@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "stratos",
+      "runtimeExecutable": "/Users/ivanrodriguezruelas/Stratos AI/.claude/run-vite.sh",
+      "runtimeArgs": [],
+      "port": 5173
+    }
+  ]
+}
