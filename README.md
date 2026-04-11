@@ -1,16 +1,37 @@
-# React + Vite
+# Stratos IA - CRM & Dashboard
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Stratos IA es un entorno avanzado en tiempo real para inteligencia analítica, escrutinio conductual de clientes, y monitoreo general para administradores de alta demanda.
 
-Currently, two official plugins are available:
+## Stack Tecnológico 💻
+Este proyecto está desarrollado bajo la filosofía **Vite + React (JavaScript)** apoyándose de Recharts, Lucide Icons y utilidades de renderizado custom para alcanzar puros 60 FPS en interfaces complejas.
+Toda la data en vivo para el módulo del **CRM** se respalda en **Supabase**.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Requisitos de Variables de Entorno (.env) 🔑
 
-## React Compiler
+Para que el proyecto se ejecute de manera perfecta y obtenga datos en vivo de Supabase, debes crear un archivo llamado `.env` en la raíz de tu proyecto e introducir tus variables:
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+```env
+# Variables críticas para la recolección en vivo del Pipeline de Leads (Módulo CRM)
+VITE_SUPABASE_URL=https://[TU_URL_DE_PROYECTO].supabase.co
+VITE_SUPABASE_ANON_KEY=[TU_ANON_KEY]
+```
 
-## Expanding the ESLint configuration
+### Tabla de Base de Datos Necesaria
+Las credenciales de arriba deberán apuntar a un proyecto de Supabase que contenga una base de datos con una tabla nombrada **`LEADS`** con la siguiente estructura y columnas:
+- `FECHA INGRESO` (string / timestamptz)
+- `ASESOR` (string)
+- `NOMBRE DEL CLIENTE` (string)
+- `TELEFONO` (string)
+- `ESTATUS` (string - ej: 'ZOOM AGENDADO', 'SEGUIMIENTO')
+- `PRESUPUESTO` (numeric)
+- `PROYECTO DE INTERES` (string)
+- `CAMPAÑA` (string)
+- `NOTAS` (jsonb - un arreglo de objetos tipo `[{"fecha": "...", "asesor": "...", "nota": "..."}]`)
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## Scripts de Desarrollo 🚀
+
+Para correr el proyecto usa los comandos estándar de Node:
+```sh
+npm install
+npm run dev
+```
