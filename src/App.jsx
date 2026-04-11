@@ -25,6 +25,7 @@ import {
   ResponsiveContainer, PieChart, Pie, Cell
 } from "recharts";
 import "./App.css";
+import { supabase } from "./lib/supabase";
 
 /* ════════════════════════════════════════
    DESIGN SYSTEM
@@ -546,50 +547,119 @@ const Dash = ({ oc }) => (
   </div>
 );
 
-const CRM = ({ oc }) => (
+const CRM = ({ oc }) => {
+  const [dbLeads, setDbLeads] = useState([]); // Inicializa vacío para evitar errores de renderizado de propiedades mapeadas
+  const [modalLead, setModalLead] = useState(null);
+
+  useEffect(() => {
+    const fetchLeads = async () => {
+      try {
+        const { data, error } = await supabase.from('LEADS').select('*');
+        if (error) throw error;
+        if (data && data.length > 0) {
+          const mapped = data.map((d, index) => {
+            let finalNota = 'Sin notas';
+            let allNotas = [];
+            try {
+              if (d['NOTAS']) {
+                let notesArr = typeof d['NOTAS'] === 'string' ? JSON.parse(d['NOTAS']) : d['NOTAS'];
+                if (Array.isArray(notesArr)) {
+                  allNotas = notesArr;
+                  if (notesArr.length > 0 && notesArr[0].nota) {
+                    finalNota = notesArr[0].nota;
+                  }
+                }
+              }
+            } catch (e) {
+              console.warn("Could not parse nota:", e);
+            }
+
+            return {
+              id: d.id || `${index}`,
+              fecha: d['FECHA INGRESO'] || '-',
+              asesor: d['ASESOR'] || '-',
+              cliente: d['NOMBRE DEL CLIENTE'] || 'Sin nombre',
+              tel: d['TELEFONO'] || '-',
+              estatus: d['ESTATUS'] || '-',
+              presupuesto: d['PRESUPUESTO'] ? `$${d['PRESUPUESTO'].toLocaleString()}` : '-',
+              proyecto: d['PROYECTO DE INTERES'] || '-',
+              campaña: d['CAMPAÑA'] || '-',
+              notaCorta: finalNota,
+              todasLasNotas: allNotas,
+              hot: (d['ESTATUS'] || '').includes('AGENDA')
+            };
+          });
+          setDbLeads(mapped);
+        }
+      } catch (err) {
+        console.error("Error al cargar leads de Supabase:", err);
+      }
+    };
+    
+    fetchLeads();
+  }, []);
+
+  return (
   <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
     <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 14 }}>
-      <KPI label="Clientes Activos" value="70" icon={Users} color={P.blue} />
-      <KPI label="Calidad Promedio" value="67" sub="+4.8" icon={Target} color={P.amber} />
+      <KPI label="Clientes Activos" value={dbLeads.length} icon={Users} color={P.blue} />
+      <KPI label="Calidad Promedio" value="82" sub="+4.8" icon={Target} color={P.amber} />
       <KPI label="Tasa de Conversión" value="18.4%" icon={TrendingUp} color={P.emerald} />
       <KPI label="Proyección Comercial" value="$48.2M" icon={DollarSign} />
     </div>
     <G np>
       <div style={{ padding: "14px 18px", display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: `1px solid ${P.border}` }}>
-        <p style={{ fontSize: 13, fontWeight: 700, color: P.txt }}>Todos los leads</p>
+        <p style={{ fontSize: 13, fontWeight: 700, color: P.txt }}>Lead Pipeline (Supabase DB)</p>
         <div style={{ display: "flex", gap: 8 }}>
           <button style={{ display: "flex", alignItems: "center", gap: 5, padding: "5px 12px", borderRadius: P.rx, background: P.glass, border: `1px solid ${P.border}`, fontSize: 11, color: P.txt3, cursor: "pointer", fontFamily: font }}><Filter size={12} />Filtrar</button>
           <button onClick={() => oc("Crear nuevo lead")} style={{ display: "flex", alignItems: "center", gap: 5, padding: "5px 12px", borderRadius: P.rx, background: P.accentS, border: `1px solid ${P.accentB}`, fontSize: 11, color: P.accent, cursor: "pointer", fontFamily: font }}><Plus size={12} />Nuevo</button>
         </div>
       </div>
-      <div style={{ display: "grid", gridTemplateColumns: "1.6fr 1fr 0.6fr 0.7fr 0.5fr 0.4fr", padding: "8px 18px", borderBottom: `1px solid ${P.border}`, fontSize: 10, color: P.txt3, textTransform: "uppercase", letterSpacing: "0.07em", fontWeight: 600 }}>
-        <span>Cliente</span><span>Proyecto</span><span>Score</span><span>Etapa</span><span>Valor</span><span></span>
+      <div style={{ display: "grid", gridTemplateColumns: "0.7fr 1fr 1.3fr 0.9fr 1.1fr 0.7fr 1.1fr 0.6fr 0.4fr", gap: 8, padding: "8px 18px", borderBottom: `1px solid ${P.border}`, fontSize: 9, color: P.txt3, textTransform: "uppercase", letterSpacing: "0.06em", fontWeight: 600 }}>
+        <span>Fecha</span><span>Asesor</span><span>Cliente</span><span>Teléfono</span><span>Estatus</span><span>Ppto.</span><span>Proyecto</span><span>Campaña</span><span style={{ textAlign: "center" }}>Notas</span>
       </div>
-      {leads.map(l => (
-        <div key={l.id} onClick={() => oc(`[Escrutinio Predictivo 360] Renderiza análisis conductual inteligente e hiper-personaliza sugerencia para forzar cierre con el cliente: ${l.n}.`)} style={{
-          display: "grid", gridTemplateColumns: "1.6fr 1fr 0.6fr 0.7fr 0.5fr 0.4fr",
-          alignItems: "center", padding: "10px 18px", borderBottom: `1px solid ${P.border}`,
-          fontSize: 12, cursor: "pointer", transition: "background 0.2s",
+      {dbLeads.map(l => (
+        <div key={l.id} onClick={() => oc(`Detalle principal de: ${l.cliente}`)} style={{
+          display: "grid", gridTemplateColumns: "0.7fr 1fr 1.3fr 0.9fr 1.1fr 0.7fr 1.1fr 0.6fr 0.4fr",
+          alignItems: "center", gap: 8, padding: "10px 18px", borderBottom: `1px solid ${P.border}`,
+          fontSize: 11, cursor: "pointer", transition: "background 0.2s",
         }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <Ico icon={User} sz={28} is={13} c={l.hot ? P.accent : P.txt3} />
-            <span style={{ color: P.txt, fontWeight: 400, fontFamily: font }}>{l.n}</span>
-            {l.tag && <span style={{ fontSize: 9, color: P.txt3, background: "rgba(255,255,255,0.06)", padding: "2px 6px", borderRadius: 4, fontWeight: 500 }}>{l.tag}</span>}
+          <span style={{ color: P.txt3, fontFamily: font }}>{l.fecha}</span>
+          <span style={{ color: P.txt2, fontWeight: 500, fontFamily: font }}>{l.asesor}</span>
+          <div style={{ display: "flex", alignItems: "center", gap: 6, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+            <Ico icon={User} sz={22} is={11} c={l.hot ? P.emerald : P.txt3} />
+            <span style={{ color: P.txt, fontWeight: 500, fontFamily: font, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{l.cliente}</span>
           </div>
-          <span style={{ color: P.txt3, fontFamily: font }}>{l.p}</span>
-          <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-            <div style={{ width: 28, height: 3, borderRadius: 2, background: P.border }}>
-              <div style={{ width: `${l.sc}%`, height: 3, borderRadius: 2, background: l.sc > 70 ? "rgba(255,255,255,0.7)" : l.sc > 50 ? "rgba(255,255,255,0.4)" : P.border }} />
-            </div>
-            <span style={{ fontSize: 10, color: P.txt3, fontFamily: fontDisp }}>{l.sc}</span>
-          </div>
+          <span style={{ color: P.txt3, fontFamily: "monospace", fontSize: 10 }}>{l.tel}</span>
           <div>
-            <Pill color={stgC[l.st]} s>
-              {l.st} <ChevronRight size={10} style={{ marginLeft: 3, opacity: 0.6 }} />
+            <Pill color={l.hot ? P.emerald : (l.estatus || "").includes("SEGUIMIENTO") ? P.blue : P.txt3} s>
+              {l.estatus}
             </Pill>
           </div>
-          <span style={{ color: "#FFFFFF", fontWeight: 300, fontFamily: fontDisp }}>{l.v}</span>
-          <span style={{ color: P.txt3, fontSize: 10, textAlign: "right", fontFamily: fontDisp }}>{l.t}</span>
+          <span style={{ color: "#FFFFFF", fontWeight: 500, fontFamily: fontDisp }}>{l.presupuesto}</span>
+          <span style={{ color: P.txt3, fontSize: 10, fontFamily: font, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{l.proyecto}</span>
+          <span style={{ color: P.txt3, fontSize: 9, fontFamily: font, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{l.campaña}</span>
+          
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "100%" }}>
+             {l.todasLasNotas && l.todasLasNotas.length > 0 ? (
+               <div 
+                 onClick={(e) => { 
+                   e.stopPropagation();
+                   setModalLead(l);
+                 }}
+                 style={{ padding: 6, background: "rgba(255,255,255,0.05)", borderRadius: 6, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "background 0.2s" }}
+                 title="Ver historial de notas completo"
+                 onMouseEnter={(e) => e.currentTarget.style.background = "rgba(255,255,255,0.1)"}
+                 onMouseLeave={(e) => e.currentTarget.style.background = "rgba(255,255,255,0.05)"}
+               >
+                 <ClipboardList size={13} color={P.txt2} />
+               </div>
+             ) : (
+                <div style={{ padding: 6, borderRadius: 6, display: "flex", alignItems: "center", justifyContent: "center", opacity: 0.3 }}>
+                 <ClipboardList size={13} color={P.txt3} />
+               </div>
+             )}
+          </div>
         </div>
       ))}
     </G>
@@ -616,8 +686,32 @@ const CRM = ({ oc }) => (
         </div>
       </G>
     </div>
+
+    {modalLead && (
+      <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)", zIndex: 9999, display: "flex", justifyContent: "center", alignItems: "center" }} onClick={() => setModalLead(null)}>
+        <div style={{ background: P.panel, width: 440, borderRadius: P.rx, border: `1px solid ${P.border}`, overflow: "hidden", display: "flex", flexDirection: "column", boxShadow: "0 24px 48px rgba(0,0,0,0.4)" }} onClick={e => e.stopPropagation()}>
+          <div style={{ padding: "16px 20px", borderBottom: `1px solid ${P.border}`, display: "flex", justifyContent: "space-between", alignItems: "center", background: P.glass }}>
+            <p style={{ fontSize: 14, fontWeight: 600, color: P.txt, fontFamily: fontDisp }}>Historial de Notas</p>
+            <button onClick={() => setModalLead(null)} style={{ background: "none", border: "none", color: P.txt3, cursor: "pointer", fontSize: 16 }}>✕</button>
+          </div>
+          <div style={{ padding: "20px", display: "flex", flexDirection: "column", gap: 12, maxHeight: 400, overflowY: "auto" }}>
+             <p style={{ fontSize: 13, color: P.txt2, marginBottom: 4, fontFamily: font }}>Cliente: <strong style={{color: P.txt}}>{modalLead.cliente}</strong></p>
+             {modalLead.todasLasNotas.map((nt, ix) => (
+               <div key={ix} style={{ background: "rgba(255,255,255,0.03)", padding: 12, borderRadius: P.rs, border: `1px solid ${P.border}` }}>
+                 <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6, fontSize: 10, color: P.txt3, fontFamily: fontDisp }}>
+                   <span>{nt.fecha || 'Sin fecha'}</span>
+                   <span>{nt.asesor || 'Sin asesor'}</span>
+                 </div>
+                 <p style={{ fontSize: 12, color: P.txt2, lineHeight: 1.5, fontFamily: font, whiteSpace: "pre-wrap" }}>{nt.nota}</p>
+               </div>
+             ))}
+          </div>
+        </div>
+      </div>
+    )}
   </div>
-);
+  );
+};
 
 const ERP = ({ oc }) => {
   const erpProjects = [
