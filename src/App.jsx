@@ -766,7 +766,7 @@ const getResp = (t) => {
   // — Priority / today's focus —
   if (l.includes("priorit") || l.includes("hoy") || l.includes("80/20") || l.includes("importante") || l.includes("focus")) {
     const hot = leads.filter(x => x.isNew || x.sc >= 80 || x.st === "Zoom Agendado").slice(0, 3);
-    const totalV = hot.reduce((s, x) => s + parseFloat(x.v.replace(/[^0-9.]/g, "") || 0), 0);
+    const totalV = hot.reduce((s, x) => s + (x.presupuesto || 0), 0);
     return {
       content: "Tus **3 prioridades de hoy** — Análisis 80/20 del pipeline activo:",
       metrics: [
@@ -774,7 +774,7 @@ const getResp = (t) => {
         { label: `2. ${hot[1]?.n} · ${hot[1]?.st}`, val: `${hot[1]?.nextAction}  ·  ${hot[1]?.nextActionDate}`, i: Target, c: P.blue },
         { label: `3. ${hot[2]?.n} · ${hot[2]?.st}`, val: `${hot[2]?.nextAction}  ·  ${hot[2]?.nextActionDate}`, i: Zap, c: P.amber },
       ],
-      follow: `Estas 3 oportunidades representan **$${totalV.toFixed(1)}M** combinados. Atenderlos hoy puede detonar el ciclo de cierre esta semana.`,
+      follow: `Estas 3 oportunidades representan **$${(totalV/1000000).toFixed(1)}M** combinados. Atenderlos hoy puede detonar el ciclo de cierre esta semana.`,
       btn: "Activar Seguimiento",
       action: "Activar seguimiento automático para clientes prioritarios",
     };
@@ -786,7 +786,7 @@ const getResp = (t) => {
     return {
       content: `**${newLeads.length} clientes nuevos** registrados recientemente — requieren primer contacto:`,
       metrics: newLeads.slice(0, 3).map((x, i) => ({
-        label: `${x.n} · ${x.p} · ${x.v}`,
+        label: `${x.n} · ${x.p} · ${x.budget}`,
         val: `${x.nextAction}  ·  ${x.nextActionDate}`,
         i: [User, Phone, CalendarDays][i] || User,
         c: [P.accent, P.blue, P.violet][i] || P.accent,
@@ -846,15 +846,15 @@ const getResp = (t) => {
 /* ════════════════════════════════════════
    VIEWS
    ════════════════════════════════════════ */
-const Dash = ({ oc }) => (
+const Dash = ({ oc, co }) => (
   <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
-    <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 14 }}>
+    <div style={{ display: "grid", gridTemplateColumns: co ? "repeat(2, 1fr)" : "repeat(4, 1fr)", gap: 14 }}>
       <KPI label="Ingresos Acumulados" value="$35.9M" sub="+28%" icon={DollarSign} />
       <KPI label="Proyección Comercial" value="70" sub="+12 mes" icon={Target} color={P.blue} />
       <KPI label="Tasa de Conversión" value="18.4%" sub="+3.2pp" icon={TrendingUp} color={P.emerald} />
       <KPI label="Agentes IA" value="47" sub="12 auto" icon={Atom} color={P.violet} />
     </div>
-    <div style={{ display: "grid", gridTemplateColumns: "3fr 1.3fr", gap: 14 }}>
+    <div style={{ display: "grid", gridTemplateColumns: co ? "1fr" : "3fr 1.3fr", gap: 14 }}>
       <G>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
           <p style={{ fontSize: 13, fontWeight: 700, color: P.txt }}>Ingresos vs Objetivo</p>
@@ -888,7 +888,7 @@ const Dash = ({ oc }) => (
     </div>
 
     {/* Quick actions */}
-    <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10 }}>
+    <div style={{ display: "grid", gridTemplateColumns: co ? "repeat(2, 1fr)" : "repeat(4, 1fr)", gap: 10 }}>
       {[
         { l: "Nota de voz", i: Mic2, c: P.accent, q: examples[0].t },
         { l: "Mis prioridades", i: Crosshair, c: P.amber, q: examples[1].t },
@@ -915,8 +915,8 @@ const Dash = ({ oc }) => (
         <button onClick={() => {}} style={{ fontSize: 11, color: P.txt3, background: "none", border: "none", cursor: "pointer", fontFamily: font }}>Ver todos →</button>
       </div>
       {leads.filter(l => l.isNew || l.st === "Zoom Agendado").sort((a,b) => b.sc - a.sc).slice(0, 4).map(l => (
-        <div key={l.id} onClick={() => oc(`Dame análisis completo de ${l.n}`)} style={{
-          display: "grid", gridTemplateColumns: "2fr 0.9fr 0.55fr 0.9fr 0.7fr 1.4fr",
+        <div key={l.id} onClick={() => oc(`__crm__ ${l.n.toLowerCase()}`)} style={{
+          display: "grid", gridTemplateColumns: "2fr 0.55fr 0.9fr 0.7fr 1.4fr",
           alignItems: "center", padding: "11px 18px", borderBottom: `1px solid ${P.border}`,
           gap: 8, cursor: "pointer", transition: "background 0.18s",
         }}
@@ -933,7 +933,6 @@ const Dash = ({ oc }) => (
               <p style={{ fontSize: 9, color: P.txt3, marginTop: 1 }}>{l.tag}</p>
             </div>
           </div>
-          <span style={{ fontSize: 11, color: P.txt2 }}>{l.p}</span>
           <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
             <div style={{ width: 24, height: 3, borderRadius: 2, background: P.border }}>
               <div style={{ width: `${l.sc}%`, height: 3, borderRadius: 2, background: l.sc >= 80 ? P.emerald : l.sc >= 60 ? P.blue : P.amber }} />
@@ -941,7 +940,7 @@ const Dash = ({ oc }) => (
             <span style={{ fontSize: 10, fontWeight: 700, color: l.sc >= 80 ? P.emerald : l.sc >= 60 ? P.blue : P.amber, fontFamily: fontDisp }}>{l.sc}</span>
           </div>
           <Pill color={stgC[l.st]} s>{l.st}</Pill>
-          <span style={{ fontSize: 13, fontWeight: 500, color: "#FFFFFF", fontFamily: fontDisp, letterSpacing: "-0.02em" }}>{l.v}</span>
+          <span style={{ fontSize: 13, fontWeight: 500, color: "#FFFFFF", fontFamily: fontDisp, letterSpacing: "-0.02em" }}>{l.budget}</span>
           <div style={{ padding: "5px 8px", borderRadius: 7, background: `${P.accent}07`, border: `1px solid ${P.accentB}` }}>
             <p style={{ fontSize: 9, fontWeight: 700, color: P.accent, letterSpacing: "0.04em", marginBottom: 2 }}>{l.nextActionDate?.toUpperCase()}</p>
             <p style={{ fontSize: 10, color: P.txt2, lineHeight: 1.35 }}>{l.nextAction?.substring(0, 45)}{l.nextAction?.length > 45 ? "…" : ""}</p>
@@ -951,7 +950,7 @@ const Dash = ({ oc }) => (
     </G>
 
     {/* Agent status strip */}
-    <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }}>
+    <div style={{ display: "grid", gridTemplateColumns: co ? "1fr" : "repeat(3, 1fr)", gap: 10 }}>
       {[
         { n: "Estrategia", r: "Pipeline 80/20 · Alertas", i: AgentIcons.gerente, c: P.amber, s: "342 acciones" },
         { n: "Coordinación", r: "Voz→CRM · Tareas", i: AgentIcons.asistente, c: P.blue, s: "1,248 acciones" },
@@ -1131,7 +1130,7 @@ const LeadPanel = ({ lead, onClose, oc }) => {
 /* ═══════════════════════════════════════════
    CRM — Pipeline Pro
 ═══════════════════════════════════════════ */
-function CRM({ oc }) {
+function CRM({ oc, co }) {
   const [leadsData, setLeadsData]       = useState(leads);
   const [sortField, setSortField]       = useState("fechaIngreso");
   const [sortDir, setSortDir]           = useState("desc");
@@ -1216,11 +1215,18 @@ Realizar primer contacto y calificar necesidades del cliente.`,
   /* ── KANBAN columns (visible stages) ── */
   const kanbanStages = STAGES.filter(s => s !== "Perdido");
 
+  /* ── Responsive column definitions ── */
+  // Full: Fecha · Asesor · Nombre · Teléfono · Estatus · Presupuesto · Proyecto · Score · Acciones
+  // Compact (chat open): Nombre · Teléfono · Estatus · Presupuesto · Score · Acciones
+  const colsFull    = "100px 115px 1.4fr 110px 1fr 110px 100px 65px 85px";
+  const colsCompact = "1.5fr 105px 1fr 100px 60px 80px";
+  const cols = co ? colsCompact : colsFull;
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
 
       {/* KPIs */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
+      <div style={{ display: "grid", gridTemplateColumns: co ? "repeat(2, 1fr)" : "repeat(4, 1fr)", gap: 12 }}>
         <KPI label="Clientes en Pipeline" value={leadsData.length} icon={Users} color={P.blue} />
         <KPI label="Score Promedio" value={avgScore} sub="+4.8 este mes" icon={Target} color={P.amber} />
         <KPI label="Tasa de Conversión" value="18.4%" icon={TrendingUp} color={P.emerald} />
@@ -1240,7 +1246,7 @@ Realizar primer contacto y calificar necesidades del cliente.`,
               const scoreColor = sc >= 80 ? P.emerald : sc >= 60 ? P.blue : P.amber;
               return (
                 <div key={l.id} onClick={() => { oc(`__crm__ ${l.n.toLowerCase()}`); }} style={{
-                  minWidth: 230, padding: "13px 14px", borderRadius: 14,
+                  minWidth: co ? 190 : 230, padding: "13px 14px", borderRadius: 14,
                   background: P.glass, border: `1px solid ${l.st.includes("Zoom") ? P.violet+"30" : P.border}`,
                   cursor: "pointer", flexShrink: 0, transition: "all 0.2s",
                 }}
@@ -1330,33 +1336,35 @@ Realizar primer contacto y calificar necesidades del cliente.`,
         {viewMode === "list" && (
           <>
             {/* Column headers */}
-            <div style={{ display: "grid", gridTemplateColumns: "100px 120px 1.4fr 110px 1fr 110px 100px 70px 90px", gap: 6, padding: "7px 16px", borderBottom: `1px solid ${P.border}`, alignItems: "center" }}>
-              <SH label="Fecha" field="fechaIngreso" />
-              <SH label="Asesor" field="asesor" />
+            <div style={{ display: "grid", gridTemplateColumns: cols, gap: 6, padding: "7px 16px", borderBottom: `1px solid ${P.border}`, alignItems: "center" }}>
+              {!co && <SH label="Fecha" field="fechaIngreso" />}
+              {!co && <SH label="Asesor" field="asesor" />}
               <SH label="Nombre" field="n" />
               <SH label="Teléfono" field="phone" />
               <SH label="Estatus" field="st" />
               <SH label="Presupuesto" field="presupuesto" align="right" />
-              <SH label="Proyecto" field="p" />
+              {!co && <SH label="Proyecto" field="p" />}
               <SH label="Score" field="sc" />
               <span style={{ fontSize: 9, fontWeight: 700, color: P.txt3, letterSpacing: "0.07em", textTransform: "uppercase", textAlign: "center" }}>Acciones</span>
             </div>
 
             {sortedLeads.map(l => (
-              <div key={l.id} style={{ display: "grid", gridTemplateColumns: "100px 120px 1.4fr 110px 1fr 110px 100px 70px 90px", gap: 6, padding: "10px 16px", borderBottom: `1px solid ${P.border}`, alignItems: "center", transition: "background 0.15s" }}
+              <div key={l.id} style={{ display: "grid", gridTemplateColumns: cols, gap: 6, padding: "10px 16px", borderBottom: `1px solid ${P.border}`, alignItems: "center", transition: "background 0.15s" }}
                 onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.02)"}
                 onMouseLeave={e => e.currentTarget.style.background = "transparent"}
               >
-                {/* Fecha */}
-                <span style={{ fontSize: 10.5, color: P.txt3, fontFamily: font }}>{l.fechaIngreso}</span>
+                {/* Fecha — hidden when compact */}
+                {!co && <span style={{ fontSize: 10.5, color: P.txt3, fontFamily: font }}>{l.fechaIngreso}</span>}
 
-                {/* Asesor */}
-                <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
-                  <div style={{ width: 20, height: 20, borderRadius: "50%", background: `${P.violet}18`, border: `1px solid ${P.violet}28`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 8, fontWeight: 800, color: P.violet, flexShrink: 0 }}>{l.asesor?.charAt(0)}</div>
-                  <span style={{ fontSize: 10.5, color: P.txt2, fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{l.asesor?.split(" ")[0]}</span>
-                </div>
+                {/* Asesor — hidden when compact */}
+                {!co && (
+                  <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                    <div style={{ width: 20, height: 20, borderRadius: "50%", background: `${P.violet}18`, border: `1px solid ${P.violet}28`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 8, fontWeight: 800, color: P.violet, flexShrink: 0 }}>{l.asesor?.charAt(0)}</div>
+                    <span style={{ fontSize: 10.5, color: P.txt2, fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{l.asesor?.split(" ")[0]}</span>
+                  </div>
+                )}
 
-                {/* Nombre */}
+                {/* Nombre — shows asesor initial when compact */}
                 <div style={{ display: "flex", alignItems: "center", gap: 7, minWidth: 0 }}>
                   <div style={{ width: 28, height: 28, borderRadius: 8, background: `${l.hot ? P.accent : P.blue}14`, border: `1px solid ${l.hot ? P.accent : P.blue}22`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 800, color: l.hot ? P.accent : P.blue, flexShrink: 0, fontFamily: fontDisp }}>{l.n.charAt(0)}</div>
                   <div style={{ minWidth: 0 }}>
@@ -1364,7 +1372,9 @@ Realizar primer contacto y calificar necesidades del cliente.`,
                       <span style={{ fontSize: 12.5, fontWeight: 700, color: "#FFFFFF", fontFamily: fontDisp, letterSpacing: "-0.01em", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{l.n}</span>
                       {l.isNew && <span style={{ fontSize: 8, fontWeight: 800, color: P.accent, background: `${P.accent}14`, padding: "1px 5px", borderRadius: 99, letterSpacing: "0.06em", flexShrink: 0 }}>NEW</span>}
                     </div>
-                    <p style={{ fontSize: 9.5, color: P.txt3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{l.campana}</p>
+                    <p style={{ fontSize: 9.5, color: P.txt3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      {co ? `${l.asesor?.split(" ")[0]} · ${l.campana}` : l.campana}
+                    </p>
                   </div>
                 </div>
 
@@ -1379,25 +1389,22 @@ Realizar primer contacto y calificar necesidades del cliente.`,
                 {/* Presupuesto */}
                 <span style={{ fontSize: 12.5, fontWeight: 600, color: "#FFFFFF", fontFamily: fontDisp, letterSpacing: "-0.02em", textAlign: "right" }}>{l.budget}</span>
 
-                {/* Proyecto */}
-                <span style={{ fontSize: 10, color: P.txt2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{l.p.split("·")[0].trim()}</span>
+                {/* Proyecto — hidden when compact */}
+                {!co && <span style={{ fontSize: 10, color: P.txt2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{l.p.split("·")[0].trim()}</span>}
 
                 {/* Score */}
                 <ScoreBar sc={l.sc} compact />
 
                 {/* Acciones */}
                 <div style={{ display: "flex", gap: 4, justifyContent: "center" }}>
-                  {/* IA button — click to send brief to chat */}
                   <button onClick={() => oc(`__crm__ ${l.n.toLowerCase()}`)} title="Analizar con IA" style={{ width: 26, height: 26, borderRadius: 6, border: `1px solid ${P.accentB}`, background: P.accentS, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.18s" }}
                     onMouseEnter={e => { e.currentTarget.style.background = `${P.accent}20`; }}
                     onMouseLeave={e => { e.currentTarget.style.background = P.accentS; }}
                   ><Zap size={11} color={P.accent} /></button>
-                  {/* Notes button */}
                   <button onClick={() => setNotesLead(l)} title="Ver notas" style={{ width: 26, height: 26, borderRadius: 6, border: `1px solid ${P.border}`, background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.18s" }}
                     onMouseEnter={e => { e.currentTarget.style.background = P.glass; e.currentTarget.style.borderColor = P.borderH; }}
                     onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = P.border; }}
                   ><FileText size={11} color={P.txt3} /></button>
-                  {/* Profile button */}
                   <button onClick={() => setSelectedLead(l)} title="Ver perfil completo" style={{ width: 26, height: 26, borderRadius: 6, border: `1px solid ${P.border}`, background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.18s" }}
                     onMouseEnter={e => { e.currentTarget.style.background = P.glass; e.currentTarget.style.borderColor = P.borderH; }}
                     onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = P.border; }}
@@ -1465,7 +1472,7 @@ Realizar primer contacto y calificar necesidades del cliente.`,
       </G>
 
       {/* ── Analytics ── */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
+      <div style={{ display: "grid", gridTemplateColumns: co ? "1fr 1fr" : "1fr 1fr 1fr", gap: 12 }}>
         <G>
           <p style={{ fontSize: 12, fontWeight: 700, color: P.txt, marginBottom: 10, fontFamily: fontDisp }}>Score por Cliente</p>
           <ResponsiveContainer width="100%" height={110}>
@@ -6514,8 +6521,8 @@ export default function App() {
 
         <div style={{ flex: 1, display: "flex", overflow: "hidden" }}>
           <div style={{ flex: 1, padding: "18px 22px", overflowY: "auto", animation: "fadeIn 0.4s ease" }}>
-            {v === "d" && <Dash oc={oc} />}
-            {v === "c" && <CRM oc={oc} />}
+            {v === "d" && <Dash oc={oc} co={co} />}
+            {v === "c" && <CRM oc={oc} co={co} />}
             {v === "ia" && <IACRM oc={oc} />}
             {v === "e" && <ERP oc={oc} />}
             {v === "a" && <AsesorCRM oc={oc} />}
