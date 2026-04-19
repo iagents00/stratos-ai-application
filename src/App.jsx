@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback, useMemo, memo } from "react";
+import LoginScreen from "./LoginScreen.jsx";
 import { createPortal } from "react-dom";
 import {
   TrendingUp, Target, ArrowUpRight, ArrowRight, CheckCircle2, Mic, Search,
@@ -25,7 +26,6 @@ import {
   ResponsiveContainer, PieChart, Pie, Cell
 } from "recharts";
 import "./App.css";
-import { supabase } from "./lib/supabase";
 
 /* ════════════════════════════════════════
    DESIGN SYSTEM
@@ -241,23 +241,351 @@ const pipe = [
   { name: "Negociación", val: 12, c: "#67B7D1" },
   { name: "Cierre", val: 6, c: "#6DD4A8" },
 ];
-const stgC = { Prospecto: P.blue, Visita: P.violet, Negociación: P.amber, Cierre: P.emerald, Perdido: P.rose };
+/* ─────────────────────────────────────────
+   PIPELINE STAGES
+───────────────────────────────────────── */
+const STAGES = [
+  "Nuevo Registro", "Primer Contacto", "Seguimiento",
+  "Zoom Agendado", "Zoom Concretado",
+  "Visita Agendada", "Visita Concretada",
+  "Negociación", "Cierre", "Perdido",
+];
+
+const stgC = {
+  "Nuevo Registro":     P.txt3,
+  "Primer Contacto":    P.blue,
+  "Seguimiento":        P.amber,
+  "Zoom Agendado":      P.violet,
+  "Zoom Concretado":    "#C084FC",
+  "Visita Agendada":    P.cyan,
+  "Visita Concretada":  P.emerald,
+  "Negociación":        "#F97316",
+  "Cierre":             P.accent,
+  "Perdido":            P.rose,
+};
+
+/* ─────────────────────────────────────────
+   CRM LEADS DATA  (schema: fecha ingreso, asesor, nombre, tel, estatus,
+   presupuesto, proyecto, notas, campaña)
+───────────────────────────────────────── */
 const leads = [
-  { id: 1, n: "Fam. Rodríguez", tag: "Penthouse Élite", p: "Gobernador 28", sc: 92, st: "Negociación", v: "$4.2M", t: "2h", hot: true,
-    bio: "Familia inversionista buscando propiedades premium para crecimiento patrimonial.",
-    risk: "Pendiente: Costos notariales por confirmar", friction: "Bajo", action: "Conectar con notaría aliada para agilizar cierre", speed: "+65% Cierre" },
-  { id: 2, n: "James Mitchell", tag: "CEO Tecnología", p: "Monarca 28", sc: 85, st: "Visita", v: "$2.8M", t: "3h", hot: true,
-    bio: "Director de empresa de tecnología. Busca diversificar su patrimonio en bienes raíces.",
-    risk: "Quiere ver garantías de construcción", friction: "Bajo", action: "Enviar Reporte de Avance en Tiempo Real", speed: "+40% Confianza" },
-  { id: 3, n: "Carlos Slim Jr.", tag: "Gran Inversionista", p: "Portofino", sc: 78, st: "Prospecto", v: "$6.5M", t: "5h",
-    bio: "Inversionista de alto perfil. Busca proteger su capital con propiedades de lujo a largo plazo.",
-    risk: "Necesita proyección de valor a 10 años", friction: "Medio", action: "Agendar sesión con Director de Arquitectura", speed: "+80% Valor" },
-  { id: 4, n: "Sarah Williams", tag: "Inversionista Internacional", p: "Gobernador 28", sc: 65, st: "Visita", v: "$3.1M", t: "8h",
-    bio: "Analista de bienes raíces de Londres. Muy detallista con los números y rendimientos.",
-    risk: "Está comparando con otras zonas de la Riviera Maya", friction: "Alto", action: "Enviar comparativo de rendimientos por zona", speed: "+55% Avance" },
-  { id: 5, n: "Fam. Hernández", tag: "Primera Inversión", p: "Monarca 28", sc: 45, st: "Prospecto", v: "$1.9M", t: "1d",
-    bio: "Familia haciendo su primera inversión inmobiliaria. Necesitan guía y acompañamiento.",
-    risk: "Necesitan confirmar capacidad de financiamiento", friction: "Alto", action: "Ofrecer pre-aprobación de crédito", speed: "+35% Avance" },
+  {
+    id: 1,
+    fechaIngreso: "2 Abr, 12:07pm",
+    asesor: "Estefanía Valdes",
+    n: "Rafael",
+    tag: "Inversión + Disfrute",
+    phone: "+1 817 682 3272",
+    email: "",
+    st: "Zoom Concretado",
+    budget: "$200K USD",
+    presupuesto: 200000,
+    p: "Torre 25 · BAGA · Kaab On The Beach",
+    campana: "Cancún",
+    sc: 72,
+    hot: false,
+    isNew: true,
+    bio: "Mexicano radicado en Texas. Busca inversión + disfrute en Playa del Carmen. Perfil decisor — toma consejos de su esposa pero él decide. Ya ha invertido en otros mercados. Conoce Cancún y zona hotelera, no Tulum.",
+    risk: "Ya evaluó Amares sin cerrar. Requiere propiedad construida y céntrica. Viaje a Riviera Maya programado para el 4 de julio.",
+    friction: "Medio",
+    nextAction: "Enviar videos de las propiedades + comparativo Torre 25 vs BAGA vs Kaab",
+    nextActionDate: "Esta semana",
+    lastActivity: "Zoom concretado — 9 de Abril 6pm",
+    daysInactive: 9,
+    notas: `📍 OBJETIVO
+Inversión y disfrute personal. Playa del Carmen como destino principal.
+
+💰 PRESUPUESTO
+$200K USD · Entrega inmediata.
+Puede extender presupuesto con financiamiento de desarrollador o crédito hipotecario — planea hipotecar su casa en Texas.
+
+👤 PERFIL DEL CLIENTE
+Mexicano viviendo en Texas. Ya evaluó Amares pero no le gustó. Busca algo ya construido y más céntrico. Viaja el 4 de julio a Riviera Maya. Conoce Cancún y la zona hotelera; no conoce Tulum. Toma consejos de su esposa pero él decide. Ya tiene inversiones en otros mercados. Actualmente en Guerrero por temas personales.
+
+📅 HISTORIAL DE CONTACTO
+• Sáb 4 Abr — Cita presencial en Guerrero 10am / PDC 11am
+• Reagendado → Jue 9 Abr 6pm
+• ✅ Zoom concretado el 9 de Abril
+
+⚡ PENDIENTE
+Sacar y enviar videos de las propiedades de interés (Torre 25, BAGA, Kaab On The Beach).`,
+  },
+  {
+    id: 2,
+    fechaIngreso: "28 Mar, 9:15am",
+    asesor: "Ken Lugo Ríos",
+    n: "Fam. Rodríguez",
+    tag: "Penthouse Élite",
+    phone: "+52 984 123 0001",
+    email: "familia@rodriguez.com",
+    st: "Negociación",
+    budget: "$4.2M USD",
+    presupuesto: 4200000,
+    p: "Gobernador 28",
+    campana: "Referido",
+    sc: 92,
+    hot: true,
+    isNew: false,
+    bio: "Familia inversionista buscando propiedades premium para crecimiento patrimonial. Alto potencial de referidos.",
+    risk: "Costos notariales pendientes de confirmar con banco.",
+    friction: "Bajo",
+    nextAction: "Enviar expediente a notaría y confirmar fecha de firma",
+    nextActionDate: "Hoy",
+    lastActivity: "Visita al penthouse — reacción muy positiva",
+    daysInactive: 2,
+    notas: `📍 OBJETIVO
+Crecimiento patrimonial. Penthouse de lujo como activo principal.
+
+💰 PRESUPUESTO
+$4.2M USD · Financiamiento propio confirmado.
+
+👤 PERFIL DEL CLIENTE
+Familia con historial de inversión inmobiliaria. Muy orientados a calidad y exclusividad. Alto potencial de referidos dentro de su red.
+
+📅 HISTORIAL DE CONTACTO
+• Primera visita al penthouse — excelente reacción
+• Propuesta enviada y revisada
+• En etapa activa de negociación de condiciones
+
+⚡ PENDIENTE
+Conectar con notaría aliada. Confirmar costos notariales con el banco. Preparar expediente de cierre.`,
+  },
+  {
+    id: 3,
+    fechaIngreso: "30 Mar, 11:00am",
+    asesor: "Emmanuel Ortiz",
+    n: "James Mitchell",
+    tag: "CEO · Tecnología",
+    phone: "+1 310 555 0002",
+    email: "james@mitchell.co",
+    st: "Zoom Agendado",
+    budget: "$2.8M USD",
+    presupuesto: 2800000,
+    p: "Monarca 28",
+    campana: "LinkedIn",
+    sc: 85,
+    hot: true,
+    isNew: true,
+    bio: "Director de empresa de tecnología. Busca diversificar patrimonio. Muy analítico, basa decisiones en datos y proyecciones.",
+    risk: "Solicita garantías de construcción y avances de obra documentados.",
+    friction: "Bajo",
+    nextAction: "Zoom mañana 10:00am — presentar avances de obra y proyección ROI a 3 años",
+    nextActionDate: "Mañana 10:00am",
+    lastActivity: "Llamada 25 min — muy interesado en ROI",
+    daysInactive: 3,
+    notas: `📍 OBJETIVO
+Diversificación patrimonial. Busca activos de alto ROI con respaldo constructivo sólido.
+
+💰 PRESUPUESTO
+$2.8M USD · Capital propio disponible.
+
+👤 PERFIL DEL CLIENTE
+CEO de empresa tecnológica. Perfil analítico — necesita datos, no emoción. Valora la transparencia en avances de obra y proyecciones financieras reales.
+
+📅 HISTORIAL DE CONTACTO
+• Primer contacto vía LinkedIn
+• Llamada de 25 min — alto interés en ROI y garantías
+• Zoom agendado
+
+⚡ PENDIENTE
+Preparar reporte de avance de obra actualizado + proyección ROI a 3 años antes del zoom.`,
+  },
+  {
+    id: 4,
+    fechaIngreso: "1 Abr, 3:30pm",
+    asesor: "Araceli Oneto",
+    n: "Sarah Williams",
+    tag: "Inversionista Internacional",
+    phone: "+44 20 7946 0004",
+    email: "sarah@williams-capital.com",
+    st: "Seguimiento",
+    budget: "$3.1M USD",
+    presupuesto: 3100000,
+    p: "Gobernador 28",
+    campana: "Facebook Ads",
+    sc: 65,
+    hot: false,
+    isNew: true,
+    bio: "Analista de bienes raíces de Londres. Muy detallista con números y comparativas de rendimiento por zona.",
+    risk: "Compara activamente con otras zonas de la Riviera Maya. Alta exigencia documental.",
+    friction: "Alto",
+    nextAction: "Enviar comparativo Riviera Maya vs Cancún + llamar hoy 5pm",
+    nextActionDate: "Hoy 5:00pm",
+    lastActivity: "Visitó proyecto — solicitó comparativas de zona",
+    daysInactive: 8,
+    notas: `📍 OBJETIVO
+Inversión de portafolio con criterio internacional. Busca rendimientos superiores al mercado londinense.
+
+💰 PRESUPUESTO
+$3.1M USD · Capital de inversión institucional.
+
+👤 PERFIL DEL CLIENTE
+Analista de bienes raíces con base en Londres. Muy detallista y comparativa. Exige documentación completa y comparativas por zona antes de tomar cualquier decisión.
+
+📅 HISTORIAL DE CONTACTO
+• Contacto vía Facebook Ads
+• Visita al proyecto — buena reacción inicial
+• Solicitó comparativo de rendimientos por zona
+
+⚡ PENDIENTE
+Enviar comparativo detallado: Riviera Maya vs Cancún vs CDMX. Llamar hoy 5pm para resolver dudas.`,
+  },
+  {
+    id: 5,
+    fechaIngreso: "25 Mar, 2:00pm",
+    asesor: "Emmanuel Ortiz",
+    n: "Tony Norberto",
+    tag: "Inversionista VIP",
+    phone: "+52 998 555 0006",
+    email: "tony.norberto@inv.com",
+    st: "Zoom Concretado",
+    budget: "$5.1M USD",
+    presupuesto: 5100000,
+    p: "Portofino",
+    campana: "Referido VIP",
+    sc: 88,
+    hot: true,
+    isNew: false,
+    bio: "Empresario con portafolio diversificado. Busca activo de alta liquidez en zona costera premium.",
+    risk: "Evalúa otra propiedad en paralelo. Plazo de decisión muy corto.",
+    friction: "Medio",
+    nextAction: "Enviar propuesta formal con condiciones de pago + carta de exclusividad",
+    nextActionDate: "Hoy",
+    lastActivity: "Zoom concretado — confirmó alto interés en Portofino",
+    daysInactive: 1,
+    notas: `📍 OBJETIVO
+Alta liquidez y plusvalía en zona costera premium. Portafolio de inversión diversificado.
+
+💰 PRESUPUESTO
+$5.1M USD · Capital disponible inmediato.
+
+👤 PERFIL DEL CLIENTE
+Empresario experimentado. Portafolio diversificado en distintos mercados. Evalúa decisiones rápido pero requiere condiciones claras y exclusividad.
+
+📅 HISTORIAL DE CONTACTO
+• Referido VIP directo
+• Zoom concretado — alto interés confirmado en Portofino
+
+⚡ PENDIENTE
+Enviar propuesta formal con condiciones de pago. Carta de exclusividad de unidad. Actúa rápido o pierde a otro comprador.`,
+  },
+  {
+    id: 6,
+    fechaIngreso: "3 Abr, 10:00am",
+    asesor: "Araceli Oneto",
+    n: "Daniela Vega",
+    tag: "Nuevo Registro",
+    phone: "+52 984 555 0007",
+    email: "dra.vega@clinica.com",
+    st: "Seguimiento",
+    budget: "$2.2M USD",
+    presupuesto: 2200000,
+    p: "Gobernador 28",
+    campana: "Referido",
+    sc: 55,
+    hot: false,
+    isNew: true,
+    bio: "Médica especialista. Primera inversión inmobiliaria. Alto poder adquisitivo, poco conocimiento del sector.",
+    risk: "Necesita educación sobre el proceso de compra y retorno real antes de decidir.",
+    friction: "Medio",
+    nextAction: "Enviar guía de inversión + llamar mañana para explicar el proceso",
+    nextActionDate: "Mañana",
+    lastActivity: "Registro web — referida por Fam. Rodríguez",
+    daysInactive: 1,
+    notas: `📍 OBJETIVO
+Primera inversión inmobiliaria. Busca seguridad y crecimiento patrimonial.
+
+💰 PRESUPUESTO
+$2.2M USD · Recursos propios disponibles.
+
+👤 PERFIL DEL CLIENTE
+Médica especialista. Ingresos altos pero sin experiencia en bienes raíces. Requiere acompañamiento y educación en el proceso. Referida directamente por Fam. Rodríguez.
+
+📅 HISTORIAL DE CONTACTO
+• Registro vía formulario web
+• Referida por Fam. Rodríguez — contacto cálido
+
+⚡ PENDIENTE
+Enviar guía personalizada de inversión inmobiliaria. Llamar mañana para resolver dudas sobre el proceso de compra.`,
+  },
+  {
+    id: 7,
+    fechaIngreso: "3 Abr, 4:45pm",
+    asesor: "Cecilia Mendoza",
+    n: "Marco Aurelio",
+    tag: "Nuevo Registro",
+    phone: "+52 998 555 0008",
+    email: "marco.aurelio@arqui.mx",
+    st: "Primer Contacto",
+    budget: "$1.5M USD",
+    presupuesto: 1500000,
+    p: "Monarca 28",
+    campana: "Google Ads",
+    sc: 62,
+    hot: false,
+    isNew: true,
+    bio: "Arquitecto independiente. Perfil técnico, valora calidad constructiva. Busca primera inversión inmobiliaria.",
+    risk: "Quiere inspección técnica detallada de la obra antes de comprometerse.",
+    friction: "Bajo",
+    nextAction: "Confirmar tour técnico de obra — jueves 9:00am con ingeniero residente",
+    nextActionDate: "Jueves 9:00am",
+    lastActivity: "Registro web — preguntó por especificaciones técnicas de construcción",
+    daysInactive: 0,
+    notas: `📍 OBJETIVO
+Inversión con alta calidad constructiva. Como arquitecto, evalúa técnicamente la obra.
+
+💰 PRESUPUESTO
+$1.5M USD · Recursos propios.
+
+👤 PERFIL DEL CLIENTE
+Arquitecto independiente. Muy técnico — evalúa especificaciones, materiales y procesos constructivos. Baja fricción porque entiende el sector, pero requiere validación técnica antes de comprometerse.
+
+📅 HISTORIAL DE CONTACTO
+• Registro vía Google Ads
+• Preguntó específicamente por especificaciones técnicas de construcción
+
+⚡ PENDIENTE
+Confirmar tour técnico de obra con el ingeniero residente para el jueves 9:00am. Preparar dossier técnico con especificaciones.`,
+  },
+  {
+    id: 8,
+    fechaIngreso: "20 Mar, 8:30am",
+    asesor: "Oscar Gálvez",
+    n: "Carlos Slim Jr.",
+    tag: "Gran Inversionista",
+    phone: "+52 55 555 0003",
+    email: "csj@grupofinanciero.com",
+    st: "Seguimiento",
+    budget: "$6.5M USD",
+    presupuesto: 6500000,
+    p: "Portofino",
+    campana: "Evento VIP",
+    sc: 78,
+    hot: false,
+    isNew: false,
+    bio: "Inversionista de alto perfil. Busca proteger capital con propiedades de lujo a largo plazo. Portafolio diversificado.",
+    risk: "Necesita proyección financiera a 10 años antes de comprometerse.",
+    friction: "Medio",
+    nextAction: "Enviar proyección financiera a 10 años y proponer sesión ejecutiva",
+    nextActionDate: "Esta semana",
+    lastActivity: "Reunión inicial en evento VIP — intrigado por rendimientos",
+    daysInactive: 5,
+    notas: `📍 OBJETIVO
+Protección de capital a largo plazo. Activo de lujo en destino premium.
+
+💰 PRESUPUESTO
+$6.5M USD · Capacidad de inversión amplia.
+
+👤 PERFIL DEL CLIENTE
+Inversionista de alto perfil con portafolio diversificado. Tomador de decisiones lento pero con alto poder de cierre. Requiere proyecciones financieras sólidas.
+
+📅 HISTORIAL DE CONTACTO
+• Contacto en evento VIP exclusivo
+• Reunión inicial — interés en rendimientos a largo plazo
+
+⚡ PENDIENTE
+Preparar proyección financiera a 10 años. Proponer sesión ejecutiva con Director de Arquitectura y CEO.`,
+  },
 ];
 const props = [
   { n: "Gobernador 28", u: 48, s: 31, roi: "24%", pr: "$280K–$1.2M", loc: "Playa del Carmen", st: "Pre-venta", c: P.blue },
@@ -265,14 +593,14 @@ const props = [
   { n: "Portofino", u: 36, s: 12, roi: "32%", pr: "$520K–$2.1M", loc: "Puerto Aventuras", st: "Lanzamiento", c: P.emerald },
 ];
 const team = [
-  { n: "Oscar Gálvez", r: "CEO Ejecutivo", d: 28, rv: "$24.8M", e: 98, sk: 12, role: "CEO", c: P.violet },
-  { n: "Emmanuel Ortiz", r: "Director de Ventas", d: 14, rv: "$12.4M", e: 94, sk: 9, role: "Directivo", c: P.blue },
-  { n: "Alexia Santillán", r: "Directora Administrativa", d: 14, rv: "$11.2M", e: 91, sk: 8, role: "Directiva", c: P.emerald },
-  { n: "Alex Velázquez", r: "Director de Marketing", d: 12, rv: "$9.8M", e: 89, sk: 7, role: "Directivo", c: P.amber },
-  { n: "Ken Lugo Ríos", r: "Asesor Senior", d: 11, rv: "$8.7M", e: 88, sk: 6, role: "Directivo", c: P.cyan },
-  { n: "Araceli Oneto", r: "Asesora Especialista", d: 10, rv: "$7.5M", e: 85, sk: 5, role: "Asesor", c: P.accent },
-  { n: "Cecilia Mendoza", r: "Asesora Premium", d: 10, rv: "$7.2M", e: 83, sk: 4, role: "Asesor", c: P.accent },
-  { n: "Estefanía Valdes", r: "Asesora Premium", d: 9, rv: "$6.8M", e: 82, sk: 4, role: "Asesor", c: P.accent },
+  { n: "Oscar Gálvez",      r: "CEO Ejecutivo",          d: 28, rv: "$24.8M", e: 98, sk: 12, role: "CEO",       c: P.violet,  wa: "+52 998 000 0001", cal: "" },
+  { n: "Emmanuel Ortiz",    r: "Director de Ventas",     d: 14, rv: "$12.4M", e: 94, sk: 9,  role: "Directivo", c: P.blue,    wa: "+52 998 000 0002", cal: "" },
+  { n: "Alexia Santillán",  r: "Directora Administrativa",d:14, rv: "$11.2M", e: 91, sk: 8,  role: "Directiva", c: P.emerald, wa: "+52 998 000 0003", cal: "" },
+  { n: "Alex Velázquez",    r: "Director de Marketing",  d: 12, rv: "$9.8M",  e: 89, sk: 7,  role: "Directivo", c: P.amber,   wa: "+52 998 000 0004", cal: "" },
+  { n: "Ken Lugo Ríos",     r: "Asesor Senior",          d: 11, rv: "$8.7M",  e: 88, sk: 6,  role: "Directivo", c: P.cyan,    wa: "+52 998 000 0005", cal: "" },
+  { n: "Araceli Oneto",     r: "Asesora Especialista",   d: 10, rv: "$7.5M",  e: 85, sk: 5,  role: "Asesor",    c: P.accent,  wa: "+52 998 000 0006", cal: "" },
+  { n: "Cecilia Mendoza",   r: "Asesora Premium",        d: 10, rv: "$7.2M",  e: 83, sk: 4,  role: "Asesor",    c: P.accent,  wa: "+52 998 000 0007", cal: "" },
+  { n: "Estefanía Valdes",  r: "Asesora Premium",        d: 9,  rv: "$6.8M",  e: 82, sk: 4,  role: "Asesor",    c: P.accent,  wa: "+52 998 000 0008", cal: "" },
 ];
 
 /* ════════════════════════════════════════
@@ -387,34 +715,130 @@ const responses = {
 
 const getResp = (t) => {
   const l = t.toLowerCase();
+
+  // — CRM direct brief (when user clicks a client row in the CRM) —
+  if (l.startsWith("__crm__")) {
+    const lead = leads.find(le => l.includes(le.n.toLowerCase()) || l.includes(le.n.split(" ")[0].toLowerCase()));
+    if (lead) {
+      const frictionColor = lead.friction === "Bajo" ? P.emerald : lead.friction === "Medio" ? P.amber : P.rose;
+      const stageColor = stgC[lead.st] || P.txt3;
+      const scoreColor = lead.sc >= 80 ? P.emerald : lead.sc >= 60 ? P.blue : lead.sc >= 40 ? P.amber : P.rose;
+      return {
+        content: `Expediente CRM — **${lead.n}** · Score ${lead.sc}/100`,
+        metrics: [
+          { label: `Estatus · ${lead.st}`, val: `Ingresó ${lead.fechaIngreso} · Campaña: ${lead.campana} · Asesor: ${lead.asesor}`, i: CalendarDays, c: stageColor },
+          { label: "Perfil del cliente", val: lead.bio, i: User, c: P.blue },
+          { label: `Presupuesto · ${lead.budget}`, val: `Proyecto de interés: ${lead.p} · Tel: ${lead.phone}`, i: DollarSign, c: scoreColor },
+          { label: "Riesgo + Fricción", val: `${lead.risk} · Fricción: ${lead.friction}`, i: Shield, c: frictionColor },
+          { label: `⚡ Próxima Acción · ${lead.nextActionDate}`, val: lead.nextAction, i: Zap, c: P.accent },
+        ],
+        follow: `Última actividad: ${lead.lastActivity}. ¿Quieres que prepare la estrategia de cierre completa para **${lead.n}**?`,
+        btn: "Preparar Estrategia",
+        action: `Dame la estrategia de cierre completa para ${lead.n} con presupuesto de ${lead.budget} en ${lead.p}`,
+      };
+    }
+  }
+
+  // — Match a specific lead by name —
   const lead = leads.find(le => {
-    const nameParts = le.n.toLowerCase().split(' ');
-    return l.includes(le.n.toLowerCase()) || nameParts.some(part => part.length > 3 && l.includes(part));
+    const parts = le.n.toLowerCase().split(" ");
+    return l.includes(le.n.toLowerCase()) || parts.some(p => p.length > 3 && l.includes(p));
   });
 
   if (lead) {
+    const frictionIcon = lead.friction === "Bajo" ? CheckCircle2 : lead.friction === "Medio" ? AlertCircle : AlertTriangle;
+    const frictionColor = lead.friction === "Bajo" ? P.emerald : lead.friction === "Medio" ? P.amber : P.rose;
+    const frictionLabel = lead.friction === "Bajo" ? "Fricción baja — buen momento para avanzar" : lead.friction === "Medio" ? "Fricción media — resolver objeción primero" : "Fricción alta — reforzar confianza antes de cerrar";
     return {
-      content: `Expediente Estratégico: **${lead.n}** — Análisis de Alta Fidelidad.`,
+      content: `Expediente de **${lead.n}** · Score ${lead.sc}/100 · ${lead.tag}`,
       metrics: [
-        { label: "Biografía Ejecutiva", val: lead.bio, i: User, c: P.blue },
-        { label: "Análisis de Riesgo", val: lead.risk, i: Shield, c: P.rose },
-        { label: "Siguiente Acción Óptima", val: lead.action, i: Zap, c: P.amber }
+        { label: "Perfil del cliente", val: lead.bio, i: User, c: P.blue },
+        { label: `Estado · ${lead.st}`, val: frictionLabel, i: frictionIcon, c: frictionColor },
+        { label: "Riesgo identificado", val: lead.risk, i: Shield, c: P.rose },
+        { label: `⚡ Próxima acción · ${lead.nextActionDate}`, val: lead.nextAction, i: Zap, c: P.accent },
       ],
-      follow: `Esta acción incrementará la probabilidad de éxito en un **${lead.speed}**. ¿Ejecutamos ahora?`,
-      btn: "Ejecutar Acción",
-      action: `Confirmar envío de dossier a ${lead.n}`
+      follow: `Última actividad: ${lead.lastActivity}. ¿Preparamos la estrategia de cierre ahora?`,
+      btn: "Preparar Estrategia",
+      action: `Dame la estrategia de cierre completa para ${lead.n}`,
     };
   }
 
-  if (l.includes("propuesta") || l.includes("genera") || l.includes("documento")) return responses.proposal;
-  if (l.includes("absorción") || l.includes("portofino") || l.includes("gobernador") || l.includes("monarca")) return responses.macro_erp;
-  if (l.includes("autorizar") || l.includes("validar") || l.includes("ejecución") || l.includes("ajuste")) return responses.macro_autorizar;
-  if (l.includes("protocolo de cierre") || l.includes("macro") || l.includes("dossier") || l.includes("contrato")) return responses.macro_cierre;
-  if (l.includes("visitar") || l.includes("penthouse") || l.includes("actualizar") || l.includes("acabo de")) return responses.crm_update;
-  if (l.includes("priorit") || l.includes("80/20") || l.includes("hoy")) return responses.priority;
+  // — Priority / today's focus —
+  if (l.includes("priorit") || l.includes("hoy") || l.includes("80/20") || l.includes("importante") || l.includes("focus")) {
+    const hot = leads.filter(x => x.isNew || x.sc >= 80 || x.st === "Zoom Agendado").slice(0, 3);
+    const totalV = hot.reduce((s, x) => s + parseFloat(x.v.replace(/[^0-9.]/g, "") || 0), 0);
+    return {
+      content: "Tus **3 prioridades de hoy** — Análisis 80/20 del pipeline activo:",
+      metrics: [
+        { label: `1. ${hot[0]?.n} · ${hot[0]?.st}`, val: `${hot[0]?.nextAction}  ·  ${hot[0]?.nextActionDate}`, i: Crown, c: P.emerald },
+        { label: `2. ${hot[1]?.n} · ${hot[1]?.st}`, val: `${hot[1]?.nextAction}  ·  ${hot[1]?.nextActionDate}`, i: Target, c: P.blue },
+        { label: `3. ${hot[2]?.n} · ${hot[2]?.st}`, val: `${hot[2]?.nextAction}  ·  ${hot[2]?.nextActionDate}`, i: Zap, c: P.amber },
+      ],
+      follow: `Estas 3 oportunidades representan **$${totalV.toFixed(1)}M** combinados. Atenderlos hoy puede detonar el ciclo de cierre esta semana.`,
+      btn: "Activar Seguimiento",
+      action: "Activar seguimiento automático para clientes prioritarios",
+    };
+  }
+
+  // — New / recently registered leads —
+  if (l.includes("nuevo") || l.includes("registr") || l.includes("reciente") || l.includes("ingres")) {
+    const newLeads = leads.filter(x => x.isNew);
+    return {
+      content: `**${newLeads.length} clientes nuevos** registrados recientemente — requieren primer contacto:`,
+      metrics: newLeads.slice(0, 3).map((x, i) => ({
+        label: `${x.n} · ${x.p} · ${x.v}`,
+        val: `${x.nextAction}  ·  ${x.nextActionDate}`,
+        i: [User, Phone, CalendarDays][i] || User,
+        c: [P.accent, P.blue, P.violet][i] || P.accent,
+      })),
+      follow: `El primer contacto en menos de 24h aumenta la tasa de conversión hasta un 70%. ¿Activo seguimiento automático para estos clientes?`,
+      btn: "Contactar ahora",
+      action: "Activar primer contacto para clientes nuevos",
+    };
+  }
+
+  // — Zoom / scheduled meetings —
+  if (l.includes("zoom") || l.includes("reunión") || l.includes("videollamada")) {
+    const zooms = leads.filter(x => x.st === "Zoom Agendado");
+    return {
+      content: `**${zooms.length} Zooms agendados** — Prepara cada sesión con los siguientes puntos:`,
+      metrics: zooms.map((x, i) => ({
+        label: `${x.n} — ${x.nextActionDate}`,
+        val: `${x.nextAction}. Riesgo a resolver: ${x.risk}`,
+        i: [Mic2, CalendarDays, Target][i] || Mic2,
+        c: [P.violet, P.blue, P.amber][i] || P.violet,
+      })),
+      follow: "¿Quieres que prepare un brief personalizado con los puntos clave para cada sesión?",
+      btn: "Preparar briefs",
+      action: "Preparar brief para zooms del día",
+    };
+  }
+
+  // — Update CRM / just visited —
+  if (l.includes("visitar") || l.includes("penthouse") || l.includes("actualizar") || l.includes("acabo de") || l.includes("registr")) {
+    return responses.crm_update;
+  }
+
+  // — Proposal / document —
+  if (l.includes("propuesta") || l.includes("genera") || l.includes("documento") || l.includes("dossier") || l.includes("contrato")) return responses.proposal;
+
+  // — Project analysis —
+  if (l.includes("portofino") || l.includes("gobernador") || l.includes("monarca")) return responses.macro_erp;
+
+  // — Price / market authorization —
+  if (l.includes("autorizar") || l.includes("validar") || l.includes("ajuste") || l.includes("precio")) return responses.macro_autorizar;
+
+  // — Schedule / appointment —
   if (l.includes("agenda") || l.includes("llamada") || l.includes("cita") || l.includes("tarea")) return responses.schedule;
+
+  // — Team report —
   if (l.includes("rendimiento") || l.includes("equipo") || l.includes("reporte") || l.includes("métricas")) return responses.teamrep;
+
+  // — Inventory —
   if (l.includes("inventario") || l.includes("unidades") || l.includes("quedan") || l.includes("disponible")) return responses.inventory;
+
+  // — Pipeline / cierre macro —
+  if (l.includes("pipeline") || l.includes("cierre") || l.includes("macro")) return responses.macro_cierre;
 
   return responses.default;
 };
@@ -480,38 +904,48 @@ const Dash = ({ oc }) => (
       ))}
     </div>
 
-    {/* Priority leads */}
+    {/* Priority leads — new registrations + zoom scheduled */}
     <G np>
-      <div style={{ padding: "14px 18px", display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: `1px solid ${P.border}` }}>
+      <div style={{ padding: "13px 18px", display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: `1px solid ${P.border}` }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <p style={{ fontSize: 13, fontWeight: 700, color: P.txt }}>Clientes Prioritarios</p>
-          <Pill color={P.amber} s><Crown size={9} /> 80/20</Pill>
+          <div style={{ width: 7, height: 7, borderRadius: "50%", background: P.accent, boxShadow: `0 0 8px ${P.accent}` }} />
+          <p style={{ fontSize: 13, fontWeight: 700, color: P.txt, fontFamily: fontDisp }}>Atención Inmediata</p>
+          <Pill color={P.accent} s>Nuevos · Zoom agendado</Pill>
         </div>
+        <button onClick={() => {}} style={{ fontSize: 11, color: P.txt3, background: "none", border: "none", cursor: "pointer", fontFamily: font }}>Ver todos →</button>
       </div>
-      {leads.slice(0, 4).map(l => (
-        <div key={l.id} onClick={() => oc(`Dame info completa de ${l.n}`)} style={{
-          display: "grid", gridTemplateColumns: "1.6fr 1fr 0.6fr 0.7fr 0.5fr",
+      {leads.filter(l => l.isNew || l.st === "Zoom Agendado").sort((a,b) => b.sc - a.sc).slice(0, 4).map(l => (
+        <div key={l.id} onClick={() => oc(`Dame análisis completo de ${l.n}`)} style={{
+          display: "grid", gridTemplateColumns: "2fr 0.9fr 0.55fr 0.9fr 0.7fr 1.4fr",
           alignItems: "center", padding: "11px 18px", borderBottom: `1px solid ${P.border}`,
-          fontSize: 12, cursor: "pointer", transition: "background 0.2s",
-        }}>
+          gap: 8, cursor: "pointer", transition: "background 0.18s",
+        }}
+          onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.025)"}
+          onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+        >
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            {l.hot && <div style={{ width: 5, height: 5, borderRadius: "50%", background: P.accent, boxShadow: `0 0 8px ${P.accent}` }} />}
-            <span style={{ color: P.txt, fontWeight: 600 }}>{l.n}</span>
-            {l.tag && <span style={{ fontSize: 9, color: P.txt3, background: "rgba(255,255,255,0.06)", padding: "2px 6px", borderRadius: 4, fontWeight: 500, letterSpacing: "0.02em" }}>{l.tag}</span>}
-          </div>
-          <span style={{ color: P.txt3 }}>{l.p}</span>
-          <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
-            <div style={{ width: 32, height: 3, borderRadius: 2, background: P.border }}>
-              <div style={{ width: `${l.sc}%`, height: 3, borderRadius: 2, background: l.sc > 70 ? P.emerald : P.amber }} />
+            <div style={{ width: 28, height: 28, borderRadius: 8, background: `${l.hot ? P.accent : P.blue}12`, border: `1px solid ${l.hot ? P.accent : P.blue}20`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 700, color: l.hot ? P.accent : P.blue, flexShrink: 0, fontFamily: fontDisp }}>{l.n.charAt(0)}</div>
+            <div>
+              <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                <span style={{ fontSize: 12.5, fontWeight: 600, color: "#FFFFFF", fontFamily: fontDisp, letterSpacing: "-0.01em" }}>{l.n}</span>
+                {l.isNew && <span style={{ fontSize: 8, fontWeight: 800, color: P.accent, background: `${P.accent}14`, padding: "1px 5px", borderRadius: 99, letterSpacing: "0.06em" }}>NEW</span>}
+              </div>
+              <p style={{ fontSize: 9, color: P.txt3, marginTop: 1 }}>{l.tag}</p>
             </div>
-            <span style={{ fontSize: 10, color: P.txt3, fontWeight: 600 }}>{l.sc}</span>
           </div>
-          <div>
-            <Pill color={stgC[l.st]} s>
-              {l.st} <ChevronRight size={10} style={{ marginLeft: 3, opacity: 0.6 }} />
-            </Pill>
+          <span style={{ fontSize: 11, color: P.txt2 }}>{l.p}</span>
+          <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+            <div style={{ width: 24, height: 3, borderRadius: 2, background: P.border }}>
+              <div style={{ width: `${l.sc}%`, height: 3, borderRadius: 2, background: l.sc >= 80 ? P.emerald : l.sc >= 60 ? P.blue : P.amber }} />
+            </div>
+            <span style={{ fontSize: 10, fontWeight: 700, color: l.sc >= 80 ? P.emerald : l.sc >= 60 ? P.blue : P.amber, fontFamily: fontDisp }}>{l.sc}</span>
           </div>
-          <span style={{ color: P.txt, fontWeight: 700, textAlign: "right", fontFamily: "'Outfit'" }}>{l.v}</span>
+          <Pill color={stgC[l.st]} s>{l.st}</Pill>
+          <span style={{ fontSize: 13, fontWeight: 500, color: "#FFFFFF", fontFamily: fontDisp, letterSpacing: "-0.02em" }}>{l.v}</span>
+          <div style={{ padding: "5px 8px", borderRadius: 7, background: `${P.accent}07`, border: `1px solid ${P.accentB}` }}>
+            <p style={{ fontSize: 9, fontWeight: 700, color: P.accent, letterSpacing: "0.04em", marginBottom: 2 }}>{l.nextActionDate?.toUpperCase()}</p>
+            <p style={{ fontSize: 10, color: P.txt2, lineHeight: 1.35 }}>{l.nextAction?.substring(0, 45)}{l.nextAction?.length > 45 ? "…" : ""}</p>
+          </div>
         </div>
       ))}
     </G>
@@ -547,171 +981,550 @@ const Dash = ({ oc }) => (
   </div>
 );
 
-const CRM = ({ oc }) => {
-  const [dbLeads, setDbLeads] = useState([]); // Inicializa vacío para evitar errores de renderizado de propiedades mapeadas
-  const [modalLead, setModalLead] = useState(null);
-
-  useEffect(() => {
-    const fetchLeads = async () => {
-      try {
-        const { data, error } = await supabase.from('LEADS').select('*');
-        if (error) throw error;
-        if (data && data.length > 0) {
-          const mapped = data.map((d, index) => {
-            let finalNota = 'Sin notas';
-            let allNotas = [];
-            try {
-              if (d['NOTAS']) {
-                let notesArr = typeof d['NOTAS'] === 'string' ? JSON.parse(d['NOTAS']) : d['NOTAS'];
-                if (Array.isArray(notesArr)) {
-                  allNotas = notesArr;
-                  if (notesArr.length > 0 && notesArr[0].nota) {
-                    finalNota = notesArr[0].nota;
-                  }
-                }
-              }
-            } catch (e) {
-              console.warn("Could not parse nota:", e);
-            }
-
-            return {
-              id: d.id || `${index}`,
-              fecha: d['FECHA INGRESO'] || '-',
-              asesor: d['ASESOR'] || '-',
-              cliente: d['NOMBRE DEL CLIENTE'] || 'Sin nombre',
-              tel: d['TELEFONO'] || '-',
-              estatus: d['ESTATUS'] || '-',
-              presupuesto: d['PRESUPUESTO'] ? `$${d['PRESUPUESTO'].toLocaleString()}` : '-',
-              proyecto: d['PROYECTO DE INTERES'] || '-',
-              campaña: d['CAMPAÑA'] || '-',
-              notaCorta: finalNota,
-              todasLasNotas: allNotas,
-              hot: (d['ESTATUS'] || '').includes('AGENDA')
-            };
-          });
-          setDbLeads(mapped);
-        }
-      } catch (err) {
-        console.error("Error al cargar leads de Supabase:", err);
-      }
-    };
-    
-    fetchLeads();
-  }, []);
-
+/* ─── Score bar helper ─── */
+const ScoreBar = ({ sc, compact }) => {
+  const c = sc >= 80 ? P.emerald : sc >= 60 ? P.blue : sc >= 40 ? P.amber : P.rose;
   return (
-  <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
-    <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 14 }}>
-      <KPI label="Clientes Activos" value={dbLeads.length} icon={Users} color={P.blue} />
-      <KPI label="Calidad Promedio" value="82" sub="+4.8" icon={Target} color={P.amber} />
-      <KPI label="Tasa de Conversión" value="18.4%" icon={TrendingUp} color={P.emerald} />
-      <KPI label="Proyección Comercial" value="$48.2M" icon={DollarSign} />
+    <div style={{ display: "flex", alignItems: "center", gap: compact ? 4 : 6 }}>
+      <div style={{ flex: 1, height: 3, borderRadius: 2, background: "rgba(255,255,255,0.06)" }}>
+        <div style={{ width: `${sc}%`, height: 3, borderRadius: 2, background: c, boxShadow: `0 0 6px ${c}40`, transition: "width 0.5s ease" }} />
+      </div>
+      <span style={{ fontSize: compact ? 10 : 11, fontWeight: 700, color: c, fontFamily: fontDisp, minWidth: 20, textAlign: "right" }}>{sc}</span>
     </div>
-    <G np>
-      <div style={{ padding: "14px 18px", display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: `1px solid ${P.border}` }}>
-        <p style={{ fontSize: 13, fontWeight: 700, color: P.txt }}>Lead Pipeline (Supabase DB)</p>
-        <div style={{ display: "flex", gap: 8 }}>
-          <button style={{ display: "flex", alignItems: "center", gap: 5, padding: "5px 12px", borderRadius: P.rx, background: P.glass, border: `1px solid ${P.border}`, fontSize: 11, color: P.txt3, cursor: "pointer", fontFamily: font }}><Filter size={12} />Filtrar</button>
-          <button onClick={() => oc("Crear nuevo lead")} style={{ display: "flex", alignItems: "center", gap: 5, padding: "5px 12px", borderRadius: P.rx, background: P.accentS, border: `1px solid ${P.accentB}`, fontSize: 11, color: P.accent, cursor: "pointer", fontFamily: font }}><Plus size={12} />Nuevo</button>
-        </div>
-      </div>
-      <div style={{ display: "grid", gridTemplateColumns: "0.7fr 1fr 1.3fr 0.9fr 1.1fr 0.7fr 1.1fr 0.6fr 0.4fr", gap: 8, padding: "8px 18px", borderBottom: `1px solid ${P.border}`, fontSize: 9, color: P.txt3, textTransform: "uppercase", letterSpacing: "0.06em", fontWeight: 600 }}>
-        <span>Fecha</span><span>Asesor</span><span>Cliente</span><span>Teléfono</span><span>Estatus</span><span>Ppto.</span><span>Proyecto</span><span>Campaña</span><span style={{ textAlign: "center" }}>Notas</span>
-      </div>
-      {dbLeads.map(l => (
-        <div key={l.id} onClick={() => oc(`Detalle principal de: ${l.cliente}`)} style={{
-          display: "grid", gridTemplateColumns: "0.7fr 1fr 1.3fr 0.9fr 1.1fr 0.7fr 1.1fr 0.6fr 0.4fr",
-          alignItems: "center", gap: 8, padding: "10px 18px", borderBottom: `1px solid ${P.border}`,
-          fontSize: 11, cursor: "pointer", transition: "background 0.2s",
-        }}>
-          <span style={{ color: P.txt3, fontFamily: font }}>{l.fecha}</span>
-          <span style={{ color: P.txt2, fontWeight: 500, fontFamily: font }}>{l.asesor}</span>
-          <div style={{ display: "flex", alignItems: "center", gap: 6, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-            <Ico icon={User} sz={22} is={11} c={l.hot ? P.emerald : P.txt3} />
-            <span style={{ color: P.txt, fontWeight: 500, fontFamily: font, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{l.cliente}</span>
-          </div>
-          <span style={{ color: P.txt3, fontFamily: "monospace", fontSize: 10 }}>{l.tel}</span>
-          <div>
-            <Pill color={l.hot ? P.emerald : (l.estatus || "").includes("SEGUIMIENTO") ? P.blue : P.txt3} s>
-              {l.estatus}
-            </Pill>
-          </div>
-          <span style={{ color: "#FFFFFF", fontWeight: 500, fontFamily: fontDisp }}>{l.presupuesto}</span>
-          <span style={{ color: P.txt3, fontSize: 10, fontFamily: font, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{l.proyecto}</span>
-          <span style={{ color: P.txt3, fontSize: 9, fontFamily: font, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{l.campaña}</span>
-          
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "100%" }}>
-             {l.todasLasNotas && l.todasLasNotas.length > 0 ? (
-               <div 
-                 onClick={(e) => { 
-                   e.stopPropagation();
-                   setModalLead(l);
-                 }}
-                 style={{ padding: 6, background: "rgba(255,255,255,0.05)", borderRadius: 6, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "background 0.2s" }}
-                 title="Ver historial de notas completo"
-                 onMouseEnter={(e) => e.currentTarget.style.background = "rgba(255,255,255,0.1)"}
-                 onMouseLeave={(e) => e.currentTarget.style.background = "rgba(255,255,255,0.05)"}
-               >
-                 <ClipboardList size={13} color={P.txt2} />
-               </div>
-             ) : (
-                <div style={{ padding: 6, borderRadius: 6, display: "flex", alignItems: "center", justifyContent: "center", opacity: 0.3 }}>
-                 <ClipboardList size={13} color={P.txt3} />
-               </div>
-             )}
-          </div>
-        </div>
-      ))}
-    </G>
-    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
-      <G>
-        <p style={{ fontSize: 13, fontWeight: 700, color: P.txt, marginBottom: 10 }}>Desempeño Analítico Automático</p>
-        <ResponsiveContainer width="100%" height={130}>
-          <BarChart data={[{ r: "0–20", c: 5 }, { r: "21–40", c: 12 }, { r: "41–60", c: 18 }, { r: "61–80", c: 22 }, { r: "81+", c: 13 }]}>
-            <XAxis dataKey="r" tick={{ fill: P.txt3, fontSize: 10 }} axisLine={false} tickLine={false} />
-            <Bar dataKey="c" radius={[4, 4, 0, 0]}>{[P.rose, P.rose, P.amber, P.blue, P.emerald].map((c, i) => <Cell key={i} fill={c} opacity={0.6} />)}</Bar>
-          </BarChart>
-        </ResponsiveContainer>
-      </G>
-      <G>
-        <p style={{ fontSize: 13, fontWeight: 700, color: P.txt, marginBottom: 6 }}>Enfoque 80/20</p>
-        <p style={{ fontSize: 11.5, color: P.txt2, lineHeight: 1.6, marginBottom: 12 }}>14 leads (top 20%) = $28.6M — 59% del pipeline.</p>
-        <div style={{ display: "flex", gap: 10 }}>
-          {[{ l: "Leads top", v: "14", c: P.emerald }, { l: "Valor", v: "$28.6M", c: P.accent }].map(x => (
-            <div key={x.l} style={{ flex: 1, padding: 12, borderRadius: P.rs, background: `${x.c}08`, border: `1px solid ${x.c}14` }}>
-              <p style={{ fontSize: 32, fontWeight: 300, letterSpacing: "-0.04em", lineHeight: 1, color: x.c, fontFamily: fontDisp }}>{x.v}</p>
-              <p style={{ fontSize: 10, color: P.txt3, marginTop: 4 }}>{x.l}</p>
-            </div>
-          ))}
-        </div>
-      </G>
-    </div>
-
-    {modalLead && (
-      <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)", zIndex: 9999, display: "flex", justifyContent: "center", alignItems: "center" }} onClick={() => setModalLead(null)}>
-        <div style={{ background: P.panel, width: 440, borderRadius: P.rx, border: `1px solid ${P.border}`, overflow: "hidden", display: "flex", flexDirection: "column", boxShadow: "0 24px 48px rgba(0,0,0,0.4)" }} onClick={e => e.stopPropagation()}>
-          <div style={{ padding: "16px 20px", borderBottom: `1px solid ${P.border}`, display: "flex", justifyContent: "space-between", alignItems: "center", background: P.glass }}>
-            <p style={{ fontSize: 14, fontWeight: 600, color: P.txt, fontFamily: fontDisp }}>Historial de Notas</p>
-            <button onClick={() => setModalLead(null)} style={{ background: "none", border: "none", color: P.txt3, cursor: "pointer", fontSize: 16 }}>✕</button>
-          </div>
-          <div style={{ padding: "20px", display: "flex", flexDirection: "column", gap: 12, maxHeight: 400, overflowY: "auto" }}>
-             <p style={{ fontSize: 13, color: P.txt2, marginBottom: 4, fontFamily: font }}>Cliente: <strong style={{color: P.txt}}>{modalLead.cliente}</strong></p>
-             {modalLead.todasLasNotas.map((nt, ix) => (
-               <div key={ix} style={{ background: "rgba(255,255,255,0.03)", padding: 12, borderRadius: P.rs, border: `1px solid ${P.border}` }}>
-                 <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6, fontSize: 10, color: P.txt3, fontFamily: fontDisp }}>
-                   <span>{nt.fecha || 'Sin fecha'}</span>
-                   <span>{nt.asesor || 'Sin asesor'}</span>
-                 </div>
-                 <p style={{ fontSize: 12, color: P.txt2, lineHeight: 1.5, fontFamily: font, whiteSpace: "pre-wrap" }}>{nt.nota}</p>
-               </div>
-             ))}
-          </div>
-        </div>
-      </div>
-    )}
-  </div>
   );
 };
+
+/* ─── Notes Modal ─── */
+const NotesModal = ({ lead, onClose }) => {
+  if (!lead) return null;
+  return createPortal(
+    <>
+      <div onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: 500, background: "rgba(2,5,12,0.7)", backdropFilter: "blur(6px)" }} />
+      <div style={{
+        position: "fixed", top: "50%", left: "50%", transform: "translate(-50%,-50%)",
+        zIndex: 501, width: "min(600px, 92vw)",
+        background: "linear-gradient(160deg, #0D1626 0%, #080D17 100%)",
+        border: `1px solid ${P.border}`, borderRadius: 20,
+        boxShadow: "0 40px 80px rgba(0,0,0,0.6)",
+        display: "flex", flexDirection: "column",
+        animation: "fadeIn 0.22s ease",
+        maxHeight: "80vh",
+      }}>
+        <div style={{ padding: "18px 22px 14px", borderBottom: `1px solid ${P.border}`, display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexShrink: 0 }}>
+          <div>
+            <p style={{ fontSize: 16, fontWeight: 700, color: "#FFFFFF", fontFamily: fontDisp, letterSpacing: "-0.02em" }}>{lead.n}</p>
+            <p style={{ fontSize: 11, color: P.txt3, marginTop: 2 }}>{lead.tag} · {lead.p} · {lead.asesor}</p>
+          </div>
+          <button onClick={onClose} style={{ width: 30, height: 30, borderRadius: 8, border: `1px solid ${P.border}`, background: P.glass, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}><X size={14} color={P.txt3} /></button>
+        </div>
+        <div style={{ padding: "18px 22px", overflowY: "auto", flex: 1 }}>
+          <pre style={{ fontSize: 12.5, color: P.txt2, lineHeight: 1.75, fontFamily: font, whiteSpace: "pre-wrap", margin: 0 }}>{lead.notas}</pre>
+        </div>
+      </div>
+    </>,
+    document.body
+  );
+};
+
+/* ─── Client profile side panel ─── */
+const LeadPanel = ({ lead, onClose, oc }) => {
+  if (!lead) return null;
+  const sc = lead.sc;
+  const scoreColor = sc >= 80 ? P.emerald : sc >= 60 ? P.blue : sc >= 40 ? P.amber : P.rose;
+  const frictionColor = lead.friction === "Bajo" ? P.emerald : lead.friction === "Medio" ? P.amber : P.rose;
+  return createPortal(
+    <>
+      <div onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: 400, background: "rgba(2,5,12,0.4)", backdropFilter: "blur(3px)" }} />
+      <div style={{
+        position: "fixed", right: 0, top: 0, bottom: 0, zIndex: 401,
+        width: 370, background: "linear-gradient(160deg, #0D1626 0%, #080D17 100%)",
+        borderLeft: `1px solid ${P.border}`, display: "flex", flexDirection: "column",
+        animation: "slideInRight 0.28s cubic-bezier(0.32,0.72,0,1)",
+      }}>
+        <style>{`@keyframes slideInRight{from{transform:translateX(100%)}to{transform:translateX(0)}}`}</style>
+        {/* Header */}
+        <div style={{ padding: "18px 20px 14px", borderBottom: `1px solid ${P.border}`, display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
+          <div style={{ flex: 1 }}>
+            <div style={{ display: "flex", gap: 5, marginBottom: 5 }}>
+              {lead.isNew && <span style={{ fontSize: 8, fontWeight: 800, color: P.accent, background: `${P.accent}14`, border: `1px solid ${P.accentB}`, padding: "1px 7px", borderRadius: 99, letterSpacing: "0.07em" }}>NUEVO</span>}
+              {lead.hot && <span style={{ fontSize: 8, fontWeight: 800, color: P.rose, background: `${P.rose}14`, border: `1px solid ${P.rose}25`, padding: "1px 7px", borderRadius: 99, letterSpacing: "0.07em" }}>HOT</span>}
+            </div>
+            <p style={{ fontSize: 17, fontWeight: 700, color: "#FFFFFF", fontFamily: fontDisp, letterSpacing: "-0.02em", marginBottom: 2 }}>{lead.n}</p>
+            <p style={{ fontSize: 11, color: P.txt2 }}>{lead.tag} · {lead.p}</p>
+          </div>
+          <button onClick={onClose} style={{ width: 28, height: 28, borderRadius: 7, border: `1px solid ${P.border}`, background: P.glass, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><X size={13} color={P.txt3} /></button>
+        </div>
+        <div style={{ flex: 1, overflowY: "auto", padding: "16px 20px", display: "flex", flexDirection: "column", gap: 14 }}>
+          {/* Score + Stage */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+            <div style={{ padding: "10px 12px", borderRadius: P.rs, background: `${scoreColor}08`, border: `1px solid ${scoreColor}18` }}>
+              <p style={{ fontSize: 9, color: P.txt3, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 3 }}>Score cierre</p>
+              <p style={{ fontSize: 26, fontWeight: 300, color: scoreColor, fontFamily: fontDisp, letterSpacing: "-0.04em", lineHeight: 1 }}>{sc}<span style={{ fontSize: 11, color: P.txt3 }}>/100</span></p>
+            </div>
+            <div style={{ padding: "10px 12px", borderRadius: P.rs, background: P.glass, border: `1px solid ${P.border}` }}>
+              <p style={{ fontSize: 9, color: P.txt3, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 5 }}>Estatus</p>
+              <Pill color={stgC[lead.st]} s>{lead.st}</Pill>
+              <p style={{ fontSize: 10, color: P.txt3, marginTop: 5 }}>Fricción: <span style={{ color: frictionColor, fontWeight: 600 }}>{lead.friction}</span></p>
+            </div>
+          </div>
+          {/* Key info row */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
+            {[
+              { l: "Ingresó", v: lead.fechaIngreso },
+              { l: "Campaña", v: lead.campana },
+              { l: "Presupuesto", v: lead.budget },
+              { l: "Asesor", v: lead.asesor },
+            ].map(x => (
+              <div key={x.l} style={{ padding: "8px 10px", borderRadius: 8, background: P.glass, border: `1px solid ${P.border}` }}>
+                <p style={{ fontSize: 9, color: P.txt3, fontWeight: 600, letterSpacing: "0.05em", textTransform: "uppercase", marginBottom: 2 }}>{x.l}</p>
+                <p style={{ fontSize: 11, color: P.txt, fontWeight: 500 }}>{x.v}</p>
+              </div>
+            ))}
+          </div>
+          {/* Next action */}
+          <div style={{ padding: "12px 14px", borderRadius: P.rs, background: `${P.accent}07`, border: `1px solid ${P.accentB}` }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 5 }}>
+              <Zap size={12} color={P.accent} />
+              <p style={{ fontSize: 9, fontWeight: 700, color: P.accent, letterSpacing: "0.07em", textTransform: "uppercase" }}>PRÓXIMA ACCIÓN · {lead.nextActionDate}</p>
+            </div>
+            <p style={{ fontSize: 12.5, color: "#FFFFFF", lineHeight: 1.5, fontFamily: fontDisp, fontWeight: 500 }}>{lead.nextAction}</p>
+          </div>
+          {/* Bio + Risk */}
+          <div>
+            <p style={{ fontSize: 9, fontWeight: 700, color: P.txt3, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 5 }}>Perfil</p>
+            <p style={{ fontSize: 12, color: P.txt2, lineHeight: 1.6 }}>{lead.bio}</p>
+          </div>
+          <div style={{ padding: "9px 12px", borderRadius: P.rs, background: `${P.rose}07`, border: `1px solid ${P.rose}18`, display: "flex", gap: 7, alignItems: "flex-start" }}>
+            <AlertCircle size={13} color={P.rose} style={{ marginTop: 1, flexShrink: 0 }} />
+            <p style={{ fontSize: 11.5, color: P.txt2, lineHeight: 1.5 }}>{lead.risk}</p>
+          </div>
+          {/* Last activity */}
+          <div style={{ display: "flex", gap: 5, alignItems: "center" }}>
+            <Clock size={11} color={P.txt3} />
+            <p style={{ fontSize: 10.5, color: P.txt3 }}>Última actividad: <span style={{ color: P.txt2 }}>{lead.lastActivity}</span></p>
+          </div>
+          {/* Contact */}
+          <div style={{ display: "flex", gap: 7 }}>
+            <a href={`tel:${lead.phone}`} style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 5, padding: "9px", borderRadius: P.rx, background: P.glass, border: `1px solid ${P.border}`, color: P.txt2, fontSize: 11, fontWeight: 600, textDecoration: "none" }}>
+              <Phone size={12} /> {lead.phone}
+            </a>
+            <a href={`https://wa.me/${lead.phone?.replace(/[^0-9]/g,"")}`} target="_blank" rel="noreferrer" style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 5, padding: "9px", borderRadius: P.rx, background: "rgba(37,211,102,0.08)", border: "1px solid rgba(37,211,102,0.2)", color: "rgba(37,211,102,0.9)", fontSize: 11, fontWeight: 700, textDecoration: "none" }}>
+              <MessageCircle size={12} /> WhatsApp
+            </a>
+          </div>
+        </div>
+        {/* CTA */}
+        <div style={{ padding: "12px 20px", borderTop: `1px solid ${P.border}` }}>
+          <button onClick={() => { oc(`__crm__ ${lead.n.toLowerCase()}`); onClose(); }} style={{
+            width: "100%", padding: "12px 0", borderRadius: 11,
+            background: "linear-gradient(135deg, rgba(110,231,194,0.16), rgba(110,231,194,0.07))",
+            border: `1px solid ${P.accentB}`, color: P.accent,
+            fontSize: 13, fontWeight: 700, fontFamily: fontDisp, cursor: "pointer", letterSpacing: "0.01em",
+          }}>Analizar con IA →</button>
+        </div>
+      </div>
+    </>,
+    document.body
+  );
+};
+
+/* ═══════════════════════════════════════════
+   CRM — Pipeline Pro
+═══════════════════════════════════════════ */
+function CRM({ oc }) {
+  const [leadsData, setLeadsData]       = useState(leads);
+  const [sortField, setSortField]       = useState("fechaIngreso");
+  const [sortDir, setSortDir]           = useState("desc");
+  const [filterStage, setFilterStage]   = useState("TODO");
+  const [filterAsesor, setFilterAsesor] = useState("TODO");
+  const [searchQ, setSearchQ]           = useState("");
+  const [viewMode, setViewMode]         = useState("list");   // "list" | "kanban"
+  const [selectedLead, setSelectedLead] = useState(null);     // profile panel
+  const [notesLead, setNotesLead]       = useState(null);     // notes modal
+  const [addingLead, setAddingLead]     = useState(false);
+  const [newLead, setNewLead]           = useState({ n: "", asesor: "", phone: "", budget: "", p: "", campana: "" });
+
+  const asesores = [...new Set(leadsData.map(l => l.asesor))];
+
+  const sortedLeads = useMemo(() => {
+    let data = leadsData.filter(l => {
+      const q = searchQ.toLowerCase();
+      const matchQ = !q || l.n.toLowerCase().includes(q) || l.phone.includes(q) || l.asesor.toLowerCase().includes(q) || l.campana.toLowerCase().includes(q) || l.p.toLowerCase().includes(q);
+      const matchStage = filterStage === "TODO" || l.st === filterStage;
+      const matchAsesor = filterAsesor === "TODO" || l.asesor === filterAsesor;
+      return matchQ && matchStage && matchAsesor;
+    });
+    return [...data].sort((a, b) => {
+      let av = a[sortField], bv = b[sortField];
+      if (sortField === "presupuesto") { av = a.presupuesto; bv = b.presupuesto; }
+      else if (sortField === "sc") { av = a.sc; bv = b.sc; }
+      else { av = String(av).toLowerCase(); bv = String(bv).toLowerCase(); }
+      if (av < bv) return sortDir === "asc" ? -1 : 1;
+      if (av > bv) return sortDir === "asc" ? 1 : -1;
+      return 0;
+    });
+  }, [leadsData, sortField, sortDir, filterStage, filterAsesor, searchQ]);
+
+  const handleSort = (field) => {
+    if (sortField === field) setSortDir(d => d === "asc" ? "desc" : "asc");
+    else { setSortField(field); setSortDir("asc"); }
+  };
+
+  const updateLead = (id, field, value) => setLeadsData(prev => prev.map(l => l.id === id ? { ...l, [field]: value } : l));
+
+  const addNewLead = () => {
+    if (!newLead.n.trim()) return;
+    const now = new Date();
+    const dateStr = `${now.getDate()} Abr, ${now.getHours()}:${String(now.getMinutes()).padStart(2,"0")}${now.getHours() >= 12 ? "pm" : "am"}`;
+    setLeadsData(prev => [{
+      id: Date.now(), ...newLead, sc: 40, st: "Nuevo Registro",
+      tag: "Nuevo Registro", hot: false, isNew: true,
+      fechaIngreso: dateStr,
+      bio: "Cliente recién registrado. Pendiente primer contacto.", risk: "Sin información suficiente aún.",
+      friction: "Medio", nextAction: "Primer contacto en las próximas 24 horas",
+      nextActionDate: "Hoy", lastActivity: "Registro manual",
+      daysInactive: 0, email: "",
+      notas: `📍 OBJETIVO
+Pendiente — primer contacto.
+
+⚡ PENDIENTE
+Realizar primer contacto y calificar necesidades del cliente.`,
+      presupuesto: parseFloat(String(newLead.budget).replace(/[^0-9.]/g, "")) || 0,
+    }, ...prev]);
+    setAddingLead(false); setNewLead({ n: "", asesor: "", phone: "", budget: "", p: "", campana: "" });
+  };
+
+  const SH = ({ label, field, align = "left" }) => {
+    const active = sortField === field;
+    return (
+      <span onClick={() => handleSort(field)} style={{
+        cursor: "pointer", userSelect: "none", display: "flex", alignItems: "center", gap: 3,
+        justifyContent: align === "right" ? "flex-end" : "flex-start",
+        color: active ? P.accent : P.txt3, fontSize: 9, fontWeight: 700,
+        letterSpacing: "0.08em", textTransform: "uppercase", transition: "color 0.2s",
+      }}>
+        {label}
+        <span style={{ opacity: active ? 1 : 0.3, fontSize: 9 }}>{active ? (sortDir === "asc" ? "↑" : "↓") : "↕"}</span>
+      </span>
+    );
+  };
+
+  const priorityLeads = leadsData.filter(l => l.isNew || l.st === "Zoom Concretado" || l.st === "Zoom Agendado").sort((a,b) => b.sc - a.sc);
+  const totalPipeline = leadsData.reduce((s, l) => s + (l.presupuesto || 0), 0);
+  const avgScore = Math.round(leadsData.reduce((s, l) => s + l.sc, 0) / leadsData.length);
+
+  /* ── KANBAN columns (visible stages) ── */
+  const kanbanStages = STAGES.filter(s => s !== "Perdido");
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+
+      {/* KPIs */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
+        <KPI label="Clientes en Pipeline" value={leadsData.length} icon={Users} color={P.blue} />
+        <KPI label="Score Promedio" value={avgScore} sub="+4.8 este mes" icon={Target} color={P.amber} />
+        <KPI label="Tasa de Conversión" value="18.4%" icon={TrendingUp} color={P.emerald} />
+        <KPI label="Valor Total" value={`$${(totalPipeline/1000000).toFixed(1)}M`} icon={DollarSign} />
+      </div>
+
+      {/* ── Priority strip ── */}
+      {priorityLeads.length > 0 && (
+        <div>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+            <div style={{ width: 6, height: 6, borderRadius: "50%", background: P.accent, boxShadow: `0 0 8px ${P.accent}` }} />
+            <p style={{ fontSize: 10, fontWeight: 700, color: P.txt2, letterSpacing: "0.07em", textTransform: "uppercase" }}>Requieren atención · {priorityLeads.length} clientes</p>
+          </div>
+          <div style={{ display: "flex", gap: 10, overflowX: "auto", paddingBottom: 4 }}>
+            {priorityLeads.map(l => {
+              const sc = l.sc;
+              const scoreColor = sc >= 80 ? P.emerald : sc >= 60 ? P.blue : P.amber;
+              return (
+                <div key={l.id} onClick={() => { oc(`__crm__ ${l.n.toLowerCase()}`); }} style={{
+                  minWidth: 230, padding: "13px 14px", borderRadius: 14,
+                  background: P.glass, border: `1px solid ${l.st.includes("Zoom") ? P.violet+"30" : P.border}`,
+                  cursor: "pointer", flexShrink: 0, transition: "all 0.2s",
+                }}
+                  onMouseEnter={e => { e.currentTarget.style.background = P.glassH; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = P.glass; }}
+                >
+                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
+                    <div>
+                      <div style={{ display: "flex", gap: 4, marginBottom: 3 }}>
+                        {l.isNew && <span style={{ fontSize: 8, fontWeight: 800, color: P.accent, background: `${P.accent}14`, padding: "1px 6px", borderRadius: 99, letterSpacing: "0.07em" }}>NUEVO</span>}
+                        <Pill color={stgC[l.st]} s>{l.st}</Pill>
+                      </div>
+                      <p style={{ fontSize: 12.5, fontWeight: 700, color: "#FFFFFF", fontFamily: fontDisp }}>{l.n}</p>
+                      <p style={{ fontSize: 9.5, color: P.txt3 }}>{l.asesor} · {l.campana}</p>
+                    </div>
+                    <div style={{ textAlign: "right" }}>
+                      <p style={{ fontSize: 14, fontWeight: 500, color: "#FFFFFF", fontFamily: fontDisp, letterSpacing: "-0.02em" }}>{l.budget}</p>
+                      <p style={{ fontSize: 9, color: P.txt3 }}>{l.p.split("·")[0].trim()}</p>
+                    </div>
+                  </div>
+                  <div style={{ padding: "6px 8px", borderRadius: 7, background: `${P.accent}06`, border: `1px solid ${P.accentB}`, marginBottom: 7 }}>
+                    <p style={{ fontSize: 9, fontWeight: 700, color: P.accent, letterSpacing: "0.05em", marginBottom: 2 }}>{l.nextActionDate?.toUpperCase()}</p>
+                    <p style={{ fontSize: 10.5, color: P.txt2, lineHeight: 1.4 }}>{l.nextAction?.substring(0, 55)}{l.nextAction?.length > 55 ? "…" : ""}</p>
+                  </div>
+                  <ScoreBar sc={sc} compact />
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* ── Main table / kanban ── */}
+      <G np>
+        {/* Toolbar */}
+        <div style={{ padding: "11px 16px", display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: `1px solid ${P.border}`, gap: 10, flexWrap: "wrap" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <p style={{ fontSize: 13, fontWeight: 700, color: P.txt, fontFamily: fontDisp }}>Pipeline de Clientes</p>
+            <span style={{ fontSize: 9, fontWeight: 800, color: P.txt3, background: P.glass, border: `1px solid ${P.border}`, borderRadius: 4, padding: "2px 8px", letterSpacing: "0.06em" }}>{sortedLeads.length} LEADS</span>
+          </div>
+          <div style={{ display: "flex", gap: 7, alignItems: "center", flexWrap: "wrap" }}>
+            {/* View toggle */}
+            <div style={{ display: "flex", borderRadius: 7, border: `1px solid ${P.border}`, overflow: "hidden" }}>
+              {[["list","≡ Lista"],["kanban","⊞ Kanban"]].map(([m, lbl]) => (
+                <button key={m} onClick={() => setViewMode(m)} style={{ padding: "5px 11px", border: "none", cursor: "pointer", fontSize: 11, fontWeight: 600, fontFamily: font, background: viewMode === m ? P.glassH : "transparent", color: viewMode === m ? P.txt : P.txt3, transition: "all 0.18s" }}>{lbl}</button>
+              ))}
+            </div>
+            {/* Search */}
+            <div style={{ position: "relative" }}>
+              <Search size={10} style={{ position: "absolute", left: 8, top: "50%", transform: "translateY(-50%)", color: P.txt3, pointerEvents: "none" }} />
+              <input value={searchQ} onChange={e => setSearchQ(e.target.value)} placeholder="Buscar..." style={{ paddingLeft: 24, paddingRight: 8, height: 28, borderRadius: P.rx, width: 140, background: P.glass, border: `1px solid ${P.border}`, fontSize: 11, color: P.txt, outline: "none", fontFamily: font }} />
+            </div>
+            {/* Filters */}
+            <select value={filterStage} onChange={e => setFilterStage(e.target.value)} style={{ height: 28, padding: "0 8px", borderRadius: P.rx, background: P.glass, border: `1px solid ${P.border}`, fontSize: 11, color: P.txt3, cursor: "pointer", outline: "none" }}>
+              <option value="TODO">Todas las etapas</option>
+              {STAGES.map(s => <option key={s} value={s}>{s}</option>)}
+            </select>
+            <select value={filterAsesor} onChange={e => setFilterAsesor(e.target.value)} style={{ height: 28, padding: "0 8px", borderRadius: P.rx, background: P.glass, border: `1px solid ${P.border}`, fontSize: 11, color: P.txt3, cursor: "pointer", outline: "none" }}>
+              <option value="TODO">Todos los asesores</option>
+              {asesores.map(a => <option key={a} value={a}>{a}</option>)}
+            </select>
+            <button onClick={() => setAddingLead(a => !a)} style={{ display: "flex", alignItems: "center", gap: 4, padding: "5px 12px", borderRadius: P.rx, background: P.accentS, border: `1px solid ${P.accentB}`, fontSize: 11, fontWeight: 700, color: P.accent, cursor: "pointer", fontFamily: font }}><Plus size={11} />Nuevo</button>
+          </div>
+        </div>
+
+        {/* Quick add row */}
+        {addingLead && (
+          <div style={{ padding: "10px 16px", borderBottom: `1px solid ${P.border}`, display: "flex", gap: 6, alignItems: "center", background: `${P.accent}04`, flexWrap: "wrap" }}>
+            {[
+              { ph: "Nombre *", key: "n", w: 130 },
+              { ph: "Teléfono", key: "phone", w: 120 },
+              { ph: "Asesor", key: "asesor", w: 120 },
+              { ph: "Presupuesto", key: "budget", w: 100 },
+              { ph: "Campaña", key: "campana", w: 90 },
+            ].map(f => (
+              <input key={f.key} placeholder={f.ph} value={newLead[f.key]} onChange={e => setNewLead(p => ({...p, [f.key]: e.target.value}))} style={{ width: f.w, height: 28, padding: "0 8px", borderRadius: P.rx, background: P.glass, border: `1px solid ${P.accentB}`, color: P.txt, fontSize: 11, outline: "none", fontFamily: font }} />
+            ))}
+            <select value={newLead.p} onChange={e => setNewLead(p => ({...p, p: e.target.value}))} style={{ height: 28, padding: "0 8px", borderRadius: P.rx, background: P.glass, border: `1px solid ${P.border}`, color: P.txt2, fontSize: 11, outline: "none" }}>
+              {["Gobernador 28","Monarca 28","Portofino","Torre 25","BAGA","Kaab On The Beach"].map(pr => <option key={pr}>{pr}</option>)}
+            </select>
+            <button onClick={addNewLead} style={{ padding: "5px 13px", borderRadius: P.rx, background: P.accentS, border: `1px solid ${P.accentB}`, color: P.accent, fontSize: 11, fontWeight: 700, cursor: "pointer" }}>Agregar</button>
+            <button onClick={() => setAddingLead(false)} style={{ padding: "5px 9px", borderRadius: P.rx, background: "transparent", border: `1px solid ${P.border}`, color: P.txt3, fontSize: 13, cursor: "pointer", lineHeight: 1 }}>×</button>
+          </div>
+        )}
+
+        {/* ── LIST VIEW ── */}
+        {viewMode === "list" && (
+          <>
+            {/* Column headers */}
+            <div style={{ display: "grid", gridTemplateColumns: "100px 120px 1.4fr 110px 1fr 110px 100px 70px 90px", gap: 6, padding: "7px 16px", borderBottom: `1px solid ${P.border}`, alignItems: "center" }}>
+              <SH label="Fecha" field="fechaIngreso" />
+              <SH label="Asesor" field="asesor" />
+              <SH label="Nombre" field="n" />
+              <SH label="Teléfono" field="phone" />
+              <SH label="Estatus" field="st" />
+              <SH label="Presupuesto" field="presupuesto" align="right" />
+              <SH label="Proyecto" field="p" />
+              <SH label="Score" field="sc" />
+              <span style={{ fontSize: 9, fontWeight: 700, color: P.txt3, letterSpacing: "0.07em", textTransform: "uppercase", textAlign: "center" }}>Acciones</span>
+            </div>
+
+            {sortedLeads.map(l => (
+              <div key={l.id} style={{ display: "grid", gridTemplateColumns: "100px 120px 1.4fr 110px 1fr 110px 100px 70px 90px", gap: 6, padding: "10px 16px", borderBottom: `1px solid ${P.border}`, alignItems: "center", transition: "background 0.15s" }}
+                onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.02)"}
+                onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+              >
+                {/* Fecha */}
+                <span style={{ fontSize: 10.5, color: P.txt3, fontFamily: font }}>{l.fechaIngreso}</span>
+
+                {/* Asesor */}
+                <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                  <div style={{ width: 20, height: 20, borderRadius: "50%", background: `${P.violet}18`, border: `1px solid ${P.violet}28`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 8, fontWeight: 800, color: P.violet, flexShrink: 0 }}>{l.asesor?.charAt(0)}</div>
+                  <span style={{ fontSize: 10.5, color: P.txt2, fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{l.asesor?.split(" ")[0]}</span>
+                </div>
+
+                {/* Nombre */}
+                <div style={{ display: "flex", alignItems: "center", gap: 7, minWidth: 0 }}>
+                  <div style={{ width: 28, height: 28, borderRadius: 8, background: `${l.hot ? P.accent : P.blue}14`, border: `1px solid ${l.hot ? P.accent : P.blue}22`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 800, color: l.hot ? P.accent : P.blue, flexShrink: 0, fontFamily: fontDisp }}>{l.n.charAt(0)}</div>
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                      <span style={{ fontSize: 12.5, fontWeight: 700, color: "#FFFFFF", fontFamily: fontDisp, letterSpacing: "-0.01em", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{l.n}</span>
+                      {l.isNew && <span style={{ fontSize: 8, fontWeight: 800, color: P.accent, background: `${P.accent}14`, padding: "1px 5px", borderRadius: 99, letterSpacing: "0.06em", flexShrink: 0 }}>NEW</span>}
+                    </div>
+                    <p style={{ fontSize: 9.5, color: P.txt3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{l.campana}</p>
+                  </div>
+                </div>
+
+                {/* Teléfono */}
+                <a href={`tel:${l.phone}`} onClick={e => e.stopPropagation()} style={{ fontSize: 10.5, color: P.txt2, textDecoration: "none", fontFamily: font, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{l.phone}</a>
+
+                {/* Estatus */}
+                <div>
+                  <Pill color={stgC[l.st]} s>{l.st}</Pill>
+                </div>
+
+                {/* Presupuesto */}
+                <span style={{ fontSize: 12.5, fontWeight: 600, color: "#FFFFFF", fontFamily: fontDisp, letterSpacing: "-0.02em", textAlign: "right" }}>{l.budget}</span>
+
+                {/* Proyecto */}
+                <span style={{ fontSize: 10, color: P.txt2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{l.p.split("·")[0].trim()}</span>
+
+                {/* Score */}
+                <ScoreBar sc={l.sc} compact />
+
+                {/* Acciones */}
+                <div style={{ display: "flex", gap: 4, justifyContent: "center" }}>
+                  {/* IA button — click to send brief to chat */}
+                  <button onClick={() => oc(`__crm__ ${l.n.toLowerCase()}`)} title="Analizar con IA" style={{ width: 26, height: 26, borderRadius: 6, border: `1px solid ${P.accentB}`, background: P.accentS, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.18s" }}
+                    onMouseEnter={e => { e.currentTarget.style.background = `${P.accent}20`; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = P.accentS; }}
+                  ><Zap size={11} color={P.accent} /></button>
+                  {/* Notes button */}
+                  <button onClick={() => setNotesLead(l)} title="Ver notas" style={{ width: 26, height: 26, borderRadius: 6, border: `1px solid ${P.border}`, background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.18s" }}
+                    onMouseEnter={e => { e.currentTarget.style.background = P.glass; e.currentTarget.style.borderColor = P.borderH; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = P.border; }}
+                  ><FileText size={11} color={P.txt3} /></button>
+                  {/* Profile button */}
+                  <button onClick={() => setSelectedLead(l)} title="Ver perfil completo" style={{ width: 26, height: 26, borderRadius: 6, border: `1px solid ${P.border}`, background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.18s" }}
+                    onMouseEnter={e => { e.currentTarget.style.background = P.glass; e.currentTarget.style.borderColor = P.borderH; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = P.border; }}
+                  ><User size={11} color={P.txt3} /></button>
+                </div>
+              </div>
+            ))}
+
+            {sortedLeads.length === 0 && (
+              <div style={{ padding: "48px", textAlign: "center" }}>
+                <p style={{ fontSize: 13, color: P.txt3 }}>Sin resultados — intenta otra búsqueda o filtro</p>
+              </div>
+            )}
+          </>
+        )}
+
+        {/* ── KANBAN VIEW ── */}
+        {viewMode === "kanban" && (
+          <div style={{ display: "flex", gap: 8, overflowX: "auto", padding: "14px 16px", minHeight: 420 }}>
+            {kanbanStages.map((stage) => {
+              const stLeads = leadsData.filter(l => l.st === stage);
+              const stVal = stLeads.reduce((s, l) => s + (l.presupuesto || 0), 0);
+              const c = stgC[stage] || P.txt3;
+              return (
+                <div key={stage} style={{ minWidth: 180, flex: "0 0 180px" }}>
+                  <div style={{ marginBottom: 8, padding: "7px 10px", borderRadius: 8, background: `${c}08`, border: `1px solid ${c}18` }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 2 }}>
+                      <span style={{ fontSize: 9, fontWeight: 800, color: c, letterSpacing: "0.08em", textTransform: "uppercase" }}>{stage}</span>
+                      <span style={{ fontSize: 10, fontWeight: 700, color: P.txt3, background: P.glass, padding: "1px 6px", borderRadius: 4 }}>{stLeads.length}</span>
+                    </div>
+                    {stLeads.length > 0 && <p style={{ fontSize: 10, color: P.txt3, fontFamily: fontDisp }}>${(stVal/1000000).toFixed(1)}M</p>}
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
+                    {stLeads.map(l => (
+                      <div key={l.id} style={{ padding: "10px 11px", borderRadius: 10, background: P.glass, border: `1px solid ${P.border}`, cursor: "pointer", transition: "all 0.18s" }}
+                        onClick={() => oc(`__crm__ ${l.n.toLowerCase()}`)}
+                        onMouseEnter={e => { e.currentTarget.style.background = P.glassH; e.currentTarget.style.borderColor = P.borderH; }}
+                        onMouseLeave={e => { e.currentTarget.style.background = P.glass; e.currentTarget.style.borderColor = P.border; }}
+                      >
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 6 }}>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: 3, marginBottom: 1 }}>
+                              <p style={{ fontSize: 11.5, fontWeight: 700, color: "#FFFFFF", fontFamily: fontDisp, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{l.n}</p>
+                              {l.isNew && <span style={{ fontSize: 7, fontWeight: 800, color: P.accent, background: `${P.accent}14`, padding: "1px 4px", borderRadius: 99, flexShrink: 0 }}>NEW</span>}
+                            </div>
+                            <p style={{ fontSize: 9, color: P.txt3 }}>{l.asesor?.split(" ")[0]}</p>
+                          </div>
+                        </div>
+                        <ScoreBar sc={l.sc} compact />
+                        <p style={{ fontSize: 12, fontWeight: 500, color: "#FFFFFF", fontFamily: fontDisp, letterSpacing: "-0.02em", marginTop: 5 }}>{l.budget}</p>
+                        <p style={{ fontSize: 9, color: P.txt3, marginTop: 3, lineHeight: 1.4, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{l.nextAction}</p>
+                      </div>
+                    ))}
+                    {stLeads.length === 0 && (
+                      <div style={{ padding: "16px", borderRadius: 10, border: `1px dashed ${P.border}`, textAlign: "center" }}>
+                        <p style={{ fontSize: 10, color: P.txt3 }}>Sin clientes</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </G>
+
+      {/* ── Analytics ── */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
+        <G>
+          <p style={{ fontSize: 12, fontWeight: 700, color: P.txt, marginBottom: 10, fontFamily: fontDisp }}>Score por Cliente</p>
+          <ResponsiveContainer width="100%" height={110}>
+            <BarChart data={sortedLeads.slice(0,6).map(l => ({ n: l.n.split(" ")[0], sc: l.sc }))} margin={{ top: 0, right: 0, left: -30, bottom: 0 }}>
+              <XAxis dataKey="n" tick={{ fill: P.txt3, fontSize: 8 }} axisLine={false} tickLine={false} />
+              <Tooltip contentStyle={{ background: P.surface, border: `1px solid ${P.border}`, borderRadius: 8, color: P.txt, fontSize: 11 }} />
+              <Bar dataKey="sc" radius={[3, 3, 0, 0]} maxBarSize={22}>
+                {sortedLeads.slice(0,6).map((l, i) => {
+                  const c = l.sc >= 80 ? P.emerald : l.sc >= 60 ? P.blue : P.amber;
+                  return <Cell key={i} fill={c} opacity={0.75} />;
+                })}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        </G>
+        <G>
+          <p style={{ fontSize: 12, fontWeight: 700, color: P.txt, marginBottom: 8, fontFamily: fontDisp }}>Pipeline por Estatus</p>
+          <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+            {STAGES.map(st => {
+              const cnt = leadsData.filter(l => l.st === st).length;
+              if (cnt === 0) return null;
+              const pct = Math.round((cnt / leadsData.length) * 100);
+              return (
+                <div key={st} style={{ display: "flex", alignItems: "center", gap: 7 }}>
+                  <span style={{ fontSize: 9, color: P.txt3, width: 100, flexShrink: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{st}</span>
+                  <div style={{ flex: 1, height: 4, borderRadius: 2, background: "rgba(255,255,255,0.05)" }}>
+                    <div style={{ width: `${pct}%`, height: "100%", borderRadius: 2, background: stgC[st] || P.txt3 }} />
+                  </div>
+                  <span style={{ fontSize: 10, fontWeight: 700, color: P.txt2, fontFamily: fontDisp, width: 12, textAlign: "right" }}>{cnt}</span>
+                </div>
+              );
+            })}
+          </div>
+        </G>
+        <G>
+          <p style={{ fontSize: 12, fontWeight: 700, color: P.txt, marginBottom: 6, fontFamily: fontDisp }}>Por Asesor</p>
+          <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+            {asesores.map(a => {
+              const cnt = leadsData.filter(l => l.asesor === a).length;
+              const val = leadsData.filter(l => l.asesor === a).reduce((s, l) => s + (l.presupuesto || 0), 0);
+              return (
+                <div key={a} style={{ display: "flex", alignItems: "center", gap: 7, padding: "5px 8px", borderRadius: 7, background: P.glass, border: `1px solid ${P.border}` }}>
+                  <div style={{ width: 18, height: 18, borderRadius: "50%", background: `${P.violet}18`, border: `1px solid ${P.violet}28`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 8, fontWeight: 800, color: P.violet, flexShrink: 0 }}>{a.charAt(0)}</div>
+                  <span style={{ fontSize: 10, color: P.txt2, flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{a.split(" ")[0]}</span>
+                  <span style={{ fontSize: 10, fontWeight: 700, color: P.txt3, fontFamily: fontDisp }}>{cnt} · ${(val/1000000).toFixed(1)}M</span>
+                </div>
+              );
+            })}
+          </div>
+        </G>
+      </div>
+
+      {/* Panels */}
+      <NotesModal lead={notesLead} onClose={() => setNotesLead(null)} />
+      <LeadPanel lead={selectedLead} onClose={() => setSelectedLead(null)} oc={oc} />
+    </div>
+  );
+}
+
 
 const ERP = ({ oc }) => {
   const erpProjects = [
@@ -1981,8 +2794,8 @@ const rivieraProperties = [
     amenities: ["Cenote floral de 20m de diámetro", "Speakeasy bar", "Temazcal tradicional", "Rooftop pool", "Escaleras flotantes", "Diseño de baja densidad"],
     highlights: ["Solo 27 unidades exclusivas", "Cenote en forma de flor como pieza central", "Región 8 — mayor plusvalía de Tulum", "Arquitectura boutique única"],
     description: "Desarrollo exclusivo de baja densidad con solo 27 apartamentos privados en la Región 8 de Tulum. La pieza arquitectónica central es un dramático cenote en forma de flor con escaleras flotantes. Para compradores que buscan propiedades boutique únicas.",
-    img: "linear-gradient(135deg, #3a1a4d 0%, #5a2d7a 30%, #7a3d9a 60%, #2a0d3e 100%)",
-    accent: "#A78BFA",
+    img: "linear-gradient(135deg, #0d2a4d 0%, #1a4a7a 30%, #2a6a9a 60%, #0a1e3e 100%)",
+    accent: "#60A5FA",
   },
   {
     id: 5, name: "Kokoon Pueblo", brand: "",
@@ -1994,8 +2807,8 @@ const rivieraProperties = [
     amenities: ["Jardín privado por unidad", "Rooftop privado con plunge pool", "Piscina comunal grande", "Lounge y sundeck", "Almacenamiento", "Estacionamiento", "Paneles solares", "Seguridad 24/7"],
     highlights: ["Solo 10 unidades totales", "Inspirado en pueblos yucatecos", "Jardín + rooftop + plunge pool privados", "Máxima privacidad"],
     description: "Desarrollo boutique inspirado en pueblos tradicionales yucatecos, con solo 10 unidades. Cada villa incluye jardín privado, rooftop y plunge pool, combinando la comodidad de una casa con la seguridad de un condominio.",
-    img: "linear-gradient(135deg, #4d3a1a 0%, #7a5a2d 30%, #9a7a3d 60%, #3e2a0d 100%)",
-    accent: "#E8B84D",
+    img: "linear-gradient(135deg, #0d3d2e 0%, #1a6d4d 30%, #2d9a6e 60%, #082a1e 100%)",
+    accent: "#34D399",
   },
   {
     id: 6, name: "Gran Tulum", brand: "at Selvazama",
@@ -2051,159 +2864,347 @@ const marketData = {
 };
 
 /* ─── Modal: Agregar Nueva Propiedad ─── */
-const NewPropertyModal = ({ onClose, onSave }) => {
-  const [form, setForm] = useState({
+const NewPropertyModal = ({ onClose, onSave, initialData = null }) => {
+  const editing = !!initialData;
+  const EMPTY = {
     name: "", brand: "", location: "Tulum", zone: "", type: "Condominios",
     priceFrom: "", priceTo: "", roi: "8-10%", delivery: "2026",
     bedrooms: "1-2 recámaras", sizes: "", badge: "NUEVO",
     description: "", highlights: "", amenities: "",
-    accent: "#6DD4A8", driveLink: "",
-  });
-  const set = (k, v) => setForm(p => ({ ...p, [k]: v }));
-  const accentOptions = ["#6DD4A8","#7EB8F0","#A78BFA","#E8B84D","#5DC8D9","#E8818C","#8BC34A","#4CAF50"];
+    accent: "#4ADE80", driveLink: "", unitsAvailable: "", totalUnits: "",
+  };
+  const [form, setForm] = useState(initialData ? {
+    ...EMPTY,
+    ...initialData,
+    priceFrom: String(initialData.priceFrom || ""),
+    priceTo: String(initialData.priceTo || ""),
+    sizes: Array.isArray(initialData.sizes) ? initialData.sizes.join(", ") : (initialData.sizes || ""),
+    highlights: Array.isArray(initialData.highlights) ? initialData.highlights.join(", ") : (initialData.highlights || ""),
+    amenities: Array.isArray(initialData.amenities) ? initialData.amenities.join(", ") : (initialData.amenities || ""),
+    unitsAvailable: String(initialData.unitsAvailable || ""),
+    totalUnits: String(initialData.totalUnits || ""),
+  } : EMPTY);
+  const [errors, setErrors] = useState({});
+  const set = (k, v) => { setForm(p => ({ ...p, [k]: v })); setErrors(e => ({ ...e, [k]: false })); };
+  const accentOptions = ["#4ADE80","#22D3EE","#6DD4A8","#34D399","#38BDF8","#7EB8F0","#2DD4BF","#86EFAC"];
   const badgeOptions = ["NUEVO","EXCLUSIVO","PREVENTA","ÚLTIMAS UNIDADES","MAYOR ROI","ULTRA PREMIUM"];
+  const locationOptions = ["Tulum","Playa del Carmen","Puerto Morelos","Puerto Aventuras","Cancún","Bacalar","Akumal","Holbox"];
+  const typeOptions = ["Condominios","Villas","Penthouses","Condominios y Penthouses","Villas y Departamentos","Estudios y Condominios","Condominios de Lujo","Casas"];
+
+  const validate = () => {
+    const e = {};
+    if (!form.name.trim()) e.name = true;
+    if (!form.priceFrom || isNaN(parseInt(form.priceFrom))) e.priceFrom = true;
+    if (!form.priceTo || isNaN(parseInt(form.priceTo))) e.priceTo = true;
+    setErrors(e);
+    return Object.keys(e).length === 0;
+  };
 
   const handleSave = () => {
-    if (!form.name || !form.priceFrom || !form.priceTo) return;
-    const newProp = {
-      id: Date.now(), name: form.name, brand: form.brand,
-      location: form.location, zone: form.zone || form.location,
-      type: form.type, sizes: form.sizes ? form.sizes.split(",").map(s => s.trim()) : ["—"],
-      bedrooms: form.bedrooms, priceFrom: parseInt(form.priceFrom) || 0,
-      priceTo: parseInt(form.priceTo) || 0, roi: form.roi, roiNum: parseFloat(form.roi) || 8,
-      delivery: form.delivery, badge: form.badge, unitsAvailable: 10, totalUnits: 10,
-      featured: false, accent: form.accent,
-      amenities: form.amenities ? form.amenities.split(",").map(s => s.trim()) : [],
-      highlights: form.highlights ? form.highlights.split(",").map(s => s.trim()) : [],
-      description: form.description,
-      img: `linear-gradient(135deg, ${form.accent}20 0%, #060a11 60%)`,
-      custom: true, driveLink: form.driveLink,
+    if (!validate()) return;
+    const prop = {
+      id: initialData?.id || Date.now(),
+      name: form.name.trim(), brand: form.brand.trim(),
+      location: form.location, zone: form.zone.trim() || form.location,
+      type: form.type,
+      sizes: form.sizes ? form.sizes.split(",").map(s => s.trim()).filter(Boolean) : ["—"],
+      bedrooms: form.bedrooms.trim() || "—",
+      priceFrom: parseInt(form.priceFrom) || 0,
+      priceTo: parseInt(form.priceTo) || 0,
+      roi: form.roi.trim() || "8-10%",
+      roiNum: parseFloat(form.roi) || 8,
+      delivery: form.delivery.trim() || "2026",
+      badge: form.badge,
+      unitsAvailable: parseInt(form.unitsAvailable) || 10,
+      totalUnits: parseInt(form.totalUnits) || 10,
+      featured: initialData?.featured || false,
+      accent: form.accent,
+      amenities: form.amenities ? form.amenities.split(",").map(s => s.trim()).filter(Boolean) : [],
+      highlights: form.highlights ? form.highlights.split(",").map(s => s.trim()).filter(Boolean) : [],
+      description: form.description.trim(),
+      img: `linear-gradient(135deg, ${form.accent}25 0%, ${form.accent}08 40%, #060a11 100%)`,
+      custom: true,
+      driveLink: form.driveLink.trim(),
+      createdAt: initialData?.createdAt || new Date().toLocaleDateString("es-MX", { day: "numeric", month: "short", year: "numeric" }),
+      updatedAt: new Date().toLocaleDateString("es-MX", { day: "numeric", month: "short", year: "numeric" }),
     };
-    onSave(newProp);
+    onSave(prop);
     onClose();
   };
 
+  const canSave = form.name.trim() && form.priceFrom && form.priceTo;
+
+  const inputStyle = (key) => ({
+    width: "100%", padding: "10px 14px", borderRadius: 8,
+    background: P.glass, border: `1px solid ${errors[key] ? P.rose + "80" : P.border}`,
+    color: P.txt, fontSize: 13, fontFamily: font, outline: "none",
+    transition: "border-color 0.2s", boxSizing: "border-box",
+  });
+  const labelStyle = { fontSize: 10, color: P.txt2, display: "block", marginBottom: 5, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em", fontFamily: font };
+  const sectionTitle = (accent) => ({ fontSize: 11, color: accent, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 12, fontFamily: font });
+
   return createPortal(
     <>
-      <div onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", backdropFilter: "blur(8px)", zIndex: 200000 }} />
+      <div onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)", backdropFilter: "blur(10px)", zIndex: 200000 }} />
       <div style={{
         position: "fixed", top: "50%", left: "50%", transform: "translate(-50%,-50%)", zIndex: 200001,
-        width: 600, maxHeight: "90vh", overflowY: "auto",
-        background: "#0C1219", border: `1px solid ${P.border}`, borderRadius: 20,
-        boxShadow: "0 32px 80px rgba(0,0,0,0.6)",
+        width: 680, maxHeight: "92vh", overflowY: "auto",
+        background: "#0C1219", border: `1px solid ${P.border}`, borderRadius: 22,
+        boxShadow: "0 40px 100px rgba(0,0,0,0.7)",
       }}>
-        <div style={{ padding: "22px 28px", borderBottom: `1px solid ${P.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <div>
-            <p style={{ fontSize: 16, fontWeight: 700, color: "#FFFFFF", fontFamily: fontDisp }}>Agregar Propiedad</p>
-            <p style={{ fontSize: 11, color: P.txt3, marginTop: 2 }}>Crea una propiedad personalizada para tu catálogo</p>
+        {/* Header with accent preview */}
+        <div style={{
+          padding: "22px 28px", borderBottom: `1px solid ${P.border}`,
+          display: "flex", justifyContent: "space-between", alignItems: "center",
+          background: `linear-gradient(135deg, ${form.accent}10 0%, transparent 60%)`,
+        }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+            <div style={{
+              width: 44, height: 44, borderRadius: 12,
+              background: `linear-gradient(135deg, ${form.accent}25 0%, #060a11 100%)`,
+              border: `1px solid ${form.accent}40`,
+              display: "flex", alignItems: "center", justifyContent: "center",
+            }}>
+              <Building2 size={20} color={form.accent} />
+            </div>
+            <div>
+              <p style={{ fontSize: 16, fontWeight: 700, color: "#FFFFFF", fontFamily: fontDisp }}>
+                {editing ? "Editar Propiedad" : "Registrar Propiedad"}
+              </p>
+              <p style={{ fontSize: 11, color: P.txt3, marginTop: 2 }}>
+                {editing ? `Editando: ${initialData.name}` : "Agrega un nuevo desarrollo al catálogo permanente"}
+              </p>
+            </div>
           </div>
-          <button onClick={onClose} style={{ width: 32, height: 32, borderRadius: 8, border: `1px solid ${P.border}`, background: P.glass, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}><X size={14} color={P.txt2} /></button>
+          <button onClick={onClose} style={{ width: 32, height: 32, borderRadius: 8, border: `1px solid ${P.border}`, background: P.glass, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <X size={14} color={P.txt2} />
+          </button>
         </div>
-        <div style={{ padding: "24px 28px", display: "flex", flexDirection: "column", gap: 16 }}>
-          {/* Row 1 */}
-          <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 12 }}>
-            {[{k:"name",label:"Nombre del desarrollo *",ph:"Ej: Almara Residences"},{k:"brand",label:"Marca / Sub-nombre",ph:"Ej: by Four Seasons"}].map(f=>(
-              <div key={f.k}>
-                <label style={{ fontSize: 10, color: P.txt2, display: "block", marginBottom: 5, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em" }}>{f.label}</label>
-                <input value={form[f.k]} onChange={e=>set(f.k,e.target.value)} placeholder={f.ph} style={{ width: "100%", padding: "10px 14px", borderRadius: 8, background: P.glass, border: `1px solid ${P.border}`, color: P.txt, fontSize: 13, fontFamily: font, outline: "none" }} />
+
+        <div style={{ padding: "24px 28px", display: "flex", flexDirection: "column", gap: 18 }}>
+
+          {/* SECCIÓN 1 — Identidad */}
+          <div>
+            <p style={sectionTitle(form.accent)}>Identidad del desarrollo</p>
+            <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 12, marginBottom: 12 }}>
+              <div>
+                <label style={labelStyle}>Nombre del desarrollo *</label>
+                <input value={form.name} onChange={e=>set("name",e.target.value)} placeholder="Ej: Almara Residences" style={inputStyle("name")}
+                  onFocus={e=>e.target.style.borderColor=form.accent+"80"} onBlur={e=>e.target.style.borderColor=errors.name?P.rose+"80":P.border} />
+                {errors.name && <p style={{fontSize:10,color:P.rose,marginTop:3}}>Campo requerido</p>}
               </div>
-            ))}
-          </div>
-          {/* Row 2 — Location */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-            <div>
-              <label style={{ fontSize: 10, color: P.txt2, display: "block", marginBottom: 5, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em" }}>Ubicación</label>
-              <select value={form.location} onChange={e=>set("location",e.target.value)} style={{ width: "100%", padding: "10px 14px", borderRadius: 8, background: P.surface, border: `1px solid ${P.border}`, color: P.txt, fontSize: 13, fontFamily: font }}>
-                {["Tulum","Playa del Carmen","Puerto Morelos","Puerto Aventuras","Cancún","Bacalar","Akumal","Holbox"].map(l=><option key={l}>{l}</option>)}
-              </select>
-            </div>
-            <div>
-              <label style={{ fontSize: 10, color: P.txt2, display: "block", marginBottom: 5, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em" }}>Zona / Referencia</label>
-              <input value={form.zone} onChange={e=>set("zone",e.target.value)} placeholder="Ej: Aldea Zama, frente al mar..." style={{ width: "100%", padding: "10px 14px", borderRadius: 8, background: P.glass, border: `1px solid ${P.border}`, color: P.txt, fontSize: 13, fontFamily: font, outline: "none" }} />
-            </div>
-          </div>
-          {/* Row 3 — Prices */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 12 }}>
-            {[{k:"priceFrom",label:"Precio desde (USD) *",ph:"155000"},{k:"priceTo",label:"Precio hasta (USD) *",ph:"500000"},{k:"roi",label:"ROI anual",ph:"8-12%"},{k:"delivery",label:"Entrega",ph:"2026"}].map(f=>(
-              <div key={f.k}>
-                <label style={{ fontSize: 10, color: P.txt2, display: "block", marginBottom: 5, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em" }}>{f.label}</label>
-                <input value={form[f.k]} onChange={e=>set(f.k,e.target.value)} placeholder={f.ph} style={{ width: "100%", padding: "10px 14px", borderRadius: 8, background: P.glass, border: `1px solid ${P.border}`, color: P.txt, fontSize: 13, fontFamily: font, outline: "none" }} />
+              <div>
+                <label style={labelStyle}>Marca / Sub-nombre</label>
+                <input value={form.brand} onChange={e=>set("brand",e.target.value)} placeholder="Ej: by Four Seasons" style={inputStyle("brand")}
+                  onFocus={e=>e.target.style.borderColor=form.accent+"80"} onBlur={e=>e.target.style.borderColor=P.border} />
               </div>
-            ))}
-          </div>
-          {/* Row 4 — Type & bedrooms */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
-            <div>
-              <label style={{ fontSize: 10, color: P.txt2, display: "block", marginBottom: 5, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em" }}>Tipo</label>
-              <select value={form.type} onChange={e=>set("type",e.target.value)} style={{ width: "100%", padding: "10px 14px", borderRadius: 8, background: P.surface, border: `1px solid ${P.border}`, color: P.txt, fontSize: 13, fontFamily: font }}>
-                {["Condominios","Villas","Penthouses","Condominios y Penthouses","Villas y Departamentos","Estudios y Condominios","Condominios de Lujo"].map(t=><option key={t}>{t}</option>)}
-              </select>
             </div>
-            <div>
-              <label style={{ fontSize: 10, color: P.txt2, display: "block", marginBottom: 5, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em" }}>Recámaras</label>
-              <input value={form.bedrooms} onChange={e=>set("bedrooms",e.target.value)} placeholder="1-3 recámaras" style={{ width: "100%", padding: "10px 14px", borderRadius: 8, background: P.glass, border: `1px solid ${P.border}`, color: P.txt, fontSize: 13, fontFamily: font, outline: "none" }} />
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
+              <div>
+                <label style={labelStyle}>Ubicación</label>
+                <select value={form.location} onChange={e=>set("location",e.target.value)} style={{ ...inputStyle("location"), background: P.surface, cursor: "pointer" }}>
+                  {locationOptions.map(l=><option key={l}>{l}</option>)}
+                </select>
+              </div>
+              <div>
+                <label style={labelStyle}>Zona / Referencia</label>
+                <input value={form.zone} onChange={e=>set("zone",e.target.value)} placeholder="Ej: Aldea Zama, frente al mar" style={inputStyle("zone")}
+                  onFocus={e=>e.target.style.borderColor=form.accent+"80"} onBlur={e=>e.target.style.borderColor=P.border} />
+              </div>
+              <div>
+                <label style={labelStyle}>Badge</label>
+                <select value={form.badge} onChange={e=>set("badge",e.target.value)} style={{ ...inputStyle("badge"), background: P.surface, cursor: "pointer" }}>
+                  {badgeOptions.map(b=><option key={b}>{b}</option>)}
+                </select>
+              </div>
             </div>
-            <div>
-              <label style={{ fontSize: 10, color: P.txt2, display: "block", marginBottom: 5, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em" }}>Badge</label>
-              <select value={form.badge} onChange={e=>set("badge",e.target.value)} style={{ width: "100%", padding: "10px 14px", borderRadius: 8, background: P.surface, border: `1px solid ${P.border}`, color: P.txt, fontSize: 13, fontFamily: font }}>
-                {badgeOptions.map(b=><option key={b}>{b}</option>)}
-              </select>
-            </div>
           </div>
-          {/* Sizes */}
-          <div>
-            <label style={{ fontSize: 10, color: P.txt2, display: "block", marginBottom: 5, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em" }}>Tamaños (separados por coma)</label>
-            <input value={form.sizes} onChange={e=>set("sizes",e.target.value)} placeholder="65 m², 85 m², 120 m²" style={{ width: "100%", padding: "10px 14px", borderRadius: 8, background: P.glass, border: `1px solid ${P.border}`, color: P.txt, fontSize: 13, fontFamily: font, outline: "none" }} />
-          </div>
-          {/* Description */}
-          <div>
-            <label style={{ fontSize: 10, color: P.txt2, display: "block", marginBottom: 5, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em" }}>Descripción</label>
-            <textarea value={form.description} onChange={e=>set("description",e.target.value)} rows={3} placeholder="Descripción del desarrollo..." style={{ width: "100%", padding: "10px 14px", borderRadius: 8, background: P.glass, border: `1px solid ${P.border}`, color: P.txt, fontSize: 13, fontFamily: font, outline: "none", resize: "vertical" }} />
-          </div>
-          {/* Highlights */}
-          <div>
-            <label style={{ fontSize: 10, color: P.txt2, display: "block", marginBottom: 5, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em" }}>Puntos clave (separados por coma)</label>
-            <input value={form.highlights} onChange={e=>set("highlights",e.target.value)} placeholder="Rooftop con piscina, Cenote natural, 14 unidades exclusivas" style={{ width: "100%", padding: "10px 14px", borderRadius: 8, background: P.glass, border: `1px solid ${P.border}`, color: P.txt, fontSize: 13, fontFamily: font, outline: "none" }} />
-          </div>
-          {/* Amenities */}
-          <div>
-            <label style={{ fontSize: 10, color: P.txt2, display: "block", marginBottom: 5, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em" }}>Amenidades (separadas por coma)</label>
-            <input value={form.amenities} onChange={e=>set("amenities",e.target.value)} placeholder="Piscina, Rooftop, Gym, Seguridad 24/7" style={{ width: "100%", padding: "10px 14px", borderRadius: 8, background: P.glass, border: `1px solid ${P.border}`, color: P.txt, fontSize: 13, fontFamily: font, outline: "none" }} />
-          </div>
-          {/* Drive Link */}
-          <div>
-            <label style={{ fontSize: 10, color: P.txt2, display: "block", marginBottom: 5, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em" }}>
-              Link de imágenes (Google Drive)
-              <span style={{ color: P.txt3, fontWeight: 400, marginLeft: 6, textTransform: "none" }}>— los asesores podrán abrirlo desde la selección</span>
-            </label>
-            <div style={{ position: "relative" }}>
-              <ExternalLink size={13} color={P.txt3} style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)" }} />
-              <input
-                value={form.driveLink} onChange={e => set("driveLink", e.target.value)}
-                placeholder="https://drive.google.com/drive/folders/..."
-                style={{ width: "100%", padding: "10px 14px 10px 34px", borderRadius: 8, background: P.glass, border: `1px solid ${form.driveLink ? P.accent + "50" : P.border}`, color: P.txt, fontSize: 12, fontFamily: font, outline: "none" }}
-              />
-            </div>
-            {form.driveLink && (
-              <a href={form.driveLink} target="_blank" rel="noreferrer" style={{ fontSize: 10, color: P.accent, marginTop: 4, display: "inline-block" }}>
-                Verificar link ↗
-              </a>
-            )}
-          </div>
-          {/* Color accent */}
-          <div>
-            <label style={{ fontSize: 10, color: P.txt2, display: "block", marginBottom: 8, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em" }}>Color de acento</label>
-            <div style={{ display: "flex", gap: 8 }}>
-              {accentOptions.map(c=>(
-                <button key={c} onClick={()=>set("accent",c)} style={{ width: 28, height: 28, borderRadius: "50%", background: c, border: form.accent===c ? `3px solid white` : "3px solid transparent", cursor: "pointer", transition: "all 0.2s" }} />
+
+          {/* SECCIÓN 2 — Precios y financiero */}
+          <div style={{ paddingTop: 4, borderTop: `1px solid ${P.border}` }}>
+            <p style={{ ...sectionTitle(form.accent), marginTop: 14 }}>Precios y financiero</p>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 12 }}>
+              {[
+                {k:"priceFrom",label:"Precio desde (USD) *",ph:"155000"},
+                {k:"priceTo",label:"Precio hasta (USD) *",ph:"500000"},
+                {k:"roi",label:"ROI anual",ph:"8-12%"},
+                {k:"delivery",label:"Entrega estimada",ph:"2026"},
+              ].map(f=>(
+                <div key={f.k}>
+                  <label style={labelStyle}>{f.label}</label>
+                  <input value={form[f.k]} onChange={e=>set(f.k,e.target.value)} placeholder={f.ph} style={inputStyle(f.k)}
+                    onFocus={e=>e.target.style.borderColor=form.accent+"80"} onBlur={e=>e.target.style.borderColor=errors[f.k]?P.rose+"80":P.border} />
+                  {errors[f.k] && <p style={{fontSize:10,color:P.rose,marginTop:3}}>Requerido</p>}
+                </div>
               ))}
             </div>
+            {/* Preview pricing */}
+            {form.priceFrom && form.priceTo && (
+              <div style={{ marginTop: 10, display: "flex", gap: 10 }}>
+                <div style={{ padding: "8px 14px", borderRadius: 8, background: `${form.accent}0A`, border: `1px solid ${form.accent}20`, fontSize: 12, color: form.accent, fontFamily: fontDisp }}>
+                  Desde ${(parseInt(form.priceFrom)/1000).toFixed(0)}K USD
+                </div>
+                <div style={{ padding: "8px 14px", borderRadius: 8, background: P.glass, border: `1px solid ${P.border}`, fontSize: 12, color: P.txt2, fontFamily: fontDisp }}>
+                  Hasta ${(parseInt(form.priceTo)/1000).toFixed(0)}K USD
+                </div>
+                {form.roi && <div style={{ padding: "8px 14px", borderRadius: 8, background: "rgba(74,222,128,0.08)", border: "1px solid rgba(74,222,128,0.2)", fontSize: 12, color: "#4ADE80", fontFamily: fontDisp }}>ROI {form.roi}</div>}
+              </div>
+            )}
           </div>
+
+          {/* SECCIÓN 3 — Características */}
+          <div style={{ paddingTop: 4, borderTop: `1px solid ${P.border}` }}>
+            <p style={{ ...sectionTitle(form.accent), marginTop: 14 }}>Características</p>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 12, marginBottom: 12 }}>
+              <div>
+                <label style={labelStyle}>Tipo</label>
+                <select value={form.type} onChange={e=>set("type",e.target.value)} style={{ ...inputStyle("type"), background: P.surface, cursor: "pointer" }}>
+                  {typeOptions.map(t=><option key={t}>{t}</option>)}
+                </select>
+              </div>
+              <div>
+                <label style={labelStyle}>Recámaras</label>
+                <input value={form.bedrooms} onChange={e=>set("bedrooms",e.target.value)} placeholder="1-3 recámaras" style={inputStyle("bedrooms")}
+                  onFocus={e=>e.target.style.borderColor=form.accent+"80"} onBlur={e=>e.target.style.borderColor=P.border} />
+              </div>
+              <div>
+                <label style={labelStyle}>Unidades disp.</label>
+                <input value={form.unitsAvailable} onChange={e=>set("unitsAvailable",e.target.value)} placeholder="10" type="number" min="0" style={inputStyle("unitsAvailable")}
+                  onFocus={e=>e.target.style.borderColor=form.accent+"80"} onBlur={e=>e.target.style.borderColor=P.border} />
+              </div>
+              <div>
+                <label style={labelStyle}>Total unidades</label>
+                <input value={form.totalUnits} onChange={e=>set("totalUnits",e.target.value)} placeholder="40" type="number" min="0" style={inputStyle("totalUnits")}
+                  onFocus={e=>e.target.style.borderColor=form.accent+"80"} onBlur={e=>e.target.style.borderColor=P.border} />
+              </div>
+            </div>
+            <div style={{ marginBottom: 12 }}>
+              <label style={labelStyle}>Tamaños disponibles (separados por coma)</label>
+              <input value={form.sizes} onChange={e=>set("sizes",e.target.value)} placeholder="65 m², 85 m², 120 m², 180 m²" style={inputStyle("sizes")}
+                onFocus={e=>e.target.style.borderColor=form.accent+"80"} onBlur={e=>e.target.style.borderColor=P.border} />
+            </div>
+          </div>
+
+          {/* SECCIÓN 4 — Descripción y detalles */}
+          <div style={{ paddingTop: 4, borderTop: `1px solid ${P.border}` }}>
+            <p style={{ ...sectionTitle(form.accent), marginTop: 14 }}>Descripción y detalles</p>
+            <div style={{ marginBottom: 12 }}>
+              <label style={labelStyle}>Descripción del desarrollo</label>
+              <textarea value={form.description} onChange={e=>set("description",e.target.value)} rows={3}
+                placeholder="Describe el proyecto, su concepto, entorno y propuesta de valor..."
+                style={{ ...inputStyle("description"), resize: "vertical", lineHeight: 1.6 }}
+                onFocus={e=>e.target.style.borderColor=form.accent+"80"} onBlur={e=>e.target.style.borderColor=P.border} />
+            </div>
+            <div style={{ marginBottom: 12 }}>
+              <label style={labelStyle}>Puntos clave — highlights (separados por coma)</label>
+              <input value={form.highlights} onChange={e=>set("highlights",e.target.value)}
+                placeholder="Rooftop con piscina, Cenote natural, Solo 14 unidades exclusivas"
+                style={inputStyle("highlights")}
+                onFocus={e=>e.target.style.borderColor=form.accent+"80"} onBlur={e=>e.target.style.borderColor=P.border} />
+              {form.highlights && (
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 4, marginTop: 6 }}>
+                  {form.highlights.split(",").filter(h=>h.trim()).map((h,i)=>(
+                    <span key={i} style={{ fontSize: 10, padding: "3px 8px", borderRadius: 5, background: `${form.accent}10`, border: `1px solid ${form.accent}20`, color: form.accent }}>{h.trim()}</span>
+                  ))}
+                </div>
+              )}
+            </div>
+            <div>
+              <label style={labelStyle}>Amenidades (separadas por coma)</label>
+              <input value={form.amenities} onChange={e=>set("amenities",e.target.value)}
+                placeholder="Piscina, Rooftop, Gimnasio, Spa, Seguridad 24/7, Estacionamiento"
+                style={inputStyle("amenities")}
+                onFocus={e=>e.target.style.borderColor=form.accent+"80"} onBlur={e=>e.target.style.borderColor=P.border} />
+              {form.amenities && (
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 4, marginTop: 6 }}>
+                  {form.amenities.split(",").filter(a=>a.trim()).map((a,i)=>(
+                    <span key={i} style={{ fontSize: 10, padding: "3px 8px", borderRadius: 5, background: P.glass, border: `1px solid ${P.border}`, color: P.txt2 }}>{a.trim()}</span>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* SECCIÓN 5 — Media y visual */}
+          <div style={{ paddingTop: 4, borderTop: `1px solid ${P.border}` }}>
+            <p style={{ ...sectionTitle(form.accent), marginTop: 14 }}>Media y visual</p>
+            <div style={{ marginBottom: 14 }}>
+              <label style={{ ...labelStyle, display: "flex", alignItems: "center", gap: 6 }}>
+                <ExternalLink size={10} color={P.accent} /> Link de galería de imágenes
+                <span style={{ color: P.txt3, fontWeight: 400, textTransform: "none", marginLeft: 4 }}>— Google Drive, Dropbox o cualquier carpeta compartida</span>
+              </label>
+              <div style={{ position: "relative" }}>
+                <ExternalLink size={13} color={form.driveLink ? form.accent : P.txt3} style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", flexShrink: 0 }} />
+                <input
+                  value={form.driveLink} onChange={e => set("driveLink", e.target.value)}
+                  placeholder="https://drive.google.com/drive/folders/..."
+                  style={{ ...inputStyle("driveLink"), paddingLeft: 34, borderColor: form.driveLink ? form.accent + "50" : P.border }}
+                  onFocus={e=>e.target.style.borderColor=form.accent+"80"} onBlur={e=>e.target.style.borderColor=form.driveLink?form.accent+"50":P.border}
+                />
+              </div>
+              {form.driveLink && (
+                <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 6 }}>
+                  <span style={{ fontSize: 10, color: "#4ADE80" }}>✓ Link configurado</span>
+                  <a href={form.driveLink} target="_blank" rel="noreferrer" style={{ fontSize: 10, color: form.accent, display: "flex", alignItems: "center", gap: 3 }}>
+                    Verificar ↗
+                  </a>
+                </div>
+              )}
+            </div>
+            <div>
+              <label style={labelStyle}>Color de acento para la tarjeta</label>
+              <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                {accentOptions.map(c=>(
+                  <button key={c} onClick={()=>set("accent",c)} title={c} style={{
+                    width: 32, height: 32, borderRadius: 8, background: c,
+                    border: form.accent===c ? `3px solid white` : "3px solid transparent",
+                    cursor: "pointer", transition: "all 0.2s",
+                    boxShadow: form.accent===c ? `0 0 12px ${c}80` : "none",
+                  }} />
+                ))}
+                {/* Custom color */}
+                <div style={{ position: "relative" }}>
+                  <input type="color" value={form.accent} onChange={e=>set("accent",e.target.value)}
+                    style={{ width: 32, height: 32, borderRadius: 8, border: "none", cursor: "pointer", padding: 2, background: "transparent" }} title="Color personalizado" />
+                </div>
+              </div>
+              {/* Preview card */}
+              <div style={{
+                marginTop: 12, padding: "14px 18px", borderRadius: 12,
+                background: `linear-gradient(135deg, ${form.accent}15 0%, #060a11 100%)`,
+                border: `1px solid ${form.accent}30`,
+                display: "flex", alignItems: "center", justifyContent: "space-between",
+              }}>
+                <div>
+                  <p style={{ fontSize: 13, fontWeight: 700, color: "#fff", fontFamily: fontDisp }}>{form.name || "Nombre del desarrollo"}</p>
+                  {form.brand && <p style={{ fontSize: 11, color: "rgba(255,255,255,0.5)" }}>{form.brand}</p>}
+                  <div style={{ display: "flex", gap: 6, marginTop: 6, flexWrap: "wrap" }}>
+                    {form.badge && <span style={{ fontSize: 9, padding: "2px 7px", borderRadius: 4, background: `${form.accent}20`, border: `1px solid ${form.accent}30`, color: form.accent, fontWeight: 700, letterSpacing: "0.05em" }}>{form.badge}</span>}
+                    {form.type && <span style={{ fontSize: 9, padding: "2px 7px", borderRadius: 4, background: P.glass, border: `1px solid ${P.border}`, color: P.txt2 }}>{form.type}</span>}
+                  </div>
+                </div>
+                <div style={{ textAlign: "right" }}>
+                  {form.priceFrom && <p style={{ fontSize: 18, fontWeight: 700, color: form.accent, fontFamily: fontDisp }}>${(parseInt(form.priceFrom)/1000).toFixed(0)}K</p>}
+                  {form.roi && <p style={{ fontSize: 10, color: "rgba(255,255,255,0.4)", marginTop: 2 }}>ROI {form.roi}</p>}
+                </div>
+              </div>
+            </div>
+          </div>
+
           {/* Actions */}
-          <div style={{ display: "flex", gap: 10, paddingTop: 8 }}>
-            <button onClick={onClose} style={{ flex: 1, padding: "12px", borderRadius: 10, border: `1px solid ${P.border}`, background: P.glass, color: P.txt2, fontSize: 13, cursor: "pointer", fontFamily: font }}>Cancelar</button>
-            <button onClick={handleSave} disabled={!form.name || !form.priceFrom || !form.priceTo} style={{ flex: 2, padding: "12px", borderRadius: 10, border: "none", background: form.name && form.priceFrom && form.priceTo ? "rgba(255,255,255,0.95)" : P.glass, color: form.name && form.priceFrom && form.priceTo ? "#0A0F18" : P.txt3, fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: fontDisp }}>
-              Agregar al Catálogo
+          <div style={{ display: "flex", gap: 10, paddingTop: 8, borderTop: `1px solid ${P.border}`, marginTop: 4 }}>
+            <button onClick={onClose} style={{ padding: "13px 20px", borderRadius: 10, border: `1px solid ${P.border}`, background: P.glass, color: P.txt2, fontSize: 13, cursor: "pointer", fontFamily: font, whiteSpace: "nowrap" }}>
+              Cancelar
+            </button>
+            <button onClick={handleSave} disabled={!canSave} style={{
+              flex: 1, padding: "13px", borderRadius: 10, border: "none",
+              background: canSave ? `linear-gradient(135deg, ${form.accent} 0%, ${form.accent}CC 100%)` : P.glass,
+              color: canSave ? "#060A11" : P.txt3,
+              fontSize: 13, fontWeight: 700, cursor: canSave ? "pointer" : "not-allowed", fontFamily: fontDisp,
+              transition: "all 0.2s",
+              boxShadow: canSave ? `0 4px 20px ${form.accent}40` : "none",
+            }}>
+              {editing ? "Guardar cambios" : "Registrar en catálogo"} {canSave && "→"}
             </button>
           </div>
         </div>
@@ -2361,23 +3362,66 @@ const LandingPages = () => {
   const [clientPrefs, setClientPrefs] = useState({ beach: false, golf: false, marina: false, jungle: false, investment: false, retirement: false, family: false, boutique: false });
   const [selectedProps, setSelectedProps] = useState([]);
   const [previewOpen, setPreviewOpen] = useState(false);
-  const [customProperties, setCustomProperties] = useState([]);
+  const [customProperties, setCustomProperties] = useState(() => {
+    try { return JSON.parse(localStorage.getItem("stratos_custom_props") || "[]"); } catch { return []; }
+  });
   const [showNewPropModal, setShowNewPropModal] = useState(false);
+  const [editingProp, setEditingProp] = useState(null);
+  const [showCatalogSection, setShowCatalogSection] = useState(false);
   const [savedPages, setSavedPages] = useState([
     { id: 1, client: "Fam. Rodríguez", date: "3 Abr 2026", props: 3, status: "Enviada", budget: "$280K-$1.2M", opens: 4, asesor: "Ken Lugo Ríos" },
     { id: 2, client: "James Mitchell", date: "2 Abr 2026", props: 4, status: "Vista", budget: "$180K-$650K", opens: 2, asesor: "Emmanuel Ortiz" },
     { id: 3, client: "Sarah Williams", date: "1 Abr 2026", props: 2, status: "Generada", budget: "$300K-$600K", opens: 0, asesor: "Cecilia Mendoza" },
   ]);
   const [asesor, setAsesor] = useState("Emmanuel Ortiz");
+  const [asesorWA, setAsesorWA] = useState("+52 998 000 0002");
+  const [asesorCal, setAsesorCal] = useState("");
   const [mensaje, setMensaje] = useState("");
   const [lpTheme, setLpTheme] = useState("dark");
   const [generatedId, setGeneratedId] = useState(null);
   const [copied, setCopied] = useState(false);
   const [showCatalog, setShowCatalog] = useState(false);
-  // Drive links per property (id → url), editable by advisors
-  const [driveLinks, setDriveLinks] = useState({});
+  const [showShareModal, setShowShareModal] = useState(false);
+  // Drive links per property (id → url), persisted in localStorage
+  const [driveLinks, setDriveLinks] = useState(() => {
+    try { return JSON.parse(localStorage.getItem("stratos_drive_links") || "{}"); } catch { return {}; }
+  });
   const [editingLinkId, setEditingLinkId] = useState(null);
   const [editLinkValue, setEditLinkValue] = useState("");
+  const [agencyName, setAgencyName] = useState(() => localStorage.getItem("stratos_agency_name") || "STRATOS REALTY");
+
+  // Persist drive links to localStorage whenever they change
+  useEffect(() => {
+    try { localStorage.setItem("stratos_drive_links", JSON.stringify(driveLinks)); } catch {}
+  }, [driveLinks]);
+
+  // Persist custom properties to localStorage whenever they change
+  useEffect(() => {
+    try { localStorage.setItem("stratos_custom_props", JSON.stringify(customProperties)); } catch {}
+  }, [customProperties]);
+
+  const saveCustomProp = (prop) => {
+    setCustomProperties(prev => {
+      const exists = prev.find(p => p.id === prop.id);
+      return exists ? prev.map(p => p.id === prop.id ? prop : p) : [prop, ...prev];
+    });
+    // Also update driveLinks if the prop has one
+    if (prop.driveLink) {
+      setDriveLinks(prev => ({ ...prev, [prop.id]: prop.driveLink }));
+    }
+  };
+
+  const deleteCustomProp = (id) => {
+    setCustomProperties(prev => prev.filter(p => p.id !== id));
+    setDriveLinks(prev => { const n = { ...prev }; delete n[id]; return n; });
+    setSelectedProps(prev => prev.filter(x => x !== id));
+  };
+
+  // When asesor changes, auto-fill contact info from team data
+  useEffect(() => {
+    const member = team.find(t => t.n === asesor);
+    if (member) { setAsesorWA(member.wa || ""); setAsesorCal(member.cal || ""); }
+  }, [asesor]);
 
   const budgetOptions = [
     { label: "$120K", value: 120000 },
@@ -2403,12 +3447,17 @@ const LandingPages = () => {
 
   const allProperties = useMemo(() => [...rivieraProperties, ...customProperties], [customProperties]);
 
+  const inBudget = (p) => p.priceFrom <= clientBudgetMax && p.priceTo >= clientBudgetMin;
   const filteredProperties = useMemo(() => {
-    return allProperties.filter(p => p.priceFrom <= clientBudgetMax && p.priceTo >= clientBudgetMin);
+    const inB = allProperties.filter(p => inBudget(p));
+    const outB = allProperties.filter(p => !inBudget(p));
+    return [...inB, ...outB];
   }, [allProperties, clientBudgetMin, clientBudgetMax]);
 
   const saveDriveLink = (propId) => {
     setDriveLinks(prev => ({ ...prev, [propId]: editLinkValue }));
+    // Also persist link inside the custom property object itself
+    setCustomProperties(prev => prev.map(p => p.id === propId ? { ...p, driveLink: editLinkValue } : p));
     setEditingLinkId(null);
     setEditLinkValue("");
   };
@@ -2429,17 +3478,21 @@ const LandingPages = () => {
     setSavedPages(prev => [{
       id: newId,
       client: clientName || "Cliente",
-      date: "6 Abr 2026",
+      date: new Date().toLocaleDateString("es-MX", { day: "numeric", month: "short", year: "numeric" }),
+      propIds: [...selectedProps],
       props: selectedProps.length,
       status: "Generada",
       budget: `$${(clientBudgetMin / 1000).toFixed(0)}K-$${(clientBudgetMax / 1000).toFixed(0)}K`,
+      asesor,
     }, ...prev]);
     setPreviewOpen(true);
   };
 
   const handleCopyLink = () => {
+    const demoUrl = `${window.location.origin}${window.location.pathname}?lp=${generatedId || "preview"}&c=${encodeURIComponent(clientName || "cliente")}`;
+    navigator.clipboard.writeText(demoUrl).catch(() => {});
     setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    setTimeout(() => setCopied(false), 2500);
   };
 
   const resetForm = () => {
@@ -2451,6 +3504,7 @@ const LandingPages = () => {
     setSelectedProps([]);
     setMensaje("");
     setGeneratedId(null);
+    setShowShareModal(false);
   };
 
   const statusColors = { Generada: P.blue, Enviada: P.emerald, Vista: P.accent, Expirada: P.rose };
@@ -2458,67 +3512,243 @@ const LandingPages = () => {
   // ─── Step 0: Lista de Landing Pages ───
   if (step === 0) return (
     <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+      {/* Header */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
         <div>
           <p style={{ fontSize: 21, fontWeight: 400, color: "#FFFFFF", fontFamily: fontDisp, letterSpacing: "-0.02em" }}>
             Landing Pages <span style={{ fontWeight: 300, color: "rgba(255,255,255,0.4)" }}>Premium</span>
           </p>
           <p style={{ fontSize: 12, color: P.txt3, fontFamily: font, marginTop: 4 }}>Genera presentaciones personalizadas para cada cliente en un clic</p>
         </div>
-        <button onClick={() => setStep(1)} style={{
-          display: "flex", alignItems: "center", gap: 8, padding: "12px 22px",
-          borderRadius: 12, border: "none", cursor: "pointer",
-          background: "rgba(255,255,255,0.95)", color: "#0A0F18",
-          fontSize: 13, fontWeight: 700, fontFamily: fontDisp,
-          boxShadow: "0 4px 20px rgba(255,255,255,0.15)",
-          transition: "all 0.25s",
-        }}
-          onMouseEnter={e => { e.currentTarget.style.background = "#FFFFFF"; e.currentTarget.style.transform = "translateY(-1px)"; e.currentTarget.style.boxShadow = "0 6px 28px rgba(255,255,255,0.22)"; }}
-          onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.95)"; e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "0 4px 20px rgba(255,255,255,0.15)"; }}
-        >
-          <Plus size={16} /> Nueva Landing Page
-        </button>
+        <div style={{ display: "flex", gap: 10 }}>
+          <button onClick={() => setShowNewPropModal(true)} style={{
+            display: "flex", alignItems: "center", gap: 7, padding: "11px 18px",
+            borderRadius: 11, border: `1px solid ${P.accent}40`, background: P.accentS,
+            cursor: "pointer", color: P.accent, fontSize: 13, fontWeight: 600, fontFamily: fontDisp,
+            transition: "all 0.22s",
+          }}
+            onMouseEnter={e => { e.currentTarget.style.background = P.accentB; e.currentTarget.style.borderColor = P.accent + "70"; }}
+            onMouseLeave={e => { e.currentTarget.style.background = P.accentS; e.currentTarget.style.borderColor = P.accent + "40"; }}
+          >
+            <Plus size={15} /> Registrar propiedad
+          </button>
+          <button onClick={() => setStep(1)} style={{
+            display: "flex", alignItems: "center", gap: 8, padding: "11px 22px",
+            borderRadius: 11, border: "none", cursor: "pointer",
+            background: "rgba(255,255,255,0.95)", color: "#0A0F18",
+            fontSize: 13, fontWeight: 700, fontFamily: fontDisp,
+            boxShadow: "0 4px 20px rgba(255,255,255,0.15)",
+            transition: "all 0.25s",
+          }}
+            onMouseEnter={e => { e.currentTarget.style.background = "#FFFFFF"; e.currentTarget.style.transform = "translateY(-1px)"; }}
+            onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.95)"; e.currentTarget.style.transform = "translateY(0)"; }}
+          >
+            <Sparkles size={15} /> Nueva Landing Page
+          </button>
+        </div>
       </div>
 
+      {/* KPIs */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 14 }}>
-        <KPI label="Pages Generadas" value={savedPages.length} sub="este mes" icon={Globe} color={P.blue} />
-        <KPI label="Propiedades Activas" value="8" sub="Riviera Maya" icon={Building2} color={P.emerald} />
+        <KPI label="Pages Generadas" value={savedPages.length} sub="total" icon={Globe} color={P.blue} />
+        <KPI label="Propiedades en catálogo" value={rivieraProperties.length + customProperties.length} sub={`${customProperties.length} registradas`} icon={Building2} color={P.emerald} />
         <KPI label="Tasa de Apertura" value="87%" sub="+12%" icon={Eye} color={P.accent} />
         <KPI label="Conversión a Zoom" value="34%" sub="+8pp" icon={Target} color={P.violet} />
       </div>
 
+      {/* Landing Pages Recientes */}
       <G np>
         <div style={{ padding: "16px 20px", display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: `1px solid ${P.border}` }}>
           <p style={{ fontSize: 14, fontWeight: 700, color: P.txt, fontFamily: fontDisp }}>Landing Pages Recientes</p>
           <Pill color={P.accent} s>{savedPages.length} páginas</Pill>
         </div>
-        <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 0.8fr 0.8fr 1fr 0.8fr", gap: 12, padding: "10px 20px", borderBottom: `1px solid ${P.border}`, fontSize: 10, color: P.txt3, textTransform: "uppercase", letterSpacing: "0.07em", fontWeight: 600 }}>
-          <span>Cliente</span><span>Fecha</span><span>Propiedades</span><span>Presupuesto</span><span>Status</span><span>Acciones</span>
+        <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 0.8fr 0.8fr 1fr 0.8fr 0.8fr", gap: 10, padding: "10px 20px", borderBottom: `1px solid ${P.border}`, fontSize: 10, color: P.txt3, textTransform: "uppercase", letterSpacing: "0.07em", fontWeight: 600 }}>
+          <span>Cliente</span><span>Fecha</span><span>Props.</span><span>Presupuesto</span><span>Status</span><span>Asesor</span><span>Acciones</span>
         </div>
         {savedPages.map(pg => (
           <div key={pg.id} style={{
-            display: "grid", gridTemplateColumns: "2fr 1fr 0.8fr 0.8fr 1fr 0.8fr",
-            gap: 12, alignItems: "center", padding: "14px 20px", borderBottom: `1px solid ${P.border}`,
+            display: "grid", gridTemplateColumns: "2fr 1fr 0.8fr 0.8fr 1fr 0.8fr 0.8fr",
+            gap: 10, alignItems: "center", padding: "13px 20px", borderBottom: `1px solid ${P.border}`,
             transition: "background 0.2s",
           }}
             onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.02)"}
             onMouseLeave={e => e.currentTarget.style.background = "transparent"}
           >
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <Ico icon={User} sz={32} is={14} c={P.accent} />
+              <Ico icon={User} sz={30} is={13} c={P.accent} />
               <span style={{ fontSize: 13, color: P.txt, fontWeight: 600, fontFamily: fontDisp }}>{pg.client}</span>
             </div>
             <span style={{ fontSize: 11, color: P.txt2, fontFamily: font }}>{pg.date}</span>
             <span style={{ fontSize: 12, color: P.txt, fontWeight: 500, fontFamily: fontDisp }}>{pg.props}</span>
             <span style={{ fontSize: 11, color: P.emerald, fontWeight: 600, fontFamily: fontDisp }}>{pg.budget}</span>
             <Pill color={statusColors[pg.status] || P.txt3} s>{pg.status}</Pill>
-            <div style={{ display: "flex", gap: 6 }}>
-              <button onClick={() => { setClientName(pg.client); setSelectedProps([1, 2, 3].slice(0, pg.props)); setPreviewOpen(true); }} style={{ padding: "5px 8px", borderRadius: 6, border: `1px solid ${P.border}`, background: P.glass, cursor: "pointer", display: "flex", alignItems: "center", gap: 4, fontSize: 10, color: P.txt2 }}><Eye size={12} /></button>
-              <button onClick={handleCopyLink} style={{ padding: "5px 8px", borderRadius: 6, border: `1px solid ${P.border}`, background: P.glass, cursor: "pointer", display: "flex", alignItems: "center", gap: 4, fontSize: 10, color: P.txt2 }}><Copy size={12} /></button>
-              <button style={{ padding: "5px 8px", borderRadius: 6, border: `1px solid ${P.border}`, background: P.glass, cursor: "pointer", display: "flex", alignItems: "center", gap: 4, fontSize: 10, color: P.txt2 }}><Share2 size={12} /></button>
+            <span style={{ fontSize: 11, color: P.txt2, fontFamily: font, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{pg.asesor?.split(" ")[0] || "—"}</span>
+            <div style={{ display: "flex", gap: 5 }}>
+              <button onClick={() => { setClientName(pg.client); setSelectedProps(pg.propIds || allProperties.slice(0, pg.props).map(p => p.id)); setPreviewOpen(true); }} style={{ padding: "5px 7px", borderRadius: 6, border: `1px solid ${P.border}`, background: P.glass, cursor: "pointer", display: "flex", alignItems: "center" }}><Eye size={11} color={P.txt2} /></button>
+              <button onClick={handleCopyLink} style={{ padding: "5px 7px", borderRadius: 6, border: `1px solid ${P.border}`, background: P.glass, cursor: "pointer", display: "flex", alignItems: "center" }}>{copied ? <Check size={11} color={P.accent} /> : <Copy size={11} color={P.txt2} />}</button>
+              <button style={{ padding: "5px 7px", borderRadius: 6, border: `1px solid ${P.border}`, background: P.glass, cursor: "pointer", display: "flex", alignItems: "center" }}><Share2 size={11} color={P.txt2} /></button>
             </div>
           </div>
         ))}
+      </G>
+
+      {/* Catálogo de Propiedades */}
+      <G np>
+        <div style={{ padding: "16px 20px", display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: showCatalogSection ? `1px solid ${P.border}` : "none", cursor: "pointer" }}
+          onClick={() => setShowCatalogSection(s => !s)}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <Ico icon={Building2} sz={30} is={14} c={P.emerald} />
+            <div>
+              <p style={{ fontSize: 14, fontWeight: 700, color: P.txt, fontFamily: fontDisp }}>Catálogo de Propiedades</p>
+              <p style={{ fontSize: 11, color: P.txt3, marginTop: 1 }}>
+                {rivieraProperties.length} predeterminadas · <span style={{ color: customProperties.length > 0 ? P.accent : P.txt3 }}>{customProperties.length} registradas por el equipo</span>
+              </p>
+            </div>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <button onClick={e => { e.stopPropagation(); setShowNewPropModal(true); }} style={{
+              display: "flex", alignItems: "center", gap: 6, padding: "7px 14px",
+              borderRadius: 8, border: `1px solid ${P.accent}40`, background: P.accentS,
+              cursor: "pointer", color: P.accent, fontSize: 12, fontWeight: 700, fontFamily: fontDisp,
+              transition: "all 0.2s",
+            }}
+              onMouseEnter={e => { e.currentTarget.style.background = P.accentB; }}
+              onMouseLeave={e => { e.currentTarget.style.background = P.accentS; }}
+            >
+              <Plus size={13} /> Registrar nueva
+            </button>
+            <div style={{ color: P.txt3, transition: "transform 0.2s", transform: showCatalogSection ? "rotate(180deg)" : "none" }}>
+              <ChevronDown size={16} />
+            </div>
+          </div>
+        </div>
+
+        {showCatalogSection && (
+          <div style={{ padding: "16px 20px" }}>
+            {/* Custom properties */}
+            {customProperties.length > 0 && (
+              <div style={{ marginBottom: 20 }}>
+                <p style={{ fontSize: 11, color: P.accent, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 12 }}>
+                  Registradas por el equipo ({customProperties.length})
+                </p>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 12 }}>
+                  {customProperties.map(prop => (
+                    <div key={prop.id} style={{
+                      borderRadius: 12, overflow: "hidden",
+                      background: `linear-gradient(135deg, ${prop.accent}12 0%, #060a11 100%)`,
+                      border: `1px solid ${prop.accent}25`,
+                    }}>
+                      {/* Card header */}
+                      <div style={{ padding: "14px 16px", display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
+                            <span style={{ fontSize: 9, padding: "2px 7px", borderRadius: 4, background: `${prop.accent}20`, border: `1px solid ${prop.accent}30`, color: prop.accent, fontWeight: 700, letterSpacing: "0.05em" }}>{prop.badge}</span>
+                            <span style={{ fontSize: 9, color: P.txt3, fontFamily: font }}>{prop.location}</span>
+                          </div>
+                          <p style={{ fontSize: 13, fontWeight: 700, color: "#FFFFFF", fontFamily: fontDisp, letterSpacing: "-0.01em" }}>{prop.name}</p>
+                          {prop.brand && <p style={{ fontSize: 11, color: P.txt3 }}>{prop.brand}</p>}
+                        </div>
+                        <div style={{ textAlign: "right", flexShrink: 0, marginLeft: 8 }}>
+                          <p style={{ fontSize: 14, fontWeight: 700, color: prop.accent, fontFamily: fontDisp }}>${(prop.priceFrom / 1000).toFixed(0)}K</p>
+                          <p style={{ fontSize: 10, color: P.txt3 }}>ROI {prop.roi}</p>
+                        </div>
+                      </div>
+                      {/* Drive link status */}
+                      <div style={{ padding: "8px 16px", borderTop: `1px solid ${P.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                          <ExternalLink size={11} color={driveLinks[prop.id] || prop.driveLink ? prop.accent : P.txt3} />
+                          <span style={{ fontSize: 10, color: driveLinks[prop.id] || prop.driveLink ? prop.accent : P.txt3 }}>
+                            {driveLinks[prop.id] || prop.driveLink ? "Galería configurada" : "Sin galería"}
+                          </span>
+                        </div>
+                        <div style={{ display: "flex", gap: 5 }}>
+                          <button onClick={() => { setEditingProp(prop); setShowNewPropModal(true); }} style={{ display: "flex", alignItems: "center", gap: 4, padding: "4px 10px", borderRadius: 6, border: `1px solid ${P.border}`, background: P.glass, cursor: "pointer", color: P.txt2, fontSize: 10, fontFamily: font, transition: "all 0.2s" }}
+                            onMouseEnter={e => { e.currentTarget.style.color = P.txt; e.currentTarget.style.borderColor = P.borderH; }}
+                            onMouseLeave={e => { e.currentTarget.style.color = P.txt2; e.currentTarget.style.borderColor = P.border; }}
+                          >
+                            <FileText size={10} /> Editar
+                          </button>
+                          <button onClick={() => { if (window.confirm(`¿Eliminar "${prop.name}" del catálogo?`)) deleteCustomProp(prop.id); }} style={{ display: "flex", alignItems: "center", padding: "4px 8px", borderRadius: 6, border: `1px solid ${P.border}`, background: P.glass, cursor: "pointer", color: P.rose, fontSize: 10, transition: "all 0.2s" }}
+                            onMouseEnter={e => { e.currentTarget.style.background = "rgba(232,129,140,0.08)"; e.currentTarget.style.borderColor = P.rose + "40"; }}
+                            onMouseLeave={e => { e.currentTarget.style.background = P.glass; e.currentTarget.style.borderColor = P.border; }}
+                          >
+                            <Trash2 size={10} />
+                          </button>
+                        </div>
+                      </div>
+                      {prop.createdAt && (
+                        <div style={{ padding: "4px 16px 8px", fontSize: 9, color: P.txt3, fontFamily: font }}>
+                          Registrada: {prop.createdAt}{prop.updatedAt && prop.updatedAt !== prop.createdAt ? ` · Editada: ${prop.updatedAt}` : ""}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Default properties summary */}
+            <div>
+              <p style={{ fontSize: 11, color: P.txt2, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 12 }}>
+                Propiedades Riviera Maya ({rivieraProperties.length})
+              </p>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 10 }}>
+                {rivieraProperties.map(prop => {
+                  const dl = driveLinks[prop.id] || prop.driveLink || "";
+                  return (
+                    <div key={prop.id} style={{
+                      padding: "12px 14px", borderRadius: 10,
+                      background: `${prop.accent}06`, border: `1px solid ${prop.accent}18`,
+                      display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8,
+                    }}>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <p style={{ fontSize: 12, fontWeight: 700, color: "#fff", fontFamily: fontDisp, letterSpacing: "-0.01em" }}>{prop.name}</p>
+                        <p style={{ fontSize: 10, color: P.txt3 }}>{prop.location} · ${(prop.priceFrom/1000).toFixed(0)}K–${(prop.priceTo/1000).toFixed(0)}K · ROI {prop.roi}</p>
+                      </div>
+                      <div onClick={e => e.stopPropagation()} style={{ display: "flex", alignItems: "center", gap: 5, flexShrink: 0 }}>
+                        {editingLinkId === prop.id ? (
+                          <div style={{ display: "flex", gap: 5, alignItems: "center" }}>
+                            <input
+                              autoFocus
+                              value={editLinkValue}
+                              onChange={e => setEditLinkValue(e.target.value)}
+                              onKeyDown={e => { if (e.key === "Enter") saveDriveLink(prop.id); if (e.key === "Escape") { setEditingLinkId(null); setEditLinkValue(""); } }}
+                              placeholder="Link Drive..."
+                              style={{ padding: "4px 8px", borderRadius: 6, fontSize: 10, background: P.glass, border: `1px solid ${P.accent}50`, color: P.txt, fontFamily: font, outline: "none", width: 180 }}
+                            />
+                            <button onClick={() => saveDriveLink(prop.id)} style={{ padding: "4px 9px", borderRadius: 5, border: "none", background: P.accent, color: "#000", fontSize: 10, fontWeight: 700, cursor: "pointer" }}>OK</button>
+                            <button onClick={() => { setEditingLinkId(null); setEditLinkValue(""); }} style={{ padding: "4px 6px", borderRadius: 5, border: `1px solid ${P.border}`, background: P.glass, cursor: "pointer", color: P.txt3 }}><X size={10} /></button>
+                          </div>
+                        ) : (
+                          <div style={{ display: "flex", gap: 5, alignItems: "center" }}>
+                            {dl && <a href={dl} target="_blank" rel="noreferrer" style={{ display: "flex", alignItems: "center", gap: 4, padding: "4px 9px", borderRadius: 6, border: `1px solid ${prop.accent}40`, background: `${prop.accent}10`, color: prop.accent, fontSize: 10, fontWeight: 700, textDecoration: "none" }}><Image size={10} /> Galería</a>}
+                            <button onClick={e => { e.stopPropagation(); startEditLink(prop.id, dl, e); }} style={{ display: "flex", alignItems: "center", gap: 3, padding: "4px 9px", borderRadius: 6, border: `1px solid ${P.border}`, background: P.glass, cursor: "pointer", color: P.txt2, fontSize: 10, fontFamily: font }}>
+                              <FileText size={9} /> {dl ? "Editar link" : "Añadir link"}
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {customProperties.length === 0 && (
+              <div style={{ textAlign: "center", padding: "24px 0 8px" }}>
+                <p style={{ fontSize: 13, color: P.txt2, fontFamily: fontDisp, marginBottom: 8 }}>Aún no has registrado propiedades personalizadas</p>
+                <p style={{ fontSize: 11, color: P.txt3, marginBottom: 16 }}>Registra desarrollos adicionales para incluirlos en tus landing pages</p>
+                <button onClick={() => setShowNewPropModal(true)} style={{
+                  display: "inline-flex", alignItems: "center", gap: 8, padding: "12px 24px",
+                  borderRadius: 10, border: `1px solid ${P.accent}40`, background: P.accentS,
+                  cursor: "pointer", color: P.accent, fontSize: 13, fontWeight: 700, fontFamily: fontDisp,
+                }}>
+                  <Plus size={15} /> Registrar primera propiedad
+                </button>
+              </div>
+            )}
+          </div>
+        )}
       </G>
 
       {/* Quick Market Stats */}
@@ -2578,6 +3808,15 @@ const LandingPages = () => {
           </div>
         </G>
       </div>
+
+      {/* New Property Modal accessible from step 0 */}
+      {showNewPropModal && (
+        <NewPropertyModal
+          onClose={() => { setShowNewPropModal(false); setEditingProp(null); }}
+          onSave={saveCustomProp}
+          initialData={editingProp}
+        />
+      )}
     </div>
   );
 
@@ -2619,6 +3858,21 @@ const LandingPages = () => {
         </div>
 
         <div style={{ marginBottom: 18 }}>
+          <label style={{ fontSize: 11, color: P.txt2, display: "flex", alignItems: "center", gap: 6, marginBottom: 6, fontWeight: 600, letterSpacing: "0.03em" }}>
+            <Building2 size={11} color={P.accent} /> Nombre de la agencia / bróker
+          </label>
+          <input
+            type="text" value={agencyName}
+            onChange={e => { setAgencyName(e.target.value); localStorage.setItem("stratos_agency_name", e.target.value); }}
+            placeholder="Ej: STRATOS REALTY, Inmobiliaria Azul, RE/MAX Elite…"
+            style={{ width: "100%", padding: "10px 14px", borderRadius: 9, fontSize: 13, background: P.glass, border: `1px solid ${P.accentB}`, color: P.txt, fontFamily: font, outline: "none" }}
+            onFocus={e => e.target.style.borderColor = P.accent + "60"}
+            onBlur={e => e.target.style.borderColor = P.accentB}
+          />
+          <p style={{ fontSize: 10, color: P.txt3, marginTop: 4 }}>Aparece en el encabezado de la landing page del cliente. Se guarda automáticamente.</p>
+        </div>
+
+        <div style={{ marginBottom: 18 }}>
           <label style={{ fontSize: 11, color: P.txt2, display: "block", marginBottom: 6, fontWeight: 600, letterSpacing: "0.03em" }}>Asesor asignado</label>
           <select value={asesor} onChange={e => setAsesor(e.target.value)} style={{
             width: "100%", padding: "12px 16px", borderRadius: 10, fontSize: 13,
@@ -2627,6 +3881,44 @@ const LandingPages = () => {
           }}>
             {team.map(t => <option key={t.n} value={t.n}>{t.n} — {t.r}</option>)}
           </select>
+        </div>
+
+        {/* Asesor contact info */}
+        <div style={{ marginBottom: 18, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+          <div>
+            <label style={{ fontSize: 11, color: P.txt2, display: "flex", alignItems: "center", gap: 5, marginBottom: 6, fontWeight: 600, letterSpacing: "0.03em" }}>
+              <Phone size={11} color={P.emerald} /> WhatsApp del asesor
+            </label>
+            <input
+              type="text" value={asesorWA} onChange={e => setAsesorWA(e.target.value)}
+              placeholder="+52 998 000 0000"
+              style={{ width: "100%", padding: "10px 14px", borderRadius: 9, fontSize: 13, background: P.glass, border: `1px solid ${asesorWA ? P.emerald + "50" : P.border}`, color: P.txt, fontFamily: font, outline: "none" }}
+              onFocus={e => e.target.style.borderColor = P.emerald + "70"}
+              onBlur={e => e.target.style.borderColor = asesorWA ? P.emerald + "50" : P.border}
+            />
+            {asesorWA && (
+              <a href={`https://wa.me/${asesorWA.replace(/\D/g,"")}`} target="_blank" rel="noreferrer" style={{ fontSize: 10, color: P.emerald, marginTop: 4, display: "inline-block" }}>
+                ✓ Verificar número
+              </a>
+            )}
+          </div>
+          <div>
+            <label style={{ fontSize: 11, color: P.txt2, display: "flex", alignItems: "center", gap: 5, marginBottom: 6, fontWeight: 600, letterSpacing: "0.03em" }}>
+              <CalendarDays size={11} color={P.blue} /> Link de agenda (Calendly, Cal.com…)
+            </label>
+            <input
+              type="text" value={asesorCal} onChange={e => setAsesorCal(e.target.value)}
+              placeholder="https://calendly.com/..."
+              style={{ width: "100%", padding: "10px 14px", borderRadius: 9, fontSize: 13, background: P.glass, border: `1px solid ${asesorCal ? P.blue + "50" : P.border}`, color: P.txt, fontFamily: font, outline: "none" }}
+              onFocus={e => e.target.style.borderColor = P.blue + "70"}
+              onBlur={e => e.target.style.borderColor = asesorCal ? P.blue + "50" : P.border}
+            />
+            {asesorCal && (
+              <a href={asesorCal} target="_blank" rel="noreferrer" style={{ fontSize: 10, color: P.blue, marginTop: 4, display: "inline-block" }}>
+                ✓ Verificar link
+              </a>
+            )}
+          </div>
         </div>
 
         <div style={{ marginBottom: 18 }}>
@@ -2738,7 +4030,9 @@ const LandingPages = () => {
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 14px", borderRadius: 10, background: "rgba(255,255,255,0.025)", border: `1px solid ${P.border}` }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <Image size={14} color={P.txt3} />
-          <span style={{ fontSize: 11, color: P.txt3, fontFamily: font }}>Haz clic en una propiedad para seleccionarla · Cada propiedad tiene un enlace a sus imágenes en Drive</span>
+          <span style={{ fontSize: 11, color: P.txt3, fontFamily: font }}>Haz clic para seleccionar · </span>
+          <span style={{ fontSize: 11, color: P.accent, fontWeight: 600, fontFamily: font }}>{filteredProperties.filter(inBudget).length} en presupuesto</span>
+          <span style={{ fontSize: 11, color: P.txt3, fontFamily: font }}>· {filteredProperties.length} totales</span>
         </div>
         <button
           onClick={() => setShowNewPropModal(true)}
@@ -2758,8 +4052,9 @@ const LandingPages = () => {
       <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 16 }}>
         {filteredProperties.map(prop => {
           const selected = selectedProps.includes(prop.id);
-          const driveLink = driveLinks[prop.id] || "";
+          const driveLink = driveLinks[prop.id] || prop.driveLink || "";
           const isEditingThis = editingLinkId === prop.id;
+          const matchesBudget = inBudget(prop);
 
           return (
             <div key={prop.id} style={{
@@ -2769,6 +4064,7 @@ const LandingPages = () => {
               boxShadow: selected ? `0 0 24px ${prop.accent}20` : "none",
               transform: selected ? "scale(1.01)" : "scale(1)",
               position: "relative",
+              opacity: matchesBudget ? 1 : 0.75,
             }}>
               {/* Clickable area for selection */}
               <div onClick={() => toggleProp(prop.id)} style={{ cursor: "pointer" }}>
@@ -2801,7 +4097,15 @@ const LandingPages = () => {
                       <Check size={16} color="#000" strokeWidth={3} />
                     </div>
                   )}
-                  {!selected && (
+                  {!selected && !matchesBudget && (
+                    <div style={{
+                      position: "absolute", top: 12, right: 12,
+                      padding: "3px 8px", borderRadius: 6,
+                      background: "rgba(0,0,0,0.6)", border: "1px solid rgba(255,255,255,0.15)",
+                      fontSize: 9, color: "rgba(255,255,255,0.5)", fontFamily: font, whiteSpace: "nowrap",
+                    }}>Fuera de rango</div>
+                  )}
+                  {!selected && matchesBudget && (
                     <div style={{
                       position: "absolute", top: 12, right: 12,
                       width: 28, height: 28, borderRadius: "50%",
@@ -2828,9 +4132,14 @@ const LandingPages = () => {
                     </div>
                   </div>
                   <p style={{ fontSize: 11, color: P.txt2, lineHeight: 1.5, fontFamily: font, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{prop.description}</p>
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: 4, marginTop: 8 }}>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 4, marginTop: 10 }}>
                     {prop.highlights.slice(0, 3).map((h, i) => (
-                      <span key={i} style={{ fontSize: 9, color: P.txt3, padding: "3px 8px", borderRadius: 4, background: "rgba(255,255,255,0.04)", border: `1px solid ${P.border}` }}>{h}</span>
+                      <div key={i} style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                        <div style={{ width: 14, height: 14, borderRadius: "50%", background: `${prop.accent}18`, border: `1px solid ${prop.accent}40`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                          <CheckCircle2 size={8} color={prop.accent} />
+                        </div>
+                        <span style={{ fontSize: 10, color: P.txt2, fontFamily: font, lineHeight: 1.3 }}>{h}</span>
+                      </div>
                     ))}
                   </div>
                 </div>
@@ -2874,9 +4183,11 @@ const LandingPages = () => {
                       <span style={{
                         fontSize: 11, color: driveLink ? P.accent : P.txt3, fontFamily: font,
                         overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
-                        maxWidth: 160,
-                      }}>
-                        {driveLink ? "Link Drive configurado" : "Sin link de imágenes"}
+                        maxWidth: 200,
+                      }} title={driveLink || ""}>
+                        {driveLink
+                          ? (driveLink.length > 38 ? driveLink.slice(0, 35) + "…" : driveLink)
+                          : "Sin link de imágenes"}
                       </span>
                     </div>
                     <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
@@ -2956,8 +4267,9 @@ const LandingPages = () => {
       {/* New Property Modal */}
       {showNewPropModal && (
         <NewPropertyModal
-          onClose={() => setShowNewPropModal(false)}
-          onSave={prop => setCustomProperties(prev => [...prev, prop])}
+          onClose={() => { setShowNewPropModal(false); setEditingProp(null); }}
+          onSave={saveCustomProp}
+          initialData={editingProp}
         />
       )}
 
@@ -2966,7 +4278,10 @@ const LandingPages = () => {
         <LandingPagePreview
           client={clientName}
           asesor={asesor}
+          asesorWA={asesorWA}
+          asesorCal={asesorCal}
           mensaje={mensaje}
+          agencyName={agencyName}
           properties={allProperties.filter(p => selectedProps.includes(p.id))}
           driveLinks={driveLinks}
           onClose={() => { setPreviewOpen(false); resetForm(); }}
@@ -2984,14 +4299,29 @@ const LandingPages = () => {
 /* ════════════════════════════════════════
    LANDING PAGE PREVIEW — FULL SCREEN
    ════════════════════════════════════════ */
-const LandingPagePreview = ({ client, asesor, mensaje, properties, onClose, onCopyLink, copied, driveLinks = {} }) => {
+const LandingPagePreview = ({ client, asesor, asesorWA = "", asesorCal = "", mensaje, agencyName = "STRATOS REALTY", properties, onClose, onCopyLink, copied, driveLinks = {} }) => {
   const [activeProperty, setActiveProperty] = useState(0);
-  const [showROI, setShowROI] = useState(false);
+  const [showSharePanel, setShowSharePanel] = useState(false);
 
   const currentProp = properties[activeProperty] || properties[0];
   if (!currentProp) return null;
 
   const fmtPrice = (n) => n >= 1000000 ? `$${(n / 1000000).toFixed(1)}M` : `$${(n / 1000).toFixed(0)}K`;
+
+  const waPhone = asesorWA.replace(/\D/g, "");
+  const propNames = properties.map(p => p.name).join(", ");
+  const waText = encodeURIComponent(`Hola ${asesor.split(" ")[0]}, acabo de revisar la presentación de propiedades que me enviaste (${propNames}). Me gustaría conocer más detalles.`);
+  const waUrl = waPhone ? `https://wa.me/${waPhone}?text=${waText}` : null;
+  const calUrl = asesorCal || null;
+
+  const demoShareUrl = `${window.location.origin}${window.location.pathname}?lp=preview&c=${encodeURIComponent(client || "cliente")}`;
+
+  const handleWhatsAppAdvisor = () => {
+    if (waUrl) window.open(waUrl, "_blank");
+  };
+  const handleScheduleCall = () => {
+    if (calUrl) window.open(calUrl, "_blank");
+  };
 
   return (
     <div style={{
@@ -2999,6 +4329,85 @@ const LandingPagePreview = ({ client, asesor, mensaje, properties, onClose, onCo
       background: "#000000", overflowY: "auto",
       fontFamily: font,
     }}>
+      {/* Share panel overlay */}
+      {showSharePanel && (
+        <div style={{
+          position: "fixed", inset: 0, zIndex: 200000,
+          background: "rgba(0,0,0,0.75)", backdropFilter: "blur(12px)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+        }} onClick={() => setShowSharePanel(false)}>
+          <div onClick={e => e.stopPropagation()} style={{
+            background: "#0C1219", border: `1px solid ${P.border}`,
+            borderRadius: 20, padding: "28px 32px", width: 500, maxWidth: "95vw",
+            boxShadow: "0 40px 80px rgba(0,0,0,0.7)",
+          }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+              <p style={{ fontSize: 16, fontWeight: 700, color: "#fff", fontFamily: fontDisp }}>Enviar al cliente</p>
+              <button onClick={() => setShowSharePanel(false)} style={{ width: 30, height: 30, borderRadius: 7, border: `1px solid ${P.border}`, background: P.glass, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <X size={14} color={P.txt2} />
+              </button>
+            </div>
+
+            {/* Copy link */}
+            <div style={{ marginBottom: 16 }}>
+              <p style={{ fontSize: 11, color: P.txt2, marginBottom: 8, fontWeight: 600, letterSpacing: "0.04em", textTransform: "uppercase" }}>Enlace de la landing page</p>
+              <div style={{ display: "flex", gap: 8 }}>
+                <input readOnly value={demoShareUrl} style={{ flex: 1, padding: "10px 14px", borderRadius: 9, fontSize: 11, background: P.glass, border: `1px solid ${P.border}`, color: P.txt3, fontFamily: font, outline: "none" }} onClick={e => e.target.select()} />
+                <button onClick={() => { onCopyLink(); navigator.clipboard.writeText(demoShareUrl).catch(()=>{}); }} style={{
+                  padding: "10px 18px", borderRadius: 9, border: "none",
+                  background: copied ? P.emerald : P.accent, color: "#000",
+                  fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: fontDisp,
+                  display: "flex", alignItems: "center", gap: 6, whiteSpace: "nowrap",
+                  transition: "background 0.2s",
+                }}>
+                  {copied ? <><Check size={13} /> Copiado</> : <><Copy size={13} /> Copiar</>}
+                </button>
+              </div>
+            </div>
+
+            {/* WhatsApp option */}
+            <div style={{ marginBottom: 12 }}>
+              <p style={{ fontSize: 11, color: P.txt2, marginBottom: 8, fontWeight: 600, letterSpacing: "0.04em", textTransform: "uppercase" }}>Enviar por WhatsApp</p>
+              {waUrl ? (
+                <a href={`https://wa.me/${waPhone}?text=${encodeURIComponent(`Hola ${client || "estimado cliente"}, te comparto la presentación exclusiva de propiedades que seleccioné para ti: ${demoShareUrl}`)}`}
+                  target="_blank" rel="noreferrer"
+                  style={{
+                    display: "flex", alignItems: "center", gap: 10, padding: "12px 18px",
+                    borderRadius: 10, background: "rgba(37,211,102,0.1)", border: "1px solid rgba(37,211,102,0.25)",
+                    color: "#25D366", textDecoration: "none", fontSize: 13, fontWeight: 700, fontFamily: fontDisp,
+                    transition: "all 0.2s",
+                  }}
+                >
+                  <Phone size={16} /> Enviar enlace al cliente por WhatsApp
+                </a>
+              ) : (
+                <div style={{ padding: "12px 18px", borderRadius: 10, background: P.glass, border: `1px solid ${P.border}`, color: P.txt3, fontSize: 12 }}>
+                  Configura el WhatsApp del asesor en el Paso 1 para activar esta opción
+                </div>
+              )}
+            </div>
+
+            {/* Calendly / meeting link */}
+            {calUrl && (
+              <div>
+                <p style={{ fontSize: 11, color: P.txt2, marginBottom: 8, fontWeight: 600, letterSpacing: "0.04em", textTransform: "uppercase" }}>Agendar llamada</p>
+                <a href={calUrl} target="_blank" rel="noreferrer" style={{
+                  display: "flex", alignItems: "center", gap: 10, padding: "12px 18px",
+                  borderRadius: 10, background: P.blueS || "rgba(126,184,240,0.08)", border: `1px solid ${P.blue}30`,
+                  color: P.blue, textDecoration: "none", fontSize: 13, fontWeight: 700, fontFamily: fontDisp,
+                }}>
+                  <CalendarDays size={16} /> Abrir link de agenda
+                </a>
+              </div>
+            )}
+
+            <p style={{ fontSize: 10, color: P.txt3, marginTop: 18, lineHeight: 1.6, textAlign: "center" }}>
+              La landing page muestra las propiedades seleccionadas con todos sus datos,<br />galería de imágenes y botones de contacto directo con el asesor.
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Top Bar */}
       <div style={{
         position: "fixed", top: 0, left: 0, right: 0, zIndex: 100001,
@@ -3009,18 +4418,22 @@ const LandingPagePreview = ({ client, asesor, mensaje, properties, onClose, onCo
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <Pill color={P.accent}>Vista Previa</Pill>
           <span style={{ fontSize: 12, color: P.txt2 }}>Landing page para {client}</span>
+          {properties.length > 1 && (
+            <span style={{ fontSize: 11, color: P.txt3 }}>· {properties.length} propiedades</span>
+          )}
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <button onClick={onCopyLink} style={{
             display: "flex", alignItems: "center", gap: 6, padding: "8px 16px",
-            borderRadius: 8, border: `1px solid ${P.border}`, background: P.glass,
-            cursor: "pointer", color: copied ? P.accent : P.txt2, fontSize: 12, fontWeight: 600, fontFamily: font,
-            transition: "all 0.2s",
+            borderRadius: 8, border: `1px solid ${copied ? P.emerald + "50" : P.border}`,
+            background: copied ? "rgba(109,212,168,0.08)" : P.glass,
+            cursor: "pointer", color: copied ? P.emerald : P.txt2, fontSize: 12, fontWeight: 600, fontFamily: font,
+            transition: "all 0.25s",
           }}>
             {copied ? <Check size={14} /> : <Copy size={14} />}
-            {copied ? "Copiado" : "Copiar enlace"}
+            {copied ? "Enlace copiado" : "Copiar enlace"}
           </button>
-          <button onClick={onCopyLink} style={{
+          <button onClick={() => setShowSharePanel(true)} style={{
             display: "flex", alignItems: "center", gap: 6, padding: "8px 16px",
             borderRadius: 8, border: "none", background: "rgba(255,255,255,0.95)",
             cursor: "pointer", color: "#0A0F18", fontSize: 12, fontWeight: 700, fontFamily: fontDisp,
@@ -3070,7 +4483,7 @@ const LandingPagePreview = ({ client, asesor, mensaje, properties, onClose, onCo
             {/* Branding */}
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 30 }}>
               <StratosAtom size={24} color={currentProp.accent} />
-              <span style={{ fontSize: 14, color: "rgba(255,255,255,0.5)", fontWeight: 400, fontFamily: fontDisp, letterSpacing: "0.1em" }}>STRATOS REALTY</span>
+              <span style={{ fontSize: 14, color: "rgba(255,255,255,0.5)", fontWeight: 400, fontFamily: fontDisp, letterSpacing: "0.1em" }}>{agencyName}</span>
             </div>
 
             {/* Personalized greeting */}
@@ -3093,23 +4506,47 @@ const LandingPagePreview = ({ client, asesor, mensaje, properties, onClose, onCo
               </p>
             )}
 
-            <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
-              <button style={{
-                padding: "14px 32px", borderRadius: 12, border: "none",
-                background: "#FFFFFF", color: "#000000",
-                fontSize: 14, fontWeight: 700, fontFamily: fontDisp, cursor: "pointer",
-                boxShadow: "0 4px 24px rgba(255,255,255,0.2)",
-              }}>
-                Agendar Llamada
-              </button>
-              <button style={{
-                padding: "14px 32px", borderRadius: 12,
-                border: "1px solid rgba(255,255,255,0.2)", background: "rgba(255,255,255,0.05)",
-                color: "#FFFFFF", fontSize: 14, fontWeight: 500, fontFamily: fontDisp, cursor: "pointer",
-                backdropFilter: "blur(10px)",
-              }}>
-                Ver Propiedades
-              </button>
+            <div style={{ display: "flex", gap: 14, alignItems: "center", flexWrap: "wrap" }}>
+              {calUrl ? (
+                <a href={calUrl} target="_blank" rel="noreferrer" style={{
+                  padding: "14px 32px", borderRadius: 12, border: "none",
+                  background: "#FFFFFF", color: "#000000",
+                  fontSize: 14, fontWeight: 700, fontFamily: fontDisp,
+                  boxShadow: "0 4px 24px rgba(255,255,255,0.2)", textDecoration: "none",
+                  display: "inline-flex", alignItems: "center", gap: 8,
+                }}>
+                  <CalendarDays size={15} style={{ verticalAlign: "middle" }} /> Agendar Llamada
+                </a>
+              ) : (
+                <button onClick={() => setShowSharePanel(true)} style={{
+                  padding: "14px 32px", borderRadius: 12, border: "none",
+                  background: "#FFFFFF", color: "#000000",
+                  fontSize: 14, fontWeight: 700, fontFamily: fontDisp, cursor: "pointer",
+                  boxShadow: "0 4px 24px rgba(255,255,255,0.2)",
+                }}>
+                  <CalendarDays size={15} style={{ marginRight: 8, verticalAlign: "middle" }} />Agendar Llamada
+                </button>
+              )}
+              {waUrl ? (
+                <a href={waUrl} target="_blank" rel="noreferrer" style={{
+                  padding: "14px 32px", borderRadius: 12,
+                  border: "1px solid rgba(37,211,102,0.3)", background: "rgba(37,211,102,0.08)",
+                  color: "#25D366", fontSize: 14, fontWeight: 600, fontFamily: fontDisp,
+                  backdropFilter: "blur(10px)", textDecoration: "none",
+                  display: "inline-flex", alignItems: "center", gap: 8,
+                }}>
+                  <Phone size={14} /> WhatsApp
+                </a>
+              ) : (
+                <button onClick={() => setShowSharePanel(true)} style={{
+                  padding: "14px 32px", borderRadius: 12,
+                  border: "1px solid rgba(255,255,255,0.2)", background: "rgba(255,255,255,0.05)",
+                  color: "#FFFFFF", fontSize: 14, fontWeight: 500, fontFamily: fontDisp, cursor: "pointer",
+                  backdropFilter: "blur(10px)",
+                }}>
+                  Contactar Asesor
+                </button>
+              )}
             </div>
 
             {/* Quick stats */}
@@ -3231,26 +4668,50 @@ const LandingPagePreview = ({ client, asesor, mensaje, properties, onClose, onCo
                     </div>
                   </div>
 
-                  {/* Drive link CTA */}
-                  {(driveLinks[prop.id] || prop.driveLink) && (
-                    <a
-                      href={driveLinks[prop.id] || prop.driveLink}
-                      target="_blank" rel="noreferrer"
-                      style={{
-                        display: "inline-flex", alignItems: "center", gap: 10,
-                        padding: "14px 28px", borderRadius: 12,
-                        border: `1px solid ${prop.accent}50`,
-                        background: `${prop.accent}10`,
-                        color: prop.accent, textDecoration: "none",
-                        fontSize: 13, fontWeight: 700, fontFamily: fontDisp,
-                        transition: "all 0.2s",
-                      }}
-                    >
-                      <Image size={16} />
-                      Ver galería de imágenes — {prop.name}
-                      <ExternalLink size={13} />
-                    </a>
-                  )}
+                  {/* Gallery / Drive link CTA */}
+                  <div style={{
+                    marginTop: 8, padding: "20px 24px", borderRadius: 14,
+                    background: (driveLinks[prop.id] || prop.driveLink) ? `${prop.accent}08` : "rgba(255,255,255,0.02)",
+                    border: `1px solid ${(driveLinks[prop.id] || prop.driveLink) ? prop.accent + "30" : "rgba(255,255,255,0.05)"}`,
+                    display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap",
+                  }}>
+                    <div>
+                      <p style={{ fontSize: 13, fontWeight: 600, color: "#FFFFFF", fontFamily: fontDisp, marginBottom: 4 }}>
+                        {(driveLinks[prop.id] || prop.driveLink) ? "Galería de imágenes disponible" : "Galería de imágenes"}
+                      </p>
+                      <p style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", fontFamily: font }}>
+                        {(driveLinks[prop.id] || prop.driveLink)
+                          ? "Fotos reales del proyecto, renders y planos disponibles"
+                          : "El asesor puede agregar un link a la galería de fotos desde el panel"}
+                      </p>
+                    </div>
+                    {(driveLinks[prop.id] || prop.driveLink) ? (
+                      <a
+                        href={driveLinks[prop.id] || prop.driveLink}
+                        target="_blank" rel="noreferrer"
+                        style={{
+                          display: "inline-flex", alignItems: "center", gap: 8,
+                          padding: "12px 24px", borderRadius: 10,
+                          border: `1px solid ${prop.accent}50`,
+                          background: `${prop.accent}15`,
+                          color: prop.accent, textDecoration: "none",
+                          fontSize: 13, fontWeight: 700, fontFamily: fontDisp,
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        <Image size={15} /> Ver galería <ExternalLink size={12} />
+                      </a>
+                    ) : (
+                      <div style={{
+                        display: "inline-flex", alignItems: "center", gap: 8,
+                        padding: "12px 24px", borderRadius: 10,
+                        border: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.03)",
+                        color: "rgba(255,255,255,0.25)", fontSize: 12, fontFamily: fontDisp,
+                      }}>
+                        <Image size={14} /> Galería no configurada
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             ))}
@@ -3329,24 +4790,50 @@ const LandingPagePreview = ({ client, asesor, mensaje, properties, onClose, onCo
               ¿Listo para dar el siguiente paso?
             </h2>
             <p style={{ fontSize: 14, color: "rgba(255,255,255,0.5)", lineHeight: 1.6, marginBottom: 32 }}>
-              Agenda una llamada con {asesor} para conocer todos los detalles, resolver tus dudas y asegurar la mejor oportunidad de inversión.
+              Agenda una llamada con <strong style={{ color: "rgba(255,255,255,0.8)" }}>{asesor}</strong> para conocer todos los detalles, resolver tus dudas y asegurar la mejor oportunidad de inversión.
             </p>
-            <div style={{ display: "flex", gap: 16, justifyContent: "center" }}>
-              <button style={{
-                padding: "16px 40px", borderRadius: 12, border: "none",
-                background: "#FFFFFF", color: "#000000",
-                fontSize: 15, fontWeight: 700, fontFamily: fontDisp, cursor: "pointer",
-                boxShadow: "0 4px 24px rgba(255,255,255,0.2)",
-              }}>
-                Agendar Llamada con {asesor.split(" ")[0]}
-              </button>
-              <button style={{
-                padding: "16px 40px", borderRadius: 12,
-                border: "1px solid rgba(255,255,255,0.15)", background: "transparent",
-                color: "#FFFFFF", fontSize: 15, fontWeight: 500, fontFamily: fontDisp, cursor: "pointer",
-              }}>
-                Enviar WhatsApp
-              </button>
+            <div style={{ display: "flex", gap: 14, justifyContent: "center", flexWrap: "wrap" }}>
+              {calUrl ? (
+                <a href={calUrl} target="_blank" rel="noreferrer" style={{
+                  padding: "16px 40px", borderRadius: 12, border: "none",
+                  background: "#FFFFFF", color: "#000000",
+                  fontSize: 15, fontWeight: 700, fontFamily: fontDisp,
+                  boxShadow: "0 4px 24px rgba(255,255,255,0.2)", textDecoration: "none",
+                  display: "inline-flex", alignItems: "center", gap: 8,
+                }}>
+                  <CalendarDays size={16} /> Agendar con {asesor.split(" ")[0]}
+                </a>
+              ) : (
+                <button style={{
+                  padding: "16px 40px", borderRadius: 12, border: "none",
+                  background: "#FFFFFF", color: "#000000",
+                  fontSize: 15, fontWeight: 700, fontFamily: fontDisp, cursor: "pointer",
+                  boxShadow: "0 4px 24px rgba(255,255,255,0.2)",
+                }}>
+                  Agendar Llamada con {asesor.split(" ")[0]}
+                </button>
+              )}
+              {waUrl ? (
+                <a href={`https://wa.me/${waPhone}?text=${encodeURIComponent(`Hola ${asesor.split(" ")[0]}, vi tu presentación de propiedades y me interesa agendar una llamada. ¿Cuándo tienes disponibilidad?`)}`}
+                  target="_blank" rel="noreferrer"
+                  style={{
+                    padding: "16px 40px", borderRadius: 12,
+                    border: "1px solid rgba(37,211,102,0.3)", background: "rgba(37,211,102,0.08)",
+                    color: "#25D366", fontSize: 15, fontWeight: 600, fontFamily: fontDisp,
+                    textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 8,
+                  }}
+                >
+                  <Phone size={15} /> WhatsApp
+                </a>
+              ) : (
+                <button style={{
+                  padding: "16px 40px", borderRadius: 12,
+                  border: "1px solid rgba(255,255,255,0.15)", background: "transparent",
+                  color: "#FFFFFF", fontSize: 15, fontWeight: 500, fontFamily: fontDisp, cursor: "pointer",
+                }}>
+                  Contactar Asesor
+                </button>
+              )}
             </div>
 
             <div style={{ marginTop: 60, padding: "20px 0", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
@@ -4816,13 +6303,28 @@ const RRHHModule = () => {
 };
 
 export default function App() {
+  const [user, setUser] = useState(() => {
+    try { return JSON.parse(localStorage.getItem("stratos_user") || "null"); }
+    catch { return null; }
+  });
   const [v, setV] = useState("d");
   const [co, setCo] = useState(false);
   const [msgs, setMsgs] = useState([]);
   const [inp, setInp] = useState("");
   const [notifs, setNotifs] = useState([]);
 
+  const handleLogin = (userData) => {
+    localStorage.setItem("stratos_user", JSON.stringify(userData));
+    setUser(userData);
+  };
+
+  const onLogout = () => {
+    localStorage.removeItem("stratos_user");
+    setUser(null);
+  };
+
   useEffect(() => {
+    if (!user) return;
     const notificationsData = [
       { agent: "Cartera de Cierre", text: "$8.7M en negociación final — 3 cierres esperados esta semana", detail: "Gobernador 28 ($4.2M), Monarca 28 ($2.8M), Portofino ($1.7M). Documentación lista. Notarías confirmadas.", c: P.emerald, icon: Banknote, btn: "Gestionar Cierre", action: "Mostrar cartera de cierre" },
       { agent: "Alerta de Conversión", text: "Tasa de conversión pipeline: 32.1% — Superó meta mensual (+8.2%)", detail: "Prospecto→Visita: 52% | Visita→Negociación: 67% | Negociación→Cierre: 50%. Emmanuel Ortiz lidera con 94% eficiencia.", c: P.blue, icon: TrendingUp, btn: "Ver Detalles", action: "Análisis de conversión por asesor" },
@@ -4843,7 +6345,7 @@ export default function App() {
     });
 
     return () => timers.forEach(t => clearTimeout(t));
-  }, []);
+  }, [user]);
 
   const oc = useCallback((t) => {
     setCo(true);
@@ -4852,6 +6354,8 @@ export default function App() {
       setTimeout(() => { setMsgs(p => [...p, { role: "a", ...getResp(t) }]); }, 1105);
     }, 150);
   }, []);
+
+  if (!user) return <LoginScreen onLogin={handleLogin} />;
 
   return (
     <div style={{
@@ -4921,6 +6425,12 @@ export default function App() {
         <button title="Config" style={{ width: 40, height: 40, borderRadius: 11, border: "none", background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
           <Settings size={16} color={P.txt3} />
         </button>
+        <button title="Volver al inicio" onClick={() => window.location.href = "/"} style={{ width: 40, height: 40, borderRadius: 11, border: `1px solid ${P.border}`, background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 6, transition: "all 0.2s" }}
+          onMouseEnter={e => { e.currentTarget.style.background = P.glass; e.currentTarget.style.borderColor = P.borderH; }}
+          onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = P.border; }}
+        >
+          <Home size={15} color={P.txt3} />
+        </button>
       </div>
 
       {/* Main */}
@@ -4959,7 +6469,7 @@ export default function App() {
             </button>
           </div>
 
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "5px 12px", borderRadius: 99, background: P.glass, border: `1px solid ${P.border}` }}>
               <Search size={13} color={P.txt3} />
               <span style={{ fontSize: 11, color: P.txt3 }}>Buscar...</span>
@@ -4969,6 +6479,36 @@ export default function App() {
               <Bell size={14} color={P.txt3} />
               <div style={{ position: "absolute", top: 5, right: 5, width: 5, height: 5, borderRadius: "50%", background: P.rose }} />
             </button>
+            {/* User avatar + logout */}
+            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <div style={{
+                width: 30, height: 30, borderRadius: "50%",
+                background: `linear-gradient(135deg, ${P.accent}30, ${P.accent}08)`,
+                border: `1px solid ${P.accentB}`,
+                display: "flex", alignItems: "center", justifyContent: "center",
+                fontSize: 11, fontWeight: 700, color: P.accent, fontFamily: fontDisp,
+                flexShrink: 0,
+              }}>
+                {user?.name ? user.name.charAt(0).toUpperCase() : "U"}
+              </div>
+              <div style={{ display: "flex", flexDirection: "column" }}>
+                <span style={{ fontSize: 11, color: P.txt, fontWeight: 600, fontFamily: fontDisp, lineHeight: 1.2, maxWidth: 90, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  {user?.name || "Usuario"}
+                </span>
+                {user?.isDemo && <span style={{ fontSize: 9, color: P.amber, fontFamily: font, lineHeight: 1 }}>Demo</span>}
+              </div>
+              <button onClick={onLogout} title="Cerrar sesión" style={{
+                width: 28, height: 28, borderRadius: 7,
+                border: `1px solid ${P.border}`, background: "transparent",
+                cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
+                transition: "all 0.2s",
+              }}
+                onMouseEnter={e => { e.currentTarget.style.background = "rgba(232,129,140,0.08)"; e.currentTarget.style.borderColor = "rgba(232,129,140,0.25)"; }}
+                onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = P.border; }}
+              >
+                <UserCheck size={13} color={P.txt3} />
+              </button>
+            </div>
           </div>
         </div>
 
