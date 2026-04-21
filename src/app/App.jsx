@@ -1717,30 +1717,30 @@ function CRM({ oc, co }) {
                 </div>
               ))}
 
-              {/* ── Estatus / Etapa ── */}
+              {/* ── Estatus / Etapa — pills compactos ── */}
               <div style={{ gridColumn: "1 / -1" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 7 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 8 }}>
                   <Waypoints size={10} color={P.txt3} />
                   <span style={{ fontSize: 10, fontWeight: 700, color: P.txt3, letterSpacing: "0.055em", textTransform: "uppercase", fontFamily: fontDisp }}>Estatus / Etapa</span>
                 </div>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(130px, 1fr))", gap: 7 }}>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
                   {STAGES.map(s => {
                     const c = stgC[s] || P.txt3;
                     const active = newLead.st === s;
                     return (
                       <button key={s} onClick={() => setNewLead(p => ({...p, st: s}))} style={{
-                        padding: "7px 10px", borderRadius: 9, cursor: "pointer",
-                        background: active ? `${c}18` : "rgba(255,255,255,0.03)",
-                        border: `1px solid ${active ? `${c}50` : P.border}`,
+                        padding: "5px 11px", borderRadius: 99, cursor: "pointer",
+                        background: active ? `${c}18` : "transparent",
+                        border: `1px solid ${active ? `${c}55` : P.border}`,
                         color: active ? c : P.txt3,
-                        fontSize: 11, fontWeight: active ? 700 : 500,
-                        fontFamily: font, transition: "all 0.16s",
-                        display: "flex", alignItems: "center", gap: 6, textAlign: "left",
+                        fontSize: 10.5, fontWeight: active ? 700 : 400,
+                        fontFamily: font, transition: "all 0.15s",
+                        display: "flex", alignItems: "center", gap: 5, whiteSpace: "nowrap",
                       }}
-                        onMouseEnter={e => { if (!active) { e.currentTarget.style.background = `${c}0C`; e.currentTarget.style.borderColor = `${c}30`; e.currentTarget.style.color = c; } }}
-                        onMouseLeave={e => { if (!active) { e.currentTarget.style.background = "rgba(255,255,255,0.03)"; e.currentTarget.style.borderColor = P.border; e.currentTarget.style.color = P.txt3; } }}
+                        onMouseEnter={e => { if (!active) { e.currentTarget.style.borderColor = `${c}35`; e.currentTarget.style.color = c; } }}
+                        onMouseLeave={e => { if (!active) { e.currentTarget.style.borderColor = P.border; e.currentTarget.style.color = P.txt3; } }}
                       >
-                        <div style={{ width: 7, height: 7, borderRadius: "50%", background: c, flexShrink: 0, opacity: active ? 1 : 0.5 }} />
+                        <div style={{ width: 6, height: 6, borderRadius: "50%", background: c, flexShrink: 0, opacity: active ? 1 : 0.55 }} />
                         {s}
                       </button>
                     );
@@ -2119,35 +2119,41 @@ function CRM({ oc, co }) {
         )}
       </G>
 
-      {/* ── ANALYTICS ROW ── */}
-      <div style={{ display: "grid", gridTemplateColumns: co ? "1fr 1fr" : "1.2fr 1fr 1fr", gap: 14 }}>
+      {/* ── ANALYTICS ROW — responsive wrap ── */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 14 }}>
 
-        {/* Score chart */}
-        <G>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
-            <p style={{ fontSize: 12.5, fontWeight: 700, color: P.txt, fontFamily: fontDisp }}>Score por Cliente</p>
-            <Pill color={P.blue} s>Top {Math.min(sortedLeads.length, 6)}</Pill>
+        {/* Score por Cliente */}
+        <G style={{ paddingBottom: 10 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+            <p style={{ fontSize: 12.5, fontWeight: 700, color: P.txt, fontFamily: fontDisp, margin: 0 }}>Score por Cliente</p>
+            <Pill color={P.blue} s>Top {Math.min(sortedLeads.length, 8)}</Pill>
           </div>
-          <ResponsiveContainer width="100%" height={120}>
-            <BarChart data={[...sortedLeads].sort((a,b) => b.sc - a.sc).slice(0,6).map(l => ({ n: l.n.split(" ")[0], sc: l.sc }))} margin={{ top: 4, right: 0, left: -28, bottom: 0 }}>
-              <XAxis dataKey="n" tick={{ fill: P.txt3, fontSize: 9, fontFamily: font }} axisLine={false} tickLine={false} />
-              <YAxis domain={[0, 100]} tick={{ fill: P.txt3, fontSize: 9 }} axisLine={false} tickLine={false} />
-              <Tooltip contentStyle={{ background: "#0C1219", border: `1px solid ${P.border}`, borderRadius: 10, color: P.txt, fontSize: 11, boxShadow: "0 8px 32px rgba(0,0,0,0.4)" }} cursor={{ fill: "rgba(255,255,255,0.03)" }} />
-              <Bar dataKey="sc" radius={[4, 4, 0, 0]} maxBarSize={28}>
-                {[...sortedLeads].sort((a,b) => b.sc - a.sc).slice(0,6).map((l, i) => (
-                  <Cell key={i} fill={l.sc >= 80 ? P.emerald : l.sc >= 60 ? P.blue : P.amber} opacity={0.85} />
+          <ResponsiveContainer width="100%" height={150}>
+            <BarChart
+              data={[...sortedLeads].sort((a,b) => b.sc - a.sc).slice(0,8).map(l => ({ n: l.n.split(" ")[0], sc: l.sc }))}
+              margin={{ top: 2, right: 4, left: -20, bottom: 0 }}
+            >
+              <XAxis dataKey="n" tick={{ fill: P.txt3, fontSize: 9, fontFamily: font }} axisLine={false} tickLine={false} interval={0} />
+              <YAxis domain={[0, 100]} tick={{ fill: P.txt3, fontSize: 9 }} axisLine={false} tickLine={false} width={28} />
+              <Tooltip contentStyle={{ background: "#0C1219", border: `1px solid ${P.border}`, borderRadius: 10, color: P.txt, fontSize: 11, boxShadow: "0 8px 32px rgba(0,0,0,0.4)" }} cursor={{ fill: "rgba(255,255,255,0.03)" }} formatter={(v) => [`Score: ${v}`, ""]} />
+              <Bar dataKey="sc" radius={[5, 5, 0, 0]} maxBarSize={32}>
+                {[...sortedLeads].sort((a,b) => b.sc - a.sc).slice(0,8).map((l, i) => (
+                  <Cell key={i} fill={l.sc >= 80 ? P.emerald : l.sc >= 60 ? P.blue : P.cyan} opacity={0.88} />
                 ))}
               </Bar>
             </BarChart>
           </ResponsiveContainer>
         </G>
 
-        {/* Pipeline por etapa — clickable */}
-        <G>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-            <p style={{ fontSize: 12.5, fontWeight: 700, color: P.txt, fontFamily: fontDisp }}>Distribución</p>
+        {/* Distribución por etapa */}
+        <G style={{ paddingBottom: 12 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+            <p style={{ fontSize: 12.5, fontWeight: 700, color: P.txt, fontFamily: fontDisp, margin: 0 }}>Distribución</p>
             {filterStage !== "TODO" && (
-              <button onClick={() => setFilterStage("TODO")} style={{ fontSize: 9.5, color: P.rose, background: "none", border: "none", cursor: "pointer", fontFamily: font, padding: 0 }}>✕ Quitar filtro</button>
+              <button onClick={() => setFilterStage("TODO")} style={{ fontSize: 9.5, color: P.txt3, background: "none", border: "none", cursor: "pointer", fontFamily: font, padding: 0 }}
+                onMouseEnter={e => e.currentTarget.style.color = P.txt2}
+                onMouseLeave={e => e.currentTarget.style.color = P.txt3}
+              >✕ Quitar filtro</button>
             )}
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
@@ -2156,27 +2162,34 @@ function CRM({ oc, co }) {
               if (cnt === 0) return null;
               const pct = Math.round((cnt / visibleLeads.length) * 100);
               const isActive = filterStage === st;
+              const c = stgC[st] || P.txt3;
               return (
-                <div key={st} style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", padding: "3px 0" }} onClick={() => setFilterStage(isActive ? "TODO" : st)}>
-                  <div style={{ width: 7, height: 7, borderRadius: "50%", background: stgC[st] || P.txt3, flexShrink: 0, boxShadow: isActive ? `0 0 6px ${stgC[st] || P.txt3}` : "none" }} />
-                  <span style={{ fontSize: 10, color: isActive ? "#FFF" : P.txt3, width: 98, flexShrink: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontWeight: isActive ? 700 : 400, transition: "color 0.18s" }}>{st}</span>
-                  <div style={{ flex: 1, height: 4, borderRadius: 2, background: "rgba(255,255,255,0.05)" }}>
-                    <div style={{ width: `${pct}%`, height: "100%", borderRadius: 2, background: stgC[st] || P.txt3, transition: "width 0.5s", opacity: isActive ? 1 : 0.7 }} />
+                <div key={st} onClick={() => setFilterStage(isActive ? "TODO" : st)}
+                  style={{ display: "flex", alignItems: "center", gap: 7, cursor: "pointer", padding: "3px 5px", borderRadius: 6, transition: "background 0.15s", background: isActive ? `${c}0C` : "transparent" }}
+                  onMouseEnter={e => { if (!isActive) e.currentTarget.style.background = "rgba(255,255,255,0.03)"; }}
+                  onMouseLeave={e => { if (!isActive) e.currentTarget.style.background = "transparent"; }}
+                >
+                  <div style={{ width: 6, height: 6, borderRadius: "50%", background: c, flexShrink: 0, boxShadow: isActive ? `0 0 5px ${c}` : "none" }} />
+                  <span style={{ fontSize: 10, color: isActive ? "#FFF" : P.txt2, flex: "0 0 auto", maxWidth: 100, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontWeight: isActive ? 700 : 400, fontFamily: font }}>{st}</span>
+                  <div style={{ flex: 1, height: 3.5, borderRadius: 2, background: "rgba(255,255,255,0.05)", minWidth: 12 }}>
+                    <div style={{ width: `${pct}%`, height: "100%", borderRadius: 2, background: c, transition: "width 0.5s", opacity: isActive ? 1 : 0.6 }} />
                   </div>
-                  <span style={{ fontSize: 11, fontWeight: 700, color: isActive ? (stgC[st] || P.txt3) : P.txt2, fontFamily: fontDisp, minWidth: 14, textAlign: "right" }}>{cnt}</span>
+                  <span style={{ fontSize: 10.5, fontWeight: 700, color: isActive ? c : P.txt2, fontFamily: fontDisp, minWidth: 16, textAlign: "right", flexShrink: 0 }}>{cnt}</span>
                 </div>
               );
             })}
           </div>
-          <p style={{ fontSize: 9.5, color: P.txt3, marginTop: 10 }}>Haz clic en una etapa para filtrar</p>
         </G>
 
-        {/* Cartera por asesor */}
-        <G>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-            <p style={{ fontSize: 12.5, fontWeight: 700, color: P.txt, fontFamily: fontDisp }}>Por Asesor</p>
+        {/* Por Asesor */}
+        <G style={{ paddingBottom: 12 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+            <p style={{ fontSize: 12.5, fontWeight: 700, color: P.txt, fontFamily: fontDisp, margin: 0 }}>Por Asesor</p>
             {filterAsesor !== "TODO" && (
-              <button onClick={() => setFilterAsesor("TODO")} style={{ fontSize: 9.5, color: P.rose, background: "none", border: "none", cursor: "pointer", fontFamily: font, padding: 0 }}>✕ Quitar</button>
+              <button onClick={() => setFilterAsesor("TODO")} style={{ fontSize: 9.5, color: P.txt3, background: "none", border: "none", cursor: "pointer", fontFamily: font, padding: 0 }}
+                onMouseEnter={e => e.currentTarget.style.color = P.txt2}
+                onMouseLeave={e => e.currentTarget.style.color = P.txt3}
+              >✕ Quitar</button>
             )}
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
@@ -2185,25 +2198,25 @@ function CRM({ oc, co }) {
               const cnt = aLeads.length;
               const val = aLeads.reduce((s, l) => s + (l.presupuesto || 0), 0);
               const avgSc = Math.round(aLeads.reduce((s, l) => s + l.sc, 0) / cnt);
-              const aCols = [P.accent, P.blue, P.violet, P.amber, P.cyan, P.emerald, P.rose];
+              const aCols = [P.accent, P.blue, P.violet, P.amber, P.cyan, P.emerald];
               const c = aCols[i % aCols.length];
               const isActive = filterAsesor === a;
               return (
-                <div key={a} onClick={() => setFilterAsesor(isActive ? "TODO" : a)} style={{ display: "flex", alignItems: "center", gap: 9, padding: "8px 10px", borderRadius: 10, background: isActive ? `${c}12` : P.glass, border: `1px solid ${isActive ? `${c}35` : P.border}`, cursor: "pointer", transition: "all 0.18s" }}
+                <div key={a} onClick={() => setFilterAsesor(isActive ? "TODO" : a)}
+                  style={{ display: "flex", alignItems: "center", gap: 9, padding: "7px 10px", borderRadius: 10, background: isActive ? `${c}12` : P.glass, border: `1px solid ${isActive ? `${c}35` : P.border}`, cursor: "pointer", transition: "all 0.18s" }}
                   onMouseEnter={e => { if (!isActive) { e.currentTarget.style.background = P.glassH; e.currentTarget.style.borderColor = P.borderH; } }}
                   onMouseLeave={e => { if (!isActive) { e.currentTarget.style.background = P.glass; e.currentTarget.style.borderColor = P.border; } }}
                 >
-                  <div style={{ width: 24, height: 24, borderRadius: "50%", background: `${c}20`, border: `1px solid ${c}32`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 800, color: c, flexShrink: 0 }}>{a.charAt(0)}</div>
+                  <div style={{ width: 24, height: 24, borderRadius: "50%", background: `${c}1E`, border: `1px solid ${c}30`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 800, color: c, flexShrink: 0, fontFamily: fontDisp }}>{a.charAt(0)}</div>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <p style={{ fontSize: 11.5, color: isActive ? "#FFF" : P.txt2, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{a.split(" ")[0]}</p>
-                    <p style={{ fontSize: 9.5, color: P.txt3 }}>{cnt} clientes · score {avgSc}</p>
+                    <p style={{ fontSize: 11.5, color: isActive ? "#FFF" : P.txt2, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", margin: 0, fontFamily: fontDisp }}>{a.split(" ")[0]}</p>
+                    <p style={{ fontSize: 9, color: P.txt3, margin: 0, fontFamily: font }}>{cnt} clientes · score {avgSc}</p>
                   </div>
-                  <span style={{ fontSize: 12, fontWeight: 700, color: c, fontFamily: fontDisp }}>${(val/1000000).toFixed(1)}M</span>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: c, fontFamily: fontDisp, flexShrink: 0 }}>${(val/1000000).toFixed(1)}M</span>
                 </div>
               );
             })}
           </div>
-          <p style={{ fontSize: 9.5, color: P.txt3, marginTop: 8 }}>Haz clic para filtrar por asesor</p>
         </G>
       </div>
 
