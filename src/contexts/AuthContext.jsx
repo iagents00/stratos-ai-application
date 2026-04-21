@@ -22,6 +22,8 @@ import {
   getStoredSession,
   seedDemoUser,
 } from "../lib/auth";
+import { supabase } from "../lib/supabase";
+
 
 // ─── CONTEXTO ────────────────────────────────────────────────────────────────
 export const AuthContext = createContext(null);
@@ -32,23 +34,37 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);   // true durante hidratación inicial
   const [error,   setError]   = useState(null);
 
-  // Hidratación: leer sesión almacenada + sembrar usuario demo
+  // Hidratación: sesión real de Supabase
   useEffect(() => {
-    seedDemoUser();
-    const session = getStoredSession();
-    setUser(session);
-    setLoading(false);
+    const initAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        const role = session.user.user_metadata?.role || 'asesor';
+        const name = session.user.user_metadata?.full_name || session.user.user_metadata?.name || 'Usuario';
+        setUser({ ...session.user, role, name });
+      } else {
+        setUser(null);
+      }
+      setLoading(false);
+    };
 
-    // TODO Supabase — reemplazar el bloque de arriba con:
-    // const { data: { session } } = await supabase.auth.getSession()
-    // setUser(session?.user ?? null)
-    // setLoading(false)
-    //
-    // const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-    //   setUser(session?.user ?? null)
-    // })
-    // return () => subscription.unsubscribe()
+    initAuth();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        // Normalizamos el usuario con el rol de los metadatos para conveniencia en la UI
+        const role = session.user.user_metadata?.role || 'asesor';
+        const name = session.user.user_metadata?.full_name || session.user.user_metadata?.name || 'Usuario';
+        setUser({ ...session.user, role, name });
+      } else {
+        setUser(null);
+      }
+      setLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
+
 
   // ─── ACCIONES ────────────────────────────────────────────────────────────
 
@@ -63,8 +79,10 @@ export function AuthProvider({ children }) {
     }
     if (authError) {
       setError(authError);
-    } else {
-      setUser(data);
+    } else if (data) {
+      const role = data.user_metadata?.role || 'asesor';
+      const name = data.user_metadata?.full_name || data.user_metadata?.name || 'Usuario';
+      setUser({ ...data, role, name });
     }
     setLoading(false);
     return { data, error: authError };
@@ -76,8 +94,10 @@ export function AuthProvider({ children }) {
     const { data, error: authError } = await signUp(name, email, password);
     if (authError) {
       setError(authError);
-    } else {
-      setUser(data);
+    } else if (data) {
+      const role = data.user_metadata?.role || 'asesor';
+      const name = data.user_metadata?.full_name || data.user_metadata?.name || 'Usuario';
+      setUser({ ...data, role, name });
     }
     setLoading(false);
     return { data, error: authError };

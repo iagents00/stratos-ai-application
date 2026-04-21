@@ -3,6 +3,14 @@ import LoginScreen from "../landing/LoginScreen.jsx";
 import PricingScreen from "../landing/PricingScreen.jsx";
 import { createPortal } from "react-dom";
 import { useAuth } from "../hooks/useAuth";
+import { useLeads } from "../hooks/useLeads";
+import { useProperties } from "../hooks/useProperties";
+import { useTeam } from "../hooks/useTeam";
+import { supabase } from "../lib/supabase";
+
+
+
+
 import { adminGetAllUsers, adminCreateUser, adminUpdateUser, adminDeleteUser, adminResetPassword } from "../lib/auth";
 import {
   TrendingUp, Target, ArrowUpRight, ArrowRight, CheckCircle2, Mic, Search,
@@ -200,6 +208,7 @@ const DynIsland = ({ onExpand, notifications = [] }) => {
                     <ChevronRight size={14} color={P.txt3} />
                   </div>
                 ))}
+
               </div>
             )}
 
@@ -271,7 +280,7 @@ const stgC = {
    CRM LEADS DATA  (schema: fecha ingreso, asesor, nombre, tel, estatus,
    presupuesto, proyecto, notas, campaña)
 ───────────────────────────────────────── */
-const leads = [
+const MOCK_LEADS = [
   {
     id: 1,
     fechaIngreso: "2 Abr, 12:07pm",
@@ -590,12 +599,12 @@ PENDIENTE
 Preparar proyección financiera a 10 años. Proponer sesión ejecutiva con Director de Arquitectura y CEO.`,
   },
 ];
-const props = [
+const MOCK_PROPS = [
   { n: "Gobernador 28", u: 48, s: 31, roi: "24%", pr: "$280K–$1.2M", loc: "Playa del Carmen", st: "Pre-venta", c: P.blue },
   { n: "Monarca 28", u: 72, s: 45, roi: "19%", pr: "$180K–$650K", loc: "Playa del Carmen", st: "Construcción", c: P.amber },
   { n: "Portofino", u: 36, s: 12, roi: "32%", pr: "$520K–$2.1M", loc: "Puerto Aventuras", st: "Lanzamiento", c: P.emerald },
 ];
-const team = [
+const MOCK_TEAM = [
   { n: "Oscar Gálvez",      r: "CEO Ejecutivo",          d: 28, rv: "$24.8M", e: 98, sk: 12, role: "CEO",       c: P.violet,  wa: "+52 998 000 0001", cal: "" },
   { n: "Emmanuel Ortiz",    r: "Director de Ventas",     d: 14, rv: "$12.4M", e: 94, sk: 9,  role: "Directivo", c: P.blue,    wa: "+52 998 000 0002", cal: "" },
   { n: "Alexia Santillán",  r: "Directora Administrativa",d:14, rv: "$11.2M", e: 91, sk: 8,  role: "Directiva", c: P.emerald, wa: "+52 998 000 0003", cal: "" },
@@ -716,12 +725,13 @@ const responses = {
   }
 };
 
-const getResp = (t, leadData) => {
-  const l = t.toLowerCase();
+const getResp = (t, leadData, currentLeads = MOCK_LEADS) => {
+  const l = t?.toLowerCase() || "";
+  // Si viene leadData directo (desde un botón en el UI), lo usamos
+  const lead = leadData || currentLeads.find(le => l.includes(le.n.toLowerCase()) || l.includes(le.n.split(" ")[0].toLowerCase()));
 
-  // — CRM direct brief — usa datos en vivo si se pasan, o busca en el array estático —
+  // — CRM direct brief — usa datos en vivo si se pasan, o busca en el array dinámico —
   if (l.startsWith("__crm__") || leadData) {
-    const lead = leadData || leads.find(le => l.includes(le.n.toLowerCase()) || l.includes(le.n.split(" ")[0].toLowerCase()));
     if (lead) {
       const frictionColor = lead.friction === "Bajo" ? P.emerald : lead.friction === "Medio" ? P.cyan : P.violet;
       const stageColor = stgC[lead.st] || P.txt3;
@@ -748,11 +758,6 @@ const getResp = (t, leadData) => {
   }
 
   // — Match a specific lead by name —
-  const lead = leads.find(le => {
-    const parts = le.n.toLowerCase().split(" ");
-    return l.includes(le.n.toLowerCase()) || parts.some(p => p.length > 3 && l.includes(p));
-  });
-
   if (lead) {
     const frictionIcon = lead.friction === "Bajo" ? CheckCircle2 : lead.friction === "Medio" ? AlertCircle : AlertTriangle;
     const frictionColor = lead.friction === "Bajo" ? P.emerald : lead.friction === "Medio" ? P.cyan : P.violet;
@@ -773,7 +778,7 @@ const getResp = (t, leadData) => {
 
   // — Priority / today's focus —
   if (l.includes("priorit") || l.includes("hoy") || l.includes("80/20") || l.includes("importante") || l.includes("focus")) {
-    const hot = leads.filter(x => x.isNew || x.sc >= 80 || x.st === "Zoom Agendado").slice(0, 3);
+    const hot = currentLeads.filter(x => x.isNew || x.sc >= 80 || x.st === "Zoom Agendado").slice(0, 3);
     const totalV = hot.reduce((s, x) => s + (x.presupuesto || 0), 0);
     return {
       content: "Tus **3 prioridades de hoy** — Análisis 80/20 del pipeline activo:",
@@ -854,139 +859,158 @@ const getResp = (t, leadData) => {
 /* ════════════════════════════════════════
    VIEWS
    ════════════════════════════════════════ */
-const Dash = ({ oc, co }) => (
-  <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
-    <div style={{ display: "grid", gridTemplateColumns: co ? "repeat(2, 1fr)" : "repeat(4, 1fr)", gap: 14 }}>
-      <KPI label="Ingresos Acumulados" value="$35.9M" sub="+28%" icon={DollarSign} />
-      <KPI label="Proyección Comercial" value="70" sub="+12 mes" icon={Target} color={P.blue} />
-      <KPI label="Tasa de Conversión" value="18.4%" sub="+3.2pp" icon={TrendingUp} color={P.emerald} />
-      <KPI label="Agentes IA" value="47" sub="12 auto" icon={Atom} color={P.violet} />
-    </div>
-    <div style={{ display: "grid", gridTemplateColumns: co ? "1fr" : "3fr 1.3fr", gap: 14 }}>
-      <G>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
-          <p style={{ fontSize: 13, fontWeight: 700, color: P.txt }}>Ingresos vs Objetivo</p>
-          <Pill color={P.emerald} s>+28% target</Pill>
-        </div>
-        <ResponsiveContainer width="100%" height={170}>
-          <AreaChart data={revenue}>
-            <XAxis dataKey="m" tick={{ fill: P.txt3, fontSize: 10 }} axisLine={false} tickLine={false} />
-            <YAxis tick={{ fill: P.txt3, fontSize: 10 }} axisLine={false} tickLine={false} domain={[0, 10]} />
-            <Tooltip contentStyle={{ background: P.surface, border: `1px solid ${P.border}`, borderRadius: 10, color: P.txt, fontSize: 12, boxShadow: "0 8px 32px rgba(0,0,0,0.4)" }} />
-            <Area type="monotone" dataKey="v" stroke={P.accent} strokeWidth={2.5} fill={`${P.accent}14`} dot={{ r: 3, fill: P.accent, stroke: P.bg, strokeWidth: 2 }} name="$M" />
-          </AreaChart>
-        </ResponsiveContainer>
-      </G>
-      <G>
-        <p style={{ fontSize: 13, fontWeight: 700, color: P.txt, marginBottom: 8 }}>Proyección por Etapas</p>
-        {pipe.map(d => (
-          <div key={d.name} style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
-            <span style={{ fontSize: 11, color: P.txt2, width: 74 }}>{d.name}</span>
-            <div style={{ flex: 1, height: 6, borderRadius: 3, background: P.glass }}>
-              <div style={{ height: 6, borderRadius: 3, width: `${(d.val / 70) * 100}%`, background: d.c, transition: "width 0.8s ease", boxShadow: `0 0 8px ${d.c}30` }} />
-            </div>
-            <span style={{ fontSize: 12, fontWeight: 700, color: d.c, width: 24, textAlign: "right" }}>{d.val}</span>
-          </div>
-        ))}
-        <div style={{ marginTop: 6, padding: "8px 10px", borderRadius: P.rx, background: P.accentS, border: `1px solid ${P.accentB}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <span style={{ fontSize: 11, color: P.txt2 }}>Total</span>
-          <span style={{ fontSize: 15, fontWeight: 800, color: P.accent, fontFamily: "'Outfit'" }}>70</span>
-        </div>
-      </G>
-    </div>
+const Dash = ({ oc, co, leads = [] }) => {
+  const totalLeads = leads.length;
+  const closedLeads = leads.filter(l => l.st === "Cerrado" || l.st === "Escritura");
+  const accumulatedRevenue = closedLeads.reduce((s, l) => s + (l.budget || 0), 0);
+  const totalPipeline = leads.reduce((s, l) => s + (l.budget || 0), 0);
+  const conversionRate = totalLeads ? ((closedLeads.length / totalLeads) * 100).toFixed(1) : 0;
+  const hotLeads = leads.filter(l => l.hot || l.sc >= 80).length;
 
-    {/* Quick actions */}
-    <div style={{ display: "grid", gridTemplateColumns: co ? "repeat(2, 1fr)" : "repeat(4, 1fr)", gap: 10 }}>
-      {[
-        { l: "Nota de voz", i: Mic2, c: P.accent, q: examples[0].t },
-        { l: "Mis prioridades", i: Crosshair, c: P.amber, q: examples[1].t },
-        { l: "Agendar tarea", i: CalendarDays, c: P.blue, q: examples[2].t },
-        { l: "Reporte equipo", i: Trophy, c: P.violet, q: examples[3].t },
-      ].map(a => (
-        <button key={a.l} onClick={() => oc(a.q)} style={{
-          display: "flex", alignItems: "center", gap: 10, padding: "12px 14px",
-          borderRadius: P.rs, border: `1px solid ${a.c}18`,
-          background: `${a.c}08`, cursor: "pointer", color: P.txt2,
-          fontSize: 12, fontWeight: 600, fontFamily: font, transition: "all 0.25s",
-        }}><Ico icon={a.i} sz={30} is={14} c={a.c} />{a.l}</button>
-      ))}
-    </div>
+  const dynamicPipe = STAGES.map(st => ({
+    name: st,
+    val: leads.filter(l => l.st === st).length,
+    c: stgC[st] || P.txt3
+  })).filter(d => d.val > 0);
 
-    {/* Priority leads — new registrations + zoom scheduled */}
-    <G np>
-      <div style={{ padding: "13px 18px", display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: `1px solid ${P.border}` }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <div style={{ width: 7, height: 7, borderRadius: "50%", background: P.accent, boxShadow: `0 0 8px ${P.accent}` }} />
-          <p style={{ fontSize: 13, fontWeight: 700, color: P.txt, fontFamily: fontDisp }}>Atención Inmediata</p>
-          <Pill color={P.accent} s>Nuevos · Zoom agendado</Pill>
-        </div>
-        <button onClick={() => {}} style={{ fontSize: 11, color: P.txt3, background: "none", border: "none", cursor: "pointer", fontFamily: font }}>Ver todos →</button>
+  const revenueTrend = [
+    { m: "Ene", v: 4.2 }, { m: "Feb", v: 5.8 }, { m: "Mar", v: 3.5 },
+    { m: "Abr", v: 7.2 }, { m: "May", v: 8.4 }, 
+    { m: "Jun", v: accumulatedRevenue / 1000000 || 6.9 },
+  ];
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+      <div style={{ display: "grid", gridTemplateColumns: co ? "repeat(2, 1fr)" : "repeat(4, 1fr)", gap: 14 }}>
+        <KPI label="Ingresos Reales" value={`$${(accumulatedRevenue / 1000000).toFixed(1)}M`} sub="En caja" icon={DollarSign} color={P.emerald} />
+        <KPI label="Pipeline Activo" value={`$${(totalPipeline / 1000000).toFixed(1)}M`} sub={`${totalLeads} prospectos`} icon={Target} color={P.blue} />
+        <KPI label="Tasa de Conversión" value={`${conversionRate}%`} sub="Lead a Cierre" icon={TrendingUp} color={P.amber} />
+        <KPI label="Clientes High-Score" value={hotLeads} sub="Score > 80" icon={Atom} color={P.violet} />
       </div>
-      {leads.filter(l => l.isNew || l.st === "Zoom Agendado").sort((a,b) => b.sc - a.sc).slice(0, 4).map(l => (
-        <div key={l.id} onClick={() => oc(`__crm__ ${l.n.toLowerCase()}`)} style={{
-          display: "grid", gridTemplateColumns: "2fr 0.55fr 0.9fr 0.7fr 1.4fr",
-          alignItems: "center", padding: "11px 18px", borderBottom: `1px solid ${P.border}`,
-          gap: 8, cursor: "pointer", transition: "background 0.18s",
-        }}
-          onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.025)"}
-          onMouseLeave={e => e.currentTarget.style.background = "transparent"}
-        >
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <div style={{ width: 28, height: 28, borderRadius: 8, background: `${l.hot ? P.accent : P.blue}12`, border: `1px solid ${l.hot ? P.accent : P.blue}20`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 700, color: l.hot ? P.accent : P.blue, flexShrink: 0, fontFamily: fontDisp }}>{l.n.charAt(0)}</div>
-            <div>
-              <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
-                <span style={{ fontSize: 12.5, fontWeight: 600, color: "#FFFFFF", fontFamily: fontDisp, letterSpacing: "-0.01em" }}>{l.n}</span>
-                {l.isNew && <span style={{ fontSize: 8, fontWeight: 800, color: P.accent, background: `${P.accent}14`, padding: "1px 5px", borderRadius: 99, letterSpacing: "0.06em" }}>NEW</span>}
-              </div>
-              <p style={{ fontSize: 9, color: P.txt3, marginTop: 1 }}>{l.tag}</p>
-            </div>
-          </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-            <div style={{ width: 24, height: 3, borderRadius: 2, background: P.border }}>
-              <div style={{ width: `${l.sc}%`, height: 3, borderRadius: 2, background: l.sc >= 80 ? P.emerald : l.sc >= 60 ? P.blue : P.cyan }} />
-            </div>
-            <span style={{ fontSize: 10, fontWeight: 700, color: l.sc >= 80 ? P.emerald : l.sc >= 60 ? P.blue : P.cyan, fontFamily: fontDisp }}>{l.sc}</span>
-          </div>
-          <Pill color={stgC[l.st]} s>{l.st}</Pill>
-          <span style={{ fontSize: 13, fontWeight: 500, color: "#FFFFFF", fontFamily: fontDisp, letterSpacing: "-0.02em" }}>{l.budget}</span>
-          <div style={{ padding: "5px 8px", borderRadius: 7, background: `${P.accent}07`, border: `1px solid ${P.accentB}` }}>
-            <p style={{ fontSize: 9, fontWeight: 700, color: P.accent, letterSpacing: "0.04em", marginBottom: 2 }}>{l.nextActionDate?.toUpperCase()}</p>
-            <p style={{ fontSize: 10, color: P.txt2, lineHeight: 1.35 }}>{l.nextAction?.substring(0, 45)}{l.nextAction?.length > 45 ? "…" : ""}</p>
-          </div>
-        </div>
-      ))}
-    </G>
 
-    {/* Agent status strip */}
-    <div style={{ display: "grid", gridTemplateColumns: co ? "1fr" : "repeat(3, 1fr)", gap: 10 }}>
-      {[
-        { n: "Estrategia", r: "Pipeline 80/20 · Alertas", i: AgentIcons.gerente, c: P.amber, s: "342 acciones" },
-        { n: "Coordinación", r: "Voz→CRM · Tareas", i: AgentIcons.asistente, c: P.blue, s: "1,248 acciones" },
-        { n: "Análisis", r: "ROI · Scoring · Proyecciones", i: AgentIcons.analista, c: P.emerald, s: "186 acciones" },
-      ].map(a => (
-        <G key={a.n} hover>
-          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
-            <Ico icon={a.i} sz={32} is={15} c={a.c} />
-            <div>
-              <p style={{ fontSize: 12, fontWeight: 700, color: P.txt }}>{a.n}</p>
-              <p style={{ fontSize: 10, color: P.txt3 }}>{a.r}</p>
-            </div>
+      <div style={{ display: "grid", gridTemplateColumns: co ? "1fr" : "3fr 1.3fr", gap: 14 }}>
+        <G>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+            <p style={{ fontSize: 13, fontWeight: 700, color: P.txt }}>Tendencia de Ingresos ($M)</p>
+            <Pill color={P.accent} s>Actualizado hoy</Pill>
           </div>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <span style={{ fontSize: 10, color: P.txt3 }}>{a.s}</span>
-            <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-              <div style={{ width: 6, height: 6, borderRadius: "50%", background: P.emerald, boxShadow: `0 0 6px ${P.emerald}50` }} />
-              <span style={{ fontSize: 10, color: P.emerald, fontWeight: 600 }}>Activo</span>
+          <ResponsiveContainer width="100%" height={170}>
+            <AreaChart data={revenueTrend}>
+              <XAxis dataKey="m" tick={{ fill: P.txt3, fontSize: 10 }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fill: P.txt3, fontSize: 10 }} axisLine={false} tickLine={false} domain={[0, 'auto']} />
+              <Tooltip contentStyle={{ background: P.surface, border: `1px solid ${P.border}`, borderRadius: 10, color: P.txt, fontSize: 12, boxShadow: "0 8px 32px rgba(0,0,0,0.4)" }} />
+              <Area type="monotone" dataKey="v" stroke={P.accent} strokeWidth={2.5} fill={`${P.accent}14`} dot={{ r: 3, fill: P.accent, stroke: P.bg, strokeWidth: 2 }} name="$M" />
+            </AreaChart>
+          </ResponsiveContainer>
+        </G>
+        <G>
+          <p style={{ fontSize: 13, fontWeight: 700, color: P.txt, marginBottom: 8 }}>Estado del Pipeline</p>
+          {dynamicPipe.length > 0 ? dynamicPipe.map(d => (
+            <div key={d.name} style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
+              <span style={{ fontSize: 10, color: P.txt2, width: 85, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{d.name}</span>
+              <div style={{ flex: 1, height: 6, borderRadius: 3, background: P.glass }}>
+                <div style={{ height: 6, borderRadius: 3, width: `${(d.val / totalLeads) * 100}%`, background: d.c, transition: "width 0.8s ease", boxShadow: `0 0 8px ${d.c}30` }} />
+              </div>
+              <span style={{ fontSize: 12, fontWeight: 700, color: d.c, width: 24, textAlign: "right" }}>{d.val}</span>
             </div>
+          )) : (
+            <div style={{ padding: "20px 0", textAlign: "center", color: P.txt3, fontSize: 11 }}>Sin datos en pipeline</div>
+          )}
+          <div style={{ marginTop: 6, padding: "8px 10px", borderRadius: P.rx, background: P.accentS, border: `1px solid ${P.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <span style={{ fontSize: 11, color: P.txt2 }}>Total Prospectos</span>
+            <span style={{ fontSize: 15, fontWeight: 800, color: P.accent, fontFamily: fontDisp }}>{totalLeads}</span>
           </div>
         </G>
-      ))}
-    </div>
+      </div>
 
-    {/* Team */}
-    <Team />
-  </div>
-);
+      <div style={{ display: "grid", gridTemplateColumns: co ? "repeat(2, 1fr)" : "repeat(4, 1fr)", gap: 10 }}>
+        {[
+          { l: "Nota de voz", i: Mic2, c: P.accent, q: examples[0].t },
+          { l: "Mis prioridades", i: Crosshair, c: P.amber, q: examples[1].t },
+          { l: "Agendar tarea", i: CalendarDays, c: P.blue, q: examples[2].t },
+          { l: "Reporte equipo", i: Trophy, c: P.violet, q: examples[3].t },
+        ].map(a => (
+          <button key={a.l} onClick={() => oc(a.q)} style={{
+            display: "flex", alignItems: "center", gap: 10, padding: "12px 14px",
+            borderRadius: P.rs, border: `1px solid ${a.c}18`,
+            background: `${a.c}08`, cursor: "pointer", color: P.txt2,
+            fontSize: 12, fontWeight: 600, fontFamily: font, transition: "all 0.25s",
+          }}><Ico icon={a.i} sz={30} is={14} c={a.c} />{a.l}</button>
+        ))}
+      </div>
+
+      <G np>
+        <div style={{ padding: "13px 18px", display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: `1px solid ${P.border}` }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <div style={{ width: 7, height: 7, borderRadius: "50%", background: P.accent, boxShadow: `0 0 8px ${P.accent}` }} />
+            <p style={{ fontSize: 13, fontWeight: 700, color: P.txt, fontFamily: fontDisp }}>Atención Inmediata</p>
+            <Pill color={P.accent} s>Nuevos · Zoom agendado</Pill>
+          </div>
+        </div>
+        {leads.filter(l => l.isNew || l.st === "Zoom Agendado").sort((a,b) => b.sc - a.sc).slice(0, 4).map(l => (
+          <div key={l.id} onClick={() => oc(`__crm__ ${l.n.toLowerCase()}`)} style={{
+            display: "grid", gridTemplateColumns: "2fr 0.55fr 0.9fr 0.7fr 1.4fr",
+            alignItems: "center", padding: "11px 18px", borderBottom: `1px solid ${P.border}`,
+            gap: 8, cursor: "pointer", transition: "background 0.18s",
+          }}
+            onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.025)"}
+            onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <div style={{ width: 28, height: 28, borderRadius: 8, background: `${l.hot ? P.accent : P.blue}12`, border: `1px solid ${l.hot ? P.accent : P.blue}20`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 700, color: l.hot ? P.accent : P.blue, flexShrink: 0, fontFamily: fontDisp }}>{l.n.charAt(0)}</div>
+              <div>
+                <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                  <span style={{ fontSize: 12.5, fontWeight: 600, color: "#FFFFFF", fontFamily: fontDisp, letterSpacing: "-0.01em" }}>{l.n}</span>
+                  {l.isNew && <span style={{ fontSize: 8, fontWeight: 800, color: P.accent, background: `${P.accent}14`, padding: "1px 5px", borderRadius: 99, letterSpacing: "0.06em" }}>NEW</span>}
+                </div>
+                <p style={{ fontSize: 9, color: P.txt3, marginTop: 1 }}>{l.tag}</p>
+              </div>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+              <div style={{ width: 24, height: 3, borderRadius: 2, background: P.border }}>
+                <div style={{ width: `${l.sc}%`, height: 3, borderRadius: 2, background: l.sc >= 80 ? P.emerald : l.sc >= 60 ? P.blue : P.cyan }} />
+              </div>
+              <span style={{ fontSize: 10, fontWeight: 700, color: l.sc >= 80 ? P.emerald : l.sc >= 60 ? P.blue : P.cyan, fontFamily: fontDisp }}>{l.sc}</span>
+            </div>
+            <Pill color={stgC[l.st] || P.txt3} s>{l.st}</Pill>
+            <span style={{ fontSize: 13, fontWeight: 500, color: "#FFFFFF", fontFamily: fontDisp, letterSpacing: "-0.02em" }}>{l.budget}</span>
+            <div style={{ padding: "5px 8px", borderRadius: 7, background: `${P.accent}07`, border: `1px solid ${P.accentB}` }}>
+              <p style={{ fontSize: 9, fontWeight: 700, color: P.accent, letterSpacing: "0.04em", marginBottom: 2 }}>{l.nextActionDate?.toUpperCase() || "HOY"}</p>
+              <p style={{ fontSize: 10, color: P.txt2, lineHeight: 1.35 }}>{l.nextAction?.substring(0, 45) || "Pendiente contacto"}{l.nextAction?.length > 45 ? "…" : ""}</p>
+            </div>
+          </div>
+        ))}
+      </G>
+
+      <div style={{ display: "grid", gridTemplateColumns: co ? "1fr" : "repeat(3, 1fr)", gap: 10 }}>
+        {[
+          { n: "Estrategia", r: "Pipeline 80/20 · Alertas", i: AgentIcons.gerente, c: P.amber, s: "342 acciones" },
+          { n: "Coordinación", r: "Voz→CRM · Tareas", i: AgentIcons.asistente, c: P.blue, s: "1,248 acciones" },
+          { n: "Análisis", r: "ROI · Scoring · Proyecciones", i: AgentIcons.analista, c: P.emerald, s: "186 acciones" },
+        ].map(a => (
+          <G key={a.n} hover>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
+              <Ico icon={a.i} sz={32} is={15} c={a.c} />
+              <div>
+                <p style={{ fontSize: 12, fontWeight: 700, color: P.txt }}>{a.n}</p>
+                <p style={{ fontSize: 10, color: P.txt3 }}>{a.r}</p>
+              </div>
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <span style={{ fontSize: 10, color: P.txt3 }}>{a.s}</span>
+              <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                <div style={{ width: 6, height: 6, borderRadius: "50%", background: P.emerald, boxShadow: `0 0 6px ${P.emerald}50` }} />
+                <span style={{ fontSize: 10, color: P.emerald, fontWeight: 600 }}>Activo</span>
+              </div>
+            </div>
+          </G>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+
 
 /* ─── Score bar helper ─── */
 const ScoreBar = ({ sc, compact }) => {
@@ -1279,7 +1303,7 @@ const LeadPanel = ({ lead, onClose, oc, onOpenNotes, onUpdate }) => {
 /* ═══════════════════════════════════════════
    CRM — Pipeline Pro
 ═══════════════════════════════════════════ */
-function CRM({ oc, co }) {
+function CRM({ oc, co, leads = MOCK_LEADS, updateDb }) {
   const { user } = useAuth();
 
   // Solo director, admin y super_admin ven todos los leads
@@ -1288,6 +1312,12 @@ function CRM({ oc, co }) {
   const [leadsData, setLeadsData]       = useState(() =>
     canSeeAll ? leads : leads.filter(l => l.asesor === user?.name)
   );
+
+  // Sincronizar con Supabase cuando los datos cambian
+  useEffect(() => {
+    setLeadsData(canSeeAll ? leads : leads.filter(l => l.asesor === user?.name));
+  }, [leads, canSeeAll, user?.name]);
+
   const [sortField, setSortField]       = useState("sc");
   const [sortDir, setSortDir]           = useState("desc");
   const [filterStage, setFilterStage]   = useState("TODO");
@@ -1309,6 +1339,8 @@ function CRM({ oc, co }) {
     setLeadsData(prev => prev.map(l => l.id === updated.id ? updated : l));
     if (selectedLead?.id === updated.id) setSelectedLead(updated);
     if (notesLead?.id === updated.id) setNotesLead(updated);
+    // Persistir en Supabase
+    if (updateDb) updateDb(updated.id, updated);
   };
   const saveNotes = (newNotas) => { const u = {...notesLead, notas: newNotas}; updateLead(u); setNotesLead(u); };
   const handleDragStart = (e, id) => { setDragLeadId(id); e.dataTransfer.effectAllowed = "move"; };
@@ -2216,23 +2248,20 @@ function CRM({ oc, co }) {
 }
 
 
-const ERP = ({ oc }) => {
-  const erpProjects = [
-    { id: 1, n: "Gobernador 28", loc: "Playa del Carmen", st: "Construcción", c: P.blue, roi: "24%", u: 48, s: 36, v: "$4.2M", m: 31, f: "Q2 2026", t: "Residencial Premium" },
-    { id: 2, n: "Monarca 28", loc: "Playa del Carmen", st: "Preventa", c: P.emerald, roi: "28%", u: 56, s: 42, v: "$5.8M", m: 29, f: "Q3 2026", t: "Condominios de Lujo" },
-    { id: 3, n: "Portofino", loc: "Cancún", st: "Disponible", c: P.amber, roi: "26%", u: 32, s: 26, v: "$3.8M", m: 32, f: "Q1 2026", t: "Casas Residenciales" },
-    { id: 4, n: "Casa Blanca", loc: "Playa del Carmen", st: "Reserva", c: P.violet, roi: "22%", u: 20, s: 14, v: "$2.2M", m: 27, f: "Q4 2025", t: "Villas Exclusivas" },
+const ERP = ({ oc, properties = MOCK_PROPS }) => {
+  const erpProjects = properties.length > 0 ? properties : [
+    { n: "Gobernador 28", loc: "Playa del Carmen", st: "Construcción", c: P.blue, roi: "24%", u: 48, s: 36, v: "$4.2M", m: 31, f: "Q2 2026", t: "Residencial Premium" },
+    { n: "Monarca 28", loc: "Playa del Carmen", st: "Preventa", c: P.emerald, roi: "28%", u: 56, s: 42, v: "$5.8M", m: 29, f: "Q3 2026", t: "Condominios de Lujo" },
+    { n: "Portofino", loc: "Cancún", st: "Disponible", c: P.amber, roi: "26%", u: 32, s: 26, v: "$3.8M", m: 32, f: "Q1 2026", t: "Casas Residenciales" },
   ];
 
   const inventorySummary = {
-    total: 156,
-    sold: 118,
-    available: 38,
-    reserved: 28,
+    total: erpProjects.reduce((s, p) => s + p.u, 0),
+    sold: erpProjects.reduce((s, p) => s + p.s, 0),
+    available: erpProjects.reduce((s, p) => s + (p.u - p.s), 0),
     value: "$72.4M",
     avgMargin: "26.5%",
     absorption: 75.6,
-    pipeline: "$18.7M"
   };
 
   return (
@@ -2254,15 +2283,14 @@ const ERP = ({ oc }) => {
         <div style={{ display: "grid", gridTemplateColumns: "1.8fr 1fr 1fr 1fr 1.2fr 1fr 1fr", gap: 12, padding: "14px 22px", borderBottom: `1px solid ${P.border}`, fontSize: 10, color: P.txt3, textTransform: "uppercase", letterSpacing: "0.07em", fontWeight: 600 }}>
           <span>Proyecto</span><span>Ubicación</span><span>Estado</span><span>Unidades</span><span>Venta Rápida</span><span>Margen</span><span>Cierre</span>
         </div>
-        {erpProjects.map((proj) => (
-          <div key={proj.id} onClick={() => oc(`Análisis detallado de ${proj.n}: Inventario ${proj.s}/${proj.u}, ROI ${proj.roi}, Absorción ${((proj.s / proj.u) * 100).toFixed(1)}%, Próximo: ${proj.f}`)} style={{
+        {erpProjects.map((proj, i) => (
+          <div key={i} onClick={() => oc(`Análisis detallado de ${proj.n}: Inventario ${proj.s}/${proj.u}, ROI ${proj.roi}`)} style={{
             display: "grid", gridTemplateColumns: "1.8fr 1fr 1fr 1fr 1.2fr 1fr 1fr",
             gap: 12, padding: "16px 22px", borderBottom: `1px solid ${P.border}`,
             cursor: "pointer", transition: "all 0.2s",
           }} onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.03)"} onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
             <div>
               <p style={{ fontSize: 13, fontWeight: 700, color: P.txt, fontFamily: fontDisp, marginBottom: 3 }}>{proj.n}</p>
-              <p style={{ fontSize: 10, color: P.txt3, fontFamily: font }}>{proj.t}</p>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
               <MapPin size={12} color={P.txt3} />
@@ -2279,8 +2307,8 @@ const ERP = ({ oc }) => {
               </div>
               <p style={{ fontSize: 10, color: P.txt3, textAlign: "center" }}>{((proj.s / proj.u) * 100).toFixed(0)}%</p>
             </div>
-            <p style={{ fontSize: 12, fontWeight: 700, color: proj.m > 28 ? P.emerald : proj.m > 25 ? P.blue : P.amber, fontFamily: fontDisp, textAlign: "center" }}>{proj.m}%</p>
-            <p style={{ fontSize: 11, color: P.txt2, fontFamily: font, textAlign: "center" }}>{proj.f}</p>
+            <p style={{ fontSize: 12, fontWeight: 700, color: P.emerald, fontFamily: fontDisp, textAlign: "center" }}>{proj.roi}</p>
+            <p style={{ fontSize: 11, color: P.txt2, fontFamily: font, textAlign: "center" }}>Q4 2025</p>
           </div>
         ))}
       </G>
@@ -2293,7 +2321,6 @@ const ERP = ({ oc }) => {
             {[
               { label: "Vendidas", val: inventorySummary.sold, c: P.emerald },
               { label: "Disponibles", val: inventorySummary.available, c: P.blue },
-              { label: "Reservadas", val: inventorySummary.reserved, c: P.amber },
             ].map(s => (
               <div key={s.label} style={{ display: "flex", alignItems: "center", gap: 12 }}>
                 <span style={{ fontSize: 11, color: P.txt2, fontFamily: font, minWidth: 80 }}>{s.label}</span>
@@ -2315,15 +2342,7 @@ const ERP = ({ oc }) => {
             </div>
             <div style={{ padding: "12px", borderRadius: 8, background: P.glass, border: `1px solid ${P.border}` }}>
               <p style={{ fontSize: 10, color: P.txt3, fontFamily: font, marginBottom: 6 }}>Pipeline Activo</p>
-              <p style={{ fontSize: 16, fontWeight: 800, color: P.blue, fontFamily: fontDisp }}>{inventorySummary.pipeline}</p>
-            </div>
-            <div style={{ padding: "12px", borderRadius: 8, background: P.glass, border: `1px solid ${P.border}` }}>
-              <p style={{ fontSize: 10, color: P.txt3, fontFamily: font, marginBottom: 6 }}>Tiempo Absorción</p>
-              <p style={{ fontSize: 16, fontWeight: 800, color: P.violet, fontFamily: fontDisp }}>6.8 meses</p>
-            </div>
-            <div style={{ padding: "12px", borderRadius: 8, background: P.glass, border: `1px solid ${P.border}` }}>
-              <p style={{ fontSize: 10, color: P.txt3, fontFamily: font, marginBottom: 6 }}>Proyección Q4</p>
-              <p style={{ fontSize: 16, fontWeight: 800, color: P.amber, fontFamily: fontDisp }}>142 Sold</p>
+              <p style={{ fontSize: 16, fontWeight: 800, color: P.blue, fontFamily: fontDisp }}>$18.7M</p>
             </div>
           </div>
         </G>
@@ -2332,7 +2351,7 @@ const ERP = ({ oc }) => {
   );
 };
 
-const Team = () => (
+const Team = ({ team = MOCK_TEAM, properties = MOCK_PROPS }) => (
   <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
     <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 14 }}>
       <KPI label="Eficiencia Operativa" value="87.5%" sub="+5.2%" icon={Gauge} color={P.emerald} />
@@ -2374,9 +2393,9 @@ const Team = () => (
           </div>
           <div style={{ height: 28 }}>
             <ResponsiveContainer width="100%" height={28}>
-              <AreaChart data={[{ v: 2 }, { v: 5 }, { v: 3 }, { v: 7 }, { v: 5 }, { v: 8 }]}>
-                <Area type="monotone" dataKey="v" stroke={P.accent} strokeWidth={1.2} fill={`${P.accent}14`} />
-              </AreaChart>
+              <BarChart data={properties.map(p=>({name:p.n, s:p.s}))}>
+                <Bar dataKey="s" fill={P.accent} radius={[0, 4, 4, 0]} name="Vendidas" />
+              </BarChart>
             </ResponsiveContainer>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 4, justifyContent: "flex-end" }}>
@@ -2478,20 +2497,20 @@ const callCenterData = [
 
 const priorityC = { Alta: P.amber, Media: P.blue, Crítica: P.rose };
 
-const AsesorCRM = ({ oc }) => {
+const AsesorCRM = ({ oc, leads = MOCK_LEADS, updateDb }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("TODO");
 
   // Filtro y búsqueda optimizados con useMemo
   const filteredData = useMemo(() => {
-    return crmAsesores.filter(r => {
-      const matchesSearch = r.cliente.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                            r.asesor.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                            r.tel.includes(searchTerm);
-      const matchesFilter = filterStatus === "TODO" || r.status.includes(filterStatus);
+    return leads.filter(r => {
+      const matchesSearch = (r.n || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+                            (r.asesor || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+                            (r.tel || "").includes(searchTerm);
+      const matchesFilter = filterStatus === "TODO" || (r.st || "").includes(filterStatus);
       return matchesSearch && matchesFilter;
     });
-  }, [searchTerm, filterStatus]);
+  }, [searchTerm, filterStatus, leads]);
 
   return (
   <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
@@ -2506,10 +2525,10 @@ const AsesorCRM = ({ oc }) => {
 
     {/* Stats */}
     <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 14 }}>
-      <KPI label="Registros Totales" value={crmAsesores.length} icon={FileText} color={P.blue} />
-      <KPI label="Zeta Agendados" value={crmAsesores.filter(r => r.status.includes("ZOOM")).length} sub="próximos" icon={CalendarDays} color={P.emerald} />
-      <KPI label="En Seguimiento" value={crmAsesores.filter(r => r.status.includes("SEGUIMIENTO")).length} sub="active" icon={Phone} color={P.amber} />
-      <KPI label="Sin Respuesta" value={crmAsesores.filter(r => r.status.includes("NO CONTESTA")).length} sub="reactivar" icon={Bell} color={P.rose} />
+      <KPI label="Registros Totales" value={leads.length} icon={FileText} color={P.blue} />
+      <KPI label="Zeta Agendados" value={leads.filter(r => (r.st || "").includes("ZOOM")).length} sub="próximos" icon={CalendarDays} color={P.emerald} />
+      <KPI label="En Seguimiento" value={leads.filter(r => (r.st || "").includes("SEGUIMIENTO")).length} sub="active" icon={Phone} color={P.amber} />
+      <KPI label="Sin Respuesta" value={leads.filter(r => (r.st || "").includes("NO CONTESTA")).length} sub="reactivar" icon={Bell} color={P.rose} />
     </div>
 
     {/* Tabla de datos con búsqueda y filtrado */}
@@ -2551,9 +2570,9 @@ const AsesorCRM = ({ oc }) => {
       </div>
       <div style={{ maxHeight: "400px", overflowY: "auto" }}>
         {filteredData.length > 0 ? filteredData.map((r, i) => {
-          const statusColor = r.status.includes("ZOOM") ? P.emerald : r.status.includes("SEGUIMIENTO") ? P.blue : r.status.includes("WHATSAPP") ? P.cyan : P.rose;
+          const statusColor = (r.st || "").includes("ZOOM") ? P.emerald : (r.st || "").includes("SEGUIMIENTO") ? P.blue : (r.st || "").includes("WHATSAPP") ? P.cyan : P.rose;
           return (
-            <div key={i} onClick={() => oc(`Detalles de ${r.cliente}: ${r.notas}`)} style={{
+            <div key={i} onClick={() => oc(`Detalles de ${r.n}: ${r.notes || "Sin notas"}`)} style={{
               display: "grid", gridTemplateColumns: "1fr 1fr 1.2fr 1.2fr 0.9fr 0.9fr 1fr 0.6fr",
               gap: 8, alignItems: "center", padding: "11px 20px", borderBottom: `1px solid ${P.border}`,
               fontSize: 11, cursor: "pointer", transition: "background 0.2s",
@@ -2561,14 +2580,14 @@ const AsesorCRM = ({ oc }) => {
               onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.02)"}
               onMouseLeave={e => e.currentTarget.style.background = "transparent"}
             >
-              <span style={{ color: P.txt3, fontFamily: font, fontSize: 10 }}>{r.fecha}</span>
+              <span style={{ color: P.txt3, fontFamily: font, fontSize: 10 }}>{r.date || "—"}</span>
               <span style={{ color: P.txt, fontWeight: 500, fontFamily: font }}>{r.asesor}</span>
-              <span style={{ color: P.txt, fontWeight: 500, fontFamily: font, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{r.cliente}</span>
+              <span style={{ color: P.txt, fontWeight: 500, fontFamily: font, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{r.n}</span>
               <span style={{ color: P.txt2, fontFamily: "monospace", fontSize: 10 }}>{r.tel}</span>
-              <Pill color={statusColor} s>{r.status}</Pill>
-              <span style={{ color: r.presupuesto ? P.emerald : P.txt3, fontWeight: 500, fontFamily: fontDisp, fontSize: 10 }}>{r.presupuesto || "—"}</span>
-              <span style={{ color: P.txt2, fontSize: 10, fontFamily: font }}>{r.proyecto}</span>
-              <span style={{ color: P.txt3, fontSize: 9 }}>{r.campaña || "—"}</span>
+              <Pill color={statusColor} s>{r.st}</Pill>
+              <span style={{ color: r.budget ? P.emerald : P.txt3, fontWeight: 500, fontFamily: fontDisp, fontSize: 10 }}>{r.budget || "—"}</span>
+              <span style={{ color: P.txt2, fontSize: 10, fontFamily: font }}>{r.project}</span>
+              <span style={{ color: P.txt3, fontSize: 9 }}>{r.camp || "—"}</span>
             </div>
           );
         }) : (
@@ -2696,7 +2715,7 @@ const AsesorCRM = ({ oc }) => {
   );
 };
 
-const IACRM = ({ oc }) => (
+const IACRM = ({ oc, leads = MOCK_LEADS, updateDb }) => (
   <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
     {/* Header con logo */}
     <div style={{ display: "flex", alignItems: "center", gap: 16, padding: "4px 0" }}>
@@ -2876,7 +2895,7 @@ const IACRM = ({ oc }) => (
 /* ════════════════════════════════════════
    CHAT PANEL
    ════════════════════════════════════════ */
-const Chat = ({ open, onClose, msgs, setMsgs, inp, setInp }) => {
+const Chat = ({ open, onClose, msgs, setMsgs, inp, setInp, leads = MOCK_LEADS }) => {
   const endRef = useRef(null);
   const [typing, setTyping] = useState(false);
   const [rec, setRec] = useState(false);
@@ -2888,7 +2907,7 @@ const Chat = ({ open, onClose, msgs, setMsgs, inp, setInp }) => {
     setMsgs(p => [...p, { role: "u", text: t.trim() }]);
     setInp(""); setTyping(true);
     setTimeout(() => {
-      const r = getResp(t);
+      const r = getResp(t, null, leads);
       setMsgs(p => [...p, { role: "a", ...r }]);
       setTyping(false);
     }, 1000 + Math.random() * 600);
@@ -5548,11 +5567,14 @@ const LandingPagePreview = ({ client, asesor, asesorWA = "", asesorCal = "", men
    Sistema Contable-Fiscal · México 2026
    CFDI 4.0 | SAT | NIF | ISR | IVA | IMSS
    ════════════════════════════════════════ */
-const FinanzasAdmin = () => {
-  const [tab, setTab] = useState("panel");
+const FinanzasAdmin = ({ leads = [] }) => {
+  const [tab, setTab]         = useState("panel");
   const [cfdiFilter, setCfdiFilter] = useState("todos");
   const [showNewCFDI, setShowNewCFDI] = useState(false);
-  const [cxTab, setCxTab] = useState("cobrar");
+  const [cxTab, setCxTab]     = useState("cobrar");
+
+
+
   const [cfdiForm, setCfdiForm] = useState({
     receptor: "", rfc: "", uso: "G03", tipo: "I", concepto: "",
     subtotal: "", iva: "16", metodoPago: "PUE", formaPago: "03", moneda: "MXN",
@@ -5631,12 +5653,12 @@ const FinanzasAdmin = () => {
   const statusObl = { Completada: P.emerald, Pendiente: P.amber, "En proceso": P.blue, Próxima: P.txt3, Vencida: P.rose };
   const statusCX = { Vigente: P.accent, Vencida: P.rose, Pagada: P.emerald, Pendiente: P.amber };
 
-  const totalIngresos = cfdiData.filter(c => c.tipo === "I" && c.status === "Vigente").reduce((s, c) => s + c.total, 0);
-  const totalIVA = cfdiData.filter(c => c.tipo === "I" && c.status === "Vigente").reduce((s, c) => s + c.iva, 0);
-  const totalCXC = cxcData.filter(c => c.status !== "Pagada").reduce((s, c) => s + c.monto, 0);
-  const cxcVencidas = cxcData.filter(c => c.status === "Vencida").reduce((s, c) => s + c.monto, 0);
+  const totalIngresos = (leads.filter(l => l.st === "Cerrado").reduce((s, l) => s + (l.budget || 0), 0)) || cfdiData.filter(c => c.tipo === "I" && c.status === "Vigente").reduce((s, c) => s + c.total, 0);
+  const totalIVA = cfdiData.filter(c => c.tipo === "I" && c.status === "Vigente").reduce((s, c) => s + c.iva, 0) || (totalIngresos * 0.16);
+  const totalCXC = (leads.filter(l => ["Contrato", "Escritura"].includes(l.st)).reduce((s, l) => s + (l.budget || 0), 0)) || cxcData.filter(c => c.status !== "Pagada").reduce((s, c) => s + c.monto, 0);
+  const cxcVencidas = cxcData.filter(c => c.status === "Vencida").reduce((s, c) => s + c.monto, 0) || (totalCXC * 0.12);
   const totalCXP = cxpData.filter(c => c.status === "Pendiente").reduce((s, c) => s + c.monto, 0);
-  const isrProvisional = Math.round(totalIngresos * 0.30 * 0.17); // 30% base × 17% coeficiente simplificado
+  const isrProvisional = Math.round(totalIngresos * 0.30); 
 
   const cfdiFiltered = cfdiFilter === "todos" ? cfdiData : cfdiFilter === "cancelado" ? cfdiData.filter(c => c.status === "Cancelado") : cfdiData.filter(c => c.tipo === cfdiFilter);
 
@@ -5803,6 +5825,8 @@ const FinanzasAdmin = () => {
             </div>
           </div>
         </div>
+      </div>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
         <div style={{ display: "flex", gap: 8 }}>
           <button style={{ display: "flex", alignItems: "center", gap: 6, padding: "9px 16px", borderRadius: 9, border: `1px solid ${P.border}`, background: P.glass, cursor: "pointer", color: P.txt2, fontSize: 12, fontWeight: 600, fontFamily: fontDisp }}>
             <Download size={13} /> Exportar
@@ -7018,8 +7042,9 @@ function RoleBadge({ role }) {
 }
 
 function AdminPanel() {
+  console.log("AdminPanel Rendering...");
   const { user: me } = useAuth();
-  const [users, setUsers]           = useState(() => adminGetAllUsers());
+  const { users, refresh, loading: loadingUsers } = useTeam();
   const [search, setSearch]         = useState("");
   const [roleFilter, setRoleFilter] = useState("ALL");
   const [modal, setModal]           = useState(null); // null | { mode: "create"|"edit"|"reset", user? }
@@ -7027,11 +7052,88 @@ function AdminPanel() {
   const [form, setForm]             = useState({});
   const [formErr, setFormErr]       = useState("");
   const [formOk, setFormOk]         = useState("");
+  const [seeding, setSeeding]       = useState(false);
+
+  // Funciones de Seed
+  const handleSeedProjects = async () => {
+    try {
+      setSeeding(true);
+      const { error } = await supabase.from('projects').upsert(
+        MOCK_PROPS.map(p => ({
+          name: p.n,
+          units: p.u,
+          sold: p.s,
+          roi: p.roi,
+          price_range: p.pr,
+          location: p.loc,
+          status: p.st,
+          color: p.c
+        }))
+      );
+      if (error) throw error;
+      setFormOk("Proyectos sincronizados con Supabase.");
+    } catch (e) {
+      setFormErr("Error al sembrar proyectos: " + e.message);
+    } finally {
+      setSeeding(false);
+    }
+  };
+
+  const handleSeedLeads = async () => {
+    try {
+      setSeeding(true);
+      const { error } = await supabase.from('LEADS').upsert(
+        MOCK_LEADS.map(l => ({
+          "NOMBRE DEL CLIENTE": l.n,
+          "ASESOR": l.asesor,
+          "FECHA INGRESO": l.fechaIngreso,
+          "TELEFONO": l.phone,
+          "ESTATUS": l.st,
+          "PRESUPUESTO": l.presupuesto,
+          "PROYECTO DE INTERES": l.p,
+          "CAMPAÑA": l.campana,
+          "NOTAS": [{ nota: l.bio, fecha: new Date().toISOString() }]
+        }))
+      );
+      if (error) throw error;
+      setFormOk("Leads sincronizados con Supabase.");
+    } catch (e) {
+      setFormErr("Error al sembrar leads: " + e.message);
+    } finally {
+      setSeeding(false);
+    }
+  };
+
+  const handleSeedTeam = async () => {
+    try {
+      setSeeding(true);
+      const { error } = await supabase.from('profiles').upsert(
+        MOCK_TEAM.map(t => ({
+          name: t.n,
+          role_display: t.r,
+          deals: t.d,
+          revenue: t.rv,
+          efficiency: t.e,
+          skills_count: t.sk,
+          role: t.role,
+          color: t.c,
+          whatsapp: t.wa,
+          calendly: t.cal
+        }))
+      );
+      if (error) throw error;
+      setFormOk("Equipo sincronizado con Supabase.");
+    } catch (e) {
+      setFormErr("Error al sembrar equipo: " + e.message);
+    } finally {
+      setSeeding(false);
+    }
+  };
+
+
 
   const isSuper = me?.role === "super_admin";
   const canManage = ["super_admin", "admin"].includes(me?.role);
-
-  const refresh = () => setUsers(adminGetAllUsers());
 
   const sf = (k) => (v) => setForm(p => ({ ...p, [k]: typeof v === "string" ? v : v.target.value }));
 
@@ -7135,6 +7237,31 @@ function AdminPanel() {
           ><Plus size={14} /> Nuevo Usuario</button>
         )}
       </div>
+
+      {/* Database Seeding — Solo Super Admins */}
+      {isSuper && (
+        <div style={{ marginBottom: 4 }}>
+          <G style={{ padding: "16px 20px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: (formOk || formErr) ? 14 : 0 }}>
+              <div>
+                <p style={{ fontSize: 13, fontWeight: 700, color: "#FFFFFF", fontFamily: fontDisp }}>Base de Datos: Supabase</p>
+                <p style={{ fontSize: 11, color: P.txt3, marginTop: 2 }}>Sincroniza los datos iniciales del demo con tu base de datos real.</p>
+              </div>
+              <div style={{ display: "flex", gap: 10 }}>
+                <button onClick={handleSeedProjects} disabled={seeding} style={{ padding: "8px 14px", borderRadius: 8, background: P.glass, border: `1px solid ${P.border}`, color: P.txt2, fontSize: 11, fontWeight: 600, cursor: "pointer", transition: "all 0.2s" }} onMouseEnter={e=>e.currentTarget.style.borderColor=P.blue} onMouseLeave={e=>e.currentTarget.style.borderColor=P.border}>Sembrar Proyectos</button>
+                <button onClick={handleSeedLeads} disabled={seeding} style={{ padding: "8px 14px", borderRadius: 8, background: P.glass, border: `1px solid ${P.border}`, color: P.txt2, fontSize: 11, fontWeight: 600, cursor: "pointer", transition: "all 0.2s" }} onMouseEnter={e=>e.currentTarget.style.borderColor=P.emerald} onMouseLeave={e=>e.currentTarget.style.borderColor=P.border}>Sembrar Leads</button>
+                <button onClick={handleSeedTeam} disabled={seeding} style={{ padding: "8px 14px", borderRadius: 8, background: P.glass, border: `1px solid ${P.border}`, color: P.txt2, fontSize: 11, fontWeight: 600, cursor: "pointer", transition: "all 0.2s" }} onMouseEnter={e=>e.currentTarget.style.borderColor=P.violet} onMouseLeave={e=>e.currentTarget.style.borderColor=P.border}>Sembrar Equipo</button>
+              </div>
+            </div>
+            {(formOk || formErr) && (
+              <div style={{ padding: "10px 14px", borderRadius: 8, background: formOk ? `${P.emerald}10` : `${P.rose}10`, border: `1px solid ${formOk ? `${P.emerald}30` : `${P.rose}30`}`, display: "flex", alignItems: "center", gap: 8, marginTop: 14 }}>
+                {formOk ? <CheckCircle2 size={14} color={P.emerald} /> : <AlertCircle size={14} color={P.rose} />}
+                <span style={{ fontSize: 11, color: formOk ? P.emerald : P.rose, fontWeight: 600 }}>{formOk || formErr}</span>
+              </div>
+            )}
+          </G>
+        </div>
+      )}
 
       {/* ── Role stats strip ── */}
       <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
@@ -7470,6 +7597,10 @@ function PermissionGate({ moduleId, onGoBack }) {
 
 export default function App() {
   const { user, login, logout } = useAuth();
+  console.log("Current User:", user);
+  const { leads, updateLead } = useLeads();
+  const { properties } = useProperties();
+  const { team } = useTeam();
   const isAsesorRole = !["super_admin","admin","director","ceo"].includes(user?.role);
   const [v, setV] = useState(isAsesorRole ? "c" : "d");
   const [co, setCo] = useState(false);
@@ -7510,9 +7641,9 @@ export default function App() {
     if (t) setTimeout(() => {
       const displayText = leadData ? `Analizar expediente de ${leadData.n}` : t;
       setMsgs(p => [...p, { role: "u", text: displayText }]);
-      setTimeout(() => { setMsgs(p => [...p, { role: "a", ...getResp(t, leadData) }]); }, 1105);
+      setTimeout(() => { setMsgs(p => [...p, { role: "a", ...getResp(t, leadData, leads) }]); }, 1105);
     }, 150);
-  }, []);
+  }, [leads]);
 
   if (!user) return <LoginScreen onLogin={login} />;
 
@@ -7540,9 +7671,10 @@ export default function App() {
 
       {/* Sidebar */}
       <div style={{
-        width: 60, flexShrink: 0, borderRight: `1px solid ${P.border}`,
+        width: 60, height: "100vh", flexShrink: 0, borderRight: `1px solid ${P.border}`,
         display: "flex", flexDirection: "column", alignItems: "center",
-        padding: "56px 0 14px", background: "rgba(6,10,17,0.5)",
+        padding: "24px 0 16px", background: "rgba(6,10,17,0.5)",
+        zIndex: 20,
       }}>
         <div style={{
           width: 38, height: 38, borderRadius: 11, marginBottom: 28,
@@ -7554,10 +7686,10 @@ export default function App() {
           <StratosAtom size={22} color={P.accent} />
         </div>
 
-        {nav.filter(n => !n.adminOnly || ["super_admin","admin"].includes(user?.role)).map(n => {
+        {nav.filter(n => !n.adminOnly || ["super_admin","admin"].includes(user?.role || "asesor")).map(n => {
           const a = v === n.id;
           const isAdmin = n.adminOnly;
-          const hasAccess = MODULE_ROLES[n.id]?.includes(user?.role) ?? true;
+          const hasAccess = MODULE_ROLES[n.id]?.includes(user?.role || "asesor") ?? true;
           const activeColor = isAdmin ? "#A78BFA" : P.accent;
           const activeBg = isAdmin ? "rgba(167,139,250,0.1)" : P.accentS;
           return (
@@ -7588,13 +7720,13 @@ export default function App() {
         }}>
           <Atom size={17} color={co ? P.accent : P.txt3} />
         </button>
-        <button title={["super_admin","admin"].includes(user?.role) ? "Gestión de Usuarios" : "Configuración"}
-          onClick={() => ["super_admin","admin"].includes(user?.role) ? setV("admin") : null}
+        <button title={["super_admin","admin"].includes(user?.role || "asesor") ? "Gestión de Usuarios" : "Configuración"}
+          onClick={() => ["super_admin","admin"].includes(user?.role || "asesor") ? setV("admin") : null}
           style={{ width: 40, height: 40, borderRadius: 11, border: `1px solid ${v === "admin" ? "rgba(167,139,250,0.3)" : "transparent"}`, background: v === "admin" ? "rgba(167,139,250,0.1)" : "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.2s" }}
           onMouseEnter={e => { if (["super_admin","admin"].includes(user?.role)) { e.currentTarget.style.background = P.glass; e.currentTarget.style.borderColor = P.border; } }}
           onMouseLeave={e => { e.currentTarget.style.background = v === "admin" ? "rgba(167,139,250,0.1)" : "transparent"; e.currentTarget.style.borderColor = v === "admin" ? "rgba(167,139,250,0.3)" : "transparent"; }}
         >
-          <Settings size={16} color={["super_admin","admin"].includes(user?.role) ? (v === "admin" ? "#A78BFA" : P.txt2) : P.txt3} />
+          <Settings size={16} color={["super_admin","admin"].includes(user?.role || "asesor") ? (v === "admin" ? "#A78BFA" : P.txt2) : P.txt3} />
         </button>
         <button title="Volver al inicio" onClick={() => window.location.href = "/"} style={{ width: 40, height: 40, borderRadius: 11, border: `1px solid ${P.border}`, background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 6, transition: "all 0.2s" }}
           onMouseEnter={e => { e.currentTarget.style.background = P.glass; e.currentTarget.style.borderColor = P.borderH; }}
@@ -7686,23 +7818,24 @@ export default function App() {
         <div style={{ flex: 1, display: "flex", overflow: "hidden" }}>
           <div style={{ flex: 1, padding: "18px 22px", overflowY: "auto", animation: "fadeIn 0.4s ease", display: "flex", flexDirection: "column" }}>
             {/* Permission gate — solo bloquea si el rol está definido y NO tiene acceso */}
-            {user?.role && MODULE_ROLES[v] && !MODULE_ROLES[v].includes(user.role)
+            {MODULE_ROLES[v] && !MODULE_ROLES[v].includes(user?.role || "asesor")
               ? <PermissionGate moduleId={v} onGoBack={() => setV("c")} />
               : <>
-                  {v === "d" && <Dash oc={oc} co={co} />}
-                  {v === "c" && <CRM oc={oc} co={co} />}
-                  {v === "ia" && <IACRM oc={oc} />}
-                  {v === "e" && <ERP oc={oc} />}
-                  {v === "a" && <AsesorCRM oc={oc} />}
+                  {v === "d" && <Dash oc={oc} co={co} leads={leads} />}
+                  {v === "c" && <CRM oc={oc} co={co} leads={leads} updateDb={updateLead} />}
+                  {v === "ia" && <IACRM oc={oc} leads={leads} updateDb={updateLead} />}
+                  {v === "v" && <Team team={team || MOCK_TEAM} properties={properties || MOCK_PROPS} />}
+                  {v === "e" && <ERP oc={oc} properties={properties || MOCK_PROPS} />}
+                  {v === "a" && <AsesorCRM oc={oc} leads={leads} updateDb={updateLead} />}
                   {v === "lp" && <LandingPages />}
-                  {v === "fa" && <FinanzasAdmin />}
+                  {v === "fa" && <FinanzasAdmin leads={leads} />}
                   {v === "rrhh" && <RRHHModule />}
                   {v === "planes" && <PricingScreen embedded onBack={() => setV(isAsesorRole ? "c" : "d")} />}
-                  {v === "admin" && ["super_admin","admin"].includes(user?.role) && <AdminPanel />}
+                  {v === "admin" && ["super_admin","admin"].includes(user?.role || "asesor") && <AdminPanel />}
                 </>
             }
           </div>
-          <Chat open={co} onClose={() => setCo(false)} msgs={msgs} setMsgs={setMsgs} inp={inp} setInp={setInp} />
+          <Chat open={co} onClose={() => setCo(false)} msgs={msgs} setMsgs={setMsgs} inp={inp} setInp={setInp} leads={leads} />
         </div>
       </div>
     </div>
