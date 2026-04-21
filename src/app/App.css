@@ -3,6 +3,36 @@ body {
   padding: 0;
 }
 
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.55; transform: scale(0.82); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+@keyframes atomSpin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+@keyframes urgentGlow {
+  0%, 100% { box-shadow: 0 0 0 1px rgba(52,211,153,0.12), 0 6px 24px rgba(0,0,0,0.28); }
+  50%       { box-shadow: 0 0 0 1px rgba(52,211,153,0.40), 0 8px 32px rgba(52,211,153,0.10); }
+}
+
+@keyframes shimmer {
+  0%   { background-position: 200% center; }
+  100% { background-position: -200% center; }
+}
+
 @keyframes orbitSmart {
   0% { offset-distance: 0%; opacity: 0; transform: scale(0.4); }
   5% { opacity: 0.8; transform: scale(1.2); }

@@ -39,7 +39,7 @@ const P = {
   borderH: "rgba(255,255,255,0.12)", surface: "#0C1219",
   accent: "#6EE7C2", accentS: "rgba(110,231,194,0.08)",
   accentB: "rgba(110,231,194,0.14)", blue: "#7EB8F0",
-  violet: "#A78BFA", amber: "#67B7D1", rose: "#E8818C",
+  violet: "#A78BFA", amber: "#67B7D1", rose: "#9B8EFF",
   emerald: "#6DD4A8", cyan: "#5DC8D9",
   txt: "#E2E8F0", txt2: "#8B99AE", txt3: "#4A5568",
   r: 16, rs: 10, rx: 6,
@@ -255,16 +255,16 @@ const STAGES = [
 ];
 
 const stgC = {
-  "Nuevo Registro":     P.txt3,
-  "Primer Contacto":    P.blue,
-  "Seguimiento":        P.amber,
-  "Zoom Agendado":      P.violet,
-  "Zoom Concretado":    "#C084FC",
-  "Visita Agendada":    P.cyan,
-  "Visita Concretada":  P.emerald,
-  "Negociación":        "#F97316",
-  "Cierre":             P.accent,
-  "Perdido":            P.rose,
+  "Nuevo Registro":     "#64748B",   // gris slate    — lead recién llegado
+  "Primer Contacto":    "#7EB8F0",   // azul suave    — iniciando conversación
+  "Seguimiento":        "#67B7D1",   // cyan-azul      — en proceso
+  "Zoom Agendado":      "#818CF8",   // índigo         — cita en calendario
+  "Zoom Concretado":    "#4ADE80",   // verde lima     — reunión exitosa ✓
+  "Visita Agendada":    "#F59E0B",   // ámbar dorado   — visita próxima
+  "Visita Concretada":  "#6EE7C2",   // menta          — visita realizada ✓
+  "Negociación":        "#FB923C",   // naranja        — en negociación activa
+  "Cierre":             "#34D399",   // verde esmeralda— ¡cerrando!
+  "Perdido":            "#9B8EFF",   // violeta suave  — perdido
 };
 
 /* ─────────────────────────────────────────
@@ -723,9 +723,9 @@ const getResp = (t, leadData) => {
   if (l.startsWith("__crm__") || leadData) {
     const lead = leadData || leads.find(le => l.includes(le.n.toLowerCase()) || l.includes(le.n.split(" ")[0].toLowerCase()));
     if (lead) {
-      const frictionColor = lead.friction === "Bajo" ? P.emerald : lead.friction === "Medio" ? P.amber : P.rose;
+      const frictionColor = lead.friction === "Bajo" ? P.emerald : lead.friction === "Medio" ? P.cyan : P.violet;
       const stageColor = stgC[lead.st] || P.txt3;
-      const scoreColor = lead.sc >= 80 ? P.emerald : lead.sc >= 60 ? P.blue : lead.sc >= 40 ? P.amber : P.rose;
+      const scoreColor = lead.sc >= 80 ? P.emerald : lead.sc >= 60 ? P.blue : lead.sc >= 40 ? P.cyan : P.violet;
       const hasPhone = lead.phone && lead.phone !== "";
       const hasNotes = lead.notas && lead.notas.trim() !== "";
       return {
@@ -755,7 +755,7 @@ const getResp = (t, leadData) => {
 
   if (lead) {
     const frictionIcon = lead.friction === "Bajo" ? CheckCircle2 : lead.friction === "Medio" ? AlertCircle : AlertTriangle;
-    const frictionColor = lead.friction === "Bajo" ? P.emerald : lead.friction === "Medio" ? P.amber : P.rose;
+    const frictionColor = lead.friction === "Bajo" ? P.emerald : lead.friction === "Medio" ? P.cyan : P.violet;
     const frictionLabel = lead.friction === "Bajo" ? "Fricción baja — buen momento para avanzar" : lead.friction === "Medio" ? "Fricción media — resolver objeción primero" : "Fricción alta — reforzar confianza antes de cerrar";
     return {
       content: `Expediente de **${lead.n}** · Score ${lead.sc}/100 · ${lead.tag}`,
@@ -943,9 +943,9 @@ const Dash = ({ oc, co }) => (
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
             <div style={{ width: 24, height: 3, borderRadius: 2, background: P.border }}>
-              <div style={{ width: `${l.sc}%`, height: 3, borderRadius: 2, background: l.sc >= 80 ? P.emerald : l.sc >= 60 ? P.blue : P.amber }} />
+              <div style={{ width: `${l.sc}%`, height: 3, borderRadius: 2, background: l.sc >= 80 ? P.emerald : l.sc >= 60 ? P.blue : P.cyan }} />
             </div>
-            <span style={{ fontSize: 10, fontWeight: 700, color: l.sc >= 80 ? P.emerald : l.sc >= 60 ? P.blue : P.amber, fontFamily: fontDisp }}>{l.sc}</span>
+            <span style={{ fontSize: 10, fontWeight: 700, color: l.sc >= 80 ? P.emerald : l.sc >= 60 ? P.blue : P.cyan, fontFamily: fontDisp }}>{l.sc}</span>
           </div>
           <Pill color={stgC[l.st]} s>{l.st}</Pill>
           <span style={{ fontSize: 13, fontWeight: 500, color: "#FFFFFF", fontFamily: fontDisp, letterSpacing: "-0.02em" }}>{l.budget}</span>
@@ -990,7 +990,7 @@ const Dash = ({ oc, co }) => (
 
 /* ─── Score bar helper ─── */
 const ScoreBar = ({ sc, compact }) => {
-  const c = sc >= 80 ? P.emerald : sc >= 60 ? P.blue : sc >= 40 ? P.amber : P.rose;
+  const c = sc >= 80 ? P.emerald : sc >= 60 ? P.blue : sc >= 40 ? P.cyan : P.violet;
   return (
     <div style={{ display: "flex", alignItems: "center", gap: compact ? 4 : 6 }}>
       <div style={{ flex: 1, height: 3, borderRadius: 2, background: "rgba(255,255,255,0.06)" }}>
@@ -1316,9 +1316,23 @@ function CRM({ oc, co }) {
   const handleDrop = (e, stage) => { e.preventDefault(); if (dragLeadId) setLeadsData(prev => prev.map(l => l.id === dragLeadId ? {...l,st:stage} : l)); setDragLeadId(null); setDragOverStage(null); };
   const handleDragEnd = () => { setDragLeadId(null); setDragOverStage(null); };
   const [expandedPriority, setExpandedPriority] = useState(null);
+  const [pinnedIds,    setPinnedIds]    = useState(new Set());
+  const [dismissedIds, setDismissedIds] = useState(new Set());
+
+  const togglePin = (id) => {
+    setPinnedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) { next.delete(id); } else { next.add(id); setDismissedIds(p => { const d = new Set(p); d.delete(id); return d; }); }
+      return next;
+    });
+  };
+  const dismissPriority = (id) => {
+    setDismissedIds(prev => { const next = new Set(prev); next.add(id); return next; });
+    setPinnedIds(prev => { const next = new Set(prev); next.delete(id); return next; });
+  };
 
   const asesores = [...new Set(visibleLeads.map(l => l.asesor))];
-  const urgColor = (d) => d >= 10 ? P.rose : d >= 5 ? P.amber : P.emerald;
+  const urgColor = (d) => d >= 10 ? P.violet : d >= 5 ? P.cyan : P.emerald;
 
   const sortedLeads = useMemo(() => {
     let data = visibleLeads.filter(l => {
@@ -1378,15 +1392,16 @@ function CRM({ oc, co }) {
     );
   };
 
-  const priorityLeads = visibleLeads.filter(l => l.isNew || l.st === "Zoom Concretado" || l.st === "Zoom Agendado" || l.hot).sort((a,b) => (b.sc - a.sc));
+  const isAutoPriority = (l) => (l.isNew || l.st === "Zoom Concretado" || l.st === "Zoom Agendado" || l.hot) && !dismissedIds.has(l.id);
+  const priorityLeads = visibleLeads.filter(l => pinnedIds.has(l.id) || isAutoPriority(l)).sort((a,b) => (pinnedIds.has(b.id) ? 1 : 0) - (pinnedIds.has(a.id) ? 1 : 0) || b.sc - a.sc);
   const totalPipeline = visibleLeads.reduce((s, l) => s + (l.presupuesto || 0), 0);
   const avgScore = visibleLeads.length ? Math.round(visibleLeads.reduce((s, l) => s + l.sc, 0) / visibleLeads.length) : 0;
   const hotLeads = visibleLeads.filter(l => l.hot || l.daysInactive <= 2).length;
   const kanbanStages = STAGES.filter(s => s !== "Perdido");
 
   /* Responsive grid columns */
-  const colsFull    = "88px 110px 1.6fr 120px 1fr 110px 1.1fr 68px 96px";
-  const colsCompact = "1.6fr 110px 1fr 110px 68px 90px";
+  const colsFull    = "88px 110px 1.6fr 120px 1fr 110px 1.1fr 68px 120px";
+  const colsCompact = "1.6fr 110px 1fr 110px 68px 120px";
   const cols = co ? colsCompact : colsFull;
 
   return (
@@ -1424,157 +1439,207 @@ function CRM({ oc, co }) {
         <KPI label="Valor Total Pipeline" value={`$${(totalPipeline/1000000).toFixed(1)}M`} icon={DollarSign} />
       </div>
 
-      {/* ── ACCIONES CRÍTICAS — máx 3, diseño acción-primero ── */}
+      {/* ── CLIENTES EN PRIORIDAD — todos, color por tipo, botones uniformes ── */}
       {priorityLeads.length > 0 && (() => {
-        const top3 = priorityLeads.slice(0, 3);
+
+        // Paleta de tipo — cada categoría tiene identidad visual única
+        const getCardMeta = (l) => {
+          // 🟢 Verde pulsante — urgente, nuevos, calientes
+          if (l.hot) return {
+            color: "#34D399", bg: "rgba(52,211,153,0.06)", border: "rgba(52,211,153,0.22)",
+            topBar: "linear-gradient(90deg,#34D399,#6EE7C2,#34D399)",
+            label: `CALIENTE · ${l.daysInactive}D`, sublabel: "Actuar ahora mismo",
+            pulse: true, glow: true,
+          };
+          if (l.isNew) return {
+            color: "#34D399", bg: "rgba(52,211,153,0.06)", border: "rgba(52,211,153,0.22)",
+            topBar: "linear-gradient(90deg,#34D399,#6EE7C2,#34D399)",
+            label: "NUEVO REGISTRO", sublabel: "Primer contacto — no esperes",
+            pulse: true, glow: true,
+          };
+          // 🔵 Índigo — zoom agendado
+          if (l.st === "Zoom Agendado") return {
+            color: "#818CF8", bg: "rgba(129,140,248,0.07)", border: "rgba(129,140,248,0.24)",
+            topBar: "linear-gradient(90deg,#818CF8,#6366F1 55%,transparent)",
+            label: "ZOOM AGENDADO", sublabel: "Preparar presentación de cierre",
+            pulse: false, glow: false,
+          };
+          // 🟩 Verde lima — zoom concretado (reunión exitosa, paso a cierre)
+          if (l.st === "Zoom Concretado") return {
+            color: "#4ADE80", bg: "rgba(74,222,128,0.07)", border: "rgba(74,222,128,0.24)",
+            topBar: "linear-gradient(90deg,#4ADE80,#16A34A 55%,transparent)",
+            label: "ZOOM CONCRETADO ✓", sublabel: "Enviar propuesta y cerrar hoy",
+            pulse: false, glow: false,
+          };
+          // 🩵 Cyan — sin contacto
+          if (l.daysInactive >= 7) return {
+            color: P.cyan, bg: `${P.cyan}07`, border: `${P.cyan}1E`,
+            topBar: `linear-gradient(90deg,${P.cyan},${P.cyan}40,transparent)`,
+            label: `SIN CONTACTO · ${l.daysInactive}D`, sublabel: "Retomar antes de que enfríe",
+            pulse: false, glow: false,
+          };
+          return {
+            color: P.blue, bg: `${P.blue}07`, border: `${P.blue}1A`,
+            topBar: `linear-gradient(90deg,${P.blue},${P.blue}40,transparent)`,
+            label: "ACCIÓN PENDIENTE", sublabel: "Revisar y avanzar hoy",
+            pulse: false, glow: false,
+          };
+        };
+
         return (
           <div>
             {/* Header */}
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "5px 14px 5px 10px", borderRadius: 99, background: `${P.rose}0A`, border: `1px solid ${P.rose}28` }}>
-                  <div style={{ width: 7, height: 7, borderRadius: "50%", background: P.rose, boxShadow: `0 0 8px ${P.rose}90`, animation: "pulse 2s infinite" }} />
-                  <span style={{ fontSize: 12, fontWeight: 700, color: "#FFFFFF", letterSpacing: "-0.01em", fontFamily: fontDisp }}>Acción requerida ahora</span>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "5px 14px 5px 10px", borderRadius: 99, background: "rgba(52,211,153,0.08)", border: "1px solid rgba(52,211,153,0.22)" }}>
+                  <div style={{ width: 7, height: 7, borderRadius: "50%", background: "#34D399", boxShadow: "0 0 9px rgba(52,211,153,0.85)", animation: "pulse 1.8s ease-in-out infinite" }} />
+                  <span style={{ fontSize: 12, fontWeight: 700, color: "#FFFFFF", letterSpacing: "-0.01em", fontFamily: fontDisp }}>Clientes en prioridad</span>
                 </div>
-                <span style={{ fontSize: 11, color: P.txt3 }}>{top3.length} cliente{top3.length !== 1 ? "s" : ""} esperando</span>
+                <span style={{ fontSize: 11, color: P.txt3, fontFamily: font }}>{priorityLeads.length} cliente{priorityLeads.length !== 1 ? "s" : ""} esperando acción</span>
               </div>
-              {priorityLeads.length > 3 && (
-                <span style={{ fontSize: 11, color: P.txt3, cursor: "pointer" }} onClick={() => setFilterStage("TODO")}>
-                  +{priorityLeads.length - 3} más →
-                </span>
-              )}
+              {/* Leyenda de tipos */}
+              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                {[
+                  { color: "#34D399", label: "Urgente / Nuevo" },
+                  { color: "#818CF8", label: "Zoom agendado" },
+                  { color: "#4ADE80", label: "Zoom concretado" },
+                ].map(({ color, label }) => (
+                  <div key={label} style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                    <div style={{ width: 6, height: 6, borderRadius: "50%", background: color }} />
+                    <span style={{ fontSize: 9.5, color: P.txt3, fontFamily: font }}>{label}</span>
+                  </div>
+                ))}
+              </div>
             </div>
 
-            <div style={{ display: "flex", gap: 12, overflowX: "auto", paddingBottom: 8, scrollbarWidth: "none" }}>
-              {top3.map((l, cardIdx) => {
+            {/* Scroll horizontal — todos los leads */}
+            <div style={{ display: "flex", gap: 12, overflowX: "auto", paddingBottom: 6, scrollbarWidth: "none" }}>
+              {priorityLeads.map((l, cardIdx) => {
                 const sc = l.sc;
                 const stageColor = stgC[l.st] || P.txt3;
-                const isOverdue = l.daysInactive >= 7;
-                const isHot = l.hot;
-                const isNew = l.isNew;
-
-                // Color de urgencia de la tarjeta
-                const urgColor = isHot ? P.rose : isOverdue ? P.amber : isNew ? P.accent : P.blue;
-                const urgBg = isHot ? `${P.rose}09` : isOverdue ? `${P.amber}07` : isNew ? `${P.accent}07` : `${P.blue}07`;
-
-                // Label de urgencia
-                const urgLabel = isHot
-                  ? `CALIENTE · ${l.daysInactive}d`
-                  : isNew
-                  ? "NUEVO · PRIMER CONTACTO"
-                  : isOverdue
-                  ? `SIN CONTACTO · ${l.daysInactive} DÍAS`
-                  : l.st === "Zoom Concretado"
-                  ? "ZOOM LISTO · DAR SEGUIMIENTO"
-                  : "ACCIÓN PENDIENTE";
-
-                // Número de prioridad
-                const priorityNum = cardIdx + 1;
+                const meta = getCardMeta(l);
 
                 return (
                   <div key={l.id} style={{
-                    minWidth: co ? 252 : 284, maxWidth: 284, flexShrink: 0,
+                    minWidth: co ? 256 : 284, maxWidth: 284, flexShrink: 0,
                     borderRadius: 18, overflow: "hidden",
-                    background: urgBg,
-                    border: `1px solid ${urgColor}22`,
-                    transition: "all 0.22s ease",
+                    background: meta.bg, border: `1px solid ${meta.border}`,
                     display: "flex", flexDirection: "column",
+                    transition: "transform 0.2s ease",
+                    animation: meta.glow ? "urgentGlow 2.8s ease-in-out infinite" : "none",
                   }}
-                    onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-3px)"; e.currentTarget.style.boxShadow = `0 16px 48px rgba(0,0,0,0.35), 0 0 0 1px ${urgColor}30`; }}
-                    onMouseLeave={e => { e.currentTarget.style.transform = "none"; e.currentTarget.style.boxShadow = "none"; }}
+                    onMouseEnter={e => e.currentTarget.style.transform = "translateY(-4px)"}
+                    onMouseLeave={e => e.currentTarget.style.transform = "none"}
                   >
-                    {/* Barra superior de urgencia — sólida, visible */}
-                    <div style={{ height: 3, background: `linear-gradient(90deg, ${urgColor} 0%, ${urgColor}60 60%, transparent 100%)` }} />
+                    {/* Barra top — shimmer animado en urgentes */}
+                    <div style={{
+                      height: 3, flexShrink: 0,
+                      background: meta.topBar,
+                      backgroundSize: meta.glow ? "300% 100%" : "100%",
+                      animation: meta.glow ? "shimmer 2.2s linear infinite" : "none",
+                    }} />
 
-                    <div style={{ padding: "14px 16px 16px", display: "flex", flexDirection: "column", gap: 12, flex: 1 }}>
+                    <div style={{ padding: "13px 15px 15px", display: "flex", flexDirection: "column", gap: 11, flex: 1 }}>
 
-                      {/* Fila superior: número + urgencia + días */}
-                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                          <div style={{ width: 20, height: 20, borderRadius: 6, background: `${urgColor}18`, border: `1px solid ${urgColor}30`, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                            <span style={{ fontSize: 10, fontWeight: 800, color: urgColor, fontFamily: fontDisp }}>{priorityNum}</span>
+                      {/* Fila superior: número + tipo · score · × */}
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 6 }}>
+                        {/* Izquierda: badge número + tipo */}
+                        <div style={{ display: "flex", alignItems: "center", gap: 6, minWidth: 0, flex: 1 }}>
+                          <div style={{ width: 21, height: 21, borderRadius: 6, background: `${meta.color}15`, border: `1px solid ${meta.color}26`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                            <span style={{ fontSize: 10, fontWeight: 800, color: meta.color, fontFamily: fontDisp }}>{cardIdx + 1}</span>
                           </div>
-                          <span style={{ fontSize: 9.5, fontWeight: 700, color: urgColor, letterSpacing: "0.06em", textTransform: "uppercase", fontFamily: font }}>{urgLabel}</span>
+                          <div style={{ minWidth: 0 }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 1 }}>
+                              {meta.pulse && <div style={{ width: 5, height: 5, borderRadius: "50%", background: meta.color, flexShrink: 0, animation: "pulse 1.5s ease-in-out infinite" }} />}
+                              <span style={{ fontSize: 8, fontWeight: 700, color: meta.color, letterSpacing: "0.07em", textTransform: "uppercase", fontFamily: font }}>{meta.label}</span>
+                            </div>
+                            <span style={{ fontSize: 7.5, color: P.txt3, fontFamily: font, lineHeight: 1.2 }}>{meta.sublabel}</span>
+                          </div>
                         </div>
-                        {/* Score mini */}
-                        <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
-                          <div style={{ width: 32, height: 3, borderRadius: 2, background: "rgba(255,255,255,0.07)" }}>
-                            <div style={{ width: `${sc}%`, height: 3, borderRadius: 2, background: urgColor }} />
+                        {/* Derecha: score + botón quitar */}
+                        <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
+                          <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 3 }}>
+                            <span style={{ fontSize: 14, fontWeight: 800, color: meta.color, fontFamily: fontDisp, lineHeight: 1 }}>{sc}</span>
+                            <div style={{ width: 30, height: 2.5, borderRadius: 2, background: "rgba(255,255,255,0.07)" }}>
+                              <div style={{ width: `${sc}%`, height: "100%", borderRadius: 2, background: meta.color }} />
+                            </div>
                           </div>
-                          <span style={{ fontSize: 10, fontWeight: 700, color: P.txt2, fontFamily: fontDisp }}>{sc}</span>
+                          <button onClick={() => dismissPriority(l.id)} title="Quitar de prioridad"
+                            style={{ width: 20, height: 20, borderRadius: 5, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.09)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.14s", flexShrink: 0 }}
+                            onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.13)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.20)"; }}
+                            onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.05)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.09)"; }}
+                          ><X size={9} color="rgba(255,255,255,0.45)" strokeWidth={2.5} /></button>
                         </div>
                       </div>
 
-                      {/* Cliente + presupuesto */}
+                      {/* Nombre + presupuesto */}
                       <div>
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 8, marginBottom: 3 }}>
-                          <p style={{ fontSize: 16, fontWeight: 800, color: "#FFFFFF", fontFamily: fontDisp, letterSpacing: "-0.025em", lineHeight: 1.15 }}>{l.n}</p>
-                          <p style={{ fontSize: 13.5, fontWeight: 700, color: "#FFFFFF", fontFamily: fontDisp, letterSpacing: "-0.02em", flexShrink: 0, opacity: 0.85 }}>{l.budget}</p>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 6, marginBottom: 4 }}>
+                          <p style={{ fontSize: 15, fontWeight: 800, color: "#FFFFFF", fontFamily: fontDisp, letterSpacing: "-0.025em", lineHeight: 1.15, margin: 0 }}>{l.n}</p>
+                          <p style={{ fontSize: 12, fontWeight: 700, color: P.txt2, fontFamily: fontDisp, flexShrink: 0, margin: 0 }}>{l.budget}</p>
                         </div>
-                        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
                           <Pill color={stageColor} s>{l.st}</Pill>
-                          <span style={{ fontSize: 10, color: P.txt3 }}>{l.campana}</span>
+                          {l.campana && <span style={{ fontSize: 8.5, color: P.txt3, fontFamily: font }}>{l.campana}</span>}
                         </div>
                       </div>
 
-                      {/* ─── PRÓXIMA ACCIÓN — protagonista de la card ─── */}
-                      <div style={{
-                        borderRadius: 12,
-                        background: "rgba(0,0,0,0.25)",
-                        border: `1px solid ${urgColor}18`,
-                        overflow: "hidden",
-                      }}>
-                        {/* Header de acción */}
-                        <div style={{ padding: "8px 12px 7px", borderBottom: `1px solid ${urgColor}14`, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                          <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
-                            <Timer size={10} color={urgColor} strokeWidth={2.5} />
-                            <span style={{ fontSize: 9, fontWeight: 700, color: urgColor, letterSpacing: "0.07em", textTransform: "uppercase" }}>Próxima acción</span>
+                      {/* ── Próxima acción — protagonista ── */}
+                      <div style={{ borderRadius: 10, background: "rgba(0,0,0,0.28)", border: "1px solid rgba(255,255,255,0.06)", overflow: "hidden" }}>
+                        <div style={{ padding: "6px 10px 5px", borderBottom: "1px solid rgba(255,255,255,0.05)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                            <Timer size={9} color={P.accent} strokeWidth={2.5} />
+                            <span style={{ fontSize: 8, fontWeight: 700, color: P.accent, letterSpacing: "0.07em", textTransform: "uppercase", fontFamily: font }}>Próxima acción</span>
                           </div>
-                          <span style={{ fontSize: 9, fontWeight: 600, color: P.txt3, background: "rgba(255,255,255,0.05)", padding: "1px 7px", borderRadius: 99 }}>{l.nextActionDate}</span>
+                          <span style={{ fontSize: 8, fontWeight: 600, color: P.txt3, background: "rgba(255,255,255,0.05)", padding: "1px 5px", borderRadius: 99, fontFamily: font }}>{l.nextActionDate}</span>
                         </div>
-                        {/* Texto de acción — prominente */}
-                        <div style={{ padding: "10px 12px" }}>
-                          <p style={{ fontSize: 12.5, fontWeight: 600, color: "#FFFFFF", fontFamily: fontDisp, lineHeight: 1.55, margin: 0, letterSpacing: "-0.01em" }}>
-                            {l.nextAction?.substring(0, 90)}{(l.nextAction?.length || 0) > 90 ? "…" : ""}
+                        <div style={{ padding: "8px 10px" }}>
+                          <p style={{ fontSize: 11.5, fontWeight: 600, color: "#FFFFFF", fontFamily: fontDisp, lineHeight: 1.5, margin: 0, letterSpacing: "-0.01em" }}>
+                            {l.nextAction?.substring(0, 82)}{(l.nextAction?.length || 0) > 82 ? "…" : ""}
                           </p>
                         </div>
                       </div>
 
-                      {/* Selector de etapa */}
+                      {/* Cambio de etapa */}
                       <select value={l.st} onChange={e => updateLead({...l, st: e.target.value})}
-                        style={{ width: "100%", padding: "7px 10px", borderRadius: 9, background: `${stageColor}0C`, border: `1px solid ${stageColor}28`, color: stageColor, fontSize: 11, fontWeight: 600, outline: "none", cursor: "pointer", fontFamily: font }}
-                      >
+                        style={{ width: "100%", padding: "6px 10px", borderRadius: 8, background: `${stageColor}0C`, border: `1px solid ${stageColor}24`, color: stageColor, fontSize: 10.5, fontWeight: 600, outline: "none", cursor: "pointer", fontFamily: font }}>
                         {STAGES.map(s => <option key={s} value={s} style={{ background: "#0C1219", color: "#fff" }}>{s}</option>)}
                       </select>
 
-                      {/* Botones */}
-                      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                        {/* CTA urgente — tomar acción */}
+                      {/* ── 3 botones — mismo color en TODOS los cards ── */}
+                      <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+                        {/* CTA principal — siempre accent verde */}
                         <button onClick={() => oc(`__crm__ ${l.n.toLowerCase()}`, l)} style={{
-                          width: "100%", padding: "11px 14px", borderRadius: 10,
-                          background: `linear-gradient(135deg, ${urgColor}22, ${urgColor}0E)`,
-                          border: `1px solid ${urgColor}40`,
-                          color: urgColor, fontSize: 12.5, fontWeight: 700,
-                          fontFamily: fontDisp, cursor: "pointer",
-                          letterSpacing: "0.01em", transition: "all 0.18s",
-                          display: "flex", alignItems: "center", justifyContent: "center", gap: 7,
+                          width: "100%", padding: "10px 12px", borderRadius: 9,
+                          background: "linear-gradient(135deg, rgba(110,231,194,0.18), rgba(110,231,194,0.08))",
+                          border: `1px solid ${P.accentB}`,
+                          color: P.accent, fontSize: 11.5, fontWeight: 700,
+                          fontFamily: fontDisp, cursor: "pointer", letterSpacing: "0.005em",
+                          transition: "all 0.18s",
+                          display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
                         }}
-                          onMouseEnter={e => { e.currentTarget.style.background = `linear-gradient(135deg, ${urgColor}35, ${urgColor}18)`; e.currentTarget.style.boxShadow = `0 4px 20px ${urgColor}18`; e.currentTarget.style.borderColor = `${urgColor}65`; }}
-                          onMouseLeave={e => { e.currentTarget.style.background = `linear-gradient(135deg, ${urgColor}22, ${urgColor}0E)`; e.currentTarget.style.boxShadow = "none"; e.currentTarget.style.borderColor = `${urgColor}40`; }}
-                        >
-                          <Zap size={12} strokeWidth={2.5} />
-                          Analizar y actuar
-                        </button>
+                          onMouseEnter={e => { e.currentTarget.style.background = "linear-gradient(135deg, rgba(110,231,194,0.28), rgba(110,231,194,0.14))"; e.currentTarget.style.boxShadow = `0 4px 16px ${P.accent}14`; }}
+                          onMouseLeave={e => { e.currentTarget.style.background = "linear-gradient(135deg, rgba(110,231,194,0.18), rgba(110,231,194,0.08))"; e.currentTarget.style.boxShadow = "none"; }}
+                        ><Zap size={11} strokeWidth={2.5} /> Analizar y actuar</button>
 
-                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
-                          <button onClick={() => setSelectedLead(l)} style={{ padding: "8px 0", borderRadius: 9, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.09)", display: "flex", alignItems: "center", justifyContent: "center", gap: 5, color: "#C8D4E3", fontSize: 11, fontWeight: 600, fontFamily: font, cursor: "pointer", transition: "all 0.15s" }}
-                            onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.09)"; e.currentTarget.style.color = "#fff"; }}
-                            onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.04)"; e.currentTarget.style.color = "#C8D4E3"; }}
-                          ><User size={11} /> Perfil</button>
-                          <button onClick={() => setNotesLead(l)} style={{ padding: "8px 0", borderRadius: 9, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.09)", display: "flex", alignItems: "center", justifyContent: "center", gap: 5, color: "#C8D4E3", fontSize: 11, fontWeight: 600, fontFamily: font, cursor: "pointer", transition: "all 0.15s" }}
-                            onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.09)"; e.currentTarget.style.color = "#fff"; }}
-                            onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.04)"; e.currentTarget.style.color = "#C8D4E3"; }}
-                          ><FileText size={11} /> Notas</button>
+                        {/* Perfil + Notas — mismo estilo neutro siempre */}
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 5 }}>
+                          {[
+                            { label: "Perfil", icon: User, fn: () => setSelectedLead(l) },
+                            { label: "Notas",  icon: FileText, fn: () => setNotesLead(l) },
+                          ].map(({ label, icon: Icon, fn }) => (
+                            <button key={label} onClick={fn} style={{
+                              padding: "8px 0", borderRadius: 8,
+                              background: "rgba(255,255,255,0.04)",
+                              border: "1px solid rgba(255,255,255,0.08)",
+                              display: "flex", alignItems: "center", justifyContent: "center", gap: 4,
+                              color: P.txt2, fontSize: 10.5, fontWeight: 600,
+                              fontFamily: font, cursor: "pointer", transition: "all 0.14s",
+                            }}
+                              onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.09)"; e.currentTarget.style.color = "#fff"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.14)"; }}
+                              onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.04)"; e.currentTarget.style.color = P.txt2; e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)"; }}
+                            ><Icon size={10} /> {label}</button>
+                          ))}
                         </div>
                       </div>
                     </div>
@@ -1586,61 +1651,125 @@ function CRM({ oc, co }) {
         );
       })()}
 
-      {/* ── MODAL NUEVO LEAD — Refined ── */}
+      {/* ── MODAL NUEVO LEAD ── */}
       {addingLead && createPortal(
         <>
-          <div onClick={() => setAddingLead(false)} style={{ position: "fixed", inset: 0, background: "rgba(2,5,12,0.78)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)", zIndex: 500 }} />
-          <div style={{ position: "fixed", top: "50%", left: "50%", transform: "translate(-50%,-50%)", zIndex: 501, width: "min(540px, 95vw)", background: "#07080F", border: `1px solid ${P.borderH}`, borderRadius: 22, boxShadow: "0 48px 96px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.04)", animation: "fadeIn 0.22s ease" }}>
-            {/* Accent top bar */}
-            <div style={{ height: 3, background: `linear-gradient(90deg, ${P.accent}, ${P.accent}40)`, borderRadius: "22px 22px 0 0" }} />
-            <div style={{ padding: "22px 26px 18px", borderBottom: `1px solid ${P.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div onClick={() => setAddingLead(false)} style={{ position: "fixed", inset: 0, background: "rgba(2,5,12,0.82)", backdropFilter: "blur(10px)", WebkitBackdropFilter: "blur(10px)", zIndex: 500 }} />
+          <div style={{ position: "fixed", top: "50%", left: "50%", transform: "translate(-50%,-50%)", zIndex: 501, width: "min(540px, 95vw)", background: "#07090F", border: `1px solid ${P.borderH}`, borderRadius: 22, boxShadow: "0 52px 100px rgba(0,0,0,0.72), 0 0 0 1px rgba(255,255,255,0.04)", animation: "fadeIn 0.2s ease", overflow: "hidden" }}>
+
+            {/* ── Barra accent — azul menta solamente ── */}
+            <div style={{ height: 3, background: `linear-gradient(90deg, ${P.accent}, ${P.accent}CC 60%, ${P.accent}44)` }} />
+
+            {/* ── Header ── */}
+            <div style={{ padding: "20px 26px 16px", borderBottom: `1px solid ${P.border}`, display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
               <div>
-                <p style={{ fontSize: 16, fontWeight: 700, color: "#FFFFFF", fontFamily: fontDisp, letterSpacing: "-0.02em", marginBottom: 3 }}>Registrar Nuevo Cliente</p>
-                <p style={{ fontSize: 11, color: P.txt3 }}>Se crea en etapa <span style={{ color: stgC["Nuevo Registro"], fontWeight: 600 }}>Nuevo Registro</span> · Score inicial 40</p>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 5 }}>
+                  <div style={{ width: 28, height: 28, borderRadius: 9, background: `${P.accent}12`, border: `1px solid ${P.accentB}`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <UserCheck size={14} color={P.accent} />
+                  </div>
+                  <h3 style={{ fontSize: 16, fontWeight: 700, color: "#FFFFFF", fontFamily: fontDisp, letterSpacing: "-0.025em", margin: 0 }}>Registrar Nuevo Cliente</h3>
+                </div>
+                <p style={{ fontSize: 11, color: P.txt3, fontFamily: font, margin: 0, paddingLeft: 36 }}>
+                  Etapa inicial <span style={{ color: stgC["Nuevo Registro"] || P.accent, fontWeight: 600, fontFamily: fontDisp }}>Nuevo Registro</span>
+                  <span style={{ color: P.txt3 }}> · Score 40</span>
+                </p>
               </div>
-              <button onClick={() => setAddingLead(false)} style={{ width: 32, height: 32, borderRadius: 9, border: `1px solid ${P.border}`, background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.18s" }}
+              <button onClick={() => setAddingLead(false)} style={{ width: 30, height: 30, borderRadius: 8, border: `1px solid ${P.border}`, background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.16s", flexShrink: 0 }}
                 onMouseEnter={e => e.currentTarget.style.background = P.glass}
                 onMouseLeave={e => e.currentTarget.style.background = "transparent"}
-              ><X size={14} color={P.txt3} /></button>
+              ><X size={13} color={P.txt3} /></button>
             </div>
-            <div style={{ padding: "22px 26px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px 16px" }}>
+
+            {/* ── Campos ── */}
+            <div style={{ padding: "20px 26px 4px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px 14px" }}>
               {[
-                { label: "Nombre completo", key: "n", ph: "Ej. Rafael García", full: true, required: true },
-                { label: "Teléfono", key: "phone", ph: "+1 817 682 3272" },
-                ...(canSeeAll ? [{ label: "Asesor asignado", key: "asesor", ph: "Estefanía Valdes" }] : []),
-                { label: "Presupuesto", key: "budget", ph: "$200K USD" },
-                { label: "Fuente / Campaña", key: "campana", ph: "Cancún, Google Ads, Referido…" },
+                { label: "Nombre completo", key: "n", ph: "Ej. Rafael García López", full: true, required: true, icon: User },
+                { label: "Teléfono", key: "phone", ph: "+52 998 123 4567", icon: Phone },
+                ...(canSeeAll ? [{ label: "Asesor asignado", key: "asesor", ph: "Estefanía Valdes", icon: Users }] : []),
+                { label: "Presupuesto estimado", key: "budget", ph: "$200,000 USD", icon: DollarSign },
+                { label: "Fuente / Campaña", key: "campana", ph: "Google Ads, Referido, Expo…", icon: Crosshair },
+                { label: "Proyecto de interés", key: "p", ph: "Gobernador 28, Monarca 28, Torre 25…", full: true, icon: Building2 },
               ].map(f => (
                 <div key={f.key} style={{ gridColumn: f.full ? "1 / -1" : "auto" }}>
-                  <p style={{ fontSize: 10, fontWeight: 700, color: P.txt3, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 6 }}>{f.label}{f.required && <span style={{ color: P.accent }}> *</span>}</p>
-                  <input placeholder={f.ph} value={newLead[f.key]} onChange={e => setNewLead(p => ({...p, [f.key]: e.target.value}))}
-                    style={{ width: "100%", height: 40, padding: "0 14px", borderRadius: 11, background: P.glass, border: `1px solid ${newLead[f.key] ? P.accentB : P.border}`, color: P.txt, fontSize: 13, outline: "none", fontFamily: font, boxSizing: "border-box", transition: "border-color 0.2s" }}
-                    onFocus={e => e.target.style.borderColor = P.accentB}
-                    onBlur={e => e.target.style.borderColor = newLead[f.key] ? P.accentB : P.border}
+                  <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 7 }}>
+                    {f.icon && <f.icon size={10} color={P.txt3} />}
+                    <span style={{ fontSize: 10, fontWeight: 700, color: P.txt3, letterSpacing: "0.055em", textTransform: "uppercase", fontFamily: fontDisp }}>
+                      {f.label}
+                      {f.required && <span style={{ color: P.accent, marginLeft: 3 }}>*</span>}
+                    </span>
+                  </div>
+                  <input
+                    placeholder={f.ph}
+                    value={newLead[f.key] || ""}
+                    onChange={e => setNewLead(p => ({...p, [f.key]: e.target.value}))}
+                    style={{
+                      width: "100%", height: 42, padding: "0 14px",
+                      borderRadius: 11,
+                      background: newLead[f.key] ? "rgba(110,231,194,0.04)" : P.glass,
+                      border: `1px solid ${newLead[f.key] ? P.accentB : P.border}`,
+                      color: P.txt, fontSize: 13, fontWeight: 400,
+                      outline: "none", fontFamily: font,
+                      boxSizing: "border-box", transition: "all 0.2s",
+                    }}
+                    onFocus={e => { e.target.style.borderColor = P.accentB; e.target.style.background = "rgba(110,231,194,0.05)"; e.target.style.boxShadow = `0 0 0 3px ${P.accent}0A`; }}
+                    onBlur={e => { e.target.style.borderColor = newLead[f.key] ? P.accentB : P.border; e.target.style.background = newLead[f.key] ? "rgba(110,231,194,0.04)" : P.glass; e.target.style.boxShadow = "none"; }}
                   />
                 </div>
               ))}
+
+              {/* ── Notas iniciales ── */}
               <div style={{ gridColumn: "1 / -1" }}>
-                <p style={{ fontSize: 10, fontWeight: 700, color: P.txt3, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 6 }}>Proyecto de interés</p>
-                <input
-                  value={newLead.p}
-                  onChange={e => setNewLead(p => ({...p, p: e.target.value}))}
-                  placeholder="Ej. Gobernador 28, Monarca 28, Torre 25…"
-                  style={{ width: "100%", height: 40, padding: "0 14px", borderRadius: 11, background: P.glass, border: `1px solid ${newLead.p ? P.accentB : P.border}`, color: P.txt, fontSize: 13, outline: "none", fontFamily: font, boxSizing: "border-box", transition: "border-color 0.2s" }}
-                  onFocus={e => e.target.style.borderColor = P.accentB}
-                  onBlur={e => e.target.style.borderColor = newLead.p ? P.accentB : P.border}
+                <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 7 }}>
+                  <FileText size={10} color={P.txt3} />
+                  <span style={{ fontSize: 10, fontWeight: 700, color: P.txt3, letterSpacing: "0.055em", textTransform: "uppercase", fontFamily: fontDisp }}>Notas iniciales</span>
+                </div>
+                <textarea
+                  placeholder="Observaciones del primer contacto, intereses específicos, objeciones detectadas…"
+                  value={newLead.notas || ""}
+                  onChange={e => setNewLead(p => ({...p, notas: e.target.value}))}
+                  rows={3}
+                  style={{
+                    width: "100%", padding: "11px 14px",
+                    borderRadius: 11, resize: "vertical",
+                    background: newLead.notas ? "rgba(110,231,194,0.04)" : P.glass,
+                    border: `1px solid ${newLead.notas ? P.accentB : P.border}`,
+                    color: P.txt, fontSize: 13, fontWeight: 400,
+                    outline: "none", fontFamily: font,
+                    boxSizing: "border-box", transition: "all 0.2s",
+                    lineHeight: 1.55,
+                  }}
+                  onFocus={e => { e.target.style.borderColor = P.accentB; e.target.style.background = "rgba(110,231,194,0.05)"; e.target.style.boxShadow = `0 0 0 3px ${P.accent}0A`; }}
+                  onBlur={e => { e.target.style.borderColor = newLead.notas ? P.accentB : P.border; e.target.style.background = newLead.notas ? "rgba(110,231,194,0.04)" : P.glass; e.target.style.boxShadow = "none"; }}
                 />
               </div>
             </div>
-            <div style={{ padding: "16px 26px", borderTop: `1px solid ${P.border}`, display: "flex", gap: 10 }}>
-              <button onClick={() => setAddingLead(false)} style={{ flex: 1, height: 42, borderRadius: 12, background: "transparent", border: `1px solid ${P.border}`, color: P.txt3, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: font, transition: "all 0.18s" }}
+
+            {/* ── Footer ── */}
+            <div style={{ padding: "18px 26px 22px", display: "flex", gap: 10 }}>
+              <button onClick={() => setAddingLead(false)} style={{ flex: 1, height: 43, borderRadius: 12, background: "transparent", border: `1px solid ${P.border}`, color: P.txt3, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: font, transition: "all 0.18s" }}
                 onMouseEnter={e => { e.currentTarget.style.background = P.glass; e.currentTarget.style.color = P.txt2; }}
                 onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = P.txt3; }}
               >Cancelar</button>
-              <button onClick={addNewLead} disabled={!newLead.n.trim()} style={{ flex: 2, height: 42, borderRadius: 12, background: newLead.n.trim() ? "linear-gradient(135deg, rgba(110,231,194,0.22), rgba(110,231,194,0.1))" : P.glass, border: `1px solid ${newLead.n.trim() ? P.accentB : P.border}`, color: newLead.n.trim() ? P.accent : P.txt3, fontSize: 13, fontWeight: 700, cursor: newLead.n.trim() ? "pointer" : "not-allowed", fontFamily: fontDisp, letterSpacing: "0.01em", transition: "all 0.2s", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}
-                onMouseEnter={e => { if (newLead.n.trim()) { e.currentTarget.style.background = "linear-gradient(135deg, rgba(110,231,194,0.3), rgba(110,231,194,0.15))"; } }}
-                onMouseLeave={e => { if (newLead.n.trim()) { e.currentTarget.style.background = "linear-gradient(135deg, rgba(110,231,194,0.22), rgba(110,231,194,0.1))"; } }}
-              ><Plus size={14} /> Registrar Cliente</button>
+              <button onClick={addNewLead} disabled={!newLead.n.trim()} style={{
+                flex: 2.2, height: 43, borderRadius: 12,
+                background: newLead.n.trim()
+                  ? "linear-gradient(135deg, rgba(110,231,194,0.24), rgba(110,231,194,0.10))"
+                  : P.glass,
+                border: `1px solid ${newLead.n.trim() ? P.accentB : P.border}`,
+                color: newLead.n.trim() ? P.accent : P.txt3,
+                fontSize: 13, fontWeight: 700,
+                cursor: newLead.n.trim() ? "pointer" : "not-allowed",
+                fontFamily: fontDisp, letterSpacing: "0.005em",
+                transition: "all 0.2s",
+                display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+                boxShadow: newLead.n.trim() ? `0 0 20px ${P.accent}10` : "none",
+              }}
+                onMouseEnter={e => { if (newLead.n.trim()) { e.currentTarget.style.background = "linear-gradient(135deg, rgba(110,231,194,0.32), rgba(110,231,194,0.16))"; e.currentTarget.style.boxShadow = `0 4px 24px ${P.accent}18`; } }}
+                onMouseLeave={e => { if (newLead.n.trim()) { e.currentTarget.style.background = "linear-gradient(135deg, rgba(110,231,194,0.24), rgba(110,231,194,0.10))"; e.currentTarget.style.boxShadow = `0 0 20px ${P.accent}10`; } }}
+              >
+                <UserCheck size={14} />
+                Registrar Cliente
+              </button>
             </div>
           </div>
         </>,
@@ -1828,6 +1957,19 @@ function CRM({ oc, co }) {
 
                   {/* Acciones — siempre visibles */}
                   <div style={{ display: "flex", gap: 4, justifyContent: "center" }}>
+                    {/* Pin — añadir/quitar de prioridad */}
+                    {(() => {
+                      const isPinned = pinnedIds.has(l.id);
+                      const isAuto   = isAutoPriority(l);
+                      const inPriority = isPinned || isAuto;
+                      return (
+                        <button onClick={() => togglePin(l.id)} title={inPriority ? "Quitar de prioridad" : "Añadir a prioridad"}
+                          style={{ width: 29, height: 29, borderRadius: 8, border: `1px solid ${inPriority ? `${P.accent}40` : P.border}`, background: inPriority ? `${P.accent}12` : "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.15s" }}
+                          onMouseEnter={e => { e.currentTarget.style.background = inPriority ? `${P.accent}20` : "rgba(255,255,255,0.06)"; }}
+                          onMouseLeave={e => { e.currentTarget.style.background = inPriority ? `${P.accent}12` : "transparent"; }}
+                        ><Star size={11} color={inPriority ? P.accent : P.txt3} fill={isPinned ? P.accent : "none"} strokeWidth={2} /></button>
+                      );
+                    })()}
                     <button onClick={() => oc(`__crm__ ${l.n.toLowerCase()}`, l)} title="Analizar con IA"
                       style={{ padding: "6px 10px", borderRadius: 8, border: `1px solid ${P.accentB}`, background: `${P.accent}10`, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 4, color: P.accent, fontSize: 10.5, fontWeight: 600, fontFamily: font, transition: "background 0.15s", whiteSpace: "nowrap" }}
                       onMouseEnter={e => e.currentTarget.style.background = `${P.accent}1E`}
@@ -1925,6 +2067,7 @@ function CRM({ oc, co }) {
                             </div>
                             <div style={{ display: "flex", gap: 5 }}>
                               <button onClick={() => oc(`__crm__ ${l.n.toLowerCase()}`, l)} style={{ flex: 1, padding: "6px 0", borderRadius: 7, background: `${P.accent}10`, border: `1px solid ${P.accentB}`, color: P.accent, fontSize: 9.5, fontWeight: 600, cursor: "pointer", fontFamily: font, transition: "background 0.15s" }} onMouseEnter={e => e.currentTarget.style.background = `${P.accent}1E`} onMouseLeave={e => e.currentTarget.style.background = `${P.accent}10`}>Analizar</button>
+                              <button onClick={() => togglePin(l.id)} title={pinnedIds.has(l.id) ? "Quitar de prioridad" : "Añadir a prioridad"} style={{ width: 28, padding: "5px 0", borderRadius: 7, background: pinnedIds.has(l.id) ? `${P.accent}12` : "transparent", border: `1px solid ${pinnedIds.has(l.id) ? `${P.accent}36` : P.border}`, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.15s" }} onMouseEnter={e => { e.currentTarget.style.background = `${P.accent}1A`; }} onMouseLeave={e => { e.currentTarget.style.background = pinnedIds.has(l.id) ? `${P.accent}12` : "transparent"; }}><Star size={10} color={pinnedIds.has(l.id) ? P.accent : P.txt3} fill={pinnedIds.has(l.id) ? P.accent : "none"} strokeWidth={2} /></button>
                               <button onClick={() => setSelectedLead(l)} style={{ width: 28, padding: "5px 0", borderRadius: 7, background: "transparent", border: `1px solid ${P.border}`, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.15s" }} onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.06)"; e.currentTarget.style.borderColor = P.borderH; }} onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = P.border; }}><User size={10} color={P.txt3} /></button>
                               <button onClick={() => setNotesLead(l)} style={{ width: 28, padding: "5px 0", borderRadius: 7, background: "transparent", border: `1px solid ${P.border}`, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.15s" }} onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.06)"; e.currentTarget.style.borderColor = P.borderH; }} onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = P.border; }}><FileText size={10} color={P.txt3} /></button>
                             </div>
