@@ -1572,7 +1572,7 @@ function CRM({ oc, co }) {
                       </div>
 
                       {/* Próxima acción */}
-                      <div style={{ borderRadius: 10, background: "rgba(0,0,0,0.22)", border: `1px solid rgba(255,255,255,0.06)`, overflow: "hidden" }}>
+                      <div style={{ borderRadius: 10, background: "rgba(0,0,0,0.22)", border: `1px solid rgba(255,255,255,0.06)`, overflow: "hidden", flex: 1 }}>
                         <div style={{ padding: "7px 11px 6px", borderBottom: "1px solid rgba(255,255,255,0.05)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                           <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
                             <Timer size={9} color={meta.color} strokeWidth={2.5} />
@@ -1580,9 +1580,9 @@ function CRM({ oc, co }) {
                           </div>
                           <span style={{ fontSize: 8.5, color: P.txt3, background: "rgba(255,255,255,0.05)", padding: "1px 6px", borderRadius: 99, fontFamily: font }}>{l.nextActionDate}</span>
                         </div>
-                        <div style={{ padding: "9px 11px" }}>
-                          <p style={{ fontSize: 12, fontWeight: 500, color: "#E2E8F0", fontFamily: font, lineHeight: 1.55, margin: 0 }}>
-                            {l.nextAction?.substring(0, 90)}{(l.nextAction?.length || 0) > 90 ? "…" : ""}
+                        <div style={{ padding: "9px 11px", minHeight: 52, display: "flex", alignItems: "flex-start" }}>
+                          <p style={{ fontSize: 12, fontWeight: 500, color: "#E2E8F0", fontFamily: font, lineHeight: 1.55, margin: 0, display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
+                            {l.nextAction || "Sin próxima acción registrada."}
                           </p>
                         </div>
                       </div>
@@ -1597,7 +1597,7 @@ function CRM({ oc, co }) {
                       </div>
 
                       {/* Botones */}
-                      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                      <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: "auto" }}>
                         <button onClick={() => oc(`__crm__ ${l.n.toLowerCase()}`, l)} style={{
                           width: "100%", padding: "10px 12px", borderRadius: 9,
                           background: "linear-gradient(135deg, rgba(110,231,194,0.15), rgba(110,231,194,0.07))",
