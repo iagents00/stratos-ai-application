@@ -1,6 +1,9 @@
 import { useState, useEffect, useRef, useCallback, useMemo, memo } from "react";
-import LoginScreen from "./LoginScreen.jsx";
+import LoginScreen from "../landing/LoginScreen.jsx";
+import PricingScreen from "../landing/PricingScreen.jsx";
 import { createPortal } from "react-dom";
+import { useAuth } from "../hooks/useAuth";
+import { adminGetAllUsers, adminCreateUser, adminUpdateUser, adminDeleteUser, adminResetPassword } from "../lib/auth";
 import {
   TrendingUp, Target, ArrowUpRight, ArrowRight, CheckCircle2, Mic, Search,
   Users, Building2, MapPin, Send, Plus, Timer, Flame, Crown,
@@ -13,13 +16,13 @@ import {
   AlertCircle, TrendingDown, Home, Hammer, FileCheck,
   LayoutGrid, AlertTriangle, CheckSquare,
   Banknote, Percent, Calendar, MapPinOff,
-  Globe, Palmtree, Waves, Sparkles, Image,
+  Globe, Palmtree, Waves, Wand2, Image,
   Download, ExternalLink, Copy, Check, Trash2,
   ChevronDown, ChevronUp, Heart, Share2, Maximize2,
   Receipt, CreditCard, BookOpen, PiggyBank, ArrowDownLeft,
   ClipboardList, FilePlus, RefreshCw, BadgeCheck, ListChecks,
   Landmark, Scale, Calculator,
-  UserCheck
+  UserCheck, Sparkles, List, SlidersHorizontal
 } from "lucide-react";
 import {
   AreaChart, Area, BarChart, Bar, XAxis, YAxis, Tooltip,
@@ -292,22 +295,22 @@ const leads = [
     nextActionDate: "Esta semana",
     lastActivity: "Zoom concretado — 9 de Abril 6pm",
     daysInactive: 9,
-    notas: `📍 OBJETIVO
+    notas: `OBJETIVO
 Inversión y disfrute personal. Playa del Carmen como destino principal.
 
-💰 PRESUPUESTO
+PRESUPUESTO
 $200K USD · Entrega inmediata.
 Puede extender presupuesto con financiamiento de desarrollador o crédito hipotecario — planea hipotecar su casa en Texas.
 
-👤 PERFIL DEL CLIENTE
+PERFIL DEL CLIENTE
 Mexicano viviendo en Texas. Ya evaluó Amares pero no le gustó. Busca algo ya construido y más céntrico. Viaja el 4 de julio a Riviera Maya. Conoce Cancún y la zona hotelera; no conoce Tulum. Toma consejos de su esposa pero él decide. Ya tiene inversiones en otros mercados. Actualmente en Guerrero por temas personales.
 
-📅 HISTORIAL DE CONTACTO
+HISTORIAL DE CONTACTO
 • Sáb 4 Abr — Cita presencial en Guerrero 10am / PDC 11am
 • Reagendado → Jue 9 Abr 6pm
-• ✅ Zoom concretado el 9 de Abril
+• Zoom concretado el 9 de Abril
 
-⚡ PENDIENTE
+PENDIENTE
 Sacar y enviar videos de las propiedades de interés (Torre 25, BAGA, Kaab On The Beach).`,
   },
   {
@@ -333,21 +336,21 @@ Sacar y enviar videos de las propiedades de interés (Torre 25, BAGA, Kaab On Th
     nextActionDate: "Hoy",
     lastActivity: "Visita al penthouse — reacción muy positiva",
     daysInactive: 2,
-    notas: `📍 OBJETIVO
+    notas: `OBJETIVO
 Crecimiento patrimonial. Penthouse de lujo como activo principal.
 
-💰 PRESUPUESTO
+PRESUPUESTO
 $4.2M USD · Financiamiento propio confirmado.
 
-👤 PERFIL DEL CLIENTE
+PERFIL DEL CLIENTE
 Familia con historial de inversión inmobiliaria. Muy orientados a calidad y exclusividad. Alto potencial de referidos dentro de su red.
 
-📅 HISTORIAL DE CONTACTO
+HISTORIAL DE CONTACTO
 • Primera visita al penthouse — excelente reacción
 • Propuesta enviada y revisada
 • En etapa activa de negociación de condiciones
 
-⚡ PENDIENTE
+PENDIENTE
 Conectar con notaría aliada. Confirmar costos notariales con el banco. Preparar expediente de cierre.`,
   },
   {
@@ -373,21 +376,21 @@ Conectar con notaría aliada. Confirmar costos notariales con el banco. Preparar
     nextActionDate: "Mañana 10:00am",
     lastActivity: "Llamada 25 min — muy interesado en ROI",
     daysInactive: 3,
-    notas: `📍 OBJETIVO
+    notas: `OBJETIVO
 Diversificación patrimonial. Busca activos de alto ROI con respaldo constructivo sólido.
 
-💰 PRESUPUESTO
+PRESUPUESTO
 $2.8M USD · Capital propio disponible.
 
-👤 PERFIL DEL CLIENTE
+PERFIL DEL CLIENTE
 CEO de empresa tecnológica. Perfil analítico — necesita datos, no emoción. Valora la transparencia en avances de obra y proyecciones financieras reales.
 
-📅 HISTORIAL DE CONTACTO
+HISTORIAL DE CONTACTO
 • Primer contacto vía LinkedIn
 • Llamada de 25 min — alto interés en ROI y garantías
 • Zoom agendado
 
-⚡ PENDIENTE
+PENDIENTE
 Preparar reporte de avance de obra actualizado + proyección ROI a 3 años antes del zoom.`,
   },
   {
@@ -413,21 +416,21 @@ Preparar reporte de avance de obra actualizado + proyección ROI a 3 años antes
     nextActionDate: "Hoy 5:00pm",
     lastActivity: "Visitó proyecto — solicitó comparativas de zona",
     daysInactive: 8,
-    notas: `📍 OBJETIVO
+    notas: `OBJETIVO
 Inversión de portafolio con criterio internacional. Busca rendimientos superiores al mercado londinense.
 
-💰 PRESUPUESTO
+PRESUPUESTO
 $3.1M USD · Capital de inversión institucional.
 
-👤 PERFIL DEL CLIENTE
+PERFIL DEL CLIENTE
 Analista de bienes raíces con base en Londres. Muy detallista y comparativa. Exige documentación completa y comparativas por zona antes de tomar cualquier decisión.
 
-📅 HISTORIAL DE CONTACTO
+HISTORIAL DE CONTACTO
 • Contacto vía Facebook Ads
 • Visita al proyecto — buena reacción inicial
 • Solicitó comparativo de rendimientos por zona
 
-⚡ PENDIENTE
+PENDIENTE
 Enviar comparativo detallado: Riviera Maya vs Cancún vs CDMX. Llamar hoy 5pm para resolver dudas.`,
   },
   {
@@ -453,20 +456,20 @@ Enviar comparativo detallado: Riviera Maya vs Cancún vs CDMX. Llamar hoy 5pm pa
     nextActionDate: "Hoy",
     lastActivity: "Zoom concretado — confirmó alto interés en Portofino",
     daysInactive: 1,
-    notas: `📍 OBJETIVO
+    notas: `OBJETIVO
 Alta liquidez y plusvalía en zona costera premium. Portafolio de inversión diversificado.
 
-💰 PRESUPUESTO
+PRESUPUESTO
 $5.1M USD · Capital disponible inmediato.
 
-👤 PERFIL DEL CLIENTE
+PERFIL DEL CLIENTE
 Empresario experimentado. Portafolio diversificado en distintos mercados. Evalúa decisiones rápido pero requiere condiciones claras y exclusividad.
 
-📅 HISTORIAL DE CONTACTO
+HISTORIAL DE CONTACTO
 • Referido VIP directo
 • Zoom concretado — alto interés confirmado en Portofino
 
-⚡ PENDIENTE
+PENDIENTE
 Enviar propuesta formal con condiciones de pago. Carta de exclusividad de unidad. Actúa rápido o pierde a otro comprador.`,
   },
   {
@@ -492,20 +495,20 @@ Enviar propuesta formal con condiciones de pago. Carta de exclusividad de unidad
     nextActionDate: "Mañana",
     lastActivity: "Registro web — referida por Fam. Rodríguez",
     daysInactive: 1,
-    notas: `📍 OBJETIVO
+    notas: `OBJETIVO
 Primera inversión inmobiliaria. Busca seguridad y crecimiento patrimonial.
 
-💰 PRESUPUESTO
+PRESUPUESTO
 $2.2M USD · Recursos propios disponibles.
 
-👤 PERFIL DEL CLIENTE
+PERFIL DEL CLIENTE
 Médica especialista. Ingresos altos pero sin experiencia en bienes raíces. Requiere acompañamiento y educación en el proceso. Referida directamente por Fam. Rodríguez.
 
-📅 HISTORIAL DE CONTACTO
+HISTORIAL DE CONTACTO
 • Registro vía formulario web
 • Referida por Fam. Rodríguez — contacto cálido
 
-⚡ PENDIENTE
+PENDIENTE
 Enviar guía personalizada de inversión inmobiliaria. Llamar mañana para resolver dudas sobre el proceso de compra.`,
   },
   {
@@ -531,20 +534,20 @@ Enviar guía personalizada de inversión inmobiliaria. Llamar mañana para resol
     nextActionDate: "Jueves 9:00am",
     lastActivity: "Registro web — preguntó por especificaciones técnicas de construcción",
     daysInactive: 0,
-    notas: `📍 OBJETIVO
+    notas: `OBJETIVO
 Inversión con alta calidad constructiva. Como arquitecto, evalúa técnicamente la obra.
 
-💰 PRESUPUESTO
+PRESUPUESTO
 $1.5M USD · Recursos propios.
 
-👤 PERFIL DEL CLIENTE
+PERFIL DEL CLIENTE
 Arquitecto independiente. Muy técnico — evalúa especificaciones, materiales y procesos constructivos. Baja fricción porque entiende el sector, pero requiere validación técnica antes de comprometerse.
 
-📅 HISTORIAL DE CONTACTO
+HISTORIAL DE CONTACTO
 • Registro vía Google Ads
 • Preguntó específicamente por especificaciones técnicas de construcción
 
-⚡ PENDIENTE
+PENDIENTE
 Confirmar tour técnico de obra con el ingeniero residente para el jueves 9:00am. Preparar dossier técnico con especificaciones.`,
   },
   {
@@ -570,20 +573,20 @@ Confirmar tour técnico de obra con el ingeniero residente para el jueves 9:00am
     nextActionDate: "Esta semana",
     lastActivity: "Reunión inicial en evento VIP — intrigado por rendimientos",
     daysInactive: 5,
-    notas: `📍 OBJETIVO
+    notas: `OBJETIVO
 Protección de capital a largo plazo. Activo de lujo en destino premium.
 
-💰 PRESUPUESTO
+PRESUPUESTO
 $6.5M USD · Capacidad de inversión amplia.
 
-👤 PERFIL DEL CLIENTE
+PERFIL DEL CLIENTE
 Inversionista de alto perfil con portafolio diversificado. Tomador de decisiones lento pero con alto poder de cierre. Requiere proyecciones financieras sólidas.
 
-📅 HISTORIAL DE CONTACTO
+HISTORIAL DE CONTACTO
 • Contacto en evento VIP exclusivo
 • Reunión inicial — interés en rendimientos a largo plazo
 
-⚡ PENDIENTE
+PENDIENTE
 Preparar proyección financiera a 10 años. Proponer sesión ejecutiva con Director de Arquitectura y CEO.`,
   },
 ];
@@ -730,7 +733,7 @@ const getResp = (t) => {
           { label: "Perfil del cliente", val: lead.bio, i: User, c: P.blue },
           { label: `Presupuesto · ${lead.budget}`, val: `Proyecto de interés: ${lead.p} · Tel: ${lead.phone}`, i: DollarSign, c: scoreColor },
           { label: "Riesgo + Fricción", val: `${lead.risk} · Fricción: ${lead.friction}`, i: Shield, c: frictionColor },
-          { label: `⚡ Próxima Acción · ${lead.nextActionDate}`, val: lead.nextAction, i: Zap, c: P.accent },
+          { label: `Próxima Acción · ${lead.nextActionDate}`, val: lead.nextAction, i: Zap, c: P.accent },
         ],
         follow: `Última actividad: ${lead.lastActivity}. ¿Quieres que prepare la estrategia de cierre completa para **${lead.n}**?`,
         btn: "Preparar Estrategia",
@@ -755,7 +758,7 @@ const getResp = (t) => {
         { label: "Perfil del cliente", val: lead.bio, i: User, c: P.blue },
         { label: `Estado · ${lead.st}`, val: frictionLabel, i: frictionIcon, c: frictionColor },
         { label: "Riesgo identificado", val: lead.risk, i: Shield, c: P.rose },
-        { label: `⚡ Próxima acción · ${lead.nextActionDate}`, val: lead.nextAction, i: Zap, c: P.accent },
+        { label: `Próxima acción · ${lead.nextActionDate}`, val: lead.nextAction, i: Zap, c: P.accent },
       ],
       follow: `Última actividad: ${lead.lastActivity}. ¿Preparamos la estrategia de cierre ahora?`,
       btn: "Preparar Estrategia",
@@ -993,133 +996,274 @@ const ScoreBar = ({ sc, compact }) => {
   );
 };
 
-/* ─── Notes Modal ─── */
-const NotesModal = ({ lead, onClose }) => {
+/* ─── Notes Modal — Rich sectioned view ─── */
+const NotesModal = ({ lead, onClose, onSave }) => {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState("");
   if (!lead) return null;
+
+  const KNOWN_SECTIONS = ["OBJETIVO", "PRESUPUESTO", "PERFIL DEL CLIENTE", "HISTORIAL DE CONTACTO", "PENDIENTE"];
+  const sectionColors = { "OBJETIVO": P.blue, "PRESUPUESTO": P.emerald, "PERFIL DEL CLIENTE": P.txt2, "HISTORIAL DE CONTACTO": P.amber, "PENDIENTE": P.accent };
+
+  const parseSections = (raw = "") => {
+    const sections = []; const lines = raw.split("\n"); let cur = null;
+    for (const line of lines) {
+      if (line.trim() === "") { if (cur) cur.body += "\n"; continue; }
+      const stripped = line.replace(/^[^\w\s]+\s*/, "").trim();
+      const hk = KNOWN_SECTIONS.find(s => stripped.toUpperCase() === s || line.trim() === s);
+      if (hk) { if (cur) sections.push(cur); cur = { title: hk, body: "", key: hk }; }
+      else { if (cur) cur.body += (cur.body ? "\n" : "") + line; else sections.push({ title: "", body: line, key: "" }); }
+    }
+    if (cur) sections.push(cur); return sections;
+  };
+  const sections = parseSections(lead.notas);
+
+  const startEdit = () => { setDraft(lead.notas || ""); setEditing(true); };
+  const saveEdit = () => { onSave?.(draft); setEditing(false); };
+
   return createPortal(
     <>
-      <div onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: 500, background: "rgba(2,5,12,0.7)", backdropFilter: "blur(6px)" }} />
-      <div style={{
-        position: "fixed", top: "50%", left: "50%", transform: "translate(-50%,-50%)",
-        zIndex: 501, width: "min(600px, 92vw)",
-        background: "linear-gradient(160deg, #0D1626 0%, #080D17 100%)",
-        border: `1px solid ${P.border}`, borderRadius: 20,
-        boxShadow: "0 40px 80px rgba(0,0,0,0.6)",
-        display: "flex", flexDirection: "column",
-        animation: "fadeIn 0.22s ease",
-        maxHeight: "80vh",
-      }}>
-        <div style={{ padding: "18px 22px 14px", borderBottom: `1px solid ${P.border}`, display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexShrink: 0 }}>
-          <div>
-            <p style={{ fontSize: 16, fontWeight: 700, color: "#FFFFFF", fontFamily: fontDisp, letterSpacing: "-0.02em" }}>{lead.n}</p>
-            <p style={{ fontSize: 11, color: P.txt3, marginTop: 2 }}>{lead.tag} · {lead.p} · {lead.asesor}</p>
+      <div onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: 500, background: "rgba(2,5,12,0.75)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)" }} />
+      <div style={{ position: "fixed", top: "50%", left: "50%", transform: "translate(-50%,-50%)", zIndex: 501, width: "min(660px, 94vw)", background: "#080D17", border: `1px solid ${P.borderH}`, borderRadius: 22, boxShadow: "0 48px 96px rgba(0,0,0,0.7)", display: "flex", flexDirection: "column", animation: "fadeIn 0.22s ease", maxHeight: "85vh" }}>
+        <div style={{ height: 3, background: `linear-gradient(90deg, ${stgC[lead.st] || P.accent}, transparent)`, borderRadius: "22px 22px 0 0" }} />
+        <div style={{ padding: "18px 22px 14px", borderBottom: `1px solid ${P.border}`, display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <div style={{ width: 40, height: 40, borderRadius: 11, background: P.glass, border: `1px solid ${P.border}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 15, fontWeight: 800, color: P.txt2, fontFamily: fontDisp, flexShrink: 0 }}>{lead.n.charAt(0)}</div>
+            <div>
+              <p style={{ fontSize: 15, fontWeight: 700, color: "#FFFFFF", fontFamily: fontDisp, letterSpacing: "-0.02em", marginBottom: 3 }}>{lead.n}</p>
+              <p style={{ fontSize: 11, color: P.txt3 }}>{lead.asesor} · {lead.budget}</p>
+            </div>
           </div>
-          <button onClick={onClose} style={{ width: 30, height: 30, borderRadius: 8, border: `1px solid ${P.border}`, background: P.glass, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}><X size={14} color={P.txt3} /></button>
+          <div style={{ display: "flex", gap: 7 }}>
+            {!editing && (
+              <button onClick={startEdit} style={{ display: "flex", alignItems: "center", gap: 5, padding: "7px 14px", borderRadius: 9, border: `1px solid ${P.border}`, background: "transparent", color: P.txt3, fontSize: 11.5, fontWeight: 600, cursor: "pointer", transition: "all 0.18s" }}
+                onMouseEnter={e => { e.currentTarget.style.background = P.glassH; e.currentTarget.style.color = P.txt; e.currentTarget.style.borderColor = P.borderH; }}
+                onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = P.txt3; e.currentTarget.style.borderColor = P.border; }}
+              >Editar notas</button>
+            )}
+            <button onClick={onClose} style={{ width: 32, height: 32, borderRadius: 9, border: `1px solid ${P.border}`, background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.18s" }}
+              onMouseEnter={e => e.currentTarget.style.background = P.glassH}
+              onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+            ><X size={14} color={P.txt2} /></button>
+          </div>
         </div>
         <div style={{ padding: "18px 22px", overflowY: "auto", flex: 1 }}>
-          <pre style={{ fontSize: 12.5, color: P.txt2, lineHeight: 1.75, fontFamily: font, whiteSpace: "pre-wrap", margin: 0 }}>{lead.notas}</pre>
+          {editing ? (
+            <textarea value={draft} onChange={e => setDraft(e.target.value)}
+              placeholder={"OBJETIVO\nDescripción...\n\nPENDIENTE\nAcciones pendientes..."}
+              style={{ width: "100%", minHeight: 300, padding: "14px", borderRadius: 12, background: "rgba(255,255,255,0.04)", border: `1px solid ${P.borderH}`, color: P.txt, fontSize: 13, fontFamily: font, lineHeight: 1.7, outline: "none", resize: "vertical", boxSizing: "border-box" }} />
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              {sections.filter(s => s.title || s.body).map((s, i) => {
+                const c = sectionColors[s.key] || P.txt2;
+                return (
+                  <div key={i} style={{ borderRadius: 12, border: `1px solid ${s.key ? `${c}18` : P.border}`, overflow: "hidden" }}>
+                    {s.title && <div style={{ padding: "8px 14px", background: s.key ? `${c}08` : P.glass, borderBottom: `1px solid ${s.key ? `${c}18` : P.border}` }}><p style={{ fontSize: 10, fontWeight: 700, color: s.key ? c : P.txt3, letterSpacing: "0.07em", textTransform: "uppercase" }}>{s.title}</p></div>}
+                    <div style={{ padding: s.title ? "12px 14px" : "14px" }}><pre style={{ fontSize: 12.5, color: P.txt2, lineHeight: 1.8, fontFamily: font, whiteSpace: "pre-wrap", margin: 0 }}>{s.body.trim()}</pre></div>
+                  </div>
+                );
+              })}
+              {sections.length === 0 && (
+                <div style={{ padding: "40px 0", textAlign: "center" }}>
+                  <p style={{ fontSize: 13, color: P.txt3, marginBottom: 12 }}>Sin notas registradas.</p>
+                  <button onClick={startEdit} style={{ padding: "8px 20px", borderRadius: 9, background: `${P.accent}12`, border: `1px solid ${P.accentB}`, color: P.accent, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>Agregar primera nota</button>
+                </div>
+              )}
+            </div>
+          )}
         </div>
+        {editing && (
+          <div style={{ padding: "14px 22px", borderTop: `1px solid ${P.border}`, display: "flex", gap: 8, flexShrink: 0 }}>
+            <button onClick={() => setEditing(false)} style={{ flex: 1, padding: "11px 0", borderRadius: 11, background: "transparent", border: `1px solid ${P.border}`, color: P.txt3, fontSize: 13, fontWeight: 600, cursor: "pointer", transition: "all 0.18s" }}
+              onMouseEnter={e => { e.currentTarget.style.background = P.glassH; e.currentTarget.style.color = P.txt2; }}
+              onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = P.txt3; }}
+            >Cancelar</button>
+            <button onClick={saveEdit} style={{ flex: 2, padding: "11px 0", borderRadius: 11, background: `${P.accent}16`, border: `1px solid ${P.accentB}`, color: P.accent, fontSize: 13, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 7, transition: "background 0.18s" }}
+              onMouseEnter={e => e.currentTarget.style.background = `${P.accent}24`}
+              onMouseLeave={e => e.currentTarget.style.background = `${P.accent}16`}
+            >Guardar notas</button>
+          </div>
+        )}
       </div>
     </>,
     document.body
   );
 };
 
-/* ─── Client profile side panel ─── */
-const LeadPanel = ({ lead, onClose, oc }) => {
+const LeadPanel = ({ lead, onClose, oc, onOpenNotes, onUpdate }) => {
+  const [activeTab, setActiveTab] = useState("perfil");
+  const [editing, setEditing] = useState(false);
+  const [form, setForm] = useState(null);
   if (!lead) return null;
   const sc = lead.sc;
-  const scoreColor = sc >= 80 ? P.emerald : sc >= 60 ? P.blue : sc >= 40 ? P.amber : P.rose;
-  const frictionColor = lead.friction === "Bajo" ? P.emerald : lead.friction === "Medio" ? P.amber : P.rose;
+  const scoreColor = P.accent;
+  const stageColor = stgC[lead.st] || P.txt3;
+  const stageIdx = STAGES.indexOf(lead.st);
+  const startEditing = () => { setForm({ n: lead.n, phone: lead.phone||"", budget: lead.budget||"", asesor: lead.asesor||"", campana: lead.campana||"", p: lead.p||"", st: lead.st, nextAction: lead.nextAction||"", nextActionDate: lead.nextActionDate||"", bio: lead.bio||"" }); setEditing(true); };
+  const saveEditing = () => { if (!form.n.trim()) return; onUpdate?.({...lead,...form}); setEditing(false); setForm(null); };
+  const cancelEditing = () => { setEditing(false); setForm(null); };
+  const f = k => form?.[k] ?? ""; const sf = k => v => setForm(p => ({...p,[k]:v}));
+  const inp = (label, key, ph, full) => (
+    <div style={full ? { gridColumn: "1 / -1" } : {}}>
+      <p style={{ fontSize: 9, fontWeight: 700, color: P.txt3, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 4 }}>{label}</p>
+      <input value={f(key)} onChange={e => sf(key)(e.target.value)} placeholder={ph}
+        style={{ width: "100%", padding: "8px 10px", borderRadius: 9, background: "rgba(255,255,255,0.05)", border: `1px solid ${P.borderH}`, color: P.txt, fontSize: 12, outline: "none", fontFamily: font, boxSizing: "border-box" }} />
+    </div>
+  );
+  const textarea = (label, key, ph) => (
+    <div style={{ gridColumn: "1 / -1" }}>
+      <p style={{ fontSize: 9, fontWeight: 700, color: P.txt3, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 4 }}>{label}</p>
+      <textarea value={f(key)} onChange={e => sf(key)(e.target.value)} placeholder={ph} rows={3}
+        style={{ width: "100%", padding: "8px 10px", borderRadius: 9, background: "rgba(255,255,255,0.05)", border: `1px solid ${P.borderH}`, color: P.txt, fontSize: 12, outline: "none", fontFamily: font, resize: "vertical", boxSizing: "border-box" }} />
+    </div>
+  );
+
   return createPortal(
     <>
-      <div onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: 400, background: "rgba(2,5,12,0.4)", backdropFilter: "blur(3px)" }} />
-      <div style={{
-        position: "fixed", right: 0, top: 0, bottom: 0, zIndex: 401,
-        width: 370, background: "linear-gradient(160deg, #0D1626 0%, #080D17 100%)",
-        borderLeft: `1px solid ${P.border}`, display: "flex", flexDirection: "column",
-        animation: "slideInRight 0.28s cubic-bezier(0.32,0.72,0,1)",
-      }}>
-        <style>{`@keyframes slideInRight{from{transform:translateX(100%)}to{transform:translateX(0)}}`}</style>
+      <div onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: 400, background: "rgba(2,5,12,0.5)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)" }} />
+      <div style={{ position: "fixed", right: 0, top: 0, bottom: 0, zIndex: 401, width: 440, background: "#07080F", borderLeft: `1px solid ${P.borderH}`, display: "flex", flexDirection: "column", animation: "slideInRight 0.28s cubic-bezier(0.32,0.72,0,1)", boxShadow: "-24px 0 80px rgba(0,0,0,0.5)" }}>
+        <style>{`@keyframes slideInRight{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}`}</style>
+        <div style={{ height: 3, background: `linear-gradient(90deg, ${stgC[editing ? form?.st : lead.st] || stageColor}, transparent)`, flexShrink: 0 }} />
+
         {/* Header */}
-        <div style={{ padding: "18px 20px 14px", borderBottom: `1px solid ${P.border}`, display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
-          <div style={{ flex: 1 }}>
-            <div style={{ display: "flex", gap: 5, marginBottom: 5 }}>
-              {lead.isNew && <span style={{ fontSize: 8, fontWeight: 800, color: P.accent, background: `${P.accent}14`, border: `1px solid ${P.accentB}`, padding: "1px 7px", borderRadius: 99, letterSpacing: "0.07em" }}>NUEVO</span>}
-              {lead.hot && <span style={{ fontSize: 8, fontWeight: 800, color: P.rose, background: `${P.rose}14`, border: `1px solid ${P.rose}25`, padding: "1px 7px", borderRadius: 99, letterSpacing: "0.07em" }}>HOT</span>}
+        <div style={{ padding: "18px 22px 14px", borderBottom: `1px solid ${P.border}`, flexShrink: 0 }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+            <div style={{ display: "flex", gap: 6 }}>
+              {lead.hot && <span style={{ fontSize: 9, fontWeight: 700, color: P.accent, background: `${P.accent}12`, border: `1px solid ${P.accentB}`, padding: "2px 8px", borderRadius: 99 }}>HOT</span>}
+              {lead.daysInactive >= 7 && <span style={{ fontSize: 9, fontWeight: 600, color: P.txt3, background: P.glass, border: `1px solid ${P.border}`, padding: "2px 8px", borderRadius: 99 }}>{lead.daysInactive}d inactivo</span>}
             </div>
-            <p style={{ fontSize: 17, fontWeight: 700, color: "#FFFFFF", fontFamily: fontDisp, letterSpacing: "-0.02em", marginBottom: 2 }}>{lead.n}</p>
-            <p style={{ fontSize: 11, color: P.txt2 }}>{lead.tag} · {lead.p}</p>
-          </div>
-          <button onClick={onClose} style={{ width: 28, height: 28, borderRadius: 7, border: `1px solid ${P.border}`, background: P.glass, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><X size={13} color={P.txt3} /></button>
-        </div>
-        <div style={{ flex: 1, overflowY: "auto", padding: "16px 20px", display: "flex", flexDirection: "column", gap: 14 }}>
-          {/* Score + Stage */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-            <div style={{ padding: "10px 12px", borderRadius: P.rs, background: `${scoreColor}08`, border: `1px solid ${scoreColor}18` }}>
-              <p style={{ fontSize: 9, color: P.txt3, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 3 }}>Score cierre</p>
-              <p style={{ fontSize: 26, fontWeight: 300, color: scoreColor, fontFamily: fontDisp, letterSpacing: "-0.04em", lineHeight: 1 }}>{sc}<span style={{ fontSize: 11, color: P.txt3 }}>/100</span></p>
-            </div>
-            <div style={{ padding: "10px 12px", borderRadius: P.rs, background: P.glass, border: `1px solid ${P.border}` }}>
-              <p style={{ fontSize: 9, color: P.txt3, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 5 }}>Estatus</p>
-              <Pill color={stgC[lead.st]} s>{lead.st}</Pill>
-              <p style={{ fontSize: 10, color: P.txt3, marginTop: 5 }}>Fricción: <span style={{ color: frictionColor, fontWeight: 600 }}>{lead.friction}</span></p>
+            <div style={{ display: "flex", gap: 6 }}>
+              {!editing && <button onClick={startEditing} style={{ display: "flex", alignItems: "center", gap: 5, padding: "6px 12px", borderRadius: 8, border: `1px solid ${P.border}`, background: "transparent", color: P.txt3, fontSize: 11, fontWeight: 600, cursor: "pointer", transition: "all 0.18s" }} onMouseEnter={e => { e.currentTarget.style.background = P.glassH; e.currentTarget.style.color = P.txt; e.currentTarget.style.borderColor = P.borderH; }} onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = P.txt3; e.currentTarget.style.borderColor = P.border; }}>Editar</button>}
+              <button onClick={onClose} style={{ width: 30, height: 30, borderRadius: 8, border: `1px solid ${P.border}`, background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.18s" }} onMouseEnter={e => e.currentTarget.style.background = P.glassH} onMouseLeave={e => e.currentTarget.style.background = "transparent"}><X size={13} color={P.txt3} /></button>
             </div>
           </div>
-          {/* Key info row */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
-            {[
-              { l: "Ingresó", v: lead.fechaIngreso },
-              { l: "Campaña", v: lead.campana },
-              { l: "Presupuesto", v: lead.budget },
-              { l: "Asesor", v: lead.asesor },
-            ].map(x => (
-              <div key={x.l} style={{ padding: "8px 10px", borderRadius: 8, background: P.glass, border: `1px solid ${P.border}` }}>
-                <p style={{ fontSize: 9, color: P.txt3, fontWeight: 600, letterSpacing: "0.05em", textTransform: "uppercase", marginBottom: 2 }}>{x.l}</p>
-                <p style={{ fontSize: 11, color: P.txt, fontWeight: 500 }}>{x.v}</p>
+          <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 14 }}>
+            <div style={{ position: "relative", flexShrink: 0 }}>
+              <svg width={54} height={54} style={{ position: "absolute", top: -3, left: -3 }}>
+                <circle cx={27} cy={27} r={24} fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth={2.5} />
+                <circle cx={27} cy={27} r={24} fill="none" stroke={P.accent} strokeWidth={2.5} strokeDasharray={`${2*Math.PI*24}`} strokeDashoffset={`${2*Math.PI*24*(1-sc/100)}`} strokeLinecap="round" style={{ transform: "rotate(-90deg)", transformOrigin: "27px 27px" }} />
+              </svg>
+              <div style={{ width: 48, height: 48, borderRadius: 13, background: "rgba(255,255,255,0.07)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, fontWeight: 800, color: P.txt2, fontFamily: fontDisp }}>{lead.n.charAt(0)}</div>
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              {editing ? <input value={f("n")} onChange={e => sf("n")(e.target.value)} style={{ width: "100%", fontSize: 17, fontWeight: 700, fontFamily: fontDisp, background: "transparent", border: "none", borderBottom: `1px solid ${P.borderH}`, color: "#FFF", outline: "none", paddingBottom: 3, marginBottom: 6, boxSizing: "border-box" }} />
+                : <p style={{ fontSize: 17, fontWeight: 700, color: "#FFF", fontFamily: fontDisp, letterSpacing: "-0.025em", marginBottom: 4, lineHeight: 1.1 }}>{lead.n}</p>}
+              <p style={{ fontSize: 11, color: P.txt3, marginBottom: 6 }}>{lead.tag}</p>
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                {editing ? <select value={f("st")} onChange={e => sf("st")(e.target.value)} style={{ padding: "3px 8px", borderRadius: 99, background: `${stgC[f("st")]||P.txt3}18`, border: `1px solid ${stgC[f("st")]||P.txt3}30`, color: stgC[f("st")]||P.txt3, fontSize: 10, fontWeight: 700, cursor: "pointer", outline: "none" }}>{STAGES.map(s => <option key={s} value={s} style={{ background: "#0C1219", color: "#fff" }}>{s}</option>)}</select>
+                  : <Pill color={stageColor} s>{lead.st}</Pill>}
+                <span style={{ fontSize: 10, color: P.txt3 }}>·</span>
+                {editing ? <input value={f("budget")} onChange={e => sf("budget")(e.target.value)} style={{ fontSize: 12, fontWeight: 700, fontFamily: fontDisp, background: "transparent", border: "none", borderBottom: `1px solid ${P.border}`, color: "#FFF", outline: "none", width: 90 }} />
+                  : <span style={{ fontSize: 12, fontWeight: 700, color: "#FFF", fontFamily: fontDisp }}>{lead.budget}</span>}
               </div>
-            ))}
-          </div>
-          {/* Next action */}
-          <div style={{ padding: "12px 14px", borderRadius: P.rs, background: `${P.accent}07`, border: `1px solid ${P.accentB}` }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 5 }}>
-              <Zap size={12} color={P.accent} />
-              <p style={{ fontSize: 9, fontWeight: 700, color: P.accent, letterSpacing: "0.07em", textTransform: "uppercase" }}>PRÓXIMA ACCIÓN · {lead.nextActionDate}</p>
             </div>
-            <p style={{ fontSize: 12.5, color: "#FFFFFF", lineHeight: 1.5, fontFamily: fontDisp, fontWeight: 500 }}>{lead.nextAction}</p>
           </div>
-          {/* Bio + Risk */}
-          <div>
-            <p style={{ fontSize: 9, fontWeight: 700, color: P.txt3, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 5 }}>Perfil</p>
-            <p style={{ fontSize: 12, color: P.txt2, lineHeight: 1.6 }}>{lead.bio}</p>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
+            <div style={{ flex: 1, height: 4, borderRadius: 2, background: "rgba(255,255,255,0.06)" }}><div style={{ width: `${sc}%`, height: 4, borderRadius: 2, background: P.accent }} /></div>
+            <span style={{ fontSize: 12, fontWeight: 700, color: P.txt2, fontFamily: fontDisp, minWidth: 50, textAlign: "right" }}>Score {sc}</span>
           </div>
-          <div style={{ padding: "9px 12px", borderRadius: P.rs, background: `${P.rose}07`, border: `1px solid ${P.rose}18`, display: "flex", gap: 7, alignItems: "flex-start" }}>
-            <AlertCircle size={13} color={P.rose} style={{ marginTop: 1, flexShrink: 0 }} />
-            <p style={{ fontSize: 11.5, color: P.txt2, lineHeight: 1.5 }}>{lead.risk}</p>
-          </div>
-          {/* Last activity */}
-          <div style={{ display: "flex", gap: 5, alignItems: "center" }}>
-            <Clock size={11} color={P.txt3} />
-            <p style={{ fontSize: 10.5, color: P.txt3 }}>Última actividad: <span style={{ color: P.txt2 }}>{lead.lastActivity}</span></p>
-          </div>
-          {/* Contact */}
           <div style={{ display: "flex", gap: 7 }}>
-            <a href={`tel:${lead.phone}`} style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 5, padding: "9px", borderRadius: P.rx, background: P.glass, border: `1px solid ${P.border}`, color: P.txt2, fontSize: 11, fontWeight: 600, textDecoration: "none" }}>
-              <Phone size={12} /> {lead.phone}
-            </a>
-            <a href={`https://wa.me/${lead.phone?.replace(/[^0-9]/g,"")}`} target="_blank" rel="noreferrer" style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 5, padding: "9px", borderRadius: P.rx, background: "rgba(37,211,102,0.08)", border: "1px solid rgba(37,211,102,0.2)", color: "rgba(37,211,102,0.9)", fontSize: 11, fontWeight: 700, textDecoration: "none" }}>
-              <MessageCircle size={12} /> WhatsApp
-            </a>
+            <a href={`tel:${editing ? f("phone") : lead.phone}`} style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "8px 12px", borderRadius: 9, background: P.glass, border: `1px solid ${P.border}`, color: P.txt2, fontSize: 11, fontWeight: 600, textDecoration: "none", transition: "all 0.18s" }} onMouseEnter={e => { e.currentTarget.style.background = P.glassH; e.currentTarget.style.color = P.txt; }} onMouseLeave={e => { e.currentTarget.style.background = P.glass; e.currentTarget.style.color = P.txt2; }}><Phone size={12} /> Llamar</a>
+            <a href={`https://wa.me/${(editing?f("phone"):lead.phone)?.replace(/[^0-9]/g,"")}`} target="_blank" rel="noreferrer" style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "8px 12px", borderRadius: 9, background: "rgba(37,211,102,0.07)", border: "1px solid rgba(37,211,102,0.18)", color: "rgba(37,211,102,0.85)", fontSize: 11, fontWeight: 600, textDecoration: "none", transition: "all 0.18s" }} onMouseEnter={e => { e.currentTarget.style.background = "rgba(37,211,102,0.13)"; e.currentTarget.style.color = "rgba(37,211,102,1)"; }} onMouseLeave={e => { e.currentTarget.style.background = "rgba(37,211,102,0.07)"; e.currentTarget.style.color = "rgba(37,211,102,0.85)"; }}><MessageCircle size={12} /> WhatsApp</a>
           </div>
         </div>
-        {/* CTA */}
-        <div style={{ padding: "12px 20px", borderTop: `1px solid ${P.border}` }}>
-          <button onClick={() => { oc(`__crm__ ${lead.n.toLowerCase()}`); onClose(); }} style={{
-            width: "100%", padding: "12px 0", borderRadius: 11,
-            background: "linear-gradient(135deg, rgba(110,231,194,0.16), rgba(110,231,194,0.07))",
-            border: `1px solid ${P.accentB}`, color: P.accent,
-            fontSize: 13, fontWeight: 700, fontFamily: fontDisp, cursor: "pointer", letterSpacing: "0.01em",
-          }}>Analizar con IA →</button>
+
+        {/* Tabs */}
+        <div style={{ display: "flex", padding: "0 22px", borderBottom: `1px solid ${P.border}`, flexShrink: 0 }}>
+          {[["perfil","Perfil"],["pipeline","Pipeline"],["notas","Notas"]].map(([id,label]) => (
+            <button key={id} onClick={() => id==="notas" ? onOpenNotes?.() : setActiveTab(id)} style={{ padding: "11px 0", marginRight: 20, background: "none", border: "none", cursor: "pointer", fontSize: 12, fontWeight: 600, fontFamily: font, color: activeTab===id&&id!=="notas"?P.accent:P.txt3, borderBottom: activeTab===id&&id!=="notas"?`2px solid ${P.accent}`:"2px solid transparent", transition: "all 0.18s", marginBottom: -1 }} onMouseEnter={e=>{if(activeTab!==id||id==="notas")e.currentTarget.style.color=P.txt2;}} onMouseLeave={e=>{if(activeTab!==id||id==="notas")e.currentTarget.style.color=P.txt3;}}>{label}</button>
+          ))}
+        </div>
+
+        {/* Content */}
+        <div style={{ flex: 1, overflowY: "auto", padding: "18px 22px", display: "flex", flexDirection: "column", gap: 12 }}>
+          {activeTab==="perfil" && !editing && <>
+            <div style={{ borderRadius: 12, background: `${P.accent}08`, border: `1px solid ${P.accentB}`, overflow: "hidden" }}>
+              <div style={{ padding: "8px 14px", borderBottom: `1px solid ${P.accentB}`, display: "flex", alignItems: "center", gap: 6 }}>
+                <p style={{ fontSize: 10, fontWeight: 700, color: P.accent, letterSpacing: "0.07em", textTransform: "uppercase", flex: 1 }}>Próxima acción</p>
+                <span style={{ fontSize: 10, fontWeight: 600, color: P.accent, background: `${P.accent}18`, padding: "2px 8px", borderRadius: 99 }}>{lead.nextActionDate}</span>
+              </div>
+              <div style={{ padding: "11px 14px" }}><p style={{ fontSize: 13, color: "#FFF", lineHeight: 1.55, fontFamily: fontDisp, fontWeight: 500 }}>{lead.nextAction}</p></div>
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
+              {[{l:"Teléfono",v:lead.phone,icon:Phone},{l:"Ingresó",v:lead.fechaIngreso,icon:CalendarDays},{l:"Campaña",v:lead.campana,icon:Signal},{l:"Proyecto",v:lead.p?.split("·")[0]?.trim(),icon:Building2},{l:"Asesor",v:lead.asesor,icon:User},{l:"Inactividad",v:`${lead.daysInactive} días`,icon:Clock}].map(x=>(
+                <div key={x.l} style={{ padding: "9px 11px", borderRadius: 10, background: P.glass, border: `1px solid ${P.border}`, display: "flex", gap: 8, alignItems: "flex-start" }}>
+                  <x.icon size={11} color={P.txt3} style={{ marginTop: 2, flexShrink: 0 }} />
+                  <div style={{ minWidth: 0 }}>
+                    <p style={{ fontSize: 9, color: P.txt3, fontWeight: 600, letterSpacing: "0.05em", textTransform: "uppercase", marginBottom: 2 }}>{x.l}</p>
+                    <p style={{ fontSize: 11, color: P.txt, fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{x.v}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div><p style={{ fontSize: 10, fontWeight: 700, color: P.txt3, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 7 }}>Perfil del cliente</p><p style={{ fontSize: 12.5, color: P.txt2, lineHeight: 1.7 }}>{lead.bio}</p></div>
+            {lead.risk && <div style={{ padding: "11px 13px", borderRadius: 11, background: "rgba(255,255,255,0.03)", border: `1px solid ${P.border}`, display: "flex", gap: 8 }}><AlertCircle size={13} color={P.txt3} style={{ marginTop: 1, flexShrink: 0 }} /><div><p style={{ fontSize: 9, fontWeight: 700, color: P.txt3, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 3 }}>Riesgo identificado</p><p style={{ fontSize: 12, color: P.txt2, lineHeight: 1.55 }}>{lead.risk}</p></div></div>}
+            <div style={{ display: "flex", gap: 7, alignItems: "center", padding: "8px 11px", borderRadius: 10, background: P.glass, border: `1px solid ${P.border}` }}><Activity size={11} color={P.txt3} /><div><p style={{ fontSize: 9, color: P.txt3, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 1 }}>Última actividad</p><p style={{ fontSize: 11.5, color: P.txt2 }}>{lead.lastActivity}</p></div></div>
+          </>}
+
+          {activeTab==="perfil" && editing && form && (
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+              {inp("Nombre completo","n","Nombre del cliente",true)}
+              {inp("Teléfono","phone","+1 817 682...")}
+              {inp("Presupuesto","budget","$500K USD")}
+              {inp("Asesor","asesor","Nombre asesor")}
+              {inp("Campaña / Fuente","campana","Referido, Google...")}
+              <div style={{ gridColumn: "1 / -1" }}>
+                <p style={{ fontSize: 9, fontWeight: 700, color: P.txt3, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 4 }}>Etapa del pipeline</p>
+                <select value={f("st")} onChange={e => sf("st")(e.target.value)} style={{ width: "100%", padding: "8px 10px", borderRadius: 9, background: "rgba(255,255,255,0.05)", border: `1px solid ${P.borderH}`, color: P.txt, fontSize: 12, outline: "none", fontFamily: font, cursor: "pointer" }}>{STAGES.map(s=><option key={s} value={s} style={{ background: "#0C1219" }}>{s}</option>)}</select>
+              </div>
+              {inp("Proyecto de interés","p","Gobernador 28, Portofino...",true)}
+              {textarea("Próxima acción","nextAction","Descripción de la próxima acción...")}
+              {inp("Fecha acción","nextActionDate","Hoy, Mañana 10am...")}
+              {textarea("Perfil del cliente","bio","Descripción del cliente...")}
+            </div>
+          )}
+
+          {activeTab==="pipeline" && <>
+            <div>
+              <p style={{ fontSize: 10, fontWeight: 700, color: P.txt3, letterSpacing: "0.07em", textTransform: "uppercase", marginBottom: 10 }}>Progreso en el pipeline</p>
+              <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                {STAGES.map((stage,idx) => { const isActive=stage===lead.st; const isPast=idx<stageIdx; const c=stgC[stage]||P.txt3; return (
+                  <div key={stage} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 10px", borderRadius: 9, background: isActive?`${c}10`:"transparent", border: `1px solid ${isActive?`${c}28`:"transparent"}`, transition: "all 0.2s" }}>
+                    <div style={{ width: 20, height: 20, borderRadius: "50%", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", background: isActive?c:isPast?`${c}28`:"rgba(255,255,255,0.04)", border: `1px solid ${isActive?c:isPast?`${c}45`:"rgba(255,255,255,0.08)"}` }}>
+                      {isPast&&<Check size={10} color={c} />}{isActive&&<div style={{ width: 6, height: 6, borderRadius: "50%", background: "#000" }} />}
+                    </div>
+                    <span style={{ fontSize: 11.5, fontWeight: isActive?700:500, color: isActive?"#FFF":isPast?P.txt2:P.txt3 }}>{stage}</span>
+                    {isActive&&<span style={{ marginLeft: "auto", fontSize: 9, fontWeight: 700, color: c, background: `${c}16`, padding: "2px 8px", borderRadius: 99 }}>ACTUAL</span>}
+                  </div>
+                ); })}
+              </div>
+            </div>
+            <div style={{ padding: "14px 16px", borderRadius: 12, background: P.glass, border: `1px solid ${P.border}` }}>
+              <p style={{ fontSize: 10, fontWeight: 700, color: P.txt3, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 10 }}>Inversión</p>
+              <p style={{ fontSize: 28, fontWeight: 300, color: "#FFF", fontFamily: fontDisp, letterSpacing: "-0.04em", lineHeight: 1, marginBottom: 6 }}>{lead.budget}</p>
+              <p style={{ fontSize: 11, color: P.txt2 }}>{lead.p}</p>
+            </div>
+            <div>
+              <p style={{ fontSize: 10, fontWeight: 700, color: P.txt3, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 8 }}>Mover de etapa</p>
+              <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+                {STAGES.filter(s=>s!==lead.st).map(stage => { const c=stgC[stage]||P.txt3; const isAhead=STAGES.indexOf(stage)>stageIdx; return (
+                  <button key={stage} onClick={()=>onUpdate?.({...lead,st:stage})} style={{ display: "flex", alignItems: "center", gap: 8, padding: "9px 12px", borderRadius: 9, background: "transparent", border: `1px solid ${P.border}`, cursor: "pointer", transition: "all 0.16s", textAlign: "left" }} onMouseEnter={e=>{e.currentTarget.style.background=`${c}0C`;e.currentTarget.style.borderColor=`${c}28`;}} onMouseLeave={e=>{e.currentTarget.style.background="transparent";e.currentTarget.style.borderColor=P.border;}}>
+                    <div style={{ width: 8, height: 8, borderRadius: "50%", background: c, flexShrink: 0 }} />
+                    <span style={{ fontSize: 12, fontWeight: 500, color: P.txt2, flex: 1 }}>{stage}</span>
+                    <span style={{ fontSize: 9, color: P.txt3 }}>{isAhead?"avanzar →":"← retroceder"}</span>
+                  </button>
+                ); })}
+              </div>
+            </div>
+          </>}
+        </div>
+
+        {/* Footer */}
+        <div style={{ padding: "13px 22px", borderTop: `1px solid ${P.border}`, flexShrink: 0 }}>
+          {editing ? (
+            <div style={{ display: "flex", gap: 8 }}>
+              <button onClick={cancelEditing} style={{ flex: 1, padding: "11px 0", borderRadius: 11, background: "transparent", border: `1px solid ${P.border}`, color: P.txt3, fontSize: 13, fontWeight: 600, cursor: "pointer", transition: "all 0.18s" }} onMouseEnter={e=>{e.currentTarget.style.background=P.glassH;e.currentTarget.style.color=P.txt2;}} onMouseLeave={e=>{e.currentTarget.style.background="transparent";e.currentTarget.style.color=P.txt3;}}>Cancelar</button>
+              <button onClick={saveEditing} disabled={!form?.n?.trim()} style={{ flex: 2, padding: "11px 0", borderRadius: 11, background: form?.n?.trim()?`${P.accent}18`:"transparent", border: `1px solid ${form?.n?.trim()?P.accentB:P.border}`, color: form?.n?.trim()?P.accent:P.txt3, fontSize: 13, fontWeight: 700, cursor: form?.n?.trim()?"pointer":"not-allowed", display: "flex", alignItems: "center", justifyContent: "center", gap: 7, transition: "all 0.18s" }}>Guardar cambios</button>
+            </div>
+          ) : (
+            <button onClick={()=>{oc(`__crm__ ${lead.n.toLowerCase()}`);onClose();}} style={{ width: "100%", padding: "11px 0", borderRadius: 11, background: `${P.accent}14`, border: `1px solid ${P.accentB}`, color: P.accent, fontSize: 13, fontWeight: 700, fontFamily: fontDisp, cursor: "pointer", transition: "background 0.18s" }} onMouseEnter={e=>e.currentTarget.style.background=`${P.accent}22`} onMouseLeave={e=>e.currentTarget.style.background=`${P.accent}14`}>Analizar con IA</button>
+          )}
         </div>
       </div>
     </>,
@@ -1131,66 +1275,88 @@ const LeadPanel = ({ lead, onClose, oc }) => {
    CRM — Pipeline Pro
 ═══════════════════════════════════════════ */
 function CRM({ oc, co }) {
-  const [leadsData, setLeadsData]       = useState(leads);
-  const [sortField, setSortField]       = useState("fechaIngreso");
+  const { user } = useAuth();
+
+  // Role-based access: asesor only sees their own leads
+  const isAsesor = user?.role === "asesor";
+  const isDirectorOrAbove = ["director", "ceo", "admin", "super_admin"].includes(user?.role);
+
+  const [leadsData, setLeadsData]       = useState(() =>
+    isAsesor ? leads.filter(l => l.asesor === user?.name) : leads
+  );
+  const [sortField, setSortField]       = useState("sc");
   const [sortDir, setSortDir]           = useState("desc");
   const [filterStage, setFilterStage]   = useState("TODO");
   const [filterAsesor, setFilterAsesor] = useState("TODO");
   const [searchQ, setSearchQ]           = useState("");
-  const [viewMode, setViewMode]         = useState("list");   // "list" | "kanban"
-  const [selectedLead, setSelectedLead] = useState(null);     // profile panel
-  const [notesLead, setNotesLead]       = useState(null);     // notes modal
+  const [viewMode, setViewMode]         = useState("list");
+  const [selectedLead, setSelectedLead] = useState(null);
+  const [notesLead, setNotesLead]       = useState(null);
   const [addingLead, setAddingLead]     = useState(false);
-  const [newLead, setNewLead]           = useState({ n: "", asesor: "", phone: "", budget: "", p: "", campana: "" });
+  const [newLead, setNewLead]           = useState({ n: "", asesor: user?.name || "", phone: "", budget: "", p: "", campana: "" });
+  const [hoveredRow, setHoveredRow]     = useState(null);
+  const [dragLeadId, setDragLeadId]     = useState(null);
+  const [dragOverStage, setDragOverStage] = useState(null);
 
-  const asesores = [...new Set(leadsData.map(l => l.asesor))];
+  // visibleLeads = all leads accessible to this user (before UI filters)
+  const visibleLeads = isAsesor ? leadsData.filter(l => l.asesor === user?.name) : leadsData;
+
+  const updateLead = (updated) => {
+    setLeadsData(prev => prev.map(l => l.id === updated.id ? updated : l));
+    if (selectedLead?.id === updated.id) setSelectedLead(updated);
+    if (notesLead?.id === updated.id) setNotesLead(updated);
+  };
+  const saveNotes = (newNotas) => { const u = {...notesLead, notas: newNotas}; updateLead(u); setNotesLead(u); };
+  const handleDragStart = (e, id) => { setDragLeadId(id); e.dataTransfer.effectAllowed = "move"; };
+  const handleDragOver = (e, stage) => { e.preventDefault(); e.dataTransfer.dropEffect = "move"; setDragOverStage(stage); };
+  const handleDrop = (e, stage) => { e.preventDefault(); if (dragLeadId) setLeadsData(prev => prev.map(l => l.id === dragLeadId ? {...l,st:stage} : l)); setDragLeadId(null); setDragOverStage(null); };
+  const handleDragEnd = () => { setDragLeadId(null); setDragOverStage(null); };
+  const [expandedPriority, setExpandedPriority] = useState(null);
+
+  const asesores = [...new Set(visibleLeads.map(l => l.asesor))];
+  const urgColor = (d) => d >= 10 ? P.rose : d >= 5 ? P.amber : P.emerald;
 
   const sortedLeads = useMemo(() => {
-    let data = leadsData.filter(l => {
+    let data = visibleLeads.filter(l => {
       const q = searchQ.toLowerCase();
-      const matchQ = !q || l.n.toLowerCase().includes(q) || l.phone.includes(q) || l.asesor.toLowerCase().includes(q) || l.campana.toLowerCase().includes(q) || l.p.toLowerCase().includes(q);
+      const matchQ = !q || l.n.toLowerCase().includes(q) || l.phone.includes(q) || l.asesor.toLowerCase().includes(q) || l.campana.toLowerCase().includes(q) || l.p.toLowerCase().includes(q) || l.tag.toLowerCase().includes(q);
       const matchStage = filterStage === "TODO" || l.st === filterStage;
       const matchAsesor = filterAsesor === "TODO" || l.asesor === filterAsesor;
       return matchQ && matchStage && matchAsesor;
     });
     return [...data].sort((a, b) => {
       let av = a[sortField], bv = b[sortField];
-      if (sortField === "presupuesto") { av = a.presupuesto; bv = b.presupuesto; }
-      else if (sortField === "sc") { av = a.sc; bv = b.sc; }
-      else { av = String(av).toLowerCase(); bv = String(bv).toLowerCase(); }
+      if (sortField === "presupuesto" || sortField === "sc" || sortField === "daysInactive") { av = Number(av) || 0; bv = Number(bv) || 0; }
+      else { av = String(av || "").toLowerCase(); bv = String(bv || "").toLowerCase(); }
       if (av < bv) return sortDir === "asc" ? -1 : 1;
       if (av > bv) return sortDir === "asc" ? 1 : -1;
       return 0;
     });
-  }, [leadsData, sortField, sortDir, filterStage, filterAsesor, searchQ]);
+  }, [visibleLeads, sortField, sortDir, filterStage, filterAsesor, searchQ]);
 
   const handleSort = (field) => {
     if (sortField === field) setSortDir(d => d === "asc" ? "desc" : "asc");
-    else { setSortField(field); setSortDir("asc"); }
+    else { setSortField(field); setSortDir("desc"); }
   };
-
-  const updateLead = (id, field, value) => setLeadsData(prev => prev.map(l => l.id === id ? { ...l, [field]: value } : l));
 
   const addNewLead = () => {
     if (!newLead.n.trim()) return;
     const now = new Date();
-    const dateStr = `${now.getDate()} Abr, ${now.getHours()}:${String(now.getMinutes()).padStart(2,"0")}${now.getHours() >= 12 ? "pm" : "am"}`;
-    setLeadsData(prev => [{
+    const mos = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
+    const h = now.getHours(); const ampm = h >= 12 ? "pm" : "am"; const h12 = h % 12 || 12;
+    const dateStr = `${now.getDate()} ${mos[now.getMonth()]}, ${h12}:${String(now.getMinutes()).padStart(2,"0")}${ampm}`;
+    const newEntry = {
       id: Date.now(), ...newLead, sc: 40, st: "Nuevo Registro",
-      tag: "Nuevo Registro", hot: false, isNew: true,
-      fechaIngreso: dateStr,
+      tag: "Nuevo Registro", hot: false, isNew: true, fechaIngreso: dateStr,
       bio: "Cliente recién registrado. Pendiente primer contacto.", risk: "Sin información suficiente aún.",
       friction: "Medio", nextAction: "Primer contacto en las próximas 24 horas",
-      nextActionDate: "Hoy", lastActivity: "Registro manual",
-      daysInactive: 0, email: "",
-      notas: `📍 OBJETIVO
-Pendiente — primer contacto.
-
-⚡ PENDIENTE
-Realizar primer contacto y calificar necesidades del cliente.`,
+      nextActionDate: "Hoy", lastActivity: "Registro manual", daysInactive: 0, email: "",
+      notas: `OBJETIVO\nPendiente — primer contacto.\n\nPENDIENTE\nRealizar primer contacto y calificar necesidades del cliente.`,
       presupuesto: parseFloat(String(newLead.budget).replace(/[^0-9.]/g, "")) || 0,
-    }, ...prev]);
-    setAddingLead(false); setNewLead({ n: "", asesor: "", phone: "", budget: "", p: "", campana: "" });
+    };
+    setLeadsData(prev => [newEntry, ...prev]);
+    setAddingLead(false);
+    setNewLead({ n: "", asesor: "", phone: "", budget: "", p: "", campana: "" });
   };
 
   const SH = ({ label, field, align = "left" }) => {
@@ -1200,78 +1366,174 @@ Realizar primer contacto y calificar necesidades del cliente.`,
         cursor: "pointer", userSelect: "none", display: "flex", alignItems: "center", gap: 3,
         justifyContent: align === "right" ? "flex-end" : "flex-start",
         color: active ? P.accent : P.txt3, fontSize: 9, fontWeight: 700,
-        letterSpacing: "0.08em", textTransform: "uppercase", transition: "color 0.2s",
+        letterSpacing: "0.08em", textTransform: "uppercase", transition: "color 0.15s",
       }}>
         {label}
-        <span style={{ opacity: active ? 1 : 0.3, fontSize: 9 }}>{active ? (sortDir === "asc" ? "↑" : "↓") : "↕"}</span>
+        <span style={{ opacity: active ? 1 : 0.25 }}>{active ? (sortDir === "asc" ? " ↑" : " ↓") : " ↕"}</span>
       </span>
     );
   };
 
-  const priorityLeads = leadsData.filter(l => l.isNew || l.st === "Zoom Concretado" || l.st === "Zoom Agendado").sort((a,b) => b.sc - a.sc);
-  const totalPipeline = leadsData.reduce((s, l) => s + (l.presupuesto || 0), 0);
-  const avgScore = Math.round(leadsData.reduce((s, l) => s + l.sc, 0) / leadsData.length);
-
-  /* ── KANBAN columns (visible stages) ── */
+  const priorityLeads = visibleLeads.filter(l => l.isNew || l.st === "Zoom Concretado" || l.st === "Zoom Agendado" || l.hot).sort((a,b) => (b.sc - a.sc));
+  const totalPipeline = visibleLeads.reduce((s, l) => s + (l.presupuesto || 0), 0);
+  const avgScore = visibleLeads.length ? Math.round(visibleLeads.reduce((s, l) => s + l.sc, 0) / visibleLeads.length) : 0;
+  const hotLeads = visibleLeads.filter(l => l.hot || l.daysInactive <= 2).length;
   const kanbanStages = STAGES.filter(s => s !== "Perdido");
 
-  /* ── Responsive column definitions ── */
-  // Full: Fecha · Asesor · Nombre · Teléfono · Estatus · Presupuesto · Proyecto · Score · Acciones
-  // Compact (chat open): Nombre · Teléfono · Estatus · Presupuesto · Score · Acciones
-  const colsFull    = "100px 115px 1.4fr 110px 1fr 110px 100px 65px 85px";
-  const colsCompact = "1.5fr 105px 1fr 100px 60px 80px";
+  /* Responsive grid columns */
+  const colsFull    = "88px 110px 1.6fr 120px 1fr 110px 1.1fr 68px 96px";
+  const colsCompact = "1.6fr 110px 1fr 110px 68px 90px";
   const cols = co ? colsCompact : colsFull;
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
 
-      {/* KPIs */}
-      <div style={{ display: "grid", gridTemplateColumns: co ? "repeat(2, 1fr)" : "repeat(4, 1fr)", gap: 12 }}>
-        <KPI label="Clientes en Pipeline" value={leadsData.length} icon={Users} color={P.blue} />
-        <KPI label="Score Promedio" value={avgScore} sub="+4.8 este mes" icon={Target} color={P.amber} />
-        <KPI label="Tasa de Conversión" value="18.4%" icon={TrendingUp} color={P.emerald} />
-        <KPI label="Valor Total" value={`$${(totalPipeline/1000000).toFixed(1)}M`} icon={DollarSign} />
+      {/* ── HEADER ROW ── */}
+      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16 }}>
+        <div>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
+            <div style={{ width: 8, height: 8, borderRadius: "50%", background: P.accent, boxShadow: `0 0 10px ${P.accent}80` }} />
+            <h2 style={{ fontSize: 20, fontWeight: 700, color: "#FFFFFF", fontFamily: fontDisp, letterSpacing: "-0.025em", margin: 0 }}>Pipeline CRM</h2>
+            <span style={{ fontSize: 10, fontWeight: 700, color: P.txt3, background: P.glass, border: `1px solid ${P.border}`, padding: "3px 9px", borderRadius: 99, letterSpacing: "0.06em" }}>{visibleLeads.length} clientes</span>
+            {isAsesor && <span style={{ fontSize: 10, fontWeight: 700, color: P.amber, background: `${P.amber}10`, border: `1px solid ${P.amber}28`, padding: "3px 9px", borderRadius: 99, letterSpacing: "0.04em" }}>Vista personal</span>}
+          </div>
+          <p style={{ fontSize: 11.5, color: P.txt3, fontFamily: font, margin: 0 }}>
+            <span style={{ color: P.txt2 }}>${(totalPipeline/1000000).toFixed(1)}M</span> en pipeline · <span style={{ color: P.emerald }}>{hotLeads} activos</span> · Score promedio <span style={{ color: P.blue }}>{avgScore}</span>
+          </p>
+        </div>
+        <button onClick={() => setAddingLead(true)} style={{
+          display: "flex", alignItems: "center", gap: 7, padding: "9px 18px",
+          borderRadius: 11, background: "linear-gradient(135deg, rgba(110,231,194,0.16), rgba(110,231,194,0.07))",
+          border: `1px solid ${P.accentB}`, color: P.accent, fontSize: 12, fontWeight: 700,
+          fontFamily: fontDisp, cursor: "pointer", letterSpacing: "0.01em", transition: "all 0.2s", flexShrink: 0,
+        }}
+          onMouseEnter={e => { e.currentTarget.style.background = "linear-gradient(135deg, rgba(110,231,194,0.24), rgba(110,231,194,0.12))"; e.currentTarget.style.boxShadow = `0 0 20px ${P.accent}18`; }}
+          onMouseLeave={e => { e.currentTarget.style.background = "linear-gradient(135deg, rgba(110,231,194,0.16), rgba(110,231,194,0.07))"; e.currentTarget.style.boxShadow = "none"; }}
+        ><Plus size={14} /> Nuevo cliente</button>
       </div>
 
-      {/* ── Priority strip ── */}
+      {/* ── KPIs ── */}
+      <div style={{ display: "grid", gridTemplateColumns: co ? "repeat(2, 1fr)" : "repeat(4, 1fr)", gap: 12 }}>
+        <KPI label="Clientes en Pipeline" value={visibleLeads.length} icon={Users} color={P.blue} />
+        <KPI label="Score Promedio" value={avgScore} sub="+4.8 este mes" icon={Target} color={P.amber} />
+        <KPI label="Tasa de Conversión" value="18.4%" sub="+3.2pp" icon={TrendingUp} color={P.emerald} />
+        <KPI label="Valor Total Pipeline" value={`$${(totalPipeline/1000000).toFixed(1)}M`} icon={DollarSign} />
+      </div>
+
+      {/* ── ATENCIÓN INMEDIATA — Premium cards ── */}
       {priorityLeads.length > 0 && (
         <div>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
-            <div style={{ width: 6, height: 6, borderRadius: "50%", background: P.accent, boxShadow: `0 0 8px ${P.accent}` }} />
-            <p style={{ fontSize: 10, fontWeight: 700, color: P.txt2, letterSpacing: "0.07em", textTransform: "uppercase" }}>Requieren atención · {priorityLeads.length} clientes</p>
+          {/* ── Header de sección — sin punto rojo, aesthetic pro ── */}
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <div style={{
+                display: "flex", alignItems: "center", gap: 7,
+                padding: "5px 14px 5px 10px", borderRadius: 99,
+                background: "rgba(255,255,255,0.04)", border: `1px solid ${P.border}`,
+              }}>
+                <div style={{ width: 7, height: 7, borderRadius: "50%", background: P.accent, boxShadow: `0 0 10px ${P.accent}90` }} />
+                <span style={{ fontSize: 12, fontWeight: 700, color: "#FFFFFF", letterSpacing: "-0.01em", fontFamily: fontDisp }}>Requieren Atención</span>
+              </div>
+              <span style={{ fontSize: 11, color: P.txt3 }}>{priorityLeads.length} con acción pendiente</span>
+            </div>
           </div>
-          <div style={{ display: "flex", gap: 10, overflowX: "auto", paddingBottom: 4 }}>
+          <div style={{ display: "flex", gap: 12, overflowX: "auto", paddingBottom: 8, scrollbarWidth: "none" }}>
             {priorityLeads.map(l => {
               const sc = l.sc;
-              const scoreColor = sc >= 80 ? P.emerald : sc >= 60 ? P.blue : P.amber;
+              const stageColor = stgC[l.st] || P.txt3;
+              /* Urgencia — texto limpio, color neutro, sin emojis */
+              const urgLabel = l.hot
+                ? "Caliente"
+                : l.isNew
+                ? "Nuevo registro"
+                : l.daysInactive >= 7
+                ? `Sin actividad · ${l.daysInactive}d`
+                : l.st === "Zoom Concretado"
+                ? "Zoom completado"
+                : "Acción pendiente";
               return (
-                <div key={l.id} onClick={() => { oc(`__crm__ ${l.n.toLowerCase()}`); }} style={{
-                  minWidth: co ? 190 : 230, padding: "13px 14px", borderRadius: 14,
-                  background: P.glass, border: `1px solid ${l.st.includes("Zoom") ? P.violet+"30" : P.border}`,
-                  cursor: "pointer", flexShrink: 0, transition: "all 0.2s",
+                <div key={l.id} style={{
+                  minWidth: co ? 240 : 272, maxWidth: 272, flexShrink: 0,
+                  borderRadius: 16, overflow: "hidden",
+                  background: "rgba(255,255,255,0.036)",
+                  border: `1px solid ${P.border}`,
+                  transition: "all 0.25s ease",
                 }}
-                  onMouseEnter={e => { e.currentTarget.style.background = P.glassH; }}
-                  onMouseLeave={e => { e.currentTarget.style.background = P.glass; }}
+                  onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.056)"; e.currentTarget.style.borderColor = P.borderH; e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 12px 40px rgba(0,0,0,0.32)"; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.036)"; e.currentTarget.style.borderColor = P.border; e.currentTarget.style.transform = "none"; e.currentTarget.style.boxShadow = "none"; }}
                 >
-                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
-                    <div>
-                      <div style={{ display: "flex", gap: 4, marginBottom: 3 }}>
-                        {l.isNew && <span style={{ fontSize: 8, fontWeight: 800, color: P.accent, background: `${P.accent}14`, padding: "1px 6px", borderRadius: 99, letterSpacing: "0.07em" }}>NUEVO</span>}
-                        <Pill color={stgC[l.st]} s>{l.st}</Pill>
+                  {/* Línea de etapa — fina, elegante */}
+                  <div style={{ height: 2, background: `linear-gradient(90deg, ${stageColor}BB 0%, transparent 100%)` }} />
+
+                  <div style={{ padding: "14px 16px 15px" }}>
+
+                    {/* Tag de urgencia — neutro, sin color por tipo */}
+                    <div style={{ marginBottom: 12 }}>
+                      <span style={{ fontSize: 10, fontWeight: 600, color: P.txt3, letterSpacing: "0.04em", textTransform: "uppercase", fontFamily: font }}>
+                        {urgLabel}
+                      </span>
+                    </div>
+
+                    {/* Nombre + presupuesto */}
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 4, gap: 8 }}>
+                      <p style={{ fontSize: 15, fontWeight: 700, color: "#FFFFFF", fontFamily: fontDisp, letterSpacing: "-0.02em", lineHeight: 1.2 }}>{l.n}</p>
+                      <p style={{ fontSize: 14, fontWeight: 700, color: "#FFFFFF", fontFamily: fontDisp, letterSpacing: "-0.025em", flexShrink: 0 }}>{l.budget}</p>
+                    </div>
+
+                    {/* Asesor · fuente */}
+                    <p style={{ fontSize: 10.5, color: P.txt3, marginBottom: 12 }}>{l.asesor?.split(" ")[0]} · {l.campana}</p>
+
+                    {/* Etapa + Score en una línea */}
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+                      <Pill color={stageColor} s>{l.st}</Pill>
+                      <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
+                        <div style={{ width: 48, height: 3, borderRadius: 2, background: "rgba(255,255,255,0.07)" }}>
+                          <div style={{ width: `${sc}%`, height: 3, borderRadius: 2, background: P.accent, transition: "width 0.5s ease" }} />
+                        </div>
+                        <span style={{ fontSize: 11, fontWeight: 700, color: P.txt2, fontFamily: fontDisp }}>{sc}</span>
                       </div>
-                      <p style={{ fontSize: 12.5, fontWeight: 700, color: "#FFFFFF", fontFamily: fontDisp }}>{l.n}</p>
-                      <p style={{ fontSize: 9.5, color: P.txt3 }}>{l.asesor} · {l.campana}</p>
                     </div>
-                    <div style={{ textAlign: "right" }}>
-                      <p style={{ fontSize: 14, fontWeight: 500, color: "#FFFFFF", fontFamily: fontDisp, letterSpacing: "-0.02em" }}>{l.budget}</p>
-                      <p style={{ fontSize: 9, color: P.txt3 }}>{l.p.split("·")[0].trim()}</p>
+
+                    {/* Próxima acción */}
+                    <div style={{ padding: "9px 11px", borderRadius: 10, background: "rgba(255,255,255,0.03)", border: `1px solid ${P.border}`, marginBottom: 13 }}>
+                      <span style={{ fontSize: 9, fontWeight: 700, color: P.txt3, letterSpacing: "0.07em", textTransform: "uppercase", display: "block", marginBottom: 4 }}>{l.nextActionDate}</span>
+                      <p style={{ fontSize: 11, color: P.txt2, lineHeight: 1.5, margin: 0 }}>{l.nextAction?.substring(0, 72)}{(l.nextAction?.length || 0) > 72 ? "…" : ""}</p>
                     </div>
+
+                    {/* Cambio rápido de etapa */}
+                    <div style={{ marginBottom: 10 }}>
+                      <p style={{ fontSize: 9, fontWeight: 700, color: P.txt3, letterSpacing: "0.07em", textTransform: "uppercase", marginBottom: 5 }}>Etapa</p>
+                      <select value={l.st}
+                        onChange={e => updateLead({...l, st: e.target.value})}
+                        style={{ width: "100%", padding: "7px 10px", borderRadius: 9, background: `${stgC[l.st] || P.txt3}10`, border: `1px solid ${stgC[l.st] || P.txt3}35`, color: stgC[l.st] || P.txt2, fontSize: 11, fontWeight: 600, outline: "none", cursor: "pointer", fontFamily: font, transition: "all 0.18s" }}
+                      >
+                        {STAGES.map(s => <option key={s} value={s} style={{ background: "#0C1219", color: "#fff" }}>{s}</option>)}
+                      </select>
+                    </div>
+
+                    {/* Botones — claros y accionables */}
+                    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                      <button onClick={() => oc(`__crm__ ${l.n.toLowerCase()}`)}
+                        style={{ width: "100%", padding: "10px 14px", borderRadius: 10, background: `${P.accent}14`, border: `1px solid ${P.accentB}`, color: P.accent, fontSize: 12, fontWeight: 700, fontFamily: fontDisp, cursor: "pointer", transition: "background 0.18s", letterSpacing: "0.01em" }}
+                        onMouseEnter={e => e.currentTarget.style.background = `${P.accent}22`}
+                        onMouseLeave={e => e.currentTarget.style.background = `${P.accent}14`}
+                      >Analizar con IA</button>
+
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
+                        <button onClick={() => setSelectedLead(l)}
+                          style={{ padding: "9px 0", borderRadius: 9, background: "rgba(126,184,240,0.08)", border: `1px solid rgba(126,184,240,0.22)`, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, color: P.blue, fontSize: 11.5, fontWeight: 600, fontFamily: font, cursor: "pointer", transition: "all 0.16s" }}
+                          onMouseEnter={e => { e.currentTarget.style.background = "rgba(126,184,240,0.15)"; e.currentTarget.style.borderColor = "rgba(126,184,240,0.4)"; }}
+                          onMouseLeave={e => { e.currentTarget.style.background = "rgba(126,184,240,0.08)"; e.currentTarget.style.borderColor = "rgba(126,184,240,0.22)"; }}
+                        ><User size={12} /> Perfil</button>
+                        <button onClick={() => setNotesLead(l)}
+                          style={{ padding: "9px 0", borderRadius: 9, background: "rgba(167,139,250,0.08)", border: `1px solid rgba(167,139,250,0.22)`, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, color: P.violet, fontSize: 11.5, fontWeight: 600, fontFamily: font, cursor: "pointer", transition: "all 0.16s" }}
+                          onMouseEnter={e => { e.currentTarget.style.background = "rgba(167,139,250,0.15)"; e.currentTarget.style.borderColor = "rgba(167,139,250,0.4)"; }}
+                          onMouseLeave={e => { e.currentTarget.style.background = "rgba(167,139,250,0.08)"; e.currentTarget.style.borderColor = "rgba(167,139,250,0.22)"; }}
+                        ><FileText size={12} /> Notas</button>
+                      </div>
+                    </div>
+
                   </div>
-                  <div style={{ padding: "6px 8px", borderRadius: 7, background: `${P.accent}06`, border: `1px solid ${P.accentB}`, marginBottom: 7 }}>
-                    <p style={{ fontSize: 9, fontWeight: 700, color: P.accent, letterSpacing: "0.05em", marginBottom: 2 }}>{l.nextActionDate?.toUpperCase()}</p>
-                    <p style={{ fontSize: 10.5, color: P.txt2, lineHeight: 1.4 }}>{l.nextAction?.substring(0, 55)}{l.nextAction?.length > 55 ? "…" : ""}</p>
-                  </div>
-                  <ScoreBar sc={sc} compact />
                 </div>
               );
             })}
@@ -1279,188 +1541,351 @@ Realizar primer contacto y calificar necesidades del cliente.`,
         </div>
       )}
 
-      {/* ── Main table / kanban ── */}
-      <G np>
-        {/* Toolbar */}
-        <div style={{ padding: "11px 16px", display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: `1px solid ${P.border}`, gap: 10, flexWrap: "wrap" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <p style={{ fontSize: 13, fontWeight: 700, color: P.txt, fontFamily: fontDisp }}>Pipeline de Clientes</p>
-            <span style={{ fontSize: 9, fontWeight: 800, color: P.txt3, background: P.glass, border: `1px solid ${P.border}`, borderRadius: 4, padding: "2px 8px", letterSpacing: "0.06em" }}>{sortedLeads.length} LEADS</span>
-          </div>
-          <div style={{ display: "flex", gap: 7, alignItems: "center", flexWrap: "wrap" }}>
-            {/* View toggle */}
-            <div style={{ display: "flex", borderRadius: 7, border: `1px solid ${P.border}`, overflow: "hidden" }}>
-              {[["list","≡ Lista"],["kanban","⊞ Kanban"]].map(([m, lbl]) => (
-                <button key={m} onClick={() => setViewMode(m)} style={{ padding: "5px 11px", border: "none", cursor: "pointer", fontSize: 11, fontWeight: 600, fontFamily: font, background: viewMode === m ? P.glassH : "transparent", color: viewMode === m ? P.txt : P.txt3, transition: "all 0.18s" }}>{lbl}</button>
+      {/* ── MODAL NUEVO LEAD — Refined ── */}
+      {addingLead && createPortal(
+        <>
+          <div onClick={() => setAddingLead(false)} style={{ position: "fixed", inset: 0, background: "rgba(2,5,12,0.78)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)", zIndex: 500 }} />
+          <div style={{ position: "fixed", top: "50%", left: "50%", transform: "translate(-50%,-50%)", zIndex: 501, width: "min(540px, 95vw)", background: "#07080F", border: `1px solid ${P.borderH}`, borderRadius: 22, boxShadow: "0 48px 96px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.04)", animation: "fadeIn 0.22s ease" }}>
+            {/* Accent top bar */}
+            <div style={{ height: 3, background: `linear-gradient(90deg, ${P.accent}, ${P.accent}40)`, borderRadius: "22px 22px 0 0" }} />
+            <div style={{ padding: "22px 26px 18px", borderBottom: `1px solid ${P.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div>
+                <p style={{ fontSize: 16, fontWeight: 700, color: "#FFFFFF", fontFamily: fontDisp, letterSpacing: "-0.02em", marginBottom: 3 }}>Registrar Nuevo Cliente</p>
+                <p style={{ fontSize: 11, color: P.txt3 }}>Se crea en etapa <span style={{ color: stgC["Nuevo Registro"], fontWeight: 600 }}>Nuevo Registro</span> · Score inicial 40</p>
+              </div>
+              <button onClick={() => setAddingLead(false)} style={{ width: 32, height: 32, borderRadius: 9, border: `1px solid ${P.border}`, background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.18s" }}
+                onMouseEnter={e => e.currentTarget.style.background = P.glass}
+                onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+              ><X size={14} color={P.txt3} /></button>
+            </div>
+            <div style={{ padding: "22px 26px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px 16px" }}>
+              {[
+                { label: "Nombre completo", key: "n", ph: "Ej. Rafael García", full: true, required: true },
+                { label: "Teléfono", key: "phone", ph: "+1 817 682 3272" },
+                { label: "Asesor asignado", key: "asesor", ph: "Estefanía Valdes" },
+                { label: "Presupuesto", key: "budget", ph: "$200K USD" },
+                { label: "Fuente / Campaña", key: "campana", ph: "Cancún, Google Ads, Referido…" },
+              ].map(f => (
+                <div key={f.key} style={{ gridColumn: f.full ? "1 / -1" : "auto" }}>
+                  <p style={{ fontSize: 10, fontWeight: 700, color: P.txt3, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 6 }}>{f.label}{f.required && <span style={{ color: P.accent }}> *</span>}</p>
+                  <input placeholder={f.ph} value={newLead[f.key]} onChange={e => setNewLead(p => ({...p, [f.key]: e.target.value}))}
+                    style={{ width: "100%", height: 40, padding: "0 14px", borderRadius: 11, background: P.glass, border: `1px solid ${newLead[f.key] ? P.accentB : P.border}`, color: P.txt, fontSize: 13, outline: "none", fontFamily: font, boxSizing: "border-box", transition: "border-color 0.2s" }}
+                    onFocus={e => e.target.style.borderColor = P.accentB}
+                    onBlur={e => e.target.style.borderColor = newLead[f.key] ? P.accentB : P.border}
+                  />
+                </div>
               ))}
+              <div style={{ gridColumn: "1 / -1" }}>
+                <p style={{ fontSize: 10, fontWeight: 700, color: P.txt3, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 6 }}>Proyecto de interés</p>
+                <select value={newLead.p} onChange={e => setNewLead(p => ({...p, p: e.target.value}))} style={{ width: "100%", height: 40, padding: "0 14px", borderRadius: 11, background: P.glass, border: `1px solid ${newLead.p ? P.accentB : P.border}`, color: newLead.p ? P.txt : P.txt3, fontSize: 13, outline: "none", fontFamily: font, boxSizing: "border-box", cursor: "pointer" }}>
+                  <option value="">Seleccionar proyecto…</option>
+                  {["Gobernador 28","Monarca 28","Portofino","Torre 25","BAGA","Kaab On The Beach"].map(pr => <option key={pr} value={pr} style={{ background: "#0C1219", color: P.txt }}>{pr}</option>)}
+                </select>
+              </div>
             </div>
-            {/* Search */}
-            <div style={{ position: "relative" }}>
-              <Search size={10} style={{ position: "absolute", left: 8, top: "50%", transform: "translateY(-50%)", color: P.txt3, pointerEvents: "none" }} />
-              <input value={searchQ} onChange={e => setSearchQ(e.target.value)} placeholder="Buscar..." style={{ paddingLeft: 24, paddingRight: 8, height: 28, borderRadius: P.rx, width: 140, background: P.glass, border: `1px solid ${P.border}`, fontSize: 11, color: P.txt, outline: "none", fontFamily: font }} />
+            <div style={{ padding: "16px 26px", borderTop: `1px solid ${P.border}`, display: "flex", gap: 10 }}>
+              <button onClick={() => setAddingLead(false)} style={{ flex: 1, height: 42, borderRadius: 12, background: "transparent", border: `1px solid ${P.border}`, color: P.txt3, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: font, transition: "all 0.18s" }}
+                onMouseEnter={e => { e.currentTarget.style.background = P.glass; e.currentTarget.style.color = P.txt2; }}
+                onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = P.txt3; }}
+              >Cancelar</button>
+              <button onClick={addNewLead} disabled={!newLead.n.trim()} style={{ flex: 2, height: 42, borderRadius: 12, background: newLead.n.trim() ? "linear-gradient(135deg, rgba(110,231,194,0.22), rgba(110,231,194,0.1))" : P.glass, border: `1px solid ${newLead.n.trim() ? P.accentB : P.border}`, color: newLead.n.trim() ? P.accent : P.txt3, fontSize: 13, fontWeight: 700, cursor: newLead.n.trim() ? "pointer" : "not-allowed", fontFamily: fontDisp, letterSpacing: "0.01em", transition: "all 0.2s", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}
+                onMouseEnter={e => { if (newLead.n.trim()) { e.currentTarget.style.background = "linear-gradient(135deg, rgba(110,231,194,0.3), rgba(110,231,194,0.15))"; } }}
+                onMouseLeave={e => { if (newLead.n.trim()) { e.currentTarget.style.background = "linear-gradient(135deg, rgba(110,231,194,0.22), rgba(110,231,194,0.1))"; } }}
+              ><Plus size={14} /> Registrar Cliente</button>
             </div>
-            {/* Filters */}
-            <select value={filterStage} onChange={e => setFilterStage(e.target.value)} style={{ height: 28, padding: "0 8px", borderRadius: P.rx, background: P.glass, border: `1px solid ${P.border}`, fontSize: 11, color: P.txt3, cursor: "pointer", outline: "none" }}>
-              <option value="TODO">Todas las etapas</option>
-              {STAGES.map(s => <option key={s} value={s}>{s}</option>)}
-            </select>
-            <select value={filterAsesor} onChange={e => setFilterAsesor(e.target.value)} style={{ height: 28, padding: "0 8px", borderRadius: P.rx, background: P.glass, border: `1px solid ${P.border}`, fontSize: 11, color: P.txt3, cursor: "pointer", outline: "none" }}>
-              <option value="TODO">Todos los asesores</option>
-              {asesores.map(a => <option key={a} value={a}>{a}</option>)}
-            </select>
-            <button onClick={() => setAddingLead(a => !a)} style={{ display: "flex", alignItems: "center", gap: 4, padding: "5px 12px", borderRadius: P.rx, background: P.accentS, border: `1px solid ${P.accentB}`, fontSize: 11, fontWeight: 700, color: P.accent, cursor: "pointer", fontFamily: font }}><Plus size={11} />Nuevo</button>
           </div>
+        </>,
+        document.body
+      )}
+
+      {/* ── PIPELINE STAGE STRIP ── */}
+      <div style={{ display: "flex", gap: 0, borderRadius: 13, overflow: "hidden", border: `1px solid ${P.border}`, background: P.glass }}>
+        {STAGES.slice(0,-1).map((stage, idx) => {
+          const cnt = visibleLeads.filter(l => l.st === stage).length;
+          const c = stgC[stage] || P.txt3;
+          const isActive = filterStage === stage;
+          return (
+            <div key={stage} onClick={() => setFilterStage(isActive ? "TODO" : stage)}
+              title={`${stage} · ${cnt} clientes`}
+              style={{ flex: 1, padding: "10px 8px", cursor: "pointer", borderRight: idx < STAGES.length - 2 ? `1px solid ${P.border}` : "none",
+                background: isActive ? `${c}18` : "transparent",
+                transition: "background 0.2s",
+                display: "flex", flexDirection: "column", alignItems: "center", gap: 4,
+              }}
+              onMouseEnter={e => { if (!isActive) e.currentTarget.style.background = "rgba(255,255,255,0.04)"; }}
+              onMouseLeave={e => { if (!isActive) e.currentTarget.style.background = "transparent"; }}
+            >
+              <div style={{ width: "100%", height: 3, borderRadius: 2, background: isActive ? c : `${c}30`, transition: "background 0.2s" }} />
+              <span style={{ fontSize: 18, fontWeight: 700, color: cnt > 0 ? (isActive ? c : "#FFFFFF") : P.txt3, fontFamily: fontDisp, letterSpacing: "-0.04em", lineHeight: 1 }}>{cnt}</span>
+              <span style={{ fontSize: 8.5, color: isActive ? c : P.txt3, fontWeight: isActive ? 700 : 500, letterSpacing: "0.02em", textAlign: "center", lineHeight: 1.2, maxWidth: "100%", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{stage}</span>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* ── MAIN TABLE / KANBAN ── */}
+      <G np>
+        {/* ── Toolbar — refined ── */}
+        <div style={{ padding: "13px 18px", borderBottom: `1px solid ${P.border}`, display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+
+          {/* View toggle — pill style */}
+          <div style={{ display: "flex", borderRadius: 9, border: `1px solid ${P.border}`, overflow: "hidden", flexShrink: 0, background: P.glass }}>
+            {[["list","Lista"],["kanban","Kanban"]].map(([m, lbl]) => (
+              <button key={m} onClick={() => setViewMode(m)} style={{ padding: "6px 14px", border: "none", cursor: "pointer", fontSize: 11, fontWeight: 600, fontFamily: font,
+                background: viewMode === m ? "rgba(255,255,255,0.08)" : "transparent",
+                color: viewMode === m ? "#FFFFFF" : P.txt3,
+                borderRight: m === "list" ? `1px solid ${P.border}` : "none",
+                transition: "all 0.18s",
+              }}>{lbl}</button>
+            ))}
+          </div>
+
+          {/* Search */}
+          <div style={{ position: "relative", flex: 1, minWidth: 140, maxWidth: 240 }}>
+            <Search size={12} style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", color: P.txt3, pointerEvents: "none" }} />
+            <input value={searchQ} onChange={e => setSearchQ(e.target.value)} placeholder="Buscar cliente, asesor, proyecto…"
+              style={{ width: "100%", paddingLeft: 30, paddingRight: searchQ ? 30 : 12, height: 32, borderRadius: 9, background: P.glass, border: `1px solid ${searchQ ? P.accentB : P.border}`, fontSize: 11.5, color: P.txt, outline: "none", fontFamily: font, boxSizing: "border-box", transition: "border-color 0.2s" }}
+              onFocus={e => e.target.style.borderColor = P.accentB}
+              onBlur={e => e.target.style.borderColor = searchQ ? P.accentB : P.border}
+            />
+            {searchQ && <button onClick={() => setSearchQ("")} style={{ position: "absolute", right: 9, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: P.txt3, display: "flex", padding: 0 }}><X size={11} /></button>}
+          </div>
+
+          {/* Stage filter */}
+          <select value={filterStage} onChange={e => setFilterStage(e.target.value)} style={{ height: 32, padding: "0 12px", borderRadius: 9, background: filterStage !== "TODO" ? `${stgC[filterStage]}16` : P.glass, border: `1px solid ${filterStage !== "TODO" ? `${stgC[filterStage]}45` : P.border}`, fontSize: 11, color: filterStage !== "TODO" ? stgC[filterStage] : P.txt3, cursor: "pointer", outline: "none", fontFamily: font, fontWeight: filterStage !== "TODO" ? 700 : 400, transition: "all 0.2s" }}>
+            <option value="TODO">Todas las etapas</option>
+            {STAGES.map(s => <option key={s} value={s} style={{ background: "#0C1219", color: P.txt }}>{s}</option>)}
+          </select>
+
+          {/* Asesor filter — solo visible para directivos y admin */}
+          {!isAsesor && (
+            <select value={filterAsesor} onChange={e => setFilterAsesor(e.target.value)} style={{ height: 32, padding: "0 12px", borderRadius: 9, background: filterAsesor !== "TODO" ? `${P.violet}14` : P.glass, border: `1px solid ${filterAsesor !== "TODO" ? `${P.violet}45` : P.border}`, fontSize: 11, color: filterAsesor !== "TODO" ? P.violet : P.txt3, cursor: "pointer", outline: "none", fontFamily: font, fontWeight: filterAsesor !== "TODO" ? 700 : 400 }}>
+              <option value="TODO">Todos los asesores</option>
+              {asesores.map(a => <option key={a} value={a} style={{ background: "#0C1219", color: P.txt }}>{a.split(" ")[0]} {a.split(" ")[1] || ""}</option>)}
+            </select>
+          )}
+
+          {/* Filters count + clear */}
+          {(filterStage !== "TODO" || filterAsesor !== "TODO" || searchQ) && (
+            <button onClick={() => { setFilterStage("TODO"); setFilterAsesor("TODO"); setSearchQ(""); }} style={{ height: 32, padding: "0 12px", borderRadius: 9, background: `${P.rose}0C`, border: `1px solid ${P.rose}28`, color: P.rose, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: font, flexShrink: 0, display: "flex", alignItems: "center", gap: 5, transition: "all 0.18s" }}
+              onMouseEnter={e => { e.currentTarget.style.background = `${P.rose}18`; }}
+              onMouseLeave={e => { e.currentTarget.style.background = `${P.rose}0C`; }}
+            ><X size={11} /> Limpiar</button>
+          )}
+
+          <div style={{ flex: 1 }} />
+
+          {/* Count badge */}
+          <span style={{ fontSize: 11, fontWeight: 700, color: P.txt3, background: P.glass, border: `1px solid ${P.border}`, padding: "4px 11px", borderRadius: 99, flexShrink: 0, letterSpacing: "0.02em" }}>
+            {sortedLeads.length} resultado{sortedLeads.length !== 1 ? "s" : ""}
+          </span>
         </div>
 
-        {/* Quick add row */}
-        {addingLead && (
-          <div style={{ padding: "10px 16px", borderBottom: `1px solid ${P.border}`, display: "flex", gap: 6, alignItems: "center", background: `${P.accent}04`, flexWrap: "wrap" }}>
-            {[
-              { ph: "Nombre *", key: "n", w: 130 },
-              { ph: "Teléfono", key: "phone", w: 120 },
-              { ph: "Asesor", key: "asesor", w: 120 },
-              { ph: "Presupuesto", key: "budget", w: 100 },
-              { ph: "Campaña", key: "campana", w: 90 },
-            ].map(f => (
-              <input key={f.key} placeholder={f.ph} value={newLead[f.key]} onChange={e => setNewLead(p => ({...p, [f.key]: e.target.value}))} style={{ width: f.w, height: 28, padding: "0 8px", borderRadius: P.rx, background: P.glass, border: `1px solid ${P.accentB}`, color: P.txt, fontSize: 11, outline: "none", fontFamily: font }} />
-            ))}
-            <select value={newLead.p} onChange={e => setNewLead(p => ({...p, p: e.target.value}))} style={{ height: 28, padding: "0 8px", borderRadius: P.rx, background: P.glass, border: `1px solid ${P.border}`, color: P.txt2, fontSize: 11, outline: "none" }}>
-              {["Gobernador 28","Monarca 28","Portofino","Torre 25","BAGA","Kaab On The Beach"].map(pr => <option key={pr}>{pr}</option>)}
-            </select>
-            <button onClick={addNewLead} style={{ padding: "5px 13px", borderRadius: P.rx, background: P.accentS, border: `1px solid ${P.accentB}`, color: P.accent, fontSize: 11, fontWeight: 700, cursor: "pointer" }}>Agregar</button>
-            <button onClick={() => setAddingLead(false)} style={{ padding: "5px 9px", borderRadius: P.rx, background: "transparent", border: `1px solid ${P.border}`, color: P.txt3, fontSize: 13, cursor: "pointer", lineHeight: 1 }}>×</button>
-          </div>
-        )}
-
-        {/* ── LIST VIEW ── */}
+        {/* ── LIST VIEW — Redesigned ── */}
         {viewMode === "list" && (
           <>
             {/* Column headers */}
-            <div style={{ display: "grid", gridTemplateColumns: cols, gap: 6, padding: "7px 16px", borderBottom: `1px solid ${P.border}`, alignItems: "center" }}>
+            <div style={{ display: "grid", gridTemplateColumns: cols, gap: 8, padding: "8px 18px", borderBottom: `1px solid ${P.border}`, alignItems: "center", background: "rgba(255,255,255,0.012)" }}>
               {!co && <SH label="Fecha" field="fechaIngreso" />}
               {!co && <SH label="Asesor" field="asesor" />}
-              <SH label="Nombre" field="n" />
+              <SH label="Cliente" field="n" />
               <SH label="Teléfono" field="phone" />
-              <SH label="Estatus" field="st" />
+              <SH label="Etapa" field="st" />
               <SH label="Presupuesto" field="presupuesto" align="right" />
               {!co && <SH label="Proyecto" field="p" />}
-              <SH label="Score" field="sc" />
+              <SH label="Score" field="sc" align="right" />
               <span style={{ fontSize: 9, fontWeight: 700, color: P.txt3, letterSpacing: "0.07em", textTransform: "uppercase", textAlign: "center" }}>Acciones</span>
             </div>
 
-            {sortedLeads.map(l => (
-              <div key={l.id} style={{ display: "grid", gridTemplateColumns: cols, gap: 6, padding: "10px 16px", borderBottom: `1px solid ${P.border}`, alignItems: "center", transition: "background 0.15s" }}
-                onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.02)"}
-                onMouseLeave={e => e.currentTarget.style.background = "transparent"}
-              >
-                {/* Fecha — hidden when compact */}
-                {!co && <span style={{ fontSize: 10.5, color: P.txt3, fontFamily: font }}>{l.fechaIngreso}</span>}
+            {sortedLeads.map((l, rowIdx) => {
+              const isHov = hoveredRow === l.id;
+              const sc = l.sc;
+              const scoreColor = sc >= 80 ? P.emerald : sc >= 60 ? P.blue : sc >= 40 ? P.amber : P.rose;
+              const showUrgency = l.daysInactive >= 5;
+              const uc = urgColor(l.daysInactive);
+              const stageC = stgC[l.st] || P.txt3;
 
-                {/* Asesor — hidden when compact */}
-                {!co && (
-                  <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
-                    <div style={{ width: 20, height: 20, borderRadius: "50%", background: `${P.violet}18`, border: `1px solid ${P.violet}28`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 8, fontWeight: 800, color: P.violet, flexShrink: 0 }}>{l.asesor?.charAt(0)}</div>
-                    <span style={{ fontSize: 10.5, color: P.txt2, fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{l.asesor?.split(" ")[0]}</span>
-                  </div>
-                )}
+              return (
+                <div key={l.id}
+                  onMouseEnter={() => setHoveredRow(l.id)}
+                  onMouseLeave={() => setHoveredRow(null)}
+                  style={{
+                    display: "grid", gridTemplateColumns: cols, gap: 8, padding: "12px 18px",
+                    borderBottom: `1px solid ${P.border}`, alignItems: "center",
+                    transition: "background 0.14s",
+                    background: isHov ? "rgba(255,255,255,0.028)" : "transparent",
+                    position: "relative",
+                  }}
+                >
+                  {/* Left urgency bar */}
+                  {showUrgency && (
+                    <div style={{ position: "absolute", left: 0, top: 4, bottom: 4, width: 3, borderRadius: "0 3px 3px 0", background: uc, opacity: 0.75 }} />
+                  )}
 
-                {/* Nombre — shows asesor initial when compact */}
-                <div style={{ display: "flex", alignItems: "center", gap: 7, minWidth: 0 }}>
-                  <div style={{ width: 28, height: 28, borderRadius: 8, background: `${l.hot ? P.accent : P.blue}14`, border: `1px solid ${l.hot ? P.accent : P.blue}22`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 800, color: l.hot ? P.accent : P.blue, flexShrink: 0, fontFamily: fontDisp }}>{l.n.charAt(0)}</div>
-                  <div style={{ minWidth: 0 }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                      <span style={{ fontSize: 12.5, fontWeight: 700, color: "#FFFFFF", fontFamily: fontDisp, letterSpacing: "-0.01em", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{l.n}</span>
-                      {l.isNew && <span style={{ fontSize: 8, fontWeight: 800, color: P.accent, background: `${P.accent}14`, padding: "1px 5px", borderRadius: 99, letterSpacing: "0.06em", flexShrink: 0 }}>NEW</span>}
+                  {/* Fecha */}
+                  {!co && <span style={{ fontSize: 10.5, color: P.txt3, fontFamily: font }}>{l.fechaIngreso}</span>}
+
+                  {/* Asesor */}
+                  {!co && (
+                    <div style={{ display: "flex", alignItems: "center", gap: 7, minWidth: 0 }}>
+                      <div style={{ width: 24, height: 24, borderRadius: "50%", background: `${P.violet}16`, border: `1px solid ${P.violet}28`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 9.5, fontWeight: 800, color: P.violet, flexShrink: 0, fontFamily: fontDisp }}>{l.asesor?.charAt(0)}</div>
+                      <span style={{ fontSize: 11, color: P.txt2, fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{l.asesor?.split(" ")[0]}</span>
                     </div>
-                    <p style={{ fontSize: 9.5, color: P.txt3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                      {co ? `${l.asesor?.split(" ")[0]} · ${l.campana}` : l.campana}
-                    </p>
+                  )}
+
+                  {/* Cliente */}
+                  <div style={{ display: "flex", alignItems: "center", gap: 9, minWidth: 0 }}>
+                    <div style={{ width: 32, height: 32, borderRadius: 10, background: "rgba(255,255,255,0.06)", border: `1px solid ${P.border}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 800, color: P.txt2, flexShrink: 0, fontFamily: fontDisp }}>{l.n.charAt(0)}</div>
+                    <div style={{ minWidth: 0, flex: 1 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 1 }}>
+                        <span style={{ fontSize: 13, fontWeight: 700, color: "#FFFFFF", fontFamily: fontDisp, letterSpacing: "-0.01em", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{l.n}</span>
+                        {l.isNew && <span style={{ fontSize: 7.5, fontWeight: 700, color: P.txt3, background: "rgba(255,255,255,0.06)", border: `1px solid ${P.border}`, padding: "1px 5px", borderRadius: 99, flexShrink: 0, letterSpacing: "0.05em" }}>NUEVO</span>}
+                        {l.hot && <span style={{ fontSize: 7.5, fontWeight: 700, color: P.accent, background: `${P.accent}10`, border: `1px solid ${P.accentB}`, padding: "1px 5px", borderRadius: 99, flexShrink: 0, letterSpacing: "0.05em" }}>HOT</span>}
+                      </div>
+                      <p style={{ fontSize: 10, color: P.txt3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        {co ? `${l.asesor?.split(" ")[0]} · ${l.campana}` : l.tag}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Teléfono */}
+                  <a href={`tel:${l.phone}`} onClick={e => e.stopPropagation()} style={{ fontSize: 11, color: isHov ? P.txt2 : P.txt3, textDecoration: "none", fontFamily: font, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", transition: "color 0.15s" }}>{l.phone}</a>
+
+                  {/* Etapa con inline change */}
+                  <div onClick={e => e.stopPropagation()}>
+                    <select value={l.st} onChange={e => { const v = e.target.value; setLeadsData(prev => prev.map(x => x.id === l.id ? {...x, st: v} : x)); }}
+                      style={{ background: `${stageC}14`, border: `1px solid ${stageC}30`, borderRadius: 99, padding: "4px 10px 4px 8px", fontSize: 10.5, fontWeight: 700, color: stageC, cursor: "pointer", outline: "none", appearance: "none", maxWidth: "100%", overflow: "hidden", textOverflow: "ellipsis", transition: "all 0.2s" }}>
+                      {STAGES.map(s => <option key={s} value={s} style={{ background: "#0C1219", color: P.txt }}>{s}</option>)}
+                    </select>
+                  </div>
+
+                  {/* Presupuesto */}
+                  <span style={{ fontSize: 12.5, fontWeight: 700, color: "#FFFFFF", fontFamily: fontDisp, letterSpacing: "-0.025em", textAlign: "right" }}>{l.budget}</span>
+
+                  {/* Proyecto */}
+                  {!co && (
+                    <span style={{ fontSize: 10.5, color: P.txt2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      {l.p.split("·")[0].trim()}
+                    </span>
+                  )}
+
+                  {/* Score */}
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 6 }}>
+                    <div style={{ flex: 1, height: 3, borderRadius: 2, background: "rgba(255,255,255,0.06)", maxWidth: 36 }}>
+                      <div style={{ width: `${sc}%`, height: 3, borderRadius: 2, background: P.accent, transition: "width 0.4s" }} />
+                    </div>
+                    <span style={{ fontSize: 11.5, fontWeight: 700, color: P.txt2, fontFamily: fontDisp, minWidth: 22, textAlign: "right" }}>{sc}</span>
+                  </div>
+
+                  {/* Acciones — siempre visibles */}
+                  <div style={{ display: "flex", gap: 4, justifyContent: "center" }}>
+                    <button onClick={() => oc(`__crm__ ${l.n.toLowerCase()}`)} title="Analizar con IA"
+                      style={{ padding: "6px 10px", borderRadius: 8, border: `1px solid ${P.accentB}`, background: `${P.accent}10`, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 4, color: P.accent, fontSize: 10.5, fontWeight: 600, fontFamily: font, transition: "background 0.15s", whiteSpace: "nowrap" }}
+                      onMouseEnter={e => e.currentTarget.style.background = `${P.accent}1E`}
+                      onMouseLeave={e => e.currentTarget.style.background = `${P.accent}10`}
+                    >IA</button>
+                    <button onClick={() => setNotesLead(l)} title="Ver notas"
+                      style={{ width: 29, height: 29, borderRadius: 8, border: `1px solid ${P.border}`, background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.15s" }}
+                      onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.06)"; e.currentTarget.style.borderColor = P.borderH; }}
+                      onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = P.border; }}
+                    ><FileText size={12} color={P.txt3} /></button>
+                    <button onClick={() => setSelectedLead(l)} title="Ver perfil"
+                      style={{ width: 29, height: 29, borderRadius: 8, border: `1px solid ${P.border}`, background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.15s" }}
+                      onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.06)"; e.currentTarget.style.borderColor = P.borderH; }}
+                      onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = P.border; }}
+                    ><User size={12} color={P.txt3} /></button>
                   </div>
                 </div>
+              );
+            })}
 
-                {/* Teléfono */}
-                <a href={`tel:${l.phone}`} onClick={e => e.stopPropagation()} style={{ fontSize: 10.5, color: P.txt2, textDecoration: "none", fontFamily: font, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{l.phone}</a>
-
-                {/* Estatus */}
-                <div>
-                  <Pill color={stgC[l.st]} s>{l.st}</Pill>
-                </div>
-
-                {/* Presupuesto */}
-                <span style={{ fontSize: 12.5, fontWeight: 600, color: "#FFFFFF", fontFamily: fontDisp, letterSpacing: "-0.02em", textAlign: "right" }}>{l.budget}</span>
-
-                {/* Proyecto — hidden when compact */}
-                {!co && <span style={{ fontSize: 10, color: P.txt2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{l.p.split("·")[0].trim()}</span>}
-
-                {/* Score */}
-                <ScoreBar sc={l.sc} compact />
-
-                {/* Acciones */}
-                <div style={{ display: "flex", gap: 4, justifyContent: "center" }}>
-                  <button onClick={() => oc(`__crm__ ${l.n.toLowerCase()}`)} title="Analizar con IA" style={{ width: 26, height: 26, borderRadius: 6, border: `1px solid ${P.accentB}`, background: P.accentS, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.18s" }}
-                    onMouseEnter={e => { e.currentTarget.style.background = `${P.accent}20`; }}
-                    onMouseLeave={e => { e.currentTarget.style.background = P.accentS; }}
-                  ><Zap size={11} color={P.accent} /></button>
-                  <button onClick={() => setNotesLead(l)} title="Ver notas" style={{ width: 26, height: 26, borderRadius: 6, border: `1px solid ${P.border}`, background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.18s" }}
-                    onMouseEnter={e => { e.currentTarget.style.background = P.glass; e.currentTarget.style.borderColor = P.borderH; }}
-                    onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = P.border; }}
-                  ><FileText size={11} color={P.txt3} /></button>
-                  <button onClick={() => setSelectedLead(l)} title="Ver perfil completo" style={{ width: 26, height: 26, borderRadius: 6, border: `1px solid ${P.border}`, background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.18s" }}
-                    onMouseEnter={e => { e.currentTarget.style.background = P.glass; e.currentTarget.style.borderColor = P.borderH; }}
-                    onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = P.border; }}
-                  ><User size={11} color={P.txt3} /></button>
-                </div>
-              </div>
-            ))}
-
+            {/* Empty state */}
             {sortedLeads.length === 0 && (
-              <div style={{ padding: "48px", textAlign: "center" }}>
-                <p style={{ fontSize: 13, color: P.txt3 }}>Sin resultados — intenta otra búsqueda o filtro</p>
+              <div style={{ padding: "64px 32px", textAlign: "center" }}>
+                <div style={{ width: 52, height: 52, borderRadius: 16, background: P.glass, border: `1px solid ${P.border}`, display: "inline-flex", alignItems: "center", justifyContent: "center", marginBottom: 16 }}>
+                  <Search size={22} color={P.txt3} />
+                </div>
+                <p style={{ fontSize: 15, fontWeight: 600, color: P.txt2, fontFamily: fontDisp, marginBottom: 8 }}>Sin resultados</p>
+                <p style={{ fontSize: 12, color: P.txt3, marginBottom: 20 }}>Intenta con otro término, etapa o asesor</p>
+                <button onClick={() => { setFilterStage("TODO"); setFilterAsesor("TODO"); setSearchQ(""); }} style={{ padding: "8px 20px", borderRadius: 10, background: P.glass, border: `1px solid ${P.border}`, color: P.txt2, fontSize: 12, cursor: "pointer", fontFamily: font, transition: "all 0.18s" }}
+                  onMouseEnter={e => { e.currentTarget.style.background = P.glassH; e.currentTarget.style.color = P.txt; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = P.glass; e.currentTarget.style.color = P.txt2; }}
+                >Limpiar todos los filtros</button>
               </div>
             )}
           </>
         )}
 
-        {/* ── KANBAN VIEW ── */}
+        {/* ── KANBAN — drag & drop ── */}
         {viewMode === "kanban" && (
-          <div style={{ display: "flex", gap: 8, overflowX: "auto", padding: "14px 16px", minHeight: 420 }}>
-            {kanbanStages.map((stage) => {
-              const stLeads = leadsData.filter(l => l.st === stage);
+          <div style={{ display: "flex", gap: 10, overflowX: "auto", padding: "16px", minHeight: 480, alignItems: "flex-start", scrollbarWidth: "thin", scrollbarColor: `${P.border} transparent` }}>
+            {kanbanStages.map(stage => {
+              const stLeads = sortedLeads.filter(l => l.st === stage);
               const stVal = stLeads.reduce((s, l) => s + (l.presupuesto || 0), 0);
               const c = stgC[stage] || P.txt3;
+              const isDragTarget = dragOverStage === stage;
               return (
-                <div key={stage} style={{ minWidth: 180, flex: "0 0 180px" }}>
-                  <div style={{ marginBottom: 8, padding: "7px 10px", borderRadius: 8, background: `${c}08`, border: `1px solid ${c}18` }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 2 }}>
-                      <span style={{ fontSize: 9, fontWeight: 800, color: c, letterSpacing: "0.08em", textTransform: "uppercase" }}>{stage}</span>
-                      <span style={{ fontSize: 10, fontWeight: 700, color: P.txt3, background: P.glass, padding: "1px 6px", borderRadius: 4 }}>{stLeads.length}</span>
+                <div key={stage}
+                  onDragOver={e => handleDragOver(e, stage)}
+                  onDrop={e => handleDrop(e, stage)}
+                  style={{ minWidth: 222, flex: "0 0 222px", display: "flex", flexDirection: "column", gap: 8 }}>
+                  <div style={{ padding: "10px 13px 10px 11px", borderRadius: 11, background: isDragTarget ? `${c}18` : `${c}0C`, border: `1px solid ${isDragTarget ? `${c}50` : `${c}28`}`, display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0, transition: "all 0.15s" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 7, minWidth: 0 }}>
+                      <div style={{ width: 8, height: 8, borderRadius: "50%", background: c, flexShrink: 0 }} />
+                      <div style={{ minWidth: 0 }}>
+                        <p style={{ fontSize: 10.5, fontWeight: 700, color: c, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{stage}</p>
+                        {stLeads.length > 0 && <p style={{ fontSize: 9.5, color: P.txt3 }}>${(stVal/1000000).toFixed(1)}M</p>}
+                      </div>
                     </div>
-                    {stLeads.length > 0 && <p style={{ fontSize: 10, color: P.txt3, fontFamily: fontDisp }}>${(stVal/1000000).toFixed(1)}M</p>}
+                    <span style={{ fontSize: 12, fontWeight: 700, color: c, background: `${c}18`, border: `1px solid ${c}28`, padding: "2px 9px", borderRadius: 99, flexShrink: 0, fontFamily: fontDisp }}>{stLeads.length}</span>
                   </div>
-                  <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
-                    {stLeads.map(l => (
-                      <div key={l.id} style={{ padding: "10px 11px", borderRadius: 10, background: P.glass, border: `1px solid ${P.border}`, cursor: "pointer", transition: "all 0.18s" }}
-                        onClick={() => oc(`__crm__ ${l.n.toLowerCase()}`)}
-                        onMouseEnter={e => { e.currentTarget.style.background = P.glassH; e.currentTarget.style.borderColor = P.borderH; }}
-                        onMouseLeave={e => { e.currentTarget.style.background = P.glass; e.currentTarget.style.borderColor = P.border; }}
-                      >
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 6 }}>
-                          <div style={{ flex: 1, minWidth: 0 }}>
-                            <div style={{ display: "flex", alignItems: "center", gap: 3, marginBottom: 1 }}>
-                              <p style={{ fontSize: 11.5, fontWeight: 700, color: "#FFFFFF", fontFamily: fontDisp, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{l.n}</p>
-                              {l.isNew && <span style={{ fontSize: 7, fontWeight: 800, color: P.accent, background: `${P.accent}14`, padding: "1px 4px", borderRadius: 99, flexShrink: 0 }}>NEW</span>}
+
+                  <div style={{ display: "flex", flexDirection: "column", gap: 7, minHeight: 60, borderRadius: 11, padding: isDragTarget ? "6px" : "0", background: isDragTarget ? "rgba(255,255,255,0.022)" : "transparent", transition: "all 0.15s" }}>
+                    {stLeads.map(l => {
+                      const sc = l.sc;
+                      const isDragging = dragLeadId === l.id;
+                      return (
+                        <div key={l.id}
+                          draggable
+                          onDragStart={e => handleDragStart(e, l.id)}
+                          onDragEnd={handleDragEnd}
+                          style={{ borderRadius: 13, background: "rgba(255,255,255,0.032)", border: `1px solid ${P.border}`, overflow: "hidden", transition: "all 0.2s", cursor: "grab", opacity: isDragging ? 0.4 : 1 }}
+                          onMouseEnter={e => { if (!isDragging) { e.currentTarget.style.background = "rgba(255,255,255,0.052)"; e.currentTarget.style.borderColor = P.borderH; e.currentTarget.style.transform = "translateY(-1px)"; e.currentTarget.style.boxShadow = "0 6px 24px rgba(0,0,0,0.28)"; } }}
+                          onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.032)"; e.currentTarget.style.borderColor = P.border; e.currentTarget.style.transform = "none"; e.currentTarget.style.boxShadow = "none"; }}
+                        >
+                          <div style={{ height: 2, background: `linear-gradient(90deg, ${c}AA, transparent)` }} />
+                          <div style={{ padding: "12px 13px" }}>
+                            <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 7, gap: 6 }}>
+                              <div style={{ flex: 1, minWidth: 0 }}>
+                                <p style={{ fontSize: 12.5, fontWeight: 700, color: "#FFF", fontFamily: fontDisp, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginBottom: 2 }}>{l.n}</p>
+                                <p style={{ fontSize: 9.5, color: P.txt3 }}>{l.asesor?.split(" ")[0]} · {l.campana}</p>
+                              </div>
+                              <p style={{ fontSize: 12, fontWeight: 700, color: "#FFF", fontFamily: fontDisp, letterSpacing: "-0.02em", flexShrink: 0 }}>{l.budget}</p>
                             </div>
-                            <p style={{ fontSize: 9, color: P.txt3 }}>{l.asesor?.split(" ")[0]}</p>
+                            <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+                              <div style={{ flex: 1, height: 2.5, borderRadius: 2, background: "rgba(255,255,255,0.06)" }}><div style={{ width: `${sc}%`, height: "100%", borderRadius: 2, background: P.accent }} /></div>
+                              <span style={{ fontSize: 10, fontWeight: 700, color: P.txt2, fontFamily: fontDisp, minWidth: 18 }}>{sc}</span>
+                            </div>
+                            {l.daysInactive >= 5 && <p style={{ fontSize: 9.5, color: P.txt3, marginBottom: 7 }}>{l.daysInactive}d sin actividad</p>}
+                            {/* Selector de etapa inline */}
+                            <div onClick={e => e.stopPropagation()} style={{ marginBottom: 8 }}>
+                              <select value={l.st} onChange={e => setLeadsData(prev => prev.map(x => x.id === l.id ? {...x, st: e.target.value} : x))}
+                                style={{ width: "100%", padding: "5px 8px", borderRadius: 7, background: `${c}0C`, border: `1px solid ${c}28`, color: c, fontSize: 9.5, fontWeight: 700, cursor: "pointer", outline: "none", appearance: "none" }}>
+                                {STAGES.map(s => <option key={s} value={s} style={{ background: "#0C1219", color: "#fff" }}>{s}</option>)}
+                              </select>
+                            </div>
+                            <div style={{ display: "flex", gap: 5 }}>
+                              <button onClick={() => oc(`__crm__ ${l.n.toLowerCase()}`)} style={{ flex: 1, padding: "6px 0", borderRadius: 7, background: `${P.accent}10`, border: `1px solid ${P.accentB}`, color: P.accent, fontSize: 9.5, fontWeight: 600, cursor: "pointer", fontFamily: font, transition: "background 0.15s" }} onMouseEnter={e => e.currentTarget.style.background = `${P.accent}1E`} onMouseLeave={e => e.currentTarget.style.background = `${P.accent}10`}>Analizar</button>
+                              <button onClick={() => setSelectedLead(l)} style={{ width: 28, padding: "5px 0", borderRadius: 7, background: "transparent", border: `1px solid ${P.border}`, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.15s" }} onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.06)"; e.currentTarget.style.borderColor = P.borderH; }} onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = P.border; }}><User size={10} color={P.txt3} /></button>
+                              <button onClick={() => setNotesLead(l)} style={{ width: 28, padding: "5px 0", borderRadius: 7, background: "transparent", border: `1px solid ${P.border}`, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.15s" }} onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.06)"; e.currentTarget.style.borderColor = P.borderH; }} onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = P.border; }}><FileText size={10} color={P.txt3} /></button>
+                            </div>
                           </div>
                         </div>
-                        <ScoreBar sc={l.sc} compact />
-                        <p style={{ fontSize: 12, fontWeight: 500, color: "#FFFFFF", fontFamily: fontDisp, letterSpacing: "-0.02em", marginTop: 5 }}>{l.budget}</p>
-                        <p style={{ fontSize: 9, color: P.txt3, marginTop: 3, lineHeight: 1.4, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{l.nextAction}</p>
-                      </div>
-                    ))}
+                      );
+                    })}
                     {stLeads.length === 0 && (
-                      <div style={{ padding: "16px", borderRadius: 10, border: `1px dashed ${P.border}`, textAlign: "center" }}>
-                        <p style={{ fontSize: 10, color: P.txt3 }}>Sin clientes</p>
+                      <div style={{ padding: "28px 16px", borderRadius: 11, border: `1px dashed ${isDragTarget ? `${c}50` : P.border}`, textAlign: "center", background: isDragTarget ? `${c}06` : "transparent", transition: "all 0.15s" }}>
+                        <p style={{ fontSize: 10.5, color: isDragTarget ? c : P.txt3 }}>{isDragTarget ? "Soltar aquí" : "Sin clientes"}</p>
                       </div>
                     )}
                   </div>
@@ -1471,63 +1896,97 @@ Realizar primer contacto y calificar necesidades del cliente.`,
         )}
       </G>
 
-      {/* ── Analytics ── */}
-      <div style={{ display: "grid", gridTemplateColumns: co ? "1fr 1fr" : "1fr 1fr 1fr", gap: 12 }}>
+      {/* ── ANALYTICS ROW ── */}
+      <div style={{ display: "grid", gridTemplateColumns: co ? "1fr 1fr" : "1.2fr 1fr 1fr", gap: 14 }}>
+
+        {/* Score chart */}
         <G>
-          <p style={{ fontSize: 12, fontWeight: 700, color: P.txt, marginBottom: 10, fontFamily: fontDisp }}>Score por Cliente</p>
-          <ResponsiveContainer width="100%" height={110}>
-            <BarChart data={sortedLeads.slice(0,6).map(l => ({ n: l.n.split(" ")[0], sc: l.sc }))} margin={{ top: 0, right: 0, left: -30, bottom: 0 }}>
-              <XAxis dataKey="n" tick={{ fill: P.txt3, fontSize: 8 }} axisLine={false} tickLine={false} />
-              <Tooltip contentStyle={{ background: P.surface, border: `1px solid ${P.border}`, borderRadius: 8, color: P.txt, fontSize: 11 }} />
-              <Bar dataKey="sc" radius={[3, 3, 0, 0]} maxBarSize={22}>
-                {sortedLeads.slice(0,6).map((l, i) => {
-                  const c = l.sc >= 80 ? P.emerald : l.sc >= 60 ? P.blue : P.amber;
-                  return <Cell key={i} fill={c} opacity={0.75} />;
-                })}
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+            <p style={{ fontSize: 12.5, fontWeight: 700, color: P.txt, fontFamily: fontDisp }}>Score por Cliente</p>
+            <Pill color={P.blue} s>Top {Math.min(sortedLeads.length, 6)}</Pill>
+          </div>
+          <ResponsiveContainer width="100%" height={120}>
+            <BarChart data={[...sortedLeads].sort((a,b) => b.sc - a.sc).slice(0,6).map(l => ({ n: l.n.split(" ")[0], sc: l.sc }))} margin={{ top: 4, right: 0, left: -28, bottom: 0 }}>
+              <XAxis dataKey="n" tick={{ fill: P.txt3, fontSize: 9, fontFamily: font }} axisLine={false} tickLine={false} />
+              <YAxis domain={[0, 100]} tick={{ fill: P.txt3, fontSize: 9 }} axisLine={false} tickLine={false} />
+              <Tooltip contentStyle={{ background: "#0C1219", border: `1px solid ${P.border}`, borderRadius: 10, color: P.txt, fontSize: 11, boxShadow: "0 8px 32px rgba(0,0,0,0.4)" }} cursor={{ fill: "rgba(255,255,255,0.03)" }} />
+              <Bar dataKey="sc" radius={[4, 4, 0, 0]} maxBarSize={28}>
+                {[...sortedLeads].sort((a,b) => b.sc - a.sc).slice(0,6).map((l, i) => (
+                  <Cell key={i} fill={l.sc >= 80 ? P.emerald : l.sc >= 60 ? P.blue : P.amber} opacity={0.85} />
+                ))}
               </Bar>
             </BarChart>
           </ResponsiveContainer>
         </G>
+
+        {/* Pipeline por etapa — clickable */}
         <G>
-          <p style={{ fontSize: 12, fontWeight: 700, color: P.txt, marginBottom: 8, fontFamily: fontDisp }}>Pipeline por Estatus</p>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+            <p style={{ fontSize: 12.5, fontWeight: 700, color: P.txt, fontFamily: fontDisp }}>Distribución</p>
+            {filterStage !== "TODO" && (
+              <button onClick={() => setFilterStage("TODO")} style={{ fontSize: 9.5, color: P.rose, background: "none", border: "none", cursor: "pointer", fontFamily: font, padding: 0 }}>✕ Quitar filtro</button>
+            )}
+          </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
             {STAGES.map(st => {
-              const cnt = leadsData.filter(l => l.st === st).length;
+              const cnt = visibleLeads.filter(l => l.st === st).length;
               if (cnt === 0) return null;
-              const pct = Math.round((cnt / leadsData.length) * 100);
+              const pct = Math.round((cnt / visibleLeads.length) * 100);
+              const isActive = filterStage === st;
               return (
-                <div key={st} style={{ display: "flex", alignItems: "center", gap: 7 }}>
-                  <span style={{ fontSize: 9, color: P.txt3, width: 100, flexShrink: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{st}</span>
+                <div key={st} style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", padding: "3px 0" }} onClick={() => setFilterStage(isActive ? "TODO" : st)}>
+                  <div style={{ width: 7, height: 7, borderRadius: "50%", background: stgC[st] || P.txt3, flexShrink: 0, boxShadow: isActive ? `0 0 6px ${stgC[st] || P.txt3}` : "none" }} />
+                  <span style={{ fontSize: 10, color: isActive ? "#FFF" : P.txt3, width: 98, flexShrink: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontWeight: isActive ? 700 : 400, transition: "color 0.18s" }}>{st}</span>
                   <div style={{ flex: 1, height: 4, borderRadius: 2, background: "rgba(255,255,255,0.05)" }}>
-                    <div style={{ width: `${pct}%`, height: "100%", borderRadius: 2, background: stgC[st] || P.txt3 }} />
+                    <div style={{ width: `${pct}%`, height: "100%", borderRadius: 2, background: stgC[st] || P.txt3, transition: "width 0.5s", opacity: isActive ? 1 : 0.7 }} />
                   </div>
-                  <span style={{ fontSize: 10, fontWeight: 700, color: P.txt2, fontFamily: fontDisp, width: 12, textAlign: "right" }}>{cnt}</span>
+                  <span style={{ fontSize: 11, fontWeight: 700, color: isActive ? (stgC[st] || P.txt3) : P.txt2, fontFamily: fontDisp, minWidth: 14, textAlign: "right" }}>{cnt}</span>
                 </div>
               );
             })}
           </div>
+          <p style={{ fontSize: 9.5, color: P.txt3, marginTop: 10 }}>Haz clic en una etapa para filtrar</p>
         </G>
+
+        {/* Cartera por asesor */}
         <G>
-          <p style={{ fontSize: 12, fontWeight: 700, color: P.txt, marginBottom: 6, fontFamily: fontDisp }}>Por Asesor</p>
-          <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
-            {asesores.map(a => {
-              const cnt = leadsData.filter(l => l.asesor === a).length;
-              const val = leadsData.filter(l => l.asesor === a).reduce((s, l) => s + (l.presupuesto || 0), 0);
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+            <p style={{ fontSize: 12.5, fontWeight: 700, color: P.txt, fontFamily: fontDisp }}>Por Asesor</p>
+            {filterAsesor !== "TODO" && (
+              <button onClick={() => setFilterAsesor("TODO")} style={{ fontSize: 9.5, color: P.rose, background: "none", border: "none", cursor: "pointer", fontFamily: font, padding: 0 }}>✕ Quitar</button>
+            )}
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            {asesores.map((a, i) => {
+              const aLeads = visibleLeads.filter(l => l.asesor === a);
+              const cnt = aLeads.length;
+              const val = aLeads.reduce((s, l) => s + (l.presupuesto || 0), 0);
+              const avgSc = Math.round(aLeads.reduce((s, l) => s + l.sc, 0) / cnt);
+              const aCols = [P.accent, P.blue, P.violet, P.amber, P.cyan, P.emerald, P.rose];
+              const c = aCols[i % aCols.length];
+              const isActive = filterAsesor === a;
               return (
-                <div key={a} style={{ display: "flex", alignItems: "center", gap: 7, padding: "5px 8px", borderRadius: 7, background: P.glass, border: `1px solid ${P.border}` }}>
-                  <div style={{ width: 18, height: 18, borderRadius: "50%", background: `${P.violet}18`, border: `1px solid ${P.violet}28`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 8, fontWeight: 800, color: P.violet, flexShrink: 0 }}>{a.charAt(0)}</div>
-                  <span style={{ fontSize: 10, color: P.txt2, flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{a.split(" ")[0]}</span>
-                  <span style={{ fontSize: 10, fontWeight: 700, color: P.txt3, fontFamily: fontDisp }}>{cnt} · ${(val/1000000).toFixed(1)}M</span>
+                <div key={a} onClick={() => setFilterAsesor(isActive ? "TODO" : a)} style={{ display: "flex", alignItems: "center", gap: 9, padding: "8px 10px", borderRadius: 10, background: isActive ? `${c}12` : P.glass, border: `1px solid ${isActive ? `${c}35` : P.border}`, cursor: "pointer", transition: "all 0.18s" }}
+                  onMouseEnter={e => { if (!isActive) { e.currentTarget.style.background = P.glassH; e.currentTarget.style.borderColor = P.borderH; } }}
+                  onMouseLeave={e => { if (!isActive) { e.currentTarget.style.background = P.glass; e.currentTarget.style.borderColor = P.border; } }}
+                >
+                  <div style={{ width: 24, height: 24, borderRadius: "50%", background: `${c}20`, border: `1px solid ${c}32`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 800, color: c, flexShrink: 0 }}>{a.charAt(0)}</div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <p style={{ fontSize: 11.5, color: isActive ? "#FFF" : P.txt2, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{a.split(" ")[0]}</p>
+                    <p style={{ fontSize: 9.5, color: P.txt3 }}>{cnt} clientes · score {avgSc}</p>
+                  </div>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: c, fontFamily: fontDisp }}>${(val/1000000).toFixed(1)}M</span>
                 </div>
               );
             })}
           </div>
+          <p style={{ fontSize: 9.5, color: P.txt3, marginTop: 8 }}>Haz clic para filtrar por asesor</p>
         </G>
       </div>
 
       {/* Panels */}
-      <NotesModal lead={notesLead} onClose={() => setNotesLead(null)} />
-      <LeadPanel lead={selectedLead} onClose={() => setSelectedLead(null)} oc={oc} />
+      <NotesModal lead={notesLead} onClose={() => setNotesLead(null)} onSave={saveNotes} />
+      <LeadPanel lead={selectedLead} onClose={() => setSelectedLead(null)} oc={oc} onUpdate={updateLead} onOpenNotes={() => { setNotesLead(selectedLead); setSelectedLead(null); }} />
     </div>
   );
 }
@@ -1818,7 +2277,7 @@ const AsesorCRM = ({ oc }) => {
         <p style={{ fontSize: 18, fontWeight: 600, color: "#FFFFFF", fontFamily: fontDisp, letterSpacing: "-0.02em" }}>CRM de Asesores</p>
         <p style={{ fontSize: 11, color: P.txt3, fontFamily: font, marginTop: 2 }}>Backup de Datos · Gestión de Clientes · Seguimiento Integral</p>
       </div>
-      <Pill color={P.accent} s>🔒 {crmAsesores.length} registros</Pill>
+      <Pill color={P.accent} s>{crmAsesores.length} registros</Pill>
     </div>
 
     {/* Stats */}
@@ -1861,7 +2320,7 @@ const AsesorCRM = ({ oc }) => {
             <option value="NO CONTESTA">No Contesta</option>
           </select>
         </div>
-        <button onClick={() => oc("Exportar datos de CRM para respaldo")} style={{ display: "flex", alignItems: "center", gap: 5, padding: "6px 12px", borderRadius: P.rx, background: P.glass, border: `1px solid ${P.border}`, fontSize: 11, color: P.txt2, cursor: "pointer", fontFamily: font, marginLeft: 12 }}>📥 Exportar</button>
+        <button onClick={() => oc("Exportar datos de CRM para respaldo")} style={{ display: "flex", alignItems: "center", gap: 5, padding: "6px 12px", borderRadius: P.rx, background: P.glass, border: `1px solid ${P.border}`, fontSize: 11, color: P.txt2, cursor: "pointer", fontFamily: font, marginLeft: 12 }}><Download size={12} /> Exportar</button>
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1.2fr 1.2fr 0.9fr 0.9fr 1fr 0.6fr", gap: 8, padding: "10px 20px", borderBottom: `1px solid ${P.border}`, fontSize: 9, color: P.txt3, textTransform: "uppercase", letterSpacing: "0.06em", fontWeight: 700 }}>
         <span>Fecha</span><span>Asesor</span><span>Cliente</span><span>Teléfono</span><span>Status</span><span>Presupuesto</span><span>Proyecto</span><span>Campaña</span>
@@ -2383,6 +2842,8 @@ const nav = [
   { id: "lp", l: "Landing Pages", i: Globe },
   { id: "fa", l: "Finanzas", i: Landmark },
   { id: "rrhh", l: "Personas", i: UserCheck },
+  { id: "planes", l: "Planes", i: CreditCard, sep: true },
+  { id: "admin", l: "Usuarios", i: Shield, sep: true, adminOnly: true },
 ];
 
 /* ════════════════════════════════════════
@@ -2468,7 +2929,7 @@ const WriterSection = ({ value, onChange, clientName }) => {
         />
         <div style={{ position: "absolute", bottom: 10, right: 12, display: "flex", alignItems: "center", gap: 6 }}>
           <span style={{ fontSize: 10, color: charCount > charLimit * 0.8 ? P.rose : P.txt3 }}>
-            {charCount > charLimit * 0.8 ? "⚠" : "✓"}
+            {charCount}/{charLimit}
           </span>
         </div>
       </div>
@@ -3550,7 +4011,7 @@ const LandingPages = () => {
             onMouseEnter={e => { e.currentTarget.style.background = "#FFFFFF"; e.currentTarget.style.transform = "translateY(-1px)"; }}
             onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.95)"; e.currentTarget.style.transform = "translateY(0)"; }}
           >
-            <Sparkles size={15} /> Nueva Landing Page
+            <Wand2 size={15} /> Nueva Landing Page
           </button>
         </div>
       </div>
@@ -3905,7 +4366,7 @@ const LandingPages = () => {
             />
             {asesorWA && (
               <a href={`https://wa.me/${asesorWA.replace(/\D/g,"")}`} target="_blank" rel="noreferrer" style={{ fontSize: 10, color: P.emerald, marginTop: 4, display: "inline-block" }}>
-                ✓ Verificar número
+                Verificar número →
               </a>
             )}
           </div>
@@ -3922,7 +4383,7 @@ const LandingPages = () => {
             />
             {asesorCal && (
               <a href={asesorCal} target="_blank" rel="noreferrer" style={{ fontSize: 10, color: P.blue, marginTop: 4, display: "inline-block" }}>
-                ✓ Verificar link
+                Verificar link →
               </a>
             )}
           </div>
@@ -4023,7 +4484,7 @@ const LandingPages = () => {
             onMouseEnter={e => { e.currentTarget.style.background = "#FFFFFF"; e.currentTarget.style.transform = "translateY(-1px)"; }}
             onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.95)"; e.currentTarget.style.transform = "translateY(0)"; }}
           >
-            <Sparkles size={16} /> Generar Landing Page ({selectedProps.length})
+            <Wand2 size={16} /> Generar Landing Page ({selectedProps.length})
           </button>
         )}
       </div>
@@ -4266,7 +4727,7 @@ const LandingPages = () => {
             fontSize: 14, fontWeight: 700, fontFamily: fontDisp,
             boxShadow: "0 4px 20px rgba(255,255,255,0.15)",
           }}>
-            <Sparkles size={16} /> Generar Landing Page
+            <Wand2 size={16} /> Generar Landing Page
           </button>
         </div>
       )}
@@ -6309,25 +6770,427 @@ const RRHHModule = () => {
   );
 };
 
-export default function App() {
-  const [user, setUser] = useState(() => {
-    try { return JSON.parse(localStorage.getItem("stratos_user") || "null"); }
-    catch { return null; }
+/* ════════════════════════════════════════
+   ADMIN PANEL — Gestión de Usuarios
+   ════════════════════════════════════════ */
+const ROLE_META = {
+  super_admin: { label: "Super Admin", color: "#A78BFA", level: 1 },
+  admin:       { label: "Admin",       color: "#F59E0B", level: 2 },
+  ceo:         { label: "CEO",         color: "#7EB8F0", level: 3 },
+  director:    { label: "Director",    color: "#5DC8D9", level: 4 },
+  asesor:      { label: "Asesor",      color: "#6EE7C2", level: 5 },
+};
+
+function RoleBadge({ role }) {
+  const m = ROLE_META[role] || { label: role, color: P.txt3 };
+  return (
+    <span style={{
+      display: "inline-flex", alignItems: "center", padding: "3px 10px",
+      borderRadius: 99, fontSize: 10.5, fontWeight: 700,
+      color: m.color, background: `${m.color}12`, border: `1px solid ${m.color}28`,
+      letterSpacing: "0.03em",
+    }}>{m.label}</span>
+  );
+}
+
+function AdminPanel() {
+  const { user: me } = useAuth();
+  const [users, setUsers]           = useState(() => adminGetAllUsers());
+  const [search, setSearch]         = useState("");
+  const [roleFilter, setRoleFilter] = useState("ALL");
+  const [modal, setModal]           = useState(null); // null | { mode: "create"|"edit"|"reset", user? }
+  const [deleteConfirm, setDeleteConfirm] = useState(null); // userId
+  const [form, setForm]             = useState({});
+  const [formErr, setFormErr]       = useState("");
+  const [formOk, setFormOk]         = useState("");
+
+  const isSuper = me?.role === "super_admin";
+  const canManage = ["super_admin", "admin"].includes(me?.role);
+
+  const refresh = () => setUsers(adminGetAllUsers());
+
+  const sf = (k) => (v) => setForm(p => ({ ...p, [k]: typeof v === "string" ? v : v.target.value }));
+
+  const openCreate = () => {
+    setForm({ name: "", email: "", password: "", role: "asesor", isActive: true });
+    setFormErr(""); setFormOk("");
+    setModal({ mode: "create" });
+  };
+
+  const openEdit = (u) => {
+    setForm({ name: u.name, email: u.email, role: u.role, isActive: u.isActive !== false });
+    setFormErr(""); setFormOk("");
+    setModal({ mode: "edit", user: u });
+  };
+
+  const openReset = (u) => {
+    setForm({ password: "" });
+    setFormErr(""); setFormOk("");
+    setModal({ mode: "reset", user: u });
+  };
+
+  const handleCreate = () => {
+    if (!form.name?.trim()) { setFormErr("El nombre es requerido."); return; }
+    if (!form.email?.trim() || !form.email.includes("@")) { setFormErr("Email inválido."); return; }
+    if (!form.password || form.password.length < 6) { setFormErr("La contraseña debe tener al menos 6 caracteres."); return; }
+    const { data, error } = adminCreateUser({ name: form.name.trim(), email: form.email.trim().toLowerCase(), password: form.password, role: form.role });
+    if (error) { setFormErr(error); return; }
+    refresh(); setFormOk(`Usuario ${data.name} creado exitosamente.`);
+    setTimeout(() => setModal(null), 1400);
+  };
+
+  const handleEdit = () => {
+    if (!form.name?.trim()) { setFormErr("El nombre es requerido."); return; }
+    const { data, error } = adminUpdateUser(modal.user.id, { name: form.name.trim(), email: form.email.trim().toLowerCase(), role: form.role, isActive: form.isActive });
+    if (error) { setFormErr(error); return; }
+    refresh(); setFormOk("Cambios guardados."); setTimeout(() => setModal(null), 1000);
+  };
+
+  const handleReset = () => {
+    if (!form.password || form.password.length < 6) { setFormErr("Mínimo 6 caracteres."); return; }
+    const { error } = adminResetPassword(modal.user.id, form.password);
+    if (error) { setFormErr(error); return; }
+    setFormOk("Contraseña actualizada."); setTimeout(() => setModal(null), 1000);
+  };
+
+  const handleDelete = (id) => {
+    const { error } = adminDeleteUser(id, me?.id);
+    if (error) return;
+    setDeleteConfirm(null); refresh();
+  };
+
+  const handleToggleActive = (u) => {
+    adminUpdateUser(u.id, { isActive: !u.isActive }); refresh();
+  };
+
+  const filtered = users.filter(u => {
+    const q = search.toLowerCase();
+    const matchQ = !q || u.name?.toLowerCase().includes(q) || u.email?.toLowerCase().includes(q);
+    const matchR = roleFilter === "ALL" || u.role === roleFilter;
+    return matchQ && matchR;
   });
+
+  const stats = Object.entries(ROLE_META).map(([key, m]) => ({
+    ...m, key, count: users.filter(u => u.role === key).length,
+  })).filter(s => s.count > 0);
+
+  const availableRoles = Object.entries(ROLE_META)
+    .filter(([key]) => isSuper || ROLE_META[key].level > (ROLE_META[me?.role]?.level ?? 99))
+    .map(([key, m]) => ({ key, ...m }));
+
+  const inputStyle = {
+    width: "100%", height: 40, padding: "0 14px", borderRadius: 11,
+    background: P.glass, border: `1px solid ${P.border}`, color: P.txt,
+    fontSize: 13, outline: "none", fontFamily: font, boxSizing: "border-box",
+    transition: "border-color 0.2s",
+  };
+
+  return (
+    <div style={{ padding: "28px 28px 0", display: "flex", flexDirection: "column", gap: 20, height: "100%" }}>
+
+      {/* ── Header ── */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 12 }}>
+        <div>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
+            <h2 style={{ fontSize: 20, fontWeight: 700, color: "#FFFFFF", fontFamily: fontDisp, letterSpacing: "-0.025em", margin: 0 }}>Gestión de Usuarios</h2>
+            <span style={{ fontSize: 10, fontWeight: 700, color: P.txt3, background: P.glass, border: `1px solid ${P.border}`, padding: "3px 9px", borderRadius: 99, letterSpacing: "0.06em" }}>{users.length} usuarios</span>
+          </div>
+          <p style={{ fontSize: 11.5, color: P.txt3, margin: 0 }}>
+            {users.filter(u => u.isActive !== false).length} activos · {users.filter(u => u.isActive === false).length} inactivos
+          </p>
+        </div>
+        {canManage && (
+          <button onClick={openCreate} style={{
+            display: "flex", alignItems: "center", gap: 7, padding: "10px 20px",
+            borderRadius: 11, background: "linear-gradient(135deg, rgba(110,231,194,0.16), rgba(110,231,194,0.07))",
+            border: `1px solid ${P.accentB}`, color: P.accent, fontSize: 12.5, fontWeight: 700,
+            fontFamily: fontDisp, cursor: "pointer", transition: "all 0.2s", flexShrink: 0,
+          }}
+            onMouseEnter={e => { e.currentTarget.style.background = "linear-gradient(135deg, rgba(110,231,194,0.24), rgba(110,231,194,0.12))"; }}
+            onMouseLeave={e => { e.currentTarget.style.background = "linear-gradient(135deg, rgba(110,231,194,0.16), rgba(110,231,194,0.07))"; }}
+          ><Plus size={14} /> Nuevo Usuario</button>
+        )}
+      </div>
+
+      {/* ── Role stats strip ── */}
+      <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+        {stats.map(s => (
+          <div key={s.key} onClick={() => setRoleFilter(roleFilter === s.key ? "ALL" : s.key)}
+            style={{
+              display: "flex", alignItems: "center", gap: 9, padding: "10px 16px",
+              borderRadius: 12, background: roleFilter === s.key ? `${s.color}10` : P.glass,
+              border: `1px solid ${roleFilter === s.key ? `${s.color}35` : P.border}`,
+              cursor: "pointer", transition: "all 0.18s",
+            }}
+            onMouseEnter={e => { if (roleFilter !== s.key) e.currentTarget.style.borderColor = P.borderH; }}
+            onMouseLeave={e => { if (roleFilter !== s.key) e.currentTarget.style.borderColor = P.border; }}
+          >
+            <div style={{ width: 8, height: 8, borderRadius: "50%", background: s.color, flexShrink: 0 }} />
+            <span style={{ fontSize: 11, fontWeight: 600, color: roleFilter === s.key ? s.color : P.txt2 }}>{s.label}</span>
+            <span style={{ fontSize: 15, fontWeight: 700, color: roleFilter === s.key ? s.color : "#FFFFFF", fontFamily: fontDisp }}>{s.count}</span>
+          </div>
+        ))}
+      </div>
+
+      {/* ── Toolbar ── */}
+      <G np>
+        <div style={{ padding: "12px 18px", borderBottom: `1px solid ${P.border}`, display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+          <div style={{ position: "relative", flex: 1, minWidth: 160, maxWidth: 300 }}>
+            <Search size={12} style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", color: P.txt3, pointerEvents: "none" }} />
+            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Buscar nombre o email…"
+              style={{ ...inputStyle, paddingLeft: 30, height: 34, fontSize: 12 }}
+              onFocus={e => e.target.style.borderColor = P.accentB}
+              onBlur={e => e.target.style.borderColor = P.border}
+            />
+          </div>
+          <select value={roleFilter} onChange={e => setRoleFilter(e.target.value)} style={{ height: 34, padding: "0 12px", borderRadius: 9, background: P.glass, border: `1px solid ${P.border}`, fontSize: 11, color: P.txt3, cursor: "pointer", outline: "none", fontFamily: font }}>
+            <option value="ALL">Todos los roles</option>
+            {Object.entries(ROLE_META).map(([k, m]) => <option key={k} value={k} style={{ background: "#0C1219" }}>{m.label}</option>)}
+          </select>
+          {(search || roleFilter !== "ALL") && (
+            <button onClick={() => { setSearch(""); setRoleFilter("ALL"); }} style={{ height: 34, padding: "0 12px", borderRadius: 9, background: `${P.rose}0C`, border: `1px solid ${P.rose}28`, color: P.rose, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: font, display: "flex", alignItems: "center", gap: 5 }}>
+              <X size={11} /> Limpiar
+            </button>
+          )}
+          <span style={{ marginLeft: "auto", fontSize: 11, color: P.txt3 }}>{filtered.length} resultado{filtered.length !== 1 ? "s" : ""}</span>
+        </div>
+
+        {/* ── Table header ── */}
+        <div style={{ display: "grid", gridTemplateColumns: "2.2fr 2fr 1fr 1fr 100px", gap: 0, padding: "9px 20px", borderBottom: `1px solid ${P.border}` }}>
+          {["Usuario", "Email", "Rol", "Estado", "Acciones"].map((h, i) => (
+            <span key={h} style={{ fontSize: 9, fontWeight: 700, color: P.txt3, letterSpacing: "0.08em", textTransform: "uppercase", textAlign: i === 4 ? "center" : "left" }}>{h}</span>
+          ))}
+        </div>
+
+        {/* ── User rows ── */}
+        <div style={{ overflowY: "auto", maxHeight: "calc(100vh - 380px)" }}>
+          {filtered.length === 0 && (
+            <div style={{ padding: "48px 0", textAlign: "center" }}>
+              <p style={{ fontSize: 13, color: P.txt3 }}>No se encontraron usuarios.</p>
+            </div>
+          )}
+          {filtered.map((u, idx) => {
+            const m = ROLE_META[u.role] || { label: u.role, color: P.txt3 };
+            const active = u.isActive !== false;
+            const isMe = u.id === me?.id;
+            const canEdit = canManage && (isSuper || (ROLE_META[u.role]?.level ?? 99) > (ROLE_META[me?.role]?.level ?? 0));
+            const initials = (u.name || "?").split(" ").map(w => w[0]).join("").toUpperCase().slice(0, 2);
+            const avatarColors = ["#A78BFA", "#7EB8F0", "#6EE7C2", "#F59E0B", "#5DC8D9", "#E8818C"];
+            const ac = avatarColors[u.id % avatarColors.length];
+            return (
+              <div key={u.id} style={{
+                display: "grid", gridTemplateColumns: "2.2fr 2fr 1fr 1fr 100px",
+                padding: "13px 20px", borderBottom: idx < filtered.length - 1 ? `1px solid ${P.border}` : "none",
+                background: "transparent", transition: "background 0.15s", alignItems: "center",
+              }}
+                onMouseEnter={e => e.currentTarget.style.background = P.glass}
+                onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+              >
+                {/* Name + avatar */}
+                <div style={{ display: "flex", alignItems: "center", gap: 11 }}>
+                  <div style={{ width: 34, height: 34, borderRadius: 10, background: `${ac}18`, border: `1.5px solid ${ac}30`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 800, color: ac, fontFamily: fontDisp, flexShrink: 0 }}>{initials}</div>
+                  <div>
+                    <p style={{ fontSize: 13, fontWeight: 600, color: active ? "#FFFFFF" : P.txt3, fontFamily: fontDisp, letterSpacing: "-0.01em" }}>
+                      {u.name}
+                      {isMe && <span style={{ fontSize: 9, color: P.accent, fontWeight: 700, marginLeft: 7, background: `${P.accent}12`, border: `1px solid ${P.accentB}`, padding: "1px 7px", borderRadius: 99 }}>Tú</span>}
+                    </p>
+                    <p style={{ fontSize: 10.5, color: P.txt3, marginTop: 1 }}>ID #{u.id}</p>
+                  </div>
+                </div>
+
+                {/* Email */}
+                <span style={{ fontSize: 12, color: active ? P.txt2 : P.txt3, fontFamily: font, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", paddingRight: 12 }}>{u.email}</span>
+
+                {/* Role */}
+                <RoleBadge role={u.role} />
+
+                {/* Status */}
+                <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
+                  <div style={{ width: 7, height: 7, borderRadius: "50%", background: active ? P.emerald : P.txt3, boxShadow: active ? `0 0 6px ${P.emerald}80` : "none" }} />
+                  <span style={{ fontSize: 11, color: active ? P.txt2 : P.txt3, fontWeight: active ? 600 : 400 }}>{active ? "Activo" : "Inactivo"}</span>
+                </div>
+
+                {/* Actions */}
+                <div style={{ display: "flex", gap: 5, justifyContent: "center" }}>
+                  {canEdit ? (
+                    <>
+                      <button onClick={() => openEdit(u)} title="Editar usuario" style={{ width: 28, height: 28, borderRadius: 8, border: `1px solid ${P.border}`, background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.15s" }}
+                        onMouseEnter={e => { e.currentTarget.style.background = "rgba(126,184,240,0.1)"; e.currentTarget.style.borderColor = "rgba(126,184,240,0.35)"; }}
+                        onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = P.border; }}
+                      ><User size={12} color={P.blue} /></button>
+                      <button onClick={() => handleToggleActive(u)} title={active ? "Desactivar" : "Activar"} style={{ width: 28, height: 28, borderRadius: 8, border: `1px solid ${P.border}`, background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.15s" }}
+                        onMouseEnter={e => { e.currentTarget.style.background = active ? "rgba(232,129,140,0.1)" : "rgba(110,231,194,0.1)"; e.currentTarget.style.borderColor = active ? "rgba(232,129,140,0.35)" : "rgba(110,231,194,0.35)"; }}
+                        onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = P.border; }}
+                      >{active ? <X size={12} color={P.rose} /> : <CheckCircle2 size={12} color={P.emerald} />}</button>
+                      {!isMe && (
+                        <button onClick={() => setDeleteConfirm(u.id)} title="Eliminar usuario" style={{ width: 28, height: 28, borderRadius: 8, border: `1px solid ${P.border}`, background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.15s" }}
+                          onMouseEnter={e => { e.currentTarget.style.background = "rgba(232,129,140,0.1)"; e.currentTarget.style.borderColor = "rgba(232,129,140,0.35)"; }}
+                          onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = P.border; }}
+                        ><Trash2 size={12} color={P.rose} /></button>
+                      )}
+                    </>
+                  ) : (
+                    <span style={{ fontSize: 10, color: P.txt3, fontStyle: "italic" }}>—</span>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </G>
+
+      {/* ── Delete confirmation ── */}
+      {deleteConfirm !== null && createPortal(
+        <>
+          <div onClick={() => setDeleteConfirm(null)} style={{ position: "fixed", inset: 0, background: "rgba(2,5,12,0.78)", backdropFilter: "blur(8px)", zIndex: 500 }} />
+          <div style={{ position: "fixed", top: "50%", left: "50%", transform: "translate(-50%,-50%)", zIndex: 501, width: "min(400px, 92vw)", background: "#07080F", border: `1px solid ${P.rose}30`, borderRadius: 20, boxShadow: "0 32px 64px rgba(0,0,0,0.7)", padding: "26px 28px", animation: "fadeIn 0.2s ease" }}>
+            <div style={{ width: 44, height: 44, borderRadius: 12, background: `${P.rose}12`, border: `1px solid ${P.rose}28`, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 16 }}>
+              <Trash2 size={20} color={P.rose} />
+            </div>
+            <p style={{ fontSize: 15, fontWeight: 700, color: "#FFFFFF", fontFamily: fontDisp, marginBottom: 8 }}>¿Eliminar usuario?</p>
+            <p style={{ fontSize: 12.5, color: P.txt3, lineHeight: 1.6, marginBottom: 22 }}>
+              Esta acción es permanente. El usuario perderá acceso inmediatamente y no podrá recuperarse.
+            </p>
+            <div style={{ display: "flex", gap: 10 }}>
+              <button onClick={() => setDeleteConfirm(null)} style={{ flex: 1, height: 40, borderRadius: 10, background: "transparent", border: `1px solid ${P.border}`, color: P.txt3, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: font }}>Cancelar</button>
+              <button onClick={() => handleDelete(deleteConfirm)} style={{ flex: 1, height: 40, borderRadius: 10, background: `${P.rose}14`, border: `1px solid ${P.rose}35`, color: P.rose, fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: fontDisp }}>Eliminar</button>
+            </div>
+          </div>
+        </>,
+        document.body
+      )}
+
+      {/* ── Create / Edit / Reset modal ── */}
+      {modal !== null && createPortal(
+        <>
+          <div onClick={() => setModal(null)} style={{ position: "fixed", inset: 0, background: "rgba(2,5,12,0.78)", backdropFilter: "blur(8px)", zIndex: 500 }} />
+          <div style={{ position: "fixed", top: "50%", left: "50%", transform: "translate(-50%,-50%)", zIndex: 501, width: "min(500px, 94vw)", background: "#07080F", border: `1px solid ${P.borderH}`, borderRadius: 22, boxShadow: "0 48px 96px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.04)", animation: "fadeIn 0.22s ease" }}>
+            <div style={{ height: 3, background: `linear-gradient(90deg, ${P.accent}, ${P.accent}40)`, borderRadius: "22px 22px 0 0" }} />
+            <div style={{ padding: "22px 26px 18px", borderBottom: `1px solid ${P.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div>
+                <p style={{ fontSize: 16, fontWeight: 700, color: "#FFFFFF", fontFamily: fontDisp, letterSpacing: "-0.02em", marginBottom: 3 }}>
+                  {modal.mode === "create" ? "Crear Nuevo Usuario" : modal.mode === "reset" ? "Restablecer Contraseña" : `Editar: ${modal.user?.name}`}
+                </p>
+                <p style={{ fontSize: 11, color: P.txt3 }}>
+                  {modal.mode === "create" ? "El usuario podrá iniciar sesión inmediatamente." : modal.mode === "reset" ? "Define una nueva contraseña temporal." : "Modifica los datos y el rol del usuario."}
+                </p>
+              </div>
+              <button onClick={() => setModal(null)} style={{ width: 32, height: 32, borderRadius: 9, border: `1px solid ${P.border}`, background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}
+                onMouseEnter={e => e.currentTarget.style.background = P.glass}
+                onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+              ><X size={14} color={P.txt3} /></button>
+            </div>
+
+            <div style={{ padding: "22px 26px", display: "flex", flexDirection: "column", gap: 15 }}>
+              {modal.mode !== "reset" && (
+                <>
+                  <div>
+                    <p style={{ fontSize: 10, fontWeight: 700, color: P.txt3, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 7 }}>Nombre completo <span style={{ color: P.accent }}>*</span></p>
+                    <input value={form.name || ""} onChange={e => sf("name")(e.target.value)} placeholder="Ej. María González" style={inputStyle}
+                      onFocus={e => e.target.style.borderColor = P.accentB}
+                      onBlur={e => e.target.style.borderColor = P.border}
+                    />
+                  </div>
+                  <div>
+                    <p style={{ fontSize: 10, fontWeight: 700, color: P.txt3, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 7 }}>Email <span style={{ color: P.accent }}>*</span></p>
+                    <input value={form.email || ""} onChange={e => sf("email")(e.target.value)} placeholder="maria@stratos.ai" type="email" style={inputStyle}
+                      onFocus={e => e.target.style.borderColor = P.accentB}
+                      onBlur={e => e.target.style.borderColor = P.border}
+                    />
+                  </div>
+                  <div>
+                    <p style={{ fontSize: 10, fontWeight: 700, color: P.txt3, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 7 }}>Rol</p>
+                    <select value={form.role || "asesor"} onChange={e => sf("role")(e.target.value)} style={{ ...inputStyle, cursor: "pointer" }}
+                      onFocus={e => e.target.style.borderColor = P.accentB}
+                      onBlur={e => e.target.style.borderColor = P.border}
+                    >
+                      {availableRoles.map(r => (
+                        <option key={r.key} value={r.key} style={{ background: "#0C1219" }}>{r.label} — Nivel {r.level}</option>
+                      ))}
+                    </select>
+                    <p style={{ fontSize: 10, color: P.txt3, marginTop: 5 }}>
+                      {ROLE_META[form.role]?.level === 1 && "Acceso total al sistema. Puede crear y eliminar cualquier usuario."}
+                      {ROLE_META[form.role]?.level === 2 && "Acceso administrativo. Gestiona directores y asesores."}
+                      {ROLE_META[form.role]?.level === 3 && "Acceso ejecutivo. Ve KPIs globales y métricas del equipo."}
+                      {ROLE_META[form.role]?.level === 4 && "Acceso de gestión. Supervisa su equipo de asesores."}
+                      {ROLE_META[form.role]?.level === 5 && "Acceso personal. Ve solo sus propios clientes y registros."}
+                    </p>
+                  </div>
+                </>
+              )}
+
+              {modal.mode === "create" && (
+                <div>
+                  <p style={{ fontSize: 10, fontWeight: 700, color: P.txt3, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 7 }}>Contraseña inicial <span style={{ color: P.accent }}>*</span></p>
+                  <input value={form.password || ""} onChange={e => sf("password")(e.target.value)} placeholder="Mínimo 6 caracteres" type="password" style={inputStyle}
+                    onFocus={e => e.target.style.borderColor = P.accentB}
+                    onBlur={e => e.target.style.borderColor = P.border}
+                  />
+                </div>
+              )}
+
+              {modal.mode === "reset" && (
+                <div>
+                  <p style={{ fontSize: 10, fontWeight: 700, color: P.txt3, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 7 }}>Nueva contraseña <span style={{ color: P.accent }}>*</span></p>
+                  <input value={form.password || ""} onChange={e => sf("password")(e.target.value)} placeholder="Nueva contraseña (mín. 6 caracteres)" type="password" style={inputStyle}
+                    onFocus={e => e.target.style.borderColor = P.accentB}
+                    onBlur={e => e.target.style.borderColor = P.border}
+                  />
+                  <p style={{ fontSize: 10.5, color: P.txt3, marginTop: 8 }}>Reseteando contraseña para: <span style={{ color: P.txt2 }}>{modal.user?.name}</span></p>
+                </div>
+              )}
+
+              {modal.mode === "edit" && (
+                <div>
+                  <p style={{ fontSize: 10, fontWeight: 700, color: P.txt3, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 9 }}>Estado de la cuenta</p>
+                  <div style={{ display: "flex", gap: 8 }}>
+                    {[{ v: true, label: "Activo", c: P.emerald }, { v: false, label: "Inactivo", c: P.rose }].map(o => (
+                      <button key={String(o.v)} onClick={() => sf("isActive")(o.v)} style={{ flex: 1, padding: "9px 0", borderRadius: 10, cursor: "pointer", fontSize: 12, fontWeight: 600, fontFamily: font, transition: "all 0.18s", background: form.isActive === o.v ? `${o.c}14` : "transparent", border: `1px solid ${form.isActive === o.v ? `${o.c}40` : P.border}`, color: form.isActive === o.v ? o.c : P.txt3 }}>{o.label}</button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {modal.mode === "edit" && (
+                <button onClick={() => openReset(modal.user)} style={{ padding: "9px 0", borderRadius: 10, background: "transparent", border: `1px solid ${P.amber}28`, color: P.amber, fontSize: 11.5, fontWeight: 600, fontFamily: font, cursor: "pointer", transition: "all 0.18s" }}
+                  onMouseEnter={e => e.currentTarget.style.background = `${P.amber}0C`}
+                  onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+                >Restablecer contraseña</button>
+              )}
+
+              {formErr && <p style={{ fontSize: 11.5, color: P.rose, background: `${P.rose}0C`, border: `1px solid ${P.rose}22`, padding: "10px 14px", borderRadius: 10 }}>{formErr}</p>}
+              {formOk  && <p style={{ fontSize: 11.5, color: P.emerald, background: `${P.emerald}0C`, border: `1px solid ${P.emerald}22`, padding: "10px 14px", borderRadius: 10 }}>{formOk}</p>}
+            </div>
+
+            <div style={{ padding: "16px 26px", borderTop: `1px solid ${P.border}`, display: "flex", gap: 10 }}>
+              <button onClick={() => setModal(null)} style={{ flex: 1, height: 42, borderRadius: 12, background: "transparent", border: `1px solid ${P.border}`, color: P.txt3, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: font, transition: "all 0.18s" }}>Cancelar</button>
+              <button
+                onClick={modal.mode === "create" ? handleCreate : modal.mode === "reset" ? handleReset : handleEdit}
+                style={{ flex: 2, height: 42, borderRadius: 12, background: `${P.accent}16`, border: `1px solid ${P.accentB}`, color: P.accent, fontSize: 13, fontWeight: 700, fontFamily: fontDisp, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 7, transition: "background 0.18s" }}
+                onMouseEnter={e => e.currentTarget.style.background = `${P.accent}24`}
+                onMouseLeave={e => e.currentTarget.style.background = `${P.accent}16`}
+              >
+                {modal.mode === "create" ? <><Plus size={14} /> Crear Usuario</> : modal.mode === "reset" ? <><CheckCircle2 size={14} /> Guardar Contraseña</> : <><CheckCircle2 size={14} /> Guardar Cambios</>}
+              </button>
+            </div>
+          </div>
+        </>,
+        document.body
+      )}
+    </div>
+  );
+}
+
+export default function App() {
+  const { user, login, logout } = useAuth();
   const [v, setV] = useState("d");
   const [co, setCo] = useState(false);
   const [msgs, setMsgs] = useState([]);
   const [inp, setInp] = useState("");
   const [notifs, setNotifs] = useState([]);
 
-  const handleLogin = (userData) => {
-    localStorage.setItem("stratos_user", JSON.stringify(userData));
-    setUser(userData);
-  };
-
   const onLogout = () => {
-    localStorage.removeItem("stratos_user");
-    setUser(null);
+    logout();
   };
 
   useEffect(() => {
@@ -6362,7 +7225,7 @@ export default function App() {
     }, 150);
   }, []);
 
-  if (!user) return <LoginScreen onLogin={handleLogin} />;
+  if (!user) return <LoginScreen onLogin={login} />;
 
   return (
     <div style={{
@@ -6402,18 +7265,24 @@ export default function App() {
           <StratosAtom size={22} color={P.accent} />
         </div>
 
-        {nav.map(n => {
+        {nav.filter(n => !n.adminOnly || ["super_admin","admin"].includes(user?.role)).map(n => {
           const a = v === n.id;
+          const isAdmin = n.adminOnly;
+          const activeColor = isAdmin ? "#A78BFA" : P.accent;
+          const activeBg = isAdmin ? "rgba(167,139,250,0.1)" : P.accentS;
           return (
-            <button key={n.id} onClick={() => setV(n.id)} title={n.l} style={{
-              width: 40, height: 40, borderRadius: 11, border: "none", cursor: "pointer",
-              background: a ? P.accentS : "transparent",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              marginBottom: 4, transition: "all 0.25s", position: "relative",
-            }}>
-              <n.i size={18} color={a ? P.accent : P.txt3} strokeWidth={a ? 2.2 : 1.8} />
-              {a && <div style={{ position: "absolute", left: -1, top: "50%", transform: "translateY(-50%)", width: 2, height: 14, borderRadius: 1, background: P.accent, boxShadow: `0 0 6px ${P.accent}60` }} />}
-            </button>
+            <div key={n.id}>
+              {n.sep && <div style={{ height: 1, background: P.border, margin: "6px 0 10px" }} />}
+              <button onClick={() => setV(n.id)} title={n.l} style={{
+                width: 40, height: 40, borderRadius: 11, border: "none", cursor: "pointer",
+                background: a ? activeBg : "transparent",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                marginBottom: 4, transition: "all 0.25s", position: "relative",
+              }}>
+                <n.i size={18} color={a ? activeColor : P.txt3} strokeWidth={a ? 2.2 : 1.8} />
+                {a && <div style={{ position: "absolute", left: -1, top: "50%", transform: "translateY(-50%)", width: 2, height: 14, borderRadius: 1, background: activeColor, boxShadow: `0 0 6px ${activeColor}60` }} />}
+              </button>
+            </div>
           );
         })}
 
@@ -6429,8 +7298,13 @@ export default function App() {
         }}>
           <Atom size={17} color={co ? P.accent : P.txt3} />
         </button>
-        <button title="Config" style={{ width: 40, height: 40, borderRadius: 11, border: "none", background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <Settings size={16} color={P.txt3} />
+        <button title={["super_admin","admin"].includes(user?.role) ? "Gestión de Usuarios" : "Configuración"}
+          onClick={() => ["super_admin","admin"].includes(user?.role) ? setV("admin") : null}
+          style={{ width: 40, height: 40, borderRadius: 11, border: `1px solid ${v === "admin" ? "rgba(167,139,250,0.3)" : "transparent"}`, background: v === "admin" ? "rgba(167,139,250,0.1)" : "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.2s" }}
+          onMouseEnter={e => { if (["super_admin","admin"].includes(user?.role)) { e.currentTarget.style.background = P.glass; e.currentTarget.style.borderColor = P.border; } }}
+          onMouseLeave={e => { e.currentTarget.style.background = v === "admin" ? "rgba(167,139,250,0.1)" : "transparent"; e.currentTarget.style.borderColor = v === "admin" ? "rgba(167,139,250,0.3)" : "transparent"; }}
+        >
+          <Settings size={16} color={["super_admin","admin"].includes(user?.role) ? (v === "admin" ? "#A78BFA" : P.txt2) : P.txt3} />
         </button>
         <button title="Volver al inicio" onClick={() => window.location.href = "/"} style={{ width: 40, height: 40, borderRadius: 11, border: `1px solid ${P.border}`, background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 6, transition: "all 0.2s" }}
           onMouseEnter={e => { e.currentTarget.style.background = P.glass; e.currentTarget.style.borderColor = P.borderH; }}
@@ -6529,6 +7403,8 @@ export default function App() {
             {v === "lp" && <LandingPages />}
             {v === "fa" && <FinanzasAdmin />}
             {v === "rrhh" && <RRHHModule />}
+            {v === "planes" && <PricingScreen embedded onBack={() => setV("d")} />}
+            {v === "admin" && ["super_admin","admin"].includes(user?.role) && <AdminPanel />}
           </div>
           <Chat open={co} onClose={() => setCo(false)} msgs={msgs} setMsgs={setMsgs} inp={inp} setInp={setInp} />
         </div>
@@ -6805,7 +7681,7 @@ const CandidatePortal = () => {
                   <button onClick={handleNextPreg}
                     disabled={!respuestas[pregActual?.id] && !(multiSel[pregActual?.id]?.length > 0)}
                     style={{ flex: 1, padding: "14px 24px", borderRadius: 11, border: "none", fontSize: 14, fontWeight: 700, cursor: (respuestas[pregActual?.id] || multiSel[pregActual?.id]?.length > 0) ? "pointer" : "default", fontFamily: pf, background: (respuestas[pregActual?.id] || multiSel[pregActual?.id]?.length > 0) ? "#FFF" : "rgba(255,255,255,0.07)", color: (respuestas[pregActual?.id] || multiSel[pregActual?.id]?.length > 0) ? "#080D14" : "rgba(255,255,255,0.2)", transition: "all 0.2s" }}>
-                    {pregIdx === totalPregs - 1 ? "✓ Enviar aplicación" : "Siguiente →"}
+                    {pregIdx === totalPregs - 1 ? "Enviar aplicación →" : "Siguiente →"}
                   </button>
                 </div>
 

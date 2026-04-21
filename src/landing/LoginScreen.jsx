@@ -91,37 +91,24 @@ export default function LoginScreen({ onLogin }) {
   );
 
   /* ─── ACCIONES ─── */
-  const doLogin = () => {
+  const doLogin = async () => {
     setError("");
     if (!email.trim() || !password) { setError("Completa todos los campos."); return; }
     setLoad(true);
-    setTimeout(() => {
-      const users = JSON.parse(localStorage.getItem("stratos_users") || "[]");
-      const u = users.find(x => x.email.toLowerCase() === email.trim().toLowerCase() && x.password === password);
-      if (!u) { setError("Correo o contraseña incorrectos."); setLoad(false); return; }
-      localStorage.setItem("stratos_user", JSON.stringify({ id: u.id, name: u.name, email: u.email }));
-      onLogin({ id: u.id, name: u.name, email: u.email });
-    }, 650);
+    const result = await onLogin(email.trim().toLowerCase(), password);
+    if (result?.error) { setError(result.error); setLoad(false); }
+    // Si no hay error, App.jsx desmonta LoginScreen automáticamente
   };
 
-  const doRegister = () => {
+  const doRegister = async () => {
     setError("");
     if (!name.trim() || !email.trim() || !password || !confirm) { setError("Completa todos los campos."); return; }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { setError("Correo electrónico inválido."); return; }
     if (password.length < 6) { setError("Mínimo 6 caracteres en la contraseña."); return; }
     if (password !== confirm) { setError("Las contraseñas no coinciden."); return; }
     setLoad(true);
-    setTimeout(() => {
-      const users = JSON.parse(localStorage.getItem("stratos_users") || "[]");
-      if (users.find(x => x.email.toLowerCase() === email.trim().toLowerCase())) {
-        setError("Este correo ya está registrado."); setLoad(false); return;
-      }
-      const nu = { id: Date.now(), name: name.trim(), email: email.trim().toLowerCase(), password };
-      users.push(nu);
-      localStorage.setItem("stratos_users", JSON.stringify(users));
-      localStorage.setItem("stratos_user", JSON.stringify({ id: nu.id, name: nu.name, email: nu.email }));
-      onLogin({ id: nu.id, name: nu.name, email: nu.email });
-    }, 750);
+    const result = await onLogin(email.trim().toLowerCase(), password, { name: name.trim(), isRegister: true });
+    if (result?.error) { setError(result.error); setLoad(false); }
   };
 
   const doForgot = () => {
@@ -132,13 +119,10 @@ export default function LoginScreen({ onLogin }) {
     setTimeout(() => { setLoad(false); setMode("forgot-sent"); }, 900);
   };
 
-  const doDemo = () => {
+  const doDemo = async () => {
     setLoad(true);
-    setTimeout(() => {
-      const u = { id: 1, name: "Usuario Demo", email: "demo@stratos.ai", isDemo: true };
-      localStorage.setItem("stratos_user", JSON.stringify(u));
-      onLogin(u);
-    }, 420);
+    const result = await onLogin("demo@stratos.ai", "Demo2024");
+    if (result?.error) { setError(result.error); setLoad(false); }
   };
 
   const onKey = (e) => {
@@ -229,7 +213,7 @@ export default function LoginScreen({ onLogin }) {
               <p style={{ fontSize: 13, color: "#FFFFFF", fontWeight: 600, marginBottom: 24 }}>{email}</p>
               <div style={{ padding: "10px 14px", borderRadius: 9, background: P.accentS, border: `1px solid ${P.accentB}`, marginBottom: 20, textAlign: "left" }}>
                 <p style={{ fontSize: 11, color: "rgba(110,231,194,0.8)", lineHeight: 1.6 }}>
-                  💡 Para activar el envío real de emails conecta Supabase Auth — el plan completo está en <code style={{ fontSize: 10 }}>CLAUDE.md</code>.
+                  Para activar el envío real de emails conecta Supabase Auth. El plan completo está en <code style={{ fontSize: 10 }}>CLAUDE.md</code>.
                 </p>
               </div>
               <button onClick={() => go("login")} style={{
@@ -262,6 +246,39 @@ export default function LoginScreen({ onLogin }) {
                     }}>{lbl}</button>
                   ))}
                 </div>
+              )}
+
+              {/* ─ Google Sign-In ─ */}
+              {(mode === "login" || mode === "register") && (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => alert("Conecta Supabase Auth con Google OAuth para habilitar este acceso.")}
+                    style={{
+                      width: "100%", padding: "12px 0", borderRadius: 10, marginBottom: 14,
+                      border: `1px solid ${P.border}`, background: "rgba(255,255,255,0.04)",
+                      color: "#FFFFFF", fontSize: 13, fontWeight: 500, fontFamily: font,
+                      cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
+                      transition: "all 0.2s",
+                    }}
+                    onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.07)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.14)"; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.04)"; e.currentTarget.style.borderColor = P.border; }}
+                  >
+                    {/* Google icon SVG */}
+                    <svg width="16" height="16" viewBox="0 0 48 48" fill="none">
+                      <path d="M43.611 20.083H42V20H24v8h11.303c-1.649 4.657-6.08 8-11.303 8-6.627 0-12-5.373-12-12s5.373-12 12-12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 12.955 4 4 12.955 4 24s8.955 20 20 20 20-8.955 20-20c0-1.341-.138-2.65-.389-3.917z" fill="#FFC107"/>
+                      <path d="M6.306 14.691l6.571 4.819C14.655 15.108 19.001 12 24 12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 16.318 4 9.656 8.337 6.306 14.691z" fill="#FF3D00"/>
+                      <path d="M24 44c5.166 0 9.86-1.977 13.409-5.192l-6.19-5.238A11.91 11.91 0 0124 36c-5.202 0-9.619-3.317-11.283-7.946l-6.522 5.025C9.505 39.556 16.227 44 24 44z" fill="#4CAF50"/>
+                      <path d="M43.611 20.083H42V20H24v8h11.303a12.04 12.04 0 01-4.087 5.571l.003-.002 6.19 5.238C36.971 39.205 44 34 44 24c0-1.341-.138-2.65-.389-3.917z" fill="#1976D2"/>
+                    </svg>
+                    Continuar con Google
+                  </button>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
+                    <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.06)" }} />
+                    <span style={{ fontSize: 10, color: P.txt3, letterSpacing: "0.04em" }}>o con correo</span>
+                    <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.06)" }} />
+                  </div>
+                </>
               )}
 
               {/* ─ Campos ─ */}
@@ -404,12 +421,20 @@ export default function LoginScreen({ onLogin }) {
                   }}
                     onMouseEnter={e => !loading && (e.currentTarget.style.background = "rgba(255,255,255,0.06)")}
                     onMouseLeave={e => (e.currentTarget.style.background = "rgba(255,255,255,0.03)")}
-                  >⚡ Entrar como Demo — acceso completo sin registro</button>
+                  >Entrar como Demo — acceso completo sin registro</button>
                 </>
               )}
 
+              {/* ─ Planes link ─ */}
+              {mode === "login" && (
+                <p style={{ fontSize: 11, color: P.txt3, textAlign: "center", marginTop: 14 }}>
+                  ¿Aún no tienes cuenta?{" "}
+                  <span onClick={() => alert("Visita la página de precios para conocer los planes disponibles.")} style={{ color: P.accent, cursor: "pointer", fontWeight: 600 }}>Ver planes →</span>
+                </p>
+              )}
+
               {/* ─ Legal ─ */}
-              <p style={{ fontSize: 10, color: P.txt3, textAlign: "center", marginTop: 18, lineHeight: 1.65 }}>
+              <p style={{ fontSize: 10, color: P.txt3, textAlign: "center", marginTop: 14, lineHeight: 1.65 }}>
                 Al continuar aceptas los <span style={{ color: "rgba(110,231,194,0.6)", cursor: "pointer" }}>Términos de Servicio</span>{" "}
                 y la <span style={{ color: "rgba(110,231,194,0.6)", cursor: "pointer" }}>Política de Privacidad</span>.
               </p>

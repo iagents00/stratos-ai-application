@@ -23,14 +23,41 @@ Es el punto de entrada oficial para cualquier dev que trabaje aquí.
 
 ```
 src/
-├── main.jsx              ← Raíz de la app. Controla auth state central.
-├── App.jsx               ← Plataforma completa (Dashboard, CRM, ERP, etc.)
-├── LandingMarketing.jsx  ← Landing pública con auth modal integrado
-├── App.css               ← Estilos globales mínimos
-└── index.css             ← Reset base
+├── main.jsx                     ← Entry point: AuthProvider + routing por hostname
+├── index.css                    ← Reset global
+│
+├── design-system/               ← FUENTE ÚNICA DE VERDAD para diseño
+│   ├── tokens.js                ← Colores (P, PL), tipografías, spacing, STAGES
+│   └── primitives.jsx           ← Componentes atómicos: GlassCard, Pill, IconBox, KPICard
+│
+├── contexts/
+│   └── AuthContext.jsx          ← Estado global de auth (user, login, logout, etc.)
+│
+├── hooks/
+│   └── useAuth.js               ← Hook: const { user, login, logout } = useAuth()
+│
+├── lib/
+│   ├── supabase.js              ← Cliente Supabase (listo para activar)
+│   └── auth.js                  ← Capa auth: signIn/signUp/signOut (localStorage→Supabase)
+│
+├── data/
+│   ├── leads.js                 ← Datos mock CRM
+│   └── constants.js             ← Re-exporta desde design-system/tokens
+│
+├── assets/
+│   └── hero.png
+│
+├── landing/                     ← Sitio público (stratoscapitalgroup.com)
+│   ├── LandingMarketing.jsx     ← Página principal de marketing
+│   ├── PricingScreen.jsx        ← Planes y precios
+│   └── LoginScreen.jsx          ← Login / Registro / Forgot password
+│
+└── app/                         ← Plataforma autenticada (app.stratoscapitalgroup.com)
+    ├── App.jsx                  ← Shell: sidebar + nav + todas las vistas
+    └── App.css                  ← Animaciones y estilos de la plataforma
 
 CLAUDE.md                 ← Este archivo (léelo primero)
-DESIGN_SYSTEM.md          ← Colores, tipografías, espaciado
+DESIGN_SYSTEM.md          ← Referencia visual completa
 DEVELOPMENT.md            ← Patrones de código y convenciones
 QUICK_REFERENCE.md        ← Componentes copy-paste
 CHANGELOG.md              ← Historial de versiones
@@ -59,26 +86,37 @@ npm run preview
 
 ## Flujo de Autenticación (Estado Actual)
 
-El auth vive en `main.jsx` como estado React central:
+El auth vive en `AuthContext` como estado React global:
 
 ```
 main.jsx
-  ├── user = null  → muestra <LandingMarketing onLogin={handleLogin} />
-  └── user = {...} → muestra <App onLogout={handleLogout} user={user} />
+  └── <AuthProvider>          ← Provee user, login, logout a TODA la app
+       ├── isApp = true  → <App />              (plataforma)
+       └── isApp = false → <LandingMarketing />  (marketing)
+
+App.jsx (app/App.jsx)
+  └── const { user, login, logout } = useAuth()
+       ├── !user → <LoginScreen onLogin={login} />
+       └── user  → render de la plataforma completa
 ```
 
 ### Cómo funciona el login/registro ahora
 
-Todos los usuarios se guardan en `localStorage["stratos_users"]` como array JSON:
+**Capa de datos:** `src/lib/auth.js`
+- `signIn(email, password)` → verifica en localStorage
+- `signUp(name, email, password)` → crea usuario en localStorage
+- `signOut()` → borra sesión
+- Todas retornan `{ data, error }` — igual que Supabase Auth
 
-```json
-[
-  { "id": 1, "name": "Usuario Demo", "email": "demo@stratos.ai", "password": "Demo2024" },
-  { "id": 1700000000, "name": "Juan Pérez", "email": "juan@empresa.com", "password": "MiPass123" }
-]
+**Almacenamiento:**
+- `localStorage["stratos_users"]` → array de todos los usuarios registrados
+- `localStorage["stratos_user"]`  → usuario activo de la sesión
+
+**Para consumir auth en cualquier componente:**
+```js
+import { useAuth } from "../hooks/useAuth";
+const { user, login, logout, loading, error } = useAuth();
 ```
-
-La sesión activa se guarda en `localStorage["stratos_user"]` (sin 's').
 
 ### Cuenta demo pre-sembrada
 
@@ -87,7 +125,7 @@ Email:      demo@stratos.ai
 Password:   Demo2024
 ```
 
-Esta cuenta se crea automáticamente en el primer render si no existe.
+Se crea automáticamente en `AuthContext` al iniciar la app si no existe.
 
 ---
 
