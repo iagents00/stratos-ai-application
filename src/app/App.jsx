@@ -716,28 +716,33 @@ const responses = {
   }
 };
 
-const getResp = (t) => {
+const getResp = (t, leadData) => {
   const l = t.toLowerCase();
 
-  // — CRM direct brief (when user clicks a client row in the CRM) —
-  if (l.startsWith("__crm__")) {
-    const lead = leads.find(le => l.includes(le.n.toLowerCase()) || l.includes(le.n.split(" ")[0].toLowerCase()));
+  // — CRM direct brief — usa datos en vivo si se pasan, o busca en el array estático —
+  if (l.startsWith("__crm__") || leadData) {
+    const lead = leadData || leads.find(le => l.includes(le.n.toLowerCase()) || l.includes(le.n.split(" ")[0].toLowerCase()));
     if (lead) {
       const frictionColor = lead.friction === "Bajo" ? P.emerald : lead.friction === "Medio" ? P.amber : P.rose;
       const stageColor = stgC[lead.st] || P.txt3;
       const scoreColor = lead.sc >= 80 ? P.emerald : lead.sc >= 60 ? P.blue : lead.sc >= 40 ? P.amber : P.rose;
+      const hasPhone = lead.phone && lead.phone !== "";
+      const hasNotes = lead.notas && lead.notas.trim() !== "";
       return {
         content: `Expediente CRM — **${lead.n}** · Score ${lead.sc}/100`,
         metrics: [
-          { label: `Estatus · ${lead.st}`, val: `Ingresó ${lead.fechaIngreso} · Campaña: ${lead.campana} · Asesor: ${lead.asesor}`, i: CalendarDays, c: stageColor },
-          { label: "Perfil del cliente", val: lead.bio, i: User, c: P.blue },
-          { label: `Presupuesto · ${lead.budget}`, val: `Proyecto de interés: ${lead.p} · Tel: ${lead.phone}`, i: DollarSign, c: scoreColor },
-          { label: "Riesgo + Fricción", val: `${lead.risk} · Fricción: ${lead.friction}`, i: Shield, c: frictionColor },
-          { label: `Próxima Acción · ${lead.nextActionDate}`, val: lead.nextAction, i: Zap, c: P.accent },
+          { label: `Etapa actual · ${lead.st}`, val: `Ingresó: ${lead.fechaIngreso || "Reciente"} · Campaña: ${lead.campana || "—"} · Asesor: ${lead.asesor || "—"}`, i: CalendarDays, c: stageColor },
+          { label: "Perfil del cliente", val: lead.bio || lead.tag || "Sin perfil registrado aún.", i: User, c: P.blue },
+          { label: `Presupuesto · ${lead.budget || "Por definir"}`, val: `Proyecto: ${lead.p || "Sin proyecto asignado"} · Tel: ${hasPhone ? lead.phone : "No registrado"}`, i: DollarSign, c: scoreColor },
+          ...(lead.risk ? [{ label: `Riesgo + Fricción · ${lead.friction || "—"}`, val: lead.risk, i: Shield, c: frictionColor }] : []),
+          { label: `Próxima acción · ${lead.nextActionDate || "Sin fecha"}`, val: lead.nextAction || "Sin próxima acción registrada.", i: Zap, c: P.accent },
+          ...(hasNotes ? [{ label: "Notas del expediente", val: lead.notas.replace(/[📍🎯💰👤📋⚠️✅]/g, "").substring(0, 180) + (lead.notas.length > 180 ? "…" : ""), i: FileText, c: P.txt2 }] : []),
         ],
-        follow: `Última actividad: ${lead.lastActivity}. ¿Quieres que prepare la estrategia de cierre completa para **${lead.n}**?`,
-        btn: "Preparar Estrategia",
-        action: `Dame la estrategia de cierre completa para ${lead.n} con presupuesto de ${lead.budget} en ${lead.p}`,
+        follow: lead.lastActivity
+          ? `Última actividad: ${lead.lastActivity}. ¿Preparo la estrategia de cierre completa para **${lead.n}**?`
+          : `Cliente recién registrado. ¿Preparo el plan de primer contacto para **${lead.n}**?`,
+        btn: lead.lastActivity ? "Preparar Estrategia" : "Plan de Primer Contacto",
+        action: `Dame la estrategia de cierre completa para ${lead.n} con presupuesto de ${lead.budget || "a definir"} en ${lead.p || "proyecto por asignar"}`,
       };
     }
   }
@@ -1262,7 +1267,7 @@ const LeadPanel = ({ lead, onClose, oc, onOpenNotes, onUpdate }) => {
               <button onClick={saveEditing} disabled={!form?.n?.trim()} style={{ flex: 2, padding: "11px 0", borderRadius: 11, background: form?.n?.trim()?`${P.accent}18`:"transparent", border: `1px solid ${form?.n?.trim()?P.accentB:P.border}`, color: form?.n?.trim()?P.accent:P.txt3, fontSize: 13, fontWeight: 700, cursor: form?.n?.trim()?"pointer":"not-allowed", display: "flex", alignItems: "center", justifyContent: "center", gap: 7, transition: "all 0.18s" }}>Guardar cambios</button>
             </div>
           ) : (
-            <button onClick={()=>{oc(`__crm__ ${lead.n.toLowerCase()}`);onClose();}} style={{ width: "100%", padding: "11px 0", borderRadius: 11, background: `${P.accent}14`, border: `1px solid ${P.accentB}`, color: P.accent, fontSize: 13, fontWeight: 700, fontFamily: fontDisp, cursor: "pointer", transition: "background 0.18s" }} onMouseEnter={e=>e.currentTarget.style.background=`${P.accent}22`} onMouseLeave={e=>e.currentTarget.style.background=`${P.accent}14`}>Analizar con IA</button>
+            <button onClick={()=>{oc(`__crm__ ${lead.n.toLowerCase()}`, lead);onClose();}} style={{ width: "100%", padding: "11px 0", borderRadius: 11, background: `${P.accent}14`, border: `1px solid ${P.accentB}`, color: P.accent, fontSize: 13, fontWeight: 700, fontFamily: fontDisp, cursor: "pointer", transition: "background 0.18s" }} onMouseEnter={e=>e.currentTarget.style.background=`${P.accent}22`} onMouseLeave={e=>e.currentTarget.style.background=`${P.accent}14`}>Analizar con IA</button>
           )}
         </div>
       </div>
@@ -1277,12 +1282,11 @@ const LeadPanel = ({ lead, onClose, oc, onOpenNotes, onUpdate }) => {
 function CRM({ oc, co }) {
   const { user } = useAuth();
 
-  // Role-based access: asesor only sees their own leads
-  const isAsesor = user?.role === "asesor";
-  const isDirectorOrAbove = ["director", "ceo", "admin", "super_admin"].includes(user?.role);
+  // Solo director, admin y super_admin ven todos los leads
+  const canSeeAll = ["super_admin", "admin", "director"].includes(user?.role);
 
   const [leadsData, setLeadsData]       = useState(() =>
-    isAsesor ? leads.filter(l => l.asesor === user?.name) : leads
+    canSeeAll ? leads : leads.filter(l => l.asesor === user?.name)
   );
   const [sortField, setSortField]       = useState("sc");
   const [sortDir, setSortDir]           = useState("desc");
@@ -1293,13 +1297,13 @@ function CRM({ oc, co }) {
   const [selectedLead, setSelectedLead] = useState(null);
   const [notesLead, setNotesLead]       = useState(null);
   const [addingLead, setAddingLead]     = useState(false);
-  const [newLead, setNewLead]           = useState({ n: "", asesor: user?.name || "", phone: "", budget: "", p: "", campana: "" });
+  const [newLead, setNewLead]           = useState({ n: "", asesor: canSeeAll ? "" : (user?.name || ""), phone: "", budget: "", p: "", campana: "" });
   const [hoveredRow, setHoveredRow]     = useState(null);
   const [dragLeadId, setDragLeadId]     = useState(null);
   const [dragOverStage, setDragOverStage] = useState(null);
 
-  // visibleLeads = all leads accessible to this user (before UI filters)
-  const visibleLeads = isAsesor ? leadsData.filter(l => l.asesor === user?.name) : leadsData;
+  // visibleLeads = leads accesibles según el rol del usuario
+  const visibleLeads = canSeeAll ? leadsData : leadsData.filter(l => l.asesor === user?.name);
 
   const updateLead = (updated) => {
     setLeadsData(prev => prev.map(l => l.id === updated.id ? updated : l));
@@ -1395,7 +1399,7 @@ function CRM({ oc, co }) {
             <div style={{ width: 8, height: 8, borderRadius: "50%", background: P.accent, boxShadow: `0 0 10px ${P.accent}80` }} />
             <h2 style={{ fontSize: 20, fontWeight: 700, color: "#FFFFFF", fontFamily: fontDisp, letterSpacing: "-0.025em", margin: 0 }}>Pipeline CRM</h2>
             <span style={{ fontSize: 10, fontWeight: 700, color: P.txt3, background: P.glass, border: `1px solid ${P.border}`, padding: "3px 9px", borderRadius: 99, letterSpacing: "0.06em" }}>{visibleLeads.length} clientes</span>
-            {isAsesor && <span style={{ fontSize: 10, fontWeight: 700, color: P.amber, background: `${P.amber}10`, border: `1px solid ${P.amber}28`, padding: "3px 9px", borderRadius: 99, letterSpacing: "0.04em" }}>Vista personal</span>}
+            {!canSeeAll && <span style={{ fontSize: 10, fontWeight: 700, color: P.amber, background: `${P.amber}10`, border: `1px solid ${P.amber}28`, padding: "3px 9px", borderRadius: 99, letterSpacing: "0.04em" }}>Vista personal</span>}
           </div>
           <p style={{ fontSize: 11.5, color: P.txt3, fontFamily: font, margin: 0 }}>
             <span style={{ color: P.txt2 }}>${(totalPipeline/1000000).toFixed(1)}M</span> en pipeline · <span style={{ color: P.emerald }}>{hotLeads} activos</span> · Score promedio <span style={{ color: P.blue }}>{avgScore}</span>
@@ -1511,25 +1515,51 @@ function CRM({ oc, co }) {
                       </select>
                     </div>
 
-                    {/* Botones — claros y accionables */}
-                    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                      <button onClick={() => oc(`__crm__ ${l.n.toLowerCase()}`)}
-                        style={{ width: "100%", padding: "10px 14px", borderRadius: 10, background: `${P.accent}14`, border: `1px solid ${P.accentB}`, color: P.accent, fontSize: 12, fontWeight: 700, fontFamily: fontDisp, cursor: "pointer", transition: "background 0.18s", letterSpacing: "0.01em" }}
-                        onMouseEnter={e => e.currentTarget.style.background = `${P.accent}22`}
-                        onMouseLeave={e => e.currentTarget.style.background = `${P.accent}14`}
-                      >Analizar con IA</button>
+                    {/* Botones — pro, jerarquía visual clara */}
+                    <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
 
+                      {/* CTA principal — acento sólido */}
+                      <button onClick={() => oc(`__crm__ ${l.n.toLowerCase()}`, l)} style={{
+                        width: "100%", padding: "10px 14px", borderRadius: 10,
+                        background: `linear-gradient(135deg, ${P.accent}20, ${P.accent}0C)`,
+                        border: `1px solid ${P.accent}35`,
+                        color: P.accent, fontSize: 12, fontWeight: 700,
+                        fontFamily: fontDisp, cursor: "pointer",
+                        letterSpacing: "0.01em", transition: "all 0.18s",
+                        display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+                      }}
+                        onMouseEnter={e => { e.currentTarget.style.background = `linear-gradient(135deg, ${P.accent}30, ${P.accent}18)`; e.currentTarget.style.borderColor = `${P.accent}55`; e.currentTarget.style.boxShadow = `0 4px 16px ${P.accent}14`; }}
+                        onMouseLeave={e => { e.currentTarget.style.background = `linear-gradient(135deg, ${P.accent}20, ${P.accent}0C)`; e.currentTarget.style.borderColor = `${P.accent}35`; e.currentTarget.style.boxShadow = "none"; }}
+                      >
+                        <Zap size={11} strokeWidth={2.5} />
+                        Analizar con IA
+                      </button>
+
+                      {/* Secundarios — mismo tono, misma familia, sin colores distintos */}
                       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
-                        <button onClick={() => setSelectedLead(l)}
-                          style={{ padding: "9px 0", borderRadius: 9, background: "rgba(126,184,240,0.08)", border: `1px solid rgba(126,184,240,0.22)`, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, color: P.blue, fontSize: 11.5, fontWeight: 600, fontFamily: font, cursor: "pointer", transition: "all 0.16s" }}
-                          onMouseEnter={e => { e.currentTarget.style.background = "rgba(126,184,240,0.15)"; e.currentTarget.style.borderColor = "rgba(126,184,240,0.4)"; }}
-                          onMouseLeave={e => { e.currentTarget.style.background = "rgba(126,184,240,0.08)"; e.currentTarget.style.borderColor = "rgba(126,184,240,0.22)"; }}
-                        ><User size={12} /> Perfil</button>
-                        <button onClick={() => setNotesLead(l)}
-                          style={{ padding: "9px 0", borderRadius: 9, background: "rgba(167,139,250,0.08)", border: `1px solid rgba(167,139,250,0.22)`, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, color: P.violet, fontSize: 11.5, fontWeight: 600, fontFamily: font, cursor: "pointer", transition: "all 0.16s" }}
-                          onMouseEnter={e => { e.currentTarget.style.background = "rgba(167,139,250,0.15)"; e.currentTarget.style.borderColor = "rgba(167,139,250,0.4)"; }}
-                          onMouseLeave={e => { e.currentTarget.style.background = "rgba(167,139,250,0.08)"; e.currentTarget.style.borderColor = "rgba(167,139,250,0.22)"; }}
-                        ><FileText size={12} /> Notas</button>
+                        <button onClick={() => setSelectedLead(l)} style={{
+                          padding: "9px 0", borderRadius: 9,
+                          background: "rgba(255,255,255,0.045)",
+                          border: "1px solid rgba(255,255,255,0.10)",
+                          display: "flex", alignItems: "center", justifyContent: "center", gap: 5,
+                          color: "#C8D4E3", fontSize: 11.5, fontWeight: 600,
+                          fontFamily: font, cursor: "pointer", transition: "all 0.15s",
+                        }}
+                          onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.09)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.18)"; e.currentTarget.style.color = "#FFFFFF"; }}
+                          onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.045)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.10)"; e.currentTarget.style.color = "#C8D4E3"; }}
+                        ><User size={11} strokeWidth={2} /> Perfil</button>
+
+                        <button onClick={() => setNotesLead(l)} style={{
+                          padding: "9px 0", borderRadius: 9,
+                          background: "rgba(255,255,255,0.045)",
+                          border: "1px solid rgba(255,255,255,0.10)",
+                          display: "flex", alignItems: "center", justifyContent: "center", gap: 5,
+                          color: "#C8D4E3", fontSize: 11.5, fontWeight: 600,
+                          fontFamily: font, cursor: "pointer", transition: "all 0.15s",
+                        }}
+                          onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.09)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.18)"; e.currentTarget.style.color = "#FFFFFF"; }}
+                          onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.045)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.10)"; e.currentTarget.style.color = "#C8D4E3"; }}
+                        ><FileText size={11} strokeWidth={2} /> Notas</button>
                       </div>
                     </div>
 
@@ -1562,7 +1592,7 @@ function CRM({ oc, co }) {
               {[
                 { label: "Nombre completo", key: "n", ph: "Ej. Rafael García", full: true, required: true },
                 { label: "Teléfono", key: "phone", ph: "+1 817 682 3272" },
-                { label: "Asesor asignado", key: "asesor", ph: "Estefanía Valdes" },
+                ...(canSeeAll ? [{ label: "Asesor asignado", key: "asesor", ph: "Estefanía Valdes" }] : []),
                 { label: "Presupuesto", key: "budget", ph: "$200K USD" },
                 { label: "Fuente / Campaña", key: "campana", ph: "Cancún, Google Ads, Referido…" },
               ].map(f => (
@@ -1658,7 +1688,7 @@ function CRM({ oc, co }) {
           </select>
 
           {/* Asesor filter — solo visible para directivos y admin */}
-          {!isAsesor && (
+          {canSeeAll && (
             <select value={filterAsesor} onChange={e => setFilterAsesor(e.target.value)} style={{ height: 32, padding: "0 12px", borderRadius: 9, background: filterAsesor !== "TODO" ? `${P.violet}14` : P.glass, border: `1px solid ${filterAsesor !== "TODO" ? `${P.violet}45` : P.border}`, fontSize: 11, color: filterAsesor !== "TODO" ? P.violet : P.txt3, cursor: "pointer", outline: "none", fontFamily: font, fontWeight: filterAsesor !== "TODO" ? 700 : 400 }}>
               <option value="TODO">Todos los asesores</option>
               {asesores.map(a => <option key={a} value={a} style={{ background: "#0C1219", color: P.txt }}>{a.split(" ")[0]} {a.split(" ")[1] || ""}</option>)}
@@ -1779,7 +1809,7 @@ function CRM({ oc, co }) {
 
                   {/* Acciones — siempre visibles */}
                   <div style={{ display: "flex", gap: 4, justifyContent: "center" }}>
-                    <button onClick={() => oc(`__crm__ ${l.n.toLowerCase()}`)} title="Analizar con IA"
+                    <button onClick={() => oc(`__crm__ ${l.n.toLowerCase()}`, l)} title="Analizar con IA"
                       style={{ padding: "6px 10px", borderRadius: 8, border: `1px solid ${P.accentB}`, background: `${P.accent}10`, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 4, color: P.accent, fontSize: 10.5, fontWeight: 600, fontFamily: font, transition: "background 0.15s", whiteSpace: "nowrap" }}
                       onMouseEnter={e => e.currentTarget.style.background = `${P.accent}1E`}
                       onMouseLeave={e => e.currentTarget.style.background = `${P.accent}10`}
@@ -1875,7 +1905,7 @@ function CRM({ oc, co }) {
                               </select>
                             </div>
                             <div style={{ display: "flex", gap: 5 }}>
-                              <button onClick={() => oc(`__crm__ ${l.n.toLowerCase()}`)} style={{ flex: 1, padding: "6px 0", borderRadius: 7, background: `${P.accent}10`, border: `1px solid ${P.accentB}`, color: P.accent, fontSize: 9.5, fontWeight: 600, cursor: "pointer", fontFamily: font, transition: "background 0.15s" }} onMouseEnter={e => e.currentTarget.style.background = `${P.accent}1E`} onMouseLeave={e => e.currentTarget.style.background = `${P.accent}10`}>Analizar</button>
+                              <button onClick={() => oc(`__crm__ ${l.n.toLowerCase()}`, l)} style={{ flex: 1, padding: "6px 0", borderRadius: 7, background: `${P.accent}10`, border: `1px solid ${P.accentB}`, color: P.accent, fontSize: 9.5, fontWeight: 600, cursor: "pointer", fontFamily: font, transition: "background 0.15s" }} onMouseEnter={e => e.currentTarget.style.background = `${P.accent}1E`} onMouseLeave={e => e.currentTarget.style.background = `${P.accent}10`}>Analizar</button>
                               <button onClick={() => setSelectedLead(l)} style={{ width: 28, padding: "5px 0", borderRadius: 7, background: "transparent", border: `1px solid ${P.border}`, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.15s" }} onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.06)"; e.currentTarget.style.borderColor = P.borderH; }} onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = P.border; }}><User size={10} color={P.txt3} /></button>
                               <button onClick={() => setNotesLead(l)} style={{ width: 28, padding: "5px 0", borderRadius: 7, background: "transparent", border: `1px solid ${P.border}`, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.15s" }} onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.06)"; e.currentTarget.style.borderColor = P.borderH; }} onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = P.border; }}><FileText size={10} color={P.txt3} /></button>
                             </div>
@@ -7181,9 +7211,73 @@ function AdminPanel() {
   );
 }
 
+/* ════════════════════════════════════════
+   PERMISOS POR MÓDULO
+   ════════════════════════════════════════ */
+const MODULE_ROLES = {
+  d:      ["super_admin","admin","director","ceo"],
+  c:      ["super_admin","admin","director","ceo","asesor"],
+  ia:     ["super_admin","admin","director","ceo"],
+  e:      ["super_admin","admin","director","ceo"],
+  a:      ["super_admin","admin","director","ceo"],
+  lp:     ["super_admin","admin","director","ceo"],
+  fa:     ["super_admin","admin","director","ceo"],
+  rrhh:   ["super_admin","admin","director","ceo"],
+  planes: ["super_admin","admin","director","ceo","asesor"],
+  admin:  ["super_admin","admin"],
+};
+
+const MODULE_NAMES = {
+  d: "Comando", c: "CRM", ia: "IA CRM", e: "ERP",
+  a: "Asesores", lp: "Landing Pages", fa: "Finanzas",
+  rrhh: "Personas", planes: "Planes", admin: "Usuarios",
+};
+
+function PermissionGate({ moduleId, onGoBack }) {
+  return (
+    <div style={{
+      flex: 1, display: "flex", alignItems: "center", justifyContent: "center",
+      flexDirection: "column", gap: 20, padding: 40,
+    }}>
+      <div style={{
+        width: 72, height: 72, borderRadius: 20,
+        background: "rgba(255,255,255,0.04)", border: `1px solid rgba(255,255,255,0.08)`,
+        display: "flex", alignItems: "center", justifyContent: "center",
+      }}>
+        <Shield size={32} color={P.txt3} strokeWidth={1.5} />
+      </div>
+      <div style={{ textAlign: "center", maxWidth: 380 }}>
+        <p style={{ fontSize: 18, fontWeight: 700, color: "#FFFFFF", fontFamily: fontDisp, letterSpacing: "-0.02em", marginBottom: 8 }}>
+          Acceso restringido
+        </p>
+        <p style={{ fontSize: 13, color: P.txt3, lineHeight: 1.7, marginBottom: 6 }}>
+          No tienes permiso para acceder al módulo <span style={{ color: P.txt2, fontWeight: 600 }}>{MODULE_NAMES[moduleId] || moduleId}</span>.
+        </p>
+        <p style={{ fontSize: 12, color: P.txt3, lineHeight: 1.6 }}>
+          Contacta a tu director o administrador para solicitar acceso.
+        </p>
+      </div>
+      <button onClick={onGoBack} style={{
+        marginTop: 8, padding: "10px 24px", borderRadius: 11,
+        background: `${P.accent}14`, border: `1px solid ${P.accentB}`,
+        color: P.accent, fontSize: 13, fontWeight: 700,
+        fontFamily: fontDisp, cursor: "pointer", transition: "background 0.18s",
+        display: "flex", alignItems: "center", gap: 8,
+      }}
+        onMouseEnter={e => e.currentTarget.style.background = `${P.accent}22`}
+        onMouseLeave={e => e.currentTarget.style.background = `${P.accent}14`}
+      >
+        <ArrowRight size={14} style={{ transform: "rotate(180deg)" }} />
+        Ir a mi CRM
+      </button>
+    </div>
+  );
+}
+
 export default function App() {
   const { user, login, logout } = useAuth();
-  const [v, setV] = useState("d");
+  const isAsesorRole = !["super_admin","admin","director","ceo"].includes(user?.role);
+  const [v, setV] = useState(isAsesorRole ? "c" : "d");
   const [co, setCo] = useState(false);
   const [msgs, setMsgs] = useState([]);
   const [inp, setInp] = useState("");
@@ -7217,11 +7311,12 @@ export default function App() {
     return () => timers.forEach(t => clearTimeout(t));
   }, [user]);
 
-  const oc = useCallback((t) => {
+  const oc = useCallback((t, leadData) => {
     setCo(true);
     if (t) setTimeout(() => {
-      setMsgs(p => [...p, { role: "u", text: t }]);
-      setTimeout(() => { setMsgs(p => [...p, { role: "a", ...getResp(t) }]); }, 1105);
+      const displayText = leadData ? `Analizar expediente de ${leadData.n}` : t;
+      setMsgs(p => [...p, { role: "u", text: displayText }]);
+      setTimeout(() => { setMsgs(p => [...p, { role: "a", ...getResp(t, leadData) }]); }, 1105);
     }, 150);
   }, []);
 
@@ -7268,16 +7363,17 @@ export default function App() {
         {nav.filter(n => !n.adminOnly || ["super_admin","admin"].includes(user?.role)).map(n => {
           const a = v === n.id;
           const isAdmin = n.adminOnly;
+          const hasAccess = MODULE_ROLES[n.id]?.includes(user?.role) ?? true;
           const activeColor = isAdmin ? "#A78BFA" : P.accent;
           const activeBg = isAdmin ? "rgba(167,139,250,0.1)" : P.accentS;
           return (
             <div key={n.id}>
               {n.sep && <div style={{ height: 1, background: P.border, margin: "6px 0 10px" }} />}
-              <button onClick={() => setV(n.id)} title={n.l} style={{
+              <button onClick={() => setV(n.id)} title={`${n.l}${!hasAccess ? " · Sin acceso" : ""}`} style={{
                 width: 40, height: 40, borderRadius: 11, border: "none", cursor: "pointer",
                 background: a ? activeBg : "transparent",
                 display: "flex", alignItems: "center", justifyContent: "center",
-                marginBottom: 4, transition: "all 0.25s", position: "relative",
+                marginBottom: 4, transition: "all 0.25s", position: "relative", opacity: hasAccess ? 1 : 0.45,
               }}>
                 <n.i size={18} color={a ? activeColor : P.txt3} strokeWidth={a ? 2.2 : 1.8} />
                 {a && <div style={{ position: "absolute", left: -1, top: "50%", transform: "translateY(-50%)", width: 2, height: 14, borderRadius: 1, background: activeColor, boxShadow: `0 0 6px ${activeColor}60` }} />}
@@ -7394,17 +7490,23 @@ export default function App() {
         </div>
 
         <div style={{ flex: 1, display: "flex", overflow: "hidden" }}>
-          <div style={{ flex: 1, padding: "18px 22px", overflowY: "auto", animation: "fadeIn 0.4s ease" }}>
-            {v === "d" && <Dash oc={oc} co={co} />}
-            {v === "c" && <CRM oc={oc} co={co} />}
-            {v === "ia" && <IACRM oc={oc} />}
-            {v === "e" && <ERP oc={oc} />}
-            {v === "a" && <AsesorCRM oc={oc} />}
-            {v === "lp" && <LandingPages />}
-            {v === "fa" && <FinanzasAdmin />}
-            {v === "rrhh" && <RRHHModule />}
-            {v === "planes" && <PricingScreen embedded onBack={() => setV("d")} />}
-            {v === "admin" && ["super_admin","admin"].includes(user?.role) && <AdminPanel />}
+          <div style={{ flex: 1, padding: "18px 22px", overflowY: "auto", animation: "fadeIn 0.4s ease", display: "flex", flexDirection: "column" }}>
+            {/* Permission gate — solo bloquea si el rol está definido y NO tiene acceso */}
+            {user?.role && MODULE_ROLES[v] && !MODULE_ROLES[v].includes(user.role)
+              ? <PermissionGate moduleId={v} onGoBack={() => setV("c")} />
+              : <>
+                  {v === "d" && <Dash oc={oc} co={co} />}
+                  {v === "c" && <CRM oc={oc} co={co} />}
+                  {v === "ia" && <IACRM oc={oc} />}
+                  {v === "e" && <ERP oc={oc} />}
+                  {v === "a" && <AsesorCRM oc={oc} />}
+                  {v === "lp" && <LandingPages />}
+                  {v === "fa" && <FinanzasAdmin />}
+                  {v === "rrhh" && <RRHHModule />}
+                  {v === "planes" && <PricingScreen embedded onBack={() => setV(isAsesorRole ? "c" : "d")} />}
+                  {v === "admin" && ["super_admin","admin"].includes(user?.role) && <AdminPanel />}
+                </>
+            }
           </div>
           <Chat open={co} onClose={() => setCo(false)} msgs={msgs} setMsgs={setMsgs} inp={inp} setInp={setInp} />
         </div>
