@@ -1539,104 +1539,89 @@ function CRM({ oc, co }) {
                       animation: meta.glow ? "shimmer 2.2s linear infinite" : "none",
                     }} />
 
-                    <div style={{ padding: "13px 15px 15px", display: "flex", flexDirection: "column", gap: 11, flex: 1 }}>
+                    <div style={{ padding: "14px 16px 16px", display: "flex", flexDirection: "column", gap: 13, flex: 1 }}>
 
-                      {/* Fila superior: número + tipo · score · × */}
-                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 6 }}>
-                        {/* Izquierda: badge número + tipo */}
-                        <div style={{ display: "flex", alignItems: "center", gap: 6, minWidth: 0, flex: 1 }}>
-                          <div style={{ width: 21, height: 21, borderRadius: 6, background: `${meta.color}15`, border: `1px solid ${meta.color}26`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                            <span style={{ fontSize: 10, fontWeight: 800, color: meta.color, fontFamily: fontDisp }}>{cardIdx + 1}</span>
-                          </div>
-                          <div style={{ minWidth: 0 }}>
-                            <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 1 }}>
-                              {meta.pulse && <div style={{ width: 5, height: 5, borderRadius: "50%", background: meta.color, flexShrink: 0, animation: "pulse 1.5s ease-in-out infinite" }} />}
-                              <span style={{ fontSize: 8, fontWeight: 700, color: meta.color, letterSpacing: "0.07em", textTransform: "uppercase", fontFamily: font }}>{meta.label}</span>
-                            </div>
-                            <span style={{ fontSize: 7.5, color: P.txt3, fontFamily: font, lineHeight: 1.2 }}>{meta.sublabel}</span>
-                          </div>
-                        </div>
-                        {/* Derecha: score + botón quitar */}
-                        <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
-                          <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 3 }}>
-                            <span style={{ fontSize: 14, fontWeight: 800, color: meta.color, fontFamily: fontDisp, lineHeight: 1 }}>{sc}</span>
-                            <div style={{ width: 30, height: 2.5, borderRadius: 2, background: "rgba(255,255,255,0.07)" }}>
-                              <div style={{ width: `${sc}%`, height: "100%", borderRadius: 2, background: meta.color }} />
-                            </div>
-                          </div>
-                          <button onClick={() => dismissPriority(l.id)} title="Quitar de prioridad"
-                            style={{ width: 20, height: 20, borderRadius: 5, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.09)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.14s", flexShrink: 0 }}
-                            onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.13)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.20)"; }}
-                            onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.05)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.09)"; }}
-                          ><X size={9} color="rgba(255,255,255,0.45)" strokeWidth={2.5} /></button>
-                        </div>
-                      </div>
-
-                      {/* Nombre + presupuesto */}
-                      <div>
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 6, marginBottom: 4 }}>
-                          <p style={{ fontSize: 15, fontWeight: 800, color: "#FFFFFF", fontFamily: fontDisp, letterSpacing: "-0.025em", lineHeight: 1.15, margin: 0 }}>{l.n}</p>
-                          <p style={{ fontSize: 12, fontWeight: 700, color: P.txt2, fontFamily: fontDisp, flexShrink: 0, margin: 0 }}>{l.budget}</p>
-                        </div>
+                      {/* Fila superior: tipo · × */}
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
                         <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                          {meta.pulse && <div style={{ width: 6, height: 6, borderRadius: "50%", background: meta.color, flexShrink: 0, animation: "pulse 1.5s ease-in-out infinite" }} />}
+                          <span style={{ fontSize: 9, fontWeight: 700, color: meta.color, letterSpacing: "0.06em", textTransform: "uppercase", fontFamily: font }}>{meta.label}</span>
+                        </div>
+                        <button onClick={() => dismissPriority(l.id)} title="Quitar de prioridad"
+                          style={{ width: 20, height: 20, borderRadius: 5, background: "transparent", border: "1px solid rgba(255,255,255,0.08)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.14s", flexShrink: 0 }}
+                          onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.10)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.18)"; }}
+                          onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)"; }}
+                        ><X size={9} color="rgba(255,255,255,0.40)" strokeWidth={2.5} /></button>
+                      </div>
+
+                      {/* Nombre + presupuesto + etapa */}
+                      <div>
+                        <p style={{ fontSize: 15.5, fontWeight: 800, color: "#FFFFFF", fontFamily: fontDisp, letterSpacing: "-0.025em", lineHeight: 1.2, margin: "0 0 5px" }}>{l.n}</p>
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 6 }}>
                           <Pill color={stageColor} s>{l.st}</Pill>
-                          {l.campana && <span style={{ fontSize: 8.5, color: P.txt3, fontFamily: font }}>{l.campana}</span>}
+                          <span style={{ fontSize: 11.5, fontWeight: 700, color: P.txt3, fontFamily: fontDisp }}>{l.budget}</span>
                         </div>
                       </div>
 
-                      {/* ── Próxima acción — protagonista ── */}
-                      <div style={{ borderRadius: 10, background: "rgba(0,0,0,0.28)", border: "1px solid rgba(255,255,255,0.06)", overflow: "hidden" }}>
-                        <div style={{ padding: "6px 10px 5px", borderBottom: "1px solid rgba(255,255,255,0.05)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                          <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                            <Timer size={9} color={P.accent} strokeWidth={2.5} />
-                            <span style={{ fontSize: 8, fontWeight: 700, color: P.accent, letterSpacing: "0.07em", textTransform: "uppercase", fontFamily: font }}>Próxima acción</span>
-                          </div>
-                          <span style={{ fontSize: 8, fontWeight: 600, color: P.txt3, background: "rgba(255,255,255,0.05)", padding: "1px 5px", borderRadius: 99, fontFamily: font }}>{l.nextActionDate}</span>
+                      {/* Score bar — discreta */}
+                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        <div style={{ flex: 1, height: 3, borderRadius: 2, background: "rgba(255,255,255,0.06)" }}>
+                          <div style={{ width: `${sc}%`, height: "100%", borderRadius: 2, background: meta.color, opacity: 0.8 }} />
                         </div>
-                        <div style={{ padding: "8px 10px" }}>
-                          <p style={{ fontSize: 11.5, fontWeight: 600, color: "#FFFFFF", fontFamily: fontDisp, lineHeight: 1.5, margin: 0, letterSpacing: "-0.01em" }}>
-                            {l.nextAction?.substring(0, 82)}{(l.nextAction?.length || 0) > 82 ? "…" : ""}
+                        <span style={{ fontSize: 10, fontWeight: 700, color: P.txt3, fontFamily: fontDisp, flexShrink: 0 }}>Score {sc}</span>
+                      </div>
+
+                      {/* Próxima acción */}
+                      <div style={{ borderRadius: 10, background: "rgba(0,0,0,0.22)", border: `1px solid rgba(255,255,255,0.06)`, overflow: "hidden" }}>
+                        <div style={{ padding: "7px 11px 6px", borderBottom: "1px solid rgba(255,255,255,0.05)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                            <Timer size={9} color={meta.color} strokeWidth={2.5} />
+                            <span style={{ fontSize: 8.5, fontWeight: 700, color: meta.color, letterSpacing: "0.06em", textTransform: "uppercase", fontFamily: font }}>Próxima acción</span>
+                          </div>
+                          <span style={{ fontSize: 8.5, color: P.txt3, background: "rgba(255,255,255,0.05)", padding: "1px 6px", borderRadius: 99, fontFamily: font }}>{l.nextActionDate}</span>
+                        </div>
+                        <div style={{ padding: "9px 11px" }}>
+                          <p style={{ fontSize: 12, fontWeight: 500, color: "#E2E8F0", fontFamily: font, lineHeight: 1.55, margin: 0 }}>
+                            {l.nextAction?.substring(0, 90)}{(l.nextAction?.length || 0) > 90 ? "…" : ""}
                           </p>
                         </div>
                       </div>
 
                       {/* Cambio de etapa */}
                       <select value={l.st} onChange={e => updateLead({...l, st: e.target.value})}
-                        style={{ width: "100%", padding: "6px 10px", borderRadius: 8, background: `${stageColor}0C`, border: `1px solid ${stageColor}24`, color: stageColor, fontSize: 10.5, fontWeight: 600, outline: "none", cursor: "pointer", fontFamily: font }}>
+                        style={{ width: "100%", padding: "6px 10px", borderRadius: 8, background: `${stageColor}0C`, border: `1px solid ${stageColor}22`, color: stageColor, fontSize: 10.5, fontWeight: 600, outline: "none", cursor: "pointer", fontFamily: font }}>
                         {STAGES.map(s => <option key={s} value={s} style={{ background: "#0C1219", color: "#fff" }}>{s}</option>)}
                       </select>
 
-                      {/* ── 3 botones — mismo color en TODOS los cards ── */}
-                      <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
-                        {/* CTA principal — siempre accent verde */}
+                      {/* Botones */}
+                      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                         <button onClick={() => oc(`__crm__ ${l.n.toLowerCase()}`, l)} style={{
                           width: "100%", padding: "10px 12px", borderRadius: 9,
-                          background: "linear-gradient(135deg, rgba(110,231,194,0.18), rgba(110,231,194,0.08))",
+                          background: "linear-gradient(135deg, rgba(110,231,194,0.15), rgba(110,231,194,0.07))",
                           border: `1px solid ${P.accentB}`,
                           color: P.accent, fontSize: 11.5, fontWeight: 700,
                           fontFamily: fontDisp, cursor: "pointer", letterSpacing: "0.005em",
                           transition: "all 0.18s",
                           display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
                         }}
-                          onMouseEnter={e => { e.currentTarget.style.background = "linear-gradient(135deg, rgba(110,231,194,0.28), rgba(110,231,194,0.14))"; e.currentTarget.style.boxShadow = `0 4px 16px ${P.accent}14`; }}
-                          onMouseLeave={e => { e.currentTarget.style.background = "linear-gradient(135deg, rgba(110,231,194,0.18), rgba(110,231,194,0.08))"; e.currentTarget.style.boxShadow = "none"; }}
+                          onMouseEnter={e => { e.currentTarget.style.background = "linear-gradient(135deg, rgba(110,231,194,0.26), rgba(110,231,194,0.12))"; e.currentTarget.style.boxShadow = `0 4px 16px ${P.accent}12`; }}
+                          onMouseLeave={e => { e.currentTarget.style.background = "linear-gradient(135deg, rgba(110,231,194,0.15), rgba(110,231,194,0.07))"; e.currentTarget.style.boxShadow = "none"; }}
                         ><Zap size={11} strokeWidth={2.5} /> Analizar y actuar</button>
 
-                        {/* Perfil + Notas — mismo estilo neutro siempre */}
-                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 5 }}>
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
                           {[
                             { label: "Perfil", icon: User, fn: () => setSelectedLead(l) },
                             { label: "Notas",  icon: FileText, fn: () => setNotesLead(l) },
                           ].map(({ label, icon: Icon, fn }) => (
                             <button key={label} onClick={fn} style={{
                               padding: "8px 0", borderRadius: 8,
-                              background: "rgba(255,255,255,0.04)",
-                              border: "1px solid rgba(255,255,255,0.08)",
+                              background: "rgba(255,255,255,0.035)",
+                              border: "1px solid rgba(255,255,255,0.07)",
                               display: "flex", alignItems: "center", justifyContent: "center", gap: 4,
                               color: P.txt2, fontSize: 10.5, fontWeight: 600,
                               fontFamily: font, cursor: "pointer", transition: "all 0.14s",
                             }}
-                              onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.09)"; e.currentTarget.style.color = "#fff"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.14)"; }}
+                              onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.08)"; e.currentTarget.style.color = "#fff"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.13)"; }}
                               onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.04)"; e.currentTarget.style.color = P.txt2; e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)"; }}
                             ><Icon size={10} /> {label}</button>
                           ))}
