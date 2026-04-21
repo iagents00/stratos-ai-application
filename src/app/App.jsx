@@ -1424,152 +1424,167 @@ function CRM({ oc, co }) {
         <KPI label="Valor Total Pipeline" value={`$${(totalPipeline/1000000).toFixed(1)}M`} icon={DollarSign} />
       </div>
 
-      {/* ── ATENCIÓN INMEDIATA — Premium cards ── */}
-      {priorityLeads.length > 0 && (
-        <div>
-          {/* ── Header de sección — sin punto rojo, aesthetic pro ── */}
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <div style={{
-                display: "flex", alignItems: "center", gap: 7,
-                padding: "5px 14px 5px 10px", borderRadius: 99,
-                background: "rgba(255,255,255,0.04)", border: `1px solid ${P.border}`,
-              }}>
-                <div style={{ width: 7, height: 7, borderRadius: "50%", background: P.accent, boxShadow: `0 0 10px ${P.accent}90` }} />
-                <span style={{ fontSize: 12, fontWeight: 700, color: "#FFFFFF", letterSpacing: "-0.01em", fontFamily: fontDisp }}>Requieren Atención</span>
+      {/* ── ACCIONES CRÍTICAS — máx 3, diseño acción-primero ── */}
+      {priorityLeads.length > 0 && (() => {
+        const top3 = priorityLeads.slice(0, 3);
+        return (
+          <div>
+            {/* Header */}
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "5px 14px 5px 10px", borderRadius: 99, background: `${P.rose}0A`, border: `1px solid ${P.rose}28` }}>
+                  <div style={{ width: 7, height: 7, borderRadius: "50%", background: P.rose, boxShadow: `0 0 8px ${P.rose}90`, animation: "pulse 2s infinite" }} />
+                  <span style={{ fontSize: 12, fontWeight: 700, color: "#FFFFFF", letterSpacing: "-0.01em", fontFamily: fontDisp }}>Acción requerida ahora</span>
+                </div>
+                <span style={{ fontSize: 11, color: P.txt3 }}>{top3.length} cliente{top3.length !== 1 ? "s" : ""} esperando</span>
               </div>
-              <span style={{ fontSize: 11, color: P.txt3 }}>{priorityLeads.length} con acción pendiente</span>
+              {priorityLeads.length > 3 && (
+                <span style={{ fontSize: 11, color: P.txt3, cursor: "pointer" }} onClick={() => setFilterStage("TODO")}>
+                  +{priorityLeads.length - 3} más →
+                </span>
+              )}
             </div>
-          </div>
-          <div style={{ display: "flex", gap: 12, overflowX: "auto", paddingBottom: 8, scrollbarWidth: "none" }}>
-            {priorityLeads.map(l => {
-              const sc = l.sc;
-              const stageColor = stgC[l.st] || P.txt3;
-              /* Urgencia — texto limpio, color neutro, sin emojis */
-              const urgLabel = l.hot
-                ? "Caliente"
-                : l.isNew
-                ? "Nuevo registro"
-                : l.daysInactive >= 7
-                ? `Sin actividad · ${l.daysInactive}d`
-                : l.st === "Zoom Concretado"
-                ? "Zoom completado"
-                : "Acción pendiente";
-              return (
-                <div key={l.id} style={{
-                  minWidth: co ? 240 : 272, maxWidth: 272, flexShrink: 0,
-                  borderRadius: 16, overflow: "hidden",
-                  background: "rgba(255,255,255,0.036)",
-                  border: `1px solid ${P.border}`,
-                  transition: "all 0.25s ease",
-                }}
-                  onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.056)"; e.currentTarget.style.borderColor = P.borderH; e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 12px 40px rgba(0,0,0,0.32)"; }}
-                  onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.036)"; e.currentTarget.style.borderColor = P.border; e.currentTarget.style.transform = "none"; e.currentTarget.style.boxShadow = "none"; }}
-                >
-                  {/* Línea de etapa — fina, elegante */}
-                  <div style={{ height: 2, background: `linear-gradient(90deg, ${stageColor}BB 0%, transparent 100%)` }} />
 
-                  <div style={{ padding: "14px 16px 15px" }}>
+            <div style={{ display: "flex", gap: 12, overflowX: "auto", paddingBottom: 8, scrollbarWidth: "none" }}>
+              {top3.map((l, cardIdx) => {
+                const sc = l.sc;
+                const stageColor = stgC[l.st] || P.txt3;
+                const isOverdue = l.daysInactive >= 7;
+                const isHot = l.hot;
+                const isNew = l.isNew;
 
-                    {/* Tag de urgencia — neutro, sin color por tipo */}
-                    <div style={{ marginBottom: 12 }}>
-                      <span style={{ fontSize: 10, fontWeight: 600, color: P.txt3, letterSpacing: "0.04em", textTransform: "uppercase", fontFamily: font }}>
-                        {urgLabel}
-                      </span>
-                    </div>
+                // Color de urgencia de la tarjeta
+                const urgColor = isHot ? P.rose : isOverdue ? P.amber : isNew ? P.accent : P.blue;
+                const urgBg = isHot ? `${P.rose}09` : isOverdue ? `${P.amber}07` : isNew ? `${P.accent}07` : `${P.blue}07`;
 
-                    {/* Nombre + presupuesto */}
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 4, gap: 8 }}>
-                      <p style={{ fontSize: 15, fontWeight: 700, color: "#FFFFFF", fontFamily: fontDisp, letterSpacing: "-0.02em", lineHeight: 1.2 }}>{l.n}</p>
-                      <p style={{ fontSize: 14, fontWeight: 700, color: "#FFFFFF", fontFamily: fontDisp, letterSpacing: "-0.025em", flexShrink: 0 }}>{l.budget}</p>
-                    </div>
+                // Label de urgencia
+                const urgLabel = isHot
+                  ? `CALIENTE · ${l.daysInactive}d`
+                  : isNew
+                  ? "NUEVO · PRIMER CONTACTO"
+                  : isOverdue
+                  ? `SIN CONTACTO · ${l.daysInactive} DÍAS`
+                  : l.st === "Zoom Concretado"
+                  ? "ZOOM LISTO · DAR SEGUIMIENTO"
+                  : "ACCIÓN PENDIENTE";
 
-                    {/* Asesor · fuente */}
-                    <p style={{ fontSize: 10.5, color: P.txt3, marginBottom: 12 }}>{l.asesor?.split(" ")[0]} · {l.campana}</p>
+                // Número de prioridad
+                const priorityNum = cardIdx + 1;
 
-                    {/* Etapa + Score en una línea */}
-                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
-                      <Pill color={stageColor} s>{l.st}</Pill>
-                      <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
-                        <div style={{ width: 48, height: 3, borderRadius: 2, background: "rgba(255,255,255,0.07)" }}>
-                          <div style={{ width: `${sc}%`, height: 3, borderRadius: 2, background: P.accent, transition: "width 0.5s ease" }} />
+                return (
+                  <div key={l.id} style={{
+                    minWidth: co ? 252 : 284, maxWidth: 284, flexShrink: 0,
+                    borderRadius: 18, overflow: "hidden",
+                    background: urgBg,
+                    border: `1px solid ${urgColor}22`,
+                    transition: "all 0.22s ease",
+                    display: "flex", flexDirection: "column",
+                  }}
+                    onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-3px)"; e.currentTarget.style.boxShadow = `0 16px 48px rgba(0,0,0,0.35), 0 0 0 1px ${urgColor}30`; }}
+                    onMouseLeave={e => { e.currentTarget.style.transform = "none"; e.currentTarget.style.boxShadow = "none"; }}
+                  >
+                    {/* Barra superior de urgencia — sólida, visible */}
+                    <div style={{ height: 3, background: `linear-gradient(90deg, ${urgColor} 0%, ${urgColor}60 60%, transparent 100%)` }} />
+
+                    <div style={{ padding: "14px 16px 16px", display: "flex", flexDirection: "column", gap: 12, flex: 1 }}>
+
+                      {/* Fila superior: número + urgencia + días */}
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                          <div style={{ width: 20, height: 20, borderRadius: 6, background: `${urgColor}18`, border: `1px solid ${urgColor}30`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                            <span style={{ fontSize: 10, fontWeight: 800, color: urgColor, fontFamily: fontDisp }}>{priorityNum}</span>
+                          </div>
+                          <span style={{ fontSize: 9.5, fontWeight: 700, color: urgColor, letterSpacing: "0.06em", textTransform: "uppercase", fontFamily: font }}>{urgLabel}</span>
                         </div>
-                        <span style={{ fontSize: 11, fontWeight: 700, color: P.txt2, fontFamily: fontDisp }}>{sc}</span>
+                        {/* Score mini */}
+                        <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                          <div style={{ width: 32, height: 3, borderRadius: 2, background: "rgba(255,255,255,0.07)" }}>
+                            <div style={{ width: `${sc}%`, height: 3, borderRadius: 2, background: urgColor }} />
+                          </div>
+                          <span style={{ fontSize: 10, fontWeight: 700, color: P.txt2, fontFamily: fontDisp }}>{sc}</span>
+                        </div>
                       </div>
-                    </div>
 
-                    {/* Próxima acción */}
-                    <div style={{ padding: "9px 11px", borderRadius: 10, background: "rgba(255,255,255,0.03)", border: `1px solid ${P.border}`, marginBottom: 13 }}>
-                      <span style={{ fontSize: 9, fontWeight: 700, color: P.txt3, letterSpacing: "0.07em", textTransform: "uppercase", display: "block", marginBottom: 4 }}>{l.nextActionDate}</span>
-                      <p style={{ fontSize: 11, color: P.txt2, lineHeight: 1.5, margin: 0 }}>{l.nextAction?.substring(0, 72)}{(l.nextAction?.length || 0) > 72 ? "…" : ""}</p>
-                    </div>
+                      {/* Cliente + presupuesto */}
+                      <div>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 8, marginBottom: 3 }}>
+                          <p style={{ fontSize: 16, fontWeight: 800, color: "#FFFFFF", fontFamily: fontDisp, letterSpacing: "-0.025em", lineHeight: 1.15 }}>{l.n}</p>
+                          <p style={{ fontSize: 13.5, fontWeight: 700, color: "#FFFFFF", fontFamily: fontDisp, letterSpacing: "-0.02em", flexShrink: 0, opacity: 0.85 }}>{l.budget}</p>
+                        </div>
+                        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                          <Pill color={stageColor} s>{l.st}</Pill>
+                          <span style={{ fontSize: 10, color: P.txt3 }}>{l.campana}</span>
+                        </div>
+                      </div>
 
-                    {/* Cambio rápido de etapa */}
-                    <div style={{ marginBottom: 10 }}>
-                      <p style={{ fontSize: 9, fontWeight: 700, color: P.txt3, letterSpacing: "0.07em", textTransform: "uppercase", marginBottom: 5 }}>Etapa</p>
-                      <select value={l.st}
-                        onChange={e => updateLead({...l, st: e.target.value})}
-                        style={{ width: "100%", padding: "7px 10px", borderRadius: 9, background: `${stgC[l.st] || P.txt3}10`, border: `1px solid ${stgC[l.st] || P.txt3}35`, color: stgC[l.st] || P.txt2, fontSize: 11, fontWeight: 600, outline: "none", cursor: "pointer", fontFamily: font, transition: "all 0.18s" }}
+                      {/* ─── PRÓXIMA ACCIÓN — protagonista de la card ─── */}
+                      <div style={{
+                        borderRadius: 12,
+                        background: "rgba(0,0,0,0.25)",
+                        border: `1px solid ${urgColor}18`,
+                        overflow: "hidden",
+                      }}>
+                        {/* Header de acción */}
+                        <div style={{ padding: "8px 12px 7px", borderBottom: `1px solid ${urgColor}14`, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                            <Timer size={10} color={urgColor} strokeWidth={2.5} />
+                            <span style={{ fontSize: 9, fontWeight: 700, color: urgColor, letterSpacing: "0.07em", textTransform: "uppercase" }}>Próxima acción</span>
+                          </div>
+                          <span style={{ fontSize: 9, fontWeight: 600, color: P.txt3, background: "rgba(255,255,255,0.05)", padding: "1px 7px", borderRadius: 99 }}>{l.nextActionDate}</span>
+                        </div>
+                        {/* Texto de acción — prominente */}
+                        <div style={{ padding: "10px 12px" }}>
+                          <p style={{ fontSize: 12.5, fontWeight: 600, color: "#FFFFFF", fontFamily: fontDisp, lineHeight: 1.55, margin: 0, letterSpacing: "-0.01em" }}>
+                            {l.nextAction?.substring(0, 90)}{(l.nextAction?.length || 0) > 90 ? "…" : ""}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Selector de etapa */}
+                      <select value={l.st} onChange={e => updateLead({...l, st: e.target.value})}
+                        style={{ width: "100%", padding: "7px 10px", borderRadius: 9, background: `${stageColor}0C`, border: `1px solid ${stageColor}28`, color: stageColor, fontSize: 11, fontWeight: 600, outline: "none", cursor: "pointer", fontFamily: font }}
                       >
                         {STAGES.map(s => <option key={s} value={s} style={{ background: "#0C1219", color: "#fff" }}>{s}</option>)}
                       </select>
-                    </div>
 
-                    {/* Botones — pro, jerarquía visual clara */}
-                    <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
-
-                      {/* CTA principal — acento sólido */}
-                      <button onClick={() => oc(`__crm__ ${l.n.toLowerCase()}`, l)} style={{
-                        width: "100%", padding: "10px 14px", borderRadius: 10,
-                        background: `linear-gradient(135deg, ${P.accent}20, ${P.accent}0C)`,
-                        border: `1px solid ${P.accent}35`,
-                        color: P.accent, fontSize: 12, fontWeight: 700,
-                        fontFamily: fontDisp, cursor: "pointer",
-                        letterSpacing: "0.01em", transition: "all 0.18s",
-                        display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
-                      }}
-                        onMouseEnter={e => { e.currentTarget.style.background = `linear-gradient(135deg, ${P.accent}30, ${P.accent}18)`; e.currentTarget.style.borderColor = `${P.accent}55`; e.currentTarget.style.boxShadow = `0 4px 16px ${P.accent}14`; }}
-                        onMouseLeave={e => { e.currentTarget.style.background = `linear-gradient(135deg, ${P.accent}20, ${P.accent}0C)`; e.currentTarget.style.borderColor = `${P.accent}35`; e.currentTarget.style.boxShadow = "none"; }}
-                      >
-                        <Zap size={11} strokeWidth={2.5} />
-                        Analizar con IA
-                      </button>
-
-                      {/* Secundarios — mismo tono, misma familia, sin colores distintos */}
-                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
-                        <button onClick={() => setSelectedLead(l)} style={{
-                          padding: "9px 0", borderRadius: 9,
-                          background: "rgba(255,255,255,0.045)",
-                          border: "1px solid rgba(255,255,255,0.10)",
-                          display: "flex", alignItems: "center", justifyContent: "center", gap: 5,
-                          color: "#C8D4E3", fontSize: 11.5, fontWeight: 600,
-                          fontFamily: font, cursor: "pointer", transition: "all 0.15s",
+                      {/* Botones */}
+                      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                        {/* CTA urgente — tomar acción */}
+                        <button onClick={() => oc(`__crm__ ${l.n.toLowerCase()}`, l)} style={{
+                          width: "100%", padding: "11px 14px", borderRadius: 10,
+                          background: `linear-gradient(135deg, ${urgColor}22, ${urgColor}0E)`,
+                          border: `1px solid ${urgColor}40`,
+                          color: urgColor, fontSize: 12.5, fontWeight: 700,
+                          fontFamily: fontDisp, cursor: "pointer",
+                          letterSpacing: "0.01em", transition: "all 0.18s",
+                          display: "flex", alignItems: "center", justifyContent: "center", gap: 7,
                         }}
-                          onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.09)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.18)"; e.currentTarget.style.color = "#FFFFFF"; }}
-                          onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.045)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.10)"; e.currentTarget.style.color = "#C8D4E3"; }}
-                        ><User size={11} strokeWidth={2} /> Perfil</button>
+                          onMouseEnter={e => { e.currentTarget.style.background = `linear-gradient(135deg, ${urgColor}35, ${urgColor}18)`; e.currentTarget.style.boxShadow = `0 4px 20px ${urgColor}18`; e.currentTarget.style.borderColor = `${urgColor}65`; }}
+                          onMouseLeave={e => { e.currentTarget.style.background = `linear-gradient(135deg, ${urgColor}22, ${urgColor}0E)`; e.currentTarget.style.boxShadow = "none"; e.currentTarget.style.borderColor = `${urgColor}40`; }}
+                        >
+                          <Zap size={12} strokeWidth={2.5} />
+                          Analizar y actuar
+                        </button>
 
-                        <button onClick={() => setNotesLead(l)} style={{
-                          padding: "9px 0", borderRadius: 9,
-                          background: "rgba(255,255,255,0.045)",
-                          border: "1px solid rgba(255,255,255,0.10)",
-                          display: "flex", alignItems: "center", justifyContent: "center", gap: 5,
-                          color: "#C8D4E3", fontSize: 11.5, fontWeight: 600,
-                          fontFamily: font, cursor: "pointer", transition: "all 0.15s",
-                        }}
-                          onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.09)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.18)"; e.currentTarget.style.color = "#FFFFFF"; }}
-                          onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.045)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.10)"; e.currentTarget.style.color = "#C8D4E3"; }}
-                        ><FileText size={11} strokeWidth={2} /> Notas</button>
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
+                          <button onClick={() => setSelectedLead(l)} style={{ padding: "8px 0", borderRadius: 9, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.09)", display: "flex", alignItems: "center", justifyContent: "center", gap: 5, color: "#C8D4E3", fontSize: 11, fontWeight: 600, fontFamily: font, cursor: "pointer", transition: "all 0.15s" }}
+                            onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.09)"; e.currentTarget.style.color = "#fff"; }}
+                            onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.04)"; e.currentTarget.style.color = "#C8D4E3"; }}
+                          ><User size={11} /> Perfil</button>
+                          <button onClick={() => setNotesLead(l)} style={{ padding: "8px 0", borderRadius: 9, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.09)", display: "flex", alignItems: "center", justifyContent: "center", gap: 5, color: "#C8D4E3", fontSize: 11, fontWeight: 600, fontFamily: font, cursor: "pointer", transition: "all 0.15s" }}
+                            onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.09)"; e.currentTarget.style.color = "#fff"; }}
+                            onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.04)"; e.currentTarget.style.color = "#C8D4E3"; }}
+                          ><FileText size={11} /> Notas</button>
+                        </div>
                       </div>
                     </div>
-
                   </div>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* ── MODAL NUEVO LEAD — Refined ── */}
       {addingLead && createPortal(
@@ -1607,10 +1622,14 @@ function CRM({ oc, co }) {
               ))}
               <div style={{ gridColumn: "1 / -1" }}>
                 <p style={{ fontSize: 10, fontWeight: 700, color: P.txt3, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 6 }}>Proyecto de interés</p>
-                <select value={newLead.p} onChange={e => setNewLead(p => ({...p, p: e.target.value}))} style={{ width: "100%", height: 40, padding: "0 14px", borderRadius: 11, background: P.glass, border: `1px solid ${newLead.p ? P.accentB : P.border}`, color: newLead.p ? P.txt : P.txt3, fontSize: 13, outline: "none", fontFamily: font, boxSizing: "border-box", cursor: "pointer" }}>
-                  <option value="">Seleccionar proyecto…</option>
-                  {["Gobernador 28","Monarca 28","Portofino","Torre 25","BAGA","Kaab On The Beach"].map(pr => <option key={pr} value={pr} style={{ background: "#0C1219", color: P.txt }}>{pr}</option>)}
-                </select>
+                <input
+                  value={newLead.p}
+                  onChange={e => setNewLead(p => ({...p, p: e.target.value}))}
+                  placeholder="Ej. Gobernador 28, Monarca 28, Torre 25…"
+                  style={{ width: "100%", height: 40, padding: "0 14px", borderRadius: 11, background: P.glass, border: `1px solid ${newLead.p ? P.accentB : P.border}`, color: P.txt, fontSize: 13, outline: "none", fontFamily: font, boxSizing: "border-box", transition: "border-color 0.2s" }}
+                  onFocus={e => e.target.style.borderColor = P.accentB}
+                  onBlur={e => e.target.style.borderColor = newLead.p ? P.accentB : P.border}
+                />
               </div>
             </div>
             <div style={{ padding: "16px 26px", borderTop: `1px solid ${P.border}`, display: "flex", gap: 10 }}>
