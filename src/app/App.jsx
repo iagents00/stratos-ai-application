@@ -1588,10 +1588,13 @@ function CRM({ oc, co }) {
                       </div>
 
                       {/* Cambio de etapa */}
-                      <select value={l.st} onChange={e => updateLead({...l, st: e.target.value})}
-                        style={{ width: "100%", padding: "6px 10px", borderRadius: 8, background: `${stageColor}0C`, border: `1px solid ${stageColor}22`, color: stageColor, fontSize: 10.5, fontWeight: 600, outline: "none", cursor: "pointer", fontFamily: font }}>
-                        {STAGES.map(s => <option key={s} value={s} style={{ background: "#0C1219", color: "#fff" }}>{s}</option>)}
-                      </select>
+                      <div style={{ position: "relative" }}>
+                        <select value={l.st} onChange={e => updateLead({...l, st: e.target.value})}
+                          style={{ width: "100%", padding: "6px 28px 6px 10px", borderRadius: 8, background: `${stageColor}0C`, border: `1px solid ${stageColor}22`, color: stageColor, fontSize: 10.5, fontWeight: 600, outline: "none", cursor: "pointer", fontFamily: font, appearance: "none", WebkitAppearance: "none" }}>
+                          {STAGES.map(s => <option key={s} value={s} style={{ background: "#0C1219", color: "#fff" }}>{s}</option>)}
+                        </select>
+                        <ChevronDown size={11} color={stageColor} strokeWidth={2.5} style={{ position: "absolute", right: 9, top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }} />
+                      </div>
 
                       {/* Botones */}
                       <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
