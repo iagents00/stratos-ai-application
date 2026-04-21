@@ -1297,7 +1297,7 @@ function CRM({ oc, co }) {
   const [selectedLead, setSelectedLead] = useState(null);
   const [notesLead, setNotesLead]       = useState(null);
   const [addingLead, setAddingLead]     = useState(false);
-  const [newLead, setNewLead]           = useState({ n: "", asesor: canSeeAll ? "" : (user?.name || ""), phone: "", budget: "", p: "", campana: "" });
+  const [newLead, setNewLead]           = useState({ n: "", asesor: canSeeAll ? "" : (user?.name || ""), phone: "", budget: "", p: "", campana: "", st: "Nuevo Registro" });
   const [hoveredRow, setHoveredRow]     = useState(null);
   const [dragLeadId, setDragLeadId]     = useState(null);
   const [dragOverStage, setDragOverStage] = useState(null);
@@ -1364,8 +1364,8 @@ function CRM({ oc, co }) {
     const h = now.getHours(); const ampm = h >= 12 ? "pm" : "am"; const h12 = h % 12 || 12;
     const dateStr = `${now.getDate()} ${mos[now.getMonth()]}, ${h12}:${String(now.getMinutes()).padStart(2,"0")}${ampm}`;
     const newEntry = {
-      id: Date.now(), ...newLead, sc: 40, st: "Nuevo Registro",
-      tag: "Nuevo Registro", hot: false, isNew: true, fechaIngreso: dateStr,
+      id: Date.now(), ...newLead, sc: 40, st: newLead.st || "Nuevo Registro",
+      tag: newLead.st || "Nuevo Registro", hot: false, isNew: true, fechaIngreso: dateStr,
       bio: "Cliente recién registrado. Pendiente primer contacto.", risk: "Sin información suficiente aún.",
       friction: "Medio", nextAction: "Primer contacto en las próximas 24 horas",
       nextActionDate: "Hoy", lastActivity: "Registro manual", daysInactive: 0, email: "",
@@ -1374,7 +1374,7 @@ function CRM({ oc, co }) {
     };
     setLeadsData(prev => [newEntry, ...prev]);
     setAddingLead(false);
-    setNewLead({ n: "", asesor: "", phone: "", budget: "", p: "", campana: "" });
+    setNewLead({ n: "", asesor: canSeeAll ? "" : (user?.name || ""), phone: "", budget: "", p: "", campana: "", st: "Nuevo Registro" });
   };
 
   const SH = ({ label, field, align = "left" }) => {
@@ -1670,7 +1670,7 @@ function CRM({ oc, co }) {
                   <h3 style={{ fontSize: 16, fontWeight: 700, color: "#FFFFFF", fontFamily: fontDisp, letterSpacing: "-0.025em", margin: 0 }}>Registrar Nuevo Cliente</h3>
                 </div>
                 <p style={{ fontSize: 11, color: P.txt3, fontFamily: font, margin: 0, paddingLeft: 36 }}>
-                  Etapa inicial <span style={{ color: stgC["Nuevo Registro"] || P.accent, fontWeight: 600, fontFamily: fontDisp }}>Nuevo Registro</span>
+                  Etapa <span style={{ color: stgC[newLead.st] || P.accent, fontWeight: 600, fontFamily: fontDisp }}>{newLead.st}</span>
                   <span style={{ color: P.txt3 }}> · Score 40</span>
                 </p>
               </div>
@@ -1716,6 +1716,37 @@ function CRM({ oc, co }) {
                   />
                 </div>
               ))}
+
+              {/* ── Estatus / Etapa ── */}
+              <div style={{ gridColumn: "1 / -1" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 7 }}>
+                  <Waypoints size={10} color={P.txt3} />
+                  <span style={{ fontSize: 10, fontWeight: 700, color: P.txt3, letterSpacing: "0.055em", textTransform: "uppercase", fontFamily: fontDisp }}>Estatus / Etapa</span>
+                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(130px, 1fr))", gap: 7 }}>
+                  {STAGES.map(s => {
+                    const c = stgC[s] || P.txt3;
+                    const active = newLead.st === s;
+                    return (
+                      <button key={s} onClick={() => setNewLead(p => ({...p, st: s}))} style={{
+                        padding: "7px 10px", borderRadius: 9, cursor: "pointer",
+                        background: active ? `${c}18` : "rgba(255,255,255,0.03)",
+                        border: `1px solid ${active ? `${c}50` : P.border}`,
+                        color: active ? c : P.txt3,
+                        fontSize: 11, fontWeight: active ? 700 : 500,
+                        fontFamily: font, transition: "all 0.16s",
+                        display: "flex", alignItems: "center", gap: 6, textAlign: "left",
+                      }}
+                        onMouseEnter={e => { if (!active) { e.currentTarget.style.background = `${c}0C`; e.currentTarget.style.borderColor = `${c}30`; e.currentTarget.style.color = c; } }}
+                        onMouseLeave={e => { if (!active) { e.currentTarget.style.background = "rgba(255,255,255,0.03)"; e.currentTarget.style.borderColor = P.border; e.currentTarget.style.color = P.txt3; } }}
+                      >
+                        <div style={{ width: 7, height: 7, borderRadius: "50%", background: c, flexShrink: 0, opacity: active ? 1 : 0.5 }} />
+                        {s}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
 
               {/* ── Notas iniciales ── */}
               <div style={{ gridColumn: "1 / -1" }}>
