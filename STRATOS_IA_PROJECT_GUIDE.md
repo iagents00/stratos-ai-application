@@ -47,8 +47,8 @@ plataforma de gestión integral para una empresa inmobiliaria de lujo en la Rivi
 
 - **Tipo**: SPA (Single Page Application) — prototipo interactivo con datos estáticos
 - **Industria**: Real Estate de lujo — Riviera Maya (Cancún, Playa del Carmen, Tulum)
-- **Estado**: Demo funcional avanzado, no conectado a backend
-- **Commits**: 2 (proyecto nuevo)
+- **Estado**: Demo funcional avanzado con integración real a Supabase en el módulo CRM
+- **Commits**: 3 (integración con Supabase y mapeo de datos)
 
 ---
 
@@ -56,7 +56,8 @@ plataforma de gestión integral para una empresa inmobiliaria de lujo en la Rivi
 
 | Componente | Tecnología | Versión | Notas |
 |---|---|---|---|
-| Framework | React | 19.2.4 | Hooks (useState, useEffect, useRef, useCallback, useMemo, memo) |
+| Backend | Supabase | ^2.103.0 | DB, Auth y Real-time activados |
+| Framework | React | 19.2.4 | Hooks (useState, useEffect, useLeads) |
 | Build Tool | Vite | 8.0.1 | Config mínima |
 | Iconografía | Lucide React | 1.7.0 | ~70+ íconos importados |
 | Gráficos | Recharts | 3.8.1 | AreaChart, BarChart, PieChart |
