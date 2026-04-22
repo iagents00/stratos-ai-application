@@ -1,11 +1,9 @@
-import { createClient } from '@supabase/supabase-js'
+// Supabase pendiente de activar — usando localStorage por ahora
+// TODO: descomentar cuando se integre Supabase
+//
+// import { createClient } from '@supabase/supabase-js'
+// const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+// const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY
+// export const supabase = createClient(supabaseUrl, supabaseKey)
 
-const supabaseUrl  = import.meta.env.VITE_SUPABASE_URL
-const supabaseKey  = import.meta.env.VITE_SUPABASE_ANON_KEY
-
-if (!supabaseUrl || !supabaseKey) {
-  console.error('[Supabase] Variables de entorno no configuradas. Ver .env.example')
-}
-
-export const supabase = createClient(supabaseUrl, supabaseKey)
-
+export const supabase = null;

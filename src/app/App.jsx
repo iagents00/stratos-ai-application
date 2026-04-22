@@ -22,7 +22,7 @@ import {
   Receipt, CreditCard, BookOpen, PiggyBank, ArrowDownLeft,
   ClipboardList, FilePlus, RefreshCw, BadgeCheck, ListChecks,
   Landmark, Scale, Calculator,
-  UserCheck, Sparkles, List, SlidersHorizontal
+  UserCheck, Sparkles, List, SlidersHorizontal, Mail
 } from "lucide-react";
 import {
   AreaChart, Area, BarChart, Bar, XAxis, YAxis, Tooltip,
@@ -102,7 +102,7 @@ const Ico = ({ icon: I, sz = 34, is = 16, c = P.accent }) => (
 const KPI = ({ label, value, sub, icon, color = P.accent }) => (
   <G hover style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
     <div style={{ flex: 1, minWidth: 0, paddingRight: 12 }}>
-      <p style={{ fontSize: 13, color: P.txt2, marginBottom: 8, letterSpacing: "0.01em", fontWeight: 400, fontFamily: font, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{label}</p>
+      <p style={{ fontSize: 14, color: P.txt2, marginBottom: 8, letterSpacing: "0.01em", fontWeight: 400, fontFamily: font, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{label}</p>
       <p style={{ fontSize: 32, fontWeight: 300, color: "#FFFFFF", letterSpacing: "-0.04em", lineHeight: 1, fontFamily: fontDisp }}>{value}</p>
       {sub && <p style={{ fontSize: 12, color: P.emerald, marginTop: 10, display: "flex", alignItems: "center", gap: 3, fontWeight: 500 }}><ArrowUpRight size={12} />{sub}</p>}
     </div>
@@ -564,7 +564,7 @@ Confirmar tour técnico de obra con el ingeniero residente para el jueves 9:00am
     p: "Portofino",
     campana: "Evento VIP",
     sc: 78,
-    hot: false,
+    hot: true,
     isNew: false,
     bio: "Inversionista de alto perfil. Busca proteger capital con propiedades de lujo a largo plazo. Portafolio diversificado.",
     risk: "Necesita proyección financiera a 10 años antes de comprometerse.",
@@ -716,12 +716,13 @@ const responses = {
   }
 };
 
-const getResp = (t, leadData) => {
+const getResp = (t, leadData, liveLeads) => {
   const l = t.toLowerCase();
+  const allLeads = liveLeads && liveLeads.length ? liveLeads : leads; // Usa datos en vivo si están disponibles
 
-  // — CRM direct brief — usa datos en vivo si se pasan, o busca en el array estático —
+  // — CRM direct brief — usa datos en vivo si se pasan, o busca en el array —
   if (l.startsWith("__crm__") || leadData) {
-    const lead = leadData || leads.find(le => l.includes(le.n.toLowerCase()) || l.includes(le.n.split(" ")[0].toLowerCase()));
+    const lead = leadData || allLeads.find(le => l.includes(le.n.toLowerCase()) || l.includes(le.n.split(" ")[0].toLowerCase()));
     if (lead) {
       const frictionColor = lead.friction === "Bajo" ? P.emerald : lead.friction === "Medio" ? P.cyan : P.violet;
       const stageColor = stgC[lead.st] || P.txt3;
@@ -748,7 +749,7 @@ const getResp = (t, leadData) => {
   }
 
   // — Match a specific lead by name —
-  const lead = leads.find(le => {
+  const lead = allLeads.find(le => {
     const parts = le.n.toLowerCase().split(" ");
     return l.includes(le.n.toLowerCase()) || parts.some(p => p.length > 3 && l.includes(p));
   });
@@ -772,8 +773,8 @@ const getResp = (t, leadData) => {
   }
 
   // — Priority / today's focus —
-  if (l.includes("priorit") || l.includes("hoy") || l.includes("80/20") || l.includes("importante") || l.includes("focus")) {
-    const hot = leads.filter(x => x.isNew || x.sc >= 80 || x.st === "Zoom Agendado").slice(0, 3);
+  if (l.includes("priorit") || l.includes("hoy") || l.includes("80/20") || l.includes("importante") || l.includes("focus") || l.includes("cerrar") || l.includes("listo")) {
+    const hot = [...allLeads].filter(x => x.isNew || x.sc >= 80 || x.st === "Zoom Agendado").sort((a,b) => b.sc - a.sc).slice(0, 3);
     const totalV = hot.reduce((s, x) => s + (x.presupuesto || 0), 0);
     return {
       content: "Tus **3 prioridades de hoy** — Análisis 80/20 del pipeline activo:",
@@ -790,7 +791,7 @@ const getResp = (t, leadData) => {
 
   // — New / recently registered leads —
   if (l.includes("nuevo") || l.includes("registr") || l.includes("reciente") || l.includes("ingres")) {
-    const newLeads = leads.filter(x => x.isNew);
+    const newLeads = allLeads.filter(x => x.isNew);
     return {
       content: `**${newLeads.length} clientes nuevos** registrados recientemente — requieren primer contacto:`,
       metrics: newLeads.slice(0, 3).map((x, i) => ({
@@ -807,7 +808,7 @@ const getResp = (t, leadData) => {
 
   // — Zoom / scheduled meetings —
   if (l.includes("zoom") || l.includes("reunión") || l.includes("videollamada")) {
-    const zooms = leads.filter(x => x.st === "Zoom Agendado");
+    const zooms = allLeads.filter(x => x.st === "Zoom Agendado" || x.st === "Zoom Concretado");
     return {
       content: `**${zooms.length} Zooms agendados** — Prepara cada sesión con los siguientes puntos:`,
       metrics: zooms.map((x, i) => ({
@@ -839,8 +840,47 @@ const getResp = (t, leadData) => {
   // — Schedule / appointment —
   if (l.includes("agenda") || l.includes("llamada") || l.includes("cita") || l.includes("tarea")) return responses.schedule;
 
-  // — Team report —
-  if (l.includes("rendimiento") || l.includes("equipo") || l.includes("reporte") || l.includes("métricas")) return responses.teamrep;
+  // — Inactivity — using live data
+  if (l.includes("inactividad") || l.includes("inactiv") || l.includes("sin actividad") || l.includes("olvidado")) {
+    const inactive = [...allLeads].filter(x => x.daysInactive > 4 && x.st !== "Cierre" && x.st !== "Perdido").sort((a,b) => b.daysInactive - a.daysInactive).slice(0, 4);
+    return {
+      content: `⚠️ **${inactive.length} clientes con inactividad crítica** — requieren contacto inmediato:`,
+      metrics: inactive.map((x, i) => ({
+        label: `${x.n} · ${x.st} · ${x.daysInactive}d inactivo`,
+        val: `Acción sugerida: ${x.nextAction || "Llamar o enviar mensaje de seguimiento"}`,
+        i: [AlertCircle, AlertTriangle, Timer, Phone][i] || AlertCircle,
+        c: x.daysInactive >= 10 ? P.rose : x.daysInactive >= 7 ? "#FF6B6B" : P.amber,
+      })),
+      follow: `Reactivar estos clientes esta semana puede recuperar hasta **$${(inactive.reduce((s,x) => s+(x.presupuesto||0),0)/1000000).toFixed(1)}M** en pipeline.`,
+      btn: "Reactivar todos",
+      action: "Ejecutar campaña de reactivación para clientes inactivos",
+    };
+  }
+
+  // — Team report — using live data
+  if (l.includes("rendimiento") || l.includes("equipo") || l.includes("reporte") || l.includes("métricas")) {
+    const asesoresMap = {};
+    allLeads.forEach(x => {
+      if (!asesoresMap[x.asesor]) asesoresMap[x.asesor] = { leads: 0, zooms: 0, cierres: 0, totalSc: 0 };
+      asesoresMap[x.asesor].leads++;
+      if (x.st === "Zoom Agendado" || x.st === "Zoom Concretado") asesoresMap[x.asesor].zooms++;
+      if (x.st === "Cierre") asesoresMap[x.asesor].cierres++;
+      asesoresMap[x.asesor].totalSc += x.sc;
+    });
+    const asesorList = Object.entries(asesoresMap).map(([name, d]) => ({ name, ...d, avgSc: Math.round(d.totalSc / d.leads) })).sort((a,b) => b.avgSc - a.avgSc);
+    return {
+      content: `📊 **Reporte del equipo** — ${allLeads.length} clientes · ${asesorList.length} asesores activos:`,
+      metrics: asesorList.slice(0, 4).map((a, i) => ({
+        label: `${a.name.split(" ")[0]} · ${a.leads} leads · Score promedio ${a.avgSc}`,
+        val: `Zooms: ${a.zooms} · Cierres: ${a.cierres} · Pipeline activo: ${a.leads - a.cierres}`,
+        i: [Crown, Trophy, Target, Users][i] || Users,
+        c: [P.emerald, P.blue, P.cyan, P.violet][i] || P.txt2,
+      })),
+      follow: `El equipo mantiene un score promedio de **${Math.round(allLeads.reduce((s,x)=>s+x.sc,0)/allLeads.length)}** puntos. ¿Quieres el análisis detallado por asesor?`,
+      btn: "Ver análisis completo",
+      action: "Análisis completo de rendimiento por asesor",
+    };
+  }
 
   // — Inventory —
   if (l.includes("inventario") || l.includes("unidades") || l.includes("quedan") || l.includes("disponible")) return responses.inventory;
@@ -1375,10 +1415,11 @@ function CRM({ oc, co, leadsData, setLeadsData }) {
   const [selectedLead, setSelectedLead] = useState(null);
   const [notesLead, setNotesLead]       = useState(null);
   const [addingLead, setAddingLead]     = useState(false);
-  const [newLead, setNewLead]           = useState({ n: "", asesor: canSeeAll ? "" : (user?.name || ""), phone: "", budget: "", p: "", campana: "", st: "Nuevo Registro" });
+  const [newLead, setNewLead]           = useState({ n: "", asesor: canSeeAll ? "" : (user?.name || ""), phone: "", email: "", budget: "", p: "", campana: "", st: "Nuevo Registro", nextAction: "", notas: "" });
   const [hoveredRow, setHoveredRow]     = useState(null);
   const [dragLeadId, setDragLeadId]     = useState(null);
   const [dragOverStage, setDragOverStage] = useState(null);
+  const [activeCardIdx, setActiveCardIdx] = useState(0);
 
   // visibleLeads = leads accesibles según el rol del usuario
   const visibleLeads = canSeeAll ? leadsData : leadsData.filter(l => l.asesor === user?.name);
@@ -1389,13 +1430,30 @@ function CRM({ oc, co, leadsData, setLeadsData }) {
     if (notesLead?.id === updated.id) setNotesLead(updated);
   };
   const saveNotes = (newNotas) => { const u = {...notesLead, notas: newNotas}; updateLead(u); setNotesLead(u); };
-  const handleDragStart = (e, id) => { setDragLeadId(id); e.dataTransfer.effectAllowed = "move"; };
+  const handleDragStart = (e, id) => {
+    setDragLeadId(id);
+    e.dataTransfer.effectAllowed = "move";
+    // Custom drag image for clarity
+    const el = e.currentTarget;
+    if (el) { e.dataTransfer.setDragImage(el, el.offsetWidth / 2, 20); }
+  };
   const handleDragOver = (e, stage) => { e.preventDefault(); e.dataTransfer.dropEffect = "move"; setDragOverStage(stage); };
-  const handleDrop = (e, stage) => { e.preventDefault(); if (dragLeadId) setLeadsData(prev => prev.map(l => l.id === dragLeadId ? {...l,st:stage} : l)); setDragLeadId(null); setDragOverStage(null); };
+  const handleDrop = (e, stage) => {
+    e.preventDefault();
+    if (dragLeadId) {
+      setLeadsData(prev => prev.map(l => l.id === dragLeadId ? {...l, st: stage} : l));
+      // If we pinned/auto-prioritized this lead, update its stage in pinnedIds context too
+    }
+    setDragLeadId(null);
+    setDragOverStage(null);
+  };
   const handleDragEnd = () => { setDragLeadId(null); setDragOverStage(null); };
   const [expandedPriority, setExpandedPriority] = useState(null);
   const [pinnedIds,    setPinnedIds]    = useState(new Set());
   const [dismissedIds, setDismissedIds] = useState(new Set());
+  const [priorityOrder, setPriorityOrder] = useState([]); // IDs ordered manually
+  const [dragCardId,   setDragCardId]   = useState(null);
+  const [dragInsertIdx, setDragInsertIdx] = useState(null); // index where card will be inserted
 
   const togglePin = (id) => {
     setPinnedIds(prev => {
@@ -1470,8 +1528,56 @@ function CRM({ oc, co, leadsData, setLeadsData }) {
     );
   };
 
-  const isAutoPriority = (l) => (l.isNew || l.st === "Zoom Concretado" || l.st === "Zoom Agendado" || l.hot) && !dismissedIds.has(l.id);
-  const priorityLeads = visibleLeads.filter(l => pinnedIds.has(l.id) || isAutoPriority(l)).sort((a,b) => (pinnedIds.has(b.id) ? 1 : 0) - (pinnedIds.has(a.id) ? 1 : 0) || b.sc - a.sc);
+  const isAutoPriority = (l) => (l.isNew || l.st === "Zoom Concretado" || l.st === "Zoom Agendado" || l.hot || l.daysInactive <= 3) && !dismissedIds.has(l.id);
+  const rawPriorityLeads = visibleLeads.filter(l => pinnedIds.has(l.id) || isAutoPriority(l));
+  // Respect manual drag order when set
+  const priorityLeads = priorityOrder.length
+    ? [...rawPriorityLeads].sort((a, b) => {
+        const ia = priorityOrder.indexOf(a.id);
+        const ib = priorityOrder.indexOf(b.id);
+        if (ia === -1 && ib === -1) return b.sc - a.sc;
+        if (ia === -1) return 1;
+        if (ib === -1) return -1;
+        return ia - ib;
+      })
+    : [...rawPriorityLeads].sort((a,b) => (pinnedIds.has(b.id) ? 1 : 0) - (pinnedIds.has(a.id) ? 1 : 0) || b.sc - a.sc);
+
+  // Drag handlers for priority card reordering — uses insert-index for precision
+  const handleCardDragStart = (e, id) => {
+    setDragCardId(id);
+    e.dataTransfer.effectAllowed = "move";
+    e.dataTransfer.setData("cardId", String(id));
+  };
+  const handleCardDragOver = (e, idx) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    // Determine insert position: before or after this card based on mouse X position
+    const rect = e.currentTarget.getBoundingClientRect();
+    const midX = rect.left + rect.width / 2;
+    const insertAfter = e.clientX > midX;
+    setDragInsertIdx(insertAfter ? idx + 1 : idx);
+  };
+  const handleCarouselDragOver = (e) => {
+    e.preventDefault();
+    // When dragging over empty space at end of carousel
+    setDragInsertIdx(priorityLeads.length);
+  };
+  const handleCardDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (dragInsertIdx === null || !dragCardId) { setDragCardId(null); setDragInsertIdx(null); return; }
+    const ids = priorityLeads.map(l => l.id);
+    const fromIdx = ids.indexOf(dragCardId);
+    if (fromIdx === -1) { setDragCardId(null); setDragInsertIdx(null); return; }
+    const reordered = ids.filter(id => id !== dragCardId);
+    const insertAt = dragInsertIdx > fromIdx ? Math.max(0, dragInsertIdx - 1) : dragInsertIdx;
+    reordered.splice(insertAt, 0, dragCardId);
+    setPriorityOrder(reordered);
+    setDragCardId(null);
+    setDragInsertIdx(null);
+  };
+  const handleCardDragEnd = () => { setDragCardId(null); setDragInsertIdx(null); };
+
   const carouselRef = useRef(null);
   const scrollCarousel = (dir) => carouselRef.current?.scrollBy({ left: dir * 310, behavior: "smooth" });
   const totalPipeline = visibleLeads.reduce((s, l) => s + (l.presupuesto || 0), 0);
@@ -1592,52 +1698,52 @@ function CRM({ oc, co, leadsData, setLeadsData }) {
               </div>
             </div>
 
-            {/* Scroll horizontal — carrusel con flechas */}
+            {/* Scroll horizontal — swipe / drag sin flechas */}
             <div style={{ position: "relative" }}>
-              {/* Flecha izquierda */}
-              {priorityLeads.length > 1 && (
-                <button onClick={() => scrollCarousel(-1)} style={{
-                  position: "absolute", left: -14, top: "50%", transform: "translateY(-50%)",
-                  zIndex: 10, width: 32, height: 32, borderRadius: "50%",
-                  background: "rgba(6,10,17,0.85)", border: "1px solid rgba(255,255,255,0.12)",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  cursor: "pointer", backdropFilter: "blur(8px)", transition: "all 0.18s",
-                }}
-                  onMouseEnter={e => { e.currentTarget.style.background = "rgba(110,231,194,0.15)"; e.currentTarget.style.borderColor = P.accentB; }}
-                  onMouseLeave={e => { e.currentTarget.style.background = "rgba(6,10,17,0.85)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.12)"; }}
-                ><ChevronLeft size={15} color={P.txt2} strokeWidth={2} /></button>
-              )}
-              {/* Flecha derecha */}
-              {priorityLeads.length > 1 && (
-                <button onClick={() => scrollCarousel(1)} style={{
-                  position: "absolute", right: -14, top: "50%", transform: "translateY(-50%)",
-                  zIndex: 10, width: 32, height: 32, borderRadius: "50%",
-                  background: "rgba(6,10,17,0.85)", border: "1px solid rgba(255,255,255,0.12)",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  cursor: "pointer", backdropFilter: "blur(8px)", transition: "all 0.18s",
-                }}
-                  onMouseEnter={e => { e.currentTarget.style.background = "rgba(110,231,194,0.15)"; e.currentTarget.style.borderColor = P.accentB; }}
-                  onMouseLeave={e => { e.currentTarget.style.background = "rgba(6,10,17,0.85)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.12)"; }}
-                ><ChevronRight size={15} color={P.txt2} strokeWidth={2} /></button>
-              )}
-            <div ref={carouselRef} style={{ display: "flex", gap: 12, overflowX: "auto", paddingBottom: 6, scrollbarWidth: "none", scrollBehavior: "smooth", scrollSnapType: "x mandatory", WebkitOverflowScrolling: "touch" }}>
+            <div ref={carouselRef}
+              onScroll={() => {
+                if (!carouselRef.current) return;
+                const cardW = 310;
+                const idx = Math.round(carouselRef.current.scrollLeft / cardW);
+                setActiveCardIdx(Math.max(0, Math.min(idx, priorityLeads.length - 1)));
+              }}
+              onDragOver={handleCarouselDragOver}
+              onDrop={handleCardDrop}
+              style={{ display: "flex", gap: 12, overflowX: "auto", paddingBottom: 6, scrollbarWidth: "none", msOverflowStyle: "none", scrollBehavior: "smooth", scrollSnapType: "x mandatory", WebkitOverflowScrolling: "touch" }}>
               {priorityLeads.map((l, cardIdx) => {
                 const sc = l.sc;
                 const stageColor = stgC[l.st] || P.txt3;
                 const meta = getCardMeta(l);
 
+                const isDraggingCard = dragCardId === l.id;
+                const showInsertBefore = dragInsertIdx === cardIdx && dragCardId && dragCardId !== l.id;
+                const showInsertAfter = dragInsertIdx === cardIdx + 1 && dragCardId && cardIdx === priorityLeads.length - 1;
                 return (
-                  <div key={l.id} style={{
-                    minWidth: co ? 256 : 288, maxWidth: 288, flexShrink: 0,
-                    borderRadius: 18, overflow: "hidden",
-                    background: meta.bg, border: `1px solid ${meta.border}`,
-                    display: "flex", flexDirection: "column",
-                    transition: "transform 0.2s ease",
-                    animation: meta.glow ? "urgentGlow 2.8s ease-in-out infinite" : "none",
-                    scrollSnapAlign: "start",
-                  }}
-                    onMouseEnter={e => e.currentTarget.style.transform = "translateY(-4px)"}
-                    onMouseLeave={e => e.currentTarget.style.transform = "none"}
+                  <div key={l.id} style={{ display: "flex", alignItems: "stretch", gap: 0, flexShrink: 0, scrollSnapAlign: "start" }}>
+                    {/* Insert-before indicator */}
+                    {showInsertBefore && (
+                      <div style={{ width: 3, borderRadius: 3, background: P.accent, boxShadow: `0 0 12px ${P.accent}80`, marginRight: 4, alignSelf: "stretch", flexShrink: 0, transition: "opacity 0.15s" }} />
+                    )}
+                  <div
+                    draggable
+                    onDragStart={e => handleCardDragStart(e, l.id)}
+                    onDragOver={e => { e.stopPropagation(); handleCardDragOver(e, cardIdx); }}
+                    onDrop={e => { e.stopPropagation(); handleCardDrop(e); }}
+                    onDragEnd={handleCardDragEnd}
+                    style={{
+                      minWidth: co ? 256 : 288, maxWidth: 288, flexShrink: 0,
+                      borderRadius: 18, overflow: "hidden",
+                      background: meta.bg,
+                      border: `1px solid ${meta.border}`,
+                      display: "flex", flexDirection: "column",
+                      transition: "transform 0.2s ease, opacity 0.18s ease",
+                      animation: meta.glow ? "urgentGlow 2.8s ease-in-out infinite" : "none",
+                      opacity: isDraggingCard ? 0.38 : 1,
+                      cursor: dragCardId ? (isDraggingCard ? "grabbing" : "copy") : "grab",
+                      transform: isDraggingCard ? "scale(0.97)" : "none",
+                    }}
+                    onMouseEnter={e => { if (!dragCardId) e.currentTarget.style.transform = "translateY(-4px)"; }}
+                    onMouseLeave={e => { if (!dragCardId) e.currentTarget.style.transform = "none"; }}
                   >
                     {/* Barra top — shimmer animado en urgentes */}
                     <div style={{
@@ -1652,8 +1758,11 @@ function CRM({ oc, co, leadsData, setLeadsData }) {
                       {/* Fila superior: tipo · × */}
                       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
                         <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
-                          {meta.pulse && <div style={{ width: 6, height: 6, borderRadius: "50%", background: meta.color, flexShrink: 0, animation: "pulse 1.5s ease-in-out infinite" }} />}
-                          <span style={{ fontSize: 9, fontWeight: 700, color: meta.color, letterSpacing: "0.06em", textTransform: "uppercase", fontFamily: font }}>{meta.label}</span>
+                          {meta.pulse && <div style={{ width: 6, height: 6, borderRadius: "50%", background: meta.color, flexShrink: 0, animation: "pulse 1.5s ease-in-out infinite", boxShadow: `0 0 6px ${meta.color}80` }} />}
+                          <span style={{ fontSize: 10.5, fontWeight: 700, color: meta.color, letterSpacing: "0.06em", textTransform: "uppercase", fontFamily: font }}>
+                            {meta.label}
+                            {l.daysInactive !== undefined && l.daysInactive <= 1 && !l.isNew ? <span style={{ marginLeft: 5, fontSize: 9, background: `${meta.color}22`, border: `1px solid ${meta.color}44`, borderRadius: 4, padding: "1px 5px" }}>HOY</span> : l.daysInactive > 1 && l.daysInactive <= 4 ? <span style={{ marginLeft: 5, fontSize: 9, color: `${meta.color}99` }}>{l.daysInactive}D</span> : null}
+                          </span>
                         </div>
                         <button onClick={() => dismissPriority(l.id)} title="Quitar de prioridad"
                           style={{ width: 20, height: 20, borderRadius: 5, background: "transparent", border: "1px solid rgba(255,255,255,0.08)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.14s", flexShrink: 0 }}
@@ -1671,12 +1780,14 @@ function CRM({ oc, co, leadsData, setLeadsData }) {
                         </div>
                       </div>
 
-                      {/* Score bar — discreta */}
+                      {/* Score bar — con glow en score alto */}
                       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                        <div style={{ flex: 1, height: 3, borderRadius: 2, background: "rgba(255,255,255,0.06)" }}>
-                          <div style={{ width: `${sc}%`, height: "100%", borderRadius: 2, background: meta.color, opacity: 0.8 }} />
+                        <div style={{ flex: 1, height: 3.5, borderRadius: 2, background: "rgba(255,255,255,0.06)" }}>
+                          <div style={{ width: `${sc}%`, height: "100%", borderRadius: 2, background: sc >= 80 ? P.emerald : sc >= 60 ? P.blue : P.amber, opacity: 0.9,
+                            boxShadow: sc >= 80 ? `0 0 8px ${P.emerald}60` : sc >= 60 ? `0 0 6px ${P.blue}50` : "none" }} />
                         </div>
-                        <span style={{ fontSize: 10, fontWeight: 700, color: P.txt3, fontFamily: fontDisp, flexShrink: 0 }}>Score {sc}</span>
+                        <span style={{ fontSize: 10, fontWeight: 700, fontFamily: fontDisp, flexShrink: 0,
+                          color: sc >= 80 ? P.emerald : sc >= 60 ? P.blue : P.amber }}>Score {sc}</span>
                       </div>
 
                       {/* Próxima acción */}
@@ -1715,8 +1826,8 @@ function CRM({ oc, co, leadsData, setLeadsData }) {
                           transition: "all 0.18s",
                           display: "flex", alignItems: "center", justifyContent: "center", gap: 7,
                         }}
-                          onMouseEnter={e => { e.currentTarget.style.background = "linear-gradient(135deg, rgba(110,231,194,0.30), rgba(110,231,194,0.14))"; e.currentTarget.style.boxShadow = `0 6px 20px ${P.accent}20`; }}
-                          onMouseLeave={e => { e.currentTarget.style.background = "linear-gradient(135deg, rgba(110,231,194,0.18), rgba(110,231,194,0.08))"; e.currentTarget.style.boxShadow = "none"; }}
+                          onMouseEnter={e => { e.currentTarget.style.background = "linear-gradient(135deg, rgba(110,231,194,0.30), rgba(110,231,194,0.14))"; e.currentTarget.style.boxShadow = `0 0 28px ${P.accent}35, 0 4px 16px ${P.accent}20`; e.currentTarget.style.transform = "translateY(-1px)"; }}
+                          onMouseLeave={e => { e.currentTarget.style.background = "linear-gradient(135deg, rgba(110,231,194,0.18), rgba(110,231,194,0.08))"; e.currentTarget.style.boxShadow = "none"; e.currentTarget.style.transform = "none"; }}
                         ><Zap size={13} strokeWidth={2.5} /> Analizar y actuar</button>
 
                         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 7 }}>
@@ -1740,10 +1851,31 @@ function CRM({ oc, co, leadsData, setLeadsData }) {
                       </div>
                     </div>
                   </div>
+                  {/* Insert-after indicator (last card) */}
+                  {showInsertAfter && (
+                    <div style={{ width: 3, borderRadius: 3, background: P.accent, boxShadow: `0 0 12px ${P.accent}80`, marginLeft: 4, alignSelf: "stretch", flexShrink: 0 }} />
+                  )}
+                  </div>
                 );
               })}
             </div>
-            </div>{/* cierre wrapper flechas */}
+            {/* Dots indicadores de posición */}
+            {priorityLeads.length > 1 && (
+              <div style={{ display: "flex", justifyContent: "center", gap: 5, marginTop: 10 }}>
+                {priorityLeads.map((l, i) => (
+                  <div key={l.id}
+                    onClick={() => carouselRef.current?.scrollTo({ left: i * 310, behavior: "smooth" })}
+                    style={{
+                      width: i === activeCardIdx ? 20 : 6, height: 6, borderRadius: 3,
+                      background: i === activeCardIdx ? P.accent : "rgba(255,255,255,0.16)",
+                      transition: "all 0.3s cubic-bezier(0.4,0,0.2,1)",
+                      cursor: "pointer", flexShrink: 0,
+                    }}
+                  />
+                ))}
+              </div>
+            )}
+            </div>{/* cierre wrapper carrusel */}
           </div>
         );
       })()}
@@ -1782,10 +1914,12 @@ function CRM({ oc, co, leadsData, setLeadsData }) {
               {[
                 { label: "Nombre completo", key: "n", ph: "Ej. Rafael García López", full: true, required: true, icon: User },
                 { label: "Teléfono", key: "phone", ph: "+52 998 123 4567", icon: Phone },
+                { label: "Email", key: "email", ph: "cliente@email.com", icon: Mail },
                 ...(canSeeAll ? [{ label: "Asesor asignado", key: "asesor", ph: "Estefanía Valdes", icon: Users }] : []),
                 { label: "Presupuesto estimado", key: "budget", ph: "$200,000 USD", icon: DollarSign },
                 { label: "Fuente / Campaña", key: "campana", ph: "Google Ads, Referido, Expo…", icon: Crosshair },
                 { label: "Proyecto de interés", key: "p", ph: "Gobernador 28, Monarca 28, Torre 25…", full: true, icon: Building2 },
+                { label: "Próxima acción", key: "nextAction", ph: "Enviar propuesta formal, agendar zoom…", full: true, icon: Zap },
               ].map(f => (
                 <div key={f.key} style={{ gridColumn: f.full ? "1 / -1" : "auto" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 7 }}>
@@ -2147,7 +2281,7 @@ function CRM({ oc, co, leadsData, setLeadsData }) {
                 <div key={stage}
                   onDragOver={e => handleDragOver(e, stage)}
                   onDrop={e => handleDrop(e, stage)}
-                  style={{ minWidth: 222, flex: "0 0 222px", display: "flex", flexDirection: "column", gap: 8 }}>
+                  style={{ minWidth: 244, flex: "0 0 244px", display: "flex", flexDirection: "column", gap: 8 }}>
                   <div style={{ padding: "10px 13px 10px 11px", borderRadius: 11, background: isDragTarget ? `${c}18` : `${c}0C`, border: `1px solid ${isDragTarget ? `${c}50` : `${c}28`}`, display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0, transition: "all 0.15s" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 7, minWidth: 0 }}>
                       <div style={{ width: 8, height: 8, borderRadius: "50%", background: c, flexShrink: 0 }} />
@@ -2182,10 +2316,23 @@ function CRM({ oc, co, leadsData, setLeadsData }) {
                               <p style={{ fontSize: 12, fontWeight: 700, color: "#FFF", fontFamily: fontDisp, letterSpacing: "-0.02em", flexShrink: 0 }}>{l.budget}</p>
                             </div>
                             <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
-                              <div style={{ flex: 1, height: 2.5, borderRadius: 2, background: "rgba(255,255,255,0.06)" }}><div style={{ width: `${sc}%`, height: "100%", borderRadius: 2, background: P.accent }} /></div>
-                              <span style={{ fontSize: 10, fontWeight: 700, color: P.txt2, fontFamily: fontDisp, minWidth: 18 }}>{sc}</span>
+                              <div style={{ flex: 1, height: 2.5, borderRadius: 2, background: "rgba(255,255,255,0.06)" }}>
+                                <div style={{ width: `${sc}%`, height: "100%", borderRadius: 2, background: sc >= 80 ? P.emerald : sc >= 60 ? P.blue : P.amber,
+                                  boxShadow: sc >= 80 ? `0 0 6px ${P.emerald}50` : "none" }} />
+                              </div>
+                              <span style={{ fontSize: 10, fontWeight: 700, fontFamily: fontDisp, minWidth: 18,
+                                color: sc >= 80 ? P.emerald : sc >= 60 ? P.blue : P.amber }}>{sc}</span>
                             </div>
-                            {l.daysInactive >= 5 && <p style={{ fontSize: 9.5, color: P.txt3, marginBottom: 7 }}>{l.daysInactive}d sin actividad</p>}
+                            {l.daysInactive >= 7 && (
+                              <div style={{ fontSize: 8.5, color: "#FF6B6B", background: "rgba(255,107,107,0.10)", border: "1px solid rgba(255,107,107,0.22)", borderRadius: 5, padding: "2px 7px", display: "inline-flex", alignItems: "center", gap: 3, marginBottom: 7 }}>
+                                ⚠ {l.daysInactive}d sin actividad
+                              </div>
+                            )}
+                            {l.daysInactive >= 3 && l.daysInactive < 7 && (
+                              <div style={{ fontSize: 8.5, color: P.amber, background: `${P.amber}12`, border: `1px solid ${P.amber}25`, borderRadius: 5, padding: "2px 7px", display: "inline-flex", alignItems: "center", gap: 3, marginBottom: 7 }}>
+                                {l.daysInactive}d sin actividad
+                              </div>
+                            )}
                             {/* Selector de etapa inline */}
                             <div onClick={e => e.stopPropagation()} style={{ marginBottom: 8 }}>
                               <select value={l.st} onChange={e => setLeadsData(prev => prev.map(x => x.id === l.id ? {...x, st: e.target.value} : x))}
@@ -2220,12 +2367,12 @@ function CRM({ oc, co, leadsData, setLeadsData }) {
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 14 }}>
 
         {/* Score por Cliente */}
-        <G style={{ padding: "14px 16px" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+        <G style={{ padding: "12px 14px 8px" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
             <p style={{ fontSize: 12.5, fontWeight: 700, color: P.txt, fontFamily: fontDisp, margin: 0 }}>Score por Cliente</p>
             <Pill color={P.blue} s>Top {Math.min(sortedLeads.length, 8)}</Pill>
           </div>
-          <ResponsiveContainer width="100%" height={Math.max(sortedLeads.slice(0,8).length * 22, 80)}>
+          <ResponsiveContainer width="100%" height={Math.max(sortedLeads.slice(0,8).length * 20, 68)}>
             <BarChart
               data={[...sortedLeads].sort((a,b) => b.sc - a.sc).slice(0,8).map(l => ({ n: l.n.split(" ")[0], sc: l.sc }))}
               margin={{ top: 2, right: 4, left: -20, bottom: 0 }}
@@ -2243,8 +2390,8 @@ function CRM({ oc, co, leadsData, setLeadsData }) {
         </G>
 
         {/* Distribución por etapa */}
-        <G style={{ padding: "14px 16px" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+        <G style={{ padding: "12px 14px 8px" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
             <p style={{ fontSize: 12.5, fontWeight: 700, color: P.txt, fontFamily: fontDisp, margin: 0 }}>Distribución</p>
             {filterStage !== "TODO" && (
               <button onClick={() => setFilterStage("TODO")} style={{ fontSize: 9.5, color: P.txt3, background: "none", border: "none", cursor: "pointer", fontFamily: font, padding: 0 }}
@@ -2279,8 +2426,8 @@ function CRM({ oc, co, leadsData, setLeadsData }) {
         </G>
 
         {/* Por Asesor */}
-        <G style={{ padding: "14px 16px" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+        <G style={{ padding: "12px 14px 8px" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
             <p style={{ fontSize: 12.5, fontWeight: 700, color: P.txt, fontFamily: fontDisp, margin: 0 }}>Por Asesor</p>
             {filterAsesor !== "TODO" && (
               <button onClick={() => setFilterAsesor("TODO")} style={{ fontSize: 9.5, color: P.txt3, background: "none", border: "none", cursor: "pointer", fontFamily: font, padding: 0 }}
@@ -5170,17 +5317,32 @@ const LandingPagePreview = ({ client, asesor, asesorWA = "", asesorCal = "", men
             <div style={{ marginBottom: 12 }}>
               <p style={{ fontSize: 11, color: P.txt2, marginBottom: 8, fontWeight: 600, letterSpacing: "0.04em", textTransform: "uppercase" }}>Enviar por WhatsApp</p>
               {waUrl ? (
-                <a href={`https://wa.me/${waPhone}?text=${encodeURIComponent(`Hola ${client || "estimado cliente"}, te comparto la presentación exclusiva de propiedades que seleccioné para ti: ${demoShareUrl}`)}`}
-                  target="_blank" rel="noreferrer"
-                  style={{
-                    display: "flex", alignItems: "center", gap: 10, padding: "12px 18px",
-                    borderRadius: 10, background: "rgba(37,211,102,0.1)", border: "1px solid rgba(37,211,102,0.25)",
-                    color: "#25D366", textDecoration: "none", fontSize: 13, fontWeight: 700, fontFamily: fontDisp,
-                    transition: "all 0.2s",
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  <a href={`https://wa.me/${waPhone}?text=${encodeURIComponent(`Hola ${client || "estimado cliente"}, te comparto la presentación exclusiva de propiedades que seleccioné para ti:\n${demoShareUrl}`)}`}
+                    target="_blank" rel="noreferrer"
+                    style={{
+                      display: "flex", alignItems: "center", gap: 10, padding: "12px 18px",
+                      borderRadius: 10, background: "rgba(37,211,102,0.1)", border: "1px solid rgba(37,211,102,0.25)",
+                      color: "#25D366", textDecoration: "none", fontSize: 13, fontWeight: 700, fontFamily: fontDisp,
+                      transition: "all 0.2s",
+                    }}
+                  >
+                    <Phone size={16} /> Abrir WhatsApp con cliente
+                  </a>
+                  <button onClick={() => {
+                    const waMsg = `Hola ${client || "estimado cliente"} 🏡\n\nPrepare una presentación exclusiva con propiedades seleccionadas especialmente para ti.\n\nVe las propiedades aquí:\n${demoShareUrl}\n\n¿Cuándo te viene bien una llamada para revisarlas juntos?`;
+                    navigator.clipboard.writeText(waMsg).then(() => onCopyLink()).catch(() => {});
+                  }} style={{
+                    display: "flex", alignItems: "center", gap: 8, padding: "10px 16px",
+                    borderRadius: 9, background: P.glass, border: `1px solid ${P.border}`,
+                    color: P.txt2, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: font, transition: "all 0.18s",
                   }}
-                >
-                  <Phone size={16} /> Enviar enlace al cliente por WhatsApp
-                </a>
+                    onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.07)"; e.currentTarget.style.color = "#fff"; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = P.glass; e.currentTarget.style.color = P.txt2; }}
+                  >
+                    <Copy size={13} /> Copiar mensaje completo para WhatsApp
+                  </button>
+                </div>
               ) : (
                 <div style={{ padding: "12px 18px", borderRadius: 10, background: P.glass, border: `1px solid ${P.border}`, color: P.txt3, fontSize: 12 }}>
                   Configura el WhatsApp del asesor en el Paso 1 para activar esta opción
@@ -5282,16 +5444,16 @@ const LandingPagePreview = ({ client, asesor, asesorWA = "", asesorCal = "", men
 
           <div style={{ position: "relative", zIndex: 1, maxWidth: 900, margin: "0 auto", padding: "0 40px", width: "100%" }}>
             {/* Branding */}
-            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 30 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 30, animation: "fadeInUp 0.6s ease both" }}>
               <StratosAtom size={24} color={currentProp.accent} />
               <span style={{ fontSize: 14, color: "rgba(255,255,255,0.5)", fontWeight: 400, fontFamily: fontDisp, letterSpacing: "0.1em" }}>{agencyName}</span>
             </div>
 
             {/* Personalized greeting */}
-            <p style={{ fontSize: 16, color: "rgba(255,255,255,0.6)", fontFamily: font, marginBottom: 8, fontWeight: 400 }}>
+            <p style={{ fontSize: 16, color: "rgba(255,255,255,0.6)", fontFamily: font, marginBottom: 8, fontWeight: 400, animation: "fadeInUp 0.65s 0.08s ease both" }}>
               Preparado exclusivamente para
             </p>
-            <h1 style={{ fontSize: 52, fontWeight: 300, color: "#FFFFFF", fontFamily: fontDisp, letterSpacing: "-0.03em", lineHeight: 1.1, marginBottom: 20 }}>
+            <h1 style={{ fontSize: 52, fontWeight: 300, color: "#FFFFFF", fontFamily: fontDisp, letterSpacing: "-0.03em", lineHeight: 1.1, marginBottom: 20, animation: "floatSoft 5s 0.3s ease-in-out infinite, fadeInUp 0.7s 0.15s ease both" }}>
               {client || "Estimado Cliente"}
             </h1>
 
@@ -5307,7 +5469,7 @@ const LandingPagePreview = ({ client, asesor, asesorWA = "", asesorCal = "", men
               </p>
             )}
 
-            <div style={{ display: "flex", gap: 14, alignItems: "center", flexWrap: "wrap" }}>
+            <div style={{ display: "flex", gap: 14, alignItems: "center", flexWrap: "wrap", animation: "fadeInUp 0.7s 0.25s ease both" }}>
               {calUrl ? (
                 <a href={calUrl} target="_blank" rel="noreferrer" style={{
                   padding: "14px 32px", borderRadius: 12, border: "none",
@@ -5383,6 +5545,7 @@ const LandingPagePreview = ({ client, asesor, asesorWA = "", asesorCal = "", men
               <div key={prop.id} style={{
                 marginBottom: 60, borderRadius: 20, overflow: "hidden",
                 background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)",
+                animation: `scaleIn 0.55s ${idx * 0.1}s ease both`,
               }}>
                 {/* Property Header */}
                 <div style={{
@@ -7588,9 +7751,8 @@ export default function App() {
   const [notifs, setNotifs] = useState([]);
 
   // ── leadsData global — compartido entre Dash y CRM ───────────────────────
-  const [leadsData, setLeadsData] = useState(() =>
-    canSeeAllGlobal ? leads : leads.filter(l => l.asesor === user?.name)
-  );
+  // Inicializamos con TODOS los leads; el filtro por rol lo hace visibleLeads en CRM
+  const [leadsData, setLeadsData] = useState(leads);
 
   const onLogout = () => {
     logout();
@@ -7622,12 +7784,13 @@ export default function App() {
 
   const oc = useCallback((t, leadData) => {
     setCo(true);
+    setV("ia"); // Navegar al agente IA automáticamente
     if (t) setTimeout(() => {
       const displayText = leadData ? `Analizar expediente de ${leadData.n}` : t;
       setMsgs(p => [...p, { role: "u", text: displayText }]);
-      setTimeout(() => { setMsgs(p => [...p, { role: "a", ...getResp(t, leadData) }]); }, 1105);
+      setTimeout(() => { setMsgs(p => [...p, { role: "a", ...getResp(t, leadData, leadsData) }]); }, 1105);
     }, 150);
-  }, []);
+  }, [leadsData]);
 
   if (!user) return <LoginScreen onLogin={login} />;
 
