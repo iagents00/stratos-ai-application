@@ -8,7 +8,7 @@ import {
   TrendingUp, Target, ArrowUpRight, ArrowRight, CheckCircle2, Mic, Search,
   Users, Building2, MapPin, Send, Plus, Timer, Flame, Crown,
   Trophy, Gauge, Bell, Filter, User, DollarSign, Zap, Phone,
-  CalendarDays, FileText, Briefcase, ChevronRight, Lightbulb,
+  CalendarDays, FileText, Briefcase, ChevronRight, ChevronLeft, Lightbulb,
   Settings, X, Mic2, MicOff, Atom, Orbit, Hexagon, Crosshair,
   BarChart3, Activity, Clock, Wallet, Eye, MessageCircle,
   Star, Radar, Signal, Waypoints, ScanLine, CircuitBoard,
@@ -854,43 +854,91 @@ const getResp = (t, leadData) => {
 /* ════════════════════════════════════════
    VIEWS
    ════════════════════════════════════════ */
-const Dash = ({ oc, co }) => (
+const Dash = ({ oc, co, leadsData = [] }) => {
+  const [dashPeriod, setDashPeriod] = useState("semana");
+  const total    = leadsData.length || 1;
+  const cierres  = leadsData.filter(l => l.st === "Cierre").length;
+  const zooms    = leadsData.filter(l => l.st === "Zoom Agendado" || l.st === "Zoom Concretado").length;
+  const activos  = leadsData.filter(l => l.st !== "Perdido" && l.st !== "Cierre").length;
+  const tasaConv = ((cierres / total) * 100).toFixed(1);
+  const actionStages = ["Primer Contacto","Seguimiento","Zoom Agendado","Zoom Concretado","Visita Agendada","Negociación","Cierre"];
+  const actionData   = actionStages.map(st => ({
+    label: st.length > 10 ? st.substring(0, 10) + "…" : st,
+    fullName: st, val: leadsData.filter(l => l.st === st).length, color: stgC[st] || P.txt3,
+  })).filter(d => d.val > 0);
+  const totalAcciones = actionData.reduce((s, d) => s + d.val, 0);
+  const asesorList  = [...new Set(leadsData.map(l => l.asesor).filter(Boolean))];
+  const asesorStats = asesorList.map(a => {
+    const al = leadsData.filter(l => l.asesor === a);
+    return { name: a, total: al.length, zooms: al.filter(l => l.st === "Zoom Agendado" || l.st === "Zoom Concretado").length, cierres: al.filter(l => l.st === "Cierre").length, avgSc: al.length ? Math.round(al.reduce((s, l) => s + l.sc, 0) / al.length) : 0 };
+  }).sort((a, b) => b.total - a.total);
+  return (
   <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
     <div style={{ display: "grid", gridTemplateColumns: co ? "repeat(2, 1fr)" : "repeat(4, 1fr)", gap: 14 }}>
-      <KPI label="Ingresos Acumulados" value="$35.9M" sub="+28%" icon={DollarSign} />
-      <KPI label="Proyección Comercial" value="70" sub="+12 mes" icon={Target} color={P.blue} />
-      <KPI label="Tasa de Conversión" value="18.4%" sub="+3.2pp" icon={TrendingUp} color={P.emerald} />
-      <KPI label="Agentes IA" value="47" sub="12 auto" icon={Atom} color={P.violet} />
+      <KPI label="Pipeline Activo"     value={activos}         sub={`de ${leadsData.length} leads`} icon={Target} />
+      <KPI label="Zooms Totales"       value={zooms}           sub="agendados + concretados"         icon={CalendarDays} color={P.blue} />
+      <KPI label="Tasa de Conversión"  value={`${tasaConv}%`}  sub={`${cierres} cierres`}            icon={TrendingUp}   color={P.emerald} />
+      <KPI label="Score Promedio"      value={leadsData.length ? Math.round(leadsData.reduce((s,l)=>s+l.sc,0)/leadsData.length) : 0} sub="del equipo" icon={Atom} color={P.violet} />
     </div>
+    {/* Gráfica acciones del equipo + pipeline por etapa */}
     <div style={{ display: "grid", gridTemplateColumns: co ? "1fr" : "3fr 1.3fr", gap: 14 }}>
       <G>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
-          <p style={{ fontSize: 13, fontWeight: 700, color: P.txt }}>Ingresos vs Objetivo</p>
-          <Pill color={P.emerald} s>+28% target</Pill>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14, flexWrap: "wrap", gap: 8 }}>
+          <div>
+            <p style={{ fontSize: 13, fontWeight: 700, color: P.txt, fontFamily: fontDisp, margin: 0 }}>Acciones del Equipo</p>
+            <p style={{ fontSize: 10, color: P.txt3, fontFamily: font, margin: "2px 0 0" }}>Leads activos por etapa · tiempo real</p>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            {["semana","mes"].map(p => (
+              <button key={p} onClick={() => setDashPeriod(p)} style={{
+                padding: "3px 10px", borderRadius: 99, fontSize: 9.5, fontWeight: 600,
+                fontFamily: font, cursor: "pointer", transition: "all 0.15s",
+                background: dashPeriod === p ? `${P.accent}18` : "transparent",
+                border: `1px solid ${dashPeriod === p ? P.accentB : P.border}`,
+                color: dashPeriod === p ? P.accent : P.txt3,
+              }}>{p.charAt(0).toUpperCase() + p.slice(1)}</button>
+            ))}
+            <Pill color={P.accent} s>{totalAcciones} acciones</Pill>
+          </div>
         </div>
-        <ResponsiveContainer width="100%" height={170}>
-          <AreaChart data={revenue}>
-            <XAxis dataKey="m" tick={{ fill: P.txt3, fontSize: 10 }} axisLine={false} tickLine={false} />
-            <YAxis tick={{ fill: P.txt3, fontSize: 10 }} axisLine={false} tickLine={false} domain={[0, 10]} />
-            <Tooltip contentStyle={{ background: P.surface, border: `1px solid ${P.border}`, borderRadius: 10, color: P.txt, fontSize: 12, boxShadow: "0 8px 32px rgba(0,0,0,0.4)" }} />
-            <Area type="monotone" dataKey="v" stroke={P.accent} strokeWidth={2.5} fill={`${P.accent}14`} dot={{ r: 3, fill: P.accent, stroke: P.bg, strokeWidth: 2 }} name="$M" />
-          </AreaChart>
-        </ResponsiveContainer>
+        {actionData.length === 0 ? (
+          <div style={{ height: 155, display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <p style={{ fontSize: 12, color: P.txt3, fontFamily: font }}>Sin datos — registra clientes en el CRM</p>
+          </div>
+        ) : (
+          <ResponsiveContainer width="100%" height={155}>
+            <BarChart data={actionData} margin={{ top: 4, right: 4, left: -18, bottom: 0 }}>
+              <XAxis dataKey="label" tick={{ fill: P.txt3, fontSize: 9, fontFamily: font }} axisLine={false} tickLine={false} interval={0} />
+              <YAxis allowDecimals={false} tick={{ fill: P.txt3, fontSize: 9 }} axisLine={false} tickLine={false} width={24} />
+              <Tooltip contentStyle={{ background: "#0C1219", border: `1px solid ${P.border}`, borderRadius: 10, color: P.txt, fontSize: 11, boxShadow: "0 8px 32px rgba(0,0,0,0.4)" }} cursor={{ fill: "rgba(255,255,255,0.03)" }} formatter={(v, n, p) => [`${v} leads`, p.payload.fullName]} />
+              <Bar dataKey="val" radius={[5,5,0,0]} maxBarSize={42}>
+                {actionData.map((d, i) => <Cell key={i} fill={d.color} opacity={0.85} />)}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        )}
       </G>
       <G>
-        <p style={{ fontSize: 13, fontWeight: 700, color: P.txt, marginBottom: 8 }}>Proyección por Etapas</p>
-        {pipe.map(d => (
-          <div key={d.name} style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
-            <span style={{ fontSize: 11, color: P.txt2, width: 74 }}>{d.name}</span>
-            <div style={{ flex: 1, height: 6, borderRadius: 3, background: P.glass }}>
-              <div style={{ height: 6, borderRadius: 3, width: `${(d.val / 70) * 100}%`, background: d.c, transition: "width 0.8s ease", boxShadow: `0 0 8px ${d.c}30` }} />
+        <p style={{ fontSize: 13, fontWeight: 700, color: P.txt, fontFamily: fontDisp, marginBottom: 10 }}>Pipeline por Etapa</p>
+        {actionStages.map(st => {
+          const cnt = leadsData.filter(l => l.st === st).length;
+          if (cnt === 0) return null;
+          const c = stgC[st] || P.txt3;
+          const pct = Math.round((cnt / total) * 100);
+          return (
+            <div key={st} style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 9 }}>
+              <div style={{ width: 6, height: 6, borderRadius: "50%", background: c, flexShrink: 0 }} />
+              <span style={{ fontSize: 10, color: P.txt2, flex: 1, fontFamily: font, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{st}</span>
+              <div style={{ width: 48, height: 4, borderRadius: 2, background: "rgba(255,255,255,0.05)" }}>
+                <div style={{ width: `${pct}%`, height: "100%", borderRadius: 2, background: c, opacity: 0.75 }} />
+              </div>
+              <span style={{ fontSize: 11, fontWeight: 700, color: c, fontFamily: fontDisp, minWidth: 16, textAlign: "right" }}>{cnt}</span>
             </div>
-            <span style={{ fontSize: 12, fontWeight: 700, color: d.c, width: 24, textAlign: "right" }}>{d.val}</span>
-          </div>
-        ))}
-        <div style={{ marginTop: 6, padding: "8px 10px", borderRadius: P.rx, background: P.accentS, border: `1px solid ${P.accentB}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <span style={{ fontSize: 11, color: P.txt2 }}>Total</span>
-          <span style={{ fontSize: 15, fontWeight: 800, color: P.accent, fontFamily: "'Outfit'" }}>70</span>
+          );
+        })}
+        <div style={{ marginTop: 6, padding: "7px 10px", borderRadius: P.rx, background: P.accentS, border: `1px solid ${P.accentB}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <span style={{ fontSize: 10.5, color: P.txt2, fontFamily: font }}>Total activos</span>
+          <span style={{ fontSize: 15, fontWeight: 800, color: P.accent, fontFamily: fontDisp }}>{activos}</span>
         </div>
       </G>
     </div>
@@ -898,10 +946,10 @@ const Dash = ({ oc, co }) => (
     {/* Quick actions */}
     <div style={{ display: "grid", gridTemplateColumns: co ? "repeat(2, 1fr)" : "repeat(4, 1fr)", gap: 10 }}>
       {[
-        { l: "Nota de voz", i: Mic2, c: P.accent, q: examples[0].t },
-        { l: "Mis prioridades", i: Crosshair, c: P.amber, q: examples[1].t },
-        { l: "Agendar tarea", i: CalendarDays, c: P.blue, q: examples[2].t },
-        { l: "Reporte equipo", i: Trophy, c: P.violet, q: examples[3].t },
+        { l: "Nota de voz",    i: Mic2,        c: P.accent, q: examples[0].t },
+        { l: "Mis prioridades",i: Crosshair,   c: P.amber,  q: examples[1].t },
+        { l: "Agendar tarea",  i: CalendarDays,c: P.blue,   q: examples[2].t },
+        { l: "Reporte equipo", i: Trophy,      c: P.violet, q: examples[3].t },
       ].map(a => (
         <button key={a.l} onClick={() => oc(a.q)} style={{
           display: "flex", alignItems: "center", gap: 10, padding: "12px 14px",
@@ -912,57 +960,91 @@ const Dash = ({ oc, co }) => (
       ))}
     </div>
 
-    {/* Priority leads — new registrations + zoom scheduled */}
+    {/* Atención Inmediata — datos reales */}
     <G np>
       <div style={{ padding: "13px 18px", display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: `1px solid ${P.border}` }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <div style={{ width: 7, height: 7, borderRadius: "50%", background: P.accent, boxShadow: `0 0 8px ${P.accent}` }} />
+          <div style={{ width: 7, height: 7, borderRadius: "50%", background: P.accent, boxShadow: `0 0 8px ${P.accent}`, animation: "pulse 1.8s ease-in-out infinite" }} />
           <p style={{ fontSize: 13, fontWeight: 700, color: P.txt, fontFamily: fontDisp }}>Atención Inmediata</p>
           <Pill color={P.accent} s>Nuevos · Zoom agendado</Pill>
         </div>
-        <button onClick={() => {}} style={{ fontSize: 11, color: P.txt3, background: "none", border: "none", cursor: "pointer", fontFamily: font }}>Ver todos →</button>
+        <button onClick={() => oc("Dame un resumen de los clientes que necesitan atención inmediata")} style={{ fontSize: 11, color: P.txt3, background: "none", border: "none", cursor: "pointer", fontFamily: font }}
+          onMouseEnter={e => e.currentTarget.style.color = P.txt2}
+          onMouseLeave={e => e.currentTarget.style.color = P.txt3}
+        >Analizar con IA →</button>
       </div>
-      {leads.filter(l => l.isNew || l.st === "Zoom Agendado").sort((a,b) => b.sc - a.sc).slice(0, 4).map(l => (
-        <div key={l.id} onClick={() => oc(`__crm__ ${l.n.toLowerCase()}`)} style={{
-          display: "grid", gridTemplateColumns: "2fr 0.55fr 0.9fr 0.7fr 1.4fr",
-          alignItems: "center", padding: "11px 18px", borderBottom: `1px solid ${P.border}`,
-          gap: 8, cursor: "pointer", transition: "background 0.18s",
-        }}
-          onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.025)"}
-          onMouseLeave={e => e.currentTarget.style.background = "transparent"}
-        >
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <div style={{ width: 28, height: 28, borderRadius: 8, background: `${l.hot ? P.accent : P.blue}12`, border: `1px solid ${l.hot ? P.accent : P.blue}20`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 700, color: l.hot ? P.accent : P.blue, flexShrink: 0, fontFamily: fontDisp }}>{l.n.charAt(0)}</div>
-            <div>
-              <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
-                <span style={{ fontSize: 12.5, fontWeight: 600, color: "#FFFFFF", fontFamily: fontDisp, letterSpacing: "-0.01em" }}>{l.n}</span>
-                {l.isNew && <span style={{ fontSize: 8, fontWeight: 800, color: P.accent, background: `${P.accent}14`, padding: "1px 5px", borderRadius: 99, letterSpacing: "0.06em" }}>NEW</span>}
+      {leadsData.filter(l => l.isNew || l.st === "Zoom Agendado").sort((a,b) => b.sc - a.sc).slice(0, 4).length === 0
+        ? <div style={{ padding: "22px 18px", textAlign: "center" }}><p style={{ fontSize: 12, color: P.txt3, fontFamily: font }}>Sin clientes urgentes ✓</p></div>
+        : leadsData.filter(l => l.isNew || l.st === "Zoom Agendado").sort((a,b) => b.sc - a.sc).slice(0, 4).map(l => (
+          <div key={l.id} onClick={() => oc(`__crm__ ${l.n.toLowerCase()}`)} style={{
+            display: "grid", gridTemplateColumns: co ? "2fr 0.7fr 1fr" : "2fr 0.55fr 0.9fr 0.7fr 1.4fr",
+            alignItems: "center", padding: "11px 18px", borderBottom: `1px solid ${P.border}`,
+            gap: 8, cursor: "pointer", transition: "background 0.18s",
+          }}
+            onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.025)"}
+            onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <div style={{ width: 28, height: 28, borderRadius: 8, background: `${l.hot ? P.accent : P.blue}12`, border: `1px solid ${l.hot ? P.accent : P.blue}20`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 700, color: l.hot ? P.accent : P.blue, flexShrink: 0, fontFamily: fontDisp }}>{l.n.charAt(0)}</div>
+              <div>
+                <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                  <span style={{ fontSize: 12.5, fontWeight: 600, color: "#FFFFFF", fontFamily: fontDisp, letterSpacing: "-0.01em" }}>{l.n}</span>
+                  {l.isNew && <span style={{ fontSize: 8, fontWeight: 800, color: P.accent, background: `${P.accent}14`, padding: "1px 5px", borderRadius: 99, letterSpacing: "0.06em" }}>NEW</span>}
+                </div>
+                <p style={{ fontSize: 9, color: P.txt3, marginTop: 1, fontFamily: font }}>{l.asesor}</p>
               </div>
-              <p style={{ fontSize: 9, color: P.txt3, marginTop: 1 }}>{l.tag}</p>
             </div>
-          </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-            <div style={{ width: 24, height: 3, borderRadius: 2, background: P.border }}>
-              <div style={{ width: `${l.sc}%`, height: 3, borderRadius: 2, background: l.sc >= 80 ? P.emerald : l.sc >= 60 ? P.blue : P.cyan }} />
+            <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+              <div style={{ width: 24, height: 3, borderRadius: 2, background: P.border }}>
+                <div style={{ width: `${l.sc}%`, height: 3, borderRadius: 2, background: l.sc >= 80 ? P.emerald : l.sc >= 60 ? P.blue : P.cyan }} />
+              </div>
+              <span style={{ fontSize: 10, fontWeight: 700, color: l.sc >= 80 ? P.emerald : l.sc >= 60 ? P.blue : P.cyan, fontFamily: fontDisp }}>{l.sc}</span>
             </div>
-            <span style={{ fontSize: 10, fontWeight: 700, color: l.sc >= 80 ? P.emerald : l.sc >= 60 ? P.blue : P.cyan, fontFamily: fontDisp }}>{l.sc}</span>
+            <Pill color={stgC[l.st]} s>{l.st}</Pill>
+            {!co && <span style={{ fontSize: 13, fontWeight: 500, color: "#FFF", fontFamily: fontDisp, letterSpacing: "-0.02em" }}>{l.budget}</span>}
+            {!co && <div style={{ padding: "5px 8px", borderRadius: 7, background: `${P.accent}07`, border: `1px solid ${P.accentB}` }}>
+              <p style={{ fontSize: 9, fontWeight: 700, color: P.accent, letterSpacing: "0.04em", marginBottom: 2, fontFamily: font }}>{l.nextActionDate?.toUpperCase()}</p>
+              <p style={{ fontSize: 10, color: P.txt2, lineHeight: 1.35, fontFamily: font }}>{l.nextAction?.substring(0, 45)}{l.nextAction?.length > 45 ? "…" : ""}</p>
+            </div>}
           </div>
-          <Pill color={stgC[l.st]} s>{l.st}</Pill>
-          <span style={{ fontSize: 13, fontWeight: 500, color: "#FFFFFF", fontFamily: fontDisp, letterSpacing: "-0.02em" }}>{l.budget}</span>
-          <div style={{ padding: "5px 8px", borderRadius: 7, background: `${P.accent}07`, border: `1px solid ${P.accentB}` }}>
-            <p style={{ fontSize: 9, fontWeight: 700, color: P.accent, letterSpacing: "0.04em", marginBottom: 2 }}>{l.nextActionDate?.toUpperCase()}</p>
-            <p style={{ fontSize: 10, color: P.txt2, lineHeight: 1.35 }}>{l.nextAction?.substring(0, 45)}{l.nextAction?.length > 45 ? "…" : ""}</p>
-          </div>
-        </div>
-      ))}
+        ))
+      }
     </G>
+
+    {/* Rendimiento del equipo por asesor */}
+    {asesorStats.length > 0 && (
+      <G>
+        <p style={{ fontSize: 13, fontWeight: 700, color: P.txt, fontFamily: fontDisp, marginBottom: 12 }}>Rendimiento del Equipo</p>
+        <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr", gap: 0 }}>
+          {["Asesor","Leads","Zooms","Cierres","Score"].map(h => (
+            <span key={h} style={{ fontSize: 9, fontWeight: 700, color: P.txt3, fontFamily: font, letterSpacing: "0.05em", textTransform: "uppercase", paddingBottom: 8 }}>{h}</span>
+          ))}
+        </div>
+        {asesorStats.map((a, i) => {
+          const cols = [P.accent, P.blue, P.violet, P.amber, P.cyan, P.emerald];
+          const c = cols[i % cols.length];
+          return (
+            <div key={a.name} style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr", gap: 0, alignItems: "center", padding: "8px 0", borderTop: `1px solid ${P.border}` }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
+                <div style={{ width: 22, height: 22, borderRadius: 6, background: `${c}14`, border: `1px solid ${c}22`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 9, fontWeight: 700, color: c, fontFamily: fontDisp }}>{a.name.charAt(0)}</div>
+                <span style={{ fontSize: 11.5, color: P.txt, fontFamily: font }}>{a.name.split(" ")[0]}</span>
+              </div>
+              <span style={{ fontSize: 12, fontWeight: 700, color: P.txt,     fontFamily: fontDisp }}>{a.total}</span>
+              <span style={{ fontSize: 12, fontWeight: 700, color: P.blue,    fontFamily: fontDisp }}>{a.zooms}</span>
+              <span style={{ fontSize: 12, fontWeight: 700, color: P.emerald, fontFamily: fontDisp }}>{a.cierres}</span>
+              <span style={{ fontSize: 12, fontWeight: 700, color: c,         fontFamily: fontDisp }}>{a.avgSc}</span>
+            </div>
+          );
+        })}
+      </G>
+    )}
 
     {/* Agent status strip */}
     <div style={{ display: "grid", gridTemplateColumns: co ? "1fr" : "repeat(3, 1fr)", gap: 10 }}>
       {[
-        { n: "Estrategia", r: "Pipeline 80/20 · Alertas", i: AgentIcons.gerente, c: P.amber, s: "342 acciones" },
-        { n: "Coordinación", r: "Voz→CRM · Tareas", i: AgentIcons.asistente, c: P.blue, s: "1,248 acciones" },
-        { n: "Análisis", r: "ROI · Scoring · Proyecciones", i: AgentIcons.analista, c: P.emerald, s: "186 acciones" },
+        { n: "Estrategia",   r: "Pipeline 80/20 · Alertas",      i: AgentIcons.gerente,   c: P.amber,   s: "342 acciones" },
+        { n: "Coordinación", r: "Voz→CRM · Tareas",              i: AgentIcons.asistente, c: P.blue,    s: "1,248 acciones" },
+        { n: "Análisis",     r: "ROI · Scoring · Proyecciones",   i: AgentIcons.analista,  c: P.emerald, s: "186 acciones" },
       ].map(a => (
         <G key={a.n} hover>
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
@@ -983,10 +1065,10 @@ const Dash = ({ oc, co }) => (
       ))}
     </div>
 
-    {/* Team */}
     <Team />
   </div>
-);
+  );
+};
 
 /* ─── Score bar helper ─── */
 const ScoreBar = ({ sc, compact }) => {
@@ -1279,15 +1361,11 @@ const LeadPanel = ({ lead, onClose, oc, onOpenNotes, onUpdate }) => {
 /* ═══════════════════════════════════════════
    CRM — Pipeline Pro
 ═══════════════════════════════════════════ */
-function CRM({ oc, co }) {
+function CRM({ oc, co, leadsData, setLeadsData }) {
   const { user } = useAuth();
 
   // Solo director, admin y super_admin ven todos los leads
   const canSeeAll = ["super_admin", "admin", "director"].includes(user?.role);
-
-  const [leadsData, setLeadsData]       = useState(() =>
-    canSeeAll ? leads : leads.filter(l => l.asesor === user?.name)
-  );
   const [sortField, setSortField]       = useState("sc");
   const [sortDir, setSortDir]           = useState("desc");
   const [filterStage, setFilterStage]   = useState("TODO");
@@ -1394,6 +1472,8 @@ function CRM({ oc, co }) {
 
   const isAutoPriority = (l) => (l.isNew || l.st === "Zoom Concretado" || l.st === "Zoom Agendado" || l.hot) && !dismissedIds.has(l.id);
   const priorityLeads = visibleLeads.filter(l => pinnedIds.has(l.id) || isAutoPriority(l)).sort((a,b) => (pinnedIds.has(b.id) ? 1 : 0) - (pinnedIds.has(a.id) ? 1 : 0) || b.sc - a.sc);
+  const carouselRef = useRef(null);
+  const scrollCarousel = (dir) => carouselRef.current?.scrollBy({ left: dir * 310, behavior: "smooth" });
   const totalPipeline = visibleLeads.reduce((s, l) => s + (l.presupuesto || 0), 0);
   const avgScore = visibleLeads.length ? Math.round(visibleLeads.reduce((s, l) => s + l.sc, 0) / visibleLeads.length) : 0;
   const hotLeads = visibleLeads.filter(l => l.hot || l.daysInactive <= 2).length;
@@ -1512,8 +1592,35 @@ function CRM({ oc, co }) {
               </div>
             </div>
 
-            {/* Scroll horizontal — todos los leads */}
-            <div style={{ display: "flex", gap: 12, overflowX: "auto", paddingBottom: 6, scrollbarWidth: "none" }}>
+            {/* Scroll horizontal — carrusel con flechas */}
+            <div style={{ position: "relative" }}>
+              {/* Flecha izquierda */}
+              {priorityLeads.length > 1 && (
+                <button onClick={() => scrollCarousel(-1)} style={{
+                  position: "absolute", left: -14, top: "50%", transform: "translateY(-50%)",
+                  zIndex: 10, width: 32, height: 32, borderRadius: "50%",
+                  background: "rgba(6,10,17,0.85)", border: "1px solid rgba(255,255,255,0.12)",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  cursor: "pointer", backdropFilter: "blur(8px)", transition: "all 0.18s",
+                }}
+                  onMouseEnter={e => { e.currentTarget.style.background = "rgba(110,231,194,0.15)"; e.currentTarget.style.borderColor = P.accentB; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = "rgba(6,10,17,0.85)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.12)"; }}
+                ><ChevronLeft size={15} color={P.txt2} strokeWidth={2} /></button>
+              )}
+              {/* Flecha derecha */}
+              {priorityLeads.length > 1 && (
+                <button onClick={() => scrollCarousel(1)} style={{
+                  position: "absolute", right: -14, top: "50%", transform: "translateY(-50%)",
+                  zIndex: 10, width: 32, height: 32, borderRadius: "50%",
+                  background: "rgba(6,10,17,0.85)", border: "1px solid rgba(255,255,255,0.12)",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  cursor: "pointer", backdropFilter: "blur(8px)", transition: "all 0.18s",
+                }}
+                  onMouseEnter={e => { e.currentTarget.style.background = "rgba(110,231,194,0.15)"; e.currentTarget.style.borderColor = P.accentB; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = "rgba(6,10,17,0.85)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.12)"; }}
+                ><ChevronRight size={15} color={P.txt2} strokeWidth={2} /></button>
+              )}
+            <div ref={carouselRef} style={{ display: "flex", gap: 12, overflowX: "auto", paddingBottom: 6, scrollbarWidth: "none", scrollBehavior: "smooth", scrollSnapType: "x mandatory", WebkitOverflowScrolling: "touch" }}>
               {priorityLeads.map((l, cardIdx) => {
                 const sc = l.sc;
                 const stageColor = stgC[l.st] || P.txt3;
@@ -1521,12 +1628,13 @@ function CRM({ oc, co }) {
 
                 return (
                   <div key={l.id} style={{
-                    minWidth: co ? 256 : 284, maxWidth: 284, flexShrink: 0,
+                    minWidth: co ? 256 : 288, maxWidth: 288, flexShrink: 0,
                     borderRadius: 18, overflow: "hidden",
                     background: meta.bg, border: `1px solid ${meta.border}`,
                     display: "flex", flexDirection: "column",
                     transition: "transform 0.2s ease",
                     animation: meta.glow ? "urgentGlow 2.8s ease-in-out infinite" : "none",
+                    scrollSnapAlign: "start",
                   }}
                     onMouseEnter={e => e.currentTarget.style.transform = "translateY(-4px)"}
                     onMouseLeave={e => e.currentTarget.style.transform = "none"}
@@ -1599,34 +1707,34 @@ function CRM({ oc, co }) {
                       {/* Botones */}
                       <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: "auto" }}>
                         <button onClick={() => oc(`__crm__ ${l.n.toLowerCase()}`, l)} style={{
-                          width: "100%", padding: "10px 12px", borderRadius: 9,
-                          background: "linear-gradient(135deg, rgba(110,231,194,0.15), rgba(110,231,194,0.07))",
+                          width: "100%", padding: "13px 14px", borderRadius: 10,
+                          background: "linear-gradient(135deg, rgba(110,231,194,0.18), rgba(110,231,194,0.08))",
                           border: `1px solid ${P.accentB}`,
-                          color: P.accent, fontSize: 11.5, fontWeight: 700,
+                          color: P.accent, fontSize: 13, fontWeight: 700,
                           fontFamily: fontDisp, cursor: "pointer", letterSpacing: "0.005em",
                           transition: "all 0.18s",
-                          display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+                          display: "flex", alignItems: "center", justifyContent: "center", gap: 7,
                         }}
-                          onMouseEnter={e => { e.currentTarget.style.background = "linear-gradient(135deg, rgba(110,231,194,0.26), rgba(110,231,194,0.12))"; e.currentTarget.style.boxShadow = `0 4px 16px ${P.accent}12`; }}
-                          onMouseLeave={e => { e.currentTarget.style.background = "linear-gradient(135deg, rgba(110,231,194,0.15), rgba(110,231,194,0.07))"; e.currentTarget.style.boxShadow = "none"; }}
-                        ><Zap size={11} strokeWidth={2.5} /> Analizar y actuar</button>
+                          onMouseEnter={e => { e.currentTarget.style.background = "linear-gradient(135deg, rgba(110,231,194,0.30), rgba(110,231,194,0.14))"; e.currentTarget.style.boxShadow = `0 6px 20px ${P.accent}20`; }}
+                          onMouseLeave={e => { e.currentTarget.style.background = "linear-gradient(135deg, rgba(110,231,194,0.18), rgba(110,231,194,0.08))"; e.currentTarget.style.boxShadow = "none"; }}
+                        ><Zap size={13} strokeWidth={2.5} /> Analizar y actuar</button>
 
-                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 7 }}>
                           {[
                             { label: "Perfil", icon: User, fn: () => setSelectedLead(l) },
                             { label: "Notas",  icon: FileText, fn: () => setNotesLead(l) },
                           ].map(({ label, icon: Icon, fn }) => (
                             <button key={label} onClick={fn} style={{
-                              padding: "8px 0", borderRadius: 8,
-                              background: "rgba(255,255,255,0.035)",
-                              border: "1px solid rgba(255,255,255,0.07)",
-                              display: "flex", alignItems: "center", justifyContent: "center", gap: 4,
-                              color: P.txt2, fontSize: 10.5, fontWeight: 600,
+                              padding: "11px 0", borderRadius: 9,
+                              background: "rgba(255,255,255,0.04)",
+                              border: "1px solid rgba(255,255,255,0.09)",
+                              display: "flex", alignItems: "center", justifyContent: "center", gap: 5,
+                              color: P.txt2, fontSize: 12, fontWeight: 600,
                               fontFamily: font, cursor: "pointer", transition: "all 0.14s",
                             }}
-                              onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.08)"; e.currentTarget.style.color = "#fff"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.13)"; }}
-                              onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.04)"; e.currentTarget.style.color = P.txt2; e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)"; }}
-                            ><Icon size={10} /> {label}</button>
+                              onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.09)"; e.currentTarget.style.color = "#fff"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.16)"; }}
+                              onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.04)"; e.currentTarget.style.color = P.txt2; e.currentTarget.style.borderColor = "rgba(255,255,255,0.09)"; }}
+                            ><Icon size={12} /> {label}</button>
                           ))}
                         </div>
                       </div>
@@ -1635,6 +1743,7 @@ function CRM({ oc, co }) {
                 );
               })}
             </div>
+            </div>{/* cierre wrapper flechas */}
           </div>
         );
       })()}
@@ -2111,12 +2220,12 @@ function CRM({ oc, co }) {
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 14 }}>
 
         {/* Score por Cliente */}
-        <G style={{ paddingBottom: 10 }}>
+        <G style={{ padding: "14px 16px" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
             <p style={{ fontSize: 12.5, fontWeight: 700, color: P.txt, fontFamily: fontDisp, margin: 0 }}>Score por Cliente</p>
             <Pill color={P.blue} s>Top {Math.min(sortedLeads.length, 8)}</Pill>
           </div>
-          <ResponsiveContainer width="100%" height={150}>
+          <ResponsiveContainer width="100%" height={Math.max(sortedLeads.slice(0,8).length * 22, 80)}>
             <BarChart
               data={[...sortedLeads].sort((a,b) => b.sc - a.sc).slice(0,8).map(l => ({ n: l.n.split(" ")[0], sc: l.sc }))}
               margin={{ top: 2, right: 4, left: -20, bottom: 0 }}
@@ -2134,7 +2243,7 @@ function CRM({ oc, co }) {
         </G>
 
         {/* Distribución por etapa */}
-        <G style={{ paddingBottom: 12 }}>
+        <G style={{ padding: "14px 16px" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
             <p style={{ fontSize: 12.5, fontWeight: 700, color: P.txt, fontFamily: fontDisp, margin: 0 }}>Distribución</p>
             {filterStage !== "TODO" && (
@@ -2170,7 +2279,7 @@ function CRM({ oc, co }) {
         </G>
 
         {/* Por Asesor */}
-        <G style={{ paddingBottom: 12 }}>
+        <G style={{ padding: "14px 16px" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
             <p style={{ fontSize: 12.5, fontWeight: 700, color: P.txt, fontFamily: fontDisp, margin: 0 }}>Por Asesor</p>
             {filterAsesor !== "TODO" && (
@@ -7471,11 +7580,17 @@ function PermissionGate({ moduleId, onGoBack }) {
 export default function App() {
   const { user, login, logout } = useAuth();
   const isAsesorRole = !["super_admin","admin","director","ceo"].includes(user?.role);
+  const canSeeAllGlobal = ["super_admin","admin","director"].includes(user?.role);
   const [v, setV] = useState(isAsesorRole ? "c" : "d");
   const [co, setCo] = useState(false);
   const [msgs, setMsgs] = useState([]);
   const [inp, setInp] = useState("");
   const [notifs, setNotifs] = useState([]);
+
+  // ── leadsData global — compartido entre Dash y CRM ───────────────────────
+  const [leadsData, setLeadsData] = useState(() =>
+    canSeeAllGlobal ? leads : leads.filter(l => l.asesor === user?.name)
+  );
 
   const onLogout = () => {
     logout();
@@ -7689,8 +7804,8 @@ export default function App() {
             {user?.role && MODULE_ROLES[v] && !MODULE_ROLES[v].includes(user.role)
               ? <PermissionGate moduleId={v} onGoBack={() => setV("c")} />
               : <>
-                  {v === "d" && <Dash oc={oc} co={co} />}
-                  {v === "c" && <CRM oc={oc} co={co} />}
+                  {v === "d" && <Dash oc={oc} co={co} leadsData={leadsData} />}
+                  {v === "c" && <CRM oc={oc} co={co} leadsData={leadsData} setLeadsData={setLeadsData} />}
                   {v === "ia" && <IACRM oc={oc} />}
                   {v === "e" && <ERP oc={oc} />}
                   {v === "a" && <AsesorCRM oc={oc} />}
