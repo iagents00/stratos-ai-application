@@ -28,6 +28,26 @@ import { supabase } from "../lib/supabase";
 // ─── CONTEXTO ────────────────────────────────────────────────────────────────
 export const AuthContext = createContext(null);
 
+// ─── ROLE RESOLUTION ─────────────────────────────────────────────────────────
+// Resolves the correct role from user_metadata OR email-based fallback.
+// This handles cases where a user signed up before admin roles existed,
+// or where the metadata wasn't set correctly.
+function resolveRole(user) {
+  const metaRole = user?.user_metadata?.role;
+  // If metadata already has a valid elevated role, use it
+  if (metaRole && metaRole !== 'asesor') return metaRole;
+  
+  // Fallback: detect admin accounts by email pattern
+  const email = (user?.email || '').toLowerCase();
+  if (email.startsWith('super@') || email.includes('super_admin')) return 'super_admin';
+  if (email.startsWith('admin@') || email.includes('admin')) return 'admin';
+  if (email.startsWith('director@')) return 'director';
+  if (email.startsWith('ceo@')) return 'ceo';
+  
+  return metaRole || 'asesor';
+}
+
+
 // ─── PROVIDER ────────────────────────────────────────────────────────────────
 export function AuthProvider({ children }) {
   const [user,    setUser]    = useState(null);
@@ -39,7 +59,7 @@ export function AuthProvider({ children }) {
     const initAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session?.user) {
-        const role = session.user.user_metadata?.role || 'asesor';
+        const role = resolveRole(session.user);
         const name = session.user.user_metadata?.full_name || session.user.user_metadata?.name || 'Usuario';
         setUser({ ...session.user, role, name });
       } else {
@@ -53,7 +73,7 @@ export function AuthProvider({ children }) {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session?.user) {
         // Normalizamos el usuario con el rol de los metadatos para conveniencia en la UI
-        const role = session.user.user_metadata?.role || 'asesor';
+        const role = resolveRole(session.user);
         const name = session.user.user_metadata?.full_name || session.user.user_metadata?.name || 'Usuario';
         setUser({ ...session.user, role, name });
       } else {
@@ -80,7 +100,7 @@ export function AuthProvider({ children }) {
     if (authError) {
       setError(authError);
     } else if (data) {
-      const role = data.user_metadata?.role || 'asesor';
+      const role = resolveRole(data);
       const name = data.user_metadata?.full_name || data.user_metadata?.name || 'Usuario';
       setUser({ ...data, role, name });
     }
@@ -95,7 +115,7 @@ export function AuthProvider({ children }) {
     if (authError) {
       setError(authError);
     } else if (data) {
-      const role = data.user_metadata?.role || 'asesor';
+      const role = resolveRole(data);
       const name = data.user_metadata?.full_name || data.user_metadata?.name || 'Usuario';
       setUser({ ...data, role, name });
     }

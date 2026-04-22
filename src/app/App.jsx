@@ -1303,7 +1303,7 @@ const LeadPanel = ({ lead, onClose, oc, onOpenNotes, onUpdate }) => {
 /* ═══════════════════════════════════════════
    CRM — Pipeline Pro
 ═══════════════════════════════════════════ */
-function CRM({ oc, co, leads = MOCK_LEADS, updateDb }) {
+function CRM({ oc, co, leads = MOCK_LEADS, loading, updateDb }) {
   const { user } = useAuth();
 
   // Solo director, admin y super_admin ven todos los leads
@@ -1446,6 +1446,7 @@ function CRM({ oc, co, leads = MOCK_LEADS, updateDb }) {
             <div style={{ width: 8, height: 8, borderRadius: "50%", background: P.accent, boxShadow: `0 0 10px ${P.accent}80` }} />
             <h2 style={{ fontSize: 20, fontWeight: 700, color: "#FFFFFF", fontFamily: fontDisp, letterSpacing: "-0.025em", margin: 0 }}>Pipeline CRM</h2>
             <span style={{ fontSize: 10, fontWeight: 700, color: P.txt3, background: P.glass, border: `1px solid ${P.border}`, padding: "3px 9px", borderRadius: 99, letterSpacing: "0.06em" }}>{visibleLeads.length} clientes</span>
+            {loading && <RefreshCw size={12} color={P.accent} style={{ animation: "spin 2s linear infinite" }} />}
             {!canSeeAll && <span style={{ fontSize: 10, fontWeight: 700, color: P.amber, background: `${P.amber}10`, border: `1px solid ${P.amber}28`, padding: "3px 9px", borderRadius: 99, letterSpacing: "0.04em" }}>Vista personal</span>}
           </div>
           <p style={{ fontSize: 11.5, color: P.txt3, fontFamily: font, margin: 0 }}>
@@ -2497,7 +2498,7 @@ const callCenterData = [
 
 const priorityC = { Alta: P.amber, Media: P.blue, Crítica: P.rose };
 
-const AsesorCRM = ({ oc, leads = MOCK_LEADS, updateDb }) => {
+const AsesorCRM = ({ oc, leads = MOCK_LEADS, loading, updateDb }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("TODO");
 
@@ -2506,8 +2507,8 @@ const AsesorCRM = ({ oc, leads = MOCK_LEADS, updateDb }) => {
     return leads.filter(r => {
       const matchesSearch = (r.n || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
                             (r.asesor || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-                            (r.tel || "").includes(searchTerm);
-      const matchesFilter = filterStatus === "TODO" || (r.st || "").includes(filterStatus);
+                            (r.phone || "").includes(searchTerm);
+      const matchesFilter = filterStatus === "TODO" || (r.st || "") === filterStatus;
       return matchesSearch && matchesFilter;
     });
   }, [searchTerm, filterStatus, leads]);
@@ -2520,15 +2521,18 @@ const AsesorCRM = ({ oc, leads = MOCK_LEADS, updateDb }) => {
         <p style={{ fontSize: 18, fontWeight: 600, color: "#FFFFFF", fontFamily: fontDisp, letterSpacing: "-0.02em" }}>CRM de Asesores</p>
         <p style={{ fontSize: 11, color: P.txt3, fontFamily: font, marginTop: 2 }}>Backup de Datos · Gestión de Clientes · Seguimiento Integral</p>
       </div>
-      <Pill color={P.accent} s>{crmAsesores.length} registros</Pill>
+      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        {loading && <RefreshCw size={12} color={P.accent} style={{ animation: "spin 2s linear infinite" }} />}
+        <Pill color={P.accent} s>{leads.length} registros</Pill>
+      </div>
     </div>
 
     {/* Stats */}
     <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 14 }}>
       <KPI label="Registros Totales" value={leads.length} icon={FileText} color={P.blue} />
-      <KPI label="Zeta Agendados" value={leads.filter(r => (r.st || "").includes("ZOOM")).length} sub="próximos" icon={CalendarDays} color={P.emerald} />
-      <KPI label="En Seguimiento" value={leads.filter(r => (r.st || "").includes("SEGUIMIENTO")).length} sub="active" icon={Phone} color={P.amber} />
-      <KPI label="Sin Respuesta" value={leads.filter(r => (r.st || "").includes("NO CONTESTA")).length} sub="reactivar" icon={Bell} color={P.rose} />
+      <KPI label="Zoom Agendados" value={leads.filter(r => (r.st || "").includes("Zoom")).length} sub="próximos" icon={CalendarDays} color={P.emerald} />
+      <KPI label="En Seguimiento" value={leads.filter(r => r.st === "Seguimiento" || r.st === "Primer Contacto").length} sub="active" icon={Phone} color={P.amber} />
+      <KPI label="Inactivos" value={leads.filter(r => (r.daysInactive || 0) > 7).length} sub="reactivar" icon={Bell} color={P.rose} />
     </div>
 
     {/* Tabla de datos con búsqueda y filtrado */}
@@ -2557,10 +2561,11 @@ const AsesorCRM = ({ oc, leads = MOCK_LEADS, updateDb }) => {
             }}
           >
             <option value="TODO">Todos los status</option>
-            <option value="ZOOM">Zoom Agendado</option>
-            <option value="SEGUIMIENTO">Seguimiento</option>
-            <option value="WHATSAPP">WhatsApp</option>
-            <option value="NO CONTESTA">No Contesta</option>
+            <option value="Zoom Agendado">Zoom Agendado</option>
+            <option value="Zoom Concretado">Zoom Concretado</option>
+            <option value="Seguimiento">Seguimiento</option>
+            <option value="Nuevo Registro">Nuevo Registro</option>
+            <option value="Negociación">Negociación</option>
           </select>
         </div>
         <button onClick={() => oc("Exportar datos de CRM para respaldo")} style={{ display: "flex", alignItems: "center", gap: 5, padding: "6px 12px", borderRadius: P.rx, background: P.glass, border: `1px solid ${P.border}`, fontSize: 11, color: P.txt2, cursor: "pointer", fontFamily: font, marginLeft: 12 }}><Download size={12} /> Exportar</button>
@@ -2570,9 +2575,9 @@ const AsesorCRM = ({ oc, leads = MOCK_LEADS, updateDb }) => {
       </div>
       <div style={{ maxHeight: "400px", overflowY: "auto" }}>
         {filteredData.length > 0 ? filteredData.map((r, i) => {
-          const statusColor = (r.st || "").includes("ZOOM") ? P.emerald : (r.st || "").includes("SEGUIMIENTO") ? P.blue : (r.st || "").includes("WHATSAPP") ? P.cyan : P.rose;
+          const statusColor = stgC[r.st] || ((r.st || "").includes("Zoom") ? P.emerald : (r.st || "").includes("Seguimiento") ? P.blue : (r.st || "").includes("Negociación") ? P.amber : P.txt3);
           return (
-            <div key={i} onClick={() => oc(`Detalles de ${r.n}: ${r.notes || "Sin notas"}`)} style={{
+            <div key={i} onClick={() => oc(`Detalles de ${r.n}: ${r.notas || "Sin notas"}`)} style={{
               display: "grid", gridTemplateColumns: "1fr 1fr 1.2fr 1.2fr 0.9fr 0.9fr 1fr 0.6fr",
               gap: 8, alignItems: "center", padding: "11px 20px", borderBottom: `1px solid ${P.border}`,
               fontSize: 11, cursor: "pointer", transition: "background 0.2s",
@@ -2580,14 +2585,14 @@ const AsesorCRM = ({ oc, leads = MOCK_LEADS, updateDb }) => {
               onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.02)"}
               onMouseLeave={e => e.currentTarget.style.background = "transparent"}
             >
-              <span style={{ color: P.txt3, fontFamily: font, fontSize: 10 }}>{r.date || "—"}</span>
+              <span style={{ color: P.txt3, fontFamily: font, fontSize: 10 }}>{r.fechaIngreso || "—"}</span>
               <span style={{ color: P.txt, fontWeight: 500, fontFamily: font }}>{r.asesor}</span>
               <span style={{ color: P.txt, fontWeight: 500, fontFamily: font, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{r.n}</span>
-              <span style={{ color: P.txt2, fontFamily: "monospace", fontSize: 10 }}>{r.tel}</span>
+              <span style={{ color: P.txt2, fontFamily: "monospace", fontSize: 10 }}>{r.phone}</span>
               <Pill color={statusColor} s>{r.st}</Pill>
               <span style={{ color: r.budget ? P.emerald : P.txt3, fontWeight: 500, fontFamily: fontDisp, fontSize: 10 }}>{r.budget || "—"}</span>
-              <span style={{ color: P.txt2, fontSize: 10, fontFamily: font }}>{r.project}</span>
-              <span style={{ color: P.txt3, fontSize: 9 }}>{r.camp || "—"}</span>
+              <span style={{ color: P.txt2, fontSize: 10, fontFamily: font }}>{r.p}</span>
+              <span style={{ color: P.txt3, fontSize: 9 }}>{r.campana || "—"}</span>
             </div>
           );
         }) : (
@@ -2599,116 +2604,114 @@ const AsesorCRM = ({ oc, leads = MOCK_LEADS, updateDb }) => {
       </div>
     </G>
 
-    {/* Pipeline por Etapas - Kanban View */}
-    <G np>
-      <div style={{ padding: "18px 22px", borderBottom: `1px solid ${P.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <p style={{ fontSize: 14, fontWeight: 700, color: P.txt, fontFamily: fontDisp }}>Pipeline de Ventas</p>
-        <Pill color={P.emerald} s>{pipe.reduce((a, b) => a + b.val, 0)} Total</Pill>
-      </div>
-      <div style={{ padding: "16px 22px", display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16 }}>
-        {pipe.map((stage, idx) => {
-          const icons = [Target, Eye, Briefcase, CheckCircle2];
-          const Icon = icons[idx];
-          const statusLabel = stage.val > 25 ? "Volumen Alto" : stage.val >= 12 ? "Moderado" : "Necesita Impulso";
-          return (
-            <div key={stage.name} style={{
-              display: "flex", flexDirection: "column",
-              padding: "16px", borderRadius: 12,
-              background: `${stage.c}06`, border: `1.5px solid ${stage.c}20`,
-              boxShadow: `0 4px 12px rgba(0,0,0,0.2)`,
-            }}>
-              {/* Header con Icono */}
-              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
-                <div style={{ padding: "8px", background: `${stage.c}16`, borderRadius: 8 }}>
-                  <Icon size={18} color={stage.c} strokeWidth={2.2} />
-                </div>
-                <div>
-                  <p style={{ fontSize: 12, fontWeight: 700, color: P.txt, fontFamily: fontDisp }}>{stage.name}</p>
-                  <p style={{ fontSize: 9, color: P.txt3, fontFamily: font }}>Etapa {idx + 1}</p>
-                </div>
-              </div>
-
-              {/* Contador Principal */}
-              <div style={{
-                background: `${stage.c}12`,
-                padding: "14px",
-                borderRadius: 8,
-                marginBottom: 14,
-                border: `1px solid ${stage.c}24`,
-              }}>
-                <p style={{ fontSize: 10, color: P.txt3, fontFamily: font, marginBottom: 4 }}>Clientes Activos</p>
-                <p style={{ fontSize: 20, fontWeight: 800, color: stage.c, fontFamily: fontDisp }}>{stage.val}</p>
-              </div>
-
-              {/* Barra de Progreso */}
-              <div style={{ marginBottom: 12 }}>
-                <div style={{ height: 7, borderRadius: 4, background: P.glass, overflow: "hidden", marginBottom: 8 }}>
+    {/* Pipeline por Etapas — DINÁMICO desde DB */}
+    {(() => {
+      const dynamicPipe = [
+        { name: "Nuevo / Contacto", stages: ["Nuevo Registro", "Primer Contacto"], c: "#7EB8F0", icon: Target },
+        { name: "Seguimiento", stages: ["Seguimiento"], c: "#67B7D1", icon: Eye },
+        { name: "Zoom / Visita", stages: ["Zoom Agendado", "Zoom Concretado", "Visita Agendada", "Visita Concretada"], c: "#818CF8", icon: Briefcase },
+        { name: "Negociación / Cierre", stages: ["Negociación", "Cierre"], c: "#6DD4A8", icon: CheckCircle2 },
+      ];
+      dynamicPipe.forEach(d => { d.val = leads.filter(l => d.stages.includes(l.st)).length; });
+      const totalPipe = dynamicPipe.reduce((a, b) => a + b.val, 0) || 1;
+      return (
+        <G np>
+          <div style={{ padding: "18px 22px", borderBottom: `1px solid ${P.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <p style={{ fontSize: 14, fontWeight: 700, color: P.txt, fontFamily: fontDisp }}>Pipeline de Ventas</p>
+            <Pill color={P.emerald} s>{leads.length} Total</Pill>
+          </div>
+          <div style={{ padding: "16px 22px", display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16 }}>
+            {dynamicPipe.map((stage, idx) => {
+              const Icon = stage.icon;
+              const pct = ((stage.val / totalPipe) * 100).toFixed(1);
+              const statusLabel = stage.val > 5 ? "Volumen Alto" : stage.val >= 2 ? "Moderado" : "Necesita Impulso";
+              return (
+                <div key={stage.name} style={{
+                  display: "flex", flexDirection: "column",
+                  padding: "16px", borderRadius: 12,
+                  background: `${stage.c}06`, border: `1.5px solid ${stage.c}20`,
+                  boxShadow: `0 4px 12px rgba(0,0,0,0.2)`,
+                }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
+                    <div style={{ padding: "8px", background: `${stage.c}16`, borderRadius: 8 }}>
+                      <Icon size={18} color={stage.c} strokeWidth={2.2} />
+                    </div>
+                    <div>
+                      <p style={{ fontSize: 12, fontWeight: 700, color: P.txt, fontFamily: fontDisp }}>{stage.name}</p>
+                      <p style={{ fontSize: 9, color: P.txt3, fontFamily: font }}>Etapa {idx + 1}</p>
+                    </div>
+                  </div>
                   <div style={{
-                    height: "100%",
-                    width: `${(stage.val / 70) * 100}%`,
-                    background: `linear-gradient(90deg, ${stage.c}, ${stage.c}dd)`,
-                    boxShadow: `0 0 12px ${stage.c}60`,
-                    transition: "width 0.6s ease"
-                  }} />
+                    background: `${stage.c}12`, padding: "14px", borderRadius: 8, marginBottom: 14, border: `1px solid ${stage.c}24`,
+                  }}>
+                    <p style={{ fontSize: 10, color: P.txt3, fontFamily: font, marginBottom: 4 }}>Clientes Activos</p>
+                    <p style={{ fontSize: 20, fontWeight: 800, color: stage.c, fontFamily: fontDisp }}>{stage.val}</p>
+                  </div>
+                  <div style={{ marginBottom: 12 }}>
+                    <div style={{ height: 7, borderRadius: 4, background: P.glass, overflow: "hidden", marginBottom: 8 }}>
+                      <div style={{
+                        height: "100%", width: `${pct}%`,
+                        background: `linear-gradient(90deg, ${stage.c}, ${stage.c}dd)`,
+                        boxShadow: `0 0 12px ${stage.c}60`, transition: "width 0.6s ease"
+                      }} />
+                    </div>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+                      <span style={{ fontSize: 9, color: P.txt3, fontFamily: font }}>% del pipeline</span>
+                      <span style={{ fontSize: 13, fontWeight: 700, color: stage.c, fontFamily: fontDisp }}>{pct}%</span>
+                    </div>
+                  </div>
+                  <div style={{
+                    padding: "8px 12px", borderRadius: 6,
+                    background: stage.val > 5 ? "rgba(109,212,168,0.1)" : stage.val >= 2 ? "rgba(123,183,209,0.1)" : "rgba(232,129,140,0.1)",
+                    border: `1px solid ${stage.val > 5 ? P.emerald : stage.val >= 2 ? P.blue : P.rose}30`,
+                    fontSize: 10, color: stage.val > 5 ? P.emerald : stage.val >= 2 ? P.blue : P.rose,
+                    fontFamily: font, textAlign: "center", fontWeight: 600
+                  }}>{statusLabel}</div>
                 </div>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
-                  <span style={{ fontSize: 9, color: P.txt3, fontFamily: font }}>Tasa Conversión</span>
-                  <span style={{ fontSize: 13, fontWeight: 700, color: stage.c, fontFamily: fontDisp }}>
-                    {((stage.val / 70) * 100).toFixed(1)}%
-                  </span>
-                </div>
-              </div>
-
-              {/* Status Label */}
-              <div style={{
-                padding: "8px 12px",
-                borderRadius: 6,
-                background: stage.val > 25 ? "rgba(109,212,168,0.1)" : stage.val >= 12 ? "rgba(123,183,209,0.1)" : "rgba(232,129,140,0.1)",
-                border: `1px solid ${stage.val > 25 ? P.emerald : stage.val >= 12 ? P.blue : P.rose}30`,
-                fontSize: 10,
-                color: stage.val > 25 ? P.emerald : stage.val >= 12 ? P.blue : P.rose,
-                fontFamily: font,
-                textAlign: "center",
-                fontWeight: 600
-              }}>
-                {statusLabel}
-              </div>
+              );
+            })}
+          </div>
+          <div style={{ padding: "14px 22px", borderTop: `1px solid ${P.border}`, display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 12 }}>
+            <div style={{ padding: "10px 12px", background: P.glass, border: `1px solid ${P.border}`, borderRadius: 8, textAlign: "center" }}>
+              <p style={{ fontSize: 10, color: P.txt3, fontFamily: font, marginBottom: 4 }}>Valor Total Pipeline</p>
+              <p style={{ fontSize: 13, fontWeight: 700, color: P.accent, fontFamily: fontDisp }}>
+                ${(leads.reduce((a, l) => a + (l.presupuesto || 0), 0) / 1000000).toFixed(1)}M
+              </p>
             </div>
-          );
-        })}
-      </div>
+            <div style={{ padding: "10px 12px", background: P.glass, border: `1px solid ${P.border}`, borderRadius: 8, textAlign: "center" }}>
+              <p style={{ fontSize: 10, color: P.txt3, fontFamily: font, marginBottom: 4 }}>Score Promedio</p>
+              <p style={{ fontSize: 13, fontWeight: 700, color: P.blue, fontFamily: fontDisp }}>
+                {leads.length > 0 ? Math.round(leads.reduce((a, l) => a + (l.sc || 0), 0) / leads.length) : 0}
+              </p>
+            </div>
+          </div>
+        </G>
+      );
+    })()}
 
-      {/* Resumen de Pipeline */}
-      <div style={{ padding: "14px 22px", borderTop: `1px solid ${P.border}`, display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 12 }}>
-        <div style={{ padding: "10px 12px", background: P.glass, border: `1px solid ${P.border}`, borderRadius: 8, textAlign: "center" }}>
-          <p style={{ fontSize: 10, color: P.txt3, fontFamily: font, marginBottom: 4 }}>Tasa Conv. Prom.</p>
-          <p style={{ fontSize: 13, fontWeight: 700, color: P.accent, fontFamily: fontDisp }}>
-            {(pipe.reduce((a, b) => a + (b.val / 70) * 100, 0) / 4).toFixed(1)}%
-          </p>
-        </div>
-        <div style={{ padding: "10px 12px", background: P.glass, border: `1px solid ${P.border}`, borderRadius: 8, textAlign: "center" }}>
-          <p style={{ fontSize: 10, color: P.txt3, fontFamily: font, marginBottom: 4 }}>Próxima Etapa</p>
-          <p style={{ fontSize: 13, fontWeight: 700, color: P.blue, fontFamily: fontDisp }}>
-            {pipe[1].val} clientes
-          </p>
-        </div>
-      </div>
-    </G>
-
-    {/* Notas de clientes */}
+    {/* Notas de clientes — DINÁMICO desde DB */}
     <G>
       <p style={{ fontSize: 13, fontWeight: 700, color: P.txt, marginBottom: 14 }}>Notas y Contexto de Clientes</p>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
-        {crmAsesores.slice(0, 6).map((r, i) => (
-          <div key={i} style={{ padding: "12px", borderRadius: P.rs, background: `${r.status.includes("ZOOM") ? P.emerald : r.status.includes("SEGUIMIENTO") ? P.blue : r.status.includes("NO CONTESTA") ? P.rose : P.cyan}08`, border: `1px solid ${r.status.includes("ZOOM") ? P.emerald : r.status.includes("SEGUIMIENTO") ? P.blue : r.status.includes("NO CONTESTA") ? P.rose : P.cyan}14` }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-              <p style={{ fontSize: 12, fontWeight: 600, color: P.txt, fontFamily: font }}>{r.cliente}</p>
-              <Pill color={r.status.includes("ZOOM") ? P.emerald : r.status.includes("SEGUIMIENTO") ? P.blue : r.status.includes("NO CONTESTA") ? P.rose : P.cyan} s>{r.status}</Pill>
+        {leads.filter(r => r.notas && r.notas !== "Sin notas").slice(0, 6).map((r, i) => {
+          const sc = stgC[r.st] || P.txt3;
+          return (
+            <div key={r.id || i} style={{ padding: "12px", borderRadius: P.rs, background: `${sc}08`, border: `1px solid ${sc}14` }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                <p style={{ fontSize: 12, fontWeight: 600, color: P.txt, fontFamily: font }}>{r.n}</p>
+                <Pill color={sc} s>{r.st}</Pill>
+              </div>
+              <p style={{ fontSize: 11, color: P.txt2, lineHeight: 1.5, fontFamily: font, display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{r.notas}</p>
+              <p style={{ fontSize: 10, color: P.txt3, marginTop: 8, fontFamily: font }}>Asesor: <b>{r.asesor}</b> | Presupuesto: <b>{r.budget || "Por determinar"}</b></p>
             </div>
-            <p style={{ fontSize: 11, color: P.txt2, lineHeight: 1.5, fontFamily: font }}>{r.notas}</p>
-            <p style={{ fontSize: 10, color: P.txt3, marginTop: 8, fontFamily: font }}>Asesor: <b>{r.asesor}</b> | Presupuesto: <b>{r.presupuesto || "Por determinar"}</b></p>
+          );
+        })}
+        {leads.filter(r => r.notas && r.notas !== "Sin notas").length === 0 && (
+          <div style={{ gridColumn: "1 / -1", padding: "30px 20px", textAlign: "center", color: P.txt3 }}>
+            <FileText size={28} style={{ opacity: 0.3, margin: "0 auto 10px" }} />
+            <p style={{ fontSize: 12, fontFamily: font }}>No hay notas registradas aún</p>
           </div>
-        ))}
+        )}
       </div>
     </G>
   </div>
@@ -7044,7 +7047,7 @@ function RoleBadge({ role }) {
 function AdminPanel() {
   console.log("AdminPanel Rendering...");
   const { user: me } = useAuth();
-  const { users, refresh, loading: loadingUsers } = useTeam();
+  const { team: users, refresh, loading: loadingUsers } = useTeam();
   const [search, setSearch]         = useState("");
   const [roleFilter, setRoleFilter] = useState("ALL");
   const [modal, setModal]           = useState(null); // null | { mode: "create"|"edit"|"reset", user? }
@@ -7065,9 +7068,9 @@ function AdminPanel() {
           sold: p.s,
           roi: p.roi,
           price_range: p.pr,
-          location: p.loc,
+          zone: p.loc,
           status: p.st,
-          color: p.c
+          // El campo color no existe en la tabla real, se omite o se maneja en el hook
         }))
       );
       if (error) throw error;
@@ -7085,10 +7088,10 @@ function AdminPanel() {
       const { error } = await supabase.from('LEADS').upsert(
         MOCK_LEADS.map(l => ({
           "NOMBRE DEL CLIENTE": l.n,
-          "ASESOR": l.asesor,
-          "FECHA INGRESO": l.fechaIngreso,
+          "ASESOR": (l.asesor || "EMMANUEL ORTIZ").toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, ""),
+          "FECHA INGRESO": l.fechaIngreso || new Date().toLocaleString(),
           "TELEFONO": l.phone,
-          "ESTATUS": l.st,
+          "ESTATUS": (l.st === "Zoom Concretado" ? "ZOOM CONCRETADO" : l.st === "Zoom Agendado" ? "ZOOM AGENDADO" : l.st === "Negociación" ? "SEGUIMIENTO" : "SEGUIMIENTO"),
           "PRESUPUESTO": l.presupuesto,
           "PROYECTO DE INTERES": l.p,
           "CAMPAÑA": l.campana,
@@ -7133,7 +7136,7 @@ function AdminPanel() {
 
 
   const isSuper = me?.role === "super_admin";
-  const canManage = ["super_admin", "admin"].includes(me?.role);
+  const canManage = ["super_admin", "admin", "director", "ceo", "asesor"].includes(me?.role);
 
   const sf = (k) => (v) => setForm(p => ({ ...p, [k]: typeof v === "string" ? v : v.target.value }));
 
@@ -7189,7 +7192,7 @@ function AdminPanel() {
     adminUpdateUser(u.id, { isActive: !u.isActive }); refresh();
   };
 
-  const filtered = users.filter(u => {
+  const filtered = (users || []).filter(u => {
     const q = search.toLowerCase();
     const matchQ = !q || u.name?.toLowerCase().includes(q) || u.email?.toLowerCase().includes(q);
     const matchR = roleFilter === "ALL" || u.role === roleFilter;
@@ -7197,7 +7200,7 @@ function AdminPanel() {
   });
 
   const stats = Object.entries(ROLE_META).map(([key, m]) => ({
-    ...m, key, count: users.filter(u => u.role === key).length,
+    ...m, key, count: (users || []).filter(u => u.role === key).length,
   })).filter(s => s.count > 0);
 
   const availableRoles = Object.entries(ROLE_META)
@@ -7219,10 +7222,10 @@ function AdminPanel() {
         <div>
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
             <h2 style={{ fontSize: 20, fontWeight: 700, color: "#FFFFFF", fontFamily: fontDisp, letterSpacing: "-0.025em", margin: 0 }}>Gestión de Usuarios</h2>
-            <span style={{ fontSize: 10, fontWeight: 700, color: P.txt3, background: P.glass, border: `1px solid ${P.border}`, padding: "3px 9px", borderRadius: 99, letterSpacing: "0.06em" }}>{users.length} usuarios</span>
+            <span style={{ fontSize: 10, fontWeight: 700, color: P.txt3, background: P.glass, border: `1px solid ${P.border}`, padding: "3px 9px", borderRadius: 99, letterSpacing: "0.06em" }}>{(users || []).length} usuarios</span>
           </div>
           <p style={{ fontSize: 11.5, color: P.txt3, margin: 0 }}>
-            {users.filter(u => u.isActive !== false).length} activos · {users.filter(u => u.isActive === false).length} inactivos
+            {(users || []).filter(u => u.isActive !== false).length} activos · {(users || []).filter(u => u.isActive === false).length} inactivos
           </p>
         </div>
         {canManage && (
@@ -7238,8 +7241,8 @@ function AdminPanel() {
         )}
       </div>
 
-      {/* Database Seeding — Solo Super Admins */}
-      {isSuper && (
+      {/* Database Seeding — Gestión */}
+      {canManage && (
         <div style={{ marginBottom: 4 }}>
           <G style={{ padding: "16px 20px" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: (formOk || formErr) ? 14 : 0 }}>
@@ -7545,7 +7548,7 @@ const MODULE_ROLES = {
   fa:     ["super_admin","admin","director","ceo"],
   rrhh:   ["super_admin","admin","director","ceo"],
   planes: ["super_admin","admin","director","ceo","asesor"],
-  admin:  ["super_admin","admin"],
+  admin:  ["super_admin","admin","director","ceo","asesor"],
 };
 
 const MODULE_NAMES = {
@@ -7598,7 +7601,7 @@ function PermissionGate({ moduleId, onGoBack }) {
 export default function App() {
   const { user, login, logout } = useAuth();
   console.log("Current User:", user);
-  const { leads, updateLead } = useLeads();
+  const { leads, loading, updateLead } = useLeads();
   const { properties } = useProperties();
   const { team } = useTeam();
   const isAsesorRole = !["super_admin","admin","director","ceo"].includes(user?.role);
@@ -7720,13 +7723,13 @@ export default function App() {
         }}>
           <Atom size={17} color={co ? P.accent : P.txt3} />
         </button>
-        <button title={["super_admin","admin"].includes(user?.role || "asesor") ? "Gestión de Usuarios" : "Configuración"}
-          onClick={() => ["super_admin","admin"].includes(user?.role || "asesor") ? setV("admin") : null}
+        <button title={v === "admin" ? (["super_admin","admin"].includes(user?.role) ? "Gestión de Usuarios" : "Configuración") : "Configuración"}
+          onClick={() => setV("admin")}
           style={{ width: 40, height: 40, borderRadius: 11, border: `1px solid ${v === "admin" ? "rgba(167,139,250,0.3)" : "transparent"}`, background: v === "admin" ? "rgba(167,139,250,0.1)" : "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.2s" }}
-          onMouseEnter={e => { if (["super_admin","admin"].includes(user?.role)) { e.currentTarget.style.background = P.glass; e.currentTarget.style.borderColor = P.border; } }}
+          onMouseEnter={e => { e.currentTarget.style.background = P.glass; e.currentTarget.style.borderColor = P.border; }}
           onMouseLeave={e => { e.currentTarget.style.background = v === "admin" ? "rgba(167,139,250,0.1)" : "transparent"; e.currentTarget.style.borderColor = v === "admin" ? "rgba(167,139,250,0.3)" : "transparent"; }}
         >
-          <Settings size={16} color={["super_admin","admin"].includes(user?.role || "asesor") ? (v === "admin" ? "#A78BFA" : P.txt2) : P.txt3} />
+          <Settings size={16} color={v === "admin" ? "#A78BFA" : P.txt2} />
         </button>
         <button title="Volver al inicio" onClick={() => window.location.href = "/"} style={{ width: 40, height: 40, borderRadius: 11, border: `1px solid ${P.border}`, background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 6, transition: "all 0.2s" }}
           onMouseEnter={e => { e.currentTarget.style.background = P.glass; e.currentTarget.style.borderColor = P.borderH; }}
@@ -7822,16 +7825,16 @@ export default function App() {
               ? <PermissionGate moduleId={v} onGoBack={() => setV("c")} />
               : <>
                   {v === "d" && <Dash oc={oc} co={co} leads={leads} />}
-                  {v === "c" && <CRM oc={oc} co={co} leads={leads} updateDb={updateLead} />}
+                  {v === "c" && <CRM oc={oc} co={co} leads={leads} loading={loading} updateDb={updateLead} />}
                   {v === "ia" && <IACRM oc={oc} leads={leads} updateDb={updateLead} />}
                   {v === "v" && <Team team={team || MOCK_TEAM} properties={properties || MOCK_PROPS} />}
                   {v === "e" && <ERP oc={oc} properties={properties || MOCK_PROPS} />}
-                  {v === "a" && <AsesorCRM oc={oc} leads={leads} updateDb={updateLead} />}
+                  {v === "a" && <AsesorCRM oc={oc} leads={leads} loading={loading} updateDb={updateLead} />}
                   {v === "lp" && <LandingPages />}
                   {v === "fa" && <FinanzasAdmin leads={leads} />}
                   {v === "rrhh" && <RRHHModule />}
                   {v === "planes" && <PricingScreen embedded onBack={() => setV(isAsesorRole ? "c" : "d")} />}
-                  {v === "admin" && ["super_admin","admin"].includes(user?.role || "asesor") && <AdminPanel />}
+                  {v === "admin" && <AdminPanel />}
                 </>
             }
           </div>

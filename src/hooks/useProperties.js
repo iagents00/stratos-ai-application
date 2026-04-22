@@ -22,8 +22,8 @@ export function useProperties() {
         u: p.units,
         s: p.sold,
         roi: p.roi,
-        pr: p.price_range,
-        loc: p.location,
+        pr: p.price_range || "$0",
+        loc: p.zone || p.location || "",
         st: p.status,
         c: p.color || '#3B82F6',
       }));
