@@ -7984,7 +7984,8 @@ const nav = [
    ════════════════════════════════════════ */
 
 /* WriterSection: Rich message composer for client personalization */
-const WriterSection = ({ value, onChange, clientName }) => {
+const WriterSection = ({ value, onChange, clientName, T = P }) => {
+  const isLight = T !== P;
   const [showPreview, setShowPreview] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState("formal");
   const charLimit = 500;
@@ -8016,9 +8017,9 @@ const WriterSection = ({ value, onChange, clientName }) => {
 
   return (
     <div style={{ marginBottom: 18 }}>
-      <label style={{ fontSize: 11, color: P.txt2, display: "block", marginBottom: 10, fontWeight: 600, letterSpacing: "0.03em", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+      <label style={{ fontSize: 11, color: T.txt2, display: "block", marginBottom: 10, fontWeight: 600, letterSpacing: "0.03em", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <span>Mensaje personalizado</span>
-        <span style={{ fontSize: 10, color: P.txt3, fontWeight: 400 }}>{charCount}/{charLimit}</span>
+        <span style={{ fontSize: 10, color: T.txt3, fontWeight: 400 }}>{charCount}/{charLimit}</span>
       </label>
 
       {/* Templates */}
@@ -8029,9 +8030,9 @@ const WriterSection = ({ value, onChange, clientName }) => {
             onClick={() => applyTemplate(key)}
             style={{
               padding: "8px 10px", borderRadius: 8, fontSize: 11, fontWeight: 600,
-              border: `1px solid ${selectedTemplate === key ? P.accent + "60" : P.border}`,
-              background: selectedTemplate === key ? P.accentS : P.glass,
-              color: selectedTemplate === key ? P.accent : P.txt2,
+              border: `1px solid ${selectedTemplate === key ? T.accent + "60" : T.border}`,
+              background: selectedTemplate === key ? T.accentS : T.glass,
+              color: selectedTemplate === key ? T.accent : T.txt2,
               cursor: "pointer", fontFamily: font, transition: "all 0.2s",
             }}
           >
@@ -8051,16 +8052,16 @@ const WriterSection = ({ value, onChange, clientName }) => {
           rows={4}
           style={{
             width: "100%", padding: "12px 16px", borderRadius: 10, fontSize: 13,
-            background: P.glass, border: `1px solid ${P.border}`, color: P.txt,
+            background: T.glass, border: `1px solid ${T.border}`, color: T.txt,
             fontFamily: font, outline: "none", resize: "vertical", lineHeight: 1.5,
             transition: "border-color 0.2s",
           }}
-          onFocus={e => e.target.style.borderColor = P.accent + "60"}
-          onBlur={e => e.target.style.borderColor = P.border}
+          onFocus={e => e.target.style.borderColor = T.accent + "60"}
+          onBlur={e => e.target.style.borderColor = T.border}
           maxLength={charLimit}
         />
         <div style={{ position: "absolute", bottom: 10, right: 12, display: "flex", alignItems: "center", gap: 6 }}>
-          <span style={{ fontSize: 10, color: charCount > charLimit * 0.8 ? P.rose : P.txt3 }}>
+          <span style={{ fontSize: 10, color: charCount > charLimit * 0.8 ? T.rose : T.txt3 }}>
             {charCount}/{charLimit}
           </span>
         </div>
@@ -8070,7 +8071,7 @@ const WriterSection = ({ value, onChange, clientName }) => {
       <button
         onClick={() => setShowPreview(!showPreview)}
         style={{
-          fontSize: 11, fontWeight: 600, color: P.accent, background: "transparent",
+          fontSize: 11, fontWeight: 600, color: T.accent, background: "transparent",
           border: "none", cursor: "pointer", padding: 0, marginBottom: 12,
           display: "flex", alignItems: "center", gap: 4,
         }}
@@ -8081,9 +8082,9 @@ const WriterSection = ({ value, onChange, clientName }) => {
 
       {/* Preview */}
       {showPreview && value && (
-        <G style={{ padding: 16, background: "rgba(110,231,194,0.05)", border: `1px solid ${P.accent}1A` }}>
-          <p style={{ fontSize: 10, color: P.accent, fontWeight: 600, letterSpacing: "0.03em", marginBottom: 10, textTransform: "uppercase" }}>Cómo verá el cliente</p>
-          <p style={{ fontSize: 14, color: P.txt, lineHeight: 1.7, fontFamily: font, fontStyle: "italic" }}>
+        <G T={T} style={{ padding: 16, background: `${T.accent}08`, border: `1px solid ${T.accent}1A` }}>
+          <p style={{ fontSize: 10, color: T.accent, fontWeight: 600, letterSpacing: "0.03em", marginBottom: 10, textTransform: "uppercase" }}>Cómo verá el cliente</p>
+          <p style={{ fontSize: 14, color: T.txt, lineHeight: 1.7, fontFamily: font, fontStyle: "italic" }}>
             "{value}"
           </p>
         </G>
@@ -8464,7 +8465,8 @@ const marketData = {
 };
 
 /* ─── Modal: Agregar Nueva Propiedad ─── */
-const NewPropertyModal = ({ onClose, onSave, initialData = null }) => {
+const NewPropertyModal = ({ onClose, onSave, initialData = null, T = P }) => {
+  const isLight = T !== P;
   const editing = !!initialData;
   const EMPTY = {
     name: "", brand: "", location: "Tulum", zone: "", type: "Condominios",
@@ -8536,11 +8538,11 @@ const NewPropertyModal = ({ onClose, onSave, initialData = null }) => {
 
   const inputStyle = (key) => ({
     width: "100%", padding: "10px 14px", borderRadius: 8,
-    background: P.glass, border: `1px solid ${errors[key] ? P.rose + "80" : P.border}`,
-    color: P.txt, fontSize: 13, fontFamily: font, outline: "none",
+    background: T.glass, border: `1px solid ${errors[key] ? T.rose + "80" : T.border}`,
+    color: T.txt, fontSize: 13, fontFamily: font, outline: "none",
     transition: "border-color 0.2s", boxSizing: "border-box",
   });
-  const labelStyle = { fontSize: 10, color: P.txt2, display: "block", marginBottom: 5, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em", fontFamily: font };
+  const labelStyle = { fontSize: 10, color: T.txt2, display: "block", marginBottom: 5, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em", fontFamily: font };
   const sectionTitle = (accent) => ({ fontSize: 11, color: accent, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 12, fontFamily: font });
 
   return createPortal(
@@ -8549,35 +8551,35 @@ const NewPropertyModal = ({ onClose, onSave, initialData = null }) => {
       <div style={{
         position: "fixed", top: "50%", left: "50%", transform: "translate(-50%,-50%)", zIndex: 200001,
         width: 680, maxHeight: "92vh", overflowY: "auto",
-        background: "#0C1219", border: `1px solid ${P.border}`, borderRadius: 22,
-        boxShadow: "0 40px 100px rgba(0,0,0,0.7)",
+        background: isLight ? "#FFFFFF" : "#0C1219", border: `1px solid ${T.border}`, borderRadius: 22,
+        boxShadow: isLight ? T.shadow3 || "0 40px 100px rgba(15,23,42,0.15)" : "0 40px 100px rgba(0,0,0,0.7)",
       }}>
         {/* Header with accent preview */}
         <div style={{
-          padding: "22px 28px", borderBottom: `1px solid ${P.border}`,
+          padding: "22px 28px", borderBottom: `1px solid ${T.border}`,
           display: "flex", justifyContent: "space-between", alignItems: "center",
           background: `linear-gradient(135deg, ${form.accent}10 0%, transparent 60%)`,
         }}>
           <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
             <div style={{
               width: 44, height: 44, borderRadius: 12,
-              background: `linear-gradient(135deg, ${form.accent}25 0%, #060a11 100%)`,
+              background: isLight ? `${form.accent}18` : `linear-gradient(135deg, ${form.accent}25 0%, #060a11 100%)`,
               border: `1px solid ${form.accent}40`,
               display: "flex", alignItems: "center", justifyContent: "center",
             }}>
               <Building2 size={20} color={form.accent} />
             </div>
             <div>
-              <p style={{ fontSize: 16, fontWeight: 700, color: "#FFFFFF", fontFamily: fontDisp }}>
+              <p style={{ fontSize: 16, fontWeight: 700, color: T.txt, fontFamily: fontDisp }}>
                 {editing ? "Editar Propiedad" : "Registrar Propiedad"}
               </p>
-              <p style={{ fontSize: 11, color: P.txt3, marginTop: 2 }}>
+              <p style={{ fontSize: 11, color: T.txt3, marginTop: 2 }}>
                 {editing ? `Editando: ${initialData.name}` : "Agrega un nuevo desarrollo al catálogo permanente"}
               </p>
             </div>
           </div>
-          <button onClick={onClose} style={{ width: 32, height: 32, borderRadius: 8, border: `1px solid ${P.border}`, background: P.glass, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <X size={14} color={P.txt2} />
+          <button onClick={onClose} style={{ width: 32, height: 32, borderRadius: 8, border: `1px solid ${T.border}`, background: T.glass, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <X size={14} color={T.txt2} />
           </button>
         </div>
 
@@ -8591,29 +8593,29 @@ const NewPropertyModal = ({ onClose, onSave, initialData = null }) => {
                 <label style={labelStyle}>Nombre del desarrollo *</label>
                 <input value={form.name} onChange={e=>set("name",e.target.value)} placeholder="Ej: Almara Residences" style={inputStyle("name")}
                   onFocus={e=>e.target.style.borderColor=form.accent+"80"} onBlur={e=>e.target.style.borderColor=errors.name?P.rose+"80":P.border} />
-                {errors.name && <p style={{fontSize:10,color:P.rose,marginTop:3}}>Campo requerido</p>}
+                {errors.name && <p style={{fontSize:10,color:T.rose,marginTop:3}}>Campo requerido</p>}
               </div>
               <div>
                 <label style={labelStyle}>Marca / Sub-nombre</label>
                 <input value={form.brand} onChange={e=>set("brand",e.target.value)} placeholder="Ej: by Four Seasons" style={inputStyle("brand")}
-                  onFocus={e=>e.target.style.borderColor=form.accent+"80"} onBlur={e=>e.target.style.borderColor=P.border} />
+                  onFocus={e=>e.target.style.borderColor=form.accent+"80"} onBlur={e=>e.target.style.borderColor=T.border} />
               </div>
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
               <div>
                 <label style={labelStyle}>Ubicación</label>
-                <select value={form.location} onChange={e=>set("location",e.target.value)} style={{ ...inputStyle("location"), background: P.surface, cursor: "pointer" }}>
+                <select value={form.location} onChange={e=>set("location",e.target.value)} style={{ ...inputStyle("location"), background: T.surface || T.glass, cursor: "pointer" }}>
                   {locationOptions.map(l=><option key={l}>{l}</option>)}
                 </select>
               </div>
               <div>
                 <label style={labelStyle}>Zona / Referencia</label>
                 <input value={form.zone} onChange={e=>set("zone",e.target.value)} placeholder="Ej: Aldea Zama, frente al mar" style={inputStyle("zone")}
-                  onFocus={e=>e.target.style.borderColor=form.accent+"80"} onBlur={e=>e.target.style.borderColor=P.border} />
+                  onFocus={e=>e.target.style.borderColor=form.accent+"80"} onBlur={e=>e.target.style.borderColor=T.border} />
               </div>
               <div>
                 <label style={labelStyle}>Badge</label>
-                <select value={form.badge} onChange={e=>set("badge",e.target.value)} style={{ ...inputStyle("badge"), background: P.surface, cursor: "pointer" }}>
+                <select value={form.badge} onChange={e=>set("badge",e.target.value)} style={{ ...inputStyle("badge"), background: T.surface || T.glass, cursor: "pointer" }}>
                   {badgeOptions.map(b=><option key={b}>{b}</option>)}
                 </select>
               </div>
@@ -8621,7 +8623,7 @@ const NewPropertyModal = ({ onClose, onSave, initialData = null }) => {
           </div>
 
           {/* SECCIÓN 2 — Precios y financiero */}
-          <div style={{ paddingTop: 4, borderTop: `1px solid ${P.border}` }}>
+          <div style={{ paddingTop: 4, borderTop: `1px solid ${T.border}` }}>
             <p style={{ ...sectionTitle(form.accent), marginTop: 14 }}>Precios y financiero</p>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 12 }}>
               {[
@@ -8633,8 +8635,8 @@ const NewPropertyModal = ({ onClose, onSave, initialData = null }) => {
                 <div key={f.k}>
                   <label style={labelStyle}>{f.label}</label>
                   <input value={form[f.k]} onChange={e=>set(f.k,e.target.value)} placeholder={f.ph} style={inputStyle(f.k)}
-                    onFocus={e=>e.target.style.borderColor=form.accent+"80"} onBlur={e=>e.target.style.borderColor=errors[f.k]?P.rose+"80":P.border} />
-                  {errors[f.k] && <p style={{fontSize:10,color:P.rose,marginTop:3}}>Requerido</p>}
+                    onFocus={e=>e.target.style.borderColor=form.accent+"80"} onBlur={e=>e.target.style.borderColor=errors[f.k]?T.rose+"80":T.border} />
+                  {errors[f.k] && <p style={{fontSize:10,color:T.rose,marginTop:3}}>Requerido</p>}
                 </div>
               ))}
             </div>
@@ -8644,7 +8646,7 @@ const NewPropertyModal = ({ onClose, onSave, initialData = null }) => {
                 <div style={{ padding: "8px 14px", borderRadius: 8, background: `${form.accent}0A`, border: `1px solid ${form.accent}20`, fontSize: 12, color: form.accent, fontFamily: fontDisp }}>
                   Desde ${(parseInt(form.priceFrom)/1000).toFixed(0)}K USD
                 </div>
-                <div style={{ padding: "8px 14px", borderRadius: 8, background: P.glass, border: `1px solid ${P.border}`, fontSize: 12, color: P.txt2, fontFamily: fontDisp }}>
+                <div style={{ padding: "8px 14px", borderRadius: 8, background: T.glass, border: `1px solid ${T.border}`, fontSize: 12, color: T.txt2, fontFamily: fontDisp }}>
                   Hasta ${(parseInt(form.priceTo)/1000).toFixed(0)}K USD
                 </div>
                 {form.roi && <div style={{ padding: "8px 14px", borderRadius: 8, background: "rgba(74,222,128,0.08)", border: "1px solid rgba(74,222,128,0.2)", fontSize: 12, color: "#4ADE80", fontFamily: fontDisp }}>ROI {form.roi}</div>}
@@ -8653,54 +8655,54 @@ const NewPropertyModal = ({ onClose, onSave, initialData = null }) => {
           </div>
 
           {/* SECCIÓN 3 — Características */}
-          <div style={{ paddingTop: 4, borderTop: `1px solid ${P.border}` }}>
+          <div style={{ paddingTop: 4, borderTop: `1px solid ${T.border}` }}>
             <p style={{ ...sectionTitle(form.accent), marginTop: 14 }}>Características</p>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 12, marginBottom: 12 }}>
               <div>
                 <label style={labelStyle}>Tipo</label>
-                <select value={form.type} onChange={e=>set("type",e.target.value)} style={{ ...inputStyle("type"), background: P.surface, cursor: "pointer" }}>
+                <select value={form.type} onChange={e=>set("type",e.target.value)} style={{ ...inputStyle("type"), background: T.surface || T.glass, cursor: "pointer" }}>
                   {typeOptions.map(t=><option key={t}>{t}</option>)}
                 </select>
               </div>
               <div>
                 <label style={labelStyle}>Recámaras</label>
                 <input value={form.bedrooms} onChange={e=>set("bedrooms",e.target.value)} placeholder="1-3 recámaras" style={inputStyle("bedrooms")}
-                  onFocus={e=>e.target.style.borderColor=form.accent+"80"} onBlur={e=>e.target.style.borderColor=P.border} />
+                  onFocus={e=>e.target.style.borderColor=form.accent+"80"} onBlur={e=>e.target.style.borderColor=T.border} />
               </div>
               <div>
                 <label style={labelStyle}>Unidades disp.</label>
                 <input value={form.unitsAvailable} onChange={e=>set("unitsAvailable",e.target.value)} placeholder="10" type="number" min="0" style={inputStyle("unitsAvailable")}
-                  onFocus={e=>e.target.style.borderColor=form.accent+"80"} onBlur={e=>e.target.style.borderColor=P.border} />
+                  onFocus={e=>e.target.style.borderColor=form.accent+"80"} onBlur={e=>e.target.style.borderColor=T.border} />
               </div>
               <div>
                 <label style={labelStyle}>Total unidades</label>
                 <input value={form.totalUnits} onChange={e=>set("totalUnits",e.target.value)} placeholder="40" type="number" min="0" style={inputStyle("totalUnits")}
-                  onFocus={e=>e.target.style.borderColor=form.accent+"80"} onBlur={e=>e.target.style.borderColor=P.border} />
+                  onFocus={e=>e.target.style.borderColor=form.accent+"80"} onBlur={e=>e.target.style.borderColor=T.border} />
               </div>
             </div>
             <div style={{ marginBottom: 12 }}>
               <label style={labelStyle}>Tamaños disponibles (separados por coma)</label>
               <input value={form.sizes} onChange={e=>set("sizes",e.target.value)} placeholder="65 m², 85 m², 120 m², 180 m²" style={inputStyle("sizes")}
-                onFocus={e=>e.target.style.borderColor=form.accent+"80"} onBlur={e=>e.target.style.borderColor=P.border} />
+                onFocus={e=>e.target.style.borderColor=form.accent+"80"} onBlur={e=>e.target.style.borderColor=T.border} />
             </div>
           </div>
 
           {/* SECCIÓN 4 — Descripción y detalles */}
-          <div style={{ paddingTop: 4, borderTop: `1px solid ${P.border}` }}>
+          <div style={{ paddingTop: 4, borderTop: `1px solid ${T.border}` }}>
             <p style={{ ...sectionTitle(form.accent), marginTop: 14 }}>Descripción y detalles</p>
             <div style={{ marginBottom: 12 }}>
               <label style={labelStyle}>Descripción del desarrollo</label>
               <textarea value={form.description} onChange={e=>set("description",e.target.value)} rows={3}
                 placeholder="Describe el proyecto, su concepto, entorno y propuesta de valor..."
                 style={{ ...inputStyle("description"), resize: "vertical", lineHeight: 1.6 }}
-                onFocus={e=>e.target.style.borderColor=form.accent+"80"} onBlur={e=>e.target.style.borderColor=P.border} />
+                onFocus={e=>e.target.style.borderColor=form.accent+"80"} onBlur={e=>e.target.style.borderColor=T.border} />
             </div>
             <div style={{ marginBottom: 12 }}>
               <label style={labelStyle}>Puntos clave — highlights (separados por coma)</label>
               <input value={form.highlights} onChange={e=>set("highlights",e.target.value)}
                 placeholder="Rooftop con piscina, Cenote natural, Solo 14 unidades exclusivas"
                 style={inputStyle("highlights")}
-                onFocus={e=>e.target.style.borderColor=form.accent+"80"} onBlur={e=>e.target.style.borderColor=P.border} />
+                onFocus={e=>e.target.style.borderColor=form.accent+"80"} onBlur={e=>e.target.style.borderColor=T.border} />
               {form.highlights && (
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 4, marginTop: 6 }}>
                   {form.highlights.split(",").filter(h=>h.trim()).map((h,i)=>(
@@ -8714,11 +8716,11 @@ const NewPropertyModal = ({ onClose, onSave, initialData = null }) => {
               <input value={form.amenities} onChange={e=>set("amenities",e.target.value)}
                 placeholder="Piscina, Rooftop, Gimnasio, Spa, Seguridad 24/7, Estacionamiento"
                 style={inputStyle("amenities")}
-                onFocus={e=>e.target.style.borderColor=form.accent+"80"} onBlur={e=>e.target.style.borderColor=P.border} />
+                onFocus={e=>e.target.style.borderColor=form.accent+"80"} onBlur={e=>e.target.style.borderColor=T.border} />
               {form.amenities && (
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 4, marginTop: 6 }}>
                   {form.amenities.split(",").filter(a=>a.trim()).map((a,i)=>(
-                    <span key={i} style={{ fontSize: 10, padding: "3px 8px", borderRadius: 5, background: P.glass, border: `1px solid ${P.border}`, color: P.txt2 }}>{a.trim()}</span>
+                    <span key={i} style={{ fontSize: 10, padding: "3px 8px", borderRadius: 5, background: T.glass, border: `1px solid ${T.border}`, color: T.txt2 }}>{a.trim()}</span>
                   ))}
                 </div>
               )}
@@ -8726,20 +8728,20 @@ const NewPropertyModal = ({ onClose, onSave, initialData = null }) => {
           </div>
 
           {/* SECCIÓN 5 — Media y visual */}
-          <div style={{ paddingTop: 4, borderTop: `1px solid ${P.border}` }}>
+          <div style={{ paddingTop: 4, borderTop: `1px solid ${T.border}` }}>
             <p style={{ ...sectionTitle(form.accent), marginTop: 14 }}>Media y visual</p>
             <div style={{ marginBottom: 14 }}>
               <label style={{ ...labelStyle, display: "flex", alignItems: "center", gap: 6 }}>
-                <ExternalLink size={10} color={P.accent} /> Link de galería de imágenes
-                <span style={{ color: P.txt3, fontWeight: 400, textTransform: "none", marginLeft: 4 }}>— Google Drive, Dropbox o cualquier carpeta compartida</span>
+                <ExternalLink size={10} color={T.accent} /> Link de galería de imágenes
+                <span style={{ color: T.txt3, fontWeight: 400, textTransform: "none", marginLeft: 4 }}>— Google Drive, Dropbox o cualquier carpeta compartida</span>
               </label>
               <div style={{ position: "relative" }}>
-                <ExternalLink size={13} color={form.driveLink ? form.accent : P.txt3} style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", flexShrink: 0 }} />
+                <ExternalLink size={13} color={form.driveLink ? form.accent : T.txt3} style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", flexShrink: 0 }} />
                 <input
                   value={form.driveLink} onChange={e => set("driveLink", e.target.value)}
                   placeholder="https://drive.google.com/drive/folders/..."
-                  style={{ ...inputStyle("driveLink"), paddingLeft: 34, borderColor: form.driveLink ? form.accent + "50" : P.border }}
-                  onFocus={e=>e.target.style.borderColor=form.accent+"80"} onBlur={e=>e.target.style.borderColor=form.driveLink?form.accent+"50":P.border}
+                  style={{ ...inputStyle("driveLink"), paddingLeft: 34, borderColor: form.driveLink ? form.accent + "50" : T.border }}
+                  onFocus={e=>e.target.style.borderColor=form.accent+"80"} onBlur={e=>e.target.style.borderColor=form.driveLink?form.accent+"50":T.border}
                 />
               </div>
               {form.driveLink && (
@@ -8792,14 +8794,14 @@ const NewPropertyModal = ({ onClose, onSave, initialData = null }) => {
           </div>
 
           {/* Actions */}
-          <div style={{ display: "flex", gap: 10, paddingTop: 8, borderTop: `1px solid ${P.border}`, marginTop: 4 }}>
-            <button onClick={onClose} style={{ padding: "13px 20px", borderRadius: 10, border: `1px solid ${P.border}`, background: P.glass, color: P.txt2, fontSize: 13, cursor: "pointer", fontFamily: font, whiteSpace: "nowrap" }}>
+          <div style={{ display: "flex", gap: 10, paddingTop: 8, borderTop: `1px solid ${T.border}`, marginTop: 4 }}>
+            <button onClick={onClose} style={{ padding: "13px 20px", borderRadius: 10, border: `1px solid ${T.border}`, background: T.glass, color: T.txt2, fontSize: 13, cursor: "pointer", fontFamily: font, whiteSpace: "nowrap" }}>
               Cancelar
             </button>
             <button onClick={handleSave} disabled={!canSave} style={{
               flex: 1, padding: "13px", borderRadius: 10, border: "none",
-              background: canSave ? `linear-gradient(135deg, ${form.accent} 0%, ${form.accent}CC 100%)` : P.glass,
-              color: canSave ? "#060A11" : P.txt3,
+              background: canSave ? `linear-gradient(135deg, ${form.accent} 0%, ${form.accent}CC 100%)` : T.glass,
+              color: canSave ? "#060A11" : T.txt3,
               fontSize: 13, fontWeight: 700, cursor: canSave ? "pointer" : "not-allowed", fontFamily: fontDisp,
               transition: "all 0.2s",
               boxShadow: canSave ? `0 4px 20px ${form.accent}40` : "none",
@@ -8954,7 +8956,8 @@ const RivieraMayaMap = ({ properties }) => {
   );
 };
 
-const LandingPages = () => {
+const LandingPages = ({ T = P }) => {
+  const isLight = T !== P;
   const [step, setStep] = useState(0);
   const [clientName, setClientName] = useState("");
   const [clientBudgetMin, setClientBudgetMin] = useState(120000);
@@ -9107,7 +9110,7 @@ const LandingPages = () => {
     setShowShareModal(false);
   };
 
-  const statusColors = { Generada: P.blue, Enviada: P.emerald, Vista: P.accent, Expirada: P.rose };
+  const statusColors = { Generada: T.blue, Enviada: T.emerald, Vista: T.accent, Expirada: T.rose };
 
   // ─── Step 0: Lista de Landing Pages ───
   if (step === 0) return (
@@ -9115,33 +9118,34 @@ const LandingPages = () => {
       {/* Header */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
         <div>
-          <p style={{ fontSize: 21, fontWeight: 400, color: "#FFFFFF", fontFamily: fontDisp, letterSpacing: "-0.02em" }}>
-            Landing Pages <span style={{ fontWeight: 300, color: "rgba(255,255,255,0.4)" }}>Premium</span>
+          <p style={{ fontSize: 21, fontWeight: 400, color: isLight ? T.txt : "#FFFFFF", fontFamily: fontDisp, letterSpacing: "-0.02em" }}>
+            Landing Pages <span style={{ fontWeight: 300, color: isLight ? T.txt3 : "rgba(255,255,255,0.4)" }}>Premium</span>
           </p>
-          <p style={{ fontSize: 12, color: P.txt3, fontFamily: font, marginTop: 4 }}>Genera presentaciones personalizadas para cada cliente en un clic</p>
+          <p style={{ fontSize: 12, color: T.txt3, fontFamily: font, marginTop: 4 }}>Genera presentaciones personalizadas para cada cliente en un clic</p>
         </div>
         <div style={{ display: "flex", gap: 10 }}>
           <button onClick={() => setShowNewPropModal(true)} style={{
             display: "flex", alignItems: "center", gap: 7, padding: "11px 18px",
-            borderRadius: 11, border: `1px solid ${P.accent}40`, background: P.accentS,
-            cursor: "pointer", color: P.accent, fontSize: 13, fontWeight: 600, fontFamily: fontDisp,
+            borderRadius: 11, border: `1px solid ${T.accent}40`, background: T.accentS,
+            cursor: "pointer", color: T.accent, fontSize: 13, fontWeight: 600, fontFamily: fontDisp,
             transition: "all 0.22s",
           }}
-            onMouseEnter={e => { e.currentTarget.style.background = P.accentB; e.currentTarget.style.borderColor = P.accent + "70"; }}
-            onMouseLeave={e => { e.currentTarget.style.background = P.accentS; e.currentTarget.style.borderColor = P.accent + "40"; }}
+            onMouseEnter={e => { e.currentTarget.style.background = T.accentB; e.currentTarget.style.borderColor = T.accent + "70"; }}
+            onMouseLeave={e => { e.currentTarget.style.background = T.accentS; e.currentTarget.style.borderColor = T.accent + "40"; }}
           >
             <Plus size={15} /> Registrar propiedad
           </button>
           <button onClick={() => setStep(1)} style={{
             display: "flex", alignItems: "center", gap: 8, padding: "11px 22px",
-            borderRadius: 11, border: "none", cursor: "pointer",
-            background: "rgba(255,255,255,0.95)", color: "#0A0F18",
+            borderRadius: 11, border: isLight ? "none" : "none", cursor: "pointer",
+            background: isLight ? T.accent : "rgba(255,255,255,0.95)",
+            color: isLight ? "#FFFFFF" : "#0A0F18",
             fontSize: 13, fontWeight: 700, fontFamily: fontDisp,
-            boxShadow: "0 4px 20px rgba(255,255,255,0.15)",
+            boxShadow: isLight ? T.shadowMint || "0 4px 16px rgba(13,154,118,0.25)" : "0 4px 20px rgba(255,255,255,0.15)",
             transition: "all 0.25s",
           }}
-            onMouseEnter={e => { e.currentTarget.style.background = "#FFFFFF"; e.currentTarget.style.transform = "translateY(-1px)"; }}
-            onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.95)"; e.currentTarget.style.transform = "translateY(0)"; }}
+            onMouseEnter={e => { e.currentTarget.style.background = isLight ? (T.accentDark || T.accent) : "#FFFFFF"; e.currentTarget.style.transform = "translateY(-1px)"; }}
+            onMouseLeave={e => { e.currentTarget.style.background = isLight ? T.accent : "rgba(255,255,255,0.95)"; e.currentTarget.style.transform = "translateY(0)"; }}
           >
             <Wand2 size={15} /> Nueva Landing Page
           </button>
@@ -9150,74 +9154,74 @@ const LandingPages = () => {
 
       {/* KPIs */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 14 }}>
-        <KPI label="Pages Generadas" value={savedPages.length} sub="total" icon={Globe} color={P.blue} />
-        <KPI label="Propiedades en catálogo" value={rivieraProperties.length + customProperties.length} sub={`${customProperties.length} registradas`} icon={Building2} color={P.emerald} />
-        <KPI label="Tasa de Apertura" value="87%" sub="+12%" icon={Eye} color={P.accent} />
-        <KPI label="Conversión a Zoom" value="34%" sub="+8pp" icon={Target} color={P.violet} />
+        <KPI label="Pages Generadas" value={savedPages.length} sub="total" icon={Globe} color={T.blue} T={T} />
+        <KPI label="Propiedades en catálogo" value={rivieraProperties.length + customProperties.length} sub={`${customProperties.length} registradas`} icon={Building2} color={T.emerald} T={T} />
+        <KPI label="Tasa de Apertura" value="87%" sub="+12%" icon={Eye} color={T.accent} T={T} />
+        <KPI label="Conversión a Zoom" value="34%" sub="+8pp" icon={Target} color={T.violet} T={T} />
       </div>
 
       {/* Landing Pages Recientes */}
-      <G np>
-        <div style={{ padding: "16px 20px", display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: `1px solid ${P.border}` }}>
-          <p style={{ fontSize: 14, fontWeight: 700, color: P.txt, fontFamily: fontDisp }}>Landing Pages Recientes</p>
-          <Pill color={P.accent} s>{savedPages.length} páginas</Pill>
+      <G np T={T}>
+        <div style={{ padding: "16px 20px", display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: `1px solid ${T.border}` }}>
+          <p style={{ fontSize: 14, fontWeight: 700, color: T.txt, fontFamily: fontDisp }}>Landing Pages Recientes</p>
+          <Pill color={T.accent} s isLight={isLight}>{savedPages.length} páginas</Pill>
         </div>
-        <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 0.8fr 0.8fr 1fr 0.8fr 0.8fr", gap: 10, padding: "10px 20px", borderBottom: `1px solid ${P.border}`, fontSize: 10, color: P.txt3, textTransform: "uppercase", letterSpacing: "0.07em", fontWeight: 600 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 0.8fr 0.8fr 1fr 0.8fr 0.8fr", gap: 10, padding: "10px 20px", borderBottom: `1px solid ${T.border}`, fontSize: 10, color: T.txt3, textTransform: "uppercase", letterSpacing: "0.07em", fontWeight: 600 }}>
           <span>Cliente</span><span>Fecha</span><span>Props.</span><span>Presupuesto</span><span>Status</span><span>Asesor</span><span>Acciones</span>
         </div>
         {savedPages.map(pg => (
           <div key={pg.id} style={{
             display: "grid", gridTemplateColumns: "2fr 1fr 0.8fr 0.8fr 1fr 0.8fr 0.8fr",
-            gap: 10, alignItems: "center", padding: "13px 20px", borderBottom: `1px solid ${P.border}`,
+            gap: 10, alignItems: "center", padding: "13px 20px", borderBottom: `1px solid ${T.border}`,
             transition: "background 0.2s",
           }}
-            onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.02)"}
+            onMouseEnter={e => e.currentTarget.style.background = isLight ? "rgba(0,0,0,0.03)" : "rgba(255,255,255,0.02)"}
             onMouseLeave={e => e.currentTarget.style.background = "transparent"}
           >
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <Ico icon={User} sz={30} is={13} c={P.accent} />
-              <span style={{ fontSize: 13, color: P.txt, fontWeight: 600, fontFamily: fontDisp }}>{pg.client}</span>
+              <Ico icon={User} sz={30} is={13} c={T.accent} />
+              <span style={{ fontSize: 13, color: T.txt, fontWeight: 600, fontFamily: fontDisp }}>{pg.client}</span>
             </div>
-            <span style={{ fontSize: 11, color: P.txt2, fontFamily: font }}>{pg.date}</span>
-            <span style={{ fontSize: 12, color: P.txt, fontWeight: 500, fontFamily: fontDisp }}>{pg.props}</span>
-            <span style={{ fontSize: 11, color: P.emerald, fontWeight: 600, fontFamily: fontDisp }}>{pg.budget}</span>
-            <Pill color={statusColors[pg.status] || P.txt3} s>{pg.status}</Pill>
-            <span style={{ fontSize: 11, color: P.txt2, fontFamily: font, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{pg.asesor?.split(" ")[0] || "—"}</span>
+            <span style={{ fontSize: 11, color: T.txt2, fontFamily: font }}>{pg.date}</span>
+            <span style={{ fontSize: 12, color: T.txt, fontWeight: 500, fontFamily: fontDisp }}>{pg.props}</span>
+            <span style={{ fontSize: 11, color: T.emerald, fontWeight: 600, fontFamily: fontDisp }}>{pg.budget}</span>
+            <Pill color={statusColors[pg.status] || T.txt3} s isLight={isLight}>{pg.status}</Pill>
+            <span style={{ fontSize: 11, color: T.txt2, fontFamily: font, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{pg.asesor?.split(" ")[0] || "—"}</span>
             <div style={{ display: "flex", gap: 5 }}>
-              <button onClick={() => { setClientName(pg.client); setSelectedProps(pg.propIds || allProperties.slice(0, pg.props).map(p => p.id)); setPreviewOpen(true); }} style={{ padding: "5px 7px", borderRadius: 6, border: `1px solid ${P.border}`, background: P.glass, cursor: "pointer", display: "flex", alignItems: "center" }}><Eye size={11} color={P.txt2} /></button>
-              <button onClick={handleCopyLink} style={{ padding: "5px 7px", borderRadius: 6, border: `1px solid ${P.border}`, background: P.glass, cursor: "pointer", display: "flex", alignItems: "center" }}>{copied ? <Check size={11} color={P.accent} /> : <Copy size={11} color={P.txt2} />}</button>
-              <button style={{ padding: "5px 7px", borderRadius: 6, border: `1px solid ${P.border}`, background: P.glass, cursor: "pointer", display: "flex", alignItems: "center" }}><Share2 size={11} color={P.txt2} /></button>
+              <button onClick={() => { setClientName(pg.client); setSelectedProps(pg.propIds || allProperties.slice(0, pg.props).map(p => p.id)); setPreviewOpen(true); }} style={{ padding: "5px 7px", borderRadius: 6, border: `1px solid ${T.border}`, background: T.glass, cursor: "pointer", display: "flex", alignItems: "center" }}><Eye size={11} color={T.txt2} /></button>
+              <button onClick={handleCopyLink} style={{ padding: "5px 7px", borderRadius: 6, border: `1px solid ${T.border}`, background: T.glass, cursor: "pointer", display: "flex", alignItems: "center" }}>{copied ? <Check size={11} color={T.accent} /> : <Copy size={11} color={T.txt2} />}</button>
+              <button style={{ padding: "5px 7px", borderRadius: 6, border: `1px solid ${T.border}`, background: T.glass, cursor: "pointer", display: "flex", alignItems: "center" }}><Share2 size={11} color={T.txt2} /></button>
             </div>
           </div>
         ))}
       </G>
 
       {/* Catálogo de Propiedades */}
-      <G np>
-        <div style={{ padding: "16px 20px", display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: showCatalogSection ? `1px solid ${P.border}` : "none", cursor: "pointer" }}
+      <G np T={T}>
+        <div style={{ padding: "16px 20px", display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: showCatalogSection ? `1px solid ${T.border}` : "none", cursor: "pointer" }}
           onClick={() => setShowCatalogSection(s => !s)}>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <Ico icon={Building2} sz={30} is={14} c={P.emerald} />
+            <Ico icon={Building2} sz={30} is={14} c={T.emerald} />
             <div>
-              <p style={{ fontSize: 14, fontWeight: 700, color: P.txt, fontFamily: fontDisp }}>Catálogo de Propiedades</p>
-              <p style={{ fontSize: 11, color: P.txt3, marginTop: 1 }}>
-                {rivieraProperties.length} predeterminadas · <span style={{ color: customProperties.length > 0 ? P.accent : P.txt3 }}>{customProperties.length} registradas por el equipo</span>
+              <p style={{ fontSize: 14, fontWeight: 700, color: T.txt, fontFamily: fontDisp }}>Catálogo de Propiedades</p>
+              <p style={{ fontSize: 11, color: T.txt3, marginTop: 1 }}>
+                {rivieraProperties.length} predeterminadas · <span style={{ color: customProperties.length > 0 ? T.accent : T.txt3 }}>{customProperties.length} registradas por el equipo</span>
               </p>
             </div>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <button onClick={e => { e.stopPropagation(); setShowNewPropModal(true); }} style={{
               display: "flex", alignItems: "center", gap: 6, padding: "7px 14px",
-              borderRadius: 8, border: `1px solid ${P.accent}40`, background: P.accentS,
-              cursor: "pointer", color: P.accent, fontSize: 12, fontWeight: 700, fontFamily: fontDisp,
+              borderRadius: 8, border: `1px solid ${T.accent}40`, background: T.accentS,
+              cursor: "pointer", color: T.accent, fontSize: 12, fontWeight: 700, fontFamily: fontDisp,
               transition: "all 0.2s",
             }}
-              onMouseEnter={e => { e.currentTarget.style.background = P.accentB; }}
-              onMouseLeave={e => { e.currentTarget.style.background = P.accentS; }}
+              onMouseEnter={e => { e.currentTarget.style.background = T.accentB; }}
+              onMouseLeave={e => { e.currentTarget.style.background = T.accentS; }}
             >
               <Plus size={13} /> Registrar nueva
             </button>
-            <div style={{ color: P.txt3, transition: "transform 0.2s", transform: showCatalogSection ? "rotate(180deg)" : "none" }}>
+            <div style={{ color: T.txt3, transition: "transform 0.2s", transform: showCatalogSection ? "rotate(180deg)" : "none" }}>
               <ChevronDown size={16} />
             </div>
           </div>
@@ -9228,14 +9232,14 @@ const LandingPages = () => {
             {/* Custom properties */}
             {customProperties.length > 0 && (
               <div style={{ marginBottom: 20 }}>
-                <p style={{ fontSize: 11, color: P.accent, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 12 }}>
+                <p style={{ fontSize: 11, color: T.accent, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 12 }}>
                   Registradas por el equipo ({customProperties.length})
                 </p>
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 12 }}>
                   {customProperties.map(prop => (
                     <div key={prop.id} style={{
                       borderRadius: 12, overflow: "hidden",
-                      background: `linear-gradient(135deg, ${prop.accent}12 0%, #060a11 100%)`,
+                      background: isLight ? `${prop.accent}08` : `linear-gradient(135deg, ${prop.accent}12 0%, #060a11 100%)`,
                       border: `1px solid ${prop.accent}25`,
                     }}>
                       {/* Card header */}
@@ -9243,41 +9247,41 @@ const LandingPages = () => {
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
                             <span style={{ fontSize: 9, padding: "2px 7px", borderRadius: 4, background: `${prop.accent}20`, border: `1px solid ${prop.accent}30`, color: prop.accent, fontWeight: 700, letterSpacing: "0.05em" }}>{prop.badge}</span>
-                            <span style={{ fontSize: 9, color: P.txt3, fontFamily: font }}>{prop.location}</span>
+                            <span style={{ fontSize: 9, color: T.txt3, fontFamily: font }}>{prop.location}</span>
                           </div>
-                          <p style={{ fontSize: 13, fontWeight: 700, color: "#FFFFFF", fontFamily: fontDisp, letterSpacing: "-0.01em" }}>{prop.name}</p>
-                          {prop.brand && <p style={{ fontSize: 11, color: P.txt3 }}>{prop.brand}</p>}
+                          <p style={{ fontSize: 13, fontWeight: 700, color: T.txt, fontFamily: fontDisp, letterSpacing: "-0.01em" }}>{prop.name}</p>
+                          {prop.brand && <p style={{ fontSize: 11, color: T.txt3 }}>{prop.brand}</p>}
                         </div>
                         <div style={{ textAlign: "right", flexShrink: 0, marginLeft: 8 }}>
                           <p style={{ fontSize: 14, fontWeight: 700, color: prop.accent, fontFamily: fontDisp }}>${(prop.priceFrom / 1000).toFixed(0)}K</p>
-                          <p style={{ fontSize: 10, color: P.txt3 }}>ROI {prop.roi}</p>
+                          <p style={{ fontSize: 10, color: T.txt3 }}>ROI {prop.roi}</p>
                         </div>
                       </div>
                       {/* Drive link status */}
-                      <div style={{ padding: "8px 16px", borderTop: `1px solid ${P.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <div style={{ padding: "8px 16px", borderTop: `1px solid ${T.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                         <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
-                          <ExternalLink size={11} color={driveLinks[prop.id] || prop.driveLink ? prop.accent : P.txt3} />
-                          <span style={{ fontSize: 10, color: driveLinks[prop.id] || prop.driveLink ? prop.accent : P.txt3 }}>
+                          <ExternalLink size={11} color={driveLinks[prop.id] || prop.driveLink ? prop.accent : T.txt3} />
+                          <span style={{ fontSize: 10, color: driveLinks[prop.id] || prop.driveLink ? prop.accent : T.txt3 }}>
                             {driveLinks[prop.id] || prop.driveLink ? "Galería configurada" : "Sin galería"}
                           </span>
                         </div>
                         <div style={{ display: "flex", gap: 5 }}>
-                          <button onClick={() => { setEditingProp(prop); setShowNewPropModal(true); }} style={{ display: "flex", alignItems: "center", gap: 4, padding: "4px 10px", borderRadius: 6, border: `1px solid ${P.border}`, background: P.glass, cursor: "pointer", color: P.txt2, fontSize: 10, fontFamily: font, transition: "all 0.2s" }}
-                            onMouseEnter={e => { e.currentTarget.style.color = P.txt; e.currentTarget.style.borderColor = P.borderH; }}
-                            onMouseLeave={e => { e.currentTarget.style.color = P.txt2; e.currentTarget.style.borderColor = P.border; }}
+                          <button onClick={() => { setEditingProp(prop); setShowNewPropModal(true); }} style={{ display: "flex", alignItems: "center", gap: 4, padding: "4px 10px", borderRadius: 6, border: `1px solid ${T.border}`, background: T.glass, cursor: "pointer", color: T.txt2, fontSize: 10, fontFamily: font, transition: "all 0.2s" }}
+                            onMouseEnter={e => { e.currentTarget.style.color = T.txt; e.currentTarget.style.borderColor = T.borderH; }}
+                            onMouseLeave={e => { e.currentTarget.style.color = T.txt2; e.currentTarget.style.borderColor = T.border; }}
                           >
                             <FileText size={10} /> Editar
                           </button>
-                          <button onClick={() => { if (window.confirm(`¿Eliminar "${prop.name}" del catálogo?`)) deleteCustomProp(prop.id); }} style={{ display: "flex", alignItems: "center", padding: "4px 8px", borderRadius: 6, border: `1px solid ${P.border}`, background: P.glass, cursor: "pointer", color: P.rose, fontSize: 10, transition: "all 0.2s" }}
-                            onMouseEnter={e => { e.currentTarget.style.background = "rgba(232,129,140,0.08)"; e.currentTarget.style.borderColor = P.rose + "40"; }}
-                            onMouseLeave={e => { e.currentTarget.style.background = P.glass; e.currentTarget.style.borderColor = P.border; }}
+                          <button onClick={() => { if (window.confirm(`¿Eliminar "${prop.name}" del catálogo?`)) deleteCustomProp(prop.id); }} style={{ display: "flex", alignItems: "center", padding: "4px 8px", borderRadius: 6, border: `1px solid ${T.border}`, background: T.glass, cursor: "pointer", color: T.rose, fontSize: 10, transition: "all 0.2s" }}
+                            onMouseEnter={e => { e.currentTarget.style.background = `${T.rose}18`; e.currentTarget.style.borderColor = T.rose + "40"; }}
+                            onMouseLeave={e => { e.currentTarget.style.background = T.glass; e.currentTarget.style.borderColor = T.border; }}
                           >
                             <Trash2 size={10} />
                           </button>
                         </div>
                       </div>
                       {prop.createdAt && (
-                        <div style={{ padding: "4px 16px 8px", fontSize: 9, color: P.txt3, fontFamily: font }}>
+                        <div style={{ padding: "4px 16px 8px", fontSize: 9, color: T.txt3, fontFamily: font }}>
                           Registrada: {prop.createdAt}{prop.updatedAt && prop.updatedAt !== prop.createdAt ? ` · Editada: ${prop.updatedAt}` : ""}
                         </div>
                       )}
@@ -9289,7 +9293,7 @@ const LandingPages = () => {
 
             {/* Default properties summary */}
             <div>
-              <p style={{ fontSize: 11, color: P.txt2, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 12 }}>
+              <p style={{ fontSize: 11, color: T.txt2, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 12 }}>
                 Propiedades Riviera Maya ({rivieraProperties.length})
               </p>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 10 }}>
@@ -9302,8 +9306,8 @@ const LandingPages = () => {
                       display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8,
                     }}>
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <p style={{ fontSize: 12, fontWeight: 700, color: "#fff", fontFamily: fontDisp, letterSpacing: "-0.01em" }}>{prop.name}</p>
-                        <p style={{ fontSize: 10, color: P.txt3 }}>{prop.location} · ${(prop.priceFrom/1000).toFixed(0)}K–${(prop.priceTo/1000).toFixed(0)}K · ROI {prop.roi}</p>
+                        <p style={{ fontSize: 12, fontWeight: 700, color: T.txt, fontFamily: fontDisp, letterSpacing: "-0.01em" }}>{prop.name}</p>
+                        <p style={{ fontSize: 10, color: T.txt3 }}>{prop.location} · ${(prop.priceFrom/1000).toFixed(0)}K–${(prop.priceTo/1000).toFixed(0)}K · ROI {prop.roi}</p>
                       </div>
                       <div onClick={e => e.stopPropagation()} style={{ display: "flex", alignItems: "center", gap: 5, flexShrink: 0 }}>
                         {editingLinkId === prop.id ? (
@@ -9314,15 +9318,15 @@ const LandingPages = () => {
                               onChange={e => setEditLinkValue(e.target.value)}
                               onKeyDown={e => { if (e.key === "Enter") saveDriveLink(prop.id); if (e.key === "Escape") { setEditingLinkId(null); setEditLinkValue(""); } }}
                               placeholder="Link Drive..."
-                              style={{ padding: "4px 8px", borderRadius: 6, fontSize: 10, background: P.glass, border: `1px solid ${P.accent}50`, color: P.txt, fontFamily: font, outline: "none", width: 180 }}
+                              style={{ padding: "4px 8px", borderRadius: 6, fontSize: 10, background: T.glass, border: `1px solid ${T.accent}50`, color: T.txt, fontFamily: font, outline: "none", width: 180 }}
                             />
-                            <button onClick={() => saveDriveLink(prop.id)} style={{ padding: "4px 9px", borderRadius: 5, border: "none", background: P.accent, color: "#000", fontSize: 10, fontWeight: 700, cursor: "pointer" }}>OK</button>
-                            <button onClick={() => { setEditingLinkId(null); setEditLinkValue(""); }} style={{ padding: "4px 6px", borderRadius: 5, border: `1px solid ${P.border}`, background: P.glass, cursor: "pointer", color: P.txt3 }}><X size={10} /></button>
+                            <button onClick={() => saveDriveLink(prop.id)} style={{ padding: "4px 9px", borderRadius: 5, border: "none", background: T.accent, color: "#000", fontSize: 10, fontWeight: 700, cursor: "pointer" }}>OK</button>
+                            <button onClick={() => { setEditingLinkId(null); setEditLinkValue(""); }} style={{ padding: "4px 6px", borderRadius: 5, border: `1px solid ${T.border}`, background: T.glass, cursor: "pointer", color: T.txt3 }}><X size={10} /></button>
                           </div>
                         ) : (
                           <div style={{ display: "flex", gap: 5, alignItems: "center" }}>
                             {dl && <a href={dl} target="_blank" rel="noreferrer" style={{ display: "flex", alignItems: "center", gap: 4, padding: "4px 9px", borderRadius: 6, border: `1px solid ${prop.accent}40`, background: `${prop.accent}10`, color: prop.accent, fontSize: 10, fontWeight: 700, textDecoration: "none" }}><Image size={10} /> Galería</a>}
-                            <button onClick={e => { e.stopPropagation(); startEditLink(prop.id, dl, e); }} style={{ display: "flex", alignItems: "center", gap: 3, padding: "4px 9px", borderRadius: 6, border: `1px solid ${P.border}`, background: P.glass, cursor: "pointer", color: P.txt2, fontSize: 10, fontFamily: font }}>
+                            <button onClick={e => { e.stopPropagation(); startEditLink(prop.id, dl, e); }} style={{ display: "flex", alignItems: "center", gap: 3, padding: "4px 9px", borderRadius: 6, border: `1px solid ${T.border}`, background: T.glass, cursor: "pointer", color: T.txt2, fontSize: 10, fontFamily: font }}>
                               <FileText size={9} /> {dl ? "Editar link" : "Añadir link"}
                             </button>
                           </div>
@@ -9336,12 +9340,12 @@ const LandingPages = () => {
 
             {customProperties.length === 0 && (
               <div style={{ textAlign: "center", padding: "24px 0 8px" }}>
-                <p style={{ fontSize: 13, color: P.txt2, fontFamily: fontDisp, marginBottom: 8 }}>Aún no has registrado propiedades personalizadas</p>
-                <p style={{ fontSize: 11, color: P.txt3, marginBottom: 16 }}>Registra desarrollos adicionales para incluirlos en tus landing pages</p>
+                <p style={{ fontSize: 13, color: T.txt2, fontFamily: fontDisp, marginBottom: 8 }}>Aún no has registrado propiedades personalizadas</p>
+                <p style={{ fontSize: 11, color: T.txt3, marginBottom: 16 }}>Registra desarrollos adicionales para incluirlos en tus landing pages</p>
                 <button onClick={() => setShowNewPropModal(true)} style={{
                   display: "inline-flex", alignItems: "center", gap: 8, padding: "12px 24px",
-                  borderRadius: 10, border: `1px solid ${P.accent}40`, background: P.accentS,
-                  cursor: "pointer", color: P.accent, fontSize: 13, fontWeight: 700, fontFamily: fontDisp,
+                  borderRadius: 10, border: `1px solid ${T.accent}40`, background: T.accentS,
+                  cursor: "pointer", color: T.accent, fontSize: 13, fontWeight: 700, fontFamily: fontDisp,
                 }}>
                   <Plus size={15} /> Registrar primera propiedad
                 </button>
@@ -9353,10 +9357,10 @@ const LandingPages = () => {
 
       {/* Quick Market Stats */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 14 }}>
-        <G>
+        <G T={T}>
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
-            <Ico icon={TrendingUp} sz={32} is={15} c={P.emerald} />
-            <p style={{ fontSize: 13, fontWeight: 700, color: P.txt, fontFamily: fontDisp }}>Mercado Riviera Maya</p>
+            <Ico icon={TrendingUp} sz={32} is={15} c={T.emerald} />
+            <p style={{ fontSize: 13, fontWeight: 700, color: T.txt, fontFamily: fontDisp }}>Mercado Riviera Maya</p>
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             {[
@@ -9364,17 +9368,17 @@ const LandingPages = () => {
               { l: "Crecimiento anual", v: marketData.yearGrowth },
               { l: "Plusvalía real", v: marketData.realGrowth },
             ].map(x => (
-              <div key={x.l} style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", borderBottom: `1px solid ${P.border}` }}>
-                <span style={{ fontSize: 11, color: P.txt2 }}>{x.l}</span>
-                <span style={{ fontSize: 12, fontWeight: 700, color: P.emerald, fontFamily: fontDisp }}>{x.v}</span>
+              <div key={x.l} style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", borderBottom: `1px solid ${T.border}` }}>
+                <span style={{ fontSize: 11, color: T.txt2 }}>{x.l}</span>
+                <span style={{ fontSize: 12, fontWeight: 700, color: T.emerald, fontFamily: fontDisp }}>{x.v}</span>
               </div>
             ))}
           </div>
         </G>
-        <G>
+        <G T={T}>
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
-            <Ico icon={DollarSign} sz={32} is={15} c={P.accent} />
-            <p style={{ fontSize: 13, fontWeight: 700, color: P.txt, fontFamily: fontDisp }}>Rendimientos</p>
+            <Ico icon={DollarSign} sz={32} is={15} c={T.accent} />
+            <p style={{ fontSize: 13, fontWeight: 700, color: T.txt, fontFamily: fontDisp }}>Rendimientos</p>
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             {[
@@ -9382,17 +9386,17 @@ const LandingPages = () => {
               { l: "Plusvalía capital", v: marketData.capitalAppreciation },
               { l: "Ocupación promedio", v: marketData.occupancy },
             ].map(x => (
-              <div key={x.l} style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", borderBottom: `1px solid ${P.border}` }}>
-                <span style={{ fontSize: 11, color: P.txt2 }}>{x.l}</span>
-                <span style={{ fontSize: 12, fontWeight: 700, color: P.accent, fontFamily: fontDisp }}>{x.v}</span>
+              <div key={x.l} style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", borderBottom: `1px solid ${T.border}` }}>
+                <span style={{ fontSize: 11, color: T.txt2 }}>{x.l}</span>
+                <span style={{ fontSize: 12, fontWeight: 700, color: T.accent, fontFamily: fontDisp }}>{x.v}</span>
               </div>
             ))}
           </div>
         </G>
-        <G>
+        <G T={T}>
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
-            <Ico icon={Shield} sz={32} is={15} c={P.blue} />
-            <p style={{ fontSize: 13, fontWeight: 700, color: P.txt, fontFamily: fontDisp }}>Para Inversionistas</p>
+            <Ico icon={Shield} sz={32} is={15} c={T.blue} />
+            <p style={{ fontSize: 13, fontWeight: 700, color: T.txt, fontFamily: fontDisp }}>Para Inversionistas</p>
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             {[
@@ -9400,9 +9404,9 @@ const LandingPages = () => {
               { l: "Impuesto predial", v: "Mínimo" },
               { l: "Aeropuerto Tulum", v: "Nuevo" },
             ].map(x => (
-              <div key={x.l} style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", borderBottom: `1px solid ${P.border}` }}>
-                <span style={{ fontSize: 11, color: P.txt2 }}>{x.l}</span>
-                <span style={{ fontSize: 12, fontWeight: 700, color: P.blue, fontFamily: fontDisp }}>{x.v}</span>
+              <div key={x.l} style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", borderBottom: `1px solid ${T.border}` }}>
+                <span style={{ fontSize: 11, color: T.txt2 }}>{x.l}</span>
+                <span style={{ fontSize: 12, fontWeight: 700, color: T.blue, fontFamily: fontDisp }}>{x.v}</span>
               </div>
             ))}
           </div>
@@ -9415,6 +9419,7 @@ const LandingPages = () => {
           onClose={() => { setShowNewPropModal(false); setEditingProp(null); }}
           onSave={saveCustomProp}
           initialData={editingProp}
+          T={T}
         />
       )}
     </div>
@@ -9424,59 +9429,59 @@ const LandingPages = () => {
   if (step === 1) return (
     <div style={{ display: "flex", flexDirection: "column", gap: 18, maxWidth: 700, margin: "0 auto" }}>
       <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-        <button onClick={() => setStep(0)} style={{ padding: "8px 12px", borderRadius: 8, border: `1px solid ${P.border}`, background: P.glass, cursor: "pointer", color: P.txt2, fontSize: 12, fontFamily: font, display: "flex", alignItems: "center", gap: 4 }}>
+        <button onClick={() => setStep(0)} style={{ padding: "8px 12px", borderRadius: 8, border: `1px solid ${T.border}`, background: T.glass, cursor: "pointer", color: T.txt2, fontSize: 12, fontFamily: font, display: "flex", alignItems: "center", gap: 4 }}>
           <ChevronRight size={14} style={{ transform: "rotate(180deg)" }} /> Atrás
         </button>
         <div>
-          <p style={{ fontSize: 18, fontWeight: 600, color: "#FFFFFF", fontFamily: fontDisp }}>Crear Landing Page</p>
-          <p style={{ fontSize: 11, color: P.txt3, fontFamily: font }}>Paso 1 de 2 — Información del cliente</p>
+          <p style={{ fontSize: 18, fontWeight: 600, color: isLight ? T.txt : "#FFFFFF", fontFamily: fontDisp }}>Crear Landing Page</p>
+          <p style={{ fontSize: 11, color: T.txt3, fontFamily: font }}>Paso 1 de 2 — Información del cliente</p>
         </div>
       </div>
 
       {/* Progress */}
       <div style={{ display: "flex", gap: 8 }}>
-        <div style={{ flex: 1, height: 3, borderRadius: 2, background: P.accent, boxShadow: `0 0 8px ${P.accent}40` }} />
-        <div style={{ flex: 1, height: 3, borderRadius: 2, background: P.border }} />
+        <div style={{ flex: 1, height: 3, borderRadius: 2, background: T.accent, boxShadow: `0 0 8px ${T.accent}40` }} />
+        <div style={{ flex: 1, height: 3, borderRadius: 2, background: T.border }} />
       </div>
 
-      <G>
-        <p style={{ fontSize: 14, fontWeight: 700, color: P.txt, marginBottom: 16, fontFamily: fontDisp }}>Datos del Cliente</p>
+      <G T={T}>
+        <p style={{ fontSize: 14, fontWeight: 700, color: T.txt, marginBottom: 16, fontFamily: fontDisp }}>Datos del Cliente</p>
 
         <div style={{ marginBottom: 18 }}>
-          <label style={{ fontSize: 11, color: P.txt2, display: "block", marginBottom: 6, fontWeight: 600, letterSpacing: "0.03em" }}>Nombre del cliente</label>
+          <label style={{ fontSize: 11, color: T.txt2, display: "block", marginBottom: 6, fontWeight: 600, letterSpacing: "0.03em" }}>Nombre del cliente</label>
           <input
             type="text" value={clientName} onChange={e => setClientName(e.target.value)}
             placeholder="Ej: Familia Rodríguez, James Mitchell..."
             style={{
               width: "100%", padding: "12px 16px", borderRadius: 10, fontSize: 14,
-              background: P.glass, border: `1px solid ${P.border}`, color: P.txt,
+              background: T.glass, border: `1px solid ${T.border}`, color: T.txt,
               fontFamily: font, outline: "none", transition: "border-color 0.2s",
             }}
-            onFocus={e => e.target.style.borderColor = P.accent + "60"}
-            onBlur={e => e.target.style.borderColor = P.border}
+            onFocus={e => e.target.style.borderColor = T.accent + "60"}
+            onBlur={e => e.target.style.borderColor = T.border}
           />
         </div>
 
         <div style={{ marginBottom: 18 }}>
-          <label style={{ fontSize: 11, color: P.txt2, display: "flex", alignItems: "center", gap: 6, marginBottom: 6, fontWeight: 600, letterSpacing: "0.03em" }}>
-            <Building2 size={11} color={P.accent} /> Nombre de la agencia / bróker
+          <label style={{ fontSize: 11, color: T.txt2, display: "flex", alignItems: "center", gap: 6, marginBottom: 6, fontWeight: 600, letterSpacing: "0.03em" }}>
+            <Building2 size={11} color={T.accent} /> Nombre de la agencia / bróker
           </label>
           <input
             type="text" value={agencyName}
             onChange={e => { setAgencyName(e.target.value); localStorage.setItem("stratos_agency_name", e.target.value); }}
             placeholder="Ej: STRATOS REALTY, Inmobiliaria Azul, RE/MAX Elite…"
-            style={{ width: "100%", padding: "10px 14px", borderRadius: 9, fontSize: 13, background: P.glass, border: `1px solid ${P.accentB}`, color: P.txt, fontFamily: font, outline: "none" }}
-            onFocus={e => e.target.style.borderColor = P.accent + "60"}
-            onBlur={e => e.target.style.borderColor = P.accentB}
+            style={{ width: "100%", padding: "10px 14px", borderRadius: 9, fontSize: 13, background: T.glass, border: `1px solid ${T.accentB}`, color: T.txt, fontFamily: font, outline: "none" }}
+            onFocus={e => e.target.style.borderColor = T.accent + "60"}
+            onBlur={e => e.target.style.borderColor = T.accentB}
           />
-          <p style={{ fontSize: 10, color: P.txt3, marginTop: 4 }}>Aparece en el encabezado de la landing page del cliente. Se guarda automáticamente.</p>
+          <p style={{ fontSize: 10, color: T.txt3, marginTop: 4 }}>Aparece en el encabezado de la landing page del cliente. Se guarda automáticamente.</p>
         </div>
 
         <div style={{ marginBottom: 18 }}>
-          <label style={{ fontSize: 11, color: P.txt2, display: "block", marginBottom: 6, fontWeight: 600, letterSpacing: "0.03em" }}>Asesor asignado</label>
+          <label style={{ fontSize: 11, color: T.txt2, display: "block", marginBottom: 6, fontWeight: 600, letterSpacing: "0.03em" }}>Asesor asignado</label>
           <select value={asesor} onChange={e => setAsesor(e.target.value)} style={{
             width: "100%", padding: "12px 16px", borderRadius: 10, fontSize: 13,
-            background: P.surface, border: `1px solid ${P.border}`, color: P.txt,
+            background: T.surface || T.glass, border: `1px solid ${T.border}`, color: T.txt,
             fontFamily: font, cursor: "pointer",
           }}>
             {team.map(t => <option key={t.n} value={t.n}>{t.n} — {t.r}</option>)}
@@ -9486,35 +9491,35 @@ const LandingPages = () => {
         {/* Asesor contact info */}
         <div style={{ marginBottom: 18, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
           <div>
-            <label style={{ fontSize: 11, color: P.txt2, display: "flex", alignItems: "center", gap: 5, marginBottom: 6, fontWeight: 600, letterSpacing: "0.03em" }}>
-              <Phone size={11} color={P.emerald} /> WhatsApp del asesor
+            <label style={{ fontSize: 11, color: T.txt2, display: "flex", alignItems: "center", gap: 5, marginBottom: 6, fontWeight: 600, letterSpacing: "0.03em" }}>
+              <Phone size={11} color={T.emerald} /> WhatsApp del asesor
             </label>
             <input
               type="text" value={asesorWA} onChange={e => setAsesorWA(e.target.value)}
               placeholder="+52 998 000 0000"
-              style={{ width: "100%", padding: "10px 14px", borderRadius: 9, fontSize: 13, background: P.glass, border: `1px solid ${asesorWA ? P.emerald + "50" : P.border}`, color: P.txt, fontFamily: font, outline: "none" }}
-              onFocus={e => e.target.style.borderColor = P.emerald + "70"}
-              onBlur={e => e.target.style.borderColor = asesorWA ? P.emerald + "50" : P.border}
+              style={{ width: "100%", padding: "10px 14px", borderRadius: 9, fontSize: 13, background: T.glass, border: `1px solid ${asesorWA ? T.emerald + "50" : T.border}`, color: T.txt, fontFamily: font, outline: "none" }}
+              onFocus={e => e.target.style.borderColor = T.emerald + "70"}
+              onBlur={e => e.target.style.borderColor = asesorWA ? T.emerald + "50" : T.border}
             />
             {asesorWA && (
-              <a href={`https://wa.me/${asesorWA.replace(/\D/g,"")}`} target="_blank" rel="noreferrer" style={{ fontSize: 10, color: P.emerald, marginTop: 4, display: "inline-block" }}>
+              <a href={`https://wa.me/${asesorWA.replace(/\D/g,"")}`} target="_blank" rel="noreferrer" style={{ fontSize: 10, color: T.emerald, marginTop: 4, display: "inline-block" }}>
                 Verificar número →
               </a>
             )}
           </div>
           <div>
-            <label style={{ fontSize: 11, color: P.txt2, display: "flex", alignItems: "center", gap: 5, marginBottom: 6, fontWeight: 600, letterSpacing: "0.03em" }}>
-              <CalendarDays size={11} color={P.blue} /> Link de agenda (Calendly, Cal.com…)
+            <label style={{ fontSize: 11, color: T.txt2, display: "flex", alignItems: "center", gap: 5, marginBottom: 6, fontWeight: 600, letterSpacing: "0.03em" }}>
+              <CalendarDays size={11} color={T.blue} /> Link de agenda (Calendly, Cal.com…)
             </label>
             <input
               type="text" value={asesorCal} onChange={e => setAsesorCal(e.target.value)}
               placeholder="https://calendly.com/..."
-              style={{ width: "100%", padding: "10px 14px", borderRadius: 9, fontSize: 13, background: P.glass, border: `1px solid ${asesorCal ? P.blue + "50" : P.border}`, color: P.txt, fontFamily: font, outline: "none" }}
-              onFocus={e => e.target.style.borderColor = P.blue + "70"}
-              onBlur={e => e.target.style.borderColor = asesorCal ? P.blue + "50" : P.border}
+              style={{ width: "100%", padding: "10px 14px", borderRadius: 9, fontSize: 13, background: T.glass, border: `1px solid ${asesorCal ? T.blue + "50" : T.border}`, color: T.txt, fontFamily: font, outline: "none" }}
+              onFocus={e => e.target.style.borderColor = T.blue + "70"}
+              onBlur={e => e.target.style.borderColor = asesorCal ? T.blue + "50" : T.border}
             />
             {asesorCal && (
-              <a href={asesorCal} target="_blank" rel="noreferrer" style={{ fontSize: 10, color: P.blue, marginTop: 4, display: "inline-block" }}>
+              <a href={asesorCal} target="_blank" rel="noreferrer" style={{ fontSize: 10, color: T.blue, marginTop: 4, display: "inline-block" }}>
                 Verificar link →
               </a>
             )}
@@ -9522,32 +9527,32 @@ const LandingPages = () => {
         </div>
 
         <div style={{ marginBottom: 18 }}>
-          <label style={{ fontSize: 11, color: P.txt2, display: "block", marginBottom: 8, fontWeight: 600, letterSpacing: "0.03em" }}>Rango de presupuesto</label>
+          <label style={{ fontSize: 11, color: T.txt2, display: "block", marginBottom: 8, fontWeight: 600, letterSpacing: "0.03em" }}>Rango de presupuesto</label>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
             <div style={{ flex: 1 }}>
-              <p style={{ fontSize: 10, color: P.txt3, marginBottom: 4 }}>Desde</p>
+              <p style={{ fontSize: 10, color: T.txt3, marginBottom: 4 }}>Desde</p>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
                 {budgetOptions.slice(0, 5).map(b => (
                   <button key={b.value} onClick={() => setClientBudgetMin(b.value)} style={{
                     padding: "6px 14px", borderRadius: 8, fontSize: 12, fontWeight: 600,
-                    border: `1px solid ${clientBudgetMin === b.value ? P.accent + "60" : P.border}`,
-                    background: clientBudgetMin === b.value ? P.accentS : P.glass,
-                    color: clientBudgetMin === b.value ? P.accent : P.txt2,
+                    border: `1px solid ${clientBudgetMin === b.value ? T.accent + "60" : T.border}`,
+                    background: clientBudgetMin === b.value ? T.accentS : T.glass,
+                    color: clientBudgetMin === b.value ? T.accent : T.txt2,
                     cursor: "pointer", fontFamily: fontDisp, transition: "all 0.2s",
                   }}>{b.label}</button>
                 ))}
               </div>
             </div>
-            <div style={{ color: P.txt3, fontSize: 14 }}>—</div>
+            <div style={{ color: T.txt3, fontSize: 14 }}>—</div>
             <div style={{ flex: 1 }}>
-              <p style={{ fontSize: 10, color: P.txt3, marginBottom: 4 }}>Hasta</p>
+              <p style={{ fontSize: 10, color: T.txt3, marginBottom: 4 }}>Hasta</p>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
                 {budgetOptions.slice(2).map(b => (
                   <button key={b.value} onClick={() => setClientBudgetMax(b.value)} style={{
                     padding: "6px 14px", borderRadius: 8, fontSize: 12, fontWeight: 600,
-                    border: `1px solid ${clientBudgetMax === b.value ? P.accent + "60" : P.border}`,
-                    background: clientBudgetMax === b.value ? P.accentS : P.glass,
-                    color: clientBudgetMax === b.value ? P.accent : P.txt2,
+                    border: `1px solid ${clientBudgetMax === b.value ? T.accent + "60" : T.border}`,
+                    background: clientBudgetMax === b.value ? T.accentS : T.glass,
+                    color: clientBudgetMax === b.value ? T.accent : T.txt2,
                     cursor: "pointer", fontFamily: fontDisp, transition: "all 0.2s",
                   }}>{b.label}</button>
                 ))}
@@ -9557,7 +9562,7 @@ const LandingPages = () => {
         </div>
 
         <div style={{ marginBottom: 18 }}>
-          <label style={{ fontSize: 11, color: P.txt2, display: "block", marginBottom: 8, fontWeight: 600, letterSpacing: "0.03em" }}>Preferencias del cliente</label>
+          <label style={{ fontSize: 11, color: T.txt2, display: "block", marginBottom: 8, fontWeight: 600, letterSpacing: "0.03em" }}>Preferencias del cliente</label>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8 }}>
             {prefOptions.map(pref => {
               const active = clientPrefs[pref.key];
@@ -9565,27 +9570,27 @@ const LandingPages = () => {
                 <button key={pref.key} onClick={() => setClientPrefs(prev => ({ ...prev, [pref.key]: !prev[pref.key] }))} style={{
                   display: "flex", flexDirection: "column", alignItems: "center", gap: 6,
                   padding: "14px 8px", borderRadius: 10,
-                  border: `1px solid ${active ? P.accent + "50" : P.border}`,
-                  background: active ? P.accentS : P.glass,
+                  border: `1px solid ${active ? T.accent + "50" : T.border}`,
+                  background: active ? T.accentS : T.glass,
                   cursor: "pointer", transition: "all 0.2s",
                 }}>
-                  <pref.icon size={18} color={active ? P.accent : P.txt3} />
-                  <span style={{ fontSize: 10, color: active ? P.accent : P.txt2, fontWeight: 600, fontFamily: font, textAlign: "center" }}>{pref.label}</span>
+                  <pref.icon size={18} color={active ? T.accent : T.txt3} />
+                  <span style={{ fontSize: 10, color: active ? T.accent : T.txt2, fontWeight: 600, fontFamily: font, textAlign: "center" }}>{pref.label}</span>
                 </button>
               );
             })}
           </div>
         </div>
 
-        <WriterSection value={mensaje} onChange={setMensaje} clientName={clientName} />
+        <WriterSection value={mensaje} onChange={setMensaje} clientName={clientName} T={T} />
       </G>
 
       <button onClick={() => setStep(2)} disabled={!clientName.trim()} style={{
         padding: "14px 28px", borderRadius: 12, border: "none", cursor: clientName.trim() ? "pointer" : "not-allowed",
-        background: clientName.trim() ? "rgba(255,255,255,0.95)" : P.glass,
-        color: clientName.trim() ? "#0A0F18" : P.txt3,
+        background: clientName.trim() ? (isLight ? T.accent : "rgba(255,255,255,0.95)") : T.glass,
+        color: clientName.trim() ? (isLight ? "#FFFFFF" : "#0A0F18") : T.txt3,
         fontSize: 14, fontWeight: 700, fontFamily: fontDisp,
-        boxShadow: clientName.trim() ? "0 4px 20px rgba(255,255,255,0.15)" : "none",
+        boxShadow: clientName.trim() ? (isLight ? T.shadowMint || "0 4px 16px rgba(13,154,118,0.25)" : "0 4px 20px rgba(255,255,255,0.15)") : "none",
         transition: "all 0.25s", width: "100%",
       }}>
         Seleccionar Propiedades <ArrowRight size={16} style={{ marginLeft: 8, verticalAlign: "middle" }} />
@@ -9597,24 +9602,25 @@ const LandingPages = () => {
   if (step === 2) return (
     <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
       <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-        <button onClick={() => setStep(1)} style={{ padding: "8px 12px", borderRadius: 8, border: `1px solid ${P.border}`, background: P.glass, cursor: "pointer", color: P.txt2, fontSize: 12, fontFamily: font, display: "flex", alignItems: "center", gap: 4 }}>
+        <button onClick={() => setStep(1)} style={{ padding: "8px 12px", borderRadius: 8, border: `1px solid ${T.border}`, background: T.glass, cursor: "pointer", color: T.txt2, fontSize: 12, fontFamily: font, display: "flex", alignItems: "center", gap: 4 }}>
           <ChevronRight size={14} style={{ transform: "rotate(180deg)" }} /> Atrás
         </button>
         <div style={{ flex: 1 }}>
-          <p style={{ fontSize: 18, fontWeight: 600, color: "#FFFFFF", fontFamily: fontDisp }}>Seleccionar Propiedades</p>
-          <p style={{ fontSize: 11, color: P.txt3, fontFamily: font }}>Paso 2 de 2 — Landing page para <span style={{ color: P.accent, fontWeight: 600 }}>{clientName}</span> · Presupuesto: <span style={{ color: P.emerald, fontWeight: 600 }}>${(clientBudgetMin / 1000).toFixed(0)}K – ${(clientBudgetMax / 1000).toFixed(0)}K</span></p>
+          <p style={{ fontSize: 18, fontWeight: 600, color: isLight ? T.txt : "#FFFFFF", fontFamily: fontDisp }}>Seleccionar Propiedades</p>
+          <p style={{ fontSize: 11, color: T.txt3, fontFamily: font }}>Paso 2 de 2 — Landing page para <span style={{ color: T.accent, fontWeight: 600 }}>{clientName}</span> · Presupuesto: <span style={{ color: T.emerald, fontWeight: 600 }}>${(clientBudgetMin / 1000).toFixed(0)}K – ${(clientBudgetMax / 1000).toFixed(0)}K</span></p>
         </div>
         {selectedProps.length > 0 && (
           <button onClick={handleGenerate} style={{
             display: "flex", alignItems: "center", gap: 8, padding: "12px 22px",
             borderRadius: 12, border: "none", cursor: "pointer",
-            background: "rgba(255,255,255,0.95)", color: "#0A0F18",
+            background: isLight ? T.accent : "rgba(255,255,255,0.95)",
+            color: isLight ? "#FFFFFF" : "#0A0F18",
             fontSize: 13, fontWeight: 700, fontFamily: fontDisp,
-            boxShadow: "0 4px 20px rgba(255,255,255,0.15)",
+            boxShadow: isLight ? T.shadowMint || "0 4px 16px rgba(13,154,118,0.25)" : "0 4px 20px rgba(255,255,255,0.15)",
             transition: "all 0.25s",
           }}
-            onMouseEnter={e => { e.currentTarget.style.background = "#FFFFFF"; e.currentTarget.style.transform = "translateY(-1px)"; }}
-            onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.95)"; e.currentTarget.style.transform = "translateY(0)"; }}
+            onMouseEnter={e => { e.currentTarget.style.background = isLight ? (T.accentDark || T.accent) : "#FFFFFF"; e.currentTarget.style.transform = "translateY(-1px)"; }}
+            onMouseLeave={e => { e.currentTarget.style.background = isLight ? T.accent : "rgba(255,255,255,0.95)"; e.currentTarget.style.transform = "translateY(0)"; }}
           >
             <Wand2 size={16} /> Generar Landing Page ({selectedProps.length})
           </button>
@@ -9622,28 +9628,28 @@ const LandingPages = () => {
       </div>
 
       <div style={{ display: "flex", gap: 8 }}>
-        <div style={{ flex: 1, height: 3, borderRadius: 2, background: P.accent }} />
-        <div style={{ flex: 1, height: 3, borderRadius: 2, background: P.accent, boxShadow: `0 0 8px ${P.accent}40` }} />
+        <div style={{ flex: 1, height: 3, borderRadius: 2, background: T.accent }} />
+        <div style={{ flex: 1, height: 3, borderRadius: 2, background: T.accent, boxShadow: `0 0 8px ${T.accent}40` }} />
       </div>
 
       {/* Toolbar: hint + register button */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 14px", borderRadius: 10, background: "rgba(255,255,255,0.025)", border: `1px solid ${P.border}` }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 14px", borderRadius: 10, background: isLight ? "rgba(0,0,0,0.04)" : "rgba(255,255,255,0.025)", border: `1px solid ${T.border}` }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <Image size={14} color={P.txt3} />
-          <span style={{ fontSize: 11, color: P.txt3, fontFamily: font }}>Haz clic para seleccionar · </span>
-          <span style={{ fontSize: 11, color: P.accent, fontWeight: 600, fontFamily: font }}>{filteredProperties.filter(inBudget).length} en presupuesto</span>
-          <span style={{ fontSize: 11, color: P.txt3, fontFamily: font }}>· {filteredProperties.length} totales</span>
+          <Image size={14} color={T.txt3} />
+          <span style={{ fontSize: 11, color: T.txt3, fontFamily: font }}>Haz clic para seleccionar · </span>
+          <span style={{ fontSize: 11, color: T.accent, fontWeight: 600, fontFamily: font }}>{filteredProperties.filter(inBudget).length} en presupuesto</span>
+          <span style={{ fontSize: 11, color: T.txt3, fontFamily: font }}>· {filteredProperties.length} totales</span>
         </div>
         <button
           onClick={() => setShowNewPropModal(true)}
           style={{
             display: "flex", alignItems: "center", gap: 7, padding: "8px 16px",
-            borderRadius: 9, border: `1px solid ${P.accent}40`, background: P.accentS,
-            cursor: "pointer", color: P.accent, fontSize: 12, fontWeight: 700, fontFamily: fontDisp,
+            borderRadius: 9, border: `1px solid ${T.accent}40`, background: T.accentS,
+            cursor: "pointer", color: T.accent, fontSize: 12, fontWeight: 700, fontFamily: fontDisp,
             transition: "all 0.2s", whiteSpace: "nowrap",
           }}
-          onMouseEnter={e => { e.currentTarget.style.background = P.accentB; e.currentTarget.style.borderColor = P.accent + "80"; }}
-          onMouseLeave={e => { e.currentTarget.style.background = P.accentS; e.currentTarget.style.borderColor = P.accent + "40"; }}
+          onMouseEnter={e => { e.currentTarget.style.background = T.accentB; e.currentTarget.style.borderColor = T.accent + "80"; }}
+          onMouseLeave={e => { e.currentTarget.style.background = T.accentS; e.currentTarget.style.borderColor = T.accent + "40"; }}
         >
           <Plus size={14} /> Registrar propiedad
         </button>
@@ -9659,8 +9665,8 @@ const LandingPages = () => {
           return (
             <div key={prop.id} style={{
               borderRadius: 16, overflow: "visible", cursor: "pointer",
-              border: `2px solid ${selected ? prop.accent + "80" : P.border}`,
-              background: P.glass, transition: "all 0.3s",
+              border: `2px solid ${selected ? prop.accent + "80" : T.border}`,
+              background: T.glass, transition: "all 0.3s",
               boxShadow: selected ? `0 0 24px ${prop.accent}20` : "none",
               transform: selected ? "scale(1.01)" : "scale(1)",
               position: "relative",
@@ -9717,28 +9723,28 @@ const LandingPages = () => {
                 {/* Property Details */}
                 <div style={{ padding: "14px 16px 10px" }}>
                   <div style={{ display: "flex", gap: 8, marginBottom: 10, flexWrap: "wrap" }}>
-                    <Pill color={prop.accent} s>{prop.type}</Pill>
-                    <Pill color={P.emerald} s>ROI {prop.roi}</Pill>
-                    <Pill color={P.txt2} s>{prop.bedrooms}</Pill>
+                    <Pill color={prop.accent} s isLight={isLight}>{prop.type}</Pill>
+                    <Pill color={T.emerald} s isLight={isLight}>ROI {prop.roi}</Pill>
+                    <Pill color={T.txt2} s isLight={isLight}>{prop.bedrooms}</Pill>
                   </div>
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 10 }}>
                     <div style={{ padding: "8px 10px", borderRadius: 8, background: `${prop.accent}0A`, border: `1px solid ${prop.accent}18` }}>
-                      <p style={{ fontSize: 9, color: P.txt3, marginBottom: 2 }}>Desde</p>
+                      <p style={{ fontSize: 9, color: T.txt3, marginBottom: 2 }}>Desde</p>
                       <p style={{ fontSize: 16, fontWeight: 700, color: prop.accent, fontFamily: fontDisp }}>${(prop.priceFrom / 1000).toFixed(0)}K</p>
                     </div>
-                    <div style={{ padding: "8px 10px", borderRadius: 8, background: P.glass, border: `1px solid ${P.border}` }}>
-                      <p style={{ fontSize: 9, color: P.txt3, marginBottom: 2 }}>Hasta</p>
-                      <p style={{ fontSize: 16, fontWeight: 700, color: P.txt, fontFamily: fontDisp }}>${(prop.priceTo / 1000).toFixed(0)}K</p>
+                    <div style={{ padding: "8px 10px", borderRadius: 8, background: T.glass, border: `1px solid ${T.border}` }}>
+                      <p style={{ fontSize: 9, color: T.txt3, marginBottom: 2 }}>Hasta</p>
+                      <p style={{ fontSize: 16, fontWeight: 700, color: T.txt, fontFamily: fontDisp }}>${(prop.priceTo / 1000).toFixed(0)}K</p>
                     </div>
                   </div>
-                  <p style={{ fontSize: 11, color: P.txt2, lineHeight: 1.5, fontFamily: font, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{prop.description}</p>
+                  <p style={{ fontSize: 11, color: T.txt2, lineHeight: 1.5, fontFamily: font, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{prop.description}</p>
                   <div style={{ display: "flex", flexDirection: "column", gap: 4, marginTop: 10 }}>
                     {prop.highlights.slice(0, 3).map((h, i) => (
                       <div key={i} style={{ display: "flex", alignItems: "center", gap: 6 }}>
                         <div style={{ width: 14, height: 14, borderRadius: "50%", background: `${prop.accent}18`, border: `1px solid ${prop.accent}40`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                           <CheckCircle2 size={8} color={prop.accent} />
                         </div>
-                        <span style={{ fontSize: 10, color: P.txt2, fontFamily: font, lineHeight: 1.3 }}>{h}</span>
+                        <span style={{ fontSize: 10, color: T.txt2, fontFamily: font, lineHeight: 1.3 }}>{h}</span>
                       </div>
                     ))}
                   </div>
@@ -9747,15 +9753,15 @@ const LandingPages = () => {
 
               {/* ─── Drive Link Bar ─── */}
               <div onClick={e => e.stopPropagation()} style={{
-                borderTop: `1px solid ${P.border}`,
+                borderTop: `1px solid ${T.border}`,
                 padding: "10px 14px",
-                background: "rgba(0,0,0,0.2)",
+                background: isLight ? "rgba(0,0,0,0.04)" : "rgba(0,0,0,0.2)",
                 borderRadius: "0 0 14px 14px",
               }}>
                 {isEditingThis ? (
                   /* Edit mode */
                   <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                    <ExternalLink size={13} color={P.txt3} style={{ flexShrink: 0 }} />
+                    <ExternalLink size={13} color={T.txt3} style={{ flexShrink: 0 }} />
                     <input
                       autoFocus
                       value={editLinkValue}
@@ -9764,14 +9770,14 @@ const LandingPages = () => {
                       placeholder="Pega aquí el link de Google Drive..."
                       style={{
                         flex: 1, padding: "6px 10px", borderRadius: 7, fontSize: 11,
-                        background: P.glass, border: `1px solid ${P.accent}50`, color: P.txt,
+                        background: T.glass, border: `1px solid ${T.accent}50`, color: T.txt,
                         fontFamily: font, outline: "none",
                       }}
                     />
-                    <button onClick={() => saveDriveLink(prop.id)} style={{ padding: "6px 12px", borderRadius: 7, border: "none", background: P.accent, color: "#000", fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: fontDisp, whiteSpace: "nowrap" }}>
+                    <button onClick={() => saveDriveLink(prop.id)} style={{ padding: "6px 12px", borderRadius: 7, border: "none", background: T.accent, color: "#000", fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: fontDisp, whiteSpace: "nowrap" }}>
                       Guardar
                     </button>
-                    <button onClick={() => { setEditingLinkId(null); setEditLinkValue(""); }} style={{ padding: "6px 8px", borderRadius: 7, border: `1px solid ${P.border}`, background: P.glass, cursor: "pointer", color: P.txt3 }}>
+                    <button onClick={() => { setEditingLinkId(null); setEditLinkValue(""); }} style={{ padding: "6px 8px", borderRadius: 7, border: `1px solid ${T.border}`, background: T.glass, cursor: "pointer", color: T.txt3 }}>
                       <X size={12} />
                     </button>
                   </div>
@@ -9779,9 +9785,9 @@ const LandingPages = () => {
                   /* View mode */
                   <div style={{ display: "flex", gap: 8, alignItems: "center", justifyContent: "space-between" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 6, minWidth: 0 }}>
-                      <ExternalLink size={12} color={driveLink ? P.accent : P.txt3} style={{ flexShrink: 0 }} />
+                      <ExternalLink size={12} color={driveLink ? T.accent : T.txt3} style={{ flexShrink: 0 }} />
                       <span style={{
-                        fontSize: 11, color: driveLink ? P.accent : P.txt3, fontFamily: font,
+                        fontSize: 11, color: driveLink ? T.accent : T.txt3, fontFamily: font,
                         overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
                         maxWidth: 200,
                       }} title={driveLink || ""}>
@@ -9811,12 +9817,12 @@ const LandingPages = () => {
                         title={driveLink ? "Cambiar link" : "Agregar link de Drive"}
                         style={{
                           display: "flex", alignItems: "center", gap: 5, padding: "5px 10px",
-                          borderRadius: 7, border: `1px solid ${P.border}`,
-                          background: P.glass, color: P.txt3, cursor: "pointer",
+                          borderRadius: 7, border: `1px solid ${T.border}`,
+                          background: T.glass, color: T.txt3, cursor: "pointer",
                           fontSize: 11, fontFamily: font, transition: "all 0.2s",
                         }}
-                        onMouseEnter={e => { e.currentTarget.style.borderColor = P.borderH; e.currentTarget.style.color = P.txt; }}
-                        onMouseLeave={e => { e.currentTarget.style.borderColor = P.border; e.currentTarget.style.color = P.txt3; }}
+                        onMouseEnter={e => { e.currentTarget.style.borderColor = T.borderH; e.currentTarget.style.color = T.txt; }}
+                        onMouseLeave={e => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.color = T.txt3; }}
                       >
                         {driveLink ? <><Copy size={11} /> Cambiar</> : <><Plus size={11} /> Agregar link</>}
                       </button>
@@ -9830,11 +9836,11 @@ const LandingPages = () => {
       </div>
 
       {filteredProperties.length === 0 && (
-        <G style={{ textAlign: "center", padding: 40 }}>
-          <Building2 size={40} color={P.txt3} style={{ margin: "0 auto 12px", opacity: 0.4 }} />
-          <p style={{ fontSize: 14, color: P.txt2, fontFamily: fontDisp }}>No hay propiedades en este rango de presupuesto</p>
-          <p style={{ fontSize: 12, color: P.txt3, marginTop: 4 }}>Ajusta el rango en el paso anterior</p>
-          <button onClick={() => setShowNewPropModal(true)} style={{ marginTop: 14, padding: "10px 20px", borderRadius: 10, border: `1px solid ${P.accent}40`, background: P.accentS, color: P.accent, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: fontDisp }}>
+        <G T={T} style={{ textAlign: "center", padding: 40 }}>
+          <Building2 size={40} color={T.txt3} style={{ margin: "0 auto 12px", opacity: 0.4 }} />
+          <p style={{ fontSize: 14, color: T.txt2, fontFamily: fontDisp }}>No hay propiedades en este rango de presupuesto</p>
+          <p style={{ fontSize: 12, color: T.txt3, marginTop: 4 }}>Ajusta el rango en el paso anterior</p>
+          <button onClick={() => setShowNewPropModal(true)} style={{ marginTop: 14, padding: "10px 20px", borderRadius: 10, border: `1px solid ${T.accent}40`, background: T.accentS, color: T.accent, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: fontDisp }}>
             <Plus size={13} style={{ marginRight: 6, verticalAlign: "middle" }} />Registrar propiedad nueva
           </button>
         </G>
@@ -9843,21 +9849,22 @@ const LandingPages = () => {
       {selectedProps.length > 0 && (
         <div style={{
           position: "sticky", bottom: 0, padding: "14px 20px",
-          background: "rgba(6,10,17,0.95)", backdropFilter: "blur(16px)",
-          borderRadius: 14, border: `1px solid ${P.border}`,
+          background: isLight ? "rgba(255,255,255,0.98)" : "rgba(6,10,17,0.95)", backdropFilter: "blur(16px)",
+          borderRadius: 14, border: `1px solid ${T.border}`,
           display: "flex", justifyContent: "space-between", alignItems: "center",
-          boxShadow: "0 -8px 32px rgba(0,0,0,0.4)",
+          boxShadow: isLight ? T.shadow2 || "0 -4px 20px rgba(15,23,42,0.10)" : "0 -8px 32px rgba(0,0,0,0.4)",
         }}>
           <div>
-            <p style={{ fontSize: 13, color: P.txt, fontWeight: 600 }}>{selectedProps.length} propiedad{selectedProps.length > 1 ? "es" : ""} seleccionada{selectedProps.length > 1 ? "s" : ""}</p>
-            <p style={{ fontSize: 11, color: P.txt3 }}>para {clientName}</p>
+            <p style={{ fontSize: 13, color: T.txt, fontWeight: 600 }}>{selectedProps.length} propiedad{selectedProps.length > 1 ? "es" : ""} seleccionada{selectedProps.length > 1 ? "s" : ""}</p>
+            <p style={{ fontSize: 11, color: T.txt3 }}>para {clientName}</p>
           </div>
           <button onClick={handleGenerate} style={{
             display: "flex", alignItems: "center", gap: 8, padding: "12px 28px",
             borderRadius: 12, border: "none", cursor: "pointer",
-            background: "rgba(255,255,255,0.95)", color: "#0A0F18",
+            background: isLight ? T.accent : "rgba(255,255,255,0.95)",
+            color: isLight ? "#FFFFFF" : "#0A0F18",
             fontSize: 14, fontWeight: 700, fontFamily: fontDisp,
-            boxShadow: "0 4px 20px rgba(255,255,255,0.15)",
+            boxShadow: isLight ? T.shadowMint || "0 4px 16px rgba(13,154,118,0.25)" : "0 4px 20px rgba(255,255,255,0.15)",
           }}>
             <Wand2 size={16} /> Generar Landing Page
           </button>
@@ -9870,6 +9877,7 @@ const LandingPages = () => {
           onClose={() => { setShowNewPropModal(false); setEditingProp(null); }}
           onSave={saveCustomProp}
           initialData={editingProp}
+          T={T}
         />
       )}
 
@@ -12878,7 +12886,7 @@ export default function App() {
                   {v === "ia" && <IACRM oc={oc} />}
                   {v === "e" && <ERP oc={oc} />}
                   {v === "a" && <AsesorCRM oc={oc} />}
-                  {v === "lp" && <LandingPages />}
+                  {v === "lp" && <LandingPages T={T} />}
                   {v === "fa" && <FinanzasAdmin />}
                   {v === "rrhh" && <RRHHModule />}
                   {v === "planes" && <PricingScreen embedded onBack={() => setV(isAsesorRole ? "c" : "d")} />}
