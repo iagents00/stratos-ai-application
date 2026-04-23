@@ -1,6 +1,30 @@
 body {
   margin: 0;
   padding: 0;
+  font-family: "SF Pro Text", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* ── FORCE FONT INHERITANCE — form controls por defecto usan fuente del sistema
+   (a veces serif Times). Esto garantiza SF Pro en todo input/button/textarea ── */
+input, textarea, select, button, optgroup {
+  font-family: inherit;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* Placeholders: también hereden y sean sutiles */
+input::placeholder, textarea::placeholder {
+  font-family: inherit;
+  opacity: 1;
+}
+
+/* Options dentro de select */
+option {
+  font-family: "SF Pro Text", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
 @keyframes pulse {
@@ -83,3 +107,17 @@ body {
 
 /* ── Carousel scrollbar hidden globally ── */
 .carousel-no-scroll::-webkit-scrollbar { display: none; }
+
+/* ── Priority card breathing border — se usa en las tarjetas de "Clientes en prioridad"
+   Variables dinámicas: --brC (color base CSS), --brBgBase, --brBgBreath, --brBorBase,
+   --brBorBreath, --brShBase, --brShBreath permiten adaptar por tema desde inline style.  ── */
+@keyframes priorityBreathe {
+  0%, 100% {
+    border-color: var(--brBorBase);
+    box-shadow: var(--brShBase);
+  }
+  50% {
+    border-color: var(--brBorBreath);
+    box-shadow: var(--brShBreath);
+  }
+}

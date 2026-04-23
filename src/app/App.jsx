@@ -22,7 +22,8 @@ import {
   Receipt, CreditCard, BookOpen, PiggyBank, ArrowDownLeft,
   ClipboardList, FilePlus, RefreshCw, BadgeCheck, ListChecks,
   Landmark, Scale, Calculator,
-  UserCheck, Sparkles, List, SlidersHorizontal, Mail
+  UserCheck, Sparkles, List, SlidersHorizontal, Mail, LogOut, Power,
+  Sun, Moon, Pencil, Save, Minus, RotateCcw
 } from "lucide-react";
 import {
   AreaChart, Area, BarChart, Bar, XAxis, YAxis, Tooltip,
@@ -44,17 +45,149 @@ const P = {
   txt: "#E2E8F0", txt2: "#8B99AE", txt3: "#4A5568",
   r: 16, rs: 10, rx: 6,
 };
+
+/* ── Paleta LIGHT (modo blanco premium) ──
+   Diseñada con técnicas de "rich white background":
+   · Fondo off-white con tinte cálido-azulado sutil (no blanco plano)
+   · Glass ultra-traslúcido con layered shadow premium
+   · Acentos saturados para contraste AA y "vida" visual
+   · Tokens extra para shadows/gradients reutilizables */
+const LP = {
+  bg: "#EDF3F0",                      // off-white con tinte mint muy sutil — vibra con el branding
+  bgSoft: "#F6FAF8",
+  bgCool: "#EAF0EE",
+  glass: "rgba(255,255,255,0.70)",
+  glassH: "rgba(255,255,255,0.92)",
+  glassStrong: "rgba(255,255,255,0.96)",
+  glassMint: "rgba(236,251,246,0.75)", // glass con tinte mint para sidebar/elementos branded
+  border: "rgba(15,23,42,0.08)",
+  borderH: "rgba(15,23,42,0.16)",
+  borderMint: "rgba(15,158,122,0.18)",
+  surface: "#FFFFFF",
+  accent: "#0D9A76",                  // mint-emerald brand, saturado y profundo
+  accentDark: "#067A5E",
+  accentS: "rgba(13,154,118,0.08)",
+  accentB: "rgba(13,154,118,0.28)",
+  accentG: "linear-gradient(135deg, #0D9A76 0%, #14B892 50%, #34D4AA 100%)",
+  blue: "#2563EB",
+  violet: "#7C3AED",
+  amber: "#D97706",
+  rose: "#E11D48",
+  emerald: "#059669",
+  cyan: "#0891B2",
+  txt: "#0B1220",
+  txt2: "#3B4A61",
+  txt3: "#7A8699",
+  // Tokens premium de sombra (layered shadows tipo Apple/Stripe)
+  shadow1: "0 1px 2px rgba(15,23,42,0.05), 0 2px 4px rgba(15,23,42,0.04)",
+  shadow2: "0 1px 3px rgba(15,23,42,0.06), 0 8px 24px rgba(15,23,42,0.07), 0 16px 40px rgba(15,23,42,0.04)",
+  shadow3: "0 4px 12px rgba(15,23,42,0.08), 0 20px 56px rgba(15,23,42,0.10), 0 32px 80px rgba(15,23,42,0.06)",
+  shadowMint: "0 2px 8px rgba(13,154,118,0.10), 0 8px 28px rgba(13,154,118,0.08)",
+  r: 16, rs: 10, rx: 6,
+};
 const font = `-apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif`;
 const fontDisp = `-apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, Helvetica, Arial, sans-serif`;
 
+/* ════════════════════════════════════════
+   BUDGET PARSING — acepta shorthand del usuario
+   ════════════════════════════════════════
+   parseBudget("300k")     → 300000
+   parseBudget("1.5M")     → 1500000
+   parseBudget("2.5 mdd")  → 2500000
+   parseBudget("500 mil")  → 500000
+   parseBudget("$300,000") → 300000
+   parseBudget("750")      → 750
+*/
+const parseBudget = (input) => {
+  if (input === null || input === undefined) return 0;
+  if (typeof input === "number") return isFinite(input) ? input : 0;
+  let s = String(input).trim().toLowerCase();
+  if (!s) return 0;
+  // limpia símbolos de moneda / separadores / sufijos de texto comunes
+  s = s.replace(/usd|mxn|dolares|dólares|pesos|\$|€|,|\s+$/g, "").trim();
+  // colapsar espacios internos
+  s = s.replace(/\s+/g, " ");
+
+  // Detectar sufijo multiplicador
+  // k, mil, millar → 1_000
+  // m, mm, mdd, millón, millones → 1_000_000
+  // b, bn, billón → 1_000_000_000
+  let multiplier = 1;
+  const suffixMatch = s.match(/([0-9.,]+)\s*(k|mil(?:es|lar|lares)?|m|mm|mdd|millon(?:es)?|millón|b|bn|billon(?:es)?|billón)$/);
+  if (suffixMatch) {
+    const suf = suffixMatch[2];
+    if (suf === "k" || suf.startsWith("mil") || suf === "millar" || suf === "millares") multiplier = 1_000;
+    else if (suf === "m" || suf === "mm" || suf === "mdd" || suf.startsWith("millon") || suf === "millón") multiplier = 1_000_000;
+    else if (suf === "b" || suf === "bn" || suf.startsWith("billon") || suf === "billón") multiplier = 1_000_000_000;
+    s = suffixMatch[1];
+  }
+
+  // Normalizar coma como separador decimal si es relevante (ej. "1,5")
+  // Si tiene una sola coma y no termina en dígitos de grupo de miles, tratar como decimal.
+  if (/^[0-9]+,[0-9]{1,2}$/.test(s)) s = s.replace(",", ".");
+  s = s.replace(/,/g, "");
+
+  const num = parseFloat(s);
+  if (!isFinite(num)) return 0;
+  return Math.round(num * multiplier);
+};
+
+const formatBudget = (amount) => {
+  const n = Number(amount) || 0;
+  if (n === 0) return "";
+  if (n >= 1_000_000) {
+    const v = n / 1_000_000;
+    return `$${v % 1 === 0 ? v.toFixed(0) : v.toFixed(v < 10 ? 2 : 1).replace(/\.?0+$/, "")}M USD`;
+  }
+  if (n >= 1_000) {
+    const v = n / 1_000;
+    return `$${v % 1 === 0 ? v.toFixed(0) : v.toFixed(1).replace(/\.?0+$/, "")}K USD`;
+  }
+  return `$${n.toLocaleString("en-US")} USD`;
+};
+
 /* Minimalist Stratos Logo */
+/* Atom clásico — rings concéntricos (header, sidebar, cards generales) */
 const StratosAtom = ({ size = 20, color = "#FFFFFF" }) => (
   <svg width={size} height={size} viewBox="0 0 32 32" fill="none">
-    <circle cx="16" cy="16" r="10" stroke={color} strokeWidth="1.2" opacity="0.3" />
-    <circle cx="16" cy="16" r="4" stroke={color} strokeWidth="1.2" opacity="0.6" />
-    <circle cx="16" cy="16" r="1.5" fill={color} />
+    <circle cx="16" cy="16" r="13" stroke={color} strokeWidth="1.1" opacity="0.18" />
+    <circle cx="16" cy="16" r="9"  stroke={color} strokeWidth="1.2" opacity="0.38" />
+    <circle cx="16" cy="16" r="4.5" stroke={color} strokeWidth="1.25" opacity="0.68" />
+    <circle cx="16" cy="16" r="1.6" fill={color} />
   </svg>
 );
+
+/* Atom hex — 3 órbitas elípticas rotadas + núcleo brillante (solo en Centro de Agentes IA) */
+const StratosAtomHex = ({ size = 22, color = "#FFFFFF", edge = "#6EE7C2" }) => {
+  const uid = `atomhex-${size}-${String(color).replace(/[^a-z0-9]/gi, "")}`;
+  return (
+    <svg width={size} height={size} viewBox="0 0 32 32" fill="none" style={{ display: "block" }}>
+      <defs>
+        <radialGradient id={`${uid}-core`} cx="50%" cy="50%" r="50%">
+          <stop offset="0%"  stopColor="#FFFFFF" stopOpacity="1" />
+          <stop offset="70%" stopColor="#FFFFFF" stopOpacity="0.95" />
+          <stop offset="100%" stopColor={edge}   stopOpacity="0.85" />
+        </radialGradient>
+        <linearGradient id={`${uid}-ring`} x1="0%" y1="50%" x2="100%" y2="50%">
+          <stop offset="0%"   stopColor={edge}  stopOpacity="0.55" />
+          <stop offset="50%"  stopColor={color} stopOpacity="1" />
+          <stop offset="100%" stopColor={edge}  stopOpacity="0.55" />
+        </linearGradient>
+      </defs>
+
+      {/* Tres órbitas elípticas — 0°, 60°, 120° */}
+      <g fill="none" strokeWidth="1" stroke={`url(#${uid}-ring)`} strokeLinecap="round">
+        <ellipse cx="16" cy="16" rx="12.6" ry="4.6" />
+        <ellipse cx="16" cy="16" rx="12.6" ry="4.6" transform="rotate(60 16 16)" />
+        <ellipse cx="16" cy="16" rx="12.6" ry="4.6" transform="rotate(120 16 16)" />
+      </g>
+
+      {/* Núcleo — blanco brillante con borde mint sutil */}
+      <circle cx="16" cy="16" r="2.4" fill={`url(#${uid}-core)`} />
+      <circle cx="16" cy="16" r="2.4" fill="none" stroke={edge} strokeWidth="0.4" opacity="0.9" />
+    </svg>
+  );
+};
 
 /* Agent icons */
 const AgentIcons = {
@@ -64,32 +197,105 @@ const AgentIcons = {
 };
 
 /* ════════════════════════════════════════
+   AI AGENT REGISTRY — equipo virtual asignable
+   ════════════════════════════════════════ */
+const AI_AGENTS = {
+  reactivar: {
+    key: "reactivar",
+    name: "Reactivador",
+    short: "Reactivador",
+    role: "Recupera leads fríos",
+    icon: RefreshCw,
+    color: "#F5A85F",
+    bestFor: "Clientes con 5+ días sin contacto",
+    how: "Envía mensajes personalizados por WhatsApp y email para reabrir la conversación sin sonar forzado.",
+  },
+  seguimiento: {
+    key: "seguimiento",
+    name: "Seguimiento",
+    short: "Seguimiento",
+    role: "Mantiene la relación activa",
+    icon: MessageCircle,
+    color: "#6EE7C2",
+    bestFor: "Clientes activos en primer contacto o seguimiento",
+    how: "Prepara next-steps, recordatorios y micro-compromisos para evitar que el lead se enfríe.",
+  },
+  callcenter: {
+    key: "callcenter",
+    name: "Callcenter IA",
+    short: "Callcenter",
+    role: "Prepara y asiste llamadas",
+    icon: Phone,
+    color: "#72A9F5",
+    bestFor: "Leads HOT o Zooms agendados",
+    how: "Genera briefing pre-llamada con objeciones esperadas, argumentos y tono del cliente.",
+  },
+  calificar: {
+    key: "calificar",
+    name: "Calificador",
+    short: "Calificador",
+    role: "Evalúa y prioriza leads nuevos",
+    icon: Target,
+    color: "#C9B1F8",
+    bestFor: "Clientes recién registrados",
+    how: "Analiza perfil, intención y fit del proyecto para darte un score y recomendación accionable.",
+  },
+};
+const AI_AGENT_LIST = Object.values(AI_AGENTS);
+
+/* ════════════════════════════════════════
    SHARED COMPONENTS
    ════════════════════════════════════════ */
-const G = ({ children, style, hover, onClick, np }) => {
+const G = ({ children, style, hover, onClick, np, T: Tprop }) => {
   const [h, setH] = useState(false);
+  const T = Tprop || P;
+  const isLight = T !== P;
   return (
     <div onMouseEnter={() => hover && setH(true)} onMouseLeave={() => setH(false)}
       onClick={onClick} style={{
-        background: h ? P.glassH : P.glass,
-        backdropFilter: "blur(32px)", WebkitBackdropFilter: "blur(32px)",
-        border: `1px solid ${h ? P.borderH : P.border}`,
-        borderRadius: P.r, padding: np ? 0 : 18,
+        background: isLight
+          ? (h ? "rgba(255,255,255,0.92)" : "rgba(255,255,255,0.78)")
+          : (h ? T.glassH : T.glass),
+        backdropFilter: "blur(40px) saturate(160%)",
+        WebkitBackdropFilter: "blur(40px) saturate(160%)",
+        border: `1px solid ${h ? T.borderH : T.border}`,
+        borderRadius: isLight ? 20 : T.r, padding: np ? 0 : 18,
         cursor: onClick ? "pointer" : "default",
+        boxShadow: isLight
+          ? (h
+              ? "0 2px 4px rgba(15,23,42,0.04), 0 12px 28px rgba(15,23,42,0.08), 0 24px 56px rgba(15,23,42,0.06), inset 0 1px 0 rgba(255,255,255,0.8)"
+              : "0 1px 3px rgba(15,23,42,0.05), 0 8px 24px rgba(15,23,42,0.06), 0 16px 40px rgba(15,23,42,0.04), inset 0 1px 0 rgba(255,255,255,0.8)")
+          : "none",
         transition: "all 0.3s cubic-bezier(.4,0,.2,1)", ...style,
       }}>{children}</div>
   );
 };
 
-const Pill = ({ children, color = P.accent, s }) => (
-  <span style={{
-    display: "inline-flex", alignItems: "center", gap: 4,
-    padding: s ? "2px 8px" : "4px 11px", borderRadius: 99,
-    fontSize: s ? 10 : 11, fontWeight: 600, color,
-    background: `${color}12`, border: `1px solid ${color}1A`,
-    letterSpacing: "0.02em", whiteSpace: "nowrap",
-  }}>{children}</span>
-);
+const Pill = ({ children, color = P.accent, s, isLight = false }) => {
+  // En tema claro, oscurecemos el texto para que contraste sobre blanco
+  // y subimos los alphas del fondo/borde para darle presencia sin saturar.
+  const textColor = isLight
+    ? `color-mix(in srgb, ${color} 62%, #0B1220 38%)`
+    : color;
+  const bgGrad = isLight
+    ? `linear-gradient(135deg, ${color}2E 0%, ${color}18 100%)`
+    : `linear-gradient(135deg, ${color}22 0%, ${color}10 100%)`;
+  const borderCol = isLight ? `${color}5C` : `${color}3A`;
+  const shadow = isLight
+    ? `0 1px 3px ${color}26, inset 0 1px 0 rgba(255,255,255,0.55)`
+    : `0 1px 2px ${color}14, inset 0 1px 0 rgba(255,255,255,0.18)`;
+  return (
+    <span style={{
+      display: "inline-flex", alignItems: "center", gap: 4,
+      padding: s ? "2px 8px" : "4px 11px", borderRadius: 99,
+      fontSize: s ? 10 : 11, fontWeight: 700, color: textColor,
+      background: bgGrad,
+      border: `1px solid ${borderCol}`,
+      boxShadow: shadow,
+      letterSpacing: "0.015em", whiteSpace: "nowrap",
+    }}>{children}</span>
+  );
+};
 
 const Ico = ({ icon: I, sz = 34, is = 16, c = P.accent }) => (
   <div style={{
@@ -99,21 +305,297 @@ const Ico = ({ icon: I, sz = 34, is = 16, c = P.accent }) => (
   }}><I size={is} color={c} /></div>
 );
 
-const KPI = ({ label, value, sub, icon, color = P.accent }) => (
-  <G hover style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-    <div style={{ flex: 1, minWidth: 0, paddingRight: 12 }}>
-      <p style={{ fontSize: 14, color: P.txt2, marginBottom: 8, letterSpacing: "0.01em", fontWeight: 400, fontFamily: font, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{label}</p>
-      <p style={{ fontSize: 32, fontWeight: 300, color: "#FFFFFF", letterSpacing: "-0.04em", lineHeight: 1, fontFamily: fontDisp }}>{value}</p>
-      {sub && <p style={{ fontSize: 12, color: P.emerald, marginTop: 10, display: "flex", alignItems: "center", gap: 3, fontWeight: 500 }}><ArrowUpRight size={12} />{sub}</p>}
+/* ────────────────────────────────────────────────────────────
+   ChipSelect — Selector click-first con "+ Registrar nuevo"
+   ──────────────────────────────────────────────────────────── */
+const ChipSelect = ({ value, onChange, options = [], onAddNew, placeholder = "Seleccionar", icon: Icon = Users, color = P.accent, newLabel = "Registrar nuevo", searchPlaceholder = "Buscar o escribir…" }) => {
+  const [open, setOpen] = useState(false);
+  const [adding, setAdding] = useState(false);
+  const [query, setQuery] = useState("");
+  const [newVal, setNewVal] = useState("");
+  const ref = useRef(null);
+  const inputRef = useRef(null);
+
+  // Cerrar al hacer click fuera
+  useEffect(() => {
+    if (!open) return;
+    const onDoc = (e) => { if (ref.current && !ref.current.contains(e.target)) { setOpen(false); setAdding(false); setQuery(""); setNewVal(""); } };
+    document.addEventListener("mousedown", onDoc);
+    return () => document.removeEventListener("mousedown", onDoc);
+  }, [open]);
+
+  useEffect(() => {
+    if (adding && inputRef.current) inputRef.current.focus();
+  }, [adding]);
+
+  const uniqueOptions = Array.from(new Set(options.filter(Boolean).map(s => String(s).trim()).filter(Boolean)));
+  const filtered = query
+    ? uniqueOptions.filter(o => o.toLowerCase().includes(query.toLowerCase()))
+    : uniqueOptions;
+
+  const handlePick = (v) => { onChange?.(v); setOpen(false); setAdding(false); setQuery(""); setNewVal(""); };
+  const handleAdd = () => {
+    const v = newVal.trim();
+    if (!v) return;
+    onAddNew?.(v);
+    handlePick(v);
+  };
+
+  const hasValue = !!value;
+
+  return (
+    <div ref={ref} style={{ position: "relative" }}>
+      {/* Trigger — pill full-width */}
+      <button
+        type="button"
+        onClick={() => setOpen(o => !o)}
+        style={{
+          width: "100%", height: 44, padding: "0 12px",
+          borderRadius: 11,
+          background: hasValue ? `${color}10` : P.glass,
+          border: `1px solid ${hasValue ? `${color}44` : (open ? P.borderH : P.border)}`,
+          color: hasValue ? "#FFF" : P.txt3,
+          display: "flex", alignItems: "center", gap: 10,
+          cursor: "pointer", fontFamily: font, fontSize: 13, fontWeight: hasValue ? 600 : 500,
+          letterSpacing: "-0.005em",
+          transition: "all 0.18s",
+          boxShadow: open ? `0 0 0 3px ${color}1A` : "none",
+          textAlign: "left",
+        }}
+        onMouseEnter={e => { if (!hasValue) { e.currentTarget.style.background = P.glassH; e.currentTarget.style.borderColor = P.borderH; } }}
+        onMouseLeave={e => { if (!hasValue && !open) { e.currentTarget.style.background = P.glass; e.currentTarget.style.borderColor = P.border; } }}
+      >
+        <div style={{ width: 26, height: 26, borderRadius: 7, background: `${color}18`, border: `1px solid ${color}2E`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+          <Icon size={12} color={color} strokeWidth={2.5} />
+        </div>
+        <span style={{ flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontFamily: font }}>
+          {value || placeholder}
+        </span>
+        {hasValue && (
+          <span
+            role="button"
+            onClick={e => { e.stopPropagation(); handlePick(""); }}
+            title="Limpiar"
+            style={{ width: 20, height: 20, borderRadius: 5, background: "rgba(255,255,255,0.05)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", transition: "all 0.15s" }}
+            onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.12)"; }}
+            onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.05)"; }}
+          >
+            <X size={10} color={P.txt3} strokeWidth={2.5} />
+          </span>
+        )}
+        <ChevronDown size={12} color={P.txt3} strokeWidth={2.5} style={{ transition: "transform 0.18s", transform: open ? "rotate(180deg)" : "none", flexShrink: 0 }} />
+      </button>
+
+      {/* Dropdown */}
+      {open && (
+        <div style={{
+          position: "absolute", top: "calc(100% + 6px)", left: 0, right: 0, zIndex: 600,
+          background: "#0B101A", border: `1px solid ${P.borderH}`, borderRadius: 12,
+          boxShadow: "0 24px 60px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.02)",
+          overflow: "hidden", animation: "fadeIn 0.14s ease",
+          fontFamily: font,
+        }}>
+          {!adding && (
+            <>
+              {/* Search */}
+              {uniqueOptions.length > 3 && (
+                <div style={{ padding: "9px 10px 8px", borderBottom: `1px solid ${P.border}` }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 7, padding: "6px 9px", borderRadius: 8, background: P.glass, border: `1px solid ${P.border}` }}>
+                    <Search size={11} color={P.txt3} />
+                    <input
+                      value={query}
+                      onChange={e => setQuery(e.target.value)}
+                      placeholder={searchPlaceholder}
+                      style={{ flex: 1, border: "none", background: "transparent", outline: "none", color: P.txt, fontSize: 12, fontFamily: font, minWidth: 0 }}
+                    />
+                  </div>
+                </div>
+              )}
+              {/* Options */}
+              <div style={{ maxHeight: 220, overflowY: "auto" }}>
+                {filtered.length === 0 && (
+                  <div style={{ padding: "16px 14px", textAlign: "center", fontSize: 11.5, color: P.txt3, fontFamily: font }}>
+                    {uniqueOptions.length === 0 ? "Sin registros — crea el primero abajo." : "Sin coincidencias."}
+                  </div>
+                )}
+                {filtered.map(opt => {
+                  const active = opt === value;
+                  return (
+                    <button key={opt} type="button" onClick={() => handlePick(opt)} style={{
+                      width: "100%", padding: "9px 12px", background: active ? `${color}14` : "transparent",
+                      border: "none", borderLeft: `2px solid ${active ? color : "transparent"}`,
+                      display: "flex", alignItems: "center", gap: 9,
+                      cursor: "pointer", transition: "background 0.12s",
+                      color: active ? "#FFF" : P.txt2, fontSize: 12.5, fontWeight: active ? 600 : 500, fontFamily: font,
+                      textAlign: "left",
+                    }}
+                      onMouseEnter={e => { if (!active) e.currentTarget.style.background = "rgba(255,255,255,0.04)"; }}
+                      onMouseLeave={e => { if (!active) e.currentTarget.style.background = "transparent"; }}
+                    >
+                      <div style={{ width: 22, height: 22, borderRadius: "50%", background: `${color}18`, border: `1px solid ${color}38`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 10, fontWeight: 800, color, fontFamily: fontDisp }}>
+                        {opt.charAt(0).toUpperCase()}
+                      </div>
+                      <span style={{ flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{opt}</span>
+                      {active && <Check size={13} color={color} strokeWidth={2.8} />}
+                    </button>
+                  );
+                })}
+              </div>
+              {/* Add new footer */}
+              <button type="button" onClick={() => { setAdding(true); setNewVal(query); }} style={{
+                width: "100%", padding: "10px 12px", background: `${color}08`, borderTop: `1px solid ${P.border}`, border: "none",
+                display: "flex", alignItems: "center", gap: 8,
+                cursor: "pointer", transition: "background 0.14s",
+                color, fontSize: 12, fontWeight: 700, fontFamily: fontDisp, letterSpacing: "0.01em",
+                textAlign: "left",
+              }}
+                onMouseEnter={e => e.currentTarget.style.background = `${color}14`}
+                onMouseLeave={e => e.currentTarget.style.background = `${color}08`}
+              >
+                <div style={{ width: 22, height: 22, borderRadius: "50%", background: `${color}22`, border: `1px dashed ${color}60`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  <Plus size={12} color={color} strokeWidth={2.8} />
+                </div>
+                <span>{newLabel}</span>
+              </button>
+            </>
+          )}
+          {adding && (
+            <div style={{ padding: 10 }}>
+              <p style={{ fontSize: 9.5, fontWeight: 700, color, letterSpacing: "0.08em", textTransform: "uppercase", fontFamily: fontDisp, margin: "0 0 7px 2px" }}>{newLabel}</p>
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <input
+                  ref={inputRef}
+                  value={newVal}
+                  onChange={e => setNewVal(e.target.value)}
+                  onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); handleAdd(); } if (e.key === "Escape") { setAdding(false); setNewVal(""); } }}
+                  placeholder="Nombre…"
+                  style={{ flex: 1, height: 34, padding: "0 11px", borderRadius: 8, background: P.glass, border: `1px solid ${color}44`, color: P.txt, fontSize: 12.5, outline: "none", fontFamily: font, boxSizing: "border-box" }}
+                />
+                <button type="button" onClick={() => { setAdding(false); setNewVal(""); }} style={{ height: 34, padding: "0 10px", borderRadius: 8, background: "transparent", border: `1px solid ${P.border}`, color: P.txt3, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: font }}>
+                  Cancelar
+                </button>
+                <button type="button" disabled={!newVal.trim()} onClick={handleAdd} style={{ height: 34, padding: "0 12px", borderRadius: 8, background: newVal.trim() ? color : "rgba(255,255,255,0.04)", border: `1px solid ${newVal.trim() ? color : P.border}`, color: newVal.trim() ? "#041016" : P.txt3, fontSize: 11, fontWeight: 800, cursor: newVal.trim() ? "pointer" : "not-allowed", fontFamily: fontDisp, letterSpacing: "0.01em" }}>
+                  Guardar
+                </button>
+              </div>
+              <p style={{ fontSize: 9.5, color: P.txt3, margin: "7px 2px 0", fontFamily: font }}>Disponible al registrar otros clientes más adelante.</p>
+            </div>
+          )}
+        </div>
+      )}
     </div>
-    <Ico icon={icon} color={color} />
-  </G>
-);
+  );
+};
+
+const KPI = ({ label, value, sub, icon: I, color, T: Tprop }) => {
+  const [h, setH] = useState(false);
+  const T = Tprop || P;
+  const isLight = T !== P;
+  // Ignoramos tintes ámbar: si recibimos amber usamos accent (verde marca) para unificar branding
+  const rawC = color || T.accent;
+  const isAmber = rawC === T.amber || rawC === "#F59E0B" || rawC === "#D97706";
+  const c = isAmber ? T.accent : rawC;
+  return (
+    <div
+      onMouseEnter={() => setH(true)}
+      onMouseLeave={() => setH(false)}
+      style={{
+        position: "relative", overflow: "hidden",
+        padding: 18, borderRadius: isLight ? 18 : 16,
+        // Apple Liquid Glass: base limpia, apenas un hint de color
+        background: isLight
+          ? `linear-gradient(160deg, rgba(255,255,255,0.96) 0%, rgba(250,252,254,0.88) 100%)`
+          : `linear-gradient(160deg, rgba(22,28,40,0.72) 0%, rgba(12,18,28,0.80) 100%)`,
+        backdropFilter: "blur(50px) saturate(170%)",
+        WebkitBackdropFilter: "blur(50px) saturate(170%)",
+        border: `1px solid ${h ? (isLight ? c + "38" : "rgba(255,255,255,0.12)") : (isLight ? "rgba(15,23,42,0.06)" : "rgba(255,255,255,0.06)")}`,
+        boxShadow: isLight
+          ? (h
+              ? `0 1px 2px rgba(15,23,42,0.04), 0 12px 28px rgba(15,23,42,0.07), 0 4px 14px ${c}16, inset 0 1px 0 rgba(255,255,255,0.95), inset 0 -1px 0 rgba(15,23,42,0.03)`
+              : `0 1px 2px rgba(15,23,42,0.04), 0 6px 16px rgba(15,23,42,0.04), inset 0 1px 0 rgba(255,255,255,0.9), inset 0 -1px 0 rgba(15,23,42,0.02)`)
+          : (h
+              ? `0 10px 36px rgba(0,0,0,0.38), 0 3px 14px ${c}18, inset 0 1px 0 rgba(255,255,255,0.08)`
+              : `0 6px 22px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.05)`),
+        transition: "all 0.3s cubic-bezier(.4,0,.2,1)",
+        transform: h ? "translateY(-2px)" : "none",
+        display: "flex", justifyContent: "space-between", alignItems: "flex-start",
+      }}
+    >
+      {/* Hint de color sutil — solo un halo muy tenue desde una esquina */}
+      <div style={{
+        position: "absolute", inset: 0,
+        background: isLight
+          ? `radial-gradient(ellipse 220px 120px at 100% 0%, ${c}12 0%, transparent 70%)`
+          : `radial-gradient(ellipse 240px 140px at 100% 0%, ${c}1F 0%, transparent 72%)`,
+        opacity: h ? 1 : 0.85, transition: "opacity 0.3s",
+        pointerEvents: "none",
+      }} />
+      {/* Glass shine diagonal muy sutil */}
+      <div style={{
+        position: "absolute", inset: 0,
+        background: isLight
+          ? `linear-gradient(135deg, rgba(255,255,255,0.4) 0%, transparent 32%)`
+          : `linear-gradient(135deg, rgba(255,255,255,0.04) 0%, transparent 40%)`,
+        pointerEvents: "none",
+      }} />
+      {/* Accent top bar — hairline brand */}
+      <div style={{
+        position: "absolute", top: 0, left: 12, right: 12, height: 1,
+        background: `linear-gradient(90deg, ${c}00 0%, ${c}88 50%, ${c}00 100%)`,
+        opacity: h ? 0.9 : 0.45, transition: "opacity 0.3s",
+      }} />
+      <div style={{ flex: 1, minWidth: 0, paddingRight: 12, position: "relative" }}>
+        <p style={{
+          fontSize: 10.5, color: isLight ? T.txt3 : "rgba(255,255,255,0.62)",
+          letterSpacing: "0.08em", fontWeight: 700,
+          fontFamily: fontDisp, textTransform: "uppercase",
+          whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
+          margin: 0,
+        }}>{label}</p>
+        <p style={{
+          fontSize: 32, fontWeight: 700,
+          color: isLight ? T.txt : "#FFFFFF",
+          letterSpacing: "-0.04em", lineHeight: 1,
+          fontFamily: fontDisp, margin: "8px 0 0",
+        }}>{value}</p>
+        {sub && (
+          <p style={{
+            fontSize: 11, color: isLight ? T.emerald : T.accent,
+            marginTop: 10, display: "flex", alignItems: "center", gap: 4, fontWeight: 700,
+            fontFamily: fontDisp, letterSpacing: "0.01em",
+            padding: "3px 9px", borderRadius: 99,
+            background: isLight ? `${T.emerald}12` : `${T.accent}12`,
+            border: `1px solid ${isLight ? T.emerald + "2A" : T.accent + "28"}`,
+            width: "fit-content",
+            boxShadow: isLight ? `inset 0 1px 0 rgba(255,255,255,0.6)` : "none",
+          }}>
+            <ArrowUpRight size={11} strokeWidth={2.5} />{sub}
+          </p>
+        )}
+      </div>
+      {/* Icon premium */}
+      <div style={{
+        width: 42, height: 42, borderRadius: 12, flexShrink: 0, position: "relative",
+        background: isLight
+          ? `linear-gradient(135deg, ${c}28 0%, ${c}0C 100%)`
+          : `linear-gradient(135deg, ${c}30 0%, ${c}10 100%)`,
+        border: `1px solid ${isLight ? c + "3A" : c + "38"}`,
+        display: "flex", alignItems: "center", justifyContent: "center",
+        boxShadow: isLight
+          ? `0 2px 6px ${c}22, inset 0 1px 0 rgba(255,255,255,0.55)`
+          : `0 2px 8px ${c}22, inset 0 1px 0 rgba(255,255,255,0.12)`,
+      }}>
+        <I size={18} color={c} strokeWidth={2.2} />
+      </div>
+    </div>
+  );
+};
 
 /* ════════════════════════════════════════
    DYNAMIC ISLAND
    ════════════════════════════════════════ */
-const DynIsland = ({ onExpand, notifications = [] }) => {
+const DynIsland = ({ onExpand, notifications = [], theme = "dark" }) => {
+  const isLight = theme === "light";
   const [isOpen, setIsOpen] = useState(false);
   const [selectedNotif, setSelectedNotif] = useState(null);
 
@@ -134,33 +616,53 @@ const DynIsland = ({ onExpand, notifications = [] }) => {
         style={{
           position: "relative",
           height: 38, width: 220, borderRadius: 50,
-          background: "linear-gradient(180deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0) 100%), #000000",
-          border: "0.5px solid rgba(255,255,255,0.12)",
+          background: isLight
+            ? `linear-gradient(180deg, #FFFFFF 0%, rgba(246,252,250,0.92) 100%)`
+            : "rgba(255,255,255,0.035)",
+          border: isLight
+            ? `1px solid rgba(13,154,118,0.22)`
+            : "0.5px solid rgba(255,255,255,0.10)",
+          boxShadow: isLight
+            ? "0 1px 2px rgba(13,154,118,0.08), 0 4px 14px rgba(13,154,118,0.08), inset 0 1px 0 rgba(255,255,255,0.8)"
+            : "inset 0 1px 0 rgba(255,255,255,0.04)",
           display: expanded ? "none" : "flex", alignItems: "center", justifyContent: "center",
           padding: "0 14px", gap: 8, overflow: "hidden",
           cursor: "pointer",
         }}>
-        <div style={{
-          position: "absolute", inset: 0, pointerEvents: "none", borderRadius: "inherit", overflow: "hidden"
-        }}>
+        {/* Orbit/shine — solo en light (tono brand). En dark lo dejamos limpio, sin
+            elementos animados brillantes, para un look mucho más sobrio y pro. */}
+        {isLight && (
           <div style={{
-            position: "absolute", top: -20, left: -20, width: 40, height: 40,
-            borderRadius: "50%", background: "radial-gradient(circle, rgba(255,255,255,0.6) 0%, transparent 75%)",
-            filter: "blur(10px)",
-            offsetPath: "path('M 19 0 H 201 A 19 19 0 0 1 201 38 H 19 A 19 19 0 0 1 19 0 Z')",
-            animation: "orbitSmart 7s cubic-bezier(0.19, 1, 0.22, 1) infinite, orbitColor 7s linear infinite"
-          }} />
-          <div style={{
-            position: "absolute", top: 0, left: "-100%", width: "50%", height: "100%",
-            background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.03), transparent)",
-            animation: "shine 6s ease-in-out infinite"
-          }} />
-        </div>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, width: "100%" }}>
-          <div style={{ filter: `drop-shadow(0 0 4px ${P.accent}44)`, display: "flex" }}>
-            <StratosAtom size={16} color={P.accent} />
+            position: "absolute", inset: 0, pointerEvents: "none", borderRadius: "inherit", overflow: "hidden"
+          }}>
+            <div style={{
+              position: "absolute", top: -20, left: -20, width: 40, height: 40,
+              borderRadius: "50%",
+              background: "radial-gradient(circle, rgba(13,154,118,0.45) 0%, transparent 75%)",
+              filter: "blur(10px)",
+              offsetPath: "path('M 19 0 H 201 A 19 19 0 0 1 201 38 H 19 A 19 19 0 0 1 19 0 Z')",
+              animation: "orbitSmart 7s cubic-bezier(0.19, 1, 0.22, 1) infinite, orbitColor 7s linear infinite",
+            }} />
+            <div style={{
+              position: "absolute", top: 0, left: "-100%", width: "50%", height: "100%",
+              background: "linear-gradient(90deg, transparent, rgba(13,154,118,0.10), transparent)",
+              animation: "shine 6s ease-in-out infinite"
+            }} />
           </div>
-          <span style={{ fontSize: 13, color: "rgba(255,255,255,0.9)", fontWeight: 500, letterSpacing: "-0.01em", fontFamily: fontDisp }}>Centro de Inteligencia</span>
+        )}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, width: "100%" }}>
+          {/* Atom: dark → blanco sutil sin halo; light → mint con drop-shadow sobrio. */}
+          <div style={{
+            filter: isLight ? `drop-shadow(0 0 3px rgba(13,154,118,0.40))` : "none",
+            display: "flex",
+          }}>
+            <StratosAtom size={16} color={isLight ? "#0D9A76" : "rgba(255,255,255,0.72)"} />
+          </div>
+          <span style={{
+            fontSize: 13,
+            color: isLight ? "#067A5E" : "rgba(255,255,255,0.82)",
+            fontWeight: isLight ? 700 : 500, letterSpacing: "-0.01em", fontFamily: fontDisp,
+          }}>Centro de Inteligencia</span>
         </div>
       </div>
 
@@ -737,7 +1239,7 @@ const getResp = (t, leadData, liveLeads) => {
           { label: `Presupuesto · ${lead.budget || "Por definir"}`, val: `Proyecto: ${lead.p || "Sin proyecto asignado"} · Tel: ${hasPhone ? lead.phone : "No registrado"}`, i: DollarSign, c: scoreColor },
           ...(lead.risk ? [{ label: `Riesgo + Fricción · ${lead.friction || "—"}`, val: lead.risk, i: Shield, c: frictionColor }] : []),
           { label: `Próxima acción · ${lead.nextActionDate || "Sin fecha"}`, val: lead.nextAction || "Sin próxima acción registrada.", i: Zap, c: P.accent },
-          ...(hasNotes ? [{ label: "Notas del expediente", val: lead.notas.replace(/[📍🎯💰👤📋⚠️✅]/g, "").substring(0, 180) + (lead.notas.length > 180 ? "…" : ""), i: FileText, c: P.txt2 }] : []),
+          ...(hasNotes ? [{ label: "Expediente del cliente", val: lead.notas.replace(/[📍🎯💰👤📋⚠️✅]/g, "").substring(0, 180) + (lead.notas.length > 180 ? "…" : ""), i: FileText, c: P.txt2 }] : []),
         ],
         follow: lead.lastActivity
           ? `Última actividad: ${lead.lastActivity}. ¿Preparo la estrategia de cierre completa para **${lead.n}**?`
@@ -1123,14 +1625,1188 @@ const ScoreBar = ({ sc, compact }) => {
   );
 };
 
+/* ═══════════════════════════════════════════
+   STAGE BADGE — selector de etapa (st) interactivo y reutilizable.
+   El asesor ve la etapa actual como pill coloreada (stgC[lead.st]) y al hacer
+   clic se despliega un menú con todas las etapas para cambiarla en un clic.
+   Usa la paleta del stage de forma theme-aware y es segura AA en light.
+
+   Props:
+   · lead     — el cliente (debe tener .st)
+   · onUpdate — callback que recibe el lead modificado
+   · T        — tema (P dark | LP light)
+   · compact  — variante pequeña para CRM list/cards
+═══════════════════════════════════════════ */
+const StageBadge = ({ lead, onUpdate, T = P, compact = false }) => {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+  const isLight = T !== P;
+
+  useEffect(() => {
+    if (!open) return;
+    const handle = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    document.addEventListener("mousedown", handle);
+    return () => document.removeEventListener("mousedown", handle);
+  }, [open]);
+
+  if (!lead) return null;
+  const stageColor = stgC[lead.st] || T.txt3;
+  const stageColorSafe = isLight ? `color-mix(in srgb, ${stageColor} 62%, #0B1220 38%)` : stageColor;
+
+  const handleSelect = (st) => {
+    if (st === lead.st) { setOpen(false); return; }
+    onUpdate?.({ ...lead, st });
+    setOpen(false);
+  };
+
+  return (
+    <div ref={ref} style={{ position: "relative", flexShrink: 0 }}>
+      <button
+        onClick={(e) => { e.stopPropagation(); setOpen(v => !v); }}
+        style={{
+          display: "inline-flex", alignItems: "center", gap: 7,
+          padding: compact ? "5px 9px 5px 9px" : "7px 11px 7px 10px",
+          borderRadius: 99,
+          background: isLight ? `${stageColor}16` : `${stageColor}1E`,
+          border: `1px solid ${isLight ? `${stageColor}55` : `${stageColor}44`}`,
+          color: stageColorSafe,
+          fontSize: compact ? 10 : 11, fontWeight: 700, fontFamily: fontDisp,
+          letterSpacing: "0.01em", cursor: "pointer",
+          transition: "all 0.15s", whiteSpace: "nowrap",
+        }}
+        onMouseEnter={e => { e.currentTarget.style.background = isLight ? `${stageColor}26` : `${stageColor}2C`; }}
+        onMouseLeave={e => { e.currentTarget.style.background = isLight ? `${stageColor}16` : `${stageColor}1E`; }}
+      >
+        <span style={{
+          width: compact ? 7 : 8, height: compact ? 7 : 8, borderRadius: 99,
+          background: stageColor, boxShadow: `0 0 6px ${stageColor}99`, flexShrink: 0,
+        }} />
+        {lead.st}
+        <ChevronDown size={compact ? 9 : 10} strokeWidth={2.4} style={{ opacity: 0.7, transform: open ? "rotate(180deg)" : "none", transition: "transform 0.2s" }} />
+      </button>
+
+      {open && (
+        <div style={{
+          position: "absolute", top: "calc(100% + 6px)", left: 0, zIndex: 60,
+          minWidth: 210,
+          background: isLight ? "#FFFFFF" : "#0C1220",
+          border: `1px solid ${isLight ? "rgba(15,23,42,0.12)" : T.borderH}`,
+          borderRadius: 12,
+          boxShadow: isLight
+            ? "0 12px 28px rgba(15,23,42,0.16), 0 3px 8px rgba(15,23,42,0.08)"
+            : "0 10px 32px rgba(0,0,0,0.55), 0 2px 6px rgba(0,0,0,0.4)",
+          padding: 4, maxHeight: 320, overflowY: "auto",
+        }}>
+          <p style={{ margin: "6px 10px 6px", fontSize: 9, fontWeight: 800, color: T.txt3, letterSpacing: "0.12em", textTransform: "uppercase", fontFamily: fontDisp }}>Cambiar etapa</p>
+          {STAGES.map(st => {
+            const c = stgC[st] || T.txt3;
+            const cSafe = isLight ? `color-mix(in srgb, ${c} 62%, #0B1220 38%)` : c;
+            const active = lead.st === st;
+            return (
+              <button key={st} onClick={() => handleSelect(st)} style={{
+                width: "100%", padding: "8px 10px", borderRadius: 8,
+                background: active ? (isLight ? `${c}14` : `${c}1E`) : "transparent",
+                border: "none",
+                color: active ? cSafe : (isLight ? T.txt : T.txt2),
+                fontSize: 12, fontWeight: active ? 700 : 500, fontFamily: font,
+                textAlign: "left", cursor: "pointer",
+                display: "flex", alignItems: "center", gap: 8,
+                transition: "background 0.12s",
+              }}
+                onMouseEnter={e => { if (!active) e.currentTarget.style.background = isLight ? "rgba(15,23,42,0.05)" : "rgba(255,255,255,0.05)"; }}
+                onMouseLeave={e => { if (!active) e.currentTarget.style.background = "transparent"; }}
+              >
+                <span style={{ width: 8, height: 8, borderRadius: 99, background: c, flexShrink: 0, boxShadow: active ? `0 0 8px ${c}` : "none" }} />
+                <span style={{ flex: 1 }}>{st}</span>
+                {active && <CheckCircle2 size={12} strokeWidth={2.4} style={{ color: cSafe }} />}
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+};
+
+/* ═══════════════════════════════════════════
+   FOLLOW UP BADGE — contador de seguimientos / recontactos al cliente.
+   El vendedor cada vez que contacta al cliente (llamada, WA, email) pulsa +1
+   y queda registrado cuántos seguimientos lleva + fecha del último.
+   Click en el contador abre un panel con el detalle y la opción de deshacer.
+
+   Props iguales que StageBadge.
+═══════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════════════════════
+   FollowUpBadge — stepper compacto para registrar seguimientos.
+   Permite subir/bajar con − y + o escribir el número directamente
+   (click en el dígito → input numérico). La fecha del último contacto
+   se guarda automáticamente solo al incrementar (no al bajar ni editar
+   a un número menor, para no falsear la señal temporal).
+
+   Variantes:
+   · compact   — pill ultra-compacto para filas de tabla (altura 26).
+   · fullWidth — ancho completo con "Último: …" inline (tarjetas).
+   · default   — intermedio (drawers).
+   ═══════════════════════════════════════════════════════════════ */
+const FollowUpBadge = ({ lead, onUpdate, T = P, compact = false, fullWidth = false, tint = null }) => {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft]     = useState("");
+  const [pulse, setPulse]     = useState(false);
+  const inputRef = useRef(null);
+  const isLight = T !== P;
+
+  useEffect(() => {
+    if (editing && inputRef.current) {
+      inputRef.current.focus();
+      inputRef.current.select?.();
+    }
+  }, [editing]);
+
+  if (!lead) return null;
+  const count = lead.seguimientos || 0;
+  const accentC = tint || T.blue || "#60A5FA";
+  const accentSafe = isLight ? `color-mix(in srgb, ${accentC} 62%, #0B1220 38%)` : accentC;
+
+  // Aplica un nuevo valor (clampeado 0..999). Solo guarda la cuenta — sin
+  // timestamps ni metadata de "último contacto" para mantener la UI limpia.
+  const commitValue = (next) => {
+    const clamped = Math.max(0, Math.min(999, Number.isFinite(next) ? next : 0));
+    onUpdate?.({ ...lead, seguimientos: clamped });
+    setPulse(true);
+    setTimeout(() => setPulse(false), 260);
+  };
+
+  const inc = (e) => { e?.stopPropagation?.(); commitValue(count + 1); };
+  const dec = (e) => { e?.stopPropagation?.(); if (count > 0) commitValue(count - 1); };
+
+  const openEdit = (e) => { e?.stopPropagation?.(); setDraft(String(count)); setEditing(true); };
+  const cancelEdit = () => { setEditing(false); };
+  const commitEdit = () => {
+    const parsed = parseInt(draft.replace(/[^0-9]/g, ""), 10);
+    if (!isNaN(parsed)) commitValue(parsed);
+    setEditing(false);
+  };
+
+  // Estado binario: ¿hay seguimientos registrados? — determina el lenguaje visual
+  const isEmpty = count === 0;
+
+  // ────────────────────────────────────────────────────────────────────────
+  // fullWidth — variante pro para las tarjetas de clientes en prioridad.
+  // Diseño Apple-like con dos estados muy diferenciados:
+  //
+  //   ESTADO VACÍO (count = 0):
+  //     • Superficie neutra (glass sutil), sin tinte de color
+  //     • Centro: "Registrar primer seguimiento" — CTA conversacional
+  //     • + destacado (bg accent relleno, contraste fuerte) invita a empezar
+  //
+  //   ESTADO CON REGISTROS (count > 0):
+  //     • Superficie con tinte accent (~6% dark · 5% light)
+  //     • Centro: número gigante (24px bold) + caption "seguimiento(s)"
+  //     • + sutil (tinte accent ligero), el peso está en el número
+  //     • ↺ reset aparece como micro-botón ghost (solo count ≥ 2)
+  //
+  // En ambos estados los botones son ghost (sin bg por defecto, bg en hover).
+  // El pulse de 260ms al cambiar da feedback kinestésico.
+  // ────────────────────────────────────────────────────────────────────────
+  if (fullWidth) {
+    const pillBg = isEmpty
+      ? (isLight ? "rgba(15,23,42,0.025)" : "rgba(255,255,255,0.025)")
+      : (isLight ? `${accentC}0D` : `${accentC}0E`);
+    const pillBorder = isEmpty
+      ? (isLight ? "rgba(15,23,42,0.08)" : "rgba(255,255,255,0.07)")
+      : (isLight ? `${accentC}2E` : `${accentC}22`);
+
+    return (
+      <div onClick={e => e.stopPropagation()} style={{
+        display: "flex", alignItems: "stretch", width: "100%",
+        height: 46, borderRadius: 12,
+        background: pillBg,
+        border: `1px solid ${pillBorder}`,
+        overflow: "hidden", position: "relative",
+        transform: pulse ? "scale(1.018)" : "scale(1)",
+        boxShadow: pulse
+          ? `0 0 0 3px ${accentC}2C, 0 6px 20px ${accentC}36`
+          : (isLight ? `0 1px 2px rgba(15,23,42,0.03), inset 0 1px 0 rgba(255,255,255,0.55)` : "inset 0 1px 0 rgba(255,255,255,0.025)"),
+        transition: "transform 0.26s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.22s cubic-bezier(0.4, 0, 0.2, 1), background 0.22s, border-color 0.22s",
+      }}>
+
+        {/* ─── − (minus) ────────────────────────────────────────────────
+            Ghost discreto; desaparece visualmente cuando no hay nada que
+            restar (opacidad reducida + cursor not-allowed). */}
+        <button
+          onClick={dec}
+          disabled={isEmpty}
+          title="Restar un seguimiento"
+          aria-label="Restar un seguimiento"
+          style={{
+            width: 46, height: "100%", padding: 0, border: "none",
+            background: "transparent",
+            color: isEmpty ? T.txt3 : accentSafe,
+            opacity: isEmpty ? 0.32 : 0.85,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            cursor: isEmpty ? "not-allowed" : "pointer",
+            borderRight: `1px solid ${isLight ? "rgba(15,23,42,0.05)" : "rgba(255,255,255,0.04)"}`,
+            transition: "background 0.15s, opacity 0.15s, color 0.15s",
+            flexShrink: 0,
+          }}
+          onMouseEnter={e => {
+            if (!isEmpty) {
+              e.currentTarget.style.background = isLight ? "rgba(15,23,42,0.05)" : "rgba(255,255,255,0.05)";
+              e.currentTarget.style.opacity = "1";
+            }
+          }}
+          onMouseLeave={e => {
+            e.currentTarget.style.background = "transparent";
+            e.currentTarget.style.opacity = isEmpty ? "0.32" : "0.85";
+          }}
+        >
+          <Minus size={15} strokeWidth={2.6} />
+        </button>
+
+        {/* ─── Zona central — número + caption (o CTA vacío) ──────────── */}
+        {editing ? (
+          <input
+            ref={inputRef}
+            type="text"
+            inputMode="numeric"
+            value={draft}
+            onChange={e => setDraft(e.target.value.replace(/[^0-9]/g, "").slice(0, 3))}
+            onBlur={commitEdit}
+            onKeyDown={e => {
+              if (e.key === "Enter") { e.preventDefault(); commitEdit(); }
+              else if (e.key === "Escape") { e.preventDefault(); cancelEdit(); }
+            }}
+            onClick={e => e.stopPropagation()}
+            style={{
+              flex: 1, minWidth: 0, height: "100%",
+              padding: 0, margin: 0,
+              border: "none", outline: "none",
+              background: isLight ? "#FFFFFF" : "rgba(255,255,255,0.04)",
+              color: accentSafe,
+              fontSize: 22, fontWeight: 800, fontFamily: fontDisp,
+              letterSpacing: "-0.03em", textAlign: "center",
+              fontVariantNumeric: "tabular-nums",
+              boxShadow: `inset 0 0 0 2px ${accentC}55`,
+            }}
+          />
+        ) : (
+          <button
+            onClick={openEdit}
+            title={isEmpty ? "Click para registrar el primer seguimiento" : "Click para editar el número"}
+            style={{
+              flex: 1, minWidth: 0, height: "100%",
+              padding: "0 14px", margin: 0,
+              border: "none", background: "transparent",
+              cursor: "text",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              gap: 9,
+              transition: "background 0.15s",
+            }}
+            onMouseEnter={e => e.currentTarget.style.background = isLight ? "rgba(15,23,42,0.025)" : "rgba(255,255,255,0.02)"}
+            onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+          >
+            {isEmpty ? (
+              // Estado vacío — prompt conversacional, no un "0" frío.
+              <>
+                <Phone size={11} strokeWidth={2.4} color={T.txt3} style={{ opacity: 0.75 }} />
+                <span style={{
+                  fontSize: 12, fontWeight: 600,
+                  color: T.txt3, fontFamily: font,
+                  letterSpacing: "0.005em",
+                }}>
+                  Registrar primer seguimiento
+                </span>
+              </>
+            ) : (
+              // Estado con registros — número como protagonista.
+              <>
+                <Phone size={11} strokeWidth={2.6} color={accentSafe} style={{ opacity: 0.55, flexShrink: 0 }} />
+                <span style={{
+                  fontSize: 22, fontWeight: 800, fontFamily: fontDisp,
+                  letterSpacing: "-0.03em", lineHeight: 1,
+                  fontVariantNumeric: "tabular-nums",
+                  color: accentSafe,
+                }}>{count}</span>
+                <span style={{
+                  fontSize: 10.5, fontWeight: 600, color: T.txt3,
+                  letterSpacing: "0.01em", fontFamily: font,
+                  whiteSpace: "nowrap", lineHeight: 1,
+                }}>
+                  {count === 1 ? "seguimiento" : "seguimientos"}
+                </span>
+              </>
+            )}
+          </button>
+        )}
+
+        {/* ─── ↺ reset — micro-botón ghost, solo cuando count ≥ 2 ─────── */}
+        {count >= 2 && !editing && (
+          <button
+            onClick={e => { e.stopPropagation(); commitValue(0); }}
+            title="Reiniciar contador a 0"
+            aria-label="Reiniciar contador"
+            style={{
+              width: 30, height: "100%", padding: 0, border: "none",
+              borderLeft: `1px solid ${isLight ? "rgba(15,23,42,0.05)" : "rgba(255,255,255,0.04)"}`,
+              background: "transparent", color: T.txt3,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              cursor: "pointer", opacity: 0.5,
+              transition: "all 0.15s",
+              flexShrink: 0,
+            }}
+            onMouseEnter={e => {
+              e.currentTarget.style.background = isLight ? "rgba(15,23,42,0.05)" : "rgba(255,255,255,0.05)";
+              e.currentTarget.style.opacity = "1";
+              e.currentTarget.style.color = T.txt2;
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.background = "transparent";
+              e.currentTarget.style.opacity = "0.5";
+              e.currentTarget.style.color = T.txt3;
+            }}
+          >
+            <RotateCcw size={11} strokeWidth={2.4} />
+          </button>
+        )}
+
+        {/* ─── + (plus) — CTA principal ────────────────────────────────
+            Vacío: bg relleno en accent → invita a empezar.
+            Con registros: ghost tintado → acción secundaria. */}
+        <button
+          onClick={inc}
+          title="Registrar un nuevo seguimiento"
+          aria-label="Registrar un nuevo seguimiento"
+          style={{
+            width: 46, height: "100%", padding: 0, border: "none",
+            borderLeft: isEmpty
+              ? "none"
+              : `1px solid ${isLight ? `${accentC}1F` : `${accentC}18`}`,
+            background: isEmpty
+              ? `linear-gradient(180deg, ${accentC} 0%, ${isLight ? "#14B892" : `${accentC}DD`} 100%)`
+              : (isLight ? `${accentC}1C` : `${accentC}16`),
+            color: isEmpty ? "#FFFFFF" : accentSafe,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            cursor: "pointer",
+            transition: "background 0.18s, transform 0.18s, box-shadow 0.18s",
+            flexShrink: 0,
+            boxShadow: isEmpty
+              ? `inset 0 1px 0 rgba(255,255,255,0.28), 0 2px 8px ${accentC}45`
+              : "none",
+          }}
+          onMouseEnter={e => {
+            if (isEmpty) {
+              e.currentTarget.style.transform = "scale(1.04)";
+              e.currentTarget.style.boxShadow = `inset 0 1px 0 rgba(255,255,255,0.35), 0 3px 12px ${accentC}60`;
+            } else {
+              e.currentTarget.style.background = isLight ? `${accentC}2E` : `${accentC}28`;
+            }
+          }}
+          onMouseLeave={e => {
+            if (isEmpty) {
+              e.currentTarget.style.transform = "scale(1)";
+              e.currentTarget.style.boxShadow = `inset 0 1px 0 rgba(255,255,255,0.28), 0 2px 8px ${accentC}45`;
+            } else {
+              e.currentTarget.style.background = isLight ? `${accentC}1C` : `${accentC}16`;
+            }
+          }}
+        >
+          <Plus size={16} strokeWidth={2.8} />
+        </button>
+      </div>
+    );
+  }
+
+  // ────────────────────────────────────────────────────────────────────────
+  // compact / default — pill inline para tabla, kanban y drawers.
+  //
+  // PROGRESSIVE DISCLOSURE (clave de intuitividad):
+  //   count = 0 → pill compacto con CTA "+ Registrar" (ícono ☎+ + label)
+  //               nadie quiere restar de 0; mostrar [− 0 +] es ruido inútil.
+  //   count ≥ 1 → stepper completo [☎ − N seguim. +] con semántica clara.
+  //
+  // compact (tabla, h=26): versión densa para listados, sin texto "seguim."
+  // default (drawer, h=32): más aire, con mini-label "seguim." tras el número.
+  //
+  // Ambos: hover del + crece ligeramente (feedback kinestésico), pulse 260ms
+  // al registrar, tabular-nums para estabilidad del dígito.
+  // ────────────────────────────────────────────────────────────────────────
+  const H       = compact ? 28 : 32;
+  const btnW    = compact ? 24 : 28;
+  const numFS   = compact ? 12 : 13;
+  const iconSz  = compact ? 11 : 12;
+  const numMinW = compact ? 18 : 20;
+
+  // ── Estado vacío: un solo CTA "+ Registrar" — mucho más intuitivo que [− 0 +]
+  if (isEmpty && !editing) {
+    return (
+      <button
+        onClick={inc}
+        onMouseEnter={e => {
+          e.currentTarget.style.background = isLight ? `${accentC}18` : `${accentC}1C`;
+          e.currentTarget.style.borderColor = isLight ? `${accentC}55` : `${accentC}44`;
+          e.currentTarget.style.color = accentSafe;
+          e.currentTarget.style.transform = "translateY(-0.5px)";
+        }}
+        onMouseLeave={e => {
+          e.currentTarget.style.background = isLight ? `${accentC}0C` : `${accentC}10`;
+          e.currentTarget.style.borderColor = isLight ? `${accentC}2E` : `${accentC}26`;
+          e.currentTarget.style.color = accentSafe;
+          e.currentTarget.style.transform = "translateY(0)";
+        }}
+        title="Registrar el primer seguimiento al cliente"
+        aria-label="Registrar primer seguimiento"
+        style={{
+          display: "inline-flex", alignItems: "center", gap: compact ? 5 : 6,
+          height: H, padding: compact ? "0 10px 0 9px" : "0 12px 0 11px",
+          borderRadius: 99,
+          background: isLight ? `${accentC}0C` : `${accentC}10`,
+          border: `1px dashed ${isLight ? `${accentC}2E` : `${accentC}26`}`,
+          color: accentSafe,
+          fontSize: compact ? 11 : 12, fontWeight: 700, fontFamily: fontDisp,
+          letterSpacing: "0.01em",
+          cursor: "pointer",
+          transition: "all 0.18s cubic-bezier(0.4, 0, 0.2, 1)",
+          flexShrink: 0,
+          boxShadow: pulse ? `0 0 0 3px ${accentC}22` : "none",
+        }}
+      >
+        <Plus size={iconSz + 2} strokeWidth={2.8} style={{ marginLeft: -2 }} />
+        {compact ? "Registrar" : "Registrar seguimiento"}
+      </button>
+    );
+  }
+
+  // ── Stepper (count ≥ 1): [☎ − N (seguim.) +] — el "+" es la acción primaria.
+  return (
+    <div style={{ display: "inline-flex", alignItems: "center", flexShrink: 0 }}>
+      <div
+        onClick={e => e.stopPropagation()}
+        title={`${count} seguimiento${count === 1 ? "" : "s"} registrado${count === 1 ? "" : "s"} — click + para sumar otro`}
+        style={{
+          display: "inline-flex", alignItems: "stretch",
+          height: H, borderRadius: 99,
+          background: isLight ? `${accentC}0E` : `${accentC}12`,
+          border: `1px solid ${isLight ? `${accentC}33` : `${accentC}28`}`,
+          overflow: "hidden",
+          transform: pulse ? "scale(1.06)" : "scale(1)",
+          boxShadow: pulse ? `0 0 0 3px ${accentC}26, 0 3px 12px ${accentC}33` : "none",
+          transition: "transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.22s, background 0.18s, border-color 0.18s",
+          flexShrink: 0,
+        }}
+      >
+        {/* ☎ signifier — solo en variante default (drawers) */}
+        {!compact && (
+          <div aria-hidden="true" style={{
+            width: 20, height: "100%",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            flexShrink: 0, color: accentSafe, opacity: 0.9,
+            paddingLeft: 6,
+          }}>
+            <Phone size={iconSz} strokeWidth={2.5} />
+          </div>
+        )}
+
+        {/* − restar (secundario) */}
+        <button
+          onClick={dec}
+          title="Corregir: restar un seguimiento"
+          aria-label="Restar un seguimiento"
+          style={{
+            width: btnW, height: "100%", padding: 0, border: "none",
+            background: "transparent",
+            color: accentSafe, opacity: 0.7,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            cursor: "pointer",
+            transition: "background 0.14s, opacity 0.14s",
+            flexShrink: 0,
+          }}
+          onMouseEnter={e => {
+            e.currentTarget.style.background = isLight ? `${accentC}1C` : `${accentC}20`;
+            e.currentTarget.style.opacity = "1";
+          }}
+          onMouseLeave={e => {
+            e.currentTarget.style.background = "transparent";
+            e.currentTarget.style.opacity = "0.7";
+          }}
+        >
+          <Minus size={iconSz} strokeWidth={2.8} />
+        </button>
+
+        {/* Número — click edita directo. En default añade mini-label "seguim." */}
+        {editing ? (
+          <input
+            ref={inputRef}
+            type="text"
+            inputMode="numeric"
+            value={draft}
+            onChange={e => setDraft(e.target.value.replace(/[^0-9]/g, "").slice(0, 3))}
+            onBlur={commitEdit}
+            onKeyDown={e => {
+              if (e.key === "Enter") { e.preventDefault(); commitEdit(); }
+              else if (e.key === "Escape") { e.preventDefault(); cancelEdit(); }
+            }}
+            onClick={e => e.stopPropagation()}
+            style={{
+              width: (compact ? numMinW : numMinW + 42),
+              height: "100%", padding: 0, margin: 0,
+              border: "none", outline: "none",
+              background: isLight ? "rgba(255,255,255,0.85)" : "rgba(255,255,255,0.04)",
+              color: accentSafe,
+              fontSize: numFS, fontWeight: 800, fontFamily: fontDisp,
+              letterSpacing: "-0.015em", textAlign: "center",
+              fontVariantNumeric: "tabular-nums",
+              boxShadow: `inset 0 0 0 1.5px ${accentC}55`,
+            }}
+          />
+        ) : (
+          <button
+            onClick={openEdit}
+            title="Click para escribir el número directamente"
+            style={{
+              height: "100%", padding: compact ? "0 3px" : "0 5px",
+              border: "none", background: "transparent",
+              color: accentSafe, cursor: "text",
+              display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 3,
+              transition: "background 0.14s",
+            }}
+            onMouseEnter={e => e.currentTarget.style.background = isLight ? `${accentC}16` : `${accentC}1A`}
+            onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+          >
+            <span style={{
+              fontSize: numFS, fontWeight: 800, fontFamily: fontDisp,
+              letterSpacing: "-0.015em",
+              fontVariantNumeric: "tabular-nums",
+              minWidth: numMinW, textAlign: "center",
+              lineHeight: 1,
+            }}>{count}</span>
+            {!compact && (
+              <span style={{
+                fontSize: 9.5, fontWeight: 700, color: `${accentC}B0`,
+                letterSpacing: "0.03em", fontFamily: font, textTransform: "lowercase",
+                opacity: 0.85,
+                lineHeight: 1, whiteSpace: "nowrap",
+              }}>{count === 1 ? "seguim." : "seguim."}</span>
+            )}
+          </button>
+        )}
+
+        {/* + sumar (PRIMARIO) — bg relleno sutil, hover con micro-scale */}
+        <button
+          onClick={inc}
+          title="Registrar un nuevo seguimiento"
+          aria-label="Registrar un nuevo seguimiento"
+          style={{
+            width: btnW, height: "100%", padding: 0, border: "none",
+            background: isLight
+              ? `linear-gradient(180deg, ${accentC}28, ${accentC}18)`
+              : `linear-gradient(180deg, ${accentC}26, ${accentC}14)`,
+            borderLeft: `1px solid ${isLight ? `${accentC}26` : `${accentC}20`}`,
+            color: accentSafe,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            cursor: "pointer",
+            transition: "background 0.16s, box-shadow 0.16s",
+            flexShrink: 0,
+            boxShadow: `inset 0 1px 0 ${isLight ? "rgba(255,255,255,0.55)" : "rgba(255,255,255,0.10)"}`,
+          }}
+          onMouseEnter={e => {
+            e.currentTarget.style.background = isLight
+              ? `linear-gradient(180deg, ${accentC}40, ${accentC}28)`
+              : `linear-gradient(180deg, ${accentC}38, ${accentC}22)`;
+            e.currentTarget.style.boxShadow = `inset 0 1px 0 ${isLight ? "rgba(255,255,255,0.55)" : "rgba(255,255,255,0.10)"}, 0 0 10px ${accentC}40`;
+          }}
+          onMouseLeave={e => {
+            e.currentTarget.style.background = isLight
+              ? `linear-gradient(180deg, ${accentC}28, ${accentC}18)`
+              : `linear-gradient(180deg, ${accentC}26, ${accentC}14)`;
+            e.currentTarget.style.boxShadow = `inset 0 1px 0 ${isLight ? "rgba(255,255,255,0.55)" : "rgba(255,255,255,0.10)"}`;
+          }}
+        >
+          <Plus size={iconSz + 1} strokeWidth={2.9} />
+        </button>
+      </div>
+    </div>
+  );
+};
+
+/* ═══════════════════════════════════════════
+   NEXT ACTION HERO — el elemento MÁS IMPORTANTE de cada drawer del cliente.
+   Pattern: el asesor abre un cliente → primero ve qué tiene que hacer HOY.
+   Se usa idéntico en los 3 drawers (Análisis IA · Perfil · Expediente)
+   para que el asesor tenga siempre la acción clave a la vista.
+
+   Diseño aesthetic-pro:
+   · Barra vertical mint de 5 px (accent rail) a la izquierda — firma visual.
+   · Halo radial sutil superior-derecha.
+   · Header con chip ZAP + badge "ACCIÓN CLAVE" animado + fecha pill.
+   · Texto de acción grande (15.5 px, SF Pro Display, weight 600).
+   · Quick actions inline: Llamar · WhatsApp · Ver más — realmente
+     accionable, no solo decorativo.
+   · Theme-aware (claro/oscuro), márgenes matemáticos 12-18-20.
+   · Placeholder cálido en cursiva cuando no hay acción registrada. */
+const NextActionHero = ({ lead, T = P, onUpdate = null }) => {
+  const [expanded, setExpanded] = useState(false);
+  const [editing, setEditing]   = useState(false);
+  const [draftA, setDraftA]     = useState("");
+  const [draftD, setDraftD]     = useState("");
+  const isLight = T !== P;
+  if (!lead) return null;
+
+  const hasAction  = !!(lead.nextAction && lead.nextAction.trim());
+  const actionText = hasAction
+    ? lead.nextAction
+    : "Sin próxima acción definida. Agrega una para activar el cierre con este cliente.";
+  const dateText   = lead.nextActionDate || "";
+  const LONG = 160;
+  const isLong   = actionText.length > LONG;
+  const showFull = !isLong || expanded;
+  const canEdit  = typeof onUpdate === "function";
+
+  const openEdit = (e) => {
+    e?.stopPropagation?.();
+    setDraftA(lead.nextAction || "");
+    setDraftD(lead.nextActionDate || "");
+    setEditing(true);
+  };
+  const saveEdit = () => {
+    onUpdate?.({ ...lead, nextAction: draftA.trim(), nextActionDate: draftD.trim() });
+    setEditing(false);
+  };
+  const cancelEdit = () => setEditing(false);
+
+  const accentStrong = isLight ? (T.accentDark || T.accent) : T.accent;
+  const textMain     = isLight ? T.txt : "#F1F5F9";
+  const phoneClean   = (lead.phone || "").replace(/[^0-9+]/g, "");
+  const waPhone      = (lead.phone || "").replace(/[^0-9]/g, "");
+
+  return (
+    <div style={{
+      position: "relative",
+      borderRadius: 16,
+      flexShrink: 0,
+      padding: "14px 16px 14px 20px",
+      background: isLight
+        ? `linear-gradient(180deg, ${T.accent}14 0%, ${T.accent}06 100%)`
+        : `linear-gradient(180deg, ${T.accent}1E 0%, ${T.accent}08 100%)`,
+      border: `1.5px solid ${isLight ? `${T.accent}4A` : `${T.accent}3A`}`,
+      boxShadow: isLight
+        ? `0 1px 3px ${T.accent}14, 0 8px 22px ${T.accent}1A, inset 0 1px 0 rgba(255,255,255,0.7)`
+        : `0 0 0 1px ${T.accent}14, 0 6px 22px ${T.accent}14, inset 0 1px 0 rgba(255,255,255,0.05)`,
+      isolation: "isolate",
+    }}>
+      {/* Accent rail vertical — firma visual mint que grita "esto es lo más importante" */}
+      <div style={{
+        position: "absolute", left: 0, top: 10, bottom: 10, width: 4,
+        borderRadius: "0 4px 4px 0",
+        background: isLight
+          ? `linear-gradient(180deg, ${T.accent} 0%, ${T.accentDark || T.accent} 100%)`
+          : `linear-gradient(180deg, ${T.accent} 0%, ${T.accent}AA 100%)`,
+        boxShadow: `0 0 12px ${T.accent}${isLight ? "55" : "66"}`,
+      }} />
+
+      {/* Mini header row — etiqueta + fecha. Sin borderBottom para que fluya */}
+      <div style={{
+        display: "flex", alignItems: "center", gap: 8,
+        marginBottom: 8, flexWrap: "wrap",
+        position: "relative",
+      }}>
+        <div style={{
+          width: 22, height: 22, borderRadius: 7,
+          background: isLight
+            ? `linear-gradient(135deg, ${T.accent} 0%, #14B892 100%)`
+            : `linear-gradient(135deg, ${T.accent}3C 0%, ${T.accent}18 100%)`,
+          border: `1px solid ${isLight ? "transparent" : T.accentB}`,
+          display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+          boxShadow: isLight
+            ? `0 2px 6px ${T.accent}44, inset 0 1px 0 rgba(255,255,255,0.4)`
+            : `0 0 10px ${T.accent}40`,
+        }}>
+          <Zap size={12} color={isLight ? "#FFFFFF" : accentStrong} strokeWidth={2.6} fill={isLight ? "#FFFFFF" : "none"} />
+        </div>
+        <p style={{ margin: 0, fontSize: 10.5, fontWeight: 800, color: accentStrong, letterSpacing: "0.14em", textTransform: "uppercase", fontFamily: fontDisp }}>Próxima acción</p>
+        <span style={{
+          fontSize: 8.5, fontWeight: 800, color: accentStrong,
+          background: isLight ? `${T.accent}22` : `${T.accent}2A`,
+          border: `1px solid ${isLight ? `${T.accent}55` : T.accentB}`,
+          padding: "2px 7px", borderRadius: 99, letterSpacing: "0.1em",
+          fontFamily: fontDisp, animation: "pulse 2.4s ease-in-out infinite",
+          flexShrink: 0,
+        }}>CLAVE</span>
+        {dateText && !editing && (
+          <span style={{
+            marginLeft: "auto",
+            fontSize: 10, fontWeight: 700, color: accentStrong,
+            background: isLight ? "#FFFFFF" : `${T.accent}16`,
+            border: `1px solid ${isLight ? `${T.accent}55` : T.accentB}`,
+            padding: "3px 9px", borderRadius: 99, fontFamily: fontDisp,
+            letterSpacing: "0.02em", whiteSpace: "nowrap", flexShrink: 0,
+            boxShadow: isLight ? `0 1px 3px ${T.accent}22, inset 0 1px 0 rgba(255,255,255,0.8)` : "none",
+            display: "inline-flex", alignItems: "center", gap: 4,
+          }}>
+            <Clock size={9} strokeWidth={2.6} />
+            {dateText}
+          </span>
+        )}
+        {/* Botón de edición — aparece si hay onUpdate y no estamos ya editando.
+            Permite modificar la acción y fecha sin salir del drawer/tarjeta. */}
+        {canEdit && !editing && (
+          <button
+            onClick={openEdit}
+            title="Editar próxima acción"
+            aria-label="Editar próxima acción"
+            style={{
+              marginLeft: dateText ? 6 : "auto",
+              display: "inline-flex", alignItems: "center", justifyContent: "center",
+              width: 24, height: 24, borderRadius: 7,
+              background: isLight ? "rgba(255,255,255,0.9)" : `${T.accent}12`,
+              border: `1px solid ${isLight ? `${T.accent}44` : T.accentB}`,
+              color: accentStrong, cursor: "pointer", padding: 0,
+              transition: "all 0.15s", flexShrink: 0,
+              boxShadow: isLight ? `0 1px 2px ${T.accent}1A` : "none",
+            }}
+            onMouseEnter={e => {
+              e.currentTarget.style.background = isLight ? `${T.accent}18` : `${T.accent}22`;
+              e.currentTarget.style.borderColor = isLight ? `${T.accent}88` : `${T.accent}55`;
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.background = isLight ? "rgba(255,255,255,0.9)" : `${T.accent}12`;
+              e.currentTarget.style.borderColor = isLight ? `${T.accent}44` : T.accentB;
+            }}
+          >
+            <Pencil size={11} strokeWidth={2.4} />
+          </button>
+        )}
+      </div>
+
+      {/* Cuerpo — texto de la acción, jerarquía máxima, SIEMPRE visible */}
+      {!editing && (
+        <p style={{
+          margin: 0,
+          fontSize: 15, lineHeight: 1.5,
+          color: hasAction ? textMain : T.txt3,
+          fontFamily: fontDisp,
+          fontWeight: hasAction ? 600 : 500,
+          letterSpacing: "-0.012em",
+          fontStyle: hasAction ? "normal" : "italic",
+          position: "relative",
+          ...(showFull ? {} : {
+            display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden",
+          }),
+        }}>{actionText}</p>
+      )}
+
+      {/* Modo edición — textarea para acción + input para fecha + guardar/cancelar */}
+      {editing && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 8, position: "relative" }}>
+          <textarea
+            value={draftA}
+            onChange={e => setDraftA(e.target.value)}
+            autoFocus
+            placeholder="¿Qué tienes que hacer con este cliente? Ej: Llamar mañana 10am para confirmar visita, enviar propuesta, agendar Zoom…"
+            rows={3}
+            style={{
+              width: "100%", boxSizing: "border-box",
+              padding: "10px 12px", borderRadius: 10,
+              background: isLight ? "#FFFFFF" : "rgba(255,255,255,0.04)",
+              border: `1px solid ${isLight ? `${T.accent}55` : T.accentB}`,
+              color: textMain, fontSize: 14, lineHeight: 1.45,
+              fontFamily: fontDisp, fontWeight: 600, letterSpacing: "-0.01em",
+              outline: "none", resize: "vertical", minHeight: 60,
+              boxShadow: isLight ? `0 1px 2px ${T.accent}14, inset 0 1px 0 rgba(255,255,255,0.6)` : "none",
+            }}
+          />
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 6, flex: 1, minWidth: 180 }}>
+              <Clock size={11} color={accentStrong} strokeWidth={2.6} />
+              <input
+                value={draftD}
+                onChange={e => setDraftD(e.target.value)}
+                placeholder="Fecha (ej: Hoy 5pm, Mañana 10am, Jueves)"
+                style={{
+                  flex: 1, padding: "7px 11px", borderRadius: 8,
+                  background: isLight ? "#FFFFFF" : "rgba(255,255,255,0.04)",
+                  border: `1px solid ${isLight ? `${T.accent}44` : T.accentB}`,
+                  color: textMain, fontSize: 11.5, fontWeight: 600,
+                  fontFamily: fontDisp, letterSpacing: "0.01em",
+                  outline: "none", boxSizing: "border-box",
+                }}
+              />
+            </div>
+            <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
+              <button
+                onClick={cancelEdit}
+                style={{
+                  padding: "7px 12px", borderRadius: 8,
+                  background: "transparent",
+                  border: `1px solid ${T.border}`,
+                  color: T.txt3, fontSize: 11, fontWeight: 700,
+                  fontFamily: fontDisp, letterSpacing: "0.02em",
+                  cursor: "pointer", transition: "all 0.15s",
+                }}
+                onMouseEnter={e => { e.currentTarget.style.color = T.txt2; e.currentTarget.style.borderColor = T.borderH; }}
+                onMouseLeave={e => { e.currentTarget.style.color = T.txt3; e.currentTarget.style.borderColor = T.border; }}
+              >Cancelar</button>
+              <button
+                onClick={saveEdit}
+                style={{
+                  padding: "7px 14px", borderRadius: 8,
+                  background: isLight
+                    ? `linear-gradient(135deg, ${T.accent} 0%, #14B892 100%)`
+                    : `linear-gradient(135deg, ${T.accent}28, ${T.accent}10)`,
+                  border: `1px solid ${isLight ? "transparent" : T.accentB}`,
+                  color: isLight ? "#FFFFFF" : accentStrong,
+                  fontSize: 11, fontWeight: 800,
+                  fontFamily: fontDisp, letterSpacing: "0.02em",
+                  cursor: "pointer", transition: "all 0.15s",
+                  display: "inline-flex", alignItems: "center", gap: 5,
+                  boxShadow: isLight ? `0 2px 6px ${T.accent}40` : "none",
+                }}
+              ><Save size={11} strokeWidth={2.6} /> Guardar</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Ver más / menos */}
+      {isLong && !editing && (
+        <button
+          onClick={() => setExpanded(v => !v)}
+          style={{
+            marginTop: 8, padding: "4px 11px", borderRadius: 99,
+            background: "transparent",
+            border: `1px solid ${isLight ? `${T.accent}55` : T.accentB}`,
+            color: accentStrong, fontSize: 10, fontWeight: 700,
+            fontFamily: fontDisp, letterSpacing: "0.02em",
+            cursor: "pointer", transition: "all 0.16s",
+            display: "inline-flex", alignItems: "center", gap: 4,
+            position: "relative",
+          }}
+          onMouseEnter={e => {
+            e.currentTarget.style.background = `${T.accent}${isLight ? "1A" : "16"}`;
+            e.currentTarget.style.borderColor = `${T.accent}${isLight ? "88" : "55"}`;
+          }}
+          onMouseLeave={e => {
+            e.currentTarget.style.background = "transparent";
+            e.currentTarget.style.borderColor = isLight ? `${T.accent}55` : T.accentB;
+          }}
+        >
+          {expanded ? "Ver menos" : "Ver más"}
+          <ChevronDown size={10} strokeWidth={2.6} style={{ transform: expanded ? "rotate(180deg)" : "none", transition: "transform 0.2s" }} />
+        </button>
+      )}
+
+      {/* Quick-action CTAs — hacen la acción realmente ejecutable sin salir del drawer */}
+      {hasAction && phoneClean && !editing && (
+        <div style={{
+          marginTop: 12, paddingTop: 10,
+          borderTop: `1px dashed ${isLight ? `${T.accent}2E` : `${T.accent}22`}`,
+          display: "flex", gap: 7, flexWrap: "wrap",
+          position: "relative",
+        }}>
+            <a
+              href={`tel:${phoneClean}`}
+              style={{
+                flex: 1, minWidth: 120,
+                display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+                padding: "9px 12px", borderRadius: 10,
+                background: isLight
+                  ? `linear-gradient(135deg, ${T.accent} 0%, #14B892 100%)`
+                  : `linear-gradient(135deg, ${T.accent}28, ${T.accent}10)`,
+                border: `1px solid ${isLight ? "transparent" : T.accentB}`,
+                color: isLight ? "#FFFFFF" : accentStrong,
+                fontSize: 12, fontWeight: 700, fontFamily: fontDisp,
+                letterSpacing: "0.01em", textDecoration: "none",
+                boxShadow: isLight
+                  ? `0 3px 10px ${T.accent}40, 0 1px 3px ${T.accent}26, inset 0 1px 0 rgba(255,255,255,0.35)`
+                  : `0 0 14px ${T.accent}22`,
+                transition: "all 0.18s",
+              }}
+              onMouseEnter={e => {
+                if (isLight) {
+                  e.currentTarget.style.boxShadow = `0 5px 16px ${T.accent}55, 0 2px 5px ${T.accent}30, inset 0 1px 0 rgba(255,255,255,0.45)`;
+                  e.currentTarget.style.transform = "translateY(-1px)";
+                } else {
+                  e.currentTarget.style.background = `linear-gradient(135deg, ${T.accent}3C, ${T.accent}18)`;
+                  e.currentTarget.style.boxShadow = `0 0 22px ${T.accent}38`;
+                }
+              }}
+              onMouseLeave={e => {
+                if (isLight) {
+                  e.currentTarget.style.boxShadow = `0 3px 10px ${T.accent}40, 0 1px 3px ${T.accent}26, inset 0 1px 0 rgba(255,255,255,0.35)`;
+                  e.currentTarget.style.transform = "none";
+                } else {
+                  e.currentTarget.style.background = `linear-gradient(135deg, ${T.accent}28, ${T.accent}10)`;
+                  e.currentTarget.style.boxShadow = `0 0 14px ${T.accent}22`;
+                }
+              }}
+            >
+              <Phone size={12} strokeWidth={2.4} /> Llamar ahora
+            </a>
+            <a
+              href={`https://wa.me/${waPhone}`}
+              target="_blank" rel="noreferrer"
+              style={{
+                flex: 1, minWidth: 120,
+                display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+                padding: "9px 12px", borderRadius: 10,
+                background: isLight ? "#FFFFFF" : "rgba(37,211,102,0.10)",
+                border: `1px solid ${isLight ? "rgba(37,211,102,0.45)" : "rgba(37,211,102,0.28)"}`,
+                color: isLight ? "#128C7E" : "rgba(37,211,102,0.95)",
+                fontSize: 12, fontWeight: 700, fontFamily: fontDisp,
+                letterSpacing: "0.01em", textDecoration: "none",
+                boxShadow: isLight ? "0 1px 3px rgba(18,140,126,0.14)" : "none",
+                transition: "all 0.18s",
+              }}
+              onMouseEnter={e => {
+                if (isLight) {
+                  e.currentTarget.style.background = "rgba(37,211,102,0.10)";
+                  e.currentTarget.style.borderColor = "rgba(37,211,102,0.65)";
+                  e.currentTarget.style.transform = "translateY(-1px)";
+                } else {
+                  e.currentTarget.style.background = "rgba(37,211,102,0.18)";
+                  e.currentTarget.style.borderColor = "rgba(37,211,102,0.45)";
+                  e.currentTarget.style.color = "rgba(37,211,102,1)";
+                }
+              }}
+              onMouseLeave={e => {
+                if (isLight) {
+                  e.currentTarget.style.background = "#FFFFFF";
+                  e.currentTarget.style.borderColor = "rgba(37,211,102,0.45)";
+                  e.currentTarget.style.transform = "none";
+                } else {
+                  e.currentTarget.style.background = "rgba(37,211,102,0.10)";
+                  e.currentTarget.style.borderColor = "rgba(37,211,102,0.28)";
+                  e.currentTarget.style.color = "rgba(37,211,102,0.95)";
+                }
+              }}
+            >
+              <MessageCircle size={12} strokeWidth={2.4} /> WhatsApp
+            </a>
+          </div>
+        )}
+    </div>
+  );
+};
+
 /* ─── Notes Modal — Rich sectioned view ─── */
-const NotesModal = ({ lead, onClose, onSave }) => {
+/* ═══════════════════════════════════════════
+   DRAWER TAB ISLAND — Pill flotante estilo Dynamic Island, colocada abajo
+   en cada drawer (Análisis IA · Perfil · Expediente). Permite al vendedor
+   saltar entre las 3 vistas del lead sin cerrar el drawer.
+═══════════════════════════════════════════ */
+const DRAWER_TABS = [
+  { id: "analisis",   label: "Análisis IA", shortLabel: "IA",     colorKey: "accent" },
+  { id: "perfil",     label: "Perfil",      shortLabel: "Perfil", colorKey: "violet" },
+  { id: "expediente", label: "Expediente",  shortLabel: "Exped.", colorKey: "blue"   },
+];
+
+const DrawerTabIsland = ({ current, onSwitch, T = P }) => {
+  const isLight = T !== P;
+  const safeC = (c) => isLight ? `color-mix(in srgb, ${c} 60%, #0B1220 40%)` : c;
+
+  return (
+    <div style={{
+      position: "absolute",
+      bottom: 20,
+      left: "50%",
+      transform: "translateX(-50%)",
+      zIndex: 10,
+      display: "flex", alignItems: "center", gap: 3,
+      padding: 5,
+      borderRadius: 999,
+      background: isLight
+        ? "rgba(255,255,255,0.92)"
+        : "rgba(12,17,28,0.78)",
+      backdropFilter: "blur(28px) saturate(180%)",
+      WebkitBackdropFilter: "blur(28px) saturate(180%)",
+      border: `1px solid ${isLight ? "rgba(15,23,42,0.10)" : "rgba(255,255,255,0.08)"}`,
+      boxShadow: isLight
+        ? "0 14px 32px rgba(15,23,42,0.18), 0 4px 12px rgba(15,23,42,0.08), inset 0 1px 0 rgba(255,255,255,0.7)"
+        : "0 14px 36px rgba(0,0,0,0.5), 0 3px 10px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.06)",
+      fontFamily: font,
+    }}>
+      {DRAWER_TABS.map(tab => {
+        const active = tab.id === current;
+        const color = T[tab.colorKey] || T.accent;
+        const txtC  = active ? safeC(color) : (isLight ? T.txt2 : T.txt3);
+        const iconNode =
+          tab.id === "analisis"   ? <StratosAtom size={13} color={txtC} />
+        : tab.id === "perfil"     ? <User size={13} color={txtC} strokeWidth={2.2} />
+        :                           <FileText size={13} color={txtC} strokeWidth={2.2} />;
+
+        return (
+          <button
+            key={tab.id}
+            onClick={() => !active && onSwitch?.(tab.id)}
+            style={{
+              height: 38, padding: "0 14px", borderRadius: 999,
+              border: "none",
+              background: active
+                ? (isLight ? `${color}22` : `${color}26`)
+                : "transparent",
+              color: txtC,
+              fontSize: 12.5, fontWeight: active ? 700 : 600,
+              fontFamily: font, letterSpacing: "0.01em",
+              cursor: active ? "default" : "pointer",
+              display: "flex", alignItems: "center", gap: 7,
+              transition: "all 0.22s cubic-bezier(0.4, 0, 0.2, 1)",
+              boxShadow: active && isLight ? `inset 0 1px 0 rgba(255,255,255,0.55)` : "none",
+              whiteSpace: "nowrap",
+            }}
+            onMouseEnter={e => {
+              if (!active) {
+                e.currentTarget.style.background = isLight ? "rgba(15,23,42,0.05)" : "rgba(255,255,255,0.06)";
+                e.currentTarget.style.color = isLight ? T.txt : "#FFFFFF";
+              }
+            }}
+            onMouseLeave={e => {
+              if (!active) {
+                e.currentTarget.style.background = "transparent";
+                e.currentTarget.style.color = txtC;
+              }
+            }}
+          >
+            {iconNode}
+            <span>{tab.label}</span>
+          </button>
+        );
+      })}
+    </div>
+  );
+};
+
+/* ═══════════════════════════════════════════
+   InlineEdit — click-to-edit universal
+   ═══════════════════════════════════════════
+   Convierte cualquier texto en editable al hacer clic. Escape cancela,
+   Enter guarda (en modo text/select) o Cmd+Enter (en modo multiline).
+   Un hint sutil (underline en hover) invita a editar sin añadir ruido. */
+const InlineEdit = ({
+  value, onSave, T, isLight,
+  type = "text", options, placeholder = "—",
+  multiline = false, rows = 3,
+  parse,
+  readStyle = {}, editStyle = {},
+  displayValue,
+  emptyText = "—",
+  autoCommitSelect = true,
+}) => {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft]     = useState("");
+  const ref = useRef(null);
+
+  useEffect(() => {
+    if (editing && ref.current) {
+      ref.current.focus();
+      if (ref.current.select && !multiline && type !== "select") ref.current.select();
+    }
+  }, [editing, multiline, type]);
+
+  const start = () => { setDraft(value == null ? "" : String(value)); setEditing(true); };
+  const commit = (val) => {
+    const raw = val === undefined ? draft : val;
+    const final = parse ? parse(raw) : raw;
+    onSave?.(final);
+    setEditing(false);
+  };
+  const cancel = () => { setEditing(false); };
+
+  const baseInput = {
+    width: "100%", padding: "6px 9px", borderRadius: 8,
+    background: isLight ? "rgba(15,23,42,0.05)" : "rgba(255,255,255,0.06)",
+    border: `1px solid ${T.accentB}`, color: T.txt,
+    fontSize: 12, fontFamily: font, outline: "none",
+    boxSizing: "border-box",
+    boxShadow: `0 0 0 3px ${T.accent}14`,
+    ...editStyle,
+  };
+
+  if (editing) {
+    if (type === "select") {
+      return (
+        <select
+          ref={ref}
+          value={draft}
+          onChange={e => { setDraft(e.target.value); if (autoCommitSelect) commit(e.target.value); }}
+          onBlur={() => commit(draft)}
+          onKeyDown={e => { if (e.key === "Escape") cancel(); }}
+          style={{ ...baseInput, cursor: "pointer" }}
+        >
+          {(options || []).map(o => (
+            <option key={o} value={o} style={{ background: isLight ? "#FFFFFF" : "#0C1219", color: T.txt }}>{o}</option>
+          ))}
+        </select>
+      );
+    }
+    if (multiline) {
+      return (
+        <textarea
+          ref={ref}
+          value={draft}
+          onChange={e => setDraft(e.target.value)}
+          onBlur={() => commit()}
+          onKeyDown={e => {
+            if (e.key === "Escape") cancel();
+            if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) commit();
+          }}
+          rows={rows}
+          placeholder={placeholder}
+          style={{ ...baseInput, resize: "vertical", lineHeight: 1.55 }}
+        />
+      );
+    }
+    return (
+      <input
+        ref={ref}
+        type="text"
+        value={draft}
+        onChange={e => setDraft(e.target.value)}
+        onBlur={() => commit()}
+        onKeyDown={e => {
+          if (e.key === "Enter") commit();
+          if (e.key === "Escape") cancel();
+        }}
+        placeholder={placeholder}
+        style={baseInput}
+      />
+    );
+  }
+
+  const shown = displayValue ? displayValue(value) : (value ?? "");
+  const isEmpty = shown === "" || shown == null;
+
+  return (
+    <span
+      onClick={e => { e.stopPropagation?.(); start(); }}
+      title="Click para editar"
+      role="button"
+      tabIndex={0}
+      onKeyDown={e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); start(); } }}
+      style={{
+        cursor: "text",
+        display: "inline-block",
+        borderRadius: 4,
+        padding: "1px 3px",
+        margin: "-1px -3px",
+        transition: "background 0.15s, box-shadow 0.15s",
+        color: isEmpty ? T.txt3 : undefined,
+        fontStyle: isEmpty ? "italic" : undefined,
+        ...readStyle,
+      }}
+      onMouseEnter={e => { e.currentTarget.style.background = isLight ? "rgba(15,23,42,0.04)" : "rgba(255,255,255,0.05)"; e.currentTarget.style.boxShadow = `inset 0 -1px 0 ${T.accent}55`; }}
+      onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.boxShadow = "none"; }}
+    >
+      {isEmpty ? emptyText : shown}
+    </span>
+  );
+};
+
+const NotesModal = ({ lead, onClose, onSave, onUpdate, onSwitchTab, T = P }) => {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState("");
   if (!lead) return null;
 
   const KNOWN_SECTIONS = ["OBJETIVO", "PRESUPUESTO", "PERFIL DEL CLIENTE", "HISTORIAL DE CONTACTO", "PENDIENTE"];
-  const sectionColors = { "OBJETIVO": P.blue, "PRESUPUESTO": P.emerald, "PERFIL DEL CLIENTE": P.txt2, "HISTORIAL DE CONTACTO": P.amber, "PENDIENTE": P.accent };
+  const sectionColors = { "OBJETIVO": T.blue, "PRESUPUESTO": T.emerald, "PERFIL DEL CLIENTE": T.txt2, "HISTORIAL DE CONTACTO": T.amber, "PENDIENTE": T.accent };
 
   const parseSections = (raw = "") => {
     const sections = []; const lines = raw.split("\n"); let cur = null;
@@ -1148,196 +2824,412 @@ const NotesModal = ({ lead, onClose, onSave }) => {
   const startEdit = () => { setDraft(lead.notas || ""); setEditing(true); };
   const saveEdit = () => { onSave?.(draft); setEditing(false); };
 
+  const isLight = T !== P;
+  const titleC = isLight ? T.txt : "#FFFFFF";
+
   return createPortal(
     <>
-      <div onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: 500, background: "rgba(2,5,12,0.75)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)" }} />
-      <div style={{ position: "fixed", top: "50%", left: "50%", transform: "translate(-50%,-50%)", zIndex: 501, width: "min(660px, 94vw)", background: "#080D17", border: `1px solid ${P.borderH}`, borderRadius: 22, boxShadow: "0 48px 96px rgba(0,0,0,0.7)", display: "flex", flexDirection: "column", animation: "fadeIn 0.22s ease", maxHeight: "85vh" }}>
-        <div style={{ height: 3, background: `linear-gradient(90deg, ${stgC[lead.st] || P.accent}, transparent)`, borderRadius: "22px 22px 0 0" }} />
-        <div style={{ padding: "18px 22px 14px", borderBottom: `1px solid ${P.border}`, display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <div style={{ width: 40, height: 40, borderRadius: 11, background: P.glass, border: `1px solid ${P.border}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 15, fontWeight: 800, color: P.txt2, fontFamily: fontDisp, flexShrink: 0 }}>{lead.n.charAt(0)}</div>
-            <div>
-              <p style={{ fontSize: 15, fontWeight: 700, color: "#FFFFFF", fontFamily: fontDisp, letterSpacing: "-0.02em", marginBottom: 3 }}>{lead.n}</p>
-              <p style={{ fontSize: 11, color: P.txt3 }}>{lead.asesor} · {lead.budget}</p>
+      <div onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: 400, background: T === P ? "rgba(2,5,12,0.5)" : "rgba(15,23,42,0.32)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)" }} />
+      <div style={{ position: "fixed", right: 0, top: 0, bottom: 0, zIndex: 401, width: 460, background: T === P ? "#07080F" : "#FFFFFF", borderLeft: `1px solid ${T.borderH}`, display: "flex", flexDirection: "column", animation: "slideInRight 0.28s cubic-bezier(0.32,0.72,0,1)", boxShadow: T === P ? "-24px 0 80px rgba(0,0,0,0.5)" : "-24px 0 80px rgba(15,23,42,0.12)" }}>
+        <style>{`@keyframes slideInRight{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}`}</style>
+
+        {/* Header: identidad + botón cerrar */}
+        <div style={{ padding: "18px 24px 14px", borderBottom: `1px solid ${T.border}`, flexShrink: 0 }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <div style={{ width: 32, height: 32, borderRadius: 9, background: `linear-gradient(135deg, ${T.blue}22, ${T.blue}10)`, border: `1px solid ${T.blue}44`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, boxShadow: `0 0 14px ${T.blue}20` }}>
+                <FileText size={14} color={isLight ? `color-mix(in srgb, ${T.blue} 58%, #0B1220 42%)` : T.blue} strokeWidth={2.2} />
+              </div>
+              <div>
+                <p style={{ margin: 0, fontSize: 10.5, fontWeight: 800, color: isLight ? `color-mix(in srgb, ${T.blue} 58%, #0B1220 42%)` : T.blue, letterSpacing: "0.12em", textTransform: "uppercase", fontFamily: fontDisp }}>Expediente</p>
+                <p style={{ margin: 0, fontSize: 11, color: T.txt3, fontFamily: font }}>Todo sobre el cliente en un vistazo</p>
+              </div>
+            </div>
+            <div style={{ display: "flex", gap: 7 }}>
+              {!editing && (
+                <button onClick={startEdit} style={{ display: "flex", alignItems: "center", gap: 5, padding: "7px 12px", borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", color: T.txt3, fontSize: 11.5, fontWeight: 600, cursor: "pointer", fontFamily: font, transition: "all 0.18s" }}
+                  onMouseEnter={e => { e.currentTarget.style.background = T.glassH; e.currentTarget.style.color = T.txt; e.currentTarget.style.borderColor = T.borderH; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = T.txt3; e.currentTarget.style.borderColor = T.border; }}
+                >Editar</button>
+              )}
+              <button onClick={onClose} style={{ width: 30, height: 30, borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.18s" }}
+                onMouseEnter={e => e.currentTarget.style.background = T.glassH}
+                onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+              ><X size={13} color={T.txt3} /></button>
             </div>
           </div>
-          <div style={{ display: "flex", gap: 7 }}>
-            {!editing && (
-              <button onClick={startEdit} style={{ display: "flex", alignItems: "center", gap: 5, padding: "7px 14px", borderRadius: 9, border: `1px solid ${P.border}`, background: "transparent", color: P.txt3, fontSize: 11.5, fontWeight: 600, cursor: "pointer", transition: "all 0.18s" }}
-                onMouseEnter={e => { e.currentTarget.style.background = P.glassH; e.currentTarget.style.color = P.txt; e.currentTarget.style.borderColor = P.borderH; }}
-                onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = P.txt3; e.currentTarget.style.borderColor = P.border; }}
-              >Editar notas</button>
-            )}
-            <button onClick={onClose} style={{ width: 32, height: 32, borderRadius: 9, border: `1px solid ${P.border}`, background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.18s" }}
-              onMouseEnter={e => e.currentTarget.style.background = P.glassH}
-              onMouseLeave={e => e.currentTarget.style.background = "transparent"}
-            ><X size={14} color={P.txt2} /></button>
+
+          {/* Snapshot del lead */}
+          <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 14px", borderRadius: 12, background: T.glass, border: `1px solid ${T.border}` }}>
+            <div style={{ width: 38, height: 38, borderRadius: 11, background: `${T.blue}18`, border: `1px solid ${T.blue}44`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 800, color: isLight ? `color-mix(in srgb, ${T.blue} 58%, #0B1220 42%)` : T.blue, fontFamily: fontDisp, flexShrink: 0 }}>{lead.n.charAt(0)}</div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <p style={{ margin: 0, fontSize: 14.5, fontWeight: 700, color: titleC, fontFamily: fontDisp, letterSpacing: "-0.02em" }}>
+                <InlineEdit value={lead.n} onSave={v => onUpdate?.({...lead, n: v})} T={T} isLight={isLight} placeholder="Nombre" />
+              </p>
+              <p style={{ margin: "3px 0 0", fontSize: 11.5, color: T.txt3, fontFamily: font }}>
+                <InlineEdit value={lead.asesor} onSave={v => onUpdate?.({...lead, asesor: v})} T={T} isLight={isLight} placeholder="Asesor" emptyText="Sin asesor" />
+                {" · "}
+                <InlineEdit
+                  value={lead.budget}
+                  onSave={v => {
+                    const parsed = parseBudget(v);
+                    onUpdate?.({...lead, budget: parsed ? formatBudget(parsed) : v, presupuesto: parsed || lead.presupuesto || 0 });
+                  }}
+                  T={T} isLight={isLight} placeholder="300k · 1.5M" emptyText="Sin presupuesto"
+                />
+              </p>
+            </div>
           </div>
         </div>
-        <div style={{ padding: "18px 22px", overflowY: "auto", flex: 1 }}>
+
+        {/* Contenido */}
+        <div style={{ padding: "18px 24px 120px", overflowY: "auto", overscrollBehavior: "contain", WebkitOverflowScrolling: "touch", scrollBehavior: "smooth", flex: 1 }}>
+          {/* ── Próxima acción — hero unificado (siempre visible en modo lectura).
+              Mismo componente que Perfil y Análisis IA: es lo primero
+              accionable que ve el asesor en el expediente del cliente. ── */}
+          {!editing && (
+            <div style={{ marginBottom: 16 }}>
+              <NextActionHero lead={lead} T={T} onUpdate={onUpdate} />
+            </div>
+          )}
+          {/* ── Acciones rápidas — seguimientos + etapa editable ── */}
+          {!editing && (
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 7, alignItems: "center", marginBottom: 16 }}>
+              <FollowUpBadge lead={lead} onUpdate={onUpdate} T={T} />
+              <StageBadge lead={lead} onUpdate={onUpdate} T={T} />
+            </div>
+          )}
           {editing ? (
-            <textarea value={draft} onChange={e => setDraft(e.target.value)}
-              placeholder={"OBJETIVO\nDescripción...\n\nPENDIENTE\nAcciones pendientes..."}
-              style={{ width: "100%", minHeight: 300, padding: "14px", borderRadius: 12, background: "rgba(255,255,255,0.04)", border: `1px solid ${P.borderH}`, color: P.txt, fontSize: 13, fontFamily: font, lineHeight: 1.7, outline: "none", resize: "vertical", boxSizing: "border-box" }} />
+            <div>
+              <p style={{ fontSize: 10, fontWeight: 700, color: T.txt3, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 8, fontFamily: fontDisp }}>Editar expediente</p>
+              <textarea value={draft} onChange={e => setDraft(e.target.value)}
+                placeholder={"OBJETIVO\nDescripción...\n\nPENDIENTE\nAcciones pendientes..."}
+                style={{ width: "100%", minHeight: 360, padding: "14px", borderRadius: 12, background: isLight ? "rgba(15,23,42,0.04)" : "rgba(255,255,255,0.04)", border: `1px solid ${T.borderH}`, color: T.txt, fontSize: 13, fontFamily: font, lineHeight: 1.75, outline: "none", resize: "vertical", boxSizing: "border-box" }} />
+            </div>
           ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
               {sections.filter(s => s.title || s.body).map((s, i) => {
-                const c = sectionColors[s.key] || P.txt2;
+                const c = sectionColors[s.key] || T.txt2;
+                const titleCol = isLight && s.key ? `color-mix(in srgb, ${c} 58%, #0B1220 42%)` : c;
                 return (
-                  <div key={i} style={{ borderRadius: 12, border: `1px solid ${s.key ? `${c}18` : P.border}`, overflow: "hidden" }}>
-                    {s.title && <div style={{ padding: "8px 14px", background: s.key ? `${c}08` : P.glass, borderBottom: `1px solid ${s.key ? `${c}18` : P.border}` }}><p style={{ fontSize: 10, fontWeight: 700, color: s.key ? c : P.txt3, letterSpacing: "0.07em", textTransform: "uppercase" }}>{s.title}</p></div>}
-                    <div style={{ padding: s.title ? "12px 14px" : "14px" }}><pre style={{ fontSize: 12.5, color: P.txt2, lineHeight: 1.8, fontFamily: font, whiteSpace: "pre-wrap", margin: 0 }}>{s.body.trim()}</pre></div>
+                  <div key={i} style={{ borderRadius: 12, border: `1px solid ${s.key ? `${c}${isLight ? "30" : "20"}` : T.border}`, overflow: "hidden", background: isLight && s.key ? `${c}08` : "transparent" }}>
+                    {s.title && (
+                      <div style={{ padding: "9px 15px", background: s.key ? (isLight ? `${c}14` : `${c}0C`) : T.glass, borderBottom: `1px solid ${s.key ? `${c}${isLight ? "28" : "1C"}` : T.border}` }}>
+                        <p style={{ margin: 0, fontSize: 10.5, fontWeight: 800, color: titleCol, letterSpacing: "0.08em", textTransform: "uppercase", fontFamily: fontDisp }}>{s.title}</p>
+                      </div>
+                    )}
+                    <div style={{ padding: s.title ? "13px 15px" : "15px" }}>
+                      {/* div con whiteSpace: pre-wrap en vez de <pre> —
+                          el tag <pre> del navegador aplica fuente monospace
+                          por defecto (aspecto "antigua"); usando <div> con
+                          fontFamily SF Pro se ve consistente con el resto. */}
+                      <div style={{ fontSize: 13, color: isLight ? T.txt : T.txt2, lineHeight: 1.75, fontFamily: font, whiteSpace: "pre-wrap", margin: 0, fontWeight: 500 }}>{s.body.trim()}</div>
+                    </div>
                   </div>
                 );
               })}
               {sections.length === 0 && (
-                <div style={{ padding: "40px 0", textAlign: "center" }}>
-                  <p style={{ fontSize: 13, color: P.txt3, marginBottom: 12 }}>Sin notas registradas.</p>
-                  <button onClick={startEdit} style={{ padding: "8px 20px", borderRadius: 9, background: `${P.accent}12`, border: `1px solid ${P.accentB}`, color: P.accent, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>Agregar primera nota</button>
+                <div style={{ padding: "48px 0", textAlign: "center" }}>
+                  <p style={{ fontSize: 13, color: T.txt3, marginBottom: 14, fontFamily: font }}>Sin información registrada en el expediente.</p>
+                  <button onClick={startEdit} style={{ padding: "9px 22px", borderRadius: 9, background: `${T.blue}14`, border: `1px solid ${T.blue}44`, color: isLight ? `color-mix(in srgb, ${T.blue} 58%, #0B1220 42%)` : T.blue, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: font }}>Agregar primera entrada</button>
                 </div>
               )}
             </div>
           )}
         </div>
+
         {editing && (
-          <div style={{ padding: "14px 22px", borderTop: `1px solid ${P.border}`, display: "flex", gap: 8, flexShrink: 0 }}>
-            <button onClick={() => setEditing(false)} style={{ flex: 1, padding: "11px 0", borderRadius: 11, background: "transparent", border: `1px solid ${P.border}`, color: P.txt3, fontSize: 13, fontWeight: 600, cursor: "pointer", transition: "all 0.18s" }}
-              onMouseEnter={e => { e.currentTarget.style.background = P.glassH; e.currentTarget.style.color = P.txt2; }}
-              onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = P.txt3; }}
+          <div style={{ padding: "14px 24px", borderTop: `1px solid ${T.border}`, display: "flex", gap: 8, flexShrink: 0, background: T === P ? "#07080F" : "#FFFFFF" }}>
+            <button onClick={() => setEditing(false)} style={{ flex: 1, padding: "11px 0", borderRadius: 11, background: "transparent", border: `1px solid ${T.border}`, color: T.txt3, fontSize: 13, fontWeight: 600, fontFamily: font, cursor: "pointer", transition: "all 0.18s" }}
+              onMouseEnter={e => { e.currentTarget.style.background = T.glassH; e.currentTarget.style.color = T.txt2; }}
+              onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = T.txt3; }}
             >Cancelar</button>
-            <button onClick={saveEdit} style={{ flex: 2, padding: "11px 0", borderRadius: 11, background: `${P.accent}16`, border: `1px solid ${P.accentB}`, color: P.accent, fontSize: 13, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 7, transition: "background 0.18s" }}
-              onMouseEnter={e => e.currentTarget.style.background = `${P.accent}24`}
-              onMouseLeave={e => e.currentTarget.style.background = `${P.accent}16`}
-            >Guardar notas</button>
+            <button onClick={saveEdit} style={{ flex: 2, padding: "11px 0", borderRadius: 11, background: `${T.blue}18`, border: `1px solid ${T.blue}44`, color: isLight ? `color-mix(in srgb, ${T.blue} 58%, #0B1220 42%)` : T.blue, fontSize: 13, fontWeight: 700, fontFamily: fontDisp, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 7, transition: "background 0.18s" }}
+              onMouseEnter={e => e.currentTarget.style.background = `${T.blue}28`}
+              onMouseLeave={e => e.currentTarget.style.background = `${T.blue}18`}
+            >Guardar expediente</button>
           </div>
         )}
+
+        {/* Dynamic Island — switcher Análisis IA · Perfil · Expediente */}
+        {!editing && <DrawerTabIsland current="expediente" onSwitch={onSwitchTab} T={T} />}
       </div>
     </>,
     document.body
   );
 };
 
-const LeadPanel = ({ lead, onClose, oc, onOpenNotes, onUpdate }) => {
+const LeadPanel = ({ lead, onClose, oc, onUpdate, onSwitchTab, T = P }) => {
   const [activeTab, setActiveTab] = useState("perfil");
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState(null);
+  // expandAction ya no se usa aquí — NextActionHero gestiona su propio estado
+  const [expandBio, setExpandBio] = useState(false);
   if (!lead) return null;
+  const isLight = T !== P;
   const sc = lead.sc;
-  const scoreColor = P.accent;
-  const stageColor = stgC[lead.st] || P.txt3;
+  const scoreColor = T.accent;
+  const stageColor = stgC[lead.st] || T.txt3;
   const stageIdx = STAGES.indexOf(lead.st);
   const startEditing = () => { setForm({ n: lead.n, phone: lead.phone||"", budget: lead.budget||"", asesor: lead.asesor||"", campana: lead.campana||"", p: lead.p||"", st: lead.st, nextAction: lead.nextAction||"", nextActionDate: lead.nextActionDate||"", bio: lead.bio||"" }); setEditing(true); };
-  const saveEditing = () => { if (!form.n.trim()) return; onUpdate?.({...lead,...form}); setEditing(false); setForm(null); };
+  const saveEditing = () => {
+    if (!form.n.trim()) return;
+    const parsed = parseBudget(form.budget);
+    const normalized = {
+      ...form,
+      budget: parsed ? formatBudget(parsed) : form.budget,
+      presupuesto: parsed || lead.presupuesto || 0,
+    };
+    onUpdate?.({...lead, ...normalized});
+    setEditing(false); setForm(null);
+  };
   const cancelEditing = () => { setEditing(false); setForm(null); };
   const f = k => form?.[k] ?? ""; const sf = k => v => setForm(p => ({...p,[k]:v}));
+  // Color primario "fuerte" para títulos — respeta el tema claro/oscuro
+  const titleC = isLight ? T.txt : "#FFFFFF";
+  const inputBg = isLight ? "rgba(15,23,42,0.04)" : "rgba(255,255,255,0.05)";
   const inp = (label, key, ph, full) => (
     <div style={full ? { gridColumn: "1 / -1" } : {}}>
-      <p style={{ fontSize: 9, fontWeight: 700, color: P.txt3, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 4 }}>{label}</p>
+      <p style={{ fontSize: 9, fontWeight: 700, color: T.txt3, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 4, fontFamily: fontDisp }}>{label}</p>
       <input value={f(key)} onChange={e => sf(key)(e.target.value)} placeholder={ph}
-        style={{ width: "100%", padding: "8px 10px", borderRadius: 9, background: "rgba(255,255,255,0.05)", border: `1px solid ${P.borderH}`, color: P.txt, fontSize: 12, outline: "none", fontFamily: font, boxSizing: "border-box" }} />
+        style={{ width: "100%", padding: "8px 10px", borderRadius: 9, background: inputBg, border: `1px solid ${T.borderH}`, color: T.txt, fontSize: 12, outline: "none", fontFamily: font, boxSizing: "border-box" }} />
     </div>
   );
   const textarea = (label, key, ph) => (
     <div style={{ gridColumn: "1 / -1" }}>
-      <p style={{ fontSize: 9, fontWeight: 700, color: P.txt3, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 4 }}>{label}</p>
+      <p style={{ fontSize: 9, fontWeight: 700, color: T.txt3, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 4, fontFamily: fontDisp }}>{label}</p>
       <textarea value={f(key)} onChange={e => sf(key)(e.target.value)} placeholder={ph} rows={3}
-        style={{ width: "100%", padding: "8px 10px", borderRadius: 9, background: "rgba(255,255,255,0.05)", border: `1px solid ${P.borderH}`, color: P.txt, fontSize: 12, outline: "none", fontFamily: font, resize: "vertical", boxSizing: "border-box" }} />
+        style={{ width: "100%", padding: "8px 10px", borderRadius: 9, background: inputBg, border: `1px solid ${T.borderH}`, color: T.txt, fontSize: 12, outline: "none", fontFamily: font, resize: "vertical", boxSizing: "border-box" }} />
     </div>
   );
 
   return createPortal(
     <>
-      <div onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: 400, background: "rgba(2,5,12,0.5)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)" }} />
-      <div style={{ position: "fixed", right: 0, top: 0, bottom: 0, zIndex: 401, width: 440, background: "#07080F", borderLeft: `1px solid ${P.borderH}`, display: "flex", flexDirection: "column", animation: "slideInRight 0.28s cubic-bezier(0.32,0.72,0,1)", boxShadow: "-24px 0 80px rgba(0,0,0,0.5)" }}>
+      <div onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: 400, background: T === P ? "rgba(2,5,12,0.5)" : "rgba(15,23,42,0.32)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)" }} />
+      <div style={{ position: "fixed", right: 0, top: 0, bottom: 0, zIndex: 401, width: 440, background: T === P ? "#07080F" : "#FFFFFF", borderLeft: `1px solid ${T.borderH}`, display: "flex", flexDirection: "column", animation: "slideInRight 0.28s cubic-bezier(0.32,0.72,0,1)", boxShadow: T === P ? "-24px 0 80px rgba(0,0,0,0.5)" : "-24px 0 80px rgba(15,23,42,0.12)" }}>
         <style>{`@keyframes slideInRight{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}`}</style>
-        <div style={{ height: 3, background: `linear-gradient(90deg, ${stgC[editing ? form?.st : lead.st] || stageColor}, transparent)`, flexShrink: 0 }} />
 
         {/* Header */}
-        <div style={{ padding: "18px 22px 14px", borderBottom: `1px solid ${P.border}`, flexShrink: 0 }}>
+        <div style={{ padding: "18px 22px 14px", borderBottom: `1px solid ${T.border}`, flexShrink: 0 }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
             <div style={{ display: "flex", gap: 6 }}>
-              {lead.hot && <span style={{ fontSize: 9, fontWeight: 700, color: P.accent, background: `${P.accent}12`, border: `1px solid ${P.accentB}`, padding: "2px 8px", borderRadius: 99 }}>HOT</span>}
-              {lead.daysInactive >= 7 && <span style={{ fontSize: 9, fontWeight: 600, color: P.txt3, background: P.glass, border: `1px solid ${P.border}`, padding: "2px 8px", borderRadius: 99 }}>{lead.daysInactive}d inactivo</span>}
+              {lead.hot && <span style={{ fontSize: 9, fontWeight: 700, color: T.accent, background: `${T.accent}12`, border: `1px solid ${T.accentB}`, padding: "2px 8px", borderRadius: 99 }}>HOT</span>}
+              {lead.daysInactive >= 7 && <span style={{ fontSize: 9, fontWeight: 600, color: T.txt3, background: T.glass, border: `1px solid ${T.border}`, padding: "2px 8px", borderRadius: 99 }}>{lead.daysInactive}d inactivo</span>}
             </div>
             <div style={{ display: "flex", gap: 6 }}>
-              {!editing && <button onClick={startEditing} style={{ display: "flex", alignItems: "center", gap: 5, padding: "6px 12px", borderRadius: 8, border: `1px solid ${P.border}`, background: "transparent", color: P.txt3, fontSize: 11, fontWeight: 600, cursor: "pointer", transition: "all 0.18s" }} onMouseEnter={e => { e.currentTarget.style.background = P.glassH; e.currentTarget.style.color = P.txt; e.currentTarget.style.borderColor = P.borderH; }} onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = P.txt3; e.currentTarget.style.borderColor = P.border; }}>Editar</button>}
-              <button onClick={onClose} style={{ width: 30, height: 30, borderRadius: 8, border: `1px solid ${P.border}`, background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.18s" }} onMouseEnter={e => e.currentTarget.style.background = P.glassH} onMouseLeave={e => e.currentTarget.style.background = "transparent"}><X size={13} color={P.txt3} /></button>
+              {!editing && <button onClick={startEditing} style={{ display: "flex", alignItems: "center", gap: 5, padding: "6px 12px", borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", color: T.txt3, fontSize: 11, fontWeight: 600, cursor: "pointer", transition: "all 0.18s" }} onMouseEnter={e => { e.currentTarget.style.background = T.glassH; e.currentTarget.style.color = T.txt; e.currentTarget.style.borderColor = T.borderH; }} onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = T.txt3; e.currentTarget.style.borderColor = T.border; }}>Editar</button>}
+              <button onClick={onClose} style={{ width: 30, height: 30, borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.18s" }} onMouseEnter={e => e.currentTarget.style.background = T.glassH} onMouseLeave={e => e.currentTarget.style.background = "transparent"}><X size={13} color={T.txt3} /></button>
             </div>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 14 }}>
             <div style={{ position: "relative", flexShrink: 0 }}>
               <svg width={54} height={54} style={{ position: "absolute", top: -3, left: -3 }}>
-                <circle cx={27} cy={27} r={24} fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth={2.5} />
-                <circle cx={27} cy={27} r={24} fill="none" stroke={P.accent} strokeWidth={2.5} strokeDasharray={`${2*Math.PI*24}`} strokeDashoffset={`${2*Math.PI*24*(1-sc/100)}`} strokeLinecap="round" style={{ transform: "rotate(-90deg)", transformOrigin: "27px 27px" }} />
+                <circle cx={27} cy={27} r={24} fill="none" stroke={isLight ? "rgba(15,23,42,0.10)" : "rgba(255,255,255,0.08)"} strokeWidth={2.5} />
+                <circle cx={27} cy={27} r={24} fill="none" stroke={T.accent} strokeWidth={2.5} strokeDasharray={`${2*Math.PI*24}`} strokeDashoffset={`${2*Math.PI*24*(1-sc/100)}`} strokeLinecap="round" style={{ transform: "rotate(-90deg)", transformOrigin: "27px 27px" }} />
               </svg>
-              <div style={{ width: 48, height: 48, borderRadius: 13, background: "rgba(255,255,255,0.07)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, fontWeight: 800, color: P.txt2, fontFamily: fontDisp }}>{lead.n.charAt(0)}</div>
+              <div style={{ width: 48, height: 48, borderRadius: 13, background: isLight ? "rgba(15,23,42,0.05)" : "rgba(255,255,255,0.07)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, fontWeight: 800, color: T.txt2, fontFamily: fontDisp }}>{lead.n.charAt(0)}</div>
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
-              {editing ? <input value={f("n")} onChange={e => sf("n")(e.target.value)} style={{ width: "100%", fontSize: 17, fontWeight: 700, fontFamily: fontDisp, background: "transparent", border: "none", borderBottom: `1px solid ${P.borderH}`, color: "#FFF", outline: "none", paddingBottom: 3, marginBottom: 6, boxSizing: "border-box" }} />
-                : <p style={{ fontSize: 17, fontWeight: 700, color: "#FFF", fontFamily: fontDisp, letterSpacing: "-0.025em", marginBottom: 4, lineHeight: 1.1 }}>{lead.n}</p>}
-              <p style={{ fontSize: 11, color: P.txt3, marginBottom: 6 }}>{lead.tag}</p>
+              {editing ? <input value={f("n")} onChange={e => sf("n")(e.target.value)} style={{ width: "100%", fontSize: 17, fontWeight: 700, fontFamily: fontDisp, background: "transparent", border: "none", borderBottom: `1px solid ${T.borderH}`, color: titleC, outline: "none", paddingBottom: 3, marginBottom: 6, boxSizing: "border-box" }} />
+                : <p style={{ fontSize: 17, fontWeight: 700, color: titleC, fontFamily: fontDisp, letterSpacing: "-0.025em", marginBottom: 4, lineHeight: 1.1 }}>
+                    <InlineEdit value={lead.n} onSave={v => onUpdate?.({...lead, n: v})} T={T} isLight={isLight} placeholder="Nombre" editStyle={{ fontSize: 17, fontWeight: 700 }} />
+                  </p>}
+              <p style={{ fontSize: 11, color: T.txt3, marginBottom: 6 }}>
+                {editing ? lead.tag : <InlineEdit value={lead.tag} onSave={v => onUpdate?.({...lead, tag: v})} T={T} isLight={isLight} placeholder="Etiqueta / segmento" emptyText="Sin etiqueta" />}
+              </p>
               <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                {editing ? <select value={f("st")} onChange={e => sf("st")(e.target.value)} style={{ padding: "3px 8px", borderRadius: 99, background: `${stgC[f("st")]||P.txt3}18`, border: `1px solid ${stgC[f("st")]||P.txt3}30`, color: stgC[f("st")]||P.txt3, fontSize: 10, fontWeight: 700, cursor: "pointer", outline: "none" }}>{STAGES.map(s => <option key={s} value={s} style={{ background: "#0C1219", color: "#fff" }}>{s}</option>)}</select>
-                  : <Pill color={stageColor} s>{lead.st}</Pill>}
-                <span style={{ fontSize: 10, color: P.txt3 }}>·</span>
-                {editing ? <input value={f("budget")} onChange={e => sf("budget")(e.target.value)} style={{ fontSize: 12, fontWeight: 700, fontFamily: fontDisp, background: "transparent", border: "none", borderBottom: `1px solid ${P.border}`, color: "#FFF", outline: "none", width: 90 }} />
-                  : <span style={{ fontSize: 12, fontWeight: 700, color: "#FFF", fontFamily: fontDisp }}>{lead.budget}</span>}
+                {editing ? <select value={f("st")} onChange={e => sf("st")(e.target.value)} style={{ padding: "3px 8px", borderRadius: 99, background: `${stgC[f("st")]||T.txt3}18`, border: `1px solid ${stgC[f("st")]||T.txt3}30`, color: isLight ? `color-mix(in srgb, ${stgC[f("st")]||T.txt3} 60%, #0B1220 40%)` : (stgC[f("st")]||T.txt3), fontSize: 10, fontWeight: 700, cursor: "pointer", outline: "none" }}>{STAGES.map(s => <option key={s} value={s} style={{ background: isLight ? "#FFFFFF" : "#0C1219", color: T.txt }}>{s}</option>)}</select>
+                  : <Pill color={stageColor} s isLight={isLight}>{lead.st}</Pill>}
+                <span style={{ fontSize: 10, color: T.txt3 }}>·</span>
+                {editing ? (
+                  (() => {
+                    const prev = parseBudget(f("budget"));
+                    return (
+                      <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+                        <input value={f("budget")} onChange={e => sf("budget")(e.target.value)} placeholder="300k"
+                          title="Acepta 300k, 1.5M, 2 mdd, $500,000"
+                          style={{ fontSize: 12, fontWeight: 700, fontFamily: fontDisp, background: "transparent", border: "none", borderBottom: `1px solid ${T.border}`, color: titleC, outline: "none", width: 90 }} />
+                        {prev > 0 && <span style={{ fontSize: 10, color: T.accent, fontFamily: fontDisp, fontWeight: 700 }}>= {formatBudget(prev)}</span>}
+                      </span>
+                    );
+                  })()
+                ) : <span style={{ fontSize: 12, fontWeight: 700, color: titleC, fontFamily: fontDisp }}>
+                    <InlineEdit
+                      value={lead.budget}
+                      onSave={v => { const parsed = parseBudget(v); onUpdate?.({...lead, budget: parsed ? formatBudget(parsed) : v, presupuesto: parsed || lead.presupuesto || 0 }); }}
+                      T={T} isLight={isLight} placeholder="300k · 1.5M" emptyText="Sin presupuesto"
+                      editStyle={{ fontSize: 12, fontWeight: 700, width: 110 }}
+                    />
+                  </span>}
               </div>
             </div>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
-            <div style={{ flex: 1, height: 4, borderRadius: 2, background: "rgba(255,255,255,0.06)" }}><div style={{ width: `${sc}%`, height: 4, borderRadius: 2, background: P.accent }} /></div>
-            <span style={{ fontSize: 12, fontWeight: 700, color: P.txt2, fontFamily: fontDisp, minWidth: 50, textAlign: "right" }}>Score {sc}</span>
+            <div style={{ flex: 1, height: 4, borderRadius: 2, background: isLight ? "rgba(15,23,42,0.08)" : "rgba(255,255,255,0.06)" }}><div style={{ width: `${sc}%`, height: 4, borderRadius: 2, background: T.accent }} /></div>
+            <span style={{ fontSize: 12, fontWeight: 700, color: T.txt2, fontFamily: fontDisp, minWidth: 50, textAlign: "right" }}>Score {sc}</span>
           </div>
           <div style={{ display: "flex", gap: 7 }}>
-            <a href={`tel:${editing ? f("phone") : lead.phone}`} style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "8px 12px", borderRadius: 9, background: P.glass, border: `1px solid ${P.border}`, color: P.txt2, fontSize: 11, fontWeight: 600, textDecoration: "none", transition: "all 0.18s" }} onMouseEnter={e => { e.currentTarget.style.background = P.glassH; e.currentTarget.style.color = P.txt; }} onMouseLeave={e => { e.currentTarget.style.background = P.glass; e.currentTarget.style.color = P.txt2; }}><Phone size={12} /> Llamar</a>
+            <a href={`tel:${editing ? f("phone") : lead.phone}`} style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "8px 12px", borderRadius: 9, background: T.glass, border: `1px solid ${T.border}`, color: T.txt2, fontSize: 11, fontWeight: 600, textDecoration: "none", transition: "all 0.18s" }} onMouseEnter={e => { e.currentTarget.style.background = T.glassH; e.currentTarget.style.color = T.txt; }} onMouseLeave={e => { e.currentTarget.style.background = T.glass; e.currentTarget.style.color = T.txt2; }}><Phone size={12} /> Llamar</a>
             <a href={`https://wa.me/${(editing?f("phone"):lead.phone)?.replace(/[^0-9]/g,"")}`} target="_blank" rel="noreferrer" style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "8px 12px", borderRadius: 9, background: "rgba(37,211,102,0.07)", border: "1px solid rgba(37,211,102,0.18)", color: "rgba(37,211,102,0.85)", fontSize: 11, fontWeight: 600, textDecoration: "none", transition: "all 0.18s" }} onMouseEnter={e => { e.currentTarget.style.background = "rgba(37,211,102,0.13)"; e.currentTarget.style.color = "rgba(37,211,102,1)"; }} onMouseLeave={e => { e.currentTarget.style.background = "rgba(37,211,102,0.07)"; e.currentTarget.style.color = "rgba(37,211,102,0.85)"; }}><MessageCircle size={12} /> WhatsApp</a>
           </div>
         </div>
 
-        {/* Tabs */}
-        <div style={{ display: "flex", padding: "0 22px", borderBottom: `1px solid ${P.border}`, flexShrink: 0 }}>
-          {[["perfil","Perfil"],["pipeline","Pipeline"],["notas","Notas"]].map(([id,label]) => (
-            <button key={id} onClick={() => id==="notas" ? onOpenNotes?.() : setActiveTab(id)} style={{ padding: "11px 0", marginRight: 20, background: "none", border: "none", cursor: "pointer", fontSize: 12, fontWeight: 600, fontFamily: font, color: activeTab===id&&id!=="notas"?P.accent:P.txt3, borderBottom: activeTab===id&&id!=="notas"?`2px solid ${P.accent}`:"2px solid transparent", transition: "all 0.18s", marginBottom: -1 }} onMouseEnter={e=>{if(activeTab!==id||id==="notas")e.currentTarget.style.color=P.txt2;}} onMouseLeave={e=>{if(activeTab!==id||id==="notas")e.currentTarget.style.color=P.txt3;}}>{label}</button>
+        {/* Sub-tabs del perfil: Datos · Pipeline */}
+        <div style={{ display: "flex", padding: "0 22px", borderBottom: `1px solid ${T.border}`, flexShrink: 0 }}>
+          {[["perfil","Datos"],["pipeline","Pipeline"]].map(([id,label]) => (
+            <button key={id} onClick={() => setActiveTab(id)} style={{ padding: "11px 0", marginRight: 22, background: "none", border: "none", cursor: "pointer", fontSize: 12, fontWeight: 600, fontFamily: font, color: activeTab===id?(isLight ? `color-mix(in srgb, ${T.accent} 60%, #0B1220 40%)` : T.accent):T.txt3, borderBottom: activeTab===id?`2px solid ${T.accent}`:"2px solid transparent", transition: "all 0.18s", marginBottom: -1, letterSpacing: "0.01em" }} onMouseEnter={e=>{if(activeTab!==id)e.currentTarget.style.color=T.txt2;}} onMouseLeave={e=>{if(activeTab!==id)e.currentTarget.style.color=T.txt3;}}>{label}</button>
           ))}
         </div>
 
-        {/* Content */}
-        <div style={{ flex: 1, overflowY: "auto", padding: "18px 22px", display: "flex", flexDirection: "column", gap: 12 }}>
+        {/* Content — extra padding-bottom para no chocar con el Dynamic Island flotante */}
+        <div style={{ flex: 1, overflowY: "auto", overscrollBehavior: "contain", WebkitOverflowScrolling: "touch", scrollBehavior: "smooth", padding: "20px 22px 120px", display: "flex", flexDirection: "column", gap: 14 }}>
           {activeTab==="perfil" && !editing && <>
-            <div style={{ borderRadius: 12, background: `${P.accent}08`, border: `1px solid ${P.accentB}`, overflow: "hidden" }}>
-              <div style={{ padding: "8px 14px", borderBottom: `1px solid ${P.accentB}`, display: "flex", alignItems: "center", gap: 6 }}>
-                <p style={{ fontSize: 10, fontWeight: 700, color: P.accent, letterSpacing: "0.07em", textTransform: "uppercase", flex: 1 }}>Próxima acción</p>
-                <span style={{ fontSize: 10, fontWeight: 600, color: P.accent, background: `${P.accent}18`, padding: "2px 8px", borderRadius: 99 }}>{lead.nextActionDate}</span>
-              </div>
-              <div style={{ padding: "11px 14px" }}><p style={{ fontSize: 13, color: "#FFF", lineHeight: 1.55, fontFamily: fontDisp, fontWeight: 500 }}>{lead.nextAction}</p></div>
+            {/* ── Próxima acción — hero unificado (mismo componente en los 3 drawers).
+                Wrapper con flexShrink: 0 para garantizar que en un contenedor
+                flex-column el hero nunca se comprima/recorte. ── */}
+            <div style={{ flexShrink: 0 }}>
+              <NextActionHero lead={lead} T={T} onUpdate={onUpdate} />
             </div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
-              {[{l:"Teléfono",v:lead.phone,icon:Phone},{l:"Ingresó",v:lead.fechaIngreso,icon:CalendarDays},{l:"Campaña",v:lead.campana,icon:Signal},{l:"Proyecto",v:lead.p?.split("·")[0]?.trim(),icon:Building2},{l:"Asesor",v:lead.asesor,icon:User},{l:"Inactividad",v:`${lead.daysInactive} días`,icon:Clock}].map(x=>(
-                <div key={x.l} style={{ padding: "9px 11px", borderRadius: 10, background: P.glass, border: `1px solid ${P.border}`, display: "flex", gap: 8, alignItems: "flex-start" }}>
-                  <x.icon size={11} color={P.txt3} style={{ marginTop: 2, flexShrink: 0 }} />
-                  <div style={{ minWidth: 0 }}>
-                    <p style={{ fontSize: 9, color: P.txt3, fontWeight: 600, letterSpacing: "0.05em", textTransform: "uppercase", marginBottom: 2 }}>{x.l}</p>
-                    <p style={{ fontSize: 11, color: P.txt, fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{x.v}</p>
+
+            {/* ── Acciones rápidas — contador de seguimientos + etapa editable.
+                El asesor puede registrar cada recontacto con el cliente en un clic
+                y cambiar el estatus sin abrir el modal de edición completa. ── */}
+            <div style={{ flexShrink: 0, display: "flex", flexWrap: "wrap", gap: 7, alignItems: "center" }}>
+              <FollowUpBadge lead={lead} onUpdate={onUpdate} T={T} />
+              <StageBadge lead={lead} onUpdate={onUpdate} T={T} />
+            </div>
+
+            {/* ── Datos del cliente — 2 columnas, todos editables inline ──
+                Click en el valor → input. Enter guarda, Escape cancela.
+                "Inactividad" es derivado y no se edita. */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 7 }}>
+              {[
+                { l:"Teléfono",    k:"phone",        v:lead.phone,                    icon:Phone,        ph:"+1 817 682..." },
+                { l:"Ingresó",     k:"fechaIngreso", v:lead.fechaIngreso,             icon:CalendarDays, ph:"Hoy, 10 Oct..." },
+                { l:"Campaña",     k:"campana",      v:lead.campana,                  icon:Signal,       ph:"Referido, Google..." },
+                { l:"Proyecto",    k:"p",            v:lead.p,                        icon:Building2,    ph:"Gobernador 28..." },
+                { l:"Asesor",      k:"asesor",       v:lead.asesor,                   icon:User,         ph:"Nombre asesor" },
+                { l:"Inactividad", k:null,           v:`${lead.daysInactive} días`,   icon:Clock,        ph:"" },
+              ].map(x => (
+                <div key={x.l} style={{ padding: "10px 12px", borderRadius: 11, background: T.glass, border: `1px solid ${T.border}`, display: "flex", gap: 9, alignItems: "flex-start", minHeight: 48 }}>
+                  <x.icon size={11} color={T.txt3} style={{ marginTop: 3, flexShrink: 0 }} />
+                  <div style={{ minWidth: 0, flex: 1 }}>
+                    <p style={{ fontSize: 9, color: T.txt3, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 3, fontFamily: fontDisp }}>{x.l}</p>
+                    <div style={{ fontSize: 11.5, color: T.txt, fontWeight: 500, wordBreak: "break-word", lineHeight: 1.35 }}>
+                      {x.k
+                        ? <InlineEdit value={x.v} onSave={v => onUpdate?.({...lead, [x.k]: v})} T={T} isLight={isLight} placeholder={x.ph} readStyle={{ width: "100%" }} editStyle={{ fontSize: 11.5 }} />
+                        : (x.v || "—")}
+                    </div>
                   </div>
                 </div>
               ))}
             </div>
-            <div><p style={{ fontSize: 10, fontWeight: 700, color: P.txt3, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 7 }}>Perfil del cliente</p><p style={{ fontSize: 12.5, color: P.txt2, lineHeight: 1.7 }}>{lead.bio}</p></div>
-            {lead.risk && <div style={{ padding: "11px 13px", borderRadius: 11, background: "rgba(255,255,255,0.03)", border: `1px solid ${P.border}`, display: "flex", gap: 8 }}><AlertCircle size={13} color={P.txt3} style={{ marginTop: 1, flexShrink: 0 }} /><div><p style={{ fontSize: 9, fontWeight: 700, color: P.txt3, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 3 }}>Riesgo identificado</p><p style={{ fontSize: 12, color: P.txt2, lineHeight: 1.55 }}>{lead.risk}</p></div></div>}
-            <div style={{ display: "flex", gap: 7, alignItems: "center", padding: "8px 11px", borderRadius: 10, background: P.glass, border: `1px solid ${P.border}` }}><Activity size={11} color={P.txt3} /><div><p style={{ fontSize: 9, color: P.txt3, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 1 }}>Última actividad</p><p style={{ fontSize: 11.5, color: P.txt2 }}>{lead.lastActivity}</p></div></div>
+
+            {/* ── Perfil del cliente (bio) — siempre visible y editable inline.
+                Click en el texto → textarea. Si no hay bio, prompt para agregar. */}
+            {(() => {
+              const BIO_THRESHOLD = 220;
+              const hasBio = !!lead.bio;
+              const isBioLong = hasBio && lead.bio.length > BIO_THRESHOLD;
+              const showBio = !isBioLong || expandBio;
+              const accentC = isLight ? `color-mix(in srgb, ${T.accent} 58%, #0B1220 42%)` : T.accent;
+              return (
+                <div style={{ padding: "4px 2px" }}>
+                  <p style={{ fontSize: 10, fontWeight: 800, color: T.txt3, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 8, fontFamily: fontDisp }}>Perfil del cliente</p>
+                  <div style={{
+                    fontSize: 12.5, color: T.txt2, lineHeight: 1.7, margin: 0,
+                    ...(showBio ? {} : { display: "-webkit-box", WebkitLineClamp: 4, WebkitBoxOrient: "vertical", overflow: "hidden" }),
+                  }}>
+                    <InlineEdit
+                      value={lead.bio}
+                      onSave={v => onUpdate?.({...lead, bio: v})}
+                      T={T} isLight={isLight}
+                      multiline rows={4}
+                      placeholder="Describe al cliente: necesidad, contexto, objeciones..."
+                      emptyText="+ Agregar perfil del cliente"
+                      readStyle={{ fontSize: 12.5, lineHeight: 1.7, display: "block" }}
+                      editStyle={{ fontSize: 12.5 }}
+                    />
+                  </div>
+                  {isBioLong && (
+                    <button
+                      onClick={() => setExpandBio(v => !v)}
+                      style={{
+                        marginTop: 8, padding: "4px 10px", borderRadius: 99,
+                        background: "transparent", border: `1px solid ${T.border}`,
+                        color: accentC, fontSize: 10.5, fontWeight: 700,
+                        fontFamily: fontDisp, letterSpacing: "0.02em",
+                        cursor: "pointer", transition: "all 0.16s",
+                        display: "inline-flex", alignItems: "center", gap: 4,
+                      }}
+                      onMouseEnter={e => { e.currentTarget.style.background = T.glassH; e.currentTarget.style.borderColor = T.borderH; }}
+                      onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = T.border; }}
+                    >
+                      {expandBio ? "Ver menos" : "Ver más"}
+                      <ChevronDown size={10} strokeWidth={2.5} style={{ transform: expandBio ? "rotate(180deg)" : "none", transition: "transform 0.2s" }} />
+                    </button>
+                  )}
+                </div>
+              );
+            })()}
+
+            {/* ── Riesgo identificado — editable inline, se oculta solo si no hay riesgo
+                y el asesor no lo ha querido agregar. Mostramos siempre en modo lectura
+                para que pueda editarse desde el drawer. ── */}
+            <div style={{
+              padding: "12px 14px", borderRadius: 11,
+              background: isLight ? `${T.amber}12` : `${T.amber}0A`,
+              border: `1px solid ${T.amber}${isLight ? "3A" : "26"}`,
+              display: "flex", gap: 10, alignItems: "flex-start",
+            }}>
+              <AlertCircle size={13} color={isLight ? `color-mix(in srgb, ${T.amber} 55%, #0B1220 45%)` : T.amber} strokeWidth={2.2} style={{ marginTop: 1, flexShrink: 0 }} />
+              <div style={{ minWidth: 0, flex: 1 }}>
+                <p style={{ fontSize: 9.5, fontWeight: 800, color: isLight ? `color-mix(in srgb, ${T.amber} 55%, #0B1220 45%)` : T.amber, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 4, fontFamily: fontDisp }}>Riesgo identificado</p>
+                <div style={{ fontSize: 12, color: T.txt2, lineHeight: 1.6, margin: 0, wordBreak: "break-word" }}>
+                  <InlineEdit
+                    value={lead.risk}
+                    onSave={v => onUpdate?.({...lead, risk: v})}
+                    T={T} isLight={isLight}
+                    multiline rows={2}
+                    placeholder="Describe el riesgo: competencia, presupuesto, timing..."
+                    emptyText="+ Registrar riesgo u objeción"
+                    readStyle={{ fontSize: 12, lineHeight: 1.6, display: "block", width: "100%" }}
+                    editStyle={{ fontSize: 12 }}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* ── Última actividad ── */}
+            <div style={{ display: "flex", gap: 10, alignItems: "center", padding: "9px 12px", borderRadius: 11, background: T.glass, border: `1px solid ${T.border}` }}>
+              <Activity size={12} color={T.txt3} style={{ flexShrink: 0 }} />
+              <div style={{ minWidth: 0, flex: 1 }}>
+                <p style={{ fontSize: 9, color: T.txt3, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 2, fontFamily: fontDisp }}>Última actividad</p>
+                <div style={{ fontSize: 11.5, color: T.txt2, wordBreak: "break-word", lineHeight: 1.4, margin: 0 }}>
+                  <InlineEdit
+                    value={lead.lastActivity}
+                    onSave={v => onUpdate?.({...lead, lastActivity: v})}
+                    T={T} isLight={isLight}
+                    placeholder="Llamada, WhatsApp, visita..."
+                    emptyText="+ Registrar última actividad"
+                    readStyle={{ fontSize: 11.5, width: "100%" }}
+                    editStyle={{ fontSize: 11.5 }}
+                  />
+                </div>
+              </div>
+            </div>
           </>}
 
           {activeTab==="perfil" && editing && form && (
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
               {inp("Nombre completo","n","Nombre del cliente",true)}
               {inp("Teléfono","phone","+1 817 682...")}
-              {inp("Presupuesto","budget","$500K USD")}
+              {inp("Presupuesto","budget","300k · 1.5M · 2 mdd")}
               {inp("Asesor","asesor","Nombre asesor")}
               {inp("Campaña / Fuente","campana","Referido, Google...")}
               <div style={{ gridColumn: "1 / -1" }}>
-                <p style={{ fontSize: 9, fontWeight: 700, color: P.txt3, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 4 }}>Etapa del pipeline</p>
-                <select value={f("st")} onChange={e => sf("st")(e.target.value)} style={{ width: "100%", padding: "8px 10px", borderRadius: 9, background: "rgba(255,255,255,0.05)", border: `1px solid ${P.borderH}`, color: P.txt, fontSize: 12, outline: "none", fontFamily: font, cursor: "pointer" }}>{STAGES.map(s=><option key={s} value={s} style={{ background: "#0C1219" }}>{s}</option>)}</select>
+                <p style={{ fontSize: 9, fontWeight: 700, color: T.txt3, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 4 }}>Etapa del pipeline</p>
+                <select value={f("st")} onChange={e => sf("st")(e.target.value)} style={{ width: "100%", padding: "8px 10px", borderRadius: 9, background: inputBg, border: `1px solid ${T.borderH}`, color: T.txt, fontSize: 12, outline: "none", fontFamily: font, cursor: "pointer" }}>{STAGES.map(s=><option key={s} value={s} style={{ background: isLight ? "#FFFFFF" : "#0C1219", color: T.txt }}>{s}</option>)}</select>
               </div>
               {inp("Proyecto de interés","p","Gobernador 28, Portofino...",true)}
               {textarea("Próxima acción","nextAction","Descripción de la próxima acción...")}
@@ -1348,32 +3240,34 @@ const LeadPanel = ({ lead, onClose, oc, onOpenNotes, onUpdate }) => {
 
           {activeTab==="pipeline" && <>
             <div>
-              <p style={{ fontSize: 10, fontWeight: 700, color: P.txt3, letterSpacing: "0.07em", textTransform: "uppercase", marginBottom: 10 }}>Progreso en el pipeline</p>
+              <p style={{ fontSize: 10, fontWeight: 700, color: T.txt3, letterSpacing: "0.07em", textTransform: "uppercase", marginBottom: 10 }}>Progreso en el pipeline</p>
               <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                {STAGES.map((stage,idx) => { const isActive=stage===lead.st; const isPast=idx<stageIdx; const c=stgC[stage]||P.txt3; return (
-                  <div key={stage} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 10px", borderRadius: 9, background: isActive?`${c}10`:"transparent", border: `1px solid ${isActive?`${c}28`:"transparent"}`, transition: "all 0.2s" }}>
-                    <div style={{ width: 20, height: 20, borderRadius: "50%", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", background: isActive?c:isPast?`${c}28`:"rgba(255,255,255,0.04)", border: `1px solid ${isActive?c:isPast?`${c}45`:"rgba(255,255,255,0.08)"}` }}>
-                      {isPast&&<Check size={10} color={c} />}{isActive&&<div style={{ width: 6, height: 6, borderRadius: "50%", background: "#000" }} />}
+                {STAGES.map((stage,idx) => { const isActive=stage===lead.st; const isPast=idx<stageIdx; const c=stgC[stage]||T.txt3;
+                  const activeTxtC = isLight ? `color-mix(in srgb, ${c} 62%, #0B1220 38%)` : "#FFFFFF";
+                  return (
+                  <div key={stage} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 10px", borderRadius: 9, background: isActive?`${c}${isLight ? "18" : "10"}`:"transparent", border: `1px solid ${isActive?`${c}${isLight ? "44" : "28"}`:"transparent"}`, transition: "all 0.2s" }}>
+                    <div style={{ width: 20, height: 20, borderRadius: "50%", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", background: isActive?c:isPast?`${c}28`:(isLight ? "rgba(15,23,42,0.04)" : "rgba(255,255,255,0.04)"), border: `1px solid ${isActive?c:isPast?`${c}45`:(isLight ? "rgba(15,23,42,0.08)" : "rgba(255,255,255,0.08)")}` }}>
+                      {isPast&&<Check size={10} color={c} />}{isActive&&<div style={{ width: 6, height: 6, borderRadius: "50%", background: isLight ? "#FFFFFF" : "#000" }} />}
                     </div>
-                    <span style={{ fontSize: 11.5, fontWeight: isActive?700:500, color: isActive?"#FFF":isPast?P.txt2:P.txt3 }}>{stage}</span>
-                    {isActive&&<span style={{ marginLeft: "auto", fontSize: 9, fontWeight: 700, color: c, background: `${c}16`, padding: "2px 8px", borderRadius: 99 }}>ACTUAL</span>}
+                    <span style={{ fontSize: 11.5, fontWeight: isActive?700:500, fontFamily: font, color: isActive?activeTxtC:isPast?T.txt2:T.txt3 }}>{stage}</span>
+                    {isActive&&<span style={{ marginLeft: "auto", fontSize: 9, fontWeight: 700, color: activeTxtC, background: `${c}${isLight ? "22" : "16"}`, padding: "2px 8px", borderRadius: 99, letterSpacing: "0.05em", fontFamily: fontDisp }}>ACTUAL</span>}
                   </div>
                 ); })}
               </div>
             </div>
-            <div style={{ padding: "14px 16px", borderRadius: 12, background: P.glass, border: `1px solid ${P.border}` }}>
-              <p style={{ fontSize: 10, fontWeight: 700, color: P.txt3, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 10 }}>Inversión</p>
-              <p style={{ fontSize: 28, fontWeight: 300, color: "#FFF", fontFamily: fontDisp, letterSpacing: "-0.04em", lineHeight: 1, marginBottom: 6 }}>{lead.budget}</p>
-              <p style={{ fontSize: 11, color: P.txt2 }}>{lead.p}</p>
+            <div style={{ padding: "14px 16px", borderRadius: 12, background: T.glass, border: `1px solid ${T.border}` }}>
+              <p style={{ fontSize: 10, fontWeight: 700, color: T.txt3, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 10 }}>Inversión</p>
+              <p style={{ fontSize: 28, fontWeight: 300, color: titleC, fontFamily: fontDisp, letterSpacing: "-0.04em", lineHeight: 1, marginBottom: 6 }}>{lead.budget}</p>
+              <p style={{ fontSize: 11, color: T.txt2 }}>{lead.p}</p>
             </div>
             <div>
-              <p style={{ fontSize: 10, fontWeight: 700, color: P.txt3, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 8 }}>Mover de etapa</p>
+              <p style={{ fontSize: 10, fontWeight: 700, color: T.txt3, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 8 }}>Mover de etapa</p>
               <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
-                {STAGES.filter(s=>s!==lead.st).map(stage => { const c=stgC[stage]||P.txt3; const isAhead=STAGES.indexOf(stage)>stageIdx; return (
-                  <button key={stage} onClick={()=>onUpdate?.({...lead,st:stage})} style={{ display: "flex", alignItems: "center", gap: 8, padding: "9px 12px", borderRadius: 9, background: "transparent", border: `1px solid ${P.border}`, cursor: "pointer", transition: "all 0.16s", textAlign: "left" }} onMouseEnter={e=>{e.currentTarget.style.background=`${c}0C`;e.currentTarget.style.borderColor=`${c}28`;}} onMouseLeave={e=>{e.currentTarget.style.background="transparent";e.currentTarget.style.borderColor=P.border;}}>
+                {STAGES.filter(s=>s!==lead.st).map(stage => { const c=stgC[stage]||T.txt3; const isAhead=STAGES.indexOf(stage)>stageIdx; return (
+                  <button key={stage} onClick={()=>onUpdate?.({...lead,st:stage})} style={{ display: "flex", alignItems: "center", gap: 8, padding: "9px 12px", borderRadius: 9, background: "transparent", border: `1px solid ${T.border}`, cursor: "pointer", transition: "all 0.16s", textAlign: "left" }} onMouseEnter={e=>{e.currentTarget.style.background=`${c}0C`;e.currentTarget.style.borderColor=`${c}28`;}} onMouseLeave={e=>{e.currentTarget.style.background="transparent";e.currentTarget.style.borderColor=T.border;}}>
                     <div style={{ width: 8, height: 8, borderRadius: "50%", background: c, flexShrink: 0 }} />
-                    <span style={{ fontSize: 12, fontWeight: 500, color: P.txt2, flex: 1 }}>{stage}</span>
-                    <span style={{ fontSize: 9, color: P.txt3 }}>{isAhead?"avanzar →":"← retroceder"}</span>
+                    <span style={{ fontSize: 12, fontWeight: 500, color: T.txt2, flex: 1 }}>{stage}</span>
+                    <span style={{ fontSize: 9, color: T.txt3 }}>{isAhead?"avanzar →":"← retroceder"}</span>
                   </button>
                 ); })}
               </div>
@@ -1381,17 +3275,19 @@ const LeadPanel = ({ lead, onClose, oc, onOpenNotes, onUpdate }) => {
           </>}
         </div>
 
-        {/* Footer */}
-        <div style={{ padding: "13px 22px", borderTop: `1px solid ${P.border}`, flexShrink: 0 }}>
-          {editing ? (
+        {/* Footer — solo aparece cuando se edita (Cancelar / Guardar). En modo lectura,
+           el switcher inferior (Dynamic Island) ocupa el lugar del CTA. */}
+        {editing && (
+          <div style={{ padding: "13px 22px", borderTop: `1px solid ${T.border}`, flexShrink: 0, background: T === P ? "#07080F" : "#FFFFFF" }}>
             <div style={{ display: "flex", gap: 8 }}>
-              <button onClick={cancelEditing} style={{ flex: 1, padding: "11px 0", borderRadius: 11, background: "transparent", border: `1px solid ${P.border}`, color: P.txt3, fontSize: 13, fontWeight: 600, cursor: "pointer", transition: "all 0.18s" }} onMouseEnter={e=>{e.currentTarget.style.background=P.glassH;e.currentTarget.style.color=P.txt2;}} onMouseLeave={e=>{e.currentTarget.style.background="transparent";e.currentTarget.style.color=P.txt3;}}>Cancelar</button>
-              <button onClick={saveEditing} disabled={!form?.n?.trim()} style={{ flex: 2, padding: "11px 0", borderRadius: 11, background: form?.n?.trim()?`${P.accent}18`:"transparent", border: `1px solid ${form?.n?.trim()?P.accentB:P.border}`, color: form?.n?.trim()?P.accent:P.txt3, fontSize: 13, fontWeight: 700, cursor: form?.n?.trim()?"pointer":"not-allowed", display: "flex", alignItems: "center", justifyContent: "center", gap: 7, transition: "all 0.18s" }}>Guardar cambios</button>
+              <button onClick={cancelEditing} style={{ flex: 1, padding: "11px 0", borderRadius: 11, background: "transparent", border: `1px solid ${T.border}`, color: T.txt3, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: font, transition: "all 0.18s" }} onMouseEnter={e=>{e.currentTarget.style.background=T.glassH;e.currentTarget.style.color=T.txt2;}} onMouseLeave={e=>{e.currentTarget.style.background="transparent";e.currentTarget.style.color=T.txt3;}}>Cancelar</button>
+              <button onClick={saveEditing} disabled={!form?.n?.trim()} style={{ flex: 2, padding: "11px 0", borderRadius: 11, background: form?.n?.trim()?`${T.accent}18`:"transparent", border: `1px solid ${form?.n?.trim()?T.accentB:T.border}`, color: form?.n?.trim()?(isLight ? `color-mix(in srgb, ${T.accent} 60%, #0B1220 40%)` : T.accent):T.txt3, fontSize: 13, fontWeight: 700, fontFamily: fontDisp, cursor: form?.n?.trim()?"pointer":"not-allowed", display: "flex", alignItems: "center", justifyContent: "center", gap: 7, transition: "all 0.18s" }}>Guardar cambios</button>
             </div>
-          ) : (
-            <button onClick={()=>{oc(`__crm__ ${lead.n.toLowerCase()}`, lead);onClose();}} style={{ width: "100%", padding: "11px 0", borderRadius: 11, background: `${P.accent}14`, border: `1px solid ${P.accentB}`, color: P.accent, fontSize: 13, fontWeight: 700, fontFamily: fontDisp, cursor: "pointer", transition: "background 0.18s" }} onMouseEnter={e=>e.currentTarget.style.background=`${P.accent}22`} onMouseLeave={e=>e.currentTarget.style.background=`${P.accent}14`}>Analizar con IA</button>
-          )}
-        </div>
+          </div>
+        )}
+
+        {/* Dynamic Island — switcher entre Análisis IA · Perfil · Expediente */}
+        {!editing && <DrawerTabIsland current="perfil" onSwitch={onSwitchTab} T={T} />}
       </div>
     </>,
     document.body
@@ -1399,10 +3295,559 @@ const LeadPanel = ({ lead, onClose, oc, onOpenNotes, onUpdate }) => {
 };
 
 /* ═══════════════════════════════════════════
+   ANALYSIS DRAWER — Análisis IA contextual sobre Pipeline
+═══════════════════════════════════════════ */
+const AnalysisDrawer = ({ lead, onClose, oc, onUpdate, onSwitchTab, T = P }) => {
+  if (!lead) return null;
+  const isLight = T !== P;
+  // Color primario fuerte para títulos — respeta el tema claro/oscuro
+  const titleC = isLight ? T.txt : "#FFFFFF";
+  const assignAgent = (key) => onUpdate?.({...lead, aiAgent: key });
+  const releaseAgent = () => onUpdate?.({...lead, aiAgent: null });
+  const sc = lead.sc;
+  const stageColor = stgC[lead.st] || T.accent;
+  const stageIdx = STAGES.indexOf(lead.st);
+  const inactive = lead.daysInactive || 0;
+  const hot = !!lead.hot;
+
+  // ── Próximas acciones recomendadas ──
+  const nextActions = [];
+  if (inactive >= 7) {
+    nextActions.push({
+      priority: "CRÍTICA", color: T.rose, icon: AlertCircle,
+      title: "Reactivación inmediata",
+      detail: `Lleva ${inactive} días sin contacto. Envía WhatsApp personalizado en las próximas 2 horas antes de enfriarse más.`,
+      eta: "Hoy · 2h",
+    });
+  } else if (inactive >= 3) {
+    nextActions.push({
+      priority: "ALTA", color: T.amber, icon: Clock,
+      title: "Seguimiento de cortesía",
+      detail: `${inactive} días sin contacto. Mantén la conversación activa con un mensaje de valor (case study, update de obra).`,
+      eta: "Hoy",
+    });
+  }
+  if (lead.st === "Zoom Agendado") {
+    nextActions.push({
+      priority: "ALTA", color: T.accent, icon: CalendarDays,
+      title: "Preparar Zoom con briefing IA",
+      detail: "Genera dossier: historial, objeciones previstas, 3 proyectos alineados al presupuesto. Envía confirmación 24h y 1h antes.",
+      eta: "Antes del Zoom",
+    });
+  }
+  if (lead.st === "Propuesta Enviada") {
+    nextActions.push({
+      priority: "ALTA", color: T.accent, icon: FileText,
+      title: "Seguimiento a propuesta",
+      detail: "48h desde el envío es la ventana dorada. Llamada breve para resolver dudas + escasez controlada (últimas unidades).",
+      eta: "+48h",
+    });
+  }
+  if (sc >= 75 && lead.st !== "Cierre Concretado") {
+    nextActions.push({
+      priority: "OPORTUNIDAD", color: T.accent, icon: Target,
+      title: "Movimiento de cierre",
+      detail: `Score ${sc} indica alta intención. Propón siguiente paso tangible: visita, reserva simbólica o carta de intención.`,
+      eta: "Esta semana",
+    });
+  }
+  if (hot) {
+    nextActions.push({
+      priority: "HOT", color: T.accent, icon: Zap,
+      title: "Acelerar cierre",
+      detail: "Lead caliente detectado por IA. Prioriza agenda: contacto directo del director, no delegues.",
+      eta: "24h",
+    });
+  }
+  if (nextActions.length === 0) {
+    nextActions.push({
+      priority: "PRÓXIMA", color: T.accent, icon: MessageCircle,
+      title: lead.nextAction || "Definir próximo touchpoint",
+      detail: `Etapa ${lead.st}. Mantén ritmo de contacto cada 3–4 días para evitar enfriamiento.`,
+      eta: lead.nextActionDate || "Por definir",
+    });
+  }
+
+  // ── Estrategias técnicas sugeridas ──
+  const strategies = [
+    {
+      icon: Target,
+      title: "Anclaje de valor",
+      detail: `Presenta primero la unidad premium del desarrollo — luego la recomendada. Esto posiciona su presupuesto de ${lead.budget || "referencia"} como una decisión inteligente, no un tope.`,
+    },
+    {
+      icon: Shield,
+      title: "Prueba social específica",
+      detail: `Comparte 1–2 casos de clientes del mismo perfil (${lead.tag || "inversión"}) que cerraron en ${lead.p?.split("·")[0]?.trim() || "el mismo proyecto"}. Especifica ROI y timeline.`,
+    },
+    {
+      icon: Clock,
+      title: "Escasez temporal real",
+      detail: "Comunica hitos concretos: 'quedan 3 unidades en esta línea de precio', 'la preventa sube 8% en 15 días'. Nunca inventes urgencia.",
+    },
+    {
+      icon: Activity,
+      title: "Micro-compromisos",
+      detail: "Antes de pedir el gran sí, pide 3 pequeños sí: confirmar Zoom, revisar el dossier, responder a 2 preguntas. Escalera de compromiso.",
+    },
+  ];
+
+  // ── Acciones inteligentes para cerrar ──
+  const closingActions = [
+    {
+      icon: DollarSign,
+      title: "Proponer reserva simbólica",
+      detail: "USD $5,000 reembolsables 72h. Baja la fricción y convierte interés en decisión medible.",
+      cta: "Generar acuerdo",
+    },
+    {
+      icon: FileText,
+      title: "Carta de intención personalizada",
+      detail: "Dossier legal con beneficios fiscales + proyección a 10 años. IA lo genera en 3 segundos.",
+      cta: "Generar borrador",
+    },
+    {
+      icon: Phone,
+      title: "Llamada de cierre asistida",
+      detail: "Callcenter IA prepara briefing: objeciones esperadas, argumentos de cierre, tono del cliente.",
+      cta: "Preparar llamada",
+    },
+  ];
+
+  return createPortal(
+    <>
+      <div onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: 400, background: T === P ? "rgba(2,5,12,0.45)" : "rgba(15,23,42,0.32)", backdropFilter: "blur(3px)", WebkitBackdropFilter: "blur(3px)" }} />
+      <div style={{ position: "fixed", right: 0, top: 0, bottom: 0, zIndex: 401, width: 480, background: T === P ? "#07080F" : "#FFFFFF", borderLeft: `1px solid ${T.borderH}`, display: "flex", flexDirection: "column", animation: "slideInRight 0.28s cubic-bezier(0.32,0.72,0,1)", boxShadow: T === P ? "-24px 0 80px rgba(0,0,0,0.55)" : "-24px 0 80px rgba(15,23,42,0.14)" }}>
+        <style>{`@keyframes slideInRight{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}`}</style>
+
+        {/* Header */}
+        <div style={{ padding: "18px 22px 16px", borderBottom: `1px solid ${T.border}`, flexShrink: 0 }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
+              <div style={{ width: 34, height: 34, borderRadius: 10, background: `linear-gradient(135deg, ${T.accent}22, ${T.blue}22)`, border: `1px solid ${T.accentB}`, display: "flex", alignItems: "center", justifyContent: "center", boxShadow: `0 0 20px ${T.accent}22` }}>
+                <Zap size={15} color={T.accent} strokeWidth={2.5} />
+              </div>
+              <div>
+                <p style={{ margin: 0, fontSize: 10, fontWeight: 800, color: T.accent, letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: fontDisp }}>Análisis IA</p>
+                <p style={{ margin: 0, fontSize: 11, color: T.txt3, fontFamily: font }}>Estrategia personalizada de cierre</p>
+              </div>
+            </div>
+            <button onClick={onClose} style={{ width: 30, height: 30, borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.18s" }}
+              onMouseEnter={e => e.currentTarget.style.background = T.glassH}
+              onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+            ><X size={13} color={T.txt3} /></button>
+          </div>
+
+          {/* Lead snapshot */}
+          <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", borderRadius: 12, background: T.glass, border: `1px solid ${T.border}` }}>
+            <div style={{ width: 40, height: 40, borderRadius: 11, background: `${stageColor}18`, border: `1px solid ${stageColor}44`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 15, fontWeight: 800, color: stageColor, fontFamily: fontDisp, flexShrink: 0 }}>
+              {lead.n.charAt(0)}
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: titleC, fontFamily: fontDisp, letterSpacing: "-0.02em" }}>
+                <InlineEdit value={lead.n} onSave={v => onUpdate?.({...lead, n: v})} T={T} isLight={isLight} placeholder="Nombre" editStyle={{ fontSize: 14, fontWeight: 700 }} />
+              </p>
+              <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 3, flexWrap: "wrap" }}>
+                <Pill color={stageColor} s isLight={isLight}>{lead.st}</Pill>
+                <span style={{ fontSize: 10.5, color: T.txt3 }}>·</span>
+                <span style={{ fontSize: 11, fontWeight: 700, color: T.txt2, fontFamily: fontDisp }}>
+                  <InlineEdit
+                    value={lead.budget}
+                    onSave={v => { const parsed = parseBudget(v); onUpdate?.({...lead, budget: parsed ? formatBudget(parsed) : v, presupuesto: parsed || lead.presupuesto || 0 }); }}
+                    T={T} isLight={isLight} placeholder="300k · 1.5M" emptyText="Sin presupuesto"
+                    editStyle={{ fontSize: 11, fontWeight: 700, width: 110 }}
+                  />
+                </span>
+              </div>
+            </div>
+            <div style={{ textAlign: "right", flexShrink: 0 }}>
+              <p style={{ margin: 0, fontSize: 18, fontWeight: 800, color: T.accent, fontFamily: fontDisp, lineHeight: 1 }}>{sc}</p>
+              <p style={{ margin: 0, fontSize: 8.5, color: T.txt3, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", marginTop: 3 }}>Score IA</p>
+            </div>
+          </div>
+
+          {/* Etiquetas rápidas */}
+          <div style={{ display: "flex", gap: 6, marginTop: 10, flexWrap: "wrap" }}>
+            {hot && <span style={{ fontSize: 9, fontWeight: 700, color: T.accent, background: `${T.accent}14`, border: `1px solid ${T.accentB}`, padding: "3px 9px", borderRadius: 99, letterSpacing: "0.05em" }}>HOT</span>}
+            {inactive >= 7 && <span style={{ fontSize: 9, fontWeight: 700, color: T.rose, background: `${T.rose}14`, border: `1px solid ${T.rose}33`, padding: "3px 9px", borderRadius: 99 }}>{inactive}d inactivo</span>}
+            <span style={{ fontSize: 9, fontWeight: 700, color: T.txt3, background: T.glass, border: `1px solid ${T.border}`, padding: "3px 9px", borderRadius: 99 }}>Etapa {stageIdx + 1}/{STAGES.length}</span>
+          </div>
+        </div>
+
+        {/* Content */}
+        <div style={{ flex: 1, overflowY: "auto", overscrollBehavior: "contain", WebkitOverflowScrolling: "touch", scrollBehavior: "smooth", padding: "18px 22px 120px", display: "flex", flexDirection: "column", gap: 18 }}>
+
+          {/* ── Próxima acción — hero unificado, mismo componente que Perfil y Expediente.
+              Es lo primero que ve el asesor al abrir el drawer: qué tiene que hacer
+              concretamente con este cliente, antes de cualquier análisis.
+              Wrapper con flexShrink: 0 para que el contenedor flex-column no lo comprima. ── */}
+          <div style={{ flexShrink: 0 }}>
+            <NextActionHero lead={lead} T={T} onUpdate={onUpdate} />
+          </div>
+
+          {/* ── Acciones rápidas — seguimientos + etapa editable ── */}
+          <div style={{ flexShrink: 0, display: "flex", flexWrap: "wrap", gap: 7, alignItems: "center" }}>
+            <FollowUpBadge lead={lead} onUpdate={onUpdate} T={T} />
+            <StageBadge lead={lead} onUpdate={onUpdate} T={T} />
+          </div>
+
+          {/* ── 0. Delegar al equipo IA ── */}
+          <section>
+            <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 10 }}>
+              <Atom size={12} color={T.accent} strokeWidth={2.2} />
+              <p style={{ margin: 0, fontSize: 10.5, fontWeight: 800, color: T.accent, letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: fontDisp }}>Delegar al equipo IA</p>
+              {lead.aiAgent && (
+                <button onClick={releaseAgent} style={{ marginLeft: "auto", fontSize: 9, fontWeight: 700, color: T.txt3, background: T.glass, border: `1px solid ${T.border}`, padding: "3px 9px", borderRadius: 99, cursor: "pointer", display: "flex", alignItems: "center", gap: 4, letterSpacing: "0.05em", textTransform: "uppercase", fontFamily: fontDisp, transition: "all 0.15s" }}
+                  onMouseEnter={e => { e.currentTarget.style.color = T.accent; e.currentTarget.style.borderColor = T.accentB; }}
+                  onMouseLeave={e => { e.currentTarget.style.color = T.txt3; e.currentTarget.style.borderColor = T.border; }}
+                ><X size={9} strokeWidth={2.5} /> Retomar control</button>
+              )}
+            </div>
+            {!lead.aiAgent && (
+              <p style={{ margin: "0 0 10px", fontSize: 11, color: T.txt3, lineHeight: 1.5 }}>
+                Asigna un miembro de tu equipo IA. Tú conservas el control — puedes retomarlo en cualquier momento.
+              </p>
+            )}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 7 }}>
+              {AI_AGENT_LIST.map(a => {
+                const AI = a.icon;
+                const isActive = lead.aiAgent === a.key;
+                return (
+                  <button key={a.key} onClick={() => assignAgent(a.key)} style={{
+                    padding: "11px 12px", borderRadius: 11, textAlign: "left",
+                    background: isActive ? `${a.color}14` : (isLight ? "rgba(15,23,42,0.025)" : "rgba(255,255,255,0.025)"),
+                    border: `1px solid ${isActive ? `${a.color}55` : T.border}`,
+                    cursor: "pointer", transition: "all 0.18s",
+                    display: "flex", gap: 9, alignItems: "flex-start",
+                    position: "relative", overflow: "hidden",
+                    boxShadow: isActive ? `0 0 18px ${a.color}22, inset 0 1px 0 ${a.color}22` : "none",
+                  }}
+                    onMouseEnter={e => { if (!isActive) { e.currentTarget.style.background = isLight ? "rgba(15,23,42,0.05)" : "rgba(255,255,255,0.05)"; e.currentTarget.style.borderColor = `${a.color}40`; } }}
+                    onMouseLeave={e => { if (!isActive) { e.currentTarget.style.background = isLight ? "rgba(15,23,42,0.025)" : "rgba(255,255,255,0.025)"; e.currentTarget.style.borderColor = T.border; } }}
+                  >
+                    <div style={{ width: 28, height: 28, borderRadius: 8, background: `${a.color}20`, border: `1px solid ${a.color}40`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                      <AI size={13} color={a.color} strokeWidth={2.5} />
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                        <p style={{ margin: 0, fontSize: 12, fontWeight: 700, color: isActive ? (isLight ? `color-mix(in srgb, ${a.color} 60%, #0B1220 40%)` : a.color) : titleC, fontFamily: fontDisp }}>{a.short}</p>
+                        {isActive && <span style={{ fontSize: 8, fontWeight: 800, color: a.color, background: `${a.color}20`, padding: "1px 5px", borderRadius: 4, letterSpacing: "0.08em" }}>ACTIVO</span>}
+                      </div>
+                      <p style={{ margin: "2px 0 0", fontSize: 10, color: T.txt3, lineHeight: 1.4 }}>{a.role}</p>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+            {lead.aiAgent && (() => {
+              const a = AI_AGENTS[lead.aiAgent];
+              const AI = a.icon;
+              return (
+                <div style={{ marginTop: 10, padding: "10px 12px", borderRadius: 10, background: `${a.color}08`, border: `1px solid ${a.color}2A`, display: "flex", gap: 9, alignItems: "flex-start" }}>
+                  <AI size={13} color={a.color} strokeWidth={2.5} style={{ marginTop: 1, flexShrink: 0 }} />
+                  <p style={{ margin: 0, fontSize: 11, color: T.txt2, lineHeight: 1.5 }}>
+                    <span style={{ color: a.color, fontWeight: 700, fontFamily: fontDisp }}>{a.name}</span> trabajará este cliente: {a.how}
+                  </p>
+                </div>
+              );
+            })()}
+          </section>
+
+          {/* ── 1. Próximas acciones recomendadas ── */}
+          <section>
+            <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 10 }}>
+              <Target size={12} color={T.accent} strokeWidth={2.5} />
+              <p style={{ margin: 0, fontSize: 10.5, fontWeight: 800, color: T.accent, letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: fontDisp }}>Próximas acciones</p>
+              <span style={{ marginLeft: "auto", fontSize: 9, fontWeight: 700, color: T.txt3, background: T.glass, border: `1px solid ${T.border}`, padding: "2px 8px", borderRadius: 99 }}>{nextActions.length}</span>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              {nextActions.map((a, i) => {
+                const I = a.icon;
+                return (
+                  <div key={i} style={{ padding: "11px 13px", borderRadius: 11, background: `${a.color}08`, border: `1px solid ${a.color}2A` }}>
+                    <div style={{ display: "flex", alignItems: "flex-start", gap: 9 }}>
+                      <div style={{ width: 28, height: 28, borderRadius: 8, background: `${a.color}18`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                        <I size={13} color={a.color} strokeWidth={2.5} />
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
+                          <p style={{ margin: 0, fontSize: 12.5, fontWeight: 700, color: titleC, fontFamily: fontDisp }}>{a.title}</p>
+                          <span style={{ fontSize: 8.5, fontWeight: 800, color: a.color, background: `${a.color}18`, padding: "1px 6px", borderRadius: 4, letterSpacing: "0.08em", textTransform: "uppercase" }}>{a.priority}</span>
+                        </div>
+                        <p style={{ margin: 0, fontSize: 11.5, color: T.txt2, lineHeight: 1.5 }}>{a.detail}</p>
+                        <p style={{ margin: "6px 0 0", fontSize: 9.5, color: a.color, fontWeight: 700, fontFamily: fontDisp, letterSpacing: "0.05em" }}>⏱ {a.eta}</p>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+
+          {/* ── 2. Estrategias técnicas ── */}
+          <section>
+            <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 10 }}>
+              <Activity size={12} color={T.blue} strokeWidth={2.5} />
+              <p style={{ margin: 0, fontSize: 10.5, fontWeight: 800, color: T.blue, letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: fontDisp }}>Estrategias técnicas</p>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
+              {strategies.map((s, i) => {
+                const I = s.icon;
+                return (
+                  <div key={i} style={{ padding: "10px 12px", borderRadius: 10, background: T.glass, border: `1px solid ${T.border}`, display: "flex", gap: 9, alignItems: "flex-start", transition: "all 0.18s" }}
+                    onMouseEnter={e => { e.currentTarget.style.background = T.glassH; e.currentTarget.style.borderColor = T.borderH; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = T.glass; e.currentTarget.style.borderColor = T.border; }}
+                  >
+                    <div style={{ width: 26, height: 26, borderRadius: 7, background: `${T.blue}12`, border: `1px solid ${T.blue}22`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                      <I size={12} color={T.blue} strokeWidth={2.5} />
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <p style={{ margin: "0 0 3px", fontSize: 12, fontWeight: 700, color: titleC, fontFamily: fontDisp }}>{s.title}</p>
+                      <p style={{ margin: 0, fontSize: 11, color: T.txt2, lineHeight: 1.5 }}>{s.detail}</p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+
+          {/* ── 3. Acciones inteligentes de cierre ── */}
+          <section>
+            <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 10 }}>
+              <Zap size={12} color={T.amber} strokeWidth={2.5} />
+              <p style={{ margin: 0, fontSize: 10.5, fontWeight: 800, color: T.amber, letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: fontDisp }}>Acciones de cierre IA</p>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              {closingActions.map((a, i) => {
+                const I = a.icon;
+                return (
+                  <div key={i} style={{ padding: "11px 13px", borderRadius: 11, background: `${T.amber}06`, border: `1px solid ${T.amber}24`, display: "flex", gap: 10, alignItems: "center" }}>
+                    <div style={{ width: 30, height: 30, borderRadius: 8, background: `${T.amber}16`, border: `1px solid ${T.amber}30`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                      <I size={13} color={T.amber} strokeWidth={2.5} />
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <p style={{ margin: "0 0 2px", fontSize: 12, fontWeight: 700, color: "#FFF", fontFamily: fontDisp }}>{a.title}</p>
+                      <p style={{ margin: 0, fontSize: 10.5, color: T.txt3, lineHeight: 1.45 }}>{a.detail}</p>
+                    </div>
+                    <button onClick={() => oc(`__crm__ ${a.title.toLowerCase()} para ${lead.n.toLowerCase()}`, lead)} style={{
+                      padding: "7px 11px", borderRadius: 8, background: `${T.amber}14`, border: `1px solid ${T.amber}40`, color: T.amber, fontSize: 10, fontWeight: 700, cursor: "pointer", fontFamily: fontDisp, letterSpacing: "0.02em", whiteSpace: "nowrap", flexShrink: 0, transition: "all 0.16s"
+                    }}
+                      onMouseEnter={e => { e.currentTarget.style.background = `${T.amber}26`; e.currentTarget.style.boxShadow = `0 0 14px ${T.amber}30`; }}
+                      onMouseLeave={e => { e.currentTarget.style.background = `${T.amber}14`; e.currentTarget.style.boxShadow = "none"; }}
+                    >{a.cta}</button>
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+        </div>
+
+        {/* Dynamic Island — switcher entre Análisis IA · Perfil · Expediente */}
+        <DrawerTabIsland current="analisis" onSwitch={onSwitchTab} T={T} />
+      </div>
+    </>,
+    document.body
+  );
+};
+
+/* ═══════════════════════════════════════════
+   ClickDropdown — selector con búsqueda + crear nuevo
+   ═══════════════════════════════════════════
+   Usado en el modal "Nuevo Cliente" para Asesor y Proyecto.
+   - Muestra las opciones existentes (extraídas de leadsData + customs).
+   - Permite filtrar por texto.
+   - Al final del menú hay un CTA "Crear nuevo <entidad>" que abre un input
+     inline; al confirmar, se agrega a la lista y queda seleccionado.
+   - Theme-aware (T + isLight) y tipografía SF Pro en todos los elementos. */
+const ClickDropdown = ({
+  value, onChange, options, placeholder, label, icon: IconC,
+  createLabel = "Crear nuevo", T = P, isLight = false,
+}) => {
+  const [open, setOpen]       = useState(false);
+  const [query, setQuery]     = useState("");
+  const [creating, setCreating] = useState(false);
+  const [draft, setDraft]     = useState("");
+  const wrapperRef = useRef(null);
+
+  // Cierra al hacer click fuera
+  useEffect(() => {
+    if (!open) return;
+    const onDoc = (e) => {
+      if (wrapperRef.current && !wrapperRef.current.contains(e.target)) {
+        setOpen(false); setCreating(false); setDraft(""); setQuery("");
+      }
+    };
+    document.addEventListener("mousedown", onDoc);
+    return () => document.removeEventListener("mousedown", onDoc);
+  }, [open]);
+
+  const filtered = (options || []).filter(o => !query || o.toLowerCase().includes(query.toLowerCase()));
+  const showCreate = query && !options.some(o => o.toLowerCase() === query.toLowerCase());
+
+  const commitCreate = (name) => {
+    const trimmed = String(name || "").trim();
+    if (!trimmed) return;
+    onChange(trimmed);
+    setOpen(false); setCreating(false); setDraft(""); setQuery("");
+  };
+
+  const triggerBg   = isLight ? "rgba(255,255,255,0.85)" : "rgba(255,255,255,0.035)";
+  const triggerBgH  = isLight ? "#FFFFFF" : "rgba(255,255,255,0.06)";
+  const menuBg      = isLight ? "#FFFFFF" : "#0C1219";
+  const menuBorder  = isLight ? "rgba(15,23,42,0.10)" : "rgba(255,255,255,0.10)";
+  const menuShadow  = isLight
+    ? "0 4px 12px rgba(15,23,42,0.08), 0 20px 40px rgba(15,23,42,0.10)"
+    : "0 20px 44px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.04)";
+  const itemHoverBg = isLight ? `${T.accent}10` : "rgba(255,255,255,0.06)";
+  const activeBg    = isLight ? `${T.accent}14` : `${T.accent}18`;
+  const activeBor   = isLight ? `${T.accent}55` : T.accentB;
+  const activeC     = isLight ? T.accentDark || T.accent : T.accent;
+
+  return (
+    <div ref={wrapperRef} style={{ position: "relative" }}>
+      {/* Trigger con apariencia de input */}
+      <button
+        type="button"
+        onClick={() => { setOpen(o => !o); setCreating(false); }}
+        style={{
+          width: "100%", height: 40, padding: "0 13px",
+          borderRadius: 10, background: triggerBg,
+          border: `1px solid ${open ? T.accentB : (isLight ? T.border : "rgba(255,255,255,0.07)")}`,
+          color: value ? T.txt : T.txt3,
+          fontSize: 13, fontFamily: font, textAlign: "left",
+          cursor: "pointer", outline: "none", boxSizing: "border-box",
+          display: "flex", alignItems: "center", gap: 8,
+          boxShadow: open ? `0 0 0 3px ${T.accent}0F` : "none",
+          transition: "all 0.18s",
+        }}
+        onMouseEnter={e => { if (!open) e.currentTarget.style.background = triggerBgH; }}
+        onMouseLeave={e => { if (!open) e.currentTarget.style.background = triggerBg; }}
+      >
+        <span style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontWeight: value ? 600 : 400 }}>
+          {value || placeholder}
+        </span>
+        <ChevronDown size={14} color={T.txt3} strokeWidth={2.2}
+          style={{ transition: "transform 0.2s", transform: open ? "rotate(180deg)" : "none", flexShrink: 0 }} />
+      </button>
+
+      {/* Menú */}
+      {open && (
+        <div style={{
+          position: "absolute", top: "calc(100% + 6px)", left: 0, right: 0,
+          zIndex: 510, background: menuBg, border: `1px solid ${menuBorder}`,
+          borderRadius: 12, boxShadow: menuShadow, overflow: "hidden",
+          animation: "fadeIn 0.14s ease",
+          backdropFilter: "blur(24px) saturate(180%)",
+          WebkitBackdropFilter: "blur(24px) saturate(180%)",
+        }}>
+          {/* Buscador / creador */}
+          {creating ? (
+            <div style={{ padding: 10, borderBottom: `1px solid ${isLight ? "rgba(15,23,42,0.06)" : "rgba(255,255,255,0.06)"}`, display: "flex", gap: 6 }}>
+              <input
+                autoFocus
+                value={draft}
+                onChange={e => setDraft(e.target.value)}
+                onKeyDown={e => { if (e.key === "Enter") commitCreate(draft); if (e.key === "Escape") { setCreating(false); setDraft(""); } }}
+                placeholder={`Nombre del ${label?.toLowerCase() || "elemento"}`}
+                style={{
+                  flex: 1, height: 34, padding: "0 11px", borderRadius: 8,
+                  background: isLight ? "rgba(15,23,42,0.04)" : "rgba(255,255,255,0.05)",
+                  border: `1px solid ${T.accentB}`, color: T.txt,
+                  fontSize: 12.5, fontFamily: font, outline: "none",
+                  boxSizing: "border-box",
+                }}
+              />
+              <button type="button" onClick={() => commitCreate(draft)}
+                style={{ padding: "0 12px", height: 34, borderRadius: 8, background: activeBg, border: `1px solid ${activeBor}`, color: activeC, fontSize: 11.5, fontWeight: 700, fontFamily: fontDisp, cursor: "pointer", letterSpacing: "0.01em" }}
+              >Añadir</button>
+            </div>
+          ) : (
+            <div style={{ padding: 8, borderBottom: `1px solid ${isLight ? "rgba(15,23,42,0.06)" : "rgba(255,255,255,0.06)"}`, position: "relative" }}>
+              <Search size={11} color={T.txt3} strokeWidth={2.3}
+                style={{ position: "absolute", left: 18, top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }} />
+              <input
+                autoFocus
+                value={query}
+                onChange={e => setQuery(e.target.value)}
+                placeholder={`Buscar ${label?.toLowerCase() || "opción"}...`}
+                style={{
+                  width: "100%", height: 34, padding: "0 11px 0 32px", borderRadius: 8,
+                  background: isLight ? "rgba(15,23,42,0.04)" : "rgba(255,255,255,0.04)",
+                  border: `1px solid ${isLight ? "rgba(15,23,42,0.08)" : "rgba(255,255,255,0.08)"}`,
+                  color: T.txt, fontSize: 12.5, fontFamily: font, outline: "none",
+                  boxSizing: "border-box",
+                }}
+                onFocus={e => { e.target.style.borderColor = T.accentB; }}
+                onBlur={e => { e.target.style.borderColor = isLight ? "rgba(15,23,42,0.08)" : "rgba(255,255,255,0.08)"; }}
+              />
+            </div>
+          )}
+
+          {/* Lista */}
+          <div style={{ maxHeight: 220, overflowY: "auto", padding: "6px 0" }}>
+            {filtered.length === 0 && !showCreate && !creating && (
+              <div style={{ padding: "14px 16px", fontSize: 12, color: T.txt3, fontFamily: font, textAlign: "center" }}>
+                Sin resultados
+              </div>
+            )}
+            {filtered.map(opt => {
+              const active = opt === value;
+              return (
+                <button type="button" key={opt}
+                  onClick={() => { onChange(opt); setOpen(false); setCreating(false); setQuery(""); }}
+                  style={{
+                    width: "100%", padding: "9px 14px",
+                    background: active ? activeBg : "transparent",
+                    border: "none", textAlign: "left", cursor: "pointer",
+                    color: active ? activeC : T.txt2,
+                    fontSize: 12.5, fontWeight: active ? 700 : 500,
+                    fontFamily: font, display: "flex", alignItems: "center", gap: 8,
+                    transition: "background 0.12s",
+                  }}
+                  onMouseEnter={e => { if (!active) e.currentTarget.style.background = itemHoverBg; }}
+                  onMouseLeave={e => { if (!active) e.currentTarget.style.background = "transparent"; }}
+                >
+                  {IconC && <IconC size={12} color={active ? activeC : T.txt3} strokeWidth={2.2} />}
+                  <span style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{opt}</span>
+                  {active && <CheckCircle2 size={12} color={activeC} strokeWidth={2.4} />}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* CTA crear nuevo */}
+          {!creating && (
+            <button type="button"
+              onClick={() => { setCreating(true); setDraft(showCreate ? query : ""); }}
+              style={{
+                width: "100%", padding: "11px 14px",
+                background: isLight ? `${T.accent}08` : `${T.accent}10`,
+                border: "none", borderTop: `1px solid ${isLight ? "rgba(15,23,42,0.06)" : "rgba(255,255,255,0.06)"}`,
+                textAlign: "left", cursor: "pointer",
+                color: activeC, fontSize: 11.5, fontWeight: 700, fontFamily: fontDisp,
+                display: "flex", alignItems: "center", gap: 7, letterSpacing: "0.01em",
+                transition: "background 0.14s",
+              }}
+              onMouseEnter={e => e.currentTarget.style.background = isLight ? `${T.accent}14` : `${T.accent}1C`}
+              onMouseLeave={e => e.currentTarget.style.background = isLight ? `${T.accent}08` : `${T.accent}10`}
+            >
+              <Plus size={13} strokeWidth={2.6} />
+              <span>{showCreate ? `Usar "${query}" como nuevo` : createLabel}</span>
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+
+/* ═══════════════════════════════════════════
    CRM — Pipeline Pro
 ═══════════════════════════════════════════ */
-function CRM({ oc, co, leadsData, setLeadsData }) {
+function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () => {} }) {
   const { user } = useAuth();
+  const isLight = theme === "light";
+  const T = isLight ? LP : P;
 
   // Solo director, admin y super_admin ven todos los leads
   const canSeeAll = ["super_admin", "admin", "director"].includes(user?.role);
@@ -1414,9 +3859,48 @@ function CRM({ oc, co, leadsData, setLeadsData }) {
   const [viewMode, setViewMode]         = useState("list");
   const [selectedLead, setSelectedLead] = useState(null);
   const [notesLead, setNotesLead]       = useState(null);
+  const [analyzingLead, setAnalyzingLead] = useState(null);
   const [addingLead, setAddingLead]     = useState(false);
   const [newLead, setNewLead]           = useState({ n: "", asesor: canSeeAll ? "" : (user?.name || ""), phone: "", email: "", budget: "", p: "", campana: "", st: "Nuevo Registro", nextAction: "", notas: "" });
+  // ── Listas maestras de asesores y proyectos ──
+  // Se alimentan de leadsData + registros "custom" hechos desde el modal.
+  // Al registrar un nuevo asesor/proyecto desde el modal, se añade aquí para
+  // que esté disponible en el próximo alta sin necesidad de volver a teclearlo.
+  const [customAsesores, setCustomAsesores]   = useState([]);
+  const [customProyectos, setCustomProyectos] = useState([]);
+  const [customCampanas, setCustomCampanas]   = useState([]);
   const [hoveredRow, setHoveredRow]     = useState(null);
+  // Edición inline de "próxima acción" en tarjetas de prioridad — sincroniza
+  // estado con el lead activo y se cierra al guardar/cancelar.
+  const [editingActionId, setEditingActionId] = useState(null);
+  const [actionDraft, setActionDraft]         = useState({ a: "", d: "" });
+  const startInlineAction = (lead) => {
+    setActionDraft({ a: lead.nextAction || "", d: lead.nextActionDate || "" });
+    setEditingActionId(lead.id);
+  };
+  const saveInlineAction = (lead) => {
+    updateLead({ ...lead, nextAction: actionDraft.a.trim(), nextActionDate: actionDraft.d.trim() });
+    setEditingActionId(null);
+  };
+  const cancelInlineAction = () => setEditingActionId(null);
+
+  // ── Captura rápida (voz o texto) para el modal "Registrar Nuevo Cliente" ──
+  // El asesor puede dictar o pegar un mensaje libre y el sistema extrae
+  // automáticamente nombre, teléfono, email, presupuesto, proyecto y campaña.
+  // Mientras dicta, va viendo en vivo qué datos se están detectando.
+  const [quickText, setQuickText]       = useState("");
+  const [isListening, setIsListening]   = useState(false);
+  const recognitionRef                  = useRef(null);
+
+  // Cleanup del reconocimiento de voz al cerrar el modal
+  useEffect(() => {
+    if (!addingLead && recognitionRef.current) {
+      try { recognitionRef.current.stop(); } catch {}
+      recognitionRef.current = null;
+      setIsListening(false);
+    }
+  }, [addingLead]);
+
   const [dragLeadId, setDragLeadId]     = useState(null);
   const [dragOverStage, setDragOverStage] = useState(null);
   const [activeCardIdx, setActiveCardIdx] = useState(0);
@@ -1428,8 +3912,23 @@ function CRM({ oc, co, leadsData, setLeadsData }) {
     setLeadsData(prev => prev.map(l => l.id === updated.id ? updated : l));
     if (selectedLead?.id === updated.id) setSelectedLead(updated);
     if (notesLead?.id === updated.id) setNotesLead(updated);
+    if (analyzingLead?.id === updated.id) setAnalyzingLead(updated);
   };
   const saveNotes = (newNotas) => { const u = {...notesLead, notas: newNotas}; updateLead(u); setNotesLead(u); };
+
+  // Switcher unificado del Dynamic Island — al cambiar de tab, cerramos el drawer
+  // actual y abrimos el target con el MISMO lead. Así el vendedor navega Análisis IA
+  // · Perfil · Expediente sin fricción.
+  const openDrawerTab = (tab, lead) => {
+    if (!lead) return;
+    if (tab === "analisis") {
+      setSelectedLead(null); setNotesLead(null); setAnalyzingLead(lead);
+    } else if (tab === "perfil") {
+      setAnalyzingLead(null); setNotesLead(null); setSelectedLead(lead);
+    } else if (tab === "expediente") {
+      setAnalyzingLead(null); setSelectedLead(null); setNotesLead(lead);
+    }
+  };
   const handleDragStart = (e, id) => {
     setDragLeadId(id);
     e.dataTransfer.effectAllowed = "move";
@@ -1452,6 +3951,7 @@ function CRM({ oc, co, leadsData, setLeadsData }) {
   const [pinnedIds,    setPinnedIds]    = useState(new Set());
   const [dismissedIds, setDismissedIds] = useState(new Set());
   const [priorityOrder, setPriorityOrder] = useState([]); // IDs ordered manually
+  const [prioritySort, setPrioritySort] = useState("manual"); // manual | newest | oldest | score | urgency
   const [dragCardId,   setDragCardId]   = useState(null);
   const [dragInsertIdx, setDragInsertIdx] = useState(null); // index where card will be inserted
 
@@ -1468,7 +3968,146 @@ function CRM({ oc, co, leadsData, setLeadsData }) {
   };
 
   const asesores = [...new Set(visibleLeads.map(l => l.asesor))];
-  const urgColor = (d) => d >= 10 ? P.violet : d >= 5 ? P.cyan : P.emerald;
+  // Listas maestras: únicas, sin vacíos, ordenadas alfabéticamente.
+  // Se alimentan de leadsData (todos, no solo visibles — para que un director
+  // también vea asesores completos) + customs añadidos desde el modal.
+  const asesoresMaster = useMemo(() => {
+    const set = new Set([...leadsData.map(l => l.asesor), ...customAsesores].filter(Boolean));
+    return [...set].sort((a, b) => a.localeCompare(b, "es"));
+  }, [leadsData, customAsesores]);
+  const proyectosMaster = useMemo(() => {
+    const set = new Set([...leadsData.map(l => l.p), ...customProyectos].filter(Boolean));
+    return [...set].sort((a, b) => a.localeCompare(b, "es"));
+  }, [leadsData, customProyectos]);
+  // Campañas activas de marketing — las 3 campañas vigentes de Facebook Ads
+  // están preregistradas para métricas consistentes. El asesor puede crear
+  // campañas adicionales desde el modal si aparecen nuevas.
+  const FB_CAMPAIGNS_BASE = [
+    "Facebook Ads · Bay View Grand",
+    "Facebook Ads · Cancún",
+    "Facebook Ads · Tulum",
+  ];
+  const campanasMaster = useMemo(() => {
+    const set = new Set([
+      ...FB_CAMPAIGNS_BASE,
+      ...leadsData.map(l => l.campana),
+      ...customCampanas,
+    ].filter(Boolean));
+    return [...set].sort((a, b) => a.localeCompare(b, "es"));
+  }, [leadsData, customCampanas]);
+
+  // ── Parser de captura rápida — extrae datos estructurados del texto libre.
+  // Admite frases naturales en español: "se llama…", "su teléfono es…",
+  // "presupuesto de 2.5M", "le interesa Portofino", "viene de Cancún"…
+  // Mientras el asesor dicta o escribe, la UI va mostrando el preview en vivo.
+  const extractFromText = useCallback((raw) => {
+    const text = String(raw || "");
+    if (!text.trim()) return {};
+    const out = {};
+
+    // Teléfono — al menos 8 dígitos, con prefijos y separadores opcionales
+    const phoneMatch = text.match(/(\+?\d{1,3}[\s.-]?)?(\(?\d{2,4}\)?[\s.-]?)\d{3,4}[\s.-]?\d{3,5}/);
+    if (phoneMatch) {
+      const digits = phoneMatch[0].replace(/\D/g, "");
+      if (digits.length >= 8 && digits.length <= 15) out.phone = phoneMatch[0].trim();
+    }
+
+    // Email
+    const emailMatch = text.match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i);
+    if (emailMatch) out.email = emailMatch[0];
+
+    // Presupuesto — patrón explícito primero, luego cualquier cantidad con sufijo k/m
+    const budgetExplicit = text.match(/(?:presupuesto|budget|rango|puede pagar|tiene|invierte)\s*(?:de|por|hasta|aproximadamente|aprox\.?|cerca de|como)?\s*\$?\s*([0-9]+(?:[.,][0-9]+)?\s*(?:k|m|mm|mdd|mil(?:es|lar|lares)?|millon(?:es)?|millón))/i);
+    const budgetGeneric = text.match(/\$?\s*\b([0-9]+(?:[.,][0-9]+)?\s*(?:k|m|mm|mdd|millon(?:es)?|millón))\b/i);
+    const budgetRaw = (budgetExplicit && budgetExplicit[1]) || (budgetGeneric && budgetGeneric[1]);
+    if (budgetRaw) {
+      const cleaned = budgetRaw.replace(/\s+/g, "").toUpperCase();
+      if (parseBudget(cleaned) > 0) out.budget = cleaned;
+    }
+
+    // Nombre — después de "se llama", "nombre es", "cliente es", "señor/a"
+    const nameMatch = text.match(/(?:se llama|nombre(?:\s+(?:es|completo(?:\s+es)?))?|cliente(?:\s+es)?|señor(?:a)?\.?|sr\.?a?\.?|sra\.?)\s*:?\s*([A-ZÁÉÍÓÚÑ][a-záéíóúñ]+(?:\s+[A-ZÁÉÍÓÚÑ][a-záéíóúñ]+){0,3})/);
+    if (nameMatch) out.n = nameMatch[1].trim();
+    // Fallback: si el texto comienza con un nombre propio (2-4 palabras capitalizadas)
+    if (!out.n) {
+      const startMatch = text.trim().match(/^([A-ZÁÉÍÓÚÑ][a-záéíóúñ]+(?:\s+[A-ZÁÉÍÓÚÑ][a-záéíóúñ]+){1,3})(?=\s*[,.]|\s+(?:de|con|que|su|le|tiene|quiere|busca|está|vive))/);
+      if (startMatch) out.n = startMatch[1].trim();
+    }
+
+    // Proyecto — match contra proyectos existentes
+    for (const p of proyectosMaster) {
+      if (!p) continue;
+      const safe = p.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      if (new RegExp(`\\b${safe}\\b`, "i").test(text)) { out.p = p; break; }
+    }
+
+    // Campaña — match contra campañas existentes
+    for (const c of campanasMaster) {
+      if (!c) continue;
+      const safe = c.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      if (new RegExp(`\\b${safe}\\b`, "i").test(text)) { out.campana = c; break; }
+      // También matchear el nombre corto (última parte después de "·")
+      const short = c.split("·").pop()?.trim();
+      if (short && short.length > 2 && new RegExp(`\\b${short.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`, "i").test(text)) {
+        out.campana = c; break;
+      }
+    }
+
+    return out;
+  }, [proyectosMaster, campanasMaster]);
+
+  // Aplica los campos detectados al formulario sin pisar los que el asesor ya tocó.
+  // Si el texto libre tiene más contenido del extraído, lo guarda en "notas"
+  // para preservar el contexto original.
+  const applyQuickCapture = () => {
+    const extracted = extractFromText(quickText);
+    setNewLead(prev => {
+      const next = { ...prev };
+      Object.entries(extracted).forEach(([k, v]) => {
+        if (v && (!prev[k] || String(prev[k]).trim() === "")) next[k] = v;
+      });
+      if (quickText.trim() && (!prev.notas || prev.notas.trim() === "")) {
+        next.notas = quickText.trim();
+      }
+      return next;
+    });
+  };
+
+  // Toggle de dictado por voz — usa Web Speech API (Chrome/Edge/Safari).
+  // Muestra texto interino mientras habla; al detenerse, deja el texto final.
+  const toggleVoiceCapture = () => {
+    const SR = typeof window !== "undefined" ? (window.SpeechRecognition || window.webkitSpeechRecognition) : null;
+    if (!SR) {
+      alert("Tu navegador no soporta dictado por voz. Usa Chrome, Edge o Safari más reciente.");
+      return;
+    }
+    if (isListening) {
+      try { recognitionRef.current?.stop(); } catch {}
+      setIsListening(false);
+      return;
+    }
+    const rec = new SR();
+    rec.lang = "es-MX";
+    rec.continuous = true;
+    rec.interimResults = true;
+    let baseText = quickText;
+    rec.onresult = (ev) => {
+      let interim = "", finalChunk = "";
+      for (let i = ev.resultIndex; i < ev.results.length; i++) {
+        const r = ev.results[i];
+        if (r.isFinal) finalChunk += r[0].transcript;
+        else interim += r[0].transcript;
+      }
+      if (finalChunk) baseText = (baseText + " " + finalChunk).replace(/\s+/g, " ").trim();
+      setQuickText(interim ? `${baseText} ${interim}`.trim() : baseText);
+    };
+    rec.onend   = () => setIsListening(false);
+    rec.onerror = () => setIsListening(false);
+    recognitionRef.current = rec;
+    try { rec.start(); setIsListening(true); } catch { setIsListening(false); }
+  };
+
+  const urgColor = (d) => d >= 10 ? T.violet : d >= 5 ? T.cyan : T.emerald;
 
   const sortedLeads = useMemo(() => {
     let data = visibleLeads.filter(l => {
@@ -1499,6 +4138,7 @@ function CRM({ oc, co, leadsData, setLeadsData }) {
     const mos = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
     const h = now.getHours(); const ampm = h >= 12 ? "pm" : "am"; const h12 = h % 12 || 12;
     const dateStr = `${now.getDate()} ${mos[now.getMonth()]}, ${h12}:${String(now.getMinutes()).padStart(2,"0")}${ampm}`;
+    const parsedBudget = parseBudget(newLead.budget);
     const newEntry = {
       id: Date.now(), ...newLead, sc: 40, st: newLead.st || "Nuevo Registro",
       tag: newLead.st || "Nuevo Registro", hot: false, isNew: true, fechaIngreso: dateStr,
@@ -1506,11 +4146,29 @@ function CRM({ oc, co, leadsData, setLeadsData }) {
       friction: "Medio", nextAction: "Primer contacto en las próximas 24 horas",
       nextActionDate: "Hoy", lastActivity: "Registro manual", daysInactive: 0, email: "",
       notas: `OBJETIVO\nPendiente — primer contacto.\n\nPENDIENTE\nRealizar primer contacto y calificar necesidades del cliente.`,
-      presupuesto: parseFloat(String(newLead.budget).replace(/[^0-9.]/g, "")) || 0,
+      presupuesto: parsedBudget,
+      budget: parsedBudget ? formatBudget(parsedBudget) : (newLead.budget || ""),
     };
     setLeadsData(prev => [newEntry, ...prev]);
+    // Si el asesor o proyecto son nuevos (no existían en leadsData), los
+    // registramos como custom para que aparezcan en los dropdowns del
+    // siguiente alta. Así el usuario no tiene que volver a teclearlos.
+    if (newLead.asesor && !leadsData.some(l => l.asesor === newLead.asesor) && !customAsesores.includes(newLead.asesor)) {
+      setCustomAsesores(prev => [...prev, newLead.asesor]);
+    }
+    if (newLead.p && !leadsData.some(l => l.p === newLead.p) && !customProyectos.includes(newLead.p)) {
+      setCustomProyectos(prev => [...prev, newLead.p]);
+    }
+    // Registrar campaña nueva si no estaba en base ni en leads ni en customs.
+    if (newLead.campana
+        && !FB_CAMPAIGNS_BASE.includes(newLead.campana)
+        && !leadsData.some(l => l.campana === newLead.campana)
+        && !customCampanas.includes(newLead.campana)) {
+      setCustomCampanas(prev => [...prev, newLead.campana]);
+    }
     setAddingLead(false);
-    setNewLead({ n: "", asesor: canSeeAll ? "" : (user?.name || ""), phone: "", budget: "", p: "", campana: "", st: "Nuevo Registro" });
+    setNewLead({ n: "", asesor: canSeeAll ? "" : (user?.name || ""), phone: "", budget: "", p: "", campana: "", st: "Nuevo Registro", nextAction: "", notas: "" });
+    setQuickText("");
   };
 
   const SH = ({ label, field, align = "left" }) => {
@@ -1519,7 +4177,7 @@ function CRM({ oc, co, leadsData, setLeadsData }) {
       <span onClick={() => handleSort(field)} style={{
         cursor: "pointer", userSelect: "none", display: "flex", alignItems: "center", gap: 3,
         justifyContent: align === "right" ? "flex-end" : "flex-start",
-        color: active ? P.accent : P.txt3, fontSize: 9, fontWeight: 700,
+        color: active ? T.accent : T.txt3, fontSize: 9, fontWeight: 700,
         letterSpacing: "0.08em", textTransform: "uppercase", transition: "color 0.15s",
       }}>
         {label}
@@ -1530,53 +4188,161 @@ function CRM({ oc, co, leadsData, setLeadsData }) {
 
   const isAutoPriority = (l) => (l.isNew || l.st === "Zoom Concretado" || l.st === "Zoom Agendado" || l.hot || l.daysInactive <= 3) && !dismissedIds.has(l.id);
   const rawPriorityLeads = visibleLeads.filter(l => pinnedIds.has(l.id) || isAutoPriority(l));
-  // Respect manual drag order when set
-  const priorityLeads = priorityOrder.length
-    ? [...rawPriorityLeads].sort((a, b) => {
-        const ia = priorityOrder.indexOf(a.id);
-        const ib = priorityOrder.indexOf(b.id);
-        if (ia === -1 && ib === -1) return b.sc - a.sc;
-        if (ia === -1) return 1;
-        if (ib === -1) return -1;
-        return ia - ib;
-      })
-    : [...rawPriorityLeads].sort((a,b) => (pinnedIds.has(b.id) ? 1 : 0) - (pinnedIds.has(a.id) ? 1 : 0) || b.sc - a.sc);
+  // Orden final: modo manual respeta drag & dropdown de posición; los demás aplican criterio
+  const priorityLeads = (() => {
+    const arr = [...rawPriorityLeads];
+    const recency = (l) => l.id || 0; // id mayor = registro más reciente
+    switch (prioritySort) {
+      case "newest":
+        return arr.sort((a, b) => ((b.isNew ? 1 : 0) - (a.isNew ? 1 : 0)) || recency(b) - recency(a));
+      case "oldest":
+        return arr.sort((a, b) => ((a.isNew ? 1 : 0) - (b.isNew ? 1 : 0)) || recency(a) - recency(b));
+      case "score":
+        return arr.sort((a, b) => b.sc - a.sc);
+      case "urgency":
+        return arr.sort((a, b) => ((b.hot ? 1 : 0) - (a.hot ? 1 : 0)) || (b.daysInactive || 0) - (a.daysInactive || 0));
+      case "manual":
+      default:
+        return priorityOrder.length
+          ? arr.sort((a, b) => {
+              const ia = priorityOrder.indexOf(a.id);
+              const ib = priorityOrder.indexOf(b.id);
+              if (ia === -1 && ib === -1) return b.sc - a.sc;
+              if (ia === -1) return 1;
+              if (ib === -1) return -1;
+              return ia - ib;
+            })
+          : arr.sort((a, b) => (pinnedIds.has(b.id) ? 1 : 0) - (pinnedIds.has(a.id) ? 1 : 0) || b.sc - a.sc);
+    }
+  })();
 
-  // Drag handlers for priority card reordering — uses insert-index for precision
+  // ── Drag & drop para reordenar priority cards ──────────────────────────────
+  // Usamos refs para los valores críticos del drop (siempre síncronos, sin closure stale)
+  const [justDroppedId, setJustDroppedId] = useState(null);
+  const justDroppedTimer  = useRef(null);
+  const dragCardIdRef     = useRef(null);   // fuente de verdad para el drop
+  const dragInsertIdxRef  = useRef(null);   // fuente de verdad para el drop
+  const priorityLeadsRef  = useRef([]);     // snapshot del array para el drop
+  // dragOverCardRef: evita re-renders excesivos durante dragover
+  const dragOverCardRef   = useRef(null);
+
+  // Sincronizar priorityLeadsRef en cada render
+  priorityLeadsRef.current = priorityLeads;
+
   const handleCardDragStart = (e, id) => {
+    // Si veníamos en modo sort automático, congelar el orden actual como "manual"
+    if (prioritySort !== "manual") {
+      setPriorityOrder(priorityLeadsRef.current.map(l => l.id));
+      setPrioritySort("manual");
+    }
+    dragCardIdRef.current   = id;
+    dragInsertIdxRef.current = null;
+    dragOverCardRef.current  = null;
     setDragCardId(id);
+    setDragInsertIdx(null);
     e.dataTransfer.effectAllowed = "move";
-    e.dataTransfer.setData("cardId", String(id));
+    e.dataTransfer.setData("text/plain", String(id));
   };
+
   const handleCardDragOver = (e, idx) => {
     e.preventDefault();
     e.dataTransfer.dropEffect = "move";
-    // Determine insert position: before or after this card based on mouse X position
     const rect = e.currentTarget.getBoundingClientRect();
-    const midX = rect.left + rect.width / 2;
-    const insertAfter = e.clientX > midX;
-    setDragInsertIdx(insertAfter ? idx + 1 : idx);
+    const inRightHalf = e.clientX > rect.left + rect.width / 2;
+    const newInsert = inRightHalf ? idx + 1 : idx;
+    dragInsertIdxRef.current = newInsert;   // siempre actualizar ref (síncrono)
+    if (dragOverCardRef.current !== newInsert) {
+      dragOverCardRef.current = newInsert;
+      setDragInsertIdx(newInsert);           // state solo para la línea visual
+    }
   };
+
   const handleCarouselDragOver = (e) => {
     e.preventDefault();
-    // When dragging over empty space at end of carousel
-    setDragInsertIdx(priorityLeads.length);
+    e.dataTransfer.dropEffect = "move";
+    const last = priorityLeadsRef.current.length;
+    dragInsertIdxRef.current = last;
+    if (dragOverCardRef.current !== last) {
+      dragOverCardRef.current = last;
+      setDragInsertIdx(last);
+    }
   };
-  const handleCardDrop = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (dragInsertIdx === null || !dragCardId) { setDragCardId(null); setDragInsertIdx(null); return; }
-    const ids = priorityLeads.map(l => l.id);
-    const fromIdx = ids.indexOf(dragCardId);
-    if (fromIdx === -1) { setDragCardId(null); setDragInsertIdx(null); return; }
-    const reordered = ids.filter(id => id !== dragCardId);
-    const insertAt = dragInsertIdx > fromIdx ? Math.max(0, dragInsertIdx - 1) : dragInsertIdx;
-    reordered.splice(insertAt, 0, dragCardId);
-    setPriorityOrder(reordered);
+
+  const commitCardDrop = () => {
+    // Leer SIEMPRE de refs — nunca del closure de estado
+    const insertIdx = dragInsertIdxRef.current;
+    const fromId    = dragCardIdRef.current;
+    // Limpiar todo
+    dragCardIdRef.current    = null;
+    dragInsertIdxRef.current = null;
+    dragOverCardRef.current  = null;
+    setDragCardId(null);
+    setDragInsertIdx(null);
+
+    if (insertIdx === null || insertIdx === undefined || !fromId) return;
+
+    const ids = priorityLeadsRef.current.map(l => l.id);
+    const fromIdx = ids.indexOf(fromId);
+    if (fromIdx === -1) return;
+
+    const without = ids.filter(id => id !== fromId);
+    const destIdx = insertIdx > fromIdx ? insertIdx - 1 : insertIdx;
+    const clamped = Math.max(0, Math.min(destIdx, without.length));
+    without.splice(clamped, 0, fromId);
+
+    if (without.join(",") === ids.join(",")) return;  // sin cambio real
+
+    // Guardar scroll actual ANTES del re-render para restaurarlo después
+    const savedScroll = carouselRef.current ? carouselRef.current.scrollLeft : 0;
+
+    setPriorityOrder(without);
+
+    // Doble rAF: esperar que React termine el re-render y luego restaurar scroll
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      if (carouselRef.current) {
+        carouselRef.current.scrollLeft = savedScroll;
+      }
+    }));
+
+    // Highlight 3 segundos — solo borde blanco sutil
+    if (justDroppedTimer.current) clearTimeout(justDroppedTimer.current);
+    setJustDroppedId(fromId);
+    justDroppedTimer.current = setTimeout(() => setJustDroppedId(null), 3000);
+  };
+
+  const handleCardDrop     = (e) => { e.preventDefault(); e.stopPropagation(); commitCardDrop(); };
+  const handleCarouselDrop = (e) => { e.preventDefault(); commitCardDrop(); };
+
+  // Mover un lead a una posición específica (1-indexed) vía dropdown
+  const moveToPriorityPosition = (leadId, newPos) => {
+    const ids = priorityLeadsRef.current.map(l => l.id);
+    const fromIdx = ids.indexOf(leadId);
+    if (fromIdx === -1) return;
+    const targetIdx = Math.max(0, Math.min(newPos - 1, ids.length - 1));
+    if (targetIdx === fromIdx) return;
+
+    const without = ids.filter(id => id !== leadId);
+    without.splice(targetIdx, 0, leadId);
+
+    const savedScroll = carouselRef.current ? carouselRef.current.scrollLeft : 0;
+    // Asegurar modo manual para que el orden seleccionado prevalezca
+    if (prioritySort !== "manual") setPrioritySort("manual");
+    setPriorityOrder(without);
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      if (carouselRef.current) carouselRef.current.scrollLeft = savedScroll;
+    }));
+
+    if (justDroppedTimer.current) clearTimeout(justDroppedTimer.current);
+    setJustDroppedId(leadId);
+    justDroppedTimer.current = setTimeout(() => setJustDroppedId(null), 3000);
+  };
+  const handleCardDragEnd  = () => {
+    dragCardIdRef.current    = null;
+    dragInsertIdxRef.current = null;
+    dragOverCardRef.current  = null;
     setDragCardId(null);
     setDragInsertIdx(null);
   };
-  const handleCardDragEnd = () => { setDragCardId(null); setDragInsertIdx(null); };
 
   const carouselRef = useRef(null);
   const scrollCarousel = (dir) => carouselRef.current?.scrollBy({ left: dir * 310, behavior: "smooth" });
@@ -1585,44 +4351,76 @@ function CRM({ oc, co, leadsData, setLeadsData }) {
   const hotLeads = visibleLeads.filter(l => l.hot || l.daysInactive <= 2).length;
   const kanbanStages = STAGES.filter(s => s !== "Perdido");
 
-  /* Responsive grid columns */
-  const colsFull    = "88px 110px 1.6fr 120px 1fr 110px 1.1fr 68px 120px";
-  const colsCompact = "1.6fr 110px 1fr 110px 68px 120px";
+  /* Responsive grid columns — 5 columnas en modo full, 4 en compact.
+     · Cliente: absorbe avatar + nombre + tags + sub-línea (asesor · proyecto · fecha)
+       y el presupuesto a la derecha dentro de la misma celda, para que lo
+       monetario viva junto al nombre sin una columna extra.
+     · Etapa, Seguim., Score (solo full), Acciones. */
+  const colsFull    = "2.4fr 140px 140px 110px 140px";
+  const colsCompact = "2fr 130px 130px 120px";
   const cols = co ? colsCompact : colsFull;
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+    <div style={{
+      display: "flex", flexDirection: "column", gap: 18,
+      color: T.txt,
+      transition: "color 0.3s ease",
+    }}>
 
       {/* ── HEADER ROW ── */}
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16 }}>
         <div>
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
-            <div style={{ width: 8, height: 8, borderRadius: "50%", background: P.accent, boxShadow: `0 0 10px ${P.accent}80` }} />
-            <h2 style={{ fontSize: 20, fontWeight: 700, color: "#FFFFFF", fontFamily: fontDisp, letterSpacing: "-0.025em", margin: 0 }}>Pipeline CRM</h2>
-            <span style={{ fontSize: 10, fontWeight: 700, color: P.txt3, background: P.glass, border: `1px solid ${P.border}`, padding: "3px 9px", borderRadius: 99, letterSpacing: "0.06em" }}>{visibleLeads.length} clientes</span>
-            {!canSeeAll && <span style={{ fontSize: 10, fontWeight: 700, color: P.amber, background: `${P.amber}10`, border: `1px solid ${P.amber}28`, padding: "3px 9px", borderRadius: 99, letterSpacing: "0.04em" }}>Vista personal</span>}
+            <div style={{ width: 8, height: 8, borderRadius: "50%", background: T.accent, boxShadow: `0 0 10px ${T.accent}80` }} />
+            <h2 style={{ fontSize: 20, fontWeight: 700, color: isLight ? T.txt : "#FFFFFF", fontFamily: fontDisp, letterSpacing: "-0.025em", margin: 0 }}>Pipeline CRM</h2>
+            <span style={{ fontSize: 10, fontWeight: 700, color: T.txt3, background: T.glass, border: `1px solid ${T.border}`, padding: "3px 9px", borderRadius: 99, letterSpacing: "0.06em" }}>{visibleLeads.length} clientes</span>
+            {!canSeeAll && <span style={{ fontSize: 10, fontWeight: 700, color: T.amber, background: `${T.amber}10`, border: `1px solid ${T.amber}28`, padding: "3px 9px", borderRadius: 99, letterSpacing: "0.04em" }}>Vista personal</span>}
           </div>
-          <p style={{ fontSize: 11.5, color: P.txt3, fontFamily: font, margin: 0 }}>
-            <span style={{ color: P.txt2 }}>${(totalPipeline/1000000).toFixed(1)}M</span> en pipeline · <span style={{ color: P.emerald }}>{hotLeads} activos</span> · Score promedio <span style={{ color: P.blue }}>{avgScore}</span>
+          <p style={{ fontSize: 11.5, color: T.txt3, fontFamily: font, margin: 0 }}>
+            <span style={{ color: T.txt2 }}>${(totalPipeline/1000000).toFixed(1)}M</span> en pipeline · <span style={{ color: T.emerald }}>{hotLeads} activos</span> · Score promedio <span style={{ color: T.blue }}>{avgScore}</span>
           </p>
         </div>
-        <button onClick={() => setAddingLead(true)} style={{
-          display: "flex", alignItems: "center", gap: 7, padding: "9px 18px",
-          borderRadius: 11, background: "linear-gradient(135deg, rgba(110,231,194,0.16), rgba(110,231,194,0.07))",
-          border: `1px solid ${P.accentB}`, color: P.accent, fontSize: 12, fontWeight: 700,
-          fontFamily: fontDisp, cursor: "pointer", letterSpacing: "0.01em", transition: "all 0.2s", flexShrink: 0,
-        }}
-          onMouseEnter={e => { e.currentTarget.style.background = "linear-gradient(135deg, rgba(110,231,194,0.24), rgba(110,231,194,0.12))"; e.currentTarget.style.boxShadow = `0 0 20px ${P.accent}18`; }}
-          onMouseLeave={e => { e.currentTarget.style.background = "linear-gradient(135deg, rgba(110,231,194,0.16), rgba(110,231,194,0.07))"; e.currentTarget.style.boxShadow = "none"; }}
-        ><Plus size={14} /> Nuevo cliente</button>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
+          <button onClick={() => setAddingLead(true)} style={{
+            display: "flex", alignItems: "center", gap: 7, padding: "9px 18px",
+            borderRadius: 11,
+            background: isLight
+              ? `linear-gradient(135deg, ${T.accent}, ${T.emerald})`
+              : "linear-gradient(135deg, rgba(110,231,194,0.16), rgba(110,231,194,0.07))",
+            border: `1px solid ${isLight ? "transparent" : T.accentB}`,
+            color: isLight ? "#FFFFFF" : T.accent,
+            fontSize: 12, fontWeight: 700, fontFamily: fontDisp, cursor: "pointer",
+            letterSpacing: "0.01em", transition: "all 0.2s", flexShrink: 0,
+            boxShadow: isLight ? `0 4px 14px ${T.accent}40` : "none",
+          }}
+            onMouseEnter={e => {
+              if (isLight) {
+                e.currentTarget.style.boxShadow = `0 6px 18px ${T.accent}55`;
+                e.currentTarget.style.transform = "translateY(-1px)";
+              } else {
+                e.currentTarget.style.background = "linear-gradient(135deg, rgba(110,231,194,0.24), rgba(110,231,194,0.12))";
+                e.currentTarget.style.boxShadow = `0 0 20px ${T.accent}18`;
+              }
+            }}
+            onMouseLeave={e => {
+              if (isLight) {
+                e.currentTarget.style.boxShadow = `0 4px 14px ${T.accent}40`;
+                e.currentTarget.style.transform = "none";
+              } else {
+                e.currentTarget.style.background = "linear-gradient(135deg, rgba(110,231,194,0.16), rgba(110,231,194,0.07))";
+                e.currentTarget.style.boxShadow = "none";
+              }
+            }}
+          ><Plus size={14} /> Nuevo cliente</button>
+        </div>
       </div>
 
       {/* ── KPIs ── */}
       <div style={{ display: "grid", gridTemplateColumns: co ? "repeat(2, 1fr)" : "repeat(4, 1fr)", gap: 12 }}>
-        <KPI label="Clientes en Pipeline" value={visibleLeads.length} icon={Users} color={P.blue} />
-        <KPI label="Score Promedio" value={avgScore} sub="+4.8 este mes" icon={Target} color={P.amber} />
-        <KPI label="Tasa de Conversión" value="18.4%" sub="+3.2pp" icon={TrendingUp} color={P.emerald} />
-        <KPI label="Valor Total Pipeline" value={`$${(totalPipeline/1000000).toFixed(1)}M`} icon={DollarSign} />
+        <KPI T={T} label="Clientes en Pipeline" value={visibleLeads.length} icon={Users} color={T.blue} />
+        <KPI T={T} label="Score Promedio" value={avgScore} sub="+4.8 este mes" icon={Target} />
+        <KPI T={T} label="Tasa de Conversión" value="18.4%" sub="+3.2pp" icon={TrendingUp} color={T.emerald} />
+        <KPI T={T} label="Valor Total Pipeline" value={`$${(totalPipeline/1000000).toFixed(1)}M`} icon={DollarSign} color={T.accent} />
       </div>
 
       {/* ── CLIENTES EN PRIORIDAD — todos, color por tipo, botones uniformes ── */}
@@ -1659,14 +4457,14 @@ function CRM({ oc, co, leadsData, setLeadsData }) {
           };
           // 🩵 Cyan — sin contacto
           if (l.daysInactive >= 7) return {
-            color: P.cyan, bg: `${P.cyan}07`, border: `${P.cyan}1E`,
-            topBar: `linear-gradient(90deg,${P.cyan},${P.cyan}40,transparent)`,
+            color: T.cyan, bg: `${T.cyan}07`, border: `${T.cyan}1E`,
+            topBar: `linear-gradient(90deg,${T.cyan},${T.cyan}40,transparent)`,
             label: `SIN CONTACTO · ${l.daysInactive}D`, sublabel: "Retomar antes de que enfríe",
             pulse: false, glow: false,
           };
           return {
-            color: P.blue, bg: `${P.blue}07`, border: `${P.blue}1A`,
-            topBar: `linear-gradient(90deg,${P.blue},${P.blue}40,transparent)`,
+            color: T.blue, bg: `${T.blue}07`, border: `${T.blue}1A`,
+            topBar: `linear-gradient(90deg,${T.blue},${T.blue}40,transparent)`,
             label: "ACCIÓN PENDIENTE", sublabel: "Revisar y avanzar hoy",
             pulse: false, glow: false,
           };
@@ -1674,77 +4472,207 @@ function CRM({ oc, co, leadsData, setLeadsData }) {
 
         return (
           <div>
-            {/* Header */}
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "5px 14px 5px 10px", borderRadius: 99, background: "rgba(52,211,153,0.08)", border: "1px solid rgba(52,211,153,0.22)" }}>
-                  <div style={{ width: 7, height: 7, borderRadius: "50%", background: "#34D399", boxShadow: "0 0 9px rgba(52,211,153,0.85)", animation: "pulse 1.8s ease-in-out infinite" }} />
-                  <span style={{ fontSize: 12, fontWeight: 700, color: "#FFFFFF", letterSpacing: "-0.01em", fontFamily: fontDisp }}>Clientes en prioridad</span>
-                </div>
-                <span style={{ fontSize: 11, color: P.txt3, fontFamily: font }}>{priorityLeads.length} cliente{priorityLeads.length !== 1 ? "s" : ""} esperando acción</span>
-              </div>
-              {/* Leyenda de tipos */}
+            {/* Header — 3 zonas: título (izq) · leyenda (centro absoluto) · orden (der) */}
+            <div style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                <div style={{
+                  display: "flex", alignItems: "center", gap: 9,
+                  padding: "7px 16px 7px 12px", borderRadius: 99,
+                  position: "relative",
+                  background: isLight
+                    ? `linear-gradient(135deg, ${T.accent}18 0%, ${T.accent}08 100%)`
+                    : "rgba(52,211,153,0.08)",
+                  border: `1px solid ${isLight ? T.accent + "44" : "rgba(52,211,153,0.24)"}`,
+                  boxShadow: isLight
+                    ? `0 2px 8px ${T.accent}18, 0 4px 16px ${T.accent}14, inset 0 1px 0 rgba(255,255,255,0.7)`
+                    : `0 0 20px ${T.accent}14`,
+                }}>
+                  {/* Dot respirando */}
+                  <div style={{
+                    width: 9, height: 9, borderRadius: "50%",
+                    background: `radial-gradient(circle at 30% 30%, #5CE0B0, ${T.accent})`,
+                    animation: "priorityBreathe 2.4s ease-in-out infinite",
+                  }} />
+                  <span style={{
+                    fontSize: 12.5, fontWeight: 800,
+                    color: isLight ? T.accentDark : "#FFFFFF",
+                    letterSpacing: "-0.005em", fontFamily: fontDisp,
+                  }}>Clientes en prioridad</span>
+                </div>
+                <span style={{
+                  fontSize: 11, color: T.txt2, fontFamily: font, fontWeight: 500,
+                }}>
+                  <span style={{ color: T.accent, fontWeight: 700 }}>{priorityLeads.length}</span> cliente{priorityLeads.length !== 1 ? "s" : ""} esperando acción
+                </span>
+              </div>
+              {/* Leyenda de tipos — centrada absolutamente, no afectada por
+                  los anchos del título y el selector de orden. */}
+              <div style={{
+                position: "absolute", left: "50%", top: "50%",
+                transform: "translate(-50%, -50%)",
+                display: "flex", alignItems: "center", gap: 14,
+                padding: "5px 14px", borderRadius: 99,
+                background: isLight ? "rgba(15,23,42,0.025)" : "rgba(255,255,255,0.025)",
+                border: `1px solid ${isLight ? "rgba(15,23,42,0.06)" : "rgba(255,255,255,0.06)"}`,
+                pointerEvents: "none",
+              }}>
                 {[
                   { color: "#34D399", label: "Urgente / Nuevo" },
                   { color: "#818CF8", label: "Zoom agendado" },
                   { color: "#4ADE80", label: "Zoom concretado" },
                 ].map(({ color, label }) => (
-                  <div key={label} style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                    <div style={{ width: 6, height: 6, borderRadius: "50%", background: color }} />
-                    <span style={{ fontSize: 9.5, color: P.txt3, fontFamily: font }}>{label}</span>
+                  <div key={label} style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                    <div style={{
+                      width: 7, height: 7, borderRadius: "50%",
+                      background: color,
+                      boxShadow: `0 0 0 2px ${isLight ? "#FFFFFF" : "#0B0F17"}, 0 0 0 3px ${color}40`,
+                    }} />
+                    <span style={{ fontSize: 10, color: T.txt2, fontFamily: font, fontWeight: 500, letterSpacing: "0.01em" }}>{label}</span>
                   </div>
                 ))}
               </div>
+
+              {/* Selector de orden — al costado derecho */}
+              <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
+                <span style={{ fontSize: 10, color: T.txt3, fontFamily: font, letterSpacing: "0.03em", textTransform: "uppercase", fontWeight: 600 }}>Ordenar</span>
+                <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
+                  <select
+                    value={prioritySort}
+                    onChange={e => setPrioritySort(e.target.value)}
+                    title="Cambiar orden de las tarjetas de prioridad"
+                    style={{
+                      appearance: "none", WebkitAppearance: "none", MozAppearance: "none",
+                      height: 28, padding: "0 26px 0 12px", minWidth: 168,
+                      borderRadius: 8,
+                      background: prioritySort === "manual"
+                        ? (isLight ? "rgba(15,23,42,0.04)" : "rgba(255,255,255,0.04)")
+                        : `${T.accent}14`,
+                      border: `1px solid ${prioritySort === "manual" ? T.border : `${T.accent}44`}`,
+                      color: prioritySort === "manual" ? T.txt2 : (isLight ? T.accentDark || T.accent : T.accent),
+                      fontSize: 11, fontWeight: 600, fontFamily: font,
+                      outline: "none", cursor: "pointer",
+                      transition: "background 0.15s, border-color 0.15s, color 0.15s",
+                    }}
+                    onMouseEnter={e => {
+                      e.currentTarget.style.background = prioritySort === "manual"
+                        ? (isLight ? "rgba(15,23,42,0.07)" : "rgba(255,255,255,0.07)")
+                        : `${T.accent}22`;
+                      e.currentTarget.style.borderColor = prioritySort === "manual" ? T.borderH : `${T.accent}77`;
+                    }}
+                    onMouseLeave={e => {
+                      e.currentTarget.style.background = prioritySort === "manual"
+                        ? (isLight ? "rgba(15,23,42,0.04)" : "rgba(255,255,255,0.04)")
+                        : `${T.accent}14`;
+                      e.currentTarget.style.borderColor = prioritySort === "manual" ? T.border : `${T.accent}44`;
+                    }}
+                  >
+                    <option value="manual"  style={{ background: isLight ? "#FFFFFF" : "#0C1219", color: T.txt }}>Manual (arrastra)</option>
+                    <option value="newest"  style={{ background: isLight ? "#FFFFFF" : "#0C1219", color: T.txt }}>Nuevos primero</option>
+                    <option value="oldest"  style={{ background: isLight ? "#FFFFFF" : "#0C1219", color: T.txt }}>Nuevos al final</option>
+                    <option value="score"   style={{ background: isLight ? "#FFFFFF" : "#0C1219", color: T.txt }}>Score más alto</option>
+                    <option value="urgency" style={{ background: isLight ? "#FFFFFF" : "#0C1219", color: T.txt }}>Más urgentes</option>
+                  </select>
+                  <ChevronDown size={12} color={prioritySort === "manual" ? T.txt3 : T.accent} strokeWidth={2.5} style={{ position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }} />
+                </div>
+              </div>
             </div>
 
-            {/* Scroll horizontal — swipe / drag sin flechas */}
-            <div style={{ position: "relative" }}>
+            {/* Carrusel horizontal — con máscara sutil a la derecha para indicar scroll */}
+            <div style={{
+              position: "relative",
+              maskImage: "linear-gradient(90deg, #000 0%, #000 94%, transparent 100%)",
+              WebkitMaskImage: "linear-gradient(90deg, #000 0%, #000 94%, transparent 100%)",
+            }}>
             <div ref={carouselRef}
-              onScroll={() => {
-                if (!carouselRef.current) return;
-                const cardW = 310;
-                const idx = Math.round(carouselRef.current.scrollLeft / cardW);
-                setActiveCardIdx(Math.max(0, Math.min(idx, priorityLeads.length - 1)));
-              }}
               onDragOver={handleCarouselDragOver}
-              onDrop={handleCardDrop}
-              style={{ display: "flex", gap: 12, overflowX: "auto", paddingBottom: 6, scrollbarWidth: "none", msOverflowStyle: "none", scrollBehavior: "smooth", scrollSnapType: "x mandatory", WebkitOverflowScrolling: "touch" }}>
+              onDrop={handleCarouselDrop}
+              className="carousel-no-scroll"
+              style={{ display: "flex", gap: 12, overflowX: "auto", padding: "3px 24px 8px 3px", scrollbarWidth: "none", msOverflowStyle: "none", WebkitOverflowScrolling: "touch" }}>
               {priorityLeads.map((l, cardIdx) => {
                 const sc = l.sc;
-                const stageColor = stgC[l.st] || P.txt3;
+                const stageColor = stgC[l.st] || T.txt3;
                 const meta = getCardMeta(l);
+                const prioNum = cardIdx + 1;
 
                 const isDraggingCard = dragCardId === l.id;
+                const isJustDropped  = justDroppedId === l.id;
                 const showInsertBefore = dragInsertIdx === cardIdx && dragCardId && dragCardId !== l.id;
-                const showInsertAfter = dragInsertIdx === cardIdx + 1 && dragCardId && cardIdx === priorityLeads.length - 1;
+                const showInsertAfter  = dragInsertIdx === cardIdx + 1 && dragCardId && cardIdx === priorityLeads.length - 1;
                 return (
-                  <div key={l.id} style={{ display: "flex", alignItems: "stretch", gap: 0, flexShrink: 0, scrollSnapAlign: "start" }}>
+                  <div key={l.id} style={{ display: "flex", alignItems: "stretch", gap: 0 }}>
                     {/* Insert-before indicator */}
                     {showInsertBefore && (
-                      <div style={{ width: 3, borderRadius: 3, background: P.accent, boxShadow: `0 0 12px ${P.accent}80`, marginRight: 4, alignSelf: "stretch", flexShrink: 0, transition: "opacity 0.15s" }} />
+                      <div style={{ width: 3, borderRadius: 3, background: T.accent, boxShadow: `0 0 12px ${T.accent}80`, marginRight: 4, alignSelf: "stretch", flexShrink: 0, transition: "opacity 0.15s" }} />
                     )}
+                  {(() => {
+                    // ── Estilos estáticos de la tarjeta — sin animación de respiración ──
+                    // El color de atención ("meta.color") se manifiesta como un borde sutil
+                    // + un halo suave en sombra. Mismo lenguaje en claro y oscuro, adaptado al fondo.
+                    const restBorder = isLight
+                      ? `${meta.color}40`  // ~25% — visible sobre blanco sin saturar
+                      : `${meta.color}3D`; // ~24% — visible sobre oscuro
+                    const restShadow = isLight
+                      ? `0 1px 2px rgba(15,23,42,0.04), 0 10px 26px rgba(15,23,42,0.06), 0 4px 14px ${meta.color}10, inset 0 1px 0 rgba(255,255,255,0.9)`
+                      : `0 4px 14px rgba(0,0,0,0.28), 0 12px 32px rgba(0,0,0,0.22), 0 4px 18px ${meta.color}14, inset 0 1px 0 rgba(255,255,255,0.05)`;
+                    const hoverBorder = isLight ? `${meta.color}70` : `${meta.color}66`;
+                    const hoverShadow = isLight
+                      ? `0 4px 12px rgba(15,23,42,0.06), 0 20px 48px rgba(15,23,42,0.10), 0 6px 22px ${meta.color}22, inset 0 1px 0 rgba(255,255,255,0.95)`
+                      : `0 8px 20px rgba(0,0,0,0.34), 0 22px 52px rgba(0,0,0,0.28), 0 6px 24px ${meta.color}2E, inset 0 1px 0 rgba(255,255,255,0.06)`;
+                    const droppedBorder = isLight ? `${meta.color}85` : `${meta.color}80`;
+                    const droppedShadow = isLight
+                      ? `0 0 0 3px ${meta.color}1F, 0 14px 38px rgba(15,23,42,0.10), 0 6px 16px ${meta.color}1A`
+                      : `0 0 0 2px ${meta.color}38, 0 12px 36px rgba(0,0,0,0.4)`;
+                    return (
                   <div
                     draggable
                     onDragStart={e => handleCardDragStart(e, l.id)}
                     onDragOver={e => { e.stopPropagation(); handleCardDragOver(e, cardIdx); }}
                     onDrop={e => { e.stopPropagation(); handleCardDrop(e); }}
                     onDragEnd={handleCardDragEnd}
+                    onClick={() => { if (!dragCardId && !isDraggingCard) setSelectedLead(l); }}
+                    title="Click para ver perfil completo · arrastrar para reordenar"
                     style={{
-                      minWidth: co ? 256 : 288, maxWidth: 288, flexShrink: 0,
-                      borderRadius: 18, overflow: "hidden",
-                      background: meta.bg,
-                      border: `1px solid ${meta.border}`,
+                      width: co ? 256 : 288, flexShrink: 0,
+                      borderRadius: 20, overflow: "hidden",
+                      position: "relative",
+                      // Apple Liquid Glass: base limpia, el color aparece sutilmente en borde y halo
+                      background: isLight
+                        ? `linear-gradient(180deg, rgba(255,255,255,0.96) 0%, rgba(250,252,254,0.88) 100%)`
+                        : `linear-gradient(180deg, rgba(16,22,32,0.72) 0%, rgba(10,14,22,0.82) 100%)`,
+                      backdropFilter: "blur(50px) saturate(170%)",
+                      WebkitBackdropFilter: "blur(50px) saturate(170%)",
+                      border: `1px solid ${isJustDropped ? droppedBorder : restBorder}`,
+                      boxShadow: isJustDropped ? droppedShadow : restShadow,
                       display: "flex", flexDirection: "column",
-                      transition: "transform 0.2s ease, opacity 0.18s ease",
-                      animation: meta.glow ? "urgentGlow 2.8s ease-in-out infinite" : "none",
+                      transition: "transform 0.24s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.24s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.24s",
                       opacity: isDraggingCard ? 0.38 : 1,
-                      cursor: dragCardId ? (isDraggingCard ? "grabbing" : "copy") : "grab",
+                      cursor: dragCardId ? (isDraggingCard ? "grabbing" : "copy") : "pointer",
                       transform: isDraggingCard ? "scale(0.97)" : "none",
                     }}
-                    onMouseEnter={e => { if (!dragCardId) e.currentTarget.style.transform = "translateY(-4px)"; }}
-                    onMouseLeave={e => { if (!dragCardId) e.currentTarget.style.transform = "none"; }}
+                    onMouseEnter={e => {
+                      if (!dragCardId) {
+                        e.currentTarget.style.transform = "translateY(-4px)";
+                        e.currentTarget.style.boxShadow = hoverShadow;
+                        e.currentTarget.style.borderColor = hoverBorder;
+                      }
+                    }}
+                    onMouseLeave={e => {
+                      if (!dragCardId) {
+                        e.currentTarget.style.transform = "none";
+                        e.currentTarget.style.boxShadow = restShadow;
+                        e.currentTarget.style.borderColor = restBorder;
+                      }
+                    }}
                   >
+                    {/* Hint de color sutil — halo tenue en la esquina superior, único overlay.
+                        Sin glass-shine adicional para mantener la carta limpia y minimalista. */}
+                    <div style={{
+                      position: "absolute", inset: 0,
+                      background: isLight
+                        ? `radial-gradient(ellipse 200px 140px at 0% 0%, ${meta.color}10 0%, transparent 72%)`
+                        : `radial-gradient(ellipse 220px 160px at 0% 0%, ${meta.color}1A 0%, transparent 74%)`,
+                      pointerEvents: "none",
+                    }} />
                     {/* Barra top — shimmer animado en urgentes */}
                     <div style={{
                       height: 3, flexShrink: 0,
@@ -1755,127 +4683,385 @@ function CRM({ oc, co, leadsData, setLeadsData }) {
 
                     <div style={{ padding: "14px 16px 16px", display: "flex", flexDirection: "column", gap: 13, flex: 1 }}>
 
-                      {/* Fila superior: tipo · × */}
+                      {/* Fila superior: PRIORIDAD #N + dot estado */}
                       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
-                          {meta.pulse && <div style={{ width: 6, height: 6, borderRadius: "50%", background: meta.color, flexShrink: 0, animation: "pulse 1.5s ease-in-out infinite", boxShadow: `0 0 6px ${meta.color}80` }} />}
-                          <span style={{ fontSize: 10.5, fontWeight: 700, color: meta.color, letterSpacing: "0.06em", textTransform: "uppercase", fontFamily: font }}>
-                            {meta.label}
-                            {l.daysInactive !== undefined && l.daysInactive <= 1 && !l.isNew ? <span style={{ marginLeft: 5, fontSize: 9, background: `${meta.color}22`, border: `1px solid ${meta.color}44`, borderRadius: 4, padding: "1px 5px" }}>HOY</span> : l.daysInactive > 1 && l.daysInactive <= 4 ? <span style={{ marginLeft: 5, fontSize: 9, color: `${meta.color}99` }}>{l.daysInactive}D</span> : null}
-                          </span>
+                        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                          {/* Selector de posición — click para cambiar de número */}
+                          <div
+                            onMouseDown={e => e.stopPropagation()}
+                            onPointerDown={e => e.stopPropagation()}
+                            onClick={e => e.stopPropagation()}
+                            onDragStart={e => { e.preventDefault(); e.stopPropagation(); }}
+                            draggable={false}
+                            title="Cambiar posición de prioridad"
+                            style={{ position: "relative", display: "flex", alignItems: "center", flexShrink: 0 }}
+                          >
+                            <select
+                              value={prioNum}
+                              onChange={e => moveToPriorityPosition(l.id, parseInt(e.target.value, 10))}
+                              style={{
+                                appearance: "none", WebkitAppearance: "none", MozAppearance: "none",
+                                height: 22, padding: "0 16px 0 7px", minWidth: 38,
+                                borderRadius: 6,
+                                background: `${meta.color}18`, border: `1px solid ${meta.color}44`,
+                                color: meta.color, fontSize: 10, fontWeight: 800, fontFamily: fontDisp,
+                                lineHeight: 1, outline: "none", cursor: "pointer",
+                                textAlign: "center", textAlignLast: "center",
+                                transition: "background 0.15s, border-color 0.15s",
+                              }}
+                              onMouseEnter={e => { e.currentTarget.style.background = `${meta.color}28`; e.currentTarget.style.borderColor = `${meta.color}77`; }}
+                              onMouseLeave={e => { e.currentTarget.style.background = `${meta.color}18`; e.currentTarget.style.borderColor = `${meta.color}44`; }}
+                            >
+                              {priorityLeads.map((_, i) => (
+                                <option key={i} value={i + 1} style={{ background: "#0C1219", color: "#fff", fontFamily: fontDisp }}>#{i + 1}</option>
+                              ))}
+                            </select>
+                            <ChevronDown size={9} color={meta.color} strokeWidth={2.5} style={{ position: "absolute", right: 4, top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }} />
+                          </div>
+                          <span style={{ fontSize: 10.5, fontWeight: 700, color: meta.color, letterSpacing: "0.06em", textTransform: "uppercase", fontFamily: font }}>Prioridad</span>
+                          {meta.pulse && <div style={{ width: 5, height: 5, borderRadius: "50%", background: meta.color, flexShrink: 0, animation: "pulse 1.5s ease-in-out infinite", boxShadow: `0 0 6px ${meta.color}80` }} />}
                         </div>
-                        <button onClick={() => dismissPriority(l.id)} title="Quitar de prioridad"
-                          style={{ width: 20, height: 20, borderRadius: 5, background: "transparent", border: "1px solid rgba(255,255,255,0.08)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.14s", flexShrink: 0 }}
-                          onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.10)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.18)"; }}
-                          onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)"; }}
-                        ><X size={9} color="rgba(255,255,255,0.40)" strokeWidth={2.5} /></button>
+                        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                          {/* Estado secundario (zoom, urgente, etc.) */}
+                          <span style={{ fontSize: 8.5, color: meta.color, opacity: 0.65, fontFamily: font, fontWeight: 600, letterSpacing: "0.04em", textTransform: "uppercase", background: `${meta.color}10`, padding: "2px 7px", borderRadius: 99, border: `1px solid ${meta.color}20` }}>{meta.label.split("·")[0].trim()}</span>
+                          {/* Botón quitar de prioridad — X discreta.
+                              Usa dismissPriority (no togglePin) para que funcione tanto en
+                              leads pinneados manualmente como en auto-priority (isNew, Zoom,
+                              hot, inactividad). dismissPriority despinea + añade a dismissedIds
+                              para suprimir la regla automática. */}
+                          <button
+                            onMouseDown={e => e.stopPropagation()}
+                            onPointerDown={e => e.stopPropagation()}
+                            onDragStart={e => { e.preventDefault(); e.stopPropagation(); }}
+                            draggable={false}
+                            onClick={e => { e.stopPropagation(); dismissPriority(l.id); }}
+                            title="Quitar de prioridad"
+                            style={{
+                              width: 22, height: 22, borderRadius: 7,
+                              background: "transparent",
+                              border: `1px solid ${isLight ? "rgba(15,23,42,0.10)" : "rgba(255,255,255,0.10)"}`,
+                              color: T.txt3, cursor: "pointer",
+                              display: "flex", alignItems: "center", justifyContent: "center",
+                              padding: 0, flexShrink: 0, transition: "all 0.14s",
+                            }}
+                            onMouseEnter={e => {
+                              e.currentTarget.style.background  = isLight ? "rgba(239,68,68,0.10)" : "rgba(239,68,68,0.14)";
+                              e.currentTarget.style.borderColor = isLight ? "rgba(239,68,68,0.35)" : "rgba(239,68,68,0.40)";
+                              e.currentTarget.style.color = isLight ? "#B91C1C" : "#FCA5A5";
+                            }}
+                            onMouseLeave={e => {
+                              e.currentTarget.style.background  = "transparent";
+                              e.currentTarget.style.borderColor = isLight ? "rgba(15,23,42,0.10)" : "rgba(255,255,255,0.10)";
+                              e.currentTarget.style.color = T.txt3;
+                            }}
+                          >
+                            <X size={11} strokeWidth={2.4} />
+                          </button>
+                        </div>
                       </div>
 
                       {/* Nombre + presupuesto + etapa */}
                       <div>
-                        <p style={{ fontSize: 15.5, fontWeight: 800, color: "#FFFFFF", fontFamily: fontDisp, letterSpacing: "-0.025em", lineHeight: 1.2, margin: "0 0 5px" }}>{l.n}</p>
+                        <p style={{ fontSize: 15.5, fontWeight: 800, color: isLight ? T.txt : "#FFFFFF", fontFamily: fontDisp, letterSpacing: "-0.025em", lineHeight: 1.2, margin: "0 0 5px" }}>{l.n}</p>
                         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 6 }}>
-                          <Pill color={stageColor} s>{l.st}</Pill>
-                          <span style={{ fontSize: 11.5, fontWeight: 700, color: P.txt3, fontFamily: fontDisp }}>{l.budget}</span>
+                          <Pill color={stageColor} s isLight={isLight}>{l.st}</Pill>
+                          <span style={{ fontSize: 11.5, fontWeight: 700, color: T.txt3, fontFamily: fontDisp }}>{l.budget}</span>
                         </div>
                       </div>
 
-                      {/* Score bar — con glow en score alto */}
-                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                        <div style={{ flex: 1, height: 3.5, borderRadius: 2, background: "rgba(255,255,255,0.06)" }}>
-                          <div style={{ width: `${sc}%`, height: "100%", borderRadius: 2, background: sc >= 80 ? P.emerald : sc >= 60 ? P.blue : P.amber, opacity: 0.9,
-                            boxShadow: sc >= 80 ? `0 0 8px ${P.emerald}60` : sc >= 60 ? `0 0 6px ${P.blue}50` : "none" }} />
-                        </div>
-                        <span style={{ fontSize: 10, fontWeight: 700, fontFamily: fontDisp, flexShrink: 0,
-                          color: sc >= 80 ? P.emerald : sc >= 60 ? P.blue : P.amber }}>Score {sc}</span>
-                      </div>
-
-                      {/* Próxima acción */}
-                      <div style={{ borderRadius: 10, background: "rgba(0,0,0,0.22)", border: `1px solid rgba(255,255,255,0.06)`, overflow: "hidden", flex: 1 }}>
-                        <div style={{ padding: "7px 11px 6px", borderBottom: "1px solid rgba(255,255,255,0.05)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                          <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                            <Timer size={9} color={meta.color} strokeWidth={2.5} />
-                            <span style={{ fontSize: 8.5, fontWeight: 700, color: meta.color, letterSpacing: "0.06em", textTransform: "uppercase", fontFamily: font }}>Próxima acción</span>
+                      {/* Agente IA asignado — badge contextual */}
+                      {(() => {
+                        const agent = l.aiAgent ? AI_AGENTS[l.aiAgent] : null;
+                        if (!agent) return null;
+                        const AI = agent.icon;
+                        return (
+                          <div onClick={e => e.stopPropagation()} style={{ display: "flex", alignItems: "center", gap: 7, padding: "6px 9px", borderRadius: 8, background: `${agent.color}12`, border: `1px solid ${agent.color}35`, boxShadow: `0 0 10px ${agent.color}18` }}>
+                            <div style={{ width: 20, height: 20, borderRadius: 6, background: `${agent.color}22`, border: `1px solid ${agent.color}55`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, position: "relative" }}>
+                              <AI size={10} color={agent.color} strokeWidth={2.5} />
+                              <div style={{ position: "absolute", top: -2, right: -2, width: 6, height: 6, borderRadius: "50%", background: agent.color, boxShadow: `0 0 5px ${agent.color}`, animation: "pulse 2s ease-in-out infinite" }} />
+                            </div>
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <p style={{ margin: 0, fontSize: 9, fontWeight: 800, color: agent.color, letterSpacing: "0.08em", textTransform: "uppercase", fontFamily: fontDisp }}>IA activa · {agent.short}</p>
+                              <p style={{ margin: 0, fontSize: 9, color: T.txt3, fontFamily: font }}>Tú conservas el control</p>
+                            </div>
+                            <button
+                              onClick={() => updateLead({...l, aiAgent: null})}
+                              title="Retomar control — liberar agente"
+                              style={{ background: "transparent", border: "none", color: T.txt3, cursor: "pointer", padding: 4, borderRadius: 5, display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.14s" }}
+                              onMouseEnter={e => { e.currentTarget.style.color = agent.color; e.currentTarget.style.background = `${agent.color}18`; }}
+                              onMouseLeave={e => { e.currentTarget.style.color = T.txt3; e.currentTarget.style.background = "transparent"; }}
+                            >
+                              <X size={11} strokeWidth={2.5} />
+                            </button>
                           </div>
-                          <span style={{ fontSize: 8.5, color: P.txt3, background: "rgba(255,255,255,0.05)", padding: "1px 6px", borderRadius: 99, fontFamily: font }}>{l.nextActionDate}</span>
-                        </div>
-                        <div style={{ padding: "9px 11px", minHeight: 52, display: "flex", alignItems: "flex-start" }}>
-                          <p style={{ fontSize: 12, fontWeight: 500, color: "#E2E8F0", fontFamily: font, lineHeight: 1.55, margin: 0, display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
-                            {l.nextAction || "Sin próxima acción registrada."}
-                          </p>
-                        </div>
+                        );
+                      })()}
+
+                      {/* Score bar — sutil, sin label redundante. La intensidad del mint
+                          comunica la calidad del match por sí sola (≥80 brillante con glow,
+                          ≥60 claro, <60 tenue). El número se ve en el drawer si se requiere. */}
+                      <div style={{ height: 3, borderRadius: 2, background: isLight ? "rgba(15,23,42,0.06)" : "rgba(255,255,255,0.06)", overflow: "hidden" }}>
+                        <div style={{ width: `${sc}%`, height: "100%", borderRadius: 2, background: T.accent,
+                          opacity: sc >= 80 ? 1 : sc >= 60 ? 0.85 : 0.6,
+                          boxShadow: sc >= 80 ? `0 0 6px ${T.accent}55` : "none",
+                          transition: "width 0.24s ease",
+                        }} />
                       </div>
 
-                      {/* Cambio de etapa */}
-                      <div style={{ position: "relative" }}>
-                        <select value={l.st} onChange={e => updateLead({...l, st: e.target.value})}
-                          style={{ width: "100%", padding: "6px 28px 6px 10px", borderRadius: 8, background: `${stageColor}0C`, border: `1px solid ${stageColor}22`, color: stageColor, fontSize: 10.5, fontWeight: 600, outline: "none", cursor: "pointer", fontFamily: font, appearance: "none", WebkitAppearance: "none" }}>
-                          {STAGES.map(s => <option key={s} value={s} style={{ background: "#0C1219", color: "#fff" }}>{s}</option>)}
-                        </select>
-                        <ChevronDown size={11} color={stageColor} strokeWidth={2.5} style={{ position: "absolute", right: 9, top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }} />
+                      {/* Próxima acción — hero del card, editable inline.
+                          Click al icono lápiz convierte el cuerpo en textarea + input fecha. */}
+                      {(() => {
+                        const isEditingAction = editingActionId === l.id;
+                        return (
+                          <div onClick={e => e.stopPropagation()} style={{
+                            borderRadius: 12,
+                            background: isLight
+                              ? `linear-gradient(135deg, ${meta.color}14 0%, ${meta.color}07 100%)`
+                              : "rgba(0,0,0,0.22)",
+                            border: `1px solid ${isEditingAction ? (meta.color + (isLight ? "77" : "55")) : (isLight ? meta.color + "33" : "rgba(255,255,255,0.06)")}`,
+                            overflow: "hidden", flex: 1,
+                            boxShadow: isLight ? `0 2px 8px ${meta.color}14, inset 0 1px 0 rgba(255,255,255,0.5)` : "none",
+                            transition: "border-color 0.15s",
+                          }}>
+                            <div style={{
+                              padding: "8px 12px 7px",
+                              borderBottom: `1px solid ${isLight ? meta.color + "20" : "rgba(255,255,255,0.05)"}`,
+                              display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8,
+                              background: isLight ? `${meta.color}10` : "transparent",
+                            }}>
+                              <div style={{ display: "flex", alignItems: "center", gap: 5, minWidth: 0 }}>
+                                <Timer size={10} color={meta.color} strokeWidth={2.5} />
+                                <span style={{ fontSize: 9, fontWeight: 800, color: meta.color, letterSpacing: "0.07em", textTransform: "uppercase", fontFamily: fontDisp }}>Próxima acción</span>
+                              </div>
+                              <div style={{ display: "flex", alignItems: "center", gap: 5, flexShrink: 0 }}>
+                                {!isEditingAction && l.nextActionDate && (
+                                  <span style={{
+                                    fontSize: 9, fontWeight: 700, color: isLight ? meta.color : T.txt3,
+                                    background: isLight ? "#FFFFFF" : "rgba(255,255,255,0.05)",
+                                    padding: "2px 8px", borderRadius: 99, fontFamily: fontDisp,
+                                    border: isLight ? `1px solid ${meta.color}33` : "none",
+                                    letterSpacing: "0.02em",
+                                  }}>{l.nextActionDate}</span>
+                                )}
+                                {!isEditingAction && (
+                                  <button
+                                    onClick={() => startInlineAction(l)}
+                                    title="Editar próxima acción"
+                                    aria-label="Editar próxima acción"
+                                    style={{
+                                      display: "inline-flex", alignItems: "center", justifyContent: "center",
+                                      width: 20, height: 20, borderRadius: 6,
+                                      background: isLight ? "#FFFFFF" : "rgba(255,255,255,0.05)",
+                                      border: `1px solid ${isLight ? meta.color + "33" : "rgba(255,255,255,0.08)"}`,
+                                      color: meta.color, cursor: "pointer", padding: 0,
+                                      transition: "all 0.15s",
+                                    }}
+                                    onMouseEnter={e => {
+                                      e.currentTarget.style.background = isLight ? `${meta.color}1A` : `${meta.color}22`;
+                                      e.currentTarget.style.borderColor = `${meta.color}66`;
+                                    }}
+                                    onMouseLeave={e => {
+                                      e.currentTarget.style.background = isLight ? "#FFFFFF" : "rgba(255,255,255,0.05)";
+                                      e.currentTarget.style.borderColor = isLight ? meta.color + "33" : "rgba(255,255,255,0.08)";
+                                    }}
+                                  >
+                                    <Pencil size={9} strokeWidth={2.5} />
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                            {!isEditingAction && (
+                              <div style={{ padding: "10px 12px", minHeight: 54, display: "flex", alignItems: "flex-start" }}>
+                                <p style={{
+                                  fontSize: 12.5, fontWeight: 600,
+                                  color: isLight ? T.txt : "#E2E8F0",
+                                  fontFamily: font, lineHeight: 1.5, margin: 0,
+                                  display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden",
+                                }}>
+                                  {l.nextAction || "Sin próxima acción registrada."}
+                                </p>
+                              </div>
+                            )}
+                            {isEditingAction && (
+                              <div style={{ padding: 10, display: "flex", flexDirection: "column", gap: 7 }}>
+                                <textarea
+                                  value={actionDraft.a}
+                                  onChange={e => setActionDraft(d => ({ ...d, a: e.target.value }))}
+                                  autoFocus
+                                  placeholder="Ej: Llamar mañana 10am para confirmar visita…"
+                                  rows={3}
+                                  style={{
+                                    width: "100%", boxSizing: "border-box",
+                                    padding: "8px 10px", borderRadius: 8,
+                                    background: isLight ? "#FFFFFF" : "rgba(255,255,255,0.04)",
+                                    border: `1px solid ${isLight ? meta.color + "55" : meta.color + "44"}`,
+                                    color: isLight ? T.txt : "#E2E8F0",
+                                    fontSize: 12.5, lineHeight: 1.45,
+                                    fontFamily: font, fontWeight: 500,
+                                    outline: "none", resize: "vertical", minHeight: 52,
+                                  }}
+                                />
+                                <input
+                                  value={actionDraft.d}
+                                  onChange={e => setActionDraft(d => ({ ...d, d: e.target.value }))}
+                                  placeholder="Fecha (Hoy 5pm, Mañana 10am…)"
+                                  style={{
+                                    width: "100%", boxSizing: "border-box",
+                                    padding: "6px 10px", borderRadius: 7,
+                                    background: isLight ? "#FFFFFF" : "rgba(255,255,255,0.04)",
+                                    border: `1px solid ${isLight ? meta.color + "44" : meta.color + "33"}`,
+                                    color: isLight ? T.txt : "#E2E8F0",
+                                    fontSize: 11, fontWeight: 600,
+                                    fontFamily: fontDisp, letterSpacing: "0.01em",
+                                    outline: "none",
+                                  }}
+                                />
+                                <div style={{ display: "flex", gap: 6, justifyContent: "flex-end" }}>
+                                  <button
+                                    onClick={cancelInlineAction}
+                                    style={{
+                                      padding: "6px 10px", borderRadius: 7,
+                                      background: "transparent",
+                                      border: `1px solid ${T.border}`,
+                                      color: T.txt3, fontSize: 10.5, fontWeight: 700,
+                                      fontFamily: fontDisp, letterSpacing: "0.02em",
+                                      cursor: "pointer", transition: "all 0.15s",
+                                    }}
+                                  >Cancelar</button>
+                                  <button
+                                    onClick={() => saveInlineAction(l)}
+                                    style={{
+                                      padding: "6px 12px", borderRadius: 7,
+                                      background: isLight
+                                        ? `linear-gradient(135deg, ${meta.color} 0%, ${meta.color}CC 100%)`
+                                        : `linear-gradient(135deg, ${meta.color}33, ${meta.color}18)`,
+                                      border: `1px solid ${isLight ? "transparent" : meta.color + "55"}`,
+                                      color: isLight ? "#FFFFFF" : meta.color,
+                                      fontSize: 10.5, fontWeight: 800,
+                                      fontFamily: fontDisp, letterSpacing: "0.02em",
+                                      cursor: "pointer", transition: "all 0.15s",
+                                      display: "inline-flex", alignItems: "center", gap: 4,
+                                      boxShadow: isLight ? `0 2px 6px ${meta.color}44` : "none",
+                                    }}
+                                  ><Save size={10} strokeWidth={2.6} /> Guardar</button>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })()}
+
+                      {/* Seguimientos — pill horizontal completo, color del meta.
+                          Permite registrar recontactos sin abrir el drawer. */}
+                      <div onClick={e => e.stopPropagation()}>
+                        <FollowUpBadge lead={l} onUpdate={updateLead} T={T} fullWidth tint={meta.color} />
                       </div>
 
-                      {/* Botones */}
-                      <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: "auto" }}>
-                        <button onClick={() => oc(`__crm__ ${l.n.toLowerCase()}`, l)} style={{
-                          width: "100%", padding: "13px 14px", borderRadius: 10,
-                          background: "linear-gradient(135deg, rgba(110,231,194,0.18), rgba(110,231,194,0.08))",
-                          border: `1px solid ${P.accentB}`,
-                          color: P.accent, fontSize: 13, fontWeight: 700,
-                          fontFamily: fontDisp, cursor: "pointer", letterSpacing: "0.005em",
+                      {/* CTA única — "Analizar y actuar" es la acción principal del card.
+                          Perfil/Expediente se acceden con click en cualquier zona libre
+                          del card (abre el drawer con tabs completos). Minimalista. */}
+                      <button
+                        onClick={e => { e.stopPropagation(); setAnalyzingLead(l); }}
+                        style={{
+                          width: "100%", padding: "12px 14px", borderRadius: 11,
+                          marginTop: "auto",
+                          background: isLight
+                            ? `linear-gradient(135deg, ${T.accent} 0%, #14B892 100%)`
+                            : "linear-gradient(135deg, rgba(110,231,194,0.18), rgba(110,231,194,0.08))",
+                          border: isLight ? "1px solid transparent" : `1px solid ${T.accentB}`,
+                          color: isLight ? "#FFFFFF" : T.accent, fontSize: 12.5, fontWeight: 700,
+                          fontFamily: fontDisp, cursor: "pointer", letterSpacing: "0.01em",
                           transition: "all 0.18s",
                           display: "flex", alignItems: "center", justifyContent: "center", gap: 7,
+                          boxShadow: isLight ? `0 4px 14px ${T.accent}48, 0 2px 6px ${T.accent}28, inset 0 1px 0 rgba(255,255,255,0.35)` : "none",
                         }}
-                          onMouseEnter={e => { e.currentTarget.style.background = "linear-gradient(135deg, rgba(110,231,194,0.30), rgba(110,231,194,0.14))"; e.currentTarget.style.boxShadow = `0 0 28px ${P.accent}35, 0 4px 16px ${P.accent}20`; e.currentTarget.style.transform = "translateY(-1px)"; }}
-                          onMouseLeave={e => { e.currentTarget.style.background = "linear-gradient(135deg, rgba(110,231,194,0.18), rgba(110,231,194,0.08))"; e.currentTarget.style.boxShadow = "none"; e.currentTarget.style.transform = "none"; }}
-                        ><Zap size={13} strokeWidth={2.5} /> Analizar y actuar</button>
-
-                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 7 }}>
-                          {[
-                            { label: "Perfil", icon: User, fn: () => setSelectedLead(l) },
-                            { label: "Notas",  icon: FileText, fn: () => setNotesLead(l) },
-                          ].map(({ label, icon: Icon, fn }) => (
-                            <button key={label} onClick={fn} style={{
-                              padding: "11px 0", borderRadius: 9,
-                              background: "rgba(255,255,255,0.04)",
-                              border: "1px solid rgba(255,255,255,0.09)",
-                              display: "flex", alignItems: "center", justifyContent: "center", gap: 5,
-                              color: P.txt2, fontSize: 12, fontWeight: 600,
-                              fontFamily: font, cursor: "pointer", transition: "all 0.14s",
-                            }}
-                              onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.09)"; e.currentTarget.style.color = "#fff"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.16)"; }}
-                              onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.04)"; e.currentTarget.style.color = P.txt2; e.currentTarget.style.borderColor = "rgba(255,255,255,0.09)"; }}
-                            ><Icon size={12} /> {label}</button>
-                          ))}
-                        </div>
-                      </div>
+                        onMouseEnter={e => {
+                          if (isLight) {
+                            e.currentTarget.style.boxShadow = `0 6px 20px ${T.accent}60, 0 3px 10px ${T.accent}38, inset 0 1px 0 rgba(255,255,255,0.45)`;
+                            e.currentTarget.style.transform = "translateY(-1px)";
+                          } else {
+                            e.currentTarget.style.background = "linear-gradient(135deg, rgba(110,231,194,0.30), rgba(110,231,194,0.14))";
+                            e.currentTarget.style.boxShadow = `0 0 28px ${T.accent}35, 0 4px 16px ${T.accent}20`;
+                            e.currentTarget.style.transform = "translateY(-1px)";
+                          }
+                        }}
+                        onMouseLeave={e => {
+                          if (isLight) {
+                            e.currentTarget.style.boxShadow = `0 4px 14px ${T.accent}48, 0 2px 6px ${T.accent}28, inset 0 1px 0 rgba(255,255,255,0.35)`;
+                            e.currentTarget.style.transform = "none";
+                          } else {
+                            e.currentTarget.style.background = "linear-gradient(135deg, rgba(110,231,194,0.18), rgba(110,231,194,0.08))";
+                            e.currentTarget.style.boxShadow = "none";
+                            e.currentTarget.style.transform = "none";
+                          }
+                        }}
+                      ><Zap size={12.5} strokeWidth={2.5} /> Analizar y actuar</button>
                     </div>
                   </div>
+                    );
+                  })()}
                   {/* Insert-after indicator (last card) */}
                   {showInsertAfter && (
-                    <div style={{ width: 3, borderRadius: 3, background: P.accent, boxShadow: `0 0 12px ${P.accent}80`, marginLeft: 4, alignSelf: "stretch", flexShrink: 0 }} />
+                    <div style={{ width: 3, borderRadius: 3, background: T.accent, boxShadow: `0 0 12px ${T.accent}80`, marginLeft: 4, alignSelf: "stretch", flexShrink: 0 }} />
                   )}
                   </div>
                 );
               })}
             </div>
-            {/* Dots indicadores de posición */}
-            {priorityLeads.length > 1 && (
-              <div style={{ display: "flex", justifyContent: "center", gap: 5, marginTop: 10 }}>
-                {priorityLeads.map((l, i) => (
-                  <div key={l.id}
-                    onClick={() => carouselRef.current?.scrollTo({ left: i * 310, behavior: "smooth" })}
-                    style={{
-                      width: i === activeCardIdx ? 20 : 6, height: 6, borderRadius: 3,
-                      background: i === activeCardIdx ? P.accent : "rgba(255,255,255,0.16)",
-                      transition: "all 0.3s cubic-bezier(0.4,0,0.2,1)",
-                      cursor: "pointer", flexShrink: 0,
-                    }}
-                  />
-                ))}
+            </div>
+
+            {/* ── Controles del carrusel — navegación con ratón ── */}
+            {priorityLeads.length > 2 && (
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10, marginTop: 10 }}>
+                <button onClick={() => scrollCarousel(-1)} title="Desplazar a la izquierda"
+                  style={{
+                    width: 34, height: 34, borderRadius: 999,
+                    background: isLight ? "#FFFFFF" : "rgba(255,255,255,0.05)",
+                    border: `1px solid ${isLight ? "rgba(15,23,42,0.10)" : "rgba(255,255,255,0.10)"}`,
+                    cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
+                    transition: "all 0.16s ease",
+                    boxShadow: isLight ? "0 1px 2px rgba(15,23,42,0.04), 0 4px 12px rgba(15,23,42,0.04)" : "0 4px 12px rgba(0,0,0,0.28)",
+                  }}
+                  onMouseEnter={e => {
+                    e.currentTarget.style.background = isLight ? `${T.accent}10` : "rgba(255,255,255,0.09)";
+                    e.currentTarget.style.borderColor = isLight ? `${T.accent}55` : "rgba(255,255,255,0.18)";
+                    e.currentTarget.style.transform = "translateY(-1px)";
+                  }}
+                  onMouseLeave={e => {
+                    e.currentTarget.style.background = isLight ? "#FFFFFF" : "rgba(255,255,255,0.05)";
+                    e.currentTarget.style.borderColor = isLight ? "rgba(15,23,42,0.10)" : "rgba(255,255,255,0.10)";
+                    e.currentTarget.style.transform = "none";
+                  }}
+                >
+                  <ChevronLeft size={15} color={isLight ? T.txt2 : T.txt2} strokeWidth={2.2} />
+                </button>
+                <span style={{ fontSize: 10, color: T.txt3, fontFamily: font, letterSpacing: "0.05em", textTransform: "uppercase", fontWeight: 600 }}>
+                  Desplazar
+                </span>
+                <button onClick={() => scrollCarousel(1)} title="Desplazar a la derecha"
+                  style={{
+                    width: 34, height: 34, borderRadius: 999,
+                    background: isLight ? "#FFFFFF" : "rgba(255,255,255,0.05)",
+                    border: `1px solid ${isLight ? "rgba(15,23,42,0.10)" : "rgba(255,255,255,0.10)"}`,
+                    cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
+                    transition: "all 0.16s ease",
+                    boxShadow: isLight ? "0 1px 2px rgba(15,23,42,0.04), 0 4px 12px rgba(15,23,42,0.04)" : "0 4px 12px rgba(0,0,0,0.28)",
+                  }}
+                  onMouseEnter={e => {
+                    e.currentTarget.style.background = isLight ? `${T.accent}10` : "rgba(255,255,255,0.09)";
+                    e.currentTarget.style.borderColor = isLight ? `${T.accent}55` : "rgba(255,255,255,0.18)";
+                    e.currentTarget.style.transform = "translateY(-1px)";
+                  }}
+                  onMouseLeave={e => {
+                    e.currentTarget.style.background = isLight ? "#FFFFFF" : "rgba(255,255,255,0.05)";
+                    e.currentTarget.style.borderColor = isLight ? "rgba(15,23,42,0.10)" : "rgba(255,255,255,0.10)";
+                    e.currentTarget.style.transform = "none";
+                  }}
+                >
+                  <ChevronRight size={15} color={isLight ? T.txt2 : T.txt2} strokeWidth={2.2} />
+                </button>
               </div>
             )}
-            </div>{/* cierre wrapper carrusel */}
           </div>
         );
       })()}
@@ -1883,95 +5069,342 @@ function CRM({ oc, co, leadsData, setLeadsData }) {
       {/* ── MODAL NUEVO LEAD ── */}
       {addingLead && createPortal(
         <>
-          <div onClick={() => setAddingLead(false)} style={{ position: "fixed", inset: 0, background: "rgba(2,5,12,0.82)", backdropFilter: "blur(10px)", WebkitBackdropFilter: "blur(10px)", zIndex: 500 }} />
-          <div style={{ position: "fixed", top: "50%", left: "50%", transform: "translate(-50%,-50%)", zIndex: 501, width: "min(540px, 95vw)", background: "#07090F", border: `1px solid ${P.borderH}`, borderRadius: 22, boxShadow: "0 52px 100px rgba(0,0,0,0.72), 0 0 0 1px rgba(255,255,255,0.04)", animation: "fadeIn 0.2s ease", overflow: "hidden" }}>
+          <div onClick={() => setAddingLead(false)} style={{
+            position: "fixed", inset: 0, zIndex: 500,
+            background: isLight ? "rgba(15,23,42,0.22)" : "rgba(2,5,12,0.78)",
+            backdropFilter: "blur(10px)", WebkitBackdropFilter: "blur(10px)",
+          }} />
+          <div style={{
+            position: "fixed", top: "50%", left: "50%", transform: "translate(-50%,-50%)",
+            zIndex: 501, width: "min(720px, 96vw)", maxHeight: "94vh",
+            overflowY: "auto",
+            background: isLight ? "#FFFFFF" : "#07090F",
+            border: `1px solid ${isLight ? "rgba(15,23,42,0.08)" : T.borderH}`,
+            borderRadius: 18,
+            boxShadow: isLight
+              ? "0 4px 12px rgba(15,23,42,0.08), 0 28px 80px rgba(15,23,42,0.12), 0 48px 120px rgba(15,23,42,0.08)"
+              : "0 52px 100px rgba(0,0,0,0.72), 0 0 0 1px rgba(255,255,255,0.04)",
+            animation: "fadeIn 0.2s ease",
+          }}>
 
-            {/* ── Barra accent — azul menta solamente ── */}
-            <div style={{ height: 3, background: `linear-gradient(90deg, ${P.accent}, ${P.accent}CC 60%, ${P.accent}44)` }} />
-
-            {/* ── Header ── */}
-            <div style={{ padding: "20px 26px 16px", borderBottom: `1px solid ${P.border}`, display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-              <div>
-                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 5 }}>
-                  <div style={{ width: 28, height: 28, borderRadius: 9, background: `${P.accent}12`, border: `1px solid ${P.accentB}`, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                    <UserCheck size={14} color={P.accent} />
-                  </div>
-                  <h3 style={{ fontSize: 16, fontWeight: 700, color: "#FFFFFF", fontFamily: fontDisp, letterSpacing: "-0.025em", margin: 0 }}>Registrar Nuevo Cliente</h3>
+            {/* ── Header compacto (icono + título + X) ── */}
+            <div style={{
+              padding: "14px 18px",
+              borderBottom: `1px solid ${isLight ? "rgba(15,23,42,0.06)" : T.border}`,
+              display: "flex", justifyContent: "space-between", alignItems: "center",
+              background: isLight
+                ? `linear-gradient(180deg, ${T.accent}08 0%, transparent 100%)`
+                : "transparent",
+            }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
+                <div style={{
+                  width: 28, height: 28, borderRadius: 9,
+                  background: isLight ? `${T.accent}14` : `${T.accent}12`,
+                  border: `1px solid ${isLight ? `${T.accent}40` : T.accentB}`,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  flexShrink: 0,
+                  boxShadow: isLight ? `0 2px 8px ${T.accent}18` : "none",
+                }}>
+                  <UserCheck size={14} color={isLight ? (T.accentDark || T.accent) : T.accent} strokeWidth={2.4} />
                 </div>
-                <p style={{ fontSize: 11, color: P.txt3, fontFamily: font, margin: 0, paddingLeft: 36 }}>
-                  Etapa <span style={{ color: stgC[newLead.st] || P.accent, fontWeight: 600, fontFamily: fontDisp }}>{newLead.st}</span>
-                  <span style={{ color: P.txt3 }}> · Score 40</span>
-                </p>
+                <h3 style={{
+                  fontSize: 15.5, fontWeight: 700,
+                  color: isLight ? T.txt : "#FFFFFF",
+                  fontFamily: fontDisp, letterSpacing: "-0.025em", margin: 0,
+                }}>Nuevo cliente</h3>
+                <span style={{
+                  fontSize: 10, fontWeight: 700,
+                  color: T.txt3, fontFamily: font, letterSpacing: "0.02em",
+                  whiteSpace: "nowrap",
+                }}>· Dicta, pega o completa — todo en una pantalla</span>
               </div>
-              <button onClick={() => setAddingLead(false)} style={{ width: 30, height: 30, borderRadius: 8, border: `1px solid ${P.border}`, background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.16s", flexShrink: 0 }}
-                onMouseEnter={e => e.currentTarget.style.background = P.glass}
+              <button onClick={() => setAddingLead(false)} style={{
+                width: 30, height: 30, borderRadius: 9,
+                border: `1px solid ${isLight ? "rgba(15,23,42,0.08)" : T.border}`,
+                background: "transparent", cursor: "pointer",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                transition: "all 0.16s", flexShrink: 0,
+              }}
+                onMouseEnter={e => { e.currentTarget.style.background = isLight ? "rgba(15,23,42,0.05)" : T.glass; }}
                 onMouseLeave={e => e.currentTarget.style.background = "transparent"}
-              ><X size={13} color={P.txt3} /></button>
+              ><X size={14} color={T.txt3} /></button>
             </div>
 
-            {/* ── Campos ── */}
-            <div style={{ padding: "20px 26px 4px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px 14px" }}>
-              {[
-                { label: "Nombre completo", key: "n", ph: "Ej. Rafael García López", full: true, required: true, icon: User },
-                { label: "Teléfono", key: "phone", ph: "+52 998 123 4567", icon: Phone },
-                { label: "Email", key: "email", ph: "cliente@email.com", icon: Mail },
-                ...(canSeeAll ? [{ label: "Asesor asignado", key: "asesor", ph: "Estefanía Valdes", icon: Users }] : []),
-                { label: "Presupuesto estimado", key: "budget", ph: "$200,000 USD", icon: DollarSign },
-                { label: "Fuente / Campaña", key: "campana", ph: "Google Ads, Referido, Expo…", icon: Crosshair },
-                { label: "Proyecto de interés", key: "p", ph: "Gobernador 28, Monarca 28, Torre 25…", full: true, icon: Building2 },
-                { label: "Próxima acción", key: "nextAction", ph: "Enviar propuesta formal, agendar zoom…", full: true, icon: Zap },
-              ].map(f => (
-                <div key={f.key} style={{ gridColumn: f.full ? "1 / -1" : "auto" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 7 }}>
-                    {f.icon && <f.icon size={10} color={P.txt3} />}
-                    <span style={{ fontSize: 10, fontWeight: 700, color: P.txt3, letterSpacing: "0.055em", textTransform: "uppercase", fontFamily: fontDisp }}>
-                      {f.label}
-                      {f.required && <span style={{ color: P.accent, marginLeft: 3 }}>*</span>}
-                    </span>
+            {/* ── CAPTURA RÁPIDA — voz o texto libre ─────────────────────────
+                El asesor dicta o escribe todo junto: "Rafael García, tel +52 998
+                445 1122, presupuesto 2.5M, Portofino, campaña Cancún". El sistema
+                detecta en vivo cada campo y los coloca en el formulario al pulsar
+                "Aplicar". No reemplaza los campos que el asesor ya llenó a mano.
+                ───────────────────────────────────────────────────────────────── */}
+            {(() => {
+              const accentStrong = isLight ? (T.accentDark || T.accent) : T.accent;
+              const extracted = extractFromText(quickText);
+              const entries = Object.entries(extracted).filter(([, v]) => v);
+              const labels = { n: "Nombre", phone: "Tel", email: "Email", budget: "Presup", p: "Proyecto", campana: "Campaña" };
+              const hasContent = quickText.trim().length > 0;
+              return (
+                <div style={{ padding: "12px 18px 0" }}>
+                  <div style={{
+                    borderRadius: 12, overflow: "hidden",
+                    background: isLight
+                      ? `linear-gradient(180deg, ${T.accent}0C 0%, ${T.accent}04 100%)`
+                      : `linear-gradient(180deg, ${T.accent}0E 0%, rgba(255,255,255,0.01) 100%)`,
+                    border: `1px solid ${isLight ? `${T.accent}3A` : `${T.accent}2E`}`,
+                    boxShadow: isLight ? `0 2px 8px ${T.accent}10, inset 0 1px 0 rgba(255,255,255,0.7)` : `inset 0 1px 0 rgba(255,255,255,0.03)`,
+                  }}>
+                    {/* Row única: mic + textarea + Aplicar (si hay entries) */}
+                    <div style={{
+                      display: "flex", alignItems: "stretch", gap: 0,
+                    }}>
+                      {/* Botón micrófono — grande y táctil, extremo izquierdo */}
+                      <button
+                        type="button"
+                        onClick={toggleVoiceCapture}
+                        title={isListening ? "Detener dictado" : "Dictar por voz"}
+                        style={{
+                          width: 58, flexShrink: 0,
+                          display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 2,
+                          background: isListening
+                            ? "linear-gradient(180deg, #EF4444 0%, #DC2626 100%)"
+                            : (isLight ? `linear-gradient(180deg, ${T.accent} 0%, #14B892 100%)` : `linear-gradient(180deg, ${T.accent}22, ${T.accent}0E)`),
+                          border: "none",
+                          borderRight: `1px solid ${isLight ? `${T.accent}2E` : `${T.accent}24`}`,
+                          color: isListening ? "#FFFFFF" : (isLight ? "#FFFFFF" : T.accent),
+                          cursor: "pointer", transition: "all 0.18s",
+                          fontSize: 8.5, fontWeight: 800, fontFamily: fontDisp, letterSpacing: "0.08em",
+                          textTransform: "uppercase",
+                          boxShadow: isListening
+                            ? "inset 0 1px 0 rgba(255,255,255,0.25), 0 0 16px rgba(239,68,68,0.42)"
+                            : (isLight ? `inset 0 1px 0 rgba(255,255,255,0.28)` : "none"),
+                        }}
+                      >
+                        {isListening
+                          ? <><MicOff size={16} strokeWidth={2.6} /><span style={{ animation: "pulse 1.2s ease-in-out infinite" }}>REC</span></>
+                          : <><Mic size={16} strokeWidth={2.6} /><span>Dictar</span></>
+                        }
+                      </button>
+
+                      {/* Textarea flexible */}
+                      <textarea
+                        placeholder={'Ej. "Rafael García, tel +52 998 445 1122, presupuesto 2.5M, Portofino, campaña Cancún"'}
+                        value={quickText}
+                        onChange={e => setQuickText(e.target.value)}
+                        rows={2}
+                        style={{
+                          flex: 1, minWidth: 0, padding: "10px 12px",
+                          background: "transparent", border: "none", outline: "none",
+                          color: T.txt, fontSize: 12.5, fontFamily: font,
+                          lineHeight: 1.5, resize: "none", display: "block",
+                          boxSizing: "border-box", minHeight: 58, maxHeight: 96,
+                          overflowY: "auto",
+                        }}
+                      />
+                    </div>
+
+                    {/* Preview en vivo — chips inline + botón Aplicar */}
+                    {hasContent && (
+                      <div style={{
+                        display: "flex", flexWrap: "wrap", gap: 5, alignItems: "center",
+                        padding: "7px 10px 8px",
+                        borderTop: `1px solid ${isLight ? `${T.accent}1E` : `${T.accent}12`}`,
+                        background: isLight ? `${T.accent}06` : "rgba(255,255,255,0.012)",
+                      }}>
+                        <Sparkles size={10} color={accentStrong} strokeWidth={2.4} style={{ flexShrink: 0 }} />
+                        <span style={{ fontSize: 9, color: T.txt3, letterSpacing: "0.08em", textTransform: "uppercase", fontWeight: 800, fontFamily: fontDisp, marginRight: 2 }}>
+                          {entries.length > 0 ? `Detecta ${entries.length}` : "Sin datos"}
+                        </span>
+                        {entries.map(([k, v]) => (
+                          <span key={k} style={{
+                            display: "inline-flex", alignItems: "center", gap: 4,
+                            padding: "2px 7px", borderRadius: 99,
+                            background: isLight ? `${T.accent}1A` : `${T.accent}14`,
+                            border: `1px solid ${isLight ? `${T.accent}4A` : `${T.accent}2E`}`,
+                            fontSize: 10, fontWeight: 700, fontFamily: fontDisp,
+                            color: accentStrong,
+                            maxWidth: 200, overflow: "hidden",
+                          }}>
+                            <span style={{ opacity: 0.7, fontSize: 9 }}>{labels[k]}:</span>
+                            <span style={{ color: T.txt, fontWeight: 700, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{String(v)}</span>
+                          </span>
+                        ))}
+                        <button
+                          type="button"
+                          onClick={applyQuickCapture}
+                          disabled={entries.length === 0}
+                          style={{
+                            marginLeft: "auto", height: 24, padding: "0 10px", borderRadius: 7,
+                            background: entries.length === 0
+                              ? (isLight ? "rgba(15,23,42,0.04)" : "rgba(255,255,255,0.04)")
+                              : (isLight ? T.accent : `${T.accent}20`),
+                            border: entries.length === 0
+                              ? `1px solid ${isLight ? "rgba(15,23,42,0.08)" : T.border}`
+                              : (isLight ? "1px solid transparent" : `1px solid ${T.accentB}`),
+                            color: entries.length === 0 ? T.txt3 : (isLight ? "#FFFFFF" : T.accent),
+                            fontSize: 10, fontWeight: 800, fontFamily: fontDisp, letterSpacing: "0.01em",
+                            cursor: entries.length === 0 ? "not-allowed" : "pointer",
+                            display: "inline-flex", alignItems: "center", gap: 4,
+                            transition: "all 0.15s",
+                            boxShadow: entries.length === 0 ? "none" : (isLight ? `0 2px 6px ${T.accent}30` : "none"),
+                          }}
+                        >
+                          <Check size={10} strokeWidth={2.8} /> Aplicar
+                        </button>
+                      </div>
+                    )}
                   </div>
-                  <input
-                    placeholder={f.ph}
-                    value={newLead[f.key] || ""}
-                    onChange={e => setNewLead(p => ({...p, [f.key]: e.target.value}))}
-                    style={{
-                      width: "100%", height: 42, padding: "0 14px",
-                      borderRadius: 11,
-                      background: newLead[f.key] ? "rgba(110,231,194,0.04)" : P.glass,
-                      border: `1px solid ${newLead[f.key] ? P.accentB : P.border}`,
-                      color: P.txt, fontSize: 13, fontWeight: 400,
-                      outline: "none", fontFamily: font,
-                      boxSizing: "border-box", transition: "all 0.2s",
-                    }}
-                    onFocus={e => { e.target.style.borderColor = P.accentB; e.target.style.background = "rgba(110,231,194,0.05)"; e.target.style.boxShadow = `0 0 0 3px ${P.accent}0A`; }}
-                    onBlur={e => { e.target.style.borderColor = newLead[f.key] ? P.accentB : P.border; e.target.style.background = newLead[f.key] ? "rgba(110,231,194,0.04)" : P.glass; e.target.style.boxShadow = "none"; }}
+                </div>
+              );
+            })()}
+
+            {/* ── Formulario denso — todo en una pantalla, 2 columnas ── */}
+            {(() => {
+              const inputBg       = isLight ? "rgba(255,255,255,0.85)" : T.glass;
+              const inputBorder   = isLight ? "rgba(15,23,42,0.08)" : T.border;
+              const chipBg        = isLight ? "rgba(15,23,42,0.04)" : "rgba(255,255,255,0.03)";
+              const accentStrong  = isLight ? (T.accentDark || T.accent) : T.accent;
+              const labelStyle = {
+                fontSize: 9, fontWeight: 700, color: T.txt3,
+                letterSpacing: "0.06em", textTransform: "uppercase",
+                fontFamily: fontDisp, display: "flex", alignItems: "center", gap: 4, marginBottom: 5,
+              };
+              const inputStyle = {
+                width: "100%", height: 34, padding: "0 11px",
+                borderRadius: 9, background: inputBg,
+                border: `1px solid ${inputBorder}`, color: T.txt,
+                fontSize: 12.5, outline: "none", fontFamily: font,
+                boxSizing: "border-box", transition: "all 0.18s",
+              };
+              const focusOn = (e) => {
+                e.target.style.borderColor = T.accentB;
+                e.target.style.boxShadow = `0 0 0 3px ${T.accent}10`;
+              };
+              const focusOff = (e, borderOverride) => {
+                e.target.style.borderColor = borderOverride || inputBorder;
+                e.target.style.boxShadow = "none";
+              };
+              const parsed = parseBudget(newLead.budget);
+              const hasParsed = parsed > 0 && String(newLead.budget || "").trim() !== "";
+              const budgetBorder = hasParsed ? `${T.accent}55` : inputBorder;
+              return (
+            <div style={{ padding: "12px 18px 0", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px 12px" }}>
+
+              {/* Nombre — full width */}
+              <div style={{ gridColumn: "1 / -1" }}>
+                <label style={labelStyle}>
+                  <User size={9} color={T.txt3} /> Nombre <span style={{ color: accentStrong }}>*</span>
+                </label>
+                <input placeholder="Ej. Rafael García López"
+                  value={newLead.n || ""} onChange={e => setNewLead(p => ({...p, n: e.target.value}))}
+                  style={inputStyle}
+                  onFocus={focusOn} onBlur={e => focusOff(e)}
+                />
+              </div>
+
+              {/* Teléfono */}
+              <div>
+                <label style={labelStyle}>
+                  <Phone size={9} color={T.txt3} /> Teléfono
+                </label>
+                <input placeholder="+52 998 123 4567" value={newLead.phone || ""} onChange={e => setNewLead(p => ({...p, phone: e.target.value}))}
+                  style={inputStyle}
+                  onFocus={focusOn} onBlur={e => focusOff(e)}
+                />
+              </div>
+
+              {/* Presupuesto — acepta "300k", "1.5M", "2 mdd" */}
+              <div>
+                <label style={{ ...labelStyle, justifyContent: "space-between" }}>
+                  <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                    <DollarSign size={9} color={T.txt3} /> Presupuesto
+                  </span>
+                  {hasParsed && (
+                    <span style={{ fontSize: 9, fontWeight: 700, color: accentStrong, fontFamily: fontDisp, letterSpacing: "-0.005em", textTransform: "none" }}>
+                      = {formatBudget(parsed)}
+                    </span>
+                  )}
+                </label>
+                <input placeholder="300k · 1.5M · 2 mdd"
+                  value={newLead.budget || ""}
+                  onChange={e => setNewLead(p => ({...p, budget: e.target.value}))}
+                  style={{ ...inputStyle, border: `1px solid ${budgetBorder}` }}
+                  onFocus={focusOn} onBlur={e => focusOff(e, budgetBorder)}
+                />
+              </div>
+
+              {/* Proyecto */}
+              <div>
+                <label style={labelStyle}>
+                  <Building2 size={9} color={T.txt3} /> Proyecto
+                </label>
+                <ClickDropdown
+                  value={newLead.p || ""}
+                  onChange={(v) => setNewLead(p => ({...p, p: v}))}
+                  options={proyectosMaster}
+                  placeholder="Seleccionar proyecto…"
+                  label="proyecto"
+                  icon={Building2}
+                  createLabel="Nuevo proyecto"
+                  T={T} isLight={isLight}
+                />
+              </div>
+
+              {/* Campaña */}
+              <div>
+                <label style={labelStyle}>
+                  <Signal size={9} color={T.txt3} /> Campaña FB
+                </label>
+                <ClickDropdown
+                  value={newLead.campana || ""}
+                  onChange={(v) => setNewLead(p => ({...p, campana: v}))}
+                  options={campanasMaster}
+                  placeholder="Seleccionar campaña…"
+                  label="campaña"
+                  icon={Signal}
+                  createLabel="Nueva campaña"
+                  T={T} isLight={isLight}
+                />
+              </div>
+
+              {/* Asesor — solo admins */}
+              {canSeeAll && (
+                <div style={{ gridColumn: "1 / -1" }}>
+                  <label style={labelStyle}>
+                    <Users size={9} color={T.txt3} /> Asesor asignado
+                  </label>
+                  <ClickDropdown
+                    value={newLead.asesor || ""}
+                    onChange={(v) => setNewLead(p => ({...p, asesor: v}))}
+                    options={asesoresMaster}
+                    placeholder="Seleccionar asesor…"
+                    label="asesor"
+                    icon={Users}
+                    createLabel="Nuevo asesor"
+                    T={T} isLight={isLight}
                   />
                 </div>
-              ))}
+              )}
 
-              {/* ── Estatus / Etapa — pills compactos ── */}
+              {/* Etapa — pills en una fila */}
               <div style={{ gridColumn: "1 / -1" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 8 }}>
-                  <Waypoints size={10} color={P.txt3} />
-                  <span style={{ fontSize: 10, fontWeight: 700, color: P.txt3, letterSpacing: "0.055em", textTransform: "uppercase", fontFamily: fontDisp }}>Estatus / Etapa</span>
-                </div>
-                <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                <label style={labelStyle}>
+                  <Waypoints size={9} color={T.txt3} /> Etapa inicial
+                </label>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
                   {STAGES.map(s => {
-                    const c = stgC[s] || P.txt3;
+                    const c = stgC[s] || T.txt3;
                     const active = newLead.st === s;
+                    const cTitle = isLight && s ? `color-mix(in srgb, ${c} 55%, #0B1220 45%)` : c;
                     return (
-                      <button key={s} onClick={() => setNewLead(p => ({...p, st: s}))} style={{
-                        padding: "5px 11px", borderRadius: 99, cursor: "pointer",
-                        background: active ? `${c}18` : "transparent",
-                        border: `1px solid ${active ? `${c}55` : P.border}`,
-                        color: active ? c : P.txt3,
-                        fontSize: 10.5, fontWeight: active ? 700 : 400,
-                        fontFamily: font, transition: "all 0.15s",
-                        display: "flex", alignItems: "center", gap: 5, whiteSpace: "nowrap",
-                      }}
-                        onMouseEnter={e => { if (!active) { e.currentTarget.style.borderColor = `${c}35`; e.currentTarget.style.color = c; } }}
-                        onMouseLeave={e => { if (!active) { e.currentTarget.style.borderColor = P.border; e.currentTarget.style.color = P.txt3; } }}
-                      >
-                        <div style={{ width: 6, height: 6, borderRadius: "50%", background: c, flexShrink: 0, opacity: active ? 1 : 0.55 }} />
+                      <button key={s} type="button" onClick={() => setNewLead(p => ({...p, st: s}))} style={{
+                        padding: "4px 10px", borderRadius: 99, cursor: "pointer",
+                        background: active ? `${c}${isLight ? "1E" : "18"}` : chipBg,
+                        border: `1px solid ${active ? `${c}${isLight ? "66" : "55"}` : inputBorder}`,
+                        color: active ? cTitle : T.txt3,
+                        fontSize: 10, fontWeight: active ? 700 : 500,
+                        fontFamily: font, transition: "all 0.14s",
+                        display: "flex", alignItems: "center", gap: 4, whiteSpace: "nowrap",
+                      }}>
+                        <div style={{ width: 5, height: 5, borderRadius: "50%", background: c, opacity: active ? 1 : 0.55 }} />
                         {s}
                       </button>
                     );
@@ -1979,144 +5412,256 @@ function CRM({ oc, co, leadsData, setLeadsData }) {
                 </div>
               </div>
 
-              {/* ── Notas iniciales ── */}
-              <div style={{ gridColumn: "1 / -1" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 7 }}>
-                  <FileText size={10} color={P.txt3} />
-                  <span style={{ fontSize: 10, fontWeight: 700, color: P.txt3, letterSpacing: "0.055em", textTransform: "uppercase", fontFamily: fontDisp }}>Notas iniciales</span>
-                </div>
+              {/* Próxima acción + Notas — lado a lado, compactos */}
+              <div>
+                <label style={labelStyle}>
+                  <Zap size={9} color={accentStrong} /> Próxima acción
+                  <span style={{ color: T.txt3, fontSize: 8.5, fontWeight: 500, textTransform: "none", letterSpacing: 0, marginLeft: 4 }}>opcional</span>
+                </label>
                 <textarea
-                  placeholder="Observaciones del primer contacto, intereses específicos, objeciones detectadas…"
+                  placeholder="¿Qué hace el asesor mañana? Ej. Llamar 10am, mandar Torre 25…"
+                  value={newLead.nextAction || ""}
+                  onChange={e => setNewLead(p => ({...p, nextAction: e.target.value}))}
+                  rows={2}
+                  style={{ width: "100%", padding: "8px 11px", background: inputBg, border: `1px solid ${inputBorder}`, borderRadius: 9, color: T.txt, fontSize: 12, fontWeight: 500, outline: "none", fontFamily: font, boxSizing: "border-box", lineHeight: 1.45, resize: "none", display: "block", minHeight: 52, maxHeight: 72, overflowY: "auto", transition: "all 0.18s" }}
+                  onFocus={focusOn}
+                  onBlur={e => focusOff(e)}
+                />
+              </div>
+              <div>
+                <label style={labelStyle}>
+                  <FileText size={9} color={T.txt3} /> Notas
+                  <span style={{ color: T.txt3, fontSize: 8.5, fontWeight: 500, textTransform: "none", letterSpacing: 0, marginLeft: 4 }}>opcional</span>
+                </label>
+                <textarea
+                  placeholder="Preferencias, contexto, insights…"
                   value={newLead.notas || ""}
                   onChange={e => setNewLead(p => ({...p, notas: e.target.value}))}
-                  rows={3}
-                  style={{
-                    width: "100%", padding: "11px 14px",
-                    borderRadius: 11, resize: "vertical",
-                    background: newLead.notas ? "rgba(110,231,194,0.04)" : P.glass,
-                    border: `1px solid ${newLead.notas ? P.accentB : P.border}`,
-                    color: P.txt, fontSize: 13, fontWeight: 400,
-                    outline: "none", fontFamily: font,
-                    boxSizing: "border-box", transition: "all 0.2s",
-                    lineHeight: 1.55,
-                  }}
-                  onFocus={e => { e.target.style.borderColor = P.accentB; e.target.style.background = "rgba(110,231,194,0.05)"; e.target.style.boxShadow = `0 0 0 3px ${P.accent}0A`; }}
-                  onBlur={e => { e.target.style.borderColor = newLead.notas ? P.accentB : P.border; e.target.style.background = newLead.notas ? "rgba(110,231,194,0.04)" : P.glass; e.target.style.boxShadow = "none"; }}
+                  rows={2}
+                  style={{ width: "100%", padding: "8px 11px", background: inputBg, border: `1px solid ${inputBorder}`, borderRadius: 9, color: T.txt, fontSize: 12, fontWeight: 500, outline: "none", fontFamily: font, boxSizing: "border-box", lineHeight: 1.45, resize: "none", display: "block", minHeight: 52, maxHeight: 72, overflowY: "auto", transition: "all 0.18s" }}
+                  onFocus={focusOn}
+                  onBlur={e => focusOff(e)}
                 />
               </div>
             </div>
+            );
+            })()}
 
             {/* ── Footer ── */}
-            <div style={{ padding: "18px 26px 22px", display: "flex", gap: 10 }}>
-              <button onClick={() => setAddingLead(false)} style={{ flex: 1, height: 43, borderRadius: 12, background: "transparent", border: `1px solid ${P.border}`, color: P.txt3, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: font, transition: "all 0.18s" }}
-                onMouseEnter={e => { e.currentTarget.style.background = P.glass; e.currentTarget.style.color = P.txt2; }}
-                onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = P.txt3; }}
-              >Cancelar</button>
-              <button onClick={addNewLead} disabled={!newLead.n.trim()} style={{
-                flex: 2.2, height: 43, borderRadius: 12,
-                background: newLead.n.trim()
-                  ? "linear-gradient(135deg, rgba(110,231,194,0.24), rgba(110,231,194,0.10))"
-                  : P.glass,
-                border: `1px solid ${newLead.n.trim() ? P.accentB : P.border}`,
-                color: newLead.n.trim() ? P.accent : P.txt3,
-                fontSize: 13, fontWeight: 700,
-                cursor: newLead.n.trim() ? "pointer" : "not-allowed",
-                fontFamily: fontDisp, letterSpacing: "0.005em",
-                transition: "all 0.2s",
-                display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-                boxShadow: newLead.n.trim() ? `0 0 20px ${P.accent}10` : "none",
+            {(() => {
+              const accentStrong = isLight ? (T.accentDark || T.accent) : T.accent;
+              const canSubmit = newLead.n.trim();
+              const primaryBg = canSubmit
+                ? (isLight
+                    ? `linear-gradient(135deg, ${T.accent} 0%, #14B892 100%)`
+                    : `linear-gradient(135deg, ${T.accent}38, ${T.accent}14)`)
+                : (isLight ? "rgba(15,23,42,0.06)" : T.glass);
+              const primaryColor = canSubmit
+                ? (isLight ? "#FFFFFF" : T.accent)
+                : T.txt3;
+              const primaryBorder = canSubmit
+                ? (isLight ? "transparent" : T.accentB)
+                : (isLight ? "rgba(15,23,42,0.08)" : T.border);
+              const primaryShadow = canSubmit && isLight
+                ? `0 4px 14px ${T.accent}48, 0 2px 6px ${T.accent}28, inset 0 1px 0 rgba(255,255,255,0.35)`
+                : canSubmit
+                  ? `0 0 24px ${T.accent}18`
+                  : "none";
+              return (
+            <div style={{ padding: "14px 18px 16px", display: "flex", gap: 8 }}>
+              <button onClick={() => setAddingLead(false)} style={{
+                flex: 1, height: 38, borderRadius: 10,
+                background: "transparent",
+                border: `1px solid ${isLight ? "rgba(15,23,42,0.08)" : T.border}`,
+                color: T.txt3, fontSize: 12.5, fontWeight: 600,
+                cursor: "pointer", fontFamily: font, transition: "all 0.18s",
               }}
-                onMouseEnter={e => { if (newLead.n.trim()) { e.currentTarget.style.background = "linear-gradient(135deg, rgba(110,231,194,0.32), rgba(110,231,194,0.16))"; e.currentTarget.style.boxShadow = `0 4px 24px ${P.accent}18`; } }}
-                onMouseLeave={e => { if (newLead.n.trim()) { e.currentTarget.style.background = "linear-gradient(135deg, rgba(110,231,194,0.24), rgba(110,231,194,0.10))"; e.currentTarget.style.boxShadow = `0 0 20px ${P.accent}10`; } }}
+                onMouseEnter={e => { e.currentTarget.style.background = isLight ? "rgba(15,23,42,0.04)" : T.glass; e.currentTarget.style.color = T.txt2; }}
+                onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = T.txt3; }}
+              >Cancelar</button>
+              <button onClick={addNewLead} disabled={!canSubmit} style={{
+                flex: 2.4, height: 38, borderRadius: 10,
+                background: primaryBg,
+                border: `1px solid ${primaryBorder}`,
+                color: primaryColor,
+                fontSize: 12.5, fontWeight: 700,
+                cursor: canSubmit ? "pointer" : "not-allowed",
+                fontFamily: fontDisp, letterSpacing: "0.01em",
+                transition: "all 0.2s",
+                display: "flex", alignItems: "center", justifyContent: "center", gap: 7,
+                boxShadow: primaryShadow,
+              }}
+                onMouseEnter={e => {
+                  if (!canSubmit) return;
+                  if (isLight) {
+                    e.currentTarget.style.boxShadow = `0 6px 20px ${T.accent}60, 0 3px 10px ${T.accent}38, inset 0 1px 0 rgba(255,255,255,0.45)`;
+                    e.currentTarget.style.transform = "translateY(-1px)";
+                  } else {
+                    e.currentTarget.style.background = `linear-gradient(135deg, ${T.accent}50, ${T.accent}20)`;
+                    e.currentTarget.style.boxShadow = `0 6px 28px ${T.accent}2C`;
+                  }
+                }}
+                onMouseLeave={e => {
+                  if (!canSubmit) return;
+                  if (isLight) {
+                    e.currentTarget.style.boxShadow = primaryShadow;
+                    e.currentTarget.style.transform = "none";
+                  } else {
+                    e.currentTarget.style.background = primaryBg;
+                    e.currentTarget.style.boxShadow = primaryShadow;
+                  }
+                }}
               >
-                <UserCheck size={14} />
-                Registrar Cliente
+                <UserCheck size={13} strokeWidth={2.4} />
+                Registrar cliente
               </button>
             </div>
+              );
+            })()}
           </div>
         </>,
         document.body
       )}
 
-      {/* ── PIPELINE STAGE STRIP ── */}
-      <div style={{ display: "flex", gap: 0, borderRadius: 13, overflow: "hidden", border: `1px solid ${P.border}`, background: P.glass }}>
+      {/* ── PIPELINE STAGE STRIP — Liquid Glass con presencia en ambos temas ── */}
+      <div style={{
+        display: "flex", gap: 0, borderRadius: 14, overflow: "hidden",
+        border: `1px solid ${isLight ? "rgba(15,23,42,0.07)" : "rgba(255,255,255,0.07)"}`,
+        background: isLight
+          ? "linear-gradient(180deg, rgba(255,255,255,0.96) 0%, rgba(250,252,254,0.88) 100%)"
+          : "linear-gradient(180deg, rgba(18,26,38,0.62) 0%, rgba(10,16,26,0.72) 100%)",
+        backdropFilter: "blur(50px) saturate(170%)",
+        WebkitBackdropFilter: "blur(50px) saturate(170%)",
+        boxShadow: isLight
+          ? "0 1px 2px rgba(15,23,42,0.04), 0 8px 24px rgba(15,23,42,0.06), 0 2px 10px rgba(15,23,42,0.03), inset 0 1px 0 rgba(255,255,255,0.9)"
+          : "0 4px 16px rgba(0,0,0,0.26), inset 0 1px 0 rgba(255,255,255,0.04)",
+      }}>
         {STAGES.slice(0,-1).map((stage, idx) => {
           const cnt = visibleLeads.filter(l => l.st === stage).length;
-          const c = stgC[stage] || P.txt3;
+          const c = stgC[stage] || T.txt3;
           const isActive = filterStage === stage;
+          const hasCount = cnt > 0;
           return (
             <div key={stage} onClick={() => setFilterStage(isActive ? "TODO" : stage)}
               title={`${stage} · ${cnt} clientes`}
-              style={{ flex: 1, padding: "10px 8px", cursor: "pointer", borderRight: idx < STAGES.length - 2 ? `1px solid ${P.border}` : "none",
-                background: isActive ? `${c}18` : "transparent",
-                transition: "background 0.2s",
-                display: "flex", flexDirection: "column", alignItems: "center", gap: 4,
+              style={{
+                flex: 1, padding: "13px 8px 11px", cursor: "pointer",
+                borderRight: idx < STAGES.length - 2 ? `1px solid ${isLight ? "rgba(15,23,42,0.05)" : "rgba(255,255,255,0.05)"}` : "none",
+                background: isActive
+                  ? (isLight
+                      ? `linear-gradient(180deg, ${c}22 0%, ${c}0C 100%)`
+                      : `linear-gradient(180deg, ${c}22 0%, ${c}0A 100%)`)
+                  : "transparent",
+                transition: "background 0.22s",
+                display: "flex", flexDirection: "column", alignItems: "center", gap: 6,
+                position: "relative",
+                boxShadow: isActive && isLight ? `inset 0 1px 0 rgba(255,255,255,0.7)` : "none",
               }}
-              onMouseEnter={e => { if (!isActive) e.currentTarget.style.background = "rgba(255,255,255,0.04)"; }}
+              onMouseEnter={e => { if (!isActive) e.currentTarget.style.background = isLight ? `${c}0E` : "rgba(255,255,255,0.035)"; }}
               onMouseLeave={e => { if (!isActive) e.currentTarget.style.background = "transparent"; }}
             >
-              <div style={{ width: "100%", height: 3, borderRadius: 2, background: isActive ? c : `${c}30`, transition: "background 0.2s" }} />
-              <span style={{ fontSize: 18, fontWeight: 700, color: cnt > 0 ? (isActive ? c : "#FFFFFF") : P.txt3, fontFamily: fontDisp, letterSpacing: "-0.04em", lineHeight: 1 }}>{cnt}</span>
-              <span style={{ fontSize: 8.5, color: isActive ? c : P.txt3, fontWeight: isActive ? 700 : 500, letterSpacing: "0.02em", textAlign: "center", lineHeight: 1.2, maxWidth: "100%", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{stage}</span>
+              {/* Indicador superior — barra de color con hint adaptado al contador */}
+              <div style={{
+                width: "100%", height: 3, borderRadius: 2,
+                background: isActive
+                  ? `linear-gradient(90deg, ${c}00 0%, ${c} 50%, ${c}00 100%)`
+                  : (hasCount
+                      ? (isLight ? `linear-gradient(90deg, ${c}00, ${c}70 50%, ${c}00)` : `linear-gradient(90deg, ${c}00, ${c}55 50%, ${c}00)`)
+                      : (isLight ? "rgba(15,23,42,0.08)" : "rgba(255,255,255,0.06)")),
+                transition: "background 0.22s",
+                boxShadow: isActive ? `0 0 8px ${c}60` : "none",
+              }} />
+              <span style={{
+                fontSize: 22, fontWeight: 800,
+                color: isActive
+                  ? c
+                  : (hasCount ? (isLight ? T.txt : "#FFFFFF") : (isLight ? "rgba(15,23,42,0.25)" : "rgba(255,255,255,0.28)")),
+                fontFamily: fontDisp, letterSpacing: "-0.04em", lineHeight: 1,
+                textShadow: isActive && isLight ? `0 1px 2px ${c}22` : "none",
+              }}>{cnt}</span>
+              <span style={{
+                fontSize: 9.5,
+                color: isActive
+                  ? c
+                  : (isLight ? (hasCount ? T.txt2 : T.txt3) : T.txt3),
+                fontWeight: isActive ? 800 : 700,
+                letterSpacing: "0.05em", textTransform: "uppercase",
+                textAlign: "center", lineHeight: 1.2,
+                maxWidth: "100%", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+                fontFamily: fontDisp,
+              }}>{stage}</span>
             </div>
           );
         })}
       </div>
 
       {/* ── MAIN TABLE / KANBAN ── */}
-      <G np>
+      <G T={T} np>
         {/* ── Toolbar — refined ── */}
-        <div style={{ padding: "13px 18px", borderBottom: `1px solid ${P.border}`, display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+        <div style={{ padding: "13px 18px", borderBottom: `1px solid ${T.border}`, display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
 
-          {/* View toggle — pill style */}
-          <div style={{ display: "flex", borderRadius: 9, border: `1px solid ${P.border}`, overflow: "hidden", flexShrink: 0, background: P.glass }}>
-            {[["list","Lista"],["kanban","Kanban"]].map(([m, lbl]) => (
-              <button key={m} onClick={() => setViewMode(m)} style={{ padding: "6px 14px", border: "none", cursor: "pointer", fontSize: 11, fontWeight: 600, fontFamily: font,
-                background: viewMode === m ? "rgba(255,255,255,0.08)" : "transparent",
-                color: viewMode === m ? "#FFFFFF" : P.txt3,
-                borderRight: m === "list" ? `1px solid ${P.border}` : "none",
-                transition: "all 0.18s",
-              }}>{lbl}</button>
-            ))}
+          {/* View toggle — pill style, theme-aware active state */}
+          <div style={{ display: "flex", borderRadius: 9, border: `1px solid ${T.border}`, overflow: "hidden", flexShrink: 0, background: T.glass }}>
+            {[["list","Lista"],["kanban","Kanban"]].map(([m, lbl]) => {
+              const isActive = viewMode === m;
+              return (
+                <button key={m} onClick={() => setViewMode(m)} style={{
+                  padding: "6px 14px", border: "none", cursor: "pointer",
+                  fontSize: 11, fontWeight: isActive ? 700 : 600, fontFamily: font,
+                  background: isActive
+                    ? (isLight
+                        ? `linear-gradient(180deg, ${T.accent}22 0%, ${T.accent}14 100%)`
+                        : "rgba(255,255,255,0.08)")
+                    : "transparent",
+                  color: isActive
+                    ? (isLight ? `color-mix(in srgb, ${T.accent} 62%, #0B1220 38%)` : "#FFFFFF")
+                    : T.txt3,
+                  borderRight: m === "list" ? `1px solid ${T.border}` : "none",
+                  transition: "all 0.18s",
+                  letterSpacing: "0.01em",
+                  boxShadow: isActive && isLight ? `inset 0 1px 0 rgba(255,255,255,0.6)` : "none",
+                }}>{lbl}</button>
+              );
+            })}
           </div>
 
           {/* Search */}
           <div style={{ position: "relative", flex: 1, minWidth: 140, maxWidth: 240 }}>
-            <Search size={12} style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", color: P.txt3, pointerEvents: "none" }} />
+            <Search size={12} style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", color: T.txt3, pointerEvents: "none" }} />
             <input value={searchQ} onChange={e => setSearchQ(e.target.value)} placeholder="Buscar cliente, asesor, proyecto…"
-              style={{ width: "100%", paddingLeft: 30, paddingRight: searchQ ? 30 : 12, height: 32, borderRadius: 9, background: P.glass, border: `1px solid ${searchQ ? P.accentB : P.border}`, fontSize: 11.5, color: P.txt, outline: "none", fontFamily: font, boxSizing: "border-box", transition: "border-color 0.2s" }}
-              onFocus={e => e.target.style.borderColor = P.accentB}
-              onBlur={e => e.target.style.borderColor = searchQ ? P.accentB : P.border}
+              style={{ width: "100%", paddingLeft: 30, paddingRight: searchQ ? 30 : 12, height: 32, borderRadius: 9, background: T.glass, border: `1px solid ${searchQ ? T.accentB : T.border}`, fontSize: 11.5, color: T.txt, outline: "none", fontFamily: font, boxSizing: "border-box", transition: "border-color 0.2s" }}
+              onFocus={e => e.target.style.borderColor = T.accentB}
+              onBlur={e => e.target.style.borderColor = searchQ ? T.accentB : T.border}
             />
-            {searchQ && <button onClick={() => setSearchQ("")} style={{ position: "absolute", right: 9, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: P.txt3, display: "flex", padding: 0 }}><X size={11} /></button>}
+            {searchQ && <button onClick={() => setSearchQ("")} style={{ position: "absolute", right: 9, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: T.txt3, display: "flex", padding: 0 }}><X size={11} /></button>}
           </div>
 
           {/* Stage filter */}
-          <select value={filterStage} onChange={e => setFilterStage(e.target.value)} style={{ height: 32, padding: "0 12px", borderRadius: 9, background: filterStage !== "TODO" ? `${stgC[filterStage]}16` : P.glass, border: `1px solid ${filterStage !== "TODO" ? `${stgC[filterStage]}45` : P.border}`, fontSize: 11, color: filterStage !== "TODO" ? stgC[filterStage] : P.txt3, cursor: "pointer", outline: "none", fontFamily: font, fontWeight: filterStage !== "TODO" ? 700 : 400, transition: "all 0.2s" }}>
+          <select value={filterStage} onChange={e => setFilterStage(e.target.value)} style={{ height: 32, padding: "0 12px", borderRadius: 9, background: filterStage !== "TODO" ? `${stgC[filterStage]}16` : T.glass, border: `1px solid ${filterStage !== "TODO" ? `${stgC[filterStage]}45` : T.border}`, fontSize: 11, color: filterStage !== "TODO" ? stgC[filterStage] : T.txt3, cursor: "pointer", outline: "none", fontFamily: font, fontWeight: filterStage !== "TODO" ? 700 : 400, transition: "all 0.2s" }}>
             <option value="TODO">Todas las etapas</option>
-            {STAGES.map(s => <option key={s} value={s} style={{ background: "#0C1219", color: P.txt }}>{s}</option>)}
+            {STAGES.map(s => <option key={s} value={s} style={{ background: "#0C1219", color: T.txt }}>{s}</option>)}
           </select>
 
           {/* Asesor filter — solo visible para directivos y admin */}
           {canSeeAll && (
-            <select value={filterAsesor} onChange={e => setFilterAsesor(e.target.value)} style={{ height: 32, padding: "0 12px", borderRadius: 9, background: filterAsesor !== "TODO" ? `${P.violet}14` : P.glass, border: `1px solid ${filterAsesor !== "TODO" ? `${P.violet}45` : P.border}`, fontSize: 11, color: filterAsesor !== "TODO" ? P.violet : P.txt3, cursor: "pointer", outline: "none", fontFamily: font, fontWeight: filterAsesor !== "TODO" ? 700 : 400 }}>
+            <select value={filterAsesor} onChange={e => setFilterAsesor(e.target.value)} style={{ height: 32, padding: "0 12px", borderRadius: 9, background: filterAsesor !== "TODO" ? `${T.violet}14` : T.glass, border: `1px solid ${filterAsesor !== "TODO" ? `${T.violet}45` : T.border}`, fontSize: 11, color: filterAsesor !== "TODO" ? T.violet : T.txt3, cursor: "pointer", outline: "none", fontFamily: font, fontWeight: filterAsesor !== "TODO" ? 700 : 400 }}>
               <option value="TODO">Todos los asesores</option>
-              {asesores.map(a => <option key={a} value={a} style={{ background: "#0C1219", color: P.txt }}>{a.split(" ")[0]} {a.split(" ")[1] || ""}</option>)}
+              {asesores.map(a => <option key={a} value={a} style={{ background: "#0C1219", color: T.txt }}>{a.split(" ")[0]} {a.split(" ")[1] || ""}</option>)}
             </select>
           )}
 
           {/* Filters count + clear */}
           {(filterStage !== "TODO" || filterAsesor !== "TODO" || searchQ) && (
-            <button onClick={() => { setFilterStage("TODO"); setFilterAsesor("TODO"); setSearchQ(""); }} style={{ height: 32, padding: "0 12px", borderRadius: 9, background: `${P.rose}0C`, border: `1px solid ${P.rose}28`, color: P.rose, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: font, flexShrink: 0, display: "flex", alignItems: "center", gap: 5, transition: "all 0.18s" }}
-              onMouseEnter={e => { e.currentTarget.style.background = `${P.rose}18`; }}
-              onMouseLeave={e => { e.currentTarget.style.background = `${P.rose}0C`; }}
+            <button onClick={() => { setFilterStage("TODO"); setFilterAsesor("TODO"); setSearchQ(""); }} style={{ height: 32, padding: "0 12px", borderRadius: 9, background: `${T.rose}0C`, border: `1px solid ${T.rose}28`, color: T.rose, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: font, flexShrink: 0, display: "flex", alignItems: "center", gap: 5, transition: "all 0.18s" }}
+              onMouseEnter={e => { e.currentTarget.style.background = `${T.rose}18`; }}
+              onMouseLeave={e => { e.currentTarget.style.background = `${T.rose}0C`; }}
             ><X size={11} /> Limpiar</button>
           )}
 
           <div style={{ flex: 1 }} />
 
           {/* Count badge */}
-          <span style={{ fontSize: 11, fontWeight: 700, color: P.txt3, background: P.glass, border: `1px solid ${P.border}`, padding: "4px 11px", borderRadius: 99, flexShrink: 0, letterSpacing: "0.02em" }}>
+          <span style={{ fontSize: 11, fontWeight: 700, color: T.txt3, background: T.glass, border: `1px solid ${T.border}`, padding: "4px 11px", borderRadius: 99, flexShrink: 0, letterSpacing: "0.02em" }}>
             {sortedLeads.length} resultado{sortedLeads.length !== 1 ? "s" : ""}
           </span>
         </div>
@@ -2124,130 +5669,242 @@ function CRM({ oc, co, leadsData, setLeadsData }) {
         {/* ── LIST VIEW — Redesigned ── */}
         {viewMode === "list" && (
           <>
-            {/* Column headers */}
-            <div style={{ display: "grid", gridTemplateColumns: cols, gap: 8, padding: "8px 18px", borderBottom: `1px solid ${P.border}`, alignItems: "center", background: "rgba(255,255,255,0.012)" }}>
-              {!co && <SH label="Fecha" field="fechaIngreso" />}
-              {!co && <SH label="Asesor" field="asesor" />}
+            {/* Column headers — 5 columnas full / 4 compact. "Cliente" abarca
+                identidad y presupuesto juntos; Seguim. es el stepper editable. */}
+            <div style={{ display: "grid", gridTemplateColumns: cols, gap: 12, padding: "10px 20px", borderBottom: `1px solid ${T.border}`, alignItems: "center", background: isLight ? "rgba(15,23,42,0.015)" : "rgba(255,255,255,0.012)" }}>
               <SH label="Cliente" field="n" />
-              <SH label="Teléfono" field="phone" />
               <SH label="Etapa" field="st" />
-              <SH label="Presupuesto" field="presupuesto" align="right" />
-              {!co && <SH label="Proyecto" field="p" />}
-              <SH label="Score" field="sc" align="right" />
-              <span style={{ fontSize: 9, fontWeight: 700, color: P.txt3, letterSpacing: "0.07em", textTransform: "uppercase", textAlign: "center" }}>Acciones</span>
+              <SH label="Seguim." field="seguimientos" />
+              {!co && <SH label="Score" field="sc" align="right" />}
+              <span style={{ fontSize: 9, fontWeight: 700, color: T.txt3, letterSpacing: "0.07em", textTransform: "uppercase", textAlign: "center" }}>Acciones</span>
             </div>
 
             {sortedLeads.map((l, rowIdx) => {
               const isHov = hoveredRow === l.id;
               const sc = l.sc;
-              const scoreColor = sc >= 80 ? P.emerald : sc >= 60 ? P.blue : sc >= 40 ? P.amber : P.rose;
+              const scoreColor = T.accent;
               const showUrgency = l.daysInactive >= 5;
               const uc = urgColor(l.daysInactive);
-              const stageC = stgC[l.st] || P.txt3;
+              const stageC = stgC[l.st] || T.txt3;
 
               return (
                 <div key={l.id}
                   onMouseEnter={() => setHoveredRow(l.id)}
                   onMouseLeave={() => setHoveredRow(null)}
                   style={{
-                    display: "grid", gridTemplateColumns: cols, gap: 8, padding: "12px 18px",
-                    borderBottom: `1px solid ${P.border}`, alignItems: "center",
+                    display: "grid", gridTemplateColumns: cols, gap: 12, padding: "14px 20px",
+                    borderBottom: `1px solid ${T.border}`, alignItems: "center",
                     transition: "background 0.14s",
-                    background: isHov ? "rgba(255,255,255,0.028)" : "transparent",
+                    background: isHov ? (isLight ? "rgba(15,23,42,0.022)" : "rgba(255,255,255,0.028)") : "transparent",
                     position: "relative",
                   }}
                 >
-                  {/* Left urgency bar */}
+                  {/* Barra de urgencia a la izquierda — señal de inactividad crítica */}
                   {showUrgency && (
                     <div style={{ position: "absolute", left: 0, top: 4, bottom: 4, width: 3, borderRadius: "0 3px 3px 0", background: uc, opacity: 0.75 }} />
                   )}
 
-                  {/* Fecha */}
-                  {!co && <span style={{ fontSize: 10.5, color: P.txt3, fontFamily: font }}>{l.fechaIngreso}</span>}
-
-                  {/* Asesor */}
-                  {!co && (
-                    <div style={{ display: "flex", alignItems: "center", gap: 7, minWidth: 0 }}>
-                      <div style={{ width: 24, height: 24, borderRadius: "50%", background: `${P.violet}16`, border: `1px solid ${P.violet}28`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 9.5, fontWeight: 800, color: P.violet, flexShrink: 0, fontFamily: fontDisp }}>{l.asesor?.charAt(0)}</div>
-                      <span style={{ fontSize: 11, color: P.txt2, fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{l.asesor?.split(" ")[0]}</span>
-                    </div>
-                  )}
-
-                  {/* Cliente */}
-                  <div style={{ display: "flex", alignItems: "center", gap: 9, minWidth: 0 }}>
-                    <div style={{ width: 32, height: 32, borderRadius: 10, background: "rgba(255,255,255,0.06)", border: `1px solid ${P.border}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 800, color: P.txt2, flexShrink: 0, fontFamily: fontDisp }}>{l.n.charAt(0)}</div>
+                  {/* ═══ CLIENTE ═══ Avatar + identidad a la izquierda (nombre +
+                       tags HOT/NUEVO + sub-línea asesor · proyecto · fecha) y
+                       presupuesto grande a la derecha, todo en una sola celda
+                       para un escaneo vertical limpio sin columna extra. */}
+                  <div style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 0 }}>
+                    <div style={{
+                      width: 36, height: 36, borderRadius: 10,
+                      background: isLight ? `${T.violet}14` : "rgba(255,255,255,0.06)",
+                      border: `1px solid ${isLight ? `${T.violet}2E` : T.border}`,
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      fontSize: 13, fontWeight: 800,
+                      color: isLight ? `color-mix(in srgb, ${T.violet} 58%, #0B1220 42%)` : T.txt2,
+                      flexShrink: 0, fontFamily: fontDisp,
+                    }}>{l.n.charAt(0)}</div>
                     <div style={{ minWidth: 0, flex: 1 }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 1 }}>
-                        <span style={{ fontSize: 13, fontWeight: 700, color: "#FFFFFF", fontFamily: fontDisp, letterSpacing: "-0.01em", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{l.n}</span>
-                        {l.isNew && <span style={{ fontSize: 7.5, fontWeight: 700, color: P.txt3, background: "rgba(255,255,255,0.06)", border: `1px solid ${P.border}`, padding: "1px 5px", borderRadius: 99, flexShrink: 0, letterSpacing: "0.05em" }}>NUEVO</span>}
-                        {l.hot && <span style={{ fontSize: 7.5, fontWeight: 700, color: P.accent, background: `${P.accent}10`, border: `1px solid ${P.accentB}`, padding: "1px 5px", borderRadius: 99, flexShrink: 0, letterSpacing: "0.05em" }}>HOT</span>}
+                      <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 2 }}>
+                        <span style={{ fontSize: 13.5, fontWeight: 700, color: isLight ? T.txt : "#FFFFFF", fontFamily: fontDisp, letterSpacing: "-0.015em", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{l.n}</span>
+                        {l.isNew && <span style={{ fontSize: 7.5, fontWeight: 800, color: T.txt3, background: isLight ? "rgba(15,23,42,0.05)" : "rgba(255,255,255,0.06)", border: `1px solid ${T.border}`, padding: "1px 5px", borderRadius: 99, flexShrink: 0, letterSpacing: "0.08em" }}>NUEVO</span>}
+                        {l.hot && <span style={{ fontSize: 7.5, fontWeight: 800, color: isLight ? `color-mix(in srgb, ${T.accent} 58%, #0B1220 42%)` : T.accent, background: `${T.accent}${isLight ? "1E" : "10"}`, border: `1px solid ${T.accentB}`, padding: "1px 5px", borderRadius: 99, flexShrink: 0, letterSpacing: "0.08em" }}>HOT</span>}
                       </div>
-                      <p style={{ fontSize: 10, color: P.txt3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                        {co ? `${l.asesor?.split(" ")[0]} · ${l.campana}` : l.tag}
+                      <p style={{ fontSize: 10.5, color: T.txt3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontFamily: font, margin: 0 }}>
+                        {l.asesor?.split(" ")[0]} · {(l.p || "").split("·")[0].trim()}{!co && l.fechaIngreso ? ` · ${l.fechaIngreso}` : ""}
                       </p>
                     </div>
+                    {/* Presupuesto dentro de la misma celda — jerarquía numérica clara */}
+                    <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", flexShrink: 0, paddingLeft: 6 }}>
+                      <span style={{ fontSize: 13.5, fontWeight: 800, color: isLight ? T.txt : "#FFFFFF", fontFamily: fontDisp, letterSpacing: "-0.025em", whiteSpace: "nowrap" }}>{l.budget}</span>
+                      {l.campana && (
+                        <span style={{ fontSize: 9.5, color: T.txt3, fontFamily: font, whiteSpace: "nowrap", maxWidth: 140, overflow: "hidden", textOverflow: "ellipsis", marginTop: 1 }}>{l.campana}</span>
+                      )}
+                    </div>
                   </div>
 
-                  {/* Teléfono */}
-                  <a href={`tel:${l.phone}`} onClick={e => e.stopPropagation()} style={{ fontSize: 11, color: isHov ? P.txt2 : P.txt3, textDecoration: "none", fontFamily: font, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", transition: "color 0.15s" }}>{l.phone}</a>
-
-                  {/* Etapa con inline change */}
-                  <div onClick={e => e.stopPropagation()}>
-                    <select value={l.st} onChange={e => { const v = e.target.value; setLeadsData(prev => prev.map(x => x.id === l.id ? {...x, st: v} : x)); }}
-                      style={{ background: `${stageC}14`, border: `1px solid ${stageC}30`, borderRadius: 99, padding: "4px 10px 4px 8px", fontSize: 10.5, fontWeight: 700, color: stageC, cursor: "pointer", outline: "none", appearance: "none", maxWidth: "100%", overflow: "hidden", textOverflow: "ellipsis", transition: "all 0.2s" }}>
-                      {STAGES.map(s => <option key={s} value={s} style={{ background: "#0C1219", color: P.txt }}>{s}</option>)}
-                    </select>
+                  {/* ═══ ETAPA ═══ Pill con LED y cambio inline por select */}
+                  <div onClick={e => e.stopPropagation()} style={{ display: "flex", alignItems: "center", minWidth: 0 }}>
+                    <div style={{
+                      position: "relative", display: "inline-flex", alignItems: "center", gap: 7,
+                      padding: "5px 24px 5px 11px", borderRadius: 99,
+                      background: isLight
+                        ? `linear-gradient(135deg, ${stageC}3D 0%, ${stageC}1F 55%, ${stageC}12 100%)`
+                        : `linear-gradient(135deg, ${stageC}26 0%, ${stageC}10 100%)`,
+                      border: `1px solid ${isLight ? stageC + "85" : stageC + "44"}`,
+                      boxShadow: isLight
+                        ? `0 2px 8px ${stageC}2E, 0 1px 2px ${stageC}1A, inset 0 1px 0 rgba(255,255,255,0.7), inset 0 -1px 0 ${stageC}14`
+                        : `0 1px 4px ${stageC}18, inset 0 1px 0 rgba(255,255,255,0.12)`,
+                      transition: "all 0.2s ease",
+                      maxWidth: "100%", overflow: "hidden",
+                    }}
+                      onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-1px)"; e.currentTarget.style.boxShadow = isLight ? `0 4px 14px ${stageC}3A, 0 2px 4px ${stageC}22, inset 0 1px 0 rgba(255,255,255,0.8)` : `0 3px 10px ${stageC}26, inset 0 1px 0 rgba(255,255,255,0.15)`; }}
+                      onMouseLeave={e => { e.currentTarget.style.transform = "none"; e.currentTarget.style.boxShadow = isLight ? `0 2px 8px ${stageC}2E, 0 1px 2px ${stageC}1A, inset 0 1px 0 rgba(255,255,255,0.7), inset 0 -1px 0 ${stageC}14` : `0 1px 4px ${stageC}18, inset 0 1px 0 rgba(255,255,255,0.12)`; }}
+                    >
+                      <span style={{
+                        width: 7, height: 7, borderRadius: "50%",
+                        background: `radial-gradient(circle at 30% 30%, #FFFFFFB3 0%, ${stageC} 45%, ${stageC} 100%)`,
+                        boxShadow: `0 0 0 2px ${stageC}2E, 0 0 6px ${stageC}70`,
+                        flexShrink: 0,
+                      }} />
+                      <select value={l.st} onChange={e => { const v = e.target.value; setLeadsData(prev => prev.map(x => x.id === l.id ? {...x, st: v} : x)); }}
+                        style={{
+                          background: "transparent", border: "none", padding: 0,
+                          fontSize: 10.5, fontWeight: 800,
+                          color: isLight ? `color-mix(in srgb, ${stageC} 55%, #0B1220 45%)` : stageC,
+                          cursor: "pointer", outline: "none", appearance: "none",
+                          maxWidth: "100%", overflow: "hidden", textOverflow: "ellipsis",
+                          fontFamily: font, letterSpacing: "0.015em",
+                          textShadow: isLight ? "0 1px 0 rgba(255,255,255,0.4)" : "none",
+                        }}>
+                        {STAGES.map(s => <option key={s} value={s} style={{ background: "#0C1219", color: "#fff", fontWeight: 600 }}>{s}</option>)}
+                      </select>
+                      <ChevronDown size={10} strokeWidth={2.8}
+                        color={isLight ? `color-mix(in srgb, ${stageC} 55%, #0B1220 45%)` : stageC}
+                        style={{ position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)", pointerEvents: "none", opacity: 0.85 }} />
+                    </div>
                   </div>
 
-                  {/* Presupuesto */}
-                  <span style={{ fontSize: 12.5, fontWeight: 700, color: "#FFFFFF", fontFamily: fontDisp, letterSpacing: "-0.025em", textAlign: "right" }}>{l.budget}</span>
+                  {/* ═══ SEGUIMIENTOS ═══ Stepper con −/número editable/+ —
+                       el asesor registra recontactos directo, o escribe el total */}
+                  <div onClick={e => e.stopPropagation()} style={{ display: "flex", alignItems: "center", minWidth: 0 }}>
+                    <FollowUpBadge lead={l} onUpdate={updateLead} T={T} compact />
+                  </div>
 
-                  {/* Proyecto */}
+                  {/* ═══ SCORE ═══ Solo visible en modo full — bar + número */}
                   {!co && (
-                    <span style={{ fontSize: 10.5, color: P.txt2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                      {l.p.split("·")[0].trim()}
-                    </span>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 6 }}>
+                      <div style={{ flex: 1, height: 3, borderRadius: 2, background: isLight ? "rgba(15,23,42,0.08)" : "rgba(255,255,255,0.06)", maxWidth: 40 }}>
+                        <div style={{ width: `${sc}%`, height: 3, borderRadius: 2, background: T.accent, transition: "width 0.4s", boxShadow: sc >= 80 ? `0 0 6px ${T.accent}60` : "none" }} />
+                      </div>
+                      <span style={{ fontSize: 11.5, fontWeight: 700, color: isLight ? T.txt2 : T.txt2, fontFamily: fontDisp, minWidth: 22, textAlign: "right" }}>{sc}</span>
+                    </div>
                   )}
 
-                  {/* Score */}
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 6 }}>
-                    <div style={{ flex: 1, height: 3, borderRadius: 2, background: "rgba(255,255,255,0.06)", maxWidth: 36 }}>
-                      <div style={{ width: `${sc}%`, height: 3, borderRadius: 2, background: P.accent, transition: "width 0.4s" }} />
-                    </div>
-                    <span style={{ fontSize: 11.5, fontWeight: 700, color: P.txt2, fontFamily: fontDisp, minWidth: 22, textAlign: "right" }}>{sc}</span>
-                  </div>
+                  {/* Acciones — 3 controles: ★ prioridad (icono solo), ⚛ IA (icono solo),
+                     y "Ver perfil" (CTA con label). Aesthetic pro, minimalista, cada uno con su color. */}
+                  {(() => {
+                    const isPinned = pinnedIds.has(l.id);
+                    const isAuto   = isAutoPriority(l);
+                    const inPriority = isPinned || isAuto;
 
-                  {/* Acciones — siempre visibles */}
-                  <div style={{ display: "flex", gap: 4, justifyContent: "center" }}>
-                    {/* Pin — añadir/quitar de prioridad */}
-                    {(() => {
-                      const isPinned = pinnedIds.has(l.id);
-                      const isAuto   = isAutoPriority(l);
-                      const inPriority = isPinned || isAuto;
-                      return (
-                        <button onClick={() => togglePin(l.id)} title={inPriority ? "Quitar de prioridad" : "Añadir a prioridad"}
-                          style={{ width: 29, height: 29, borderRadius: 8, border: `1px solid ${inPriority ? `${P.accent}40` : P.border}`, background: inPriority ? `${P.accent}12` : "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.15s" }}
-                          onMouseEnter={e => { e.currentTarget.style.background = inPriority ? `${P.accent}20` : "rgba(255,255,255,0.06)"; }}
-                          onMouseLeave={e => { e.currentTarget.style.background = inPriority ? `${P.accent}12` : "transparent"; }}
-                        ><Star size={11} color={inPriority ? P.accent : P.txt3} fill={isPinned ? P.accent : "none"} strokeWidth={2} /></button>
-                      );
-                    })()}
-                    <button onClick={() => oc(`__crm__ ${l.n.toLowerCase()}`, l)} title="Analizar con IA"
-                      style={{ padding: "6px 10px", borderRadius: 8, border: `1px solid ${P.accentB}`, background: `${P.accent}10`, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 4, color: P.accent, fontSize: 10.5, fontWeight: 600, fontFamily: font, transition: "background 0.15s", whiteSpace: "nowrap" }}
-                      onMouseEnter={e => e.currentTarget.style.background = `${P.accent}1E`}
-                      onMouseLeave={e => e.currentTarget.style.background = `${P.accent}10`}
-                    >IA</button>
-                    <button onClick={() => setNotesLead(l)} title="Ver notas"
-                      style={{ width: 29, height: 29, borderRadius: 8, border: `1px solid ${P.border}`, background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.15s" }}
-                      onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.06)"; e.currentTarget.style.borderColor = P.borderH; }}
-                      onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = P.border; }}
-                    ><FileText size={12} color={P.txt3} /></button>
-                    <button onClick={() => setSelectedLead(l)} title="Ver perfil"
-                      style={{ width: 29, height: 29, borderRadius: 8, border: `1px solid ${P.border}`, background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.15s" }}
-                      onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.06)"; e.currentTarget.style.borderColor = P.borderH; }}
-                      onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = P.border; }}
-                    ><User size={12} color={P.txt3} /></button>
-                  </div>
+                    // Utility: devuelve un color seguro para tema claro (oscurece hacia slate)
+                    const safeC = (c) => isLight ? `color-mix(in srgb, ${c} 58%, #0B1220 42%)` : c;
+
+                    // Estrella en dorado auténtico (más pro y cálido que ámbar puro)
+                    const goldC = isLight ? "#B8860B" : "#F5C542";
+                    const goldBorder = isPinned ? (isLight ? "#B8860B" : "#F5C542") : (isLight ? "#D4A84433" : "#F5C54238");
+                    const goldBg     = isPinned ? (isLight ? "#F5C54228" : "#F5C54222") : (isLight ? "#F5C54212" : "#F5C5420E");
+                    const blueC = safeC(T.blue);
+
+                    return (
+                      <div style={{ display: "flex", alignItems: "center", gap: 8, justifyContent: "center" }}>
+                        {/* ★ Prioridad — dorado, icono solamente */}
+                        <button onClick={() => togglePin(l.id)}
+                          title={inPriority ? "Quitar de prioridad" : "Marcar como prioridad"}
+                          aria-label={inPriority ? "Quitar de prioridad" : "Marcar como prioridad"}
+                          style={{
+                            width: 34, height: 34, borderRadius: 9,
+                            border: `1px solid ${goldBorder}`,
+                            background: goldBg,
+                            cursor: "pointer", padding: 0,
+                            display: "flex", alignItems: "center", justifyContent: "center",
+                            transition: "all 0.16s ease",
+                            boxShadow: isPinned
+                              ? (isLight
+                                  ? `0 1px 2px rgba(184,134,11,0.28), inset 0 1px 0 rgba(255,255,255,0.6)`
+                                  : `0 0 12px rgba(245,197,66,0.22)`)
+                              : "none",
+                            flexShrink: 0,
+                          }}
+                          onMouseEnter={e => {
+                            e.currentTarget.style.background  = isLight ? "#F5C5423A" : "#F5C54230";
+                            e.currentTarget.style.borderColor = isLight ? "#B8860B" : "#F5C54266";
+                            e.currentTarget.style.transform   = "translateY(-1px)";
+                          }}
+                          onMouseLeave={e => {
+                            e.currentTarget.style.background  = goldBg;
+                            e.currentTarget.style.borderColor = goldBorder;
+                            e.currentTarget.style.transform   = "none";
+                          }}
+                        >
+                          <Star size={14} color={goldC} fill={isPinned ? goldC : "none"} strokeWidth={2.2} />
+                        </button>
+
+                        {/* ⚛ IA — abre el panel "Analizar y actuar" del Agente con
+                            contexto completo del lead (mismo flujo que AURA, sin ir al chat).
+                            Siempre resaltado en mint: es el CTA suave del módulo. */}
+                        <button onClick={() => openDrawerTab("analisis", l)}
+                          title="Analizar y actuar con el Agente IA"
+                          aria-label="Analizar y actuar con el Agente IA"
+                          style={{
+                            width: 34, height: 34, borderRadius: 9,
+                            border: `1px solid ${T.accentB}`,
+                            background: `${T.accent}${isLight ? "18" : "12"}`,
+                            cursor: "pointer", padding: 0,
+                            display: "flex", alignItems: "center", justifyContent: "center",
+                            transition: "all 0.16s ease",
+                            boxShadow: isLight ? `0 1px 2px ${T.accent}1A, inset 0 1px 0 rgba(255,255,255,0.5)` : "none",
+                            flexShrink: 0,
+                          }}
+                          onMouseEnter={e => {
+                            e.currentTarget.style.background  = `${T.accent}${isLight ? "28" : "22"}`;
+                            e.currentTarget.style.borderColor = `${T.accent}${isLight ? "88" : "66"}`;
+                            e.currentTarget.style.transform   = "translateY(-1px)";
+                          }}
+                          onMouseLeave={e => {
+                            e.currentTarget.style.background  = `${T.accent}${isLight ? "18" : "12"}`;
+                            e.currentTarget.style.borderColor = T.accentB;
+                            e.currentTarget.style.transform   = "none";
+                          }}
+                        >
+                          <Atom size={14} color={isLight ? `color-mix(in srgb, ${T.accent} 58%, #0B1220 42%)` : T.accent} strokeWidth={2.2} />
+                        </button>
+
+                        {/* 👤 Perfil — abre el drawer completo del cliente */}
+                        <button onClick={() => setSelectedLead(l)}
+                          title="Abrir perfil del cliente"
+                          aria-label="Abrir perfil del cliente"
+                          style={{
+                            width: 34, height: 34, borderRadius: 9,
+                            border: `1px solid ${T.blue}${isLight ? "3A" : "38"}`,
+                            background: `${T.blue}${isLight ? "14" : "14"}`,
+                            cursor: "pointer", padding: 0,
+                            display: "flex", alignItems: "center", justifyContent: "center",
+                            transition: "all 0.16s ease",
+                            boxShadow: isLight ? `0 1px 2px ${T.blue}1A, inset 0 1px 0 rgba(255,255,255,0.5)` : "none",
+                            flexShrink: 0,
+                          }}
+                          onMouseEnter={e => {
+                            e.currentTarget.style.background  = `${T.blue}${isLight ? "24" : "26"}`;
+                            e.currentTarget.style.borderColor = `${T.blue}${isLight ? "66" : "5C"}`;
+                            e.currentTarget.style.transform   = "translateY(-1px)";
+                          }}
+                          onMouseLeave={e => {
+                            e.currentTarget.style.background  = `${T.blue}${isLight ? "14" : "14"}`;
+                            e.currentTarget.style.borderColor = `${T.blue}${isLight ? "3A" : "38"}`;
+                            e.currentTarget.style.transform   = "none";
+                          }}
+                        >
+                          <User size={14} color={blueC} strokeWidth={2.2} />
+                        </button>
+                      </div>
+                    );
+                  })()}
                 </div>
               );
             })}
@@ -2255,14 +5912,14 @@ function CRM({ oc, co, leadsData, setLeadsData }) {
             {/* Empty state */}
             {sortedLeads.length === 0 && (
               <div style={{ padding: "64px 32px", textAlign: "center" }}>
-                <div style={{ width: 52, height: 52, borderRadius: 16, background: P.glass, border: `1px solid ${P.border}`, display: "inline-flex", alignItems: "center", justifyContent: "center", marginBottom: 16 }}>
-                  <Search size={22} color={P.txt3} />
+                <div style={{ width: 52, height: 52, borderRadius: 16, background: T.glass, border: `1px solid ${T.border}`, display: "inline-flex", alignItems: "center", justifyContent: "center", marginBottom: 16 }}>
+                  <Search size={22} color={T.txt3} />
                 </div>
-                <p style={{ fontSize: 15, fontWeight: 600, color: P.txt2, fontFamily: fontDisp, marginBottom: 8 }}>Sin resultados</p>
-                <p style={{ fontSize: 12, color: P.txt3, marginBottom: 20 }}>Intenta con otro término, etapa o asesor</p>
-                <button onClick={() => { setFilterStage("TODO"); setFilterAsesor("TODO"); setSearchQ(""); }} style={{ padding: "8px 20px", borderRadius: 10, background: P.glass, border: `1px solid ${P.border}`, color: P.txt2, fontSize: 12, cursor: "pointer", fontFamily: font, transition: "all 0.18s" }}
-                  onMouseEnter={e => { e.currentTarget.style.background = P.glassH; e.currentTarget.style.color = P.txt; }}
-                  onMouseLeave={e => { e.currentTarget.style.background = P.glass; e.currentTarget.style.color = P.txt2; }}
+                <p style={{ fontSize: 15, fontWeight: 600, color: T.txt2, fontFamily: fontDisp, marginBottom: 8 }}>Sin resultados</p>
+                <p style={{ fontSize: 12, color: T.txt3, marginBottom: 20 }}>Intenta con otro término, etapa o asesor</p>
+                <button onClick={() => { setFilterStage("TODO"); setFilterAsesor("TODO"); setSearchQ(""); }} style={{ padding: "8px 20px", borderRadius: 10, background: T.glass, border: `1px solid ${T.border}`, color: T.txt2, fontSize: 12, cursor: "pointer", fontFamily: font, transition: "all 0.18s" }}
+                  onMouseEnter={e => { e.currentTarget.style.background = T.glassH; e.currentTarget.style.color = T.txt; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = T.glass; e.currentTarget.style.color = T.txt2; }}
                 >Limpiar todos los filtros</button>
               </div>
             )}
@@ -2271,26 +5928,41 @@ function CRM({ oc, co, leadsData, setLeadsData }) {
 
         {/* ── KANBAN — drag & drop ── */}
         {viewMode === "kanban" && (
-          <div style={{ display: "flex", gap: 10, overflowX: "auto", padding: "16px", minHeight: 480, alignItems: "flex-start", scrollbarWidth: "thin", scrollbarColor: `${P.border} transparent` }}>
+          <div style={{ display: "flex", gap: 10, overflowX: "auto", padding: "16px", minHeight: 480, alignItems: "flex-start", scrollbarWidth: "thin", scrollbarColor: `${T.border} transparent` }}>
             {kanbanStages.map(stage => {
               const stLeads = sortedLeads.filter(l => l.st === stage);
               const stVal = stLeads.reduce((s, l) => s + (l.presupuesto || 0), 0);
-              const c = stgC[stage] || P.txt3;
+              const c = stgC[stage] || T.txt3;
               const isDragTarget = dragOverStage === stage;
+              // Color de texto legible en blanco: mezcla hacia el slate profundo
+              const cText = isLight ? `color-mix(in srgb, ${c} 58%, #0B1220 42%)` : c;
+              // Alphas más fuertes en light para compensar el fondo blanco
+              const headerBg = isLight
+                ? (isDragTarget
+                    ? `linear-gradient(135deg, ${c}32 0%, ${c}1A 100%)`
+                    : `linear-gradient(135deg, ${c}22 0%, ${c}10 100%)`)
+                : (isDragTarget ? `${c}18` : `${c}0C`);
+              const headerBorder = isLight
+                ? (isDragTarget ? `${c}78` : `${c}52`)
+                : (isDragTarget ? `${c}50` : `${c}28`);
+              const countBg = isLight
+                ? `linear-gradient(135deg, ${c}38 0%, ${c}1C 100%)`
+                : `${c}18`;
+              const countBorder = isLight ? `${c}62` : `${c}28`;
               return (
                 <div key={stage}
                   onDragOver={e => handleDragOver(e, stage)}
                   onDrop={e => handleDrop(e, stage)}
                   style={{ minWidth: 244, flex: "0 0 244px", display: "flex", flexDirection: "column", gap: 8 }}>
-                  <div style={{ padding: "10px 13px 10px 11px", borderRadius: 11, background: isDragTarget ? `${c}18` : `${c}0C`, border: `1px solid ${isDragTarget ? `${c}50` : `${c}28`}`, display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0, transition: "all 0.15s" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 7, minWidth: 0 }}>
-                      <div style={{ width: 8, height: 8, borderRadius: "50%", background: c, flexShrink: 0 }} />
+                  <div style={{ padding: "10px 13px 10px 11px", borderRadius: 11, background: headerBg, border: `1px solid ${headerBorder}`, display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0, transition: "all 0.15s", boxShadow: isLight ? `0 1px 3px ${c}1E, inset 0 1px 0 rgba(255,255,255,0.65)` : "none", backdropFilter: isLight ? "blur(20px) saturate(160%)" : "none" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
+                      <div style={{ width: 10, height: 10, borderRadius: "50%", background: c, flexShrink: 0, boxShadow: `0 0 0 2px ${c}2E${isLight ? ", 0 1px 3px " + c + "55" : ""}` }} />
                       <div style={{ minWidth: 0 }}>
-                        <p style={{ fontSize: 10.5, fontWeight: 700, color: c, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{stage}</p>
-                        {stLeads.length > 0 && <p style={{ fontSize: 9.5, color: P.txt3 }}>${(stVal/1000000).toFixed(1)}M</p>}
+                        <p style={{ fontSize: 10.5, fontWeight: 800, color: cText, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", letterSpacing: "0.01em" }}>{stage}</p>
+                        {stLeads.length > 0 && <p style={{ fontSize: 9.5, color: T.txt3, fontWeight: 600 }}>${(stVal/1000000).toFixed(1)}M</p>}
                       </div>
                     </div>
-                    <span style={{ fontSize: 12, fontWeight: 700, color: c, background: `${c}18`, border: `1px solid ${c}28`, padding: "2px 9px", borderRadius: 99, flexShrink: 0, fontFamily: fontDisp }}>{stLeads.length}</span>
+                    <span style={{ fontSize: 12, fontWeight: 800, color: cText, background: countBg, border: `1px solid ${countBorder}`, padding: "2px 9px", borderRadius: 99, flexShrink: 0, fontFamily: fontDisp, boxShadow: isLight ? `inset 0 1px 0 rgba(255,255,255,0.5)` : "none" }}>{stLeads.length}</span>
                   </div>
 
                   <div style={{ display: "flex", flexDirection: "column", gap: 7, minHeight: 60, borderRadius: 11, padding: isDragTarget ? "6px" : "0", background: isDragTarget ? "rgba(255,255,255,0.022)" : "transparent", transition: "all 0.15s" }}>
@@ -2302,57 +5974,62 @@ function CRM({ oc, co, leadsData, setLeadsData }) {
                           draggable
                           onDragStart={e => handleDragStart(e, l.id)}
                           onDragEnd={handleDragEnd}
-                          style={{ borderRadius: 13, background: "rgba(255,255,255,0.032)", border: `1px solid ${P.border}`, overflow: "hidden", transition: "all 0.2s", cursor: "grab", opacity: isDragging ? 0.4 : 1 }}
-                          onMouseEnter={e => { if (!isDragging) { e.currentTarget.style.background = "rgba(255,255,255,0.052)"; e.currentTarget.style.borderColor = P.borderH; e.currentTarget.style.transform = "translateY(-1px)"; e.currentTarget.style.boxShadow = "0 6px 24px rgba(0,0,0,0.28)"; } }}
-                          onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.032)"; e.currentTarget.style.borderColor = P.border; e.currentTarget.style.transform = "none"; e.currentTarget.style.boxShadow = "none"; }}
+                          style={{ borderRadius: 13, background: "rgba(255,255,255,0.032)", border: `1px solid ${T.border}`, overflow: "hidden", transition: "all 0.2s", cursor: "grab", opacity: isDragging ? 0.4 : 1 }}
+                          onMouseEnter={e => { if (!isDragging) { e.currentTarget.style.background = "rgba(255,255,255,0.052)"; e.currentTarget.style.borderColor = T.borderH; e.currentTarget.style.transform = "translateY(-1px)"; e.currentTarget.style.boxShadow = "0 6px 24px rgba(0,0,0,0.28)"; } }}
+                          onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.032)"; e.currentTarget.style.borderColor = T.border; e.currentTarget.style.transform = "none"; e.currentTarget.style.boxShadow = "none"; }}
                         >
                           <div style={{ height: 2, background: `linear-gradient(90deg, ${c}AA, transparent)` }} />
                           <div style={{ padding: "12px 13px" }}>
                             <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 7, gap: 6 }}>
                               <div style={{ flex: 1, minWidth: 0 }}>
-                                <p style={{ fontSize: 12.5, fontWeight: 700, color: "#FFF", fontFamily: fontDisp, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginBottom: 2 }}>{l.n}</p>
-                                <p style={{ fontSize: 9.5, color: P.txt3 }}>{l.asesor?.split(" ")[0]} · {l.campana}</p>
+                                <p style={{ fontSize: 12.5, fontWeight: 700, color: isLight ? T.txt : "#FFF", fontFamily: fontDisp, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginBottom: 2 }}>{l.n}</p>
+                                <p style={{ fontSize: 9.5, color: T.txt3 }}>{l.asesor?.split(" ")[0]} · {l.campana}</p>
                               </div>
-                              <p style={{ fontSize: 12, fontWeight: 700, color: "#FFF", fontFamily: fontDisp, letterSpacing: "-0.02em", flexShrink: 0 }}>{l.budget}</p>
+                              <p style={{ fontSize: 12, fontWeight: 700, color: isLight ? T.txt : "#FFF", fontFamily: fontDisp, letterSpacing: "-0.02em", flexShrink: 0 }}>{l.budget}</p>
                             </div>
                             <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
                               <div style={{ flex: 1, height: 2.5, borderRadius: 2, background: "rgba(255,255,255,0.06)" }}>
-                                <div style={{ width: `${sc}%`, height: "100%", borderRadius: 2, background: sc >= 80 ? P.emerald : sc >= 60 ? P.blue : P.amber,
-                                  boxShadow: sc >= 80 ? `0 0 6px ${P.emerald}50` : "none" }} />
+                                <div style={{ width: `${sc}%`, height: "100%", borderRadius: 2, background: T.accent,
+                                  opacity: sc >= 80 ? 1 : sc >= 60 ? 0.85 : 0.65,
+                                  boxShadow: sc >= 80 ? `0 0 6px ${T.accent}50` : "none" }} />
                               </div>
-                              <span style={{ fontSize: 10, fontWeight: 700, fontFamily: fontDisp, minWidth: 18,
-                                color: sc >= 80 ? P.emerald : sc >= 60 ? P.blue : P.amber }}>{sc}</span>
+                              <span style={{ fontSize: 10, fontWeight: 700, fontFamily: fontDisp, minWidth: 18, color: T.accent }}>{sc}</span>
                             </div>
                             {l.daysInactive >= 7 && (
-                              <div style={{ fontSize: 8.5, color: "#FF6B6B", background: "rgba(255,107,107,0.10)", border: "1px solid rgba(255,107,107,0.22)", borderRadius: 5, padding: "2px 7px", display: "inline-flex", alignItems: "center", gap: 3, marginBottom: 7 }}>
+                              <div style={{ fontSize: 9, fontWeight: 700, color: isLight ? "#B91C1C" : "#FF6B6B", background: isLight ? "linear-gradient(135deg, rgba(239,68,68,0.16) 0%, rgba(239,68,68,0.08) 100%)" : "rgba(255,107,107,0.10)", border: isLight ? "1px solid rgba(239,68,68,0.45)" : "1px solid rgba(255,107,107,0.22)", borderRadius: 6, padding: "2px 7px", display: "inline-flex", alignItems: "center", gap: 3, marginBottom: 7, boxShadow: isLight ? "inset 0 1px 0 rgba(255,255,255,0.55)" : "none" }}>
                                 ⚠ {l.daysInactive}d sin actividad
                               </div>
                             )}
                             {l.daysInactive >= 3 && l.daysInactive < 7 && (
-                              <div style={{ fontSize: 8.5, color: P.amber, background: `${P.amber}12`, border: `1px solid ${P.amber}25`, borderRadius: 5, padding: "2px 7px", display: "inline-flex", alignItems: "center", gap: 3, marginBottom: 7 }}>
+                              <div style={{ fontSize: 9, fontWeight: 700, color: isLight ? `color-mix(in srgb, ${T.amber} 55%, #0B1220 45%)` : T.amber, background: isLight ? `linear-gradient(135deg, ${T.amber}2E 0%, ${T.amber}14 100%)` : `${T.amber}12`, border: `1px solid ${isLight ? T.amber + "5C" : T.amber + "25"}`, borderRadius: 6, padding: "2px 7px", display: "inline-flex", alignItems: "center", gap: 3, marginBottom: 7, boxShadow: isLight ? "inset 0 1px 0 rgba(255,255,255,0.55)" : "none" }}>
                                 {l.daysInactive}d sin actividad
                               </div>
                             )}
                             {/* Selector de etapa inline */}
                             <div onClick={e => e.stopPropagation()} style={{ marginBottom: 8 }}>
                               <select value={l.st} onChange={e => setLeadsData(prev => prev.map(x => x.id === l.id ? {...x, st: e.target.value} : x))}
-                                style={{ width: "100%", padding: "5px 8px", borderRadius: 7, background: `${c}0C`, border: `1px solid ${c}28`, color: c, fontSize: 9.5, fontWeight: 700, cursor: "pointer", outline: "none", appearance: "none" }}>
+                                style={{ width: "100%", padding: "5px 8px", borderRadius: 7, background: isLight ? `linear-gradient(135deg, ${c}26 0%, ${c}12 100%)` : `${c}0C`, border: `1px solid ${isLight ? c + "55" : c + "28"}`, color: cText, fontSize: 9.5, fontWeight: 700, cursor: "pointer", outline: "none", appearance: "none", boxShadow: isLight ? "inset 0 1px 0 rgba(255,255,255,0.55)" : "none" }}>
                                 {STAGES.map(s => <option key={s} value={s} style={{ background: "#0C1219", color: "#fff" }}>{s}</option>)}
                               </select>
                             </div>
+                            {/* Contador de seguimientos — permite al asesor registrar
+                                cada recontacto directamente desde la tarjeta */}
+                            <div onClick={e => e.stopPropagation()} style={{ marginBottom: 8, display: "flex" }}>
+                              <FollowUpBadge lead={l} onUpdate={updateLead} T={T} compact />
+                            </div>
                             <div style={{ display: "flex", gap: 5 }}>
-                              <button onClick={() => oc(`__crm__ ${l.n.toLowerCase()}`, l)} style={{ flex: 1, padding: "6px 0", borderRadius: 7, background: `${P.accent}10`, border: `1px solid ${P.accentB}`, color: P.accent, fontSize: 9.5, fontWeight: 600, cursor: "pointer", fontFamily: font, transition: "background 0.15s" }} onMouseEnter={e => e.currentTarget.style.background = `${P.accent}1E`} onMouseLeave={e => e.currentTarget.style.background = `${P.accent}10`}>Analizar</button>
-                              <button onClick={() => togglePin(l.id)} title={pinnedIds.has(l.id) ? "Quitar de prioridad" : "Añadir a prioridad"} style={{ width: 28, padding: "5px 0", borderRadius: 7, background: pinnedIds.has(l.id) ? `${P.accent}12` : "transparent", border: `1px solid ${pinnedIds.has(l.id) ? `${P.accent}36` : P.border}`, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.15s" }} onMouseEnter={e => { e.currentTarget.style.background = `${P.accent}1A`; }} onMouseLeave={e => { e.currentTarget.style.background = pinnedIds.has(l.id) ? `${P.accent}12` : "transparent"; }}><Star size={10} color={pinnedIds.has(l.id) ? P.accent : P.txt3} fill={pinnedIds.has(l.id) ? P.accent : "none"} strokeWidth={2} /></button>
-                              <button onClick={() => setSelectedLead(l)} style={{ width: 28, padding: "5px 0", borderRadius: 7, background: "transparent", border: `1px solid ${P.border}`, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.15s" }} onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.06)"; e.currentTarget.style.borderColor = P.borderH; }} onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = P.border; }}><User size={10} color={P.txt3} /></button>
-                              <button onClick={() => setNotesLead(l)} style={{ width: 28, padding: "5px 0", borderRadius: 7, background: "transparent", border: `1px solid ${P.border}`, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.15s" }} onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.06)"; e.currentTarget.style.borderColor = P.borderH; }} onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = P.border; }}><FileText size={10} color={P.txt3} /></button>
+                              <button onClick={() => oc(`__crm__ ${l.n.toLowerCase()}`, l)} style={{ flex: 1, padding: "6px 0", borderRadius: 7, background: `${T.accent}10`, border: `1px solid ${T.accentB}`, color: T.accent, fontSize: 9.5, fontWeight: 600, cursor: "pointer", fontFamily: font, transition: "background 0.15s" }} onMouseEnter={e => e.currentTarget.style.background = `${T.accent}1E`} onMouseLeave={e => e.currentTarget.style.background = `${T.accent}10`}>Analizar</button>
+                              <button onClick={() => togglePin(l.id)} title={pinnedIds.has(l.id) ? "Quitar de prioridad" : "Añadir a prioridad"} style={{ width: 28, padding: "5px 0", borderRadius: 7, background: pinnedIds.has(l.id) ? `${T.accent}12` : "transparent", border: `1px solid ${pinnedIds.has(l.id) ? `${T.accent}36` : T.border}`, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.15s" }} onMouseEnter={e => { e.currentTarget.style.background = `${T.accent}1A`; }} onMouseLeave={e => { e.currentTarget.style.background = pinnedIds.has(l.id) ? `${T.accent}12` : "transparent"; }}><Star size={10} color={pinnedIds.has(l.id) ? T.accent : T.txt3} fill={pinnedIds.has(l.id) ? T.accent : "none"} strokeWidth={2} /></button>
+                              <button onClick={() => setSelectedLead(l)} style={{ width: 28, padding: "5px 0", borderRadius: 7, background: "transparent", border: `1px solid ${T.border}`, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.15s" }} onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.06)"; e.currentTarget.style.borderColor = T.borderH; }} onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = T.border; }}><User size={10} color={T.txt3} /></button>
+                              <button onClick={() => setNotesLead(l)} style={{ width: 28, padding: "5px 0", borderRadius: 7, background: "transparent", border: `1px solid ${T.border}`, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.15s" }} onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.06)"; e.currentTarget.style.borderColor = T.borderH; }} onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = T.border; }}><FileText size={10} color={T.txt3} /></button>
                             </div>
                           </div>
                         </div>
                       );
                     })}
                     {stLeads.length === 0 && (
-                      <div style={{ padding: "28px 16px", borderRadius: 11, border: `1px dashed ${isDragTarget ? `${c}50` : P.border}`, textAlign: "center", background: isDragTarget ? `${c}06` : "transparent", transition: "all 0.15s" }}>
-                        <p style={{ fontSize: 10.5, color: isDragTarget ? c : P.txt3 }}>{isDragTarget ? "Soltar aquí" : "Sin clientes"}</p>
+                      <div style={{ padding: "28px 16px", borderRadius: 11, border: `1px dashed ${isDragTarget ? `${c}50` : T.border}`, textAlign: "center", background: isDragTarget ? `${c}06` : "transparent", transition: "all 0.15s" }}>
+                        <p style={{ fontSize: 10.5, color: isDragTarget ? c : T.txt3 }}>{isDragTarget ? "Soltar aquí" : "Sin clientes"}</p>
                       </div>
                     )}
                   </div>
@@ -2363,110 +6040,672 @@ function CRM({ oc, co, leadsData, setLeadsData }) {
         )}
       </G>
 
-      {/* ── ANALYTICS ROW — responsive wrap ── */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 14 }}>
+      {/* ── CENTRO DE AGENTES IA — equipo virtual que trabaja con los asesores ── */}
+      {(() => {
+        // Cola por agente, derivada del pipeline real
+        const reactivarQueue   = visibleLeads.filter(l => (l.daysInactive || 0) >= 5).sort((a, b) => (b.daysInactive || 0) - (a.daysInactive || 0));
+        const seguimientoQueue = visibleLeads.filter(l => ["Primer Contacto", "Seguimiento"].includes(l.st) && !l.hot).sort((a, b) => b.sc - a.sc);
+        const callcenterQueue  = visibleLeads.filter(l => l.hot || l.st === "Zoom Agendado").sort((a, b) => (b.hot ? 1 : 0) - (a.hot ? 1 : 0) || b.sc - a.sc);
+        const calificarQueue   = visibleLeads.filter(l => l.isNew).sort((a, b) => (b.id || 0) - (a.id || 0));
 
-        {/* Score por Cliente */}
-        <G style={{ padding: "12px 14px 8px" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-            <p style={{ fontSize: 12.5, fontWeight: 700, color: P.txt, fontFamily: fontDisp, margin: 0 }}>Score por Cliente</p>
-            <Pill color={P.blue} s>Top {Math.min(sortedLeads.length, 8)}</Pill>
-          </div>
-          <ResponsiveContainer width="100%" height={Math.max(sortedLeads.slice(0,8).length * 20, 68)}>
-            <BarChart
-              data={[...sortedLeads].sort((a,b) => b.sc - a.sc).slice(0,8).map(l => ({ n: l.n.split(" ")[0], sc: l.sc }))}
-              margin={{ top: 2, right: 4, left: -20, bottom: 0 }}
-            >
-              <XAxis dataKey="n" tick={{ fill: P.txt3, fontSize: 9, fontFamily: font }} axisLine={false} tickLine={false} interval={0} />
-              <YAxis domain={[0, 100]} tick={{ fill: P.txt3, fontSize: 9 }} axisLine={false} tickLine={false} width={28} />
-              <Tooltip contentStyle={{ background: "#0C1219", border: `1px solid ${P.border}`, borderRadius: 10, color: P.txt, fontSize: 11, boxShadow: "0 8px 32px rgba(0,0,0,0.4)" }} cursor={{ fill: "rgba(255,255,255,0.03)" }} formatter={(v) => [`Score: ${v}`, ""]} />
-              <Bar dataKey="sc" radius={[5, 5, 0, 0]} maxBarSize={32}>
-                {[...sortedLeads].sort((a,b) => b.sc - a.sc).slice(0,8).map((l, i) => (
-                  <Cell key={i} fill={l.sc >= 80 ? P.emerald : l.sc >= 60 ? P.blue : P.cyan} opacity={0.88} />
-                ))}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
-        </G>
+        const totalActions = reactivarQueue.length + seguimientoQueue.length + callcenterQueue.length + calificarQueue.length;
+        const hoursSaved   = (totalActions * 0.3).toFixed(1);
+        // Leads asignados por agente (aiAgent === key)
+        const assignedByAgent = {
+          reactivar:   visibleLeads.filter(l => l.aiAgent === "reactivar"),
+          seguimiento: visibleLeads.filter(l => l.aiAgent === "seguimiento"),
+          callcenter:  visibleLeads.filter(l => l.aiAgent === "callcenter"),
+          calificar:   visibleLeads.filter(l => l.aiAgent === "calificar"),
+        };
+        const totalAssigned = Object.values(assignedByAgent).reduce((s, arr) => s + arr.length, 0);
 
-        {/* Distribución por etapa */}
-        <G style={{ padding: "12px 14px 8px" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-            <p style={{ fontSize: 12.5, fontWeight: 700, color: P.txt, fontFamily: fontDisp, margin: 0 }}>Distribución</p>
-            {filterStage !== "TODO" && (
-              <button onClick={() => setFilterStage("TODO")} style={{ fontSize: 9.5, color: P.txt3, background: "none", border: "none", cursor: "pointer", fontFamily: font, padding: 0 }}
-                onMouseEnter={e => e.currentTarget.style.color = P.txt2}
-                onMouseLeave={e => e.currentTarget.style.color = P.txt3}
-              >✕ Quitar filtro</button>
-            )}
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
-            {STAGES.map(st => {
-              const cnt = visibleLeads.filter(l => l.st === st).length;
-              if (cnt === 0) return null;
-              const pct = Math.round((cnt / visibleLeads.length) * 100);
-              const isActive = filterStage === st;
-              const c = stgC[st] || P.txt3;
-              return (
-                <div key={st} onClick={() => setFilterStage(isActive ? "TODO" : st)}
-                  style={{ display: "flex", alignItems: "center", gap: 7, cursor: "pointer", padding: "3px 5px", borderRadius: 6, transition: "background 0.15s", background: isActive ? `${c}0C` : "transparent" }}
-                  onMouseEnter={e => { if (!isActive) e.currentTarget.style.background = "rgba(255,255,255,0.03)"; }}
-                  onMouseLeave={e => { if (!isActive) e.currentTarget.style.background = "transparent"; }}
-                >
-                  <div style={{ width: 6, height: 6, borderRadius: "50%", background: c, flexShrink: 0, boxShadow: isActive ? `0 0 5px ${c}` : "none" }} />
-                  <span style={{ fontSize: 10, color: isActive ? "#FFF" : P.txt2, flex: "0 0 auto", maxWidth: 100, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontWeight: isActive ? 700 : 400, fontFamily: font }}>{st}</span>
-                  <div style={{ flex: 1, height: 3.5, borderRadius: 2, background: "rgba(255,255,255,0.05)", minWidth: 12 }}>
-                    <div style={{ width: `${pct}%`, height: "100%", borderRadius: 2, background: c, transition: "width 0.5s", opacity: isActive ? 1 : 0.6 }} />
+        const agents = [
+          {
+            key: "reactivar",
+            icon: AI_AGENTS.reactivar.icon,
+            color: AI_AGENTS.reactivar.color,
+            name: AI_AGENTS.reactivar.name,
+            role: AI_AGENTS.reactivar.role,
+            queue: reactivarQueue,
+            metric: "68% re-enganche",
+            verb: "Reactivar",
+            actionText: "envió mensaje a",
+            prompt: (l) => `__crm__ reactivar a ${l.n.toLowerCase()} con mensaje personalizado — lleva ${l.daysInactive} días sin contacto`,
+            batchPrompt: (q) => `__crm__ reactivar a los ${q.length} leads fríos: ${q.slice(0, 5).map(l => l.n).join(", ")}${q.length > 5 ? "..." : ""}`,
+            queueLabel: (l) => `${l.daysInactive}d`,
+          },
+          {
+            key: "seguimiento",
+            icon: AI_AGENTS.seguimiento.icon,
+            color: AI_AGENTS.seguimiento.color,
+            name: AI_AGENTS.seguimiento.name,
+            role: AI_AGENTS.seguimiento.role,
+            queue: seguimientoQueue,
+            metric: "+42% respuesta",
+            verb: "Ejecutar",
+            actionText: "preparó next-step para",
+            prompt: (l) => `__crm__ próxima acción para ${l.n.toLowerCase()} — etapa ${l.st}, score ${l.sc}`,
+            batchPrompt: (q) => `__crm__ prepara next-steps para los ${q.length} leads en seguimiento`,
+            queueLabel: (l) => `${l.st.split(" ")[0]} · ${l.sc}`,
+          },
+          {
+            key: "callcenter",
+            icon: AI_AGENTS.callcenter.icon,
+            color: AI_AGENTS.callcenter.color,
+            name: AI_AGENTS.callcenter.name,
+            role: AI_AGENTS.callcenter.role,
+            queue: callcenterQueue,
+            metric: "3.2× conversión",
+            verb: "Llamar",
+            actionText: "completó llamada con",
+            prompt: (l) => `__crm__ prepara briefing de llamada para ${l.n.toLowerCase()} — ${l.hot ? "HOT lead" : "Zoom agendado"}, presupuesto ${l.budget}`,
+            batchPrompt: (q) => `__crm__ prepara la cola de ${q.length} llamadas con briefing IA`,
+            queueLabel: (l) => l.hot ? "HOT" : "Zoom",
+          },
+          {
+            key: "calificar",
+            icon: AI_AGENTS.calificar.icon,
+            color: AI_AGENTS.calificar.color,
+            name: AI_AGENTS.calificar.name,
+            role: AI_AGENTS.calificar.role,
+            queue: calificarQueue,
+            metric: "96% precisión",
+            verb: "Calificar",
+            actionText: "calificó a",
+            prompt: (l) => `__crm__ califica al lead nuevo ${l.n.toLowerCase()} y dame recomendación de próximos pasos`,
+            batchPrompt: (q) => `__crm__ prepara la cola de ${q.length} leads nuevos y ordénalos por prioridad`,
+            queueLabel: (l) => l.campana ? l.campana.slice(0, 8) : "Nuevo",
+          },
+        ];
+
+        // Feed de actividad reciente (determinista, a partir del pipeline)
+        const activityLog = [
+          { agent: agents[0], lead: reactivarQueue[1]   || reactivarQueue[0],   time: "hace 3m" },
+          { agent: agents[1], lead: seguimientoQueue[1] || seguimientoQueue[0], time: "hace 9m" },
+          { agent: agents[2], lead: callcenterQueue[1]  || callcenterQueue[0],  time: "hace 16m" },
+          { agent: agents[3], lead: calificarQueue[1]   || calificarQueue[0],   time: "hace 24m" },
+        ].filter(e => e.lead);
+
+        return (
+          <G T={T} style={{ padding: 0, overflow: "hidden" }}>
+            {/* Halo superior sutil — sin barra, funciona en claro y oscuro */}
+            <div style={{
+              position: "absolute", top: 0, left: "50%", transform: "translateX(-50%)",
+              width: "60%", height: 1,
+              background: isLight
+                ? `linear-gradient(90deg, transparent, ${T.accent}66, transparent)`
+                : `linear-gradient(90deg, transparent, ${T.accent}3A, transparent)`,
+              pointerEvents: "none",
+            }} />
+
+            <div style={{ padding: "18px 20px 16px", position: "relative" }}>
+              {/* Header */}
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, marginBottom: 16, flexWrap: "wrap" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 0 }}>
+                  <div style={{
+                    width: 42, height: 42, borderRadius: 13,
+                    background: isLight
+                      ? `radial-gradient(circle at 35% 28%, #FFFFFF 0%, ${T.accent}14 100%)`
+                      : `radial-gradient(circle at 35% 28%, ${T.accent}1A 0%, ${T.accent}06 60%, rgba(255,255,255,0.02) 100%)`,
+                    border: `1px solid ${isLight ? `${T.accent}3A` : `${T.accent}28`}`,
+                    display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+                    boxShadow: isLight
+                      ? `0 2px 8px ${T.accent}24, inset 0 1px 0 rgba(255,255,255,0.9)`
+                      : `0 0 18px ${T.accent}14, inset 0 1px 0 rgba(255,255,255,0.08)`,
+                  }}>
+                    <div style={{ animation: "stratosAtomSpin 14s cubic-bezier(0.45,0.05,0.55,0.95) infinite", transformOrigin: "center", display: "flex", filter: isLight ? `drop-shadow(0 1px 2px ${T.accent}55)` : `drop-shadow(0 0 6px ${T.accent}40)` }}>
+                      <StratosAtomHex size={24} color={T.accent} edge={T.accent} />
+                    </div>
+                    <style>{`
+                      @keyframes stratosAtomSpin {
+                        0%   { transform: rotate(0deg) scale(1); }
+                        18%  { transform: rotate(90deg) scale(1.03); }
+                        32%  { transform: rotate(140deg) scale(1); }
+                        50%  { transform: rotate(180deg) scale(1); }
+                        68%  { transform: rotate(268deg) scale(1.03); }
+                        82%  { transform: rotate(320deg) scale(1); }
+                        100% { transform: rotate(360deg) scale(1); }
+                      }
+                    `}</style>
                   </div>
-                  <span style={{ fontSize: 10.5, fontWeight: 700, color: isActive ? c : P.txt2, fontFamily: fontDisp, minWidth: 16, textAlign: "right", flexShrink: 0 }}>{cnt}</span>
-                </div>
-              );
-            })}
-          </div>
-        </G>
-
-        {/* Por Asesor */}
-        <G style={{ padding: "12px 14px 8px" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-            <p style={{ fontSize: 12.5, fontWeight: 700, color: P.txt, fontFamily: fontDisp, margin: 0 }}>Por Asesor</p>
-            {filterAsesor !== "TODO" && (
-              <button onClick={() => setFilterAsesor("TODO")} style={{ fontSize: 9.5, color: P.txt3, background: "none", border: "none", cursor: "pointer", fontFamily: font, padding: 0 }}
-                onMouseEnter={e => e.currentTarget.style.color = P.txt2}
-                onMouseLeave={e => e.currentTarget.style.color = P.txt3}
-              >✕ Quitar</button>
-            )}
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-            {asesores.map((a, i) => {
-              const aLeads = visibleLeads.filter(l => l.asesor === a);
-              const cnt = aLeads.length;
-              const val = aLeads.reduce((s, l) => s + (l.presupuesto || 0), 0);
-              const avgSc = Math.round(aLeads.reduce((s, l) => s + l.sc, 0) / cnt);
-              const aCols = [P.accent, P.blue, P.violet, P.amber, P.cyan, P.emerald];
-              const c = aCols[i % aCols.length];
-              const isActive = filterAsesor === a;
-              return (
-                <div key={a} onClick={() => setFilterAsesor(isActive ? "TODO" : a)}
-                  style={{ display: "flex", alignItems: "center", gap: 9, padding: "7px 10px", borderRadius: 10, background: isActive ? `${c}12` : P.glass, border: `1px solid ${isActive ? `${c}35` : P.border}`, cursor: "pointer", transition: "all 0.18s" }}
-                  onMouseEnter={e => { if (!isActive) { e.currentTarget.style.background = P.glassH; e.currentTarget.style.borderColor = P.borderH; } }}
-                  onMouseLeave={e => { if (!isActive) { e.currentTarget.style.background = P.glass; e.currentTarget.style.borderColor = P.border; } }}
-                >
-                  <div style={{ width: 24, height: 24, borderRadius: "50%", background: `${c}1E`, border: `1px solid ${c}30`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 800, color: c, flexShrink: 0, fontFamily: fontDisp }}>{a.charAt(0)}</div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <p style={{ fontSize: 11.5, color: isActive ? "#FFF" : P.txt2, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", margin: 0, fontFamily: fontDisp }}>{a.split(" ")[0]}</p>
-                    <p style={{ fontSize: 9, color: P.txt3, margin: 0, fontFamily: font }}>{cnt} clientes · score {avgSc}</p>
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 9, flexWrap: "wrap" }}>
+                      <p style={{ fontSize: 15, fontWeight: 800, color: T.txt, fontFamily: fontDisp, margin: 0, letterSpacing: "-0.02em" }}>Centro de Agentes IA</p>
+                      <div style={{
+                        display: "inline-flex", alignItems: "center", gap: 6, padding: "3.5px 11px", borderRadius: 99,
+                        background: isLight
+                          ? `linear-gradient(135deg, ${T.accent}3D 0%, ${T.accent}1F 55%, ${T.accent}12 100%)`
+                          : `linear-gradient(135deg, ${T.accent}26 0%, ${T.accent}10 100%)`,
+                        border: `1px solid ${isLight ? T.accent + "85" : T.accent + "44"}`,
+                        boxShadow: isLight
+                          ? `0 2px 8px ${T.accent}2E, 0 1px 2px ${T.accent}1A, inset 0 1px 0 rgba(255,255,255,0.7)`
+                          : `0 1px 4px ${T.accent}18, inset 0 1px 0 rgba(255,255,255,0.12)`,
+                      }}>
+                        <span style={{
+                          width: 6, height: 6, borderRadius: "50%",
+                          background: `radial-gradient(circle at 30% 30%, #FFFFFFB3 0%, ${T.accent} 45%, ${T.accent} 100%)`,
+                          boxShadow: `0 0 0 2px ${T.accent}2E, 0 0 6px ${T.accent}`,
+                          animation: "pulse 2s ease-in-out infinite",
+                        }} />
+                        <span style={{
+                          fontSize: 9, fontWeight: 800,
+                          color: isLight ? `color-mix(in srgb, ${T.accent} 55%, #0B1220 45%)` : T.accent,
+                          letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: font,
+                          textShadow: isLight ? "0 1px 0 rgba(255,255,255,0.4)" : "none",
+                        }}>LIVE</span>
+                      </div>
+                    </div>
+                    <p style={{ fontSize: 11, color: T.txt3, margin: "3px 0 0", fontFamily: font, letterSpacing: "0.005em" }}>Tu equipo virtual — redacta, llama, califica y reactiva mientras tú cierras</p>
                   </div>
-                  <span style={{ fontSize: 12, fontWeight: 700, color: c, fontFamily: fontDisp, flexShrink: 0 }}>${(val/1000000).toFixed(1)}M</span>
                 </div>
-              );
-            })}
-          </div>
-        </G>
-      </div>
 
-      {/* Panels */}
-      <NotesModal lead={notesLead} onClose={() => setNotesLead(null)} onSave={saveNotes} />
-      <LeadPanel lead={selectedLead} onClose={() => setSelectedLead(null)} oc={oc} onUpdate={updateLead} onOpenNotes={() => { setNotesLead(selectedLead); setSelectedLead(null); }} />
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  {[
+                    { label: "Asignados", value: totalAssigned, color: T.accent },
+                    { label: "Acciones", value: totalActions, color: T.blue },
+                    { label: "Ahorro",   value: `${hoursSaved}h`, color: T.violet },
+                    { label: "Éxito IA", value: "91%", color: T.emerald },
+                  ].map((k) => (
+                    <div key={k.label} style={{
+                      display: "flex", flexDirection: "column", alignItems: "flex-start",
+                      padding: "7px 13px", borderRadius: 10,
+                      background: isLight
+                        ? `linear-gradient(135deg, ${k.color}28 0%, ${k.color}12 55%, ${k.color}08 100%)`
+                        : `linear-gradient(135deg, ${k.color}1A 0%, ${k.color}08 100%)`,
+                      border: `1px solid ${isLight ? k.color + "5C" : k.color + "30"}`,
+                      boxShadow: isLight
+                        ? `0 2px 6px ${k.color}22, 0 1px 2px ${k.color}14, inset 0 1px 0 rgba(255,255,255,0.7)`
+                        : `0 1px 3px ${k.color}12, inset 0 1px 0 rgba(255,255,255,0.08)`,
+                    }}>
+                      <p style={{
+                        fontSize: 8.5, margin: 0, fontFamily: font, letterSpacing: "0.1em",
+                        textTransform: "uppercase", fontWeight: 800,
+                        color: isLight ? `color-mix(in srgb, ${k.color} 55%, #0B1220 45%)` : k.color,
+                        opacity: 0.85,
+                      }}>{k.label}</p>
+                      <p style={{
+                        fontSize: 18, fontWeight: 800, fontFamily: fontDisp, margin: "1px 0 0",
+                        letterSpacing: "-0.03em", lineHeight: 1,
+                        color: isLight ? `color-mix(in srgb, ${k.color} 68%, #0B1220 32%)` : k.color,
+                        textShadow: isLight ? "0 1px 0 rgba(255,255,255,0.4)" : "none",
+                      }}>{k.value}</p>
+                    </div>
+                  ))}
+
+                  {/* CTA global — mint corporativo sólido en ambos temas, sin icono.
+                      El peso del botón recae en el color y el tipo, no en decoración. */}
+                  <button
+                    disabled={totalActions === 0}
+                    onClick={() => totalActions > 0 && oc(`__crm__ ejecuta a todo el equipo de IA: Reactivador (${reactivarQueue.length}), Seguimiento (${seguimientoQueue.length}), Callcenter (${callcenterQueue.length}), Calificador (${calificarQueue.length}) — dame el plan priorizado`)}
+                    style={{
+                      marginLeft: 4, padding: "10px 20px", borderRadius: 10, height: 38,
+                      background: totalActions === 0
+                        ? (isLight ? "rgba(15,23,42,0.03)" : "rgba(255,255,255,0.03)")
+                        : `linear-gradient(180deg, ${T.accent} 0%, ${isLight ? T.emerald : "#14B892"} 100%)`,
+                      border: `1px solid ${totalActions === 0
+                        ? T.border
+                        : (isLight ? `${T.emerald}66` : `${T.accent}66`)}`,
+                      color: totalActions === 0 ? T.txt3 : "#FFFFFF",
+                      fontSize: 12.5, fontWeight: 700, fontFamily: fontDisp, letterSpacing: "0.005em",
+                      cursor: totalActions === 0 ? "not-allowed" : "pointer",
+                      transition: "all 0.22s cubic-bezier(0.4, 0, 0.2, 1)",
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      whiteSpace: "nowrap",
+                      boxShadow: totalActions === 0
+                        ? "none"
+                        : (isLight
+                            ? `0 2px 6px ${T.accent}3A, 0 6px 18px ${T.accent}2E, inset 0 1px 0 rgba(255,255,255,0.45), inset 0 -1px 2px rgba(0,0,0,0.08)`
+                            : `0 2px 6px ${T.accent}30, 0 8px 22px ${T.accent}22, inset 0 1px 0 rgba(255,255,255,0.25), inset 0 -1px 2px rgba(0,0,0,0.18)`),
+                      textShadow: totalActions === 0 ? "none" : "0 1px 0 rgba(0,0,0,0.12)",
+                    }}
+                    onMouseEnter={e => {
+                      if (totalActions > 0) {
+                        e.currentTarget.style.transform = "translateY(-1px)";
+                        e.currentTarget.style.boxShadow = isLight
+                          ? `0 4px 10px ${T.accent}4D, 0 10px 26px ${T.accent}40, inset 0 1px 0 rgba(255,255,255,0.55), inset 0 -1px 2px rgba(0,0,0,0.10)`
+                          : `0 4px 10px ${T.accent}42, 0 12px 30px ${T.accent}33, inset 0 1px 0 rgba(255,255,255,0.30), inset 0 -1px 2px rgba(0,0,0,0.20)`;
+                      }
+                    }}
+                    onMouseLeave={e => {
+                      if (totalActions > 0) {
+                        e.currentTarget.style.transform = "none";
+                        e.currentTarget.style.boxShadow = isLight
+                          ? `0 2px 6px ${T.accent}3A, 0 6px 18px ${T.accent}2E, inset 0 1px 0 rgba(255,255,255,0.45), inset 0 -1px 2px rgba(0,0,0,0.08)`
+                          : `0 2px 6px ${T.accent}30, 0 8px 22px ${T.accent}22, inset 0 1px 0 rgba(255,255,255,0.25), inset 0 -1px 2px rgba(0,0,0,0.18)`;
+                      }
+                    }}
+                  >Ejecutar equipo</button>
+                </div>
+              </div>
+
+              {/* Grid de agentes */}
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 12 }}>
+                {agents.map(a => {
+                  const { icon: Icon, color, queue } = a;
+                  const isIdle = queue.length === 0;
+                  const visibleQueue = queue.slice(0, 3);
+                  const extra = queue.length - visibleQueue.length;
+                  const assigned = assignedByAgent[a.key] || [];
+
+                  // Text con contraste premium en ambos temas
+                  const colorText = isLight
+                    ? `color-mix(in srgb, ${color} 58%, #0B1220 42%)`
+                    : color;
+
+                  return (
+                    <div key={a.key}
+                      style={{
+                        position: "relative",
+                        borderRadius: 16,
+                        background: isLight
+                          ? (isIdle
+                              ? `linear-gradient(180deg, rgba(255,255,255,0.86) 0%, rgba(248,250,252,0.72) 100%)`
+                              : `radial-gradient(ellipse 320px 180px at 0% 0%, ${color}2E 0%, ${color}0E 42%, transparent 72%), linear-gradient(180deg, rgba(255,255,255,0.96) 0%, rgba(250,252,254,0.86) 100%)`)
+                          : (isIdle
+                              ? "linear-gradient(180deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.012) 100%)"
+                              : "linear-gradient(180deg, rgba(255,255,255,0.032) 0%, rgba(255,255,255,0.014) 100%)"),
+                        backdropFilter: "blur(30px) saturate(180%)",
+                        WebkitBackdropFilter: "blur(30px) saturate(180%)",
+                        border: `1px solid ${isIdle ? T.border : (isLight ? `${color}5A` : `${color}22`)}`,
+                        boxShadow: isLight
+                          ? (isIdle
+                              ? `0 1px 2px rgba(15,23,42,0.04), 0 4px 14px rgba(15,23,42,0.04), inset 0 1px 0 rgba(255,255,255,0.85)`
+                              : `0 2px 4px ${color}1A, 0 8px 24px rgba(15,23,42,0.06), 0 4px 14px ${color}22, inset 0 1px 0 rgba(255,255,255,0.9), inset 0 -1px 0 ${color}0F`)
+                          : (isIdle
+                              ? "inset 0 1px 0 rgba(255,255,255,0.04)"
+                              : `0 2px 8px rgba(0,0,0,0.22), 0 8px 22px rgba(0,0,0,0.26), inset 0 1px 0 rgba(255,255,255,0.05)`),
+                        overflow: "hidden",
+                        display: "flex", flexDirection: "column",
+                        transition: "all 0.24s cubic-bezier(.4,0,.2,1)",
+                      }}
+                      onMouseEnter={e => {
+                        if (!isIdle) {
+                          e.currentTarget.style.borderColor = isLight ? `${color}82` : `${color}3A`;
+                          e.currentTarget.style.transform = "translateY(-3px)";
+                          e.currentTarget.style.boxShadow = isLight
+                            ? `0 4px 14px rgba(15,23,42,0.08), 0 22px 48px rgba(15,23,42,0.1), 0 8px 28px ${color}3A, inset 0 1px 0 rgba(255,255,255,0.95)`
+                            : `0 4px 12px rgba(0,0,0,0.32), 0 16px 40px rgba(0,0,0,0.38), inset 0 1px 0 rgba(255,255,255,0.08)`;
+                        }
+                      }}
+                      onMouseLeave={e => {
+                        if (!isIdle) {
+                          e.currentTarget.style.borderColor = isLight ? `${color}5A` : `${color}22`;
+                          e.currentTarget.style.transform = "none";
+                          e.currentTarget.style.boxShadow = isLight
+                            ? `0 2px 4px ${color}1A, 0 8px 24px rgba(15,23,42,0.06), 0 4px 14px ${color}22, inset 0 1px 0 rgba(255,255,255,0.9), inset 0 -1px 0 ${color}0F`
+                            : `0 2px 8px rgba(0,0,0,0.22), 0 8px 22px rgba(0,0,0,0.26), inset 0 1px 0 rgba(255,255,255,0.05)`;
+                        }
+                      }}
+                    >
+                      {/* Shimmer diagonal — solo en light theme (en dark estorba) */}
+                      {!isIdle && isLight && (
+                        <div style={{
+                          position: "absolute", inset: 0, pointerEvents: "none",
+                          background: `linear-gradient(135deg, rgba(255,255,255,0.45) 0%, transparent 35%)`,
+                          borderRadius: 16,
+                        }} />
+                      )}
+
+                      <div style={{ padding: 14, display: "flex", flexDirection: "column", gap: 11, flex: 1, position: "relative" }}>
+                        {/* Head */}
+                        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                          <div style={{
+                            width: 40, height: 40, borderRadius: 11,
+                            background: isLight
+                              ? `radial-gradient(circle at 30% 25%, ${color}48 0%, ${color}22 55%, ${color}10 100%)`
+                              : `radial-gradient(circle at 30% 25%, ${color}22 0%, ${color}0C 55%, ${color}04 100%)`,
+                            border: `1px solid ${isLight ? color + "62" : color + "32"}`,
+                            display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+                            position: "relative",
+                            boxShadow: isIdle
+                              ? "none"
+                              : (isLight
+                                  ? `0 3px 10px ${color}36, 0 1px 2px ${color}1A, inset 0 1px 0 rgba(255,255,255,0.75), inset 0 0 10px ${color}14`
+                                  : `0 0 12px ${color}18, inset 0 1px 0 rgba(255,255,255,0.12), inset 0 0 8px ${color}10`),
+                          }}>
+                            <Icon size={17} color={color} strokeWidth={2.3} />
+                            {!isIdle && (
+                              <div style={{
+                                position: "absolute", top: -3, right: -3, width: 11, height: 11, borderRadius: "50%",
+                                background: `radial-gradient(circle at 32% 30%, #FFFFFF 0%, #FFFFFF 18%, ${color} 55%, ${color} 100%)`,
+                                boxShadow: isLight
+                                  ? `0 0 0 2.5px #FFFFFF, 0 0 0 3.5px ${color}, 0 0 8px ${color}AA`
+                                  : `0 0 0 2.5px ${T.bg}, 0 0 0 3.5px ${color}, 0 0 8px ${color}AA`,
+                                animation: "pulse 2.2s ease-in-out infinite",
+                              }} />
+                            )}
+                          </div>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <p style={{ fontSize: 13, fontWeight: 800, color: T.txt, fontFamily: fontDisp, margin: 0, letterSpacing: "-0.015em" }}>{a.name}</p>
+                            <p style={{ fontSize: 10, color: T.txt3, fontFamily: font, margin: "2px 0 0", letterSpacing: "0.005em" }}>{a.role}</p>
+                          </div>
+                          <div style={{
+                            padding: "4px 12px", borderRadius: 99, minWidth: 32,
+                            background: isIdle
+                              ? (isLight ? "rgba(15,23,42,0.04)" : "rgba(255,255,255,0.04)")
+                              : (isLight
+                                  ? `linear-gradient(135deg, ${color}42 0%, ${color}22 55%, ${color}14 100%)`
+                                  : `linear-gradient(135deg, ${color}18 0%, ${color}0C 100%)`),
+                            border: `1px solid ${isIdle ? T.border : (isLight ? `${color}82` : `${color}34`)}`,
+                            flexShrink: 0, textAlign: "center",
+                            boxShadow: !isIdle
+                              ? (isLight
+                                  ? `0 2px 8px ${color}32, 0 1px 2px ${color}1A, inset 0 1px 0 rgba(255,255,255,0.65)`
+                                  : `inset 0 1px 0 rgba(255,255,255,0.07)`)
+                              : "none",
+                          }}>
+                            <span style={{
+                              fontSize: 12.5, fontWeight: 900,
+                              color: isIdle ? T.txt3 : colorText,
+                              fontFamily: fontDisp, letterSpacing: "-0.02em",
+                              textShadow: !isIdle && isLight ? "0 1px 0 rgba(255,255,255,0.5)" : "none",
+                            }}>{queue.length}</span>
+                          </div>
+                        </div>
+
+                        {/* Métrica de éxito */}
+                        <div style={{
+                          display: "flex", alignItems: "center", gap: 7,
+                          padding: "6px 10px", borderRadius: 8,
+                          background: isIdle
+                            ? "transparent"
+                            : (isLight
+                                ? `linear-gradient(135deg, ${color}1E 0%, ${color}08 100%)`
+                                : `linear-gradient(135deg, ${color}0A 0%, ${color}03 100%)`),
+                          border: isIdle ? "none" : `1px solid ${isLight ? color + "36" : color + "18"}`,
+                          boxShadow: !isIdle && isLight ? "inset 0 1px 0 rgba(255,255,255,0.5)" : "none",
+                        }}>
+                          <TrendingUp size={11} color={isIdle ? T.txt3 : colorText} strokeWidth={2.5} />
+                          <span style={{
+                            fontSize: 10, fontWeight: 800,
+                            color: isIdle ? T.txt3 : colorText,
+                            fontFamily: font, letterSpacing: "0.02em",
+                          }}>{a.metric}</span>
+                          <span style={{ fontSize: 9, color: T.txt3, fontFamily: font, marginLeft: "auto", fontWeight: 600 }}>últ. 30 días</span>
+                        </div>
+
+                        {/* Clientes asignados por asesor */}
+                        <div style={{
+                          display: "flex", alignItems: "center", gap: 8, padding: "7px 10px", borderRadius: 9,
+                          background: assigned.length > 0
+                            ? (isLight
+                                ? `linear-gradient(135deg, ${color}2A 0%, ${color}10 55%, ${color}06 100%)`
+                                : `linear-gradient(135deg, ${color}0C 0%, ${color}03 100%)`)
+                            : (isLight ? "rgba(15,23,42,0.03)" : "rgba(255,255,255,0.02)"),
+                          border: `1px solid ${assigned.length > 0 ? (isLight ? `${color}5C` : `${color}20`) : T.border}`,
+                          boxShadow: assigned.length > 0
+                            ? (isLight ? `0 1px 2px ${color}18, inset 0 1px 0 rgba(255,255,255,0.55)` : "none")
+                            : "none",
+                        }}>
+                          <Users size={11} color={assigned.length > 0 ? colorText : T.txt3} strokeWidth={2.5} />
+                          <span style={{
+                            fontSize: 10, fontWeight: 700,
+                            color: assigned.length > 0 ? colorText : T.txt3,
+                            fontFamily: font, letterSpacing: "0.015em",
+                          }}>
+                            {assigned.length > 0 ? `${assigned.length} asignado${assigned.length > 1 ? "s" : ""} por el asesor` : "Sin asignaciones directas"}
+                          </span>
+                          {assigned.length > 0 && (
+                            <div style={{ marginLeft: "auto", display: "flex", gap: 3 }}>
+                              {assigned.slice(0, 3).map(l => (
+                                <div key={l.id} title={l.n} style={{
+                                  width: 19, height: 19, borderRadius: "50%",
+                                  background: isLight
+                                    ? `linear-gradient(135deg, ${color}48 0%, ${color}22 100%)`
+                                    : `linear-gradient(135deg, ${color}2E 0%, ${color}14 100%)`,
+                                  border: `1px solid ${isLight ? color + "7A" : color + "55"}`,
+                                  display: "flex", alignItems: "center", justifyContent: "center",
+                                  fontSize: 8.5, fontWeight: 800, color: colorText, fontFamily: fontDisp,
+                                  boxShadow: isLight ? `0 1px 2px ${color}22` : "none",
+                                }}>{l.n.charAt(0)}</div>
+                              ))}
+                              {assigned.length > 3 && <span style={{ fontSize: 9, fontWeight: 800, color: colorText, fontFamily: fontDisp, alignSelf: "center", marginLeft: 2 }}>+{assigned.length - 3}</span>}
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Cola */}
+                        <div style={{ flex: 1, padding: 0, borderRadius: 10,
+                          background: isLight
+                            ? `linear-gradient(180deg, rgba(248,250,252,0.88) 0%, rgba(241,245,249,0.68) 100%)`
+                            : `linear-gradient(180deg, rgba(0,0,0,0.22) 0%, rgba(0,0,0,0.14) 100%)`,
+                          border: `1px solid ${isLight ? "rgba(15,23,42,0.07)" : "rgba(255,255,255,0.05)"}`,
+                          boxShadow: isLight
+                            ? "inset 0 1px 3px rgba(15,23,42,0.04), inset 0 -1px 0 rgba(255,255,255,0.4)"
+                            : "inset 0 1px 0 rgba(255,255,255,0.03), inset 0 -1px 0 rgba(0,0,0,0.2)",
+                          overflow: "hidden", display: "flex", flexDirection: "column",
+                        }}>
+                          {isIdle ? (
+                            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 7, padding: "20px 10px" }}>
+                              <CheckCircle2 size={12} color={T.emerald} />
+                              <span style={{ fontSize: 10.5, color: T.txt3, fontFamily: font, fontWeight: 600 }}>Sin pendientes — todo al día</span>
+                            </div>
+                          ) : (
+                            <>
+                              {visibleQueue.map((l, idx) => (
+                                <div key={l.id}
+                                  onClick={() => setSelectedLead(l)}
+                                  title={`Ver perfil de ${l.n}`}
+                                  style={{
+                                    display: "flex", alignItems: "center", gap: 9,
+                                    padding: "8px 11px",
+                                    borderBottom: idx < visibleQueue.length - 1 || extra > 0 ? `1px solid ${isLight ? "rgba(15,23,42,0.06)" : "rgba(255,255,255,0.05)"}` : "none",
+                                    cursor: "pointer", transition: "all 0.15s",
+                                    position: "relative",
+                                  }}
+                                  onMouseEnter={e => {
+                                    e.currentTarget.style.background = isLight
+                                      ? `linear-gradient(135deg, ${color}1E 0%, ${color}08 100%)`
+                                      : `linear-gradient(135deg, ${color}0A 0%, ${color}03 100%)`;
+                                    e.currentTarget.style.paddingLeft = "13px";
+                                  }}
+                                  onMouseLeave={e => {
+                                    e.currentTarget.style.background = "transparent";
+                                    e.currentTarget.style.paddingLeft = "11px";
+                                  }}
+                                >
+                                  {/* LED dot premium */}
+                                  <div style={{
+                                    width: 7, height: 7, borderRadius: "50%",
+                                    background: `radial-gradient(circle at 30% 30%, #FFFFFFB0 0%, ${color} 45%, ${color} 100%)`,
+                                    boxShadow: isLight
+                                      ? `0 0 0 2px ${color}22, 0 0 6px ${color}75`
+                                      : `0 0 0 1.5px ${color}28, 0 0 5px ${color}90`,
+                                    flexShrink: 0,
+                                  }} />
+                                  <span style={{ fontSize: 11.5, fontWeight: 700, color: isLight ? T.txt : "#FFF", fontFamily: fontDisp, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1, minWidth: 0, letterSpacing: "-0.005em" }}>{l.n}</span>
+                                  <span style={{
+                                    fontSize: 9, fontWeight: 800,
+                                    color: colorText,
+                                    fontFamily: font, letterSpacing: "0.05em", textTransform: "uppercase",
+                                    flexShrink: 0,
+                                    padding: "2px 7px", borderRadius: 99,
+                                    background: isLight
+                                      ? `linear-gradient(135deg, ${color}2A 0%, ${color}12 100%)`
+                                      : `${color}10`,
+                                    border: `1px solid ${isLight ? color + "4E" : color + "22"}`,
+                                    boxShadow: isLight ? `inset 0 1px 0 rgba(255,255,255,0.5)` : "none",
+                                  }}>{a.queueLabel(l)}</span>
+                                  {/* Botón de ejecución rápida del agente sobre este lead */}
+                                  <button
+                                    onClick={(e) => { e.stopPropagation(); oc(a.prompt(l), l); }}
+                                    title={`Ejecutar ${a.name} para ${l.n}`}
+                                    style={{
+                                      width: 22, height: 22, borderRadius: 7,
+                                      display: "flex", alignItems: "center", justifyContent: "center",
+                                      background: isLight ? `${color}1A` : `${color}14`,
+                                      border: `1px solid ${isLight ? color + "40" : color + "26"}`,
+                                      cursor: "pointer", flexShrink: 0, padding: 0,
+                                      transition: "all 0.15s",
+                                    }}
+                                    onMouseEnter={e => {
+                                      e.stopPropagation();
+                                      e.currentTarget.style.background = isLight ? `${color}32` : `${color}24`;
+                                      e.currentTarget.style.borderColor = isLight ? `${color}6A` : `${color}42`;
+                                    }}
+                                    onMouseLeave={e => {
+                                      e.stopPropagation();
+                                      e.currentTarget.style.background = isLight ? `${color}1A` : `${color}14`;
+                                      e.currentTarget.style.borderColor = isLight ? `${color}40` : `${color}26`;
+                                    }}
+                                  >
+                                    <Zap size={10} color={colorText} strokeWidth={2.6} />
+                                  </button>
+                                </div>
+                              ))}
+                              {extra > 0 && (
+                                <div style={{
+                                  padding: "6px 11px", textAlign: "center",
+                                  background: isLight
+                                    ? `linear-gradient(135deg, ${color}0C 0%, ${color}04 100%)`
+                                    : "rgba(255,255,255,0.015)",
+                                  borderTop: `1px solid ${isLight ? color + "18" : "rgba(255,255,255,0.04)"}`,
+                                }}>
+                                  <span style={{ fontSize: 9.5, color: colorText, fontFamily: font, fontWeight: 700, letterSpacing: "0.02em" }}>+{extra} más en cola</span>
+                                </div>
+                              )}
+                            </>
+                          )}
+                        </div>
+
+                        {/* Acciones */}
+                        <div style={{ display: "flex", gap: 6 }}>
+                          <button
+                            disabled={isIdle}
+                            onClick={() => !isIdle && oc(a.batchPrompt(queue))}
+                            style={{
+                              flex: 1, padding: "10px 10px", borderRadius: 10,
+                              background: isIdle
+                                ? (isLight ? "rgba(15,23,42,0.03)" : "rgba(255,255,255,0.03)")
+                                : (isLight
+                                    ? `linear-gradient(135deg, ${color}22, ${color}0C)`
+                                    : `linear-gradient(135deg, ${color}18, ${color}08)`),
+                              border: `1px solid ${isIdle ? T.border : (isLight ? `${color}4A` : `${color}38`)}`,
+                              color: isIdle ? T.txt3 : colorText,
+                              fontSize: 11.5, fontWeight: 800, fontFamily: fontDisp, letterSpacing: "-0.005em",
+                              cursor: isIdle ? "not-allowed" : "pointer",
+                              transition: "all 0.18s",
+                              display: "flex", alignItems: "center", justifyContent: "center", gap: 5,
+                              boxShadow: !isIdle && isLight ? `0 1px 3px ${color}14, inset 0 1px 0 rgba(255,255,255,0.55)` : "none",
+                            }}
+                            onMouseEnter={e => { if (!isIdle) { e.currentTarget.style.background = `linear-gradient(135deg, ${color}, ${color}DD)`; e.currentTarget.style.color = "#FFFFFF"; e.currentTarget.style.borderColor = color; e.currentTarget.style.boxShadow = `0 5px 14px ${color}48, inset 0 1px 0 rgba(255,255,255,0.28)`; e.currentTarget.style.transform = "translateY(-1px)"; } }}
+                            onMouseLeave={e => { if (!isIdle) { e.currentTarget.style.background = isLight ? `linear-gradient(135deg, ${color}22, ${color}0C)` : `linear-gradient(135deg, ${color}18, ${color}08)`; e.currentTarget.style.color = colorText; e.currentTarget.style.borderColor = isLight ? `${color}4A` : `${color}38`; e.currentTarget.style.boxShadow = isLight ? `0 1px 3px ${color}14, inset 0 1px 0 rgba(255,255,255,0.55)` : "none"; e.currentTarget.style.transform = "none"; } }}
+                          >
+                            <Zap size={12} strokeWidth={2.5} /> {a.verb} {!isIdle && `los ${queue.length}`}
+                          </button>
+                          <button
+                            disabled={isIdle}
+                            onClick={() => !isIdle && oc(`__crm__ muestra la cola completa del agente ${a.name.toLowerCase()}: ${queue.length} leads`)}
+                            title={`Ver los ${queue.length} leads en cola`}
+                            style={{
+                              width: 36, height: 36, borderRadius: 9,
+                              background: isLight ? "rgba(255,255,255,0.6)" : "rgba(255,255,255,0.025)",
+                              border: `1px solid ${T.border}`,
+                              color: isIdle ? T.txt3 : T.txt2,
+                              cursor: isIdle ? "not-allowed" : "pointer",
+                              display: "flex", alignItems: "center", justifyContent: "center",
+                              transition: "all 0.15s", flexShrink: 0, padding: 0,
+                              boxShadow: isLight ? "inset 0 1px 0 rgba(255,255,255,0.8)" : "none",
+                            }}
+                            onMouseEnter={e => { if (!isIdle) { e.currentTarget.style.background = isLight ? "rgba(255,255,255,0.85)" : "rgba(255,255,255,0.06)"; e.currentTarget.style.borderColor = T.borderH; } }}
+                            onMouseLeave={e => { if (!isIdle) { e.currentTarget.style.background = isLight ? "rgba(255,255,255,0.6)" : "rgba(255,255,255,0.025)"; e.currentTarget.style.borderColor = T.border; } }}
+                          >
+                            <List size={13} />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Feed de actividad reciente */}
+            {activityLog.length > 0 && (
+              <div style={{
+                padding: "10px 18px 14px",
+                borderTop: `1px solid ${isLight ? T.borderMint : T.border}`,
+                background: isLight
+                  ? `linear-gradient(180deg, rgba(240,252,247,0.5) 0%, rgba(255,255,255,0.3) 100%)`
+                  : "rgba(255,255,255,0.01)",
+              }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                    <Activity size={11} color={T.txt3} />
+                    <span style={{ fontSize: 9.5, fontWeight: 700, color: T.txt3, letterSpacing: "0.08em", textTransform: "uppercase", fontFamily: font }}>Actividad reciente</span>
+                  </div>
+                  <button onClick={() => oc("__crm__ muestra el historial completo de acciones ejecutadas por los agentes IA hoy")}
+                    style={{ fontSize: 10, color: T.accent, background: "none", border: "none", cursor: "pointer", fontFamily: font, fontWeight: 600, padding: 0, letterSpacing: "0.01em" }}
+                    onMouseEnter={e => e.currentTarget.style.textDecoration = "underline"}
+                    onMouseLeave={e => e.currentTarget.style.textDecoration = "none"}
+                  >Ver historial →</button>
+                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 8 }}>
+                  {activityLog.map(({ agent, lead, time }) => {
+                    const A = agent.icon;
+                    return (
+                      <div key={agent.key} style={{
+                        display: "flex", alignItems: "center", gap: 8, padding: "6px 9px", borderRadius: 8,
+                        background: isLight
+                          ? `linear-gradient(135deg, rgba(255,255,255,0.88) 0%, rgba(248,252,250,0.72) 100%)`
+                          : "rgba(255,255,255,0.02)",
+                        border: `1px solid ${T.border}`,
+                        boxShadow: isLight ? "0 1px 2px rgba(15,23,42,0.03), inset 0 1px 0 rgba(255,255,255,0.6)" : "none",
+                      }}>
+                        <div style={{
+                          width: 22, height: 22, borderRadius: 6,
+                          background: isLight ? `linear-gradient(135deg, ${agent.color}24, ${agent.color}0A)` : `${agent.color}16`,
+                          border: `1px solid ${agent.color}34`,
+                          display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+                          boxShadow: isLight ? `0 1px 3px ${agent.color}1F, inset 0 1px 0 rgba(255,255,255,0.5)` : "none",
+                        }}>
+                          <A size={11} color={agent.color} strokeWidth={2.2} />
+                        </div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <p style={{ fontSize: 10.5, color: T.txt2, margin: 0, fontFamily: font, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                            <span style={{ color: agent.color, fontWeight: 700 }}>{agent.name}</span>
+                            <span style={{ color: T.txt3 }}> {agent.actionText} </span>
+                            <span style={{ color: isLight ? T.txt : "#FFF", fontWeight: 600 }}>{lead.n}</span>
+                          </p>
+                          <p style={{ fontSize: 9, color: T.txt3, margin: "1px 0 0", fontFamily: font }}>{time}</p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </G>
+        );
+      })()}
+
+      {/* Drawers — los 3 (Análisis IA, Perfil, Expediente) comparten un switcher
+         "Dynamic Island" en la parte inferior que permite al vendedor saltar
+         entre vistas del mismo lead sin cerrar. */}
+      <NotesModal
+        T={T}
+        lead={notesLead}
+        onClose={() => setNotesLead(null)}
+        onSave={saveNotes}
+        onUpdate={(u) => { updateLead(u); if (notesLead && u.id === notesLead.id) setNotesLead(u); }}
+        onSwitchTab={(tab) => openDrawerTab(tab, notesLead)}
+      />
+      <LeadPanel
+        T={T}
+        lead={selectedLead}
+        onClose={() => setSelectedLead(null)}
+        oc={oc}
+        onUpdate={updateLead}
+        onSwitchTab={(tab) => openDrawerTab(tab, selectedLead)}
+      />
+      <AnalysisDrawer
+        T={T}
+        lead={analyzingLead}
+        onClose={() => setAnalyzingLead(null)}
+        oc={oc}
+        onUpdate={updateLead}
+        onSwitchTab={(tab) => openDrawerTab(tab, analyzingLead)}
+      />
     </div>
   );
 }
@@ -2932,9 +7171,9 @@ const AsesorCRM = ({ oc }) => {
       </div>
     </G>
 
-    {/* Notas de clientes */}
+    {/* Expediente de clientes */}
     <G>
-      <p style={{ fontSize: 13, fontWeight: 700, color: P.txt, marginBottom: 14 }}>Notas y Contexto de Clientes</p>
+      <p style={{ fontSize: 13, fontWeight: 700, color: P.txt, marginBottom: 14 }}>Expediente y Contexto de Clientes</p>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
         {crmAsesores.slice(0, 6).map((r, i) => (
           <div key={i} style={{ padding: "12px", borderRadius: P.rs, background: `${r.status.includes("ZOOM") ? P.emerald : r.status.includes("SEGUIMIENTO") ? P.blue : r.status.includes("NO CONTESTA") ? P.rose : P.cyan}08`, border: `1px solid ${r.status.includes("ZOOM") ? P.emerald : r.status.includes("SEGUIMIENTO") ? P.blue : r.status.includes("NO CONTESTA") ? P.rose : P.cyan}14` }}>
@@ -7750,6 +11989,18 @@ export default function App() {
   const [inp, setInp] = useState("");
   const [notifs, setNotifs] = useState([]);
 
+  // ── THEME (dark ↔ light) — global para CRM, header, sidebar ──
+  const [theme, setThemeState] = useState(() => {
+    try { return localStorage.getItem("stratos_crm_theme") || "dark"; }
+    catch { return "dark"; }
+  });
+  const setTheme = useCallback((next) => {
+    setThemeState(next);
+    try { localStorage.setItem("stratos_crm_theme", next); } catch {}
+  }, []);
+  const isLight = theme === "light";
+  const T = isLight ? LP : P;
+
   // ── leadsData global — compartido entre Dash y CRM ───────────────────────
   // Inicializamos con TODOS los leads; el filtro por rol lo hace visibleLeads en CRM
   const [leadsData, setLeadsData] = useState(leads);
@@ -7796,9 +12047,15 @@ export default function App() {
 
   return (
     <div style={{
-      height: "100vh", display: "flex", fontFamily: font, color: P.txt,
-      background: `radial-gradient(ellipse at 15% 0%, rgba(0,228,184,0.03) 0%, transparent 50%),
-                    radial-gradient(ellipse at 85% 100%, rgba(76,158,255,0.02) 0%, transparent 50%), ${P.bg}`,
+      height: "100vh", display: "flex", fontFamily: font,
+      color: T.txt,
+      background: isLight
+        ? `radial-gradient(1400px 900px at 50% -10%, rgba(13,154,118,0.10) 0%, rgba(13,154,118,0.04) 35%, transparent 65%),
+           radial-gradient(1200px 800px at 50% 110%, rgba(20,184,146,0.08) 0%, rgba(20,184,146,0.03) 35%, transparent 65%),
+           linear-gradient(180deg, #F4F9F6 0%, #F8FBF9 45%, #F4F9F6 100%)`
+        : `radial-gradient(ellipse at 15% 0%, rgba(0,228,184,0.03) 0%, transparent 50%),
+           radial-gradient(ellipse at 85% 100%, rgba(76,158,255,0.02) 0%, transparent 50%), ${P.bg}`,
+      transition: "background 0.3s ease, color 0.3s ease",
     }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
@@ -7808,47 +12065,94 @@ export default function App() {
         @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
         @keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
         @keyframes atomSpin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+        @keyframes agentOrbBreathe{
+          0%,100%{box-shadow:0 2px 8px ${T.accent}40,0 6px 20px ${T.accent}38,0 0 0 0 ${T.accent}44,inset 0 1px 0 rgba(255,255,255,0.35),inset 0 -1px 0 rgba(0,0,0,0.15)}
+          50%{box-shadow:0 2px 8px ${T.accent}55,0 8px 28px ${T.accent}60,0 0 0 6px ${T.accent}18,inset 0 1px 0 rgba(255,255,255,0.45),inset 0 -1px 0 rgba(0,0,0,0.15)}
+        }
+        @keyframes priorityBreathe{
+          0%,100%{box-shadow:0 0 0 0 ${T.accent}40,0 0 14px ${T.accent}55}
+          50%{box-shadow:0 0 0 6px ${T.accent}00,0 0 22px ${T.accent}88}
+        }
         @keyframes scanLine{0%{top:0}100%{top:100%}}
         @keyframes stepFade{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:translateX(0)}}
         *{box-sizing:border-box;margin:0}
         ::-webkit-scrollbar{width:4px}
         ::-webkit-scrollbar-track{background:transparent}
-        ::-webkit-scrollbar-thumb{background:${P.border};border-radius:4px}
+        ::-webkit-scrollbar-thumb{background:${T.border};border-radius:4px}
       `}</style>
 
       {/* Sidebar */}
       <div style={{
-        width: 60, flexShrink: 0, borderRight: `1px solid ${P.border}`,
+        width: 60, flexShrink: 0,
+        borderRight: `1px solid ${isLight ? T.borderMint : T.border}`,
         display: "flex", flexDirection: "column", alignItems: "center",
-        padding: "56px 0 14px", background: "rgba(6,10,17,0.5)",
+        padding: "56px 0 14px",
+        position: "relative",
+        background: isLight
+          ? `linear-gradient(180deg, rgba(240,252,247,0.95) 0%, rgba(255,255,255,0.78) 45%, rgba(234,250,244,0.88) 100%)`
+          : "rgba(6,10,17,0.5)",
+        backdropFilter: "blur(28px) saturate(160%)",
+        WebkitBackdropFilter: "blur(28px) saturate(160%)",
+        boxShadow: isLight
+          ? "1px 0 0 rgba(13,154,118,0.10), 6px 0 28px rgba(13,154,118,0.06), 12px 0 48px rgba(15,23,42,0.03)"
+          : "none",
+        transition: "background 0.3s ease, box-shadow 0.3s ease",
       }}>
+        {/* Línea vertical brand green decorativa (solo light) */}
+        {isLight && (
+          <div style={{
+            position: "absolute", top: 0, right: -1, width: 2, height: "100%",
+            background: `linear-gradient(180deg, transparent 0%, ${T.accent}40 20%, ${T.accent}60 50%, ${T.accent}40 80%, transparent 100%)`,
+            pointerEvents: "none",
+          }} />
+        )}
         <div style={{
           width: 38, height: 38, borderRadius: 11, marginBottom: 28,
-          background: `linear-gradient(135deg, ${P.accent}20, ${P.accent}06)`,
-          border: `1px solid ${P.accent}22`,
+          background: isLight
+            ? `linear-gradient(135deg, ${T.accent} 0%, #14B892 100%)`
+            : `linear-gradient(135deg, ${T.accent}20, ${T.accent}06)`,
+          border: `1px solid ${isLight ? "transparent" : T.accent + "22"}`,
           display: "flex", alignItems: "center", justifyContent: "center",
-          boxShadow: `0 0 24px ${P.accent}0D`,
+          boxShadow: isLight
+            ? `0 4px 14px ${T.accent}40, 0 8px 28px ${T.accent}28, inset 0 1px 0 rgba(255,255,255,0.35)`
+            : `0 0 24px ${T.accent}0D`,
         }}>
-          <StratosAtom size={22} color={P.accent} />
+          <StratosAtom size={22} color={isLight ? "#FFFFFF" : T.accent} />
         </div>
 
         {nav.filter(n => !n.adminOnly || ["super_admin","admin"].includes(user?.role)).map(n => {
           const a = v === n.id;
           const isAdmin = n.adminOnly;
           const hasAccess = MODULE_ROLES[n.id]?.includes(user?.role) ?? true;
-          const activeColor = isAdmin ? "#A78BFA" : P.accent;
-          const activeBg = isAdmin ? "rgba(167,139,250,0.1)" : P.accentS;
+          const activeColor = isAdmin ? "#A78BFA" : T.accent;
+          const activeBg = isAdmin
+            ? "rgba(167,139,250,0.1)"
+            : (isLight
+                ? `linear-gradient(135deg, ${T.accent}22, ${T.accent}0E)`
+                : T.accentS);
           return (
             <div key={n.id}>
-              {n.sep && <div style={{ height: 1, background: P.border, margin: "6px 0 10px" }} />}
+              {n.sep && <div style={{ height: 1, background: isLight ? T.borderMint : T.border, margin: "6px 0 10px", width: 28 }} />}
               <button onClick={() => setV(n.id)} title={`${n.l}${!hasAccess ? " · Sin acceso" : ""}`} style={{
-                width: 40, height: 40, borderRadius: 11, border: "none", cursor: "pointer",
+                width: 40, height: 40, borderRadius: 11,
+                border: a && isLight && !isAdmin ? `1px solid ${T.accent}44` : "1px solid transparent",
+                cursor: "pointer",
                 background: a ? activeBg : "transparent",
                 display: "flex", alignItems: "center", justifyContent: "center",
                 marginBottom: 4, transition: "all 0.25s", position: "relative", opacity: hasAccess ? 1 : 0.45,
-              }}>
-                <n.i size={18} color={a ? activeColor : P.txt3} strokeWidth={a ? 2.2 : 1.8} />
-                {a && <div style={{ position: "absolute", left: -1, top: "50%", transform: "translateY(-50%)", width: 2, height: 14, borderRadius: 1, background: activeColor, boxShadow: `0 0 6px ${activeColor}60` }} />}
+                boxShadow: a && isLight && !isAdmin ? `0 4px 14px ${T.accent}26, inset 0 1px 0 rgba(255,255,255,0.6)` : "none",
+              }}
+                onMouseEnter={e => {
+                  if (!a && hasAccess) {
+                    e.currentTarget.style.background = isLight ? `${T.accent}10` : "rgba(255,255,255,0.04)";
+                  }
+                }}
+                onMouseLeave={e => {
+                  if (!a) e.currentTarget.style.background = "transparent";
+                }}
+              >
+                <n.i size={18} color={a ? activeColor : (isLight ? T.txt2 : T.txt3)} strokeWidth={a ? 2.3 : 1.9} />
+                {a && <div style={{ position: "absolute", left: -1, top: "50%", transform: "translateY(-50%)", width: 3, height: 18, borderRadius: 2, background: activeColor, boxShadow: `0 0 8px ${activeColor}80, 0 0 16px ${activeColor}40` }} />}
               </button>
             </div>
           );
@@ -7856,29 +12160,19 @@ export default function App() {
 
         <div style={{ flex: 1 }} />
 
-        <button onClick={() => setCo(!co)} title="Agente Stratos" style={{
-          width: 40, height: 40, borderRadius: 11,
-          border: `1px solid ${co ? P.accentB : P.border}`,
-          background: co ? P.accentS : P.glass,
-          cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
-          position: "relative", transition: "all 0.25s", marginBottom: 6,
-          boxShadow: co ? `0 0 16px ${P.accent}0A` : "none",
-        }}>
-          <Atom size={17} color={co ? P.accent : P.txt3} />
-        </button>
         <button title={["super_admin","admin"].includes(user?.role) ? "Gestión de Usuarios" : "Configuración"}
           onClick={() => ["super_admin","admin"].includes(user?.role) ? setV("admin") : null}
           style={{ width: 40, height: 40, borderRadius: 11, border: `1px solid ${v === "admin" ? "rgba(167,139,250,0.3)" : "transparent"}`, background: v === "admin" ? "rgba(167,139,250,0.1)" : "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.2s" }}
-          onMouseEnter={e => { if (["super_admin","admin"].includes(user?.role)) { e.currentTarget.style.background = P.glass; e.currentTarget.style.borderColor = P.border; } }}
+          onMouseEnter={e => { if (["super_admin","admin"].includes(user?.role)) { e.currentTarget.style.background = T.glass; e.currentTarget.style.borderColor = T.border; } }}
           onMouseLeave={e => { e.currentTarget.style.background = v === "admin" ? "rgba(167,139,250,0.1)" : "transparent"; e.currentTarget.style.borderColor = v === "admin" ? "rgba(167,139,250,0.3)" : "transparent"; }}
         >
-          <Settings size={16} color={["super_admin","admin"].includes(user?.role) ? (v === "admin" ? "#A78BFA" : P.txt2) : P.txt3} />
+          <Settings size={16} color={["super_admin","admin"].includes(user?.role) ? (v === "admin" ? "#A78BFA" : T.txt2) : T.txt3} />
         </button>
-        <button title="Volver al inicio" onClick={() => window.location.href = "/"} style={{ width: 40, height: 40, borderRadius: 11, border: `1px solid ${P.border}`, background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 6, transition: "all 0.2s" }}
-          onMouseEnter={e => { e.currentTarget.style.background = P.glass; e.currentTarget.style.borderColor = P.borderH; }}
-          onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = P.border; }}
+        <button title="Volver al inicio" onClick={() => window.location.href = "/"} style={{ width: 40, height: 40, borderRadius: 11, border: `1px solid ${T.border}`, background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 6, transition: "all 0.2s" }}
+          onMouseEnter={e => { e.currentTarget.style.background = T.glass; e.currentTarget.style.borderColor = T.borderH; }}
+          onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = T.border; }}
         >
-          <Home size={15} color={P.txt3} />
+          <Home size={15} color={T.txt3} />
         </button>
       </div>
 
@@ -7886,78 +12180,277 @@ export default function App() {
       <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
         <div style={{
           position: "relative",
-          padding: "16px 28px", borderBottom: `1px solid ${P.border}`,
+          padding: "12px 24px", borderBottom: `1px solid ${isLight ? T.borderMint : T.border}`,
           display: "flex", justifyContent: "space-between", alignItems: "center",
-          background: "rgba(6,10,17,0.4)", backdropFilter: "blur(16px)",
+          background: isLight
+            ? `linear-gradient(180deg, rgba(255,255,255,0.96) 0%, rgba(248,252,250,0.82) 100%)`
+            : "rgba(6,10,17,0.42)",
+          backdropFilter: "blur(28px) saturate(160%)",
+          WebkitBackdropFilter: "blur(28px) saturate(160%)",
+          boxShadow: isLight
+            ? `0 1px 0 ${T.accent}14, 0 6px 28px rgba(15,23,42,0.04), 0 12px 48px rgba(15,23,42,0.02)`
+            : "none",
+          transition: "background 0.3s ease, box-shadow 0.3s ease",
         }}>
-          <div style={{ display: "flex", alignItems: "baseline", gap: 14 }}>
+          {/* Línea horizontal brand green decorativa inferior (solo light) */}
+          {isLight && (
+            <div style={{
+              position: "absolute", left: 0, right: 0, bottom: -1, height: 1,
+              background: `linear-gradient(90deg, transparent 0%, ${T.accent}30 20%, ${T.accent}48 50%, ${T.accent}30 80%, transparent 100%)`,
+              pointerEvents: "none",
+            }} />
+          )}
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            {/* Dot brand green con pulse sutil */}
+            <div style={{
+              width: 8, height: 8, borderRadius: "50%",
+              background: `radial-gradient(circle at 30% 30%, #5CE0B0, ${T.accent})`,
+              boxShadow: isLight
+                ? `0 0 14px ${T.accent}90, 0 0 4px ${T.accent}`
+                : `0 0 12px ${T.accent}90`,
+              animation: "pulse 2.4s ease-in-out infinite",
+            }} />
             <p style={{
-              fontSize: 21, fontWeight: 400, fontFamily: fontDisp, letterSpacing: "-0.02em", color: "#FFFFFF"
+              fontSize: 20, fontWeight: 500, fontFamily: fontDisp, letterSpacing: "-0.028em",
+              color: isLight ? T.txt : "#FFFFFF", margin: 0, lineHeight: 1,
             }}>
               Stratos
-              <span style={{ fontWeight: 300, color: "rgba(255,255,255,0.5)", marginLeft: 4 }}>IA</span>
+              <span style={{
+                fontWeight: 500,
+                background: isLight ? T.accentG : undefined,
+                WebkitBackgroundClip: isLight ? "text" : undefined,
+                WebkitTextFillColor: isLight ? "transparent" : undefined,
+                color: isLight ? undefined : "rgba(255,255,255,0.58)",
+                marginLeft: 5,
+              }}>IA</span>
             </p>
-            <div style={{ height: 14, width: 1, background: P.border, alignSelf: "center" }} />
-            <span style={{ fontSize: 13, color: P.txt2, fontWeight: 400, fontFamily: font, letterSpacing: "0.02em" }}>
+            <div style={{
+              height: 16, width: 1, alignSelf: "center",
+              background: isLight
+                ? `linear-gradient(180deg, transparent 0%, ${T.accent}32 50%, transparent 100%)`
+                : T.border,
+            }} />
+            <span style={{
+              fontSize: 10.5, fontWeight: 800, fontFamily: fontDisp,
+              letterSpacing: "0.08em", textTransform: "uppercase",
+              padding: "4px 11px",
+              borderRadius: 99,
+              background: isLight
+                ? `linear-gradient(135deg, ${T.accent}1A 0%, ${T.accent}0A 100%)`
+                : `rgba(255,255,255,0.04)`,
+              border: `1px solid ${isLight ? T.accent + "2E" : T.border}`,
+              color: isLight ? T.accentDark : T.txt2,
+              boxShadow: isLight
+                ? `0 1px 3px ${T.accent}14, inset 0 1px 0 rgba(255,255,255,0.6)`
+                : "none",
+            }}>
               {nav.find(n => n.id === v)?.l}
             </span>
           </div>
           <div style={{ position: "absolute", left: "50%", transform: "translateX(-50%)", display: "flex", alignItems: "center", gap: 12 }}>
-            <DynIsland onExpand={oc} notifications={notifs} />
-            {/* Agent Orb */}
-            <button onClick={() => setCo(!co)} style={{
-              width: 38, height: 38, borderRadius: "50%", border: "none", cursor: "pointer",
-              background: co ? "rgba(110,231,194,0.12)" : "#000000",
+            <DynIsland onExpand={oc} notifications={notifs} theme={theme} />
+            {/* Agent Orb — IA que guía al asesor, siempre verde brand · refinado pro */}
+            {/* Agent Orb — refinado: en oscuro es un disco sutil casi-monocromo
+                con un hint mint muy tenue; en claro, mint elegante. Sin glow externo. */}
+            <button onClick={() => setCo(!co)} title="Agente Stratos IA" style={{
+              width: 30, height: 30, borderRadius: "50%", border: "none", cursor: "pointer",
+              background: co
+                ? (isLight
+                    ? `radial-gradient(circle at 30% 28%, #FFFFFF 0%, ${T.accent}1A 100%)`
+                    : `radial-gradient(circle at 30% 28%, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.02) 100%)`)
+                : (isLight
+                    ? `radial-gradient(circle at 32% 28%, #8FEFD0 0%, ${T.accent} 55%, #0E9878 100%)`
+                    : `radial-gradient(circle at 32% 28%, rgba(255,255,255,0.14) 0%, rgba(255,255,255,0.04) 55%, rgba(255,255,255,0.015) 100%)`),
               display: "flex", alignItems: "center", justifyContent: "center",
-              position: "relative", transition: "all 0.55s cubic-bezier(0.32, 0.72, 0, 1)",
-              boxShadow: co ? `0 0 20px rgba(110,231,194,0.15)` : "none",
-              outline: co ? `1.5px solid rgba(110,231,194,0.3)` : `0.5px solid rgba(255,255,255,0.12)`,
+              position: "relative", transition: "all 0.45s cubic-bezier(0.32, 0.72, 0, 1)",
+              border: isLight ? "none" : "0.5px solid rgba(255,255,255,0.14)",
+              boxShadow: co
+                ? (isLight
+                    ? `0 0 0 1.5px ${T.accent}44, 0 0 16px ${T.accent}40`
+                    : `0 0 0 1px rgba(255,255,255,0.18), inset 0 1px 0 rgba(255,255,255,0.10)`)
+                : (isLight
+                    ? `0 1px 3px ${T.accent}55, 0 3px 10px ${T.accent}32, inset 0 1px 0 rgba(255,255,255,0.55), inset 0 -1px 2px rgba(0,0,0,0.12)`
+                    : `inset 0 1px 0 rgba(255,255,255,0.10), inset 0 -1px 2px rgba(0,0,0,0.35)`),
+              animation: !co && isLight ? "agentOrbBreathe 3.2s ease-in-out infinite" : "none",
             }}>
-              <StratosAtom size={20} color={co ? P.accent : "rgba(255,255,255,0.7)"} />
-              {notifs.length > 0 && !co && <div style={{ position: "absolute", top: 4, right: 4, width: 6, height: 6, borderRadius: "50%", background: P.accent, boxShadow: `0 0 8px ${P.accent}`, animation: "pulse 2s infinite" }} />}
+              <StratosAtom size={15} color={co ? (isLight ? T.accent : "rgba(255,255,255,0.92)") : (isLight ? "rgba(255,255,255,0.96)" : "rgba(255,255,255,0.82)")} />
+              {notifs.length > 0 && !co && (
+                <div style={{
+                  position: "absolute", top: 1, right: 1, width: 6, height: 6, borderRadius: "50%",
+                  background: isLight ? "#FFFFFF" : T.accent,
+                  boxShadow: isLight
+                    ? `0 0 4px #FFFFFF, 0 0 8px ${T.accent}`
+                    : `0 0 0 1.5px #07080F`,
+                  border: isLight ? `1px solid ${T.accent}` : "none",
+                  animation: isLight ? "pulse 2s infinite" : "none",
+                }} />
+              )}
             </button>
           </div>
 
+          {/* ── Header acciones derecha — agrupadas en 3 clusters: búsqueda · utilidades · usuario ── */}
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "5px 12px", borderRadius: 99, background: P.glass, border: `1px solid ${P.border}` }}>
-              <Search size={13} color={P.txt3} />
-              <span style={{ fontSize: 11, color: P.txt3 }}>Buscar...</span>
-              <span style={{ fontSize: 9, color: P.txt3, padding: "1px 5px", borderRadius: 4, background: P.border }}>⌘K</span>
+
+            {/* ── Cluster 1: Search ── */}
+            <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 12px 6px 12px", height: 34, borderRadius: 99, background: T.glass, border: `1px solid ${T.border}`, transition: "all 0.18s", cursor: "pointer", boxShadow: isLight ? "0 1px 2px rgba(15,23,42,0.04), inset 0 1px 0 rgba(255,255,255,0.6)" : "none" }}
+              onMouseEnter={e => { e.currentTarget.style.background = T.glassH; e.currentTarget.style.borderColor = isLight ? T.accent + "33" : T.borderH; }}
+              onMouseLeave={e => { e.currentTarget.style.background = T.glass; e.currentTarget.style.borderColor = T.border; }}
+            >
+              <Search size={13} color={isLight ? T.accentDark : T.txt3} strokeWidth={2.2} />
+              <span style={{ fontSize: 11, color: T.txt3, fontFamily: font, letterSpacing: "-0.005em" }}>Buscar</span>
+              <span style={{ fontSize: 9, color: isLight ? T.accentDark : T.txt3, padding: "1.5px 6px", borderRadius: 5, background: isLight ? `${T.accent}14` : "rgba(255,255,255,0.06)", border: isLight ? `1px solid ${T.accent}22` : "1px solid transparent", fontFamily: fontDisp, fontWeight: 700, letterSpacing: "0.02em" }}>⌘K</span>
             </div>
-            <button style={{ width: 30, height: 30, borderRadius: 8, border: `1px solid ${P.border}`, background: P.glass, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", position: "relative" }}>
-              <Bell size={14} color={P.txt3} />
-              <div style={{ position: "absolute", top: 5, right: 5, width: 5, height: 5, borderRadius: "50%", background: P.rose }} />
-            </button>
-            {/* User avatar + logout */}
-            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+
+            {/* Divider brand-mint en light */}
+            <div style={{
+              width: 1, height: 20,
+              background: isLight
+                ? `linear-gradient(180deg, transparent 0%, ${T.accent}30 50%, transparent 100%)`
+                : T.border,
+            }} />
+
+            {/* ── Cluster 2: Utilidades (tema + notif) unificadas en un solo contenedor ── */}
+            <div style={{
+              display: "flex", alignItems: "center", gap: 0,
+              height: 34, padding: 3, borderRadius: 99,
+              background: T.glass, border: `1px solid ${T.border}`,
+              boxShadow: isLight ? "0 1px 2px rgba(15,23,42,0.04), inset 0 1px 0 rgba(255,255,255,0.6)" : "none",
+              transition: "all 0.18s",
+            }}>
+
+              {/* Theme toggle — pill segmentado premium (integrado sin borde propio) */}
+              <button
+                onClick={() => setTheme(isLight ? "dark" : "light")}
+                title={isLight ? "Cambiar a modo oscuro" : "Cambiar a modo claro"}
+                aria-label={isLight ? "Modo oscuro" : "Modo claro"}
+                style={{
+                  position: "relative",
+                  display: "flex", alignItems: "center",
+                  width: 58, height: 28, padding: 2, borderRadius: 99,
+                  background: isLight ? "rgba(15,23,42,0.05)" : "rgba(255,255,255,0.05)",
+                  border: "none",
+                  cursor: "pointer", transition: "all 0.2s",
+                  boxShadow: isLight ? "inset 0 1px 2px rgba(15,23,42,0.05)" : "inset 0 1px 0 rgba(255,255,255,0.02)",
+                }}
+              >
+                {/* Thumb deslizante */}
+                <div style={{
+                  position: "absolute", top: 2, left: isLight ? 30 : 2,
+                  width: 24, height: 24, borderRadius: "50%",
+                  background: isLight
+                    ? `linear-gradient(135deg, #FFFFFF 0%, #F1F5F9 100%)`
+                    : `linear-gradient(135deg, #1E293B 0%, #0B1220 100%)`,
+                  boxShadow: isLight
+                    ? "0 2px 6px rgba(15,23,42,0.14), 0 1px 2px rgba(15,23,42,0.06), inset 0 1px 0 rgba(255,255,255,0.9)"
+                    : "0 2px 6px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.12)",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  transition: "left 0.28s cubic-bezier(0.4, 0, 0.2, 1), background 0.28s",
+                }}>
+                  {isLight
+                    ? <Sun size={12} color={T.amber} strokeWidth={2.4} />
+                    : <Moon size={11} color="#E2E8F0" strokeWidth={2} fill="#E2E8F0" />}
+                </div>
+                {/* Icon indicators detrás del thumb */}
+                <div style={{ width: 26, display: "flex", alignItems: "center", justifyContent: "center", opacity: isLight ? 0.42 : 0, transition: "opacity 0.2s" }}>
+                  <Moon size={10} color={T.txt3} strokeWidth={2} />
+                </div>
+                <div style={{ width: 26, display: "flex", alignItems: "center", justifyContent: "center", opacity: isLight ? 0 : 0.42, transition: "opacity 0.2s" }}>
+                  <Sun size={10} color={T.txt3} strokeWidth={2} />
+                </div>
+              </button>
+
+              {/* Inner divider */}
               <div style={{
-                width: 30, height: 30, borderRadius: "50%",
-                background: `linear-gradient(135deg, ${P.accent}30, ${P.accent}08)`,
-                border: `1px solid ${P.accentB}`,
+                width: 1, height: 16, margin: "0 4px",
+                background: isLight ? `${T.accent}22` : "rgba(255,255,255,0.08)",
+              }} />
+
+              {/* Notifications */}
+              <button title="Notificaciones" style={{
+                width: 28, height: 28, borderRadius: "50%",
+                border: "none", background: "transparent",
+                cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
+                position: "relative", transition: "all 0.18s",
+              }}
+                onMouseEnter={e => { e.currentTarget.style.background = isLight ? `${T.accent}12` : "rgba(255,255,255,0.06)"; }}
+                onMouseLeave={e => { e.currentTarget.style.background = "transparent"; }}
+              >
+                <Bell size={13} color={T.txt2} strokeWidth={2.2} />
+                <div style={{ position: "absolute", top: 3, right: 3, width: 6, height: 6, borderRadius: "50%", background: T.rose, boxShadow: `0 0 6px ${T.rose}80`, border: `1.5px solid ${isLight ? "#FFFFFF" : "#07090F"}` }} />
+              </button>
+            </div>
+
+            {/* Divider brand-mint en light */}
+            <div style={{
+              width: 1, height: 20,
+              background: isLight
+                ? `linear-gradient(180deg, transparent 0%, ${T.accent}30 50%, transparent 100%)`
+                : T.border,
+            }} />
+
+            {/* ── Cluster 3: Usuario ── */}
+            {/* User pill — avatar + nombre (un solo bloque) */}
+            <div style={{
+              display: "flex", alignItems: "center", gap: 9, height: 34, padding: "0 11px 0 4px",
+              borderRadius: 99,
+              background: T.glass, border: `1px solid ${T.border}`,
+              transition: "all 0.18s",
+              boxShadow: isLight ? "0 1px 2px rgba(15,23,42,0.04)" : "none",
+            }}
+              onMouseEnter={e => { e.currentTarget.style.background = T.glassH; e.currentTarget.style.borderColor = T.borderH; }}
+              onMouseLeave={e => { e.currentTarget.style.background = T.glass; e.currentTarget.style.borderColor = T.border; }}
+            >
+              <div style={{
+                width: 26, height: 26, borderRadius: "50%",
+                background: isLight
+                  ? `linear-gradient(135deg, ${T.accent} 0%, #14B892 100%)`
+                  : `linear-gradient(135deg, ${T.accent}38, ${T.accent}10)`,
+                border: isLight ? "1px solid transparent" : `1px solid ${T.accentB}`,
                 display: "flex", alignItems: "center", justifyContent: "center",
-                fontSize: 11, fontWeight: 700, color: P.accent, fontFamily: fontDisp,
+                fontSize: 11, fontWeight: 800,
+                color: isLight ? "#FFFFFF" : T.accent, fontFamily: fontDisp,
                 flexShrink: 0,
+                boxShadow: isLight
+                  ? `0 2px 8px ${T.accent}55, 0 4px 16px ${T.accent}28, inset 0 1px 0 rgba(255,255,255,0.35)`
+                  : `0 0 8px ${T.accent}22, inset 0 1px 0 ${T.accent}30`,
               }}>
                 {user?.name ? user.name.charAt(0).toUpperCase() : "U"}
               </div>
-              <div style={{ display: "flex", flexDirection: "column" }}>
-                <span style={{ fontSize: 11, color: P.txt, fontWeight: 600, fontFamily: fontDisp, lineHeight: 1.2, maxWidth: 90, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+              <div style={{ display: "flex", flexDirection: "column", minWidth: 0 }}>
+                <span style={{ fontSize: 11.5, color: T.txt, fontWeight: 700, fontFamily: fontDisp, lineHeight: 1.15, maxWidth: 110, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", letterSpacing: "-0.01em" }}>
                   {user?.name || "Usuario"}
                 </span>
-                {user?.isDemo && <span style={{ fontSize: 9, color: P.amber, fontFamily: font, lineHeight: 1 }}>Demo</span>}
+                <span style={{ fontSize: 9, color: user?.isDemo ? T.amber : T.txt3, fontFamily: font, lineHeight: 1.1, fontWeight: 600, letterSpacing: "0.02em" }}>
+                  {user?.isDemo ? "Cuenta Demo" : (user?.role || "Miembro")}
+                </span>
               </div>
-              <button onClick={onLogout} title="Cerrar sesión" style={{
-                width: 28, height: 28, borderRadius: 7,
-                border: `1px solid ${P.border}`, background: "transparent",
-                cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
-                transition: "all 0.2s",
-              }}
-                onMouseEnter={e => { e.currentTarget.style.background = "rgba(232,129,140,0.08)"; e.currentTarget.style.borderColor = "rgba(232,129,140,0.25)"; }}
-                onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = P.border; }}
-              >
-                <UserCheck size={13} color={P.txt3} />
-              </button>
             </div>
+
+            {/* Logout — botón claramente distintivo */}
+            <button onClick={onLogout} title="Cerrar sesión" style={{
+              height: 34, padding: "0 12px 0 11px", borderRadius: 10,
+              border: `1px solid ${T.border}`, background: T.glass,
+              cursor: "pointer", display: "flex", alignItems: "center", gap: 7,
+              transition: "all 0.18s",
+              color: T.txt3, fontSize: 11.5, fontWeight: 700, fontFamily: fontDisp, letterSpacing: "0.005em",
+              boxShadow: isLight ? "0 1px 2px rgba(15,23,42,0.04)" : "none",
+            }}
+              onMouseEnter={e => {
+                e.currentTarget.style.background = isLight ? "rgba(225,29,72,0.06)" : "rgba(232,129,140,0.10)";
+                e.currentTarget.style.borderColor = isLight ? "rgba(225,29,72,0.28)" : "rgba(232,129,140,0.38)";
+                e.currentTarget.style.color = T.rose;
+                e.currentTarget.style.boxShadow = isLight ? `0 4px 12px rgba(225,29,72,0.12)` : `0 0 16px rgba(232,129,140,0.18)`;
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.background = T.glass;
+                e.currentTarget.style.borderColor = T.border;
+                e.currentTarget.style.color = T.txt3;
+                e.currentTarget.style.boxShadow = isLight ? "0 1px 2px rgba(15,23,42,0.04)" : "none";
+              }}
+            >
+              <LogOut size={13} strokeWidth={2.5} />
+              <span>Salir</span>
+            </button>
           </div>
         </div>
 
@@ -7968,7 +12461,7 @@ export default function App() {
               ? <PermissionGate moduleId={v} onGoBack={() => setV("c")} />
               : <>
                   {v === "d" && <Dash oc={oc} co={co} leadsData={leadsData} />}
-                  {v === "c" && <CRM oc={oc} co={co} leadsData={leadsData} setLeadsData={setLeadsData} />}
+                  {v === "c" && <CRM oc={oc} co={co} leadsData={leadsData} setLeadsData={setLeadsData} theme={theme} setTheme={setTheme} />}
                   {v === "ia" && <IACRM oc={oc} />}
                   {v === "e" && <ERP oc={oc} />}
                   {v === "a" && <AsesorCRM oc={oc} />}
