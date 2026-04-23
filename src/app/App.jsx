@@ -608,60 +608,130 @@ const DynIsland = ({ onExpand, notifications = [], theme = "dark" }) => {
 
   const expanded = isOpen || selectedNotif;
 
+  /* ── colores aurora según tema ── */
+  const MC  = isLight ? "13,154,118"  : "110,231,194";   // mint RGB
+  const MC2 = isLight ? "52,211,153"  : "52,211,153";    // teal secundario
+
   return (
     <>
-      {/* Collapsed pill */}
+      {/* ════════════════════════════════════════
+          COLLAPSED PILL — Mint Glass Aurora
+          Capas (de atrás a adelante):
+          1. Background glass
+          2. Aurora blob principal (auroraShift)
+          3. Aurora blob secundaria (auroraShift2)
+          4. Shimmer horizontal (pillShimmer)
+          5. Borde con glowPulse
+          6. Contenido (atom + texto)
+          ════════════════════════════════════════ */}
       <div
         onClick={() => !selectedNotif && !isOpen && setIsOpen(true)}
         style={{
           position: "relative",
-          height: 38, width: 220, borderRadius: 50,
+          height: 38, width: 230, borderRadius: 50,
+          /* Glass base */
           background: isLight
-            ? `linear-gradient(180deg, #FFFFFF 0%, rgba(246,252,250,0.92) 100%)`
-            : "rgba(255,255,255,0.035)",
+            ? "rgba(255,255,255,0.82)"
+            : "rgba(5,8,16,0.92)",
+          backdropFilter: isLight ? "blur(24px) saturate(160%)" : "blur(12px)",
+          WebkitBackdropFilter: isLight ? "blur(24px) saturate(160%)" : "blur(12px)",
+          /* Border: mint-tinted */
           border: isLight
-            ? `1px solid rgba(13,154,118,0.22)`
-            : "0.5px solid rgba(255,255,255,0.10)",
-          boxShadow: isLight
-            ? "0 1px 2px rgba(13,154,118,0.08), 0 4px 14px rgba(13,154,118,0.08), inset 0 1px 0 rgba(255,255,255,0.8)"
-            : "inset 0 1px 0 rgba(255,255,255,0.04)",
+            ? "1px solid rgba(13,154,118,0.30)"
+            : "1px solid rgba(110,231,194,0.14)",
+          /* Halo exterior respira */
+          animation: isLight ? "haloBreathLight 4s ease-in-out infinite" : "haloBreath 4.5s ease-in-out infinite",
           display: expanded ? "none" : "flex", alignItems: "center", justifyContent: "center",
-          padding: "0 14px", gap: 8, overflow: "hidden",
+          padding: "0 16px", gap: 0, overflow: "hidden",
           cursor: "pointer",
+          transition: "border-color 0.3s, transform 0.2s cubic-bezier(0.34,1.56,0.64,1)",
+        }}
+        onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-1px) scale(1.015)"; }}
+        onMouseLeave={e => { e.currentTarget.style.transform = "translateY(0) scale(1)"; }}
+      >
+        {/* ── Capa 1: Aurora blob principal ── */}
+        <div style={{
+          position: "absolute",
+          top: "50%", left: "30%",
+          transform: "translate(-50%, -50%)",
+          width: 90, height: 90,
+          borderRadius: "50%",
+          background: isLight
+            ? `radial-gradient(circle, rgba(${MC},0.55) 0%, rgba(${MC2},0.18) 50%, transparent 72%)`
+            : `radial-gradient(circle, rgba(${MC},0.28) 0%, rgba(${MC},0.10) 50%, transparent 72%)`,
+          filter: `blur(${isLight ? 12 : 10}px)`,
+          pointerEvents: "none",
+          animation: "auroraShift 9s ease-in-out infinite",
+          zIndex: 0,
+        }} />
+
+        {/* ── Capa 2: Aurora blob secundaria (contraste) ── */}
+        <div style={{
+          position: "absolute",
+          top: "50%", right: "20%",
+          transform: "translate(50%, -50%)",
+          width: 60, height: 60,
+          borderRadius: "50%",
+          background: isLight
+            ? `radial-gradient(circle, rgba(52,211,153,0.40) 0%, transparent 70%)`
+            : `radial-gradient(circle, rgba(110,231,194,0.18) 0%, transparent 70%)`,
+          filter: `blur(${isLight ? 10 : 8}px)`,
+          pointerEvents: "none",
+          animation: "auroraShift2 12s ease-in-out infinite",
+          zIndex: 0,
+        }} />
+
+        {/* ── Capa 3: Shimmer sweep ── */}
+        <div style={{
+          position: "absolute",
+          top: 0, left: 0, width: "35%", height: "100%",
+          background: isLight
+            ? "linear-gradient(90deg, transparent, rgba(255,255,255,0.70), transparent)"
+            : "linear-gradient(90deg, transparent, rgba(255,255,255,0.07), transparent)",
+          pointerEvents: "none",
+          animation: "pillShimmer 5s ease-in-out infinite",
+          zIndex: 1,
+        }} />
+
+        {/* ── Capa 4: Inner top-highlight (frosted glass edge) ── */}
+        <div style={{
+          position: "absolute", top: 0, left: "10%", right: "10%",
+          height: 1,
+          background: isLight
+            ? "rgba(255,255,255,0.95)"
+            : "rgba(255,255,255,0.12)",
+          borderRadius: 1,
+          pointerEvents: "none",
+          zIndex: 2,
+        }} />
+
+        {/* ── Contenido ── */}
+        <div style={{
+          position: "relative", zIndex: 3,
+          display: "flex", alignItems: "center", justifyContent: "center",
+          gap: 8, width: "100%",
         }}>
-        {/* Orbit/shine — solo en light (tono brand). En dark lo dejamos limpio, sin
-            elementos animados brillantes, para un look mucho más sobrio y pro. */}
-        {isLight && (
+          {/* Atom con halo mint */}
           <div style={{
-            position: "absolute", inset: 0, pointerEvents: "none", borderRadius: "inherit", overflow: "hidden"
+            display: "flex", flexShrink: 0,
+            filter: isLight
+              ? "drop-shadow(0 0 4px rgba(13,154,118,0.55)) drop-shadow(0 0 8px rgba(13,154,118,0.25))"
+              : "drop-shadow(0 0 5px rgba(110,231,194,0.55)) drop-shadow(0 0 12px rgba(110,231,194,0.20))",
           }}>
-            <div style={{
-              position: "absolute", top: -20, left: -20, width: 40, height: 40,
-              borderRadius: "50%",
-              background: "radial-gradient(circle, rgba(13,154,118,0.45) 0%, transparent 75%)",
-              filter: "blur(10px)",
-              offsetPath: "path('M 19 0 H 201 A 19 19 0 0 1 201 38 H 19 A 19 19 0 0 1 19 0 Z')",
-              animation: "orbitSmart 7s cubic-bezier(0.19, 1, 0.22, 1) infinite, orbitColor 7s linear infinite",
-            }} />
-            <div style={{
-              position: "absolute", top: 0, left: "-100%", width: "50%", height: "100%",
-              background: "linear-gradient(90deg, transparent, rgba(13,154,118,0.10), transparent)",
-              animation: "shine 6s ease-in-out infinite"
-            }} />
-          </div>
-        )}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, width: "100%" }}>
-          {/* Atom: dark → blanco sutil sin halo; light → mint con drop-shadow sobrio. */}
-          <div style={{
-            filter: isLight ? `drop-shadow(0 0 3px rgba(13,154,118,0.40))` : "none",
-            display: "flex",
-          }}>
-            <StratosAtom size={16} color={isLight ? "#0D9A76" : "rgba(255,255,255,0.72)"} />
+            <StratosAtom
+              size={16}
+              color={isLight ? "#0D9A76" : "#6EE7C2"}
+            />
           </div>
           <span style={{
             fontSize: 13,
-            color: isLight ? "#067A5E" : "rgba(255,255,255,0.82)",
-            fontWeight: isLight ? 700 : 500, letterSpacing: "-0.01em", fontFamily: fontDisp,
+            color: isLight ? "#056A50" : "rgba(255,255,255,0.88)",
+            fontWeight: isLight ? 700 : 500,
+            letterSpacing: "-0.01em",
+            fontFamily: fontDisp,
+            textShadow: isLight
+              ? "0 1px 0 rgba(255,255,255,0.6)"
+              : "0 0 12px rgba(110,231,194,0.18)",
           }}>Centro de Inteligencia</span>
         </div>
       </div>
@@ -2959,12 +3029,56 @@ const NotesModal = ({ lead, onClose, onSave, onUpdate, onSwitchTab, T = P }) => 
   );
 };
 
+/* ─── Mock AI coaching analysis generator ─── */
+const COACHING_MOCKS = [
+  {
+    score: 84,
+    duracion: "18:32",
+    resumen: "Llamada sólida. El asesor establece rapport efectivo y explora necesidades con buenas preguntas abiertas. Se pierde momentum en el cierre.",
+    fortalezas: ["Escucha activa excelente — deja al cliente hablar sin interrumpir", "Manejo de objeción de precio con beneficios concretos", "Tono cálido y profesional durante toda la llamada"],
+    mejoras: ["El cierre llegó 4 minutos tarde — proponer siguiente paso antes de que el cliente desvíe tema", "Evitar frases de relleno: 'básicamente', 'o sea' aparecen 12 veces", "Confirmar compromisos con fecha específica, no 'esta semana'"],
+    tecnica: "SPIN Selling — aumentar preguntas de Implicación para ampliar el dolor antes de presentar la solución.",
+    nextStep: "Practicar el cierre de prueba: '¿Le parece si agendamos la visita para el jueves?'",
+  },
+  {
+    score: 71,
+    duracion: "9:14",
+    resumen: "Primer contacto correcto. Falta profundidad en la calificación — el asesor no detectó el presupuesto real ni el plazo de decisión.",
+    fortalezas: ["Presentación de la empresa clara y concisa", "Logra agendar siguiente reunión — buen cierre parcial"],
+    mejoras: ["Calificar presupuesto en los primeros 5 minutos (BANT)", "No presentar propiedades sin entender el objetivo de inversión", "El silencio posterior a una pregunta duró < 2s — dejar más tiempo al cliente"],
+    tecnica: "BANT Framework — Budget, Authority, Need, Timeline. Cubrir los 4 en todo primer contacto.",
+    nextStep: "Usar el script de calificación: '¿Cuál es el rango que tienes disponible y en qué plazo piensas decidir?'",
+  },
+  {
+    score: 93,
+    duracion: "24:07",
+    resumen: "Llamada de alto rendimiento. Manejo de objeciones magistral y cierre efectivo. Uno de los mejores registros del equipo este mes.",
+    fortalezas: ["Manejo de la objeción 'lo voy a pensar' con pregunta de reversión perfecta", "Uso de prueba social (caso de cliente similar) en el momento correcto", "Cierre con alternativa: 'jueves a las 10 o viernes a las 3' — sin dejar espacio al 'no'"],
+    mejoras: ["Reducir duración de la presentación inicial de 6 a 3 minutos", "Incluir referencia al ROI específico del proyecto desde la apertura"],
+    tecnica: "Cierre con Alternativa — siempre ofrecer dos opciones concretas, nunca preguntar '¿te parece bien?'",
+    nextStep: "Compartir esta grabación como caso de estudio en la próxima reunión del equipo.",
+  },
+];
+
 const LeadPanel = ({ lead, onClose, oc, onUpdate, onSwitchTab, T = P }) => {
   const [activeTab, setActiveTab] = useState("perfil");
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState(null);
-  // expandAction ya no se usa aquí — NextActionHero gestiona su propio estado
   const [expandBio, setExpandBio] = useState(false);
+
+  /* ── Grabaciones state ── */
+  const [recordings, setRecordings] = useState(() => {
+    const mock = COACHING_MOCKS[lead?.id % COACHING_MOCKS.length || 0];
+    return lead?.id <= 3 ? [{
+      id: 1, nombre: "Llamada inicial · Zoom", tipo: "videollamada",
+      fecha: lead?.lastActivity?.split("—")?.[1]?.trim() || "9 Abr, 6:00pm",
+      duracion: mock.duracion, size: "42 MB",
+      analisis: mock, analizando: false,
+    }] : [];
+  });
+  const [uploadDragging, setUploadDragging] = useState(false);
+  const [analyzingId, setAnalyzingId] = useState(null);
+  const fileInputRef = useRef(null);
   if (!lead) return null;
   const isLight = T !== P;
   const sc = lead.sc;
@@ -3074,11 +3188,21 @@ const LeadPanel = ({ lead, onClose, oc, onUpdate, onSwitchTab, T = P }) => {
           </div>
         </div>
 
-        {/* Sub-tabs del perfil: Datos · Pipeline */}
-        <div style={{ display: "flex", padding: "0 22px", borderBottom: `1px solid ${T.border}`, flexShrink: 0 }}>
-          {[["perfil","Datos"],["pipeline","Pipeline"]].map(([id,label]) => (
-            <button key={id} onClick={() => setActiveTab(id)} style={{ padding: "11px 0", marginRight: 22, background: "none", border: "none", cursor: "pointer", fontSize: 12, fontWeight: 600, fontFamily: font, color: activeTab===id?(isLight ? `color-mix(in srgb, ${T.accent} 60%, #0B1220 40%)` : T.accent):T.txt3, borderBottom: activeTab===id?`2px solid ${T.accent}`:"2px solid transparent", transition: "all 0.18s", marginBottom: -1, letterSpacing: "0.01em" }} onMouseEnter={e=>{if(activeTab!==id)e.currentTarget.style.color=T.txt2;}} onMouseLeave={e=>{if(activeTab!==id)e.currentTarget.style.color=T.txt3;}}>{label}</button>
-          ))}
+        {/* Sub-tabs: Datos · Pipeline · Grabaciones */}
+        <div style={{ display: "flex", padding: "0 22px", borderBottom: `1px solid ${T.border}`, flexShrink: 0, gap: 0 }}>
+          {[["perfil","Datos",null],["pipeline","Pipeline",null],["grabaciones","Grabaciones",recordings.length]].map(([id,label,badge]) => {
+            const active = activeTab === id;
+            const accentC = isLight ? `color-mix(in srgb, ${T.accent} 60%, #0B1220 40%)` : T.accent;
+            return (
+              <button key={id} onClick={() => setActiveTab(id)} style={{ padding: "11px 0", marginRight: 20, background: "none", border: "none", cursor: "pointer", fontSize: 12, fontWeight: 600, fontFamily: font, color: active ? accentC : T.txt3, borderBottom: active ? `2px solid ${T.accent}` : "2px solid transparent", transition: "all 0.18s", marginBottom: -1, letterSpacing: "0.01em", display: "flex", alignItems: "center", gap: 5, flexShrink: 0 }}
+                onMouseEnter={e=>{if(!active)e.currentTarget.style.color=T.txt2;}}
+                onMouseLeave={e=>{if(!active)e.currentTarget.style.color=T.txt3;}}
+              >
+                {label}
+                {badge > 0 && <span style={{ fontSize: 9, fontWeight: 800, color: active ? accentC : T.txt3, background: active ? `${T.accent}18` : T.glass, border: `1px solid ${active ? T.accentB : T.border}`, padding: "1px 5px", borderRadius: 99, minWidth: 16, textAlign: "center" }}>{badge}</span>}
+              </button>
+            );
+          })}
         </div>
 
         {/* Content — extra padding-bottom para no chocar con el Dynamic Island flotante */}
@@ -3273,6 +3397,286 @@ const LeadPanel = ({ lead, onClose, oc, onUpdate, onSwitchTab, T = P }) => {
               </div>
             </div>
           </>}
+
+          {/* ══════════════════════════════════════════════════
+              TAB: GRABACIONES — Upload + Análisis IA Coaching
+          ══════════════════════════════════════════════════ */}
+          {activeTab === "grabaciones" && (() => {
+            const accentC = isLight ? `color-mix(in srgb, ${T.accent} 58%, #0B1220 42%)` : T.accent;
+            const blueC   = isLight ? `color-mix(in srgb, ${T.blue}  60%, #0B1220 40%)` : T.blue;
+            const violetC = isLight ? `color-mix(in srgb, ${T.violet} 60%, #0B1220 40%)` : T.violet;
+
+            const handleFiles = (files) => {
+              const arr = Array.from(files).filter(f => f.type.startsWith("audio/") || f.type.startsWith("video/"));
+              if (!arr.length) return;
+              const newRecs = arr.map((f, i) => {
+                const isVideo = f.type.startsWith("video/");
+                return {
+                  id: Date.now() + i,
+                  nombre: f.name.replace(/\.[^.]+$/, ""),
+                  tipo: isVideo ? "videollamada" : "llamada",
+                  fecha: new Date().toLocaleDateString("es-MX", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }),
+                  duracion: "—",
+                  size: `${(f.size / 1048576).toFixed(1)} MB`,
+                  analisis: null, analizando: false,
+                };
+              });
+              setRecordings(prev => [...newRecs, ...prev]);
+            };
+
+            const analyzeRecording = (rec) => {
+              setAnalyzingId(rec.id);
+              setRecordings(prev => prev.map(r => r.id === rec.id ? {...r, analizando: true} : r));
+              setTimeout(() => {
+                const mock = COACHING_MOCKS[Math.floor(Math.random() * COACHING_MOCKS.length)];
+                setRecordings(prev => prev.map(r => r.id === rec.id ? {...r, analizando: false, analisis: mock, duracion: mock.duracion} : r));
+                setAnalyzingId(null);
+              }, 2800);
+            };
+
+            const deleteRecording = (id) => setRecordings(prev => prev.filter(r => r.id !== id));
+
+            const ScoreRing = ({ score, size = 48 }) => {
+              const r = (size - 6) / 2;
+              const circ = 2 * Math.PI * r;
+              const scoreCol = score >= 85 ? T.accent : score >= 70 ? T.blue : T.amber;
+              const safeCol  = isLight ? `color-mix(in srgb, ${scoreCol} 58%, #0B1220 42%)` : scoreCol;
+              return (
+                <div style={{ position: "relative", width: size, height: size, flexShrink: 0 }}>
+                  <svg width={size} height={size} style={{ position: "absolute", inset: 0 }}>
+                    <circle cx={size/2} cy={size/2} r={r} fill="none" stroke={isLight ? "rgba(15,23,42,0.07)" : "rgba(255,255,255,0.07)"} strokeWidth={3} />
+                    <circle cx={size/2} cy={size/2} r={r} fill="none" stroke={scoreCol} strokeWidth={3}
+                      strokeDasharray={circ} strokeDashoffset={circ * (1 - score/100)}
+                      strokeLinecap="round" style={{ transform: "rotate(-90deg)", transformOrigin: "50% 50%", transition: "stroke-dashoffset 1s ease" }} />
+                  </svg>
+                  <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <span style={{ fontSize: 12, fontWeight: 800, color: safeCol, fontFamily: fontDisp }}>{score}</span>
+                  </div>
+                </div>
+              );
+            };
+
+            /* Waveform decorativa */
+            const Waveform = ({ color }) => (
+              <div style={{ display: "flex", alignItems: "center", gap: 2, height: 22 }}>
+                {[4,9,14,8,18,12,6,16,10,7,15,9,13,5,11,8,17,6,12,9].map((h, i) => (
+                  <div key={i} style={{ width: 2, height: h, borderRadius: 2, background: color, opacity: 0.6 + (i % 3) * 0.13, flexShrink: 0 }} />
+                ))}
+              </div>
+            );
+
+            return (
+              <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+
+                {/* ── Upload area ── */}
+                <div
+                  onDragOver={e => { e.preventDefault(); setUploadDragging(true); }}
+                  onDragLeave={() => setUploadDragging(false)}
+                  onDrop={e => { e.preventDefault(); setUploadDragging(false); handleFiles(e.dataTransfer.files); }}
+                  onClick={() => fileInputRef.current?.click()}
+                  style={{
+                    border: `1.5px dashed ${uploadDragging ? T.accent : (isLight ? "rgba(15,23,42,0.14)" : "rgba(255,255,255,0.12)")}`,
+                    borderRadius: 14,
+                    padding: "20px 16px",
+                    textAlign: "center",
+                    cursor: "pointer",
+                    background: uploadDragging
+                      ? (isLight ? `${T.accent}0A` : `${T.accent}08`)
+                      : (isLight ? "rgba(15,23,42,0.02)" : "rgba(255,255,255,0.02)"),
+                    transition: "all 0.2s",
+                    display: "flex", flexDirection: "column", alignItems: "center", gap: 8,
+                  }}
+                >
+                  <input ref={fileInputRef} type="file" accept="audio/*,video/*" multiple style={{ display: "none" }} onChange={e => handleFiles(e.target.files)} />
+                  <div style={{ width: 38, height: 38, borderRadius: 12, background: isLight ? `${T.accent}14` : `${T.accent}10`, border: `1px solid ${T.accentB}`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <Mic2 size={17} color={accentC} strokeWidth={2} />
+                  </div>
+                  <div>
+                    <p style={{ fontSize: 12.5, fontWeight: 700, color: uploadDragging ? accentC : titleC, fontFamily: fontDisp, marginBottom: 3 }}>
+                      {uploadDragging ? "Suelta para subir" : "Subir grabación"}
+                    </p>
+                    <p style={{ fontSize: 11, color: T.txt3, fontFamily: font }}>
+                      Arrastra o haz clic · Audio o Video · MP3, MP4, WAV, M4A
+                    </p>
+                  </div>
+                </div>
+
+                {/* ── Stats globales si hay grabaciones ── */}
+                {recordings.length > 0 && (() => {
+                  const withAnalysis = recordings.filter(r => r.analisis);
+                  const avgScore = withAnalysis.length ? Math.round(withAnalysis.reduce((s,r) => s + r.analisis.score, 0) / withAnalysis.length) : null;
+                  return (
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 7 }}>
+                      {[
+                        { l: "Grabaciones", v: recordings.length, c: T.blue },
+                        { l: "Analizadas", v: withAnalysis.length, c: T.accent },
+                        { l: "Score prom.", v: avgScore ? `${avgScore}` : "—", c: avgScore >= 85 ? T.accent : avgScore >= 70 ? T.blue : T.amber },
+                      ].map(x => (
+                        <div key={x.l} style={{ padding: "9px 10px", borderRadius: 10, background: T.glass, border: `1px solid ${T.border}`, textAlign: "center" }}>
+                          <p style={{ fontSize: 17, fontWeight: 800, color: isLight ? `color-mix(in srgb, ${x.c} 55%, #0B1220 45%)` : x.c, fontFamily: fontDisp, letterSpacing: "-0.025em" }}>{x.v}</p>
+                          <p style={{ fontSize: 9, fontWeight: 700, color: T.txt3, letterSpacing: "0.05em", textTransform: "uppercase", fontFamily: fontDisp, marginTop: 2 }}>{x.l}</p>
+                        </div>
+                      ))}
+                    </div>
+                  );
+                })()}
+
+                {/* ── Lista de grabaciones ── */}
+                {recordings.length === 0 && (
+                  <div style={{ textAlign: "center", padding: "24px 0", color: T.txt3 }}>
+                    <Mic2 size={28} color={T.txt3} strokeWidth={1.5} style={{ marginBottom: 10, opacity: 0.4 }} />
+                    <p style={{ fontSize: 12, fontFamily: font }}>Sin grabaciones aún</p>
+                    <p style={{ fontSize: 11, marginTop: 4 }}>Sube la primera llamada para recibir coaching IA</p>
+                  </div>
+                )}
+
+                {recordings.map(rec => {
+                  const isVideo = rec.tipo === "videollamada";
+                  const typeC = isVideo ? T.violet : T.blue;
+                  const typeSafeC = isVideo ? violetC : blueC;
+                  const hasAnalysis = !!rec.analisis;
+                  const isAnalyzing = rec.analizando;
+
+                  return (
+                    <div key={rec.id} style={{ borderRadius: 14, border: `1px solid ${T.border}`, overflow: "hidden", background: T.glass }}>
+
+                      {/* Cabecera de la grabación */}
+                      <div style={{ padding: "12px 14px", display: "flex", alignItems: "center", gap: 11 }}>
+                        <div style={{ width: 36, height: 36, borderRadius: 10, background: `${typeC}18`, border: `1px solid ${typeC}30`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                          {isVideo ? <Eye size={15} color={typeSafeC} strokeWidth={2} /> : <Mic size={15} color={typeSafeC} strokeWidth={2} />}
+                        </div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <p style={{ fontSize: 12.5, fontWeight: 700, color: titleC, fontFamily: fontDisp, letterSpacing: "-0.015em", marginBottom: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{rec.nombre}</p>
+                          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                            <span style={{ fontSize: 9.5, fontWeight: 700, color: typeSafeC, background: `${typeC}14`, padding: "1px 6px", borderRadius: 99, letterSpacing: "0.04em", textTransform: "uppercase" }}>{rec.tipo}</span>
+                            <span style={{ fontSize: 10, color: T.txt3 }}>{rec.fecha}</span>
+                            {rec.duracion !== "—" && <span style={{ fontSize: 10, color: T.txt3 }}>· {rec.duracion}</span>}
+                          </div>
+                        </div>
+                        {hasAnalysis && <ScoreRing score={rec.analisis.score} />}
+                        <button onClick={() => deleteRecording(rec.id)} style={{ width: 26, height: 26, borderRadius: 7, border: `1px solid ${T.border}`, background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, transition: "all 0.16s" }} onMouseEnter={e => { e.currentTarget.style.background = "rgba(232,129,140,0.12)"; e.currentTarget.style.borderColor = "rgba(232,129,140,0.28)"; }} onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = T.border; }}>
+                          <Trash2 size={11} color={T.txt3} strokeWidth={2} />
+                        </button>
+                      </div>
+
+                      {/* Waveform visual */}
+                      <div style={{ padding: "0 14px 12px", display: "flex", alignItems: "center", gap: 10 }}>
+                        <div style={{ flex: 1 }}><Waveform color={typeC} /></div>
+                        {rec.size && <span style={{ fontSize: 10, color: T.txt3, flexShrink: 0 }}>{rec.size}</span>}
+                      </div>
+
+                      {/* Botón analizar — solo si no tiene análisis */}
+                      {!hasAnalysis && (
+                        <div style={{ padding: "0 14px 14px" }}>
+                          <button
+                            onClick={() => !isAnalyzing && analyzeRecording(rec)}
+                            disabled={isAnalyzing}
+                            style={{
+                              width: "100%", padding: "10px 0", borderRadius: 10,
+                              border: `1px solid ${isAnalyzing ? T.border : T.accentB}`,
+                              background: isAnalyzing
+                                ? (isLight ? "rgba(15,23,42,0.04)" : "rgba(255,255,255,0.04)")
+                                : (isLight ? `${T.accent}0E` : `${T.accent}10`),
+                              color: isAnalyzing ? T.txt3 : accentC,
+                              fontSize: 12, fontWeight: 700, fontFamily: fontDisp,
+                              cursor: isAnalyzing ? "wait" : "pointer",
+                              display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+                              transition: "all 0.2s",
+                            }}
+                            onMouseEnter={e => { if (!isAnalyzing) { e.currentTarget.style.background = isLight ? `${T.accent}16` : `${T.accent}1A`; e.currentTarget.style.borderColor = T.accent + "55"; }}}
+                            onMouseLeave={e => { if (!isAnalyzing) { e.currentTarget.style.background = isLight ? `${T.accent}0E` : `${T.accent}10`; e.currentTarget.style.borderColor = T.accentB; }}}
+                          >
+                            {isAnalyzing ? (
+                              <>
+                                <div style={{ width: 13, height: 13, borderRadius: "50%", border: `2px solid ${T.txt3}`, borderTopColor: T.accent, animation: "spin 0.8s linear infinite" }} />
+                                Analizando con IA…
+                              </>
+                            ) : (
+                              <>
+                                <StratosAtom size={14} color={accentC} />
+                                Analizar con IA · Coaching de ventas
+                              </>
+                            )}
+                          </button>
+                        </div>
+                      )}
+
+                      {/* ── Panel de Coaching IA ── */}
+                      {hasAnalysis && (() => {
+                        const a = rec.analisis;
+                        const scoreCol = a.score >= 85 ? T.accent : a.score >= 70 ? T.blue : T.amber;
+                        const scoreSafe = isLight ? `color-mix(in srgb, ${scoreCol} 58%, #0B1220 42%)` : scoreCol;
+                        return (
+                          <div style={{ margin: "0 14px 14px", borderRadius: 11, border: `1px solid ${isLight ? `${T.accent}28` : `${T.accent}20`}`, overflow: "hidden", background: isLight ? `${T.accent}06` : `${T.accent}06` }}>
+
+                            {/* Header coaching */}
+                            <div style={{ padding: "11px 13px", borderBottom: `1px solid ${isLight ? `${T.accent}18` : `${T.accent}14`}`, display: "flex", alignItems: "center", gap: 8 }}>
+                              <StratosAtom size={14} color={accentC} />
+                              <p style={{ fontSize: 11, fontWeight: 800, color: accentC, letterSpacing: "0.05em", textTransform: "uppercase", fontFamily: fontDisp, flex: 1 }}>Coaching IA · Análisis de llamada</p>
+                              <span style={{ fontSize: 14, fontWeight: 800, color: scoreSafe, fontFamily: fontDisp }}>{a.score}<span style={{ fontSize: 9, fontWeight: 600, color: T.txt3 }}>/100</span></span>
+                            </div>
+
+                            <div style={{ padding: "12px 13px", display: "flex", flexDirection: "column", gap: 12 }}>
+                              {/* Resumen */}
+                              <p style={{ fontSize: 11.5, color: T.txt2, lineHeight: 1.65, fontFamily: font }}>{a.resumen}</p>
+
+                              {/* Fortalezas */}
+                              <div>
+                                <p style={{ fontSize: 9.5, fontWeight: 800, color: accentC, letterSpacing: "0.07em", textTransform: "uppercase", marginBottom: 7, fontFamily: fontDisp }}>✓ Fortalezas</p>
+                                <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+                                  {a.fortalezas.map((f, i) => (
+                                    <div key={i} style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
+                                      <div style={{ width: 5, height: 5, borderRadius: "50%", background: T.accent, marginTop: 5, flexShrink: 0 }} />
+                                      <p style={{ fontSize: 11, color: T.txt2, lineHeight: 1.5, fontFamily: font }}>{f}</p>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+
+                              {/* Mejoras */}
+                              <div>
+                                <p style={{ fontSize: 9.5, fontWeight: 800, color: isLight ? `color-mix(in srgb, ${T.amber} 55%, #0B1220 45%)` : T.amber, letterSpacing: "0.07em", textTransform: "uppercase", marginBottom: 7, fontFamily: fontDisp }}>⚡ Áreas de mejora</p>
+                                <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+                                  {a.mejoras.map((m, i) => (
+                                    <div key={i} style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
+                                      <div style={{ width: 5, height: 5, borderRadius: "50%", background: T.amber, marginTop: 5, flexShrink: 0 }} />
+                                      <p style={{ fontSize: 11, color: T.txt2, lineHeight: 1.5, fontFamily: font }}>{m}</p>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+
+                              {/* Técnica recomendada */}
+                              <div style={{ padding: "10px 12px", borderRadius: 9, background: isLight ? `${T.violet}0E` : `${T.violet}0A`, border: `1px solid ${T.violet}${isLight ? "28" : "20"}` }}>
+                                <p style={{ fontSize: 9.5, fontWeight: 800, color: violetC, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 5, fontFamily: fontDisp }}>Técnica recomendada</p>
+                                <p style={{ fontSize: 11, color: T.txt2, lineHeight: 1.5, fontFamily: font }}>{a.tecnica}</p>
+                              </div>
+
+                              {/* Siguiente paso */}
+                              <div style={{ padding: "10px 12px", borderRadius: 9, background: isLight ? `${T.blue}0E` : `${T.blue}0A`, border: `1px solid ${T.blue}${isLight ? "28" : "1E"}` }}>
+                                <p style={{ fontSize: 9.5, fontWeight: 800, color: blueC, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 5, fontFamily: fontDisp }}>Siguiente paso del asesor</p>
+                                <p style={{ fontSize: 11, color: T.txt2, lineHeight: 1.5, fontFamily: font }}>{a.nextStep}</p>
+                              </div>
+
+                              {/* Re-analizar */}
+                              <button
+                                onClick={() => { setRecordings(prev => prev.map(r => r.id === rec.id ? {...r, analisis: null} : r)); analyzeRecording({...rec, analisis: null}); }}
+                                style={{ alignSelf: "flex-start", display: "flex", alignItems: "center", gap: 5, padding: "5px 11px", borderRadius: 99, background: "transparent", border: `1px solid ${T.border}`, color: T.txt3, fontSize: 10.5, fontWeight: 600, cursor: "pointer", fontFamily: font, transition: "all 0.16s" }}
+                                onMouseEnter={e => { e.currentTarget.style.background = T.glassH; e.currentTarget.style.color = T.txt2; }}
+                                onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = T.txt3; }}
+                              >
+                                <RefreshCw size={10} strokeWidth={2.2} /> Re-analizar
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })()}
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })()}
         </div>
 
         {/* Footer — solo aparece cuando se edita (Cancelar / Guardar). En modo lectura,
@@ -4372,7 +4776,10 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
         <div>
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
             <div style={{ width: 8, height: 8, borderRadius: "50%", background: T.accent, boxShadow: `0 0 10px ${T.accent}80` }} />
-            <h2 style={{ fontSize: 20, fontWeight: 700, color: isLight ? T.txt : "#FFFFFF", fontFamily: fontDisp, letterSpacing: "-0.025em", margin: 0 }}>Pipeline CRM</h2>
+            <h2 style={{ fontSize: 20, fontWeight: 400, color: isLight ? T.txt : "#FFFFFF", fontFamily: fontDisp, letterSpacing: "-0.025em", margin: 0 }}>
+              CRM{" "}
+              <span style={{ fontWeight: 300, color: isLight ? T.txt3 : "rgba(255,255,255,0.38)" }}>Asesores</span>
+            </h2>
             <span style={{ fontSize: 10, fontWeight: 700, color: T.txt3, background: T.glass, border: `1px solid ${T.border}`, padding: "3px 9px", borderRadius: 99, letterSpacing: "0.06em" }}>{visibleLeads.length} clientes</span>
             {!canSeeAll && <span style={{ fontSize: 10, fontWeight: 700, color: T.amber, background: `${T.amber}10`, border: `1px solid ${T.amber}28`, padding: "3px 9px", borderRadius: 99, letterSpacing: "0.04em" }}>Vista personal</span>}
           </div>
@@ -5741,7 +6148,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                   <div onClick={e => e.stopPropagation()} style={{ display: "flex", alignItems: "center", minWidth: 0 }}>
                     <div style={{
                       position: "relative", display: "inline-flex", alignItems: "center", gap: 7,
-                      padding: "5px 24px 5px 11px", borderRadius: 99,
+                      padding: "5px 20px 5px 11px", borderRadius: 99,
                       background: isLight
                         ? `linear-gradient(135deg, ${stageC}3D 0%, ${stageC}1F 55%, ${stageC}12 100%)`
                         : `linear-gradient(135deg, ${stageC}26 0%, ${stageC}10 100%)`,
@@ -5773,9 +6180,15 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                         }}>
                         {STAGES.map(s => <option key={s} value={s} style={{ background: "#0C1219", color: "#fff", fontWeight: 600 }}>{s}</option>)}
                       </select>
-                      <ChevronDown size={10} strokeWidth={2.8}
-                        color={isLight ? `color-mix(in srgb, ${stageC} 55%, #0B1220 45%)` : stageC}
-                        style={{ position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)", pointerEvents: "none", opacity: 0.85 }} />
+                      {/* Indicador sutil de selector — dos puntos verticales */}
+                      <div style={{
+                        position: "absolute", right: 7, top: "50%", transform: "translateY(-50%)",
+                        display: "flex", flexDirection: "column", gap: 2.5,
+                        pointerEvents: "none", opacity: 0.5,
+                      }}>
+                        <div style={{ width: 2.5, height: 2.5, borderRadius: "50%", background: isLight ? `color-mix(in srgb, ${stageC} 55%, #0B1220 45%)` : stageC }} />
+                        <div style={{ width: 2.5, height: 2.5, borderRadius: "50%", background: isLight ? `color-mix(in srgb, ${stageC} 55%, #0B1220 45%)` : stageC }} />
+                      </div>
                     </div>
                   </div>
 

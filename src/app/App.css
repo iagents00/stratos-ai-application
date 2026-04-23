@@ -108,6 +108,73 @@ option {
 /* ── Carousel scrollbar hidden globally ── */
 .carousel-no-scroll::-webkit-scrollbar { display: none; }
 
+/* ══════════════════════════════════════════════════════════
+   CENTRO DE INTELIGENCIA — Mint Glass Aurora Animations
+   Tres capas: aurora blob · shimmer sweep · border pulse
+   ══════════════════════════════════════════════════════════ */
+
+/* Aurora blob: se mueve de izquierda a derecha respirando */
+@keyframes auroraShift {
+  0%   { transform: translateX(-28%) scale(0.90); opacity: 0.50; }
+  30%  { transform: translateX(5%)   scale(1.20); opacity: 0.85; }
+  60%  { transform: translateX(30%)  scale(0.95); opacity: 0.55; }
+  80%  { transform: translateX(12%)  scale(1.10); opacity: 0.72; }
+  100% { transform: translateX(-28%) scale(0.90); opacity: 0.50; }
+}
+
+/* Aurora secundaria: contramovimiento para profundidad */
+@keyframes auroraShift2 {
+  0%   { transform: translateX(28%)  scale(0.85); opacity: 0.30; }
+  40%  { transform: translateX(-10%) scale(1.10); opacity: 0.55; }
+  70%  { transform: translateX(-30%) scale(0.88); opacity: 0.35; }
+  100% { transform: translateX(28%)  scale(0.85); opacity: 0.30; }
+}
+
+/* Shimmer horizontal — barre el pill de izquierda a derecha */
+@keyframes pillShimmer {
+  0%        { transform: translateX(-130%) skewX(-18deg); opacity: 0; }
+  8%        { opacity: 1; }
+  40%       { transform: translateX(130%)  skewX(-18deg); opacity: 0; }
+  100%      { transform: translateX(130%)  skewX(-18deg); opacity: 0; }
+}
+
+/* Borde: pulso muy suave que amplifica la sensación de "vivo" */
+@keyframes borderGlowPulse {
+  0%, 100% { opacity: 0.55; }
+  50%       { opacity: 1.00; }
+}
+
+/* Micro-halo exterior: ring de glow que respira */
+@keyframes haloBreath {
+  0%, 100% { box-shadow:
+    0 0 0 1px rgba(110,231,194,0.08),
+    0 4px 20px rgba(0,0,0,0.45),
+    inset 0 1px 0 rgba(255,255,255,0.06);
+  }
+  50% { box-shadow:
+    0 0 0 1.5px rgba(110,231,194,0.22),
+    0 4px 28px rgba(110,231,194,0.10),
+    0 8px 32px rgba(0,0,0,0.40),
+    inset 0 1px 0 rgba(255,255,255,0.08);
+  }
+}
+
+/* Light theme: halo más visible sobre fondo blanco */
+@keyframes haloBreathLight {
+  0%, 100% { box-shadow:
+    0 2px 8px  rgba(13,154,118,0.10),
+    0 6px 22px rgba(13,154,118,0.08),
+    0 0 0 1px  rgba(13,154,118,0.18),
+    inset 0 1px 0 rgba(255,255,255,0.95);
+  }
+  50% { box-shadow:
+    0 2px 12px rgba(13,154,118,0.18),
+    0 8px 32px rgba(13,154,118,0.14),
+    0 0 0 2px  rgba(13,154,118,0.28),
+    inset 0 1px 0 rgba(255,255,255,0.95);
+  }
+}
+
 /* ── Priority card breathing border — se usa en las tarjetas de "Clientes en prioridad"
    Variables dinámicas: --brC (color base CSS), --brBgBase, --brBgBreath, --brBorBase,
    --brBorBreath, --brShBase, --brShBreath permiten adaptar por tema desde inline style.  ── */
