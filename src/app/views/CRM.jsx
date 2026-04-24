@@ -58,18 +58,18 @@ const parseBudget = (input) => {
 
 const buildTelegramSummary = (lead) => {
   const lines = [];
-  lines.push(`👤 ${lead.n || "Sin nombre"}${lead.budget ? ` · ${lead.budget}` : ""}`);
-  if (lead.p)      lines.push(`🏠 ${lead.p}`);
-  if (lead.phone)  lines.push(`📱 ${lead.phone}`);
-  lines.push(`📍 ${lead.st || "Nuevo Registro"} · Score ${lead.sc ?? 0}`);
+  lines.push(`${lead.n || "Sin nombre"}${lead.budget ? ` · ${lead.budget}` : ""}`);
+  if (lead.p)     lines.push(`Proyecto: ${lead.p}`);
+  if (lead.phone) lines.push(`Tel: ${lead.phone}`);
+  lines.push(`Etapa: ${lead.st || "Nuevo Registro"} · Score ${lead.sc ?? 0}`);
   if (lead.nextAction) {
     const fecha = lead.nextActionDate && lead.nextActionDate !== "Por definir" ? ` — ${lead.nextActionDate}` : "";
-    lines.push(`⚡ ${lead.nextAction}${fecha}`);
+    lines.push(`Siguiente accion: ${lead.nextAction}${fecha}`);
   }
-  const segStr = lead.seguimientos ? `${lead.seguimientos} seg.` : "Sin seguimientos";
+  const segStr = lead.seguimientos ? `${lead.seguimientos} seguimientos` : "Sin seguimientos";
   const asorStr = lead.asesor ? ` · Asesor: ${lead.asesor}` : "";
-  lines.push(`📊 ${segStr}${asorStr}`);
-  if (lead.campana) lines.push(`📢 ${lead.campana}`);
+  lines.push(segStr + asorStr);
+  if (lead.campana) lines.push(`Fuente: ${lead.campana}`);
   return lines.join("\n");
 };
 
@@ -4250,56 +4250,9 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                         <FollowUpBadge lead={l} onUpdate={updateLead} T={T} fullWidth tint={meta.color} />
                       </div>
 
-                      {/* CTA + copiar resumen Telegram */}
+                      {/* CTA */}
                       <div style={{ display: "flex", gap: 7, alignItems: "stretch", marginTop: "auto" }}>
-                      {/* Copiar para Telegram */}
-                      {(() => {
-                        const copied = copiedId === l.id;
-                        return (
-                          <button
-                            onMouseDown={e => e.stopPropagation()}
-                            onPointerDown={e => e.stopPropagation()}
-                            onDragStart={e => { e.preventDefault(); e.stopPropagation(); }}
-                            draggable={false}
-                            onClick={e => { e.stopPropagation(); copyLeadToClipboard(l); }}
-                            title="Copiar resumen para Telegram"
-                            style={{
-                              flexShrink: 0, width: 40, borderRadius: 11,
-                              background: copied
-                                ? (isLight ? `${T.accent}18` : `${T.accent}14`)
-                                : (isLight ? "rgba(15,23,42,0.04)" : "rgba(255,255,255,0.06)"),
-                              border: `1px solid ${copied
-                                ? (isLight ? `${T.accent}55` : T.accentB)
-                                : (isLight ? "rgba(15,23,42,0.10)" : "rgba(255,255,255,0.12)")}`,
-                              color: copied
-                                ? (isLight ? `color-mix(in srgb, ${T.accent} 60%, #0B1220 40%)` : T.accent)
-                                : (isLight ? "rgba(15,23,42,0.45)" : "rgba(255,255,255,0.45)"),
-                              cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
-                              transition: "all 0.18s",
-                            }}
-                            onMouseEnter={e => {
-                              if (!copied) {
-                                e.currentTarget.style.background = isLight ? "rgba(15,23,42,0.07)" : "rgba(255,255,255,0.10)";
-                                e.currentTarget.style.color = isLight ? T.txt : "#FFF";
-                                e.currentTarget.style.borderColor = isLight ? "rgba(15,23,42,0.16)" : "rgba(255,255,255,0.20)";
-                              }
-                            }}
-                            onMouseLeave={e => {
-                              if (!copied) {
-                                e.currentTarget.style.background = isLight ? "rgba(15,23,42,0.04)" : "rgba(255,255,255,0.06)";
-                                e.currentTarget.style.color = isLight ? "rgba(15,23,42,0.45)" : "rgba(255,255,255,0.45)";
-                                e.currentTarget.style.borderColor = isLight ? "rgba(15,23,42,0.10)" : "rgba(255,255,255,0.12)";
-                              }
-                            }}
-                          >
-                            {copied
-                              ? <Check size={13} strokeWidth={2.8} />
-                              : <Copy size={13} strokeWidth={2.2} />}
-                          </button>
-                        );
-                      })()}
                       <button
-                        style={{ flex: 1 }}
                         onClick={e => { e.stopPropagation(); setAnalyzingLead(l); }}
                         style={{
                           width: "100%", padding: "12px 14px", borderRadius: 11,
