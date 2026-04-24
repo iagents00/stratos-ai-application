@@ -271,7 +271,7 @@ const SourceBadge = ({ source, isLight }) => {
 };
 
 /* ── ScoreInput: barra clicable + número editable inline ── */
-const ScoreInput = ({ sc, onUpdate, color, isLight, T, stopProp = false, big = false }) => {
+const ScoreInput = ({ sc, onUpdate, color, isLight, T, stopProp = false, big = false, readOnly = false }) => {
   const [editSc, setEditSc] = useState(false);
   const [val, setVal] = useState("");
   const accentColor = color || (isLight ? T.accent : "rgba(255,255,255,0.85)");
@@ -283,6 +283,7 @@ const ScoreInput = ({ sc, onUpdate, color, isLight, T, stopProp = false, big = f
   };
 
   const handleBarClick = (e) => {
+    if (readOnly) return;
     if (stopProp) e.stopPropagation();
     const rect = e.currentTarget.getBoundingClientRect();
     const pct = Math.round(((e.clientX - rect.left) / rect.width) * 100);
@@ -301,12 +302,11 @@ const ScoreInput = ({ sc, onUpdate, color, isLight, T, stopProp = false, big = f
       <span style={{ fontSize: 8.5, fontWeight: 700, fontFamily: fontDisp, letterSpacing: "0.08em", textTransform: "uppercase", color: isLight ? "rgba(15,23,42,0.30)" : "rgba(255,255,255,0.25)", flexShrink: 0 }}>Score</span>
       <div
         onClick={handleBarClick}
-        title="Click para ajustar score"
-        style={{ flex: 1, height: 5, borderRadius: 99, background: isLight ? "rgba(15,23,42,0.07)" : "rgba(255,255,255,0.07)", cursor: "ew-resize", position: "relative", overflow: "hidden" }}
+        style={{ flex: 1, height: 2.5, borderRadius: 99, background: isLight ? "rgba(15,23,42,0.07)" : "rgba(255,255,255,0.07)", cursor: readOnly ? "default" : "ew-resize", position: "relative", overflow: "hidden" }}
       >
         <div style={{ width: `${sc}%`, height: "100%", borderRadius: 99, background: accentColor, transition: "width 0.3s cubic-bezier(0.4,0,0.2,1)" }} />
       </div>
-      {editSc ? (
+      {!readOnly && editSc ? (
         <input
           autoFocus
           type="number"
@@ -319,9 +319,8 @@ const ScoreInput = ({ sc, onUpdate, color, isLight, T, stopProp = false, big = f
         />
       ) : (
         <span
-          onClick={e => { if (stopProp) e.stopPropagation(); setVal(String(sc)); setEditSc(true); }}
-          title="Click para editar score"
-          style={{ fontSize: big ? 16 : 13, fontWeight: 700, fontFamily: fontDisp, letterSpacing: "-0.02em", color: accentColor, flexShrink: 0, minWidth: big ? 30 : 22, textAlign: "right", cursor: "text", userSelect: "none" }}
+          onClick={readOnly ? undefined : e => { if (stopProp) e.stopPropagation(); setVal(String(sc)); setEditSc(true); }}
+          style={{ fontSize: big ? 16 : 13, fontWeight: 700, fontFamily: fontDisp, letterSpacing: "-0.02em", color: accentColor, flexShrink: 0, minWidth: big ? 30 : 22, textAlign: "right", cursor: readOnly ? "default" : "text", userSelect: "none" }}
         >{sc}</span>
       )}
     </div>
@@ -4102,8 +4101,8 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                       })()}
 
 
-                      {/* Score — barra clicable + número editable */}
-                      <ScoreInput sc={sc} onUpdate={n => updateLead({...l, sc: n})} color={isLight ? meta.color : "rgba(255,255,255,0.85)"} isLight={isLight} T={T} stopProp />
+                      {/* Score — solo visual en tarjetas, editable desde drawers */}
+                      <ScoreInput sc={sc} onUpdate={n => updateLead({...l, sc: n})} color={isLight ? meta.color : "rgba(255,255,255,0.85)"} isLight={isLight} T={T} stopProp readOnly />
 
                       {/* Próxima acción — HERO del card */}
                       {(() => {
