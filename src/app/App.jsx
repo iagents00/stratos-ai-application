@@ -3110,7 +3110,7 @@ export default function App() {
               : <>
                   {v === "d" && <Dash oc={oc} co={co} leadsData={leadsData} T={T} />}
                   {v === "c" && <CRM oc={oc} co={co} leadsData={leadsData} setLeadsData={setLeadsData} theme={theme} setTheme={setTheme} autoOpenPriority1={autoOpenPriority1} onAutoOpenHandled={() => setAutoOpenPriority1(0)} />}
-                  {v === "ia" && <IACRM oc={oc} />}
+                  {v === "ia" && <IACRM oc={oc} theme={theme} />}
                   {v === "e" && <ERP oc={oc} T={T} />}
                   {v === "a" && <AsesorCRM oc={oc} />}
                   {v === "lp" && <LandingPages T={T} />}
