@@ -624,18 +624,18 @@ const DynIsland = ({ onExpand, notifications = [], theme = "dark" }) => {
 
           background: isLight
             ? "linear-gradient(145deg, rgba(255,255,255,0.92) 0%, rgba(236,251,246,0.88) 100%)"
-            : "linear-gradient(145deg, rgba(8,16,26,0.82) 0%, rgba(4,10,18,0.88) 100%)",
+            : "linear-gradient(145deg, rgba(20,36,56,0.72) 0%, rgba(8,16,30,0.80) 100%)",
 
-          backdropFilter: "blur(28px) saturate(160%)",
-          WebkitBackdropFilter: "blur(28px) saturate(160%)",
+          backdropFilter: "blur(32px) saturate(180%)",
+          WebkitBackdropFilter: "blur(32px) saturate(180%)",
 
           border: isLight
             ? "1px solid rgba(255,255,255,0.92)"
-            : "1px solid rgba(110,231,194,0.16)",
+            : "1px solid rgba(110,231,194,0.28)",
 
           boxShadow: isLight
             ? "inset 0 1px 0 rgba(255,255,255,1.0), 0 0 0 1px rgba(13,154,118,0.06), 0 4px 20px rgba(0,0,0,0.07), 0 1px 3px rgba(0,0,0,0.04)"
-            : "inset 0 1px 0 rgba(255,255,255,0.10), inset 0 -1px 0 rgba(0,0,0,0.28), 0 0 0 1px rgba(110,231,194,0.08), 0 0 18px rgba(110,231,194,0.10), 0 8px 32px rgba(0,0,0,0.58), 0 2px 6px rgba(0,0,0,0.40)",
+            : "inset 0 1px 0 rgba(255,255,255,0.18), inset 0 -1px 0 rgba(0,0,0,0.35), 0 0 0 1px rgba(110,231,194,0.14), 0 0 24px rgba(110,231,194,0.18), 0 8px 32px rgba(0,0,0,0.70), 0 2px 6px rgba(0,0,0,0.50)",
 
           display: expanded ? "none" : "flex",
           alignItems: "center", justifyContent: "center",
@@ -645,17 +645,17 @@ const DynIsland = ({ onExpand, notifications = [], theme = "dark" }) => {
         }}
         onMouseEnter={e => {
           e.currentTarget.style.transform = "scale(1.028)";
-          e.currentTarget.style.borderColor = isLight ? "rgba(255,255,255,1.0)" : "rgba(110,231,194,0.32)";
+          e.currentTarget.style.borderColor = isLight ? "rgba(255,255,255,1.0)" : "rgba(110,231,194,0.45)";
           e.currentTarget.style.boxShadow = isLight
             ? "inset 0 1px 0 rgba(255,255,255,1.0), 0 0 0 1px rgba(13,154,118,0.10), 0 6px 26px rgba(0,0,0,0.10), 0 2px 5px rgba(0,0,0,0.06)"
-            : "inset 0 1px 0 rgba(255,255,255,0.16), inset 0 -1px 0 rgba(0,0,0,0.30), 0 0 0 1px rgba(110,231,194,0.18), 0 0 28px rgba(110,231,194,0.18), 0 10px 38px rgba(0,0,0,0.65), 0 3px 9px rgba(0,0,0,0.45)";
+            : "inset 0 1px 0 rgba(255,255,255,0.22), inset 0 -1px 0 rgba(0,0,0,0.38), 0 0 0 1px rgba(110,231,194,0.22), 0 0 36px rgba(110,231,194,0.26), 0 10px 38px rgba(0,0,0,0.72), 0 3px 9px rgba(0,0,0,0.52)";
         }}
         onMouseLeave={e => {
           e.currentTarget.style.transform = "scale(1)";
-          e.currentTarget.style.borderColor = isLight ? "rgba(255,255,255,0.92)" : "rgba(110,231,194,0.16)";
+          e.currentTarget.style.borderColor = isLight ? "rgba(255,255,255,0.92)" : "rgba(110,231,194,0.28)";
           e.currentTarget.style.boxShadow = isLight
             ? "inset 0 1px 0 rgba(255,255,255,1.0), 0 0 0 1px rgba(13,154,118,0.06), 0 4px 20px rgba(0,0,0,0.07), 0 1px 3px rgba(0,0,0,0.04)"
-            : "inset 0 1px 0 rgba(255,255,255,0.10), inset 0 -1px 0 rgba(0,0,0,0.28), 0 0 0 1px rgba(110,231,194,0.08), 0 0 18px rgba(110,231,194,0.10), 0 8px 32px rgba(0,0,0,0.58), 0 2px 6px rgba(0,0,0,0.40)";
+            : "inset 0 1px 0 rgba(255,255,255,0.18), inset 0 -1px 0 rgba(0,0,0,0.35), 0 0 0 1px rgba(110,231,194,0.14), 0 0 24px rgba(110,231,194,0.18), 0 8px 32px rgba(0,0,0,0.70), 0 2px 6px rgba(0,0,0,0.50)";
         }}
         onMouseDown={e => {
           e.currentTarget.style.transform = "scale(0.965)";
@@ -669,45 +669,55 @@ const DynIsland = ({ onExpand, notifications = [], theme = "dark" }) => {
         {/* ── Aurora primaria — blob mint flotante ── */}
         <div style={{
           position: "absolute",
-          width: "55%", height: "180%",
-          left: "5%", top: "-40%",
+          width: "60%", height: "200%",
+          left: "2%", top: "-50%",
           background: isLight
-            ? "radial-gradient(ellipse, rgba(13,154,118,0.13) 0%, transparent 68%)"
-            : "radial-gradient(ellipse, rgba(110,231,194,0.20) 0%, transparent 68%)",
+            ? "radial-gradient(ellipse, rgba(13,154,118,0.15) 0%, transparent 68%)"
+            : "radial-gradient(ellipse, rgba(110,231,194,0.36) 0%, rgba(52,211,153,0.12) 55%, transparent 72%)",
           animation: "auroraShift 9s ease-in-out infinite",
           pointerEvents: "none",
-          filter: "blur(6px)",
+          filter: isLight ? "blur(6px)" : "blur(5px)",
         }} />
 
         {/* ── Aurora secundaria — blob teal contramovimiento ── */}
         <div style={{
           position: "absolute",
-          width: "45%", height: "160%",
-          right: "8%", top: "-30%",
+          width: "50%", height: "180%",
+          right: "5%", top: "-40%",
           background: isLight
-            ? "radial-gradient(ellipse, rgba(52,211,153,0.09) 0%, transparent 65%)"
-            : "radial-gradient(ellipse, rgba(94,234,212,0.14) 0%, transparent 65%)",
+            ? "radial-gradient(ellipse, rgba(52,211,153,0.10) 0%, transparent 65%)"
+            : "radial-gradient(ellipse, rgba(94,234,212,0.24) 0%, rgba(110,231,194,0.08) 55%, transparent 70%)",
           animation: "auroraShift2 12s ease-in-out infinite",
           pointerEvents: "none",
-          filter: "blur(8px)",
+          filter: isLight ? "blur(8px)" : "blur(6px)",
         }} />
 
         {/* ── Specular arc — borde superior que capta la luz ── */}
         <div style={{
-          position: "absolute", top: 0, left: "8%", right: "8%", height: "55%",
+          position: "absolute", top: 0, left: "6%", right: "6%", height: "52%",
           background: isLight
             ? "radial-gradient(ellipse at 50% -8%, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.50) 38%, transparent 68%)"
-            : "radial-gradient(ellipse at 50% -8%, rgba(255,255,255,0.16) 0%, rgba(255,255,255,0.06) 42%, transparent 70%)",
+            : "radial-gradient(ellipse at 50% -6%, rgba(255,255,255,0.26) 0%, rgba(255,255,255,0.10) 40%, transparent 68%)",
           borderRadius: "50% 50% 0 0 / 80% 80% 0 0",
           pointerEvents: "none",
         }} />
+
+        {/* ── Bottom edge shadow — liquid glass depth ── */}
+        {!isLight && (
+          <div style={{
+            position: "absolute", bottom: 0, left: "12%", right: "12%", height: "30%",
+            background: "radial-gradient(ellipse at 50% 120%, rgba(0,0,0,0.45) 0%, transparent 70%)",
+            borderRadius: "0 0 50% 50% / 0 0 80% 80%",
+            pointerEvents: "none",
+          }} />
+        )}
 
         {/* ── Shimmer sweep — rayo de luz diagonal periódico ── */}
         <div style={{
           position: "absolute", inset: 0,
           background: isLight
             ? "linear-gradient(112deg, transparent 25%, rgba(255,255,255,0.70) 48%, transparent 68%)"
-            : "linear-gradient(112deg, transparent 25%, rgba(255,255,255,0.14) 48%, transparent 68%)",
+            : "linear-gradient(112deg, transparent 20%, rgba(255,255,255,0.22) 46%, rgba(110,231,194,0.06) 52%, transparent 70%)",
           animation: "pillShimmer 6s cubic-bezier(0.4,0,0.6,1) 1.8s infinite",
           pointerEvents: "none", borderRadius: "inherit",
         }} />
@@ -716,7 +726,7 @@ const DynIsland = ({ onExpand, notifications = [], theme = "dark" }) => {
         {!isLight && (
           <div style={{
             position: "absolute", inset: -1, borderRadius: "inherit",
-            border: "1px solid rgba(110,231,194,0.22)",
+            border: "1px solid rgba(110,231,194,0.30)",
             animation: "borderGlowPulse 3.5s ease-in-out infinite",
             pointerEvents: "none",
           }} />
@@ -749,11 +759,11 @@ const DynIsland = ({ onExpand, notifications = [], theme = "dark" }) => {
 
           <span style={{
             fontSize: 12.5,
-            color: isLight ? "#0A6448" : "rgba(255,255,255,0.90)",
-            fontWeight: 560,
-            letterSpacing: "-0.024em",
+            color: isLight ? "#0A6448" : "#FFFFFF",
+            fontWeight: 600,
+            letterSpacing: "-0.028em",
             fontFamily: fontDisp,
-            textShadow: isLight ? "none" : "0 0 12px rgba(110,231,194,0.22)",
+            textShadow: isLight ? "none" : "0 1px 8px rgba(0,0,0,0.40), 0 0 16px rgba(110,231,194,0.28)",
           }}>Centro de Inteligencia</span>
         </div>
       </div>
