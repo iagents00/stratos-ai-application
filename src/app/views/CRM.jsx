@@ -270,6 +270,64 @@ const SourceBadge = ({ source, isLight }) => {
   );
 };
 
+/* ── ScoreInput: barra clicable + número editable inline ── */
+const ScoreInput = ({ sc, onUpdate, color, isLight, T, stopProp = false, big = false }) => {
+  const [editSc, setEditSc] = useState(false);
+  const [val, setVal] = useState("");
+  const accentColor = color || (isLight ? T.accent : "rgba(255,255,255,0.85)");
+
+  const commit = (v) => {
+    const n = Math.max(0, Math.min(100, parseInt(v, 10)));
+    if (!isNaN(n)) onUpdate(n);
+    setEditSc(false);
+  };
+
+  const handleBarClick = (e) => {
+    if (stopProp) e.stopPropagation();
+    const rect = e.currentTarget.getBoundingClientRect();
+    const pct = Math.round(((e.clientX - rect.left) / rect.width) * 100);
+    onUpdate(Math.max(0, Math.min(100, pct)));
+  };
+
+  return (
+    <div
+      style={{ display: "flex", alignItems: "center", gap: 7, width: "100%" }}
+      onClick={stopProp ? e => e.stopPropagation() : undefined}
+      onMouseDown={stopProp ? e => e.stopPropagation() : undefined}
+      onPointerDown={stopProp ? e => e.stopPropagation() : undefined}
+      draggable={false}
+      onDragStart={stopProp ? e => { e.preventDefault(); e.stopPropagation(); } : undefined}
+    >
+      <span style={{ fontSize: 8.5, fontWeight: 700, fontFamily: fontDisp, letterSpacing: "0.08em", textTransform: "uppercase", color: isLight ? "rgba(15,23,42,0.30)" : "rgba(255,255,255,0.25)", flexShrink: 0 }}>Score</span>
+      <div
+        onClick={handleBarClick}
+        title="Click para ajustar score"
+        style={{ flex: 1, height: 5, borderRadius: 99, background: isLight ? "rgba(15,23,42,0.07)" : "rgba(255,255,255,0.07)", cursor: "ew-resize", position: "relative", overflow: "hidden" }}
+      >
+        <div style={{ width: `${sc}%`, height: "100%", borderRadius: 99, background: accentColor, transition: "width 0.3s cubic-bezier(0.4,0,0.2,1)" }} />
+      </div>
+      {editSc ? (
+        <input
+          autoFocus
+          type="number"
+          value={val}
+          onChange={e => setVal(e.target.value)}
+          onBlur={() => commit(val)}
+          onKeyDown={e => { if (e.key === "Enter") commit(val); if (e.key === "Escape") setEditSc(false); }}
+          style={{ width: big ? 44 : 36, fontSize: big ? 16 : 13, fontWeight: 700, fontFamily: fontDisp, background: "transparent", border: `1px solid ${accentColor}60`, borderRadius: 6, color: accentColor, outline: "none", padding: "1px 4px", textAlign: "center" }}
+          min={0} max={100}
+        />
+      ) : (
+        <span
+          onClick={e => { if (stopProp) e.stopPropagation(); setVal(String(sc)); setEditSc(true); }}
+          title="Click para editar score"
+          style={{ fontSize: big ? 16 : 13, fontWeight: 700, fontFamily: fontDisp, letterSpacing: "-0.02em", color: accentColor, flexShrink: 0, minWidth: big ? 30 : 22, textAlign: "right", cursor: "text", userSelect: "none" }}
+        >{sc}</span>
+      )}
+    </div>
+  );
+};
+
 const ScoreBar = ({ sc, compact, isLight = false }) => {
   const c = sc >= 80 ? P.emerald : sc >= 60 ? P.blue : sc >= 40 ? P.cyan : P.violet;
   return (
@@ -2104,19 +2162,8 @@ const LeadPanel = ({ lead, onClose, oc, onUpdate, onSwitchTab, T = P }) => {
               </div>
             </div>
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
-            <div style={{ flex: 1, height: 3, borderRadius: 2, background: isLight ? "rgba(15,23,42,0.06)" : "rgba(255,255,255,0.05)" }}>
-              <div style={{ width: `${sc}%`, height: 3, borderRadius: 2, background: isLight ? `color-mix(in srgb, ${T.accent} 55%, #0B1220 45%)` : T.accent, opacity: 0.7, transition: "width 0.4s" }} />
-            </div>
-            <div style={{ display: "flex", alignItems: "center", gap: 4, flexShrink: 0 }}>
-              {[{d:-5,l:"−"},{d:5,l:"+"}].map(({d,l},i) => i === 0 ? (
-                <button key={d} onClick={() => onUpdate?.({...lead, sc: Math.max(0, sc + d)})} title={`${d} puntos`} style={{ width: 18, height: 18, borderRadius: 5, border: `1px solid ${T.border}`, background: "transparent", color: T.txt3, fontSize: 11, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: fontDisp, lineHeight: 1, padding: 0, transition: "all 0.15s" }} onMouseEnter={e=>{e.currentTarget.style.background=T.glassH;e.currentTarget.style.color=T.txt;}} onMouseLeave={e=>{e.currentTarget.style.background="transparent";e.currentTarget.style.color=T.txt3;}}>{l}</button>
-              ) : null)}
-              <span style={{ fontSize: 11, fontWeight: 700, color: T.txt3, fontFamily: fontDisp, whiteSpace: "nowrap", minWidth: 44, textAlign: "center" }}>Score {sc}</span>
-              {[{d:-5,l:"−"},{d:5,l:"+"}].map(({d,l},i) => i === 1 ? (
-                <button key={d} onClick={() => onUpdate?.({...lead, sc: Math.min(100, sc + d)})} title={`+${d} puntos`} style={{ width: 18, height: 18, borderRadius: 5, border: `1px solid ${T.border}`, background: "transparent", color: T.txt3, fontSize: 11, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: fontDisp, lineHeight: 1, padding: 0, transition: "all 0.15s" }} onMouseEnter={e=>{e.currentTarget.style.background=T.glassH;e.currentTarget.style.color=T.txt;}} onMouseLeave={e=>{e.currentTarget.style.background="transparent";e.currentTarget.style.color=T.txt3;}}>{l}</button>
-              ) : null)}
-            </div>
+          <div style={{ marginBottom: 14 }}>
+            <ScoreInput sc={sc} onUpdate={n => onUpdate?.({...lead, sc: n})} isLight={isLight} T={T} />
           </div>
           <div style={{ display: "flex", gap: 7 }}>
             <a href={`tel:${editing ? f("phone") : lead.phone}`} style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "8px 12px", borderRadius: 9, background: T.glass, border: `1px solid ${T.border}`, color: T.txt2, fontSize: 11, fontWeight: 600, textDecoration: "none", transition: "all 0.18s" }} onMouseEnter={e => { e.currentTarget.style.background = T.glassH; e.currentTarget.style.color = T.txt; }} onMouseLeave={e => { e.currentTarget.style.background = T.glass; e.currentTarget.style.color = T.txt2; }}><Phone size={12} /> Llamar</a>
@@ -2717,13 +2764,8 @@ const AnalysisDrawer = ({ lead, onClose, oc, onUpdate, onSwitchTab, T = P }) => 
                 </span>
               </div>
             </div>
-            <div style={{ textAlign: "right", flexShrink: 0 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 5, justifyContent: "flex-end" }}>
-                <button onClick={() => onUpdate?.({...lead, sc: Math.max(0, sc - 5)})} title="-5 puntos" style={{ width: 20, height: 20, borderRadius: 6, border: `1px solid ${T.border}`, background: "transparent", color: T.txt3, fontSize: 12, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: fontDisp, lineHeight: 1, padding: 0, transition: "all 0.15s" }} onMouseEnter={e=>{e.currentTarget.style.background=T.glassH;e.currentTarget.style.color=T.txt;}} onMouseLeave={e=>{e.currentTarget.style.background="transparent";e.currentTarget.style.color=T.txt3;}}>−</button>
-                <p style={{ margin: 0, fontSize: 18, fontWeight: 800, color: T.accent, fontFamily: fontDisp, lineHeight: 1, minWidth: 28, textAlign: "center" }}>{sc}</p>
-                <button onClick={() => onUpdate?.({...lead, sc: Math.min(100, sc + 5)})} title="+5 puntos" style={{ width: 20, height: 20, borderRadius: 6, border: `1px solid ${T.border}`, background: "transparent", color: T.txt3, fontSize: 12, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: fontDisp, lineHeight: 1, padding: 0, transition: "all 0.15s" }} onMouseEnter={e=>{e.currentTarget.style.background=T.glassH;e.currentTarget.style.color=T.txt;}} onMouseLeave={e=>{e.currentTarget.style.background="transparent";e.currentTarget.style.color=T.txt3;}}>+</button>
-              </div>
-              <p style={{ margin: 0, fontSize: 8.5, color: T.txt3, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", marginTop: 3 }}>Score · Manual</p>
+            <div style={{ minWidth: 110, flexShrink: 0 }}>
+              <ScoreInput sc={sc} onUpdate={n => onUpdate?.({...lead, sc: n})} isLight={isLight} T={T} big />
             </div>
           </div>
 
@@ -4060,14 +4102,8 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                       })()}
 
 
-                      {/* Score row — minimalista */}
-                      <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
-                        <span style={{ fontSize: 8.5, fontWeight: 700, fontFamily: fontDisp, letterSpacing: "0.08em", textTransform: "uppercase", color: isLight ? "rgba(15,23,42,0.30)" : "rgba(255,255,255,0.25)", flexShrink: 0 }}>Score</span>
-                        <div style={{ flex: 1, height: 3, borderRadius: 99, background: isLight ? "rgba(15,23,42,0.07)" : "rgba(255,255,255,0.07)", overflow: "hidden" }}>
-                          <div style={{ width: `${sc}%`, height: "100%", borderRadius: 99, background: isLight ? `linear-gradient(90deg, ${meta.color} 0%, ${meta.color}BB 100%)` : "rgba(255,255,255,0.75)", transition: "width 0.5s cubic-bezier(0.4,0,0.2,1)" }} />
-                        </div>
-                        <span style={{ fontSize: 13, fontWeight: 700, fontFamily: fontDisp, letterSpacing: "-0.02em", color: isLight ? meta.color : "rgba(255,255,255,0.88)", flexShrink: 0, minWidth: 22, textAlign: "right" }}>{sc}</span>
-                      </div>
+                      {/* Score — barra clicable + número editable */}
+                      <ScoreInput sc={sc} onUpdate={n => updateLead({...l, sc: n})} color={isLight ? meta.color : "rgba(255,255,255,0.85)"} isLight={isLight} T={T} stopProp />
 
                       {/* Próxima acción — HERO del card */}
                       {(() => {
