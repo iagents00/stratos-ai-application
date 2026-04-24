@@ -13827,7 +13827,7 @@ export default function App() {
                     </div>
 
                     {/* Quick-add bar */}
-                    <div style={{ display:"flex", gap:8, marginBottom:18 }}>
+                    <div style={{ display:"flex", gap:8, marginBottom:18, alignItems:"stretch" }}>
                       <input
                         value={metaNewText}
                         onChange={e => setMetaNewText(e.target.value)}
@@ -13837,23 +13837,39 @@ export default function App() {
                             setMetaNewText("");
                           }
                         }}
-                        placeholder="Escribe una acción y presiona Enter…"
+                        placeholder="Nueva acción — escribe y presiona Enter…"
                         style={{
-                          flex:1, padding:"9px 14px", borderRadius:10,
-                          background: isLight?"rgba(255,255,255,0.90)":"rgba(255,255,255,0.05)",
+                          flex:1, padding:"10px 15px", borderRadius:10,
+                          background: isLight?"#FFFFFF":"rgba(255,255,255,0.05)",
                           border:`1.5px solid ${metaNewText ? T.accent : T.border}`,
                           color:T.txt, fontSize:12.5, fontFamily:font, outline:"none",
-                          transition:"border 0.15s",
+                          boxShadow: metaNewText ? `0 0 0 3px ${T.accent}18` : "none",
+                          transition:"border 0.15s, box-shadow 0.15s",
                         }}
                       />
                       <button
                         onClick={() => {
-                          const txt = metaNewText.trim() || "Nueva acción";
+                          const txt = metaNewText.trim();
+                          if (!txt) return;
                           setMetaActions(p => [{ id:Date.now(), text:txt, lead:"General", asesor:"Equipo", date:"Hoy", done:false, priority:"normal", assignee:"", assigneeType:"human" }, ...p]);
                           setMetaNewText("");
                         }}
-                        style={{ display:"flex", alignItems:"center", gap:6, padding:"9px 16px", borderRadius:10, background:T.accent, border:"none", color:"#041016", fontSize:12, fontWeight:700, fontFamily:font, cursor:"pointer", flexShrink:0, letterSpacing:"-0.01em" }}>
-                        <Plus size={13} strokeWidth={2.5} /> Agregar
+                        style={{
+                          display:"flex", alignItems:"center", gap:7,
+                          padding:"0 20px", borderRadius:10, border:"none",
+                          background: metaNewText
+                            ? `linear-gradient(135deg,#0D9A76,${T.accent})`
+                            : (isLight?"rgba(0,0,0,0.06)":"rgba(255,255,255,0.07)"),
+                          color: metaNewText ? "#041016" : T.txt3,
+                          fontSize:12.5, fontWeight:700, fontFamily:fontDisp,
+                          cursor: metaNewText ? "pointer" : "default",
+                          flexShrink:0, letterSpacing:"-0.02em",
+                          boxShadow: metaNewText ? "0 2px 12px rgba(13,154,118,0.30)" : "none",
+                          transition:"background 0.18s, color 0.18s, box-shadow 0.18s",
+                          minHeight:42,
+                        }}>
+                        <Plus size={14} strokeWidth={2.5} />
+                        Agregar
                       </button>
                     </div>
 
@@ -13868,7 +13884,8 @@ export default function App() {
                       const isHigh   = !isUrgent && (a.priority==="alto" || a.date?.toLowerCase().includes("mañana") || a.date?.toLowerCase().includes("semana"));
                       const prioColor = isUrgent ? "#EF4444" : isHigh ? "#F59E0B" : T.txt3;
                       const prioNext = a.priority==="normal" ? "alto" : a.priority==="alto" ? "urgente" : "normal";
-                      const prioLabel = a.priority==="urgente" ? "🔴 Urgente" : a.priority==="alto" ? "🟡 Alto" : "Normal";
+                      const prioDot  = isUrgent ? "#EF4444" : isHigh ? "#F59E0B" : (isLight?"#94A3B8":"#475569");
+                      const prioLabel = a.priority==="urgente" ? "Urgente" : a.priority==="alto" ? "Alto" : "Normal";
                       return (
                         <div
                           key={a.id}
@@ -13925,7 +13942,15 @@ export default function App() {
                               <button
                                 onClick={() => setMetaActions(p => p.map(x => x.id===a.id?{...x,priority:prioNext}:x))}
                                 title="Click para cambiar prioridad"
-                                style={{ fontSize:9, fontWeight:600, fontFamily:font, color:prioColor, background:`${prioColor}12`, border:`1px solid ${prioColor}25`, borderRadius:99, padding:"1px 7px", cursor:"pointer", letterSpacing:"0.01em" }}>
+                                style={{
+                                  display:"inline-flex", alignItems:"center", gap:4,
+                                  fontSize:9.5, fontWeight:600, fontFamily:font,
+                                  color:prioColor, background:`${prioDot}10`,
+                                  border:`1px solid ${prioDot}28`, borderRadius:99,
+                                  padding:"2px 8px 2px 6px", cursor:"pointer",
+                                  letterSpacing:"0.01em", transition:"all 0.15s",
+                                }}>
+                                <span style={{ width:6, height:6, borderRadius:"50%", background:prioDot, display:"inline-block", flexShrink:0 }} />
                                 {prioLabel}
                               </button>
                             </div>
