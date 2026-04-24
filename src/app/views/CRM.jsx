@@ -231,6 +231,28 @@ const stgC = {
   "Perdido":            "#F87171",   // rojo suave     — perdido (lógico y sin morado)
 };
 
+const SRC_META = {
+  telegram: { label: "TG",        color: "#29B6F6" },
+  whatsapp:  { label: "WA",        color: "#25D366" },
+  facebook:  { label: "FB",        color: "#7EB8F0" },
+  web:       { label: "Web",       color: "#A78BFA" },
+  manual:    { label: null,        color: null      },
+};
+const SourceBadge = ({ source, isLight }) => {
+  const meta = SRC_META[source] || null;
+  if (!meta || !meta.label) return null;
+  const c = isLight ? `color-mix(in srgb, ${meta.color} 60%, #0B1220 40%)` : meta.color;
+  return (
+    <span style={{
+      fontSize: 8, fontWeight: 800, letterSpacing: "0.06em",
+      color: c, background: isLight ? `${meta.color}15` : `${meta.color}18`,
+      border: `1px solid ${isLight ? `${meta.color}38` : `${meta.color}30`}`,
+      padding: "1px 6px", borderRadius: 99,
+      fontFamily: "-apple-system, sans-serif", flexShrink: 0,
+    }}>{meta.label}</span>
+  );
+};
+
 const ScoreBar = ({ sc, compact, isLight = false }) => {
   const c = sc >= 80 ? P.emerald : sc >= 60 ? P.blue : sc >= 40 ? P.cyan : P.violet;
   return (
@@ -2677,10 +2699,11 @@ const AnalysisDrawer = ({ lead, onClose, oc, onUpdate, onSwitchTab, T = P }) => 
           </div>
 
           {/* Etiquetas rápidas */}
-          <div style={{ display: "flex", gap: 6, marginTop: 10, flexWrap: "wrap" }}>
+          <div style={{ display: "flex", gap: 6, marginTop: 10, flexWrap: "wrap", alignItems: "center" }}>
             {hot && <span style={{ fontSize: 9, fontWeight: 700, color: T.accent, background: `${T.accent}14`, border: `1px solid ${T.accentB}`, padding: "3px 9px", borderRadius: 99, letterSpacing: "0.05em" }}>HOT</span>}
             {inactive >= 7 && <span style={{ fontSize: 9, fontWeight: 700, color: T.rose, background: `${T.rose}14`, border: `1px solid ${T.rose}33`, padding: "3px 9px", borderRadius: 99 }}>{inactive}d inactivo</span>}
             <span style={{ fontSize: 9, fontWeight: 700, color: T.txt3, background: T.glass, border: `1px solid ${T.border}`, padding: "3px 9px", borderRadius: 99 }}>Etapa {stageIdx + 1}/{STAGES.length}</span>
+            <SourceBadge source={lead.source} isLight={isLight} />
           </div>
         </div>
 
@@ -3119,7 +3142,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
   const [addingLead, setAddingLead]     = useState(false);
   const [budgetMenuOpen, setBudgetMenuOpen] = useState(false);
   const [stageMenuOpen, setStageMenuOpen]   = useState(false);
-  const [newLead, setNewLead]           = useState({ n: "", asesor: canSeeAll ? "" : (user?.name || ""), phone: "", email: "", budget: "", p: "", campana: "", st: "Nuevo Registro", nextAction: "", notas: "" });
+  const [newLead, setNewLead]           = useState({ n: "", asesor: canSeeAll ? "" : (user?.name || ""), phone: "", email: "", budget: "", p: "", campana: "", source: "manual", st: "Nuevo Registro", nextAction: "", notas: "" });
   // ── Listas maestras de asesores y proyectos ──
   // Se alimentan de leadsData + registros "custom" hechos desde el modal.
   // Al registrar un nuevo asesor/proyecto desde el modal, se añade aquí para
@@ -3166,7 +3189,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
     const prev = leadsData.find(l => l.id === updated.id);
     const segDelta = (updated.seguimientos || 0) - (prev?.seguimientos || 0);
     const baseSc = updated.sc ?? prev?.sc ?? 0;
-    const newSc = Math.max(0, Math.min(100, baseSc + segDelta * 3));
+    const newSc = Math.max(0, Math.min(100, baseSc + segDelta * 1));
     const withScore = { ...updated, sc: newSc };
     setLeadsData(prev => prev.map(l => l.id === withScore.id ? withScore : l));
     if (selectedLead?.id === withScore.id) setSelectedLead(withScore);
@@ -3300,7 +3323,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
     const newEntry = {
       id: Date.now(), ...newLead, st: newLead.st || "Nuevo Registro",
       sc: 5,
-      source: "manual",
+      source: newLead.source || "manual",
       tag: newLead.tag || newLead.st || "Nuevo Registro", hot: false, isNew: true, fechaIngreso: dateStr,
       bio: "Cliente recién registrado. Pendiente primer contacto.", risk: "Sin información suficiente aún.",
       friction: "Medio",
@@ -3331,7 +3354,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
       setCustomCampanas(prev => [...prev, newLead.campana]);
     }
     setAddingLead(false);
-    setNewLead({ n: "", asesor: canSeeAll ? "" : (user?.name || ""), phone: "", email: "", budget: "", p: "", campana: "", st: "Nuevo Registro", nextAction: "", notas: "" });
+    setNewLead({ n: "", asesor: canSeeAll ? "" : (user?.name || ""), phone: "", email: "", budget: "", p: "", campana: "", source: "manual", st: "Nuevo Registro", nextAction: "", notas: "" });
     setQuickText("");
   };
 
@@ -3964,8 +3987,11 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                           <p style={{ fontSize: 15.5, fontWeight: 600, color: isLight ? T.txt : "#FFFFFF", fontFamily: fontDisp, letterSpacing: "-0.022em", lineHeight: 1.2, margin: 0 }}>{l.n}</p>
                         </div>
                         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 6 }}>
-                          <Pill color={stageColor} s isLight={isLight}>{l.st}</Pill>
-                          <span style={{ fontSize: 11.5, fontWeight: 600, color: isLight ? T.txt2 : "rgba(255,255,255,0.55)", fontFamily: fontDisp, letterSpacing: "-0.01em" }}>{l.budget}</span>
+                          <div style={{ display: "flex", alignItems: "center", gap: 5, minWidth: 0 }}>
+                            <Pill color={stageColor} s isLight={isLight}>{l.st}</Pill>
+                            <SourceBadge source={l.source} isLight={isLight} />
+                          </div>
+                          <span style={{ fontSize: 11.5, fontWeight: 600, color: isLight ? T.txt2 : "rgba(255,255,255,0.55)", fontFamily: fontDisp, letterSpacing: "-0.01em", flexShrink: 0 }}>{l.budget}</span>
                         </div>
                       </div>
 
@@ -4715,6 +4741,46 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                   onBlur={e => focusOff(e)}
                 />
               </div>
+
+              {/* Canal de origen */}
+              {(() => {
+                const SOURCES = [
+                  { key: "manual",    label: "Manual",    color: T.txt3   },
+                  { key: "telegram",  label: "Telegram",  color: "#29B6F6" },
+                  { key: "whatsapp",  label: "WhatsApp",  color: "#25D366" },
+                  { key: "facebook",  label: "Facebook",  color: "#7EB8F0" },
+                  { key: "web",       label: "Web",       color: T.violet  },
+                ];
+                return (
+                  <div style={{ gridColumn: "1 / -1" }}>
+                    <label style={labelStyle}>
+                      <Send size={9} color={T.txt3} /> Canal de origen
+                    </label>
+                    <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                      {SOURCES.map(({ key, label, color }) => {
+                        const active = (newLead.source || "manual") === key;
+                        const c = isLight ? `color-mix(in srgb, ${color} 60%, #0B1220 40%)` : color;
+                        return (
+                          <button key={key} type="button"
+                            onClick={() => setNewLead(p => ({...p, source: key}))}
+                            style={{
+                              padding: "5px 13px", borderRadius: 99,
+                              background: active ? (isLight ? `${color}18` : `${color}14`) : inputBg,
+                              border: `1px solid ${active ? (isLight ? `${color}50` : `${color}55`) : inputBorder}`,
+                              color: active ? c : T.txt3,
+                              fontSize: 11, fontWeight: active ? 700 : 500,
+                              cursor: "pointer", fontFamily: font,
+                              transition: "all 0.15s",
+                            }}
+                            onMouseEnter={e => { if (!active) { e.currentTarget.style.background = isLight ? `${color}0A` : `${color}0C`; e.currentTarget.style.borderColor = isLight ? `${color}30` : `${color}30`; e.currentTarget.style.color = c; }}}
+                            onMouseLeave={e => { if (!active) { e.currentTarget.style.background = inputBg; e.currentTarget.style.borderColor = inputBorder; e.currentTarget.style.color = T.txt3; }}}
+                          >{label}</button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
             );
             })()}
@@ -5076,6 +5142,8 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                             padding: "1.5px 5px", borderRadius: 99, flexShrink: 0,
                           }}>HOT</span>
                         )}
+
+                        <SourceBadge source={l.source} isLight={isLight} />
 
                         {/* flex spacer — pushes budget to right edge */}
                         <div style={{ flex: 1, minWidth: 6 }} />
