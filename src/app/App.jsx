@@ -12908,6 +12908,8 @@ export default function App() {
       assigneeType: "human",
     }))
   );
+  const [metaNewText, setMetaNewText] = useState("");
+  const [doneCollapsed, setDoneCollapsed] = useState(true);
   const [metaPlan, setMetaPlan] = useState({
     coreValues: ["Integridad en cada transacción", "Excelencia en experiencia de lujo", "Confianza y transparencia total", "Resultados medibles y reales"],
     purpose: "Conectar inversionistas globales con las mejores propiedades de lujo en la Riviera Maya, creando riqueza y legado generacional.",
@@ -13814,7 +13816,7 @@ export default function App() {
                 {metaTab === "acciones" && (
                   <div>
                     {/* Header */}
-                    <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:18 }}>
+                    <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:14 }}>
                       <div>
                         <h3 style={{ margin:0, fontSize:15, fontWeight:700, fontFamily:fontDisp, letterSpacing:"-0.03em", color:T.txt }}>Acciones del Equipo</h3>
                         <p style={{ margin:"3px 0 0", fontSize:11, color:T.txt3, fontFamily:font }}>
@@ -13822,18 +13824,51 @@ export default function App() {
                           <span style={{ marginLeft:8, opacity:0.45, fontSize:10 }}>· Arrastra para reordenar</span>
                         </p>
                       </div>
+                    </div>
+
+                    {/* Quick-add bar */}
+                    <div style={{ display:"flex", gap:8, marginBottom:18 }}>
+                      <input
+                        value={metaNewText}
+                        onChange={e => setMetaNewText(e.target.value)}
+                        onKeyDown={e => {
+                          if (e.key === "Enter" && metaNewText.trim()) {
+                            setMetaActions(p => [{ id:Date.now(), text:metaNewText.trim(), lead:"General", asesor:"Equipo", date:"Hoy", done:false, priority:"normal", assignee:"", assigneeType:"human" }, ...p]);
+                            setMetaNewText("");
+                          }
+                        }}
+                        placeholder="Escribe una acción y presiona Enter…"
+                        style={{
+                          flex:1, padding:"9px 14px", borderRadius:10,
+                          background: isLight?"rgba(255,255,255,0.90)":"rgba(255,255,255,0.05)",
+                          border:`1.5px solid ${metaNewText ? T.accent : T.border}`,
+                          color:T.txt, fontSize:12.5, fontFamily:font, outline:"none",
+                          transition:"border 0.15s",
+                        }}
+                      />
                       <button
-                        onClick={() => setMetaActions(p => [...p, { id: Date.now(), text:"Nueva acción", lead:"General", asesor:"Equipo", date:"Esta semana", done:false, priority:"normal", assignee:"", assigneeType:"human" }])}
-                        style={{ display:"flex", alignItems:"center", gap:6, padding:"8px 15px", borderRadius:9, background:`${T.accent}12`, border:`1px solid ${T.accent}25`, color: isLight?"#082818":T.accent, fontSize:12, fontWeight:600, fontFamily:font, cursor:"pointer" }}>
-                        <Plus size={13} strokeWidth={2.5} /> Nueva acción
+                        onClick={() => {
+                          const txt = metaNewText.trim() || "Nueva acción";
+                          setMetaActions(p => [{ id:Date.now(), text:txt, lead:"General", asesor:"Equipo", date:"Hoy", done:false, priority:"normal", assignee:"", assigneeType:"human" }, ...p]);
+                          setMetaNewText("");
+                        }}
+                        style={{ display:"flex", alignItems:"center", gap:6, padding:"9px 16px", borderRadius:10, background:T.accent, border:"none", color:"#041016", fontSize:12, fontWeight:700, fontFamily:font, cursor:"pointer", flexShrink:0, letterSpacing:"-0.01em" }}>
+                        <Plus size={13} strokeWidth={2.5} /> Agregar
                       </button>
                     </div>
 
-                    {/* Flat drag-and-drop list — tasks stay in place when checked */}
-                    {metaActions.map(a => {
-                      const isUrgent = !a.done && (a.priority==="urgente" || a.date?.toLowerCase().includes("hoy"));
-                      const isHigh   = !a.done && !isUrgent && (a.priority==="alto" || a.date?.toLowerCase().includes("mañana") || a.date?.toLowerCase().includes("semana"));
-                      const prioColor = a.done ? T.accent : isUrgent ? "#EF4444" : isHigh ? "#F59E0B" : T.txt3;
+                    {/* Pending tasks */}
+                    {metaActions.filter(a=>!a.done).length === 0 && (
+                      <div style={{ textAlign:"center", padding:"30px 0 20px", color:T.txt3, fontSize:12, fontFamily:font, opacity:0.5 }}>
+                        Sin acciones pendientes · Agrega la primera arriba
+                      </div>
+                    )}
+                    {metaActions.filter(a=>!a.done).map(a => {
+                      const isUrgent = a.priority==="urgente" || a.date?.toLowerCase().includes("hoy");
+                      const isHigh   = !isUrgent && (a.priority==="alto" || a.date?.toLowerCase().includes("mañana") || a.date?.toLowerCase().includes("semana"));
+                      const prioColor = isUrgent ? "#EF4444" : isHigh ? "#F59E0B" : T.txt3;
+                      const prioNext = a.priority==="normal" ? "alto" : a.priority==="alto" ? "urgente" : "normal";
+                      const prioLabel = a.priority==="urgente" ? "🔴 Urgente" : a.priority==="alto" ? "🟡 Alto" : "Normal";
                       return (
                         <div
                           key={a.id}
@@ -13859,16 +13894,11 @@ export default function App() {
                           style={{
                             display:"flex", alignItems:"flex-start", gap:8,
                             padding:"10px 12px", borderRadius:10, marginBottom:5,
-                            background: a.done
-                              ? (isLight?"rgba(52,211,153,0.04)":"rgba(52,211,153,0.03)")
-                              : isUrgent
-                                ? (isLight?"rgba(239,68,68,0.03)":"rgba(239,68,68,0.04)")
-                                : (isLight?"#FFFFFF":"rgba(255,255,255,0.03)"),
-                            border:`1px solid ${a.done
-                              ? (isLight?"rgba(52,211,153,0.18)":"rgba(52,211,153,0.10)")
-                              : isUrgent ? "rgba(239,68,68,0.18)" : T.border}`,
+                            background: isUrgent
+                              ? (isLight?"rgba(239,68,68,0.03)":"rgba(239,68,68,0.04)")
+                              : (isLight?"#FFFFFF":"rgba(255,255,255,0.03)"),
+                            border:`1px solid ${isUrgent ? "rgba(239,68,68,0.18)" : T.border}`,
                             transition:"background 0.15s, border 0.15s",
-                            opacity: a.done ? 0.65 : 1,
                           }}
                         >
                           {/* Drag handle */}
@@ -13876,26 +13906,31 @@ export default function App() {
 
                           {/* Checkbox */}
                           <button
-                            onClick={() => setMetaActions(p => p.map(x => x.id===a.id ? {...x,done:!x.done} : x))}
-                            style={{ width:18, height:18, borderRadius:5, border:`1.5px solid ${a.done?T.accent:T.border}`, background:a.done?T.accent:"transparent", cursor:"pointer", flexShrink:0, marginTop:2, display:"flex", alignItems:"center", justifyContent:"center", transition:"all 0.15s" }}>
-                            {a.done && <Check size={10} strokeWidth={3} color="#041016" />}
-                          </button>
+                            onClick={() => setMetaActions(p => p.map(x => x.id===a.id ? {...x,done:true} : x))}
+                            style={{ width:18, height:18, borderRadius:5, border:`1.5px solid ${T.border}`, background:"transparent", cursor:"pointer", flexShrink:0, marginTop:2, display:"flex", alignItems:"center", justifyContent:"center", transition:"all 0.15s" }}
+                          />
 
                           {/* Content */}
                           <div style={{ flex:1, minWidth:0 }}>
                             <E
                               val={a.text}
                               onSave={v => setMetaActions(p => p.map(x => x.id===a.id ? {...x,text:v} : x))}
-                              style={{ fontSize:12.5, fontWeight:500, color:a.done?T.txt3:T.txt, fontFamily:font, textDecoration:a.done?"line-through":"none", lineHeight:1.4, marginBottom:3 }}
+                              style={{ fontSize:12.5, fontWeight:500, color:T.txt, fontFamily:font, lineHeight:1.4, marginBottom:4 }}
                             />
-                            <div style={{ display:"flex", alignItems:"center", gap:6, marginBottom:5 }}>
+                            <div style={{ display:"flex", alignItems:"center", gap:6, marginBottom:6, flexWrap:"wrap" }}>
                               <E val={a.lead}   onSave={v => setMetaActions(p => p.map(x => x.id===a.id?{...x,lead:v}:x))}   style={{ fontSize:10.5, color:T.txt3, fontFamily:font }} />
                               <span style={{ fontSize:8.5, color:T.txt3, opacity:0.4 }}>·</span>
                               <E val={a.asesor} onSave={v => setMetaActions(p => p.map(x => x.id===a.id?{...x,asesor:v}:x))} style={{ fontSize:10.5, color:T.txt3, fontFamily:font }} />
+                              {/* Priority cycle pill */}
+                              <button
+                                onClick={() => setMetaActions(p => p.map(x => x.id===a.id?{...x,priority:prioNext}:x))}
+                                title="Click para cambiar prioridad"
+                                style={{ fontSize:9, fontWeight:600, fontFamily:font, color:prioColor, background:`${prioColor}12`, border:`1px solid ${prioColor}25`, borderRadius:99, padding:"1px 7px", cursor:"pointer", letterSpacing:"0.01em" }}>
+                                {prioLabel}
+                              </button>
                             </div>
                             {/* Assignee row */}
                             <div style={{ display:"flex", alignItems:"center", gap:5 }}>
-                              {/* Human team assignee selector */}
                               <select
                                 value={a.assignee || ""}
                                 onChange={e => setMetaActions(p => p.map(x => x.id===a.id ? {...x, assignee:e.target.value, assigneeType:"human"} : x))}
@@ -13905,7 +13940,7 @@ export default function App() {
                                   background: isLight ? "rgba(15,23,42,0.04)" : "rgba(255,255,255,0.05)",
                                   border:`1px solid ${a.assignee ? T.accentB : T.border}`,
                                   borderRadius:6, padding:"2px 6px",
-                                  cursor:"pointer", outline:"none", maxWidth:130,
+                                  cursor:"pointer", outline:"none", maxWidth:140,
                                 }}
                               >
                                 <option value="">＋ Responsable</option>
@@ -13915,7 +13950,6 @@ export default function App() {
                                   ))}
                                 </optgroup>
                               </select>
-                              {/* iAgent button — disabled, próximamente */}
                               <button
                                 disabled
                                 title="Próximamente — Asignación directa a iAgents IA"
@@ -13925,7 +13959,7 @@ export default function App() {
                                   border:`1px solid ${T.blue}28`,
                                   background:`${T.blue}07`,
                                   color:T.blue, fontSize:9, fontFamily:font, fontWeight:600,
-                                  cursor:"not-allowed", opacity:0.38, letterSpacing:"0.01em",
+                                  cursor:"not-allowed", opacity:0.38,
                                 }}
                               >
                                 <Atom size={9} />iAgent IA
@@ -13933,33 +13967,57 @@ export default function App() {
                             </div>
                           </div>
 
-                          {/* Date + action buttons */}
-                          <div style={{ display:"flex", flexDirection:"column", alignItems:"flex-end", gap:4, flexShrink:0 }}>
+                          {/* Date + delete */}
+                          <div style={{ display:"flex", flexDirection:"column", alignItems:"flex-end", gap:5, flexShrink:0 }}>
                             <E
                               val={a.date || "—"}
                               onSave={v => setMetaActions(p => p.map(x => x.id===a.id?{...x,date:v}:x))}
-                              style={{ fontSize:10, fontWeight:600, fontFamily:fontDisp, color:prioColor, background:`${prioColor}15`, border:`1px solid ${prioColor}28`, padding:"2px 8px", borderRadius:99, whiteSpace:"nowrap", cursor:"text" }}
+                              style={{ fontSize:10, fontWeight:600, fontFamily:fontDisp, color:prioColor, background:`${prioColor}13`, border:`1px solid ${prioColor}25`, padding:"2px 9px", borderRadius:99, whiteSpace:"nowrap", cursor:"text" }}
                             />
-                            <div style={{ display:"flex", gap:2 }}>
-                              {a.done && (
-                                <button
-                                  onClick={() => setMetaActions(p => { const arr=p.filter(x=>x.id!==a.id); return [...arr, a]; })}
-                                  title="Enviar al fondo"
-                                  style={{ background:"none", border:"none", cursor:"pointer", padding:2, opacity:0.35, display:"flex", alignItems:"center" }}>
-                                  <ChevronsDown size={11} color={T.txt3} />
-                                </button>
-                              )}
-                              <button onClick={() => setMetaActions(p => p.filter(x => x.id!==a.id))} style={{ background:"none", border:"none", cursor:"pointer", padding:2, opacity:0.28, display:"flex", alignItems:"center" }}>
-                                <Minus size={11} color={T.txt3} />
-                              </button>
-                            </div>
+                            <button onClick={() => setMetaActions(p => p.filter(x => x.id!==a.id))} style={{ background:"none", border:"none", cursor:"pointer", padding:2, opacity:0.25, display:"flex", alignItems:"center" }}>
+                              <Minus size={11} color={T.txt3} />
+                            </button>
                           </div>
                         </div>
                       );
                     })}
-                    {metaActions.length === 0 && (
-                      <div style={{ textAlign:"center", padding:"40px 0", color:T.txt3, fontSize:12, fontFamily:font, opacity:0.5 }}>
-                        Sin acciones pendientes · Agrega la primera
+
+                    {/* Completed tasks — collapsible */}
+                    {metaActions.filter(a=>a.done).length > 0 && (
+                      <div style={{ marginTop:14 }}>
+                        <button
+                          onClick={() => setDoneCollapsed(x => !x)}
+                          style={{ display:"flex", alignItems:"center", gap:7, background:"none", border:"none", cursor:"pointer", padding:"6px 0", width:"100%" }}>
+                          <div style={{ flex:1, height:1, background:T.border }} />
+                          <span style={{ fontSize:10.5, fontWeight:600, color:T.txt3, fontFamily:font, whiteSpace:"nowrap", display:"flex", alignItems:"center", gap:5 }}>
+                            <Check size={11} color={T.accent} />
+                            {metaActions.filter(a=>a.done).length} completadas
+                            <span style={{ fontSize:9, opacity:0.6 }}>{doneCollapsed ? "▸ ver" : "▾ ocultar"}</span>
+                          </span>
+                          <div style={{ flex:1, height:1, background:T.border }} />
+                        </button>
+                        {!doneCollapsed && metaActions.filter(a=>a.done).map(a => (
+                          <div key={a.id} style={{
+                            display:"flex", alignItems:"flex-start", gap:8,
+                            padding:"8px 12px", borderRadius:10, marginBottom:4,
+                            background: isLight?"rgba(52,211,153,0.03)":"rgba(52,211,153,0.025)",
+                            border:`1px solid ${T.accent}14`,
+                            opacity:0.60,
+                          }}>
+                            <button
+                              onClick={() => setMetaActions(p => p.map(x => x.id===a.id ? {...x,done:false} : x))}
+                              style={{ width:17, height:17, borderRadius:5, border:`1.5px solid ${T.accent}`, background:T.accent, cursor:"pointer", flexShrink:0, marginTop:2, display:"flex", alignItems:"center", justifyContent:"center" }}>
+                              <Check size={9} strokeWidth={3} color="#041016" />
+                            </button>
+                            <div style={{ flex:1, minWidth:0 }}>
+                              <span style={{ fontSize:12, color:T.txt3, fontFamily:font, textDecoration:"line-through", lineHeight:1.4 }}>{a.text}</span>
+                              <p style={{ margin:"2px 0 0", fontSize:10, color:T.txt3, fontFamily:font, opacity:0.7 }}>{a.lead} · {a.asesor}</p>
+                            </div>
+                            <button onClick={() => setMetaActions(p => p.filter(x => x.id!==a.id))} style={{ background:"none", border:"none", cursor:"pointer", padding:2, opacity:0.25 }}>
+                              <Minus size={11} color={T.txt3} />
+                            </button>
+                          </div>
+                        ))}
                       </div>
                     )}
                   </div>
