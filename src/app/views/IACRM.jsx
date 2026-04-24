@@ -154,7 +154,16 @@ const AgentToggle = ({ active, onChange, T, isLight }) => (
 /* ─── VISTA PRINCIPAL ─── */
 const IACRM = ({ oc, theme = "dark" }) => {
   const isLight = theme === "light";
-  const T = isLight ? LP : P;
+  const T = isLight ? {
+    ...LP,
+    txt:     "#0A0A0A",
+    txt2:    "#1C1C1C",
+    txt3:    "#555E6C",
+    glass:   "rgba(255,255,255,0.97)",
+    glassH:  "rgba(255,255,255,1)",
+    border:  "rgba(0,0,0,0.09)",
+    borderH: "rgba(0,0,0,0.16)",
+  } : P;
 
   const [tab, setTab]                     = useState("agentes");
   const [expandedAgent, setExpandedAgent] = useState("calificador");
@@ -324,7 +333,7 @@ const IACRM = ({ oc, theme = "dark" }) => {
               <div key={agent.key} style={{
                 borderRadius: 16,
                 background: isLight
-                  ? (expanded ? "rgba(255,255,255,0.96)" : "rgba(255,255,255,0.80)")
+                  ? "#FFFFFF"
                   : (expanded ? "rgba(6,10,17,0.98)" : T.glass),
                 border: `1px solid ${expanded ? c + (isLight ? "40" : "38") : T.border}`,
                 overflow: "hidden", transition: "all 0.22s",
@@ -424,7 +433,7 @@ const IACRM = ({ oc, theme = "dark" }) => {
                       <p style={{ margin: "0 0 10px", fontSize: 9.5, fontWeight: 700, color: T.txt3, textTransform: "uppercase", letterSpacing: "0.08em", fontFamily: fontDisp }}>Últimas conversaciones</p>
                       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                         {agent.lastActions.map((a, i) => (
-                          <div key={i} style={{ padding: "11px 13px", borderRadius: 12, background: isLight ? "rgba(255,255,255,0.80)" : "rgba(255,255,255,0.025)", border: `1px solid ${T.border}`, boxShadow: isLight ? T.shadow1 : "none" }}>
+                          <div key={i} style={{ padding: "11px 13px", borderRadius: 12, background: isLight ? "#F7F9FC" : "rgba(255,255,255,0.025)", border: `1px solid ${T.border}`, boxShadow: isLight ? T.shadow1 : "none" }}>
                             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 7 }}>
                               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                                 <div style={{ width: 28, height: 28, borderRadius: 9, background: isLight ? `${c}14` : `${c}14`, border: `1px solid ${c}${isLight ? "30" : "26"}`, display: "flex", alignItems: "center", justifyContent: "center" }}>
