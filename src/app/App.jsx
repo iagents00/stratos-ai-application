@@ -608,103 +608,152 @@ const DynIsland = ({ onExpand, notifications = [], theme = "dark" }) => {
 
   return (
     <>
-      {/* ─── PILL — Centro de Inteligencia — Liquid Glass ────────────────
-          Minimalista: una sola fuente de color (el átomo en tema claro).
-          Dark: vidrio neutral sin ningún tinte de color — solo blanco y negro.
-          Light: átomo verde accent, vidrio blanco, specular sutil.
-          Sin punto de notificación — el átomo girando ya indica "sistema vivo".
+      {/* ─── PILL — Centro de Inteligencia — Liquid Glass Aurora ───────────
+          Tres capas de movimiento simultáneo:
+          1. Aurora primaria: blob mint que flota de izq→der (auroraShift)
+          2. Aurora secundaria: blob teal contramovimiento (auroraShift2)
+          3. Shimmer sweep: rayo de luz diagonal periódico (pillShimmer)
+          + Specular top highlight + border glow pulse en dark mode
           ──────────────────────────────────────────────────────────────── */}
       <div
         title="Centro de Inteligencia"
         onClick={() => { if (!expanded) { onExpand?.(); } }}
         style={{
           position: "relative",
-          height: 34, width: 220, borderRadius: 50,
+          height: 36, width: 226, borderRadius: 50,
 
           background: isLight
-            ? "rgba(255,255,255,0.88)"
-            : "rgba(0,0,0,0.90)",
+            ? "linear-gradient(145deg, rgba(255,255,255,0.92) 0%, rgba(236,251,246,0.88) 100%)"
+            : "linear-gradient(145deg, rgba(8,16,26,0.82) 0%, rgba(4,10,18,0.88) 100%)",
 
-          backdropFilter: "blur(24px) saturate(140%)",
-          WebkitBackdropFilter: "blur(24px) saturate(140%)",
+          backdropFilter: "blur(28px) saturate(160%)",
+          WebkitBackdropFilter: "blur(28px) saturate(160%)",
 
           border: isLight
-            ? "1px solid rgba(255,255,255,0.85)"
-            : "1px solid rgba(255,255,255,0.08)",
+            ? "1px solid rgba(255,255,255,0.92)"
+            : "1px solid rgba(110,231,194,0.16)",
 
           boxShadow: isLight
-            ? "0 4px 18px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.05)"
-            : "0 8px 32px rgba(0,0,0,0.72), 0 2px 6px rgba(0,0,0,0.45)",
+            ? "inset 0 1px 0 rgba(255,255,255,1.0), 0 0 0 1px rgba(13,154,118,0.06), 0 4px 20px rgba(0,0,0,0.07), 0 1px 3px rgba(0,0,0,0.04)"
+            : "inset 0 1px 0 rgba(255,255,255,0.10), inset 0 -1px 0 rgba(0,0,0,0.28), 0 0 0 1px rgba(110,231,194,0.08), 0 0 18px rgba(110,231,194,0.10), 0 8px 32px rgba(0,0,0,0.58), 0 2px 6px rgba(0,0,0,0.40)",
 
           display: expanded ? "none" : "flex",
           alignItems: "center", justifyContent: "center",
-          padding: "0 14px", gap: 0, overflow: "hidden",
+          padding: "0 16px", gap: 0, overflow: "hidden",
           cursor: "pointer",
           transition: "transform 0.24s cubic-bezier(0.34,1.56,0.64,1), border-color 0.22s ease, box-shadow 0.22s ease",
         }}
         onMouseEnter={e => {
-          e.currentTarget.style.transform = "scale(1.026)";
-          e.currentTarget.style.borderColor = isLight ? "rgba(255,255,255,0.96)" : "rgba(255,255,255,0.18)";
+          e.currentTarget.style.transform = "scale(1.028)";
+          e.currentTarget.style.borderColor = isLight ? "rgba(255,255,255,1.0)" : "rgba(110,231,194,0.32)";
           e.currentTarget.style.boxShadow = isLight
-            ? "inset 0 1px 0 rgba(255,255,255,1.0), 0 6px 24px rgba(0,0,0,0.12), 0 2px 5px rgba(0,0,0,0.08)"
-            : "inset 0 1px 0 rgba(255,255,255,0.18), inset 0 -1px 0 rgba(0,0,0,0.22), 0 10px 36px rgba(0,0,0,0.65), 0 3px 9px rgba(0,0,0,0.46)";
+            ? "inset 0 1px 0 rgba(255,255,255,1.0), 0 0 0 1px rgba(13,154,118,0.10), 0 6px 26px rgba(0,0,0,0.10), 0 2px 5px rgba(0,0,0,0.06)"
+            : "inset 0 1px 0 rgba(255,255,255,0.16), inset 0 -1px 0 rgba(0,0,0,0.30), 0 0 0 1px rgba(110,231,194,0.18), 0 0 28px rgba(110,231,194,0.18), 0 10px 38px rgba(0,0,0,0.65), 0 3px 9px rgba(0,0,0,0.45)";
         }}
         onMouseLeave={e => {
           e.currentTarget.style.transform = "scale(1)";
-          e.currentTarget.style.borderColor = isLight ? "rgba(255,255,255,0.90)" : "rgba(255,255,255,0.10)";
+          e.currentTarget.style.borderColor = isLight ? "rgba(255,255,255,0.92)" : "rgba(110,231,194,0.16)";
           e.currentTarget.style.boxShadow = isLight
-            ? "inset 0 1px 0 rgba(255,255,255,1.0), 0 4px 18px rgba(0,0,0,0.09), 0 1px 3px rgba(0,0,0,0.07)"
-            : "inset 0 1px 0 rgba(255,255,255,0.12), inset 0 -1px 0 rgba(0,0,0,0.18), 0 6px 28px rgba(0,0,0,0.55), 0 2px 6px rgba(0,0,0,0.38)";
+            ? "inset 0 1px 0 rgba(255,255,255,1.0), 0 0 0 1px rgba(13,154,118,0.06), 0 4px 20px rgba(0,0,0,0.07), 0 1px 3px rgba(0,0,0,0.04)"
+            : "inset 0 1px 0 rgba(255,255,255,0.10), inset 0 -1px 0 rgba(0,0,0,0.28), 0 0 0 1px rgba(110,231,194,0.08), 0 0 18px rgba(110,231,194,0.10), 0 8px 32px rgba(0,0,0,0.58), 0 2px 6px rgba(0,0,0,0.40)";
         }}
         onMouseDown={e => {
-          e.currentTarget.style.transform = "scale(0.96)";
+          e.currentTarget.style.transform = "scale(0.965)";
           e.currentTarget.style.transition = "transform 0.10s ease";
         }}
         onMouseUp={e => {
           e.currentTarget.style.transition = "transform 0.24s cubic-bezier(0.34,1.56,0.64,1), border-color 0.22s ease, box-shadow 0.22s ease";
-          e.currentTarget.style.transform = "scale(1.026)";
+          e.currentTarget.style.transform = "scale(1.028)";
         }}
       >
-        {/* ── Specular arc — glass rim catching light (solo en light) ── */}
-        {isLight && (
-          <div style={{
-            position: "absolute", top: 0, left: "10%", right: "10%", height: "50%",
-            background: "radial-gradient(ellipse at 50% -10%, rgba(255,255,255,0.90) 0%, rgba(255,255,255,0.45) 40%, transparent 70%)",
-            borderRadius: "50% 50% 0 0 / 80% 80% 0 0",
-            pointerEvents: "none",
-          }} />
-        )}
+        {/* ── Aurora primaria — blob mint flotante ── */}
+        <div style={{
+          position: "absolute",
+          width: "55%", height: "180%",
+          left: "5%", top: "-40%",
+          background: isLight
+            ? "radial-gradient(ellipse, rgba(13,154,118,0.13) 0%, transparent 68%)"
+            : "radial-gradient(ellipse, rgba(110,231,194,0.20) 0%, transparent 68%)",
+          animation: "auroraShift 9s ease-in-out infinite",
+          pointerEvents: "none",
+          filter: "blur(6px)",
+        }} />
 
-        {/* ── Shimmer — periodic light beam (color-neutral) ── */}
+        {/* ── Aurora secundaria — blob teal contramovimiento ── */}
+        <div style={{
+          position: "absolute",
+          width: "45%", height: "160%",
+          right: "8%", top: "-30%",
+          background: isLight
+            ? "radial-gradient(ellipse, rgba(52,211,153,0.09) 0%, transparent 65%)"
+            : "radial-gradient(ellipse, rgba(94,234,212,0.14) 0%, transparent 65%)",
+          animation: "auroraShift2 12s ease-in-out infinite",
+          pointerEvents: "none",
+          filter: "blur(8px)",
+        }} />
+
+        {/* ── Specular arc — borde superior que capta la luz ── */}
+        <div style={{
+          position: "absolute", top: 0, left: "8%", right: "8%", height: "55%",
+          background: isLight
+            ? "radial-gradient(ellipse at 50% -8%, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.50) 38%, transparent 68%)"
+            : "radial-gradient(ellipse at 50% -8%, rgba(255,255,255,0.16) 0%, rgba(255,255,255,0.06) 42%, transparent 70%)",
+          borderRadius: "50% 50% 0 0 / 80% 80% 0 0",
+          pointerEvents: "none",
+        }} />
+
+        {/* ── Shimmer sweep — rayo de luz diagonal periódico ── */}
         <div style={{
           position: "absolute", inset: 0,
           background: isLight
-            ? "linear-gradient(108deg, transparent 30%, rgba(255,255,255,0.55) 50%, transparent 70%)"
-            : "linear-gradient(108deg, transparent 30%, rgba(255,255,255,0.10) 50%, transparent 70%)",
-          animation: "pillShimmer 7s cubic-bezier(0.4,0,0.6,1) 2.5s infinite",
+            ? "linear-gradient(112deg, transparent 25%, rgba(255,255,255,0.70) 48%, transparent 68%)"
+            : "linear-gradient(112deg, transparent 25%, rgba(255,255,255,0.14) 48%, transparent 68%)",
+          animation: "pillShimmer 6s cubic-bezier(0.4,0,0.6,1) 1.8s infinite",
           pointerEvents: "none", borderRadius: "inherit",
         }} />
+
+        {/* ── Borde glow pulse — solo dark ── */}
+        {!isLight && (
+          <div style={{
+            position: "absolute", inset: -1, borderRadius: "inherit",
+            border: "1px solid rgba(110,231,194,0.22)",
+            animation: "borderGlowPulse 3.5s ease-in-out infinite",
+            pointerEvents: "none",
+          }} />
+        )}
 
         {/* ── Content ── */}
         <div style={{
           position: "relative", zIndex: 2,
           display: "flex", alignItems: "center",
-          justifyContent: "center", gap: 6, width: "100%",
+          justifyContent: "center", gap: 7, width: "100%",
         }}>
-          {/* Live green pulse dot */}
-          <div style={{
-            width: 5, height: 5, borderRadius: "50%", flexShrink: 0,
-            background: "#34D399",
-            boxShadow: "0 0 6px rgba(52,211,153,0.90), 0 0 12px rgba(52,211,153,0.40)",
-            animation: "pulse 2.4s ease-in-out infinite",
-          }} />
+          {/* Live dot — doble anillo en dark */}
+          <div style={{ position: "relative", width: 6, height: 6, flexShrink: 0 }}>
+            {!isLight && (
+              <div style={{
+                position: "absolute", inset: -3, borderRadius: "50%",
+                background: "rgba(52,211,153,0.18)",
+                animation: "pulse 2.4s ease-in-out infinite",
+              }} />
+            )}
+            <div style={{
+              width: 6, height: 6, borderRadius: "50%",
+              background: isLight ? "#059669" : "#34D399",
+              boxShadow: isLight
+                ? "0 0 5px rgba(5,150,105,0.70), 0 0 10px rgba(5,150,105,0.30)"
+                : "0 0 7px rgba(52,211,153,1.0), 0 0 14px rgba(52,211,153,0.50), 0 0 24px rgba(52,211,153,0.20)",
+              animation: "pulse 2.4s ease-in-out infinite",
+            }} />
+          </div>
 
           <span style={{
             fontSize: 12.5,
-            color: isLight ? "#0A6448" : "rgba(255,255,255,0.88)",
-            fontWeight: 500,
-            letterSpacing: "-0.022em",
+            color: isLight ? "#0A6448" : "rgba(255,255,255,0.90)",
+            fontWeight: 560,
+            letterSpacing: "-0.024em",
             fontFamily: fontDisp,
+            textShadow: isLight ? "none" : "0 0 12px rgba(110,231,194,0.22)",
           }}>Centro de Inteligencia</span>
         </div>
       </div>
