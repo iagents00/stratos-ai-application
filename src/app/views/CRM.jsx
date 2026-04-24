@@ -4512,19 +4512,22 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                 );
               })()}
 
-              {/* Proyecto */}
-              <div>
+              {/* Proyecto de interés — full width para dar espacio */}
+              <div style={{ gridColumn: "1 / -1" }}>
                 <label style={labelStyle}>
-                  <Building2 size={9} color={T.txt3} /> Proyecto
+                  <Building2 size={9} color={T.txt3} /> Proyecto de interés
                 </label>
                 <ClickDropdown
                   value={newLead.p || ""}
-                  onChange={(v) => setNewLead(p => ({...p, p: v}))}
+                  onChange={(v) => {
+                    setNewLead(p => ({...p, p: v}));
+                    if (v && !proyectosMaster.includes(v)) setCustomProyectos(prev => [...prev, v]);
+                  }}
                   options={proyectosMaster}
-                  placeholder="Seleccionar proyecto…"
+                  placeholder="Gobernador 28, Portofino, Torre Esmeralda, Monarca 28…"
                   label="proyecto"
                   icon={Building2}
-                  createLabel="Nuevo proyecto"
+                  createLabel="Registrar nuevo proyecto"
                   T={T} isLight={isLight}
                 />
               </div>
@@ -4532,11 +4535,14 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
               {/* Campaña */}
               <div>
                 <label style={labelStyle}>
-                  <Signal size={9} color={T.txt3} /> Campaña FB
+                  <Signal size={9} color={T.txt3} /> Campaña / Fuente
                 </label>
                 <ClickDropdown
                   value={newLead.campana || ""}
-                  onChange={(v) => setNewLead(p => ({...p, campana: v}))}
+                  onChange={(v) => {
+                    setNewLead(p => ({...p, campana: v}));
+                    if (v && !campanasMaster.includes(v) && !FB_CAMPAIGNS_BASE.includes(v)) setCustomCampanas(prev => [...prev, v]);
+                  }}
                   options={campanasMaster}
                   placeholder="Seleccionar campaña…"
                   label="campaña"
