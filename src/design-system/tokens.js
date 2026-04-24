@@ -86,6 +86,28 @@ export const PL = {
   r: 14,
 };
 
+// ─── PALETA — LIGHT MODE (modo blanco premium de la plataforma) ──────────────
+export const LP = {
+  bg: "#EDF3F0", bgSoft: "#F6FAF8", bgCool: "#EAF0EE",
+  glass: "rgba(255,255,255,0.70)", glassH: "rgba(255,255,255,0.92)",
+  glassStrong: "rgba(255,255,255,0.96)",
+  glassMint: "rgba(236,251,246,0.75)",
+  border: "rgba(15,23,42,0.08)", borderH: "rgba(15,23,42,0.16)",
+  borderMint: "rgba(15,158,122,0.18)",
+  surface: "#FFFFFF",
+  accent: "#0D9A76", accentDark: "#067A5E",
+  accentS: "rgba(13,154,118,0.08)", accentB: "rgba(13,154,118,0.28)",
+  accentG: "linear-gradient(135deg, #0D9A76 0%, #14B892 50%, #34D4AA 100%)",
+  blue: "#2563EB", violet: "#7C3AED", amber: "#D97706",
+  rose: "#E11D48", emerald: "#059669", cyan: "#0891B2",
+  txt: "#0B1220", txt2: "#3B4A61", txt3: "#7A8699",
+  shadow1: "0 1px 2px rgba(15,23,42,0.05), 0 2px 4px rgba(15,23,42,0.04)",
+  shadow2: "0 1px 3px rgba(15,23,42,0.06), 0 8px 24px rgba(15,23,42,0.07), 0 16px 40px rgba(15,23,42,0.04)",
+  shadow3: "0 4px 12px rgba(15,23,42,0.08), 0 20px 56px rgba(15,23,42,0.10), 0 32px 80px rgba(15,23,42,0.06)",
+  shadowMint: "0 2px 8px rgba(13,154,118,0.10), 0 8px 28px rgba(13,154,118,0.08)",
+  r: 16, rs: 10, rx: 6,
+};
+
 // ─── TIPOGRAFÍAS ──────────────────────────────────────────────────────────────
 export const font     = `-apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif`;
 export const fontDisp = `-apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, Helvetica, Arial, sans-serif`;
