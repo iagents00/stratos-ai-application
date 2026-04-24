@@ -70,6 +70,62 @@ const formatBudget = (amount) => {
   return `$${n.toLocaleString("en-US")} USD`;
 };
 
+/* ─── IAOS Score Engine — calcula el score real de un lead basado en:
+   stage (0-35pts), presupuesto (0-25pts), seguimientos (0-15pts),
+   completitud BANT (0-15pts), inactividad (hasta -15pts), hot (+10pts).
+   Reemplaza el sc:40 estático — se recalcula en cada updateLead y al crear. ─── */
+const calculateLeadScore = (lead) => {
+  let score = 0;
+
+  // 1. Stage progression — 0 a 35 pts
+  const stages = ["Nuevo Registro","Primer Contacto","Seguimiento","Zoom Agendado",
+    "Zoom Concretado","Visita Agendada","Visita Concretada","Negociación","Cierre","Perdido"];
+  const stageIdx = stages.indexOf(lead.st ?? "Nuevo Registro");
+  // Excluir "Perdido" del score positivo
+  if (stageIdx >= 0 && lead.st !== "Perdido") {
+    score += Math.round((stageIdx / 8) * 35);
+  }
+
+  // 2. Presupuesto — 0 a 25 pts
+  const budget = lead.presupuesto || parseBudget(lead.budget) || 0;
+  if      (budget >= 2_000_000) score += 25;
+  else if (budget >= 1_000_000) score += 20;
+  else if (budget >= 500_000)   score += 15;
+  else if (budget >= 200_000)   score += 10;
+  else if (budget >= 50_000)    score += 5;
+  else if (budget > 0)          score += 2;
+
+  // 3. Seguimientos activos — 0 a 15 pts
+  const fu = lead.seguimientos || 0;
+  if      (fu >= 6) score += 15;
+  else if (fu >= 4) score += 11;
+  else if (fu >= 2) score += 7;
+  else if (fu >= 1) score += 4;
+
+  // 4. BANT completitud — 0 a 15 pts (3.75 pts por criterio)
+  let bant = 0;
+  if (budget > 0)                                                bant++; // Budget
+  if (lead.asesor && lead.asesor.trim())                         bant++; // Authority
+  if (lead.bio && lead.bio.length > 40)                         bant++; // Need
+  if (lead.nextActionDate && lead.nextActionDate !== "Por definir") bant++; // Timeline
+  score += Math.round(bant * 3.75);
+
+  // 5. Inactividad — penalización hasta -15 pts
+  const inactive = lead.daysInactive || 0;
+  if      (inactive >= 21) score -= 15;
+  else if (inactive >= 14) score -= 12;
+  else if (inactive >= 7)  score -= 8;
+  else if (inactive >= 4)  score -= 4;
+
+  // 6. HOT bonus — +10 pts
+  if (lead.hot) score += 10;
+
+  // "Perdido" — cap en 15
+  if (lead.st === "Perdido") score = Math.min(score, 15);
+
+  return Math.max(0, Math.min(100, Math.round(score)));
+};
+
 const StratosAtom = ({ size = 20, color = "#FFFFFF" }) => (
   <svg width={size} height={size} viewBox="0 0 32 32" fill="none">
     <circle cx="16" cy="16" r="13" stroke={color} strokeWidth="1.1" opacity="0.18" />
@@ -2403,60 +2459,109 @@ const AnalysisDrawer = ({ lead, onClose, oc, onUpdate, onSwitchTab, T = P }) => 
   const inactive = lead.daysInactive || 0;
   const hot = !!lead.hot;
 
-  // ── Próximas acciones recomendadas ──
+  // ── BANT completitud (Protocolo Duke del Caribe) ──
+  const bantBudget   = (lead.presupuesto || parseBudget(lead.budget)) > 0;
+  const bantAuthority = !!(lead.asesor?.trim());
+  const bantNeed     = !!(lead.bio && lead.bio.length > 40);
+  const bantTimeline = !!(lead.nextActionDate && lead.nextActionDate !== "Por definir");
+  const bantScore    = [bantBudget, bantAuthority, bantNeed, bantTimeline].filter(Boolean).length;
+  const bantPct      = Math.round((bantScore / 4) * 100);
+
+  // ── Próximas acciones — alineadas con Protocolo Duke del Caribe ──
   const nextActions = [];
+
+  // HOT lead — máxima prioridad, primer aviso
+  if (hot) {
+    nextActions.push({
+      priority: "HOT", color: "#34D399", icon: Zap,
+      title: "Lead caliente — actuar en las próximas horas",
+      detail: "Protocolo Duke: lead con señales de compra activa. Contacto directo del director o asesor senior, NO delegar. Proponer visita o reserva simbólica hoy.",
+      eta: "Hoy · inmediato",
+    });
+  }
+
+  // SLA primer contacto — ≤ 5 min (Protocolo Duke del Caribe)
+  if (lead.st === "Nuevo Registro" || lead.isNew) {
+    nextActions.push({
+      priority: "SLA", color: T.accent, icon: Timer,
+      title: "Primer contacto — regla de los 5 minutos",
+      detail: "Protocolo Duke del Caribe: contactar dentro de 5 minutos de registro aumenta 9× la probabilidad de calificación exitosa. Usa WhatsApp + llamada si no responde.",
+      eta: "< 5 min",
+    });
+  }
+
+  // Inactividad crítica (> 7 días)
   if (inactive >= 7) {
     nextActions.push({
       priority: "CRÍTICA", color: T.rose, icon: AlertCircle,
-      title: "Reactivación inmediata",
-      detail: `Lleva ${inactive} días sin contacto. Envía WhatsApp personalizado en las próximas 2 horas antes de enfriarse más.`,
+      title: `Reactivación urgente — ${inactive}d sin contacto`,
+      detail: `Protocolo Duke: a partir de 7 días sin contacto el lead enfría 60%. Mensaje personalizado de WhatsApp: usa un dato específico del cliente para reabrir (proyecto, fecha que mencionó, avance de obra).`,
       eta: "Hoy · 2h",
     });
   } else if (inactive >= 3) {
     nextActions.push({
       priority: "ALTA", color: T.amber, icon: Clock,
-      title: "Seguimiento de cortesía",
-      detail: `${inactive} días sin contacto. Mantén la conversación activa con un mensaje de valor (case study, update de obra).`,
+      title: `Seguimiento de valor — ${inactive}d sin contacto`,
+      detail: "Protocolo Duke — Fase Seguimiento: no contactes solo para 'dar seguimiento'. Lleva algo: update de precios, caso de éxito similar, disponibilidad de unidades. Que cada touchpoint aporte valor real.",
       eta: "Hoy",
     });
   }
+
+  // Zoom agendado — preparar briefing
   if (lead.st === "Zoom Agendado") {
     nextActions.push({
-      priority: "ALTA", color: T.accent, icon: CalendarDays,
-      title: "Preparar Zoom con briefing IA",
-      detail: "Genera dossier: historial, objeciones previstas, 3 proyectos alineados al presupuesto. Envía confirmación 24h y 1h antes.",
+      priority: "ALTA", color: T.blue, icon: CalendarDays,
+      title: "Preparar briefing de Zoom (Protocolo Duke)",
+      detail: "Genera dossier antes del Zoom: perfil del cliente, objeciones previstas, 2–3 proyectos alineados al presupuesto declarado. Confirma 24h y 1h antes por WhatsApp con el orden del día.",
       eta: "Antes del Zoom",
     });
   }
-  if (lead.st === "Propuesta Enviada") {
+
+  // Zoom concretado — propuesta en 24h (Protocolo Duke)
+  if (lead.st === "Zoom Concretado") {
     nextActions.push({
-      priority: "ALTA", color: T.accent, icon: FileText,
-      title: "Seguimiento a propuesta",
-      detail: "48h desde el envío es la ventana dorada. Llamada breve para resolver dudas + escasez controlada (últimas unidades).",
-      eta: "+48h",
+      priority: "ALTA", color: "#4ADE80", icon: FileText,
+      title: "Enviar propuesta en las próximas 24h",
+      detail: "Protocolo Duke — Post-Zoom: la propuesta debe llegar antes de 24 horas. Incluye: 3 opciones de proyecto (low-mid-premium), ROI proyectado a 5 años, carta de beneficios fiscales personalizada.",
+      eta: "< 24h",
     });
   }
-  if (sc >= 75 && lead.st !== "Cierre Concretado") {
+
+  // Negociación — cerrar condiciones
+  if (lead.st === "Negociación") {
     nextActions.push({
-      priority: "OPORTUNIDAD", color: T.accent, icon: Target,
-      title: "Movimiento de cierre",
-      detail: `Score ${sc} indica alta intención. Propón siguiente paso tangible: visita, reserva simbólica o carta de intención.`,
+      priority: "CIERRE", color: "#FB923C", icon: Trophy,
+      title: "Cerrar condiciones esta semana",
+      detail: "Protocolo Duke — Fase Cierre: define el triángulo decisión (precio · fecha de entrega · condiciones de pago). Propone una reserva simbólica reembolsable para anclar el compromiso.",
       eta: "Esta semana",
     });
   }
-  if (hot) {
+
+  // Score alto — oportunidad de mover etapa
+  if (sc >= 72 && !["Negociación","Cierre","Perdido"].includes(lead.st)) {
     nextActions.push({
-      priority: "HOT", color: T.accent, icon: Zap,
-      title: "Acelerar cierre",
-      detail: "Lead caliente detectado por IA. Prioriza agenda: contacto directo del director, no delegues.",
-      eta: "24h",
+      priority: "OPORTUNIDAD", color: T.violet, icon: Target,
+      title: `Score ${sc} — mover a la siguiente etapa`,
+      detail: `Señales de intención alta. Protocolo Duke: propón el siguiente paso tangible — visita presencial, video de obra, o reunión con el director de proyecto.`,
+      eta: "Esta semana",
     });
   }
+
+  // BANT incompleto — calificar
+  if (bantScore < 3 && !["Perdido","Nuevo Registro"].includes(lead.st)) {
+    nextActions.push({
+      priority: "CALIFICAR", color: T.cyan, icon: ListChecks,
+      title: `BANT incompleto — ${bantScore}/4 criterios`,
+      detail: `Protocolo Duke: BANT debe cubrirse en el primer contacto. Faltan: ${!bantBudget?"Presupuesto ":""} ${!bantAuthority?"Autoridad decisora ":""} ${!bantNeed?"Necesidad definida ":""} ${!bantTimeline?"Timeline de decisión":""}.`,
+      eta: "Próximo contacto",
+    });
+  }
+
   if (nextActions.length === 0) {
     nextActions.push({
       priority: "PRÓXIMA", color: T.accent, icon: MessageCircle,
       title: lead.nextAction || "Definir próximo touchpoint",
-      detail: `Etapa ${lead.st}. Mantén ritmo de contacto cada 3–4 días para evitar enfriamiento.`,
+      detail: `Etapa ${lead.st}. Protocolo Duke: contacto de valor cada 3–4 días máximo. No dejes enfriar — usa el agente de Seguimiento IA si el asesor está saturado.`,
       eta: lead.nextActionDate || "Por definir",
     });
   }
@@ -2644,6 +2749,35 @@ const AnalysisDrawer = ({ lead, onClose, oc, onUpdate, onSwitchTab, T = P }) => 
                 </div>
               );
             })()}
+          </section>
+
+          {/* ── 0.5 BANT — Protocolo Duke del Caribe (calificación estructurada) ── */}
+          <section>
+            <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 10 }}>
+              <ListChecks size={12} color={T.cyan} strokeWidth={2.5} />
+              <p style={{ margin: 0, fontSize: 10.5, fontWeight: 800, color: T.cyan, letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: fontDisp }}>Calificación BANT</p>
+              <span style={{ marginLeft: "auto", fontSize: 9, fontWeight: 700, color: bantScore >= 3 ? T.accent : T.amber, background: bantScore >= 3 ? `${T.accent}12` : `${T.amber}12`, border: `1px solid ${bantScore >= 3 ? T.accentB : `${T.amber}40`}`, padding: "2px 8px", borderRadius: 99 }}>{bantPct}% completo</span>
+            </div>
+            {/* Barra de progreso BANT */}
+            <div style={{ height: 4, borderRadius: 2, background: isLight ? "rgba(15,23,42,0.08)" : "rgba(255,255,255,0.06)", marginBottom: 10, overflow: "hidden" }}>
+              <div style={{ width: `${bantPct}%`, height: "100%", borderRadius: 2, background: bantScore >= 4 ? `linear-gradient(90deg, ${T.accent}, #34D399)` : bantScore >= 2 ? `linear-gradient(90deg, ${T.amber}, #FCD34D)` : T.rose, transition: "width 0.5s ease" }} />
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
+              {[
+                { key: "B", label: "Budget", sub: bantBudget ? (lead.budget || "Registrado") : "Sin declarar", ok: bantBudget },
+                { key: "A", label: "Authority", sub: bantAuthority ? lead.asesor : "Sin asesor asignado", ok: bantAuthority },
+                { key: "N", label: "Need", sub: bantNeed ? "Perfil documentado" : "Perfil incompleto", ok: bantNeed },
+                { key: "T", label: "Timeline", sub: bantTimeline ? (lead.nextActionDate || "Definido") : "Sin fecha de decisión", ok: bantTimeline },
+              ].map(b => (
+                <div key={b.key} style={{ padding: "8px 10px", borderRadius: 9, background: b.ok ? (isLight ? `${T.accent}08` : `${T.accent}06`) : (isLight ? "rgba(15,23,42,0.03)" : "rgba(255,255,255,0.03)"), border: `1px solid ${b.ok ? (isLight ? `${T.accent}44` : `${T.accent}22`) : T.border}`, display: "flex", gap: 8, alignItems: "flex-start" }}>
+                  <span style={{ width: 18, height: 18, borderRadius: 5, background: b.ok ? `${T.accent}1C` : "transparent", border: `1px solid ${b.ok ? T.accentB : T.border}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 9, fontWeight: 800, color: b.ok ? T.accent : T.txt3, fontFamily: fontDisp, flexShrink: 0 }}>{b.key}</span>
+                  <div style={{ minWidth: 0 }}>
+                    <p style={{ margin: 0, fontSize: 10, fontWeight: 700, color: b.ok ? (isLight ? T.accent : T.accent) : T.txt3, fontFamily: fontDisp }}>{b.label}</p>
+                    <p style={{ margin: 0, fontSize: 9.5, color: T.txt3, fontFamily: font, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{b.sub}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
           </section>
 
           {/* ── 1. Próximas acciones recomendadas ── */}
@@ -3012,10 +3146,11 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
   const visibleLeads = canSeeAll ? leadsData : leadsData.filter(l => l.asesor === user?.name);
 
   const updateLead = (updated) => {
-    setLeadsData(prev => prev.map(l => l.id === updated.id ? updated : l));
-    if (selectedLead?.id === updated.id) setSelectedLead(updated);
-    if (notesLead?.id === updated.id) setNotesLead(updated);
-    if (analyzingLead?.id === updated.id) setAnalyzingLead(updated);
+    const withScore = { ...updated, sc: calculateLeadScore(updated) };
+    setLeadsData(prev => prev.map(l => l.id === withScore.id ? withScore : l));
+    if (selectedLead?.id === withScore.id) setSelectedLead(withScore);
+    if (notesLead?.id === withScore.id) setNotesLead(withScore);
+    if (analyzingLead?.id === withScore.id) setAnalyzingLead(withScore);
   };
   const saveNotes = (newNotas) => { const u = {...notesLead, notas: newNotas}; updateLead(u); setNotesLead(u); };
 
@@ -3142,7 +3277,8 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
     const dateStr = `${now.getDate()} ${mos[now.getMonth()]}, ${h12}:${String(now.getMinutes()).padStart(2,"0")}${ampm}`;
     const parsedBudget = parseBudget(newLead.budget);
     const newEntry = {
-      id: Date.now(), ...newLead, sc: 40, st: newLead.st || "Nuevo Registro",
+      id: Date.now(), ...newLead, st: newLead.st || "Nuevo Registro",
+      sc: calculateLeadScore({ ...newLead, presupuesto: parsedBudget, st: newLead.st || "Nuevo Registro", daysInactive: 0, seguimientos: 0, hot: false }),
       tag: newLead.tag || newLead.st || "Nuevo Registro", hot: false, isNew: true, fechaIngreso: dateStr,
       bio: "Cliente recién registrado. Pendiente primer contacto.", risk: "Sin información suficiente aún.",
       friction: "Medio",
@@ -3838,6 +3974,14 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                           </div>
                         );
                       })()}
+
+                      {/* SLA badge — Protocolo Duke del Caribe: 5 min primer contacto */}
+                      {(l.st === "Nuevo Registro" || l.isNew) && (
+                        <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "5px 10px", borderRadius: 8, background: isLight ? "rgba(110,231,194,0.10)" : "rgba(110,231,194,0.07)", border: `1px solid ${isLight ? "rgba(110,231,194,0.45)" : "rgba(110,231,194,0.22)"}` }}>
+                          <Timer size={10} color={T.accent} strokeWidth={2.5} />
+                          <span style={{ fontSize: 9, fontWeight: 800, color: isLight ? "#067A5E" : T.accent, letterSpacing: "0.07em", textTransform: "uppercase", fontFamily: fontDisp }}>SLA · 5 min primer contacto</span>
+                        </div>
+                      )}
 
                       {/* Score row — label · bar · number */}
                       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
