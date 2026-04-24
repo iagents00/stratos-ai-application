@@ -3146,6 +3146,11 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
   const visibleLeads = canSeeAll ? leadsData : leadsData.filter(l => l.asesor === user?.name);
 
   const updateLead = (updated) => {
+    // Congela el orden visual actual antes de que el nuevo score pueda reordenar
+    if (prioritySort === "manual" && priorityOrder.length === 0) {
+      const snap = priorityLeadsRef.current.map(l => l.id);
+      if (snap.length > 0) setPriorityOrder(snap);
+    }
     const withScore = { ...updated, sc: calculateLeadScore(updated) };
     setLeadsData(prev => prev.map(l => l.id === withScore.id ? withScore : l));
     if (selectedLead?.id === withScore.id) setSelectedLead(withScore);
@@ -3368,12 +3373,12 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
           ? arr.sort((a, b) => {
               const ia = priorityOrder.indexOf(a.id);
               const ib = priorityOrder.indexOf(b.id);
-              if (ia === -1 && ib === -1) return b.sc - a.sc;
+              if (ia === -1 && ib === -1) return b.id - a.id;
               if (ia === -1) return 1;
               if (ib === -1) return -1;
               return ia - ib;
             })
-          : arr.sort((a, b) => (pinnedIds.has(b.id) ? 1 : 0) - (pinnedIds.has(a.id) ? 1 : 0) || b.sc - a.sc);
+          : arr.sort((a, b) => (pinnedIds.has(b.id) ? 1 : 0) - (pinnedIds.has(a.id) ? 1 : 0) || b.id - a.id);
     }
   })();
 
@@ -3975,13 +3980,6 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                         );
                       })()}
 
-                      {/* SLA badge — Protocolo Duke del Caribe: 5 min primer contacto */}
-                      {(l.st === "Nuevo Registro" || l.isNew) && (
-                        <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "5px 10px", borderRadius: 8, background: isLight ? "rgba(110,231,194,0.10)" : "rgba(110,231,194,0.07)", border: `1px solid ${isLight ? "rgba(110,231,194,0.45)" : "rgba(110,231,194,0.22)"}` }}>
-                          <Timer size={10} color={T.accent} strokeWidth={2.5} />
-                          <span style={{ fontSize: 9, fontWeight: 800, color: isLight ? "#067A5E" : T.accent, letterSpacing: "0.07em", textTransform: "uppercase", fontFamily: fontDisp }}>SLA · 5 min primer contacto</span>
-                        </div>
-                      )}
 
                       {/* Score row — label · bar · number */}
                       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
