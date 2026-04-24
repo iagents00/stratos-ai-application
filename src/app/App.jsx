@@ -759,11 +759,17 @@ const DynIsland = ({ onExpand, notifications = [], theme = "dark" }) => {
 
           <span style={{
             fontSize: 12.5,
-            color: isLight ? "#0A6448" : "#FFFFFF",
             fontWeight: 600,
             letterSpacing: "-0.028em",
             fontFamily: fontDisp,
-            textShadow: isLight ? "none" : "0 1px 8px rgba(0,0,0,0.40), 0 0 16px rgba(110,231,194,0.28)",
+            background: isLight
+              ? "linear-gradient(90deg, #0A6448 20%, #0D9A76 38%, #34D4AA 50%, #0D9A76 62%, #0A6448 80%)"
+              : "linear-gradient(90deg, rgba(255,255,255,0.55) 20%, rgba(255,255,255,1) 38%, rgba(110,231,194,1) 50%, rgba(255,255,255,1) 62%, rgba(255,255,255,0.55) 80%)",
+            backgroundSize: "300% auto",
+            WebkitBackgroundClip: "text",
+            backgroundClip: "text",
+            WebkitTextFillColor: "transparent",
+            animation: "textShimmer 3.2s linear infinite",
           }}>Centro de Inteligencia</span>
         </div>
       </div>
@@ -2517,6 +2523,7 @@ export default function App() {
         @keyframes scanLine{0%{top:0}100%{top:100%}}
         @keyframes stepFade{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:translateX(0)}}
         @keyframes modalIn{from{opacity:0;transform:translate(-50%,-50%) scale(0.97)}to{opacity:1;transform:translate(-50%,-50%) scale(1)}}
+        @keyframes textShimmer{0%{background-position:200% center}100%{background-position:-200% center}}
         *{box-sizing:border-box;margin:0}
         ::-webkit-scrollbar{width:4px}
         ::-webkit-scrollbar-track{background:transparent}
