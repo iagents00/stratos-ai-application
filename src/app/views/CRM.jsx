@@ -2062,9 +2062,17 @@ const LeadPanel = ({ lead, onClose, oc, onUpdate, onSwitchTab, T = P }) => {
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
             <div style={{ flex: 1, height: 3, borderRadius: 2, background: isLight ? "rgba(15,23,42,0.06)" : "rgba(255,255,255,0.05)" }}>
-              <div style={{ width: `${sc}%`, height: 3, borderRadius: 2, background: isLight ? `color-mix(in srgb, ${T.accent} 55%, #0B1220 45%)` : T.accent, opacity: 0.7 }} />
+              <div style={{ width: `${sc}%`, height: 3, borderRadius: 2, background: isLight ? `color-mix(in srgb, ${T.accent} 55%, #0B1220 45%)` : T.accent, opacity: 0.7, transition: "width 0.4s" }} />
             </div>
-            <span style={{ fontSize: 11, fontWeight: 600, color: T.txt3, fontFamily: fontDisp, whiteSpace: "nowrap" }}>Score {sc}</span>
+            <div style={{ display: "flex", alignItems: "center", gap: 4, flexShrink: 0 }}>
+              {[{d:-5,l:"−"},{d:5,l:"+"}].map(({d,l},i) => i === 0 ? (
+                <button key={d} onClick={() => onUpdate?.({...lead, sc: Math.max(0, sc + d)})} title={`${d} puntos`} style={{ width: 18, height: 18, borderRadius: 5, border: `1px solid ${T.border}`, background: "transparent", color: T.txt3, fontSize: 11, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: fontDisp, lineHeight: 1, padding: 0, transition: "all 0.15s" }} onMouseEnter={e=>{e.currentTarget.style.background=T.glassH;e.currentTarget.style.color=T.txt;}} onMouseLeave={e=>{e.currentTarget.style.background="transparent";e.currentTarget.style.color=T.txt3;}}>{l}</button>
+              ) : null)}
+              <span style={{ fontSize: 11, fontWeight: 700, color: T.txt3, fontFamily: fontDisp, whiteSpace: "nowrap", minWidth: 44, textAlign: "center" }}>Score {sc}</span>
+              {[{d:-5,l:"−"},{d:5,l:"+"}].map(({d,l},i) => i === 1 ? (
+                <button key={d} onClick={() => onUpdate?.({...lead, sc: Math.min(100, sc + d)})} title={`+${d} puntos`} style={{ width: 18, height: 18, borderRadius: 5, border: `1px solid ${T.border}`, background: "transparent", color: T.txt3, fontSize: 11, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: fontDisp, lineHeight: 1, padding: 0, transition: "all 0.15s" }} onMouseEnter={e=>{e.currentTarget.style.background=T.glassH;e.currentTarget.style.color=T.txt;}} onMouseLeave={e=>{e.currentTarget.style.background="transparent";e.currentTarget.style.color=T.txt3;}}>{l}</button>
+              ) : null)}
+            </div>
           </div>
           <div style={{ display: "flex", gap: 7 }}>
             <a href={`tel:${editing ? f("phone") : lead.phone}`} style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "8px 12px", borderRadius: 9, background: T.glass, border: `1px solid ${T.border}`, color: T.txt2, fontSize: 11, fontWeight: 600, textDecoration: "none", transition: "all 0.18s" }} onMouseEnter={e => { e.currentTarget.style.background = T.glassH; e.currentTarget.style.color = T.txt; }} onMouseLeave={e => { e.currentTarget.style.background = T.glass; e.currentTarget.style.color = T.txt2; }}><Phone size={12} /> Llamar</a>
@@ -2659,8 +2667,12 @@ const AnalysisDrawer = ({ lead, onClose, oc, onUpdate, onSwitchTab, T = P }) => 
               </div>
             </div>
             <div style={{ textAlign: "right", flexShrink: 0 }}>
-              <p style={{ margin: 0, fontSize: 18, fontWeight: 800, color: T.accent, fontFamily: fontDisp, lineHeight: 1 }}>{sc}</p>
-              <p style={{ margin: 0, fontSize: 8.5, color: T.txt3, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", marginTop: 3 }}>Score IA</p>
+              <div style={{ display: "flex", alignItems: "center", gap: 5, justifyContent: "flex-end" }}>
+                <button onClick={() => onUpdate?.({...lead, sc: Math.max(0, sc - 5)})} title="-5 puntos" style={{ width: 20, height: 20, borderRadius: 6, border: `1px solid ${T.border}`, background: "transparent", color: T.txt3, fontSize: 12, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: fontDisp, lineHeight: 1, padding: 0, transition: "all 0.15s" }} onMouseEnter={e=>{e.currentTarget.style.background=T.glassH;e.currentTarget.style.color=T.txt;}} onMouseLeave={e=>{e.currentTarget.style.background="transparent";e.currentTarget.style.color=T.txt3;}}>−</button>
+                <p style={{ margin: 0, fontSize: 18, fontWeight: 800, color: T.accent, fontFamily: fontDisp, lineHeight: 1, minWidth: 28, textAlign: "center" }}>{sc}</p>
+                <button onClick={() => onUpdate?.({...lead, sc: Math.min(100, sc + 5)})} title="+5 puntos" style={{ width: 20, height: 20, borderRadius: 6, border: `1px solid ${T.border}`, background: "transparent", color: T.txt3, fontSize: 12, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: fontDisp, lineHeight: 1, padding: 0, transition: "all 0.15s" }} onMouseEnter={e=>{e.currentTarget.style.background=T.glassH;e.currentTarget.style.color=T.txt;}} onMouseLeave={e=>{e.currentTarget.style.background="transparent";e.currentTarget.style.color=T.txt3;}}>+</button>
+              </div>
+              <p style={{ margin: 0, fontSize: 8.5, color: T.txt3, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", marginTop: 3 }}>Score · Manual</p>
             </div>
           </div>
 
@@ -3146,12 +3158,16 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
   const visibleLeads = canSeeAll ? leadsData : leadsData.filter(l => l.asesor === user?.name);
 
   const updateLead = (updated) => {
-    // Congela el orden visual actual antes de que el nuevo score pueda reordenar
     if (prioritySort === "manual" && priorityOrder.length === 0) {
       const snap = priorityLeadsRef.current.map(l => l.id);
       if (snap.length > 0) setPriorityOrder(snap);
     }
-    const withScore = { ...updated, sc: calculateLeadScore(updated) };
+    // Score manual: preserva el sc actual; cada seguimiento adicional suma +3 pts
+    const prev = leadsData.find(l => l.id === updated.id);
+    const segDelta = (updated.seguimientos || 0) - (prev?.seguimientos || 0);
+    const baseSc = updated.sc ?? prev?.sc ?? 0;
+    const newSc = Math.max(0, Math.min(100, baseSc + segDelta * 3));
+    const withScore = { ...updated, sc: newSc };
     setLeadsData(prev => prev.map(l => l.id === withScore.id ? withScore : l));
     if (selectedLead?.id === withScore.id) setSelectedLead(withScore);
     if (notesLead?.id === withScore.id) setNotesLead(withScore);
@@ -3283,7 +3299,8 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
     const parsedBudget = parseBudget(newLead.budget);
     const newEntry = {
       id: Date.now(), ...newLead, st: newLead.st || "Nuevo Registro",
-      sc: calculateLeadScore({ ...newLead, presupuesto: parsedBudget, st: newLead.st || "Nuevo Registro", daysInactive: 0, seguimientos: 0, hot: false }),
+      sc: 5,
+      source: "manual",
       tag: newLead.tag || newLead.st || "Nuevo Registro", hot: false, isNew: true, fechaIngreso: dateStr,
       bio: "Cliente recién registrado. Pendiente primer contacto.", risk: "Sin información suficiente aún.",
       friction: "Medio",
@@ -3981,7 +3998,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                       })()}
 
 
-                      {/* Score row — label · bar · number */}
+                      {/* Score row — label · bar · number · ± ajuste manual */}
                       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                         <span style={{
                           fontSize: 9, fontWeight: 700, fontFamily: fontDisp,
@@ -4005,12 +4022,26 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                             transition: "width 0.5s cubic-bezier(0.4,0,0.2,1)",
                           }} />
                         </div>
-                        <span style={{
-                          fontSize: 11, fontWeight: 300, fontFamily: fontDisp,
-                          letterSpacing: "-0.01em", lineHeight: 1,
-                          color: isLight ? "rgba(15,23,42,0.70)" : "rgba(255,255,255,0.80)",
-                          flexShrink: 0, minWidth: 22, textAlign: "right",
-                        }}>{sc}</span>
+                        <div
+                          onMouseDown={e => e.stopPropagation()}
+                          onPointerDown={e => e.stopPropagation()}
+                          onDragStart={e => { e.preventDefault(); e.stopPropagation(); }}
+                          draggable={false}
+                          onClick={e => e.stopPropagation()}
+                          style={{ display: "flex", alignItems: "center", gap: 3, flexShrink: 0 }}
+                        >
+                          {(() => {
+                            const lead = l;
+                            const btnStyle = { width: 16, height: 16, borderRadius: 4, border: `1px solid ${isLight?"rgba(15,23,42,0.10)":"rgba(255,255,255,0.10)"}`, background: "transparent", color: isLight?"rgba(15,23,42,0.35)":"rgba(255,255,255,0.35)", fontSize: 10, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", lineHeight: 1, padding: 0, fontFamily: fontDisp, transition: "all 0.15s" };
+                            const onEnter = e => { e.currentTarget.style.background = isLight ? "rgba(15,23,42,0.07)" : "rgba(255,255,255,0.10)"; e.currentTarget.style.color = isLight ? T.txt : "#FFF"; };
+                            const onLeave = e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = isLight ? "rgba(15,23,42,0.35)" : "rgba(255,255,255,0.35)"; };
+                            return (<>
+                              <button onClick={e => { e.stopPropagation(); updateLead({...lead, sc: Math.max(0, sc - 1)}); }} title="-1" style={btnStyle} onMouseEnter={onEnter} onMouseLeave={onLeave}>−</button>
+                              <span style={{ fontSize: 11, fontWeight: 300, fontFamily: fontDisp, letterSpacing: "-0.01em", lineHeight: 1, color: isLight ? "rgba(15,23,42,0.70)" : "rgba(255,255,255,0.80)", minWidth: 22, textAlign: "center" }}>{sc}</span>
+                              <button onClick={e => { e.stopPropagation(); updateLead({...lead, sc: Math.min(100, sc + 1)}); }} title="+1" style={btnStyle} onMouseEnter={onEnter} onMouseLeave={onLeave}>+</button>
+                            </>);
+                          })()}
+                        </div>
                       </div>
 
                       {/* Próxima acción — HERO del card */}
@@ -5128,13 +5159,23 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                     <FollowUpBadge lead={l} onUpdate={updateLead} T={T} compact />
                   </div>
 
-                  {/* ═══ SCORE ═══ Solo visible en modo full — bar + número */}
+                  {/* ═══ SCORE ═══ Solo visible en modo full — bar + número + ± manual */}
                   {!co && (
-                    <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 6 }}>
-                      <div style={{ flex: 1, height: 3, borderRadius: 2, background: isLight ? "rgba(15,23,42,0.08)" : "rgba(255,255,255,0.06)", maxWidth: 40 }}>
+                    <div onClick={e => e.stopPropagation()} style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 5 }}>
+                      <div style={{ flex: 1, height: 3, borderRadius: 2, background: isLight ? "rgba(15,23,42,0.08)" : "rgba(255,255,255,0.06)", maxWidth: 36 }}>
                         <div style={{ width: `${sc}%`, height: 3, borderRadius: 2, background: T.accent, transition: "width 0.4s", boxShadow: sc >= 80 ? `0 0 6px ${T.accent}60` : "none" }} />
                       </div>
-                      <span style={{ fontSize: 11.5, fontWeight: 700, color: isLight ? T.txt2 : T.txt2, fontFamily: fontDisp, minWidth: 22, textAlign: "right" }}>{sc}</span>
+                      {(() => {
+                        const lead = l;
+                        const mbs = { width: 15, height: 15, borderRadius: 4, border: `1px solid ${T.border}`, background: "transparent", color: T.txt3, fontSize: 10, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", lineHeight: 1, padding: 0, fontFamily: fontDisp, transition: "all 0.15s" };
+                        const mbe = e => { e.currentTarget.style.background = T.glassH; e.currentTarget.style.color = T.txt; };
+                        const mbl = e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = T.txt3; };
+                        return (<>
+                          <button onClick={e => { e.stopPropagation(); updateLead({...lead, sc: Math.max(0, sc - 1)}); }} title="-1" style={mbs} onMouseEnter={mbe} onMouseLeave={mbl}>−</button>
+                          <span style={{ fontSize: 11.5, fontWeight: 700, color: T.txt2, fontFamily: fontDisp, minWidth: 20, textAlign: "center" }}>{sc}</span>
+                          <button onClick={e => { e.stopPropagation(); updateLead({...lead, sc: Math.min(100, sc + 1)}); }} title="+1" style={mbs} onMouseEnter={mbe} onMouseLeave={mbl}>+</button>
+                        </>);
+                      })()}
                     </div>
                   )}
 
