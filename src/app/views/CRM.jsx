@@ -4060,50 +4060,13 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                       })()}
 
 
-                      {/* Score row — label · bar · number · ± ajuste manual */}
-                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                        <span style={{
-                          fontSize: 9, fontWeight: 700, fontFamily: fontDisp,
-                          letterSpacing: "0.07em", textTransform: "uppercase",
-                          color: isLight ? "rgba(15,23,42,0.35)" : "rgba(255,255,255,0.28)",
-                          flexShrink: 0,
-                        }}>SC</span>
-                        <div style={{
-                          flex: 1, height: 3, borderRadius: 99,
-                          background: isLight ? "rgba(15,23,42,0.07)" : "rgba(255,255,255,0.07)",
-                          overflow: "hidden",
-                        }}>
-                          <div style={{
-                            width: `${sc}%`, height: "100%", borderRadius: 99,
-                            background: isLight
-                              ? `linear-gradient(90deg, ${meta.color} 0%, ${meta.color}BB 100%)`
-                              : "rgba(255,255,255,0.82)",
-                            boxShadow: sc >= 80
-                              ? (isLight ? `0 0 6px ${meta.color}66` : "0 0 8px rgba(255,255,255,0.30)")
-                              : "none",
-                            transition: "width 0.5s cubic-bezier(0.4,0,0.2,1)",
-                          }} />
+                      {/* Score row — minimalista */}
+                      <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
+                        <span style={{ fontSize: 8.5, fontWeight: 700, fontFamily: fontDisp, letterSpacing: "0.08em", textTransform: "uppercase", color: isLight ? "rgba(15,23,42,0.30)" : "rgba(255,255,255,0.25)", flexShrink: 0 }}>Score</span>
+                        <div style={{ flex: 1, height: 3, borderRadius: 99, background: isLight ? "rgba(15,23,42,0.07)" : "rgba(255,255,255,0.07)", overflow: "hidden" }}>
+                          <div style={{ width: `${sc}%`, height: "100%", borderRadius: 99, background: isLight ? `linear-gradient(90deg, ${meta.color} 0%, ${meta.color}BB 100%)` : "rgba(255,255,255,0.75)", transition: "width 0.5s cubic-bezier(0.4,0,0.2,1)" }} />
                         </div>
-                        <div
-                          onMouseDown={e => e.stopPropagation()}
-                          onPointerDown={e => e.stopPropagation()}
-                          onDragStart={e => { e.preventDefault(); e.stopPropagation(); }}
-                          draggable={false}
-                          onClick={e => e.stopPropagation()}
-                          style={{ display: "flex", alignItems: "center", gap: 3, flexShrink: 0 }}
-                        >
-                          {(() => {
-                            const lead = l;
-                            const btnStyle = { width: 16, height: 16, borderRadius: 4, border: `1px solid ${isLight?"rgba(15,23,42,0.10)":"rgba(255,255,255,0.10)"}`, background: "transparent", color: isLight?"rgba(15,23,42,0.35)":"rgba(255,255,255,0.35)", fontSize: 10, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", lineHeight: 1, padding: 0, fontFamily: fontDisp, transition: "all 0.15s" };
-                            const onEnter = e => { e.currentTarget.style.background = isLight ? "rgba(15,23,42,0.07)" : "rgba(255,255,255,0.10)"; e.currentTarget.style.color = isLight ? T.txt : "#FFF"; };
-                            const onLeave = e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = isLight ? "rgba(15,23,42,0.35)" : "rgba(255,255,255,0.35)"; };
-                            return (<>
-                              <button onClick={e => { e.stopPropagation(); updateLead({...lead, sc: Math.max(0, sc - 1)}); }} title="-1" style={btnStyle} onMouseEnter={onEnter} onMouseLeave={onLeave}>−</button>
-                              <span style={{ fontSize: 11, fontWeight: 300, fontFamily: fontDisp, letterSpacing: "-0.01em", lineHeight: 1, color: isLight ? "rgba(15,23,42,0.70)" : "rgba(255,255,255,0.80)", minWidth: 22, textAlign: "center" }}>{sc}</span>
-                              <button onClick={e => { e.stopPropagation(); updateLead({...lead, sc: Math.min(100, sc + 1)}); }} title="+1" style={btnStyle} onMouseEnter={onEnter} onMouseLeave={onLeave}>+</button>
-                            </>);
-                          })()}
-                        </div>
+                        <span style={{ fontSize: 13, fontWeight: 700, fontFamily: fontDisp, letterSpacing: "-0.02em", color: isLight ? meta.color : "rgba(255,255,255,0.88)", flexShrink: 0, minWidth: 22, textAlign: "right" }}>{sc}</span>
                       </div>
 
                       {/* Próxima acción — HERO del card */}
