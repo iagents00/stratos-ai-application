@@ -763,13 +763,13 @@ const DynIsland = ({ onExpand, notifications = [], theme = "dark" }) => {
             letterSpacing: "-0.028em",
             fontFamily: fontDisp,
             background: isLight
-              ? "linear-gradient(90deg, #0A6448 20%, #0D9A76 38%, #34D4AA 50%, #0D9A76 62%, #0A6448 80%)"
-              : "linear-gradient(90deg, rgba(255,255,255,0.55) 20%, rgba(255,255,255,1) 38%, rgba(110,231,194,1) 50%, rgba(255,255,255,1) 62%, rgba(255,255,255,0.55) 80%)",
-            backgroundSize: "300% auto",
+              ? "linear-gradient(90deg, #0A6448 0%, #0A6448 40%, #1BB887 46%, #4DDCB4 50%, #1BB887 54%, #0A6448 60%, #0A6448 100%)"
+              : "linear-gradient(90deg, rgba(220,235,228,0.82) 0%, rgba(220,235,228,0.82) 40%, rgba(255,255,255,0.96) 46%, rgba(110,231,194,1) 50%, rgba(255,255,255,0.96) 54%, rgba(220,235,228,0.82) 60%, rgba(220,235,228,0.82) 100%)",
+            backgroundSize: "250% auto",
             WebkitBackgroundClip: "text",
             backgroundClip: "text",
             WebkitTextFillColor: "transparent",
-            animation: "textShimmer 3.2s linear infinite",
+            animation: "textShimmer 2.6s ease-in-out infinite",
           }}>Centro de Inteligencia</span>
         </div>
       </div>
@@ -2240,8 +2240,8 @@ function PermissionGate({ moduleId, onGoBack }) {
 }
 
 const IAOSIsland = ({ leadsData, isLight, fontDisp }) => {
-  const hot      = leadsData.filter(l => l.hot).length;
-  const waAct    = leadsData.filter(l => l.phone && l.daysInactive <= 3).length;
+  const hot       = leadsData.filter(l => l.hot).length;
+  const waAct     = leadsData.filter(l => l.phone && l.daysInactive <= 3).length;
   const totalPipe = (leadsData.reduce((s, l) => s + (l.presupuesto || 0), 0) / 1e6).toFixed(1);
 
   const phrases = [
@@ -2251,50 +2251,49 @@ const IAOSIsland = ({ leadsData, isLight, fontDisp }) => {
   ];
 
   const [idx, setIdx] = useState(0);
-  const [show, setShow] = useState(true);
 
   useEffect(() => {
     const t = setInterval(() => {
-      setShow(false);
-      setTimeout(() => { setIdx(i => (i + 1) % phrases.length); setShow(true); }, 300);
-    }, 3500);
+      setIdx(i => (i + 1) % phrases.length);
+    }, 3200);
     return () => clearInterval(t);
   }, []);
 
   return (
     <div style={{
-      display: "flex", alignItems: "center", gap: 8,
-      background: isLight ? "rgba(0,0,0,0.028)" : "rgba(255,255,255,0.042)",
-      borderRadius: 9, padding: "5px 12px 5px 10px",
-      border: `1px solid ${isLight ? "rgba(0,0,0,0.048)" : "rgba(255,255,255,0.065)"}`,
+      display: "flex", alignItems: "center", gap: 0,
+      background: isLight ? "rgba(13,154,118,0.06)" : "rgba(110,231,194,0.05)",
+      borderRadius: 10, padding: "5px 13px 5px 11px",
+      border: `1px solid ${isLight ? "rgba(13,154,118,0.14)" : "rgba(110,231,194,0.10)"}`,
       flexShrink: 0, overflow: "hidden",
     }}>
-      {/* IAOS label */}
-      <span style={{
-        fontSize: 9, fontFamily: fontDisp, fontWeight: 800,
-        letterSpacing: "0.18em", textTransform: "uppercase", lineHeight: 1,
-        color: isLight ? "rgba(13,154,118,0.55)" : "rgba(110,231,194,0.50)",
-        flexShrink: 0,
-      }}>IAOS</span>
-
-      {/* Single power-on dot */}
+      {/* Dot */}
       <div style={{
-        width: 5, height: 5, borderRadius: "50%", flexShrink: 0,
+        width: 5, height: 5, borderRadius: "50%", flexShrink: 0, marginRight: 7,
         background: "#34D399",
-        boxShadow: "0 0 7px rgba(52,211,153,0.90), 0 0 14px rgba(52,211,153,0.40)",
+        boxShadow: "0 0 6px rgba(52,211,153,0.95), 0 0 12px rgba(52,211,153,0.40)",
         animation: "pulse 2.4s ease-in-out infinite",
       }} />
 
-      {/* Sliding status text — fixed width prevents layout shift between phrases */}
-      <div style={{ position: "relative", overflow: "hidden", height: 14, width: 132, flexShrink: 0 }}>
-        <span style={{
+      {/* IAOS label */}
+      <span style={{
+        fontSize: 9, fontFamily: fontDisp, fontWeight: 800,
+        letterSpacing: "0.16em", textTransform: "uppercase", lineHeight: 1,
+        color: isLight ? "rgba(13,154,118,0.70)" : "rgba(110,231,194,0.60)",
+        flexShrink: 0, marginRight: 8,
+      }}>IAOS</span>
+
+      {/* Separator */}
+      <div style={{ width: 1, height: 10, background: isLight ? "rgba(13,154,118,0.20)" : "rgba(110,231,194,0.15)", flexShrink: 0, marginRight: 8 }} />
+
+      {/* Horizontal slide text — key triggers CSS enter animation */}
+      <div style={{ overflow: "hidden", height: 14, width: 126, flexShrink: 0 }}>
+        <span key={idx} style={{
           display: "block",
-          fontSize: 10.5, fontFamily: fontDisp, fontWeight: 400,
-          letterSpacing: "-0.015em", whiteSpace: "nowrap",
-          color: isLight ? "rgba(15,23,42,0.58)" : "rgba(255,255,255,0.65)",
-          opacity: show ? 1 : 0,
-          transform: show ? "translateY(0)" : "translateY(-6px)",
-          transition: "opacity 0.25s ease, transform 0.25s ease",
+          fontSize: 10.5, fontFamily: fontDisp, fontWeight: 500,
+          letterSpacing: "-0.012em", whiteSpace: "nowrap",
+          color: isLight ? "rgba(10,20,15,0.62)" : "rgba(255,255,255,0.62)",
+          animation: "iaosSlideIn 0.36s cubic-bezier(0.22,1,0.36,1) both",
         }}>{phrases[idx]}</span>
       </div>
     </div>
@@ -2523,7 +2522,8 @@ export default function App() {
         @keyframes scanLine{0%{top:0}100%{top:100%}}
         @keyframes stepFade{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:translateX(0)}}
         @keyframes modalIn{from{opacity:0;transform:translate(-50%,-50%) scale(0.97)}to{opacity:1;transform:translate(-50%,-50%) scale(1)}}
-        @keyframes textShimmer{0%{background-position:200% center}100%{background-position:-200% center}}
+        @keyframes textShimmer{0%{background-position:150% center}100%{background-position:-50% center}}
+        @keyframes iaosSlideIn{from{opacity:0;transform:translateX(16px)}to{opacity:1;transform:translateX(0)}}
         *{box-sizing:border-box;margin:0}
         ::-webkit-scrollbar{width:4px}
         ::-webkit-scrollbar-track{background:transparent}
