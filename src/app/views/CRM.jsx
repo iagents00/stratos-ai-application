@@ -56,6 +56,23 @@ const parseBudget = (input) => {
   return Math.round(num * multiplier);
 };
 
+const buildTelegramSummary = (lead) => {
+  const lines = [];
+  lines.push(`👤 ${lead.n || "Sin nombre"}${lead.budget ? ` · ${lead.budget}` : ""}`);
+  if (lead.p)      lines.push(`🏠 ${lead.p}`);
+  if (lead.phone)  lines.push(`📱 ${lead.phone}`);
+  lines.push(`📍 ${lead.st || "Nuevo Registro"} · Score ${lead.sc ?? 0}`);
+  if (lead.nextAction) {
+    const fecha = lead.nextActionDate && lead.nextActionDate !== "Por definir" ? ` — ${lead.nextActionDate}` : "";
+    lines.push(`⚡ ${lead.nextAction}${fecha}`);
+  }
+  const segStr = lead.seguimientos ? `${lead.seguimientos} seg.` : "Sin seguimientos";
+  const asorStr = lead.asesor ? ` · Asesor: ${lead.asesor}` : "";
+  lines.push(`📊 ${segStr}${asorStr}`);
+  if (lead.campana) lines.push(`📢 ${lead.campana}`);
+  return lines.join("\n");
+};
+
 const formatBudget = (amount) => {
   const n = Number(amount) || 0;
   if (n === 0) return "";
@@ -1916,6 +1933,7 @@ const LeadPanel = ({ lead, onClose, oc, onUpdate, onSwitchTab, T = P }) => {
   const [activeTab, setActiveTab] = useState("perfil");
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState(null);
+  const [panelCopied, setPanelCopied] = useState(false);
   const [expandBio, setExpandBio] = useState(false);
   const [updateChatOpen, setUpdateChatOpen] = useState(false);
 
@@ -2033,6 +2051,10 @@ const LeadPanel = ({ lead, onClose, oc, onUpdate, onSwitchTab, T = P }) => {
             </div>
             <div style={{ display: "flex", gap: 6 }}>
               {!editing && <button onClick={startEditing} style={{ display: "flex", alignItems: "center", gap: 5, padding: "6px 12px", borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", color: T.txt3, fontSize: 11, fontWeight: 600, cursor: "pointer", transition: "all 0.18s" }} onMouseEnter={e => { e.currentTarget.style.background = T.glassH; e.currentTarget.style.color = T.txt; e.currentTarget.style.borderColor = T.borderH; }} onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = T.txt3; e.currentTarget.style.borderColor = T.border; }}>Editar</button>}
+              <button onClick={() => { navigator.clipboard?.writeText(buildTelegramSummary(lead)).then(() => { setPanelCopied(true); setTimeout(() => setPanelCopied(false), 1800); }); }} title="Copiar resumen para Telegram" style={{ width: 30, height: 30, borderRadius: 8, border: `1px solid ${T.border}`, background: panelCopied ? `${T.accent}18` : "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.18s", color: panelCopied ? T.accent : T.txt3 }}
+                onMouseEnter={e => e.currentTarget.style.background = panelCopied ? `${T.accent}22` : T.glassH}
+                onMouseLeave={e => e.currentTarget.style.background = panelCopied ? `${T.accent}18` : "transparent"}
+              >{panelCopied ? <Check size={13} strokeWidth={2.8} /> : <Copy size={13} strokeWidth={2} />}</button>
               <button onClick={onClose} style={{ width: 30, height: 30, borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.18s" }} onMouseEnter={e => e.currentTarget.style.background = T.glassH} onMouseLeave={e => e.currentTarget.style.background = "transparent"}><X size={13} color={T.txt3} /></button>
             </div>
           </div>
@@ -2459,6 +2481,7 @@ const LeadPanel = ({ lead, onClose, oc, onUpdate, onSwitchTab, T = P }) => {
    ANALYSIS DRAWER — Análisis IA contextual sobre Pipeline
 ═══════════════════════════════════════════ */
 const AnalysisDrawer = ({ lead, onClose, oc, onUpdate, onSwitchTab, T = P }) => {
+  const [analysisCopied, setAnalysisCopied] = useState(false);
   const [expedienteItems, setExpedienteItems] = useState(() => {
     if (lead?.id <= 3) {
       const mock = COACHING_MOCKS[lead.id % COACHING_MOCKS.length];
@@ -2660,10 +2683,16 @@ const AnalysisDrawer = ({ lead, onClose, oc, onUpdate, onSwitchTab, T = P }) => 
                 <p style={{ margin: 0, fontSize: 11, color: T.txt3, fontFamily: font }}>Estrategia personalizada de cierre</p>
               </div>
             </div>
-            <button onClick={onClose} style={{ width: 30, height: 30, borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.18s" }}
-              onMouseEnter={e => e.currentTarget.style.background = T.glassH}
-              onMouseLeave={e => e.currentTarget.style.background = "transparent"}
-            ><X size={13} color={T.txt3} /></button>
+            <div style={{ display: "flex", gap: 6 }}>
+              <button onClick={() => { navigator.clipboard?.writeText(buildTelegramSummary(lead)).then(() => { setAnalysisCopied(true); setTimeout(() => setAnalysisCopied(false), 1800); }); }} title="Copiar resumen para Telegram" style={{ width: 30, height: 30, borderRadius: 8, border: `1px solid ${T.border}`, background: analysisCopied ? `${T.accent}18` : "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.18s", color: analysisCopied ? T.accent : T.txt3 }}
+                onMouseEnter={e => e.currentTarget.style.background = analysisCopied ? `${T.accent}22` : T.glassH}
+                onMouseLeave={e => e.currentTarget.style.background = analysisCopied ? `${T.accent}18` : "transparent"}
+              >{analysisCopied ? <Check size={13} strokeWidth={2.8} /> : <Copy size={13} strokeWidth={2} />}</button>
+              <button onClick={onClose} style={{ width: 30, height: 30, borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.18s" }}
+                onMouseEnter={e => e.currentTarget.style.background = T.glassH}
+                onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+              ><X size={13} color={T.txt3} /></button>
+            </div>
           </div>
 
           {/* Lead snapshot */}
@@ -3140,6 +3169,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
     onAutoOpenHandled?.();
   }, [autoOpenPriority1]); // priorityLeadsRef is a ref, always current
   const [addingLead, setAddingLead]     = useState(false);
+  const [copiedId, setCopiedId]         = useState(null);
   const [budgetMenuOpen, setBudgetMenuOpen] = useState(false);
   const [stageMenuOpen, setStageMenuOpen]   = useState(false);
   const [newLead, setNewLead]           = useState({ n: "", asesor: canSeeAll ? "" : (user?.name || ""), phone: "", email: "", budget: "", p: "", campana: "", source: "manual", st: "Nuevo Registro", nextAction: "", notas: "" });
@@ -3197,6 +3227,12 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
     if (analyzingLead?.id === withScore.id) setAnalyzingLead(withScore);
   };
   const saveNotes = (newNotas) => { const u = {...notesLead, notas: newNotas}; updateLead(u); setNotesLead(u); };
+  const copyLeadToClipboard = (lead) => {
+    navigator.clipboard?.writeText(buildTelegramSummary(lead)).then(() => {
+      setCopiedId(lead.id);
+      setTimeout(() => setCopiedId(null), 1800);
+    });
+  };
 
   // Switcher unificado del Dynamic Island — al cambiar de tab, cerramos el drawer
   // actual y abrimos el target con el MISMO lead. Así el vendedor navega Análisis IA
@@ -4214,10 +4250,56 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                         <FollowUpBadge lead={l} onUpdate={updateLead} T={T} fullWidth tint={meta.color} />
                       </div>
 
-                      {/* CTA única — "Analizar y actuar" es la acción principal del card.
-                          Perfil/Expediente se acceden con click en cualquier zona libre
-                          del card (abre el drawer con tabs completos). Minimalista. */}
+                      {/* CTA + copiar resumen Telegram */}
+                      <div style={{ display: "flex", gap: 7, alignItems: "stretch", marginTop: "auto" }}>
+                      {/* Copiar para Telegram */}
+                      {(() => {
+                        const copied = copiedId === l.id;
+                        return (
+                          <button
+                            onMouseDown={e => e.stopPropagation()}
+                            onPointerDown={e => e.stopPropagation()}
+                            onDragStart={e => { e.preventDefault(); e.stopPropagation(); }}
+                            draggable={false}
+                            onClick={e => { e.stopPropagation(); copyLeadToClipboard(l); }}
+                            title="Copiar resumen para Telegram"
+                            style={{
+                              flexShrink: 0, width: 40, borderRadius: 11,
+                              background: copied
+                                ? (isLight ? `${T.accent}18` : `${T.accent}14`)
+                                : (isLight ? "rgba(15,23,42,0.04)" : "rgba(255,255,255,0.06)"),
+                              border: `1px solid ${copied
+                                ? (isLight ? `${T.accent}55` : T.accentB)
+                                : (isLight ? "rgba(15,23,42,0.10)" : "rgba(255,255,255,0.12)")}`,
+                              color: copied
+                                ? (isLight ? `color-mix(in srgb, ${T.accent} 60%, #0B1220 40%)` : T.accent)
+                                : (isLight ? "rgba(15,23,42,0.45)" : "rgba(255,255,255,0.45)"),
+                              cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
+                              transition: "all 0.18s",
+                            }}
+                            onMouseEnter={e => {
+                              if (!copied) {
+                                e.currentTarget.style.background = isLight ? "rgba(15,23,42,0.07)" : "rgba(255,255,255,0.10)";
+                                e.currentTarget.style.color = isLight ? T.txt : "#FFF";
+                                e.currentTarget.style.borderColor = isLight ? "rgba(15,23,42,0.16)" : "rgba(255,255,255,0.20)";
+                              }
+                            }}
+                            onMouseLeave={e => {
+                              if (!copied) {
+                                e.currentTarget.style.background = isLight ? "rgba(15,23,42,0.04)" : "rgba(255,255,255,0.06)";
+                                e.currentTarget.style.color = isLight ? "rgba(15,23,42,0.45)" : "rgba(255,255,255,0.45)";
+                                e.currentTarget.style.borderColor = isLight ? "rgba(15,23,42,0.10)" : "rgba(255,255,255,0.12)";
+                              }
+                            }}
+                          >
+                            {copied
+                              ? <Check size={13} strokeWidth={2.8} />
+                              : <Copy size={13} strokeWidth={2.2} />}
+                          </button>
+                        );
+                      })()}
                       <button
+                        style={{ flex: 1 }}
                         onClick={e => { e.stopPropagation(); setAnalyzingLead(l); }}
                         style={{
                           width: "100%", padding: "12px 14px", borderRadius: 11,
@@ -4256,6 +4338,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                           }
                         }}
                       ><Zap size={12.5} strokeWidth={2.5} color={isLight ? "#FFFFFF" : "#0A3D2A"} /> Analizar y actuar</button>
+                      </div>{/* end CTA row */}
                     </div>
                   </div>
                     );
