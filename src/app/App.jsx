@@ -736,16 +736,12 @@ const DynIsland = ({ onExpand, notifications = [], theme = "dark" }) => {
         <div style={{
           position: "relative", zIndex: 2,
           display: "flex", alignItems: "center",
-          justifyContent: "center", gap: 7, width: "100%",
+          justifyContent: "center", gap: 8, width: "100%",
         }}>
-          {/* Live dot — doble anillo en dark */}
+          {/* Live dot */}
           <div style={{ position: "relative", width: 6, height: 6, flexShrink: 0 }}>
             {!isLight && (
-              <div style={{
-                position: "absolute", inset: -3, borderRadius: "50%",
-                background: "rgba(52,211,153,0.18)",
-                animation: "pulse 2.4s ease-in-out infinite",
-              }} />
+              <div style={{ position: "absolute", inset: -3, borderRadius: "50%", background: "rgba(52,211,153,0.18)", animation: "pulse 2.4s ease-in-out infinite" }} />
             )}
             <div style={{
               width: 6, height: 6, borderRadius: "50%",
@@ -757,20 +753,24 @@ const DynIsland = ({ onExpand, notifications = [], theme = "dark" }) => {
             }} />
           </div>
 
-          <span style={{
-            fontSize: 12.5,
-            fontWeight: 600,
-            letterSpacing: "-0.028em",
-            fontFamily: fontDisp,
-            background: isLight
-              ? "linear-gradient(90deg, #0A6448 0%, #0A6448 40%, #1BB887 46%, #4DDCB4 50%, #1BB887 54%, #0A6448 60%, #0A6448 100%)"
-              : "linear-gradient(90deg, rgba(220,235,228,0.82) 0%, rgba(220,235,228,0.82) 40%, rgba(255,255,255,0.96) 46%, rgba(110,231,194,1) 50%, rgba(255,255,255,0.96) 54%, rgba(220,235,228,0.82) 60%, rgba(220,235,228,0.82) 100%)",
-            backgroundSize: "250% auto",
-            WebkitBackgroundClip: "text",
-            backgroundClip: "text",
-            WebkitTextFillColor: "transparent",
-            animation: "textShimmer 2.6s ease-in-out infinite",
-          }}>Centro de Inteligencia</span>
+          {/* Texto con shimmer overlay — sin background-clip para evitar bugs */}
+          <div style={{ position: "relative", overflow: "hidden", flexShrink: 0 }}>
+            <span style={{
+              fontSize: 12.5, fontWeight: 600,
+              letterSpacing: "-0.028em", fontFamily: fontDisp,
+              color: isLight ? "#0A5E42" : "rgba(255,255,255,0.92)",
+              display: "block", whiteSpace: "nowrap",
+            }}>Centro de Inteligencia</span>
+            {/* Barra de brillo que barre de izq → der */}
+            <div style={{
+              position: "absolute", top: 0, bottom: 0, width: "35%",
+              background: isLight
+                ? "linear-gradient(90deg, transparent, rgba(255,255,255,0.72), transparent)"
+                : "linear-gradient(90deg, transparent, rgba(110,231,194,0.45), rgba(255,255,255,0.30), transparent)",
+              animation: "shimmerBar 2.8s ease-in-out infinite",
+              pointerEvents: "none",
+            }} />
+          </div>
         </div>
       </div>
 
@@ -2522,7 +2522,7 @@ export default function App() {
         @keyframes scanLine{0%{top:0}100%{top:100%}}
         @keyframes stepFade{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:translateX(0)}}
         @keyframes modalIn{from{opacity:0;transform:translate(-50%,-50%) scale(0.97)}to{opacity:1;transform:translate(-50%,-50%) scale(1)}}
-        @keyframes textShimmer{0%{background-position:150% center}100%{background-position:-50% center}}
+        @keyframes shimmerBar{0%{left:-40%}100%{left:120%}}
         @keyframes iaosSlideIn{from{opacity:0;transform:translateX(16px)}to{opacity:1;transform:translateX(0)}}
         *{box-sizing:border-box;margin:0}
         ::-webkit-scrollbar{width:4px}
