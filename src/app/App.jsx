@@ -2439,6 +2439,20 @@ export default function App() {
     setAutoOpenPriority1(n => n + 1);
   }, []);
 
+  // ── Dynamic CSS memoizado — DEBE ir antes de cualquier early return
+  // para no violar las reglas de hooks (React error #310).
+  const dynamicStyles = useMemo(() => `
+    @keyframes agentOrbBreathe{
+      0%,100%{box-shadow:0 2px 8px ${T.accent}40,0 6px 20px ${T.accent}38,0 0 0 0 ${T.accent}44,inset 0 1px 0 rgba(255,255,255,0.35),inset 0 -1px 0 rgba(0,0,0,0.15)}
+      50%{box-shadow:0 2px 8px ${T.accent}55,0 8px 28px ${T.accent}60,0 0 0 6px ${T.accent}18,inset 0 1px 0 rgba(255,255,255,0.45),inset 0 -1px 0 rgba(0,0,0,0.15)}
+    }
+    @keyframes priorityBreathe{
+      0%,100%{box-shadow:0 0 0 0 ${T.accent}40,0 0 14px ${T.accent}55}
+      50%{box-shadow:0 0 0 6px ${T.accent}00,0 0 22px ${T.accent}88}
+    }
+    ::-webkit-scrollbar-thumb{background:${T.border};border-radius:4px}
+  `, [T.accent, T.border]);
+
   if (!user) return <LoginScreen onLogin={login} />;
 
   return (
@@ -2475,17 +2489,7 @@ export default function App() {
         ::-webkit-scrollbar-track{background:transparent}
       `}</style>
       {/* ── Dynamic CSS — memoized, only re-injects when accent/border color changes ── */}
-      <style>{useMemo(() => `
-        @keyframes agentOrbBreathe{
-          0%,100%{box-shadow:0 2px 8px ${T.accent}40,0 6px 20px ${T.accent}38,0 0 0 0 ${T.accent}44,inset 0 1px 0 rgba(255,255,255,0.35),inset 0 -1px 0 rgba(0,0,0,0.15)}
-          50%{box-shadow:0 2px 8px ${T.accent}55,0 8px 28px ${T.accent}60,0 0 0 6px ${T.accent}18,inset 0 1px 0 rgba(255,255,255,0.45),inset 0 -1px 0 rgba(0,0,0,0.15)}
-        }
-        @keyframes priorityBreathe{
-          0%,100%{box-shadow:0 0 0 0 ${T.accent}40,0 0 14px ${T.accent}55}
-          50%{box-shadow:0 0 0 6px ${T.accent}00,0 0 22px ${T.accent}88}
-        }
-        ::-webkit-scrollbar-thumb{background:${T.border};border-radius:4px}
-      `, [T.accent, T.border])}</style>
+      <style>{dynamicStyles}</style>
 
       {/* ══ Sidebar — Apple-style Navigation ══ */}
       <div style={{
