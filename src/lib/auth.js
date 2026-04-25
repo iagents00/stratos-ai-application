@@ -9,11 +9,12 @@ import { supabase } from './supabase'
 const DEMO_EMAIL    = 'demo@stratos.ai'
 const DEMO_PASSWORD = 'demo2027'
 const DEMO_USER = {
-  id:    'demo-user-local',
-  name:  'Usuario Demo',
-  email: DEMO_EMAIL,
-  role:  'admin',
-  phone: null,
+  id:     'demo-user-local',
+  name:   'Usuario Demo',
+  email:  DEMO_EMAIL,
+  role:   'admin',
+  phone:  null,
+  isDemo: true,
 }
 
 export function seedDemoUser() {
