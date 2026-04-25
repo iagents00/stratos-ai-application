@@ -74,6 +74,19 @@ const buildTelegramSummary = (lead) => {
   return lines.join("\n");
 };
 
+// ── Utilidades de fecha/ID para historial de acciones ───────────────────────
+const fmtNow = () => {
+  const now = new Date();
+  const mos = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
+  const h = now.getHours(); const m = String(now.getMinutes()).padStart(2,"0");
+  const ampm = h >= 12 ? "pm" : "am"; const h12 = (h % 12) || 12;
+  return `${now.getDate()} ${mos[now.getMonth()]}, ${h12}:${m}${ampm}`;
+};
+const genId = () =>
+  (typeof crypto !== "undefined" && crypto.randomUUID)
+    ? crypto.randomUUID()
+    : `${Date.now()}-${Math.random().toString(36).slice(2,9)}`;
+
 const formatBudget = (amount) => {
   const n = Number(amount) || 0;
   if (n === 0) return "";
@@ -1718,6 +1731,201 @@ const InlineEdit = ({
   );
 };
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   TASK CHECKLIST — lista de tareas pendientes por cliente.
+   Cada tarea completada se auto-registra en el historial de acciones.
+   Aparece en: Perfil (LeadPanel) y Expediente (NotesModal).
+═══════════════════════════════════════════════════════════════════════════ */
+const TaskChecklist = ({ lead, onUpdate, T = P }) => {
+  const isLight = T !== P;
+  const [input, setInput]       = useState("");
+  const [addingTask, setAdding] = useState(false);
+  const [showDone, setShowDone] = useState(false);
+  const inputRef = useRef(null);
+
+  const tasks   = Array.isArray(lead?.tasks) ? lead.tasks : [];
+  const pending = tasks.filter(t => !t.done);
+  const done    = tasks.filter(t => t.done);
+
+  useEffect(() => { if (addingTask && inputRef.current) inputRef.current.focus(); }, [addingTask]);
+
+  const addTask = () => {
+    const text = input.trim();
+    if (!text) { setAdding(false); return; }
+    const newTask = { id: genId(), text, done: false, createdAt: new Date().toISOString() };
+    onUpdate?.({ ...lead, tasks: [newTask, ...tasks] });
+    setInput(""); setAdding(false);
+  };
+
+  const toggleDone = (taskId) => {
+    const task = tasks.find(t => t.id === taskId);
+    if (!task) return;
+    const nowFmt = fmtNow();
+    const updatedTasks = tasks.map(t =>
+      t.id === taskId
+        ? { ...t, done: !t.done, doneAt: !t.done ? new Date().toISOString() : undefined, doneAtFmt: !t.done ? nowFmt : undefined }
+        : t
+    );
+    // Si se marca como completada → añadir al historial de acciones
+    const prevHistory = Array.isArray(lead.actionHistory) ? lead.actionHistory : [];
+    const newHistory = !task.done
+      ? [{ id: genId(), action: task.text, doneAtFmt: nowFmt, type: "tarea" }, ...prevHistory]
+      : prevHistory;
+    onUpdate?.({ ...lead, tasks: updatedTasks, actionHistory: newHistory });
+  };
+
+  const removeTask = (taskId) => onUpdate?.({ ...lead, tasks: tasks.filter(t => t.id !== taskId) });
+
+  const accentC = isLight ? `color-mix(in srgb, ${T.accent} 58%, #0B1220 42%)` : T.accent;
+  const hasContent = pending.length > 0 || done.length > 0;
+
+  return (
+    <div style={{ borderRadius: 12, border: `1px solid ${T.border}`, overflow: "hidden", background: T.glass }}>
+      {/* Header */}
+      <div style={{ padding: "10px 14px", display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: (hasContent || addingTask) ? `1px solid ${T.border}` : "none" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
+          <CheckSquare size={12} color={T.txt3} strokeWidth={2} />
+          <span style={{ fontSize: 10, fontWeight: 800, color: T.txt3, letterSpacing: "0.08em", textTransform: "uppercase", fontFamily: fontDisp }}>Tareas</span>
+          {pending.length > 0 && (
+            <span style={{ fontSize: 9, fontWeight: 800, color: accentC, background: `${T.accent}14`, padding: "1px 6px", borderRadius: 99, fontFamily: fontDisp }}>{pending.length}</span>
+          )}
+        </div>
+        <button onClick={() => setAdding(true)} style={{ display: "flex", alignItems: "center", gap: 4, padding: "4px 10px", borderRadius: 7, background: "transparent", border: `1px solid ${T.border}`, color: T.txt3, fontSize: 10.5, fontWeight: 600, cursor: "pointer", fontFamily: font, transition: "all 0.15s" }}
+          onMouseEnter={e => { e.currentTarget.style.background = T.glassH; e.currentTarget.style.color = T.txt2; e.currentTarget.style.borderColor = T.borderH; }}
+          onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = T.txt3; e.currentTarget.style.borderColor = T.border; }}
+        ><Plus size={10} strokeWidth={2.5} /> Agregar</button>
+      </div>
+
+      {/* Input nueva tarea */}
+      {addingTask && (
+        <div style={{ padding: "9px 14px", borderBottom: `1px solid ${T.border}`, display: "flex", gap: 8, alignItems: "center" }}>
+          <input ref={inputRef} value={input} onChange={e => setInput(e.target.value)}
+            onKeyDown={e => { if (e.key === "Enter") addTask(); if (e.key === "Escape") { setAdding(false); setInput(""); } }}
+            placeholder="Describe la tarea..."
+            style={{ flex: 1, padding: "6px 10px", borderRadius: 7, background: isLight ? "rgba(15,23,42,0.04)" : "rgba(255,255,255,0.06)", border: `1px solid ${T.borderH}`, color: T.txt, fontSize: 12, fontFamily: font, outline: "none" }}
+          />
+          <button onClick={addTask} style={{ padding: "6px 12px", borderRadius: 7, background: `${T.accent}18`, border: `1px solid ${T.accentB}`, color: accentC, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: fontDisp, whiteSpace: "nowrap" }}>+ Agregar</button>
+          <button onClick={() => { setAdding(false); setInput(""); }} style={{ width: 26, height: 26, borderRadius: 6, background: "transparent", border: "none", cursor: "pointer", color: T.txt3, display: "flex", alignItems: "center", justifyContent: "center" }}><X size={12} /></button>
+        </div>
+      )}
+
+      {/* Tareas pendientes */}
+      {pending.map((task, i) => (
+        <div key={task.id} style={{ padding: "10px 14px", display: "flex", alignItems: "flex-start", gap: 10, borderBottom: i < pending.length - 1 || done.length > 0 ? `1px solid ${T.border}` : "none", transition: "background 0.15s" }}
+          onMouseEnter={e => e.currentTarget.style.background = T.glassH}
+          onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+        >
+          <button onClick={() => toggleDone(task.id)} title="Marcar como completada"
+            style={{ width: 18, height: 18, borderRadius: "50%", border: `2px solid ${T.borderH}`, background: "transparent", cursor: "pointer", flexShrink: 0, marginTop: 1, display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.18s" }}
+            onMouseEnter={e => { e.currentTarget.style.borderColor = T.accent; e.currentTarget.style.background = `${T.accent}18`; }}
+            onMouseLeave={e => { e.currentTarget.style.borderColor = T.borderH; e.currentTarget.style.background = "transparent"; }}
+          />
+          <span style={{ flex: 1, fontSize: 12.5, color: T.txt, fontFamily: font, lineHeight: 1.45 }}>{task.text}</span>
+          <button onClick={() => removeTask(task.id)} title="Eliminar"
+            style={{ opacity: 0, width: 22, height: 22, borderRadius: 5, background: "transparent", border: "none", cursor: "pointer", color: T.txt3, display: "flex", alignItems: "center", justifyContent: "center", transition: "opacity 0.15s", flexShrink: 0 }}
+            onMouseEnter={e => e.currentTarget.style.opacity = "1"} onMouseLeave={e => e.currentTarget.style.opacity = "0"}
+          ><X size={11} /></button>
+        </div>
+      ))}
+
+      {/* Toggle completadas */}
+      {done.length > 0 && (
+        <>
+          <button onClick={() => setShowDone(v => !v)} style={{ width: "100%", padding: "8px 14px", display: "flex", alignItems: "center", gap: 6, background: "transparent", border: "none", borderTop: pending.length > 0 ? `1px solid ${T.border}` : "none", cursor: "pointer", color: T.txt3, fontSize: 10.5, fontFamily: font, textAlign: "left", transition: "background 0.15s" }}
+            onMouseEnter={e => e.currentTarget.style.background = T.glass}
+            onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+          >
+            <CheckCircle2 size={11} color={T.txt3} strokeWidth={2} />
+            {done.length} completada{done.length !== 1 ? "s" : ""}
+            <ChevronDown size={10} strokeWidth={2.5} style={{ marginLeft: "auto", transform: showDone ? "rotate(180deg)" : "none", transition: "transform 0.2s" }} />
+          </button>
+          {showDone && done.map((task) => (
+            <div key={task.id} style={{ padding: "8px 14px", display: "flex", alignItems: "flex-start", gap: 10, borderTop: `1px solid ${T.border}` }}>
+              <div style={{ width: 18, height: 18, borderRadius: "50%", border: `2px solid ${T.accent}`, background: `${T.accent}18`, flexShrink: 0, marginTop: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <Check size={9} color={isLight ? accentC : T.accent} strokeWidth={3} />
+              </div>
+              <span style={{ flex: 1, fontSize: 12, color: T.txt3, fontFamily: font, lineHeight: 1.4, textDecoration: "line-through" }}>{task.text}</span>
+              {task.doneAtFmt && <span style={{ fontSize: 9.5, color: T.txt3, fontFamily: fontDisp, whiteSpace: "nowrap", marginTop: 2 }}>{task.doneAtFmt}</span>}
+            </div>
+          ))}
+        </>
+      )}
+
+      {/* Estado vacío */}
+      {!hasContent && !addingTask && (
+        <div style={{ padding: "20px 14px", textAlign: "center" }}>
+          <p style={{ fontSize: 11.5, color: T.txt3, fontFamily: font, marginBottom: 10 }}>Añade tareas concretas para este cliente</p>
+          <button onClick={() => setAdding(true)} style={{ padding: "6px 16px", borderRadius: 7, background: `${T.accent}10`, border: `1px solid ${T.accentB}`, color: accentC, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: fontDisp }}>+ Primera tarea</button>
+        </div>
+      )}
+    </div>
+  );
+};
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   ACTION TIMELINE — historial cronológico de acciones completadas.
+   Se auto-popula cuando: se completa una tarea, cambia la próxima acción.
+   Aparece en: Expediente (NotesModal) como sección principal.
+═══════════════════════════════════════════════════════════════════════════ */
+const ActionTimeline = ({ lead, T = P, maxItems = 6 }) => {
+  const isLight = T !== P;
+  const [expanded, setExpanded] = useState(false);
+  const history = Array.isArray(lead?.actionHistory) ? lead.actionHistory : [];
+  if (history.length === 0) return null;
+
+  const shown = expanded ? history : history.slice(0, maxItems);
+  const typeColor  = (type) => ({ tarea: T.emerald, seguimiento: T.blue, completada: T.accent }[type] ?? T.accent);
+  const TypeIcon   = (type) => ({ tarea: CheckCircle2, seguimiento: RefreshCw, completada: CheckCircle2 }[type] ?? CheckCircle2);
+
+  return (
+    <div style={{ borderRadius: 12, border: `1px solid ${T.border}`, overflow: "hidden" }}>
+      {/* Header */}
+      <div style={{ padding: "10px 15px", borderBottom: `1px solid ${T.border}`, background: T.glass, display: "flex", alignItems: "center", gap: 8 }}>
+        <ListChecks size={12} color={T.txt3} strokeWidth={2} />
+        <span style={{ fontSize: 10, fontWeight: 800, color: T.txt3, letterSpacing: "0.08em", textTransform: "uppercase", fontFamily: fontDisp }}>Historial de Acciones</span>
+        <span style={{ fontSize: 9.5, fontWeight: 700, color: T.txt3, background: T.glass, border: `1px solid ${T.border}`, padding: "1px 6px", borderRadius: 99, fontFamily: fontDisp }}>{history.length}</span>
+      </div>
+
+      {/* Línea de tiempo */}
+      <div>
+        {shown.map((entry, i) => {
+          const col  = typeColor(entry.type);
+          const Icon = TypeIcon(entry.type);
+          const colSafe = isLight ? `color-mix(in srgb, ${col} 62%, #0B1220 38%)` : col;
+          const isLast = i === shown.length - 1;
+          return (
+            <div key={entry.id || i} style={{ display: "flex", gap: 0, borderBottom: isLast ? "none" : `1px solid ${T.border}` }}>
+              {/* Línea vertical + icono */}
+              <div style={{ width: 42, display: "flex", flexDirection: "column", alignItems: "center", padding: "10px 0", flexShrink: 0 }}>
+                <div style={{ width: 24, height: 24, borderRadius: "50%", background: `${col}14`, border: `1px solid ${col}28`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  <Icon size={11} color={colSafe} strokeWidth={2.2} />
+                </div>
+                {!isLast && <div style={{ width: 1, flex: 1, minHeight: 8, background: T.border, marginTop: 4 }} />}
+              </div>
+              {/* Contenido */}
+              <div style={{ flex: 1, padding: "10px 14px 10px 0", minWidth: 0 }}>
+                <p style={{ margin: 0, fontSize: 12.5, color: T.txt, fontFamily: font, lineHeight: 1.4, wordBreak: "break-word" }}>{entry.action}</p>
+                {entry.doneAtFmt && <p style={{ margin: "3px 0 0", fontSize: 9.5, color: T.txt3, fontFamily: fontDisp }}>{entry.doneAtFmt}</p>}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Ver más / menos */}
+      {history.length > maxItems && (
+        <button onClick={() => setExpanded(v => !v)} style={{ width: "100%", padding: "8px 15px", background: "transparent", border: "none", borderTop: `1px solid ${T.border}`, cursor: "pointer", color: T.txt3, fontSize: 10.5, fontFamily: font, display: "flex", alignItems: "center", justifyContent: "center", gap: 5, transition: "background 0.15s" }}
+          onMouseEnter={e => e.currentTarget.style.background = T.glass}
+          onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+        >
+          {expanded ? "Ver menos" : `Ver ${history.length - maxItems} registro${history.length - maxItems !== 1 ? "s" : ""} más`}
+          <ChevronDown size={10} strokeWidth={2.5} style={{ transform: expanded ? "rotate(180deg)" : "none", transition: "transform 0.2s" }} />
+        </button>
+      )}
+    </div>
+  );
+};
+
 const NotesModal = ({ lead, onClose, onSave, onUpdate, onSwitchTab, T = P }) => {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState("");
@@ -1848,6 +2056,9 @@ const NotesModal = ({ lead, onClose, onSave, onUpdate, onSwitchTab, T = P }) => 
               <StageBadge lead={lead} onUpdate={onUpdate} T={T} />
             </div>
           )}
+          {/* ── Historial de acciones — siempre visible en lectura ── */}
+          {!editing && <ActionTimeline lead={lead} T={T} />}
+
           {editing ? (
             <div>
               <p style={{ fontSize: 10, fontWeight: 700, color: T.txt3, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 8, fontFamily: fontDisp }}>Editar expediente</p>
@@ -2183,6 +2394,10 @@ const LeadPanel = ({ lead, onClose, oc, onUpdate, onSwitchTab, T = P }) => {
               <FollowUpBadge lead={lead} onUpdate={onUpdate} T={T} />
               <StageBadge lead={lead} onUpdate={onUpdate} T={T} />
             </div>
+
+            {/* ── Lista de tareas — múltiples acciones por cliente.
+                Cada tarea completada se registra automáticamente en el Expediente. ── */}
+            <TaskChecklist lead={lead} onUpdate={onUpdate} T={T} />
 
             {/* ── Datos del cliente — 2 columnas, todos editables inline ──
                 Click en el valor → input. Enter guarda, Escape cancela.
@@ -3217,7 +3432,8 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
     setEditingActionId(lead.id);
   };
   const saveInlineAction = (lead) => {
-    updateLead({ ...lead, nextAction: actionDraft.a.trim(), nextActionDate: actionDraft.d.trim() });
+    // logPrevAction: true → la nextAction anterior pasa al historial del expediente
+    updateLead({ ...lead, nextAction: actionDraft.a.trim(), nextActionDate: actionDraft.d.trim() }, { logPrevAction: true });
     setEditingActionId(null);
   };
   const cancelInlineAction = () => setEditingActionId(null);
@@ -3237,22 +3453,42 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
   // visibleLeads = leads accesibles según el rol del usuario
   const visibleLeads = canSeeAll ? leadsData : leadsData.filter(l => l.asesor === user?.name);
 
-  const updateLead = (updated) => {
+  // updateLead — actualiza lead local + persiste en Supabase.
+  // opts.logPrevAction = true → mueve la nextAction anterior al historial
+  // antes de aplicar el nuevo valor (se usa desde saveInlineAction y edición).
+  const updateLead = (updated, { logPrevAction = false } = {}) => {
     if (prioritySort === "manual" && priorityOrder.length === 0) {
       const snap = priorityLeadsRef.current.map(l => l.id);
       if (snap.length > 0) setPriorityOrder(snap);
     }
     const prev = leadsData.find(l => l.id === updated.id);
+
+    // ── Auto-log de acción anterior al historial ──────────────────────────
+    const prevHistory = Array.isArray(updated.actionHistory)
+      ? updated.actionHistory
+      : (Array.isArray(prev?.actionHistory) ? prev.actionHistory : []);
+    let newHistory = prevHistory;
+    if (
+      logPrevAction &&
+      prev?.nextAction?.trim() &&
+      prev.nextAction.trim() !== (updated.nextAction || "").trim()
+    ) {
+      newHistory = [
+        { id: genId(), action: prev.nextAction.trim(), date: prev.nextActionDate || '', doneAtFmt: fmtNow(), type: "completada" },
+        ...prevHistory,
+      ];
+    }
+
     const segDelta = (updated.seguimientos || 0) - (prev?.seguimientos || 0);
-    const baseSc = updated.sc ?? prev?.sc ?? 0;
-    const newSc = Math.max(0, Math.min(100, baseSc + segDelta * 1));
-    const withScore = { ...updated, sc: newSc };
+    const baseSc   = updated.sc ?? prev?.sc ?? 0;
+    const newSc    = Math.max(0, Math.min(100, baseSc + segDelta));
+    const withScore = { ...updated, sc: newSc, actionHistory: newHistory };
 
     // Actualizar estado local inmediatamente (UI reactiva)
     setLeadsData(prev => prev.map(l => l.id === withScore.id ? withScore : l));
-    if (selectedLead?.id === withScore.id) setSelectedLead(withScore);
-    if (notesLead?.id === withScore.id) setNotesLead(withScore);
-    if (analyzingLead?.id === withScore.id) setAnalyzingLead(withScore);
+    if (selectedLead?.id   === withScore.id) setSelectedLead(withScore);
+    if (notesLead?.id      === withScore.id) setNotesLead(withScore);
+    if (analyzingLead?.id  === withScore.id) setAnalyzingLead(withScore);
 
     // Persistir en Supabase (sin bloquear la UI)
     supabase.from('leads').update({
@@ -3282,6 +3518,12 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
       asesor_name:      withScore.asesor,
       phone:            withScore.phone,
       email:            withScore.email,
+      // ── Nuevos campos de historial / tareas ─────────────────────────────
+      // Requieren columnas JSONB en Supabase:
+      //   ALTER TABLE leads ADD COLUMN action_history jsonb DEFAULT '[]';
+      //   ALTER TABLE leads ADD COLUMN tasks jsonb DEFAULT '[]';
+      action_history:   newHistory,
+      tasks:            Array.isArray(withScore.tasks) ? withScore.tasks : [],
     }).eq('id', withScore.id).then(({ error }) => {
       if (error) {
         console.error('Error guardando lead:', error.message);
@@ -3479,6 +3721,9 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
       notas: notasVal,
       presupuesto: parsedBudget,
       budget: parsedBudget ? formatBudget(parsedBudget) : (newLead.budget || ""),
+      // ── Historial y tareas — se inicializan vacíos en cada lead nuevo ──
+      actionHistory: [],
+      tasks: [],
     };
     setLeadsData(prev => [newEntry, ...prev]);
     // Si el asesor o proyecto son nuevos (no existían en leadsData), los

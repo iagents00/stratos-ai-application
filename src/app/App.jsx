@@ -2225,6 +2225,11 @@ export default function App() {
       ? new Date(l.created_at).toLocaleDateString('es-MX',
           { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
       : '',
+    // Historial de acciones completadas y lista de tareas (columnas JSONB en Supabase)
+    actionHistory:  Array.isArray(l.action_history) ? l.action_history
+      : (() => { try { return JSON.parse(l.action_history || '[]'); } catch { return []; } })(),
+    tasks:          Array.isArray(l.tasks) ? l.tasks
+      : (() => { try { return JSON.parse(l.tasks || '[]'); } catch { return []; } })(),
   })), []);
 
   const fetchLeads = useCallback(async () => {
