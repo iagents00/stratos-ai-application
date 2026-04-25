@@ -23,16 +23,24 @@ import LandingMarketing from "./landing/LandingMarketing.jsx";
 import "./index.css";
 
 // ─── DECISIÓN DE EXPERIENCIA ─────────────────────────────────────────────────
+// LÓGICA: mostrar Landing SOLO en los dominios públicos conocidos.
+// Todo lo demás (Vercel, subdominio app., localhost con ?app) → Plataforma.
 const hostname = window.location.hostname;
 const params   = new URLSearchParams(window.location.search);
-const isApp    = hostname.startsWith("app.")
-              || hostname === "stratos-ai-application.vercel.app"
-              || hostname.endsWith(".vercel.app")
-              || params.has("app")
-              || import.meta.env.VITE_IS_APP === "true";
+
+const LANDING_DOMAINS = [
+  "stratoscapitalgroup.com",
+  "www.stratoscapitalgroup.com",
+];
+
+const isLanding = LANDING_DOMAINS.includes(hostname)
+               || (hostname === "localhost" && !params.has("app"))
+               || (hostname === "127.0.0.1" && !params.has("app"));
+
+const isApp = !isLanding;
 
 // URL de la plataforma — usada por la landing para el CTA principal
-const APP_URL  = import.meta.env.VITE_APP_URL || "/?app";
+const APP_URL = import.meta.env.VITE_APP_URL || (window.location.origin + "/?app");
 
 // ─── RENDER ───────────────────────────────────────────────────────────────────
 createRoot(document.getElementById("root")).render(
