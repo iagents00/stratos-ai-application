@@ -41,7 +41,7 @@ function seedDemo() {
   try {
     const users = JSON.parse(localStorage.getItem("stratos_users") || "[]");
     if (!users.find(u => u.email === "demo@stratos.ai")) {
-      users.unshift({ id: 1, name: "Usuario Demo", email: "demo@stratos.ai", password: "Demo2024" });
+      users.unshift({ id: 1, name: "Usuario Demo", email: "demo@stratos.ai", password: "demo2027" });
       localStorage.setItem("stratos_users", JSON.stringify(users));
     }
   } catch {}
@@ -121,7 +121,7 @@ export default function LoginScreen({ onLogin }) {
 
   const doDemo = async () => {
     setLoad(true);
-    const result = await onLogin("demo@stratos.ai", "Demo2024");
+    const result = await onLogin("demo@stratos.ai", "demo2027");
     if (result?.error) { setError(result.error); setLoad(false); }
   };
 

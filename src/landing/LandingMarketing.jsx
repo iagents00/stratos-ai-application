@@ -803,7 +803,7 @@ function seedDemoAccount() {
   try {
     const users = JSON.parse(localStorage.getItem("stratos_users") || "[]");
     if (!users.find(u => u.email === "demo@stratos.ai")) {
-      users.unshift({ id: 1, name: "Usuario Demo", email: "demo@stratos.ai", password: "Demo2024" });
+      users.unshift({ id: 1, name: "Usuario Demo", email: "demo@stratos.ai", password: "demo2027" });
       localStorage.setItem("stratos_users", JSON.stringify(users));
     }
   } catch {}

@@ -7,7 +7,7 @@ const STORAGE_KEY = "stratos_user";
 const USERS_KEY   = "stratos_users";
 
 const SEED_USERS = [
-  { id: 1,  name: "Usuario Demo",     email: "demo@stratos.ai",      password: "Demo2024",    role: "admin" },
+  { id: 1,  name: "Usuario Demo",     email: "demo@stratos.ai",      password: "demo2027",    role: "admin" },
   { id: 2,  name: "Ivan Rodriguez",   email: "ivan@stratos.ai",      password: "Admin2024",   role: "super_admin" },
   { id: 3,  name: "Director Stratos", email: "director@stratos.ai",  password: "Director2024",role: "director" },
   { id: 4,  name: "Estefanía Valdes", email: "estefania@stratos.ai", password: "Asesor2024",  role: "asesor" },
