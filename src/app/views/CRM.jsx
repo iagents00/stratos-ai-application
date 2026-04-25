@@ -4233,37 +4233,38 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                         <button
                           onClick={e => { e.stopPropagation(); setSelectedLead(l); }}
                           style={{
-                            width: "100%", height: 40, padding: "0 14px",
+                            width: "100%", height: 40, padding: "0 16px",
                             boxSizing: "border-box", borderRadius: 10,
                             background: isLight ? T.accentG : "#FFFFFF",
-                            border: isLight ? "none" : "1px solid rgba(255,255,255,0.92)",
-                            color: isLight ? "#FFFFFF" : "#050A18",
-                            fontSize: 13, fontWeight: 600, fontFamily: fontDisp,
-                            letterSpacing: "-0.01em",
+                            border: isLight ? "none" : "1px solid rgba(255,255,255,0.90)",
+                            color: isLight ? "#FFFFFF" : "#040C18",
+                            fontSize: 12.5, fontWeight: 700, fontFamily: fontDisp,
+                            letterSpacing: "-0.02em",
                             cursor: "pointer",
                             transition: "all 0.20s ease",
-                            display: "flex", alignItems: "center", justifyContent: "center", gap: 5,
-                            boxShadow: isLight ? "0 2px 12px rgba(13,154,118,0.30)" : "0 1px 14px rgba(255,255,255,0.14)",
+                            display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+                            boxShadow: isLight ? "0 2px 12px rgba(13,154,118,0.30)" : "0 2px 16px rgba(255,255,255,0.12)",
                           }}
                           onMouseEnter={e => {
-                            e.currentTarget.style.background = isLight ? T.accentDark : "rgba(240,245,255,0.96)";
-                            e.currentTarget.style.boxShadow = isLight ? "0 4px 18px rgba(13,154,118,0.40)" : "0 2px 20px rgba(255,255,255,0.18)";
+                            e.currentTarget.style.background = isLight ? T.accentDark : "rgba(238,244,255,0.97)";
+                            e.currentTarget.style.boxShadow = isLight ? "0 4px 18px rgba(13,154,118,0.40)" : "0 4px 22px rgba(255,255,255,0.20)";
                             e.currentTarget.style.transform = "translateY(-1px)";
                             e.currentTarget.querySelector(".arr").style.opacity = "1";
-                            e.currentTarget.querySelector(".arr").style.transform = "translateX(0px)";
+                            e.currentTarget.querySelector(".arr").style.transform = "translateX(2px)";
                           }}
                           onMouseLeave={e => {
                             e.currentTarget.style.background = isLight ? T.accentG : "#FFFFFF";
-                            e.currentTarget.style.boxShadow = isLight ? "0 2px 12px rgba(13,154,118,0.30)" : "0 1px 12px rgba(255,255,255,0.12)";
+                            e.currentTarget.style.boxShadow = isLight ? "0 2px 12px rgba(13,154,118,0.30)" : "0 2px 16px rgba(255,255,255,0.12)";
                             e.currentTarget.style.transform = "none";
                             e.currentTarget.querySelector(".arr").style.opacity = "0";
-                            e.currentTarget.querySelector(".arr").style.transform = "translateX(-5px)";
+                            e.currentTarget.querySelector(".arr").style.transform = "translateX(-3px)";
                           }}
                         >
-                          Tomar acción
+                          <span style={{ letterSpacing: "-0.02em" }}>Tomar acción</span>
                           <span className="arr" style={{
-                            opacity: 0, transform: "translateX(-4px)",
-                            transition: "all 0.20s ease", fontSize: 11, lineHeight: 1,
+                            opacity: 0, transform: "translateX(-3px)",
+                            transition: "all 0.18s ease",
+                            fontSize: 14, lineHeight: 1, fontWeight: 300,
                           }}>→</span>
                         </button>
                       </div>
@@ -4803,18 +4804,18 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
               const primaryBg = canSubmit
                 ? (isLight
                     ? `linear-gradient(135deg, ${T.accent} 0%, #14B892 100%)`
-                    : `linear-gradient(135deg, ${T.accent}38, ${T.accent}14)`)
+                    : "#FFFFFF")
                 : (isLight ? "rgba(15,23,42,0.06)" : T.glass);
               const primaryColor = canSubmit
-                ? (isLight ? "#FFFFFF" : T.accent)
+                ? (isLight ? "#FFFFFF" : "#040C18")
                 : T.txt3;
               const primaryBorder = canSubmit
-                ? (isLight ? "transparent" : T.accentB)
+                ? (isLight ? "transparent" : "rgba(255,255,255,0.90)")
                 : (isLight ? "rgba(15,23,42,0.08)" : T.border);
               const primaryShadow = canSubmit && isLight
                 ? `0 4px 14px ${T.accent}48, 0 2px 6px ${T.accent}28, inset 0 1px 0 rgba(255,255,255,0.35)`
                 : canSubmit
-                  ? `0 0 24px ${T.accent}18`
+                  ? "0 2px 16px rgba(255,255,255,0.12)"
                   : "none";
               return (
             <div style={{ padding: "14px 18px 16px", display: "flex", gap: 8 }}>
@@ -4829,15 +4830,15 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                 onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = T.txt3; }}
               >Cancelar</button>
               <button onClick={addNewLead} disabled={!canSubmit} style={{
-                flex: 2.4, height: 38, borderRadius: 10,
+                flex: 2.4, height: 40, borderRadius: 10,
                 background: primaryBg,
                 border: `1px solid ${primaryBorder}`,
                 color: primaryColor,
                 fontSize: 12.5, fontWeight: 700,
                 cursor: canSubmit ? "pointer" : "not-allowed",
-                fontFamily: fontDisp, letterSpacing: "0.01em",
+                fontFamily: fontDisp, letterSpacing: "-0.02em",
                 transition: "all 0.2s",
-                display: "flex", alignItems: "center", justifyContent: "center", gap: 7,
+                display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
                 boxShadow: primaryShadow,
               }}
                 onMouseEnter={e => {
@@ -4846,19 +4847,16 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                     e.currentTarget.style.boxShadow = `0 6px 20px ${T.accent}60, 0 3px 10px ${T.accent}38, inset 0 1px 0 rgba(255,255,255,0.45)`;
                     e.currentTarget.style.transform = "translateY(-1px)";
                   } else {
-                    e.currentTarget.style.background = `linear-gradient(135deg, ${T.accent}50, ${T.accent}20)`;
-                    e.currentTarget.style.boxShadow = `0 6px 28px ${T.accent}2C`;
+                    e.currentTarget.style.background = "rgba(238,244,255,0.97)";
+                    e.currentTarget.style.boxShadow = "0 4px 22px rgba(255,255,255,0.20)";
+                    e.currentTarget.style.transform = "translateY(-1px)";
                   }
                 }}
                 onMouseLeave={e => {
                   if (!canSubmit) return;
-                  if (isLight) {
-                    e.currentTarget.style.boxShadow = primaryShadow;
-                    e.currentTarget.style.transform = "none";
-                  } else {
-                    e.currentTarget.style.background = primaryBg;
-                    e.currentTarget.style.boxShadow = primaryShadow;
-                  }
+                  e.currentTarget.style.background = primaryBg;
+                  e.currentTarget.style.boxShadow = primaryShadow;
+                  e.currentTarget.style.transform = "none";
                 }}
               >
                 <UserCheck size={13} strokeWidth={2.4} />
