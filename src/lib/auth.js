@@ -1,105 +1,130 @@
 /**
- * lib/auth.js — Autenticación con localStorage (prototipo)
- * Cuando se active Supabase, solo cambia este archivo.
+ * lib/auth.js — Autenticación con Supabase Auth
+ * Misma interfaz { data, error } que la versión localStorage.
+ * AuthContext.jsx no necesita cambios.
  */
-
-const STORAGE_KEY = "stratos_user";
-const USERS_KEY   = "stratos_users";
-
-const SEED_USERS = [
-  { id: 1,  name: "Usuario Demo",     email: "demo@stratos.ai",      password: "demo2027",    role: "admin" },
-  { id: 2,  name: "Ivan Rodriguez",   email: "ivan@stratos.ai",      password: "Admin2024",   role: "super_admin" },
-  { id: 3,  name: "Director Stratos", email: "director@stratos.ai",  password: "Director2024",role: "director" },
-  { id: 4,  name: "Estefanía Valdes", email: "estefania@stratos.ai", password: "Asesor2024",  role: "asesor" },
-  { id: 5,  name: "Emmanuel Ortiz",   email: "emmanuel@stratos.ai",  password: "Asesor2024",  role: "asesor" },
-  { id: 6,  name: "Araceli Oneto",    email: "araceli@stratos.ai",   password: "Asesor2024",  role: "asesor" },
-  { id: 7,  name: "Ken Lugo Ríos",    email: "ken@stratos.ai",       password: "Asesor2024",  role: "asesor" },
-  { id: 8,  name: "Cecilia Mendoza",  email: "cecilia@stratos.ai",   password: "Asesor2024",  role: "asesor" },
-  { id: 9,  name: "Oscar Gálvez",     email: "oscar@stratos.ai",     password: "Asesor2024",  role: "asesor" },
-];
+import { supabase } from './supabase'
 
 export function seedDemoUser() {
-  try {
-    // Siempre re-siembra para asegurarse que los usuarios tienen contraseña
-    const existing = JSON.parse(localStorage.getItem(USERS_KEY) || "[]");
-    const merged = [...existing];
-    for (const u of SEED_USERS) {
-      const idx = merged.findIndex(e => e.email === u.email);
-      if (idx === -1) {
-        merged.push(u);
-      } else if (!merged[idx].password) {
-        // Usuario sin contraseña (sesión Supabase vieja) — reemplazar
-        merged[idx] = { ...merged[idx], ...u };
-      }
-    }
-    localStorage.setItem(USERS_KEY, JSON.stringify(merged));
-  } catch { /* silent */ }
+  // Ya no se usa — usuarios viven en Supabase
 }
-
-function getUsers() {
-  try { return JSON.parse(localStorage.getItem(USERS_KEY) || "[]"); } catch { return []; }
-}
-
-function sanitize({ password: _, ...safe }) { return safe; }
 
 export async function signIn(email, password) {
-  const users = getUsers();
-  const found = users.find(u => u.email === email && u.password === password);
-  if (!found) return { data: null, error: "Credenciales incorrectas. Verifica tu email y contraseña." };
-  if (found.isActive === false) return { data: null, error: "Cuenta desactivada. Contacta a tu administrador." };
-  const safe = sanitize(found);
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(safe));
-  return { data: safe, error: null };
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+  if (error) return { data: null, error: error.message }
+
+  const { data: profile, error: profileError } = await supabase
+    .from('profiles')
+    .select('id, name, role, phone, active')
+    .eq('id', data.user.id)
+    .single()
+
+  if (profileError || !profile) {
+    return { data: null, error: 'No se encontró tu perfil. Contacta al administrador.' }
+  }
+  if (profile.active === false) {
+    return { data: null, error: 'Cuenta desactivada. Contacta al administrador.' }
+  }
+
+  return {
+    data: {
+      id:    profile.id,
+      name:  profile.name,
+      email: data.user.email,
+      role:  profile.role,
+      phone: profile.phone,
+    },
+    error: null
+  }
 }
 
 export async function signUp(name, email, password) {
-  const users = getUsers();
-  if (users.some(u => u.email === email)) return { data: null, error: "Este email ya está registrado." };
-  const newUser = { id: Date.now(), name, email, password, role: "asesor", isActive: true };
-  localStorage.setItem(USERS_KEY, JSON.stringify([...users, newUser]));
-  const safe = sanitize(newUser);
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(safe));
-  return { data: safe, error: null };
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: { data: { name, role: 'asesor' } }
+  })
+  if (error) return { data: null, error: error.message }
+
+  return {
+    data: {
+      id:    data.user.id,
+      name,
+      email: data.user.email,
+      role:  'asesor',
+    },
+    error: null
+  }
 }
 
 export async function signOut() {
-  localStorage.removeItem(STORAGE_KEY);
-  return { error: null };
+  await supabase.auth.signOut()
+  return { error: null }
 }
 
 export async function resetPassword(email) {
-  return { data: { message: "Si el email existe, recibirás instrucciones." }, error: null };
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${window.location.origin}/?reset=true`,
+  })
+  if (error) return { data: null, error: error.message }
+  return {
+    data: { message: 'Revisa tu correo — te enviamos el link para restablecer tu contraseña.' },
+    error: null
+  }
 }
 
-export function getStoredSession() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? JSON.parse(raw) : null;
-  } catch { return null; }
+export async function getStoredSession() {
+  const { data: { session } } = await supabase.auth.getSession()
+  if (!session) return null
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('id, name, role, phone, active')
+    .eq('id', session.user.id)
+    .single()
+
+  if (!profile || profile.active === false) return null
+
+  return {
+    id:    profile.id,
+    name:  profile.name,
+    email: session.user.email,
+    role:  profile.role,
+    phone: profile.phone,
+  }
 }
 
-export function adminGetAllUsers() { return getUsers().map(({ password: _, ...u }) => u); }
-export function adminCreateUser({ name, email, password, role }) {
-  const users = getUsers();
-  if (users.some(u => u.email === email)) return { data: null, error: "Email ya registrado." };
-  const newUser = { id: Date.now(), name, email, password: password || "Stratos2024", role: role || "asesor", isActive: true, createdAt: new Date().toISOString() };
-  localStorage.setItem(USERS_KEY, JSON.stringify([...users, newUser]));
-  const { password: _, ...safe } = newUser;
-  return { data: safe, error: null };
+/* ── Funciones admin ─────────────────────────────────────── */
+export async function adminGetAllUsers() {
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('id, name, role, phone, active, created_at')
+    .order('created_at')
+  return error ? [] : data
 }
-export function adminUpdateUser(id, updates) {
-  const users = getUsers();
-  const idx = users.findIndex(u => u.id === id);
-  if (idx === -1) return { data: null, error: "Usuario no encontrado." };
-  users[idx] = { ...users[idx], ...updates };
-  localStorage.setItem(USERS_KEY, JSON.stringify(users));
-  const { password: _, ...safe } = users[idx];
-  return { data: safe, error: null };
+
+export async function adminUpdateUser(id, updates) {
+  const { data, error } = await supabase
+    .from('profiles')
+    .update(updates)
+    .eq('id', id)
+    .select()
+    .single()
+  return { data, error: error?.message ?? null }
 }
-export function adminDeleteUser(id, currentUserId) {
-  if (id === currentUserId) return { error: "No puedes eliminar tu propia cuenta." };
-  const users = getUsers();
-  localStorage.setItem(USERS_KEY, JSON.stringify(users.filter(u => u.id !== id)));
-  return { error: null };
+
+export async function adminDeleteUser(id, currentUserId) {
+  if (id === currentUserId) return { error: 'No puedes desactivar tu propia cuenta.' }
+  const { error } = await supabase
+    .from('profiles')
+    .update({ active: false })
+    .eq('id', id)
+  return { error: error?.message ?? null }
 }
-export function adminResetPassword(id, newPassword) { return adminUpdateUser(id, { password: newPassword }); }
+
+export function adminCreateUser() {
+  return { data: null, error: 'Crear usuarios desde Supabase Dashboard → Authentication → Users' }
+}
+export function adminResetPassword() {
+  return { data: null, error: 'Resetear desde Supabase Dashboard → Authentication → Users' }
+}

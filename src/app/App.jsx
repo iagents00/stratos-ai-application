@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback, useMemo, memo } from "react";
+import { supabase } from "../lib/supabase";
 import LoginScreen from "../landing/LoginScreen.jsx";
 import PricingScreen from "../landing/PricingScreen.jsx";
 import { createPortal } from "react-dom";
@@ -2200,8 +2201,53 @@ export default function App() {
   const T = isLight ? LP : P;
 
   // ── leadsData global — compartido entre Dash y CRM ───────────────────────
-  // Inicializamos con TODOS los leads; el filtro por rol lo hace visibleLeads en CRM
-  const [leadsData, setLeadsData] = useState(leads);
+  const [leadsData, setLeadsData]     = useState([]);
+  const [leadsLoading, setLeadsLoading] = useState(true);
+
+  // Normaliza campos snake_case (Supabase) → camelCase (UI)
+  const normalizeLeads = useCallback((rows) => rows.map(l => ({
+    ...l,
+    n:              l.name,
+    st:             l.stage,
+    sc:             l.score,
+    p:              l.project,
+    campana:        l.campaign,
+    hot:            l.hot,
+    isNew:          l.is_new,
+    nextAction:     l.next_action,
+    nextActionDate: l.next_action_date,
+    lastActivity:   l.last_activity,
+    daysInactive:   l.days_inactive ?? 0,
+    seguimientos:   l.seguimientos ?? 0,
+    aiAgent:        l.ai_agent,
+    asesor:         l.asesor_name ?? '',
+    fechaIngreso:   l.created_at
+      ? new Date(l.created_at).toLocaleDateString('es-MX',
+          { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
+      : '',
+  })), []);
+
+  const fetchLeads = useCallback(async () => {
+    setLeadsLoading(true);
+    const { data, error } = await supabase
+      .from('leads')
+      .select('*')
+      .is('deleted_at', null)
+      .order('created_at', { ascending: false });
+    if (!error && data) setLeadsData(normalizeLeads(data));
+    setLeadsLoading(false);
+  }, [normalizeLeads]);
+
+  useEffect(() => {
+    if (!user) return;
+    fetchLeads();
+    // Realtime — refleja cambios de otros asesores al instante
+    const ch = supabase.channel('leads-global')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'leads' },
+        () => fetchLeads())
+      .subscribe();
+    return () => supabase.removeChannel(ch);
+  }, [user, fetchLeads]);
   const [iaosIdx, setIaosIdx] = useState(0);
   useEffect(() => {
     const t = setInterval(() => setIaosIdx(i => (i + 1) % 4), 4000);

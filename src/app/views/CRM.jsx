@@ -3234,21 +3234,57 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
   // visibleLeads = leads accesibles según el rol del usuario
   const visibleLeads = canSeeAll ? leadsData : leadsData.filter(l => l.asesor === user?.name);
 
-  const updateLead = (updated) => {
+  const updateLead = async (updated) => {
     if (prioritySort === "manual" && priorityOrder.length === 0) {
       const snap = priorityLeadsRef.current.map(l => l.id);
       if (snap.length > 0) setPriorityOrder(snap);
     }
-    // Score manual: preserva el sc actual; cada seguimiento adicional suma +3 pts
     const prev = leadsData.find(l => l.id === updated.id);
     const segDelta = (updated.seguimientos || 0) - (prev?.seguimientos || 0);
     const baseSc = updated.sc ?? prev?.sc ?? 0;
     const newSc = Math.max(0, Math.min(100, baseSc + segDelta * 1));
     const withScore = { ...updated, sc: newSc };
+
+    // Actualizar estado local inmediatamente (UI reactiva)
     setLeadsData(prev => prev.map(l => l.id === withScore.id ? withScore : l));
     if (selectedLead?.id === withScore.id) setSelectedLead(withScore);
     if (notesLead?.id === withScore.id) setNotesLead(withScore);
     if (analyzingLead?.id === withScore.id) setAnalyzingLead(withScore);
+
+    // Persistir en Supabase (sin bloquear la UI)
+    const { supabase: sb } = await import('../../lib/supabase');
+    if (sb) {
+      sb.from('leads').update({
+        name:             withScore.n ?? withScore.name,
+        stage:            withScore.st ?? withScore.stage,
+        score:            withScore.sc,
+        hot:              withScore.hot,
+        is_new:           withScore.isNew ?? withScore.is_new ?? false,
+        budget:           withScore.budget,
+        presupuesto:      withScore.presupuesto || 0,
+        project:          withScore.p ?? withScore.project,
+        campaign:         withScore.campana ?? withScore.campaign,
+        source:           withScore.source,
+        next_action:      withScore.nextAction ?? withScore.next_action,
+        next_action_date: withScore.nextActionDate ?? withScore.next_action_date,
+        last_activity:    withScore.lastActivity ?? withScore.last_activity,
+        days_inactive:    withScore.daysInactive ?? withScore.days_inactive ?? 0,
+        seguimientos:     withScore.seguimientos ?? 0,
+        notas:            withScore.notas,
+        bio:              withScore.bio,
+        risk:             withScore.risk,
+        friction:         withScore.friction,
+        tag:              withScore.tag,
+        ai_agent:         withScore.aiAgent ?? withScore.ai_agent,
+        priority:         withScore.priority,
+        priority_order:   withScore.priority_order,
+        asesor_name:      withScore.asesor,
+        phone:            withScore.phone,
+        email:            withScore.email,
+      }).eq('id', withScore.id).then(({ error }) => {
+        if (error) console.error('Error guardando lead:', error.message);
+      });
+    }
   };
   const saveNotes = (newNotas) => { const u = {...notesLead, notas: newNotas}; updateLead(u); setNotesLead(u); };
   const copyLeadToClipboard = (lead) => {
@@ -3373,15 +3409,52 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
     else { setSortField(field); setSortDir("desc"); }
   };
 
-  const addNewLead = () => {
+  const addNewLead = async () => {
     if (!newLead.n.trim()) return;
     const now = new Date();
     const mos = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
     const h = now.getHours(); const ampm = h >= 12 ? "pm" : "am"; const h12 = h % 12 || 12;
     const dateStr = `${now.getDate()} ${mos[now.getMonth()]}, ${h12}:${String(now.getMinutes()).padStart(2,"0")}${ampm}`;
     const parsedBudget = parseBudget(newLead.budget);
+    const notasVal = newLead.notas?.trim()
+      ? `📍 OBJETIVO\nPendiente — primer contacto.\n\n📋 NOTAS INICIALES\n${newLead.notas.trim()}\n\n⚡ PENDIENTE\nRealizar primer contacto y calificar necesidades.`
+      : `📍 OBJETIVO\nPendiente — primer contacto.\n\n⚡ PENDIENTE\nRealizar primer contacto y calificar necesidades del cliente.`;
+
+    // Insertar en Supabase primero para obtener el UUID real
+    const { supabase: sb } = await import('../../lib/supabase');
+    let realId = Date.now(); // fallback temporal
+    if (sb) {
+      const { data: saved, error } = await sb.from('leads').insert({
+        name:             newLead.n.trim(),
+        phone:            newLead.phone || null,
+        email:            newLead.email || null,
+        stage:            newLead.st || "Nuevo Registro",
+        score:            5,
+        hot:              false,
+        is_new:           true,
+        budget:           parsedBudget ? formatBudget(parsedBudget) : (newLead.budget || ""),
+        presupuesto:      parsedBudget || 0,
+        project:          newLead.p || null,
+        campaign:         newLead.campana || null,
+        source:           newLead.source || "manual",
+        next_action:      newLead.nextAction?.trim() || "Primer contacto en las próximas 24 horas",
+        next_action_date: "Hoy",
+        last_activity:    "Registro manual",
+        days_inactive:    0,
+        seguimientos:     0,
+        bio:              "Cliente recién registrado. Pendiente primer contacto.",
+        risk:             "Sin información suficiente aún.",
+        friction:         "Medio",
+        notas:            notasVal,
+        tag:              newLead.st || "Nuevo Registro",
+        asesor_name:      newLead.asesor || user?.name || "",
+        asesor_id:        user?.id || null,
+      }).select().single();
+      if (!error && saved) realId = saved.id;
+    }
+
     const newEntry = {
-      id: Date.now(), ...newLead, st: newLead.st || "Nuevo Registro",
+      id: realId, ...newLead, st: newLead.st || "Nuevo Registro",
       sc: 5,
       source: newLead.source || "manual",
       tag: newLead.tag || newLead.st || "Nuevo Registro", hot: false, isNew: true, fechaIngreso: dateStr,
@@ -3390,9 +3463,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
       nextAction: newLead.nextAction?.trim() || "Primer contacto en las próximas 24 horas",
       nextActionDate: "Hoy", lastActivity: "Registro manual", daysInactive: 0,
       email: newLead.email || "",
-      notas: newLead.notas?.trim()
-        ? `📍 OBJETIVO\nPendiente — primer contacto.\n\n📋 NOTAS INICIALES\n${newLead.notas.trim()}\n\n⚡ PENDIENTE\nRealizar primer contacto y calificar necesidades.`
-        : `📍 OBJETIVO\nPendiente — primer contacto.\n\n⚡ PENDIENTE\nRealizar primer contacto y calificar necesidades del cliente.`,
+      notas: notasVal,
       presupuesto: parsedBudget,
       budget: parsedBudget ? formatBudget(parsedBudget) : (newLead.budget || ""),
     };
