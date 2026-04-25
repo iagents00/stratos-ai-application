@@ -5,11 +5,28 @@
  */
 import { supabase } from './supabase'
 
+// ── Usuario demo local — permite verificar la interfaz sin Supabase configurado ──
+const DEMO_EMAIL    = 'demo@stratos.ai'
+const DEMO_PASSWORD = 'demo2027'
+const DEMO_USER = {
+  id:    'demo-user-local',
+  name:  'Usuario Demo',
+  email: DEMO_EMAIL,
+  role:  'admin',
+  phone: null,
+}
+
 export function seedDemoUser() {
-  // Ya no se usa — usuarios viven en Supabase
+  // No-op — usuarios viven en Supabase (o modo demo local)
 }
 
 export async function signIn(email, password) {
+  // Modo demo local — siempre funciona sin necesitar Supabase
+  if (email.trim().toLowerCase() === DEMO_EMAIL && password === DEMO_PASSWORD) {
+    sessionStorage.setItem('stratos_demo', '1')
+    return { data: DEMO_USER, error: null }
+  }
+
   try {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password })
     if (error) return { data: null, error: error.message }
@@ -66,6 +83,7 @@ export async function signUp(name, email, password) {
 }
 
 export async function signOut() {
+  sessionStorage.removeItem('stratos_demo')
   try {
     await supabase.auth.signOut()
   } catch (e) {
@@ -90,6 +108,11 @@ export async function resetPassword(email) {
 }
 
 export async function getStoredSession() {
+  // Recuperar sesión demo local tras un refresh
+  if (sessionStorage.getItem('stratos_demo') === '1') {
+    return DEMO_USER
+  }
+
   try {
     const { data: { session } } = await supabase.auth.getSession()
     if (!session) return null

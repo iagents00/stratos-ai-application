@@ -2240,6 +2240,14 @@ export default function App() {
 
   useEffect(() => {
     if (!user) return;
+
+    // Usuario demo — usar datos mock locales, sin tocar Supabase
+    if (user.id === 'demo-user-local') {
+      setLeadsData(leads.map(l => ({ ...l, seguimientos: l.seguimientos ?? 0 })));
+      setLeadsLoading(false);
+      return;
+    }
+
     fetchLeads();
     // Realtime — refleja cambios de otros asesores al instante
     const ch = supabase.channel('leads-global')
