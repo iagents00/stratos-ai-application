@@ -2255,16 +2255,30 @@ export default function App() {
   }, []);
   const [metaOpen, setMetaOpen] = useState(false);
   const [metaTab, setMetaTab] = useState("acciones");
-  const [metaActions, setMetaActions] = useState(() =>
-    leads.filter(l => l.nextAction).map(l => ({
-      id: l.id, text: l.nextAction, lead: l.n,
-      asesor: l.asesor.split(" ")[0],
-      date: l.nextActionDate, done: false,
-      priority: l.hot ? "urgente" : l.daysInactive >= 7 ? "alto" : "normal",
-      assignee: l.asesor,
-      assigneeType: "human",
-    }))
-  );
+  // metaActions se puebla desde leadsData (Supabase) en cuanto llegan los datos.
+  // Se inicializa vacío para no depender del array mock `leads`.
+  const [metaActions, setMetaActions] = useState([]);
+  const metaActionsSeeded = useRef(false);
+
+  useEffect(() => {
+    if (metaActionsSeeded.current || leadsData.length === 0) return;
+    metaActionsSeeded.current = true;
+    setMetaActions(
+      leadsData
+        .filter(l => l.nextAction)
+        .map(l => ({
+          id:           l.id,
+          text:         l.nextAction,
+          lead:         l.n,
+          asesor:       (l.asesor || '').split(' ')[0],
+          date:         l.nextActionDate,
+          done:         false,
+          priority:     l.hot ? 'urgente' : l.daysInactive >= 7 ? 'alto' : 'normal',
+          assignee:     l.asesor,
+          assigneeType: 'human',
+        }))
+    );
+  }, [leadsData]);
   const [metaNewText, setMetaNewText] = useState("");
   const [doneCollapsed, setDoneCollapsed] = useState(true);
   const [metaPlan, setMetaPlan] = useState({

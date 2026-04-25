@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { useAuth } from "../../hooks/useAuth";
+import { supabase } from "../../lib/supabase";
 import {
   TrendingUp, Target, CheckCircle2, Mic, Search,
   Users, Building2, Send, Plus, Timer, Flame,
@@ -3194,6 +3195,12 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
   }, [autoOpenPriority1]); // priorityLeadsRef is a ref, always current
   const [addingLead, setAddingLead]     = useState(false);
   const [copiedId, setCopiedId]         = useState(null);
+  const [saveToast, setSaveToast]       = useState(null); // { msg, type }
+  const showToast = useCallback((msg, type = "error") => {
+    setSaveToast({ msg, type });
+    const t = setTimeout(() => setSaveToast(null), 4000);
+    return () => clearTimeout(t);
+  }, []);
   const [budgetMenuOpen, setBudgetMenuOpen] = useState(false);
   const [stageMenuOpen, setStageMenuOpen]   = useState(false);
   const [newLead, setNewLead]           = useState({ n: "", asesor: canSeeAll ? "" : (user?.name || ""), phone: "", email: "", budget: "", p: "", campana: "", source: "manual", st: "Nuevo Registro", nextAction: "", notas: "" });
@@ -3234,7 +3241,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
   // visibleLeads = leads accesibles según el rol del usuario
   const visibleLeads = canSeeAll ? leadsData : leadsData.filter(l => l.asesor === user?.name);
 
-  const updateLead = async (updated) => {
+  const updateLead = (updated) => {
     if (prioritySort === "manual" && priorityOrder.length === 0) {
       const snap = priorityLeadsRef.current.map(l => l.id);
       if (snap.length > 0) setPriorityOrder(snap);
@@ -3252,39 +3259,39 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
     if (analyzingLead?.id === withScore.id) setAnalyzingLead(withScore);
 
     // Persistir en Supabase (sin bloquear la UI)
-    const { supabase: sb } = await import('../../lib/supabase');
-    if (sb) {
-      sb.from('leads').update({
-        name:             withScore.n ?? withScore.name,
-        stage:            withScore.st ?? withScore.stage,
-        score:            withScore.sc,
-        hot:              withScore.hot,
-        is_new:           withScore.isNew ?? withScore.is_new ?? false,
-        budget:           withScore.budget,
-        presupuesto:      withScore.presupuesto || 0,
-        project:          withScore.p ?? withScore.project,
-        campaign:         withScore.campana ?? withScore.campaign,
-        source:           withScore.source,
-        next_action:      withScore.nextAction ?? withScore.next_action,
-        next_action_date: withScore.nextActionDate ?? withScore.next_action_date,
-        last_activity:    withScore.lastActivity ?? withScore.last_activity,
-        days_inactive:    withScore.daysInactive ?? withScore.days_inactive ?? 0,
-        seguimientos:     withScore.seguimientos ?? 0,
-        notas:            withScore.notas,
-        bio:              withScore.bio,
-        risk:             withScore.risk,
-        friction:         withScore.friction,
-        tag:              withScore.tag,
-        ai_agent:         withScore.aiAgent ?? withScore.ai_agent,
-        priority:         withScore.priority,
-        priority_order:   withScore.priority_order,
-        asesor_name:      withScore.asesor,
-        phone:            withScore.phone,
-        email:            withScore.email,
-      }).eq('id', withScore.id).then(({ error }) => {
-        if (error) console.error('Error guardando lead:', error.message);
-      });
-    }
+    supabase.from('leads').update({
+      name:             withScore.n ?? withScore.name,
+      stage:            withScore.st ?? withScore.stage,
+      score:            withScore.sc,
+      hot:              withScore.hot,
+      is_new:           withScore.isNew ?? withScore.is_new ?? false,
+      budget:           withScore.budget,
+      presupuesto:      withScore.presupuesto || 0,
+      project:          withScore.p ?? withScore.project,
+      campaign:         withScore.campana ?? withScore.campaign,
+      source:           withScore.source,
+      next_action:      withScore.nextAction ?? withScore.next_action,
+      next_action_date: withScore.nextActionDate ?? withScore.next_action_date,
+      last_activity:    withScore.lastActivity ?? withScore.last_activity,
+      days_inactive:    withScore.daysInactive ?? withScore.days_inactive ?? 0,
+      seguimientos:     withScore.seguimientos ?? 0,
+      notas:            withScore.notas,
+      bio:              withScore.bio,
+      risk:             withScore.risk,
+      friction:         withScore.friction,
+      tag:              withScore.tag,
+      ai_agent:         withScore.aiAgent ?? withScore.ai_agent,
+      priority:         withScore.priority,
+      priority_order:   withScore.priority_order,
+      asesor_name:      withScore.asesor,
+      phone:            withScore.phone,
+      email:            withScore.email,
+    }).eq('id', withScore.id).then(({ error }) => {
+      if (error) {
+        console.error('Error guardando lead:', error.message);
+        showToast(`Error al guardar "${withScore.n}": ${error.message}`);
+      }
+    });
   };
   const saveNotes = (newNotas) => { const u = {...notesLead, notas: newNotas}; updateLead(u); setNotesLead(u); };
   const copyLeadToClipboard = (lead) => {
@@ -3421,36 +3428,43 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
       : `📍 OBJETIVO\nPendiente — primer contacto.\n\n⚡ PENDIENTE\nRealizar primer contacto y calificar necesidades del cliente.`;
 
     // Insertar en Supabase primero para obtener el UUID real
-    const { supabase: sb } = await import('../../lib/supabase');
-    let realId = Date.now(); // fallback temporal
-    if (sb) {
-      const { data: saved, error } = await sb.from('leads').insert({
-        name:             newLead.n.trim(),
-        phone:            newLead.phone || null,
-        email:            newLead.email || null,
-        stage:            newLead.st || "Nuevo Registro",
-        score:            5,
-        hot:              false,
-        is_new:           true,
-        budget:           parsedBudget ? formatBudget(parsedBudget) : (newLead.budget || ""),
-        presupuesto:      parsedBudget || 0,
-        project:          newLead.p || null,
-        campaign:         newLead.campana || null,
-        source:           newLead.source || "manual",
-        next_action:      newLead.nextAction?.trim() || "Primer contacto en las próximas 24 horas",
-        next_action_date: "Hoy",
-        last_activity:    "Registro manual",
-        days_inactive:    0,
-        seguimientos:     0,
-        bio:              "Cliente recién registrado. Pendiente primer contacto.",
-        risk:             "Sin información suficiente aún.",
-        friction:         "Medio",
-        notas:            notasVal,
-        tag:              newLead.st || "Nuevo Registro",
-        asesor_name:      newLead.asesor || user?.name || "",
-        asesor_id:        user?.id || null,
-      }).select().single();
-      if (!error && saved) realId = saved.id;
+    // Fallback: crypto.randomUUID() genera un UUID v4 compatible con PostgreSQL
+    let realId = (typeof crypto !== 'undefined' && crypto.randomUUID)
+      ? crypto.randomUUID()
+      : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+
+    const { data: saved, error: insertError } = await supabase.from('leads').insert({
+      name:             newLead.n.trim(),
+      phone:            newLead.phone || null,
+      email:            newLead.email || null,
+      stage:            newLead.st || "Nuevo Registro",
+      score:            5,
+      hot:              false,
+      is_new:           true,
+      budget:           parsedBudget ? formatBudget(parsedBudget) : (newLead.budget || ""),
+      presupuesto:      parsedBudget || 0,
+      project:          newLead.p || null,
+      campaign:         newLead.campana || null,
+      source:           newLead.source || "manual",
+      next_action:      newLead.nextAction?.trim() || "Primer contacto en las próximas 24 horas",
+      next_action_date: "Hoy",
+      last_activity:    "Registro manual",
+      days_inactive:    0,
+      seguimientos:     0,
+      bio:              "Cliente recién registrado. Pendiente primer contacto.",
+      risk:             "Sin información suficiente aún.",
+      friction:         "Medio",
+      notas:            notasVal,
+      tag:              newLead.st || "Nuevo Registro",
+      asesor_name:      newLead.asesor || user?.name || "",
+      asesor_id:        user?.id || null,
+    }).select().single();
+
+    if (insertError) {
+      console.error('Error al crear lead:', insertError.message);
+      showToast(`No se pudo guardar "${newLead.n.trim()}": ${insertError.message}`);
+    } else if (saved) {
+      realId = saved.id;
     }
 
     const newEntry = {
@@ -6273,6 +6287,44 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
         onUpdate={updateLead}
         onSwitchTab={(tab) => openDrawerTab(tab, analyzingLead)}
       />
+
+      {/* ── Toast de error / confirmación ─────────────────────────────────── */}
+      {saveToast && createPortal(
+        <div style={{
+          position:     "fixed",
+          bottom:       24,
+          left:         "50%",
+          transform:    "translateX(-50%)",
+          zIndex:       99999,
+          display:      "flex",
+          alignItems:   "center",
+          gap:          10,
+          padding:      "12px 20px",
+          borderRadius: 10,
+          background:   saveToast.type === "error"
+            ? "rgba(239,68,68,0.95)"
+            : "rgba(110,231,194,0.95)",
+          color:         "#fff",
+          fontSize:      13,
+          fontWeight:    500,
+          fontFamily:    font,
+          boxShadow:    "0 8px 32px rgba(0,0,0,0.35)",
+          maxWidth:     "90vw",
+          backdropFilter: "blur(12px)",
+          animation:    "fadeIn 0.2s ease",
+          cursor:       "pointer",
+          userSelect:   "none",
+        }}
+        onClick={() => setSaveToast(null)}
+        >
+          {saveToast.type === "error"
+            ? <AlertCircle size={15} style={{ flexShrink: 0 }} />
+            : <CheckCircle2 size={15} style={{ flexShrink: 0 }} />
+          }
+          {saveToast.msg}
+        </div>,
+        document.body
+      )}
     </div>
   );
 }

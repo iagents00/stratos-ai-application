@@ -17,6 +17,7 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 
 import { AuthProvider } from "./contexts/AuthContext";
+import ErrorBoundary   from "./components/ErrorBoundary.jsx";
 import App            from "./app/App.jsx";
 import LandingMarketing from "./landing/LandingMarketing.jsx";
 
@@ -45,11 +46,13 @@ const APP_URL = import.meta.env.VITE_APP_URL || (window.location.origin + "/?app
 // ─── RENDER ───────────────────────────────────────────────────────────────────
 createRoot(document.getElementById("root")).render(
   <StrictMode>
-    <AuthProvider>
-      {isApp
-        ? <App />
-        : <LandingMarketing appUrl={APP_URL} />
-      }
-    </AuthProvider>
+    <ErrorBoundary>
+      <AuthProvider>
+        {isApp
+          ? <App />
+          : <LandingMarketing appUrl={APP_URL} />
+        }
+      </AuthProvider>
+    </ErrorBoundary>
   </StrictMode>
 );

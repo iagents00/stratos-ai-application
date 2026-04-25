@@ -23,8 +23,11 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     seedDemoUser();
 
+    let isMounted = true;
+
     // Hidratación inicial — leer sesión activa de Supabase
     getStoredSession().then(session => {
+      if (!isMounted) return;
       setUser(session);
       setLoading(false);
     });
@@ -32,16 +35,20 @@ export function AuthProvider({ children }) {
     // Listener en tiempo real: login / logout / token refresh
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        if (!isMounted) return;
         if (event === 'SIGNED_OUT' || !session) {
           setUser(null);
           return;
         }
         const profile = await getStoredSession();
-        setUser(profile);
+        if (isMounted) setUser(profile);
       }
     );
 
-    return () => subscription.unsubscribe();
+    return () => {
+      isMounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const login = useCallback(async (email, password, opts) => {
