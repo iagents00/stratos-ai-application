@@ -19,7 +19,7 @@ import {
   UserCheck, List, SlidersHorizontal, Mail,
   Pencil, Save, Minus, GripVertical, ChevronsDown
 } from "lucide-react";
-import { P, LP, font, fontDisp, STAGES as STAGES_TOKENS } from "../../design-system/tokens";
+import { P, LP, font, fontDisp, STAGES } from "../../design-system/tokens";
 import { G, KPI, Pill, Ico, ChipSelect } from "../SharedComponents";
 
 
@@ -229,12 +229,7 @@ const AI_AGENTS = {
 const AI_AGENT_LIST = Object.values(AI_AGENTS);
 
 
-const STAGES = [
-  "Nuevo Registro", "Primer Contacto", "Seguimiento",
-  "Zoom Agendado", "Zoom Concretado",
-  "Visita Agendada", "Visita Concretada",
-  "Negociación", "Cierre", "Perdido",
-];
+// STAGES se importa desde design-system/tokens.js — fuente única de verdad
 
 const stgC = {
   "Nuevo Registro":     "#94A3B8",   // slate neutro   — lead recién llegado
@@ -3196,10 +3191,11 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
   const [addingLead, setAddingLead]     = useState(false);
   const [copiedId, setCopiedId]         = useState(null);
   const [saveToast, setSaveToast]       = useState(null); // { msg, type }
+  const toastTimer = useRef(null);
   const showToast = useCallback((msg, type = "error") => {
+    if (toastTimer.current) clearTimeout(toastTimer.current);
     setSaveToast({ msg, type });
-    const t = setTimeout(() => setSaveToast(null), 4000);
-    return () => clearTimeout(t);
+    toastTimer.current = setTimeout(() => setSaveToast(null), 4000);
   }, []);
   const [budgetMenuOpen, setBudgetMenuOpen] = useState(false);
   const [stageMenuOpen, setStageMenuOpen]   = useState(false);
@@ -3291,6 +3287,9 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
         console.error('Error guardando lead:', error.message);
         showToast(`Error al guardar "${withScore.n}": ${error.message}`);
       }
+    }).catch((err) => {
+      console.error('Error de red al guardar lead:', err?.message);
+      showToast('Sin conexión — verifica tu red e intenta de nuevo.');
     });
   };
   const saveNotes = (newNotas) => { const u = {...notesLead, notas: newNotas}; updateLead(u); setNotesLead(u); };
@@ -3325,8 +3324,8 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
   const handleDrop = (e, stage) => {
     e.preventDefault();
     if (dragLeadId) {
-      setLeadsData(prev => prev.map(l => l.id === dragLeadId ? {...l, st: stage} : l));
-      // If we pinned/auto-prioritized this lead, update its stage in pinnedIds context too
+      const lead = leadsData.find(l => l.id === dragLeadId);
+      if (lead && lead.st !== stage) updateLead({ ...lead, st: stage });
     }
     setDragLeadId(null);
     setDragOverStage(null);
@@ -3500,7 +3499,6 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
     }
     setAddingLead(false);
     setNewLead({ n: "", asesor: canSeeAll ? "" : (user?.name || ""), phone: "", email: "", budget: "", p: "", campana: "", source: "manual", st: "Nuevo Registro", nextAction: "", notas: "" });
-    setQuickText("");
   };
 
   const SH = ({ label, field, align = "left" }) => {
