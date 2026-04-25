@@ -29,3 +29,9 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+.vercel
+
+# Herramientas locales de AI (no son parte del proyecto)
+.agents/
+.continue/
+skills-lock.json
