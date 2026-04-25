@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback, useMemo, memo } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo, memo, startTransition } from "react";
 import { supabase } from "../lib/supabase";
 import LoginScreen from "../landing/LoginScreen.jsx";
 import PricingScreen from "../landing/PricingScreen.jsx";
@@ -2194,8 +2194,8 @@ export default function App() {
     catch { return "dark"; }
   });
   const setTheme = useCallback((next) => {
-    setThemeState(next);
     try { localStorage.setItem("stratos_crm_theme", next); } catch {}
+    startTransition(() => setThemeState(next));
   }, []);
   const isLight = theme === "light";
   const T = isLight ? LP : P;
@@ -2448,6 +2448,7 @@ export default function App() {
            #030810`,
       transition: "background 0.3s ease, color 0.3s ease",
     }}>
+      {/* ── Static CSS — never changes, so keyframes never restart ── */}
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
         .topbar-shimmer{background-size:300% 100%;animation:shimmer 2.4s linear infinite}
@@ -2459,14 +2460,6 @@ export default function App() {
         @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
         @keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
         @keyframes atomSpin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
-        @keyframes agentOrbBreathe{
-          0%,100%{box-shadow:0 2px 8px ${T.accent}40,0 6px 20px ${T.accent}38,0 0 0 0 ${T.accent}44,inset 0 1px 0 rgba(255,255,255,0.35),inset 0 -1px 0 rgba(0,0,0,0.15)}
-          50%{box-shadow:0 2px 8px ${T.accent}55,0 8px 28px ${T.accent}60,0 0 0 6px ${T.accent}18,inset 0 1px 0 rgba(255,255,255,0.45),inset 0 -1px 0 rgba(0,0,0,0.15)}
-        }
-        @keyframes priorityBreathe{
-          0%,100%{box-shadow:0 0 0 0 ${T.accent}40,0 0 14px ${T.accent}55}
-          50%{box-shadow:0 0 0 6px ${T.accent}00,0 0 22px ${T.accent}88}
-        }
         @keyframes scanLine{0%{top:0}100%{top:100%}}
         @keyframes stepFade{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:translateX(0)}}
         @keyframes modalIn{from{opacity:0;transform:translate(-50%,-50%) scale(0.97)}to{opacity:1;transform:translate(-50%,-50%) scale(1)}}
@@ -2475,8 +2468,19 @@ export default function App() {
         *{box-sizing:border-box;margin:0}
         ::-webkit-scrollbar{width:4px}
         ::-webkit-scrollbar-track{background:transparent}
-        ::-webkit-scrollbar-thumb{background:${T.border};border-radius:4px}
       `}</style>
+      {/* ── Dynamic CSS — memoized, only re-injects when accent/border color changes ── */}
+      <style>{useMemo(() => `
+        @keyframes agentOrbBreathe{
+          0%,100%{box-shadow:0 2px 8px ${T.accent}40,0 6px 20px ${T.accent}38,0 0 0 0 ${T.accent}44,inset 0 1px 0 rgba(255,255,255,0.35),inset 0 -1px 0 rgba(0,0,0,0.15)}
+          50%{box-shadow:0 2px 8px ${T.accent}55,0 8px 28px ${T.accent}60,0 0 0 6px ${T.accent}18,inset 0 1px 0 rgba(255,255,255,0.45),inset 0 -1px 0 rgba(0,0,0,0.15)}
+        }
+        @keyframes priorityBreathe{
+          0%,100%{box-shadow:0 0 0 0 ${T.accent}40,0 0 14px ${T.accent}55}
+          50%{box-shadow:0 0 0 6px ${T.accent}00,0 0 22px ${T.accent}88}
+        }
+        ::-webkit-scrollbar-thumb{background:${T.border};border-radius:4px}
+      `, [T.accent, T.border])}</style>
 
       {/* ══ Sidebar — Apple-style Navigation ══ */}
       <div style={{
@@ -2488,6 +2492,7 @@ export default function App() {
         background: isLight ? "rgba(246,248,247,0.98)" : "rgba(2,4,11,0.98)",
         backdropFilter: "blur(28px)",
         WebkitBackdropFilter: "blur(28px)",
+        transition: "background 0.35s ease, border-color 0.35s ease, box-shadow 0.35s ease",
         boxShadow: isLight
           ? "1px 0 0 rgba(0,0,0,0.05)"
           : "1px 0 0 rgba(255,255,255,0.04), 8px 0 28px rgba(0,0,0,0.30)",
@@ -3064,7 +3069,7 @@ export default function App() {
         })()}
 
         <div style={{ flex: 1, display: "flex", overflow: "hidden" }}>
-          <div style={{ flex: 1, padding: "18px 22px", overflowY: "auto", animation: "fadeIn 0.4s ease", display: "flex", flexDirection: "column" }}>
+          <div key={v} style={{ flex: 1, padding: "18px 22px", overflowY: "auto", animation: "fadeIn 0.28s ease", display: "flex", flexDirection: "column" }}>
             {/* Permission gate — solo bloquea si el rol está definido y NO tiene acceso */}
             {user?.role && MODULE_ROLES[v] && !MODULE_ROLES[v].includes(user.role)
               ? <PermissionGate moduleId={v} onGoBack={() => setV("c")} />
