@@ -25,7 +25,9 @@ import "./index.css";
 // ─── DECISIÓN DE EXPERIENCIA ─────────────────────────────────────────────────
 const hostname = window.location.hostname;
 const params   = new URLSearchParams(window.location.search);
-const isApp    = hostname.startsWith("app.") || params.has("app");
+const isApp    = hostname.startsWith("app.")
+              || params.has("app")
+              || import.meta.env.VITE_IS_APP === "true";
 
 // URL de la plataforma — usada por la landing para el CTA principal
 const APP_URL  = import.meta.env.VITE_APP_URL || "http://localhost:5173/?app";
