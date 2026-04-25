@@ -26,11 +26,12 @@ import "./index.css";
 const hostname = window.location.hostname;
 const params   = new URLSearchParams(window.location.search);
 const isApp    = hostname.startsWith("app.")
+              || hostname === "stratos-ai-application.vercel.app"
+              || hostname.endsWith(".vercel.app")
               || params.has("app")
               || import.meta.env.VITE_IS_APP === "true";
 
 // URL de la plataforma — usada por la landing para el CTA principal
-// Usar URL relativa para que funcione en cualquier dominio (Vercel, prod, localhost)
 const APP_URL  = import.meta.env.VITE_APP_URL || "/?app";
 
 // ─── RENDER ───────────────────────────────────────────────────────────────────
