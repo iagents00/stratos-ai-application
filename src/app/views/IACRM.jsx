@@ -152,18 +152,9 @@ const AgentToggle = ({ active, onChange, T, isLight }) => (
 );
 
 /* ─── VISTA PRINCIPAL ─── */
-const IACRM = ({ oc, theme = "dark" }) => {
+const IACRM = ({ oc, T: _T, theme = "dark" }) => {
   const isLight = theme === "light";
-  const T = isLight ? {
-    ...LP,
-    txt:     "#0A0A0A",
-    txt2:    "#1C1C1C",
-    txt3:    "#555E6C",
-    glass:   "rgba(255,255,255,0.97)",
-    glassH:  "rgba(255,255,255,1)",
-    border:  "rgba(0,0,0,0.09)",
-    borderH: "rgba(0,0,0,0.16)",
-  } : P;
+  const T = _T || (isLight ? LP : P);
 
   const [tab, setTab]                     = useState("agentes");
   const [expandedAgent, setExpandedAgent] = useState("calificador");

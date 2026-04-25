@@ -3071,12 +3071,12 @@ export default function App() {
               : <>
                   {v === "d" && <Dash oc={oc} co={co} leadsData={leadsData} T={T} />}
                   {v === "c" && <CRM oc={oc} co={co} leadsData={leadsData} setLeadsData={setLeadsData} theme={theme} setTheme={setTheme} autoOpenPriority1={autoOpenPriority1} onAutoOpenHandled={() => setAutoOpenPriority1(0)} />}
-                  {v === "ia" && <IACRM oc={oc} theme={theme} />}
+                  {v === "ia" && <IACRM oc={oc} T={T} theme={theme} />}
                   {v === "e" && <ERP oc={oc} T={T} />}
-                  {v === "a" && <AsesorCRM oc={oc} />}
+                  {v === "a" && <Team oc={oc} T={T} />}
                   {v === "lp" && <LandingPages T={T} />}
-                  {v === "fa" && <FinanzasAdmin />}
-                  {v === "rrhh" && <RRHHModule />}
+                  {v === "fa" && <FinanzasAdmin T={T} />}
+                  {v === "rrhh" && <RRHHModule T={T} />}
                   {v === "planes" && <PricingScreen embedded onBack={() => setV(isAsesorRole ? "c" : "d")} />}
                   {v === "admin" && ["super_admin","admin"].includes(user?.role) && <AdminPanel />}
                 </>

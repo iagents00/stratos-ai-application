@@ -627,7 +627,7 @@ const NewPropertyModal = ({ onClose, onSave, initialData = null, T = P }) => {
               <div>
                 <label style={labelStyle}>Nombre del desarrollo *</label>
                 <input value={form.name} onChange={e=>set("name",e.target.value)} placeholder="Ej: Almara Residences" style={inputStyle("name")}
-                  onFocus={e=>e.target.style.borderColor=form.accent+"80"} onBlur={e=>e.target.style.borderColor=errors.name?P.rose+"80":P.border} />
+                  onFocus={e=>e.target.style.borderColor=form.accent+"80"} onBlur={e=>e.target.style.borderColor=errors.name?T.rose+"80":T.border} />
                 {errors.name && <p style={{fontSize:10,color:T.rose,marginTop:3}}>Campo requerido</p>}
               </div>
               <div>
@@ -817,7 +817,7 @@ const NewPropertyModal = ({ onClose, onSave, initialData = null, T = P }) => {
                   {form.brand && <p style={{ fontSize: 11, color: "rgba(255,255,255,0.5)" }}>{form.brand}</p>}
                   <div style={{ display: "flex", gap: 6, marginTop: 6, flexWrap: "wrap" }}>
                     {form.badge && <span style={{ fontSize: 9, padding: "2px 7px", borderRadius: 4, background: `${form.accent}20`, border: `1px solid ${form.accent}30`, color: form.accent, fontWeight: 700, letterSpacing: "0.05em" }}>{form.badge}</span>}
-                    {form.type && <span style={{ fontSize: 9, padding: "2px 7px", borderRadius: 4, background: P.glass, border: `1px solid ${P.border}`, color: P.txt2 }}>{form.type}</span>}
+                    {form.type && <span style={{ fontSize: 9, padding: "2px 7px", borderRadius: 4, background: T.glass, border: `1px solid ${T.border}`, color: T.txt2 }}>{form.type}</span>}
                   </div>
                 </div>
                 <div style={{ textAlign: "right" }}>
@@ -869,13 +869,13 @@ const ROICalc = ({ prop }) => {
     <div style={{ padding: "40px", background: "#030508", borderTop: "1px solid rgba(255,255,255,0.04)" }}>
       <div style={{ maxWidth: 900, margin: "0 auto" }}>
         <p style={{ fontSize: 11, color: prop.accent, fontWeight: 700, letterSpacing: "0.15em", textTransform: "uppercase", marginBottom: 12 }}>CALCULADORA DE RETORNO</p>
-        <h3 style={{ fontSize: 26, fontWeight: 300, color: "#FFFFFF", fontFamily: fontDisp, letterSpacing: "-0.02em", marginBottom: 8 }}>Proyección de Tu Inversión</h3>
+        <h3 style={{ fontSize: 26, fontWeight: 300, color: T.txt, fontFamily: fontDisp, letterSpacing: "-0.02em", marginBottom: 8 }}>Proyección de Tu Inversión</h3>
         <p style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", marginBottom: 28 }}>Basado en ROI {prop.roi} + plusvalía histórica del 10% anual en la Riviera Maya</p>
         {/* Slider */}
         <div style={{ marginBottom: 28, padding: "20px 24px", borderRadius: 14, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 12 }}>
             <span style={{ fontSize: 13, color: "rgba(255,255,255,0.5)" }}>Inversión inicial</span>
-            <span style={{ fontSize: 28, fontWeight: 300, color: "#FFFFFF", fontFamily: fontDisp, letterSpacing: "-0.03em" }}>{fmt(inv)} USD</span>
+            <span style={{ fontSize: 28, fontWeight: 300, color: T.txt, fontFamily: fontDisp, letterSpacing: "-0.03em" }}>{fmt(inv)} USD</span>
           </div>
           <input type="range" min={prop.priceFrom} max={prop.priceTo} value={inv} onChange={e=>setInv(parseInt(e.target.value))} step={10000}
             style={{ width: "100%", accentColor: prop.accent, cursor: "pointer" }} />
@@ -895,11 +895,11 @@ const ROICalc = ({ prop }) => {
               </div>
               <div style={{ marginBottom: 10 }}>
                 <p style={{ fontSize: 9, color: "rgba(255,255,255,0.35)", marginBottom: 2 }}>Plusvalía</p>
-                <p style={{ fontSize: 14, fontWeight: 500, color: P.emerald, fontFamily: fontDisp }}>+{fmt(pr.appreciation)}</p>
+                <p style={{ fontSize: 14, fontWeight: 500, color: T.emerald, fontFamily: fontDisp }}>+{fmt(pr.appreciation)}</p>
               </div>
               <div style={{ paddingTop: 10, borderTop: "1px solid rgba(255,255,255,0.06)" }}>
                 <p style={{ fontSize: 9, color: "rgba(255,255,255,0.35)", marginBottom: 2 }}>Retorno total</p>
-                <p style={{ fontSize: 18, fontWeight: 700, color: "#FFFFFF", fontFamily: fontDisp }}>{fmt(pr.total)}</p>
+                <p style={{ fontSize: 18, fontWeight: 700, color: T.txt, fontFamily: fontDisp }}>{fmt(pr.total)}</p>
               </div>
               <div style={{ marginTop: 8, padding: "6px 8px", borderRadius: 6, background: `${prop.accent}12` }}>
                 <p style={{ fontSize: 9, color: "rgba(255,255,255,0.4)", marginBottom: 1 }}>Valor propiedad</p>
@@ -933,15 +933,15 @@ const RivieraMayaMap = ({ properties }) => {
     <div style={{ padding: "60px 40px", background: "#020406" }}>
       <div style={{ maxWidth: 900, margin: "0 auto", display: "grid", gridTemplateColumns: "1fr 1.2fr", gap: 40, alignItems: "center" }}>
         <div>
-          <p style={{ fontSize: 11, color: P.accent, fontWeight: 700, letterSpacing: "0.15em", textTransform: "uppercase", marginBottom: 12 }}>UBICACIÓN</p>
-          <h3 style={{ fontSize: 26, fontWeight: 300, color: "#FFFFFF", fontFamily: fontDisp, letterSpacing: "-0.02em", marginBottom: 16 }}>Riviera Maya, México</h3>
+          <p style={{ fontSize: 11, color: T.accent, fontWeight: 700, letterSpacing: "0.15em", textTransform: "uppercase", marginBottom: 12 }}>UBICACIÓN</p>
+          <h3 style={{ fontSize: 26, fontWeight: 300, color: T.txt, fontFamily: fontDisp, letterSpacing: "-0.02em", marginBottom: 16 }}>Riviera Maya, México</h3>
           <p style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", lineHeight: 1.7, marginBottom: 20 }}>
             La Riviera Maya se extiende a lo largo de 120 km de costa caribeña. Con el nuevo Aeropuerto Internacional de Tulum y el Tren Maya, el acceso nunca ha sido mejor.
           </p>
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             {propLocations.map(loc => (
               <div key={loc} style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <div style={{ width: 8, height: 8, borderRadius: "50%", background: properties.find(p=>p.location===loc)?.accent || P.accent, boxShadow: `0 0 8px ${properties.find(p=>p.location===loc)?.accent || P.accent}` }} />
+                <div style={{ width: 8, height: 8, borderRadius: "50%", background: properties.find(p=>p.location===loc)?.accent || T.accent, boxShadow: `0 0 8px ${properties.find(p=>p.location===loc)?.accent || T.accent}` }} />
                 <span style={{ fontSize: 13, color: "rgba(255,255,255,0.7)", fontFamily: font }}>{loc}</span>
                 <span style={{ fontSize: 11, color: "rgba(255,255,255,0.3)" }}>— {properties.filter(p=>p.location===loc).length} propiedad{properties.filter(p=>p.location===loc).length>1?"es":""}</span>
               </div>
@@ -951,7 +951,7 @@ const RivieraMayaMap = ({ properties }) => {
             {[{l:"Cancún →",d:"15-45 min"},{l:"Playa del Carmen →",d:"5-90 min"},{l:"Aeropuerto Tulum →",d:"Nuevo 2025"}].map(r=>(
               <div key={r.l} style={{ padding: "8px 12px", borderRadius: 8, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
                 <p style={{ fontSize: 10, color: "rgba(255,255,255,0.5)" }}>{r.l}</p>
-                <p style={{ fontSize: 12, fontWeight: 600, color: "#FFFFFF", fontFamily: fontDisp }}>{r.d}</p>
+                <p style={{ fontSize: 12, fontWeight: 600, color: T.txt, fontFamily: fontDisp }}>{r.d}</p>
               </div>
             ))}
           </div>
@@ -972,7 +972,7 @@ const RivieraMayaMap = ({ properties }) => {
             {/* City dots */}
             {Object.entries(locations).map(([city, pos]) => {
               const isProp = propLocations.includes(city);
-              const propAccent = isProp ? (properties.find(p=>p.location===city)?.accent || P.accent) : null;
+              const propAccent = isProp ? (properties.find(p=>p.location===city)?.accent || T.accent) : null;
               return (
                 <g key={city}>
                   {isProp && <circle cx={pos.x} cy={pos.y} r="5" fill={propAccent} opacity="0.15"/>}
@@ -1719,7 +1719,7 @@ const LandingPages = ({ T = P }) => {
                   <div style={{ position: "relative", zIndex: 1, width: "100%" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
                       <div>
-                        <p style={{ fontSize: 18, fontWeight: 700, color: "#FFFFFF", fontFamily: fontDisp, letterSpacing: "-0.02em" }}>{prop.name}</p>
+                        <p style={{ fontSize: 18, fontWeight: 700, color: T.txt, fontFamily: fontDisp, letterSpacing: "-0.02em" }}>{prop.name}</p>
                         {prop.brand && <p style={{ fontSize: 11, color: "rgba(255,255,255,0.6)", fontFamily: font }}>{prop.brand}</p>}
                       </div>
                       <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
@@ -1980,25 +1980,25 @@ const LandingPagePreview = ({ client, asesor, asesorWA = "", asesorCal = "", men
           display: "flex", alignItems: "center", justifyContent: "center",
         }} onClick={() => setShowSharePanel(false)}>
           <div onClick={e => e.stopPropagation()} style={{
-            background: "#111318", border: `1px solid ${P.border}`,
+            background: T.surface, border: `1px solid ${T.border}`,
             borderRadius: 20, padding: "28px 32px", width: 500, maxWidth: "95vw",
             boxShadow: "0 40px 80px rgba(0,0,0,0.7)",
           }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
               <p style={{ fontSize: 16, fontWeight: 700, color: "#fff", fontFamily: fontDisp }}>Enviar al cliente</p>
-              <button onClick={() => setShowSharePanel(false)} style={{ width: 30, height: 30, borderRadius: 7, border: `1px solid ${P.border}`, background: P.glass, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <X size={14} color={P.txt2} />
+              <button onClick={() => setShowSharePanel(false)} style={{ width: 30, height: 30, borderRadius: 7, border: `1px solid ${T.border}`, background: T.glass, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <X size={14} color={T.txt2} />
               </button>
             </div>
 
             {/* Copy link */}
             <div style={{ marginBottom: 16 }}>
-              <p style={{ fontSize: 11, color: P.txt2, marginBottom: 8, fontWeight: 600, letterSpacing: "0.04em", textTransform: "uppercase" }}>Enlace de la landing page</p>
+              <p style={{ fontSize: 11, color: T.txt2, marginBottom: 8, fontWeight: 600, letterSpacing: "0.04em", textTransform: "uppercase" }}>Enlace de la landing page</p>
               <div style={{ display: "flex", gap: 8 }}>
-                <input readOnly value={demoShareUrl} style={{ flex: 1, padding: "10px 14px", borderRadius: 9, fontSize: 11, background: P.glass, border: `1px solid ${P.border}`, color: P.txt3, fontFamily: font, outline: "none" }} onClick={e => e.target.select()} />
+                <input readOnly value={demoShareUrl} style={{ flex: 1, padding: "10px 14px", borderRadius: 9, fontSize: 11, background: T.glass, border: `1px solid ${T.border}`, color: T.txt3, fontFamily: font, outline: "none" }} onClick={e => e.target.select()} />
                 <button onClick={() => { onCopyLink(); navigator.clipboard.writeText(demoShareUrl).catch(()=>{}); }} style={{
                   padding: "10px 18px", borderRadius: 9, border: "none",
-                  background: copied ? P.emerald : P.accent, color: "#000",
+                  background: copied ? T.emerald : T.accent, color: "#000",
                   fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: fontDisp,
                   display: "flex", alignItems: "center", gap: 6, whiteSpace: "nowrap",
                   transition: "background 0.2s",
@@ -2010,7 +2010,7 @@ const LandingPagePreview = ({ client, asesor, asesorWA = "", asesorCal = "", men
 
             {/* WhatsApp option */}
             <div style={{ marginBottom: 12 }}>
-              <p style={{ fontSize: 11, color: P.txt2, marginBottom: 8, fontWeight: 600, letterSpacing: "0.04em", textTransform: "uppercase" }}>Enviar por WhatsApp</p>
+              <p style={{ fontSize: 11, color: T.txt2, marginBottom: 8, fontWeight: 600, letterSpacing: "0.04em", textTransform: "uppercase" }}>Enviar por WhatsApp</p>
               {waUrl ? (
                 <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                   <a href={`https://wa.me/${waPhone}?text=${encodeURIComponent(`Hola ${client || "estimado cliente"}, te comparto la presentación exclusiva de propiedades que seleccioné para ti:\n${demoShareUrl}`)}`}
@@ -2029,17 +2029,17 @@ const LandingPagePreview = ({ client, asesor, asesorWA = "", asesorCal = "", men
                     navigator.clipboard.writeText(waMsg).then(() => onCopyLink()).catch(() => {});
                   }} style={{
                     display: "flex", alignItems: "center", gap: 8, padding: "10px 16px",
-                    borderRadius: 9, background: P.glass, border: `1px solid ${P.border}`,
-                    color: P.txt2, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: font, transition: "all 0.18s",
+                    borderRadius: 9, background: T.glass, border: `1px solid ${T.border}`,
+                    color: T.txt2, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: font, transition: "all 0.18s",
                   }}
                     onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.07)"; e.currentTarget.style.color = "#fff"; }}
-                    onMouseLeave={e => { e.currentTarget.style.background = P.glass; e.currentTarget.style.color = P.txt2; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = T.glass; e.currentTarget.style.color = T.txt2; }}
                   >
                     <Copy size={13} /> Copiar mensaje completo para WhatsApp
                   </button>
                 </div>
               ) : (
-                <div style={{ padding: "12px 18px", borderRadius: 10, background: P.glass, border: `1px solid ${P.border}`, color: P.txt3, fontSize: 12 }}>
+                <div style={{ padding: "12px 18px", borderRadius: 10, background: T.glass, border: `1px solid ${T.border}`, color: T.txt3, fontSize: 12 }}>
                   Configura el WhatsApp del asesor en el Paso 1 para activar esta opción
                 </div>
               )}
@@ -2048,18 +2048,18 @@ const LandingPagePreview = ({ client, asesor, asesorWA = "", asesorCal = "", men
             {/* Calendly / meeting link */}
             {calUrl && (
               <div>
-                <p style={{ fontSize: 11, color: P.txt2, marginBottom: 8, fontWeight: 600, letterSpacing: "0.04em", textTransform: "uppercase" }}>Agendar llamada</p>
+                <p style={{ fontSize: 11, color: T.txt2, marginBottom: 8, fontWeight: 600, letterSpacing: "0.04em", textTransform: "uppercase" }}>Agendar llamada</p>
                 <a href={calUrl} target="_blank" rel="noreferrer" style={{
                   display: "flex", alignItems: "center", gap: 10, padding: "12px 18px",
-                  borderRadius: 10, background: P.blueS || "rgba(126,184,240,0.08)", border: `1px solid ${P.blue}30`,
-                  color: P.blue, textDecoration: "none", fontSize: 13, fontWeight: 700, fontFamily: fontDisp,
+                  borderRadius: 10, background: P.blueS || "rgba(126,184,240,0.08)", border: `1px solid ${T.blue}30`,
+                  color: T.blue, textDecoration: "none", fontSize: 13, fontWeight: 700, fontFamily: fontDisp,
                 }}>
                   <CalendarDays size={16} /> Abrir link de agenda
                 </a>
               </div>
             )}
 
-            <p style={{ fontSize: 10, color: P.txt3, marginTop: 18, lineHeight: 1.6, textAlign: "center" }}>
+            <p style={{ fontSize: 10, color: T.txt3, marginTop: 18, lineHeight: 1.6, textAlign: "center" }}>
               La landing page muestra las propiedades seleccionadas con todos sus datos,<br />galería de imágenes y botones de contacto directo con el asesor.
             </p>
           </div>
@@ -2074,18 +2074,18 @@ const LandingPagePreview = ({ client, asesor, asesorWA = "", asesorCal = "", men
         borderBottom: "1px solid rgba(255,255,255,0.08)",
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <Pill color={P.accent}>Vista Previa</Pill>
-          <span style={{ fontSize: 12, color: P.txt2 }}>Landing page para {client}</span>
+          <Pill color={T.accent}>Vista Previa</Pill>
+          <span style={{ fontSize: 12, color: T.txt2 }}>Landing page para {client}</span>
           {properties.length > 1 && (
-            <span style={{ fontSize: 11, color: P.txt3 }}>· {properties.length} propiedades</span>
+            <span style={{ fontSize: 11, color: T.txt3 }}>· {properties.length} propiedades</span>
           )}
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <button onClick={onCopyLink} style={{
             display: "flex", alignItems: "center", gap: 6, padding: "8px 16px",
-            borderRadius: 8, border: `1px solid ${copied ? P.emerald + "50" : P.border}`,
-            background: copied ? "rgba(109,212,168,0.08)" : P.glass,
-            cursor: "pointer", color: copied ? P.emerald : P.txt2, fontSize: 12, fontWeight: 600, fontFamily: font,
+            borderRadius: 8, border: `1px solid ${copied ? T.emerald + "50" : T.border}`,
+            background: copied ? "rgba(109,212,168,0.08)" : T.glass,
+            cursor: "pointer", color: copied ? T.emerald : T.txt2, fontSize: 12, fontWeight: 600, fontFamily: font,
             transition: "all 0.25s",
           }}>
             {copied ? <Check size={14} /> : <Copy size={14} />}
@@ -2099,10 +2099,10 @@ const LandingPagePreview = ({ client, asesor, asesorWA = "", asesorCal = "", men
             <Share2 size={14} /> Enviar al cliente
           </button>
           <button onClick={onClose} style={{
-            width: 36, height: 36, borderRadius: 8, border: `1px solid ${P.border}`,
-            background: P.glass, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
+            width: 36, height: 36, borderRadius: 8, border: `1px solid ${T.border}`,
+            background: T.glass, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
           }}>
-            <X size={16} color={P.txt2} />
+            <X size={16} color={T.txt2} />
           </button>
         </div>
       </div>
@@ -2148,7 +2148,7 @@ const LandingPagePreview = ({ client, asesor, asesorWA = "", asesorCal = "", men
             <p style={{ fontSize: 16, color: "rgba(255,255,255,0.6)", fontFamily: font, marginBottom: 8, fontWeight: 400, animation: "fadeInUp 0.65s 0.08s ease both" }}>
               Preparado exclusivamente para
             </p>
-            <h1 style={{ fontSize: 52, fontWeight: 300, color: "#FFFFFF", fontFamily: fontDisp, letterSpacing: "-0.03em", lineHeight: 1.1, marginBottom: 20, animation: "floatSoft 5s 0.3s ease-in-out infinite, fadeInUp 0.7s 0.15s ease both" }}>
+            <h1 style={{ fontSize: 52, fontWeight: 300, color: T.txt, fontFamily: fontDisp, letterSpacing: "-0.03em", lineHeight: 1.1, marginBottom: 20, animation: "floatSoft 5s 0.3s ease-in-out infinite, fadeInUp 0.7s 0.15s ease both" }}>
               {client || "Estimado Cliente"}
             </h1>
 
@@ -2215,7 +2215,7 @@ const LandingPagePreview = ({ client, asesor, asesorWA = "", asesorCal = "", men
                 { label: "Ubicaciones", value: [...new Set(properties.map(p => p.location))].length },
               ].map(s => (
                 <div key={s.label}>
-                  <p style={{ fontSize: 28, fontWeight: 300, color: "#FFFFFF", fontFamily: fontDisp, letterSpacing: "-0.03em" }}>{s.value}</p>
+                  <p style={{ fontSize: 28, fontWeight: 300, color: T.txt, fontFamily: fontDisp, letterSpacing: "-0.03em" }}>{s.value}</p>
                   <p style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", fontFamily: font, letterSpacing: "0.05em", textTransform: "uppercase", marginTop: 4 }}>{s.label}</p>
                 </div>
               ))}
@@ -2228,7 +2228,7 @@ const LandingPagePreview = ({ client, asesor, asesorWA = "", asesorCal = "", men
           <div style={{ maxWidth: 1100, margin: "0 auto" }}>
             <div style={{ textAlign: "center", marginBottom: 60 }}>
               <p style={{ fontSize: 11, color: currentProp.accent, fontWeight: 700, letterSpacing: "0.15em", textTransform: "uppercase", marginBottom: 12 }}>PORTAFOLIO EXCLUSIVO</p>
-              <h2 style={{ fontSize: 36, fontWeight: 300, color: "#FFFFFF", fontFamily: fontDisp, letterSpacing: "-0.02em" }}>
+              <h2 style={{ fontSize: 36, fontWeight: 300, color: T.txt, fontFamily: fontDisp, letterSpacing: "-0.02em" }}>
                 Propiedades Seleccionadas
               </h2>
               <p style={{ fontSize: 14, color: "rgba(255,255,255,0.5)", marginTop: 12, fontFamily: font }}>
@@ -2253,9 +2253,9 @@ const LandingPagePreview = ({ client, asesor, asesorWA = "", asesorCal = "", men
                       <div>
                         <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
                           <Pill color={prop.accent}>{prop.type}</Pill>
-                          <Pill color={P.emerald}>ROI {prop.roi}</Pill>
+                          <Pill color={T.emerald}>ROI {prop.roi}</Pill>
                         </div>
-                        <h3 style={{ fontSize: 32, fontWeight: 300, color: "#FFFFFF", fontFamily: fontDisp, letterSpacing: "-0.02em" }}>
+                        <h3 style={{ fontSize: 32, fontWeight: 300, color: T.txt, fontFamily: fontDisp, letterSpacing: "-0.02em" }}>
                           {prop.name} <span style={{ color: "rgba(255,255,255,0.4)", fontWeight: 200 }}>{prop.brand}</span>
                         </h3>
                         <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 8 }}>
@@ -2265,7 +2265,7 @@ const LandingPagePreview = ({ client, asesor, asesorWA = "", asesorCal = "", men
                       </div>
                       <div style={{ textAlign: "right" }}>
                         <p style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", letterSpacing: "0.05em", textTransform: "uppercase", marginBottom: 4 }}>DESDE</p>
-                        <p style={{ fontSize: 38, fontWeight: 300, color: "#FFFFFF", fontFamily: fontDisp, letterSpacing: "-0.03em" }}>
+                        <p style={{ fontSize: 38, fontWeight: 300, color: T.txt, fontFamily: fontDisp, letterSpacing: "-0.03em" }}>
                           {fmtPrice(prop.priceFrom)}
                         </p>
                         <p style={{ fontSize: 12, color: "rgba(255,255,255,0.4)" }}>hasta {fmtPrice(prop.priceTo)} USD</p>
@@ -2284,9 +2284,9 @@ const LandingPagePreview = ({ client, asesor, asesorWA = "", asesorCal = "", men
                   <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16, marginBottom: 28 }}>
                     {[
                       { label: "Recámaras", value: prop.bedrooms, icon: Home, c: prop.accent },
-                      { label: "ROI Anual", value: prop.roi, icon: TrendingUp, c: P.emerald },
-                      { label: "Entrega", value: prop.delivery, icon: Calendar, c: P.blue },
-                      { label: "Tamaños", value: prop.sizes[0] + " – " + prop.sizes[prop.sizes.length - 1], icon: Maximize2, c: P.violet },
+                      { label: "ROI Anual", value: prop.roi, icon: TrendingUp, c: T.emerald },
+                      { label: "Entrega", value: prop.delivery, icon: Calendar, c: T.blue },
+                      { label: "Tamaños", value: prop.sizes[0] + " – " + prop.sizes[prop.sizes.length - 1], icon: Maximize2, c: T.violet },
                     ].map(m => (
                       <div key={m.label} style={{
                         padding: "16px", borderRadius: 12,
@@ -2296,7 +2296,7 @@ const LandingPagePreview = ({ client, asesor, asesorWA = "", asesorCal = "", men
                           <m.icon size={14} color={m.c} />
                           <span style={{ fontSize: 10, color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: "0.05em" }}>{m.label}</span>
                         </div>
-                        <p style={{ fontSize: 16, fontWeight: 600, color: "#FFFFFF", fontFamily: fontDisp }}>{m.value}</p>
+                        <p style={{ fontSize: 16, fontWeight: 600, color: T.txt, fontFamily: fontDisp }}>{m.value}</p>
                       </div>
                     ))}
                   </div>
@@ -2335,7 +2335,7 @@ const LandingPagePreview = ({ client, asesor, asesorWA = "", asesorCal = "", men
                     display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap",
                   }}>
                     <div>
-                      <p style={{ fontSize: 13, fontWeight: 600, color: "#FFFFFF", fontFamily: fontDisp, marginBottom: 4 }}>
+                      <p style={{ fontSize: 13, fontWeight: 600, color: T.txt, fontFamily: fontDisp, marginBottom: 4 }}>
                         {(driveLinks[prop.id] || prop.driveLink) ? "Galería de imágenes disponible" : "Galería de imágenes"}
                       </p>
                       <p style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", fontFamily: font }}>
@@ -2381,24 +2381,24 @@ const LandingPagePreview = ({ client, asesor, asesorWA = "", asesorCal = "", men
         <div style={{ background: "#030508", padding: "80px 40px" }}>
           <div style={{ maxWidth: 900, margin: "0 auto" }}>
             <div style={{ textAlign: "center", marginBottom: 50 }}>
-              <p style={{ fontSize: 11, color: P.accent, fontWeight: 700, letterSpacing: "0.15em", textTransform: "uppercase", marginBottom: 12 }}>DATOS DEL MERCADO 2026</p>
-              <h2 style={{ fontSize: 32, fontWeight: 300, color: "#FFFFFF", fontFamily: fontDisp, letterSpacing: "-0.02em" }}>
+              <p style={{ fontSize: 11, color: T.accent, fontWeight: 700, letterSpacing: "0.15em", textTransform: "uppercase", marginBottom: 12 }}>DATOS DEL MERCADO 2026</p>
+              <h2 style={{ fontSize: 32, fontWeight: 300, color: T.txt, fontFamily: fontDisp, letterSpacing: "-0.02em" }}>
                 ¿Por qué la Riviera Maya?
               </h2>
             </div>
 
             <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 20, marginBottom: 40 }}>
               {[
-                { label: "Crecimiento Anual", value: "14%", sub: "Nominal YoY", icon: TrendingUp, c: P.emerald },
-                { label: "ROI por Rentas", value: "8-15%", sub: "Neto anual", icon: DollarSign, c: P.accent },
-                { label: "Ocupación", value: "75-90%", sub: "Promedio anual", icon: Building2, c: P.blue },
+                { label: "Crecimiento Anual", value: "14%", sub: "Nominal YoY", icon: TrendingUp, c: T.emerald },
+                { label: "ROI por Rentas", value: "8-15%", sub: "Neto anual", icon: DollarSign, c: T.accent },
+                { label: "Ocupación", value: "75-90%", sub: "Promedio anual", icon: Building2, c: T.blue },
               ].map(s => (
                 <div key={s.label} style={{
                   padding: 28, borderRadius: 16, textAlign: "center",
                   background: `${s.c}06`, border: `1px solid ${s.c}15`,
                 }}>
                   <s.icon size={24} color={s.c} style={{ margin: "0 auto 14px" }} />
-                  <p style={{ fontSize: 36, fontWeight: 300, color: "#FFFFFF", fontFamily: fontDisp, letterSpacing: "-0.03em" }}>{s.value}</p>
+                  <p style={{ fontSize: 36, fontWeight: 300, color: T.txt, fontFamily: fontDisp, letterSpacing: "-0.03em" }}>{s.value}</p>
                   <p style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", marginTop: 6, letterSpacing: "0.05em" }}>{s.label}</p>
                   <p style={{ fontSize: 10, color: s.c, marginTop: 2 }}>{s.sub}</p>
                 </div>
@@ -2407,7 +2407,7 @@ const LandingPagePreview = ({ client, asesor, asesorWA = "", asesorCal = "", men
 
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
               <div style={{ padding: 28, borderRadius: 16, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)" }}>
-                <p style={{ fontSize: 14, fontWeight: 700, color: "#FFFFFF", fontFamily: fontDisp, marginBottom: 18 }}>Ventajas para Inversionistas</p>
+                <p style={{ fontSize: 14, fontWeight: 700, color: T.txt, fontFamily: fontDisp, marginBottom: 18 }}>Ventajas para Inversionistas</p>
                 {[
                   "Propiedad 100% legal para extranjeros via fideicomiso",
                   "Impuestos prediales mínimos vs EE.UU./Canadá",
@@ -2417,14 +2417,14 @@ const LandingPagePreview = ({ client, asesor, asesorWA = "", asesorCal = "", men
                   "Mercado de nómadas digitales en expansión",
                 ].map((v, i) => (
                   <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 10, marginBottom: 12 }}>
-                    <CheckCircle2 size={16} color={P.accent} style={{ flexShrink: 0, marginTop: 2 }} />
+                    <CheckCircle2 size={16} color={T.accent} style={{ flexShrink: 0, marginTop: 2 }} />
                     <span style={{ fontSize: 13, color: "rgba(255,255,255,0.7)", lineHeight: 1.5 }}>{v}</span>
                   </div>
                 ))}
               </div>
 
               <div style={{ padding: 28, borderRadius: 16, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)" }}>
-                <p style={{ fontSize: 14, fontWeight: 700, color: "#FFFFFF", fontFamily: fontDisp, marginBottom: 18 }}>Infraestructura</p>
+                <p style={{ fontSize: 14, fontWeight: 700, color: T.txt, fontFamily: fontDisp, marginBottom: 18 }}>Infraestructura</p>
                 {[
                   { title: "Aeropuerto de Tulum", desc: "Nuevo aeropuerto internacional, abrió en 2025" },
                   { title: "Tren Maya", desc: "Conectividad ferroviaria regional — impulsa plusvalía" },
@@ -2432,7 +2432,7 @@ const LandingPagePreview = ({ client, asesor, asesorWA = "", asesorCal = "", men
                   { title: "Plusvalía real", desc: "8% anual después de inflación" },
                 ].map((inf, i) => (
                   <div key={i} style={{ marginBottom: 16, padding: "12px 14px", borderRadius: 10, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.04)" }}>
-                    <p style={{ fontSize: 13, fontWeight: 600, color: "#FFFFFF", fontFamily: fontDisp }}>{inf.title}</p>
+                    <p style={{ fontSize: 13, fontWeight: 600, color: T.txt, fontFamily: fontDisp }}>{inf.title}</p>
                     <p style={{ fontSize: 11, color: "rgba(255,255,255,0.5)", marginTop: 4, lineHeight: 1.4 }}>{inf.desc}</p>
                   </div>
                 ))}
@@ -2444,8 +2444,8 @@ const LandingPagePreview = ({ client, asesor, asesorWA = "", asesorCal = "", men
         {/* CTA SECTION */}
         <div style={{ background: "#000000", padding: "80px 40px", textAlign: "center" }}>
           <div style={{ maxWidth: 600, margin: "0 auto" }}>
-            <StratosAtom size={40} color={P.accent} />
-            <h2 style={{ fontSize: 32, fontWeight: 300, color: "#FFFFFF", fontFamily: fontDisp, letterSpacing: "-0.02em", marginTop: 20, marginBottom: 12 }}>
+            <StratosAtom size={40} color={T.accent} />
+            <h2 style={{ fontSize: 32, fontWeight: 300, color: T.txt, fontFamily: fontDisp, letterSpacing: "-0.02em", marginTop: 20, marginBottom: 12 }}>
               ¿Listo para dar el siguiente paso?
             </h2>
             <p style={{ fontSize: 14, color: "rgba(255,255,255,0.5)", lineHeight: 1.6, marginBottom: 32 }}>
