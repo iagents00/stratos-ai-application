@@ -2456,7 +2456,7 @@ export default function App() {
   if (!user) return <LoginScreen onLogin={login} />;
 
   return (
-    <div style={{
+    <div className="stratos-app" style={{
       height: "100vh", display: "flex", fontFamily: font,
       color: T.txt,
       background: isLight
@@ -2487,12 +2487,26 @@ export default function App() {
         *{box-sizing:border-box;margin:0}
         ::-webkit-scrollbar{width:4px}
         ::-webkit-scrollbar-track{background:transparent}
+
+        /* ── Mobile layout ── */
+        .stratos-bottomnav{display:none}
+        @media(max-width:768px){
+          .stratos-sidebar{display:none!important}
+          .stratos-content-area{padding:14px 14px 72px 14px!important}
+          .stratos-bottomnav{
+            display:flex!important;
+            position:fixed;bottom:0;left:0;right:0;
+            height:58px;z-index:200;
+            align-items:center;justify-content:space-around;
+            border-top:1px solid rgba(255,255,255,0.07);
+          }
+        }
       `}</style>
       {/* ── Dynamic CSS — memoized, only re-injects when accent/border color changes ── */}
       <style>{dynamicStyles}</style>
 
       {/* ══ Sidebar — Apple-style Navigation ══ */}
-      <div style={{
+      <div className="stratos-sidebar" style={{
         width: 72, flexShrink: 0, zIndex: 10,
         borderRight: `1px solid ${isLight ? "rgba(0,0,0,0.06)" : "rgba(255,255,255,0.05)"}`,
         display: "flex", flexDirection: "column", alignItems: "center",
@@ -3078,7 +3092,7 @@ export default function App() {
         })()}
 
         <div style={{ flex: 1, display: "flex", overflow: "hidden" }}>
-          <div key={v} style={{ flex: 1, padding: "18px 22px", overflowY: "auto", animation: "fadeIn 0.28s ease", display: "flex", flexDirection: "column" }}>
+          <div key={v} className="stratos-content-area" style={{ flex: 1, padding: "18px 22px", overflowY: "auto", animation: "fadeIn 0.28s ease", display: "flex", flexDirection: "column" }}>
             {/* Permission gate — solo bloquea si el rol está definido y NO tiene acceso */}
             {user?.role && MODULE_ROLES[v] && !MODULE_ROLES[v].includes(user.role)
               ? <PermissionGate moduleId={v} onGoBack={() => setV("c")} />
@@ -3098,6 +3112,93 @@ export default function App() {
           </div>
           <Chat open={co} onClose={() => setCo(false)} msgs={msgs} setMsgs={setMsgs} inp={inp} setInp={setInp} />
         </div>
+      </div>
+
+      {/* ── Mobile Bottom Nav — shown only on small screens via CSS ── */}
+      <div className="stratos-bottomnav" style={{
+        backdropFilter: "blur(24px)", WebkitBackdropFilter: "blur(24px)",
+        background: isLight ? "rgba(246,248,247,0.97)" : "rgba(2,4,11,0.97)",
+      }}>
+        {nav.filter(n => !n.more).map(n => {
+          const a = v === n.id;
+          const activeColor = isLight ? T.accent : "#6EE7C2";
+          return (
+            <button
+              key={n.id}
+              onClick={() => setV(n.id)}
+              style={{
+                flex: 1, height: "100%", border: "none", background: "transparent",
+                cursor: "pointer", display: "flex", flexDirection: "column",
+                alignItems: "center", justifyContent: "center", gap: 3,
+                outline: "none",
+              }}
+            >
+              <n.i
+                size={22}
+                color={a ? activeColor : (isLight ? "rgba(15,23,42,0.38)" : "rgba(255,255,255,0.30)")}
+                strokeWidth={a ? 1.9 : 1.5}
+              />
+              <span style={{
+                fontSize: 9, fontFamily: fontDisp, fontWeight: a ? 700 : 400,
+                color: a ? activeColor : (isLight ? "rgba(15,23,42,0.38)" : "rgba(255,255,255,0.28)"),
+                lineHeight: 1,
+              }}>{n.l}</span>
+            </button>
+          );
+        })}
+        {/* "Más" button for secondary nav */}
+        <button
+          onClick={() => setSidebarMore(p => !p)}
+          style={{
+            flex: 1, height: "100%", border: "none", background: "transparent",
+            cursor: "pointer", display: "flex", flexDirection: "column",
+            alignItems: "center", justifyContent: "center", gap: 3, outline: "none",
+          }}
+        >
+          <ChevronsDown
+            size={22}
+            color={nav.filter(n=>n.more).some(n=>n.id===v) ? (isLight ? T.accent : "#6EE7C2") : (isLight ? "rgba(15,23,42,0.38)" : "rgba(255,255,255,0.30)")}
+            strokeWidth={1.5}
+            style={{ transform: sidebarMore ? "rotate(180deg)" : "none", transition: "transform 0.22s" }}
+          />
+          <span style={{
+            fontSize: 9, fontFamily: fontDisp, fontWeight: 400,
+            color: nav.filter(n=>n.more).some(n=>n.id===v) ? (isLight ? T.accent : "#6EE7C2") : (isLight ? "rgba(15,23,42,0.38)" : "rgba(255,255,255,0.28)"),
+            lineHeight: 1,
+          }}>Más</span>
+        </button>
+
+        {/* Secondary nav drawer — slides up from bottom on mobile */}
+        {sidebarMore && (
+          <div style={{
+            position: "fixed", bottom: 58, left: 0, right: 0, zIndex: 199,
+            display: "flex", flexWrap: "wrap", justifyContent: "center", gap: 8,
+            padding: "14px 16px",
+            background: isLight ? "rgba(246,248,247,0.97)" : "rgba(4,8,18,0.97)",
+            backdropFilter: "blur(24px)", WebkitBackdropFilter: "blur(24px)",
+            borderTop: `1px solid ${isLight ? "rgba(0,0,0,0.07)" : "rgba(255,255,255,0.07)"}`,
+          }}>
+            {nav.filter(n => n.more && (!n.adminOnly || ["super_admin","admin"].includes(user?.role))).map(n => {
+              const a = v === n.id;
+              const activeColor = n.adminOnly ? "#A78BFA" : (isLight ? T.accent : "#6EE7C2");
+              return (
+                <button
+                  key={n.id}
+                  onClick={() => { setV(n.id); setSidebarMore(false); }}
+                  style={{
+                    display: "flex", flexDirection: "column", alignItems: "center", gap: 4,
+                    padding: "10px 14px", borderRadius: 14, border: "none", cursor: "pointer",
+                    background: a ? `${activeColor}14` : (isLight ? "rgba(0,0,0,0.04)" : "rgba(255,255,255,0.05)"),
+                    minWidth: 70,
+                  }}
+                >
+                  <n.i size={20} color={a ? activeColor : (isLight ? "rgba(15,23,42,0.45)" : "rgba(255,255,255,0.35)")} strokeWidth={a ? 1.9 : 1.5} />
+                  <span style={{ fontSize: 9.5, fontFamily: fontDisp, fontWeight: a ? 700 : 400, color: a ? activeColor : (isLight ? "rgba(15,23,42,0.45)" : "rgba(255,255,255,0.35)"), lineHeight: 1 }}>{n.l}</span>
+                </button>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {/* ── META PANEL — Lista de Acción · Plan Estratégico · Protocolo de Ventas ── */}
