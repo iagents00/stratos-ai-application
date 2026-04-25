@@ -302,9 +302,9 @@ const ScoreInput = ({ sc, onUpdate, color, isLight, T, stopProp = false, big = f
       <span style={{ fontSize: 8.5, fontWeight: 700, fontFamily: fontDisp, letterSpacing: "0.08em", textTransform: "uppercase", color: isLight ? "rgba(15,23,42,0.30)" : "rgba(255,255,255,0.25)", flexShrink: 0 }}>Score</span>
       <div
         onClick={handleBarClick}
-        style={{ flex: 1, height: 2.5, borderRadius: 99, background: isLight ? "rgba(15,23,42,0.07)" : "rgba(255,255,255,0.07)", cursor: readOnly ? "default" : "ew-resize", position: "relative", overflow: "hidden" }}
+        style={{ flex: 1, height: 3, borderRadius: 99, background: isLight ? "rgba(15,23,42,0.07)" : "rgba(255,255,255,0.09)", cursor: readOnly ? "default" : "ew-resize", position: "relative", overflow: "hidden" }}
       >
-        <div style={{ width: `${sc}%`, height: "100%", borderRadius: 99, background: accentColor, transition: "width 0.3s cubic-bezier(0.4,0,0.2,1)" }} />
+        <div style={{ width: `${sc}%`, height: "100%", borderRadius: 99, background: accentColor, boxShadow: `0 0 10px ${accentColor}40`, transition: "width 0.3s cubic-bezier(0.4,0,0.2,1)" }} />
       </div>
       {!readOnly && editSc ? (
         <input
@@ -533,7 +533,7 @@ const FollowUpBadge = ({ lead, onUpdate, T = P, compact = false, fullWidth = fal
     return (
       <div onClick={e => e.stopPropagation()} style={{
         display: "flex", alignItems: "stretch", width: "100%",
-        height: 46, borderRadius: 12,
+        height: 40, borderRadius: 10,
         background: pillBg,
         border: `1px solid ${pillBorder}`,
         overflow: "hidden", position: "relative",
@@ -628,27 +628,20 @@ const FollowUpBadge = ({ lead, onUpdate, T = P, compact = false, fullWidth = fal
                   color: T.txt3, fontFamily: font,
                   letterSpacing: "0.005em",
                 }}>
-                  Registrar primer seguimiento
+                  Registrar
                 </span>
               </>
             ) : (
-              // Estado con registros — número como protagonista.
-              <>
-                <Phone size={11} strokeWidth={2.6} color={accentSafe} style={{ opacity: 0.55, flexShrink: 0 }} />
+              // Estado con registros — número + label vertical stack.
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <Phone size={9} strokeWidth={1.8} color={T.txt3} style={{ opacity: 0.40, flexShrink: 0, marginTop: 1 }} />
                 <span style={{
-                  fontSize: 22, fontWeight: 800, fontFamily: fontDisp,
-                  letterSpacing: "-0.03em", lineHeight: 1,
+                  fontSize: 20, fontWeight: 200, fontFamily: fontDisp,
+                  letterSpacing: "-0.04em", lineHeight: 1,
                   fontVariantNumeric: "tabular-nums",
                   color: accentSafe,
                 }}>{count}</span>
-                <span style={{
-                  fontSize: 10.5, fontWeight: 600, color: T.txt3,
-                  letterSpacing: "0.01em", fontFamily: font,
-                  whiteSpace: "nowrap", lineHeight: 1,
-                }}>
-                  {count === 1 ? "seguimiento" : "seguimientos"}
-                </span>
-              </>
+              </div>
             )}
           </button>
         )}
@@ -667,32 +660,22 @@ const FollowUpBadge = ({ lead, onUpdate, T = P, compact = false, fullWidth = fal
               ? "none"
               : `1px solid ${isLight ? `${accentC}1F` : `${accentC}18`}`,
             background: isEmpty
-              ? `linear-gradient(180deg, ${accentC} 0%, ${isLight ? "#14B892" : `${accentC}DD`} 100%)`
+              ? (isLight ? `${accentC}10` : `${accentC}0E`)
               : (isLight ? `${accentC}1C` : `${accentC}16`),
-            color: isEmpty ? "#FFFFFF" : accentSafe,
+            color: isEmpty ? accentSafe : accentSafe,
             display: "flex", alignItems: "center", justifyContent: "center",
             cursor: "pointer",
             transition: "background 0.18s, transform 0.18s, box-shadow 0.18s",
             flexShrink: 0,
-            boxShadow: isEmpty
-              ? `inset 0 1px 0 rgba(255,255,255,0.28), 0 2px 8px ${accentC}45`
-              : "none",
+            boxShadow: "none",
           }}
           onMouseEnter={e => {
-            if (isEmpty) {
-              e.currentTarget.style.transform = "scale(1.04)";
-              e.currentTarget.style.boxShadow = `inset 0 1px 0 rgba(255,255,255,0.35), 0 3px 12px ${accentC}60`;
-            } else {
-              e.currentTarget.style.background = isLight ? `${accentC}2E` : `${accentC}28`;
-            }
+            e.currentTarget.style.background = isLight ? `${accentC}22` : `${accentC}22`;
           }}
           onMouseLeave={e => {
-            if (isEmpty) {
-              e.currentTarget.style.transform = "scale(1)";
-              e.currentTarget.style.boxShadow = `inset 0 1px 0 rgba(255,255,255,0.28), 0 2px 8px ${accentC}45`;
-            } else {
-              e.currentTarget.style.background = isLight ? `${accentC}1C` : `${accentC}16`;
-            }
+            e.currentTarget.style.background = isEmpty
+              ? (isLight ? `${accentC}10` : `${accentC}0E`)
+              : (isLight ? `${accentC}1C` : `${accentC}16`);
           }}
         >
           <Plus size={16} strokeWidth={2.8} />
@@ -3706,10 +3689,10 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
 
       {/* ── KPIs ── */}
       <div style={{ display: "grid", gridTemplateColumns: co ? "repeat(2, 1fr)" : "repeat(4, 1fr)", gap: 12 }}>
-        <KPI T={T} label="Clientes en Pipeline" value={visibleLeads.length} sub={`${hotLeads} activos hoy`} icon={Users} />
-        <KPI T={T} label="Score Promedio" value={avgScore} sub="+4.8 este mes" icon={Target} />
-        <KPI T={T} label="Tasa de Conversión" value="18.4%" sub="+3.2pp este mes" icon={TrendingUp} />
-        <KPI T={T} label="Valor Total Pipeline" value={`$${(totalPipeline/1000000).toFixed(1)}M`} sub={`${nearCloseLeads} en cierre`} icon={DollarSign} />
+        <KPI T={T} label="Clientes en Pipeline" value={visibleLeads.length} sub={`${hotLeads} activos hoy`} icon={Users} color={T.blue} />
+        <KPI T={T} label="Score Promedio" value={avgScore} sub="+4.8 este mes" icon={Target} color={T.cyan} />
+        <KPI T={T} label="Tasa de Conversión" value="18.4%" sub="+3.2pp este mes" icon={TrendingUp} color={T.accent} />
+        <KPI T={T} label="Valor Total Pipeline" value={`$${(totalPipeline/1000000).toFixed(1)}M`} sub={`${nearCloseLeads} en cierre`} icon={DollarSign} color={T.emerald} />
       </div>
 
       {/* ── CLIENTES EN PRIORIDAD — todos, color por tipo, botones uniformes ── */}
@@ -3905,18 +3888,18 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                     // ────────────────────────────────────────────────────────────────────
                     const restBorder = isLight
                       ? `${meta.color}30`
-                      : `${meta.color}22`;
+                      : `rgba(255,255,255,0.07)`;
                     const restShadow = isLight
                       ? `0 1px 3px rgba(15,23,42,0.05), 0 4px 16px rgba(15,23,42,0.07), inset 0 1px 0 rgba(255,255,255,1)`
-                      : `0 1px 4px rgba(0,0,0,0.35), 0 6px 20px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.06)`;
-                    const hoverBorder = isLight ? `${meta.color}68` : `${meta.color}55`;
+                      : `0 2px 8px rgba(0,0,0,0.55), 0 12px 44px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.06)`;
+                    const hoverBorder = isLight ? `${meta.color}68` : `rgba(255,255,255,0.14)`;
                     const hoverShadow = isLight
                       ? `0 2px 6px rgba(15,23,42,0.07), 0 8px 22px rgba(15,23,42,0.10), inset 0 1px 0 rgba(255,255,255,1)`
-                      : `0 3px 10px rgba(0,0,0,0.38), 0 8px 28px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.08)`;
-                    const droppedBorder = isLight ? `${meta.color}80` : `${meta.color}66`;
+                      : `0 6px 20px rgba(0,0,0,0.62), 0 20px 60px rgba(0,0,0,0.52), inset 0 1px 0 rgba(255,255,255,0.08)`;
+                    const droppedBorder = isLight ? `${meta.color}80` : `rgba(255,255,255,0.20)`;
                     const droppedShadow = isLight
                       ? `0 0 0 3px ${meta.color}18, 0 4px 14px rgba(15,23,42,0.08)`
-                      : `0 0 0 2px ${meta.color}30, 0 4px 16px rgba(0,0,0,0.42)`;
+                      : `0 0 0 1px rgba(255,255,255,0.12), 0 8px 28px rgba(0,0,0,0.55)`;
                     return (
                   <div
                     draggable
@@ -3932,7 +3915,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                       position: "relative",
                       background: isLight
                         ? "#FFFFFF"
-                        : `linear-gradient(175deg, rgba(10,14,24,0.97) 0%, rgba(5,7,14,0.99) 100%)`,
+                        : `linear-gradient(160deg, #0A0F1E 0%, #060810 100%)`,
                       backdropFilter: isLight ? "none" : "blur(40px) saturate(150%)",
                       WebkitBackdropFilter: isLight ? "none" : "blur(40px) saturate(150%)",
                       border: `1px solid ${isJustDropped ? droppedBorder : restBorder}`,
@@ -3963,13 +3946,13 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                       position: "absolute", inset: 0,
                       background: isLight
                         ? `radial-gradient(ellipse 200px 120px at 50% -10%, ${meta.color}10 0%, transparent 65%)`
-                        : `radial-gradient(ellipse 220px 130px at 50% -10%, ${meta.color}0C 0%, transparent 65%)`,
+                        : `radial-gradient(ellipse 200px 100px at 50% -10%, ${meta.color}0A 0%, transparent 65%)`,
                       pointerEvents: "none",
                     }} />
                     {/* Top bar — 4px, shimmer on hot/new */}
                     <div
                       className={meta.glow ? "topbar-shimmer" : "topbar-static"}
-                      style={{ height: 4, flexShrink: 0, backgroundImage: meta.topBar }}
+                      style={{ height: 3, flexShrink: 0, backgroundImage: meta.topBar, opacity: isLight ? 1 : 0.40, boxShadow: isLight ? "none" : `0 2px 8px ${meta.color}22, 0 1px 3px ${meta.color}12` }}
                     />
 
                     <div style={{ padding: "12px 16px 16px", display: "flex", flexDirection: "column", gap: 11, flex: 1 }}>
@@ -4061,7 +4044,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                           {meta.pulse && (
                             <div style={{ width: 7, height: 7, borderRadius: "50%", flexShrink: 0, background: meta.color, boxShadow: `0 0 6px ${meta.color}90`, animation: "pulse 1.8s ease-in-out infinite" }} />
                           )}
-                          <p style={{ fontSize: 15.5, fontWeight: 600, color: isLight ? T.txt : "#FFFFFF", fontFamily: fontDisp, letterSpacing: "-0.022em", lineHeight: 1.2, margin: 0 }}>{l.n}</p>
+                          <p style={{ fontSize: 17, fontWeight: 700, color: isLight ? T.txt : "#FFFFFF", fontFamily: fontDisp, letterSpacing: "-0.03em", lineHeight: 1.2, margin: 0 }}>{l.n}</p>
                         </div>
                         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 6 }}>
                           <div style={{ display: "flex", alignItems: "center", gap: 5, minWidth: 0 }}>
@@ -4249,46 +4232,42 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                       </div>
 
                       {/* CTA */}
-                      <div style={{ display: "flex", gap: 7, alignItems: "stretch", marginTop: "auto" }}>
+                      <div style={{ marginTop: "auto" }}>
                       <button
-                        onClick={e => { e.stopPropagation(); setAnalyzingLead(l); }}
+                        onClick={e => { e.stopPropagation(); setSelectedLead(l); }}
                         style={{
-                          width: "100%", padding: "12px 14px", borderRadius: 11,
-                          marginTop: "auto",
-                          background: isLight
-                            ? `linear-gradient(135deg, ${T.accent} 0%, #14B892 100%)`
-                            : "rgba(255,255,255,0.95)",
-                          border: isLight ? "1px solid transparent" : "1px solid rgba(255,255,255,0.20)",
-                          color: isLight ? "#FFFFFF" : "#0A3D2A",
-                          fontSize: 12.5, fontWeight: 650,
-                          fontFamily: fontDisp, cursor: "pointer", letterSpacing: "0.005em",
-                          transition: "all 0.18s",
-                          display: "flex", alignItems: "center", justifyContent: "center", gap: 7,
-                          boxShadow: isLight
-                            ? `0 4px 14px ${T.accent}48, 0 2px 6px ${T.accent}28, inset 0 1px 0 rgba(255,255,255,0.35)`
-                            : "0 2px 14px rgba(0,0,0,0.30), inset 0 1px 0 rgba(255,255,255,1)",
+                          width: "100%", padding: "10px 14px", borderRadius: 10,
+                          background: isLight ? T.accentG : "#FFFFFF",
+                          border: isLight ? "none" : "1px solid rgba(255,255,255,0.92)",
+                          color: isLight ? "#FFFFFF" : "#050A18",
+                          fontSize: 13, fontWeight: 600, fontFamily: fontDisp,
+                          letterSpacing: "-0.01em",
+                          cursor: "pointer",
+                          transition: "all 0.20s ease",
+                          display: "flex", alignItems: "center", justifyContent: "center", gap: 5,
+                          boxShadow: isLight ? "0 2px 12px rgba(13,154,118,0.30)" : "0 1px 14px rgba(255,255,255,0.14)",
                         }}
                         onMouseEnter={e => {
-                          if (isLight) {
-                            e.currentTarget.style.boxShadow = `0 6px 20px ${T.accent}60, 0 3px 10px ${T.accent}38, inset 0 1px 0 rgba(255,255,255,0.45)`;
-                            e.currentTarget.style.transform = "translateY(-1px)";
-                          } else {
-                            e.currentTarget.style.background = "rgba(255,255,255,1)";
-                            e.currentTarget.style.boxShadow = "0 4px 20px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,1)";
-                            e.currentTarget.style.transform = "translateY(-1px)";
-                          }
+                          e.currentTarget.style.background = isLight ? T.accentDark : "rgba(240,245,255,0.96)";
+                          e.currentTarget.style.boxShadow = isLight ? "0 4px 18px rgba(13,154,118,0.40)" : "0 2px 20px rgba(255,255,255,0.18)";
+                          e.currentTarget.style.transform = "translateY(-1px)";
+                          e.currentTarget.querySelector(".arr").style.opacity = "1";
+                          e.currentTarget.querySelector(".arr").style.transform = "translateX(0px)";
                         }}
                         onMouseLeave={e => {
-                          if (isLight) {
-                            e.currentTarget.style.boxShadow = `0 4px 14px ${T.accent}48, 0 2px 6px ${T.accent}28, inset 0 1px 0 rgba(255,255,255,0.35)`;
-                            e.currentTarget.style.transform = "none";
-                          } else {
-                            e.currentTarget.style.background = "rgba(255,255,255,0.95)";
-                            e.currentTarget.style.boxShadow = "0 2px 14px rgba(0,0,0,0.30), inset 0 1px 0 rgba(255,255,255,1)";
-                            e.currentTarget.style.transform = "none";
-                          }
+                          e.currentTarget.style.background = isLight ? T.accentG : "#FFFFFF";
+                          e.currentTarget.style.boxShadow = isLight ? "0 2px 12px rgba(13,154,118,0.30)" : "0 1px 12px rgba(255,255,255,0.12)";
+                          e.currentTarget.style.transform = "none";
+                          e.currentTarget.querySelector(".arr").style.opacity = "0";
+                          e.currentTarget.querySelector(".arr").style.transform = "translateX(-5px)";
                         }}
-                      ><Zap size={12.5} strokeWidth={2.5} color={isLight ? "#FFFFFF" : "#0A3D2A"} /> Analizar y actuar</button>
+                      >
+                        Tomar acción
+                        <span className="arr" style={{
+                          opacity: 0, transform: "translateX(-4px)",
+                          transition: "all 0.20s ease", fontSize: 11, lineHeight: 1,
+                        }}>→</span>
+                      </button>
                       </div>{/* end CTA row */}
                     </div>
                   </div>

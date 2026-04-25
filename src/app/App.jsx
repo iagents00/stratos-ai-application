@@ -43,9 +43,9 @@ import RRHHModule   from "./views/RRHHModule";
    DESIGN SYSTEM
    ════════════════════════════════════════ */
 const P = {
-  bg: "#0C0E14", glass: "rgba(255,255,255,0.032)",
+  bg: "#030810", glass: "rgba(255,255,255,0.032)",
   glassH: "rgba(255,255,255,0.052)", border: "rgba(255,255,255,0.07)",
-  borderH: "rgba(255,255,255,0.12)", surface: "#111318",
+  borderH: "rgba(255,255,255,0.12)", surface: "#091225",
   accent: "#6EE7C2", accentS: "rgba(110,231,194,0.07)",
   accentB: "rgba(110,231,194,0.12)", blue: "#7EB8F0",
   violet: "#A78BFA", amber: "#67B7D1", rose: "#9B8EFF",
@@ -398,7 +398,7 @@ const ChipSelect = ({ value, onChange, options = [], onAddNew, placeholder = "Se
       {open && (
         <div style={{
           position: "absolute", top: "calc(100% + 6px)", left: 0, right: 0, zIndex: 600,
-          background: "#0B101A", border: `1px solid ${P.borderH}`, borderRadius: 12,
+          background: "#08122A", border: `1px solid ${P.borderH}`, borderRadius: 12,
           boxShadow: "0 24px 60px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.02)",
           overflow: "hidden", animation: "fadeIn 0.14s ease",
           fontFamily: font,
@@ -588,7 +588,7 @@ const KPI = ({ label, value, sub, icon: I, color, T: Tprop }) => {
 /* ════════════════════════════════════════
    DYNAMIC ISLAND
    ════════════════════════════════════════ */
-const DynIsland = ({ onExpand, notifications = [], theme = "dark" }) => {
+const DynIsland = ({ onExpand, notifications = [], theme = "dark", beamIdx = 0 }) => {
   const isLight = theme === "light";
   const [isOpen, setIsOpen] = useState(false);
   const [selectedNotif, setSelectedNotif] = useState(null);
@@ -620,157 +620,47 @@ const DynIsland = ({ onExpand, notifications = [], theme = "dark" }) => {
         onClick={() => { if (!expanded) { onExpand?.(); } }}
         style={{
           position: "relative",
-          height: 36, width: 226, borderRadius: 50,
-
-          background: isLight
-            ? "linear-gradient(145deg, rgba(255,255,255,0.92) 0%, rgba(236,251,246,0.88) 100%)"
-            : "linear-gradient(145deg, rgba(20,36,56,0.72) 0%, rgba(8,16,30,0.80) 100%)",
-
-          backdropFilter: "blur(32px) saturate(180%)",
-          WebkitBackdropFilter: "blur(32px) saturate(180%)",
-
+          height: 30, borderRadius: 50,
+          background: isLight ? "rgba(255,255,255,0.94)" : "#050507",
           border: isLight
-            ? "1px solid rgba(255,255,255,0.92)"
-            : "1px solid rgba(110,231,194,0.28)",
-
+            ? "1px solid rgba(13,154,118,0.13)"
+            : "1px solid rgba(255,255,255,0.07)",
           boxShadow: isLight
-            ? "inset 0 1px 0 rgba(255,255,255,1.0), 0 0 0 1px rgba(13,154,118,0.06), 0 4px 20px rgba(0,0,0,0.07), 0 1px 3px rgba(0,0,0,0.04)"
-            : "inset 0 1px 0 rgba(255,255,255,0.18), inset 0 -1px 0 rgba(0,0,0,0.35), 0 0 0 1px rgba(110,231,194,0.14), 0 0 24px rgba(110,231,194,0.18), 0 8px 32px rgba(0,0,0,0.70), 0 2px 6px rgba(0,0,0,0.50)",
-
+            ? "0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.05), inset 0 1px 0 rgba(255,255,255,1)"
+            : "inset 0 1px 0 rgba(255,255,255,0.09), 0 4px 24px rgba(0,0,0,0.80)",
           display: expanded ? "none" : "flex",
           alignItems: "center", justifyContent: "center",
-          padding: "0 16px", gap: 0, overflow: "hidden",
+          overflow: "hidden",
+          padding: "0 14px", gap: 0,
           cursor: "pointer",
-          transition: "transform 0.24s cubic-bezier(0.34,1.56,0.64,1), border-color 0.22s ease, box-shadow 0.22s ease",
+          transition: "transform 0.20s cubic-bezier(0.34,1.56,0.64,1)",
         }}
-        onMouseEnter={e => {
-          e.currentTarget.style.transform = "scale(1.028)";
-          e.currentTarget.style.borderColor = isLight ? "rgba(255,255,255,1.0)" : "rgba(110,231,194,0.45)";
-          e.currentTarget.style.boxShadow = isLight
-            ? "inset 0 1px 0 rgba(255,255,255,1.0), 0 0 0 1px rgba(13,154,118,0.10), 0 6px 26px rgba(0,0,0,0.10), 0 2px 5px rgba(0,0,0,0.06)"
-            : "inset 0 1px 0 rgba(255,255,255,0.22), inset 0 -1px 0 rgba(0,0,0,0.38), 0 0 0 1px rgba(110,231,194,0.22), 0 0 36px rgba(110,231,194,0.26), 0 10px 38px rgba(0,0,0,0.72), 0 3px 9px rgba(0,0,0,0.52)";
-        }}
-        onMouseLeave={e => {
-          e.currentTarget.style.transform = "scale(1)";
-          e.currentTarget.style.borderColor = isLight ? "rgba(255,255,255,0.92)" : "rgba(110,231,194,0.28)";
-          e.currentTarget.style.boxShadow = isLight
-            ? "inset 0 1px 0 rgba(255,255,255,1.0), 0 0 0 1px rgba(13,154,118,0.06), 0 4px 20px rgba(0,0,0,0.07), 0 1px 3px rgba(0,0,0,0.04)"
-            : "inset 0 1px 0 rgba(255,255,255,0.18), inset 0 -1px 0 rgba(0,0,0,0.35), 0 0 0 1px rgba(110,231,194,0.14), 0 0 24px rgba(110,231,194,0.18), 0 8px 32px rgba(0,0,0,0.70), 0 2px 6px rgba(0,0,0,0.50)";
-        }}
-        onMouseDown={e => {
-          e.currentTarget.style.transform = "scale(0.965)";
-          e.currentTarget.style.transition = "transform 0.10s ease";
-        }}
-        onMouseUp={e => {
-          e.currentTarget.style.transition = "transform 0.24s cubic-bezier(0.34,1.56,0.64,1), border-color 0.22s ease, box-shadow 0.22s ease";
-          e.currentTarget.style.transform = "scale(1.028)";
-        }}
+        onMouseEnter={e => e.currentTarget.style.transform = "scale(1.022)"}
+        onMouseLeave={e => e.currentTarget.style.transform = "scale(1)"}
+        onMouseDown={e => { e.currentTarget.style.transform = "scale(0.972)"; e.currentTarget.style.transition = "transform 0.08s ease"; }}
+        onMouseUp={e => { e.currentTarget.style.transition = "transform 0.20s cubic-bezier(0.34,1.56,0.64,1)"; e.currentTarget.style.transform = "scale(1.022)"; }}
       >
-        {/* ── Aurora primaria — blob mint flotante ── */}
-        <div style={{
-          position: "absolute",
-          width: "60%", height: "200%",
-          left: "2%", top: "-50%",
+        {/* Shimmer beam — one-shot per IAOS cycle, synced via beamIdx key */}
+        <div key={beamIdx} style={{
+          position: "absolute", top: 0, bottom: 0, left: 0, width: "52%",
           background: isLight
-            ? "radial-gradient(ellipse, rgba(13,154,118,0.15) 0%, transparent 68%)"
-            : "radial-gradient(ellipse, rgba(110,231,194,0.36) 0%, rgba(52,211,153,0.12) 55%, transparent 72%)",
-          animation: "auroraShift 9s ease-in-out infinite",
-          pointerEvents: "none",
-          filter: isLight ? "blur(6px)" : "blur(5px)",
-        }} />
-
-        {/* ── Aurora secundaria — blob teal contramovimiento ── */}
-        <div style={{
-          position: "absolute",
-          width: "50%", height: "180%",
-          right: "5%", top: "-40%",
-          background: isLight
-            ? "radial-gradient(ellipse, rgba(52,211,153,0.10) 0%, transparent 65%)"
-            : "radial-gradient(ellipse, rgba(94,234,212,0.24) 0%, rgba(110,231,194,0.08) 55%, transparent 70%)",
-          animation: "auroraShift2 12s ease-in-out infinite",
-          pointerEvents: "none",
-          filter: isLight ? "blur(8px)" : "blur(6px)",
-        }} />
-
-        {/* ── Specular arc — borde superior que capta la luz ── */}
-        <div style={{
-          position: "absolute", top: 0, left: "6%", right: "6%", height: "52%",
-          background: isLight
-            ? "radial-gradient(ellipse at 50% -8%, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.50) 38%, transparent 68%)"
-            : "radial-gradient(ellipse at 50% -6%, rgba(255,255,255,0.26) 0%, rgba(255,255,255,0.10) 40%, transparent 68%)",
-          borderRadius: "50% 50% 0 0 / 80% 80% 0 0",
+            ? "linear-gradient(90deg, transparent 0%, rgba(13,154,118,0.11) 50%, transparent 100%)"
+            : "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.22) 50%, transparent 100%)",
+          animation: "pillBeamOnce 1.8s ease-in-out both",
           pointerEvents: "none",
         }} />
 
-        {/* ── Bottom edge shadow — liquid glass depth ── */}
-        {!isLight && (
-          <div style={{
-            position: "absolute", bottom: 0, left: "12%", right: "12%", height: "30%",
-            background: "radial-gradient(ellipse at 50% 120%, rgba(0,0,0,0.45) 0%, transparent 70%)",
-            borderRadius: "0 0 50% 50% / 0 0 80% 80%",
-            pointerEvents: "none",
-          }} />
-        )}
-
-        {/* ── Shimmer sweep — rayo de luz diagonal periódico ── */}
-        <div style={{
-          position: "absolute", inset: 0,
-          background: isLight
-            ? "linear-gradient(112deg, transparent 25%, rgba(255,255,255,0.70) 48%, transparent 68%)"
-            : "linear-gradient(112deg, transparent 20%, rgba(255,255,255,0.22) 46%, rgba(110,231,194,0.06) 52%, transparent 70%)",
-          animation: "pillShimmer 6s cubic-bezier(0.4,0,0.6,1) 1.8s infinite",
-          pointerEvents: "none", borderRadius: "inherit",
-        }} />
-
-        {/* ── Borde glow pulse — solo dark ── */}
-        {!isLight && (
-          <div style={{
-            position: "absolute", inset: -1, borderRadius: "inherit",
-            border: "1px solid rgba(110,231,194,0.30)",
-            animation: "borderGlowPulse 3.5s ease-in-out infinite",
-            pointerEvents: "none",
-          }} />
-        )}
-
-        {/* ── Content ── */}
-        <div style={{
-          position: "relative", zIndex: 2,
-          display: "flex", alignItems: "center",
-          justifyContent: "center", gap: 8, width: "100%",
-        }}>
-          {/* Live dot */}
-          <div style={{ position: "relative", width: 6, height: 6, flexShrink: 0 }}>
-            {!isLight && (
-              <div style={{ position: "absolute", inset: -3, borderRadius: "50%", background: "rgba(52,211,153,0.18)", animation: "pulse 2.4s ease-in-out infinite" }} />
-            )}
-            <div style={{
-              width: 6, height: 6, borderRadius: "50%",
-              background: isLight ? "#059669" : "#34D399",
-              boxShadow: isLight
-                ? "0 0 5px rgba(5,150,105,0.70), 0 0 10px rgba(5,150,105,0.30)"
-                : "0 0 7px rgba(52,211,153,1.0), 0 0 14px rgba(52,211,153,0.50), 0 0 24px rgba(52,211,153,0.20)",
-              animation: "pulse 2.4s ease-in-out infinite",
-            }} />
+        {/* Content */}
+        <div style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+          <div style={{ position: "relative", flexShrink: 0 }}>
+            <div style={{ position: "absolute", inset: -2, borderRadius: "50%", background: "rgba(52,211,153,0.20)", animation: "pulse 2.6s ease-in-out infinite" }} />
+            <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#34D399", boxShadow: "0 0 6px rgba(52,211,153,0.85), 0 0 12px rgba(52,211,153,0.30)" }} />
           </div>
-
-          {/* Texto con shimmer overlay — sin background-clip para evitar bugs */}
-          <div style={{ position: "relative", overflow: "hidden", flexShrink: 0 }}>
-            <span style={{
-              fontSize: 12.5, fontWeight: 600,
-              letterSpacing: "-0.028em", fontFamily: fontDisp,
-              color: isLight ? "#0A5E42" : "rgba(255,255,255,0.92)",
-              display: "block", whiteSpace: "nowrap",
-            }}>Centro de Inteligencia</span>
-            {/* Barra de brillo que barre de izq → der */}
-            <div style={{
-              position: "absolute", top: 0, bottom: 0, width: "35%",
-              background: isLight
-                ? "linear-gradient(90deg, transparent, rgba(255,255,255,0.72), transparent)"
-                : "linear-gradient(90deg, transparent, rgba(110,231,194,0.45), rgba(255,255,255,0.30), transparent)",
-              animation: "shimmerBar 2.8s ease-in-out infinite",
-              pointerEvents: "none",
-            }} />
-          </div>
+          <span style={{
+            fontSize: 12.5, fontWeight: 600, letterSpacing: "-0.025em", fontFamily: fontDisp,
+            color: isLight ? "#0A0A0A" : "rgba(255,255,255,0.88)",
+            whiteSpace: "nowrap", flexShrink: 0,
+          }}>Centro de Inteligencia</span>
         </div>
       </div>
 
@@ -1583,7 +1473,7 @@ const Chat = ({ open, onClose, msgs, setMsgs, inp, setInp }) => {
   return (
     <div style={{
       width: 400, height: "100%", borderLeft: `1px solid ${P.border}`,
-      background: "rgba(6,10,17,0.96)", backdropFilter: "blur(32px)",
+      background: "rgba(4,7,20,0.96)", backdropFilter: "blur(32px)",
       display: "flex", flexDirection: "column", flexShrink: 0,
     }}>
       <div style={{ padding: "14px 18px", borderBottom: `1px solid ${P.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -2239,42 +2129,27 @@ function PermissionGate({ moduleId, onGoBack }) {
   );
 }
 
-const IAOSIsland = ({ leadsData, isLight, fontDisp }) => {
+const IAOSIsland = ({ leadsData, isLight, fontDisp, idx }) => {
   const hot       = leadsData.filter(l => l.hot).length;
-  const waAct     = leadsData.filter(l => l.phone && l.daysInactive <= 3).length;
+  const inact     = leadsData.filter(l => l.daysInactive >= 5).length;
   const totalPipe = (leadsData.reduce((s, l) => s + (l.presupuesto || 0), 0) / 1e6).toFixed(1);
+  const enProceso = leadsData.filter(l => (l.followUps || 0) > 0).length;
 
   const phrases = [
-    `Calificando ${hot} leads`,
+    `Duke · ${hot} alertas activas`,
     `$${totalPipe}M en pipeline`,
-    `${waAct} chats activos`,
+    `${inact} leads sin actividad`,
+    `Protocolo Duke activo`,
   ];
-
-  const [idx, setIdx] = useState(0);
-
-  useEffect(() => {
-    const t = setInterval(() => {
-      setIdx(i => (i + 1) % phrases.length);
-    }, 3200);
-    return () => clearInterval(t);
-  }, []);
 
   return (
     <div style={{
       display: "flex", alignItems: "center", gap: 0,
       background: isLight ? "rgba(13,154,118,0.06)" : "rgba(110,231,194,0.05)",
-      borderRadius: 10, padding: "5px 13px 5px 11px",
+      borderRadius: 10, padding: "5px 10px",
       border: `1px solid ${isLight ? "rgba(13,154,118,0.14)" : "rgba(110,231,194,0.10)"}`,
       flexShrink: 0, overflow: "hidden",
     }}>
-      {/* Dot */}
-      <div style={{
-        width: 5, height: 5, borderRadius: "50%", flexShrink: 0, marginRight: 7,
-        background: "#34D399",
-        boxShadow: "0 0 6px rgba(52,211,153,0.95), 0 0 12px rgba(52,211,153,0.40)",
-        animation: "pulse 2.4s ease-in-out infinite",
-      }} />
-
       {/* IAOS label */}
       <span style={{
         fontSize: 9, fontFamily: fontDisp, fontWeight: 800,
@@ -2286,14 +2161,14 @@ const IAOSIsland = ({ leadsData, isLight, fontDisp }) => {
       {/* Separator */}
       <div style={{ width: 1, height: 10, background: isLight ? "rgba(13,154,118,0.20)" : "rgba(110,231,194,0.15)", flexShrink: 0, marginRight: 8 }} />
 
-      {/* Horizontal slide text — key triggers CSS enter animation */}
-      <div style={{ overflow: "hidden", height: 14, width: 126, flexShrink: 0 }}>
+      {/* Slide text left→right — key on idx re-mounts span triggering CSS animation */}
+      <div style={{ overflow: "hidden", height: 14, width: 118, flexShrink: 0 }}>
         <span key={idx} style={{
           display: "block",
           fontSize: 10.5, fontFamily: fontDisp, fontWeight: 500,
           letterSpacing: "-0.012em", whiteSpace: "nowrap",
           color: isLight ? "rgba(10,20,15,0.62)" : "rgba(255,255,255,0.62)",
-          animation: "iaosSlideIn 0.36s cubic-bezier(0.22,1,0.36,1) both",
+          animation: "iaosSlideIn 0.40s cubic-bezier(0.22,1,0.36,1) both",
         }}>{phrases[idx]}</span>
       </div>
     </div>
@@ -2327,6 +2202,11 @@ export default function App() {
   // ── leadsData global — compartido entre Dash y CRM ───────────────────────
   // Inicializamos con TODOS los leads; el filtro por rol lo hace visibleLeads en CRM
   const [leadsData, setLeadsData] = useState(leads);
+  const [iaosIdx, setIaosIdx] = useState(0);
+  useEffect(() => {
+    const t = setInterval(() => setIaosIdx(i => (i + 1) % 4), 4000);
+    return () => clearInterval(t);
+  }, []);
   const [metaOpen, setMetaOpen] = useState(false);
   const [metaTab, setMetaTab] = useState("acciones");
   const [metaActions, setMetaActions] = useState(() =>
@@ -2496,8 +2376,8 @@ export default function App() {
         ? `radial-gradient(1400px 900px at 50% -10%, rgba(13,154,118,0.10) 0%, rgba(13,154,118,0.04) 35%, transparent 65%),
            radial-gradient(1200px 800px at 50% 110%, rgba(20,184,146,0.08) 0%, rgba(20,184,146,0.03) 35%, transparent 65%),
            linear-gradient(180deg, #F4F9F6 0%, #F8FBF9 45%, #F4F9F6 100%)`
-        : `radial-gradient(1400px 700px at 50% -8%, rgba(52,211,153,0.028) 0%, transparent 58%),
-           #0C0E14`,
+        : `radial-gradient(1200px 600px at 30% -5%, rgba(80,120,255,0.025) 0%, transparent 55%),
+           #030810`,
       transition: "background 0.3s ease, color 0.3s ease",
     }}>
       <style>{`
@@ -2522,8 +2402,8 @@ export default function App() {
         @keyframes scanLine{0%{top:0}100%{top:100%}}
         @keyframes stepFade{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:translateX(0)}}
         @keyframes modalIn{from{opacity:0;transform:translate(-50%,-50%) scale(0.97)}to{opacity:1;transform:translate(-50%,-50%) scale(1)}}
-        @keyframes shimmerBar{0%{left:-40%}100%{left:120%}}
-        @keyframes iaosSlideIn{from{opacity:0;transform:translateX(16px)}to{opacity:1;transform:translateX(0)}}
+        @keyframes pillBeamOnce{from{transform:translateX(-130%);opacity:0}22%{opacity:1}78%{opacity:1}to{transform:translateX(230%);opacity:0}}
+        @keyframes iaosSlideIn{from{opacity:0;transform:translateX(-14px)}to{opacity:1;transform:translateX(0)}}
         *{box-sizing:border-box;margin:0}
         ::-webkit-scrollbar{width:4px}
         ::-webkit-scrollbar-track{background:transparent}
@@ -2537,7 +2417,7 @@ export default function App() {
         display: "flex", flexDirection: "column", alignItems: "center",
         paddingTop: 0, paddingBottom: 0,
         position: "relative", overflow: "hidden",
-        background: isLight ? "rgba(246,248,247,0.98)" : "rgba(5,7,13,0.98)",
+        background: isLight ? "rgba(246,248,247,0.98)" : "rgba(2,4,11,0.98)",
         backdropFilter: "blur(28px)",
         WebkitBackdropFilter: "blur(28px)",
         boxShadow: isLight
@@ -2905,7 +2785,7 @@ export default function App() {
           /* ── Shared micro-tokens ── */
           const hBg   = isLight
             ? "linear-gradient(180deg,#FFFFFF 0%,rgba(248,253,250,0.96) 100%)"
-            : "#050810";
+            : "#02050E";
           const hBorder = isLight ? "rgba(13,154,118,0.10)" : "rgba(255,255,255,0.06)";
 
           /* Icon button style — flat, hover fills. */
@@ -2970,55 +2850,27 @@ export default function App() {
                 </p>
 
                 {/* ── IAOS Dynamic Island ── */}
-                <IAOSIsland leadsData={leadsData} isLight={isLight} T={T} fontDisp={fontDisp} font={font} />
+                <IAOSIsland leadsData={leadsData} isLight={isLight} T={T} fontDisp={fontDisp} font={font} idx={iaosIdx} />
               </div>
 
               {/* ══ CENTER: Solo Centro de Inteligencia ══ */}
               <div style={{
                 position: "absolute", left: "50%", transform: "translateX(-50%)",
               }}>
-                <DynIsland onExpand={openPriorityLead} notifications={notifs} theme={theme} />
+                <DynIsland onExpand={openPriorityLead} notifications={notifs} theme={theme} beamIdx={iaosIdx} />
               </div>
 
-              {/* ══ RIGHT: Minimal icon controls ══ */}
-              <div style={{ display: "flex", alignItems: "center", gap: 2 }}>
+              {/* ══ RIGHT: Controls ══ */}
+              <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
 
-                {/* Search */}
+                {/* Search — icon only */}
                 <button
                   title="Buscar (⌘K)"
-                  style={{ ...iBtnBase, width: "auto", padding: "0 10px", gap: 6 }}
-                  onMouseEnter={onIco} onMouseLeave={offIco}
-                  onMouseDown={dnIco} onMouseUp={upIco}
-                >
-                  <Search size={13} color={icoRest} strokeWidth={2.1} />
-                  <span style={{
-                    fontSize: 11, fontFamily: font,
-                    color: isLight ? T.txt3 : "rgba(255,255,255,0.36)",
-                    letterSpacing: "-0.005em",
-                  }}>Buscar</span>
-                  <kbd style={{
-                    fontSize: 8.5, fontFamily: fontDisp, fontWeight: 700,
-                    padding: "2px 5px", borderRadius: 4,
-                    background: isLight ? `${T.accent}0C` : "rgba(255,255,255,0.05)",
-                    border: `1px solid ${isLight ? `${T.accent}20` : "rgba(255,255,255,0.08)"}`,
-                    color: isLight ? T.accentDark : "rgba(255,255,255,0.28)",
-                    lineHeight: 1.4,
-                  }}>⌘K</kbd>
-                </button>
-
-                {hDiv}
-
-                {/* Theme toggle — icon only, swaps sun↔moon */}
-                <button
-                  onClick={() => setTheme(isLight ? "dark" : "light")}
-                  title={isLight ? "Modo oscuro" : "Modo claro"}
                   style={iBtnBase}
                   onMouseEnter={onIco} onMouseLeave={offIco}
                   onMouseDown={dnIco} onMouseUp={upIco}
                 >
-                  {isLight
-                    ? <Sun  size={14} color={T.amber}  strokeWidth={2.2} />
-                    : <Moon size={13} color="rgba(255,255,255,0.50)" strokeWidth={2} fill="rgba(255,255,255,0.50)" />}
+                  <Search size={14} color={icoRest} strokeWidth={2} />
                 </button>
 
                 {/* Bell */}
@@ -3028,13 +2880,47 @@ export default function App() {
                   onMouseEnter={onIco} onMouseLeave={offIco}
                   onMouseDown={dnIco} onMouseUp={upIco}
                 >
-                  <Bell size={13} color={icoRest} strokeWidth={2.1} />
+                  <Bell size={14} color={icoRest} strokeWidth={2} />
                   <div style={{
-                    position: "absolute", top: 5, right: 5,
+                    position: "absolute", top: 6, right: 6,
                     width: 5, height: 5, borderRadius: "50%",
                     background: T.rose,
-                    border: `1.5px solid ${isLight ? "#FAFCFA" : "#050810"}`,
+                    border: `1.5px solid ${isLight ? "#F5FAF8" : "#050507"}`,
                   }} />
+                </button>
+
+                {hDiv}
+
+                {/* Theme — sliding toggle switch */}
+                <button
+                  onClick={() => setTheme(isLight ? "dark" : "light")}
+                  title={isLight ? "Modo oscuro" : "Modo claro"}
+                  style={{
+                    width: 42, height: 24, borderRadius: 12,
+                    border: "none", padding: 0, flexShrink: 0,
+                    background: isLight
+                      ? `linear-gradient(135deg, ${T.accent} 0%, #12B48A 100%)`
+                      : "rgba(255,255,255,0.09)",
+                    cursor: "pointer", position: "relative",
+                    transition: "background 0.28s ease",
+                    boxShadow: isLight
+                      ? `0 2px 8px ${T.accent}40, inset 0 1px 0 rgba(255,255,255,0.28)`
+                      : "inset 0 1px 3px rgba(0,0,0,0.35), 0 0 0 1px rgba(255,255,255,0.08)",
+                  }}
+                >
+                  <div style={{
+                    position: "absolute", top: 3,
+                    left: isLight ? 21 : 3,
+                    width: 18, height: 18, borderRadius: "50%",
+                    background: "#FFFFFF",
+                    boxShadow: "0 1px 4px rgba(0,0,0,0.22), 0 2px 6px rgba(0,0,0,0.12)",
+                    transition: "left 0.28s cubic-bezier(0.34,1.56,0.64,1)",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                  }}>
+                    {isLight
+                      ? <Sun  size={9}  color={T.accent}  strokeWidth={2.4} />
+                      : <Moon size={8}  color="#64748B" strokeWidth={2} fill="#64748B" />}
+                  </div>
                 </button>
 
                 {hDiv}

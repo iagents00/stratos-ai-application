@@ -17,10 +17,10 @@
 // ─── PALETA — PLATAFORMA (app.stratoscapitalgroup.com) ───────────────────────
 export const P = {
   // Fondos
-  bg:      "#060A11",
-  bg2:     "#0B1018",
-  bg3:     "#111827",
-  surface: "#0C1219",
+  bg:      "#030810",
+  bg2:     "#07101E",
+  bg3:     "#0C1628",
+  surface: "#091225",
 
   // Vidrio (glassmorphism)
   glass:   "rgba(255,255,255,0.035)",

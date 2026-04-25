@@ -72,9 +72,7 @@ export const KPI = ({ label, value, sub, icon: I, color, T: Tprop }) => {
   const [h, setH] = useState(false);
   const T = Tprop || P;
   const isLight = T !== P;
-  const rawC = color || T.accent;
-  const isAmber = rawC === T.amber || rawC === "#F59E0B" || rawC === "#D97706";
-  const c = isAmber ? T.accent : rawC;
+  const c = color || T.accent;
 
   return (
     <div
@@ -85,51 +83,61 @@ export const KPI = ({ label, value, sub, icon: I, color, T: Tprop }) => {
         padding: "22px 20px 20px",
         borderRadius: 20,
         background: isLight
-          ? "rgba(255,255,255,0.88)"
-          : "rgba(9,14,24,0.80)",
+          ? "rgba(255,255,255,0.90)"
+          : "rgba(8,12,24,0.85)",
         backdropFilter: "blur(28px) saturate(110%)",
         WebkitBackdropFilter: "blur(28px) saturate(110%)",
-        border: `1px solid ${isLight ? "rgba(15,23,42,0.07)" : "rgba(255,255,255,0.068)"}`,
+        border: `1px solid ${isLight ? "rgba(15,23,42,0.07)" : `${c}0C`}`,
         boxShadow: isLight
           ? `inset 0 1px 0 rgba(255,255,255,0.95), 0 2px 16px rgba(15,23,42,0.06)`
-          : `inset 0 1px 0 rgba(255,255,255,0.055), 0 8px 32px rgba(0,0,0,0.30)`,
+          : `inset 0 1px 0 rgba(255,255,255,0.04), 0 8px 32px rgba(0,0,0,0.40), 0 0 0 0.5px rgba(255,255,255,0.04)`,
         transition: "transform 0.26s cubic-bezier(.4,0,.2,1), box-shadow 0.26s ease",
         transform: h ? "translateY(-3px)" : "translateY(0)",
         cursor: "default",
       }}
     >
+      {/* Ambient glow — top-right, matches icon color */}
       <div style={{
-        position: "absolute", top: 0, left: 0, right: 0, height: 1,
+        position: "absolute", top: -24, right: -24,
+        width: 88, height: 88, borderRadius: "50%",
         background: isLight
-          ? "linear-gradient(90deg, transparent, rgba(15,23,42,0.10) 40%, rgba(15,23,42,0.10) 60%, transparent)"
-          : "linear-gradient(90deg, transparent, rgba(255,255,255,0.08) 40%, rgba(255,255,255,0.08) 60%, transparent)",
+          ? `radial-gradient(circle, ${c}0E 0%, transparent 70%)`
+          : `radial-gradient(circle, ${c}10 0%, transparent 70%)`,
         pointerEvents: "none",
       }} />
 
+      {/* Top accent line — colored */}
       <div style={{
-        position: "absolute", top: 18, right: 18,
-        width: 32, height: 32, borderRadius: 9,
-        background: isLight ? "rgba(15,23,42,0.05)" : "rgba(255,255,255,0.055)",
-        border: `1px solid ${isLight ? "rgba(15,23,42,0.07)" : "rgba(255,255,255,0.08)"}`,
+        position: "absolute", top: 0, left: 0, right: 0, height: 1,
+        background: isLight
+          ? `linear-gradient(90deg, transparent, ${c}25 40%, ${c}25 60%, transparent)`
+          : `linear-gradient(90deg, transparent, ${c}28 40%, ${c}28 60%, transparent)`,
+        pointerEvents: "none",
+      }} />
+
+      {/* Icon — naked, branded color, no box */}
+      <div style={{
+        position: "absolute", top: 20, right: 20,
         display: "flex", alignItems: "center", justifyContent: "center",
+        opacity: isLight ? 0.80 : 0.90,
       }}>
-        <I size={15} color={isLight ? "rgba(15,23,42,0.50)" : "rgba(255,255,255,0.55)"} strokeWidth={1.8} />
+        <I size={17} color={c} strokeWidth={1.6} />
       </div>
 
       <p style={{
         margin: "0 0 14px",
         fontSize: 9.5, fontFamily: fontDisp, fontWeight: 600,
         letterSpacing: "0.14em", textTransform: "uppercase",
-        color: isLight ? "rgba(15,23,42,0.38)" : "rgba(255,255,255,0.32)",
+        color: isLight ? "rgba(15,23,42,0.38)" : "rgba(255,255,255,0.28)",
         whiteSpace: "nowrap",
       }}>{label}</p>
 
       <p style={{
         margin: 0,
         fontSize: 40, fontWeight: 250,
-        letterSpacing: "-0.01em", lineHeight: 1,
+        letterSpacing: "-0.025em", lineHeight: 1,
         fontFamily: fontDisp,
-        color: isLight ? "rgba(15,23,42,0.93)" : "rgba(255,255,255,0.96)",
+        color: isLight ? "rgba(15,23,42,0.93)" : "#FFFFFF",
       }}>{value}</p>
 
       {sub && (
@@ -138,13 +146,13 @@ export const KPI = ({ label, value, sub, icon: I, color, T: Tprop }) => {
           display: "flex", alignItems: "center", gap: 7,
         }}>
           <div style={{
-            width: 2.5, height: 13, borderRadius: 2, flexShrink: 0,
-            background: `linear-gradient(180deg, ${c} 0%, ${c}55 100%)`,
+            width: 2, height: 12, borderRadius: 2, flexShrink: 0,
+            background: `linear-gradient(180deg, ${c} 0%, ${c}44 100%)`,
           }} />
           <span style={{
-            fontSize: 11, fontFamily: fontDisp, fontWeight: 500,
+            fontSize: 10.5, fontFamily: fontDisp, fontWeight: 500,
             letterSpacing: "-0.008em",
-            color: isLight ? "rgba(15,23,42,0.46)" : "rgba(255,255,255,0.40)",
+            color: isLight ? "rgba(15,23,42,0.44)" : "rgba(255,255,255,0.36)",
             whiteSpace: "nowrap",
           }}>{sub}</span>
         </div>
