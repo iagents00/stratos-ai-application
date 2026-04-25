@@ -38,7 +38,7 @@ const examples = [
 ];
 
 const Dash = ({ oc, co, leadsData = [], T: _T }) => {
-  const isLight = !!_T && _T !== P;
+  const isLight = !!_T && _T?.bg !== P.bg;
   const T = _T || P;
   const [dashPeriod, setDashPeriod] = useState("semana");
   const total    = leadsData.length || 1;

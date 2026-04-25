@@ -11,7 +11,7 @@ import { P, font, fontDisp } from "../design-system/tokens";
 export const G = ({ children, style, hover, onClick, np, T: Tprop }) => {
   const [h, setH] = useState(false);
   const T = Tprop || P;
-  const isLight = T !== P;
+  const isLight = T?.bg !== P.bg;
   return (
     <div onMouseEnter={() => hover && setH(true)} onMouseLeave={() => setH(false)}
       onClick={onClick} style={{
@@ -71,7 +71,7 @@ export const Ico = ({ icon: I, sz = 34, is = 16, c = P.accent }) => (
 export const KPI = ({ label, value, sub, icon: I, color, T: Tprop }) => {
   const [h, setH] = useState(false);
   const T = Tprop || P;
-  const isLight = T !== P;
+  const isLight = T?.bg !== P.bg;
   const c = color || T.accent;
 
   return (

@@ -15,7 +15,7 @@ const team = [
 ];
 
 const Team = ({ T: _T }) => {
-  const isLight = !!_T && _T !== P;
+  const isLight = !!_T && _T?.bg !== P.bg;
   const T = _T || P;
   return (
   <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>

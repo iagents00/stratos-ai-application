@@ -20,7 +20,7 @@ const team = [
 ];
 
 const WriterSection = ({ value, onChange, clientName, T = P }) => {
-  const isLight = T !== P;
+  const isLight = T?.bg !== P.bg;
   const [showPreview, setShowPreview] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState("formal");
   const charLimit = 500;
@@ -501,7 +501,7 @@ const marketData = {
 
 /* ─── Modal: Agregar Nueva Propiedad ─── */
 const NewPropertyModal = ({ onClose, onSave, initialData = null, T = P }) => {
-  const isLight = T !== P;
+  const isLight = T?.bg !== P.bg;
   const editing = !!initialData;
   const EMPTY = {
     name: "", brand: "", location: "Tulum", zone: "", type: "Condominios",
@@ -992,7 +992,7 @@ const RivieraMayaMap = ({ properties }) => {
 };
 
 const LandingPages = ({ T = P }) => {
-  const isLight = T !== P;
+  const isLight = T?.bg !== P.bg;
   const [step, setStep] = useState(0);
   const [clientName, setClientName] = useState("");
   const [clientBudgetMin, setClientBudgetMin] = useState(120000);

@@ -3,7 +3,7 @@ import { G, KPI, Pill } from "../SharedComponents";
 import { Building2, CheckCircle2, Banknote, Percent, MapPin } from "lucide-react";
 
 const ERP = ({ oc, T: _T }) => {
-  const isLight = !!_T && _T !== P;
+  const isLight = !!_T && _T?.bg !== P.bg;
   const T = _T || P;
   const erpProjects = [
     { id: 1, n: "Gobernador 28", loc: "Playa del Carmen", st: "Construcción", c: P.blue, roi: "24%", u: 48, s: 36, v: "$4.2M", m: 31, f: "Q2 2026", t: "Residencial Premium" },
