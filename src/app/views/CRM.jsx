@@ -4225,50 +4225,48 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                         );
                       })()}
 
-                      {/* Seguimientos — pill horizontal completo, color del meta.
-                          Permite registrar recontactos sin abrir el drawer. */}
-                      <div onClick={e => e.stopPropagation()}>
-                        <FollowUpBadge lead={l} onUpdate={updateLead} T={T} fullWidth tint={meta.color} />
+                      {/* Bottom actions — Seguimientos + Tomar acción, misma altura */}
+                      <div style={{ marginTop: "auto", display: "flex", flexDirection: "column", gap: 8 }}>
+                        <div onClick={e => e.stopPropagation()}>
+                          <FollowUpBadge lead={l} onUpdate={updateLead} T={T} fullWidth tint={meta.color} />
+                        </div>
+                        <button
+                          onClick={e => { e.stopPropagation(); setSelectedLead(l); }}
+                          style={{
+                            width: "100%", height: 40, padding: "0 14px",
+                            boxSizing: "border-box", borderRadius: 10,
+                            background: isLight ? T.accentG : "#FFFFFF",
+                            border: isLight ? "none" : "1px solid rgba(255,255,255,0.92)",
+                            color: isLight ? "#FFFFFF" : "#050A18",
+                            fontSize: 13, fontWeight: 600, fontFamily: fontDisp,
+                            letterSpacing: "-0.01em",
+                            cursor: "pointer",
+                            transition: "all 0.20s ease",
+                            display: "flex", alignItems: "center", justifyContent: "center", gap: 5,
+                            boxShadow: isLight ? "0 2px 12px rgba(13,154,118,0.30)" : "0 1px 14px rgba(255,255,255,0.14)",
+                          }}
+                          onMouseEnter={e => {
+                            e.currentTarget.style.background = isLight ? T.accentDark : "rgba(240,245,255,0.96)";
+                            e.currentTarget.style.boxShadow = isLight ? "0 4px 18px rgba(13,154,118,0.40)" : "0 2px 20px rgba(255,255,255,0.18)";
+                            e.currentTarget.style.transform = "translateY(-1px)";
+                            e.currentTarget.querySelector(".arr").style.opacity = "1";
+                            e.currentTarget.querySelector(".arr").style.transform = "translateX(0px)";
+                          }}
+                          onMouseLeave={e => {
+                            e.currentTarget.style.background = isLight ? T.accentG : "#FFFFFF";
+                            e.currentTarget.style.boxShadow = isLight ? "0 2px 12px rgba(13,154,118,0.30)" : "0 1px 12px rgba(255,255,255,0.12)";
+                            e.currentTarget.style.transform = "none";
+                            e.currentTarget.querySelector(".arr").style.opacity = "0";
+                            e.currentTarget.querySelector(".arr").style.transform = "translateX(-5px)";
+                          }}
+                        >
+                          Tomar acción
+                          <span className="arr" style={{
+                            opacity: 0, transform: "translateX(-4px)",
+                            transition: "all 0.20s ease", fontSize: 11, lineHeight: 1,
+                          }}>→</span>
+                        </button>
                       </div>
-
-                      {/* CTA */}
-                      <div style={{ marginTop: "auto" }}>
-                      <button
-                        onClick={e => { e.stopPropagation(); setSelectedLead(l); }}
-                        style={{
-                          width: "100%", padding: "10px 14px", borderRadius: 10,
-                          background: isLight ? T.accentG : "#FFFFFF",
-                          border: isLight ? "none" : "1px solid rgba(255,255,255,0.92)",
-                          color: isLight ? "#FFFFFF" : "#050A18",
-                          fontSize: 13, fontWeight: 600, fontFamily: fontDisp,
-                          letterSpacing: "-0.01em",
-                          cursor: "pointer",
-                          transition: "all 0.20s ease",
-                          display: "flex", alignItems: "center", justifyContent: "center", gap: 5,
-                          boxShadow: isLight ? "0 2px 12px rgba(13,154,118,0.30)" : "0 1px 14px rgba(255,255,255,0.14)",
-                        }}
-                        onMouseEnter={e => {
-                          e.currentTarget.style.background = isLight ? T.accentDark : "rgba(240,245,255,0.96)";
-                          e.currentTarget.style.boxShadow = isLight ? "0 4px 18px rgba(13,154,118,0.40)" : "0 2px 20px rgba(255,255,255,0.18)";
-                          e.currentTarget.style.transform = "translateY(-1px)";
-                          e.currentTarget.querySelector(".arr").style.opacity = "1";
-                          e.currentTarget.querySelector(".arr").style.transform = "translateX(0px)";
-                        }}
-                        onMouseLeave={e => {
-                          e.currentTarget.style.background = isLight ? T.accentG : "#FFFFFF";
-                          e.currentTarget.style.boxShadow = isLight ? "0 2px 12px rgba(13,154,118,0.30)" : "0 1px 12px rgba(255,255,255,0.12)";
-                          e.currentTarget.style.transform = "none";
-                          e.currentTarget.querySelector(".arr").style.opacity = "0";
-                          e.currentTarget.querySelector(".arr").style.transform = "translateX(-5px)";
-                        }}
-                      >
-                        Tomar acción
-                        <span className="arr" style={{
-                          opacity: 0, transform: "translateX(-4px)",
-                          transition: "all 0.20s ease", fontSize: 11, lineHeight: 1,
-                        }}>→</span>
-                      </button>
-                      </div>{/* end CTA row */}
                     </div>
                   </div>
                     );
