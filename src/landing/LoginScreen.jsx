@@ -48,9 +48,13 @@ function seedDemo() {
 }
 
 export default function LoginScreen({ onLogin }) {
+  // Si viene de landing con ?register=true → abrir tab de registro directamente
+  const initialMode = new URLSearchParams(window.location.search).get("register") === "true"
+    ? "register" : "login";
+
   useEffect(() => { seedDemo(); }, []);
 
-  const [mode, setMode]       = useState("login"); // login | register | forgot | forgot-sent
+  const [mode, setMode]       = useState(initialMode); // login | register | forgot | forgot-sent
   const [name, setName]       = useState("");
   const [email, setEmail]     = useState("");
   const [password, setPass]   = useState("");
