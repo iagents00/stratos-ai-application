@@ -927,7 +927,7 @@ export default function LandingMarketing({ appUrl = "/?app" }) {
             >
               Iniciar sesión
             </a>
-            <a href={appUrl + "?register=true"} className="btn-white-glow" style={{
+            <a href="https://wa.me/17479779711?text=Hola%2C%20quiero%20solicitar%20acceso%20a%20Stratos%20AI%20%F0%9F%9A%80" target="_blank" rel="noopener noreferrer" className="btn-white-glow" style={{
               padding: "8px 20px", borderRadius: 9, border: "none",
               background: "linear-gradient(145deg, #FFFFFF 0%, #E8F4F0 100%)",
               color: "#060A12", fontSize: 13, fontWeight: 700,
@@ -984,13 +984,13 @@ export default function LandingMarketing({ appUrl = "/?app" }) {
 
             {/* CTA buttons mobile */}
             <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: "auto" }}>
-              <a href={appUrl + "?register=true"} onClick={() => setMobileMenu(false)} style={{
+              <a href="https://wa.me/17479779711?text=Hola%2C%20quiero%20solicitar%20acceso%20a%20Stratos%20AI%20%F0%9F%9A%80" target="_blank" rel="noopener noreferrer" onClick={() => setMobileMenu(false)} style={{
                 display: "block", width: "100%", padding: "14px 0", borderRadius: 12, border: "none",
                 background: `linear-gradient(135deg, ${P.accent} 0%, #3BC9A8 100%)`,
                 color: "#04080F", fontSize: 15, fontWeight: 700, fontFamily: fontD, cursor: "pointer",
                 boxShadow: "0 4px 20px rgba(82,217,184,0.30)", textDecoration: "none", textAlign: "center",
               }}>
-                Empezar gratis →
+                Solicitar acceso →
               </a>
               <a href={appUrl} onClick={() => setMobileMenu(false)} style={{
                 display: "block", width: "100%", padding: "13px 0", borderRadius: 12,
@@ -1522,8 +1522,8 @@ export default function LandingMarketing({ appUrl = "/?app" }) {
           </p>
 
           <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap", marginBottom: 28 }}>
-            <Btn primary style={{ fontSize: 15, padding: "16px 34px" }} onClick={() => window.location.href = appUrl + "?register=true"}>
-              Empezar gratis ahora <ArrowRight size={15} />
+            <Btn primary style={{ fontSize: 15, padding: "16px 34px" }} onClick={() => window.open("https://wa.me/17479779711?text=Hola%2C%20quiero%20solicitar%20acceso%20a%20Stratos%20AI%20%F0%9F%9A%80", "_blank")}>
+              Solicitar acceso ahora <ArrowRight size={15} />
             </Btn>
             <Btn style={{ padding: "15px 28px" }} onClick={() => window.location.href = appUrl}>
               <LogIn size={14} strokeWidth={1.6} /> Iniciar sesión

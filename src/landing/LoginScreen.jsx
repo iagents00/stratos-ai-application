@@ -217,7 +217,7 @@ export default function LoginScreen({ onLogin }) {
               <p style={{ fontSize: 13, color: "#FFFFFF", fontWeight: 600, marginBottom: 24 }}>{email}</p>
               <div style={{ padding: "10px 14px", borderRadius: 9, background: P.accentS, border: `1px solid ${P.accentB}`, marginBottom: 20, textAlign: "left" }}>
                 <p style={{ fontSize: 11, color: "rgba(110,231,194,0.8)", lineHeight: 1.6 }}>
-                  Para activar el envío real de emails conecta Supabase Auth. El plan completo está en <code style={{ fontSize: 10 }}>CLAUDE.md</code>.
+                  Revisa también tu carpeta de spam. El enlace expira en 24 horas.
                 </p>
               </div>
               <button onClick={() => go("login")} style={{
@@ -231,17 +231,17 @@ export default function LoginScreen({ onLogin }) {
               {/* ─ Título ─ */}
               <div style={{ marginBottom: 28 }}>
                 <p style={{ fontSize: 11, color: P.accent, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 8 }}>
-                  {mode === "login" ? "Acceso a la plataforma" : mode === "register" ? "Nueva cuenta" : "Recuperar acceso"}
+                  {mode === "login" ? "Acceso a la plataforma" : mode === "register" ? "Acceso por invitación" : "Recuperar acceso"}
                 </p>
                 <h2 style={{ fontSize: 24, fontWeight: 700, color: "#FFFFFF", fontFamily: fontD, letterSpacing: "-0.02em" }}>
-                  {mode === "login" ? "Bienvenido de vuelta" : mode === "register" ? "Crear cuenta gratis" : "Olvidé mi contraseña"}
+                  {mode === "login" ? "Bienvenido de vuelta" : mode === "register" ? "Solicitar acceso" : "Olvidé mi contraseña"}
                 </h2>
               </div>
 
               {/* ─ Tabs ─ */}
               {(mode === "login" || mode === "register") && (
                 <div style={{ display: "flex", gap: 3, background: "rgba(255,255,255,0.04)", borderRadius: 10, padding: 3, marginBottom: 24 }}>
-                  {[["login","Iniciar sesión"],["register","Crear cuenta"]].map(([m, lbl]) => (
+                  {[["login","Iniciar sesión"],["register","Solicitar acceso"]].map(([m, lbl]) => (
                     <button key={m} type="button" onClick={() => go(m)} style={{
                       flex: 1, padding: "8px 0", borderRadius: 8, border: "none", cursor: "pointer",
                       background: mode === m ? "rgba(255,255,255,0.09)" : "transparent",
@@ -253,156 +253,166 @@ export default function LoginScreen({ onLogin }) {
               )}
 
 
-              {/* ─ Campos ─ */}
-              <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 16 }}>
-
-                {/* Nombre */}
-                {mode === "register" && (
-                  <div>
-                    <Label text="Nombre completo" />
-                    <input value={name} onChange={e => setName(e.target.value)} onKeyDown={onKey}
-                      onFocus={() => setFocused("name")} onBlur={() => setFocused(null)}
-                      placeholder="Tu nombre completo" style={inputStyle("name", false)} autoComplete="name" />
+              {/* ─ SOLICITAR ACCESO (modo register) ─ */}
+              {mode === "register" ? (
+                <div style={{ textAlign: "center", padding: "8px 0 4px" }}>
+                  {/* Ícono WhatsApp */}
+                  <div style={{
+                    width: 68, height: 68, borderRadius: "50%",
+                    background: "linear-gradient(145deg, #25D366 0%, #1ebe5d 100%)",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    margin: "0 auto 20px",
+                    boxShadow: "0 4px 28px rgba(37,211,102,0.35)",
+                  }}>
+                    <svg width="34" height="34" viewBox="0 0 32 32" fill="none">
+                      <path d="M16 4C9.373 4 4 9.373 4 16c0 2.152.563 4.17 1.55 5.914L4 28l6.23-1.527A11.94 11.94 0 0016 28c6.627 0 12-5.373 12-12S22.627 4 16 4z" fill="white"/>
+                      <path d="M11.867 9.6c-.267-.64-.56-.653-.813-.667-.21-.01-.45-.01-.69-.01-.24 0-.627.09-.957.45-.33.36-1.26 1.23-1.26 3 0 1.77 1.29 3.48 1.47 3.72.18.24 2.49 3.99 6.15 5.43 3.04 1.2 3.66.96 4.32.9.66-.06 2.13-.87 2.43-1.71.3-.84.3-1.56.21-1.71-.09-.15-.33-.24-.69-.42-.36-.18-2.13-1.05-2.46-1.17-.33-.12-.57-.18-.81.18-.24.36-.93 1.17-1.14 1.41-.21.24-.42.27-.78.09-.36-.18-1.52-.56-2.89-1.79-1.07-.955-1.79-2.134-2-2.494-.21-.36-.022-.554.158-.734.162-.162.36-.42.54-.63.18-.21.24-.36.36-.6.12-.24.06-.45-.03-.63-.09-.18-.795-1.97-1.11-2.69z" fill="#25D366"/>
+                    </svg>
                   </div>
-                )}
 
-                {/* Email */}
-                <div>
-                  <Label text="Correo electrónico" />
-                  <input type="email" value={email} onChange={e => setEmail(e.target.value)} onKeyDown={onKey}
-                    onFocus={() => setFocused("email")} onBlur={() => setFocused(null)}
-                    placeholder="correo@empresa.com" style={inputStyle("email", false)} autoComplete="email" />
+                  <h3 style={{ fontSize: 17, fontWeight: 700, color: "#FFFFFF", fontFamily: fontD, marginBottom: 10, letterSpacing: "-0.02em" }}>
+                    Acceso por invitación
+                  </h3>
+                  <p style={{ fontSize: 13, color: P.txt2, lineHeight: 1.7, marginBottom: 24, maxWidth: 280, margin: "0 auto 24px" }}>
+                    La plataforma es exclusiva para equipos comerciales. Escríbenos y te enviamos tus credenciales en minutos.
+                  </p>
+
+                  {/* Botón WhatsApp */}
+                  <a
+                    href="https://wa.me/17479779711?text=Hola%2C%20quiero%20solicitar%20acceso%20a%20Stratos%20AI%20%F0%9F%9A%80"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+                      width: "100%", padding: "13px 0", borderRadius: 11, border: "none",
+                      background: "linear-gradient(135deg, #25D366 0%, #1ebe5d 100%)",
+                      color: "#FFFFFF", fontSize: 14, fontWeight: 700, fontFamily: fontD,
+                      textDecoration: "none", marginBottom: 12,
+                      boxShadow: "0 4px 20px rgba(37,211,102,0.30)",
+                      transition: "all 0.2s",
+                    }}
+                    onMouseEnter={e => { e.currentTarget.style.boxShadow = "0 6px 28px rgba(37,211,102,0.50)"; e.currentTarget.style.transform = "translateY(-1px)"; }}
+                    onMouseLeave={e => { e.currentTarget.style.boxShadow = "0 4px 20px rgba(37,211,102,0.30)"; e.currentTarget.style.transform = "none"; }}
+                  >
+                    <svg width="18" height="18" viewBox="0 0 32 32" fill="none">
+                      <path d="M16 4C9.373 4 4 9.373 4 16c0 2.152.563 4.17 1.55 5.914L4 28l6.23-1.527A11.94 11.94 0 0016 28c6.627 0 12-5.373 12-12S22.627 4 16 4z" fill="white" fillOpacity="0.9"/>
+                      <path d="M11.867 9.6c-.267-.64-.56-.653-.813-.667-.21-.01-.45-.01-.69-.01-.24 0-.627.09-.957.45-.33.36-1.26 1.23-1.26 3 0 1.77 1.29 3.48 1.47 3.72.18.24 2.49 3.99 6.15 5.43 3.04 1.2 3.66.96 4.32.9.66-.06 2.13-.87 2.43-1.71.3-.84.3-1.56.21-1.71-.09-.15-.33-.24-.69-.42-.36-.18-2.13-1.05-2.46-1.17-.33-.12-.57-.18-.81.18-.24.36-.93 1.17-1.14 1.41-.21.24-.42.27-.78.09-.36-.18-1.52-.56-2.89-1.79-1.07-.955-1.79-2.134-2-2.494-.21-.36-.022-.554.158-.734.162-.162.36-.42.54-.63.18-.21.24-.36.36-.6.12-.24.06-.45-.03-.63-.09-.18-.795-1.97-1.11-2.69z" fill="rgba(37,211,102,0.9)"/>
+                    </svg>
+                    Solicitar acceso por WhatsApp
+                  </a>
+
+                  <button type="button" onClick={() => go("login")} style={{
+                    width: "100%", padding: "11px", borderRadius: 10, cursor: "pointer",
+                    border: `1px solid ${P.border}`, background: "transparent",
+                    color: P.txt2, fontSize: 12, fontFamily: font, transition: "all 0.18s",
+                  }}
+                    onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.04)"; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = "transparent"; }}
+                  >Ya tengo cuenta → Iniciar sesión</button>
                 </div>
+              ) : (
+                <>
+                  {/* ─ Campos (login / forgot) ─ */}
+                  <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 16 }}>
 
-                {/* Contraseña */}
-                {(mode === "login" || mode === "register") && (
-                  <div>
-                    <Label text="Contraseña" right={
-                      mode === "login" && (
-                        <button type="button" onClick={() => go("forgot")} style={{
-                          background: "none", border: "none", cursor: "pointer",
-                          fontSize: 11, color: P.accent, fontFamily: font, padding: 0,
-                        }}>¿Olvidaste tu contraseña?</button>
-                      )
-                    } />
-                    <div style={{ position: "relative" }}>
-                      <input type={showP ? "text" : "password"} value={password} onChange={e => setPass(e.target.value)} onKeyDown={onKey}
-                        onFocus={() => setFocused("pass")} onBlur={() => setFocused(null)}
-                        placeholder={mode === "register" ? "Mínimo 6 caracteres" : "••••••••"}
-                        style={{ ...inputStyle("pass", false), paddingRight: 52 }}
-                        autoComplete={mode === "login" ? "current-password" : "new-password"} />
-                      <button type="button" onClick={() => setShowP(s => !s)} style={{
-                        position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)",
-                        background: "none", border: "none", cursor: "pointer",
-                        color: P.txt3, fontSize: 11, fontFamily: font, padding: 0,
-                      }}>{showP ? "Ocultar" : "Ver"}</button>
+                    {/* Email */}
+                    <div>
+                      <Label text="Correo electrónico" />
+                      <input type="email" value={email} onChange={e => setEmail(e.target.value)} onKeyDown={onKey}
+                        onFocus={() => setFocused("email")} onBlur={() => setFocused(null)}
+                        placeholder="correo@empresa.com" style={inputStyle("email", false)} autoComplete="email" />
                     </div>
-                    {/* Barra de fuerza */}
-                    {mode === "register" && password.length > 0 && (
-                      <div style={{ marginTop: 6 }}>
-                        <div style={{ display: "flex", gap: 3, marginBottom: 3 }}>
-                          {[0,1,2,3].map(i => (
-                            <div key={i} style={{ flex: 1, height: 2, borderRadius: 2, transition: "background 0.3s",
-                              background: i < pw ? strengthColor : "rgba(255,255,255,0.07)" }} />
-                          ))}
+
+                    {/* Contraseña */}
+                    {mode === "login" && (
+                      <div>
+                        <Label text="Contraseña" right={
+                          <button type="button" onClick={() => go("forgot")} style={{
+                            background: "none", border: "none", cursor: "pointer",
+                            fontSize: 11, color: P.accent, fontFamily: font, padding: 0,
+                          }}>¿Olvidaste tu contraseña?</button>
+                        } />
+                        <div style={{ position: "relative" }}>
+                          <input type={showP ? "text" : "password"} value={password} onChange={e => setPass(e.target.value)} onKeyDown={onKey}
+                            onFocus={() => setFocused("pass")} onBlur={() => setFocused(null)}
+                            placeholder="••••••••"
+                            style={{ ...inputStyle("pass", false), paddingRight: 52 }}
+                            autoComplete="current-password" />
+                          <button type="button" onClick={() => setShowP(s => !s)} style={{
+                            position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)",
+                            background: "none", border: "none", cursor: "pointer",
+                            color: P.txt3, fontSize: 11, fontFamily: font, padding: 0,
+                          }}>{showP ? "Ocultar" : "Ver"}</button>
                         </div>
-                        <p style={{ fontSize: 10, color: strengthColor, fontFamily: font }}>{strengthLabel}</p>
                       </div>
                     )}
                   </div>
-                )}
 
-                {/* Confirmar contraseña */}
-                {mode === "register" && (
-                  <div>
-                    <Label text="Confirmar contraseña" right={
-                      confirm && (
-                        <span style={{ fontSize: 10, fontFamily: font, color: confirm === password ? P.accent : P.rose }}>
-                          {confirm === password ? "✓ Coinciden" : "No coinciden"}
-                        </span>
-                      )
-                    } />
-                    <div style={{ position: "relative" }}>
-                      <input type={showC ? "text" : "password"} value={confirm} onChange={e => setConfirm(e.target.value)} onKeyDown={onKey}
-                        onFocus={() => setFocused("confirm")} onBlur={() => setFocused(null)}
-                        placeholder="Repite tu contraseña"
-                        style={{ ...inputStyle("confirm", !!(confirm && confirm !== password)), paddingRight: 52 }}
-                        autoComplete="new-password" />
-                      <button type="button" onClick={() => setShowC(s => !s)} style={{
-                        position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)",
-                        background: "none", border: "none", cursor: "pointer",
-                        color: P.txt3, fontSize: 11, fontFamily: font, padding: 0,
-                      }}>{showC ? "Ocultar" : "Ver"}</button>
+                  {/* ─ Error ─ */}
+                  {error && (
+                    <div style={{ padding: "10px 13px", borderRadius: 8, background: "rgba(232,129,140,0.07)", border: "1px solid rgba(232,129,140,0.2)", marginBottom: 14 }}>
+                      <p style={{ fontSize: 12, color: "#E8A0A0", fontFamily: font }}>{error}</p>
                     </div>
-                  </div>
-                )}
-              </div>
+                  )}
 
-              {/* ─ Error ─ */}
-              {error && (
-                <div style={{ padding: "10px 13px", borderRadius: 8, background: "rgba(232,129,140,0.07)", border: "1px solid rgba(232,129,140,0.2)", marginBottom: 14 }}>
-                  <p style={{ fontSize: 12, color: "#E8A0A0", fontFamily: font }}>{error}</p>
-                </div>
-              )}
+                  {/* ─ Acción principal ─ */}
+                  <button type="button"
+                    onClick={mode === "login" ? doLogin : doForgot}
+                    disabled={loading}
+                    style={{
+                      width: "100%", padding: "13px 0", borderRadius: 11, border: "none",
+                      cursor: loading ? "not-allowed" : "pointer",
+                      background: loading
+                        ? "rgba(110,231,194,0.25)"
+                        : "linear-gradient(135deg, #6EE7C2 0%, #3BC9A8 100%)",
+                      color: "#04080F", fontSize: 14, fontWeight: 700, fontFamily: fontD,
+                      transition: "all 0.2s", marginBottom: 12,
+                      boxShadow: loading ? "none" : "0 4px 20px rgba(110,231,194,0.20)",
+                      letterSpacing: "0.01em",
+                    }}
+                    onMouseEnter={e => !loading && (e.currentTarget.style.boxShadow = "0 6px 26px rgba(110,231,194,0.32)")}
+                    onMouseLeave={e => (e.currentTarget.style.boxShadow = loading ? "none" : "0 4px 20px rgba(110,231,194,0.20)")}
+                  >
+                    {loading ? "Verificando..." :
+                      mode === "login" ? "Iniciar sesión →" : "Enviar enlace de recuperación →"}
+                  </button>
 
-              {/* ─ Acción principal ─ */}
-              <button type="button"
-                onClick={mode === "login" ? doLogin : mode === "register" ? doRegister : doForgot}
-                disabled={loading}
-                style={{
-                  width: "100%", padding: "13px 0", borderRadius: 11, border: "none",
-                  cursor: loading ? "not-allowed" : "pointer",
-                  background: loading
-                    ? "rgba(110,231,194,0.25)"
-                    : "linear-gradient(135deg, #6EE7C2 0%, #3BC9A8 100%)",
-                  color: "#04080F", fontSize: 14, fontWeight: 700, fontFamily: fontD,
-                  transition: "all 0.2s", marginBottom: 12,
-                  boxShadow: loading ? "none" : "0 4px 20px rgba(110,231,194,0.20)",
-                  letterSpacing: "0.01em",
-                }}
-                onMouseEnter={e => !loading && (e.currentTarget.style.boxShadow = "0 6px 26px rgba(110,231,194,0.32)")}
-                onMouseLeave={e => (e.currentTarget.style.boxShadow = loading ? "none" : "0 4px 20px rgba(110,231,194,0.20)")}
-              >
-                {loading ? "Procesando..." :
-                  mode === "login"    ? "Iniciar sesión →" :
-                  mode === "register" ? "Crear cuenta gratis →" :
-                                        "Enviar enlace de recuperación →"}
-              </button>
+                  {/* ─ Volver (forgot) ─ */}
+                  {mode === "forgot" && (
+                    <button type="button" onClick={() => go("login")} style={{
+                      width: "100%", padding: "10px", borderRadius: 10, cursor: "pointer",
+                      border: `1px solid ${P.border}`, background: "transparent",
+                      color: P.txt2, fontSize: 12, fontFamily: font, marginBottom: 12,
+                    }}>← Volver al inicio de sesión</button>
+                  )}
 
-              {/* ─ Volver (forgot) ─ */}
-              {mode === "forgot" && (
-                <button type="button" onClick={() => go("login")} style={{
-                  width: "100%", padding: "10px", borderRadius: 10, cursor: "pointer",
-                  border: `1px solid ${P.border}`, background: "transparent",
-                  color: P.txt2, fontSize: 12, fontFamily: font, marginBottom: 12,
-                }}>← Volver al inicio de sesión</button>
-              )}
+                  {/* ─ Demo ─ */}
+                  {mode === "login" && (
+                    <>
+                      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
+                        <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.05)" }} />
+                        <span style={{ fontSize: 10, color: P.txt3, letterSpacing: "0.04em" }}>o prueba la demo</span>
+                        <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.05)" }} />
+                      </div>
+                      <button type="button" onClick={doDemo} disabled={loading} style={{
+                        width: "100%", padding: "11px", borderRadius: 10, cursor: loading ? "not-allowed" : "pointer",
+                        background: "rgba(255,255,255,0.03)", border: `1px solid ${P.border}`,
+                        color: "rgba(255,255,255,0.55)", fontSize: 12, fontFamily: font, transition: "all 0.18s",
+                      }}
+                        onMouseEnter={e => !loading && (e.currentTarget.style.background = "rgba(255,255,255,0.06)")}
+                        onMouseLeave={e => (e.currentTarget.style.background = "rgba(255,255,255,0.03)")}
+                      >Entrar como Demo — acceso completo sin registro</button>
+                    </>
+                  )}
 
-              {/* ─ Demo ─ */}
-              {(mode === "login" || mode === "register") && (
-                <>
-                  <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
-                    <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.05)" }} />
-                    <span style={{ fontSize: 10, color: P.txt3, letterSpacing: "0.04em" }}>o accede sin registro</span>
-                    <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.05)" }} />
-                  </div>
-                  <button type="button" onClick={doDemo} disabled={loading} style={{
-                    width: "100%", padding: "11px", borderRadius: 10, cursor: loading ? "not-allowed" : "pointer",
-                    background: "rgba(255,255,255,0.03)", border: `1px solid ${P.border}`,
-                    color: "rgba(255,255,255,0.55)", fontSize: 12, fontFamily: font, transition: "all 0.18s",
-                  }}
-                    onMouseEnter={e => !loading && (e.currentTarget.style.background = "rgba(255,255,255,0.06)")}
-                    onMouseLeave={e => (e.currentTarget.style.background = "rgba(255,255,255,0.03)")}
-                  >Entrar como Demo — acceso completo sin registro</button>
+                  {/* ─ Solicitar acceso link ─ */}
+                  {mode === "login" && (
+                    <p style={{ fontSize: 11, color: P.txt3, textAlign: "center", marginTop: 14 }}>
+                      ¿No tienes cuenta?{" "}
+                      <span onClick={() => go("register")} style={{ color: P.accent, cursor: "pointer", fontWeight: 600 }}>Solicitar acceso →</span>
+                    </p>
+                  )}
                 </>
-              )}
-
-              {/* ─ Planes link ─ */}
-              {mode === "login" && (
-                <p style={{ fontSize: 11, color: P.txt3, textAlign: "center", marginTop: 14 }}>
-                  ¿Aún no tienes cuenta?{" "}
-                  <span onClick={() => alert("Visita la página de precios para conocer los planes disponibles.")} style={{ color: P.accent, cursor: "pointer", fontWeight: 600 }}>Ver planes →</span>
-                </p>
               )}
 
               {/* ─ Legal ─ */}

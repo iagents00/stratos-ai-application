@@ -30,7 +30,16 @@ export async function signIn(email, password) {
 
   try {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password })
-    if (error) return { data: null, error: error.message }
+    if (error) {
+      const msg = error.message?.toLowerCase() || ""
+      if (msg.includes("invalid login credentials") || msg.includes("invalid email or password"))
+        return { data: null, error: "Correo o contraseña incorrectos." }
+      if (msg.includes("email not confirmed"))
+        return { data: null, error: "Confirma tu correo antes de iniciar sesión." }
+      if (msg.includes("too many requests"))
+        return { data: null, error: "Demasiados intentos. Espera unos minutos e inténtalo de nuevo." }
+      return { data: null, error: "Error al iniciar sesión. Verifica tus datos e inténtalo de nuevo." }
+    }
 
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
