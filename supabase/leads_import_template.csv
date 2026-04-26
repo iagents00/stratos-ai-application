@@ -1,0 +1,3 @@
+name,email,phone,source,stage,score,hot,presupuesto,project,campaign,asesor_name,next_action,notes
+Juan Ejemplo,juan@email.com,+52 55 1234 5678,whatsapp,Primer Contacto,70,false,5000000,Kanai,Facebook Ads,María López,Agendar zoom para esta semana,Cliente interesado en departamento de 2 recámaras
+María Ejemplo,maria@email.com,+52 55 9876 5432,telegram,Seguimiento,85,true,8000000,Kanai,Google Ads,Carlos Ruiz,Enviar propuesta de financiamiento,Ya visitó dos propiedades
