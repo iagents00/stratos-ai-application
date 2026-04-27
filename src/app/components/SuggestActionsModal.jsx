@@ -1,16 +1,20 @@
 /**
  * SuggestActionsModal — Co-pilot IA que sugiere próximas acciones.
  *
- * Lee el expediente del lead y llama a la Edge Function
- * `suggest-next-actions` (Claude Sonnet 4.5 + Protocolo Duke).
- * Muestra 1-3 sugerencias con técnica de venta + razón.
- * El asesor elige cuáles agregar a tasks.
+ * Estrategia DOBLE FUENTE:
+ *   1. Inmediato: muestra el `lead.playbook` (5 acciones precalculadas
+ *      desde el Protocolo Duke en build time, sin esperar red).
+ *   2. Background: llama a la Edge Function `suggest-next-actions`
+ *      (Gemini Flash + Protocolo Duke). Si responde con sugerencias
+ *      mejores que las del playbook, las muestra. Si falla, se queda
+ *      con el playbook — el asesor nunca ve un estado "vacío".
+ *
+ * El asesor selecciona cuáles agregar a sus tasks con un click.
  */
 import { useEffect, useState } from "react";
 import { X, Wand2, Plus, RefreshCw, Lightbulb } from "lucide-react";
 import { P, font, fontDisp, mono } from "../../design-system/tokens";
 import { suggestNextActions, suggestionToTask } from "../../lib/suggest-actions";
-import ProFeatureGate from "./ProFeatureGate";
 
 const PRIORITY_META = {
   alta:  { color: "#EF4444", label: "ATENDER YA" },
@@ -25,16 +29,82 @@ const TECHNIQUE_LABEL = {
   "BANT — Need":               "Entender necesidad",
   "BANT — Timeline":           "Confirmar urgencia",
   "BANT-F — Financing":        "Forma de pago",
+  "BANT-F":                    "Calificar al cliente",
+  "BANT":                      "Calificar al cliente",
   "SPIN":                      "Pregunta que abre conversación",
   "Manejo de objeción":        "Para responder dudas",
   "Manejo de objeción de precio": "Si dice 'está caro'",
   "Closing technique":         "Cierre suave",
   "Reactivación":              "Recuperar interés",
   "Re-engagement":             "Recuperar interés",
+  "Velocidad de respuesta":    "Contactar rápido",
+  "Doble canal":               "WhatsApp + llamada",
+  "Cambio de canal":           "Cambiar el canal de contacto",
+  "Aportar valor":             "Mensaje con valor nuevo",
+  "Reducir fricción":          "Bajar la barrera",
+  "Push de información":       "Enviar info sin pedir",
+  "Manejo objeción precio":    "Si dice 'está caro'",
+  "Avance del protocolo":      "Cerrar con siguiente paso",
+  "Frecuencia por temperatura": "Cadencia ideal",
+  "Personalización":           "Material específico al cliente",
+  "Personalización doble":     "2 versiones para 2 decisores",
+  "Decisión binaria":          "Dar 2 opciones cerradas",
+  "Anticipación":              "Tener todo listo",
+  "Preparación":               "Preparar antes de la cita",
+  "Anti no-show":              "Confirmar para que no falte",
+  "Estructura de venta":       "Plan estructurado de la cita",
+  "Material persuasivo":       "Material que convence",
+  "Velocidad post-cita":       "Mover rápido tras Zoom",
+  "Propuesta personalizada":   "Propuesta a la medida",
+  "Seguimiento activo":        "Provocar la respuesta",
+  "Cita inclusiva":            "Incluir a todos los decisores",
+  "Pre-venta a 2do decisor":   "Vender al otro decisor también",
+  "Aumentar valor percibido":  "Mostrar valor extra",
+  "Prueba social":             "Casos de éxito",
+  "Costo de oportunidad":      "Mostrar lo que pierde si espera",
+  "Escasez":                   "Crear urgencia con escasez",
+  "Llamada en frío":           "Llamada de recuperación",
+  "Cierre de proceso":         "Decidir si cerrar o seguir",
+  "Cierre suave":              "Cerrar sin presionar",
+  "Transparencia":             "Ser claro con costos",
+  "Cierre ampliado":           "Cerrar y pedir más",
+  "Post-venta":                "Atención post-compra",
+  "Programa de referidos":     "Pedir referidos",
+  "Mantener relación":         "Seguir en contacto",
+  "Comunidad":                 "Mantenerlo cercano",
+  "Re-engagement frío":        "Recuperar después de tiempo",
+  "Escalation":                "Escalar al director",
+  "Frecuencia":                "Cadencia adecuada",
 };
 function naturalTechnique(t) {
   if (!t) return "Sugerencia";
   return TECHNIQUE_LABEL[t] || t;
+}
+
+// ── Mapping playbook → suggestions ───────────────────────────────────
+// Convierte items del playbook al formato de suggestions para que el
+// modal pueda renderizarlos uniformemente.
+const CATEGORY_TO_PRIORITY = {
+  reactivacion: "alta",
+  cita:         "alta",
+  cierre:       "alta",
+  calificacion: "media",
+  propuesta:    "media",
+  retencion:    "baja",
+};
+
+function playbookAsSuggestions(playbook = []) {
+  return playbook
+    .filter(p => !p.completed)   // no mostrar las ya completadas
+    .map(p => ({
+      action:    p.action,
+      date:      "",
+      technique: p.technique || "",
+      reason:    p.reason || "",
+      priority:  CATEGORY_TO_PRIORITY[p.category] || "media",
+      icon:      p.icon || "💡",
+      _fromPlaybook: true,
+    }));
 }
 
 export default function SuggestActionsModal({ open, onClose, lead, onAddTasks }) {
@@ -43,24 +113,46 @@ export default function SuggestActionsModal({ open, onClose, lead, onAddTasks })
   const [summary, setSummary]       = useState("");
   const [error, setError]           = useState(null);
   const [selected, setSelected]     = useState(new Set());
-  const [needsActivation, setNeedsActivation] = useState(false);
+  const [source, setSource]         = useState("playbook"); // "playbook" | "ai"
 
+  /**
+   * fetchSuggestions — estrategia de doble fuente:
+   *   1. Inmediato: muestra el playbook precalculado del Protocolo Duke
+   *      (5 acciones por cliente generadas en build time)
+   *   2. Background: pide a la IA (Gemini Flash + Protocolo) sugerencias
+   *      contextuales. Si la IA responde mejor, las sustituye.
+   *   3. Si la IA falla, se queda con el playbook — el asesor nunca ve vacío.
+   */
   const fetchSuggestions = async () => {
     if (!lead) return;
-    setLoading(true); setError(null); setSelected(new Set()); setNeedsActivation(false);
+    setSelected(new Set());
+    setError(null);
+
+    // PASO 1: Playbook inmediato (sin esperar red)
+    const playbookSuggestions = playbookAsSuggestions(lead.playbook || []);
+    if (playbookSuggestions.length > 0) {
+      setSuggestions(playbookSuggestions);
+      setSummary("");
+      setSource("playbook");
+    }
+
+    // PASO 2: Intentar mejorar con IA en background
+    setLoading(true);
     try {
       const tasks = Array.isArray(lead.tasks) ? lead.tasks : [];
       const r = await suggestNextActions(lead, tasks);
-      // Si la edge function no está deployada o no hay API key, mostramos
-      // el ProFeatureGate (función premium) en lugar de un error técnico
-      if (r.error || (Array.isArray(r.suggestions) && r.suggestions.length === 0 && r.error)) {
-        setNeedsActivation(true);
-        return;
+      if (r && Array.isArray(r.suggestions) && r.suggestions.length > 0 && !r.error) {
+        // IA respondió con sugerencias mejores → reemplazar
+        setSuggestions(r.suggestions);
+        setSummary(r.summary_one_line || "");
+        setSource("ai");
       }
-      setSuggestions(r.suggestions || []);
-      setSummary(r.summary_one_line || "");
+      // Si IA falla pero hay playbook, ya está mostrado — no mostrar error
     } catch (e) {
-      setNeedsActivation(true);
+      // Sin IA → quedarse con el playbook silenciosamente
+      if (playbookSuggestions.length === 0) {
+        setError("No tenemos sugerencias para este cliente todavía. Agrega más información en el expediente.");
+      }
     } finally {
       setLoading(false);
     }
@@ -87,24 +179,6 @@ export default function SuggestActionsModal({ open, onClose, lead, onAddTasks })
   };
 
   if (!open) return null;
-
-  // Si la edge function no está deployada → mostrar gate premium
-  if (needsActivation) {
-    return (
-      <ProFeatureGate
-        open={true}
-        onClose={onClose}
-        title="Asistente inteligente de venta"
-        subtitle="Tu copiloto de IA para cerrar más clientes"
-        benefits={[
-          "Lee el expediente de cada cliente y te dice qué hacer ahora con palabras claras.",
-          "Aplica las técnicas de venta del Protocolo Duke sin que tengas que estudiarlas.",
-          "Te recomienda 2-3 acciones priorizadas para que avances al cierre más rápido.",
-          "Aprende del histórico de tus mejores ventas y te empuja en los momentos clave.",
-        ]}
-      />
-    );
-  }
 
   return (
     <div
@@ -148,8 +222,19 @@ export default function SuggestActionsModal({ open, onClose, lead, onAddTasks })
               <Wand2 size={17} color={P.accent} strokeWidth={2.4} />
             </div>
             <div>
-              <div style={{ fontSize: 9, color: P.txt3, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", fontFamily: fontDisp }}>
-                Tu asistente de venta
+              <div style={{ fontSize: 9, color: P.txt3, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", fontFamily: fontDisp, display: "flex", alignItems: "center", gap: 6 }}>
+                <span>Tu asistente de venta</span>
+                <span style={{
+                  display: "inline-flex", alignItems: "center", gap: 4,
+                  padding: "1px 7px", borderRadius: 99,
+                  background: source === "ai" ? `${P.accent}1A` : `${P.violet}1A`,
+                  border: `1px solid ${source === "ai" ? P.accentB : `${P.violet}33`}`,
+                  color: source === "ai" ? P.accent : P.violet,
+                  fontSize: 8.5, letterSpacing: "0.1em",
+                }}>
+                  <span style={{ fontSize: 8 }}>{source === "ai" ? "✨" : "🎯"}</span>
+                  {source === "ai" ? "IA + Protocolo Duke" : "Protocolo Duke"}
+                </span>
               </div>
               <div style={{ fontSize: 16, color: P.txt, fontWeight: 700, fontFamily: fontDisp, marginTop: 2 }}>
                 ¿Qué hago ahora con {lead?.n || lead?.name}?

@@ -1086,9 +1086,11 @@ const NextActionHero = ({ lead, T = P, onUpdate = null }) => {
    saltar entre las 3 vistas del lead sin cerrar el drawer.
 ═══════════════════════════════════════════ */
 const DRAWER_TABS = [
-  { id: "analisis",   label: "Análisis IA", shortLabel: "IA",     colorKey: "accent" },
-  { id: "perfil",     label: "Perfil",      shortLabel: "Perfil", colorKey: "violet" },
+  // Expediente primero — es donde el asesor pasa el 90% del tiempo
   { id: "expediente", label: "Expediente",  shortLabel: "Exped.", colorKey: "blue"   },
+  { id: "perfil",     label: "Perfil",      shortLabel: "Perfil", colorKey: "violet" },
+  // Análisis IA bloqueado por ahora — se desbloqueará en siguiente etapa
+  { id: "analisis",   label: "Análisis IA", shortLabel: "IA",     colorKey: "accent", locked: true, lockReason: "Próximamente" },
 ];
 
 const DrawerTabIsland = ({ current, onSwitch, T = P }) => {
@@ -1118,8 +1120,11 @@ const DrawerTabIsland = ({ current, onSwitch, T = P }) => {
     }}>
       {DRAWER_TABS.map(tab => {
         const active = tab.id === current;
+        const locked = !!tab.locked;
         const color = T[tab.colorKey] || T.accent;
-        const txtC  = active ? safeC(color) : (isLight ? T.txt2 : T.txt3);
+        const txtC  = locked
+          ? T.txt3
+          : (active ? safeC(color) : (isLight ? T.txt2 : T.txt3));
         const iconNode =
           tab.id === "analisis"   ? <StratosAtom size={13} color={txtC} />
         : tab.id === "perfil"     ? <User size={13} color={txtC} strokeWidth={2.2} />
@@ -1128,30 +1133,36 @@ const DrawerTabIsland = ({ current, onSwitch, T = P }) => {
         return (
           <button
             key={tab.id}
-            onClick={() => !active && onSwitch?.(tab.id)}
+            onClick={() => { if (!active && !locked) onSwitch?.(tab.id); }}
+            disabled={locked}
+            title={locked ? tab.lockReason || "Próximamente" : tab.label}
             style={{
               height: 38, padding: "0 14px", borderRadius: 999,
               border: "none",
-              background: active
-                ? (isLight ? `${color}22` : `${color}26`)
-                : "transparent",
+              background: locked
+                ? "transparent"
+                : (active
+                  ? (isLight ? `${color}22` : `${color}26`)
+                  : "transparent"),
               color: txtC,
+              opacity: locked ? 0.45 : 1,
               fontSize: 12.5, fontWeight: active ? 700 : 600,
               fontFamily: font, letterSpacing: "0.01em",
-              cursor: active ? "default" : "pointer",
+              cursor: locked ? "not-allowed" : (active ? "default" : "pointer"),
               display: "flex", alignItems: "center", gap: 7,
               transition: "all 0.22s cubic-bezier(0.4, 0, 0.2, 1)",
-              boxShadow: active && isLight ? `inset 0 1px 0 rgba(255,255,255,0.55)` : "none",
+              boxShadow: active && isLight && !locked ? `inset 0 1px 0 rgba(255,255,255,0.55)` : "none",
               whiteSpace: "nowrap",
+              position: "relative",
             }}
             onMouseEnter={e => {
-              if (!active) {
+              if (!active && !locked) {
                 e.currentTarget.style.background = isLight ? "rgba(15,23,42,0.05)" : "rgba(255,255,255,0.06)";
                 e.currentTarget.style.color = isLight ? T.txt : "#FFFFFF";
               }
             }}
             onMouseLeave={e => {
-              if (!active) {
+              if (!active && !locked) {
                 e.currentTarget.style.background = "transparent";
                 e.currentTarget.style.color = txtC;
               }
@@ -1159,6 +1170,11 @@ const DrawerTabIsland = ({ current, onSwitch, T = P }) => {
           >
             {iconNode}
             <span>{tab.label}</span>
+            {locked && (
+              <span aria-hidden style={{
+                fontSize: 10, marginLeft: 2, opacity: 0.7,
+              }}>🔒</span>
+            )}
           </button>
         );
       })}

@@ -2343,35 +2343,12 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                           <Star size={14} color={goldC} fill={isPinned ? goldC : "none"} strokeWidth={2.2} />
                         </button>
 
-                        {/* ⚛ IA — abre el panel "Analizar y actuar" del Agente con
-                            contexto completo del lead (mismo flujo que AURA, sin ir al chat).
-                            Siempre resaltado en mint: es el CTA suave del módulo. */}
-                        <button onClick={() => openDrawerTab("analisis", l)}
-                          title="Analizar y actuar con el Agente IA"
-                          aria-label="Analizar y actuar con el Agente IA"
-                          style={{
-                            width: 34, height: 34, borderRadius: 9,
-                            border: `1px solid ${T.accentB}`,
-                            background: `${T.accent}${isLight ? "18" : "12"}`,
-                            cursor: "pointer", padding: 0,
-                            display: "flex", alignItems: "center", justifyContent: "center",
-                            transition: "all 0.16s ease",
-                            boxShadow: isLight ? `0 1px 2px ${T.accent}1A, inset 0 1px 0 rgba(255,255,255,0.5)` : "none",
-                            flexShrink: 0,
-                          }}
-                          onMouseEnter={e => {
-                            e.currentTarget.style.background  = `${T.accent}${isLight ? "28" : "22"}`;
-                            e.currentTarget.style.borderColor = `${T.accent}${isLight ? "88" : "66"}`;
-                            e.currentTarget.style.transform   = "translateY(-1px)";
-                          }}
-                          onMouseLeave={e => {
-                            e.currentTarget.style.background  = `${T.accent}${isLight ? "18" : "12"}`;
-                            e.currentTarget.style.borderColor = T.accentB;
-                            e.currentTarget.style.transform   = "none";
-                          }}
-                        >
-                          <Atom size={14} color={isLight ? `color-mix(in srgb, ${T.accent} 58%, #0B1220 42%)` : T.accent} strokeWidth={2.2} />
-                        </button>
+                        {/* ⚛ IA — bloqueado por ahora (próxima etapa).
+                            Mantengo el código comentado para reactivarlo después.
+                            <button onClick={() => openDrawerTab("analisis", l)} ...>
+                              <Atom size={14} ... />
+                            </button>
+                        */}
 
                         {/* 👤 Perfil — abre el drawer completo del cliente */}
                         <button onClick={() => setSelectedLead(l)}
@@ -3240,77 +3217,91 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
         onSwitchTab={(tab) => openDrawerTab(tab, analyzingLead)}
       />
 
-      {/* Botón flotante "Historial" — visible cuando hay un drawer abierto.
-          Se monta arriba de los drawers y abre el HistoryDrawer del lead actual.
-          Se oculta cuando el HistoryDrawer está abierto para no estorbar. */}
+      {/* Floating Action Bar — botones de acción global del drawer activo.
+         Posicionado en la parte INFERIOR del drawer (justo arriba del tab
+         switcher) para no encimar con el header del lead. Diseño:
+            ┌─────────────────────────────────────────┐
+            │  [💡 ¿Qué hago ahora?]   [🕒 Historial] │
+            │  ─── tab switcher (Exped · Perfil · IA) │
+            └─────────────────────────────────────────┘
+         */}
       {activeDrawerLead && !historyLead && createPortal(
-        <button
-          onClick={() => setHistoryLead(activeDrawerLead)}
-          title="Ver historial de cambios"
-          style={{
-            position: "fixed", top: 20, right: 20, zIndex: 99999,
-            display: "flex", alignItems: "center", gap: 8,
-            height: 38, padding: "0 14px",
-            borderRadius: 999,
-            background: "rgba(12,17,28,0.78)",
-            backdropFilter: "blur(28px) saturate(180%)",
-            WebkitBackdropFilter: "blur(28px) saturate(180%)",
-            border: `1px solid ${P.border}`,
-            boxShadow: "0 14px 36px rgba(0,0,0,0.5), 0 3px 10px rgba(0,0,0,0.35)",
-            color: P.txt, fontSize: 12.5, fontWeight: 600,
-            fontFamily: font, letterSpacing: "0.01em",
-            cursor: "pointer",
-            transition: "all 0.18s",
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.background = "rgba(20,28,42,0.92)";
-            e.currentTarget.style.borderColor = P.borderH;
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.background = "rgba(12,17,28,0.78)";
-            e.currentTarget.style.borderColor = P.border;
-          }}
-        >
-          <HistoryIcon size={14} strokeWidth={2.2} />
-          <span>Historial</span>
-        </button>,
-        document.body
-      )}
-
-      {/* ✨ Botón "Sugerir acciones" — copilot IA que lee el expediente
-         y propone próximas acciones con técnicas de venta del Protocolo Duke.
-         Tono co-pilot, no jefe. El asesor decide cuáles agregar a tasks. */}
-      {activeDrawerLead && !historyLead && !suggestLead && createPortal(
-        <button
-          onClick={() => setSuggestLead(activeDrawerLead)}
-          title="¿Qué hago ahora con este cliente? — Tu asistente de venta"
-          style={{
-            position: "fixed", top: 20, right: 144, zIndex: 99999,
-            display: "flex", alignItems: "center", gap: 8,
-            height: 38, padding: "0 14px",
-            borderRadius: 999,
-            background: `linear-gradient(135deg, ${P.accent}26, ${P.violet}26)`,
-            backdropFilter: "blur(28px) saturate(180%)",
-            WebkitBackdropFilter: "blur(28px) saturate(180%)",
-            border: `1px solid ${P.accentB}`,
-            boxShadow: "0 14px 36px rgba(0,0,0,0.5), 0 3px 10px rgba(0,0,0,0.35)",
-            color: P.accent, fontSize: 12.5, fontWeight: 700,
-            fontFamily: font, letterSpacing: "0.01em",
-            cursor: "pointer",
-            transition: "all 0.18s",
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.transform = "translateY(-1px)";
-            e.currentTarget.style.boxShadow = `0 18px 44px rgba(0,0,0,0.55), 0 0 0 1px ${P.accent}40`;
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.transform = "none";
-            e.currentTarget.style.boxShadow = "0 14px 36px rgba(0,0,0,0.5), 0 3px 10px rgba(0,0,0,0.35)";
-          }}
-        >
-          <span style={{ fontSize: 14 }}>💡</span>
-          <span>¿Qué hago ahora?</span>
-        </button>,
+        <div style={{
+          position: "fixed",
+          bottom: 76,                  // 20 (tab island bottom) + 38 (height) + 18 (gap)
+          right: 20,                   // dentro del drawer (drawer width 460, right: 0)
+          zIndex: 99998,
+          display: "flex", gap: 8,
+          fontFamily: font,
+          pointerEvents: "none",       // los hijos heredan auto
+        }}>
+          {!suggestLead && (
+            <button
+              onClick={() => setSuggestLead(activeDrawerLead)}
+              title="¿Qué hago ahora con este cliente? — Asistente IA con Protocolo Duke"
+              style={{
+                pointerEvents: "auto",
+                display: "flex", alignItems: "center", gap: 7,
+                height: 36, padding: "0 14px",
+                borderRadius: 999,
+                background: `linear-gradient(135deg, ${P.accent}28, ${P.violet}28)`,
+                backdropFilter: "blur(28px) saturate(180%)",
+                WebkitBackdropFilter: "blur(28px) saturate(180%)",
+                border: `1px solid ${P.accentB}`,
+                boxShadow: `0 12px 32px rgba(0,0,0,0.45), 0 2px 8px ${P.accent}24`,
+                color: P.accent, fontSize: 12, fontWeight: 700,
+                letterSpacing: "0.01em",
+                cursor: "pointer",
+                transition: "all 0.18s",
+                whiteSpace: "nowrap",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = "translateY(-1px)";
+                e.currentTarget.style.boxShadow = `0 16px 40px rgba(0,0,0,0.55), 0 0 0 1px ${P.accent}50`;
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = "none";
+                e.currentTarget.style.boxShadow = `0 12px 32px rgba(0,0,0,0.45), 0 2px 8px ${P.accent}24`;
+              }}
+            >
+              <span style={{ fontSize: 13 }}>💡</span>
+              <span>¿Qué hago ahora?</span>
+            </button>
+          )}
+          <button
+            onClick={() => setHistoryLead(activeDrawerLead)}
+            title="Ver historial de cambios de este cliente"
+            style={{
+              pointerEvents: "auto",
+              display: "flex", alignItems: "center", gap: 7,
+              height: 36, padding: "0 12px",
+              borderRadius: 999,
+              background: "rgba(12,17,28,0.84)",
+              backdropFilter: "blur(28px) saturate(180%)",
+              WebkitBackdropFilter: "blur(28px) saturate(180%)",
+              border: `1px solid ${P.border}`,
+              boxShadow: "0 12px 32px rgba(0,0,0,0.45)",
+              color: P.txt2, fontSize: 12, fontWeight: 600,
+              letterSpacing: "0.01em",
+              cursor: "pointer",
+              transition: "all 0.18s",
+              whiteSpace: "nowrap",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = "rgba(20,28,42,0.92)";
+              e.currentTarget.style.borderColor = P.borderH;
+              e.currentTarget.style.color = P.txt;
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = "rgba(12,17,28,0.84)";
+              e.currentTarget.style.borderColor = P.border;
+              e.currentTarget.style.color = P.txt2;
+            }}
+          >
+            <HistoryIcon size={13} strokeWidth={2.2} />
+            <span>Historial</span>
+          </button>
+        </div>,
         document.body
       )}
 
