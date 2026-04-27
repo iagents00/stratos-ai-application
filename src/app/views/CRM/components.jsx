@@ -2231,7 +2231,7 @@ const NotesModal = ({ lead, onClose, onSave, onUpdate, onSwitchTab, onShowHistor
     }
     return [];
   });
-  const [updateChatOpen, setUpdateChatOpen] = useState(true);
+  const [updateChatOpen, setUpdateChatOpen] = useState(false);
   if (!lead) return null;
 
   const KNOWN_SECTIONS = ["OBJETIVO", "PRESUPUESTO", "PERFIL DEL CLIENTE", "HISTORIAL DE CONTACTO", "PENDIENTE"];
@@ -2280,19 +2280,28 @@ const NotesModal = ({ lead, onClose, onSave, onUpdate, onSwitchTab, onShowHistor
                   onClick={() => setUpdateChatOpen(true)}
                   title="Registrar lo que pasó con el cliente"
                   style={{
-                    display: "flex", alignItems: "center", gap: 6,
-                    padding: "7px 12px", borderRadius: 8,
-                    border: `1px solid ${T.accentB}`,
-                    background: `${T.accent}10`,
+                    display: "flex", alignItems: "center", gap: 7,
+                    padding: "8px 14px", borderRadius: 9,
+                    border: `1px solid ${T.accent}${isLight ? "55" : "44"}`,
+                    background: `linear-gradient(135deg, ${T.accent}28, ${T.accent}14)`,
                     color: isLight ? `color-mix(in srgb, ${T.accent} 62%, #0B1220 38%)` : T.accent,
-                    fontSize: 11.5, fontWeight: 700, cursor: "pointer",
+                    fontSize: 12, fontWeight: 700, cursor: "pointer",
                     fontFamily: fontDisp, transition: "all 0.18s",
+                    boxShadow: `0 2px 8px ${T.accent}24`,
                   }}
-                  onMouseEnter={e => { e.currentTarget.style.background = `${T.accent}1E`; e.currentTarget.style.boxShadow = `0 0 14px ${T.accent}18`; }}
-                  onMouseLeave={e => { e.currentTarget.style.background = `${T.accent}10`; e.currentTarget.style.boxShadow = "none"; }}
+                  onMouseEnter={e => {
+                    e.currentTarget.style.background = `linear-gradient(135deg, ${T.accent}3A, ${T.accent}20)`;
+                    e.currentTarget.style.boxShadow = `0 4px 16px ${T.accent}38`;
+                    e.currentTarget.style.transform = "translateY(-1px)";
+                  }}
+                  onMouseLeave={e => {
+                    e.currentTarget.style.background = `linear-gradient(135deg, ${T.accent}28, ${T.accent}14)`;
+                    e.currentTarget.style.boxShadow = `0 2px 8px ${T.accent}24`;
+                    e.currentTarget.style.transform = "none";
+                  }}
                 >
-                  <RefreshCw size={11} strokeWidth={2.5} />
-                  Actualizar
+                  <Plus size={12} strokeWidth={2.5} />
+                  Actualizar expediente
                 </button>
               )}
               {!editing && typeof onShowHistory === 'function' && (
