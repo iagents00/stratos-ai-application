@@ -8,11 +8,12 @@
 import { useState } from "react";
 import { createPortal } from "react-dom";
 import {
-  Search, Plus, X, User, CheckCircle2, Trash2
+  Search, Plus, X, User, CheckCircle2, Trash2, Download
 } from "lucide-react";
 import { P, font, fontDisp } from "../../../design-system/tokens";
 import { useAuth } from "../../../hooks/useAuth";
 import { adminGetAllUsers, adminCreateUser, adminUpdateUser, adminDeleteUser, adminResetPassword } from "../../../lib/auth";
+import { downloadBackup } from "../../../lib/backup";
 import { G } from "../../SharedComponents";
 import { ROLE_META, RoleBadge } from "./RoleBadge";
 
@@ -26,9 +27,25 @@ export default function AdminPanel() {
   const [form, setForm]             = useState({});
   const [formErr, setFormErr]       = useState("");
   const [formOk, setFormOk]         = useState("");
+  const [backupState, setBackupState] = useState({ loading: false, msg: "", isError: false });
 
   const isSuper = me?.role === "super_admin";
   const canManage = ["super_admin", "admin"].includes(me?.role);
+
+  const handleDownloadBackup = async () => {
+    setBackupState({ loading: true, msg: "", isError: false });
+    const { ok, error, filename, stats } = await downloadBackup();
+    if (ok) {
+      setBackupState({
+        loading: false,
+        msg: `Respaldo descargado: ${filename} (${stats.profiles} usuarios, ${stats.leads} leads).`,
+        isError: false,
+      });
+    } else {
+      setBackupState({ loading: false, msg: error || "Error al descargar respaldo.", isError: true });
+    }
+    setTimeout(() => setBackupState(s => ({ ...s, msg: "" })), 6000);
+  };
 
   const refresh = () => setUsers(adminGetAllUsers());
 
@@ -123,17 +140,47 @@ export default function AdminPanel() {
           </p>
         </div>
         {canManage && (
-          <button onClick={openCreate} style={{
-            display: "flex", alignItems: "center", gap: 7, padding: "10px 20px",
-            borderRadius: 11, background: "linear-gradient(135deg, rgba(110,231,194,0.16), rgba(110,231,194,0.07))",
-            border: `1px solid ${P.accentB}`, color: P.accent, fontSize: 12.5, fontWeight: 700,
-            fontFamily: fontDisp, cursor: "pointer", transition: "all 0.2s", flexShrink: 0,
-          }}
-            onMouseEnter={e => { e.currentTarget.style.background = "linear-gradient(135deg, rgba(110,231,194,0.24), rgba(110,231,194,0.12))"; }}
-            onMouseLeave={e => { e.currentTarget.style.background = "linear-gradient(135deg, rgba(110,231,194,0.16), rgba(110,231,194,0.07))"; }}
-          ><Plus size={14} /> Nuevo Usuario</button>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0, flexWrap: "wrap" }}>
+            <button
+              onClick={handleDownloadBackup}
+              disabled={backupState.loading}
+              title="Descargar respaldo completo en JSON (perfiles, leads, auditoría)"
+              style={{
+                display: "flex", alignItems: "center", gap: 7, padding: "10px 18px",
+                borderRadius: 11, background: P.glass,
+                border: `1px solid ${P.border}`, color: P.txt2, fontSize: 12.5, fontWeight: 600,
+                fontFamily: font, cursor: backupState.loading ? "wait" : "pointer",
+                transition: "all 0.2s", opacity: backupState.loading ? 0.7 : 1,
+              }}
+              onMouseEnter={e => { if (!backupState.loading) { e.currentTarget.style.borderColor = P.borderH; e.currentTarget.style.color = P.txt; } }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = P.border; e.currentTarget.style.color = P.txt2; }}
+            >
+              <Download size={13} /> {backupState.loading ? "Generando..." : "Descargar respaldo"}
+            </button>
+            <button onClick={openCreate} style={{
+              display: "flex", alignItems: "center", gap: 7, padding: "10px 20px",
+              borderRadius: 11, background: "linear-gradient(135deg, rgba(110,231,194,0.16), rgba(110,231,194,0.07))",
+              border: `1px solid ${P.accentB}`, color: P.accent, fontSize: 12.5, fontWeight: 700,
+              fontFamily: fontDisp, cursor: "pointer", transition: "all 0.2s",
+            }}
+              onMouseEnter={e => { e.currentTarget.style.background = "linear-gradient(135deg, rgba(110,231,194,0.24), rgba(110,231,194,0.12))"; }}
+              onMouseLeave={e => { e.currentTarget.style.background = "linear-gradient(135deg, rgba(110,231,194,0.16), rgba(110,231,194,0.07))"; }}
+            ><Plus size={14} /> Nuevo Usuario</button>
+          </div>
         )}
       </div>
+
+      {/* Toast de estado del backup */}
+      {backupState.msg && (
+        <div style={{
+          padding: "10px 16px", borderRadius: 10, fontSize: 12.5,
+          background: backupState.isError ? `${P.rose}0E` : `${P.emerald}0E`,
+          border: `1px solid ${backupState.isError ? `${P.rose}30` : `${P.emerald}30`}`,
+          color: backupState.isError ? P.rose : P.emerald, fontFamily: font,
+        }}>
+          {backupState.msg}
+        </div>
+      )}
 
       {/* ── Role stats strip ── */}
       <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>

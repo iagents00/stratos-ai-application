@@ -6,6 +6,7 @@ import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { useAuth } from "../../../hooks/useAuth";
 import { supabase } from "../../../lib/supabase";
+import { updateOfflineLead } from "../../../lib/offline-mode";
 import {
   TrendingUp, Target, CheckCircle2, Mic, Search,
   Users, Building2, Send, Plus, Timer, Flame,
@@ -171,8 +172,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
       return;
     }
 
-    // Persistir en Supabase (sin bloquear la UI)
-    supabase.from('leads').update({
+    const payload = {
       name:             withScore.n ?? withScore.name,
       stage:            withScore.st ?? withScore.stage,
       score:            withScore.sc,
@@ -205,14 +205,35 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
       //   ALTER TABLE leads ADD COLUMN tasks jsonb DEFAULT '[]';
       action_history:   newHistory,
       tasks:            Array.isArray(withScore.tasks) ? withScore.tasks : [],
-    }).eq('id', withScore.id).then(({ error }) => {
+    };
+
+    // ── Modo offline: encolar el cambio en localStorage ─────────────────
+    if (user?._offline) {
+      updateOfflineLead(withScore.id, payload, user);
+      return;
+    }
+
+    // Persistir en Supabase (sin bloquear la UI)
+    supabase.from('leads').update(payload).eq('id', withScore.id).then(({ error }) => {
       if (error) {
         console.error('Error guardando lead:', error.message);
-        showToast(`Error al guardar "${withScore.n}": ${error.message}`);
+        // Fallback: si Supabase falla y tenemos al usuario, encolar offline
+        if (user?.id) {
+          updateOfflineLead(withScore.id, payload, user);
+          showToast('Guardado localmente (Supabase lento). Se sincronizará después.');
+        } else {
+          showToast(`Error al guardar "${withScore.n}": ${error.message}`);
+        }
       }
     }).catch((err) => {
       console.error('Error de red al guardar lead:', err?.message);
-      showToast('Sin conexión — verifica tu red e intenta de nuevo.');
+      // Fallback offline en caso de error de red
+      if (user?.id) {
+        updateOfflineLead(withScore.id, payload, user);
+        showToast('Sin conexión — guardado localmente, se sincronizará al volver.');
+      } else {
+        showToast('Sin conexión — verifica tu red e intenta de nuevo.');
+      }
     });
   };
   const saveNotes = (newNotas) => { const u = {...notesLead, notas: newNotas}; updateLead(u); setNotesLead(u); };

@@ -1077,7 +1077,16 @@ export default function LandingMarketing({ appUrl = "/?app" }) {
 
           {/* CTAs */}
           <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap", marginBottom: 64 }}>
-            <Btn primary onClick={() => window.location.href = appUrl}>
+            <Btn
+              primary
+              onClick={() =>
+                window.open(
+                  "https://wa.me/17479779711?text=Hola%2C%20quiero%20empezar%20gratis%20con%20Stratos%20AI%20%F0%9F%9A%80",
+                  "_blank",
+                  "noopener,noreferrer",
+                )
+              }
+            >
               Empezar gratis — sin tarjeta <ArrowRight size={15} />
             </Btn>
             <Btn onClick={() => window.location.href = appUrl}>
@@ -1544,37 +1553,6 @@ export default function LandingMarketing({ appUrl = "/?app" }) {
           </div>
         </div>
       </section>
-
-      {/* ── WHATSAPP FLOTANTE ─────────────────────────── */}
-      <a
-        href="https://wa.me/17479779711?text=Hola%2C%20me%20interesa%20Stratos%20AI%20%F0%9F%9A%80"
-        target="_blank"
-        rel="noopener noreferrer"
-        title="Chatea con nuestro agente IA por WhatsApp"
-        style={{
-          position: "fixed", bottom: 28, right: 28, zIndex: 999,
-          width: 58, height: 58, borderRadius: "50%",
-          background: "linear-gradient(145deg, #25D366 0%, #1ebe5d 100%)",
-          display: "flex", alignItems: "center", justifyContent: "center",
-          boxShadow: "0 4px 24px rgba(37,211,102,0.45), 0 1px 0 rgba(255,255,255,0.25) inset",
-          textDecoration: "none", transition: "transform 0.22s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.22s",
-        }}
-        onMouseEnter={e => {
-          e.currentTarget.style.transform = "scale(1.12) translateY(-2px)";
-          e.currentTarget.style.boxShadow = "0 8px 32px rgba(37,211,102,0.60), 0 1px 0 rgba(255,255,255,0.25) inset";
-        }}
-        onMouseLeave={e => {
-          e.currentTarget.style.transform = "none";
-          e.currentTarget.style.boxShadow = "0 4px 24px rgba(37,211,102,0.45), 0 1px 0 rgba(255,255,255,0.25) inset";
-        }}
-      >
-        {/* WhatsApp SVG icon */}
-        <svg width="28" height="28" viewBox="0 0 32 32" fill="none">
-          <path d="M16 2.667C8.636 2.667 2.667 8.636 2.667 16c0 2.327.611 4.51 1.68 6.4L2.667 29.333l7.147-1.653A13.267 13.267 0 0016 29.333c7.364 0 13.333-5.97 13.333-13.333C29.333 8.636 23.364 2.667 16 2.667z" fill="white" fillOpacity="0.15"/>
-          <path d="M16 4C9.373 4 4 9.373 4 16c0 2.152.563 4.17 1.55 5.914L4 28l6.23-1.527A11.94 11.94 0 0016 28c6.627 0 12-5.373 12-12S22.627 4 16 4z" fill="white"/>
-          <path d="M11.867 9.6c-.267-.64-.56-.653-.813-.667-.21-.01-.45-.01-.69-.01-.24 0-.627.09-.957.45-.33.36-1.26 1.23-1.26 3 0 1.77 1.29 3.48 1.47 3.72.18.24 2.49 3.99 6.15 5.43 3.04 1.2 3.66.96 4.32.9.66-.06 2.13-.87 2.43-1.71.3-.84.3-1.56.21-1.71-.09-.15-.33-.24-.69-.42-.36-.18-2.13-1.05-2.46-1.17-.33-.12-.57-.18-.81.18-.24.36-.93 1.17-1.14 1.41-.21.24-.42.27-.78.09-.36-.18-1.52-.56-2.89-1.79-1.07-.955-1.79-2.134-2-2.494-.21-.36-.022-.554.158-.734.162-.162.36-.42.54-.63.18-.21.24-.36.36-.6.12-.24.06-.45-.03-.63-.09-.18-.795-1.97-1.11-2.69z" fill="#25D366"/>
-        </svg>
-      </a>
 
       {/* ── FOOTER ─────────────────────────── */}
       <footer style={{ borderTop: `1px solid ${P.border}`, padding: "36px 0" }}>
