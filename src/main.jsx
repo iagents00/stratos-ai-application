@@ -56,3 +56,39 @@ createRoot(document.getElementById("root")).render(
     </ErrorBoundary>
   </StrictMode>
 );
+
+// ─── SERVICE WORKER ─────────────────────────────────────────────────────────
+// Registramos el SW en producción y en preview. NO en dev (puerto 5173) porque
+// el HMR de Vite se vuelve impredecible cuando el SW intercepta requests.
+//
+// Beneficios:
+//   · App carga sin internet (cache-first del shell)
+//   · Instalable como app nativa en celular (Add to Home Screen)
+//   · Datos seed offline siempre disponibles
+if ("serviceWorker" in navigator && import.meta.env.PROD) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("/sw.js", { scope: "/" })
+      .then(reg => {
+        // Si hay un SW esperando, lo activamos inmediatamente
+        if (reg.waiting) reg.waiting.postMessage({ type: "SKIP_WAITING" });
+        reg.addEventListener("updatefound", () => {
+          const next = reg.installing;
+          if (!next) return;
+          next.addEventListener("statechange", () => {
+            if (next.state === "installed" && navigator.serviceWorker.controller) {
+              next.postMessage({ type: "SKIP_WAITING" });
+            }
+          });
+        });
+      })
+      .catch(err => console.warn("[Stratos] SW registro falló:", err));
+
+    // Cuando el SW nuevo toma control, recargar para usar la última versión
+    let refreshing = false;
+    navigator.serviceWorker.addEventListener("controllerchange", () => {
+      if (refreshing) return;
+      refreshing = true;
+      window.location.reload();
+    });
+  });
+}

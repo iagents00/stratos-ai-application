@@ -1,0 +1,56 @@
+name: Daily Supabase Backup
+
+# Cron diario a las 09:00 UTC (= 03:00 hora de Cancún)
+# También se puede disparar manualmente desde la pestaña "Actions" en GitHub.
+on:
+  schedule:
+    - cron: '0 9 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: supabase-backup
+  cancel-in-progress: false
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Run backup script
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: node scripts/backup-supabase.mjs
+
+      # Limpiar backups viejos (mantener solo los últimos 30 días)
+      - name: Prune old backups (>30 días)
+        run: |
+          cd backups || exit 0
+          # Borrar archivos YYYY-MM-DD.json más viejos que 30 días
+          find . -name "[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9].json" -mtime +30 -delete
+          ls -la
+
+      - name: Commit backup
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name  "github-actions[bot]"
+          git add backups/
+          if git diff --staged --quiet; then
+            echo "Sin cambios — backup ya está al día."
+          else
+            DATE=$(date -u +"%Y-%m-%d")
+            git commit -m "chore(backup): snapshot diario $DATE [skip ci]"
+            git push
+          fi
