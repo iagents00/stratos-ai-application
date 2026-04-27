@@ -29,6 +29,7 @@ import { G, KPI, Pill, Ico, ChipSelect } from "../../SharedComponents";
 import { parseBudget, formatBudget, buildTelegramSummary, fmtNow, genId } from "../../../lib/utils";
 import { StratosAtom, StratosAtomHex } from "../../components/Logo";
 import HistoryDrawer from "../../components/HistoryDrawer";
+import SuggestActionsModal from "../../components/SuggestActionsModal";
 import { AI_AGENTS, AI_AGENT_LIST } from "../../constants/agents";
 import { stgC } from "../../constants/crm";
 import {
@@ -66,6 +67,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
   const [notesLead, setNotesLead]       = useState(null);
   const [analyzingLead, setAnalyzingLead] = useState(null);
   const [historyLead, setHistoryLead]   = useState(null);
+  const [suggestLead, setSuggestLead]   = useState(null);
   // Lead activo en cualquiera de los 3 drawers — base para el botón "Historial"
   const activeDrawerLead = analyzingLead || selectedLead || notesLead;
 
@@ -3251,12 +3253,69 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
         document.body
       )}
 
+      {/* ✨ Botón "Sugerir acciones" — copilot IA que lee el expediente
+         y propone próximas acciones con técnicas de venta del Protocolo Duke.
+         Tono co-pilot, no jefe. El asesor decide cuáles agregar a tasks. */}
+      {activeDrawerLead && !historyLead && !suggestLead && createPortal(
+        <button
+          onClick={() => setSuggestLead(activeDrawerLead)}
+          title="Sugerir próximas acciones con IA — Protocolo Duke"
+          style={{
+            position: "fixed", top: 20, right: 144, zIndex: 99999,
+            display: "flex", alignItems: "center", gap: 8,
+            height: 38, padding: "0 14px",
+            borderRadius: 999,
+            background: `linear-gradient(135deg, ${P.accent}26, ${P.violet}26)`,
+            backdropFilter: "blur(28px) saturate(180%)",
+            WebkitBackdropFilter: "blur(28px) saturate(180%)",
+            border: `1px solid ${P.accentB}`,
+            boxShadow: "0 14px 36px rgba(0,0,0,0.5), 0 3px 10px rgba(0,0,0,0.35)",
+            color: P.accent, fontSize: 12.5, fontWeight: 700,
+            fontFamily: font, letterSpacing: "0.01em",
+            cursor: "pointer",
+            transition: "all 0.18s",
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = "translateY(-1px)";
+            e.currentTarget.style.boxShadow = `0 18px 44px rgba(0,0,0,0.55), 0 0 0 1px ${P.accent}40`;
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = "none";
+            e.currentTarget.style.boxShadow = "0 14px 36px rgba(0,0,0,0.5), 0 3px 10px rgba(0,0,0,0.35)";
+          }}
+        >
+          <span style={{ fontSize: 14 }}>✨</span>
+          <span>Sugerir acciones</span>
+        </button>,
+        document.body
+      )}
+
       <HistoryDrawer
         open={!!historyLead}
         entityType="leads"
         entityId={historyLead?.id}
         entityLabel={historyLead?.n || historyLead?.name}
         onClose={() => setHistoryLead(null)}
+      />
+
+      <SuggestActionsModal
+        open={!!suggestLead}
+        lead={suggestLead}
+        onClose={() => setSuggestLead(null)}
+        onAddTasks={(newTasks) => {
+          // Agregar los tasks al lead actual + sincronizar drawers abiertos
+          if (!suggestLead) return;
+          const existingTasks = Array.isArray(suggestLead.tasks) ? suggestLead.tasks : [];
+          const updated = { ...suggestLead, tasks: [...newTasks, ...existingTasks] };
+          // Mirror a next_action si no hay
+          if (!updated.next_action && !updated.nextAction && newTasks[0]) {
+            updated.next_action = newTasks[0].action;
+            updated.nextAction = newTasks[0].action;
+            updated.next_action_date = newTasks[0].date || "";
+            updated.nextActionDate = newTasks[0].date || "";
+          }
+          updateLead(updated);
+        }}
       />
 
       {/* ── Toast de error / confirmación ─────────────────────────────────── */}
