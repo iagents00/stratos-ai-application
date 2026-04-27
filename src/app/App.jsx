@@ -10,6 +10,12 @@ import { supabase } from "../lib/supabase";
 import LoginScreen from "../landing/LoginScreen.jsx";
 import PricingScreen from "../landing/PricingScreen.jsx";
 import { useAuth } from "../hooks/useAuth";
+import {
+  getOfflineLeads,
+  updateOfflineLead,
+  getPendingSyncCount,
+  syncToSupabase,
+} from "../lib/offline-mode";
 
 import {
   Search, Bell, Settings, LogOut, Sun, Moon, ChevronDown, ChevronsDown,
@@ -136,11 +142,35 @@ export default function App() {
 
   const fetchLeads = useCallback(async () => {
     setLeadsLoading(true);
+
+    // Modo offline: cargar del JSON estático + overlay localStorage
+    if (user?._offline) {
+      try {
+        const offlineLeads = await getOfflineLeads(user);
+        setLeadsData(normalizeLeads(offlineLeads));
+      } catch (e) {
+        console.warn('[Stratos] Error cargando leads offline:', e);
+        setLeadsData([]);
+      }
+      setLeadsLoading(false);
+      return;
+    }
+
+    // Modo online normal
     const { data, error } = await supabase
       .from('leads').select('*').is('deleted_at', null).order('created_at', { ascending: false });
-    if (!error && data) setLeadsData(normalizeLeads(data));
+    if (!error && data) {
+      setLeadsData(normalizeLeads(data));
+    } else if (error) {
+      // Supabase falló — intentar offline como último recurso
+      console.warn('[Stratos] Supabase leads falló, intentando offline:', error.message);
+      try {
+        const offlineLeads = await getOfflineLeads(user);
+        if (offlineLeads.length > 0) setLeadsData(normalizeLeads(offlineLeads));
+      } catch (_) { /* noop */ }
+    }
     setLeadsLoading(false);
-  }, [normalizeLeads]);
+  }, [normalizeLeads, user]);
 
   useEffect(() => {
     if (!user) return;
@@ -150,11 +180,43 @@ export default function App() {
       return;
     }
     fetchLeads();
+    // Solo subscribir al realtime si NO estamos offline
+    if (user._offline) return;
     const ch = supabase.channel('leads-global')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'leads' }, () => fetchLeads())
       .subscribe();
     return () => supabase.removeChannel(ch);
   }, [user, fetchLeads]);
+
+  /* ── Modo offline: contador de cambios pendientes + sync ── */
+  const [pendingSync, setPendingSync] = useState(0);
+  const [syncing, setSyncing] = useState(false);
+  const [syncMsg, setSyncMsg] = useState("");
+
+  useEffect(() => {
+    if (!user?._offline) { setPendingSync(0); return; }
+    const tick = () => setPendingSync(getPendingSyncCount());
+    tick();
+    const t = setInterval(tick, 3000);
+    return () => clearInterval(t);
+  }, [user?._offline]);
+
+  const handleSync = useCallback(async () => {
+    setSyncing(true);
+    setSyncMsg("");
+    const { ok, synced, failed } = await syncToSupabase(supabase);
+    setSyncing(false);
+    setPendingSync(getPendingSyncCount());
+    if (ok && synced > 0) {
+      setSyncMsg(`✅ ${synced} cambios sincronizados.`);
+      setTimeout(() => setSyncMsg(""), 4000);
+      // Refrescar de Supabase tras sync exitoso
+      fetchLeads();
+    } else if (failed > 0) {
+      setSyncMsg(`⚠️ ${synced} ok, ${failed} fallaron. Reintenta cuando Supabase esté estable.`);
+      setTimeout(() => setSyncMsg(""), 6000);
+    }
+  }, [fetchLeads]);
 
   /* ── IAOS ticker ── */
   const [iaosIdx, setIaosIdx] = useState(0);
@@ -322,6 +384,49 @@ export default function App() {
         }
       `}</style>
       <style>{dynamicStyles}</style>
+
+      {/* ══ BANNER MODO OFFLINE ══ */}
+      {user?._offline && (
+        <div style={{
+          position: "fixed", top: 0, left: 0, right: 0, zIndex: 999,
+          background: "linear-gradient(90deg, #F59E0B 0%, #EAB308 100%)",
+          color: "#0B1220",
+          padding: "8px 16px",
+          display: "flex", alignItems: "center", justifyContent: "center", gap: 12,
+          fontSize: 12.5, fontWeight: 600, fontFamily: font,
+          boxShadow: "0 2px 12px rgba(0,0,0,0.18)",
+        }}>
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+            <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#0B1220", animation: "pulse 1.6s ease-in-out infinite" }} />
+            Modo offline — Supabase está temporalmente lento. Tus cambios se guardan localmente.
+          </span>
+          {pendingSync > 0 && (
+            <span style={{
+              padding: "2px 9px", borderRadius: 99, background: "#0B1220",
+              color: "#F59E0B", fontSize: 11, fontWeight: 700,
+            }}>
+              {pendingSync} cambio{pendingSync !== 1 ? "s" : ""} pendiente{pendingSync !== 1 ? "s" : ""}
+            </span>
+          )}
+          <button
+            onClick={handleSync}
+            disabled={syncing || pendingSync === 0}
+            style={{
+              padding: "5px 12px", borderRadius: 7,
+              background: pendingSync > 0 && !syncing ? "#0B1220" : "rgba(11,18,32,0.30)",
+              color: "#FFFFFF", border: "none",
+              fontSize: 11, fontWeight: 700, fontFamily: font,
+              cursor: syncing || pendingSync === 0 ? "not-allowed" : "pointer",
+              transition: "all 0.18s",
+            }}
+          >
+            {syncing ? "Sincronizando..." : "🔄 Sincronizar ahora"}
+          </button>
+          {syncMsg && (
+            <span style={{ fontSize: 11, fontWeight: 600 }}>{syncMsg}</span>
+          )}
+        </div>
+      )}
 
       {/* ══ SIDEBAR ══ */}
       <div className="stratos-sidebar" style={{
