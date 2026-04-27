@@ -492,7 +492,7 @@ export default function App() {
           <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
             <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#0B1220", animation: "pulse 1.6s ease-in-out infinite" }} />
             {user?._offline
-              ? "Modo offline — Supabase respondiendo lento. Cambios se sincronizan solos al volver."
+              ? "Modo offline — servicio respondiendo lento. Cambios se sincronizan automáticamente al recuperar conexión."
               : "Sincronización pendiente — los cambios se enviarán automáticamente."}
           </span>
           {pendingSync > 0 && (
