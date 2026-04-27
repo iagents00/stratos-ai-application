@@ -1892,6 +1892,216 @@ const TaskChecklist = ({ lead, onUpdate, T = P }) => {
 };
 
 /* ═══════════════════════════════════════════════════════════════════════════
+   PLAYBOOK SECTION — Lista de 4-5 acciones específicas para este cliente
+   alineadas con el Protocolo Duke del Caribe.
+
+   Cada acción incluye: técnica de venta, razón (por qué hacerlo ahora),
+   categoría visual (reactivación / calificación / cita / etc).
+
+   El asesor puede tickearlas como completadas. Es una "checklist viva"
+   que cambia según la situación del lead.
+═══════════════════════════════════════════════════════════════════════════ */
+const PLAYBOOK_CATEGORIES = {
+  reactivacion: { label: "Reactivación",   colorKey: "rose"    },
+  calificacion: { label: "Calificación",   colorKey: "blue"    },
+  cita:         { label: "Avance",         colorKey: "accent"  },
+  propuesta:    { label: "Propuesta",      colorKey: "violet"  },
+  cierre:       { label: "Cierre",         colorKey: "emerald" },
+  retencion:    { label: "Post-venta",     colorKey: "cyan"    },
+};
+
+const PlaybookSection = ({ lead, T = P, onUpdate = null }) => {
+  const isLight = T !== P;
+  const [expanded, setExpanded] = useState(false);
+  const playbook = Array.isArray(lead?.playbook) ? lead.playbook : [];
+  if (playbook.length === 0) return null;
+
+  // Calcular progreso
+  const completed = playbook.filter(p => p.completed).length;
+  const total     = playbook.length;
+  const progress  = Math.round((completed / total) * 100);
+
+  // Mostrar 3 primero, expandir para ver todos
+  const visible = expanded ? playbook : playbook.slice(0, 3);
+
+  const safeC = (c) => isLight ? `color-mix(in srgb, ${c} 60%, #0B1220 40%)` : c;
+  const headerC = isLight ? `color-mix(in srgb, ${T.violet} 58%, #0B1220 42%)` : T.violet;
+
+  const toggleItem = (idx) => {
+    if (typeof onUpdate !== 'function') return;
+    const updated = playbook.map((p, i) =>
+      i === idx ? { ...p, completed: !p.completed, completed_at: !p.completed ? new Date().toISOString() : null } : p
+    );
+    onUpdate({ ...lead, playbook: updated });
+  };
+
+  return (
+    <div style={{
+      marginBottom: 16,
+      borderRadius: 14,
+      border: `1px solid ${T.violet}${isLight ? "26" : "1E"}`,
+      background: isLight ? `${T.violet}06` : `${T.violet}08`,
+      overflow: "hidden",
+      position: "relative",
+    }}>
+      {/* Halo decorativo */}
+      <div aria-hidden style={{
+        position: "absolute", top: -40, right: -40, width: 160, height: 160,
+        background: `radial-gradient(circle, ${T.violet}${isLight ? "12" : "1A"} 0%, transparent 70%)`,
+        pointerEvents: "none",
+      }} />
+
+      {/* Header */}
+      <div style={{
+        padding: "12px 16px",
+        borderBottom: `1px solid ${T.violet}${isLight ? "20" : "16"}`,
+        display: "flex", alignItems: "center", gap: 10,
+        position: "relative",
+      }}>
+        <div style={{
+          width: 28, height: 28, borderRadius: 8,
+          background: `linear-gradient(135deg, ${T.violet}26, ${T.violet}10)`,
+          border: `1px solid ${T.violet}40`,
+          display: "flex", alignItems: "center", justifyContent: "center",
+          flexShrink: 0,
+          boxShadow: `0 0 12px ${T.violet}1C`,
+        }}>
+          <span style={{ fontSize: 14 }}>🎯</span>
+        </div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <p style={{
+            margin: 0, fontSize: 11, fontWeight: 800, color: headerC,
+            letterSpacing: "0.10em", textTransform: "uppercase", fontFamily: fontDisp,
+          }}>
+            Playbook personalizado
+          </p>
+          <p style={{
+            margin: "2px 0 0", fontSize: 10.5, color: T.txt3, fontFamily: font,
+          }}>
+            {total} acciones del Protocolo Duke para este cliente
+          </p>
+        </div>
+        {/* Progreso */}
+        <div style={{
+          padding: "4px 10px", borderRadius: 99,
+          background: progress > 0 ? `${T.emerald}14` : T.glass,
+          border: `1px solid ${progress > 0 ? `${T.emerald}30` : T.border}`,
+          fontSize: 10.5, fontWeight: 700, fontFamily: fontDisp,
+          color: progress > 0 ? safeC(T.emerald) : T.txt3,
+        }}>
+          {completed}/{total}
+        </div>
+      </div>
+
+      {/* Items */}
+      <div style={{ padding: "8px 0" }}>
+        {visible.map((item, idx) => {
+          const realIdx = playbook.indexOf(item);
+          const cat = PLAYBOOK_CATEGORIES[item.category] || { label: item.category, colorKey: "txt2" };
+          const catColor = T[cat.colorKey] || T.txt2;
+          const catC = safeC(catColor);
+          const done = !!item.completed;
+
+          return (
+            <div key={item.id || idx} style={{
+              padding: "10px 16px",
+              borderBottom: idx < visible.length - 1 ? `1px solid ${T.violet}${isLight ? "10" : "0A"}` : "none",
+              display: "flex", alignItems: "flex-start", gap: 10,
+              opacity: done ? 0.55 : 1,
+              transition: "opacity 0.18s",
+            }}>
+              {/* Checkbox */}
+              <button
+                onClick={() => toggleItem(realIdx)}
+                aria-label={done ? "Marcar como pendiente" : "Marcar como completada"}
+                style={{
+                  flexShrink: 0, marginTop: 2,
+                  width: 20, height: 20, borderRadius: 6,
+                  background: done ? T.emerald : "transparent",
+                  border: `1.5px solid ${done ? T.emerald : (isLight ? "rgba(15,23,42,0.20)" : "rgba(255,255,255,0.20)")}`,
+                  cursor: typeof onUpdate === 'function' ? "pointer" : "default",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  transition: "all 0.16s",
+                  color: "#FFFFFF",
+                  fontSize: 12, fontWeight: 800,
+                }}
+                onMouseEnter={e => { if (!done) e.currentTarget.style.borderColor = T.emerald; }}
+                onMouseLeave={e => { if (!done) e.currentTarget.style.borderColor = isLight ? "rgba(15,23,42,0.20)" : "rgba(255,255,255,0.20)"; }}
+              >
+                {done && "✓"}
+              </button>
+
+              {/* Contenido */}
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 4, flexWrap: "wrap" }}>
+                  <span style={{ fontSize: 14 }}>{item.icon}</span>
+                  <span style={{
+                    fontSize: 9, fontWeight: 800, color: catC,
+                    background: `${catColor}${isLight ? "14" : "10"}`,
+                    border: `1px solid ${catColor}${isLight ? "26" : "1E"}`,
+                    padding: "2px 7px", borderRadius: 99,
+                    letterSpacing: "0.06em", textTransform: "uppercase",
+                    fontFamily: fontDisp,
+                  }}>{cat.label}</span>
+                </div>
+                <p style={{
+                  margin: 0, fontSize: 12.5, fontWeight: 600,
+                  color: isLight ? T.txt : "#FFFFFF",
+                  fontFamily: fontDisp, lineHeight: 1.45,
+                  textDecoration: done ? "line-through" : "none",
+                }}>
+                  {item.action}
+                </p>
+                {item.technique && (
+                  <p style={{
+                    margin: "4px 0 0", fontSize: 11, color: T.txt3,
+                    fontFamily: font, lineHeight: 1.5,
+                  }}>
+                    <span style={{ fontWeight: 700, color: catC }}>Técnica:</span> {item.technique}
+                  </p>
+                )}
+                {item.reason && (
+                  <p style={{
+                    margin: "2px 0 0", fontSize: 11, color: T.txt3,
+                    fontFamily: font, lineHeight: 1.5, fontStyle: "italic",
+                  }}>
+                    {item.reason}
+                  </p>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Toggle expandir */}
+      {playbook.length > 3 && (
+        <div style={{ padding: "8px 16px 12px", borderTop: `1px solid ${T.violet}${isLight ? "12" : "0E"}` }}>
+          <button
+            onClick={() => setExpanded(e => !e)}
+            style={{
+              width: "100%",
+              padding: "7px 12px", borderRadius: 8,
+              background: "transparent",
+              border: `1px dashed ${T.violet}${isLight ? "30" : "26"}`,
+              color: headerC,
+              fontSize: 11, fontWeight: 700, fontFamily: fontDisp,
+              cursor: "pointer",
+              transition: "all 0.18s",
+              letterSpacing: "0.04em",
+            }}
+            onMouseEnter={e => { e.currentTarget.style.background = `${T.violet}${isLight ? "08" : "0E"}`; }}
+            onMouseLeave={e => { e.currentTarget.style.background = "transparent"; }}
+          >
+            {expanded ? "Ver menos" : `Ver las ${playbook.length - 3} acciones restantes`}
+          </button>
+        </div>
+      )}
+    </div>
+  );
+};
+
+/* ═══════════════════════════════════════════════════════════════════════════
    ACTION TIMELINE — historial cronológico de acciones completadas.
    Se auto-popula cuando: se completa una tarea, cambia la próxima acción.
    Aparece en: Expediente (NotesModal) como sección principal.
@@ -2085,6 +2295,8 @@ const NotesModal = ({ lead, onClose, onSave, onUpdate, onSwitchTab, T = P }) => 
               <StageBadge lead={lead} onUpdate={onUpdate} T={T} />
             </div>
           )}
+          {/* ── Playbook personalizado — checklist de acciones del Protocolo Duke ── */}
+          {!editing && <PlaybookSection lead={lead} T={T} onUpdate={onUpdate} />}
           {/* ── Historial de acciones — siempre visible en lectura ── */}
           {!editing && <ActionTimeline lead={lead} T={T} />}
 

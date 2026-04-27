@@ -207,6 +207,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
       //   ALTER TABLE leads ADD COLUMN tasks jsonb DEFAULT '[]';
       action_history:   newHistory,
       tasks:            Array.isArray(withScore.tasks) ? withScore.tasks : [],
+      playbook:         Array.isArray(withScore.playbook) ? withScore.playbook : [],
     };
 
     // ── Modo offline: encolar el cambio en localStorage ─────────────────
