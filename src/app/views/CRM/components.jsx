@@ -2147,7 +2147,14 @@ const PlaybookSection = ({ lead, T = P, onUpdate = null, onShowSuggest = null })
 const ActionTimeline = ({ lead, T = P, maxItems = 6 }) => {
   const isLight = T !== P;
   const [expanded, setExpanded] = useState(false);
-  const history = Array.isArray(lead?.actionHistory) ? lead.actionHistory : [];
+  const rawHistory = Array.isArray(lead?.actionHistory) ? lead.actionHistory : [];
+  // Ordenar por fecha descendente (más reciente arriba). Items sin fecha
+  // mantienen su posición relativa (sort estable).
+  const history = [...rawHistory].sort((a, b) => {
+    const da = new Date(a.completed_at || a.doneAt || a.done_at || 0).getTime();
+    const db = new Date(b.completed_at || b.doneAt || b.done_at || 0).getTime();
+    return db - da;
+  });
   if (history.length === 0) return null;
 
   const shown = expanded ? history : history.slice(0, maxItems);
@@ -2159,8 +2166,9 @@ const ActionTimeline = ({ lead, T = P, maxItems = 6 }) => {
       {/* Header */}
       <div style={{ padding: "10px 15px", borderBottom: `1px solid ${T.border}`, background: T.glass, display: "flex", alignItems: "center", gap: 8 }}>
         <ListChecks size={12} color={T.txt3} strokeWidth={2} />
-        <span style={{ fontSize: 10, fontWeight: 800, color: T.txt3, letterSpacing: "0.08em", textTransform: "uppercase", fontFamily: fontDisp }}>Historial de Acciones</span>
+        <span style={{ fontSize: 10, fontWeight: 800, color: T.txt3, letterSpacing: "0.08em", textTransform: "uppercase", fontFamily: fontDisp }}>Últimos registros</span>
         <span style={{ fontSize: 9.5, fontWeight: 700, color: T.txt3, background: T.glass, border: `1px solid ${T.border}`, padding: "1px 6px", borderRadius: 99, fontFamily: fontDisp }}>{history.length}</span>
+        <span style={{ marginLeft: "auto", fontSize: 9, color: T.txt3, fontFamily: font, opacity: 0.7 }}>más reciente arriba</span>
       </div>
 
       {/* Línea de tiempo */}
@@ -2223,7 +2231,7 @@ const NotesModal = ({ lead, onClose, onSave, onUpdate, onSwitchTab, onShowHistor
     }
     return [];
   });
-  const [updateChatOpen, setUpdateChatOpen] = useState(true);
+  const [updateChatOpen, setUpdateChatOpen] = useState(false);
   if (!lead) return null;
 
   const KNOWN_SECTIONS = ["OBJETIVO", "PRESUPUESTO", "PERFIL DEL CLIENTE", "HISTORIAL DE CONTACTO", "PENDIENTE"];
@@ -2272,19 +2280,28 @@ const NotesModal = ({ lead, onClose, onSave, onUpdate, onSwitchTab, onShowHistor
                   onClick={() => setUpdateChatOpen(true)}
                   title="Registrar lo que pasó con el cliente"
                   style={{
-                    display: "flex", alignItems: "center", gap: 6,
-                    padding: "7px 12px", borderRadius: 8,
-                    border: `1px solid ${T.accentB}`,
-                    background: `${T.accent}10`,
+                    display: "flex", alignItems: "center", gap: 7,
+                    padding: "8px 14px", borderRadius: 9,
+                    border: `1px solid ${T.accent}${isLight ? "55" : "44"}`,
+                    background: `linear-gradient(135deg, ${T.accent}28, ${T.accent}14)`,
                     color: isLight ? `color-mix(in srgb, ${T.accent} 62%, #0B1220 38%)` : T.accent,
-                    fontSize: 11.5, fontWeight: 700, cursor: "pointer",
+                    fontSize: 12, fontWeight: 700, cursor: "pointer",
                     fontFamily: fontDisp, transition: "all 0.18s",
+                    boxShadow: `0 2px 8px ${T.accent}24`,
                   }}
-                  onMouseEnter={e => { e.currentTarget.style.background = `${T.accent}1E`; e.currentTarget.style.boxShadow = `0 0 14px ${T.accent}18`; }}
-                  onMouseLeave={e => { e.currentTarget.style.background = `${T.accent}10`; e.currentTarget.style.boxShadow = "none"; }}
+                  onMouseEnter={e => {
+                    e.currentTarget.style.background = `linear-gradient(135deg, ${T.accent}3A, ${T.accent}20)`;
+                    e.currentTarget.style.boxShadow = `0 4px 16px ${T.accent}38`;
+                    e.currentTarget.style.transform = "translateY(-1px)";
+                  }}
+                  onMouseLeave={e => {
+                    e.currentTarget.style.background = `linear-gradient(135deg, ${T.accent}28, ${T.accent}14)`;
+                    e.currentTarget.style.boxShadow = `0 2px 8px ${T.accent}24`;
+                    e.currentTarget.style.transform = "none";
+                  }}
                 >
-                  <RefreshCw size={11} strokeWidth={2.5} />
-                  Actualizar
+                  <Plus size={12} strokeWidth={2.5} />
+                  Actualizar expediente
                 </button>
               )}
               {!editing && typeof onShowHistory === 'function' && (
@@ -2337,7 +2354,7 @@ const NotesModal = ({ lead, onClose, onSave, onUpdate, onSwitchTab, onShowHistor
         </div>
 
         {/* Contenido */}
-        <div style={{ padding: "18px 24px 130px", overflowY: "auto", overscrollBehavior: "contain", WebkitOverflowScrolling: "touch", scrollBehavior: "smooth", flex: 1 }}>
+        <div style={{ padding: "18px 24px 90px", overflowY: "auto", overscrollBehavior: "contain", WebkitOverflowScrolling: "touch", scrollBehavior: "smooth", flex: 1 }}>
           {/* ── Próxima acción — hero unificado (siempre visible en modo lectura).
               Mismo componente que Perfil y Análisis IA: es lo primero
               accionable que ve el asesor en el expediente del cliente. ── */}
@@ -2353,10 +2370,16 @@ const NotesModal = ({ lead, onClose, onSave, onUpdate, onSwitchTab, onShowHistor
               <StageBadge lead={lead} onUpdate={onUpdate} T={T} />
             </div>
           )}
+          {/* ── ÚLTIMOS REGISTROS — historial cronológico (más reciente arriba)
+              Se muestra ANTES del playbook para que el asesor vea siempre
+              "¿qué fue lo último que pasó con este cliente?" arriba de todo. ── */}
+          {!editing && (
+            <div style={{ marginBottom: 16 }}>
+              <ActionTimeline lead={lead} T={T} />
+            </div>
+          )}
           {/* ── Playbook personalizado — checklist de acciones del Protocolo Duke ── */}
           {!editing && <PlaybookSection lead={lead} T={T} onUpdate={onUpdate} onShowSuggest={onShowSuggest} />}
-          {/* ── Historial de acciones — siempre visible en lectura ── */}
-          {!editing && <ActionTimeline lead={lead} T={T} />}
 
           {editing ? (
             <div>
@@ -2433,7 +2456,26 @@ const NotesModal = ({ lead, onClose, onSave, onUpdate, onSwitchTab, onShowHistor
             isOpen={updateChatOpen}
             onClose={() => setUpdateChatOpen(false)}
             expedienteItems={expedienteItems}
-            onAddItem={item => setExpedienteItems(prev => [item, ...prev])}
+            onAddItem={item => {
+              setExpedienteItems(prev => [item, ...prev]);
+              // Persistir el registro al actionHistory del lead para que
+              // aparezca arriba en "Últimos registros" del Expediente.
+              if (lead && typeof onUpdate === 'function') {
+                const summary = (item.title || item.content || 'Registro nuevo')
+                  .toString()
+                  .slice(0, 200);
+                const action = {
+                  id: item.id?.toString() || genId(),
+                  action: summary,
+                  type: 'tarea',
+                  doneAtFmt: item.fecha || fmtNow(),
+                  completed_at: new Date().toISOString(),
+                  date: '',
+                };
+                const prevHistory = Array.isArray(lead.actionHistory) ? lead.actionHistory : [];
+                onUpdate({ ...lead, actionHistory: [action, ...prevHistory] });
+              }
+            }}
             onRemoveItem={id => setExpedienteItems(prev => prev.filter(x => x.id !== id))}
             T={T}
             lead={lead}
@@ -3013,7 +3055,26 @@ const LeadPanel = ({ lead, onClose, oc, onUpdate, onSwitchTab, onShowHistory, T 
             isOpen={updateChatOpen}
             onClose={() => setUpdateChatOpen(false)}
             expedienteItems={expedienteItems}
-            onAddItem={item => setExpedienteItems(prev => [item, ...prev])}
+            onAddItem={item => {
+              setExpedienteItems(prev => [item, ...prev]);
+              // Persistir el registro al actionHistory del lead para que
+              // aparezca arriba en "Últimos registros" del Expediente.
+              if (lead && typeof onUpdate === 'function') {
+                const summary = (item.title || item.content || 'Registro nuevo')
+                  .toString()
+                  .slice(0, 200);
+                const action = {
+                  id: item.id?.toString() || genId(),
+                  action: summary,
+                  type: 'tarea',
+                  doneAtFmt: item.fecha || fmtNow(),
+                  completed_at: new Date().toISOString(),
+                  date: '',
+                };
+                const prevHistory = Array.isArray(lead.actionHistory) ? lead.actionHistory : [];
+                onUpdate({ ...lead, actionHistory: [action, ...prevHistory] });
+              }
+            }}
             onRemoveItem={id => setExpedienteItems(prev => prev.filter(x => x.id !== id))}
             T={T}
             lead={lead}
