@@ -136,11 +136,22 @@ export function AuthProvider({ children }) {
     return (levels[user?.role] ?? 99) <= minLevel;
   }, [user]);
 
+  /**
+   * upgradeToOnline(profile) — transición silenciosa del usuario offline
+   * a online cuando Supabase vuelve a estar disponible. La invoca App.jsx
+   * después de un silentSignIn exitoso.
+   */
+  const upgradeToOnline = useCallback((profile) => {
+    if (!profile) return;
+    setUser(profile);  // sin _offline → vuelve al modo normal
+  }, []);
+
   const value = {
     user, loading, error,
     isAuthenticated: !!user,
     login, register, logout, resetPassword, clearError,
     hasRole, hasMinRole,
+    upgradeToOnline,
   };
 
   return (
