@@ -12,6 +12,9 @@ ALTER TABLE public.leads ADD COLUMN IF NOT EXISTS friction        text;
 ALTER TABLE public.leads ADD COLUMN IF NOT EXISTS tag             text;
 ALTER TABLE public.leads ADD COLUMN IF NOT EXISTS priority        text;
 ALTER TABLE public.leads ADD COLUMN IF NOT EXISTS priority_order  integer;
+-- FK al perfil del asesor (futuro: asesor_name será derivado de aquí)
+ALTER TABLE public.leads ADD COLUMN IF NOT EXISTS asesor_id       uuid
+  REFERENCES public.profiles(id) ON DELETE SET NULL;
 
 -- ── Campos JSONB que pueden no haberse aplicado en la 001 ────
 ALTER TABLE public.leads ADD COLUMN IF NOT EXISTS action_history  jsonb NOT NULL DEFAULT '[]';
@@ -34,6 +37,7 @@ END$$;
 CREATE INDEX IF NOT EXISTS idx_leads_priority       ON public.leads(priority)       WHERE priority IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_leads_priority_order ON public.leads(priority_order) WHERE priority_order IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_leads_tag            ON public.leads(tag)            WHERE tag IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_leads_asesor_id      ON public.leads(asesor_id)      WHERE asesor_id IS NOT NULL;
 
 -- ── Refrescar el schema cache de PostgREST ───────────────────
 -- Esto evita el error "Could not find the X column in the schema cache"

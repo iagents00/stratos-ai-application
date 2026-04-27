@@ -15,8 +15,9 @@ Abre tu proyecto Supabase → **SQL Editor** → New query. Ejecuta en este orde
 | # | Migración | Qué hace |
 |---|---|---|
 | 1 | `supabase/migrations/001_initial_schema.sql` | Crea `profiles` + `leads` + RLS + trigger de auto-perfil |
-| 2 | `supabase/migrations/002_leads_complete_schema.sql` | Agrega columnas que faltaban (`action_history`, `tasks`, `budget`, `notas`, `friction`, `tag`, `priority`, `priority_order`) |
+| 2 | `supabase/migrations/002_leads_complete_schema.sql` | Agrega columnas que faltaban (`action_history`, `tasks`, `budget`, `notas`, `friction`, `tag`, `priority`, `priority_order`, `asesor_id`) |
 | 3 | `supabase/migrations/003_audit_log.sql` | Tabla de auditoría + triggers automáticos en `leads` y `profiles` |
+| 4 | `supabase/migrations/004_performance_tuning.sql` | Índices compuestos + RLS optimizado para escala (10 × 30 = 300+ leads) |
 
 **Verificación rápida** (ejecutar al final, en SQL Editor):
 ```sql
@@ -122,10 +123,23 @@ Espera 5-15 min para que propague. Verifica en https://dnschecker.org/.
 - [ ] Aparece el dashboard sin errores en consola (F12 → Console).
 - [ ] Navegar a CRM muestra los leads (puede estar vacío al inicio — eso es OK).
 - [ ] Crear un lead nuevo desde el botón "+ Nuevo cliente" → guarda sin error.
-- [ ] Editar el lead (cambiar etapa, agregar nota) → guarda sin error.
-- [ ] Ver botón "Historial" arriba a la derecha al abrir un lead → muestra los cambios.
+- [ ] **Editar desde Perfil** (cambiar etapa, score, asesor) → guarda y aparece en Historial.
+- [ ] **Editar desde Expediente** (agregar nota) → guarda y aparece en Historial.
+- [ ] **Editar desde Análisis IA** (cambiar próxima acción) → guarda y aparece en Historial.
+- [ ] Ver botón "Historial" arriba a la derecha → muestra los 3 cambios anteriores con quién/cuándo/qué cambió.
 - [ ] Cerrar sesión → volver a entrar → la sesión persiste correctamente.
-- [ ] Logueado en Supabase: `SELECT * FROM audit_log ORDER BY created_at DESC LIMIT 5;` muestra los cambios que hiciste.
+- [ ] **En Supabase SQL Editor:**
+  ```sql
+  SELECT actor_name, action, entity_type, changed_fields, created_at
+  FROM audit_log ORDER BY created_at DESC LIMIT 10;
+  ```
+  Debe mostrar tus ediciones recientes con el diff campo-por-campo.
+- [ ] **Login auditado:**
+  ```sql
+  SELECT actor_name, action, metadata->>'email', created_at
+  FROM audit_log WHERE entity_type = 'auth' ORDER BY created_at DESC LIMIT 5;
+  ```
+  Debe mostrar tus inicios/cierres de sesión.
 
 ---
 
