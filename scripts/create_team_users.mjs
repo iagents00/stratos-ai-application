@@ -63,6 +63,11 @@ function generatePassword() {
 // ── Validación ─────────────────────────────────────────────
 const VALID_ROLES = ['super_admin', 'admin', 'ceo', 'director', 'asesor']
 
+// Org default donde van todos los usuarios del equipo Stratos.
+// Si tu equipo va a tener su propia org separada, cámbialo o
+// pásalo en team_users.json con la prop "organizationId" por user.
+const DEFAULT_ORG_ID = '00000000-0000-0000-0000-000000000001'
+
 function validateUsers(users) {
   if (!Array.isArray(users)) throw new Error('team_users.json debe ser un array')
   const seen = new Set()
@@ -147,11 +152,12 @@ async function main() {
       let password = generatePassword()
       let alreadyExisted = false
 
+      const orgId = u.organizationId || DEFAULT_ORG_ID
       const { data: created, error: createErr } = await supabase.auth.admin.createUser({
         email,
         password,
         email_confirm: true,             // sin verificación por correo
-        user_metadata: { name, role },
+        user_metadata: { name, role, organization_id: orgId },
       })
 
       if (createErr) {
@@ -172,9 +178,13 @@ async function main() {
       }
 
       // 2. Actualizar perfil (el trigger lo creó con defaults; lo afinamos)
+      // Forzamos organization_id por si el trigger creó una org nueva.
       const { error: profErr } = await supabase
         .from('profiles')
-        .upsert({ id: userId, name, role, active: true }, { onConflict: 'id' })
+        .upsert({
+          id: userId, name, role, active: true,
+          organization_id: orgId,
+        }, { onConflict: 'id' })
 
       if (profErr) throw profErr
 
