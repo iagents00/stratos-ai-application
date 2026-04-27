@@ -1,0 +1,22 @@
+{
+  "name": "Stratos AI — CRM",
+  "short_name": "Stratos AI",
+  "description": "Sistema operativo de ventas para Stratos Capital Group. CRM con IA aplicada a la operación comercial.",
+  "lang": "es-MX",
+  "dir": "ltr",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#030810",
+  "theme_color": "#030810",
+  "categories": ["business", "productivity"],
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
