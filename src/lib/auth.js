@@ -43,9 +43,12 @@ export async function signIn(email, password) {
       return { data: null, error: "Error al iniciar sesión. Verifica tus datos e inténtalo de nuevo." }
     }
 
+    // Query simple a profiles SIN JOIN — el JOIN con organizations puede
+    // colgarse si RLS lo bloquea. La org la cargamos por separado en
+    // background, sin bloquear el login.
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
-      .select('id, name, role, phone, active, organization_id, organizations(id, name, slug, plan, subscription_status)')
+      .select('id, name, role, phone, active, organization_id')
       .eq('id', data.user.id)
       .single()
 
@@ -67,7 +70,6 @@ export async function signIn(email, password) {
         role:  profile.role,
         phone: profile.phone,
         organizationId: profile.organization_id,
-        organization:   profile.organizations || null,
       },
       error: null,
     }
@@ -142,7 +144,7 @@ export async function getStoredSession() {
 
     const { data: profile } = await supabase
       .from('profiles')
-      .select('id, name, role, phone, active, organization_id, organizations(id, name, slug, plan, subscription_status)')
+      .select('id, name, role, phone, active, organization_id')
       .eq('id', session.user.id)
       .single()
 
@@ -155,7 +157,6 @@ export async function getStoredSession() {
       role:  profile.role,
       phone: profile.phone,
       organizationId: profile.organization_id,
-      organization:   profile.organizations || null,
     }
   } catch (e) {
     console.warn('[Stratos] getStoredSession error:', e.message)
