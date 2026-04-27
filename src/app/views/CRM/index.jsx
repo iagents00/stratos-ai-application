@@ -21,12 +21,14 @@ import {
   ChevronDown, ChevronUp, Heart, Share2, Maximize2,
   FilePlus, RefreshCw, BadgeCheck, ListChecks,
   UserCheck, List, SlidersHorizontal, Mail,
-  Pencil, Save, Minus, GripVertical, ChevronsDown
+  Pencil, Save, Minus, GripVertical, ChevronsDown,
+  History as HistoryIcon
 } from "lucide-react";
 import { P, LP, font, fontDisp, STAGES } from "../../../design-system/tokens";
 import { G, KPI, Pill, Ico, ChipSelect } from "../../SharedComponents";
 import { parseBudget, formatBudget, buildTelegramSummary, fmtNow, genId } from "../../../lib/utils";
 import { StratosAtom, StratosAtomHex } from "../../components/Logo";
+import HistoryDrawer from "../../components/HistoryDrawer";
 import { AI_AGENTS, AI_AGENT_LIST } from "../../constants/agents";
 import { stgC } from "../../constants/crm";
 import {
@@ -63,6 +65,9 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
   const [selectedLead, setSelectedLead] = useState(null);
   const [notesLead, setNotesLead]       = useState(null);
   const [analyzingLead, setAnalyzingLead] = useState(null);
+  const [historyLead, setHistoryLead]   = useState(null);
+  // Lead activo en cualquiera de los 3 drawers — base para el botón "Historial"
+  const activeDrawerLead = analyzingLead || selectedLead || notesLead;
 
   useEffect(() => {
     if (!autoOpenPriority1) return;
@@ -3196,6 +3201,51 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
         oc={oc}
         onUpdate={updateLead}
         onSwitchTab={(tab) => openDrawerTab(tab, analyzingLead)}
+      />
+
+      {/* Botón flotante "Historial" — visible cuando hay un drawer abierto.
+          Se monta arriba de los drawers y abre el HistoryDrawer del lead actual.
+          Se oculta cuando el HistoryDrawer está abierto para no estorbar. */}
+      {activeDrawerLead && !historyLead && createPortal(
+        <button
+          onClick={() => setHistoryLead(activeDrawerLead)}
+          title="Ver historial de cambios"
+          style={{
+            position: "fixed", top: 20, right: 20, zIndex: 99999,
+            display: "flex", alignItems: "center", gap: 8,
+            height: 38, padding: "0 14px",
+            borderRadius: 999,
+            background: "rgba(12,17,28,0.78)",
+            backdropFilter: "blur(28px) saturate(180%)",
+            WebkitBackdropFilter: "blur(28px) saturate(180%)",
+            border: `1px solid ${P.border}`,
+            boxShadow: "0 14px 36px rgba(0,0,0,0.5), 0 3px 10px rgba(0,0,0,0.35)",
+            color: P.txt, fontSize: 12.5, fontWeight: 600,
+            fontFamily: font, letterSpacing: "0.01em",
+            cursor: "pointer",
+            transition: "all 0.18s",
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = "rgba(20,28,42,0.92)";
+            e.currentTarget.style.borderColor = P.borderH;
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = "rgba(12,17,28,0.78)";
+            e.currentTarget.style.borderColor = P.border;
+          }}
+        >
+          <HistoryIcon size={14} strokeWidth={2.2} />
+          <span>Historial</span>
+        </button>,
+        document.body
+      )}
+
+      <HistoryDrawer
+        open={!!historyLead}
+        entityType="leads"
+        entityId={historyLead?.id}
+        entityLabel={historyLead?.n || historyLead?.name}
+        onClose={() => setHistoryLead(null)}
       />
 
       {/* ── Toast de error / confirmación ─────────────────────────────────── */}

@@ -1,0 +1,52 @@
+[
+  {
+    "name":  "Ivan Rodriguez Ruelas",
+    "email": "ivan@stratoscapitalgroup.com",
+    "role":  "ceo"
+  },
+  {
+    "name":  "Super Admin Stratos",
+    "email": "admin@stratoscapitalgroup.com",
+    "role":  "super_admin"
+  },
+  {
+    "name":  "Director 1",
+    "email": "director1@stratoscapitalgroup.com",
+    "role":  "director"
+  },
+  {
+    "name":  "Director 2",
+    "email": "director2@stratoscapitalgroup.com",
+    "role":  "director"
+  },
+  {
+    "name":  "Asesor 1",
+    "email": "asesor1@stratoscapitalgroup.com",
+    "role":  "asesor"
+  },
+  {
+    "name":  "Asesor 2",
+    "email": "asesor2@stratoscapitalgroup.com",
+    "role":  "asesor"
+  },
+  {
+    "name":  "Asesor 3",
+    "email": "asesor3@stratoscapitalgroup.com",
+    "role":  "asesor"
+  },
+  {
+    "name":  "Asesor 4",
+    "email": "asesor4@stratoscapitalgroup.com",
+    "role":  "asesor"
+  },
+  {
+    "name":  "Asesor 5",
+    "email": "asesor5@stratoscapitalgroup.com",
+    "role":  "asesor"
+  },
+  {
+    "name":  "Asesor 6",
+    "email": "asesor6@stratoscapitalgroup.com",
+    "role":  "asesor"
+  }
+]
