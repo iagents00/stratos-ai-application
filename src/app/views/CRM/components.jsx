@@ -1384,12 +1384,12 @@ const UpdateChatPanel = ({ isOpen, onClose, expedienteItems = [], onAddItem, onR
             </div>
             <div>
               <p style={{ margin: 0, fontSize: 13, fontWeight: 800, color: titleC, fontFamily: fontDisp, letterSpacing: "-0.015em" }}>
-                Actualizar expediente
+                ¿Qué pasó con el cliente?
               </p>
               <p style={{ margin: 0, fontSize: 9.5, color: T.txt3, fontFamily: font }}>
                 {expedienteItems.length > 0
                   ? `${expedienteItems.length} registro${expedienteItems.length !== 1 ? "s" : ""} · más reciente arriba`
-                  : "Sin registros — escribe la primera actualización"}
+                  : "Sin registros aún — escribe la primera nota"}
               </p>
             </div>
           </div>
@@ -1407,7 +1407,7 @@ const UpdateChatPanel = ({ isOpen, onClose, expedienteItems = [], onAddItem, onR
         <div style={{ padding: "9px 18px 4px", display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
           <div style={{ flex: 1, height: 1, background: T.border }} />
           <span style={{ fontSize: 9.5, color: T.txt3, fontFamily: font, letterSpacing: "0.01em", whiteSpace: "nowrap" }}>
-            Pega tu mensaje de Telegram · nota de voz · adjunto · ✨ Organizar con IA
+            Escribe lo que pasó · pega un audio · adjunta foto · 📝 yo lo organizo
           </span>
           <div style={{ flex: 1, height: 1, background: T.border }} />
         </div>
@@ -1566,7 +1566,7 @@ const UpdateChatPanel = ({ isOpen, onClose, expedienteItems = [], onAddItem, onR
             <button
               onClick={handleOrganize}
               disabled={!inputText.trim() || organizing}
-              title="Organizar texto desordenado con IA — extrae objetivo, presupuesto, próxima acción"
+              title="📝 Guardar lo que pasó — escríbelo desordenado y yo lo organizo"
               style={{
                 width: 36, height: 36, borderRadius: 10, flexShrink: 0,
                 background: organizing ? T.accentS : `linear-gradient(135deg, ${T.accent}26, ${T.violet}26)`,
@@ -1596,7 +1596,7 @@ const UpdateChatPanel = ({ isOpen, onClose, expedienteItems = [], onAddItem, onR
                   handleSend();
                 }
               }}
-              placeholder="Nota, transcripción, mensaje del agente Telegram…"
+              placeholder="Cuéntame qué pasó con el cliente — escribe libre…"
               rows={Math.min(Math.max(inputText.split("\n").length, 1), 4)}
               style={{
                 flex: 1, padding: "8px 12px", borderRadius: 10,
@@ -2133,7 +2133,7 @@ const NotesModal = ({ lead, onClose, onSave, onUpdate, onSwitchTab, T = P }) => 
                     onMouseLeave={e => { e.currentTarget.style.background = `${T.accent}12`; }}
                   >
                     <RefreshCw size={12} strokeWidth={2.5} />
-                    Actualizar expediente
+                    ¿Qué pasó con el cliente?
                   </button>
                 </div>
               )}
