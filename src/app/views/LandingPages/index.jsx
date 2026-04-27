@@ -3,6 +3,7 @@
  * LandingPagePreview vive en ./LandingPagePreview.jsx
  */
 import { useState, useEffect, useMemo } from "react";
+import { createPortal } from "react-dom";
 import {
   TrendingUp, Target, Plus, Heart, Users, Crown, Building2,
   Globe, Palmtree, Waves, Wand2, Image, Download, ExternalLink,
@@ -857,7 +858,7 @@ const NewPropertyModal = ({ onClose, onSave, initialData = null, T = P }) => {
 };
 
 /* ─── ROI Calculator ─── */
-const ROICalc = ({ prop }) => {
+const ROICalc = ({ prop, T = P }) => {
   const [inv, setInv] = useState(prop.priceFrom);
   const roiPct = prop.roiNum / 100;
   const appPct = 0.10; // 10% annual appreciation
@@ -920,7 +921,7 @@ const ROICalc = ({ prop }) => {
 };
 
 /* ─── Map/Location visual ─── */
-const RivieraMayaMap = ({ properties }) => {
+const RivieraMayaMap = ({ properties, T = P }) => {
   // Positions on simplified coastline map
   const locations = {
     "Cancún": { x: 82, y: 8 },
