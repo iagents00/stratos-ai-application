@@ -1177,6 +1177,8 @@ const UpdateChatPanel = ({ isOpen, onClose, expedienteItems = [], onAddItem, onR
   const [inputText, setInputText] = useState("");
   const [organizing, setOrganizing] = useState(false);
   const [organizeError, setOrganizeError] = useState(null);
+  // Estado de confirmación: si el AI devuelve preguntas, las mostramos como modal
+  const [confirmQueue, setConfirmQueue] = useState(null); // { questions: [...], answers: {q: ''}, originalText, partialResult }
   const fileInputRef = useRef(null);
   if (!isOpen) return null;
 
@@ -1204,53 +1206,100 @@ const UpdateChatPanel = ({ isOpen, onClose, expedienteItems = [], onAddItem, onR
     setInputText("");
   };
 
-  // ── Organizar texto desordenado con IA / parser ────────────
-  // El asesor escribe rápido durante una llamada (texto stream of consciousness)
-  // y este botón lo estructura en bio, presupuesto, próxima acción, etc.
+  // ── Aplicar resultado al lead (compartido entre primer turno y confirmación)
+  const applyResult = (result, originalText) => {
+    // Construir bio mejorada
+    const bioParts = [];
+    if (result.objetivo)  bioParts.push(`🎯 ${result.objetivo}`);
+    if (result.ubicacion) bioParts.push(`📍 ${result.ubicacion}`);
+    if (result.notas)     bioParts.push(`\n${result.notas}`);
+    const newBio = bioParts.join(" · ").replace(/ · \n/g, "\n").trim();
+
+    if (lead && onUpdate) {
+      const updates = { ...lead };
+      if (result.name && !lead.n && !lead.name) { updates.n = result.name; updates.name = result.name; }
+      if (result.phone && !lead.phone)          updates.phone = result.phone;
+      if (newBio)                               updates.bio = newBio;
+      if (result.next_action)                   { updates.nextAction = result.next_action; updates.next_action = result.next_action; }
+      if (result.next_action_date)              { updates.nextActionDate = result.next_action_date; updates.next_action_date = result.next_action_date; }
+      if (result.presupuesto_num && result.presupuesto_num > 0) {
+        updates.presupuesto = result.presupuesto_num;
+        updates.budget = result.presupuesto;
+      }
+      if (result.stage_sugerido && !lead.st)    { updates.st = result.stage_sugerido; updates.stage = result.stage_sugerido; }
+      if (result.score_sugerido > 0 && !lead.sc) { updates.sc = result.score_sugerido; updates.score = result.score_sugerido; }
+      onUpdate(updates);
+    }
+
+    // Helper para formatear el resumen
+    const lines = [];
+    if (result.name)             lines.push(`👤 ${result.name}`);
+    if (result.objetivo)         lines.push(`🎯 ${result.objetivo}`);
+    if (result.ubicacion)        lines.push(`📍 ${result.ubicacion}`);
+    if (result.presupuesto)      lines.push(`💰 ${result.presupuesto}`);
+    if (result.next_action)      lines.push(`📅 ${result.next_action}${result.next_action_date ? " · " + result.next_action_date : ""}`);
+    if (result.notas)            lines.push(`\n${result.notas}`);
+
+    onAddItem?.({
+      id: Date.now(),
+      type: "transcripcion",
+      title: result.source === "ai" ? "✨ Registro IA" : "✨ Registro",
+      content: lines.join("\n") || originalText,
+      details: { confidence: result.confidence, source: result.source },
+      fecha: new Date().toLocaleDateString("es-MX", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }),
+      source: "asesor",
+      fileName: null,
+      size: null,
+    });
+  };
+
+  // ── Organizar texto desordenado con IA ─────────────────────
+  // Si el AI tiene dudas → muestra confirmQueue con preguntas concretas.
+  // El asesor responde, y entonces SI registra. Nunca inventa info.
   const handleOrganize = async () => {
     if (!inputText.trim() || organizing) return;
     setOrganizing(true); setOrganizeError(null);
     try {
-      const { organizeNotes, formatOrganized } = await import("../../../lib/organize-notes");
+      const { organizeNotes } = await import("../../../lib/organize-notes");
       const result = await organizeNotes(inputText.trim(), { useAI: true });
       if (!result) { setOrganizeError("No se pudo procesar"); return; }
 
-      // Construir bio mejorada
-      const bioParts = [];
-      if (result.objetivo)  bioParts.push(`🎯 ${result.objetivo}`);
-      if (result.ubicacion) bioParts.push(`📍 ${result.ubicacion}`);
-      if (result.notas)     bioParts.push(`\n${result.notas}`);
-      const newBio = bioParts.join(" · ").replace(/ · \n/g, "\n").trim();
-
-      // Aplicar al lead via onUpdate
-      if (lead && onUpdate) {
-        const updates = { ...lead };
-        if (newBio) updates.bio = newBio;
-        if (result.next_action) updates.nextAction = result.next_action;
-        if (result.next_action_date) updates.nextActionDate = result.next_action_date;
-        if (result.presupuesto_num && result.presupuesto_num > 0) {
-          updates.presupuesto = result.presupuesto_num;
-          updates.budget = result.presupuesto;
-        }
-        onUpdate(updates);
+      // Si la IA pide confirmación, mostrar las preguntas en un panel
+      if (Array.isArray(result.needs_confirmation) && result.needs_confirmation.length > 0) {
+        const answers = {};
+        result.needs_confirmation.forEach(q => { answers[q] = ""; });
+        setConfirmQueue({
+          questions: result.needs_confirmation,
+          answers,
+          originalText: inputText.trim(),
+          partialResult: result,
+        });
+        // No reseteamos inputText — el asesor decide después
+      } else {
+        // Confianza alta — aplicar directo
+        applyResult(result, inputText.trim());
+        setInputText("");
       }
-
-      // Agregar entrada al expediente con el resumen IA
-      onAddItem?.({
-        id: Date.now(),
-        type: "transcripcion",
-        title: result.source === "ai" ? "✨ Organizado con IA" : "✨ Organizado",
-        content: formatOrganized(result) || inputText.trim(),
-        details: { confidence: result.confidence, source: result.source },
-        fecha: new Date().toLocaleDateString("es-MX", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }),
-        source: "asesor",
-        fileName: null,
-        size: null,
-      });
-
-      setInputText("");
     } catch (e) {
       setOrganizeError(e?.message || "Error al organizar");
+    } finally {
+      setOrganizing(false);
+    }
+  };
+
+  // Después de que el asesor responde las preguntas, reintentar
+  const handleConfirmAnswers = async () => {
+    if (!confirmQueue) return;
+    setOrganizing(true);
+    try {
+      const { organizeWithConfirmations } = await import("../../../lib/organize-notes");
+      const result = await organizeWithConfirmations(confirmQueue.originalText, confirmQueue.answers);
+      if (!result) { setOrganizeError("No se pudo confirmar"); return; }
+      applyResult(result, confirmQueue.originalText);
+      setConfirmQueue(null);
+      setInputText("");
+    } catch (e) {
+      setOrganizeError(e?.message || "Error");
     } finally {
       setOrganizing(false);
     }
@@ -1362,6 +1411,74 @@ const UpdateChatPanel = ({ isOpen, onClose, expedienteItems = [], onAddItem, onR
           </span>
           <div style={{ flex: 1, height: 1, background: T.border }} />
         </div>
+
+        {/* ── Panel de confirmación IA ──
+           Cuando el agente IA encuentra ambigüedad, muestra preguntas
+           concretas. El asesor responde y entonces registramos. Esto
+           evita meter basura al CRM. */}
+        {confirmQueue && (
+          <div style={{
+            margin: "8px 16px 4px",
+            padding: "12px 14px",
+            borderRadius: 12,
+            background: `${T.violet}10`,
+            border: `1px solid ${T.violet}33`,
+            flexShrink: 0,
+          }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+              <Wand2 size={13} color={violetC} strokeWidth={2.4} />
+              <p style={{ margin: 0, fontSize: 11, fontWeight: 800, color: violetC, fontFamily: fontDisp, letterSpacing: "0.04em", textTransform: "uppercase" }}>
+                Necesito aclarar antes de registrar
+              </p>
+            </div>
+            {confirmQueue.questions.map((q, i) => (
+              <div key={i} style={{ marginBottom: 8 }}>
+                <p style={{ margin: "0 0 4px", fontSize: 11.5, color: T.txt, fontFamily: font, lineHeight: 1.4 }}>{q}</p>
+                <input
+                  type="text"
+                  value={confirmQueue.answers[q] || ""}
+                  onChange={e => setConfirmQueue(prev => ({ ...prev, answers: { ...prev.answers, [q]: e.target.value } }))}
+                  placeholder="Tu respuesta…"
+                  style={{
+                    width: "100%", boxSizing: "border-box",
+                    padding: "7px 10px", borderRadius: 8,
+                    background: T === P ? "rgba(0,0,0,0.25)" : "rgba(255,255,255,0.7)",
+                    border: `1px solid ${T.border}`,
+                    color: T.txt, fontSize: 11.5, fontFamily: font, outline: "none",
+                  }}
+                />
+              </div>
+            ))}
+            <div style={{ display: "flex", gap: 6, marginTop: 8 }}>
+              <button
+                onClick={handleConfirmAnswers}
+                disabled={organizing}
+                style={{
+                  flex: 1, padding: "7px 12px", borderRadius: 8,
+                  background: violetC, border: `1px solid ${violetC}`,
+                  color: T === P ? "#0B1220" : "#FFF",
+                  cursor: organizing ? "wait" : "pointer",
+                  fontSize: 11.5, fontWeight: 700, fontFamily: fontDisp,
+                  display: "flex", alignItems: "center", justifyContent: "center", gap: 5,
+                }}
+              >
+                {organizing ? <RefreshCw size={11} style={{ animation: "spin 1s linear infinite" }} /> : <Check size={11} strokeWidth={2.5} />}
+                Registrar con estas respuestas
+              </button>
+              <button
+                onClick={() => setConfirmQueue(null)}
+                style={{
+                  padding: "7px 12px", borderRadius: 8,
+                  background: "transparent", border: `1px solid ${T.border}`,
+                  color: T.txt3, cursor: "pointer",
+                  fontSize: 11.5, fontFamily: font,
+                }}
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* ── Feed de registros ── */}
         <div style={{ flex: 1, overflowY: "auto", overscrollBehavior: "contain", padding: "6px 16px 6px", display: "flex", flexDirection: "column", gap: 7 }}>
