@@ -45,7 +45,7 @@ export async function signIn(email, password) {
 
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
-      .select('id, name, role, phone, active')
+      .select('id, name, role, phone, active, organization_id, organizations(id, name, slug, plan, subscription_status)')
       .eq('id', data.user.id)
       .single()
 
@@ -66,6 +66,8 @@ export async function signIn(email, password) {
         email: data.user.email,
         role:  profile.role,
         phone: profile.phone,
+        organizationId: profile.organization_id,
+        organization:   profile.organizations || null,
       },
       error: null,
     }
@@ -140,7 +142,7 @@ export async function getStoredSession() {
 
     const { data: profile } = await supabase
       .from('profiles')
-      .select('id, name, role, phone, active')
+      .select('id, name, role, phone, active, organization_id, organizations(id, name, slug, plan, subscription_status)')
       .eq('id', session.user.id)
       .single()
 
@@ -152,6 +154,8 @@ export async function getStoredSession() {
       email: session.user.email,
       role:  profile.role,
       phone: profile.phone,
+      organizationId: profile.organization_id,
+      organization:   profile.organizations || null,
     }
   } catch (e) {
     console.warn('[Stratos] getStoredSession error:', e.message)
