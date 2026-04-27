@@ -20,6 +20,8 @@ import { AuthProvider } from "./contexts/AuthContext";
 import ErrorBoundary   from "./components/ErrorBoundary.jsx";
 import App            from "./app/App.jsx";
 import LandingMarketing from "./landing/LandingMarketing.jsx";
+import { initDevMonitor } from "./lib/dev-monitor";
+import { getOfflineSession } from "./lib/offline-mode";
 
 import "./index.css";
 
@@ -42,6 +44,20 @@ const isApp = !isLanding;
 
 // URL de la plataforma — usada por la landing para el CTA principal
 const APP_URL = import.meta.env.VITE_APP_URL || (window.location.origin + "/?app");
+
+// ─── DEV MONITOR ─────────────────────────────────────────────────────────────
+// Captura errores globales y los envía a Telegram para que el equipo dev
+// se entere antes que los usuarios. Solo activo si VITE_TELEGRAM_BOT_TOKEN
+// está configurado en Vercel. Ver src/lib/dev-monitor.js para setup.
+initDevMonitor(() => {
+  // Devuelve contexto del usuario actual para los reportes de error
+  const session = getOfflineSession();
+  let stored = null;
+  try { stored = JSON.parse(localStorage.getItem("stratos_session_cache") || "null")?.profile; }
+  catch (_) { /* noop */ }
+  const u = session || stored;
+  return { userEmail: u?.email, userRole: u?.role };
+});
 
 // ─── RENDER ───────────────────────────────────────────────────────────────────
 createRoot(document.getElementById("root")).render(

@@ -201,11 +201,13 @@ export default function App() {
   const [syncing, setSyncing] = useState(false);
   const [syncMsg, setSyncMsg] = useState("");
 
-  // Mostrar banner solo a roles administrativos. Asesores nunca lo ven.
-  // Trabajan fluido sin saber que estaban en modo offline.
-  const ADMIN_ROLES = ["super_admin", "admin", "ceo"];
-  const isAdminRole = ADMIN_ROLES.includes(user?.role);
-  const showOfflineBanner = isAdminRole && (user?._offline || pendingSync > 0);
+  // Mostrar banner SOLO al equipo de desarrollo (super_admin).
+  // Directivos (role admin) y asesores ven UX 100% limpia, sin
+  // mensajes técnicos de infraestructura. El equipo dev ve el
+  // banner para diagnóstico y monitoreo en producción.
+  const DEV_ROLES = ["super_admin"];
+  const isDevRole = DEV_ROLES.includes(user?.role);
+  const showOfflineBanner = isDevRole && (user?._offline || pendingSync > 0);
 
   useEffect(() => {
     const hasPending = getPendingSyncCount() > 0;
@@ -274,7 +276,7 @@ export default function App() {
         setPendingSync(getPendingSyncCount());
         if (ok && synced > 0) {
           // Solo mostrar mensaje a admin/super (asesores no se enteran)
-          if (isAdminRole) {
+          if (isDevRole) {
             setSyncMsg(`✅ ${synced} cambios sincronizados automáticamente.`);
             setTimeout(() => setSyncMsg(""), 4000);
           }
@@ -285,7 +287,7 @@ export default function App() {
     } finally {
       autoRecoveryRunning.current = false;
     }
-  }, [user, upgradeToOnline, fetchLeads, isAdminRole]);
+  }, [user, upgradeToOnline, fetchLeads, isDevRole]);
 
   // Ciclo periódico cada 60 s
   useEffect(() => {

@@ -18,6 +18,15 @@
     "organization_id": "00000000-0000-0000-0000-000000000001"
   },
   {
+    "id": "11111111-2222-4333-8444-555555555555",
+    "name": "Dirección Stratos",
+    "role": "admin",
+    "email": "direccion@stratoscapitalgroup.com",
+    "phone": null,
+    "active": true,
+    "organization_id": "00000000-0000-0000-0000-000000000001"
+  },
+  {
     "id": "cc1030f0-d738-49fe-972d-7acbb6f48cea",
     "name": "Araceli Oneto",
     "role": "asesor",
