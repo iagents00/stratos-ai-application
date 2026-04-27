@@ -1926,7 +1926,7 @@ const PLAYBOOK_CATEGORIES = {
   retencion:    { label: "Post-venta",     colorKey: "cyan"    },
 };
 
-const PlaybookSection = ({ lead, T = P, onUpdate = null }) => {
+const PlaybookSection = ({ lead, T = P, onUpdate = null, onShowSuggest = null }) => {
   const isLight = T !== P;
   const [expanded, setExpanded] = useState(false);
   const playbook = Array.isArray(lead?.playbook) ? lead.playbook : [];
@@ -1997,6 +1997,28 @@ const PlaybookSection = ({ lead, T = P, onUpdate = null }) => {
             {total} acciones del Protocolo Duke para este cliente
           </p>
         </div>
+        {/* Botón IA (sutil) — abre el modal de sugerencias contextuales */}
+        {typeof onShowSuggest === 'function' && (
+          <button
+            onClick={onShowSuggest}
+            title="Pedir sugerencias adicionales con IA"
+            aria-label="Sugerencias IA"
+            style={{
+              width: 28, height: 28, borderRadius: 8,
+              border: `1px solid ${T.violet}${isLight ? "26" : "1E"}`,
+              background: `${T.violet}${isLight ? "10" : "0E"}`,
+              cursor: "pointer", padding: 0,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              transition: "all 0.18s",
+              flexShrink: 0,
+            }}
+            onMouseEnter={e => { e.currentTarget.style.background = `${T.violet}${isLight ? "1C" : "16"}`; e.currentTarget.style.borderColor = `${T.violet}${isLight ? "44" : "32"}`; }}
+            onMouseLeave={e => { e.currentTarget.style.background = `${T.violet}${isLight ? "10" : "0E"}`; e.currentTarget.style.borderColor = `${T.violet}${isLight ? "26" : "1E"}`; }}
+          >
+            <span style={{ fontSize: 13 }}>💡</span>
+          </button>
+        )}
+
         {/* Progreso */}
         <div style={{
           padding: "4px 10px", borderRadius: 99,
@@ -2181,7 +2203,7 @@ const ActionTimeline = ({ lead, T = P, maxItems = 6 }) => {
   );
 };
 
-const NotesModal = ({ lead, onClose, onSave, onUpdate, onSwitchTab, T = P }) => {
+const NotesModal = ({ lead, onClose, onSave, onUpdate, onSwitchTab, onShowHistory, onShowSuggest, T = P }) => {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState("");
   const [expedienteItems, setExpedienteItems] = useState(() => {
@@ -2244,13 +2266,14 @@ const NotesModal = ({ lead, onClose, onSave, onUpdate, onSwitchTab, T = P }) => 
                 <p style={{ margin: 0, fontSize: 11, color: T.txt3, fontFamily: font }}>Todo sobre el cliente en un vistazo</p>
               </div>
             </div>
-            <div style={{ display: "flex", gap: 7 }}>
+            <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
               {!editing && (
                 <button
                   onClick={() => setUpdateChatOpen(true)}
+                  title="Registrar lo que pasó con el cliente"
                   style={{
                     display: "flex", alignItems: "center", gap: 6,
-                    padding: "7px 14px", borderRadius: 8,
+                    padding: "7px 12px", borderRadius: 8,
                     border: `1px solid ${T.accentB}`,
                     background: `${T.accent}10`,
                     color: isLight ? `color-mix(in srgb, ${T.accent} 62%, #0B1220 38%)` : T.accent,
@@ -2264,9 +2287,28 @@ const NotesModal = ({ lead, onClose, onSave, onUpdate, onSwitchTab, T = P }) => 
                   Actualizar
                 </button>
               )}
-              <button onClick={onClose} style={{ width: 30, height: 30, borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.18s" }}
-                onMouseEnter={e => e.currentTarget.style.background = T.glassH}
-                onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+              {!editing && typeof onShowHistory === 'function' && (
+                <button
+                  onClick={onShowHistory}
+                  title="Ver historial de cambios"
+                  aria-label="Ver historial"
+                  style={{
+                    width: 30, height: 30, borderRadius: 8,
+                    border: `1px solid ${T.border}`,
+                    background: "transparent",
+                    cursor: "pointer",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    transition: "all 0.18s",
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.background = T.glassH; e.currentTarget.style.borderColor = T.borderH; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = T.border; }}
+                >
+                  <Clock size={13} color={T.txt3} strokeWidth={2.2} />
+                </button>
+              )}
+              <button onClick={onClose} title="Cerrar" style={{ width: 30, height: 30, borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.18s" }}
+                onMouseEnter={e => { e.currentTarget.style.background = T.glassH; e.currentTarget.style.borderColor = T.borderH; }}
+                onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = T.border; }}
               ><X size={13} color={T.txt3} /></button>
             </div>
           </div>
@@ -2312,7 +2354,7 @@ const NotesModal = ({ lead, onClose, onSave, onUpdate, onSwitchTab, T = P }) => 
             </div>
           )}
           {/* ── Playbook personalizado — checklist de acciones del Protocolo Duke ── */}
-          {!editing && <PlaybookSection lead={lead} T={T} onUpdate={onUpdate} />}
+          {!editing && <PlaybookSection lead={lead} T={T} onUpdate={onUpdate} onShowSuggest={onShowSuggest} />}
           {/* ── Historial de acciones — siempre visible en lectura ── */}
           {!editing && <ActionTimeline lead={lead} T={T} />}
 
@@ -2435,7 +2477,7 @@ const COACHING_MOCKS = [
   },
 ];
 
-const LeadPanel = ({ lead, onClose, oc, onUpdate, onSwitchTab, T = P }) => {
+const LeadPanel = ({ lead, onClose, oc, onUpdate, onSwitchTab, onShowHistory, T = P }) => {
   const [activeTab, setActiveTab] = useState("perfil");
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState(null);
@@ -2561,7 +2603,13 @@ const LeadPanel = ({ lead, onClose, oc, onUpdate, onSwitchTab, T = P }) => {
                 onMouseEnter={e => e.currentTarget.style.background = panelCopied ? `${T.accent}22` : T.glassH}
                 onMouseLeave={e => e.currentTarget.style.background = panelCopied ? `${T.accent}18` : "transparent"}
               >{panelCopied ? <Check size={13} strokeWidth={2.8} /> : <Copy size={13} strokeWidth={2} />}</button>
-              <button onClick={onClose} style={{ width: 30, height: 30, borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.18s" }} onMouseEnter={e => e.currentTarget.style.background = T.glassH} onMouseLeave={e => e.currentTarget.style.background = "transparent"}><X size={13} color={T.txt3} /></button>
+              {!editing && typeof onShowHistory === 'function' && (
+                <button onClick={onShowHistory} title="Ver historial de cambios" aria-label="Historial" style={{ width: 30, height: 30, borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.18s" }}
+                  onMouseEnter={e => { e.currentTarget.style.background = T.glassH; e.currentTarget.style.borderColor = T.borderH; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = T.border; }}
+                ><Clock size={13} color={T.txt3} strokeWidth={2.2} /></button>
+              )}
+              <button onClick={onClose} title="Cerrar" style={{ width: 30, height: 30, borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.18s" }} onMouseEnter={e => { e.currentTarget.style.background = T.glassH; e.currentTarget.style.borderColor = T.borderH; }} onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = T.border; }}><X size={13} color={T.txt3} /></button>
             </div>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 14 }}>

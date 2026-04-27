@@ -2994,8 +2994,8 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                             <>
                               {visibleQueue.map((l, idx) => (
                                 <div key={l.id}
-                                  onClick={() => setSelectedLead(l)}
-                                  title={`Ver perfil de ${l.n}`}
+                                  onClick={() => setNotesLead(l)}
+                                  title={`Abrir expediente de ${l.n}`}
                                   style={{
                                     display: "flex", alignItems: "center", gap: 9,
                                     padding: "8px 11px",
@@ -3199,6 +3199,8 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
         onSave={saveNotes}
         onUpdate={(u) => { updateLead(u); if (notesLead && u.id === notesLead.id) setNotesLead(u); }}
         onSwitchTab={(tab) => openDrawerTab(tab, notesLead)}
+        onShowHistory={() => setHistoryLead(notesLead)}
+        onShowSuggest={() => setSuggestLead(notesLead)}
       />
       <LeadPanel
         T={T}
@@ -3207,6 +3209,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
         oc={oc}
         onUpdate={updateLead}
         onSwitchTab={(tab) => openDrawerTab(tab, selectedLead)}
+        onShowHistory={() => setHistoryLead(selectedLead)}
       />
       <AnalysisDrawer
         T={T}
@@ -3217,93 +3220,18 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
         onSwitchTab={(tab) => openDrawerTab(tab, analyzingLead)}
       />
 
-      {/* Floating Action Bar — botones de acción global del drawer activo.
-         Posicionado en la parte INFERIOR del drawer (justo arriba del tab
-         switcher) para no encimar con el header del lead. Diseño:
-            ┌─────────────────────────────────────────┐
-            │  [💡 ¿Qué hago ahora?]   [🕒 Historial] │
-            │  ─── tab switcher (Exped · Perfil · IA) │
-            └─────────────────────────────────────────┘
-         */}
-      {activeDrawerLead && !historyLead && createPortal(
-        <div style={{
-          position: "fixed",
-          bottom: 76,                  // 20 (tab island bottom) + 38 (height) + 18 (gap)
-          right: 20,                   // dentro del drawer (drawer width 460, right: 0)
-          zIndex: 99998,
-          display: "flex", gap: 8,
-          fontFamily: font,
-          pointerEvents: "none",       // los hijos heredan auto
-        }}>
-          {!suggestLead && (
-            <button
-              onClick={() => setSuggestLead(activeDrawerLead)}
-              title="¿Qué hago ahora con este cliente? — Asistente IA con Protocolo Duke"
-              style={{
-                pointerEvents: "auto",
-                display: "flex", alignItems: "center", gap: 7,
-                height: 36, padding: "0 14px",
-                borderRadius: 999,
-                background: `linear-gradient(135deg, ${P.accent}28, ${P.violet}28)`,
-                backdropFilter: "blur(28px) saturate(180%)",
-                WebkitBackdropFilter: "blur(28px) saturate(180%)",
-                border: `1px solid ${P.accentB}`,
-                boxShadow: `0 12px 32px rgba(0,0,0,0.45), 0 2px 8px ${P.accent}24`,
-                color: P.accent, fontSize: 12, fontWeight: 700,
-                letterSpacing: "0.01em",
-                cursor: "pointer",
-                transition: "all 0.18s",
-                whiteSpace: "nowrap",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = "translateY(-1px)";
-                e.currentTarget.style.boxShadow = `0 16px 40px rgba(0,0,0,0.55), 0 0 0 1px ${P.accent}50`;
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = "none";
-                e.currentTarget.style.boxShadow = `0 12px 32px rgba(0,0,0,0.45), 0 2px 8px ${P.accent}24`;
-              }}
-            >
-              <span style={{ fontSize: 13 }}>💡</span>
-              <span>¿Qué hago ahora?</span>
-            </button>
-          )}
-          <button
-            onClick={() => setHistoryLead(activeDrawerLead)}
-            title="Ver historial de cambios de este cliente"
-            style={{
-              pointerEvents: "auto",
-              display: "flex", alignItems: "center", gap: 7,
-              height: 36, padding: "0 12px",
-              borderRadius: 999,
-              background: "rgba(12,17,28,0.84)",
-              backdropFilter: "blur(28px) saturate(180%)",
-              WebkitBackdropFilter: "blur(28px) saturate(180%)",
-              border: `1px solid ${P.border}`,
-              boxShadow: "0 12px 32px rgba(0,0,0,0.45)",
-              color: P.txt2, fontSize: 12, fontWeight: 600,
-              letterSpacing: "0.01em",
-              cursor: "pointer",
-              transition: "all 0.18s",
-              whiteSpace: "nowrap",
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = "rgba(20,28,42,0.92)";
-              e.currentTarget.style.borderColor = P.borderH;
-              e.currentTarget.style.color = P.txt;
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = "rgba(12,17,28,0.84)";
-              e.currentTarget.style.borderColor = P.border;
-              e.currentTarget.style.color = P.txt2;
-            }}
-          >
-            <HistoryIcon size={13} strokeWidth={2.2} />
-            <span>Historial</span>
-          </button>
-        </div>,
-        document.body
-      )}
+      {/* Los botones "¿Qué hago ahora?" y "Historial" se removieron del
+         layout flotante para limpiar la UX. La funcionalidad equivalente
+         ahora vive integrada de forma profesional dentro del drawer:
+            · El PLAYBOOK PERSONALIZADO en el Expediente ya muestra las
+              acciones recomendadas según el Protocolo Duke (sin botón).
+            · El acceso a "Sugerencias IA" se hace desde un link sutil
+              dentro del header del Playbook, opcional.
+            · El "Historial" se accede desde el ícono de reloj en el
+              header del drawer (junto a editar/cerrar).
+
+         Esto elimina ruido visual y centra la atención del asesor en
+         lo único que importa: las acciones del cliente. */}
 
       <HistoryDrawer
         open={!!historyLead}
