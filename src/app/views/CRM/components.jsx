@@ -1173,8 +1173,10 @@ const DrawerTabIsland = ({ current, onSwitch, T = P }) => {
    El vendedor registra notas, transcripciones y archivos
    tal como lo hace en Telegram — texto libre, voz o adjunto.
    ═══════════════════════════════════════════ */
-const UpdateChatPanel = ({ isOpen, onClose, expedienteItems = [], onAddItem, onRemoveItem, T = P }) => {
+const UpdateChatPanel = ({ isOpen, onClose, expedienteItems = [], onAddItem, onRemoveItem, T = P, lead, onUpdate }) => {
   const [inputText, setInputText] = useState("");
+  const [organizing, setOrganizing] = useState(false);
+  const [organizeError, setOrganizeError] = useState(null);
   const fileInputRef = useRef(null);
   if (!isOpen) return null;
 
@@ -1200,6 +1202,58 @@ const UpdateChatPanel = ({ isOpen, onClose, expedienteItems = [], onAddItem, onR
       size: null,
     });
     setInputText("");
+  };
+
+  // ── Organizar texto desordenado con IA / parser ────────────
+  // El asesor escribe rápido durante una llamada (texto stream of consciousness)
+  // y este botón lo estructura en bio, presupuesto, próxima acción, etc.
+  const handleOrganize = async () => {
+    if (!inputText.trim() || organizing) return;
+    setOrganizing(true); setOrganizeError(null);
+    try {
+      const { organizeNotes, formatOrganized } = await import("../../../lib/organize-notes");
+      const result = await organizeNotes(inputText.trim(), { useAI: true });
+      if (!result) { setOrganizeError("No se pudo procesar"); return; }
+
+      // Construir bio mejorada
+      const bioParts = [];
+      if (result.objetivo)  bioParts.push(`🎯 ${result.objetivo}`);
+      if (result.ubicacion) bioParts.push(`📍 ${result.ubicacion}`);
+      if (result.notas)     bioParts.push(`\n${result.notas}`);
+      const newBio = bioParts.join(" · ").replace(/ · \n/g, "\n").trim();
+
+      // Aplicar al lead via onUpdate
+      if (lead && onUpdate) {
+        const updates = { ...lead };
+        if (newBio) updates.bio = newBio;
+        if (result.next_action) updates.nextAction = result.next_action;
+        if (result.next_action_date) updates.nextActionDate = result.next_action_date;
+        if (result.presupuesto_num && result.presupuesto_num > 0) {
+          updates.presupuesto = result.presupuesto_num;
+          updates.budget = result.presupuesto;
+        }
+        onUpdate(updates);
+      }
+
+      // Agregar entrada al expediente con el resumen IA
+      onAddItem?.({
+        id: Date.now(),
+        type: "transcripcion",
+        title: result.source === "ai" ? "✨ Organizado con IA" : "✨ Organizado",
+        content: formatOrganized(result) || inputText.trim(),
+        details: { confidence: result.confidence, source: result.source },
+        fecha: new Date().toLocaleDateString("es-MX", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }),
+        source: "asesor",
+        fileName: null,
+        size: null,
+      });
+
+      setInputText("");
+    } catch (e) {
+      setOrganizeError(e?.message || "Error al organizar");
+    } finally {
+      setOrganizing(false);
+    }
   };
 
   const handleFile = (files) => {
@@ -1304,7 +1358,7 @@ const UpdateChatPanel = ({ isOpen, onClose, expedienteItems = [], onAddItem, onR
         <div style={{ padding: "9px 18px 4px", display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
           <div style={{ flex: 1, height: 1, background: T.border }} />
           <span style={{ fontSize: 9.5, color: T.txt3, fontFamily: font, letterSpacing: "0.01em", whiteSpace: "nowrap" }}>
-            Pega tu mensaje de Telegram · nota de voz · adjunto
+            Pega tu mensaje de Telegram · nota de voz · adjunto · ✨ Organizar con IA
           </span>
           <div style={{ flex: 1, height: 1, background: T.border }} />
         </div>
@@ -1386,6 +1440,35 @@ const UpdateChatPanel = ({ isOpen, onClose, expedienteItems = [], onAddItem, onR
               onMouseLeave={e => { e.currentTarget.style.background = T.glass; e.currentTarget.style.color = T.txt3; }}
             >
               <FilePlus size={15} strokeWidth={2} />
+            </button>
+            {/* ── ✨ Organizar con IA ──
+               Toma el texto desordenado del input y estructura los campos del lead
+               (objetivo/ubicación/presupuesto/próxima acción/notas) automáticamente.
+               Usa parser local (offline) primero; si la confianza es baja, llama al
+               Edge Function `organize-lead-notes` que usa Claude Haiku 4.5. */}
+            <button
+              onClick={handleOrganize}
+              disabled={!inputText.trim() || organizing}
+              title="Organizar texto desordenado con IA — extrae objetivo, presupuesto, próxima acción"
+              style={{
+                width: 36, height: 36, borderRadius: 10, flexShrink: 0,
+                background: organizing ? T.accentS : `linear-gradient(135deg, ${T.accent}26, ${T.violet}26)`,
+                border: `1px solid ${T.accentB}`,
+                color: accentC,
+                cursor: !inputText.trim() || organizing ? "not-allowed" : "pointer",
+                opacity: !inputText.trim() ? 0.4 : 1,
+                display: "flex", alignItems: "center", justifyContent: "center",
+                transition: "all 0.18s",
+                position: "relative",
+              }}
+              onMouseEnter={e => { if (inputText.trim() && !organizing) { e.currentTarget.style.transform = "translateY(-1px)"; e.currentTarget.style.boxShadow = `0 4px 14px ${T.accent}33`; } }}
+              onMouseLeave={e => { e.currentTarget.style.transform = "none"; e.currentTarget.style.boxShadow = "none"; }}
+            >
+              {organizing
+                ? <RefreshCw size={14} strokeWidth={2.4} style={{ animation: "spin 1s linear infinite" }} />
+                : <Wand2 size={15} strokeWidth={2.2} />
+              }
+              <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
             </button>
             <textarea
               value={inputText}
@@ -1966,6 +2049,8 @@ const NotesModal = ({ lead, onClose, onSave, onUpdate, onSwitchTab, T = P }) => 
             onAddItem={item => setExpedienteItems(prev => [item, ...prev])}
             onRemoveItem={id => setExpedienteItems(prev => prev.filter(x => x.id !== id))}
             T={T}
+            lead={lead}
+            onUpdate={onUpdate}
           />
         )}
       </div>
@@ -2538,6 +2623,8 @@ const LeadPanel = ({ lead, onClose, oc, onUpdate, onSwitchTab, T = P }) => {
             onAddItem={item => setExpedienteItems(prev => [item, ...prev])}
             onRemoveItem={id => setExpedienteItems(prev => prev.filter(x => x.id !== id))}
             T={T}
+            lead={lead}
+            onUpdate={onUpdate}
           />
         )}
       </div>
