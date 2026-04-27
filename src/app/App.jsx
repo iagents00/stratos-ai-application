@@ -144,6 +144,8 @@ export default function App() {
       : (() => { try { return JSON.parse(l.action_history || '[]'); } catch { return []; } })(),
     tasks: Array.isArray(l.tasks) ? l.tasks
       : (() => { try { return JSON.parse(l.tasks || '[]'); } catch { return []; } })(),
+    playbook: Array.isArray(l.playbook) ? l.playbook
+      : (() => { try { return JSON.parse(l.playbook || '[]'); } catch { return []; } })(),
   })), []);
 
   const fetchLeads = useCallback(async () => {

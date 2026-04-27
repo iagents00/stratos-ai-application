@@ -75,7 +75,9 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
   useEffect(() => {
     if (!autoOpenPriority1) return;
     const lead = priorityLeadsRef.current[0];
-    if (lead) { setSelectedLead(null); setNotesLead(null); setAnalyzingLead(lead); }
+    // Abrir directo en Expediente — donde el asesor ve notas + próxima acción + historial.
+    // El switcher inferior le permite saltar a Perfil o Análisis IA si lo necesita.
+    if (lead) { setSelectedLead(null); setAnalyzingLead(null); setNotesLead(lead); }
     onAutoOpenHandled?.();
   }, [autoOpenPriority1]); // priorityLeadsRef is a ref, always current
   const [addingLead, setAddingLead]     = useState(false);
@@ -205,6 +207,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
       //   ALTER TABLE leads ADD COLUMN tasks jsonb DEFAULT '[]';
       action_history:   newHistory,
       tasks:            Array.isArray(withScore.tasks) ? withScore.tasks : [],
+      playbook:         Array.isArray(withScore.playbook) ? withScore.playbook : [],
     };
 
     // ── Modo offline: encolar el cambio en localStorage ─────────────────
@@ -941,8 +944,8 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                     onDragOver={e => { e.stopPropagation(); handleCardDragOver(e, cardIdx); }}
                     onDrop={e => { e.stopPropagation(); handleCardDrop(e); }}
                     onDragEnd={handleCardDragEnd}
-                    onClick={() => { if (!dragCardId && !isDraggingCard) setSelectedLead(l); }}
-                    title="Click para ver perfil completo · arrastrar para reordenar"
+                    onClick={() => { if (!dragCardId && !isDraggingCard) setNotesLead(l); }}
+                    title="Click para abrir expediente · arrastrar para reordenar"
                     style={{
                       width: co ? 256 : 288, flexShrink: 0,
                       borderRadius: 18, overflow: "hidden",
@@ -1265,7 +1268,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                           <FollowUpBadge lead={l} onUpdate={updateLead} T={T} fullWidth tint={meta.color} />
                         </div>
                         <button
-                          onClick={e => { e.stopPropagation(); setSelectedLead(l); }}
+                          onClick={e => { e.stopPropagation(); setNotesLead(l); }}
                           style={{
                             width: "100%", height: 40, padding: "0 16px",
                             boxSizing: "border-box", borderRadius: 10,
@@ -2340,35 +2343,12 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                           <Star size={14} color={goldC} fill={isPinned ? goldC : "none"} strokeWidth={2.2} />
                         </button>
 
-                        {/* ⚛ IA — abre el panel "Analizar y actuar" del Agente con
-                            contexto completo del lead (mismo flujo que AURA, sin ir al chat).
-                            Siempre resaltado en mint: es el CTA suave del módulo. */}
-                        <button onClick={() => openDrawerTab("analisis", l)}
-                          title="Analizar y actuar con el Agente IA"
-                          aria-label="Analizar y actuar con el Agente IA"
-                          style={{
-                            width: 34, height: 34, borderRadius: 9,
-                            border: `1px solid ${T.accentB}`,
-                            background: `${T.accent}${isLight ? "18" : "12"}`,
-                            cursor: "pointer", padding: 0,
-                            display: "flex", alignItems: "center", justifyContent: "center",
-                            transition: "all 0.16s ease",
-                            boxShadow: isLight ? `0 1px 2px ${T.accent}1A, inset 0 1px 0 rgba(255,255,255,0.5)` : "none",
-                            flexShrink: 0,
-                          }}
-                          onMouseEnter={e => {
-                            e.currentTarget.style.background  = `${T.accent}${isLight ? "28" : "22"}`;
-                            e.currentTarget.style.borderColor = `${T.accent}${isLight ? "88" : "66"}`;
-                            e.currentTarget.style.transform   = "translateY(-1px)";
-                          }}
-                          onMouseLeave={e => {
-                            e.currentTarget.style.background  = `${T.accent}${isLight ? "18" : "12"}`;
-                            e.currentTarget.style.borderColor = T.accentB;
-                            e.currentTarget.style.transform   = "none";
-                          }}
-                        >
-                          <Atom size={14} color={isLight ? `color-mix(in srgb, ${T.accent} 58%, #0B1220 42%)` : T.accent} strokeWidth={2.2} />
-                        </button>
+                        {/* ⚛ IA — bloqueado por ahora (próxima etapa).
+                            Mantengo el código comentado para reactivarlo después.
+                            <button onClick={() => openDrawerTab("analisis", l)} ...>
+                              <Atom size={14} ... />
+                            </button>
+                        */}
 
                         {/* 👤 Perfil — abre el drawer completo del cliente */}
                         <button onClick={() => setSelectedLead(l)}
@@ -3014,8 +2994,8 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                             <>
                               {visibleQueue.map((l, idx) => (
                                 <div key={l.id}
-                                  onClick={() => setSelectedLead(l)}
-                                  title={`Ver perfil de ${l.n}`}
+                                  onClick={() => setNotesLead(l)}
+                                  title={`Abrir expediente de ${l.n}`}
                                   style={{
                                     display: "flex", alignItems: "center", gap: 9,
                                     padding: "8px 11px",
@@ -3219,6 +3199,8 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
         onSave={saveNotes}
         onUpdate={(u) => { updateLead(u); if (notesLead && u.id === notesLead.id) setNotesLead(u); }}
         onSwitchTab={(tab) => openDrawerTab(tab, notesLead)}
+        onShowHistory={() => setHistoryLead(notesLead)}
+        onShowSuggest={() => setSuggestLead(notesLead)}
       />
       <LeadPanel
         T={T}
@@ -3227,6 +3209,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
         oc={oc}
         onUpdate={updateLead}
         onSwitchTab={(tab) => openDrawerTab(tab, selectedLead)}
+        onShowHistory={() => setHistoryLead(selectedLead)}
       />
       <AnalysisDrawer
         T={T}
@@ -3237,79 +3220,18 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
         onSwitchTab={(tab) => openDrawerTab(tab, analyzingLead)}
       />
 
-      {/* Botón flotante "Historial" — visible cuando hay un drawer abierto.
-          Se monta arriba de los drawers y abre el HistoryDrawer del lead actual.
-          Se oculta cuando el HistoryDrawer está abierto para no estorbar. */}
-      {activeDrawerLead && !historyLead && createPortal(
-        <button
-          onClick={() => setHistoryLead(activeDrawerLead)}
-          title="Ver historial de cambios"
-          style={{
-            position: "fixed", top: 20, right: 20, zIndex: 99999,
-            display: "flex", alignItems: "center", gap: 8,
-            height: 38, padding: "0 14px",
-            borderRadius: 999,
-            background: "rgba(12,17,28,0.78)",
-            backdropFilter: "blur(28px) saturate(180%)",
-            WebkitBackdropFilter: "blur(28px) saturate(180%)",
-            border: `1px solid ${P.border}`,
-            boxShadow: "0 14px 36px rgba(0,0,0,0.5), 0 3px 10px rgba(0,0,0,0.35)",
-            color: P.txt, fontSize: 12.5, fontWeight: 600,
-            fontFamily: font, letterSpacing: "0.01em",
-            cursor: "pointer",
-            transition: "all 0.18s",
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.background = "rgba(20,28,42,0.92)";
-            e.currentTarget.style.borderColor = P.borderH;
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.background = "rgba(12,17,28,0.78)";
-            e.currentTarget.style.borderColor = P.border;
-          }}
-        >
-          <HistoryIcon size={14} strokeWidth={2.2} />
-          <span>Historial</span>
-        </button>,
-        document.body
-      )}
+      {/* Los botones "¿Qué hago ahora?" y "Historial" se removieron del
+         layout flotante para limpiar la UX. La funcionalidad equivalente
+         ahora vive integrada de forma profesional dentro del drawer:
+            · El PLAYBOOK PERSONALIZADO en el Expediente ya muestra las
+              acciones recomendadas según el Protocolo Duke (sin botón).
+            · El acceso a "Sugerencias IA" se hace desde un link sutil
+              dentro del header del Playbook, opcional.
+            · El "Historial" se accede desde el ícono de reloj en el
+              header del drawer (junto a editar/cerrar).
 
-      {/* ✨ Botón "Sugerir acciones" — copilot IA que lee el expediente
-         y propone próximas acciones con técnicas de venta del Protocolo Duke.
-         Tono co-pilot, no jefe. El asesor decide cuáles agregar a tasks. */}
-      {activeDrawerLead && !historyLead && !suggestLead && createPortal(
-        <button
-          onClick={() => setSuggestLead(activeDrawerLead)}
-          title="¿Qué hago ahora con este cliente? — Tu asistente de venta"
-          style={{
-            position: "fixed", top: 20, right: 144, zIndex: 99999,
-            display: "flex", alignItems: "center", gap: 8,
-            height: 38, padding: "0 14px",
-            borderRadius: 999,
-            background: `linear-gradient(135deg, ${P.accent}26, ${P.violet}26)`,
-            backdropFilter: "blur(28px) saturate(180%)",
-            WebkitBackdropFilter: "blur(28px) saturate(180%)",
-            border: `1px solid ${P.accentB}`,
-            boxShadow: "0 14px 36px rgba(0,0,0,0.5), 0 3px 10px rgba(0,0,0,0.35)",
-            color: P.accent, fontSize: 12.5, fontWeight: 700,
-            fontFamily: font, letterSpacing: "0.01em",
-            cursor: "pointer",
-            transition: "all 0.18s",
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.transform = "translateY(-1px)";
-            e.currentTarget.style.boxShadow = `0 18px 44px rgba(0,0,0,0.55), 0 0 0 1px ${P.accent}40`;
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.transform = "none";
-            e.currentTarget.style.boxShadow = "0 14px 36px rgba(0,0,0,0.5), 0 3px 10px rgba(0,0,0,0.35)";
-          }}
-        >
-          <span style={{ fontSize: 14 }}>💡</span>
-          <span>¿Qué hago ahora?</span>
-        </button>,
-        document.body
-      )}
+         Esto elimina ruido visual y centra la atención del asesor en
+         lo único que importa: las acciones del cliente. */}
 
       <HistoryDrawer
         open={!!historyLead}

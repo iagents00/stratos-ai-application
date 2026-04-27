@@ -22,70 +22,128 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 
 const PROTOCOLO_DUKE = `
 ═══════════════════════════════════════════════════════
-PROTOCOLO DUKE DEL CARIBE · Sistema de ventas consultivo
-Riviera Maya · Alta inversión · Stratos Capital Group
+PROTOCOLO OPERATIVO · STRATOS CAPITAL GROUP
+PROTOCOLO DUKE DEL CARIBE
+Sistema de ventas consultivo · Riviera Maya · Alta inversión
 ═══════════════════════════════════════════════════════
 
-OBJETIVO PRINCIPAL
+OBJETIVO
 Convertir leads en ventas mediante un proceso claro, rápido y consistente.
 
 REGLA BASE
 Todo lead debe avanzar, seguir en proceso o cerrarse. Si no, está perdido.
 
+PRINCIPIOS DEL ASESOR
+1. Responder rápido
+2. Calificar correctamente
+3. Mover al siguiente paso
+4. Dar seguimiento constante
+5. Registrar todo
+
+REGLA CRÍTICA
+"Lo que no está registrado en el CRM, no existe."
+
 PRINCIPIO FINAL
-"El dinero está en el seguimiento." — Las ventas ocurren después de
-30-45 intentos de contacto. No abandonar sin razón clara.
+"No gana el que más leads tiene. Gana el que mejor los trabaja.
+El dinero está en el seguimiento."
 
 VELOCIDAD DE RESPUESTA
 • Ideal: < 5 minutos desde el lead nuevo.
 • Máximo aceptable: 30 minutos.
-• Protocolo: WhatsApp → Llamada → Mensaje breve si no contesta.
+• Protocolo: WhatsApp → Llamada directa → Mensaje breve si no contesta.
+
+FLUJO DE TRABAJO
+1. Contacto Inicial — obtener respuesta (mensaje + llamada).
+2. Calificación — entender al cliente (nombre, presupuesto, zona,
+   objetivo, tiempo, ubicación, objeciones).
+3. Avance — toda conversación termina en SIGUIENTE PASO concreto
+   (Zoom agendado · recorrido agendado · seguimiento con fecha).
+4. Registro — después de cada interacción registrar en Stratos AI:
+   resumen · etapa · próxima acción · fecha · nivel del lead.
 
 PIPELINE 10 ETAPAS
-1. Nuevo Registro · 2. Primer Contacto · 3. Seguimiento ·
-4. Zoom Agendado · 5. Zoom Concretado · 6. Visita Agendada ·
-7. Visita Concretada · 8. Negociación · 9. Cierre · 10. Perdido
+1. Lead nuevo
+2. Contactado
+3. Conversación
+4. Zoom agendado
+5. Recorrido
+6. Seguimiento
+7. Apartado
+8. Venta cerrada
+9. Post-venta
+10. Referidos
 
-CALIFICACIÓN BANT-F
-• Budget: ¿Cuál es tu presupuesto disponible?
+CALIFICACIÓN BANT
+• Budget: ¿Cuál es tu presupuesto disponible para esta inversión?
 • Authority: ¿Eres tú quien toma la decisión final?
 • Need: ¿Buscas inversión, disfrute personal o ambos?
-• Timeline: ¿En qué plazo planeas concretar?
-• Financing: ¿Tienes capital o necesitas financiamiento?
+• Timeline: ¿En qué plazo planeas concretar la compra?
+• Financing: ¿Tienes capital disponible o necesitas financiamiento?
 
-OBJECIONES TÍPICAS Y RESPUESTAS
-• "Está muy caro" → El precio refleja ROI proyectado de 8% anual.
-  Pregunta: "¿Cuál es tu referencia de precio?"
-• "Necesito pensarlo" → "¿Qué información adicional necesitas?
-  Tengo disponibilidad esta semana."
-• "No conozco la zona" → "Tour virtual o visita VIP con traslado.
-  ¿Cuándo tienes disponibilidad?"
-• "¿Y si no se vende?" → "8% apreciación + renta vacacional 10-12% ROI.
-  ¿Te muestro los números?"
-• "Quiero esperar precios bajos" → "PDC sube 8% anual. Cada mes de
-  espera = pagar más. ¿Te muestro la proyección?"
+MANEJO DE OBJECIONES
+• "Está muy caro" → El precio refleja ubicación premium y ROI proyectado
+  de 8% anual. Pregunta: "¿Cuál es tu referencia de precio?"
+• "Necesito pensarlo" → "Entendido. ¿Qué información adicional necesitas
+  para decidir? Tengo disponibilidad esta semana."
+• "No conozco la zona" → "Hagamos tour virtual o agendo una visita VIP
+  con traslado incluido. ¿Cuándo tienes disponibilidad?"
+• "¿Y si no se vende?" → "8% apreciación anual + programa de renta
+  vacacional con 10-12% ROI. ¿Te muestro los números?"
+• "Quiero esperar precios bajos" → "En PDC los precios suben 8% anual.
+  Cada mes de espera equivale a pagar más. ¿Te muestro la proyección?"
 
-FRECUENCIA DE SEGUIMIENTO POR TEMPERATURA
-• Lead caliente: cada 24h
-• Lead medio: cada 48h
-• Lead frío: cada 3-5 días
+SLA DE RESPUESTA · TIEMPOS CRÍTICOS
+┌─────────────────────────┬───────────────────┬──────────────┐
+│ Evento                  │ Respuesta         │ Tiempo       │
+├─────────────────────────┼───────────────────┼──────────────┤
+│ Nuevo lead registrado   │ Primer contacto   │ < 2 horas    │
+│ Zoom concretado         │ Envío propuesta   │ < 24 horas   │
+│ Sin actividad 5+ días   │ Reactivación      │ Inmediato    │
+│ Negociación activa      │ Seguimiento       │ < 24 horas   │
+└─────────────────────────┴───────────────────┴──────────────┘
 
 REGLAS OPERATIVAS
 • Todo lead tiene próxima acción y fecha definida.
-• 3 intentos sin respuesta → marcar como riesgo.
-• 24h sin avance → alerta.
-• 5 días sin actividad → frío, requiere reactivación.
+• 3 intentos sin respuesta → RIESGO (escalar al director).
+• 24h sin avance → ALERTA.
+• 5 días sin actividad → FRÍO, requiere reactivación inmediata.
 
-ERRORES QUE EVITAR
+FASES DE SEGUIMIENTO
+Las ventas ocurren hasta después de 30–45 intentos.
+NO abandonar sin razón clara.
+• Intentos 1–5: Contacto y respuesta
+• Intentos 6–15: Interés y valor
+• Intentos 16–30: Confianza y decisión
+• Intentos 31–45: Cierre o reactivación
+
+FRECUENCIA DE SEGUIMIENTO POR TEMPERATURA
+• Caliente: cada 24h
+• Medio: cada 48h
+• Frío: cada 3-5 días
+
+REGLAS DE COMUNICACIÓN
+• No repetir mensajes
+• Cada contacto debe aportar valor
+• SIEMPRE cerrar con siguiente paso
+
+ALERTAS QUE GENERAR
+• Lead sin contacto
+• Seguimiento vencido
+• Lead caliente sin avance
+• Cliente sin próxima acción
+
+ERRORES CRÍTICOS A EVITAR
 • No registrar en CRM
 • No dar seguimiento
 • No definir siguiente paso
 • Responder tarde
 • No calificar al lead
 
-CIERRE
-Un lead solo se cierra si: compra, se descarta con motivo claro,
-o deja de ser viable.
+CIERRE DE PROCESO
+Un lead solo se cierra si:
+1. Compra (venta cerrada)
+2. Se descarta con motivo claro
+3. Deja de ser viable
 ═══════════════════════════════════════════════════════
 `.trim();
 
@@ -120,15 +178,51 @@ Devuelve JSON con 2-3 sugerencias de próximas acciones. Cada una con:
   • reason: 1-2 frases del POR QUÉ esta acción tiene sentido AHORA según el expediente
   • priority: "alta" | "media" | "baja"
 
-REGLAS:
+REGLAS DE PRIORIZACIÓN SEGÚN PROTOCOLO DUKE:
   • SIEMPRE responde con JSON válido, sin markdown, sin texto antes ni después.
   • Máximo 3 sugerencias. MENOS es mejor (2 sugerencias top > 3 mediocres).
   • NO repitas tasks que ya están en el array \`tasks\` actual.
-  • Si la situación es "lead frío" (días sin actividad > 5), prioriza reactivación con valor agregado.
-  • Si está en "Zoom Concretado" sin avance >24h, sugiere envío de propuesta.
-  • Si está en "Negociación" sin avance >24h, sugiere conectar con notaría / cierre suave.
-  • Si el score es bajo (<30), prioriza calificar (BANT) antes que cerrar.
-  • Si el score es alto (>70), prioriza acciones de cierre concretas.
+  • Cada sugerencia DEBE alinearse con UNA fase del Protocolo Duke.
+  • Cada sugerencia DEBE cerrar con SIGUIENTE PASO concreto (sin ambigüedad).
+
+REGLAS DE STAGE (etapas del pipeline 10):
+  • "Lead nuevo" → URGENTE: SLA <2h, primer contacto WhatsApp + llamada,
+    iniciar BANT en discovery de 30 min.
+  • "Contactado" / "Primer Contacto" → completar discovery (BANT),
+    confirmar presupuesto + zona + timeline + financiamiento.
+  • "Conversación" → cerrar la conversación con SIGUIENTE PASO (Zoom o tour).
+  • "Zoom agendado" → preparar presentación personalizada + comparativos,
+    recordatorio 24h y 2h antes.
+  • "Recorrido" / "Zoom Concretado" → SLA <24h: enviar propuesta formal
+    + proponer visita presencial.
+  • "Seguimiento" → frecuencia según temperatura:
+       Caliente cada 24h, Medio cada 48h, Frío cada 3-5 días.
+       Cada toque debe aportar VALOR NUEVO (no repetir mensajes).
+  • "Apartado" / "Negociación" → SLA <24h: revisar pago, conectar notaría,
+    validar costos, preparar expediente de cierre.
+  • "Cierre" / "Venta cerrada" → confirmar firma + solicitar referidos.
+  • "Post-venta" → solicitar 2-3 referidos calificados.
+
+REGLAS DE ALERTA:
+  • 3 intentos sin respuesta → RIESGO: escalar al director, cambiar canal,
+    aportar valor distinto (descuento, oferta exclusiva, info nueva).
+  • 24h sin avance → ALERTA: re-engagement con valor agregado.
+  • 5+ días sin actividad → FRÍO: reactivación INMEDIATA con propuesta concreta.
+
+REGLAS BANT:
+  • Score bajo (<30) → priorizar CALIFICAR antes de cerrar.
+  • Score alto (>70) → acciones concretas de cierre.
+  • Si las notas mencionan "consulta con esposa/familia" → falta Authority,
+    incluir al decisor en próxima conversación.
+  • Si menciona "no urge", "más adelante" → falta Timeline, crear urgencia
+    con escasez (precio sube, unidades disponibles).
+  • Si no se ha tocado presupuesto → preguntar Budget directamente.
+
+REGLAS DE OBJECIONES:
+  • Si las notas mencionan "muy caro" → usar manejo de objeción de precio
+    (ROI 8%, comparar con renta vacacional 10-12%).
+  • Si menciona "no conoce la zona" → ofrecer tour virtual o visita VIP.
+  • Si menciona "necesito pensarlo" → preguntar qué info adicional necesita.
 
 EJEMPLO DE OUTPUT:
 {
