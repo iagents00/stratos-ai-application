@@ -1,16 +1,17 @@
 import { useState, useEffect, useRef } from "react";
 import {
-  Users, UserCheck, Search, Filter, Plus, X, CheckCircle2, 
+  Users, UserCheck, Search, Filter, Plus, X, CheckCircle2,
   AlertCircle, TrendingUp, Target, Zap, Star, BarChart3,
   Clock, Calendar, Building2, Briefcase, FileText, Activity,
   ChevronDown, ChevronRight, SlidersHorizontal, Mail, Phone,
-  Shield, Atom, RefreshCw, ListChecks
+  Shield, Atom, RefreshCw, ListChecks,
+  BadgeCheck, Banknote, ClipboardList, Workflow,
 } from "lucide-react";
 import { AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import { P, LP, font, fontDisp } from "../../design-system/tokens";
 import { G, KPI, Pill, Ico } from "../SharedComponents";
 
-const AIAtom = ({ size = 20, color = T.violet, spin = false }) => (
+const AIAtom = ({ size = 20, color = P.violet, spin = false }) => (
   <svg width={size} height={size} viewBox="0 0 36 36" fill="none" style={spin ? { animation: "atomSpin 3s linear infinite" } : {}}>
     {/* Nucleus */}
     <circle cx="18" cy="18" r="3" fill={color} opacity="0.95" />
