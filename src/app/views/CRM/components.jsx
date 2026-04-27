@@ -1929,121 +1929,186 @@ const PLAYBOOK_CATEGORIES = {
 const PlaybookSection = ({ lead, T = P, onUpdate = null, onShowSuggest = null }) => {
   const isLight = T !== P;
   const [expanded, setExpanded] = useState(false);
-  const playbook = Array.isArray(lead?.playbook) ? lead.playbook : [];
-  if (playbook.length === 0) return null;
+  const [editingIdx, setEditingIdx] = useState(null);   // índice del item en edición
+  const [editDraft, setEditDraft]   = useState("");
+  const [adding, setAdding]         = useState(false);
+  const [newDraft, setNewDraft]     = useState("");
 
-  // Calcular progreso
+  const playbook = Array.isArray(lead?.playbook) ? lead.playbook : [];
+
   const completed = playbook.filter(p => p.completed).length;
   const total     = playbook.length;
-  const progress  = Math.round((completed / total) * 100);
+  const visible   = expanded ? playbook : playbook.slice(0, 3);
 
-  // Mostrar 3 primero, expandir para ver todos
-  const visible = expanded ? playbook : playbook.slice(0, 3);
-
-  const safeC = (c) => isLight ? `color-mix(in srgb, ${c} 60%, #0B1220 40%)` : c;
+  const safeC   = (c) => isLight ? `color-mix(in srgb, ${c} 60%, #0B1220 40%)` : c;
   const headerC = isLight ? `color-mix(in srgb, ${T.violet} 58%, #0B1220 42%)` : T.violet;
+  const canEdit = typeof onUpdate === 'function';
+
+  const persistPlaybook = (newPlaybook) => {
+    if (!canEdit) return;
+    onUpdate({ ...lead, playbook: newPlaybook });
+  };
 
   const toggleItem = (idx) => {
-    if (typeof onUpdate !== 'function') return;
-    const updated = playbook.map((p, i) =>
+    persistPlaybook(playbook.map((p, i) =>
       i === idx ? { ...p, completed: !p.completed, completed_at: !p.completed ? new Date().toISOString() : null } : p
-    );
-    onUpdate({ ...lead, playbook: updated });
+    ));
   };
+
+  const startEdit = (idx) => {
+    setEditingIdx(idx);
+    setEditDraft(playbook[idx]?.action || "");
+  };
+
+  const saveEdit = () => {
+    if (editingIdx == null) return;
+    if (!editDraft.trim()) {
+      setEditingIdx(null);
+      return;
+    }
+    persistPlaybook(playbook.map((p, i) =>
+      i === editingIdx ? { ...p, action: editDraft.trim() } : p
+    ));
+    setEditingIdx(null);
+    setEditDraft("");
+  };
+
+  const cancelEdit = () => { setEditingIdx(null); setEditDraft(""); };
+
+  const deleteItem = (idx) => {
+    persistPlaybook(playbook.filter((_, i) => i !== idx));
+  };
+
+  const addNew = () => {
+    if (!newDraft.trim()) {
+      setAdding(false);
+      return;
+    }
+    const newItem = {
+      id: genId(),
+      order: playbook.length + 1,
+      icon: "",
+      category: "cita",
+      action: newDraft.trim(),
+      technique: "",
+      reason: "",
+      completed: false,
+    };
+    persistPlaybook([...playbook, newItem]);
+    setNewDraft("");
+    setAdding(false);
+    setExpanded(true);
+  };
+
+  // Si no hay playbook, mostrar solo el botón "Agregar acción"
+  if (playbook.length === 0 && !adding) {
+    if (!canEdit) return null;
+    return (
+      <div style={{
+        marginBottom: 16,
+        padding: "16px",
+        borderRadius: 14,
+        border: `1px dashed ${T.border}`,
+        background: T.glass,
+        textAlign: "center",
+      }}>
+        <p style={{ margin: 0, fontSize: 12, color: T.txt3, fontFamily: font, marginBottom: 10 }}>
+          Sin acciones registradas para este cliente.
+        </p>
+        <button
+          onClick={() => setAdding(true)}
+          style={{
+            padding: "8px 16px", borderRadius: 9,
+            background: `${T.violet}14`, border: `1px solid ${T.violet}38`,
+            color: headerC, fontSize: 12, fontWeight: 700,
+            fontFamily: fontDisp, cursor: "pointer",
+            transition: "all 0.18s",
+          }}
+          onMouseEnter={e => e.currentTarget.style.background = `${T.violet}24`}
+          onMouseLeave={e => e.currentTarget.style.background = `${T.violet}14`}
+        >
+          + Agregar primera acción
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div style={{
       marginBottom: 16,
       borderRadius: 14,
-      border: `1px solid ${T.violet}${isLight ? "26" : "1E"}`,
-      background: isLight ? `${T.violet}06` : `${T.violet}08`,
+      border: `1px solid ${T.border}`,
+      background: T.glass,
       overflow: "hidden",
-      position: "relative",
     }}>
-      {/* Halo decorativo */}
-      <div aria-hidden style={{
-        position: "absolute", top: -40, right: -40, width: 160, height: 160,
-        background: `radial-gradient(circle, ${T.violet}${isLight ? "12" : "1A"} 0%, transparent 70%)`,
-        pointerEvents: "none",
-      }} />
-
-      {/* Header */}
+      {/* Header — sin emoji, lenguaje claro */}
       <div style={{
         padding: "12px 16px",
-        borderBottom: `1px solid ${T.violet}${isLight ? "20" : "16"}`,
+        borderBottom: `1px solid ${T.border}`,
         display: "flex", alignItems: "center", gap: 10,
-        position: "relative",
       }}>
-        <div style={{
-          width: 28, height: 28, borderRadius: 8,
-          background: `linear-gradient(135deg, ${T.violet}26, ${T.violet}10)`,
-          border: `1px solid ${T.violet}40`,
-          display: "flex", alignItems: "center", justifyContent: "center",
-          flexShrink: 0,
-          boxShadow: `0 0 12px ${T.violet}1C`,
-        }}>
-          <span style={{ fontSize: 14 }}>🎯</span>
-        </div>
         <div style={{ flex: 1, minWidth: 0 }}>
           <p style={{
             margin: 0, fontSize: 11, fontWeight: 800, color: headerC,
             letterSpacing: "0.10em", textTransform: "uppercase", fontFamily: fontDisp,
           }}>
-            Playbook personalizado
+            Acciones recomendadas
           </p>
           <p style={{
             margin: "2px 0 0", fontSize: 10.5, color: T.txt3, fontFamily: font,
           }}>
-            {total} acciones del Protocolo Duke para este cliente
+            {total > 0 ? `${total} acciones para avanzar la venta` : 'Agrega acciones para este cliente'}
           </p>
         </div>
-        {/* Botón IA (sutil) — abre el modal de sugerencias contextuales */}
-        {typeof onShowSuggest === 'function' && (
+        {/* Botón pedir sugerencias IA */}
+        {canEdit && typeof onShowSuggest === 'function' && (
           <button
             onClick={onShowSuggest}
-            title="Pedir sugerencias adicionales con IA"
-            aria-label="Sugerencias IA"
+            title="Pedir sugerencias con IA"
             style={{
-              width: 28, height: 28, borderRadius: 8,
-              border: `1px solid ${T.violet}${isLight ? "26" : "1E"}`,
-              background: `${T.violet}${isLight ? "10" : "0E"}`,
-              cursor: "pointer", padding: 0,
-              display: "flex", alignItems: "center", justifyContent: "center",
+              padding: "6px 10px", borderRadius: 8,
+              border: `1px solid ${T.border}`,
+              background: "transparent",
+              color: T.txt2, fontSize: 11, fontWeight: 600,
+              fontFamily: font, cursor: "pointer",
               transition: "all 0.18s",
-              flexShrink: 0,
+              whiteSpace: "nowrap",
             }}
-            onMouseEnter={e => { e.currentTarget.style.background = `${T.violet}${isLight ? "1C" : "16"}`; e.currentTarget.style.borderColor = `${T.violet}${isLight ? "44" : "32"}`; }}
-            onMouseLeave={e => { e.currentTarget.style.background = `${T.violet}${isLight ? "10" : "0E"}`; e.currentTarget.style.borderColor = `${T.violet}${isLight ? "26" : "1E"}`; }}
+            onMouseEnter={e => { e.currentTarget.style.borderColor = T.borderH; e.currentTarget.style.color = T.txt; }}
+            onMouseLeave={e => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.color = T.txt2; }}
           >
-            <span style={{ fontSize: 13 }}>💡</span>
+            Sugerencias IA
           </button>
         )}
-
         {/* Progreso */}
-        <div style={{
-          padding: "4px 10px", borderRadius: 99,
-          background: progress > 0 ? `${T.emerald}14` : T.glass,
-          border: `1px solid ${progress > 0 ? `${T.emerald}30` : T.border}`,
-          fontSize: 10.5, fontWeight: 700, fontFamily: fontDisp,
-          color: progress > 0 ? safeC(T.emerald) : T.txt3,
-        }}>
-          {completed}/{total}
-        </div>
+        {total > 0 && (
+          <div style={{
+            padding: "4px 10px", borderRadius: 99,
+            background: completed > 0 ? `${T.emerald}14` : T.glass,
+            border: `1px solid ${completed > 0 ? `${T.emerald}30` : T.border}`,
+            fontSize: 10.5, fontWeight: 700, fontFamily: fontDisp,
+            color: completed > 0 ? safeC(T.emerald) : T.txt3,
+            whiteSpace: "nowrap",
+          }}>
+            {completed}/{total}
+          </div>
+        )}
       </div>
 
-      {/* Items */}
-      <div style={{ padding: "8px 0" }}>
+      {/* Items — sin emojis, con editar/eliminar */}
+      <div style={{ padding: "4px 0" }}>
         {visible.map((item, idx) => {
           const realIdx = playbook.indexOf(item);
           const cat = PLAYBOOK_CATEGORIES[item.category] || { label: item.category, colorKey: "txt2" };
           const catColor = T[cat.colorKey] || T.txt2;
           const catC = safeC(catColor);
           const done = !!item.completed;
+          const isEditing = editingIdx === realIdx;
 
           return (
             <div key={item.id || idx} style={{
               padding: "10px 16px",
-              borderBottom: idx < visible.length - 1 ? `1px solid ${T.violet}${isLight ? "10" : "0A"}` : "none",
+              borderBottom: idx < visible.length - 1 ? `1px solid ${T.border}` : "none",
               display: "flex", alignItems: "flex-start", gap: 10,
               opacity: done ? 0.55 : 1,
               transition: "opacity 0.18s",
@@ -2052,27 +2117,28 @@ const PlaybookSection = ({ lead, T = P, onUpdate = null, onShowSuggest = null })
               <button
                 onClick={() => toggleItem(realIdx)}
                 aria-label={done ? "Marcar como pendiente" : "Marcar como completada"}
+                disabled={isEditing}
                 style={{
                   flexShrink: 0, marginTop: 2,
                   width: 20, height: 20, borderRadius: 6,
                   background: done ? T.emerald : "transparent",
                   border: `1.5px solid ${done ? T.emerald : (isLight ? "rgba(15,23,42,0.20)" : "rgba(255,255,255,0.20)")}`,
-                  cursor: typeof onUpdate === 'function' ? "pointer" : "default",
+                  cursor: canEdit && !isEditing ? "pointer" : "default",
                   display: "flex", alignItems: "center", justifyContent: "center",
                   transition: "all 0.16s",
                   color: "#FFFFFF",
                   fontSize: 12, fontWeight: 800,
                 }}
-                onMouseEnter={e => { if (!done) e.currentTarget.style.borderColor = T.emerald; }}
-                onMouseLeave={e => { if (!done) e.currentTarget.style.borderColor = isLight ? "rgba(15,23,42,0.20)" : "rgba(255,255,255,0.20)"; }}
+                onMouseEnter={e => { if (!done && !isEditing) e.currentTarget.style.borderColor = T.emerald; }}
+                onMouseLeave={e => { if (!done && !isEditing) e.currentTarget.style.borderColor = isLight ? "rgba(15,23,42,0.20)" : "rgba(255,255,255,0.20)"; }}
               >
                 {done && "✓"}
               </button>
 
               {/* Contenido */}
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 4, flexWrap: "wrap" }}>
-                  <span style={{ fontSize: 14 }}>{item.icon}</span>
+                {/* Etiqueta de categoría sin emoji */}
+                <div style={{ marginBottom: 6 }}>
                   <span style={{
                     fontSize: 9, fontWeight: 800, color: catC,
                     background: `${catColor}${isLight ? "14" : "10"}`,
@@ -2082,15 +2148,41 @@ const PlaybookSection = ({ lead, T = P, onUpdate = null, onShowSuggest = null })
                     fontFamily: fontDisp,
                   }}>{cat.label}</span>
                 </div>
-                <p style={{
-                  margin: 0, fontSize: 12.5, fontWeight: 600,
-                  color: isLight ? T.txt : "#FFFFFF",
-                  fontFamily: fontDisp, lineHeight: 1.45,
-                  textDecoration: done ? "line-through" : "none",
-                }}>
-                  {item.action}
-                </p>
-                {item.technique && (
+
+                {/* Texto editable o display */}
+                {isEditing ? (
+                  <textarea
+                    autoFocus
+                    value={editDraft}
+                    onChange={e => setEditDraft(e.target.value)}
+                    onKeyDown={e => {
+                      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); saveEdit(); }
+                      if (e.key === 'Escape')              { e.preventDefault(); cancelEdit(); }
+                    }}
+                    rows={2}
+                    style={{
+                      width: "100%", padding: "8px 10px", borderRadius: 8,
+                      background: isLight ? "rgba(15,23,42,0.04)" : "rgba(255,255,255,0.04)",
+                      border: `1px solid ${T.violet}55`,
+                      color: isLight ? T.txt : "#FFFFFF",
+                      fontSize: 12.5, fontFamily: font, lineHeight: 1.45,
+                      outline: "none", resize: "vertical", boxSizing: "border-box",
+                    }}
+                  />
+                ) : (
+                  <p style={{
+                    margin: 0, fontSize: 12.5, fontWeight: 600,
+                    color: isLight ? T.txt : "#FFFFFF",
+                    fontFamily: fontDisp, lineHeight: 1.45,
+                    textDecoration: done ? "line-through" : "none",
+                  }}>
+                    {/* Limpiar emojis del action si vienen del playbook generado */}
+                    {(item.action || "").replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]\s*/gu, "").trim()}
+                  </p>
+                )}
+
+                {/* Técnica y razón sin emojis */}
+                {!isEditing && item.technique && (
                   <p style={{
                     margin: "4px 0 0", fontSize: 11, color: T.txt3,
                     fontFamily: font, lineHeight: 1.5,
@@ -2098,41 +2190,180 @@ const PlaybookSection = ({ lead, T = P, onUpdate = null, onShowSuggest = null })
                     <span style={{ fontWeight: 700, color: catC }}>Técnica:</span> {item.technique}
                   </p>
                 )}
-                {item.reason && (
+                {!isEditing && item.reason && (
                   <p style={{
                     margin: "2px 0 0", fontSize: 11, color: T.txt3,
-                    fontFamily: font, lineHeight: 1.5, fontStyle: "italic",
+                    fontFamily: font, lineHeight: 1.5,
                   }}>
                     {item.reason}
                   </p>
+                )}
+
+                {/* Botones de acción inline */}
+                {canEdit && (
+                  <div style={{ marginTop: 8, display: "flex", gap: 6 }}>
+                    {isEditing ? (
+                      <>
+                        <button
+                          onClick={saveEdit}
+                          style={{
+                            padding: "5px 12px", borderRadius: 7,
+                            background: `${T.emerald}18`, border: `1px solid ${T.emerald}40`,
+                            color: safeC(T.emerald),
+                            fontSize: 11, fontWeight: 700, fontFamily: fontDisp,
+                            cursor: "pointer",
+                          }}
+                        >Guardar</button>
+                        <button
+                          onClick={cancelEdit}
+                          style={{
+                            padding: "5px 12px", borderRadius: 7,
+                            background: "transparent", border: `1px solid ${T.border}`,
+                            color: T.txt3,
+                            fontSize: 11, fontWeight: 600, fontFamily: font,
+                            cursor: "pointer",
+                          }}
+                        >Cancelar</button>
+                      </>
+                    ) : (
+                      <>
+                        <button
+                          onClick={() => startEdit(realIdx)}
+                          title="Editar acción"
+                          style={{
+                            padding: "5px 10px", borderRadius: 7,
+                            background: "transparent", border: `1px solid ${T.border}`,
+                            color: T.txt3,
+                            fontSize: 10.5, fontWeight: 600, fontFamily: font,
+                            cursor: "pointer",
+                            transition: "all 0.15s",
+                          }}
+                          onMouseEnter={e => { e.currentTarget.style.borderColor = T.borderH; e.currentTarget.style.color = T.txt2; }}
+                          onMouseLeave={e => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.color = T.txt3; }}
+                        >Editar</button>
+                        <button
+                          onClick={() => deleteItem(realIdx)}
+                          title="Eliminar acción"
+                          style={{
+                            padding: "5px 10px", borderRadius: 7,
+                            background: "transparent", border: `1px solid ${T.border}`,
+                            color: T.txt3,
+                            fontSize: 10.5, fontWeight: 600, fontFamily: font,
+                            cursor: "pointer",
+                            transition: "all 0.15s",
+                          }}
+                          onMouseEnter={e => { e.currentTarget.style.borderColor = `${T.rose}50`; e.currentTarget.style.color = isLight ? `color-mix(in srgb, ${T.rose} 60%, #0B1220 40%)` : T.rose; }}
+                          onMouseLeave={e => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.color = T.txt3; }}
+                        >Eliminar</button>
+                      </>
+                    )}
+                  </div>
                 )}
               </div>
             </div>
           );
         })}
+
+        {/* Form para nueva acción */}
+        {adding && (
+          <div style={{
+            padding: "12px 16px",
+            borderTop: playbook.length > 0 ? `1px solid ${T.border}` : "none",
+            background: isLight ? "rgba(15,23,42,0.02)" : "rgba(255,255,255,0.02)",
+          }}>
+            <p style={{ margin: "0 0 8px", fontSize: 10, fontWeight: 800, color: T.txt3, letterSpacing: "0.08em", textTransform: "uppercase", fontFamily: fontDisp }}>
+              Nueva acción
+            </p>
+            <textarea
+              autoFocus
+              value={newDraft}
+              onChange={e => setNewDraft(e.target.value)}
+              onKeyDown={e => {
+                if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); addNew(); }
+                if (e.key === 'Escape')              { e.preventDefault(); setAdding(false); setNewDraft(""); }
+              }}
+              rows={2}
+              placeholder="Ej. Llamar al cliente para confirmar visita del jueves"
+              style={{
+                width: "100%", padding: "9px 11px", borderRadius: 8,
+                background: isLight ? "rgba(15,23,42,0.04)" : "rgba(255,255,255,0.04)",
+                border: `1px solid ${T.border}`,
+                color: isLight ? T.txt : "#FFFFFF",
+                fontSize: 12.5, fontFamily: font, lineHeight: 1.45,
+                outline: "none", resize: "vertical", boxSizing: "border-box",
+              }}
+              onFocus={e => e.target.style.borderColor = `${T.violet}55`}
+              onBlur={e => e.target.style.borderColor = T.border}
+            />
+            <div style={{ marginTop: 8, display: "flex", gap: 6 }}>
+              <button
+                onClick={addNew}
+                style={{
+                  padding: "6px 14px", borderRadius: 8,
+                  background: `${T.violet}20`, border: `1px solid ${T.violet}48`,
+                  color: headerC,
+                  fontSize: 11.5, fontWeight: 700, fontFamily: fontDisp,
+                  cursor: "pointer",
+                }}
+              >Agregar</button>
+              <button
+                onClick={() => { setAdding(false); setNewDraft(""); }}
+                style={{
+                  padding: "6px 14px", borderRadius: 8,
+                  background: "transparent", border: `1px solid ${T.border}`,
+                  color: T.txt3,
+                  fontSize: 11.5, fontWeight: 600, fontFamily: font,
+                  cursor: "pointer",
+                }}
+              >Cancelar</button>
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* Toggle expandir */}
-      {playbook.length > 3 && (
-        <div style={{ padding: "8px 16px 12px", borderTop: `1px solid ${T.violet}${isLight ? "12" : "0E"}` }}>
-          <button
-            onClick={() => setExpanded(e => !e)}
-            style={{
-              width: "100%",
-              padding: "7px 12px", borderRadius: 8,
-              background: "transparent",
-              border: `1px dashed ${T.violet}${isLight ? "30" : "26"}`,
-              color: headerC,
-              fontSize: 11, fontWeight: 700, fontFamily: fontDisp,
-              cursor: "pointer",
-              transition: "all 0.18s",
-              letterSpacing: "0.04em",
-            }}
-            onMouseEnter={e => { e.currentTarget.style.background = `${T.violet}${isLight ? "08" : "0E"}`; }}
-            onMouseLeave={e => { e.currentTarget.style.background = "transparent"; }}
-          >
-            {expanded ? "Ver menos" : `Ver las ${playbook.length - 3} acciones restantes`}
-          </button>
+      {/* Footer: agregar nueva + expandir */}
+      {(canEdit || playbook.length > 3) && (
+        <div style={{
+          padding: "10px 16px",
+          borderTop: `1px solid ${T.border}`,
+          display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap",
+        }}>
+          {canEdit && !adding && (
+            <button
+              onClick={() => setAdding(true)}
+              style={{
+                padding: "7px 14px", borderRadius: 8,
+                background: `${T.violet}12`, border: `1px solid ${T.violet}30`,
+                color: headerC,
+                fontSize: 11, fontWeight: 700, fontFamily: fontDisp,
+                cursor: "pointer",
+                transition: "all 0.18s",
+              }}
+              onMouseEnter={e => e.currentTarget.style.background = `${T.violet}1E`}
+              onMouseLeave={e => e.currentTarget.style.background = `${T.violet}12`}
+            >
+              + Agregar acción
+            </button>
+          )}
+          {playbook.length > 3 && (
+            <button
+              onClick={() => setExpanded(e => !e)}
+              style={{
+                marginLeft: "auto",
+                padding: "7px 12px", borderRadius: 8,
+                background: "transparent",
+                border: `1px solid ${T.border}`,
+                color: T.txt3,
+                fontSize: 11, fontWeight: 600, fontFamily: font,
+                cursor: "pointer",
+                transition: "all 0.18s",
+              }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = T.borderH; e.currentTarget.style.color = T.txt2; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.color = T.txt3; }}
+            >
+              {expanded ? "Ver menos" : `Ver ${playbook.length - 3} más`}
+            </button>
+          )}
         </div>
       )}
     </div>
