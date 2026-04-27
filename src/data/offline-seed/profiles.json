@@ -1,0 +1,74 @@
+[
+  {
+    "id": "8ba4d349-a617-47c3-b0bd-26a05b310860",
+    "name": "Ivan Rodriguez Ruelas",
+    "role": "super_admin",
+    "email": "synergyfornature@gmail.com",
+    "phone": null,
+    "active": true,
+    "organization_id": "00000000-0000-0000-0000-000000000001"
+  },
+  {
+    "id": "3bd2e00e-0eaa-4ee9-876a-7de504a004ef",
+    "name": "Admin Stratos",
+    "role": "super_admin",
+    "email": "admin@stratoscapitalgroup.com",
+    "phone": null,
+    "active": true,
+    "organization_id": "00000000-0000-0000-0000-000000000001"
+  },
+  {
+    "id": "cc1030f0-d738-49fe-972d-7acbb6f48cea",
+    "name": "Araceli Oneto",
+    "role": "asesor",
+    "email": "araceli@stratoscapitalgroup.com",
+    "phone": null,
+    "active": true,
+    "organization_id": "00000000-0000-0000-0000-000000000001"
+  },
+  {
+    "id": "f509500d-2e44-4a46-ac21-8680bd566778",
+    "name": "Cecilia Mendoza",
+    "role": "asesor",
+    "email": "cecilia@stratoscapitalgroup.com",
+    "phone": null,
+    "active": true,
+    "organization_id": "00000000-0000-0000-0000-000000000001"
+  },
+  {
+    "id": "5793c2a3-e3d8-4f59-ae3f-cda8128b272f",
+    "name": "Emmanuel Ortiz",
+    "role": "asesor",
+    "email": "emmanuel@stratoscapitalgroup.com",
+    "phone": null,
+    "active": true,
+    "organization_id": "00000000-0000-0000-0000-000000000001"
+  },
+  {
+    "id": "afe12551-afa5-4813-b93a-d86373d4c43a",
+    "name": "Alexia Santillán",
+    "role": "asesor",
+    "email": "alexia@stratoscapitalgroup.com",
+    "phone": null,
+    "active": true,
+    "organization_id": "00000000-0000-0000-0000-000000000001"
+  },
+  {
+    "id": "ee3a0244-1ea7-4e4b-a7e6-f0d36b74e5af",
+    "name": "Ken Lugo Ríos",
+    "role": "asesor",
+    "email": "ken@stratoscapitalgroup.com",
+    "phone": null,
+    "active": true,
+    "organization_id": "00000000-0000-0000-0000-000000000001"
+  },
+  {
+    "id": "88f6d379-4d24-4085-bd59-90a603a9c207",
+    "name": "Oscar Gálvez",
+    "role": "asesor",
+    "email": "oscar@stratoscapitalgroup.com",
+    "phone": null,
+    "active": true,
+    "organization_id": "00000000-0000-0000-0000-000000000001"
+  }
+]
