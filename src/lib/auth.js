@@ -4,6 +4,7 @@
  * Todas las funciones capturan errores de red y los devuelven de forma limpia.
  */
 import { supabase } from './supabase'
+import { logAuthEvent } from './audit'
 
 // ── Usuario demo local — permite verificar la interfaz sin Supabase configurado ──
 const DEMO_EMAIL    = 'demo@stratos.ai'
@@ -31,6 +32,7 @@ export async function signIn(email, password) {
   try {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password })
     if (error) {
+      logAuthEvent('LOGIN_FAIL', null, { email, reason: error.message })
       const msg = error.message?.toLowerCase() || ""
       if (msg.includes("invalid login credentials") || msg.includes("invalid email or password"))
         return { data: null, error: "Correo o contraseña incorrectos." }
@@ -48,12 +50,15 @@ export async function signIn(email, password) {
       .single()
 
     if (profileError || !profile) {
+      logAuthEvent('LOGIN_FAIL', data.user.id, { email, reason: 'profile_not_found' })
       return { data: null, error: 'No se encontró tu perfil. Contacta al administrador.' }
     }
     if (profile.active === false) {
+      logAuthEvent('LOGIN_FAIL', data.user.id, { email, reason: 'account_disabled' })
       return { data: null, error: 'Cuenta desactivada. Contacta al administrador.' }
     }
 
+    logAuthEvent('LOGIN', profile.id, { email, name: profile.name, role: profile.role })
     return {
       data: {
         id:    profile.id,
@@ -78,6 +83,7 @@ export async function signUp(name, email, password) {
     })
     if (error) return { data: null, error: error.message }
 
+    logAuthEvent('SIGNUP', data.user?.id || null, { email, name, role: 'asesor' })
     return {
       data: {
         id:    data.user.id,
@@ -95,6 +101,10 @@ export async function signUp(name, email, password) {
 export async function signOut() {
   sessionStorage.removeItem('stratos_demo')
   try {
+    const { data: { session } } = await supabase.auth.getSession()
+    if (session?.user?.id) {
+      await logAuthEvent('LOGOUT', session.user.id, { email: session.user.email })
+    }
     await supabase.auth.signOut()
   } catch (e) {
     console.warn('[Stratos] signOut error (ignorado):', e.message)
@@ -108,6 +118,7 @@ export async function resetPassword(email) {
       redirectTo: `${window.location.origin}/?reset=true`,
     })
     if (error) return { data: null, error: error.message }
+    logAuthEvent('PASSWORD_RESET', null, { email })
     return {
       data: { message: 'Revisa tu correo — te enviamos el link para restablecer tu contraseña.' },
       error: null,

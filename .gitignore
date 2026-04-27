@@ -36,3 +36,8 @@ dist-ssr
 .continue/
 skills-lock.json
 .claude/worktrees/
+
+# Datos sensibles del onboarding del equipo (generados por scripts/create_team_users.mjs)
+team_users.json
+team_credentials.md
+team_credentials.txt
