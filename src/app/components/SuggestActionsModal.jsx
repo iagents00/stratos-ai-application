@@ -10,12 +10,32 @@ import { useEffect, useState } from "react";
 import { X, Wand2, Plus, RefreshCw, Lightbulb } from "lucide-react";
 import { P, font, fontDisp, mono } from "../../design-system/tokens";
 import { suggestNextActions, suggestionToTask } from "../../lib/suggest-actions";
+import ProFeatureGate from "./ProFeatureGate";
 
 const PRIORITY_META = {
-  alta:  { color: "#EF4444", label: "ALTA" },
-  media: { color: "#FBBF24", label: "MEDIA" },
-  baja:  { color: "#7EB8F0", label: "BAJA" },
+  alta:  { color: "#EF4444", label: "ATENDER YA" },
+  media: { color: "#FBBF24", label: "ESTA SEMANA" },
+  baja:  { color: "#7EB8F0", label: "CUANDO PUEDAS" },
 };
+
+// Traduce términos técnicos de venta a frases naturales para el asesor
+const TECHNIQUE_LABEL = {
+  "BANT — Authority":          "Saber quién decide",
+  "BANT — Budget":             "Validar presupuesto",
+  "BANT — Need":               "Entender necesidad",
+  "BANT — Timeline":           "Confirmar urgencia",
+  "BANT-F — Financing":        "Forma de pago",
+  "SPIN":                      "Pregunta que abre conversación",
+  "Manejo de objeción":        "Para responder dudas",
+  "Manejo de objeción de precio": "Si dice 'está caro'",
+  "Closing technique":         "Cierre suave",
+  "Reactivación":              "Recuperar interés",
+  "Re-engagement":             "Recuperar interés",
+};
+function naturalTechnique(t) {
+  if (!t) return "Sugerencia";
+  return TECHNIQUE_LABEL[t] || t;
+}
 
 export default function SuggestActionsModal({ open, onClose, lead, onAddTasks }) {
   const [loading, setLoading]       = useState(false);
@@ -23,18 +43,24 @@ export default function SuggestActionsModal({ open, onClose, lead, onAddTasks })
   const [summary, setSummary]       = useState("");
   const [error, setError]           = useState(null);
   const [selected, setSelected]     = useState(new Set());
+  const [needsActivation, setNeedsActivation] = useState(false);
 
   const fetchSuggestions = async () => {
     if (!lead) return;
-    setLoading(true); setError(null); setSelected(new Set());
+    setLoading(true); setError(null); setSelected(new Set()); setNeedsActivation(false);
     try {
       const tasks = Array.isArray(lead.tasks) ? lead.tasks : [];
       const r = await suggestNextActions(lead, tasks);
-      if (r.error) setError(r.error);
+      // Si la edge function no está deployada o no hay API key, mostramos
+      // el ProFeatureGate (función premium) en lugar de un error técnico
+      if (r.error || (Array.isArray(r.suggestions) && r.suggestions.length === 0 && r.error)) {
+        setNeedsActivation(true);
+        return;
+      }
       setSuggestions(r.suggestions || []);
       setSummary(r.summary_one_line || "");
     } catch (e) {
-      setError(e?.message || "Error inesperado");
+      setNeedsActivation(true);
     } finally {
       setLoading(false);
     }
@@ -61,6 +87,24 @@ export default function SuggestActionsModal({ open, onClose, lead, onAddTasks })
   };
 
   if (!open) return null;
+
+  // Si la edge function no está deployada → mostrar gate premium
+  if (needsActivation) {
+    return (
+      <ProFeatureGate
+        open={true}
+        onClose={onClose}
+        title="Asistente inteligente de venta"
+        subtitle="Tu copiloto de IA para cerrar más clientes"
+        benefits={[
+          "Lee el expediente de cada cliente y te dice qué hacer ahora con palabras claras.",
+          "Aplica las técnicas de venta del Protocolo Duke sin que tengas que estudiarlas.",
+          "Te recomienda 2-3 acciones priorizadas para que avances al cierre más rápido.",
+          "Aprende del histórico de tus mejores ventas y te empuja en los momentos clave.",
+        ]}
+      />
+    );
+  }
 
   return (
     <div
@@ -105,10 +149,10 @@ export default function SuggestActionsModal({ open, onClose, lead, onAddTasks })
             </div>
             <div>
               <div style={{ fontSize: 9, color: P.txt3, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", fontFamily: fontDisp }}>
-                Copilot · Protocolo Duke
+                Tu asistente de venta
               </div>
               <div style={{ fontSize: 16, color: P.txt, fontWeight: 700, fontFamily: fontDisp, marginTop: 2 }}>
-                Sugerencias para {lead?.n || lead?.name}
+                ¿Qué hago ahora con {lead?.n || lead?.name}?
               </div>
             </div>
           </div>
@@ -148,8 +192,8 @@ export default function SuggestActionsModal({ open, onClose, lead, onAddTasks })
           {loading && (
             <div style={{ padding: 40, textAlign: "center", color: P.txt3, fontFamily: font }}>
               <RefreshCw size={28} color={P.accent} strokeWidth={2} style={{ animation: "spinAi 1s linear infinite", marginBottom: 12 }} />
-              <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: P.txt2 }}>Analizando expediente…</p>
-              <p style={{ margin: "4px 0 0", fontSize: 11, color: P.txt3 }}>Aplicando técnicas Duke + BANT + manejo de objeciones</p>
+              <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: P.txt2 }}>Estoy leyendo el expediente…</p>
+              <p style={{ margin: "4px 0 0", fontSize: 11, color: P.txt3 }}>Pensando qué te conviene hacer para avanzar la venta</p>
               <style>{`@keyframes spinAi { to { transform: rotate(360deg); } }`}</style>
             </div>
           )}
@@ -196,7 +240,7 @@ export default function SuggestActionsModal({ open, onClose, lead, onAddTasks })
                         fontSize: 9.5, color: P.violet,
                         background: `${P.violet}15`, border: `1px solid ${P.violet}33`,
                         padding: "2px 8px", borderRadius: 99, fontFamily: fontDisp, fontWeight: 700,
-                      }}>{s.technique || "Técnica"}</span>
+                      }}>{naturalTechnique(s.technique) || "Sugerencia"}</span>
                       <div style={{ flex: 1 }} />
                       <div style={{
                         width: 20, height: 20, borderRadius: 6,
@@ -227,7 +271,7 @@ export default function SuggestActionsModal({ open, onClose, lead, onAddTasks })
                         margin: 0, fontSize: 11.5, color: P.txt2, fontFamily: font, lineHeight: 1.55,
                         paddingTop: 8, borderTop: `1px solid ${P.border}`,
                       }}>
-                        <span style={{ color: P.txt3, fontWeight: 600 }}>POR QUÉ · </span>
+                        <span style={{ color: P.txt3, fontWeight: 600 }}>POR QUÉ TE LO SUGIERO · </span>
                         {s.reason}
                       </p>
                     )}
@@ -263,7 +307,7 @@ export default function SuggestActionsModal({ open, onClose, lead, onAddTasks })
               color: P.txt2, cursor: "pointer", fontSize: 12, fontFamily: font,
               display: "flex", alignItems: "center", gap: 6,
             }}>
-              <RefreshCw size={12} /> Otras sugerencias
+              <RefreshCw size={12} /> Pensar de nuevo
             </button>
             <button
               onClick={addSelected}
@@ -280,7 +324,7 @@ export default function SuggestActionsModal({ open, onClose, lead, onAddTasks })
               }}
             >
               <Plus size={13} strokeWidth={3} />
-              Agregar {selected.size > 0 ? `${selected.size} ` : ""}a tasks
+              {selected.size > 0 ? `Agregar ${selected.size} a mi lista de hoy` : "Agregar a mi lista"}
             </button>
           </div>
         )}
