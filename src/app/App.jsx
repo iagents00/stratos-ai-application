@@ -5,7 +5,7 @@
  * Todos los componentes y lógica de negocio viven en sus propios módulos.
  * ─────────────────────────────────────────────────────────────────────────────
  */
-import { useState, useEffect, useRef, useCallback, useMemo, startTransition } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo, startTransition, lazy, Suspense } from "react";
 import { supabase } from "../lib/supabase";
 import LoginScreen from "../landing/LoginScreen.jsx";
 import PricingScreen from "../landing/PricingScreen.jsx";
@@ -15,6 +15,8 @@ import {
   updateOfflineLead,
   getPendingSyncCount,
   syncToSupabase,
+  pingSupabase,
+  silentSignIn,
 } from "../lib/offline-mode";
 
 import {
@@ -33,20 +35,24 @@ import PermissionGate     from "./components/PermissionGate";
 import Chat, { getResp }  from "./features/ChatPanel";
 import MetaPanel,
   { DEFAULT_META_PLAN, DEFAULT_META_PROTOCOL } from "./features/MetaPanel";
-import AdminPanel         from "./features/Admin/AdminPanel";
+// AdminPanel y vistas pesadas se cargan bajo demanda con React.lazy
+// para reducir el bundle inicial de ~1.3 MB a ~400 KB.
+const AdminPanel = lazy(() => import("./features/Admin/AdminPanel"));
 
 /* ── Navigation & roles ── */
 import { nav, MODULE_ROLES } from "./constants/navigation";
 
-/* ── Views ── */
+/* ── Views ──
+ * Dash y CRM son las que se ven inmediatamente al entrar → carga eager.
+ * El resto se carga bajo demanda al cambiar de pestaña (code splitting). */
 import Dash          from "./views/Dash";
 import CRM           from "./views/CRM";
-import ERP           from "./views/ERP";
-import Team          from "./views/Team";
-import IACRM         from "./views/IACRM";
-import LandingPages  from "./views/LandingPages";
-import FinanzasAdmin from "./views/FinanzasAdmin";
-import RRHHModule    from "./views/RRHHModule";
+const ERP           = lazy(() => import("./views/ERP"));
+const Team          = lazy(() => import("./views/Team"));
+const IACRM         = lazy(() => import("./views/IACRM"));
+const LandingPages  = lazy(() => import("./views/LandingPages"));
+const FinanzasAdmin = lazy(() => import("./views/FinanzasAdmin"));
+const RRHHModule    = lazy(() => import("./views/RRHHModule"));
 
 /* ── Mock data (demo fallback) ── */
 import { leads } from "./data/leads";
@@ -90,7 +96,7 @@ const LP = {
    MAIN APP
    ════════════════════════════════════════ */
 export default function App() {
-  const { user, login, logout } = useAuth();
+  const { user, login, logout, upgradeToOnline } = useAuth();
   const isAsesorRole     = !["super_admin","admin","director","ceo"].includes(user?.role);
   const [v, setV]        = useState(isAsesorRole ? "c" : "d");
   const [co, setCo]      = useState(false);
@@ -193,8 +199,15 @@ export default function App() {
   const [syncing, setSyncing] = useState(false);
   const [syncMsg, setSyncMsg] = useState("");
 
+  // Mostrar banner solo a roles administrativos. Asesores nunca lo ven.
+  // Trabajan fluido sin saber que estaban en modo offline.
+  const ADMIN_ROLES = ["super_admin", "admin", "ceo"];
+  const isAdminRole = ADMIN_ROLES.includes(user?.role);
+  const showOfflineBanner = isAdminRole && (user?._offline || pendingSync > 0);
+
   useEffect(() => {
-    if (!user?._offline) { setPendingSync(0); return; }
+    const hasPending = getPendingSyncCount() > 0;
+    if (!user?._offline && !hasPending) { setPendingSync(0); return; }
     const tick = () => setPendingSync(getPendingSyncCount());
     tick();
     const t = setInterval(tick, 3000);
@@ -217,6 +230,82 @@ export default function App() {
       setTimeout(() => setSyncMsg(""), 6000);
     }
   }, [fetchLeads]);
+
+  /**
+   * Auto-recovery: cada 60 s pingueamos Supabase. Cuando responde:
+   *   1. Si el usuario está en modo offline, intentamos un silent sign-in
+   *      con sus credenciales del equipo y lo pasamos a modo online sin
+   *      que se entere (no logout, no relogin manual).
+   *   2. Si hay cambios pendientes en localStorage, los sincronizamos
+   *      silenciosamente sin notificación al asesor.
+   *
+   * También se ejecuta al recuperar foco de la ventana (window focus +
+   * visibilitychange) para detectar la recuperación lo antes posible.
+   */
+  const autoRecoveryRunning = useRef(false);
+
+  const runAutoRecovery = useCallback(async () => {
+    if (autoRecoveryRunning.current) return;
+    if (!user) return;
+    if (user.id === 'demo-user-local') return;
+
+    const hasPending = getPendingSyncCount() > 0;
+    if (!user._offline && !hasPending) return;   // nada que hacer
+
+    autoRecoveryRunning.current = true;
+    try {
+      const alive = await pingSupabase(supabase, 3000);
+      if (!alive) return;                         // sigue caído, reintentar luego
+
+      // 1. Si estamos offline, intentar silent sign-in para volver a online
+      if (user._offline && user.email) {
+        const { ok, profile } = await silentSignIn(supabase, user.email);
+        if (ok && profile) {
+          upgradeToOnline(profile);
+          // El cambio de user disparará fetchLeads online vía effect
+        }
+      }
+
+      // 2. Si hay cambios pendientes, sincronizar silenciosamente
+      if (getPendingSyncCount() > 0) {
+        const { ok, synced } = await syncToSupabase(supabase);
+        setPendingSync(getPendingSyncCount());
+        if (ok && synced > 0) {
+          // Solo mostrar mensaje a admin/super (asesores no se enteran)
+          if (isAdminRole) {
+            setSyncMsg(`✅ ${synced} cambios sincronizados automáticamente.`);
+            setTimeout(() => setSyncMsg(""), 4000);
+          }
+          // Refrescar leads de Supabase para tener la versión canónica
+          fetchLeads();
+        }
+      }
+    } finally {
+      autoRecoveryRunning.current = false;
+    }
+  }, [user, upgradeToOnline, fetchLeads, isAdminRole]);
+
+  // Ciclo periódico cada 60 s
+  useEffect(() => {
+    if (!user) return;
+    if (user.id === 'demo-user-local') return;
+    const t = setInterval(runAutoRecovery, 60_000);
+    // Disparo inmediato a los 8 s del montaje (margen tras el timeout de auth)
+    const initial = setTimeout(runAutoRecovery, 8_000);
+    return () => { clearInterval(t); clearTimeout(initial); };
+  }, [user, runAutoRecovery]);
+
+  // Detección agresiva al recuperar foco / visibilidad
+  useEffect(() => {
+    const onWake = () => runAutoRecovery();
+    window.addEventListener("focus", onWake);
+    document.addEventListener("visibilitychange", () => {
+      if (!document.hidden) runAutoRecovery();
+    });
+    return () => {
+      window.removeEventListener("focus", onWake);
+    };
+  }, [runAutoRecovery]);
 
   /* ── IAOS ticker ── */
   const [iaosIdx, setIaosIdx] = useState(0);
@@ -385,8 +474,10 @@ export default function App() {
       `}</style>
       <style>{dynamicStyles}</style>
 
-      {/* ══ BANNER MODO OFFLINE ══ */}
-      {user?._offline && (
+      {/* ══ BANNER MODO OFFLINE — solo para roles administrativos ══
+            Asesores no ven nada: el modo offline + auto-sync es totalmente
+            transparente para ellos. */}
+      {showOfflineBanner && (
         <div style={{
           position: "fixed", top: 0, left: 0, right: 0, zIndex: 999,
           background: "linear-gradient(90deg, #F59E0B 0%, #EAB308 100%)",
@@ -398,7 +489,9 @@ export default function App() {
         }}>
           <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
             <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#0B1220", animation: "pulse 1.6s ease-in-out infinite" }} />
-            Modo offline — Supabase está temporalmente lento. Tus cambios se guardan localmente.
+            {user?._offline
+              ? "Modo offline — Supabase respondiendo lento. Cambios se sincronizan solos al volver."
+              : "Sincronización pendiente — los cambios se enviarán automáticamente."}
           </span>
           {pendingSync > 0 && (
             <span style={{
@@ -612,7 +705,12 @@ export default function App() {
           <div key={v} className="stratos-content-area" style={{ flex:1, padding:"18px 22px", overflowY:"auto", animation:"fadeIn 0.28s ease", display:"flex", flexDirection:"column" }}>
             {user?.role && MODULE_ROLES[v] && !MODULE_ROLES[v].includes(user.role)
               ? <PermissionGate moduleId={v} onGoBack={() => setV("c")} />
-              : <>
+              : <Suspense fallback={
+                  <div style={{ display:"flex", alignItems:"center", justifyContent:"center", padding:"60px 20px", color:T.txt3, fontFamily:font, fontSize:13 }}>
+                    <span style={{ display:"inline-block", width:20, height:20, border:`2px solid ${T.accent}40`, borderTopColor:T.accent, borderRadius:"50%", animation:"spin 0.8s linear infinite", marginRight:10 }} />
+                    Cargando…
+                  </div>
+                }>
                   {v === "d"      && <Dash oc={oc} leadsData={leadsData} T={T} />}
                   {v === "c"      && <CRM oc={oc} leadsData={leadsData} setLeadsData={setLeadsData} theme={theme} setTheme={setTheme} autoOpenPriority1={autoOpenPriority1} onAutoOpenHandled={() => setAutoOpenPriority1(0)} />}
                   {v === "ia"     && <IACRM oc={oc} T={T} theme={theme} />}
@@ -623,7 +721,7 @@ export default function App() {
                   {v === "rrhh"   && <RRHHModule T={T} />}
                   {v === "planes" && <PricingScreen embedded onBack={() => setV(isAsesorRole ? "c" : "d")} />}
                   {v === "admin"  && ["super_admin","admin"].includes(user?.role) && <AdminPanel />}
-                </>
+                </Suspense>
             }
           </div>
           <Chat open={co} onClose={() => setCo(false)} msgs={msgs} setMsgs={setMsgs} inp={inp} setInp={setInp} />

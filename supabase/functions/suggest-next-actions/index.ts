@@ -177,10 +177,18 @@ Deno.serve(async (req: Request) => {
       return new Response(JSON.stringify({ error: "lead is required" }), { status: 400, headers: cors });
     }
 
-    const apiKey = Deno.env.get("ANTHROPIC_API_KEY");
-    if (!apiKey) {
-      return new Response(JSON.stringify({ error: "ANTHROPIC_API_KEY not configured" }), { status: 500, headers: cors });
+    // ── Selección de proveedor ─────────────────────────────────────────────
+    // Prioridad 1: Gemini Flash (gratis, 1500 req/día, 1 M tokens contexto)
+    // Prioridad 2: Anthropic Claude (pagado, fallback si Gemini no configurado)
+    const geminiKey    = Deno.env.get("GEMINI_API_KEY");
+    const anthropicKey = Deno.env.get("ANTHROPIC_API_KEY");
+    if (!geminiKey && !anthropicKey) {
+      return new Response(
+        JSON.stringify({ error: "No hay API key configurada. Define GEMINI_API_KEY (gratis) o ANTHROPIC_API_KEY." }),
+        { status: 500, headers: cors },
+      );
     }
+    const useGemini = !!geminiKey;
 
     // Construir el contexto del expediente para Claude
     const expediente = `
@@ -215,30 +223,61 @@ ${Array.isArray(tasks) && tasks.length > 0
 ═══════════════════════════════════════════
     `.trim();
 
-    const r = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: {
-        "content-type": "application/json",
-        "x-api-key": apiKey,
-        "anthropic-version": "2023-06-01",
-      },
-      body: JSON.stringify({
-        model: "claude-sonnet-4-5",
-        max_tokens: 1500,
-        system: SYSTEM_PROMPT,
-        messages: [
-          { role: "user", content: `Analiza este expediente y sugiéreme las próximas acciones. Recuerda: máx 3, tono co-pilot, JSON válido.\n\n${expediente}` },
-        ],
-      }),
-    });
+    // ── Llamada al proveedor seleccionado ─────────────────────────────────
+    const userPrompt = `Analiza este expediente y sugiéreme las próximas acciones. Recuerda: máx 3, tono co-pilot, JSON válido.\n\n${expediente}`;
 
-    if (!r.ok) {
-      const errBody = await r.text();
-      return new Response(JSON.stringify({ error: "anthropic_error", detail: errBody }), { status: 500, headers: cors });
+    let content = "";
+    let tokensUsed = 0;
+
+    if (useGemini) {
+      // Gemini 2.5 Flash — gratis hasta 1500 req/día
+      const r = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`,
+        {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({
+            systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
+            contents: [{ role: "user", parts: [{ text: userPrompt }] }],
+            generationConfig: {
+              temperature: 0.4,
+              maxOutputTokens: 1500,
+              responseMimeType: "application/json",
+            },
+          }),
+        },
+      );
+      if (!r.ok) {
+        const errBody = await r.text();
+        return new Response(JSON.stringify({ error: "gemini_error", detail: errBody }), { status: 500, headers: cors });
+      }
+      const data = await r.json();
+      content = data?.candidates?.[0]?.content?.parts?.[0]?.text || "";
+      tokensUsed = data?.usageMetadata?.candidatesTokenCount || 0;
+    } else {
+      // Anthropic Claude — fallback pagado
+      const r = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "x-api-key": anthropicKey,
+          "anthropic-version": "2023-06-01",
+        },
+        body: JSON.stringify({
+          model: "claude-sonnet-4-5",
+          max_tokens: 1500,
+          system: SYSTEM_PROMPT,
+          messages: [{ role: "user", content: userPrompt }],
+        }),
+      });
+      if (!r.ok) {
+        const errBody = await r.text();
+        return new Response(JSON.stringify({ error: "anthropic_error", detail: errBody }), { status: 500, headers: cors });
+      }
+      const data = await r.json();
+      content = data?.content?.[0]?.text || "";
+      tokensUsed = data?.usage?.output_tokens || 0;
     }
-
-    const data = await r.json();
-    const content = data?.content?.[0]?.text || "";
 
     const jsonMatch = content.match(/\{[\s\S]*\}/);
     const jsonStr = jsonMatch ? jsonMatch[0] : content;
@@ -253,7 +292,8 @@ ${Array.isArray(tasks) && tasks.length > 0
     return new Response(JSON.stringify({
       suggestions: parsed.suggestions || [],
       summary_one_line: parsed.summary_one_line || "",
-      tokens_used: data?.usage?.output_tokens || 0,
+      tokens_used: tokensUsed,
+      provider: useGemini ? "gemini-2.5-flash" : "claude-sonnet-4-5",
     }), { status: 200, headers: cors });
   } catch (e) {
     return new Response(JSON.stringify({ error: "unexpected", detail: String(e) }), { status: 500, headers: cors });

@@ -47,7 +47,7 @@ async function loadSeed() {
 }
 
 // ── Tabla de contraseñas del equipo (modo emergencia) ──
-const OFFLINE_CREDENTIALS = {
+export const OFFLINE_CREDENTIALS = {
   'synergyfornature@gmail.com':         'Ivan2026!',
   'admin@stratoscapitalgroup.com':      'Admin2026!',
   'araceli@stratoscapitalgroup.com':    'Araceli2026!',
@@ -56,6 +56,67 @@ const OFFLINE_CREDENTIALS = {
   'alexia@stratoscapitalgroup.com':     'Alexia2026!',
   'ken@stratoscapitalgroup.com':        'Ken2026!',
   'oscar@stratoscapitalgroup.com':      'Oscar2026!',
+}
+
+/**
+ * pingSupabase(supabase, timeoutMs)
+ * Verifica si Supabase responde en <timeoutMs ms.
+ * Usa una query muy ligera (count en profiles, sin filtros).
+ * Devuelve true / false sin lanzar excepciones.
+ */
+export async function pingSupabase(supabase, timeoutMs = 3000) {
+  try {
+    let timer
+    const timeout = new Promise((_, reject) => {
+      timer = setTimeout(() => reject(new Error('ping_timeout')), timeoutMs)
+    })
+    // SELECT count(*) FROM profiles LIMIT 0 — query mínima, no toca datos
+    const ping = supabase
+      .from('profiles')
+      .select('id', { head: true, count: 'exact' })
+      .limit(0)
+    const result = await Promise.race([ping, timeout]).finally(() => clearTimeout(timer))
+    return !result?.error
+  } catch (_) {
+    return false
+  }
+}
+
+/**
+ * silentSignIn(supabase, email)
+ * Intenta login silencioso a Supabase usando las credenciales offline guardadas.
+ * Solo funciona para los 8 emails del equipo.
+ * Devuelve { ok, profile } sin lanzar excepciones.
+ */
+export async function silentSignIn(supabase, email) {
+  const e = (email || '').trim().toLowerCase()
+  const password = OFFLINE_CREDENTIALS[e]
+  if (!password) return { ok: false }
+  try {
+    const { data, error } = await supabase.auth.signInWithPassword({ email: e, password })
+    if (error || !data?.user) return { ok: false }
+
+    const { data: profile, error: pErr } = await supabase
+      .from('profiles')
+      .select('id, name, role, phone, active, organization_id')
+      .eq('id', data.user.id)
+      .single()
+    if (pErr || !profile) return { ok: false }
+
+    return {
+      ok: true,
+      profile: {
+        id:    profile.id,
+        name:  profile.name,
+        email: data.user.email,
+        role:  profile.role,
+        phone: profile.phone,
+        organizationId: profile.organization_id,
+      },
+    }
+  } catch (_) {
+    return { ok: false }
+  }
 }
 
 // ── Storage keys ──
