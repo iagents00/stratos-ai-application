@@ -162,6 +162,13 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
     if (notesLead?.id      === withScore.id) setNotesLead(withScore);
     if (analyzingLead?.id  === withScore.id) setAnalyzingLead(withScore);
 
+    // ── Modo demo — NO persistir en Supabase ─────────────────────────
+    // Los leads demo tienen IDs numéricos ("1","2","5") que no son UUIDs,
+    // y el demo user no debe escribir en la base de datos real.
+    if (user?.id === 'demo-user-local' || user?.isDemo) {
+      return;
+    }
+
     // Persistir en Supabase (sin bloquear la UI)
     supabase.from('leads').update({
       name:             withScore.n ?? withScore.name,
@@ -346,7 +353,11 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
       ? crypto.randomUUID()
       : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
 
-    const { data: saved, error: insertError } = await supabase.from('leads').insert({
+    // ── Modo demo — NO insertar en Supabase ─────────────────────────
+    const isDemo = user?.id === 'demo-user-local' || user?.isDemo;
+    const { data: saved, error: insertError } = isDemo
+      ? { data: null, error: null }
+      : await supabase.from('leads').insert({
       name:             newLead.n.trim(),
       phone:            newLead.phone || null,
       email:            newLead.email || null,
