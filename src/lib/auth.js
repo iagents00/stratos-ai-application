@@ -40,9 +40,11 @@ function withTimeout(promise, ms = TIMEOUT_MS, label = 'operación') {
 }
 
 /**
- * Mensaje amigable cuando Supabase no responde a tiempo.
+ * Mensaje amigable cuando el servicio no responde a tiempo.
+ * Sin mencionar Supabase ni servicios técnicos — el asesor no debe
+ * ver detalles de infraestructura.
  */
-const TIMEOUT_MESSAGE = 'El servicio está respondiendo lento. Intenta de nuevo en 1 minuto. Si persiste, revisa status.supabase.com'
+const TIMEOUT_MESSAGE = 'Servicio temporalmente lento. Intenta de nuevo en 1 minuto.'
 
 /**
  * Detecta si un error vino del wrapper withTimeout.
