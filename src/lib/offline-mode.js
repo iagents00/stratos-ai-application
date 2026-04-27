@@ -48,8 +48,12 @@ async function loadSeed() {
 
 // ── Tabla de contraseñas del equipo (modo emergencia) ──
 export const OFFLINE_CREDENTIALS = {
+  // DEV / SUPER ADMIN — ven mensajes técnicos, errores, banner offline
   'synergyfornature@gmail.com':         'Ivan2026!',
   'admin@stratoscapitalgroup.com':      'Admin2026!',
+  // DIRECCIÓN — UX limpia (sin mensajes técnicos), acceso completo a CRM
+  'direccion@stratoscapitalgroup.com':  'Direccion2026!',
+  // ASESORES — UX limpia, ven solo sus leads
   'araceli@stratoscapitalgroup.com':    'Araceli2026!',
   'cecilia@stratoscapitalgroup.com':    'Cecilia2026!',
   'emmanuel@stratoscapitalgroup.com':   'Emmanuel2026!',

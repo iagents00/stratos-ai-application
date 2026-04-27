@@ -217,10 +217,10 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
     }
 
     // Persistir en Supabase (sin bloquear la UI)
-    // Para asesores: experiencia totalmente silenciosa. Si Supabase falla,
-    // se encola en localStorage y se sincroniza después sin que se enteren.
-    // Para admins: ven mensajes técnicos para diagnóstico.
-    const isAdminUser = ["super_admin", "admin", "ceo"].includes(user?.role);
+    // Solo el equipo dev (super_admin) ve mensajes técnicos. Directivos
+    // (admin) y asesores tienen experiencia 100% limpia: el guardado es
+    // exitoso desde su perspectiva aunque Supabase falle (queda en cola).
+    const isAdminUser = ["super_admin"].includes(user?.role);
     supabase.from('leads').update(payload).eq('id', withScore.id).then(({ error }) => {
       if (error) {
         console.error('Error guardando lead:', error.message);
