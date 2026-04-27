@@ -217,24 +217,31 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
     }
 
     // Persistir en Supabase (sin bloquear la UI)
+    // Para asesores: experiencia totalmente silenciosa. Si Supabase falla,
+    // se encola en localStorage y se sincroniza después sin que se enteren.
+    // Para admins: ven mensajes técnicos para diagnóstico.
+    const isAdminUser = ["super_admin", "admin", "ceo"].includes(user?.role);
     supabase.from('leads').update(payload).eq('id', withScore.id).then(({ error }) => {
       if (error) {
         console.error('Error guardando lead:', error.message);
-        // Fallback: si Supabase falla y tenemos al usuario, encolar offline
         if (user?.id) {
           updateOfflineLead(withScore.id, payload, user);
-          showToast('Guardado localmente (Supabase lento). Se sincronizará después.');
-        } else {
+          if (isAdminUser) {
+            showToast('Guardado localmente. Se sincronizará al volver Supabase.');
+          }
+          // Asesor: silencio total — el guardado fue exitoso desde su perspectiva.
+        } else if (isAdminUser) {
           showToast(`Error al guardar "${withScore.n}": ${error.message}`);
         }
       }
     }).catch((err) => {
       console.error('Error de red al guardar lead:', err?.message);
-      // Fallback offline en caso de error de red
       if (user?.id) {
         updateOfflineLead(withScore.id, payload, user);
-        showToast('Sin conexión — guardado localmente, se sincronizará al volver.');
-      } else {
+        if (isAdminUser) {
+          showToast('Sin conexión — guardado localmente, se sincronizará al volver.');
+        }
+      } else if (isAdminUser) {
         showToast('Sin conexión — verifica tu red e intenta de nuevo.');
       }
     });
