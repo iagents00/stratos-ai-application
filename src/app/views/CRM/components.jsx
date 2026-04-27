@@ -1086,9 +1086,11 @@ const NextActionHero = ({ lead, T = P, onUpdate = null }) => {
    saltar entre las 3 vistas del lead sin cerrar el drawer.
 ═══════════════════════════════════════════ */
 const DRAWER_TABS = [
-  { id: "analisis",   label: "Análisis IA", shortLabel: "IA",     colorKey: "accent" },
-  { id: "perfil",     label: "Perfil",      shortLabel: "Perfil", colorKey: "violet" },
+  // Expediente primero — es donde el asesor pasa el 90% del tiempo
   { id: "expediente", label: "Expediente",  shortLabel: "Exped.", colorKey: "blue"   },
+  { id: "perfil",     label: "Perfil",      shortLabel: "Perfil", colorKey: "violet" },
+  // Análisis IA bloqueado por ahora — se desbloqueará en siguiente etapa
+  { id: "analisis",   label: "Análisis IA", shortLabel: "IA",     colorKey: "accent", locked: true, lockReason: "Próximamente" },
 ];
 
 const DrawerTabIsland = ({ current, onSwitch, T = P }) => {
@@ -1118,8 +1120,11 @@ const DrawerTabIsland = ({ current, onSwitch, T = P }) => {
     }}>
       {DRAWER_TABS.map(tab => {
         const active = tab.id === current;
+        const locked = !!tab.locked;
         const color = T[tab.colorKey] || T.accent;
-        const txtC  = active ? safeC(color) : (isLight ? T.txt2 : T.txt3);
+        const txtC  = locked
+          ? T.txt3
+          : (active ? safeC(color) : (isLight ? T.txt2 : T.txt3));
         const iconNode =
           tab.id === "analisis"   ? <StratosAtom size={13} color={txtC} />
         : tab.id === "perfil"     ? <User size={13} color={txtC} strokeWidth={2.2} />
@@ -1128,30 +1133,36 @@ const DrawerTabIsland = ({ current, onSwitch, T = P }) => {
         return (
           <button
             key={tab.id}
-            onClick={() => !active && onSwitch?.(tab.id)}
+            onClick={() => { if (!active && !locked) onSwitch?.(tab.id); }}
+            disabled={locked}
+            title={locked ? tab.lockReason || "Próximamente" : tab.label}
             style={{
               height: 38, padding: "0 14px", borderRadius: 999,
               border: "none",
-              background: active
-                ? (isLight ? `${color}22` : `${color}26`)
-                : "transparent",
+              background: locked
+                ? "transparent"
+                : (active
+                  ? (isLight ? `${color}22` : `${color}26`)
+                  : "transparent"),
               color: txtC,
+              opacity: locked ? 0.45 : 1,
               fontSize: 12.5, fontWeight: active ? 700 : 600,
               fontFamily: font, letterSpacing: "0.01em",
-              cursor: active ? "default" : "pointer",
+              cursor: locked ? "not-allowed" : (active ? "default" : "pointer"),
               display: "flex", alignItems: "center", gap: 7,
               transition: "all 0.22s cubic-bezier(0.4, 0, 0.2, 1)",
-              boxShadow: active && isLight ? `inset 0 1px 0 rgba(255,255,255,0.55)` : "none",
+              boxShadow: active && isLight && !locked ? `inset 0 1px 0 rgba(255,255,255,0.55)` : "none",
               whiteSpace: "nowrap",
+              position: "relative",
             }}
             onMouseEnter={e => {
-              if (!active) {
+              if (!active && !locked) {
                 e.currentTarget.style.background = isLight ? "rgba(15,23,42,0.05)" : "rgba(255,255,255,0.06)";
                 e.currentTarget.style.color = isLight ? T.txt : "#FFFFFF";
               }
             }}
             onMouseLeave={e => {
-              if (!active) {
+              if (!active && !locked) {
                 e.currentTarget.style.background = "transparent";
                 e.currentTarget.style.color = txtC;
               }
@@ -1159,6 +1170,11 @@ const DrawerTabIsland = ({ current, onSwitch, T = P }) => {
           >
             {iconNode}
             <span>{tab.label}</span>
+            {locked && (
+              <span aria-hidden style={{
+                fontSize: 10, marginLeft: 2, opacity: 0.7,
+              }}>🔒</span>
+            )}
           </button>
         );
       })}
@@ -1892,6 +1908,238 @@ const TaskChecklist = ({ lead, onUpdate, T = P }) => {
 };
 
 /* ═══════════════════════════════════════════════════════════════════════════
+   PLAYBOOK SECTION — Lista de 4-5 acciones específicas para este cliente
+   alineadas con el Protocolo Duke del Caribe.
+
+   Cada acción incluye: técnica de venta, razón (por qué hacerlo ahora),
+   categoría visual (reactivación / calificación / cita / etc).
+
+   El asesor puede tickearlas como completadas. Es una "checklist viva"
+   que cambia según la situación del lead.
+═══════════════════════════════════════════════════════════════════════════ */
+const PLAYBOOK_CATEGORIES = {
+  reactivacion: { label: "Reactivación",   colorKey: "rose"    },
+  calificacion: { label: "Calificación",   colorKey: "blue"    },
+  cita:         { label: "Avance",         colorKey: "accent"  },
+  propuesta:    { label: "Propuesta",      colorKey: "violet"  },
+  cierre:       { label: "Cierre",         colorKey: "emerald" },
+  retencion:    { label: "Post-venta",     colorKey: "cyan"    },
+};
+
+const PlaybookSection = ({ lead, T = P, onUpdate = null, onShowSuggest = null }) => {
+  const isLight = T !== P;
+  const [expanded, setExpanded] = useState(false);
+  const playbook = Array.isArray(lead?.playbook) ? lead.playbook : [];
+  if (playbook.length === 0) return null;
+
+  // Calcular progreso
+  const completed = playbook.filter(p => p.completed).length;
+  const total     = playbook.length;
+  const progress  = Math.round((completed / total) * 100);
+
+  // Mostrar 3 primero, expandir para ver todos
+  const visible = expanded ? playbook : playbook.slice(0, 3);
+
+  const safeC = (c) => isLight ? `color-mix(in srgb, ${c} 60%, #0B1220 40%)` : c;
+  const headerC = isLight ? `color-mix(in srgb, ${T.violet} 58%, #0B1220 42%)` : T.violet;
+
+  const toggleItem = (idx) => {
+    if (typeof onUpdate !== 'function') return;
+    const updated = playbook.map((p, i) =>
+      i === idx ? { ...p, completed: !p.completed, completed_at: !p.completed ? new Date().toISOString() : null } : p
+    );
+    onUpdate({ ...lead, playbook: updated });
+  };
+
+  return (
+    <div style={{
+      marginBottom: 16,
+      borderRadius: 14,
+      border: `1px solid ${T.violet}${isLight ? "26" : "1E"}`,
+      background: isLight ? `${T.violet}06` : `${T.violet}08`,
+      overflow: "hidden",
+      position: "relative",
+    }}>
+      {/* Halo decorativo */}
+      <div aria-hidden style={{
+        position: "absolute", top: -40, right: -40, width: 160, height: 160,
+        background: `radial-gradient(circle, ${T.violet}${isLight ? "12" : "1A"} 0%, transparent 70%)`,
+        pointerEvents: "none",
+      }} />
+
+      {/* Header */}
+      <div style={{
+        padding: "12px 16px",
+        borderBottom: `1px solid ${T.violet}${isLight ? "20" : "16"}`,
+        display: "flex", alignItems: "center", gap: 10,
+        position: "relative",
+      }}>
+        <div style={{
+          width: 28, height: 28, borderRadius: 8,
+          background: `linear-gradient(135deg, ${T.violet}26, ${T.violet}10)`,
+          border: `1px solid ${T.violet}40`,
+          display: "flex", alignItems: "center", justifyContent: "center",
+          flexShrink: 0,
+          boxShadow: `0 0 12px ${T.violet}1C`,
+        }}>
+          <span style={{ fontSize: 14 }}>🎯</span>
+        </div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <p style={{
+            margin: 0, fontSize: 11, fontWeight: 800, color: headerC,
+            letterSpacing: "0.10em", textTransform: "uppercase", fontFamily: fontDisp,
+          }}>
+            Playbook personalizado
+          </p>
+          <p style={{
+            margin: "2px 0 0", fontSize: 10.5, color: T.txt3, fontFamily: font,
+          }}>
+            {total} acciones del Protocolo Duke para este cliente
+          </p>
+        </div>
+        {/* Botón IA (sutil) — abre el modal de sugerencias contextuales */}
+        {typeof onShowSuggest === 'function' && (
+          <button
+            onClick={onShowSuggest}
+            title="Pedir sugerencias adicionales con IA"
+            aria-label="Sugerencias IA"
+            style={{
+              width: 28, height: 28, borderRadius: 8,
+              border: `1px solid ${T.violet}${isLight ? "26" : "1E"}`,
+              background: `${T.violet}${isLight ? "10" : "0E"}`,
+              cursor: "pointer", padding: 0,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              transition: "all 0.18s",
+              flexShrink: 0,
+            }}
+            onMouseEnter={e => { e.currentTarget.style.background = `${T.violet}${isLight ? "1C" : "16"}`; e.currentTarget.style.borderColor = `${T.violet}${isLight ? "44" : "32"}`; }}
+            onMouseLeave={e => { e.currentTarget.style.background = `${T.violet}${isLight ? "10" : "0E"}`; e.currentTarget.style.borderColor = `${T.violet}${isLight ? "26" : "1E"}`; }}
+          >
+            <span style={{ fontSize: 13 }}>💡</span>
+          </button>
+        )}
+
+        {/* Progreso */}
+        <div style={{
+          padding: "4px 10px", borderRadius: 99,
+          background: progress > 0 ? `${T.emerald}14` : T.glass,
+          border: `1px solid ${progress > 0 ? `${T.emerald}30` : T.border}`,
+          fontSize: 10.5, fontWeight: 700, fontFamily: fontDisp,
+          color: progress > 0 ? safeC(T.emerald) : T.txt3,
+        }}>
+          {completed}/{total}
+        </div>
+      </div>
+
+      {/* Items */}
+      <div style={{ padding: "8px 0" }}>
+        {visible.map((item, idx) => {
+          const realIdx = playbook.indexOf(item);
+          const cat = PLAYBOOK_CATEGORIES[item.category] || { label: item.category, colorKey: "txt2" };
+          const catColor = T[cat.colorKey] || T.txt2;
+          const catC = safeC(catColor);
+          const done = !!item.completed;
+
+          return (
+            <div key={item.id || idx} style={{
+              padding: "10px 16px",
+              borderBottom: idx < visible.length - 1 ? `1px solid ${T.violet}${isLight ? "10" : "0A"}` : "none",
+              display: "flex", alignItems: "flex-start", gap: 10,
+              opacity: done ? 0.55 : 1,
+              transition: "opacity 0.18s",
+            }}>
+              {/* Checkbox */}
+              <button
+                onClick={() => toggleItem(realIdx)}
+                aria-label={done ? "Marcar como pendiente" : "Marcar como completada"}
+                style={{
+                  flexShrink: 0, marginTop: 2,
+                  width: 20, height: 20, borderRadius: 6,
+                  background: done ? T.emerald : "transparent",
+                  border: `1.5px solid ${done ? T.emerald : (isLight ? "rgba(15,23,42,0.20)" : "rgba(255,255,255,0.20)")}`,
+                  cursor: typeof onUpdate === 'function' ? "pointer" : "default",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  transition: "all 0.16s",
+                  color: "#FFFFFF",
+                  fontSize: 12, fontWeight: 800,
+                }}
+                onMouseEnter={e => { if (!done) e.currentTarget.style.borderColor = T.emerald; }}
+                onMouseLeave={e => { if (!done) e.currentTarget.style.borderColor = isLight ? "rgba(15,23,42,0.20)" : "rgba(255,255,255,0.20)"; }}
+              >
+                {done && "✓"}
+              </button>
+
+              {/* Contenido */}
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 4, flexWrap: "wrap" }}>
+                  <span style={{ fontSize: 14 }}>{item.icon}</span>
+                  <span style={{
+                    fontSize: 9, fontWeight: 800, color: catC,
+                    background: `${catColor}${isLight ? "14" : "10"}`,
+                    border: `1px solid ${catColor}${isLight ? "26" : "1E"}`,
+                    padding: "2px 7px", borderRadius: 99,
+                    letterSpacing: "0.06em", textTransform: "uppercase",
+                    fontFamily: fontDisp,
+                  }}>{cat.label}</span>
+                </div>
+                <p style={{
+                  margin: 0, fontSize: 12.5, fontWeight: 600,
+                  color: isLight ? T.txt : "#FFFFFF",
+                  fontFamily: fontDisp, lineHeight: 1.45,
+                  textDecoration: done ? "line-through" : "none",
+                }}>
+                  {item.action}
+                </p>
+                {item.technique && (
+                  <p style={{
+                    margin: "4px 0 0", fontSize: 11, color: T.txt3,
+                    fontFamily: font, lineHeight: 1.5,
+                  }}>
+                    <span style={{ fontWeight: 700, color: catC }}>Técnica:</span> {item.technique}
+                  </p>
+                )}
+                {item.reason && (
+                  <p style={{
+                    margin: "2px 0 0", fontSize: 11, color: T.txt3,
+                    fontFamily: font, lineHeight: 1.5, fontStyle: "italic",
+                  }}>
+                    {item.reason}
+                  </p>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Toggle expandir */}
+      {playbook.length > 3 && (
+        <div style={{ padding: "8px 16px 12px", borderTop: `1px solid ${T.violet}${isLight ? "12" : "0E"}` }}>
+          <button
+            onClick={() => setExpanded(e => !e)}
+            style={{
+              width: "100%",
+              padding: "7px 12px", borderRadius: 8,
+              background: "transparent",
+              border: `1px dashed ${T.violet}${isLight ? "30" : "26"}`,
+              color: headerC,
+              fontSize: 11, fontWeight: 700, fontFamily: fontDisp,
+              cursor: "pointer",
+              transition: "all 0.18s",
+              letterSpacing: "0.04em",
+            }}
+            onMouseEnter={e => { e.currentTarget.style.background = `${T.violet}${isLight ? "08" : "0E"}`; }}
+            onMouseLeave={e => { e.currentTarget.style.background = "transparent"; }}
+          >
+            {expanded ? "Ver menos" : `Ver las ${playbook.length - 3} acciones restantes`}
+          </button>
+        </div>
+      )}
+    </div>
+  );
+};
+
+/* ═══════════════════════════════════════════════════════════════════════════
    ACTION TIMELINE — historial cronológico de acciones completadas.
    Se auto-popula cuando: se completa una tarea, cambia la próxima acción.
    Aparece en: Expediente (NotesModal) como sección principal.
@@ -1955,7 +2203,7 @@ const ActionTimeline = ({ lead, T = P, maxItems = 6 }) => {
   );
 };
 
-const NotesModal = ({ lead, onClose, onSave, onUpdate, onSwitchTab, T = P }) => {
+const NotesModal = ({ lead, onClose, onSave, onUpdate, onSwitchTab, onShowHistory, onShowSuggest, T = P }) => {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState("");
   const [expedienteItems, setExpedienteItems] = useState(() => {
@@ -2018,13 +2266,14 @@ const NotesModal = ({ lead, onClose, onSave, onUpdate, onSwitchTab, T = P }) => 
                 <p style={{ margin: 0, fontSize: 11, color: T.txt3, fontFamily: font }}>Todo sobre el cliente en un vistazo</p>
               </div>
             </div>
-            <div style={{ display: "flex", gap: 7 }}>
+            <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
               {!editing && (
                 <button
                   onClick={() => setUpdateChatOpen(true)}
+                  title="Registrar lo que pasó con el cliente"
                   style={{
                     display: "flex", alignItems: "center", gap: 6,
-                    padding: "7px 14px", borderRadius: 8,
+                    padding: "7px 12px", borderRadius: 8,
                     border: `1px solid ${T.accentB}`,
                     background: `${T.accent}10`,
                     color: isLight ? `color-mix(in srgb, ${T.accent} 62%, #0B1220 38%)` : T.accent,
@@ -2038,9 +2287,28 @@ const NotesModal = ({ lead, onClose, onSave, onUpdate, onSwitchTab, T = P }) => 
                   Actualizar
                 </button>
               )}
-              <button onClick={onClose} style={{ width: 30, height: 30, borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.18s" }}
-                onMouseEnter={e => e.currentTarget.style.background = T.glassH}
-                onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+              {!editing && typeof onShowHistory === 'function' && (
+                <button
+                  onClick={onShowHistory}
+                  title="Ver historial de cambios"
+                  aria-label="Ver historial"
+                  style={{
+                    width: 30, height: 30, borderRadius: 8,
+                    border: `1px solid ${T.border}`,
+                    background: "transparent",
+                    cursor: "pointer",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    transition: "all 0.18s",
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.background = T.glassH; e.currentTarget.style.borderColor = T.borderH; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = T.border; }}
+                >
+                  <Clock size={13} color={T.txt3} strokeWidth={2.2} />
+                </button>
+              )}
+              <button onClick={onClose} title="Cerrar" style={{ width: 30, height: 30, borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.18s" }}
+                onMouseEnter={e => { e.currentTarget.style.background = T.glassH; e.currentTarget.style.borderColor = T.borderH; }}
+                onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = T.border; }}
               ><X size={13} color={T.txt3} /></button>
             </div>
           </div>
@@ -2085,6 +2353,8 @@ const NotesModal = ({ lead, onClose, onSave, onUpdate, onSwitchTab, T = P }) => 
               <StageBadge lead={lead} onUpdate={onUpdate} T={T} />
             </div>
           )}
+          {/* ── Playbook personalizado — checklist de acciones del Protocolo Duke ── */}
+          {!editing && <PlaybookSection lead={lead} T={T} onUpdate={onUpdate} onShowSuggest={onShowSuggest} />}
           {/* ── Historial de acciones — siempre visible en lectura ── */}
           {!editing && <ActionTimeline lead={lead} T={T} />}
 
@@ -2207,7 +2477,7 @@ const COACHING_MOCKS = [
   },
 ];
 
-const LeadPanel = ({ lead, onClose, oc, onUpdate, onSwitchTab, T = P }) => {
+const LeadPanel = ({ lead, onClose, oc, onUpdate, onSwitchTab, onShowHistory, T = P }) => {
   const [activeTab, setActiveTab] = useState("perfil");
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState(null);
@@ -2333,7 +2603,13 @@ const LeadPanel = ({ lead, onClose, oc, onUpdate, onSwitchTab, T = P }) => {
                 onMouseEnter={e => e.currentTarget.style.background = panelCopied ? `${T.accent}22` : T.glassH}
                 onMouseLeave={e => e.currentTarget.style.background = panelCopied ? `${T.accent}18` : "transparent"}
               >{panelCopied ? <Check size={13} strokeWidth={2.8} /> : <Copy size={13} strokeWidth={2} />}</button>
-              <button onClick={onClose} style={{ width: 30, height: 30, borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.18s" }} onMouseEnter={e => e.currentTarget.style.background = T.glassH} onMouseLeave={e => e.currentTarget.style.background = "transparent"}><X size={13} color={T.txt3} /></button>
+              {!editing && typeof onShowHistory === 'function' && (
+                <button onClick={onShowHistory} title="Ver historial de cambios" aria-label="Historial" style={{ width: 30, height: 30, borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.18s" }}
+                  onMouseEnter={e => { e.currentTarget.style.background = T.glassH; e.currentTarget.style.borderColor = T.borderH; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = T.border; }}
+                ><Clock size={13} color={T.txt3} strokeWidth={2.2} /></button>
+              )}
+              <button onClick={onClose} title="Cerrar" style={{ width: 30, height: 30, borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.18s" }} onMouseEnter={e => { e.currentTarget.style.background = T.glassH; e.currentTarget.style.borderColor = T.borderH; }} onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = T.border; }}><X size={13} color={T.txt3} /></button>
             </div>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 14 }}>
