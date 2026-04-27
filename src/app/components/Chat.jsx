@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { X, ArrowRight, Send, Mic2, MicOff, Target, Shield, Zap } from "lucide-react";
+import { X, ArrowRight, Send, Mic2, MicOff, Target, Shield, Zap, User } from "lucide-react";
 import { P, font, fontDisp } from "../../design-system/tokens";
 import { StratosAtom, Ico } from "../../design-system/primitives";
 import { getResp, examples } from "../data/chat";

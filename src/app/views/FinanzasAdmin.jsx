@@ -1,11 +1,14 @@
 import { useState } from "react";
+import { createPortal } from "react-dom";
 import {
   Receipt, CreditCard, BookOpen, PiggyBank, ArrowDownLeft, DollarSign,
   ClipboardList, FilePlus, RefreshCw, BadgeCheck, ListChecks,
   Landmark, Scale, Calculator, Building2, Users, AlertCircle,
   TrendingUp, TrendingDown, CheckCircle2, FileText, Plus, X,
   ChevronDown, ChevronUp, BarChart3, Activity, Banknote, Percent,
-  ArrowUpRight, Shield, Calendar
+  ArrowUpRight, Shield, Calendar, CalendarDays, Check,
+  AlertTriangle, CheckSquare, Clock, Home, Maximize2,
+  User, Wallet,
 } from "lucide-react";
 import { AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import { P, LP, font, fontDisp } from "../../design-system/tokens";

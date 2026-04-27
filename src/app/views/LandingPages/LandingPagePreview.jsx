@@ -7,12 +7,13 @@ import {
   TrendingUp, Target, Plus, Heart, Users, Crown, Building2,
   Globe, Palmtree, Waves, Wand2, Image, Download, ExternalLink,
   Copy, Check, Trash2, ChevronDown, ChevronRight, Eye, Share2,
-  DollarSign, Shield, MapPin, FileText, X, Phone, CalendarDays, User
+  DollarSign, Shield, MapPin, FileText, X, Phone, CalendarDays, User,
+  Calendar, Home, Maximize2,
 } from "lucide-react";
 import { P, font, fontDisp } from "../../../design-system/tokens";
 import { G, KPI, Pill, Ico } from "../../SharedComponents";
 
-const LandingPagePreview = ({ client, asesor, asesorWA = "", asesorCal = "", mensaje, agencyName = "STRATOS REALTY", properties, onClose, onCopyLink, copied, driveLinks = {} }) => {
+const LandingPagePreview = ({ client, asesor, asesorWA = "", asesorCal = "", mensaje, agencyName = "STRATOS REALTY", properties, onClose, onCopyLink, copied, driveLinks = {}, T = P }) => {
   const [activeProperty, setActiveProperty] = useState(0);
   const [showSharePanel, setShowSharePanel] = useState(false);
 
