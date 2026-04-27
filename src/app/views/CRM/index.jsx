@@ -75,7 +75,9 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
   useEffect(() => {
     if (!autoOpenPriority1) return;
     const lead = priorityLeadsRef.current[0];
-    if (lead) { setSelectedLead(null); setNotesLead(null); setAnalyzingLead(lead); }
+    // Abrir directo en Expediente — donde el asesor ve notas + próxima acción + historial.
+    // El switcher inferior le permite saltar a Perfil o Análisis IA si lo necesita.
+    if (lead) { setSelectedLead(null); setAnalyzingLead(null); setNotesLead(lead); }
     onAutoOpenHandled?.();
   }, [autoOpenPriority1]); // priorityLeadsRef is a ref, always current
   const [addingLead, setAddingLead]     = useState(false);
@@ -941,8 +943,8 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                     onDragOver={e => { e.stopPropagation(); handleCardDragOver(e, cardIdx); }}
                     onDrop={e => { e.stopPropagation(); handleCardDrop(e); }}
                     onDragEnd={handleCardDragEnd}
-                    onClick={() => { if (!dragCardId && !isDraggingCard) setSelectedLead(l); }}
-                    title="Click para ver perfil completo · arrastrar para reordenar"
+                    onClick={() => { if (!dragCardId && !isDraggingCard) setNotesLead(l); }}
+                    title="Click para abrir expediente · arrastrar para reordenar"
                     style={{
                       width: co ? 256 : 288, flexShrink: 0,
                       borderRadius: 18, overflow: "hidden",
@@ -1265,7 +1267,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                           <FollowUpBadge lead={l} onUpdate={updateLead} T={T} fullWidth tint={meta.color} />
                         </div>
                         <button
-                          onClick={e => { e.stopPropagation(); setSelectedLead(l); }}
+                          onClick={e => { e.stopPropagation(); setNotesLead(l); }}
                           style={{
                             width: "100%", height: 40, padding: "0 16px",
                             boxSizing: "border-box", borderRadius: 10,
