@@ -49,6 +49,14 @@ Crea los usuarios del equipo en Supabase Auth en lote, asigna roles, y genera un
 - **Auto-confirma email:** los usuarios pueden entrar sin verificar correo (útil para setup rápido).
 - **Passwords seguras:** formato `Stratos-XXXX-NNNN` (4 letras + 4 dígitos), legibles y memorables.
 
+### Sanity check antes de crear usuarios reales
+
+```bash
+node scripts/create_team_users.mjs --dry-run
+```
+
+Solo valida que `team_users.json` está bien formado, que `.env.local` tiene las claves correctas, y que la conexión a Supabase funciona. NO crea usuarios.
+
 ### Limpieza después
 
 ```bash
@@ -58,3 +66,21 @@ rm team_users.json   # si no quieres reusar
 ```
 
 Ambos están en `.gitignore`.
+
+---
+
+## `verify_setup.mjs`
+
+Valida que la base de datos de Supabase está completa después de aplicar las 4 migraciones. Corre esto **antes** de crear los usuarios para confirmar que todo aplicó bien.
+
+```bash
+node scripts/verify_setup.mjs
+```
+
+Verifica:
+- ✅ Tablas `profiles`, `leads`, `audit_log` existen.
+- ✅ Todas las columnas requeridas están en cada tabla.
+- ✅ Función RPC `get_entity_history` existe y es invocable.
+- ✅ Trigger de auditoría en `profiles` funciona (hace un UPDATE de prueba y verifica que se registró en `audit_log`).
+
+Si algún check falla, te dice qué migración falta correr.

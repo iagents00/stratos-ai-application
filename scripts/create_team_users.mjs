@@ -12,7 +12,10 @@
  *   2. Crea `.env.local` en la raíz con:
  *        VITE_SUPABASE_URL=https://xxxx.supabase.co
  *        SUPABASE_SERVICE_ROLE_KEY=eyJ...   (NO la anon key)
- *   3. Corre: node scripts/create_team_users.mjs
+ *   3. Sanity check (no crea nada, solo valida):
+ *        node scripts/create_team_users.mjs --dry-run
+ *   4. Crear los usuarios reales:
+ *        node scripts/create_team_users.mjs
  *
  * El script es IDEMPOTENTE: si un email ya existe, lo deja como está
  * y solo actualiza el perfil (nombre + rol).
@@ -78,6 +81,7 @@ function validateUsers(users) {
 
 // ── Main ───────────────────────────────────────────────────
 async function main() {
+  const dryRun = process.argv.includes('--dry-run')
   const env = loadEnv()
   const url = env.VITE_SUPABASE_URL
   const key = env.SUPABASE_SERVICE_ROLE_KEY
@@ -96,6 +100,34 @@ async function main() {
 
   const users = JSON.parse(readFileSync(usersPath, 'utf8'))
   validateUsers(users)
+
+  if (dryRun) {
+    console.log('\n🧪 DRY RUN — no se va a crear ningún usuario, solo validar.\n')
+    console.log(`✓ team_users.json válido con ${users.length} usuario(s):\n`)
+    const counts = users.reduce((a, u) => ({ ...a, [u.role]: (a[u.role] || 0) + 1 }), {})
+    Object.entries(counts).forEach(([role, n]) =>
+      console.log(`   ${role.padEnd(12)} → ${n}`))
+    console.log()
+    users.forEach((u, i) =>
+      console.log(`   ${String(i+1).padStart(2)}. ${u.name.padEnd(28)} ${u.email.padEnd(40)} (${u.role})`))
+    console.log()
+    console.log(`✓ Conexión a Supabase con service role key: validando…`)
+    const supabase = createClient(url, key, { auth: { persistSession: false } })
+    try {
+      const { error } = await supabase.from('profiles').select('id').limit(1)
+      if (error) {
+        console.error(`   ✗ Error: ${error.message}`)
+        console.error(`   ↳ Asegúrate de haber corrido las migraciones 001-004.`)
+        process.exit(1)
+      }
+      console.log(`   ✓ Conexión OK · tabla profiles accesible.`)
+    } catch (e) {
+      console.error(`   ✗ Error: ${e.message}`)
+      process.exit(1)
+    }
+    console.log('\n✅ Todo listo. Quita --dry-run para crear los usuarios reales.\n')
+    return
+  }
 
   console.log(`\n🚀 Creando ${users.length} usuarios en Supabase…\n`)
 
