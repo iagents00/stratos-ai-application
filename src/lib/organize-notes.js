@@ -148,13 +148,16 @@ function parseBudget(s) {
 }
 
 // ── Parser IA (Edge Function con Claude) ─────────────────────
-async function aiParse(text) {
+// `confirmations` es opcional — segundo turno con respuestas a preguntas
+async function aiParse(text, confirmations = null) {
   try {
-    const { data, error } = await supabase.functions.invoke("organize-lead-notes", {
-      body: { text },
-    });
+    const body = confirmations ? { text, confirmations } : { text };
+    const { data, error } = await supabase.functions.invoke("organize-lead-notes", { body });
     if (error) throw error;
     return {
+      name: data.name || "",
+      phone: data.phone || "",
+      email: data.email || "",
       objetivo: data.objetivo || "",
       ubicacion: data.ubicacion || "",
       presupuesto: data.presupuesto || "",
@@ -162,6 +165,9 @@ async function aiParse(text) {
       notas: data.notas || "",
       next_action: data.next_action || "",
       next_action_date: data.next_action_date || "",
+      stage_sugerido: data.stage_sugerido || "",
+      score_sugerido: data.score_sugerido || 0,
+      needs_confirmation: Array.isArray(data.needs_confirmation) ? data.needs_confirmation : [],
       confidence: data.confidence || "high",
       source: "ai",
     };
@@ -169,6 +175,11 @@ async function aiParse(text) {
     console.warn("[organize-notes] AI fallback failed:", e?.message);
     return null;
   }
+}
+
+// Reintento con respuestas a preguntas de confirmación
+export async function organizeWithConfirmations(text, confirmations) {
+  return aiParse(text, confirmations);
 }
 
 // ── Función pública: organiza el texto, prefiere local y cae a IA ──

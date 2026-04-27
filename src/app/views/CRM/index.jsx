@@ -3259,7 +3259,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
       {activeDrawerLead && !historyLead && !suggestLead && createPortal(
         <button
           onClick={() => setSuggestLead(activeDrawerLead)}
-          title="Sugerir próximas acciones con IA — Protocolo Duke"
+          title="¿Qué hago ahora con este cliente? — Tu asistente de venta"
           style={{
             position: "fixed", top: 20, right: 144, zIndex: 99999,
             display: "flex", alignItems: "center", gap: 8,
@@ -3284,8 +3284,8 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
             e.currentTarget.style.boxShadow = "0 14px 36px rgba(0,0,0,0.5), 0 3px 10px rgba(0,0,0,0.35)";
           }}
         >
-          <span style={{ fontSize: 14 }}>✨</span>
-          <span>Sugerir acciones</span>
+          <span style={{ fontSize: 14 }}>💡</span>
+          <span>¿Qué hago ahora?</span>
         </button>,
         document.body
       )}
