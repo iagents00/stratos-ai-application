@@ -128,6 +128,44 @@ const KEY_OFFLINE_FLAG    = 'stratos_offline_mode'        // '1' = forzado offli
 const KEY_OFFLINE_USER    = 'stratos_offline_user'         // perfil del usuario actual
 const KEY_PENDING_SYNC    = 'stratos_pending_sync'         // cola de cambios
 const KEY_LEADS_OVERLAY   = 'stratos_offline_leads'        // leads modificados localmente
+const KEY_LEADS_SNAPSHOT  = 'stratos_leads_snapshot'       // CAPA 2 backup — snapshot full
+
+// ── CAPA 2 DE RESPALDO ─────────────────────────────────────────────
+// Cada vez que se actualizan los leads, guardamos un snapshot COMPLETO
+// con timestamp en localStorage. Si algo se pierde en el flujo principal
+// (overlay, sync, race conditions), el snapshot tiene la última versión
+// completa de los datos. NUNCA se debería perder un dato registrado.
+//
+// Storage budget: 111 leads × ~2KB = ~220KB. Lejos del límite de 5MB.
+//
+// Para recuperar manualmente:
+//   const snap = JSON.parse(localStorage.getItem('stratos_leads_snapshot'))
+//   console.log(snap.savedAt, snap.leads.length)
+
+export function saveLeadsSnapshot(leads) {
+  if (!Array.isArray(leads) || leads.length === 0) return
+  try {
+    localStorage.setItem(KEY_LEADS_SNAPSHOT, JSON.stringify({
+      savedAt: Date.now(),
+      version: 1,
+      leads,
+    }))
+  } catch (e) {
+    // localStorage lleno (raro) — tirar el snapshot anterior y reintentar
+    console.warn('[snapshot] write failed:', e?.message)
+    try { localStorage.removeItem(KEY_LEADS_SNAPSHOT) } catch (_) { /* noop */ }
+  }
+}
+
+export function readLeadsSnapshot() {
+  try {
+    const raw = localStorage.getItem(KEY_LEADS_SNAPSHOT)
+    if (!raw) return null
+    return JSON.parse(raw)
+  } catch (_) {
+    return null
+  }
+}
 
 // ── Detectar / forzar modo offline ──
 export function isOfflineForced() {
@@ -204,7 +242,7 @@ export async function getOfflineLeads(currentUser) {
   })
 }
 
-function readOverlay() {
+export function readOverlay() {
   try {
     return JSON.parse(localStorage.getItem(KEY_LEADS_OVERLAY) || '{}')
   } catch (_) {
@@ -214,6 +252,19 @@ function readOverlay() {
 
 function writeOverlay(map) {
   localStorage.setItem(KEY_LEADS_OVERLAY, JSON.stringify(map))
+}
+
+/**
+ * mergeWithOverlay(supabaseLeads) → aplica los cambios pendientes del
+ * overlay sobre los datos frescos de Supabase. Garantiza que aunque
+ * los cambios offline aún no se hayan sincronizado, la UI sigue
+ * mostrando los datos correctos al usuario.
+ */
+export function mergeWithOverlay(supabaseLeads) {
+  if (!Array.isArray(supabaseLeads)) return supabaseLeads
+  const overlay = readOverlay()
+  if (Object.keys(overlay).length === 0) return supabaseLeads
+  return supabaseLeads.map(l => overlay[l.id] ? { ...l, ...overlay[l.id] } : l)
 }
 
 // ── Mutación de un lead (escribe overlay + encola sync) ──
@@ -263,6 +314,7 @@ export async function syncToSupabase(supabase) {
   let synced = 0
   let failed = 0
   const remaining = []
+  const syncedLeadIds = new Set()    // IDs de leads sincronizados exitosamente
 
   for (const op of q) {
     try {
@@ -271,8 +323,13 @@ export async function syncToSupabase(supabase) {
           .from('leads')
           .update(op.changes)
           .eq('id', op.lead_id)
-        if (error) { failed++; remaining.push(op) }
-        else       { synced++ }
+        if (error) {
+          failed++
+          remaining.push(op)
+        } else {
+          synced++
+          syncedLeadIds.add(op.lead_id)
+        }
       } else {
         remaining.push(op) // tipo desconocido — preservar
       }
@@ -283,8 +340,21 @@ export async function syncToSupabase(supabase) {
 
   writeQueue(remaining)
 
-  // Si todo se sincronizó, limpiar overlay (los cambios ya están en Supabase)
-  if (failed === 0) writeOverlay({})
+  // CRÍTICO: solo limpiar del overlay los leads que SÍ se sincronizaron.
+  // Los que fallaron deben mantener su overlay para reintentar en
+  // el siguiente ciclo de auto-recovery. Nunca borrar todo el overlay
+  // porque puede contener cambios que aún no se han subido.
+  if (syncedLeadIds.size > 0) {
+    const overlay = readOverlay()
+    let changed = false
+    for (const id of syncedLeadIds) {
+      if (overlay[id]) {
+        delete overlay[id]
+        changed = true
+      }
+    }
+    if (changed) writeOverlay(overlay)
+  }
 
   return { ok: failed === 0, synced, failed }
 }

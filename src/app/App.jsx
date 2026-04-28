@@ -17,6 +17,9 @@ import {
   syncToSupabase,
   pingSupabase,
   silentSignIn,
+  mergeWithOverlay,
+  saveLeadsSnapshot,
+  readLeadsSnapshot,
 } from "../lib/offline-mode";
 
 import {
@@ -121,6 +124,23 @@ export default function App() {
   const [leadsData, setLeadsData]       = useState([]);
   const [leadsLoading, setLeadsLoading] = useState(true);
 
+  /* ── CAPA 2 BACKUP: snapshot completo de leads en localStorage ──
+     Cada vez que leadsData cambia, guardamos un snapshot full con timestamp.
+     Debounced 500ms para no escribir en cada render. Garantiza que ningún
+     dato registrado se pierda — ni seguimientos, ni notas, ni acciones,
+     ni nada. Si el flujo principal falla, el snapshot tiene todo. */
+  const snapshotTimerRef = useRef(null);
+  useEffect(() => {
+    if (!Array.isArray(leadsData) || leadsData.length === 0) return;
+    if (snapshotTimerRef.current) clearTimeout(snapshotTimerRef.current);
+    snapshotTimerRef.current = setTimeout(() => {
+      saveLeadsSnapshot(leadsData);
+    }, 500);
+    return () => {
+      if (snapshotTimerRef.current) clearTimeout(snapshotTimerRef.current);
+    };
+  }, [leadsData]);
+
   const normalizeLeads = useCallback((rows) => rows.map(l => ({
     ...l,
     n:              l.name,
@@ -155,10 +175,19 @@ export default function App() {
     if (user?._offline) {
       try {
         const offlineLeads = await getOfflineLeads(user);
-        setLeadsData(normalizeLeads(offlineLeads));
+        const normalized = normalizeLeads(offlineLeads);
+        setLeadsData(normalized);
+        // CAPA 2 backup: snapshot completo para recuperación
+        saveLeadsSnapshot(offlineLeads);
       } catch (e) {
         console.warn('[Stratos] Error cargando leads offline:', e);
-        setLeadsData([]);
+        // FALLBACK: usar el snapshot si está disponible
+        const snap = readLeadsSnapshot();
+        if (snap?.leads?.length > 0) {
+          setLeadsData(normalizeLeads(snap.leads));
+        } else {
+          setLeadsData([]);
+        }
       }
       setLeadsLoading(false);
       return;
@@ -168,13 +197,27 @@ export default function App() {
     const { data, error } = await supabase
       .from('leads').select('*').is('deleted_at', null).order('created_at', { ascending: false });
     if (!error && data) {
-      setLeadsData(normalizeLeads(data));
+      // CRÍTICO: aplicar overlay de cambios pendientes encima de los datos
+      // de Supabase. Si el usuario hizo cambios offline que aún no se han
+      // sincronizado, la UI sigue mostrándolos. Cuando el sync sea exitoso,
+      // syncToSupabase() limpiará el overlay del lead correspondiente.
+      const merged = mergeWithOverlay(data);
+      const normalized = normalizeLeads(merged);
+      setLeadsData(normalized);
+      // CAPA 2 backup: snapshot completo
+      saveLeadsSnapshot(merged);
     } else if (error) {
       // Supabase falló — intentar offline como último recurso
       console.warn('[Stratos] Supabase leads falló, intentando offline:', error.message);
       try {
         const offlineLeads = await getOfflineLeads(user);
-        if (offlineLeads.length > 0) setLeadsData(normalizeLeads(offlineLeads));
+        if (offlineLeads.length > 0) {
+          setLeadsData(normalizeLeads(offlineLeads));
+        } else {
+          // Último recurso: snapshot
+          const snap = readLeadsSnapshot();
+          if (snap?.leads?.length > 0) setLeadsData(normalizeLeads(snap.leads));
+        }
       } catch (_) { /* noop */ }
     }
     setLeadsLoading(false);

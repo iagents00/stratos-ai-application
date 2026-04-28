@@ -328,8 +328,29 @@ const FollowUpBadge = ({ lead, onUpdate, T = P, compact = false, fullWidth = fal
     setTimeout(() => setPulse(false), 260);
   };
 
-  const inc = (e) => { e?.stopPropagation?.(); commitValue(count + 1); };
-  const dec = (e) => { e?.stopPropagation?.(); if (count > 0) commitValue(count - 1); };
+  // ANTI RACE-CONDITION: usamos pendingDeltaRef + flush para acumular clicks
+  // rápidos antes de que React re-renderice el badge con el nuevo prop.
+  // Sin esto, dos clicks rápidos en +1 producían +1 (no +2) porque el
+  // segundo click leía el `count` viejo del prop antes del re-render.
+  const pendingDeltaRef = useRef(0);
+  const flushTimerRef = useRef(null);
+  const applyDelta = (delta, e) => {
+    e?.stopPropagation?.();
+    pendingDeltaRef.current += delta;
+    setPulse(true);
+    setTimeout(() => setPulse(false), 260);
+    if (flushTimerRef.current) clearTimeout(flushTimerRef.current);
+    flushTimerRef.current = setTimeout(() => {
+      const total = pendingDeltaRef.current;
+      pendingDeltaRef.current = 0;
+      if (total === 0) return;
+      // commit basado en el count del prop al momento de flush
+      const next = Math.max(0, Math.min(999, count + total));
+      onUpdate?.({ ...lead, seguimientos: next });
+    }, 220);
+  };
+  const inc = (e) => applyDelta(+1, e);
+  const dec = (e) => { if (count + pendingDeltaRef.current > 0) applyDelta(-1, e); };
 
   const openEdit = (e) => { e?.stopPropagation?.(); setDraft(String(count)); setEditing(true); };
   const cancelEdit = () => { setEditing(false); };
