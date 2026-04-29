@@ -18,6 +18,7 @@ import {
   getStoredSession,
   seedDemoUser,
 } from "../lib/auth";
+import { clearOfflineSession } from "../lib/offline-mode";
 
 export const AuthContext = createContext(null);
 
@@ -143,6 +144,10 @@ export function AuthProvider({ children }) {
    */
   const upgradeToOnline = useCallback((profile) => {
     if (!profile) return;
+    // Limpiar el snapshot offline para que el próximo refresh use la
+    // sesión real de Supabase (sino getStoredSession lo prefiere y nos
+    // deja atrapados en _offline:true para siempre).
+    clearOfflineSession();
     setUser(profile);  // sin _offline → vuelve al modo normal
   }, []);
 
