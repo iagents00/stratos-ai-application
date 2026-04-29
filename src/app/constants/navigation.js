@@ -7,7 +7,7 @@
  */
 import {
   Users, Hexagon, Activity, Building2, Atom,
-  Trophy, Landmark, UserCheck, CreditCard, Shield
+  Trophy, Landmark, UserCheck, CreditCard, Shield, User
 } from "lucide-react";
 
 export const nav = [
@@ -20,6 +20,7 @@ export const nav = [
   { id: "fa",    l: "Finanzas",  i: Landmark,  more: true },
   { id: "rrhh",  l: "Personas",  i: UserCheck, more: true },
   { id: "planes",l: "Planes",    i: CreditCard, more: true },
+  { id: "perfil",l: "Perfil",    i: User,      more: true },
   { id: "admin", l: "Usuarios",  i: Shield,    more: true, adminOnly: true },
 ];
 
@@ -33,11 +34,12 @@ export const MODULE_ROLES = {
   fa:     ["super_admin","admin","director","ceo"],
   rrhh:   ["super_admin","admin","director","ceo"],
   planes: ["super_admin","admin","director","ceo","asesor"],
+  perfil: ["super_admin","admin","director","ceo","asesor"],
   admin:  ["super_admin","admin"],
 };
 
 export const MODULE_NAMES = {
   d: "Comando", c: "CRM", ia: "iAgents", e: "ERP",
   a: "Asesores", lp: "Campañas", fa: "Finanzas",
-  rrhh: "Personas", planes: "Planes", admin: "Usuarios",
+  rrhh: "Personas", planes: "Planes", perfil: "Perfil", admin: "Usuarios",
 };
