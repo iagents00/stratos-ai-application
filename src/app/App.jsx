@@ -17,6 +17,7 @@ import {
   syncToSupabase,
   pingSupabase,
   silentSignIn,
+  discardPendingSync,
 } from "../lib/offline-mode";
 
 import {
@@ -106,6 +107,9 @@ export default function App() {
   const [msgs, setMsgs]  = useState([]);
   const [inp, setInp]    = useState("");
   const [notifs, setNotifs] = useState([]);
+  // Dropdown de la campana — abierto/cerrado
+  const [bellOpen, setBellOpen] = useState(false);
+  const bellRef = useRef(null);
 
   /* ── Theme ── */
   const [theme, setThemeState] = useState(() => {
@@ -208,14 +212,16 @@ export default function App() {
   const isAdminRole = ADMIN_ROLES.includes(user?.role);
   const showOfflineBanner = isAdminRole && (user?._offline || pendingSync > 0);
 
+  // Polling cada 5 s del contador de cambios pendientes.
+  // Corre SIEMPRE (no condicional) — si la cola se llena después porque cae
+  // Supabase, queremos detectarlo en menos de 5 s sin tener que recargar.
   useEffect(() => {
-    const hasPending = getPendingSyncCount() > 0;
-    if (!user?._offline && !hasPending) { setPendingSync(0); return; }
+    if (!user || user.id === 'demo-user-local') return;
     const tick = () => setPendingSync(getPendingSyncCount());
     tick();
-    const t = setInterval(tick, 3000);
+    const t = setInterval(tick, 5000);
     return () => clearInterval(t);
-  }, [user?._offline]);
+  }, [user?.id]);
 
   const handleSync = useCallback(async () => {
     setSyncing(true);
@@ -477,52 +483,9 @@ export default function App() {
       `}</style>
       <style>{dynamicStyles}</style>
 
-      {/* ══ BANNER MODO OFFLINE — solo para roles administrativos ══
-            Asesores no ven nada: el modo offline + auto-sync es totalmente
-            transparente para ellos. */}
-      {showOfflineBanner && (
-        <div style={{
-          position: "fixed", top: 0, left: 0, right: 0, zIndex: 999,
-          background: "linear-gradient(90deg, #F59E0B 0%, #EAB308 100%)",
-          color: "#0B1220",
-          padding: "8px 16px",
-          display: "flex", alignItems: "center", justifyContent: "center", gap: 12,
-          fontSize: 12.5, fontWeight: 600, fontFamily: font,
-          boxShadow: "0 2px 12px rgba(0,0,0,0.18)",
-        }}>
-          <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
-            <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#0B1220", animation: "pulse 1.6s ease-in-out infinite" }} />
-            {user?._offline
-              ? "Modo offline — servicio respondiendo lento. Cambios se sincronizan automáticamente al recuperar conexión."
-              : "Sincronización pendiente — los cambios se enviarán automáticamente."}
-          </span>
-          {pendingSync > 0 && (
-            <span style={{
-              padding: "2px 9px", borderRadius: 99, background: "#0B1220",
-              color: "#F59E0B", fontSize: 11, fontWeight: 700,
-            }}>
-              {pendingSync} cambio{pendingSync !== 1 ? "s" : ""} pendiente{pendingSync !== 1 ? "s" : ""}
-            </span>
-          )}
-          <button
-            onClick={handleSync}
-            disabled={syncing || pendingSync === 0}
-            style={{
-              padding: "5px 12px", borderRadius: 7,
-              background: pendingSync > 0 && !syncing ? "#0B1220" : "rgba(11,18,32,0.30)",
-              color: "#FFFFFF", border: "none",
-              fontSize: 11, fontWeight: 700, fontFamily: font,
-              cursor: syncing || pendingSync === 0 ? "not-allowed" : "pointer",
-              transition: "all 0.18s",
-            }}
-          >
-            {syncing ? "Sincronizando..." : "🔄 Sincronizar ahora"}
-          </button>
-          {syncMsg && (
-            <span style={{ fontSize: 11, fontWeight: 600 }}>{syncMsg}</span>
-          )}
-        </div>
-      )}
+      {/* El banner full-width fue reemplazado por el dropdown de la campana
+          de notificaciones — vive en el header y solo es visible para roles
+          administrativos cuando hay cambios pendientes o estamos offline. */}
 
       {/* ══ SIDEBAR ══ */}
       <div className="stratos-sidebar" style={{
@@ -661,10 +624,136 @@ export default function App() {
                 <button title="Buscar (⌘K)" style={iBtnBase} onMouseEnter={onIco} onMouseLeave={offIco} onMouseDown={dnIco} onMouseUp={upIco}>
                   <Search size={14} color={icoRest} strokeWidth={2} />
                 </button>
-                <button title="Notificaciones" style={{ ...iBtnBase, position:"relative" }} onMouseEnter={onIco} onMouseLeave={offIco} onMouseDown={dnIco} onMouseUp={upIco}>
-                  <Bell size={14} color={icoRest} strokeWidth={2} />
-                  <div style={{ position:"absolute", top:6, right:6, width:5, height:5, borderRadius:"50%", background:T.rose, border:`1.5px solid ${isLight ? "#F5FAF8" : "#050507"}` }} />
-                </button>
+                {/* ── Campana de notificaciones ──
+                   Cuando hay cambios pendientes de sincronizar (modo offline
+                   o cola residual), la campana muestra un badge ámbar con la
+                   cuenta y abre un dropdown con acciones. Para el resto de
+                   usuarios sigue siendo solo el icono. */}
+                <div ref={bellRef} style={{ position:"relative" }}>
+                  <button
+                    title={pendingSync > 0 ? `${pendingSync} cambios pendientes de sincronizar` : "Notificaciones"}
+                    onClick={() => setBellOpen(o => !o)}
+                    style={{ ...iBtnBase, position:"relative" }}
+                    onMouseEnter={onIco}
+                    onMouseLeave={offIco}
+                    onMouseDown={dnIco}
+                    onMouseUp={upIco}
+                  >
+                    <Bell size={14} color={icoRest} strokeWidth={2} />
+                    {pendingSync > 0 ? (
+                      <div style={{
+                        position:"absolute", top:-2, right:-2,
+                        minWidth:14, height:14, padding:"0 3.5px", borderRadius:99,
+                        background:"#F59E0B", color:"#0B1220",
+                        border:`1.5px solid ${isLight ? "#F5FAF8" : "#050507"}`,
+                        fontSize:8.5, fontWeight:800, fontFamily:fontDisp,
+                        display:"flex", alignItems:"center", justifyContent:"center",
+                        lineHeight:1,
+                      }}>{pendingSync > 99 ? "99+" : pendingSync}</div>
+                    ) : (
+                      <div style={{ position:"absolute", top:6, right:6, width:5, height:5, borderRadius:"50%", background:T.rose, border:`1.5px solid ${isLight ? "#F5FAF8" : "#050507"}` }} />
+                    )}
+                  </button>
+
+                  {bellOpen && (
+                    <>
+                      {/* Overlay para cerrar el dropdown clickeando fuera */}
+                      <div onClick={() => setBellOpen(false)} style={{ position:"fixed", inset:0, zIndex:998 }} />
+                      <div style={{
+                        position:"absolute", top:38, right:0, zIndex:999,
+                        width:300, padding:14, borderRadius:12,
+                        background: isLight ? "#FFFFFF" : "rgba(10,15,28,0.98)",
+                        backdropFilter: isLight ? "none" : "blur(20px) saturate(140%)",
+                        border:`1px solid ${isLight ? "rgba(15,23,42,0.10)" : "rgba(255,255,255,0.10)"}`,
+                        boxShadow: isLight ? "0 12px 36px rgba(15,23,42,0.14)" : "0 12px 36px rgba(0,0,0,0.55)",
+                        display:"flex", flexDirection:"column", gap:10,
+                      }}>
+                        <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+                          <span style={{ fontSize:11, fontWeight:700, letterSpacing:"0.06em", textTransform:"uppercase", color:isLight ? T.txt2 : "rgba(255,255,255,0.55)", fontFamily:fontDisp }}>Notificaciones</span>
+                        </div>
+
+                        {/* Estado: sin pendientes ni offline */}
+                        {!user?._offline && pendingSync === 0 && (
+                          <div style={{ fontSize:12, color: isLight ? T.txt3 : "rgba(255,255,255,0.45)", fontFamily:font, padding:"8px 0" }}>
+                            Sin notificaciones nuevas.
+                          </div>
+                        )}
+
+                        {/* Estado: offline */}
+                        {user?._offline && isAdminRole && (
+                          <div style={{
+                            padding:10, borderRadius:8,
+                            background: isLight ? "rgba(245,158,11,0.10)" : "rgba(245,158,11,0.10)",
+                            border:`1px solid ${isLight ? "rgba(245,158,11,0.32)" : "rgba(245,158,11,0.30)"}`,
+                            display:"flex", flexDirection:"column", gap:4,
+                          }}>
+                            <span style={{ fontSize:11.5, fontWeight:700, color:"#F59E0B", fontFamily:fontDisp }}>Modo offline</span>
+                            <span style={{ fontSize:11, color:isLight ? T.txt2 : "rgba(255,255,255,0.65)", fontFamily:font, lineHeight:1.4 }}>
+                              Servicio respondiendo lento. Los cambios se sincronizan automáticamente al recuperar conexión.
+                            </span>
+                          </div>
+                        )}
+
+                        {/* Estado: pending sync */}
+                        {pendingSync > 0 && isAdminRole && (
+                          <div style={{
+                            padding:10, borderRadius:8,
+                            background: isLight ? "rgba(245,158,11,0.08)" : "rgba(245,158,11,0.08)",
+                            border:`1px solid ${isLight ? "rgba(245,158,11,0.28)" : "rgba(245,158,11,0.24)"}`,
+                            display:"flex", flexDirection:"column", gap:8,
+                          }}>
+                            <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+                              <span style={{ fontSize:11.5, fontWeight:700, color:"#F59E0B", fontFamily:fontDisp }}>
+                                {pendingSync} cambio{pendingSync !== 1 ? "s" : ""} pendiente{pendingSync !== 1 ? "s" : ""}
+                              </span>
+                            </div>
+                            <span style={{ fontSize:11, color:isLight ? T.txt2 : "rgba(255,255,255,0.62)", fontFamily:font, lineHeight:1.4 }}>
+                              Se intentan enviar automáticamente cada 60 s. Si llevan tiempo sin avanzar es probable que sean obsoletos.
+                            </span>
+                            <div style={{ display:"flex", gap:6, marginTop:2 }}>
+                              <button
+                                onClick={async () => { await handleSync(); }}
+                                disabled={syncing}
+                                style={{
+                                  flex:1, padding:"7px 10px", borderRadius:7,
+                                  background: syncing ? (isLight ? "rgba(15,23,42,0.06)" : "rgba(255,255,255,0.05)") : "#F59E0B",
+                                  color: syncing ? (isLight ? T.txt3 : "rgba(255,255,255,0.40)") : "#0B1220",
+                                  border:"none", fontSize:11, fontWeight:700, fontFamily:font,
+                                  cursor: syncing ? "not-allowed" : "pointer", transition:"opacity 0.16s",
+                                }}
+                              >{syncing ? "Sincronizando..." : "Sincronizar ahora"}</button>
+                              <button
+                                onClick={() => {
+                                  if (!window.confirm(`¿Descartar ${pendingSync} cambio(s) pendiente(s)? Esta acción no se puede deshacer.`)) return;
+                                  const n = discardPendingSync();
+                                  setPendingSync(0);
+                                  setSyncMsg(`Descartados ${n} cambios pendientes.`);
+                                  setTimeout(() => setSyncMsg(""), 4000);
+                                }}
+                                style={{
+                                  padding:"7px 10px", borderRadius:7,
+                                  background:"transparent",
+                                  color: isLight ? T.txt2 : "rgba(255,255,255,0.55)",
+                                  border:`1px solid ${isLight ? "rgba(15,23,42,0.14)" : "rgba(255,255,255,0.14)"}`,
+                                  fontSize:11, fontWeight:600, fontFamily:font,
+                                  cursor:"pointer", transition:"all 0.14s",
+                                }}
+                                onMouseEnter={e => { e.currentTarget.style.background = isLight ? "rgba(225,29,72,0.08)" : "rgba(239,68,68,0.10)"; e.currentTarget.style.color = isLight ? "#B91C1C" : "#FCA5A5"; e.currentTarget.style.borderColor = isLight ? "rgba(225,29,72,0.32)" : "rgba(239,68,68,0.32)"; }}
+                                onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = isLight ? T.txt2 : "rgba(255,255,255,0.55)"; e.currentTarget.style.borderColor = isLight ? "rgba(15,23,42,0.14)" : "rgba(255,255,255,0.14)"; }}
+                              >Descartar</button>
+                            </div>
+                          </div>
+                        )}
+
+                        {syncMsg && (
+                          <div style={{ fontSize:11, color: isLight ? T.txt2 : "rgba(255,255,255,0.65)", fontFamily:font, padding:"4px 2px" }}>
+                            {syncMsg}
+                          </div>
+                        )}
+                      </div>
+                    </>
+                  )}
+                </div>
                 {hDiv}
                 <button onClick={() => setTheme(isLight ? "dark" : "light")} title={isLight ? "Modo oscuro" : "Modo claro"}
                   style={{ width:42, height:24, borderRadius:12, border:"none", padding:0, flexShrink:0, background: isLight ? `linear-gradient(135deg, ${T.accent} 0%, #12B48A 100%)` : "rgba(255,255,255,0.09)", cursor:"pointer", position:"relative", transition:"background 0.28s ease", boxShadow: isLight ? `0 2px 8px ${T.accent}40, inset 0 1px 0 rgba(255,255,255,0.28)` : "inset 0 1px 3px rgba(0,0,0,0.35), 0 0 0 1px rgba(255,255,255,0.08)" }}>

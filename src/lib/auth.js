@@ -17,6 +17,7 @@ import {
   signInOffline,
   getOfflineSession,
   signOutOffline,
+  clearOfflineSession,
 } from './offline-mode'
 
 // ── Configuración de resiliencia ──────────────────────────────────────
@@ -131,7 +132,7 @@ export async function signIn(email, password) {
     const { data: profile, error: profileError } = await withTimeout(
       supabase
         .from('profiles')
-        .select('id, name, role, phone, active, organization_id')
+        .select('id, name, role, phone, active, organization_id, view_all_leads')
         .eq('id', data.user.id)
         .single(),
       TIMEOUT_MS,
@@ -155,9 +156,14 @@ export async function signIn(email, password) {
       role:  profile.role,
       phone: profile.phone,
       organizationId: profile.organization_id,
+      viewAllLeads:   profile.view_all_leads === true,
     }
     // Cachear sesión 24h para resiliencia ante caídas futuras
     saveSessionCache(sessionUser)
+    // Limpiar la sesión "offline" si quedó residual de un intento anterior —
+    // así getStoredSession() en el siguiente refresh prefiere la sesión real
+    // de Supabase y no nos deja atrapados en modo degradado.
+    clearOfflineSession()
     return { data: sessionUser, error: null }
   } catch (e) {
     if (isTimeoutError(e)) {
@@ -254,7 +260,7 @@ export async function getStoredSession() {
       const result = await withTimeout(
         supabase
           .from('profiles')
-          .select('id, name, role, phone, active, organization_id')
+          .select('id, name, role, phone, active, organization_id, view_all_leads')
           .eq('id', session.user.id)
           .single(),
         TIMEOUT_MS,
@@ -285,6 +291,7 @@ export async function getStoredSession() {
       role:  profile.role,
       phone: profile.phone,
       organizationId: profile.organization_id,
+      viewAllLeads:   profile.view_all_leads === true,
     }
     saveSessionCache(sessionUser)
     return sessionUser
