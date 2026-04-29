@@ -52,7 +52,9 @@ export const OFFLINE_CREDENTIALS = {
   'admin@stratoscapitalgroup.com':      'Admin2026!',
   'araceli@stratoscapitalgroup.com':    'Araceli2026!',
   'cecilia@stratoscapitalgroup.com':    'Cecilia2026!',
-  'emmanuel@stratoscapitalgroup.com':   'Emmanuel2026!',
+  'emmanuel@stratoscapitalgroup.com':   'Em!2026Stratos',
+  'gael@stratoscapitalgroup.com':       'Ga!2026Stratos',
+  'themis@gvintell.com':                'Th!2026GVIntell',
   'alexia@stratoscapitalgroup.com':     'Alexia2026!',
   'ken@stratoscapitalgroup.com':        'Ken2026!',
   'oscar@stratoscapitalgroup.com':      'Oscar2026!',
@@ -175,6 +177,17 @@ export function signOutOffline() {
   localStorage.removeItem(KEY_OFFLINE_USER)
 }
 
+/**
+ * clearOfflineSession() → borra solo el snapshot "offline" del usuario sin
+ * tocar la cola de cambios pendientes. La diferencia con signOutOffline:
+ *   · signOutOffline = "el usuario cerró sesión" — explícito.
+ *   · clearOfflineSession = "ya estamos online de verdad, descarta el
+ *      snapshot degradado para que el próximo refresh use la sesión real".
+ */
+export function clearOfflineSession() {
+  localStorage.removeItem(KEY_OFFLINE_USER)
+}
+
 // ── Lectura de leads (con overlay de cambios locales) ──
 export async function getOfflineLeads(currentUser) {
   const { leads } = await loadSeed()
@@ -246,6 +259,21 @@ function enqueueSync(op) {
 
 export function getPendingSyncCount() {
   return readQueue().length
+}
+
+/**
+ * discardPendingSync() → vacía la cola y descarta también el overlay local.
+ * Usar cuando los cambios pendientes son obsoletos (leads borrados,
+ * reorganización de la base, etc.) y quieres que el banner desaparezca
+ * sin reintentar.
+ *
+ * Devuelve la cantidad de cambios descartados.
+ */
+export function discardPendingSync() {
+  const count = readQueue().length
+  writeQueue([])
+  writeOverlay({})
+  return count
 }
 
 /**
