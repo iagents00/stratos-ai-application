@@ -821,26 +821,24 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
       {/* ── CLIENTES EN PRIORIDAD — todos, color por tipo, botones uniformes ── */}
       {priorityLeads.length > 0 && (() => {
 
-        // Paleta de tipo — cada categoría tiene identidad visual única.
-        // Los colores vienen del design system (`T` = paleta activa: P en oscuro, LP en claro)
-        // así que los cards quedan automáticamente alineados al tema y a la paleta global.
-        // El topBar usa una versión clara del color base + transparencia para que respire.
-        const lighten = (hex) => `${hex}CC`; // mismo color, leve transparencia para el highlight central
-        const tb = (c) => `linear-gradient(90deg, ${c} 0%, ${lighten(c)} 50%, ${c} 100%)`;
-        const tbFade = (c) => `linear-gradient(90deg, ${c} 0%, ${lighten(c)} 50%, transparent 100%)`;
+        // Identidad visual UNIFICADA — todas las cards llevan la misma barra
+        // verde mint (T.accent) con shimmer arriba. La identidad de etapa
+        // sigue diferenciada con el color del badge interno (stageColor),
+        // pero el "marco" del card es siempre el mismo verde para que el
+        // pipeline se lea como un solo bloque coherente.
+        const tbAccent = `linear-gradient(90deg, ${T.accent} 0%, ${T.accent}CC 50%, ${T.accent} 100%)`;
 
         const getCardMeta = (l) => {
-          if (l.hot)               return { color: T.accent, topBar: tb(T.accent),     label: `CALIENTE · ${l.daysInactive}D`,        sublabel: "Actuar ahora mismo",            pulse: true,  glow: true  };
-          if (l.isNew)             return { color: T.accent, topBar: tb(T.accent),     label: "NUEVO REGISTRO",                       sublabel: "Primer contacto — no esperes",  pulse: true,  glow: true  };
-          if (l.st === "Zoom Agendado")    return { color: T.blue,    topBar: tbFade(T.blue),    label: "ZOOM AGENDADO",         sublabel: "Preparar presentación de cierre", pulse: false, glow: false };
-          if (l.st === "Zoom Concretado")  return { color: T.emerald, topBar: tbFade(T.emerald), label: "ZOOM CONCRETADO ✓",     sublabel: "Enviar propuesta y cerrar hoy",   pulse: false, glow: false };
-          // T.orange solo existe en la paleta P (oscuro). En LP (claro) usamos T.amber.
-          if (l.st === "Negociación") {
-            const c = T.orange || T.amber;
-            return { color: c, topBar: tbFade(c), label: "EN NEGOCIACIÓN", sublabel: "Cerrar condiciones esta semana", pulse: false, glow: false };
-          }
-          if (l.daysInactive >= 7) return { color: T.cyan,    topBar: tbFade(T.cyan),   label: `SIN CONTACTO · ${l.daysInactive}D`,    sublabel: "Retomar antes de que enfríe",   pulse: false, glow: false };
-          return                         { color: T.blue,    topBar: tbFade(T.blue),    label: "ACCIÓN PENDIENTE",                     sublabel: "Revisar y avanzar hoy",         pulse: false, glow: false };
+          // Etiqueta + sublabel siguen variando por contexto — solo el color
+          // se uniformiza. Pulse/glow se mantienen para hot/new que sí merecen
+          // énfasis (animación más viva del topBar).
+          if (l.hot)                       return { color: T.accent, topBar: tbAccent, label: `CALIENTE · ${l.daysInactive}D`,     sublabel: "Actuar ahora mismo",              pulse: true,  glow: true  };
+          if (l.isNew)                     return { color: T.accent, topBar: tbAccent, label: "NUEVO REGISTRO",                    sublabel: "Primer contacto — no esperes",    pulse: true,  glow: true  };
+          if (l.st === "Zoom Agendado")    return { color: T.accent, topBar: tbAccent, label: "ZOOM AGENDADO",                     sublabel: "Preparar presentación de cierre", pulse: false, glow: false };
+          if (l.st === "Zoom Concretado")  return { color: T.accent, topBar: tbAccent, label: "ZOOM CONCRETADO ✓",                 sublabel: "Enviar propuesta y cerrar hoy",   pulse: false, glow: false };
+          if (l.st === "Negociación")      return { color: T.accent, topBar: tbAccent, label: "EN NEGOCIACIÓN",                    sublabel: "Cerrar condiciones esta semana",  pulse: false, glow: false };
+          if (l.daysInactive >= 7)         return { color: T.accent, topBar: tbAccent, label: `SIN CONTACTO · ${l.daysInactive}D`, sublabel: "Retomar antes de que enfríe",     pulse: false, glow: false };
+          return                                  { color: T.accent, topBar: tbAccent, label: "ACCIÓN PENDIENTE",                  sublabel: "Revisar y avanzar hoy",           pulse: false, glow: false };
         };
 
         return (
