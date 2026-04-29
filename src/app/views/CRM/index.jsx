@@ -56,8 +56,10 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
   const isLight = theme === "light";
   const T = isLight ? LP : P;
 
-  // Solo director, admin y super_admin ven todos los leads
-  const canSeeAll = ["super_admin", "admin", "director"].includes(user?.role);
+  // Roles administrativos (director hacia arriba) y asesores con la bandera
+  // view_all_leads=true ven todos los leads de la organización.
+  const canSeeAll = ["super_admin", "admin", "ceo", "director"].includes(user?.role)
+                 || user?.viewAllLeads === true;
   const [sortField, setSortField]       = useState("sc");
   const [sortDir, setSortDir]           = useState("desc");
   const [filterStage, setFilterStage]   = useState("TODO");
@@ -286,13 +288,59 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
   };
   const handleDragEnd = () => { setDragLeadId(null); setDragOverStage(null); };
   const [expandedPriority, setExpandedPriority] = useState(null);
-  const [pinnedIds,    setPinnedIds]    = useState(new Set());
-  const [pinnedOrder,  setPinnedOrder]  = useState([]); // tracks pin history: last element = most recently pinned
-  const [dismissedIds, setDismissedIds] = useState(new Set());
-  const [priorityOrder, setPriorityOrder] = useState([]); // IDs ordered manually
+
+  // ── Persistencia local de pin/dismiss ─────────────────────────────────
+  // Las preferencias de prioridad viven por usuario (clave = user.id).
+  // Sobreviven a refresh, login/logout, y al reordenamiento del backend.
+  const prefsKey = user?.id ? `stratos_crm_prio_${user.id}` : null;
+  const loadPrefs = () => {
+    if (!prefsKey) return { pinned: [], pinnedOrder: [], dismissed: [], order: [] };
+    try {
+      const raw = localStorage.getItem(prefsKey);
+      if (!raw) return { pinned: [], pinnedOrder: [], dismissed: [], order: [] };
+      const p = JSON.parse(raw);
+      return {
+        pinned:      Array.isArray(p.pinned)      ? p.pinned      : [],
+        pinnedOrder: Array.isArray(p.pinnedOrder) ? p.pinnedOrder : [],
+        dismissed:   Array.isArray(p.dismissed)   ? p.dismissed   : [],
+        order:       Array.isArray(p.order)       ? p.order       : [],
+      };
+    } catch {
+      return { pinned: [], pinnedOrder: [], dismissed: [], order: [] };
+    }
+  };
+
+  const initialPrefs = useMemo(loadPrefs, [prefsKey]);
+  const [pinnedIds,    setPinnedIds]    = useState(() => new Set(initialPrefs.pinned));
+  const [pinnedOrder,  setPinnedOrder]  = useState(() => initialPrefs.pinnedOrder); // tracks pin history: last element = most recently pinned
+  const [dismissedIds, setDismissedIds] = useState(() => new Set(initialPrefs.dismissed));
+  const [priorityOrder, setPriorityOrder] = useState(() => initialPrefs.order); // IDs ordered manually
   const [prioritySort, setPrioritySort] = useState("manual"); // manual | newest | oldest | concretado
   const [dragCardId,   setDragCardId]   = useState(null);
   const [dragInsertIdx, setDragInsertIdx] = useState(null); // index where card will be inserted
+
+  // Recargar prefs si cambia el usuario (ej. logout/login en la misma pestaña)
+  useEffect(() => {
+    const p = loadPrefs();
+    setPinnedIds(new Set(p.pinned));
+    setPinnedOrder(p.pinnedOrder);
+    setDismissedIds(new Set(p.dismissed));
+    setPriorityOrder(p.order);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [prefsKey]);
+
+  // Persistir prefs cada vez que cambien
+  useEffect(() => {
+    if (!prefsKey) return;
+    try {
+      localStorage.setItem(prefsKey, JSON.stringify({
+        pinned:      [...pinnedIds],
+        pinnedOrder,
+        dismissed:   [...dismissedIds],
+        order:       priorityOrder,
+      }));
+    } catch { /* localStorage lleno o bloqueado — silencioso */ }
+  }, [prefsKey, pinnedIds, pinnedOrder, dismissedIds, priorityOrder]);
 
   const togglePin = (id) => {
     setPinnedIds(prev => {
@@ -307,6 +355,8 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
       }
       return next;
     });
+    // Highlight inmediato + scroll al carousel — UX fluida
+    triggerPriorityFocus(id);
   };
   const dismissPriority = (id) => {
     setDismissedIds(prev => { const next = new Set(prev); next.add(id); return next; });
@@ -355,6 +405,16 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
       return matchQ && matchStage && matchAsesor;
     });
     return [...data].sort((a, b) => {
+      // Los clientes con estrella SIEMPRE arriba — sin importar el sort.
+      // Entre pinneados, los más recientemente marcados van primero.
+      const ap = pinnedIds.has(a.id);
+      const bp = pinnedIds.has(b.id);
+      if (ap !== bp) return ap ? -1 : 1;
+      if (ap && bp) {
+        const ai = pinnedOrder.indexOf(a.id);
+        const bi = pinnedOrder.indexOf(b.id);
+        if (ai !== bi) return bi - ai; // mayor índice = más reciente = primero
+      }
       let av = a[sortField], bv = b[sortField];
       if (sortField === "presupuesto" || sortField === "sc" || sortField === "daysInactive") { av = Number(av) || 0; bv = Number(bv) || 0; }
       else { av = String(av || "").toLowerCase(); bv = String(bv || "").toLowerCase(); }
@@ -362,7 +422,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
       if (av > bv) return sortDir === "asc" ? 1 : -1;
       return 0;
     });
-  }, [visibleLeads, sortField, sortDir, filterStage, filterAsesor, searchQ]);
+  }, [visibleLeads, sortField, sortDir, filterStage, filterAsesor, searchQ, pinnedIds, pinnedOrder]);
 
   const handleSort = (field) => {
     if (sortField === field) setSortDir(d => d === "asc" ? "desc" : "asc");
@@ -623,6 +683,25 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
   const handleCardDrop     = (e) => { e.preventDefault(); e.stopPropagation(); commitCardDrop(); };
   const handleCarouselDrop = (e) => { e.preventDefault(); commitCardDrop(); };
 
+  // ── Foco en card de prioridad (UX fluida al togglear desde tabla) ────────
+  // Resalta la card 3s y la centra en el carousel. Espera 2 frames para que
+  // React termine el re-render con el nuevo orden antes de medir posiciones.
+  const triggerPriorityFocus = (leadId) => {
+    if (!leadId) return;
+    if (justDroppedTimer.current) clearTimeout(justDroppedTimer.current);
+    setJustDroppedId(leadId);
+    justDroppedTimer.current = setTimeout(() => setJustDroppedId(null), 3000);
+
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      const carousel = carouselRef.current;
+      if (!carousel) return;
+      const el = carousel.querySelector(`[data-priority-id="${leadId}"]`);
+      if (!el) return;
+      const target = el.offsetLeft - (carousel.clientWidth - el.clientWidth) / 2;
+      carousel.scrollTo({ left: Math.max(0, target), behavior: "smooth" });
+    }));
+  };
+
   // Mover un lead a una posición específica (1-indexed) vía dropdown
   const moveToPriorityPosition = (leadId, newPos) => {
     const ids = priorityLeadsRef.current.map(l => l.id);
@@ -742,50 +821,26 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
       {/* ── CLIENTES EN PRIORIDAD — todos, color por tipo, botones uniformes ── */}
       {priorityLeads.length > 0 && (() => {
 
-        // Paleta de tipo — cada categoría tiene identidad visual única
+        // Paleta de tipo — cada categoría tiene identidad visual única.
+        // Los colores vienen del design system (`T` = paleta activa: P en oscuro, LP en claro)
+        // así que los cards quedan automáticamente alineados al tema y a la paleta global.
+        // El topBar usa una versión clara del color base + transparencia para que respire.
+        const lighten = (hex) => `${hex}CC`; // mismo color, leve transparencia para el highlight central
+        const tb = (c) => `linear-gradient(90deg, ${c} 0%, ${lighten(c)} 50%, ${c} 100%)`;
+        const tbFade = (c) => `linear-gradient(90deg, ${c} 0%, ${lighten(c)} 50%, transparent 100%)`;
+
         const getCardMeta = (l) => {
-          if (l.hot) return {
-            color: "#34D399",
-            topBar: "linear-gradient(90deg, #34D399 0%, #6EE7C2 50%, #34D399 100%)",
-            label: `CALIENTE · ${l.daysInactive}D`, sublabel: "Actuar ahora mismo",
-            pulse: true, glow: true,
-          };
-          if (l.isNew) return {
-            color: "#34D399",
-            topBar: "linear-gradient(90deg, #34D399 0%, #6EE7C2 50%, #34D399 100%)",
-            label: "NUEVO REGISTRO", sublabel: "Primer contacto — no esperes",
-            pulse: true, glow: true,
-          };
-          if (l.st === "Zoom Agendado") return {
-            color: "#60A5FA",
-            topBar: "linear-gradient(90deg, #60A5FA 0%, #93C5FD 50%, transparent 100%)",
-            label: "ZOOM AGENDADO", sublabel: "Preparar presentación de cierre",
-            pulse: false, glow: false,
-          };
-          if (l.st === "Zoom Concretado") return {
-            color: "#4ADE80",
-            topBar: "linear-gradient(90deg, #4ADE80 0%, #86EFAC 50%, transparent 100%)",
-            label: "ZOOM CONCRETADO ✓", sublabel: "Enviar propuesta y cerrar hoy",
-            pulse: false, glow: false,
-          };
-          if (l.st === "Negociación") return {
-            color: "#FB923C",
-            topBar: "linear-gradient(90deg, #FB923C 0%, #FDBA74 50%, transparent 100%)",
-            label: "EN NEGOCIACIÓN", sublabel: "Cerrar condiciones esta semana",
-            pulse: false, glow: false,
-          };
-          if (l.daysInactive >= 7) return {
-            color: "#67E8F9",
-            topBar: "linear-gradient(90deg, #67E8F9 0%, #A5F3FC 50%, transparent 100%)",
-            label: `SIN CONTACTO · ${l.daysInactive}D`, sublabel: "Retomar antes de que enfríe",
-            pulse: false, glow: false,
-          };
-          return {
-            color: "#7EB8F0",
-            topBar: "linear-gradient(90deg, #7EB8F0 0%, #BAD4F5 50%, transparent 100%)",
-            label: "ACCIÓN PENDIENTE", sublabel: "Revisar y avanzar hoy",
-            pulse: false, glow: false,
-          };
+          if (l.hot)               return { color: T.accent, topBar: tb(T.accent),     label: `CALIENTE · ${l.daysInactive}D`,        sublabel: "Actuar ahora mismo",            pulse: true,  glow: true  };
+          if (l.isNew)             return { color: T.accent, topBar: tb(T.accent),     label: "NUEVO REGISTRO",                       sublabel: "Primer contacto — no esperes",  pulse: true,  glow: true  };
+          if (l.st === "Zoom Agendado")    return { color: T.blue,    topBar: tbFade(T.blue),    label: "ZOOM AGENDADO",         sublabel: "Preparar presentación de cierre", pulse: false, glow: false };
+          if (l.st === "Zoom Concretado")  return { color: T.emerald, topBar: tbFade(T.emerald), label: "ZOOM CONCRETADO ✓",     sublabel: "Enviar propuesta y cerrar hoy",   pulse: false, glow: false };
+          // T.orange solo existe en la paleta P (oscuro). En LP (claro) usamos T.amber.
+          if (l.st === "Negociación") {
+            const c = T.orange || T.amber;
+            return { color: c, topBar: tbFade(c), label: "EN NEGOCIACIÓN", sublabel: "Cerrar condiciones esta semana", pulse: false, glow: false };
+          }
+          if (l.daysInactive >= 7) return { color: T.cyan,    topBar: tbFade(T.cyan),   label: `SIN CONTACTO · ${l.daysInactive}D`,    sublabel: "Retomar antes de que enfríe",   pulse: false, glow: false };
+          return                         { color: T.blue,    topBar: tbFade(T.blue),    label: "ACCIÓN PENDIENTE",                     sublabel: "Revisar y avanzar hoy",         pulse: false, glow: false };
         };
 
         return (
@@ -946,6 +1001,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                       : `0 0 0 1px rgba(255,255,255,0.12), 0 8px 28px rgba(0,0,0,0.55)`;
                     return (
                   <div
+                    data-priority-id={l.id}
                     draggable
                     onDragStart={e => handleCardDragStart(e, l.id)}
                     onDragOver={e => { e.stopPropagation(); handleCardDragOver(e, cardIdx); }}
@@ -2132,6 +2188,16 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
               const showUrgency = l.daysInactive >= 5;
               const uc = urgColor(l.daysInactive);
               const stageC = stgC[l.st] || T.txt3;
+              const isPinnedRow = pinnedIds.has(l.id);
+              // Color dorado consistente con el botón estrella
+              const goldRow = isLight ? "#B8860B" : "#F5C542";
+              // Fondo base de la fila: tinte dorado sutil si está pinneada
+              const rowBg = isPinnedRow
+                ? (isLight ? `${goldRow}0E` : `${goldRow}10`)
+                : (isHov ? (isLight ? "rgba(15,23,42,0.022)" : "rgba(255,255,255,0.028)") : "transparent");
+              const rowHoverBg = isPinnedRow
+                ? (isLight ? `${goldRow}1A` : `${goldRow}1C`)
+                : (isLight ? "rgba(15,23,42,0.022)" : "rgba(255,255,255,0.028)");
 
               return (
                 <div key={l.id}
@@ -2141,8 +2207,10 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                     display: "grid", gridTemplateColumns: cols, gap: 12, padding: "14px 20px",
                     borderBottom: `1px solid ${T.border}`, alignItems: "center",
                     transition: "background 0.14s",
-                    background: isHov ? (isLight ? "rgba(15,23,42,0.022)" : "rgba(255,255,255,0.028)") : "transparent",
+                    background: isHov ? rowHoverBg : rowBg,
                     position: "relative",
+                    // Banda dorada izquierda — marca visual de "pinneado" sin gritar
+                    boxShadow: isPinnedRow ? `inset 3px 0 0 ${goldRow}` : "none",
                   }}
                 >
 
