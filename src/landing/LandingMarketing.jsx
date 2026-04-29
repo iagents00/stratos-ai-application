@@ -1071,8 +1071,8 @@ export default function LandingMarketing({ appUrl = "/?app" }) {
             maxWidth: 480, lineHeight: 1.85, marginBottom: 40, fontWeight: 400,
             fontFamily: font,
           }}>
-            El sistema operativo que hace que tu equipo registre mejor,
-            siga mejor y convierta más — con IA aplicada a la operación comercial real.
+            El sistema operativo que hace que tu equipo convierta más
+            — con IA aplicada a la operación comercial real.
           </p>
 
           {/* CTAs */}

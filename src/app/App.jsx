@@ -53,6 +53,7 @@ const IACRM         = lazy(() => import("./views/IACRM"));
 const LandingPages  = lazy(() => import("./views/LandingPages"));
 const FinanzasAdmin = lazy(() => import("./views/FinanzasAdmin"));
 const RRHHModule    = lazy(() => import("./views/RRHHModule"));
+const Profile       = lazy(() => import("./views/Profile"));
 
 /* ── Mock data (demo fallback) ── */
 import { leads } from "./data/leads";
@@ -722,6 +723,7 @@ export default function App() {
                   {v === "fa"     && <FinanzasAdmin T={T} />}
                   {v === "rrhh"   && <RRHHModule T={T} />}
                   {v === "planes" && <PricingScreen embedded onBack={() => setV(isAsesorRole ? "c" : "d")} />}
+                  {v === "perfil" && <Profile />}
                   {v === "admin"  && ["super_admin","admin"].includes(user?.role) && <AdminPanel />}
                 </Suspense>
             }
