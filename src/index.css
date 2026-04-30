@@ -15,3 +15,29 @@ input, textarea, select, button {
   width: 100%;
   height: 100vh;
 }
+
+/* ── Móvil: ajustes globales de UX táctil ───────────────────────────────
+   · iOS hace zoom automático cuando el foco cae en un input con
+     font-size < 16px. Forzamos 16px en touch para mantener la UI estable.
+   · -webkit-tap-highlight-color: el flash azul de tap en Safari/Chrome
+     mobile es ruidoso visual y hace que el botón parezca "atascado".
+   · text-size-adjust: evita que iOS reescale tipografías al rotar.
+   · overscroll-behavior: bloquea el "rebote" de pull-to-refresh dentro
+     de drawers/modales. */
+@media (max-width: 768px) {
+  input, textarea, select {
+    font-size: 16px !important;
+  }
+  button, a, [role="button"] {
+    -webkit-tap-highlight-color: rgba(110,231,194,0.18);
+    touch-action: manipulation; /* elimina delay de 300ms en mobile */
+  }
+  html, body {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+    overscroll-behavior-y: none; /* sin pull-to-refresh accidental */
+  }
+}
+
+/* Scrollbar invisible en horizontal carousels (kanban, priority cards) */
+.carousel-no-scroll::-webkit-scrollbar { display: none; }
