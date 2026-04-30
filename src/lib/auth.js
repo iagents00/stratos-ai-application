@@ -132,7 +132,7 @@ export async function signIn(email, password) {
     const { data: profile, error: profileError } = await withTimeout(
       supabase
         .from('profiles')
-        .select('id, name, role, phone, active, organization_id, view_all_leads')
+        .select('id, name, role, phone, active, organization_id, view_all_leads, crm_prefs')
         .eq('id', data.user.id)
         .single(),
       TIMEOUT_MS,
@@ -157,6 +157,8 @@ export async function signIn(email, password) {
       phone: profile.phone,
       organizationId: profile.organization_id,
       viewAllLeads:   profile.view_all_leads === true,
+      // crm_prefs vive en Supabase: pin, orden, descartados sobreviven entre dispositivos.
+      crmPrefs:       profile.crm_prefs && typeof profile.crm_prefs === 'object' ? profile.crm_prefs : {},
     }
     // Cachear sesión 24h para resiliencia ante caídas futuras
     saveSessionCache(sessionUser)
@@ -260,7 +262,7 @@ export async function getStoredSession() {
       const result = await withTimeout(
         supabase
           .from('profiles')
-          .select('id, name, role, phone, active, organization_id, view_all_leads')
+          .select('id, name, role, phone, active, organization_id, view_all_leads, crm_prefs')
           .eq('id', session.user.id)
           .single(),
         TIMEOUT_MS,
@@ -292,6 +294,7 @@ export async function getStoredSession() {
       phone: profile.phone,
       organizationId: profile.organization_id,
       viewAllLeads:   profile.view_all_leads === true,
+      crmPrefs:       profile.crm_prefs && typeof profile.crm_prefs === 'object' ? profile.crm_prefs : {},
     }
     saveSessionCache(sessionUser)
     return sessionUser
