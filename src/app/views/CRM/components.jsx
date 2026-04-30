@@ -782,8 +782,23 @@ const NextActionHero = ({ lead, T = P, onUpdate = null }) => {
 
   const accentStrong = isLight ? (T.accentDark || T.accent) : T.accent;
   const textMain     = isLight ? T.txt : "#F1F5F9";
-  const phoneClean   = (lead.phone || "").replace(/[^0-9+]/g, "");
-  const waPhone      = (lead.phone || "").replace(/[^0-9]/g, "");
+  // Normalización de teléfono — separamos formato visual del que va al dialer.
+  // tel:  → mantiene "+" si lo trae, si no, dígitos puros (el SO sabe parsear).
+  // wa.me → DEBE incluir código de país. Si no detecta uno (longitud típica
+  //         de número MX local: 10 dígitos), prepend "52" (México) por default.
+  const phoneClean = (lead.phone || "").replace(/[^0-9+]/g, "");
+  const waDigits   = (lead.phone || "").replace(/[^0-9]/g, "");
+  const waPhone    = (() => {
+    if (!waDigits) return "";
+    // Si ya empieza con "+" en el original, asumimos código de país explícito.
+    if ((lead.phone || "").trim().startsWith("+")) return waDigits;
+    // 10 dígitos típicos MX sin código → prepend 52
+    if (waDigits.length === 10) return `52${waDigits}`;
+    // Otros casos (más o menos dígitos): pasar como vienen, wa.me decide
+    return waDigits;
+  })();
+  // Texto bonito para mostrar en el botón de copiar
+  const phoneDisplay = lead.phone || "";
 
   return (
     <div style={{
@@ -983,8 +998,17 @@ const NextActionHero = ({ lead, T = P, onUpdate = null }) => {
         </button>
       )}
 
-      {/* Quick-action CTAs — hacen la acción realmente ejecutable sin salir del drawer */}
-      {hasAction && phoneClean && !editing && (
+      {/* ════════════════════════════════════════════════════════════════
+          CTAs DE CONTACTO — siempre visibles cuando el lead tiene teléfono.
+          Antes solo aparecían con `hasAction`, lo cual ocultaba los
+          botones más útiles del Expediente cuando no había próxima acción
+          definida. Ahora:
+            · Llamar       → tel:<num> (abre el dialer del SO)
+            · WhatsApp     → wa.me/<num con código de país> (app o web)
+            · Copiar       → copia el número al portapapeles (fallback si
+                             el navegador no tiene dialer registrado)
+          Si no hay teléfono: aparece un mini-input para guardarlo. ════ */}
+      {!editing && phoneClean && (
         <div style={{
           marginTop: 12, paddingTop: 10,
           borderTop: `1px dashed ${isLight ? `${T.accent}2E` : `${T.accent}22`}`,
@@ -1074,8 +1098,129 @@ const NextActionHero = ({ lead, T = P, onUpdate = null }) => {
             >
               <MessageCircle size={12} strokeWidth={2.4} /> WhatsApp
             </a>
+            {/* Copiar número — fallback útil en escritorio cuando el SO no
+                tiene un dialer registrado, o cuando el asesor quiere
+                pegarlo en otra app. Hace copy + toast efímero in-line. */}
+            <CopyPhoneButton phone={phoneDisplay} T={T} isLight={isLight} />
           </div>
         )}
+
+        {/* Sin teléfono → mini-form para agregarlo en un click. Esto evita
+            que el asesor tenga que abrir el modo edición completo solo
+            para registrar un número que necesita usar ya. */}
+        {!editing && !phoneClean && canEdit && (
+          <AddPhoneInline lead={lead} onUpdate={onUpdate} T={T} isLight={isLight} />
+        )}
+    </div>
+  );
+};
+
+/* ──────────────────────────────────────────────────────────────────────
+   CopyPhoneButton — botón pequeño que copia el teléfono al portapapeles
+   con confirmación visual de 1.4s. Útil cuando el navegador no abre
+   el dialer (escritorio) o cuando el asesor quiere reutilizar el número.
+   ────────────────────────────────────────────────────────────────────── */
+const CopyPhoneButton = ({ phone, T = P, isLight = false }) => {
+  const [copied, setCopied] = useState(false);
+  if (!phone) return null;
+  const doCopy = async () => {
+    try {
+      if (navigator?.clipboard?.writeText) {
+        await navigator.clipboard.writeText(phone);
+      } else {
+        // Fallback legado para browsers viejos / contextos sin clipboard API
+        const ta = document.createElement("textarea");
+        ta.value = phone; document.body.appendChild(ta);
+        ta.select(); document.execCommand("copy");
+        document.body.removeChild(ta);
+      }
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1400);
+    } catch { /* noop — silencioso si el browser bloquea */ }
+  };
+  return (
+    <button
+      onClick={doCopy}
+      title={`Copiar ${phone}`}
+      aria-label={`Copiar ${phone}`}
+      style={{
+        flexShrink: 0,
+        display: "inline-flex", alignItems: "center", gap: 6,
+        padding: "9px 12px", borderRadius: 10,
+        background: copied
+          ? (isLight ? `${T.accent}1A` : `${T.accent}18`)
+          : "transparent",
+        border: `1px solid ${copied ? `${T.accent}55` : (isLight ? "rgba(15,23,42,0.10)" : "rgba(255,255,255,0.10)")}`,
+        color: copied
+          ? (isLight ? `color-mix(in srgb, ${T.accent} 60%, #0B1220 40%)` : T.accent)
+          : (isLight ? "rgba(15,23,42,0.6)" : "rgba(255,255,255,0.7)"),
+        fontSize: 12, fontWeight: 700, fontFamily: fontDisp,
+        letterSpacing: "0.01em", cursor: "pointer", transition: "all 0.18s",
+      }}
+    >
+      {copied ? <Check size={12} strokeWidth={2.6} /> : <Copy size={12} strokeWidth={2.2} />}
+      {copied ? "Copiado" : "Copiar"}
+    </button>
+  );
+};
+
+/* ──────────────────────────────────────────────────────────────────────
+   AddPhoneInline — input chiquito siempre visible cuando el lead no
+   tiene teléfono. El asesor pega/escribe el número y lo guarda con un
+   tap. Sin abrir el modal de edición completo.
+   ────────────────────────────────────────────────────────────────────── */
+const AddPhoneInline = ({ lead, onUpdate, T = P, isLight = false }) => {
+  const [val, setVal] = useState("");
+  const [savingPhone, setSavingPhone] = useState(false);
+  if (!lead) return null;
+  const submit = async () => {
+    const trimmed = (val || "").trim();
+    if (!trimmed) return;
+    setSavingPhone(true);
+    try { onUpdate?.({ ...lead, phone: trimmed }); }
+    finally { setTimeout(() => setSavingPhone(false), 400); }
+  };
+  return (
+    <div style={{
+      marginTop: 12, paddingTop: 10,
+      borderTop: `1px dashed ${isLight ? `${T.accent}2E` : `${T.accent}22`}`,
+      display: "flex", gap: 7, alignItems: "center", flexWrap: "wrap",
+    }}>
+      <Phone size={12} color={T.txt3} strokeWidth={2.2} style={{ flexShrink: 0 }} />
+      <input
+        value={val}
+        onChange={e => setVal(e.target.value)}
+        onKeyDown={e => { if (e.key === "Enter") submit(); }}
+        placeholder="Agrega un teléfono…  +52 81 …"
+        inputMode="tel"
+        style={{
+          flex: 1, minWidth: 140,
+          height: 36, padding: "0 12px", borderRadius: 10,
+          background: isLight ? "rgba(255,255,255,0.7)" : "rgba(255,255,255,0.04)",
+          border: `1px solid ${T.border}`,
+          color: T.txt, fontSize: 13, fontFamily: fontDisp,
+          outline: "none", boxSizing: "border-box",
+        }}
+        onFocus={e => { e.currentTarget.style.borderColor = T.accent; }}
+        onBlur={e => { e.currentTarget.style.borderColor = T.border; }}
+      />
+      <button
+        onClick={submit}
+        disabled={!val.trim() || savingPhone}
+        style={{
+          height: 36, padding: "0 14px", borderRadius: 10,
+          background: val.trim() ? (isLight ? `linear-gradient(135deg, ${T.accent}, #14B892)` : T.accent) : T.glass,
+          border: "none",
+          color: val.trim() ? "#FFFFFF" : T.txt3,
+          fontSize: 12, fontWeight: 700, fontFamily: fontDisp,
+          cursor: val.trim() ? "pointer" : "not-allowed",
+          letterSpacing: "0.01em",
+          boxShadow: val.trim() && isLight ? `0 3px 10px ${T.accent}40` : "none",
+          transition: "all 0.18s",
+        }}
+      >
+        {savingPhone ? "Guardando…" : "Guardar"}
+      </button>
     </div>
   );
 };
@@ -2490,56 +2635,138 @@ const ActionTimeline = ({ lead, T = P, maxItems = 6 }) => {
   );
 };
 
-const NotesModal = ({ lead, onClose, onSave, onUpdate, onSwitchTab, onShowHistory, onShowSuggest, onDelete, T = P }) => {
+/* ──────────────────────────────────────────────────────────────────────
+   SectionLabel — micro-encabezado consistente para las secciones del
+   Expediente y del Perfil. Aesthetic minimalista: icono pequeño + texto
+   uppercase pequeño. Sin chrome. Reutilizable.
+   ────────────────────────────────────────────────────────────────────── */
+const SectionLabel = ({ icon: Icon, children, T = P }) => (
+  <p style={{
+    margin: "0 0 8px",
+    display: "inline-flex", alignItems: "center", gap: 6,
+    fontSize: 10, fontWeight: 800, color: T.txt3,
+    letterSpacing: "0.08em", textTransform: "uppercase",
+    fontFamily: fontDisp,
+  }}>
+    {Icon && <Icon size={11} strokeWidth={2.2} />}
+    {children}
+  </p>
+);
+
+const NotesModal = ({ lead, onClose, onSave, onUpdate, onSwitchTab, onShowHistory, onDelete, T = P }) => {
   const isMobile = useIsMobile();
-  const [editing, setEditing] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
-  const [draft, setDraft] = useState("");
-  const [expedienteItems, setExpedienteItems] = useState(() => {
-    if (lead?.id <= 3) {
-      const mock = COACHING_MOCKS[lead.id % COACHING_MOCKS.length];
-      return [{
-        id: `mock_notes_${lead.id}`,
-        type: "transcripcion",
-        title: "Llamada inicial · Zoom",
-        content: mock.resumen,
-        details: null,
-        fecha: lead?.lastActivity?.split("—")?.[1]?.trim() || "9 Abr, 6:00pm",
-        source: "asesor",
-        fileName: null,
-        size: null,
-      }];
-    }
-    return [];
-  });
-  const [updateChatOpen, setUpdateChatOpen] = useState(false);
-  if (!lead) return null;
 
-  const KNOWN_SECTIONS = ["OBJETIVO", "PRESUPUESTO", "PERFIL DEL CLIENTE", "HISTORIAL DE CONTACTO", "PENDIENTE"];
-  const sectionColors = { "OBJETIVO": T.blue, "PRESUPUESTO": T.emerald, "PERFIL DEL CLIENTE": T.txt2, "HISTORIAL DE CONTACTO": T.amber, "PENDIENTE": T.accent };
+  // ══════════════════════════════════════════════════════════════════════
+  // EXPEDIENTE EN TEXTO PLANO + AUTO-SAVE PROFESIONAL
+  // ══════════════════════════════════════════════════════════════════════
+  // Diseño: textarea siempre editable. El asesor escribe lo que pasó con
+  // el cliente — sin Telegram, sin voz, sin IA. Texto plano y listo.
+  //
+  // Garantías de persistencia:
+  //  · Auto-save con debounce 1.5s (cualquier pausa de tipeo guarda)
+  //  · Save forzado on blur (al hacer click fuera del textarea)
+  //  · Save forzado on close (espera el flush antes de desmontar)
+  //  · beforeunload: si hay cambios pendientes, el navegador advierte
+  //  · saveStatus visible: idle/saving/saved/error con timestamp
+  //
+  // Si Supabase falla, updateLead encola el cambio en localStorage
+  // (lib/offline-mode.js) y reintenta cuando vuelve la conexión.
+  // ══════════════════════════════════════════════════════════════════════
+  const [notesDraft, setNotesDraft] = useState(lead?.notas || "");
+  const [saveStatus, setSaveStatus] = useState("idle"); // idle | saving | saved | error
+  const [lastSavedAt, setLastSavedAt] = useState(null);
+  const saveTimerRef = useRef(null);
+  const dirtyRef = useRef(false);
+  const currentLeadIdRef = useRef(lead?.id);
 
-  const parseSections = (raw = "") => {
-    const sections = []; const lines = raw.split("\n"); let cur = null;
-    for (const line of lines) {
-      if (line.trim() === "") { if (cur) cur.body += "\n"; continue; }
-      const stripped = line.replace(/^[^\w\s]+\s*/, "").trim();
-      const hk = KNOWN_SECTIONS.find(s => stripped.toUpperCase() === s || line.trim() === s);
-      if (hk) { if (cur) sections.push(cur); cur = { title: hk, body: "", key: hk }; }
-      else { if (cur) cur.body += (cur.body ? "\n" : "") + line; else sections.push({ title: "", body: line, key: "" }); }
+  // Si cambia el lead activo (drawer abierto a otro lead), reset draft
+  useEffect(() => {
+    if (currentLeadIdRef.current !== lead?.id) {
+      currentLeadIdRef.current = lead?.id;
+      setNotesDraft(lead?.notas || "");
+      setSaveStatus("idle");
+      setLastSavedAt(null);
+      dirtyRef.current = false;
     }
-    if (cur) sections.push(cur); return sections;
+  }, [lead?.id, lead?.notas]);
+
+  // Si lead.notas cambia desde fuera (otro device, sync) y NO estoy editando,
+  // refresca el draft. Si dirtyRef=true, mantengo mi edición local.
+  useEffect(() => {
+    if (!dirtyRef.current && lead?.notas !== undefined && lead.notas !== notesDraft) {
+      setNotesDraft(lead.notas || "");
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lead?.notas]);
+
+  // Función de guardado — idempotente, segura para llamarse múltiples veces
+  const flushSave = useCallback(() => {
+    if (!dirtyRef.current) return;
+    if (saveTimerRef.current) { clearTimeout(saveTimerRef.current); saveTimerRef.current = null; }
+    setSaveStatus("saving");
+    try {
+      onSave?.(notesDraft);
+      dirtyRef.current = false;
+      setSaveStatus("saved");
+      setLastSavedAt(Date.now());
+    } catch (e) {
+      setSaveStatus("error");
+    }
+  }, [onSave, notesDraft]);
+
+  // Debounce 1.5s después de cada cambio de tipeo
+  const handleChange = (val) => {
+    setNotesDraft(val);
+    dirtyRef.current = true;
+    setSaveStatus("saving");
+    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    saveTimerRef.current = setTimeout(() => {
+      try {
+        onSave?.(val);
+        dirtyRef.current = false;
+        setSaveStatus("saved");
+        setLastSavedAt(Date.now());
+      } catch {
+        setSaveStatus("error");
+      }
+    }, 1500);
   };
-  const sections = parseSections(lead.notas);
 
-  const startEdit = () => { setDraft(lead.notas || ""); setEditing(true); };
-  const saveEdit = () => { onSave?.(draft); setEditing(false); };
+  // Beforeunload: si hay cambios pendientes, avisa al usuario antes de cerrar
+  useEffect(() => {
+    const handler = (e) => {
+      if (dirtyRef.current) {
+        e.preventDefault();
+        e.returnValue = "Tienes cambios sin guardar en el expediente.";
+        return e.returnValue;
+      }
+    };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, []);
+
+  // Wrap onClose para forzar flush
+  const safeClose = () => {
+    flushSave();
+    onClose?.();
+  };
+
+  // Cleanup al desmontar
+  useEffect(() => () => {
+    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    if (dirtyRef.current) onSave?.(notesDraft); // last-chance flush
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  if (!lead) return null;
 
   const isLight = T !== P;
   const titleC = isLight ? T.txt : "#FFFFFF";
 
   return createPortal(
     <>
-      <div onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: 400, background: T === P ? "rgba(2,5,12,0.5)" : "rgba(15,23,42,0.32)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)" }} />
+      <div onClick={safeClose} style={{ position: "fixed", inset: 0, zIndex: 400, background: T === P ? "rgba(2,5,12,0.5)" : "rgba(15,23,42,0.32)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)" }} />
       <div style={isMobile ? {
         // ── MOBILE: bottom-sheet full-width que ocupa 92% del viewport ──
         position: "fixed", left: 0, right: 0, bottom: 0, zIndex: 401,
@@ -2571,89 +2798,118 @@ const NotesModal = ({ lead, onClose, onSave, onUpdate, onSwitchTab, onShowHistor
           </div>
         )}
 
-        {/* Header: identidad + botón cerrar */}
-        <div style={{ padding: isMobile ? "8px 16px 12px" : "18px 24px 14px", borderBottom: `1px solid ${T.border}`, flexShrink: 0 }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <div style={{ width: 32, height: 32, borderRadius: 9, background: `linear-gradient(135deg, ${T.blue}22, ${T.blue}10)`, border: `1px solid ${T.blue}44`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, boxShadow: `0 0 14px ${T.blue}20` }}>
-                <FileText size={14} color={isLight ? `color-mix(in srgb, ${T.blue} 58%, #0B1220 42%)` : T.blue} strokeWidth={2.2} />
-              </div>
-              <div>
-                <p style={{ margin: 0, fontSize: 10.5, fontWeight: 800, color: isLight ? `color-mix(in srgb, ${T.blue} 58%, #0B1220 42%)` : T.blue, letterSpacing: "0.12em", textTransform: "uppercase", fontFamily: fontDisp }}>Expediente</p>
-                <p style={{ margin: 0, fontSize: 11, color: T.txt3, fontFamily: font }}>Todo sobre el cliente en un vistazo</p>
+        {/* ════════════════════════════════════════════════════════════════
+            HEADER MINIMAL — el nombre del cliente es lo único que importa.
+            Acciones (chip de guardado, eliminar, cerrar) van pegadas a la
+            derecha sin etiquetas redundantes. La info secundaria (asesor,
+            etapa, presupuesto) vive en una sub-línea ligera. ════════════ */}
+        <div style={{ padding: isMobile ? "10px 16px 14px" : "18px 24px 16px", borderBottom: `1px solid ${T.border}`, flexShrink: 0 }}>
+          <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
+            {/* Izquierda: avatar + nombre + sub-línea */}
+            <div style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 0, flex: 1 }}>
+              <div style={{
+                width: isMobile ? 40 : 44, height: isMobile ? 40 : 44, borderRadius: 12,
+                background: isLight
+                  ? `linear-gradient(145deg, ${T.blue}1A 0%, ${T.blue}0D 100%)`
+                  : `linear-gradient(145deg, ${T.blue}24 0%, ${T.blue}10 100%)`,
+                border: `1px solid ${isLight ? `${T.blue}38` : `${T.blue}44`}`,
+                display: "flex", alignItems: "center", justifyContent: "center",
+                fontSize: isMobile ? 16 : 18, fontWeight: 700,
+                color: isLight ? `color-mix(in srgb, ${T.blue} 60%, #0B1220 40%)` : T.blue,
+                fontFamily: fontDisp, flexShrink: 0,
+                boxShadow: isLight ? `0 1px 2px ${T.blue}18, inset 0 1px 0 rgba(255,255,255,0.6)` : "none",
+                letterSpacing: "-0.02em",
+              }}>{(lead.n || "?").charAt(0).toUpperCase()}</div>
+              <div style={{ minWidth: 0, flex: 1 }}>
+                <h2 style={{
+                  margin: 0,
+                  fontSize: isMobile ? 18 : 19,
+                  fontWeight: 700,
+                  letterSpacing: "-0.025em",
+                  color: titleC,
+                  fontFamily: fontDisp,
+                  overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+                  lineHeight: 1.2,
+                }}>
+                  <InlineEdit value={lead.n} onSave={v => onUpdate?.({...lead, n: v})} T={T} isLight={isLight} placeholder="Nombre" />
+                </h2>
+                <p style={{
+                  margin: "3px 0 0", fontSize: 11.5, color: T.txt3,
+                  fontFamily: font, fontWeight: 500,
+                  overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+                }}>
+                  <InlineEdit value={lead.asesor} onSave={v => onUpdate?.({...lead, asesor: v})} T={T} isLight={isLight} placeholder="Asesor" emptyText="Sin asesor" />
+                  {lead.budget || lead.presupuesto ? <>{" · "}
+                    <InlineEdit
+                      value={lead.budget}
+                      onSave={v => {
+                        const parsed = parseBudget(v);
+                        onUpdate?.({...lead, budget: parsed ? formatBudget(parsed) : v, presupuesto: parsed || lead.presupuesto || 0 });
+                      }}
+                      T={T} isLight={isLight} placeholder="300k · 1.5M" emptyText="Sin presupuesto"
+                    />
+                  </> : null}
+                </p>
               </div>
             </div>
-            <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-              {!editing && (
-                <button
-                  onClick={() => setUpdateChatOpen(true)}
-                  title="Registrar lo que pasó con el cliente"
-                  style={{
-                    display: "flex", alignItems: "center", gap: 7,
-                    padding: "8px 14px", borderRadius: 9,
-                    border: `1px solid ${T.accent}${isLight ? "55" : "44"}`,
-                    background: `linear-gradient(135deg, ${T.accent}28, ${T.accent}14)`,
-                    color: isLight ? `color-mix(in srgb, ${T.accent} 62%, #0B1220 38%)` : T.accent,
-                    fontSize: 12, fontWeight: 700, cursor: "pointer",
-                    fontFamily: fontDisp, transition: "all 0.18s",
-                    boxShadow: `0 2px 8px ${T.accent}24`,
-                  }}
-                  onMouseEnter={e => {
-                    e.currentTarget.style.background = `linear-gradient(135deg, ${T.accent}3A, ${T.accent}20)`;
-                    e.currentTarget.style.boxShadow = `0 4px 16px ${T.accent}38`;
-                    e.currentTarget.style.transform = "translateY(-1px)";
-                  }}
-                  onMouseLeave={e => {
-                    e.currentTarget.style.background = `linear-gradient(135deg, ${T.accent}28, ${T.accent}14)`;
-                    e.currentTarget.style.boxShadow = `0 2px 8px ${T.accent}24`;
-                    e.currentTarget.style.transform = "none";
-                  }}
-                >
-                  <Plus size={12} strokeWidth={2.5} />
-                  Actualizar expediente
-                </button>
-              )}
-              {!editing && typeof onShowHistory === 'function' && (
-                <button
-                  onClick={onShowHistory}
-                  title="Ver historial de cambios"
-                  aria-label="Ver historial"
-                  style={{
-                    width: 30, height: 30, borderRadius: 8,
-                    border: `1px solid ${T.border}`,
-                    background: "transparent",
-                    cursor: "pointer",
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    transition: "all 0.18s",
-                  }}
+
+            {/* Derecha: chip estado + acciones — apilados muy compactos */}
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 6, flexShrink: 0 }}>
+              <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                {typeof onDelete === 'function' && (
+                  <button
+                    onClick={() => setConfirmDelete(true)}
+                    title="Eliminar cliente (mover a papelera)"
+                    aria-label="Eliminar cliente"
+                    style={{
+                      width: 32, height: 32, borderRadius: 9,
+                      border: `1px solid ${T.border}`, background: "transparent",
+                      cursor: "pointer",
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      transition: "all 0.18s",
+                    }}
+                    onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(239,68,68,0.45)"; e.currentTarget.style.background = "rgba(239,68,68,0.08)"; }}
+                    onMouseLeave={e => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.background = "transparent"; }}
+                  >
+                    <Trash2 size={14} color="#EF4444" strokeWidth={2.2} />
+                  </button>
+                )}
+                <button onClick={safeClose} title="Cerrar" aria-label="Cerrar" style={{ width: 32, height: 32, borderRadius: 9, border: `1px solid ${T.border}`, background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.18s" }}
                   onMouseEnter={e => { e.currentTarget.style.background = T.glassH; e.currentTarget.style.borderColor = T.borderH; }}
                   onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = T.border; }}
-                >
-                  <Clock size={13} color={T.txt3} strokeWidth={2.2} />
-                </button>
-              )}
-              {!editing && typeof onDelete === 'function' && (
-                <button
-                  onClick={() => setConfirmDelete(true)}
-                  title="Eliminar cliente (mover a papelera)"
-                  aria-label="Eliminar cliente"
+                ><X size={14} color={T.txt3} /></button>
+              </div>
+              {/* Chip de estado de guardado — solo aparece cuando hay actividad */}
+              {saveStatus !== "idle" && (
+                <span
+                  title={lastSavedAt ? `Último guardado: ${new Date(lastSavedAt).toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" })}` : ""}
                   style={{
-                    width: 30, height: 30, borderRadius: 8,
-                    border: `1px solid ${T.border}`, background: "transparent",
-                    cursor: "pointer",
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    transition: "all 0.18s",
+                    display: "inline-flex", alignItems: "center", gap: 5,
+                    padding: "3px 9px", borderRadius: 99,
+                    fontSize: 10, fontWeight: 700, fontFamily: fontDisp,
+                    letterSpacing: "0.02em", whiteSpace: "nowrap",
+                    border: `1px solid ${
+                      saveStatus === "saved" ? `${T.accent}${isLight ? "44" : "38"}` :
+                      saveStatus === "error" ? "rgba(239,68,68,0.4)" :
+                      T.border
+                    }`,
+                    background:
+                      saveStatus === "saved" ? `${T.accent}${isLight ? "12" : "0E"}` :
+                      saveStatus === "error" ? "rgba(239,68,68,0.10)" :
+                      T.glass,
+                    color:
+                      saveStatus === "saved" ? (isLight ? `color-mix(in srgb, ${T.accent} 60%, #0B1220 40%)` : T.accent) :
+                      saveStatus === "error" ? "#F87171" : T.txt3,
                   }}
-                  onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(239,68,68,0.45)"; e.currentTarget.style.background = "rgba(239,68,68,0.08)"; }}
-                  onMouseLeave={e => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.background = "transparent"; }}
                 >
-                  <Trash2 size={13} color="#EF4444" strokeWidth={2.2} />
-                </button>
+                  {saveStatus === "saving" && <>
+                    <span style={{ width: 7, height: 7, borderRadius: "50%", border: `1.5px solid ${T.txt3}`, borderTopColor: "transparent", animation: "spin 0.8s linear infinite" }} />
+                    Guardando…
+                  </>}
+                  {saveStatus === "saved" && <><Check size={10} strokeWidth={3} /> Guardado</>}
+                  {saveStatus === "error" && <><AlertCircle size={10} strokeWidth={2.5} /> Sin guardar</>}
+                </span>
               )}
-              <button onClick={onClose} title="Cerrar" style={{ width: 30, height: 30, borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.18s" }}
-                onMouseEnter={e => { e.currentTarget.style.background = T.glassH; e.currentTarget.style.borderColor = T.borderH; }}
-                onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = T.border; }}
-              ><X size={13} color={T.txt3} /></button>
             </div>
           </div>
 
@@ -2706,159 +2962,82 @@ const NotesModal = ({ lead, onClose, onSave, onUpdate, onSwitchTab, onShowHistor
               </div>
             </div>
           )}
-
-          {/* Snapshot del lead */}
-          <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 14px", borderRadius: 12, background: T.glass, border: `1px solid ${T.border}` }}>
-            <div style={{ width: 38, height: 38, borderRadius: 11, background: `${T.blue}18`, border: `1px solid ${T.blue}44`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 800, color: isLight ? `color-mix(in srgb, ${T.blue} 58%, #0B1220 42%)` : T.blue, fontFamily: fontDisp, flexShrink: 0 }}>{lead.n.charAt(0)}</div>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <p style={{ margin: 0, fontSize: 14.5, fontWeight: 700, color: titleC, fontFamily: fontDisp, letterSpacing: "-0.02em" }}>
-                <InlineEdit value={lead.n} onSave={v => onUpdate?.({...lead, n: v})} T={T} isLight={isLight} placeholder="Nombre" />
-              </p>
-              <p style={{ margin: "3px 0 0", fontSize: 11.5, color: T.txt3, fontFamily: font }}>
-                <InlineEdit value={lead.asesor} onSave={v => onUpdate?.({...lead, asesor: v})} T={T} isLight={isLight} placeholder="Asesor" emptyText="Sin asesor" />
-                {" · "}
-                <InlineEdit
-                  value={lead.budget}
-                  onSave={v => {
-                    const parsed = parseBudget(v);
-                    onUpdate?.({...lead, budget: parsed ? formatBudget(parsed) : v, presupuesto: parsed || lead.presupuesto || 0 });
-                  }}
-                  T={T} isLight={isLight} placeholder="300k · 1.5M" emptyText="Sin presupuesto"
-                />
-              </p>
-            </div>
-          </div>
         </div>
 
-        {/* Contenido */}
-        <div style={{ padding: isMobile ? "16px 16px 110px" : "18px 24px 90px", overflowY: "auto", overscrollBehavior: "contain", WebkitOverflowScrolling: "touch", scrollBehavior: "smooth", flex: 1 }}>
-          {/* ── Próxima acción — hero unificado (siempre visible en modo lectura).
-              Mismo componente que Perfil y Análisis IA: es lo primero
-              accionable que ve el asesor en el expediente del cliente. ── */}
-          {!editing && (
-            <div style={{ marginBottom: 16 }}>
-              <NextActionHero lead={lead} T={T} onUpdate={onUpdate} />
-            </div>
-          )}
-          {/* ── Acciones rápidas — seguimientos + etapa editable ── */}
-          {!editing && (
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 7, alignItems: "center", marginBottom: 16 }}>
-              <FollowUpBadge lead={lead} onUpdate={onUpdate} T={T} />
-              <StageBadge lead={lead} onUpdate={onUpdate} T={T} />
-            </div>
-          )}
-          {/* ── ÚLTIMOS REGISTROS — historial cronológico (más reciente arriba)
-              Se muestra ANTES del playbook para que el asesor vea siempre
-              "¿qué fue lo último que pasó con este cliente?" arriba de todo. ── */}
-          {!editing && (
-            <div style={{ marginBottom: 16 }}>
+        {/* ════════════════════════════════════════════════════════════════
+            CUERPO DEL EXPEDIENTE — jerarquía orientada a resultados:
+              1. Próxima acción (qué hago AHORA)
+              2. Etapa + seguimientos (cómo voy)
+              3. Notas del expediente (dónde anoto todo) — ESTRELLA
+              4. Tareas pendientes (mini-checklist)
+              5. Historial de acciones (solo si hay registros)
+            Cada sección tiene un título minúsculo, sin chrome pesado.
+            ════════════════════════════════════════════════════════════════ */}
+        <div style={{ padding: isMobile ? "16px 16px 110px" : "18px 24px 90px", overflowY: "auto", overscrollBehavior: "contain", WebkitOverflowScrolling: "touch", scrollBehavior: "smooth", flex: 1, display: "flex", flexDirection: "column", gap: 18 }}>
+
+          {/* 1. PRÓXIMA ACCIÓN — hero mint, lo primero accionable */}
+          <NextActionHero lead={lead} T={T} onUpdate={onUpdate} />
+
+          {/* 2. ETAPA + SEGUIMIENTOS — pills compactos */}
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 7, alignItems: "center" }}>
+            <FollowUpBadge lead={lead} onUpdate={onUpdate} T={T} />
+            <StageBadge lead={lead} onUpdate={onUpdate} T={T} />
+          </div>
+
+          {/* 3. NOTAS DEL EXPEDIENTE — textarea siempre editable, auto-save.
+              Es la sección estrella: aquí el asesor escribe TODO lo que
+              pasó con el cliente (contexto, conversaciones, decisiones).
+              Sin Telegram, sin voz, sin IA. Texto plano y persistente. */}
+          <div>
+            <SectionLabel T={T} icon={FileText}>Notas del expediente</SectionLabel>
+            <textarea
+              value={notesDraft}
+              onChange={e => handleChange(e.target.value)}
+              onBlur={flushSave}
+              placeholder={"Escribe lo que pasó con el cliente: contexto, conversaciones, objeciones, decisiones, lo que sea relevante…"}
+              spellCheck={true}
+              style={{
+                width: "100%",
+                minHeight: isMobile ? 220 : 280,
+                padding: "14px 16px",
+                borderRadius: 12,
+                background: isLight ? "rgba(15,23,42,0.025)" : "rgba(255,255,255,0.03)",
+                border: `1px solid ${T.border}`,
+                color: T.txt,
+                fontSize: isMobile ? 15 : 13.5,
+                fontFamily: font,
+                lineHeight: 1.7,
+                outline: "none",
+                resize: "vertical",
+                boxSizing: "border-box",
+                transition: "border-color 0.18s, background 0.18s",
+              }}
+              onFocus={e => { e.currentTarget.style.borderColor = T.borderH; e.currentTarget.style.background = isLight ? "rgba(15,23,42,0.04)" : "rgba(255,255,255,0.045)"; }}
+            />
+          </div>
+
+          {/* 4. TAREAS — checklist accionable */}
+          <div>
+            <SectionLabel T={T} icon={CheckSquare}>Tareas</SectionLabel>
+            <TaskChecklist lead={lead} onUpdate={onUpdate} T={T} />
+          </div>
+
+          {/* 5. HISTORIAL DE ACCIONES — solo aparece si hay registros.
+              No mostramos empty state preachy: si no hay historial,
+              tampoco hay sección. La cabecera del componente ya indica
+              "Lista de acciones · N · más reciente arriba". */}
+          {Array.isArray(lead?.actionHistory) && lead.actionHistory.length > 0 && (
+            <div>
+              <SectionLabel T={T} icon={Clock}>Historial</SectionLabel>
               <ActionTimeline lead={lead} T={T} />
             </div>
           )}
-          {/* ── Playbook personalizado — checklist de acciones del Protocolo Duke ── */}
-          {!editing && <PlaybookSection lead={lead} T={T} onUpdate={onUpdate} onShowSuggest={onShowSuggest} />}
-
-          {editing ? (
-            <div>
-              <p style={{ fontSize: 10, fontWeight: 700, color: T.txt3, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 8, fontFamily: fontDisp }}>Editar expediente</p>
-              <textarea value={draft} onChange={e => setDraft(e.target.value)}
-                placeholder={"OBJETIVO\nDescripción...\n\nPENDIENTE\nAcciones pendientes..."}
-                style={{ width: "100%", minHeight: 360, padding: "14px", borderRadius: 12, background: isLight ? "rgba(15,23,42,0.04)" : "rgba(255,255,255,0.04)", border: `1px solid ${T.borderH}`, color: T.txt, fontSize: 13, fontFamily: font, lineHeight: 1.75, outline: "none", resize: "vertical", boxSizing: "border-box" }} />
-            </div>
-          ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-              {sections.filter(s => s.title || s.body).map((s, i) => {
-                const c = sectionColors[s.key] || T.txt2;
-                const titleCol = isLight && s.key ? `color-mix(in srgb, ${c} 58%, #0B1220 42%)` : c;
-                return (
-                  <div key={i} style={{ borderRadius: 12, border: `1px solid ${s.key ? `${c}${isLight ? "30" : "20"}` : T.border}`, overflow: "hidden", background: isLight && s.key ? `${c}08` : "transparent" }}>
-                    {s.title && (
-                      <div style={{ padding: "9px 15px", background: s.key ? (isLight ? `${c}14` : `${c}0C`) : T.glass, borderBottom: `1px solid ${s.key ? `${c}${isLight ? "28" : "1C"}` : T.border}` }}>
-                        <p style={{ margin: 0, fontSize: 10.5, fontWeight: 800, color: titleCol, letterSpacing: "0.08em", textTransform: "uppercase", fontFamily: fontDisp }}>{s.title}</p>
-                      </div>
-                    )}
-                    <div style={{ padding: s.title ? "13px 15px" : "15px" }}>
-                      {/* div con whiteSpace: pre-wrap en vez de <pre> —
-                          el tag <pre> del navegador aplica fuente monospace
-                          por defecto (aspecto "antigua"); usando <div> con
-                          fontFamily SF Pro se ve consistente con el resto. */}
-                      <div style={{ fontSize: 13, color: isLight ? T.txt : T.txt2, lineHeight: 1.75, fontFamily: font, whiteSpace: "pre-wrap", margin: 0, fontWeight: 500 }}>{s.body.trim()}</div>
-                    </div>
-                  </div>
-                );
-              })}
-              {sections.length === 0 && (
-                <div style={{ padding: "48px 0", textAlign: "center" }}>
-                  <p style={{ fontSize: 13, color: T.txt3, marginBottom: 14, fontFamily: font }}>Sin información registrada en el expediente.</p>
-                  <button
-                    onClick={() => setUpdateChatOpen(true)}
-                    style={{
-                      padding: "9px 22px", borderRadius: 9,
-                      background: `${T.accent}12`, border: `1px solid ${T.accentB}`,
-                      color: isLight ? `color-mix(in srgb, ${T.accent} 62%, #0B1220 38%)` : T.accent,
-                      fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: fontDisp,
-                      display: "inline-flex", alignItems: "center", gap: 7, transition: "all 0.16s",
-                    }}
-                    onMouseEnter={e => { e.currentTarget.style.background = `${T.accent}1E`; }}
-                    onMouseLeave={e => { e.currentTarget.style.background = `${T.accent}12`; }}
-                  >
-                    <RefreshCw size={12} strokeWidth={2.5} />
-                    ¿Qué pasó con el cliente?
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
         </div>
 
-        {editing && (
-          <div style={{ padding: "14px 24px", borderTop: `1px solid ${T.border}`, display: "flex", gap: 8, flexShrink: 0, background: T === P ? "#111318" : "#FFFFFF" }}>
-            <button onClick={() => setEditing(false)} style={{ flex: 1, padding: "11px 0", borderRadius: 11, background: "transparent", border: `1px solid ${T.border}`, color: T.txt3, fontSize: 13, fontWeight: 600, fontFamily: font, cursor: "pointer", transition: "all 0.18s" }}
-              onMouseEnter={e => { e.currentTarget.style.background = T.glassH; e.currentTarget.style.color = T.txt2; }}
-              onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = T.txt3; }}
-            >Cancelar</button>
-            <button onClick={saveEdit} style={{ flex: 2, padding: "11px 0", borderRadius: 11, background: `${T.blue}18`, border: `1px solid ${T.blue}44`, color: isLight ? `color-mix(in srgb, ${T.blue} 58%, #0B1220 42%)` : T.blue, fontSize: 13, fontWeight: 700, fontFamily: fontDisp, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 7, transition: "background 0.18s" }}
-              onMouseEnter={e => e.currentTarget.style.background = `${T.blue}28`}
-              onMouseLeave={e => e.currentTarget.style.background = `${T.blue}18`}
-            >Guardar expediente</button>
-          </div>
-        )}
-
-        {/* Dynamic Island — switcher Análisis IA · Perfil · Expediente */}
-        {!editing && <DrawerTabIsland current="expediente" onSwitch={onSwitchTab} T={T} />}
-
-        {/* ── UpdateChatPanel ── */}
-        {!editing && (
-          <UpdateChatPanel
-            isOpen={updateChatOpen}
-            onClose={() => setUpdateChatOpen(false)}
-            expedienteItems={expedienteItems}
-            onAddItem={item => {
-              setExpedienteItems(prev => [item, ...prev]);
-              // Persistir el registro al actionHistory del lead para que
-              // aparezca arriba en "Últimos registros" del Expediente.
-              if (lead && typeof onUpdate === 'function') {
-                const summary = (item.title || item.content || 'Registro nuevo')
-                  .toString()
-                  .slice(0, 200);
-                const action = {
-                  id: item.id?.toString() || genId(),
-                  action: summary,
-                  type: 'tarea',
-                  doneAtFmt: item.fecha || fmtNow(),
-                  completed_at: new Date().toISOString(),
-                  date: '',
-                };
-                const prevHistory = Array.isArray(lead.actionHistory) ? lead.actionHistory : [];
-                onUpdate({ ...lead, actionHistory: [action, ...prevHistory] });
-              }
-            }}
-            onRemoveItem={id => setExpedienteItems(prev => prev.filter(x => x.id !== id))}
-            T={T}
-            lead={lead}
-            onUpdate={onUpdate}
-          />
-        )}
+        {/* Dynamic Island — switcher Análisis IA · Perfil · Expediente.
+            Los flujos previos de Telegram/voz/IA fueron retirados: el
+            expediente ahora es 100% texto plano con auto-save. */}
+        <DrawerTabIsland current="expediente" onSwitch={onSwitchTab} T={T} />
       </div>
     </>,
     document.body
@@ -3119,10 +3298,50 @@ const LeadPanel = ({ lead, onClose, oc, onUpdate, onSwitchTab, onShowHistory, on
           <div style={{ marginBottom: 14 }}>
             <ScoreInput sc={sc} onUpdate={n => onUpdate?.({...lead, sc: n})} isLight={isLight} T={T} />
           </div>
-          <div style={{ display: "flex", gap: 7 }}>
-            <a href={`tel:${editing ? f("phone") : lead.phone}`} style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "8px 12px", borderRadius: 9, background: T.glass, border: `1px solid ${T.border}`, color: T.txt2, fontSize: 11, fontWeight: 600, textDecoration: "none", transition: "all 0.18s" }} onMouseEnter={e => { e.currentTarget.style.background = T.glassH; e.currentTarget.style.color = T.txt; }} onMouseLeave={e => { e.currentTarget.style.background = T.glass; e.currentTarget.style.color = T.txt2; }}><Phone size={12} /> Llamar</a>
-            <a href={`https://wa.me/${(editing?f("phone"):lead.phone)?.replace(/[^0-9]/g,"")}`} target="_blank" rel="noreferrer" style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "8px 12px", borderRadius: 9, background: T.glass, border: `1px solid ${T.border}`, color: T.txt2, fontSize: 11, fontWeight: 600, textDecoration: "none", transition: "all 0.18s" }} onMouseEnter={e => { e.currentTarget.style.background = T.glassH; e.currentTarget.style.color = T.txt; }} onMouseLeave={e => { e.currentTarget.style.background = T.glass; e.currentTarget.style.color = T.txt2; }}><MessageCircle size={12} /> WhatsApp</a>
-          </div>
+          {/* CTAs de contacto en el Perfil — usan los mismos helpers que el
+              Expediente: tel:, wa.me con código MX por default si falta,
+              copiar al portapapeles, y mini-form para agregar si no hay
+              número. Todo en una sola fila táctil-friendly (44px de alto). */}
+          {(() => {
+            const rawPhone   = (editing ? f("phone") : lead.phone) || "";
+            const phoneClean = rawPhone.replace(/[^0-9+]/g, "");
+            const waDigits   = rawPhone.replace(/[^0-9]/g, "");
+            const waPhone    = !waDigits ? "" :
+              rawPhone.trim().startsWith("+") ? waDigits :
+              waDigits.length === 10 ? `52${waDigits}` : waDigits;
+            if (!phoneClean) {
+              return <AddPhoneInline lead={lead} onUpdate={onUpdate} T={T} isLight={isLight} />;
+            }
+            return (
+              <div style={{ display: "flex", gap: 7, flexWrap: "wrap" }}>
+                <a href={`tel:${phoneClean}`}
+                  style={{
+                    flex: 1, minWidth: 110, height: 40,
+                    display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+                    padding: "0 12px", borderRadius: 10,
+                    background: isLight ? `linear-gradient(135deg, ${T.accent}, #14B892)` : "rgba(255,255,255,0.92)",
+                    border: "none", color: isLight ? "#FFFFFF" : "#0A0F18",
+                    fontSize: 12, fontWeight: 700, fontFamily: fontDisp, textDecoration: "none",
+                    boxShadow: isLight ? `0 3px 10px ${T.accent}40` : "0 2px 8px rgba(0,0,0,0.35)",
+                    transition: "all 0.18s",
+                  }}
+                ><Phone size={12} strokeWidth={2.4} /> Llamar</a>
+                <a href={`https://wa.me/${waPhone}`} target="_blank" rel="noreferrer"
+                  style={{
+                    flex: 1, minWidth: 110, height: 40,
+                    display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+                    padding: "0 12px", borderRadius: 10,
+                    background: isLight ? "#FFFFFF" : "rgba(255,255,255,0.07)",
+                    border: `1px solid ${isLight ? "rgba(37,211,102,0.45)" : "rgba(255,255,255,0.12)"}`,
+                    color: isLight ? "#128C7E" : "rgba(255,255,255,0.88)",
+                    fontSize: 12, fontWeight: 700, fontFamily: fontDisp, textDecoration: "none",
+                    transition: "all 0.18s",
+                  }}
+                ><MessageCircle size={12} strokeWidth={2.4} /> WhatsApp</a>
+                <CopyPhoneButton phone={rawPhone} T={T} isLight={isLight} />
+              </div>
+            );
+          })()}
         </div>
 
         {/* Sub-tabs: Datos · Documentos */}
