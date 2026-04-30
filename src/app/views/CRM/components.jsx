@@ -780,20 +780,42 @@ const NextActionHero = ({ lead, T = P, onUpdate = null }) => {
   };
   const cancelEdit = () => setEditing(false);
 
+  // ════════════════════════════════════════════════════════════════════
+  // markDone — completa la próxima acción y abre el editor para definir
+  // la siguiente. updateLead detecta el cambio de nextAction (ahora vacío
+  // pero antes había una) y registra la previa como "completada" en el
+  // historial automáticamente. Después de un breve delay, abrimos el
+  // editor con foco en el textarea para que el asesor escriba la nueva
+  // próxima acción sin fricción. UX orientada a resultados.
+  // ════════════════════════════════════════════════════════════════════
+  const markDone = (e) => {
+    e?.stopPropagation?.();
+    if (!hasAction) return;
+    onUpdate?.({ ...lead, nextAction: "", nextActionDate: "" });
+    // Pequeño delay para que el auto-log tenga tiempo de procesarse y se
+    // sienta como un flujo natural ("hecho → ¿qué sigue?").
+    setTimeout(() => {
+      setDraftA("");
+      setDraftD("");
+      setEditing(true);
+    }, 220);
+  };
+
   const accentStrong = isLight ? (T.accentDark || T.accent) : T.accent;
   const textMain     = isLight ? T.txt : "#F1F5F9";
   // Normalización de teléfono — separamos formato visual del que va al dialer.
   // tel:  → mantiene "+" si lo trae, si no, dígitos puros (el SO sabe parsear).
   // wa.me → DEBE incluir código de país. Si no detecta uno (longitud típica
-  //         de número MX local: 10 dígitos), prepend "52" (México) por default.
+  //         de número de 10 dígitos sin lada), prepend "1" (USA) por default.
+  //         La mayoría de los clientes son de Estados Unidos.
   const phoneClean = (lead.phone || "").replace(/[^0-9+]/g, "");
   const waDigits   = (lead.phone || "").replace(/[^0-9]/g, "");
   const waPhone    = (() => {
     if (!waDigits) return "";
     // Si ya empieza con "+" en el original, asumimos código de país explícito.
     if ((lead.phone || "").trim().startsWith("+")) return waDigits;
-    // 10 dígitos típicos MX sin código → prepend 52
-    if (waDigits.length === 10) return `52${waDigits}`;
+    // 10 dígitos sin código → asumimos USA (+1) por default
+    if (waDigits.length === 10) return `1${waDigits}`;
     // Otros casos (más o menos dígitos): pasar como vienen, wa.me decide
     return waDigits;
   })();
@@ -1102,6 +1124,62 @@ const NextActionHero = ({ lead, T = P, onUpdate = null }) => {
                 tiene un dialer registrado, o cuando el asesor quiere
                 pegarlo en otra app. Hace copy + toast efímero in-line. */}
             <CopyPhoneButton phone={phoneDisplay} T={T} isLight={isLight} />
+            {/* Marcar como hecha — solo aparece cuando hay nextAction.
+                Mueve la actual al historial (auto-log) y abre el editor
+                con foco listo para escribir la siguiente. */}
+            {hasAction && (
+              <button
+                onClick={markDone}
+                title="Marcar la próxima acción como hecha y agendar la siguiente"
+                aria-label="Marcar como hecha"
+                style={{
+                  flexShrink: 0,
+                  display: "inline-flex", alignItems: "center", gap: 6,
+                  padding: "9px 12px", borderRadius: 10,
+                  background: "transparent",
+                  border: `1px dashed ${isLight ? `${T.accent}66` : `${T.accent}55`}`,
+                  color: isLight ? `color-mix(in srgb, ${T.accent} 60%, #0B1220 40%)` : T.accent,
+                  fontSize: 12, fontWeight: 700, fontFamily: fontDisp,
+                  letterSpacing: "0.01em", cursor: "pointer",
+                  transition: "all 0.18s",
+                }}
+                onMouseEnter={e => { e.currentTarget.style.background = `${T.accent}${isLight ? "12" : "0E"}`; e.currentTarget.style.borderStyle = "solid"; }}
+                onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderStyle = "dashed"; }}
+              >
+                <CheckCircle2 size={12} strokeWidth={2.4} /> Hecho
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* Si NO hay teléfono pero SÍ hay próxima acción, mostramos solo
+            el botón "Hecho" en su propia fila — el asesor puede cerrar la
+            acción aunque no esté llamando ni mandando WhatsApp. */}
+        {!editing && !phoneClean && hasAction && (
+          <div style={{
+            marginTop: 12, paddingTop: 10,
+            borderTop: `1px dashed ${isLight ? `${T.accent}2E` : `${T.accent}22`}`,
+          }}>
+            <button
+              onClick={markDone}
+              title="Marcar la próxima acción como hecha y agendar la siguiente"
+              aria-label="Marcar como hecha"
+              style={{
+                width: "100%",
+                display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6,
+                padding: "9px 12px", borderRadius: 10,
+                background: "transparent",
+                border: `1px dashed ${isLight ? `${T.accent}66` : `${T.accent}55`}`,
+                color: isLight ? `color-mix(in srgb, ${T.accent} 60%, #0B1220 40%)` : T.accent,
+                fontSize: 12, fontWeight: 700, fontFamily: fontDisp,
+                letterSpacing: "0.01em", cursor: "pointer",
+                transition: "all 0.18s",
+              }}
+              onMouseEnter={e => { e.currentTarget.style.background = `${T.accent}${isLight ? "12" : "0E"}`; e.currentTarget.style.borderStyle = "solid"; }}
+              onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderStyle = "dashed"; }}
+            >
+              <CheckCircle2 size={12} strokeWidth={2.4} /> Marcar como hecha
+            </button>
           </div>
         )}
 
@@ -1191,7 +1269,7 @@ const AddPhoneInline = ({ lead, onUpdate, T = P, isLight = false }) => {
         value={val}
         onChange={e => setVal(e.target.value)}
         onKeyDown={e => { if (e.key === "Enter") submit(); }}
-        placeholder="Agrega un teléfono…  +52 81 …"
+        placeholder="Agrega un teléfono…  +1 555 …"
         inputMode="tel"
         style={{
           flex: 1, minWidth: 140,
@@ -3299,16 +3377,17 @@ const LeadPanel = ({ lead, onClose, oc, onUpdate, onSwitchTab, onShowHistory, on
             <ScoreInput sc={sc} onUpdate={n => onUpdate?.({...lead, sc: n})} isLight={isLight} T={T} />
           </div>
           {/* CTAs de contacto en el Perfil — usan los mismos helpers que el
-              Expediente: tel:, wa.me con código MX por default si falta,
+              Expediente: tel:, wa.me con código USA por default si falta,
               copiar al portapapeles, y mini-form para agregar si no hay
               número. Todo en una sola fila táctil-friendly (44px de alto). */}
           {(() => {
             const rawPhone   = (editing ? f("phone") : lead.phone) || "";
             const phoneClean = rawPhone.replace(/[^0-9+]/g, "");
             const waDigits   = rawPhone.replace(/[^0-9]/g, "");
+            // 10 dígitos sin "+" → USA por default (mayoría de los clientes).
             const waPhone    = !waDigits ? "" :
               rawPhone.trim().startsWith("+") ? waDigits :
-              waDigits.length === 10 ? `52${waDigits}` : waDigits;
+              waDigits.length === 10 ? `1${waDigits}` : waDigits;
             if (!phoneClean) {
               return <AddPhoneInline lead={lead} onUpdate={onUpdate} T={T} isLight={isLight} />;
             }
