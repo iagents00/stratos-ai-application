@@ -2490,9 +2490,10 @@ const ActionTimeline = ({ lead, T = P, maxItems = 6 }) => {
   );
 };
 
-const NotesModal = ({ lead, onClose, onSave, onUpdate, onSwitchTab, onShowHistory, onShowSuggest, T = P }) => {
+const NotesModal = ({ lead, onClose, onSave, onUpdate, onSwitchTab, onShowHistory, onShowSuggest, onDelete, T = P }) => {
   const isMobile = useIsMobile();
   const [editing, setEditing] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const [draft, setDraft] = useState("");
   const [expedienteItems, setExpedienteItems] = useState(() => {
     if (lead?.id <= 3) {
@@ -2571,7 +2572,7 @@ const NotesModal = ({ lead, onClose, onSave, onUpdate, onSwitchTab, onShowHistor
         )}
 
         {/* Header: identidad + botón cerrar */}
-        <div style={{ padding: "18px 24px 14px", borderBottom: `1px solid ${T.border}`, flexShrink: 0 }}>
+        <div style={{ padding: isMobile ? "8px 16px 12px" : "18px 24px 14px", borderBottom: `1px solid ${T.border}`, flexShrink: 0 }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               <div style={{ width: 32, height: 32, borderRadius: 9, background: `linear-gradient(135deg, ${T.blue}22, ${T.blue}10)`, border: `1px solid ${T.blue}44`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, boxShadow: `0 0 14px ${T.blue}20` }}>
@@ -2631,12 +2632,80 @@ const NotesModal = ({ lead, onClose, onSave, onUpdate, onSwitchTab, onShowHistor
                   <Clock size={13} color={T.txt3} strokeWidth={2.2} />
                 </button>
               )}
+              {!editing && typeof onDelete === 'function' && (
+                <button
+                  onClick={() => setConfirmDelete(true)}
+                  title="Eliminar cliente (mover a papelera)"
+                  aria-label="Eliminar cliente"
+                  style={{
+                    width: 30, height: 30, borderRadius: 8,
+                    border: `1px solid ${T.border}`, background: "transparent",
+                    cursor: "pointer",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    transition: "all 0.18s",
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(239,68,68,0.45)"; e.currentTarget.style.background = "rgba(239,68,68,0.08)"; }}
+                  onMouseLeave={e => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.background = "transparent"; }}
+                >
+                  <Trash2 size={13} color="#EF4444" strokeWidth={2.2} />
+                </button>
+              )}
               <button onClick={onClose} title="Cerrar" style={{ width: 30, height: 30, borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.18s" }}
                 onMouseEnter={e => { e.currentTarget.style.background = T.glassH; e.currentTarget.style.borderColor = T.borderH; }}
                 onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = T.border; }}
               ><X size={13} color={T.txt3} /></button>
             </div>
           </div>
+
+          {/* Modal de confirmación soft-delete */}
+          {confirmDelete && (
+            <div onClick={() => setConfirmDelete(false)} style={{
+              position: "fixed", inset: 0, zIndex: 9999,
+              background: "rgba(0,0,0,0.65)",
+              backdropFilter: "blur(6px)", WebkitBackdropFilter: "blur(6px)",
+              display: "flex", alignItems: "center", justifyContent: "center", padding: 20,
+            }}>
+              <div onClick={e => e.stopPropagation()} style={{
+                width: "min(380px, 100%)", padding: 22, borderRadius: 16,
+                background: T === P ? "#0F1419" : "#FFFFFF",
+                border: `1px solid ${T.borderH}`,
+                boxShadow: "0 24px 60px rgba(0,0,0,0.5)",
+              }}>
+                <div style={{
+                  width: 44, height: 44, borderRadius: 12,
+                  background: "rgba(239,68,68,0.12)",
+                  border: "1px solid rgba(239,68,68,0.32)",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  marginBottom: 14,
+                }}>
+                  <Trash2 size={20} color="#EF4444" />
+                </div>
+                <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: T.txt, fontFamily: fontDisp, letterSpacing: "-0.02em" }}>
+                  ¿Eliminar a {lead.n}?
+                </h3>
+                <p style={{ margin: "8px 0 18px", fontSize: 12.5, color: T.txt2, lineHeight: 1.5 }}>
+                  Se moverá a la <strong style={{ color: T.txt }}>Papelera</strong>. Podrás restaurarlo en cualquier momento desde ahí.
+                </p>
+                <div style={{ display: "flex", gap: 8 }}>
+                  <button onClick={() => setConfirmDelete(false)} style={{
+                    flex: 1, padding: "10px 14px", borderRadius: 10,
+                    border: `1px solid ${T.border}`, background: "transparent",
+                    color: T.txt2, fontSize: 13, fontWeight: 600, fontFamily: fontDisp, cursor: "pointer",
+                  }}>Cancelar</button>
+                  <button onClick={async () => {
+                    setConfirmDelete(false);
+                    await onDelete?.(lead);
+                    onClose?.();
+                  }} style={{
+                    flex: 1, padding: "10px 14px", borderRadius: 10,
+                    border: "1px solid rgba(239,68,68,0.4)",
+                    background: "rgba(239,68,68,0.18)",
+                    color: "#FCA5A5", fontSize: 13, fontWeight: 700, fontFamily: fontDisp, cursor: "pointer",
+                  }}>Sí, eliminar</button>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Snapshot del lead */}
           <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 14px", borderRadius: 12, background: T.glass, border: `1px solid ${T.border}` }}>
@@ -2662,7 +2731,7 @@ const NotesModal = ({ lead, onClose, onSave, onUpdate, onSwitchTab, onShowHistor
         </div>
 
         {/* Contenido */}
-        <div style={{ padding: "18px 24px 90px", overflowY: "auto", overscrollBehavior: "contain", WebkitOverflowScrolling: "touch", scrollBehavior: "smooth", flex: 1 }}>
+        <div style={{ padding: isMobile ? "16px 16px 110px" : "18px 24px 90px", overflowY: "auto", overscrollBehavior: "contain", WebkitOverflowScrolling: "touch", scrollBehavior: "smooth", flex: 1 }}>
           {/* ── Próxima acción — hero unificado (siempre visible en modo lectura).
               Mismo componente que Perfil y Análisis IA: es lo primero
               accionable que ve el asesor en el expediente del cliente. ── */}
@@ -2827,10 +2896,11 @@ const COACHING_MOCKS = [
   },
 ];
 
-const LeadPanel = ({ lead, onClose, oc, onUpdate, onSwitchTab, onShowHistory, T = P }) => {
+const LeadPanel = ({ lead, onClose, oc, onUpdate, onSwitchTab, onShowHistory, onDelete, T = P }) => {
   const isMobile = useIsMobile();
   const [activeTab, setActiveTab] = useState("perfil");
   const [editing, setEditing] = useState(false);
+  const [confirmDeleteLP, setConfirmDeleteLP] = useState(false);
   const [form, setForm] = useState(null);
   const [panelCopied, setPanelCopied] = useState(false);
   const [expandBio, setExpandBio] = useState(false);
@@ -2967,7 +3037,7 @@ const LeadPanel = ({ lead, onClose, oc, onUpdate, onSwitchTab, onShowHistory, T 
         )}
 
         {/* Header */}
-        <div style={{ padding: "18px 22px 14px", borderBottom: `1px solid ${T.border}`, flexShrink: 0 }}>
+        <div style={{ padding: isMobile ? "8px 16px 12px" : "18px 22px 14px", borderBottom: `1px solid ${T.border}`, flexShrink: 0 }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
             <div style={{ display: "flex", gap: 6 }}>
               {lead.hot && <span style={{ fontSize: 9, fontWeight: 700, color: T.accent, background: `${T.accent}12`, border: `1px solid ${T.accentB}`, padding: "2px 8px", borderRadius: 99 }}>HOT</span>}
@@ -2984,6 +3054,18 @@ const LeadPanel = ({ lead, onClose, oc, onUpdate, onSwitchTab, onShowHistory, T 
                   onMouseEnter={e => { e.currentTarget.style.background = T.glassH; e.currentTarget.style.borderColor = T.borderH; }}
                   onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = T.border; }}
                 ><Clock size={13} color={T.txt3} strokeWidth={2.2} /></button>
+              )}
+              {typeof onDelete === 'function' && (
+                <button
+                  onClick={() => setConfirmDeleteLP(true)}
+                  title="Eliminar cliente (mover a papelera)"
+                  aria-label="Eliminar cliente"
+                  style={{ width: 30, height: 30, borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.18s" }}
+                  onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(239,68,68,0.45)"; e.currentTarget.style.background = "rgba(239,68,68,0.08)"; }}
+                  onMouseLeave={e => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.background = "transparent"; }}
+                >
+                  <Trash2 size={13} color="#EF4444" strokeWidth={2.2} />
+                </button>
               )}
               <button onClick={onClose} title="Cerrar" style={{ width: 30, height: 30, borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.18s" }} onMouseEnter={e => { e.currentTarget.style.background = T.glassH; e.currentTarget.style.borderColor = T.borderH; }} onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = T.border; }}><X size={13} color={T.txt3} /></button>
             </div>
@@ -3420,6 +3502,56 @@ const LeadPanel = ({ lead, onClose, oc, onUpdate, onSwitchTab, onShowHistory, T 
             onUpdate={onUpdate}
           />
         )}
+
+        {/* Modal de confirmación soft-delete (LeadPanel) */}
+        {confirmDeleteLP && (
+          <div onClick={() => setConfirmDeleteLP(false)} style={{
+            position: "fixed", inset: 0, zIndex: 9999,
+            background: "rgba(0,0,0,0.65)",
+            backdropFilter: "blur(6px)", WebkitBackdropFilter: "blur(6px)",
+            display: "flex", alignItems: "center", justifyContent: "center", padding: 20,
+          }}>
+            <div onClick={e => e.stopPropagation()} style={{
+              width: "min(380px, 100%)", padding: 22, borderRadius: 16,
+              background: T === P ? "#0F1419" : "#FFFFFF",
+              border: `1px solid ${T.borderH}`,
+              boxShadow: "0 24px 60px rgba(0,0,0,0.5)",
+            }}>
+              <div style={{
+                width: 44, height: 44, borderRadius: 12,
+                background: "rgba(239,68,68,0.12)",
+                border: "1px solid rgba(239,68,68,0.32)",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                marginBottom: 14,
+              }}>
+                <Trash2 size={20} color="#EF4444" />
+              </div>
+              <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: T.txt, fontFamily: fontDisp, letterSpacing: "-0.02em" }}>
+                ¿Eliminar a {lead.n}?
+              </h3>
+              <p style={{ margin: "8px 0 18px", fontSize: 12.5, color: T.txt2, lineHeight: 1.5 }}>
+                Se moverá a la <strong style={{ color: T.txt }}>Papelera</strong>. Podrás restaurarlo en cualquier momento desde ahí.
+              </p>
+              <div style={{ display: "flex", gap: 8 }}>
+                <button onClick={() => setConfirmDeleteLP(false)} style={{
+                  flex: 1, padding: "10px 14px", borderRadius: 10,
+                  border: `1px solid ${T.border}`, background: "transparent",
+                  color: T.txt2, fontSize: 13, fontWeight: 600, fontFamily: fontDisp, cursor: "pointer",
+                }}>Cancelar</button>
+                <button onClick={async () => {
+                  setConfirmDeleteLP(false);
+                  await onDelete?.(lead);
+                  onClose?.();
+                }} style={{
+                  flex: 1, padding: "10px 14px", borderRadius: 10,
+                  border: "1px solid rgba(239,68,68,0.4)",
+                  background: "rgba(239,68,68,0.18)",
+                  color: "#FCA5A5", fontSize: 13, fontWeight: 700, fontFamily: fontDisp, cursor: "pointer",
+                }}>Sí, eliminar</button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </>,
     document.body
@@ -3647,7 +3779,7 @@ const AnalysisDrawer = ({ lead, onClose, oc, onUpdate, onSwitchTab, T = P }) => 
         )}
 
         {/* Header */}
-        <div style={{ padding: "18px 22px 16px", borderBottom: `1px solid ${T.border}`, flexShrink: 0 }}>
+        <div style={{ padding: isMobile ? "8px 16px 14px" : "18px 22px 16px", borderBottom: `1px solid ${T.border}`, flexShrink: 0 }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
               <div style={{ width: 34, height: 34, borderRadius: 10, background: `linear-gradient(135deg, ${T.accent}22, ${T.blue}22)`, border: `1px solid ${T.accentB}`, display: "flex", alignItems: "center", justifyContent: "center", boxShadow: `0 0 20px ${T.accent}22` }}>
@@ -3707,7 +3839,7 @@ const AnalysisDrawer = ({ lead, onClose, oc, onUpdate, onSwitchTab, T = P }) => 
         </div>
 
         {/* Content */}
-        <div style={{ flex: 1, overflowY: "auto", overscrollBehavior: "contain", WebkitOverflowScrolling: "touch", scrollBehavior: "smooth", padding: "18px 22px 130px", display: "flex", flexDirection: "column", gap: 18 }}>
+        <div style={{ flex: 1, overflowY: "auto", overscrollBehavior: "contain", WebkitOverflowScrolling: "touch", scrollBehavior: "smooth", padding: isMobile ? "16px 16px 130px" : "18px 22px 130px", display: "flex", flexDirection: "column", gap: 18 }}>
 
           {/* ── Próxima acción — hero unificado, mismo componente que Perfil y Expediente.
               Es lo primero que ve el asesor al abrir el drawer: qué tiene que hacer

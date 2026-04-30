@@ -55,6 +55,7 @@ const LandingPages  = lazy(() => import("./views/LandingPages"));
 const FinanzasAdmin = lazy(() => import("./views/FinanzasAdmin"));
 const RRHHModule    = lazy(() => import("./views/RRHHModule"));
 const Profile       = lazy(() => import("./views/Profile"));
+const Trash         = lazy(() => import("./views/Trash"));
 
 /* ── Mock data (demo fallback) ── */
 import { leads } from "./data/leads";
@@ -217,6 +218,82 @@ export default function App() {
       supabase.removeChannel(ch);
     };
   }, [user, fetchLeads]);
+
+  // ══════════════════════════════════════════════════════════════════════
+  // SOFT-DELETE / PAPELERA
+  // ══════════════════════════════════════════════════════════════════════
+  // El schema de leads tiene `deleted_at timestamptz NULL`. Las queries
+  // normales filtran por deleted_at IS NULL. Aquí exponemos:
+  //   · softDeleteLead(id)     → mueve a la papelera (set deleted_at = now())
+  //   · restoreLead(id)        → restaura (set deleted_at = null)
+  //   · hardDeleteLead(id)     → DELETE definitivo, solo super_admin/admin
+  //   · trashedLeads (state)   → lista de leads con deleted_at NOT NULL
+  //   · refreshTrash()         → recarga la papelera bajo demanda
+  // ══════════════════════════════════════════════════════════════════════
+  const [trashedLeads, setTrashedLeads] = useState([]);
+
+  const refreshTrash = useCallback(async () => {
+    if (!user || user.id === 'demo-user-local') return;
+    const { data, error } = await supabase
+      .from('leads').select('*')
+      .not('deleted_at', 'is', null)
+      .order('deleted_at', { ascending: false });
+    if (!error && data) setTrashedLeads(normalizeLeads(data));
+  }, [user, normalizeLeads]);
+
+  // Cargar papelera al montar y cuando cambia user
+  useEffect(() => {
+    if (!user || user.id === 'demo-user-local' || user._offline) return;
+    refreshTrash();
+  }, [user, refreshTrash]);
+
+  const softDeleteLead = useCallback(async (leadId) => {
+    if (!leadId) return { ok: false, error: 'ID inválido' };
+    // Optimistic: quitar del estado activo inmediatamente
+    setLeadsData(prev => prev.filter(l => l.id !== leadId));
+    if (user?.id === 'demo-user-local' || user?.isDemo) return { ok: true };
+    const { error } = await supabase
+      .from('leads')
+      .update({ deleted_at: new Date().toISOString() })
+      .eq('id', leadId);
+    if (error) {
+      // Rollback — re-fetch para restaurar
+      fetchLeads();
+      return { ok: false, error: error.message };
+    }
+    refreshTrash();
+    return { ok: true };
+  }, [user, fetchLeads, refreshTrash]);
+
+  const restoreLead = useCallback(async (leadId) => {
+    if (!leadId) return { ok: false, error: 'ID inválido' };
+    // Optimistic: quitar de papelera inmediatamente
+    setTrashedLeads(prev => prev.filter(l => l.id !== leadId));
+    if (user?.id === 'demo-user-local' || user?.isDemo) return { ok: true };
+    const { error } = await supabase
+      .from('leads')
+      .update({ deleted_at: null })
+      .eq('id', leadId);
+    if (error) {
+      refreshTrash();
+      return { ok: false, error: error.message };
+    }
+    fetchLeads();
+    return { ok: true };
+  }, [user, fetchLeads, refreshTrash]);
+
+  const hardDeleteLead = useCallback(async (leadId) => {
+    if (!leadId) return { ok: false, error: 'ID inválido' };
+    if (!["super_admin", "admin"].includes(user?.role))
+      return { ok: false, error: 'Solo super_admin/admin pueden eliminar definitivamente' };
+    setTrashedLeads(prev => prev.filter(l => l.id !== leadId));
+    const { error } = await supabase.from('leads').delete().eq('id', leadId);
+    if (error) {
+      refreshTrash();
+      return { ok: false, error: error.message };
+    }
+    return { ok: true };
+  }, [user, refreshTrash]);
 
   /* ── Modo offline: contador de cambios pendientes + sync ── */
   const [pendingSync, setPendingSync] = useState(0);
@@ -821,7 +898,8 @@ export default function App() {
                   </div>
                 }>
                   {v === "d"      && <Dash oc={oc} leadsData={leadsData} T={T} />}
-                  {v === "c"      && <CRM oc={oc} leadsData={leadsData} setLeadsData={setLeadsData} theme={theme} setTheme={setTheme} autoOpenPriority1={autoOpenPriority1} onAutoOpenHandled={() => setAutoOpenPriority1(0)} />}
+                  {v === "c"      && <CRM oc={oc} leadsData={leadsData} setLeadsData={setLeadsData} theme={theme} setTheme={setTheme} autoOpenPriority1={autoOpenPriority1} onAutoOpenHandled={() => setAutoOpenPriority1(0)} softDeleteLead={softDeleteLead} />}
+                  {v === "trash"  && <Trash trashedLeads={trashedLeads} onRestore={restoreLead} onHardDelete={hardDeleteLead} onRefresh={refreshTrash} T={T} />}
                   {v === "ia"     && <IACRM oc={oc} T={T} theme={theme} />}
                   {v === "e"      && <ERP oc={oc} T={T} />}
                   {v === "a"      && <Team oc={oc} T={T} />}
