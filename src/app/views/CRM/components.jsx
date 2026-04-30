@@ -2386,19 +2386,52 @@ const ActionTimeline = ({ lead, T = P, maxItems = 6 }) => {
     const db = new Date(b.completed_at || b.doneAt || b.done_at || 0).getTime();
     return db - da;
   });
-  if (history.length === 0) return null;
+
+  // Estado vacío — el asesor ve qué es esta sección y qué la activa.
+  if (history.length === 0) {
+    return (
+      <div style={{ borderRadius: 12, border: `1px dashed ${T.border}`, padding: "14px 16px", background: T.glass }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+          <ListChecks size={12} color={T.txt3} strokeWidth={2} />
+          <span style={{ fontSize: 10, fontWeight: 800, color: T.txt3, letterSpacing: "0.08em", textTransform: "uppercase", fontFamily: fontDisp }}>Lista de acciones</span>
+        </div>
+        <p style={{ margin: 0, fontSize: 12, color: T.txt3, fontFamily: font, lineHeight: 1.5 }}>
+          Cada vez que registres una próxima acción, sumes un seguimiento o cambies la etapa, quedará aquí como historial del cliente.
+        </p>
+      </div>
+    );
+  }
 
   const shown = expanded ? history : history.slice(0, maxItems);
-  const typeColor  = (type) => ({ tarea: T.emerald, seguimiento: T.blue, completada: T.accent }[type] ?? T.accent);
-  const TypeIcon   = (type) => ({ tarea: CheckCircle2, seguimiento: RefreshCw, completada: CheckCircle2 }[type] ?? CheckCircle2);
+  const typeColor  = (type) => ({
+    tarea:        T.emerald,
+    seguimiento:  T.blue,
+    completada:   T.accent,
+    registrada:   T.accent,
+    etapa:        T.violet || T.blue,
+  }[type] ?? T.accent);
+  const TypeIcon   = (type) => ({
+    tarea:        CheckCircle2,
+    seguimiento:  RefreshCw,
+    completada:   CheckCircle2,
+    registrada:   Zap,
+    etapa:        Waypoints,
+  }[type] ?? CheckCircle2);
+  const typeLabel  = (type) => ({
+    tarea:        "Tarea",
+    seguimiento:  "Seguimiento",
+    completada:   "Acción completada",
+    registrada:   "Acción registrada",
+    etapa:        "Cambio de etapa",
+  }[type] ?? "Registro");
 
   return (
     <div style={{ borderRadius: 12, border: `1px solid ${T.border}`, overflow: "hidden" }}>
       {/* Header */}
       <div style={{ padding: "10px 15px", borderBottom: `1px solid ${T.border}`, background: T.glass, display: "flex", alignItems: "center", gap: 8 }}>
         <ListChecks size={12} color={T.txt3} strokeWidth={2} />
-        <span style={{ fontSize: 10, fontWeight: 800, color: T.txt3, letterSpacing: "0.08em", textTransform: "uppercase", fontFamily: fontDisp }}>Últimos registros</span>
-        <span style={{ fontSize: 9.5, fontWeight: 700, color: T.txt3, background: T.glass, border: `1px solid ${T.border}`, padding: "1px 6px", borderRadius: 99, fontFamily: fontDisp }}>{history.length}</span>
+        <span style={{ fontSize: 10, fontWeight: 800, color: T.txt3, letterSpacing: "0.08em", textTransform: "uppercase", fontFamily: fontDisp }}>Lista de acciones</span>
+        <span style={{ fontSize: 9.5, fontWeight: 800, color: T.accent, background: `${T.accent}14`, border: `1px solid ${T.accent}28`, padding: "1px 7px", borderRadius: 99, fontFamily: fontDisp }}>{history.length}</span>
         <span style={{ marginLeft: "auto", fontSize: 9, color: T.txt3, fontFamily: font, opacity: 0.7 }}>más reciente arriba</span>
       </div>
 
@@ -2409,6 +2442,7 @@ const ActionTimeline = ({ lead, T = P, maxItems = 6 }) => {
           const Icon = TypeIcon(entry.type);
           const colSafe = isLight ? `color-mix(in srgb, ${col} 62%, #0B1220 38%)` : col;
           const isLast = i === shown.length - 1;
+          const label = typeLabel(entry.type);
           return (
             <div key={entry.id || i} style={{ display: "flex", gap: 0, borderBottom: isLast ? "none" : `1px solid ${T.border}` }}>
               {/* Línea vertical + icono */}
@@ -2420,8 +2454,19 @@ const ActionTimeline = ({ lead, T = P, maxItems = 6 }) => {
               </div>
               {/* Contenido */}
               <div style={{ flex: 1, padding: "10px 14px 10px 0", minWidth: 0 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 3, flexWrap: "wrap" }}>
+                  <span style={{ fontSize: 9, fontWeight: 800, color: colSafe, background: `${col}14`, border: `1px solid ${col}28`, padding: "1px 6px", borderRadius: 99, letterSpacing: "0.06em", textTransform: "uppercase", fontFamily: fontDisp }}>{label}</span>
+                  {entry.by && (
+                    <span style={{ fontSize: 9, color: T.txt3, fontFamily: font }}>· {entry.by}</span>
+                  )}
+                </div>
                 <p style={{ margin: 0, fontSize: 12.5, color: T.txt, fontFamily: font, lineHeight: 1.4, wordBreak: "break-word" }}>{entry.action}</p>
-                {entry.doneAtFmt && <p style={{ margin: "3px 0 0", fontSize: 9.5, color: T.txt3, fontFamily: fontDisp }}>{entry.doneAtFmt}</p>}
+                {(entry.doneAtFmt || entry.date) && (
+                  <p style={{ margin: "3px 0 0", fontSize: 9.5, color: T.txt3, fontFamily: fontDisp }}>
+                    {entry.doneAtFmt}
+                    {entry.date && entry.doneAtFmt ? ` · vencía ${entry.date}` : (entry.date || "")}
+                  </p>
+                )}
               </div>
             </div>
           );
@@ -2978,6 +3023,11 @@ const LeadPanel = ({ lead, onClose, oc, onUpdate, onSwitchTab, onShowHistory, T 
             {/* ── Lista de tareas — múltiples acciones por cliente.
                 Cada tarea completada se registra automáticamente en el Expediente. ── */}
             <TaskChecklist lead={lead} onUpdate={onUpdate} T={T} />
+
+            {/* ── Lista de acciones — historial cronológico también visible
+                desde el Perfil para que el asesor pueda revisar lo que
+                pasó con el cliente sin saltar al Expediente. ── */}
+            <ActionTimeline lead={lead} T={T} maxItems={4} />
 
             {/* ── Datos del cliente — 2 columnas, todos editables inline ──
                 Click en el valor → input. Enter guarda, Escape cancela.
