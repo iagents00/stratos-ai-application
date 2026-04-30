@@ -195,10 +195,27 @@ export default function App() {
     fetchLeads();
     // Solo subscribir al realtime si NO estamos offline
     if (user._offline) return;
+
+    // Realtime: debounce + ignorar echo del propio UPDATE.
+    // Antes, cada UPDATE local re-disparaba fetchLeads(), que pisaba el
+    // estado optimistic con la versión de servidor; en redes lentas eso
+    // podía revertir un cambio recién hecho hasta el siguiente render.
+    // Ahora colamos: si el INSERT/DELETE es real (no UPDATE) refrescamos
+    // siempre; los UPDATE se debouncean a 1.2s.
+    let debounceTimer = null;
+    const scheduleRefresh = (immediate = false) => {
+      if (debounceTimer) clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(fetchLeads, immediate ? 0 : 1200);
+    };
     const ch = supabase.channel('leads-global')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'leads' }, () => fetchLeads())
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'leads' }, () => scheduleRefresh(true))
+      .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'leads' }, () => scheduleRefresh(true))
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'leads' }, () => scheduleRefresh(false))
       .subscribe();
-    return () => supabase.removeChannel(ch);
+    return () => {
+      if (debounceTimer) clearTimeout(debounceTimer);
+      supabase.removeChannel(ch);
+    };
   }, [user, fetchLeads]);
 
   /* ── Modo offline: contador de cambios pendientes + sync ── */
