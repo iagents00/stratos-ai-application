@@ -111,8 +111,9 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
     setEditingActionId(lead.id);
   };
   const saveInlineAction = (lead) => {
-    // logPrevAction: true → la nextAction anterior pasa al historial del expediente
-    updateLead({ ...lead, nextAction: actionDraft.a.trim(), nextActionDate: actionDraft.d.trim() }, { logPrevAction: true });
+    // updateLead detecta automáticamente el cambio de nextAction y registra
+    // la acción anterior en el historial del expediente.
+    updateLead({ ...lead, nextAction: actionDraft.a.trim(), nextActionDate: actionDraft.d.trim() });
     setEditingActionId(null);
   };
   const cancelInlineAction = () => setEditingActionId(null);
@@ -129,41 +130,156 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
   const kanbanRef = useRef(null);
   const [kanbanScrollPos, setKanbanScrollPos] = useState(0);
 
-  // visibleLeads = leads accesibles según el rol del usuario
-  const visibleLeads = canSeeAll ? leadsData : leadsData.filter(l => l.asesor === user?.name);
+  // visibleLeads — leads accesibles según el rol del usuario.
+  // Filtramos por asesor_id (UUID inmutable) cuando está disponible; cae al
+  // nombre solo si el lead aún no tiene asesor_id seedeado. Esto evita el bug
+  // de que dos asesores con el mismo nombre se vieran los leads cruzados, y
+  // que renombrar un asesor le "borrara" sus leads de la vista.
+  const visibleLeads = canSeeAll
+    ? leadsData
+    : leadsData.filter(l =>
+        l.asesor_id
+          ? l.asesor_id === user?.id
+          : l.asesor === user?.name
+      );
+
+  // leadsDataRef — fuente de verdad síncrona del array de leads.
+  // Antes, updateLead() usaba `leadsData.find()` capturado en closure, lo que
+  // producía datos stale si dos updates al mismo lead llegaban en el mismo
+  // tick (ej. drag&drop + autosave). Con la ref, cada updateLead lee siempre
+  // el snapshot más reciente y aplica auto-log + score sobre el estado actual.
+  const leadsDataRef = useRef(leadsData);
+  useEffect(() => { leadsDataRef.current = leadsData; }, [leadsData]);
 
   // updateLead — actualiza lead local + persiste en Supabase.
-  // opts.logPrevAction = true → mueve la nextAction anterior al historial
-  // antes de aplicar el nuevo valor (se usa desde saveInlineAction y edición).
-  const updateLead = (updated, { logPrevAction = false } = {}) => {
+  //
+  // Auto-log al historial del expediente — ocurre transparentemente, sin flags:
+  //   · Si cambia nextAction y había una previa → se registra la previa como "completada".
+  //   · Si nextAction se define por primera vez → se registra como "registrada".
+  //   · Si seguimientos sube en +1 → se registra "Seguimiento #N".
+  //   · Si cambia la etapa (st) → se registra el cambio de etapa.
+  //
+  // opts.skipAutoLog = true → desactiva el auto-log (útil para imports masivos
+  // o ediciones que ya traen su propio actionHistory explícito).
+  const updateLead = (updated, { skipAutoLog = false } = {}) => {
     if (prioritySort === "manual" && priorityOrder.length === 0) {
       const snap = priorityLeadsRef.current.map(l => l.id);
       if (snap.length > 0) setPriorityOrder(snap);
     }
-    const prev = leadsData.find(l => l.id === updated.id);
+    // Lectura del prev desde la ref (siempre síncrona y actual).
+    const prev = leadsDataRef.current.find(l => l.id === updated.id);
 
-    // ── Auto-log de acción anterior al historial ──────────────────────────
-    const prevHistory = Array.isArray(updated.actionHistory)
+    // ── Auto-log de eventos relevantes al historial ──────────────────────
+    // Si el caller ya pasó un actionHistory explícito (ej: TaskChecklist al
+    // completar una tarea), respetamos su decisión y NO añadimos eventos extra.
+    const callerProvidedHistory = Array.isArray(updated.actionHistory)
+      && updated.actionHistory !== prev?.actionHistory;
+    const baseHistory = Array.isArray(updated.actionHistory)
       ? updated.actionHistory
       : (Array.isArray(prev?.actionHistory) ? prev.actionHistory : []);
-    let newHistory = prevHistory;
-    if (
-      logPrevAction &&
-      prev?.nextAction?.trim() &&
-      prev.nextAction.trim() !== (updated.nextAction || "").trim()
-    ) {
-      newHistory = [
-        { id: genId(), action: prev.nextAction.trim(), date: prev.nextActionDate || '', doneAtFmt: fmtNow(), type: "completada" },
-        ...prevHistory,
-      ];
+    let newHistory = baseHistory;
+
+    if (!skipAutoLog && !callerProvidedHistory && prev) {
+      const events = [];
+      const nowFmt = fmtNow();
+      const nowIso = new Date().toISOString();
+      const by     = user?.name || null;
+
+      const prevAction = (prev.nextAction || "").trim();
+      const newAction  = (updated.nextAction || "").trim();
+      // 1) Cambio de próxima acción
+      if (newAction && prevAction && newAction !== prevAction) {
+        events.push({
+          id: genId(),
+          type: "completada",
+          action: prevAction,
+          date: prev.nextActionDate || "",
+          doneAtFmt: nowFmt,
+          completed_at: nowIso,
+          by,
+        });
+      }
+      // 1b) Primera vez que se define una próxima acción
+      else if (newAction && !prevAction) {
+        events.push({
+          id: genId(),
+          type: "registrada",
+          action: `Próxima acción registrada: ${newAction}`,
+          date: updated.nextActionDate || "",
+          doneAtFmt: nowFmt,
+          completed_at: nowIso,
+          by,
+        });
+      }
+
+      // 2) Incremento de seguimientos
+      const prevSeg = prev.seguimientos || 0;
+      const newSeg  = updated.seguimientos ?? prevSeg;
+      if (newSeg > prevSeg) {
+        // Pueden subir varios a la vez (raro, pero posible) — un evento por bump
+        for (let i = prevSeg + 1; i <= newSeg; i++) {
+          events.push({
+            id: genId(),
+            type: "seguimiento",
+            action: `Seguimiento #${i} registrado`,
+            doneAtFmt: nowFmt,
+            completed_at: nowIso,
+            by,
+          });
+        }
+      }
+
+      // 3) Cambio de etapa (CRM stage)
+      if (updated.st && prev.st && updated.st !== prev.st) {
+        events.push({
+          id: genId(),
+          type: "etapa",
+          action: `Etapa: ${prev.st} → ${updated.st}`,
+          doneAtFmt: nowFmt,
+          completed_at: nowIso,
+          by,
+        });
+      }
+
+      if (events.length > 0) {
+        // Más reciente arriba; si hubo varios eventos en este update, conservamos
+        // su orden lógico (acción, seguimiento, etapa) en el tope.
+        newHistory = [...events, ...baseHistory];
+      }
     }
 
     const segDelta = (updated.seguimientos || 0) - (prev?.seguimientos || 0);
     const baseSc   = updated.sc ?? prev?.sc ?? 0;
     const newSc    = Math.max(0, Math.min(100, baseSc + segDelta));
-    const withScore = { ...updated, sc: newSc, actionHistory: newHistory };
 
-    // Actualizar estado local inmediatamente (UI reactiva)
+    // Reasignación de asesor — si cambió el nombre del asesor, intentamos
+    // resolver el asesor_id desde otros leads del mismo asesor. El bot Telegram
+    // y los policies RLS usan asesor_id, así que mantenerlo sincronizado evita
+    // que el bot sirva leads "fantasma" tras una reasignación desde admin.
+    let resolvedAsesorId = updated.asesor_id ?? prev?.asesor_id ?? null;
+    if (
+      updated.asesor &&
+      prev?.asesor &&
+      updated.asesor !== prev.asesor &&
+      updated.asesor_id === prev?.asesor_id
+    ) {
+      const sample = leadsDataRef.current.find(
+        l => l.asesor === updated.asesor && l.asesor_id
+      );
+      resolvedAsesorId = sample?.asesor_id ?? null; // null hasta que admin lo refleje
+    }
+
+    const withScore = {
+      ...updated,
+      sc: newSc,
+      actionHistory: newHistory,
+      asesor_id: resolvedAsesorId,
+    };
+
+    // Actualizar estado local inmediatamente (UI reactiva).
+    // Mantenemos la ref síncronicamente — así un updateLead consecutivo en el
+    // mismo tick lee el snapshot ya actualizado.
+    leadsDataRef.current = leadsDataRef.current.map(l => l.id === withScore.id ? withScore : l);
     setLeadsData(prev => prev.map(l => l.id === withScore.id ? withScore : l));
     if (selectedLead?.id   === withScore.id) setSelectedLead(withScore);
     if (notesLead?.id      === withScore.id) setNotesLead(withScore);
@@ -201,6 +317,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
       priority:         withScore.priority,
       priority_order:   withScore.priority_order,
       asesor_name:      withScore.asesor,
+      asesor_id:        withScore.asesor_id ?? null,
       phone:            withScore.phone,
       email:            withScore.email,
       // ── Nuevos campos de historial / tareas ─────────────────────────────
@@ -248,7 +365,10 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
       }
     });
   };
-  const saveNotes = (newNotas) => { const u = {...notesLead, notas: newNotas}; updateLead(u); setNotesLead(u); };
+  // saveNotes — updateLead ya re-sincroniza notesLead/selectedLead/analyzingLead
+  // con el resultado recomputado (score, actionHistory). El setNotesLead(u)
+  // anterior pisaba ese resultado con el draft sin recomputar — bug latente.
+  const saveNotes = (newNotas) => { updateLead({ ...notesLead, notas: newNotas }); };
   const copyLeadToClipboard = (lead) => {
     navigator.clipboard?.writeText(buildTelegramSummary(lead)).then(() => {
       setCopiedId(lead.id);
@@ -399,7 +519,17 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
   const sortedLeads = useMemo(() => {
     let data = visibleLeads.filter(l => {
       const q = searchQ.toLowerCase();
-      const matchQ = !q || l.n.toLowerCase().includes(q) || l.phone.includes(q) || l.asesor.toLowerCase().includes(q) || l.campana.toLowerCase().includes(q) || l.p.toLowerCase().includes(q) || l.tag.toLowerCase().includes(q);
+      // Defensivo: cualquier campo puede venir null/undefined desde Supabase.
+      // Antes: l.phone.includes(q) tiraba TypeError si phone era null y rompía
+      // el render del CRM completo.
+      const lc = (v) => String(v || "").toLowerCase();
+      const matchQ = !q
+        || lc(l.n).includes(q)
+        || String(l.phone || "").includes(q)
+        || lc(l.asesor).includes(q)
+        || lc(l.campana).includes(q)
+        || lc(l.p).includes(q)
+        || lc(l.tag).includes(q);
       const matchStage = filterStage === "TODO" || l.st === filterStage;
       const matchAsesor = filterAsesor === "TODO" || l.asesor === filterAsesor;
       return matchQ && matchStage && matchAsesor;
@@ -472,7 +602,9 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
       risk:             "Sin información suficiente aún.",
       friction:         "Medio",
       notas:            notasVal,
-      tag:              newLead.st || "Nuevo Registro",
+      // tag — etiqueta de segmento libre; antes se sobreescribía con la etapa,
+      // dejando `tag` inservible para clasificaciones manuales del asesor.
+      tag:              newLead.tag || null,
       asesor_name:      newLead.asesor || user?.name || "",
       asesor_id:        user?.id || null,
     }).select().single();
@@ -497,9 +629,16 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
       notas: notasVal,
       presupuesto: parsedBudget,
       budget: parsedBudget ? formatBudget(parsedBudget) : (newLead.budget || ""),
-      // ── Historial y tareas — se inicializan vacíos en cada lead nuevo ──
+      // ── Historial, tareas y playbook — se inicializan vacíos en cada
+      // lead nuevo. Postgres aplica defaults '[]' del schema, pero el
+      // newEntry local también necesita los arrays para evitar undefined
+      // en componentes que iteran (PlaybookSection, ActionTimeline, etc.).
       actionHistory: [],
       tasks: [],
+      playbook: [],
+      // asesor_id explícito en el snapshot local — el filtro visibleLeads
+      // lo usa para separar leads por asesor (vs comparar nombres).
+      asesor_id: user?.id || null,
     };
     setLeadsData(prev => [newEntry, ...prev]);
     // Si el asesor o proyecto son nuevos (no existían en leadsData), los
@@ -543,7 +682,12 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
   // Orden final: modo manual respeta drag & dropdown de posición; los demás aplican criterio
   const priorityLeads = (() => {
     const arr = [...rawPriorityLeads];
-    const recency = (l) => l.id || 0; // id mayor = registro más reciente
+    // recency basada en created_at (Supabase usa UUID como id, no integer
+    // autoincremental, así que `b.id - a.id` daría NaN). Cae a 0 si falta.
+    const recency = (l) => {
+      const t = new Date(l.created_at || l.createdAt || l.fechaIngreso || 0).getTime();
+      return Number.isFinite(t) ? t : 0;
+    };
     switch (prioritySort) {
       case "newest":
         // Pinned recently → first (pinnedOrder: last element = most recent pin)
@@ -577,12 +721,15 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
           ? arr.sort((a, b) => {
               const ia = priorityOrder.indexOf(a.id);
               const ib = priorityOrder.indexOf(b.id);
-              if (ia === -1 && ib === -1) return b.id - a.id;
+              if (ia === -1 && ib === -1) return recency(b) - recency(a);
               if (ia === -1) return 1;
               if (ib === -1) return -1;
               return ia - ib;
             })
-          : arr.sort((a, b) => (pinnedIds.has(b.id) ? 1 : 0) - (pinnedIds.has(a.id) ? 1 : 0) || b.id - a.id);
+          : arr.sort((a, b) =>
+              (pinnedIds.has(b.id) ? 1 : 0) - (pinnedIds.has(a.id) ? 1 : 0)
+              || recency(b) - recency(a)
+            );
     }
   })();
 
