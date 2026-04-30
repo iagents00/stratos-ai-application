@@ -52,7 +52,7 @@ import {
   ClickDropdown,
 } from "./components";
 
-function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () => {}, autoOpenPriority1 = 0, onAutoOpenHandled }) {
+function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () => {}, autoOpenPriority1 = 0, onAutoOpenHandled, softDeleteLead }) {
   const { user } = useAuth();
   const isMobile = useIsMobile();
   const isLight = theme === "light";
@@ -68,6 +68,10 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
   const [filterAsesor, setFilterAsesor] = useState("TODO");
   const [searchQ, setSearchQ]           = useState("");
   const [viewMode, setViewMode]         = useState("list");
+  // En mobile el kanban es virtualmente inusable (columnas chicas, drag&drop
+  // bloqueado en touch). Forzamos lista — el stage strip horizontal ya da
+  // visibilidad por etapa.
+  const effectiveViewMode = isMobile ? "list" : viewMode;
   const [selectedLead, setSelectedLead] = useState(null);
   const [notesLead, setNotesLead]       = useState(null);
   const [analyzingLead, setAnalyzingLead] = useState(null);
@@ -411,58 +415,119 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
   const handleDragEnd = () => { setDragLeadId(null); setDragOverStage(null); };
   const [expandedPriority, setExpandedPriority] = useState(null);
 
-  // ── Persistencia local de pin/dismiss ─────────────────────────────────
-  // Las preferencias de prioridad viven por usuario (clave = user.id).
-  // Sobreviven a refresh, login/logout, y al reordenamiento del backend.
+  // ══════════════════════════════════════════════════════════════════════
+  // PERSISTENCIA DE PREFERENCIAS CRM — Supabase como fuente de verdad
+  // ══════════════════════════════════════════════════════════════════════
+  // Antes: vivían en localStorage `stratos_crm_prio_<userId>` → no
+  // sobrevivían cambios de dispositivo, modo incógnito, ni reinstalación.
+  //
+  // Ahora: profiles.crm_prefs (jsonb) guarda { pinned, pinnedOrder,
+  // dismissed, order, prioritySort } por usuario. Se lee al login (auth.js
+  // lo expone en user.crmPrefs) y se persiste con debounce de 600ms para
+  // evitar saturar la red durante reordenamientos rápidos.
+  //
+  // Migración silenciosa: si el usuario tiene datos viejos en localStorage
+  // y NO tiene aún crm_prefs server-side, los subimos al primer cambio.
+  // Demo (sin id real) sigue usando localStorage como fallback.
+  // ══════════════════════════════════════════════════════════════════════
   const prefsKey = user?.id ? `stratos_crm_prio_${user.id}` : null;
-  const loadPrefs = () => {
-    if (!prefsKey) return { pinned: [], pinnedOrder: [], dismissed: [], order: [] };
+
+  const loadInitialPrefs = () => {
+    // 1) Server-side (usuario real autenticado) — siempre prioritario
+    const server = user?.crmPrefs;
+    if (server && typeof server === 'object' && Object.keys(server).length > 0) {
+      return {
+        pinned:        Array.isArray(server.pinned)      ? server.pinned      : [],
+        pinnedOrder:   Array.isArray(server.pinnedOrder) ? server.pinnedOrder : [],
+        dismissed:     Array.isArray(server.dismissed)   ? server.dismissed   : [],
+        order:         Array.isArray(server.order)       ? server.order       : [],
+        prioritySort:  typeof server.prioritySort === 'string' ? server.prioritySort : 'manual',
+      };
+    }
+    // 2) Fallback localStorage (legado o demo)
+    if (!prefsKey) return { pinned: [], pinnedOrder: [], dismissed: [], order: [], prioritySort: 'manual' };
     try {
       const raw = localStorage.getItem(prefsKey);
-      if (!raw) return { pinned: [], pinnedOrder: [], dismissed: [], order: [] };
+      if (!raw) return { pinned: [], pinnedOrder: [], dismissed: [], order: [], prioritySort: 'manual' };
       const p = JSON.parse(raw);
       return {
-        pinned:      Array.isArray(p.pinned)      ? p.pinned      : [],
-        pinnedOrder: Array.isArray(p.pinnedOrder) ? p.pinnedOrder : [],
-        dismissed:   Array.isArray(p.dismissed)   ? p.dismissed   : [],
-        order:       Array.isArray(p.order)       ? p.order       : [],
+        pinned:        Array.isArray(p.pinned)      ? p.pinned      : [],
+        pinnedOrder:   Array.isArray(p.pinnedOrder) ? p.pinnedOrder : [],
+        dismissed:     Array.isArray(p.dismissed)   ? p.dismissed   : [],
+        order:         Array.isArray(p.order)       ? p.order       : [],
+        prioritySort:  typeof p.prioritySort === 'string' ? p.prioritySort : 'manual',
       };
     } catch {
-      return { pinned: [], pinnedOrder: [], dismissed: [], order: [] };
+      return { pinned: [], pinnedOrder: [], dismissed: [], order: [], prioritySort: 'manual' };
     }
   };
 
-  const initialPrefs = useMemo(loadPrefs, [prefsKey]);
+  const initialPrefs = useMemo(loadInitialPrefs, [user?.id, user?.crmPrefs]);
   const [pinnedIds,    setPinnedIds]    = useState(() => new Set(initialPrefs.pinned));
-  const [pinnedOrder,  setPinnedOrder]  = useState(() => initialPrefs.pinnedOrder); // tracks pin history: last element = most recently pinned
+  const [pinnedOrder,  setPinnedOrder]  = useState(() => initialPrefs.pinnedOrder);
   const [dismissedIds, setDismissedIds] = useState(() => new Set(initialPrefs.dismissed));
-  const [priorityOrder, setPriorityOrder] = useState(() => initialPrefs.order); // IDs ordered manually
-  const [prioritySort, setPrioritySort] = useState("manual"); // manual | newest | oldest | concretado
+  const [priorityOrder, setPriorityOrder] = useState(() => initialPrefs.order);
+  const [prioritySort, setPrioritySort] = useState(() => initialPrefs.prioritySort);
   const [dragCardId,   setDragCardId]   = useState(null);
-  const [dragInsertIdx, setDragInsertIdx] = useState(null); // index where card will be inserted
+  const [dragInsertIdx, setDragInsertIdx] = useState(null);
 
-  // Recargar prefs si cambia el usuario (ej. logout/login en la misma pestaña)
+  // Recargar prefs si cambia el usuario o sus crmPrefs server-side
   useEffect(() => {
-    const p = loadPrefs();
+    const p = loadInitialPrefs();
     setPinnedIds(new Set(p.pinned));
     setPinnedOrder(p.pinnedOrder);
     setDismissedIds(new Set(p.dismissed));
     setPriorityOrder(p.order);
+    setPrioritySort(p.prioritySort);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [prefsKey]);
+  }, [user?.id]);
 
-  // Persistir prefs cada vez que cambien
+  // ── Persistencia debounced (600ms) ──────────────────────────────────
+  // Un drag&drop largo puede emitir 5-10 cambios de orden por segundo;
+  // con debounce solo enviamos 1 UPDATE al final, ahorrando ancho de banda
+  // y evitando rate-limits.
+  const prefsSaveTimerRef = useRef(null);
+  const prefsHydratedRef  = useRef(false);
   useEffect(() => {
-    if (!prefsKey) return;
-    try {
-      localStorage.setItem(prefsKey, JSON.stringify({
-        pinned:      [...pinnedIds],
-        pinnedOrder,
-        dismissed:   [...dismissedIds],
-        order:       priorityOrder,
-      }));
-    } catch { /* localStorage lleno o bloqueado — silencioso */ }
-  }, [prefsKey, pinnedIds, pinnedOrder, dismissedIds, priorityOrder]);
+    if (!user?.id) return;
+    // Skip el primer render para no escribir prefs inmediatamente al hidratar
+    if (!prefsHydratedRef.current) { prefsHydratedRef.current = true; return; }
+
+    const payload = {
+      pinned:       [...pinnedIds],
+      pinnedOrder,
+      dismissed:    [...dismissedIds],
+      order:        priorityOrder,
+      prioritySort,
+    };
+
+    // Cache local inmediato (resiliencia si Supabase está caído)
+    if (prefsKey) {
+      try { localStorage.setItem(prefsKey, JSON.stringify(payload)); } catch {}
+    }
+
+    // Demo no toca Supabase
+    const isDemoUser = user.id === 'demo-user-local' || user.isDemo;
+    if (isDemoUser) return;
+
+    // Debounce 600ms — el último cambio gana
+    clearTimeout(prefsSaveTimerRef.current);
+    prefsSaveTimerRef.current = setTimeout(() => {
+      supabase
+        .from('profiles')
+        .update({ crm_prefs: payload })
+        .eq('id', user.id)
+        .then(({ error }) => {
+          if (error) {
+            // Silencioso — el localStorage ya guardó como fallback. Si Supabase
+            // vuelve, el próximo cambio empuja el snapshot completo.
+            console.warn('[Stratos] No se pudieron guardar prefs CRM:', error.message);
+          }
+        });
+    }, 600);
+
+    return () => clearTimeout(prefsSaveTimerRef.current);
+  }, [user?.id, prefsKey, pinnedIds, pinnedOrder, dismissedIds, priorityOrder, prioritySort]);
 
   const togglePin = (id) => {
     setPinnedIds(prev => {
@@ -910,74 +975,97 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
       transition: "color 0.3s ease",
     }}>
 
-      {/* ── HEADER ROW ── En mobile el botón "Nuevo cliente" se va abajo
-          como bloque full-width; en desktop queda a la derecha del título. */}
-      <div style={{
-        display: "flex",
-        flexDirection: isMobile ? "column" : "row",
-        alignItems: isMobile ? "stretch" : "flex-start",
-        justifyContent: "space-between",
-        gap: isMobile ? 12 : 16,
-      }}>
-        <div>
-          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
-            <div style={{ width: 8, height: 8, borderRadius: "50%", background: T.accent, boxShadow: `0 0 10px ${T.accent}80` }} />
-            <h2 style={{ fontSize: 20, fontWeight: 400, color: isLight ? T.txt : "#FFFFFF", fontFamily: fontDisp, letterSpacing: "-0.025em", margin: 0 }}>
-              CRM{" "}
-              <span style={{ fontWeight: 300, color: isLight ? T.txt3 : "rgba(255,255,255,0.38)" }}>Asesores</span>
-            </h2>
-            <span style={{ fontSize: 10, fontWeight: 700, color: T.txt3, background: T.glass, border: `1px solid ${T.border}`, padding: "3px 9px", borderRadius: 99, letterSpacing: "0.06em" }}>{visibleLeads.length} clientes</span>
-            {!canSeeAll && <span style={{ fontSize: 10, fontWeight: 700, color: T.amber, background: `${T.amber}10`, border: `1px solid ${T.amber}28`, padding: "3px 9px", borderRadius: 99, letterSpacing: "0.04em" }}>Vista personal</span>}
+      {/* ══════════════════════════════════════════════════════════════════
+          HEADER — diseño dual: mobile minimalista (1 fila clean), desktop
+          mantiene el tratamiento amplio con subtítulo y stats inline.
+          ══════════════════════════════════════════════════════════════════ */}
+      {isMobile ? (
+        // ── MOBILE: 1 fila — título grande + count discreto. Sin subtítulo,
+        // sin badge "vista personal" (eso vive en el perfil del asesor).
+        // El botón de añadir se mueve al FAB (abajo) — más alcance de pulgar.
+        <div style={{ display: "flex", alignItems: "baseline", gap: 10 }}>
+          <h2 style={{
+            fontSize: 24, fontWeight: 600, letterSpacing: "-0.03em",
+            color: isLight ? T.txt : "#FFFFFF", fontFamily: fontDisp, margin: 0,
+            lineHeight: 1,
+          }}>
+            CRM
+          </h2>
+          <span style={{
+            fontSize: 13, fontWeight: 500, color: T.txt3, fontFamily: fontDisp,
+            letterSpacing: "-0.01em",
+          }}>
+            {visibleLeads.length} {visibleLeads.length === 1 ? "cliente" : "clientes"}
+          </span>
+          <span style={{ marginLeft: "auto", fontSize: 11.5, color: T.txt3, fontFamily: font, fontWeight: 500 }}>
+            ${(totalPipeline/1000000).toFixed(1)}M
+          </span>
+        </div>
+      ) : (
+        // ── DESKTOP: layout amplio sin cambios respecto al original. ──
+        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16 }}>
+          <div>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
+              <div style={{ width: 8, height: 8, borderRadius: "50%", background: T.accent, boxShadow: `0 0 10px ${T.accent}80` }} />
+              <h2 style={{ fontSize: 20, fontWeight: 400, color: isLight ? T.txt : "#FFFFFF", fontFamily: fontDisp, letterSpacing: "-0.025em", margin: 0 }}>
+                CRM{" "}
+                <span style={{ fontWeight: 300, color: isLight ? T.txt3 : "rgba(255,255,255,0.38)" }}>Asesores</span>
+              </h2>
+              <span style={{ fontSize: 10, fontWeight: 700, color: T.txt3, background: T.glass, border: `1px solid ${T.border}`, padding: "3px 9px", borderRadius: 99, letterSpacing: "0.06em" }}>{visibleLeads.length} clientes</span>
+              {!canSeeAll && <span style={{ fontSize: 10, fontWeight: 700, color: T.amber, background: `${T.amber}10`, border: `1px solid ${T.amber}28`, padding: "3px 9px", borderRadius: 99, letterSpacing: "0.04em" }}>Vista personal</span>}
+            </div>
+            <p style={{ fontSize: 11.5, color: T.txt3, fontFamily: font, margin: 0 }}>
+              <span style={{ color: T.txt2 }}>${(totalPipeline/1000000).toFixed(1)}M</span> en pipeline · <span style={{ color: T.emerald }}>{hotLeads} activos</span> · Score promedio <span style={{ color: T.blue }}>{avgScore}</span>
+            </p>
           </div>
-          <p style={{ fontSize: 11.5, color: T.txt3, fontFamily: font, margin: 0 }}>
-            <span style={{ color: T.txt2 }}>${(totalPipeline/1000000).toFixed(1)}M</span> en pipeline · <span style={{ color: T.emerald }}>{hotLeads} activos</span> · Score promedio <span style={{ color: T.blue }}>{avgScore}</span>
-          </p>
-        </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0, width: isMobile ? "100%" : "auto" }}>
-          <button onClick={() => setAddingLead(true)} style={{
-            display: "flex", alignItems: "center", justifyContent: "center", gap: 7,
-            padding: isMobile ? "13px 18px" : "9px 18px",
-            width: isMobile ? "100%" : "auto",
-            minHeight: isMobile ? 48 : "auto",
-            borderRadius: 11,
-            background: isLight
-              ? `linear-gradient(135deg, ${T.accent}, ${T.emerald})`
-              : "linear-gradient(135deg, rgba(110,231,194,0.16), rgba(110,231,194,0.07))",
-            border: `1px solid ${isLight ? "transparent" : T.accentB}`,
-            color: isLight ? "#FFFFFF" : T.accent,
-            fontSize: 12, fontWeight: 700, fontFamily: fontDisp, cursor: "pointer",
-            letterSpacing: "0.01em", transition: "all 0.2s", flexShrink: 0,
-            boxShadow: isLight ? `0 4px 14px ${T.accent}40` : "none",
-          }}
-            onMouseEnter={e => {
-              if (isLight) {
-                e.currentTarget.style.boxShadow = `0 6px 18px ${T.accent}55`;
-                e.currentTarget.style.transform = "translateY(-1px)";
-              } else {
-                e.currentTarget.style.background = "linear-gradient(135deg, rgba(110,231,194,0.24), rgba(110,231,194,0.12))";
-                e.currentTarget.style.boxShadow = `0 0 20px ${T.accent}18`;
-              }
+          <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
+            <button onClick={() => setAddingLead(true)} style={{
+              display: "flex", alignItems: "center", gap: 7, padding: "9px 18px",
+              borderRadius: 11,
+              background: isLight
+                ? `linear-gradient(135deg, ${T.accent}, ${T.emerald})`
+                : "linear-gradient(135deg, rgba(110,231,194,0.16), rgba(110,231,194,0.07))",
+              border: `1px solid ${isLight ? "transparent" : T.accentB}`,
+              color: isLight ? "#FFFFFF" : T.accent,
+              fontSize: 12, fontWeight: 700, fontFamily: fontDisp, cursor: "pointer",
+              letterSpacing: "0.01em", transition: "all 0.2s", flexShrink: 0,
+              boxShadow: isLight ? `0 4px 14px ${T.accent}40` : "none",
             }}
-            onMouseLeave={e => {
-              if (isLight) {
-                e.currentTarget.style.boxShadow = `0 4px 14px ${T.accent}40`;
-                e.currentTarget.style.transform = "none";
-              } else {
-                e.currentTarget.style.background = "linear-gradient(135deg, rgba(110,231,194,0.16), rgba(110,231,194,0.07))";
-                e.currentTarget.style.boxShadow = "none";
-              }
-            }}
-          ><Plus size={14} /> Nuevo cliente</button>
+              onMouseEnter={e => {
+                if (isLight) {
+                  e.currentTarget.style.boxShadow = `0 6px 18px ${T.accent}55`;
+                  e.currentTarget.style.transform = "translateY(-1px)";
+                } else {
+                  e.currentTarget.style.background = "linear-gradient(135deg, rgba(110,231,194,0.24), rgba(110,231,194,0.12))";
+                  e.currentTarget.style.boxShadow = `0 0 20px ${T.accent}18`;
+                }
+              }}
+              onMouseLeave={e => {
+                if (isLight) {
+                  e.currentTarget.style.boxShadow = `0 4px 14px ${T.accent}40`;
+                  e.currentTarget.style.transform = "none";
+                } else {
+                  e.currentTarget.style.background = "linear-gradient(135deg, rgba(110,231,194,0.16), rgba(110,231,194,0.07))";
+                  e.currentTarget.style.boxShadow = "none";
+                }
+              }}
+            ><Plus size={14} /> Nuevo cliente</button>
+          </div>
         </div>
-      </div>
+      )}
 
-      {/* ── KPIs — en mobile: 2 columnas; en desktop: 4 (o 2 si chat abierto) ── */}
-      <div style={{ display: "grid", gridTemplateColumns: isMobile ? "repeat(2, 1fr)" : (co ? "repeat(2, 1fr)" : "repeat(4, 1fr)"), gap: isMobile ? 8 : 12 }}>
-        <KPI T={T} label="Clientes en Pipeline" value={visibleLeads.length} sub={`${hotLeads} activos hoy`} icon={Users} color={T.blue} />
-        <KPI T={T} label="Score Promedio" value={avgScore} sub="+4.8 este mes" icon={Target} color={T.cyan} />
-        <KPI T={T} label="Tasa de Conversión" value="18.4%" sub="+3.2pp este mes" icon={TrendingUp} color={T.accent} />
-        <KPI T={T} label="Valor Total Pipeline" value={`$${(totalPipeline/1000000).toFixed(1)}M`} sub={`${nearCloseLeads} en cierre`} icon={DollarSign} color={T.emerald} />
-      </div>
+      {/* ── KPIs — solo desktop. En mobile son ruido visual: ocupan 1/3 de
+          la pantalla para datos que el asesor ya conoce o puede consultar
+          después en el Dashboard. La cifra crítica (pipeline) ya está en
+          el header mobile. ── */}
+      {!isMobile && (
+        <div style={{ display: "grid", gridTemplateColumns: co ? "repeat(2, 1fr)" : "repeat(4, 1fr)", gap: 12 }}>
+          <KPI T={T} label="Clientes en Pipeline" value={visibleLeads.length} sub={`${hotLeads} activos hoy`} icon={Users} color={T.blue} />
+          <KPI T={T} label="Score Promedio" value={avgScore} sub="+4.8 este mes" icon={Target} color={T.cyan} />
+          <KPI T={T} label="Tasa de Conversión" value="18.4%" sub="+3.2pp este mes" icon={TrendingUp} color={T.accent} />
+          <KPI T={T} label="Valor Total Pipeline" value={`$${(totalPipeline/1000000).toFixed(1)}M`} sub={`${nearCloseLeads} en cierre`} icon={DollarSign} color={T.emerald} />
+        </div>
+      )}
 
       {/* ── CLIENTES EN PRIORIDAD — todos, color por tipo, botones uniformes ── */}
       {priorityLeads.length > 0 && (() => {
@@ -1015,36 +1103,58 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
               gap: isMobile ? 8 : 0,
               marginBottom: isMobile ? 10 : 14,
             }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                <div style={{
-                  display: "flex", alignItems: "center", gap: 9,
-                  padding: "7px 16px 7px 12px", borderRadius: 99,
-                  position: "relative",
-                  background: isLight
-                    ? `linear-gradient(135deg, ${T.accent}18 0%, ${T.accent}08 100%)`
-                    : "rgba(52,211,153,0.08)",
-                  border: `1px solid ${isLight ? T.accent + "44" : "rgba(52,211,153,0.24)"}`,
-                  boxShadow: isLight
-                    ? `0 1px 4px ${T.accent}14, inset 0 1px 0 rgba(255,255,255,0.9)`
-                    : `0 0 12px ${T.accent}10`,
-                }}>
-                  {/* Dot respirando */}
-                  <div style={{
-                    width: 9, height: 9, borderRadius: "50%",
-                    background: `radial-gradient(circle at 30% 30%, #5CE0B0, ${T.accent})`,
-                    animation: "priorityBreathe 2.4s ease-in-out infinite",
-                  }} />
-                  <span style={{
-                    fontSize: 12.5, fontWeight: 800,
-                    color: isLight ? T.accentDark : "#FFFFFF",
-                    letterSpacing: "-0.005em", fontFamily: fontDisp,
-                  }}>Clientes en prioridad</span>
-                </div>
-                <span style={{
-                  fontSize: 11, color: T.txt2, fontFamily: font, fontWeight: 500,
-                }}>
-                  <span style={{ color: T.accent, fontWeight: 700 }}>{priorityLeads.length}</span> cliente{priorityLeads.length !== 1 ? "s" : ""} esperando acción
-                </span>
+              <div style={{ display: "flex", alignItems: "center", gap: isMobile ? 8 : 12 }}>
+                {isMobile ? (
+                  // ── MOBILE: header simple — dot + título + count inline ──
+                  <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
+                    <span style={{
+                      width: 7, height: 7, borderRadius: "50%",
+                      background: T.accent, boxShadow: `0 0 8px ${T.accent}80`,
+                      alignSelf: "center",
+                    }} />
+                    <h3 style={{
+                      margin: 0, fontSize: 16, fontWeight: 600,
+                      color: isLight ? T.txt : "#FFFFFF",
+                      fontFamily: fontDisp, letterSpacing: "-0.025em",
+                    }}>Prioridad</h3>
+                    <span style={{
+                      fontSize: 13, fontWeight: 500, color: T.accent,
+                      fontFamily: fontDisp,
+                    }}>{priorityLeads.length}</span>
+                  </div>
+                ) : (
+                  // ── DESKTOP: header amplio con pill + sub-label ──
+                  <>
+                    <div style={{
+                      display: "flex", alignItems: "center", gap: 9,
+                      padding: "7px 16px 7px 12px", borderRadius: 99,
+                      position: "relative",
+                      background: isLight
+                        ? `linear-gradient(135deg, ${T.accent}18 0%, ${T.accent}08 100%)`
+                        : "rgba(52,211,153,0.08)",
+                      border: `1px solid ${isLight ? T.accent + "44" : "rgba(52,211,153,0.24)"}`,
+                      boxShadow: isLight
+                        ? `0 1px 4px ${T.accent}14, inset 0 1px 0 rgba(255,255,255,0.9)`
+                        : `0 0 12px ${T.accent}10`,
+                    }}>
+                      <div style={{
+                        width: 9, height: 9, borderRadius: "50%",
+                        background: `radial-gradient(circle at 30% 30%, #5CE0B0, ${T.accent})`,
+                        animation: "priorityBreathe 2.4s ease-in-out infinite",
+                      }} />
+                      <span style={{
+                        fontSize: 12.5, fontWeight: 800,
+                        color: isLight ? T.accentDark : "#FFFFFF",
+                        letterSpacing: "-0.005em", fontFamily: fontDisp,
+                      }}>Clientes en prioridad</span>
+                    </div>
+                    <span style={{
+                      fontSize: 11, color: T.txt2, fontFamily: font, fontWeight: 500,
+                    }}>
+                      <span style={{ color: T.accent, fontWeight: 700 }}>{priorityLeads.length}</span> cliente{priorityLeads.length !== 1 ? "s" : ""} esperando acción
+                    </span>
+                  </>
+                )}
               </div>
               {/* Leyenda de tipos — centrada absolutamente en desktop;
                   oculta en mobile (no hay espacio para los 4 chips). */}
@@ -2165,9 +2275,13 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
         document.body
       )}
 
-      {/* ── PIPELINE STAGE STRIP ── */}
-      <div style={{
-        display: "flex", gap: 0, borderRadius: 12, overflow: "hidden",
+      {/* ── PIPELINE STAGE STRIP ── En mobile: scroll horizontal con snap
+          (cada etapa ocupa ~28% del viewport, suficiente para leer count+nombre).
+          En desktop: una sola fila con flex-1 que comparte el ancho total. ── */}
+      <div className={isMobile ? "carousel-no-scroll" : ""} style={{
+        display: "flex", gap: 0,
+        borderRadius: 12,
+        overflow: isMobile ? "auto" : "hidden",
         border: `1px solid ${isLight ? "rgba(15,23,42,0.07)" : "rgba(255,255,255,0.06)"}`,
         background: isLight ? "#FFFFFF" : "rgba(11,16,26,0.72)",
         backdropFilter: isLight ? "none" : "blur(40px) saturate(150%)",
@@ -2175,6 +2289,8 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
         boxShadow: isLight
           ? "0 1px 2px rgba(0,0,0,0.05), inset 0 1px 0 rgba(255,255,255,0.9)"
           : "0 2px 10px rgba(0,0,0,0.22), inset 0 1px 0 rgba(255,255,255,0.04)",
+        scrollSnapType: isMobile ? "x mandatory" : "none",
+        WebkitOverflowScrolling: "touch",
       }}>
         {STAGES.slice(0,-1).map((stage, idx) => {
           const cnt = visibleLeads.filter(l => l.st === stage).length;
@@ -2186,7 +2302,13 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
             <div key={stage} onClick={() => setFilterStage(isActive ? "TODO" : stage)}
               title={`${stage} · ${cnt} cliente${cnt !== 1 ? "s" : ""}`}
               style={{
-                flex: 1, padding: "10px 4px 9px", cursor: "pointer",
+                // En mobile: cada chip toma 30% del viewport → 3 visibles + peek;
+                // en desktop: flex:1 reparte el ancho entre todas las etapas.
+                flex: isMobile ? "0 0 30%" : 1,
+                minWidth: isMobile ? "30%" : 0,
+                scrollSnapAlign: isMobile ? "start" : "none",
+                padding: isMobile ? "12px 4px 11px" : "10px 4px 9px",
+                cursor: "pointer",
                 borderRight: divider ? `1px solid ${isLight ? "rgba(15,23,42,0.05)" : "rgba(255,255,255,0.04)"}` : "none",
                 background: isActive
                   ? (isLight ? `${c}10` : `${c}12`)
@@ -2235,55 +2357,56 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
 
       {/* ── MAIN TABLE / KANBAN ── */}
       <G T={T} np>
-        {/* ── Toolbar — en mobile: padding reducido, items en columnas full-width;
-              en desktop: la fila tradicional con flex-wrap. ── */}
+        {/* ── Toolbar — solo desktop muestra el View toggle (Lista/Kanban).
+              Mobile siempre fuerza Lista (kanban no es usable en teléfono). ── */}
         <div style={{
           padding: isMobile ? "10px 12px" : "11px 18px",
           borderBottom: `1px solid ${isLight ? "rgba(15,23,42,0.07)" : "rgba(255,255,255,0.055)"}`,
           display: "flex",
-          alignItems: isMobile ? "stretch" : "center",
-          flexDirection: isMobile ? "column" : "row",
-          gap: isMobile ? 8 : 8,
+          alignItems: "center",
+          gap: 8,
           flexWrap: "wrap",
         }}>
 
-          {/* View toggle */}
-          <div style={{
-            display: "flex", borderRadius: 9, overflow: "hidden", flexShrink: 0,
-            background: isLight ? "rgba(15,23,42,0.05)" : "rgba(255,255,255,0.05)",
-            border: `1px solid ${isLight ? "rgba(15,23,42,0.08)" : "rgba(255,255,255,0.08)"}`,
-          }}>
-            {[["list","Lista"],["kanban","Kanban"]].map(([m, lbl]) => {
-              const isActive = viewMode === m;
-              return (
-                <button key={m} onClick={() => setViewMode(m)} style={{
-                  padding: "5px 13px", border: "none", cursor: "pointer",
-                  fontSize: 11, fontWeight: isActive ? 600 : 400, fontFamily: fontDisp,
-                  letterSpacing: "0.01em",
-                  background: isActive
-                    ? (isLight ? "rgba(255,255,255,0.85)" : "rgba(255,255,255,0.10)")
-                    : "transparent",
-                  color: isActive
-                    ? (isLight ? "rgba(15,23,42,0.85)" : "rgba(255,255,255,0.88)")
-                    : (isLight ? "rgba(15,23,42,0.38)" : "rgba(255,255,255,0.32)"),
-                  borderRight: m === "list" ? `1px solid ${isLight ? "rgba(15,23,42,0.07)" : "rgba(255,255,255,0.07)"}` : "none",
-                  transition: "all 0.16s",
-                  boxShadow: isActive && !isLight ? "inset 0 1px 0 rgba(255,255,255,0.08)" : "none",
-                }}>{lbl}</button>
-              );
-            })}
-          </div>
+          {/* View toggle — solo desktop */}
+          {!isMobile && (
+            <div style={{
+              display: "flex", borderRadius: 9, overflow: "hidden", flexShrink: 0,
+              background: isLight ? "rgba(15,23,42,0.05)" : "rgba(255,255,255,0.05)",
+              border: `1px solid ${isLight ? "rgba(15,23,42,0.08)" : "rgba(255,255,255,0.08)"}`,
+            }}>
+              {[["list","Lista"],["kanban","Kanban"]].map(([m, lbl]) => {
+                const isActive = viewMode === m;
+                return (
+                  <button key={m} onClick={() => setViewMode(m)} style={{
+                    padding: "5px 13px", border: "none", cursor: "pointer",
+                    fontSize: 11, fontWeight: isActive ? 600 : 400, fontFamily: fontDisp,
+                    letterSpacing: "0.01em",
+                    background: isActive
+                      ? (isLight ? "rgba(255,255,255,0.85)" : "rgba(255,255,255,0.10)")
+                      : "transparent",
+                    color: isActive
+                      ? (isLight ? "rgba(15,23,42,0.85)" : "rgba(255,255,255,0.88)")
+                      : (isLight ? "rgba(15,23,42,0.38)" : "rgba(255,255,255,0.32)"),
+                    borderRight: m === "list" ? `1px solid ${isLight ? "rgba(15,23,42,0.07)" : "rgba(255,255,255,0.07)"}` : "none",
+                    transition: "all 0.16s",
+                    boxShadow: isActive && !isLight ? "inset 0 1px 0 rgba(255,255,255,0.08)" : "none",
+                  }}>{lbl}</button>
+                );
+              })}
+            </div>
+          )}
 
           {/* Search — full width en mobile, max 240 en desktop */}
           <div style={{ position: "relative", flex: 1, minWidth: 140, maxWidth: isMobile ? "100%" : 240, width: isMobile ? "100%" : "auto" }}>
-            <Search size={11} color={isLight ? "rgba(15,23,42,0.30)" : "rgba(255,255,255,0.28)"} style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }} />
-            <input value={searchQ} onChange={e => setSearchQ(e.target.value)} placeholder="Buscar cliente, asesor, proyecto…"
+            <Search size={isMobile ? 14 : 11} color={isLight ? "rgba(15,23,42,0.30)" : "rgba(255,255,255,0.28)"} style={{ position: "absolute", left: isMobile ? 14 : 10, top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }} />
+            <input value={searchQ} onChange={e => setSearchQ(e.target.value)} placeholder={isMobile ? "Buscar cliente…" : "Buscar cliente, asesor, proyecto…"}
               style={{
-                width: "100%", paddingLeft: 29, paddingRight: searchQ ? 28 : 11,
-                height: 32, borderRadius: 9,
+                width: "100%", paddingLeft: isMobile ? 36 : 29, paddingRight: searchQ ? 32 : 11,
+                height: isMobile ? 44 : 32, borderRadius: isMobile ? 12 : 9,
                 background: isLight ? "rgba(255,255,255,0.70)" : "rgba(255,255,255,0.042)",
                 border: `1px solid ${isLight ? "rgba(15,23,42,0.09)" : "rgba(255,255,255,0.08)"}`,
-                fontSize: 11.5, color: isLight ? T.txt : "rgba(255,255,255,0.80)",
+                fontSize: isMobile ? 14 : 11.5, color: isLight ? T.txt : "rgba(255,255,255,0.80)",
                 outline: "none", fontFamily: fontDisp, boxSizing: "border-box", transition: "border-color 0.18s",
               }}
               onFocus={e => { e.target.style.borderColor = isLight ? T.accent : "rgba(255,255,255,0.22)"; }}
@@ -2292,8 +2415,9 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
             {searchQ && <button onClick={() => setSearchQ("")} style={{ position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: isLight ? "rgba(15,23,42,0.35)" : "rgba(255,255,255,0.30)", display: "flex", padding: 0 }}><X size={10} /></button>}
           </div>
 
-          {/* Stage filter — custom wrapper */}
-          {(() => {
+          {/* Stage filter — solo desktop. En mobile el stage strip de arriba
+              ya cumple la misma función con mejor affordance táctil. */}
+          {!isMobile && (() => {
             const active = filterStage !== "TODO";
             const selBg  = isLight ? (active ? `${stgC[filterStage]}10` : "rgba(255,255,255,0.70)") : (active ? "rgba(255,255,255,0.07)" : "rgba(255,255,255,0.042)");
             const selBdr = isLight ? (active ? `${stgC[filterStage]}40` : "rgba(15,23,42,0.09)") : (active ? "rgba(255,255,255,0.18)" : "rgba(255,255,255,0.08)");
@@ -2315,19 +2439,20 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
             );
           })()}
 
-          {/* Asesor filter */}
+          {/* Asesor filter — más alto en mobile (44px) para que sea cómodo el tap */}
           {canSeeAll && (() => {
             const active = filterAsesor !== "TODO";
             const selBg  = isLight ? (active ? `${T.accent}10` : "rgba(255,255,255,0.70)") : (active ? "rgba(255,255,255,0.07)" : "rgba(255,255,255,0.042)");
             const selBdr = isLight ? (active ? `${T.accent}40` : "rgba(15,23,42,0.09)") : (active ? "rgba(255,255,255,0.18)" : "rgba(255,255,255,0.08)");
             const selClr = isLight ? (active ? T.accent : "rgba(15,23,42,0.45)") : (active ? "rgba(255,255,255,0.85)" : "rgba(255,255,255,0.42)");
             return (
-              <div style={{ position: "relative", display: "flex", alignItems: "center", flexShrink: 0 }}>
+              <div style={{ position: "relative", display: "flex", alignItems: "center", flexShrink: 0, width: isMobile ? "100%" : "auto" }}>
                 <select value={filterAsesor} onChange={e => setFilterAsesor(e.target.value)} style={{
-                  height: 32, padding: "0 30px 0 12px",
-                  borderRadius: 9, appearance: "none", WebkitAppearance: "none", MozAppearance: "none",
+                  height: isMobile ? 44 : 32, width: isMobile ? "100%" : "auto",
+                  padding: isMobile ? "0 36px 0 14px" : "0 30px 0 12px",
+                  borderRadius: isMobile ? 12 : 9, appearance: "none", WebkitAppearance: "none", MozAppearance: "none",
                   background: selBg, border: `1px solid ${selBdr}`,
-                  fontSize: 11, color: selClr, cursor: "pointer", outline: "none",
+                  fontSize: isMobile ? 14 : 11, color: selClr, cursor: "pointer", outline: "none",
                   fontFamily: fontDisp, fontWeight: active ? 600 : 400, transition: "all 0.18s",
                 }}>
                   <option value="TODO">Todos los asesores</option>
@@ -2356,20 +2481,22 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
 
           <div style={{ flex: 1 }} />
 
-          {/* Count badge */}
-          <span style={{
-            fontSize: 10.5, fontWeight: 600, fontFamily: fontDisp, letterSpacing: "0.02em",
-            color: isLight ? "rgba(15,23,42,0.38)" : "rgba(255,255,255,0.32)",
-            background: isLight ? "rgba(15,23,42,0.04)" : "rgba(255,255,255,0.04)",
-            border: `1px solid ${isLight ? "rgba(15,23,42,0.07)" : "rgba(255,255,255,0.07)"}`,
-            padding: "4px 12px", borderRadius: 99, flexShrink: 0,
-          }}>
-            {sortedLeads.length} resultado{sortedLeads.length !== 1 ? "s" : ""}
-          </span>
+          {/* Count badge — solo desktop. En mobile el header ya muestra el total. */}
+          {!isMobile && (
+            <span style={{
+              fontSize: 10.5, fontWeight: 600, fontFamily: fontDisp, letterSpacing: "0.02em",
+              color: isLight ? "rgba(15,23,42,0.38)" : "rgba(255,255,255,0.32)",
+              background: isLight ? "rgba(15,23,42,0.04)" : "rgba(255,255,255,0.04)",
+              border: `1px solid ${isLight ? "rgba(15,23,42,0.07)" : "rgba(255,255,255,0.07)"}`,
+              padding: "4px 12px", borderRadius: 99, flexShrink: 0,
+            }}>
+              {sortedLeads.length} resultado{sortedLeads.length !== 1 ? "s" : ""}
+            </span>
+          )}
         </div>
 
         {/* ── LIST VIEW — Redesigned ── */}
-        {viewMode === "list" && (
+        {effectiveViewMode === "list" && (
           <>
             {/* Column headers — solo visibles en desktop. En mobile cada fila
                 es una "card" vertical sin necesidad de encabezados. */}
@@ -2502,7 +2629,53 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                     </div>
                   </div>
 
-                  {/* ═══ ETAPA ═══ Pill con LED y cambio inline por select */}
+                  {/* ─── META-ROW MOBILE ─── Línea compacta debajo del Cliente
+                       cell con: LED de etapa + nombre de etapa, score badge,
+                       días de inactividad y chevron de "abrir". Reemplaza las
+                       3 columnas que se ocultan en mobile. ─── */}
+                  {isMobile && (
+                    <div style={{
+                      display: "flex", alignItems: "center", gap: 8, marginTop: 10,
+                      paddingTop: 9, borderTop: `1px dashed ${T.border}`,
+                    }}>
+                      <span style={{
+                        display: "inline-flex", alignItems: "center", gap: 6,
+                        fontSize: 11, fontWeight: 700, color: isLight
+                          ? `color-mix(in srgb, ${stageC} 55%, #0B1220 45%)`
+                          : stageC,
+                        fontFamily: fontDisp, letterSpacing: "0.01em",
+                      }}>
+                        <span style={{
+                          width: 7, height: 7, borderRadius: "50%",
+                          background: stageC,
+                          boxShadow: `0 0 0 2px ${stageC}24`,
+                        }} />
+                        {l.st}
+                      </span>
+                      {l.daysInactive >= 5 && (
+                        <span style={{
+                          fontSize: 10, fontWeight: 600,
+                          color: uc, fontFamily: fontDisp,
+                          background: `${uc}12`,
+                          padding: "2px 7px", borderRadius: 99,
+                          border: `1px solid ${uc}28`,
+                        }}>{l.daysInactive}d</span>
+                      )}
+                      <span style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 4 }}>
+                        <span style={{
+                          fontSize: 11, fontWeight: 700, color: T.txt2,
+                          fontFamily: fontDisp,
+                        }}>{sc}</span>
+                        <span style={{ fontSize: 9, color: T.txt3, fontFamily: fontDisp }}>score</span>
+                        <ChevronRight size={14} color={T.txt3} strokeWidth={2.2} style={{ marginLeft: 4 }} />
+                      </span>
+                    </div>
+                  )}
+
+                  {/* ═══ ETAPA ═══ Pill con LED y cambio inline por select.
+                       En mobile: oculta — el meta-row al final del Cliente cell
+                       muestra la etapa con un LED + label más compacto. */}
+                  {!isMobile && (
                   <div onClick={e => e.stopPropagation()} style={{ display: "flex", alignItems: "center", minWidth: 0 }}>
                     <div style={{
                       position: "relative", display: "inline-flex", alignItems: "center", gap: 7,
@@ -2549,15 +2722,18 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                       </div>
                     </div>
                   </div>
+                  )}
 
-                  {/* ═══ SEGUIMIENTOS ═══ Stepper con −/número editable/+ —
-                       el asesor registra recontactos directo, o escribe el total */}
+                  {/* ═══ SEGUIMIENTOS ═══ Stepper. Oculto en mobile — el meta
+                       row del Cliente cell muestra el contador como pill. */}
+                  {!isMobile && (
                   <div onClick={e => e.stopPropagation()} style={{ display: "flex", alignItems: "center", minWidth: 0 }}>
                     <FollowUpBadge lead={l} onUpdate={updateLead} T={T} compact />
                   </div>
+                  )}
 
-                  {/* ═══ SCORE ═══ Solo visible en modo full — bar + número + ± manual */}
-                  {!co && (
+                  {/* ═══ SCORE ═══ Solo desktop full mode — bar + número + ± manual */}
+                  {!co && !isMobile && (
                     <div onClick={e => e.stopPropagation()} style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 5 }}>
                       <div style={{ flex: 1, height: 3, borderRadius: 2, background: isLight ? "rgba(15,23,42,0.08)" : "rgba(255,255,255,0.06)", maxWidth: 36 }}>
                         <div style={{ width: `${sc}%`, height: 3, borderRadius: 2, background: T.accent, transition: "width 0.4s", boxShadow: sc >= 80 ? `0 0 6px ${T.accent}60` : "none" }} />
@@ -2576,9 +2752,9 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                     </div>
                   )}
 
-                  {/* Acciones — 3 controles: ★ prioridad (icono solo), ⚛ IA (icono solo),
-                     y "Ver perfil" (CTA con label). Aesthetic pro, minimalista, cada uno con su color. */}
-                  {(() => {
+                  {/* Acciones — 3 controles: ★ prioridad, ⚛ IA, "Ver perfil".
+                     Solo desktop. En mobile el row entero abre el expediente. */}
+                  {!isMobile && (() => {
                     const isPinned = pinnedIds.has(l.id);
                     const isAuto   = isAutoPriority(l);
                     const inPriority = isPinned || isAuto;
@@ -2685,7 +2861,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
         )}
 
         {/* ── KANBAN — drag & drop ── */}
-        {viewMode === "kanban" && (() => {
+        {effectiveViewMode === "kanban" && (() => {
           // Cada columna: 244px + 10px gap = 254px. Avance de 2 columnas = 508px
           const COL_W = 254;
           const STEP  = COL_W * 2;
@@ -3502,6 +3678,11 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
         onSwitchTab={(tab) => openDrawerTab(tab, notesLead)}
         onShowHistory={() => setHistoryLead(notesLead)}
         onShowSuggest={() => setSuggestLead(notesLead)}
+        onDelete={softDeleteLead ? async (l) => {
+          const r = await softDeleteLead(l.id);
+          if (r?.ok) showToast(`"${l.n}" movido a la papelera`, "success");
+          else showToast(r?.error || "No se pudo eliminar", "error");
+        } : undefined}
       />
       <LeadPanel
         T={T}
@@ -3511,6 +3692,11 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
         onUpdate={updateLead}
         onSwitchTab={(tab) => openDrawerTab(tab, selectedLead)}
         onShowHistory={() => setHistoryLead(selectedLead)}
+        onDelete={softDeleteLead ? async (l) => {
+          const r = await softDeleteLead(l.id);
+          if (r?.ok) showToast(`"${l.n}" movido a la papelera`, "success");
+          else showToast(r?.error || "No se pudo eliminar", "error");
+        } : undefined}
       />
       <AnalysisDrawer
         T={T}
@@ -3561,6 +3747,41 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
           updateLead(updated);
         }}
       />
+
+      {/* ── FAB "+ Nuevo cliente" — solo mobile ─────────────────────────────
+          Floating Action Button en la zona del pulgar (bottom-right). Se
+          posiciona ABOVE del bottom nav (z=200) y respeta safe-area.
+          Cuando hay un drawer abierto se oculta para no chocar con el
+          bottom-sheet (z drawer=401, FAB z=199). ─────────────────────── */}
+      {isMobile && !notesLead && !selectedLead && !analyzingLead && !addingLead && createPortal(
+        <button
+          onClick={() => setAddingLead(true)}
+          aria-label="Nuevo cliente"
+          style={{
+            position: "fixed",
+            right: 18,
+            bottom: `calc(58px + env(safe-area-inset-bottom, 0px) + 16px)`,
+            zIndex: 199,
+            width: 56, height: 56, borderRadius: 999,
+            border: "none",
+            background: isLight
+              ? `linear-gradient(135deg, ${T.accent}, ${T.emerald || T.accent})`
+              : `linear-gradient(135deg, ${T.accent}, color-mix(in srgb, ${T.accent} 60%, #0B1220 40%))`,
+            color: "#FFFFFF",
+            cursor: "pointer",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            boxShadow: isLight
+              ? `0 6px 16px ${T.accent}55, 0 12px 28px rgba(15,23,42,0.18)`
+              : `0 4px 14px ${T.accent}44, 0 16px 32px rgba(0,0,0,0.55)`,
+            transition: "transform 0.2s ease, box-shadow 0.2s ease",
+          }}
+          onTouchStart={e => { e.currentTarget.style.transform = "scale(0.94)"; }}
+          onTouchEnd={e => { e.currentTarget.style.transform = "scale(1)"; }}
+        >
+          <Plus size={24} strokeWidth={2.4} />
+        </button>,
+        document.body
+      )}
 
       {/* ── Toast de error / confirmación ─────────────────────────────────── */}
       {saveToast && createPortal(
