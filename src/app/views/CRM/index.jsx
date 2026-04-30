@@ -25,6 +25,7 @@ import {
   Pencil, Save, Minus, GripVertical, ChevronsDown,
   History as HistoryIcon
 } from "lucide-react";
+import { useIsMobile } from "../../../hooks/useViewport";
 import { P, LP, font, fontDisp, STAGES } from "../../../design-system/tokens";
 import { G, KPI, Pill, Ico, ChipSelect } from "../../SharedComponents";
 import { parseBudget, formatBudget, buildTelegramSummary, fmtNow, genId } from "../../../lib/utils";
@@ -53,6 +54,7 @@ import {
 
 function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () => {}, autoOpenPriority1 = 0, onAutoOpenHandled }) {
   const { user } = useAuth();
+  const isMobile = useIsMobile();
   const isLight = theme === "light";
   const T = isLight ? LP : P;
 
@@ -897,7 +899,9 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
      · Etapa, Seguim., Score (solo full), Acciones. */
   const colsFull    = "2.4fr 140px 140px 110px 140px";
   const colsCompact = "2fr 130px 130px 120px";
-  const cols = co ? colsCompact : colsFull;
+  // En mobile: una sola columna que toma ancho completo — la fila se
+  // re-organiza en stack vertical con info principal arriba y acciones abajo.
+  const cols = isMobile ? "1fr" : (co ? colsCompact : colsFull);
 
   return (
     <div style={{
@@ -906,8 +910,15 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
       transition: "color 0.3s ease",
     }}>
 
-      {/* ── HEADER ROW ── */}
-      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16 }}>
+      {/* ── HEADER ROW ── En mobile el botón "Nuevo cliente" se va abajo
+          como bloque full-width; en desktop queda a la derecha del título. */}
+      <div style={{
+        display: "flex",
+        flexDirection: isMobile ? "column" : "row",
+        alignItems: isMobile ? "stretch" : "flex-start",
+        justifyContent: "space-between",
+        gap: isMobile ? 12 : 16,
+      }}>
         <div>
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
             <div style={{ width: 8, height: 8, borderRadius: "50%", background: T.accent, boxShadow: `0 0 10px ${T.accent}80` }} />
@@ -922,9 +933,12 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
             <span style={{ color: T.txt2 }}>${(totalPipeline/1000000).toFixed(1)}M</span> en pipeline · <span style={{ color: T.emerald }}>{hotLeads} activos</span> · Score promedio <span style={{ color: T.blue }}>{avgScore}</span>
           </p>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0, width: isMobile ? "100%" : "auto" }}>
           <button onClick={() => setAddingLead(true)} style={{
-            display: "flex", alignItems: "center", gap: 7, padding: "9px 18px",
+            display: "flex", alignItems: "center", justifyContent: "center", gap: 7,
+            padding: isMobile ? "13px 18px" : "9px 18px",
+            width: isMobile ? "100%" : "auto",
+            minHeight: isMobile ? 48 : "auto",
             borderRadius: 11,
             background: isLight
               ? `linear-gradient(135deg, ${T.accent}, ${T.emerald})`
@@ -957,8 +971,8 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
         </div>
       </div>
 
-      {/* ── KPIs ── */}
-      <div style={{ display: "grid", gridTemplateColumns: co ? "repeat(2, 1fr)" : "repeat(4, 1fr)", gap: 12 }}>
+      {/* ── KPIs — en mobile: 2 columnas; en desktop: 4 (o 2 si chat abierto) ── */}
+      <div style={{ display: "grid", gridTemplateColumns: isMobile ? "repeat(2, 1fr)" : (co ? "repeat(2, 1fr)" : "repeat(4, 1fr)"), gap: isMobile ? 8 : 12 }}>
         <KPI T={T} label="Clientes en Pipeline" value={visibleLeads.length} sub={`${hotLeads} activos hoy`} icon={Users} color={T.blue} />
         <KPI T={T} label="Score Promedio" value={avgScore} sub="+4.8 este mes" icon={Target} color={T.cyan} />
         <KPI T={T} label="Tasa de Conversión" value="18.4%" sub="+3.2pp este mes" icon={TrendingUp} color={T.accent} />
@@ -992,8 +1006,15 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
 
         return (
           <div>
-            {/* Header — 3 zonas: título (izq) · leyenda (centro absoluto) · orden (der) */}
-            <div style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+            {/* Header — 3 zonas. En mobile: título arriba, sort abajo, leyenda oculta. */}
+            <div style={{
+              position: "relative", display: "flex",
+              flexDirection: isMobile ? "column" : "row",
+              alignItems: isMobile ? "stretch" : "center",
+              justifyContent: "space-between",
+              gap: isMobile ? 8 : 0,
+              marginBottom: isMobile ? 10 : 14,
+            }}>
               <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                 <div style={{
                   display: "flex", alignItems: "center", gap: 9,
@@ -1025,12 +1046,12 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                   <span style={{ color: T.accent, fontWeight: 700 }}>{priorityLeads.length}</span> cliente{priorityLeads.length !== 1 ? "s" : ""} esperando acción
                 </span>
               </div>
-              {/* Leyenda de tipos — centrada absolutamente, no afectada por
-                  los anchos del título y el selector de orden. */}
+              {/* Leyenda de tipos — centrada absolutamente en desktop;
+                  oculta en mobile (no hay espacio para los 4 chips). */}
               <div style={{
                 position: "absolute", left: "50%", top: "50%",
                 transform: "translate(-50%, -50%)",
-                display: "flex", alignItems: "center", gap: 14,
+                display: isMobile ? "none" : "flex", alignItems: "center", gap: 14,
                 padding: "5px 14px", borderRadius: 99,
                 background: isLight ? "rgba(15,23,42,0.025)" : "rgba(255,255,255,0.025)",
                 border: `1px solid ${isLight ? "rgba(15,23,42,0.06)" : "rgba(255,255,255,0.06)"}`,
@@ -1108,7 +1129,15 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
               onDrop={handleCarouselDrop}
               onScroll={e => setPrioScrollX(e.currentTarget.scrollLeft)}
               className="carousel-no-scroll"
-              style={{ display: "flex", gap: 12, overflowX: "auto", padding: "10px 24px 20px 8px", scrollbarWidth: "none", msOverflowStyle: "none", WebkitOverflowScrolling: "touch" }}>
+              style={{
+                display: "flex", gap: 12, overflowX: "auto",
+                padding: isMobile ? "8px 16px 18px" : "10px 24px 20px 8px",
+                scrollbarWidth: "none", msOverflowStyle: "none",
+                WebkitOverflowScrolling: "touch",
+                // En mobile: scroll-snap para que cada card "encaje" tras swipe.
+                scrollSnapType: isMobile ? "x mandatory" : "none",
+                scrollPaddingLeft: isMobile ? 16 : 0,
+              }}>
               {priorityLeads.map((l, cardIdx) => {
                 const sc = l.sc;
                 const stageColor = stgC[l.st] || T.txt3;
@@ -1149,15 +1178,19 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                     return (
                   <div
                     data-priority-id={l.id}
-                    draggable
+                    draggable={!isMobile}
                     onDragStart={e => handleCardDragStart(e, l.id)}
                     onDragOver={e => { e.stopPropagation(); handleCardDragOver(e, cardIdx); }}
                     onDrop={e => { e.stopPropagation(); handleCardDrop(e); }}
                     onDragEnd={handleCardDragEnd}
                     onClick={() => { if (!dragCardId && !isDraggingCard) setNotesLead(l); }}
-                    title="Click para abrir expediente · arrastrar para reordenar"
+                    title={isMobile ? "Tap para abrir expediente" : "Click para abrir expediente · arrastrar para reordenar"}
                     style={{
-                      width: co ? 256 : 288, flexShrink: 0,
+                      // En mobile: ~88% del viewport para que aparezca el peek
+                      // de la siguiente card y se sienta carousel táctil natural.
+                      width: isMobile ? "min(88vw, 360px)" : (co ? 256 : 288),
+                      flexShrink: 0,
+                      scrollSnapAlign: isMobile ? "start" : "none",
                       borderRadius: 18, overflow: "hidden",
                       position: "relative",
                       background: isLight
@@ -1592,7 +1625,19 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
             backdropFilter: "blur(10px)", WebkitBackdropFilter: "blur(10px)",
             animation: "fadeIn 0.20s ease both",
           }} />
-          <div style={{
+          <div style={isMobile ? {
+            // En mobile: modal full-screen — más cómodo para llenar el form
+            // sin que el teclado virtual lo recorte.
+            position: "fixed", inset: 0, zIndex: 501,
+            width: "100vw", height: "100dvh", maxHeight: "100dvh",
+            overflowY: "auto",
+            background: isLight ? "#FFFFFF" : "#111318",
+            border: "none",
+            borderRadius: 0,
+            boxShadow: "none",
+            animation: "modalInMobile 0.24s cubic-bezier(0.16,1,0.3,1) both",
+            paddingBottom: "env(safe-area-inset-bottom, 0px)",
+          } : {
             position: "fixed", top: "50%", left: "50%",
             zIndex: 501, width: "min(720px, 96vw)", maxHeight: "94vh",
             overflowY: "auto",
@@ -1604,6 +1649,9 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
               : "0 52px 100px rgba(0,0,0,0.72), 0 0 0 1px rgba(255,255,255,0.04)",
             animation: "modalIn 0.26s cubic-bezier(0.16,1,0.3,1) both",
           }}>
+            <style>{`
+              @keyframes modalInMobile{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+            `}</style>
 
             {/* ── Header compacto (icono + título + X) ── */}
             <div style={{
@@ -1679,7 +1727,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
               const hasParsed = parsed > 0 && String(newLead.budget || "").trim() !== "";
               const budgetBorder = hasParsed ? `${T.accent}55` : inputBorder;
               return (
-            <div style={{ padding: "12px 18px 0", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px 12px" }}>
+            <div style={{ padding: "12px 18px 0", display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: isMobile ? "10px" : "10px 12px" }}>
 
               {/* Nombre — full width */}
               <div style={{ gridColumn: "1 / -1" }}>
@@ -2187,11 +2235,16 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
 
       {/* ── MAIN TABLE / KANBAN ── */}
       <G T={T} np>
-        {/* ── Toolbar — refined ── */}
+        {/* ── Toolbar — en mobile: padding reducido, items en columnas full-width;
+              en desktop: la fila tradicional con flex-wrap. ── */}
         <div style={{
-          padding: "11px 18px",
+          padding: isMobile ? "10px 12px" : "11px 18px",
           borderBottom: `1px solid ${isLight ? "rgba(15,23,42,0.07)" : "rgba(255,255,255,0.055)"}`,
-          display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap",
+          display: "flex",
+          alignItems: isMobile ? "stretch" : "center",
+          flexDirection: isMobile ? "column" : "row",
+          gap: isMobile ? 8 : 8,
+          flexWrap: "wrap",
         }}>
 
           {/* View toggle */}
@@ -2221,8 +2274,8 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
             })}
           </div>
 
-          {/* Search */}
-          <div style={{ position: "relative", flex: 1, minWidth: 140, maxWidth: 240 }}>
+          {/* Search — full width en mobile, max 240 en desktop */}
+          <div style={{ position: "relative", flex: 1, minWidth: 140, maxWidth: isMobile ? "100%" : 240, width: isMobile ? "100%" : "auto" }}>
             <Search size={11} color={isLight ? "rgba(15,23,42,0.30)" : "rgba(255,255,255,0.28)"} style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }} />
             <input value={searchQ} onChange={e => setSearchQ(e.target.value)} placeholder="Buscar cliente, asesor, proyecto…"
               style={{
@@ -2318,15 +2371,17 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
         {/* ── LIST VIEW — Redesigned ── */}
         {viewMode === "list" && (
           <>
-            {/* Column headers — 5 columnas full / 4 compact. "Cliente" abarca
-                identidad y presupuesto juntos; Seguim. es el stepper editable. */}
-            <div style={{ display: "grid", gridTemplateColumns: cols, gap: 12, padding: "10px 20px", borderBottom: `1px solid ${T.border}`, alignItems: "center", background: isLight ? "rgba(15,23,42,0.015)" : "rgba(255,255,255,0.012)" }}>
-              <SH label="Cliente" field="n" />
-              <SH label="Etapa" field="st" />
-              <SH label="Seguim." field="seguimientos" />
-              {!co && <SH label="Score" field="sc" align="right" />}
-              <span style={{ fontSize: 9.5, fontWeight: 700, color: T.txt3, fontFamily: fontDisp, letterSpacing: "0.07em", textTransform: "uppercase", textAlign: "center" }}>Acciones</span>
-            </div>
+            {/* Column headers — solo visibles en desktop. En mobile cada fila
+                es una "card" vertical sin necesidad de encabezados. */}
+            {!isMobile && (
+              <div style={{ display: "grid", gridTemplateColumns: cols, gap: 12, padding: "10px 20px", borderBottom: `1px solid ${T.border}`, alignItems: "center", background: isLight ? "rgba(15,23,42,0.015)" : "rgba(255,255,255,0.012)" }}>
+                <SH label="Cliente" field="n" />
+                <SH label="Etapa" field="st" />
+                <SH label="Seguim." field="seguimientos" />
+                {!co && <SH label="Score" field="sc" align="right" />}
+                <span style={{ fontSize: 9.5, fontWeight: 700, color: T.txt3, fontFamily: fontDisp, letterSpacing: "0.07em", textTransform: "uppercase", textAlign: "center" }}>Acciones</span>
+              </div>
+            )}
 
             {sortedLeads.map((l, rowIdx) => {
               const isHov = hoveredRow === l.id;
@@ -2350,14 +2405,20 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                 <div key={l.id}
                   onMouseEnter={() => setHoveredRow(l.id)}
                   onMouseLeave={() => setHoveredRow(null)}
+                  onClick={isMobile ? () => setNotesLead(l) : undefined}
                   style={{
-                    display: "grid", gridTemplateColumns: cols, gap: 12, padding: "14px 20px",
-                    borderBottom: `1px solid ${T.border}`, alignItems: "center",
+                    display: "grid", gridTemplateColumns: cols,
+                    gap: isMobile ? 8 : 12,
+                    padding: isMobile ? "12px 14px" : "14px 20px",
+                    borderBottom: `1px solid ${T.border}`,
+                    alignItems: isMobile ? "stretch" : "center",
                     transition: "background 0.14s",
                     background: isHov ? rowHoverBg : rowBg,
                     position: "relative",
                     // Banda dorada izquierda — marca visual de "pinneado" sin gritar
                     boxShadow: isPinnedRow ? `inset 3px 0 0 ${goldRow}` : "none",
+                    // En mobile el row entero es tap-to-open
+                    cursor: isMobile ? "pointer" : "default",
                   }}
                 >
 
@@ -2657,8 +2718,8 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
 
           return (
             <div style={{ position: "relative" }}>
-              {/* ← botón izquierda */}
-              {canLeft && (
+              {/* ← botón izquierda — oculto en mobile (touch swipe es natural) */}
+              {canLeft && !isMobile && (
                 <button
                   onClick={() => scrollTo(-1)}
                   style={{
@@ -2677,8 +2738,8 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                 </button>
               )}
 
-              {/* → botón derecha */}
-              {canRight && (
+              {/* → botón derecha — oculto en mobile */}
+              {canRight && !isMobile && (
                 <button
                   onClick={() => scrollTo(1)}
                   style={{
@@ -2701,7 +2762,18 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
             ref={kanbanRef}
             onScroll={e => setKanbanScrollPos(e.currentTarget.scrollLeft)}
             onWheel={e => { if (e.deltaX === 0 && e.deltaY !== 0) { e.currentTarget.scrollLeft += e.deltaY; } }}
-            style={{ display: "flex", gap: 10, overflowX: "auto", padding: "16px", minHeight: 480, alignItems: "flex-start", scrollbarWidth: "none", msOverflowStyle: "none" }}>
+            style={{
+              display: "flex", gap: isMobile ? 8 : 10,
+              overflowX: "auto",
+              padding: isMobile ? "12px" : "16px",
+              minHeight: isMobile ? 420 : 480,
+              alignItems: "flex-start",
+              scrollbarWidth: "none", msOverflowStyle: "none",
+              // Scroll-snap por columna en mobile — tras un swipe se acomoda
+              // a la siguiente etapa visualmente.
+              scrollSnapType: isMobile ? "x mandatory" : "none",
+              WebkitOverflowScrolling: "touch",
+            }}>
             {kanbanStages.map(stage => {
               const stLeads = sortedLeads.filter(l => l.st === stage);
               const stVal = stLeads.reduce((s, l) => s + (l.presupuesto || 0), 0);
@@ -2726,7 +2798,14 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                 <div key={stage}
                   onDragOver={e => handleDragOver(e, stage)}
                   onDrop={e => handleDrop(e, stage)}
-                  style={{ minWidth: 244, flex: "0 0 244px", display: "flex", flexDirection: "column", gap: 8 }}>
+                  style={{
+                    // En mobile cada etapa toma ~85vw para que sea cómoda;
+                    // en desktop mantiene 244px para mostrar varias en pantalla.
+                    minWidth: isMobile ? "min(85vw, 320px)" : 244,
+                    flex: isMobile ? "0 0 min(85vw, 320px)" : "0 0 244px",
+                    display: "flex", flexDirection: "column", gap: 8,
+                    scrollSnapAlign: isMobile ? "start" : "none",
+                  }}>
                   <div style={{ padding: "10px 13px 10px 11px", borderRadius: 11, background: headerBg, border: `1px solid ${headerBorder}`, display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0, transition: "all 0.15s", boxShadow: isLight ? `0 1px 3px ${c}1E, inset 0 1px 0 rgba(255,255,255,0.65)` : "none", backdropFilter: isLight ? "blur(20px) saturate(160%)" : "none" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
                       <div style={{ width: 10, height: 10, borderRadius: "50%", background: c, flexShrink: 0, boxShadow: `0 0 0 2px ${c}2E${isLight ? ", 0 1px 3px " + c + "55" : ""}` }} />

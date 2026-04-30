@@ -5,6 +5,7 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { useAuth } from "../../../hooks/useAuth";
+import { useIsMobile } from "../../../hooks/useViewport";
 import { supabase } from "../../../lib/supabase";
 import {
   TrendingUp, Target, CheckCircle2, Mic, Search,
@@ -1100,7 +1101,9 @@ const DrawerTabIsland = ({ current, onSwitch, T = P }) => {
   return (
     <div style={{
       position: "absolute",
-      bottom: 20,
+      // En mobile el drawer es bottom-sheet con safe-area; bajamos el island
+      // un poco más para no chocar con el indicador inferior del iPhone.
+      bottom: "max(20px, env(safe-area-inset-bottom, 20px))",
       left: "50%",
       transform: "translateX(-50%)",
       zIndex: 10,
@@ -2488,6 +2491,7 @@ const ActionTimeline = ({ lead, T = P, maxItems = 6 }) => {
 };
 
 const NotesModal = ({ lead, onClose, onSave, onUpdate, onSwitchTab, onShowHistory, onShowSuggest, T = P }) => {
+  const isMobile = useIsMobile();
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState("");
   const [expedienteItems, setExpedienteItems] = useState(() => {
@@ -2535,8 +2539,36 @@ const NotesModal = ({ lead, onClose, onSave, onUpdate, onSwitchTab, onShowHistor
   return createPortal(
     <>
       <div onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: 400, background: T === P ? "rgba(2,5,12,0.5)" : "rgba(15,23,42,0.32)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)" }} />
-      <div style={{ position: "fixed", right: 0, top: 0, bottom: 0, zIndex: 401, width: 460, background: T === P ? "#111318" : "#FFFFFF", borderLeft: `1px solid ${T.borderH}`, display: "flex", flexDirection: "column", animation: "slideInRight 0.28s cubic-bezier(0.32,0.72,0,1)", boxShadow: T === P ? "-24px 0 80px rgba(0,0,0,0.5)" : "-24px 0 80px rgba(15,23,42,0.12)" }}>
-        <style>{`@keyframes slideInRight{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}`}</style>
+      <div style={isMobile ? {
+        // ── MOBILE: bottom-sheet full-width que ocupa 92% del viewport ──
+        position: "fixed", left: 0, right: 0, bottom: 0, zIndex: 401,
+        height: "92dvh", maxHeight: "92dvh",
+        background: T === P ? "#111318" : "#FFFFFF",
+        borderTop: `1px solid ${T.borderH}`,
+        borderRadius: "20px 20px 0 0",
+        display: "flex", flexDirection: "column",
+        animation: "slideInUp 0.28s cubic-bezier(0.32,0.72,0,1)",
+        boxShadow: T === P ? "0 -24px 80px rgba(0,0,0,0.55)" : "0 -16px 60px rgba(15,23,42,0.16)",
+        paddingBottom: "env(safe-area-inset-bottom, 0px)",
+      } : {
+        // ── DESKTOP: drawer lateral 460px ──
+        position: "fixed", right: 0, top: 0, bottom: 0, zIndex: 401, width: 460,
+        background: T === P ? "#111318" : "#FFFFFF",
+        borderLeft: `1px solid ${T.borderH}`,
+        display: "flex", flexDirection: "column",
+        animation: "slideInRight 0.28s cubic-bezier(0.32,0.72,0,1)",
+        boxShadow: T === P ? "-24px 0 80px rgba(0,0,0,0.5)" : "-24px 0 80px rgba(15,23,42,0.12)",
+      }}>
+        <style>{`
+          @keyframes slideInRight{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
+          @keyframes slideInUp{from{transform:translateY(100%);opacity:0}to{transform:translateY(0);opacity:1}}
+        `}</style>
+        {isMobile && (
+          /* Drag handle visual — el sheet es full-width así que el handle solo es indicador */
+          <div style={{ padding: "8px 0 4px", display: "flex", justifyContent: "center", flexShrink: 0 }}>
+            <div style={{ width: 38, height: 4, borderRadius: 2, background: T === P ? "rgba(255,255,255,0.14)" : "rgba(15,23,42,0.14)" }} />
+          </div>
+        )}
 
         {/* Header: identidad + botón cerrar */}
         <div style={{ padding: "18px 24px 14px", borderBottom: `1px solid ${T.border}`, flexShrink: 0 }}>
@@ -2796,6 +2828,7 @@ const COACHING_MOCKS = [
 ];
 
 const LeadPanel = ({ lead, onClose, oc, onUpdate, onSwitchTab, onShowHistory, T = P }) => {
+  const isMobile = useIsMobile();
   const [activeTab, setActiveTab] = useState("perfil");
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState(null);
@@ -2905,8 +2938,33 @@ const LeadPanel = ({ lead, onClose, oc, onUpdate, onSwitchTab, onShowHistory, T 
   return createPortal(
     <>
       <div onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: 400, background: T === P ? "rgba(2,5,12,0.5)" : "rgba(15,23,42,0.32)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)" }} />
-      <div style={{ position: "fixed", right: 0, top: 0, bottom: 0, zIndex: 401, width: 440, background: T === P ? "#111318" : "#FFFFFF", borderLeft: `1px solid ${T.borderH}`, display: "flex", flexDirection: "column", animation: "slideInRight 0.28s cubic-bezier(0.32,0.72,0,1)", boxShadow: T === P ? "-24px 0 80px rgba(0,0,0,0.5)" : "-24px 0 80px rgba(15,23,42,0.12)" }}>
-        <style>{`@keyframes slideInRight{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}`}</style>
+      <div style={isMobile ? {
+        position: "fixed", left: 0, right: 0, bottom: 0, zIndex: 401,
+        height: "92dvh", maxHeight: "92dvh",
+        background: T === P ? "#111318" : "#FFFFFF",
+        borderTop: `1px solid ${T.borderH}`,
+        borderRadius: "20px 20px 0 0",
+        display: "flex", flexDirection: "column",
+        animation: "slideInUp 0.28s cubic-bezier(0.32,0.72,0,1)",
+        boxShadow: T === P ? "0 -24px 80px rgba(0,0,0,0.55)" : "0 -16px 60px rgba(15,23,42,0.16)",
+        paddingBottom: "env(safe-area-inset-bottom, 0px)",
+      } : {
+        position: "fixed", right: 0, top: 0, bottom: 0, zIndex: 401, width: 440,
+        background: T === P ? "#111318" : "#FFFFFF",
+        borderLeft: `1px solid ${T.borderH}`,
+        display: "flex", flexDirection: "column",
+        animation: "slideInRight 0.28s cubic-bezier(0.32,0.72,0,1)",
+        boxShadow: T === P ? "-24px 0 80px rgba(0,0,0,0.5)" : "-24px 0 80px rgba(15,23,42,0.12)",
+      }}>
+        <style>{`
+          @keyframes slideInRight{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
+          @keyframes slideInUp{from{transform:translateY(100%);opacity:0}to{transform:translateY(0);opacity:1}}
+        `}</style>
+        {isMobile && (
+          <div style={{ padding: "8px 0 4px", display: "flex", justifyContent: "center", flexShrink: 0 }}>
+            <div style={{ width: 38, height: 4, borderRadius: 2, background: T === P ? "rgba(255,255,255,0.14)" : "rgba(15,23,42,0.14)" }} />
+          </div>
+        )}
 
         {/* Header */}
         <div style={{ padding: "18px 22px 14px", borderBottom: `1px solid ${T.border}`, flexShrink: 0 }}>
@@ -3372,6 +3430,7 @@ const LeadPanel = ({ lead, onClose, oc, onUpdate, onSwitchTab, onShowHistory, T 
    ANALYSIS DRAWER — Análisis IA contextual sobre Pipeline
 ═══════════════════════════════════════════ */
 const AnalysisDrawer = ({ lead, onClose, oc, onUpdate, onSwitchTab, T = P }) => {
+  const isMobile = useIsMobile();
   const [analysisCopied, setAnalysisCopied] = useState(false);
   const [expedienteItems, setExpedienteItems] = useState(() => {
     if (lead?.id <= 3) {
@@ -3559,8 +3618,33 @@ const AnalysisDrawer = ({ lead, onClose, oc, onUpdate, onSwitchTab, T = P }) => 
   return createPortal(
     <>
       <div onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: 400, background: T === P ? "rgba(2,5,12,0.45)" : "rgba(15,23,42,0.32)", backdropFilter: "blur(3px)", WebkitBackdropFilter: "blur(3px)" }} />
-      <div style={{ position: "fixed", right: 0, top: 0, bottom: 0, zIndex: 401, width: 480, background: T === P ? "#111318" : "#FFFFFF", borderLeft: `1px solid ${T.borderH}`, display: "flex", flexDirection: "column", animation: "slideInRight 0.28s cubic-bezier(0.32,0.72,0,1)", boxShadow: T === P ? "-24px 0 80px rgba(0,0,0,0.55)" : "-24px 0 80px rgba(15,23,42,0.14)" }}>
-        <style>{`@keyframes slideInRight{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}`}</style>
+      <div style={isMobile ? {
+        position: "fixed", left: 0, right: 0, bottom: 0, zIndex: 401,
+        height: "92dvh", maxHeight: "92dvh",
+        background: T === P ? "#111318" : "#FFFFFF",
+        borderTop: `1px solid ${T.borderH}`,
+        borderRadius: "20px 20px 0 0",
+        display: "flex", flexDirection: "column",
+        animation: "slideInUp 0.28s cubic-bezier(0.32,0.72,0,1)",
+        boxShadow: T === P ? "0 -24px 80px rgba(0,0,0,0.55)" : "0 -16px 60px rgba(15,23,42,0.16)",
+        paddingBottom: "env(safe-area-inset-bottom, 0px)",
+      } : {
+        position: "fixed", right: 0, top: 0, bottom: 0, zIndex: 401, width: 480,
+        background: T === P ? "#111318" : "#FFFFFF",
+        borderLeft: `1px solid ${T.borderH}`,
+        display: "flex", flexDirection: "column",
+        animation: "slideInRight 0.28s cubic-bezier(0.32,0.72,0,1)",
+        boxShadow: T === P ? "-24px 0 80px rgba(0,0,0,0.55)" : "-24px 0 80px rgba(15,23,42,0.14)",
+      }}>
+        <style>{`
+          @keyframes slideInRight{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
+          @keyframes slideInUp{from{transform:translateY(100%);opacity:0}to{transform:translateY(0);opacity:1}}
+        `}</style>
+        {isMobile && (
+          <div style={{ padding: "8px 0 4px", display: "flex", justifyContent: "center", flexShrink: 0 }}>
+            <div style={{ width: 38, height: 4, borderRadius: 2, background: T === P ? "rgba(255,255,255,0.14)" : "rgba(15,23,42,0.14)" }} />
+          </div>
+        )}
 
         {/* Header */}
         <div style={{ padding: "18px 22px 16px", borderBottom: `1px solid ${T.border}`, flexShrink: 0 }}>
