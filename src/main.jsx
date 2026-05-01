@@ -20,6 +20,7 @@ import { AuthProvider } from "./contexts/AuthContext";
 import ErrorBoundary   from "./components/ErrorBoundary.jsx";
 import App            from "./app/App.jsx";
 import LandingMarketing from "./landing/LandingMarketing.jsx";
+import PrivacyPolicy   from "./landing/PrivacyPolicy.jsx";
 
 import "./index.css";
 
@@ -28,17 +29,22 @@ import "./index.css";
 // Todo lo demás (Vercel, subdominio app., localhost con ?app) → Plataforma.
 const hostname = window.location.hostname;
 const params   = new URLSearchParams(window.location.search);
+const pathname = window.location.pathname;
 
 const LANDING_DOMAINS = [
   "stratoscapitalgroup.com",
   "www.stratoscapitalgroup.com",
 ];
 
+// Rutas públicas legales — accesibles desde cualquier dominio sin auth
+const PRIVACY_PATHS = ["/politica-de-privacidad", "/privacy-policy"];
+const isPrivacy = PRIVACY_PATHS.some(p => pathname === p || pathname === p + "/");
+
 const isLanding = LANDING_DOMAINS.includes(hostname)
                || (hostname === "localhost" && !params.has("app"))
                || (hostname === "127.0.0.1" && !params.has("app"));
 
-const isApp = !isLanding;
+const isApp = !isPrivacy && !isLanding;
 
 // URL de la plataforma — usada por la landing para el CTA principal
 const APP_URL = import.meta.env.VITE_APP_URL || (window.location.origin + "/?app");
@@ -48,9 +54,11 @@ createRoot(document.getElementById("root")).render(
   <StrictMode>
     <ErrorBoundary>
       <AuthProvider>
-        {isApp
-          ? <App />
-          : <LandingMarketing appUrl={APP_URL} />
+        {isPrivacy
+          ? <PrivacyPolicy />
+          : isApp
+            ? <App />
+            : <LandingMarketing appUrl={APP_URL} />
         }
       </AuthProvider>
     </ErrorBoundary>
