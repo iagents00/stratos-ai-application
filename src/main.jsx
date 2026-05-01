@@ -21,6 +21,7 @@ import ErrorBoundary   from "./components/ErrorBoundary.jsx";
 import App            from "./app/App.jsx";
 import LandingMarketing from "./landing/LandingMarketing.jsx";
 import PrivacyPolicy   from "./landing/PrivacyPolicy.jsx";
+import DataDeletion    from "./landing/DataDeletion.jsx";
 
 import "./index.css";
 
@@ -38,13 +39,16 @@ const LANDING_DOMAINS = [
 
 // Rutas públicas legales — accesibles desde cualquier dominio sin auth
 const PRIVACY_PATHS = ["/politica-de-privacidad", "/privacy-policy"];
-const isPrivacy = PRIVACY_PATHS.some(p => pathname === p || pathname === p + "/");
+const DELETION_PATHS = ["/eliminar-mis-datos", "/data-deletion"];
+const matchPath = (paths) => paths.some(p => pathname === p || pathname === p + "/");
+const isPrivacy = matchPath(PRIVACY_PATHS);
+const isDeletion = matchPath(DELETION_PATHS);
 
 const isLanding = LANDING_DOMAINS.includes(hostname)
                || (hostname === "localhost" && !params.has("app"))
                || (hostname === "127.0.0.1" && !params.has("app"));
 
-const isApp = !isPrivacy && !isLanding;
+const isApp = !isPrivacy && !isDeletion && !isLanding;
 
 // URL de la plataforma — usada por la landing para el CTA principal
 const APP_URL = import.meta.env.VITE_APP_URL || (window.location.origin + "/?app");
@@ -56,9 +60,11 @@ createRoot(document.getElementById("root")).render(
       <AuthProvider>
         {isPrivacy
           ? <PrivacyPolicy />
-          : isApp
-            ? <App />
-            : <LandingMarketing appUrl={APP_URL} />
+          : isDeletion
+            ? <DataDeletion />
+            : isApp
+              ? <App />
+              : <LandingMarketing appUrl={APP_URL} />
         }
       </AuthProvider>
     </ErrorBoundary>
