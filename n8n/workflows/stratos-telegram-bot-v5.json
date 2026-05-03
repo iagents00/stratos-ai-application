@@ -1,0 +1,1014 @@
+{
+  "name": "Stratos AI — Telegram CRM Bot v5 (paridad CRM)",
+  "nodes": [
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "supabase-url",
+              "name": "SUPABASE_URL",
+              "value": "https://glulgyhkrqpykxmujodb.supabase.co",
+              "type": "string"
+            },
+            {
+              "id": "supabase-key",
+              "name": "SUPABASE_SERVICE_ROLE_KEY",
+              "value": "REEMPLAZAR_CON_SERVICE_ROLE_KEY",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [-1504, -1344],
+      "id": "set-globals",
+      "name": "Set Globals"
+    },
+    {
+      "parameters": {
+        "updates": ["message"],
+        "additionalFields": { "download": false }
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [-1616, -1344],
+      "id": "tg-trigger",
+      "name": "Telegram Trigger",
+      "webhookId": "stratos-bot-v5-trigger",
+      "credentials": {
+        "telegramApi": { "id": "87yW20WNKUw82mLU", "name": "STRATOS BOT" }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 3 },
+                "conditions": [
+                  { "id": "voice-rule", "leftValue": "={{ $json.message.voice }}", "rightValue": "", "operator": { "type": "object", "operation": "exists", "singleValue": true } }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "VOICE"
+            },
+            {
+              "conditions": {
+                "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 3 },
+                "conditions": [
+                  { "id": "image-rule", "leftValue": "={{ $json.message.photo }}", "rightValue": "", "operator": { "type": "array", "operation": "exists", "singleValue": true } }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "IMAGE"
+            },
+            {
+              "conditions": {
+                "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 3 },
+                "conditions": [
+                  { "id": "text-rule", "leftValue": "={{ $json.message.text }}", "rightValue": "", "operator": { "type": "string", "operation": "exists", "singleValue": true } }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "TEXT"
+            }
+          ]
+        },
+        "options": { "fallbackOutput": "extra" }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [-1392, -1376],
+      "id": "switch-msg-type",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.message.from.id }}",
+        "text": "Solo puedo procesar texto, audio e imágenes.",
+        "additionalFields": { "appendAttribution": false }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [-1168, -1248],
+      "id": "unsupported-msg",
+      "name": "UNSUPPORTED MESSAGE",
+      "webhookId": "stratos-bot-v5-unsupported",
+      "credentials": {
+        "telegramApi": { "id": "87yW20WNKUw82mLU", "name": "STRATOS BOT" }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "fileId": "={{ $json.message.voice.file_id }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [-1168, -1632],
+      "id": "get-voice",
+      "name": "Get VOICE",
+      "webhookId": "stratos-bot-v5-getvoice",
+      "credentials": {
+        "telegramApi": { "id": "87yW20WNKUw82mLU", "name": "STRATOS BOT" }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "fileId": "={{ $json.message.photo.last().file_id }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [-1168, -1440],
+      "id": "get-image",
+      "name": "Get IMAGE",
+      "webhookId": "stratos-bot-v5-getimage",
+      "credentials": {
+        "telegramApi": { "id": "87yW20WNKUw82mLU", "name": "STRATOS BOT" }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "audio",
+        "operation": "transcribe",
+        "options": { "language": "es" }
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [-944, -1632],
+      "id": "transcribe-audio",
+      "name": "TRANSCRIBE AUDIO",
+      "credentials": {
+        "openAiApi": { "id": "uwB811lF0iAbjXKn", "name": "OpenAi account" }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "operation": "analyze",
+        "modelId": { "__rl": true, "value": "gpt-4o", "mode": "list", "cachedResultName": "GPT-4O" },
+        "text": "=Eres un experto describiendo imágenes para un agente CRM. Describe lo que ves en español plano, conciso, así: \"El asesor envió una imagen donde se ve [descripción]\". Si es un screenshot de chat o documento, transcribe el texto relevante.",
+        "inputType": "base64",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [-944, -1440],
+      "id": "analyze-image",
+      "name": "ANALIZA IMAGEN",
+      "credentials": {
+        "openAiApi": { "id": "uwB811lF0iAbjXKn", "name": "OpenAi account" }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            { "id": "audio-msg", "name": "mensaje", "value": "={{ $json.text }}", "type": "string" },
+            { "id": "audio-time", "name": "hora_llegada", "value": "={{ $('Telegram Trigger').item.json.message.date.toDateTime('s').toFormat('dd/MM/yyyy HH:mm:ss') }}", "type": "string" }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [-720, -1632],
+      "id": "audio-input",
+      "name": "audio input"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            { "id": "image-msg", "name": "mensaje", "value": "={{ $json.content }}", "type": "string" },
+            { "id": "image-time", "name": "hora_llegada", "value": "={{ $('Telegram Trigger').item.json.message.date.toDateTime('s').toFormat('dd/MM/yyyy HH:mm:ss') }}", "type": "string" }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [-720, -1440],
+      "id": "image-input",
+      "name": "image input"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            { "id": "text-msg", "name": "mensaje", "value": "={{ $('Telegram Trigger').item.json.message.text }}", "type": "string" },
+            { "id": "text-time", "name": "hora_llegada", "value": "={{ $('Telegram Trigger').item.json.message.date.toDateTime('s').toFormat('dd/MM/yyyy HH:mm:ss') }}", "type": "string" }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [-720, -1104],
+      "id": "text-input",
+      "name": "text input"
+    },
+    {
+      "parameters": { "numberInputs": 3 },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [-496, -1456],
+      "id": "merge",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "sortFieldsUi": { "sortField": [{ "fieldName": "hora_llegada" }] },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.sort",
+      "typeVersion": 1,
+      "position": [-272, -1440],
+      "id": "sort",
+      "name": "Sort"
+    },
+    {
+      "parameters": {
+        "fieldsToAggregate": { "fieldToAggregate": [{ "fieldToAggregate": "mensaje" }] },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [-48, -1440],
+      "id": "aggregate",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            { "id": "input-final", "name": "input", "value": "={{ $json.mensaje.join(\" \") }}", "type": "string" }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [176, -1440],
+      "id": "input-final",
+      "name": "INPUT FINAL"
+    },
+    {
+      "parameters": {
+        "operation": "push",
+        "list": "=user:{{ $('Telegram Trigger').item.json.message.from.id }}",
+        "messageData": "={{ $json.input }}",
+        "tail": true
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [400, -1440],
+      "id": "save-message",
+      "name": "SAVE MESSAGE",
+      "credentials": { "redis": { "id": "gdtlDcc7rYNC84xN", "name": "Redis" } }
+    },
+    {
+      "parameters": { "amount": 1 },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [624, -1440],
+      "id": "wait",
+      "name": "Wait",
+      "webhookId": "stratos-bot-v5-wait"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "key": "=user:{{ $('Telegram Trigger').item.json.message.from.id }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [848, -1440],
+      "id": "get-message",
+      "name": "GET MESSAGE",
+      "credentials": { "redis": { "id": "gdtlDcc7rYNC84xN", "name": "Redis" } }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 3 },
+          "conditions": [
+            {
+              "id": "filter-cond",
+              "leftValue": "={{ $json.propertyName.last() }}",
+              "rightValue": "={{ $('INPUT FINAL').item.json.input }}",
+              "operator": { "type": "string", "operation": "equals" }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.3,
+      "position": [1072, -1440],
+      "id": "filter",
+      "name": "Filter"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            { "id": "joining-msg", "name": "message", "value": "={{ $json.propertyName.join(\" \") }}", "type": "string" }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [1296, -1440],
+      "id": "joining-message",
+      "name": "JOINNING MESSAGE"
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "key": "=user:{{ $('Telegram Trigger').item.json.message.from.id }}"
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [1520, -1440],
+      "id": "delete-messages",
+      "name": "DELETE MESSAGES",
+      "credentials": { "redis": { "id": "gdtlDcc7rYNC84xN", "name": "Redis" } }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Set Globals').first().json.SUPABASE_URL }}/rest/v1/rpc/identify_asesor_by_telegram",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $('Set Globals').first().json.SUPABASE_SERVICE_ROLE_KEY }}" },
+            { "name": "Authorization", "value": "=Bearer {{ $('Set Globals').first().json.SUPABASE_SERVICE_ROLE_KEY }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"p_telegram_chat_id\": {{ $('Telegram Trigger').item.json.message.from.id }}\n}",
+        "options": { "timeout": 8000 }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1744, -1440],
+      "id": "identify-asesor",
+      "name": "Identify asesor"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Mensaje recibido (puede combinar texto, transcripción de voz o descripción de imagen):\n\"{{ $('JOINNING MESSAGE').item.json.message }}\"\n\nDatos del Telegram:\n- chat_id: {{ $('Telegram Trigger').item.json.message.from.id }}\n- nombre Telegram: {{ $('Telegram Trigger').item.json.message.from.first_name }}\n\nResultado de identify_asesor_by_telegram:\n{{ JSON.stringify($json) }}\n\nProcesa según las reglas del system message.",
+        "options": {
+          "systemMessage": "=Eres Stratos, el copiloto CRM por Telegram para asesores inmobiliarios. Tu único usuario en este chat es el asesor que pareó este Telegram con su cuenta de Stratos en el web. Tu trabajo: registrar clientes, anotar seguimientos y comunicaciones, agendar tareas, consultar fichas, cerrar deals, recordar pendientes — todo por chat, en segundos.\n\nFecha y hora actual: {{ $now.setZone('America/Cancun').toFormat('dd/MM/yyyy HH:mm') }} (zona America/Cancun, UTC-5, sin horario de verano).\n\n========================================\n## 1. IDENTIDAD DEL ASESOR EN ESTE CHAT\n========================================\n\nEl resultado de identify_asesor_by_telegram ya viene en el contexto.\nFormato cuando paired:true → { paired:true, profile_id, name, role, organization_id }.\nFormato cuando paired:false → { paired:false } o { paired:false, reason:'inactive' }.\n\nRoles que existen: super_admin, admin, ceo, director, asesor.\n- Roles 'admin/cabeza' (super_admin, admin, ceo, director): pueden ver, editar, reasignar y borrar leads de cualquier asesor de su organización.\n- Rol 'asesor': solo ve y modifica sus propios leads.\n\nNunca preguntes al asesor cómo se llama, en qué organización está, ni a qué asesor asignar un lead. El sistema lo resuelve por chat_id.\n\n========================================\n## 2. REGLAS DE VOZ (sin excepción)\n========================================\n\n1. Sin emojis. Ni 🔥 ni ✅ ni 📞. Solo iconos tipográficos: · ▸ → ─ ◆ •\n2. Pocas palabras. Una idea por línea. Confirmaciones de una palabra: 'Registrado.', 'Actualizado.', 'Listo.'. Sin '¡Perfecto!', '¡Genial!', 'claro que sí'.\n3. Tono humano, casual, profesional. Trata de tú. Sin formalidades robóticas. Sin chistes. Como un colega eficiente.\n4. Sin Markdown ni HTML. Solo texto plano y los iconos tipográficos de arriba.\n5. Telegram envía texto plano — no uses **negritas**, _cursivas_ ni `código`.\n\n========================================\n## 3. REGLA DE ORO: confirmar antes de escribir\n========================================\n\nCualquier ESCRITURA (bot_upsert_lead, bot_update_lead_fields, bot_add_seguimiento, bot_add_comunicacion, bot_add_task, bot_complete_task, bot_create_deal, bot_soft_delete_lead) se hace en dos pasos:\n1. Refleja lo que entendiste, estructurado con bullets ·\n2. Espera 'sí' / 'ok' / corrección. Si corrige, vuelve a confirmar todo.\n3. Solo después llamas la tool de escritura.\n\nConfirmaciones válidas: sí, si, ok, dale, va, sale, correcto, ándale, órale, confirmo.\nNegaciones válidas: no, nel, cancela, espera, para, detente.\n\nLECTURAS (bot_view_lead, bot_search_leads_by_name, bot_list_leads_by_filter, bot_list_pending, bot_list_pipeline_summary, bot_get_lead_full_context) NO requieren confirmación — se ejecutan directo.\n\n========================================\n## 4. EL TELÉFONO ES LA LLAVE ÚNICA\n========================================\n\nTodo cliente se identifica por su teléfono. Si el asesor menciona un cliente sin teléfono ('cómo va María'), primero usa bot_search_leads_by_name para resolver. Si hay un solo match, propónselo: 'Encontré María López — 555 321 0987 ¿esa?'. Si hay varios, lístalos con su teléfono y pídele que indique. Si no hay match, pídele el teléfono.\n\nLa BD guarda solo dígitos en phone_normalized. Cuando muestres teléfono al asesor, formátealo con espacios ('555 123 4567'). Cuando lo pases a una tool, pasa el original — la BD normaliza.\n\n========================================\n## 5. ETAPAS CANÓNICAS DEL PIPELINE\n========================================\n\nValores válidos para 'stage' (case-sensitive, exactos):\n  Nuevo Registro\n  Primer Contacto\n  Seguimiento\n  Zoom Agendado\n  Zoom Concretado\n  Visita Agendada\n  Visita Concretada\n  Negociación\n  Cierre\n  Perdido\n\nReglas de transición rápida:\n- 'siguiente etapa' desde Primer Contacto o Seguimiento → pregunta si Zoom Agendado o sigue en Seguimiento.\n- 'pasa a Zoom' / 'agendamos Zoom' → 'Zoom Agendado'.\n- 'ya tuve el Zoom' / 'tuvimos la videollamada' → 'Zoom Concretado'.\n- 'visita agendada' / 'va al sitio' → 'Visita Agendada'.\n- 'fui a verlo' / 'estuvimos en obra' → 'Visita Concretada'.\n- 'va a comprar' / 'firmó propuesta' / 'acepta condiciones' → 'Negociación'.\n- 'cerró' / 'firmó contrato' / 'pagó enganche' → 'Cierre' (esto generalmente lo hace bot_create_deal automático).\n- 'no responde semanas' / 'desistió' / 'compró con la competencia' → 'Perdido'.\n- Si hay duda, pregunta antes de mover.\n\n========================================\n## 6. MODELO DE DATOS (campos del lead)\n========================================\n\n- id (uuid, no exponer)\n- name (texto)\n- phone (texto libre, BD normaliza a phone_normalized)\n- email\n- stage (uno de los 10 de arriba)\n- score (entero 0-100)\n- hot (boolean)\n- presupuesto (número entero, USD)\n- budget (texto display, ej: '850K USD' o '$2.5M USD')\n- project (texto)\n- campaign (origen: 'Facebook Ads', 'Instagram Ads', 'Referido', 'LinkedIn', 'WhatsApp', etc.)\n- bio (1-2 frases descripción del cliente)\n- next_action (texto corto: 'Llamar', 'Confirmar Zoom', 'Mandar contrato')\n- next_action_at (TIMESTAMPTZ con offset, ej: '2026-05-02T11:00:00-05:00')\n- asesor_name / asesor_id (asignación)\n- seguimientos (contador entero, NO modificar manualmente — se actualiza vía bot_add_seguimiento)\n- notas (texto libre, append-only desde el bot)\n- last_activity (texto resumen — se actualiza solo)\n\n========================================\n## 7. TOOLS DISPONIBLES — CUÁNDO USAR CADA UNA\n========================================\n\n### Pareo\n- consume_telegram_pairing_code → mensaje '/conectar XXXXXXXX' o '/start XXXXXXXX' (8 dígitos). Solo cuando paired=false.\n\n### Lectura (sin confirmación)\n- bot_view_lead → ficha completa de UN cliente. Usa cuando el asesor pregunta por un cliente concreto (ya conoces el teléfono o uuid).\n- bot_get_lead_full_context → trae la ficha + las últimas 50 comunicaciones (llamadas, mensajes, etc.). Úsala antes de aconsejar al asesor sobre 'qué le digo a este cliente' o 'cómo retomo'.\n- bot_search_leads_by_name → cuando el asesor menciona un cliente solo por nombre o nombre parcial.\n- bot_list_leads_by_filter → 'mis leads en Zoom Agendado', 'todos los de Cecilia', 'leads del proyecto X'. Filtra por etapa y/o asesor.\n- bot_list_pending → '¿qué tengo hoy?', 'mis pendientes', '¿qué sigue?'. Por defecto 24h.\n- bot_list_pipeline_summary → '¿cómo va mi pipeline?', 'resumen', 'cuántos leads tengo'. Para admin/director da desglose por asesor.\n\n### Escritura (SIEMPRE confirmar antes)\n- bot_upsert_lead → crea o actualiza por phone+org. Para registro inicial. Pasa solo los campos que el asesor mencionó (los demás se quedan iguales en update, defaults en create).\n- bot_update_lead_fields → modificar campos de un lead existente. Igual que upsert, solo pasa lo que cambió. Si quieres reasignar a otro asesor, usa el campo p_new_asesor_name (solo admins/directores).\n- bot_add_seguimiento → reportar interacción rápida ('llamé y no contestó', 'mandé WhatsApp'). Incrementa contador y registra evento.\n- bot_add_comunicacion → versión rica del seguimiento, con duración (segundos) y transcripción opcional. Úsala para llamadas largas o reuniones que el asesor describa con detalle.\n- bot_add_task → tarea concreta con fecha y prioridad ('recordame llamarlo el martes', 'mandar contrato mañana 10am').\n- bot_complete_task → marcar tarea como hecha cuando el asesor lo confirma ('ya hice la llamada de Juan').\n- bot_create_deal → cierre de venta con monto y unidad. Esto cambia stage del lead a 'Cierre' automáticamente.\n- bot_soft_delete_lead → descartar lead con motivo. Para el asesor solo aplica a sus propios leads; admins pueden borrar cualquiera. Pídele siempre el motivo (mínimo 3 palabras) antes de confirmar.\n\n========================================\n## 8. DETECCIÓN DE TIPO DE SEGUIMIENTO/COMUNICACIÓN\n========================================\n\nVerbo del asesor → tipo:\n- 'llamé', 'marqué', 'le hablé' → llamada\n- 'WhatsApp', 'le escribí', 'le mandé wa' → whatsapp\n- 'le mandé correo', 'email' → email\n- 'Zoom con', 'videollamada', 'meet' → zoom\n- 'fui a verlo', 'visita', 'pasé al sitio', 'fuimos a obra' → visita\n- 'anoté', 'nota', 'apunta' → nota\n\nSi no queda claro, usa nota.\n\nElige bot_add_seguimiento para el caso normal. Solo usa bot_add_comunicacion cuando el asesor da duración explícita ('llamada de 8 minutos') o transcribe lo que se habló en detalle.\n\n========================================\n## 9. SI EL ASESOR NO ESTÁ PAREADO (paired=false)\n========================================\n\nSi el mensaje empieza con '/conectar ' o '/start ' seguido de 8 dígitos: llama consume_telegram_pairing_code con el código y el chat_id viene auto. Si success=true responde 'Conectado, [name]. Ya puedes usarme.'. Si error responde 'Código inválido o vencido. Genera uno nuevo desde el web.'.\n\nSi el mensaje NO es /conectar ni /start con código y paired=false, responde EXACTAMENTE:\n\nNo te tengo registrado.\n\nEntra a app.stratoscapitalgroup.com → Perfil → Conectar Telegram.\nTe dan un código de 8 dígitos. Mándamelo así:\n\n/conectar 12345678\n\nY no llames ninguna tool más. Termina ahí.\n\n========================================\n## 10. PRÓXIMA ACCIÓN Y FECHAS\n========================================\n\nCuando registres o actualices, intenta capturar la próxima acción.\n- 'llamarlo el viernes 11am' → next_action='Llamar', next_action_at='2026-05-08T11:00:00-05:00'\n- 'mañana a las 4' → mañana 16:00 zona America/Cancun (UTC-5).\n- 'la próxima semana' → ambiguo, pregunta día.\n- Zona: America/Cancun (UTC-5, sin horario de verano).\n- Si la fecha es ambigua, pregunta antes de escribir.\n- bot_add_task usa el mismo formato ISO 8601 con offset -05:00.\n\n========================================\n## 11. DATOS PARCIALES — ESTÁ BIEN\n========================================\n\nSi el asesor da info incompleta ('nuevo cliente Marco 555-1234'), regístralo con lo que hay. Al confirmar dile lo que falta:\n\nRegistrado.\nFalta: presupuesto, proyecto.\n\nNo bloquees pidiendo todo.\n\n========================================\n## 12. MANEJO DE ERRORES DEVUELTOS POR LAS RPCs\n========================================\n\n- error: 'asesor_not_paired' → no debería ocurrir si ya validaste. Si ocurre, sigue el flujo de §9.\n- error: 'lead_not_found' → 'No encontré ese cliente. Verifica el teléfono.'\n- error: 'invalid_phone' → 'Ese número no parece válido. Pásamelo de nuevo.'\n- error: 'forbidden' → 'Ese cliente está asignado a otro asesor. Pídele a un director que te lo reasigne desde el web.' (No reveles el nombre del otro asesor.)\n- error: 'reassign_forbidden' → 'Solo un director o admin puede reasignar leads.'\n- error: 'new_asesor_not_found' → 'No encuentro ese asesor en la organización. Confirma el nombre exacto.'\n- error: 'task_not_found' → 'No encuentro esa tarea.'\n- error: 'invalid_amount' → 'El monto debe ser un número positivo en USD.'\n- error de timeout/red → 'Servicio temporalmente lento. Intenta en un minuto.'\n\nNo inventes confirmaciones. Si la tool falló, no digas 'registrado'.\n\n========================================\n## 13. LO QUE NO HACES\n========================================\n\n- No agendas Zoom ni Calendar (eso es otra integración futura).\n- No envías mensajes al cliente final.\n- No alteras presupuestos sin que el asesor lo diga.\n- No respondes preguntas no relacionadas al CRM. Responde: 'Solo te ayudo con la gestión del CRM.'\n- No reveles el nombre del asesor dueño de un lead ajeno.\n- No expongas uuids al asesor — usa nombre y teléfono.\n\n========================================\n## 14. EJEMPLOS\n========================================\n\nEjemplo 1 — registro nuevo:\nAsesor: Nuevo lead Marco González 555-1234, Tulum, 500K, vino por Facebook\nBot: Voy a registrar\n· Marco González\n· 555 123 4567\n· Tulum  ·  500,000 USD\n· Facebook\n· Etapa Primer Contacto\n¿Confirmas?\nAsesor: sí\nBot: [llama bot_upsert_lead]\nRegistrado.\nFalta: email, próxima acción.\n\nEjemplo 2 — seguimiento:\nAsesor: Llamé a Juan 555-9876, no contestó. Reagendar mañana 11am\nBot: Voy a registrar en Juan (555 987 6543)\n· Seguimiento: llamada — no contestó\n· Próxima acción: Llamar mañana 11:00\n¿Confirmas?\nAsesor: ok\nBot: [llama bot_add_seguimiento + bot_update_lead_fields con next_action]\nListo. Seguimientos de Juan: 4.\n\nEjemplo 3 — consulta por nombre:\nAsesor: cómo va María\nBot: [llama bot_search_leads_by_name 'María']\nEncontré 2 con María:\n· María López — 555 321 0987 — Zoom Agendado\n· María Fernández — 555 998 0011 — Seguimiento\n¿Cuál?\nAsesor: la primera\nBot: [llama bot_view_lead]\nMaría López — 555 321 0987\n· Etapa Zoom Agendado\n· Score 75  ·  caliente\n· Presupuesto 350,000 USD\n· Proyecto Torre 25\n· 6 seguimientos  ·  última hace 2 días\n· Próxima acción: Confirmar Zoom — viernes 10:00\n\nEjemplo 4 — pendientes:\nAsesor: qué tengo hoy\nBot: [llama bot_list_pending]\n3 pendientes hoy\n· 09:00  Juan García     · llamar\n· 11:30  María López     · confirmar Zoom\n· 16:00  Carlos Ruiz     · enviar propuesta\n\nEjemplo 5 — reasignación (admin):\nAsesor (director): pasa el lead 555-1234 a Cecilia\nBot: Reasignar lead\n· Marco González — 555 123 4567\n· De: Gael G\n· A: Cecilia Mendoza\n¿Confirmas?\nAsesor: sí\nBot: [llama bot_update_lead_fields p_new_asesor_name='Cecilia Mendoza']\nReasignado a Cecilia Mendoza.\n\nEjemplo 6 — descarte:\nAsesor: descarta a Pedro 555-7777, compró con la competencia\nBot: Voy a descartar\n· Pedro (555 777 0000)\n· Motivo: compró con la competencia\nEsto saca al cliente del pipeline. ¿Confirmas?\nAsesor: sí\nBot: [llama bot_soft_delete_lead]\nDescartado. Queda en el histórico.\n\nEjemplo 7 — cierre:\nAsesor: cerré con Marco González, 850K USD, unidad PH-04 de Monarca\nBot: [primero bot_view_lead para confirmar el lead y opcionalmente buscar la unidad]\nCierre\n· Marco González — 555 123 4567\n· Monto: 850,000 USD\n· Unidad: Monarca · PH-04\n· Stage pasa a Cierre\n¿Confirmas?\nAsesor: sí\nBot: [llama bot_create_deal]\nDeal registrado. Felicidades.\n\nEjemplo 8 — tarea:\nAsesor: recordame llamarle a Juan el martes a las 10\nBot: Tarea para Juan García (555 987 6543)\n· Llamar martes 06/may 10:00\n¿Confirmas?\nAsesor: ok\nBot: [llama bot_add_task]\nAgendado.\n\nEjemplo 9 — ambigüedad:\nAsesor: pasa a Juan a Zoom\nBot: ¿'Zoom Agendado' (acabas de agendar) o\n'Zoom Concretado' (ya lo tuviste)?\nAsesor: ya lo tuve\nBot: Voy a actualizar Juan García\n· Etapa → Zoom Concretado\n¿Confirmas?\n\nEjemplo 10 — pipeline (admin):\nAsesor (director): cómo va el pipeline general\nBot: [llama bot_list_pipeline_summary]\nTotal: 117 leads\n· Seguimiento 82\n· Nuevo Registro 12\n· Primer Contacto 11\n· Zoom Agendado 9\n· Negociación 1\n· Visita Concretada 1\n· Zoom Concretado 1\nPor asesor:\n· Cecilia Mendoza 57\n· Emmanuel Ortiz 43\n· Araceli Oneto 11\n· Gael G 5\n· Admin Stratos 1"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [2064, -1440],
+      "id": "ai-agent",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": { "__rl": true, "value": "claude-sonnet-4-5", "mode": "list", "cachedResultName": "Claude Sonnet 4.5" },
+        "options": { "temperature": 0.2, "maxTokensToSample": 1500 }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1.3,
+      "position": [1840, -1200],
+      "id": "anthropic-model",
+      "name": "Claude Sonnet 4.5",
+      "credentials": {
+        "anthropicApi": { "id": "ANTHROPIC_CREDENTIAL_ID", "name": "Anthropic Stratos" }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "=user:{{ $('Telegram Trigger').item.json.message.from.id }}",
+        "tableName": "CRM_chat_histories_supabase",
+        "contextWindowLength": 12
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.3,
+      "position": [2000, -1200],
+      "id": "memory",
+      "name": "Postgres Chat Memory",
+      "credentials": {
+        "postgres": { "id": "T62w52bxaH11bbYW", "name": "Postgres Supabase Oficial" }
+      }
+    },
+    {
+      "parameters": {
+        "name": "consume_telegram_pairing_code",
+        "description": "Pareo inicial del asesor. Llama esta tool cuando el mensaje es '/conectar XXXXXXXX' o '/start XXXXXXXX' (8 dígitos, ambos comandos sirven — el segundo viene del deep link generado por el web). Devuelve {success:true, profile_id, name, role, organization_id} si el código es válido, o {error:'invalid_or_expired_code'} si no.",
+        "method": "POST",
+        "url": "={{ $('Set Globals').first().json.SUPABASE_URL }}/rest/v1/rpc/consume_telegram_pairing_code",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $('Set Globals').first().json.SUPABASE_SERVICE_ROLE_KEY }}" },
+            { "name": "Authorization", "value": "=Bearer {{ $('Set Globals').first().json.SUPABASE_SERVICE_ROLE_KEY }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"p_code\": \"{code}\",\n  \"p_telegram_chat_id\": {{ $('Telegram Trigger').item.json.message.from.id }}\n}",
+        "placeholderDefinitions": {
+          "values": [
+            { "name": "code", "description": "Código de 8 dígitos del asesor (ej: '48291734')", "type": "string" }
+          ]
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "position": [2160, -1200],
+      "id": "tool-consume-code",
+      "name": "Tool: consume_telegram_pairing_code"
+    },
+    {
+      "parameters": {
+        "name": "bot_view_lead",
+        "description": "Ficha COMPLETA de UN cliente (devuelve también tasks, playbook, action_history). Usa esta tool cuando el asesor pregunta por un cliente concreto y ya tienes su teléfono o uuid. Devuelve {found:true, lead:{id, name, phone, email, stage, score, hot, budget, presupuesto, project, project_id, campaign, campaign_id, bio, seguimientos, next_action, next_action_at, last_activity, asesor_name, fecha_ingreso, notas, tasks, playbook, action_history}} o {found:false}. Si found:false, responde 'No encontré ese cliente. Verifica el teléfono.'",
+        "method": "POST",
+        "url": "={{ $('Set Globals').first().json.SUPABASE_URL }}/rest/v1/rpc/bot_view_lead",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $('Set Globals').first().json.SUPABASE_SERVICE_ROLE_KEY }}" },
+            { "name": "Authorization", "value": "=Bearer {{ $('Set Globals').first().json.SUPABASE_SERVICE_ROLE_KEY }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"p_telegram_chat_id\": {{ $('Telegram Trigger').item.json.message.from.id }},\n  \"p_phone\": \"{phone}\",\n  \"p_lead_id\": \"{lead_id}\"\n}",
+        "placeholderDefinitions": {
+          "values": [
+            { "name": "phone", "description": "Teléfono tal cual lo escribió el asesor — la BD normaliza. Pasa cadena vacía si usas lead_id.", "type": "string" },
+            { "name": "lead_id", "description": "UUID del lead si lo conoces (ej. de un search anterior). Cadena vacía si usas teléfono.", "type": "string" }
+          ]
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "position": [2320, -1200],
+      "id": "tool-view-lead",
+      "name": "Tool: bot_view_lead"
+    },
+    {
+      "parameters": {
+        "name": "bot_get_lead_full_context",
+        "description": "Trae la ficha del lead + las últimas comunicaciones (hasta 50: llamadas, WhatsApp, emails, zooms, visitas, notas) + datos para AI. Úsala cuando el asesor te pida CONSEJO sobre cómo retomar un cliente, qué decirle, o un resumen detallado de su historial. Más caro que bot_view_lead — no la uses para una simple consulta de datos.",
+        "method": "POST",
+        "url": "={{ $('Set Globals').first().json.SUPABASE_URL }}/rest/v1/rpc/bot_get_lead_full_context",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $('Set Globals').first().json.SUPABASE_SERVICE_ROLE_KEY }}" },
+            { "name": "Authorization", "value": "=Bearer {{ $('Set Globals').first().json.SUPABASE_SERVICE_ROLE_KEY }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"p_telegram_chat_id\": {{ $('Telegram Trigger').item.json.message.from.id }},\n  \"p_phone\": \"{phone}\"\n}",
+        "placeholderDefinitions": {
+          "values": [
+            { "name": "phone", "description": "Teléfono del cliente. REQUERIDO.", "type": "string" }
+          ]
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "position": [2480, -1200],
+      "id": "tool-full-context",
+      "name": "Tool: bot_get_lead_full_context"
+    },
+    {
+      "parameters": {
+        "name": "bot_search_leads_by_name",
+        "description": "Búsqueda parcial por nombre (ILIKE %query%). Úsala cuando el asesor menciona un cliente solo por nombre ('cómo va María', 'busca a Carlos'). Limitado por rol: asesor regular solo ve sus propios leads, admins/directores ven todos los de su organización. Devuelve {count, results:[{id, name, phone, asesor_name, stage, project, campaign, budget, presupuesto, hot, score, fecha_ingreso}]}. Si count > 1 lista los matches con teléfono y deja al asesor elegir.",
+        "method": "POST",
+        "url": "={{ $('Set Globals').first().json.SUPABASE_URL }}/rest/v1/rpc/bot_search_leads_by_name",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $('Set Globals').first().json.SUPABASE_SERVICE_ROLE_KEY }}" },
+            { "name": "Authorization", "value": "=Bearer {{ $('Set Globals').first().json.SUPABASE_SERVICE_ROLE_KEY }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"p_telegram_chat_id\": {{ $('Telegram Trigger').item.json.message.from.id }},\n  \"p_query\": \"{query}\",\n  \"p_limit\": {limit}\n}",
+        "placeholderDefinitions": {
+          "values": [
+            { "name": "query", "description": "Trozo del nombre (ej: 'María', 'Marco Gonz', 'lópez'). Mínimo 2 caracteres.", "type": "string" },
+            { "name": "limit", "description": "Máximo de resultados. Default 10. Usa 25 para búsquedas amplias.", "type": "number" }
+          ]
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "position": [2640, -1200],
+      "id": "tool-search-name",
+      "name": "Tool: bot_search_leads_by_name"
+    },
+    {
+      "parameters": {
+        "name": "bot_list_leads_by_filter",
+        "description": "Listar leads con filtros opcionales por etapa y/o asesor. Útil para 'mis leads en Zoom Agendado', 'todos los leads de Cecilia', 'qué tengo en Negociación'. Asesor regular solo ve los propios; admins/directores ven todos los de su org y pueden filtrar por asesor_name. Devuelve {count, results:[{id, name, phone, asesor_name, stage, project, campaign, budget, presupuesto, hot, score, next_action_at}]}.",
+        "method": "POST",
+        "url": "={{ $('Set Globals').first().json.SUPABASE_URL }}/rest/v1/rpc/bot_list_leads_by_filter",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $('Set Globals').first().json.SUPABASE_SERVICE_ROLE_KEY }}" },
+            { "name": "Authorization", "value": "=Bearer {{ $('Set Globals').first().json.SUPABASE_SERVICE_ROLE_KEY }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"p_telegram_chat_id\": {{ $('Telegram Trigger').item.json.message.from.id }},\n  \"p_asesor_name\": \"{asesor_name}\",\n  \"p_stage\": \"{stage}\",\n  \"p_limit\": {limit}\n}",
+        "placeholderDefinitions": {
+          "values": [
+            { "name": "asesor_name", "description": "Nombre EXACTO del asesor a filtrar (case-insensitive, ej: 'Cecilia Mendoza'). Vacío para no filtrar.", "type": "string" },
+            { "name": "stage", "description": "Etapa exacta del pipeline (ej: 'Zoom Agendado'). Vacío para todas.", "type": "string" },
+            { "name": "limit", "description": "Máximo de resultados. Default 50.", "type": "number" }
+          ]
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "position": [2800, -1200],
+      "id": "tool-list-filter",
+      "name": "Tool: bot_list_leads_by_filter"
+    },
+    {
+      "parameters": {
+        "name": "bot_list_pending",
+        "description": "Pendientes del asesor en una ventana de tiempo (next_action_at). Llama cuando el asesor pregunta 'qué tengo hoy', 'mis pendientes', 'qué sigue'. Por defecto 24 horas. Devuelve {pending:[{id, name, phone, stage, next_action, next_action_at, hot}, ...]}. Si window_hours=0 usa el default.",
+        "method": "POST",
+        "url": "={{ $('Set Globals').first().json.SUPABASE_URL }}/rest/v1/rpc/bot_list_pending",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $('Set Globals').first().json.SUPABASE_SERVICE_ROLE_KEY }}" },
+            { "name": "Authorization", "value": "=Bearer {{ $('Set Globals').first().json.SUPABASE_SERVICE_ROLE_KEY }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"p_telegram_chat_id\": {{ $('Telegram Trigger').item.json.message.from.id }},\n  \"p_window_hours\": {window_hours}\n}",
+        "placeholderDefinitions": {
+          "values": [
+            { "name": "window_hours", "description": "Ventana en horas. 24=hoy, 48=hoy+mañana, 168=esta semana. Default 24.", "type": "number" }
+          ]
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "position": [2960, -1200],
+      "id": "tool-list-pending",
+      "name": "Tool: bot_list_pending"
+    },
+    {
+      "parameters": {
+        "name": "bot_list_pipeline_summary",
+        "description": "Resumen ejecutivo del pipeline. Devuelve {total, by_stage:{etapa:count}, by_asesor:{asesor:count}}. Para asesor regular by_asesor viene vacío y total/by_stage solo cuentan sus leads. Para admin/director cuenta toda la organización con desglose por asesor. Usa para preguntas tipo 'cómo va mi pipeline', 'cuántos tengo', 'resumen', 'cómo va el equipo'.",
+        "method": "POST",
+        "url": "={{ $('Set Globals').first().json.SUPABASE_URL }}/rest/v1/rpc/bot_list_pipeline_summary",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $('Set Globals').first().json.SUPABASE_SERVICE_ROLE_KEY }}" },
+            { "name": "Authorization", "value": "=Bearer {{ $('Set Globals').first().json.SUPABASE_SERVICE_ROLE_KEY }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"p_telegram_chat_id\": {{ $('Telegram Trigger').item.json.message.from.id }}\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "position": [3120, -1200],
+      "id": "tool-pipeline-summary",
+      "name": "Tool: bot_list_pipeline_summary"
+    },
+    {
+      "parameters": {
+        "name": "bot_upsert_lead",
+        "description": "Crea un lead nuevo o actualiza uno existente. Idempotente por teléfono+organización. SIEMPRE confirma con el asesor antes de llamar. Si el lead pertenece a otro asesor y no eres admin, devuelve error:'forbidden'. Pasa solo los campos que el asesor mencionó (cadena vacía o null en los demás — la BD ignora los vacíos).",
+        "method": "POST",
+        "url": "={{ $('Set Globals').first().json.SUPABASE_URL }}/rest/v1/rpc/bot_upsert_lead",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $('Set Globals').first().json.SUPABASE_SERVICE_ROLE_KEY }}" },
+            { "name": "Authorization", "value": "=Bearer {{ $('Set Globals').first().json.SUPABASE_SERVICE_ROLE_KEY }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"p_telegram_chat_id\": {{ $('Telegram Trigger').item.json.message.from.id }},\n  \"p_phone\": \"{phone}\",\n  \"p_name\": \"{name}\",\n  \"p_email\": \"{email}\",\n  \"p_stage\": \"{stage}\",\n  \"p_budget_text\": \"{budget_text}\",\n  \"p_budget_numeric\": {budget_numeric},\n  \"p_project\": \"{project}\",\n  \"p_campaign\": \"{campaign}\",\n  \"p_bio\": \"{bio}\",\n  \"p_score\": {score},\n  \"p_hot\": {hot},\n  \"p_next_action\": \"{next_action}\",\n  \"p_next_action_at\": \"{next_action_at}\"\n}",
+        "placeholderDefinitions": {
+          "values": [
+            { "name": "phone", "description": "Teléfono del cliente (formato libre, la BD normaliza). REQUERIDO.", "type": "string" },
+            { "name": "name", "description": "Nombre completo o vacío si no se sabe", "type": "string" },
+            { "name": "email", "description": "Email o vacío", "type": "string" },
+            { "name": "stage", "description": "Etapa canónica del pipeline o vacío para mantener actual", "type": "string" },
+            { "name": "budget_text", "description": "Presupuesto como texto (ej: '500K USD') o vacío", "type": "string" },
+            { "name": "budget_numeric", "description": "Presupuesto en USD como número entero, o null", "type": "number" },
+            { "name": "project", "description": "Proyecto de interés o vacío", "type": "string" },
+            { "name": "campaign", "description": "Origen del lead (Facebook, Referido, etc.) o vacío", "type": "string" },
+            { "name": "bio", "description": "Bio breve del cliente (1-2 frases) o vacío", "type": "string" },
+            { "name": "score", "description": "Score 0-100 estimado, o null", "type": "number" },
+            { "name": "hot", "description": "true si es hot lead, false si no, null para no cambiar", "type": "boolean" },
+            { "name": "next_action", "description": "Texto corto de la próxima acción ('Llamar', 'Confirmar Zoom') o vacío", "type": "string" },
+            { "name": "next_action_at", "description": "Fecha-hora ISO 8601 con offset (ej: '2026-05-02T11:00:00-05:00') o vacío", "type": "string" }
+          ]
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "position": [2160, -1040],
+      "id": "tool-upsert-lead",
+      "name": "Tool: bot_upsert_lead"
+    },
+    {
+      "parameters": {
+        "name": "bot_update_lead_fields",
+        "description": "Actualiza campos puntuales de un lead existente (por teléfono). Útil para cambios quirúrgicos sin tocar lo demás. Para REASIGNAR el lead a otro asesor pasa p_new_asesor_name (solo admins/directores; asesor regular obtiene 'reassign_forbidden'). SIEMPRE confirma antes. Pasa cadena vacía o null en los campos que NO cambian.",
+        "method": "POST",
+        "url": "={{ $('Set Globals').first().json.SUPABASE_URL }}/rest/v1/rpc/bot_update_lead_fields",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $('Set Globals').first().json.SUPABASE_SERVICE_ROLE_KEY }}" },
+            { "name": "Authorization", "value": "=Bearer {{ $('Set Globals').first().json.SUPABASE_SERVICE_ROLE_KEY }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"p_telegram_chat_id\": {{ $('Telegram Trigger').item.json.message.from.id }},\n  \"p_phone\": \"{phone}\",\n  \"p_name\": \"{name}\",\n  \"p_email\": \"{email}\",\n  \"p_stage\": \"{stage}\",\n  \"p_budget_text\": \"{budget_text}\",\n  \"p_budget_numeric\": {budget_numeric},\n  \"p_project\": \"{project}\",\n  \"p_campaign\": \"{campaign}\",\n  \"p_bio\": \"{bio}\",\n  \"p_score\": {score},\n  \"p_hot\": {hot},\n  \"p_next_action\": \"{next_action}\",\n  \"p_next_action_at\": \"{next_action_at}\",\n  \"p_new_asesor_name\": \"{new_asesor_name}\"\n}",
+        "placeholderDefinitions": {
+          "values": [
+            { "name": "phone", "description": "Teléfono del lead a modificar. REQUERIDO.", "type": "string" },
+            { "name": "name", "description": "Nuevo nombre o vacío", "type": "string" },
+            { "name": "email", "description": "Nuevo email o vacío", "type": "string" },
+            { "name": "stage", "description": "Nueva etapa canónica o vacío", "type": "string" },
+            { "name": "budget_text", "description": "Nuevo budget texto o vacío", "type": "string" },
+            { "name": "budget_numeric", "description": "Nuevo budget numérico USD o null", "type": "number" },
+            { "name": "project", "description": "Nuevo proyecto o vacío", "type": "string" },
+            { "name": "campaign", "description": "Nueva campaña o vacío", "type": "string" },
+            { "name": "bio", "description": "Nueva bio o vacío", "type": "string" },
+            { "name": "score", "description": "Nuevo score o null", "type": "number" },
+            { "name": "hot", "description": "Nuevo hot true/false o null", "type": "boolean" },
+            { "name": "next_action", "description": "Nueva próxima acción o vacío", "type": "string" },
+            { "name": "next_action_at", "description": "Nueva fecha ISO 8601 con offset o vacío", "type": "string" },
+            { "name": "new_asesor_name", "description": "Nombre del NUEVO asesor para reasignar (solo admins/directores). Vacío para no reasignar.", "type": "string" }
+          ]
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "position": [2320, -1040],
+      "id": "tool-update-fields",
+      "name": "Tool: bot_update_lead_fields"
+    },
+    {
+      "parameters": {
+        "name": "bot_add_seguimiento",
+        "description": "Registra una interacción rápida del asesor con un cliente. Incrementa contador de seguimientos, agrega nota timestamped y crea evento en lead_events + comunicaciones. SIEMPRE confirma antes. El tipo se infiere del verbo (llamada/whatsapp/email/zoom/visita/nota).",
+        "method": "POST",
+        "url": "={{ $('Set Globals').first().json.SUPABASE_URL }}/rest/v1/rpc/bot_add_seguimiento",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $('Set Globals').first().json.SUPABASE_SERVICE_ROLE_KEY }}" },
+            { "name": "Authorization", "value": "=Bearer {{ $('Set Globals').first().json.SUPABASE_SERVICE_ROLE_KEY }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"p_telegram_chat_id\": {{ $('Telegram Trigger').item.json.message.from.id }},\n  \"p_phone\": \"{phone}\",\n  \"p_tipo\": \"{tipo}\",\n  \"p_resumen\": \"{resumen}\"\n}",
+        "placeholderDefinitions": {
+          "values": [
+            { "name": "phone", "description": "Teléfono del cliente. REQUERIDO.", "type": "string" },
+            { "name": "tipo", "description": "Uno de: llamada, whatsapp, email, zoom, visita, nota", "type": "string" },
+            { "name": "resumen", "description": "Resumen breve de la interacción", "type": "string" }
+          ]
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "position": [2480, -1040],
+      "id": "tool-add-seguimiento",
+      "name": "Tool: bot_add_seguimiento"
+    },
+    {
+      "parameters": {
+        "name": "bot_add_comunicacion",
+        "description": "Versión RICA del seguimiento, con duración (segundos) y transcripción opcional. Úsala para llamadas largas, reuniones, zooms o cuando el asesor describe en detalle lo que se habló. Inserta una fila completa en public.comunicaciones (no usa el contador de seguimientos del lead, eso lo hace bot_add_seguimiento). SIEMPRE confirma antes.",
+        "method": "POST",
+        "url": "={{ $('Set Globals').first().json.SUPABASE_URL }}/rest/v1/rpc/bot_add_comunicacion",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $('Set Globals').first().json.SUPABASE_SERVICE_ROLE_KEY }}" },
+            { "name": "Authorization", "value": "=Bearer {{ $('Set Globals').first().json.SUPABASE_SERVICE_ROLE_KEY }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"p_telegram_chat_id\": {{ $('Telegram Trigger').item.json.message.from.id }},\n  \"p_phone\": \"{phone}\",\n  \"p_tipo\": \"{tipo}\",\n  \"p_resumen\": \"{resumen}\",\n  \"p_transcripcion\": \"{transcripcion}\",\n  \"p_ocurrio_en\": \"{ocurrio_en}\",\n  \"p_duracion_seg\": {duracion_seg}\n}",
+        "placeholderDefinitions": {
+          "values": [
+            { "name": "phone", "description": "Teléfono del cliente. REQUERIDO.", "type": "string" },
+            { "name": "tipo", "description": "Uno de: llamada, whatsapp, email, zoom, visita, nota", "type": "string" },
+            { "name": "resumen", "description": "Resumen ejecutivo de 1-2 líneas. REQUERIDO.", "type": "string" },
+            { "name": "transcripcion", "description": "Transcripción literal o detalle largo. Vacío si no aplica.", "type": "string" },
+            { "name": "ocurrio_en", "description": "Cuándo ocurrió, ISO 8601 con offset (ej: '2026-05-02T15:30:00-05:00'). Vacío para 'ahora'.", "type": "string" },
+            { "name": "duracion_seg", "description": "Duración en segundos (ej. 480 para 8 min). 0 o null si no aplica.", "type": "number" }
+          ]
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "position": [2640, -1040],
+      "id": "tool-add-comunicacion",
+      "name": "Tool: bot_add_comunicacion"
+    },
+    {
+      "parameters": {
+        "name": "bot_add_task",
+        "description": "Crea una tarea concreta sobre un lead, con fecha límite y prioridad. Para 'recordame llamarle el martes 10am', 'mandar contrato mañana', 'pasar por la oficina viernes'. SIEMPRE confirma antes. Devuelve {success:true, task_id, lead_id}. La tarea aparecerá en bot_list_pending si su due_at cae en la ventana.",
+        "method": "POST",
+        "url": "={{ $('Set Globals').first().json.SUPABASE_URL }}/rest/v1/rpc/bot_add_task",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $('Set Globals').first().json.SUPABASE_SERVICE_ROLE_KEY }}" },
+            { "name": "Authorization", "value": "=Bearer {{ $('Set Globals').first().json.SUPABASE_SERVICE_ROLE_KEY }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"p_telegram_chat_id\": {{ $('Telegram Trigger').item.json.message.from.id }},\n  \"p_phone\": \"{phone}\",\n  \"p_text\": \"{text}\",\n  \"p_due_at\": \"{due_at}\",\n  \"p_priority\": \"{priority}\"\n}",
+        "placeholderDefinitions": {
+          "values": [
+            { "name": "phone", "description": "Teléfono del lead asociado. REQUERIDO.", "type": "string" },
+            { "name": "text", "description": "Texto de la tarea ('Llamar para confirmar Zoom'). REQUERIDO.", "type": "string" },
+            { "name": "due_at", "description": "Fecha-hora ISO 8601 con offset, ej '2026-05-08T10:00:00-05:00'. Vacío si no hay fecha.", "type": "string" },
+            { "name": "priority", "description": "low | normal | high. Default 'normal'.", "type": "string" }
+          ]
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "position": [2800, -1040],
+      "id": "tool-add-task",
+      "name": "Tool: bot_add_task"
+    },
+    {
+      "parameters": {
+        "name": "bot_complete_task",
+        "description": "Marca una tarea como completada. Necesita el task_id (uuid) — generalmente lo obtienes de bot_view_lead.tasks o bot_list_pending. Usa cuando el asesor diga 'ya hice X' o 'completa la tarea de Y'. SIEMPRE confirma antes.",
+        "method": "POST",
+        "url": "={{ $('Set Globals').first().json.SUPABASE_URL }}/rest/v1/rpc/bot_complete_task",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $('Set Globals').first().json.SUPABASE_SERVICE_ROLE_KEY }}" },
+            { "name": "Authorization", "value": "=Bearer {{ $('Set Globals').first().json.SUPABASE_SERVICE_ROLE_KEY }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"p_telegram_chat_id\": {{ $('Telegram Trigger').item.json.message.from.id }},\n  \"p_task_id\": \"{task_id}\"\n}",
+        "placeholderDefinitions": {
+          "values": [
+            { "name": "task_id", "description": "UUID de la tarea. REQUERIDO.", "type": "string" }
+          ]
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "position": [2960, -1040],
+      "id": "tool-complete-task",
+      "name": "Tool: bot_complete_task"
+    },
+    {
+      "parameters": {
+        "name": "bot_create_deal",
+        "description": "Registra un cierre de venta (deal firmado). Inserta en public.deals, mueve el stage del lead a 'Cierre' y, si pasas project_unit_id, marca esa unidad como 'vendido'. SIEMPRE confirma antes (monto, moneda, unidad, lead). Felicita al asesor en el mensaje de éxito. Devuelve {success:true, deal_id, lead_id}.",
+        "method": "POST",
+        "url": "={{ $('Set Globals').first().json.SUPABASE_URL }}/rest/v1/rpc/bot_create_deal",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $('Set Globals').first().json.SUPABASE_SERVICE_ROLE_KEY }}" },
+            { "name": "Authorization", "value": "=Bearer {{ $('Set Globals').first().json.SUPABASE_SERVICE_ROLE_KEY }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"p_telegram_chat_id\": {{ $('Telegram Trigger').item.json.message.from.id }},\n  \"p_phone\": \"{phone}\",\n  \"p_amount\": {amount},\n  \"p_currency\": \"{currency}\",\n  \"p_project_unit_id\": \"{project_unit_id}\",\n  \"p_signed_at\": \"{signed_at}\",\n  \"p_notes\": \"{notes}\"\n}",
+        "placeholderDefinitions": {
+          "values": [
+            { "name": "phone", "description": "Teléfono del lead. REQUERIDO.", "type": "string" },
+            { "name": "amount", "description": "Monto del deal en unidad entera de la moneda (ej. 850000 = 850K USD). REQUERIDO.", "type": "number" },
+            { "name": "currency", "description": "ISO currency. Default 'USD'.", "type": "string" },
+            { "name": "project_unit_id", "description": "UUID de la unidad vendida si la conoces. Vacío si no.", "type": "string" }, 
+            { "name": "signed_at", "description": "Fecha de firma ISO 8601 con offset. Vacío para 'ahora'.", "type": "string" },
+            { "name": "notes", "description": "Notas libres del cierre. Vacío si no hay.", "type": "string" }
+          ]
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "position": [3120, -1040],
+      "id": "tool-create-deal",
+      "name": "Tool: bot_create_deal"
+    },
+    {
+      "parameters": {
+        "name": "bot_soft_delete_lead",
+        "description": "Descarta (soft-delete) un lead. Lo saca del pipeline activo pero queda en histórico (deleted_at != NULL). Asesor regular solo puede borrar SUS propios leads (otros devuelven 'forbidden'); admins/directores/CEO pueden borrar cualquiera de la organización. SIEMPRE pide motivo (mínimo 3 palabras) antes de confirmar. Si el lead ya estaba borrado, devuelve already_deleted:true (idempotente).",
+        "method": "POST",
+        "url": "={{ $('Set Globals').first().json.SUPABASE_URL }}/rest/v1/rpc/bot_soft_delete_lead",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $('Set Globals').first().json.SUPABASE_SERVICE_ROLE_KEY }}" },
+            { "name": "Authorization", "value": "=Bearer {{ $('Set Globals').first().json.SUPABASE_SERVICE_ROLE_KEY }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"p_telegram_chat_id\": {{ $('Telegram Trigger').item.json.message.from.id }},\n  \"p_phone\": \"{phone}\",\n  \"p_reason\": \"{reason}\"\n}",
+        "placeholderDefinitions": {
+          "values": [
+            { "name": "phone", "description": "Teléfono del lead a descartar. REQUERIDO.", "type": "string" },
+            { "name": "reason", "description": "Motivo del descarte ('compró con la competencia', 'no responde hace 30 días', 'cambió de presupuesto'). REQUERIDO — mínimo 3 palabras.", "type": "string" }
+          ]
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "position": [3280, -1040],
+      "id": "tool-soft-delete",
+      "name": "Tool: bot_soft_delete_lead"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 3 },
+          "conditions": [
+            {
+              "id": "if-not-error",
+              "leftValue": "={{ $json.output !== undefined && $json.output !== '' }}",
+              "rightValue": "",
+              "operator": { "type": "boolean", "operation": "true", "singleValue": true }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [2720, -1440],
+      "id": "if-not-error",
+      "name": "IF_NOT_Error"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.from.id }}",
+        "text": "={{ $json.output }}",
+        "additionalFields": { "appendAttribution": false }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [2944, -1536],
+      "id": "respond-message",
+      "name": "RESPOND MESSAGE",
+      "webhookId": "stratos-bot-v5-respond",
+      "credentials": {
+        "telegramApi": { "id": "87yW20WNKUw82mLU", "name": "STRATOS BOT" }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.from.id }}",
+        "text": "Servicio temporalmente lento. Intenta en un minuto.",
+        "additionalFields": { "appendAttribution": false }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [2944, -1344],
+      "id": "error-message",
+      "name": "ERROR MESSAGE",
+      "webhookId": "stratos-bot-v5-error",
+      "credentials": {
+        "telegramApi": { "id": "87yW20WNKUw82mLU", "name": "STRATOS BOT" }
+      }
+    }
+  ],
+  "connections": {
+    "Telegram Trigger": {
+      "main": [[{ "node": "Set Globals", "type": "main", "index": 0 }]]
+    },
+    "Set Globals": {
+      "main": [[{ "node": "Switch", "type": "main", "index": 0 }]]
+    },
+    "Switch": {
+      "main": [
+        [{ "node": "Get VOICE", "type": "main", "index": 0 }],
+        [{ "node": "Get IMAGE", "type": "main", "index": 0 }],
+        [{ "node": "text input", "type": "main", "index": 0 }],
+        [{ "node": "UNSUPPORTED MESSAGE", "type": "main", "index": 0 }]
+      ]
+    },
+    "Get VOICE":           { "main": [[{ "node": "TRANSCRIBE AUDIO", "type": "main", "index": 0 }]] },
+    "Get IMAGE":           { "main": [[{ "node": "ANALIZA IMAGEN",   "type": "main", "index": 0 }]] },
+    "TRANSCRIBE AUDIO":    { "main": [[{ "node": "audio input",      "type": "main", "index": 0 }]] },
+    "ANALIZA IMAGEN":      { "main": [[{ "node": "image input",      "type": "main", "index": 0 }]] },
+    "audio input":         { "main": [[{ "node": "Merge",            "type": "main", "index": 0 }]] },
+    "image input":         { "main": [[{ "node": "Merge",            "type": "main", "index": 1 }]] },
+    "text input":          { "main": [[{ "node": "Merge",            "type": "main", "index": 2 }]] },
+    "Merge":               { "main": [[{ "node": "Sort",             "type": "main", "index": 0 }]] },
+    "Sort":                { "main": [[{ "node": "Aggregate",        "type": "main", "index": 0 }]] },
+    "Aggregate":           { "main": [[{ "node": "INPUT FINAL",      "type": "main", "index": 0 }]] },
+    "INPUT FINAL":         { "main": [[{ "node": "SAVE MESSAGE",     "type": "main", "index": 0 }]] },
+    "SAVE MESSAGE":        { "main": [[{ "node": "Wait",             "type": "main", "index": 0 }]] },
+    "Wait":                { "main": [[{ "node": "GET MESSAGE",      "type": "main", "index": 0 }]] },
+    "GET MESSAGE":         { "main": [[{ "node": "Filter",           "type": "main", "index": 0 }]] },
+    "Filter":              { "main": [[{ "node": "JOINNING MESSAGE", "type": "main", "index": 0 }]] },
+    "JOINNING MESSAGE":    { "main": [[{ "node": "DELETE MESSAGES",  "type": "main", "index": 0 }]] },
+    "DELETE MESSAGES":     { "main": [[{ "node": "Identify asesor",  "type": "main", "index": 0 }]] },
+    "Identify asesor":     { "main": [[{ "node": "AI Agent",         "type": "main", "index": 0 }]] },
+
+    "Claude Sonnet 4.5":   { "ai_languageModel": [[{ "node": "AI Agent", "type": "ai_languageModel", "index": 0 }]] },
+    "Postgres Chat Memory":{ "ai_memory":        [[{ "node": "AI Agent", "type": "ai_memory",        "index": 0 }]] },
+
+    "Tool: consume_telegram_pairing_code": { "ai_tool": [[{ "node": "AI Agent", "type": "ai_tool", "index": 0 }]] },
+    "Tool: bot_view_lead":                  { "ai_tool": [[{ "node": "AI Agent", "type": "ai_tool", "index": 0 }]] },
+    "Tool: bot_get_lead_full_context":      { "ai_tool": [[{ "node": "AI Agent", "type": "ai_tool", "index": 0 }]] },
+    "Tool: bot_search_leads_by_name":       { "ai_tool": [[{ "node": "AI Agent", "type": "ai_tool", "index": 0 }]] },
+    "Tool: bot_list_leads_by_filter":       { "ai_tool": [[{ "node": "AI Agent", "type": "ai_tool", "index": 0 }]] },
+    "Tool: bot_list_pending":               { "ai_tool": [[{ "node": "AI Agent", "type": "ai_tool", "index": 0 }]] },
+    "Tool: bot_list_pipeline_summary":      { "ai_tool": [[{ "node": "AI Agent", "type": "ai_tool", "index": 0 }]] },
+    "Tool: bot_upsert_lead":                { "ai_tool": [[{ "node": "AI Agent", "type": "ai_tool", "index": 0 }]] },
+    "Tool: bot_update_lead_fields":         { "ai_tool": [[{ "node": "AI Agent", "type": "ai_tool", "index": 0 }]] },
+    "Tool: bot_add_seguimiento":            { "ai_tool": [[{ "node": "AI Agent", "type": "ai_tool", "index": 0 }]] },
+    "Tool: bot_add_comunicacion":           { "ai_tool": [[{ "node": "AI Agent", "type": "ai_tool", "index": 0 }]] },
+    "Tool: bot_add_task":                   { "ai_tool": [[{ "node": "AI Agent", "type": "ai_tool", "index": 0 }]] },
+    "Tool: bot_complete_task":              { "ai_tool": [[{ "node": "AI Agent", "type": "ai_tool", "index": 0 }]] },
+    "Tool: bot_create_deal":                { "ai_tool": [[{ "node": "AI Agent", "type": "ai_tool", "index": 0 }]] },
+    "Tool: bot_soft_delete_lead":           { "ai_tool": [[{ "node": "AI Agent", "type": "ai_tool", "index": 0 }]] },
+
+    "AI Agent":            { "main": [[{ "node": "IF_NOT_Error", "type": "main", "index": 0 }]] },
+    "IF_NOT_Error": {
+      "main": [
+        [{ "node": "RESPOND MESSAGE", "type": "main", "index": 0 }],
+        [{ "node": "ERROR MESSAGE",   "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "settings": { "executionOrder": "v1" },
+  "pinData": {},
+  "meta": {
+    "templateCreatedBy": "Stratos AI — v5 paridad CRM (15 tools: añade view_lead/full_context/search/list_filter/pipeline_summary/update_fields/add_comunicacion/add_task/complete_task/create_deal/soft_delete; reemplaza get_lead_by_phone por view_lead más rico)"
+  }
+}
