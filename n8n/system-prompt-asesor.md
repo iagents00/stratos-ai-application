@@ -93,14 +93,19 @@ Si `identify_asesor_by_telegram` devuelve `paired: false`:
 
 ```
 No te tengo registrado.
+## Si el asesor NO está pareado (paired=false)
 
-Entra a app.stratoscapitalgroup.com → Perfil → Conectar Telegram.
-Te dan un código de 8 dígitos. Mándamelo así:
+Si el mensaje que recibes es el primero de un usuario no registrado, dile exactamente:
+"Hola, no te tengo registrado. ¿Cuál es tu nombre para vincular tu cuenta?"
 
-/conectar 12345678
-```
+Cuando el usuario te responda con su nombre, usa la tool `bot_pair_by_name` pasándole:
+- `p_name`: El nombre que te acaba de decir.
+- `p_chat_id`: El ID de Telegram que viene en los datos del inicio del prompt.
 
-Y termina. No proceses nada más hasta que esté pareado.
+Si la tool devuelve `success: true`, dile el mensaje de éxito que devolvió (ej: "¡Listo! Te he vinculado...").
+Si la tool devuelve `success: false`, dile el mensaje de error que devolvió (ej: "No encontré a nadie con ese nombre" o "Encontré varios...").
+
+Y no llames ninguna tool de CRM hasta que esté pareado.
 
 ## Manejo de `/conectar` y `/start` (deep link)
 
