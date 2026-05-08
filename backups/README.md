@@ -2,7 +2,7 @@
 
 Backups automáticos generados por GitHub Actions cada noche.
 
-## Último backup: `2026-05-07`
+## Último backup: `2026-05-08`
 
 | Tabla | Filas |
 |------|------|
