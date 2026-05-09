@@ -24,7 +24,7 @@ import {
 // 12s cubre el cold-start de Supabase free tier (instancia dormida tras
 // inactividad despierta en ~6-10s). Si supera eso, asumimos caída real.
 const TIMEOUT_MS      = 12000              // queries normales (read profile, leads)
-const AUTH_TIMEOUT_MS = 25000              // signInWithPassword: cold start es lento legitimamente
+const AUTH_TIMEOUT_MS = 18000              // signInWithPassword: cold start tolerado
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000   // 24 horas — sesión cacheada localmente
 const SESSION_CACHE_KEY = 'stratos_session_cache'
 
@@ -112,29 +112,15 @@ export async function signIn(email, password) {
     return signInOffline(email, password)
   }
 
-  // Helper interno — un intento de signIn con timeout dedicado para auth.
-  const attemptSignIn = () => withTimeout(
-    supabase.auth.signInWithPassword({ email, password }),
-    AUTH_TIMEOUT_MS,
-    'auth',
-  )
-
   try {
-    // Auth con timeout dedicado (25s para tolerar cold start) + retry
-    // silencioso de 1 intento si el primero falla por timeout puro.
-    let authResp
-    try {
-      authResp = await attemptSignIn()
-    } catch (firstErr) {
-      if (isTimeoutError(firstErr)) {
-        // Reintento silencioso — el primer intento puede haber despertado
-        // la conexión y el segundo suele responder rápido (<3s).
-        authResp = await attemptSignIn()
-      } else {
-        throw firstErr
-      }
-    }
-    const { data, error } = authResp
+    // Auth con timeout dedicado (18s — cubre cold start sin hacer
+    // esperar al usuario eternamente). El warm-up de LoginScreen
+    // mantiene la conexión caliente, asi que en uso normal responde <3s.
+    const { data, error } = await withTimeout(
+      supabase.auth.signInWithPassword({ email, password }),
+      AUTH_TIMEOUT_MS,
+      'auth',
+    )
     if (error) {
       logAuthEvent('LOGIN_FAIL', null, { email, reason: error.message })
       const msg = error.message?.toLowerCase() || ""
