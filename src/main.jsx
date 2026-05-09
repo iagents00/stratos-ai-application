@@ -23,6 +23,7 @@ import LandingMarketing from "./landing/LandingMarketing.jsx";
 import PrivacyPolicy   from "./landing/PrivacyPolicy.jsx";
 import DataDeletion    from "./landing/DataDeletion.jsx";
 import DeliveryHubCRM  from "./landing/DeliveryHubCRM.jsx";
+import ManualCRM       from "./landing/ManualCRM.jsx";
 
 import "./index.css";
 
@@ -44,16 +45,20 @@ const DELETION_PATHS = ["/eliminar-mis-datos", "/data-deletion"];
 // Hub de entrega del CRM — público, sin login. Compartido con socios/fundadores
 // para que entiendan qué se les entregó y qué viene después.
 const DELIVERY_PATHS = ["/entrega-crm", "/entrega"];
+// Manual operativo del CRM — público, para asesores. Diseñado para que un agente
+// IA de soporte futuro consuma window.__STRATOS_MANUAL__ y dé respuestas RAG.
+const MANUAL_PATHS = ["/manual", "/manual-crm"];
 const matchPath = (paths) => paths.some(p => pathname === p || pathname === p + "/");
 const isPrivacy = matchPath(PRIVACY_PATHS);
 const isDeletion = matchPath(DELETION_PATHS);
 const isDelivery = matchPath(DELIVERY_PATHS);
+const isManual = matchPath(MANUAL_PATHS);
 
 const isLanding = LANDING_DOMAINS.includes(hostname)
                || (hostname === "localhost" && !params.has("app"))
                || (hostname === "127.0.0.1" && !params.has("app"));
 
-const isApp = !isPrivacy && !isDeletion && !isDelivery && !isLanding;
+const isApp = !isPrivacy && !isDeletion && !isDelivery && !isManual && !isLanding;
 
 // URL de la plataforma — usada por la landing para el CTA principal
 const APP_URL = import.meta.env.VITE_APP_URL || (window.location.origin + "/?app");
@@ -69,9 +74,11 @@ createRoot(document.getElementById("root")).render(
             ? <DataDeletion />
             : isDelivery
               ? <DeliveryHubCRM />
-              : isApp
-                ? <App />
-                : <LandingMarketing appUrl={APP_URL} />
+              : isManual
+                ? <ManualCRM />
+                : isApp
+                  ? <App />
+                  : <LandingMarketing appUrl={APP_URL} />
         }
       </AuthProvider>
     </ErrorBoundary>
