@@ -109,9 +109,15 @@ export const LP = {
 };
 
 // ─── TIPOGRAFÍAS ──────────────────────────────────────────────────────────────
-export const font     = `-apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif`;
-export const fontDisp = `-apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, Helvetica, Arial, sans-serif`;
-export const mono     = `"SF Mono", "Fira Code", "Cascadia Code", monospace`;
+// "Inter" es una webfont diseñada para uniformidad cross-platform — se sirve
+// desde Google Fonts (cargado en index.html) y reemplaza SF Pro en Windows
+// y Linux, donde la fallback nativa "Segoe UI" tiene metricas distintas que
+// rompian el look. En Mac/iOS también se usa Inter para consistencia total
+// (los pixeles son identicos al de Windows). Si Inter falla por red, los
+// fallbacks aseguran que algo legible salga.
+export const font     = `"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI Variable", "Segoe UI", Roboto, Helvetica, Arial, sans-serif`;
+export const fontDisp = `"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI Variable", "Segoe UI", Roboto, Helvetica, Arial, sans-serif`;
+export const mono     = `"SF Mono", "Cascadia Code", "Consolas", "Fira Code", monospace`;
 
 // ─── ESPACIADO ────────────────────────────────────────────────────────────────
 export const spacing = {
