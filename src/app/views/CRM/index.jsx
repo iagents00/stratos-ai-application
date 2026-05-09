@@ -461,33 +461,48 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
   // ══════════════════════════════════════════════════════════════════════
   const prefsKey = user?.id ? `stratos_crm_prio_${user.id}` : null;
 
+  // Defaults que se aplican cuando el usuario aún no tiene prefs guardadas.
+  const DEFAULT_PREFS = {
+    pinned: [], pinnedOrder: [], dismissed: [], order: [], prioritySort: 'manual',
+    customAsesores: [], customProyectos: [], customCampanas: [],
+    sortField: 'sc', sortDir: 'desc',
+    filterStage: 'TODO', filterAsesor: 'TODO',
+    viewMode: 'list',
+  };
+
+  const normalizePrefs = (raw) => {
+    if (!raw || typeof raw !== 'object') return { ...DEFAULT_PREFS };
+    return {
+      pinned:          Array.isArray(raw.pinned)          ? raw.pinned          : [],
+      pinnedOrder:     Array.isArray(raw.pinnedOrder)     ? raw.pinnedOrder     : [],
+      dismissed:       Array.isArray(raw.dismissed)       ? raw.dismissed       : [],
+      order:           Array.isArray(raw.order)           ? raw.order           : [],
+      prioritySort:    typeof raw.prioritySort === 'string'   ? raw.prioritySort    : 'manual',
+      customAsesores:  Array.isArray(raw.customAsesores)  ? raw.customAsesores  : [],
+      customProyectos: Array.isArray(raw.customProyectos) ? raw.customProyectos : [],
+      customCampanas:  Array.isArray(raw.customCampanas)  ? raw.customCampanas  : [],
+      sortField:       typeof raw.sortField === 'string'      ? raw.sortField       : 'sc',
+      sortDir:         typeof raw.sortDir === 'string'        ? raw.sortDir         : 'desc',
+      filterStage:     typeof raw.filterStage === 'string'    ? raw.filterStage     : 'TODO',
+      filterAsesor:    typeof raw.filterAsesor === 'string'   ? raw.filterAsesor    : 'TODO',
+      viewMode:        typeof raw.viewMode === 'string'       ? raw.viewMode        : 'list',
+    };
+  };
+
   const loadInitialPrefs = () => {
     // 1) Server-side (usuario real autenticado) — siempre prioritario
     const server = user?.crmPrefs;
     if (server && typeof server === 'object' && Object.keys(server).length > 0) {
-      return {
-        pinned:        Array.isArray(server.pinned)      ? server.pinned      : [],
-        pinnedOrder:   Array.isArray(server.pinnedOrder) ? server.pinnedOrder : [],
-        dismissed:     Array.isArray(server.dismissed)   ? server.dismissed   : [],
-        order:         Array.isArray(server.order)       ? server.order       : [],
-        prioritySort:  typeof server.prioritySort === 'string' ? server.prioritySort : 'manual',
-      };
+      return normalizePrefs(server);
     }
     // 2) Fallback localStorage (legado o demo)
-    if (!prefsKey) return { pinned: [], pinnedOrder: [], dismissed: [], order: [], prioritySort: 'manual' };
+    if (!prefsKey) return { ...DEFAULT_PREFS };
     try {
       const raw = localStorage.getItem(prefsKey);
-      if (!raw) return { pinned: [], pinnedOrder: [], dismissed: [], order: [], prioritySort: 'manual' };
-      const p = JSON.parse(raw);
-      return {
-        pinned:        Array.isArray(p.pinned)      ? p.pinned      : [],
-        pinnedOrder:   Array.isArray(p.pinnedOrder) ? p.pinnedOrder : [],
-        dismissed:     Array.isArray(p.dismissed)   ? p.dismissed   : [],
-        order:         Array.isArray(p.order)       ? p.order       : [],
-        prioritySort:  typeof p.prioritySort === 'string' ? p.prioritySort : 'manual',
-      };
+      if (!raw) return { ...DEFAULT_PREFS };
+      return normalizePrefs(JSON.parse(raw));
     } catch {
-      return { pinned: [], pinnedOrder: [], dismissed: [], order: [], prioritySort: 'manual' };
+      return { ...DEFAULT_PREFS };
     }
   };
 
@@ -508,6 +523,16 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
     setDismissedIds(new Set(p.dismissed));
     setPriorityOrder(p.order);
     setPrioritySort(p.prioritySort);
+    // Customs (asesor / proyecto / campaña) y vista — antes vivían en useState
+    // efímero y se borraban al refrescar. Ahora persisten en crm_prefs.
+    setCustomAsesores(p.customAsesores);
+    setCustomProyectos(p.customProyectos);
+    setCustomCampanas(p.customCampanas);
+    setSortField(p.sortField);
+    setSortDir(p.sortDir);
+    setFilterStage(p.filterStage);
+    setFilterAsesor(p.filterAsesor);
+    setViewMode(p.viewMode);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id]);
 
@@ -528,6 +553,16 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
       dismissed:    [...dismissedIds],
       order:        priorityOrder,
       prioritySort,
+      // Persisten también las listas customs y la configuración de vista
+      // del CRM. Antes se reseteaban a vacío/defaults en cada refresh.
+      customAsesores,
+      customProyectos,
+      customCampanas,
+      sortField,
+      sortDir,
+      filterStage,
+      filterAsesor,
+      viewMode,
     };
 
     // Cache local inmediato (resiliencia si Supabase está caído)
@@ -556,7 +591,9 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
     }, 600);
 
     return () => clearTimeout(prefsSaveTimerRef.current);
-  }, [user?.id, prefsKey, pinnedIds, pinnedOrder, dismissedIds, priorityOrder, prioritySort]);
+  }, [user?.id, prefsKey, pinnedIds, pinnedOrder, dismissedIds, priorityOrder, prioritySort,
+      customAsesores, customProyectos, customCampanas,
+      sortField, sortDir, filterStage, filterAsesor, viewMode]);
 
   const togglePin = (id) => {
     setPinnedIds(prev => {
@@ -2798,7 +2835,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                         boxShadow: `0 0 0 2px ${stageC}2E, 0 0 6px ${stageC}70`,
                         flexShrink: 0,
                       }} />
-                      <select value={l.st} onChange={e => { const v = e.target.value; setLeadsData(prev => prev.map(x => x.id === l.id ? {...x, st: v} : x)); }}
+                      <select value={l.st} onChange={e => { const v = e.target.value; updateLead({ ...l, st: v }); }}
                         style={{
                           background: "transparent", border: "none", padding: 0,
                           fontSize: 10.5, fontWeight: 800,
@@ -3134,7 +3171,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                             )}
                             {/* Selector de etapa inline */}
                             <div onClick={e => e.stopPropagation()} style={{ marginBottom: 8 }}>
-                              <select value={l.st} onChange={e => setLeadsData(prev => prev.map(x => x.id === l.id ? {...x, st: e.target.value} : x))}
+                              <select value={l.st} onChange={e => updateLead({ ...l, st: e.target.value })}
                                 style={{ width: "100%", padding: "5px 8px", borderRadius: 7, background: isLight ? `linear-gradient(135deg, ${c}26 0%, ${c}12 100%)` : `${c}0C`, border: `1px solid ${isLight ? c + "55" : c + "28"}`, color: cText, fontSize: 9.5, fontWeight: 700, cursor: "pointer", outline: "none", appearance: "none", boxShadow: isLight ? "inset 0 1px 0 rgba(255,255,255,0.55)" : "none" }}>
                                 {STAGES.map(s => <option key={s} value={s} style={{ background: "#111318", color: "#fff" }}>{s}</option>)}
                               </select>
