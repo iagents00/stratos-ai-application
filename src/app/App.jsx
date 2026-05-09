@@ -127,32 +127,51 @@ export default function App() {
   const [leadsData, setLeadsData]       = useState([]);
   const [leadsLoading, setLeadsLoading] = useState(true);
 
-  const normalizeLeads = useCallback((rows) => rows.map(l => ({
-    ...l,
-    n:              l.name,
-    st:             l.stage,
-    sc:             l.score,
-    p:              l.project,
-    campana:        l.campaign,
-    hot:            l.hot,
-    isNew:          l.is_new,
-    nextAction:     l.next_action,
-    nextActionDate: l.next_action_date,
-    lastActivity:   l.last_activity,
-    daysInactive:   l.days_inactive ?? 0,
-    seguimientos:   l.seguimientos ?? 0,
-    aiAgent:        l.ai_agent,
-    asesor:         l.asesor_name ?? '',
-    fechaIngreso:   l.created_at
-      ? new Date(l.created_at).toLocaleDateString('es-MX', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' })
-      : '',
-    actionHistory: Array.isArray(l.action_history) ? l.action_history
-      : (() => { try { return JSON.parse(l.action_history || '[]'); } catch { return []; } })(),
-    tasks: Array.isArray(l.tasks) ? l.tasks
-      : (() => { try { return JSON.parse(l.tasks || '[]'); } catch { return []; } })(),
-    playbook: Array.isArray(l.playbook) ? l.playbook
-      : (() => { try { return JSON.parse(l.playbook || '[]'); } catch { return []; } })(),
-  })), []);
+  // Cache de filas ya normalizadas. Clave = id, valor = { stamp, row }.
+  // stamp = updated_at || created_at — si no cambió, devolvemos la MISMA
+  // referencia, así React.memo / useMemo aguas abajo evita re-renders y
+  // ahorramos el JSON.parse x3 por fila en cada refresh. Sin invalidación
+  // por tamaño: el cache crece a lo sumo al # de leads de la org (~1K max),
+  // memoria despreciable. Si el contenido cambia (updated_at avanza),
+  // re-normalizamos y reemplazamos la entrada.
+  const normalizeCache = useRef(new Map());
+
+  const normalizeLeads = useCallback((rows) => {
+    const cache = normalizeCache.current;
+    return rows.map(l => {
+      const stamp = l.updated_at || l.created_at || '';
+      const cached = cache.get(l.id);
+      if (cached && cached.stamp === stamp) return cached.row;
+      const normalized = {
+        ...l,
+        n:              l.name,
+        st:             l.stage,
+        sc:             l.score,
+        p:              l.project,
+        campana:        l.campaign,
+        hot:            l.hot,
+        isNew:          l.is_new,
+        nextAction:     l.next_action,
+        nextActionDate: l.next_action_date,
+        lastActivity:   l.last_activity,
+        daysInactive:   l.days_inactive ?? 0,
+        seguimientos:   l.seguimientos ?? 0,
+        aiAgent:        l.ai_agent,
+        asesor:         l.asesor_name ?? '',
+        fechaIngreso:   l.created_at
+          ? new Date(l.created_at).toLocaleDateString('es-MX', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' })
+          : '',
+        actionHistory: Array.isArray(l.action_history) ? l.action_history
+          : (() => { try { return JSON.parse(l.action_history || '[]'); } catch { return []; } })(),
+        tasks: Array.isArray(l.tasks) ? l.tasks
+          : (() => { try { return JSON.parse(l.tasks || '[]'); } catch { return []; } })(),
+        playbook: Array.isArray(l.playbook) ? l.playbook
+          : (() => { try { return JSON.parse(l.playbook || '[]'); } catch { return []; } })(),
+      };
+      cache.set(l.id, { stamp, row: normalized });
+      return normalized;
+    });
+  }, []);
 
   const fetchLeads = useCallback(async () => {
     setLeadsLoading(true);
