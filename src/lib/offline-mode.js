@@ -240,6 +240,18 @@ export function updateOfflineLead(leadId, changes, currentUser) {
   })
 }
 
+// ── Inserción pendiente de un lead nuevo (cuando Supabase falla) ──
+// Encola un payload completo para reintentar la inserción más tarde.
+// Se procesa en `syncToSupabase` con type='lead_insert'.
+export function enqueueLeadInsert(payload, currentUser) {
+  enqueueSync({
+    type:     'lead_insert',
+    payload,
+    user_id:  currentUser?.id,
+    queued_at: Date.now(),
+  })
+}
+
 // ── Cola de sincronización ──
 function readQueue() {
   try {
@@ -295,6 +307,14 @@ export async function syncToSupabase(supabase) {
           .from('leads')
           .update(op.changes)
           .eq('id', op.lead_id)
+        if (error) { failed++; remaining.push(op) }
+        else       { synced++ }
+      } else if (op.type === 'lead_insert') {
+        // Reintento de creación de lead. Idempotente: si ya existe (mismo id),
+        // usamos upsert para evitar duplicados.
+        const { error } = await supabase
+          .from('leads')
+          .upsert(op.payload, { onConflict: 'id' })
         if (error) { failed++; remaining.push(op) }
         else       { synced++ }
       } else {
