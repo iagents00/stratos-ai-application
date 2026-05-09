@@ -1904,11 +1904,14 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                   color: isLight ? T.txt : "#FFFFFF",
                   fontFamily: fontDisp, letterSpacing: "-0.025em", margin: 0,
                 }}>Nuevo cliente</h3>
-                <span style={{
-                  fontSize: 10, fontWeight: 700,
-                  color: T.txt3, fontFamily: font, letterSpacing: "0.02em",
-                  whiteSpace: "nowrap",
-                }}>· Completa los campos del formulario</span>
+                {/* Subtítulo: oculto en mobile (no cabe y rompe el header) */}
+                {!isMobile && (
+                  <span style={{
+                    fontSize: 10, fontWeight: 700,
+                    color: T.txt3, fontFamily: font, letterSpacing: "0.02em",
+                    whiteSpace: "nowrap",
+                  }}>· Completa los campos del formulario</span>
+                )}
               </div>
               <button onClick={() => setAddingLead(false)} style={{
                 width: 30, height: 30, borderRadius: 9,
