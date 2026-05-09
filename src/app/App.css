@@ -171,3 +171,15 @@ option {
     box-shadow: var(--brShBreath);
   }
 }
+
+/* ── Pulso de "cliente recién registrado" — halo verde que decae a los 30 s.
+   Lo dispara CRM cuando addNewLead inserta una fila. La animación tiene 6 ciclos
+   (≈10 s) y luego solo queda el halo estático del style inline hasta los 30 s. */
+@keyframes stratosNewLeadPulse {
+  0%, 100% {
+    box-shadow: inset 4px 0 0 #6EE7C2, 0 0 0 1px rgba(110,231,194,0.33), 0 0 18px rgba(110,231,194,0.20);
+  }
+  50% {
+    box-shadow: inset 4px 0 0 #6EE7C2, 0 0 0 2px rgba(110,231,194,0.55), 0 0 28px rgba(110,231,194,0.45);
+  }
+}

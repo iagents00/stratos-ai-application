@@ -7,6 +7,7 @@ import { createPortal } from "react-dom";
 import { useAuth } from "../../../hooks/useAuth";
 import { supabase } from "../../../lib/supabase";
 import { updateOfflineLead } from "../../../lib/offline-mode";
+import { saveLead } from "../../../lib/lead-save";
 import {
   TrendingUp, Target, CheckCircle2, Mic, Search,
   Users, Building2, Send, Plus, Timer, Flame,
@@ -637,17 +638,12 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
       ? `📍 OBJETIVO\nPendiente — primer contacto.\n\n📋 NOTAS INICIALES\n${newLead.notas.trim()}\n\n⚡ PENDIENTE\nRealizar primer contacto y calificar necesidades.`
       : `📍 OBJETIVO\nPendiente — primer contacto.\n\n⚡ PENDIENTE\nRealizar primer contacto y calificar necesidades del cliente.`;
 
-    // Insertar en Supabase primero para obtener el UUID real
-    // Fallback: crypto.randomUUID() genera un UUID v4 compatible con PostgreSQL
-    let realId = (typeof crypto !== 'undefined' && crypto.randomUUID)
-      ? crypto.randomUUID()
-      : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
-
-    // ── Modo demo — NO insertar en Supabase ─────────────────────────
+    // ── Guardado resiliente con doble respaldo ──────────────────────
+    // saveLead() escribe primero al espejo local (localStorage), luego
+    // intenta Supabase, y si falla encola para reintento automático.
+    // NUNCA lanza — siempre devuelve un resultado.
     const isDemo = user?.id === 'demo-user-local' || user?.isDemo;
-    const { data: saved, error: insertError } = isDemo
-      ? { data: null, error: null }
-      : await supabase.from('leads').insert({
+    const payload = {
       name:             newLead.n.trim(),
       phone:            newLead.phone || null,
       email:            newLead.email || null,
@@ -669,18 +665,20 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
       risk:             "Sin información suficiente aún.",
       friction:         "Medio",
       notas:            notasVal,
-      // tag — etiqueta de segmento libre; antes se sobreescribía con la etapa,
-      // dejando `tag` inservible para clasificaciones manuales del asesor.
       tag:              newLead.tag || null,
       asesor_name:      newLead.asesor || user?.name || "",
       asesor_id:        user?.id || null,
-    }).select().single();
+    };
 
-    if (insertError) {
-      console.error('Error al crear lead:', insertError.message);
-      showToast(`No se pudo guardar "${newLead.n.trim()}": ${insertError.message}`);
-    } else if (saved) {
-      realId = saved.id;
+    const { id: realId, savedToCloud, queuedForRetry, error: saveErr } =
+      await saveLead(supabase, payload, user, { skipCloud: isDemo });
+
+    if (savedToCloud) {
+      showToast(`Cliente "${newLead.n.trim()}" guardado.`);
+    } else if (queuedForRetry) {
+      showToast(`Cliente guardado localmente. Se reintentará al recuperar conexión${saveErr ? ` (${saveErr})` : ''}.`);
+    } else if (saveErr) {
+      showToast(`Aviso: ${saveErr}`);
     }
 
     const newEntry = {
@@ -708,6 +706,25 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
       asesor_id: user?.id || null,
     };
     setLeadsData(prev => [newEntry, ...prev]);
+
+    // ── Visibilidad inmediata del nuevo cliente ──────────────────────
+    // 1. Auto-pin → la fila se ancla arriba con la banda dorada (sort-proof).
+    setPinnedIds(prev => { const next = new Set(prev); next.add(realId); return next; });
+    setPinnedOrder(prev => [...prev.filter(x => x !== realId), realId]);
+    setDismissedIds(prev => { const d = new Set(prev); d.delete(realId); return d; });
+    // 2. Halo verde por 30s para que el asesor lo identifique sin buscar.
+    if (justRegisteredTimer.current) clearTimeout(justRegisteredTimer.current);
+    setJustRegisteredId(realId);
+    justRegisteredTimer.current = setTimeout(() => setJustRegisteredId(null), 30000);
+    // 3. Auto-scroll a la fila tras el render (2 frames para que React pinte).
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      const row = document.querySelector(`[data-lead-row="${realId}"]`);
+      if (row && typeof row.scrollIntoView === 'function') {
+        row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+      // También centra la card en el carousel de Prioridad si está visible.
+      triggerPriorityFocus(realId);
+    }));
     // Si el asesor o proyecto son nuevos (no existían en leadsData), los
     // registramos como custom para que aparezcan en los dropdowns del
     // siguiente alta. Así el usuario no tiene que volver a teclearlos.
@@ -804,6 +821,10 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
   // Usamos refs para los valores críticos del drop (siempre síncronos, sin closure stale)
   const [justDroppedId, setJustDroppedId] = useState(null);
   const justDroppedTimer  = useRef(null);
+  // ID del último cliente recién registrado. Se aplica halo verde y auto-scroll.
+  // Decae solo a los 30 s para que el asesor lo identifique sin esfuerzo.
+  const [justRegisteredId, setJustRegisteredId] = useState(null);
+  const justRegisteredTimer = useRef(null);
   const dragCardIdRef     = useRef(null);   // fuente de verdad para el drop
   const dragInsertIdxRef  = useRef(null);   // fuente de verdad para el drop
   const priorityLeadsRef  = useRef([]);     // snapshot del array para el drop
@@ -2527,6 +2548,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
               const uc = urgColor(l.daysInactive);
               const stageC = stgC[l.st] || T.txt3;
               const isPinnedRow = pinnedIds.has(l.id);
+              const isJustNew   = justRegisteredId === l.id;
               // Color dorado consistente con el botón estrella
               const goldRow = isLight ? "#B8860B" : "#F5C542";
               // Fondo base de la fila: tinte dorado sutil si está pinneada
@@ -2536,9 +2558,18 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
               const rowHoverBg = isPinnedRow
                 ? (isLight ? `${goldRow}1A` : `${goldRow}1C`)
                 : (isLight ? "rgba(15,23,42,0.022)" : "rgba(255,255,255,0.028)");
+              // Halo verde por 30s para clientes recién registrados — manda
+              // sobre la banda dorada de pinneado mientras dura.
+              const newRowShadow = isJustNew
+                ? `inset 4px 0 0 ${T.accent}, 0 0 0 1px ${T.accent}55, 0 0 18px ${T.accent}33`
+                : (isPinnedRow ? `inset 3px 0 0 ${goldRow}` : "none");
+              const newRowBg = isJustNew
+                ? (isLight ? `${T.accent}14` : `${T.accent}1F`)
+                : (isHov ? rowHoverBg : rowBg);
 
               return (
                 <div key={l.id}
+                  data-lead-row={l.id}
                   onMouseEnter={() => setHoveredRow(l.id)}
                   onMouseLeave={() => setHoveredRow(null)}
                   onClick={isMobile ? () => setNotesLead(l) : undefined}
@@ -2548,11 +2579,12 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                     padding: isMobile ? "12px 14px" : "14px 20px",
                     borderBottom: `1px solid ${T.border}`,
                     alignItems: isMobile ? "stretch" : "center",
-                    transition: "background 0.14s",
-                    background: isHov ? rowHoverBg : rowBg,
+                    transition: "background 0.14s, box-shadow 0.4s",
+                    background: newRowBg,
                     position: "relative",
-                    // Banda dorada izquierda — marca visual de "pinneado" sin gritar
-                    boxShadow: isPinnedRow ? `inset 3px 0 0 ${goldRow}` : "none",
+                    // Halo del recién registrado o banda dorada del pinneado.
+                    boxShadow: newRowShadow,
+                    animation: isJustNew ? "stratosNewLeadPulse 1.6s ease-in-out 0s 6" : undefined,
                     // En mobile el row entero es tap-to-open
                     cursor: isMobile ? "pointer" : "default",
                   }}
