@@ -197,24 +197,65 @@ export default function App() {
     // Solo subscribir al realtime si NO estamos offline
     if (user._offline) return;
 
-    // Realtime: debounce + ignorar echo del propio UPDATE.
-    // Antes, cada UPDATE local re-disparaba fetchLeads(), que pisaba el
-    // estado optimistic con la versión de servidor; en redes lentas eso
-    // podía revertir un cambio recién hecho hasta el siguiente render.
-    // Ahora colamos: si el INSERT/DELETE es real (no UPDATE) refrescamos
-    // siempre; los UPDATE se debouncean a 1.2s.
-    let debounceTimer = null;
-    const scheduleRefresh = (immediate = false) => {
-      if (debounceTimer) clearTimeout(debounceTimer);
-      debounceTimer = setTimeout(fetchLeads, immediate ? 0 : 1200);
+    // Realtime: aplicar el cambio del payload directamente al estado local,
+    // SIN re-fetchear toda la tabla. Antes cada evento disparaba un
+    // SELECT * (~600KB-1MB) que duraba 400-800ms y pisaba el optimistic UI.
+    // Ahora el payload de Supabase ya trae la fila completa; la metemos al
+    // array sin tocar la red. fetchLeads() queda como fallback de seguridad
+    // si el payload viene degenerado (sin id o sin stage).
+    let fallbackTimer = null;
+    const scheduleFallback = () => {
+      if (fallbackTimer) clearTimeout(fallbackTimer);
+      fallbackTimer = setTimeout(fetchLeads, 0);
     };
+    // Salvaguarda: si la fila no tiene los campos críticos esperados,
+    // caemos a fetchLeads() para preservar el comportamiento previo.
+    const isPayloadValid = (row) => row && row.id && (row.stage || row.deleted_at !== undefined);
+
     const ch = supabase.channel('leads-global')
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'leads' }, () => scheduleRefresh(true))
-      .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'leads' }, () => scheduleRefresh(true))
-      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'leads' }, () => scheduleRefresh(false))
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'leads' }, (p) => {
+        const row = p?.new;
+        if (!isPayloadValid(row)) return scheduleFallback();
+        // INSERT con deleted_at ya seteado (raro): ignorar para el activo.
+        if (row.deleted_at) return;
+        const [normalized] = normalizeLeads([row]);
+        setLeadsData(prev => {
+          // Evitar duplicados (echo del propio insert que ya hizo optimistic).
+          if (prev.some(l => l.id === normalized.id)) return prev;
+          // Mantener orden por created_at desc → INSERT nuevo va al inicio.
+          return [normalized, ...prev];
+        });
+      })
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'leads' }, (p) => {
+        const row = p?.new;
+        if (!isPayloadValid(row)) return scheduleFallback();
+        // UPDATE con deleted_at no nulo = soft-delete desde otro cliente.
+        // Lo removemos del array activo. (La papelera se refresca al montar
+        // o cuando el usuario abre esa vista, igual que antes.)
+        if (row.deleted_at) {
+          setLeadsData(prev => prev.filter(l => l.id !== row.id));
+          return;
+        }
+        const [normalized] = normalizeLeads([row]);
+        setLeadsData(prev => {
+          const idx = prev.findIndex(l => l.id === normalized.id);
+          if (idx === -1) {
+            // Restore desde papelera (otro cliente removió deleted_at).
+            return [normalized, ...prev];
+          }
+          const next = prev.slice();
+          next[idx] = normalized;
+          return next;
+        });
+      })
+      .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'leads' }, (p) => {
+        const oldId = p?.old?.id;
+        if (!oldId) return scheduleFallback();
+        setLeadsData(prev => prev.filter(l => l.id !== oldId));
+      })
       .subscribe();
     return () => {
-      if (debounceTimer) clearTimeout(debounceTimer);
+      if (fallbackTimer) clearTimeout(fallbackTimer);
       supabase.removeChannel(ch);
     };
   }, [user, fetchLeads]);
