@@ -21,7 +21,9 @@ import {
 } from './offline-mode'
 
 // ── Configuración de resiliencia ──────────────────────────────────────
-const TIMEOUT_MS   = 8000        // 8 segundos — más allá de eso, asumimos que Supabase está caído
+// 12s cubre el cold-start de Supabase free tier (instancia dormida tras
+// inactividad despierta en ~6-10s). Si supera eso, asumimos caída real.
+const TIMEOUT_MS   = 12000
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000   // 24 horas — sesión cacheada localmente
 const SESSION_CACHE_KEY = 'stratos_session_cache'
 
@@ -45,7 +47,7 @@ function withTimeout(promise, ms = TIMEOUT_MS, label = 'operación') {
  * Sin mencionar Supabase ni servicios técnicos — el asesor no debe
  * ver detalles de infraestructura.
  */
-const TIMEOUT_MESSAGE = 'Servicio temporalmente lento. Intenta de nuevo en 1 minuto.'
+const TIMEOUT_MESSAGE = 'El servidor está despertando. Espera 30 segundos y vuelve a intentar.'
 
 /**
  * Detecta si un error vino del wrapper withTimeout.
