@@ -88,26 +88,48 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
   const [justRegisteredId, setJustRegisteredId] = useState(null);
   const justRegisteredTimer = useRef(null);
 
-  // ── Auto-clear de isNew al abrir el lead ─────────────────────────
-  // En cuanto el asesor abre un drawer (notas, perfil o análisis) sobre un
-  // cliente recién registrado, lo marcamos como "ya visto": isNew=false.
-  // updateLead propaga is_new=false a Supabase y persiste el cambio. Así
-  // el halo verde menta desaparece de la fila, el lead deja de aparecer
-  // como "NUEVO" y baja del tope (donde solo viven los aún-no-vistos).
+  // ── Duración del halo verde ──────────────────────────────────────
+  // El aura verde menta dura ~20 segundos desde que aparece el lead
+  // como isNew. Después se limpia automáticamente y la fila se ve como
+  // cualquier otra. updateLead propaga is_new=false a Supabase para que
+  // no reaparezca al refrescar.
+  const HALO_DURATION_MS = 20000;
+  // Timestamp de "primera vista" por lead — registrado cuando aparece
+  // por primera vez como isNew=true en esta sesión.
+  const haloFirstSeenRef = useRef({});
+  // Timers de auto-clear pendientes — cancelables si el lead deja de ser
+  // isNew antes (p.ej. otro dispositivo lo limpió o un updateLead).
+  const haloTimersRef = useRef({});
+
+  // Para cada lead que es isNew, registrar firstSeen y programar
+  // auto-clear después de HALO_DURATION_MS desde que se vio por
+  // primera vez. Si ya pasó ese tiempo (refresh tardío), limpiar
+  // inmediatamente.
   useEffect(() => {
-    const open = activeDrawerLead;
-    if (!open || !open.isNew) return;
-    // Pequeño delay para que la UI muestre el halo cuando el asesor llega
-    // al drawer — evita que la fila se "deshalogue" antes de que él la viera.
-    const t = setTimeout(() => {
-      // Re-leer del ref por si cambió en el ínterin.
-      const current = leadsDataRef.current.find(l => l.id === open.id);
-      if (current?.isNew) {
-        updateLead({ ...current, isNew: false });
-      }
-    }, 800);
-    return () => clearTimeout(t);
-  }, [activeDrawerLead?.id]);
+    const seen = haloFirstSeenRef.current;
+    const timers = haloTimersRef.current;
+    const now = Date.now();
+    leadsData.forEach(l => {
+      if (!l.isNew) return;
+      if (!seen[l.id]) seen[l.id] = now;
+      if (timers[l.id]) return; // ya hay timer agendado
+      const elapsed = now - seen[l.id];
+      const remaining = Math.max(0, HALO_DURATION_MS - elapsed);
+      timers[l.id] = setTimeout(() => {
+        delete timers[l.id];
+        const current = leadsDataRef.current.find(x => x.id === l.id);
+        if (current?.isNew) updateLead({ ...current, isNew: false });
+      }, remaining);
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [leadsData]);
+
+  // Cleanup de timers al desmontar — separado del effect de programación
+  // para no cancelarlos en cada cambio de leadsData.
+  useEffect(() => () => {
+    Object.values(haloTimersRef.current).forEach(t => clearTimeout(t));
+    haloTimersRef.current = {};
+  }, []);
 
   useEffect(() => {
     if (!autoOpenPriority1) return;
@@ -800,12 +822,12 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
     // El halo dura mientras isNew=true; se limpia automáticamente cuando
     // el asesor abre el lead (drawer de notas, perfil, análisis).
     //
-    // El pulso animado sí dura solo 10s — atrae el ojo al instante, luego
-    // queda el halo estático. Esto evita una pulsación eterna que canse
-    // a la vista si el asesor demora en regresar al lead.
+    // Pulso animado dura HALO_DURATION_MS (20s) — sincronizado con la
+    // ventana de halo. Cuando termina, isNew también se limpia (vía el
+    // useEffect de auto-clear) y la fila se ve como cualquier otra.
     if (justRegisteredTimer.current) clearTimeout(justRegisteredTimer.current);
     setJustRegisteredId(realId);
-    justRegisteredTimer.current = setTimeout(() => setJustRegisteredId(null), 10000);
+    justRegisteredTimer.current = setTimeout(() => setJustRegisteredId(null), HALO_DURATION_MS);
     // Auto-scroll a la fila tras el render (2 frames para que React pinte).
     requestAnimationFrame(() => requestAnimationFrame(() => {
       const row = document.querySelector(`[data-lead-row="${realId}"]`);
@@ -2682,7 +2704,9 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                     // Pulso animado solo los primeros 10s tras registrar — atrae
                     // el ojo al instante y luego queda el halo estático mientras
                     // isNew=true (= hasta que el asesor abra el lead).
-                    animation: isPulsing ? "stratosNewLeadPulse 1.6s ease-in-out 0s 6" : undefined,
+                    // 12 iteraciones × 1.6s ≈ 19.2s — respira durante toda la
+                    // ventana de halo (HALO_DURATION_MS = 20s).
+                    animation: isPulsing ? "stratosNewLeadPulse 1.6s ease-in-out 0s 12" : undefined,
                     // En mobile el row entero es tap-to-open
                     cursor: isMobile ? "pointer" : "default",
                   }}
