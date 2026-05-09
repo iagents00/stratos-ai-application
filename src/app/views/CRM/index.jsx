@@ -7,6 +7,7 @@ import { createPortal } from "react-dom";
 import { useAuth } from "../../../hooks/useAuth";
 import { supabase } from "../../../lib/supabase";
 import { updateOfflineLead } from "../../../lib/offline-mode";
+import { saveLead } from "../../../lib/lead-save";
 import {
   TrendingUp, Target, CheckCircle2, Mic, Search,
   Users, Building2, Send, Plus, Timer, Flame,
@@ -79,6 +80,34 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
   const [suggestLead, setSuggestLead]   = useState(null);
   // Lead activo en cualquiera de los 3 drawers — base para el botón "Historial"
   const activeDrawerLead = analyzingLead || selectedLead || notesLead;
+
+  // ID del último cliente registrado en esta sesión. Determina el lead con
+  // pulso animado + posición #1 garantizada. Decae a los 10 s (sólo afecta
+  // la animación; el halo estático persiste mientras isNew=true).
+  // Se declara aquí — antes que sortedLeads — para evitar TDZ.
+  const [justRegisteredId, setJustRegisteredId] = useState(null);
+  const justRegisteredTimer = useRef(null);
+
+  // ── Auto-clear de isNew al abrir el lead ─────────────────────────
+  // En cuanto el asesor abre un drawer (notas, perfil o análisis) sobre un
+  // cliente recién registrado, lo marcamos como "ya visto": isNew=false.
+  // updateLead propaga is_new=false a Supabase y persiste el cambio. Así
+  // el halo verde menta desaparece de la fila, el lead deja de aparecer
+  // como "NUEVO" y baja del tope (donde solo viven los aún-no-vistos).
+  useEffect(() => {
+    const open = activeDrawerLead;
+    if (!open || !open.isNew) return;
+    // Pequeño delay para que la UI muestre el halo cuando el asesor llega
+    // al drawer — evita que la fila se "deshalogue" antes de que él la viera.
+    const t = setTimeout(() => {
+      // Re-leer del ref por si cambió en el ínterin.
+      const current = leadsDataRef.current.find(l => l.id === open.id);
+      if (current?.isNew) {
+        updateLead({ ...current, isNew: false });
+      }
+    }, 800);
+    return () => clearTimeout(t);
+  }, [activeDrawerLead?.id]);
 
   useEffect(() => {
     if (!autoOpenPriority1) return;
@@ -432,33 +461,48 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
   // ══════════════════════════════════════════════════════════════════════
   const prefsKey = user?.id ? `stratos_crm_prio_${user.id}` : null;
 
+  // Defaults que se aplican cuando el usuario aún no tiene prefs guardadas.
+  const DEFAULT_PREFS = {
+    pinned: [], pinnedOrder: [], dismissed: [], order: [], prioritySort: 'manual',
+    customAsesores: [], customProyectos: [], customCampanas: [],
+    sortField: 'sc', sortDir: 'desc',
+    filterStage: 'TODO', filterAsesor: 'TODO',
+    viewMode: 'list',
+  };
+
+  const normalizePrefs = (raw) => {
+    if (!raw || typeof raw !== 'object') return { ...DEFAULT_PREFS };
+    return {
+      pinned:          Array.isArray(raw.pinned)          ? raw.pinned          : [],
+      pinnedOrder:     Array.isArray(raw.pinnedOrder)     ? raw.pinnedOrder     : [],
+      dismissed:       Array.isArray(raw.dismissed)       ? raw.dismissed       : [],
+      order:           Array.isArray(raw.order)           ? raw.order           : [],
+      prioritySort:    typeof raw.prioritySort === 'string'   ? raw.prioritySort    : 'manual',
+      customAsesores:  Array.isArray(raw.customAsesores)  ? raw.customAsesores  : [],
+      customProyectos: Array.isArray(raw.customProyectos) ? raw.customProyectos : [],
+      customCampanas:  Array.isArray(raw.customCampanas)  ? raw.customCampanas  : [],
+      sortField:       typeof raw.sortField === 'string'      ? raw.sortField       : 'sc',
+      sortDir:         typeof raw.sortDir === 'string'        ? raw.sortDir         : 'desc',
+      filterStage:     typeof raw.filterStage === 'string'    ? raw.filterStage     : 'TODO',
+      filterAsesor:    typeof raw.filterAsesor === 'string'   ? raw.filterAsesor    : 'TODO',
+      viewMode:        typeof raw.viewMode === 'string'       ? raw.viewMode        : 'list',
+    };
+  };
+
   const loadInitialPrefs = () => {
     // 1) Server-side (usuario real autenticado) — siempre prioritario
     const server = user?.crmPrefs;
     if (server && typeof server === 'object' && Object.keys(server).length > 0) {
-      return {
-        pinned:        Array.isArray(server.pinned)      ? server.pinned      : [],
-        pinnedOrder:   Array.isArray(server.pinnedOrder) ? server.pinnedOrder : [],
-        dismissed:     Array.isArray(server.dismissed)   ? server.dismissed   : [],
-        order:         Array.isArray(server.order)       ? server.order       : [],
-        prioritySort:  typeof server.prioritySort === 'string' ? server.prioritySort : 'manual',
-      };
+      return normalizePrefs(server);
     }
     // 2) Fallback localStorage (legado o demo)
-    if (!prefsKey) return { pinned: [], pinnedOrder: [], dismissed: [], order: [], prioritySort: 'manual' };
+    if (!prefsKey) return { ...DEFAULT_PREFS };
     try {
       const raw = localStorage.getItem(prefsKey);
-      if (!raw) return { pinned: [], pinnedOrder: [], dismissed: [], order: [], prioritySort: 'manual' };
-      const p = JSON.parse(raw);
-      return {
-        pinned:        Array.isArray(p.pinned)      ? p.pinned      : [],
-        pinnedOrder:   Array.isArray(p.pinnedOrder) ? p.pinnedOrder : [],
-        dismissed:     Array.isArray(p.dismissed)   ? p.dismissed   : [],
-        order:         Array.isArray(p.order)       ? p.order       : [],
-        prioritySort:  typeof p.prioritySort === 'string' ? p.prioritySort : 'manual',
-      };
+      if (!raw) return { ...DEFAULT_PREFS };
+      return normalizePrefs(JSON.parse(raw));
     } catch {
-      return { pinned: [], pinnedOrder: [], dismissed: [], order: [], prioritySort: 'manual' };
+      return { ...DEFAULT_PREFS };
     }
   };
 
@@ -479,6 +523,16 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
     setDismissedIds(new Set(p.dismissed));
     setPriorityOrder(p.order);
     setPrioritySort(p.prioritySort);
+    // Customs (asesor / proyecto / campaña) y vista — antes vivían en useState
+    // efímero y se borraban al refrescar. Ahora persisten en crm_prefs.
+    setCustomAsesores(p.customAsesores);
+    setCustomProyectos(p.customProyectos);
+    setCustomCampanas(p.customCampanas);
+    setSortField(p.sortField);
+    setSortDir(p.sortDir);
+    setFilterStage(p.filterStage);
+    setFilterAsesor(p.filterAsesor);
+    setViewMode(p.viewMode);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id]);
 
@@ -499,6 +553,16 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
       dismissed:    [...dismissedIds],
       order:        priorityOrder,
       prioritySort,
+      // Persisten también las listas customs y la configuración de vista
+      // del CRM. Antes se reseteaban a vacío/defaults en cada refresh.
+      customAsesores,
+      customProyectos,
+      customCampanas,
+      sortField,
+      sortDir,
+      filterStage,
+      filterAsesor,
+      viewMode,
     };
 
     // Cache local inmediato (resiliencia si Supabase está caído)
@@ -527,7 +591,9 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
     }, 600);
 
     return () => clearTimeout(prefsSaveTimerRef.current);
-  }, [user?.id, prefsKey, pinnedIds, pinnedOrder, dismissedIds, priorityOrder, prioritySort]);
+  }, [user?.id, prefsKey, pinnedIds, pinnedOrder, dismissedIds, priorityOrder, prioritySort,
+      customAsesores, customProyectos, customCampanas,
+      sortField, sortDir, filterStage, filterAsesor, viewMode]);
 
   const togglePin = (id) => {
     setPinnedIds(prev => {
@@ -601,9 +667,28 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
       const matchAsesor = filterAsesor === "TODO" || l.asesor === filterAsesor;
       return matchQ && matchStage && matchAsesor;
     });
+    // Mapa de índice original → posición. Lo usamos como tiebreaker dentro
+    // del grupo isNew: addNewLead prepende, así que el más reciente tiene
+    // menor índice y queda #1 entre los recién registrados.
+    const idxOf = new Map(data.map((l, i) => [l.id, i]));
     return [...data].sort((a, b) => {
-      // Los clientes con estrella SIEMPRE arriba — sin importar el sort.
-      // Entre pinneados, los más recientemente marcados van primero.
+      // 0. Cliente registrado en esta sesión SIEMPRE en posición #1.
+      if (justRegisteredId && a.id === justRegisteredId) return -1;
+      if (justRegisteredId && b.id === justRegisteredId) return 1;
+      // 1. Clientes recién registrados (isNew=true) primero. Halo verde menta
+      //    + posición arriba los hace inconfundibles. La marca se limpia
+      //    cuando el asesor abre el lead (auto-clear via useEffect).
+      const an = !!a.isNew;
+      const bn = !!b.isNew;
+      if (an !== bn) return an ? -1 : 1;
+      // 1b. Entre dos isNew: el de menor índice original (= prepend reciente)
+      //     queda primero — así el último registrado siempre lidera.
+      if (an && bn) {
+        const ai = idxOf.get(a.id) ?? 0;
+        const bi = idxOf.get(b.id) ?? 0;
+        if (ai !== bi) return ai - bi;
+      }
+      // 2. Después, los pinneados (estrella dorada).
       const ap = pinnedIds.has(a.id);
       const bp = pinnedIds.has(b.id);
       if (ap !== bp) return ap ? -1 : 1;
@@ -637,17 +722,12 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
       ? `📍 OBJETIVO\nPendiente — primer contacto.\n\n📋 NOTAS INICIALES\n${newLead.notas.trim()}\n\n⚡ PENDIENTE\nRealizar primer contacto y calificar necesidades.`
       : `📍 OBJETIVO\nPendiente — primer contacto.\n\n⚡ PENDIENTE\nRealizar primer contacto y calificar necesidades del cliente.`;
 
-    // Insertar en Supabase primero para obtener el UUID real
-    // Fallback: crypto.randomUUID() genera un UUID v4 compatible con PostgreSQL
-    let realId = (typeof crypto !== 'undefined' && crypto.randomUUID)
-      ? crypto.randomUUID()
-      : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
-
-    // ── Modo demo — NO insertar en Supabase ─────────────────────────
+    // ── Guardado resiliente con doble respaldo ──────────────────────
+    // saveLead() escribe primero al espejo local (localStorage), luego
+    // intenta Supabase, y si falla encola para reintento automático.
+    // NUNCA lanza — siempre devuelve un resultado.
     const isDemo = user?.id === 'demo-user-local' || user?.isDemo;
-    const { data: saved, error: insertError } = isDemo
-      ? { data: null, error: null }
-      : await supabase.from('leads').insert({
+    const payload = {
       name:             newLead.n.trim(),
       phone:            newLead.phone || null,
       email:            newLead.email || null,
@@ -669,18 +749,20 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
       risk:             "Sin información suficiente aún.",
       friction:         "Medio",
       notas:            notasVal,
-      // tag — etiqueta de segmento libre; antes se sobreescribía con la etapa,
-      // dejando `tag` inservible para clasificaciones manuales del asesor.
       tag:              newLead.tag || null,
       asesor_name:      newLead.asesor || user?.name || "",
       asesor_id:        user?.id || null,
-    }).select().single();
+    };
 
-    if (insertError) {
-      console.error('Error al crear lead:', insertError.message);
-      showToast(`No se pudo guardar "${newLead.n.trim()}": ${insertError.message}`);
-    } else if (saved) {
-      realId = saved.id;
+    const { id: realId, savedToCloud, queuedForRetry, error: saveErr } =
+      await saveLead(supabase, payload, user, { skipCloud: isDemo });
+
+    if (savedToCloud) {
+      showToast(`Cliente "${newLead.n.trim()}" guardado.`);
+    } else if (queuedForRetry) {
+      showToast(`Cliente guardado localmente. Se reintentará al recuperar conexión${saveErr ? ` (${saveErr})` : ''}.`);
+    } else if (saveErr) {
+      showToast(`Aviso: ${saveErr}`);
     }
 
     const newEntry = {
@@ -708,6 +790,31 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
       asesor_id: user?.id || null,
     };
     setLeadsData(prev => [newEntry, ...prev]);
+
+    // ── Visibilidad inmediata del nuevo cliente ──────────────────────
+    // El lead nuevo lleva isNew=true, lo cual:
+    //   · Lo coloca arriba del listado (vía sort en sortedLeads).
+    //   · Le aplica halo verde menta (color de marca) en lugar de la
+    //     banda dorada de "pinneado" — porque NO lo auto-pineamos.
+    //   · Lo pone en la lista de prioridad sin tocar pinnedIds.
+    // El halo dura mientras isNew=true; se limpia automáticamente cuando
+    // el asesor abre el lead (drawer de notas, perfil, análisis).
+    //
+    // El pulso animado sí dura solo 10s — atrae el ojo al instante, luego
+    // queda el halo estático. Esto evita una pulsación eterna que canse
+    // a la vista si el asesor demora en regresar al lead.
+    if (justRegisteredTimer.current) clearTimeout(justRegisteredTimer.current);
+    setJustRegisteredId(realId);
+    justRegisteredTimer.current = setTimeout(() => setJustRegisteredId(null), 10000);
+    // Auto-scroll a la fila tras el render (2 frames para que React pinte).
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      const row = document.querySelector(`[data-lead-row="${realId}"]`);
+      if (row && typeof row.scrollIntoView === 'function') {
+        row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+      // También centra la card en el carousel de Prioridad si está visible.
+      triggerPriorityFocus(realId);
+    }));
     // Si el asesor o proyecto son nuevos (no existían en leadsData), los
     // registramos como custom para que aparezcan en los dropdowns del
     // siguiente alta. Así el usuario no tiene que volver a teclearlos.
@@ -1797,11 +1904,14 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                   color: isLight ? T.txt : "#FFFFFF",
                   fontFamily: fontDisp, letterSpacing: "-0.025em", margin: 0,
                 }}>Nuevo cliente</h3>
-                <span style={{
-                  fontSize: 10, fontWeight: 700,
-                  color: T.txt3, fontFamily: font, letterSpacing: "0.02em",
-                  whiteSpace: "nowrap",
-                }}>· Completa los campos del formulario</span>
+                {/* Subtítulo: oculto en mobile (no cabe y rompe el header) */}
+                {!isMobile && (
+                  <span style={{
+                    fontSize: 10, fontWeight: 700,
+                    color: T.txt3, fontFamily: font, letterSpacing: "0.02em",
+                    whiteSpace: "nowrap",
+                  }}>· Completa los campos del formulario</span>
+                )}
               </div>
               <button onClick={() => setAddingLead(false)} style={{
                 width: 30, height: 30, borderRadius: 9,
@@ -2527,18 +2637,35 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
               const uc = urgColor(l.daysInactive);
               const stageC = stgC[l.st] || T.txt3;
               const isPinnedRow = pinnedIds.has(l.id);
+              const isJustNew   = !!l.isNew;
+              const isPulsing   = justRegisteredId === l.id; // solo los primeros 10s
               // Color dorado consistente con el botón estrella
               const goldRow = isLight ? "#B8860B" : "#F5C542";
-              // Fondo base de la fila: tinte dorado sutil si está pinneada
-              const rowBg = isPinnedRow
-                ? (isLight ? `${goldRow}0E` : `${goldRow}10`)
-                : (isHov ? (isLight ? "rgba(15,23,42,0.022)" : "rgba(255,255,255,0.028)") : "transparent");
-              const rowHoverBg = isPinnedRow
-                ? (isLight ? `${goldRow}1A` : `${goldRow}1C`)
-                : (isLight ? "rgba(15,23,42,0.022)" : "rgba(255,255,255,0.028)");
+              // Verde menta de la marca — del design system (T.accent)
+              const mintRow = T.accent;
+
+              // Fondo base — verde menta sutil tiene prioridad sobre pinneado.
+              const baseBg = isJustNew
+                ? (isLight ? `${mintRow}12` : `${mintRow}1A`)
+                : isPinnedRow
+                  ? (isLight ? `${goldRow}0E` : `${goldRow}10`)
+                  : "transparent";
+              const hoverBg = isJustNew
+                ? (isLight ? `${mintRow}1F` : `${mintRow}26`)
+                : isPinnedRow
+                  ? (isLight ? `${goldRow}1A` : `${goldRow}1C`)
+                  : (isLight ? "rgba(15,23,42,0.022)" : "rgba(255,255,255,0.028)");
+
+              // Banda izquierda + halo — verde menta para isNew, dorado para pinneado.
+              const rowShadow = isJustNew
+                ? `inset 4px 0 0 ${mintRow}, 0 0 0 1px ${mintRow}55, 0 0 18px ${mintRow}33`
+                : isPinnedRow
+                  ? `inset 3px 0 0 ${goldRow}`
+                  : "none";
 
               return (
                 <div key={l.id}
+                  data-lead-row={l.id}
                   onMouseEnter={() => setHoveredRow(l.id)}
                   onMouseLeave={() => setHoveredRow(null)}
                   onClick={isMobile ? () => setNotesLead(l) : undefined}
@@ -2548,11 +2675,14 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                     padding: isMobile ? "12px 14px" : "14px 20px",
                     borderBottom: `1px solid ${T.border}`,
                     alignItems: isMobile ? "stretch" : "center",
-                    transition: "background 0.14s",
-                    background: isHov ? rowHoverBg : rowBg,
+                    transition: "background 0.14s, box-shadow 0.4s",
+                    background: isHov ? hoverBg : baseBg,
                     position: "relative",
-                    // Banda dorada izquierda — marca visual de "pinneado" sin gritar
-                    boxShadow: isPinnedRow ? `inset 3px 0 0 ${goldRow}` : "none",
+                    boxShadow: rowShadow,
+                    // Pulso animado solo los primeros 10s tras registrar — atrae
+                    // el ojo al instante y luego queda el halo estático mientras
+                    // isNew=true (= hasta que el asesor abra el lead).
+                    animation: isPulsing ? "stratosNewLeadPulse 1.6s ease-in-out 0s 6" : undefined,
                     // En mobile el row entero es tap-to-open
                     cursor: isMobile ? "pointer" : "default",
                   }}
@@ -2708,7 +2838,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                         boxShadow: `0 0 0 2px ${stageC}2E, 0 0 6px ${stageC}70`,
                         flexShrink: 0,
                       }} />
-                      <select value={l.st} onChange={e => { const v = e.target.value; setLeadsData(prev => prev.map(x => x.id === l.id ? {...x, st: v} : x)); }}
+                      <select value={l.st} onChange={e => { const v = e.target.value; updateLead({ ...l, st: v }); }}
                         style={{
                           background: "transparent", border: "none", padding: 0,
                           fontSize: 10.5, fontWeight: 800,
@@ -3044,7 +3174,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                             )}
                             {/* Selector de etapa inline */}
                             <div onClick={e => e.stopPropagation()} style={{ marginBottom: 8 }}>
-                              <select value={l.st} onChange={e => setLeadsData(prev => prev.map(x => x.id === l.id ? {...x, st: e.target.value} : x))}
+                              <select value={l.st} onChange={e => updateLead({ ...l, st: e.target.value })}
                                 style={{ width: "100%", padding: "5px 8px", borderRadius: 7, background: isLight ? `linear-gradient(135deg, ${c}26 0%, ${c}12 100%)` : `${c}0C`, border: `1px solid ${isLight ? c + "55" : c + "28"}`, color: cText, fontSize: 9.5, fontWeight: 700, cursor: "pointer", outline: "none", appearance: "none", boxShadow: isLight ? "inset 0 1px 0 rgba(255,255,255,0.55)" : "none" }}>
                                 {STAGES.map(s => <option key={s} value={s} style={{ background: "#111318", color: "#fff" }}>{s}</option>)}
                               </select>

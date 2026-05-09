@@ -1,10 +1,54 @@
 html, body {
   margin: 0;
   padding: 0;
-  font-family: "SF Pro Text", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+  /* Inter primero — webfont cross-platform; fallbacks por si la red falla */
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI Variable", "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
+  /* font-feature-settings: kerning + ligaduras + tabular-nums.
+     "cv11" usa la variante alterna del 1 en Inter (recta sin serif),
+     mejora la legibilidad de KPIs y números en general. */
+  font-feature-settings: "kern", "liga", "calt", "cv11", "tnum";
+  font-synthesis: none;
+}
+
+/* ── Scrollbars cross-platform ─────────────────────────────────────────
+   Windows muestra scrollbars gruesas por default — rompen el look premium.
+   Forzamos delgadas y con el color de marca en cualquier navegador.
+   · Webkit/Blink (Chrome, Edge, Brave, Safari): ::-webkit-scrollbar
+   · Firefox: scrollbar-width + scrollbar-color */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(110,231,194,0.32) transparent;
+}
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+*::-webkit-scrollbar-thumb {
+  background: rgba(110,231,194,0.22);
+  border-radius: 8px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+  transition: background 0.18s;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: rgba(110,231,194,0.42);
+  background-clip: content-box;
+}
+*::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* Light mode — scrollbar más oscuro para contraste sobre fondos claros */
+@media (prefers-color-scheme: light) {
+  * { scrollbar-color: rgba(13,154,118,0.32) transparent; }
+  *::-webkit-scrollbar-thumb { background: rgba(13,154,118,0.22); background-clip: content-box; }
+  *::-webkit-scrollbar-thumb:hover { background: rgba(13,154,118,0.42); background-clip: content-box; }
 }
 
 input, textarea, select, button {
@@ -41,3 +85,77 @@ input, textarea, select, button {
 
 /* Scrollbar invisible en horizontal carousels (kanban, priority cards) */
 .carousel-no-scroll::-webkit-scrollbar { display: none; }
+
+/* ── Cross-platform polish (Windows / Linux / older Chromium) ─────────
+   Asegura que la app se vea uniforme en sistemas que no son Mac/iOS. */
+
+/* Render exacto de colores en print + alta densidad — igual en Win/Mac */
+* {
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+/* Box-sizing universal — Windows tiende a mezclar modelos */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+/* Eliminar el outline azul nativo (Chrome/Edge/Firefox) y reemplazar
+   con un focus-visible accesible y on-brand */
+:focus { outline: none; }
+:focus-visible {
+  outline: 2px solid rgba(110,231,194,0.55);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Inputs nativos en Windows tienen estilos de OS — los normalizamos */
+input, textarea, select, button {
+  color: inherit;
+  background-color: transparent;
+  -webkit-appearance: none;
+  appearance: none;
+}
+/* Pero permitimos appearance auto en select para conservar el dropdown nativo */
+select { -webkit-appearance: menulist; appearance: menulist; }
+
+/* Edge/IE legacy "X" clear button en inputs — molesto, lo quitamos */
+input::-ms-clear, input::-ms-reveal { display: none; }
+
+/* Webkit autofill — Windows Chrome rellena con amarillo brillante.
+   Forzamos el fondo del tema para que siga viéndose limpio. */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 1000px rgba(255,255,255,0.04) inset !important;
+  -webkit-text-fill-color: #E2E8F0 !important;
+  caret-color: #E2E8F0 !important;
+  transition: background-color 9999s ease-in-out 0s;
+}
+/* Light mode autofill — texto oscuro sobre fondo claro */
+@media (prefers-color-scheme: light) {
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover,
+  input:-webkit-autofill:focus {
+    -webkit-box-shadow: 0 0 0 1000px rgba(255,255,255,1) inset !important;
+    -webkit-text-fill-color: #0B1220 !important;
+    caret-color: #0B1220 !important;
+  }
+}
+
+/* Fallback para backdrop-filter — Firefox < 103 y Edge legacy no lo soportan,
+   se ven sin blur. Aseguramos que el background no sea totalmente transparente
+   para que el contenido siga siendo legible. */
+@supports not (backdrop-filter: blur(1px)) {
+  .glass, [data-glass] {
+    background-color: rgba(15, 23, 42, 0.85) !important;
+  }
+}
+
+/* Números tabulares globales en clases que muestran KPIs / dinero — evita
+   que los digitos cambien de ancho cuando se actualizan en vivo. */
+.kpi-num, .num-tabular {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+}

@@ -23,7 +23,8 @@ import {
 // ── Configuración de resiliencia ──────────────────────────────────────
 // 12s cubre el cold-start de Supabase free tier (instancia dormida tras
 // inactividad despierta en ~6-10s). Si supera eso, asumimos caída real.
-const TIMEOUT_MS   = 12000
+const TIMEOUT_MS      = 12000              // queries normales (read profile, leads)
+const AUTH_TIMEOUT_MS = 18000              // signInWithPassword: cold start tolerado
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000   // 24 horas — sesión cacheada localmente
 const SESSION_CACHE_KEY = 'stratos_session_cache'
 
@@ -47,7 +48,7 @@ function withTimeout(promise, ms = TIMEOUT_MS, label = 'operación') {
  * Sin mencionar Supabase ni servicios técnicos — el asesor no debe
  * ver detalles de infraestructura.
  */
-const TIMEOUT_MESSAGE = 'El servidor está despertando. Espera 30 segundos y vuelve a intentar.'
+const TIMEOUT_MESSAGE = 'La conexión está tardando. Vuelve a intentar en unos segundos.'
 
 /**
  * Detecta si un error vino del wrapper withTimeout.
@@ -112,10 +113,12 @@ export async function signIn(email, password) {
   }
 
   try {
-    // Auth con timeout — si Supabase no responde en 8s, fallo claro
+    // Auth con timeout dedicado (18s — cubre cold start sin hacer
+    // esperar al usuario eternamente). El warm-up de LoginScreen
+    // mantiene la conexión caliente, así que en uso normal responde <3s.
     const { data, error } = await withTimeout(
       supabase.auth.signInWithPassword({ email, password }),
-      TIMEOUT_MS,
+      AUTH_TIMEOUT_MS,
       'auth',
     )
     if (error) {
