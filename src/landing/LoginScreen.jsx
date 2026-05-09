@@ -6,6 +6,8 @@
  */
 import { useState, useEffect } from "react";
 import { X, CheckCircle2 } from "lucide-react";
+import { supabase } from "../lib/supabase";
+import { pingSupabase } from "../lib/offline-mode";
 
 const font  = `-apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif`;
 const fontD = `-apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif`;
@@ -53,6 +55,24 @@ export default function LoginScreen({ onLogin }) {
     ? "register" : "login";
 
   useEffect(() => { seedDemo(); }, []);
+
+  // ── Warm-up de Supabase al montar ────────────────────────────────
+  // Cuando el usuario llega al login, lanzamos un ping silencioso a
+  // Supabase. Para cuando teclee email + password (típicamente 4-8s),
+  // la conexión ya esta caliente y signInWithPassword responde rapido.
+  // Sin esto, el primer auth tras inactividad puede tardar >12s.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        // pingSupabase hace SELECT count(*) FROM profiles LIMIT 0 — query
+        // ligerísima, no devuelve datos pero abre el pipe TCP/HTTP.
+        await pingSupabase(supabase, 8000);
+      } catch (_) { /* silencioso — solo es un warm-up */ }
+      if (cancelled) return;
+    })();
+    return () => { cancelled = true; };
+  }, []);
 
   const [mode, setMode]       = useState(initialMode); // login | register | forgot | forgot-sent
   const [name, setName]       = useState("");
