@@ -84,6 +84,20 @@ export default function LoginScreen({ onLogin }) {
   const [error, setError]     = useState("");
   const [loading, setLoad]    = useState(false);
   const [focused, setFocused] = useState(null);
+  // Texto progresivo del botón mientras carga — da feedback al usuario
+  // que no está atascado, especialmente en redes lentas (México→us-west-2).
+  const [loadingPhase, setLoadingPhase] = useState(0);
+  useEffect(() => {
+    if (!loading) { setLoadingPhase(0); return; }
+    const t1 = setTimeout(() => setLoadingPhase(1), 5000);
+    const t2 = setTimeout(() => setLoadingPhase(2), 15000);
+    return () => { clearTimeout(t1); clearTimeout(t2); };
+  }, [loading]);
+  const loadingLabel = loadingPhase >= 2
+    ? "Casi listo, un momento…"
+    : loadingPhase >= 1
+      ? "Conectando con el servidor…"
+      : "Verificando…";
 
   // Fuerza de contraseña
   const pw = (() => {
@@ -369,7 +383,7 @@ export default function LoginScreen({ onLogin }) {
                     onMouseEnter={e => !loading && (e.currentTarget.style.boxShadow = "0 6px 26px rgba(110,231,194,0.32)")}
                     onMouseLeave={e => (e.currentTarget.style.boxShadow = loading ? "none" : "0 4px 20px rgba(110,231,194,0.20)")}
                   >
-                    {loading ? "Creando cuenta..." : "Crear cuenta →"}
+                    {loading ? loadingLabel : "Crear cuenta →"}
                   </button>
 
                   {/* ─ Alternativa: contacto directo por WhatsApp ─ */}
@@ -461,7 +475,7 @@ export default function LoginScreen({ onLogin }) {
                     onMouseEnter={e => !loading && (e.currentTarget.style.boxShadow = "0 6px 26px rgba(110,231,194,0.32)")}
                     onMouseLeave={e => (e.currentTarget.style.boxShadow = loading ? "none" : "0 4px 20px rgba(110,231,194,0.20)")}
                   >
-                    {loading ? "Verificando..." :
+                    {loading ? loadingLabel :
                       mode === "login" ? "Iniciar sesión →" : "Enviar enlace de recuperación →"}
                   </button>
 
