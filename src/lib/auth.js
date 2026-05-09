@@ -23,8 +23,14 @@ import {
 // ── Configuración de resiliencia ──────────────────────────────────────
 // 12s cubre el cold-start de Supabase free tier (instancia dormida tras
 // inactividad despierta en ~6-10s). Si supera eso, asumimos caída real.
-const TIMEOUT_MS      = 12000              // queries normales (read profile, leads)
-const AUTH_TIMEOUT_MS = 18000              // signInWithPassword: cold start tolerado
+//
+// IMPORTANTE: estos timeouts cubren NETWORK RTT, no solo procesamiento de
+// Supabase. Usuarios en redes lentas (móvil, wifi público, VPN) pueden
+// tardar 20-30s en recibir la respuesta aunque el servidor responda en
+// <500ms. Los logs de Supabase confirmaron que auth se completa siempre,
+// pero el cliente cortaba a los 18s pensando que había timeout.
+const TIMEOUT_MS      = 30000              // queries normales (read profile, leads)
+const AUTH_TIMEOUT_MS = 60000              // signInWithPassword: tolerar redes lentas
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000   // 24 horas — sesión cacheada localmente
 const SESSION_CACHE_KEY = 'stratos_session_cache'
 
