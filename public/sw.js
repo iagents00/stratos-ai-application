@@ -21,7 +21,10 @@
  * versión tome control en el siguiente refresh sin requerir interacción.
  */
 
-const CACHE_VERSION = 'stratos-v3';
+// v4 — purga bundle viejo de usuarios que tenían stratos-v3 cacheado.
+// Bump esta versión cada vez que se haga un cambio que el cliente necesita
+// recibir SI O SI (cambios de auth, schema, breaking UI, etc.).
+const CACHE_VERSION = 'stratos-v4';
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 
