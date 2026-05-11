@@ -14,7 +14,7 @@ import { useEffect } from "react";
 import {
   ArrowRight, ArrowLeft, ChevronDown, CheckCircle2, Clock,
   Users, Database, MessageCircle, Bot, ShieldCheck, Zap,
-  TrendingUp, FileText, Layers, Lock, Cloud, Sparkles, Mail,
+  TrendingUp, FileText, Layers, Lock, Cloud, Mail,
   Layout, Building2, Wallet, BriefcaseBusiness, LineChart, Workflow,
 } from "lucide-react";
 
@@ -136,54 +136,69 @@ const CSS = `
     color: ${P.amber};
   }
 
-  /* CTA buttons */
+  /* CTA buttons — alta legibilidad sobre cualquier fondo */
   .dh-btn-primary {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 8px;
-    padding: 14px 22px;
+    gap: 10px;
+    padding: 15px 26px;
     border-radius: 12px;
-    background: ${P.accentG};
-    color: #04080F;
-    font-size: 14.5px;
-    font-weight: 700;
-    letter-spacing: 0.01em;
+    /* gradiente más oscuro hacia los bordes para resaltar texto */
+    background: linear-gradient(135deg, #6FE7C6 0%, #34C49C 60%, #2BA882 100%);
+    color: #021712;
+    font-size: 15px;
+    font-weight: 800;
+    letter-spacing: 0.005em;
     text-decoration: none;
     border: none;
     cursor: pointer;
-    transition: all 0.25s;
-    box-shadow: 0 4px 18px rgba(82,217,184,0.18);
+    transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.4),
+      inset 0 -1px 0 rgba(0,0,0,0.18),
+      0 6px 20px rgba(82,217,184,0.32),
+      0 2px 6px rgba(0,0,0,0.25);
     font-family: ${fontD};
   }
   .dh-btn-primary:hover {
-    box-shadow: 0 6px 26px rgba(82,217,184,0.32);
     transform: translateY(-1px);
-    opacity: 1;
+    filter: brightness(1.05);
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.5),
+      inset 0 -1px 0 rgba(0,0,0,0.2),
+      0 10px 28px rgba(82,217,184,0.44),
+      0 3px 10px rgba(0,0,0,0.3);
+  }
+  .dh-btn-primary:active {
+    transform: translateY(0);
+    filter: brightness(0.96);
   }
   .dh-btn-secondary {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 8px;
-    padding: 14px 22px;
+    gap: 10px;
+    padding: 14px 24px;
     border-radius: 12px;
-    background: transparent;
-    color: ${P.txt};
+    background: rgba(255,255,255,0.04);
+    color: ${P.w};
     font-size: 14px;
-    font-weight: 500;
-    letter-spacing: 0.01em;
+    font-weight: 600;
+    letter-spacing: 0.005em;
     text-decoration: none;
-    border: 1px solid ${P.border};
+    border: 1px solid ${P.borderH};
     cursor: pointer;
     transition: all 0.2s;
     font-family: ${font};
   }
   .dh-btn-secondary:hover {
-    background: ${P.glass};
-    border-color: ${P.borderH};
+    background: rgba(255,255,255,0.08);
+    border-color: rgba(255,255,255,0.22);
     color: ${P.w};
+    transform: translateY(-1px);
   }
+  .dh-btn-secondary:active { transform: translateY(0); }
 
   /* Icon box */
   .dh-icon-box {
@@ -320,7 +335,7 @@ const CSS = `
 `;
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   LOGO
+   LOGO Stratos clásico (uso sutil en footer)
    ═══════════════════════════════════════════════════════════════════════════ */
 function StratosAtom({ size = 22, color = P.accent }) {
   return (
@@ -329,6 +344,37 @@ function StratosAtom({ size = 22, color = P.accent }) {
       <circle cx="16" cy="16" r="4"  stroke={color} strokeWidth="1.2" opacity="0.62" />
       <circle cx="16" cy="16" r="1.5" fill={color} />
       <ellipse cx="16" cy="16" rx="10" ry="4" stroke={color} strokeWidth="1" opacity="0.25" transform="rotate(-35 16 16)" />
+    </svg>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   PowerAtom — átomo potente para destacar marca y momentos importantes
+   3 órbitas elípticas rotadas + núcleo radial brillante + 3 electrones
+   ═══════════════════════════════════════════════════════════════════════════ */
+function PowerAtom({ size = 16, color = P.accent }) {
+  const uid = `pa-${size}-${color.replace(/[^a-z0-9]/gi, '')}`;
+  return (
+    <svg width={size} height={size} viewBox="0 0 32 32" fill="none" aria-hidden="true">
+      <defs>
+        <radialGradient id={`${uid}-core`} cx="50%" cy="50%" r="50%">
+          <stop offset="0%"  stopColor="#FFFFFF" stopOpacity="0.95" />
+          <stop offset="60%" stopColor={color}   stopOpacity="0.95" />
+          <stop offset="100%" stopColor={color}  stopOpacity="0" />
+        </radialGradient>
+      </defs>
+      {/* 3 órbitas a 0°, 60°, -60° */}
+      <ellipse cx="16" cy="16" rx="13" ry="5" stroke={color} strokeWidth="1.4" opacity="0.85" />
+      <ellipse cx="16" cy="16" rx="13" ry="5" stroke={color} strokeWidth="1.4" opacity="0.55" transform="rotate(60 16 16)" />
+      <ellipse cx="16" cy="16" rx="13" ry="5" stroke={color} strokeWidth="1.4" opacity="0.55" transform="rotate(-60 16 16)" />
+      {/* Halo del núcleo */}
+      <circle cx="16" cy="16" r="6" fill={`url(#${uid}-core)`} />
+      {/* Núcleo sólido */}
+      <circle cx="16" cy="16" r="2.6" fill={color} />
+      {/* Electrones */}
+      <circle cx="29"  cy="16"  r="1.7" fill={color} />
+      <circle cx="9.5" cy="5.2" r="1.7" fill={color} />
+      <circle cx="9.5" cy="26.8" r="1.7" fill={color} />
     </svg>
   );
 }
@@ -371,10 +417,10 @@ export default function DeliveryHubCRM() {
           padding: "16px 24px", gap: 16,
         }}>
           <a href="https://stratoscapitalgroup.com" style={{
-            display: "flex", alignItems: "center", gap: 9, color: P.w,
+            display: "flex", alignItems: "center", gap: 10, color: P.w,
             fontWeight: 700, fontSize: 15, fontFamily: fontD, letterSpacing: "-0.01em",
           }}>
-            <StratosAtom size={22} color={P.accent} />
+            <PowerAtom size={22} color={P.accent} />
             Stratos <span style={{ fontWeight: 300, opacity: 0.55 }}>AI</span>
           </a>
           <a href={APP_URL} className="dh-btn-secondary" style={{ padding: "9px 16px", fontSize: 13 }}>
@@ -389,7 +435,7 @@ export default function DeliveryHubCRM() {
         <div className="dh-container">
           <div className="dh-reveal" style={{ animationDelay: "0.05s" }}>
             <span className="dh-pill" style={{ marginBottom: 24 }}>
-              <Sparkles size={12} />
+              <PowerAtom size={14} color={P.accent} />
               Entrega oficial · Mayo 2026
             </span>
           </div>
@@ -532,7 +578,7 @@ export default function DeliveryHubCRM() {
                 desc: "Ves de un solo vistazo todos los clientes, en qué etapa están y cuáles necesitan atención. Mover un cliente entre etapas es arrastrar y soltar — como mover papelitos en un corcho, pero digital.",
               },
               {
-                icon: Sparkles,
+                icon: PowerAtom,
                 title: "Asistente IA que califica clientes",
                 desc: "Cada cliente recibe un puntaje del 0 al 100 según qué tan probable es que cierre. El asistente lee los datos, los movimientos y la actividad — y te dice quién priorizar HOY.",
               },
