@@ -16,7 +16,7 @@ import {
   Users, Database, MessageCircle, Bot, ShieldCheck, Zap,
   TrendingUp, FileText, Layers, Lock, Cloud, Mail,
   Layout, Building2, Wallet, BriefcaseBusiness, LineChart, Workflow,
-  Download, FileSignature,
+  Download,
 } from "lucide-react";
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -34,7 +34,11 @@ const P = {
   accentS:  "rgba(82,217,184,0.07)",
   accentB:  "rgba(82,217,184,0.13)",
   accentG:  "linear-gradient(135deg, #52D9B8 0%, #34C49C 100%)",
-  amber:    "#F0C674",
+  // Tono frío sutil para "próxima entrega" — sin amarillos, manteniendo
+  // disciplina cromática de un solo acento principal.
+  muted:    "#8A97AA",
+  mutedS:   "rgba(138,151,170,0.06)",
+  mutedB:   "rgba(138,151,170,0.18)",
   rose:     "#E8818C",
   w:        "#FFFFFF",
   txt:      "#EDF2F7",
@@ -134,9 +138,9 @@ const CSS = `
     text-transform: uppercase;
   }
   .dh-pill.dh-pill-soon {
-    background: rgba(240,198,116,0.07);
-    border-color: rgba(240,198,116,0.25);
-    color: ${P.amber};
+    background: ${P.mutedS};
+    border-color: ${P.mutedB};
+    color: ${P.muted};
   }
 
   /* CTA buttons — alta legibilidad sobre cualquier fondo */
@@ -215,9 +219,9 @@ const CSS = `
     justify-content: center;
     flex-shrink: 0;
   }
-  .dh-icon-box.amber {
-    background: rgba(240,198,116,0.07);
-    border-color: rgba(240,198,116,0.20);
+  .dh-icon-box.muted {
+    background: ${P.mutedS};
+    border-color: ${P.mutedB};
   }
 
   /* Section spacing */
@@ -658,10 +662,10 @@ export default function DeliveryHubCRM() {
             ].map((f) => (
               <div key={f.title} className="dh-glass" style={{ opacity: 0.85 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 14 }}>
-                  <div className="dh-icon-box amber">
-                    <f.icon size={20} color={P.amber} />
+                  <div className="dh-icon-box muted">
+                    <f.icon size={20} color={P.muted} />
                   </div>
-                  <span style={{ fontSize: 10, color: P.amber, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase" }}>
+                  <span style={{ fontSize: 10, color: P.muted, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase" }}>
                     Próxima entrega
                   </span>
                 </div>
@@ -776,90 +780,55 @@ export default function DeliveryHubCRM() {
         </div>
       </section>
 
-      {/* ─────────────── DESCARGABLES ─────────────── */}
+      {/* ─────────────── ENTREGABLE ─────────────── */}
       <section className="dh-section" style={{ borderTop: `1px solid ${P.border}` }}>
         <div className="dh-container">
           <p className="dh-section-eyebrow">Para tu archivo</p>
-          <h2 className="dh-section-title">Documentos formales de la entrega.</h2>
+          <h2 className="dh-section-title">El documento oficial de la entrega.</h2>
           <p className="dh-section-sub" style={{ marginBottom: 40 }}>
-            Si prefieres tener una copia imprimible o necesitas un documento firmable para tu archivo, aquí los puedes descargar.
+            Una pieza única, imprimible y firmable. Resume el alcance entregado, las próximas
+            observaciones programadas y el acta legal para que la archives o la firmes.
           </p>
 
-          <div className="dh-grid-2">
-            {/* Pitch ejecutivo PDF */}
-            <a
-              href="/entregables/pitch-ejecutivo.pdf"
-              download="Stratos-AI-Entrega-CRM-v1.pdf"
-              className="dh-glass dh-hover"
-              style={{ display: "flex", gap: 18, alignItems: "flex-start", textDecoration: "none" }}
-            >
-              <div className="dh-icon-box" style={{ marginTop: 4 }}>
-                <FileText size={20} color={P.accent} />
-              </div>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
-                  <span style={{ color: P.w, fontWeight: 700, fontSize: 16, fontFamily: fontD }}>
-                    Pitch Ejecutivo
-                  </span>
-                  <span style={{
-                    fontSize: 10, padding: "2px 8px", borderRadius: 999,
-                    background: P.accentS, color: P.accent,
-                    border: `1px solid ${P.accentB}`,
-                    fontWeight: 700, letterSpacing: "0.06em",
-                  }}>
-                    PDF · 3 PÁGINAS
-                  </span>
-                </div>
-                <p className="dh-feature-desc" style={{ marginBottom: 12 }}>
-                  Resumen visual de qué te entregamos, métricas, roadmap y soporte. Imprimible o para mandar por correo.
-                </p>
+          <a
+            href="/entregables/stratos-ai-entrega.pdf"
+            download="Stratos-AI-Entrega-CRM-v1.pdf"
+            className="dh-glass dh-hover"
+            style={{
+              display: "flex", gap: 22, alignItems: "center",
+              textDecoration: "none", padding: 28, maxWidth: 720, margin: "0 auto",
+            }}
+          >
+            <div className="dh-icon-box" style={{ width: 56, height: 56, flexShrink: 0 }}>
+              <FileText size={26} color={P.accent} />
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6, flexWrap: "wrap" }}>
+                <span style={{ color: P.w, fontWeight: 700, fontSize: 17, fontFamily: fontD }}>
+                  Stratos AI — Entrega CRM v1.0
+                </span>
                 <span style={{
-                  display: "inline-flex", alignItems: "center", gap: 6,
-                  color: P.accent, fontSize: 13, fontWeight: 700,
+                  fontSize: 10, padding: "3px 10px", borderRadius: 999,
+                  background: P.accentS, color: P.accent,
+                  border: `1px solid ${P.accentB}`,
+                  fontWeight: 700, letterSpacing: "0.08em",
                 }}>
-                  <Download size={14} />
-                  Descargar PDF
+                  PDF · 3 PÁGINAS
                 </span>
               </div>
-            </a>
-
-            {/* Acta de Entrega DOCX */}
-            <a
-              href="/entregables/acta-de-entrega.docx"
-              download="Stratos-AI-Acta-de-Entrega.docx"
-              className="dh-glass dh-hover"
-              style={{ display: "flex", gap: 18, alignItems: "flex-start", textDecoration: "none" }}
-            >
-              <div className="dh-icon-box" style={{ marginTop: 4 }}>
-                <FileSignature size={20} color={P.accent} />
-              </div>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
-                  <span style={{ color: P.w, fontWeight: 700, fontSize: 16, fontFamily: fontD }}>
-                    Acta de Entrega
-                  </span>
-                  <span style={{
-                    fontSize: 10, padding: "2px 8px", borderRadius: 999,
-                    background: P.accentS, color: P.accent,
-                    border: `1px solid ${P.accentB}`,
-                    fontWeight: 700, letterSpacing: "0.06em",
-                  }}>
-                    WORD · FIRMABLE
-                  </span>
-                </div>
-                <p className="dh-feature-desc" style={{ marginBottom: 12 }}>
-                  Documento formal listo para firmar. Define alcance, soporte y partes. Editable si necesitas ajustes.
-                </p>
-                <span style={{
-                  display: "inline-flex", alignItems: "center", gap: 6,
-                  color: P.accent, fontSize: 13, fontWeight: 700,
-                }}>
-                  <Download size={14} />
-                  Descargar Word
-                </span>
-              </div>
-            </a>
-          </div>
+              <p className="dh-feature-desc" style={{ marginBottom: 10 }}>
+                Portada visual, alcance medido y acta firmable, todo en un solo documento
+                diseñado como una pieza de archivo.
+              </p>
+              <span style={{
+                display: "inline-flex", alignItems: "center", gap: 6,
+                color: P.accent, fontSize: 13.5, fontWeight: 700,
+              }}>
+                <Download size={14} />
+                Descargar documento oficial
+              </span>
+            </div>
+          </a>
         </div>
       </section>
 
