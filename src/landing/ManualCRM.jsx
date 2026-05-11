@@ -15,7 +15,7 @@
  */
 import { useState, useEffect, useMemo } from "react";
 import {
-  ArrowLeft, ArrowRight, Search, Sparkles, Bot, X,
+  ArrowLeft, ArrowRight, Search, Bot, X,
   ChevronRight, Lightbulb, AlertTriangle, Mail, MessageCircle,
   // Iconos usados por las secciones (importados aquí para que esté en bundle)
   LogIn, KeyRound, Layout, UserPlus, FileSearch, MoveRight, Workflow,
@@ -64,7 +64,10 @@ const APP_URL = "https://app.stratoscapitalgroup.com";
    Permite usar icon: 'LogIn' como string en manual-content.js
    ═══════════════════════════════════════════════════════════════════════════ */
 const ICON_MAP = {
-  Sparkles, Users, Layers, FileText, UsersRound, LineChart,
+  // 'Sparkles' del manual-content.js queda mapeado al átomo potente
+  Sparkles: PowerAtom,
+  Atom: PowerAtom,
+  Users, Layers, FileText, UsersRound, LineChart,
   MessageCircle, LifeBuoy,
   LogIn, KeyRound, Layout, UserPlus, FileSearch, MoveRight, Workflow,
   NotebookPen, CheckSquare, History, UserCheck, ShieldUser: ShieldCheck,
@@ -318,7 +321,7 @@ const CSS = `
 `;
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   LOGO
+   LOGO Stratos clásico (uso sutil en footer)
    ═══════════════════════════════════════════════════════════════════════════ */
 function StratosAtom({ size = 22, color = P.accent }) {
   return (
@@ -327,6 +330,33 @@ function StratosAtom({ size = 22, color = P.accent }) {
       <circle cx="16" cy="16" r="4"  stroke={color} strokeWidth="1.2" opacity="0.62" />
       <circle cx="16" cy="16" r="1.5" fill={color} />
       <ellipse cx="16" cy="16" rx="10" ry="4" stroke={color} strokeWidth="1" opacity="0.25" transform="rotate(-35 16 16)" />
+    </svg>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   PowerAtom — átomo potente con 3 órbitas + electrones + núcleo radial
+   Usado en el nav y como icono destacado en secciones IA / "Empezar".
+   ═══════════════════════════════════════════════════════════════════════════ */
+function PowerAtom({ size = 16, color = P.accent }) {
+  const uid = `mpa-${size}-${color.replace(/[^a-z0-9]/gi, '')}`;
+  return (
+    <svg width={size} height={size} viewBox="0 0 32 32" fill="none" aria-hidden="true">
+      <defs>
+        <radialGradient id={`${uid}-core`} cx="50%" cy="50%" r="50%">
+          <stop offset="0%"  stopColor="#FFFFFF" stopOpacity="0.95" />
+          <stop offset="60%" stopColor={color}   stopOpacity="0.95" />
+          <stop offset="100%" stopColor={color}  stopOpacity="0" />
+        </radialGradient>
+      </defs>
+      <ellipse cx="16" cy="16" rx="13" ry="5" stroke={color} strokeWidth="1.4" opacity="0.85" />
+      <ellipse cx="16" cy="16" rx="13" ry="5" stroke={color} strokeWidth="1.4" opacity="0.55" transform="rotate(60 16 16)" />
+      <ellipse cx="16" cy="16" rx="13" ry="5" stroke={color} strokeWidth="1.4" opacity="0.55" transform="rotate(-60 16 16)" />
+      <circle cx="16" cy="16" r="6" fill={`url(#${uid}-core)`} />
+      <circle cx="16" cy="16" r="2.6" fill={color} />
+      <circle cx="29"  cy="16"  r="1.7" fill={color} />
+      <circle cx="9.5" cy="5.2" r="1.7" fill={color} />
+      <circle cx="9.5" cy="26.8" r="1.7" fill={color} />
     </svg>
   );
 }
@@ -454,10 +484,10 @@ export default function ManualCRM() {
           gap: 16, flexWrap: "wrap",
         }}>
           <a href="https://stratoscapitalgroup.com" style={{
-            display: "flex", alignItems: "center", gap: 9, color: P.w,
+            display: "flex", alignItems: "center", gap: 10, color: P.w,
             fontWeight: 700, fontSize: 15, fontFamily: fontD, letterSpacing: "-0.01em",
           }}>
-            <StratosAtom size={22} color={P.accent} />
+            <PowerAtom size={22} color={P.accent} />
             Stratos <span style={{ fontWeight: 300, opacity: 0.55 }}>AI</span>
             <span style={{
               marginLeft: 12, paddingLeft: 12, borderLeft: `1px solid ${P.border}`,
@@ -605,7 +635,7 @@ export default function ManualCRM() {
                     aria-disabled="true"
                   />
                   <button type="button" className="mn-ai-button" disabled aria-disabled="true">
-                    <Sparkles size={14} />
+                    <PowerAtom size={14} color={P.txt3} />
                     Preguntar
                   </button>
                 </div>
