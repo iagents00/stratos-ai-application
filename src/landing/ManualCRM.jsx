@@ -39,9 +39,15 @@ const P = {
   accentS:  "rgba(82,217,184,0.07)",
   accentB:  "rgba(82,217,184,0.13)",
   accentG:  "linear-gradient(135deg, #52D9B8 0%, #34C49C 100%)",
-  amber:    "#F0C674",
-  amberS:   "rgba(240,198,116,0.08)",
-  amberB:   "rgba(240,198,116,0.22)",
+  // Tono frío para "próximamente" — disciplina cromática sin amarillos.
+  muted:    "#8A97AA",
+  mutedS:   "rgba(138,151,170,0.06)",
+  mutedB:   "rgba(138,151,170,0.18)",
+  // Mantenemos `warn` para callouts de advertencia operativa (no es decoración,
+  // es alerta funcional dentro del contenido del manual).
+  warn:     "#E8A488",
+  warnS:    "rgba(232,164,136,0.07)",
+  warnB:    "rgba(232,164,136,0.22)",
   blue:     "#7EB8F0",
   blueS:    "rgba(126,184,240,0.08)",
   blueB:    "rgba(126,184,240,0.22)",
@@ -247,11 +253,11 @@ const CSS = `
   }
   .mn-callout-tip .mn-callout-icon { color: ${P.blue}; }
   .mn-callout-warn {
-    background: ${P.amberS};
-    border: 1px solid ${P.amberB};
+    background: ${P.warnS};
+    border: 1px solid ${P.warnB};
     color: ${P.txt};
   }
-  .mn-callout-warn .mn-callout-icon { color: ${P.amber}; }
+  .mn-callout-warn .mn-callout-icon { color: ${P.warn}; }
   .mn-callout-icon { flex-shrink: 0; margin-top: 2px; }
 
   /* AI Assistant card (placeholder) */
@@ -655,8 +661,8 @@ export default function ManualCRM() {
             </h2>
             <span style={{
               fontSize: 10, padding: "4px 10px", borderRadius: 999,
-              background: P.amberS, color: P.amber,
-              border: `1px solid ${P.amberB}`,
+              background: P.mutedS, color: P.muted,
+              border: `1px solid ${P.mutedB}`,
               fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase",
             }}>
               Próximamente
