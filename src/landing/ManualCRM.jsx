@@ -597,56 +597,8 @@ export default function ManualCRM() {
                 ))}
               </div>
 
-              {/* AI Assistant placeholder — listo para conectar agente futuro */}
-              <div className="mn-ai-card">
-                <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 8 }}>
-                  <div style={{
-                    width: 40, height: 40, borderRadius: 11,
-                    background: P.accentS, border: `1px solid ${P.accentB}`,
-                    display: "inline-flex", alignItems: "center", justifyContent: "center",
-                  }}>
-                    <Bot size={20} color={P.accent} />
-                  </div>
-                  <div>
-                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                      <span style={{ color: P.w, fontWeight: 700, fontSize: 15, fontFamily: fontD }}>
-                        Asistente del Manual
-                      </span>
-                      <span style={{
-                        fontSize: 10, padding: "2px 8px", borderRadius: 999,
-                        background: P.amberS, color: P.amber,
-                        border: `1px solid ${P.amberB}`,
-                        fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase",
-                      }}>
-                        Próximamente
-                      </span>
-                    </div>
-                    <p style={{ color: P.txt2, fontSize: 13, marginTop: 2 }}>
-                      Pronto vas a poder preguntarle al asistente cualquier duda en lenguaje natural.
-                    </p>
-                  </div>
-                </div>
-                <div className="mn-ai-input-row">
-                  <input
-                    type="text"
-                    className="mn-ai-input"
-                    placeholder="Pregúntale al asistente..."
-                    disabled
-                    aria-disabled="true"
-                  />
-                  <button type="button" className="mn-ai-button" disabled aria-disabled="true">
-                    <PowerAtom size={14} color={P.txt3} />
-                    Preguntar
-                  </button>
-                </div>
-                <p style={{ color: P.txt3, fontSize: 12, marginTop: 12, lineHeight: 1.5 }}>
-                  El asistente leerá este manual y tu pregunta para darte la respuesta exacta paso-a-paso.
-                  Mientras tanto, usa el buscador de la izquierda.
-                </p>
-              </div>
-
               {/* Quick contact */}
-              <div style={{ marginTop: 32, padding: "20px 0", borderTop: `1px solid ${P.border}`,
+              <div style={{ marginTop: 40, padding: "20px 0", borderTop: `1px solid ${P.border}`,
                             display: "flex", gap: 14, alignItems: "center", flexWrap: "wrap" }}>
                 <span style={{ color: P.txt2, fontSize: 13 }}>
                   ¿No encuentras lo que buscas?
@@ -677,6 +629,66 @@ export default function ManualCRM() {
           )}
         </main>
       </div>
+
+      {/* ─────────────── ASISTENTE DEL MANUAL (sección única al final) ─────────────── */}
+      <section style={{
+        borderTop: `1px solid ${P.border}`,
+        background: `linear-gradient(180deg, ${P.bg} 0%, ${P.surface} 100%)`,
+        padding: "72px 24px",
+      }}>
+        <div style={{ maxWidth: 720, margin: "0 auto", textAlign: "center" }}>
+          <div style={{
+            width: 64, height: 64, borderRadius: 18,
+            background: P.accentS, border: `1px solid ${P.accentB}`,
+            display: "inline-flex", alignItems: "center", justifyContent: "center",
+            marginBottom: 20,
+            boxShadow: `0 8px 32px ${P.accentS}`,
+          }}>
+            <Bot size={30} color={P.accent} />
+          </div>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10, marginBottom: 12 }}>
+            <h2 style={{
+              fontSize: "clamp(22px, 3vw, 28px)", fontWeight: 700,
+              color: P.w, fontFamily: fontD, letterSpacing: "-0.02em",
+            }}>
+              Asistente del Manual
+            </h2>
+            <span style={{
+              fontSize: 10, padding: "4px 10px", borderRadius: 999,
+              background: P.amberS, color: P.amber,
+              border: `1px solid ${P.amberB}`,
+              fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase",
+            }}>
+              Próximamente
+            </span>
+          </div>
+          <p style={{
+            color: P.txt2, fontSize: 15, lineHeight: 1.6,
+            maxWidth: 540, margin: "0 auto 28px",
+          }}>
+            Pronto vas a poder preguntarle al asistente cualquier duda en lenguaje natural.
+            Va a leer este manual completo y darte la respuesta exacta paso-a-paso.
+          </p>
+          <div className="mn-ai-input-row" style={{ maxWidth: 540, margin: "0 auto" }}>
+            <input
+              type="text"
+              className="mn-ai-input"
+              placeholder="Pregúntale al asistente..."
+              disabled
+              aria-disabled="true"
+            />
+            <button type="button" className="mn-ai-button" disabled aria-disabled="true">
+              <PowerAtom size={14} color={P.txt3} />
+              Preguntar
+            </button>
+          </div>
+          <p style={{
+            color: P.txt3, fontSize: 12, marginTop: 16, lineHeight: 1.5,
+          }}>
+            Mientras tanto, usa el buscador de la izquierda para encontrar lo que necesitas.
+          </p>
+        </div>
+      </section>
 
       {/* FOOTER */}
       <footer className="mn-footer">
