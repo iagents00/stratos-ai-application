@@ -51,8 +51,10 @@ const SUPPORT_EMAIL = "info@stratoscapitalgroup.com";
 const CSS = `
   .dh-wrap { background: ${P.bg}; color: ${P.txt}; font-family: ${font}; min-height: 100vh; overflow-x: hidden; }
   .dh-wrap *, .dh-wrap *::before, .dh-wrap *::after { box-sizing: border-box; }
-  .dh-wrap a { color: ${P.accent}; text-decoration: none; transition: opacity 0.2s; }
-  .dh-wrap a:hover { opacity: 0.85; }
+  .dh-wrap a:not(.dh-btn-primary):not(.dh-btn-secondary) { color: ${P.accent}; text-decoration: none; transition: opacity 0.2s; }
+  .dh-wrap a:not(.dh-btn-primary):not(.dh-btn-secondary):hover { opacity: 0.85; }
+  .dh-wrap .dh-btn-primary,
+  .dh-wrap .dh-btn-secondary { text-decoration: none; }
   .dh-wrap h1, .dh-wrap h2, .dh-wrap h3 { font-family: ${fontD}; color: ${P.w}; letter-spacing: -0.025em; margin: 0; }
   .dh-wrap p { margin: 0; line-height: 1.65; }
   .dh-wrap button { font-family: inherit; }
