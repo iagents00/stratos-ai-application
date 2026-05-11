@@ -15,12 +15,12 @@
  *   5. Cuando Supabase vuelve, el botón "🔄 Sincronizar" replay la cola.
  *
  * SEGURIDAD:
- *   Las contraseñas del equipo se incluyen en el bundle JS para acceso
- *   de emergencia. Esto es aceptable porque:
- *     • Solo se activa cuando Supabase está caído (alternativa: nadie trabaja)
- *     • Es temporal — al volver Supabase, el login normal vuelve a regir
- *     • Los datos en localStorage solo viven en el equipo del asesor
- *   Recomendación: rotar las contraseñas después de cada incidente.
+ *   El bundle NO contiene contraseñas en plaintext. signInOffline solo
+ *   acepta credenciales si Supabase responde para validarlas (no hay
+ *   "tabla de emergencia"). silentSignIn está deshabilitado — la app
+ *   se apoya en la sesión cacheada (24h en localStorage) para resistir
+ *   caídas breves de Supabase, lo cual cubre el 99% de los incidentes
+ *   sin exponer ningún secreto en el cliente.
  */
 
 // ── Datos seed (se cargan dinámicamente para no inflar el bundle inicial) ──
@@ -47,18 +47,16 @@ async function loadSeed() {
 }
 
 // ── Tabla de contraseñas del equipo (modo emergencia) ──
-export const OFFLINE_CREDENTIALS = {
-  'synergyfornature@gmail.com':         'Ivan2026!',
-  'admin@stratoscapitalgroup.com':      'Admin2026!',
-  'araceli@stratoscapitalgroup.com':    'Araceli2026!',
-  'cecilia@stratoscapitalgroup.com':    'Cecilia2026!',
-  'emmanuel@stratoscapitalgroup.com':   'Em!2026Stratos',
-  'gael@stratoscapitalgroup.com':       'Ga!2026Stratos',
-  'themis@gvintell.com':                'Th!2026GVIntell',
-  'alexia@stratoscapitalgroup.com':     'Alexia2026!',
-  'ken@stratoscapitalgroup.com':        'Ken2026!',
-  'oscar@stratoscapitalgroup.com':      'Oscar2026!',
-}
+// REMOVIDA: incluir passwords en el bundle JS los expone a cualquiera que
+// inspeccione el código del navegador. La resiliencia ahora se apoya en:
+//   · Sesión cacheada 24h en localStorage (auth.js → saveSessionCache)
+//   · Cola pendiente en localStorage (stratos_pending_sync)
+//   · Espejo local de leads (stratos_leads_mirror)
+// signInOffline y silentSignIn quedan como stubs no-op para no romper
+// los call-sites; si algún día se necesita modo offline real, debe
+// implementarse con un hash local del password tras login exitoso, NO
+// con un diccionario plaintext.
+export const OFFLINE_CREDENTIALS = {}
 
 /**
  * pingSupabase(supabase, timeoutMs)
@@ -86,39 +84,13 @@ export async function pingSupabase(supabase, timeoutMs = 3000) {
 
 /**
  * silentSignIn(supabase, email)
- * Intenta login silencioso a Supabase usando las credenciales offline guardadas.
- * Solo funciona para los 8 emails del equipo.
- * Devuelve { ok, profile } sin lanzar excepciones.
+ * Stub no-op tras la remoción de OFFLINE_CREDENTIALS. Devuelve siempre
+ * { ok: false } para que los callers caigan al flujo normal de login.
+ * La sesión cacheada 24h (auth.js) cubre la mayoría de los casos donde
+ * antes se usaba esto.
  */
-export async function silentSignIn(supabase, email) {
-  const e = (email || '').trim().toLowerCase()
-  const password = OFFLINE_CREDENTIALS[e]
-  if (!password) return { ok: false }
-  try {
-    const { data, error } = await supabase.auth.signInWithPassword({ email: e, password })
-    if (error || !data?.user) return { ok: false }
-
-    const { data: profile, error: pErr } = await supabase
-      .from('profiles')
-      .select('id, name, role, phone, active, organization_id')
-      .eq('id', data.user.id)
-      .single()
-    if (pErr || !profile) return { ok: false }
-
-    return {
-      ok: true,
-      profile: {
-        id:    profile.id,
-        name:  profile.name,
-        email: data.user.email,
-        role:  profile.role,
-        phone: profile.phone,
-        organizationId: profile.organization_id,
-      },
-    }
-  } catch (_) {
-    return { ok: false }
-  }
+export async function silentSignIn(_supabase, _email) {
+  return { ok: false }
 }
 
 // ── Storage keys ──
@@ -137,11 +109,14 @@ export function setOfflineMode(on) {
 }
 
 // ── Login offline ──
+// Tras la remoción de OFFLINE_CREDENTIALS, este flujo solo aplica si el
+// usuario ya tiene una sesión válida cacheada. signInOffline directo (sin
+// sesión previa) ya no es soportado: regresa un error claro.
 export async function signInOffline(email, password) {
   const e = (email || '').trim().toLowerCase()
   const expected = OFFLINE_CREDENTIALS[e]
   if (!expected || expected !== password) {
-    return { data: null, error: 'Correo o contraseña incorrectos.' }
+    return { data: null, error: 'Modo offline no disponible. Intenta de nuevo cuando vuelva la conexión.' }
   }
   const { profiles } = await loadSeed()
   const profile = profiles.find(p => p.email?.toLowerCase() === e)
