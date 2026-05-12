@@ -26,13 +26,12 @@ export const supabase = createClient(
       // PKCE flow: más resiliente con múltiples pestañas/dispositivos.
       // El refresh token no se invalida si dos pestañas refrescan a la vez.
       flowType:           'pkce',
-      // Storage key explícito y consistente — evita colisiones con otros
-      // proyectos Supabase que pudieran convivir en el mismo dominio.
-      storageKey:         'stratos.supabase.auth.v1',
-      // Lock de sesión multi-tab — Supabase JS v2.45+ usa BroadcastChannel
-      // para coordinar refrescos entre pestañas. Sin él, dos pestañas pueden
-      // rotar el refresh token a la vez y una se queda con token inválido.
-      lock:               undefined, // null fuerza no-lock; undefined deja el default (recomendado)
+      // NO sobrescribir storageKey: el default de Supabase es
+      // `sb-<projectref>-auth-token`. Sobrescribirlo a uno custom rompe
+      // las sesiones existentes de TODOS los usuarios (su token vive bajo
+      // la key vieja y el código nuevo lo busca bajo la key custom → sesión
+      // perdida → re-login forzado). Mejor mantener el default para
+      // retro-compatibilidad y dejar que el SDK se encargue del namespacing.
     },
   }
 )
