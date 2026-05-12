@@ -285,11 +285,18 @@ export async function syncToSupabase(supabase) {
         if (error) { failed++; remaining.push(op) }
         else       { synced++ }
       } else if (op.type === 'lead_insert') {
-        // Reintento de creación de lead. Idempotente: si ya existe (mismo id),
-        // usamos upsert para evitar duplicados.
-        const { error } = await supabase
-          .from('leads')
-          .upsert(op.payload, { onConflict: 'id' })
+        // Reintento de creación de lead. Usamos la RPC create_lead (migración 008)
+        // en vez de .upsert() directo. Razón:
+        //   · .upsert(payload, { onConflict: 'id' }) hace INSERT y, si choca, hace
+        //     UPDATE. El UPDATE pasa por la RLS "leads_update" que solo permite al
+        //     dueño o admin → si el lead ya existe (porque saveLead lo guardó
+        //     correctamente la primera vez) y el actor actual no es admin, el
+        //     UPDATE se rechaza con 409. La cola entonces NUNCA logra sincronizar
+        //     y reintenta para siempre, generando ruido y el banner "Sin conexión".
+        //   · create_lead RPC solo hace INSERT con ON CONFLICT (id) DO NOTHING.
+        //     Si el lead ya existe, was_inserted=false pero NO hay error. La cola
+        //     considera el item sincronizado y lo saca → fin del retry loop.
+        const { error } = await supabase.rpc('create_lead', { payload: op.payload })
         if (error) { failed++; remaining.push(op) }
         else       { synced++ }
       } else {
