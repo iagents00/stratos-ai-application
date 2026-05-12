@@ -21,10 +21,17 @@
  * versión tome control en el siguiente refresh sin requerir interacción.
  */
 
-// v4 — purga bundle viejo de usuarios que tenían stratos-v3 cacheado.
+// v5 — purga bundle viejo de usuarios atascados con la versión v4.
+// El PR #43 (fix auth + registro idempotente) no bumpeó esta versión, así
+// que el SW del browser veía el sw.js idéntico (byte-a-byte) y NUNCA se
+// actualizaba → seguía sirviendo el JS viejo desde cache aunque Vercel ya
+// había deployado el código nuevo. Esto dejaba a los asesores atascados.
+// Lección: cualquier cambio en src/ que el usuario necesite "sí o sí"
+// (auth, schema, breaking UI) DEBE venir con un bump de CACHE_VERSION.
+//
 // Bump esta versión cada vez que se haga un cambio que el cliente necesita
 // recibir SI O SI (cambios de auth, schema, breaking UI, etc.).
-const CACHE_VERSION = 'stratos-v4';
+const CACHE_VERSION = 'stratos-v5';
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 
@@ -45,7 +52,12 @@ self.addEventListener('install', (event) => {
   );
 });
 
-// ── ACTIVATE: limpiar caches viejos ──
+// ── ACTIVATE: limpiar caches viejos + avisar a clientes para recargar ──
+// Tras claim(), main.jsx escucha 'controllerchange' y hace location.reload().
+// Si el JS del cliente está colgado (caso "Verificando…" infinito), el
+// reload no se procesa — el usuario tendrá que cerrar y reabrir la tab.
+// Para esos casos también enviamos un postMessage explícito por si algún
+// listener no relacionado al controllerchange puede actuar.
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then(keys =>
@@ -54,7 +66,14 @@ self.addEventListener('activate', (event) => {
           .filter(k => !k.startsWith(CACHE_VERSION))
           .map(k => caches.delete(k))
       )
-    ).then(() => self.clients.claim())
+    )
+    .then(() => self.clients.claim())
+    .then(() => self.clients.matchAll({ includeUncontrolled: true }))
+    .then(clients => {
+      for (const c of clients) {
+        c.postMessage({ type: 'SW_UPDATED', version: CACHE_VERSION });
+      }
+    })
   );
 });
 
