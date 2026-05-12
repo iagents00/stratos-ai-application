@@ -21,18 +21,16 @@
  * versión tome control en el siguiente refresh sin requerir interacción.
  */
 
-// v7 — fix CRÍTICO de sesión que se cerraba al recargar.
-// El timeout de hidratación del AuthContext (PR #44) llamaba clearLocalAuthState
-// + supabase.auth.signOut() si la hidratación tardaba >12s. Eso cerraba
-// sesiones LEGÍTIMAS de usuarios con red lenta (México→us-west-2 puede tardar
-// más por cold start). Plus, el listener onAuthStateChange limpiaba storage
-// en CUALQUIER evento con session=null incluyendo TOKEN_REFRESHED transitorios.
-// El usuario tenía que volver a loguearse en cada F5. AHORA: el timeout no
-// destruye storage; el listener solo limpia en SIGNED_OUT/USER_DELETED.
+// v8 — orden por defecto del CRM: fechaIngreso desc (más recientes arriba).
+// Antes el default era "sc desc" (score), lo que hacía caer al fondo a los
+// leads recién registrados con score bajo (5) en cuanto se limpiaba el
+// flag isNew (20s). Ahora los nuevos siempre quedan arriba sin importar
+// su score. Migración silenciosa: usuarios con el viejo default se mueven
+// al nuevo automáticamente; los que tenían un orden custom se respetan.
 //
 // Bump esta versión cada vez que se haga un cambio que el cliente necesita
 // recibir SI O SI (cambios de auth, schema, breaking UI, etc.).
-const CACHE_VERSION = 'stratos-v7';
+const CACHE_VERSION = 'stratos-v8';
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 
