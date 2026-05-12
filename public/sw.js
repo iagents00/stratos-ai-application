@@ -21,17 +21,15 @@
  * versión tome control en el siguiente refresh sin requerir interacción.
  */
 
-// v5 — purga bundle viejo de usuarios atascados con la versión v4.
-// El PR #43 (fix auth + registro idempotente) no bumpeó esta versión, así
-// que el SW del browser veía el sw.js idéntico (byte-a-byte) y NUNCA se
-// actualizaba → seguía sirviendo el JS viejo desde cache aunque Vercel ya
-// había deployado el código nuevo. Esto dejaba a los asesores atascados.
-// Lección: cualquier cambio en src/ que el usuario necesite "sí o sí"
-// (auth, schema, breaking UI) DEBE venir con un bump de CACHE_VERSION.
+// v6 — fix del retry loop de la cola offline.
+// La cola de retry usaba .upsert(payload, {onConflict:'id'}) que cuando el
+// lead ya existía en BD chocaba con RLS de UPDATE → 409 perpetuo → banner
+// "Sin conexión" eterno y logs llenos de errores. Ahora usa la RPC
+// create_lead que solo hace INSERT con ON CONFLICT DO NOTHING (sin UPDATE).
 //
 // Bump esta versión cada vez que se haga un cambio que el cliente necesita
 // recibir SI O SI (cambios de auth, schema, breaking UI, etc.).
-const CACHE_VERSION = 'stratos-v5';
+const CACHE_VERSION = 'stratos-v6';
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 
