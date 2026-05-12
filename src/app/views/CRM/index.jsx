@@ -140,6 +140,14 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
     onAutoOpenHandled?.();
   }, [autoOpenPriority1]); // priorityLeadsRef is a ref, always current
   const [addingLead, setAddingLead]     = useState(false);
+  // Bloqueo de doble submit:
+  //   · submittingRef    → guard SÍNCRONO. Imprescindible porque React
+  //     useState es async: 10 clics en el mismo tick verían el state
+  //     viejo y todos pasarían. useRef.current se actualiza al instante.
+  //   · submittingLead   → mismo flag pero como state, sólo para que el
+  //     botón se pinte deshabilitado (no protege del race; el ref sí).
+  const submittingRef                   = useRef(false);
+  const [submittingLead, setSubmittingLead] = useState(false);
   const [copiedId, setCopiedId]         = useState(null);
   const [saveToast, setSaveToast]       = useState(null); // { msg, type }
   const toastTimer = useRef(null);
@@ -735,6 +743,13 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
 
   const addNewLead = async () => {
     if (!newLead.n.trim()) return;
+    // Guardia idempotente síncrona: si ya hay un submit en vuelo, ignoramos.
+    // useRef se actualiza al instante; useState quedaría desfasado un render
+    // y dejaría pasar todos los clics rápidos.
+    if (submittingRef.current) return;
+    submittingRef.current = true;
+    setSubmittingLead(true);
+
     const now = new Date();
     const mos = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
     const h = now.getHours(); const ampm = h >= 12 ? "pm" : "am"; const h12 = h % 12 || 12;
@@ -744,25 +759,34 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
       ? `📍 OBJETIVO\nPendiente — primer contacto.\n\n📋 NOTAS INICIALES\n${newLead.notas.trim()}\n\n⚡ PENDIENTE\nRealizar primer contacto y calificar necesidades.`
       : `📍 OBJETIVO\nPendiente — primer contacto.\n\n⚡ PENDIENTE\nRealizar primer contacto y calificar necesidades del cliente.`;
 
-    // ── Guardado resiliente con doble respaldo ──────────────────────
-    // saveLead() escribe primero al espejo local (localStorage), luego
-    // intenta Supabase, y si falla encola para reintento automático.
-    // NUNCA lanza — siempre devuelve un resultado.
+    // ── Id estable generado en cliente ─────────────────────────────────
+    // Se usa como PK al insertar (la RPC create_lead lo respeta con
+    // ON CONFLICT DO NOTHING) y como id del entry local. Si por cualquier
+    // razón saveLead se llama 2 veces con este mismo id, sólo crea fila
+    // la primera. Sin esto, cada clic generaría un id distinto y la BD
+    // crearía un lead nuevo por clic.
+    const localId = (typeof crypto !== 'undefined' && crypto.randomUUID)
+      ? crypto.randomUUID()
+      : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+
+    // Capturamos el draft antes de limpiarlo (el setState es async).
+    const draft = newLead;
     const isDemo = user?.id === 'demo-user-local' || user?.isDemo;
     const payload = {
-      name:             newLead.n.trim(),
-      phone:            newLead.phone || null,
-      email:            newLead.email || null,
-      stage:            newLead.st || "Nuevo Registro",
+      id:               localId,
+      name:             draft.n.trim(),
+      phone:            draft.phone || null,
+      email:            draft.email || null,
+      stage:            draft.st || "Nuevo Registro",
       score:            5,
       hot:              false,
       is_new:           true,
-      budget:           parsedBudget ? formatBudget(parsedBudget) : (newLead.budget || ""),
+      budget:           parsedBudget ? formatBudget(parsedBudget) : (draft.budget || ""),
       presupuesto:      parsedBudget || 0,
-      project:          newLead.p || null,
-      campaign:         newLead.campana || null,
-      source:           newLead.source || "manual",
-      next_action:      newLead.nextAction?.trim() || "Primer contacto en las próximas 24 horas",
+      project:          draft.p || null,
+      campaign:         draft.campana || null,
+      source:           draft.source || "manual",
+      next_action:      draft.nextAction?.trim() || "Primer contacto en las próximas 24 horas",
       next_action_date: "Hoy",
       last_activity:    "Registro manual",
       days_inactive:    0,
@@ -771,90 +795,91 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
       risk:             "Sin información suficiente aún.",
       friction:         "Medio",
       notas:            notasVal,
-      tag:              newLead.tag || null,
-      asesor_name:      newLead.asesor || user?.name || "",
+      tag:              draft.tag || null,
+      asesor_name:      draft.asesor || user?.name || "",
       asesor_id:        user?.id || null,
     };
 
-    const { id: realId, savedToCloud, queuedForRetry, error: saveErr } =
-      await saveLead(supabase, payload, user, { skipCloud: isDemo });
-
-    if (savedToCloud) {
-      showToast(`Cliente "${newLead.n.trim()}" guardado.`);
-    } else if (queuedForRetry) {
-      showToast(`Cliente guardado localmente. Se reintentará al recuperar conexión${saveErr ? ` (${saveErr})` : ''}.`);
-    } else if (saveErr) {
-      showToast(`Aviso: ${saveErr}`);
-    }
-
+    // ── Entry local (lo que se pinta en la UI) ─────────────────────────
     const newEntry = {
-      id: realId, ...newLead, st: newLead.st || "Nuevo Registro",
+      id: localId, ...draft, st: draft.st || "Nuevo Registro",
       sc: 5,
-      source: newLead.source || "manual",
-      tag: newLead.tag || newLead.st || "Nuevo Registro", hot: false, isNew: true, fechaIngreso: dateStr,
+      source: draft.source || "manual",
+      tag: draft.tag || draft.st || "Nuevo Registro", hot: false, isNew: true, fechaIngreso: dateStr,
       bio: "Cliente recién registrado. Pendiente primer contacto.", risk: "Sin información suficiente aún.",
       friction: "Medio",
-      nextAction: newLead.nextAction?.trim() || "Primer contacto en las próximas 24 horas",
+      nextAction: draft.nextAction?.trim() || "Primer contacto en las próximas 24 horas",
       nextActionDate: "Hoy", lastActivity: "Registro manual", daysInactive: 0,
-      email: newLead.email || "",
+      email: draft.email || "",
       notas: notasVal,
       presupuesto: parsedBudget,
-      budget: parsedBudget ? formatBudget(parsedBudget) : (newLead.budget || ""),
-      // ── Historial, tareas y playbook — se inicializan vacíos en cada
-      // lead nuevo. Postgres aplica defaults '[]' del schema, pero el
-      // newEntry local también necesita los arrays para evitar undefined
-      // en componentes que iteran (PlaybookSection, ActionTimeline, etc.).
+      budget: parsedBudget ? formatBudget(parsedBudget) : (draft.budget || ""),
       actionHistory: [],
       tasks: [],
       playbook: [],
-      // asesor_id explícito en el snapshot local — el filtro visibleLeads
-      // lo usa para separar leads por asesor (vs comparar nombres).
       asesor_id: user?.id || null,
     };
-    setLeadsData(prev => [newEntry, ...prev]);
 
-    // ── Visibilidad inmediata del nuevo cliente ──────────────────────
-    // El lead nuevo lleva isNew=true, lo cual:
-    //   · Lo coloca arriba del listado (vía sort en sortedLeads).
-    //   · Le aplica halo verde menta (color de marca) en lugar de la
-    //     banda dorada de "pinneado" — porque NO lo auto-pineamos.
-    //   · Lo pone en la lista de prioridad sin tocar pinnedIds.
-    // El halo dura mientras isNew=true; se limpia automáticamente cuando
-    // el asesor abre el lead (drawer de notas, perfil, análisis).
-    //
-    // Pulso animado dura HALO_DURATION_MS (20s) — sincronizado con la
-    // ventana de halo. Cuando termina, isNew también se limpia (vía el
-    // useEffect de auto-clear) y la fila se ve como cualquier otra.
+    // ═══════════════════════════════════════════════════════════════════
+    // OPTIMISTIC UI — todo lo de abajo ocurre ANTES del await.
+    // El usuario ve la confirmación instantánea (modal cierra, lead aparece,
+    // toast se muestra). El insert real va en background; si falla, la cola
+    // de retries de saveLead se encarga y muestra un toast secundario.
+    // ═══════════════════════════════════════════════════════════════════
+
+    // 1. Cerrar modal y limpiar el draft → el botón "Registrar" desaparece
+    //    de la pantalla. Imposible hacer doble clic a partir de aquí.
+    setAddingLead(false);
+    setNewLead({ n: "", asesor: canSeeAll ? "" : (user?.name || ""), phone: "", email: "", budget: "", p: "", campana: "", source: "manual", st: "Nuevo Registro", nextAction: "", notas: "" });
+
+    // 2. Insertar el lead en la lista visible y disparar halo + scroll.
+    setLeadsData(prev => [newEntry, ...prev]);
     if (justRegisteredTimer.current) clearTimeout(justRegisteredTimer.current);
-    setJustRegisteredId(realId);
+    setJustRegisteredId(localId);
     justRegisteredTimer.current = setTimeout(() => setJustRegisteredId(null), HALO_DURATION_MS);
-    // Auto-scroll a la fila tras el render (2 frames para que React pinte).
     requestAnimationFrame(() => requestAnimationFrame(() => {
-      const row = document.querySelector(`[data-lead-row="${realId}"]`);
+      const row = document.querySelector(`[data-lead-row="${localId}"]`);
       if (row && typeof row.scrollIntoView === 'function') {
         row.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }
-      // También centra la card en el carousel de Prioridad si está visible.
-      triggerPriorityFocus(realId);
+      triggerPriorityFocus(localId);
     }));
-    // Si el asesor o proyecto son nuevos (no existían en leadsData), los
-    // registramos como custom para que aparezcan en los dropdowns del
-    // siguiente alta. Así el usuario no tiene que volver a teclearlos.
-    if (newLead.asesor && !leadsData.some(l => l.asesor === newLead.asesor) && !customAsesores.includes(newLead.asesor)) {
-      setCustomAsesores(prev => [...prev, newLead.asesor]);
+
+    // 3. Refrescar listas maestras (asesor/proyecto/campaña nuevos).
+    if (draft.asesor && !leadsData.some(l => l.asesor === draft.asesor) && !customAsesores.includes(draft.asesor)) {
+      setCustomAsesores(prev => [...prev, draft.asesor]);
     }
-    if (newLead.p && !leadsData.some(l => l.p === newLead.p) && !customProyectos.includes(newLead.p)) {
-      setCustomProyectos(prev => [...prev, newLead.p]);
+    if (draft.p && !leadsData.some(l => l.p === draft.p) && !customProyectos.includes(draft.p)) {
+      setCustomProyectos(prev => [...prev, draft.p]);
     }
-    // Registrar campaña nueva si no estaba en base ni en leads ni en customs.
-    if (newLead.campana
-        && !FB_CAMPAIGNS_BASE.includes(newLead.campana)
-        && !leadsData.some(l => l.campana === newLead.campana)
-        && !customCampanas.includes(newLead.campana)) {
-      setCustomCampanas(prev => [...prev, newLead.campana]);
+    if (draft.campana
+        && !FB_CAMPAIGNS_BASE.includes(draft.campana)
+        && !leadsData.some(l => l.campana === draft.campana)
+        && !customCampanas.includes(draft.campana)) {
+      setCustomCampanas(prev => [...prev, draft.campana]);
     }
-    setAddingLead(false);
-    setNewLead({ n: "", asesor: canSeeAll ? "" : (user?.name || ""), phone: "", email: "", budget: "", p: "", campana: "", source: "manual", st: "Nuevo Registro", nextAction: "", notas: "" });
+
+    // 4. Toast optimista (asume éxito; si falla, otro toast lo corrige).
+    showToast(`Cliente "${draft.n.trim()}" registrado.`, "success");
+
+    // ═══════════════════════════════════════════════════════════════════
+    // PERSISTENCIA EN BACKGROUND — el usuario ya vio su lead, ahora la
+    // sincronización con Supabase. saveLead nunca lanza; siempre resuelve.
+    // ═══════════════════════════════════════════════════════════════════
+    try {
+      const { savedToCloud, queuedForRetry, error: saveErr } =
+        await saveLead(supabase, payload, user, { skipCloud: isDemo });
+      if (!savedToCloud) {
+        if (queuedForRetry) {
+          showToast(`Sin conexión: el cliente "${draft.n.trim()}" se sincronizará automáticamente cuando vuelva la red.`);
+        } else if (saveErr && !isDemo) {
+          showToast(`Aviso al guardar "${draft.n.trim()}": ${saveErr}`);
+        }
+      }
+    } finally {
+      submittingRef.current = false;
+      setSubmittingLead(false);
+    }
   };
 
   const SH = ({ label, field, align = "left" }) => {
@@ -2375,13 +2400,13 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                 onMouseEnter={e => { e.currentTarget.style.background = isLight ? "rgba(15,23,42,0.04)" : T.glass; e.currentTarget.style.color = T.txt2; }}
                 onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = T.txt3; }}
               >Cancelar</button>
-              <button onClick={addNewLead} disabled={!canSubmit} style={{
+              <button onClick={addNewLead} disabled={!canSubmit || submittingLead} style={{
                 flex: 2.4, height: 40, borderRadius: 10,
                 background: primaryBg,
                 border: `1px solid ${primaryBorder}`,
                 color: primaryColor,
                 fontSize: 12.5, fontWeight: 700,
-                cursor: canSubmit ? "pointer" : "not-allowed",
+                cursor: (canSubmit && !submittingLead) ? "pointer" : "not-allowed",
                 fontFamily: fontDisp, letterSpacing: "-0.02em",
                 transition: "all 0.2s",
                 display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
