@@ -183,15 +183,21 @@ export async function saveLead(supabase, payload, currentUser, opts = {}) {
   }
 
   // 4. Intento de inserción en Supabase con timeout duro.
+  //    Usamos la RPC create_lead (migración 008) en lugar de
+  //    .from('leads').insert(...).select().single() — la RPC hace
+  //    ON CONFLICT (id) DO NOTHING, así que si llega 2+ veces con el mismo
+  //    id (doble clic, retry de red, etc.) sólo crea la fila la primera
+  //    vez. Además devuelve sólo {lead_id, lead_created_at,
+  //    lead_organization_id, was_inserted} en vez de SELECT * — más liviano.
   try {
     const { data, error } = await withTimeout(
-      supabase.from('leads').insert(fullPayload).select().single(),
+      supabase.rpc('create_lead', { payload: fullPayload }).single(),
       INSERT_TIMEOUT_MS
     )
 
     if (error) {
-      // Error duro de Supabase (RLS, validación, conflicto, etc.).
-      // Encolamos para reintento con el mismo id (el upsert es idempotente).
+      // Error duro de Supabase (RLS, validación, etc.).
+      // Encolamos para reintento con el mismo id (la RPC es idempotente).
       enqueueLeadInsert(fullPayload, currentUser)
       return {
         id,
@@ -202,14 +208,21 @@ export async function saveLead(supabase, payload, currentUser, opts = {}) {
       }
     }
 
-    // Éxito en la nube — marcamos el espejo y devolvemos la fila real.
-    markMirrorSynced(localId, data?.id || id)
+    // Éxito en la nube — marcamos el espejo y devolvemos los datos clave.
+    // data: { lead_id, lead_created_at, lead_organization_id, was_inserted }
+    const realId = data?.lead_id || id
+    markMirrorSynced(localId, realId)
     return {
-      id:             data?.id || id,
+      id:             realId,
       savedToCloud:   true,
       queuedForRetry: false,
       error:          null,
-      savedRow:       data || null,
+      savedRow: data ? {
+        id:              data.lead_id,
+        created_at:      data.lead_created_at,
+        organization_id: data.lead_organization_id,
+        was_inserted:    data.was_inserted,
+      } : null,
     }
   } catch (e) {
     // Timeout o excepción inesperada → cola de reintentos.
