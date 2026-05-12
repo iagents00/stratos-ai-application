@@ -113,10 +113,17 @@ if ("serviceWorker" in navigator && import.meta.env.PROD) {
 
     // Cuando el SW nuevo toma control, recargar para usar la última versión
     let refreshing = false;
-    navigator.serviceWorker.addEventListener("controllerchange", () => {
+    const forceReload = () => {
       if (refreshing) return;
       refreshing = true;
       window.location.reload();
+    };
+    navigator.serviceWorker.addEventListener("controllerchange", forceReload);
+    // Backup: el SW también nos manda un postMessage en activate. Si por
+    // alguna razón controllerchange no se dispara (ej. la página ya estaba
+    // controlada por una versión vieja del SW), este listener lo cubre.
+    navigator.serviceWorker.addEventListener("message", (evt) => {
+      if (evt.data?.type === "SW_UPDATED") forceReload();
     });
   });
 }
