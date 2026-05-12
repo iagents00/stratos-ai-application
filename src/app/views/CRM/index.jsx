@@ -63,7 +63,12 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
   // view_all_leads=true ven todos los leads de la organización.
   const canSeeAll = ["super_admin", "admin", "ceo", "director"].includes(user?.role)
                  || user?.viewAllLeads === true;
-  const [sortField, setSortField]       = useState("sc");
+  // Orden por defecto: fecha de creación descendente (los más recientes
+  // arriba). Antes era "sc desc" (score), lo que hacía que un lead recién
+  // registrado con score bajo (5 por default) cayera abajo en cuanto se
+  // limpiaba la flag `isNew` a los 20s. Ahora los nuevos siempre quedan
+  // arriba sin importar su score.
+  const [sortField, setSortField]       = useState("fechaIngreso");
   const [sortDir, setSortDir]           = useState("desc");
   const [filterStage, setFilterStage]   = useState("TODO");
   const [filterAsesor, setFilterAsesor] = useState("TODO");
@@ -492,16 +497,25 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
   const prefsKey = user?.id ? `stratos_crm_prio_${user.id}` : null;
 
   // Defaults que se aplican cuando el usuario aún no tiene prefs guardadas.
+  // sortField='fechaIngreso' + sortDir='desc' → los más recientes arriba.
   const DEFAULT_PREFS = {
     pinned: [], pinnedOrder: [], dismissed: [], order: [], prioritySort: 'manual',
     customAsesores: [], customProyectos: [], customCampanas: [],
-    sortField: 'sc', sortDir: 'desc',
+    sortField: 'fechaIngreso', sortDir: 'desc',
     filterStage: 'TODO', filterAsesor: 'TODO',
     viewMode: 'list',
   };
 
   const normalizePrefs = (raw) => {
     if (!raw || typeof raw !== 'object') return { ...DEFAULT_PREFS };
+    // Migración silenciosa: usuarios que tenían el viejo default ('sc desc')
+    // se migran automáticamente a 'fechaIngreso desc'. Asumimos que si nunca
+    // cambiaron el sort, querían "lo más reciente arriba" todo el tiempo.
+    // Si el usuario explícitamente cambió a otro campo (asesor, presupuesto,
+    // etc.), respetamos esa decisión.
+    const rawSortField = typeof raw.sortField === 'string' ? raw.sortField : 'fechaIngreso';
+    const rawSortDir   = typeof raw.sortDir === 'string'   ? raw.sortDir   : 'desc';
+    const migrated = (rawSortField === 'sc' && rawSortDir === 'desc');
     return {
       pinned:          Array.isArray(raw.pinned)          ? raw.pinned          : [],
       pinnedOrder:     Array.isArray(raw.pinnedOrder)     ? raw.pinnedOrder     : [],
@@ -511,8 +525,8 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
       customAsesores:  Array.isArray(raw.customAsesores)  ? raw.customAsesores  : [],
       customProyectos: Array.isArray(raw.customProyectos) ? raw.customProyectos : [],
       customCampanas:  Array.isArray(raw.customCampanas)  ? raw.customCampanas  : [],
-      sortField:       typeof raw.sortField === 'string'      ? raw.sortField       : 'sc',
-      sortDir:         typeof raw.sortDir === 'string'        ? raw.sortDir         : 'desc',
+      sortField:       migrated ? 'fechaIngreso' : rawSortField,
+      sortDir:         migrated ? 'desc'         : rawSortDir,
       filterStage:     typeof raw.filterStage === 'string'    ? raw.filterStage     : 'TODO',
       filterAsesor:    typeof raw.filterAsesor === 'string'   ? raw.filterAsesor    : 'TODO',
       viewMode:        typeof raw.viewMode === 'string'       ? raw.viewMode        : 'list',
@@ -728,8 +742,17 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
         if (ai !== bi) return bi - ai; // mayor índice = más reciente = primero
       }
       let av = a[sortField], bv = b[sortField];
-      if (sortField === "presupuesto" || sortField === "sc" || sortField === "daysInactive") { av = Number(av) || 0; bv = Number(bv) || 0; }
-      else { av = String(av || "").toLowerCase(); bv = String(bv || "").toLowerCase(); }
+      // fechaIngreso usa el ISO created_at real (no el string formateado en
+      // español que está en a.fechaIngreso). Si no hay created_at, fallback
+      // a 0 para que esos leads queden al final del orden desc.
+      if (sortField === "fechaIngreso") {
+        av = a.created_at ? new Date(a.created_at).getTime() : 0;
+        bv = b.created_at ? new Date(b.created_at).getTime() : 0;
+      } else if (sortField === "presupuesto" || sortField === "sc" || sortField === "daysInactive") {
+        av = Number(av) || 0; bv = Number(bv) || 0;
+      } else {
+        av = String(av || "").toLowerCase(); bv = String(bv || "").toLowerCase();
+      }
       if (av < bv) return sortDir === "asc" ? -1 : 1;
       if (av > bv) return sortDir === "asc" ? 1 : -1;
       return 0;
