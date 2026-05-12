@@ -25,13 +25,12 @@ export const AuthContext = createContext(null);
 const DEMO_SESSION_KEY = 'stratos_demo';
 const isDemo = () => sessionStorage.getItem(DEMO_SESSION_KEY) === '1';
 
-// Timeout duro de la hidratación inicial. Si la lectura de la sesión activa
-// (que puede tener que refrescar el access token y consultar el perfil) no
-// termina en este lapso, asumimos que algo se colgó (típicamente: refresh
-// token corrupto/revocado en localStorage tras una race entre pestañas) y
-// limpiamos el estado para mostrar el login. Sin esto, el usuario veía
-// "Verificando…" indefinidamente.
-const HYDRATION_TIMEOUT_MS = 12000;
+// Timeout SUAVE de la hidratación inicial. Si la lectura de la sesión tarda,
+// mostramos el login pero NO destruimos storage ni hacemos signOut — eso
+// cerraba sesiones legítimas (red lenta, cold start de Supabase, etc.).
+// Si la promesa eventualmente resuelve con sesión válida, la lógica del
+// .then la usa igual. Subimos de 12s a 25s para tolerar redes lentas.
+const HYDRATION_TIMEOUT_MS = 25000;
 
 /**
  * Limpia toda la sesión local de Supabase + caches de Stratos.
@@ -74,34 +73,35 @@ export function AuthProvider({ children }) {
 
     let isMounted = true;
 
-    // ── Hidratación inicial con timeout duro + cleanup ───────────────────
-    // Si pasan 12s y nadie respondió, asumimos token corrupto y reseteamos
-    // el estado. El usuario verá el login limpio en lugar de "Verificando…"
-    // eterno. Esto resuelve el caso reportado: tras añadir un cliente y
-    // recargar, el SDK quedaba colgado intentando refrescar un token
-    // invalidado por reuse-detection.
+    // ── Hidratación inicial con timeout SUAVE (no destructivo) ──────────
+    // CRITICAL FIX: el timeout anterior limpiaba storage + llamaba signOut
+    // si la hidratación tardaba >12s. Eso cerraba sesiones LEGÍTIMAS de
+    // usuarios con red lenta (México→us-west-2 RTT alto, cold start de
+    // Supabase, etc.). Ahora el timeout sólo muestra el login si la promesa
+    // tarda, PERO NO TOCA STORAGE NI HACE SIGNOUT. Si la hidratación
+    // eventualmente resuelve con sesión válida, el listener SIGNED_IN del
+    // SDK reconstituye al usuario automáticamente. Resultado: aunque haya
+    // un timeout transitorio, el F5 mantiene la sesión.
     const hydrationTimer = setTimeout(() => {
       if (!isMounted || hydrationDoneRef.current || loginSettledRef.current) return;
-      hydrationDoneRef.current = true;
-      console.warn('[Stratos] Hidratación de sesión colgada → limpiando storage y mostrando login.');
-      clearLocalAuthState();
-      // Forzar al SDK a soltar la sesión actual también
-      supabase.auth.signOut({ scope: 'local' }).catch(() => {});
-      setUser(null);
+      console.warn('[Stratos] Hidratación tardando >25s, mostrando login pero conservando storage');
+      // NO marcar hydrationDoneRef=true: dejamos que la promesa de getStoredSession()
+      // siga corriendo y, si responde después, la lógica del .then la usa.
       setLoading(false);
     }, HYDRATION_TIMEOUT_MS);
 
     getStoredSession()
       .then(session => {
         if (!isMounted || loginSettledRef.current) return;
-        setUser(session);
+        // Si llegó después del timeout (loading ya está en false), pero hay
+        // sesión válida, restauramos al usuario igual.
+        if (session) setUser(session);
       })
       .catch(e => {
-        console.warn('[Stratos] Hidratación falló:', e?.message || e);
-        if (!isMounted || loginSettledRef.current) return;
-        // Si reventó, limpiar y mostrar login (no nos quedamos "Verificando…")
-        clearLocalAuthState();
-        setUser(null);
+        console.warn('[Stratos] Hidratación falló (no destructivo):', e?.message || e);
+        // NO limpiamos storage aquí. Si fue un error transitorio de red,
+        // el próximo refresh del SDK puede recuperarse. Si fue un error
+        // permanente (token revocado), el listener SIGNED_OUT lo manejará.
       })
       .finally(() => {
         clearTimeout(hydrationTimer);
@@ -111,9 +111,10 @@ export function AuthProvider({ children }) {
       });
 
     // ── Listener Supabase en tiempo real ────────────────────────────────
-    // Maneja eventos: SIGNED_IN, SIGNED_OUT, TOKEN_REFRESHED, USER_UPDATED,
-    // PASSWORD_RECOVERY. Si el refresh falla, Supabase emite SIGNED_OUT con
-    // session=null → limpiamos y mandamos a login (no "Verificando…").
+    // FIX: SÓLO limpiar storage en SIGNED_OUT explícito o USER_DELETED.
+    // El comportamiento anterior limpiaba en CUALQUIER evento con
+    // session=null (incluyendo TOKEN_REFRESHED transitorios) lo que mataba
+    // sesiones legítimas durante refresh races entre pestañas o realtime.
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         if (!isMounted) return;
@@ -121,20 +122,26 @@ export function AuthProvider({ children }) {
         // Nunca desloguear una sesión demo local por eventos de Supabase
         if (isDemo()) return;
 
-        // Eventos de fin de sesión / token roto → cleanup completo
-        if (event === 'SIGNED_OUT' || (!session && event !== 'INITIAL_SESSION')) {
+        // SÓLO eventos EXPLÍCITOS de fin de sesión → cleanup destructivo
+        if (event === 'SIGNED_OUT' || event === 'USER_DELETED') {
           clearLocalAuthState();
           setUser(null);
           return;
         }
 
-        // SIGNED_IN, TOKEN_REFRESHED, USER_UPDATED → refrescar perfil
-        // (TOKEN_REFRESHED es el caso más común: el SDK renovó el access
-        // token automáticamente. Sólo refrescamos el perfil si pasó >5min
-        // desde el último fetch para no martillar la BD.)
+        // Otros eventos sin sesión (ej. TOKEN_REFRESHED transitorio) →
+        // NO destruir storage. Sólo mostrar login si no había usuario.
+        if (!session) {
+          // Si previamente teníamos user pero session viene null, es probable
+          // un evento de refresh en curso. Mantenemos el user hasta que llegue
+          // un evento definitivo (SIGNED_IN nuevo o SIGNED_OUT).
+          return;
+        }
+
+        // SIGNED_IN, TOKEN_REFRESHED con sesión, USER_UPDATED → refrescar perfil
         try {
           const profile = await getStoredSession();
-          if (isMounted && !isDemo()) setUser(profile);
+          if (isMounted && !isDemo() && profile) setUser(profile);
         } catch (e) {
           console.warn('[Stratos] onAuthStateChange refresh perfil falló:', e?.message);
         }
