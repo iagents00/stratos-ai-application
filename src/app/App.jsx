@@ -557,7 +557,14 @@ export default function App() {
   const fmt = n => n >= 1e6 ? `$${(n/1e6).toFixed(1).replace(/\.0$/,"")}M` : `$${(n/1e3).toFixed(0)}K`;
 
   const primary   = nav.filter(n => !n.more);
-  const secondary = nav.filter(n => n.more && (!n.adminOnly || ["super_admin","admin"].includes(user?.role)));
+  // El menú "Más" se filtra también por permisos del módulo. Así un asesor no
+  // ve módulos a los que no tiene acceso (Asesores, Finanzas, Personas) y solo
+  // ve los que le aplican (Planes, Perfil). Mantiene el adminOnly check.
+  const secondary = nav.filter(n =>
+    n.more
+    && (!n.adminOnly || ["super_admin","admin"].includes(user?.role))
+    && (MODULE_ROLES[n.id]?.includes(user?.role) ?? true)
+  );
   const hasActiveMore = secondary.some(n => n.id === v);
 
   const NavBtn = ({ n }) => {
@@ -1003,7 +1010,7 @@ export default function App() {
         </button>
         {sidebarMore && (
           <div style={{ position:"fixed", bottom:58, left:0, right:0, zIndex:199, display:"flex", flexWrap:"wrap", justifyContent:"center", gap:8, padding:"14px 16px", background: isLight ? "rgba(246,248,247,0.97)" : "rgba(4,8,18,0.97)", backdropFilter:"blur(24px)", WebkitBackdropFilter:"blur(24px)", borderTop:`1px solid ${isLight ? "rgba(0,0,0,0.07)" : "rgba(255,255,255,0.07)"}` }}>
-            {nav.filter(n => n.more && (!n.adminOnly || ["super_admin","admin"].includes(user?.role))).map(n => {
+            {nav.filter(n => n.more && (!n.adminOnly || ["super_admin","admin"].includes(user?.role)) && (MODULE_ROLES[n.id]?.includes(user?.role) ?? true)).map(n => {
               const a = v === n.id;
               const activeColor = n.adminOnly ? "#A78BFA" : (isLight ? T.accent : "#6EE7C2");
               return (
