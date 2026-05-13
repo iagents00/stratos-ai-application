@@ -63,6 +63,13 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
   // view_all_leads=true ven todos los leads de la organización.
   const canSeeAll = ["super_admin", "admin", "ceo", "director"].includes(user?.role)
                  || user?.viewAllLeads === true;
+  // Permiso para REASIGNAR el asesor de un lead. Es independiente de
+  // canSeeAll: por requerimiento del cliente, Gael G (asesor) también
+  // puede reasignar aunque su rol normal no le permita ver todos los
+  // leads de la organización. Otros asesores NO pueden tocar el campo
+  // asesor en ningún lado del CRM (ni en alta ni en edición).
+  const canReassign = ["super_admin", "admin"].includes(user?.role)
+                   || (user?.name || "").trim().toLowerCase() === "gael g";
   // Orden por defecto: fecha de creación descendente (los más recientes
   // arriba). Antes era "sc desc" (score), lo que hacía que un lead recién
   // registrado con score bajo (5 por default) cayera abajo en cuanto se
@@ -2223,8 +2230,8 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                 />
               </div>
 
-              {/* Asesor — solo admins */}
-              {canSeeAll && (
+              {/* Asesor — solo super_admin/admin y Gael G pueden asignar a otro */}
+              {canReassign && (
                 <div style={{ gridColumn: "1 / -1" }}>
                   <label style={labelStyle}>
                     <Users size={9} color={T.txt3} /> Asesor asignado
@@ -3911,6 +3918,8 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
         onClose={() => setSelectedLead(null)}
         oc={oc}
         onUpdate={updateLead}
+        canReassign={canReassign}
+        asesoresMaster={asesoresMaster}
         onSwitchTab={(tab) => openDrawerTab(tab, selectedLead)}
         onShowHistory={() => setHistoryLead(selectedLead)}
         onDelete={softDeleteLead ? async (l) => {
