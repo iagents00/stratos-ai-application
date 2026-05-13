@@ -1,21 +1,26 @@
 import { createClient } from '@supabase/supabase-js'
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
-const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY
+// Fallback al proyecto productivo. El anon key es público por diseño
+// (protegido por RLS server-side). Si Vercel tiene VITE_SUPABASE_URL /
+// VITE_SUPABASE_ANON_KEY configurados, esos ganan; si no, usamos estos
+// para que el login funcione sin depender de la config del host.
+const FALLBACK_URL = 'https://glulgyhkrqpykxmujodb.supabase.co'
+const FALLBACK_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdsdWxneWhrcnFweWt4bXVqb2RiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcyNjc0ODQsImV4cCI6MjA5Mjg0MzQ4NH0.GUPRPxZM8G50TVpvTDegzADO8n117clpTgSQpaMJAEk'
 
-if (!supabaseUrl || !supabaseKey) {
-  console.error(
-    '[Stratos AI] ⚠️  Variables de entorno faltantes.\n' +
-    '  Crea un archivo .env.local en la raíz del proyecto con:\n' +
-    '  VITE_SUPABASE_URL=https://tu-proyecto.supabase.co\n' +
-    '  VITE_SUPABASE_ANON_KEY=tu-anon-key\n' +
-    '  La autenticación y base de datos no funcionarán sin estas variables.'
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || FALLBACK_URL
+const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || FALLBACK_KEY
+
+if (!import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_ANON_KEY) {
+  console.warn(
+    '[Stratos AI] Usando fallback hardcodeado de Supabase. ' +
+    'Para limpieza: configurar VITE_SUPABASE_URL y VITE_SUPABASE_ANON_KEY ' +
+    'en Vercel → Settings → Environment Variables.'
   )
 }
 
 export const supabase = createClient(
-  supabaseUrl  || 'https://placeholder.supabase.co',
-  supabaseKey  || 'placeholder-key',
+  supabaseUrl,
+  supabaseKey,
   {
     auth: {
       // Mantener la sesión viva: refrescar access token automáticamente
