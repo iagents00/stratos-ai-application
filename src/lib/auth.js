@@ -292,7 +292,20 @@ export async function getStoredSession() {
       throw e
     }
 
-    if (!profile || profile.active === false) {
+    // Sesión Supabase válida pero perfil null/error: puede ser RLS
+    // transitorio (token aún propagándose tras un refresh), error de red
+    // momentáneo, o profile realmente borrado. Si tenemos caché vigente,
+    // preferimos eso a tirar al user al login. Solo si profile.active
+    // viene explícitamente false (cuenta desactivada) limpiamos caché.
+    if (!profile) {
+      const cached = readSessionCache()
+      if (cached && cached.id === session.user.id) {
+        console.warn('[Stratos] Perfil no resuelto, devuelvo caché')
+        return { ...cached, _fromCache: true }
+      }
+      return null
+    }
+    if (profile.active === false) {
       clearSessionCache()
       return null
     }

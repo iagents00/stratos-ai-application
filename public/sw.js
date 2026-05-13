@@ -21,16 +21,19 @@
  * versión tome control en el siguiente refresh sin requerir interacción.
  */
 
-// v9 — destrabar login: usuarios reportan cuelgue infinito incluso con la
-// cuenta demo (que no toca red). Eso solo pasa si un SW viejo está sirviendo
-// bundle pre-fixes de auth (#43/#44/#46). Bump fuerza purga total + reload
-// automático vía `clients.claim()` + postMessage('SW_UPDATED').
+// v10 — sesión se cerraba al refrescar en modo normal porque el navegador
+// tenía tokens bajo `stratos.supabase.*` (storageKey custom de versiones
+// pre-#43). El SDK actual usa `sb-*` y no encuentra esos huérfanos →
+// session=null → user perdía sesión. Este bump dispara PURGE_LEGACY_AUTH
+// al cliente para que main.jsx limpie las keys viejas (refuerzo además
+// del cleanup síncrono que main.jsx ya hace al boot).
 //
+// v9 — destrabar login: cuelgue infinito por bundle viejo cacheado.
 // v8 — orden por defecto del CRM: fechaIngreso desc (nuevos arriba).
 //
 // Bump esta versión cada vez que se haga un cambio que el cliente necesita
 // recibir SI O SI (cambios de auth, schema, breaking UI, etc.).
-const CACHE_VERSION = 'stratos-v9';
+const CACHE_VERSION = 'stratos-v10';
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 
@@ -70,6 +73,9 @@ self.addEventListener('activate', (event) => {
     .then(() => self.clients.matchAll({ includeUncontrolled: true }))
     .then(clients => {
       for (const c of clients) {
+        // SW_UPDATED → main.jsx fuerza window.location.reload()
+        // PURGE_LEGACY_AUTH → main.jsx limpia tokens huérfanos antes del reload
+        c.postMessage({ type: 'PURGE_LEGACY_AUTH', version: CACHE_VERSION });
         c.postMessage({ type: 'SW_UPDATED', version: CACHE_VERSION });
       }
     })
