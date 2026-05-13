@@ -4,6 +4,38 @@ Registro de todos los cambios y mejoras en cada versión.
 
 ---
 
+## [12.0.0] — Mayo 2026 ✅ AUTH ESTABILIZADO (SW v12)
+
+**Versión de referencia para futuros cambios. Lee la sección "ZONA CRÍTICA — CONFIG DE AUTH ESTABLE" en CLAUDE.md antes de tocar el flujo de auth.**
+
+### 🔧 Fixes críticos de auth (PRs #48, #49, #50, #51, #52)
+
+- **Login real funcional**: hardcoded fallback de `VITE_SUPABASE_URL` y `VITE_SUPABASE_ANON_KEY` en `supabase.js` (las env vars no estaban en Vercel y el bundle apuntaba a `placeholder.supabase.co`).
+- **Sesión persiste al F5**: cambio de `flowType: 'pkce'` → `'implicit'` en cliente Supabase. PKCE escribe `code_verifier` que rompe `signInWithPassword`.
+- **"Conectando con el servidor..." indefinido resuelto**: agregado timeout 3.5s a `supabase.auth.getSession()` (sin timeout previamente, se colgaba >25s por auto-refresh interno y bloqueaba el lock del SDK).
+- **`getStoredSession` resiliente**: si `getSession()` o profile lookup falla/tarda, devuelve caché 24h (`_fromCache: true`) en vez de tirar al user al login.
+- **Boot guard en `main.jsx`**: limpia keys legacy (`stratos.supabase.*`, `*-code-verifier`, `sb-*-pkce*`) que ensuciaban localStorage de versiones anteriores.
+- **`onAuthStateChange` no destructivo**: limpia storage SOLO en `SIGNED_OUT` o `USER_DELETED` explícitos.
+- **Service Worker v12**: kill switch (skipWaiting + clients.claim + postMessage `SW_UPDATED` y `PURGE_LEGACY_AUTH`) que destraba navegadores con bundle viejo cacheado.
+
+### ⚡ Performance al registrar lead
+
+- `LOCAL_MIRROR_LIMIT`: 500 → 150 (evita bloqueo del main thread con `JSON.stringify` de arrays grandes).
+- `appendToMirror`: ahora usa `requestIdleCallback` (no bloquea UI).
+- `INSERT_TIMEOUT_MS`: 25s → 12s (Supabase paid plan no tiene cold-start).
+- Toast diferenciado: "Guardando…" cuando es timeout, "Sin conexión" solo para errores reales.
+
+### 🎯 Estado comprobado
+
+- F5 muestra LoginScreen brevemente (~2s) y restaura sesión desde caché 24h sin requerir login.
+- Funciona en Chrome, Brave, Safari, Edge — modo normal e incógnito.
+- Demo (`demo@stratos.ai` / `demo2027`) persiste vía `sessionStorage`.
+- Console limpia, sin POST 400 automáticos a `/auth/v1/token`.
+- Realtime entre admin y asesor funcional (`leads-global` channel).
+- Orden por defecto del CRM: `fechaIngreso desc` (nuevos arriba).
+
+---
+
 ## [10.0.0] — Abril 2026 ✅ PRODUCCIÓN
 
 ### ✨ Características Nuevas
