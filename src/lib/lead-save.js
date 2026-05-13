@@ -28,7 +28,12 @@ import { enqueueLeadInsert } from './offline-mode'
 const KEY_LEADS_MIRROR     = 'stratos_leads_mirror'
 const LOCAL_MIRROR_LIMIT   = 500
 const SYNCED_TTL_MS        = 7 * 24 * 60 * 60 * 1000 // 7 días
-const INSERT_TIMEOUT_MS    = 12000
+// 25s: cubre cold-start de Supabase free tier (instancia dormida tarda
+// ~6-10s en despertar) + RTT México→us-west-2 + procesamiento de triggers
+// (audit + normalize_phone + set_org + sync_campaign). El 12s anterior
+// disparaba banner "Sin conexión" en el primer registro tras inactividad
+// aunque la red estuviera perfecta.
+const INSERT_TIMEOUT_MS    = 25000
 
 // ── UUID ──
 function newId() {

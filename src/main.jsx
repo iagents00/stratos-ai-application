@@ -27,6 +27,21 @@ import ManualCRM       from "./landing/ManualCRM.jsx";
 
 import "./index.css";
 
+// ─── BOOT GUARD: limpieza de tokens legacy ──────────────────────────────────
+// Versiones anteriores (pre-#43) usaban storageKey custom `stratos.supabase.*`
+// para los tokens de Supabase. El SDK actual usa el default `sb-*`. Si un
+// usuario abrió la app con la versión vieja, tiene tokens huérfanos bajo la
+// key custom que el SDK no reconoce → al refrescar, supabase.auth.getSession()
+// devuelve null → user pierde sesión y vuelve al login.
+// Síntoma típico: "solo me deja en incógnito, en pestaña normal se sale al
+// refrescar". El incógnito no tiene tokens legacy → no sufre el bug.
+// Ejecutamos esto ANTES de createClient para evitar interferir con el SDK.
+try {
+  for (const k of Object.keys(localStorage)) {
+    if (/^stratos\.supabase/i.test(k)) localStorage.removeItem(k);
+  }
+} catch (_) { /* localStorage bloqueado — ignorar */ }
+
 // ─── DECISIÓN DE EXPERIENCIA ─────────────────────────────────────────────────
 // LÓGICA: mostrar Landing SOLO en los dominios públicos conocidos.
 // Todo lo demás (Vercel, subdominio app., localhost con ?app) → Plataforma.
@@ -123,6 +138,16 @@ if ("serviceWorker" in navigator && import.meta.env.PROD) {
     // alguna razón controllerchange no se dispara (ej. la página ya estaba
     // controlada por una versión vieja del SW), este listener lo cubre.
     navigator.serviceWorker.addEventListener("message", (evt) => {
+      // Refuerzo: si el SW v10+ avisa, limpiamos tokens huérfanos antes del
+      // reload. Cubre el caso en que el cleanup síncrono del boot guard no
+      // haya alcanzado a correr porque el bundle viejo ya estaba en memoria.
+      if (evt.data?.type === "PURGE_LEGACY_AUTH") {
+        try {
+          for (const k of Object.keys(localStorage)) {
+            if (/^stratos\.supabase/i.test(k)) localStorage.removeItem(k);
+          }
+        } catch (_) { /* noop */ }
+      }
       if (evt.data?.type === "SW_UPDATED") forceReload();
     });
   });
