@@ -25,12 +25,12 @@ export const AuthContext = createContext(null);
 const DEMO_SESSION_KEY = 'stratos_demo';
 const isDemo = () => sessionStorage.getItem(DEMO_SESSION_KEY) === '1';
 
-// Timeout SUAVE de la hidratación inicial. Si la lectura de la sesión tarda,
-// mostramos el login pero NO destruimos storage ni hacemos signOut — eso
-// cerraba sesiones legítimas (red lenta, cold start de Supabase, etc.).
-// Si la promesa eventualmente resuelve con sesión válida, la lógica del
-// .then la usa igual. Subimos de 12s a 25s para tolerar redes lentas.
-const HYDRATION_TIMEOUT_MS = 25000;
+// Timeout SUAVE de la hidratación inicial. Tras ajustar los timeouts internos
+// de auth.js (getSession=3.5s, profile=5s), getStoredSession resuelve en <9s
+// en el peor caso. Subimos un poco de margen (12s) por si la red está lenta
+// pero NUNCA llegamos a 25s. Si dispara, mostramos login pero conservamos
+// storage — la promesa puede aún resolver y entonces el .then setea user.
+const HYDRATION_TIMEOUT_MS = 12000;
 
 /**
  * Limpia toda la sesión local de Supabase + caches de Stratos.
