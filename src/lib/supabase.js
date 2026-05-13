@@ -28,9 +28,16 @@ export const supabase = createClient(
       autoRefreshToken:   true,
       persistSession:     true,
       detectSessionInUrl: false,
-      // PKCE flow: más resiliente con múltiples pestañas/dispositivos.
-      // El refresh token no se invalida si dos pestañas refrescan a la vez.
-      flowType:           'pkce',
+      // FLOW IMPLICIT — el adecuado para signInWithPassword. PKCE estaba
+      // configurado antes y rompía el persist: PKCE es un flow OAuth
+      // (Google/GitHub/Magic Links) que escribe un `code_verifier` extra
+      // en storage, y al refrescar la página el SDK intentaba completar
+      // ese flow con un verifier que nunca existió porque el login fue
+      // por email+password. Resultado: sesión se invalidaba silenciosamente
+      // y el SDK disparaba un retry POST /token?grant_type=password en
+      // background (visible como error 400 en console). Síntoma reportado:
+      // "se sale al F5 y no puedo volver a loguear, queda en Conectando…".
+      flowType:           'implicit',
       // NO sobrescribir storageKey: el default de Supabase es
       // `sb-<projectref>-auth-token`. Sobrescribirlo a uno custom rompe
       // las sesiones existentes de TODOS los usuarios (su token vive bajo

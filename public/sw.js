@@ -21,19 +21,20 @@
  * versión tome control en el siguiente refresh sin requerir interacción.
  */
 
-// v10 — sesión se cerraba al refrescar en modo normal porque el navegador
-// tenía tokens bajo `stratos.supabase.*` (storageKey custom de versiones
-// pre-#43). El SDK actual usa `sb-*` y no encuentra esos huérfanos →
-// session=null → user perdía sesión. Este bump dispara PURGE_LEGACY_AUTH
-// al cliente para que main.jsx limpie las keys viejas (refuerzo además
-// del cleanup síncrono que main.jsx ya hace al boot).
+// v11 — el SDK estaba con flowType='pkce' (mal config para signInWithPassword).
+// PKCE escribe code_verifier en storage, y al refrescar el SDK trataba de
+// completar un flow OAuth que nunca empezó → sesión invalidada + retry
+// POST /token?grant_type=password con 400 visible en console. Cambiado a
+// flowType='implicit' (default correcto para password). Bump fuerza purga
+// de bundles viejos con PKCE config + limpieza de code_verifier huérfano.
 //
+// v10 — sesión se cerraba al refrescar en modo normal por tokens legacy.
 // v9 — destrabar login: cuelgue infinito por bundle viejo cacheado.
 // v8 — orden por defecto del CRM: fechaIngreso desc (nuevos arriba).
 //
 // Bump esta versión cada vez que se haga un cambio que el cliente necesita
 // recibir SI O SI (cambios de auth, schema, breaking UI, etc.).
-const CACHE_VERSION = 'stratos-v10';
+const CACHE_VERSION = 'stratos-v11';
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 

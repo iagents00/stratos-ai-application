@@ -28,17 +28,20 @@ import ManualCRM       from "./landing/ManualCRM.jsx";
 import "./index.css";
 
 // ─── BOOT GUARD: limpieza de tokens legacy ──────────────────────────────────
-// Versiones anteriores (pre-#43) usaban storageKey custom `stratos.supabase.*`
-// para los tokens de Supabase. El SDK actual usa el default `sb-*`. Si un
-// usuario abrió la app con la versión vieja, tiene tokens huérfanos bajo la
-// key custom que el SDK no reconoce → al refrescar, supabase.auth.getSession()
-// devuelve null → user pierde sesión y vuelve al login.
-// Síntoma típico: "solo me deja en incógnito, en pestaña normal se sale al
-// refrescar". El incógnito no tiene tokens legacy → no sufre el bug.
-// Ejecutamos esto ANTES de createClient para evitar interferir con el SDK.
+// Versiones anteriores guardaban basura en localStorage que rompía sesiones:
+//   1. `stratos.supabase.*` — storageKey custom pre-#43, huérfano del SDK.
+//   2. `sb-<ref>-auth-token-code-verifier` — code_verifier del flow PKCE
+//      que estaba mal configurado (era para OAuth, no para password). Cuando
+//      el SDK encontraba este verifier al refrescar la página, intentaba
+//      completar un flow PKCE que nunca empezó → sesión invalidada →
+//      retry POST /token?grant_type=password con error 400 → usuario fuera.
+// Borrar ambos al boot garantiza arranque limpio. NO toca `sb-<ref>-auth-token`
+// (el token JWT real), que es lo que persiste la sesión.
 try {
   for (const k of Object.keys(localStorage)) {
-    if (/^stratos\.supabase/i.test(k)) localStorage.removeItem(k);
+    if (/^stratos\.supabase/i.test(k))   localStorage.removeItem(k);
+    else if (/-code-verifier$/i.test(k)) localStorage.removeItem(k);
+    else if (/^sb-.*-pkce$/i.test(k))    localStorage.removeItem(k);
   }
 } catch (_) { /* localStorage bloqueado — ignorar */ }
 
