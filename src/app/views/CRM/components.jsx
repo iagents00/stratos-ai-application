@@ -30,6 +30,7 @@ import { parseBudget, formatBudget, buildTelegramSummary, fmtNow, genId } from "
 import { StratosAtom, StratosAtomHex } from "../../components/Logo";
 import { AI_AGENTS, AI_AGENT_LIST } from "../../constants/agents";
 import { stgC } from "../../constants/crm";
+import LeadNotesTimeline from "./LeadNotesTimeline";
 
 /* ─── IAOS Score Engine — calcula el score real de un lead basado en:
    stage (0-35pts), presupuesto (0-25pts), seguimientos (0-15pts),
@@ -3071,7 +3072,13 @@ const NotesModal = ({ lead, onClose, onSave, onUpdate, onSwitchTab, onShowHistor
           {/* 3. NOTAS DEL EXPEDIENTE — textarea siempre editable, auto-save.
               Es la sección estrella: aquí el asesor escribe TODO lo que
               pasó con el cliente (contexto, conversaciones, decisiones).
-              Sin Telegram, sin voz, sin IA. Texto plano y persistente. */}
+              Sin Telegram, sin voz, sin IA. Texto plano y persistente.
+
+              Debajo aparece un CRONOGRAMA de notas individuales (botón
+              "+ Agregar nota") — cada una con fecha y hora. El asesor
+              decide: el textarea es para "todo el contexto narrativo
+              acumulado", las notas separadas son para "anotaciones
+              fechadas tipo registro de interacción". */}
           <div>
             <SectionLabel T={T} icon={FileText}>Notas del expediente</SectionLabel>
             <textarea
@@ -3098,6 +3105,9 @@ const NotesModal = ({ lead, onClose, onSave, onUpdate, onSwitchTab, onShowHistor
               }}
               onFocus={e => { e.currentTarget.style.borderColor = T.borderH; e.currentTarget.style.background = isLight ? "rgba(15,23,42,0.04)" : "rgba(255,255,255,0.045)"; }}
             />
+
+            {/* Cronograma de notas individuales con fecha y hora */}
+            <LeadNotesTimeline lead={lead} T={T} isLight={isLight} />
           </div>
 
           {/* 4. TAREAS — checklist accionable */}
