@@ -21,16 +21,16 @@
  * versión tome control en el siguiente refresh sin requerir interacción.
  */
 
-// v8 — orden por defecto del CRM: fechaIngreso desc (más recientes arriba).
-// Antes el default era "sc desc" (score), lo que hacía caer al fondo a los
-// leads recién registrados con score bajo (5) en cuanto se limpiaba el
-// flag isNew (20s). Ahora los nuevos siempre quedan arriba sin importar
-// su score. Migración silenciosa: usuarios con el viejo default se mueven
-// al nuevo automáticamente; los que tenían un orden custom se respetan.
+// v9 — destrabar login: usuarios reportan cuelgue infinito incluso con la
+// cuenta demo (que no toca red). Eso solo pasa si un SW viejo está sirviendo
+// bundle pre-fixes de auth (#43/#44/#46). Bump fuerza purga total + reload
+// automático vía `clients.claim()` + postMessage('SW_UPDATED').
+//
+// v8 — orden por defecto del CRM: fechaIngreso desc (nuevos arriba).
 //
 // Bump esta versión cada vez que se haga un cambio que el cliente necesita
 // recibir SI O SI (cambios de auth, schema, breaking UI, etc.).
-const CACHE_VERSION = 'stratos-v8';
+const CACHE_VERSION = 'stratos-v9';
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 
