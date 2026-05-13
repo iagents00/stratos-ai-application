@@ -26,14 +26,16 @@
 import { enqueueLeadInsert } from './offline-mode'
 
 const KEY_LEADS_MIRROR     = 'stratos_leads_mirror'
-const LOCAL_MIRROR_LIMIT   = 500
+// Reducido de 500 → 150. Con 200+ leads, JSON.stringify de un array grande
+// bloquea el main thread varios cientos de ms al registrar cada cliente —
+// se percibe como lag en la UI. 150 es buffer suficiente y mantiene la
+// escritura por debajo de ~20ms.
+const LOCAL_MIRROR_LIMIT   = 150
 const SYNCED_TTL_MS        = 7 * 24 * 60 * 60 * 1000 // 7 días
-// 25s: cubre cold-start de Supabase free tier (instancia dormida tarda
-// ~6-10s en despertar) + RTT México→us-west-2 + procesamiento de triggers
-// (audit + normalize_phone + set_org + sync_campaign). El 12s anterior
-// disparaba banner "Sin conexión" en el primer registro tras inactividad
-// aunque la red estuviera perfecta.
-const INSERT_TIMEOUT_MS    = 25000
+// 12s: Supabase paid plan no tiene cold-start, así que el INSERT real toma
+// ~500ms-2s con los 5 triggers. 12s deja margen amplio para redes lentas
+// pero no deja al usuario con spinner eterno si algo falla.
+const INSERT_TIMEOUT_MS    = 12000
 
 // ── UUID ──
 function newId() {
@@ -86,7 +88,17 @@ function writeMirror(arr) {
 function appendToMirror(entry) {
   const arr = readMirror()
   arr.push(entry)
-  writeMirror(arr)
+  // Defer writeMirror — JSON.stringify + localStorage.setItem sobre 100+
+  // entries puede tardar 50-200ms y se siente como lag al hacer click en
+  // "Registrar". El espejo no necesita persistirse SÍNCRONO: si el browser
+  // se cierra antes del setTimeout, el lead ya está en cola Supabase. Si
+  // requestIdleCallback existe, lo usamos (mejor); si no, setTimeout(0).
+  const flush = () => writeMirror(arr)
+  if (typeof requestIdleCallback === 'function') {
+    requestIdleCallback(flush, { timeout: 1000 })
+  } else {
+    setTimeout(flush, 0)
+  }
 }
 
 function markMirrorSynced(localId, realId) {

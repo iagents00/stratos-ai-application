@@ -21,20 +21,19 @@
  * versión tome control en el siguiente refresh sin requerir interacción.
  */
 
-// v11 — el SDK estaba con flowType='pkce' (mal config para signInWithPassword).
-// PKCE escribe code_verifier en storage, y al refrescar el SDK trataba de
-// completar un flow OAuth que nunca empezó → sesión invalidada + retry
-// POST /token?grant_type=password con 400 visible en console. Cambiado a
-// flowType='implicit' (default correcto para password). Bump fuerza purga
-// de bundles viejos con PKCE config + limpieza de code_verifier huérfano.
+// v12 — supabase.auth.getSession() se colgaba >25s al refrescar porque el
+// SDK intentaba auto-refresh interno sin timeout. Eso bloqueaba el lock
+// del SDK → cualquier signInWithPassword posterior quedaba en
+// "Conectando con el servidor..." indefinido. Fix: timeout 3.5s a
+// getSession + fallback a caché 24h. Además hidratación timer baja a 12s
+// (era 25s) porque ya no hay razón para esperar tanto. También: lentitud
+// al registrar leads — appendToMirror ahora defer con requestIdleCallback.
 //
-// v10 — sesión se cerraba al refrescar en modo normal por tokens legacy.
+// v11 — flowType pkce → implicit.
+// v10 — limpieza de tokens legacy stratos.supabase.*.
 // v9 — destrabar login: cuelgue infinito por bundle viejo cacheado.
 // v8 — orden por defecto del CRM: fechaIngreso desc (nuevos arriba).
-//
-// Bump esta versión cada vez que se haga un cambio que el cliente necesita
-// recibir SI O SI (cambios de auth, schema, breaking UI, etc.).
-const CACHE_VERSION = 'stratos-v11';
+const CACHE_VERSION = 'stratos-v12';
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 
