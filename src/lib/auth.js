@@ -3,12 +3,20 @@
  * Misma interfaz { data, error } que antes.
  * Todas las funciones capturan errores de red y los devuelven de forma limpia.
  *
- * RESILIENCIA:
- *  · Toda llamada a Supabase tiene timeout de 8 segundos (TIMEOUT_MS).
- *    Si el servicio está caído o lento, devolvemos error claro en lugar
- *    de quedarnos cargando para siempre.
- *  · La sesión y los leads se cachean en localStorage 24h (CACHE_TTL_MS)
- *    para que un incidente de Supabase no tire la app completa.
+ * ⚠️  ZONA CRÍTICA — NO TOCAR sin leer CLAUDE.md → "ZONA CRÍTICA — CONFIG DE
+ *     AUTH ESTABLE". Estos timeouts se calibraron para resolver el cuelgue
+ *     del SDK que causaba "se sale al F5 y queda en Conectando..." en TODOS
+ *     los navegadores. Cambiarlos puede regresar el bug.
+ *
+ * RESILIENCIA (valores calibrados Mayo 2026, SW v12):
+ *  · GETSESSION_TIMEOUT = 3.5s — supabase.auth.getSession() puede colgarse
+ *    >25s sin esto (auto-refresh interno + lock del SDK bloquea TODO el flujo).
+ *  · PROFILE_TIMEOUT = 5s — query SELECT profiles tras getSession.
+ *  · AUTH_TIMEOUT_MS = 20s — signInWithPassword (tolerar redes lentas).
+ *  · TIMEOUT_MS = 8s — queries normales.
+ *  · CACHE_TTL_MS = 24h — sesión cacheada localmente. Si getSession/profile
+ *    fallan o tardan, fallback a esta caché (_fromCache: true) en lugar de
+ *    tirar al user al LoginScreen.
  */
 import { supabase } from './supabase'
 import { logAuthEvent } from './audit'
