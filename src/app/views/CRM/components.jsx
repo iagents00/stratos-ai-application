@@ -2916,7 +2916,13 @@ const NotesModal = ({ lead, onClose, onSave, onUpdate, onSwitchTab, onShowHistor
                   fontFamily: font, fontWeight: 500,
                   overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
                 }}>
-                  <InlineEdit value={lead.asesor} onSave={v => onUpdate?.({...lead, asesor: v})} T={T} isLight={isLight} placeholder="Asesor" emptyText="Sin asesor" />
+                  {/* Reasignar asesor: solo super_admin/admin y Gael G pueden editarlo.
+                      Otros usuarios ven el nombre como texto plano (no editable). */}
+                  {canReassign ? (
+                    <InlineEdit value={lead.asesor} onSave={v => onUpdate?.({...lead, asesor: v})} T={T} isLight={isLight} placeholder="Asesor" emptyText="Sin asesor" />
+                  ) : (
+                    <span>{lead.asesor || "Sin asesor"}</span>
+                  )}
                   {lead.budget || lead.presupuesto ? <>{" · "}
                     <InlineEdit
                       value={lead.budget}
@@ -3153,7 +3159,7 @@ const COACHING_MOCKS = [
   },
 ];
 
-const LeadPanel = ({ lead, onClose, oc, onUpdate, onSwitchTab, onShowHistory, onDelete, T = P }) => {
+const LeadPanel = ({ lead, onClose, oc, onUpdate, onSwitchTab, onShowHistory, onDelete, canReassign = false, asesoresMaster = [], T = P }) => {
   const isMobile = useIsMobile();
   const [activeTab, setActiveTab] = useState("perfil");
   const [editing, setEditing] = useState(false);
