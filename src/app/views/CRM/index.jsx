@@ -894,7 +894,17 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
         await saveLead(supabase, payload, user, { skipCloud: isDemo });
       if (!savedToCloud) {
         if (queuedForRetry) {
-          showToast(`Sin conexión: el cliente "${draft.n.trim()}" se sincronizará automáticamente cuando vuelva la red.`);
+          // Timeout = el INSERT probablemente sí pasó pero la respuesta
+          // tardó (cold-start de Supabase, red lenta). Mensaje calmado,
+          // sin "Sin conexión". Otros errores (RLS, validación) sí
+          // disparan el banner alarmante porque la red real está caída
+          // o hay un problema de permisos.
+          const isTimeout = typeof saveErr === "string" && saveErr.startsWith("Tiempo de espera");
+          if (isTimeout) {
+            showToast(`Guardando "${draft.n.trim()}"… terminamos en segundos.`);
+          } else {
+            showToast(`Sin conexión: el cliente "${draft.n.trim()}" se sincronizará automáticamente cuando vuelva la red.`);
+          }
         } else if (saveErr && !isDemo) {
           showToast(`Aviso al guardar "${draft.n.trim()}": ${saveErr}`);
         }
