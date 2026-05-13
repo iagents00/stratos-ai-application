@@ -122,7 +122,7 @@ const { user, login, logout, loading, error } = useAuth();
 
 ```
 Email:      demo@stratos.ai
-Password:   Demo2024
+Password:   demo2027
 ```
 
 Se crea automáticamente en `AuthContext` al iniciar la app si no existe.
