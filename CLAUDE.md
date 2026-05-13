@@ -329,6 +329,42 @@ Esta config se logró después de **MUCHAS** iteraciones para resolver:
 
 ---
 
+## ⚠️ ZONA CRÍTICA — PERFORMANCE ESTABLE (SW v12, Mayo 2026)
+
+Tras la auditoría de performance y los fixes del [PR #54](https://github.com/iagents00/stratos-ai-application/pull/54), la app va **fluida en cualquier PC** (verificado por el cliente: *"está super veloz"*). Esta es la versión más óptima a la fecha — **NO la rompas sin necesidad**.
+
+### Valores que NO se deben cambiar
+
+| Archivo | Línea aprox. | Patrón | Razón |
+|---|---|---|---|
+| `src/app/App.jsx` | `useEffect` del `visibilitychange` | **Función nombrada** `onVisibilityChange` + `removeEventListener` en cleanup | Antes era función anónima inline y el cleanup solo removía `focus`. Cada re-render acumulaba un listener huérfano → 100+ listeners en 5 min → mouse stutters. **Si vuelves a poner función anónima, regresa el bug.** |
+| `src/contexts/AuthContext.jsx` | `value` del `AuthContext.Provider` | **`useMemo`** con deps explícitas | Sin `useMemo`, el objeto `value` se crea nuevo en cada render → React.Context dispara re-render de TODOS los consumers (App, CRM, Dash, Sidebar, KPIs). Era una cascada masiva. **No quitar el useMemo ni dejar deps vacías.** |
+| `src/main.jsx` | Boot guard | Limpieza síncrona de `stratos.supabase.*`, `*-code-verifier`, `sb-*-pkce*` | Mantiene navegadores libres de basura legacy. NO tocar `sb-<projectref>-auth-token`. |
+| `public/sw.js` | `CACHE_VERSION` | Bumpear cuando se cambia auth/schema/perf crítico | Sin bump, navegadores con SW viejo siguen sirviendo bundle pre-fix. |
+
+### Reglas generales de performance que ya están aplicadas
+
+1. **`useEffect` con event listeners**: SIEMPRE extraer el handler como función nombrada y removerlo en cleanup.
+2. **`Context.Provider value`**: SIEMPRE envolver en `useMemo` cuando el árbol consumidor es grande.
+3. **`useCallback` en callbacks expuestas**: SIEMPRE que se pasen como prop o se incluyan en `value` de un Context.
+4. **`setInterval` que dispara `setState`**: SIEMPRE limpiar con `clearInterval` en cleanup + considerar pausar cuando `document.hidden`.
+5. **Realtime subscriptions** (`supabase.channel`): SIEMPRE hacer `supabase.removeChannel(ch)` en cleanup del `useEffect`.
+
+### Optimizaciones futuras pendientes (orden recomendado, no urgente)
+
+Si en algún momento la app vuelve a sentirse lenta tras agregar features:
+
+1. **Pausar polling de 5s cuando `document.hidden`** — `App.jsx:376` (10 min, cero riesgo).
+2. **Debounce 200ms al input de búsqueda del CRM** — `CRM/index.jsx` (10 min, cero riesgo).
+3. **Memoizar `<G>`, `<KPI>`, `<Pill>` con `React.memo`** — `SharedComponents.jsx` (15 min, cero riesgo).
+4. **Reemplazar animaciones de `box-shadow` por `opacity` en `priorityBreathe` y `stratosNewLeadPulse`** — `App.css:164-185` (30 min, bajo riesgo visual).
+5. **Reducir `backdrop-filter: blur(32px)` → `blur(16px)` en `GlassCard`** — `primitives.jsx:46` (10 min, casi imperceptible).
+6. **Virtualizar lista de leads con `react-window`** — `CRM/index.jsx:2747` (2-3 horas, requiere testing del realtime).
+
+**NUNCA hagas estas optimizaciones sin haber identificado un problema concreto.** El estado actual ya es fluido en PC normal.
+
+---
+
 ## Contacto del Proyecto
 
 - **Cliente**: Ivan Rodriguez Ruelas
@@ -337,4 +373,4 @@ Esta config se logró después de **MUCHAS** iteraciones para resolver:
 
 ---
 
-*Última actualización: Mayo 2026 — SW v12, auth flow estabilizado*
+*Última actualización: Mayo 2026 — SW v12, auth flow estabilizado + performance optimizado (PR #54).*
