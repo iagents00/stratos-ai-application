@@ -8,7 +8,7 @@
  *  · Para evitar que eventos de Supabase o la hidratación inicial sobreescriban
  *    al usuario demo, usamos el ref `loginSettledRef` como barrera de una sola vez.
  */
-import { createContext, useContext, useState, useEffect, useCallback, useRef } from "react";
+import { createContext, useContext, useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { supabase } from "../lib/supabase";
 import {
   signIn,
@@ -230,13 +230,18 @@ export function AuthProvider({ children }) {
     setUser(profile);  // sin _offline → vuelve al modo normal
   }, []);
 
-  const value = {
+  // FIX (perf): sin useMemo, cada render del AuthProvider creaba un nuevo
+  // objeto `value` → React.Context dispara re-render de TODOS los consumers
+  // que usan useAuth() (App.jsx, CRM, Dash, Sidebar, etc.). Como user es
+  // estable durante una sesión y todas las callbacks ya tienen useCallback,
+  // el objeto memoizado cambia solo cuando realmente cambia algo relevante.
+  const value = useMemo(() => ({
     user, loading, error,
     isAuthenticated: !!user,
     login, register, logout, resetPassword, clearError,
     hasRole, hasMinRole,
     upgradeToOnline,
-  };
+  }), [user, loading, error, login, register, logout, resetPassword, clearError, hasRole, hasMinRole, upgradeToOnline]);
 
   return (
     <AuthContext.Provider value={value}>
