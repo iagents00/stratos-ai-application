@@ -278,6 +278,57 @@ VITE_SUPABASE_ANON_KEY=    # Anon key de Supabase
 
 ---
 
+## ⚠️ ZONA CRÍTICA — CONFIG DE AUTH ESTABLE (SW v12, Mayo 2026)
+
+Esta config se logró después de **MUCHAS** iteraciones para resolver:
+- "Se sale al F5 y no puedo re-loguear, queda en Conectando con el servidor…"
+- "Lento al registrar cliente"
+- "Sale 'Sin conexión' aunque mi internet está bien"
+
+**Estado actual estable**: F5 muestra LoginScreen brevemente (~2s) y restaura sesión desde caché 24h sin requerir login. Funciona en Chrome, Brave, Safari, Edge. Sin POST 400 automáticos a `/auth/v1/token`.
+
+### Valores que NO se deben cambiar sin entender el porqué
+
+| Archivo | Línea aprox. | Config | Razón |
+|---|---|---|---|
+| `src/lib/supabase.js` | `flowType` | **`'implicit'`** — NO `'pkce'` | PKCE es para OAuth (Google/GitHub/Magic Links). Con `signInWithPassword` rompe la sesión: escribe `code_verifier` extra y al F5 el SDK intenta completar un OAuth callback que nunca existió → invalida sesión + retry POST 400 |
+| `src/lib/supabase.js` | `FALLBACK_URL` / `FALLBACK_KEY` | hardcoded | Vercel no tiene `VITE_SUPABASE_URL` configurado; sin fallback el bundle apunta a `placeholder.supabase.co` → DNS fail → login se cuelga |
+| `src/lib/auth.js` | `GETSESSION_TIMEOUT = 3500` | 3.5s con fallback a caché | `supabase.auth.getSession()` puede colgarse >25s por auto-refresh interno → bloquea el **lock del SDK** → `signInWithPassword` posterior queda en "Conectando…". Si subes este timeout vuelve el bug |
+| `src/lib/auth.js` | `PROFILE_TIMEOUT = 5000` | 5s | Igual razón. Antes era 30s y bloqueaba |
+| `src/contexts/AuthContext.jsx` | `HYDRATION_TIMEOUT_MS = 12000` | 12s, **SUAVE** (no destructivo) | Si tarda, muestra login pero **NO** llama signOut ni clearLocalAuthState — eso destruía sesiones legítimas |
+| `src/contexts/AuthContext.jsx` | `onAuthStateChange` listener | Limpia storage **SOLO** en `SIGNED_OUT` o `USER_DELETED` | Versiones anteriores limpiaban en cualquier evento sin sesión → mataba sesiones durante `TOKEN_REFRESHED` transitorios |
+| `src/main.jsx` | boot guard que limpia keys | Borra `stratos.supabase.*`, `*-code-verifier`, `sb-*-pkce*` | Restos de versiones viejas con PKCE/storageKey custom. **NO** tocar `sb-<projectref>-auth-token` (es la sesión real) |
+| `src/lib/lead-save.js` | `LOCAL_MIRROR_LIMIT = 150` | 150, no 500 | `JSON.stringify` de >500 entries bloquea main thread 50-200ms al registrar lead |
+| `src/lib/lead-save.js` | `appendToMirror` con `requestIdleCallback` | Defer, no síncrono | Hace que el registro de lead se sienta instantáneo |
+| `src/lib/lead-save.js` | `INSERT_TIMEOUT_MS = 12000` | 12s | Supabase paid plan no tiene cold-start; 25s era exagerado |
+| `public/sw.js` | `CACHE_VERSION` | bump cada vez que cambies auth/schema | Sin bump, navegadores con SW viejo siguen sirviendo bundle pre-fix |
+
+### Cómo se logró cada parte (debugging history)
+
+1. **Login real fallaba**: env vars `VITE_SUPABASE_URL` faltantes en Vercel → bundle con `placeholder.supabase.co`. Fix: hardcoded fallback en `supabase.js`.
+2. **F5 cerraba sesión + "Conectando…" colgado**: `flowType: 'pkce'` rompía `signInWithPassword`. Fix: cambiar a `'implicit'` + limpiar `*-code-verifier` legacy.
+3. **F5 mostraba "Hidratación tardando >25s"**: `supabase.auth.getSession()` se colgaba esperando auto-refresh interno. Fix: timeout 3.5s + fallback a caché 24h.
+4. **Lentitud al registrar lead**: `writeMirror` síncrono con `JSON.stringify` de 500 entries. Fix: `requestIdleCallback` + límite 150.
+
+### Si trabajas en auth: TEST OBLIGATORIO antes de mergear
+
+1. Login con cuenta real (no demo) en pestaña **normal** (no incógnito) de Chrome.
+2. F5 al menos 3 veces seguidas → debe restaurar sesión en <5s sin pedir login.
+3. Cerrar y reabrir pestaña → sesión debe persistir.
+4. Registrar 3 leads seguidos → UI debe responder al instante.
+5. Console **no debe** tener:
+   - "Hidratación tardando >25s"
+   - POST 400 a `/auth/v1/token?grant_type=password` automático
+   - Error de `code_verifier`
+
+### Referencia rápida
+
+- PRs relevantes: [#48](https://github.com/iagents00/stratos-ai-application/pull/48), [#49](https://github.com/iagents00/stratos-ai-application/pull/49), [#50](https://github.com/iagents00/stratos-ai-application/pull/50), [#51](https://github.com/iagents00/stratos-ai-application/pull/51).
+- SW estable: `stratos-v12`.
+- Proyecto Supabase: `glulgyhkrqpykxmujodb` (Stratos Capital Group).
+
+---
+
 ## Contacto del Proyecto
 
 - **Cliente**: Ivan Rodriguez Ruelas
@@ -286,4 +337,4 @@ VITE_SUPABASE_ANON_KEY=    # Anon key de Supabase
 
 ---
 
-*Última actualización: Abril 2026*
+*Última actualización: Mayo 2026 — SW v12, auth flow estabilizado*

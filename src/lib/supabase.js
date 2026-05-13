@@ -1,5 +1,16 @@
 import { createClient } from '@supabase/supabase-js'
 
+/* ═══════════════════════════════════════════════════════════════════════════
+ * ⚠️  ZONA CRÍTICA — NO TOCAR sin leer CLAUDE.md → "ZONA CRÍTICA — CONFIG DE
+ *     AUTH ESTABLE". Esta config se logró tras muchas iteraciones para
+ *     resolver "se sale al F5 y queda en Conectando con el servidor...".
+ *
+ *     Reglas no negociables:
+ *     · flowType DEBE ser 'implicit' (NO 'pkce' — PKCE rompe signInWithPassword)
+ *     · NO sobrescribir storageKey (ya causó pérdida masiva de sesiones)
+ *     · Mantener FALLBACK_URL / FALLBACK_KEY (Vercel no tiene env vars set)
+ * ═══════════════════════════════════════════════════════════════════════════ */
+
 // Fallback al proyecto productivo. El anon key es público por diseño
 // (protegido por RLS server-side). Si Vercel tiene VITE_SUPABASE_URL /
 // VITE_SUPABASE_ANON_KEY configurados, esos ganan; si no, usamos estos
