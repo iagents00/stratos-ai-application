@@ -459,14 +459,23 @@ export default function App() {
   }, [user, runAutoRecovery]);
 
   // Detección agresiva al recuperar foco / visibilidad
+  // FIX (perf): el listener de `visibilitychange` antes era una función
+  // anónima inline y el cleanup NO la removía. Como el effect depende de
+  // `runAutoRecovery` (que cambia con [user, upgradeToOnline, fetchLeads,
+  // isAdminRole]), cada re-render acumulaba un listener huérfano. En 5 min
+  // de uso quedaban 100+ listeners encolados → cada cambio de visibilidad
+  // disparaba 100+ callbacks → main thread bloqueado → mouse stutters.
+  // Ahora la función está nombrada y el cleanup la remueve correctamente.
   useEffect(() => {
     const onWake = () => runAutoRecovery();
-    window.addEventListener("focus", onWake);
-    document.addEventListener("visibilitychange", () => {
+    const onVisibilityChange = () => {
       if (!document.hidden) runAutoRecovery();
-    });
+    };
+    window.addEventListener("focus", onWake);
+    document.addEventListener("visibilitychange", onVisibilityChange);
     return () => {
       window.removeEventListener("focus", onWake);
+      document.removeEventListener("visibilitychange", onVisibilityChange);
     };
   }, [runAutoRecovery]);
 
