@@ -2731,7 +2731,7 @@ const SectionLabel = ({ icon: Icon, children, T = P }) => (
   </p>
 );
 
-const NotesModal = ({ lead, onClose, onSave, onUpdate, onSwitchTab, onShowHistory, onDelete, T = P }) => {
+const NotesModal = ({ lead, onClose, onSave, onUpdate, onSwitchTab, onShowHistory, onDelete, canReassign = false, T = P }) => {
   const isMobile = useIsMobile();
   const [confirmDelete, setConfirmDelete] = useState(false);
 
