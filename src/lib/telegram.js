@@ -67,6 +67,30 @@ export async function requestPairingCode() {
 }
 
 /**
+ * Devuelve las últimas N interacciones (humano + bot) del chat actual del
+ * asesor con el bot de Telegram. Útil para que el asesor revise lo que
+ * pidió y cómo respondió el bot, sin abrir Telegram.
+ *
+ * La RPC corre con SECURITY DEFINER y filtra internamente por el
+ * telegram_chat_id del perfil autenticado, así que cada usuario solo ve
+ * su propio historial.
+ *
+ * @param {number} limit  máximo de mensajes a devolver (default 20, máx 100)
+ * @returns {Promise<{ messages: Array<{id:number, occurred_at:string, role:string, content:string}>, error: string|null }>}
+ */
+export async function getRecentBotActivity(limit = 20) {
+  try {
+    const { data, error } = await supabase.rpc('get_my_telegram_activity', {
+      p_limit: limit,
+    })
+    if (error) return { messages: [], error: error.message }
+    return { messages: Array.isArray(data) ? data : [], error: null }
+  } catch (e) {
+    return { messages: [], error: e?.message || 'Error de conexión' }
+  }
+}
+
+/**
  * Desempareja el Telegram del perfil. El bot dejará de reconocer al usuario.
  * Útil si el asesor cambia de teléfono o quiere bloquear el acceso del bot.
  *
