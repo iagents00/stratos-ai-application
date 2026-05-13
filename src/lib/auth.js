@@ -29,8 +29,10 @@ import {
 // tardar 20-30s en recibir la respuesta aunque el servidor responda en
 // <500ms. Los logs de Supabase confirmaron que auth se completa siempre,
 // pero el cliente cortaba a los 18s pensando que había timeout.
-const TIMEOUT_MS      = 30000              // queries normales (read profile, leads)
-const AUTH_TIMEOUT_MS = 60000              // signInWithPassword: tolerar redes lentas
+const TIMEOUT_MS         = 8000              // queries normales (read profile, leads)
+const AUTH_TIMEOUT_MS    = 20000              // signInWithPassword: tolerar redes lentas
+const GETSESSION_TIMEOUT = 3500               // supabase.auth.getSession() — solo lee storage + posible refresh interno
+const PROFILE_TIMEOUT    = 5000               // SELECT profiles.* tras getSession
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000   // 24 horas — sesión cacheada localmente
 const SESSION_CACHE_KEY = 'stratos_session_cache'
 
@@ -259,15 +261,37 @@ export async function getStoredSession() {
   if (offlineSession) return offlineSession
 
   try {
-    // getSession() lee de localStorage (no toca red) → no le ponemos timeout
-    const { data: { session } } = await supabase.auth.getSession()
+    // CRITICAL: getSession() puede colgarse si el SDK trata de hacer auto-refresh
+    // del access_token y el endpoint refresh tarda. Sin timeout, queda esperando
+    // y bloquea TODO el lock interno del SDK → ningún signInWithPassword posterior
+    // puede progresar ("Conectando con el servidor..." indefinido).
+    // 3.5s es suficiente para una lectura de localStorage + refresh exitoso;
+    // si tarda más, asumimos refresh atascado y caemos a la caché de 24h.
+    let session = null
+    try {
+      const result = await withTimeout(
+        supabase.auth.getSession(),
+        GETSESSION_TIMEOUT,
+        'getSession',
+      )
+      session = result?.data?.session ?? null
+    } catch (e) {
+      if (isTimeoutError(e)) {
+        console.warn('[Stratos] getSession atascado >3.5s — uso caché local')
+        const cached = readSessionCache()
+        if (cached) return { ...cached, _fromCache: true }
+        return null
+      }
+      throw e
+    }
+
     if (!session) {
       // Sin sesión activa de Supabase → limpiar caché vieja
       clearSessionCache()
       return null
     }
 
-    // Query del perfil CON timeout — si Supabase está lento, usamos caché
+    // Query del perfil con timeout corto (5s). Si tarda más, usar caché.
     let profile
     try {
       const result = await withTimeout(
@@ -276,7 +300,7 @@ export async function getStoredSession() {
           .select('id, name, role, phone, active, organization_id, view_all_leads, crm_prefs')
           .eq('id', session.user.id)
           .single(),
-        TIMEOUT_MS,
+        PROFILE_TIMEOUT,
         'profile',
       )
       profile = result.data
@@ -285,7 +309,7 @@ export async function getStoredSession() {
         // Supabase no respondió a tiempo — usar caché local si está vigente
         const cached = readSessionCache()
         if (cached && cached.id === session.user.id) {
-          console.warn('[Stratos] Supabase lento, usando caché local de sesión')
+          console.warn('[Stratos] Profile query lento, uso caché local')
           return { ...cached, _fromCache: true }
         }
       }
