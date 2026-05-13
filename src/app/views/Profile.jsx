@@ -16,8 +16,8 @@
  * Lib:       src/lib/telegram.js
  * Workflow:  n8n/workflows/stratos-telegram-bot-v3-asesor.json
  */
-import { useState, useEffect, useRef } from "react";
-import { Send, Check, X, ExternalLink } from "lucide-react";
+import { useState, useEffect, useRef, useCallback } from "react";
+import { Send, Check, X, ExternalLink, MessageCircle, RefreshCw, User, Bot } from "lucide-react";
 import { P, font, fontDisp } from "../../design-system/tokens";
 import { G, Pill } from "../SharedComponents";
 import { useAuth } from "../../hooks/useAuth";
@@ -25,6 +25,7 @@ import {
   getPairingStatus,
   requestPairingCode,
   unpairTelegram,
+  getRecentBotActivity,
 } from "../../lib/telegram";
 
 const ROLE_LABEL = {
@@ -67,6 +68,7 @@ export default function Profile() {
       </div>
 
       <ConnectTelegramPanel />
+      <RecentBotActivity />
     </div>
   );
 }
@@ -352,6 +354,171 @@ function PairedView({ pairedAt, onUnpair, unpairing }) {
           <X size={12} />
           {unpairing ? "Desconectando…" : "Desconectar"}
         </button>
+      </div>
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────────────────────────────────── */
+/*  Últimas acciones desde Telegram                                         */
+/* ─────────────────────────────────────────────────────────────────────── */
+
+function RecentBotActivity() {
+  const [messages, setMessages] = useState([]);
+  const [loading, setLoading]   = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [paired, setPaired]     = useState(null); // null = unknown, true/false
+
+  const load = useCallback(async (showSpinner = true) => {
+    if (showSpinner) setRefreshing(true);
+    const r = await getRecentBotActivity(20);
+    setMessages(r.messages || []);
+    setLoading(false);
+    setRefreshing(false);
+  }, []);
+
+  // Verificar pareo antes de mostrar nada
+  useEffect(() => {
+    let mounted = true;
+    getPairingStatus().then((r) => {
+      if (!mounted) return;
+      setPaired(r.paired);
+      if (r.paired) load(false);
+      else setLoading(false);
+    });
+    return () => { mounted = false; };
+  }, [load]);
+
+  // Si no está paireado, no mostramos esta sección (no tiene sentido)
+  if (paired === false) return null;
+  if (paired === null || loading) {
+    return (
+      <G style={{ padding: 20, marginTop: 20 }}>
+        <div style={{ fontSize: 12, color: P.txt3 }}>Cargando actividad…</div>
+      </G>
+    );
+  }
+
+  return (
+    <G style={{ padding: 24, marginTop: 20 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 18 }}>
+        <div style={{
+          width: 40, height: 40, borderRadius: 12,
+          background: "rgba(168,85,247,0.10)", border: "1px solid rgba(168,85,247,0.24)",
+          display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+        }}>
+          <MessageCircle size={18} color="#C084FC" strokeWidth={1.8} />
+        </div>
+        <div style={{ minWidth: 0, flex: 1 }}>
+          <h2 style={{
+            margin: "0 0 2px",
+            fontSize: 17, fontWeight: 600, letterSpacing: "-0.01em",
+            color: P.txt, fontFamily: fontDisp,
+          }}>
+            Últimas acciones desde Telegram
+          </h2>
+          <p style={{ margin: 0, fontSize: 12, color: P.txt2 }}>
+            Tu historial reciente con el bot (mostrando últimos 20).
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={() => load(true)}
+          disabled={refreshing}
+          title="Refrescar"
+          style={{
+            display: "inline-flex", alignItems: "center", justifyContent: "center",
+            width: 34, height: 34, borderRadius: 10,
+            background: "rgba(255,255,255,0.04)", border: `1px solid ${P.border}`,
+            color: P.txt2,
+            cursor: refreshing ? "default" : "pointer",
+            transition: "all 0.18s",
+          }}
+          onMouseEnter={(e) => !refreshing && (e.currentTarget.style.background = "rgba(255,255,255,0.08)")}
+          onMouseLeave={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.04)")}
+        >
+          <RefreshCw size={14} strokeWidth={2} style={refreshing ? { animation: "spin 0.9s linear infinite" } : undefined} />
+        </button>
+      </div>
+
+      {messages.length === 0 ? (
+        <div style={{
+          padding: "24px 18px",
+          textAlign: "center",
+          background: "rgba(255,255,255,0.02)", border: `1px dashed ${P.border}`,
+          borderRadius: 12,
+          fontSize: 13, color: P.txt3,
+        }}>
+          Sin actividad reciente. Manda un mensaje al bot para verlo aquí.
+        </div>
+      ) : (
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          {messages.map((m) => (
+            <BotMessageRow key={m.id} msg={m} />
+          ))}
+        </div>
+      )}
+
+      <style>{`
+        @keyframes spin {
+          from { transform: rotate(0deg); }
+          to   { transform: rotate(360deg); }
+        }
+      `}</style>
+    </G>
+  );
+}
+
+function BotMessageRow({ msg }) {
+  const isAi = msg.role === "ai";
+  const time = msg.occurred_at
+    ? new Date(msg.occurred_at).toLocaleString("es-MX", {
+        day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit",
+      })
+    : "";
+
+  // Limita el preview a algo razonable y respeta saltos de línea
+  const content = (msg.content || "").trim();
+  const isLong  = content.length > 280;
+  const preview = isLong ? content.slice(0, 280) + "…" : content;
+
+  return (
+    <div style={{
+      display: "flex", gap: 10, alignItems: "flex-start",
+      padding: "10px 12px",
+      background: isAi ? "rgba(110,231,194,0.05)" : "rgba(168,85,247,0.05)",
+      border: `1px solid ${isAi ? "rgba(110,231,194,0.16)" : "rgba(168,85,247,0.16)"}`,
+      borderRadius: 10,
+    }}>
+      <div style={{
+        width: 26, height: 26, borderRadius: 8, flexShrink: 0,
+        background: isAi ? "rgba(110,231,194,0.12)" : "rgba(168,85,247,0.12)",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        color: isAi ? P.accent : "#C084FC",
+      }}>
+        {isAi ? <Bot size={13} strokeWidth={2} /> : <User size={13} strokeWidth={2} />}
+      </div>
+      <div style={{ minWidth: 0, flex: 1 }}>
+        <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 4 }}>
+          <span style={{
+            fontSize: 11, fontWeight: 700, letterSpacing: "0.04em",
+            textTransform: "uppercase", fontFamily: fontDisp,
+            color: isAi ? P.accent : "#C084FC",
+          }}>
+            {isAi ? "Bot" : "Tú"}
+          </span>
+          {time && (
+            <span style={{ fontSize: 11, color: P.txt3 }}>{time}</span>
+          )}
+        </div>
+        <pre style={{
+          margin: 0,
+          fontSize: 12.5, lineHeight: 1.5,
+          color: P.txt, fontFamily: font,
+          whiteSpace: "pre-wrap", wordBreak: "break-word",
+        }}>
+          {preview || "(mensaje vacío)"}
+        </pre>
       </div>
     </div>
   );
