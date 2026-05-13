@@ -3903,6 +3903,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
         onClose={() => setNotesLead(null)}
         onSave={saveNotes}
         onUpdate={(u) => { updateLead(u); if (notesLead && u.id === notesLead.id) setNotesLead(u); }}
+        canReassign={canReassign}
         onSwitchTab={(tab) => openDrawerTab(tab, notesLead)}
         onShowHistory={() => setHistoryLead(notesLead)}
         onShowSuggest={() => setSuggestLead(notesLead)}
