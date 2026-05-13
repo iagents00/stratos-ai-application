@@ -932,14 +932,31 @@ export default function App() {
                   </div>
                 </button>
                 {hDiv}
-                <div style={{ display:"flex", alignItems:"center", gap:8, padding:"0 8px 0 3px", height:32, borderRadius:8, cursor:"default", transition:"background 0.14s", flexShrink:0 }}
-                  onMouseEnter={e => { e.currentTarget.style.background = iBtnHoverBg; }}
-                  onMouseLeave={e => { e.currentTarget.style.background = "transparent"; }}
+                {/* Área del usuario — clickeable para abrir Perfil.
+                    Es la entrada principal a Perfil para asesores (que no tienen
+                    acceso al botón System / Gestión de Usuarios). */}
+                <button type="button"
+                  onClick={() => setV("perfil")}
+                  title="Mi perfil — conectar Telegram"
+                  aria-current={v === "perfil" ? "page" : undefined}
+                  style={{
+                    display:"flex", alignItems:"center", gap:8, padding:"0 8px 0 3px",
+                    height:32, borderRadius:8, cursor:"pointer", transition:"background 0.14s",
+                    flexShrink:0, border:"none",
+                    background: v === "perfil"
+                      ? (isLight ? `${T.accent}1A` : "rgba(110,231,194,0.10)")
+                      : "transparent",
+                    fontFamily: font,
+                  }}
+                  onMouseEnter={e => { if (v !== "perfil") e.currentTarget.style.background = iBtnHoverBg; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = v === "perfil"
+                    ? (isLight ? `${T.accent}1A` : "rgba(110,231,194,0.10)")
+                    : "transparent"; }}
                 >
                   <div style={{ width:26, height:26, borderRadius:"50%", flexShrink:0, background: isLight ? `linear-gradient(135deg, ${T.accent} 0%, #10B48A 100%)` : `linear-gradient(145deg, rgba(110,231,194,0.28) 0%, rgba(52,211,153,0.12) 100%)`, border: isLight ? "1.5px solid rgba(255,255,255,0.30)" : `1.5px solid rgba(110,231,194,0.24)`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:10.5, fontWeight:800, fontFamily:fontDisp, color: isLight ? "#FFFFFF" : T.accent, boxShadow: isLight ? `0 2px 8px ${T.accent}45` : `inset 0 1px 0 rgba(110,231,194,0.22)` }}>
                     {user?.name?.charAt(0).toUpperCase() || "U"}
                   </div>
-                  <div style={{ display:"flex", flexDirection:"column" }}>
+                  <div style={{ display:"flex", flexDirection:"column", alignItems:"flex-start" }}>
                     <span style={{ fontSize:11.5, fontWeight:700, fontFamily:fontDisp, letterSpacing:"-0.01em", lineHeight:1.2, color: isLight ? T.txt : "rgba(255,255,255,0.82)", whiteSpace:"nowrap" }}>
                       {user?.name?.split(" ")[0] || "Usuario"}
                     </span>
@@ -947,7 +964,7 @@ export default function App() {
                       {user?.isDemo ? "Demo" : (user?.role || "Miembro")}
                     </span>
                   </div>
-                </div>
+                </button>
                 {hDiv}
                 <button onClick={onLogout} title="Cerrar sesión" style={iBtnBase}
                   onMouseEnter={e => { e.currentTarget.style.background = isLight ? "rgba(225,29,72,0.07)" : "rgba(239,68,68,0.10)"; }}
