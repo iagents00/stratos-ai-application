@@ -47,11 +47,13 @@
 // v13 — alta detecta duplicados (RPC find_lead_duplicate) y avisa quién
 //       tiene al cliente antes de registrar.
 // v12 — performance: removeEventListener cleanup + useMemo AuthContext.
+// v18 — triple-redundancia de leads (IDB + LS + RPC + dead-letter) +
+//        autosave de draft + chip de teléfono inline + HOT como dot.
 // v11 — flowType pkce → implicit.
 // v10 — limpieza de tokens legacy stratos.supabase.*.
 // v9 — destrabar login: cuelgue infinito por bundle viejo cacheado.
 // v8 — orden por defecto del CRM: fechaIngreso desc (nuevos arriba).
-const CACHE_VERSION = 'stratos-v17';
+const CACHE_VERSION = 'stratos-v18';
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 

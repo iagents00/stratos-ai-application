@@ -218,12 +218,17 @@ export function updateOfflineLead(leadId, changes, currentUser) {
 // ── Inserción pendiente de un lead nuevo (cuando Supabase falla) ──
 // Encola un payload completo para reintentar la inserción más tarde.
 // Se procesa en `syncToSupabase` con type='lead_insert'.
-export function enqueueLeadInsert(payload, currentUser) {
+//
+// opts.localId → id del entry en lead-storage para poder marcarlo como
+//   fallado (incrementa fail_count, mueve a dead letter en threshold).
+export function enqueueLeadInsert(payload, currentUser, opts = {}) {
   enqueueSync({
-    type:     'lead_insert',
+    type:      'lead_insert',
     payload,
-    user_id:  currentUser?.id,
+    user_id:   currentUser?.id,
+    local_id:  opts.localId || null,
     queued_at: Date.now(),
+    fail_count: 0,
   })
 }
 
@@ -265,52 +270,85 @@ export function discardPendingSync() {
 
 /**
  * syncToSupabase(supabase) → procesa la cola contra el cliente de Supabase real.
- * Devuelve { ok, synced, failed, error }.
+ * Devuelve { ok, synced, failed, dead, error }.
+ *
+ * Items con fail_count >= QUEUE_FAIL_THRESHOLD se mueven a la dead-letter
+ * queue y se eliminan de la cola activa, evitando reintentos infinitos
+ * que silencian errores reales (ej: payload con campo extra, RLS rota).
  */
+const QUEUE_FAIL_THRESHOLD = 5
+const KEY_QUEUE_DEAD       = 'stratos_pending_sync_dead'
+
+function pushQueueDeadLetter(op, errorMsg) {
+  try {
+    const raw = localStorage.getItem(KEY_QUEUE_DEAD)
+    const arr = raw ? JSON.parse(raw) : []
+    arr.push({ ...op, dead_at: Date.now(), last_error: errorMsg || 'unknown' })
+    localStorage.setItem(KEY_QUEUE_DEAD, JSON.stringify(arr.slice(-100)))
+  } catch (_) {}
+}
+
+export function getQueueDeadLetter() {
+  try {
+    const raw = localStorage.getItem(KEY_QUEUE_DEAD)
+    return raw ? JSON.parse(raw) : []
+  } catch (_) { return [] }
+}
+
+export function clearQueueDeadLetter() {
+  try { localStorage.removeItem(KEY_QUEUE_DEAD) } catch (_) {}
+}
+
 export async function syncToSupabase(supabase) {
   const q = readQueue()
-  if (q.length === 0) return { ok: true, synced: 0, failed: 0 }
+  if (q.length === 0) return { ok: true, synced: 0, failed: 0, dead: 0 }
 
   let synced = 0
   let failed = 0
+  let dead   = 0
   const remaining = []
 
   for (const op of q) {
+    let opError = null
     try {
       if (op.type === 'lead_update') {
         const { error } = await supabase
           .from('leads')
           .update(op.changes)
           .eq('id', op.lead_id)
-        if (error) { failed++; remaining.push(op) }
-        else       { synced++ }
+        if (error) opError = error
+        else { synced++; continue }
       } else if (op.type === 'lead_insert') {
-        // Reintento de creación de lead. Usamos la RPC create_lead (migración 008)
-        // en vez de .upsert() directo. Razón:
-        //   · .upsert(payload, { onConflict: 'id' }) hace INSERT y, si choca, hace
-        //     UPDATE. El UPDATE pasa por la RLS "leads_update" que solo permite al
-        //     dueño o admin → si el lead ya existe (porque saveLead lo guardó
-        //     correctamente la primera vez) y el actor actual no es admin, el
-        //     UPDATE se rechaza con 409. La cola entonces NUNCA logra sincronizar
-        //     y reintenta para siempre, generando ruido y el banner "Sin conexión".
-        //   · create_lead RPC solo hace INSERT con ON CONFLICT (id) DO NOTHING.
-        //     Si el lead ya existe, was_inserted=false pero NO hay error. La cola
-        //     considera el item sincronizado y lo saca → fin del retry loop.
+        // Reintento de creación de lead vía RPC idempotente create_lead
+        // (ON CONFLICT (id) DO NOTHING). Si el lead ya existe, was_inserted
+        // = false pero NO hay error → se considera sincronizado y sale de
+        // la cola. Evita el retry-loop infinito de un .upsert directo.
         const { error } = await supabase.rpc('create_lead', { payload: op.payload })
-        if (error) { failed++; remaining.push(op) }
-        else       { synced++ }
+        if (error) opError = error
+        else { synced++; continue }
       } else {
         remaining.push(op) // tipo desconocido — preservar
+        continue
       }
     } catch (e) {
-      failed++; remaining.push(op)
+      opError = e
+    }
+
+    // Hubo error → incrementar fail_count y decidir si va a dead letter.
+    failed++
+    const next = { ...op, fail_count: (op.fail_count || 0) + 1, last_error: opError?.message || 'unknown' }
+    if (next.fail_count >= QUEUE_FAIL_THRESHOLD) {
+      pushQueueDeadLetter(next, next.last_error)
+      dead++
+    } else {
+      remaining.push(next)
     }
   }
 
   writeQueue(remaining)
 
-  // Si todo se sincronizó, limpiar overlay (los cambios ya están en Supabase)
-  if (failed === 0) writeOverlay({})
+  // Si toda la cola se procesó (sin pendientes) limpiar overlay.
+  if (remaining.length === 0) writeOverlay({})
 
-  return { ok: failed === 0, synced, failed }
+  return { ok: failed === 0, synced, failed, dead }
 }
