@@ -14,8 +14,10 @@
 export const stgC = {
   "Nuevo Registro":     "#94A3B8",
   "Primer Contacto":    "#38BDF8",
+  "Remarketing":        "#F472B6",
   "Seguimiento":        "#22D3EE",
   "Zoom Agendado":      "#60A5FA",
+  "No Show":            "#FB7185",
   "Zoom Concretado":    "#4ADE80",
   "Visita Agendada":    "#F59E0B",
   "Visita Concretada":  "#6EE7C2",

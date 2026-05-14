@@ -40,12 +40,12 @@ const calculateLeadScore = (lead) => {
   let score = 0;
 
   // 1. Stage progression — 0 a 35 pts
-  const stages = ["Nuevo Registro","Primer Contacto","Seguimiento","Zoom Agendado",
-    "Zoom Concretado","Visita Agendada","Visita Concretada","Negociación","Cierre","Perdido"];
+  const stages = ["Nuevo Registro","Primer Contacto","Remarketing","Seguimiento","Zoom Agendado",
+    "No Show","Zoom Concretado","Visita Agendada","Visita Concretada","Negociación","Cierre","Perdido"];
   const stageIdx = stages.indexOf(lead.st ?? "Nuevo Registro");
   // Excluir "Perdido" del score positivo
   if (stageIdx >= 0 && lead.st !== "Perdido") {
-    score += Math.round((stageIdx / 8) * 35);
+    score += Math.round((stageIdx / 10) * 35);
   }
 
   // 2. Presupuesto — 0 a 25 pts

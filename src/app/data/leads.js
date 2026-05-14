@@ -1,8 +1,8 @@
 import { P } from "../../design-system/tokens";
 
 export const STAGES = [
-  "Nuevo Registro", "Primer Contacto", "Seguimiento",
-  "Zoom Agendado", "Zoom Concretado",
+  "Nuevo Registro", "Primer Contacto", "Remarketing", "Seguimiento",
+  "Zoom Agendado", "No Show", "Zoom Concretado",
   "Visita Agendada", "Visita Concretada",
   "Negociación", "Cierre", "Perdido",
 ];
@@ -10,8 +10,10 @@ export const STAGES = [
 export const stgC = {
   "Nuevo Registro":     P.txt3,
   "Primer Contacto":    P.blue,
+  "Remarketing":        "#F472B6",
   "Seguimiento":        "#FBBF24",
   "Zoom Agendado":      P.violet,
+  "No Show":            "#FB7185",
   "Zoom Concretado":    "#C084FC",
   "Visita Agendada":    P.cyan,
   "Visita Concretada":  P.emerald,
