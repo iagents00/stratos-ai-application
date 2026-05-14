@@ -444,7 +444,7 @@ quítale el agente a 555-1234
 **Importante**: solo super admins y Gael G pueden reasignar.
 
 ```
-asigna 555-1234 a Araceli Oneto
+asigna 555-1234 a Cecilia Mendoza
 ```
 
 ```
