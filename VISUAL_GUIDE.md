@@ -1,6 +1,6 @@
 # 🎨 VISUAL GUIDE — Qué Verás en Pantalla
 
-**Descripción visual de cómo se ve Stratos IA. Úsalo para entender la estructura.**
+**Descripción visual de cómo se ve Stratos AI. Úsalo para entender la estructura.**
 
 ---
 
@@ -8,7 +8,7 @@
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
-│ Stratos IA | Centro de Inteligencia    🔍 Buscar...  ⌘K  🔔  ⚙️   │
+│ Stratos AI | Centro de Inteligencia    🔍 Buscar...  ⌘K  🔔  ⚙️   │
 ├───────────┬─────────────────────────────────────────────────────────┤
 │ MENÚ      │                                                         │
 │ LATERAL   │         VISTA ACTIVA (Dashboard, CRM, etc.)            │
@@ -65,7 +65,7 @@
 
 ```
 ┌──────────────────────────────────────────────────────────────┐
-│ Stratos IA | Comando                                          │
+│ Stratos AI | Comando                                          │
 ├──────────────────────────────────────────────────────────────┤
 │                                                               │
 │  KPI CARDS:                                                  │
@@ -103,7 +103,7 @@
 
 ```
 ┌──────────────────────────────────────────────────────────────┐
-│ Stratos IA | CRM                                              │
+│ Stratos AI | CRM                                              │
 ├──────────────────────────────────────────────────────────────┤
 │                                                               │
 │  KPI CARDS:                                                  │
@@ -135,7 +135,7 @@
 
 ```
 ┌──────────────────────────────────────────────────────────────┐
-│ Stratos IA | IA CRM                                           │
+│ Stratos AI | IA CRM                                           │
 ├──────────────────────────────────────────────────────────────┤
 │                                                               │
 │  CALL CENTER IA - Automatización · Reactivación · Agentes   │
@@ -183,7 +183,7 @@
 
 ```
 ┌──────────────────────────────────────────────────────────────┐
-│ Stratos IA | ERP                                              │
+│ Stratos AI | ERP                                              │
 ├──────────────────────────────────────────────────────────────┤
 │                                                               │
 │  KPI CARDS:                                                  │
@@ -225,7 +225,7 @@
 
 ```
 ┌──────────────────────────────────────────────────────────────┐
-│ Stratos IA | Asesores                                         │
+│ Stratos AI | Asesores                                         │
 ├──────────────────────────────────────────────────────────────┤
 │                                                               │
 │  CRM DE ASESORES - Backup · Gestión · Búsqueda Integral    │
@@ -269,7 +269,7 @@
 
 ```
 ┌──────────────────────────────────────────────────────────────┐
-│ Stratos IA | Agente Stratos                                   │
+│ Stratos AI | Agente Stratos                                   │
 ├──────────────────────────────────────────────────────────────┤
 │                                                               │
 │  ┌─────────────────────────────────────┐                     │
@@ -295,7 +295,7 @@
 
 ```
 ┌──────────────────────────────────────────────────────────────┐
-│ Stratos IA | Config                                           │
+│ Stratos AI | Config                                           │
 ├──────────────────────────────────────────────────────────────┤
 │                                                               │
 │  CONFIGURACIÓN GENERAL:                                      │
@@ -407,5 +407,5 @@ Opacity Change:     0.2s ease
 
 ---
 
-Ahora cualquier desarrollador que vea esto **sabrá exactamente qué esperar** cuando abra Stratos IA. 🚀
+Ahora cualquier desarrollador que vea esto **sabrá exactamente qué esperar** cuando abra Stratos AI. 🚀
 

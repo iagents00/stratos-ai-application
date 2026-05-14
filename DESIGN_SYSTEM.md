@@ -1,4 +1,4 @@
-# 🎨 DESIGN SYSTEM — Stratos IA v10
+# 🎨 DESIGN SYSTEM — Stratos AI v10
 
 ## 📋 Índice
 1. [Sistema de Colores](#sistema-de-colores)
@@ -676,7 +676,7 @@ const [data] = useState([
 ## 📐 Responsive Design
 
 ```javascript
-// Usar media queries si necesitas (aunque Stratos IA es principalmente desktop)
+// Usar media queries si necesitas (aunque Stratos AI es principalmente desktop)
 
 // Ejemplo:
 const cardStyle = {

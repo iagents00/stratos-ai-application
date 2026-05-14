@@ -1,7 +1,7 @@
 /**
  * design-system/tokens.js
  * ─────────────────────────────────────────────────────────────────────────────
- * FUENTE ÚNICA DE VERDAD para colores, tipografías y espaciado de Stratos IA.
+ * FUENTE ÚNICA DE VERDAD para colores, tipografías y espaciado de Stratos AI.
  *
  * USO:
  *   import { P, PL, font, fontDisp, mono } from "../design-system/tokens";

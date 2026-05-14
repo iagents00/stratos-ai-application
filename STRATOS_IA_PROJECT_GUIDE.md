@@ -1,4 +1,4 @@
-# 🛰️ STRATOS IA — Guía de Referencia del Proyecto
+# 🛰️ STRATOS AI — Guía de Referencia del Proyecto
 
 > **Propósito**: Este documento es la referencia técnica definitiva del proyecto.  
 > Cualquier IA o desarrollador que trabaje en este repo **debe leerlo antes de hacer cambios**.  
@@ -42,7 +42,7 @@ Si rompes alguna de estas directivas, destruirás la arquitectura del proyecto. 
 
 ## 1. Resumen del Proyecto
 
-**Stratos IA** es un **Sistema Operativo de Inteligencia Artificial** diseñado como demo/prototipo de una
+**Stratos AI** es un **Sistema Operativo de Inteligencia Artificial** diseñado como demo/prototipo de una
 plataforma de gestión integral para una empresa inmobiliaria de lujo en la Riviera Maya, México.
 
 - **Tipo**: SPA (Single Page Application) — prototipo interactivo con datos estáticos
