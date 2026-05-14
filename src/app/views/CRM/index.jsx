@@ -1113,10 +1113,13 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
 
   const SH = ({ label, field, align = "left" }) => {
     const active = sortField === field;
+    const justify = align === "right"  ? "flex-end"
+                  : align === "center" ? "center"
+                  :                      "flex-start";
     return (
       <span onClick={() => handleSort(field)} style={{
         cursor: "pointer", userSelect: "none", display: "flex", alignItems: "center", gap: 3,
-        justifyContent: align === "right" ? "flex-end" : "flex-start",
+        justifyContent: justify,
         color: active ? T.accent : T.txt3, fontSize: 9.5, fontWeight: 700,
         fontFamily: fontDisp, letterSpacing: "0.07em", textTransform: "uppercase",
         transition: "color 0.15s",
@@ -3063,12 +3066,12 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
             {/* Column headers — solo visibles en desktop. En mobile cada fila
                 es una "card" vertical sin necesidad de encabezados. */}
             {!isMobile && (
-              <div style={{ display: "grid", gridTemplateColumns: cols, gap: 12, padding: "10px 20px", borderBottom: `1px solid ${T.border}`, alignItems: "center", background: isLight ? "rgba(15,23,42,0.015)" : "rgba(255,255,255,0.012)" }}>
+              <div style={{ display: "grid", gridTemplateColumns: cols, gap: 14, padding: "10px 20px", borderBottom: `1px solid ${T.border}`, alignItems: "center", background: isLight ? "rgba(15,23,42,0.015)" : "rgba(255,255,255,0.012)" }}>
                 <SH label="Cliente" field="n" />
                 <SH label="Presupuesto" field="presupuesto" align="right" />
-                <SH label="Etapa" field="st" />
-                <SH label="Seguim." field="seguimientos" />
-                {!co && <SH label="Score" field="sc" align="right" />}
+                <SH label="Etapa" field="st" align="center" />
+                <SH label="Seguim." field="seguimientos" align="center" />
+                {!co && <SH label="Score" field="sc" align="center" />}
                 <span style={{ fontSize: 9.5, fontWeight: 700, color: T.txt3, fontFamily: fontDisp, letterSpacing: "0.07em", textTransform: "uppercase", textAlign: "center" }}>Acciones</span>
               </div>
             )}
@@ -3211,13 +3214,14 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                             }}
                           />
                         )}
-
-                        <SourceBadge source={l.source} isLight={isLight} />
                       </div>
 
-                      {/* Row 2: asesor · proyecto · fecha · campaña — metadata
-                          gris discreta. Tamaño reducido y opacidad baja para que
-                          jerárquicamente quede por debajo del nombre + presupuesto. */}
+                      {/* Row 2: asesor · proyecto · fecha · campaña · fuente —
+                          metadata gris discreta. Tamaño reducido y opacidad baja
+                          para que jerárquicamente quede por debajo del nombre +
+                          presupuesto. La fuente (WhatsApp / Facebook / etc.)
+                          vive aquí en lugar de un badge prominente — la info
+                          está pero no roba protagonismo. */}
                       <div style={{
                         fontSize: 10, fontWeight: 500,
                         color: isLight ? "rgba(15,23,42,0.45)" : "rgba(255,255,255,0.42)",
@@ -3230,6 +3234,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                           (l.p || "").split("·")[0].trim() || null,
                           (!co && l.fechaIngreso) ? l.fechaIngreso : null,
                           l.campana || null,
+                          l.source && l.source !== "manual" ? (SRC_META[l.source]?.label || l.source) : null,
                         ].filter(Boolean).join(" · ")}
                       </div>
 
@@ -3545,9 +3550,10 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                   {/* ═══ ETAPA ═══ Pill minimalista: LED de color + texto + caret.
                        Sin gradient ni shadow — solo borde sutil. La pill cobra
                        sutil tinte de color al hover de la fila para indicar que
-                       es clickeable (dropdown). */}
+                       es clickeable (dropdown). Contenido centrado para alinear
+                       con el header. */}
                   {!isMobile && (
-                  <div onClick={e => e.stopPropagation()} style={{ display: "flex", alignItems: "center", minWidth: 0 }}>
+                  <div onClick={e => e.stopPropagation()} style={{ display: "flex", alignItems: "center", justifyContent: "center", minWidth: 0 }}>
                     <div
                       onMouseEnter={e => {
                         e.currentTarget.style.background = isLight ? `${stageC}10` : `${stageC}14`;
@@ -3594,16 +3600,18 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                   )}
 
                   {/* ═══ SEGUIMIENTOS ═══ Stepper. Oculto en mobile — el meta
-                       row del Cliente cell muestra el contador como pill. */}
+                       row del Cliente cell muestra el contador como pill.
+                       Contenido centrado para simetría con el header. */}
                   {!isMobile && (
-                  <div onClick={e => e.stopPropagation()} style={{ display: "flex", alignItems: "center", minWidth: 0 }}>
+                  <div onClick={e => e.stopPropagation()} style={{ display: "flex", alignItems: "center", justifyContent: "center", minWidth: 0 }}>
                     <FollowUpBadge lead={l} onUpdate={updateLead} T={T} compact />
                   </div>
                   )}
 
-                  {/* ═══ SCORE ═══ Solo desktop full mode — bar + número + ± manual */}
+                  {/* ═══ SCORE ═══ Solo desktop full mode — bar + número + ± manual.
+                       Contenido centrado para alinear con el header. */}
                   {!co && !isMobile && (
-                    <div onClick={e => e.stopPropagation()} style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 5 }}>
+                    <div onClick={e => e.stopPropagation()} style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 5 }}>
                       <div style={{ flex: 1, height: 3, borderRadius: 2, background: isLight ? "rgba(15,23,42,0.08)" : "rgba(255,255,255,0.06)", maxWidth: 36 }}>
                         <div style={{ width: `${sc}%`, height: 3, borderRadius: 2, background: T.accent, transition: "width 0.4s", boxShadow: sc >= 80 ? `0 0 6px ${T.accent}60` : "none" }} />
                       </div>
