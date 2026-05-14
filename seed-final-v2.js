@@ -7,7 +7,7 @@ const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 const MOCK_LEADS = [
-  { n: "Rafael", phone: "+1 817 682 3272", st: "ZOOM CONCRETADO", presupuesto: 200000, p: "Torre 25 · BAGA · Kaab On The Beach", campana: "Cancún", bio: "Mexicano radicado en Texas...", asesor: "ESTEFANIA VALDES" },
+  { n: "Rafael", phone: "+1 817 682 3272", st: "ZOOM CONCRETADO", presupuesto: 200000, p: "Torre 25 · BAGA · Kaab On The Beach", campana: "Cancún", bio: "Mexicano radicado en Texas...", asesor: "CECILIA MENDOZA" },
   { n: "Fam. Rodríguez", phone: "+52 984 123 0001", st: "SEGUIMIENTO", presupuesto: 4200000, p: "Gobernador 28", campana: "Referido", bio: "Familia inversionista...", asesor: "CECILIA MENDOZA" },
   { n: "James Mitchell", phone: "+1 310 555 0002", st: "ZOOM AGENDADO", presupuesto: 2800000, p: "Monarca 28", campana: "LinkedIn", bio: "CEO de tecnología...", asesor: "EMMANUEL ORTIZ" },
 ];

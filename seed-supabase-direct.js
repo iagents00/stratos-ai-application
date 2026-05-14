@@ -10,7 +10,7 @@ const MOCK_LEADS = [
   {
     id: 1,
     fechaIngreso: "2 Abr, 12:07pm",
-    asesor: "Estefanía Valdes",
+    asesor: "Cecilia Mendoza",
     n: "Rafael",
     tag: "Inversión + Disfrute",
     phone: "+1 817 682 3272",
@@ -131,7 +131,7 @@ Preparar reporte de avance de obra actualizado + proyección ROI a 3 años antes
   {
     id: 4,
     fechaIngreso: "1 Abr, 3:30pm",
-    asesor: "Araceli Oneto",
+    asesor: "Cecilia Mendoza",
     n: "Sarah Williams",
     tag: "Inversionista Internacional",
     phone: "+44 20 7946 0004",
@@ -210,7 +210,7 @@ Enviar propuesta formal con condiciones de pago. Carta de exclusividad de unidad
   {
     id: 6,
     fechaIngreso: "3 Abr, 10:00am",
-    asesor: "Araceli Oneto",
+    asesor: "Cecilia Mendoza",
     n: "Daniela Vega",
     tag: "Nuevo Registro",
     phone: "+52 984 555 0007",
@@ -338,9 +338,7 @@ const MOCK_TEAM = [
   { n: "Alexia Santillán",  r: "Directora Administrativa",d:14, rv: "$11.2M", e: 91, sk: 8,  role: "Directivo", c: "#6DD4A8", wa: "+52 998 000 0003", cal: "" },
   { n: "Alex Velázquez",    r: "Director de Marketing",  d: 12, rv: "$9.8M",  e: 89, sk: 7,  role: "Directivo", c: "#67B7D1",   wa: "+52 998 000 0004", cal: "" },
   { n: "Ken Lugo Ríos",     r: "Asesor Senior",          d: 11, rv: "$8.7M",  e: 88, sk: 6,  role: "Directivo", c: "#5DC8D9",    wa: "+52 998 000 0005", cal: "" },
-  { n: "Araceli Oneto",     r: "Asesora Especialista",   d: 10, rv: "$7.5M",  e: 85, sk: 5,  role: "Asesor",    c: "#6EE7C2",  wa: "+52 998 000 0006", cal: "" },
   { n: "Cecilia Mendoza",   r: "Asesora Premium",        d: 10, rv: "$7.2M",  e: 83, sk: 4,  role: "Asesor",    c: "#6EE7C2",  wa: "+52 998 000 0007", cal: "" },
-  { n: "Estefanía Valdes",  r: "Asesora Premium",        d: 9,  rv: "$6.8M",  e: 82, sk: 4,  role: "Asesor",    c: "#6EE7C2",  wa: "+52 998 000 0008", cal: "" },
 ];
 
 async function seed() {

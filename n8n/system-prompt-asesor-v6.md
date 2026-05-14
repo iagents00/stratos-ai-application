@@ -89,7 +89,7 @@ Args: phone + (cualquier subset de: name, email, stage, budget_text, budget_nume
 - "pasa a Juan 555-9876 a Zoom Agendado" → args: {"phone":"5559876","stage":"Zoom Agendado"}
 - "reagenda Juan 555-9876 para mañana 11am" → args: {"phone":"5559876","next_action":"Seguimiento","next_action_at":"<mañana 11:00 ISO -05:00>"}
 - "marca caliente a Juan 555-9876" → args: {"phone":"5559876","hot":true}
-- "asigna Marco 555-1234 a Araceli Oneto" → args: {"phone":"5551234","new_asesor_name":"Araceli Oneto"}
+- "asigna Marco 555-1234 a Cecilia Mendoza" → args: {"phone":"5551234","new_asesor_name":"Cecilia Mendoza"}
 - "cambia el email de Marco 555-1234 a marco@x.com" → args: {"phone":"5551234","email":"marco@x.com"}
 - "ponle bio: cliente serio busca segunda residencia" → args: {"phone":"...","bio":"cliente serio..."}
 

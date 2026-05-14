@@ -403,7 +403,7 @@ export default function MetaPanel({
                         >
                           <option value="">＋ Responsable</option>
                           <optgroup label="── Equipo Humano">
-                            {["Oscar Gálvez","Alexia Santillán","Alex Velázquez","Ken Lugo","Emmanuel Ortiz","Araceli Oneto","Cecilia Mendoza","Estefanía Valdes"].map(n => (
+                            {["Oscar Gálvez","Alexia Santillán","Alex Velázquez","Ken Lugo","Emmanuel Ortiz","Cecilia Mendoza"].map(n => (
                               <option key={n} value={n}>{n}</option>
                             ))}
                           </optgroup>

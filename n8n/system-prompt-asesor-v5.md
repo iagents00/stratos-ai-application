@@ -89,9 +89,9 @@ INPUT: "pasa a Juan 555-9876 a Zoom Agendado"
 → tool_name: "update_fields"
 → args: { "phone": "5559876", "stage": "Zoom Agendado" }
 
-INPUT: "asigna a Marco 555-1234 al asesor Araceli Oneto"
+INPUT: "asigna a Marco 555-1234 al asesor Cecilia Mendoza"
 → tool_name: "update_fields"
-→ args: { "phone": "5551234", "new_asesor_name": "Araceli Oneto" }
+→ args: { "phone": "5551234", "new_asesor_name": "Cecilia Mendoza" }
 
 INPUT: "llame a Juan 555-9876, no contesto"
 → tool_name: "add_seguimiento"
