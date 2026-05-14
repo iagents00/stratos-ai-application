@@ -7,7 +7,7 @@ import { createPortal } from "react-dom";
 import { useAuth } from "../../../hooks/useAuth";
 import { supabase } from "../../../lib/supabase";
 import { updateOfflineLead } from "../../../lib/offline-mode";
-import { saveLead } from "../../../lib/lead-save";
+import { saveLead, findLeadDuplicate } from "../../../lib/lead-save";
 import {
   TrendingUp, Target, CheckCircle2, Mic, Search,
   Users, Building2, Send, Plus, Timer, Flame,
@@ -16,7 +16,7 @@ import {
   Settings, X, Atom, Signal,
   Activity, Clock, Eye, MessageCircle,
   Star, Waypoints, Shield, Aperture, Focus, Locate, Scan,
-  AlertCircle, TrendingDown,
+  AlertCircle, AlertTriangle, TrendingDown,
   LayoutGrid, CheckSquare,
   Globe, Wand2, Image,
   Download, ExternalLink, Copy, Check, Trash2,
@@ -176,6 +176,20 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
   const [budgetMenuOpen, setBudgetMenuOpen] = useState(false);
   const [stageMenuOpen, setStageMenuOpen]   = useState(false);
   const [newLead, setNewLead]           = useState({ n: "", asesor: canSeeAll ? "" : (user?.name || ""), phone: "", email: "", budget: "", p: "", campana: "", source: "manual", st: "Nuevo Registro", nextAction: "", notas: "" });
+  // ── Detección de duplicados en alta ────────────────────────────────────
+  // Cuando el asesor escribe phone o email, llamamos a la RPC find_lead_duplicate
+  // (migración 013) con debounce. Si encuentra un lead existente en la misma
+  // organización, mostramos un banner avisando quién lo tiene. El check es
+  // SECURITY DEFINER, así que ve leads de otros asesores que RLS oculta.
+  //
+  // duplicateMatch shape: { lead_id, lead_name, lead_stage, lead_created_at,
+  //                          asesor_id, asesor_name, is_mine, match_type } | null
+  // duplicateChecking: hay una request en vuelo (para mostrar spinner sutil).
+  // duplicateOverride: el usuario confirmó "registrar de todas formas".
+  const [duplicateMatch, setDuplicateMatch]     = useState(null);
+  const [duplicateChecking, setDuplicateChecking] = useState(false);
+  const [duplicateOverride, setDuplicateOverride] = useState(false);
+  const duplicateAbortRef = useRef(null);
   // ── Listas maestras de asesores y proyectos ──
   // Se alimentan de leadsData + registros "custom" hechos desde el modal.
   // Al registrar un nuevo asesor/proyecto desde el modal, se añade aquí para
@@ -203,8 +217,80 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
 
   // Reset dropdowns cuando se cierra el modal
   useEffect(() => {
-    if (!addingLead) { setBudgetMenuOpen(false); setStageMenuOpen(false); }
+    if (!addingLead) {
+      setBudgetMenuOpen(false);
+      setStageMenuOpen(false);
+      // Limpiar estado de duplicados al cerrar — la próxima vez que se abra,
+      // empezamos en blanco (sin "fantasma" del cliente anterior).
+      setDuplicateMatch(null);
+      setDuplicateChecking(false);
+      setDuplicateOverride(false);
+      if (duplicateAbortRef.current) {
+        try { duplicateAbortRef.current.abort(); } catch (_) {}
+        duplicateAbortRef.current = null;
+      }
+    }
   }, [addingLead]);
+
+  // ── Debounced duplicate check ─────────────────────────────────────────
+  // Se dispara cuando addingLead está abierto y el usuario cambia phone o
+  // email. Cancela request previa con AbortController para evitar race
+  // condition (la respuesta de un input viejo no debe pisar la del actual).
+  // Skip explícito si:
+  //   · El modal no está abierto
+  //   · El usuario es demo (no toca Supabase)
+  //   · Ambos campos están vacíos
+  const dupEmail = newLead.email;
+  const dupPhone = newLead.phone;
+  useEffect(() => {
+    if (!addingLead) return;
+    if (user?.id === 'demo-user-local' || user?.isDemo) return;
+    const e = (dupEmail || '').trim();
+    const p = (dupPhone || '').trim();
+    // Resetear si vaciaron ambos
+    if (!e && !p) {
+      setDuplicateMatch(null);
+      setDuplicateChecking(false);
+      setDuplicateOverride(false);
+      return;
+    }
+    // Email muy corto (sin '@') o phone con < 7 dígitos: aún no vale la pena buscar
+    const phoneDigits = p.replace(/\D/g, '');
+    const emailReady  = e.includes('@') && e.length >= 5;
+    const phoneReady  = phoneDigits.length >= 7;
+    if (!emailReady && !phoneReady) {
+      setDuplicateMatch(null);
+      setDuplicateChecking(false);
+      return;
+    }
+
+    // Si lo que tenemos ahora ya no coincide con el match cacheado, lo limpiamos
+    // optimísticamente para no mostrar info stale mientras hace la nueva query.
+    setDuplicateOverride(false);
+
+    const ctrl = new AbortController();
+    if (duplicateAbortRef.current) {
+      try { duplicateAbortRef.current.abort(); } catch (_) {}
+    }
+    duplicateAbortRef.current = ctrl;
+
+    setDuplicateChecking(true);
+    const t = setTimeout(async () => {
+      const { match } = await findLeadDuplicate(
+        supabase,
+        { email: emailReady ? e : null, phone: phoneReady ? p : null },
+        { signal: ctrl.signal }
+      );
+      if (ctrl.signal.aborted) return;
+      setDuplicateMatch(match);
+      setDuplicateChecking(false);
+    }, 400);
+
+    return () => {
+      clearTimeout(t);
+      try { ctrl.abort(); } catch (_) {}
+    };
+  }, [addingLead, dupEmail, dupPhone, user?.id, user?.isDemo]);
 
   const [dragLeadId, setDragLeadId]     = useState(null);
   const [dragOverStage, setDragOverStage] = useState(null);
@@ -806,6 +892,21 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
     // useRef se actualiza al instante; useState quedaría desfasado un render
     // y dejaría pasar todos los clics rápidos.
     if (submittingRef.current) return;
+
+    // ── Guard de duplicado ────────────────────────────────────────────────
+    // Si la RPC detectó un lead con mismo phone/email y el usuario NO ha
+    // confirmado el override, bloqueamos el registro. El banner del modal
+    // muestra el botón "Registrar de todas formas" que pone override=true.
+    // Si el match es propio (is_mine), no bloqueamos pero el banner ya invita
+    // a abrir la ficha en vez de duplicar.
+    if (duplicateMatch && !duplicateOverride && !duplicateMatch.is_mine) {
+      showToast(
+        `Este cliente ya está registrado por ${duplicateMatch.asesor_name || 'otro asesor'}. Confirma el aviso del formulario antes de registrar.`,
+        'error'
+      );
+      return;
+    }
+
     submittingRef.current = true;
     setSubmittingLead(true);
 
@@ -2108,6 +2209,151 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                 />
               </div>
 
+              {/* ── Banner de duplicado ───────────────────────────────────
+                  Se muestra cuando find_lead_duplicate encontró un lead con
+                  mismo phone o email en la organización. Dos variantes:
+                    · is_mine = true  → el lead ya es del asesor actual
+                      (color informativo, CTA "Abrir ficha")
+                    · is_mine = false → lo tiene OTRO asesor (color de alerta,
+                      datos del dueño + CTA "Registrar de todas formas")
+                  Si duplicateChecking y todavía no hay match, mostramos un
+                  pill discreto "Verificando…" para que el asesor sepa que
+                  el sistema está mirando. */}
+              {(() => {
+                if (duplicateChecking && !duplicateMatch) {
+                  return (
+                    <div style={{ gridColumn: "1 / -1", display: "flex", alignItems: "center", gap: 6, fontSize: 10.5, color: T.txt3, fontFamily: font, padding: "2px 0 0 2px" }}>
+                      <Search size={10} strokeWidth={2.2} style={{ opacity: 0.7 }} />
+                      Verificando si ya existe en el CRM…
+                    </div>
+                  );
+                }
+                if (!duplicateMatch) return null;
+
+                const isMine = !!duplicateMatch.is_mine;
+                const matchKind = duplicateMatch.match_type === 'both'
+                  ? 'mismo teléfono y email'
+                  : duplicateMatch.match_type === 'phone'
+                    ? 'mismo teléfono'
+                    : 'mismo email';
+                const fechaStr = (() => {
+                  try {
+                    const d = new Date(duplicateMatch.lead_created_at);
+                    const mos = ["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"];
+                    return `${d.getDate()} ${mos[d.getMonth()]} ${d.getFullYear()}`;
+                  } catch (_) { return ''; }
+                })();
+                const baseColor = isMine ? T.accent : "#F5A623";
+                const tintBg    = isLight
+                  ? (isMine ? `${T.accent}10` : "rgba(245,166,35,0.10)")
+                  : (isMine ? `${T.accent}14` : "rgba(245,166,35,0.14)");
+                const tintBorder = isLight
+                  ? (isMine ? `${T.accent}48` : "rgba(245,166,35,0.40)")
+                  : (isMine ? `${T.accent}55` : "rgba(245,166,35,0.55)");
+                const headColor = isLight
+                  ? (isMine ? (T.accentDark || T.accent) : "#9A6A0A")
+                  : baseColor;
+
+                return (
+                  <div style={{
+                    gridColumn: "1 / -1",
+                    background: tintBg,
+                    border: `1px solid ${tintBorder}`,
+                    borderRadius: 10,
+                    padding: "10px 12px",
+                    display: "flex", gap: 10, alignItems: "flex-start",
+                    fontFamily: font,
+                  }}>
+                    <AlertTriangle size={15} color={baseColor} strokeWidth={2.2} style={{ flexShrink: 0, marginTop: 1 }} />
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 12, fontWeight: 700, color: headColor, fontFamily: fontDisp, letterSpacing: "-0.01em", marginBottom: 3 }}>
+                        {isMine ? "Ya tienes este cliente en tu CRM" : "Este cliente ya está registrado en el CRM"}
+                      </div>
+                      <div style={{ fontSize: 11.5, color: T.txt2, lineHeight: 1.45 }}>
+                        <strong style={{ color: T.txt, fontWeight: 700 }}>{duplicateMatch.lead_name || "Sin nombre"}</strong>
+                        {!isMine && (
+                          <> · asignado a <strong style={{ color: T.txt, fontWeight: 700 }}>{duplicateMatch.asesor_name || "Sin asesor"}</strong></>
+                        )}
+                        {duplicateMatch.lead_stage && (
+                          <> · etapa <strong style={{ color: T.txt }}>{duplicateMatch.lead_stage}</strong></>
+                        )}
+                        {fechaStr && <> · desde {fechaStr}</>}
+                        <span style={{ color: T.txt3 }}> · coincide por {matchKind}</span>
+                      </div>
+                      {!isMine && (
+                        <div style={{ display: "flex", gap: 6, marginTop: 8, flexWrap: "wrap" }}>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              // Cierra el modal y abre la ficha del lead existente
+                              // si el usuario tiene permiso para verlo. Si no
+                              // tiene permiso (RLS lo oculta), al menos cierra
+                              // el modal — admins pueden ir a buscarlo manual.
+                              const existing = leadsData.find(l => l.id === duplicateMatch.lead_id);
+                              setAddingLead(false);
+                              if (existing) {
+                                setSelectedLead(existing);
+                              } else {
+                                showToast(`"${duplicateMatch.lead_name}" pertenece a ${duplicateMatch.asesor_name || "otro asesor"}. Pide al administrador acceso o reasignación.`, "info");
+                              }
+                            }}
+                            style={{
+                              padding: "5px 11px", borderRadius: 8,
+                              background: isLight ? "rgba(15,23,42,0.05)" : "rgba(255,255,255,0.06)",
+                              border: `1px solid ${isLight ? "rgba(15,23,42,0.10)" : "rgba(255,255,255,0.10)"}`,
+                              color: T.txt2,
+                              fontSize: 10.5, fontWeight: 600, cursor: "pointer",
+                              fontFamily: font,
+                            }}
+                          >
+                            Ver ficha existente
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setDuplicateOverride(v => !v)}
+                            style={{
+                              padding: "5px 11px", borderRadius: 8,
+                              background: duplicateOverride
+                                ? (isLight ? "rgba(245,166,35,0.22)" : "rgba(245,166,35,0.26)")
+                                : "transparent",
+                              border: `1px solid ${duplicateOverride ? "rgba(245,166,35,0.65)" : tintBorder}`,
+                              color: duplicateOverride ? headColor : T.txt3,
+                              fontSize: 10.5, fontWeight: duplicateOverride ? 700 : 600,
+                              cursor: "pointer",
+                              fontFamily: font,
+                            }}
+                          >
+                            {duplicateOverride ? "✓ Registrar de todas formas" : "Registrar de todas formas"}
+                          </button>
+                        </div>
+                      )}
+                      {isMine && (
+                        <div style={{ marginTop: 8 }}>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const existing = leadsData.find(l => l.id === duplicateMatch.lead_id);
+                              setAddingLead(false);
+                              if (existing) setSelectedLead(existing);
+                            }}
+                            style={{
+                              padding: "5px 11px", borderRadius: 8,
+                              background: isLight ? `${T.accent}1C` : `${T.accent}1A`,
+                              border: `1px solid ${T.accent}55`,
+                              color: headColor,
+                              fontSize: 10.5, fontWeight: 700, cursor: "pointer",
+                              fontFamily: font,
+                            }}
+                          >
+                            Abrir ficha del cliente
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })()}
+
               {/* Presupuesto — selector compacto con menú desplegable */}
               {(() => {
                 const BUDGET_PRESETS = [
@@ -2440,7 +2686,11 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
             {/* ── Footer ── */}
             {(() => {
               const accentStrong = isLight ? (T.accentDark || T.accent) : T.accent;
-              const canSubmit = newLead.n.trim();
+              // Bloqueamos el submit si hay duplicado de OTRO asesor sin override.
+              // Si is_mine, no bloqueamos (es decisión del asesor crear otro lead
+              // con el mismo contacto — quizá es un caso distinto).
+              const dupBlocks = !!(duplicateMatch && !duplicateOverride && !duplicateMatch.is_mine);
+              const canSubmit = newLead.n.trim() && !dupBlocks;
               const primaryBg = canSubmit
                 ? (isLight
                     ? `linear-gradient(135deg, ${T.accent} 0%, #14B892 100%)`
@@ -2469,7 +2719,11 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                 onMouseEnter={e => { e.currentTarget.style.background = isLight ? "rgba(15,23,42,0.04)" : T.glass; e.currentTarget.style.color = T.txt2; }}
                 onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = T.txt3; }}
               >Cancelar</button>
-              <button onClick={addNewLead} disabled={!canSubmit || submittingLead} style={{
+              <button
+                onClick={addNewLead}
+                disabled={!canSubmit || submittingLead}
+                title={dupBlocks ? "Confirma el aviso de duplicado antes de registrar" : undefined}
+                style={{
                 flex: 2.4, height: 40, borderRadius: 10,
                 background: primaryBg,
                 border: `1px solid ${primaryBorder}`,
@@ -2500,7 +2754,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                 }}
               >
                 <UserCheck size={13} strokeWidth={2.4} />
-                Registrar cliente
+                {dupBlocks ? "Ya existe en el CRM" : "Registrar cliente"}
               </button>
             </div>
               );
