@@ -70,7 +70,6 @@ const RRHHModule = ({ T: _T }) => {
     { id: 1, nombre: "Emmanuel Ortiz Vázquez", cargo: "Director de Ventas", dept: "Ventas", desde: "Mar 2023", salario: 85000, score: 98, estado: "Activo", avatar: "EO", color: T.emerald },
     { id: 2, nombre: "Ken Lugo Ríos", cargo: "Asesor Senior", dept: "Ventas", desde: "Jun 2023", salario: 55000, score: 92, estado: "Activo", avatar: "KL", color: T.accent },
     { id: 3, nombre: "Cecilia Mendoza Flores", cargo: "Asesora Internacional", dept: "Ventas", desde: "Sep 2023", salario: 48000, score: 88, estado: "Activo", avatar: "CM", color: T.violet },
-    { id: 4, nombre: "Araceli Oneto Peña", cargo: "Asesora de Ventas", dept: "Ventas", desde: "Jan 2024", salario: 38000, score: 85, estado: "Activo", avatar: "AO", color: T.blue },
     { id: 5, nombre: "Oscar Gálvez Torres", cargo: "CEO / Director General", dept: "Dirección", desde: "Jan 2022", salario: 150000, score: 100, estado: "Activo", avatar: "OG", color: T.accent },
     { id: 6, nombre: "Daniel Vargas Leal", cargo: "Asesor de Ventas", dept: "Ventas", desde: "Abr 2026", salario: 26000, score: 72, estado: "Onboarding", avatar: "DV", color: T.amber },
   ];

@@ -20,9 +20,7 @@ const team = [
   { n: "Alexia Santillán",  r: "Directora Administrativa",wa: "+52 998 000 0003", cal: "" },
   { n: "Alex Velázquez",    r: "Director de Marketing",   wa: "+52 998 000 0004", cal: "" },
   { n: "Ken Lugo Ríos",     r: "Asesor Senior",           wa: "+52 998 000 0005", cal: "" },
-  { n: "Araceli Oneto",     r: "Asesora Especialista",    wa: "+52 998 000 0006", cal: "" },
   { n: "Cecilia Mendoza",   r: "Asesora Premium",         wa: "+52 998 000 0007", cal: "" },
-  { n: "Estefanía Valdes",  r: "Asesora Premium",         wa: "+52 998 000 0008", cal: "" },
 ];
 
 const WriterSection = ({ value, onChange, clientName, T = P }) => {

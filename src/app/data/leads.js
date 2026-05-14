@@ -26,7 +26,7 @@ export const leads = [
   {
     id: 1,
     fechaIngreso: "2 Abr, 12:07pm",
-    asesor: "Estefanía Valdes",
+    asesor: "Cecilia Mendoza",
     n: "Rafael",
     tag: "Inversión + Disfrute",
     phone: "+1 817 682 3272",
@@ -147,7 +147,7 @@ Preparar reporte de avance de obra actualizado + proyección ROI a 3 años antes
   {
     id: 4,
     fechaIngreso: "1 Abr, 3:30pm",
-    asesor: "Araceli Oneto",
+    asesor: "Cecilia Mendoza",
     n: "Sarah Williams",
     tag: "Inversionista Internacional",
     phone: "+44 20 7946 0004",
@@ -226,7 +226,7 @@ Enviar propuesta formal con condiciones de pago. Carta de exclusividad de unidad
   {
     id: 6,
     fechaIngreso: "3 Abr, 10:00am",
-    asesor: "Araceli Oneto",
+    asesor: "Cecilia Mendoza",
     n: "Daniela Vega",
     tag: "Nuevo Registro",
     phone: "+52 984 555 0007",
