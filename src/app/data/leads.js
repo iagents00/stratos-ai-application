@@ -10,16 +10,16 @@ export const STAGES = [
 export const stgC = {
   "Nuevo Registro":     P.txt3,
   "Primer Contacto":    P.blue,
-  "Remarketing":        "#F472B6",
+  "Remarketing":        "#FB923C",
   "Seguimiento":        "#FBBF24",
-  "Zoom Agendado":      P.violet,
-  "No Show":            "#FB7185",
-  "Zoom Concretado":    "#C084FC",
+  "Zoom Agendado":      "#3B82F6",
+  "No Show":            "#EA580C",
+  "Zoom Concretado":    "#4ADE80",
   "Visita Agendada":    P.cyan,
   "Visita Concretada":  P.emerald,
   "Negociación":        "#F97316",
   "Cierre":             P.accent,
-  "Perdido":            P.rose,
+  "Perdido":            "#64748B",
 };
 
 export const leads = [
