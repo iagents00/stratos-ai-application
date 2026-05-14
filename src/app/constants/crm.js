@@ -14,16 +14,16 @@
 export const stgC = {
   "Nuevo Registro":     "#94A3B8",
   "Primer Contacto":    "#38BDF8",
-  "Remarketing":        "#F472B6",
-  "Seguimiento":        "#22D3EE",
-  "Zoom Agendado":      "#60A5FA",
-  "No Show":            "#FB7185",
+  "Remarketing":        "#FB923C",
+  "Seguimiento":        "#FBBF24",
+  "Zoom Agendado":      "#3B82F6",
+  "No Show":            "#EA580C",
   "Zoom Concretado":    "#4ADE80",
-  "Visita Agendada":    "#F59E0B",
+  "Visita Agendada":    "#06B6D4",
   "Visita Concretada":  "#6EE7C2",
   "Negociación":        "#FB923C",
   "Cierre":             "#34D399",
-  "Perdido":            "#F87171",
+  "Perdido":            "#64748B",
 };
 
 export const SRC_META = {

@@ -148,17 +148,22 @@ export const STAGES = [
   "Perdido",
 ];
 
+// Pipeline en familia verde/azul/naranja (sin rosas ni violetas).
+// Azules → fases de contacto y agendamiento.
+// Verdes → milestones cumplidos.
+// Naranjas → atención / acción requerida.
+// Gris → estado neutral o terminal.
 export const STAGE_COLORS = {
   "Nuevo Registro":    P.txt3,
   "Primer Contacto":   P.blue,
-  "Remarketing":       "#F472B6",
+  "Remarketing":       "#FB923C",
   "Seguimiento":       P.amber,
-  "Zoom Agendado":     P.violet,
-  "No Show":           "#FB7185",
-  "Zoom Concretado":   "#C084FC",
+  "Zoom Agendado":     "#3B82F6",
+  "No Show":           "#EA580C",
+  "Zoom Concretado":   "#4ADE80",
   "Visita Agendada":   P.cyan,
   "Visita Concretada": P.emerald,
   "Negociación":       P.orange,
   "Cierre":            P.accent,
-  "Perdido":           P.rose,
+  "Perdido":           "#64748B",
 };
