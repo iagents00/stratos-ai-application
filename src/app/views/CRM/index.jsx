@@ -771,10 +771,19 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
       if (next.has(id)) {
         next.delete(id);
         setPinnedOrder(p => p.filter(x => x !== id));
+        // Al despinear: removerlo también del orden manual para que no quede
+        // "fantasma" ocupando una posición sin contenido visible.
+        setPriorityOrder(p => p.filter(x => x !== id));
       } else {
         next.add(id);
         setDismissedIds(p => { const d = new Set(p); d.delete(id); return d; });
         setPinnedOrder(p => [...p.filter(x => x !== id), id]); // append → most recent last
+        // FIX: el lead recién pinneado va AL INICIO de priorityOrder. Antes
+        // sólo se actualizaba pinnedOrder/pinnedIds y, como priorityOrder
+        // (modo "manual") usa indexOf, el lead nuevo quedaba con índice -1
+        // → ordenado al FINAL del carrusel de prioridad. El cliente espera
+        // lo contrario: al darle estrellita el cliente debe aparecer primero.
+        setPriorityOrder(p => [id, ...p.filter(x => x !== id)]);
       }
       return next;
     });
