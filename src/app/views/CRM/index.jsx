@@ -3015,8 +3015,11 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
               const isPinnedRow = pinnedIds.has(l.id);
               const isJustNew   = !!l.isNew;
               const isPulsing   = justRegisteredId === l.id; // solo los primeros 10s
-              // Color dorado consistente con el botón estrella
-              const goldRow = isLight ? "#B8860B" : "#F5C542";
+              // Azul (T.blue) reemplaza al dorado para el highlight del lead pinneado.
+              // Reduce saturación de amarillos en la lista: la estrella dorada
+              // del botón estrella es el ÚNICO punto cálido — banda + fondo
+              // ahora son azules para mantener coherencia con la paleta.
+              const pinRow  = T.blue;
               // Verde menta de la marca — del design system (T.accent)
               const mintRow = T.accent;
 
@@ -3024,19 +3027,19 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
               const baseBg = isJustNew
                 ? (isLight ? `${mintRow}12` : `${mintRow}1A`)
                 : isPinnedRow
-                  ? (isLight ? `${goldRow}0E` : `${goldRow}10`)
+                  ? (isLight ? `${pinRow}0E` : `${pinRow}10`)
                   : "transparent";
               const hoverBg = isJustNew
                 ? (isLight ? `${mintRow}1F` : `${mintRow}26`)
                 : isPinnedRow
-                  ? (isLight ? `${goldRow}1A` : `${goldRow}1C`)
+                  ? (isLight ? `${pinRow}1A` : `${pinRow}1C`)
                   : (isLight ? "rgba(15,23,42,0.022)" : "rgba(255,255,255,0.028)");
 
-              // Banda izquierda + halo — verde menta para isNew, dorado para pinneado.
+              // Banda izquierda + halo — verde menta para isNew, azul para pinneado.
               const rowShadow = isJustNew
                 ? `inset 4px 0 0 ${mintRow}, 0 0 0 1px ${mintRow}55, 0 0 18px ${mintRow}33`
                 : isPinnedRow
-                  ? `inset 3px 0 0 ${goldRow}`
+                  ? `inset 3px 0 0 ${pinRow}`
                   : "none";
 
               return (
@@ -3106,8 +3109,13 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                             readStyle={{
                               fontSize: 13.5, fontWeight: 700, letterSpacing: "-0.018em",
                               color: isLight ? T.txt : "#FFFFFF", fontFamily: fontDisp,
-                              maxWidth: "100%", overflow: "hidden", textOverflow: "ellipsis",
-                              whiteSpace: "nowrap", display: "inline-block",
+                              maxWidth: "100%",
+                              // Permitir wrap a 2 líneas en lugar de truncar con
+                              // ellipsis. Si el nombre es muy largo, mejor verlo
+                              // completo en una segunda línea que cortarlo. La
+                              // sub-línea (metadata) y el chip de cita absorben
+                              // el espacio vertical extra.
+                              wordBreak: "break-word", display: "inline-block",
                             }}
                             editStyle={{ fontSize: 13.5, fontWeight: 700, fontFamily: fontDisp }}
                           />
@@ -3261,8 +3269,10 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                             ) : null}
 
                             {/* CTA cuando falta la fecha en etapa con cita — minimalista
-                               (sin pulse, sin shadow), color ámbar para indicar que
-                               requiere acción. */}
+                               (sin pulse, sin shadow). Color azul (derivado de T.blue)
+                               en lugar de ámbar para reducir saturación de amarillos
+                               en la lista. La estrella dorada del pinned ya aporta
+                               un único punto cálido — no necesitamos competirle. */}
                             {!isEditing && showMissingCita && (
                               <button
                                 onClick={startEdit}
@@ -3271,8 +3281,8 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                                   display: "inline-flex", alignItems: "center", gap: 5,
                                   padding: "3px 10px 3px 8px", borderRadius: 99,
                                   background: "transparent",
-                                  border: `1px dashed #FB923C${isLight ? "70" : "55"}`,
-                                  color: isLight ? "color-mix(in srgb, #FB923C 55%, #0B1220 45%)" : "#FB923C",
+                                  border: `1px dashed ${T.blue}${isLight ? "60" : "44"}`,
+                                  color: isLight ? `color-mix(in srgb, ${T.blue} 55%, #0B1220 45%)` : T.blue,
                                   fontSize: 10.5, fontWeight: 600, fontFamily: font,
                                   cursor: "text", outline: "none",
                                   transition: "background 0.14s, border-style 0.14s",
@@ -3280,7 +3290,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                                   letterSpacing: "0.005em",
                                 }}
                                 onMouseEnter={e => {
-                                  e.currentTarget.style.background = isLight ? "#FB923C12" : "#FB923C18";
+                                  e.currentTarget.style.background = `${T.blue}${isLight ? "12" : "16"}`;
                                   e.currentTarget.style.borderStyle = "solid";
                                 }}
                                 onMouseLeave={e => {
@@ -3504,18 +3514,24 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                     // Utility: devuelve un color seguro para tema claro (oscurece hacia slate)
                     const safeC = (c) => isLight ? `color-mix(in srgb, ${c} 58%, #0B1220 42%)` : c;
 
-                    // Estrella en dorado auténtico (más pro y cálido que ámbar puro)
+                    // Estrella: cuando ESTÁ pinneada usa AZUL (T.blue) para borde+bg
+                    // y mantiene el ícono dorado (señal universal de favorito).
+                    // Cuando NO está pinneada, el botón es totalmente neutral.
+                    // Esto evita inundar la lista de tonos amarillos: el único
+                    // toque cálido es el fill del ícono ★ en los pinneados.
                     const goldC = isLight ? "#B8860B" : "#F5C542";
-                    const goldBorder = isPinned ? (isLight ? "#B8860B" : "#F5C542") : (isLight ? "#D4A84433" : "#F5C54238");
-                    const goldBg     = isPinned ? (isLight ? "#F5C54228" : "#F5C54222") : (isLight ? "#F5C54212" : "#F5C5420E");
                     const blueC = safeC(T.blue);
 
                     // Estilo base de los botones de acción — borde y fondo
                     // sutiles SIEMPRE visibles (no hover-reveal). Más intuitivo:
                     // el usuario ve qué puede hacer sin tener que descubrirlo.
-                    const starBorder  = isPinned ? goldBorder : (isLight ? "rgba(15,23,42,0.10)" : "rgba(255,255,255,0.09)");
-                    const starBg      = isPinned ? goldBg     : "transparent";
-                    const userBorder  = isLight ? "rgba(15,23,42,0.10)" : "rgba(255,255,255,0.09)";
+                    const starBorder = isPinned
+                      ? `${T.blue}${isLight ? "55" : "48"}`
+                      : (isLight ? "rgba(15,23,42,0.10)" : "rgba(255,255,255,0.09)");
+                    const starBg = isPinned
+                      ? `${T.blue}${isLight ? "12" : "14"}`
+                      : "transparent";
+                    const userBorder = isLight ? "rgba(15,23,42,0.10)" : "rgba(255,255,255,0.09)";
                     const userBg      = "transparent";
 
                     return (
@@ -3535,8 +3551,8 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                             flexShrink: 0,
                           }}
                           onMouseEnter={e => {
-                            e.currentTarget.style.background  = isLight ? "#F5C54218" : "#F5C5421A";
-                            e.currentTarget.style.borderColor = isLight ? "#F5C54250" : "#F5C54245";
+                            e.currentTarget.style.background  = `${T.blue}${isLight ? "18" : "1C"}`;
+                            e.currentTarget.style.borderColor = `${T.blue}${isLight ? "55" : "48"}`;
                           }}
                           onMouseLeave={e => {
                             e.currentTarget.style.background  = starBg;
