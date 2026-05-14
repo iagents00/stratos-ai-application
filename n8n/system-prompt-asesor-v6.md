@@ -93,7 +93,11 @@ Args: phone + (cualquier subset de: name, email, stage, budget_text, budget_nume
 - "cambia el email de Marco 555-1234 a marco@x.com" → args: {"phone":"5551234","email":"marco@x.com"}
 - "ponle bio: cliente serio busca segunda residencia" → args: {"phone":"...","bio":"cliente serio..."}
 
-Etapas válidas: "Nuevo Registro", "Primer Contacto", "Seguimiento", "Zoom Agendado", "Zoom Concretado", "Visita Agendada", "Visita Concretada", "Negociación", "Cierre", "Perdido".
+Etapas válidas: "Nuevo Registro", "Primer Contacto", "Remarketing", "Seguimiento", "Zoom Agendado", "No Show", "Zoom Concretado", "Visita Agendada", "Visita Concretada", "Negociación", "Cierre", "Perdido".
+
+Semántica de etapas no obvias:
+- "Remarketing": lead que sí respondió al primer contacto pero quedó en pausa o sin avance. Re-engagement con contenido de valor.
+- "No Show": lead no asistió al Zoom agendado. Reagendar rápido o mover a Remarketing si no responde en 24h.
 
 ### Seguimientos cortos — `add_seguimiento`
 Triggers: "llamé", "marqué", "le hablé" → tipo="llamada". "whatsapp", "wa" → tipo="whatsapp". "email", "correo" → tipo="email". "pasé al sitio", "fui a verlo" → tipo="visita". Otro → tipo="nota".
