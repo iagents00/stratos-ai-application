@@ -2732,7 +2732,258 @@ const SectionLabel = ({ icon: Icon, children, T = P }) => (
   </p>
 );
 
-const NotesModal = ({ lead, onClose, onSave, onUpdate, onSwitchTab, onShowHistory, onDelete, canReassign = false, T = P }) => {
+/* ═══════════════════════════════════════════
+   AsesorPicker — pill clickable con avatar + dropdown buscable
+   ═══════════════════════════════════════════
+   Reasignación intuitiva del asesor de un lead.
+   - Trigger: pill compacto con avatar (iniciales) + nombre + chevron.
+   - Popover: búsqueda + lista con avatares + "Crear nuevo" opcional.
+   - Si el usuario actual es el asesor del lead y elige otro, muestra
+     aviso inline (la RLS removerá su acceso después de la transferencia).
+   - Colores de avatar hasheados a la paleta verde/azul/naranja. */
+const ASESOR_AVATAR_PALETTE = ["#3B82F6", "#10B981", "#FB923C", "#06B6D4", "#34D399", "#FBBF24", "#60A5FA", "#4ADE80"];
+const hashAsesorColor = (name) => {
+  if (!name) return "#94A3B8";
+  let h = 0;
+  for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) | 0;
+  return ASESOR_AVATAR_PALETTE[Math.abs(h) % ASESOR_AVATAR_PALETTE.length];
+};
+const asesorInitials = (name) => {
+  if (!name) return "?";
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return "?";
+  return ((parts[0][0] || "") + (parts[1]?.[0] || "")).toUpperCase() || parts[0][0].toUpperCase();
+};
+
+const AsesorPicker = ({
+  value,
+  options = [],
+  onChange,
+  currentUserName = null,
+  allowCreate = true,
+  fullWidth = false,
+  size = "md",
+  placeholder = "Sin asesor",
+  T = P,
+  isLight = false,
+}) => {
+  const [open, setOpen] = useState(false);
+  const [q, setQ] = useState("");
+  const wrapperRef = useRef(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const onDoc = (e) => {
+      if (wrapperRef.current && !wrapperRef.current.contains(e.target)) {
+        setOpen(false); setQ("");
+      }
+    };
+    document.addEventListener("mousedown", onDoc);
+    return () => document.removeEventListener("mousedown", onDoc);
+  }, [open]);
+
+  const trimmedQ = q.trim();
+  const filtered = (options || []).filter(o => !trimmedQ || o.toLowerCase().includes(trimmedQ.toLowerCase()));
+  const showCreate = allowCreate && trimmedQ && !options.some(o => o.toLowerCase() === trimmedQ.toLowerCase());
+
+  const isOwnLead = !!(currentUserName && value && value === currentUserName);
+
+  const commit = (next) => {
+    const n = String(next || "").trim();
+    if (!n || n === value) { setOpen(false); setQ(""); return; }
+    if (isOwnLead && n !== currentUserName) {
+      const ok = typeof window !== "undefined" && window.confirm(
+        `Vas a transferir este lead a ${n}.\n\nDespués de la reasignación ya no podrás ver este lead.\n\n¿Confirmar la transferencia?`
+      );
+      if (!ok) return;
+    }
+    onChange?.(n);
+    setOpen(false); setQ("");
+  };
+
+  const avatarSize = size === "sm" ? 18 : 22;
+  const pillFontSize = size === "sm" ? 11 : 12;
+  const currentColor = hashAsesorColor(value);
+  const pillBorder = value ? `${currentColor}40` : T.border;
+  const pillBg     = isLight ? `${currentColor}10` : `${currentColor}14`;
+  const pillBgH    = isLight ? `${currentColor}1C` : `${currentColor}22`;
+  const pillTxt    = isLight ? `color-mix(in srgb, ${currentColor} 58%, #0B1220 42%)` : T.txt;
+
+  return (
+    <span
+      ref={wrapperRef}
+      style={{
+        position: "relative",
+        display: fullWidth ? "block" : "inline-block",
+        width: fullWidth ? "100%" : undefined,
+      }}
+    >
+      <button
+        type="button"
+        onClick={(e) => { e.stopPropagation(); setOpen(o => !o); }}
+        title={value ? `Asesor: ${value} — click para reasignar` : "Asignar asesor"}
+        style={{
+          display: "inline-flex", alignItems: "center", gap: 7,
+          padding: "3px 9px 3px 3px", borderRadius: 99,
+          background: pillBg,
+          border: `1px solid ${pillBorder}`,
+          color: pillTxt,
+          fontSize: pillFontSize, fontWeight: 600, fontFamily: font,
+          cursor: "pointer", outline: "none",
+          transition: "all 0.15s",
+          width: fullWidth ? "100%" : undefined,
+          justifyContent: fullWidth ? "space-between" : undefined,
+          boxSizing: "border-box",
+        }}
+        onMouseEnter={e => { e.currentTarget.style.background = pillBgH; }}
+        onMouseLeave={e => { e.currentTarget.style.background = pillBg; }}
+      >
+        <span style={{ display: "inline-flex", alignItems: "center", gap: 7, minWidth: 0 }}>
+          <span style={{
+            width: avatarSize, height: avatarSize, borderRadius: "50%",
+            background: value ? currentColor : `${T.txt3}40`,
+            color: "#FFFFFF",
+            display: "inline-flex", alignItems: "center", justifyContent: "center",
+            fontSize: Math.round(avatarSize * 0.45), fontWeight: 800, fontFamily: fontDisp,
+            flexShrink: 0,
+            letterSpacing: "0.01em",
+          }}>
+            {value ? asesorInitials(value) : "?"}
+          </span>
+          <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+            {value || placeholder}
+          </span>
+        </span>
+        <ChevronDown size={11} strokeWidth={2.4} style={{ opacity: 0.55, flexShrink: 0, transition: "transform 0.2s", transform: open ? "rotate(180deg)" : "none" }} />
+      </button>
+
+      {open && (
+        <div
+          onClick={e => e.stopPropagation()}
+          style={{
+            position: "absolute", top: "calc(100% + 6px)", left: 0,
+            minWidth: 260, maxWidth: 320,
+            zIndex: 510,
+            background: isLight ? "#FFFFFF" : "#111318",
+            border: `1px solid ${isLight ? "rgba(15,23,42,0.10)" : "rgba(255,255,255,0.10)"}`,
+            borderRadius: 12,
+            boxShadow: isLight
+              ? "0 4px 12px rgba(15,23,42,0.08), 0 20px 40px rgba(15,23,42,0.10)"
+              : "0 20px 44px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.04)",
+            overflow: "hidden",
+            backdropFilter: "blur(24px) saturate(180%)",
+            WebkitBackdropFilter: "blur(24px) saturate(180%)",
+            animation: "fadeIn 0.14s ease",
+          }}
+        >
+          <div style={{ padding: "10px 12px 8px", borderBottom: `1px solid ${isLight ? "rgba(15,23,42,0.06)" : "rgba(255,255,255,0.05)"}` }}>
+            <input
+              autoFocus
+              type="text"
+              value={q}
+              onChange={e => setQ(e.target.value)}
+              placeholder="Buscar asesor…"
+              onKeyDown={e => {
+                if (e.key === "Escape") { setOpen(false); setQ(""); }
+                if (e.key === "Enter") {
+                  if (filtered[0] && !showCreate) commit(filtered[0]);
+                  else if (showCreate) commit(trimmedQ);
+                }
+              }}
+              style={{
+                width: "100%", padding: "7px 10px", borderRadius: 8,
+                background: isLight ? "rgba(15,23,42,0.04)" : "rgba(255,255,255,0.05)",
+                border: `1px solid ${isLight ? "rgba(15,23,42,0.08)" : "rgba(255,255,255,0.07)"}`,
+                color: T.txt, fontSize: 12, fontFamily: font, outline: "none",
+                boxSizing: "border-box",
+              }}
+            />
+            {isOwnLead && (
+              <div style={{
+                marginTop: 8, padding: "6px 9px", borderRadius: 7,
+                background: isLight ? "#FB923C18" : "#FB923C16",
+                border: `1px solid #FB923C40`,
+                color: isLight ? "color-mix(in srgb, #FB923C 55%, #0B1220 45%)" : "#FB923C",
+                fontSize: 10.5, fontFamily: font, lineHeight: 1.4,
+              }}>
+                Si transfieres este lead dejarás de poder verlo.
+              </div>
+            )}
+          </div>
+
+          <div style={{ maxHeight: 280, overflowY: "auto", padding: "4px 0" }}>
+            {filtered.length === 0 && !showCreate && (
+              <div style={{ padding: "16px 12px", fontSize: 11.5, color: T.txt3, fontFamily: font, textAlign: "center" }}>
+                Sin resultados
+              </div>
+            )}
+            {filtered.map(name => {
+              const isCurrent = name === value;
+              const c = hashAsesorColor(name);
+              return (
+                <button
+                  key={name}
+                  type="button"
+                  onClick={() => commit(name)}
+                  style={{
+                    width: "100%", padding: "8px 12px",
+                    border: "none", background: isCurrent
+                      ? (isLight ? `${c}14` : `${c}1C`)
+                      : "transparent",
+                    color: T.txt, fontSize: 12.5, fontFamily: font, fontWeight: isCurrent ? 700 : 500,
+                    cursor: "pointer", textAlign: "left",
+                    display: "flex", alignItems: "center", gap: 9,
+                    transition: "background 0.12s",
+                  }}
+                  onMouseEnter={e => { if (!isCurrent) e.currentTarget.style.background = isLight ? "rgba(15,23,42,0.04)" : "rgba(255,255,255,0.05)"; }}
+                  onMouseLeave={e => { if (!isCurrent) e.currentTarget.style.background = "transparent"; }}
+                >
+                  <span style={{
+                    width: 24, height: 24, borderRadius: "50%",
+                    background: c, color: "#FFFFFF",
+                    display: "inline-flex", alignItems: "center", justifyContent: "center",
+                    fontSize: 11, fontWeight: 800, fontFamily: fontDisp,
+                    flexShrink: 0,
+                  }}>
+                    {asesorInitials(name)}
+                  </span>
+                  <span style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    {name}
+                  </span>
+                  {isCurrent && <Check size={13} color={c} strokeWidth={2.6} />}
+                </button>
+              );
+            })}
+          </div>
+
+          {showCreate && (
+            <div style={{ borderTop: `1px solid ${isLight ? "rgba(15,23,42,0.06)" : "rgba(255,255,255,0.05)"}` }}>
+              <button
+                type="button"
+                onClick={() => commit(trimmedQ)}
+                style={{
+                  width: "100%", padding: "10px 12px",
+                  border: "none", background: "transparent",
+                  color: T.accent, fontSize: 12, fontFamily: font, fontWeight: 700,
+                  cursor: "pointer", textAlign: "left",
+                  display: "flex", alignItems: "center", gap: 8,
+                  transition: "background 0.12s",
+                }}
+                onMouseEnter={e => { e.currentTarget.style.background = isLight ? `${T.accent}10` : `${T.accent}14`; }}
+                onMouseLeave={e => { e.currentTarget.style.background = "transparent"; }}
+              >
+                <Plus size={13} strokeWidth={2.4} />
+                <span>Crear "{trimmedQ}"</span>
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+    </span>
+  );
+};
+
+const NotesModal = ({ lead, onClose, onSave, onUpdate, onSwitchTab, onShowHistory, onDelete, asesoresMaster = [], currentUserName = null, T = P }) => {
   const isMobile = useIsMobile();
   const [confirmDelete, setConfirmDelete] = useState(false);
 
@@ -2912,29 +3163,36 @@ const NotesModal = ({ lead, onClose, onSave, onUpdate, onSwitchTab, onShowHistor
                 }}>
                   <InlineEdit value={lead.n} onSave={v => onUpdate?.({...lead, n: v})} T={T} isLight={isLight} placeholder="Nombre" />
                 </h2>
-                <p style={{
-                  margin: "3px 0 0", fontSize: 11.5, color: T.txt3,
+                <div style={{
+                  marginTop: 3, fontSize: 11.5, color: T.txt3,
                   fontFamily: font, fontWeight: 500,
-                  overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+                  display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap",
                 }}>
-                  {/* Reasignar asesor: solo super_admin/admin y Gael G pueden editarlo.
-                      Otros usuarios ven el nombre como texto plano (no editable). */}
-                  {canReassign ? (
-                    <InlineEdit value={lead.asesor} onSave={v => onUpdate?.({...lead, asesor: v})} T={T} isLight={isLight} placeholder="Asesor" emptyText="Sin asesor" />
-                  ) : (
-                    <span>{lead.asesor || "Sin asesor"}</span>
+                  {/* Reasignar asesor — habilitado para todos. La RLS asegura
+                      que un asesor solo puede modificar leads que le pertenecen,
+                      y al transferir uno propio pierde acceso (avisamos antes). */}
+                  <AsesorPicker
+                    value={lead.asesor}
+                    options={asesoresMaster}
+                    onChange={v => onUpdate?.({ ...lead, asesor: v })}
+                    currentUserName={currentUserName}
+                    T={T} isLight={isLight}
+                    size="sm"
+                  />
+                  {(lead.budget || lead.presupuesto) && (
+                    <>
+                      <span aria-hidden="true">·</span>
+                      <InlineEdit
+                        value={lead.budget}
+                        onSave={v => {
+                          const parsed = parseBudget(v);
+                          onUpdate?.({...lead, budget: parsed ? formatBudget(parsed) : v, presupuesto: parsed || lead.presupuesto || 0 });
+                        }}
+                        T={T} isLight={isLight} placeholder="300k · 1.5M" emptyText="Sin presupuesto"
+                      />
+                    </>
                   )}
-                  {lead.budget || lead.presupuesto ? <>{" · "}
-                    <InlineEdit
-                      value={lead.budget}
-                      onSave={v => {
-                        const parsed = parseBudget(v);
-                        onUpdate?.({...lead, budget: parsed ? formatBudget(parsed) : v, presupuesto: parsed || lead.presupuesto || 0 });
-                      }}
-                      T={T} isLight={isLight} placeholder="300k · 1.5M" emptyText="Sin presupuesto"
-                    />
-                  </> : null}
-                </p>
+                </div>
               </div>
             </div>
 
@@ -3169,7 +3427,7 @@ const COACHING_MOCKS = [
   },
 ];
 
-const LeadPanel = ({ lead, onClose, oc, onUpdate, onSwitchTab, onShowHistory, onDelete, canReassign = false, asesoresMaster = [], T = P }) => {
+const LeadPanel = ({ lead, onClose, oc, onUpdate, onSwitchTab, onShowHistory, onDelete, asesoresMaster = [], currentUserName = null, T = P }) => {
   const isMobile = useIsMobile();
   const [activeTab, setActiveTab] = useState("perfil");
   const [editing, setEditing] = useState(false);
@@ -3609,7 +3867,17 @@ const LeadPanel = ({ lead, onClose, oc, onUpdate, onSwitchTab, onShowHistory, on
               {inp("Nombre completo","n","Nombre del cliente",true)}
               {inp("Teléfono","phone","+1 817 682...")}
               {inp("Presupuesto","budget","300k · 1.5M · 2 mdd")}
-              {inp("Asesor","asesor","Nombre asesor")}
+              <div>
+                <p style={{ fontSize: 9, fontWeight: 700, color: T.txt3, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 4, fontFamily: fontDisp }}>Asesor</p>
+                <AsesorPicker
+                  value={f("asesor")}
+                  options={asesoresMaster}
+                  onChange={v => sf("asesor")(v)}
+                  currentUserName={currentUserName}
+                  T={T} isLight={isLight}
+                  fullWidth
+                />
+              </div>
               {inp("Campaña / Fuente","campana","Referido, Google...")}
               <div style={{ gridColumn: "1 / -1" }}>
                 <p style={{ fontSize: 9, fontWeight: 700, color: T.txt3, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 4 }}>Etapa del pipeline</p>

@@ -63,13 +63,13 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
   // view_all_leads=true ven todos los leads de la organización.
   const canSeeAll = ["super_admin", "admin", "ceo", "director"].includes(user?.role)
                  || user?.viewAllLeads === true;
-  // Permiso para REASIGNAR el asesor de un lead. Es independiente de
-  // canSeeAll: por requerimiento del cliente, Gael G (asesor) también
-  // puede reasignar aunque su rol normal no le permita ver todos los
-  // leads de la organización. Otros asesores NO pueden tocar el campo
-  // asesor en ningún lado del CRM (ni en alta ni en edición).
-  const canReassign = ["super_admin", "admin"].includes(user?.role)
-                   || (user?.name || "").trim().toLowerCase() === "gael g";
+  // Reasignación habilitada para todos los usuarios. La RLS de Supabase
+  // (leads_update en migración 004_performance_tuning) ya asegura que un
+  // asesor solo puede modificar leads donde `asesor_name = current_user_name()`,
+  // así que un asesor puede transferir SUS leads pero no tocar los de otros.
+  // El componente AsesorPicker avisa antes de transferir un lead propio
+  // (la RLS le retirará acceso al lead después de la mutación).
+  const canReassign = true;
   // Orden por defecto: fecha de creación descendente (los más recientes
   // arriba). Antes era "sc desc" (score), lo que hacía que un lead recién
   // registrado con score bajo (5 por default) cayera abajo en cuanto se
@@ -312,6 +312,20 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
           id: genId(),
           type: "etapa",
           action: `Etapa: ${prev.st} → ${updated.st}`,
+          doneAtFmt: nowFmt,
+          completed_at: nowIso,
+          by,
+        });
+      }
+
+      // 4) Reasignación de asesor — visible en la timeline del lead
+      if (updated.asesor && updated.asesor !== prev.asesor) {
+        events.push({
+          id: genId(),
+          type: "reasignacion",
+          action: prev.asesor
+            ? `Reasignado: ${prev.asesor} → ${updated.asesor}`
+            : `Asignado a ${updated.asesor}`,
           doneAtFmt: nowFmt,
           completed_at: nowIso,
           by,
@@ -2230,24 +2244,24 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                 />
               </div>
 
-              {/* Asesor — solo super_admin/admin y Gael G pueden asignar a otro */}
-              {canReassign && (
-                <div style={{ gridColumn: "1 / -1" }}>
-                  <label style={labelStyle}>
-                    <Users size={9} color={T.txt3} /> Asesor asignado
-                  </label>
-                  <ClickDropdown
-                    value={newLead.asesor || ""}
-                    onChange={(v) => setNewLead(p => ({...p, asesor: v}))}
-                    options={asesoresMaster}
-                    placeholder="Seleccionar asesor…"
-                    label="asesor"
-                    icon={Users}
-                    createLabel="Nuevo asesor"
-                    T={T} isLight={isLight}
-                  />
-                </div>
-              )}
+              {/* Asesor — abierto a todos. La RLS de Supabase asegura que un
+                  asesor solo puede crear leads asignados a sí mismo o sin asesor,
+                  y los admins pueden asignar a cualquiera. */}
+              <div style={{ gridColumn: "1 / -1" }}>
+                <label style={labelStyle}>
+                  <Users size={9} color={T.txt3} /> Asesor asignado
+                </label>
+                <ClickDropdown
+                  value={newLead.asesor || ""}
+                  onChange={(v) => setNewLead(p => ({...p, asesor: v}))}
+                  options={asesoresMaster}
+                  placeholder="Seleccionar asesor…"
+                  label="asesor"
+                  icon={Users}
+                  createLabel="Nuevo asesor"
+                  T={T} isLight={isLight}
+                />
+              </div>
 
               {/* Etapa — selector compacto con menú desplegable */}
               <div style={{ gridColumn: "1 / -1", position: "relative" }}>
@@ -3902,8 +3916,9 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
         lead={notesLead}
         onClose={() => setNotesLead(null)}
         onSave={saveNotes}
-        onUpdate={(u) => { updateLead(u); if (notesLead && u.id === notesLead.id) setNotesLead(u); }}
-        canReassign={canReassign}
+        onUpdate={updateLead}
+        asesoresMaster={asesoresMaster}
+        currentUserName={user?.name || null}
         onSwitchTab={(tab) => openDrawerTab(tab, notesLead)}
         onShowHistory={() => setHistoryLead(notesLead)}
         onShowSuggest={() => setSuggestLead(notesLead)}
@@ -3919,8 +3934,8 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
         onClose={() => setSelectedLead(null)}
         oc={oc}
         onUpdate={updateLead}
-        canReassign={canReassign}
         asesoresMaster={asesoresMaster}
+        currentUserName={user?.name || null}
         onSwitchTab={(tab) => openDrawerTab(tab, selectedLead)}
         onShowHistory={() => setHistoryLead(selectedLead)}
         onDelete={softDeleteLead ? async (l) => {
