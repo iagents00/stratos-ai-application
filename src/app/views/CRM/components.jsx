@@ -89,11 +89,11 @@ const calculateLeadScore = (lead) => {
 };
 
 const SRC_META = {
-  telegram: { label: "TG",        color: "#29B6F6" },
-  whatsapp:  { label: "WA",        color: "#25D366" },
-  facebook:  { label: "FB",        color: "#7EB8F0" },
-  web:       { label: "Web",       color: "#A78BFA" },
-  manual:    { label: null,        color: null      },
+  telegram: { label: "Telegram", color: "#29B6F6" },
+  whatsapp:  { label: "WhatsApp", color: "#25D366" },
+  facebook:  { label: "Facebook", color: "#7EB8F0" },
+  web:       { label: "Web",      color: "#A78BFA" },
+  manual:    { label: null,       color: null      },
 };
 const SourceBadge = ({ source, isLight }) => {
   const meta = SRC_META[source] || null;
@@ -101,10 +101,10 @@ const SourceBadge = ({ source, isLight }) => {
   const c = isLight ? `color-mix(in srgb, ${meta.color} 60%, #0B1220 40%)` : meta.color;
   return (
     <span style={{
-      fontSize: 8, fontWeight: 800, letterSpacing: "0.06em",
-      color: c, background: isLight ? `${meta.color}15` : `${meta.color}18`,
+      fontSize: 9, fontWeight: 700, letterSpacing: "0.01em",
+      color: c, background: isLight ? `${meta.color}14` : `${meta.color}16`,
       border: `1px solid ${isLight ? `${meta.color}38` : `${meta.color}30`}`,
-      padding: "1px 6px", borderRadius: 99,
+      padding: "1px 8px", borderRadius: 99,
       fontFamily: "-apple-system, sans-serif", flexShrink: 0,
     }}>{meta.label}</span>
   );
