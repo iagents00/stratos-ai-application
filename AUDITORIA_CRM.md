@@ -1,4 +1,4 @@
-# Auditoría CRM — Stratos IA
+# Auditoría CRM — Stratos AI
 **Fecha:** 24 de Abril, 2026  
 **Versión:** 1.0 · Entrega inicial  
 **Estado:** ✅ Funcional para demo y uso operativo
@@ -256,4 +256,4 @@ El CRM está operativo en su totalidad. 8 módulos funcionales, 3 vistas de dato
 
 ---
 
-*Auditoría generada el 24 de Abril, 2026 — Stratos IA v1.0*
+*Auditoría generada el 24 de Abril, 2026 — Stratos AI v1.0*

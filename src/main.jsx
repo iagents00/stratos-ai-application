@@ -1,5 +1,5 @@
 /**
- * main.jsx — Entry point de Stratos IA
+ * main.jsx — Entry point de Stratos AI
  * ─────────────────────────────────────────────────────────────────────────────
  * Responsabilidades de este archivo (y SOLO estas):
  *   1. Renderizar el árbol de React en el DOM
