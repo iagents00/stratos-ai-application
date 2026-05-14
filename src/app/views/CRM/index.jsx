@@ -197,7 +197,11 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
   const [customAsesores, setCustomAsesores]   = useState([]);
   const [customProyectos, setCustomProyectos] = useState([]);
   const [customCampanas, setCustomCampanas]   = useState([]);
-  const [hoveredRow, setHoveredRow]     = useState(null);
+  // hoveredRow state ELIMINADO — causaba re-render de toda la lista de leads
+  // (80+ rows) cada vez que el cursor pasaba de una fila a otra. Ahora el
+  // hover visual se maneja con DOM directo en onMouseEnter/Leave, sin
+  // setState ni re-render. Para visibility de chips/botones, todo es visible
+  // siempre (más intuitivo, no hace falta descubrir nada con hover).
   // Edición inline de "próxima acción" en tarjetas de prioridad — sincroniza
   // estado con el lead activo y se cierra al guardar/cancelar.
   const [editingActionId, setEditingActionId] = useState(null);
@@ -1281,13 +1285,15 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
   const nearCloseLeads = visibleLeads.filter(l => l.st === "Negociación" || l.st === "Cierre").length;
   const kanbanStages = STAGES.filter(s => s !== "Perdido");
 
-  /* Responsive grid columns — 5 columnas en modo full, 4 en compact.
-     · Cliente: absorbe avatar + nombre + tags + sub-línea (asesor · proyecto · fecha)
-       y el presupuesto a la derecha dentro de la misma celda, para que lo
-       monetario viva junto al nombre sin una columna extra.
+  /* Responsive grid columns — 6 columnas en modo full, 5 en compact.
+     · Cliente: avatar + nombre + tags + sub-línea (asesor · proyecto · fecha).
+     · Presupuesto: columna propia con ancho fijo, alineada a la derecha. Antes
+       vivía dentro de la celda Cliente con flex-spacer, pero con nombres cortos
+       el monto quedaba flotando lejos del nombre. Columna propia = más fácil
+       de escanear visualmente y alineado entre filas.
      · Etapa, Seguim., Score (solo full), Acciones. */
-  const colsFull    = "2.4fr 140px 140px 110px 140px";
-  const colsCompact = "2fr 130px 130px 120px";
+  const colsFull    = "1.9fr 110px 140px 140px 100px 110px";
+  const colsCompact = "1.7fr 110px 130px 130px 110px";
   // En mobile: una sola columna que toma ancho completo — la fila se
   // re-organiza en stack vertical con info principal arriba y acciones abajo.
   const cols = isMobile ? "1fr" : (co ? colsCompact : colsFull);
@@ -2992,6 +2998,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
             {!isMobile && (
               <div style={{ display: "grid", gridTemplateColumns: cols, gap: 12, padding: "10px 20px", borderBottom: `1px solid ${T.border}`, alignItems: "center", background: isLight ? "rgba(15,23,42,0.015)" : "rgba(255,255,255,0.012)" }}>
                 <SH label="Cliente" field="n" />
+                <SH label="Presupuesto" field="presupuesto" align="right" />
                 <SH label="Etapa" field="st" />
                 <SH label="Seguim." field="seguimientos" />
                 {!co && <SH label="Score" field="sc" align="right" />}
@@ -3000,7 +3007,6 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
             )}
 
             {sortedLeads.map((l, rowIdx) => {
-              const isHov = hoveredRow === l.id;
               const sc = l.sc;
               const scoreColor = T.accent;
               const showUrgency = l.daysInactive >= 5;
@@ -3036,8 +3042,12 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
               return (
                 <div key={l.id}
                   data-lead-row={l.id}
-                  onMouseEnter={() => setHoveredRow(l.id)}
-                  onMouseLeave={() => setHoveredRow(null)}
+                  // Hover manejado vía DOM directo (no setState) para evitar
+                  // re-render de TODA la lista al pasar el mouse de fila en
+                  // fila — antes hoveredRow vivía en el state del padre y
+                  // cambiarlo causaba que las 80+ filas se re-renderizaran.
+                  onMouseEnter={e => { e.currentTarget.style.background = hoverBg; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = baseBg; }}
                   onClick={isMobile ? () => setNotesLead(l) : undefined}
                   style={{
                     display: "grid", gridTemplateColumns: cols,
@@ -3046,7 +3056,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                     borderBottom: `1px solid ${T.border}`,
                     alignItems: isMobile ? "stretch" : "center",
                     transition: "background 0.14s, box-shadow 0.4s",
-                    background: isHov ? hoverBg : baseBg,
+                    background: baseBg,
                     position: "relative",
                     boxShadow: rowShadow,
                     // Pulso animado solo los primeros 10s tras registrar — atrae
@@ -3123,37 +3133,6 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                         )}
 
                         <SourceBadge source={l.source} isLight={isLight} />
-
-                        {/* flex spacer — pushes budget to right edge */}
-                        <div style={{ flex: 1, minWidth: 6 }} />
-
-                        <span
-                          onClick={e => e.stopPropagation()}
-                          style={{ flexShrink: 0 }}
-                        >
-                          <InlineEdit
-                            value={l.budget}
-                            onSave={v => {
-                              const parsed = parseBudget(v);
-                              updateLead({ ...l,
-                                budget: parsed ? formatBudget(parsed) : v,
-                                presupuesto: parsed || l.presupuesto || 0,
-                              });
-                            }}
-                            T={T} isLight={isLight}
-                            placeholder="300k · 1.5M"
-                            emptyText="+ presupuesto"
-                            readStyle={{
-                              fontSize: 13, fontWeight: 800, letterSpacing: "-0.022em",
-                              color: l.budget
-                                ? (isLight ? T.txt : "#FFFFFF")
-                                : (isLight ? "rgba(15,23,42,0.32)" : "rgba(255,255,255,0.30)"),
-                              fontFamily: fontDisp, whiteSpace: "nowrap",
-                              fontStyle: l.budget ? "normal" : "italic",
-                            }}
-                            editStyle={{ fontSize: 13, fontWeight: 800, fontFamily: fontDisp, width: 130, textAlign: "right" }}
-                          />
-                        </span>
                       </div>
 
                       {/* Row 2: asesor · proyecto · fecha · campaña — metadata
@@ -3314,18 +3293,13 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                               </button>
                             )}
 
-                            {/* Email chip — visible solo en hover de la fila. Si el
-                                lead tiene email, aparece con fade-in al pasar el
-                                mouse; si está vacío, solo muestra "+ correo" en
-                                hover (dashed) para no añadir ruido en reposo.
+                            {/* Email chip — visible siempre con estilo discreto
+                                para no competir con el chip de cita. Inline-editable.
                                 Para abrir mailto, usar el botón de contacto del drawer. */}
                             <span
                               onClick={e => e.stopPropagation()}
                               style={{
                                 display: "inline-flex", flexShrink: 1, minWidth: 0,
-                                opacity: isHov ? 1 : 0,
-                                pointerEvents: isHov ? "auto" : "none",
-                                transition: "opacity 0.18s ease",
                               }}
                             >
                               <InlineEdit
@@ -3367,6 +3341,36 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                       })()}
                     </div>
                   </div>
+
+                  {/* ═══ PRESUPUESTO ═══ Columna propia. Alineada a la derecha
+                       para escaneo financiero rápido entre filas. Inline-editable. */}
+                  {!isMobile && (
+                  <div onClick={e => e.stopPropagation()} style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", minWidth: 0 }}>
+                    <InlineEdit
+                      value={l.budget}
+                      onSave={v => {
+                        const parsed = parseBudget(v);
+                        updateLead({ ...l,
+                          budget: parsed ? formatBudget(parsed) : v,
+                          presupuesto: parsed || l.presupuesto || 0,
+                        });
+                      }}
+                      T={T} isLight={isLight}
+                      placeholder="300k · 1.5M"
+                      emptyText="+ presupuesto"
+                      readStyle={{
+                        fontSize: 13, fontWeight: 800, letterSpacing: "-0.022em",
+                        color: l.budget
+                          ? (isLight ? T.txt : "#FFFFFF")
+                          : (isLight ? "rgba(15,23,42,0.32)" : "rgba(255,255,255,0.30)"),
+                        fontFamily: fontDisp, whiteSpace: "nowrap",
+                        fontStyle: l.budget ? "normal" : "italic",
+                        textAlign: "right",
+                      }}
+                      editStyle={{ fontSize: 13, fontWeight: 800, fontFamily: fontDisp, width: 100, textAlign: "right" }}
+                    />
+                  </div>
+                  )}
 
                   {/* ─── META-ROW MOBILE ─── Línea compacta debajo del Cliente
                        cell con: LED de etapa + nombre de etapa, score badge,
@@ -3417,15 +3421,20 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                        es clickeable (dropdown). */}
                   {!isMobile && (
                   <div onClick={e => e.stopPropagation()} style={{ display: "flex", alignItems: "center", minWidth: 0 }}>
-                    <div style={{
+                    <div
+                      onMouseEnter={e => {
+                        e.currentTarget.style.background = isLight ? `${stageC}10` : `${stageC}14`;
+                        e.currentTarget.style.borderColor = `${stageC}${isLight ? "60" : "44"}`;
+                      }}
+                      onMouseLeave={e => {
+                        e.currentTarget.style.background = isLight ? `${stageC}08` : `${stageC}0E`;
+                        e.currentTarget.style.borderColor = `${stageC}${isLight ? "38" : "28"}`;
+                      }}
+                      style={{
                       position: "relative", display: "inline-flex", alignItems: "center", gap: 6,
                       padding: "4px 18px 4px 9px", borderRadius: 99,
-                      background: isHov
-                        ? (isLight ? `${stageC}10` : `${stageC}14`)
-                        : "transparent",
-                      border: `1px solid ${isHov
-                        ? `${stageC}${isLight ? "60" : "44"}`
-                        : `${stageC}${isLight ? "38" : "28"}`}`,
+                      background: isLight ? `${stageC}08` : `${stageC}0E`,
+                      border: `1px solid ${stageC}${isLight ? "38" : "28"}`,
                       transition: "background 0.16s, border-color 0.16s",
                       maxWidth: "100%", overflow: "hidden",
                     }}>
@@ -3501,58 +3510,51 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                     const goldBg     = isPinned ? (isLight ? "#F5C54228" : "#F5C54222") : (isLight ? "#F5C54212" : "#F5C5420E");
                     const blueC = safeC(T.blue);
 
-                    // Estrella: visible siempre si está pinneada (señal permanente),
-                    // visible en hover si no lo está (descubrible sin ruido).
-                    const starVisible = isPinned || isHov;
+                    // Estilo base de los botones de acción — borde y fondo
+                    // sutiles SIEMPRE visibles (no hover-reveal). Más intuitivo:
+                    // el usuario ve qué puede hacer sin tener que descubrirlo.
+                    const starBorder  = isPinned ? goldBorder : (isLight ? "rgba(15,23,42,0.10)" : "rgba(255,255,255,0.09)");
+                    const starBg      = isPinned ? goldBg     : "transparent";
+                    const userBorder  = isLight ? "rgba(15,23,42,0.10)" : "rgba(255,255,255,0.09)";
+                    const userBg      = "transparent";
 
                     return (
                       <div style={{ display: "flex", alignItems: "center", gap: 6, justifyContent: "center" }}>
-                        {/* ★ Prioridad — ghost button. Solo visible si está pinneada o en hover. */}
+                        {/* ★ Prioridad — siempre visible. Outline si no pinneado,
+                            relleno dorado si lo está. */}
                         <button onClick={() => togglePin(l.id)}
                           title={inPriority ? "Quitar de prioridad" : "Marcar como prioridad"}
                           aria-label={inPriority ? "Quitar de prioridad" : "Marcar como prioridad"}
                           style={{
                             width: 30, height: 30, borderRadius: 8,
-                            border: `1px solid ${isPinned ? goldBorder : "transparent"}`,
-                            background: isPinned
-                              ? goldBg
-                              : "transparent",
+                            border: `1px solid ${starBorder}`,
+                            background: starBg,
                             cursor: "pointer", padding: 0,
                             display: "flex", alignItems: "center", justifyContent: "center",
-                            transition: "opacity 0.16s, background 0.16s, border-color 0.16s",
-                            opacity: starVisible ? 1 : 0,
-                            pointerEvents: starVisible ? "auto" : "none",
+                            transition: "background 0.16s, border-color 0.16s",
                             flexShrink: 0,
                           }}
                           onMouseEnter={e => {
-                            if (!isPinned) {
-                              e.currentTarget.style.background  = isLight ? "#F5C54218" : "#F5C5421A";
-                              e.currentTarget.style.borderColor = isLight ? "#F5C54245" : "#F5C54238";
-                            }
+                            e.currentTarget.style.background  = isLight ? "#F5C54218" : "#F5C5421A";
+                            e.currentTarget.style.borderColor = isLight ? "#F5C54250" : "#F5C54245";
                           }}
                           onMouseLeave={e => {
-                            if (!isPinned) {
-                              e.currentTarget.style.background  = "transparent";
-                              e.currentTarget.style.borderColor = "transparent";
-                            }
+                            e.currentTarget.style.background  = starBg;
+                            e.currentTarget.style.borderColor = starBorder;
                           }}
                         >
-                          <Star size={13} color={goldC} fill={isPinned ? goldC : "none"} strokeWidth={2} />
+                          <Star size={13} color={isPinned ? goldC : T.txt3} fill={isPinned ? goldC : "none"} strokeWidth={2} />
                         </button>
 
-                        {/* 👤 Perfil — siempre visible, pero como ghost button (sin
-                            fondo, solo se enciende en hover de la fila). */}
+                        {/* 👤 Perfil — siempre visible con borde sutil. Hover
+                            ilumina con accent azul para señal de acción. */}
                         <button onClick={() => setSelectedLead(l)}
                           title="Abrir perfil del cliente"
                           aria-label="Abrir perfil del cliente"
                           style={{
                             width: 30, height: 30, borderRadius: 8,
-                            border: `1px solid ${isHov
-                              ? `${T.blue}${isLight ? "3A" : "32"}`
-                              : "transparent"}`,
-                            background: isHov
-                              ? `${T.blue}${isLight ? "0E" : "12"}`
-                              : "transparent",
+                            border: `1px solid ${userBorder}`,
+                            background: userBg,
                             cursor: "pointer", padding: 0,
                             display: "flex", alignItems: "center", justifyContent: "center",
                             transition: "background 0.16s, border-color 0.16s",
@@ -3563,15 +3565,11 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                             e.currentTarget.style.borderColor = `${T.blue}${isLight ? "55" : "48"}`;
                           }}
                           onMouseLeave={e => {
-                            e.currentTarget.style.background  = isHov
-                              ? `${T.blue}${isLight ? "0E" : "12"}`
-                              : "transparent";
-                            e.currentTarget.style.borderColor = isHov
-                              ? `${T.blue}${isLight ? "3A" : "32"}`
-                              : "transparent";
+                            e.currentTarget.style.background  = userBg;
+                            e.currentTarget.style.borderColor = userBorder;
                           }}
                         >
-                          <User size={13} color={isHov ? blueC : T.txt3} strokeWidth={2} />
+                          <User size={13} color={T.txt3} strokeWidth={2} />
                         </button>
                       </div>
                     );

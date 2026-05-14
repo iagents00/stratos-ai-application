@@ -29,6 +29,10 @@
 // (era 25s) porque ya no hay razón para esperar tanto. También: lentitud
 // al registrar leads — appendToMirror ahora defer con requestIdleCallback.
 //
+// v15 — CRM list view fix: presupuesto en columna propia (no flotando),
+//       email/★/persona siempre visibles (no hover-reveal — más intuitivo),
+//       hoveredRow state ELIMINADO → no más re-render de 80 filas al
+//       pasar el mouse (causaba lag visible).
 // v14 — CRM list view rediseño minimalista: pill etapa sin gradient/shadow,
 //       chip cita outline sutil, email a hover, ★/persona ghost con
 //       hover-reveal, más respiro vertical (14→18px).
@@ -39,7 +43,7 @@
 // v10 — limpieza de tokens legacy stratos.supabase.*.
 // v9 — destrabar login: cuelgue infinito por bundle viejo cacheado.
 // v8 — orden por defecto del CRM: fechaIngreso desc (nuevos arriba).
-const CACHE_VERSION = 'stratos-v14';
+const CACHE_VERSION = 'stratos-v15';
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 
