@@ -29,6 +29,11 @@
 // (era 25s) porque ya no hay razón para esperar tanto. También: lentitud
 // al registrar leads — appendToMirror ahora defer con requestIdleCallback.
 //
+// v16 — CRM list view paleta: WA/TG/FB badges con nombres completos
+//       (WhatsApp, Telegram, Facebook), nombres de cliente con wrap (no
+//       ellipsis), CTA "Agendar fecha" + highlight de pinned migrados de
+//       dorado/ámbar a azul (T.blue) — solo el ícono ★ pinneado mantiene
+//       el dorado como único toque cálido.
 // v15 — CRM list view fix: presupuesto en columna propia (no flotando),
 //       email/★/persona siempre visibles (no hover-reveal — más intuitivo),
 //       hoveredRow state ELIMINADO → no más re-render de 80 filas al
@@ -43,7 +48,7 @@
 // v10 — limpieza de tokens legacy stratos.supabase.*.
 // v9 — destrabar login: cuelgue infinito por bundle viejo cacheado.
 // v8 — orden por defecto del CRM: fechaIngreso desc (nuevos arriba).
-const CACHE_VERSION = 'stratos-v15';
+const CACHE_VERSION = 'stratos-v16';
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 
