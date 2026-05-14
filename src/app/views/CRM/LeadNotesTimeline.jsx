@@ -15,7 +15,7 @@
  * RPCs y tablas relacionadas: ver supabase/migrations/008_*.sql
  */
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Plus, Send, StickyNote } from "lucide-react";
+import { Pencil, Plus, Send, StickyNote, X } from "lucide-react";
 import { P, font, fontDisp } from "../../../design-system/tokens";
 import { supabase } from "../../../lib/supabase";
 import { useAuth } from "../../../hooks/useAuth";
@@ -40,7 +40,12 @@ export default function LeadNotesTimeline({ lead, T = P, isLight = false }) {
   const [draft, setDraft] = useState("");
   const [saving, setSaving] = useState(false);
   const [errorMsg, setErrorMsg] = useState(null);
+  const [editingId, setEditingId] = useState(null);
+  const [editDraft, setEditDraft] = useState("");
+  const [editSaving, setEditSaving] = useState(false);
+  const [editError, setEditError] = useState(null);
   const textareaRef = useRef(null);
+  const editTextareaRef = useRef(null);
 
   const reload = useCallback(async () => {
     if (!lead?.id) return;
@@ -53,7 +58,7 @@ export default function LeadNotesTimeline({ lead, T = P, isLight = false }) {
     setLoading(true);
     const { data, error } = await supabase
       .from("expediente_items")
-      .select("id, descripcion, titulo, metadata, created_at, asesor_id")
+      .select("id, descripcion, titulo, metadata, created_at, updated_at, asesor_id")
       .eq("lead_id", lead.id)
       .in("tipo", ["nota", "texto"])
       .order("created_at", { ascending: false })
@@ -72,6 +77,14 @@ export default function LeadNotesTimeline({ lead, T = P, isLight = false }) {
   useEffect(() => {
     if (adding && textareaRef.current) textareaRef.current.focus();
   }, [adding]);
+
+  useEffect(() => {
+    if (editingId && editTextareaRef.current) {
+      editTextareaRef.current.focus();
+      const len = editTextareaRef.current.value.length;
+      editTextareaRef.current.setSelectionRange(len, len);
+    }
+  }, [editingId]);
 
   const onSave = async () => {
     const trimmed = draft.trim();
@@ -109,6 +122,52 @@ export default function LeadNotesTimeline({ lead, T = P, isLight = false }) {
     setDraft("");
     setAdding(false);
     setErrorMsg(null);
+  };
+
+  const onEditStart = (note) => {
+    setEditingId(note.id);
+    setEditDraft(note.descripcion || "");
+    setEditError(null);
+  };
+
+  const onEditCancel = () => {
+    setEditingId(null);
+    setEditDraft("");
+    setEditError(null);
+  };
+
+  const onEditSave = async (noteId) => {
+    const trimmed = editDraft.trim();
+    if (!trimmed || editSaving) return;
+    setEditSaving(true);
+    setEditError(null);
+    try {
+      const { error } = await supabase
+        .from("expediente_items")
+        .update({ descripcion: trimmed })
+        .eq("id", noteId);
+      if (error) throw error;
+      setEditingId(null);
+      setEditDraft("");
+      await reload();
+    } catch (e) {
+      setEditError(e?.message || "No se pudo actualizar la nota.");
+    } finally {
+      setEditSaving(false);
+    }
+  };
+
+  const wasEdited = (n) => {
+    if (!n?.updated_at || !n?.created_at) return false;
+    const diff = new Date(n.updated_at).getTime() - new Date(n.created_at).getTime();
+    return diff > 2000;
+  };
+
+  const ADMIN_ROLES = ["super_admin", "admin", "ceo", "director"];
+  const canEdit = (n) => {
+    if (!user?.id) return false;
+    if (n?.asesor_id === user.id) return true;
+    return ADMIN_ROLES.includes(user.role);
   };
 
   // En modo demo: ocultamos el cronograma (no hay BD). El textarea
@@ -236,42 +295,144 @@ export default function LeadNotesTimeline({ lead, T = P, isLight = false }) {
         )
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-          {notes.map((n) => (
-            <div key={n.id} style={{
-              padding: "10px 12px", borderRadius: 10,
-              background: isLight ? "rgba(15,23,42,0.025)" : "rgba(255,255,255,0.025)",
-              border: `1px solid ${T.border}`,
-            }}>
-              <div style={{
-                display: "flex", alignItems: "center", gap: 6,
-                marginBottom: 4, fontSize: 10.5, color: T.txt3,
-                fontFamily: fontDisp, letterSpacing: "0.04em",
+          {notes.map((n) => {
+            const isEditing = editingId === n.id;
+            const editable = canEdit(n);
+            return (
+              <div key={n.id} style={{
+                padding: "10px 12px", borderRadius: 10,
+                background: isLight ? "rgba(15,23,42,0.025)" : "rgba(255,255,255,0.025)",
+                border: `1px solid ${T.border}`,
               }}>
-                <span style={{
-                  display: "inline-block", width: 5, height: 5, borderRadius: "50%",
-                  background: T.accent, flexShrink: 0,
-                }} />
-                {fmtDateTime(n.created_at)}
-                {n.metadata?.source && n.metadata.source !== "web" && (
+                <div style={{
+                  display: "flex", alignItems: "center", gap: 6,
+                  marginBottom: 4, fontSize: 10.5, color: T.txt3,
+                  fontFamily: fontDisp, letterSpacing: "0.04em",
+                }}>
                   <span style={{
-                    marginLeft: 4, padding: "1px 6px", borderRadius: 4,
-                    background: `${T.accent}14`, color: T.accent,
-                    fontSize: 9, fontWeight: 700, textTransform: "uppercase",
-                    letterSpacing: "0.06em",
+                    display: "inline-block", width: 5, height: 5, borderRadius: "50%",
+                    background: T.accent, flexShrink: 0,
+                  }} />
+                  {fmtDateTime(n.created_at)}
+                  {n.metadata?.source && n.metadata.source !== "web" && (
+                    <span style={{
+                      marginLeft: 4, padding: "1px 6px", borderRadius: 4,
+                      background: `${T.accent}14`, color: T.accent,
+                      fontSize: 9, fontWeight: 700, textTransform: "uppercase",
+                      letterSpacing: "0.06em",
+                    }}>
+                      {n.metadata.source}
+                    </span>
+                  )}
+                  {wasEdited(n) && !isEditing && (
+                    <span style={{
+                      marginLeft: 4, fontSize: 10, color: T.txt3,
+                      fontStyle: "italic", letterSpacing: "0.02em",
+                    }}>
+                      · editada
+                    </span>
+                  )}
+                  {editable && !isEditing && (
+                    <button
+                      type="button"
+                      onClick={() => onEditStart(n)}
+                      title="Editar nota"
+                      aria-label="Editar nota"
+                      style={{
+                        marginLeft: "auto",
+                        display: "inline-flex", alignItems: "center", gap: 4,
+                        padding: "3px 8px", borderRadius: 7,
+                        background: "transparent", border: `1px solid ${T.border}`,
+                        color: T.txt3, fontSize: 10.5, fontWeight: 600,
+                        fontFamily: font, cursor: "pointer",
+                        transition: "all 0.15s",
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.color = T.accent;
+                        e.currentTarget.style.borderColor = `${T.accent}55`;
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.color = T.txt3;
+                        e.currentTarget.style.borderColor = T.border;
+                      }}
+                    >
+                      <Pencil size={10} strokeWidth={2.2} />
+                      Editar
+                    </button>
+                  )}
+                </div>
+
+                {!isEditing ? (
+                  <p style={{
+                    margin: 0, fontSize: 13, color: T.txt,
+                    fontFamily: font, lineHeight: 1.55,
+                    whiteSpace: "pre-wrap", wordBreak: "break-word",
                   }}>
-                    {n.metadata.source}
-                  </span>
+                    {n.descripcion || "(nota vacía)"}
+                  </p>
+                ) : (
+                  <div>
+                    <textarea
+                      ref={editTextareaRef}
+                      value={editDraft}
+                      onChange={(e) => setEditDraft(e.target.value)}
+                      spellCheck={true}
+                      rows={3}
+                      style={{
+                        width: "100%", padding: "10px 12px", borderRadius: 9,
+                        background: isLight ? "#FFFFFF" : "rgba(255,255,255,0.02)",
+                        border: `1px solid ${T.border}`,
+                        color: T.txt, fontSize: 13, fontFamily: font, lineHeight: 1.55,
+                        outline: "none", resize: "vertical", boxSizing: "border-box",
+                        transition: "border-color 0.18s",
+                      }}
+                      onFocus={(e) => { e.currentTarget.style.borderColor = T.borderH || T.accent; }}
+                      onBlur={(e) => { e.currentTarget.style.borderColor = T.border; }}
+                    />
+                    {editError && (
+                      <div style={{ marginTop: 6, fontSize: 11.5, color: "#F87171" }}>
+                        {editError}
+                      </div>
+                    )}
+                    <div style={{ display: "flex", gap: 8, marginTop: 8, justifyContent: "flex-end" }}>
+                      <button
+                        type="button"
+                        onClick={onEditCancel}
+                        disabled={editSaving}
+                        style={{
+                          display: "inline-flex", alignItems: "center", gap: 5,
+                          padding: "7px 13px", borderRadius: 9,
+                          background: "transparent", border: `1px solid ${T.border}`,
+                          color: T.txt2, fontSize: 12, fontWeight: 600, fontFamily: font,
+                          cursor: editSaving ? "default" : "pointer",
+                        }}
+                      >
+                        <X size={11} strokeWidth={2.4} />
+                        Cancelar
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => onEditSave(n.id)}
+                        disabled={editSaving || !editDraft.trim()}
+                        style={{
+                          display: "inline-flex", alignItems: "center", gap: 6,
+                          padding: "7px 14px", borderRadius: 9,
+                          background: editSaving || !editDraft.trim() ? `${T.accent}55` : T.accent,
+                          border: "none", color: "#041016",
+                          fontSize: 12, fontWeight: 700, fontFamily: fontDisp,
+                          cursor: editSaving || !editDraft.trim() ? "default" : "pointer",
+                          transition: "all 0.15s",
+                        }}
+                      >
+                        <Send size={11} strokeWidth={2.4} />
+                        {editSaving ? "Guardando…" : "Guardar cambios"}
+                      </button>
+                    </div>
+                  </div>
                 )}
               </div>
-              <p style={{
-                margin: 0, fontSize: 13, color: T.txt,
-                fontFamily: font, lineHeight: 1.55,
-                whiteSpace: "pre-wrap", wordBreak: "break-word",
-              }}>
-                {n.descripcion || "(nota vacía)"}
-              </p>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>
