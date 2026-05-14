@@ -1,4 +1,4 @@
-# 📝 CHANGELOG — Stratos IA
+# 📝 CHANGELOG — Stratos AI
 
 Registro de todos los cambios y mejoras en cada versión.
 
@@ -312,4 +312,4 @@ git commit -m "perf: Optimizar filtrado con useMemo"
 
 **Última actualización:** Abril 2026
 
-*Mantente al día con los últimos cambios en Stratos IA.*
+*Mantente al día con los últimos cambios en Stratos AI.*

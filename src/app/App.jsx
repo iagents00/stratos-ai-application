@@ -1,5 +1,5 @@
 /**
- * app/App.jsx — Shell principal de Stratos IA
+ * app/App.jsx — Shell principal de Stratos AI
  * ─────────────────────────────────────────────────────────────────────────────
  * Únicamente contiene: estado global, Sidebar, Header, BottomNav, view routing.
  * Todos los componentes y lógica de negocio viven en sus propios módulos.
@@ -789,7 +789,7 @@ export default function App() {
               {/* LEFT */}
               <div className="stratos-header-left" style={{ display:"flex", alignItems:"center", gap:10 }}>
                 <p style={{ margin:0, fontSize:14, fontFamily:fontDisp, letterSpacing:"-0.030em", fontWeight:600, color: isLight ? T.txt : "#FFFFFF", lineHeight:1, whiteSpace:"nowrap" }}>
-                  Stratos<span style={{ marginLeft:3, fontWeight:600, color: isLight ? "rgba(15,23,42,0.38)" : "rgba(255,255,255,0.30)", letterSpacing:"0.01em" }}>IA</span>
+                  Stratos<span style={{ marginLeft:3, fontWeight:600, color: isLight ? "rgba(15,23,42,0.38)" : "rgba(255,255,255,0.30)", letterSpacing:"0.01em" }}>AI</span>
                 </p>
                 <IAOSIsland leadsData={leadsData} isLight={isLight} idx={iaosIdx} />
               </div>
