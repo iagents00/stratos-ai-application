@@ -136,8 +136,10 @@ export const spacing = {
 export const STAGES = [
   "Nuevo Registro",
   "Primer Contacto",
+  "Remarketing",
   "Seguimiento",
   "Zoom Agendado",
+  "No Show",
   "Zoom Concretado",
   "Visita Agendada",
   "Visita Concretada",
@@ -149,8 +151,10 @@ export const STAGES = [
 export const STAGE_COLORS = {
   "Nuevo Registro":    P.txt3,
   "Primer Contacto":   P.blue,
+  "Remarketing":       "#F472B6",
   "Seguimiento":       P.amber,
   "Zoom Agendado":     P.violet,
+  "No Show":           "#FB7185",
   "Zoom Concretado":   "#C084FC",
   "Visita Agendada":   P.cyan,
   "Visita Concretada": P.emerald,
