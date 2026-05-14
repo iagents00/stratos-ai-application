@@ -8,6 +8,7 @@ import { useAuth } from "../../../hooks/useAuth";
 import { supabase } from "../../../lib/supabase";
 import { updateOfflineLead } from "../../../lib/offline-mode";
 import { saveLead, findLeadDuplicate } from "../../../lib/lead-save";
+import { saveDraft as saveLeadDraft, saveDraftImmediate as saveLeadDraftImmediate, loadDraft as loadLeadDraft, clearDraft as clearLeadDraft } from "../../../lib/lead-draft";
 import {
   TrendingUp, Target, CheckCircle2, Mic, Search,
   Users, Building2, Send, Plus, Timer, Flame,
@@ -233,8 +234,50 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
         try { duplicateAbortRef.current.abort(); } catch (_) {}
         duplicateAbortRef.current = null;
       }
+    } else {
+      // Modal recién abierto: si hay un draft persistido (TTL 24h), restaurarlo.
+      // Esto cubre el caso "el browser crasheó / cerré el tab a medio escribir".
+      // El draft solo se restaura si tiene contenido más allá del default.
+      try {
+        const stored = loadLeadDraft();
+        if (stored?.draft && typeof stored.draft === "object") {
+          // Solo restaurar si NO se está empezando con datos limpios.
+          const incoming = stored.draft;
+          const hasMeaningful = (incoming.n && incoming.n.trim().length > 0)
+            || (incoming.phone && incoming.phone.trim().length > 0)
+            || (incoming.email && incoming.email.trim().length > 0)
+            || (incoming.notas && incoming.notas.trim().length > 0);
+          if (hasMeaningful) {
+            setNewLead(prev => ({ ...prev, ...incoming }));
+          }
+        }
+      } catch (_) { /* ignore */ }
     }
   }, [addingLead]);
+
+  // ── Autosave del draft del modal ──────────────────────────────────────────
+  // En cada cambio del draft, persistir con debounce 400ms. Si el browser
+  // crashea o el tab se cierra accidentalmente, al re-abrir el modal el
+  // useEffect de arriba restaura el draft (TTL 24h en lead-draft.js).
+  useEffect(() => {
+    if (!addingLead) return;
+    saveLeadDraft(newLead);
+  }, [addingLead, newLead]);
+
+  // ── Persistencia AGRESIVA al perder visibilidad ──────────────────────────
+  // visibilitychange / pagehide se disparan ANTES del unload del tab. Aquí
+  // forzamos un flush sin debounce para garantizar que la última versión
+  // del draft queda guardada — incluso si el debounce de 400ms no alcanzó.
+  useEffect(() => {
+    if (!addingLead) return;
+    const flush = () => { saveLeadDraftImmediate(newLead); };
+    window.addEventListener("pagehide", flush);
+    document.addEventListener("visibilitychange", flush);
+    return () => {
+      window.removeEventListener("pagehide", flush);
+      document.removeEventListener("visibilitychange", flush);
+    };
+  }, [addingLead, newLead]);
 
   // ── Debounced duplicate check ─────────────────────────────────────────
   // Se dispara cuando addingLead está abierto y el usuario cambia phone o
@@ -1004,6 +1047,9 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
     //    de la pantalla. Imposible hacer doble clic a partir de aquí.
     setAddingLead(false);
     setNewLead({ n: "", asesor: canSeeAll ? "" : (user?.name || ""), phone: "", email: "", budget: "", p: "", campana: "", source: "manual", st: "Nuevo Registro", nextAction: "", notas: "" });
+    // El lead ya entró al espejo local (saveLead garantiza eso síncrono),
+    // así que el draft de recovery ya no tiene utilidad — lo limpiamos.
+    clearLeadDraft();
 
     // 2. Insertar el lead en la lista visible y disparar halo + scroll.
     setLeadsData(prev => [newEntry, ...prev]);
@@ -2802,6 +2848,24 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
           const isActive = filterStage === stage;
           const hasCount = cnt > 0;
           const divider = idx < STAGES.length - 2;
+          // Identidad visual consistente: cada etapa siempre tiene su acento de color,
+          // solo varía la intensidad. Las etapas vacías (cnt=0) siguen siendo legibles
+          // en lugar de quedar fantasmales — UX consistente sin huecos en el carrusel.
+          const accentBg = isActive
+            ? c
+            : hasCount
+              ? `${c}70`
+              : `${c}38`;
+          const countColor = isActive
+            ? c
+            : hasCount
+              ? (isLight ? T.txt : "rgba(255,255,255,0.92)")
+              : (isLight ? "rgba(15,23,42,0.42)" : "rgba(255,255,255,0.46)");
+          const labelColor = isActive
+            ? c
+            : hasCount
+              ? (isLight ? T.txt3 : "rgba(255,255,255,0.55)")
+              : (isLight ? "rgba(15,23,42,0.40)" : "rgba(255,255,255,0.42)");
           return (
             <div key={stage} onClick={() => setFilterStage(isActive ? "TODO" : stage)}
               title={`${stage} · ${cnt} cliente${cnt !== 1 ? "s" : ""}`}
@@ -2815,7 +2879,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                 cursor: "pointer",
                 borderRight: divider ? `1px solid ${isLight ? "rgba(15,23,42,0.05)" : "rgba(255,255,255,0.04)"}` : "none",
                 background: isActive
-                  ? (isLight ? `${c}10` : `${c}12`)
+                  ? (isLight ? `${c}10` : `${c}14`)
                   : "transparent",
                 transition: "background 0.18s ease",
                 display: "flex", flexDirection: "column", alignItems: "center", gap: 5,
@@ -2824,30 +2888,24 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
               onMouseEnter={e => { if (!isActive) e.currentTarget.style.background = isLight ? `${c}08` : "rgba(255,255,255,0.03)"; }}
               onMouseLeave={e => { if (!isActive) e.currentTarget.style.background = "transparent"; }}
             >
-              {/* Top accent line */}
+              {/* Top accent line — siempre visible para mantener identidad de etapa */}
               <div style={{
                 position: "absolute", top: 0, left: "20%", right: "20%", height: 2, borderRadius: "0 0 2px 2px",
-                background: isActive ? c : (hasCount ? `${c}55` : "transparent"),
+                background: accentBg,
                 transition: "background 0.18s, box-shadow 0.18s",
-                boxShadow: isActive ? `0 0 6px ${c}80` : "none",
+                boxShadow: isActive ? `0 0 8px ${c}90` : "none",
               }} />
               {/* Count */}
               <span style={{
                 fontSize: 19, fontWeight: 800, lineHeight: 1,
-                color: isActive ? c
-                  : hasCount
-                    ? (isLight ? T.txt : "rgba(255,255,255,0.88)")
-                    : (isLight ? "rgba(15,23,42,0.22)" : "rgba(255,255,255,0.22)"),
+                color: countColor,
                 fontFamily: fontDisp, letterSpacing: "-0.03em",
                 transition: "color 0.18s",
               }}>{cnt}</span>
               {/* Stage label */}
               <span style={{
                 fontSize: 8,
-                color: isActive ? c
-                  : hasCount
-                    ? (isLight ? T.txt3 : "rgba(255,255,255,0.42)")
-                    : (isLight ? "rgba(15,23,42,0.28)" : "rgba(255,255,255,0.22)"),
+                color: labelColor,
                 fontWeight: isActive ? 800 : 600,
                 letterSpacing: "0.06em", textTransform: "uppercase",
                 textAlign: "center", lineHeight: 1.25,
@@ -3063,8 +3121,8 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                   onClick={isMobile ? () => setNotesLead(l) : undefined}
                   style={{
                     display: "grid", gridTemplateColumns: cols,
-                    gap: isMobile ? 8 : 12,
-                    padding: isMobile ? "12px 14px" : "18px 22px",
+                    gap: isMobile ? 8 : 14,
+                    padding: isMobile ? "12px 14px" : "11px 20px",
                     borderBottom: `1px solid ${T.border}`,
                     alignItems: isMobile ? "stretch" : "center",
                     transition: "background 0.14s, box-shadow 0.4s",
@@ -3085,10 +3143,10 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                   {/* ═══ CLIENTE ═══ Avatar + identidad. Primera línea tiene
                        nombre, tags y presupuesto (right-aligned con spacer flex).
                        Segunda línea: asesor · proyecto · fecha · campaña. */}
-                  <div style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 0 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 11, minWidth: 0 }}>
                     {/* Avatar — rounded square, initial, accent tint */}
                     <div style={{
-                      width: 38, height: 38, borderRadius: 11,
+                      width: 34, height: 34, borderRadius: 10,
                       background: isLight
                         ? `linear-gradient(145deg, ${T.violet}1A 0%, ${T.violet}0D 100%)`
                         : `linear-gradient(145deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.04) 100%)`,
@@ -3097,7 +3155,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                         ? `inset 0 1px 0 rgba(255,255,255,0.9), 0 1px 2px ${T.violet}14`
                         : `inset 0 1px 0 rgba(255,255,255,0.07)`,
                       display: "flex", alignItems: "center", justifyContent: "center",
-                      fontSize: 14, fontWeight: 800,
+                      fontSize: 13, fontWeight: 800,
                       color: isLight ? `color-mix(in srgb, ${T.violet} 62%, #0B1220 38%)` : "rgba(255,255,255,0.72)",
                       flexShrink: 0, fontFamily: fontDisp, letterSpacing: "-0.01em",
                     }}>{l.n.charAt(0)}</div>
@@ -3105,10 +3163,11 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                     {/* Identity block — fills remaining width */}
                     <div style={{ minWidth: 0, flex: 1 }}>
                       {/* Row 1: name · tags · [spacer] · budget — todos inline-editables */}
-                      <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 3 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 2, minWidth: 0 }}>
                         <span
                           onClick={e => e.stopPropagation()}
-                          style={{ minWidth: 0, flexShrink: 1, overflow: "hidden" }}
+                          title={l.n}
+                          style={{ minWidth: 0, flex: "1 1 auto", overflow: "hidden", display: "block" }}
                         >
                           <InlineEdit
                             value={l.n}
@@ -3118,13 +3177,11 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                             readStyle={{
                               fontSize: 13.5, fontWeight: 700, letterSpacing: "-0.018em",
                               color: isLight ? T.txt : "#FFFFFF", fontFamily: fontDisp,
-                              maxWidth: "100%",
-                              // Permitir wrap a 2 líneas en lugar de truncar con
-                              // ellipsis. Si el nombre es muy largo, mejor verlo
-                              // completo en una segunda línea que cortarlo. La
-                              // sub-línea (metadata) y el chip de cita absorben
-                              // el espacio vertical extra.
-                              wordBreak: "break-word", display: "inline-block",
+                              // Una sola línea con ellipsis — ya no se rompe
+                              // mid-word ("Aria m" o "Migu el"). El title del
+                              // span padre muestra el nombre completo on hover.
+                              display: "block", maxWidth: "100%",
+                              whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
                             }}
                             editStyle={{ fontSize: 13.5, fontWeight: 700, fontFamily: fontDisp }}
                           />
@@ -3139,14 +3196,20 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                             padding: "1.5px 5px", borderRadius: 99, flexShrink: 0,
                           }}>NUEVO</span>
                         )}
+                        {/* HOT — un punto pequeñito tipo "live" en lugar del badge.
+                             Comunica "lead caliente" sin robarle protagonismo al
+                             nombre. Acent sutil + glow apenas perceptible. */}
                         {l.hot && (
-                          <span style={{
-                            fontSize: 7, fontWeight: 800, letterSpacing: "0.09em",
-                            color: isLight ? `color-mix(in srgb, ${T.accent} 62%, #0B1220 38%)` : T.accent,
-                            background: `${T.accent}${isLight ? "18" : "0E"}`,
-                            border: `1px solid ${T.accentB}`,
-                            padding: "1.5px 5px", borderRadius: 99, flexShrink: 0,
-                          }}>HOT</span>
+                          <span
+                            title="Lead caliente"
+                            aria-label="Lead caliente"
+                            style={{
+                              width: 7, height: 7, borderRadius: "50%",
+                              background: T.accent,
+                              boxShadow: `0 0 0 2px ${T.accent}28, 0 0 6px ${T.accent}55`,
+                              flexShrink: 0,
+                            }}
+                          />
                         )}
 
                         <SourceBadge source={l.source} isLight={isLight} />
@@ -3180,7 +3243,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                         const hasAppt = !!l.nextActionDate;
                         const showMissingCita = isAgendaCritical && !hasAppt;
                         const isEditing = editingApptId === l.id;
-                        const showEmpty = !hasAppt && !l.email && !showMissingCita && !isEditing;
+                        const showEmpty = !hasAppt && !l.email && !l.phone && !showMissingCita && !isEditing;
                         if (showEmpty) return null;
 
                         const startEdit = (e) => {
@@ -3198,7 +3261,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
 
                         return (
                           <div style={{
-                            display: "flex", alignItems: "center", gap: 7, marginTop: 7,
+                            display: "flex", alignItems: "center", gap: 6, marginTop: 5,
                             flexWrap: "wrap",
                           }}>
                             {/* Input inline en modo edición — reemplaza la pill */}
@@ -3311,6 +3374,51 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                                 <span>Agendar fecha</span>
                               </button>
                             )}
+
+                            {/* Phone chip — junto al email, mismo estilo discreto.
+                                Inline-editable. Para llamar, usar el botón de
+                                contacto del drawer (no abrimos tel: aquí para
+                                evitar dialer accidental al click). */}
+                            <span
+                              onClick={e => e.stopPropagation()}
+                              style={{
+                                display: "inline-flex", flexShrink: 0, minWidth: 0,
+                              }}
+                            >
+                              <InlineEdit
+                                value={l.phone}
+                                onSave={v => updateLead({ ...l, phone: (v || "").trim() || null })}
+                                T={T} isLight={isLight}
+                                placeholder="+52 998 123 4567"
+                                emptyText=""
+                                displayValue={v => (
+                                  <span style={{ display: "inline-flex", alignItems: "center", gap: 5, minWidth: 0 }}>
+                                    <Phone
+                                      size={11} strokeWidth={2.2}
+                                      style={{ flexShrink: 0, opacity: 0.7 }}
+                                    />
+                                    <span style={{
+                                      overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+                                    }}>
+                                      {v || "+ teléfono"}
+                                    </span>
+                                  </span>
+                                )}
+                                readStyle={{
+                                  display: "inline-flex", alignItems: "center",
+                                  padding: "3px 10px", borderRadius: 99,
+                                  background: "transparent",
+                                  border: `1px ${l.phone ? "solid" : "dashed"} ${isLight ? "rgba(15,23,42,0.10)" : "rgba(255,255,255,0.10)"}`,
+                                  color: isLight ? "rgba(15,23,42,0.55)" : "rgba(255,255,255,0.55)",
+                                  fontSize: 10.5, fontWeight: 500,
+                                  fontFamily: font,
+                                  maxWidth: 180, overflow: "hidden",
+                                  whiteSpace: "nowrap", flexShrink: 0, minWidth: 0,
+                                  margin: 0, fontStyle: "normal",
+                                }}
+                                editStyle={{ fontSize: 11, fontFamily: font, width: 180 }}
+                              />
+                            </span>
 
                             {/* Email chip — visible siempre con estilo discreto
                                 para no competir con el chip de cita. Inline-editable.
