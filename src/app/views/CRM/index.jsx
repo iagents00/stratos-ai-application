@@ -343,22 +343,11 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
     const baseSc   = updated.sc ?? prev?.sc ?? 0;
     const newSc    = Math.max(0, Math.min(100, baseSc + segDelta));
 
-    // Reasignación de asesor — si cambió el nombre del asesor, intentamos
-    // resolver el asesor_id desde otros leads del mismo asesor. El bot Telegram
-    // y los policies RLS usan asesor_id, así que mantenerlo sincronizado evita
-    // que el bot sirva leads "fantasma" tras una reasignación desde admin.
-    let resolvedAsesorId = updated.asesor_id ?? prev?.asesor_id ?? null;
-    if (
-      updated.asesor &&
-      prev?.asesor &&
-      updated.asesor !== prev.asesor &&
-      updated.asesor_id === prev?.asesor_id
-    ) {
-      const sample = leadsDataRef.current.find(
-        l => l.asesor === updated.asesor && l.asesor_id
-      );
-      resolvedAsesorId = sample?.asesor_id ?? null; // null hasta que admin lo refleje
-    }
+    // Reasignación de asesor — la sincronización de asesor_id ↔ asesor_name la
+    // hace ahora el trigger leads_sync_asesor_id de la migración 012. Aquí solo
+    // pasamos asesor_name; la DB resuelve el UUID correcto desde profiles.
+    // Si vino asesor_id explícito, lo respetamos (caso del bot).
+    const resolvedAsesorId = updated.asesor_id ?? prev?.asesor_id ?? null;
 
     const withScore = {
       ...updated,
@@ -367,14 +356,35 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
       asesor_id: resolvedAsesorId,
     };
 
-    // Actualizar estado local inmediatamente (UI reactiva).
-    // Mantenemos la ref síncronicamente — así un updateLead consecutivo en el
-    // mismo tick lee el snapshot ya actualizado.
-    leadsDataRef.current = leadsDataRef.current.map(l => l.id === withScore.id ? withScore : l);
-    setLeadsData(prev => prev.map(l => l.id === withScore.id ? withScore : l));
-    if (selectedLead?.id   === withScore.id) setSelectedLead(withScore);
-    if (notesLead?.id      === withScore.id) setNotesLead(withScore);
-    if (analyzingLead?.id  === withScore.id) setAnalyzingLead(withScore);
+    // ── Reasignación a otro asesor: ¿este usuario pierde acceso? ─────────
+    // Las RLS (leads_select/update) filtran por asesor_name = current_user_name.
+    // Un asesor no-admin que transfiere su lead a otro deja de poder leerlo
+    // después del UPDATE — debemos removerlo del state local inmediatamente y
+    // cerrar cualquier drawer abierto sobre él, o queda fantasma hasta refetch.
+    const losesAccess =
+      !canSeeAll &&
+      prev?.asesor &&
+      prev.asesor === user?.name &&
+      withScore.asesor &&
+      withScore.asesor !== user?.name;
+
+    if (losesAccess) {
+      leadsDataRef.current = leadsDataRef.current.filter(l => l.id !== withScore.id);
+      setLeadsData(prev => prev.filter(l => l.id !== withScore.id));
+      if (selectedLead?.id  === withScore.id) setSelectedLead(null);
+      if (notesLead?.id     === withScore.id) setNotesLead(null);
+      if (analyzingLead?.id === withScore.id) setAnalyzingLead(null);
+      // Limpia también los IDs de pinned/dismissed/priority order si quedaron.
+      setPinnedIds(prev => { if (!prev.has(withScore.id)) return prev; const n = new Set(prev); n.delete(withScore.id); return n; });
+      setDismissedIds(prev => { if (!prev.has(withScore.id)) return prev; const n = new Set(prev); n.delete(withScore.id); return n; });
+    } else {
+      // Update normal: replace en state, sync drawers abiertos.
+      leadsDataRef.current = leadsDataRef.current.map(l => l.id === withScore.id ? withScore : l);
+      setLeadsData(prev => prev.map(l => l.id === withScore.id ? withScore : l));
+      if (selectedLead?.id   === withScore.id) setSelectedLead(withScore);
+      if (notesLead?.id      === withScore.id) setNotesLead(withScore);
+      if (analyzingLead?.id  === withScore.id) setAnalyzingLead(withScore);
+    }
 
     // ── Modo demo — NO persistir en Supabase ─────────────────────────
     // Los leads demo tienen IDs numéricos ("1","2","5") que no son UUIDs,

@@ -80,8 +80,8 @@ CREATE TABLE IF NOT EXISTS leads (
   email            TEXT,
   etapa            TEXT NOT NULL DEFAULT 'Nuevo Registro'
                    CHECK (etapa IN (
-                     'Nuevo Registro','Primer Contacto','Seguimiento',
-                     'Zoom Agendado','Zoom Concretado',
+                     'Nuevo Registro','Primer Contacto','Remarketing','Seguimiento',
+                     'Zoom Agendado','No Show','Zoom Concretado',
                      'Visita Agendada','Visita Concretada',
                      'Negociación','Cierre','Perdido'
                    )),

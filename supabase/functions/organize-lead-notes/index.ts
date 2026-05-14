@@ -71,9 +71,13 @@ Responde SIEMPRE con este JSON exacto. Sin markdown, sin texto extra:
 }
 
 ETAPAS VÁLIDAS (stage_sugerido):
-"Nuevo Registro" | "Primer Contacto" | "Seguimiento" | "Zoom Agendado" |
-"Zoom Concretado" | "Visita Agendada" | "Visita Concretada" |
-"Negociación" | "Cierre" | "Perdido"
+"Nuevo Registro" | "Primer Contacto" | "Remarketing" | "Seguimiento" |
+"Zoom Agendado" | "No Show" | "Zoom Concretado" | "Visita Agendada" |
+"Visita Concretada" | "Negociación" | "Cierre" | "Perdido"
+
+Semántica:
+• "Remarketing": respondió al primer contacto pero quedó en pausa, re-engagement con contenido de valor
+• "No Show": no asistió al Zoom agendado, recovery rápido o mover a Remarketing en 24h
 
 ═══ HEURÍSTICAS DE SCORE ═══
 • Mencionó presupuesto + agendó visita/zoom → 75-90
