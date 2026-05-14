@@ -46,7 +46,7 @@ const Dash = ({ oc, co, leadsData = [], T: _T }) => {
   const zooms    = leadsData.filter(l => l.st === "Zoom Agendado" || l.st === "Zoom Concretado").length;
   const activos  = leadsData.filter(l => l.st !== "Perdido" && l.st !== "Cierre").length;
   const tasaConv = ((cierres / total) * 100).toFixed(1);
-  const actionStages = ["Primer Contacto","Seguimiento","Zoom Agendado","Zoom Concretado","Visita Agendada","Negociación","Cierre"];
+  const actionStages = ["Primer Contacto","Remarketing","Seguimiento","Zoom Agendado","No Show","Zoom Concretado","Visita Agendada","Negociación","Cierre"];
   const actionData   = actionStages.map(st => ({
     label: st.length > 10 ? st.substring(0, 10) + "…" : st,
     fullName: st, val: leadsData.filter(l => l.st === st).length, color: stgC[st] || P.txt3,
