@@ -2828,14 +2828,26 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
 
                     {/* Identity block — fills remaining width */}
                     <div style={{ minWidth: 0, flex: 1 }}>
-                      {/* Row 1: name · tags · [spacer] · budget */}
+                      {/* Row 1: name · tags · [spacer] · budget — todos inline-editables */}
                       <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 3 }}>
-                        <span style={{
-                          fontSize: 13.5, fontWeight: 700, letterSpacing: "-0.018em",
-                          color: isLight ? T.txt : "#FFFFFF", fontFamily: fontDisp,
-                          overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
-                          flexShrink: 1,
-                        }}>{l.n}</span>
+                        <span
+                          onClick={e => e.stopPropagation()}
+                          style={{ minWidth: 0, flexShrink: 1, overflow: "hidden" }}
+                        >
+                          <InlineEdit
+                            value={l.n}
+                            onSave={v => updateLead({ ...l, n: v })}
+                            T={T} isLight={isLight}
+                            placeholder="Nombre del cliente"
+                            readStyle={{
+                              fontSize: 13.5, fontWeight: 700, letterSpacing: "-0.018em",
+                              color: isLight ? T.txt : "#FFFFFF", fontFamily: fontDisp,
+                              maxWidth: "100%", overflow: "hidden", textOverflow: "ellipsis",
+                              whiteSpace: "nowrap", display: "inline-block",
+                            }}
+                            editStyle={{ fontSize: 13.5, fontWeight: 700, fontFamily: fontDisp }}
+                          />
+                        </span>
 
                         {l.isNew && (
                           <span style={{
@@ -2861,13 +2873,33 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                         {/* flex spacer — pushes budget to right edge */}
                         <div style={{ flex: 1, minWidth: 6 }} />
 
-                        {l.budget && (
-                          <span style={{
-                            fontSize: 13, fontWeight: 800, letterSpacing: "-0.022em",
-                            color: isLight ? T.txt : "#FFFFFF", fontFamily: fontDisp,
-                            whiteSpace: "nowrap", flexShrink: 0,
-                          }}>{l.budget}</span>
-                        )}
+                        <span
+                          onClick={e => e.stopPropagation()}
+                          style={{ flexShrink: 0 }}
+                        >
+                          <InlineEdit
+                            value={l.budget}
+                            onSave={v => {
+                              const parsed = parseBudget(v);
+                              updateLead({ ...l,
+                                budget: parsed ? formatBudget(parsed) : v,
+                                presupuesto: parsed || l.presupuesto || 0,
+                              });
+                            }}
+                            T={T} isLight={isLight}
+                            placeholder="300k · 1.5M"
+                            emptyText="+ presupuesto"
+                            readStyle={{
+                              fontSize: 13, fontWeight: 800, letterSpacing: "-0.022em",
+                              color: l.budget
+                                ? (isLight ? T.txt : "#FFFFFF")
+                                : (isLight ? "rgba(15,23,42,0.32)" : "rgba(255,255,255,0.30)"),
+                              fontFamily: fontDisp, whiteSpace: "nowrap",
+                              fontStyle: l.budget ? "normal" : "italic",
+                            }}
+                            editStyle={{ fontSize: 13, fontWeight: 800, fontFamily: fontDisp, width: 130, textAlign: "right" }}
+                          />
+                        </span>
                       </div>
 
                       {/* Row 2: asesor · proyecto · fecha · campaña */}
@@ -3040,44 +3072,52 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                               </button>
                             )}
 
-                            {/* Email chip */}
-                            {l.email && (
-                              <a
-                                href={`mailto:${l.email}`}
-                                onClick={e => e.stopPropagation()}
-                                title={`Enviar correo a ${l.email}`}
-                                style={{
-                                  display: "inline-flex", alignItems: "center", gap: 5,
+                            {/* Email chip — inline-editable. Click → input para
+                                capturar o corregir; muestra "+ correo" cuando
+                                falta. Para abrir mailto, usar el botón de
+                                contacto del drawer. */}
+                            <span
+                              onClick={e => e.stopPropagation()}
+                              style={{ display: "inline-flex", flexShrink: 1, minWidth: 0 }}
+                            >
+                              <InlineEdit
+                                value={l.email}
+                                onSave={v => updateLead({ ...l, email: (v || "").trim() || null })}
+                                T={T} isLight={isLight}
+                                placeholder="email@cliente.com"
+                                emptyText=""
+                                displayValue={v => (
+                                  <span style={{ display: "inline-flex", alignItems: "center", gap: 5, minWidth: 0 }}>
+                                    <Mail
+                                      size={11} strokeWidth={2.2}
+                                      style={{ flexShrink: 0, opacity: v ? 0.85 : 0.55 }}
+                                    />
+                                    <span style={{
+                                      overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+                                    }}>
+                                      {v || "+ correo"}
+                                    </span>
+                                  </span>
+                                )}
+                                readStyle={{
+                                  display: "inline-flex", alignItems: "center",
                                   padding: "4px 10px", borderRadius: 99,
-                                  background: isLight ? "rgba(15,23,42,0.05)" : "rgba(255,255,255,0.055)",
-                                  border: `1px solid ${T.borderH}`,
-                                  color: isLight ? T.txt2 : "rgba(255,255,255,0.78)",
-                                  fontSize: 11, fontWeight: 600, fontFamily: font,
-                                  textDecoration: "none", outline: "none",
-                                  transition: "all 0.16s",
+                                  background: l.email
+                                    ? (isLight ? "rgba(15,23,42,0.05)" : "rgba(255,255,255,0.055)")
+                                    : "transparent",
+                                  border: `1px ${l.email ? "solid" : "dashed"} ${T.borderH}`,
+                                  color: l.email
+                                    ? (isLight ? T.txt2 : "rgba(255,255,255,0.78)")
+                                    : T.txt3,
+                                  fontSize: 11, fontWeight: l.email ? 600 : 500,
+                                  fontFamily: font,
                                   maxWidth: 280, overflow: "hidden",
-                                  whiteSpace: "nowrap", flexShrink: 1,
-                                  minWidth: 0,
+                                  whiteSpace: "nowrap", flexShrink: 1, minWidth: 0,
+                                  margin: 0, fontStyle: "normal",
                                 }}
-                                onMouseEnter={e => {
-                                  e.currentTarget.style.background  = isLight ? "rgba(15,23,42,0.09)" : "rgba(255,255,255,0.10)";
-                                  e.currentTarget.style.color       = T.txt;
-                                  e.currentTarget.style.borderColor = isLight ? "rgba(15,23,42,0.20)" : "rgba(255,255,255,0.18)";
-                                  e.currentTarget.style.transform   = "translateY(-1px)";
-                                }}
-                                onMouseLeave={e => {
-                                  e.currentTarget.style.background  = isLight ? "rgba(15,23,42,0.05)" : "rgba(255,255,255,0.055)";
-                                  e.currentTarget.style.color       = isLight ? T.txt2 : "rgba(255,255,255,0.78)";
-                                  e.currentTarget.style.borderColor = T.borderH;
-                                  e.currentTarget.style.transform   = "none";
-                                }}
-                              >
-                                <Mail size={11} strokeWidth={2.2} style={{ flexShrink: 0, opacity: 0.85 }} />
-                                <span style={{ overflow: "hidden", textOverflow: "ellipsis" }}>
-                                  {l.email}
-                                </span>
-                              </a>
-                            )}
+                                editStyle={{ fontSize: 11, fontFamily: font, width: 240 }}
+                              />
+                            </span>
                           </div>
                         );
                       })()}
