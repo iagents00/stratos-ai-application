@@ -649,6 +649,14 @@ export default function App() {
             height:58px;z-index:200;align-items:center;justify-content:space-around;
             border-top:1px solid rgba(255,255,255,0.07);
           }
+          .stratos-header{padding:0 10px!important;gap:6px!important}
+          .stratos-header-left{gap:6px!important;min-width:0!important;flex:0 1 auto!important}
+          .stratos-header-right{gap:2px!important}
+          .stratos-header-center{display:none!important}
+          .stratos-header-search{display:none!important}
+          .stratos-header-divider{display:none!important}
+          .stratos-userpill{padding:0!important;gap:0!important}
+          .stratos-userpill-text{display:none!important}
         }
       `}</style>
       <style>{dynamicStyles}</style>
@@ -771,27 +779,27 @@ export default function App() {
           const iBtnHoverBg  = isLight ? `${T.accent}0D` : "rgba(255,255,255,0.07)";
           const iBtnActiveBg = isLight ? `${T.accent}18` : "rgba(255,255,255,0.12)";
           const icoRest  = isLight ? T.txt3  : "rgba(255,255,255,0.40)";
-          const hDiv = <div style={{ width:1, height:16, flexShrink:0, background: isLight ? `${T.accent}22` : "rgba(255,255,255,0.07)", margin:"0 2px" }} />;
+          const hDiv = <div className="stratos-header-divider" style={{ width:1, height:16, flexShrink:0, background: isLight ? `${T.accent}22` : "rgba(255,255,255,0.07)", margin:"0 2px" }} />;
           const onIco  = e => { e.currentTarget.style.background = iBtnHoverBg; };
           const offIco = e => { e.currentTarget.style.background = "transparent"; };
           const dnIco  = e => { e.currentTarget.style.background = iBtnActiveBg; e.currentTarget.style.transform="scale(0.92)"; };
           const upIco  = e => { e.currentTarget.style.background = iBtnHoverBg;  e.currentTarget.style.transform="scale(1)"; };
           return (
-            <div style={{ position:"relative", flexShrink:0, padding:"0 20px", height:52, borderBottom:`1px solid ${hBorder}`, display:"flex", justifyContent:"space-between", alignItems:"center", background:hBg, backdropFilter: isLight ? "blur(24px) saturate(180%)" : "none", WebkitBackdropFilter: isLight ? "blur(24px) saturate(180%)" : "none", boxShadow: isLight ? "inset 0 -1px 0 rgba(13,154,118,0.08), 0 2px 16px rgba(15,23,42,0.04)" : "none", transition:"background 0.3s ease" }}>
+            <div className="stratos-header" style={{ position:"relative", flexShrink:0, padding:"0 20px", height:52, borderBottom:`1px solid ${hBorder}`, display:"flex", justifyContent:"space-between", alignItems:"center", background:hBg, backdropFilter: isLight ? "blur(24px) saturate(180%)" : "none", WebkitBackdropFilter: isLight ? "blur(24px) saturate(180%)" : "none", boxShadow: isLight ? "inset 0 -1px 0 rgba(13,154,118,0.08), 0 2px 16px rgba(15,23,42,0.04)" : "none", transition:"background 0.3s ease" }}>
               {/* LEFT */}
-              <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+              <div className="stratos-header-left" style={{ display:"flex", alignItems:"center", gap:10 }}>
                 <p style={{ margin:0, fontSize:14, fontFamily:fontDisp, letterSpacing:"-0.030em", fontWeight:600, color: isLight ? T.txt : "#FFFFFF", lineHeight:1, whiteSpace:"nowrap" }}>
                   Stratos<span style={{ marginLeft:3, fontWeight:600, color: isLight ? "rgba(15,23,42,0.38)" : "rgba(255,255,255,0.30)", letterSpacing:"0.01em" }}>IA</span>
                 </p>
                 <IAOSIsland leadsData={leadsData} isLight={isLight} idx={iaosIdx} />
               </div>
               {/* CENTER */}
-              <div style={{ position:"absolute", left:"50%", transform:"translateX(-50%)" }}>
+              <div className="stratos-header-center" style={{ position:"absolute", left:"50%", transform:"translateX(-50%)" }}>
                 <DynIsland onExpand={openPriorityLead} notifications={notifs} theme={theme} beamIdx={iaosIdx} />
               </div>
               {/* RIGHT */}
-              <div style={{ display:"flex", alignItems:"center", gap:4 }}>
-                <button title="Buscar (⌘K)" style={iBtnBase} onMouseEnter={onIco} onMouseLeave={offIco} onMouseDown={dnIco} onMouseUp={upIco}>
+              <div className="stratos-header-right" style={{ display:"flex", alignItems:"center", gap:4 }}>
+                <button className="stratos-header-search" title="Buscar (⌘K)" style={iBtnBase} onMouseEnter={onIco} onMouseLeave={offIco} onMouseDown={dnIco} onMouseUp={upIco}>
                   <Search size={14} color={icoRest} strokeWidth={2} />
                 </button>
                 {/* ── Campana de notificaciones ──
@@ -936,6 +944,7 @@ export default function App() {
                     Es la entrada principal a Perfil para asesores (que no tienen
                     acceso al botón System / Gestión de Usuarios). */}
                 <button type="button"
+                  className="stratos-userpill"
                   onClick={() => setV("perfil")}
                   title="Mi perfil — conectar Telegram"
                   aria-current={v === "perfil" ? "page" : undefined}
@@ -956,7 +965,7 @@ export default function App() {
                   <div style={{ width:26, height:26, borderRadius:"50%", flexShrink:0, background: isLight ? `linear-gradient(135deg, ${T.accent} 0%, #10B48A 100%)` : `linear-gradient(145deg, rgba(110,231,194,0.28) 0%, rgba(52,211,153,0.12) 100%)`, border: isLight ? "1.5px solid rgba(255,255,255,0.30)" : `1.5px solid rgba(110,231,194,0.24)`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:10.5, fontWeight:800, fontFamily:fontDisp, color: isLight ? "#FFFFFF" : T.accent, boxShadow: isLight ? `0 2px 8px ${T.accent}45` : `inset 0 1px 0 rgba(110,231,194,0.22)` }}>
                     {user?.name?.charAt(0).toUpperCase() || "U"}
                   </div>
-                  <div style={{ display:"flex", flexDirection:"column", alignItems:"flex-start" }}>
+                  <div className="stratos-userpill-text" style={{ display:"flex", flexDirection:"column", alignItems:"flex-start" }}>
                     <span style={{ fontSize:11.5, fontWeight:700, fontFamily:fontDisp, letterSpacing:"-0.01em", lineHeight:1.2, color: isLight ? T.txt : "rgba(255,255,255,0.82)", whiteSpace:"nowrap" }}>
                       {user?.name?.split(" ")[0] || "Usuario"}
                     </span>
