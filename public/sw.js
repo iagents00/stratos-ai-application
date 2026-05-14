@@ -29,6 +29,9 @@
 // (era 25s) porque ya no hay razón para esperar tanto. También: lentitud
 // al registrar leads — appendToMirror ahora defer con requestIdleCallback.
 //
+// v17 — fix(crm): al darle estrella, el lead va al INICIO del carrusel
+//       de prioridad (antes iba al final en modo manual porque
+//       priorityOrder no se actualizaba en togglePin).
 // v16 — CRM list view paleta: WA/TG/FB badges con nombres completos
 //       (WhatsApp, Telegram, Facebook), nombres de cliente con wrap (no
 //       ellipsis), CTA "Agendar fecha" + highlight de pinned migrados de
@@ -48,7 +51,7 @@
 // v10 — limpieza de tokens legacy stratos.supabase.*.
 // v9 — destrabar login: cuelgue infinito por bundle viejo cacheado.
 // v8 — orden por defecto del CRM: fechaIngreso desc (nuevos arriba).
-const CACHE_VERSION = 'stratos-v16';
+const CACHE_VERSION = 'stratos-v17';
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 
