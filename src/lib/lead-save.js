@@ -1,37 +1,44 @@
 /**
- * lib/lead-save.js — Guardado resiliente de leads con doble respaldo
+ * lib/lead-save.js — Guardado resiliente de leads con TRIPLE respaldo
  * ─────────────────────────────────────────────────────────────────────────────
  * Garantiza que un lead recién registrado NUNCA se pierda, aún si:
  *   · Supabase está caído / lento / con error transitorio
  *   · El navegador se cierra antes de que termine el insert
  *   · Hay un error de red intermitente
+ *   · El usuario o el browser purga localStorage
+ *   · El asesor está completamente offline
  *
- * Estrategia (3 capas):
- *   1. ESPEJO LOCAL APPEND-ONLY — antes de tocar la red, escribimos el
- *      payload completo a `localStorage["stratos_leads_mirror"]`. Es la
- *      copia inmutable de respaldo. Si todo falla, el lead vive ahí
- *      hasta que se reintente.
- *   2. INSERCIÓN A SUPABASE — el camino feliz. Si responde OK, marcamos
- *      la entrada del espejo como `synced=true` con el id real.
- *   3. COLA DE REINTENTOS — si Supabase falla, encolamos `lead_insert`
- *      en la cola estándar de offline-mode.js. El loop de auto-recovery
- *      en App.jsx la reintenta cada 60s + en focus + manualmente con
- *      el botón "Sincronizar".
+ * Estrategia (4 capas):
+ *   1. ESPEJO LOCAL DOBLE — escritura SÍNCRONA a localStorage Y append a
+ *      IndexedDB (lib/lead-storage.js). LS garantiza que aunque el browser
+ *      cierre el tab inmediatamente, la entry sobrevive al próximo arranque.
+ *      IDB añade redundancia con cuotas mayores y datos por entry.
+ *   2. INSERCIÓN A SUPABASE — vía supabase.rpc('create_lead'). Idempotente
+ *      por ON CONFLICT (id) DO NOTHING. Si responde OK, marcamos la entrada
+ *      del espejo como synced=true.
+ *   3. COLA DE REINTENTOS — si Supabase falla, encolamos en la cola standard.
+ *      Auto-recovery la reintenta cada 60s + en focus + manualmente.
+ *   4. DEAD-LETTER QUEUE — si la cola falla 5 veces seguidas con el mismo
+ *      payload, se mueve a stratos_leads_dead_letter para revisión manual
+ *      (en lugar de reintentar para siempre y silenciar el error real).
  *
- * El espejo se mantiene acotado a los últimos LOCAL_MIRROR_LIMIT registros
- * para no llenar localStorage. Cualquier lead ya sincronizado y > 7 días
- * se purga del espejo (sigue en Supabase, ahí es la fuente de verdad).
+ * El espejo se purga periódicamente: sincronizados > 7 días se descartan
+ * (siguen en Supabase). Pendientes NUNCA se purgan automáticamente.
  */
 
 import { enqueueLeadInsert } from './offline-mode'
+import {
+  appendEntrySync,
+  markSynced as storageMarkSynced,
+  markFailed as storageMarkFailed,
+  getAllEntries,
+  getPendingEntries,
+  pruneOldSynced,
+  getDeadLetter as storageGetDeadLetter,
+  clearDeadLetter as storageClearDeadLetter,
+  verifyStorageHealth,
+} from './lead-storage'
 
-const KEY_LEADS_MIRROR     = 'stratos_leads_mirror'
-// Reducido de 500 → 150. Con 200+ leads, JSON.stringify de un array grande
-// bloquea el main thread varios cientos de ms al registrar cada cliente —
-// se percibe como lag en la UI. 150 es buffer suficiente y mantiene la
-// escritura por debajo de ~20ms.
-const LOCAL_MIRROR_LIMIT   = 150
-const SYNCED_TTL_MS        = 7 * 24 * 60 * 60 * 1000 // 7 días
 // 12s: Supabase paid plan no tiene cold-start, así que el INSERT real toma
 // ~500ms-2s con los 5 triggers. 12s deja margen amplio para redes lentas
 // pero no deja al usuario con spinner eterno si algo falla.
@@ -48,93 +55,44 @@ function newId() {
   return `${hex(8)}-${hex(4)}-4${hex(3)}-${(8 + Math.floor(Math.random() * 4)).toString(16)}${hex(3)}-${hex(12)}`
 }
 
-// ── Espejo local (append-only) ──
-function readMirror() {
-  try {
-    const raw = localStorage.getItem(KEY_LEADS_MIRROR)
-    return raw ? JSON.parse(raw) : []
-  } catch (_) {
-    return []
-  }
+// ── API pública (re-exports y helpers de lectura) ───────────────────────────
+export async function getPendingMirrorEntries() {
+  return getPendingEntries()
 }
 
-function writeMirror(arr) {
-  // Purga: descartamos sincronizados antiguos (> 7 días). Los pendientes
-  // (synced=false) NUNCA se purgan, viven hasta que se sincronicen.
-  const now = Date.now()
-  const purged = arr.filter(e => {
-    if (!e.synced) return true
-    return (now - (e.synced_at || e.created_at_local || now)) < SYNCED_TTL_MS
-  })
-  // Cap por tamaño: si excede, descartamos los más antiguos sincronizados.
-  let final = purged
-  if (final.length > LOCAL_MIRROR_LIMIT) {
-    const pending = final.filter(e => !e.synced)
-    const synced  = final.filter(e =>  e.synced)
-                         .sort((a, b) => (b.synced_at || 0) - (a.synced_at || 0))
-    final = [...pending, ...synced.slice(0, Math.max(0, LOCAL_MIRROR_LIMIT - pending.length))]
-  }
-  try {
-    localStorage.setItem(KEY_LEADS_MIRROR, JSON.stringify(final))
-  } catch (e) {
-    // Quota exceeded: como último recurso, conservamos solo los pendientes.
-    try {
-      const pending = final.filter(x => !x.synced)
-      localStorage.setItem(KEY_LEADS_MIRROR, JSON.stringify(pending))
-    } catch (_) { /* nada que hacer */ }
-  }
+export async function getMirrorSnapshot() {
+  return getAllEntries()
 }
 
-function appendToMirror(entry) {
-  const arr = readMirror()
-  arr.push(entry)
-  // Defer writeMirror — JSON.stringify + localStorage.setItem sobre 100+
-  // entries puede tardar 50-200ms y se siente como lag al hacer click en
-  // "Registrar". El espejo no necesita persistirse SÍNCRONO: si el browser
-  // se cierra antes del setTimeout, el lead ya está en cola Supabase. Si
-  // requestIdleCallback existe, lo usamos (mejor); si no, setTimeout(0).
-  const flush = () => writeMirror(arr)
-  if (typeof requestIdleCallback === 'function') {
-    requestIdleCallback(flush, { timeout: 1000 })
-  } else {
-    setTimeout(flush, 0)
-  }
+export function getDeadLetterEntries() {
+  return storageGetDeadLetter()
 }
 
-function markMirrorSynced(localId, realId) {
-  const arr = readMirror()
-  const idx = arr.findIndex(e => e.local_id === localId)
-  if (idx === -1) return
-  arr[idx].synced     = true
-  arr[idx].synced_at  = Date.now()
-  arr[idx].real_id    = realId || arr[idx].payload?.id
-  writeMirror(arr)
+export function clearDeadLetterEntries() {
+  return storageClearDeadLetter()
 }
 
-export function getPendingMirrorEntries() {
-  return readMirror().filter(e => !e.synced)
+export async function getStorageHealth() {
+  return verifyStorageHealth()
 }
 
-export function getMirrorSnapshot() {
-  return readMirror()
+export async function purgeOldEntries(opts) {
+  return pruneOldSynced(opts)
 }
 
 // Cuando la cola general flushea, esta función intenta marcar los espejos
 // como sincronizados. Llamar después de un sync exitoso desde App.jsx.
-export function reconcileMirrorWithCloud(syncedIds) {
+export async function reconcileMirrorWithCloud(syncedIds) {
   if (!Array.isArray(syncedIds) || syncedIds.length === 0) return
-  const arr = readMirror()
-  let dirty = false
-  for (const id of syncedIds) {
-    const idx = arr.findIndex(e => e.payload?.id === id && !e.synced)
-    if (idx !== -1) {
-      arr[idx].synced    = true
-      arr[idx].synced_at = Date.now()
-      arr[idx].real_id   = id
-      dirty = true
-    }
+  const all = await getAllEntries()
+  const pendingByPayloadId = new Map()
+  for (const e of all) {
+    if (!e.synced && e.payload?.id) pendingByPayloadId.set(e.payload.id, e)
   }
-  if (dirty) writeMirror(arr)
+  for (const id of syncedIds) {
+    const entry = pendingByPayloadId.get(id)
+    if (entry) await storageMarkSynced(entry.local_id, id)
+  }
 }
 
 // ── Wrapper de timeout ──
@@ -176,8 +134,12 @@ export async function saveLead(supabase, payload, currentUser, opts = {}) {
   const fullPayload = { ...payload, id }
   const localId = `local_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
 
-  // 2. ESPEJO LOCAL — primero, siempre, antes de tocar la red.
-  appendToMirror({
+  // 2. ESPEJO LOCAL DOBLE — escritura SÍNCRONA a localStorage + IDB en
+  //    background. Antes era deferred con requestIdleCallback, lo que abría
+  //    una ventana donde un cierre rápido del tab perdía la entry. Ahora la
+  //    escritura a LS termina antes de retornar — la entry sobrevive al
+  //    próximo arranque sí o sí.
+  appendEntrySync({
     local_id:        localId,
     payload:         fullPayload,
     user_id:         currentUser?.id || null,
@@ -186,6 +148,7 @@ export async function saveLead(supabase, payload, currentUser, opts = {}) {
     synced:          false,
     synced_at:       null,
     real_id:         null,
+    fail_count:      0,
   })
 
   // 3. Modo demo / sin red: marcamos como guardado localmente y salimos.
@@ -200,12 +163,9 @@ export async function saveLead(supabase, payload, currentUser, opts = {}) {
   }
 
   // 4. Intento de inserción en Supabase con timeout duro.
-  //    Usamos la RPC create_lead (migración 008) en lugar de
-  //    .from('leads').insert(...).select().single() — la RPC hace
-  //    ON CONFLICT (id) DO NOTHING, así que si llega 2+ veces con el mismo
-  //    id (doble clic, retry de red, etc.) sólo crea la fila la primera
-  //    vez. Además devuelve sólo {lead_id, lead_created_at,
-  //    lead_organization_id, was_inserted} en vez de SELECT * — más liviano.
+  //    Usamos la RPC create_lead (migración 008) — ON CONFLICT (id) DO NOTHING
+  //    la hace idempotente: doble clic, retry de red, replay de cola → la
+  //    fila se crea una sola vez.
   try {
     const { data, error } = await withTimeout(
       supabase.rpc('create_lead', { payload: fullPayload }).single(),
@@ -215,7 +175,7 @@ export async function saveLead(supabase, payload, currentUser, opts = {}) {
     if (error) {
       // Error duro de Supabase (RLS, validación, etc.).
       // Encolamos para reintento con el mismo id (la RPC es idempotente).
-      enqueueLeadInsert(fullPayload, currentUser)
+      enqueueLeadInsert(fullPayload, currentUser, { localId })
       return {
         id,
         savedToCloud:   false,
@@ -228,7 +188,7 @@ export async function saveLead(supabase, payload, currentUser, opts = {}) {
     // Éxito en la nube — marcamos el espejo y devolvemos los datos clave.
     // data: { lead_id, lead_created_at, lead_organization_id, was_inserted }
     const realId = data?.lead_id || id
-    markMirrorSynced(localId, realId)
+    storageMarkSynced(localId, realId)
     return {
       id:             realId,
       savedToCloud:   true,
@@ -243,7 +203,7 @@ export async function saveLead(supabase, payload, currentUser, opts = {}) {
     }
   } catch (e) {
     // Timeout o excepción inesperada → cola de reintentos.
-    enqueueLeadInsert(fullPayload, currentUser)
+    enqueueLeadInsert(fullPayload, currentUser, { localId })
     return {
       id,
       savedToCloud:   false,
