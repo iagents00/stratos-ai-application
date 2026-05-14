@@ -2879,84 +2879,151 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                         ].filter(Boolean).join(" · ")}
                       </div>
 
-                      {/* Row 3: info chips — fecha de cita + email. Solo aparece
-                          cuando hay info relevante. La pill de cita usa el color
-                          de la etapa para destacar Zoom/Visita Agendada y No Show. */}
-                      {(l.nextActionDate || l.email) && (
-                        <div style={{
-                          display: "flex", alignItems: "center", gap: 6, marginTop: 6,
-                          flexWrap: "wrap",
-                        }}>
-                          {l.nextActionDate && (
-                            <button
-                              onClick={e => { e.stopPropagation(); setNotesLead(l); }}
-                              title={l.nextAction
-                                ? `${l.nextAction} — ${l.nextActionDate}`
-                                : `Próxima acción · ${l.nextActionDate}`}
-                              style={{
-                                display: "inline-flex", alignItems: "center", gap: 5,
-                                padding: "3px 9px", borderRadius: 99,
-                                background: isLight ? `${stageC}14` : `${stageC}1A`,
-                                border: `1px solid ${stageC}44`,
-                                color: isLight
-                                  ? `color-mix(in srgb, ${stageC} 55%, #0B1220 45%)`
-                                  : stageC,
-                                fontSize: 10.5, fontWeight: 700, fontFamily: font,
-                                cursor: "pointer", outline: "none",
-                                transition: "all 0.15s",
-                                whiteSpace: "nowrap", flexShrink: 0,
-                                letterSpacing: "0.005em",
-                              }}
-                              onMouseEnter={e => {
-                                e.currentTarget.style.background = isLight ? `${stageC}1F` : `${stageC}28`;
-                                e.currentTarget.style.transform   = "translateY(-1px)";
-                              }}
-                              onMouseLeave={e => {
-                                e.currentTarget.style.background = isLight ? `${stageC}14` : `${stageC}1A`;
-                                e.currentTarget.style.transform   = "none";
-                              }}
-                            >
-                              <CalendarDays size={10} strokeWidth={2.4} />
-                              <span>{l.nextActionDate}</span>
-                            </button>
-                          )}
-                          {l.email && (
-                            <a
-                              href={`mailto:${l.email}`}
-                              onClick={e => e.stopPropagation()}
-                              title={`Enviar correo a ${l.email}`}
-                              style={{
-                                display: "inline-flex", alignItems: "center", gap: 5,
-                                padding: "3px 9px", borderRadius: 99,
-                                background: isLight ? "rgba(15,23,42,0.04)" : "rgba(255,255,255,0.045)",
-                                border: `1px solid ${T.border}`,
-                                color: T.txt2,
-                                fontSize: 10.5, fontWeight: 500, fontFamily: font,
-                                textDecoration: "none", outline: "none",
-                                transition: "all 0.15s",
-                                maxWidth: 240, overflow: "hidden",
-                                whiteSpace: "nowrap", flexShrink: 1,
-                                minWidth: 0,
-                              }}
-                              onMouseEnter={e => {
-                                e.currentTarget.style.background  = isLight ? "rgba(15,23,42,0.07)" : "rgba(255,255,255,0.08)";
-                                e.currentTarget.style.color       = T.txt;
-                                e.currentTarget.style.borderColor = T.borderH;
-                              }}
-                              onMouseLeave={e => {
-                                e.currentTarget.style.background  = isLight ? "rgba(15,23,42,0.04)" : "rgba(255,255,255,0.045)";
-                                e.currentTarget.style.color       = T.txt2;
-                                e.currentTarget.style.borderColor = T.border;
-                              }}
-                            >
-                              <Mail size={10} strokeWidth={2.2} style={{ flexShrink: 0 }} />
-                              <span style={{ overflow: "hidden", textOverflow: "ellipsis" }}>
-                                {l.email}
-                              </span>
-                            </a>
-                          )}
-                        </div>
-                      )}
+                      {/* Row 3: info chips — fecha de cita + email + CTAs.
+                          Para etapas con cita programada (Zoom Agendado, No Show,
+                          Visita Agendada, etc.) la pill se renderea PROMINENTE,
+                          y si falta la fecha aparece un CTA vibrante para que
+                          el asesor la capture. */}
+                      {(() => {
+                        const isAgendaCritical = ["Zoom Agendado","Zoom Concretado","Visita Agendada","Visita Concretada","No Show"].includes(l.st);
+                        const hasAppt = !!l.nextActionDate;
+                        const showMissingCita = isAgendaCritical && !hasAppt;
+                        const showEmpty = !l.nextActionDate && !l.email && !showMissingCita;
+                        if (showEmpty) return null;
+                        return (
+                          <div style={{
+                            display: "flex", alignItems: "center", gap: 7, marginTop: 7,
+                            flexWrap: "wrap",
+                          }}>
+                            {/* Pill de cita — prominente cuando la etapa requiere agenda */}
+                            {hasAppt && (
+                              <button
+                                onClick={e => { e.stopPropagation(); setNotesLead(l); }}
+                                title={l.nextAction
+                                  ? `${l.nextAction} — ${l.nextActionDate}`
+                                  : `Próxima acción · ${l.nextActionDate}`}
+                                style={{
+                                  display: "inline-flex", alignItems: "center",
+                                  gap: isAgendaCritical ? 7 : 5,
+                                  padding: isAgendaCritical ? "5px 12px 5px 10px" : "3px 9px",
+                                  borderRadius: 99,
+                                  background: isAgendaCritical
+                                    ? (isLight ? `${stageC}28` : `${stageC}2A`)
+                                    : (isLight ? `${stageC}14` : `${stageC}1A`),
+                                  border: `${isAgendaCritical ? 1.5 : 1}px solid ${stageC}${isAgendaCritical ? "" : "44"}`,
+                                  color: isLight
+                                    ? `color-mix(in srgb, ${stageC} 50%, #0B1220 50%)`
+                                    : stageC,
+                                  fontSize: isAgendaCritical ? 11.5 : 10.5,
+                                  fontWeight: isAgendaCritical ? 800 : 700,
+                                  fontFamily: font,
+                                  cursor: "pointer", outline: "none",
+                                  transition: "all 0.16s",
+                                  whiteSpace: "nowrap", flexShrink: 0,
+                                  letterSpacing: "0.005em",
+                                  boxShadow: isAgendaCritical
+                                    ? (isLight ? `0 1px 2px ${stageC}28` : `0 0 12px ${stageC}22`)
+                                    : "none",
+                                }}
+                                onMouseEnter={e => {
+                                  e.currentTarget.style.background = isAgendaCritical
+                                    ? (isLight ? `${stageC}38` : `${stageC}3A`)
+                                    : (isLight ? `${stageC}1F` : `${stageC}28`);
+                                  e.currentTarget.style.transform = "translateY(-1px)";
+                                }}
+                                onMouseLeave={e => {
+                                  e.currentTarget.style.background = isAgendaCritical
+                                    ? (isLight ? `${stageC}28` : `${stageC}2A`)
+                                    : (isLight ? `${stageC}14` : `${stageC}1A`);
+                                  e.currentTarget.style.transform = "none";
+                                }}
+                              >
+                                <CalendarDays size={isAgendaCritical ? 13 : 10} strokeWidth={2.5} />
+                                {isAgendaCritical && (
+                                  <span style={{
+                                    fontSize: 8.5, fontWeight: 900, letterSpacing: "0.12em",
+                                    opacity: 0.65, textTransform: "uppercase",
+                                    paddingRight: 3, borderRight: `1px solid ${stageC}55`,
+                                    marginRight: 1,
+                                  }}>{l.st === "No Show" ? "Reagendar" : "Cita"}</span>
+                                )}
+                                <span>{l.nextActionDate}</span>
+                              </button>
+                            )}
+
+                            {/* CTA cuando falta la fecha en etapa con cita */}
+                            {showMissingCita && (
+                              <button
+                                onClick={e => { e.stopPropagation(); setNotesLead(l); }}
+                                title="Click para agendar fecha/hora de la cita"
+                                style={{
+                                  display: "inline-flex", alignItems: "center", gap: 6,
+                                  padding: "5px 11px", borderRadius: 99,
+                                  background: isLight ? "#FB923C1E" : "#FB923C22",
+                                  border: `1.5px solid #FB923C`,
+                                  color: isLight ? "color-mix(in srgb, #FB923C 55%, #0B1220 45%)" : "#FB923C",
+                                  fontSize: 11, fontWeight: 800, fontFamily: font,
+                                  cursor: "pointer", outline: "none",
+                                  transition: "all 0.16s",
+                                  whiteSpace: "nowrap", flexShrink: 0,
+                                  letterSpacing: "0.01em",
+                                  animation: "stratosNewLeadPulse 2s ease-in-out infinite",
+                                }}
+                                onMouseEnter={e => {
+                                  e.currentTarget.style.background = isLight ? "#FB923C30" : "#FB923C36";
+                                  e.currentTarget.style.transform  = "translateY(-1px)";
+                                }}
+                                onMouseLeave={e => {
+                                  e.currentTarget.style.background = isLight ? "#FB923C1E" : "#FB923C22";
+                                  e.currentTarget.style.transform  = "none";
+                                }}
+                              >
+                                <CalendarDays size={12} strokeWidth={2.6} />
+                                <span>Sin fecha · agendar</span>
+                              </button>
+                            )}
+
+                            {/* Email chip */}
+                            {l.email && (
+                              <a
+                                href={`mailto:${l.email}`}
+                                onClick={e => e.stopPropagation()}
+                                title={`Enviar correo a ${l.email}`}
+                                style={{
+                                  display: "inline-flex", alignItems: "center", gap: 5,
+                                  padding: "4px 10px", borderRadius: 99,
+                                  background: isLight ? "rgba(15,23,42,0.05)" : "rgba(255,255,255,0.055)",
+                                  border: `1px solid ${T.borderH}`,
+                                  color: isLight ? T.txt2 : "rgba(255,255,255,0.78)",
+                                  fontSize: 11, fontWeight: 600, fontFamily: font,
+                                  textDecoration: "none", outline: "none",
+                                  transition: "all 0.16s",
+                                  maxWidth: 280, overflow: "hidden",
+                                  whiteSpace: "nowrap", flexShrink: 1,
+                                  minWidth: 0,
+                                }}
+                                onMouseEnter={e => {
+                                  e.currentTarget.style.background  = isLight ? "rgba(15,23,42,0.09)" : "rgba(255,255,255,0.10)";
+                                  e.currentTarget.style.color       = T.txt;
+                                  e.currentTarget.style.borderColor = isLight ? "rgba(15,23,42,0.20)" : "rgba(255,255,255,0.18)";
+                                  e.currentTarget.style.transform   = "translateY(-1px)";
+                                }}
+                                onMouseLeave={e => {
+                                  e.currentTarget.style.background  = isLight ? "rgba(15,23,42,0.05)" : "rgba(255,255,255,0.055)";
+                                  e.currentTarget.style.color       = isLight ? T.txt2 : "rgba(255,255,255,0.78)";
+                                  e.currentTarget.style.borderColor = T.borderH;
+                                  e.currentTarget.style.transform   = "none";
+                                }}
+                              >
+                                <Mail size={11} strokeWidth={2.2} style={{ flexShrink: 0, opacity: 0.85 }} />
+                                <span style={{ overflow: "hidden", textOverflow: "ellipsis" }}>
+                                  {l.email}
+                                </span>
+                              </a>
+                            )}
+                          </div>
+                        );
+                      })()}
                     </div>
                   </div>
 
