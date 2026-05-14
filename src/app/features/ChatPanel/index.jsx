@@ -1,7 +1,7 @@
 /**
  * app/features/ChatPanel/index.jsx
  * ─────────────────────────────────────────────────────────────────────────────
- * Panel de chat con Agente Stratos IA.
+ * Panel de chat con Agente Stratos AI.
  * Extraído de App.jsx (ex líneas 1150–1605).
  * Incluye getResp avanzado que acepta datos en vivo del CRM.
  * ─────────────────────────────────────────────────────────────────────────────

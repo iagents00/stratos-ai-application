@@ -4,7 +4,7 @@
 
 ---
 
-## 🎯 ¿Qué es Stratos IA?
+## 🎯 ¿Qué es Stratos AI?
 
 **Plataforma SaaS completa con:**
 - ✅ Dashboard ejecutivo con KPIs en tiempo real
@@ -63,7 +63,7 @@ Verás:
 ➜  Local:   http://localhost:5173/
 ```
 
-Click en el enlace → Se abre Stratos IA en una pestaña.
+Click en el enlace → Se abre Stratos AI en una pestaña.
 
 ### **Paso 4: Editar código**
 
@@ -474,14 +474,14 @@ Cuando hayas leído esto + DESIGN_SYSTEM.md + DEVELOPMENT.md:
 
 ---
 
-## 🚀 Bienvenido al equipo Stratos IA
+## 🚀 Bienvenido al equipo Stratos AI
 
 **Happy coding!** Si tienes dudas, el PM está para ayudarte. 
 
-Y recuerda: **El código de todos en Stratos IA sigue las mismas convenciones** — así nos es fácil entender el trabajo de otros.
+Y recuerda: **El código de todos en Stratos AI sigue las mismas convenciones** — así nos es fácil entender el trabajo de otros.
 
 ---
 
 **Versión:** 1.0  
 **Última actualización:** Abril 2026  
-**Mantenido por:** El Team Stratos IA
+**Mantenido por:** El Team Stratos AI

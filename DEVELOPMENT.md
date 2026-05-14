@@ -1,4 +1,4 @@
-# 🛠️ GUÍA DE DESARROLLO — Stratos IA v10
+# 🛠️ GUÍA DE DESARROLLO — Stratos AI v10
 
 **Para desarrolladores que trabajan en Claude Code o Antigravity**
 
@@ -46,7 +46,7 @@ yarn install
 npm run dev
 ```
 
-Si ves la interfaz de Stratos IA → **¡Listo!**
+Si ves la interfaz de Stratos AI → **¡Listo!**
 
 ---
 
