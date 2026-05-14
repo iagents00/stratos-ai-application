@@ -3042,7 +3042,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                   style={{
                     display: "grid", gridTemplateColumns: cols,
                     gap: isMobile ? 8 : 12,
-                    padding: isMobile ? "12px 14px" : "14px 20px",
+                    padding: isMobile ? "12px 14px" : "18px 22px",
                     borderBottom: `1px solid ${T.border}`,
                     alignItems: isMobile ? "stretch" : "center",
                     transition: "background 0.14s, box-shadow 0.4s",
@@ -3156,11 +3156,15 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                         </span>
                       </div>
 
-                      {/* Row 2: asesor · proyecto · fecha · campaña */}
+                      {/* Row 2: asesor · proyecto · fecha · campaña — metadata
+                          gris discreta. Tamaño reducido y opacidad baja para que
+                          jerárquicamente quede por debajo del nombre + presupuesto. */}
                       <div style={{
-                        fontSize: 10.5, color: T.txt3, fontFamily: font,
+                        fontSize: 10, fontWeight: 500,
+                        color: isLight ? "rgba(15,23,42,0.45)" : "rgba(255,255,255,0.42)",
+                        fontFamily: font,
                         overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
-                        lineHeight: 1.3,
+                        lineHeight: 1.3, letterSpacing: "0.003em",
                       }}>
                         {[
                           l.asesor?.split(" ")[0],
@@ -3239,100 +3243,90 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                                 />
                               </span>
                             ) : hasAppt ? (
-                              /* Pill de cita — prominente cuando la etapa requiere agenda */
+                              /* Pill de cita — minimalista: borde discreto, sin sombra,
+                                 sin gradient. Solo el icono y la fecha. La etapa ya
+                                 indica que es una cita; no necesitamos un sub-label. */
                               <button
                                 onClick={startEdit}
                                 title={l.nextAction
                                   ? `${l.nextAction} — ${l.nextActionDate} · click para editar`
                                   : `Próxima acción · ${l.nextActionDate} · click para editar`}
                                 style={{
-                                  display: "inline-flex", alignItems: "center",
-                                  gap: isAgendaCritical ? 7 : 5,
-                                  padding: isAgendaCritical ? "5px 12px 5px 10px" : "3px 9px",
+                                  display: "inline-flex", alignItems: "center", gap: 5,
+                                  padding: "3px 10px 3px 8px",
                                   borderRadius: 99,
-                                  background: isAgendaCritical
-                                    ? (isLight ? `${stageC}28` : `${stageC}2A`)
-                                    : (isLight ? `${stageC}14` : `${stageC}1A`),
-                                  border: `${isAgendaCritical ? 1.5 : 1}px solid ${stageC}${isAgendaCritical ? "" : "44"}`,
+                                  background: "transparent",
+                                  border: `1px solid ${stageC}${isLight ? "55" : "38"}`,
                                   color: isLight
-                                    ? `color-mix(in srgb, ${stageC} 50%, #0B1220 50%)`
+                                    ? `color-mix(in srgb, ${stageC} 55%, #0B1220 45%)`
                                     : stageC,
-                                  fontSize: isAgendaCritical ? 11.5 : 10.5,
-                                  fontWeight: isAgendaCritical ? 800 : 700,
+                                  fontSize: 10.5, fontWeight: 600,
                                   fontFamily: font,
                                   cursor: "text", outline: "none",
-                                  transition: "all 0.16s",
+                                  transition: "background 0.14s, border-color 0.14s",
                                   whiteSpace: "nowrap", flexShrink: 0,
                                   letterSpacing: "0.005em",
-                                  boxShadow: isAgendaCritical
-                                    ? (isLight ? `0 1px 2px ${stageC}28` : `0 0 12px ${stageC}22`)
-                                    : "none",
                                 }}
                                 onMouseEnter={e => {
-                                  e.currentTarget.style.background = isAgendaCritical
-                                    ? (isLight ? `${stageC}38` : `${stageC}3A`)
-                                    : (isLight ? `${stageC}1F` : `${stageC}28`);
-                                  e.currentTarget.style.transform = "translateY(-1px)";
+                                  e.currentTarget.style.background = isLight ? `${stageC}10` : `${stageC}14`;
+                                  e.currentTarget.style.borderColor = `${stageC}${isLight ? "80" : "55"}`;
                                 }}
                                 onMouseLeave={e => {
-                                  e.currentTarget.style.background = isAgendaCritical
-                                    ? (isLight ? `${stageC}28` : `${stageC}2A`)
-                                    : (isLight ? `${stageC}14` : `${stageC}1A`);
-                                  e.currentTarget.style.transform = "none";
+                                  e.currentTarget.style.background = "transparent";
+                                  e.currentTarget.style.borderColor = `${stageC}${isLight ? "55" : "38"}`;
                                 }}
                               >
-                                <CalendarDays size={isAgendaCritical ? 13 : 10} strokeWidth={2.5} />
-                                {isAgendaCritical && (
-                                  <span style={{
-                                    fontSize: 8.5, fontWeight: 900, letterSpacing: "0.12em",
-                                    opacity: 0.65, textTransform: "uppercase",
-                                    paddingRight: 3, borderRight: `1px solid ${stageC}55`,
-                                    marginRight: 1,
-                                  }}>{l.st === "No Show" ? "Reagendar" : "Cita"}</span>
-                                )}
+                                <CalendarDays size={11} strokeWidth={2.2} />
                                 <span>{l.nextActionDate}</span>
                               </button>
                             ) : null}
 
-                            {/* CTA cuando falta la fecha en etapa con cita — también activa edición inline */}
+                            {/* CTA cuando falta la fecha en etapa con cita — minimalista
+                               (sin pulse, sin shadow), color ámbar para indicar que
+                               requiere acción. */}
                             {!isEditing && showMissingCita && (
                               <button
                                 onClick={startEdit}
                                 title="Click para agendar fecha/hora de la cita"
                                 style={{
-                                  display: "inline-flex", alignItems: "center", gap: 6,
-                                  padding: "5px 11px", borderRadius: 99,
-                                  background: isLight ? "#FB923C1E" : "#FB923C22",
-                                  border: `1.5px solid #FB923C`,
+                                  display: "inline-flex", alignItems: "center", gap: 5,
+                                  padding: "3px 10px 3px 8px", borderRadius: 99,
+                                  background: "transparent",
+                                  border: `1px dashed #FB923C${isLight ? "70" : "55"}`,
                                   color: isLight ? "color-mix(in srgb, #FB923C 55%, #0B1220 45%)" : "#FB923C",
-                                  fontSize: 11, fontWeight: 800, fontFamily: font,
+                                  fontSize: 10.5, fontWeight: 600, fontFamily: font,
                                   cursor: "text", outline: "none",
-                                  transition: "all 0.16s",
+                                  transition: "background 0.14s, border-style 0.14s",
                                   whiteSpace: "nowrap", flexShrink: 0,
-                                  letterSpacing: "0.01em",
-                                  animation: "stratosNewLeadPulse 2s ease-in-out infinite",
+                                  letterSpacing: "0.005em",
                                 }}
                                 onMouseEnter={e => {
-                                  e.currentTarget.style.background = isLight ? "#FB923C30" : "#FB923C36";
-                                  e.currentTarget.style.transform  = "translateY(-1px)";
+                                  e.currentTarget.style.background = isLight ? "#FB923C12" : "#FB923C18";
+                                  e.currentTarget.style.borderStyle = "solid";
                                 }}
                                 onMouseLeave={e => {
-                                  e.currentTarget.style.background = isLight ? "#FB923C1E" : "#FB923C22";
-                                  e.currentTarget.style.transform  = "none";
+                                  e.currentTarget.style.background = "transparent";
+                                  e.currentTarget.style.borderStyle = "dashed";
                                 }}
                               >
-                                <CalendarDays size={12} strokeWidth={2.6} />
-                                <span>Sin fecha · agendar</span>
+                                <CalendarDays size={11} strokeWidth={2.2} />
+                                <span>Agendar fecha</span>
                               </button>
                             )}
 
-                            {/* Email chip — inline-editable. Click → input para
-                                capturar o corregir; muestra "+ correo" cuando
-                                falta. Para abrir mailto, usar el botón de
-                                contacto del drawer. */}
+                            {/* Email chip — visible solo en hover de la fila. Si el
+                                lead tiene email, aparece con fade-in al pasar el
+                                mouse; si está vacío, solo muestra "+ correo" en
+                                hover (dashed) para no añadir ruido en reposo.
+                                Para abrir mailto, usar el botón de contacto del drawer. */}
                             <span
                               onClick={e => e.stopPropagation()}
-                              style={{ display: "inline-flex", flexShrink: 1, minWidth: 0 }}
+                              style={{
+                                display: "inline-flex", flexShrink: 1, minWidth: 0,
+                                opacity: isHov ? 1 : 0,
+                                pointerEvents: isHov ? "auto" : "none",
+                                transition: "opacity 0.18s ease",
+                              }}
                             >
                               <InlineEdit
                                 value={l.email}
@@ -3344,7 +3338,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                                   <span style={{ display: "inline-flex", alignItems: "center", gap: 5, minWidth: 0 }}>
                                     <Mail
                                       size={11} strokeWidth={2.2}
-                                      style={{ flexShrink: 0, opacity: v ? 0.85 : 0.55 }}
+                                      style={{ flexShrink: 0, opacity: 0.7 }}
                                     />
                                     <span style={{
                                       overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
@@ -3355,17 +3349,13 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                                 )}
                                 readStyle={{
                                   display: "inline-flex", alignItems: "center",
-                                  padding: "4px 10px", borderRadius: 99,
-                                  background: l.email
-                                    ? (isLight ? "rgba(15,23,42,0.05)" : "rgba(255,255,255,0.055)")
-                                    : "transparent",
-                                  border: `1px ${l.email ? "solid" : "dashed"} ${T.borderH}`,
-                                  color: l.email
-                                    ? (isLight ? T.txt2 : "rgba(255,255,255,0.78)")
-                                    : T.txt3,
-                                  fontSize: 11, fontWeight: l.email ? 600 : 500,
+                                  padding: "3px 10px", borderRadius: 99,
+                                  background: "transparent",
+                                  border: `1px ${l.email ? "solid" : "dashed"} ${isLight ? "rgba(15,23,42,0.10)" : "rgba(255,255,255,0.10)"}`,
+                                  color: isLight ? "rgba(15,23,42,0.55)" : "rgba(255,255,255,0.55)",
+                                  fontSize: 10.5, fontWeight: 500,
                                   fontFamily: font,
-                                  maxWidth: 280, overflow: "hidden",
+                                  maxWidth: 240, overflow: "hidden",
                                   whiteSpace: "nowrap", flexShrink: 1, minWidth: 0,
                                   margin: 0, fontStyle: "normal",
                                 }}
@@ -3421,54 +3411,48 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                     </div>
                   )}
 
-                  {/* ═══ ETAPA ═══ Pill con LED y cambio inline por select.
-                       En mobile: oculta — el meta-row al final del Cliente cell
-                       muestra la etapa con un LED + label más compacto. */}
+                  {/* ═══ ETAPA ═══ Pill minimalista: LED de color + texto + caret.
+                       Sin gradient ni shadow — solo borde sutil. La pill cobra
+                       sutil tinte de color al hover de la fila para indicar que
+                       es clickeable (dropdown). */}
                   {!isMobile && (
                   <div onClick={e => e.stopPropagation()} style={{ display: "flex", alignItems: "center", minWidth: 0 }}>
                     <div style={{
-                      position: "relative", display: "inline-flex", alignItems: "center", gap: 7,
-                      padding: "5px 20px 5px 11px", borderRadius: 99,
-                      background: isLight
-                        ? `linear-gradient(135deg, ${stageC}3D 0%, ${stageC}1F 55%, ${stageC}12 100%)`
-                        : `linear-gradient(135deg, ${stageC}26 0%, ${stageC}10 100%)`,
-                      border: `1px solid ${isLight ? stageC + "85" : stageC + "44"}`,
-                      boxShadow: isLight
-                        ? `0 2px 8px ${stageC}2E, 0 1px 2px ${stageC}1A, inset 0 1px 0 rgba(255,255,255,0.7), inset 0 -1px 0 ${stageC}14`
-                        : `0 1px 4px ${stageC}18, inset 0 1px 0 rgba(255,255,255,0.12)`,
-                      transition: "all 0.2s ease",
+                      position: "relative", display: "inline-flex", alignItems: "center", gap: 6,
+                      padding: "4px 18px 4px 9px", borderRadius: 99,
+                      background: isHov
+                        ? (isLight ? `${stageC}10` : `${stageC}14`)
+                        : "transparent",
+                      border: `1px solid ${isHov
+                        ? `${stageC}${isLight ? "60" : "44"}`
+                        : `${stageC}${isLight ? "38" : "28"}`}`,
+                      transition: "background 0.16s, border-color 0.16s",
                       maxWidth: "100%", overflow: "hidden",
-                    }}
-                      onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-1px)"; e.currentTarget.style.boxShadow = isLight ? `0 4px 14px ${stageC}3A, 0 2px 4px ${stageC}22, inset 0 1px 0 rgba(255,255,255,0.8)` : `0 3px 10px ${stageC}26, inset 0 1px 0 rgba(255,255,255,0.15)`; }}
-                      onMouseLeave={e => { e.currentTarget.style.transform = "none"; e.currentTarget.style.boxShadow = isLight ? `0 2px 8px ${stageC}2E, 0 1px 2px ${stageC}1A, inset 0 1px 0 rgba(255,255,255,0.7), inset 0 -1px 0 ${stageC}14` : `0 1px 4px ${stageC}18, inset 0 1px 0 rgba(255,255,255,0.12)`; }}
-                    >
+                    }}>
                       <span style={{
-                        width: 7, height: 7, borderRadius: "50%",
-                        background: `radial-gradient(circle at 30% 30%, #FFFFFFB3 0%, ${stageC} 45%, ${stageC} 100%)`,
-                        boxShadow: `0 0 0 2px ${stageC}2E, 0 0 6px ${stageC}70`,
+                        width: 6, height: 6, borderRadius: "50%",
+                        background: stageC,
                         flexShrink: 0,
                       }} />
                       <select value={l.st} onChange={e => { const v = e.target.value; updateLead({ ...l, st: v }); }}
                         style={{
                           background: "transparent", border: "none", padding: 0,
-                          fontSize: 10.5, fontWeight: 800,
-                          color: isLight ? `color-mix(in srgb, ${stageC} 55%, #0B1220 45%)` : stageC,
+                          fontSize: 10.5, fontWeight: 600,
+                          color: isLight ? `color-mix(in srgb, ${stageC} 50%, #0B1220 50%)` : stageC,
                           cursor: "pointer", outline: "none", appearance: "none",
                           maxWidth: "100%", overflow: "hidden", textOverflow: "ellipsis",
-                          fontFamily: font, letterSpacing: "0.015em",
-                          textShadow: isLight ? "0 1px 0 rgba(255,255,255,0.4)" : "none",
+                          fontFamily: font, letterSpacing: "0.005em",
                         }}>
                         {STAGES.map(s => <option key={s} value={s} style={{ background: "#111318", color: "#fff", fontWeight: 600 }}>{s}</option>)}
                       </select>
-                      {/* Indicador sutil de selector — dos puntos verticales */}
-                      <div style={{
-                        position: "absolute", right: 7, top: "50%", transform: "translateY(-50%)",
-                        display: "flex", flexDirection: "column", gap: 2.5,
-                        pointerEvents: "none", opacity: 0.5,
-                      }}>
-                        <div style={{ width: 2.5, height: 2.5, borderRadius: "50%", background: isLight ? `color-mix(in srgb, ${stageC} 55%, #0B1220 45%)` : stageC }} />
-                        <div style={{ width: 2.5, height: 2.5, borderRadius: "50%", background: isLight ? `color-mix(in srgb, ${stageC} 55%, #0B1220 45%)` : stageC }} />
-                      </div>
+                      <ChevronDown size={10} strokeWidth={2}
+                        style={{
+                          position: "absolute", right: 6, top: "50%",
+                          transform: "translateY(-50%)",
+                          pointerEvents: "none", opacity: 0.5,
+                          color: isLight ? `color-mix(in srgb, ${stageC} 50%, #0B1220 50%)` : stageC,
+                        }}
+                      />
                     </div>
                   </div>
                   )}
@@ -3517,73 +3501,77 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                     const goldBg     = isPinned ? (isLight ? "#F5C54228" : "#F5C54222") : (isLight ? "#F5C54212" : "#F5C5420E");
                     const blueC = safeC(T.blue);
 
+                    // Estrella: visible siempre si está pinneada (señal permanente),
+                    // visible en hover si no lo está (descubrible sin ruido).
+                    const starVisible = isPinned || isHov;
+
                     return (
-                      <div style={{ display: "flex", alignItems: "center", gap: 8, justifyContent: "center" }}>
-                        {/* ★ Prioridad — dorado, icono solamente */}
+                      <div style={{ display: "flex", alignItems: "center", gap: 6, justifyContent: "center" }}>
+                        {/* ★ Prioridad — ghost button. Solo visible si está pinneada o en hover. */}
                         <button onClick={() => togglePin(l.id)}
                           title={inPriority ? "Quitar de prioridad" : "Marcar como prioridad"}
                           aria-label={inPriority ? "Quitar de prioridad" : "Marcar como prioridad"}
                           style={{
-                            width: 34, height: 34, borderRadius: 9,
-                            border: `1px solid ${goldBorder}`,
-                            background: goldBg,
+                            width: 30, height: 30, borderRadius: 8,
+                            border: `1px solid ${isPinned ? goldBorder : "transparent"}`,
+                            background: isPinned
+                              ? goldBg
+                              : "transparent",
                             cursor: "pointer", padding: 0,
                             display: "flex", alignItems: "center", justifyContent: "center",
-                            transition: "all 0.16s ease",
-                            boxShadow: isPinned
-                              ? (isLight
-                                  ? `0 1px 2px rgba(184,134,11,0.28), inset 0 1px 0 rgba(255,255,255,0.6)`
-                                  : `0 0 12px rgba(245,197,66,0.22)`)
-                              : "none",
+                            transition: "opacity 0.16s, background 0.16s, border-color 0.16s",
+                            opacity: starVisible ? 1 : 0,
+                            pointerEvents: starVisible ? "auto" : "none",
                             flexShrink: 0,
                           }}
                           onMouseEnter={e => {
-                            e.currentTarget.style.background  = isLight ? "#F5C5423A" : "#F5C54230";
-                            e.currentTarget.style.borderColor = isLight ? "#B8860B" : "#F5C54266";
-                            e.currentTarget.style.transform   = "translateY(-1px)";
+                            if (!isPinned) {
+                              e.currentTarget.style.background  = isLight ? "#F5C54218" : "#F5C5421A";
+                              e.currentTarget.style.borderColor = isLight ? "#F5C54245" : "#F5C54238";
+                            }
                           }}
                           onMouseLeave={e => {
-                            e.currentTarget.style.background  = goldBg;
-                            e.currentTarget.style.borderColor = goldBorder;
-                            e.currentTarget.style.transform   = "none";
+                            if (!isPinned) {
+                              e.currentTarget.style.background  = "transparent";
+                              e.currentTarget.style.borderColor = "transparent";
+                            }
                           }}
                         >
-                          <Star size={14} color={goldC} fill={isPinned ? goldC : "none"} strokeWidth={2.2} />
+                          <Star size={13} color={goldC} fill={isPinned ? goldC : "none"} strokeWidth={2} />
                         </button>
 
-                        {/* ⚛ IA — bloqueado por ahora (próxima etapa).
-                            Mantengo el código comentado para reactivarlo después.
-                            <button onClick={() => openDrawerTab("analisis", l)} ...>
-                              <Atom size={14} ... />
-                            </button>
-                        */}
-
-                        {/* 👤 Perfil — abre el drawer completo del cliente */}
+                        {/* 👤 Perfil — siempre visible, pero como ghost button (sin
+                            fondo, solo se enciende en hover de la fila). */}
                         <button onClick={() => setSelectedLead(l)}
                           title="Abrir perfil del cliente"
                           aria-label="Abrir perfil del cliente"
                           style={{
-                            width: 34, height: 34, borderRadius: 9,
-                            border: `1px solid ${T.blue}${isLight ? "3A" : "38"}`,
-                            background: `${T.blue}${isLight ? "14" : "14"}`,
+                            width: 30, height: 30, borderRadius: 8,
+                            border: `1px solid ${isHov
+                              ? `${T.blue}${isLight ? "3A" : "32"}`
+                              : "transparent"}`,
+                            background: isHov
+                              ? `${T.blue}${isLight ? "0E" : "12"}`
+                              : "transparent",
                             cursor: "pointer", padding: 0,
                             display: "flex", alignItems: "center", justifyContent: "center",
-                            transition: "all 0.16s ease",
-                            boxShadow: isLight ? `0 1px 2px ${T.blue}1A, inset 0 1px 0 rgba(255,255,255,0.5)` : "none",
+                            transition: "background 0.16s, border-color 0.16s",
                             flexShrink: 0,
                           }}
                           onMouseEnter={e => {
-                            e.currentTarget.style.background  = `${T.blue}${isLight ? "24" : "26"}`;
-                            e.currentTarget.style.borderColor = `${T.blue}${isLight ? "66" : "5C"}`;
-                            e.currentTarget.style.transform   = "translateY(-1px)";
+                            e.currentTarget.style.background  = `${T.blue}${isLight ? "1A" : "1E"}`;
+                            e.currentTarget.style.borderColor = `${T.blue}${isLight ? "55" : "48"}`;
                           }}
                           onMouseLeave={e => {
-                            e.currentTarget.style.background  = `${T.blue}${isLight ? "14" : "14"}`;
-                            e.currentTarget.style.borderColor = `${T.blue}${isLight ? "3A" : "38"}`;
-                            e.currentTarget.style.transform   = "none";
+                            e.currentTarget.style.background  = isHov
+                              ? `${T.blue}${isLight ? "0E" : "12"}`
+                              : "transparent";
+                            e.currentTarget.style.borderColor = isHov
+                              ? `${T.blue}${isLight ? "3A" : "32"}`
+                              : "transparent";
                           }}
                         >
-                          <User size={14} color={blueC} strokeWidth={2.2} />
+                          <User size={13} color={isHov ? blueC : T.txt3} strokeWidth={2} />
                         </button>
                       </div>
                     );
