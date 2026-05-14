@@ -2866,8 +2866,8 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                       </div>
 
                       {/* Row 2: asesor · proyecto · fecha · campaña */}
-                      <p style={{
-                        fontSize: 10.5, color: T.txt3, fontFamily: font, margin: 0,
+                      <div style={{
+                        fontSize: 10.5, color: T.txt3, fontFamily: font,
                         overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
                         lineHeight: 1.3,
                       }}>
@@ -2877,7 +2877,86 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                           (!co && l.fechaIngreso) ? l.fechaIngreso : null,
                           l.campana || null,
                         ].filter(Boolean).join(" · ")}
-                      </p>
+                      </div>
+
+                      {/* Row 3: info chips — fecha de cita + email. Solo aparece
+                          cuando hay info relevante. La pill de cita usa el color
+                          de la etapa para destacar Zoom/Visita Agendada y No Show. */}
+                      {(l.nextActionDate || l.email) && (
+                        <div style={{
+                          display: "flex", alignItems: "center", gap: 6, marginTop: 6,
+                          flexWrap: "wrap",
+                        }}>
+                          {l.nextActionDate && (
+                            <button
+                              onClick={e => { e.stopPropagation(); setNotesLead(l); }}
+                              title={l.nextAction
+                                ? `${l.nextAction} — ${l.nextActionDate}`
+                                : `Próxima acción · ${l.nextActionDate}`}
+                              style={{
+                                display: "inline-flex", alignItems: "center", gap: 5,
+                                padding: "3px 9px", borderRadius: 99,
+                                background: isLight ? `${stageC}14` : `${stageC}1A`,
+                                border: `1px solid ${stageC}44`,
+                                color: isLight
+                                  ? `color-mix(in srgb, ${stageC} 55%, #0B1220 45%)`
+                                  : stageC,
+                                fontSize: 10.5, fontWeight: 700, fontFamily: font,
+                                cursor: "pointer", outline: "none",
+                                transition: "all 0.15s",
+                                whiteSpace: "nowrap", flexShrink: 0,
+                                letterSpacing: "0.005em",
+                              }}
+                              onMouseEnter={e => {
+                                e.currentTarget.style.background = isLight ? `${stageC}1F` : `${stageC}28`;
+                                e.currentTarget.style.transform   = "translateY(-1px)";
+                              }}
+                              onMouseLeave={e => {
+                                e.currentTarget.style.background = isLight ? `${stageC}14` : `${stageC}1A`;
+                                e.currentTarget.style.transform   = "none";
+                              }}
+                            >
+                              <CalendarDays size={10} strokeWidth={2.4} />
+                              <span>{l.nextActionDate}</span>
+                            </button>
+                          )}
+                          {l.email && (
+                            <a
+                              href={`mailto:${l.email}`}
+                              onClick={e => e.stopPropagation()}
+                              title={`Enviar correo a ${l.email}`}
+                              style={{
+                                display: "inline-flex", alignItems: "center", gap: 5,
+                                padding: "3px 9px", borderRadius: 99,
+                                background: isLight ? "rgba(15,23,42,0.04)" : "rgba(255,255,255,0.045)",
+                                border: `1px solid ${T.border}`,
+                                color: T.txt2,
+                                fontSize: 10.5, fontWeight: 500, fontFamily: font,
+                                textDecoration: "none", outline: "none",
+                                transition: "all 0.15s",
+                                maxWidth: 240, overflow: "hidden",
+                                whiteSpace: "nowrap", flexShrink: 1,
+                                minWidth: 0,
+                              }}
+                              onMouseEnter={e => {
+                                e.currentTarget.style.background  = isLight ? "rgba(15,23,42,0.07)" : "rgba(255,255,255,0.08)";
+                                e.currentTarget.style.color       = T.txt;
+                                e.currentTarget.style.borderColor = T.borderH;
+                              }}
+                              onMouseLeave={e => {
+                                e.currentTarget.style.background  = isLight ? "rgba(15,23,42,0.04)" : "rgba(255,255,255,0.045)";
+                                e.currentTarget.style.color       = T.txt2;
+                                e.currentTarget.style.borderColor = T.border;
+                              }}
+                            >
+                              <Mail size={10} strokeWidth={2.2} style={{ flexShrink: 0 }} />
+                              <span style={{ overflow: "hidden", textOverflow: "ellipsis" }}>
+                                {l.email}
+                              </span>
+                            </a>
+                          )}
+                        </div>
+                      )}
                     </div>
                   </div>
 
