@@ -255,3 +255,54 @@ export async function saveLead(supabase, payload, currentUser, opts = {}) {
     }
   }
 }
+
+/**
+ * findLeadDuplicate(supabase, { email, phone })
+ * ─────────────────────────────────────────────────────────────────────────
+ * Llama a la RPC `find_lead_duplicate` (migración 013) y devuelve el lead
+ * existente (mismo org) que matchea email o teléfono, incluso si pertenece
+ * a OTRO asesor que el llamante no ve por RLS. La RPC es SECURITY DEFINER
+ * y nunca cruza organizaciones.
+ *
+ * Uso típico: el modal de "Registrar cliente" llama esto con debounce
+ * mientras el asesor escribe phone/email, para mostrar un banner antes de
+ * crear un duplicado.
+ *
+ *   { email, phone } → al menos uno debe venir; si ambos vienen vacíos se
+ *                      retorna { match: null }
+ *   opts.signal      → AbortSignal opcional para cancelar la query si el
+ *                      usuario sigue tipeando (evita race conditions)
+ *
+ * Retorno:
+ *   { match: {lead_id, lead_name, lead_stage, lead_created_at, asesor_id,
+ *             asesor_name, is_mine, match_type} | null, error }
+ */
+export async function findLeadDuplicate(supabase, { email, phone } = {}, opts = {}) {
+  const e = (email || '').trim()
+  const p = (phone || '').trim()
+  if (!e && !p) return { match: null, error: null }
+
+  try {
+    let req = supabase.rpc('find_lead_duplicate', {
+      p_email: e || null,
+      p_phone: p || null,
+    })
+    if (opts.signal) req = req.abortSignal(opts.signal)
+
+    const { data, error } = await req
+    if (error) {
+      // Si la RPC no existe (migración pendiente), no spammeamos. El frontend
+      // degrada de forma silenciosa: solo no muestra el aviso.
+      const msg = String(error.message || '').toLowerCase()
+      if (msg.includes('does not exist') || msg.includes('function')) {
+        return { match: null, error: null }
+      }
+      return { match: null, error: error.message || 'error_rpc' }
+    }
+    const row = Array.isArray(data) ? data[0] : data
+    return { match: row || null, error: null }
+  } catch (err) {
+    if (err?.name === 'AbortError') return { match: null, error: null, aborted: true }
+    return { match: null, error: err?.message || 'error_inesperado' }
+  }
+}
