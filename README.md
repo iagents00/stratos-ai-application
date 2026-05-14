@@ -106,7 +106,7 @@ Ver `.env.example` como referencia.
 | Vista | ID | Descripción |
 |-------|----|-------------|
 | Dashboard | `d` | KPIs ejecutivos, comando directivo IA |
-| CRM | `crm` | Pipeline de ventas con 10 etapas |
+| CRM | `crm` | Pipeline de ventas con 12 etapas |
 | IA CRM | `ia` | Agentes de inteligencia artificial |
 | ERP | `erp` | Gestión de proyectos inmobiliarios |
 | Asesores CRM | `acrm` | Base de datos de asesores |

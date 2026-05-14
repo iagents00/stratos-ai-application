@@ -54,7 +54,7 @@ El CRM está operativo en su totalidad. 8 módulos funcionales, 3 vistas de dato
 |---|---|---|
 | Tabs Lista / Kanban | ✅ | Cambio de vista sin pérdida de estado |
 | Búsqueda por nombre, teléfono, asesor, proyecto, campaña, tag | ✅ | Filtro en tiempo real |
-| Filtro etapa (dropdown todas / individual) | ✅ | 10 etapas disponibles |
+| Filtro etapa (dropdown todas / individual) | ✅ | 12 etapas disponibles |
 | Filtro asesor (dropdown todos / individual) | ✅ | Solo visible para admin/director |
 | Contador "N resultados" | ✅ | Dinámico según filtros activos |
 | Columna CLIENTE: avatar inicial + nombre + tags HOT/NUEVO + presupuesto | ✅ | Avatar con gradiente; presupuesto alineado a la derecha |
@@ -74,7 +74,7 @@ El CRM está operativo en su totalidad. 8 módulos funcionales, 3 vistas de dato
 
 | Elemento | Estado | Detalle |
 |---|---|---|
-| Columnas por etapa (10 etapas) | ✅ | Scroll horizontal entre columnas |
+| Columnas por etapa (12 etapas) | ✅ | Scroll horizontal entre columnas |
 | Contador de leads por columna | ✅ | Badge numérico en cada header |
 | Card mini: nombre, asesor/fuente, presupuesto, score, etapa, seguimientos | ✅ | Info compacta y legible |
 | Drag & drop entre columnas para cambiar etapa | ✅ | Drop visual; actualiza `st` del lead |
@@ -98,7 +98,7 @@ El CRM está operativo en su totalidad. 8 módulos funcionales, 3 vistas de dato
 | Selector Proyecto de interés (full-width) | ✅ | Búsqueda + crear nuevo proyecto; persiste para futuros registros |
 | Selector Campaña / Fuente | ✅ | Base de campañas + crear nueva; persiste |
 | Selector Asesor | ✅ | Visible solo para admin/director/CEO; asesores ven su nombre auto |
-| Selector Etapa inicial | ✅ | Las 10 etapas con colores; default "Nuevo Registro" |
+| Selector Etapa inicial | ✅ | Las 12 etapas con colores; default "Nuevo Registro" |
 | Campo Próxima acción (opcional) | ✅ | Textarea 2 filas |
 | Campo Notas (opcional) | ✅ | Textarea 2 filas |
 | **Canal de origen** | ✅ | Chips: Manual · Telegram · WhatsApp · Facebook · Web |
@@ -122,7 +122,7 @@ El CRM está operativo en su totalidad. 8 módulos funcionales, 3 vistas de dato
 | Botones Llamar / WhatsApp | ✅ | Links `tel:` y `wa.me/` con número del lead |
 | Próxima acción — NextActionHero | ✅ | Hero visual editable; guarda onUpdate |
 | FollowUpBadge stepper | ✅ | Full-width; estado vacío vs con registros |
-| StageBadge editable | ✅ | Dropdown de las 10 etapas |
+| StageBadge editable | ✅ | Dropdown de las 12 etapas |
 | Selector de Agente IA (4 opciones) | ✅ | Grid 2×2; activo con badge color; liberar con X |
 | Tab Datos — formulario de edición completo | ✅ | Botón "Editar" → todos los campos editables |
 | Tab Documentos — expediente de notas | ✅ | Upload audio/PDF/texto; lista de items con tipo y fecha |
