@@ -98,6 +98,11 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
   // la animación; el halo estático persiste mientras isNew=true).
   // Se declara aquí — antes que sortedLeads — para evitar TDZ.
   const [justRegisteredId, setJustRegisteredId] = useState(null);
+  // Edición inline de la fecha/hora de la cita desde la fila del lead.
+  // Solo una fila puede estar en modo edición a la vez. Click en el pill
+  // de cita (o en el CTA "Sin fecha · agendar") activa el input.
+  const [editingApptId, setEditingApptId] = useState(null);
+  const [apptDraft, setApptDraft]         = useState("");
   const justRegisteredTimer = useRef(null);
 
   // ── Duración del halo verde ──────────────────────────────────────
@@ -2888,20 +2893,72 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                         const isAgendaCritical = ["Zoom Agendado","Zoom Concretado","Visita Agendada","Visita Concretada","No Show"].includes(l.st);
                         const hasAppt = !!l.nextActionDate;
                         const showMissingCita = isAgendaCritical && !hasAppt;
-                        const showEmpty = !l.nextActionDate && !l.email && !showMissingCita;
+                        const isEditing = editingApptId === l.id;
+                        const showEmpty = !hasAppt && !l.email && !showMissingCita && !isEditing;
                         if (showEmpty) return null;
+
+                        const startEdit = (e) => {
+                          e.stopPropagation();
+                          setApptDraft(l.nextActionDate || "");
+                          setEditingApptId(l.id);
+                        };
+                        const commitEdit = () => {
+                          const v = apptDraft.trim();
+                          const prevV = (l.nextActionDate || "").trim();
+                          if (v !== prevV) updateLead({ ...l, nextActionDate: v });
+                          setEditingApptId(null); setApptDraft("");
+                        };
+                        const cancelEdit = () => { setEditingApptId(null); setApptDraft(""); };
+
                         return (
                           <div style={{
                             display: "flex", alignItems: "center", gap: 7, marginTop: 7,
                             flexWrap: "wrap",
                           }}>
-                            {/* Pill de cita — prominente cuando la etapa requiere agenda */}
-                            {hasAppt && (
+                            {/* Input inline en modo edición — reemplaza la pill */}
+                            {isEditing ? (
+                              <span
+                                onClick={e => e.stopPropagation()}
+                                style={{
+                                  display: "inline-flex", alignItems: "center", gap: 7,
+                                  padding: "5px 12px 5px 10px",
+                                  borderRadius: 99,
+                                  background: isLight ? `${stageC}1F` : `${stageC}24`,
+                                  border: `1.5px solid ${stageC}`,
+                                  boxShadow: isLight ? `0 1px 2px ${stageC}30` : `0 0 14px ${stageC}33`,
+                                  flexShrink: 0,
+                                }}
+                              >
+                                <CalendarDays size={13} strokeWidth={2.5}
+                                  color={isLight ? `color-mix(in srgb, ${stageC} 50%, #0B1220 50%)` : stageC} />
+                                <input
+                                  autoFocus
+                                  value={apptDraft}
+                                  placeholder="Mañana 10am · Hoy 5pm · 14 may 4pm"
+                                  onChange={e => setApptDraft(e.target.value)}
+                                  onClick={e => e.stopPropagation()}
+                                  onBlur={commitEdit}
+                                  onKeyDown={e => {
+                                    e.stopPropagation();
+                                    if (e.key === "Enter") { e.preventDefault(); commitEdit(); }
+                                    if (e.key === "Escape") { e.preventDefault(); cancelEdit(); }
+                                  }}
+                                  style={{
+                                    minWidth: 200, padding: 0,
+                                    background: "transparent", border: "none", outline: "none",
+                                    color: isLight ? `color-mix(in srgb, ${stageC} 35%, #0B1220 65%)` : "#FFFFFF",
+                                    fontSize: 11.5, fontWeight: 800, fontFamily: font,
+                                    letterSpacing: "0.005em",
+                                  }}
+                                />
+                              </span>
+                            ) : hasAppt ? (
+                              /* Pill de cita — prominente cuando la etapa requiere agenda */
                               <button
-                                onClick={e => { e.stopPropagation(); setNotesLead(l); }}
+                                onClick={startEdit}
                                 title={l.nextAction
-                                  ? `${l.nextAction} — ${l.nextActionDate}`
-                                  : `Próxima acción · ${l.nextActionDate}`}
+                                  ? `${l.nextAction} — ${l.nextActionDate} · click para editar`
+                                  : `Próxima acción · ${l.nextActionDate} · click para editar`}
                                 style={{
                                   display: "inline-flex", alignItems: "center",
                                   gap: isAgendaCritical ? 7 : 5,
@@ -2917,7 +2974,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                                   fontSize: isAgendaCritical ? 11.5 : 10.5,
                                   fontWeight: isAgendaCritical ? 800 : 700,
                                   fontFamily: font,
-                                  cursor: "pointer", outline: "none",
+                                  cursor: "text", outline: "none",
                                   transition: "all 0.16s",
                                   whiteSpace: "nowrap", flexShrink: 0,
                                   letterSpacing: "0.005em",
@@ -2949,12 +3006,12 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                                 )}
                                 <span>{l.nextActionDate}</span>
                               </button>
-                            )}
+                            ) : null}
 
-                            {/* CTA cuando falta la fecha en etapa con cita */}
-                            {showMissingCita && (
+                            {/* CTA cuando falta la fecha en etapa con cita — también activa edición inline */}
+                            {!isEditing && showMissingCita && (
                               <button
-                                onClick={e => { e.stopPropagation(); setNotesLead(l); }}
+                                onClick={startEdit}
                                 title="Click para agendar fecha/hora de la cita"
                                 style={{
                                   display: "inline-flex", alignItems: "center", gap: 6,
@@ -2963,7 +3020,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                                   border: `1.5px solid #FB923C`,
                                   color: isLight ? "color-mix(in srgb, #FB923C 55%, #0B1220 45%)" : "#FB923C",
                                   fontSize: 11, fontWeight: 800, fontFamily: font,
-                                  cursor: "pointer", outline: "none",
+                                  cursor: "text", outline: "none",
                                   transition: "all 0.16s",
                                   whiteSpace: "nowrap", flexShrink: 0,
                                   letterSpacing: "0.01em",
