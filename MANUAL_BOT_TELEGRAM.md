@@ -346,8 +346,10 @@ Etapas válidas (debes escribirlas exactamente igual):
 
 - Nuevo Registro
 - Primer Contacto
+- Remarketing
 - Seguimiento
 - Zoom Agendado
+- No Show
 - Zoom Concretado
 - Visita Agendada
 - Visita Concretada

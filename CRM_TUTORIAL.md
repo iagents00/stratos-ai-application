@@ -42,7 +42,7 @@ En el menú izquierdo, click en **CRM**.
 ### 3.2 Filtros disponibles
 
 - 🔍 Búsqueda por nombre, teléfono, asesor, campaña.
-- Filtro por **etapa** (10 etapas: Nuevo Registro, Primer Contacto, Seguimiento, Zoom Agendado, Zoom Concretado, Visita Agendada, Visita Concretada, Negociación, Cierre, Perdido).
+- Filtro por **etapa** (12 etapas: Nuevo Registro, Primer Contacto, Remarketing, Seguimiento, Zoom Agendado, No Show, Zoom Concretado, Visita Agendada, Visita Concretada, Negociación, Cierre, Perdido).
 - Filtro por **asesor** (solo CEO/director/admin).
 
 ---
@@ -120,8 +120,10 @@ Click para ver:
 ```
 Nuevo Registro      → llegó hoy, nadie lo ha contactado
 Primer Contacto     → ya hablamos, quedó interesado
+Remarketing         → respondió pero quedó en pausa — re-engagement con contenido de valor
 Seguimiento         → conversaciones repetidas, calificando interés
 Zoom Agendado       → tiene cita virtual programada
+No Show             → no asistió al Zoom — reagendar rápido o pasar a Remarketing
 Zoom Concretado     → asistió a la reunión virtual
 Visita Agendada     → viene al sitio
 Visita Concretada   → ya estuvo en sitio
