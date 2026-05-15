@@ -20,9 +20,10 @@
 # IMPORTANTE: agregá al colaborador correspondiente con @su-usuario-de-github.
 
 # Cliente: Grupo 28
-/src/clients/grupo28/   @iagents00
-# TODO: agregar segundo owner cuando se confirme el username GitHub del dev:
-# /src/clients/grupo28/   @iagents00 @USERNAME_DEL_DEV
+# El dev externo es co-owner de esta carpeta — puede aprobar sus propios PRs
+# que toquen SOLO archivos acá adentro. Cualquier cambio fuera sigue requiriendo
+# review de @iagents00 por las reglas más abajo.
+/src/clients/grupo28/   @iagents00 @automatizacionespopayan-dev
 
 # Cliente: Duke (cliente original, en producción — solo owner)
 /src/clients/duke/      @iagents00
