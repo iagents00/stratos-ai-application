@@ -314,7 +314,42 @@ export default function App() {
   useEffect(() => {
     if (!user) return;
     if (user.id === 'demo-user-local') {
-      setLeadsData(leads.map(l => ({ ...l, seguimientos: l.seguimientos ?? 0 })));
+      // Demo: los leads no tienen `created_at` (solo `fechaIngreso` formateado).
+      // Para que el Comando Directivo y AdvisorMetrics muestren métricas reales
+      // y no ceros, sintetizamos un `created_at` distribuido en los últimos
+      // 60 días — orden estable basado en índice. Si una entrada ya tiene
+      // `created_at`, se respeta.
+      const MES_ABBR = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
+      const parseFechaIngreso = (str) => {
+        if (!str || typeof str !== 'string') return null;
+        const m = str.match(/^(\d+)\s+(\w+),?\s+(\d+):(\d+)\s*(am|pm)?$/i);
+        if (!m) return null;
+        const day = parseInt(m[1], 10);
+        const monthIdx = MES_ABBR.findIndex(x => x.toLowerCase() === m[2].toLowerCase());
+        if (monthIdx < 0) return null;
+        let hour = parseInt(m[3], 10);
+        const min = parseInt(m[4], 10);
+        const ampm = (m[5] || '').toLowerCase();
+        if (ampm === 'pm' && hour < 12) hour += 12;
+        if (ampm === 'am' && hour === 12) hour = 0;
+        const now = new Date();
+        let year = now.getFullYear();
+        let candidate = new Date(year, monthIdx, day, hour, min);
+        if (candidate.getTime() > now.getTime()) {
+          candidate = new Date(year - 1, monthIdx, day, hour, min);
+        }
+        return candidate.toISOString();
+      };
+      const now = Date.now();
+      const spreadMs = 60 * 24 * 60 * 60 * 1000;
+      const denom = Math.max(1, leads.length - 1);
+      setLeadsData(leads.map((l, i) => ({
+        ...l,
+        seguimientos: l.seguimientos ?? 0,
+        created_at:   l.created_at
+          || parseFechaIngreso(l.fechaIngreso)
+          || new Date(now - (i / denom) * spreadMs).toISOString(),
+      })));
       setLeadsLoading(false);
       return;
     }
