@@ -7,9 +7,13 @@ import {
 import {
   AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer
 } from "recharts";
+import { lazy, Suspense } from "react";
 import { P, font, fontDisp } from "../../design-system/tokens";
 import { G, KPI, Pill, Ico } from "../SharedComponents";
-import Team from "./Team";
+
+// Lazy: Team se usa en Dash y App. Importarlo dinámico en ambos lados
+// permite que Rollup lo extraiga a su propio chunk (warning de build resuelto).
+const Team = lazy(() => import("./Team"));
 
 const stgC = {
   "Contáctame ya":      "#94A3B8",
@@ -322,7 +326,9 @@ const Dash = ({ oc, co, leadsData = [], T: _T }) => {
       ))}
     </div>
 
-    <Team T={T} />
+    <Suspense fallback={null}>
+      <Team T={T} />
+    </Suspense>
   </div>
   );
 };

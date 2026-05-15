@@ -43,12 +43,13 @@ export function ClientOrgGuard() {
     const redirectUrl = resolveRedirectForUser(user, clientId, window.location);
     if (redirectUrl) {
       redirectedRef.current = true;
-      // Log informativo — ayuda a debuggear "¿por qué me llevó a /grupo28?"
-      // sin tener que abrir el código.
-      console.info(
-        `[Stratos] Redirect: org ${user.organizationId} pertenece a otro cliente. ` +
-        `Cambiando ${window.location.pathname} → ${new URL(redirectUrl).pathname}`
-      );
+      // Log informativo solo en dev — en prod no inflamos consola del usuario.
+      if (import.meta.env.DEV) {
+        console.info(
+          `[Stratos] Redirect: org ${user.organizationId} pertenece a otro cliente. ` +
+          `Cambiando ${window.location.pathname} → ${new URL(redirectUrl).pathname}`
+        );
+      }
       window.location.replace(redirectUrl);
     }
   }, [user, clientId]);

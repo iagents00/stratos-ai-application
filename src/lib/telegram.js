@@ -16,6 +16,18 @@
  */
 import { supabase } from './supabase'
 
+// getSession() puede colgarse si el SDK auto-refresca un token caducado.
+// Mismo wrapper que auth.js — 3.5s es suficiente para lectura local + refresh.
+const GETSESSION_TIMEOUT = 3500
+function withTimeout(promise, ms = GETSESSION_TIMEOUT, label = 'op') {
+  return Promise.race([
+    promise,
+    new Promise((_, reject) =>
+      setTimeout(() => reject(new Error(`[telegram] ${label} timeout >${ms}ms`)), ms),
+    ),
+  ])
+}
+
 /**
  * Lee el estado actual de pareo del usuario autenticado.
  * Usa SELECT directo (RLS profiles_select_own ya permite leer el propio perfil).
@@ -24,7 +36,7 @@ import { supabase } from './supabase'
  */
 export async function getPairingStatus() {
   try {
-    const { data: { session } } = await supabase.auth.getSession()
+    const { data: { session } } = await withTimeout(supabase.auth.getSession(), GETSESSION_TIMEOUT, 'getSession')
     if (!session) return { paired: false, pairedAt: null, error: 'no_session' }
 
     const { data, error } = await supabase
@@ -98,7 +110,7 @@ export async function getRecentBotActivity(limit = 20) {
  */
 export async function unpairTelegram() {
   try {
-    const { data: { session } } = await supabase.auth.getSession()
+    const { data: { session } } = await withTimeout(supabase.auth.getSession(), GETSESSION_TIMEOUT, 'getSession')
     if (!session) return { ok: false, error: 'no_session' }
 
     const { error } = await supabase
