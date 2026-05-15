@@ -3236,21 +3236,6 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                             padding: "1.5px 5px", borderRadius: 99, flexShrink: 0,
                           }}>NUEVO</span>
                         )}
-                        {/* HOT — un punto pequeñito tipo "live" en lugar del badge.
-                             Comunica "lead caliente" sin robarle protagonismo al
-                             nombre. Acent sutil + glow apenas perceptible. */}
-                        {l.hot && (
-                          <span
-                            title="Lead caliente"
-                            aria-label="Lead caliente"
-                            style={{
-                              width: 7, height: 7, borderRadius: "50%",
-                              background: T.accent,
-                              boxShadow: `0 0 0 2px ${T.accent}28, 0 0 6px ${T.accent}55`,
-                              flexShrink: 0,
-                            }}
-                          />
-                        )}
                       </div>
 
                       {/* Row 2: asesor · proyecto · fecha · campaña · fuente —
