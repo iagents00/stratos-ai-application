@@ -145,6 +145,7 @@ export const STAGES = [
   "Visita Concretada",
   "Negociación",
   "Cierre",
+  "Rotación",
   "Perdido",
 ];
 
@@ -153,6 +154,7 @@ export const STAGES = [
 // Verdes → milestones cumplidos.
 // Naranjas → atención / acción requerida.
 // Gris → estado neutral o terminal.
+// Stone (Rotación) → lead reasignado / en triage entre asesores.
 export const STAGE_COLORS = {
   "Nuevo Registro":    P.txt3,
   "Primer Contacto":   P.blue,
@@ -165,5 +167,6 @@ export const STAGE_COLORS = {
   "Visita Concretada": P.emerald,
   "Negociación":       P.orange,
   "Cierre":            P.accent,
+  "Rotación":          "#A8A29E",
   "Perdido":           "#64748B",
 };

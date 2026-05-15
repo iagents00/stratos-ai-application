@@ -23,6 +23,7 @@ export const stgC = {
   "Visita Concretada":  "#6EE7C2",
   "Negociación":        "#FB923C",
   "Cierre":             "#34D399",
+  "Rotación":           "#A8A29E",
   "Perdido":            "#64748B",
 };
 
