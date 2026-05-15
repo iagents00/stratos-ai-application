@@ -53,7 +53,18 @@ export function matchClientFromLocation(location = window.location) {
 
   // 3. Query param (override útil para QA en localhost)
   const queryClient = params.get("client");
-  if (queryClient && CLIENT_CONFIGS[queryClient]) return queryClient;
+  if (queryClient) {
+    if (CLIENT_CONFIGS[queryClient]) return queryClient;
+    // Query param presente pero inválido — avisar al QA para que detecte
+    // typos rápido (?client=grupo3 cuando quiso ?client=grupo28).
+    if (typeof console !== "undefined") {
+      console.warn(
+        `[Stratos] ?client="${queryClient}" no existe en el registry. ` +
+        `Clientes válidos: ${Object.keys(CLIENT_CONFIGS).join(", ")}. ` +
+        `Fallback a "duke".`
+      );
+    }
+  }
 
   // 4. Default
   return "duke";
