@@ -49,6 +49,17 @@ const dukeConfig = {
     email:    "soporte@stratoscapitalgroup.com",
     whatsapp: null,
   },
+
+  // Configuración del CRM específica de Duke.
+  // Validado con Grupo 28 (PR #99) y promovido al cliente original.
+  // - defaultProjects: vacío → Duke sigue calculando la lista desde leadsData
+  //   (comportamiento histórico, sin cambios visibles).
+  // - advisorMetricsTab: true → admins/director/super_admin/ceo de Duke
+  //   ahora ven el botón "Indicadores" en el header del CRM.
+  crm: {
+    defaultProjects:    [],
+    advisorMetricsTab:  true,
+  },
 };
 
 export default dukeConfig;
