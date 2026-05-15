@@ -18,6 +18,7 @@ import { createRoot } from "react-dom/client";
 
 import { AuthProvider }   from "./contexts/AuthContext";
 import { ClientProvider } from "./contexts/ClientContext";
+import { ClientOrgGuard } from "./contexts/ClientOrgGuard";
 import { resolveClientFromLocation, matchClientFromLocation } from "./clients";
 import ErrorBoundary   from "./components/ErrorBoundary.jsx";
 import App            from "./app/App.jsx";
@@ -113,6 +114,10 @@ createRoot(document.getElementById("root")).render(
     <ErrorBoundary>
       <ClientProvider config={clientConfig}>
         <AuthProvider>
+          {/* Watcher: si el user logueado pertenece a otra org, redirige al
+              path correcto. Solo activo cuando isApp=true porque las páginas
+              públicas (privacy, deletion, etc.) no necesitan este guardrail. */}
+          {isApp && <ClientOrgGuard />}
           {isPrivacy
             ? <PrivacyPolicy />
             : isDeletion
