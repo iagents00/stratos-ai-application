@@ -43,6 +43,33 @@ const AdminPanel = lazy(() => import("./features/Admin/AdminPanel"));
 /* ── Navigation & roles ── */
 import { nav, MODULE_ROLES } from "./constants/navigation";
 
+// Vistas que NO se persisten entre F5: son flujos efímeros (entrar a Planes
+// desde una promo, abrir admin desde un settings click). El F5 te regresa
+// a la vista de trabajo principal (CRM o Comando), no a estas pantallas.
+const NON_PERSISTABLE_VIEWS = new Set(["planes", "admin"]);
+
+/**
+ * Resuelve la vista inicial al montar la app:
+ *   1. Si hay vista guardada para este usuario en localStorage Y su rol
+ *      tiene permiso para verla Y no está en la lista efímera → la usamos.
+ *   2. Si no, asesor → "c" (CRM), otros roles → "d" (Comando).
+ */
+function resolveInitialView(user) {
+  const isAsesorRole = !["super_admin","admin","director","ceo"].includes(user?.role);
+  const fallback = isAsesorRole ? "c" : "d";
+  if (!user?.id) return fallback;
+  try {
+    const saved = localStorage.getItem(`stratos.crm.view.${user.id}`);
+    if (!saved) return fallback;
+    if (NON_PERSISTABLE_VIEWS.has(saved)) return fallback;
+    const allowed = MODULE_ROLES[saved];
+    if (!allowed || !allowed.includes(user.role)) return fallback;
+    return saved;
+  } catch (_) {
+    return fallback;
+  }
+}
+
 /* ── Views ──
  * Dash y CRM son las que se ven inmediatamente al entrar → carga eager.
  * El resto se carga bajo demanda al cambiar de pestaña (code splitting). */
@@ -101,7 +128,20 @@ const LP = {
 export default function App() {
   const { user, login, logout, upgradeToOnline, bootHydrating } = useAuth();
   const isAsesorRole     = !["super_admin","admin","director","ceo"].includes(user?.role);
-  const [v, setV]        = useState(isAsesorRole ? "c" : "d");
+  // Vista activa persistida por usuario en localStorage. Si haces F5 estando
+  // en el CRM, vuelves al CRM (no al Comando). Validamos contra los permisos
+  // del rol actual por si cambió desde la última sesión.
+  const [v, setV]        = useState(() => resolveInitialView(user));
+
+  // Persistir vista cuando cambia para que el próximo F5 te deje donde estabas.
+  // Skip vistas efímeras (planes/admin) — esas son flujos que no queremos
+  // restaurar automáticamente.
+  useEffect(() => {
+    if (!user?.id) return;
+    if (NON_PERSISTABLE_VIEWS.has(v)) return;
+    try { localStorage.setItem(`stratos.crm.view.${user.id}`, v); } catch (_) { /* quota o bloqueado */ }
+  }, [v, user?.id]);
+
   const [co, setCo]      = useState(false);
   const [autoOpenPriority1, setAutoOpenPriority1] = useState(0);
   const [sidebarMore, setSidebarMore] = useState(false);
@@ -118,7 +158,25 @@ export default function App() {
   });
   const setTheme = useCallback((next) => {
     try { localStorage.setItem("stratos_crm_theme", next); } catch {}
-    startTransition(() => setThemeState(next));
+    // Transición suave: agregamos una clase a <html> que activa transiciones
+    // CSS globales para background, color, border, fill y shadow durante
+    // 260ms. Pasado ese tiempo la quitamos para que los hovers y otras
+    // interacciones vuelvan a su comportamiento normal sin overhead.
+    //
+    // Bonus: si el navegador soporta View Transitions API (Chrome 111+),
+    // usamos un cross-fade nativo que se ve aún más suave.
+    const applyChange = () => startTransition(() => setThemeState(next));
+    const root = document.documentElement;
+    if (typeof document.startViewTransition === "function") {
+      // View Transitions: el navegador captura un snapshot, aplica el
+      // cambio, y hace un cross-fade automático contra el nuevo estado.
+      document.startViewTransition(() => applyChange());
+    } else {
+      // Fallback CSS: clase con transitions !important durante 260ms.
+      root.classList.add("theme-transitioning");
+      applyChange();
+      setTimeout(() => root.classList.remove("theme-transitioning"), 280);
+    }
   }, []);
   const isLight = theme === "light";
   const T = isLight ? LP : P;
