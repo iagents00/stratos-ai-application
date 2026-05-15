@@ -41,7 +41,7 @@ import MetaPanel,
 const AdminPanel = lazy(() => import("./features/Admin/AdminPanel"));
 
 /* ── Navigation & roles ── */
-import { nav, MODULE_ROLES } from "./constants/navigation";
+import { nav, MODULE_ROLES, canAccessModule } from "./constants/navigation";
 
 // Vistas que NO se persisten entre F5: son flujos efímeros (entrar a Planes
 // desde una promo, abrir admin desde un settings click). El F5 te regresa
@@ -55,15 +55,17 @@ const NON_PERSISTABLE_VIEWS = new Set(["planes", "admin"]);
  *   2. Si no, asesor → "c" (CRM), otros roles → "d" (Comando).
  */
 function resolveInitialView(user) {
+  // Clientes externos (no Stratos) siempre arrancan en CRM, independiente del rol.
+  // Asesores Stratos también arrancan en CRM. El resto (admin/ceo/director Stratos) en Comando.
   const isAsesorRole = !["super_admin","admin","director","ceo"].includes(user?.role);
-  const fallback = isAsesorRole ? "c" : "d";
+  const isExternalOrg = user?.organizationId && user.organizationId !== "00000000-0000-0000-0000-000000000001";
+  const fallback = (isAsesorRole || isExternalOrg) ? "c" : "d";
   if (!user?.id) return fallback;
   try {
     const saved = localStorage.getItem(`stratos.crm.view.${user.id}`);
     if (!saved) return fallback;
     if (NON_PERSISTABLE_VIEWS.has(saved)) return fallback;
-    const allowed = MODULE_ROLES[saved];
-    if (!allowed || !allowed.includes(user.role)) return fallback;
+    if (!canAccessModule(saved, user)) return fallback;
     return saved;
   } catch (_) {
     return fallback;
@@ -688,21 +690,23 @@ export default function App() {
     ? Math.round(activeLeads.reduce((s, l) => s + (l.sc || 0), 0) / activeLeads.length) : 0;
   const fmt = n => n >= 1e6 ? `$${(n/1e6).toFixed(1).replace(/\.0$/,"")}M` : `$${(n/1e3).toFixed(0)}K`;
 
-  const primary   = nav.filter(n => !n.more);
+  // Sidebar primaria: solo módulos a los que el usuario tiene acceso (rol + org).
+  // Para clientes externos (Grupo 28 etc.) esto deja CRM como única opción visible.
+  const primary   = nav.filter(n => !n.more && canAccessModule(n.id, user));
   // El menú "Más" se filtra también por permisos del módulo. Así un asesor no
   // ve módulos a los que no tiene acceso (Asesores, Finanzas, Personas) y solo
   // ve los que le aplican (Planes, Perfil). Mantiene el adminOnly check.
   const secondary = nav.filter(n =>
     n.more
     && (!n.adminOnly || ["super_admin","admin"].includes(user?.role))
-    && (MODULE_ROLES[n.id]?.includes(user?.role) ?? true)
+    && canAccessModule(n.id, user)
   );
   const hasActiveMore = secondary.some(n => n.id === v);
 
   const NavBtn = ({ n }) => {
     const a = v === n.id;
     const isAdmin = n.adminOnly;
-    const hasAccess = MODULE_ROLES[n.id]?.includes(user?.role) ?? true;
+    const hasAccess = canAccessModule(n.id, user);
     const mintC = isAdmin ? "#A78BFA" : "#6EE7C2";
     const activeColor = isAdmin ? "#A78BFA" : (isLight ? T.accent : mintC);
     return (
@@ -880,8 +884,8 @@ export default function App() {
         <div style={{ width:"100%", display:"flex", flexDirection:"column", alignItems:"center", paddingBottom:12 }}>
           <div style={{ height:1, width:34, background: isLight ? "rgba(13,154,118,0.10)" : "rgba(255,255,255,0.06)", margin:"4px auto 8px" }} />
           <div style={{ display:"flex", flexDirection:"column", alignItems:"center", gap:3 }}>
-            <button title={["super_admin","admin"].includes(user?.role) ? "Gestión de Usuarios" : "Configuración"}
-              onClick={() => ["super_admin","admin"].includes(user?.role) ? setV("admin") : null}
+            <button title={canAccessModule("admin", user) ? "Gestión de Usuarios" : "Configuración"}
+              onClick={() => canAccessModule("admin", user) ? setV("admin") : null}
               style={{
                 width:44, height:44, borderRadius:13, cursor:"pointer",
                 background: v==="admin" ? "rgba(167,139,250,0.14)" : (isLight ? "rgba(255,255,255,0.62)" : "rgba(255,255,255,0.038)"),
@@ -1123,7 +1127,7 @@ export default function App() {
         {/* CONTENT */}
         <div style={{ flex:1, display:"flex", overflow:"hidden" }}>
           <div key={v} className="stratos-content-area" style={{ flex:1, padding:"18px 22px", overflowY:"auto", animation:"fadeIn 0.28s ease", display:"flex", flexDirection:"column" }}>
-            {user?.role && MODULE_ROLES[v] && !MODULE_ROLES[v].includes(user.role)
+            {user?.role && !canAccessModule(v, user)
               ? <PermissionGate moduleId={v} onGoBack={() => setV("c")} />
               : <Suspense fallback={
                   <div style={{ display:"flex", alignItems:"center", justifyContent:"center", padding:"60px 20px", color:T.txt3, fontFamily:font, fontSize:13 }}>
@@ -1142,7 +1146,7 @@ export default function App() {
                   {v === "rrhh"   && <RRHHModule T={T} />}
                   {v === "planes" && <PricingScreen embedded onBack={() => setV(isAsesorRole ? "c" : "d")} />}
                   {v === "perfil" && <Profile />}
-                  {v === "admin"  && ["super_admin","admin"].includes(user?.role) && <AdminPanel />}
+                  {v === "admin"  && canAccessModule("admin", user) && <AdminPanel />}
                 </Suspense>
             }
           </div>
@@ -1152,7 +1156,7 @@ export default function App() {
 
       {/* ══ MOBILE BOTTOM NAV ══ */}
       <div className="stratos-bottomnav" style={{ backdropFilter:"blur(24px)", WebkitBackdropFilter:"blur(24px)", background: isLight ? "rgba(246,248,247,0.97)" : "rgba(2,4,11,0.97)" }}>
-        {nav.filter(n => !n.more).map(n => {
+        {nav.filter(n => !n.more && canAccessModule(n.id, user)).map(n => {
           const a = v === n.id;
           const activeColor = isLight ? T.accent : "#6EE7C2";
           return (
@@ -1168,7 +1172,7 @@ export default function App() {
         </button>
         {sidebarMore && (
           <div style={{ position:"fixed", bottom:58, left:0, right:0, zIndex:199, display:"flex", flexWrap:"wrap", justifyContent:"center", gap:8, padding:"14px 16px", background: isLight ? "rgba(246,248,247,0.97)" : "rgba(4,8,18,0.97)", backdropFilter:"blur(24px)", WebkitBackdropFilter:"blur(24px)", borderTop:`1px solid ${isLight ? "rgba(0,0,0,0.07)" : "rgba(255,255,255,0.07)"}` }}>
-            {nav.filter(n => n.more && (!n.adminOnly || ["super_admin","admin"].includes(user?.role)) && (MODULE_ROLES[n.id]?.includes(user?.role) ?? true)).map(n => {
+            {nav.filter(n => n.more && (!n.adminOnly || ["super_admin","admin"].includes(user?.role)) && canAccessModule(n.id, user)).map(n => {
               const a = v === n.id;
               const activeColor = n.adminOnly ? "#A78BFA" : (isLight ? T.accent : "#6EE7C2");
               return (
