@@ -138,13 +138,24 @@ export default function MetaPanel({
   leadsData,
   T,
   isLight,
+  // Nuevos props para multi-tenant (Grupo 28 / Stratos / futuras orgs):
+  orgBrand,          // string mostrado en header — viene de DB (org.meta_config.brand o nombre de org).
+  canEdit,           // true solo si el role del usuario es super_admin o admin.
+  savingConfig,      // bool — true cuando hay un cambio pendiente de guardar en DB.
 }) {
   if (!open) return null;
+  // Brand label fallback (compat con instancias legacy que no pasen el prop)
+  const brandLabel = orgBrand || 'Duke del Caribe';
+  // canEdit puede venir indefinido en versiones legacy → permitir edición por defecto
+  const canEditFinal = canEdit === undefined ? true : canEdit;
 
-  const GOAL2  = metaPlan.goal;
+  // Si la org no tiene goal configurado (placeholder Grupo 28 etc.), evitamos
+  // división por 0 y mostramos % de pipeline contra un fallback simbólico.
+  const GOAL2  = metaPlan?.goal > 0 ? metaPlan.goal : 48_000_000;
+  const hasGoal = (metaPlan?.goal || 0) > 0;
   const aLeads = leadsData.filter(l => l.presupuesto > 0);
   const pipe2  = aLeads.reduce((s, l) => s + (l.presupuesto || 0), 0);
-  const pct2   = Math.min(100, Math.round((pipe2 / GOAL2) * 100));
+  const pct2   = hasGoal ? Math.min(100, Math.round((pipe2 / GOAL2) * 100)) : 0;
   const avgSc  = aLeads.length ? Math.round(aLeads.reduce((s, l) => s + (l.sc || 0), 0) / aLeads.length) : 0;
   const fmtM   = n => n >= 1e6 ? `$${(n/1e6).toFixed(1).replace(/\.0$/,"")}M` : `$${(n/1e3).toFixed(0)}K`;
 
@@ -158,20 +169,41 @@ export default function MetaPanel({
   const colHd = txt => (
     <p style={{ margin:"0 0 8px", fontSize:10, fontWeight:700, fontFamily:fontDisp, color:T.txt2, letterSpacing:"0.05em", textTransform:"uppercase" }}>{txt}</p>
   );
-  const E = ({ val, onSave, style={}, multi=false }) => (
-    <span
-      contentEditable suppressContentEditableWarning
-      onBlur={e => { const v=e.currentTarget.textContent.trim(); if(v) onSave(v); }}
-      onKeyDown={e => { if(!multi && e.key==="Enter"){ e.preventDefault(); e.currentTarget.blur(); } }}
-      title="Click para editar"
-      style={{
-        display:"block", outline:"none",
-        borderBottom:`1px dashed ${isLight?"rgba(0,0,0,0.12)":"rgba(255,255,255,0.12)"}`,
-        cursor:"text", minWidth:20,
-        ...style,
-      }}
-    >{val}</span>
-  );
+  // Componente in-line: editable solo si canEditFinal (super_admin/admin); en
+  // modo solo-lectura se renderiza como <span> normal sin borde dashed ni cursor text,
+  // y los asesores no pueden mutar el contenido.
+  // Para placeholders vacíos (Grupo 28 recién creado) mostramos un dim "—" para
+  // que el usuario sepa que hay un campo editable ahí.
+  const placeholderEmpty = (v) => (v === '' || v == null);
+  const E = ({ val, onSave, style={}, multi=false }) => {
+    const displayVal = placeholderEmpty(val) ? (canEditFinal ? '— Click para configurar —' : '') : val;
+    const isEmptyHint = placeholderEmpty(val);
+    if (!canEditFinal) {
+      return <span style={{ display:"block", ...style }}>{displayVal}</span>;
+    }
+    return (
+      <span
+        contentEditable suppressContentEditableWarning
+        onFocus={e => { if (isEmptyHint) e.currentTarget.textContent = ''; }}
+        onBlur={e => {
+          const v = e.currentTarget.textContent.trim();
+          if (v && v !== '— Click para configurar —') onSave(v);
+          else if (!v && !isEmptyHint) onSave('');  // permitir borrar
+          else if (!v) e.currentTarget.textContent = '— Click para configurar —';
+        }}
+        onKeyDown={e => { if(!multi && e.key==="Enter"){ e.preventDefault(); e.currentTarget.blur(); } }}
+        title="Click para editar"
+        style={{
+          display:"block", outline:"none",
+          borderBottom:`1px dashed ${isLight?"rgba(0,0,0,0.12)":"rgba(255,255,255,0.12)"}`,
+          cursor:"text", minWidth:20,
+          opacity: isEmptyHint ? 0.45 : 1,
+          fontStyle: isEmptyHint ? 'italic' : (style.fontStyle || 'normal'),
+          ...style,
+        }}
+      >{displayVal}</span>
+    );
+  };
 
   const tabs = [
     { id:"acciones",  label:"Lista de Acción" },
@@ -217,7 +249,14 @@ export default function MetaPanel({
               <Target size={17} color={T.accent} strokeWidth={2} />
             </div>
             <div>
-              <p style={{ margin:0, fontSize:15.5, fontWeight:700, fontFamily:fontDisp, letterSpacing:"-0.03em", color:T.txt }}>Duke del Caribe</p>
+              <p style={{ margin:0, fontSize:15.5, fontWeight:700, fontFamily:fontDisp, letterSpacing:"-0.03em", color:T.txt }}>
+                {brandLabel}
+                {savingConfig && (
+                  <span style={{ marginLeft:10, fontSize:9.5, fontWeight:500, color:T.txt3, fontStyle:'italic' }}>
+                    · guardando…
+                  </span>
+                )}
+              </p>
               <p style={{ margin:"1px 0 0", fontSize:10, color:T.txt3, fontFamily:font }}>Plan Estratégico · Scaling Up · 2026</p>
             </div>
           </div>
