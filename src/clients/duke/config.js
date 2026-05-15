@@ -43,6 +43,12 @@ const dukeConfig = {
     finanzas:     true,
     rrhh:         true,
     trash:        true,
+    // Comando Directivo activo en Duke — reemplaza el Dash legacy con la
+    // vista ejecutiva nueva (gráfica de evolución + tabla descargable +
+    // reporte HTML para dirección). Validado primero en Grupo 28, ahora
+    // promovido al cliente original. Aplica solo a admins/director/ceo;
+    // los asesores siguen sin tener acceso al módulo.
+    comandoDirectivo: true,
   },
 
   support: {
