@@ -120,6 +120,60 @@ Si Claude Code te sugiere editar archivos fuera de `src/clients/grupo28/`,
 **parálo** y avisale al owner. Probablemente sí se puede hacer, pero requiere
 PR + review.
 
+### 🔴 NUNCA — Bases de datos, Supabase, autenticación
+
+Estas son acciones **prohibidas de forma absoluta**, incluso con PR + review.
+Si necesitás algo de acá, **pasale el ticket al owner para que lo haga él**:
+
+| Acción prohibida | Por qué |
+|---|---|
+| Ejecutar SQL directo en Supabase (INSERT/UPDATE/DELETE) | Puede borrar/corromper datos de Duke en producción |
+| Crear o modificar **tablas, columnas, índices** en Supabase | Es schema compartido — afecta a Duke |
+| Modificar **RLS policies** | Pueden exponer datos de un cliente a otro |
+| Editar `src/lib/supabase.js`, `src/lib/auth.js`, `src/lib/lead-save.js` | Capa de auth/datos compartida |
+| Editar `src/app/constants/navigation.js` | Define quién ve qué módulos (zona crítica de seguridad) |
+| Crear migraciones nuevas en `supabase/migrations/` | Cambios estructurales del schema |
+| Cambiar credenciales en `.env.local` sin coordinarlo con el owner | Podés desconectar a Grupo 28 de producción |
+| Hacer queries en Claude Code del tipo `DELETE FROM ...`, `DROP ...`, `TRUNCATE ...` | Riesgo de pérdida de datos catastrófica |
+| Pedirle a Claude Code que "limpie", "resetee" o "borre" datos | Lo mismo |
+| Tocar el contenido de `backups/` | Son snapshots históricos — solo lectura |
+
+**Si Claude Code te sugiere alguna de estas acciones, parálo INMEDIATAMENTE
+y avisale al owner.** Las queries de lectura (`SELECT`) sí están OK para
+debugging, pero ANTE LA DUDA pregunta.
+
+### 🟢 Lo que SÍ podés hacer desde Claude Code para personalizar Grupo 28
+
+Tres niveles de personalización, en orden de simplicidad:
+
+**Nivel A — Solo config (autónomo, sin review):**
+- Editar `src/clients/grupo28/config.js`: cambiar `legalName`, `brand.logoText`,
+  `brand.accent` (color), `tagline`, `features.<modulo> = false` para apagar
+  módulos del cliente.
+- Crear `src/clients/grupo28/theme.js` o `src/clients/grupo28/overrides/` si
+  necesitás overrides visuales complejos.
+
+**Nivel B — Texto dinámico configurable por el cliente desde la UI (no toca código):**
+- Plan, Protocolo y Goal del CRM ya son **editables por organización** vía
+  `meta_config` en la tabla `organizations` (PR #90). El super_admin de Grupo 28
+  (Felipe Grillasca) puede editar esos textos directamente desde la app —
+  **no requiere intervención del dev**.
+- Si el cliente quiere cambiar uno de esos textos, decile que lo edite él
+  mismo desde la UI logueado como super_admin. Vos no tenés que hacer nada.
+
+**Nivel C — Texto hardcoded en el CRM compartido (requiere PR + review):**
+- Si hay strings tipo `"Duke del Caribe"` o `"Stratos"` hardcoded en `src/app/`
+  que deberían depender del cliente, hay dos enfoques posibles:
+  1. **Mover el string al config del cliente** (`src/clients/<id>/config.js`)
+     y usar `useClient().config.X` para leerlo. Es el enfoque correcto a largo
+     plazo.
+  2. **Gate visual con `useClient().clientId`** y mostrar texto distinto según
+     cliente.
+- En ambos casos requiere editar archivos del core (`src/app/`), entonces:
+  - Abrí PR con tu propuesta.
+  - El owner revisa que el cambio no rompa Duke ni otros clientes.
+  - Merge cuando el owner aprueba.
+
 ---
 
 ## 7. Flujo de trabajo diario
