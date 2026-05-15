@@ -43,6 +43,7 @@ function clearLocalAuthState() {
     for (const k of keys) {
       if (/^sb-/i.test(k))                  localStorage.removeItem(k); // tokens de Supabase
       else if (/^stratos\.supabase/i.test(k)) localStorage.removeItem(k); // storageKey nuestro
+      else if (/^stratos\.leads\.cache\./i.test(k)) localStorage.removeItem(k); // cache CRM por user
       else if (k === 'stratos_session_cache') localStorage.removeItem(k);
       else if (k === 'stratos_offline_session') localStorage.removeItem(k);
     }
