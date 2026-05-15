@@ -173,8 +173,46 @@ export default function App() {
     });
   }, []);
 
-  const fetchLeads = useCallback(async () => {
-    setLeadsLoading(true);
+  // Cache local de leads en localStorage (stale-while-revalidate).
+  // En F5/login pintamos esta versión cacheada al instante, mientras Supabase
+  // responde. Cuando llega la respuesta fresca la reemplazamos.
+  // Scope por user.id para que distintas cuentas no se mezclen.
+  // El listener de SIGNED_OUT en AuthContext ya limpia este storage.
+  const leadsCacheKey = user?.id ? `stratos.leads.cache.${user.id}` : null;
+
+  const readLeadsCache = useCallback(() => {
+    if (!leadsCacheKey) return null;
+    try {
+      const raw = localStorage.getItem(leadsCacheKey);
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+      // Sanity check: payload debe ser un array no vacío con shape de lead
+      if (!Array.isArray(parsed?.rows) || parsed.rows.length === 0) return null;
+      if (!parsed.rows[0]?.id) return null;
+      return parsed.rows;
+    } catch (_) { return null; }
+  }, [leadsCacheKey]);
+
+  const writeLeadsCache = useCallback((rows) => {
+    if (!leadsCacheKey || !Array.isArray(rows)) return;
+    try {
+      // Guardamos las filas crudas (no normalizadas) para evitar romper compat
+      // si normalizeLeads cambia en una versión futura.
+      localStorage.setItem(leadsCacheKey, JSON.stringify({ rows, ts: Date.now() }));
+    } catch (_) { /* quota exceeded — no es crítico */ }
+  }, [leadsCacheKey]);
+
+  const fetchLeads = useCallback(async ({ silent = false } = {}) => {
+    // Si NO es silent y hay cache, pintamos cache primero y dejamos
+    // leadsLoading=false (UX: leads aparecen al instante en F5/login).
+    // El fetch a la red continúa y reemplaza con datos frescos al volver.
+    const cached = !silent ? readLeadsCache() : null;
+    if (cached) {
+      setLeadsData(normalizeLeads(cached));
+      setLeadsLoading(false);
+    } else if (!silent) {
+      setLeadsLoading(true);
+    }
 
     // Modo offline: cargar del JSON estático + overlay localStorage
     if (user?._offline) {
@@ -183,7 +221,7 @@ export default function App() {
         setLeadsData(normalizeLeads(offlineLeads));
       } catch (e) {
         console.warn('[Stratos] Error cargando leads offline:', e);
-        setLeadsData([]);
+        if (!cached) setLeadsData([]);
       }
       setLeadsLoading(false);
       return;
@@ -194,8 +232,9 @@ export default function App() {
       .from('leads').select('*').is('deleted_at', null).order('created_at', { ascending: false });
     if (!error && data) {
       setLeadsData(normalizeLeads(data));
-    } else if (error) {
-      // Supabase falló — intentar offline como último recurso
+      writeLeadsCache(data);
+    } else if (error && !cached) {
+      // Supabase falló y no había cache — intentar offline como último recurso
       console.warn('[Stratos] Supabase leads falló, intentando offline:', error.message);
       try {
         const offlineLeads = await getOfflineLeads(user);
@@ -203,7 +242,7 @@ export default function App() {
       } catch (_) { /* noop */ }
     }
     setLeadsLoading(false);
-  }, [normalizeLeads, user]);
+  }, [normalizeLeads, user, readLeadsCache, writeLeadsCache]);
 
   useEffect(() => {
     if (!user) return;
@@ -317,8 +356,9 @@ export default function App() {
       .update({ deleted_at: new Date().toISOString() })
       .eq('id', leadId);
     if (error) {
-      // Rollback — re-fetch para restaurar
-      fetchLeads();
+      // Rollback — re-fetch para restaurar. silent=true: no pintar cache stale
+      // que volvería a meter el lead que el optimistic UI acaba de quitar.
+      fetchLeads({ silent: true });
       return { ok: false, error: error.message };
     }
     refreshTrash();
@@ -338,7 +378,7 @@ export default function App() {
       refreshTrash();
       return { ok: false, error: error.message };
     }
-    fetchLeads();
+    fetchLeads({ silent: true });
     return { ok: true };
   }, [user, fetchLeads, refreshTrash]);
 
@@ -386,8 +426,9 @@ export default function App() {
     if (ok && synced > 0) {
       setSyncMsg(`✅ ${synced} cambios sincronizados.`);
       setTimeout(() => setSyncMsg(""), 4000);
-      // Refrescar de Supabase tras sync exitoso
-      fetchLeads();
+      // Refrescar de Supabase tras sync exitoso. silent: el estado local
+      // ya está al día por el optimistic UI; no pintar cache stale.
+      fetchLeads({ silent: true });
     } else if (failed > 0) {
       setSyncMsg(`⚠️ ${synced} ok, ${failed} fallaron. Reintenta cuando Supabase esté estable.`);
       setTimeout(() => setSyncMsg(""), 6000);
@@ -439,8 +480,9 @@ export default function App() {
             setSyncMsg(`✅ ${synced} cambios sincronizados automáticamente.`);
             setTimeout(() => setSyncMsg(""), 4000);
           }
-          // Refrescar leads de Supabase para tener la versión canónica
-          fetchLeads();
+          // Refrescar leads de Supabase para tener la versión canónica.
+          // silent: estado local ya tiene los cambios optimistas.
+          fetchLeads({ silent: true });
         }
       }
     } finally {
