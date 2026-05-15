@@ -52,16 +52,17 @@ const FULL_LABELS = {
   followUps:      "Seguimientos realizados",
 };
 
-// Paleta para cada serie — alto contraste, accesible y consistente con el
-// design system. Se usan tanto en la gráfica como en los chips de leyenda.
+// Paleta unificada — SOLO derivados de azul / verde / naranja. Sin rosas,
+// violetas ni amarillos puros. Hierarquía: greens para etapas iniciales,
+// blues para el embudo de calificación/zoom, oranges para acciones activas.
 const COLORS_BY_KEY = {
-  assigned:       "#6EE7C2",
-  contacted:      "#38BDF8",
-  qualified:      "#A78BFA",
-  zoomScheduled:  "#60A5FA",
-  zoomDone:       "#34D399",
-  activePostZoom: "#FACC15",
-  followUps:      "#F472B6",
+  assigned:       "#6EE7C2",   // mint green — primer toque
+  contacted:      "#38BDF8",   // sky blue — entrando al embudo
+  qualified:      "#0EA5E9",   // deeper blue — calificado
+  zoomScheduled:  "#2563EB",   // navy blue — zoom programado
+  zoomDone:       "#10B981",   // emerald green — zoom hecho
+  activePostZoom: "#F59E0B",   // amber orange — activos en cierre
+  followUps:      "#EA580C",   // deep orange — seguimientos
 };
 
 const GRANULARITIES = [
@@ -273,137 +274,203 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
 <style>
   *, *::before, *::after { box-sizing: border-box; }
   :root {
-    --bg: #FFFFFF;
-    --ink: #0B1220;
-    --ink2: #475569;
-    --ink3: #94A3B8;
-    --line: #E2E8F0;
-    --line2: #F1F5F9;
-    --accent: #0D9A76;
-    --accent-soft: #ECFDF5;
+    --bg:           #FFFFFF;
+    --ink:          #0B1220;
+    --ink2:         #334155;
+    --ink3:         #64748B;
+    --ink4:         #94A3B8;
+    --line:         #E2E8F0;
+    --line2:        #F1F5F9;
+    --line3:        #F8FAFC;
+    /* Paleta — solo derivados de azul / verde / naranja */
+    --green:        #10B981;
+    --green-soft:   #ECFDF5;
+    --green-deep:   #047857;
+    --blue:         #2563EB;
+    --blue-soft:    #EFF6FF;
+    --orange:       #EA580C;
+    --orange-soft:  #FFF7ED;
+    /* Acentos por indicador — alineados con el chart en la app */
+    --c-assigned:       #6EE7C2;
+    --c-contacted:      #38BDF8;
+    --c-qualified:      #0EA5E9;
+    --c-zoom-sched:     #2563EB;
+    --c-zoom-done:      #10B981;
+    --c-active:         #F59E0B;
+    --c-followups:      #EA580C;
   }
   html, body { background: var(--bg); color: var(--ink); }
   body {
     margin: 0;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "SF Pro Text", Roboto, "Helvetica Neue", Arial, sans-serif;
-    font-size: 13px; line-height: 1.55;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "SF Pro Display", "SF Pro Text", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-size: 12.5px; line-height: 1.55;
     -webkit-print-color-adjust: exact; print-color-adjust: exact;
+    -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;
   }
   .page {
-    max-width: 920px; margin: 0 auto; padding: 40px 48px 56px;
+    max-width: 960px; margin: 0 auto; padding: 44px 52px 60px;
   }
   .topbar {
-    display: flex; align-items: center; justify-content: space-between;
-    border-bottom: 2px solid var(--ink); padding-bottom: 14px; margin-bottom: 28px;
+    display: flex; align-items: flex-start; justify-content: space-between;
+    border-bottom: 1.5px solid var(--ink); padding-bottom: 16px; margin-bottom: 28px;
+    gap: 24px;
   }
-  .brand { font-size: 18px; font-weight: 700; letter-spacing: -0.01em; }
+  .brand {
+    font-size: 22px; font-weight: 700; letter-spacing: -0.022em;
+    color: var(--ink); line-height: 1.1;
+  }
   .brand .badge {
-    display: inline-block; background: var(--accent); color: #fff;
-    font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 99px;
-    margin-left: 8px; letter-spacing: 0.04em; text-transform: uppercase; vertical-align: middle;
+    display: inline-block;
+    background: linear-gradient(135deg, var(--green) 0%, var(--green-deep) 100%);
+    color: #fff;
+    font-size: 9.5px; font-weight: 700; padding: 4px 10px; border-radius: 99px;
+    margin-left: 10px; letter-spacing: 0.06em; text-transform: uppercase;
+    vertical-align: middle; box-shadow: 0 1px 2px rgba(16,185,129,0.25);
   }
-  .meta { font-size: 11px; color: var(--ink2); text-align: right; }
+  .meta {
+    font-size: 10.5px; color: var(--ink3); text-align: right;
+    line-height: 1.65; letter-spacing: 0.005em;
+  }
   .meta strong { color: var(--ink); font-weight: 600; }
   h1 {
-    font-size: 26px; font-weight: 700; margin: 4px 0 8px;
-    letter-spacing: -0.025em;
+    font-size: 28px; font-weight: 700; margin: 6px 0 8px;
+    letter-spacing: -0.028em; color: var(--ink);
   }
   .subtitle {
-    font-size: 13px; color: var(--ink2); margin: 0 0 28px;
+    font-size: 12.5px; color: var(--ink2); margin: 0 0 32px;
+    line-height: 1.55;
   }
+  .subtitle strong { color: var(--ink); font-weight: 600; }
   h2 {
-    font-size: 13px; font-weight: 700; text-transform: uppercase;
-    letter-spacing: 0.08em; color: var(--ink2);
-    margin: 32px 0 12px; padding-bottom: 6px;
+    font-size: 11.5px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.10em; color: var(--ink3);
+    margin: 36px 0 14px; padding-bottom: 8px;
     border-bottom: 1px solid var(--line);
+    display: flex; align-items: center; gap: 10px;
+  }
+  h2::before {
+    content: ""; display: inline-block; width: 3px; height: 14px;
+    background: var(--green); border-radius: 2px;
   }
   .summary {
     display: grid; grid-template-columns: repeat(4, 1fr);
-    gap: 12px; margin-bottom: 8px;
+    gap: 10px; margin-bottom: 4px;
   }
   .stat {
-    border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px;
+    border: 1px solid var(--line);
+    border-radius: 12px; padding: 16px 18px;
     background: #FFFFFF;
+    position: relative; overflow: hidden;
+  }
+  .stat::before {
+    content: ""; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, var(--green), var(--green) 60%, transparent);
   }
   .stat .label {
-    font-size: 10px; font-weight: 700; color: var(--ink3);
-    text-transform: uppercase; letter-spacing: 0.07em;
+    font-size: 9.5px; font-weight: 700; color: var(--ink3);
+    text-transform: uppercase; letter-spacing: 0.08em;
   }
   .stat .value {
-    font-size: 26px; font-weight: 700; color: var(--ink);
-    margin-top: 6px; letter-spacing: -0.025em; line-height: 1;
+    font-size: 30px; font-weight: 700; color: var(--ink);
+    margin-top: 8px; letter-spacing: -0.028em; line-height: 1;
+    font-variant-numeric: tabular-nums;
   }
   .stat .sub {
-    font-size: 10.5px; color: var(--ink2); margin-top: 6px;
+    font-size: 10px; color: var(--ink3); margin-top: 8px;
+    letter-spacing: 0.005em;
   }
   .ind-grid {
     display: grid; grid-template-columns: 1fr 1fr;
-    gap: 8px 24px; margin: 8px 0 0;
+    gap: 4px 28px; margin: 6px 0 0;
   }
   .ind {
     display: flex; align-items: center; justify-content: space-between;
-    gap: 12px; padding: 9px 0;
+    gap: 14px; padding: 11px 0;
     border-bottom: 1px solid var(--line2);
   }
-  .ind:last-child { border-bottom: none; }
-  .ind .name { font-size: 12.5px; color: var(--ink); font-weight: 500; }
-  .ind .bar-wrap { flex: 1; height: 6px; border-radius: 99px; background: var(--line2); overflow: hidden; }
-  .ind .bar { height: 100%; border-radius: 99px; background: var(--accent); }
+  .ind:last-child, .ind:nth-last-child(2) { border-bottom: none; }
+  .ind .name {
+    font-size: 12px; color: var(--ink); font-weight: 500;
+    display: inline-flex; align-items: center; gap: 8px;
+    min-width: 0; flex-shrink: 1;
+  }
+  .ind .dot {
+    width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+  }
+  .ind .bar-wrap {
+    flex: 1; height: 6px; border-radius: 99px;
+    background: var(--line2); overflow: hidden; min-width: 60px;
+  }
+  .ind .bar {
+    height: 100%; border-radius: 99px;
+    transition: width 0.3s ease;
+  }
   .ind .val {
     font-size: 14px; font-weight: 700; color: var(--ink);
-    min-width: 36px; text-align: right; font-variant-numeric: tabular-nums;
+    min-width: 40px; text-align: right; font-variant-numeric: tabular-nums;
   }
   table {
-    width: 100%; border-collapse: collapse; margin-top: 6px;
-    font-size: 11.5px;
+    width: 100%; border-collapse: collapse; margin-top: 4px;
+    font-size: 11px;
+    border: 1px solid var(--line); border-radius: 10px;
+    overflow: hidden;
   }
   table th, table td {
-    padding: 8px 10px; text-align: right;
+    padding: 9px 12px; text-align: right;
     border-bottom: 1px solid var(--line2);
     font-variant-numeric: tabular-nums;
   }
   table th {
-    font-size: 10px; font-weight: 700; text-transform: uppercase;
-    letter-spacing: 0.05em; color: var(--ink2);
-    background: var(--line2); border-bottom: 1px solid var(--line);
+    font-size: 9.5px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.06em; color: var(--ink2);
+    background: var(--line3); border-bottom: 1px solid var(--line);
+    white-space: nowrap;
   }
-  table th:first-child, table td:first-child { text-align: left; }
-  table tbody tr:hover { background: #FAFCFE; }
+  table th:first-child, table td:first-child { text-align: left; font-weight: 500; }
+  table tbody tr:nth-child(even) { background: #FCFDFE; }
+  table tbody tr:hover { background: var(--green-soft); }
   table tfoot td {
-    font-weight: 700; background: var(--accent-soft); color: var(--ink);
-    border-top: 2px solid var(--accent); border-bottom: none;
+    font-weight: 800; background: var(--green-soft); color: var(--green-deep);
+    border-top: 2px solid var(--green); border-bottom: none;
+    text-transform: uppercase; letter-spacing: 0.04em; font-size: 10.5px;
   }
   .footer {
-    margin-top: 40px; padding-top: 14px;
+    margin-top: 48px; padding-top: 16px;
     border-top: 1px solid var(--line);
-    font-size: 10px; color: var(--ink3);
+    font-size: 10px; color: var(--ink4);
     display: flex; justify-content: space-between; gap: 12px;
+    letter-spacing: 0.01em;
   }
   .actions {
-    position: fixed; top: 16px; right: 16px;
+    position: fixed; top: 18px; right: 18px;
     display: flex; gap: 8px; z-index: 10;
   }
   .btn {
-    padding: 8px 14px; border-radius: 8px; border: none;
-    background: var(--accent); color: #fff; font-weight: 700;
-    font-size: 12px; cursor: pointer; box-shadow: 0 2px 8px rgba(13,154,118,0.30);
+    padding: 9px 16px; border-radius: 9px; border: none;
+    background: linear-gradient(135deg, var(--green) 0%, var(--green-deep) 100%);
+    color: #fff; font-weight: 700;
+    font-size: 12px; cursor: pointer;
+    box-shadow: 0 2px 8px rgba(16,185,129,0.32);
+    letter-spacing: 0.005em;
   }
-  .btn.secondary { background: #fff; color: var(--ink); border: 1px solid var(--line); box-shadow: none; }
+  .btn:hover { box-shadow: 0 4px 12px rgba(16,185,129,0.42); }
   @media print {
     .actions { display: none !important; }
-    .page { max-width: none; padding: 0 12mm; }
-    h2 { page-break-after: avoid; }
-    table, .ind-grid, .summary { page-break-inside: avoid; }
-    body { font-size: 11.5px; }
-    .stat .value { font-size: 22px; }
+    .page { max-width: none; padding: 0 14mm; }
+    h2 { page-break-after: avoid; break-after: avoid; }
+    table, .ind-grid, .summary, .stat { page-break-inside: avoid; break-inside: avoid; }
+    body { font-size: 10.5px; }
+    .stat .value { font-size: 24px; }
     h1 { font-size: 22px; }
+    .topbar { margin-bottom: 18px; }
+    .footer { margin-top: 32px; }
   }
-  @page { size: A4 portrait; margin: 16mm 0; }
+  @page { size: A4 portrait; margin: 14mm 0; }
 </style>
 </head>
 <body>
   <div class="actions">
-    <button class="btn" onclick="window.print()">Imprimir / Guardar PDF</button>
+    <button class="btn" onclick="window.print()">Guardar como PDF</button>
   </div>
   <div class="page">
 
@@ -474,11 +541,15 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
     <div class="ind-grid">
       ${INDICATORS.map(ind => {
         const val = snapshotTotals[ind.key] || 0;
-        const w = Math.round((val / maxIndVal) * 100);
+        const w = Math.max(2, Math.round((val / maxIndVal) * 100));
+        const color = COLORS_BY_KEY[ind.key] || "#10B981";
         return `
         <div class="ind">
-          <div class="name">${htmlEscape(FULL_LABELS[ind.key] || ind.label)}</div>
-          <div class="bar-wrap"><div class="bar" style="width: ${w}%"></div></div>
+          <div class="name">
+            <span class="dot" style="background:${color}"></span>
+            ${htmlEscape(FULL_LABELS[ind.key] || ind.label)}
+          </div>
+          <div class="bar-wrap"><div class="bar" style="width:${w}%;background:${color}"></div></div>
           <div class="val">${val}</div>
         </div>`;
       }).join("")}
@@ -540,8 +611,26 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
 </body>
 </html>`;
 
-    const filename = `comando-directivo_${granularity.label.toLowerCase()}_${stamp}.html`;
-    downloadFile(filename, html);
+    // Abre el reporte en una nueva pestaña y dispara el diálogo de impresión
+    // automáticamente — el usuario elige "Guardar como PDF" desde el destino
+    // de impresión del navegador. Fallback a descarga .html si el popup se
+    // bloquea (algunos browsers requieren whitelist).
+    const win = window.open("", "_blank", "noopener,noreferrer");
+    if (!win) {
+      const filename = `comando-directivo_${granularity.label.toLowerCase()}_${stamp}.html`;
+      downloadFile(filename, html);
+      return;
+    }
+    win.document.open();
+    win.document.write(html);
+    win.document.close();
+    // Esperar a que se monten estilos antes de imprimir.
+    setTimeout(() => {
+      try {
+        win.focus();
+        win.print();
+      } catch (_) { /* el usuario puede imprimir con Cmd/Ctrl+P */ }
+    }, 450);
   };
 
   // ── Export de la tabla — CSV plano con los indicadores por período ──────
@@ -607,7 +696,7 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
 
           <button
             onClick={handleExport}
-            title="Descargar reporte ejecutivo (HTML) — listo para imprimir o guardar como PDF y enviar a dirección"
+            title="Genera el reporte ejecutivo y abre el diálogo de Guardar como PDF — listo para enviar a dirección"
             style={{
               display: "inline-flex", alignItems: "center", gap: 7,
               padding: "8px 14px", borderRadius: 9,
@@ -631,7 +720,7 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
             }}
           >
             <Download size={13} strokeWidth={2.4} />
-            Descargar reporte
+            Generar PDF
           </button>
         </div>
       </div>
