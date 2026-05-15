@@ -1513,19 +1513,15 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
         const tbAccentSubtle = `linear-gradient(90deg, ${T.accent} 0%, ${lighten(T.accent)} 50%, transparent 100%)`;
 
         const getCardMeta = (l) => {
-          // Todos los topBars apuntan al accent (verde mint). Lo único que
-          // cambia es la intensidad del shimmer (urgentes pulsan más).
-          if (l.hot)                       return { color: T.accent, topBar: tbAccent,       label: `CALIENTE · ${l.daysInactive}D`,        sublabel: "Actuar ahora mismo",              pulse: true,  glow: true  };
-          if (l.isNew)                     return { color: T.accent, topBar: tbAccent,       label: "NUEVO REGISTRO",                       sublabel: "Primer contacto — no esperes",    pulse: true,  glow: true  };
-          if (l.st === "Zoom Agendado")    return { color: T.blue,    topBar: tbAccentSubtle, label: "ZOOM AGENDADO",                       sublabel: "Preparar presentación de cierre", pulse: false, glow: false };
-          if (l.st === "Zoom Concretado")  return { color: T.emerald, topBar: tbAccentSubtle, label: "ZOOM CONCRETADO ✓",                   sublabel: "Enviar propuesta y cerrar hoy",   pulse: false, glow: false };
-          // T.orange solo existe en la paleta P (oscuro). En LP (claro) usamos T.amber.
-          if (l.st === "Negociación") {
-            const c = T.orange || T.amber;
-            return { color: c, topBar: tbAccentSubtle, label: "EN NEGOCIACIÓN", sublabel: "Cerrar condiciones esta semana", pulse: false, glow: false };
-          }
-          if (l.daysInactive >= 7)         return { color: T.cyan,    topBar: tbAccentSubtle, label: `SIN CONTACTO · ${l.daysInactive}D`,    sublabel: "Retomar antes de que enfríe",     pulse: false, glow: false };
-          return                                  { color: T.blue,    topBar: tbAccentSubtle, label: "ACCIÓN PENDIENTE",                    sublabel: "Revisar y avanzar hoy",           pulse: false, glow: false };
+          // Todas las tarjetas comparten estética: accent verde + topbar shimmer.
+          // El contexto se sigue diferenciando solo por el pill de etapa.
+          if (l.hot)                       return { color: T.accent, topBar: tbAccent, label: `CALIENTE · ${l.daysInactive}D`,     sublabel: "Actuar ahora mismo",              pulse: true, glow: true };
+          if (l.isNew)                     return { color: T.accent, topBar: tbAccent, label: "NUEVO REGISTRO",                    sublabel: "Primer contacto — no esperes",    pulse: true, glow: true };
+          if (l.st === "Zoom Agendado")    return { color: T.accent, topBar: tbAccent, label: "ZOOM AGENDADO",                     sublabel: "Preparar presentación de cierre", pulse: true, glow: true };
+          if (l.st === "Zoom Concretado")  return { color: T.accent, topBar: tbAccent, label: "ZOOM CONCRETADO ✓",                 sublabel: "Enviar propuesta y cerrar hoy",   pulse: true, glow: true };
+          if (l.st === "Negociación")      return { color: T.accent, topBar: tbAccent, label: "EN NEGOCIACIÓN",                    sublabel: "Cerrar condiciones esta semana",  pulse: true, glow: true };
+          if (l.daysInactive >= 7)         return { color: T.accent, topBar: tbAccent, label: `SIN CONTACTO · ${l.daysInactive}D`, sublabel: "Retomar antes de que enfríe",     pulse: true, glow: true };
+          return                                  { color: T.accent, topBar: tbAccent, label: "ACCIÓN PENDIENTE",                  sublabel: "Revisar y avanzar hoy",           pulse: true, glow: true };
         };
 
         return (
