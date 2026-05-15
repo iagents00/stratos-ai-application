@@ -45,21 +45,26 @@ const grupo28Config = {
     supabaseRef:    "glulgyhkrqpykxmujodb",
   },
 
-  // Mismas features que Duke por defecto. El dev puede apagar lo que no aplique.
+  // Features de Grupo 28 — declaradas EXPLÍCITAMENTE (defensa en profundidad).
+  //
+  // El aislamiento real lo enforza `canAccessModule()` en navigation.js junto
+  // con `EXTERNAL_ORG_MODULES` (clientes externos ven solo CRM, Perfil,
+  // Papelera). Aún así declaramos los flags aquí en `false` para que la config
+  // sea AUTOEXPLICATIVA: si alguien en el futuro modifica la lista de módulos
+  // externos, Grupo 28 sigue sin ver lo que no le corresponde.
   features: {
-    crm:          true,
-    dash:         true,
-    erp:          true,
-    team:         true,
-    iacrm:        true,
-    landingPages: true,
-    finanzas:     true,
-    rrhh:         true,
-    trash:        true,
-    // Grupo 28 quiere su propio Comando Directivo en el sidebar — distinto
-    // del Dash de Stratos. Muestra los 7 indicadores ejecutivos coordinados
-    // con el CRM (asignados/contactados/calificados/zooms/activos/seguim.)
-    // con filtro Hoy/Semana/Mes y una tabla por asesor.
+    crm:          true,    // Pipeline de ventas, el módulo principal
+    dash:         false,   // Dash de Stratos — Grupo 28 usa Comando Directivo
+    erp:          false,   // ERP de Stratos — no aplica para Grupo 28
+    team:         false,   // Asesores top — solo Stratos
+    iacrm:        false,   // iAgents internos de Stratos
+    landingPages: false,   // Campañas — solo Stratos
+    finanzas:     false,   // Módulo interno de Stratos
+    rrhh:         false,   // Módulo interno de Stratos
+    trash:        true,    // Papelera del propio CRM
+    // Comando Directivo propio en el sidebar — 7 indicadores ejecutivos
+    // (asignados/contactados/calificados/zooms/activos/seguimientos) con
+    // filtro Hoy/Semana/Mes y tabla por asesor. Distinto del Dash de Stratos.
     comandoDirectivo: true,
   },
 
