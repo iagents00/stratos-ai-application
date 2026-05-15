@@ -189,9 +189,13 @@ export default function App() {
       return;
     }
 
-    // Modo online normal
+    // Modo online normal. Limit 2000 = 260 reales + 1740 importados más nuevos.
+    // Los ~4,700 importados de 2023-2025 quedan en DB pero no en el fetch inicial
+    // para que el CRM cargue rápido. Se pueden traer por búsqueda directa al backend.
     const { data, error } = await supabase
-      .from('leads').select('*').is('deleted_at', null).order('created_at', { ascending: false });
+      .from('leads').select('*').is('deleted_at', null)
+      .order('created_at', { ascending: false })
+      .limit(2000);
     if (!error && data) {
       setLeadsData(normalizeLeads(data));
     } else if (error) {
