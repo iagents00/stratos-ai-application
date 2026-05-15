@@ -12,8 +12,8 @@
  * CRM.jsx usa la versión de app/data/leads.js.
  */
 export const stgC = {
-  "Nuevo Registro":     "#94A3B8",
-  "Primer Contacto":    "#38BDF8",
+  "Contáctame ya":      "#94A3B8",
+  "Segundo Intento":    "#38BDF8",
   "Remarketing":        "#FB923C",
   "Seguimiento":        "#FBBF24",
   "Zoom Agendado":      "#3B82F6",
@@ -24,7 +24,7 @@ export const stgC = {
   "Negociación":        "#FB923C",
   "Cierre":             "#34D399",
   "Rotación":           "#A8A29E",
-  "Perdido":            "#64748B",
+  "Postventa":          "#64748B",
 };
 
 export const SRC_META = {

@@ -249,7 +249,7 @@ export const getResp = (t, leadData, liveLeads) => {
 
   // — Inactivity — using live data
   if (l.includes("inactividad") || l.includes("inactiv") || l.includes("sin actividad") || l.includes("olvidado")) {
-    const inactive = [...allLeads].filter(x => x.daysInactive > 4 && x.st !== "Cierre" && x.st !== "Perdido").sort((a,b) => b.daysInactive - a.daysInactive).slice(0, 4);
+    const inactive = [...allLeads].filter(x => x.daysInactive > 4 && x.st !== "Cierre" && x.st !== "Postventa").sort((a,b) => b.daysInactive - a.daysInactive).slice(0, 4);
     return {
       content: `**${inactive.length} clientes con inactividad crítica** — requieren contacto inmediato:`,
       metrics: inactive.map((x, i) => ({

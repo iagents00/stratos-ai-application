@@ -1,15 +1,15 @@
 import { P } from "../../design-system/tokens";
 
 export const STAGES = [
-  "Nuevo Registro", "Primer Contacto", "Remarketing", "Seguimiento",
+  "Contáctame ya", "Segundo Intento", "Remarketing", "Seguimiento",
   "Zoom Agendado", "No Show", "Zoom Concretado",
   "Visita Agendada", "Visita Concretada",
-  "Negociación", "Cierre", "Perdido",
+  "Negociación", "Cierre", "Postventa",
 ];
 
 export const stgC = {
-  "Nuevo Registro":     P.txt3,
-  "Primer Contacto":    P.blue,
+  "Contáctame ya":      P.txt3,
+  "Segundo Intento":    P.blue,
   "Remarketing":        "#FB923C",
   "Seguimiento":        "#FBBF24",
   "Zoom Agendado":      "#3B82F6",
@@ -19,7 +19,7 @@ export const stgC = {
   "Visita Concretada":  P.emerald,
   "Negociación":        "#F97316",
   "Cierre":             P.accent,
-  "Perdido":            "#64748B",
+  "Postventa":          "#64748B",
 };
 
 export const leads = [
@@ -228,7 +228,7 @@ Enviar propuesta formal con condiciones de pago. Carta de exclusividad de unidad
     fechaIngreso: "3 Abr, 10:00am",
     asesor: "Cecilia Mendoza",
     n: "Daniela Vega",
-    tag: "Nuevo Registro",
+    tag: "Contáctame ya",
     phone: "+52 984 555 0007",
     email: "dra.vega@clinica.com",
     st: "Seguimiento",
@@ -267,10 +267,10 @@ Enviar guía personalizada de inversión inmobiliaria. Llamar mañana para resol
     fechaIngreso: "3 Abr, 4:45pm",
     asesor: "Cecilia Mendoza",
     n: "Marco Aurelio",
-    tag: "Nuevo Registro",
+    tag: "Contáctame ya",
     phone: "+52 998 555 0008",
     email: "marco.aurelio@arqui.mx",
-    st: "Primer Contacto",
+    st: "Segundo Intento",
     budget: "$1.5M USD",
     presupuesto: 1500000,
     p: "Monarca 28",
