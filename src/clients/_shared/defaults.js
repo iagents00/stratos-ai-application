@@ -73,6 +73,12 @@ export const DEFAULT_CLIENT_CONFIG = {
     // Si el cliente declara una lista, esa toma prioridad → útil para clientes
     // recién onboardeados que aún no tienen leads.
     defaultProjects: [],
+
+    // Pestaña "Indicadores de Asesores" dentro del CRM. Muestra una tabla con
+    // métricas por asesor (leads asignados, contactados, zooms, etc.) filtrable
+    // por día/semana/mes. Visible solo para roles admin/director/super_admin/ceo.
+    // Default OFF → Duke no la ve hasta que se prenda explícitamente.
+    advisorMetricsTab: false,
   },
 };
 

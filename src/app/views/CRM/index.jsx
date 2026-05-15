@@ -54,6 +54,7 @@ import {
   AnalysisDrawer,
   ClickDropdown,
 } from "./components";
+import AdvisorMetrics from "./AdvisorMetrics";
 
 function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () => {}, autoOpenPriority1 = 0, onAutoOpenHandled, softDeleteLead }) {
   const { user } = useAuth();
@@ -160,6 +161,10 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
     onAutoOpenHandled?.();
   }, [autoOpenPriority1]); // priorityLeadsRef is a ref, always current
   const [addingLead, setAddingLead]     = useState(false);
+  // Vista "Indicadores de Asesores" — solo se ofrece si el cliente activo
+  // tiene crm.advisorMetricsTab=true Y el usuario es admin/director/super_admin/ceo.
+  const [showMetrics, setShowMetrics]   = useState(false);
+  const metricsTabEnabled = clientConfig?.crm?.advisorMetricsTab === true && canSeeAll;
   // Bloqueo de doble submit:
   //   · submittingRef    → guard SÍNCRONO. Imprescindible porque React
   //     useState es async: 10 clics en el mismo tick verían el state
@@ -1417,6 +1422,23 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
             </p>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
+            {metricsTabEnabled && (
+              <button
+                onClick={() => setShowMetrics(v => !v)}
+                title={showMetrics ? "Volver al CRM" : "Ver indicadores de asesores"}
+                style={{
+                  display: "flex", alignItems: "center", gap: 7, padding: "9px 14px",
+                  borderRadius: 11,
+                  background: showMetrics
+                    ? (isLight ? `${T.accent}1A` : `${T.accent}18`)
+                    : "transparent",
+                  border: `1px solid ${showMetrics ? T.accentB : T.border}`,
+                  color: showMetrics ? T.accent : T.txt2,
+                  fontSize: 12, fontWeight: 600, fontFamily: fontDisp, cursor: "pointer",
+                  letterSpacing: "0.01em", transition: "all 0.16s", flexShrink: 0,
+                }}
+              ><Activity size={13} /> Indicadores</button>
+            )}
             <button onClick={() => setAddingLead(true)} style={{
               display: "flex", alignItems: "center", gap: 7, padding: "9px 18px",
               borderRadius: 11,
@@ -1452,11 +1474,18 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
         </div>
       )}
 
+      {/* ── Vista "Indicadores de Asesores" — toggle activo, ocupa el lugar
+          de los KPIs/priority/listas. Solo disponible si el cliente tiene
+          el flag prendido + rol admin (ambos chequeados en metricsTabEnabled). */}
+      {showMetrics && metricsTabEnabled && (
+        <AdvisorMetrics leadsData={visibleLeads} theme={theme} />
+      )}
+
       {/* ── KPIs — solo desktop. En mobile son ruido visual: ocupan 1/3 de
           la pantalla para datos que el asesor ya conoce o puede consultar
           después en el Dashboard. La cifra crítica (pipeline) ya está en
           el header mobile. ── */}
-      {!isMobile && (
+      {!showMetrics && !isMobile && (
         <div style={{ display: "grid", gridTemplateColumns: co ? "repeat(2, 1fr)" : "repeat(4, 1fr)", gap: 12 }}>
           <KPI T={T} label="Clientes en Pipeline" value={visibleLeads.length} sub={`${hotLeads} activos hoy`} icon={Users} color={T.blue} />
           <KPI T={T} label="Score Promedio" value={avgScore} sub="+4.8 este mes" icon={Target} color={T.cyan} />
@@ -1466,7 +1495,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
       )}
 
       {/* ── CLIENTES EN PRIORIDAD — todos, color por tipo, botones uniformes ── */}
-      {priorityLeads.length > 0 && (() => {
+      {!showMetrics && priorityLeads.length > 0 && (() => {
 
         // Paleta de tipo — cada categoría tiene identidad visual única.
         // Los colores vienen del design system (`T` = paleta activa: P en oscuro, LP en claro)
@@ -2840,9 +2869,11 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
 
       {/* ── PIPELINE STAGE STRIP ── En mobile: scroll horizontal con snap
           (cada etapa ocupa ~28% del viewport, suficiente para leer count+nombre).
-          En desktop: una sola fila con flex-1 que comparte el ancho total. ── */}
+          En desktop: una sola fila con flex-1 que comparte el ancho total.
+          Cuando showMetrics está activo, ocultamos vía display:none para evitar
+          unmounts que perderían estado del filtro/búsqueda. ── */}
       <div className={isMobile ? "carousel-no-scroll" : ""} style={{
-        display: "flex", gap: 0,
+        display: showMetrics ? "none" : "flex", gap: 0,
         borderRadius: 12,
         overflow: isMobile ? "auto" : "hidden",
         border: `1px solid ${isLight ? "rgba(15,23,42,0.07)" : "rgba(255,255,255,0.06)"}`,
@@ -2930,8 +2961,8 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
         })}
       </div>
 
-      {/* ── MAIN TABLE / KANBAN ── */}
-      <G T={T} np>
+      {/* ── MAIN TABLE / KANBAN ── Oculto cuando estamos viendo Indicadores. */}
+      <G T={T} np style={{ display: showMetrics ? "none" : undefined }}>
         {/* ── Toolbar — solo desktop muestra el View toggle (Lista/Kanban).
               Mobile siempre fuerza Lista (kanban no es usable en teléfono). ── */}
         <div style={{

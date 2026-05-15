@@ -63,10 +63,9 @@ const grupo28Config = {
     whatsapp: null,
   },
 
-  // Proyectos curados de Grupo 28. Esta lista reemplaza el cálculo dinámico
-  // del CRM (que sumaba proyectos de leads existentes), garantizando que en
-  // el formulario "Nuevo cliente" solo aparezcan los desarrollos propios.
+  // Configuración del CRM específica de Grupo 28.
   crm: {
+    // Lista curada de proyectos en el dropdown "Nuevo cliente".
     defaultProjects: [
       "Gobernador 28",
       "Monarca 28",
@@ -74,6 +73,9 @@ const grupo28Config = {
       "Presidente 28",
       "Prueba28",
     ],
+    // Pestaña de métricas por asesor (Comando Directivo dentro del CRM).
+    // Solo la verán los admins/director/super_admin/ceo de Grupo 28.
+    advisorMetricsTab: true,
   },
 };
 
