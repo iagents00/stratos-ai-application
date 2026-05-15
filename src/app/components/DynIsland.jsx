@@ -11,11 +11,14 @@ import { X, ChevronRight, Crown } from "lucide-react";
 import { P, font, fontDisp } from "../../design-system/tokens";
 import { StratosAtom } from "./Logo";
 import { AgentIcons } from "../constants/agents";
+import { useClient } from "../../hooks/useClient";
 
 const DynIsland = ({ onExpand, notifications = [], theme = "dark", beamIdx = 0 }) => {
   const isLight = theme === "light";
   const [isOpen, setIsOpen] = useState(false);
   const [selectedNotif, setSelectedNotif] = useState(null);
+  const { config: clientConfig } = useClient();
+  const centerLabel = clientConfig?.brand?.intelligenceCenterLabel || "Centro de Inteligencia";
 
   const msgs = notifications.length > 0 ? notifications : [
     { agent: "Agente Estratégico", text: "Optimización de cierre: Familia Rodríguez.", detail: "Probabilidad de cierre detectada al 92%. Dossier de alta fidelidad preparado para envío inmediato.", c: P.blue, icon: AgentIcons.gerente, btn: "Ejecutar Protocolo", action: "¿Cuáles son mis leads prioritarios hoy?" },
@@ -30,7 +33,7 @@ const DynIsland = ({ onExpand, notifications = [], theme = "dark", beamIdx = 0 }
     <>
       {/* ─── PILL — Centro de Inteligencia ─────────────────────────────── */}
       <div
-        title="Centro de Inteligencia"
+        title={centerLabel}
         onClick={() => { if (!expanded) { onExpand?.(); } }}
         style={{
           position: "relative",
@@ -74,7 +77,7 @@ const DynIsland = ({ onExpand, notifications = [], theme = "dark", beamIdx = 0 }
             fontSize: 12.5, fontWeight: 600, letterSpacing: "-0.025em", fontFamily: fontDisp,
             color: isLight ? "#0A0A0A" : "rgba(255,255,255,0.88)",
             whiteSpace: "nowrap", flexShrink: 0,
-          }}>Centro de Inteligencia</span>
+          }}>{centerLabel}</span>
         </div>
       </div>
 
@@ -109,7 +112,7 @@ const DynIsland = ({ onExpand, notifications = [], theme = "dark", beamIdx = 0 }
                       <StratosAtom size={14} color="#6EE7C2" />
                     </div>
                     <div>
-                      <p style={{ margin: 0, fontSize: 11.5, color: "rgba(255,255,255,0.88)", fontWeight: 700, fontFamily: fontDisp, letterSpacing: "-0.01em" }}>Centro de Inteligencia</p>
+                      <p style={{ margin: 0, fontSize: 11.5, color: "rgba(255,255,255,0.88)", fontWeight: 700, fontFamily: fontDisp, letterSpacing: "-0.01em" }}>{centerLabel}</p>
                       <p style={{ margin: 0, fontSize: 9.5, color: "rgba(255,255,255,0.38)", fontFamily: font, letterSpacing: "0.02em", marginTop: 1 }}>{msgs.length} actualizaciones del equipo IA</p>
                     </div>
                   </div>
