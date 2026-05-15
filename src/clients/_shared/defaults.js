@@ -57,6 +57,11 @@ export const DEFAULT_CLIENT_CONFIG = {
     finanzas:      true,
     rrhh:          true,
     trash:         true,
+    // Comando Directivo: dashboard ejecutivo con indicadores de equipo
+    // (asignados, contactados, calificados, zooms, activos, seguimientos)
+    // filtrable por Hoy / Semana / Mes. Default OFF — solo clientes que lo
+    // necesiten explícitamente lo prenden. Visible para admin/director/ceo.
+    comandoDirectivo: false,
   },
 
   // Contacto y soporte

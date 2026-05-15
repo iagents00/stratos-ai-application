@@ -70,10 +70,15 @@ export function isStratosOrg(orgId) {
  *
  * Si el módulo no está en MODULE_ROLES, se asume público (default true).
  */
-export function canAccessModule(moduleId, user) {
+export function canAccessModule(moduleId, user, clientConfig = null) {
   if (!user) return false;
   if (!isStratosOrg(user.organizationId) && !EXTERNAL_ORG_MODULES.has(moduleId)) {
-    return false;
+    // Excepción: si el cliente externo prendió Comando Directivo (`d`)
+    // en su config, lo dejamos pasar para que el rol decida después.
+    const isComandoDirectivoOpenIn = (
+      moduleId === "d" && clientConfig?.features?.comandoDirectivo === true
+    );
+    if (!isComandoDirectivoOpenIn) return false;
   }
   const roles = MODULE_ROLES[moduleId];
   if (!roles) return true;
