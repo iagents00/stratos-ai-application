@@ -428,19 +428,34 @@ de clientes), el flujo es:
 
 ### Aislamiento de datos (Supabase)
 
-Estado actual: **un solo proyecto Supabase** (`glulgyhkrqpykxmujodb`) compartido.
+**Implementado vía `organization_id` + RLS** en el proyecto Supabase principal
+(`glulgyhkrqpykxmujodb`). PR #90 y #93 ya tienen el aislamiento end-to-end:
 
-Para Grupo 28 hay dos rutas — decidir antes de que el dev empiece a escribir
-queries:
+- Cada `profiles` tiene `organization_id`. `organizations` es la tabla de orgs.
+- `STRATOS_ORG_ID = "00000000-0000-0000-0000-000000000001"` (Stratos / Duke).
+- `Grupo 28` organizationId = `"9afe40d2-7163-4407-a4cd-5346799ecd3c"`.
+- `canAccessModule(moduleId, user)` en `src/app/constants/navigation.js`:
+  clientes externos solo ven CRM, Perfil, Papelera (independiente del rol).
+- RLS de Supabase filtra registros por `organization_id` automáticamente.
 
-- **Opción A — Columna `client_id` + RLS:** agregar `client_id text` a tablas
-  críticas (`leads`, `proyectos`, `asesores`, etc.), backfill con `'duke'`,
-  RLS policy que filtra por `auth.user_metadata.client_id`. Costo: una tarde
-  de migración. Riesgo: si el dev externo hace una query mal, podría leer
-  datos de Duke (mitigado por RLS).
-- **Opción B — Proyecto Supabase separado para Grupo 28:** $25/mes extra,
-  aislamiento total. El dev recibe credenciales SOLO del Supabase de Grupo 28
-  vía `.env.local`. Recomendado mientras no se confíe 100% en el dev externo.
+### Conexión: clientId (URL) ↔ organizationId (Supabase)
+
+Cada config en `src/clients/<id>/config.js` declara su `tenant.organizationId`.
+El componente `ClientOrgGuard` (montado en `main.jsx` cuando `isApp=true`)
+chequea post-login: si la org del user logueado no matchea con el cliente
+del path, redirige al path correcto con `window.location.replace()`.
+
+Ejemplos:
+- User Grupo 28 entra a `/` → se redirige a `/grupo28`.
+- User Stratos entra a `/grupo28` → se redirige a `/`.
+- Usuarios de orgs no registradas en `src/clients/` → no se redirige (cubre
+  el caso de clientes nuevos sin config aún).
+
+Helpers expuestos en `src/clients/index.js`:
+- `getClientIdByOrgId(orgId)` → clientId conocido o null.
+- `getOrgIdByClientId(clientId)` → UUID de Supabase o null.
+- `resolveRedirectForUser(user, currentClientId, location)` → URL absoluta a la
+  que redirigir, o null.
 
 ### Documentos relacionados
 
