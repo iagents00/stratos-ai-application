@@ -365,6 +365,90 @@ Si en algún momento la app vuelve a sentirse lenta tras agregar features:
 
 ---
 
+## ⚠️ ZONA CRÍTICA — ARQUITECTURA MULTI-CLIENTE (Mayo 2026)
+
+A partir de Mayo 2026 el proyecto sirve a múltiples clientes desde el mismo
+código. **NO ES un fork — es un solo bundle con config por cliente.**
+
+### Routing
+
+`src/main.jsx` resuelve el cliente activo al boot vía `resolveClientFromLocation()`:
+
+| URL | Cliente | Comportamiento |
+|---|---|---|
+| `app.stratoscapitalgroup.com` (sin path) | `duke` | Cliente original (producción Duke del Caribe) |
+| `app.stratoscapitalgroup.com/grupo28` | `grupo28` | Cliente nuevo (Grupo 28) |
+| `grupo28.stratoscapitalgroup.com` (fase 2) | `grupo28` | Mismo cliente, subdomain |
+| `localhost:5173/?app&client=grupo28` | `grupo28` | Override de QA en dev |
+
+El cliente queda disponible en toda la app vía `useClient()`:
+
+```js
+import { useClient } from "../hooks/useClient";
+const { config, clientId, isFeatureEnabled } = useClient();
+// → config.name, config.brand.logoText, config.tenant.clientId, etc.
+// → isFeatureEnabled("rrhh") devuelve false si grupo28 lo apagó
+```
+
+### Estructura de archivos
+
+```
+src/clients/
+├── _shared/defaults.js   ← config base que todos heredan
+├── index.js              ← resolver + registry
+├── duke/config.js        ← cliente original (zona protegida, solo owner)
+└── grupo28/config.js     ← cliente nuevo (zona del dev externo)
+```
+
+### Reglas inviolables para el dev externo de Grupo 28
+
+1. **SOLO puede modificar archivos dentro de `src/clients/grupo28/`** sin esperar review.
+2. Cualquier mejora al **CRM compartido** (`src/app/`, `src/contexts/`,
+   `src/lib/`, `src/design-system/`, `src/main.jsx`) requiere PR + review del
+   owner. Esto está enforced por:
+   - `.github/CODEOWNERS` — asigna automáticamente al owner
+   - Branch protection en `main` con `require_code_owner_reviews: true`
+3. **Datos:** Grupo 28 NO debe leer/escribir registros del cliente `duke` en
+   Supabase. Filtrado obligatorio por `client_id = "grupo28"` o proyecto
+   Supabase separado.
+4. **Branch:** trabajar SIEMPRE en `feature/grupo28-*`, nunca commit directo a `main`.
+
+### Promover mejoras de Grupo 28 al core (y a Duke)
+
+Si el dev de Grupo 28 mejora algo del CRM compartido (ej: optimiza el módulo
+de clientes), el flujo es:
+
+1. Dev abre PR con cambios en `src/app/...` → GitHub asigna al owner.
+2. Owner revisa que la mejora sea **gated por feature flag** o **agnóstica de
+   cliente** (no rompe Duke).
+3. Si la mejora es opt-in, agregar bandera en `_shared/defaults.js`:
+   `features.nuevoModulo: false` (default off, Grupo 28 lo prende en su config).
+4. Cuando se valide con Grupo 28, prender la bandera para Duke en
+   `clients/duke/config.js`.
+
+### Aislamiento de datos (Supabase)
+
+Estado actual: **un solo proyecto Supabase** (`glulgyhkrqpykxmujodb`) compartido.
+
+Para Grupo 28 hay dos rutas — decidir antes de que el dev empiece a escribir
+queries:
+
+- **Opción A — Columna `client_id` + RLS:** agregar `client_id text` a tablas
+  críticas (`leads`, `proyectos`, `asesores`, etc.), backfill con `'duke'`,
+  RLS policy que filtra por `auth.user_metadata.client_id`. Costo: una tarde
+  de migración. Riesgo: si el dev externo hace una query mal, podría leer
+  datos de Duke (mitigado por RLS).
+- **Opción B — Proyecto Supabase separado para Grupo 28:** $25/mes extra,
+  aislamiento total. El dev recibe credenciales SOLO del Supabase de Grupo 28
+  vía `.env.local`. Recomendado mientras no se confíe 100% en el dev externo.
+
+### Documentos relacionados
+
+- `SETUP_DEV_GRUPO28.md` — guía paso a paso para el dev externo.
+- `src/clients/_shared/defaults.js` — campos disponibles para customizar por cliente.
+
+---
+
 ## Contacto del Proyecto
 
 - **Cliente**: Ivan Rodriguez Ruelas
@@ -373,4 +457,4 @@ Si en algún momento la app vuelve a sentirse lenta tras agregar features:
 
 ---
 
-*Última actualización: Mayo 2026 — SW v12, auth flow estabilizado + performance optimizado (PR #54).*
+*Última actualización: Mayo 2026 — SW v12, auth flow estabilizado + performance optimizado (PR #54) + arquitectura multi-cliente (PR #55).*

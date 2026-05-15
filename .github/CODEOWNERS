@@ -1,0 +1,40 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# CODEOWNERS — Stratos AI Application
+# ─────────────────────────────────────────────────────────────────────────────
+# Cada línea define quién DEBE revisar un PR según los archivos tocados.
+# GitHub asigna automáticamente esos reviewers cuando se abre el PR.
+#
+# Junto con la branch protection en `main` (require approval), esto evita que
+# cambios fuera de la zona permitida de un cliente lleguen a producción sin
+# que el owner los apruebe.
+# ─────────────────────────────────────────────────────────────────────────────
+
+# DEFAULT — todo lo del repo lo revisa el owner del proyecto
+*   @iagents00
+
+# ─── Zonas por cliente ───────────────────────────────────────────────────────
+# El dev del cliente puede mergear cambios DENTRO de su carpeta sin esperar
+# review del owner. Cualquier archivo fuera de su carpeta sigue requiriendo
+# review del owner (porque el patrón `*` lo cubre arriba).
+#
+# IMPORTANTE: agregá al colaborador correspondiente con @su-usuario-de-github.
+
+# Cliente: Grupo 28
+/src/clients/grupo28/   @iagents00
+# TODO: agregar segundo owner cuando se confirme el username GitHub del dev:
+# /src/clients/grupo28/   @iagents00 @USERNAME_DEL_DEV
+
+# Cliente: Duke (cliente original, en producción — solo owner)
+/src/clients/duke/      @iagents00
+
+# ─── Zonas críticas — SOLO owner (refuerzo explícito) ────────────────────────
+/src/app/               @iagents00
+/src/contexts/          @iagents00
+/src/lib/               @iagents00
+/src/design-system/     @iagents00
+/src/main.jsx           @iagents00
+/public/sw.js           @iagents00
+/vercel.json            @iagents00
+/.github/               @iagents00
+/CLAUDE.md              @iagents00
+/supabase/              @iagents00
