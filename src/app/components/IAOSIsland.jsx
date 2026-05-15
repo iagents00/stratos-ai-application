@@ -3,20 +3,28 @@
  * ─────────────────────────────────────────────────────────────────────────────
  * Indicador IAOS en el header — muestra métricas animadas del pipeline.
  * Extraído de App.jsx.
+ *
+ * El brandLabel viene como prop desde App.jsx (orgBrand). Permite que cada
+ * cliente (Duke, Grupo 28, etc.) vea su propia marca en las notificaciones
+ * sin tener strings hardcoded acá.
  * ─────────────────────────────────────────────────────────────────────────────
  */
 import { fontDisp } from "../../design-system/tokens";
 
-export default function IAOSIsland({ leadsData, isLight, idx }) {
+export default function IAOSIsland({ leadsData, isLight, idx, brandLabel = "Duke" }) {
   const hot       = leadsData.filter(l => l.hot).length;
   const inact     = leadsData.filter(l => l.daysInactive >= 5).length;
   const totalPipe = (leadsData.reduce((s, l) => s + (l.presupuesto || 0), 0) / 1e6).toFixed(1);
 
+  // Forma corta del brand para el indicador chico (primer token o "Duke" como fallback).
+  // Ej: "Duke del Caribe" → "Duke" · "Grupo 28" → "Grupo 28".
+  const shortBrand = brandLabel.split(" ")[0] || "Duke";
+
   const phrases = [
-    `Duke · ${hot} alertas activas`,
+    `${shortBrand} · ${hot} alertas activas`,
     `$${totalPipe}M en pipeline`,
     `${inact} leads sin actividad`,
-    `Protocolo Duke activo`,
+    `Protocolo ${shortBrand} activo`,
   ];
 
   return (
