@@ -27,10 +27,11 @@ const grupo28Config = {
   tagline:   "Gestión inmobiliaria — Grupo 28",
 
   brand: {
-    logoText:    "Grupo 28",
-    accent:      null,   // ← Pendiente: el dev de Grupo 28 elige el color de marca
-    accentLight: null,
-    favicon:     "/favicon.ico",
+    logoText:                "Grupo 28",
+    accent:                  null,   // ← Pendiente: el dev de Grupo 28 elige el color de marca
+    accentLight:             null,
+    favicon:                 "/favicon.ico",
+    intelligenceCenterLabel: "Centro de Inteligencia · Grupo 28",
   },
 
   tenant: {
@@ -60,6 +61,19 @@ const grupo28Config = {
   support: {
     email:    null,   // Pendiente: email de soporte de Grupo 28
     whatsapp: null,
+  },
+
+  // Proyectos curados de Grupo 28. Esta lista reemplaza el cálculo dinámico
+  // del CRM (que sumaba proyectos de leads existentes), garantizando que en
+  // el formulario "Nuevo cliente" solo aparezcan los desarrollos propios.
+  crm: {
+    defaultProjects: [
+      "Gobernador 28",
+      "Monarca 28",
+      "Portofino 28",
+      "Presidente 28",
+      "Prueba28",
+    ],
   },
 };
 

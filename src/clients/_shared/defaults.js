@@ -20,10 +20,14 @@ export const DEFAULT_CLIENT_CONFIG = {
 
   // Branding visual (overrides opcionales del design system)
   brand: {
-    logoText:    "Stratos",
-    accent:      null,   // null → usa el accent del design system
-    accentLight: null,
-    favicon:     "/favicon.ico",
+    logoText:              "Stratos",
+    accent:                null,   // null → usa el accent del design system
+    accentLight:           null,
+    favicon:               "/favicon.ico",
+    // Etiqueta del pill del header (Dynamic Island). Cada cliente puede
+    // personalizarla para que la app se sienta más suya. Default mantiene el
+    // texto histórico → Duke no cambia.
+    intelligenceCenterLabel: "Centro de Inteligencia",
   },
 
   // Multi-tenancy en Supabase
@@ -60,6 +64,16 @@ export const DEFAULT_CLIENT_CONFIG = {
     email:    "soporte@stratoscapitalgroup.com",
     whatsapp: null,
   },
+
+  // Configuración del CRM por cliente
+  crm: {
+    // Lista curada de proyectos preseteados que aparecen en el dropdown del
+    // formulario "Nuevo cliente". Si está vacío (default), el CRM calcula la
+    // lista a partir de los leads existentes (comportamiento histórico de Duke).
+    // Si el cliente declara una lista, esa toma prioridad → útil para clientes
+    // recién onboardeados que aún no tienen leads.
+    defaultProjects: [],
+  },
 };
 
 /**
@@ -76,5 +90,6 @@ export function mergeClientConfig(clientConfig) {
     tenant:   { ...base.tenant,   ...(clientConfig.tenant   || {}) },
     features: { ...base.features, ...(clientConfig.features || {}) },
     support:  { ...base.support,  ...(clientConfig.support  || {}) },
+    crm:      { ...base.crm,      ...(clientConfig.crm      || {}) },
   };
 }
