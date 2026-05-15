@@ -25,8 +25,11 @@ const dukeConfig = {
   },
 
   tenant: {
-    clientId:    "duke",
-    supabaseRef: "glulgyhkrqpykxmujodb",  // proyecto Supabase de producción
+    clientId:       "duke",
+    // UUID de "Stratos Capital Group" en la tabla `organizations`. Coincide con
+    // la constante STRATOS_ORG_ID en src/app/constants/navigation.js. NO CAMBIAR.
+    organizationId: "00000000-0000-0000-0000-000000000001",
+    supabaseRef:    "glulgyhkrqpykxmujodb",  // proyecto Supabase de producción
   },
 
   // Duke tiene todos los módulos habilitados

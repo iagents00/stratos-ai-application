@@ -79,3 +79,79 @@ export function resolveClientFromLocation(location = window.location) {
 
 // Para debugging — expone los IDs registrados
 export const REGISTERED_CLIENT_IDS = Object.keys(CLIENT_CONFIGS);
+
+// ─── Mapeo bidireccional clientId ↔ organizationId (Supabase) ────────────────
+// Construido al boot a partir de los configs. Permite preguntarle al sistema
+// "¿qué cliente corresponde a esta organizationId?" después de un login.
+const ORG_ID_TO_CLIENT_ID = Object.fromEntries(
+  Object.entries(CLIENT_CONFIGS)
+    .map(([id, cfg]) => [cfg.tenant?.organizationId, id])
+    .filter(([orgId]) => orgId) // descartar clientes sin org asociada
+);
+
+/**
+ * Devuelve el clientId asociado a una organizationId de Supabase.
+ * Si no se conoce la org → null (caso típico: nuevo cliente sin config aún).
+ *
+ * @param {string} organizationId - UUID de la org en la tabla `organizations`
+ * @returns {string|null} clientId conocido, o null si no hay match
+ */
+export function getClientIdByOrgId(organizationId) {
+  if (!organizationId) return null;
+  return ORG_ID_TO_CLIENT_ID[organizationId] || null;
+}
+
+/**
+ * Devuelve la organizationId de Supabase asociada a un clientId conocido.
+ * @param {string} clientId
+ * @returns {string|null}
+ */
+export function getOrgIdByClientId(clientId) {
+  const cfg = CLIENT_CONFIGS[clientId];
+  return cfg?.tenant?.organizationId || null;
+}
+
+/**
+ * Decide si hay que redirigir al user a otro cliente según su organización.
+ *
+ * Reglas:
+ *   - Si el clientId actual matchea el clientId de la org del user → no redirige.
+ *   - Si la org del user mapea a un clientId distinto del actual → redirige
+ *     al path correcto (preserva query y hash).
+ *   - Si la org del user no está en el registry (cliente desconocido) → no
+ *     redirige (fallback al comportamiento actual).
+ *
+ * @param {object} user - { organizationId: string, ... }
+ * @param {string} currentClientId - resultado de matchClientFromLocation()
+ * @param {Location} location - window.location
+ * @returns {string|null} URL absoluta a la que redirigir, o null si no redirige
+ */
+export function resolveRedirectForUser(user, currentClientId, location = window.location) {
+  if (!user?.organizationId) return null;
+  const targetClientId = getClientIdByOrgId(user.organizationId);
+  if (!targetClientId) return null;
+  if (targetClientId === currentClientId) return null;
+
+  // Construir el path correcto:
+  //   - Si destino es "duke" (default), removemos cualquier /<cliente> del path.
+  //   - Si destino es otro cliente, le ponemos /<clienteId> como prefijo.
+  const origin = location.origin || "";
+  const search = location.search || "";
+  const hash   = location.hash   || "";
+
+  // Strippeo del prefijo del cliente actual si lo había
+  let basePath = location.pathname || "/";
+  for (const id of REGISTERED_CLIENT_IDS) {
+    if (id === "duke") continue;
+    if (basePath === `/${id}` || basePath.startsWith(`/${id}/`)) {
+      basePath = basePath.slice(`/${id}`.length) || "/";
+      break;
+    }
+  }
+
+  const targetPath = targetClientId === "duke"
+    ? basePath
+    : `/${targetClientId}${basePath === "/" ? "" : basePath}`;
+
+  return `${origin}${targetPath}${search}${hash}`;
+}
