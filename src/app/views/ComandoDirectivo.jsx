@@ -137,6 +137,12 @@ function leadsInBucket(leads, bucket) {
 }
 
 // ── Utilidades de export ────────────────────────────────────────────────────
+function csvEscape(v) {
+  const s = v == null ? "" : String(v);
+  if (/[",\n;]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
+  return s;
+}
+
 function htmlEscape(v) {
   return String(v == null ? "" : v)
     .replace(/&/g, "&amp;")
@@ -496,6 +502,19 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
     downloadFile(filename, html);
   };
 
+  // ── Export de la tabla — CSV plano con los indicadores por período ──────
+  const handleExportTable = () => {
+    const now = new Date();
+    const stamp = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2,"0")}-${String(now.getDate()).padStart(2,"0")}`;
+    const header = ["Período", ...INDICATORS.map(i => FULL_LABELS[i.key] || i.label)];
+    const rows = series.map(r => [r.csvLabel, ...INDICATORS.map(i => r[i.key] || 0)]);
+    const totalsRow = ["Total del rango", ...INDICATORS.map(i => rangeTotals[i.key] || 0)];
+    const csv = [header, ...rows, totalsRow].map(r => r.map(csvEscape).join(",")).join("\n");
+    // BOM UTF-8 — Excel/Numbers reconocen acentos sin pelearse.
+    const filename = `indicadores_${granularity.label.toLowerCase()}_${stamp}.csv`;
+    downloadFile(filename, "﻿" + csv, "text/csv;charset=utf-8");
+  };
+
   // ── Chart helpers ─────────────────────────────────────────────────────────
   const toggleSeries = (key) => setHiddenSeries(h => ({ ...h, [key]: !h[key] }));
   const visibleIndicators = INDICATORS.filter(i => !hiddenSeries[i.key]);
@@ -687,7 +706,121 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
         </div>
       </G>
 
-      {/* ── 2) KPI cards — totales del rango ─────────────────────────────── */}
+      {/* ── 2) Tabla de indicadores por período ──────────────────────────── */}
+      <G T={T}>
+        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: 12, marginBottom: 12 }}>
+          <div>
+            <p style={{ fontSize: 14, fontWeight: 700, color: T.txt, fontFamily: fontDisp, margin: 0, letterSpacing: "-0.012em" }}>
+              Tabla de indicadores
+            </p>
+            <p style={{ fontSize: 11, color: T.txt3, fontFamily: font, margin: "2px 0 0" }}>
+              Vista <strong style={{ color: T.txt2 }}>{granularity.label.toLowerCase()}</strong> · {series.length} períodos · cambia con las tabs de arriba.
+            </p>
+          </div>
+          <button
+            onClick={handleExportTable}
+            title="Descargar la tabla como CSV (abre en Excel / Numbers / Google Sheets)"
+            style={{
+              display: "inline-flex", alignItems: "center", gap: 7,
+              padding: "7px 12px", borderRadius: 8,
+              background: isLight ? "rgba(15,23,42,0.04)" : "rgba(255,255,255,0.05)",
+              color: T.txt2,
+              border: `1px solid ${isLight ? "rgba(15,23,42,0.10)" : "rgba(255,255,255,0.10)"}`,
+              fontSize: 11.5, fontWeight: 600, fontFamily: fontDisp,
+              letterSpacing: "-0.005em", cursor: "pointer",
+              transition: "all 0.15s",
+            }}
+            onMouseEnter={e => {
+              e.currentTarget.style.background = isLight ? `${accent}14` : `${accent}22`;
+              e.currentTarget.style.borderColor = `${accent}55`;
+              e.currentTarget.style.color = isLight ? T.accentDark || accent : accent;
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.background = isLight ? "rgba(15,23,42,0.04)" : "rgba(255,255,255,0.05)";
+              e.currentTarget.style.borderColor = isLight ? "rgba(15,23,42,0.10)" : "rgba(255,255,255,0.10)";
+              e.currentTarget.style.color = T.txt2;
+            }}
+          >
+            <Download size={12} strokeWidth={2.4} />
+            Descargar tabla (CSV)
+          </button>
+        </div>
+
+        <div style={{
+          overflowX: "auto",
+          border: `1px solid ${isLight ? "rgba(15,23,42,0.07)" : "rgba(255,255,255,0.06)"}`,
+          borderRadius: 12,
+          background: isLight ? "#FFFFFF" : "rgba(255,255,255,0.015)",
+        }}>
+          <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 820 }}>
+            <thead>
+              <tr style={{ background: isLight ? "rgba(15,23,42,0.035)" : "rgba(255,255,255,0.035)" }}>
+                <th style={tableHeadStyle(T, "left")}>Período</th>
+                {INDICATORS.map(ind => {
+                  const c = COLORS_BY_KEY[ind.key] || accent;
+                  return (
+                    <th key={ind.key} title={ind.title} style={tableHeadStyle(T, "right")}>
+                      <span style={{ display: "inline-flex", alignItems: "center", gap: 6, justifyContent: "flex-end" }}>
+                        <span style={{ width: 7, height: 7, borderRadius: "50%", background: c, flexShrink: 0 }} />
+                        {FULL_LABELS[ind.key] || ind.label}
+                      </span>
+                    </th>
+                  );
+                })}
+              </tr>
+            </thead>
+            <tbody>
+              {series.length === 0 && (
+                <tr>
+                  <td colSpan={INDICATORS.length + 1} style={{ padding: 24, textAlign: "center", color: T.txt3, fontFamily: font, fontSize: 12.5 }}>
+                    No hay datos en el rango seleccionado.
+                  </td>
+                </tr>
+              )}
+              {series.map((r, idx) => {
+                const isLastFew = idx >= series.length - (granularityId === "day" ? 3 : granularityId === "week" ? 2 : 1);
+                return (
+                  <tr key={r.csvLabel} style={{
+                    borderTop: idx === 0 ? "none" : `1px solid ${isLight ? "rgba(15,23,42,0.05)" : "rgba(255,255,255,0.04)"}`,
+                    background: isLastFew
+                      ? (isLight ? `${accent}07` : `${accent}0E`)
+                      : "transparent",
+                    transition: "background 0.14s",
+                  }}>
+                    <td style={tableCellStyle(T, "left", true)}>
+                      {r.csvLabel}
+                    </td>
+                    {INDICATORS.map(ind => (
+                      <td key={ind.key} style={tableCellStyle(T, "right")}>
+                        {r[ind.key] || 0}
+                      </td>
+                    ))}
+                  </tr>
+                );
+              })}
+            </tbody>
+            {series.length > 0 && (
+              <tfoot>
+                <tr style={{
+                  borderTop: `2px solid ${isLight ? "rgba(15,23,42,0.12)" : "rgba(255,255,255,0.12)"}`,
+                  background: isLight ? `${accent}10` : `${accent}1A`,
+                }}>
+                  <td style={{ ...tableCellStyle(T, "left", true), fontWeight: 800, color: isLight ? T.accentDark || accent : accent, textTransform: "uppercase", fontSize: 10.5, letterSpacing: "0.05em" }}>
+                    Total del rango
+                  </td>
+                  {INDICATORS.map(ind => (
+                    <td key={ind.key} style={{ ...tableCellStyle(T, "right"), fontWeight: 800, color: isLight ? T.accentDark || accent : accent }}>
+                      {rangeTotals[ind.key] || 0}
+                    </td>
+                  ))}
+                </tr>
+              </tfoot>
+            )}
+          </table>
+        </div>
+      </G>
+
+      {/* ── 3) KPI cards — totales del rango ─────────────────────────────── */}
       <div style={{
         display: "grid",
         gridTemplateColumns: "repeat(auto-fit, minmax(176px, 1fr))",
@@ -750,10 +883,37 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
         })}
       </div>
 
-      {/* ── 3) Desglose por asesor (coordinado con CRM) ─────────────────── */}
+      {/* ── 4) Desglose por asesor (coordinado con CRM) ─────────────────── */}
       <AdvisorMetrics leadsData={leadsData} theme={isLight ? "light" : "dark"} />
     </div>
   );
 };
+
+// ── Estilos de tabla compartidos ─────────────────────────────────────────────
+function tableHeadStyle(T, align = "right") {
+  return {
+    padding: "11px 14px",
+    textAlign: align,
+    fontSize: 10.5, fontWeight: 700,
+    color: T.txt2, fontFamily: fontDisp,
+    textTransform: "uppercase",
+    letterSpacing: "0.06em",
+    whiteSpace: "nowrap",
+    borderBottom: `1px solid ${T.bg === "#060A11" ? "rgba(255,255,255,0.06)" : "rgba(15,23,42,0.06)"}`,
+  };
+}
+
+function tableCellStyle(T, align = "right", bold = false) {
+  return {
+    padding: "10px 14px",
+    textAlign: align,
+    fontSize: 12.5,
+    fontWeight: bold ? 600 : 500,
+    color: T.txt,
+    fontFamily: fontDisp,
+    fontVariantNumeric: "tabular-nums",
+    whiteSpace: "nowrap",
+  };
+}
 
 export default ComandoDirectivo;
