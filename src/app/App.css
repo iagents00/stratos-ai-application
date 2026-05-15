@@ -7,6 +7,38 @@ body {
   text-rendering: optimizeLegibility;
 }
 
+/* ══════════════════════════════════════════════════════════════════
+   THEME SWITCH — transición suave entre modo oscuro y claro.
+   La clase .theme-transitioning se aplica a <html> por ~260 ms durante
+   el cambio. Solo entonces los colores se interpolan; el resto del
+   tiempo los cambios son instantáneos (hovers, focus, etc. mantienen
+   su sensación habitual sin overhead).
+   En navegadores con View Transitions API (Chrome 111+), preferimos
+   ese mecanismo nativo y este bloque queda como fallback.
+   ══════════════════════════════════════════════════════════════════ */
+html.theme-transitioning,
+html.theme-transitioning *,
+html.theme-transitioning *::before,
+html.theme-transitioning *::after {
+  transition:
+    background-color 260ms ease,
+    background 260ms ease,
+    color 260ms ease,
+    border-color 260ms ease,
+    fill 260ms ease,
+    stroke 260ms ease,
+    box-shadow 260ms ease,
+    backdrop-filter 260ms ease !important;
+}
+
+/* View Transitions (Chrome/Edge 111+): cross-fade nativo. El navegador
+   compone un snapshot del estado anterior y lo mezcla contra el nuevo. */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 280ms;
+  animation-timing-function: ease;
+}
+
 /* ── FORCE FONT INHERITANCE — form controls por defecto usan fuente del sistema
    (a veces serif Times). Esto garantiza SF Pro en todo input/button/textarea ── */
 input, textarea, select, button, optgroup {
