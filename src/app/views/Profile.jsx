@@ -96,9 +96,10 @@ function ConnectTelegramPanel({ T = P, isLight = false }) {
     return () => { mounted = false; };
   }, []);
 
-  // Polling: si esperamos pareo, refresca cada 5s
+  // Polling: si esperamos pareo, refresca cada 5s. Pausa en background.
   const startPolling = () => {
     stopPolling();
+    if (document.hidden) return; // arranca cuando vuelva al foreground
     pollRef.current = setInterval(async () => {
       const r = await getPairingStatus();
       if (r.paired) {
@@ -114,7 +115,17 @@ function ConnectTelegramPanel({ T = P, isLight = false }) {
       pollRef.current = null;
     }
   };
-  useEffect(() => () => stopPolling(), []);
+  useEffect(() => {
+    const onVisibility = () => {
+      if (document.hidden) stopPolling();
+      else if (status.loading && !status.paired) startPolling();
+    };
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => {
+      document.removeEventListener('visibilitychange', onVisibility);
+      stopPolling();
+    };
+  }, [status.loading, status.paired]);
 
   const handleConnect = async () => {
     setBusy(true);

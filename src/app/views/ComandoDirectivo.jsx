@@ -499,9 +499,6 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
 </style>
 </head>
 <body>
-  <div class="actions">
-    <button class="btn" onclick="window.print()">Guardar como PDF</button>
-  </div>
   <div class="page">
 
     <div class="topbar">
@@ -641,25 +638,77 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
 </body>
 </html>`;
 
-    // Abre el reporte en una nueva pestaña y dispara el diálogo de impresión
-    // automáticamente — el usuario elige "Guardar como PDF" desde el destino
-    // de impresión del navegador. Fallback a descarga .html si el popup se
-    // bloquea (algunos browsers requieren whitelist).
-    const win = window.open("", "_blank", "noopener,noreferrer");
-    if (!win) {
-      const filename = `comando-directivo_${granularity.label.toLowerCase()}_${stamp}.html`;
-      downloadFile(filename, html);
+    // Render del HTML en un iframe oculto same-origin, captura con html2canvas
+    // y descarga directa como PDF multipágina A4. Sin popups, sin diálogo de
+    // impresión: el archivo .pdf cae en la carpeta de descargas del navegador.
+    // Fallback a .html si jsPDF/html2canvas fallan en el navegador del usuario.
+    const filenameBase = `comando-directivo_${granularity.label.toLowerCase()}_${stamp}`;
+    const iframe = document.createElement("iframe");
+    iframe.setAttribute("aria-hidden", "true");
+    iframe.style.position = "fixed";
+    iframe.style.left = "-9999px";
+    iframe.style.top = "0";
+    iframe.style.width = "794px";   // A4 @ 96dpi
+    iframe.style.height = "1123px";
+    iframe.style.border = "0";
+    iframe.style.opacity = "0";
+    iframe.style.pointerEvents = "none";
+    document.body.appendChild(iframe);
+
+    const cleanupIframe = () => {
+      try { document.body.removeChild(iframe); } catch (_) { /* noop */ }
+    };
+
+    const idoc = iframe.contentDocument || iframe.contentWindow?.document;
+    if (!idoc) {
+      cleanupIframe();
+      downloadFile(`${filenameBase}.html`, html);
       return;
     }
-    win.document.open();
-    win.document.write(html);
-    win.document.close();
-    // Esperar a que se monten estilos antes de imprimir.
-    setTimeout(() => {
+    idoc.open();
+    idoc.write(html);
+    idoc.close();
+
+    setTimeout(async () => {
       try {
-        win.focus();
-        win.print();
-      } catch (_) { /* el usuario puede imprimir con Cmd/Ctrl+P */ }
+        const [{ default: jsPDF }, { default: html2canvas }] = await Promise.all([
+          import("jspdf"),
+          import("html2canvas"),
+        ]);
+
+        const body = idoc.body;
+        const canvas = await html2canvas(body, {
+          scale: 2,
+          backgroundColor: "#ffffff",
+          useCORS: true,
+          windowWidth: body.scrollWidth,
+          windowHeight: body.scrollHeight,
+        });
+
+        const pdf = new jsPDF({ unit: "mm", format: "a4", orientation: "portrait" });
+        const pageWidth  = pdf.internal.pageSize.getWidth();
+        const pageHeight = pdf.internal.pageSize.getHeight();
+        const imgWidth   = pageWidth;
+        const imgHeight  = (canvas.height * imgWidth) / canvas.width;
+        const imgData    = canvas.toDataURL("image/jpeg", 0.92);
+
+        let heightLeft = imgHeight;
+        let position = 0;
+        pdf.addImage(imgData, "JPEG", 0, position, imgWidth, imgHeight, undefined, "FAST");
+        heightLeft -= pageHeight;
+        while (heightLeft > 0) {
+          position = heightLeft - imgHeight;
+          pdf.addPage();
+          pdf.addImage(imgData, "JPEG", 0, position, imgWidth, imgHeight, undefined, "FAST");
+          heightLeft -= pageHeight;
+        }
+        pdf.save(`${filenameBase}.pdf`);
+      } catch (err) {
+        console.warn("[Comando Directivo] PDF export falló — fallback a .html:", err);
+        downloadFile(`${filenameBase}.html`, html);
+      } finally {
+        cleanupIframe();
+      }
     }, 450);
   };
 
@@ -726,7 +775,7 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
 
           <button
             onClick={handleExport}
-            title="Genera el reporte ejecutivo y abre el diálogo de Guardar como PDF — listo para enviar a dirección"
+            title="Descarga el reporte ejecutivo como PDF — listo para enviar a dirección"
             style={{
               display: "inline-flex", alignItems: "center", gap: 7,
               padding: "8px 14px", borderRadius: 9,
