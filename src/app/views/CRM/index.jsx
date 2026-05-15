@@ -16,15 +16,14 @@ import {
   CalendarDays, FileText, ChevronRight, ChevronLeft,
   Settings, X, Atom, Signal,
   Activity, Clock, Eye, MessageCircle,
-  Star, Waypoints, Shield, Aperture, Focus, Locate, Scan,
-  AlertCircle, AlertTriangle, TrendingDown,
-  LayoutGrid, CheckSquare,
-  Globe, Wand2, Image,
-  Download, ExternalLink, Copy, Check, Trash2,
-  ChevronDown, ChevronUp, Heart, Share2, Maximize2,
-  FilePlus, RefreshCw, BadgeCheck, ListChecks,
-  UserCheck, List, SlidersHorizontal, Mail,
-  Pencil, Save, Minus, GripVertical, ChevronsDown,
+  Star, Waypoints,
+  AlertCircle, AlertTriangle,
+  CheckSquare, Wand2,
+  Copy, Check, Trash2,
+  ChevronDown, ChevronUp,
+  FilePlus, RefreshCw, ListChecks,
+  UserCheck, List, Mail,
+  Save, Minus,
   History as HistoryIcon
 } from "lucide-react";
 import { useIsMobile } from "../../../hooks/useViewport";
