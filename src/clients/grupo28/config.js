@@ -56,6 +56,11 @@ const grupo28Config = {
     finanzas:     true,
     rrhh:         true,
     trash:        true,
+    // Grupo 28 quiere su propio Comando Directivo en el sidebar — distinto
+    // del Dash de Stratos. Muestra los 7 indicadores ejecutivos coordinados
+    // con el CRM (asignados/contactados/calificados/zooms/activos/seguim.)
+    // con filtro Hoy/Semana/Mes y una tabla por asesor.
+    comandoDirectivo: true,
   },
 
   support: {
