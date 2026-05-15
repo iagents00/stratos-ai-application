@@ -27,12 +27,18 @@ export const DEFAULT_CLIENT_CONFIG = {
   },
 
   // Multi-tenancy en Supabase
-  // Si la app usa la misma base, filtramos por este campo en las queries.
-  // Si el cliente tiene su PROPIO proyecto Supabase, se setea via .env.local
-  // y este campo es informativo.
+  // - organizationId: UUID de la organización en la tabla `organizations`.
+  //   Es el LINK entre nuestro sistema de URL (clientId) y el sistema de permisos
+  //   por organización (PR #93). Si un user loguea y su organizationId no matchea
+  //   con el del clientId actual, lo redirigimos al cliente correcto.
+  // - clientId: identificador interno (duke, grupo28...) usado en la URL.
+  // - supabaseRef: si el cliente usa SU PROPIO proyecto Supabase, se setea acá.
+  //   Mientras tanto, todos comparten el proyecto principal y se aíslan por
+  //   organizationId + RLS.
   tenant: {
-    clientId:     "default",
-    supabaseRef:  null,    // null → usa el VITE_SUPABASE_URL del .env
+    clientId:        "default",
+    organizationId:  null,   // null → no hay org asociada (fallback genérico)
+    supabaseRef:     null,
   },
 
   // Features habilitadas — cada módulo del CRM puede prenderse/apagarse

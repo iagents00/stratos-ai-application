@@ -34,10 +34,14 @@ const grupo28Config = {
   },
 
   tenant: {
-    clientId:    "grupo28",
-    // Si Grupo 28 usa un proyecto Supabase propio, su ref va aquí.
-    // Mientras tanto, las queries se filtran por client_id = "grupo28".
-    supabaseRef: null,
+    clientId:       "grupo28",
+    // UUID de "Grupo 28" en la tabla `organizations` del Supabase principal.
+    // Los usuarios de esta org (felipeg@grupo28.com, lural@grupo28.com, etc.)
+    // tienen profiles.organization_id = este UUID, y por PR #93 solo ven CRM.
+    organizationId: "9afe40d2-7163-4407-a4cd-5346799ecd3c",
+    // Comparte el mismo proyecto Supabase que Duke — el aislamiento es por
+    // organization_id + RLS, no por proyecto.
+    supabaseRef:    "glulgyhkrqpykxmujodb",
   },
 
   // Mismas features que Duke por defecto. El dev puede apagar lo que no aplique.
