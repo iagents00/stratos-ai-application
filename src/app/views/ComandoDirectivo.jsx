@@ -25,11 +25,12 @@ import {
 } from "lucide-react";
 import {
   LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer,
-  CartesianGrid, Legend,
+  CartesianGrid,
 } from "recharts";
 import { P, LP, font, fontDisp } from "../../design-system/tokens";
 import { G } from "../SharedComponents";
 import AdvisorMetrics, { INDICATORS } from "./CRM/AdvisorMetrics";
+import { useClient } from "../../hooks/useClient";
 
 const ICONS_BY_KEY = {
   assigned:       Users,
@@ -135,14 +136,17 @@ function leadsInBucket(leads, bucket) {
   });
 }
 
-// ── CSV utilities ───────────────────────────────────────────────────────────
-function csvEscape(v) {
-  const s = v == null ? "" : String(v);
-  if (/[",\n;]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
-  return s;
+// ── Utilidades de export ────────────────────────────────────────────────────
+function htmlEscape(v) {
+  return String(v == null ? "" : v)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
 }
 
-function downloadFile(filename, content, mimeType = "text/csv;charset=utf-8") {
+function downloadFile(filename, content, mimeType = "text/html;charset=utf-8") {
   const blob = new Blob([content], { type: mimeType });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
@@ -160,6 +164,8 @@ function downloadFile(filename, content, mimeType = "text/csv;charset=utf-8") {
 const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
   const isLight = theme === "light";
   const T = _T || (isLight ? LP : P);
+  const { config: clientConfig } = useClient();
+  const clientDisplayName = clientConfig?.legalName || clientConfig?.name || "Stratos";
   const [granularityId, setGranularityId] = useState("week");
   // Visibilidad por serie — toggleable desde la leyenda.
   const [hiddenSeries, setHiddenSeries] = useState({});
@@ -209,55 +215,292 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
     });
   }, [buckets, leadsData]);
 
-  // ── Export CSV (KPIs/OKRs) ────────────────────────────────────────────────
+  // ── Export — Reporte ejecutivo HTML (imprimible / convertible a PDF) ──────
+  // Genera un documento self-contained con fondo blanco, tipografía limpia y
+  // todas las secciones ejecutivas. El archivo se descarga como .html y el
+  // usuario puede:
+  //   1) Abrirlo en cualquier navegador (incluso offline) → ver el reporte.
+  //   2) Imprimirlo / Guardar como PDF (Ctrl/Cmd+P) — el CSS @media print
+  //      ya está optimizado: márgenes consistentes, page-break-inside: avoid
+  //      en tablas, sin botones imprimibles, branding intacto.
   const handleExport = () => {
-    const rows = [];
     const now = new Date();
     const stamp = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2,"0")}-${String(now.getDate()).padStart(2,"0")}`;
+    const hhmm  = `${String(now.getHours()).padStart(2,"0")}:${String(now.getMinutes()).padStart(2,"0")}`;
+    const periodSpan = buckets.length > 0
+      ? `${buckets[0].csvLabel} → ${buckets[buckets.length - 1].csvLabel}`
+      : "—";
 
-    rows.push(["Reporte ejecutivo — Comando Directivo"]);
-    rows.push([`Generado: ${stamp} ${String(now.getHours()).padStart(2,"0")}:${String(now.getMinutes()).padStart(2,"0")}`]);
-    rows.push([`Granularidad: ${granularity.label}`]);
-    rows.push([`Leads en el rango: ${rangeLeads.length}`]);
-    rows.push([]);
+    const asesores = [...new Set(rangeLeads.map(l => l.asesor).filter(Boolean))]
+      .sort((a, b) => a.localeCompare(b, "es"));
 
-    // Sección 1 — Evolución temporal por bucket.
-    rows.push(["EVOLUCIÓN TEMPORAL"]);
-    rows.push(["Período", ...INDICATORS.map(i => FULL_LABELS[i.key] || i.label)]);
-    for (const r of series) {
-      rows.push([r.csvLabel, ...INDICATORS.map(i => r[i.key] || 0)]);
+    // KPIs derivados — útiles para dirección.
+    const totalLeads     = rangeLeads.length;
+    const tasaCalif      = totalLeads ? Math.round((rangeTotals.qualified / totalLeads) * 100) : 0;
+    const tasaZoomSobreCal = rangeTotals.qualified
+      ? Math.round((rangeTotals.zoomDone / rangeTotals.qualified) * 100)
+      : 0;
+    const promedioSeguim = totalLeads
+      ? (rangeTotals.followUps / totalLeads).toFixed(1)
+      : "0.0";
+
+    const maxIndVal = Math.max(1, ...INDICATORS.map(i => rangeTotals[i.key] || 0));
+
+    // ── Construcción del HTML ──────────────────────────────────────────────
+    const html = `<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>${htmlEscape(clientDisplayName)} — Comando Directivo · ${stamp}</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  :root {
+    --bg: #FFFFFF;
+    --ink: #0B1220;
+    --ink2: #475569;
+    --ink3: #94A3B8;
+    --line: #E2E8F0;
+    --line2: #F1F5F9;
+    --accent: #0D9A76;
+    --accent-soft: #ECFDF5;
+  }
+  html, body { background: var(--bg); color: var(--ink); }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "SF Pro Text", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-size: 13px; line-height: 1.55;
+    -webkit-print-color-adjust: exact; print-color-adjust: exact;
+  }
+  .page {
+    max-width: 920px; margin: 0 auto; padding: 40px 48px 56px;
+  }
+  .topbar {
+    display: flex; align-items: center; justify-content: space-between;
+    border-bottom: 2px solid var(--ink); padding-bottom: 14px; margin-bottom: 28px;
+  }
+  .brand { font-size: 18px; font-weight: 700; letter-spacing: -0.01em; }
+  .brand .badge {
+    display: inline-block; background: var(--accent); color: #fff;
+    font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 99px;
+    margin-left: 8px; letter-spacing: 0.04em; text-transform: uppercase; vertical-align: middle;
+  }
+  .meta { font-size: 11px; color: var(--ink2); text-align: right; }
+  .meta strong { color: var(--ink); font-weight: 600; }
+  h1 {
+    font-size: 26px; font-weight: 700; margin: 4px 0 8px;
+    letter-spacing: -0.025em;
+  }
+  .subtitle {
+    font-size: 13px; color: var(--ink2); margin: 0 0 28px;
+  }
+  h2 {
+    font-size: 13px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.08em; color: var(--ink2);
+    margin: 32px 0 12px; padding-bottom: 6px;
+    border-bottom: 1px solid var(--line);
+  }
+  .summary {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    gap: 12px; margin-bottom: 8px;
+  }
+  .stat {
+    border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px;
+    background: #FFFFFF;
+  }
+  .stat .label {
+    font-size: 10px; font-weight: 700; color: var(--ink3);
+    text-transform: uppercase; letter-spacing: 0.07em;
+  }
+  .stat .value {
+    font-size: 26px; font-weight: 700; color: var(--ink);
+    margin-top: 6px; letter-spacing: -0.025em; line-height: 1;
+  }
+  .stat .sub {
+    font-size: 10.5px; color: var(--ink2); margin-top: 6px;
+  }
+  .ind-grid {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 8px 24px; margin: 8px 0 0;
+  }
+  .ind {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 12px; padding: 9px 0;
+    border-bottom: 1px solid var(--line2);
+  }
+  .ind:last-child { border-bottom: none; }
+  .ind .name { font-size: 12.5px; color: var(--ink); font-weight: 500; }
+  .ind .bar-wrap { flex: 1; height: 6px; border-radius: 99px; background: var(--line2); overflow: hidden; }
+  .ind .bar { height: 100%; border-radius: 99px; background: var(--accent); }
+  .ind .val {
+    font-size: 14px; font-weight: 700; color: var(--ink);
+    min-width: 36px; text-align: right; font-variant-numeric: tabular-nums;
+  }
+  table {
+    width: 100%; border-collapse: collapse; margin-top: 6px;
+    font-size: 11.5px;
+  }
+  table th, table td {
+    padding: 8px 10px; text-align: right;
+    border-bottom: 1px solid var(--line2);
+    font-variant-numeric: tabular-nums;
+  }
+  table th {
+    font-size: 10px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.05em; color: var(--ink2);
+    background: var(--line2); border-bottom: 1px solid var(--line);
+  }
+  table th:first-child, table td:first-child { text-align: left; }
+  table tbody tr:hover { background: #FAFCFE; }
+  table tfoot td {
+    font-weight: 700; background: var(--accent-soft); color: var(--ink);
+    border-top: 2px solid var(--accent); border-bottom: none;
+  }
+  .footer {
+    margin-top: 40px; padding-top: 14px;
+    border-top: 1px solid var(--line);
+    font-size: 10px; color: var(--ink3);
+    display: flex; justify-content: space-between; gap: 12px;
+  }
+  .actions {
+    position: fixed; top: 16px; right: 16px;
+    display: flex; gap: 8px; z-index: 10;
+  }
+  .btn {
+    padding: 8px 14px; border-radius: 8px; border: none;
+    background: var(--accent); color: #fff; font-weight: 700;
+    font-size: 12px; cursor: pointer; box-shadow: 0 2px 8px rgba(13,154,118,0.30);
+  }
+  .btn.secondary { background: #fff; color: var(--ink); border: 1px solid var(--line); box-shadow: none; }
+  @media print {
+    .actions { display: none !important; }
+    .page { max-width: none; padding: 0 12mm; }
+    h2 { page-break-after: avoid; }
+    table, .ind-grid, .summary { page-break-inside: avoid; }
+    body { font-size: 11.5px; }
+    .stat .value { font-size: 22px; }
+    h1 { font-size: 22px; }
+  }
+  @page { size: A4 portrait; margin: 16mm 0; }
+</style>
+</head>
+<body>
+  <div class="actions">
+    <button class="btn" onclick="window.print()">Imprimir / Guardar PDF</button>
+  </div>
+  <div class="page">
+
+    <div class="topbar">
+      <div class="brand">${htmlEscape(clientDisplayName)} <span class="badge">Comando Directivo</span></div>
+      <div class="meta">
+        Generado: <strong>${stamp}</strong> · ${hhmm}<br/>
+        Granularidad: <strong>${htmlEscape(granularity.label)}</strong> · ${buckets.length} períodos
+      </div>
+    </div>
+
+    <h1>Reporte ejecutivo de pipeline</h1>
+    <p class="subtitle">
+      Rango analizado: <strong>${htmlEscape(periodSpan)}</strong> ·
+      ${totalLeads} leads creados ·
+      ${asesores.length} asesores activos
+    </p>
+
+    <h2>Resumen ejecutivo</h2>
+    <div class="summary">
+      <div class="stat">
+        <div class="label">Leads totales</div>
+        <div class="value">${totalLeads}</div>
+        <div class="sub">creados en el rango</div>
+      </div>
+      <div class="stat">
+        <div class="label">Tasa de calificación</div>
+        <div class="value">${tasaCalif}%</div>
+        <div class="sub">${rangeTotals.qualified} de ${totalLeads || 0}</div>
+      </div>
+      <div class="stat">
+        <div class="label">Conversión a Zoom</div>
+        <div class="value">${tasaZoomSobreCal}%</div>
+        <div class="sub">de leads calificados</div>
+      </div>
+      <div class="stat">
+        <div class="label">Seguim. por lead</div>
+        <div class="value">${promedioSeguim}</div>
+        <div class="sub">promedio del rango</div>
+      </div>
+    </div>
+
+    <h2>Indicadores clave</h2>
+    <div class="ind-grid">
+      ${INDICATORS.map(ind => {
+        const val = rangeTotals[ind.key] || 0;
+        const w = Math.round((val / maxIndVal) * 100);
+        return `
+        <div class="ind">
+          <div class="name">${htmlEscape(FULL_LABELS[ind.key] || ind.label)}</div>
+          <div class="bar-wrap"><div class="bar" style="width: ${w}%"></div></div>
+          <div class="val">${val}</div>
+        </div>`;
+      }).join("")}
+    </div>
+
+    <h2>Evolución temporal — ${htmlEscape(granularity.label)}</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Período</th>
+          ${INDICATORS.map(i => `<th>${htmlEscape(i.label)}</th>`).join("")}
+        </tr>
+      </thead>
+      <tbody>
+        ${series.map(r => `
+          <tr>
+            <td>${htmlEscape(r.csvLabel)}</td>
+            ${INDICATORS.map(i => `<td>${r[i.key] || 0}</td>`).join("")}
+          </tr>`).join("")}
+      </tbody>
+      <tfoot>
+        <tr>
+          <td>Total / Estado actual</td>
+          ${INDICATORS.map(i => `<td>${rangeTotals[i.key] || 0}</td>`).join("")}
+        </tr>
+      </tfoot>
+    </table>
+
+    <h2>Desglose por asesor</h2>
+    ${asesores.length === 0
+      ? `<p style="color: var(--ink3); font-size: 12px; margin: 8px 0;">Sin asesores con leads en el rango analizado.</p>`
+      : `<table>
+        <thead>
+          <tr>
+            <th>Asesor</th>
+            <th>Leads</th>
+            ${INDICATORS.map(i => `<th>${htmlEscape(i.label)}</th>`).join("")}
+          </tr>
+        </thead>
+        <tbody>
+          ${asesores.map(ases => {
+            const leadsOf = rangeLeads.filter(l => l.asesor === ases);
+            return `
+            <tr>
+              <td>${htmlEscape(ases)}</td>
+              <td>${leadsOf.length}</td>
+              ${INDICATORS.map(i => `<td>${i.compute(leadsOf)}</td>`).join("")}
+            </tr>`;
+          }).join("")}
+        </tbody>
+      </table>`
     }
-    rows.push([]);
 
-    // Sección 2 — Totales del rango.
-    rows.push(["TOTALES DEL RANGO"]);
-    rows.push(["Indicador", "Valor", "Tipo"]);
-    for (const ind of INDICATORS) {
-      const isSnapshot = ["zoomScheduled","zoomDone","activePostZoom"].includes(ind.key);
-      rows.push([
-        FULL_LABELS[ind.key] || ind.label,
-        rangeTotals[ind.key],
-        isSnapshot ? "Estado actual" : "Acumulado del rango",
-      ]);
-    }
-    rows.push([]);
+    <div class="footer">
+      <span>Reporte generado automáticamente desde el Comando Directivo.</span>
+      <span>${htmlEscape(clientDisplayName)} · ${stamp}</span>
+    </div>
+  </div>
+</body>
+</html>`;
 
-    // Sección 3 — Por asesor (snapshot del rango).
-    rows.push(["DESGLOSE POR ASESOR"]);
-    rows.push(["Asesor", "Leads en el rango", ...INDICATORS.map(i => FULL_LABELS[i.key] || i.label)]);
-    const asesores = [...new Set(rangeLeads.map(l => l.asesor).filter(Boolean))].sort((a, b) => a.localeCompare(b, "es"));
-    for (const ases of asesores) {
-      const leadsOf = rangeLeads.filter(l => l.asesor === ases);
-      rows.push([ases, leadsOf.length, ...INDICATORS.map(i => i.compute(leadsOf))]);
-    }
-    if (asesores.length === 0) {
-      rows.push(["(sin asesores con leads en el rango)"]);
-    }
-
-    const csv = rows.map(r => r.map(csvEscape).join(",")).join("\n");
-    // BOM para que Excel reconozca UTF-8 correctamente.
-    const filename = `comando-directivo_${granularity.label.toLowerCase()}_${stamp}.csv`;
-    downloadFile(filename, "﻿" + csv);
+    const filename = `comando-directivo_${granularity.label.toLowerCase()}_${stamp}.html`;
+    downloadFile(filename, html);
   };
 
   // ── Chart helpers ─────────────────────────────────────────────────────────
@@ -310,7 +553,7 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
 
           <button
             onClick={handleExport}
-            title="Descargar reporte CSV con todos los KPIs y OKRs para enviar a dirección"
+            title="Descargar reporte ejecutivo (HTML) — listo para imprimir o guardar como PDF y enviar a dirección"
             style={{
               display: "inline-flex", alignItems: "center", gap: 7,
               padding: "8px 14px", borderRadius: 9,
