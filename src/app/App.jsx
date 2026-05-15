@@ -10,6 +10,7 @@ import { supabase } from "../lib/supabase";
 import LoginScreen from "../landing/LoginScreen.jsx";
 import PricingScreen from "../landing/PricingScreen.jsx";
 import { useAuth } from "../hooks/useAuth";
+import { useClient } from "../hooks/useClient";
 import {
   getOfflineLeads,
   updateOfflineLead,
@@ -129,6 +130,11 @@ const LP = {
    ════════════════════════════════════════ */
 export default function App() {
   const { user, login, logout, upgradeToOnline, bootHydrating } = useAuth();
+  // Cliente activo (Duke, Grupo 28, etc.) según hostname/path. Usado como
+  // fallback para orgBrand cuando la organización del user no tiene `brand`
+  // explícitamente seteado en meta_config — así cada cliente ve su propia
+  // marca sin depender de checks hardcoded.
+  const { config: clientConfig } = useClient();
   const isAsesorRole     = !["super_admin","admin","director","ceo"].includes(user?.role);
   // Vista activa persistida por usuario en localStorage. Si haces F5 estando
   // en el CRM, vuelves al CRM (no al Comando). Validamos contra los permisos
@@ -642,8 +648,14 @@ export default function App() {
     () => (orgMetaConfig?.protocol ? orgMetaConfig.protocol : metaProtocol),
     [orgMetaConfig, metaProtocol]
   );
-  // Brand label: si la org guardó su propia marca, úsala; si no, "Duke del Caribe" (legacy Stratos).
-  const orgBrand = orgMetaConfig?.brand || (orgMetaConfig?._orgName === 'Grupo 28' ? 'Grupo 28' : 'Duke del Caribe');
+  // Brand label: prioridad → meta_config.brand (override explícito en DB) →
+  // legalName del cliente activo (config por URL) → "Duke del Caribe" como
+  // último fallback. Esto reemplaza el check hardcoded "=== 'Grupo 28'"
+  // por una resolución basada en el sistema multi-cliente, así cualquier
+  // cliente futuro funciona sin tocar este archivo.
+  const orgBrand = orgMetaConfig?.brand
+                || clientConfig?.legalName
+                || 'Duke del Caribe';
 
   // Setters envueltos: si la org tiene meta_config en DB, las ediciones
   // van a orgMetaConfig (con auto-save debounceado). Si no (Stratos legacy),
@@ -1012,7 +1024,7 @@ export default function App() {
                 <p style={{ margin:0, fontSize:14, fontFamily:fontDisp, letterSpacing:"-0.030em", fontWeight:600, color: isLight ? T.txt : "#FFFFFF", lineHeight:1, whiteSpace:"nowrap" }}>
                   Stratos<span style={{ marginLeft:3, fontWeight:600, color: isLight ? "rgba(15,23,42,0.38)" : "rgba(255,255,255,0.30)", letterSpacing:"0.01em" }}>AI</span>
                 </p>
-                <IAOSIsland leadsData={leadsData} isLight={isLight} idx={iaosIdx} />
+                <IAOSIsland leadsData={leadsData} isLight={isLight} idx={iaosIdx} brandLabel={orgBrand} />
               </div>
               {/* CENTER */}
               <div className="stratos-header-center" style={{ position:"absolute", left:"50%", transform:"translateX(-50%)" }}>
