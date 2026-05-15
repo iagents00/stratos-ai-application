@@ -13,7 +13,7 @@
  *   localhost:5173               →  Landing (modo desarrollo)
  * ─────────────────────────────────────────────────────────────────────────────
  */
-import { StrictMode } from "react";
+import { StrictMode, lazy, Suspense } from "react";
 import { createRoot } from "react-dom/client";
 
 import { AuthProvider }   from "./contexts/AuthContext";
@@ -21,12 +21,15 @@ import { ClientProvider } from "./contexts/ClientContext";
 import { ClientOrgGuard } from "./contexts/ClientOrgGuard";
 import { resolveClientFromLocation, matchClientFromLocation } from "./clients";
 import ErrorBoundary   from "./components/ErrorBoundary.jsx";
-import App            from "./app/App.jsx";
-import LandingMarketing from "./landing/LandingMarketing.jsx";
-import PrivacyPolicy   from "./landing/PrivacyPolicy.jsx";
-import DataDeletion    from "./landing/DataDeletion.jsx";
-import DeliveryHubCRM  from "./landing/DeliveryHubCRM.jsx";
-import ManualCRM       from "./landing/ManualCRM.jsx";
+
+// Code-splitting: solo se carga el bundle de la experiencia que el usuario
+// realmente abrió. Antes este import era estático y arrastraba todo a 922KB.
+const App              = lazy(() => import("./app/App.jsx"));
+const LandingMarketing = lazy(() => import("./landing/LandingMarketing.jsx"));
+const PrivacyPolicy    = lazy(() => import("./landing/PrivacyPolicy.jsx"));
+const DataDeletion     = lazy(() => import("./landing/DataDeletion.jsx"));
+const DeliveryHubCRM   = lazy(() => import("./landing/DeliveryHubCRM.jsx"));
+const ManualCRM        = lazy(() => import("./landing/ManualCRM.jsx"));
 
 import "./index.css";
 
@@ -118,18 +121,20 @@ createRoot(document.getElementById("root")).render(
               path correcto. Solo activo cuando isApp=true porque las páginas
               públicas (privacy, deletion, etc.) no necesitan este guardrail. */}
           {isApp && <ClientOrgGuard />}
-          {isPrivacy
-            ? <PrivacyPolicy />
-            : isDeletion
-              ? <DataDeletion />
-              : isDelivery
-                ? <DeliveryHubCRM />
-                : isManual
-                  ? <ManualCRM />
-                  : isApp
-                    ? <App />
-                    : <LandingMarketing appUrl={APP_URL} />
-          }
+          <Suspense fallback={null}>
+            {isPrivacy
+              ? <PrivacyPolicy />
+              : isDeletion
+                ? <DataDeletion />
+                : isDelivery
+                  ? <DeliveryHubCRM />
+                  : isManual
+                    ? <ManualCRM />
+                    : isApp
+                      ? <App />
+                      : <LandingMarketing appUrl={APP_URL} />
+            }
+          </Suspense>
         </AuthProvider>
       </ClientProvider>
     </ErrorBoundary>

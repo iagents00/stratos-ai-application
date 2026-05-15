@@ -351,11 +351,18 @@ const RotatingWord = () => {
   const [visible, setVisible] = useState(true);
 
   useEffect(() => {
-    const t = setInterval(() => {
-      setVisible(false);
-      setTimeout(() => { setIdx(i => (i + 1) % words.length); setVisible(true); }, 320);
-    }, 2600);
-    return () => clearInterval(t);
+    let t = null;
+    const start = () => {
+      if (t == null) t = setInterval(() => {
+        setVisible(false);
+        setTimeout(() => { setIdx(i => (i + 1) % words.length); setVisible(true); }, 320);
+      }, 2600);
+    };
+    const stop = () => { if (t != null) { clearInterval(t); t = null; } };
+    const onVisibility = () => (document.hidden ? stop() : start());
+    if (!document.hidden) start();
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => { document.removeEventListener('visibilitychange', onVisibility); stop(); };
   }, []);
 
   return (

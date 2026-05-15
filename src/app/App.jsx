@@ -262,11 +262,18 @@ export default function App() {
 
   const writeLeadsCache = useCallback((rows) => {
     if (!leadsCacheKey || !Array.isArray(rows)) return;
-    try {
-      // Guardamos las filas crudas (no normalizadas) para evitar romper compat
-      // si normalizeLeads cambia en una versión futura.
-      localStorage.setItem(leadsCacheKey, JSON.stringify({ rows, ts: Date.now() }));
-    } catch (_) { /* quota exceeded — no es crítico */ }
+    // Defer del JSON.stringify + setItem (~50–200ms con datasets grandes) al
+    // próximo idle slot para no bloquear el main thread durante el render.
+    const persist = () => {
+      try {
+        localStorage.setItem(leadsCacheKey, JSON.stringify({ rows, ts: Date.now() }));
+      } catch (_) { /* quota exceeded — no es crítico */ }
+    };
+    if (typeof requestIdleCallback === "function") {
+      requestIdleCallback(persist, { timeout: 2000 });
+    } else {
+      setTimeout(persist, 0);
+    }
   }, [leadsCacheKey]);
 
   const fetchLeads = useCallback(async ({ silent = false } = {}) => {
@@ -509,14 +516,21 @@ export default function App() {
   const showOfflineBanner = isAdminRole && (user?._offline || pendingSync > 0);
 
   // Polling cada 5 s del contador de cambios pendientes.
-  // Corre SIEMPRE (no condicional) — si la cola se llena después porque cae
-  // Supabase, queremos detectarlo en menos de 5 s sin tener que recargar.
+  // Pausa cuando la pestaña está en background (document.hidden) para no
+  // gastar CPU/red sin beneficio; al volver al foreground reanuda inmediato.
   useEffect(() => {
     if (!user || user.id === 'demo-user-local') return;
     const tick = () => setPendingSync(getPendingSyncCount());
-    tick();
-    const t = setInterval(tick, 5000);
-    return () => clearInterval(t);
+    let t = null;
+    const start = () => { if (t == null) { tick(); t = setInterval(tick, 5000); } };
+    const stop  = () => { if (t != null) { clearInterval(t); t = null; } };
+    const onVisibility = () => (document.hidden ? stop() : start());
+    if (!document.hidden) start();
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => {
+      document.removeEventListener('visibilitychange', onVisibility);
+      stop();
+    };
   }, [user?.id]);
 
   const handleSync = useCallback(async () => {
@@ -623,11 +637,19 @@ export default function App() {
     };
   }, [runAutoRecovery]);
 
-  /* ── IAOS ticker ── */
+  /* ── IAOS ticker ── pausa con document.hidden para no gastar CPU en background */
   const [iaosIdx, setIaosIdx] = useState(0);
   useEffect(() => {
-    const t = setInterval(() => setIaosIdx(i => (i + 1) % 4), 4000);
-    return () => clearInterval(t);
+    let t = null;
+    const start = () => { if (t == null) t = setInterval(() => setIaosIdx(i => (i + 1) % 4), 4000); };
+    const stop  = () => { if (t != null) { clearInterval(t); t = null; } };
+    const onVisibility = () => (document.hidden ? stop() : start());
+    if (!document.hidden) start();
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => {
+      document.removeEventListener('visibilitychange', onVisibility);
+      stop();
+    };
   }, []);
 
   /* ── MetaPanel state ── */
