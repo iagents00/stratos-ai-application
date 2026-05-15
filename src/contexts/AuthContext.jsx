@@ -17,6 +17,8 @@ import {
   resetPassword as authResetPassword,
   getStoredSession,
   seedDemoUser,
+  readSessionFromStorageSync,
+  hasSupabaseAuthToken,
 } from "../lib/auth";
 import { clearOfflineSession } from "../lib/offline-mode";
 
@@ -51,9 +53,29 @@ function clearLocalAuthState() {
 }
 
 export function AuthProvider({ children }) {
-  const [user,    setUser]    = useState(null);
+  // HIDRATACIÓN SÍNCRONA — el F5 ya no muestra LoginScreen mientras
+  // getStoredSession() corre. Si hay sesión cacheada (24h) la usamos
+  // como user inicial; la validación asíncrona en background la reemplaza
+  // por la versión fresca o la limpia si la sesión ya no es válida.
+  const [user, setUser] = useState(() => readSessionFromStorageSync());
   const [loading, setLoading] = useState(true);
   const [error,   setError]   = useState(null);
+
+  // bootHydrating — "todavía estamos restaurando la sesión inicial".
+  // Distinto de `loading` (que también se activa durante login/register).
+  // App.jsx lo usa para mostrar splash en vez de LoginScreen cuando hay
+  // probabilidad alta de tener sesión (JWT presente) pero la caché Stratos
+  // ya expiró y getStoredSession aún no resolvió.
+  // Si tenemos user de la caché SYNC, no necesitamos splash → false.
+  // Si hay JWT pero no caché → true (mostrar splash).
+  // Si no hay ninguno → false (LoginScreen de inmediato).
+  const [bootHydrating, setBootHydrating] = useState(() => {
+    // Si ya tenemos user sync, no hay nada que esperar para mostrar app.
+    // El effect setea bootHydrating=false en su finally por consistencia.
+    const cached = readSessionFromStorageSync();
+    if (cached) return false;
+    return hasSupabaseAuthToken();
+  });
 
   /**
    * loginSettledRef — se pone a `true` en el momento en que el usuario
@@ -85,18 +107,25 @@ export function AuthProvider({ children }) {
     // un timeout transitorio, el F5 mantiene la sesión.
     const hydrationTimer = setTimeout(() => {
       if (!isMounted || hydrationDoneRef.current || loginSettledRef.current) return;
-      console.warn('[Stratos] Hidratación tardando >25s, mostrando login pero conservando storage');
+      console.warn('[Stratos] Hidratación tardando >12s, mostrando login pero conservando storage');
       // NO marcar hydrationDoneRef=true: dejamos que la promesa de getStoredSession()
       // siga corriendo y, si responde después, la lógica del .then la usa.
+      // Sí bajamos bootHydrating: pasado el timeout, mejor mostrar LoginScreen
+      // que mantener al usuario eternamente en splash.
+      setBootHydrating(false);
       setLoading(false);
     }, HYDRATION_TIMEOUT_MS);
 
     getStoredSession()
       .then(session => {
         if (!isMounted || loginSettledRef.current) return;
-        // Si llegó después del timeout (loading ya está en false), pero hay
-        // sesión válida, restauramos al usuario igual.
-        if (session) setUser(session);
+        // Sincronizar el user con el resultado real:
+        //   · Si Supabase devuelve sesión válida → reemplazar la versión
+        //     cacheada por la fresca (puede traer cambios en role/prefs).
+        //   · Si Supabase devuelve null → la caché que usamos en el render
+        //     inicial estaba obsoleta (signOut desde otra pestaña, cuenta
+        //     desactivada, JWT expirado). Limpiamos para mostrar LoginScreen.
+        setUser(session ?? null);
       })
       .catch(e => {
         console.warn('[Stratos] Hidratación falló (no destructivo):', e?.message || e);
@@ -108,6 +137,7 @@ export function AuthProvider({ children }) {
         clearTimeout(hydrationTimer);
         if (!isMounted) return;
         hydrationDoneRef.current = true;
+        setBootHydrating(false);
         if (!loginSettledRef.current) setLoading(false);
       });
 
@@ -238,11 +268,12 @@ export function AuthProvider({ children }) {
   // el objeto memoizado cambia solo cuando realmente cambia algo relevante.
   const value = useMemo(() => ({
     user, loading, error,
+    bootHydrating,
     isAuthenticated: !!user,
     login, register, logout, resetPassword, clearError,
     hasRole, hasMinRole,
     upgradeToOnline,
-  }), [user, loading, error, login, register, logout, resetPassword, clearError, hasRole, hasMinRole, upgradeToOnline]);
+  }), [user, loading, error, bootHydrating, login, register, logout, resetPassword, clearError, hasRole, hasMinRole, upgradeToOnline]);
 
   return (
     <AuthContext.Provider value={value}>
