@@ -608,6 +608,89 @@ export default function App() {
   const [metaPlan, setMetaPlan]         = useState(DEFAULT_META_PLAN);
   const [metaProtocol, setMetaProtocol] = useState(DEFAULT_META_PROTOCOL);
 
+  // Configuración por organización (Plan, Protocolo, Goal).
+  // Si la org tiene meta_config en DB → se usa (overrides los defaults).
+  // Si meta_config es NULL → caemos a DEFAULT_META_* (compat legacy / Stratos = Duke).
+  // Esto permite isolación total: Grupo 28 nunca ve contenido de Duke y viceversa.
+  const [orgMetaConfig, setOrgMetaConfig] = useState(null);
+  useEffect(() => {
+    const orgId = user?.organizationId;
+    if (!orgId || user?._offline || user?.id === 'demo-user-local') return;
+    let cancelled = false;
+    supabase
+      .from('organizations')
+      .select('meta_config, name')
+      .eq('id', orgId)
+      .maybeSingle()
+      .then(({ data, error }) => {
+        if (cancelled) return;
+        if (error) { console.warn('[Stratos] org meta_config fetch falló:', error.message); return; }
+        if (data?.meta_config) setOrgMetaConfig({ ...data.meta_config, _orgName: data.name });
+      });
+    return () => { cancelled = true; };
+  }, [user?.organizationId, user?._offline, user?.id]);
+
+  // Plan/Protocolo efectivos: org override > hardcoded default.
+  // useMemo para que las refs no cambien entre renders si no cambia la fuente.
+  const effectiveMetaPlan = useMemo(
+    () => (orgMetaConfig?.plan ? orgMetaConfig.plan : metaPlan),
+    [orgMetaConfig, metaPlan]
+  );
+  const effectiveMetaProtocol = useMemo(
+    () => (orgMetaConfig?.protocol ? orgMetaConfig.protocol : metaProtocol),
+    [orgMetaConfig, metaProtocol]
+  );
+  // Brand label: si la org guardó su propia marca, úsala; si no, "Duke del Caribe" (legacy Stratos).
+  const orgBrand = orgMetaConfig?.brand || (orgMetaConfig?._orgName === 'Grupo 28' ? 'Grupo 28' : 'Duke del Caribe');
+
+  // Setters envueltos: si la org tiene meta_config en DB, las ediciones
+  // van a orgMetaConfig (con auto-save debounceado). Si no (Stratos legacy),
+  // siguen yendo al estado local metaPlan/metaProtocol (compat).
+  const handleSetMetaPlan = useCallback((updater) => {
+    if (orgMetaConfig) {
+      setOrgMetaConfig(prev => {
+        if (!prev) return prev;
+        const nextPlan = typeof updater === 'function' ? updater(prev.plan ?? {}) : updater;
+        return { ...prev, plan: nextPlan, _dirty: true };
+      });
+    } else {
+      setMetaPlan(updater);
+    }
+  }, [orgMetaConfig]);
+  const handleSetMetaProtocol = useCallback((updater) => {
+    if (orgMetaConfig) {
+      setOrgMetaConfig(prev => {
+        if (!prev) return prev;
+        const nextProto = typeof updater === 'function' ? updater(prev.protocol ?? {}) : updater;
+        return { ...prev, protocol: nextProto, _dirty: true };
+      });
+    } else {
+      setMetaProtocol(updater);
+    }
+  }, [orgMetaConfig]);
+
+  // Auto-save debounceado de la config de org. Espera 1.5s sin cambios y persiste.
+  // RLS solo permite UPDATE a super_admin/admin de la misma org — si un asesor
+  // intentara llamar a esto, Supabase devuelve error que ignoramos silenciosamente.
+  useEffect(() => {
+    if (!orgMetaConfig?._dirty) return;
+    const orgId = user?.organizationId;
+    if (!orgId || user?._offline) return;
+    const t = setTimeout(async () => {
+      const { _dirty, _orgName, ...cleanConfig } = orgMetaConfig;
+      const { error } = await supabase
+        .from('organizations')
+        .update({ meta_config: cleanConfig })
+        .eq('id', orgId);
+      if (!error) {
+        setOrgMetaConfig(prev => prev ? ({ ...prev, _dirty: false }) : prev);
+      } else {
+        console.warn('[Stratos] No se pudo guardar meta_config:', error.message);
+      }
+    }, 1500);
+    return () => clearTimeout(t);
+  }, [orgMetaConfig, user?.organizationId, user?._offline]);
+
   /* ── Notifications ── */
   const onLogout = () => logout();
 
@@ -680,7 +763,9 @@ export default function App() {
   }
 
   /* ── Sidebar helpers ── */
-  const GOAL        = 48_000_000;
+  // GOAL viene de la organización si la tiene configurada; si no, el default Duke ($48M).
+  // Si la org tiene goal=0 (placeholder Grupo 28) lo tratamos como sin configurar.
+  const GOAL        = (effectiveMetaPlan?.goal && effectiveMetaPlan.goal > 0) ? effectiveMetaPlan.goal : 48_000_000;
   const activeLeads = leadsData.filter(l => l.presupuesto > 0);
   const totalPipe   = activeLeads.reduce((s, l) => s + (l.presupuesto || 0), 0);
   const pc          = Math.min(100, Math.round((totalPipe / GOAL) * 100));
@@ -1194,13 +1279,16 @@ export default function App() {
         setMetaNewText={setMetaNewText}
         doneCollapsed={doneCollapsed}
         setDoneCollapsed={setDoneCollapsed}
-        metaPlan={metaPlan}
-        setMetaPlan={setMetaPlan}
-        metaProtocol={metaProtocol}
-        setMetaProtocol={setMetaProtocol}
+        metaPlan={effectiveMetaPlan}
+        setMetaPlan={handleSetMetaPlan}
+        metaProtocol={effectiveMetaProtocol}
+        setMetaProtocol={handleSetMetaProtocol}
         leadsData={leadsData}
         T={T}
         isLight={isLight}
+        orgBrand={orgBrand}
+        canEdit={["super_admin","admin"].includes(user?.role)}
+        savingConfig={!!orgMetaConfig?._dirty}
       />
     </div>
   );
