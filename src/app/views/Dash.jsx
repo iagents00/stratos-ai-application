@@ -12,8 +12,8 @@ import { G, KPI, Pill, Ico } from "../SharedComponents";
 import Team from "./Team";
 
 const stgC = {
-  "Nuevo Registro":     "#94A3B8",
-  "Primer Contacto":    "#38BDF8",
+  "Contáctame ya":      "#94A3B8",
+  "Segundo Intento":    "#38BDF8",
   "Seguimiento":        "#22D3EE",
   "Zoom Agendado":      "#60A5FA",
   "Zoom Concretado":    "#4ADE80",
@@ -21,7 +21,7 @@ const stgC = {
   "Visita Concretada":  "#6EE7C2",
   "Negociación":        "#FB923C",
   "Cierre":             "#34D399",
-  "Perdido":            "#F87171",
+  "Postventa":          "#F87171",
 };
 
 const AgentIcons = {
@@ -44,9 +44,9 @@ const Dash = ({ oc, co, leadsData = [], T: _T }) => {
   const total    = leadsData.length || 1;
   const cierres  = leadsData.filter(l => l.st === "Cierre").length;
   const zooms    = leadsData.filter(l => l.st === "Zoom Agendado" || l.st === "Zoom Concretado").length;
-  const activos  = leadsData.filter(l => l.st !== "Perdido" && l.st !== "Cierre").length;
+  const activos  = leadsData.filter(l => l.st !== "Postventa" && l.st !== "Cierre").length;
   const tasaConv = ((cierres / total) * 100).toFixed(1);
-  const actionStages = ["Primer Contacto","Remarketing","Seguimiento","Zoom Agendado","No Show","Zoom Concretado","Visita Agendada","Negociación","Cierre"];
+  const actionStages = ["Segundo Intento","Remarketing","Seguimiento","Zoom Agendado","No Show","Zoom Concretado","Visita Agendada","Negociación","Cierre"];
   const actionData   = actionStages.map(st => ({
     label: st.length > 10 ? st.substring(0, 10) + "…" : st,
     fullName: st, val: leadsData.filter(l => l.st === st).length, color: stgC[st] || P.txt3,

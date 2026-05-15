@@ -45,9 +45,9 @@ export const DEFAULT_META_PLAN = {
 
 export const DEFAULT_META_PROTOCOL = {
   stages: [
-    { id: 1, name: "Nuevo Registro", color: "#34D399", sla: "< 2h",
+    { id: 1, name: "Contáctame ya", color: "#34D399", sla: "< 2h",
       actions: ["Llamada de bienvenida inmediata", "Enviar presentación de proyectos", "Calificar BANT", "Registrar notas en CRM"] },
-    { id: 2, name: "Primer Contacto", color: "#60A5FA", sla: "< 24h",
+    { id: 2, name: "Segundo Intento", color: "#60A5FA", sla: "< 24h",
       actions: ["Zoom/llamada de descubrimiento 30 min", "Identificar proyecto de interés", "Confirmar presupuesto y timeline", "Enviar dossier del proyecto"] },
     { id: 3, name: "Remarketing", color: "#FB923C", sla: "< 48h",
       actions: ["Enviar contenido de valor (caso de éxito, video del proyecto, comparativo de zona)", "Preguntar por cambios en presupuesto o timeline", "Ofrecer información que aún no haya visto", "Proponer Zoom corto de re-conexión (15 min)"] },

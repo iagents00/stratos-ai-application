@@ -87,7 +87,7 @@ export const buildTelegramSummary = (lead) => {
   lines.push(`${lead.n || "Sin nombre"}${lead.budget ? ` · ${lead.budget}` : ""}`);
   if (lead.p)     lines.push(`Proyecto: ${lead.p}`);
   if (lead.phone) lines.push(`Tel: ${lead.phone}`);
-  lines.push(`Etapa: ${lead.st || "Nuevo Registro"} · Score ${lead.sc ?? 0}`);
+  lines.push(`Etapa: ${lead.st || "Contáctame ya"} · Score ${lead.sc ?? 0}`);
   if (lead.nextAction) {
     const fecha = lead.nextActionDate && lead.nextActionDate !== "Por definir" ? ` — ${lead.nextActionDate}` : "";
     lines.push(`Siguiente accion: ${lead.nextAction}${fecha}`);

@@ -18,7 +18,7 @@ import { Users, Phone, BadgeCheck, CalendarDays, CheckCircle2, Activity, Refresh
 import { P, LP, font, fontDisp, STAGES } from "../../../design-system/tokens";
 
 const STAGE_INDEX = Object.fromEntries(STAGES.map((s, i) => [s, i]));
-const IDX_PRIMER_CONTACTO = STAGE_INDEX["Primer Contacto"];
+const IDX_PRIMER_CONTACTO = STAGE_INDEX["Segundo Intento"];
 const IDX_SEGUIMIENTO     = STAGE_INDEX["Seguimiento"];
 const IDX_ZOOM_CONCRETADO = STAGE_INDEX["Zoom Concretado"];
 
@@ -74,7 +74,7 @@ export const INDICATORS = [
     key: "contacted",
     label: "Contactados",
     icon: Phone,
-    title: "Leads contactados — etapa ≥ Primer Contacto.",
+    title: "Leads contactados — etapa ≥ Segundo Intento.",
     compute: (leads) => leads.filter(l => stageIdx(l.st) >= IDX_PRIMER_CONTACTO).length,
   },
   {
@@ -102,10 +102,10 @@ export const INDICATORS = [
     key: "activePostZoom",
     label: "Activos",
     icon: Activity,
-    title: "Activos post-Zoom — etapa ≥ Zoom Concretado, excluye Perdido y Rotación.",
+    title: "Activos post-Zoom — etapa ≥ Zoom Concretado, excluye Postventa y Rotación.",
     compute: (leads) => leads.filter(l =>
       stageIdx(l.st) >= IDX_ZOOM_CONCRETADO
-      && l.st !== "Perdido"
+      && l.st !== "Postventa"
       && l.st !== "Rotación"
     ).length,
   },

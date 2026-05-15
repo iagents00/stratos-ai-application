@@ -134,8 +134,8 @@ export const spacing = {
 
 // ─── PIPELINE CRM ─────────────────────────────────────────────────────────────
 export const STAGES = [
-  "Nuevo Registro",
-  "Primer Contacto",
+  "Contáctame ya",
+  "Segundo Intento",
   "Remarketing",
   "Seguimiento",
   "Zoom Agendado",
@@ -146,7 +146,7 @@ export const STAGES = [
   "Negociación",
   "Cierre",
   "Rotación",
-  "Perdido",
+  "Postventa",
 ];
 
 // Pipeline en familia verde/azul/naranja (sin rosas ni violetas).
@@ -156,8 +156,8 @@ export const STAGES = [
 // Gris → estado neutral o terminal.
 // Stone (Rotación) → lead reasignado / en triage entre asesores.
 export const STAGE_COLORS = {
-  "Nuevo Registro":    P.txt3,
-  "Primer Contacto":   P.blue,
+  "Contáctame ya":     P.txt3,
+  "Segundo Intento":   P.blue,
   "Remarketing":       "#FB923C",
   "Seguimiento":       P.amber,
   "Zoom Agendado":     "#3B82F6",
@@ -168,5 +168,5 @@ export const STAGE_COLORS = {
   "Negociación":       P.orange,
   "Cierre":            P.accent,
   "Rotación":          "#A8A29E",
-  "Perdido":           "#64748B",
+  "Postventa":         "#64748B",
 };
