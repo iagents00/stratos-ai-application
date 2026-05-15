@@ -1356,6 +1356,8 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
   const hotLeads = visibleLeads.filter(l => l.hot || l.daysInactive <= 2).length;
   const newLeadsCount = visibleLeads.filter(l => l.isNew).length;
   const nearCloseLeads = visibleLeads.filter(l => l.st === "Negociación" || l.st === "Cierre").length;
+  const zoomsAgendados   = visibleLeads.filter(l => l.st === "Zoom Agendado").length;
+  const zoomsConcretados = visibleLeads.filter(l => l.st === "Zoom Concretado").length;
   const kanbanStages = STAGES.filter(s => s !== "Perdido");
 
   /* Responsive grid columns — 6 columnas en modo full, 5 en compact.
@@ -1409,7 +1411,6 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
         <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16 }}>
           <div>
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
-              <div style={{ width: 8, height: 8, borderRadius: "50%", background: T.accent, boxShadow: `0 0 10px ${T.accent}80` }} />
               <h2 style={{ fontSize: 20, fontWeight: 400, color: isLight ? T.txt : "#FFFFFF", fontFamily: fontDisp, letterSpacing: "-0.025em", margin: 0 }}>
                 CRM{" "}
                 <span style={{ fontWeight: 300, color: isLight ? T.txt3 : "rgba(255,255,255,0.38)" }}>Asesores</span>
@@ -1488,8 +1489,8 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
       {!showMetrics && !isMobile && (
         <div style={{ display: "grid", gridTemplateColumns: co ? "repeat(2, 1fr)" : "repeat(4, 1fr)", gap: 12 }}>
           <KPI T={T} label="Clientes en Pipeline" value={visibleLeads.length} sub={`${hotLeads} activos hoy`} icon={Users} color={T.blue} />
-          <KPI T={T} label="Score Promedio" value={avgScore} sub="+4.8 este mes" icon={Target} color={T.cyan} />
-          <KPI T={T} label="Tasa de Conversión" value="18.4%" sub="+3.2pp este mes" icon={TrendingUp} color={T.accent} />
+          <KPI T={T} label="Score Promedio" value={avgScore} sub={`promedio del pipeline`} icon={Target} color={T.cyan} />
+          <KPI T={T} label="Zooms Agendados" value={zoomsAgendados} sub={`${zoomsConcretados} concretados`} icon={CalendarDays} color={T.accent} />
           <KPI T={T} label="Valor Total Pipeline" value={`$${(totalPipeline/1000000).toFixed(1)}M`} sub={`${nearCloseLeads} en cierre`} icon={DollarSign} color={T.emerald} />
         </div>
       )}
@@ -1588,33 +1589,6 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                   </>
                 )}
               </div>
-              {/* Leyenda de tipos — centrada absolutamente en desktop;
-                  oculta en mobile (no hay espacio para los 4 chips). */}
-              <div style={{
-                position: "absolute", left: "50%", top: "50%",
-                transform: "translate(-50%, -50%)",
-                display: isMobile ? "none" : "flex", alignItems: "center", gap: 14,
-                padding: "5px 14px", borderRadius: 99,
-                background: isLight ? "rgba(15,23,42,0.025)" : "rgba(255,255,255,0.025)",
-                border: `1px solid ${isLight ? "rgba(15,23,42,0.06)" : "rgba(255,255,255,0.06)"}`,
-                pointerEvents: "none",
-              }}>
-                {[
-                  { color: "#34D399", label: "Urgente / Nuevo" },
-                  { color: "#60A5FA", label: "Zoom agendado" },
-                  { color: "#4ADE80", label: "Zoom concretado" },
-                ].map(({ color, label }) => (
-                  <div key={label} style={{ display: "flex", alignItems: "center", gap: 5 }}>
-                    <div style={{
-                      width: 7, height: 7, borderRadius: "50%",
-                      background: color,
-                      boxShadow: `0 0 0 2px ${isLight ? "#FFFFFF" : "#0B0F17"}, 0 0 0 3px ${color}40`,
-                    }} />
-                    <span style={{ fontSize: 10, color: T.txt2, fontFamily: font, fontWeight: 500, letterSpacing: "0.01em" }}>{label}</span>
-                  </div>
-                ))}
-              </div>
-
               {/* Selector de orden — al costado derecho */}
               <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
                 <span style={{ fontSize: 10, color: T.txt3, fontFamily: font, letterSpacing: "0.03em", textTransform: "uppercase", fontWeight: 600 }}>Ordenar</span>
