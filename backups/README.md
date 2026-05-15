@@ -2,14 +2,14 @@
 
 Backups automáticos generados por GitHub Actions cada noche.
 
-## Último backup: `2026-05-14`
+## Último backup: `2026-05-15`
 
 | Tabla | Filas |
 |------|------|
-| profiles | 13 |
-| leads | 293 |
+| profiles | 22 |
+| leads | 334 |
 | audit_log | 1000 |
-| organizations | 2 |
+| organizations | 3 |
 
 ## Restauración
 
