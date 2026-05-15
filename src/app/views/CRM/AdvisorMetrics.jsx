@@ -22,14 +22,14 @@ const IDX_PRIMER_CONTACTO = STAGE_INDEX["Primer Contacto"];
 const IDX_SEGUIMIENTO     = STAGE_INDEX["Seguimiento"];
 const IDX_ZOOM_CONCRETADO = STAGE_INDEX["Zoom Concretado"];
 
-const PERIODS = [
+export const PERIODS = [
   { id: "today", label: "Hoy" },
   { id: "week",  label: "Semana" },
   { id: "month", label: "Mes" },
   { id: "all",   label: "Todo" },
 ];
 
-function periodStart(periodId) {
+export function periodStart(periodId) {
   if (periodId === "all") return null;
   const now = new Date();
   if (periodId === "today") {
@@ -48,7 +48,7 @@ function periodStart(periodId) {
   return null;
 }
 
-function leadInPeriod(lead, startTs) {
+export function leadInPeriod(lead, startTs) {
   if (startTs === null) return true;
   if (!lead.created_at) return false;
   const t = new Date(lead.created_at).getTime();
@@ -62,7 +62,7 @@ function stageIdx(stage) {
 
 // 7 indicadores pedidos en el ticket. Cada uno recibe el array de leads ya
 // filtrado por período + asesor y devuelve un número.
-const INDICATORS = [
+export const INDICATORS = [
   {
     key: "assigned",
     label: "Asignados",
