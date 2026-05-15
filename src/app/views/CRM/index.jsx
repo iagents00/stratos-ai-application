@@ -28,6 +28,7 @@ import {
   History as HistoryIcon
 } from "lucide-react";
 import { useIsMobile } from "../../../hooks/useViewport";
+import { useClient } from "../../../hooks/useClient";
 import { P, LP, font, fontDisp, STAGES } from "../../../design-system/tokens";
 import { G, KPI, Pill, Ico, ChipSelect } from "../../SharedComponents";
 import { parseBudget, formatBudget, buildTelegramSummary, fmtNow, genId } from "../../../lib/utils";
@@ -56,6 +57,7 @@ import {
 
 function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () => {}, autoOpenPriority1 = 0, onAutoOpenHandled, softDeleteLead }) {
   const { user } = useAuth();
+  const { config: clientConfig } = useClient();
   const isMobile = useIsMobile();
   const isLight = theme === "light";
   const T = isLight ? LP : P;
@@ -847,9 +849,17 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
     return [...set].sort((a, b) => a.localeCompare(b, "es"));
   }, [leadsData, customAsesores]);
   const proyectosMaster = useMemo(() => {
-    const set = new Set([...leadsData.map(l => l.p), ...customProyectos].filter(Boolean));
+    // Si el cliente declaró una lista curada en su config (ej. Grupo 28), esa
+    // lista toma prioridad sobre los proyectos derivados de leads existentes.
+    // Duke mantiene defaultProjects=[] → comportamiento histórico intacto.
+    const curated = clientConfig?.crm?.defaultProjects;
+    const useCurated = Array.isArray(curated) && curated.length > 0;
+    const baseSource = useCurated
+      ? [...curated, ...customProyectos]
+      : [...leadsData.map(l => l.p), ...customProyectos];
+    const set = new Set(baseSource.filter(Boolean));
     return [...set].sort((a, b) => a.localeCompare(b, "es"));
-  }, [leadsData, customProyectos]);
+  }, [leadsData, customProyectos, clientConfig]);
   // Campañas activas de marketing — las 3 campañas vigentes de Facebook Ads
   // están preregistradas para métricas consistentes. El asesor puede crear
   // campañas adicionales desde el modal si aparecen nuevas.
