@@ -203,11 +203,29 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
     });
   }, [buckets, leadsData]);
 
-  // Totales del rango — semántica unificada y coordinada con AdvisorMetrics:
-  // "leads creados dentro del rango que satisfacen el indicador". Equivale a
-  // sumar las barras del chart (bucket sum), pero lo calculamos directo en
-  // rangeLeads para garantizar consistencia entre KPI cards, footer de tabla
-  // y la tabla por asesor (que también opera sobre leadsOfAsesor en período).
+  // ── Dos vistas de totales, ambas reales y coordinadas con el CRM ──────────
+  //
+  // 1) `snapshotTotals` — ESTADO ACTUAL del pipeline completo. Coincide con
+  //    los KPIs del CRM (Pipeline por Etapa, Zooms Totales) porque corre sobre
+  //    TODOS los leads de leadsData sin filtro temporal. Es lo que dirección
+  //    quiere ver al entrar al Comando Directivo.
+  //
+  // 2) `rangeTotals` — FLUJO del período seleccionado. Cuenta solo leads
+  //    creados dentro del rango temporal visible. Equivale a la suma de las
+  //    barras del chart (un lead cae en exactamente un bucket). Esto alimenta
+  //    el footer "Total del rango" de la tabla de evolución y la tabla por
+  //    asesor.
+  //
+  // Las KPI cards muestran el snapshot (estado actual) para que el número de
+  // "Zooms agendados" en el dashboard coincida con el chip "Zoom Agendado 14"
+  // del CRM. El chart y la tabla siguen siendo flow-based porque su propósito
+  // es mostrar evolución temporal.
+  const snapshotTotals = useMemo(() => {
+    const t = {};
+    for (const ind of INDICATORS) t[ind.key] = ind.compute(leadsData);
+    return t;
+  }, [leadsData]);
+
   const rangeTotals = useMemo(() => {
     const t = {};
     for (const ind of INDICATORS) t[ind.key] = ind.compute(rangeLeads);
@@ -243,7 +261,7 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
       ? (rangeTotals.followUps / totalLeads).toFixed(1)
       : "0.0";
 
-    const maxIndVal = Math.max(1, ...INDICATORS.map(i => rangeTotals[i.key] || 0));
+    const maxIndVal = Math.max(1, ...INDICATORS.map(i => snapshotTotals[i.key] || 0));
 
     // ── Construcción del HTML ──────────────────────────────────────────────
     const html = `<!DOCTYPE html>
@@ -399,15 +417,39 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
 
     <h1>Reporte ejecutivo de pipeline</h1>
     <p class="subtitle">
-      Rango analizado: <strong>${htmlEscape(periodSpan)}</strong> ·
-      ${totalLeads} leads creados ·
-      ${asesores.length} asesores activos
+      Pipeline en vivo: <strong>${leadsData.length}</strong> leads totales ·
+      ${asesores.length} asesores activos en el rango ·
+      Rango analizado: <strong>${htmlEscape(periodSpan)}</strong>
     </p>
 
-    <h2>Resumen ejecutivo</h2>
+    <h2>Pipeline actual</h2>
     <div class="summary">
       <div class="stat">
-        <div class="label">Leads totales</div>
+        <div class="label">Pipeline total</div>
+        <div class="value">${leadsData.length}</div>
+        <div class="sub">leads en el CRM</div>
+      </div>
+      <div class="stat">
+        <div class="label">Zooms agendados</div>
+        <div class="value">${snapshotTotals.zoomScheduled}</div>
+        <div class="sub">estado actual</div>
+      </div>
+      <div class="stat">
+        <div class="label">Zooms realizados</div>
+        <div class="value">${snapshotTotals.zoomDone}</div>
+        <div class="sub">estado actual</div>
+      </div>
+      <div class="stat">
+        <div class="label">Activos post-Zoom</div>
+        <div class="value">${snapshotTotals.activePostZoom}</div>
+        <div class="sub">estado actual</div>
+      </div>
+    </div>
+
+    <h2>Resumen del rango — ${htmlEscape(granularity.label)}</h2>
+    <div class="summary">
+      <div class="stat">
+        <div class="label">Leads nuevos</div>
         <div class="value">${totalLeads}</div>
         <div class="sub">creados en el rango</div>
       </div>
@@ -419,7 +461,7 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
       <div class="stat">
         <div class="label">Conversión a Zoom</div>
         <div class="value">${tasaZoomSobreCal}%</div>
-        <div class="sub">de leads calificados</div>
+        <div class="sub">zooms realizados / calificados</div>
       </div>
       <div class="stat">
         <div class="label">Seguim. por lead</div>
@@ -428,10 +470,10 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
       </div>
     </div>
 
-    <h2>Indicadores clave</h2>
+    <h2>Indicadores clave — estado actual del CRM</h2>
     <div class="ind-grid">
       ${INDICATORS.map(ind => {
-        const val = rangeTotals[ind.key] || 0;
+        const val = snapshotTotals[ind.key] || 0;
         const w = Math.round((val / maxIndVal) * 100);
         return `
         <div class="ind">
@@ -820,16 +862,21 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
         </div>
       </G>
 
-      {/* ── 3) KPI cards — totales del rango ─────────────────────────────── */}
-      <div style={{
-        display: "grid",
-        gridTemplateColumns: "repeat(auto-fit, minmax(176px, 1fr))",
-        gap: 12,
-      }}>
+      {/* ── 3) KPI cards — snapshot del pipeline actual (coordina con CRM) ── */}
+      <div>
+        <p style={{ fontSize: 11, color: T.txt3, fontFamily: font, margin: "0 0 8px 4px", letterSpacing: "0.01em" }}>
+          <strong style={{ color: T.txt2, fontFamily: fontDisp, fontWeight: 700 }}>Pipeline actual</strong> · sobre el total de {leadsData.length} leads del CRM en vivo
+        </p>
+        <div style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(176px, 1fr))",
+          gap: 12,
+        }}>
         {INDICATORS.map(ind => {
           const Icon = ICONS_BY_KEY[ind.key] || Activity;
           const c = COLORS_BY_KEY[ind.key] || accent;
-          const val = rangeTotals[ind.key];
+          const val = snapshotTotals[ind.key];
+          const rangeVal = rangeTotals[ind.key];
           return (
             <div
               key={ind.key}
@@ -876,11 +923,12 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
                 fontSize: 10, color: T.txt3, fontFamily: font,
                 letterSpacing: "0.01em",
               }}>
-                En este rango · {granularity.label.toLowerCase()}
+                <strong style={{ color: c, fontWeight: 700 }}>+{rangeVal}</strong> en {granularity.label.toLowerCase()}
               </span>
             </div>
           );
         })}
+        </div>
       </div>
 
       {/* ── 4) Desglose por asesor (coordinado con CRM) ─────────────────── */}
