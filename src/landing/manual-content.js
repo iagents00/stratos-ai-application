@@ -110,7 +110,7 @@ export const MANUAL_SECTIONS = [
         'Entra al módulo CRM desde el sidebar.',
         'Da clic en el botón "Agregar Cliente" (arriba a la derecha).',
         'Llena los campos: Nombre, Teléfono, Email, Presupuesto, Proyecto de interés.',
-        'Selecciona la etapa inicial (normalmente "Nuevo Registro" o "Primer Contacto").',
+        'Selecciona la etapa inicial (normalmente "Contáctame ya" o "Segundo Intento").',
         'Si tú lo vas a atender, asegúrate de que tu nombre esté en "Asesor".',
         'Da clic en "Guardar".',
       ]},
@@ -159,7 +159,7 @@ export const MANUAL_SECTIONS = [
     category: 'pipeline',
     icon: 'MoveRight',
     title: '¿Cómo muevo a un cliente entre etapas?',
-    summary: 'Avanzar un cliente en el pipeline (de Primer Contacto a Negociación, por ejemplo).',
+    summary: 'Avanzar un cliente en el pipeline (de Segundo Intento a Negociación, por ejemplo).',
     tags: ['pipeline', 'etapa', 'mover', 'cambiar', 'arrastrar'],
     content: [
       { type: 'p', text: 'Hay dos formas de cambiar la etapa de un cliente:' },
@@ -183,13 +183,13 @@ export const MANUAL_SECTIONS = [
     category: 'pipeline',
     icon: 'Workflow',
     title: '¿Qué significa cada etapa del pipeline?',
-    summary: 'Cuándo usar cada etapa: Nuevo Registro, Primer Contacto, Zoom, Visita, Negociación, Cierre.',
+    summary: 'Cuándo usar cada etapa: Contáctame ya, Segundo Intento, Zoom, Visita, Negociación, Cierre.',
     tags: ['pipeline', 'etapas', 'estados', 'significado', 'embudo'],
     content: [
       { type: 'p', text: 'El pipeline tiene 9 etapas. Te explicamos cuándo usar cada una:' },
       { type: 'list', items: [
-        'Nuevo Registro: el cliente acaba de entrar al sistema. Aún no hablaste con él.',
-        'Primer Contacto: ya hiciste el primer contacto (llamada, WhatsApp).',
+        'Contáctame ya: el cliente acaba de entrar al sistema. Aún no hablaste con él.',
+        'Segundo Intento: ya hiciste el primer contacto (llamada, WhatsApp).',
         'Seguimiento: estás manteniendo el interés del cliente con info y conversación.',
         'Zoom Agendado: cliente aceptó una videollamada. Tienes fecha y hora.',
         'Zoom Concretado: ya tuviste la videollamada y mostraste opciones.',
@@ -198,7 +198,7 @@ export const MANUAL_SECTIONS = [
         'Negociación: están afinando precio, condiciones, términos.',
         'Cierre: firmó. ¡Felicidades!',
       ]},
-      { type: 'p', text: 'También está la etapa "Perdido" para clientes que decidieron no avanzar. Si más adelante regresan, los puedes mover de regreso a otra etapa.' },
+      { type: 'p', text: 'También está la etapa "Postventa" para clientes en seguimiento posterior a una decisión final. Si necesitan retomarse, los puedes mover de regreso a otra etapa.' },
     ],
   },
 

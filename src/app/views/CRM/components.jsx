@@ -40,11 +40,11 @@ const calculateLeadScore = (lead) => {
   let score = 0;
 
   // 1. Stage progression — 0 a 35 pts
-  const stages = ["Nuevo Registro","Primer Contacto","Remarketing","Seguimiento","Zoom Agendado",
-    "No Show","Zoom Concretado","Visita Agendada","Visita Concretada","Negociación","Cierre","Perdido"];
-  const stageIdx = stages.indexOf(lead.st ?? "Nuevo Registro");
-  // Excluir "Perdido" del score positivo
-  if (stageIdx >= 0 && lead.st !== "Perdido") {
+  const stages = ["Contáctame ya","Segundo Intento","Remarketing","Seguimiento","Zoom Agendado",
+    "No Show","Zoom Concretado","Visita Agendada","Visita Concretada","Negociación","Cierre","Postventa"];
+  const stageIdx = stages.indexOf(lead.st ?? "Contáctame ya");
+  // Excluir "Postventa" del score positivo
+  if (stageIdx >= 0 && lead.st !== "Postventa") {
     score += Math.round((stageIdx / 10) * 35);
   }
 
@@ -82,8 +82,8 @@ const calculateLeadScore = (lead) => {
   // 6. HOT bonus — +10 pts
   if (lead.hot) score += 10;
 
-  // "Perdido" — cap en 15
-  if (lead.st === "Perdido") score = Math.min(score, 15);
+  // "Postventa" — cap en 15
+  if (lead.st === "Postventa") score = Math.min(score, 15);
 
   return Math.max(0, Math.min(100, Math.round(score)));
 };
@@ -4198,7 +4198,7 @@ const AnalysisDrawer = ({ lead, onClose, oc, onUpdate, onSwitchTab, T = P }) => 
   }
 
   // SLA primer contacto — ≤ 5 min (Protocolo Duke del Caribe)
-  if (lead.st === "Nuevo Registro" || lead.isNew) {
+  if (lead.st === "Contáctame ya" || lead.isNew) {
     nextActions.push({
       priority: "SLA", color: T.accent, icon: Timer,
       title: "Primer contacto — regla de los 5 minutos",
@@ -4255,7 +4255,7 @@ const AnalysisDrawer = ({ lead, onClose, oc, onUpdate, onSwitchTab, T = P }) => 
   }
 
   // Score alto — oportunidad de mover etapa
-  if (sc >= 72 && !["Negociación","Cierre","Perdido"].includes(lead.st)) {
+  if (sc >= 72 && !["Negociación","Cierre","Postventa"].includes(lead.st)) {
     nextActions.push({
       priority: "OPORTUNIDAD", color: T.violet, icon: Target,
       title: `Score ${sc} — mover a la siguiente etapa`,
@@ -4265,7 +4265,7 @@ const AnalysisDrawer = ({ lead, onClose, oc, onUpdate, onSwitchTab, T = P }) => 
   }
 
   // BANT incompleto — calificar
-  if (bantScore < 3 && !["Perdido","Nuevo Registro"].includes(lead.st)) {
+  if (bantScore < 3 && !["Postventa","Contáctame ya"].includes(lead.st)) {
     nextActions.push({
       priority: "CALIFICAR", color: T.cyan, icon: ListChecks,
       title: `BANT incompleto — ${bantScore}/4 criterios`,

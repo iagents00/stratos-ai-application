@@ -182,7 +182,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
   }, []);
   const [budgetMenuOpen, setBudgetMenuOpen] = useState(false);
   const [stageMenuOpen, setStageMenuOpen]   = useState(false);
-  const [newLead, setNewLead]           = useState({ n: "", asesor: canSeeAll ? "" : (user?.name || ""), phone: "", email: "", budget: "", p: "", campana: "", source: "manual", st: "Nuevo Registro", nextAction: "", notas: "" });
+  const [newLead, setNewLead]           = useState({ n: "", asesor: canSeeAll ? "" : (user?.name || ""), phone: "", email: "", budget: "", p: "", campana: "", source: "manual", st: "Contáctame ya", nextAction: "", notas: "" });
   // ── Detección de duplicados en alta ────────────────────────────────────
   // Cuando el asesor escribe phone o email, llamamos a la RPC find_lead_duplicate
   // (migración 013) con debounce. Si encuentra un lead existente en la misma
@@ -1007,7 +1007,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
       name:             draft.n.trim(),
       phone:            draft.phone || null,
       email:            draft.email || null,
-      stage:            draft.st || "Nuevo Registro",
+      stage:            draft.st || "Contáctame ya",
       score:            5,
       hot:              false,
       is_new:           true,
@@ -1032,10 +1032,10 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
 
     // ── Entry local (lo que se pinta en la UI) ─────────────────────────
     const newEntry = {
-      id: localId, ...draft, st: draft.st || "Nuevo Registro",
+      id: localId, ...draft, st: draft.st || "Contáctame ya",
       sc: 5,
       source: draft.source || "manual",
-      tag: draft.tag || draft.st || "Nuevo Registro", hot: false, isNew: true, fechaIngreso: dateStr,
+      tag: draft.tag || draft.st || "Contáctame ya", hot: false, isNew: true, fechaIngreso: dateStr,
       bio: "Cliente recién registrado. Pendiente primer contacto.", risk: "Sin información suficiente aún.",
       friction: "Medio",
       nextAction: draft.nextAction?.trim() || "Primer contacto en las próximas 24 horas",
@@ -1060,7 +1060,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
     // 1. Cerrar modal y limpiar el draft → el botón "Registrar" desaparece
     //    de la pantalla. Imposible hacer doble clic a partir de aquí.
     setAddingLead(false);
-    setNewLead({ n: "", asesor: canSeeAll ? "" : (user?.name || ""), phone: "", email: "", budget: "", p: "", campana: "", source: "manual", st: "Nuevo Registro", nextAction: "", notas: "" });
+    setNewLead({ n: "", asesor: canSeeAll ? "" : (user?.name || ""), phone: "", email: "", budget: "", p: "", campana: "", source: "manual", st: "Contáctame ya", nextAction: "", notas: "" });
     // El lead ya entró al espejo local (saveLead garantiza eso síncrono),
     // así que el draft de recovery ya no tiene utilidad — lo limpiamos.
     clearLeadDraft();
@@ -1357,7 +1357,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
   const nearCloseLeads = visibleLeads.filter(l => l.st === "Negociación" || l.st === "Cierre").length;
   const zoomsAgendados   = visibleLeads.filter(l => l.st === "Zoom Agendado").length;
   const zoomsConcretados = visibleLeads.filter(l => l.st === "Zoom Concretado").length;
-  const kanbanStages = STAGES.filter(s => s !== "Perdido");
+  const kanbanStages = STAGES.filter(s => s !== "Postventa");
 
   /* Responsive grid columns — 6 columnas en modo full, 5 en compact.
      · Cliente: avatar + nombre + tags + sub-línea (asesor · proyecto · fecha).
@@ -2603,7 +2603,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                 </label>
                 {/* Trigger button */}
                 {(() => {
-                  const stageVal = newLead.st || "Nuevo Registro";
+                  const stageVal = newLead.st || "Contáctame ya";
                   const stageCol = stgC[stageVal] || T.accent;
                   const stageTitleC = isLight ? `color-mix(in srgb, ${stageCol} 55%, #0B1220 45%)` : stageCol;
                   return (
@@ -3945,7 +3945,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
       {(() => {
         // Cola por agente, derivada del pipeline real
         const reactivarQueue   = visibleLeads.filter(l => (l.daysInactive || 0) >= 5).sort((a, b) => (b.daysInactive || 0) - (a.daysInactive || 0));
-        const seguimientoQueue = visibleLeads.filter(l => ["Primer Contacto", "Seguimiento"].includes(l.st) && !l.hot).sort((a, b) => b.sc - a.sc);
+        const seguimientoQueue = visibleLeads.filter(l => ["Segundo Intento", "Seguimiento"].includes(l.st) && !l.hot).sort((a, b) => b.sc - a.sc);
         const callcenterQueue  = visibleLeads.filter(l => l.hot || l.st === "Zoom Agendado").sort((a, b) => (b.hot ? 1 : 0) - (a.hot ? 1 : 0) || b.sc - a.sc);
         const calificarQueue   = visibleLeads.filter(l => l.isNew).sort((a, b) => (b.id || 0) - (a.id || 0));
 
