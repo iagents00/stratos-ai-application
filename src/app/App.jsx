@@ -99,7 +99,7 @@ const LP = {
    MAIN APP
    ════════════════════════════════════════ */
 export default function App() {
-  const { user, login, logout, upgradeToOnline } = useAuth();
+  const { user, login, logout, upgradeToOnline, bootHydrating } = useAuth();
   const isAsesorRole     = !["super_admin","admin","director","ceo"].includes(user?.role);
   const [v, setV]        = useState(isAsesorRole ? "c" : "d");
   const [co, setCo]      = useState(false);
@@ -587,7 +587,39 @@ export default function App() {
     ::-webkit-scrollbar-thumb{background:${T.border};border-radius:4px}
   `, [T.accent, T.border]);
 
-  if (!user) return <LoginScreen onLogin={login} />;
+  // Gate de auth:
+  //  · user presente → render normal de la app.
+  //  · user null + bootHydrating → splash (estamos validando una sesión
+  //    probable: hay JWT en localStorage pero la caché Stratos expiró).
+  //    Esto evita el flash al LoginScreen que veía el usuario en cada F5.
+  //  · user null + !bootHydrating → LoginScreen (sin sesión, login real).
+  if (!user) {
+    if (bootHydrating) {
+      return (
+        <div style={{
+          position: "fixed", inset: 0, background: T.bg,
+          display: "flex", alignItems: "center", justifyContent: "center",
+          flexDirection: "column", gap: 16,
+          fontFamily: font, color: T.txt,
+        }}>
+          <div style={{
+            width: 56, height: 56, borderRadius: "50%",
+            border: `2px solid ${T.border}`,
+            borderTopColor: T.accent,
+            animation: "stratosSpin 0.9s linear infinite",
+          }} />
+          <div style={{
+            fontSize: 12, letterSpacing: "0.08em", textTransform: "uppercase",
+            color: T.txt2, fontWeight: 500,
+          }}>
+            Stratos AI
+          </div>
+          <style>{`@keyframes stratosSpin { to { transform: rotate(360deg); } }`}</style>
+        </div>
+      );
+    }
+    return <LoginScreen onLogin={login} />;
+  }
 
   /* ── Sidebar helpers ── */
   const GOAL        = 48_000_000;

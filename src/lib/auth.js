@@ -116,6 +116,62 @@ export function seedDemoUser() {
   // No-op — usuarios viven en Supabase (o modo demo local)
 }
 
+/**
+ * readSessionFromStorageSync() — lectura SÍNCRONA de la sesión cacheada.
+ * Usada por AuthContext para inicializar `user` en el primer render del F5,
+ * evitando que el usuario vea el LoginScreen mientras getStoredSession() hace
+ * su trabajo asíncrono (3-5 s).
+ *
+ * Prioridad: demo > offline > caché Stratos (24h TTL).
+ *
+ * IMPORTANTE: nunca toca la red. Si el resultado no coincide con la sesión
+ * real de Supabase, getStoredSession() lo corrige al terminar la hidratación
+ * asíncrona en background.
+ */
+export function readSessionFromStorageSync() {
+  try {
+    if (sessionStorage.getItem('stratos_demo') === '1') {
+      return DEMO_USER
+    }
+  } catch (_) { /* sessionStorage bloqueado */ }
+
+  try {
+    const offlineRaw = localStorage.getItem('stratos_offline_user')
+    if (offlineRaw) {
+      const parsed = JSON.parse(offlineRaw)
+      if (parsed && parsed.id) return parsed
+    }
+  } catch (_) { /* noop */ }
+
+  try {
+    const cacheRaw = localStorage.getItem(SESSION_CACHE_KEY)
+    if (!cacheRaw) return null
+    const { profile, savedAt } = JSON.parse(cacheRaw)
+    if (!profile || !profile.id) return null
+    if (Date.now() - savedAt > CACHE_TTL_MS) return null
+    return { ...profile, _fromCache: true }
+  } catch (_) {
+    return null
+  }
+}
+
+/**
+ * hasSupabaseAuthToken() — detecta SÍNCRONAMENTE si hay un JWT de Supabase
+ * en localStorage. Indica "probablemente hay sesión válida", aunque la caché
+ * Stratos haya expirado (24h) o el usuario sea de otro dispositivo.
+ *
+ * Usado para decidir si mostrar splash (hidratación probable) vs LoginScreen
+ * (sin sesión) durante el primer render tras un F5.
+ */
+export function hasSupabaseAuthToken() {
+  try {
+    for (const k of Object.keys(localStorage)) {
+      if (/^sb-.*-auth-token$/.test(k)) return true
+    }
+  } catch (_) { /* noop */ }
+  return false
+}
+
 export async function signIn(email, password) {
   // Modo demo local — siempre funciona sin necesitar Supabase
   if (email.trim().toLowerCase() === DEMO_EMAIL && password === DEMO_PASSWORD) {

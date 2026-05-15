@@ -47,6 +47,9 @@
 // v13 — alta detecta duplicados (RPC find_lead_duplicate) y avisa quién
 //       tiene al cliente antes de registrar.
 // v12 — performance: removeEventListener cleanup + useMemo AuthContext.
+// v21 — F5 instantáneo: hidratación SÍNCRONA de sesión desde caché +
+//        splash en vez de LoginScreen mientras se valida sesión probable.
+//        Elimina el flash a login y los 2 s de espera de los clientes.
 // v20 — nueva etapa "Rotación" en el pipeline (antes de Perdido).
 // v19 — quitar source badge de la fila (va a la línea de meta) +
 //        centrar headers y celdas de Etapa/Seguim/Score (simetría).
@@ -56,7 +59,7 @@
 // v10 — limpieza de tokens legacy stratos.supabase.*.
 // v9 — destrabar login: cuelgue infinito por bundle viejo cacheado.
 // v8 — orden por defecto del CRM: fechaIngreso desc (nuevos arriba).
-const CACHE_VERSION = 'stratos-v20';
+const CACHE_VERSION = 'stratos-v21';
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 
