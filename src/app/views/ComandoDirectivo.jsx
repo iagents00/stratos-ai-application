@@ -24,8 +24,8 @@ import {
   RefreshCw, Download,
 } from "lucide-react";
 import {
-  LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer,
-  CartesianGrid,
+  AreaChart, Area, XAxis, YAxis, Tooltip,
+  ResponsiveContainer, CartesianGrid, ReferenceLine,
 } from "recharts";
 import { P, LP, font, fontDisp } from "../../design-system/tokens";
 import { G } from "../SharedComponents";
@@ -66,30 +66,41 @@ const COLORS_BY_KEY = {
 };
 
 const GRANULARITIES = [
-  { id: "day",   label: "Día",    buckets: 14, fmtCsv: "yyyy-mm-dd" },
-  { id: "week",  label: "Semana", buckets: 8,  fmtCsv: "yyyy-mm-dd" },
-  { id: "month", label: "Mes",    buckets: 6,  fmtCsv: "yyyy-mm"    },
+  { id: "day",   label: "Día",    defaultCount: 7,  ranges: [7, 14, 30, 60],  unit: "días" },
+  { id: "week",  label: "Semana", defaultCount: 4,  ranges: [4, 8, 12, 26],   unit: "semanas" },
+  { id: "month", label: "Mes",    defaultCount: 3,  ranges: [3, 6, 12, 24],   unit: "meses" },
 ];
 
-const MES_ABBR = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
+const MES_ABBR     = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
+const MES_FULL     = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
+const DIA_SEM_ABBR = ["Dom","Lun","Mar","Mié","Jue","Vie","Sáb"];
 
 // ── Generación de buckets temporales ────────────────────────────────────────
 // Cada bucket: { key, label (eje X), csvLabel, startTs, endTs }.
 // Los buckets están ordenados de más antiguo a más reciente (izq → der).
-function buildBuckets(granularityId) {
+// El parámetro `count` controla cuántos buckets generar (configurable por el
+// usuario desde los chips de rango), permitiendo zoom in/out sobre el período.
+function buildBuckets(granularityId, count) {
   const now = new Date();
   const buckets = [];
+  const n = Math.max(1, count | 0);
 
   if (granularityId === "day") {
-    for (let i = 13; i >= 0; i--) {
+    for (let i = n - 1; i >= 0; i--) {
       const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i);
       const next = new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1);
       buckets.push({
         key: d.toISOString().slice(0, 10),
-        label: `${d.getDate()} ${MES_ABBR[d.getMonth()]}`,
+        // Eje X: número de día + abbr mes. En rangos cortos también añadimos
+        // día de la semana ("Mar 14") para que se entienda al instante.
+        label: n <= 14
+          ? `${DIA_SEM_ABBR[d.getDay()]} ${d.getDate()}`
+          : `${d.getDate()} ${MES_ABBR[d.getMonth()]}`,
+        tooltipLabel: `${DIA_SEM_ABBR[d.getDay()]} ${d.getDate()} ${MES_FULL[d.getMonth()]}`,
         csvLabel: d.toISOString().slice(0, 10),
         startTs: d.getTime(),
         endTs:   next.getTime(),
+        isCurrent: i === 0,
       });
     }
     return buckets;
@@ -100,30 +111,35 @@ function buildBuckets(granularityId) {
     const day = now.getDay();
     const diff = day === 0 ? 6 : day - 1;
     const thisMonday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - diff);
-    for (let i = 7; i >= 0; i--) {
+    for (let i = n - 1; i >= 0; i--) {
       const start = new Date(thisMonday.getFullYear(), thisMonday.getMonth(), thisMonday.getDate() - i * 7);
       const end   = new Date(start.getFullYear(), start.getMonth(), start.getDate() + 7);
+      const endVisible = new Date(start.getFullYear(), start.getMonth(), start.getDate() + 6);
       buckets.push({
         key: start.toISOString().slice(0, 10),
         label: `${start.getDate()} ${MES_ABBR[start.getMonth()]}`,
+        tooltipLabel: `Sem. ${start.getDate()} ${MES_ABBR[start.getMonth()]} – ${endVisible.getDate()} ${MES_ABBR[endVisible.getMonth()]}`,
         csvLabel: `Semana ${start.toISOString().slice(0, 10)}`,
         startTs: start.getTime(),
         endTs:   end.getTime(),
+        isCurrent: i === 0,
       });
     }
     return buckets;
   }
 
   // month
-  for (let i = 5; i >= 0; i--) {
+  for (let i = n - 1; i >= 0; i--) {
     const start = new Date(now.getFullYear(), now.getMonth() - i, 1);
     const end   = new Date(now.getFullYear(), now.getMonth() - i + 1, 1);
     buckets.push({
       key: `${start.getFullYear()}-${String(start.getMonth() + 1).padStart(2, "0")}`,
       label: `${MES_ABBR[start.getMonth()]} ${String(start.getFullYear()).slice(-2)}`,
+      tooltipLabel: `${MES_FULL[start.getMonth()]} ${start.getFullYear()}`,
       csvLabel: `${start.getFullYear()}-${String(start.getMonth() + 1).padStart(2, "0")}`,
       startTs: start.getTime(),
       endTs:   end.getTime(),
+      isCurrent: i === 0,
     });
   }
   return buckets;
@@ -174,19 +190,33 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
   const { config: clientConfig } = useClient();
   const clientDisplayName = clientConfig?.legalName || clientConfig?.name || "Stratos";
   const [granularityId, setGranularityId] = useState("week");
+  // Cantidad de buckets por granularidad — independiente para cada tab.
+  // Permite que el usuario haga zoom in/out sin perder el contexto al cambiar
+  // de tab. Default = "lo del día/semana/mes" actual + un poco de contexto.
+  const [bucketCounts, setBucketCounts] = useState({ day: 7, week: 4, month: 3 });
   // Visibilidad por serie — toggleable desde la leyenda.
   const [hiddenSeries, setHiddenSeries] = useState({});
 
   const granularity = GRANULARITIES.find(g => g.id === granularityId) || GRANULARITIES[1];
+  const bucketCount = bucketCounts[granularityId] ?? granularity.defaultCount;
+  const setBucketCount = (n) => setBucketCounts(b => ({ ...b, [granularityId]: n }));
 
   // Buckets temporales del período seleccionado.
-  const buckets = useMemo(() => buildBuckets(granularityId), [granularityId]);
+  const buckets = useMemo(
+    () => buildBuckets(granularityId, bucketCount),
+    [granularityId, bucketCount],
+  );
 
   // Para cada bucket: leads filtrados + 7 indicadores ya computados.
   const series = useMemo(() => {
     return buckets.map(b => {
       const inB = leadsInBucket(leadsData, b);
-      const row = { label: b.label, csvLabel: b.csvLabel };
+      const row = {
+        label: b.label,
+        tooltipLabel: b.tooltipLabel,
+        csvLabel: b.csvLabel,
+        isCurrent: b.isCurrent,
+      };
       for (const ind of INDICATORS) row[ind.key] = ind.compute(inB);
       return row;
     });
@@ -727,22 +757,59 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
 
       {/* ── 1) Gráfica grande — evolución en el tiempo ─────────────────────── */}
       <G T={T}>
-        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: 12, marginBottom: 12 }}>
+        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: 12, marginBottom: 14 }}>
           <div>
-            <p style={{ fontSize: 14, fontWeight: 700, color: T.txt, fontFamily: fontDisp, margin: 0, letterSpacing: "-0.012em" }}>
+            <p style={{ fontSize: 14.5, fontWeight: 700, color: T.txt, fontFamily: fontDisp, margin: 0, letterSpacing: "-0.014em" }}>
               Evolución de indicadores
             </p>
-            <p style={{ fontSize: 11, color: T.txt3, fontFamily: font, margin: "2px 0 0" }}>
-              {granularityId === "day"   && "Últimos 14 días, granularidad diaria."}
-              {granularityId === "week"  && "Últimas 8 semanas, granularidad semanal."}
-              {granularityId === "month" && "Últimos 6 meses, granularidad mensual."}
-              {" "}Click en la leyenda para enfocar series.
+            <p style={{ fontSize: 11, color: T.txt3, fontFamily: font, margin: "3px 0 0", lineHeight: 1.5 }}>
+              {granularityId === "day"
+                ? <>Mostrando <strong style={{ color: T.txt2 }}>{bucketCount === 1 ? "hoy" : `los últimos ${bucketCount} días`}</strong> — granularidad diaria.</>
+                : granularityId === "week"
+                ? <>Mostrando <strong style={{ color: T.txt2 }}>{bucketCount === 1 ? "esta semana" : `las últimas ${bucketCount} semanas`}</strong> — granularidad semanal.</>
+                : <>Mostrando <strong style={{ color: T.txt2 }}>{bucketCount === 1 ? "este mes" : `los últimos ${bucketCount} meses`}</strong> — granularidad mensual.</>
+              }
+              {" "}Click en una serie de la leyenda para enfocarla.
             </p>
+          </div>
+
+          {/* Selector de rango — chips por granularidad activa */}
+          <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+            <span style={{ fontSize: 10, fontWeight: 700, color: T.txt3, fontFamily: fontDisp, textTransform: "uppercase", letterSpacing: "0.08em" }}>
+              Rango
+            </span>
+            <div role="radiogroup" aria-label="Rango temporal" style={{
+              display: "inline-flex", gap: 2, padding: 2, borderRadius: 9,
+              background: headerBg, border: `1px solid ${rowBorder}`,
+            }}>
+              {granularity.ranges.map(n => {
+                const active = n === bucketCount;
+                return (
+                  <button
+                    key={n}
+                    role="radio"
+                    aria-checked={active}
+                    onClick={() => setBucketCount(n)}
+                    style={{
+                      padding: "5px 11px", borderRadius: 7,
+                      background: active ? accent : "transparent",
+                      color: active ? (isLight ? "#0B1220" : "#06080F") : T.txt2,
+                      border: "none",
+                      fontSize: 11, fontWeight: active ? 700 : 600,
+                      fontFamily: fontDisp, cursor: "pointer",
+                      letterSpacing: "-0.005em",
+                      fontVariantNumeric: "tabular-nums",
+                      transition: "background 0.14s, color 0.14s",
+                    }}
+                  >{n} {granularity.unit}</button>
+                );
+              })}
+            </div>
           </div>
         </div>
 
-        {/* Leyenda interactiva personalizada — chips toggleables */}
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 14 }}>
+        {/* Leyenda interactiva — chips toggleables */}
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 16 }}>
           {INDICATORS.map(ind => {
             const c = COLORS_BY_KEY[ind.key] || accent;
             const hidden = !!hiddenSeries[ind.key];
@@ -778,61 +845,85 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
           })}
         </div>
 
-        <div style={{ width: "100%", height: 360 }}>
+        <div style={{ width: "100%", height: 380 }}>
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={series} margin={{ top: 10, right: 16, bottom: 8, left: -8 }}>
-              <CartesianGrid strokeDasharray="3 4" stroke={isLight ? "rgba(15,23,42,0.07)" : "rgba(255,255,255,0.05)"} vertical={false} />
+            <AreaChart data={series} margin={{ top: 12, right: 18, bottom: 10, left: -6 }}>
+              <defs>
+                {INDICATORS.map(ind => {
+                  const c = COLORS_BY_KEY[ind.key] || accent;
+                  return (
+                    <linearGradient key={ind.key} id={`grad-${ind.key}`} x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%"   stopColor={c} stopOpacity={visibleIndicators.length <= 2 ? 0.30 : 0.14} />
+                      <stop offset="100%" stopColor={c} stopOpacity={0} />
+                    </linearGradient>
+                  );
+                })}
+              </defs>
+              <CartesianGrid
+                strokeDasharray="3 5"
+                stroke={isLight ? "rgba(15,23,42,0.06)" : "rgba(255,255,255,0.05)"}
+                vertical={false}
+              />
               <XAxis
                 dataKey="label"
                 stroke={T.txt3}
-                tick={{ fill: T.txt3, fontSize: 11, fontFamily: fontDisp }}
+                tick={{ fill: T.txt3, fontSize: 10.5, fontFamily: fontDisp, fontWeight: 500 }}
                 tickLine={false}
-                axisLine={{ stroke: isLight ? "rgba(15,23,42,0.08)" : "rgba(255,255,255,0.05)" }}
-                interval={0}
-                minTickGap={4}
-                angle={granularityId === "day" ? -20 : 0}
-                dy={granularityId === "day" ? 6 : 2}
-                height={granularityId === "day" ? 48 : 28}
+                axisLine={{ stroke: isLight ? "rgba(15,23,42,0.08)" : "rgba(255,255,255,0.06)" }}
+                interval={bucketCount > 20 ? "preserveStartEnd" : 0}
+                minTickGap={6}
+                angle={granularityId === "day" && bucketCount > 14 ? -28 : 0}
+                dy={granularityId === "day" && bucketCount > 14 ? 8 : 4}
+                height={granularityId === "day" && bucketCount > 14 ? 54 : 32}
               />
               <YAxis
                 allowDecimals={false}
                 stroke={T.txt3}
-                tick={{ fill: T.txt3, fontSize: 11, fontFamily: fontDisp }}
+                tick={{ fill: T.txt3, fontSize: 10.5, fontFamily: fontDisp, fontWeight: 500 }}
                 tickLine={false}
                 axisLine={false}
                 width={36}
               />
-              <Tooltip
-                cursor={{ stroke: T.txt3, strokeWidth: 1, strokeDasharray: "3 3" }}
-                contentStyle={{
-                  background: isLight ? "#FFFFFF" : "#0E1320",
-                  border: `1px solid ${isLight ? "rgba(15,23,42,0.10)" : "rgba(255,255,255,0.10)"}`,
-                  borderRadius: 10,
-                  fontFamily: font, fontSize: 12,
-                  boxShadow: "0 8px 24px rgba(0,0,0,0.28)",
-                  padding: "8px 12px",
-                }}
-                labelStyle={{ color: T.txt, fontWeight: 700, fontFamily: fontDisp, marginBottom: 4 }}
-                itemStyle={{ color: T.txt2, padding: "1px 0" }}
-                formatter={(value, _name, entry) => {
-                  const k = entry?.dataKey;
-                  return [value, FULL_LABELS[k] || k];
-                }}
-              />
-              {visibleIndicators.map(ind => (
-                <Line
-                  key={ind.key}
-                  type="monotone"
-                  dataKey={ind.key}
-                  stroke={COLORS_BY_KEY[ind.key] || accent}
-                  strokeWidth={2.2}
-                  dot={{ r: 2.5, strokeWidth: 0, fill: COLORS_BY_KEY[ind.key] || accent }}
-                  activeDot={{ r: 5, strokeWidth: 2, stroke: isLight ? "#FFFFFF" : "#0E1320" }}
-                  isAnimationActive={true}
-                  animationDuration={420}
+              {/* Marca "Hoy" — solo cuando hay más de un bucket, para
+                  no taparlo cuando bucketCount = 1. */}
+              {series.length > 1 && (
+                <ReferenceLine
+                  x={series[series.length - 1].label}
+                  stroke={isLight ? "rgba(15,23,42,0.30)" : "rgba(255,255,255,0.25)"}
+                  strokeDasharray="2 4"
+                  strokeWidth={1}
+                  label={{
+                    value: "Hoy", position: "top",
+                    fill: T.txt2, fontSize: 10, fontWeight: 700,
+                    fontFamily: fontDisp,
+                    dy: -2,
+                  }}
                 />
-              ))}
-            </LineChart>
+              )}
+              <Tooltip
+                cursor={{ stroke: isLight ? "rgba(15,23,42,0.18)" : "rgba(255,255,255,0.18)", strokeWidth: 1, strokeDasharray: "3 4" }}
+                content={(props) => (
+                  <ChartTooltip {...props} isLight={isLight} T={T} hiddenSeries={hiddenSeries} />
+                )}
+              />
+              {visibleIndicators.map(ind => {
+                const c = COLORS_BY_KEY[ind.key] || accent;
+                return (
+                  <Area
+                    key={ind.key}
+                    type="monotone"
+                    dataKey={ind.key}
+                    stroke={c}
+                    strokeWidth={2.4}
+                    fill={`url(#grad-${ind.key})`}
+                    dot={false}
+                    activeDot={{ r: 5, strokeWidth: 2, stroke: isLight ? "#FFFFFF" : "#0E1320", fill: c }}
+                    isAnimationActive={true}
+                    animationDuration={520}
+                  />
+                );
+              })}
+            </AreaChart>
           </ResponsiveContainer>
         </div>
       </G>
@@ -1025,6 +1116,63 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
     </div>
   );
 };
+
+// ── Custom chart tooltip — agrupado, con dots y total ──────────────────────
+function ChartTooltip({ active, payload, label, isLight, T, hiddenSeries }) {
+  if (!active || !payload || payload.length === 0) return null;
+  const firstRow = payload[0]?.payload || {};
+  const fullLabel = firstRow.tooltipLabel || label;
+  // Filtramos las series ocultas (Recharts las omite, pero por defensa).
+  const items = payload
+    .filter(p => !hiddenSeries?.[p.dataKey])
+    .sort((a, b) => (b.value ?? 0) - (a.value ?? 0));
+  const total = items.reduce((s, p) => s + (p.value || 0), 0);
+  return (
+    <div style={{
+      background: isLight ? "#FFFFFF" : "#0E1320",
+      border: `1px solid ${isLight ? "rgba(15,23,42,0.10)" : "rgba(255,255,255,0.10)"}`,
+      borderRadius: 12,
+      padding: "10px 14px",
+      fontFamily: font, fontSize: 12,
+      boxShadow: "0 12px 32px rgba(0,0,0,0.20)",
+      minWidth: 200,
+    }}>
+      <div style={{
+        fontSize: 11, fontWeight: 700, color: T.txt, fontFamily: fontDisp,
+        letterSpacing: "-0.005em",
+        marginBottom: 8, paddingBottom: 7,
+        borderBottom: `1px solid ${isLight ? "rgba(15,23,42,0.06)" : "rgba(255,255,255,0.07)"}`,
+      }}>{fullLabel}</div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+        {items.map(p => (
+          <div key={p.dataKey} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 7, color: T.txt2, fontFamily: fontDisp, fontSize: 11.5, fontWeight: 500 }}>
+              <span style={{ width: 8, height: 8, borderRadius: 2, background: p.color, flexShrink: 0 }} />
+              {FULL_LABELS[p.dataKey] || p.dataKey}
+            </span>
+            <span style={{ fontSize: 12, fontWeight: 700, color: T.txt, fontVariantNumeric: "tabular-nums", fontFamily: fontDisp }}>
+              {p.value || 0}
+            </span>
+          </div>
+        ))}
+      </div>
+      {items.length > 1 && (
+        <div style={{
+          marginTop: 8, paddingTop: 8,
+          borderTop: `1px solid ${isLight ? "rgba(15,23,42,0.06)" : "rgba(255,255,255,0.07)"}`,
+          display: "flex", justifyContent: "space-between", alignItems: "center",
+        }}>
+          <span style={{ fontSize: 10, fontWeight: 700, color: T.txt3, fontFamily: fontDisp, textTransform: "uppercase", letterSpacing: "0.06em" }}>
+            Total
+          </span>
+          <span style={{ fontSize: 13, fontWeight: 800, color: T.txt, fontVariantNumeric: "tabular-nums", fontFamily: fontDisp }}>
+            {total}
+          </span>
+        </div>
+      )}
+    </div>
+  );
+}
 
 // ── Estilos de tabla compartidos ─────────────────────────────────────────────
 function tableHeadStyle(T, align = "right") {
