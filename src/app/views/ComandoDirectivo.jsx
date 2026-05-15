@@ -185,25 +185,7 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
     });
   }, [buckets, leadsData]);
 
-  // Totales del rango visible (suma de cada serie). Para "activePostZoom"
-  // y zooms agendados/realizados que reflejan estado actual, mostramos el
-  // último bucket (= valor actual) en vez de la suma — es lo que realmente
-  // interesa ver al director.
-  const rangeTotals = useMemo(() => {
-    const t = {};
-    const last = series[series.length - 1] || {};
-    for (const ind of INDICATORS) {
-      if (["zoomScheduled","zoomDone","activePostZoom"].includes(ind.key)) {
-        // Snapshot-style — el dato útil es el del bucket más reciente.
-        t[ind.key] = last[ind.key] || 0;
-      } else {
-        t[ind.key] = series.reduce((s, r) => s + (r[ind.key] || 0), 0);
-      }
-    }
-    return t;
-  }, [series]);
-
-  // Asesores únicos con leads en el rango.
+  // Leads creados dentro del rango temporal visible.
   const rangeLeads = useMemo(() => {
     const firstStart = buckets[0]?.startTs ?? null;
     const lastEnd    = buckets[buckets.length - 1]?.endTs ?? null;
@@ -214,6 +196,17 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
       return !Number.isNaN(t) && t >= firstStart && t < lastEnd;
     });
   }, [buckets, leadsData]);
+
+  // Totales del rango — semántica unificada y coordinada con AdvisorMetrics:
+  // "leads creados dentro del rango que satisfacen el indicador". Equivale a
+  // sumar las barras del chart (bucket sum), pero lo calculamos directo en
+  // rangeLeads para garantizar consistencia entre KPI cards, footer de tabla
+  // y la tabla por asesor (que también opera sobre leadsOfAsesor en período).
+  const rangeTotals = useMemo(() => {
+    const t = {};
+    for (const ind of INDICATORS) t[ind.key] = ind.compute(rangeLeads);
+    return t;
+  }, [rangeLeads]);
 
   // ── Export — Reporte ejecutivo HTML (imprimible / convertible a PDF) ──────
   // Genera un documento self-contained con fondo blanco, tipografía limpia y
@@ -460,7 +453,7 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
       </tbody>
       <tfoot>
         <tr>
-          <td>Total / Estado actual</td>
+          <td>Total del rango</td>
           ${INDICATORS.map(i => `<td>${rangeTotals[i.key] || 0}</td>`).join("")}
         </tr>
       </tfoot>
@@ -704,7 +697,6 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
           const Icon = ICONS_BY_KEY[ind.key] || Activity;
           const c = COLORS_BY_KEY[ind.key] || accent;
           const val = rangeTotals[ind.key];
-          const isSnapshot = ["zoomScheduled","zoomDone","activePostZoom"].includes(ind.key);
           return (
             <div
               key={ind.key}
@@ -751,7 +743,7 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
                 fontSize: 10, color: T.txt3, fontFamily: font,
                 letterSpacing: "0.01em",
               }}>
-                {isSnapshot ? "Estado actual del pipeline" : `Acumulado · ${granularity.label.toLowerCase()}`}
+                En este rango · {granularity.label.toLowerCase()}
               </span>
             </div>
           );
