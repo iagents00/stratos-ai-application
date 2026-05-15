@@ -18,7 +18,7 @@
  */
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Send, Check, X, ExternalLink, MessageCircle, RefreshCw, User, Bot } from "lucide-react";
-import { P, font, fontDisp } from "../../design-system/tokens";
+import { P, LP, font, fontDisp } from "../../design-system/tokens";
 import { G, Pill } from "../SharedComponents";
 import { useAuth } from "../../hooks/useAuth";
 import {
@@ -38,8 +38,10 @@ const ROLE_LABEL = {
 
 const BOT_USERNAME = import.meta.env.VITE_TELEGRAM_BOT_USERNAME || "";
 
-export default function Profile() {
+export default function Profile({ theme = "dark", T: Tprop }) {
   const { user } = useAuth();
+  const isLight = theme === "light";
+  const T = Tprop || (isLight ? LP : P);
 
   return (
     <div style={{ padding: "32px 28px 80px", maxWidth: 760, margin: "0 auto", fontFamily: font }}>
@@ -48,7 +50,7 @@ export default function Profile() {
           margin: "0 0 8px",
           fontSize: 11, fontWeight: 700, letterSpacing: "0.14em",
           textTransform: "uppercase",
-          color: "rgba(255,255,255,0.36)",
+          color: isLight ? T.txt3 : "rgba(255,255,255,0.36)",
           fontFamily: fontDisp,
         }}>
           Perfil
@@ -56,19 +58,19 @@ export default function Profile() {
         <h1 style={{
           margin: "0 0 6px",
           fontSize: 30, fontWeight: 300, letterSpacing: "-0.02em",
-          color: P.txt, fontFamily: fontDisp,
+          color: T.txt, fontFamily: fontDisp,
         }}>
           {user?.name || "Sin nombre"}
         </h1>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <span style={{ fontSize: 13, color: P.txt2 }}>{user?.email}</span>
-          <span style={{ color: P.txt3 }}>·</span>
-          <Pill color={P.violet}>{ROLE_LABEL[user?.role] || user?.role}</Pill>
+          <span style={{ fontSize: 13, color: T.txt2 }}>{user?.email}</span>
+          <span style={{ color: T.txt3 }}>·</span>
+          <Pill color={T.violet} isLight={isLight}>{ROLE_LABEL[user?.role] || user?.role}</Pill>
         </div>
       </div>
 
-      <ConnectTelegramPanel />
-      <RecentBotActivity />
+      <ConnectTelegramPanel T={T} isLight={isLight} />
+      <RecentBotActivity T={T} isLight={isLight} />
     </div>
   );
 }
@@ -77,7 +79,7 @@ export default function Profile() {
 /*  Conectar Telegram                                                       */
 /* ─────────────────────────────────────────────────────────────────────── */
 
-function ConnectTelegramPanel() {
+function ConnectTelegramPanel({ T = P, isLight = false }) {
   const [status, setStatus] = useState({ loading: true, paired: false, pairedAt: null });
   const [busy, setBusy]     = useState(false);
   const [errorMsg, setErrorMsg] = useState(null);
@@ -157,52 +159,53 @@ function ConnectTelegramPanel() {
 
   if (status.loading) {
     return (
-      <G>
-        <div style={{ padding: 8, color: P.txt3, fontSize: 13 }}>Cargando…</div>
+      <G T={T}>
+        <div style={{ padding: 8, color: T.txt3, fontSize: 13 }}>Cargando…</div>
       </G>
     );
   }
 
   return (
-    <G style={{ padding: 24 }}>
+    <G T={T} style={{ padding: 24 }}>
       <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 6 }}>
         <div style={{
           width: 40, height: 40, borderRadius: 12,
-          background: `${P.accent}14`, border: `1px solid ${P.accent}2A`,
+          background: `${T.accent}14`, border: `1px solid ${T.accent}2A`,
           display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
         }}>
-          <Send size={18} color={P.accent} strokeWidth={1.8} />
+          <Send size={18} color={T.accent} strokeWidth={1.8} />
         </div>
         <div style={{ minWidth: 0, flex: 1 }}>
           <h2 style={{
             margin: "0 0 2px",
             fontSize: 17, fontWeight: 600, letterSpacing: "-0.01em",
-            color: P.txt, fontFamily: fontDisp,
+            color: T.txt, fontFamily: fontDisp,
           }}>
             Conectar Telegram
           </h2>
-          <p style={{ margin: 0, fontSize: 12, color: P.txt2 }}>
+          <p style={{ margin: 0, fontSize: 12, color: T.txt2 }}>
             Gestiona tus leads desde el chat del bot de Stratos.
           </p>
         </div>
-        {status.paired && <Pill color={P.accent}>Conectado</Pill>}
+        {status.paired && <Pill color={T.accent} isLight={isLight}>Conectado</Pill>}
       </div>
 
-      <div style={{ marginTop: 18, paddingTop: 18, borderTop: `1px solid ${P.border}` }}>
+      <div style={{ marginTop: 18, paddingTop: 18, borderTop: `1px solid ${T.border}` }}>
         {status.paired ? (
-          <PairedView pairedAt={status.pairedAt} onUnpair={handleUnpair} unpairing={busy} />
+          <PairedView pairedAt={status.pairedAt} onUnpair={handleUnpair} unpairing={busy} T={T} isLight={isLight} />
         ) : manualCode ? (
-          <ManualCodeView code={manualCode} />
+          <ManualCodeView code={manualCode} T={T} isLight={isLight} />
         ) : (
-          <NotPairedView onConnect={handleConnect} busy={busy} />
+          <NotPairedView onConnect={handleConnect} busy={busy} T={T} />
         )}
 
         {errorMsg && (
           <div style={{
             marginTop: 14, padding: "10px 12px",
-            background: "rgba(248,113,113,0.08)", border: "1px solid rgba(248,113,113,0.22)",
+            background: isLight ? "rgba(225,29,72,0.08)" : "rgba(248,113,113,0.08)",
+            border: `1px solid ${isLight ? "rgba(225,29,72,0.28)" : "rgba(248,113,113,0.22)"}`,
             borderRadius: 10,
-            fontSize: 12, color: "#FCA5A5",
+            fontSize: 12, color: isLight ? "#B91C3A" : "#FCA5A5",
           }}>
             {errorMsg}
           </div>
@@ -213,10 +216,10 @@ function ConnectTelegramPanel() {
 }
 
 /* ── Vista por defecto: un botón ── */
-function NotPairedView({ onConnect, busy }) {
+function NotPairedView({ onConnect, busy, T = P }) {
   return (
     <div>
-      <p style={{ margin: "0 0 16px", fontSize: 13, color: P.txt2, lineHeight: 1.55 }}>
+      <p style={{ margin: "0 0 16px", fontSize: 13, color: T.txt2, lineHeight: 1.55 }}>
         {BOT_USERNAME
           ? "Te abrimos Telegram. Solo dale START en el bot — listo."
           : "Genera tu código y mándalo al bot de Telegram para conectarte."}
@@ -229,12 +232,13 @@ function NotPairedView({ onConnect, busy }) {
         style={{
           display: "inline-flex", alignItems: "center", gap: 9,
           padding: "12px 22px", borderRadius: 12,
-          background: busy ? "rgba(110,231,194,0.18)" : P.accent,
+          background: busy ? `${T.accent}30` : T.accent,
           border: "none",
-          color: "#041016",
+          color: "#FFFFFF",
           fontSize: 14, fontWeight: 700, fontFamily: fontDisp, letterSpacing: "0.005em",
           cursor: busy ? "default" : "pointer",
           transition: "all 0.2s",
+          boxShadow: `0 4px 14px ${T.accent}55`,
         }}
       >
         {busy ? "Abriendo…" : (BOT_USERNAME ? "Conectar mi Telegram" : "Generar código")}
@@ -245,24 +249,24 @@ function NotPairedView({ onConnect, busy }) {
 }
 
 /* ── Vista fallback: sin bot username configurado, mostramos código manual ── */
-function ManualCodeView({ code }) {
+function ManualCodeView({ code, T = P, isLight = false }) {
   return (
     <div>
       <p style={{
         margin: "0 0 12px",
         fontSize: 11, fontWeight: 700, letterSpacing: "0.12em",
         textTransform: "uppercase",
-        color: P.txt3, fontFamily: fontDisp,
+        color: T.txt3, fontFamily: fontDisp,
       }}>
         Tu código
       </p>
 
       <div style={{
         padding: "20px 22px",
-        background: `${P.accent}0A`, border: `1px solid ${P.accent}2E`,
+        background: `${T.accent}0A`, border: `1px solid ${T.accent}2E`,
         borderRadius: 14,
         fontSize: 36, fontWeight: 300, letterSpacing: "0.10em",
-        fontFamily: fontDisp, color: P.txt,
+        fontFamily: fontDisp, color: T.txt,
         fontVariantNumeric: "tabular-nums",
         textAlign: "center",
         marginBottom: 14,
@@ -270,20 +274,21 @@ function ManualCodeView({ code }) {
         {code}
       </div>
 
-      <p style={{ margin: "0 0 8px", fontSize: 12.5, color: P.txt2 }}>
+      <p style={{ margin: "0 0 8px", fontSize: 12.5, color: T.txt2 }}>
         Abre el bot en Telegram y envía:
       </p>
       <code style={{
         display: "block", padding: "10px 12px",
-        background: "rgba(255,255,255,0.04)", border: `1px solid ${P.border}`,
+        background: isLight ? "rgba(15,23,42,0.04)" : "rgba(255,255,255,0.04)",
+        border: `1px solid ${T.border}`,
         borderRadius: 8,
         fontSize: 14,
         fontFamily: "ui-monospace, SF Mono, Menlo, monospace",
-        color: P.txt,
+        color: T.txt,
       }}>
         /conectar {code}
       </code>
-      <p style={{ margin: "10px 0 0", fontSize: 11, color: P.txt3 }}>
+      <p style={{ margin: "10px 0 0", fontSize: 11, color: T.txt3 }}>
         Esta pantalla se actualiza sola cuando el bot reciba el código.
       </p>
     </div>
@@ -291,7 +296,7 @@ function ManualCodeView({ code }) {
 }
 
 /* ── Vista: ya pareado ── */
-function PairedView({ pairedAt, onUnpair, unpairing }) {
+function PairedView({ pairedAt, onUnpair, unpairing, T = P, isLight = false }) {
   const fechaTxt = pairedAt
     ? new Date(pairedAt).toLocaleDateString("es-MX", {
         day: "numeric", month: "long", year: "numeric",
@@ -304,16 +309,20 @@ function PairedView({ pairedAt, onUnpair, unpairing }) {
     }
   };
 
+  const dangerColor       = isLight ? "#B91C3A" : "#F87171";
+  const dangerBorder      = isLight ? "rgba(225,29,72,0.34)" : "rgba(248,113,113,0.32)";
+  const dangerHoverBg     = isLight ? "rgba(225,29,72,0.08)" : "rgba(248,113,113,0.08)";
+
   return (
     <div>
       <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
-        <Check size={14} color={P.accent} strokeWidth={2.4} />
-        <span style={{ fontSize: 13, color: P.txt, fontWeight: 600 }}>
+        <Check size={14} color={T.accent} strokeWidth={2.4} />
+        <span style={{ fontSize: 13, color: T.txt, fontWeight: 600 }}>
           Tu Telegram está conectado.
         </span>
       </div>
       {fechaTxt && (
-        <p style={{ margin: "0 0 16px 24px", fontSize: 12, color: P.txt3 }}>
+        <p style={{ margin: "0 0 16px 24px", fontSize: 12, color: T.txt3 }}>
           Conectado desde el {fechaTxt}
         </p>
       )}
@@ -326,10 +335,11 @@ function PairedView({ pairedAt, onUnpair, unpairing }) {
             style={{
               display: "inline-flex", alignItems: "center", gap: 7,
               padding: "10px 16px", borderRadius: 11,
-              background: P.accent, border: "none",
-              color: "#041016",
+              background: T.accent, border: "none",
+              color: "#FFFFFF",
               fontSize: 13, fontWeight: 700, fontFamily: fontDisp,
               cursor: "pointer", transition: "all 0.2s",
+              boxShadow: `0 4px 12px ${T.accent}44`,
             }}
           >
             <Send size={13} strokeWidth={2.2} />
@@ -343,12 +353,12 @@ function PairedView({ pairedAt, onUnpair, unpairing }) {
           style={{
             display: "inline-flex", alignItems: "center", gap: 7,
             padding: "10px 14px", borderRadius: 11,
-            background: "transparent", border: `1px solid rgba(248,113,113,0.32)`,
-            color: "#F87171", fontSize: 12.5, fontWeight: 600, fontFamily: font,
+            background: "transparent", border: `1px solid ${dangerBorder}`,
+            color: dangerColor, fontSize: 12.5, fontWeight: 600, fontFamily: font,
             cursor: unpairing ? "default" : "pointer",
             transition: "all 0.18s",
           }}
-          onMouseEnter={(e) => !unpairing && (e.currentTarget.style.background = "rgba(248,113,113,0.08)")}
+          onMouseEnter={(e) => !unpairing && (e.currentTarget.style.background = dangerHoverBg)}
           onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
         >
           <X size={12} />
@@ -363,7 +373,7 @@ function PairedView({ pairedAt, onUnpair, unpairing }) {
 /*  Últimas acciones desde Telegram                                         */
 /* ─────────────────────────────────────────────────────────────────────── */
 
-function RecentBotActivity() {
+function RecentBotActivity({ T = P, isLight = false }) {
   const [messages, setMessages] = useState([]);
   const [loading, setLoading]   = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -393,31 +403,37 @@ function RecentBotActivity() {
   if (paired === false) return null;
   if (paired === null || loading) {
     return (
-      <G style={{ padding: 20, marginTop: 20 }}>
-        <div style={{ fontSize: 12, color: P.txt3 }}>Cargando actividad…</div>
+      <G T={T} style={{ padding: 20, marginTop: 20 }}>
+        <div style={{ fontSize: 12, color: T.txt3 }}>Cargando actividad…</div>
       </G>
     );
   }
 
+  const violetText = isLight ? "#6D28D9" : "#C084FC";
+  const violetBg   = isLight ? "rgba(124,58,237,0.10)" : "rgba(168,85,247,0.10)";
+  const violetBd   = isLight ? "rgba(124,58,237,0.26)" : "rgba(168,85,247,0.24)";
+  const subtleBg   = isLight ? "rgba(15,23,42,0.03)" : "rgba(255,255,255,0.04)";
+  const subtleHov  = isLight ? "rgba(15,23,42,0.06)" : "rgba(255,255,255,0.08)";
+
   return (
-    <G style={{ padding: 24, marginTop: 20 }}>
+    <G T={T} style={{ padding: 24, marginTop: 20 }}>
       <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 18 }}>
         <div style={{
           width: 40, height: 40, borderRadius: 12,
-          background: "rgba(168,85,247,0.10)", border: "1px solid rgba(168,85,247,0.24)",
+          background: violetBg, border: `1px solid ${violetBd}`,
           display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
         }}>
-          <MessageCircle size={18} color="#C084FC" strokeWidth={1.8} />
+          <MessageCircle size={18} color={violetText} strokeWidth={1.8} />
         </div>
         <div style={{ minWidth: 0, flex: 1 }}>
           <h2 style={{
             margin: "0 0 2px",
             fontSize: 17, fontWeight: 600, letterSpacing: "-0.01em",
-            color: P.txt, fontFamily: fontDisp,
+            color: T.txt, fontFamily: fontDisp,
           }}>
             Últimas acciones desde Telegram
           </h2>
-          <p style={{ margin: 0, fontSize: 12, color: P.txt2 }}>
+          <p style={{ margin: 0, fontSize: 12, color: T.txt2 }}>
             Tu historial reciente con el bot (mostrando últimos 20).
           </p>
         </div>
@@ -429,13 +445,13 @@ function RecentBotActivity() {
           style={{
             display: "inline-flex", alignItems: "center", justifyContent: "center",
             width: 34, height: 34, borderRadius: 10,
-            background: "rgba(255,255,255,0.04)", border: `1px solid ${P.border}`,
-            color: P.txt2,
+            background: subtleBg, border: `1px solid ${T.border}`,
+            color: T.txt2,
             cursor: refreshing ? "default" : "pointer",
             transition: "all 0.18s",
           }}
-          onMouseEnter={(e) => !refreshing && (e.currentTarget.style.background = "rgba(255,255,255,0.08)")}
-          onMouseLeave={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.04)")}
+          onMouseEnter={(e) => !refreshing && (e.currentTarget.style.background = subtleHov)}
+          onMouseLeave={(e) => (e.currentTarget.style.background = subtleBg)}
         >
           <RefreshCw size={14} strokeWidth={2} style={refreshing ? { animation: "spin 0.9s linear infinite" } : undefined} />
         </button>
@@ -445,16 +461,17 @@ function RecentBotActivity() {
         <div style={{
           padding: "24px 18px",
           textAlign: "center",
-          background: "rgba(255,255,255,0.02)", border: `1px dashed ${P.border}`,
+          background: isLight ? "rgba(15,23,42,0.02)" : "rgba(255,255,255,0.02)",
+          border: `1px dashed ${T.border}`,
           borderRadius: 12,
-          fontSize: 13, color: P.txt3,
+          fontSize: 13, color: T.txt3,
         }}>
           Sin actividad reciente. Manda un mensaje al bot para verlo aquí.
         </div>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           {messages.map((m) => (
-            <BotMessageRow key={m.id} msg={m} />
+            <BotMessageRow key={m.id} msg={m} T={T} isLight={isLight} />
           ))}
         </div>
       )}
@@ -469,7 +486,7 @@ function RecentBotActivity() {
   );
 }
 
-function BotMessageRow({ msg }) {
+function BotMessageRow({ msg, T = P, isLight = false }) {
   const isAi = msg.role === "ai";
   const time = msg.occurred_at
     ? new Date(msg.occurred_at).toLocaleString("es-MX", {
@@ -482,19 +499,34 @@ function BotMessageRow({ msg }) {
   const isLong  = content.length > 280;
   const preview = isLong ? content.slice(0, 280) + "…" : content;
 
+  // Colores por rol: el "AI" usa accent del tema (verde claro en dark, verde
+  // oscuro en light para que el texto se lea bien). El "user" usa violeta.
+  const aiColor      = T.accent;
+  const userColor    = isLight ? "#6D28D9" : "#C084FC";
+  const roleColor    = isAi ? aiColor : userColor;
+  const bubbleBg     = isAi
+    ? `${aiColor}10`
+    : (isLight ? "rgba(124,58,237,0.07)" : "rgba(168,85,247,0.05)");
+  const bubbleBorder = isAi
+    ? `${aiColor}26`
+    : (isLight ? "rgba(124,58,237,0.20)" : "rgba(168,85,247,0.16)");
+  const avatarBg     = isAi
+    ? `${aiColor}1F`
+    : (isLight ? "rgba(124,58,237,0.14)" : "rgba(168,85,247,0.12)");
+
   return (
     <div style={{
       display: "flex", gap: 10, alignItems: "flex-start",
       padding: "10px 12px",
-      background: isAi ? "rgba(110,231,194,0.05)" : "rgba(168,85,247,0.05)",
-      border: `1px solid ${isAi ? "rgba(110,231,194,0.16)" : "rgba(168,85,247,0.16)"}`,
+      background: bubbleBg,
+      border: `1px solid ${bubbleBorder}`,
       borderRadius: 10,
     }}>
       <div style={{
         width: 26, height: 26, borderRadius: 8, flexShrink: 0,
-        background: isAi ? "rgba(110,231,194,0.12)" : "rgba(168,85,247,0.12)",
+        background: avatarBg,
         display: "flex", alignItems: "center", justifyContent: "center",
-        color: isAi ? P.accent : "#C084FC",
+        color: roleColor,
       }}>
         {isAi ? <Bot size={13} strokeWidth={2} /> : <User size={13} strokeWidth={2} />}
       </div>
@@ -503,18 +535,18 @@ function BotMessageRow({ msg }) {
           <span style={{
             fontSize: 11, fontWeight: 700, letterSpacing: "0.04em",
             textTransform: "uppercase", fontFamily: fontDisp,
-            color: isAi ? P.accent : "#C084FC",
+            color: roleColor,
           }}>
             {isAi ? "Bot" : "Tú"}
           </span>
           {time && (
-            <span style={{ fontSize: 11, color: P.txt3 }}>{time}</span>
+            <span style={{ fontSize: 11, color: T.txt3 }}>{time}</span>
           )}
         </div>
         <pre style={{
           margin: 0,
           fontSize: 12.5, lineHeight: 1.5,
-          color: P.txt, fontFamily: font,
+          color: T.txt, fontFamily: font,
           whiteSpace: "pre-wrap", wordBreak: "break-word",
         }}>
           {preview || "(mensaje vacío)"}

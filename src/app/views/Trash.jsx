@@ -140,24 +140,29 @@ export default function Trash({ trashedLeads = [], onRestore, onHardDelete, onRe
                 display: "flex", alignItems: "center", gap: 12,
                 padding: isMobile ? "12px 14px" : "12px 16px",
                 borderRadius: 12,
-                border: `1px solid ${T.border}`,
-                background: isLight ? "rgba(255,255,255,0.6)" : "rgba(255,255,255,0.025)",
+                border: `1px solid ${isLight ? "rgba(15,23,42,0.10)" : T.border}`,
+                background: isLight ? "#FFFFFF" : "rgba(255,255,255,0.025)",
+                boxShadow: isLight
+                  ? "0 1px 2px rgba(15,23,42,0.04), 0 4px 12px rgba(15,23,42,0.04)"
+                  : "none",
                 opacity: isBusy ? 0.5 : 1,
                 transition: "opacity 0.18s",
               }}>
                 <div style={{
                   width: 40, height: 40, borderRadius: 11,
-                  background: isLight ? "rgba(15,23,42,0.06)" : "rgba(255,255,255,0.06)",
-                  border: `1px solid ${T.border}`,
+                  background: isLight ? "rgba(13,154,118,0.10)" : "rgba(255,255,255,0.06)",
+                  border: `1px solid ${isLight ? "rgba(13,154,118,0.22)" : T.border}`,
                   display: "flex", alignItems: "center", justifyContent: "center",
-                  fontSize: 14, fontWeight: 700, color: T.txt2, fontFamily: fontDisp,
+                  fontSize: 14, fontWeight: 700,
+                  color: isLight ? T.accentDark || T.accent : T.txt2,
+                  fontFamily: fontDisp,
                   flexShrink: 0,
                 }}>{initial}</div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: T.txt, fontFamily: fontDisp, letterSpacing: "-0.015em", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                     {l.n || l.name}
                   </p>
-                  <p style={{ margin: "2px 0 0", fontSize: 11, color: T.txt3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  <p style={{ margin: "2px 0 0", fontSize: 11, color: T.txt2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                     {[l.asesor, l.p, fmtDate(l.deleted_at)].filter(Boolean).join(" · ")}
                   </p>
                 </div>
@@ -171,11 +176,13 @@ export default function Trash({ trashedLeads = [], onRestore, onHardDelete, onRe
                       display: "inline-flex", alignItems: "center", gap: 6,
                       padding: isMobile ? "9px 12px" : "7px 11px",
                       borderRadius: 9,
-                      border: `1px solid ${T.accent}55`,
-                      background: `${T.accent}14`,
-                      color: T.accent, fontSize: isMobile ? 12 : 11, fontWeight: 700,
+                      border: `1px solid ${isLight ? T.accent : `${T.accent}55`}`,
+                      background: isLight ? T.accent : `${T.accent}14`,
+                      color: isLight ? "#FFFFFF" : T.accent,
+                      fontSize: isMobile ? 12 : 11, fontWeight: 700,
                       fontFamily: fontDisp, cursor: isBusy ? "not-allowed" : "pointer",
                       transition: "all 0.16s",
+                      boxShadow: isLight ? `0 2px 8px ${T.accent}3A` : "none",
                     }}
                   >
                     <RotateCcw size={12} strokeWidth={2.4} /> Restaurar
@@ -190,14 +197,14 @@ export default function Trash({ trashedLeads = [], onRestore, onHardDelete, onRe
                         display: "inline-flex", alignItems: "center",
                         padding: isMobile ? "9px 11px" : "7px 9px",
                         borderRadius: 9,
-                        border: `1px solid ${T.border}`,
+                        border: `1px solid ${isLight ? "rgba(15,23,42,0.16)" : T.border}`,
                         background: "transparent",
-                        color: T.txt3,
+                        color: isLight ? T.txt2 : T.txt3,
                         cursor: isBusy ? "not-allowed" : "pointer",
                         transition: "all 0.16s",
                       }}
-                      onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(239,68,68,0.5)"; e.currentTarget.style.color = "#EF4444"; }}
-                      onMouseLeave={e => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.color = T.txt3; }}
+                      onMouseEnter={e => { e.currentTarget.style.borderColor = isLight ? "#DC2626" : "rgba(239,68,68,0.5)"; e.currentTarget.style.color = isLight ? "#DC2626" : "#EF4444"; }}
+                      onMouseLeave={e => { e.currentTarget.style.borderColor = isLight ? "rgba(15,23,42,0.16)" : T.border; e.currentTarget.style.color = isLight ? T.txt2 : T.txt3; }}
                     >
                       <Trash2 size={12} strokeWidth={2.4} />
                     </button>
