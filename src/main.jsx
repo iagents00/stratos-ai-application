@@ -16,7 +16,9 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 
-import { AuthProvider } from "./contexts/AuthContext";
+import { AuthProvider }   from "./contexts/AuthContext";
+import { ClientProvider } from "./contexts/ClientContext";
+import { resolveClientFromLocation, matchClientFromLocation } from "./clients";
 import ErrorBoundary   from "./components/ErrorBoundary.jsx";
 import App            from "./app/App.jsx";
 import LandingMarketing from "./landing/LandingMarketing.jsx";
@@ -72,33 +74,59 @@ const isDeletion = matchPath(DELETION_PATHS);
 const isDelivery = matchPath(DELIVERY_PATHS);
 const isManual = matchPath(MANUAL_PATHS);
 
-const isLanding = LANDING_DOMAINS.includes(hostname)
-               || (hostname === "localhost" && !params.has("app"))
-               || (hostname === "127.0.0.1" && !params.has("app"));
+// ─── RESOLUCIÓN DE CLIENTE (multi-tenant) ────────────────────────────────────
+// Se detecta el cliente activo según hostname/path:
+//   · grupo28.stratoscapitalgroup.com  o  /grupo28   →  cliente "grupo28"
+//   · cualquier otra cosa                            →  cliente "duke" (default)
+// Si el path matchea un cliente explícito (no-default), forzamos isApp=true:
+// esto permite entrar a `/grupo28` sin necesidad de `?app` en localhost.
+const clientId        = matchClientFromLocation(window.location);
+const clientConfig    = resolveClientFromLocation(window.location);
+const isExplicitClient = clientId !== "duke";
+
+const isLanding = !isExplicitClient && (
+  LANDING_DOMAINS.includes(hostname)
+  || (hostname === "localhost" && !params.has("app"))
+  || (hostname === "127.0.0.1" && !params.has("app"))
+);
 
 const isApp = !isPrivacy && !isDeletion && !isDelivery && !isManual && !isLanding;
 
 // URL de la plataforma — usada por la landing para el CTA principal
 const APP_URL = import.meta.env.VITE_APP_URL || (window.location.origin + "/?app");
 
+// ─── BRANDING POR CLIENTE ────────────────────────────────────────────────────
+// Cambio mínimo y observable: título de la pestaña + atributo en <html>.
+// Componentes específicos del CRM pueden leer más config via useClient().
+try {
+  if (clientConfig?.name) {
+    document.title = isApp
+      ? `${clientConfig.name} — Plataforma`
+      : clientConfig.name;
+  }
+  document.documentElement.setAttribute("data-client", clientId);
+} catch (_) { /* SSR / DOM no disponible */ }
+
 // ─── RENDER ───────────────────────────────────────────────────────────────────
 createRoot(document.getElementById("root")).render(
   <StrictMode>
     <ErrorBoundary>
-      <AuthProvider>
-        {isPrivacy
-          ? <PrivacyPolicy />
-          : isDeletion
-            ? <DataDeletion />
-            : isDelivery
-              ? <DeliveryHubCRM />
-              : isManual
-                ? <ManualCRM />
-                : isApp
-                  ? <App />
-                  : <LandingMarketing appUrl={APP_URL} />
-        }
-      </AuthProvider>
+      <ClientProvider config={clientConfig}>
+        <AuthProvider>
+          {isPrivacy
+            ? <PrivacyPolicy />
+            : isDeletion
+              ? <DataDeletion />
+              : isDelivery
+                ? <DeliveryHubCRM />
+                : isManual
+                  ? <ManualCRM />
+                  : isApp
+                    ? <App />
+                    : <LandingMarketing appUrl={APP_URL} />
+          }
+        </AuthProvider>
+      </ClientProvider>
     </ErrorBoundary>
   </StrictMode>
 );
