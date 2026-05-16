@@ -102,6 +102,20 @@ export async function discardLeadViaIa(phoneE164, reason = null) {
 }
 
 /**
+ * Marca al lead como "requiere humano" — el bot deja de responder y se
+ * notifica a los asesores humanos para que tomen control de la conversación.
+ * Equivalente outbound del label `requiere-humano` que llega desde Chatwoot.
+ */
+export async function markRequiresHuman(phoneE164) {
+  const phone = toE164(phoneE164);
+  if (!phone) return { ok: false, error: "phone_invalid" };
+  return postJson(N8N_INTERNAL_WEBHOOK_URL, {
+    action: "marcar_requiere_humano",
+    phone_e164: phone,
+  });
+}
+
+/**
  * Decide si el user activo puede disparar acciones IA outbound desde el CRM.
  * Hoy: solo cuentas con `crm_only = true` (iagents@stratos.ai). Si en el
  * futuro queremos que más users puedan, cambiar esta función.
