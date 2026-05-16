@@ -34,7 +34,7 @@ Configurar UNA credencial "Supabase Stratos CRM" tipo HTTP Header Auth con:
 > ⚠️ La `SERVICE_ROLE_KEY` la sacás de Supabase Dashboard → Settings → API.
 > Bypasea RLS, mantenela como secret. No subir a Git ni compartir en chat.
 
-## 4 funciones RPC disponibles
+## 5 funciones RPC disponibles
 
 ### 1. `fn_upsert_lead_from_chatwoot` (la principal)
 
@@ -169,6 +169,53 @@ humano vea contexto al primer vistazo).
 
 Si llamás dos veces con el mismo phone, el JSON se hace **merge** (no
 overwrite). O sea agrega claves nuevas y actualiza las existentes.
+
+### 5. `fn_delete_lead_completely` (hard-delete por conversation_id)
+
+**Cuándo llamarla:** cuando el operador escribe el comando "reiniciar" en
+Chatwoot y querés borrar TODO el lead asociado a esa conversación.
+
+**Body:**
+```json
+{
+  "payload": {
+    "conversation_id": 20
+  }
+}
+```
+
+**Qué hace internamente:**
+1. Busca el lead por `chatwoot_conversation_id` dentro de la org Stratos/Duke.
+2. Si no lo encuentra → devuelve `{ok: false, error: "lead not found..."}`.
+3. Si lo encuentra → cuenta filas relacionadas, borra explícito en
+   expediente_items / lead_events / lead_assignments / lead_tasks, y
+   después DELETE del lead (cascadea a discovery_data, appointments,
+   voice_call_logs).
+
+**Respuesta:**
+```json
+{
+  "ok": true,
+  "lead_id": "uuid-borrado",
+  "phone": "+57...",
+  "conversation_id": 20,
+  "deleted_counts": {
+    "lead": 1,
+    "expediente_items": 3,
+    "voice_call_logs": 1,
+    "appointments": 1,
+    "discovery_data": 1,
+    "lead_events": 0,
+    "lead_assignments": 0,
+    "lead_tasks": 0
+  }
+}
+```
+
+**Importante:** este es un HARD DELETE — el lead desaparece de la BD
+real, no va a la papelera. La papelera del CRM (`deleted_at IS NOT NULL`)
+no aplica acá. Usalo solo para resetear flujos de testing del bot, no
+para descartar leads reales (para eso está `soft_delete` desde la UI).
 
 ## Mapeo de labels de Chatwoot → stages del CRM
 
