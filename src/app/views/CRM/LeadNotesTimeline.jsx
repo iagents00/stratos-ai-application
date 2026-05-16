@@ -15,10 +15,11 @@
  * RPCs y tablas relacionadas: ver supabase/migrations/008_*.sql
  */
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Plus, Send, StickyNote } from "lucide-react";
+import { Plus, Send, StickyNote, Sparkles } from "lucide-react";
 import { P, font, fontDisp } from "../../../design-system/tokens";
 import { supabase } from "../../../lib/supabase";
 import { useAuth } from "../../../hooks/useAuth";
+import { renderMarkdown } from "../../../lib/markdown";
 
 const fmtDateTime = (iso) => {
   if (!iso) return "";
@@ -31,6 +32,28 @@ const fmtDateTime = (iso) => {
     return iso;
   }
 };
+
+// Estilos diferenciados para notas humanas vs notas inyectadas por la IA.
+// nota_ia tiene tinte amarillo + badge "IA" + render Markdown.
+function noteVisualStyle(note, isLight) {
+  const isAi = note.tipo === "nota_ia";
+  if (isAi) {
+    return {
+      bg: isLight ? "rgba(250,204,21,0.10)" : "rgba(250,204,21,0.07)",
+      border: isLight ? "rgba(202,138,4,0.32)" : "rgba(250,204,21,0.22)",
+      accent: isLight ? "#A16207" : "#FACC15",
+      badge: "IA",
+      isAi: true,
+    };
+  }
+  return {
+    bg: isLight ? "rgba(15,23,42,0.025)" : "rgba(255,255,255,0.025)",
+    border: null,        // usa T.border
+    accent: null,        // usa T.accent
+    badge: null,
+    isAi: false,
+  };
+}
 
 export default function LeadNotesTimeline({ lead, T = P, isLight = false }) {
   const { user } = useAuth();
@@ -53,9 +76,9 @@ export default function LeadNotesTimeline({ lead, T = P, isLight = false }) {
     setLoading(true);
     const { data, error } = await supabase
       .from("expediente_items")
-      .select("id, descripcion, titulo, metadata, created_at, asesor_id")
+      .select("id, descripcion, titulo, tipo, metadata, created_at, asesor_id")
       .eq("lead_id", lead.id)
-      .in("tipo", ["nota", "texto"])
+      .in("tipo", ["nota", "texto", "nota_ia"])
       .order("created_at", { ascending: false })
       .limit(100);
     if (error) {
@@ -236,42 +259,76 @@ export default function LeadNotesTimeline({ lead, T = P, isLight = false }) {
         )
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-          {notes.map((n) => (
-            <div key={n.id} style={{
-              padding: "10px 12px", borderRadius: 10,
-              background: isLight ? "rgba(15,23,42,0.025)" : "rgba(255,255,255,0.025)",
-              border: `1px solid ${T.border}`,
-            }}>
-              <div style={{
-                display: "flex", alignItems: "center", gap: 6,
-                marginBottom: 4, fontSize: 10.5, color: T.txt3,
-                fontFamily: fontDisp, letterSpacing: "0.04em",
+          {notes.map((n) => {
+            const v = noteVisualStyle(n, isLight);
+            const dotColor    = v.isAi ? v.accent : T.accent;
+            const borderColor = v.border || T.border;
+            return (
+              <div key={n.id} style={{
+                padding: "10px 12px", borderRadius: 10,
+                background: v.bg,
+                border: `1px solid ${borderColor}`,
               }}>
-                <span style={{
-                  display: "inline-block", width: 5, height: 5, borderRadius: "50%",
-                  background: T.accent, flexShrink: 0,
-                }} />
-                {fmtDateTime(n.created_at)}
-                {n.metadata?.source && n.metadata.source !== "web" && (
+                <div style={{
+                  display: "flex", alignItems: "center", gap: 6,
+                  marginBottom: v.isAi ? 6 : 4, fontSize: 10.5, color: T.txt3,
+                  fontFamily: fontDisp, letterSpacing: "0.04em",
+                  flexWrap: "wrap",
+                }}>
                   <span style={{
-                    marginLeft: 4, padding: "1px 6px", borderRadius: 4,
-                    background: `${T.accent}14`, color: T.accent,
-                    fontSize: 9, fontWeight: 700, textTransform: "uppercase",
-                    letterSpacing: "0.06em",
+                    display: "inline-block", width: 5, height: 5, borderRadius: "50%",
+                    background: dotColor, flexShrink: 0,
+                  }} />
+                  {fmtDateTime(n.created_at)}
+                  {v.isAi && (
+                    <span style={{
+                      display: "inline-flex", alignItems: "center", gap: 3,
+                      marginLeft: 4, padding: "1px 7px", borderRadius: 5,
+                      background: isLight ? `${v.accent}1A` : `${v.accent}1F`,
+                      color: v.accent,
+                      fontSize: 9.5, fontWeight: 800, textTransform: "uppercase",
+                      letterSpacing: "0.08em",
+                    }}>
+                      <Sparkles size={9} strokeWidth={2.5} />
+                      {v.badge}
+                    </span>
+                  )}
+                  {!v.isAi && n.metadata?.source && n.metadata.source !== "web" && (
+                    <span style={{
+                      marginLeft: 4, padding: "1px 6px", borderRadius: 4,
+                      background: `${T.accent}14`, color: T.accent,
+                      fontSize: 9, fontWeight: 700, textTransform: "uppercase",
+                      letterSpacing: "0.06em",
+                    }}>
+                      {n.metadata.source}
+                    </span>
+                  )}
+                  {v.isAi && n.titulo && n.titulo !== "Nota privada de IA" && (
+                    <span style={{ marginLeft: 4, color: T.txt2, fontWeight: 600, textTransform: "none", letterSpacing: 0 }}>
+                      {n.titulo}
+                    </span>
+                  )}
+                </div>
+                {v.isAi ? (
+                  <div style={{
+                    fontSize: 13, color: T.txt,
+                    fontFamily: font, lineHeight: 1.55,
+                    wordBreak: "break-word",
                   }}>
-                    {n.metadata.source}
-                  </span>
+                    {renderMarkdown(n.descripcion || "(nota vacía)")}
+                  </div>
+                ) : (
+                  <p style={{
+                    margin: 0, fontSize: 13, color: T.txt,
+                    fontFamily: font, lineHeight: 1.55,
+                    whiteSpace: "pre-wrap", wordBreak: "break-word",
+                  }}>
+                    {n.descripcion || "(nota vacía)"}
+                  </p>
                 )}
               </div>
-              <p style={{
-                margin: 0, fontSize: 13, color: T.txt,
-                fontFamily: font, lineHeight: 1.55,
-                whiteSpace: "pre-wrap", wordBreak: "break-word",
-              }}>
-                {n.descripcion || "(nota vacía)"}
-              </p>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>
