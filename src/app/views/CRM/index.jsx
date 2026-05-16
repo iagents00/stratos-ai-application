@@ -62,9 +62,18 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
   const isLight = theme === "light";
   const T = isLight ? LP : P;
 
-  // Roles administrativos (director hacia arriba) y asesores con la bandera
-  // view_all_leads=true ven todos los leads de la organización.
-  const canSeeAll = ["super_admin", "admin", "ceo", "director"].includes(user?.role)
+  // Roles administrativos (director hacia arriba) ven todos los leads de la
+  // organización POR DEFECTO. Excepción: si el admin tiene view_all_leads
+  // explícitamente en false, queda restringido a sus propios leads (opt-out).
+  // Esto permite cuentas con poderes admin pero sin visibilidad de leads
+  // ajenos (ej. iagents@stratos.ai). Los asesores pueden hacer opt-in al
+  // ver-todo seteando view_all_leads=true.
+  //
+  // NOTA: este filtro es SOLO de UI. El RLS de Supabase (leads_select) sigue
+  // permitiendo que estos admins consulten todos los leads vía API directa.
+  // Para restringir a nivel DB, hay que modificar la policy `leads_select`.
+  const isAdminRole = ["super_admin", "admin", "ceo", "director"].includes(user?.role);
+  const canSeeAll = (isAdminRole && user?.viewAllLeads !== false)
                  || user?.viewAllLeads === true;
   // Reasignación habilitada para todos los usuarios. La RLS de Supabase
   // (leads_update en migración 004_performance_tuning) ya asegura que un
