@@ -31,6 +31,8 @@ import { StratosAtom, StratosAtomHex } from "../../components/Logo";
 import { AI_AGENTS, AI_AGENT_LIST } from "../../constants/agents";
 import { stgC } from "../../constants/crm";
 import LeadNotesTimeline from "./LeadNotesTimeline";
+import LeadDiscoveryPanel from "./LeadDiscoveryPanel";
+import LeadVoiceCalls from "./LeadVoiceCalls";
 
 /* ─── IAOS Score Engine — calcula el score real de un lead basado en:
    stage (0-35pts), presupuesto (0-25pts), seguimientos (0-15pts),
@@ -3321,6 +3323,11 @@ const NotesModal = ({ lead, onClose, onSave, onUpdate, onSwitchTab, onShowHistor
           {/* 1. PRÓXIMA ACCIÓN — hero mint, lo primero accionable */}
           <NextActionHero lead={lead} T={T} onUpdate={onUpdate} />
 
+          {/* 1.5. PERFILAMIENTO IA — perfilamiento extraído por Retell desde
+              la llamada de voz. Solo aparece si discovery_data tiene contenido
+              (la mayoría de leads no lo tendrán). */}
+          <LeadDiscoveryPanel lead={lead} T={T} isLight={isLight} />
+
           {/* 2. ETAPA + SEGUIMIENTOS — pills compactos */}
           <div style={{ display: "flex", flexWrap: "wrap", gap: 7, alignItems: "center" }}>
             <FollowUpBadge lead={lead} onUpdate={onUpdate} T={T} />
@@ -3367,6 +3374,10 @@ const NotesModal = ({ lead, onClose, onSave, onUpdate, onSwitchTab, onShowHistor
             {/* Cronograma de notas individuales con fecha y hora */}
             <LeadNotesTimeline lead={lead} T={T} isLight={isLight} />
           </div>
+
+          {/* 3.5. LLAMADAS DE VOZ — grabaciones de Retell IA con audio nativo
+              + transcript colapsable. Solo aparece si hay calls registradas. */}
+          <LeadVoiceCalls lead={lead} T={T} isLight={isLight} />
 
           {/* 4. TAREAS — checklist accionable */}
           <div>
