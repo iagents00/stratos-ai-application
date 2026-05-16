@@ -57,6 +57,9 @@ export const MODULE_NAMES = {
 // Stratos (Finanzas, Personas, Comando, ERP, iAgents, Campañas, Asesores).
 export const STRATOS_ORG_ID = "00000000-0000-0000-0000-000000000001";
 export const EXTERNAL_ORG_MODULES = new Set(["c", "perfil", "trash"]);
+// Módulos visibles para usuarios con flag crm_only=true (cuentas tipo bot/IA
+// como iagents@stratos.ai). Conservan su rol pero solo navegan CRM + Perfil.
+export const CRM_ONLY_MODULES = new Set(["c", "perfil"]);
 
 export function isStratosOrg(orgId) {
   return orgId === STRATOS_ORG_ID;
@@ -64,14 +67,18 @@ export function isStratosOrg(orgId) {
 
 /**
  * Decide si un usuario puede acceder a un módulo.
- * Combina dos capas:
- *   1) Aislamiento por organización: clientes externos solo CRM + perfil + papelera.
- *   2) Permiso por rol dentro de la org (MODULE_ROLES).
+ * Combina tres capas:
+ *   1) Restricción per-usuario `crm_only`: cuentas bot/IA solo ven CRM + Perfil.
+ *   2) Aislamiento por organización: clientes externos solo CRM + perfil + papelera.
+ *   3) Permiso por rol dentro de la org (MODULE_ROLES).
  *
  * Si el módulo no está en MODULE_ROLES, se asume público (default true).
  */
 export function canAccessModule(moduleId, user, clientConfig = null) {
   if (!user) return false;
+  // (1) Restricción per-usuario — gana sobre todo lo demás.
+  if (user.crmOnly === true && !CRM_ONLY_MODULES.has(moduleId)) return false;
+
   if (!isStratosOrg(user.organizationId) && !EXTERNAL_ORG_MODULES.has(moduleId)) {
     // Excepción: si el cliente externo prendió Comando Directivo (`d`)
     // en su config, lo dejamos pasar para que el rol decida después.
