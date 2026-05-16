@@ -1523,7 +1523,12 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
 
         const getCardMeta = (l) => {
           // Todas las tarjetas comparten estética: accent verde + topbar shimmer.
-          // El contexto se sigue diferenciando solo por el pill de etapa.
+          // Excepción: `requiere-humano` rompe el verde y usa rojo urgente.
+          if (l.tag === "requiere-humano") {
+            const red = isLight ? "#DC2626" : "#EF4444";
+            const tbRed = `linear-gradient(90deg, ${red} 0%, ${lighten(red)} 50%, ${red} 100%)`;
+            return { color: red, topBar: tbRed, label: "🔥 REQUIERE HUMANO", sublabel: "El bot pidió handoff — atendé ya", pulse: true, glow: true };
+          }
           if (l.hot)                       return { color: T.accent, topBar: tbAccent, label: `CALIENTE · ${l.daysInactive}D`,     sublabel: "Actuar ahora mismo",              pulse: true, glow: true };
           if (l.isNew)                     return { color: T.accent, topBar: tbAccent, label: "NUEVO REGISTRO",                    sublabel: "Primer contacto — no esperes",    pulse: true, glow: true };
           if (l.st === "Zoom Agendado")    return { color: T.accent, topBar: tbAccent, label: "ZOOM AGENDADO",                     sublabel: "Preparar presentación de cierre", pulse: true, glow: true };
@@ -3890,7 +3895,14 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                           <div style={{ padding: "12px 13px" }}>
                             <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 7, gap: 6 }}>
                               <div style={{ flex: 1, minWidth: 0 }}>
-                                <p style={{ fontSize: 12.5, fontWeight: 700, color: isLight ? T.txt : "#FFF", fontFamily: fontDisp, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginBottom: 2 }}>{l.n}</p>
+                                <p style={{ fontSize: 12.5, fontWeight: 700, color: isLight ? T.txt : "#FFF", fontFamily: fontDisp, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginBottom: 2, display: "flex", alignItems: "center", gap: 5 }}>
+                                  {l.tag === "requiere-humano" && (
+                                    <span title="Requiere humano" style={{
+                                      flexShrink: 0, fontSize: 11, lineHeight: 1,
+                                    }}>🔥</span>
+                                  )}
+                                  <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{l.n}</span>
+                                </p>
                                 <p style={{ fontSize: 9.5, color: T.txt3 }}>{l.asesor?.split(" ")[0]} · {l.campana}</p>
                               </div>
                               <p style={{ fontSize: 12, fontWeight: 700, color: isLight ? T.txt : "#FFF", fontFamily: fontDisp, letterSpacing: "-0.02em", flexShrink: 0 }}>{l.budget}</p>

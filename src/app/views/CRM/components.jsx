@@ -34,6 +34,7 @@ import LeadNotesTimeline from "./LeadNotesTimeline";
 import LeadDiscoveryPanel from "./LeadDiscoveryPanel";
 import LeadVoiceCalls from "./LeadVoiceCalls";
 import CallActionButton from "./CallActionButton";
+import RequiresHumanButton from "./RequiresHumanButton";
 
 /* ─── IAOS Score Engine — calcula el score real de un lead basado en:
    stage (0-35pts), presupuesto (0-25pts), seguimientos (0-15pts),
@@ -3295,10 +3296,12 @@ const NotesModal = ({ lead, onClose, onSave, onUpdate, onSwitchTab, onShowHistor
               (la mayoría de leads no lo tendrán). */}
           <LeadDiscoveryPanel lead={lead} T={T} isLight={isLight} />
 
-          {/* 2. ETAPA + SEGUIMIENTOS — pills compactos */}
+          {/* 2. ETAPA + SEGUIMIENTOS — pills compactos.
+              RequiresHumanButton: solo visible para iagents@stratos.ai. */}
           <div style={{ display: "flex", flexWrap: "wrap", gap: 7, alignItems: "center" }}>
             <FollowUpBadge lead={lead} onUpdate={onUpdate} T={T} />
             <StageBadge lead={lead} onUpdate={onUpdate} T={T} />
+            <RequiresHumanButton lead={lead} onUpdate={onUpdate} T={T} isLight={isLight} />
           </div>
 
           {/* 3. NOTAS DEL EXPEDIENTE — textarea siempre editable, auto-save.
@@ -3548,8 +3551,22 @@ const LeadPanel = ({ lead, onClose, oc, onUpdate, onSwitchTab, onShowHistory, on
         {/* Header */}
         <div style={{ padding: isMobile ? "8px 16px 12px" : "18px 22px 14px", borderBottom: `1px solid ${T.border}`, flexShrink: 0 }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
-            <div style={{ display: "flex", gap: 6 }}>
-              {lead.hot && <span style={{ fontSize: 9, fontWeight: 700, color: T.accent, background: `${T.accent}12`, border: `1px solid ${T.accentB}`, padding: "2px 8px", borderRadius: 99 }}>HOT</span>}
+            <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+              {lead.tag === "requiere-humano" && (
+                <span title="El bot pidió que un humano tome control de la conversación" style={{
+                  display: "inline-flex", alignItems: "center", gap: 4,
+                  fontSize: 9.5, fontWeight: 800, letterSpacing: "0.06em",
+                  color: "#FFFFFF",
+                  background: isLight ? "#DC2626" : "#EF4444",
+                  border: `1px solid ${isLight ? "#B91C1C" : "#F87171"}`,
+                  padding: "3px 9px", borderRadius: 99,
+                  boxShadow: `0 0 0 2px ${isLight ? "rgba(220,38,38,0.14)" : "rgba(239,68,68,0.18)"}`,
+                  textTransform: "uppercase",
+                }}>🔥 Requiere Humano</span>
+              )}
+              {lead.hot && lead.tag !== "requiere-humano" && (
+                <span style={{ fontSize: 9, fontWeight: 700, color: T.accent, background: `${T.accent}12`, border: `1px solid ${T.accentB}`, padding: "2px 8px", borderRadius: 99 }}>HOT</span>
+              )}
               {lead.daysInactive >= 7 && <span style={{ fontSize: 9, fontWeight: 600, color: T.txt3, background: T.glass, border: `1px solid ${T.border}`, padding: "2px 8px", borderRadius: 99 }}>{lead.daysInactive}d inactivo</span>}
             </div>
             <div style={{ display: "flex", gap: 6 }}>
@@ -3699,10 +3716,12 @@ const LeadPanel = ({ lead, onClose, oc, onUpdate, onSwitchTab, onShowHistory, on
 
             {/* ── Acciones rápidas — contador de seguimientos + etapa editable.
                 El asesor puede registrar cada recontacto con el cliente en un clic
-                y cambiar el estatus sin abrir el modal de edición completa. ── */}
+                y cambiar el estatus sin abrir el modal de edición completa.
+                RequiresHumanButton solo aparece para iagents@stratos.ai. ── */}
             <div style={{ flexShrink: 0, display: "flex", flexWrap: "wrap", gap: 7, alignItems: "center" }}>
               <FollowUpBadge lead={lead} onUpdate={onUpdate} T={T} />
               <StageBadge lead={lead} onUpdate={onUpdate} T={T} />
+              <RequiresHumanButton lead={lead} onUpdate={onUpdate} T={T} isLight={isLight} />
             </div>
 
             {/* ── Lista de tareas — múltiples acciones por cliente.
@@ -4386,10 +4405,23 @@ const AnalysisDrawer = ({ lead, onClose, oc, onUpdate, onSwitchTab, T = P }) => 
 
           {/* Etiquetas rápidas */}
           <div style={{ display: "flex", gap: 6, marginTop: 10, flexWrap: "wrap", alignItems: "center" }}>
-            {hot && <span style={{ fontSize: 9, fontWeight: 700, color: T.accent, background: `${T.accent}14`, border: `1px solid ${T.accentB}`, padding: "3px 9px", borderRadius: 99, letterSpacing: "0.05em" }}>HOT</span>}
+            {lead.tag === "requiere-humano" && (
+              <span title="El bot pidió que un humano tome control" style={{
+                display: "inline-flex", alignItems: "center", gap: 4,
+                fontSize: 9.5, fontWeight: 800, letterSpacing: "0.06em",
+                color: "#FFFFFF",
+                background: isLight ? "#DC2626" : "#EF4444",
+                border: `1px solid ${isLight ? "#B91C1C" : "#F87171"}`,
+                padding: "3px 9px", borderRadius: 99,
+                textTransform: "uppercase",
+                animation: "rhPulse 1.8s ease-in-out infinite",
+              }}>🔥 Requiere Humano</span>
+            )}
+            {hot && lead.tag !== "requiere-humano" && <span style={{ fontSize: 9, fontWeight: 700, color: T.accent, background: `${T.accent}14`, border: `1px solid ${T.accentB}`, padding: "3px 9px", borderRadius: 99, letterSpacing: "0.05em" }}>HOT</span>}
             {inactive >= 7 && <span style={{ fontSize: 9, fontWeight: 700, color: T.rose, background: `${T.rose}14`, border: `1px solid ${T.rose}33`, padding: "3px 9px", borderRadius: 99 }}>{inactive}d inactivo</span>}
             <span style={{ fontSize: 9, fontWeight: 700, color: T.txt3, background: T.glass, border: `1px solid ${T.border}`, padding: "3px 9px", borderRadius: 99 }}>Etapa {stageIdx + 1}/{STAGES.length}</span>
             <SourceBadge source={lead.source} isLight={isLight} />
+            <style>{`@keyframes rhPulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(239,68,68,0.45); } 50% { box-shadow: 0 0 0 5px rgba(239,68,68,0); } }`}</style>
           </div>
         </div>
 
