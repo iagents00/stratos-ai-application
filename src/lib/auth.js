@@ -209,7 +209,7 @@ export async function signIn(email, password) {
     const { data: profile, error: profileError } = await withTimeout(
       supabase
         .from('profiles')
-        .select('id, name, role, phone, active, organization_id, view_all_leads, crm_prefs')
+        .select('id, name, role, phone, active, organization_id, view_all_leads, crm_only, crm_prefs')
         .eq('id', data.user.id)
         .single(),
       TIMEOUT_MS,
@@ -234,6 +234,10 @@ export async function signIn(email, password) {
       phone: profile.phone,
       organizationId: profile.organization_id,
       viewAllLeads:   profile.view_all_leads === true,
+      // Si crm_only=true, el usuario solo accede al módulo CRM + Perfil.
+      // Usado para cuentas tipo bot/IA (iagents@stratos.ai) que no necesitan
+      // los módulos admin pero conservan su rol para operaciones del CRM.
+      crmOnly:        profile.crm_only === true,
       // crm_prefs vive en Supabase: pin, orden, descartados sobreviven entre dispositivos.
       crmPrefs:       profile.crm_prefs && typeof profile.crm_prefs === 'object' ? profile.crm_prefs : {},
     }
@@ -361,7 +365,7 @@ export async function getStoredSession() {
       const result = await withTimeout(
         supabase
           .from('profiles')
-          .select('id, name, role, phone, active, organization_id, view_all_leads, crm_prefs')
+          .select('id, name, role, phone, active, organization_id, view_all_leads, crm_only, crm_prefs')
           .eq('id', session.user.id)
           .single(),
         PROFILE_TIMEOUT,
@@ -406,6 +410,7 @@ export async function getStoredSession() {
       phone: profile.phone,
       organizationId: profile.organization_id,
       viewAllLeads:   profile.view_all_leads === true,
+      crmOnly:        profile.crm_only === true,
       crmPrefs:       profile.crm_prefs && typeof profile.crm_prefs === 'object' ? profile.crm_prefs : {},
     }
     saveSessionCache(sessionUser)
