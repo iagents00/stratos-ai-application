@@ -33,6 +33,7 @@ import { stgC } from "../../constants/crm";
 import LeadNotesTimeline from "./LeadNotesTimeline";
 import LeadDiscoveryPanel from "./LeadDiscoveryPanel";
 import LeadVoiceCalls from "./LeadVoiceCalls";
+import CallActionButton from "./CallActionButton";
 
 /* ─── IAOS Score Engine — calcula el score real de un lead basado en:
    stage (0-35pts), presupuesto (0-25pts), seguimientos (0-15pts),
@@ -1040,47 +1041,13 @@ const NextActionHero = ({ lead, T = P, onUpdate = null }) => {
           display: "flex", gap: 7, flexWrap: "wrap",
           position: "relative",
         }}>
-            <a
-              href={`tel:${phoneClean}`}
-              style={{
-                flex: 1, minWidth: 120,
-                display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
-                padding: "9px 12px", borderRadius: 10,
-                background: isLight
-                  ? `linear-gradient(135deg, ${T.accent} 0%, #14B892 100%)`
-                  : "rgba(255,255,255,0.92)",
-                border: isLight ? "none" : "none",
-                color: isLight ? "#FFFFFF" : "#0A0F18",
-                fontSize: 12, fontWeight: 700, fontFamily: fontDisp,
-                letterSpacing: "0.01em", textDecoration: "none",
-                boxShadow: isLight
-                  ? `0 3px 10px ${T.accent}40, 0 1px 3px ${T.accent}26, inset 0 1px 0 rgba(255,255,255,0.35)`
-                  : "0 2px 8px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.18)",
-                transition: "all 0.18s",
-              }}
-              onMouseEnter={e => {
-                if (isLight) {
-                  e.currentTarget.style.boxShadow = `0 5px 16px ${T.accent}55, 0 2px 5px ${T.accent}30`;
-                  e.currentTarget.style.transform = "translateY(-1px)";
-                } else {
-                  e.currentTarget.style.background = "#FFFFFF";
-                  e.currentTarget.style.boxShadow = "0 4px 14px rgba(0,0,0,0.45)";
-                  e.currentTarget.style.transform = "translateY(-1px)";
-                }
-              }}
-              onMouseLeave={e => {
-                if (isLight) {
-                  e.currentTarget.style.boxShadow = `0 3px 10px ${T.accent}40, 0 1px 3px ${T.accent}26`;
-                  e.currentTarget.style.transform = "none";
-                } else {
-                  e.currentTarget.style.background = "rgba(255,255,255,0.92)";
-                  e.currentTarget.style.boxShadow = "0 2px 8px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.18)";
-                  e.currentTarget.style.transform = "none";
-                }
-              }}
-            >
-              <Phone size={12} strokeWidth={2.4} /> Llamar ahora
-            </a>
+            <CallActionButton
+              phone={phoneClean}
+              label="Llamar ahora"
+              variant="primary"
+              T={T}
+              isLight={isLight}
+            />
             <a
               href={`https://wa.me/${waPhone}`}
               target="_blank" rel="noreferrer"
@@ -3678,18 +3645,13 @@ const LeadPanel = ({ lead, onClose, oc, onUpdate, onSwitchTab, onShowHistory, on
             }
             return (
               <div style={{ display: "flex", gap: 7, flexWrap: "wrap" }}>
-                <a href={`tel:${phoneClean}`}
-                  style={{
-                    flex: 1, minWidth: 110, height: 40,
-                    display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
-                    padding: "0 12px", borderRadius: 10,
-                    background: isLight ? `linear-gradient(135deg, ${T.accent}, #14B892)` : "rgba(255,255,255,0.92)",
-                    border: "none", color: isLight ? "#FFFFFF" : "#0A0F18",
-                    fontSize: 12, fontWeight: 700, fontFamily: fontDisp, textDecoration: "none",
-                    boxShadow: isLight ? `0 3px 10px ${T.accent}40` : "0 2px 8px rgba(0,0,0,0.35)",
-                    transition: "all 0.18s",
-                  }}
-                ><Phone size={12} strokeWidth={2.4} /> Llamar</a>
+                <CallActionButton
+                  phone={phoneClean}
+                  label="Llamar"
+                  variant="compact"
+                  T={T}
+                  isLight={isLight}
+                />
                 <a href={`https://wa.me/${waPhone}`} target="_blank" rel="noreferrer"
                   style={{
                     flex: 1, minWidth: 110, height: 40,
