@@ -33,6 +33,7 @@ import { stgC } from "../../constants/crm";
 import LeadNotesTimeline from "./LeadNotesTimeline";
 import LeadDiscoveryPanel from "./LeadDiscoveryPanel";
 import LeadVoiceCalls from "./LeadVoiceCalls";
+import LeadChatHistory from "./LeadChatHistory";
 import CallActionButton from "./CallActionButton";
 import RequiresHumanButton from "./RequiresHumanButton";
 
@@ -3687,9 +3688,12 @@ const LeadPanel = ({ lead, onClose, oc, onUpdate, onSwitchTab, onShowHistory, on
           })()}
         </div>
 
-        {/* Sub-tabs: Datos · Documentos */}
+        {/* Sub-tabs: Datos · Chat · Documentos
+            "Chat" muestra solo historial de WhatsApp/Chatwoot (note_type=historial_chat
+            inyectado por n8n vía fn_add_lead_note). El badge cuenta los items de
+            historial cargados — se actualiza dentro del componente cuando refresca. */}
         <div style={{ display: "flex", padding: "0 22px", borderBottom: `1px solid ${T.border}`, flexShrink: 0, gap: 0 }}>
-          {[["perfil","Datos",null],["docs","Documentos",expedienteItems.length]].map(([id,label,badge]) => {
+          {[["perfil","Datos",null],["chat","Chat",null],["docs","Documentos",expedienteItems.length]].map(([id,label,badge]) => {
             const active = activeTab === id;
             const accentC = isLight ? `color-mix(in srgb, ${T.accent} 60%, #0B1220 40%)` : T.accent;
             return (
@@ -3883,6 +3887,15 @@ const LeadPanel = ({ lead, onClose, oc, onUpdate, onSwitchTab, onShowHistory, on
           )}
 
           {/* Pipeline tab removed — no longer available */}
+
+          {/* ══════════════════════════════════════════════════
+              TAB: CHAT — Historial de WhatsApp/Chatwoot
+              Render limpio, sin mezclar con notas humanas o resúmenes IA.
+              Datos vienen de expediente_items donde tipo='historial_chat'.
+          ══════════════════════════════════════════════════ */}
+          {activeTab === "chat" && (
+            <LeadChatHistory lead={lead} T={T} isLight={isLight} />
+          )}
 
           {/* ══════════════════════════════════════════════════
               TAB: DOCUMENTOS — Expediente · Transcripciones · Agente Telegram
