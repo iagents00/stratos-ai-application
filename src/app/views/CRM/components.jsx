@@ -36,6 +36,8 @@ import LeadVoiceCalls from "./LeadVoiceCalls";
 import LeadChatHistory from "./LeadChatHistory";
 import CallActionButton from "./CallActionButton";
 import RequiresHumanButton from "./RequiresHumanButton";
+import ScheduledCallBadge from "./ScheduledCallBadge";
+import { useScheduledCalls } from "../../../hooks/useScheduledCalls";
 
 /* ─── IAOS Score Engine — calcula el score real de un lead basado en:
    stage (0-35pts), presupuesto (0-25pts), seguimientos (0-15pts),
@@ -765,9 +767,16 @@ const NextActionHero = ({ lead, T = P, onUpdate = null }) => {
   if (!lead) return null;
 
   const hasAction  = !!(lead.nextAction && lead.nextAction.trim());
+  // Si no hay nextAction pero el lead está en Zoom Agendado, sugerimos por
+  // defecto "Asistir a Zoom" para que el cerrador no se confunda con qué
+  // sigue. NO se persiste hasta que el asesor lo confirme manualmente
+  // (markDone o edición); es solo placeholder visual.
+  const zoomPending = lead.st === "Zoom Agendado" || lead.stage === "Zoom Agendado";
   const actionText = hasAction
     ? lead.nextAction
-    : "Sin próxima acción definida. Agrega una para activar el cierre con este cliente.";
+    : (zoomPending
+        ? "Asistir a Zoom — preparar dossier, abrir link 5 min antes."
+        : "Sin próxima acción definida. Agrega una para activar el cierre con este cliente.");
   const dateText   = lead.nextActionDate || "";
   const LONG = 160;
   const isLong   = actionText.length > LONG;
@@ -1049,6 +1058,7 @@ const NextActionHero = ({ lead, T = P, onUpdate = null }) => {
               variant="primary"
               T={T}
               isLight={isLight}
+              warnZoom={zoomPending}
             />
             <a
               href={`https://wa.me/${waPhone}`}
@@ -2957,6 +2967,9 @@ const AsesorPicker = ({
 const NotesModal = ({ lead, onClose, onSave, onUpdate, onSwitchTab, onShowHistory, onDelete, asesoresMaster = [], currentUserName = null, T = P }) => {
   const isMobile = useIsMobile();
   const [confirmDelete, setConfirmDelete] = useState(false);
+  // Llamadas programadas (Retell) — pendientes para este lead.
+  const { get: getScheduledCall } = useScheduledCalls();
+  const scheduledCallNM = getScheduledCall(lead);
 
   // ══════════════════════════════════════════════════════════════════════
   // EXPEDIENTE EN TEXTO PLANO + AUTO-SAVE PROFESIONAL
@@ -3415,6 +3428,9 @@ const LeadPanel = ({ lead, onClose, oc, onUpdate, onSwitchTab, onShowHistory, on
   const [editing, setEditing] = useState(false);
   const [confirmDeleteLP, setConfirmDeleteLP] = useState(false);
   const [form, setForm] = useState(null);
+  // Llamadas programadas (Retell) — pendientes para este lead.
+  const { get: getScheduledCall } = useScheduledCalls();
+  const scheduledCall = getScheduledCall(lead);
   const [panelCopied, setPanelCopied] = useState(false);
   const [expandBio, setExpandBio] = useState(false);
   const [updateChatOpen, setUpdateChatOpen] = useState(false);
@@ -3568,6 +3584,9 @@ const LeadPanel = ({ lead, onClose, oc, onUpdate, onSwitchTab, onShowHistory, on
               {lead.hot && lead.tag !== "requiere-humano" && (
                 <span style={{ fontSize: 9, fontWeight: 700, color: T.accent, background: `${T.accent}12`, border: `1px solid ${T.accentB}`, padding: "2px 8px", borderRadius: 99 }}>HOT</span>
               )}
+              {scheduledCall && (
+                <ScheduledCallBadge scheduledAt={scheduledCall.scheduled_at} variant="drawer" T={T} isLight={isLight} />
+              )}
               {lead.daysInactive >= 7 && <span style={{ fontSize: 9, fontWeight: 600, color: T.txt3, background: T.glass, border: `1px solid ${T.border}`, padding: "2px 8px", borderRadius: 99 }}>{lead.daysInactive}d inactivo</span>}
             </div>
             <div style={{ display: "flex", gap: 6 }}>
@@ -3669,6 +3688,7 @@ const LeadPanel = ({ lead, onClose, oc, onUpdate, onSwitchTab, onShowHistory, on
                   variant="compact"
                   T={T}
                   isLight={isLight}
+                  warnZoom={lead.st === "Zoom Agendado"}
                 />
                 <a href={`https://wa.me/${waPhone}`} target="_blank" rel="noreferrer"
                   style={{
@@ -4431,6 +4451,9 @@ const AnalysisDrawer = ({ lead, onClose, oc, onUpdate, onSwitchTab, T = P }) => 
               }}>🔥 Requiere Humano</span>
             )}
             {hot && lead.tag !== "requiere-humano" && <span style={{ fontSize: 9, fontWeight: 700, color: T.accent, background: `${T.accent}14`, border: `1px solid ${T.accentB}`, padding: "3px 9px", borderRadius: 99, letterSpacing: "0.05em" }}>HOT</span>}
+            {scheduledCallNM && (
+              <ScheduledCallBadge scheduledAt={scheduledCallNM.scheduled_at} variant="drawer" T={T} isLight={isLight} />
+            )}
             {inactive >= 7 && <span style={{ fontSize: 9, fontWeight: 700, color: T.rose, background: `${T.rose}14`, border: `1px solid ${T.rose}33`, padding: "3px 9px", borderRadius: 99 }}>{inactive}d inactivo</span>}
             <span style={{ fontSize: 9, fontWeight: 700, color: T.txt3, background: T.glass, border: `1px solid ${T.border}`, padding: "3px 9px", borderRadius: 99 }}>Etapa {stageIdx + 1}/{STAGES.length}</span>
             <SourceBadge source={lead.source} isLight={isLight} />
