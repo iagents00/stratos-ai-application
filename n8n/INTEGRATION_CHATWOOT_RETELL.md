@@ -34,7 +34,7 @@ Configurar UNA credencial "Supabase Stratos CRM" tipo HTTP Header Auth con:
 > ⚠️ La `SERVICE_ROLE_KEY` la sacás de Supabase Dashboard → Settings → API.
 > Bypasea RLS, mantenela como secret. No subir a Git ni compartir en chat.
 
-## 8 funciones RPC disponibles
+## 9 funciones RPC disponibles
 
 ### 1. `fn_upsert_lead_from_chatwoot` (la principal)
 
@@ -339,6 +339,81 @@ fue `action: "created"` o `action: "updated"`.
 > "la llamada se hizo". Si la llamada a Retell falla, esa lógica debe
 > ir en el workflow de n8n (reintento, logueo, etc.). El registro de
 > `scheduled_calls` ya no se vuelve a tomar.
+
+### 9. `fn_set_next_action` (setear la "Próxima Acción" del lead)
+
+**Cuándo llamarla:** cuando la IA decide qué tiene que hacer el humano
+después del handoff. El texto se renderiza directo en la sección
+**"PRÓXIMA ACCIÓN CLAVE"** del drawer del lead (NextActionHero).
+
+**Body (set normal):**
+```json
+{
+  "payload": {
+    "phone_e164":      "+573237451221",
+    "next_action":     "Llamar para aclarar dudas fiscales",
+    "next_action_at":  "2026-05-19T15:00:00-05:00"
+  }
+}
+```
+
+**Body (clear — marcar como completada):**
+```json
+{
+  "payload": {
+    "phone_e164": "+573237451221",
+    "clear":      true
+  }
+}
+```
+
+### Comportamiento
+
+| Campo | Obligatorio | Notas |
+|---|---|---|
+| `phone_e164` | ✅ siempre | lookup del lead |
+| `next_action` | ✅ excepto cuando `clear=true` | texto libre, se renderiza tal cual en el hero del drawer |
+| `next_action_at` | ❌ opcional | ISO 8601 con tz. Si llega, se setea para sorting + reminders. Si no, queda NULL |
+| `next_action_date` | ❌ opcional | display string custom (ej. "Mañana 3pm"). Si no llega y SÍ hay `next_action_at`, se autoformatea como "19 May, 15:00" (tz America/Cancun) |
+| `clear` | ❌ opcional | `true` resetea las 3 columnas; `next_action` se ignora |
+
+### Respuesta
+
+**Set exitoso:**
+```json
+{
+  "ok": true,
+  "lead_id": "uuid",
+  "action": "set",
+  "next_action": "Llamar para aclarar dudas fiscales",
+  "next_action_at": "2026-05-19T20:00:00+00:00",
+  "next_action_date": "19 May, 15:00"
+}
+```
+
+**Clear exitoso:**
+```json
+{ "ok": true, "lead_id": "uuid", "action": "cleared" }
+```
+
+**Errores:**
+- `{ ok:false, error:"phone_e164 missing or invalid" }`
+- `{ ok:false, error:"next_action missing (pass \"clear\": true to reset)" }`
+- `{ ok:false, error:"lead not found for phone", phone:"+..." }`
+
+### Side effects
+
+- `last_activity` se setea al momento actual.
+- `days_inactive` se resetea a 0.
+- `updated_at` se actualiza (dispara Realtime → el CRM lo muestra en vivo).
+
+### Patrón sugerido para handoff
+
+Cuando la IA decide handoff a humano, hacé **2 calls al mismo webhook**:
+1. `fn_set_next_action` con la acción concreta + hora si la tiene.
+2. (Si querés marcar urgente) `fn_upsert_lead_from_chatwoot` con label `requiere-humano` o un POST a `marcar_requiere_humano`.
+
+Así el cerrador ve simultáneamente el badge rojo **🔥 REQUIERE HUMANO** y exactamente qué tiene que hacer.
 
 ## Mapeo de labels de Chatwoot → stages del CRM
 
