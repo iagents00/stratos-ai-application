@@ -54,10 +54,13 @@ import {
   ClickDropdown,
 } from "./components";
 import AdvisorMetrics from "./AdvisorMetrics";
+import ScheduledCallBadge from "./ScheduledCallBadge";
+import { useScheduledCalls } from "../../../hooks/useScheduledCalls";
 
 function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () => {}, autoOpenPriority1 = 0, onAutoOpenHandled, softDeleteLead }) {
   const { user } = useAuth();
   const { config: clientConfig } = useClient();
+  const { get: getScheduledCall } = useScheduledCalls();
   const isMobile = useIsMobile();
   const isLight = theme === "light";
   const T = isLight ? LP : P;
@@ -1856,8 +1859,14 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                           <p style={{ fontSize: 17, fontWeight: 700, color: isLight ? T.txt : "#FFFFFF", fontFamily: fontDisp, letterSpacing: "-0.03em", lineHeight: 1.2, margin: 0 }}>{l.n}</p>
                         </div>
                         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 6 }}>
-                          <div style={{ display: "flex", alignItems: "center", gap: 5, minWidth: 0 }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: 5, minWidth: 0, flexWrap: "wrap" }}>
                             <Pill color={stageColor} s isLight={isLight}>{l.st}</Pill>
+                            {(() => {
+                              const sc = getScheduledCall(l);
+                              return sc ? (
+                                <ScheduledCallBadge scheduledAt={sc.scheduled_at} variant="card" T={T} isLight={isLight} />
+                              ) : null;
+                            })()}
                             <SourceBadge source={l.source} isLight={isLight} />
                           </div>
                           <span style={{ fontSize: 11.5, fontWeight: 600, color: isLight ? T.txt2 : "rgba(255,255,255,0.55)", fontFamily: fontDisp, letterSpacing: "-0.01em", flexShrink: 0 }}>{l.budget}</span>
@@ -3901,6 +3910,12 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                                       flexShrink: 0, fontSize: 11, lineHeight: 1,
                                     }}>🔥</span>
                                   )}
+                                  {(() => {
+                                    const sc = getScheduledCall(l);
+                                    return sc ? (
+                                      <span title={`Llamada programada · ${new Date(sc.scheduled_at).toLocaleString("es-MX",{day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit",hour12:false})}`} style={{ flexShrink: 0, fontSize: 11, lineHeight: 1 }}>📅</span>
+                                    ) : null;
+                                  })()}
                                   <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{l.n}</span>
                                 </p>
                                 <p style={{ fontSize: 9.5, color: T.txt3 }}>{l.asesor?.split(" ")[0]} · {l.campana}</p>
