@@ -34,7 +34,7 @@ Configurar UNA credencial "Supabase Stratos CRM" tipo HTTP Header Auth con:
 > ⚠️ La `SERVICE_ROLE_KEY` la sacás de Supabase Dashboard → Settings → API.
 > Bypasea RLS, mantenela como secret. No subir a Git ni compartir en chat.
 
-## 6 funciones RPC disponibles
+## 8 funciones RPC disponibles
 
 ### 1. `fn_upsert_lead_from_chatwoot` (la principal)
 
@@ -272,6 +272,73 @@ defecto según el tipo ("Mensaje WhatsApp", "Nota privada de IA", etc.).
 - `nota_ia` → cronograma de notas con fondo amarillo + badge ⚡ IA + Markdown.
 - `nota` / `texto` → cronograma de notas normal.
 - `system` → cronograma normal (se renderiza como nota humana por ahora).
+
+### 7. `fn_schedule_call` (agendar llamada diferida de Retell)
+
+**Cuándo llamarla:** cuando Retell detecta en su webhook de fin de llamada
+que el lead pidió ser recontactado más tarde ("márcame en 15 min"). n8n
+hace el cálculo (now + delta) y agenda la próxima llamada en Supabase.
+
+**Body:**
+```json
+{
+  "payload": {
+    "phone_e164":   "+573237451221",
+    "scheduled_at": "2026-05-18T17:30:00-05:00"
+  }
+}
+```
+
+**Idempotencia:** si ya hay una llamada `pending` para ese teléfono, se
+actualiza la hora en lugar de crear duplicado. La respuesta indica si
+fue `action: "created"` o `action: "updated"`.
+
+**Respuesta:**
+```json
+{
+  "ok": true,
+  "id": "uuid-de-la-fila",
+  "action": "created",
+  "phone_e164": "+573237451221",
+  "scheduled_at": "2026-05-18T22:30:00+00:00"
+}
+```
+
+### 8. `fn_get_pending_calls` (CRON consumer)
+
+**Cuándo llamarla:** desde un workflow CRON en n8n que corra cada 1 min.
+
+**Body:** vacío (`{}`).
+
+**Qué hace:**
+1. Hace `UPDATE ... RETURNING` atómico de todas las filas con
+   `status='pending'` Y `scheduled_at <= NOW()`.
+2. Las marca como `completed` (claim) y devuelve sus datos.
+3. Si dos instancias del CRON corren al mismo tiempo, Postgres garantiza
+   que cada fila la toma solo una — no hay duplicación de llamadas.
+
+**Respuesta:**
+```json
+{
+  "ok": true,
+  "count": 2,
+  "calls": [
+    {
+      "id": "uuid",
+      "phone_e164": "+573237451221",
+      "scheduled_at": "2026-05-18T22:30:00+00:00",
+      "created_at": "2026-05-18T22:15:00+00:00",
+      "attempted_at": "2026-05-18T22:30:05+00:00"
+    },
+    ...
+  ]
+}
+```
+
+> **Importante:** `completed` significa "el CRON tomó la fila", no
+> "la llamada se hizo". Si la llamada a Retell falla, esa lógica debe
+> ir en el workflow de n8n (reintento, logueo, etc.). El registro de
+> `scheduled_calls` ya no se vuelve a tomar.
 
 ## Mapeo de labels de Chatwoot → stages del CRM
 
