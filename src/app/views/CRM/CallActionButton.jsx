@@ -24,7 +24,7 @@
  * ─────────────────────────────────────────────────────────────────────────────
  */
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Phone, Check, Loader2 } from "lucide-react";
+import { Phone, Check, Loader2, AlertTriangle } from "lucide-react";
 import { P, font, fontDisp } from "../../../design-system/tokens";
 import { useAuth } from "../../../hooks/useAuth";
 import { triggerIaCall, canTriggerIaActions } from "../../../lib/iagents-actions";
@@ -38,6 +38,10 @@ export default function CallActionButton({
   T = P,
   isLight = false,
   style: styleOverride,
+  // Cuando el lead ya tiene Zoom agendado, degradamos visualmente el botón
+  // para evitar clicks accidentales que arruinen la cita pendiente. El click
+  // SIGUE funcionando — solo cambia el aspecto y agregamos confirm() previo.
+  warnZoom = false,
 }) {
   const { user } = useAuth();
   const useIa = canTriggerIaActions(user);
@@ -52,9 +56,19 @@ export default function CallActionButton({
   const phoneClean = rawPhone.replace(/[^0-9+]/g, "");
   if (!phoneClean) return null;
 
+  // Confirm de seguridad si hay Zoom agendado y el user intenta llamar.
+  const confirmIfWarn = () => {
+    if (!warnZoom) return true;
+    return window.confirm(
+      "Este lead tiene un Zoom agendado. " +
+      "¿Seguro que querés llamarlo ahora? La IA podría estar a punto de contactarlo."
+    );
+  };
+
   const handleIaCall = useCallback(async (e) => {
     e.preventDefault();
     if (state === "loading") return;
+    if (!confirmIfWarn()) return;
     setState("loading");
     setErrMsg(null);
     const res = await triggerIaCall(phoneClean);
@@ -68,65 +82,64 @@ export default function CallActionButton({
     resetTimer.current = setTimeout(() => {
       setState("idle"); setErrMsg(null);
     }, RESULT_DISPLAY_MS);
-  }, [phoneClean, state]);
+  }, [phoneClean, state, warnZoom]);
 
   // ───────── Look base ─────────
   const isCompact = variant === "compact";
+
+  // Cuando warnZoom=true, downgradeamos a un look "secondary" — outline en
+  // lugar de gradient verde — para que no compita con la card de Zoom.
+  const primaryBg = isLight
+    ? `linear-gradient(135deg, ${T.accent} 0%, #14B892 100%)`
+    : "rgba(255,255,255,0.92)";
+  const primaryFg = isLight ? "#FFFFFF" : "#0A0F18";
+  const secondaryBg = "transparent";
+  const secondaryBd = isLight ? `1px solid ${T.accent}66` : `1px solid rgba(255,255,255,0.22)`;
+  const secondaryFg = isLight ? (T.accentDark || T.accent) : T.accent;
+
   const baseStyle = {
     flex: 1, minWidth: isCompact ? 110 : 120,
     ...(isCompact ? { height: 40, padding: "0 12px" } : { padding: "9px 12px" }),
     display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
     borderRadius: 10,
-    background: isLight
-      ? `linear-gradient(135deg, ${T.accent} 0%, #14B892 100%)`
-      : "rgba(255,255,255,0.92)",
-    border: "none",
-    color: isLight ? "#FFFFFF" : "#0A0F18",
+    background: warnZoom ? secondaryBg : primaryBg,
+    border: warnZoom ? secondaryBd : "none",
+    color: warnZoom ? secondaryFg : primaryFg,
     fontSize: 12, fontWeight: 700, fontFamily: fontDisp,
     letterSpacing: "0.01em", textDecoration: "none",
-    boxShadow: isLight
+    boxShadow: warnZoom ? "none" : (isLight
       ? `0 3px 10px ${T.accent}40, 0 1px 3px ${T.accent}26, inset 0 1px 0 rgba(255,255,255,0.35)`
-      : "0 2px 8px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.18)",
+      : "0 2px 8px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.18)"),
     transition: "all 0.18s",
     cursor: "pointer",
     ...styleOverride,
   };
 
-  // ───────── User humano normal → <a tel:> de toda la vida ─────────
+  // Tooltip + icono según contexto
+  const warnTooltip = "Lead con Zoom agendado — confirma antes de llamar (puede chocar con la cita de la IA)";
+
+  // ───────── User humano normal → <a tel:> con confirm opcional ─────────
   if (!useIa) {
     return (
       <a
         href={`tel:${phoneClean}`}
+        title={warnZoom ? warnTooltip : undefined}
+        onClick={(e) => {
+          if (!confirmIfWarn()) e.preventDefault();
+        }}
         style={baseStyle}
-        onMouseEnter={(e) => {
-          if (isLight) {
-            e.currentTarget.style.boxShadow = `0 5px 16px ${T.accent}55, 0 2px 5px ${T.accent}30`;
-            e.currentTarget.style.transform = "translateY(-1px)";
-          } else {
-            e.currentTarget.style.background = "#FFFFFF";
-            e.currentTarget.style.boxShadow = "0 4px 14px rgba(0,0,0,0.45)";
-            e.currentTarget.style.transform = "translateY(-1px)";
-          }
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.transform = "none";
-          if (isLight) {
-            e.currentTarget.style.boxShadow = `0 3px 10px ${T.accent}40, 0 1px 3px ${T.accent}26`;
-          } else {
-            e.currentTarget.style.background = "rgba(255,255,255,0.92)";
-            e.currentTarget.style.boxShadow = "0 2px 8px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.18)";
-          }
-        }}
       >
-        <Phone size={12} strokeWidth={2.4} /> {label}
+        {warnZoom && <AlertTriangle size={12} strokeWidth={2.4} />}
+        {!warnZoom && <Phone size={12} strokeWidth={2.4} />}
+        {label}
       </a>
     );
   }
 
   // ───────── iAgents → POST al webhook de n8n ─────────
   const stateStyle = (() => {
-    if (state === "success") return { background: isLight ? "#0D9A76" : "rgba(110,231,194,0.96)", color: "#04130D" };
-    if (state === "error")   return { background: isLight ? "#DC2626" : "rgba(248,113,113,0.96)", color: "#3B0008" };
+    if (state === "success") return { background: isLight ? "#0D9A76" : "rgba(110,231,194,0.96)", color: "#04130D", border: "none" };
+    if (state === "error")   return { background: isLight ? "#DC2626" : "rgba(248,113,113,0.96)", color: "#3B0008", border: "none" };
     return {};
   })();
 
@@ -135,29 +148,8 @@ export default function CallActionButton({
       type="button"
       onClick={handleIaCall}
       disabled={state === "loading"}
-      title={state === "error" && errMsg ? `Error: ${errMsg}` : "Disparar llamada vía Retell"}
+      title={state === "error" && errMsg ? `Error: ${errMsg}` : (warnZoom ? warnTooltip : "Disparar llamada vía Retell")}
       style={{ ...baseStyle, ...stateStyle, cursor: state === "loading" ? "wait" : "pointer", opacity: state === "loading" ? 0.92 : 1 }}
-      onMouseEnter={(e) => {
-        if (state !== "idle") return;
-        if (isLight) {
-          e.currentTarget.style.boxShadow = `0 5px 16px ${T.accent}55, 0 2px 5px ${T.accent}30`;
-          e.currentTarget.style.transform = "translateY(-1px)";
-        } else {
-          e.currentTarget.style.background = "#FFFFFF";
-          e.currentTarget.style.boxShadow = "0 4px 14px rgba(0,0,0,0.45)";
-          e.currentTarget.style.transform = "translateY(-1px)";
-        }
-      }}
-      onMouseLeave={(e) => {
-        if (state !== "idle") return;
-        e.currentTarget.style.transform = "none";
-        if (isLight) {
-          e.currentTarget.style.boxShadow = `0 3px 10px ${T.accent}40, 0 1px 3px ${T.accent}26`;
-        } else {
-          e.currentTarget.style.background = "rgba(255,255,255,0.92)";
-          e.currentTarget.style.boxShadow = "0 2px 8px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.18)";
-        }
-      }}
     >
       {state === "loading" && (
         <>
@@ -179,7 +171,9 @@ export default function CallActionButton({
       )}
       {state === "idle" && (
         <>
-          <Phone size={12} strokeWidth={2.4} />
+          {warnZoom
+            ? <AlertTriangle size={12} strokeWidth={2.4} />
+            : <Phone size={12} strokeWidth={2.4} />}
           {label}
         </>
       )}
