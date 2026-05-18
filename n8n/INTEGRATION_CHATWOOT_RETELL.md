@@ -34,7 +34,7 @@ Configurar UNA credencial "Supabase Stratos CRM" tipo HTTP Header Auth con:
 > ⚠️ La `SERVICE_ROLE_KEY` la sacás de Supabase Dashboard → Settings → API.
 > Bypasea RLS, mantenela como secret. No subir a Git ni compartir en chat.
 
-## 5 funciones RPC disponibles
+## 6 funciones RPC disponibles
 
 ### 1. `fn_upsert_lead_from_chatwoot` (la principal)
 
@@ -216,6 +216,62 @@ Chatwoot y querés borrar TODO el lead asociado a esa conversación.
 real, no va a la papelera. La papelera del CRM (`deleted_at IS NOT NULL`)
 no aplica acá. Usalo solo para resetear flujos de testing del bot, no
 para descartar leads reales (para eso está `soft_delete` desde la UI).
+
+### 6. `fn_add_lead_note` (inyectar notas tipadas)
+
+**Cuándo llamarla:** cuando querés volcar al expediente del lead algo que NO
+sea uno de los flujos automáticos (upsert, appointment, voice, discovery).
+Casos típicos:
+- **Historial de chat de WhatsApp** → `note_type: "historial_chat"` →
+  aparece en el tab "Chat" del drawer del lead, separado del Expediente.
+- **Eventos del sistema** → `note_type: "system"` (zoom agendado, recordatorio
+  enviado, lead reasignado, etc.).
+- **Notas IA fuera del flujo Chatwoot** → `note_type: "nota_ia"`.
+- **Notas/texto manual** → `note_type: "nota"` o `"texto"`.
+
+**Body:**
+```json
+{
+  "payload": {
+    "phone":     "+573237451221",
+    "content":   "👤 Cliente: Hola\n🤖 Bot: Hola, ¿en qué te ayudo?\n👤 Cliente: Quiero info de Cancún",
+    "note_type": "historial_chat",
+    "title":     "Conversación WhatsApp · Inicial",
+    "metadata":  {
+      "source": "chatwoot",
+      "conversation_id": 20,
+      "inbox_id": 6,
+      "message_count": 3
+    }
+  }
+}
+```
+
+`content` puede traer Markdown / saltos de línea / emojis — se renderiza
+respetando el formato.
+
+`note_type` debe estar en la whitelist:
+`historial_chat`, `nota`, `nota_ia`, `system`, `texto`. Cualquier otro valor
+devuelve error con la whitelist en la respuesta.
+
+`title` y `metadata` son opcionales — si no llega `title`, se usa uno por
+defecto según el tipo ("Mensaje WhatsApp", "Nota privada de IA", etc.).
+
+**Respuesta:**
+```json
+{
+  "ok": true,
+  "item_id": "uuid-de-la-nota",
+  "lead_id": "uuid-del-lead",
+  "note_type": "historial_chat"
+}
+```
+
+**Cómo se ve en el CRM:**
+- `historial_chat` → tab **"Chat"** del drawer (separado, no contamina el Expediente).
+- `nota_ia` → cronograma de notas con fondo amarillo + badge ⚡ IA + Markdown.
+- `nota` / `texto` → cronograma de notas normal.
+- `system` → cronograma normal (se renderiza como nota humana por ahora).
 
 ## Mapeo de labels de Chatwoot → stages del CRM
 
