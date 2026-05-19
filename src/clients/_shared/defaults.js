@@ -84,6 +84,12 @@ export const DEFAULT_CLIENT_CONFIG = {
     // por día/semana/mes. Visible solo para roles admin/director/super_admin/ceo.
     // Default OFF → Duke no la ve hasta que se prenda explícitamente.
     advisorMetricsTab: false,
+
+    // Drawer "Discovery" simplificado — una sola sección scrolleable con
+    // Próxima Acción arriba, notas y cronograma, sin la sección de Tareas.
+    // Cuando está OFF, se mantiene el comportamiento histórico (Expediente
+    // + Perfil + Análisis IA con sección de Tareas visible).
+    discoverySimplified: false,
   },
 };
 

@@ -63,8 +63,11 @@ const dukeConfig = {
   // - advisorMetricsTab: true → admins/director/super_admin/ceo de Duke
   //   ahora ven el botón "Indicadores" en el header del CRM.
   crm: {
-    defaultProjects:    [],
-    advisorMetricsTab:  true,
+    defaultProjects:     [],
+    advisorMetricsTab:   true,
+    // Discovery simplificado (PR del 2026-05): un solo drawer scrolleable
+    // con Próxima Acción + notas + cronograma. Sin sub-toggle, sin Tareas.
+    discoverySimplified: true,
   },
 };
 
