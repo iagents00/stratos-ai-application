@@ -55,11 +55,20 @@ function noteVisualStyle(note, isLight) {
   };
 }
 
-export default function LeadNotesTimeline({ lead, T = P, isLight = false }) {
+export default function LeadNotesTimeline({ lead, T = P, isLight = false, autoStartAdding = 0 }) {
   const { user } = useAuth();
   const [notes, setNotes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [adding, setAdding] = useState(false);
+  // Si el padre incrementa autoStartAdding (un trigger counter), arrancamos
+  // el flujo de captura inmediatamente. Skip al primer mount (valor inicial).
+  const lastTriggerRef = useRef(autoStartAdding);
+  useEffect(() => {
+    if (autoStartAdding !== lastTriggerRef.current) {
+      lastTriggerRef.current = autoStartAdding;
+      if (autoStartAdding > 0) setAdding(true);
+    }
+  }, [autoStartAdding]);
   const [draft, setDraft] = useState("");
   const [saving, setSaving] = useState(false);
   const [errorMsg, setErrorMsg] = useState(null);
