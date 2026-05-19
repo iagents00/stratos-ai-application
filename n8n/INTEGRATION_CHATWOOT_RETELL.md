@@ -34,7 +34,7 @@ Configurar UNA credencial "Supabase Stratos CRM" tipo HTTP Header Auth con:
 > ⚠️ La `SERVICE_ROLE_KEY` la sacás de Supabase Dashboard → Settings → API.
 > Bypasea RLS, mantenela como secret. No subir a Git ni compartir en chat.
 
-## 9 funciones RPC disponibles
+## 10 funciones RPC disponibles
 
 ### 1. `fn_upsert_lead_from_chatwoot` (la principal)
 
@@ -414,6 +414,68 @@ Cuando la IA decide handoff a humano, hacé **2 calls al mismo webhook**:
 2. (Si querés marcar urgente) `fn_upsert_lead_from_chatwoot` con label `requiere-humano` o un POST a `marcar_requiere_humano`.
 
 Así el cerrador ve simultáneamente el badge rojo **🔥 REQUIERE HUMANO** y exactamente qué tiene que hacer.
+
+### 10. `fn_register_failed_call` (motor de strikes para reintentos)
+
+**Cuándo llamarla:** después de cada llamada Retell que termina sin éxito
+(buzón, no contesta, número inválido, etc.). n8n hace este POST y, según
+`new_attempts`, decide si reintentar más tarde o dropear el lead de la cola.
+
+**Body:**
+```json
+{ "payload": { "phone_e164": "+573237451221" } }
+```
+
+**Qué hace internamente:**
+- `UPDATE leads SET call_attempts = call_attempts + 1 ... RETURNING ...`
+  (atómico en una sola query — dos workers concurrentes no pueden contar el mismo intento dos veces).
+- `updated_at` se actualiza (Realtime propaga al CRM si querés mostrar el contador en la UI más adelante).
+
+**Respuesta exitosa:**
+```json
+{ "ok": true, "lead_id": "uuid", "new_attempts": 2 }
+```
+
+**Errores:**
+- `{ "ok": false, "error": "phone_e164 missing or invalid" }`
+- `{ "ok": false, "error": "lead not found for phone", "phone": "+..." }`
+
+### Patrón sugerido en n8n (3 strikes para buzón)
+
+```js
+const result = await POST("/rpc/fn_register_failed_call", { payload: { phone_e164 } });
+if (!result.ok) { logError(result.error); return; }
+
+const STRIKE_LIMIT = 3;
+if (result.new_attempts >= STRIKE_LIMIT) {
+  // Buzón persistente → dropear de la cola, marcar el lead como "no contesta"
+  await POST("/rpc/fn_set_next_action", {
+    payload: {
+      phone_e164,
+      next_action: "No contesta · 3 intentos · revisar manualmente",
+    },
+  });
+  // (opcional) marcar como requiere humano
+  await POST("/webhook/api-interna-stratos", {
+    action: "marcar_requiere_humano", phone_e164,
+  });
+} else {
+  // Aún hay strikes disponibles → reagendar en 30 min
+  await POST("/rpc/fn_schedule_call", {
+    payload: {
+      phone_e164,
+      scheduled_at: new Date(Date.now() + 30 * 60_000).toISOString(),
+    },
+  });
+}
+```
+
+### Reset del contador
+
+Cuando una llamada SÍ se conecta exitosamente, conviene resetear:
+- Hoy no hay una RPC dedicada para resetear. Si lo necesitás, podés usar
+  un PATCH directo a `/rest/v1/leads?id=eq.<lead_id>` con
+  `{ "call_attempts": 0 }`, o pedís una RPC nueva `fn_reset_failed_calls`.
 
 ## Mapeo de labels de Chatwoot → stages del CRM
 
