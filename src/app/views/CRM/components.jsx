@@ -3488,7 +3488,6 @@ const NotesModal = ({ lead, onClose, onSave, onUpdate, onSwitchTab, onShowHistor
   // estilo dashed-button para revelarse sin quitar espacio al flujo
   // principal (próxima acción + notas).
   const [showMoreNotes, setShowMoreNotes]     = useState(!discoverySimplified);
-  const [showChatHistory, setShowChatHistory] = useState(!discoverySimplified);
   const [showGeneralData, setShowGeneralData] = useState(!discoverySimplified);
   const [showHistorial, setShowHistorial]     = useState(!discoverySimplified);
   // Trigger contador para arrancar el modo "agregar nota" dentro del
@@ -3912,26 +3911,12 @@ const NotesModal = ({ lead, onClose, onSave, onUpdate, onSwitchTab, onShowHistor
               + transcript colapsable. Solo aparece si hay calls registradas. */}
           <LeadVoiceCalls lead={lead} T={T} isLight={isLight} />
 
-          {/* 3.7. CHAT — historial WhatsApp / Chatwoot. En Discovery
-              simplificado se muestra dentro de una accordion para no quitar
-              espacio. En otros clientes vive en el tab "Chat" del Perfil
-              (sin cambios). */}
-          {discoverySimplified && (
-            <div>
-              <CollapsibleSectionToggle
-                expanded={showChatHistory}
-                onToggle={() => setShowChatHistory(v => !v)}
-                label="Conversación WhatsApp · Chatwoot"
-                icon={MessageCircle}
-                T={T}
-              />
-              {showChatHistory && (
-                <div style={{ marginTop: 12 }}>
-                  <LeadChatHistory lead={lead} T={T} isLight={isLight} />
-                </div>
-              )}
-            </div>
-          )}
+          {/* La conversación WhatsApp · Chatwoot vivía aquí como accordion
+              extra, pero el cliente prefirió no mostrarla a usuarios
+              normales en el drawer de Discovery. La data sigue en
+              expediente_items (tipo='historial_chat') y se accede desde
+              el tab "Chat" del Perfil legacy. LeadVoiceCalls arriba
+              mantiene el audio + transcripción de Retell intactos. */}
 
           {/* 4. TAREAS — checklist accionable. Gated por crm.discoverySimplified
               en la config del cliente. Duke lo tiene ON → sin Tareas en el drawer.
