@@ -34,7 +34,7 @@ Configurar UNA credencial "Supabase Stratos CRM" tipo HTTP Header Auth con:
 > ⚠️ La `SERVICE_ROLE_KEY` la sacás de Supabase Dashboard → Settings → API.
 > Bypasea RLS, mantenela como secret. No subir a Git ni compartir en chat.
 
-## 10 funciones RPC disponibles
+## 12 funciones RPC disponibles
 
 ### 1. `fn_upsert_lead_from_chatwoot` (la principal)
 
@@ -476,6 +476,99 @@ Cuando una llamada SÍ se conecta exitosamente, conviene resetear:
 - Hoy no hay una RPC dedicada para resetear. Si lo necesitás, podés usar
   un PATCH directo a `/rest/v1/leads?id=eq.<lead_id>` con
   `{ "call_attempts": 0 }`, o pedís una RPC nueva `fn_reset_failed_calls`.
+
+### 11. `fn_reset_call_attempts` (resetear contador de strikes)
+
+**Cuándo llamarla:** después de una llamada Retell EXITOSA (el cliente
+contestó / la conversación se completó). Sin esto, el contador seguiría
+subiendo en el próximo intento y un cliente que contestó al segundo
+strike podría quedar a 1 de buzón persistente por error.
+
+**Body:**
+```json
+{ "payload": { "phone_e164": "+573237451221" } }
+```
+
+**Respuesta:** `{ "ok": true, "lead_id": "uuid", "call_attempts": 0 }`
+
+**Patrón sugerido (después de cada call_ended con éxito):**
+```js
+const summary = retellPayload.call_summary;
+if (summary && retellPayload.disconnection_reason === "user_hangup") {
+  // Cliente conectó normalmente → resetear strikes
+  await POST("/rpc/fn_reset_call_attempts", { payload: { phone_e164 } });
+}
+```
+
+### 12. `fn_assign_lead` (reasignación REAL del lead a un asesor)
+
+**Cuándo llamarla:** cuando el bot decide handoff a un humano específico
+(Gael, Cecilia, etc.). A diferencia de `fn_set_next_action` que solo
+escribe texto, esta función actualiza `asesor_id + asesor_name` en la BD
+→ el lead **aparece en el filtro "Mis Leads"** del asesor.
+
+**Body:**
+```json
+{
+  "payload": {
+    "phone_e164":  "+573237451221",
+    "agent_name":  "Gael G"
+  }
+}
+```
+
+**Cómo se hace el lookup del asesor:**
+- Match case-insensitive contra `profiles.name`.
+- Filtro: `organization_id = STRATOS` + `active = true`.
+- Si el name no existe → error con hint para usar el `name` exacto del profile.
+
+**Respuesta exitosa:**
+```json
+{
+  "ok": true,
+  "lead_id": "uuid",
+  "asesor_id": "uuid-del-asesor",
+  "asesor_name": "Gael G",
+  "previous_asesor": "iAgents"
+}
+```
+
+`previous_asesor` te sirve para logging / auditoría (ver de quién venía).
+
+**Errores:**
+- `{ "ok": false, "error": "phone_e164 missing or invalid" }`
+- `{ "ok": false, "error": "agent_name missing" }`
+- `{ "ok": false, "error": "agent not found in profiles", "agent_name": "...", "hint": "..." }`
+- `{ "ok": false, "error": "lead not found for phone", "phone": "..." }`
+
+### Cómo plugar `fn_assign_lead` en tu workflow actual de 3 strikes
+
+Tu workflow actual tiene **una sola llamada** al webhook "CRM: Asignar a Gael" que solo actualiza el texto de `next_action`. **Para que la reasignación sea operativa**, hay que partir esto en 2 llamadas HTTP secuenciales:
+
+```
+Antes (solo cosmético):
+  fn_set_next_action("🚨 Reasignado a Gael...")
+
+Después (operativo):
+  1. fn_assign_lead     → cambia asesor_id + asesor_name a "Gael G"
+  2. fn_set_next_action → "🚨 Reasignado a Gael (Lead no contestó 3 llamadas de IA)"
+```
+
+JSON del nuevo nodo HTTP (agregar **antes** del nodo "CRM: Asignar a Gael" existente):
+
+```json
+{
+  "method": "POST",
+  "url": "https://glulgyhkrqpykxmujodb.supabase.co/rest/v1/rpc/fn_assign_lead",
+  "headers": { "apikey": "<SERVICE_ROLE_KEY>", "Authorization": "Bearer <SERVICE_ROLE_KEY>", "Content-Type": "application/json" },
+  "body": {
+    "payload": {
+      "phone_e164": "{{ $('1. Extraer Variables Retell1').item.json.phone_e164 }}",
+      "agent_name": "Gael G"
+    }
+  }
+}
+```
 
 ## Mapeo de labels de Chatwoot → stages del CRM
 
