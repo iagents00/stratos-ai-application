@@ -866,12 +866,12 @@ const NextActionHero = ({ lead, T = P, onUpdate = null }) => {
         boxShadow: `0 0 12px ${T.accent}${isLight ? "55" : "66"}`,
       }} />
 
-      {/* Header — etiqueta + CLAVE pill en una sola fila, sin chrome.
-          La fecha vive en su propia sub-línea debajo (más limpia que
-          empujada al extremo derecho). */}
+      {/* Header — ícono Zap + "PRÓXIMA ACCIÓN" + chip de fecha/hora al
+          lado en la misma fila. Sin CLAVE pill (era ruido visual; la
+          urgencia ya la comunica el accent rail vertical + animación). */}
       <div style={{
         display: "flex", alignItems: "center", gap: 8,
-        marginBottom: dateText && !editing ? 6 : 10,
+        marginBottom: 10,
         flexWrap: "wrap",
         position: "relative",
       }}>
@@ -889,31 +889,22 @@ const NextActionHero = ({ lead, T = P, onUpdate = null }) => {
           <Zap size={12} color={isLight ? "#FFFFFF" : accentStrong} strokeWidth={2.6} fill={isLight ? "#FFFFFF" : "none"} />
         </div>
         <p style={{ margin: 0, fontSize: 10.5, fontWeight: 800, color: accentStrong, letterSpacing: "0.14em", textTransform: "uppercase", fontFamily: fontDisp }}>Próxima acción</p>
-        <span style={{
-          fontSize: 8.5, fontWeight: 800, color: accentStrong,
-          background: isLight ? `${T.accent}22` : `${T.accent}2A`,
-          border: `1px solid ${isLight ? `${T.accent}55` : T.accentB}`,
-          padding: "2px 7px", borderRadius: 99, letterSpacing: "0.1em",
-          fontFamily: fontDisp, animation: "pulse 2.4s ease-in-out infinite",
-          flexShrink: 0,
-        }}>CLAVE</span>
+        {dateText && !editing && (
+          <span style={{
+            display: "inline-flex", alignItems: "center", gap: 5,
+            padding: "3px 9px", borderRadius: 99,
+            background: isLight ? "#FFFFFF" : `${T.accent}12`,
+            border: `1px solid ${isLight ? `${T.accent}3D` : `${T.accent}26`}`,
+            color: accentStrong,
+            fontSize: 10, fontWeight: 700, fontFamily: fontDisp,
+            letterSpacing: "0.01em", whiteSpace: "nowrap", flexShrink: 0,
+            boxShadow: isLight ? `0 1px 2px ${T.accent}18, inset 0 1px 0 rgba(255,255,255,0.8)` : "none",
+          }}>
+            <Clock size={9} strokeWidth={2.6} />
+            {dateText}
+          </span>
+        )}
       </div>
-      {dateText && !editing && (
-        <div style={{
-          display: "inline-flex", alignItems: "center", gap: 6,
-          marginBottom: 12,
-          padding: "4px 10px", borderRadius: 99,
-          background: isLight ? "#FFFFFF" : `${T.accent}12`,
-          border: `1px solid ${isLight ? `${T.accent}3D` : `${T.accent}26`}`,
-          color: accentStrong,
-          fontSize: 10.5, fontWeight: 700, fontFamily: fontDisp,
-          letterSpacing: "0.01em", whiteSpace: "nowrap",
-          boxShadow: isLight ? `0 1px 2px ${T.accent}18, inset 0 1px 0 rgba(255,255,255,0.8)` : "none",
-        }}>
-          <Clock size={10} strokeWidth={2.4} />
-          {dateText}
-        </div>
-      )}
 
       {/* Cuerpo — texto de la acción, clickeable directamente para editar */}
       {!editing && (
