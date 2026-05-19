@@ -215,7 +215,8 @@ export const getResp = (t, leadData, liveLeads) => {
 
   // — Zoom / scheduled meetings —
   if (l.includes("zoom") || l.includes("reunión") || l.includes("videollamada")) {
-    const zooms = allLeads.filter(x => x.st === "Zoom Agendado" || x.st === "Zoom Concretado");
+    // Post-Mayo 2026: lo que antes era "Zoom Concretado" ahora vive en "Seguimiento".
+    const zooms = allLeads.filter(x => x.st === "Zoom Agendado" || x.st === "Seguimiento");
     return {
       content: `**${zooms.length} Zooms agendados** — Prepara cada sesión con los siguientes puntos:`,
       metrics: zooms.map((x, i) => ({
@@ -270,7 +271,7 @@ export const getResp = (t, leadData, liveLeads) => {
     allLeads.forEach(x => {
       if (!asesoresMap[x.asesor]) asesoresMap[x.asesor] = { leads: 0, zooms: 0, cierres: 0, totalSc: 0 };
       asesoresMap[x.asesor].leads++;
-      if (x.st === "Zoom Agendado" || x.st === "Zoom Concretado") asesoresMap[x.asesor].zooms++;
+      if (x.st === "Zoom Agendado" || x.st === "Seguimiento") asesoresMap[x.asesor].zooms++;
       if (x.st === "Cierre") asesoresMap[x.asesor].cierres++;
       asesoresMap[x.asesor].totalSc += x.sc;
     });

@@ -12,19 +12,18 @@
  * CRM.jsx usa la versión de app/data/leads.js.
  */
 export const stgC = {
-  "Contáctame ya":      "#94A3B8",
-  "Segundo Intento":    "#38BDF8",
-  "Remarketing":        "#FB923C",
-  "Seguimiento":        "#FBBF24",
-  "Zoom Agendado":      "#3B82F6",
-  "No Show":            "#EA580C",
-  "Zoom Concretado":    "#4ADE80",
-  "Visita Agendada":    "#06B6D4",
-  "Visita Concretada":  "#6EE7C2",
-  "Negociación":        "#FB923C",
-  "Cierre":             "#34D399",
-  "Rotación":           "#A8A29E",
-  "Postventa":          "#64748B",
+  "Contáctame Ya":    "#94A3B8",
+  "Segundo Intento":  "#38BDF8",
+  "Tercer Intento":   "#7EB8F0",
+  "Rotación":         "#A8A29E",
+  "Remarketing IA":   "#FB923C",
+  "Zoom Agendado":    "#3B82F6",
+  "Reactivar Zoom":   "#EA580C",
+  "Seguimiento":      "#FBBF24",
+  "Apartó":           "#4ADE80",
+  "Visita Agendada":  "#06B6D4",
+  "Cierre":           "#34D399",
+  "Postventa":        "#64748B",
 };
 
 export const SRC_META = {

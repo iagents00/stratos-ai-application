@@ -6,6 +6,6 @@ export const revenue = [
 export const pipe = [
   { name: "Prospecto", val: 34, c: "#7EB8F0" },
   { name: "Visita", val: 18, c: "#A78BFA" },
-  { name: "Negociación", val: 12, c: "#67B7D1" },
+  { name: "Seguimiento", val: 12, c: "#67B7D1" },
   { name: "Cierre", val: 6, c: "#6DD4A8" },
 ];
