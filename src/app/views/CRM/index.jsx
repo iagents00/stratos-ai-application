@@ -633,20 +633,38 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
     });
   };
 
+  // Cliente con discoverySimplified=true → cualquier "abrir ficha del
+  // lead" cae al NotesModal (Discovery), nunca al LeadPanel legacy con
+  // sub-tabs Datos/Chat/Documentos. Helper único para que el listado y
+  // los botones de "perfil" siempre rendericen el mismo drawer.
+  const isDiscoverySimplified = clientConfig?.crm?.discoverySimplified === true;
+  const openLeadDrawer = (lead) => {
+    if (!lead) return;
+    setAnalyzingLead(null);
+    if (isDiscoverySimplified) {
+      setSelectedLead(null);
+      setNotesLead(lead);
+    } else {
+      setNotesLead(null);
+      setSelectedLead(lead);
+    }
+  };
+
   // Switcher unificado del Dynamic Island — al cambiar de tab, cerramos el drawer
-  // actual y abrimos el target con el MISMO lead. Discovery agrupa Expediente +
-  // Perfil; el sub-toggle del header del drawer permite flipear entre ambas
-  // sub-vistas usando los ids "expediente" / "perfil" directamente.
+  // actual y abrimos el target con el MISMO lead.
   const openDrawerTab = (tab, lead) => {
     if (!lead) return;
     if (tab === "analisis") {
       setSelectedLead(null); setNotesLead(null); setAnalyzingLead(lead);
     } else if (tab === "perfil") {
-      setAnalyzingLead(null); setNotesLead(null); setSelectedLead(lead);
+      // En clientes simplified, "perfil" también cae al NotesModal —
+      // ya no se expone el LeadPanel legacy.
+      if (isDiscoverySimplified) {
+        setAnalyzingLead(null); setSelectedLead(null); setNotesLead(lead);
+      } else {
+        setAnalyzingLead(null); setNotesLead(null); setSelectedLead(lead);
+      }
     } else if (tab === "expediente" || tab === "discovery") {
-      // "discovery" desde la pill principal: cae a Expediente, la sub-vista
-      // donde el asesor pasa el 90% del tiempo. Si ya estaba en Perfil, el
-      // sub-toggle del header maneja el flip explícito vía "perfil".
       setAnalyzingLead(null); setSelectedLead(null); setNotesLead(lead);
     }
   };
@@ -2399,7 +2417,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                               const existing = leadsData.find(l => l.id === duplicateMatch.lead_id);
                               setAddingLead(false);
                               if (existing) {
-                                setSelectedLead(existing);
+                                openLeadDrawer(existing);
                               } else {
                                 showToast(`"${duplicateMatch.lead_name}" pertenece a ${duplicateMatch.asesor_name || "otro asesor"}. Pide al administrador acceso o reasignación.`, "info");
                               }
@@ -2441,7 +2459,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                             onClick={() => {
                               const existing = leadsData.find(l => l.id === duplicateMatch.lead_id);
                               setAddingLead(false);
-                              if (existing) setSelectedLead(existing);
+                              if (existing) openLeadDrawer(existing);
                             }}
                             style={{
                               padding: "5px 11px", borderRadius: 8,
@@ -3720,7 +3738,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
 
                         {/* 👤 Perfil — siempre visible con borde sutil. Hover
                             ilumina con accent azul para señal de acción. */}
-                        <button onClick={() => setSelectedLead(l)}
+                        <button onClick={() => openLeadDrawer(l)}
                           title="Abrir perfil del cliente"
                           aria-label="Abrir perfil del cliente"
                           style={{
@@ -3968,8 +3986,10 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                             <div style={{ display: "flex", gap: 5 }}>
                               <button onClick={() => oc(`__crm__ ${l.n.toLowerCase()}`, l)} style={{ flex: 1, padding: "6px 0", borderRadius: 7, background: `${T.accent}10`, border: `1px solid ${T.accentB}`, color: T.accent, fontSize: 9.5, fontWeight: 600, cursor: "pointer", fontFamily: font, transition: "background 0.15s" }} onMouseEnter={e => e.currentTarget.style.background = `${T.accent}1E`} onMouseLeave={e => e.currentTarget.style.background = `${T.accent}10`}>Analizar</button>
                               <button onClick={() => togglePin(l.id)} title={pinnedIds.has(l.id) ? "Quitar de prioridad" : "Añadir a prioridad"} style={{ width: 28, padding: "5px 0", borderRadius: 7, background: pinnedIds.has(l.id) ? `${T.accent}12` : "transparent", border: `1px solid ${pinnedIds.has(l.id) ? `${T.accent}36` : T.border}`, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.15s" }} onMouseEnter={e => { e.currentTarget.style.background = `${T.accent}1A`; }} onMouseLeave={e => { e.currentTarget.style.background = pinnedIds.has(l.id) ? `${T.accent}12` : "transparent"; }}><Star size={10} color={pinnedIds.has(l.id) ? T.accent : T.txt3} fill={pinnedIds.has(l.id) ? T.accent : "none"} strokeWidth={2} /></button>
-                              <button onClick={() => setSelectedLead(l)} style={{ width: 28, padding: "5px 0", borderRadius: 7, background: "transparent", border: `1px solid ${T.border}`, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.15s" }} onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.06)"; e.currentTarget.style.borderColor = T.borderH; }} onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = T.border; }}><User size={10} color={T.txt3} /></button>
-                              <button onClick={() => setNotesLead(l)} style={{ width: 28, padding: "5px 0", borderRadius: 7, background: "transparent", border: `1px solid ${T.border}`, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.15s" }} onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.06)"; e.currentTarget.style.borderColor = T.borderH; }} onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = T.border; }}><FileText size={10} color={T.txt3} /></button>
+                              {!isDiscoverySimplified && (
+                                <button onClick={() => openLeadDrawer(l)} title="Abrir perfil" style={{ width: 28, padding: "5px 0", borderRadius: 7, background: "transparent", border: `1px solid ${T.border}`, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.15s" }} onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.06)"; e.currentTarget.style.borderColor = T.borderH; }} onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = T.border; }}><User size={10} color={T.txt3} /></button>
+                              )}
+                              <button onClick={() => setNotesLead(l)} title="Abrir Discovery" style={{ width: 28, padding: "5px 0", borderRadius: 7, background: "transparent", border: `1px solid ${T.border}`, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.15s" }} onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.06)"; e.currentTarget.style.borderColor = T.borderH; }} onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = T.border; }}><FileText size={10} color={T.txt3} /></button>
                             </div>
                           </div>
                         </div>
