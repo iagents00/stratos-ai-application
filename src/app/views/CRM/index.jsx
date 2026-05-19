@@ -634,15 +634,19 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
   };
 
   // Switcher unificado del Dynamic Island — al cambiar de tab, cerramos el drawer
-  // actual y abrimos el target con el MISMO lead. Así el vendedor navega Análisis IA
-  // · Perfil · Expediente sin fricción.
+  // actual y abrimos el target con el MISMO lead. Discovery agrupa Expediente +
+  // Perfil; el sub-toggle del header del drawer permite flipear entre ambas
+  // sub-vistas usando los ids "expediente" / "perfil" directamente.
   const openDrawerTab = (tab, lead) => {
     if (!lead) return;
     if (tab === "analisis") {
       setSelectedLead(null); setNotesLead(null); setAnalyzingLead(lead);
     } else if (tab === "perfil") {
       setAnalyzingLead(null); setNotesLead(null); setSelectedLead(lead);
-    } else if (tab === "expediente") {
+    } else if (tab === "expediente" || tab === "discovery") {
+      // "discovery" desde la pill principal: cae a Expediente, la sub-vista
+      // donde el asesor pasa el 90% del tiempo. Si ya estaba en Perfil, el
+      // sub-toggle del header maneja el flip explícito vía "perfil".
       setAnalyzingLead(null); setSelectedLead(null); setNotesLead(lead);
     }
   };
@@ -4582,9 +4586,10 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
         );
       })()}
 
-      {/* Drawers — los 3 (Análisis IA, Perfil, Expediente) comparten un switcher
-         "Dynamic Island" en la parte inferior que permite al vendedor saltar
-         entre vistas del mismo lead sin cerrar. */}
+      {/* Drawers — "Discovery" (NotesModal/Expediente) y los drawers
+         legacy (Perfil, Análisis IA) comparten un switcher inferior. En
+         clientes con crm.discoverySimplified=true, el drawer es una sola
+         sección scrolleable sin Tareas. */}
       <NotesModal
         T={T}
         lead={notesLead}
@@ -4593,6 +4598,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
         onUpdate={updateLead}
         asesoresMaster={asesoresMaster}
         currentUserName={user?.name || null}
+        discoverySimplified={clientConfig?.crm?.discoverySimplified === true}
         onSwitchTab={(tab) => openDrawerTab(tab, notesLead)}
         onShowHistory={() => setHistoryLead(notesLead)}
         onShowSuggest={() => setSuggestLead(notesLead)}
