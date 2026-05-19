@@ -32,6 +32,7 @@ import { AI_AGENTS, AI_AGENT_LIST } from "../../constants/agents";
 import { stgC } from "../../constants/crm";
 import LeadNotesTimeline from "./LeadNotesTimeline";
 import { getEntityHistory, fieldLabel, actionLabel } from "../../../lib/audit";
+import { canTriggerIaActions } from "../../../lib/iagents-actions";
 import LeadDiscoveryPanel from "./LeadDiscoveryPanel";
 import LeadVoiceCalls from "./LeadVoiceCalls";
 import LeadChatHistory from "./LeadChatHistory";
@@ -3463,6 +3464,12 @@ const NotesModal = ({ lead, onClose, onSave, onUpdate, onSwitchTab, onShowHistor
   // Llamadas programadas (Retell) — pendientes para este lead.
   const { get: getScheduledCall } = useScheduledCalls();
   const scheduledCallNM = getScheduledCall(lead);
+  // El bloque de llamadas de voz (LeadVoiceCalls — audio + transcripción
+  // de Retell IA) solo lo muestra la cuenta de iAgents, donde vive la
+  // conexión con Retell. Los asesores normales no necesitan ver ese panel
+  // y mantenemos la UI más limpia.
+  const { user: notesUser } = useAuth();
+  const canSeeVoiceCalls = canTriggerIaActions(notesUser);
 
   // ══════════════════════════════════════════════════════════════════════
   // EXPEDIENTE EN TEXTO PLANO + AUTO-SAVE PROFESIONAL
@@ -3908,8 +3915,13 @@ const NotesModal = ({ lead, onClose, onSave, onUpdate, onSwitchTab, onShowHistor
           </div>
 
           {/* 3.5. LLAMADAS DE VOZ — grabaciones de Retell IA con audio nativo
-              + transcript colapsable. Solo aparece si hay calls registradas. */}
-          <LeadVoiceCalls lead={lead} T={T} isLight={isLight} />
+              + transcript colapsable. Gated por canTriggerIaActions: solo
+              la cuenta iagents@stratos.ai (crm_only=true) ve este panel
+              porque ahí vive la integración con Retell. Los asesores
+              normales no lo necesitan. */}
+          {canSeeVoiceCalls && (
+            <LeadVoiceCalls lead={lead} T={T} isLight={isLight} />
+          )}
 
           {/* La conversación WhatsApp · Chatwoot vivía aquí como accordion
               extra, pero el cliente prefirió no mostrarla a usuarios
