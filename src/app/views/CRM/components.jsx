@@ -31,6 +31,7 @@ import { StratosAtom, StratosAtomHex } from "../../components/Logo";
 import { AI_AGENTS, AI_AGENT_LIST } from "../../constants/agents";
 import { stgC } from "../../constants/crm";
 import LeadNotesTimeline from "./LeadNotesTimeline";
+import { getEntityHistory, fieldLabel, actionLabel } from "../../../lib/audit";
 import LeadDiscoveryPanel from "./LeadDiscoveryPanel";
 import LeadVoiceCalls from "./LeadVoiceCalls";
 import LeadChatHistory from "./LeadChatHistory";
@@ -2699,6 +2700,276 @@ const ActionTimeline = ({ lead, T = P, maxItems = 6 }) => {
 };
 
 /* ──────────────────────────────────────────────────────────────────────
+   LeadActivityTimeline — Historial unificado del lead.
+   Combina:
+     · audit_log de Supabase  (cambios automáticos por triggers — todas
+       las UPDATE/INSERT/SOFT_DELETE: reasignaciones, etapas, notas,
+       teléfonos, etc.)
+     · lead.actionHistory     (registros locales del flujo histórico:
+       tareas completadas, seguimientos, próximas acciones)
+   Sortea por fecha desc y muestra todo en una sola timeline aesthetic.
+   En demo (no UUID) muestra solo el actionHistory local; en producción
+   completa con el audit_log.
+   ────────────────────────────────────────────────────────────────────── */
+const ACTIVITY_ICON_FOR_FIELD = {
+  asesor_name:      UserCheck,
+  asesor_id:        UserCheck,
+  stage:            Waypoints,
+  next_action:      Zap,
+  next_action_date: Clock,
+  score:            Star,
+  hot:              Flame,
+  is_new:           Star,
+  notas:            FileText,
+  bio:              User,
+  risk:             AlertCircle,
+  phone:            Phone,
+  email:            Mail,
+  seguimientos:     RefreshCw,
+  tag:              BadgeCheck,
+  priority:         Target,
+  priority_order:   List,
+  budget:           DollarSign,
+  presupuesto:      DollarSign,
+  project:          Building2,
+  campaign:         Target,
+  source:           Target,
+  ai_agent:         Atom,
+  last_activity:    Activity,
+  days_inactive:    Clock,
+  friction:         AlertCircle,
+};
+
+function describeAuditRow(row) {
+  // INSERT / DELETE / SOFT_DELETE → títulos directos
+  if (row.action === "INSERT")      return { Icon: Plus,    title: "Lead creado",     body: null,                                                color: "emerald" };
+  if (row.action === "DELETE")      return { Icon: Trash2,  title: "Lead eliminado",  body: null,                                                color: "rose" };
+  if (row.action === "SOFT_DELETE") return { Icon: Trash2,  title: "Movido a papelera", body: null,                                              color: "amber" };
+
+  // UPDATE: detectar el campo más significativo y armar título humano
+  const fields = row.changed_fields && typeof row.changed_fields === "object"
+    ? Object.keys(row.changed_fields) : [];
+  if (fields.length === 0) return { Icon: Pencil, title: "Modificado", body: null, color: "blue" };
+
+  // Casos especiales con narrativa propia
+  if (fields.includes("asesor_name")) {
+    const c = row.changed_fields.asesor_name;
+    return { Icon: UserCheck, title: "Reasignado", body: `${fmtCell(c?.old) || "Sin asesor"} → ${fmtCell(c?.new) || "Sin asesor"}`, color: "violet" };
+  }
+  if (fields.includes("stage")) {
+    const c = row.changed_fields.stage;
+    return { Icon: Waypoints, title: "Cambio de etapa", body: `${fmtCell(c?.old) || "—"} → ${fmtCell(c?.new) || "—"}`, color: "blue" };
+  }
+  if (fields.includes("next_action")) {
+    const c = row.changed_fields.next_action;
+    return { Icon: Zap, title: "Próxima acción", body: fmtCell(c?.new) || "—", color: "accent" };
+  }
+  if (fields.includes("seguimientos")) {
+    const c = row.changed_fields.seguimientos;
+    return { Icon: RefreshCw, title: "Seguimiento registrado", body: `Total: ${fmtCell(c?.new) || "?"}`, color: "blue" };
+  }
+  if (fields.includes("notas") && fields.length === 1) {
+    return { Icon: FileText, title: "Notas del expediente actualizadas", body: null, color: "blue" };
+  }
+  if (fields.includes("phone")) {
+    const c = row.changed_fields.phone;
+    return { Icon: Phone, title: "Teléfono actualizado", body: fmtCell(c?.new) || "—", color: "blue" };
+  }
+  if (fields.includes("email")) {
+    const c = row.changed_fields.email;
+    return { Icon: Mail, title: "Correo actualizado", body: fmtCell(c?.new) || "—", color: "blue" };
+  }
+  if (fields.includes("score")) {
+    const c = row.changed_fields.score;
+    return { Icon: Star, title: "Score", body: `${fmtCell(c?.old) ?? "—"} → ${fmtCell(c?.new) ?? "—"}`, color: "amber" };
+  }
+
+  // Fallback genérico: lista de campos modificados
+  const labels = fields.slice(0, 3).map(fieldLabel).join(", ") + (fields.length > 3 ? "…" : "");
+  const Icon = ACTIVITY_ICON_FOR_FIELD[fields[0]] || Pencil;
+  return { Icon, title: "Modificado", body: labels, color: "blue" };
+}
+
+function fmtCell(v) {
+  if (v === null || v === undefined) return null;
+  if (typeof v === "boolean") return v ? "sí" : "no";
+  if (typeof v === "object") {
+    try {
+      const s = JSON.stringify(v);
+      return s.length > 60 ? s.slice(0, 57) + "…" : s;
+    } catch { return String(v); }
+  }
+  const s = String(v).trim();
+  if (!s) return null;
+  return s.length > 80 ? s.slice(0, 77) + "…" : s;
+}
+
+const LeadActivityTimeline = ({ lead, T = P, maxItems = 8 }) => {
+  const isLight = T !== P;
+  const { user } = useAuth();
+  const [auditRows, setAuditRows] = useState([]);
+  const [loading, setLoading]     = useState(true);
+  const [expanded, setExpanded]   = useState(false);
+
+  // Fetch audit log — skip en demo o si el id no es UUID
+  useEffect(() => {
+    if (!lead?.id) { setLoading(false); return; }
+    if (user?.isDemo || !/^[0-9a-f]{8}-/.test(String(lead.id))) {
+      setAuditRows([]);
+      setLoading(false);
+      return;
+    }
+    let cancelled = false;
+    setLoading(true);
+    getEntityHistory("leads", lead.id, 100).then(({ data }) => {
+      if (cancelled) return;
+      setAuditRows(Array.isArray(data) ? data : []);
+      setLoading(false);
+    });
+    return () => { cancelled = true; };
+  }, [lead?.id, user?.isDemo]);
+
+  // Normalizar audit_log + actionHistory a una timeline única
+  const events = useMemo(() => {
+    const out = [];
+    for (const row of auditRows) {
+      const d = describeAuditRow(row);
+      out.push({
+        id:    row.id || `audit-${row.created_at}-${row.action}`,
+        ts:    row.created_at ? new Date(row.created_at).getTime() : 0,
+        source: "audit",
+        Icon:  d.Icon,
+        color: d.color,
+        title: d.title,
+        body:  d.body,
+        actor: row.actor_name || null,
+        date:  row.created_at,
+      });
+    }
+    const local = Array.isArray(lead?.actionHistory) ? lead.actionHistory : [];
+    for (const e of local) {
+      const ts = new Date(e.completed_at || e.doneAt || e.done_at || e.created_at || 0).getTime();
+      const isCompleted = e.type === "tarea" || e.type === "completada";
+      const Icon = isCompleted ? CheckCircle2
+        : e.type === "seguimiento" ? RefreshCw
+        : e.type === "etapa"       ? Waypoints
+        : Zap;
+      const color = isCompleted ? "accent"
+        : e.type === "seguimiento" ? "blue"
+        : e.type === "etapa"       ? "violet"
+        : "accent";
+      out.push({
+        id:    e.id || `local-${ts}-${e.action || ""}`,
+        ts,
+        source: "local",
+        Icon, color,
+        title: e.type === "tarea" ? "Tarea completada"
+             : e.type === "seguimiento" ? "Seguimiento"
+             : e.type === "etapa" ? "Cambio de etapa"
+             : "Acción registrada",
+        body:  e.action || null,
+        actor: e.by || null,
+        date:  e.completed_at || e.doneAt || e.done_at || e.created_at || null,
+      });
+    }
+    return out.sort((a, b) => (b.ts || 0) - (a.ts || 0));
+  }, [auditRows, lead?.actionHistory]);
+
+  const colorOf = (key) => ({
+    emerald: T.emerald || T.accent,
+    accent:  T.accent,
+    blue:    T.blue,
+    violet:  T.violet || T.blue,
+    amber:   T.amber,
+    rose:    T.rose || "#F87171",
+  }[key] || T.accent);
+
+  if (loading) {
+    return (
+      <div style={{ padding: "16px", borderRadius: 12, border: `1px solid ${T.border}`, background: T.glass, color: T.txt3, fontSize: 12, fontFamily: font, textAlign: "center" }}>
+        Cargando historial…
+      </div>
+    );
+  }
+
+  if (events.length === 0) {
+    return (
+      <div style={{ borderRadius: 12, border: `1px dashed ${T.border}`, padding: "14px 16px", background: T.glass }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+          <Activity size={12} color={T.txt3} strokeWidth={2} />
+          <span style={{ fontSize: 10, fontWeight: 800, color: T.txt3, letterSpacing: "0.08em", textTransform: "uppercase", fontFamily: fontDisp }}>Sin actividad registrada</span>
+        </div>
+        <p style={{ margin: 0, fontSize: 12, color: T.txt3, fontFamily: font, lineHeight: 1.5 }}>
+          Cada cambio (reasignación, etapa, notas, próxima acción, etc.) se registrará aquí automáticamente.
+        </p>
+      </div>
+    );
+  }
+
+  const shown = expanded ? events : events.slice(0, maxItems);
+
+  return (
+    <div style={{ borderRadius: 12, border: `1px solid ${T.border}`, overflow: "hidden", background: T.glass }}>
+      {/* Subtle inner header: count + ordering hint */}
+      <div style={{ padding: "10px 15px", borderBottom: `1px solid ${T.border}`, display: "flex", alignItems: "center", gap: 8 }}>
+        <Activity size={12} color={T.txt3} strokeWidth={2} />
+        <span style={{ fontSize: 10, fontWeight: 800, color: T.txt3, letterSpacing: "0.08em", textTransform: "uppercase", fontFamily: fontDisp }}>Línea de tiempo</span>
+        <span style={{ fontSize: 9.5, fontWeight: 800, color: T.accent, background: `${T.accent}14`, border: `1px solid ${T.accent}28`, padding: "1px 7px", borderRadius: 99, fontFamily: fontDisp }}>{events.length}</span>
+        <span style={{ marginLeft: "auto", fontSize: 9, color: T.txt3, fontFamily: font, opacity: 0.7 }}>más reciente arriba</span>
+      </div>
+
+      <div>
+        {shown.map((ev, i) => {
+          const col     = colorOf(ev.color);
+          const Icon    = ev.Icon || Activity;
+          const colSafe = isLight ? `color-mix(in srgb, ${col} 62%, #0B1220 38%)` : col;
+          const isLast  = i === shown.length - 1;
+          const dateStr = ev.date ? new Date(ev.date).toLocaleString("es-MX", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) : "";
+          return (
+            <div key={ev.id} style={{ display: "flex", borderBottom: isLast ? "none" : `1px solid ${T.border}` }}>
+              <div style={{ width: 42, display: "flex", flexDirection: "column", alignItems: "center", padding: "10px 0", flexShrink: 0 }}>
+                <div style={{ width: 24, height: 24, borderRadius: "50%", background: `${col}14`, border: `1px solid ${col}28`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <Icon size={11} color={colSafe} strokeWidth={2.2} />
+                </div>
+                {!isLast && <div style={{ width: 1, flex: 1, minHeight: 8, background: T.border, marginTop: 4 }} />}
+              </div>
+              <div style={{ flex: 1, padding: "10px 14px 10px 0", minWidth: 0 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 3, flexWrap: "wrap" }}>
+                  <span style={{ fontSize: 9, fontWeight: 800, color: colSafe, background: `${col}14`, border: `1px solid ${col}28`, padding: "1px 6px", borderRadius: 99, letterSpacing: "0.06em", textTransform: "uppercase", fontFamily: fontDisp }}>
+                    {ev.title}
+                  </span>
+                  {ev.actor && (
+                    <span style={{ fontSize: 9, color: T.txt3, fontFamily: font }}>· {ev.actor}</span>
+                  )}
+                </div>
+                {ev.body && (
+                  <p style={{ margin: 0, fontSize: 12.5, color: T.txt, fontFamily: font, lineHeight: 1.4, wordBreak: "break-word" }}>{ev.body}</p>
+                )}
+                {dateStr && (
+                  <p style={{ margin: "3px 0 0", fontSize: 9.5, color: T.txt3, fontFamily: fontDisp }}>{dateStr}</p>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {events.length > maxItems && (
+        <button
+          onClick={() => setExpanded(v => !v)}
+          style={{ width: "100%", padding: "9px 15px", background: "transparent", border: "none", borderTop: `1px solid ${T.border}`, cursor: "pointer", color: T.txt3, fontSize: 11, fontFamily: font, display: "flex", alignItems: "center", justifyContent: "center", gap: 5, transition: "background 0.15s" }}
+          onMouseEnter={e => e.currentTarget.style.background = T.glassH}
+          onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+        >
+          {expanded ? "Ver menos" : `Ver ${events.length - maxItems} registro${events.length - maxItems !== 1 ? "s" : ""} más`}
+          <ChevronDown size={11} strokeWidth={2.5} style={{ transform: expanded ? "rotate(180deg)" : "none", transition: "transform 0.2s" }} />
+        </button>
+      )}
+    </div>
+  );
+};
+
+/* ──────────────────────────────────────────────────────────────────────
    SectionLabel — micro-encabezado consistente para las secciones del
    Expediente y del Perfil. Aesthetic minimalista: icono pequeño + texto
    uppercase pequeño. Sin chrome. Reutilizable.
@@ -3100,10 +3371,17 @@ const DiscoveryGeneralData = ({ lead, onUpdate, T = P, isLight = false }) => {
         />
         <Field
           label="Campaña / Fuente"
-          value={lead.campana}
-          onSave={v => onUpdate?.({ ...lead, campana: v })}
+          value={lead.campana || lead.campaign || lead.source}
+          onSave={v => onUpdate?.({ ...lead, campana: v, campaign: v })}
           placeholder="Google, referido..."
           emptyText="+ Agregar fuente"
+        />
+        <Field
+          label="Fricción"
+          value={lead.friction}
+          onSave={v => onUpdate?.({ ...lead, friction: v })}
+          placeholder="Bajo · Medio · Alto"
+          emptyText="+ Calificar fricción"
         />
       </div>
 
@@ -3209,9 +3487,14 @@ const NotesModal = ({ lead, onClose, onSave, onUpdate, onSwitchTab, onShowHistor
   // colapsadas por default. Cada una expone un toggle "Ver / Ocultar"
   // estilo dashed-button para revelarse sin quitar espacio al flujo
   // principal (próxima acción + notas).
-  const [showMoreNotes, setShowMoreNotes]   = useState(!discoverySimplified);
+  const [showMoreNotes, setShowMoreNotes]     = useState(!discoverySimplified);
+  const [showChatHistory, setShowChatHistory] = useState(!discoverySimplified);
   const [showGeneralData, setShowGeneralData] = useState(!discoverySimplified);
-  const [showHistorial, setShowHistorial]   = useState(!discoverySimplified);
+  const [showHistorial, setShowHistorial]     = useState(!discoverySimplified);
+  // Trigger contador para arrancar el modo "agregar nota" dentro del
+  // cronograma desde un CTA primario en el header. Bump → LeadNotesTimeline
+  // auto-inicia su flujo de captura.
+  const [addNoteTrigger, setAddNoteTrigger] = useState(0);
   const saveTimerRef = useRef(null);
   const dirtyRef = useRef(false);
   const currentLeadIdRef = useRef(lead?.id);
@@ -3577,15 +3860,38 @@ const NotesModal = ({ lead, onClose, onSave, onUpdate, onSwitchTab, onShowHistor
               onFocus={e => { e.currentTarget.style.borderColor = T.borderH; e.currentTarget.style.background = isLight ? "rgba(15,23,42,0.04)" : "rgba(255,255,255,0.045)"; }}
             />
 
-            {/* Toggle "Cronograma de notas" — solo en Discovery simplificado.
-                Comparte el patrón de accordion con Datos generales e Historial
-                para que las 3 secciones secundarias se sientan idénticas. */}
+            {/* CTA primario "+ Agregar nota adicional" + toggle subtle de
+                cronograma. El CTA expande la timeline y arranca el flujo de
+                captura en LeadNotesTimeline vía addNoteTrigger. */}
             {discoverySimplified && (
-              <div style={{ marginTop: 12 }}>
+              <div style={{ marginTop: 12, display: "flex", flexDirection: "column", gap: 8 }}>
+                <button
+                  type="button"
+                  onClick={() => { setShowMoreNotes(true); setAddNoteTrigger(t => t + 1); }}
+                  style={{
+                    width: "100%",
+                    padding: "11px 14px",
+                    borderRadius: 11,
+                    background: isLight ? `${T.accent}14` : `${T.accent}1A`,
+                    border: `1px solid ${isLight ? `${T.accent}44` : `${T.accent}38`}`,
+                    color: isLight ? `color-mix(in srgb, ${T.accent} 58%, #0B1220 42%)` : T.accent,
+                    fontSize: 12.5, fontWeight: 700,
+                    fontFamily: fontDisp, letterSpacing: "0.01em",
+                    cursor: "pointer",
+                    display: "flex", alignItems: "center", justifyContent: "center", gap: 7,
+                    transition: "all 0.18s",
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.background = isLight ? `${T.accent}22` : `${T.accent}26`; e.currentTarget.style.borderColor = isLight ? `${T.accent}60` : `${T.accent}55`; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = isLight ? `${T.accent}14` : `${T.accent}1A`; e.currentTarget.style.borderColor = isLight ? `${T.accent}44` : `${T.accent}38`; }}
+                >
+                  <Plus size={14} strokeWidth={2.5} />
+                  Agregar nota adicional
+                </button>
+
                 <CollapsibleSectionToggle
                   expanded={showMoreNotes}
                   onToggle={() => setShowMoreNotes(v => !v)}
-                  label={showMoreNotes ? "Cronograma de notas" : "Cronograma de notas · agregar sin límite"}
+                  label={showMoreNotes ? "Cronograma de notas" : "Ver notas anteriores"}
                   icon={MessageCircle}
                   T={T}
                 />
@@ -3596,13 +3902,36 @@ const NotesModal = ({ lead, onClose, onSave, onUpdate, onSwitchTab, onShowHistor
                 Si no estamos en Discovery simplificado, se muestra siempre
                 (compat con clientes que no tienen el toggle). */}
             {showMoreNotes && (
-              <LeadNotesTimeline lead={lead} T={T} isLight={isLight} />
+              <div style={{ marginTop: 12 }}>
+                <LeadNotesTimeline lead={lead} T={T} isLight={isLight} autoStartAdding={addNoteTrigger} />
+              </div>
             )}
           </div>
 
           {/* 3.5. LLAMADAS DE VOZ — grabaciones de Retell IA con audio nativo
               + transcript colapsable. Solo aparece si hay calls registradas. */}
           <LeadVoiceCalls lead={lead} T={T} isLight={isLight} />
+
+          {/* 3.7. CHAT — historial WhatsApp / Chatwoot. En Discovery
+              simplificado se muestra dentro de una accordion para no quitar
+              espacio. En otros clientes vive en el tab "Chat" del Perfil
+              (sin cambios). */}
+          {discoverySimplified && (
+            <div>
+              <CollapsibleSectionToggle
+                expanded={showChatHistory}
+                onToggle={() => setShowChatHistory(v => !v)}
+                label="Conversación WhatsApp · Chatwoot"
+                icon={MessageCircle}
+                T={T}
+              />
+              {showChatHistory && (
+                <div style={{ marginTop: 12 }}>
+                  <LeadChatHistory lead={lead} T={T} isLight={isLight} />
+                </div>
+              )}
+            </div>
+          )}
 
           {/* 4. TAREAS — checklist accionable. Gated por crm.discoverySimplified
               en la config del cliente. Duke lo tiene ON → sin Tareas en el drawer.
@@ -3634,28 +3963,31 @@ const NotesModal = ({ lead, onClose, onSave, onUpdate, onSwitchTab, onShowHistor
             </div>
           ) : null}
 
-          {/* 6. HISTORIAL DE ACCIONES — siempre al final. Solo aparece si
-              hay registros. En Discovery simplificado es colapsable con
-              chip de conteo; en otros clientes se muestra expandido como
-              histórico. */}
-          {Array.isArray(lead?.actionHistory) && lead.actionHistory.length > 0 && (
-            discoverySimplified ? (
-              <div>
-                <CollapsibleSectionToggle
-                  expanded={showHistorial}
-                  onToggle={() => setShowHistorial(v => !v)}
-                  label="Historial de acciones"
-                  icon={Clock}
-                  count={lead.actionHistory.length}
-                  T={T}
-                />
-                {showHistorial && (
-                  <div style={{ marginTop: 12 }}>
-                    <ActionTimeline lead={lead} T={T} />
-                  </div>
-                )}
-              </div>
-            ) : (
+          {/* 6. HISTORIAL DE ACCIONES — siempre al final.
+              · En Discovery simplificado (Duke): colapsable + timeline
+                unificada con audit_log de Supabase (reasignaciones,
+                etapas, notas, próximas acciones, todo). Aparece siempre
+                porque la timeline puede tener actividad desde audit_log
+                aunque actionHistory esté vacío.
+              · En otros clientes: render histórico de ActionTimeline solo
+                si hay registros en actionHistory. */}
+          {discoverySimplified ? (
+            <div>
+              <CollapsibleSectionToggle
+                expanded={showHistorial}
+                onToggle={() => setShowHistorial(v => !v)}
+                label="Historial de acciones y actividades"
+                icon={Clock}
+                T={T}
+              />
+              {showHistorial && (
+                <div style={{ marginTop: 12 }}>
+                  <LeadActivityTimeline lead={lead} T={T} />
+                </div>
+              )}
+            </div>
+          ) : (
+            Array.isArray(lead?.actionHistory) && lead.actionHistory.length > 0 && (
               <div>
                 <SectionLabel T={T} icon={Clock}>Historial</SectionLabel>
                 <ActionTimeline lead={lead} T={T} />
