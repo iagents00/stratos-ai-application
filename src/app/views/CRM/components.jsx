@@ -47,9 +47,11 @@ const calculateLeadScore = (lead) => {
   let score = 0;
 
   // 1. Stage progression — 0 a 35 pts
-  const stages = ["Contáctame ya","Segundo Intento","Remarketing","Seguimiento","Zoom Agendado",
-    "No Show","Zoom Concretado","Visita Agendada","Visita Concretada","Negociación","Cierre","Postventa"];
-  const stageIdx = stages.indexOf(lead.st ?? "Contáctame ya");
+  // Pipeline oficial Duke (12 etapas). Apartó y Cierre son los milestones más altos.
+  const stages = ["Contáctame Ya","Segundo Intento","Tercer Intento","Rotación",
+    "Remarketing IA","Zoom Agendado","Reactivar Zoom","Seguimiento","Apartó",
+    "Visita Agendada","Cierre","Postventa"];
+  const stageIdx = stages.indexOf(lead.st ?? "Contáctame Ya");
   // Excluir "Postventa" del score positivo
   if (stageIdx >= 0 && lead.st !== "Postventa") {
     score += Math.round((stageIdx / 10) * 35);
@@ -4222,8 +4224,8 @@ const AnalysisDrawer = ({ lead, onClose, oc, onUpdate, onSwitchTab, T = P }) => 
     });
   }
 
-  // SLA primer contacto — ≤ 5 min (Protocolo Duke del Caribe)
-  if (lead.st === "Contáctame ya" || lead.isNew) {
+  // SLA primer contacto — ≤ 1h (Protocolo Duke del Caribe — Mayo 2026)
+  if (lead.st === "Contáctame Ya" || lead.isNew) {
     nextActions.push({
       priority: "SLA", color: T.accent, icon: Timer,
       title: "Primer contacto — regla de los 5 minutos",
@@ -4259,28 +4261,38 @@ const AnalysisDrawer = ({ lead, onClose, oc, onUpdate, onSwitchTab, T = P }) => 
     });
   }
 
-  // Zoom concretado — propuesta en 24h (Protocolo Duke)
-  if (lead.st === "Zoom Concretado") {
+  // Reactivar Zoom — el cliente no se conectó al Zoom agendado
+  if (lead.st === "Reactivar Zoom") {
     nextActions.push({
-      priority: "ALTA", color: "#4ADE80", icon: FileText,
-      title: "Enviar propuesta en las próximas 24h",
-      detail: "Protocolo Duke — Post-Zoom: la propuesta debe llegar antes de 24 horas. Incluye: 3 opciones de proyecto (low-mid-premium), ROI proyectado a 5 años, carta de beneficios fiscales personalizada.",
-      eta: "< 24h",
+      priority: "REACTIVAR", color: "#EA580C", icon: AlertCircle,
+      title: "Reactivar y reagendar Zoom",
+      detail: "Protocolo Duke: contacta al cliente, entiende por qué no se conectó (sin presión), recupera confianza y propón 2 ventanas alternativas para reagendar. Si no responde en 24h, mover a Remarketing IA.",
+      eta: "< 2h",
     });
   }
 
-  // Negociación — cerrar condiciones
-  if (lead.st === "Negociación") {
+  // Seguimiento — propuesta + negociación activa post-Zoom
+  if (lead.st === "Seguimiento") {
     nextActions.push({
-      priority: "CIERRE", color: "#FB923C", icon: Trophy,
-      title: "Cerrar condiciones esta semana",
-      detail: "Protocolo Duke — Fase Cierre: define el triángulo decisión (precio · fecha de entrega · condiciones de pago). Propone una reserva simbólica reembolsable para anclar el compromiso.",
+      priority: "ALTA", color: "#FBBF24", icon: FileText,
+      title: "Mantener seguimiento de valor",
+      detail: "Protocolo Duke — Fase Seguimiento: incluye Zoom concretado, envío de proyectos, corridas financieras, opciones y negociación. Cada touchpoint debe aportar valor (avances de obra, casos similares, disponibilidad).",
       eta: "Esta semana",
     });
   }
 
+  // Apartó — validar comprobante de apartado
+  if (lead.st === "Apartó") {
+    nextActions.push({
+      priority: "MILESTONE", color: "#4ADE80", icon: Trophy,
+      title: "Validar comprobante de apartado",
+      detail: "Protocolo Duke — Fase Apartó: el cliente envió dinero al desarrollador. Valida comprobante, unidad, monto y desarrollador con administración. Próximo paso: coordinar visita o Down Payment.",
+      eta: "< 24h",
+    });
+  }
+
   // Score alto — oportunidad de mover etapa
-  if (sc >= 72 && !["Negociación","Cierre","Postventa"].includes(lead.st)) {
+  if (sc >= 72 && !["Apartó","Cierre","Postventa"].includes(lead.st)) {
     nextActions.push({
       priority: "OPORTUNIDAD", color: T.violet, icon: Target,
       title: `Score ${sc} — mover a la siguiente etapa`,
@@ -4290,7 +4302,7 @@ const AnalysisDrawer = ({ lead, onClose, oc, onUpdate, onSwitchTab, T = P }) => 
   }
 
   // BANT incompleto — calificar
-  if (bantScore < 3 && !["Postventa","Contáctame ya"].includes(lead.st)) {
+  if (bantScore < 3 && !["Postventa","Contáctame Ya"].includes(lead.st)) {
     nextActions.push({
       priority: "CALIFICAR", color: T.cyan, icon: ListChecks,
       title: `BANT incompleto — ${bantScore}/4 criterios`,

@@ -194,7 +194,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
   }, []);
   const [budgetMenuOpen, setBudgetMenuOpen] = useState(false);
   const [stageMenuOpen, setStageMenuOpen]   = useState(false);
-  const [newLead, setNewLead]           = useState({ n: "", asesor: canSeeAll ? "" : (user?.name || ""), phone: "", email: "", budget: "", p: "", campana: "", source: "manual", st: "Contáctame ya", nextAction: "", notas: "" });
+  const [newLead, setNewLead]           = useState({ n: "", asesor: canSeeAll ? "" : (user?.name || ""), phone: "", email: "", budget: "", p: "", campana: "", source: "manual", st: "Contáctame Ya", nextAction: "", notas: "" });
   // ── Detección de duplicados en alta ────────────────────────────────────
   // Cuando el asesor escribe phone o email, llamamos a la RPC find_lead_duplicate
   // (migración 013) con debounce. Si encuentra un lead existente en la misma
@@ -1019,7 +1019,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
       name:             draft.n.trim(),
       phone:            draft.phone || null,
       email:            draft.email || null,
-      stage:            draft.st || "Contáctame ya",
+      stage:            draft.st || "Contáctame Ya",
       score:            5,
       hot:              false,
       is_new:           true,
@@ -1044,10 +1044,10 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
 
     // ── Entry local (lo que se pinta en la UI) ─────────────────────────
     const newEntry = {
-      id: localId, ...draft, st: draft.st || "Contáctame ya",
+      id: localId, ...draft, st: draft.st || "Contáctame Ya",
       sc: 5,
       source: draft.source || "manual",
-      tag: draft.tag || draft.st || "Contáctame ya", hot: false, isNew: true, fechaIngreso: dateStr,
+      tag: draft.tag || draft.st || "Contáctame Ya", hot: false, isNew: true, fechaIngreso: dateStr,
       bio: "Cliente recién registrado. Pendiente primer contacto.", risk: "Sin información suficiente aún.",
       friction: "Medio",
       nextAction: draft.nextAction?.trim() || "Primer contacto en las próximas 24 horas",
@@ -1072,7 +1072,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
     // 1. Cerrar modal y limpiar el draft → el botón "Registrar" desaparece
     //    de la pantalla. Imposible hacer doble clic a partir de aquí.
     setAddingLead(false);
-    setNewLead({ n: "", asesor: canSeeAll ? "" : (user?.name || ""), phone: "", email: "", budget: "", p: "", campana: "", source: "manual", st: "Contáctame ya", nextAction: "", notas: "" });
+    setNewLead({ n: "", asesor: canSeeAll ? "" : (user?.name || ""), phone: "", email: "", budget: "", p: "", campana: "", source: "manual", st: "Contáctame Ya", nextAction: "", notas: "" });
     // El lead ya entró al espejo local (saveLead garantiza eso síncrono),
     // así que el draft de recovery ya no tiene utilidad — lo limpiamos.
     clearLeadDraft();
@@ -1156,7 +1156,10 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
     );
   };
 
-  const isAutoPriority = (l) => (l.isNew || l.st === "Zoom Concretado" || l.st === "Zoom Agendado" || l.st === "No Show" || l.hot || l.daysInactive <= 3) && !dismissedIds.has(l.id);
+  // Lead automáticamente "prioritario" en la cola del asesor.
+  // Pipeline Mayo 2026: Zoom Agendado | Reactivar Zoom (antes "No Show") |
+  // Apartó (milestone reciente) | Seguimiento activo (antes "Zoom Concretado").
+  const isAutoPriority = (l) => (l.isNew || l.st === "Zoom Agendado" || l.st === "Reactivar Zoom" || l.st === "Apartó" || l.st === "Seguimiento" || l.hot || l.daysInactive <= 3) && !dismissedIds.has(l.id);
   const rawPriorityLeads = visibleLeads.filter(l => pinnedIds.has(l.id) || isAutoPriority(l));
   // Orden final: modo manual respeta drag & dropdown de posición; los demás aplican criterio
   const priorityLeads = (() => {
@@ -1189,9 +1192,11 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
           return ((a.isNew ? 1 : 0) - (b.isNew ? 1 : 0)) || recency(a) - recency(b);
         });
       case "concretado":
+        // Después de Mayo 2026, "Zoom Concretado" se unificó con "Seguimiento".
+        // Conservamos el case-id "concretado" para no romper preferencias guardadas.
         return arr.sort((a, b) => {
-          const aCon = a.st === "Zoom Concretado" ? 1 : 0;
-          const bCon = b.st === "Zoom Concretado" ? 1 : 0;
+          const aCon = a.st === "Seguimiento" ? 1 : 0;
+          const bCon = b.st === "Seguimiento" ? 1 : 0;
           return bCon - aCon || b.sc - a.sc;
         });
       case "manual":
@@ -1366,9 +1371,11 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
   const avgScore = visibleLeads.length ? Math.round(visibleLeads.reduce((s, l) => s + l.sc, 0) / visibleLeads.length) : 0;
   const hotLeads = visibleLeads.filter(l => l.hot || l.daysInactive <= 2).length;
   const newLeadsCount = visibleLeads.filter(l => l.isNew).length;
-  const nearCloseLeads = visibleLeads.filter(l => l.st === "Negociación" || l.st === "Cierre").length;
+  // Cerca del cierre = Apartó + Visita Agendada + Cierre (milestones finales).
+  const nearCloseLeads = visibleLeads.filter(l => l.st === "Apartó" || l.st === "Visita Agendada" || l.st === "Cierre").length;
   const zoomsAgendados   = visibleLeads.filter(l => l.st === "Zoom Agendado").length;
-  const zoomsConcretados = visibleLeads.filter(l => l.st === "Zoom Concretado").length;
+  // Post-Mayo 2026 "Zoom Concretado" se consolidó en "Seguimiento".
+  const zoomsConcretados = visibleLeads.filter(l => l.st === "Seguimiento").length;
   const kanbanStages = STAGES.filter(s => s !== "Postventa");
 
   /* Responsive grid columns — 6 columnas en modo full, 5 en compact.
@@ -1535,8 +1542,9 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
           if (l.hot)                       return { color: T.accent, topBar: tbAccent, label: `CALIENTE · ${l.daysInactive}D`,     sublabel: "Actuar ahora mismo",              pulse: true, glow: true };
           if (l.isNew)                     return { color: T.accent, topBar: tbAccent, label: "NUEVO REGISTRO",                    sublabel: "Primer contacto — no esperes",    pulse: true, glow: true };
           if (l.st === "Zoom Agendado")    return { color: T.accent, topBar: tbAccent, label: "ZOOM AGENDADO",                     sublabel: "Preparar presentación de cierre", pulse: true, glow: true };
-          if (l.st === "Zoom Concretado")  return { color: T.accent, topBar: tbAccent, label: "ZOOM CONCRETADO ✓",                 sublabel: "Enviar propuesta y cerrar hoy",   pulse: true, glow: true };
-          if (l.st === "Negociación")      return { color: T.accent, topBar: tbAccent, label: "EN NEGOCIACIÓN",                    sublabel: "Cerrar condiciones esta semana",  pulse: true, glow: true };
+          if (l.st === "Reactivar Zoom")   return { color: T.accent, topBar: tbAccent, label: "REACTIVAR ZOOM",                    sublabel: "No se conectó — reagendar hoy",   pulse: true, glow: true };
+          if (l.st === "Seguimiento")      return { color: T.accent, topBar: tbAccent, label: "EN SEGUIMIENTO",                    sublabel: "Negociación / propuesta activa",  pulse: true, glow: true };
+          if (l.st === "Apartó")           return { color: T.accent, topBar: tbAccent, label: "APARTÓ ✓",                          sublabel: "Validar comprobante con admin",   pulse: true, glow: true };
           if (l.daysInactive >= 7)         return { color: T.accent, topBar: tbAccent, label: `SIN CONTACTO · ${l.daysInactive}D`, sublabel: "Retomar antes de que enfríe",     pulse: true, glow: true };
           return                                  { color: T.accent, topBar: tbAccent, label: "ACCIÓN PENDIENTE",                  sublabel: "Revisar y avanzar hoy",           pulse: true, glow: true };
         };
@@ -1642,7 +1650,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                     <option value="manual"     style={{ background: isLight ? "#FFFFFF" : "#111318", color: T.txt }}>Manual (arrastra)</option>
                     <option value="newest"     style={{ background: isLight ? "#FFFFFF" : "#111318", color: T.txt }}>Nuevos primero</option>
                     <option value="oldest"     style={{ background: isLight ? "#FFFFFF" : "#111318", color: T.txt }}>Nuevos al fondo</option>
-                    <option value="concretado" style={{ background: isLight ? "#FFFFFF" : "#111318", color: T.txt }}>Zoom Concretado</option>
+                    <option value="concretado" style={{ background: isLight ? "#FFFFFF" : "#111318", color: T.txt }}>En Seguimiento</option>
                   </select>
                   <ChevronDown size={12} color={prioritySort === "manual" ? T.txt3 : T.accent} strokeWidth={2.5} style={{ position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }} />
                 </div>
@@ -2626,7 +2634,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                 </label>
                 {/* Trigger button */}
                 {(() => {
-                  const stageVal = newLead.st || "Contáctame ya";
+                  const stageVal = newLead.st || "Contáctame Ya";
                   const stageCol = stgC[stageVal] || T.accent;
                   const stageTitleC = isLight ? `color-mix(in srgb, ${stageCol} 55%, #0B1220 45%)` : stageCol;
                   return (
@@ -3257,12 +3265,13 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                       </div>
 
                       {/* Row 3: info chips — fecha de cita + email + CTAs.
-                          Para etapas con cita programada (Zoom Agendado, No Show,
-                          Visita Agendada, etc.) la pill se renderea PROMINENTE,
-                          y si falta la fecha aparece un CTA vibrante para que
-                          el asesor la capture. */}
+                          Para etapas con cita programada (Zoom Agendado,
+                          Reactivar Zoom, Visita Agendada) la pill se renderea
+                          PROMINENTE, y si falta la fecha aparece un CTA vibrante
+                          para que el asesor la capture. Seguimiento + Apartó
+                          también muestran fecha porque cargan próxima acción. */}
                       {(() => {
-                        const isAgendaCritical = ["Zoom Agendado","Zoom Concretado","Visita Agendada","Visita Concretada","No Show"].includes(l.st);
+                        const isAgendaCritical = ["Zoom Agendado","Reactivar Zoom","Visita Agendada","Seguimiento","Apartó"].includes(l.st);
                         const hasAppt = !!l.nextActionDate;
                         const showMissingCita = isAgendaCritical && !hasAppt;
                         const isEditing = editingApptId === l.id;

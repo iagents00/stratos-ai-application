@@ -20,7 +20,10 @@ import { P, LP, font, fontDisp, STAGES } from "../../../design-system/tokens";
 const STAGE_INDEX = Object.fromEntries(STAGES.map((s, i) => [s, i]));
 const IDX_PRIMER_CONTACTO = STAGE_INDEX["Segundo Intento"];
 const IDX_SEGUIMIENTO     = STAGE_INDEX["Seguimiento"];
-const IDX_ZOOM_CONCRETADO = STAGE_INDEX["Zoom Concretado"];
+// Post-Mayo 2026 "Zoom Concretado" se consolidó en "Seguimiento": cualquier
+// lead en Seguimiento ya tuvo su Zoom (es la etapa donde corre la negociación
+// + proyectos + corridas + dudas). Usamos ese índice para "activos post-Zoom".
+const IDX_POST_ZOOM       = STAGE_INDEX["Seguimiento"];
 
 export const PERIODS = [
   { id: "today", label: "Hoy" },
@@ -95,18 +98,17 @@ export const INDICATORS = [
     key: "zoomDone",
     label: "Zooms Real.",
     icon: CheckCircle2,
-    title: "Zooms realizados (etapa actual = Zoom Concretado).",
-    compute: (leads) => leads.filter(l => l.st === "Zoom Concretado").length,
+    title: "Zooms realizados — leads en Seguimiento (post-Mayo 2026 ya incluye lo que antes era 'Zoom Concretado').",
+    compute: (leads) => leads.filter(l => l.st === "Seguimiento").length,
   },
   {
     key: "activePostZoom",
     label: "Activos",
     icon: Activity,
-    title: "Activos post-Zoom — etapa ≥ Zoom Concretado, excluye Postventa y Rotación.",
+    title: "Activos post-Zoom — etapa ≥ Seguimiento, excluye Postventa.",
     compute: (leads) => leads.filter(l =>
-      stageIdx(l.st) >= IDX_ZOOM_CONCRETADO
+      stageIdx(l.st) >= IDX_POST_ZOOM
       && l.st !== "Postventa"
-      && l.st !== "Rotación"
     ).length,
   },
   {
