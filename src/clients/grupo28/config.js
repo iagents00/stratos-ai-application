@@ -86,6 +86,12 @@ const grupo28Config = {
     // Pestaña de métricas por asesor (Comando Directivo dentro del CRM).
     // Solo la verán los admins/director/super_admin/ceo de Grupo 28.
     advisorMetricsTab: true,
+    // Discovery simplificado: un solo drawer scrolleable con Próxima
+    // Acción arriba, "Agregar nota adicional" prominente, y 4 accordions
+    // al final (cronograma · chat · datos generales · historial unificado
+    // de actividades del lead). Validado primero en Duke y ahora promovido
+    // a Grupo 28. Tareas quedan ocultas porque Grupo 28 tiene 0 tasks en BD.
+    discoverySimplified: true,
   },
 };
 
