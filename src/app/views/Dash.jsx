@@ -16,16 +16,18 @@ import { G, KPI, Pill, Ico } from "../SharedComponents";
 const Team = lazy(() => import("./Team"));
 
 const stgC = {
-  "Contáctame ya":      "#94A3B8",
-  "Segundo Intento":    "#38BDF8",
-  "Seguimiento":        "#22D3EE",
-  "Zoom Agendado":      "#60A5FA",
-  "Zoom Concretado":    "#4ADE80",
-  "Visita Agendada":    "#F59E0B",
-  "Visita Concretada":  "#6EE7C2",
-  "Negociación":        "#FB923C",
-  "Cierre":             "#34D399",
-  "Postventa":          "#F87171",
+  "Contáctame Ya":    "#94A3B8",
+  "Segundo Intento":  "#38BDF8",
+  "Tercer Intento":   "#7EB8F0",
+  "Rotación":         "#A8A29E",
+  "Remarketing IA":   "#FB923C",
+  "Zoom Agendado":    "#60A5FA",
+  "Reactivar Zoom":   "#EA580C",
+  "Seguimiento":      "#22D3EE",
+  "Apartó":           "#4ADE80",
+  "Visita Agendada":  "#F59E0B",
+  "Cierre":           "#34D399",
+  "Postventa":        "#F87171",
 };
 
 const AgentIcons = {
@@ -47,10 +49,13 @@ const Dash = ({ oc, co, leadsData = [], T: _T }) => {
   const [dashPeriod, setDashPeriod] = useState("semana");
   const total    = leadsData.length || 1;
   const cierres  = leadsData.filter(l => l.st === "Cierre").length;
-  const zooms    = leadsData.filter(l => l.st === "Zoom Agendado" || l.st === "Zoom Concretado").length;
+  // Zooms = agendados + los que ya pasaron al funnel post-zoom (Seguimiento).
+  // En el pipeline nuevo "Zoom Concretado" se consolidó en "Seguimiento", por
+  // lo que cualquier lead en Seguimiento ya tuvo su Zoom.
+  const zooms    = leadsData.filter(l => l.st === "Zoom Agendado" || l.st === "Seguimiento").length;
   const activos  = leadsData.filter(l => l.st !== "Postventa" && l.st !== "Cierre").length;
   const tasaConv = ((cierres / total) * 100).toFixed(1);
-  const actionStages = ["Segundo Intento","Remarketing","Seguimiento","Zoom Agendado","No Show","Zoom Concretado","Visita Agendada","Negociación","Cierre"];
+  const actionStages = ["Segundo Intento","Tercer Intento","Rotación","Remarketing IA","Zoom Agendado","Reactivar Zoom","Seguimiento","Apartó","Visita Agendada","Cierre"];
   const actionData   = actionStages.map(st => ({
     label: st.length > 10 ? st.substring(0, 10) + "…" : st,
     fullName: st, val: leadsData.filter(l => l.st === st).length, color: stgC[st] || P.txt3,
@@ -59,7 +64,7 @@ const Dash = ({ oc, co, leadsData = [], T: _T }) => {
   const asesorList  = [...new Set(leadsData.map(l => l.asesor).filter(Boolean))];
   const asesorStats = asesorList.map(a => {
     const al = leadsData.filter(l => l.asesor === a);
-    return { name: a, total: al.length, zooms: al.filter(l => l.st === "Zoom Agendado" || l.st === "Zoom Concretado").length, cierres: al.filter(l => l.st === "Cierre").length, avgSc: al.length ? Math.round(al.reduce((s, l) => s + l.sc, 0) / al.length) : 0 };
+    return { name: a, total: al.length, zooms: al.filter(l => l.st === "Zoom Agendado" || l.st === "Seguimiento").length, cierres: al.filter(l => l.st === "Cierre").length, avgSc: al.length ? Math.round(al.reduce((s, l) => s + l.sc, 0) / al.length) : 0 };
   }).sort((a, b) => b.total - a.total);
   return (
   <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>

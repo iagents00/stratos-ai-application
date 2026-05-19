@@ -133,40 +133,63 @@ export const spacing = {
 };
 
 // ─── PIPELINE CRM ─────────────────────────────────────────────────────────────
+// Pipeline oficial Duke del Caribe (Mayo 2026). 12 etapas en orden operativo:
+// contacto → reasignación → nutrición IA → cita → negociación → apartado →
+// visita → cierre → postventa. Cada etapa describe el estado real del cliente
+// y la siguiente acción obligatoria del asesor.
+//
+// NOTA — Histórico previo a Mayo 2026:
+//   "Zoom Concretado" / "Visita Concretada" / "Negociación" → se consolidaron
+//   en "Seguimiento" (Zoom hecho, negociación, corridas, proyectos, dudas).
+//   "No Show" → se renombró a "Reactivar Zoom".
+//   "Remarketing" → se renombró a "Remarketing IA".
+//   Migración de leads existentes: ver migration migrate_duke_pipeline_v2.
 export const STAGES = [
-  "Contáctame ya",
+  "Contáctame Ya",
   "Segundo Intento",
-  "Remarketing",
-  "Seguimiento",
-  "Zoom Agendado",
-  "No Show",
-  "Zoom Concretado",
-  "Visita Agendada",
-  "Visita Concretada",
-  "Negociación",
-  "Cierre",
+  "Tercer Intento",
   "Rotación",
+  "Remarketing IA",
+  "Zoom Agendado",
+  "Reactivar Zoom",
+  "Seguimiento",
+  "Apartó",
+  "Visita Agendada",
+  "Cierre",
   "Postventa",
 ];
 
 // Pipeline en familia verde/azul/naranja (sin rosas ni violetas).
 // Azules → fases de contacto y agendamiento.
-// Verdes → milestones cumplidos.
-// Naranjas → atención / acción requerida.
-// Gris → estado neutral o terminal.
+// Verdes → milestones cumplidos (Apartó, Cierre).
+// Naranjas → atención / acción requerida (Remarketing IA, Reactivar Zoom).
+// Gris → estado neutral o terminal (Contáctame Ya, Postventa).
 // Stone (Rotación) → lead reasignado / en triage entre asesores.
 export const STAGE_COLORS = {
-  "Contáctame ya":     P.txt3,
-  "Segundo Intento":   P.blue,
-  "Remarketing":       "#FB923C",
-  "Seguimiento":       P.amber,
-  "Zoom Agendado":     "#3B82F6",
-  "No Show":           "#EA580C",
-  "Zoom Concretado":   "#4ADE80",
-  "Visita Agendada":   P.cyan,
-  "Visita Concretada": P.emerald,
-  "Negociación":       P.orange,
-  "Cierre":            P.accent,
-  "Rotación":          "#A8A29E",
-  "Postventa":         "#64748B",
+  "Contáctame Ya":    P.txt3,
+  "Segundo Intento":  P.blue,
+  "Tercer Intento":   "#7EB8F0",
+  "Rotación":         "#A8A29E",
+  "Remarketing IA":   "#FB923C",
+  "Zoom Agendado":    "#3B82F6",
+  "Reactivar Zoom":   "#EA580C",
+  "Seguimiento":      P.amber,
+  "Apartó":           "#4ADE80",
+  "Visita Agendada":  P.cyan,
+  "Cierre":           P.accent,
+  "Postventa":        "#64748B",
 };
+
+// Mapping de migración: etapa vieja → etapa nueva.
+// Útil para componentes que leen datos crudos (mock o cache) con labels viejos.
+// Se mantiene exportado por si algún módulo necesita normalizar al vuelo.
+export const LEGACY_STAGE_MAP = {
+  "Contáctame ya":     "Contáctame Ya",
+  "Remarketing":       "Remarketing IA",
+  "No Show":           "Reactivar Zoom",
+  "Zoom Concretado":   "Seguimiento",
+  "Visita Concretada": "Seguimiento",
+  "Negociación":       "Seguimiento",
+};
+
+export const normalizeStage = (stage) => LEGACY_STAGE_MAP[stage] || stage;
