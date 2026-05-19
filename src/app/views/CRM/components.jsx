@@ -1290,15 +1290,17 @@ const AddPhoneInline = ({ lead, onUpdate, T = P, isLight = false }) => {
 /* ─── Notes Modal — Rich sectioned view ─── */
 /* ═══════════════════════════════════════════
    DRAWER TAB ISLAND — Pill flotante estilo Dynamic Island, colocada abajo
-   en cada drawer (Análisis IA · Perfil · Expediente). Permite al vendedor
-   saltar entre las 3 vistas del lead sin cerrar el drawer.
+   en cada drawer (Discovery · Análisis IA). Permite al vendedor saltar
+   entre las vistas del lead sin cerrar el drawer.
+
+   Discovery agrupa Expediente + Perfil en una sola sección — la sub-vista
+   activa se toggleea desde un segmented control dentro del propio drawer.
 ═══════════════════════════════════════════ */
 const DRAWER_TABS = [
-  // Expediente primero — es donde el asesor pasa el 90% del tiempo
-  { id: "expediente", label: "Expediente",  shortLabel: "Exped.", colorKey: "blue"   },
-  { id: "perfil",     label: "Perfil",      shortLabel: "Perfil", colorKey: "violet" },
+  // Discovery = Expediente + Perfil unificados (el asesor pasa 90% aquí)
+  { id: "discovery", label: "Discovery",  shortLabel: "Dyscov.", colorKey: "blue"   },
   // Análisis IA bloqueado por ahora — se desbloqueará en siguiente etapa
-  { id: "analisis",   label: "Análisis IA", shortLabel: "IA",     colorKey: "accent", locked: true, lockReason: "Próximamente" },
+  { id: "analisis",  label: "Análisis IA", shortLabel: "IA",     colorKey: "accent", locked: true, lockReason: "Próximamente" },
 ];
 
 const DrawerTabIsland = ({ current, onSwitch, T = P }) => {
@@ -1337,8 +1339,7 @@ const DrawerTabIsland = ({ current, onSwitch, T = P }) => {
           : (active ? safeC(color) : (isLight ? T.txt2 : T.txt3));
         const iconNode =
           tab.id === "analisis"   ? <StratosAtom size={13} color={txtC} />
-        : tab.id === "perfil"     ? <User size={13} color={txtC} strokeWidth={2.2} />
-        :                           <FileText size={13} color={txtC} strokeWidth={2.2} />;
+        :                           <Aperture size={13} color={txtC} strokeWidth={2.2} />;
 
         return (
           <button
@@ -2966,7 +2967,219 @@ const AsesorPicker = ({
   );
 };
 
-const NotesModal = ({ lead, onClose, onSave, onUpdate, onSwitchTab, onShowHistory, onDelete, asesoresMaster = [], currentUserName = null, T = P }) => {
+/* ─── CollapsibleSectionToggle ─────────────────────────────────────────
+   Header de sección colapsable estilo accordion: ícono · etiqueta · chip
+   opcional de conteo · chevron rotativo. Solid border + glass background
+   para leerse como un header real, no como un botón secundario.
+   Patrón único que comparten cronograma · datos generales · historial.
+   ─────────────────────────────────────────────────────────────────── */
+const CollapsibleSectionToggle = ({ expanded, onToggle, label, icon: Icon, count, T = P }) => {
+  const isLight = T !== P;
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      aria-expanded={expanded}
+      style={{
+        width: "100%",
+        padding: "11px 14px",
+        borderRadius: 11,
+        background: expanded ? T.glassH : T.glass,
+        border: `1px solid ${expanded ? T.borderH : T.border}`,
+        color: expanded ? T.txt2 : T.txt3,
+        fontSize: 12, fontWeight: 700,
+        fontFamily: fontDisp, letterSpacing: "0.01em",
+        cursor: "pointer",
+        display: "flex", alignItems: "center", gap: 10,
+        transition: "all 0.18s",
+        textAlign: "left",
+      }}
+      onMouseEnter={e => { e.currentTarget.style.background = T.glassH; e.currentTarget.style.color = T.txt2; e.currentTarget.style.borderColor = T.borderH; }}
+      onMouseLeave={e => { e.currentTarget.style.background = expanded ? T.glassH : T.glass; e.currentTarget.style.color = expanded ? T.txt2 : T.txt3; e.currentTarget.style.borderColor = expanded ? T.borderH : T.border; }}
+    >
+      {Icon && (
+        <span style={{
+          width: 22, height: 22, borderRadius: 7,
+          background: isLight ? "rgba(15,23,42,0.05)" : "rgba(255,255,255,0.05)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          flexShrink: 0,
+        }}>
+          <Icon size={12} strokeWidth={2.2} color={expanded ? T.txt2 : T.txt3} />
+        </span>
+      )}
+      <span style={{ flex: 1, minWidth: 0, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+        {label}
+      </span>
+      {typeof count === "number" && count > 0 && (
+        <span style={{
+          padding: "2px 8px",
+          borderRadius: 99,
+          background: isLight ? "rgba(15,23,42,0.08)" : "rgba(255,255,255,0.08)",
+          color: T.txt2,
+          fontSize: 10, fontWeight: 800, letterSpacing: "0.02em",
+          fontFamily: fontDisp, flexShrink: 0,
+        }}>{count}</span>
+      )}
+      <ChevronDown
+        size={14} strokeWidth={2.3}
+        color={expanded ? T.txt2 : T.txt3}
+        style={{ flexShrink: 0, transform: expanded ? "rotate(180deg)" : "none", transition: "transform 0.22s cubic-bezier(0.4, 0, 0.2, 1)" }}
+      />
+    </button>
+  );
+};
+
+/* ─── DiscoveryGeneralData ─────────────────────────────────────────────
+   Bloque "Datos generales del cliente" que vive al final del drawer
+   Discovery (Duke). Muestra contacto + perfil + riesgo + última
+   actividad, todo editable inline. Aesthetic minimal: pares label/valor
+   en grid, sin chrome pesado.
+   ─────────────────────────────────────────────────────────────────── */
+const DiscoveryGeneralData = ({ lead, onUpdate, T = P, isLight = false }) => {
+  if (!lead) return null;
+  const labelC = isLight ? "rgba(15,23,42,0.55)" : "rgba(255,255,255,0.55)";
+  const cardBg = isLight ? "rgba(15,23,42,0.025)" : "rgba(255,255,255,0.025)";
+  const Field = ({ label, value, onSave, placeholder, emptyText, multiline = false, rows = 2 }) => (
+    <div style={{
+      padding: "11px 13px",
+      borderRadius: 11,
+      background: cardBg,
+      border: `1px solid ${T.border}`,
+      minWidth: 0,
+    }}>
+      <p style={{
+        margin: 0,
+        marginBottom: 5,
+        fontSize: 9.5, fontWeight: 800,
+        letterSpacing: "0.08em", textTransform: "uppercase",
+        color: labelC, fontFamily: fontDisp,
+      }}>{label}</p>
+      <div style={{ fontSize: 12.5, color: T.txt2, lineHeight: 1.55, wordBreak: "break-word" }}>
+        <InlineEdit
+          value={value}
+          onSave={onSave}
+          T={T} isLight={isLight}
+          multiline={multiline} rows={rows}
+          placeholder={placeholder}
+          emptyText={emptyText}
+          readStyle={{ fontSize: 12.5, width: "100%", display: "block" }}
+          editStyle={{ fontSize: 12.5 }}
+        />
+      </div>
+    </div>
+  );
+
+  return (
+    <div>
+      {/* Contacto: grid 2 columnas en desktop, 1 en mobile */}
+      <div style={{
+        display: "grid",
+        gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+        gap: 10, marginBottom: 10,
+      }}>
+        <Field
+          label="Teléfono"
+          value={lead.phone}
+          onSave={v => onUpdate?.({ ...lead, phone: v })}
+          placeholder="+1 555 ..."
+          emptyText="+ Agregar teléfono"
+        />
+        <Field
+          label="Correo"
+          value={lead.email}
+          onSave={v => onUpdate?.({ ...lead, email: v })}
+          placeholder="cliente@correo.com"
+          emptyText="+ Agregar correo"
+        />
+        <Field
+          label="Etiqueta"
+          value={lead.tag}
+          onSave={v => onUpdate?.({ ...lead, tag: v })}
+          placeholder="VIP, referido, web..."
+          emptyText="+ Agregar etiqueta"
+        />
+        <Field
+          label="Campaña / Fuente"
+          value={lead.campana}
+          onSave={v => onUpdate?.({ ...lead, campana: v })}
+          placeholder="Google, referido..."
+          emptyText="+ Agregar fuente"
+        />
+      </div>
+
+      {/* Perfil del cliente (bio) — full width, textarea ampliable */}
+      <div style={{ marginBottom: 10 }}>
+        <Field
+          label="Perfil del cliente"
+          value={lead.bio}
+          onSave={v => onUpdate?.({ ...lead, bio: v })}
+          placeholder="Describe al cliente: necesidad, contexto, objeciones..."
+          emptyText="+ Agregar perfil del cliente"
+          multiline rows={4}
+        />
+      </div>
+
+      {/* Riesgo identificado — destacado en ámbar para llamar la atención */}
+      <div style={{
+        padding: "11px 13px", borderRadius: 11, marginBottom: 10,
+        background: isLight ? `${T.amber}10` : `${T.amber}0A`,
+        border: `1px solid ${T.amber}${isLight ? "32" : "22"}`,
+        display: "flex", gap: 10, alignItems: "flex-start",
+      }}>
+        <AlertCircle size={13} color={isLight ? `color-mix(in srgb, ${T.amber} 55%, #0B1220 45%)` : T.amber} strokeWidth={2.2} style={{ marginTop: 1, flexShrink: 0 }} />
+        <div style={{ minWidth: 0, flex: 1 }}>
+          <p style={{
+            margin: 0, marginBottom: 4,
+            fontSize: 9.5, fontWeight: 800, letterSpacing: "0.08em", textTransform: "uppercase",
+            color: isLight ? `color-mix(in srgb, ${T.amber} 55%, #0B1220 45%)` : T.amber,
+            fontFamily: fontDisp,
+          }}>Riesgo identificado</p>
+          <div style={{ fontSize: 12, color: T.txt2, lineHeight: 1.6, wordBreak: "break-word" }}>
+            <InlineEdit
+              value={lead.risk}
+              onSave={v => onUpdate?.({ ...lead, risk: v })}
+              T={T} isLight={isLight}
+              multiline rows={2}
+              placeholder="Describe el riesgo: competencia, presupuesto, timing..."
+              emptyText="+ Registrar riesgo u objeción"
+              readStyle={{ fontSize: 12, lineHeight: 1.6, display: "block", width: "100%" }}
+              editStyle={{ fontSize: 12 }}
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Última actividad — chip horizontal compacto */}
+      <div style={{
+        display: "flex", gap: 10, alignItems: "center",
+        padding: "9px 12px", borderRadius: 11,
+        background: T.glass, border: `1px solid ${T.border}`,
+      }}>
+        <Activity size={12} color={T.txt3} style={{ flexShrink: 0 }} />
+        <div style={{ minWidth: 0, flex: 1 }}>
+          <p style={{
+            margin: 0, marginBottom: 2,
+            fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em",
+            color: T.txt3, fontFamily: fontDisp,
+          }}>Última actividad</p>
+          <div style={{ fontSize: 11.5, color: T.txt2, lineHeight: 1.4, wordBreak: "break-word" }}>
+            <InlineEdit
+              value={lead.lastActivity}
+              onSave={v => onUpdate?.({ ...lead, lastActivity: v })}
+              T={T} isLight={isLight}
+              placeholder="Llamada, WhatsApp, visita..."
+              emptyText="+ Registrar última actividad"
+              readStyle={{ fontSize: 11.5, width: "100%" }}
+              editStyle={{ fontSize: 11.5 }}
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const NotesModal = ({ lead, onClose, onSave, onUpdate, onSwitchTab, onShowHistory, onDelete, asesoresMaster = [], currentUserName = null, discoverySimplified = false, T = P }) => {
   const isMobile = useIsMobile();
   const [confirmDelete, setConfirmDelete] = useState(false);
   // Llamadas programadas (Retell) — pendientes para este lead.
@@ -2992,6 +3205,13 @@ const NotesModal = ({ lead, onClose, onSave, onUpdate, onSwitchTab, onShowHistor
   const [notesDraft, setNotesDraft] = useState(lead?.notas || "");
   const [saveStatus, setSaveStatus] = useState("idle"); // idle | saving | saved | error
   const [lastSavedAt, setLastSavedAt] = useState(null);
+  // En modo Discovery simplificado, las secciones secundarias viven
+  // colapsadas por default. Cada una expone un toggle "Ver / Ocultar"
+  // estilo dashed-button para revelarse sin quitar espacio al flujo
+  // principal (próxima acción + notas).
+  const [showMoreNotes, setShowMoreNotes]   = useState(!discoverySimplified);
+  const [showGeneralData, setShowGeneralData] = useState(!discoverySimplified);
+  const [showHistorial, setShowHistorial]   = useState(!discoverySimplified);
   const saveTimerRef = useRef(null);
   const dirtyRef = useRef(false);
   const currentLeadIdRef = useRef(lead?.id);
@@ -3294,13 +3514,13 @@ const NotesModal = ({ lead, onClose, onSave, onUpdate, onSwitchTab, onShowHistor
         </div>
 
         {/* ════════════════════════════════════════════════════════════════
-            CUERPO DEL EXPEDIENTE — jerarquía orientada a resultados:
+            CUERPO DE DISCOVERY — una sola sección scrolleable. Próxima
+            acción siempre arriba. Tareas se oculta si discoverySimplified.
               1. Próxima acción (qué hago AHORA)
               2. Etapa + seguimientos (cómo voy)
-              3. Notas del expediente (dónde anoto todo) — ESTRELLA
-              4. Tareas pendientes (mini-checklist)
+              3. Notas del expediente + cronograma (dónde anoto todo)
+              4. Tareas (opcional, gated por crm.discoverySimplified)
               5. Historial de acciones (solo si hay registros)
-            Cada sección tiene un título minúsculo, sin chrome pesado.
             ════════════════════════════════════════════════════════════════ */}
         <div style={{ padding: isMobile ? "16px 16px 110px" : "18px 24px 90px", overflowY: "auto", overscrollBehavior: "contain", WebkitOverflowScrolling: "touch", scrollBehavior: "smooth", flex: 1, display: "flex", flexDirection: "column", gap: 18 }}>
 
@@ -3357,36 +3577,95 @@ const NotesModal = ({ lead, onClose, onSave, onUpdate, onSwitchTab, onShowHistor
               onFocus={e => { e.currentTarget.style.borderColor = T.borderH; e.currentTarget.style.background = isLight ? "rgba(15,23,42,0.04)" : "rgba(255,255,255,0.045)"; }}
             />
 
-            {/* Cronograma de notas individuales con fecha y hora */}
-            <LeadNotesTimeline lead={lead} T={T} isLight={isLight} />
+            {/* Toggle "Cronograma de notas" — solo en Discovery simplificado.
+                Comparte el patrón de accordion con Datos generales e Historial
+                para que las 3 secciones secundarias se sientan idénticas. */}
+            {discoverySimplified && (
+              <div style={{ marginTop: 12 }}>
+                <CollapsibleSectionToggle
+                  expanded={showMoreNotes}
+                  onToggle={() => setShowMoreNotes(v => !v)}
+                  label={showMoreNotes ? "Cronograma de notas" : "Cronograma de notas · agregar sin límite"}
+                  icon={MessageCircle}
+                  T={T}
+                />
+              </div>
+            )}
+
+            {/* Cronograma de notas individuales con fecha y hora.
+                Si no estamos en Discovery simplificado, se muestra siempre
+                (compat con clientes que no tienen el toggle). */}
+            {showMoreNotes && (
+              <LeadNotesTimeline lead={lead} T={T} isLight={isLight} />
+            )}
           </div>
 
           {/* 3.5. LLAMADAS DE VOZ — grabaciones de Retell IA con audio nativo
               + transcript colapsable. Solo aparece si hay calls registradas. */}
           <LeadVoiceCalls lead={lead} T={T} isLight={isLight} />
 
-          {/* 4. TAREAS — checklist accionable */}
-          <div>
-            <SectionLabel T={T} icon={CheckSquare}>Tareas</SectionLabel>
-            <TaskChecklist lead={lead} onUpdate={onUpdate} T={T} />
-          </div>
-
-          {/* 5. HISTORIAL DE ACCIONES — solo aparece si hay registros.
-              No mostramos empty state preachy: si no hay historial,
-              tampoco hay sección. La cabecera del componente ya indica
-              "Lista de acciones · N · más reciente arriba". */}
-          {Array.isArray(lead?.actionHistory) && lead.actionHistory.length > 0 && (
+          {/* 4. TAREAS — checklist accionable. Gated por crm.discoverySimplified
+              en la config del cliente. Duke lo tiene ON → sin Tareas en el drawer.
+              Otros clientes (Grupo 28, etc.) mantienen el comportamiento histórico. */}
+          {!discoverySimplified && (
             <div>
-              <SectionLabel T={T} icon={Clock}>Historial</SectionLabel>
-              <ActionTimeline lead={lead} T={T} />
+              <SectionLabel T={T} icon={CheckSquare}>Tareas</SectionLabel>
+              <TaskChecklist lead={lead} onUpdate={onUpdate} T={T} />
             </div>
+          )}
+
+          {/* 5. DATOS GENERALES DEL CLIENTE — colapsable en Discovery
+              simplificado (Duke). En otros clientes se muestra siempre
+              (mantiene compat con el comportamiento histórico). */}
+          {discoverySimplified ? (
+            <div>
+              <CollapsibleSectionToggle
+                expanded={showGeneralData}
+                onToggle={() => setShowGeneralData(v => !v)}
+                label="Datos generales del cliente"
+                icon={User}
+                T={T}
+              />
+              {showGeneralData && (
+                <div style={{ marginTop: 12 }}>
+                  <DiscoveryGeneralData lead={lead} onUpdate={onUpdate} T={T} isLight={isLight} />
+                </div>
+              )}
+            </div>
+          ) : null}
+
+          {/* 6. HISTORIAL DE ACCIONES — siempre al final. Solo aparece si
+              hay registros. En Discovery simplificado es colapsable con
+              chip de conteo; en otros clientes se muestra expandido como
+              histórico. */}
+          {Array.isArray(lead?.actionHistory) && lead.actionHistory.length > 0 && (
+            discoverySimplified ? (
+              <div>
+                <CollapsibleSectionToggle
+                  expanded={showHistorial}
+                  onToggle={() => setShowHistorial(v => !v)}
+                  label="Historial de acciones"
+                  icon={Clock}
+                  count={lead.actionHistory.length}
+                  T={T}
+                />
+                {showHistorial && (
+                  <div style={{ marginTop: 12 }}>
+                    <ActionTimeline lead={lead} T={T} />
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div>
+                <SectionLabel T={T} icon={Clock}>Historial</SectionLabel>
+                <ActionTimeline lead={lead} T={T} />
+              </div>
+            )
           )}
         </div>
 
-        {/* Dynamic Island — switcher Análisis IA · Perfil · Expediente.
-            Los flujos previos de Telegram/voz/IA fueron retirados: el
-            expediente ahora es 100% texto plano con auto-save. */}
-        <DrawerTabIsland current="expediente" onSwitch={onSwitchTab} T={T} />
+        {/* Dynamic Island — pill principal "Discovery" + "Análisis IA". */}
+        <DrawerTabIsland current="discovery" onSwitch={onSwitchTab} T={T} />
       </div>
     </>,
     document.body
@@ -4076,8 +4355,10 @@ const LeadPanel = ({ lead, onClose, oc, onUpdate, onSwitchTab, onShowHistory, on
           </div>
         )}
 
-        {/* Dynamic Island — switcher entre Análisis IA · Perfil · Expediente */}
-        {!editing && <DrawerTabIsland current="perfil" onSwitch={onSwitchTab} T={T} />}
+        {/* Dynamic Island — pill principal "Discovery" (agrupa Expediente +
+            Perfil) y "Análisis IA". El sub-toggle del header permite al
+            asesor moverse entre las dos sub-vistas de Discovery. */}
+        {!editing && <DrawerTabIsland current="discovery" onSwitch={onSwitchTab} T={T} />}
 
         {/* ── UpdateChatPanel — panel deslizable para registrar actualizaciones ── */}
         {!editing && (
