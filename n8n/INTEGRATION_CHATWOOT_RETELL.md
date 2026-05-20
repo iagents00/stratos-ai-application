@@ -34,7 +34,7 @@ Configurar UNA credencial "Supabase Stratos CRM" tipo HTTP Header Auth con:
 > ⚠️ La `SERVICE_ROLE_KEY` la sacás de Supabase Dashboard → Settings → API.
 > Bypasea RLS, mantenela como secret. No subir a Git ni compartir en chat.
 
-## 9 funciones RPC disponibles
+## 12 funciones RPC disponibles
 
 ### 1. `fn_upsert_lead_from_chatwoot` (la principal)
 
@@ -414,6 +414,161 @@ Cuando la IA decide handoff a humano, hacé **2 calls al mismo webhook**:
 2. (Si querés marcar urgente) `fn_upsert_lead_from_chatwoot` con label `requiere-humano` o un POST a `marcar_requiere_humano`.
 
 Así el cerrador ve simultáneamente el badge rojo **🔥 REQUIERE HUMANO** y exactamente qué tiene que hacer.
+
+### 10. `fn_register_failed_call` (motor de strikes para reintentos)
+
+**Cuándo llamarla:** después de cada llamada Retell que termina sin éxito
+(buzón, no contesta, número inválido, etc.). n8n hace este POST y, según
+`new_attempts`, decide si reintentar más tarde o dropear el lead de la cola.
+
+**Body:**
+```json
+{ "payload": { "phone_e164": "+573237451221" } }
+```
+
+**Qué hace internamente:**
+- `UPDATE leads SET call_attempts = call_attempts + 1 ... RETURNING ...`
+  (atómico en una sola query — dos workers concurrentes no pueden contar el mismo intento dos veces).
+- `updated_at` se actualiza (Realtime propaga al CRM si querés mostrar el contador en la UI más adelante).
+
+**Respuesta exitosa:**
+```json
+{ "ok": true, "lead_id": "uuid", "new_attempts": 2 }
+```
+
+**Errores:**
+- `{ "ok": false, "error": "phone_e164 missing or invalid" }`
+- `{ "ok": false, "error": "lead not found for phone", "phone": "+..." }`
+
+### Patrón sugerido en n8n (3 strikes para buzón)
+
+```js
+const result = await POST("/rpc/fn_register_failed_call", { payload: { phone_e164 } });
+if (!result.ok) { logError(result.error); return; }
+
+const STRIKE_LIMIT = 3;
+if (result.new_attempts >= STRIKE_LIMIT) {
+  // Buzón persistente → dropear de la cola, marcar el lead como "no contesta"
+  await POST("/rpc/fn_set_next_action", {
+    payload: {
+      phone_e164,
+      next_action: "No contesta · 3 intentos · revisar manualmente",
+    },
+  });
+  // (opcional) marcar como requiere humano
+  await POST("/webhook/api-interna-stratos", {
+    action: "marcar_requiere_humano", phone_e164,
+  });
+} else {
+  // Aún hay strikes disponibles → reagendar en 30 min
+  await POST("/rpc/fn_schedule_call", {
+    payload: {
+      phone_e164,
+      scheduled_at: new Date(Date.now() + 30 * 60_000).toISOString(),
+    },
+  });
+}
+```
+
+### Reset del contador
+
+Cuando una llamada SÍ se conecta exitosamente, conviene resetear:
+- Hoy no hay una RPC dedicada para resetear. Si lo necesitás, podés usar
+  un PATCH directo a `/rest/v1/leads?id=eq.<lead_id>` con
+  `{ "call_attempts": 0 }`, o pedís una RPC nueva `fn_reset_failed_calls`.
+
+### 11. `fn_reset_call_attempts` (resetear contador de strikes)
+
+**Cuándo llamarla:** después de una llamada Retell EXITOSA (el cliente
+contestó / la conversación se completó). Sin esto, el contador seguiría
+subiendo en el próximo intento y un cliente que contestó al segundo
+strike podría quedar a 1 de buzón persistente por error.
+
+**Body:**
+```json
+{ "payload": { "phone_e164": "+573237451221" } }
+```
+
+**Respuesta:** `{ "ok": true, "lead_id": "uuid", "call_attempts": 0 }`
+
+**Patrón sugerido (después de cada call_ended con éxito):**
+```js
+const summary = retellPayload.call_summary;
+if (summary && retellPayload.disconnection_reason === "user_hangup") {
+  // Cliente conectó normalmente → resetear strikes
+  await POST("/rpc/fn_reset_call_attempts", { payload: { phone_e164 } });
+}
+```
+
+### 12. `fn_assign_lead` (reasignación REAL del lead a un asesor)
+
+**Cuándo llamarla:** cuando el bot decide handoff a un humano específico
+(Gael, Cecilia, etc.). A diferencia de `fn_set_next_action` que solo
+escribe texto, esta función actualiza `asesor_id + asesor_name` en la BD
+→ el lead **aparece en el filtro "Mis Leads"** del asesor.
+
+**Body:**
+```json
+{
+  "payload": {
+    "phone_e164":  "+573237451221",
+    "agent_name":  "Gael G"
+  }
+}
+```
+
+**Cómo se hace el lookup del asesor:**
+- Match case-insensitive contra `profiles.name`.
+- Filtro: `organization_id = STRATOS` + `active = true`.
+- Si el name no existe → error con hint para usar el `name` exacto del profile.
+
+**Respuesta exitosa:**
+```json
+{
+  "ok": true,
+  "lead_id": "uuid",
+  "asesor_id": "uuid-del-asesor",
+  "asesor_name": "Gael G",
+  "previous_asesor": "iAgents"
+}
+```
+
+`previous_asesor` te sirve para logging / auditoría (ver de quién venía).
+
+**Errores:**
+- `{ "ok": false, "error": "phone_e164 missing or invalid" }`
+- `{ "ok": false, "error": "agent_name missing" }`
+- `{ "ok": false, "error": "agent not found in profiles", "agent_name": "...", "hint": "..." }`
+- `{ "ok": false, "error": "lead not found for phone", "phone": "..." }`
+
+### Cómo plugar `fn_assign_lead` en tu workflow actual de 3 strikes
+
+Tu workflow actual tiene **una sola llamada** al webhook "CRM: Asignar a Gael" que solo actualiza el texto de `next_action`. **Para que la reasignación sea operativa**, hay que partir esto en 2 llamadas HTTP secuenciales:
+
+```
+Antes (solo cosmético):
+  fn_set_next_action("🚨 Reasignado a Gael...")
+
+Después (operativo):
+  1. fn_assign_lead     → cambia asesor_id + asesor_name a "Gael G"
+  2. fn_set_next_action → "🚨 Reasignado a Gael (Lead no contestó 3 llamadas de IA)"
+```
+
+JSON del nuevo nodo HTTP (agregar **antes** del nodo "CRM: Asignar a Gael" existente):
+
+```json
+{
+  "method": "POST",
+  "url": "https://glulgyhkrqpykxmujodb.supabase.co/rest/v1/rpc/fn_assign_lead",
+  "headers": { "apikey": "<SERVICE_ROLE_KEY>", "Authorization": "Bearer <SERVICE_ROLE_KEY>", "Content-Type": "application/json" },
+  "body": {
+    "payload": {
+      "phone_e164": "{{ $('1. Extraer Variables Retell1').item.json.phone_e164 }}",
+      "agent_name": "Gael G"
+    }
+  }
+}
+```
 
 ## Mapeo de labels de Chatwoot → stages del CRM
 

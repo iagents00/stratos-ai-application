@@ -31,6 +31,8 @@ import { StratosAtom, StratosAtomHex } from "../../components/Logo";
 import { AI_AGENTS, AI_AGENT_LIST } from "../../constants/agents";
 import { stgC } from "../../constants/crm";
 import LeadNotesTimeline from "./LeadNotesTimeline";
+import { getEntityHistory, fieldLabel, actionLabel } from "../../../lib/audit";
+import { canTriggerIaActions } from "../../../lib/iagents-actions";
 import LeadDiscoveryPanel from "./LeadDiscoveryPanel";
 import LeadVoiceCalls from "./LeadVoiceCalls";
 import LeadChatHistory from "./LeadChatHistory";
@@ -47,9 +49,11 @@ const calculateLeadScore = (lead) => {
   let score = 0;
 
   // 1. Stage progression — 0 a 35 pts
-  const stages = ["Contáctame ya","Segundo Intento","Remarketing","Seguimiento","Zoom Agendado",
-    "No Show","Zoom Concretado","Visita Agendada","Visita Concretada","Negociación","Cierre","Postventa"];
-  const stageIdx = stages.indexOf(lead.st ?? "Contáctame ya");
+  // Pipeline oficial Duke (12 etapas). Apartó y Cierre son los milestones más altos.
+  const stages = ["Contáctame Ya","Segundo Intento","Tercer Intento","Rotación",
+    "Remarketing IA","Zoom Agendado","Reactivar Zoom","Seguimiento","Apartó",
+    "Visita Agendada","Cierre","Postventa"];
+  const stageIdx = stages.indexOf(lead.st ?? "Contáctame Ya");
   // Excluir "Postventa" del score positivo
   if (stageIdx >= 0 && lead.st !== "Postventa") {
     score += Math.round((stageIdx / 10) * 35);
@@ -862,10 +866,13 @@ const NextActionHero = ({ lead, T = P, onUpdate = null }) => {
         boxShadow: `0 0 12px ${T.accent}${isLight ? "55" : "66"}`,
       }} />
 
-      {/* Mini header row — etiqueta + fecha. Sin borderBottom para que fluya */}
+      {/* Header — ícono Zap + "PRÓXIMA ACCIÓN" + chip de fecha/hora al
+          lado en la misma fila. Sin CLAVE pill (era ruido visual; la
+          urgencia ya la comunica el accent rail vertical + animación). */}
       <div style={{
         display: "flex", alignItems: "center", gap: 8,
-        marginBottom: 8, flexWrap: "wrap",
+        marginBottom: 10,
+        flexWrap: "wrap",
         position: "relative",
       }}>
         <div style={{
@@ -882,24 +889,16 @@ const NextActionHero = ({ lead, T = P, onUpdate = null }) => {
           <Zap size={12} color={isLight ? "#FFFFFF" : accentStrong} strokeWidth={2.6} fill={isLight ? "#FFFFFF" : "none"} />
         </div>
         <p style={{ margin: 0, fontSize: 10.5, fontWeight: 800, color: accentStrong, letterSpacing: "0.14em", textTransform: "uppercase", fontFamily: fontDisp }}>Próxima acción</p>
-        <span style={{
-          fontSize: 8.5, fontWeight: 800, color: accentStrong,
-          background: isLight ? `${T.accent}22` : `${T.accent}2A`,
-          border: `1px solid ${isLight ? `${T.accent}55` : T.accentB}`,
-          padding: "2px 7px", borderRadius: 99, letterSpacing: "0.1em",
-          fontFamily: fontDisp, animation: "pulse 2.4s ease-in-out infinite",
-          flexShrink: 0,
-        }}>CLAVE</span>
         {dateText && !editing && (
           <span style={{
-            marginLeft: "auto",
-            fontSize: 10, fontWeight: 700, color: accentStrong,
-            background: isLight ? "#FFFFFF" : `${T.accent}16`,
-            border: `1px solid ${isLight ? `${T.accent}55` : T.accentB}`,
-            padding: "3px 9px", borderRadius: 99, fontFamily: fontDisp,
-            letterSpacing: "0.02em", whiteSpace: "nowrap", flexShrink: 0,
-            boxShadow: isLight ? `0 1px 3px ${T.accent}22, inset 0 1px 0 rgba(255,255,255,0.8)` : "none",
-            display: "inline-flex", alignItems: "center", gap: 4,
+            display: "inline-flex", alignItems: "center", gap: 5,
+            padding: "3px 9px", borderRadius: 99,
+            background: isLight ? "#FFFFFF" : `${T.accent}12`,
+            border: `1px solid ${isLight ? `${T.accent}3D` : `${T.accent}26`}`,
+            color: accentStrong,
+            fontSize: 10, fontWeight: 700, fontFamily: fontDisp,
+            letterSpacing: "0.01em", whiteSpace: "nowrap", flexShrink: 0,
+            boxShadow: isLight ? `0 1px 2px ${T.accent}18, inset 0 1px 0 rgba(255,255,255,0.8)` : "none",
           }}>
             <Clock size={9} strokeWidth={2.6} />
             {dateText}
@@ -1036,20 +1035,16 @@ const NextActionHero = ({ lead, T = P, onUpdate = null }) => {
       )}
 
       {/* ════════════════════════════════════════════════════════════════
-          CTAs DE CONTACTO — siempre visibles cuando el lead tiene teléfono.
-          Antes solo aparecían con `hasAction`, lo cual ocultaba los
-          botones más útiles del Expediente cuando no había próxima acción
-          definida. Ahora:
-            · Llamar       → tel:<num> (abre el dialer del SO)
-            · WhatsApp     → wa.me/<num con código de país> (app o web)
-            · Copiar       → copia el número al portapapeles (fallback si
-                             el navegador no tiene dialer registrado)
-          Si no hay teléfono: aparece un mini-input para guardarlo. ════ */}
+          CTAs DE CONTACTO — Llamar · WhatsApp · Hecho (cuando aplica).
+          Botones de altura uniforme, layout consistente, margins limpios.
+          Sin botón "Copiar" (el número ya está en Datos generales) y sin
+          warning triangle (el aviso de Zoom Agendado vive como chip de
+          fecha arriba; aquí solo importan las acciones). ═══════════════ */}
       {!editing && phoneClean && (
         <div style={{
-          marginTop: 12, paddingTop: 10,
+          marginTop: 14, paddingTop: 12,
           borderTop: `1px dashed ${isLight ? `${T.accent}2E` : `${T.accent}22`}`,
-          display: "flex", gap: 7, flexWrap: "wrap",
+          display: "flex", gap: 8, flexWrap: "wrap",
           position: "relative",
         }}>
             <CallActionButton
@@ -1058,19 +1053,18 @@ const NextActionHero = ({ lead, T = P, onUpdate = null }) => {
               variant="primary"
               T={T}
               isLight={isLight}
-              warnZoom={zoomPending}
             />
             <a
               href={`https://wa.me/${waPhone}`}
               target="_blank" rel="noreferrer"
               style={{
-                flex: 1, minWidth: 120,
+                flex: 1, minWidth: 120, height: 40,
                 display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
-                padding: "9px 12px", borderRadius: 10,
+                padding: "0 14px", borderRadius: 10,
                 background: isLight ? "#FFFFFF" : "rgba(255,255,255,0.07)",
                 border: `1px solid ${isLight ? "rgba(37,211,102,0.45)" : "rgba(255,255,255,0.12)"}`,
                 color: isLight ? "#128C7E" : "rgba(255,255,255,0.88)",
-                fontSize: 12, fontWeight: 700, fontFamily: fontDisp,
+                fontSize: 12.5, fontWeight: 700, fontFamily: fontDisp,
                 letterSpacing: "0.01em", textDecoration: "none",
                 boxShadow: isLight
                   ? "0 1px 3px rgba(18,140,126,0.14)"
@@ -1100,35 +1094,29 @@ const NextActionHero = ({ lead, T = P, onUpdate = null }) => {
                 }
               }}
             >
-              <MessageCircle size={12} strokeWidth={2.4} /> WhatsApp
+              <MessageCircle size={13} strokeWidth={2.4} /> WhatsApp
             </a>
-            {/* Copiar número — fallback útil en escritorio cuando el SO no
-                tiene un dialer registrado, o cuando el asesor quiere
-                pegarlo en otra app. Hace copy + toast efímero in-line. */}
-            <CopyPhoneButton phone={phoneDisplay} T={T} isLight={isLight} />
-            {/* Marcar como hecha — solo aparece cuando hay nextAction.
-                Mueve la actual al historial (auto-log) y abre el editor
-                con foco listo para escribir la siguiente. */}
+            {/* Marcar como hecha — solo aparece cuando hay nextAction. */}
             {hasAction && (
               <button
                 onClick={markDone}
                 title="Marcar la próxima acción como hecha y agendar la siguiente"
                 aria-label="Marcar como hecha"
                 style={{
-                  flexShrink: 0,
+                  flexShrink: 0, height: 40,
                   display: "inline-flex", alignItems: "center", gap: 6,
-                  padding: "9px 12px", borderRadius: 10,
+                  padding: "0 16px", borderRadius: 10,
                   background: "transparent",
                   border: `1px dashed ${isLight ? `${T.accent}66` : `${T.accent}55`}`,
                   color: isLight ? `color-mix(in srgb, ${T.accent} 60%, #0B1220 40%)` : T.accent,
-                  fontSize: 12, fontWeight: 700, fontFamily: fontDisp,
+                  fontSize: 12.5, fontWeight: 700, fontFamily: fontDisp,
                   letterSpacing: "0.01em", cursor: "pointer",
                   transition: "all 0.18s",
                 }}
                 onMouseEnter={e => { e.currentTarget.style.background = `${T.accent}${isLight ? "12" : "0E"}`; e.currentTarget.style.borderStyle = "solid"; }}
                 onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderStyle = "dashed"; }}
               >
-                <CheckCircle2 size={12} strokeWidth={2.4} /> Hecho
+                <CheckCircle2 size={13} strokeWidth={2.4} /> Hecho
               </button>
             )}
           </div>
@@ -1288,15 +1276,17 @@ const AddPhoneInline = ({ lead, onUpdate, T = P, isLight = false }) => {
 /* ─── Notes Modal — Rich sectioned view ─── */
 /* ═══════════════════════════════════════════
    DRAWER TAB ISLAND — Pill flotante estilo Dynamic Island, colocada abajo
-   en cada drawer (Análisis IA · Perfil · Expediente). Permite al vendedor
-   saltar entre las 3 vistas del lead sin cerrar el drawer.
+   en cada drawer (Discovery · Análisis IA). Permite al vendedor saltar
+   entre las vistas del lead sin cerrar el drawer.
+
+   Discovery agrupa Expediente + Perfil en una sola sección — la sub-vista
+   activa se toggleea desde un segmented control dentro del propio drawer.
 ═══════════════════════════════════════════ */
 const DRAWER_TABS = [
-  // Expediente primero — es donde el asesor pasa el 90% del tiempo
-  { id: "expediente", label: "Expediente",  shortLabel: "Exped.", colorKey: "blue"   },
-  { id: "perfil",     label: "Perfil",      shortLabel: "Perfil", colorKey: "violet" },
+  // Discovery = Expediente + Perfil unificados (el asesor pasa 90% aquí)
+  { id: "discovery", label: "Discovery",  shortLabel: "Dyscov.", colorKey: "blue"   },
   // Análisis IA bloqueado por ahora — se desbloqueará en siguiente etapa
-  { id: "analisis",   label: "Análisis IA", shortLabel: "IA",     colorKey: "accent", locked: true, lockReason: "Próximamente" },
+  { id: "analisis",  label: "Análisis IA", shortLabel: "IA",     colorKey: "accent", locked: true, lockReason: "Próximamente" },
 ];
 
 const DrawerTabIsland = ({ current, onSwitch, T = P }) => {
@@ -1335,8 +1325,7 @@ const DrawerTabIsland = ({ current, onSwitch, T = P }) => {
           : (active ? safeC(color) : (isLight ? T.txt2 : T.txt3));
         const iconNode =
           tab.id === "analisis"   ? <StratosAtom size={13} color={txtC} />
-        : tab.id === "perfil"     ? <User size={13} color={txtC} strokeWidth={2.2} />
-        :                           <FileText size={13} color={txtC} strokeWidth={2.2} />;
+        :                           <Aperture size={13} color={txtC} strokeWidth={2.2} />;
 
         return (
           <button
@@ -2696,6 +2685,276 @@ const ActionTimeline = ({ lead, T = P, maxItems = 6 }) => {
 };
 
 /* ──────────────────────────────────────────────────────────────────────
+   LeadActivityTimeline — Historial unificado del lead.
+   Combina:
+     · audit_log de Supabase  (cambios automáticos por triggers — todas
+       las UPDATE/INSERT/SOFT_DELETE: reasignaciones, etapas, notas,
+       teléfonos, etc.)
+     · lead.actionHistory     (registros locales del flujo histórico:
+       tareas completadas, seguimientos, próximas acciones)
+   Sortea por fecha desc y muestra todo en una sola timeline aesthetic.
+   En demo (no UUID) muestra solo el actionHistory local; en producción
+   completa con el audit_log.
+   ────────────────────────────────────────────────────────────────────── */
+const ACTIVITY_ICON_FOR_FIELD = {
+  asesor_name:      UserCheck,
+  asesor_id:        UserCheck,
+  stage:            Waypoints,
+  next_action:      Zap,
+  next_action_date: Clock,
+  score:            Star,
+  hot:              Flame,
+  is_new:           Star,
+  notas:            FileText,
+  bio:              User,
+  risk:             AlertCircle,
+  phone:            Phone,
+  email:            Mail,
+  seguimientos:     RefreshCw,
+  tag:              BadgeCheck,
+  priority:         Target,
+  priority_order:   List,
+  budget:           DollarSign,
+  presupuesto:      DollarSign,
+  project:          Building2,
+  campaign:         Target,
+  source:           Target,
+  ai_agent:         Atom,
+  last_activity:    Activity,
+  days_inactive:    Clock,
+  friction:         AlertCircle,
+};
+
+function describeAuditRow(row) {
+  // INSERT / DELETE / SOFT_DELETE → títulos directos
+  if (row.action === "INSERT")      return { Icon: Plus,    title: "Lead creado",     body: null,                                                color: "emerald" };
+  if (row.action === "DELETE")      return { Icon: Trash2,  title: "Lead eliminado",  body: null,                                                color: "rose" };
+  if (row.action === "SOFT_DELETE") return { Icon: Trash2,  title: "Movido a papelera", body: null,                                              color: "amber" };
+
+  // UPDATE: detectar el campo más significativo y armar título humano
+  const fields = row.changed_fields && typeof row.changed_fields === "object"
+    ? Object.keys(row.changed_fields) : [];
+  if (fields.length === 0) return { Icon: Pencil, title: "Modificado", body: null, color: "blue" };
+
+  // Casos especiales con narrativa propia
+  if (fields.includes("asesor_name")) {
+    const c = row.changed_fields.asesor_name;
+    return { Icon: UserCheck, title: "Reasignado", body: `${fmtCell(c?.old) || "Sin asesor"} → ${fmtCell(c?.new) || "Sin asesor"}`, color: "violet" };
+  }
+  if (fields.includes("stage")) {
+    const c = row.changed_fields.stage;
+    return { Icon: Waypoints, title: "Cambio de etapa", body: `${fmtCell(c?.old) || "—"} → ${fmtCell(c?.new) || "—"}`, color: "blue" };
+  }
+  if (fields.includes("next_action")) {
+    const c = row.changed_fields.next_action;
+    return { Icon: Zap, title: "Próxima acción", body: fmtCell(c?.new) || "—", color: "accent" };
+  }
+  if (fields.includes("seguimientos")) {
+    const c = row.changed_fields.seguimientos;
+    return { Icon: RefreshCw, title: "Seguimiento registrado", body: `Total: ${fmtCell(c?.new) || "?"}`, color: "blue" };
+  }
+  if (fields.includes("notas") && fields.length === 1) {
+    return { Icon: FileText, title: "Notas del expediente actualizadas", body: null, color: "blue" };
+  }
+  if (fields.includes("phone")) {
+    const c = row.changed_fields.phone;
+    return { Icon: Phone, title: "Teléfono actualizado", body: fmtCell(c?.new) || "—", color: "blue" };
+  }
+  if (fields.includes("email")) {
+    const c = row.changed_fields.email;
+    return { Icon: Mail, title: "Correo actualizado", body: fmtCell(c?.new) || "—", color: "blue" };
+  }
+  if (fields.includes("score")) {
+    const c = row.changed_fields.score;
+    return { Icon: Star, title: "Score", body: `${fmtCell(c?.old) ?? "—"} → ${fmtCell(c?.new) ?? "—"}`, color: "amber" };
+  }
+
+  // Fallback genérico: lista de campos modificados
+  const labels = fields.slice(0, 3).map(fieldLabel).join(", ") + (fields.length > 3 ? "…" : "");
+  const Icon = ACTIVITY_ICON_FOR_FIELD[fields[0]] || Pencil;
+  return { Icon, title: "Modificado", body: labels, color: "blue" };
+}
+
+function fmtCell(v) {
+  if (v === null || v === undefined) return null;
+  if (typeof v === "boolean") return v ? "sí" : "no";
+  if (typeof v === "object") {
+    try {
+      const s = JSON.stringify(v);
+      return s.length > 60 ? s.slice(0, 57) + "…" : s;
+    } catch { return String(v); }
+  }
+  const s = String(v).trim();
+  if (!s) return null;
+  return s.length > 80 ? s.slice(0, 77) + "…" : s;
+}
+
+const LeadActivityTimeline = ({ lead, T = P, maxItems = 8 }) => {
+  const isLight = T !== P;
+  const { user } = useAuth();
+  const [auditRows, setAuditRows] = useState([]);
+  const [loading, setLoading]     = useState(true);
+  const [expanded, setExpanded]   = useState(false);
+
+  // Fetch audit log — skip en demo o si el id no es UUID
+  useEffect(() => {
+    if (!lead?.id) { setLoading(false); return; }
+    if (user?.isDemo || !/^[0-9a-f]{8}-/.test(String(lead.id))) {
+      setAuditRows([]);
+      setLoading(false);
+      return;
+    }
+    let cancelled = false;
+    setLoading(true);
+    getEntityHistory("leads", lead.id, 100).then(({ data }) => {
+      if (cancelled) return;
+      setAuditRows(Array.isArray(data) ? data : []);
+      setLoading(false);
+    });
+    return () => { cancelled = true; };
+  }, [lead?.id, user?.isDemo]);
+
+  // Normalizar audit_log + actionHistory a una timeline única
+  const events = useMemo(() => {
+    const out = [];
+    for (const row of auditRows) {
+      const d = describeAuditRow(row);
+      out.push({
+        id:    row.id || `audit-${row.created_at}-${row.action}`,
+        ts:    row.created_at ? new Date(row.created_at).getTime() : 0,
+        source: "audit",
+        Icon:  d.Icon,
+        color: d.color,
+        title: d.title,
+        body:  d.body,
+        actor: row.actor_name || null,
+        date:  row.created_at,
+      });
+    }
+    const local = Array.isArray(lead?.actionHistory) ? lead.actionHistory : [];
+    for (const e of local) {
+      const ts = new Date(e.completed_at || e.doneAt || e.done_at || e.created_at || 0).getTime();
+      const isCompleted = e.type === "tarea" || e.type === "completada";
+      const Icon = isCompleted ? CheckCircle2
+        : e.type === "seguimiento" ? RefreshCw
+        : e.type === "etapa"       ? Waypoints
+        : Zap;
+      const color = isCompleted ? "accent"
+        : e.type === "seguimiento" ? "blue"
+        : e.type === "etapa"       ? "violet"
+        : "accent";
+      out.push({
+        id:    e.id || `local-${ts}-${e.action || ""}`,
+        ts,
+        source: "local",
+        Icon, color,
+        title: e.type === "tarea" ? "Tarea completada"
+             : e.type === "seguimiento" ? "Seguimiento"
+             : e.type === "etapa" ? "Cambio de etapa"
+             : "Acción registrada",
+        body:  e.action || null,
+        actor: e.by || null,
+        date:  e.completed_at || e.doneAt || e.done_at || e.created_at || null,
+      });
+    }
+    return out.sort((a, b) => (b.ts || 0) - (a.ts || 0));
+  }, [auditRows, lead?.actionHistory]);
+
+  const colorOf = (key) => ({
+    emerald: T.emerald || T.accent,
+    accent:  T.accent,
+    blue:    T.blue,
+    violet:  T.violet || T.blue,
+    amber:   T.amber,
+    rose:    T.rose || "#F87171",
+  }[key] || T.accent);
+
+  if (loading) {
+    return (
+      <div style={{ padding: "16px", borderRadius: 12, border: `1px solid ${T.border}`, background: T.glass, color: T.txt3, fontSize: 12, fontFamily: font, textAlign: "center" }}>
+        Cargando historial…
+      </div>
+    );
+  }
+
+  if (events.length === 0) {
+    return (
+      <div style={{ borderRadius: 12, border: `1px dashed ${T.border}`, padding: "14px 16px", background: T.glass }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+          <Activity size={12} color={T.txt3} strokeWidth={2} />
+          <span style={{ fontSize: 10, fontWeight: 800, color: T.txt3, letterSpacing: "0.08em", textTransform: "uppercase", fontFamily: fontDisp }}>Sin actividad registrada</span>
+        </div>
+        <p style={{ margin: 0, fontSize: 12, color: T.txt3, fontFamily: font, lineHeight: 1.5 }}>
+          Cada cambio (reasignación, etapa, notas, próxima acción, etc.) se registrará aquí automáticamente.
+        </p>
+      </div>
+    );
+  }
+
+  const shown = expanded ? events : events.slice(0, maxItems);
+
+  return (
+    <div style={{ borderRadius: 12, border: `1px solid ${T.border}`, overflow: "hidden", background: T.glass }}>
+      {/* Subtle inner header: count + ordering hint */}
+      <div style={{ padding: "10px 15px", borderBottom: `1px solid ${T.border}`, display: "flex", alignItems: "center", gap: 8 }}>
+        <Activity size={12} color={T.txt3} strokeWidth={2} />
+        <span style={{ fontSize: 10, fontWeight: 800, color: T.txt3, letterSpacing: "0.08em", textTransform: "uppercase", fontFamily: fontDisp }}>Línea de tiempo</span>
+        <span style={{ fontSize: 9.5, fontWeight: 800, color: T.accent, background: `${T.accent}14`, border: `1px solid ${T.accent}28`, padding: "1px 7px", borderRadius: 99, fontFamily: fontDisp }}>{events.length}</span>
+        <span style={{ marginLeft: "auto", fontSize: 9, color: T.txt3, fontFamily: font, opacity: 0.7 }}>más reciente arriba</span>
+      </div>
+
+      <div>
+        {shown.map((ev, i) => {
+          const col     = colorOf(ev.color);
+          const Icon    = ev.Icon || Activity;
+          const colSafe = isLight ? `color-mix(in srgb, ${col} 62%, #0B1220 38%)` : col;
+          const isLast  = i === shown.length - 1;
+          const dateStr = ev.date ? new Date(ev.date).toLocaleString("es-MX", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) : "";
+          return (
+            <div key={ev.id} style={{ display: "flex", borderBottom: isLast ? "none" : `1px solid ${T.border}` }}>
+              <div style={{ width: 42, display: "flex", flexDirection: "column", alignItems: "center", padding: "10px 0", flexShrink: 0 }}>
+                <div style={{ width: 24, height: 24, borderRadius: "50%", background: `${col}14`, border: `1px solid ${col}28`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <Icon size={11} color={colSafe} strokeWidth={2.2} />
+                </div>
+                {!isLast && <div style={{ width: 1, flex: 1, minHeight: 8, background: T.border, marginTop: 4 }} />}
+              </div>
+              <div style={{ flex: 1, padding: "10px 14px 10px 0", minWidth: 0 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 3, flexWrap: "wrap" }}>
+                  <span style={{ fontSize: 9, fontWeight: 800, color: colSafe, background: `${col}14`, border: `1px solid ${col}28`, padding: "1px 6px", borderRadius: 99, letterSpacing: "0.06em", textTransform: "uppercase", fontFamily: fontDisp }}>
+                    {ev.title}
+                  </span>
+                  {ev.actor && (
+                    <span style={{ fontSize: 9, color: T.txt3, fontFamily: font }}>· {ev.actor}</span>
+                  )}
+                </div>
+                {ev.body && (
+                  <p style={{ margin: 0, fontSize: 12.5, color: T.txt, fontFamily: font, lineHeight: 1.4, wordBreak: "break-word" }}>{ev.body}</p>
+                )}
+                {dateStr && (
+                  <p style={{ margin: "3px 0 0", fontSize: 9.5, color: T.txt3, fontFamily: fontDisp }}>{dateStr}</p>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {events.length > maxItems && (
+        <button
+          onClick={() => setExpanded(v => !v)}
+          style={{ width: "100%", padding: "9px 15px", background: "transparent", border: "none", borderTop: `1px solid ${T.border}`, cursor: "pointer", color: T.txt3, fontSize: 11, fontFamily: font, display: "flex", alignItems: "center", justifyContent: "center", gap: 5, transition: "background 0.15s" }}
+          onMouseEnter={e => e.currentTarget.style.background = T.glassH}
+          onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+        >
+          {expanded ? "Ver menos" : `Ver ${events.length - maxItems} registro${events.length - maxItems !== 1 ? "s" : ""} más`}
+          <ChevronDown size={11} strokeWidth={2.5} style={{ transform: expanded ? "rotate(180deg)" : "none", transition: "transform 0.2s" }} />
+        </button>
+      )}
+    </div>
+  );
+};
+
+/* ──────────────────────────────────────────────────────────────────────
    SectionLabel — micro-encabezado consistente para las secciones del
    Expediente y del Perfil. Aesthetic minimalista: icono pequeño + texto
    uppercase pequeño. Sin chrome. Reutilizable.
@@ -2964,12 +3223,237 @@ const AsesorPicker = ({
   );
 };
 
-const NotesModal = ({ lead, onClose, onSave, onUpdate, onSwitchTab, onShowHistory, onDelete, asesoresMaster = [], currentUserName = null, T = P }) => {
+/* ─── CollapsibleSectionToggle ─────────────────────────────────────────
+   Header de sección colapsable estilo accordion: ícono · etiqueta · chip
+   opcional de conteo · chevron rotativo. Solid border + glass background
+   para leerse como un header real, no como un botón secundario.
+   Patrón único que comparten cronograma · datos generales · historial.
+   ─────────────────────────────────────────────────────────────────── */
+const CollapsibleSectionToggle = ({ expanded, onToggle, label, icon: Icon, count, T = P }) => {
+  const isLight = T !== P;
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      aria-expanded={expanded}
+      style={{
+        width: "100%",
+        padding: "11px 14px",
+        borderRadius: 11,
+        background: expanded ? T.glassH : T.glass,
+        border: `1px solid ${expanded ? T.borderH : T.border}`,
+        color: expanded ? T.txt2 : T.txt3,
+        fontSize: 12, fontWeight: 700,
+        fontFamily: fontDisp, letterSpacing: "0.01em",
+        cursor: "pointer",
+        display: "flex", alignItems: "center", gap: 10,
+        transition: "all 0.18s",
+        textAlign: "left",
+      }}
+      onMouseEnter={e => { e.currentTarget.style.background = T.glassH; e.currentTarget.style.color = T.txt2; e.currentTarget.style.borderColor = T.borderH; }}
+      onMouseLeave={e => { e.currentTarget.style.background = expanded ? T.glassH : T.glass; e.currentTarget.style.color = expanded ? T.txt2 : T.txt3; e.currentTarget.style.borderColor = expanded ? T.borderH : T.border; }}
+    >
+      {Icon && (
+        <span style={{
+          width: 22, height: 22, borderRadius: 7,
+          background: isLight ? "rgba(15,23,42,0.05)" : "rgba(255,255,255,0.05)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          flexShrink: 0,
+        }}>
+          <Icon size={12} strokeWidth={2.2} color={expanded ? T.txt2 : T.txt3} />
+        </span>
+      )}
+      <span style={{ flex: 1, minWidth: 0, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+        {label}
+      </span>
+      {typeof count === "number" && count > 0 && (
+        <span style={{
+          padding: "2px 8px",
+          borderRadius: 99,
+          background: isLight ? "rgba(15,23,42,0.08)" : "rgba(255,255,255,0.08)",
+          color: T.txt2,
+          fontSize: 10, fontWeight: 800, letterSpacing: "0.02em",
+          fontFamily: fontDisp, flexShrink: 0,
+        }}>{count}</span>
+      )}
+      <ChevronDown
+        size={14} strokeWidth={2.3}
+        color={expanded ? T.txt2 : T.txt3}
+        style={{ flexShrink: 0, transform: expanded ? "rotate(180deg)" : "none", transition: "transform 0.22s cubic-bezier(0.4, 0, 0.2, 1)" }}
+      />
+    </button>
+  );
+};
+
+/* ─── DiscoveryGeneralData ─────────────────────────────────────────────
+   Bloque "Datos generales del cliente" que vive al final del drawer
+   Discovery (Duke). Muestra contacto + perfil + riesgo + última
+   actividad, todo editable inline. Aesthetic minimal: pares label/valor
+   en grid, sin chrome pesado.
+   ─────────────────────────────────────────────────────────────────── */
+const DiscoveryGeneralData = ({ lead, onUpdate, T = P, isLight = false }) => {
+  if (!lead) return null;
+  const labelC = isLight ? "rgba(15,23,42,0.55)" : "rgba(255,255,255,0.55)";
+  const cardBg = isLight ? "rgba(15,23,42,0.025)" : "rgba(255,255,255,0.025)";
+  const Field = ({ label, value, onSave, placeholder, emptyText, multiline = false, rows = 2 }) => (
+    <div style={{
+      padding: "11px 13px",
+      borderRadius: 11,
+      background: cardBg,
+      border: `1px solid ${T.border}`,
+      minWidth: 0,
+    }}>
+      <p style={{
+        margin: 0,
+        marginBottom: 5,
+        fontSize: 9.5, fontWeight: 800,
+        letterSpacing: "0.08em", textTransform: "uppercase",
+        color: labelC, fontFamily: fontDisp,
+      }}>{label}</p>
+      <div style={{ fontSize: 12.5, color: T.txt2, lineHeight: 1.55, wordBreak: "break-word" }}>
+        <InlineEdit
+          value={value}
+          onSave={onSave}
+          T={T} isLight={isLight}
+          multiline={multiline} rows={rows}
+          placeholder={placeholder}
+          emptyText={emptyText}
+          readStyle={{ fontSize: 12.5, width: "100%", display: "block" }}
+          editStyle={{ fontSize: 12.5 }}
+        />
+      </div>
+    </div>
+  );
+
+  return (
+    <div>
+      {/* Contacto: grid 2 columnas en desktop, 1 en mobile */}
+      <div style={{
+        display: "grid",
+        gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+        gap: 10, marginBottom: 10,
+      }}>
+        <Field
+          label="Teléfono"
+          value={lead.phone}
+          onSave={v => onUpdate?.({ ...lead, phone: v })}
+          placeholder="+1 555 ..."
+          emptyText="+ Agregar teléfono"
+        />
+        <Field
+          label="Correo"
+          value={lead.email}
+          onSave={v => onUpdate?.({ ...lead, email: v })}
+          placeholder="cliente@correo.com"
+          emptyText="+ Agregar correo"
+        />
+        <Field
+          label="Etiqueta"
+          value={lead.tag}
+          onSave={v => onUpdate?.({ ...lead, tag: v })}
+          placeholder="VIP, referido, web..."
+          emptyText="+ Agregar etiqueta"
+        />
+        <Field
+          label="Campaña / Fuente"
+          value={lead.campana || lead.campaign || lead.source}
+          onSave={v => onUpdate?.({ ...lead, campana: v, campaign: v })}
+          placeholder="Google, referido..."
+          emptyText="+ Agregar fuente"
+        />
+        <Field
+          label="Fricción"
+          value={lead.friction}
+          onSave={v => onUpdate?.({ ...lead, friction: v })}
+          placeholder="Bajo · Medio · Alto"
+          emptyText="+ Calificar fricción"
+        />
+      </div>
+
+      {/* Perfil del cliente (bio) — full width, textarea ampliable */}
+      <div style={{ marginBottom: 10 }}>
+        <Field
+          label="Perfil del cliente"
+          value={lead.bio}
+          onSave={v => onUpdate?.({ ...lead, bio: v })}
+          placeholder="Describe al cliente: necesidad, contexto, objeciones..."
+          emptyText="+ Agregar perfil del cliente"
+          multiline rows={4}
+        />
+      </div>
+
+      {/* Riesgo identificado — destacado en ámbar para llamar la atención */}
+      <div style={{
+        padding: "11px 13px", borderRadius: 11, marginBottom: 10,
+        background: isLight ? `${T.amber}10` : `${T.amber}0A`,
+        border: `1px solid ${T.amber}${isLight ? "32" : "22"}`,
+        display: "flex", gap: 10, alignItems: "flex-start",
+      }}>
+        <AlertCircle size={13} color={isLight ? `color-mix(in srgb, ${T.amber} 55%, #0B1220 45%)` : T.amber} strokeWidth={2.2} style={{ marginTop: 1, flexShrink: 0 }} />
+        <div style={{ minWidth: 0, flex: 1 }}>
+          <p style={{
+            margin: 0, marginBottom: 4,
+            fontSize: 9.5, fontWeight: 800, letterSpacing: "0.08em", textTransform: "uppercase",
+            color: isLight ? `color-mix(in srgb, ${T.amber} 55%, #0B1220 45%)` : T.amber,
+            fontFamily: fontDisp,
+          }}>Riesgo identificado</p>
+          <div style={{ fontSize: 12, color: T.txt2, lineHeight: 1.6, wordBreak: "break-word" }}>
+            <InlineEdit
+              value={lead.risk}
+              onSave={v => onUpdate?.({ ...lead, risk: v })}
+              T={T} isLight={isLight}
+              multiline rows={2}
+              placeholder="Describe el riesgo: competencia, presupuesto, timing..."
+              emptyText="+ Registrar riesgo u objeción"
+              readStyle={{ fontSize: 12, lineHeight: 1.6, display: "block", width: "100%" }}
+              editStyle={{ fontSize: 12 }}
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Última actividad — chip horizontal compacto */}
+      <div style={{
+        display: "flex", gap: 10, alignItems: "center",
+        padding: "9px 12px", borderRadius: 11,
+        background: T.glass, border: `1px solid ${T.border}`,
+      }}>
+        <Activity size={12} color={T.txt3} style={{ flexShrink: 0 }} />
+        <div style={{ minWidth: 0, flex: 1 }}>
+          <p style={{
+            margin: 0, marginBottom: 2,
+            fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em",
+            color: T.txt3, fontFamily: fontDisp,
+          }}>Última actividad</p>
+          <div style={{ fontSize: 11.5, color: T.txt2, lineHeight: 1.4, wordBreak: "break-word" }}>
+            <InlineEdit
+              value={lead.lastActivity}
+              onSave={v => onUpdate?.({ ...lead, lastActivity: v })}
+              T={T} isLight={isLight}
+              placeholder="Llamada, WhatsApp, visita..."
+              emptyText="+ Registrar última actividad"
+              readStyle={{ fontSize: 11.5, width: "100%" }}
+              editStyle={{ fontSize: 11.5 }}
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const NotesModal = ({ lead, onClose, onSave, onUpdate, onSwitchTab, onShowHistory, onDelete, asesoresMaster = [], currentUserName = null, discoverySimplified = false, T = P }) => {
   const isMobile = useIsMobile();
   const [confirmDelete, setConfirmDelete] = useState(false);
   // Llamadas programadas (Retell) — pendientes para este lead.
   const { get: getScheduledCall } = useScheduledCalls();
   const scheduledCallNM = getScheduledCall(lead);
+  // El bloque de llamadas de voz (LeadVoiceCalls — audio + transcripción
+  // de Retell IA) solo lo muestra la cuenta de iAgents, donde vive la
+  // conexión con Retell. Los asesores normales no necesitan ver ese panel
+  // y mantenemos la UI más limpia.
+  const { user: notesUser } = useAuth();
+  const canSeeVoiceCalls = canTriggerIaActions(notesUser);
 
   // ══════════════════════════════════════════════════════════════════════
   // EXPEDIENTE EN TEXTO PLANO + AUTO-SAVE PROFESIONAL
@@ -2990,6 +3474,17 @@ const NotesModal = ({ lead, onClose, onSave, onUpdate, onSwitchTab, onShowHistor
   const [notesDraft, setNotesDraft] = useState(lead?.notas || "");
   const [saveStatus, setSaveStatus] = useState("idle"); // idle | saving | saved | error
   const [lastSavedAt, setLastSavedAt] = useState(null);
+  // En modo Discovery simplificado, las secciones secundarias viven
+  // colapsadas por default. Cada una expone un toggle "Ver / Ocultar"
+  // estilo dashed-button para revelarse sin quitar espacio al flujo
+  // principal (próxima acción + notas).
+  const [showMoreNotes, setShowMoreNotes]     = useState(!discoverySimplified);
+  const [showGeneralData, setShowGeneralData] = useState(!discoverySimplified);
+  const [showHistorial, setShowHistorial]     = useState(!discoverySimplified);
+  // Trigger contador para arrancar el modo "agregar nota" dentro del
+  // cronograma desde un CTA primario en el header. Bump → LeadNotesTimeline
+  // auto-inicia su flujo de captura.
+  const [addNoteTrigger, setAddNoteTrigger] = useState(0);
   const saveTimerRef = useRef(null);
   const dirtyRef = useRef(false);
   const currentLeadIdRef = useRef(lead?.id);
@@ -3292,13 +3787,13 @@ const NotesModal = ({ lead, onClose, onSave, onUpdate, onSwitchTab, onShowHistor
         </div>
 
         {/* ════════════════════════════════════════════════════════════════
-            CUERPO DEL EXPEDIENTE — jerarquía orientada a resultados:
+            CUERPO DE DISCOVERY — una sola sección scrolleable. Próxima
+            acción siempre arriba. Tareas se oculta si discoverySimplified.
               1. Próxima acción (qué hago AHORA)
               2. Etapa + seguimientos (cómo voy)
-              3. Notas del expediente (dónde anoto todo) — ESTRELLA
-              4. Tareas pendientes (mini-checklist)
+              3. Notas del expediente + cronograma (dónde anoto todo)
+              4. Tareas (opcional, gated por crm.discoverySimplified)
               5. Historial de acciones (solo si hay registros)
-            Cada sección tiene un título minúsculo, sin chrome pesado.
             ════════════════════════════════════════════════════════════════ */}
         <div style={{ padding: isMobile ? "16px 16px 110px" : "18px 24px 90px", overflowY: "auto", overscrollBehavior: "contain", WebkitOverflowScrolling: "touch", scrollBehavior: "smooth", flex: 1, display: "flex", flexDirection: "column", gap: 18 }}>
 
@@ -3355,36 +3850,135 @@ const NotesModal = ({ lead, onClose, onSave, onUpdate, onSwitchTab, onShowHistor
               onFocus={e => { e.currentTarget.style.borderColor = T.borderH; e.currentTarget.style.background = isLight ? "rgba(15,23,42,0.04)" : "rgba(255,255,255,0.045)"; }}
             />
 
-            {/* Cronograma de notas individuales con fecha y hora */}
-            <LeadNotesTimeline lead={lead} T={T} isLight={isLight} />
+            {/* CTA primario "+ Agregar nota adicional" + toggle subtle de
+                cronograma. El CTA expande la timeline y arranca el flujo de
+                captura en LeadNotesTimeline vía addNoteTrigger. */}
+            {discoverySimplified && (
+              <div style={{ marginTop: 12, display: "flex", flexDirection: "column", gap: 8 }}>
+                <button
+                  type="button"
+                  onClick={() => { setShowMoreNotes(true); setAddNoteTrigger(t => t + 1); }}
+                  style={{
+                    width: "100%",
+                    padding: "11px 14px",
+                    borderRadius: 11,
+                    background: isLight ? `${T.accent}14` : `${T.accent}1A`,
+                    border: `1px solid ${isLight ? `${T.accent}44` : `${T.accent}38`}`,
+                    color: isLight ? `color-mix(in srgb, ${T.accent} 58%, #0B1220 42%)` : T.accent,
+                    fontSize: 12.5, fontWeight: 700,
+                    fontFamily: fontDisp, letterSpacing: "0.01em",
+                    cursor: "pointer",
+                    display: "flex", alignItems: "center", justifyContent: "center", gap: 7,
+                    transition: "all 0.18s",
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.background = isLight ? `${T.accent}22` : `${T.accent}26`; e.currentTarget.style.borderColor = isLight ? `${T.accent}60` : `${T.accent}55`; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = isLight ? `${T.accent}14` : `${T.accent}1A`; e.currentTarget.style.borderColor = isLight ? `${T.accent}44` : `${T.accent}38`; }}
+                >
+                  <Plus size={14} strokeWidth={2.5} />
+                  Agregar nota adicional
+                </button>
+
+                <CollapsibleSectionToggle
+                  expanded={showMoreNotes}
+                  onToggle={() => setShowMoreNotes(v => !v)}
+                  label={showMoreNotes ? "Cronograma de notas" : "Ver notas anteriores"}
+                  icon={MessageCircle}
+                  T={T}
+                />
+              </div>
+            )}
+
+            {/* Cronograma de notas individuales con fecha y hora.
+                Si no estamos en Discovery simplificado, se muestra siempre
+                (compat con clientes que no tienen el toggle). */}
+            {showMoreNotes && (
+              <div style={{ marginTop: 12 }}>
+                <LeadNotesTimeline lead={lead} T={T} isLight={isLight} autoStartAdding={addNoteTrigger} />
+              </div>
+            )}
           </div>
 
           {/* 3.5. LLAMADAS DE VOZ — grabaciones de Retell IA con audio nativo
-              + transcript colapsable. Solo aparece si hay calls registradas. */}
-          <LeadVoiceCalls lead={lead} T={T} isLight={isLight} />
+              + transcript colapsable. Gated por canTriggerIaActions: solo
+              la cuenta iagents@stratos.ai (crm_only=true) ve este panel
+              porque ahí vive la integración con Retell. Los asesores
+              normales no lo necesitan. */}
+          {canSeeVoiceCalls && (
+            <LeadVoiceCalls lead={lead} T={T} isLight={isLight} />
+          )}
 
-          {/* 4. TAREAS — checklist accionable */}
-          <div>
-            <SectionLabel T={T} icon={CheckSquare}>Tareas</SectionLabel>
-            <TaskChecklist lead={lead} onUpdate={onUpdate} T={T} />
-          </div>
+          {/* La conversación WhatsApp · Chatwoot vivía aquí como accordion
+              extra, pero el cliente prefirió no mostrarla a usuarios
+              normales en el drawer de Discovery. La data sigue en
+              expediente_items (tipo='historial_chat') y se accede desde
+              el tab "Chat" del Perfil legacy. LeadVoiceCalls arriba
+              mantiene el audio + transcripción de Retell intactos. */}
 
-          {/* 5. HISTORIAL DE ACCIONES — solo aparece si hay registros.
-              No mostramos empty state preachy: si no hay historial,
-              tampoco hay sección. La cabecera del componente ya indica
-              "Lista de acciones · N · más reciente arriba". */}
-          {Array.isArray(lead?.actionHistory) && lead.actionHistory.length > 0 && (
+          {/* 4. TAREAS — checklist accionable. Gated por crm.discoverySimplified
+              en la config del cliente. Duke lo tiene ON → sin Tareas en el drawer.
+              Otros clientes (Grupo 28, etc.) mantienen el comportamiento histórico. */}
+          {!discoverySimplified && (
             <div>
-              <SectionLabel T={T} icon={Clock}>Historial</SectionLabel>
-              <ActionTimeline lead={lead} T={T} />
+              <SectionLabel T={T} icon={CheckSquare}>Tareas</SectionLabel>
+              <TaskChecklist lead={lead} onUpdate={onUpdate} T={T} />
             </div>
+          )}
+
+          {/* 5. DATOS GENERALES DEL CLIENTE — colapsable en Discovery
+              simplificado (Duke). En otros clientes se muestra siempre
+              (mantiene compat con el comportamiento histórico). */}
+          {discoverySimplified ? (
+            <div>
+              <CollapsibleSectionToggle
+                expanded={showGeneralData}
+                onToggle={() => setShowGeneralData(v => !v)}
+                label="Datos generales del cliente"
+                icon={User}
+                T={T}
+              />
+              {showGeneralData && (
+                <div style={{ marginTop: 12 }}>
+                  <DiscoveryGeneralData lead={lead} onUpdate={onUpdate} T={T} isLight={isLight} />
+                </div>
+              )}
+            </div>
+          ) : null}
+
+          {/* 6. HISTORIAL DE ACCIONES — siempre al final.
+              · En Discovery simplificado (Duke): colapsable + timeline
+                unificada con audit_log de Supabase (reasignaciones,
+                etapas, notas, próximas acciones, todo). Aparece siempre
+                porque la timeline puede tener actividad desde audit_log
+                aunque actionHistory esté vacío.
+              · En otros clientes: render histórico de ActionTimeline solo
+                si hay registros en actionHistory. */}
+          {discoverySimplified ? (
+            <div>
+              <CollapsibleSectionToggle
+                expanded={showHistorial}
+                onToggle={() => setShowHistorial(v => !v)}
+                label="Historial de acciones y actividades"
+                icon={Clock}
+                T={T}
+              />
+              {showHistorial && (
+                <div style={{ marginTop: 12 }}>
+                  <LeadActivityTimeline lead={lead} T={T} />
+                </div>
+              )}
+            </div>
+          ) : (
+            Array.isArray(lead?.actionHistory) && lead.actionHistory.length > 0 && (
+              <div>
+                <SectionLabel T={T} icon={Clock}>Historial</SectionLabel>
+                <ActionTimeline lead={lead} T={T} />
+              </div>
+            )
           )}
         </div>
 
-        {/* Dynamic Island — switcher Análisis IA · Perfil · Expediente.
-            Los flujos previos de Telegram/voz/IA fueron retirados: el
-            expediente ahora es 100% texto plano con auto-save. */}
-        <DrawerTabIsland current="expediente" onSwitch={onSwitchTab} T={T} />
+        {/* Dynamic Island — pill principal "Discovery" + "Análisis IA". */}
+        <DrawerTabIsland current="discovery" onSwitch={onSwitchTab} T={T} />
       </div>
     </>,
     document.body
@@ -4074,8 +4668,10 @@ const LeadPanel = ({ lead, onClose, oc, onUpdate, onSwitchTab, onShowHistory, on
           </div>
         )}
 
-        {/* Dynamic Island — switcher entre Análisis IA · Perfil · Expediente */}
-        {!editing && <DrawerTabIsland current="perfil" onSwitch={onSwitchTab} T={T} />}
+        {/* Dynamic Island — pill principal "Discovery" (agrupa Expediente +
+            Perfil) y "Análisis IA". El sub-toggle del header permite al
+            asesor moverse entre las dos sub-vistas de Discovery. */}
+        {!editing && <DrawerTabIsland current="discovery" onSwitch={onSwitchTab} T={T} />}
 
         {/* ── UpdateChatPanel — panel deslizable para registrar actualizaciones ── */}
         {!editing && (
@@ -4222,8 +4818,8 @@ const AnalysisDrawer = ({ lead, onClose, oc, onUpdate, onSwitchTab, T = P }) => 
     });
   }
 
-  // SLA primer contacto — ≤ 5 min (Protocolo Duke del Caribe)
-  if (lead.st === "Contáctame ya" || lead.isNew) {
+  // SLA primer contacto — ≤ 1h (Protocolo Duke del Caribe — Mayo 2026)
+  if (lead.st === "Contáctame Ya" || lead.isNew) {
     nextActions.push({
       priority: "SLA", color: T.accent, icon: Timer,
       title: "Primer contacto — regla de los 5 minutos",
@@ -4259,28 +4855,38 @@ const AnalysisDrawer = ({ lead, onClose, oc, onUpdate, onSwitchTab, T = P }) => 
     });
   }
 
-  // Zoom concretado — propuesta en 24h (Protocolo Duke)
-  if (lead.st === "Zoom Concretado") {
+  // Reactivar Zoom — el cliente no se conectó al Zoom agendado
+  if (lead.st === "Reactivar Zoom") {
     nextActions.push({
-      priority: "ALTA", color: "#4ADE80", icon: FileText,
-      title: "Enviar propuesta en las próximas 24h",
-      detail: "Protocolo Duke — Post-Zoom: la propuesta debe llegar antes de 24 horas. Incluye: 3 opciones de proyecto (low-mid-premium), ROI proyectado a 5 años, carta de beneficios fiscales personalizada.",
-      eta: "< 24h",
+      priority: "REACTIVAR", color: "#EA580C", icon: AlertCircle,
+      title: "Reactivar y reagendar Zoom",
+      detail: "Protocolo Duke: contacta al cliente, entiende por qué no se conectó (sin presión), recupera confianza y propón 2 ventanas alternativas para reagendar. Si no responde en 24h, mover a Remarketing IA.",
+      eta: "< 2h",
     });
   }
 
-  // Negociación — cerrar condiciones
-  if (lead.st === "Negociación") {
+  // Seguimiento — propuesta + negociación activa post-Zoom
+  if (lead.st === "Seguimiento") {
     nextActions.push({
-      priority: "CIERRE", color: "#FB923C", icon: Trophy,
-      title: "Cerrar condiciones esta semana",
-      detail: "Protocolo Duke — Fase Cierre: define el triángulo decisión (precio · fecha de entrega · condiciones de pago). Propone una reserva simbólica reembolsable para anclar el compromiso.",
+      priority: "ALTA", color: "#FBBF24", icon: FileText,
+      title: "Mantener seguimiento de valor",
+      detail: "Protocolo Duke — Fase Seguimiento: incluye Zoom concretado, envío de proyectos, corridas financieras, opciones y negociación. Cada touchpoint debe aportar valor (avances de obra, casos similares, disponibilidad).",
       eta: "Esta semana",
     });
   }
 
+  // Apartó — validar comprobante de apartado
+  if (lead.st === "Apartó") {
+    nextActions.push({
+      priority: "MILESTONE", color: "#4ADE80", icon: Trophy,
+      title: "Validar comprobante de apartado",
+      detail: "Protocolo Duke — Fase Apartó: el cliente envió dinero al desarrollador. Valida comprobante, unidad, monto y desarrollador con administración. Próximo paso: coordinar visita o Down Payment.",
+      eta: "< 24h",
+    });
+  }
+
   // Score alto — oportunidad de mover etapa
-  if (sc >= 72 && !["Negociación","Cierre","Postventa"].includes(lead.st)) {
+  if (sc >= 72 && !["Apartó","Cierre","Postventa"].includes(lead.st)) {
     nextActions.push({
       priority: "OPORTUNIDAD", color: T.violet, icon: Target,
       title: `Score ${sc} — mover a la siguiente etapa`,
@@ -4290,7 +4896,7 @@ const AnalysisDrawer = ({ lead, onClose, oc, onUpdate, onSwitchTab, T = P }) => 
   }
 
   // BANT incompleto — calificar
-  if (bantScore < 3 && !["Postventa","Contáctame ya"].includes(lead.st)) {
+  if (bantScore < 3 && !["Postventa","Contáctame Ya"].includes(lead.st)) {
     nextActions.push({
       priority: "CALIFICAR", color: T.cyan, icon: ListChecks,
       title: `BANT incompleto — ${bantScore}/4 criterios`,

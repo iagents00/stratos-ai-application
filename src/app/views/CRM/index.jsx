@@ -194,7 +194,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
   }, []);
   const [budgetMenuOpen, setBudgetMenuOpen] = useState(false);
   const [stageMenuOpen, setStageMenuOpen]   = useState(false);
-  const [newLead, setNewLead]           = useState({ n: "", asesor: canSeeAll ? "" : (user?.name || ""), phone: "", email: "", budget: "", p: "", campana: "", source: "manual", st: "Contáctame ya", nextAction: "", notas: "" });
+  const [newLead, setNewLead]           = useState({ n: "", asesor: canSeeAll ? "" : (user?.name || ""), phone: "", email: "", budget: "", p: "", campana: "", source: "manual", st: "Contáctame Ya", nextAction: "", notas: "" });
   // ── Detección de duplicados en alta ────────────────────────────────────
   // Cuando el asesor escribe phone o email, llamamos a la RPC find_lead_duplicate
   // (migración 013) con debounce. Si encuentra un lead existente en la misma
@@ -633,16 +633,38 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
     });
   };
 
+  // Cliente con discoverySimplified=true → cualquier "abrir ficha del
+  // lead" cae al NotesModal (Discovery), nunca al LeadPanel legacy con
+  // sub-tabs Datos/Chat/Documentos. Helper único para que el listado y
+  // los botones de "perfil" siempre rendericen el mismo drawer.
+  const isDiscoverySimplified = clientConfig?.crm?.discoverySimplified === true;
+  const openLeadDrawer = (lead) => {
+    if (!lead) return;
+    setAnalyzingLead(null);
+    if (isDiscoverySimplified) {
+      setSelectedLead(null);
+      setNotesLead(lead);
+    } else {
+      setNotesLead(null);
+      setSelectedLead(lead);
+    }
+  };
+
   // Switcher unificado del Dynamic Island — al cambiar de tab, cerramos el drawer
-  // actual y abrimos el target con el MISMO lead. Así el vendedor navega Análisis IA
-  // · Perfil · Expediente sin fricción.
+  // actual y abrimos el target con el MISMO lead.
   const openDrawerTab = (tab, lead) => {
     if (!lead) return;
     if (tab === "analisis") {
       setSelectedLead(null); setNotesLead(null); setAnalyzingLead(lead);
     } else if (tab === "perfil") {
-      setAnalyzingLead(null); setNotesLead(null); setSelectedLead(lead);
-    } else if (tab === "expediente") {
+      // En clientes simplified, "perfil" también cae al NotesModal —
+      // ya no se expone el LeadPanel legacy.
+      if (isDiscoverySimplified) {
+        setAnalyzingLead(null); setSelectedLead(null); setNotesLead(lead);
+      } else {
+        setAnalyzingLead(null); setNotesLead(null); setSelectedLead(lead);
+      }
+    } else if (tab === "expediente" || tab === "discovery") {
       setAnalyzingLead(null); setSelectedLead(null); setNotesLead(lead);
     }
   };
@@ -1019,7 +1041,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
       name:             draft.n.trim(),
       phone:            draft.phone || null,
       email:            draft.email || null,
-      stage:            draft.st || "Contáctame ya",
+      stage:            draft.st || "Contáctame Ya",
       score:            5,
       hot:              false,
       is_new:           true,
@@ -1044,10 +1066,10 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
 
     // ── Entry local (lo que se pinta en la UI) ─────────────────────────
     const newEntry = {
-      id: localId, ...draft, st: draft.st || "Contáctame ya",
+      id: localId, ...draft, st: draft.st || "Contáctame Ya",
       sc: 5,
       source: draft.source || "manual",
-      tag: draft.tag || draft.st || "Contáctame ya", hot: false, isNew: true, fechaIngreso: dateStr,
+      tag: draft.tag || draft.st || "Contáctame Ya", hot: false, isNew: true, fechaIngreso: dateStr,
       bio: "Cliente recién registrado. Pendiente primer contacto.", risk: "Sin información suficiente aún.",
       friction: "Medio",
       nextAction: draft.nextAction?.trim() || "Primer contacto en las próximas 24 horas",
@@ -1072,7 +1094,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
     // 1. Cerrar modal y limpiar el draft → el botón "Registrar" desaparece
     //    de la pantalla. Imposible hacer doble clic a partir de aquí.
     setAddingLead(false);
-    setNewLead({ n: "", asesor: canSeeAll ? "" : (user?.name || ""), phone: "", email: "", budget: "", p: "", campana: "", source: "manual", st: "Contáctame ya", nextAction: "", notas: "" });
+    setNewLead({ n: "", asesor: canSeeAll ? "" : (user?.name || ""), phone: "", email: "", budget: "", p: "", campana: "", source: "manual", st: "Contáctame Ya", nextAction: "", notas: "" });
     // El lead ya entró al espejo local (saveLead garantiza eso síncrono),
     // así que el draft de recovery ya no tiene utilidad — lo limpiamos.
     clearLeadDraft();
@@ -1156,7 +1178,10 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
     );
   };
 
-  const isAutoPriority = (l) => (l.isNew || l.st === "Zoom Concretado" || l.st === "Zoom Agendado" || l.st === "No Show" || l.hot || l.daysInactive <= 3) && !dismissedIds.has(l.id);
+  // Lead automáticamente "prioritario" en la cola del asesor.
+  // Pipeline Mayo 2026: Zoom Agendado | Reactivar Zoom (antes "No Show") |
+  // Apartó (milestone reciente) | Seguimiento activo (antes "Zoom Concretado").
+  const isAutoPriority = (l) => (l.isNew || l.st === "Zoom Agendado" || l.st === "Reactivar Zoom" || l.st === "Apartó" || l.st === "Seguimiento" || l.hot || l.daysInactive <= 3) && !dismissedIds.has(l.id);
   const rawPriorityLeads = visibleLeads.filter(l => pinnedIds.has(l.id) || isAutoPriority(l));
   // Orden final: modo manual respeta drag & dropdown de posición; los demás aplican criterio
   const priorityLeads = (() => {
@@ -1189,9 +1214,11 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
           return ((a.isNew ? 1 : 0) - (b.isNew ? 1 : 0)) || recency(a) - recency(b);
         });
       case "concretado":
+        // Después de Mayo 2026, "Zoom Concretado" se unificó con "Seguimiento".
+        // Conservamos el case-id "concretado" para no romper preferencias guardadas.
         return arr.sort((a, b) => {
-          const aCon = a.st === "Zoom Concretado" ? 1 : 0;
-          const bCon = b.st === "Zoom Concretado" ? 1 : 0;
+          const aCon = a.st === "Seguimiento" ? 1 : 0;
+          const bCon = b.st === "Seguimiento" ? 1 : 0;
           return bCon - aCon || b.sc - a.sc;
         });
       case "manual":
@@ -1366,9 +1393,11 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
   const avgScore = visibleLeads.length ? Math.round(visibleLeads.reduce((s, l) => s + l.sc, 0) / visibleLeads.length) : 0;
   const hotLeads = visibleLeads.filter(l => l.hot || l.daysInactive <= 2).length;
   const newLeadsCount = visibleLeads.filter(l => l.isNew).length;
-  const nearCloseLeads = visibleLeads.filter(l => l.st === "Negociación" || l.st === "Cierre").length;
+  // Cerca del cierre = Apartó + Visita Agendada + Cierre (milestones finales).
+  const nearCloseLeads = visibleLeads.filter(l => l.st === "Apartó" || l.st === "Visita Agendada" || l.st === "Cierre").length;
   const zoomsAgendados   = visibleLeads.filter(l => l.st === "Zoom Agendado").length;
-  const zoomsConcretados = visibleLeads.filter(l => l.st === "Zoom Concretado").length;
+  // Post-Mayo 2026 "Zoom Concretado" se consolidó en "Seguimiento".
+  const zoomsConcretados = visibleLeads.filter(l => l.st === "Seguimiento").length;
   const kanbanStages = STAGES.filter(s => s !== "Postventa");
 
   /* Responsive grid columns — 6 columnas en modo full, 5 en compact.
@@ -1535,8 +1564,9 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
           if (l.hot)                       return { color: T.accent, topBar: tbAccent, label: `CALIENTE · ${l.daysInactive}D`,     sublabel: "Actuar ahora mismo",              pulse: true, glow: true };
           if (l.isNew)                     return { color: T.accent, topBar: tbAccent, label: "NUEVO REGISTRO",                    sublabel: "Primer contacto — no esperes",    pulse: true, glow: true };
           if (l.st === "Zoom Agendado")    return { color: T.accent, topBar: tbAccent, label: "ZOOM AGENDADO",                     sublabel: "Preparar presentación de cierre", pulse: true, glow: true };
-          if (l.st === "Zoom Concretado")  return { color: T.accent, topBar: tbAccent, label: "ZOOM CONCRETADO ✓",                 sublabel: "Enviar propuesta y cerrar hoy",   pulse: true, glow: true };
-          if (l.st === "Negociación")      return { color: T.accent, topBar: tbAccent, label: "EN NEGOCIACIÓN",                    sublabel: "Cerrar condiciones esta semana",  pulse: true, glow: true };
+          if (l.st === "Reactivar Zoom")   return { color: T.accent, topBar: tbAccent, label: "REACTIVAR ZOOM",                    sublabel: "No se conectó — reagendar hoy",   pulse: true, glow: true };
+          if (l.st === "Seguimiento")      return { color: T.accent, topBar: tbAccent, label: "EN SEGUIMIENTO",                    sublabel: "Negociación / propuesta activa",  pulse: true, glow: true };
+          if (l.st === "Apartó")           return { color: T.accent, topBar: tbAccent, label: "APARTÓ ✓",                          sublabel: "Validar comprobante con admin",   pulse: true, glow: true };
           if (l.daysInactive >= 7)         return { color: T.accent, topBar: tbAccent, label: `SIN CONTACTO · ${l.daysInactive}D`, sublabel: "Retomar antes de que enfríe",     pulse: true, glow: true };
           return                                  { color: T.accent, topBar: tbAccent, label: "ACCIÓN PENDIENTE",                  sublabel: "Revisar y avanzar hoy",           pulse: true, glow: true };
         };
@@ -1642,7 +1672,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                     <option value="manual"     style={{ background: isLight ? "#FFFFFF" : "#111318", color: T.txt }}>Manual (arrastra)</option>
                     <option value="newest"     style={{ background: isLight ? "#FFFFFF" : "#111318", color: T.txt }}>Nuevos primero</option>
                     <option value="oldest"     style={{ background: isLight ? "#FFFFFF" : "#111318", color: T.txt }}>Nuevos al fondo</option>
-                    <option value="concretado" style={{ background: isLight ? "#FFFFFF" : "#111318", color: T.txt }}>Zoom Concretado</option>
+                    <option value="concretado" style={{ background: isLight ? "#FFFFFF" : "#111318", color: T.txt }}>En Seguimiento</option>
                   </select>
                   <ChevronDown size={12} color={prioritySort === "manual" ? T.txt3 : T.accent} strokeWidth={2.5} style={{ position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }} />
                 </div>
@@ -2387,7 +2417,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                               const existing = leadsData.find(l => l.id === duplicateMatch.lead_id);
                               setAddingLead(false);
                               if (existing) {
-                                setSelectedLead(existing);
+                                openLeadDrawer(existing);
                               } else {
                                 showToast(`"${duplicateMatch.lead_name}" pertenece a ${duplicateMatch.asesor_name || "otro asesor"}. Pide al administrador acceso o reasignación.`, "info");
                               }
@@ -2429,7 +2459,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                             onClick={() => {
                               const existing = leadsData.find(l => l.id === duplicateMatch.lead_id);
                               setAddingLead(false);
-                              if (existing) setSelectedLead(existing);
+                              if (existing) openLeadDrawer(existing);
                             }}
                             style={{
                               padding: "5px 11px", borderRadius: 8,
@@ -2626,7 +2656,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                 </label>
                 {/* Trigger button */}
                 {(() => {
-                  const stageVal = newLead.st || "Contáctame ya";
+                  const stageVal = newLead.st || "Contáctame Ya";
                   const stageCol = stgC[stageVal] || T.accent;
                   const stageTitleC = isLight ? `color-mix(in srgb, ${stageCol} 55%, #0B1220 45%)` : stageCol;
                   return (
@@ -3257,12 +3287,13 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                       </div>
 
                       {/* Row 3: info chips — fecha de cita + email + CTAs.
-                          Para etapas con cita programada (Zoom Agendado, No Show,
-                          Visita Agendada, etc.) la pill se renderea PROMINENTE,
-                          y si falta la fecha aparece un CTA vibrante para que
-                          el asesor la capture. */}
+                          Para etapas con cita programada (Zoom Agendado,
+                          Reactivar Zoom, Visita Agendada) la pill se renderea
+                          PROMINENTE, y si falta la fecha aparece un CTA vibrante
+                          para que el asesor la capture. Seguimiento + Apartó
+                          también muestran fecha porque cargan próxima acción. */}
                       {(() => {
-                        const isAgendaCritical = ["Zoom Agendado","Zoom Concretado","Visita Agendada","Visita Concretada","No Show"].includes(l.st);
+                        const isAgendaCritical = ["Zoom Agendado","Reactivar Zoom","Visita Agendada","Seguimiento","Apartó"].includes(l.st);
                         const hasAppt = !!l.nextActionDate;
                         const showMissingCita = isAgendaCritical && !hasAppt;
                         const isEditing = editingApptId === l.id;
@@ -3707,7 +3738,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
 
                         {/* 👤 Perfil — siempre visible con borde sutil. Hover
                             ilumina con accent azul para señal de acción. */}
-                        <button onClick={() => setSelectedLead(l)}
+                        <button onClick={() => openLeadDrawer(l)}
                           title="Abrir perfil del cliente"
                           aria-label="Abrir perfil del cliente"
                           style={{
@@ -3955,8 +3986,10 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                             <div style={{ display: "flex", gap: 5 }}>
                               <button onClick={() => oc(`__crm__ ${l.n.toLowerCase()}`, l)} style={{ flex: 1, padding: "6px 0", borderRadius: 7, background: `${T.accent}10`, border: `1px solid ${T.accentB}`, color: T.accent, fontSize: 9.5, fontWeight: 600, cursor: "pointer", fontFamily: font, transition: "background 0.15s" }} onMouseEnter={e => e.currentTarget.style.background = `${T.accent}1E`} onMouseLeave={e => e.currentTarget.style.background = `${T.accent}10`}>Analizar</button>
                               <button onClick={() => togglePin(l.id)} title={pinnedIds.has(l.id) ? "Quitar de prioridad" : "Añadir a prioridad"} style={{ width: 28, padding: "5px 0", borderRadius: 7, background: pinnedIds.has(l.id) ? `${T.accent}12` : "transparent", border: `1px solid ${pinnedIds.has(l.id) ? `${T.accent}36` : T.border}`, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.15s" }} onMouseEnter={e => { e.currentTarget.style.background = `${T.accent}1A`; }} onMouseLeave={e => { e.currentTarget.style.background = pinnedIds.has(l.id) ? `${T.accent}12` : "transparent"; }}><Star size={10} color={pinnedIds.has(l.id) ? T.accent : T.txt3} fill={pinnedIds.has(l.id) ? T.accent : "none"} strokeWidth={2} /></button>
-                              <button onClick={() => setSelectedLead(l)} style={{ width: 28, padding: "5px 0", borderRadius: 7, background: "transparent", border: `1px solid ${T.border}`, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.15s" }} onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.06)"; e.currentTarget.style.borderColor = T.borderH; }} onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = T.border; }}><User size={10} color={T.txt3} /></button>
-                              <button onClick={() => setNotesLead(l)} style={{ width: 28, padding: "5px 0", borderRadius: 7, background: "transparent", border: `1px solid ${T.border}`, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.15s" }} onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.06)"; e.currentTarget.style.borderColor = T.borderH; }} onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = T.border; }}><FileText size={10} color={T.txt3} /></button>
+                              {!isDiscoverySimplified && (
+                                <button onClick={() => openLeadDrawer(l)} title="Abrir perfil" style={{ width: 28, padding: "5px 0", borderRadius: 7, background: "transparent", border: `1px solid ${T.border}`, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.15s" }} onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.06)"; e.currentTarget.style.borderColor = T.borderH; }} onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = T.border; }}><User size={10} color={T.txt3} /></button>
+                              )}
+                              <button onClick={() => setNotesLead(l)} title="Abrir Discovery" style={{ width: 28, padding: "5px 0", borderRadius: 7, background: "transparent", border: `1px solid ${T.border}`, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.15s" }} onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.06)"; e.currentTarget.style.borderColor = T.borderH; }} onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = T.border; }}><FileText size={10} color={T.txt3} /></button>
                             </div>
                           </div>
                         </div>
@@ -4573,9 +4606,10 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
         );
       })()}
 
-      {/* Drawers — los 3 (Análisis IA, Perfil, Expediente) comparten un switcher
-         "Dynamic Island" en la parte inferior que permite al vendedor saltar
-         entre vistas del mismo lead sin cerrar. */}
+      {/* Drawers — "Discovery" (NotesModal/Expediente) y los drawers
+         legacy (Perfil, Análisis IA) comparten un switcher inferior. En
+         clientes con crm.discoverySimplified=true, el drawer es una sola
+         sección scrolleable sin Tareas. */}
       <NotesModal
         T={T}
         lead={notesLead}
@@ -4584,6 +4618,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
         onUpdate={updateLead}
         asesoresMaster={asesoresMaster}
         currentUserName={user?.name || null}
+        discoverySimplified={clientConfig?.crm?.discoverySimplified === true}
         onSwitchTab={(tab) => openDrawerTab(tab, notesLead)}
         onShowHistory={() => setHistoryLead(notesLead)}
         onShowSuggest={() => setSuggestLead(notesLead)}

@@ -1,25 +1,27 @@
 import { P } from "../../design-system/tokens";
 
+// Pipeline oficial Duke del Caribe (Mayo 2026) — ver design-system/tokens.js
+// para la fuente única de verdad. Esta copia local existe por compatibilidad
+// con módulos que la importaban directamente; ambos arreglos están sincronizados.
 export const STAGES = [
-  "Contáctame ya", "Segundo Intento", "Remarketing", "Seguimiento",
-  "Zoom Agendado", "No Show", "Zoom Concretado",
-  "Visita Agendada", "Visita Concretada",
-  "Negociación", "Cierre", "Postventa",
+  "Contáctame Ya", "Segundo Intento", "Tercer Intento", "Rotación",
+  "Remarketing IA", "Zoom Agendado", "Reactivar Zoom",
+  "Seguimiento", "Apartó", "Visita Agendada", "Cierre", "Postventa",
 ];
 
 export const stgC = {
-  "Contáctame ya":      P.txt3,
-  "Segundo Intento":    P.blue,
-  "Remarketing":        "#FB923C",
-  "Seguimiento":        "#FBBF24",
-  "Zoom Agendado":      "#3B82F6",
-  "No Show":            "#EA580C",
-  "Zoom Concretado":    "#4ADE80",
-  "Visita Agendada":    P.cyan,
-  "Visita Concretada":  P.emerald,
-  "Negociación":        "#F97316",
-  "Cierre":             P.accent,
-  "Postventa":          "#64748B",
+  "Contáctame Ya":    P.txt3,
+  "Segundo Intento":  P.blue,
+  "Tercer Intento":   "#7EB8F0",
+  "Rotación":         "#A8A29E",
+  "Remarketing IA":   "#FB923C",
+  "Zoom Agendado":    "#3B82F6",
+  "Reactivar Zoom":   "#EA580C",
+  "Seguimiento":      "#FBBF24",
+  "Apartó":           "#4ADE80",
+  "Visita Agendada":  P.cyan,
+  "Cierre":           P.accent,
+  "Postventa":        "#64748B",
 };
 
 export const leads = [
@@ -31,7 +33,7 @@ export const leads = [
     tag: "Inversión + Disfrute",
     phone: "+1 817 682 3272",
     email: "",
-    st: "Zoom Concretado",
+    st: "Seguimiento",
     budget: "$200K USD",
     presupuesto: 200000,
     p: "Torre 25 · BAGA · Kaab On The Beach",
@@ -72,7 +74,7 @@ Sacar y enviar videos de las propiedades de interés (Torre 25, BAGA, Kaab On Th
     tag: "Penthouse Élite",
     phone: "+52 984 123 0001",
     email: "familia@rodriguez.com",
-    st: "Negociación",
+    st: "Seguimiento",
     budget: "$4.2M USD",
     presupuesto: 4200000,
     p: "Gobernador 28",
@@ -192,7 +194,7 @@ Enviar comparativo detallado: Riviera Maya vs Cancún vs CDMX. Llamar hoy 5pm pa
     tag: "Inversionista VIP",
     phone: "+52 998 555 0006",
     email: "tony.norberto@inv.com",
-    st: "Zoom Concretado",
+    st: "Seguimiento",
     budget: "$5.1M USD",
     presupuesto: 5100000,
     p: "Portofino",
