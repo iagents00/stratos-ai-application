@@ -19,6 +19,7 @@ export const stgC = {
   "Remarketing IA":   "#FB923C",
   "Zoom Agendado":    "#3B82F6",
   "Reactivar Zoom":   "#EA580C",
+  "Zoom Concretado":  "#2DD4BF",
   "Seguimiento":      "#FBBF24",
   "Apartó":           "#4ADE80",
   "Visita Agendada":  "#06B6D4",
