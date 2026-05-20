@@ -121,6 +121,12 @@ discovery exitoso de Retell).
 `next_action_at` con el horario de Zoom (para que aparezca en la agenda del
 asesor humano).
 
+**Idempotente:** si llamás dos veces con el mismo `zoom_meeting_id`, no
+duplica — actualiza la cita existente (`ON CONFLICT (zoom_meeting_id)`).
+Reagendar = volver a llamar con el mismo `zoom_meeting_id` y el nuevo
+`start_time`. Si no mandás `zoom_meeting_id`, siempre inserta (los NULL no
+deduplican).
+
 ### 3. `fn_register_voice_call` (log de llamada Retell)
 
 **Cuándo llamarla:** en el webhook `call_ended` de Retell, después de
