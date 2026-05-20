@@ -866,10 +866,13 @@ const NextActionHero = ({ lead, T = P, onUpdate = null }) => {
         boxShadow: `0 0 12px ${T.accent}${isLight ? "55" : "66"}`,
       }} />
 
-      {/* Mini header row — etiqueta + fecha. Sin borderBottom para que fluya */}
+      {/* Header — ícono Zap + "PRÓXIMA ACCIÓN" + chip de fecha/hora al
+          lado en la misma fila. Sin CLAVE pill (era ruido visual; la
+          urgencia ya la comunica el accent rail vertical + animación). */}
       <div style={{
         display: "flex", alignItems: "center", gap: 8,
-        marginBottom: 8, flexWrap: "wrap",
+        marginBottom: 10,
+        flexWrap: "wrap",
         position: "relative",
       }}>
         <div style={{
@@ -886,24 +889,16 @@ const NextActionHero = ({ lead, T = P, onUpdate = null }) => {
           <Zap size={12} color={isLight ? "#FFFFFF" : accentStrong} strokeWidth={2.6} fill={isLight ? "#FFFFFF" : "none"} />
         </div>
         <p style={{ margin: 0, fontSize: 10.5, fontWeight: 800, color: accentStrong, letterSpacing: "0.14em", textTransform: "uppercase", fontFamily: fontDisp }}>Próxima acción</p>
-        <span style={{
-          fontSize: 8.5, fontWeight: 800, color: accentStrong,
-          background: isLight ? `${T.accent}22` : `${T.accent}2A`,
-          border: `1px solid ${isLight ? `${T.accent}55` : T.accentB}`,
-          padding: "2px 7px", borderRadius: 99, letterSpacing: "0.1em",
-          fontFamily: fontDisp, animation: "pulse 2.4s ease-in-out infinite",
-          flexShrink: 0,
-        }}>CLAVE</span>
         {dateText && !editing && (
           <span style={{
-            marginLeft: "auto",
-            fontSize: 10, fontWeight: 700, color: accentStrong,
-            background: isLight ? "#FFFFFF" : `${T.accent}16`,
-            border: `1px solid ${isLight ? `${T.accent}55` : T.accentB}`,
-            padding: "3px 9px", borderRadius: 99, fontFamily: fontDisp,
-            letterSpacing: "0.02em", whiteSpace: "nowrap", flexShrink: 0,
-            boxShadow: isLight ? `0 1px 3px ${T.accent}22, inset 0 1px 0 rgba(255,255,255,0.8)` : "none",
-            display: "inline-flex", alignItems: "center", gap: 4,
+            display: "inline-flex", alignItems: "center", gap: 5,
+            padding: "3px 9px", borderRadius: 99,
+            background: isLight ? "#FFFFFF" : `${T.accent}12`,
+            border: `1px solid ${isLight ? `${T.accent}3D` : `${T.accent}26`}`,
+            color: accentStrong,
+            fontSize: 10, fontWeight: 700, fontFamily: fontDisp,
+            letterSpacing: "0.01em", whiteSpace: "nowrap", flexShrink: 0,
+            boxShadow: isLight ? `0 1px 2px ${T.accent}18, inset 0 1px 0 rgba(255,255,255,0.8)` : "none",
           }}>
             <Clock size={9} strokeWidth={2.6} />
             {dateText}
@@ -1040,20 +1035,16 @@ const NextActionHero = ({ lead, T = P, onUpdate = null }) => {
       )}
 
       {/* ════════════════════════════════════════════════════════════════
-          CTAs DE CONTACTO — siempre visibles cuando el lead tiene teléfono.
-          Antes solo aparecían con `hasAction`, lo cual ocultaba los
-          botones más útiles del Expediente cuando no había próxima acción
-          definida. Ahora:
-            · Llamar       → tel:<num> (abre el dialer del SO)
-            · WhatsApp     → wa.me/<num con código de país> (app o web)
-            · Copiar       → copia el número al portapapeles (fallback si
-                             el navegador no tiene dialer registrado)
-          Si no hay teléfono: aparece un mini-input para guardarlo. ════ */}
+          CTAs DE CONTACTO — Llamar · WhatsApp · Hecho (cuando aplica).
+          Botones de altura uniforme, layout consistente, margins limpios.
+          Sin botón "Copiar" (el número ya está en Datos generales) y sin
+          warning triangle (el aviso de Zoom Agendado vive como chip de
+          fecha arriba; aquí solo importan las acciones). ═══════════════ */}
       {!editing && phoneClean && (
         <div style={{
-          marginTop: 12, paddingTop: 10,
+          marginTop: 14, paddingTop: 12,
           borderTop: `1px dashed ${isLight ? `${T.accent}2E` : `${T.accent}22`}`,
-          display: "flex", gap: 7, flexWrap: "wrap",
+          display: "flex", gap: 8, flexWrap: "wrap",
           position: "relative",
         }}>
             <CallActionButton
@@ -1062,19 +1053,18 @@ const NextActionHero = ({ lead, T = P, onUpdate = null }) => {
               variant="primary"
               T={T}
               isLight={isLight}
-              warnZoom={zoomPending}
             />
             <a
               href={`https://wa.me/${waPhone}`}
               target="_blank" rel="noreferrer"
               style={{
-                flex: 1, minWidth: 120,
+                flex: 1, minWidth: 120, height: 40,
                 display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
-                padding: "9px 12px", borderRadius: 10,
+                padding: "0 14px", borderRadius: 10,
                 background: isLight ? "#FFFFFF" : "rgba(255,255,255,0.07)",
                 border: `1px solid ${isLight ? "rgba(37,211,102,0.45)" : "rgba(255,255,255,0.12)"}`,
                 color: isLight ? "#128C7E" : "rgba(255,255,255,0.88)",
-                fontSize: 12, fontWeight: 700, fontFamily: fontDisp,
+                fontSize: 12.5, fontWeight: 700, fontFamily: fontDisp,
                 letterSpacing: "0.01em", textDecoration: "none",
                 boxShadow: isLight
                   ? "0 1px 3px rgba(18,140,126,0.14)"
@@ -1104,35 +1094,29 @@ const NextActionHero = ({ lead, T = P, onUpdate = null }) => {
                 }
               }}
             >
-              <MessageCircle size={12} strokeWidth={2.4} /> WhatsApp
+              <MessageCircle size={13} strokeWidth={2.4} /> WhatsApp
             </a>
-            {/* Copiar número — fallback útil en escritorio cuando el SO no
-                tiene un dialer registrado, o cuando el asesor quiere
-                pegarlo en otra app. Hace copy + toast efímero in-line. */}
-            <CopyPhoneButton phone={phoneDisplay} T={T} isLight={isLight} />
-            {/* Marcar como hecha — solo aparece cuando hay nextAction.
-                Mueve la actual al historial (auto-log) y abre el editor
-                con foco listo para escribir la siguiente. */}
+            {/* Marcar como hecha — solo aparece cuando hay nextAction. */}
             {hasAction && (
               <button
                 onClick={markDone}
                 title="Marcar la próxima acción como hecha y agendar la siguiente"
                 aria-label="Marcar como hecha"
                 style={{
-                  flexShrink: 0,
+                  flexShrink: 0, height: 40,
                   display: "inline-flex", alignItems: "center", gap: 6,
-                  padding: "9px 12px", borderRadius: 10,
+                  padding: "0 16px", borderRadius: 10,
                   background: "transparent",
                   border: `1px dashed ${isLight ? `${T.accent}66` : `${T.accent}55`}`,
                   color: isLight ? `color-mix(in srgb, ${T.accent} 60%, #0B1220 40%)` : T.accent,
-                  fontSize: 12, fontWeight: 700, fontFamily: fontDisp,
+                  fontSize: 12.5, fontWeight: 700, fontFamily: fontDisp,
                   letterSpacing: "0.01em", cursor: "pointer",
                   transition: "all 0.18s",
                 }}
                 onMouseEnter={e => { e.currentTarget.style.background = `${T.accent}${isLight ? "12" : "0E"}`; e.currentTarget.style.borderStyle = "solid"; }}
                 onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderStyle = "dashed"; }}
               >
-                <CheckCircle2 size={12} strokeWidth={2.4} /> Hecho
+                <CheckCircle2 size={13} strokeWidth={2.4} /> Hecho
               </button>
             )}
           </div>

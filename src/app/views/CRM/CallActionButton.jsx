@@ -99,13 +99,14 @@ export default function CallActionButton({
 
   const baseStyle = {
     flex: 1, minWidth: isCompact ? 110 : 120,
-    ...(isCompact ? { height: 40, padding: "0 12px" } : { padding: "9px 12px" }),
+    height: 40,
+    padding: isCompact ? "0 12px" : "0 14px",
     display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
     borderRadius: 10,
     background: warnZoom ? secondaryBg : primaryBg,
     border: warnZoom ? secondaryBd : "none",
     color: warnZoom ? secondaryFg : primaryFg,
-    fontSize: 12, fontWeight: 700, fontFamily: fontDisp,
+    fontSize: 12.5, fontWeight: 700, fontFamily: fontDisp,
     letterSpacing: "0.01em", textDecoration: "none",
     boxShadow: warnZoom ? "none" : (isLight
       ? `0 3px 10px ${T.accent}40, 0 1px 3px ${T.accent}26, inset 0 1px 0 rgba(255,255,255,0.35)`
@@ -129,8 +130,7 @@ export default function CallActionButton({
         }}
         style={baseStyle}
       >
-        {warnZoom && <AlertTriangle size={12} strokeWidth={2.4} />}
-        {!warnZoom && <Phone size={12} strokeWidth={2.4} />}
+        <Phone size={12} strokeWidth={2.4} />
         {label}
       </a>
     );
@@ -171,9 +171,7 @@ export default function CallActionButton({
       )}
       {state === "idle" && (
         <>
-          {warnZoom
-            ? <AlertTriangle size={12} strokeWidth={2.4} />
-            : <Phone size={12} strokeWidth={2.4} />}
+          <Phone size={12} strokeWidth={2.4} />
           {label}
         </>
       )}
