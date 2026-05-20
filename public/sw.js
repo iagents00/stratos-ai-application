@@ -59,6 +59,10 @@
 // v10 — limpieza de tokens legacy stratos.supabase.*.
 // v9 — destrabar login: cuelgue infinito por bundle viejo cacheado.
 // v8 — orden por defecto del CRM: fechaIngreso desc (nuevos arriba).
+// v26 — fix crash-loop en iOS Safari al recargar (F5): guard de re-entrada en
+//       el silent refresh de onAuthStateChange. refreshSession() fallido emitía
+//       otro SIGNED_OUT → re-entraba → loop → WebKit mataba la pestaña. Bump
+//       obligatorio: los iPhones atrapados sirven el bundle v25 con el loop.
 // v25 — leads cache síncrono + re-persiste en realtime + SIGNED_OUT con
 //       silent refresh (fix: leads desaparecían 10s al F5; bounce a login en
 //       medio de sesión por fallos transitorios de refresh de JWT).
@@ -66,7 +70,7 @@
 //       legacy stages (Zoom Concretado/Negociación/Visita Concretada →
 //       Seguimiento; No Show → Reactivar Zoom; Remarketing → Remarketing IA).
 //       Bump obligatorio: el bundle cacheado mapea contra etapas viejas.
-const CACHE_VERSION = 'stratos-v25';
+const CACHE_VERSION = 'stratos-v26';
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 
