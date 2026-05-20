@@ -139,8 +139,10 @@ export const spacing = {
 // y la siguiente acción obligatoria del asesor.
 //
 // NOTA — Histórico previo a Mayo 2026:
-//   "Zoom Concretado" / "Visita Concretada" / "Negociación" → se consolidaron
-//   en "Seguimiento" (Zoom hecho, negociación, corridas, proyectos, dudas).
+//   "Visita Concretada" / "Negociación" → se consolidaron en "Seguimiento"
+//   (negociación, corridas, proyectos, dudas).
+//   "Zoom Concretado" → reincorporado como etapa propia (entre "Reactivar
+//   Zoom" y "Seguimiento") para distinguir el Zoom ya realizado.
 //   "No Show" → se renombró a "Reactivar Zoom".
 //   "Remarketing" → se renombró a "Remarketing IA".
 //   Migración de leads existentes: ver migration migrate_duke_pipeline_v2.
@@ -152,6 +154,7 @@ export const STAGES = [
   "Remarketing IA",
   "Zoom Agendado",
   "Reactivar Zoom",
+  "Zoom Concretado",
   "Seguimiento",
   "Apartó",
   "Visita Agendada",
@@ -173,6 +176,7 @@ export const STAGE_COLORS = {
   "Remarketing IA":   "#FB923C",
   "Zoom Agendado":    "#3B82F6",
   "Reactivar Zoom":   "#EA580C",
+  "Zoom Concretado":  "#2DD4BF",
   "Seguimiento":      P.amber,
   "Apartó":           "#4ADE80",
   "Visita Agendada":  P.cyan,
@@ -187,7 +191,6 @@ export const LEGACY_STAGE_MAP = {
   "Contáctame ya":     "Contáctame Ya",
   "Remarketing":       "Remarketing IA",
   "No Show":           "Reactivar Zoom",
-  "Zoom Concretado":   "Seguimiento",
   "Visita Concretada": "Seguimiento",
   "Negociación":       "Seguimiento",
 };

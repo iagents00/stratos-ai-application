@@ -34,7 +34,7 @@ Configurar UNA credencial "Supabase Stratos CRM" tipo HTTP Header Auth con:
 > ⚠️ La `SERVICE_ROLE_KEY` la sacás de Supabase Dashboard → Settings → API.
 > Bypasea RLS, mantenela como secret. No subir a Git ni compartir en chat.
 
-## 12 funciones RPC disponibles
+## 13 funciones RPC disponibles
 
 ### 1. `fn_upsert_lead_from_chatwoot` (la principal)
 
@@ -71,6 +71,11 @@ Chatwoot, sin importar el inbox ni el message_type.
 **Qué hace internamente:**
 1. Busca lead por `whatsapp_phone_e164 / phone / phone_normalized` en Duke org.
 2. Si existe → actualiza (sin pisar nombre/email si ya hay un valor mejor).
+   **Nombre:** el nombre de perfil de WhatsApp **solo** pisa el actual si el
+   actual es "débil" (NULL, vacío, `Sin Nombre`, o un número sin letras — el
+   caso de contactos sin nombre de perfil). Si ya hay un nombre real capturado
+   (vía `fn_update_lead_name` o manual), se conserva. Así el nombre real no se
+   sobreescribe con el del perfil en cada mensaje.
 3. Si no existe → inserta con `asesor_name='iAgents'`, `source='whatsapp'`.
 4. Mapea `labels[0]` → stage del pipeline (ver tabla abajo).
 5. Si `label='requiere-humano'` → marca `hot=true, priority='urgente'` para
@@ -115,6 +120,12 @@ discovery exitoso de Retell).
 `stage='Zoom Agendado'`, `next_action='Zoom con cliente'`, y agenda el
 `next_action_at` con el horario de Zoom (para que aparezca en la agenda del
 asesor humano).
+
+**Idempotente:** si llamás dos veces con el mismo `zoom_meeting_id`, no
+duplica — actualiza la cita existente (`ON CONFLICT (zoom_meeting_id)`).
+Reagendar = volver a llamar con el mismo `zoom_meeting_id` y el nuevo
+`start_time`. Si no mandás `zoom_meeting_id`, siempre inserta (los NULL no
+deduplican).
 
 ### 3. `fn_register_voice_call` (log de llamada Retell)
 
@@ -569,6 +580,44 @@ JSON del nuevo nodo HTTP (agregar **antes** del nodo "CRM: Asignar a Gael" exist
   }
 }
 ```
+
+### 13. `fn_update_lead_name` (setear el nombre REAL del lead)
+
+**Cuándo llamarla:** cuando la IA captura el nombre real del cliente durante
+el discovery (ej: el cliente dice "me llamo Juan Pérez"). Es la vía explícita
+e intencional para fijar el nombre — reemplaza cualquier UPDATE directo que
+estuvieras haciendo, y a diferencia del upsert, **siempre** escribe el nombre
+que le pasás.
+
+**Endpoint:** `POST /rest/v1/rpc/fn_update_lead_name`
+
+**Body:**
+```json
+{
+  "payload": {
+    "phone_e164": "+12146772589",
+    "name": "Juan Pérez Martínez"
+  }
+}
+```
+
+> Acepta `phone_e164` o `phone` (cualquiera de los dos). El match es por
+> `whatsapp_phone_e164 / phone_normalized / phone` en la org Duke.
+
+**Qué hace:** setea `leads.name = name` (tal cual, sin guard), actualiza
+`updated_at` y `last_activity`. Valida que `name` no venga vacío.
+
+**Respuesta:**
+```json
+{ "ok": true, "lead_id": "uuid-del-lead", "name": "Juan Pérez Martínez" }
+```
+
+**Errores posibles:** `phone missing or invalid`, `name missing or empty`,
+`lead not found for phone`.
+
+**Patrón sugerido:** llamala una sola vez por lead, en el momento en que la IA
+confirma el nombre real. Después de eso, el upsert de Chatwoot ya no lo pisa
+(porque detecta que el nombre actual tiene letras → lo conserva).
 
 ## Mapeo de labels de Chatwoot → stages del CRM
 
