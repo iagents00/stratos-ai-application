@@ -5,7 +5,7 @@ import { P } from "../../design-system/tokens";
 // con módulos que la importaban directamente; ambos arreglos están sincronizados.
 export const STAGES = [
   "Contáctame Ya", "Segundo Intento", "Tercer Intento", "Rotación",
-  "Remarketing IA", "Zoom Agendado", "Reactivar Zoom",
+  "Remarketing IA", "Zoom Agendado", "Reactivar Zoom", "Zoom Concretado",
   "Seguimiento", "Apartó", "Visita Agendada", "Cierre", "Postventa",
 ];
 
@@ -17,6 +17,7 @@ export const stgC = {
   "Remarketing IA":   "#FB923C",
   "Zoom Agendado":    "#3B82F6",
   "Reactivar Zoom":   "#EA580C",
+  "Zoom Concretado":  "#2DD4BF",
   "Seguimiento":      "#FBBF24",
   "Apartó":           "#4ADE80",
   "Visita Agendada":  P.cyan,
