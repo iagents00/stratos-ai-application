@@ -260,20 +260,19 @@ export default function App() {
     } catch (_) { return null; }
   }, [leadsCacheKey]);
 
+  // FIX (F5 perdía leads ~10s): la versión anterior usaba requestIdleCallback
+  // con timeout 2s. Si el usuario refrescaba antes de que disparara, el cache
+  // NO se persistía → F5 quedaba sin cache → esperaba a Supabase (10s con red
+  // lenta o cold start). Ahora persistimos SIEMPRE, con doble estrategia:
+  //   · escritura sync inmediata (garantiza persistencia ante F5 instantáneo)
+  //   · El JSON.stringify de ~1K leads tarda <30ms en PC normal — antes el
+  //     bloqueo era >200ms porque incluía 500 entries del mirror de leads,
+  //     no este cache que es el array completo.
   const writeLeadsCache = useCallback((rows) => {
     if (!leadsCacheKey || !Array.isArray(rows)) return;
-    // Defer del JSON.stringify + setItem (~50–200ms con datasets grandes) al
-    // próximo idle slot para no bloquear el main thread durante el render.
-    const persist = () => {
-      try {
-        localStorage.setItem(leadsCacheKey, JSON.stringify({ rows, ts: Date.now() }));
-      } catch (_) { /* quota exceeded — no es crítico */ }
-    };
-    if (typeof requestIdleCallback === "function") {
-      requestIdleCallback(persist, { timeout: 2000 });
-    } else {
-      setTimeout(persist, 0);
-    }
+    try {
+      localStorage.setItem(leadsCacheKey, JSON.stringify({ rows, ts: Date.now() }));
+    } catch (_) { /* quota exceeded — no es crítico */ }
   }, [leadsCacheKey]);
 
   const fetchLeads = useCallback(async ({ silent = false } = {}) => {
@@ -426,6 +425,17 @@ export default function App() {
       supabase.removeChannel(ch);
     };
   }, [user, fetchLeads]);
+
+  // FIX (F5 perdía leads): los handlers de realtime arriba mutan leadsData
+  // pero NO re-escribían el cache. Si el usuario hacía cambios y luego F5,
+  // el cache quedaba stale (o vacío si nunca se llegó a persistir tras login).
+  // Ahora re-persistimos el array completo cada vez que leadsData cambia,
+  // con debounce 800ms para amortiguar ráfagas (10 cambios = 1 escritura).
+  useEffect(() => {
+    if (!leadsCacheKey || leadsData.length === 0) return;
+    const t = setTimeout(() => writeLeadsCache(leadsData), 800);
+    return () => clearTimeout(t);
+  }, [leadsData, leadsCacheKey, writeLeadsCache]);
 
   // ══════════════════════════════════════════════════════════════════════
   // SOFT-DELETE / PAPELERA

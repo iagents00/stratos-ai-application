@@ -90,6 +90,14 @@ export function AuthProvider({ children }) {
    * usa la lógica normal del listener, sin pelear con esta primera resolución.
    */
   const hydrationDoneRef = useRef(false);
+  /**
+   * userLogoutRef — true SOLO cuando el usuario clickea Cerrar sesión.
+   * Permite distinguir un SIGNED_OUT intencional de uno espontáneo (fallo
+   * transitorio de refresh de JWT). Si es espontáneo, intentamos refrescar
+   * la sesión antes de botar al usuario. Esto resuelve el bug "estoy en el
+   * CRM y de la nada me bota al login".
+   */
+  const userLogoutRef = useRef(false);
 
   useEffect(() => {
     seedDemoUser();
@@ -153,8 +161,31 @@ export function AuthProvider({ children }) {
         // Nunca desloguear una sesión demo local por eventos de Supabase
         if (isDemo()) return;
 
-        // SÓLO eventos EXPLÍCITOS de fin de sesión → cleanup destructivo
-        if (event === 'SIGNED_OUT' || event === 'USER_DELETED') {
+        // USER_DELETED y logout explícito → cleanup directo, sin reintento.
+        if (event === 'USER_DELETED' || (event === 'SIGNED_OUT' && userLogoutRef.current)) {
+          userLogoutRef.current = false;
+          clearLocalAuthState();
+          setUser(null);
+          return;
+        }
+
+        // SIGNED_OUT espontáneo (no fue el usuario quien lo provocó) →
+        // intentar UN refresh silencioso antes de botar. Esto cubre fallos
+        // transitorios de refresh de JWT (red blip, cold start de Supabase,
+        // race entre pestañas) que antes nos botaban al login en medio del
+        // trabajo. Si el refresh recupera sesión, ignoramos el SIGNED_OUT.
+        if (event === 'SIGNED_OUT') {
+          try {
+            const { data, error } = await supabase.auth.refreshSession();
+            if (data?.session && !error && isMounted) {
+              const profile = await getStoredSession();
+              if (profile && isMounted) {
+                setUser(profile);
+                return;
+              }
+            }
+          } catch (_) { /* fall through: refresh falló → aceptar logout */ }
+          if (!isMounted) return;
           clearLocalAuthState();
           setUser(null);
           return;
@@ -229,6 +260,7 @@ export function AuthProvider({ children }) {
   const logout = useCallback(async () => {
     setError(null);
     loginSettledRef.current = false; // resetear para permitir nuevo login
+    userLogoutRef.current = true;    // marca: el SIGNED_OUT que viene es intencional
     await signOut();
     setUser(null);
   }, []);
