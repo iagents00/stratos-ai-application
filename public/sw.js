@@ -86,7 +86,10 @@
 // v29 — reasignación EN GRUPO: botón "Reasignar varios" en la barra activa
 //   selección múltiple (checkboxes a la derecha) + barra para reasignar el grupo
 //   de una sola vez vía fn_bulk_reassign_leads. Convive con el botón por fila.
-const CACHE_VERSION = 'stratos-v29';
+// v30 — la fila del lead es clickeable: el avatar (inicial) y cualquier zona
+//   vacía abren el Discovery del cliente. El texto editable y los controles
+//   (etapa, score, destacar, perfil, reasignar) conservan su comportamiento.
+const CACHE_VERSION = 'stratos-v30';
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 
