@@ -75,7 +75,12 @@
 // cachean sus propios leads). Fix: el caché de leads se acota a 150 (App.jsx).
 // Hardening adicional: en SIGNED_OUT espontáneo NO se hace clearLocalAuthState()
 // (borraba el token compartido y cascada el logout a todas las pestañas).
-const CACHE_VERSION = 'stratos-v26';
+// v27 — CRM fluido a 10k leads + reasignación masiva por grupo.
+// · Lista con windowing por scroll (solo ~60 filas en DOM), búsqueda con
+//   debounce, Prioridad y Kanban acotados → el CRM no se traba con miles.
+// · Reasignación masiva: selección múltiple + barra de acción + 1 sola
+//   escritura vía fn_bulk_reassign_leads (no N updates) → fluido en grupos grandes.
+const CACHE_VERSION = 'stratos-v27';
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 
