@@ -80,7 +80,10 @@
 //   debounce, Prioridad y Kanban acotados → el CRM no se traba con miles.
 // · Reasignación masiva: selección múltiple + barra de acción + 1 sola
 //   escritura vía fn_bulk_reassign_leads (no N updates) → fluido en grupos grandes.
-const CACHE_VERSION = 'stratos-v27';
+// v28 — reasignar movido a la columna de Acciones (botón por fila, a la derecha,
+//   junto a destacar/ver perfil) y se quitaron los checkboxes del lado izquierdo.
+//   Más simple e intuitivo; abre el mismo modal (asesor destino + Contáctame Ya).
+const CACHE_VERSION = 'stratos-v28';
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 
