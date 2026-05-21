@@ -203,6 +203,10 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
   const [reassignTarget, setReassignTarget]     = useState("");
   const [reassignQ, setReassignQ]               = useState("");
   const [reassignToContactame, setReassignToContactame] = useState(true);
+  // Modo "reasignar varios": se activa con un botón en la barra de herramientas.
+  // Mientras está activo, la columna de Acciones muestra un checkbox por fila
+  // (a la derecha, no a la izquierda) y aparece una barra para reasignar el grupo.
+  const [bulkMode, setBulkMode] = useState(false);
 
   // ── Duración del halo verde ──────────────────────────────────────
   // El aura verde menta dura ~20 segundos desde que aparece el lead
@@ -1100,13 +1104,45 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
   // El slice que efectivamente se pinta en la vista lista.
   const listLeads = useMemo(() => sortedLeads.slice(0, listLimit), [sortedLeads, listLimit]);
 
-  // ── Reasignación: disparador desde la columna de Acciones (derecha) ──────
-  // El control vive junto a "destacar" y "ver perfil", no como checkbox a la
-  // izquierda (más simple/limpio). Reusa el modal + runReassign, que ya soporta
-  // N vía la RPC bulk; aquí lo invocamos con un solo lead pre-seleccionado.
+  // ── Reasignación ─────────────────────────────────────────────────────────
+  // Dos formas, ambas reusan el MISMO modal + runReassign (que ya escribe en
+  // lote vía fn_bulk_reassign_leads):
+  //   1) Por fila: botón en la columna de Acciones (derecha) → reasigna ese lead.
+  //   2) En grupo: botón "Reasignar varios" en la barra → activa bulkMode, los
+  //      checkboxes aparecen en Acciones (derecha) y una barra reasigna el grupo.
   const clearSelection = () => setSelectedIds(new Set());
+  const exitBulkMode = () => { setBulkMode(false); clearSelection(); };
+  // Single: pre-selecciona un lead y abre el modal (sin entrar a bulkMode).
   const openReassignFor = (lead) => {
     setSelectedIds(new Set([lead.id]));
+    setReassignTarget("");
+    setReassignQ("");
+    setReassignToContactame(true);
+    setReassignOpen(true);
+  };
+  // Grupo: alterna la selección de un lead mientras bulkMode está activo.
+  const toggleSelect = (id) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+  // "Seleccionar todos" opera sobre TODO el set filtrado (sortedLeads), no solo
+  // las filas pintadas por el windowing. Memoizado para no recalcular O(N) en
+  // cada render (hover, etc.).
+  const allFilteredSelected  = useMemo(() => sortedLeads.length > 0 && sortedLeads.every(l => selectedIds.has(l.id)), [sortedLeads, selectedIds]);
+  const toggleSelectAll = () => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (sortedLeads.every(l => next.has(l.id))) sortedLeads.forEach(l => next.delete(l.id));
+      else sortedLeads.forEach(l => next.add(l.id));
+      return next;
+    });
+  };
+  // Abre el modal con el grupo ya seleccionado (desde la barra de bulkMode).
+  const openReassignGroup = () => {
+    if (selectedIds.size === 0) return;
     setReassignTarget("");
     setReassignQ("");
     setReassignToContactame(true);
@@ -1139,11 +1175,12 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
     const affectedIds = originals.map(l => l.id);
     const moved = affectedIds.length;
 
-    // Cerrar modal + limpiar selección de inmediato (la decisión ya se tomó).
+    // Cerrar modal + salir de selección múltiple + limpiar (ya se decidió).
     setReassignOpen(false);
     setReassignTarget("");
     setReassignQ("");
     clearSelection();
+    setBulkMode(false);
 
     if (moved === 0) {
       showToast("Esos leads ya estaban con ese asesor", "success");
@@ -3319,6 +3356,29 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
 
           <div style={{ flex: 1 }} />
 
+          {/* Reasignar varios — activa la selección múltiple para reasignar en
+              grupo. Solo desktop + admin/director. */}
+          {!isMobile && canBulkReassign && (
+            <button
+              onClick={() => bulkMode ? exitBulkMode() : setBulkMode(true)}
+              title={bulkMode ? "Salir de selección múltiple" : "Seleccionar varios leads y reasignarlos en grupo"}
+              style={{
+                height: 32, padding: "0 12px", borderRadius: 9, flexShrink: 0,
+                display: "flex", alignItems: "center", gap: 6, cursor: "pointer",
+                fontSize: 11, fontWeight: 600, fontFamily: fontDisp,
+                border: `1px solid ${bulkMode ? T.accent : (isLight ? "rgba(15,23,42,0.12)" : "rgba(255,255,255,0.12)")}`,
+                background: bulkMode ? (isLight ? `${T.accent}18` : `${T.accent}1E`) : "transparent",
+                color: bulkMode
+                  ? (isLight ? `color-mix(in srgb, ${T.accent} 55%, #0B1220 45%)` : T.accent)
+                  : (isLight ? "rgba(15,23,42,0.6)" : "rgba(255,255,255,0.6)"),
+                transition: "all 0.15s",
+              }}
+            >
+              {bulkMode ? <X size={13} strokeWidth={2.4} /> : <Users size={13} strokeWidth={2.2} />}
+              {bulkMode ? "Cancelar" : "Reasignar varios"}
+            </button>
+          )}
+
           {/* Count badge — solo desktop. En mobile el header ya muestra el total. */}
           {!isMobile && (
             <span style={{
@@ -3982,10 +4042,19 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                           <User size={13} color={T.txt3} strokeWidth={2} />
                         </button>
 
-                        {/* ⇄ Reasignar — manda este lead a otro asesor (pasa a
-                            Contáctame Ya). Hover en menta para distinguirlo de
-                            destacar/perfil. Solo admin/director. */}
-                        {canBulkReassign && (
+                        {/* ⇄ Reasignar — en modo "Reasignar varios" es un
+                            checkbox (selección de grupo); si no, un botón que
+                            reasigna ESE lead. Siempre a la derecha. Solo admin. */}
+                        {canBulkReassign && (bulkMode ? (
+                          <span style={{ width: 30, height: 30, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                            <SelectCheck
+                              checked={selectedIds.has(l.id)}
+                              onToggle={() => toggleSelect(l.id)}
+                              title={selectedIds.has(l.id) ? "Quitar de la selección" : "Seleccionar para reasignar"}
+                              size={20} T={T} isLight={isLight}
+                            />
+                          </span>
+                        ) : (
                           <button onClick={(e) => { e.stopPropagation(); openReassignFor(l); }}
                             title="Reasignar a otro asesor"
                             aria-label="Reasignar a otro asesor"
@@ -4009,7 +4078,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                           >
                             <UserCheck size={13} color={T.txt3} strokeWidth={2} />
                           </button>
-                        )}
+                        ))}
                       </div>
                     );
                   })()}
@@ -4996,6 +5065,71 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
         >
           <Plus size={24} strokeWidth={2.4} />
         </button>,
+        document.body
+      )}
+
+      {/* ── Barra de "Reasignar varios" ──────────────────────────────────────
+            Visible mientras bulkMode está activo. Centro-abajo, sobre el
+            contenido. Permite seleccionar todos, reasignar el grupo o salir. */}
+      {canBulkReassign && bulkMode && createPortal(
+        <div style={{
+          position: "fixed", left: "50%",
+          bottom: isMobile ? "calc(env(safe-area-inset-bottom, 0px) + 74px)" : 26,
+          transform: "translateX(-50%)", zIndex: 600,
+          display: "flex", alignItems: "center", gap: 10,
+          padding: "9px 10px 9px 14px", borderRadius: 14, maxWidth: "94vw",
+          background: isLight ? "rgba(255,255,255,0.94)" : "rgba(17,19,24,0.94)",
+          border: `1px solid ${isLight ? "rgba(15,23,42,0.10)" : "rgba(255,255,255,0.12)"}`,
+          boxShadow: isLight
+            ? "0 10px 30px rgba(15,23,42,0.16), 0 28px 70px rgba(15,23,42,0.14)"
+            : "0 14px 44px rgba(0,0,0,0.62), 0 0 0 1px rgba(255,255,255,0.04)",
+          backdropFilter: "blur(22px) saturate(160%)", WebkitBackdropFilter: "blur(22px) saturate(160%)",
+          animation: "fadeIn 0.18s ease both",
+        }}>
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 9, minWidth: 0 }}>
+            <span style={{
+              minWidth: 24, height: 24, padding: "0 7px", borderRadius: 99,
+              background: selectedIds.size > 0 ? T.accent : (isLight ? "rgba(15,23,42,0.12)" : "rgba(255,255,255,0.14)"),
+              color: selectedIds.size > 0 ? "#0B1220" : (isLight ? "rgba(15,23,42,0.5)" : "rgba(255,255,255,0.5)"),
+              display: "inline-flex", alignItems: "center", justifyContent: "center",
+              fontSize: 12.5, fontWeight: 800, fontFamily: fontDisp,
+            }}>{selectedIds.size}</span>
+            <span style={{ fontSize: 12.5, fontWeight: 600, color: isLight ? T.txt : "#fff", fontFamily: font, whiteSpace: "nowrap" }}>
+              {selectedIds.size === 0 ? "Elegí leads" : `seleccionado${selectedIds.size !== 1 ? "s" : ""}`}
+            </span>
+          </span>
+          <button onClick={toggleSelectAll} title="Seleccionar/quitar todos los resultados" style={{
+            height: 32, padding: "0 10px", borderRadius: 9, background: "transparent",
+            border: `1px solid ${isLight ? "rgba(15,23,42,0.12)" : "rgba(255,255,255,0.14)"}`,
+            color: isLight ? "rgba(15,23,42,0.6)" : "rgba(255,255,255,0.62)",
+            fontSize: 11.5, fontWeight: 600, fontFamily: font, cursor: "pointer", whiteSpace: "nowrap",
+          }}>{allFilteredSelected ? "Quitar todos" : "Todos"}</button>
+          <span style={{ width: 1, height: 22, background: isLight ? "rgba(15,23,42,0.10)" : "rgba(255,255,255,0.12)" }} />
+          <button
+            onClick={openReassignGroup}
+            disabled={selectedIds.size === 0}
+            style={{
+              display: "inline-flex", alignItems: "center", gap: 7,
+              height: 36, padding: "0 16px", borderRadius: 10, border: "none",
+              background: selectedIds.size > 0
+                ? `linear-gradient(135deg, ${T.accent}, color-mix(in srgb, ${T.accent} 70%, #0B1220 30%))`
+                : (isLight ? "rgba(15,23,42,0.1)" : "rgba(255,255,255,0.1)"),
+              color: selectedIds.size > 0 ? "#0B1220" : (isLight ? "rgba(15,23,42,0.4)" : "rgba(255,255,255,0.4)"),
+              fontSize: 13, fontWeight: 700, fontFamily: fontDisp,
+              cursor: selectedIds.size > 0 ? "pointer" : "not-allowed",
+              whiteSpace: "nowrap", boxShadow: selectedIds.size > 0 ? `0 4px 14px ${T.accent}40` : "none",
+              transition: "all 0.14s",
+            }}
+          >
+            <UserCheck size={15} strokeWidth={2.4} /> Reasignar{selectedIds.size > 0 ? ` ${selectedIds.size}` : ""}
+          </button>
+          <button onClick={exitBulkMode} title="Cancelar" style={{
+            height: 36, padding: "0 12px", borderRadius: 10, background: "transparent",
+            border: `1px solid ${isLight ? "rgba(15,23,42,0.12)" : "rgba(255,255,255,0.14)"}`,
+            color: isLight ? "rgba(15,23,42,0.55)" : "rgba(255,255,255,0.6)",
+            fontSize: 12.5, fontWeight: 600, fontFamily: font, cursor: "pointer", whiteSpace: "nowrap",
+          }}>Cancelar</button>
+        </div>,
         document.body
       )}
 

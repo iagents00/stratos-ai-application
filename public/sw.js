@@ -83,7 +83,10 @@
 // v28 — reasignar movido a la columna de Acciones (botón por fila, a la derecha,
 //   junto a destacar/ver perfil) y se quitaron los checkboxes del lado izquierdo.
 //   Más simple e intuitivo; abre el mismo modal (asesor destino + Contáctame Ya).
-const CACHE_VERSION = 'stratos-v28';
+// v29 — reasignación EN GRUPO: botón "Reasignar varios" en la barra activa
+//   selección múltiple (checkboxes a la derecha) + barra para reasignar el grupo
+//   de una sola vez vía fn_bulk_reassign_leads. Convive con el botón por fila.
+const CACHE_VERSION = 'stratos-v29';
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 
