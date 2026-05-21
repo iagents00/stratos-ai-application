@@ -1214,7 +1214,26 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
     // Modo demo / sin persistencia real → solo local.
     if (user?.id === 'demo-user-local' || user?.isDemo) return;
 
-    // ── 1 sola escritura al backend ──
+    // Cambios a persistir, en nombres de columna de la DB. El trigger
+    // leads_sync_asesor_id resuelve asesor_id desde asesor_name en cada UPDATE,
+    // así que con asesor_name (+ stage) alcanza — el mismo efecto que la RPC.
+    const dbChanges = toContactame
+      ? { asesor_name: target, stage: "Contáctame Ya" }
+      : { asesor_name: target };
+
+    // ── Ya en modo offline ───────────────────────────────────────────────
+    // No intentamos la RPC (Supabase no responde): encolamos cada lead en la
+    // MISMA cola que updateLead (overlay en localStorage + stratos_pending_sync).
+    // El auto-recovery de App.jsx la reaplica vía UPDATE en cuanto vuelve la
+    // conexión. La UI ya quedó optimista y el overlay sobrevive al F5: nada se
+    // pierde.
+    if (user?._offline) {
+      affectedIds.forEach(id => updateOfflineLead(id, dbChanges, user));
+      showToast(`Sin conexión — ${moved} reasignado${moved !== 1 ? "s" : ""} local, se sincroniza al volver.`, "success");
+      return;
+    }
+
+    // ── Online: UNA sola escritura vía la RPC bulk (atómica + auditada) ──
     try {
       const { error } = await supabase.rpc('fn_bulk_reassign_leads', {
         p_ids: affectedIds,
@@ -1222,14 +1241,21 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
         p_to_contactame: toContactame,
       });
       if (error) throw error;
+      // Éxito: el realtime + el refetch reconcilian el asesor_id canónico.
     } catch (e) {
-      console.error('[Stratos] reasignación masiva falló:', e?.message || e);
-      // Rollback: restaurar los objetos originales capturados antes del optimista.
-      const origById = new Map(originals.map(l => [l.id, l]));
-      const revert = (l) => origById.get(l.id) || l;
-      leadsDataRef.current = leadsDataRef.current.map(revert);
-      setLeadsData(prev => prev.map(revert));
-      showToast("No se pudo reasignar en el servidor. Se revirtió — intenta de nuevo.", "error");
+      // SIN rollback — perder la reasignación sería peor que un sync diferido.
+      // Encolamos cada lead (misma cola que updateLead); el auto-recovery
+      // (cada 60 s / al recuperar foco) la reaplica vía UPDATE cuando Supabase
+      // responde, y el trigger leads_sync_asesor_id fija asesor_id. La UI sigue
+      // optimista y consistente. Si un op fallara 5 veces, va al dead-letter
+      // (visible para admins), nunca a un loop silencioso.
+      console.error('[Stratos] reasignación: RPC falló, encolando para sync diferido:', e?.message || e);
+      affectedIds.forEach(id => updateOfflineLead(id, dbChanges, user));
+      if (!navigator.onLine) {
+        showToast(`Sin conexión — ${moved} reasignado${moved !== 1 ? "s" : ""} local, se sincroniza al volver.`, "success");
+      }
+      // Online con error transitorio: la cola + auto-recovery lo resuelven en
+      // segundo plano; el toast de éxito optimista ya mostrado sigue válido.
     }
   };
 
