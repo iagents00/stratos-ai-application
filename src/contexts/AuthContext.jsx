@@ -170,11 +170,15 @@ export function AuthProvider({ children }) {
         }
 
         // SIGNED_OUT espontáneo (no fue el usuario quien lo provocó) →
-        // intentar UN refresh silencioso antes de botar. Esto cubre fallos
-        // transitorios de refresh de JWT (red blip, cold start de Supabase,
-        // race entre pestañas) que antes nos botaban al login en medio del
-        // trabajo. Si el refresh recupera sesión, ignoramos el SIGNED_OUT.
+        // intentar recuperar la sesión antes de botar. Cubre fallos
+        // transitorios de refresh de JWT (red blip, cold start de Supabase) y
+        // sobre todo la ROTACIÓN del refresh token entre pestañas: con JWT de
+        // ~1h + rotación activa, una sesión larga y multi-pestaña (típico de
+        // admins) cruza el borde de expiración muchas veces al día; la pestaña
+        // que pierde la carrera de rotación recibe refresh_token_not_found y el
+        // SDK dispara este SIGNED_OUT aunque la sesión siga viva en otra pestaña.
         if (event === 'SIGNED_OUT') {
+          // Intento 1 — refresh silencioso. Cubre el grace-window de rotación.
           try {
             const { data, error } = await supabase.auth.refreshSession();
             if (data?.session && !error && isMounted) {
@@ -184,9 +188,30 @@ export function AuthProvider({ children }) {
                 return;
               }
             }
-          } catch (_) { /* fall through: refresh falló → aceptar logout */ }
+          } catch (_) { /* sigue al intento 2 */ }
           if (!isMounted) return;
-          clearLocalAuthState();
+
+          // Intento 2 — releer la sesión actual. Una pestaña hermana pudo haber
+          // rotado el token compartido (sb-<ref>-auth-token) mientras corría
+          // nuestro refresh; getStoredSession() lee ese token fresco del storage.
+          // Sin este paso, el primer SIGNED_OUT de la carrera botaba a TODAS las
+          // pestañas a la vez.
+          try {
+            const profile = await getStoredSession();
+            if (profile && isMounted) {
+              setUser(profile);
+              return;
+            }
+          } catch (_) { /* sin sesión recuperable */ }
+          if (!isMounted) return;
+
+          // Sin sesión recuperable → mostrar login, PERO sin clearLocalAuthState().
+          // Esa limpieza borra el token compartido sb-* y la caché de 24h: cascada
+          // el logout a TODAS las pestañas y obliga a re-tipear contraseña tras un
+          // F5. Si el signOut fue real, el SDK ya removió su propio token; si fue
+          // espontáneo, el próximo F5 se auto-sana (getStoredSession ve
+          // getSession=null → limpia la caché vieja → login). Solo el logout
+          // explícito y USER_DELETED hacen el cleanup destructivo (arriba).
           setUser(null);
           return;
         }

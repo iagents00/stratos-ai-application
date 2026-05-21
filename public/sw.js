@@ -66,7 +66,16 @@
 //       legacy stages (Zoom Concretado/Negociación/Visita Concretada →
 //       Seguimiento; No Show → Reactivar Zoom; Remarketing → Remarketing IA).
 //       Bump obligatorio: el bundle cacheado mapea contra etapas viejas.
-const CACHE_VERSION = 'stratos-v25';
+// v26 — kick-out de admins ("estás adentro y de la nada te saca").
+// CAUSA RAÍZ: los admins ven TODOS los leads de la org (RLS) y el caché de
+// leads en localStorage (~1.9 MB con 594 leads) compartía cuota con el token
+// sb-<ref>-auth-token. En browsers con cuota ajustada (Safari/Mac) el SDK no
+// podía PERSISTIR el token refrescado (QuotaExceededError silencioso) → al
+// siguiente F5 no había sesión → logout. Los asesores no lo sufrían (solo
+// cachean sus propios leads). Fix: el caché de leads se acota a 150 (App.jsx).
+// Hardening adicional: en SIGNED_OUT espontáneo NO se hace clearLocalAuthState()
+// (borraba el token compartido y cascada el logout a todas las pestañas).
+const CACHE_VERSION = 'stratos-v26';
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 
