@@ -744,6 +744,18 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
     }
   };
 
+  // Click en la fila → abre el Discovery del cliente. Para que sea intuitivo,
+  // basta con clickear el avatar (la inicial) o CUALQUIER zona "muerta" de la
+  // fila (sin texto/números/controles). Si el click cae sobre un control
+  // interactivo (botón, input, checkbox, campo editable inline, etc.) NO se
+  // abre el Discovery: ese control conserva su comportamiento (editar, destacar,
+  // reasignar, cambiar etapa…). Las celdas editables ya hacen stopPropagation;
+  // este guard cubre además los botones de la columna de Acciones.
+  const handleRowOpen = (e, lead) => {
+    if (e.target.closest('button, input, select, textarea, a, [role="checkbox"], [contenteditable="true"]')) return;
+    setNotesLead(lead);
+  };
+
   // Switcher unificado del Dynamic Island — al cambiar de tab, cerramos el drawer
   // actual y abrimos el target con el MISMO lead.
   const openDrawerTab = (tab, lead) => {
@@ -3464,7 +3476,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                   // cambiarlo causaba que las 80+ filas se re-renderizaran.
                   onMouseEnter={e => { e.currentTarget.style.background = hoverBg; }}
                   onMouseLeave={e => { e.currentTarget.style.background = baseBg; }}
-                  onClick={isMobile ? () => setNotesLead(l) : undefined}
+                  onClick={(e) => handleRowOpen(e, l)}
                   style={{
                     display: "grid", gridTemplateColumns: cols,
                     gap: isMobile ? 8 : 14,
@@ -3481,8 +3493,8 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                     // 12 iteraciones × 1.6s ≈ 19.2s — respira durante toda la
                     // ventana de halo (HALO_DURATION_MS = 20s).
                     animation: isPulsing ? "stratosNewLeadPulse 1.6s ease-in-out 0s 12" : undefined,
-                    // En mobile el row entero es tap-to-open
-                    cursor: isMobile ? "pointer" : "default",
+                    // Fila clickeable (zonas vacías + avatar abren Discovery).
+                    cursor: "pointer",
                   }}
                 >
 
@@ -3490,8 +3502,9 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                        nombre, tags y presupuesto (right-aligned con spacer flex).
                        Segunda línea: asesor · proyecto · fecha · campaña. */}
                   <div style={{ display: "flex", alignItems: "center", gap: 11, minWidth: 0 }}>
-                    {/* Avatar — rounded square, initial, accent tint */}
-                    <div style={{
+                    {/* Avatar — rounded square, initial, accent tint.
+                        Click → abre el Discovery (vía el onClick de la fila). */}
+                    <div title="Ver Discovery del cliente" style={{
                       width: 34, height: 34, borderRadius: 10,
                       background: isLight
                         ? `linear-gradient(145deg, ${T.violet}1A 0%, ${T.violet}0D 100%)`
