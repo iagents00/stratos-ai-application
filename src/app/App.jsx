@@ -49,6 +49,19 @@ import { nav, MODULE_ROLES, canAccessModule } from "./constants/navigation";
 // a la vista de trabajo principal (CRM o Comando), no a estas pantallas.
 const NON_PERSISTABLE_VIEWS = new Set(["planes", "admin"]);
 
+// Tope del caché de leads en localStorage (paint instantáneo en F5).
+// CRÍTICO: este caché comparte la cuota de localStorage (~5 MB en Safari) con
+// el token de sesión de Supabase (sb-<ref>-auth-token). Los admins ven TODOS
+// los leads de la org (RLS: is_admin_or_above/can_view_all_leads) — con 594
+// leads el array completo pesa ~1.9 MB en localStorage (UTF-16) y, al crecer,
+// llena la cuota; entonces el SDK no puede PERSISTIR el token refrescado
+// (QuotaExceededError silencioso) → al siguiente F5 no hay sesión → "te saca
+// de la nada". Cacheamos solo los N más recientes; el resto llega de Supabase
+// en ~1 s (stale-while-revalidate). Así el caché queda acotado (~250 KB) y
+// nunca desplaza al token. Los asesores no sufrían esto porque solo cachean
+// sus propios leads (pocos).
+const LEADS_CACHE_LIMIT = 150;
+
 /**
  * Resuelve la vista inicial al montar la app:
  *   1. Si hay vista guardada para este usuario en localStorage Y su rol
@@ -270,9 +283,19 @@ export default function App() {
   //     no este cache que es el array completo.
   const writeLeadsCache = useCallback((rows) => {
     if (!leadsCacheKey || !Array.isArray(rows)) return;
+    // Acotar a los N más recientes para no llenar la cuota de localStorage y
+    // desplazar el token de Supabase (ver LEADS_CACHE_LIMIT). El array ya viene
+    // ordenado por created_at desc (fetch + realtime prepend), así que el slice
+    // conserva los leads más recientes — los que más importan en el paint de F5.
+    const capped = rows.length > LEADS_CACHE_LIMIT ? rows.slice(0, LEADS_CACHE_LIMIT) : rows;
     try {
-      localStorage.setItem(leadsCacheKey, JSON.stringify({ rows, ts: Date.now() }));
-    } catch (_) { /* quota exceeded — no es crítico */ }
+      localStorage.setItem(leadsCacheKey, JSON.stringify({ rows: capped, ts: Date.now() }));
+    } catch (_) {
+      // Cuota llena pese al tope (otras keys grandes): mejor un caché vacío que
+      // uno corrupto a medias. Lo limpiamos para no servir datos truncados y
+      // para liberar espacio al token de sesión, que es lo crítico.
+      try { localStorage.removeItem(leadsCacheKey); } catch (_) { /* noop */ }
+    }
   }, [leadsCacheKey]);
 
   const fetchLeads = useCallback(async ({ silent = false } = {}) => {
