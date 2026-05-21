@@ -25,6 +25,9 @@
 # review de @iagents00 por las reglas más abajo.
 /src/clients/grupo28/   @iagents00 @automatizacionespopayan-dev
 
+# Cliente: Tgenius (zona propia; fuera de la carpeta requiere review del owner)
+/src/clients/tgenius/   @iagents00
+
 # Cliente: Duke (cliente original, en producción — solo owner)
 /src/clients/duke/      @iagents00
 
