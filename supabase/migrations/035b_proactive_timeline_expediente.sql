@@ -1,0 +1,16 @@
+-- ════════════════════════════════════════════════════════════════════════
+-- 035b — Botones proactivos visibles en la línea de tiempo del CRM
+-- ────────────────────────────────────────────────────────────────────────
+-- Bug: fn_proactive_inact_action y fn_proactive_log_plan escribían solo en
+-- `comunicaciones`, pero la línea de tiempo del CRM (LeadNotesTimeline.jsx)
+-- lee de `expediente_items` (tipos nota/texto/nota_ia). Por eso "Ya lo
+-- contacté" devolvía ok:true pero no se veía.
+-- Fix: ambas funciones escriben TAMBIÉN en expediente_items.
+-- NOTA: redefinidas de nuevo en 036 (cierre de report + acción perdido).
+-- (Cuerpo idéntico al aplicado vía MCP; ver 036 para la versión final.)
+-- ════════════════════════════════════════════════════════════════════════
+-- Ver migración 036 para las definiciones finales de fn_proactive_inact_action
+-- y fn_proactive_log_plan (incluyen el INSERT en expediente_items de esta
+-- migración MÁS el cierre de report del rediseño de serialización).
+-- Esta migración se aplicó vía MCP como paso intermedio.
+SELECT 'see 036 for final definitions' AS note;
