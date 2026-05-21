@@ -89,7 +89,11 @@
 // v30 — la fila del lead es clickeable: el avatar (inicial) y cualquier zona
 //   vacía abren el Discovery del cliente. El texto editable y los controles
 //   (etapa, score, destacar, perfil, reasignar) conservan su comportamiento.
-const CACHE_VERSION = 'stratos-v30';
+// v31 — reasignación a prueba de fallos: si la RPC falla (offline o error
+//   transitorio) ya NO se hace rollback; la reasignación se encola en la misma
+//   cola offline que el resto (overlay + stratos_pending_sync) y el
+//   auto-recovery la sincroniza al volver la conexión. Nada se pierde, ni en F5.
+const CACHE_VERSION = 'stratos-v31';
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 
