@@ -5493,4 +5493,5 @@ export {
   LeadPanel,
   AnalysisDrawer,
   ClickDropdown,
+  hashAsesorColor, asesorInitials,
 };
