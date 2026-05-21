@@ -40,7 +40,21 @@ const FIELD_LABELS = {
   forma_de_pago:      "Forma de pago",
   tipo_uso:           "Uso del inmueble",
   ciudad_origen:      "Ciudad origen",
+  posibles_objeciones:        "Posibles objeciones",
+  como_solucionarlas_asesor:  "Cómo resolverlas (asesor)",
+  propiedades_interes:        "Propiedades de interés",
+  anotaciones_finales_resumen:"Resumen final",
 };
+
+// Campos de texto largo (prosa) que conviene mostrar a ancho completo en vez
+// del grid de 2 columnas, para que se lean cómodos.
+const FULL_WIDTH_FIELDS = new Set([
+  "posibles_objeciones",
+  "como_solucionarlas_asesor",
+  "propiedades_interes",
+  "anotaciones_finales_resumen",
+  "objetivo",
+]);
 
 const prettyLabel = (key) =>
   FIELD_LABELS[key] ||
@@ -124,7 +138,7 @@ export default function LeadDiscoveryPanel({ lead, T = P, isLight = false }) {
           columnGap: 16, rowGap: 10,
         }}>
           {entries.map(([k, v]) => (
-            <div key={k}>
+            <div key={k} style={FULL_WIDTH_FIELDS.has(k) ? { gridColumn: "1 / -1" } : undefined}>
               <p style={{
                 margin: 0, fontSize: 10, fontWeight: 700,
                 letterSpacing: "0.08em", textTransform: "uppercase",
