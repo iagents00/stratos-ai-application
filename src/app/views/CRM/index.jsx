@@ -1100,32 +1100,17 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
   // El slice que efectivamente se pinta en la vista lista.
   const listLeads = useMemo(() => sortedLeads.slice(0, listLimit), [sortedLeads, listLimit]);
 
-  // ── Reasignación por lote: helpers de selección ─────────────────────────
-  // El "seleccionar todo" opera sobre sortedLeads (TODO el set filtrado), no
-  // solo sobre las filas pintadas (listLeads) — así "seleccionar todo" marca
-  // los 120 resultados aunque el windowing solo haya pintado 60.
-  const toggleSelect = (id) => {
-    setSelectedIds(prev => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id); else next.add(id);
-      return next;
-    });
-  };
+  // ── Reasignación: disparador desde la columna de Acciones (derecha) ──────
+  // El control vive junto a "destacar" y "ver perfil", no como checkbox a la
+  // izquierda (más simple/limpio). Reusa el modal + runReassign, que ya soporta
+  // N vía la RPC bulk; aquí lo invocamos con un solo lead pre-seleccionado.
   const clearSelection = () => setSelectedIds(new Set());
-  // Memoizados: con miles de leads, recalcular every()/some() en cada render
-  // (p.ej. al hacer hover) es O(N) inútil. Solo cambian si cambia el set o la selección.
-  const allFilteredSelected  = useMemo(() => sortedLeads.length > 0 && sortedLeads.every(l => selectedIds.has(l.id)), [sortedLeads, selectedIds]);
-  const someFilteredSelected = useMemo(() => sortedLeads.some(l => selectedIds.has(l.id)), [sortedLeads, selectedIds]);
-  const toggleSelectAll = () => {
-    setSelectedIds(prev => {
-      const next = new Set(prev);
-      if (sortedLeads.every(l => next.has(l.id))) {
-        sortedLeads.forEach(l => next.delete(l.id)); // ya estaban todos → limpiar
-      } else {
-        sortedLeads.forEach(l => next.add(l.id));     // marcar todo lo filtrado
-      }
-      return next;
-    });
+  const openReassignFor = (lead) => {
+    setSelectedIds(new Set([lead.id]));
+    setReassignTarget("");
+    setReassignQ("");
+    setReassignToContactame(true);
+    setReassignOpen(true);
   };
 
   // Lista de asesores destino para el modal (filtrada por la búsqueda interna).
@@ -3355,18 +3340,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                 es una "card" vertical sin necesidad de encabezados. */}
             {!isMobile && (
               <div style={{ display: "grid", gridTemplateColumns: cols, gap: 14, padding: "10px 20px", borderBottom: `1px solid ${T.border}`, alignItems: "center", background: isLight ? "rgba(15,23,42,0.015)" : "rgba(255,255,255,0.012)" }}>
-                <span style={{ display: "flex", alignItems: "center", gap: 11, minWidth: 0 }}>
-                  {canBulkReassign && (
-                    <SelectCheck
-                      checked={allFilteredSelected}
-                      indeterminate={someFilteredSelected && !allFilteredSelected}
-                      onToggle={toggleSelectAll}
-                      title={allFilteredSelected ? "Quitar selección" : "Seleccionar todos los resultados"}
-                      T={T} isLight={isLight}
-                    />
-                  )}
-                  <SH label="Cliente" field="n" />
-                </span>
+                <SH label="Cliente" field="n" />
                 <SH label="Presupuesto" field="presupuesto" align="right" />
                 <SH label="Etapa" field="st" align="center" />
                 <SH label="Seguim." field="seguimientos" align="center" />
@@ -3456,17 +3430,6 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                        nombre, tags y presupuesto (right-aligned con spacer flex).
                        Segunda línea: asesor · proyecto · fecha · campaña. */}
                   <div style={{ display: "flex", alignItems: "center", gap: 11, minWidth: 0 }}>
-                    {/* Checkbox de selección — solo para quien puede reasignar
-                        por lote (admin/director). stopPropagation evita abrir
-                        la ficha del lead al marcar. */}
-                    {canBulkReassign && (
-                      <SelectCheck
-                        checked={isSelected}
-                        onToggle={() => toggleSelect(l.id)}
-                        title={isSelected ? "Quitar de la selección" : "Seleccionar para reasignar"}
-                        T={T} isLight={isLight}
-                      />
-                    )}
                     {/* Avatar — rounded square, initial, accent tint */}
                     <div style={{
                       width: 34, height: 34, borderRadius: 10,
@@ -4018,6 +3981,35 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                         >
                           <User size={13} color={T.txt3} strokeWidth={2} />
                         </button>
+
+                        {/* ⇄ Reasignar — manda este lead a otro asesor (pasa a
+                            Contáctame Ya). Hover en menta para distinguirlo de
+                            destacar/perfil. Solo admin/director. */}
+                        {canBulkReassign && (
+                          <button onClick={(e) => { e.stopPropagation(); openReassignFor(l); }}
+                            title="Reasignar a otro asesor"
+                            aria-label="Reasignar a otro asesor"
+                            style={{
+                              width: 30, height: 30, borderRadius: 8,
+                              border: `1px solid ${userBorder}`,
+                              background: userBg,
+                              cursor: "pointer", padding: 0,
+                              display: "flex", alignItems: "center", justifyContent: "center",
+                              transition: "background 0.16s, border-color 0.16s",
+                              flexShrink: 0,
+                            }}
+                            onMouseEnter={e => {
+                              e.currentTarget.style.background  = `${T.accent}${isLight ? "1A" : "1E"}`;
+                              e.currentTarget.style.borderColor = `${T.accent}${isLight ? "55" : "48"}`;
+                            }}
+                            onMouseLeave={e => {
+                              e.currentTarget.style.background  = userBg;
+                              e.currentTarget.style.borderColor = userBorder;
+                            }}
+                          >
+                            <UserCheck size={13} color={T.txt3} strokeWidth={2} />
+                          </button>
+                        )}
                       </div>
                     );
                   })()}
@@ -5004,65 +4996,6 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
         >
           <Plus size={24} strokeWidth={2.4} />
         </button>,
-        document.body
-      )}
-
-      {/* ── Barra flotante de reasignación por lote ──────────────────────────
-            Aparece al marcar ≥1 lead. Centro-abajo, sobre el contenido. En
-            mobile se eleva por encima del nav inferior. ───────────────────── */}
-      {canBulkReassign && selectedIds.size > 0 && createPortal(
-        <div style={{
-          position: "fixed", left: "50%",
-          bottom: isMobile ? "calc(env(safe-area-inset-bottom, 0px) + 74px)" : 26,
-          transform: "translateX(-50%)", zIndex: 600,
-          display: "flex", alignItems: "center", gap: 10,
-          padding: "9px 10px 9px 14px", borderRadius: 14, maxWidth: "94vw",
-          background: isLight ? "rgba(255,255,255,0.94)" : "rgba(17,19,24,0.94)",
-          border: `1px solid ${isLight ? "rgba(15,23,42,0.10)" : "rgba(255,255,255,0.12)"}`,
-          boxShadow: isLight
-            ? "0 10px 30px rgba(15,23,42,0.16), 0 28px 70px rgba(15,23,42,0.14)"
-            : "0 14px 44px rgba(0,0,0,0.62), 0 0 0 1px rgba(255,255,255,0.04)",
-          backdropFilter: "blur(22px) saturate(160%)", WebkitBackdropFilter: "blur(22px) saturate(160%)",
-          animation: "fadeIn 0.18s ease both",
-        }}>
-          <span style={{ display: "inline-flex", alignItems: "center", gap: 9, minWidth: 0 }}>
-            <span style={{
-              minWidth: 24, height: 24, padding: "0 7px", borderRadius: 99,
-              background: T.accent, color: "#0B1220",
-              display: "inline-flex", alignItems: "center", justifyContent: "center",
-              fontSize: 12.5, fontWeight: 800, fontFamily: fontDisp,
-            }}>{selectedIds.size}</span>
-            <span style={{ fontSize: 12.5, fontWeight: 600, color: isLight ? T.txt : "#fff", fontFamily: font, whiteSpace: "nowrap" }}>
-              seleccionado{selectedIds.size !== 1 ? "s" : ""}
-            </span>
-          </span>
-          <span style={{ width: 1, height: 22, background: isLight ? "rgba(15,23,42,0.10)" : "rgba(255,255,255,0.12)" }} />
-          <button
-            onClick={() => { setReassignTarget(""); setReassignQ(""); setReassignToContactame(true); setReassignOpen(true); }}
-            style={{
-              display: "inline-flex", alignItems: "center", gap: 7,
-              height: 36, padding: "0 16px", borderRadius: 10, border: "none",
-              background: `linear-gradient(135deg, ${T.accent}, color-mix(in srgb, ${T.accent} 70%, #0B1220 30%))`,
-              color: "#0B1220", fontSize: 13, fontWeight: 700, fontFamily: fontDisp,
-              cursor: "pointer", whiteSpace: "nowrap", boxShadow: `0 4px 14px ${T.accent}40`,
-              transition: "transform 0.14s",
-            }}
-            onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-1px)"; }}
-            onMouseLeave={e => { e.currentTarget.style.transform = "none"; }}
-          >
-            <UserCheck size={15} strokeWidth={2.4} /> Reasignar
-          </button>
-          <button
-            onClick={clearSelection}
-            title="Cancelar selección"
-            style={{
-              height: 36, padding: "0 12px", borderRadius: 10, background: "transparent",
-              border: `1px solid ${isLight ? "rgba(15,23,42,0.12)" : "rgba(255,255,255,0.14)"}`,
-              color: isLight ? "rgba(15,23,42,0.55)" : "rgba(255,255,255,0.6)",
-              fontSize: 12.5, fontWeight: 600, fontFamily: font, cursor: "pointer", whiteSpace: "nowrap",
-            }}
-          >Cancelar</button>
-        </div>,
         document.body
       )}
 
