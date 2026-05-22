@@ -98,6 +98,17 @@ export function AuthProvider({ children }) {
    * CRM y de la nada me bota al login".
    */
   const userLogoutRef = useRef(false);
+  /**
+   * refreshingRef — guard de re-entrada para el silent refresh.
+   * `refreshSession()` se llama DENTRO de onAuthStateChange y, si falla,
+   * emite otro SIGNED_OUT → re-entraría a este branch y llamaría refreshSession
+   * de nuevo → loop. En iOS Safari (donde el refresh de JWT falla seguido por
+   * ITP/partición de storage) ese loop satura el web process y WebKit mata la
+   * pestaña ("Ocurrió un problema varias veces"), típicamente al recargar (F5),
+   * que es cuando el SDK re-hidrata la sesión desde storage. El guard ignora
+   * los SIGNED_OUT que llegan mientras ya hay un refresh en vuelo.
+   */
+  const refreshingRef = useRef(false);
 
   useEffect(() => {
     seedDemoUser();
@@ -178,6 +189,11 @@ export function AuthProvider({ children }) {
         // que pierde la carrera de rotación recibe refresh_token_not_found y el
         // SDK dispara este SIGNED_OUT aunque la sesión siga viva en otra pestaña.
         if (event === 'SIGNED_OUT') {
+          // Guard de re-entrada (iOS Safari): si ya hay un refresh en vuelo,
+          // este SIGNED_OUT es el eco del refresh que falló → ignorar para no
+          // entrar en loop (crash de WebKit al recargar / F5).
+          if (refreshingRef.current) return;
+          refreshingRef.current = true;
           // Intento 1 — refresh silencioso. Cubre el grace-window de rotación.
           try {
             const { data, error } = await supabase.auth.refreshSession();
@@ -189,6 +205,7 @@ export function AuthProvider({ children }) {
               }
             }
           } catch (_) { /* sigue al intento 2 */ }
+          finally { refreshingRef.current = false; }
           if (!isMounted) return;
 
           // Intento 2 — releer la sesión actual. Una pestaña hermana pudo haber

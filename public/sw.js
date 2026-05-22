@@ -93,7 +93,11 @@
 //   transitorio) ya NO se hace rollback; la reasignación se encola en la misma
 //   cola offline que el resto (overlay + stratos_pending_sync) y el
 //   auto-recovery la sincroniza al volver la conexión. Nada se pierde, ni en F5.
-const CACHE_VERSION = 'stratos-v31';
+// v32 — fix crash-loop en iOS Safari al recargar (F5): guard de re-entrada en
+//       el silent refresh de onAuthStateChange. refreshSession() fallido emitía
+//       otro SIGNED_OUT → re-entraba → loop → WebKit mataba la pestaña. Bump
+//       obligatorio: los iPhones atrapados sirven el bundle viejo con el loop.
+const CACHE_VERSION = 'stratos-v32';
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 
