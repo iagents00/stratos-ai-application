@@ -68,6 +68,10 @@ const dukeConfig = {
     // Discovery simplificado (PR del 2026-05): un solo drawer scrolleable
     // con Próxima Acción + notas + cronograma. Sin sub-toggle, sin Tareas.
     discoverySimplified: true,
+    // Sync realtime del tablero de prioridad: el reorden/pin que el bot de
+    // Telegram hace sobre crm_prefs ahora se refleja en vivo en el CRM abierto
+    // (antes el front lo pisaba). Solo Duke por ahora.
+    prefsRealtimeSync:   true,
   },
 };
 
