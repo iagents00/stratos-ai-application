@@ -90,6 +90,14 @@ export const DEFAULT_CLIENT_CONFIG = {
     // Cuando está OFF, se mantiene el comportamiento histórico (Expediente
     // + Perfil + Análisis IA con sección de Tareas visible).
     discoverySimplified: false,
+
+    // Sincronización realtime del tablero de prioridad (profiles.crm_prefs).
+    // Cuando el bot de Telegram reordena/pinea un cliente, el CRM abierto en el
+    // browser pisaba ese cambio al re-guardar su snapshot en memoria
+    // (last-writer-wins, sin sync). Con esto ON, el CRM se suscribe a cambios
+    // de su propia fila profiles y refleja en vivo lo que escribió el bot.
+    // Default OFF → solo clientes que lo validen lo prenden.
+    prefsRealtimeSync: false,
   },
 };
 
