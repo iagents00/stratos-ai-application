@@ -59,10 +59,6 @@
 // v10 — limpieza de tokens legacy stratos.supabase.*.
 // v9 — destrabar login: cuelgue infinito por bundle viejo cacheado.
 // v8 — orden por defecto del CRM: fechaIngreso desc (nuevos arriba).
-// v26 — fix crash-loop en iOS Safari al recargar (F5): guard de re-entrada en
-//       el silent refresh de onAuthStateChange. refreshSession() fallido emitía
-//       otro SIGNED_OUT → re-entraba → loop → WebKit mataba la pestaña. Bump
-//       obligatorio: los iPhones atrapados sirven el bundle v25 con el loop.
 // v25 — leads cache síncrono + re-persiste en realtime + SIGNED_OUT con
 //       silent refresh (fix: leads desaparecían 10s al F5; bounce a login en
 //       medio de sesión por fallos transitorios de refresh de JWT).
@@ -70,7 +66,38 @@
 //       legacy stages (Zoom Concretado/Negociación/Visita Concretada →
 //       Seguimiento; No Show → Reactivar Zoom; Remarketing → Remarketing IA).
 //       Bump obligatorio: el bundle cacheado mapea contra etapas viejas.
-const CACHE_VERSION = 'stratos-v26';
+// v26 — kick-out de admins ("estás adentro y de la nada te saca").
+// CAUSA RAÍZ: los admins ven TODOS los leads de la org (RLS) y el caché de
+// leads en localStorage (~1.9 MB con 594 leads) compartía cuota con el token
+// sb-<ref>-auth-token. En browsers con cuota ajustada (Safari/Mac) el SDK no
+// podía PERSISTIR el token refrescado (QuotaExceededError silencioso) → al
+// siguiente F5 no había sesión → logout. Los asesores no lo sufrían (solo
+// cachean sus propios leads). Fix: el caché de leads se acota a 150 (App.jsx).
+// Hardening adicional: en SIGNED_OUT espontáneo NO se hace clearLocalAuthState()
+// (borraba el token compartido y cascada el logout a todas las pestañas).
+// v27 — CRM fluido a 10k leads + reasignación masiva por grupo.
+// · Lista con windowing por scroll (solo ~60 filas en DOM), búsqueda con
+//   debounce, Prioridad y Kanban acotados → el CRM no se traba con miles.
+// · Reasignación masiva: selección múltiple + barra de acción + 1 sola
+//   escritura vía fn_bulk_reassign_leads (no N updates) → fluido en grupos grandes.
+// v28 — reasignar movido a la columna de Acciones (botón por fila, a la derecha,
+//   junto a destacar/ver perfil) y se quitaron los checkboxes del lado izquierdo.
+//   Más simple e intuitivo; abre el mismo modal (asesor destino + Contáctame Ya).
+// v29 — reasignación EN GRUPO: botón "Reasignar varios" en la barra activa
+//   selección múltiple (checkboxes a la derecha) + barra para reasignar el grupo
+//   de una sola vez vía fn_bulk_reassign_leads. Convive con el botón por fila.
+// v30 — la fila del lead es clickeable: el avatar (inicial) y cualquier zona
+//   vacía abren el Discovery del cliente. El texto editable y los controles
+//   (etapa, score, destacar, perfil, reasignar) conservan su comportamiento.
+// v31 — reasignación a prueba de fallos: si la RPC falla (offline o error
+//   transitorio) ya NO se hace rollback; la reasignación se encola en la misma
+//   cola offline que el resto (overlay + stratos_pending_sync) y el
+//   auto-recovery la sincroniza al volver la conexión. Nada se pierde, ni en F5.
+// v32 — fix crash-loop en iOS Safari al recargar (F5): guard de re-entrada en
+//       el silent refresh de onAuthStateChange. refreshSession() fallido emitía
+//       otro SIGNED_OUT → re-entraba → loop → WebKit mataba la pestaña. Bump
+//       obligatorio: los iPhones atrapados sirven el bundle viejo con el loop.
+const CACHE_VERSION = 'stratos-v32';
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 

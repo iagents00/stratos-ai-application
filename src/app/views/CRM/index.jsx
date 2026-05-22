@@ -52,10 +52,70 @@ import {
   LeadPanel,
   AnalysisDrawer,
   ClickDropdown,
+  hashAsesorColor, asesorInitials,
 } from "./components";
 import AdvisorMetrics from "./AdvisorMetrics";
 import ScheduledCallBadge from "./ScheduledCallBadge";
 import { useScheduledCalls } from "../../../hooks/useScheduledCalls";
+
+// Tamaño de "página" de render de la lista. La lista NO se virtualiza con una
+// librería externa (regla del proyecto: no agregar deps sin confirmar). En su
+// lugar hacemos windowing por scroll: pintamos LIST_PAGE filas y agregamos otra
+// página al acercarse al fondo (IntersectionObserver). Así el DOM y el costo de
+// render de React quedan acotados sin importar cuántos leads haya (594 hoy, 10k
+// mañana). El filtro/orden/búsqueda siguen operando sobre el set COMPLETO; solo
+// se acota lo que se PINTA. El contador "X resultados" muestra el total real.
+const LIST_PAGE = 60;
+
+// Checkbox de selección para la reasignación por lote. Definido a nivel de
+// módulo (no dentro de CRM) para que NO se remonte en cada render — si se
+// define inline, React lo trata como un tipo nuevo cada render y desmonta/
+// remonta los ~60 checkboxes de la lista en cada cambio de estado.
+const SelectCheck = ({ checked, indeterminate = false, onToggle, title, size = 19, T = P, isLight = false }) => {
+  const on = checked || indeterminate;
+  return (
+    <button
+      type="button"
+      role="checkbox"
+      aria-checked={indeterminate ? "mixed" : checked}
+      title={title}
+      onClick={(e) => { e.stopPropagation(); onToggle(); }}
+      style={{
+        width: size, height: size, borderRadius: 6, flexShrink: 0,
+        display: "inline-flex", alignItems: "center", justifyContent: "center",
+        cursor: "pointer", padding: 0,
+        background: on ? T.accent : (isLight ? "rgba(255,255,255,0.9)" : "rgba(255,255,255,0.04)"),
+        border: `1.5px solid ${on ? T.accent : (isLight ? "rgba(15,23,42,0.24)" : "rgba(255,255,255,0.24)")}`,
+        boxShadow: on ? `0 0 0 3px ${T.accent}22` : "none",
+        transition: "background 0.14s, border-color 0.14s, box-shadow 0.14s",
+      }}
+    >
+      {indeterminate
+        ? <Minus size={Math.round(size * 0.62)} strokeWidth={3.5} color="#fff" />
+        : checked ? <Check size={Math.round(size * 0.62)} strokeWidth={3.5} color="#fff" /> : null}
+    </button>
+  );
+};
+
+// Tope de tarjetas renderizadas por columna del Kanban. Una columna con miles
+// de tarjetas es inmanejable y costosa de montar; mostramos las primeras y un
+// pie "+N más → usa Lista". El total y el monto del encabezado siguen siendo
+// exactos (se calculan sobre el set completo).
+const KANBAN_COL_CAP = 50;
+
+// useDebounced — difiere la actualización de `value` hasta `ms` ms después del
+// último cambio. La búsqueda del CRM lo usa para no re-filtrar ni re-renderizar
+// la lista en cada tecla (con miles de leads, eso congela el tipeo). El input
+// del campo sigue instantáneo; solo el cómputo pesado (sortedLeads) consume el
+// valor diferido.
+function useDebounced(value, ms = 200) {
+  const [debounced, setDebounced] = useState(value);
+  useEffect(() => {
+    const t = setTimeout(() => setDebounced(value), ms);
+    return () => clearTimeout(t);
+  }, [value, ms]);
+  return debounced;
+}
 
 function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () => {}, autoOpenPriority1 = 0, onAutoOpenHandled, softDeleteLead }) {
   const { user } = useAuth();
@@ -85,6 +145,11 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
   // El componente AsesorPicker avisa antes de transferir un lead propio
   // (la RLS le retirará acceso al lead después de la mutación).
   const canReassign = true;
+  // Reasignación POR LOTE (selección múltiple → un asesor destino). Es una
+  // acción de gestión: distribuir/repartir leads entre el equipo. Solo la
+  // ofrecemos a quien ve todos los leads (admin/director). La RLS de Supabase
+  // (leads_update) igual valida permisos por fila, así que es seguro.
+  const canBulkReassign = canSeeAll;
   // Orden por defecto: fecha de creación descendente (los más recientes
   // arriba). Antes era "sc desc" (score), lo que hacía que un lead recién
   // registrado con score bajo (5 por default) cayera abajo en cuanto se
@@ -95,6 +160,12 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
   const [filterStage, setFilterStage]   = useState("TODO");
   const [filterAsesor, setFilterAsesor] = useState("TODO");
   const [searchQ, setSearchQ]           = useState("");
+  // searchQ alimenta el input (instantáneo). El filtrado pesado de sortedLeads
+  // usa la versión debounced para no recalcular en cada tecla con miles de leads.
+  const debouncedSearch = useDebounced(searchQ, 200);
+  // Windowing de la lista: cuántas filas renderizar (crece al hacer scroll).
+  const [listLimit, setListLimit]       = useState(LIST_PAGE);
+  const listSentinelRef = useRef(null);
   const [viewMode, setViewMode]         = useState("list");
   // En mobile el kanban es virtualmente inusable (columnas chicas, drag&drop
   // bloqueado en touch). Forzamos lista — el stage strip horizontal ya da
@@ -119,6 +190,23 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
   const [editingApptId, setEditingApptId] = useState(null);
   const [apptDraft, setApptDraft]         = useState("");
   const justRegisteredTimer = useRef(null);
+
+  // ── Selección múltiple para reasignación por lote ───────────────────────
+  // selectedIds: Set de lead.id marcados con el checkbox. Cuando hay ≥1,
+  // aparece una barra flotante con "Reasignar". El modal pide el asesor
+  // destino y (por defecto) mueve los leads a "Contáctame Ya" para que el
+  // nuevo asesor los vea al inicio de su pipeline. La propagación al asesor
+  // destino es automática vía realtime (App.jsx → handler UPDATE agrega el
+  // lead si no lo tenía). Reusa updateLead, así que hereda RLS + auto-log.
+  const [selectedIds, setSelectedIds]           = useState(() => new Set());
+  const [reassignOpen, setReassignOpen]         = useState(false);
+  const [reassignTarget, setReassignTarget]     = useState("");
+  const [reassignQ, setReassignQ]               = useState("");
+  const [reassignToContactame, setReassignToContactame] = useState(true);
+  // Modo "reasignar varios": se activa con un botón en la barra de herramientas.
+  // Mientras está activo, la columna de Acciones muestra un checkbox por fila
+  // (a la derecha, no a la izquierda) y aparece una barra para reasignar el grupo.
+  const [bulkMode, setBulkMode] = useState(false);
 
   // ── Duración del halo verde ──────────────────────────────────────
   // El aura verde menta dura ~20 segundos desde que aparece el lead
@@ -368,13 +456,19 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
   // nombre solo si el lead aún no tiene asesor_id seedeado. Esto evita el bug
   // de que dos asesores con el mismo nombre se vieran los leads cruzados, y
   // que renombrar un asesor le "borrara" sus leads de la vista.
-  const visibleLeads = canSeeAll
-    ? leadsData
-    : leadsData.filter(l =>
-        l.asesor_id
-          ? l.asesor_id === user?.id
-          : l.asesor === user?.name
-      );
+  // useMemo: para admins devuelve la referencia estable de leadsData; para
+  // asesores recalcula el filtro solo cuando cambian leadsData o el usuario,
+  // no en cada render. Mantener la referencia estable evita que asesores/
+  // sortedLeads/asesoresMaster recalculen de más con miles de leads.
+  const visibleLeads = useMemo(() => (
+    canSeeAll
+      ? leadsData
+      : leadsData.filter(l =>
+          l.asesor_id
+            ? l.asesor_id === user?.id
+            : l.asesor === user?.name
+        )
+  ), [canSeeAll, leadsData, user?.id, user?.name]);
 
   // leadsDataRef — fuente de verdad síncrona del array de leads.
   // Antes, updateLead() usaba `leadsData.find()` capturado en closure, lo que
@@ -650,6 +744,18 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
     }
   };
 
+  // Click en la fila → abre el Discovery del cliente. Para que sea intuitivo,
+  // basta con clickear el avatar (la inicial) o CUALQUIER zona "muerta" de la
+  // fila (sin texto/números/controles). Si el click cae sobre un control
+  // interactivo (botón, input, checkbox, campo editable inline, etc.) NO se
+  // abre el Discovery: ese control conserva su comportamiento (editar, destacar,
+  // reasignar, cambiar etapa…). Las celdas editables ya hacen stopPropagation;
+  // este guard cubre además los botones de la columna de Acciones.
+  const handleRowOpen = (e, lead) => {
+    if (e.target.closest('button, input, select, textarea, a, [role="checkbox"], [contenteditable="true"]')) return;
+    setNotesLead(lead);
+  };
+
   // Switcher unificado del Dynamic Island — al cambiar de tab, cerramos el drawer
   // actual y abrimos el target con el MISMO lead.
   const openDrawerTab = (tab, lead) => {
@@ -878,7 +984,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
     setPinnedIds(prev => { const next = new Set(prev); next.delete(id); return next; });
   };
 
-  const asesores = [...new Set(visibleLeads.map(l => l.asesor))];
+  const asesores = useMemo(() => [...new Set(visibleLeads.map(l => l.asesor))], [visibleLeads]);
   // Listas maestras: únicas, sin vacíos, ordenadas alfabéticamente.
   // Se alimentan de leadsData (todos, no solo visibles — para que un director
   // también vea asesores completos) + customs añadidos desde el modal.
@@ -921,7 +1027,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
 
   const sortedLeads = useMemo(() => {
     let data = visibleLeads.filter(l => {
-      const q = searchQ.toLowerCase();
+      const q = debouncedSearch.toLowerCase();
       // Defensivo: cualquier campo puede venir null/undefined desde Supabase.
       // Antes: l.phone.includes(q) tiraba TypeError si phone era null y rompía
       // el render del CRM completo.
@@ -983,7 +1089,175 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
       if (av > bv) return sortDir === "asc" ? 1 : -1;
       return 0;
     });
-  }, [visibleLeads, sortField, sortDir, filterStage, filterAsesor, searchQ, pinnedIds, pinnedOrder]);
+  }, [visibleLeads, sortField, sortDir, filterStage, filterAsesor, debouncedSearch, pinnedIds, pinnedOrder]);
+
+  // Windowing: reiniciar el límite de render cuando cambia el set de resultados
+  // (búsqueda/filtro/orden), para no quedar pintando miles de filas tras filtrar.
+  useEffect(() => { setListLimit(LIST_PAGE); }, [debouncedSearch, filterStage, filterAsesor, sortField, sortDir]);
+
+  // Windowing: crecer el límite cuando el centinela del fondo entra en viewport.
+  // rootMargin grande → precarga la siguiente página antes de llegar al borde,
+  // así el scroll se siente continuo. Se re-observa si cambia el total.
+  useEffect(() => {
+    const el = listSentinelRef.current;
+    if (!el) return;
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) {
+          setListLimit(n => Math.min(n + LIST_PAGE, sortedLeads.length));
+        }
+      },
+      { rootMargin: "800px 0px" }
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, [sortedLeads.length]);
+
+  // El slice que efectivamente se pinta en la vista lista.
+  const listLeads = useMemo(() => sortedLeads.slice(0, listLimit), [sortedLeads, listLimit]);
+
+  // ── Reasignación ─────────────────────────────────────────────────────────
+  // Dos formas, ambas reusan el MISMO modal + runReassign (que ya escribe en
+  // lote vía fn_bulk_reassign_leads):
+  //   1) Por fila: botón en la columna de Acciones (derecha) → reasigna ese lead.
+  //   2) En grupo: botón "Reasignar varios" en la barra → activa bulkMode, los
+  //      checkboxes aparecen en Acciones (derecha) y una barra reasigna el grupo.
+  const clearSelection = () => setSelectedIds(new Set());
+  const exitBulkMode = () => { setBulkMode(false); clearSelection(); };
+  // Single: pre-selecciona un lead y abre el modal (sin entrar a bulkMode).
+  const openReassignFor = (lead) => {
+    setSelectedIds(new Set([lead.id]));
+    setReassignTarget("");
+    setReassignQ("");
+    setReassignToContactame(true);
+    setReassignOpen(true);
+  };
+  // Grupo: alterna la selección de un lead mientras bulkMode está activo.
+  const toggleSelect = (id) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+  // "Seleccionar todos" opera sobre TODO el set filtrado (sortedLeads), no solo
+  // las filas pintadas por el windowing. Memoizado para no recalcular O(N) en
+  // cada render (hover, etc.).
+  const allFilteredSelected  = useMemo(() => sortedLeads.length > 0 && sortedLeads.every(l => selectedIds.has(l.id)), [sortedLeads, selectedIds]);
+  const toggleSelectAll = () => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (sortedLeads.every(l => next.has(l.id))) sortedLeads.forEach(l => next.delete(l.id));
+      else sortedLeads.forEach(l => next.add(l.id));
+      return next;
+    });
+  };
+  // Abre el modal con el grupo ya seleccionado (desde la barra de bulkMode).
+  const openReassignGroup = () => {
+    if (selectedIds.size === 0) return;
+    setReassignTarget("");
+    setReassignQ("");
+    setReassignToContactame(true);
+    setReassignOpen(true);
+  };
+
+  // Lista de asesores destino para el modal (filtrada por la búsqueda interna).
+  const reassignOptions = useMemo(() => {
+    const q = reassignQ.trim().toLowerCase();
+    return asesoresMaster.filter(a => !q || a.toLowerCase().includes(q));
+  }, [asesoresMaster, reassignQ]);
+
+  // Reasignación MASIVA al asesor destino. A diferencia de la versión previa
+  // (un updateLead por lead → N round-trips + N re-renders, inviable con miles),
+  // hace UNA sola actualización optimista local + UNA sola escritura al backend
+  // vía fn_bulk_reassign_leads. Los triggers de la DB resuelven asesor_id desde
+  // asesor_name y auditan el cambio; la RLS valida permisos. Esto es lo que
+  // mantiene la reasignación fluida incluso reasignando un grupo grande.
+  const runReassign = async () => {
+    const target = reassignTarget.trim();
+    if (!target || selectedIds.size === 0) return;
+    const toContactame = reassignToContactame;
+    const ids = new Set(selectedIds);
+
+    // Solo los que REALMENTE cambian (evita escrituras y echoes de realtime
+    // inútiles). Snapshot desde la ref síncrona, no desde el render.
+    const willChange = (l) => ids.has(l.id)
+      && (l.asesor !== target || (toContactame && l.st !== "Contáctame Ya"));
+    const originals = leadsDataRef.current.filter(willChange);
+    const affectedIds = originals.map(l => l.id);
+    const moved = affectedIds.length;
+
+    // Cerrar modal + salir de selección múltiple + limpiar (ya se decidió).
+    setReassignOpen(false);
+    setReassignTarget("");
+    setReassignQ("");
+    clearSelection();
+    setBulkMode(false);
+
+    if (moved === 0) {
+      showToast("Esos leads ya estaban con ese asesor", "success");
+      return;
+    }
+
+    // ── 1 sola actualización optimista (no N) — clave para la fluidez ──
+    const affectedSet = new Set(affectedIds);
+    const applyLocal = (l) => affectedSet.has(l.id)
+      ? { ...l, asesor: target, st: toContactame ? "Contáctame Ya" : l.st }
+      : l;
+    leadsDataRef.current = leadsDataRef.current.map(applyLocal);
+    setLeadsData(prev => prev.map(applyLocal));
+    showToast(
+      `${moved} lead${moved !== 1 ? "s" : ""} reasignado${moved !== 1 ? "s" : ""} a ${target}${toContactame ? " · Contáctame Ya" : ""}`,
+      "success"
+    );
+
+    // Modo demo / sin persistencia real → solo local.
+    if (user?.id === 'demo-user-local' || user?.isDemo) return;
+
+    // Cambios a persistir, en nombres de columna de la DB. El trigger
+    // leads_sync_asesor_id resuelve asesor_id desde asesor_name en cada UPDATE,
+    // así que con asesor_name (+ stage) alcanza — el mismo efecto que la RPC.
+    const dbChanges = toContactame
+      ? { asesor_name: target, stage: "Contáctame Ya" }
+      : { asesor_name: target };
+
+    // ── Ya en modo offline ───────────────────────────────────────────────
+    // No intentamos la RPC (Supabase no responde): encolamos cada lead en la
+    // MISMA cola que updateLead (overlay en localStorage + stratos_pending_sync).
+    // El auto-recovery de App.jsx la reaplica vía UPDATE en cuanto vuelve la
+    // conexión. La UI ya quedó optimista y el overlay sobrevive al F5: nada se
+    // pierde.
+    if (user?._offline) {
+      affectedIds.forEach(id => updateOfflineLead(id, dbChanges, user));
+      showToast(`Sin conexión — ${moved} reasignado${moved !== 1 ? "s" : ""} local, se sincroniza al volver.`, "success");
+      return;
+    }
+
+    // ── Online: UNA sola escritura vía la RPC bulk (atómica + auditada) ──
+    try {
+      const { error } = await supabase.rpc('fn_bulk_reassign_leads', {
+        p_ids: affectedIds,
+        p_asesor_name: target,
+        p_to_contactame: toContactame,
+      });
+      if (error) throw error;
+      // Éxito: el realtime + el refetch reconcilian el asesor_id canónico.
+    } catch (e) {
+      // SIN rollback — perder la reasignación sería peor que un sync diferido.
+      // Encolamos cada lead (misma cola que updateLead); el auto-recovery
+      // (cada 60 s / al recuperar foco) la reaplica vía UPDATE cuando Supabase
+      // responde, y el trigger leads_sync_asesor_id fija asesor_id. La UI sigue
+      // optimista y consistente. Si un op fallara 5 veces, va al dead-letter
+      // (visible para admins), nunca a un loop silencioso.
+      console.error('[Stratos] reasignación: RPC falló, encolando para sync diferido:', e?.message || e);
+      affectedIds.forEach(id => updateOfflineLead(id, dbChanges, user));
+      if (!navigator.onLine) {
+        showToast(`Sin conexión — ${moved} reasignado${moved !== 1 ? "s" : ""} local, se sincroniza al volver.`, "success");
+      }
+      // Online con error transitorio: la cola + auto-recovery lo resuelven en
+      // segundo plano; el toast de éxito optimista ya mostrado sigue válido.
+    }
+  };
 
   const handleSort = (field) => {
     if (sortField === field) setSortDir(d => d === "asc" ? "desc" : "asc");
@@ -1184,7 +1458,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
   const isAutoPriority = (l) => (l.isNew || l.st === "Zoom Agendado" || l.st === "Reactivar Zoom" || l.st === "Apartó" || l.st === "Seguimiento" || l.hot || l.daysInactive <= 3) && !dismissedIds.has(l.id);
   const rawPriorityLeads = visibleLeads.filter(l => pinnedIds.has(l.id) || isAutoPriority(l));
   // Orden final: modo manual respeta drag & dropdown de posición; los demás aplican criterio
-  const priorityLeads = (() => {
+  const priorityLeadsFull = (() => {
     const arr = [...rawPriorityLeads];
     // recency basada en created_at (Supabase usa UUID como id, no integer
     // autoincremental, así que `b.id - a.id` daría NaN). Cae a 0 si falta.
@@ -1238,6 +1512,17 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
             );
     }
   })();
+
+  // Cap del render de la sección Prioridad. Es una lista de FOCO ("qué trabajar
+  // ahora"), no un volcado de todos los leads activos. isAutoPriority marca como
+  // prioridad cualquier lead reciente/activo, así que con miles de leads esto
+  // renderizaría miles de tarjetas (carrusel + dots) y congelaría el montaje.
+  // Mostramos el top y listo; lo pinneado va primero por el sort, así que nunca
+  // se pierde lo importante. El resto se gestiona desde la Lista.
+  const PRIORITY_RENDER_CAP = 60;
+  const priorityLeads = priorityLeadsFull.length > PRIORITY_RENDER_CAP
+    ? priorityLeadsFull.slice(0, PRIORITY_RENDER_CAP)
+    : priorityLeadsFull;
 
   // ── Drag & drop para reordenar priority cards ──────────────────────────────
   // Usamos refs para los valores críticos del drop (siempre síncronos, sin closure stale)
@@ -3109,6 +3394,29 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
 
           <div style={{ flex: 1 }} />
 
+          {/* Reasignar varios — activa la selección múltiple para reasignar en
+              grupo. Solo desktop + admin/director. */}
+          {!isMobile && canBulkReassign && (
+            <button
+              onClick={() => bulkMode ? exitBulkMode() : setBulkMode(true)}
+              title={bulkMode ? "Salir de selección múltiple" : "Seleccionar varios leads y reasignarlos en grupo"}
+              style={{
+                height: 32, padding: "0 12px", borderRadius: 9, flexShrink: 0,
+                display: "flex", alignItems: "center", gap: 6, cursor: "pointer",
+                fontSize: 11, fontWeight: 600, fontFamily: fontDisp,
+                border: `1px solid ${bulkMode ? T.accent : (isLight ? "rgba(15,23,42,0.12)" : "rgba(255,255,255,0.12)")}`,
+                background: bulkMode ? (isLight ? `${T.accent}18` : `${T.accent}1E`) : "transparent",
+                color: bulkMode
+                  ? (isLight ? `color-mix(in srgb, ${T.accent} 55%, #0B1220 45%)` : T.accent)
+                  : (isLight ? "rgba(15,23,42,0.6)" : "rgba(255,255,255,0.6)"),
+                transition: "all 0.15s",
+              }}
+            >
+              {bulkMode ? <X size={13} strokeWidth={2.4} /> : <Users size={13} strokeWidth={2.2} />}
+              {bulkMode ? "Cancelar" : "Reasignar varios"}
+            </button>
+          )}
+
           {/* Count badge — solo desktop. En mobile el header ya muestra el total. */}
           {!isMobile && (
             <span style={{
@@ -3139,7 +3447,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
               </div>
             )}
 
-            {sortedLeads.map((l, rowIdx) => {
+            {listLeads.map((l, rowIdx) => {
               const sc = l.sc;
               const scoreColor = T.accent;
               const showUrgency = l.daysInactive >= 5;
@@ -3155,21 +3463,31 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
               const pinRow  = T.blue;
               // Verde menta de la marca — del design system (T.accent)
               const mintRow = T.accent;
+              // Fila marcada para reasignación por lote. Tiene prioridad visual
+              // sobre isNew/pinned: cuando marcas algo, debe verse marcado al
+              // instante (el checkbox lleno + banda menta lo hacen inconfundible).
+              const isSelected = canBulkReassign && selectedIds.has(l.id);
 
-              // Fondo base — verde menta sutil tiene prioridad sobre pinneado.
-              const baseBg = isJustNew
+              // Fondo base — selección > isNew > pinneado.
+              const baseBg = isSelected
+                ? (isLight ? `${mintRow}16` : `${mintRow}20`)
+                : isJustNew
                 ? (isLight ? `${mintRow}12` : `${mintRow}1A`)
                 : isPinnedRow
                   ? (isLight ? `${pinRow}0E` : `${pinRow}10`)
                   : "transparent";
-              const hoverBg = isJustNew
+              const hoverBg = isSelected
+                ? (isLight ? `${mintRow}24` : `${mintRow}2E`)
+                : isJustNew
                 ? (isLight ? `${mintRow}1F` : `${mintRow}26`)
                 : isPinnedRow
                   ? (isLight ? `${pinRow}1A` : `${pinRow}1C`)
                   : (isLight ? "rgba(15,23,42,0.022)" : "rgba(255,255,255,0.028)");
 
-              // Banda izquierda + halo — verde menta para isNew, azul para pinneado.
-              const rowShadow = isJustNew
+              // Banda izquierda + halo — menta para selección/isNew, azul para pinneado.
+              const rowShadow = isSelected
+                ? `inset 3px 0 0 ${mintRow}, 0 0 0 1px ${mintRow}45`
+                : isJustNew
                 ? `inset 4px 0 0 ${mintRow}, 0 0 0 1px ${mintRow}55, 0 0 18px ${mintRow}33`
                 : isPinnedRow
                   ? `inset 3px 0 0 ${pinRow}`
@@ -3184,7 +3502,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                   // cambiarlo causaba que las 80+ filas se re-renderizaran.
                   onMouseEnter={e => { e.currentTarget.style.background = hoverBg; }}
                   onMouseLeave={e => { e.currentTarget.style.background = baseBg; }}
-                  onClick={isMobile ? () => setNotesLead(l) : undefined}
+                  onClick={(e) => handleRowOpen(e, l)}
                   style={{
                     display: "grid", gridTemplateColumns: cols,
                     gap: isMobile ? 8 : 14,
@@ -3201,8 +3519,8 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                     // 12 iteraciones × 1.6s ≈ 19.2s — respira durante toda la
                     // ventana de halo (HALO_DURATION_MS = 20s).
                     animation: isPulsing ? "stratosNewLeadPulse 1.6s ease-in-out 0s 12" : undefined,
-                    // En mobile el row entero es tap-to-open
-                    cursor: isMobile ? "pointer" : "default",
+                    // Fila clickeable (zonas vacías + avatar abren Discovery).
+                    cursor: "pointer",
                   }}
                 >
 
@@ -3210,8 +3528,9 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                        nombre, tags y presupuesto (right-aligned con spacer flex).
                        Segunda línea: asesor · proyecto · fecha · campaña. */}
                   <div style={{ display: "flex", alignItems: "center", gap: 11, minWidth: 0 }}>
-                    {/* Avatar — rounded square, initial, accent tint */}
-                    <div style={{
+                    {/* Avatar — rounded square, initial, accent tint.
+                        Click → abre el Discovery (vía el onClick de la fila). */}
+                    <div title="Ver Discovery del cliente" style={{
                       width: 34, height: 34, borderRadius: 10,
                       background: isLight
                         ? `linear-gradient(145deg, ${T.violet}1A 0%, ${T.violet}0D 100%)`
@@ -3761,6 +4080,44 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                         >
                           <User size={13} color={T.txt3} strokeWidth={2} />
                         </button>
+
+                        {/* ⇄ Reasignar — en modo "Reasignar varios" es un
+                            checkbox (selección de grupo); si no, un botón que
+                            reasigna ESE lead. Siempre a la derecha. Solo admin. */}
+                        {canBulkReassign && (bulkMode ? (
+                          <span style={{ width: 30, height: 30, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                            <SelectCheck
+                              checked={selectedIds.has(l.id)}
+                              onToggle={() => toggleSelect(l.id)}
+                              title={selectedIds.has(l.id) ? "Quitar de la selección" : "Seleccionar para reasignar"}
+                              size={20} T={T} isLight={isLight}
+                            />
+                          </span>
+                        ) : (
+                          <button onClick={(e) => { e.stopPropagation(); openReassignFor(l); }}
+                            title="Reasignar a otro asesor"
+                            aria-label="Reasignar a otro asesor"
+                            style={{
+                              width: 30, height: 30, borderRadius: 8,
+                              border: `1px solid ${userBorder}`,
+                              background: userBg,
+                              cursor: "pointer", padding: 0,
+                              display: "flex", alignItems: "center", justifyContent: "center",
+                              transition: "background 0.16s, border-color 0.16s",
+                              flexShrink: 0,
+                            }}
+                            onMouseEnter={e => {
+                              e.currentTarget.style.background  = `${T.accent}${isLight ? "1A" : "1E"}`;
+                              e.currentTarget.style.borderColor = `${T.accent}${isLight ? "55" : "48"}`;
+                            }}
+                            onMouseLeave={e => {
+                              e.currentTarget.style.background  = userBg;
+                              e.currentTarget.style.borderColor = userBorder;
+                            }}
+                          >
+                            <UserCheck size={13} color={T.txt3} strokeWidth={2} />
+                          </button>
+                        ))}
                       </div>
                     );
                   })()}
@@ -3780,6 +4137,15 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                   onMouseEnter={e => { e.currentTarget.style.background = T.glassH; e.currentTarget.style.color = T.txt; }}
                   onMouseLeave={e => { e.currentTarget.style.background = T.glass; e.currentTarget.style.color = T.txt2; }}
                 >Limpiar todos los filtros</button>
+              </div>
+            )}
+
+            {/* Centinela de scroll infinito — al entrar en viewport, el
+                IntersectionObserver crece listLimit en una página más. Solo se
+                monta si quedan filas por mostrar. */}
+            {listLimit < sortedLeads.length && (
+              <div ref={listSentinelRef} style={{ padding: "18px", textAlign: "center", color: T.txt3, fontFamily: font, fontSize: 12, letterSpacing: "0.02em" }}>
+                Cargando más… <span style={{ opacity: 0.7 }}>({listLimit} de {sortedLeads.length})</span>
               </div>
             )}
           </>
@@ -3878,6 +4244,11 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
             {kanbanStages.map(stage => {
               const stLeads = sortedLeads.filter(l => l.st === stage);
               const stVal = stLeads.reduce((s, l) => s + (l.presupuesto || 0), 0);
+              // Render acotado: una columna con miles de tarjetas congela el
+              // montaje. Pintamos las primeras KANBAN_COL_CAP y un pie "+N más".
+              // El conteo y el monto del encabezado siguen siendo del set completo.
+              const stLeadsCapped = stLeads.length > KANBAN_COL_CAP ? stLeads.slice(0, KANBAN_COL_CAP) : stLeads;
+              const stOverflow = stLeads.length - stLeadsCapped.length;
               const c = stgC[stage] || T.txt3;
               const isDragTarget = dragOverStage === stage;
               // Color de texto legible en blanco: mezcla hacia el slate profundo
@@ -3919,7 +4290,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                   </div>
 
                   <div style={{ display: "flex", flexDirection: "column", gap: 7, minHeight: 60, borderRadius: 11, padding: isDragTarget ? "6px" : "0", background: isDragTarget ? "rgba(255,255,255,0.022)" : "transparent", transition: "all 0.15s" }}>
-                    {stLeads.map(l => {
+                    {stLeadsCapped.map(l => {
                       const sc = l.sc;
                       const isDragging = dragLeadId === l.id;
                       return (
@@ -3927,7 +4298,9 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                           draggable
                           onDragStart={e => handleDragStart(e, l.id)}
                           onDragEnd={handleDragEnd}
-                          style={{ borderRadius: 13, background: "rgba(255,255,255,0.032)", border: `1px solid ${T.border}`, overflow: "hidden", transition: "all 0.2s", cursor: "grab", opacity: isDragging ? 0.4 : 1 }}
+                          // content-visibility: el navegador omite layout/paint de
+                          // tarjetas fuera de viewport en columnas largas (fluidez).
+                          style={{ borderRadius: 13, background: "rgba(255,255,255,0.032)", border: `1px solid ${T.border}`, overflow: "hidden", transition: "all 0.2s", cursor: "grab", opacity: isDragging ? 0.4 : 1, contentVisibility: "auto", containIntrinsicSize: "0 168px" }}
                           onMouseEnter={e => { if (!isDragging) { e.currentTarget.style.background = "rgba(255,255,255,0.052)"; e.currentTarget.style.borderColor = T.borderH; e.currentTarget.style.transform = "translateY(-1px)"; e.currentTarget.style.boxShadow = "0 6px 24px rgba(0,0,0,0.28)"; } }}
                           onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.032)"; e.currentTarget.style.borderColor = T.border; e.currentTarget.style.transform = "none"; e.currentTarget.style.boxShadow = "none"; }}
                         >
@@ -3995,6 +4368,11 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                         </div>
                       );
                     })}
+                    {stOverflow > 0 && (
+                      <div style={{ padding: "9px 10px", textAlign: "center", fontSize: 10, fontWeight: 600, color: T.txt3, fontFamily: font, borderRadius: 9, border: `1px dashed ${T.border}`, background: isLight ? "rgba(15,23,42,0.02)" : "rgba(255,255,255,0.02)" }}>
+                        +{stOverflow} más · usa Lista o filtra para verlos
+                      </div>
+                    )}
                     {stLeads.length === 0 && (
                       <div style={{ padding: "28px 16px", borderRadius: 11, border: `1px dashed ${isDragTarget ? `${c}50` : T.border}`, textAlign: "center", background: isDragTarget ? `${c}06` : "transparent", transition: "all 0.15s" }}>
                         <p style={{ fontSize: 10.5, color: isDragTarget ? c : T.txt3 }}>{isDragTarget ? "Soltar aquí" : "Sin clientes"}</p>
@@ -4726,6 +5104,239 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
         >
           <Plus size={24} strokeWidth={2.4} />
         </button>,
+        document.body
+      )}
+
+      {/* ── Barra de "Reasignar varios" ──────────────────────────────────────
+            Visible mientras bulkMode está activo. Centro-abajo, sobre el
+            contenido. Permite seleccionar todos, reasignar el grupo o salir. */}
+      {canBulkReassign && bulkMode && createPortal(
+        <div style={{
+          position: "fixed", left: "50%",
+          bottom: isMobile ? "calc(env(safe-area-inset-bottom, 0px) + 74px)" : 26,
+          transform: "translateX(-50%)", zIndex: 600,
+          display: "flex", alignItems: "center", gap: 10,
+          padding: "9px 10px 9px 14px", borderRadius: 14, maxWidth: "94vw",
+          background: isLight ? "rgba(255,255,255,0.94)" : "rgba(17,19,24,0.94)",
+          border: `1px solid ${isLight ? "rgba(15,23,42,0.10)" : "rgba(255,255,255,0.12)"}`,
+          boxShadow: isLight
+            ? "0 10px 30px rgba(15,23,42,0.16), 0 28px 70px rgba(15,23,42,0.14)"
+            : "0 14px 44px rgba(0,0,0,0.62), 0 0 0 1px rgba(255,255,255,0.04)",
+          backdropFilter: "blur(22px) saturate(160%)", WebkitBackdropFilter: "blur(22px) saturate(160%)",
+          animation: "fadeIn 0.18s ease both",
+        }}>
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 9, minWidth: 0 }}>
+            <span style={{
+              minWidth: 24, height: 24, padding: "0 7px", borderRadius: 99,
+              background: selectedIds.size > 0 ? T.accent : (isLight ? "rgba(15,23,42,0.12)" : "rgba(255,255,255,0.14)"),
+              color: selectedIds.size > 0 ? "#0B1220" : (isLight ? "rgba(15,23,42,0.5)" : "rgba(255,255,255,0.5)"),
+              display: "inline-flex", alignItems: "center", justifyContent: "center",
+              fontSize: 12.5, fontWeight: 800, fontFamily: fontDisp,
+            }}>{selectedIds.size}</span>
+            <span style={{ fontSize: 12.5, fontWeight: 600, color: isLight ? T.txt : "#fff", fontFamily: font, whiteSpace: "nowrap" }}>
+              {selectedIds.size === 0 ? "Elegí leads" : `seleccionado${selectedIds.size !== 1 ? "s" : ""}`}
+            </span>
+          </span>
+          <button onClick={toggleSelectAll} title="Seleccionar/quitar todos los resultados" style={{
+            height: 32, padding: "0 10px", borderRadius: 9, background: "transparent",
+            border: `1px solid ${isLight ? "rgba(15,23,42,0.12)" : "rgba(255,255,255,0.14)"}`,
+            color: isLight ? "rgba(15,23,42,0.6)" : "rgba(255,255,255,0.62)",
+            fontSize: 11.5, fontWeight: 600, fontFamily: font, cursor: "pointer", whiteSpace: "nowrap",
+          }}>{allFilteredSelected ? "Quitar todos" : "Todos"}</button>
+          <span style={{ width: 1, height: 22, background: isLight ? "rgba(15,23,42,0.10)" : "rgba(255,255,255,0.12)" }} />
+          <button
+            onClick={openReassignGroup}
+            disabled={selectedIds.size === 0}
+            style={{
+              display: "inline-flex", alignItems: "center", gap: 7,
+              height: 36, padding: "0 16px", borderRadius: 10, border: "none",
+              background: selectedIds.size > 0
+                ? `linear-gradient(135deg, ${T.accent}, color-mix(in srgb, ${T.accent} 70%, #0B1220 30%))`
+                : (isLight ? "rgba(15,23,42,0.1)" : "rgba(255,255,255,0.1)"),
+              color: selectedIds.size > 0 ? "#0B1220" : (isLight ? "rgba(15,23,42,0.4)" : "rgba(255,255,255,0.4)"),
+              fontSize: 13, fontWeight: 700, fontFamily: fontDisp,
+              cursor: selectedIds.size > 0 ? "pointer" : "not-allowed",
+              whiteSpace: "nowrap", boxShadow: selectedIds.size > 0 ? `0 4px 14px ${T.accent}40` : "none",
+              transition: "all 0.14s",
+            }}
+          >
+            <UserCheck size={15} strokeWidth={2.4} /> Reasignar{selectedIds.size > 0 ? ` ${selectedIds.size}` : ""}
+          </button>
+          <button onClick={exitBulkMode} title="Cancelar" style={{
+            height: 36, padding: "0 12px", borderRadius: 10, background: "transparent",
+            border: `1px solid ${isLight ? "rgba(15,23,42,0.12)" : "rgba(255,255,255,0.14)"}`,
+            color: isLight ? "rgba(15,23,42,0.55)" : "rgba(255,255,255,0.6)",
+            fontSize: 12.5, fontWeight: 600, fontFamily: font, cursor: "pointer", whiteSpace: "nowrap",
+          }}>Cancelar</button>
+        </div>,
+        document.body
+      )}
+
+      {/* ── Modal: reasignar leads seleccionados a un asesor ─────────────────── */}
+      {reassignOpen && createPortal(
+        <>
+          <div onClick={() => setReassignOpen(false)} style={{
+            position: "fixed", inset: 0, zIndex: 700,
+            background: isLight ? "rgba(15,23,42,0.22)" : "rgba(2,5,12,0.78)",
+            backdropFilter: "blur(10px)", WebkitBackdropFilter: "blur(10px)",
+            animation: "fadeIn 0.2s ease both",
+          }} />
+          <div style={isMobile ? {
+            position: "fixed", inset: 0, zIndex: 701,
+            width: "100vw", height: "100dvh", display: "flex", flexDirection: "column",
+            background: isLight ? "#FFFFFF" : "#111318",
+            animation: "modalInMobile 0.24s cubic-bezier(0.16,1,0.3,1) both",
+            paddingBottom: "env(safe-area-inset-bottom, 0px)",
+          } : {
+            position: "fixed", top: "50%", left: "50%", transform: "translate(-50%, -50%)",
+            zIndex: 701, width: "min(460px, 96vw)", maxHeight: "88vh",
+            display: "flex", flexDirection: "column",
+            background: isLight ? "#FFFFFF" : "#111318",
+            border: `1px solid ${isLight ? "rgba(15,23,42,0.08)" : T.borderH}`,
+            borderRadius: 18, overflow: "hidden",
+            boxShadow: isLight
+              ? "0 4px 12px rgba(15,23,42,0.08), 0 28px 80px rgba(15,23,42,0.12)"
+              : "0 52px 100px rgba(0,0,0,0.72), 0 0 0 1px rgba(255,255,255,0.04)",
+            animation: "modalIn 0.26s cubic-bezier(0.16,1,0.3,1) both",
+          }}>
+            <style>{`@keyframes modalInMobile{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}`}</style>
+
+            {/* Header */}
+            <div style={{
+              padding: "14px 16px", flexShrink: 0,
+              borderBottom: `1px solid ${isLight ? "rgba(15,23,42,0.06)" : T.border}`,
+              display: "flex", alignItems: "center", justifyContent: "space-between",
+            }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
+                <div style={{
+                  width: 28, height: 28, borderRadius: 9,
+                  background: isLight ? `${T.accent}14` : `${T.accent}12`,
+                  border: `1px solid ${isLight ? `${T.accent}40` : T.accentB}`,
+                  display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+                }}>
+                  <UserCheck size={14} color={isLight ? (T.accentDark || T.accent) : T.accent} strokeWidth={2.4} />
+                </div>
+                <h3 style={{ fontSize: 15.5, fontWeight: 700, color: isLight ? T.txt : "#FFFFFF", fontFamily: fontDisp, letterSpacing: "-0.025em", margin: 0 }}>
+                  Reasignar {selectedIds.size} lead{selectedIds.size !== 1 ? "s" : ""}
+                </h3>
+              </div>
+              <button onClick={() => setReassignOpen(false)} style={{ background: "none", border: "none", cursor: "pointer", color: T.txt3, display: "flex", padding: 4 }}>
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Body */}
+            <div style={{ padding: "14px 16px 4px", overflowY: "auto", flex: 1 }}>
+              <p style={{ margin: "0 0 12px", fontSize: 12.5, lineHeight: 1.5, color: T.txt3, fontFamily: font }}>
+                Elegí el asesor que recibirá {selectedIds.size === 1 ? "el lead" : "los leads"}.{" "}
+                {reassignToContactame
+                  ? <>Aparecerán al inicio de su pipeline en <strong style={{ color: isLight ? T.txt : "#fff", fontWeight: 700 }}>Contáctame Ya</strong>.</>
+                  : "Conservarán su etapa actual."}
+              </p>
+
+              {/* Búsqueda de asesor */}
+              <div style={{ position: "relative", marginBottom: 10 }}>
+                <Search size={13} color={isLight ? "rgba(15,23,42,0.32)" : "rgba(255,255,255,0.3)"} style={{ position: "absolute", left: 11, top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }} />
+                <input
+                  autoFocus
+                  value={reassignQ}
+                  onChange={e => setReassignQ(e.target.value)}
+                  placeholder="Buscar asesor…"
+                  style={{
+                    width: "100%", height: 38, paddingLeft: 32, paddingRight: 12,
+                    borderRadius: 10, boxSizing: "border-box",
+                    background: isLight ? "rgba(255,255,255,0.7)" : "rgba(255,255,255,0.042)",
+                    border: `1px solid ${isLight ? "rgba(15,23,42,0.1)" : "rgba(255,255,255,0.1)"}`,
+                    fontSize: 13, color: isLight ? T.txt : "#fff", outline: "none", fontFamily: font,
+                  }}
+                />
+              </div>
+
+              {/* Lista de asesores */}
+              <div style={{ display: "flex", flexDirection: "column", gap: 4, maxHeight: isMobile ? "none" : 280, overflowY: "auto" }}>
+                {reassignOptions.length === 0 && (
+                  <div style={{ padding: "14px 8px", fontSize: 12.5, color: T.txt3, fontFamily: font, textAlign: "center" }}>
+                    Sin asesores que coincidan.
+                  </div>
+                )}
+                {reassignOptions.map(name => {
+                  const picked = reassignTarget === name;
+                  const c = hashAsesorColor(name);
+                  return (
+                    <button key={name} type="button" onClick={() => setReassignTarget(name)}
+                      style={{
+                        display: "flex", alignItems: "center", gap: 10, width: "100%",
+                        padding: "8px 10px", borderRadius: 10, cursor: "pointer", textAlign: "left",
+                        background: picked ? (isLight ? `${T.accent}14` : `${T.accent}1C`) : "transparent",
+                        border: `1px solid ${picked ? `${T.accent}55` : "transparent"}`,
+                        transition: "background 0.12s, border-color 0.12s",
+                      }}
+                      onMouseEnter={e => { if (!picked) e.currentTarget.style.background = isLight ? "rgba(15,23,42,0.04)" : "rgba(255,255,255,0.04)"; }}
+                      onMouseLeave={e => { if (!picked) e.currentTarget.style.background = "transparent"; }}
+                    >
+                      <span style={{
+                        width: 28, height: 28, borderRadius: "50%", background: c, color: "#fff",
+                        display: "inline-flex", alignItems: "center", justifyContent: "center",
+                        fontSize: 11.5, fontWeight: 800, fontFamily: fontDisp, flexShrink: 0,
+                      }}>{asesorInitials(name)}</span>
+                      <span style={{ flex: 1, minWidth: 0, fontSize: 13.5, fontWeight: 600, color: isLight ? T.txt : "#fff", fontFamily: font, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{name}</span>
+                      {picked && <Check size={16} strokeWidth={2.6} color={T.accent} style={{ flexShrink: 0 }} />}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Toggle: mover a Contáctame Ya. Es un <div> (no <button>) porque
+                  contiene el botón del checkbox y <button> no puede anidar
+                  <button> (HTML inválido → hydration error). */}
+              <div role="button" tabIndex={0} onClick={() => setReassignToContactame(v => !v)}
+                style={{
+                  display: "flex", alignItems: "center", gap: 10, width: "100%", boxSizing: "border-box",
+                  margin: "12px 0 6px", padding: "10px 12px", borderRadius: 10, cursor: "pointer", textAlign: "left",
+                  background: isLight ? "rgba(15,23,42,0.03)" : "rgba(255,255,255,0.03)",
+                  border: `1px solid ${isLight ? "rgba(15,23,42,0.08)" : "rgba(255,255,255,0.08)"}`,
+                }}>
+                <SelectCheck checked={reassignToContactame} onToggle={() => setReassignToContactame(v => !v)} size={18} title="Mover a Contáctame Ya" T={T} isLight={isLight} />
+                <span style={{ flex: 1, minWidth: 0 }}>
+                  <span style={{ display: "block", fontSize: 12.5, fontWeight: 700, color: isLight ? T.txt : "#fff", fontFamily: font }}>Mover a Contáctame Ya</span>
+                  <span style={{ display: "block", fontSize: 11, color: T.txt3, fontFamily: font, lineHeight: 1.4, marginTop: 1 }}>Reinicia el lead al inicio del pipeline del nuevo asesor.</span>
+                </span>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div style={{
+              padding: "12px 16px", flexShrink: 0,
+              borderTop: `1px solid ${isLight ? "rgba(15,23,42,0.06)" : T.border}`,
+              display: "flex", gap: 10, justifyContent: "flex-end",
+            }}>
+              <button onClick={() => setReassignOpen(false)} style={{
+                height: 38, padding: "0 16px", borderRadius: 10, background: "transparent",
+                border: `1px solid ${isLight ? "rgba(15,23,42,0.12)" : "rgba(255,255,255,0.14)"}`,
+                color: isLight ? "rgba(15,23,42,0.6)" : "rgba(255,255,255,0.62)",
+                fontSize: 13, fontWeight: 600, fontFamily: font, cursor: "pointer",
+              }}>Cancelar</button>
+              <button
+                onClick={runReassign}
+                disabled={!reassignTarget}
+                style={{
+                  display: "inline-flex", alignItems: "center", gap: 7,
+                  height: 38, padding: "0 18px", borderRadius: 10, border: "none",
+                  background: reassignTarget
+                    ? `linear-gradient(135deg, ${T.accent}, color-mix(in srgb, ${T.accent} 70%, #0B1220 30%))`
+                    : (isLight ? "rgba(15,23,42,0.1)" : "rgba(255,255,255,0.1)"),
+                  color: reassignTarget ? "#0B1220" : (isLight ? "rgba(15,23,42,0.4)" : "rgba(255,255,255,0.4)"),
+                  fontSize: 13, fontWeight: 700, fontFamily: fontDisp,
+                  cursor: reassignTarget ? "pointer" : "not-allowed",
+                  boxShadow: reassignTarget ? `0 4px 14px ${T.accent}40` : "none",
+                  transition: "all 0.14s",
+                }}>
+                <UserCheck size={15} strokeWidth={2.4} />
+                Reasignar {selectedIds.size} lead{selectedIds.size !== 1 ? "s" : ""}
+              </button>
+            </div>
+          </div>
+        </>,
         document.body
       )}
 
