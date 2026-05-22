@@ -858,7 +858,7 @@ export default function App() {
             fontSize: 12, letterSpacing: "0.08em", textTransform: "uppercase",
             color: T.txt2, fontWeight: 500,
           }}>
-            Stratos AI
+            {clientConfig?.brand?.appWordmark || "Stratos AI"}
           </div>
           <style>{`@keyframes stratosSpin { to { transform: rotate(360deg); } }`}</style>
         </div>
@@ -1113,7 +1113,9 @@ export default function App() {
               {/* LEFT */}
               <div className="stratos-header-left" style={{ display:"flex", alignItems:"center", gap:10 }}>
                 <p style={{ margin:0, fontSize:14, fontFamily:fontDisp, letterSpacing:"-0.030em", fontWeight:600, color: isLight ? T.txt : "#FFFFFF", lineHeight:1, whiteSpace:"nowrap" }}>
-                  Stratos<span style={{ marginLeft:3, fontWeight:600, color: isLight ? "rgba(15,23,42,0.38)" : "rgba(255,255,255,0.30)", letterSpacing:"0.01em" }}>AI</span>
+                  {clientConfig?.brand?.appWordmark
+                    ? clientConfig.brand.appWordmark
+                    : <>Stratos<span style={{ marginLeft:3, fontWeight:600, color: isLight ? "rgba(15,23,42,0.38)" : "rgba(255,255,255,0.30)", letterSpacing:"0.01em" }}>AI</span></>}
                 </p>
                 <IAOSIsland leadsData={leadsData} isLight={isLight} idx={iaosIdx} brandLabel={orgBrand} />
               </div>
