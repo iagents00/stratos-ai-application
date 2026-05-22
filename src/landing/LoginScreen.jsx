@@ -8,6 +8,7 @@ import { useState, useEffect } from "react";
 import { X, CheckCircle2 } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import { pingSupabase } from "../lib/offline-mode";
+import { useClient } from "../hooks/useClient";
 
 const font  = `-apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif`;
 const fontD = `-apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif`;
@@ -53,6 +54,23 @@ export default function LoginScreen({ onLogin }) {
   // Si viene de landing con ?register=true → abrir tab de registro directamente
   const initialMode = new URLSearchParams(window.location.search).get("register") === "true"
     ? "register" : "login";
+
+  // ── Marca por cliente (white-label) ───────────────────────────────
+  // El wordmark sale del config del cliente activo. Default EXACTO a Stratos
+  // para que Duke quede pixel-idéntico: name "Stratos AI" + logoText "Stratos"
+  // → "Stratos" en bold + "AI" en ligero. Para clientes cuyo name == logoText
+  // (TGenius, Grupo 28) no hay sufijo → se muestra solo el nombre.
+  const { config, clientId } = useClient();
+  const brandName   = config?.name || "Stratos AI";
+  const brandWord   = config?.brand?.logoText || "Stratos";
+  const brandSuffix = brandName.startsWith(brandWord)
+    ? brandName.slice(brandWord.length).trim()
+    : "";
+  const isDuke   = clientId === "duke";
+  // El WhatsApp de "solicitar acceso" cae al de Stratos (operador del white-label)
+  // salvo que el cliente declare el suyo; el texto siempre nombra a la marca activa.
+  const waNumber = config?.support?.whatsapp || "17479779711";
+  const waHref   = `https://wa.me/${waNumber}?text=${encodeURIComponent(`Hola, quiero solicitar acceso a ${brandName}`)}`;
 
   useEffect(() => { seedDemo(); }, []);
 
@@ -195,7 +213,7 @@ export default function LoginScreen({ onLogin }) {
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 56 }}>
             <StratosAtom size={28} color={P.accent} />
             <span style={{ fontSize: 18, fontWeight: 700, color: "#FFFFFF", fontFamily: fontD, letterSpacing: "-0.02em" }}>
-              Stratos <span style={{ fontWeight: 300, color: "rgba(255,255,255,0.5)" }}>AI</span>
+              {brandWord}{brandSuffix ? <>{" "}<span style={{ fontWeight: 300, color: "rgba(255,255,255,0.5)" }}>{brandSuffix}</span></> : null}
             </span>
           </div>
 
@@ -393,7 +411,7 @@ export default function LoginScreen({ onLogin }) {
                     <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.05)" }} />
                   </div>
                   <a
-                    href="https://wa.me/17479779711?text=Hola%2C%20quiero%20solicitar%20acceso%20a%20Stratos%20AI"
+                    href={waHref}
                     target="_blank"
                     rel="noopener noreferrer"
                     style={{
@@ -488,8 +506,8 @@ export default function LoginScreen({ onLogin }) {
                     }}>← Volver al inicio de sesión</button>
                   )}
 
-                  {/* ─ Demo ─ */}
-                  {mode === "login" && (
+                  {/* ─ Demo (solo Stratos/Duke — clientes white-label no la ven) ─ */}
+                  {mode === "login" && isDuke && (
                     <>
                       <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
                         <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.05)" }} />
