@@ -901,6 +901,20 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
   // y evitando rate-limits.
   const prefsSaveTimerRef = useRef(null);
   const prefsHydratedRef  = useRef(false);
+  // Firma estable de los campos de prioridad que el bot de Telegram controla.
+  // Sirve para distinguir el "eco" de nuestra propia escritura (a ignorar) de un
+  // cambio externo real (a aplicar) en la suscripción realtime de más abajo.
+  const lastWrittenPrioSigRef = useRef(null);
+  const prioritySig = (raw) => {
+    const p = normalizePrefs(raw);
+    return JSON.stringify({
+      pinned:       [...p.pinned].sort(),
+      dismissed:    [...p.dismissed].sort(),
+      pinnedOrder:  p.pinnedOrder,
+      order:        p.order,
+      prioritySort: p.prioritySort,
+    });
+  };
   useEffect(() => {
     if (!user?.id) return;
     // Skip el primer render para no escribir prefs inmediatamente al hidratar
@@ -936,6 +950,9 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
     // Debounce 600ms — el último cambio gana
     clearTimeout(prefsSaveTimerRef.current);
     prefsSaveTimerRef.current = setTimeout(() => {
+      // Registrar la firma que estamos a punto de escribir, para que la
+      // suscripción realtime ignore el eco de nuestra propia escritura.
+      lastWrittenPrioSigRef.current = prioritySig(payload);
       supabase
         .from('profiles')
         .update({ crm_prefs: payload })
@@ -953,6 +970,44 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
   }, [user?.id, prefsKey, pinnedIds, pinnedOrder, dismissedIds, priorityOrder, prioritySort,
       customAsesores, customProyectos, customCampanas,
       sortField, sortDir, filterStage, filterAsesor, viewMode]);
+
+  // ── Sincronización realtime de crm_prefs (gated por cliente) ───────────────
+  // Sin esto, el front re-guarda su snapshot en memoria y pisa el reorden/pin
+  // que el bot de Telegram escribe en profiles.crm_prefs (last-writer-wins).
+  // Con la suscripción, cuando el bot reordena desde Telegram el CRM abierto lo
+  // refleja en vivo. Solo mergeamos los campos de prioridad (el bot no toca
+  // filtros/vista/customs). Default OFF; Duke lo prende en su config.
+  const prefsRealtimeEnabled = clientConfig?.crm?.prefsRealtimeSync === true;
+  useEffect(() => {
+    if (!prefsRealtimeEnabled || !user?.id) return;
+    const isDemoUser = user.id === 'demo-user-local' || user.isDemo;
+    if (isDemoUser) return;
+
+    const ch = supabase
+      .channel(`crm_prefs_${user.id}`)
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'profiles', filter: `id=eq.${user.id}` },
+        (payload) => {
+          const incoming = payload?.new?.crm_prefs;
+          if (!incoming || typeof incoming !== 'object') return;
+          // Ignorar el eco de nuestra propia escritura
+          if (prioritySig(incoming) === lastWrittenPrioSigRef.current) return;
+          // Cambio externo (bot de Telegram) → reflejarlo en vivo
+          lastWrittenPrioSigRef.current = prioritySig(incoming);
+          const p = normalizePrefs(incoming);
+          setPinnedIds(new Set(p.pinned));
+          setPinnedOrder(p.pinnedOrder);
+          setDismissedIds(new Set(p.dismissed));
+          setPriorityOrder(p.order);
+          setPrioritySort(p.prioritySort);
+        }
+      )
+      .subscribe();
+
+    return () => { supabase.removeChannel(ch); };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [prefsRealtimeEnabled, user?.id]);
 
   const togglePin = (id) => {
     setPinnedIds(prev => {
