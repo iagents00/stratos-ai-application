@@ -28,6 +28,11 @@ export const DEFAULT_CLIENT_CONFIG = {
   // Branding visual (overrides opcionales del design system)
   brand: {
     logoText:              "Stratos",
+    // Wordmark del HEADER de la app (esquina superior izquierda). Opt-in:
+    // si es null, el header renderiza el legacy "Stratos" + "AI" → Duke y
+    // Grupo 28 quedan idénticos. Un cliente white-label lo setea con su nombre
+    // para que el header muestre SU marca (ej: TGenius → "TGenius").
+    appWordmark:           null,
     accent:                null,   // null → usa el accent del design system
     accentLight:           null,
     favicon:               "/favicon.ico",

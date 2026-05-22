@@ -39,6 +39,9 @@ const tgeniusConfig = {
 
   brand: {
     logoText:                "TGenius",
+    // Header de la app: muestra "TGenius" en vez del legacy "Stratos AI".
+    // Solo afecta a TGenius — Duke y Grupo 28 no declaran este campo.
+    appWordmark:             "TGenius",
     accent:                  "#6D28D9",   // violeta de marca (ajustable por TGenius)
     accentLight:             "#A78BFA",
     favicon:                 "/favicon.ico",
