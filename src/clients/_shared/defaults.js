@@ -18,9 +18,21 @@ export const DEFAULT_CLIENT_CONFIG = {
   legalName: "Stratos Capital Group",
   tagline:   "Plataforma inteligente de gestión inmobiliaria",
 
+  // Dominios propios que resuelven a este cliente (white-label con su dominio).
+  // El resolver (src/clients/index.js) los matchea por hostname EXACTO con
+  // máxima prioridad. Útil para que un cliente viva en su dominio propio
+  // (ej: app.tgenius.com) sin depender de heurísticas de subdominio ni de un
+  // path /<cliente>. Default vacío → el cliente se resuelve por path/subdominio.
+  domains: [],
+
   // Branding visual (overrides opcionales del design system)
   brand: {
     logoText:              "Stratos",
+    // Wordmark del HEADER de la app (esquina superior izquierda). Opt-in:
+    // si es null, el header renderiza el legacy "Stratos" + "AI" → Duke y
+    // Grupo 28 quedan idénticos. Un cliente white-label lo setea con su nombre
+    // para que el header muestre SU marca (ej: TGenius → "TGenius").
+    appWordmark:           null,
     accent:                null,   // null → usa el accent del design system
     accentLight:           null,
     favicon:               "/favicon.ico",

@@ -37,9 +37,21 @@ const CLIENT_CONFIGS = {
  * @returns {string} clientId
  */
 export function matchClientFromLocation(location = window.location) {
-  const hostname = location.hostname || "";
+  const hostname = (location.hostname || "").toLowerCase();
   const pathname = location.pathname || "";
   const params   = new URLSearchParams(location.search || "");
+
+  // 0. Dominio propio declarado (white-label con su propio dominio).
+  //    Máxima prioridad: si un cliente lista este hostname EXACTO en su config
+  //    (campo `domains`), gana. Esto hace que app.tgenius.com / tgenius.com
+  //    resuelvan a "tgenius" en cuanto se apunte el DNS, sin depender de la
+  //    heurística de subdominio (que no cubre app.* ni www.*).
+  for (const [id, cfg] of Object.entries(CLIENT_CONFIGS)) {
+    const domains = cfg.domains;
+    if (Array.isArray(domains) && domains.some(d => String(d).toLowerCase() === hostname)) {
+      return id;
+    }
+  }
 
   // 1. Subdomain (fase 2 — cuando configuremos DNS)
   for (const id of Object.keys(CLIENT_CONFIGS)) {
