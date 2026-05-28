@@ -235,7 +235,7 @@ function NotPairedView({ onConnect, busy, T = P }) {
           "Te abrimos Telegram. Solo dale START en el bot — listo."
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-            <span>1. Busca en Telegram: <strong>@Strato_sasistente_crm_bot</strong> y dale <strong>/start</strong></span>
+            <span>1. Busca en Telegram: <strong>@Strato_sasistente_crm_bot</strong> y presiona <strong>/start</strong></span>
             <span>2. Da clic en "Generar código" aquí abajo.</span>
             <span>3. Mándale el código al bot.</span>
           </div>
