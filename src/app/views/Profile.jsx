@@ -230,11 +230,17 @@ function ConnectTelegramPanel({ T = P, isLight = false }) {
 function NotPairedView({ onConnect, busy, T = P }) {
   return (
     <div>
-      <p style={{ margin: "0 0 16px", fontSize: 13, color: T.txt2, lineHeight: 1.55 }}>
-        {BOT_USERNAME
-          ? "Te abrimos Telegram. Solo dale START en el bot — listo."
-          : "Genera tu código y mándalo al bot de Telegram para conectarte."}
-      </p>
+      <div style={{ margin: "0 0 16px", fontSize: 13, color: T.txt2, lineHeight: 1.55 }}>
+        {BOT_USERNAME ? (
+          "Te abrimos Telegram. Solo dale START en el bot — listo."
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+            <span>1. Busca en Telegram: <strong>@Strato_sasistente_crm_bot</strong> y dale <strong>/start</strong></span>
+            <span>2. Da clic en "Generar código" aquí abajo.</span>
+            <span>3. Mándale el código al bot.</span>
+          </div>
+        )}
+      </div>
 
       <button
         type="button"
@@ -286,7 +292,7 @@ function ManualCodeView({ code, T = P, isLight = false }) {
       </div>
 
       <p style={{ margin: "0 0 8px", fontSize: 12.5, color: T.txt2 }}>
-        Abre el bot en Telegram y envía:
+        Abre el bot <strong>@Strato_sasistente_crm_bot</strong> en Telegram y envía:
       </p>
       <code style={{
         display: "block", padding: "10px 12px",
