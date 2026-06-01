@@ -119,7 +119,7 @@ function useDebounced(value, ms = 200) {
 
 function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () => {}, autoOpenPriority1 = 0, onAutoOpenHandled, softDeleteLead }) {
   const { user } = useAuth();
-  const { config: clientConfig } = useClient();
+  const { config: clientConfig, clientId } = useClient();
   const { get: getScheduledCall } = useScheduledCalls();
   const isMobile = useIsMobile();
   const isLight = theme === "light";
@@ -325,6 +325,38 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
   };
   const cancelInlineAction = () => setEditingActionId(null);
 
+  const [zoomSchedulingLead, setZoomSchedulingLead] = useState(null);
+
+  const cancelZoomScheduling = () => {
+    if (zoomSchedulingLead) {
+      const { lead, originalStage } = zoomSchedulingLead;
+      const revertedLead = { ...lead, st: originalStage };
+      leadsDataRef.current = leadsDataRef.current.map(l => l.id === revertedLead.id ? revertedLead : l);
+      setLeadsData(prev => prev.map(l => l.id === revertedLead.id ? revertedLead : l));
+      if (selectedLead?.id === revertedLead.id) setSelectedLead(revertedLead);
+      if (notesLead?.id === revertedLead.id) setNotesLead(revertedLead);
+      if (analyzingLead?.id === revertedLead.id) setAnalyzingLead(revertedLead);
+    }
+    setZoomSchedulingLead(null);
+  };
+
+  const confirmZoomScheduling = (dateTimeString, actionText) => {
+    if (!zoomSchedulingLead) return;
+    const { lead } = zoomSchedulingLead;
+    const formattedDateTime = dateTimeString.replace("T", " ");
+
+    const finalizedLead = {
+      ...lead,
+      st: "Zoom Agendado",
+      nextAction: actionText || "Zoom",
+      nextActionDate: formattedDateTime,
+      _zoomConfirmed: true,
+    };
+
+    updateLead(finalizedLead);
+    setZoomSchedulingLead(null);
+  };
+
 
   // Reset dropdowns cuando se cierra el modal
   useEffect(() => {
@@ -489,12 +521,25 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
   // opts.skipAutoLog = true → desactiva el auto-log (útil para imports masivos
   // o ediciones que ya traen su propio actionHistory explícito).
   const updateLead = (updated, { skipAutoLog = false } = {}) => {
+    // Interceptor para Zoom Agendado obligatorio en Stratos (aplica a todos los asesores)
+    const prev = leadsDataRef.current.find(l => l.id === updated.id);
+    const isTargetClient = true; // Aplica para todo Stratos
+    const isChangingToZoom = updated.st === "Zoom Agendado" && prev?.st !== "Zoom Agendado";
+
+    if (isTargetClient && isChangingToZoom && !updated._zoomConfirmed) {
+      console.log("[ZoomInterceptor] Cambiando a Zoom Agendado. Bloqueando y abriendo modal...");
+      setZoomSchedulingLead({
+        lead: updated,
+        originalStage: prev?.st || "Contáctame Ya",
+      });
+      return;
+    }
+
     if (prioritySort === "manual" && priorityOrder.length === 0) {
       const snap = priorityLeadsRef.current.map(l => l.id);
       if (snap.length > 0) setPriorityOrder(snap);
     }
-    // Lectura del prev desde la ref (siempre síncrona y actual).
-    const prev = leadsDataRef.current.find(l => l.id === updated.id);
+    // Lectura del prev desde la ref (ya obtenida al inicio de la función).
 
     // ── Auto-log de eventos relevantes al historial ──────────────────────
     // Si el caller ya pasó un actionHistory explícito (ej: TaskChecklist al
@@ -5127,6 +5172,14 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
         }}
       />
 
+      <ZoomSchedulingModal
+        open={!!zoomSchedulingLead}
+        lead={zoomSchedulingLead?.lead}
+        onClose={cancelZoomScheduling}
+        onConfirm={confirmZoomScheduling}
+        T={T}
+      />
+
       {/* ── FAB "+ Nuevo cliente" — solo mobile ─────────────────────────────
           Floating Action Button en la zona del pulgar (bottom-right). Se
           posiciona ABOVE del bottom nav (z=200) y respeta safe-area.
@@ -5436,5 +5489,167 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
   );
 }
 
+const ZoomSchedulingModal = ({ open, lead, onClose, onConfirm, T = P }) => {
+  const [dateVal, setDateVal] = useState("");
+  const [actionText, setActionText] = useState("Zoom");
+  const isLight = T !== P;
+
+  useEffect(() => {
+    if (open) {
+      setDateVal("");
+      setActionText("Zoom");
+    }
+  }, [open]);
+
+  if (!open || !lead) return null;
+
+  const handleConfirm = () => {
+    if (!dateVal) return;
+    onConfirm(dateVal, actionText);
+  };
+
+  const modalBg = isLight ? "#FFFFFF" : "#111318";
+  const overlayBg = "rgba(10, 16, 28, 0.75)";
+  const borderC = isLight ? "rgba(15,23,42,0.12)" : "rgba(255,255,255,0.08)";
+  const inputBg = isLight ? "rgba(15,23,42,0.02)" : "rgba(255,255,255,0.02)";
+
+  return createPortal(
+    <div style={{
+      position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
+      zIndex: 999999, display: "flex", alignItems: "center", justifyContent: "center",
+      background: overlayBg, backdropFilter: "blur(8px)",
+      padding: 16,
+    }}>
+      <style>{`
+        @keyframes modalIn {
+          from { opacity: 0; transform: scale(0.96) translateY(10px); }
+          to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+      `}</style>
+      <div style={{
+        width: "100%", maxWidth: 420,
+        background: modalBg, border: `1px solid ${borderC}`,
+        borderRadius: 16, overflow: "hidden",
+        boxShadow: "0 20px 40px rgba(0,0,0,0.5)",
+        animation: "modalIn 0.26s cubic-bezier(0.16,1,0.3,1) both",
+      }}>
+        {/* Header */}
+        <div style={{
+          padding: "20px 24px 16px",
+          borderBottom: `1px solid ${borderC}`,
+          display: "flex", alignItems: "center", gap: 12,
+        }}>
+          <div style={{
+            width: 36, height: 36, borderRadius: 10,
+            background: "rgba(59, 130, 246, 0.15)",
+            border: "1px solid rgba(59, 130, 246, 0.3)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            color: "#3B82F6",
+          }}>
+            <CalendarDays size={18} strokeWidth={2.2} />
+          </div>
+          <div>
+            <h3 style={{
+              margin: 0, fontSize: 16, fontWeight: 700,
+              fontFamily: fontDisp, color: T.txt,
+            }}>Programar Zoom Agendado</h3>
+            <span style={{ fontSize: 11, color: T.txt3, fontWeight: 500 }}>
+              Cita obligatoria para etapa Zoom Agendado
+            </span>
+          </div>
+        </div>
+
+        {/* Content */}
+        <div style={{ padding: "20px 24px", display: "flex", flexDirection: "column", gap: 16 }}>
+          <p style={{ margin: 0, fontSize: 12.5, color: T.txt2, lineHeight: 1.5 }}>
+            Para mover a <strong style={{ color: T.txt }}>{lead.n || lead.name}</strong> a la etapa de <strong style={{ color: "#3B82F6" }}>Zoom Agendado</strong>, es obligatorio definir la fecha y hora de la sesión.
+          </p>
+
+          {/* Fecha y Hora Input */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            <label style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: T.txt3 }}>
+              Fecha y Hora del Zoom *
+            </label>
+            <input
+              type="datetime-local"
+              value={dateVal}
+              onChange={e => setDateVal(e.target.value)}
+              style={{
+                width: "100%", padding: "10px 12px", borderRadius: 8,
+                background: inputBg, border: `1px solid ${T.border}`,
+                color: T.txt, fontSize: 13, fontFamily: font,
+                outline: "none", cursor: "pointer",
+                boxSizing: "border-box",
+              }}
+            />
+          </div>
+
+          {/* Próxima Acción Input */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            <label style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: T.txt3 }}>
+              Próxima Acción
+            </label>
+            <input
+              type="text"
+              value={actionText}
+              onChange={e => setActionText(e.target.value)}
+              placeholder="Ej: Zoom, Asistir a Zoom..."
+              style={{
+                width: "100%", padding: "10px 12px", borderRadius: 8,
+                background: inputBg, border: `1px solid ${T.border}`,
+                color: T.txt, fontSize: 13, fontFamily: font,
+                outline: "none",
+                boxSizing: "border-box",
+              }}
+            />
+          </div>
+        </div>
+
+        {/* Footer Actions */}
+        <div style={{
+          padding: "16px 24px 20px",
+          borderTop: `1px solid ${borderC}`,
+          background: isLight ? "rgba(15,23,42,0.01)" : "rgba(255,255,255,0.01)",
+          display: "flex", justifyContent: "flex-end", gap: 10,
+        }}>
+          <button
+            type="button"
+            onClick={onClose}
+            style={{
+              padding: "9px 16px", borderRadius: 8,
+              border: `1px solid ${T.border}`, background: "transparent",
+              color: T.txt2, fontSize: 12, fontWeight: 600, fontFamily: font,
+              cursor: "pointer", transition: "all 0.15s",
+            }}
+            onMouseEnter={e => { e.currentTarget.style.background = T.glassH; }}
+            onMouseLeave={e => { e.currentTarget.style.background = "transparent"; }}
+          >
+            Cancelar
+          </button>
+          <button
+            type="button"
+            onClick={handleConfirm}
+            disabled={!dateVal}
+            style={{
+              padding: "9px 18px", borderRadius: 8,
+              border: "none",
+              background: dateVal ? (T.accent || "#3B82F6") : (isLight ? "rgba(15,23,42,0.06)" : "rgba(255,255,255,0.06)"),
+              color: dateVal ? "#FFFFFF" : T.txt3,
+              fontSize: 12, fontWeight: 700, fontFamily: font,
+              cursor: dateVal ? "pointer" : "not-allowed",
+              transition: "all 0.15s",
+              boxShadow: dateVal ? `0 4px 12px ${(T.accent || "#3B82F6")}33` : "none",
+            }}
+            onMouseEnter={e => { if (dateVal) e.currentTarget.style.opacity = 0.9; }}
+            onMouseLeave={e => { if (dateVal) e.currentTarget.style.opacity = 1; }}
+          >
+            Confirmar Zoom
+          </button>
+        </div>
+      </div>
+    </div>,
+    document.body
+  );
+};
 
 export default CRM;
