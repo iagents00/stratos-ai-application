@@ -65,3 +65,30 @@ CREATE TRIGGER zoom_agendados_touch
 
 COMMENT ON TABLE public.zoom_agendados IS
   'Control operativo de Zooms de venta agendados (Duke). Replica el Excel de control con Liner / Presentadores / Estatus. Multi-tenant por organization_id + RLS.';
+
+-- ════════════════════════════════════════════════════════════════════════
+-- PLAN DE ROLLBACK  (migración ADITIVA — cero impacto en datos existentes)
+-- ────────────────────────────────────────────────────────────────────────
+-- 027 SOLO crea una tabla nueva (public.zoom_agendados) + su trigger/función;
+-- no altera ni borra ninguna tabla existente. Revertir es limpio y únicamente
+-- afecta las filas de ESTA tabla (re-sembrables con supabase/import_zooms.mjs):
+--
+--   DROP TRIGGER  IF EXISTS zoom_agendados_touch ON public.zoom_agendados;
+--   DROP FUNCTION IF EXISTS public.zoom_agendados_touch_updated_at();
+--   DROP TABLE    IF EXISTS public.zoom_agendados CASCADE;
+--
+-- ════════════════════════════════════════════════════════════════════════
+-- VALIDACIÓN POSTERIOR  (correr tras aplicar — deben pasar las 3)
+-- ────────────────────────────────────────────────────────────────────────
+-- 1) La tabla existe:
+--      SELECT to_regclass('public.zoom_agendados') IS NOT NULL AS tabla_ok;   -- → t
+-- 2) RLS encendida + política de aislamiento por org presente:
+--      SELECT relrowsecurity AS rls_on
+--        FROM pg_class WHERE oid = 'public.zoom_agendados'::regclass;          -- → t
+--      SELECT polname FROM pg_policy
+--        WHERE polrelid = 'public.zoom_agendados'::regclass;                  -- → zoom_agendados_rw
+-- 3) Aislamiento multi-tenant en runtime: toda lectura/escritura pasa por
+--    current_organization_id(), así que un usuario de una org NUNCA ve filas
+--    de otra. Verificación: GET /rest/v1/zoom_agendados con el anon key de un
+--    usuario de Duke devuelve solo filas con su organization_id.
+-- ════════════════════════════════════════════════════════════════════════
