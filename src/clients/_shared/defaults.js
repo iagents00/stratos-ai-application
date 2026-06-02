@@ -18,6 +18,13 @@ export const DEFAULT_CLIENT_CONFIG = {
   legalName: "Stratos Capital Group",
   tagline:   "Plataforma inteligente de gestión inmobiliaria",
 
+  // Dominios propios que resuelven a este cliente (white-label con su dominio).
+  // El resolver (src/clients/index.js) los matchea por hostname EXACTO con
+  // máxima prioridad. Útil para que un cliente viva en su dominio propio
+  // (ej: app.tgenius.com) sin depender de heurísticas de subdominio ni de un
+  // path /<cliente>. Default vacío → el cliente se resuelve por path/subdominio.
+  domains: [],
+
   // Branding visual (overrides opcionales del design system)
   brand: {
     logoText:              "Stratos",
@@ -62,6 +69,12 @@ export const DEFAULT_CLIENT_CONFIG = {
     // filtrable por Hoy / Semana / Mes. Default OFF — solo clientes que lo
     // necesiten explícitamente lo prenden. Visible para admin/director/ceo.
     comandoDirectivo: false,
+    // Control de Zooms: pestaña dentro de Comando Directivo para gestionar los
+    // Zooms de venta (Liner / Presentador / estatus) sobre la tabla
+    // zoom_agendados (migración 027). Reemplaza el Excel de control manual.
+    // Default OFF — workflow específico de Duke por ahora; otros clientes no
+    // ven la pestaña hasta que lo prendan.
+    zoomControl: false,
   },
 
   // Contacto y soporte

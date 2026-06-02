@@ -49,6 +49,10 @@ const dukeConfig = {
     // promovido al cliente original. Aplica solo a admins/director/ceo;
     // los asesores siguen sin tener acceso al módulo.
     comandoDirectivo: true,
+    // Control de Zooms activo en Duke — reemplaza el Excel "control_zooms_
+    // agendados_roles" con un panel CRUD (tabla zoom_agendados, migración 027)
+    // dentro de Comando Directivo. Solo admins/director/ceo.
+    zoomControl: true,
   },
 
   support: {
