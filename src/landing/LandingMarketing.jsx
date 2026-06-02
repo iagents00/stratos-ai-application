@@ -1096,6 +1096,9 @@ export default function LandingMarketing({ appUrl = "/?app" }) {
             >
               Empezar gratis — sin tarjeta <ArrowRight size={15} />
             </Btn>
+            <Btn onClick={() => window.location.href = "/diagnostico"}>
+              Iniciar diagnóstico <ArrowRight size={14} />
+            </Btn>
             <Btn onClick={() => window.location.href = appUrl}>
               Iniciar sesión <ChevronRight size={14} />
             </Btn>
