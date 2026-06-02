@@ -32,6 +32,7 @@ import { G } from "../SharedComponents";
 import AdvisorMetrics, { INDICATORS } from "./CRM/AdvisorMetrics";
 import { useClient } from "../../hooks/useClient";
 import { buildExecutivePdf, evolutionCols, asesorCols } from "./ComandoDirectivo.pdf";
+import ZoomControl from "./ZoomControl";
 
 const ICONS_BY_KEY = {
   assigned:       Users,
@@ -197,6 +198,13 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
   const [bucketCounts, setBucketCounts] = useState({ day: 7, week: 4, month: 3 });
   // Visibilidad por serie — toggleable desde la leyenda.
   const [hiddenSeries, setHiddenSeries] = useState({});
+
+  // Pestañas de nivel superior: Indicadores (vista histórica) vs Control de
+  // Zooms (panel operativo sobre zoom_agendados). La pestaña de Zooms solo
+  // aparece para clientes con features.zoomControl (hoy: Duke); el resto ve el
+  // Comando Directivo igual que siempre, sin barra de pestañas.
+  const showZoomTab = !!clientConfig?.features?.zoomControl;
+  const [tab, setTab] = useState("indicadores");
 
   const granularity = GRANULARITIES.find(g => g.id === granularityId) || GRANULARITIES[1];
   const bucketCount = bucketCounts[granularityId] ?? granularity.defaultCount;
@@ -725,6 +733,32 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+      {/* ── Pestañas: Indicadores / Control de Zooms (solo si zoomControl) ─── */}
+      {showZoomTab && (
+        <div style={{
+          display: "inline-flex", gap: 4, padding: 4, borderRadius: 14,
+          background: headerBg, border: `1px solid ${rowBorder}`, alignSelf: "flex-start",
+        }}>
+          {[
+            { id: "indicadores", label: "Indicadores" },
+            { id: "zooms", label: "Control de Zooms" },
+          ].map(t => {
+            const active = tab === t.id;
+            return (
+              <button key={t.id} onClick={() => setTab(t.id)} style={{
+                padding: "8px 16px", borderRadius: 10, border: "none", cursor: "pointer",
+                fontSize: 13, fontWeight: active ? 700 : 600, fontFamily: fontDisp,
+                background: active ? (isLight ? T.accent : `${T.accent}22`) : "transparent",
+                color: active ? (isLight ? "#06080F" : T.accent) : T.txt2,
+                transition: "all 0.15s",
+              }}>{t.label}</button>
+            );
+          })}
+        </div>
+      )}
+
+      {(!showZoomTab || tab === "indicadores") && (
+      <>
       {/* ── Header ────────────────────────────────────────────────────────── */}
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
         <div>
@@ -1156,6 +1190,12 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
 
       {/* ── 4) Desglose por asesor (coordinado con CRM) ─────────────────── */}
       <AdvisorMetrics leadsData={leadsData} theme={isLight ? "light" : "dark"} />
+      </>
+      )}
+
+      {showZoomTab && tab === "zooms" && (
+        <ZoomControl theme={isLight ? "light" : "dark"} />
+      )}
     </div>
   );
 };
