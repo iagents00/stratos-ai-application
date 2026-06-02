@@ -16,12 +16,14 @@ import { mergeClientConfig } from "./_shared/defaults";
 import dukeConfig    from "./duke/config";
 import grupo28Config from "./grupo28/config";
 import tgeniusConfig from "./tgenius/config";
+import stratosSalesConfig from "./stratos-sales/config";
 
 // Registry de todos los clientes conocidos
 const CLIENT_CONFIGS = {
-  duke:    dukeConfig,
-  grupo28: grupo28Config,
-  tgenius: tgeniusConfig,
+  duke:            dukeConfig,
+  grupo28:         grupo28Config,
+  tgenius:         tgeniusConfig,
+  "stratos-sales": stratosSalesConfig,
 };
 
 /**
