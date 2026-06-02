@@ -218,19 +218,9 @@ export default function Diagnostico() {
   const [contextText, setContextText] = useState("");
   const [loadingMsg, setLoadingMsg] = useState("");
 
-  // Inyectar Tailwind CDN solo en esta página (el resto de la app no usa Tailwind)
-  useEffect(() => {
-    if (document.getElementById('stratos-tailwind-cdn')) return;
-    const script = document.createElement('script');
-    script.id = 'stratos-tailwind-cdn';
-    script.src = 'https://cdn.tailwindcss.com';
-    document.head.appendChild(script);
-    return () => {
-      // Mantenemos el script en cache para navegaciones siguientes;
-      // si quieres limpiarlo descomenta:
-      // script.remove();
-    };
-  }, []);
+  // Tailwind se carga via CDN desde index.html (preload sincrono para evitar FOUC).
+  // Antes lo inyectabamos en runtime aqui, pero el primer paint del hero quedaba
+  // sin estilos hasta que descargaba el CDN. Movido a <head> en PR #163.
 
   useEffect(() => { window.scrollTo({ top: 0, behavior: 'smooth' }); }, [stage, step]);
 
