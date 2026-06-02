@@ -30,6 +30,7 @@ const PrivacyPolicy    = lazy(() => import("./landing/PrivacyPolicy.jsx"));
 const DataDeletion     = lazy(() => import("./landing/DataDeletion.jsx"));
 const DeliveryHubCRM   = lazy(() => import("./landing/DeliveryHubCRM.jsx"));
 const ManualCRM        = lazy(() => import("./landing/ManualCRM.jsx"));
+const Diagnostico      = lazy(() => import("./landing/Diagnostico.jsx"));
 
 import "./index.css";
 
@@ -72,11 +73,13 @@ const DELIVERY_PATHS = ["/entrega-crm", "/entrega"];
 // Manual operativo del CRM — público, para asesores. Diseñado para que un agente
 // IA de soporte futuro consuma window.__STRATOS_MANUAL__ y dé respuestas RAG.
 const MANUAL_PATHS = ["/manual", "/manual-crm"];
+const DIAGNOSTICO_PATHS = ["/diagnostico"];
 const matchPath = (paths) => paths.some(p => pathname === p || pathname === p + "/");
 const isPrivacy = matchPath(PRIVACY_PATHS);
 const isDeletion = matchPath(DELETION_PATHS);
 const isDelivery = matchPath(DELIVERY_PATHS);
 const isManual = matchPath(MANUAL_PATHS);
+const isDiagnostico = matchPath(DIAGNOSTICO_PATHS);
 
 // ─── RESOLUCIÓN DE CLIENTE (multi-tenant) ────────────────────────────────────
 // Se detecta el cliente activo según hostname/path:
@@ -94,7 +97,7 @@ const isLanding = !isExplicitClient && (
   || (hostname === "127.0.0.1" && !params.has("app"))
 );
 
-const isApp = !isPrivacy && !isDeletion && !isDelivery && !isManual && !isLanding;
+const isApp = !isPrivacy && !isDeletion && !isDelivery && !isManual && !isDiagnostico && !isLanding;
 
 // URL de la plataforma — usada por la landing para el CTA principal
 const APP_URL = import.meta.env.VITE_APP_URL || (window.location.origin + "/?app");
@@ -130,9 +133,11 @@ createRoot(document.getElementById("root")).render(
                   ? <DeliveryHubCRM />
                   : isManual
                     ? <ManualCRM />
-                    : isApp
-                      ? <App />
-                      : <LandingMarketing appUrl={APP_URL} />
+                    : isDiagnostico
+                      ? <Diagnostico />
+                      : isApp
+                        ? <App />
+                        : <LandingMarketing appUrl={APP_URL} />
             }
           </Suspense>
         </AuthProvider>
