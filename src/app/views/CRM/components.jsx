@@ -51,7 +51,7 @@ const calculateLeadScore = (lead) => {
   // 1. Stage progression — 0 a 35 pts
   // Pipeline oficial Duke (12 etapas). Apartó y Cierre son los milestones más altos.
   const stages = ["Contáctame Ya","Segundo Intento","Tercer Intento","Rotación",
-    "Remarketing IA","Zoom Agendado","Reactivar Zoom","Seguimiento","Apartó",
+    "Remarketing IA","Zoom Agendado","Reactivar Zoom","Seguimiento","Largo Plazo","Apartó",
     "Visita Agendada","Cierre","Postventa"];
   const stageIdx = stages.indexOf(lead.st ?? "Contáctame Ya");
   // Excluir "Postventa" del score positivo
