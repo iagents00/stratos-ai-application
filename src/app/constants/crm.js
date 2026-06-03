@@ -21,6 +21,7 @@ export const stgC = {
   "Reactivar Zoom":   "#EA580C",
   "Zoom Concretado":  "#2DD4BF",
   "Seguimiento":      "#FBBF24",
+  "Largo Plazo":      "#818CF8",
   "Apartó":           "#4ADE80",
   "Visita Agendada":  "#06B6D4",
   "Cierre":           "#34D399",
