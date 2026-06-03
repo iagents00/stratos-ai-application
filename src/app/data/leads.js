@@ -6,7 +6,7 @@ import { P } from "../../design-system/tokens";
 export const STAGES = [
   "Contáctame Ya", "Segundo Intento", "Tercer Intento", "Rotación",
   "Remarketing IA", "Zoom Agendado", "Reactivar Zoom", "Zoom Concretado",
-  "Seguimiento", "Apartó", "Visita Agendada", "Cierre", "Postventa",
+  "Seguimiento", "Largo Plazo", "Apartó", "Visita Agendada", "Cierre", "Postventa",
 ];
 
 export const stgC = {
@@ -19,6 +19,7 @@ export const stgC = {
   "Reactivar Zoom":   "#EA580C",
   "Zoom Concretado":  "#2DD4BF",
   "Seguimiento":      "#FBBF24",
+  "Largo Plazo":      "#818CF8",
   "Apartó":           "#4ADE80",
   "Visita Agendada":  P.cyan,
   "Cierre":           P.accent,

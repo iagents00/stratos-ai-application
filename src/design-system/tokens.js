@@ -133,10 +133,14 @@ export const spacing = {
 };
 
 // ─── PIPELINE CRM ─────────────────────────────────────────────────────────────
-// Pipeline oficial Duke del Caribe (Mayo 2026). 12 etapas en orden operativo:
-// contacto → reasignación → nutrición IA → cita → negociación → apartado →
-// visita → cierre → postventa. Cada etapa describe el estado real del cliente
-// y la siguiente acción obligatoria del asesor.
+// Pipeline oficial Duke del Caribe. 14 etapas en orden operativo:
+// contacto → reasignación → nutrición IA → cita → negociación → largo plazo →
+// apartado → visita → cierre → postventa. Cada etapa describe el estado real
+// del cliente y la siguiente acción obligatoria del asesor.
+//
+// "Largo Plazo" (Jun 2026): cliente calificado que reactivará su inversión en
+// ~6–12 meses. Va entre "Seguimiento" y "Apartó"; se nutre con baja frecuencia
+// y NO es prioridad inmediata ni agenda crítica.
 //
 // NOTA — Histórico previo a Mayo 2026:
 //   "Visita Concretada" / "Negociación" → se consolidaron en "Seguimiento"
@@ -156,6 +160,7 @@ export const STAGES = [
   "Reactivar Zoom",
   "Zoom Concretado",
   "Seguimiento",
+  "Largo Plazo",
   "Apartó",
   "Visita Agendada",
   "Cierre",
@@ -168,6 +173,8 @@ export const STAGES = [
 // Naranjas → atención / acción requerida (Remarketing IA, Reactivar Zoom).
 // Gris → estado neutral o terminal (Contáctame Ya, Postventa).
 // Stone (Rotación) → lead reasignado / en triage entre asesores.
+// Índigo (Largo Plazo) → único color frío "en pausa": lead aparcado 6–12 meses,
+//   distinto a simple vista del ámbar (Seguimiento) y el verde (Apartó) vecinos.
 export const STAGE_COLORS = {
   "Contáctame Ya":    P.txt3,
   "Segundo Intento":  P.blue,
@@ -178,6 +185,7 @@ export const STAGE_COLORS = {
   "Reactivar Zoom":   "#EA580C",
   "Zoom Concretado":  "#2DD4BF",
   "Seguimiento":      P.amber,
+  "Largo Plazo":      "#818CF8",
   "Apartó":           "#4ADE80",
   "Visita Agendada":  P.cyan,
   "Cierre":           P.accent,
