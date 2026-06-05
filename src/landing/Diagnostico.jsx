@@ -34,6 +34,34 @@ import {
 import { sendDiagnosticoStratosResult } from "../lib/webhook-diagnostico-stratos";
 
 /* ═══════════════════════════════════════════════════════════════════════════
+   DIAL CODES — lista corta de paises objetivo para Stratos / Gvintell.
+   El usuario elige el indicativo en un <select>; el campo de telefono
+   captura SOLO digitos locales. En el submit reconstruimos el E.164.
+   ═══════════════════════════════════════════════════════════════════════════ */
+const DIAL_CODES = [
+  { code: '+52',  flag: 'MX', name: 'Mexico' },
+  { code: '+57',  flag: 'CO', name: 'Colombia' },
+  { code: '+1',   flag: 'US', name: 'EE.UU. / Canada' },
+  { code: '+34',  flag: 'ES', name: 'Espana' },
+  { code: '+54',  flag: 'AR', name: 'Argentina' },
+  { code: '+51',  flag: 'PE', name: 'Peru' },
+  { code: '+56',  flag: 'CL', name: 'Chile' },
+  { code: '+593', flag: 'EC', name: 'Ecuador' },
+  { code: '+55',  flag: 'BR', name: 'Brasil' },
+  { code: '+591', flag: 'BO', name: 'Bolivia' },
+  { code: '+58',  flag: 'VE', name: 'Venezuela' },
+  { code: '+507', flag: 'PA', name: 'Panama' },
+  { code: '+502', flag: 'GT', name: 'Guatemala' },
+  { code: '+503', flag: 'SV', name: 'El Salvador' },
+  { code: '+504', flag: 'HN', name: 'Honduras' },
+  { code: '+505', flag: 'NI', name: 'Nicaragua' },
+  { code: '+506', flag: 'CR', name: 'Costa Rica' },
+  { code: '+598', flag: 'UY', name: 'Uruguay' },
+  { code: '+595', flag: 'PY', name: 'Paraguay' },
+  { code: '+1809', flag: 'DO', name: 'Rep. Dominicana' },
+];
+
+/* ═══════════════════════════════════════════════════════════════════════════
    QUESTION BANK — replicado exacto del Gemini Canvas del equipo
    ═══════════════════════════════════════════════════════════════════════════ */
 const QUESTION_BANK = [
@@ -210,7 +238,7 @@ export default function Diagnostico() {
   const [stage, setStage] = useState('gate');
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState({});
-  const [contact, setContact] = useState({ name: '', company: '', email: '', phone: '' });
+  const [contact, setContact] = useState({ name: '', company: '', email: '', phone: '', dialCode: '+52' });
   const [reportData, setReportData] = useState(null);
 
   const [activeSelections, setActiveSelections] = useState([]);
@@ -268,8 +296,12 @@ export default function Diagnostico() {
     // Generar el blueprint local (mismo cálculo que en el prototipo)
     const blueprint = generateBlueprint(answers, contact.name);
 
-    // Disparar el webhook a n8n (no bloquea la experiencia visual del lead)
-    sendDiagnosticoStratosResult({ contact, answers, blueprint })
+    // Disparar el webhook a n8n (no bloquea la experiencia visual del lead).
+    // Reconstruimos el telefono en formato E.164 combinando dialCode + digitos
+    // locales. Sin esto el backend no puede llamar al lead (Twilio exige +<pais>).
+    const digitsLocal = String(contact.phone || '').replace(/\D/g, '').replace(/^0+/, '');
+    const fullContact = { ...contact, phone: `${contact.dialCode}${digitsLocal}` };
+    sendDiagnosticoStratosResult({ contact: fullContact, answers, blueprint })
       .catch((err) => console.warn('[Diagnostico] Webhook error (no bloqueante):', err));
 
     // Mostrar el report tras la animación
@@ -443,7 +475,31 @@ export default function Diagnostico() {
                 </div>
                 <div>
                   <label className="text-[10px] uppercase tracking-[0.15em] text-slate-500 font-bold ml-1 block mb-2">WhatsApp Directo</label>
-                  <input required type="tel" value={contact.phone} onChange={e => setContact({...contact, phone: e.target.value})} className="w-full bg-[#060A11] border border-white/10 rounded-xl px-5 py-4 text-white text-sm focus:outline-none focus:border-[#34d399]/50 transition-colors placeholder:text-slate-700 shadow-[inset_0_2px_10px_rgba(0,0,0,0.3)]" placeholder="+1 234 567 890" />
+                  <div className="flex gap-2">
+                    <select
+                      value={contact.dialCode}
+                      onChange={e => setContact({...contact, dialCode: e.target.value})}
+                      aria-label="Indicativo pais"
+                      className="bg-[#060A11] border border-white/10 rounded-xl px-3 py-4 text-white text-sm focus:outline-none focus:border-[#34d399]/50 transition-colors shadow-[inset_0_2px_10px_rgba(0,0,0,0.3)] font-mono w-[120px] cursor-pointer"
+                    >
+                      {DIAL_CODES.map(c => (
+                        <option key={c.code} value={c.code} className="bg-[#060A11] text-white">
+                          {c.flag} {c.code}
+                        </option>
+                      ))}
+                    </select>
+                    <input
+                      required
+                      type="tel"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      value={contact.phone}
+                      onChange={e => setContact({...contact, phone: e.target.value.replace(/\D/g, '')})}
+                      className="flex-1 min-w-0 bg-[#060A11] border border-white/10 rounded-xl px-5 py-4 text-white text-sm focus:outline-none focus:border-[#34d399]/50 transition-colors placeholder:text-slate-700 shadow-[inset_0_2px_10px_rgba(0,0,0,0.3)]"
+                      placeholder="3001234567"
+                      maxLength={15}
+                    />
+                  </div>
                 </div>
               </div>
 
