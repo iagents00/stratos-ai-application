@@ -34,6 +34,24 @@ import {
 import { sendDiagnosticoStratosResult } from "../lib/webhook-diagnostico-stratos";
 
 /* ═══════════════════════════════════════════════════════════════════════════
+   CAL.COM — link público al event type de asesoría Stratos.
+   La URL se puede sobreescribir vía VITE_DIAGNOSTICO_CALCOM_URL si en el
+   futuro el username cambia o se mueve a un dominio propio.
+   ═══════════════════════════════════════════════════════════════════════════ */
+const CAL_BOOKING_URL =
+  import.meta.env.VITE_DIAGNOSTICO_CALCOM_URL ||
+  "https://cal.com/ivan-rodriguez-m3fi2w/stratos-asesoria";
+
+/** Build a Cal.com booking link with the lead's name/email prefilled. */
+function buildCalLink(contact) {
+  const params = new URLSearchParams();
+  if (contact?.name) params.set("name", contact.name);
+  if (contact?.email) params.set("email", contact.email);
+  const qs = params.toString();
+  return qs ? `${CAL_BOOKING_URL}?${qs}` : CAL_BOOKING_URL;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
    DIAL CODES — lista corta de paises objetivo para Stratos / Gvintell.
    El usuario elige el indicativo en un <select>; el campo de telefono
    captura SOLO digitos locales. En el submit reconstruimos el E.164.
@@ -518,6 +536,21 @@ export default function Diagnostico() {
   if (stage === 'report' && reportData) {
     return (
       <div className="min-h-screen bg-[#030508] text-white py-12 md:py-20 px-4 md:px-10 relative overflow-x-hidden font-sans print:bg-white print:text-black">
+        {/* Sticky CTA — visible apenas el lead empieza a leer el reporte. Cierra la fricción
+            de "¿y ahora qué?" al ofrecer el agendamiento en todo momento sin tener que
+            scrollear hasta el final. Oculto en print. */}
+        <a
+          href={buildCalLink(contact)}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="fixed top-4 right-4 md:top-6 md:right-6 z-50 px-5 py-3 md:px-6 md:py-3.5 bg-[#34d399] text-[#030508] text-[11px] md:text-[12px] font-bold uppercase tracking-[0.18em] rounded-full shadow-[0_0_30px_rgba(52,211,153,0.35)] hover:bg-[#2dd4bf] hover:scale-[1.03] active:scale-[0.97] transition-all inline-flex items-center gap-2 print:hidden"
+        >
+          <CalendarDays size={14} strokeWidth={2.5} />
+          <span className="hidden sm:inline">Agendar mi asesoría sin costo</span>
+          <span className="sm:hidden">Agendar sin costo</span>
+          <ArrowRight size={14} strokeWidth={2.5} />
+        </a>
+
         <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-[#34d399]/5 blur-[150px] rounded-full pointer-events-none print:hidden"></div>
         <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-[#22d3ee]/5 blur-[150px] rounded-full pointer-events-none print:hidden"></div>
 
@@ -615,9 +648,14 @@ export default function Diagnostico() {
               Ya tienes la arquitectura exacta, <strong className="text-white font-medium">{reportData.firstName}</strong>. Puedes intentar armar esto internamente (arriesgando meses de prueba y error), o permitir que nuestro equipo instale este motor <strong className="text-[#34d399] font-medium">100% "Done-For-You"</strong>.<br/><br/>
               Nos encargamos del código, de los LLMs y de la integración total. Tú solo recibes las citas pre-calificadas.
             </p>
-            <button className="px-10 py-5 bg-white text-black text-[13px] font-bold uppercase tracking-[0.2em] rounded-full hover:bg-slate-100 transition-all inline-flex items-center gap-4 relative z-10 active:scale-95 shadow-[0_0_40px_rgba(255,255,255,0.15)] hover:shadow-[0_0_60px_rgba(255,255,255,0.25)]">
+            <a
+              href={buildCalLink(contact)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-10 py-5 bg-white text-black text-[13px] font-bold uppercase tracking-[0.2em] rounded-full hover:bg-slate-100 transition-all inline-flex items-center gap-4 relative z-10 active:scale-95 shadow-[0_0_40px_rgba(255,255,255,0.15)] hover:shadow-[0_0_60px_rgba(255,255,255,0.25)]"
+            >
               Agendar Llamada de Implementación <ArrowRight size={18} />
-            </button>
+            </a>
           </div>
         </div>
       </div>
