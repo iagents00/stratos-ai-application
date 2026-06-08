@@ -25,7 +25,7 @@
  */
 import { useState, useEffect } from "react";
 import {
-  AlertTriangle, Target, ArrowRight, Check, Zap, Clock,
+  AlertTriangle, Target, ArrowRight, ArrowLeft, Check, Zap, Clock,
   PhoneCall, Database, Network, Terminal, CalendarDays,
   Cpu, TrendingUp, Lock, Workflow, Layers,
   XCircle, Bot, Smartphone, Headset,
@@ -95,7 +95,7 @@ const QUESTION_BANK = [
     ],
     dynamicPrompt: "Precisa la hemorragia de tu equipo (Selecciona las que apliquen):",
     quickTags: {
-      unqualified_leads: ["Leads sin pre-calificación", "Dejan en visto en WhatsApp", "Agendan pero no asisten (No-shows)", "CPA (Costo por Adquisición) muy alto"],
+      unqualified_leads: ["Leads sin precalificar", "Me dejan en visto en WhatsApp", "Agendan pero no se presentan", "Pago mucho por cada lead (CPA alto)"],
       slow_followup: ["Asesores desorganizados", "Respuestas tardan +1 hora", "Cero seguimiento después de 30 días", "Fuga a competidores locales"],
       call_overload: ["Leads nocturnos perdidos", "Imposible contactar en < 5 min", "Alta rotación de personal", "Asesores colapsados de trabajo"]
     }
@@ -107,12 +107,12 @@ const QUESTION_BANK = [
     insight: "Los sistemas genéricos fracasan. Un Asesor Top necesita un 'clon digital'; un Broker necesita una máquina de control y vigilancia masiva.",
     options: [
       { value: "broker_owner", label: "Broker / Dueño (Escalando Agencia)", desc: "Busco estandarizar procesos. Que mis ventas no dependan de si el asesor amaneció de buen humor. Quiero control total." },
-      { value: "top_producer", label: "Top Producer (Alto Volumen)", desc: "Tengo leads pero mi tiempo es el cuello de botella. Necesito una IA que atienda WhatsApp mientras yo estoy cerrando firmas." }
+      { value: "top_producer", label: "Asesor Estrella (Alto Volumen)", desc: "Tengo leads pero mi tiempo es el cuello de botella. Necesito una IA que atienda WhatsApp mientras yo estoy cerrando firmas." }
     ],
     dynamicPrompt: "¿Qué tipo de ticket / inventario dominas?",
     quickTags: {
       broker_owner: ["Múltiples Desarrollos", "Vivienda Media/Residencial", "Equipo de 5+ asesores", "Gestión de exclusivas"],
-      top_producer: ["Residencial Premium (High-Ticket)", "Inversionistas / Fondos", "Pre-ventas exclusivas", "Rentas corporativas"]
+      top_producer: ["Residencial Premium (Ticket Alto)", "Inversionistas / Fondos", "Pre-ventas exclusivas", "Rentas corporativas"]
     }
   },
   {
@@ -139,7 +139,7 @@ const QUESTION_BANK = [
     insight: "El enfoque radical trae resultados radicales. Instalamos un motor, lo hacemos hiper-rentable y luego escalamos al resto de la agencia.",
     options: [
       { value: "ai_whatsapp", label: "El Cerrador de WhatsApp (IA Conversacional)", desc: "Un Agente IA que entiende audios, busca en mi inventario, descarta curiosos y me agenda visitas calificadas 24/7." },
-      { value: "ai_callcenter", label: "Call Center Autónomo (Voz IA en 5 seg)", desc: "Una IA que llama al lead 5 segundos después de que deja sus datos en Meta, evalúa su crédito y me transfiere la llamada caliente." },
+      { value: "ai_callcenter", label: "Centro de Llamadas Autónomo (Voz IA en 5 seg)", desc: "Una IA que llama al lead 5 segundos después de que deja sus datos en Meta, evalúa su crédito y me transfiere la llamada caliente." },
       { value: "full_iaos", label: "IAOS: Dominio Total del Mercado", desc: "El ecosistema definitivo. Voz, WhatsApp y CRM sincronizados para absorber a toda la competencia de mi zona." }
     ],
     dynamicPrompt: "¿Qué métrica te urge reventar este trimestre?",
@@ -174,22 +174,22 @@ function generateBlueprint(answers, contactName) {
   let description = "El sistema operativo que eliminará tu carga administrativa. Tu equipo dejará de perseguir prospectos fríos y se dedicará exclusivamente a firmar contratos pre-calificados.";
   let futureStateText = "Una operación hiper-eficiente. Tu IA califica, nutre y agenda. Tú solo te presentas a estrechar la mano y cobrar la comisión.";
   let primaryMetric = { label: "Tasa de Contacto", value: "< 5 Segundos", icon: Zap };
-  let strategicMission = `Implementar un motor de automatización 'Done-For-You' que permita a ${firstName} duplicar cierres sin contratar personal extra.`;
+  let strategicMission = `Implementar un motor de automatización 'Llave en Mano' que permita a ${firstName} duplicar cierres sin contratar personal extra.`;
 
   if (goals.includes("ai_callcenter") || pains.includes("call_overload")) {
-    module = "Agente de Voz Ultra-Realista (Call Center IA)";
-    description = "Implementaremos un motor de voz sintética que contacta a tus leads en milisegundos tras entrar por Ads. Evalúa presupuesto y transfiere la llamada caliente directo a tu celular.";
+    module = "Agente de Voz Ultra-Realista (Centro de Llamadas IA)";
+    description = "Implementaremos un motor de voz sintética que contacta a tus leads en milisegundos tras entrar por tus anuncios. Evalúa presupuesto y transfiere la llamada caliente directo a tu celular.";
     futureStateText = "Cientos de llamadas simultáneas sin descansos ni rotación de personal. El prospecto siente que habla con tu mejor asesor premium.";
     primaryMetric = { label: "Capacidad Operativa", value: "24/7", icon: PhoneCall };
   } else if (goals.includes("ai_whatsapp") || pains.includes("unqualified_leads")) {
-    module = "Clonador Digital de WhatsApp (LLM RAG)";
+    module = "Clonador Digital de WhatsApp (IA Conversacional)";
     description = "Una IA conectada a tu inventario. Entiende audios complejos, perfila la capacidad crediticia del cliente, envía PDFs exactos y agenda la visita sola.";
     futureStateText = "Tu WhatsApp filtrando curiosos con precisión quirúrgica y tratando con guante de seda a los inversionistas listos para comprar.";
     primaryMetric = { label: "Aumento de Citas", value: "+250%", icon: CalendarDays };
   }
 
   if (contextText.toLowerCase().includes("premium") || contextText.toLowerCase().includes("high ticket")) {
-    description += " Calibrado con prompts de negociación High-Ticket para manejar clientes exigentes con absoluta naturalidad.";
+    description += " Calibrado con técnicas de negociación de alto valor para manejar clientes exigentes con absoluta naturalidad.";
   }
 
   return {
@@ -204,7 +204,7 @@ function generateBlueprint(answers, contactName) {
     metrics: [
       primaryMetric,
       { label: "Horas Liberadas / Mes", value: "+160 hrs", icon: Clock },
-      { label: "Multiplicador de ROI", value: "x3.5 GCI", icon: TrendingUp }
+      { label: "Multiplicador de ROI", value: "x3.5", icon: TrendingUp }
     ],
     techStack: [
       { label: "Vapi / Retell AI para Voz Ultra-Realista (Latencia <800ms)", icon: Headset },
@@ -214,14 +214,14 @@ function generateBlueprint(answers, contactName) {
     ],
     architectureNodes: [
       { id: "1", title: "Captación Inbound Omnicanal", desc: "El motor intercepta leads desde Meta, Web o Portales en milisegundos. Latencia cero.", icon: Network },
-      { id: "2", title: "Procesador Lógico Stratos", desc: tools.length > 0 ? `Conexión directa con ${tools[0]}. Cruza peticiones del lead con tu stock disponible.` : "Motor RAG entrenado con tu inventario y scripts de cierre.", icon: Cpu },
-      { id: "3", title: "Ejecución Automática", desc: "La IA envía la ficha técnica, agenda en Calendly y empuja el trato en tu CRM.", icon: Layers }
+      { id: "2", title: "Procesador Lógico Stratos", desc: tools.length > 0 ? `Conexión directa con ${tools[0]}. Cruza lo que pide el lead con tu inventario disponible.` : "Motor de IA entrenado con tu inventario y tus guiones de cierre.", icon: Cpu },
+      { id: "3", title: "Ejecución Automática", desc: "La IA envía la ficha técnica, agenda la cita y empuja el trato en tu CRM.", icon: Layers }
     ],
     timeline: [
       { day: "Días 1-3", title: "Ingeniería Inversa", desc: "Mapeamos tu embudo de ventas y conectamos nuestras APIs a tus orígenes de leads." },
-      { day: "Días 4-8", title: "Inyección RAG", desc: "Entrenamos a la IA con todo tu inventario, PDFs y el 'tono de voz' exacto de tu agencia." },
+      { day: "Días 4-8", title: "Inyección de Conocimiento", desc: "Entrenamos a la IA con todo tu inventario, PDFs y el 'tono de voz' exacto de tu agencia." },
       { day: "Días 9-12", title: "Pruebas de Estrés", desc: "Atacamos a la IA con objeciones duras e insultos simulados para garantizar que reaccione perfecto." },
-      { day: "Día 14", title: "Go-Live Operativo", desc: "Encendemos el interruptor. Empiezas a recibir notificaciones de citas calificadas en tu teléfono." }
+      { day: "Día 14", title: "Puesta en Marcha", desc: "Encendemos el interruptor. Empiezas a recibir notificaciones de citas calificadas en tu teléfono." }
     ]
   };
 }
@@ -278,20 +278,39 @@ export default function Diagnostico() {
     setSelectedTags(prev => prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]);
   };
 
+  // Carga en el estado activo lo ya respondido de un paso. Permite ir y volver
+  // entre preguntas sin perder la selección y poder corregir un error.
+  const loadStepIntoState = (idx, source) => {
+    const saved = (source || answers)[QUESTION_BANK[idx]?.id];
+    setActiveSelections(saved?.values || []);
+    setSelectedTags(saved?.tags || []);
+    setContextText(saved?.context || "");
+  };
+
+  const goBack = () => {
+    if (step === 0) { setStage('gate'); return; }
+    const prev = step - 1;
+    loadStepIntoState(prev);
+    setStep(prev);
+  };
+
   const submitWizardStep = () => {
     if (activeSelections.length === 0) return;
-    setAnswers(prev => ({
-      ...prev,
+    const nextAnswers = {
+      ...answers,
       [QUESTION_BANK[step].id]: { values: activeSelections, tags: selectedTags, context: contextText }
-    }));
-    setActiveSelections([]); setSelectedTags([]); setContextText("");
+    };
+    setAnswers(nextAnswers);
 
     if (step < QUESTION_BANK.length - 1) {
-      setStep(s => s + 1);
+      const next = step + 1;
+      loadStepIntoState(next, nextAnswers);
+      setStep(next);
     } else {
+      setActiveSelections([]); setSelectedTags([]); setContextText("");
       setStage('pre-form');
       let ticks = 0;
-      const msgs = ["Compilando respuestas...", "Identificando fugas de capital...", "Estructurando topología IAOS...", "Blueprint Listo."];
+      const msgs = ["Analizando tus respuestas...", "Identificando fugas de capital...", "Estructurando tu sistema IAOS...", "Plano Listo."];
       const int = setInterval(() => {
         setLoadingMsg(msgs[ticks]);
         ticks++;
@@ -304,7 +323,7 @@ export default function Diagnostico() {
     e.preventDefault();
     setStage('loading');
     let ticks = 0;
-    const msgs = ["Autorizando acceso...", "Conectando nodos RAG...", "Proyectando ROI estratégico...", "Desplegando Dashboard."];
+    const msgs = ["Autorizando acceso...", "Conectando la inteligencia...", "Proyectando tu ROI...", "Desplegando tu Panel."];
     const int = setInterval(() => {
       setLoadingMsg(msgs[ticks]);
       ticks++;
@@ -344,7 +363,7 @@ export default function Diagnostico() {
             </span>
           </div>
 
-          <h1 className="text-5xl md:text-[5.5rem] lg:text-[6.5rem] font-medium tracking-tighter leading-[1.02] text-white mb-8 md:mb-10 w-full px-2">
+          <h1 className="text-[2.5rem] sm:text-5xl md:text-[5.5rem] lg:text-[6.5rem] font-medium tracking-tighter leading-[1.05] md:leading-[1.02] text-white mb-8 md:mb-10 w-full px-1 sm:px-2">
             El <span className="text-[#34d399]">60% de tus comisiones</span><br className="hidden md:block"/> muere en el seguimiento.
           </h1>
 
@@ -368,21 +387,28 @@ export default function Diagnostico() {
   if (stage === 'wizard') {
     const q = QUESTION_BANK[step];
     const CurrentIcon = q.icon;
-    const progress = (step / QUESTION_BANK.length) * 100;
+    const progress = ((step + 1) / QUESTION_BANK.length) * 100;
 
     return (
-      <div className="min-h-screen bg-[#060A11] text-white p-4 md:p-8 relative selection:bg-[#34d399]/30 pb-32 font-sans flex flex-col items-center">
+      <div className="min-h-screen bg-[#060A11] text-white p-4 md:p-8 relative selection:bg-[#34d399]/30 pb-44 md:pb-32 overflow-x-hidden font-sans flex flex-col items-center">
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff02_1px,transparent_1px),linear-gradient(to_bottom,#ffffff02_1px,transparent_1px)] bg-[size:40px_40px] pointer-events-none fixed"></div>
         <div className="absolute top-0 w-full h-[500px] bg-[#34d399]/5 blur-[150px] rounded-full pointer-events-none fixed -translate-y-1/2"></div>
 
         <div className="w-full max-w-3xl relative z-10 pt-4 md:pt-10 flex-1">
           <div className="mb-12 md:mb-16">
-            <div className="flex justify-between text-[10px] font-bold uppercase tracking-[0.3em] text-slate-500 mb-4">
+            <button
+              type="button"
+              onClick={goBack}
+              className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-500 hover:text-slate-200 transition-colors mb-5 -ml-1 focus:outline-none focus-visible:text-slate-200"
+            >
+              <ArrowLeft size={14} strokeWidth={2.5} /> Volver
+            </button>
+            <div className="flex justify-between items-center text-[10px] font-bold uppercase tracking-[0.3em] text-slate-500 mb-4">
               <span>Auditoría Estructural</span>
-              <span className="text-[#34d399]">{Math.round(progress)}%</span>
+              <span className="text-[#34d399]">Pregunta {step + 1} de {QUESTION_BANK.length}</span>
             </div>
-            <div className="h-[2px] w-full bg-white/5 overflow-hidden">
-              <div className="h-full bg-[#34d399] transition-all duration-700 ease-out shadow-[0_0_10px_#34d399]" style={{ width: `${progress}%` }} />
+            <div className="h-[3px] w-full bg-white/5 overflow-hidden rounded-full">
+              <div className="h-full bg-[#34d399] rounded-full transition-all duration-700 ease-out shadow-[0_0_10px_#34d399]" style={{ width: `${progress}%` }} />
             </div>
           </div>
 
@@ -393,6 +419,9 @@ export default function Diagnostico() {
                 <span>{q.label}</span>
               </h2>
               <p className="text-slate-400 text-lg md:text-xl font-light pl-0 md:pl-16 leading-relaxed">{q.insight}</p>
+              <p className="text-[11px] uppercase tracking-[0.18em] text-[#34d399]/90 font-bold pl-0 md:pl-16 mt-5 flex items-center gap-2">
+                <Check size={13} strokeWidth={3} className="shrink-0" /> Puedes elegir más de una opción
+              </p>
             </div>
 
             <div className="grid gap-4 md:gap-5 pl-0 md:pl-16">
@@ -402,8 +431,10 @@ export default function Diagnostico() {
                 return (
                   <div key={opt.value} className={`transition-all duration-300 ${activeSelections.length > 0 && !isActive ? 'opacity-30 scale-[0.99]' : ''}`}>
                     <button
+                      type="button"
                       onClick={() => handleOptionToggle(opt.value)}
-                      className={`w-full text-left p-6 md:p-8 rounded-2xl md:rounded-[2rem] border transition-all duration-300 relative overflow-hidden group ${isActive ? 'bg-[#34d399]/[0.03] border-[#34d399]/50 shadow-[0_0_30px_rgba(52,211,153,0.15)]' : 'bg-white/[0.01] border-white/10 hover:border-white/20 hover:bg-white/[0.03]'}`}
+                      aria-pressed={isActive}
+                      className={`w-full text-left p-5 sm:p-6 md:p-8 rounded-2xl md:rounded-[2rem] border transition-all duration-300 relative overflow-hidden group focus:outline-none focus-visible:ring-2 focus-visible:ring-[#34d399]/50 ${isActive ? 'bg-[#34d399]/[0.03] border-[#34d399]/50 shadow-[0_0_30px_rgba(52,211,153,0.15)]' : 'bg-white/[0.01] border-white/10 hover:border-white/20 hover:bg-white/[0.03]'}`}
                     >
                       {isActive && <ElectricPulse />}
                       <div className="relative z-10 pr-8">
@@ -413,14 +444,14 @@ export default function Diagnostico() {
                     </button>
 
                     {isActive && tags.length > 0 && (
-                      <div className="mt-6 ml-4 md:ml-8 border-l-[2px] border-[#34d399]/30 pl-6 pb-2">
-                        <p className="text-[10px] uppercase tracking-[0.2em] text-[#34d399] font-bold mb-4 flex items-center gap-2"><ChevronRight size={14}/> {q.dynamicPrompt}</p>
+                      <div className="mt-5 ml-1 md:ml-8 border-l-2 border-[#34d399]/30 pl-4 md:pl-6 pb-2">
+                        <p className="text-[10px] uppercase tracking-[0.2em] text-[#34d399] font-bold mb-4 flex items-center gap-2"><ChevronRight size={14} className="shrink-0"/> {q.dynamicPrompt}</p>
                         <div className="flex flex-wrap gap-2.5">
                           {tags.map(tag => {
                             const isTagSelected = selectedTags.includes(tag);
                             return (
-                              <button key={tag} onClick={() => handleTagToggle(tag)} className={`px-5 py-2.5 rounded-full text-[13px] font-medium transition-all flex items-center gap-2 border ${isTagSelected ? 'bg-[#34d399]/10 border-[#34d399]/40 text-[#34d399] shadow-[0_0_15px_rgba(52,211,153,0.1)]' : 'bg-[#060A11] border-white/10 text-slate-400 hover:bg-white/5 hover:text-slate-200'}`}>
-                                {isTagSelected && <Check size={14} strokeWidth={3}/>} {tag}
+                              <button type="button" key={tag} onClick={() => handleTagToggle(tag)} aria-pressed={isTagSelected} className={`px-4 sm:px-5 py-2.5 rounded-full text-[13px] font-medium transition-all inline-flex items-center gap-2 border max-w-full text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-[#34d399]/40 ${isTagSelected ? 'bg-[#34d399]/10 border-[#34d399]/40 text-[#34d399] shadow-[0_0_15px_rgba(52,211,153,0.1)]' : 'bg-[#060A11] border-white/10 text-slate-400 hover:bg-white/5 hover:text-slate-200'}`}>
+                                {isTagSelected && <Check size={14} strokeWidth={3} className="shrink-0"/>} {tag}
                               </button>
                             );
                           })}
@@ -435,14 +466,14 @@ export default function Diagnostico() {
         </div>
 
         {activeSelections.length > 0 && (
-          <div className="fixed bottom-0 left-0 w-full bg-[#060A11]/90 backdrop-blur-2xl border-t border-white/10 p-5 md:p-6 z-50">
+          <div className="fixed bottom-0 left-0 w-full bg-[#060A11]/90 backdrop-blur-2xl border-t border-white/10 px-5 pt-5 pb-[calc(env(safe-area-inset-bottom)+1.25rem)] md:px-6 md:pt-6 md:pb-6 z-50">
             <div className="max-w-3xl mx-auto flex flex-col md:flex-row gap-4 items-center md:pl-16">
               <div className="relative w-full flex-1">
                 <Terminal className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-                <input type="text" value={contextText} onChange={e => setContextText(e.target.value)} placeholder="Añade contexto adicional (Opcional)..." className="w-full bg-[#030508] border border-white/10 rounded-full pl-12 pr-6 py-4 text-white text-sm focus:outline-none focus:border-[#34d399]/40 font-light placeholder:text-slate-600 shadow-[inset_0_2px_10px_rgba(0,0,0,0.5)] transition-colors" />
+                <input type="text" value={contextText} onChange={e => setContextText(e.target.value)} placeholder="Agrega algún detalle (opcional)…" className="w-full bg-[#030508] border border-white/10 rounded-full pl-12 pr-6 py-4 text-white text-sm focus:outline-none focus:border-[#34d399]/40 font-light placeholder:text-slate-600 shadow-[inset_0_2px_10px_rgba(0,0,0,0.5)] transition-colors" />
               </div>
-              <button onClick={submitWizardStep} className="w-full md:w-auto px-10 py-4 bg-white text-black text-xs md:text-sm font-bold uppercase tracking-[0.2em] rounded-full hover:bg-slate-200 flex items-center justify-center gap-3 transition-all active:scale-95 shrink-0 shadow-[0_0_30px_rgba(255,255,255,0.1)] hover:shadow-[0_0_40px_rgba(255,255,255,0.2)]">
-                Siguiente <ArrowRight size={16} strokeWidth={2.5}/>
+              <button type="button" onClick={submitWizardStep} className="w-full md:w-auto px-10 py-4 bg-white text-black text-xs md:text-sm font-bold uppercase tracking-[0.2em] rounded-full hover:bg-slate-200 flex items-center justify-center gap-3 transition-all active:scale-95 shrink-0 shadow-[0_0_30px_rgba(255,255,255,0.1)] hover:shadow-[0_0_40px_rgba(255,255,255,0.2)]">
+                {step === QUESTION_BANK.length - 1 ? 'Generar mi Plano' : 'Siguiente'} <ArrowRight size={16} strokeWidth={2.5}/>
               </button>
             </div>
           </div>
@@ -451,8 +482,8 @@ export default function Diagnostico() {
     );
   }
 
-  if (stage === 'pre-form') return <div className="min-h-screen bg-[#060A11]"><AnticipationLoader text="Sintetizando Data..." subtext={loadingMsg} /></div>;
-  if (stage === 'loading') return <div className="min-h-screen bg-[#060A11]"><AnticipationLoader text="Compilando Blueprint..." subtext={loadingMsg} /></div>;
+  if (stage === 'pre-form') return <div className="min-h-screen bg-[#060A11]"><AnticipationLoader text="Procesando tus datos..." subtext={loadingMsg} /></div>;
+  if (stage === 'loading') return <div className="min-h-screen bg-[#060A11]"><AnticipationLoader text="Compilando tu Plano..." subtext={loadingMsg} /></div>;
 
   /* ── STAGE: FORM (squeeze) ─────────────────────────────────────────────── */
   if (stage === 'form') {
@@ -460,7 +491,7 @@ export default function Diagnostico() {
       <div className="min-h-screen bg-[#060A11] text-white flex items-center justify-center p-6 relative font-sans">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(52,211,153,0.05)_0%,transparent_60%)] pointer-events-none"></div>
         <div className="z-10 max-w-xl w-full">
-          <div className="bg-[#030508] border border-white/10 rounded-[2rem] p-10 md:p-14 shadow-[0_40px_100px_rgba(0,0,0,0.8)] relative overflow-hidden">
+          <div className="bg-[#030508] border border-white/10 rounded-[2rem] p-6 sm:p-10 md:p-14 shadow-[0_40px_100px_rgba(0,0,0,0.8)] relative overflow-hidden">
             <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-[#34d399] to-transparent opacity-50"></div>
 
             <div className="mb-12 text-center">
@@ -468,28 +499,28 @@ export default function Diagnostico() {
                 <Lock className="w-7 h-7 text-[#34d399]" strokeWidth={1.5} />
               </div>
               <h2 className="text-3xl font-medium tracking-tight text-white mb-2">Arquitectura Calculada</h2>
-              <p className="text-[10px] uppercase tracking-[0.2em] text-[#34d399] font-bold">Blueprint Valorado en $1,500 USD</p>
+              <p className="text-[10px] uppercase tracking-[0.2em] text-[#34d399] font-bold">Plano estratégico valorado en $1,500 USD</p>
             </div>
 
             <p className="text-slate-400 text-[15px] font-light mb-10 text-center px-4 leading-relaxed">
-              El motor lógico ha diseñado tu sistema exacto. Ingresa tus datos para compilar y desencriptar tu hoja de ruta.
+              El sistema ya diseñó tu solución exacta. Déjanos tus datos para generar y ver tu plan completo.
             </p>
 
             <form onSubmit={unlockReport} className="space-y-5">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div>
                   <label className="text-[10px] uppercase tracking-[0.15em] text-slate-500 font-bold ml-1 block mb-2">Tu Nombre</label>
-                  <input required value={contact.name} onChange={e => setContact({...contact, name: e.target.value})} className="w-full bg-[#060A11] border border-white/10 rounded-xl px-5 py-4 text-white text-sm focus:outline-none focus:border-[#34d399]/50 transition-colors placeholder:text-slate-700 shadow-[inset_0_2px_10px_rgba(0,0,0,0.3)]" placeholder="Ej. Alex Hormozi" />
+                  <input required value={contact.name} onChange={e => setContact({...contact, name: e.target.value})} className="w-full bg-[#060A11] border border-white/10 rounded-xl px-5 py-4 text-white text-sm focus:outline-none focus:border-[#34d399]/50 transition-colors placeholder:text-slate-700 shadow-[inset_0_2px_10px_rgba(0,0,0,0.3)]" placeholder="Ej. Juan Pérez" />
                 </div>
                 <div>
                   <label className="text-[10px] uppercase tracking-[0.15em] text-slate-500 font-bold ml-1 block mb-2">Agencia / Empresa</label>
-                  <input required value={contact.company} onChange={e => setContact({...contact, company: e.target.value})} className="w-full bg-[#060A11] border border-white/10 rounded-xl px-5 py-4 text-white text-sm focus:outline-none focus:border-[#34d399]/50 transition-colors placeholder:text-slate-700 shadow-[inset_0_2px_10px_rgba(0,0,0,0.3)]" placeholder="Ej. Acquisition.com" />
+                  <input required value={contact.company} onChange={e => setContact({...contact, company: e.target.value})} className="w-full bg-[#060A11] border border-white/10 rounded-xl px-5 py-4 text-white text-sm focus:outline-none focus:border-[#34d399]/50 transition-colors placeholder:text-slate-700 shadow-[inset_0_2px_10px_rgba(0,0,0,0.3)]" placeholder="Ej. Inmobiliaria del Valle" />
                 </div>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div>
                   <label className="text-[10px] uppercase tracking-[0.15em] text-slate-500 font-bold ml-1 block mb-2">Correo Profesional</label>
-                  <input required type="email" value={contact.email} onChange={e => setContact({...contact, email: e.target.value})} className="w-full bg-[#060A11] border border-white/10 rounded-xl px-5 py-4 text-white text-sm focus:outline-none focus:border-[#34d399]/50 transition-colors placeholder:text-slate-700 shadow-[inset_0_2px_10px_rgba(0,0,0,0.3)]" placeholder="ceo@empresa.com" />
+                  <input required type="email" value={contact.email} onChange={e => setContact({...contact, email: e.target.value})} className="w-full bg-[#060A11] border border-white/10 rounded-xl px-5 py-4 text-white text-sm focus:outline-none focus:border-[#34d399]/50 transition-colors placeholder:text-slate-700 shadow-[inset_0_2px_10px_rgba(0,0,0,0.3)]" placeholder="tucorreo@empresa.com" />
                 </div>
                 <div>
                   <label className="text-[10px] uppercase tracking-[0.15em] text-slate-500 font-bold ml-1 block mb-2">WhatsApp Directo</label>
@@ -498,7 +529,7 @@ export default function Diagnostico() {
                       value={contact.dialCode}
                       onChange={e => setContact({...contact, dialCode: e.target.value})}
                       aria-label="Indicativo pais"
-                      className="bg-[#060A11] border border-white/10 rounded-xl px-3 py-4 text-white text-sm focus:outline-none focus:border-[#34d399]/50 transition-colors shadow-[inset_0_2px_10px_rgba(0,0,0,0.3)] font-mono w-[120px] cursor-pointer"
+                      className="bg-[#060A11] border border-white/10 rounded-xl px-3 py-4 text-white text-sm focus:outline-none focus:border-[#34d399]/50 transition-colors shadow-[inset_0_2px_10px_rgba(0,0,0,0.3)] font-mono w-[116px] shrink-0 cursor-pointer"
                     >
                       {DIAL_CODES.map(c => (
                         <option key={c.code} value={c.code} className="bg-[#060A11] text-white">
@@ -514,7 +545,7 @@ export default function Diagnostico() {
                       value={contact.phone}
                       onChange={e => setContact({...contact, phone: e.target.value.replace(/\D/g, '')})}
                       className="flex-1 min-w-0 bg-[#060A11] border border-white/10 rounded-xl px-5 py-4 text-white text-sm focus:outline-none focus:border-[#34d399]/50 transition-colors placeholder:text-slate-700 shadow-[inset_0_2px_10px_rgba(0,0,0,0.3)]"
-                      placeholder="3001234567"
+                      placeholder="55 1234 5678"
                       maxLength={15}
                     />
                   </div>
@@ -522,7 +553,7 @@ export default function Diagnostico() {
               </div>
 
               <button type="submit" className="w-full mt-6 bg-[#34d399] text-[#030508] text-[13px] font-bold uppercase tracking-[0.2em] py-5 rounded-xl transition-all flex items-center justify-center gap-3 hover:bg-[#2dd4bf] active:scale-95 shadow-[0_0_30px_rgba(52,211,153,0.3)] group">
-                 Desbloquear Blueprint
+                 Desbloquear mi Plano
                  <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform"/>
               </button>
             </form>
@@ -560,8 +591,8 @@ export default function Diagnostico() {
               <div className="inline-block px-4 py-1.5 rounded-full border border-[#34d399]/20 bg-[#34d399]/10 print:border-black/20 print:bg-transparent">
                 <span className="text-[10px] uppercase tracking-[0.3em] font-bold text-[#34d399] print:text-black">Diagnóstico Estratégico Confidencial</span>
               </div>
-              <h1 className="text-5xl md:text-7xl font-medium tracking-tighter leading-none text-white">
-                Stratos IAOS <span className="text-slate-400 font-light">Blueprint</span>
+              <h1 className="text-4xl sm:text-5xl md:text-7xl font-medium tracking-tighter leading-[1.05] md:leading-none text-white">
+                Stratos IAOS <span className="text-slate-400 font-light">· Plano Estratégico</span>
               </h1>
               <p className="text-lg text-slate-400 font-light print:text-black/60 tracking-wide">Preparado exclusivamente para: <strong className="text-white print:text-black font-medium">{reportData.fullName}</strong></p>
             </div>
@@ -626,7 +657,7 @@ export default function Diagnostico() {
               </div>
 
               <div className="p-8 md:p-10 rounded-[2rem] bg-[#060A11] border border-white/5 print:border-black/20 print:bg-transparent">
-                <h3 className="text-[11px] uppercase tracking-[0.2em] font-bold text-slate-500 mb-8 flex items-center gap-3"><CalendarDays size={16}/> Roadmap 14 Días</h3>
+                <h3 className="text-[11px] uppercase tracking-[0.2em] font-bold text-slate-500 mb-8 flex items-center gap-3"><CalendarDays size={16} className="shrink-0"/> Plan de 14 Días</h3>
                 <div className="relative border-l border-white/10 ml-4 space-y-8 print:border-black/20">
                   {reportData.timeline.map((step, i) => (
                     <div key={i} className="relative pl-8">
@@ -641,11 +672,11 @@ export default function Diagnostico() {
             </div>
           </div>
 
-          <div className="mt-16 p-12 md:p-16 rounded-[2.5rem] bg-gradient-to-br from-[#34d399]/10 to-[#060A11] border border-[#34d399]/30 text-center print:hidden relative overflow-hidden shadow-[0_0_60px_rgba(52,211,153,0.1)]">
+          <div className="mt-16 p-8 sm:p-12 md:p-16 rounded-[2.5rem] bg-gradient-to-br from-[#34d399]/10 to-[#060A11] border border-[#34d399]/30 text-center print:hidden relative overflow-hidden shadow-[0_0_60px_rgba(52,211,153,0.1)]">
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(52,211,153,0.1)_0%,transparent_60%)] pointer-events-none"></div>
             <h2 className="text-3xl md:text-4xl font-light tracking-tight mb-6 text-white relative z-10">La Ejecución "Llave en Mano"</h2>
             <p className="text-[17px] text-slate-300 font-light max-w-3xl mx-auto mb-10 leading-relaxed relative z-10">
-              Ya tienes la arquitectura exacta, <strong className="text-white font-medium">{reportData.firstName}</strong>. Puedes intentar armar esto internamente (arriesgando meses de prueba y error), o permitir que nuestro equipo instale este motor <strong className="text-[#34d399] font-medium">100% "Done-For-You"</strong>.<br/><br/>
+              Ya tienes la arquitectura exacta, <strong className="text-white font-medium">{reportData.firstName}</strong>. Puedes intentar armar esto internamente (arriesgando meses de prueba y error), o permitir que nuestro equipo instale este motor <strong className="text-[#34d399] font-medium">100% "Llave en Mano"</strong>.<br/><br/>
               Nos encargamos del código, de los LLMs y de la integración total. Tú solo recibes las citas pre-calificadas.
             </p>
             <a
