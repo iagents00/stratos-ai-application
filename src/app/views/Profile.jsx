@@ -17,7 +17,7 @@
  * Workflow:  n8n/workflows/stratos-telegram-bot-v3-asesor.json
  */
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Send, Check, X, ExternalLink, MessageCircle, RefreshCw, User, Bot, Lock, PhoneCall } from "lucide-react";
+import { Send, Check, X, ExternalLink, MessageCircle, RefreshCw, User, Bot, Lock, PhoneCall, Globe } from "lucide-react";
 import { P, LP, font, fontDisp } from "../../design-system/tokens";
 import { G, Pill } from "../SharedComponents";
 import { useAuth } from "../../hooks/useAuth";
@@ -74,6 +74,7 @@ export default function Profile({ theme = "dark", T: Tprop }) {
 
       <PasswordPanel T={T} isLight={isLight} user={user} />
       <SupportPanel T={T} isLight={isLight} clientConfig={clientConfig} />
+      <TimezonePanel T={T} isLight={isLight} user={user} />
       <ConnectTelegramPanel T={T} isLight={isLight} />
       <RecentBotActivity T={T} isLight={isLight} />
     </div>
@@ -178,6 +179,150 @@ function inputStyle(T, isLight) {
 
 function supportButtonStyle(T, isLight, primary) {
   return { display: "inline-flex", alignItems: "center", gap: 8, height: 38, padding: "0 13px", borderRadius: 11, textDecoration: "none", fontSize: 13, fontWeight: 800, fontFamily: fontDisp, color: primary ? "#06120E" : T.txt, background: primary ? T.accent : (isLight ? "rgba(255,255,255,0.70)" : "rgba(255,255,255,0.055)"), border: primary ? "none" : `1px solid ${T.border}` };
+}
+
+/* ─────────────────────────────────────────────────────────────────────── */
+/*  TimezonePanel — zona horaria del asesor (default Cancun para Stratos)  */
+/* ─────────────────────────────────────────────────────────────────────── */
+
+// Lista curada de zonas IANA mas usadas para clientes Stratos.
+// Cancun primero porque es el default para Duke (todos sus asesores estan en
+// Quintana Roo, que NO tiene DST). El asesor puede elegir otra si vive en
+// una zona diferente. Ordenadas por relevancia: Mexico/LATAM primero.
+const TZ_OPTIONS = [
+  { value: "America/Cancun",       label: "Cancun (UTC-5, sin horario verano)" },
+  { value: "America/Mexico_City",  label: "Ciudad de Mexico (UTC-6/-5)" },
+  { value: "America/Monterrey",    label: "Monterrey (UTC-6/-5)" },
+  { value: "America/Tijuana",      label: "Tijuana / Mexicali (UTC-8/-7)" },
+  { value: "America/Bogota",       label: "Bogota (UTC-5)" },
+  { value: "America/Lima",         label: "Lima (UTC-5)" },
+  { value: "America/Guayaquil",    label: "Guayaquil / Quito (UTC-5)" },
+  { value: "America/Buenos_Aires", label: "Buenos Aires (UTC-3)" },
+  { value: "America/Santiago",     label: "Santiago (UTC-4/-3)" },
+  { value: "America/Caracas",      label: "Caracas (UTC-4)" },
+  { value: "America/New_York",     label: "Nueva York / Miami (UTC-5/-4)" },
+  { value: "America/Los_Angeles",  label: "Los Angeles (UTC-8/-7)" },
+  { value: "Europe/Madrid",        label: "Madrid (UTC+1/+2)" },
+  { value: "UTC",                  label: "UTC" },
+];
+
+function TimezonePanel({ T = P, isLight = false, user }) {
+  const [currentTz, setCurrentTz] = useState("America/Cancun");
+  const [draftTz, setDraftTz]     = useState("America/Cancun");
+  const [busy, setBusy]           = useState(false);
+  const [message, setMessage]     = useState("");
+  const [errorMsg, setErrorMsg]   = useState("");
+  const disabled = user?.isDemo || user?._offline;
+
+  // Detectada del navegador (solo informativo - NO se aplica automaticamente
+  // porque el default de Stratos es Cancun por decision operativa).
+  const detected = (() => {
+    try { return Intl.DateTimeFormat().resolvedOptions().timeZone || ""; }
+    catch { return ""; }
+  })();
+
+  useEffect(() => {
+    let mounted = true;
+    if (disabled) return;
+    supabase.rpc("fn_get_my_timezone")
+      .then(({ data, error }) => {
+        if (!mounted) return;
+        const tz = (!error && data) ? String(data) : "America/Cancun";
+        setCurrentTz(tz);
+        setDraftTz(tz);
+      });
+    return () => { mounted = false; };
+  }, [disabled]);
+
+  const save = async (tz) => {
+    setMessage(""); setErrorMsg("");
+    if (disabled) return setErrorMsg("Conectate a Supabase para cambiar la zona horaria.");
+    if (!tz) return;
+    setBusy(true);
+    const { data, error } = await supabase.rpc("fn_set_my_timezone", { p_tz: tz });
+    setBusy(false);
+    if (error) return setErrorMsg(error.message || "No se pudo actualizar la zona horaria.");
+    setCurrentTz(String(data || tz));
+    setDraftTz(String(data || tz));
+    setMessage(`Zona horaria actualizada a ${data || tz}.`);
+  };
+
+  // Si la detectada no esta en TZ_OPTIONS, la agregamos dinamicamente
+  // para que el asesor pueda elegirla aunque sea una zona menos comun.
+  const options = (() => {
+    const arr = [...TZ_OPTIONS];
+    if (detected && !arr.some(o => o.value === detected)) {
+      arr.push({ value: detected, label: `${detected} (detectada)` });
+    }
+    if (currentTz && !arr.some(o => o.value === currentTz)) {
+      arr.push({ value: currentTz, label: `${currentTz} (actual)` });
+    }
+    return arr;
+  })();
+
+  return (
+    <G T={T} style={{ padding: 24, marginBottom: 18 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 14 }}>
+        <div style={{ width: 40, height: 40, borderRadius: 12, background: `${T.accent}14`, border: `1px solid ${T.accent}2A`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+          <Globe size={18} color={T.accent} strokeWidth={1.9} />
+        </div>
+        <div style={{ minWidth: 0 }}>
+          <h2 style={{ margin: "0 0 2px", fontSize: 17, fontWeight: 600, color: T.txt, fontFamily: fontDisp }}>Zona horaria</h2>
+          <p style={{ margin: 0, fontSize: 12, color: T.txt2 }}>
+            El bot de Telegram y los recordatorios usan esta zona para interpretar y mostrar fechas. Default: Cancun.
+          </p>
+        </div>
+      </div>
+
+      {detected && detected !== currentTz && (
+        <div style={{ marginBottom: 10, padding: "8px 12px", borderRadius: 8, background: isLight ? "rgba(15,23,42,0.04)" : "rgba(255,255,255,0.04)", border: `1px solid ${T.border}`, fontSize: 12, color: T.txt2, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, flexWrap: "wrap" }}>
+          <span>Detectada por tu navegador: <strong style={{ color: T.txt }}>{detected}</strong></span>
+          <button type="button" onClick={() => save(detected)} disabled={disabled || busy} style={{ padding: "5px 10px", borderRadius: 8, border: `1px solid ${T.accent}40`, background: `${T.accent}14`, color: T.txt, fontSize: 11, fontWeight: 700, fontFamily: fontDisp, cursor: disabled || busy ? "not-allowed" : "pointer" }}>
+            Usar la detectada
+          </button>
+        </div>
+      )}
+
+      <select
+        value={draftTz}
+        onChange={(e) => setDraftTz(e.target.value)}
+        disabled={disabled || busy}
+        style={{
+          width: "100%", height: 40, borderRadius: 11, padding: "0 12px",
+          border: `1px solid ${T.border}`,
+          background: isLight ? "rgba(255,255,255,0.72)" : "rgba(255,255,255,0.045)",
+          color: T.txt, fontFamily: font, fontSize: 13, outline: "none",
+          colorScheme: isLight ? "light" : "dark",
+        }}
+      >
+        {options.map(o => (
+          <option key={o.value} value={o.value} style={{ background: isLight ? "#FFFFFF" : "#0F1B2D", color: T.txt }}>
+            {o.label}
+          </option>
+        ))}
+      </select>
+
+      <div style={{ marginTop: 12, display: "flex", gap: 8, alignItems: "center", justifyContent: "space-between", flexWrap: "wrap" }}>
+        <span style={{ fontSize: 12, color: T.txt3 }}>
+          Actual: <strong style={{ color: T.txt }}>{currentTz}</strong>
+        </span>
+        <button
+          type="button"
+          onClick={() => save(draftTz)}
+          disabled={disabled || busy || draftTz === currentTz}
+          style={{ height: 36, padding: "0 16px", borderRadius: 10, border: "none", background: (disabled || busy || draftTz === currentTz) ? (isLight ? "rgba(15,23,42,0.08)" : "rgba(255,255,255,0.08)") : T.accent, color: (disabled || busy || draftTz === currentTz) ? T.txt3 : "#06120E", fontWeight: 800, fontFamily: fontDisp, fontSize: 12, cursor: (disabled || busy || draftTz === currentTz) ? "not-allowed" : "pointer" }}
+        >
+          {busy ? "Guardando..." : "Guardar zona horaria"}
+        </button>
+      </div>
+
+      {(message || errorMsg) && (
+        <div style={{ marginTop: 10, padding: "8px 12px", borderRadius: 10, fontSize: 12, color: errorMsg ? (isLight ? "#B91C1C" : "#FCA5A5") : (isLight ? "#047857" : "#6EE7C2"), background: errorMsg ? (isLight ? "rgba(225,29,72,0.08)" : "rgba(248,113,113,0.08)") : `${T.accent}12`, border: `1px solid ${errorMsg ? (isLight ? "rgba(225,29,72,0.22)" : "rgba(248,113,113,0.22)") : `${T.accent}2A`}` }}>
+          {errorMsg || message}
+        </div>
+      )}
+    </G>
+  );
 }
 
 /* ─────────────────────────────────────────────────────────────────────── */
