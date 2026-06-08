@@ -70,7 +70,8 @@ const grupo28Config = {
 
   support: {
     email:    null,   // Pendiente: email de soporte de Grupo 28
-    whatsapp: null,
+    whatsapp: "+5219842803001",
+    phoneLabel: "+52 1 984 280 3001",
   },
 
   // Configuración del CRM específica de Grupo 28.

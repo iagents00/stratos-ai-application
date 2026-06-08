@@ -80,6 +80,10 @@ export const DEFAULT_CLIENT_CONFIG = {
   support: {
     email:    "soporte@stratoscapitalgroup.com",
     whatsapp: null,
+    // Etiqueta del telefono de soporte mostrada en el header (icono PhoneCall)
+    // y en el panel "Soporte directo" del Perfil/System. Si es null, no se
+    // muestra el boton de llamada. Cada cliente lo setea en su config.js.
+    phoneLabel: null,
   },
 
   // Configuración del CRM por cliente
@@ -110,6 +114,12 @@ export const DEFAULT_CLIENT_CONFIG = {
     // de su propia fila profiles y refleja en vivo lo que escribió el bot.
     // Default OFF → solo clientes que lo validen lo prenden.
     prefsRealtimeSync: false,
+
+    // Bulk reassign: comportamiento legacy/seguro por defecto = mover los
+    // leads reasignados a "Contactame Ya" para que el nuevo asesor los vea
+    // arriba del pipeline. Clientes pueden setear esto a false para preservar
+    // la etapa actual en cada lead al reasignar.
+    bulkReassignToContactameByDefault: true,
   },
 };
 

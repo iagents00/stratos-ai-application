@@ -52,7 +52,8 @@ const stratosSalesConfig = {
 
   support: {
     email:    null,
-    whatsapp: null,
+    whatsapp: "+5219842803001",
+    phoneLabel: "+52 1 984 280 3001",
   },
 
   crm: {
