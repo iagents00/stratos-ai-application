@@ -79,7 +79,12 @@ const isPrivacy = matchPath(PRIVACY_PATHS);
 const isDeletion = matchPath(DELETION_PATHS);
 const isDelivery = matchPath(DELIVERY_PATHS);
 const isManual = matchPath(MANUAL_PATHS);
-const isDiagnostico = matchPath(DIAGNOSTICO_PATHS);
+// /diagnostico (formulario público) y /diagnostico/view/<lead_id> (vista compartida
+// del Blueprint que vio el cliente — el link llega al equipo por Telegram al
+// crearse cada lead). Ambas se renderean con el mismo componente Diagnostico.jsx,
+// que detecta la URL y decide si pinta el wizard o salta directo al reporte.
+const isDiagnosticoView = /^\/diagnostico\/view\/[A-Za-z0-9-]+\/?$/.test(pathname);
+const isDiagnostico = matchPath(DIAGNOSTICO_PATHS) || isDiagnosticoView;
 
 // ─── RESOLUCIÓN DE CLIENTE (multi-tenant) ────────────────────────────────────
 // Se detecta el cliente activo según hostname/path:

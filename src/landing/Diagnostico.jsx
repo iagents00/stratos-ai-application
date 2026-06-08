@@ -253,6 +253,21 @@ const AnticipationLoader = ({ text, subtext }) => (
 );
 
 /* ═══════════════════════════════════════════════════════════════════════════
+   SUPABASE — credenciales públicas del proyecto Stratos (anon key, no es
+   secreto: es la misma que ya está en src/lib/supabase.js como FALLBACK).
+   Se duplica acá para mantener este componente standalone — no requiere
+   importar el cliente pesado de @supabase/supabase-js en la landing.
+   ═══════════════════════════════════════════════════════════════════════════ */
+const SUPA_URL = "https://glulgyhkrqpykxmujodb.supabase.co";
+const SUPA_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdsdWxneWhrcnFweWt4bXVqb2RiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcyNjc0ODQsImV4cCI6MjA5Mjg0MzQ4NH0.GUPRPxZM8G50TVpvTDegzADO8n117clpTgSQpaMJAEk";
+
+/** Si la URL es /diagnostico/view/<uuid>, devuelve el UUID; si no, null. */
+function parseViewLeadId(pathname) {
+  const m = pathname.match(/^\/diagnostico\/view\/([A-Za-z0-9-]{8,})\/?$/);
+  return m ? m[1] : null;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
    MAIN DIAGNOSTICO COMPONENT
    ═══════════════════════════════════════════════════════════════════════════ */
 export default function Diagnostico() {
@@ -267,11 +282,98 @@ export default function Diagnostico() {
   const [contextText, setContextText] = useState("");
   const [loadingMsg, setLoadingMsg] = useState("");
 
+  // Modo "vista compartida": cuando la URL es /diagnostico/view/<lead_id>,
+  // cargamos el Blueprint exactamente como lo vio el cliente. El equipo
+  // recibe este link en el Telegram que dispara n8n cuando se crea un lead
+  // nuevo. Permite ver el mismo reporte sin tener que volver a llenar el form.
+  const [viewMode, setViewMode] = useState(false);
+  const [viewLoading, setViewLoading] = useState(false);
+  const [viewError, setViewError] = useState(null);
+
   // Tailwind se carga via CDN desde index.html (preload sincrono para evitar FOUC).
   // Antes lo inyectabamos en runtime aqui, pero el primer paint del hero quedaba
   // sin estilos hasta que descargaba el CDN. Movido a <head> en PR #163.
 
   useEffect(() => { window.scrollTo({ top: 0, behavior: 'smooth' }); }, [stage, step]);
+
+  // Detectar si estamos en modo vista compartida y cargar el Blueprint del lead.
+  // Corre una sola vez al montar el componente. Si la URL no es de vista, no
+  // hace nada y el wizard normal se renderea como siempre.
+  useEffect(() => {
+    const leadId = parseViewLeadId(window.location.pathname);
+    if (!leadId) return;
+
+    setViewMode(true);
+    setViewLoading(true);
+
+    const url = `${SUPA_URL}/rest/v1/leads?id=eq.${encodeURIComponent(leadId)}` +
+      `&select=name,email,whatsapp_phone_e164,diagnostico_payload&limit=1`;
+
+    fetch(url, {
+      headers: {
+        apikey: SUPA_ANON_KEY,
+        Authorization: `Bearer ${SUPA_ANON_KEY}`,
+        Accept: "application/json",
+      },
+    })
+      .then(r => r.json())
+      .then(rows => {
+        const lead = Array.isArray(rows) ? rows[0] : null;
+        if (!lead) throw new Error('not_found');
+        const payload = lead.diagnostico_payload || {};
+        const answersRaw = payload.answers_raw || {};
+        if (!Object.keys(answersRaw).length) throw new Error('no_answers');
+
+        const blueprint = generateBlueprint(answersRaw, lead.name || 'Líder');
+        setReportData(blueprint);
+        setContact({
+          name: lead.name || '',
+          company: payload.company || '',
+          email: lead.email || '',
+          phone: lead.whatsapp_phone_e164 || '',
+          dialCode: '+52',
+        });
+        setStage('report');
+        setViewLoading(false);
+      })
+      .catch(err => {
+        // eslint-disable-next-line no-console
+        console.warn('[Diagnostico/view] fallo carga:', err?.message || err);
+        setViewError(err?.message || 'load_failed');
+        setViewLoading(false);
+      });
+  }, []);
+
+  /* ── VIEW MODE: loader / error ─────────────────────────────────────────── */
+  if (viewMode && viewLoading) {
+    return (
+      <div className="min-h-screen bg-[#060A11]">
+        <AnticipationLoader text="Cargando diagnóstico del cliente..." subtext="Recuperando blueprint" />
+      </div>
+    );
+  }
+  if (viewMode && viewError) {
+    return (
+      <div className="min-h-screen bg-[#060A11] text-white flex items-center justify-center p-6 font-sans">
+        <div className="max-w-md w-full text-center">
+          <div className="w-16 h-16 mx-auto mb-6 rounded-2xl border border-red-500/30 bg-red-500/10 flex items-center justify-center">
+            <XCircle className="w-8 h-8 text-red-400" strokeWidth={1.5} />
+          </div>
+          <h2 className="text-2xl font-medium tracking-tight mb-3">Diagnóstico no disponible</h2>
+          <p className="text-sm text-slate-400 leading-relaxed mb-8">
+            No pudimos cargar este diagnóstico. Es posible que el link esté incorrecto
+            o que el cliente todavía no haya completado el formulario.
+          </p>
+          <a
+            href="/diagnostico"
+            className="inline-flex items-center gap-3 px-8 py-3.5 bg-[#34d399] text-[#030508] text-[12px] font-bold uppercase tracking-[0.18em] rounded-full hover:bg-[#2dd4bf] transition-all"
+          >
+            Iniciar un diagnóstico nuevo <ArrowRight size={14} strokeWidth={2.5} />
+          </a>
+        </div>
+      </div>
+    );
+  }
 
   const handleOptionToggle = (val) => {
     setActiveSelections(prev => prev.includes(val) ? prev.filter(v => v !== val) : [...prev, val]);
