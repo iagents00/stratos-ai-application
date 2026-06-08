@@ -25,7 +25,7 @@
  */
 import { useState, useEffect } from "react";
 import {
-  AlertTriangle, Target, ArrowRight, ArrowLeft, Check, Zap, Clock, Sparkles,
+  AlertTriangle, Target, ArrowRight, ArrowLeft, Check, Zap, Clock, Atom,
   PhoneCall, Database, Network, Terminal, CalendarDays,
   Cpu, TrendingUp, Lock, Workflow, Layers,
   XCircle, Bot, Smartphone, Headset,
@@ -474,7 +474,7 @@ export default function Diagnostico() {
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff03_1px,transparent_1px),linear-gradient(to_bottom,#ffffff03_1px,transparent_1px)] bg-[size:40px_40px] [mask-image:radial-gradient(ellipse_80%_50%_at_50%_50%,#000_60%,transparent_100%)] pointer-events-none"></div>
         <div className="z-10 max-w-5xl text-center flex flex-col items-center animate-[stratosRise_0.9s_ease-out_both]">
           <div className="mb-10 px-5 py-2.5 rounded-full border border-white/10 bg-white/[0.03] backdrop-blur-md inline-flex items-center gap-2">
-            <Sparkles className="w-3.5 h-3.5 text-[#34d399]" strokeWidth={2} />
+            <Atom className="w-3.5 h-3.5 text-[#34d399]" strokeWidth={1.75} />
             <span className="text-[11px] md:text-xs font-bold tracking-[0.3em] uppercase text-slate-300">
               Auditoría Ejecutiva Stratos
             </span>
