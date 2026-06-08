@@ -72,6 +72,22 @@ export const fmtNow = () => {
 };
 
 /**
+ * nowLocalDateTime — Devuelve "AHORA" formateado como input[type="datetime-local"]
+ * (YYYY-MM-DDTHH:MM), en HORARIO LOCAL del browser. Sirve para usarse como
+ * atributo `min` de un input datetime-local y bloquear la seleccion de fechas
+ * pasadas. Razon: un asesor que registre una proxima accion en el pasado
+ * pierde el recordatorio sin saberlo.
+ *
+ * Nota timezone: el input datetime-local es por diseño LOCAL al browser, no
+ * UTC. El "ahora" sigue siendo coherente con el reloj del asesor.
+ */
+export const nowLocalDateTime = () => {
+  const d = new Date();
+  const pad = (n) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+};
+
+/**
  * genId — Genera un ID único.
  */
 export const genId = () =>
