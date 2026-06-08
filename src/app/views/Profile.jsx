@@ -17,10 +17,12 @@
  * Workflow:  n8n/workflows/stratos-telegram-bot-v3-asesor.json
  */
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Send, Check, X, ExternalLink, MessageCircle, RefreshCw, User, Bot } from "lucide-react";
+import { Send, Check, X, ExternalLink, MessageCircle, RefreshCw, User, Bot, Lock, PhoneCall } from "lucide-react";
 import { P, LP, font, fontDisp } from "../../design-system/tokens";
 import { G, Pill } from "../SharedComponents";
 import { useAuth } from "../../hooks/useAuth";
+import { useClient } from "../../hooks/useClient";
+import { supabase } from "../../lib/supabase";
 import {
   getPairingStatus,
   requestPairingCode,
@@ -40,6 +42,7 @@ const BOT_USERNAME = import.meta.env.VITE_TELEGRAM_BOT_USERNAME || "";
 
 export default function Profile({ theme = "dark", T: Tprop }) {
   const { user } = useAuth();
+  const { config: clientConfig } = useClient();
   const isLight = theme === "light";
   const T = Tprop || (isLight ? LP : P);
 
@@ -69,10 +72,112 @@ export default function Profile({ theme = "dark", T: Tprop }) {
         </div>
       </div>
 
+      <PasswordPanel T={T} isLight={isLight} user={user} />
+      <SupportPanel T={T} isLight={isLight} clientConfig={clientConfig} />
       <ConnectTelegramPanel T={T} isLight={isLight} />
       <RecentBotActivity T={T} isLight={isLight} />
     </div>
   );
+}
+
+/* ─────────────────────────────────────────────────────────────────────── */
+/*  System (cambio de contrasena) + Soporte directo                         */
+/* ─────────────────────────────────────────────────────────────────────── */
+
+function normalizePhoneHref(value) {
+  const cleaned = String(value || "").replace(/[^\d+]/g, "");
+  return cleaned ? `tel:${cleaned}` : null;
+}
+
+function normalizeWaHref(value) {
+  const digits = String(value || "").replace(/\D/g, "");
+  return digits ? `https://wa.me/${digits}?text=${encodeURIComponent("Hola, necesito soporte con el CRM.")}` : null;
+}
+
+function PasswordPanel({ T = P, isLight = false, user }) {
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState("");
+  const [errorMsg, setErrorMsg] = useState("");
+  const disabled = user?.isDemo || user?._offline;
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setMessage("");
+    setErrorMsg("");
+    if (disabled) return setErrorMsg("Conectate a Supabase para cambiar la contrasena.");
+    if (password.length < 8) return setErrorMsg("Usa minimo 8 caracteres.");
+    if (password !== confirmPassword) return setErrorMsg("Las contrasenas no coinciden.");
+
+    setBusy(true);
+    const { error } = await supabase.auth.updateUser({ password });
+    setBusy(false);
+
+    if (error) return setErrorMsg(error.message || "No se pudo actualizar la contrasena.");
+    setPassword("");
+    setConfirmPassword("");
+    setMessage("Contrasena actualizada correctamente.");
+  };
+
+  return (
+    <G T={T} style={{ padding: 24, marginBottom: 18 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 16 }}>
+        <div style={{ width: 40, height: 40, borderRadius: 12, background: `${T.accent}14`, border: `1px solid ${T.accent}2A`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+          <Lock size={18} color={T.accent} strokeWidth={1.9} />
+        </div>
+        <div>
+          <h2 style={{ margin: "0 0 2px", fontSize: 17, fontWeight: 600, color: T.txt, fontFamily: fontDisp }}>System</h2>
+          <p style={{ margin: 0, fontSize: 12, color: T.txt2 }}>Cambia tu contrasena de acceso sin pedir soporte.</p>
+        </div>
+      </div>
+      <form onSubmit={handleSubmit} style={{ display: "grid", gap: 10 }}>
+        <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Nueva contrasena" autoComplete="new-password" disabled={disabled || busy} style={inputStyle(T, isLight)} />
+        <input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="Confirmar contrasena" autoComplete="new-password" disabled={disabled || busy} style={inputStyle(T, isLight)} />
+        <button type="submit" disabled={disabled || busy} style={{ height: 40, borderRadius: 11, border: "none", background: disabled || busy ? (isLight ? "rgba(15,23,42,0.08)" : "rgba(255,255,255,0.08)") : T.accent, color: disabled || busy ? T.txt3 : "#06120E", fontWeight: 800, fontFamily: fontDisp, cursor: disabled || busy ? "not-allowed" : "pointer" }}>
+          {busy ? "Actualizando..." : "Actualizar contrasena"}
+        </button>
+      </form>
+      {(message || errorMsg) && (
+        <div style={{ marginTop: 12, padding: "10px 12px", borderRadius: 10, fontSize: 12, color: errorMsg ? (isLight ? "#B91C1C" : "#FCA5A5") : (isLight ? "#047857" : "#6EE7C2"), background: errorMsg ? (isLight ? "rgba(225,29,72,0.08)" : "rgba(248,113,113,0.08)") : `${T.accent}12`, border: `1px solid ${errorMsg ? (isLight ? "rgba(225,29,72,0.22)" : "rgba(248,113,113,0.22)") : `${T.accent}2A`}` }}>
+          {errorMsg || message}
+        </div>
+      )}
+    </G>
+  );
+}
+
+function SupportPanel({ T = P, isLight = false, clientConfig }) {
+  const label = clientConfig?.support?.phoneLabel || clientConfig?.support?.whatsapp || "";
+  const telHref = normalizePhoneHref(label);
+  const waHref = normalizeWaHref(clientConfig?.support?.whatsapp || label);
+  if (!telHref && !waHref) return null;
+
+  return (
+    <G T={T} style={{ padding: 24, marginBottom: 18 }}>
+      <div style={{ display: "flex", gap: 14, alignItems: "center", marginBottom: 14 }}>
+        <div style={{ width: 40, height: 40, borderRadius: 12, background: `${T.accent}14`, border: `1px solid ${T.accent}2A`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+          <PhoneCall size={18} color={T.accent} strokeWidth={1.9} />
+        </div>
+        <div style={{ minWidth: 0 }}>
+          <h2 style={{ margin: "0 0 2px", fontSize: 17, fontWeight: 600, color: T.txt, fontFamily: fontDisp }}>Soporte directo</h2>
+          <p style={{ margin: 0, fontSize: 12, color: T.txt2 }}>Mientras activamos mas funciones, llama o escribe a soporte.</p>
+        </div>
+      </div>
+      <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+        {telHref && <a href={telHref} style={supportButtonStyle(T, isLight, true)}><PhoneCall size={14} /> Llamar {label}</a>}
+        {waHref && <a href={waHref} target="_blank" rel="noreferrer" style={supportButtonStyle(T, isLight, false)}><MessageCircle size={14} /> WhatsApp soporte</a>}
+      </div>
+    </G>
+  );
+}
+
+function inputStyle(T, isLight) {
+  return { height: 40, borderRadius: 11, border: `1px solid ${T.border}`, background: isLight ? "rgba(255,255,255,0.72)" : "rgba(255,255,255,0.045)", color: T.txt, padding: "0 12px", fontFamily: font, fontSize: 13, outline: "none" };
+}
+
+function supportButtonStyle(T, isLight, primary) {
+  return { display: "inline-flex", alignItems: "center", gap: 8, height: 38, padding: "0 13px", borderRadius: 11, textDecoration: "none", fontSize: 13, fontWeight: 800, fontFamily: fontDisp, color: primary ? "#06120E" : T.txt, background: primary ? T.accent : (isLight ? "rgba(255,255,255,0.70)" : "rgba(255,255,255,0.055)"), border: primary ? "none" : `1px solid ${T.border}` };
 }
 
 /* ─────────────────────────────────────────────────────────────────────── */

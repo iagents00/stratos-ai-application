@@ -53,7 +53,8 @@ const dukeConfig = {
 
   support: {
     email:    "soporte@stratoscapitalgroup.com",
-    whatsapp: null,
+    whatsapp: "+5219842803001",
+    phoneLabel: "+52 1 984 280 3001",
   },
 
   // Configuración del CRM específica de Duke.

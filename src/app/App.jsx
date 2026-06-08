@@ -22,7 +22,7 @@ import {
 } from "../lib/offline-mode";
 
 import {
-  Search, Bell, Settings, LogOut, Sun, Moon, ChevronDown, ChevronsDown,
+  Search, Bell, Settings, LogOut, Sun, Moon, ChevronDown, ChevronsDown, PhoneCall,
 } from "lucide-react";
 import "./App.css";
 
@@ -150,6 +150,11 @@ export default function App() {
   // marca sin depender de checks hardcoded.
   const { config: clientConfig } = useClient();
   const isAsesorRole     = !["super_admin","admin","director","ceo"].includes(user?.role);
+  // Telefono de soporte del tenant para mostrar como atajo en el header.
+  // Si el cliente no define support.phoneLabel ni support.whatsapp, el boton
+  // no se renderiza (cero impacto visual para clientes sin numero).
+  const supportPhoneLabel = clientConfig?.support?.phoneLabel || clientConfig?.support?.whatsapp || "";
+  const supportPhoneHref  = supportPhoneLabel ? `tel:${String(supportPhoneLabel).replace(/[^\d+]/g, "")}` : "";
   // Vista activa persistida por usuario en localStorage. Si haces F5 estando
   // en el CRM, vuelves al CRM (no al Comando). Validamos contra los permisos
   // del rol actual por si cambió desde la última sesión.
@@ -1092,21 +1097,36 @@ export default function App() {
         <div style={{ width:"100%", display:"flex", flexDirection:"column", alignItems:"center", paddingBottom:12 }}>
           <div style={{ height:1, width:34, background: isLight ? "rgba(13,154,118,0.10)" : "rgba(255,255,255,0.06)", margin:"4px auto 8px" }} />
           <div style={{ display:"flex", flexDirection:"column", alignItems:"center", gap:3 }}>
-            <button title={canAccessModule("admin", user) ? "Gestión de Usuarios" : "Configuración"}
-              onClick={() => canAccessModule("admin", user) ? setV("admin") : null}
+            <button title={canAccessModule("admin", user) ? "Gestión de Usuarios" : "System - contrasena y soporte"}
+              onClick={() => canAccessModule("admin", user) ? setV("admin") : setV("perfil")}
               style={{
                 width:44, height:44, borderRadius:13, cursor:"pointer",
-                background: v==="admin" ? "rgba(167,139,250,0.14)" : (isLight ? "rgba(255,255,255,0.62)" : "rgba(255,255,255,0.038)"),
-                border: v==="admin" ? "1px solid rgba(167,139,250,0.28)" : `1px solid ${isLight ? "rgba(15,23,42,0.07)" : "rgba(255,255,255,0.06)"}`,
+                background: v==="admin"
+                  ? "rgba(167,139,250,0.14)"
+                  : v==="perfil"
+                    ? (isLight ? `${T.accent}14` : "rgba(110,231,194,0.10)")
+                    : (isLight ? "rgba(255,255,255,0.62)" : "rgba(255,255,255,0.038)"),
+                border: v==="admin"
+                  ? "1px solid rgba(167,139,250,0.28)"
+                  : v==="perfil"
+                    ? `1px solid ${T.accent}40`
+                    : `1px solid ${isLight ? "rgba(15,23,42,0.07)" : "rgba(255,255,255,0.06)"}`,
                 backdropFilter:"blur(20px)", WebkitBackdropFilter:"blur(20px)",
                 display:"flex", alignItems:"center", justifyContent:"center",
                 boxShadow: isLight ? "inset 0 1px 0 rgba(255,255,255,0.72), 0 1px 2px rgba(15,23,42,0.04)" : "inset 0 1px 0 rgba(255,255,255,0.05)",
                 transition:"all 0.22s ease",
               }}
               onMouseEnter={e => { e.currentTarget.style.background = isLight ? `${T.accent}10` : "rgba(255,255,255,0.08)"; e.currentTarget.style.transform="scale(1.08)"; }}
-              onMouseLeave={e => { e.currentTarget.style.background = v==="admin" ? "rgba(167,139,250,0.14)" : (isLight ? "rgba(255,255,255,0.62)" : "rgba(255,255,255,0.038)"); e.currentTarget.style.transform="scale(1)"; }}
+              onMouseLeave={e => {
+                e.currentTarget.style.background = v==="admin"
+                  ? "rgba(167,139,250,0.14)"
+                  : v==="perfil"
+                    ? (isLight ? `${T.accent}14` : "rgba(110,231,194,0.10)")
+                    : (isLight ? "rgba(255,255,255,0.62)" : "rgba(255,255,255,0.038)");
+                e.currentTarget.style.transform="scale(1)";
+              }}
             >
-              <Settings size={17} color={v==="admin" ? "#A78BFA" : (isLight ? T.txt2 : "rgba(255,255,255,0.34)")} strokeWidth={1.9} />
+              <Settings size={17} color={v==="admin" ? "#A78BFA" : v==="perfil" ? T.accent : (isLight ? T.txt2 : "rgba(255,255,255,0.34)")} strokeWidth={1.9} />
             </button>
             <span style={{ fontSize:7.5, fontFamily:font, fontWeight:500, color: isLight ? T.txt3 : "rgba(255,255,255,0.22)", userSelect:"none" }}>System</span>
           </div>
@@ -1279,6 +1299,22 @@ export default function App() {
                   )}
                 </div>
                 {hDiv}
+                {supportPhoneHref && (
+                  <>
+                    <a href={supportPhoneHref}
+                      title={`Soporte ${supportPhoneLabel}`}
+                      aria-label={`Llamar soporte ${supportPhoneLabel}`}
+                      style={{ ...iBtnBase, textDecoration:"none" }}
+                      onMouseEnter={onIco}
+                      onMouseLeave={offIco}
+                      onMouseDown={dnIco}
+                      onMouseUp={upIco}
+                    >
+                      <PhoneCall size={14} color={icoRest} strokeWidth={1.9} />
+                    </a>
+                    {hDiv}
+                  </>
+                )}
                 <button onClick={() => setTheme(isLight ? "dark" : "light")} title={isLight ? "Modo oscuro" : "Modo claro"}
                   style={{ width:42, height:24, borderRadius:12, border:"none", padding:0, flexShrink:0, background: isLight ? `linear-gradient(135deg, ${T.accent} 0%, #12B48A 100%)` : "rgba(255,255,255,0.09)", cursor:"pointer", position:"relative", transition:"background 0.28s ease", boxShadow: isLight ? `0 2px 8px ${T.accent}40, inset 0 1px 0 rgba(255,255,255,0.28)` : "inset 0 1px 3px rgba(0,0,0,0.35), 0 0 0 1px rgba(255,255,255,0.08)" }}>
                   <div style={{ position:"absolute", top:3, left: isLight ? 21 : 3, width:18, height:18, borderRadius:"50%", background:"#FFFFFF", boxShadow:"0 1px 4px rgba(0,0,0,0.22), 0 2px 6px rgba(0,0,0,0.12)", transition:"left 0.28s cubic-bezier(0.34,1.56,0.64,1)", display:"flex", alignItems:"center", justifyContent:"center" }}>
