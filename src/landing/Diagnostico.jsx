@@ -25,7 +25,7 @@
  */
 import { useState, useEffect } from "react";
 import {
-  AlertTriangle, Target, ArrowRight, ArrowLeft, Check, Zap, Clock,
+  AlertTriangle, Target, ArrowRight, ArrowLeft, Check, Zap, Clock, Sparkles,
   PhoneCall, Database, Network, Terminal, CalendarDays,
   Cpu, TrendingUp, Lock, Workflow, Layers,
   XCircle, Bot, Smartphone, Headset,
@@ -93,7 +93,7 @@ const QUESTION_BANK = [
       { value: "slow_followup", label: "El Síndrome de la Respuesta Lenta", desc: "Mis asesores tardan en contestar o no dan seguimiento. La competencia nos roba clientes por ser más rápida." },
       { value: "call_overload", label: "Llamadas Perdidas = Dinero Quemado", desc: "Entran leads de noche o fines de semana y nadie atiende en menos de 5 minutos. Los leads se enfrían al instante." }
     ],
-    dynamicPrompt: "Precisa la hemorragia de tu equipo (Selecciona las que apliquen):",
+    dynamicPrompt: "Marca lo que te está costando dinero (elige las que apliquen):",
     quickTags: {
       unqualified_leads: ["Leads sin precalificar", "Me dejan en visto en WhatsApp", "Agendan pero no se presentan", "Pago mucho por cada lead (CPA alto)"],
       slow_followup: ["Asesores desorganizados", "Respuestas tardan +1 hora", "Cero seguimiento después de 30 días", "Fuga a competidores locales"],
@@ -104,7 +104,7 @@ const QUESTION_BANK = [
     id: "role",
     icon: Building2,
     label: "¿Cuál es el volumen real de tu operación?",
-    insight: "Los sistemas genéricos fracasan. Un Asesor Top necesita un 'clon digital'; un Broker necesita una máquina de control y vigilancia masiva.",
+    insight: "Los sistemas genéricos fracasan. Un asesor estrella necesita un 'clon digital'; un broker necesita una máquina de control y seguimiento masivo.",
     options: [
       { value: "broker_owner", label: "Broker / Dueño (Escalando Agencia)", desc: "Busco estandarizar procesos. Que mis ventas no dependan de si el asesor amaneció de buen humor. Quiero control total." },
       { value: "top_producer", label: "Asesor Estrella (Alto Volumen)", desc: "Tengo leads pero mi tiempo es el cuello de botella. Necesito una IA que atienda WhatsApp mientras yo estoy cerrando firmas." }
@@ -118,7 +118,7 @@ const QUESTION_BANK = [
   {
     id: "maturity",
     icon: Database,
-    label: "¿Dónde vive la 'verdad' de tu negocio actualmente?",
+    label: "¿Dónde guardas hoy la información de tu negocio?",
     insight: "Para que nuestro motor de IA funcione como una máquina de imprimir dinero, necesitamos conectarlo directamente a la fuente de tu inventario.",
     options: [
       { value: "low", label: "El Caos (WhatsApp y Excel)", desc: "Si un asesor renuncia, se lleva mi cartera. No hay procesos, dependo 100% de la memoria humana y notas de voz." },
@@ -135,12 +135,12 @@ const QUESTION_BANK = [
   {
     id: "primaryGoal",
     icon: Target,
-    label: "Si resolviéramos UN solo cuello de botella en los próximos 14 días, ¿cuál eliges?",
+    label: "Si resolviéramos UN solo cuello de botella en los próximos 7 días, ¿cuál eliges?",
     insight: "El enfoque radical trae resultados radicales. Instalamos un motor, lo hacemos hiper-rentable y luego escalamos al resto de la agencia.",
     options: [
       { value: "ai_whatsapp", label: "El Cerrador de WhatsApp (IA Conversacional)", desc: "Un Agente IA que entiende audios, busca en mi inventario, descarta curiosos y me agenda visitas calificadas 24/7." },
       { value: "ai_callcenter", label: "Centro de Llamadas Autónomo (Voz IA en 5 seg)", desc: "Una IA que llama al lead 5 segundos después de que deja sus datos en Meta, evalúa su crédito y me transfiere la llamada caliente." },
-      { value: "full_iaos", label: "IAOS: Dominio Total del Mercado", desc: "El ecosistema definitivo. Voz, WhatsApp y CRM sincronizados para absorber a toda la competencia de mi zona." }
+      { value: "full_iaos", label: "Dominio Total del Mercado (Sistema Integral de IA)", desc: "El ecosistema definitivo: Voz, WhatsApp y CRM sincronizados en un solo sistema para absorber a toda la competencia de tu zona." }
     ],
     dynamicPrompt: "¿Qué métrica te urge reventar este trimestre?",
     quickTags: {
@@ -170,7 +170,7 @@ function generateBlueprint(answers, contactName) {
   score = Math.min(score, 99);
 
   let profile = score >= 85 ? "Fase 3: Escala Masiva IAOS" : "Fase 2: Aceleración con IA Conversacional";
-  let module = "Motor Central Stratos IAOS";
+  let module = "Sistema Central de Inteligencia Comercial Stratos";
   let description = "El sistema operativo que eliminará tu carga administrativa. Tu equipo dejará de perseguir prospectos fríos y se dedicará exclusivamente a firmar contratos pre-calificados.";
   let futureStateText = "Una operación hiper-eficiente. Tu IA califica, nutre y agenda. Tú solo te presentas a estrechar la mano y cobrar la comisión.";
   let primaryMetric = { label: "Tasa de Contacto", value: "< 5 Segundos", icon: Zap };
@@ -213,15 +213,18 @@ function generateBlueprint(answers, contactName) {
       { label: "Meta Cloud API nativa para WhatsApp Business", icon: Smartphone }
     ],
     architectureNodes: [
-      { id: "1", title: "Captación Inbound Omnicanal", desc: "El motor intercepta leads desde Meta, Web o Portales en milisegundos. Latencia cero.", icon: Network },
+      { id: "1", title: "Captación Omnicanal de Leads", desc: "El sistema intercepta leads desde Meta, tu web o portales en milisegundos. Latencia cero.", icon: Network },
       { id: "2", title: "Procesador Lógico Stratos", desc: tools.length > 0 ? `Conexión directa con ${tools[0]}. Cruza lo que pide el lead con tu inventario disponible.` : "Motor de IA entrenado con tu inventario y tus guiones de cierre.", icon: Cpu },
       { id: "3", title: "Ejecución Automática", desc: "La IA envía la ficha técnica, agenda la cita y empuja el trato en tu CRM.", icon: Layers }
     ],
     timeline: [
-      { day: "Días 1-3", title: "Ingeniería Inversa", desc: "Mapeamos tu embudo de ventas y conectamos nuestras APIs a tus orígenes de leads." },
-      { day: "Días 4-8", title: "Inyección de Conocimiento", desc: "Entrenamos a la IA con todo tu inventario, PDFs y el 'tono de voz' exacto de tu agencia." },
-      { day: "Días 9-12", title: "Pruebas de Estrés", desc: "Atacamos a la IA con objeciones duras e insultos simulados para garantizar que reaccione perfecto." },
-      { day: "Día 14", title: "Puesta en Marcha", desc: "Encendemos el interruptor. Empiezas a recibir notificaciones de citas calificadas en tu teléfono." }
+      { day: "Día 1", title: "Diagnóstico y conexión", desc: "Conectamos tus fuentes de leads (Meta, web y portales) y mapeamos tu proceso de venta actual." },
+      { day: "Día 2", title: "Carga de tu inventario", desc: "Subimos propiedades, precios y preguntas frecuentes para que la IA responda con datos reales, no genéricos." },
+      { day: "Día 3", title: "Tu IA con tu voz", desc: "Configuramos el agente de WhatsApp y/o voz con el tono de tu marca y tus mejores guiones de cierre." },
+      { day: "Día 4", title: "Calificación y agenda", desc: "La IA aprende a filtrar curiosos, calificar presupuesto y agendar citas directo en tu calendario." },
+      { day: "Día 5", title: "Conexión con tu CRM", desc: "Cada conversación queda registrada y el trato avanza solo en tu CRM. Cero captura manual." },
+      { day: "Día 6", title: "Pruebas reales", desc: "Atacamos a la IA con objeciones, audios y casos difíciles hasta que responda impecable." },
+      { day: "Día 7", title: "En marcha contigo", desc: "Encendemos el sistema con leads reales y un estratega de Stratos te acompaña en el arranque." }
     ]
   };
 }
@@ -310,7 +313,7 @@ export default function Diagnostico() {
       setActiveSelections([]); setSelectedTags([]); setContextText("");
       setStage('pre-form');
       let ticks = 0;
-      const msgs = ["Analizando tus respuestas...", "Identificando fugas de capital...", "Estructurando tu sistema IAOS...", "Plano Listo."];
+      const msgs = ["Analizando tus respuestas...", "Identificando fugas de capital...", "Diseñando tu sistema de inteligencia comercial...", "Plano Listo."];
       const int = setInterval(() => {
         setLoadingMsg(msgs[ticks]);
         ticks++;
@@ -352,28 +355,46 @@ export default function Diagnostico() {
   if (stage === 'gate') {
     return (
       <div className="min-h-screen bg-[#060A11] text-white flex flex-col items-center justify-center p-6 relative overflow-hidden font-sans selection:bg-[#34d399]/30">
-        <div className="absolute top-[-20%] left-[-10%] w-[50vw] h-[50vw] bg-[#34d399]/5 blur-[120px] rounded-full animate-[pulse_8s_ease-in-out_infinite] pointer-events-none"></div>
-        <div className="absolute bottom-[-20%] right-[-10%] w-[40vw] h-[40vw] bg-[#22d3ee]/5 blur-[100px] rounded-full animate-[pulse_10s_ease-in-out_infinite_alternate] pointer-events-none"></div>
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff03_1px,transparent_1px),linear-gradient(to_bottom,#ffffff03_1px,transparent_1px)] bg-[size:40px_40px] [mask-image:radial-gradient(ellipse_80%_50%_at_50%_50%,#000_60%,transparent_100%)] pointer-events-none"></div>
+        <style>{`
+          @keyframes stratosAuroraA{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(8%,6%) scale(1.18)}}
+          @keyframes stratosAuroraB{0%,100%{transform:translate(0,0) scale(1.12)}50%{transform:translate(-7%,-5%) scale(1)}}
+          @keyframes stratosSheen{to{background-position:-200% center}}
+          @keyframes stratosGlow{0%,100%{opacity:.3}50%{opacity:.7}}
+          @keyframes stratosFloat{0%,100%{transform:translateY(0);opacity:.15}50%{transform:translateY(-22px);opacity:.5}}
+          @keyframes stratosRise{0%{opacity:0;transform:translateY(16px)}100%{opacity:1;transform:translateY(0)}}
+        `}</style>
 
-        <div className="z-10 max-w-5xl text-center flex flex-col items-center">
-          <div className="mb-10 px-6 py-2.5 rounded-full border border-white/10 bg-white/[0.02] backdrop-blur-md inline-flex">
+        {/* Aurora en movimiento — deriva lenta y elegante en el fondo */}
+        <div className="absolute top-[-20%] left-[-12%] w-[55vw] h-[55vw] bg-[#34d399]/10 blur-[130px] rounded-full animate-[stratosAuroraA_16s_ease-in-out_infinite] pointer-events-none"></div>
+        <div className="absolute bottom-[-20%] right-[-12%] w-[48vw] h-[48vw] bg-[#22d3ee]/10 blur-[120px] rounded-full animate-[stratosAuroraB_20s_ease-in-out_infinite] pointer-events-none"></div>
+        {/* Glow que respira detrás del titular */}
+        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[80vw] max-w-[900px] h-[420px] bg-[#34d399]/10 blur-[140px] rounded-full animate-[stratosGlow_7s_ease-in-out_infinite] pointer-events-none"></div>
+        {/* Grid sutil */}
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff03_1px,transparent_1px),linear-gradient(to_bottom,#ffffff03_1px,transparent_1px)] bg-[size:40px_40px] [mask-image:radial-gradient(ellipse_80%_50%_at_50%_50%,#000_60%,transparent_100%)] pointer-events-none"></div>
+        {/* Partículas flotantes — movimiento ambiental muy sutil */}
+        {[['16%','24%'],['33%','68%'],['52%','16%'],['71%','60%'],['86%','32%'],['44%','82%']].map(([l,t],i) => (
+          <span key={i} className="absolute w-1 h-1 rounded-full bg-[#34d399] shadow-[0_0_8px_#34d399] pointer-events-none" style={{ left: l, top: t, animation: `stratosFloat ${6 + i}s ease-in-out ${i * 0.6}s infinite` }} />
+        ))}
+
+        <div className="z-10 max-w-5xl text-center flex flex-col items-center animate-[stratosRise_0.9s_ease-out_both]">
+          <div className="mb-10 px-5 py-2.5 rounded-full border border-white/10 bg-white/[0.03] backdrop-blur-md inline-flex items-center gap-2">
+            <Sparkles className="w-3.5 h-3.5 text-[#34d399]" strokeWidth={2} />
             <span className="text-[11px] md:text-xs font-bold tracking-[0.3em] uppercase text-slate-300">
               Auditoría Ejecutiva Stratos
             </span>
           </div>
 
-          <h1 className="text-[2.5rem] sm:text-5xl md:text-[5.5rem] lg:text-[6.5rem] font-medium tracking-tighter leading-[1.05] md:leading-[1.02] text-white mb-8 md:mb-10 w-full px-1 sm:px-2">
-            El <span className="text-[#34d399]">60% de tus comisiones</span><br className="hidden md:block"/> muere en el seguimiento.
+          <h1 className="text-[2.5rem] sm:text-5xl md:text-[5.5rem] lg:text-[6.5rem] font-medium tracking-tighter leading-[1.05] md:leading-[1.02] text-white mb-8 md:mb-10 w-full px-1 sm:px-2 [text-shadow:0_0_60px_rgba(255,255,255,0.07)]">
+            El <span className="bg-gradient-to-r from-[#34d399] via-[#9af7d8] to-[#22d3ee] bg-clip-text text-transparent [background-size:200%_auto] animate-[stratosSheen_5s_linear_infinite] drop-shadow-[0_0_25px_rgba(52,211,153,0.35)]">60% de tus comisiones</span><br className="hidden md:block"/> muere en el seguimiento.
           </h1>
 
           <p className="text-lg md:text-[1.35rem] text-slate-300 font-light max-w-3xl mx-auto leading-relaxed mb-12 md:mb-16 tracking-wide">
-            Mapeamos tu operación y diseñamos la arquitectura IA para automatizar tus citas. Todo en menos de 90 segundos.
+            Mapeamos tu operación y diseñamos tu sistema de inteligencia comercial con IA para automatizar tus citas. Todo en menos de 90 segundos.
           </p>
 
           <button
             onClick={() => setStage('wizard')}
-            className="relative inline-flex items-center justify-center gap-4 px-10 py-5 md:px-12 md:py-6 bg-white text-black rounded-full text-[13px] md:text-[15px] font-bold uppercase tracking-[0.15em] transition-all duration-300 hover:bg-slate-100 hover:scale-[1.02] active:scale-[0.98] shadow-[0_0_40px_rgba(255,255,255,0.1)] group mx-auto"
+            className="relative inline-flex items-center justify-center gap-4 px-10 py-5 md:px-12 md:py-6 bg-white text-black rounded-full text-[13px] md:text-[15px] font-bold uppercase tracking-[0.15em] transition-all duration-300 hover:bg-slate-100 hover:scale-[1.02] active:scale-[0.98] shadow-[0_0_40px_rgba(255,255,255,0.12)] hover:shadow-[0_0_60px_rgba(52,211,153,0.25)] group mx-auto"
           >
             Iniciar Diagnóstico
             <ArrowRight className="w-5 h-5 md:w-6 md:h-6 text-emerald-700 group-hover:translate-x-1 transition-transform" strokeWidth={2.5}/>
@@ -592,13 +613,13 @@ export default function Diagnostico() {
                 <span className="text-[10px] uppercase tracking-[0.3em] font-bold text-[#34d399] print:text-black">Diagnóstico Estratégico Confidencial</span>
               </div>
               <h1 className="text-4xl sm:text-5xl md:text-7xl font-medium tracking-tighter leading-[1.05] md:leading-none text-white">
-                Stratos IAOS <span className="text-slate-400 font-light">· Plano Estratégico</span>
+                <span className="bg-gradient-to-r from-white via-[#9af7d8] to-white bg-clip-text text-transparent">Stratos</span> <span className="text-slate-400 font-light">· Plano Estratégico</span>
               </h1>
               <p className="text-lg text-slate-400 font-light print:text-black/60 tracking-wide">Preparado exclusivamente para: <strong className="text-white print:text-black font-medium">{reportData.fullName}</strong></p>
             </div>
             <div className="mt-10 md:mt-0 text-left md:text-right">
               <p className="text-[10px] uppercase tracking-[0.3em] font-bold text-slate-500 mb-2">Viabilidad de Escala IA</p>
-              <div className="text-6xl font-light font-mono flex items-baseline md:justify-end tracking-tighter">{reportData.score}<span className="text-2xl text-[#34d399] ml-2 font-medium print:text-black">/100</span></div>
+              <div className="text-6xl font-light font-mono flex items-baseline md:justify-end tracking-tighter [text-shadow:0_0_30px_rgba(52,211,153,0.25)] print:[text-shadow:none]">{reportData.score}<span className="text-2xl text-[#34d399] ml-2 font-medium print:text-black">/100</span></div>
             </div>
           </div>
 
@@ -615,7 +636,7 @@ export default function Diagnostico() {
                   <p className="text-[15px] text-slate-400 font-light leading-relaxed print:text-black/70">Tu equipo no puede escalar sin aumentar costos. Los leads se enfrían por falta de seguimiento inmediato y pierdes comisiones en el caos.</p>
                 </div>
                 <div className="p-10 rounded-3xl bg-[#34d399]/[0.02] border border-[#34d399]/20 shadow-[0_0_30px_rgba(52,211,153,0.05)] print:border-black">
-                  <h4 className="text-[11px] uppercase tracking-[0.2em] font-bold text-[#34d399] mb-5 flex items-center gap-3"><Check size={16}/> Stratos IAOS (Cielo)</h4>
+                  <h4 className="text-[11px] uppercase tracking-[0.2em] font-bold text-[#34d399] mb-5 flex items-center gap-3"><Check size={16} className="shrink-0"/> Con Stratos (Cielo)</h4>
                   <p className="text-[15px] text-emerald-50 font-light leading-relaxed print:text-black">{reportData.futureStateText}</p>
                 </div>
               </div>
@@ -657,7 +678,7 @@ export default function Diagnostico() {
               </div>
 
               <div className="p-8 md:p-10 rounded-[2rem] bg-[#060A11] border border-white/5 print:border-black/20 print:bg-transparent">
-                <h3 className="text-[11px] uppercase tracking-[0.2em] font-bold text-slate-500 mb-8 flex items-center gap-3"><CalendarDays size={16} className="shrink-0"/> Plan de 14 Días</h3>
+                <h3 className="text-[11px] uppercase tracking-[0.2em] font-bold text-slate-500 mb-8 flex items-center gap-3"><CalendarDays size={16} className="shrink-0"/> Plan de 7 Días</h3>
                 <div className="relative border-l border-white/10 ml-4 space-y-8 print:border-black/20">
                   {reportData.timeline.map((step, i) => (
                     <div key={i} className="relative pl-8">
@@ -669,6 +690,27 @@ export default function Diagnostico() {
                   ))}
                 </div>
               </div>
+            </div>
+          </div>
+
+          {/* Acompañamiento Stratos — el valor humano: no lo haces solo */}
+          <div className="mt-16 p-8 sm:p-12 rounded-[2.5rem] bg-[#060A11] border border-white/10 print:hidden">
+            <div className="text-center mb-10">
+              <p className="text-[10px] uppercase tracking-[0.3em] font-bold text-[#34d399] mb-3">No lo haces solo</p>
+              <h2 className="text-2xl md:text-3xl font-light tracking-tight text-white">Stratos lo activa <span className="text-[#34d399]">contigo</span>, paso a paso</h2>
+            </div>
+            <div className="grid md:grid-cols-3 gap-5">
+              {[
+                { icon: Headset, t: "Te contactamos en 24h", d: "Un estratega de Stratos revisa tu diagnóstico y te llama para resolver dudas, sin costo y sin compromiso." },
+                { icon: Workflow, t: "Lo construimos contigo", d: "Instalamos y configuramos todo el sistema con tu inventario y tu marca. Tú solo apruebas; nosotros ejecutamos." },
+                { icon: TrendingUp, t: "Hasta tu primer cierre", d: "Te acompañamos en el arranque y ajustamos la IA hasta que empiece a traerte citas reales calificadas." },
+              ].map((it, i) => { const Ic = it.icon; return (
+                <div key={i} className="p-7 rounded-3xl bg-white/[0.02] border border-white/5 hover:border-[#34d399]/30 hover:bg-white/[0.04] transition-all">
+                  <div className="w-11 h-11 rounded-xl bg-[#34d399]/10 border border-[#34d399]/20 flex items-center justify-center mb-5"><Ic className="w-5 h-5 text-[#34d399]" strokeWidth={1.8} /></div>
+                  <div className="flex items-center gap-2 mb-2"><span className="text-[#34d399] font-mono text-xs font-bold">0{i + 1}</span><h4 className="text-[16px] font-medium text-white tracking-tight">{it.t}</h4></div>
+                  <p className="text-[13.5px] text-slate-400 font-light leading-relaxed">{it.d}</p>
+                </div>
+              ); })}
             </div>
           </div>
 
@@ -685,7 +727,7 @@ export default function Diagnostico() {
               rel="noopener noreferrer"
               className="px-10 py-5 bg-white text-black text-[13px] font-bold uppercase tracking-[0.2em] rounded-full hover:bg-slate-100 transition-all inline-flex items-center gap-4 relative z-10 active:scale-95 shadow-[0_0_40px_rgba(255,255,255,0.15)] hover:shadow-[0_0_60px_rgba(255,255,255,0.25)]"
             >
-              Agendar Llamada de Implementación <ArrowRight size={18} />
+              Agendar mi llamada con Stratos <ArrowRight size={18} />
             </a>
           </div>
         </div>
