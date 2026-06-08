@@ -222,6 +222,26 @@ export default function App() {
       const stamp = l.updated_at || l.created_at || '';
       const cached = cache.get(l.id);
       if (cached && cached.stamp === stamp) return cached.row;
+      // Preferencia para `nextActionDate` cuando hay cita real agendada
+      // (selected_time poblado por Cal.com vía book_appointment / webhook):
+      // mostramos esa fecha formateada en español en vez del texto
+      // `next_action_date` que puede contener un timestamp viejo (ej. el
+      // momento en que el upsert seteó next_action_at +5min antes del
+      // rescate). El usuario reportó que la tarjeta mostraba la fecha de
+      // entrada del lead en lugar de la fecha del Zoom — esto lo resuelve
+      // sin tocar la DB. Solo aplica a etapas con cita; para el resto se
+      // mantiene `next_action_date` tal cual.
+      const STAGES_CON_CITA = new Set([
+        'Zoom Agendado', 'Reactivar Zoom', 'Visita Agendada', 'Zoom Concretado'
+      ]);
+      let displayActionDate = l.next_action_date;
+      if (l.selected_time && STAGES_CON_CITA.has(l.stage)) {
+        try {
+          displayActionDate = new Date(l.selected_time).toLocaleString('es-MX', {
+            day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'
+          });
+        } catch (_) { /* keep raw next_action_date as fallback */ }
+      }
       const normalized = {
         ...l,
         n:              l.name,
@@ -232,7 +252,7 @@ export default function App() {
         hot:            l.hot,
         isNew:          l.is_new,
         nextAction:     l.next_action,
-        nextActionDate: l.next_action_date,
+        nextActionDate: displayActionDate,
         lastActivity:   l.last_activity,
         daysInactive:   l.days_inactive ?? 0,
         seguimientos:   l.seguimientos ?? 0,
