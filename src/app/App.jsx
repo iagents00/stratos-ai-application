@@ -169,6 +169,37 @@ export default function App() {
     try { localStorage.setItem(`stratos.crm.view.${user.id}`, v); } catch (_) { /* quota o bloqueado */ }
   }, [v, user?.id]);
 
+  // ── Buscador del header → enfoca el input de busqueda del CRM ──
+  // Implementacion minima: navega al CRM (si no estamos ahi) y enfoca el
+  // input que ya existe en /src/app/views/CRM/index.jsx (marcado con el
+  // atributo data-stratos-search-input). Soporta el atajo Cmd+K / Ctrl+K
+  // que ya estaba prometido en el tooltip "Buscar (⌘K)" pero antes no hacia
+  // nada al click.
+  const openHeaderSearch = useCallback(() => {
+    setV("c"); // "c" es el id del modulo CRM en navigation.js
+    setTimeout(() => {
+      const input = document.querySelector('input[data-stratos-search-input]');
+      if (input) {
+        try { input.focus(); input.select(); } catch (_) { /* noop */ }
+      }
+    }, 80);
+  }, []);
+
+  useEffect(() => {
+    const onHeaderSearchKey = (e) => {
+      if ((e.metaKey || e.ctrlKey) && (e.key === "k" || e.key === "K")) {
+        const tag = (e.target?.tagName || "").toLowerCase();
+        if (tag === "input" || tag === "textarea" || e.target?.isContentEditable) {
+          return; // No interceptamos si estas escribiendo en otro campo.
+        }
+        e.preventDefault();
+        openHeaderSearch();
+      }
+    };
+    window.addEventListener("keydown", onHeaderSearchKey);
+    return () => window.removeEventListener("keydown", onHeaderSearchKey);
+  }, [openHeaderSearch]);
+
   const [co, setCo]      = useState(false);
   const [autoOpenPriority1, setAutoOpenPriority1] = useState(0);
   const [sidebarMore, setSidebarMore] = useState(false);
@@ -1165,7 +1196,7 @@ export default function App() {
               </div>
               {/* RIGHT */}
               <div className="stratos-header-right" style={{ display:"flex", alignItems:"center", gap:4 }}>
-                <button className="stratos-header-search" title="Buscar (⌘K)" style={iBtnBase} onMouseEnter={onIco} onMouseLeave={offIco} onMouseDown={dnIco} onMouseUp={upIco}>
+                <button className="stratos-header-search" title="Buscar (⌘K)" onClick={openHeaderSearch} style={iBtnBase} onMouseEnter={onIco} onMouseLeave={offIco} onMouseDown={dnIco} onMouseUp={upIco}>
                   <Search size={14} color={icoRest} strokeWidth={2} />
                 </button>
                 {/* ── Campana de notificaciones ──

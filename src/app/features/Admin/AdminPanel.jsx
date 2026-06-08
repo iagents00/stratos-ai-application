@@ -5,7 +5,7 @@
  * Extraído de App.jsx.
  * ─────────────────────────────────────────────────────────────────────────────
  */
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
 import {
   Search, Plus, X, User, CheckCircle2, Trash2, Download
@@ -19,7 +19,14 @@ import { ROLE_META, RoleBadge } from "./RoleBadge";
 
 export default function AdminPanel() {
   const { user: me } = useAuth();
-  const [users, setUsers]           = useState(() => adminGetAllUsers());
+  // BUG-FIX: adminGetAllUsers() es async (devuelve Promise). Antes lo
+  // pasabamos crudo a useState con useState(() => adminGetAllUsers()), lo
+  // que dejaba a `users` como una Promise. Cuando users.filter(...) corria
+  // en el render, fallaba con "t.filter is not a function" en bundle minify.
+  // Fix: inicializar como array vacio + cargar real en useEffect, y
+  // guardar Array.isArray(data) ? data : [] para defensa en profundidad.
+  const [users, setUsers]           = useState([]);
+  const [loadingUsers, setLoadingUsers] = useState(true);
   const [search, setSearch]         = useState("");
   const [roleFilter, setRoleFilter] = useState("ALL");
   const [modal, setModal]           = useState(null);
@@ -47,7 +54,33 @@ export default function AdminPanel() {
     setTimeout(() => setBackupState(s => ({ ...s, msg: "" })), 6000);
   };
 
-  const refresh = () => setUsers(adminGetAllUsers());
+  const refresh = useCallback(async () => {
+    setLoadingUsers(true);
+    try {
+      const data = await adminGetAllUsers();
+      setUsers(Array.isArray(data) ? data : []);
+    } catch (_) {
+      setUsers([]);
+    } finally {
+      setLoadingUsers(false);
+    }
+  }, []);
+
+  // Carga inicial.
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const data = await adminGetAllUsers();
+        if (active) setUsers(Array.isArray(data) ? data : []);
+      } catch (_) {
+        if (active) setUsers([]);
+      } finally {
+        if (active) setLoadingUsers(false);
+      }
+    })();
+    return () => { active = false; };
+  }, []);
 
   const sf = (k) => (v) => setForm(p => ({ ...p, [k]: typeof v === "string" ? v : v.target.value }));
 
