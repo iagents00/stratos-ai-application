@@ -203,6 +203,11 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
   const [reassignTarget, setReassignTarget]     = useState("");
   const [reassignQ, setReassignQ]               = useState("");
   const [reassignToContactame, setReassignToContactame] = useState(true);
+  // Default del checkbox "mover a Contactame Ya" al reasignar. Cliente puede
+  // override en su config (crm.bulkReassignToContactameByDefault: false) para
+  // que la reasignacion preserve la etapa original en vez de resetear.
+  const bulkReassignToContactameDefault =
+    clientConfig?.crm?.bulkReassignToContactameByDefault !== false;
   // Modo "reasignar varios": se activa con un botón en la barra de herramientas.
   // Mientras está activo, la columna de Acciones muestra un checkbox por fila
   // (a la derecha, no a la izquierda) y aparece una barra para reasignar el grupo.
@@ -798,6 +803,12 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
   // este guard cubre además los botones de la columna de Acciones.
   const handleRowOpen = (e, lead) => {
     if (e.target.closest('button, input, select, textarea, a, [role="checkbox"], [contenteditable="true"]')) return;
+    // Modo bulk reassign: clicar la fila la selecciona/deselecciona en vez
+    // de abrir el drawer. Mejora UX porque el checkbox es muy chico.
+    if (bulkMode && canBulkReassign) {
+      toggleSelect(lead.id);
+      return;
+    }
     setNotesLead(lead);
   };
 
@@ -1229,7 +1240,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
     setSelectedIds(new Set([lead.id]));
     setReassignTarget("");
     setReassignQ("");
-    setReassignToContactame(true);
+    setReassignToContactame(bulkReassignToContactameDefault);
     setReassignOpen(true);
   };
   // Grupo: alterna la selección de un lead mientras bulkMode está activo.
@@ -1257,7 +1268,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
     if (selectedIds.size === 0) return;
     setReassignTarget("");
     setReassignQ("");
-    setReassignToContactame(true);
+    setReassignToContactame(bulkReassignToContactameDefault);
     setReassignOpen(true);
   };
 
@@ -3414,6 +3425,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
           <div style={{ position: "relative", flex: 1, minWidth: 140, maxWidth: isMobile ? "100%" : 240, width: isMobile ? "100%" : "auto" }}>
             <Search size={isMobile ? 14 : 11} color={isLight ? "rgba(15,23,42,0.30)" : "rgba(255,255,255,0.28)"} style={{ position: "absolute", left: isMobile ? 14 : 10, top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }} />
             <input value={searchQ} onChange={e => setSearchQ(e.target.value)} placeholder={isMobile ? "Buscar cliente…" : "Buscar cliente, asesor, proyecto…"}
+              data-stratos-search-input="1"
               style={{
                 width: "100%", paddingLeft: isMobile ? 36 : 29, paddingRight: searchQ ? 32 : 11,
                 height: isMobile ? 44 : 32, borderRadius: isMobile ? 12 : 9,
@@ -3620,7 +3632,9 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                     // ventana de halo (HALO_DURATION_MS = 20s).
                     animation: isPulsing ? "stratosNewLeadPulse 1.6s ease-in-out 0s 12" : undefined,
                     // Fila clickeable (zonas vacías + avatar abren Discovery).
-                    cursor: "pointer",
+                    // En modo bulk reassign, cursor "cell" sugiere "esto se
+                    // selecciona/deselecciona al clicar".
+                    cursor: bulkMode && canBulkReassign ? "cell" : "pointer",
                   }}
                 >
 
