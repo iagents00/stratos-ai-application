@@ -458,12 +458,11 @@ export default function Diagnostico() {
     return (
       <div className="min-h-screen bg-[#060A11] text-white flex flex-col items-center justify-center p-6 relative overflow-hidden font-sans selection:bg-[#34d399]/30">
         <style>{`
-          @keyframes stratosAuroraA{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(8%,6%) scale(1.18)}}
-          @keyframes stratosAuroraB{0%,100%{transform:translate(0,0) scale(1.12)}50%{transform:translate(-7%,-5%) scale(1)}}
-          @keyframes stratosSheen{to{background-position:-200% center}}
-          @keyframes stratosGlow{0%,100%{opacity:.3}50%{opacity:.7}}
-          @keyframes stratosFloat{0%,100%{transform:translateY(0);opacity:.15}50%{transform:translateY(-22px);opacity:.5}}
+          @keyframes stratosAuroraA{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(9%,7%) scale(1.22)}}
+          @keyframes stratosAuroraB{0%,100%{transform:translate(0,0) scale(1.15)}50%{transform:translate(-8%,-6%) scale(1)}}
+          @keyframes stratosGlow{0%,100%{opacity:.28}50%{opacity:.62}}
           @keyframes stratosRise{0%{opacity:0;transform:translateY(16px)}100%{opacity:1;transform:translateY(0)}}
+          @keyframes stratosNeon{0%,100%{text-shadow:0 0 2px rgba(52,211,153,.85),0 0 7px rgba(52,211,153,.5),0 0 18px rgba(52,211,153,.32),0 0 36px rgba(52,211,153,.16)}50%{text-shadow:0 0 2px rgba(52,211,153,1),0 0 11px rgba(52,211,153,.7),0 0 26px rgba(52,211,153,.48),0 0 52px rgba(52,211,153,.26)}}
         `}</style>
 
         {/* Aurora en movimiento — deriva lenta y elegante en el fondo */}
@@ -473,11 +472,6 @@ export default function Diagnostico() {
         <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[80vw] max-w-[900px] h-[420px] bg-[#34d399]/10 blur-[140px] rounded-full animate-[stratosGlow_7s_ease-in-out_infinite] pointer-events-none"></div>
         {/* Grid sutil */}
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff03_1px,transparent_1px),linear-gradient(to_bottom,#ffffff03_1px,transparent_1px)] bg-[size:40px_40px] [mask-image:radial-gradient(ellipse_80%_50%_at_50%_50%,#000_60%,transparent_100%)] pointer-events-none"></div>
-        {/* Partículas flotantes — movimiento ambiental muy sutil */}
-        {[['16%','24%'],['33%','68%'],['52%','16%'],['71%','60%'],['86%','32%'],['44%','82%']].map(([l,t],i) => (
-          <span key={i} className="absolute w-1 h-1 rounded-full bg-[#34d399] shadow-[0_0_8px_#34d399] pointer-events-none" style={{ left: l, top: t, animation: `stratosFloat ${6 + i}s ease-in-out ${i * 0.6}s infinite` }} />
-        ))}
-
         <div className="z-10 max-w-5xl text-center flex flex-col items-center animate-[stratosRise_0.9s_ease-out_both]">
           <div className="mb-10 px-5 py-2.5 rounded-full border border-white/10 bg-white/[0.03] backdrop-blur-md inline-flex items-center gap-2">
             <Sparkles className="w-3.5 h-3.5 text-[#34d399]" strokeWidth={2} />
@@ -487,7 +481,7 @@ export default function Diagnostico() {
           </div>
 
           <h1 className="text-[2.5rem] sm:text-5xl md:text-[5.5rem] lg:text-[6.5rem] font-medium tracking-tighter leading-[1.05] md:leading-[1.02] text-white mb-8 md:mb-10 w-full px-1 sm:px-2 [text-shadow:0_0_60px_rgba(255,255,255,0.07)]">
-            El <span className="bg-gradient-to-r from-[#34d399] via-[#9af7d8] to-[#22d3ee] bg-clip-text text-transparent [background-size:200%_auto] animate-[stratosSheen_5s_linear_infinite] drop-shadow-[0_0_25px_rgba(52,211,153,0.35)]">60% de tus comisiones</span><br className="hidden md:block"/> muere en el seguimiento.
+            El <span className="text-white animate-[stratosNeon_3.5s_ease-in-out_infinite]">60% de tus comisiones</span><br className="hidden md:block"/> muere en el seguimiento.
           </h1>
 
           <p className="text-lg md:text-[1.35rem] text-slate-300 font-light max-w-3xl mx-auto leading-relaxed mb-12 md:mb-16 tracking-wide">
@@ -715,7 +709,7 @@ export default function Diagnostico() {
                 <span className="text-[10px] uppercase tracking-[0.3em] font-bold text-[#34d399] print:text-black">Diagnóstico Estratégico Confidencial</span>
               </div>
               <h1 className="text-4xl sm:text-5xl md:text-7xl font-medium tracking-tighter leading-[1.05] md:leading-none text-white">
-                <span className="bg-gradient-to-r from-white via-[#9af7d8] to-white bg-clip-text text-transparent">Stratos</span> <span className="text-slate-400 font-light">· Plano Estratégico</span>
+                <span className="text-white [text-shadow:0_0_18px_rgba(52,211,153,0.45)]">Stratos</span> <span className="text-slate-400 font-light">· Plano Estratégico</span>
               </h1>
               <p className="text-lg text-slate-400 font-light print:text-black/60 tracking-wide">Preparado exclusivamente para: <strong className="text-white print:text-black font-medium">{reportData.fullName}</strong></p>
             </div>
