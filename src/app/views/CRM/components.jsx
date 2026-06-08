@@ -26,7 +26,7 @@ import {
 } from "lucide-react";
 import { P, LP, font, fontDisp, STAGES } from "../../../design-system/tokens";
 import { G, KPI, Pill, Ico, ChipSelect } from "../../SharedComponents";
-import { parseBudget, formatBudget, buildTelegramSummary, fmtNow, genId } from "../../../lib/utils";
+import { parseBudget, formatBudget, buildTelegramSummary, fmtNow, genId, nowLocalDateTime } from "../../../lib/utils";
 import { StratosAtom, StratosAtomHex } from "../../components/Logo";
 import { AI_AGENTS, AI_AGENT_LIST } from "../../constants/agents";
 import { stgC } from "../../constants/crm";
@@ -790,7 +790,13 @@ const NextActionHero = ({ lead, T = P, onUpdate = null }) => {
   const openEdit = (e) => {
     e?.stopPropagation?.();
     setDraftA(lead.nextAction || "");
-    setDraftD(lead.nextActionDate || "");
+    // Normaliza el formato de la fecha al que acepta <input type="datetime-local">:
+    // - "YYYY-MM-DD HH:MM" -> "YYYY-MM-DDTHH:MM" (normalizacion al separador T).
+    // - Si el valor es texto libre antiguo ("Hoy 5pm", "Mañana 10am"), no matchea
+    //   el regex y se deja como string crudo; el browser lo va a mostrar vacio y
+    //   forzar al asesor a elegir una fecha real (que es lo que queremos).
+    const rawDate = lead.nextActionDate || "";
+    setDraftD(rawDate.replace(/^(\d{4}-\d{2}-\d{2}) (\d{2}:\d{2})/, "$1T$2"));
     setEditing(true);
   };
   const saveEdit = () => {
@@ -973,10 +979,14 @@ const NextActionHero = ({ lead, T = P, onUpdate = null }) => {
             <div style={{ display: "flex", alignItems: "center", gap: 6, flex: 1, minWidth: 180 }}>
               <Clock size={11} color={accentStrong} strokeWidth={2.6} />
               <input
+                type="datetime-local"
                 value={draftD}
                 onChange={e => setDraftD(e.target.value)}
                 onBlur={autoSaveOnBlur}
-                placeholder="Fecha (ej: Hoy 5pm, Mañana 10am, Jueves)"
+                // Bloquea fechas pasadas: si el asesor pone una fecha anterior
+                // a "ahora", el browser la rechaza/marca invalida. Mejor un
+                // error claro que un recordatorio que nunca se va a disparar.
+                min={nowLocalDateTime()}
                 style={{
                   flex: 1, padding: "7px 11px", borderRadius: 8,
                   background: isLight ? "#FFFFFF" : "rgba(255,255,255,0.04)",
@@ -984,6 +994,7 @@ const NextActionHero = ({ lead, T = P, onUpdate = null }) => {
                   color: textMain, fontSize: 11.5, fontWeight: 600,
                   fontFamily: fontDisp, letterSpacing: "0.01em",
                   outline: "none", boxSizing: "border-box",
+                  colorScheme: isLight ? "light" : "dark",
                 }}
               />
             </div>
