@@ -797,6 +797,20 @@ const NextActionHero = ({ lead, T = P, onUpdate = null }) => {
     onUpdate?.({ ...lead, nextAction: draftA.trim(), nextActionDate: draftD.trim() });
     setEditing(false);
   };
+  // autoSaveOnBlur: si el asesor cierra el panel sin tocar "Guardar" pero
+  // ya escribio algo (textarea o input), persistimos los cambios al perder
+  // el foco. Antes el cambio se perdia silenciosamente y al recargar volvia
+  // al valor anterior (queja repetida). Guard idempotencia: solo dispara
+  // onUpdate si al menos uno de los dos campos cambio de su valor original.
+  const autoSaveOnBlur = () => {
+    const a = (draftA || "").trim();
+    const d = (draftD || "").trim();
+    const origA = (lead.nextAction || "").trim();
+    const origD = (lead.nextActionDate || "").trim();
+    if (a === origA && d === origD) return;
+    if (!a && !d) return; // ambos vacios -> nada que guardar
+    onUpdate?.({ ...lead, nextAction: a, nextActionDate: d });
+  };
   const cancelEdit = () => setEditing(false);
 
   // ════════════════════════════════════════════════════════════════════
@@ -940,6 +954,7 @@ const NextActionHero = ({ lead, T = P, onUpdate = null }) => {
           <textarea
             value={draftA}
             onChange={e => setDraftA(e.target.value)}
+            onBlur={autoSaveOnBlur}
             autoFocus
             placeholder="¿Qué tienes que hacer con este cliente? Ej: Llamar mañana 10am para confirmar visita, enviar propuesta, agendar Zoom…"
             rows={3}
@@ -960,6 +975,7 @@ const NextActionHero = ({ lead, T = P, onUpdate = null }) => {
               <input
                 value={draftD}
                 onChange={e => setDraftD(e.target.value)}
+                onBlur={autoSaveOnBlur}
                 placeholder="Fecha (ej: Hoy 5pm, Mañana 10am, Jueves)"
                 style={{
                   flex: 1, padding: "7px 11px", borderRadius: 8,
