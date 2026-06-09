@@ -306,20 +306,30 @@ export default function Diagnostico() {
     setViewMode(true);
     setViewLoading(true);
 
-    const url = `${SUPA_URL}/rest/v1/leads?id=eq.${encodeURIComponent(leadId)}` +
-      `&select=name,email,whatsapp_phone_e164,diagnostico_payload&limit=1`;
+    // Llamamos a un RPC publico de solo-lectura (SECURITY DEFINER) en vez de
+    // leer la tabla `leads` directo: la tabla tiene RLS que exige org + rol y
+    // la anon key del navegador no cumple eso => devolveria vacio. El RPC
+    // bypassa RLS pero solo expone los campos del diagnostico, gateado por el
+    // UUID del lead (no enumerable). La data vive permanente en
+    // leads.diagnostico_payload; esto es solo la capa de lectura publica.
+    const url = `${SUPA_URL}/rest/v1/rpc/fn_get_diagnostico_publico`;
 
     fetch(url, {
+      method: "POST",
       headers: {
         apikey: SUPA_ANON_KEY,
         Authorization: `Bearer ${SUPA_ANON_KEY}`,
+        "Content-Type": "application/json",
         Accept: "application/json",
       },
+      body: JSON.stringify({ p_lead_id: leadId }),
     })
       .then(r => r.json())
-      .then(rows => {
-        const lead = Array.isArray(rows) ? rows[0] : null;
-        if (!lead) throw new Error('not_found');
+      .then(data => {
+        // El RPC devuelve el objeto directamente (o null si no existe).
+        // PostgREST puede envolverlo en array segun version: normalizamos.
+        const lead = Array.isArray(data) ? data[0] : data;
+        if (!lead || !lead.diagnostico_payload) throw new Error('not_found');
         const payload = lead.diagnostico_payload || {};
         const answersRaw = payload.answers_raw || {};
         if (!Object.keys(answersRaw).length) throw new Error('no_answers');
