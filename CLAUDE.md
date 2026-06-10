@@ -298,8 +298,7 @@ Esta config se logró después de **MUCHAS** iteraciones para resolver:
 | `src/contexts/AuthContext.jsx` | `HYDRATION_TIMEOUT_MS = 12000` | 12s, **SUAVE** (no destructivo) | Si tarda, muestra login pero **NO** llama signOut ni clearLocalAuthState — eso destruía sesiones legítimas |
 | `src/contexts/AuthContext.jsx` | `onAuthStateChange` listener | Limpia storage **SOLO** en `SIGNED_OUT` o `USER_DELETED` | Versiones anteriores limpiaban en cualquier evento sin sesión → mataba sesiones durante `TOKEN_REFRESHED` transitorios |
 | `src/main.jsx` | boot guard que limpia keys | Borra `stratos.supabase.*`, `*-code-verifier`, `sb-*-pkce*` | Restos de versiones viejas con PKCE/storageKey custom. **NO** tocar `sb-<projectref>-auth-token` (es la sesión real) |
-| `src/lib/lead-save.js` | `LOCAL_MIRROR_LIMIT = 150` | 150, no 500 | `JSON.stringify` de >500 entries bloquea main thread 50-200ms al registrar lead |
-| `src/lib/lead-save.js` | `appendToMirror` con `requestIdleCallback` | Defer, no síncrono | Hace que el registro de lead se sienta instantáneo |
+| `src/lib/lead-save.js` | espejo local con `appendEntrySync` (`lead-storage.js`) | Síncrono, NO deferred | El defer con `requestIdleCallback` perdía entries al cerrar el tab. NO volver al patrón viejo (`LOCAL_MIRROR_LIMIT`/idle ya no existen). _(Fila actualizada 2026-06-10 al código real.)_ |
 | `src/lib/lead-save.js` | `INSERT_TIMEOUT_MS = 12000` | 12s | Supabase paid plan no tiene cold-start; 25s era exagerado |
 | `public/sw.js` | `CACHE_VERSION` | bump cada vez que cambies auth/schema | Sin bump, navegadores con SW viejo siguen sirviendo bundle pre-fix |
 

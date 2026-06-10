@@ -15,7 +15,7 @@ Repositorio:    https://github.com/iagents00/stratos-ai-application
 Rama:           main
 App en Vercel:  https://stratos-ai-application.vercel.app
 Supabase URL:   https://ezlwrqlyebahulbienjs.supabase.co
-Supabase Key:   eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV6bHdycWx5ZWJhaHVsYmllbmpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU1OTk2NTEsImV4cCI6MjA5MTE3NTY1MX0.UOcj5weL0K34aKcukZxGYxsgUo5acyT6CJFs7KCBB5E
+Supabase Key:   <ANON_KEY_REMOVIDA_proyecto_legacy_ezlwrqlyebahulbienjs>
 ```
 
 ---
@@ -607,7 +607,7 @@ y agregar/confirmar estas 3 variables para **Production + Preview + Development*
 
 ```
 VITE_SUPABASE_URL     = https://ezlwrqlyebahulbienjs.supabase.co
-VITE_SUPABASE_ANON_KEY = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...  (la key completa)
+VITE_SUPABASE_ANON_KEY = <ANON_KEY_REMOVIDA_proyecto_legacy_ezlwrqlyebahulbienjs>.  (la key completa)
 VITE_IS_APP           = true
 ```
 

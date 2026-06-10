@@ -926,7 +926,7 @@
             {
               "id": "supabase-key",
               "name": "SUPABASE_SERVICE_ROLE_KEY",
-              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdsdWxneWhrcnFweWt4bXVqb2RiIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NzI2NzQ4NCwiZXhwIjoyMDkyODQzNDg0fQ.I3azf1jfKkN5k_Kj4UEVL6SjLWpFl_Xb0FDqVKTLl8U",
+              "value": "REEMPLAZAR_EN_N8N__LA_SERVICE_ROLE_FUE_EXPUESTA_EN_GIT__ROTARLA__NUNCA_COMMITEAR",
               "type": "string"
             }
           ]
