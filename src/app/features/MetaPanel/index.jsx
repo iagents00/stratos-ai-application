@@ -94,7 +94,7 @@ export const DEFAULT_META_PROTOCOL = {
   ],
   objetivo: "Convertir leads en ventas mediante un proceso claro, rápido y consistente.",
   reglaBase: "Todo lead debe avanzar, seguir en proceso o cerrarse. Si no, está perdido.",
-  principios: ["Responder rápido", "Calificar correctamente", "Mover al siguiente paso", "Dar seguimiento constante", "Registrar todo"],
+  principios: ["Califica rápido", "Calificar correctamente", "Mover al siguiente paso", "Dar seguimiento constante", "Registrar todo"],
   reglaRegistro: "Lo que no está registrado en el CRM, no existe.",
   velocidadIdeal: "< 5 minutos",
   velocidadMax: "30 minutos",
