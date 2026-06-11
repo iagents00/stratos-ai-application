@@ -23,6 +23,7 @@ import { G, Pill } from "../SharedComponents";
 import { useAuth } from "../../hooks/useAuth";
 import { useClient } from "../../hooks/useClient";
 import { supabase } from "../../lib/supabase";
+import { logAuthEvent } from "../../lib/audit";
 import {
   getPairingStatus,
   requestPairingCode,
@@ -112,10 +113,65 @@ function PasswordPanel({ T = P, isLight = false, user }) {
     if (password !== confirmPassword) return setErrorMsg("Las contrasenas no coinciden.");
 
     setBusy(true);
-    const { error } = await supabase.auth.updateUser({ password });
+
+    // ── Asegurar una sesion VIVA antes de tocar la contrasena ──────────────
+    // En movil / redes lentas la app corre con la sesion cacheada de 24h
+    // (_fromCache): la UI se ve logueada pero el SDK NO tiene un token vivo en
+    // memoria. En ese estado supabase.auth.updateUser() falla ("Auth session
+    // missing") o no llega al servidor → la contrasena NUNCA cambia y la vieja
+    // sigue sirviendo.
+    //
+    // OBJETIVO: que un asesor pueda cambiar su clave desde CUALQUIER lugar
+    // (incluido el iPhone). Por eso no nos rendimos al primer intento:
+    //   1. Leemos la sesion en memoria (getSession, rapido).
+    //   2. Si no hay token vivo, FORZAMOS un refresh (refreshSession): el
+    //      refresh_token sigue en storage mientras la sesion no haya expirado,
+    //      asi que esto reconstruye un token valido sin re-login.
+    //   3. Solo si el refresh tambien falla (sesion realmente vencida/revocada)
+    //      pedimos volver a iniciar sesion.
+    // Como es una accion deliberada (el boton muestra "Actualizando..."),
+    // damos timeouts generosos en vez de cortar a los 3.5s de la hidratacion.
+    const raceTimeout = (promise, ms) => Promise.race([
+      promise,
+      new Promise((resolve) => setTimeout(() => resolve({ data: { session: null } }), ms)),
+    ]);
+
+    let liveSession = null;
+    try {
+      const { data } = await raceTimeout(supabase.auth.getSession(), 4000);
+      liveSession = data?.session ?? null;
+    } catch (_) { /* intentamos refresh abajo */ }
+
+    if (!liveSession) {
+      try {
+        const { data } = await raceTimeout(supabase.auth.refreshSession(), 12000);
+        liveSession = data?.session ?? null;
+      } catch (_) { /* se maneja abajo */ }
+    }
+
+    if (!liveSession) {
+      setBusy(false);
+      return setErrorMsg(
+        "Tu sesion expiro. Vuelve a iniciar sesion y cambia tu contrasena de nuevo.",
+      );
+    }
+
+    const { data: updated, error } = await supabase.auth.updateUser({ password });
     setBusy(false);
 
-    if (error) return setErrorMsg(error.message || "No se pudo actualizar la contrasena.");
+    if (error) {
+      logAuthEvent("PASSWORD_UPDATE", liveSession.user?.id || null, {
+        email: liveSession.user?.email, success: false, reason: error.message,
+      });
+      return setErrorMsg(error.message || "No se pudo actualizar la contrasena.");
+    }
+    // Solo declarar exito si el servidor devolvio el usuario actualizado.
+    if (!updated?.user) {
+      return setErrorMsg("No se pudo confirmar el cambio. Intenta de nuevo.");
+    }
+    logAuthEvent("PASSWORD_UPDATE", updated.user.id, {
+      email: updated.user.email, success: true,
+    });
     setPassword("");
     setConfirmPassword("");
     setMessage("Contrasena actualizada correctamente.");
