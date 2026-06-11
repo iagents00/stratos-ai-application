@@ -23,6 +23,7 @@ import { G, Pill } from "../SharedComponents";
 import { useAuth } from "../../hooks/useAuth";
 import { useClient } from "../../hooks/useClient";
 import { supabase } from "../../lib/supabase";
+import { logAuthEvent } from "../../lib/audit";
 import {
   getPairingStatus,
   requestPairingCode,
@@ -112,10 +113,48 @@ function PasswordPanel({ T = P, isLight = false, user }) {
     if (password !== confirmPassword) return setErrorMsg("Las contrasenas no coinciden.");
 
     setBusy(true);
-    const { error } = await supabase.auth.updateUser({ password });
+
+    // ── Asegurar una sesion VIVA antes de tocar la contrasena ──────────────
+    // En movil / redes lentas la app corre con la sesion cacheada de 24h
+    // (_fromCache): la UI se ve logueada pero el SDK NO tiene un token vivo en
+    // memoria. En ese estado supabase.auth.updateUser() falla ("Auth session
+    // missing") o no llega al servidor → la contrasena NUNCA cambia y la vieja
+    // sigue sirviendo. getSession() puede colgarse en ese modo (ver auth.js),
+    // por eso lo limitamos a 4s y, si no hay sesion viva, paramos con un
+    // mensaje claro en lugar de mostrar un falso "exito".
+    let liveSession = null;
+    try {
+      const withTimeout = Promise.race([
+        supabase.auth.getSession(),
+        new Promise((resolve) => setTimeout(() => resolve({ data: { session: null } }), 4000)),
+      ]);
+      const { data } = await withTimeout;
+      liveSession = data?.session ?? null;
+    } catch (_) { /* sin sesion viva — se maneja abajo */ }
+
+    if (!liveSession) {
+      setBusy(false);
+      return setErrorMsg(
+        "Tu sesion esta en modo sin conexion. Recarga la pagina o vuelve a iniciar sesion y prueba de nuevo.",
+      );
+    }
+
+    const { data: updated, error } = await supabase.auth.updateUser({ password });
     setBusy(false);
 
-    if (error) return setErrorMsg(error.message || "No se pudo actualizar la contrasena.");
+    if (error) {
+      logAuthEvent("PASSWORD_UPDATE", liveSession.user?.id || null, {
+        email: liveSession.user?.email, success: false, reason: error.message,
+      });
+      return setErrorMsg(error.message || "No se pudo actualizar la contrasena.");
+    }
+    // Solo declarar exito si el servidor devolvio el usuario actualizado.
+    if (!updated?.user) {
+      return setErrorMsg("No se pudo confirmar el cambio. Intenta de nuevo.");
+    }
+    logAuthEvent("PASSWORD_UPDATE", updated.user.id, {
+      email: updated.user.email, success: true,
+    });
     setPassword("");
     setConfirmPassword("");
     setMessage("Contrasena actualizada correctamente.");
