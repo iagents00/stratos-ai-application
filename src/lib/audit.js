@@ -16,7 +16,7 @@ import { supabase } from './supabase'
  * Registra un evento de autenticación.
  * Es best-effort: si falla, no rompe el flujo principal de auth.
  *
- * @param {'LOGIN'|'LOGIN_FAIL'|'LOGOUT'|'SIGNUP'|'PASSWORD_RESET'} action
+ * @param {'LOGIN'|'LOGIN_FAIL'|'LOGOUT'|'SIGNUP'|'PASSWORD_RESET'|'PASSWORD_UPDATE'} action
  * @param {string|null} actorId  uuid del usuario, o null si aún no hay sesión
  * @param {object} metadata      datos extra: { email, reason, ... }
  */
@@ -144,6 +144,7 @@ export function actionLabel(action) {
     case 'LOGOUT':         return 'Cierre de sesión'
     case 'SIGNUP':         return 'Registro de cuenta'
     case 'PASSWORD_RESET': return 'Recuperación de contraseña'
+    case 'PASSWORD_UPDATE': return 'Cambio de contraseña'
     default: return action
   }
 }
