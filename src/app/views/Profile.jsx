@@ -119,23 +119,40 @@ function PasswordPanel({ T = P, isLight = false, user }) {
     // (_fromCache): la UI se ve logueada pero el SDK NO tiene un token vivo en
     // memoria. En ese estado supabase.auth.updateUser() falla ("Auth session
     // missing") o no llega al servidor → la contrasena NUNCA cambia y la vieja
-    // sigue sirviendo. getSession() puede colgarse en ese modo (ver auth.js),
-    // por eso lo limitamos a 4s y, si no hay sesion viva, paramos con un
-    // mensaje claro en lugar de mostrar un falso "exito".
+    // sigue sirviendo.
+    //
+    // OBJETIVO: que un asesor pueda cambiar su clave desde CUALQUIER lugar
+    // (incluido el iPhone). Por eso no nos rendimos al primer intento:
+    //   1. Leemos la sesion en memoria (getSession, rapido).
+    //   2. Si no hay token vivo, FORZAMOS un refresh (refreshSession): el
+    //      refresh_token sigue en storage mientras la sesion no haya expirado,
+    //      asi que esto reconstruye un token valido sin re-login.
+    //   3. Solo si el refresh tambien falla (sesion realmente vencida/revocada)
+    //      pedimos volver a iniciar sesion.
+    // Como es una accion deliberada (el boton muestra "Actualizando..."),
+    // damos timeouts generosos en vez de cortar a los 3.5s de la hidratacion.
+    const raceTimeout = (promise, ms) => Promise.race([
+      promise,
+      new Promise((resolve) => setTimeout(() => resolve({ data: { session: null } }), ms)),
+    ]);
+
     let liveSession = null;
     try {
-      const withTimeout = Promise.race([
-        supabase.auth.getSession(),
-        new Promise((resolve) => setTimeout(() => resolve({ data: { session: null } }), 4000)),
-      ]);
-      const { data } = await withTimeout;
+      const { data } = await raceTimeout(supabase.auth.getSession(), 4000);
       liveSession = data?.session ?? null;
-    } catch (_) { /* sin sesion viva — se maneja abajo */ }
+    } catch (_) { /* intentamos refresh abajo */ }
+
+    if (!liveSession) {
+      try {
+        const { data } = await raceTimeout(supabase.auth.refreshSession(), 12000);
+        liveSession = data?.session ?? null;
+      } catch (_) { /* se maneja abajo */ }
+    }
 
     if (!liveSession) {
       setBusy(false);
       return setErrorMsg(
-        "Tu sesion esta en modo sin conexion. Recarga la pagina o vuelve a iniciar sesion y prueba de nuevo.",
+        "Tu sesion expiro. Vuelve a iniciar sesion y cambia tu contrasena de nuevo.",
       );
     }
 
