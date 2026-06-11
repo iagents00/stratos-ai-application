@@ -4,6 +4,15 @@ import { P, font, fontDisp } from "../../design-system/tokens";
 import { StratosAtom, Ico } from "../../design-system/primitives";
 import { getResp, examples } from "../data/chat";
 
+// Los mensajes interpolan datos del lead (nombre, notas) que entran por formularios
+// públicos (/diagnostico) e ingestión externa: escapar SIEMPRE antes de inyectar
+// el HTML del **bold**.
+const escapeHtml = (s = "") => String(s)
+  .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+  .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+const mdBold = (s, color) =>
+  escapeHtml(s).replace(/\*\*(.*?)\*\*/g, `<strong style="color:${color}">$1</strong>`);
+
 const Chat = ({ open, onClose, msgs, setMsgs, inp, setInp }) => {
   const endRef = useRef(null);
   const [typing, setTyping] = useState(false);
@@ -94,7 +103,7 @@ const Chat = ({ open, onClose, msgs, setMsgs, inp, setInp }) => {
                   <span style={{ fontSize: 10, color: P.txt2, fontWeight: 600, letterSpacing: "0.04em" }}>Agente Stratos</span>
                 </div>
                 <div style={{ padding: "12px 14px", borderRadius: "4px 14px 14px 14px", background: P.glass, border: `1px solid ${P.border}`, boxShadow: "0 2px 8px rgba(0,0,0,0.15)" }}>
-                  <p style={{ fontSize: 13, color: P.txt, lineHeight: 1.6, marginBottom: m.metrics ? 12 : 0 }} dangerouslySetInnerHTML={{ __html: m.content.replace(/\*\*(.*?)\*\*/g, '<strong style="color:#FFFFFF">$1</strong>') }} />
+                  <p style={{ fontSize: 13, color: P.txt, lineHeight: 1.6, marginBottom: m.metrics ? 12 : 0 }} dangerouslySetInnerHTML={{ __html: mdBold(m.content, "#FFFFFF") }} />
                   {m.metrics && (
                     <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 4 }}>
                       {m.metrics.map((x, j) => (
@@ -108,7 +117,7 @@ const Chat = ({ open, onClose, msgs, setMsgs, inp, setInp }) => {
                       ))}
                     </div>
                   )}
-                  {m.follow && <p style={{ fontSize: 11.5, color: P.txt3, marginTop: 14, lineHeight: 1.5, fontStyle: "italic", borderTop: `1px solid ${P.border}`, paddingTop: 10 }} dangerouslySetInnerHTML={{ __html: m.follow.replace(/\*\*(.*?)\*\*/g, '<strong style="color:#E2E8F0">$1</strong>') }} />}
+                  {m.follow && <p style={{ fontSize: 11.5, color: P.txt3, marginTop: 14, lineHeight: 1.5, fontStyle: "italic", borderTop: `1px solid ${P.border}`, paddingTop: 10 }} dangerouslySetInnerHTML={{ __html: mdBold(m.follow, "#E2E8F0") }} />}
                   {m.btn && (
                     <button onClick={() => m.action && send(m.action)} style={{
                       marginTop: 14, width: "100%", padding: "11px 16px", borderRadius: 10,
