@@ -152,6 +152,81 @@ const QUESTION_BANK = [
 ];
 
 /* ═══════════════════════════════════════════════════════════════════════════
+   ESTIMADOR DE FUGA DE CAPITAL — solo matemáticas, sin humo.
+   ─────────────────────────────────────────────────────────────────────────
+   No inventamos un número exacto: derivamos un ESTIMADO CONSERVADOR a partir
+   de lo que el lead respondió, con cada supuesto a la vista. La fuga se mide
+   en COMISIÓN (lo que gana la agencia por cierre), no en precio de propiedad,
+   para que el número sea creíble y no inflado.
+
+   Fórmula:
+     fuga_mensual = leadsMes × tasaCierre × %quesecae × factorMadurez × comisión
+   El número fino se valida con el lead en la llamada — esto es un piso, no
+   una promesa.
+   ═══════════════════════════════════════════════════════════════════════════ */
+const fmtUSD = (n) => "$" + Math.round(n).toLocaleString("en-US");
+const roundTo = (n, step) => Math.round(n / step) * step;
+
+function estimateLeak(answers) {
+  const pains = answers.mainPain?.values || [];
+  const role = answers.role?.values || [];
+  const maturity = answers.maturity?.values || [];
+  const allTags = Object.values(answers).flatMap(a => a?.tags || []);
+  const has = (t) => allTags.some(x => x.toLowerCase().includes(t));
+
+  // 1) Leads nuevos al mes (estimado por perfil). Banda, no número falso-preciso.
+  let leadsMes = role.includes('broker_owner') ? 120 : 50;
+  if (has('5+')) leadsMes += 70;            // "Equipo de 5+ asesores"
+  if (has('múltiples') || has('multiples')) leadsMes += 30; // varios desarrollos
+  if (has('cpa')) leadsMes += 20;           // pauta pagada = más volumen
+
+  // 2) Comisión promedio por cierre (USD que gana la agencia, no precio del inmueble).
+  let comision = 2500;
+  if (has('premium') || has('inversionistas') || has('fondos') ||
+      has('corporativas') || has('pre-venta') || has('preventa')) comision = 6000;
+  else if (has('media') || has('residencial')) comision = 3000;
+
+  // 3) Tasa de cierre base del sector (lead → contrato). Conservador.
+  const tasaCierre = 0.03;
+
+  // 4) % de esos cierres potenciales que HOY se cae por el dolor elegido
+  //    (la parte recuperable con automatización). Si hay varios, tomamos el
+  //    mayor — NO sumamos, para no inflar.
+  const fugaPorDolor = { slow_followup: 0.30, call_overload: 0.35, unqualified_leads: 0.20 };
+  const dolorLabel = {
+    slow_followup: "respuesta lenta y sin seguimiento",
+    call_overload: "leads sin atender a tiempo (noches/fines de semana)",
+    unqualified_leads: "horas perdidas con leads sin precalificar",
+  };
+  let fuga = 0.25, dolor = "fuga de leads por procesos manuales";
+  pains.forEach(p => { if ((fugaPorDolor[p] || 0) >= fuga) { fuga = fugaPorDolor[p]; dolor = dolorLabel[p]; } });
+
+  // 5) Factor de madurez: el caos pierde más; un stack avanzado pierde menos.
+  let factorMadurez = 1.0;
+  if (maturity.includes('low')) factorMadurez = 1.15;
+  else if (maturity.includes('advanced')) factorMadurez = 0.85;
+
+  const mid = leadsMes * tasaCierre * fuga * factorMadurez * comision;
+  const low = roundTo(mid * 0.75, 500);
+  const high = roundTo(mid * 1.25, 500);
+  // Stratos recupera de forma realista ~55% de esa fuga (conservador).
+  const recLow = roundTo(low * 0.55, 500);
+  const recHigh = roundTo(high * 0.55, 500);
+
+  return {
+    low, high, recLow, recHigh,
+    annualLow: low * 12, annualHigh: high * 12,
+    inputs: { leadsMes, comision, tasaCierre, fuga, dolor, factorMadurez },
+    assumptions: [
+      `≈ ${leadsMes} leads nuevos/mes (estimado para tu perfil)`,
+      `Comisión promedio por cierre: ${fmtUSD(comision)} USD`,
+      `Tasa de cierre base del sector: ${Math.round(tasaCierre * 100)}% de los leads`,
+      `Se cae por ${dolor}: ${Math.round(fuga * 100)}% de esos cierres potenciales`,
+    ],
+  };
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
    SCORING — replicado exacto del prototipo
    ═══════════════════════════════════════════════════════════════════════════ */
 function generateBlueprint(answers, contactName) {
@@ -197,6 +272,7 @@ function generateBlueprint(answers, contactName) {
     firstName,
     profile,
     score,
+    leak: estimateLeak(answers),
     module,
     moduleDesc: description,
     strategicMission,
@@ -731,6 +807,54 @@ export default function Diagnostico() {
 
           <div className="grid lg:grid-cols-12 gap-12">
             <div className="lg:col-span-8 space-y-12">
+              {/* ── FUGA DE CAPITAL ESTIMADA — solo matemáticas, supuestos a la vista ── */}
+              {reportData.leak && (
+                <div className="rounded-[2rem] bg-[#060A11] border border-red-500/20 overflow-hidden print:border-black/30">
+                  <div className="p-8 md:p-10 bg-gradient-to-r from-red-500/[0.07] to-transparent">
+                    <div className="flex items-center gap-2.5 mb-4">
+                      <span className="text-[10px] uppercase tracking-[0.3em] font-bold text-red-400 print:text-black">Fuga de capital estimada</span>
+                      <span className="text-[9px] uppercase tracking-[0.18em] font-bold text-slate-500 border border-white/10 rounded-full px-2.5 py-1">Estimado</span>
+                    </div>
+                    <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                      <span className="text-4xl md:text-6xl font-light tracking-tighter text-red-400 [text-shadow:0_0_30px_rgba(239,68,68,0.2)] print:text-black print:[text-shadow:none]">
+                        {fmtUSD(reportData.leak.low)} – {fmtUSD(reportData.leak.high)}
+                      </span>
+                      <span className="text-base md:text-lg text-slate-400 font-light">en comisiones / mes</span>
+                    </div>
+                    <p className="text-[13px] text-slate-500 font-light mt-2">
+                      ≈ {fmtUSD(reportData.leak.annualLow)} – {fmtUSD(reportData.leak.annualHigh)} al año que hoy se quedan en la mesa.
+                    </p>
+                  </div>
+
+                  {/* La matemática — sin humo, todo a la vista */}
+                  <div className="px-8 md:px-10 py-7 border-t border-white/5">
+                    <h4 className="text-[10px] uppercase tracking-[0.2em] font-bold text-slate-500 mb-4">Cómo lo calculamos</h4>
+                    <ul className="space-y-2.5 mb-5">
+                      {reportData.leak.assumptions.map((a, i) => (
+                        <li key={i} className="flex items-start gap-3 text-[14px] text-slate-300 font-light leading-relaxed print:text-black/80">
+                          <ChevronRight size={15} className="text-red-400/70 shrink-0 mt-1 print:text-black" strokeWidth={2.5} />
+                          <span>{a}</span>
+                        </li>
+                      ))}
+                    </ul>
+                    <p className="text-[12.5px] text-slate-500 font-light leading-relaxed italic">
+                      Es un estimado conservador basado solo en tus respuestas, no una promesa. El número exacto lo validamos contigo en la llamada.
+                    </p>
+                  </div>
+
+                  {/* Lo recuperable con Stratos */}
+                  <div className="px-8 md:px-10 py-7 border-t border-white/5 bg-[#34d399]/[0.03]">
+                    <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                      <span className="text-[10px] uppercase tracking-[0.2em] font-bold text-[#34d399] w-full mb-1 print:text-black">Recuperable con Stratos (≈55%)</span>
+                      <span className="text-3xl md:text-4xl font-light tracking-tighter text-[#34d399] print:text-black">
+                        {fmtUSD(reportData.leak.recLow)} – {fmtUSD(reportData.leak.recHigh)}
+                      </span>
+                      <span className="text-[14px] text-slate-400 font-light">/ mes, sin contratar a nadie más.</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               <div className="p-10 md:p-12 rounded-[2rem] bg-gradient-to-r from-[#34d399]/10 to-transparent border-l-[3px] border-[#34d399] print:bg-black/5 print:border-black">
                 <h3 className="text-[10px] uppercase tracking-[0.3em] font-bold text-[#34d399] mb-5 print:text-black">Misión Operativa Definitiva</h3>
                 <p className="text-2xl font-light leading-relaxed tracking-tight print:text-black/80">{reportData.strategicMission}</p>
