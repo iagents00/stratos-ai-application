@@ -791,8 +791,9 @@ export default function Diagnostico() {
         <div className="max-w-6xl mx-auto relative z-10">
           <div className="flex flex-col md:flex-row md:items-end justify-between border-b border-white/10 pb-12 mb-16 print:border-black/10">
             <div className="space-y-5">
-              <div className="inline-block px-4 py-1.5 rounded-full border border-[#34d399]/20 bg-[#34d399]/10 print:border-black/20 print:bg-transparent">
-                <span className="text-[10px] uppercase tracking-[0.3em] font-bold text-[#34d399] print:text-black">Diagnóstico Estratégico Confidencial</span>
+              <div className="inline-flex items-center gap-2 pl-2.5 pr-3.5 py-1.5 rounded-full border border-[#34d399]/20 bg-[#34d399]/[0.07] print:border-black/20 print:bg-transparent">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#34d399] shadow-[0_0_8px_#34d399] print:shadow-none print:bg-black shrink-0"></span>
+                <span className="text-[10px] sm:text-[11px] uppercase tracking-[0.2em] font-bold text-[#34d399] print:text-black leading-none">Diagnóstico Estratégico Confidencial</span>
               </div>
               <h1 className="text-4xl sm:text-5xl md:text-7xl font-medium tracking-tighter leading-[1.05] md:leading-none text-white">
                 <span className="text-white [text-shadow:0_0_18px_rgba(52,211,153,0.45)]">Stratos</span> <span className="text-slate-400 font-light">· Plano Estratégico</span>
@@ -936,8 +937,11 @@ export default function Diagnostico() {
                 { icon: TrendingUp, t: "Hasta tu primer cierre", d: "Te acompañamos en el arranque y ajustamos la IA hasta que empiece a traerte citas reales calificadas." },
               ].map((it, i) => { const Ic = it.icon; return (
                 <div key={i} className="p-7 rounded-3xl bg-white/[0.02] border border-white/5 hover:border-[#34d399]/30 hover:bg-white/[0.04] transition-all">
-                  <div className="w-11 h-11 rounded-xl bg-[#34d399]/10 border border-[#34d399]/20 flex items-center justify-center mb-5"><Ic className="w-5 h-5 text-[#34d399]" strokeWidth={1.8} /></div>
-                  <div className="flex items-center gap-2 mb-2"><span className="text-[#34d399] font-mono text-xs font-bold">0{i + 1}</span><h4 className="text-[16px] font-medium text-white tracking-tight">{it.t}</h4></div>
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-10 h-10 rounded-xl bg-[#34d399]/10 border border-[#34d399]/20 flex items-center justify-center shrink-0"><Ic className="w-[18px] h-[18px] text-[#34d399]" strokeWidth={1.8} /></div>
+                    <span className="text-[#34d399] font-mono text-xs font-bold">0{i + 1}</span>
+                  </div>
+                  <h4 className="text-[16px] font-medium text-white tracking-tight mb-2">{it.t}</h4>
                   <p className="text-[13.5px] text-slate-400 font-light leading-relaxed">{it.d}</p>
                 </div>
               ); })}
