@@ -86,67 +86,67 @@ const QUESTION_BANK = [
   {
     id: "mainPain",
     icon: AlertTriangle,
-    label: "Seamos brutales con los números: ¿Dónde estás perdiendo más dinero hoy?",
-    insight: "El tiempo mata los tratos. Identificar la fuga de capital exacta nos permite inyectar Inteligencia Artificial donde el retorno de inversión sea inmediato.",
+    label: "¿Dónde estás perdiendo más ventas hoy?",
+    insight: "Responder rápido y dar seguimiento es lo que más mueve las ventas. Saber dónde está tu mayor pérdida nos dice por dónde conviene empezar.",
     options: [
-      { value: "unqualified_leads", label: "El Cementerio de Curiosos", desc: "Pago pauta cara, llegan decenas de leads, pero mi equipo pierde horas con gente que no tiene crédito o presupuesto." },
-      { value: "slow_followup", label: "El Síndrome de la Respuesta Lenta", desc: "Mis asesores tardan en contestar o no dan seguimiento. La competencia nos roba clientes por ser más rápida." },
-      { value: "call_overload", label: "Llamadas Perdidas = Dinero Quemado", desc: "Entran leads de noche o fines de semana y nadie atiende en menos de 5 minutos. Los leads se enfrían al instante." }
+      { value: "unqualified_leads", label: "Recibo muchos leads que no califican", desc: "Invierto en publicidad y llegan muchos contactos, pero mi equipo pierde tiempo con gente sin presupuesto o sin crédito." },
+      { value: "slow_followup", label: "Respondemos tarde o sin seguimiento", desc: "Mis asesores tardan en contestar o no dan seguimiento, y perdemos clientes frente a quien responde más rápido." },
+      { value: "call_overload", label: "Entran leads y no alcanzamos a atender", desc: "Llegan contactos de noche o en fin de semana y no logramos responder a tiempo, así que se enfrían." }
     ],
-    dynamicPrompt: "Marca lo que te está costando dinero (elige las que apliquen):",
+    dynamicPrompt: "¿Qué de esto te pasa? (marca lo que aplique)",
     quickTags: {
-      unqualified_leads: ["Leads sin precalificar", "Me dejan en visto en WhatsApp", "Agendan pero no se presentan", "Pago mucho por cada lead (CPA alto)"],
-      slow_followup: ["Asesores desorganizados", "Respuestas tardan +1 hora", "Cero seguimiento después de 30 días", "Fuga a competidores locales"],
-      call_overload: ["Leads nocturnos perdidos", "Imposible contactar en < 5 min", "Alta rotación de personal", "Asesores colapsados de trabajo"]
+      unqualified_leads: ["Leads sin precalificar", "Me dejan en visto", "Agendan y no llegan", "Pago alto por cada lead (CPA)"],
+      slow_followup: ["Equipo desorganizado", "Tardamos más de 1 hora en responder", "Sin seguimiento después de un tiempo", "Perdemos clientes con la competencia"],
+      call_overload: ["Perdemos leads de noche", "No contactamos en menos de 5 min", "Mucha rotación de personal", "Asesores saturados"]
     }
   },
   {
     id: "role",
     icon: Building2,
-    label: "¿Cuál es el volumen real de tu operación?",
-    insight: "Los sistemas genéricos fracasan. Un asesor estrella necesita un 'clon digital'; un broker necesita una máquina de control y seguimiento masivo.",
+    label: "¿Cómo es tu operación hoy?",
+    insight: "No es lo mismo un dueño que quiere ordenar a su equipo que un asesor que necesita ganar tiempo. Esto define cómo armamos tu solución.",
     options: [
-      { value: "broker_owner", label: "Broker / Dueño (Escalando Agencia)", desc: "Busco estandarizar procesos. Que mis ventas no dependan de si el asesor amaneció de buen humor. Quiero control total." },
-      { value: "top_producer", label: "Asesor Estrella (Alto Volumen)", desc: "Tengo leads pero mi tiempo es el cuello de botella. Necesito una IA que atienda WhatsApp mientras yo estoy cerrando firmas." }
+      { value: "broker_owner", label: "Dueño o broker con equipo", desc: "Quiero estandarizar el proceso para que las ventas no dependan del ánimo de cada asesor, y tener más control." },
+      { value: "top_producer", label: "Asesor independiente con buen volumen", desc: "Tengo leads, pero mi tiempo es el límite. Necesito ayuda para atender WhatsApp mientras cierro." }
     ],
-    dynamicPrompt: "¿Qué tipo de ticket / inventario dominas?",
+    dynamicPrompt: "¿Qué tipo de propiedades manejas?",
     quickTags: {
-      broker_owner: ["Múltiples Desarrollos", "Vivienda Media/Residencial", "Equipo de 5+ asesores", "Gestión de exclusivas"],
-      top_producer: ["Residencial Premium (Ticket Alto)", "Inversionistas / Fondos", "Pre-ventas exclusivas", "Rentas corporativas"]
+      broker_owner: ["Varios desarrollos", "Vivienda media y residencial", "Equipo de 5+ asesores", "Manejo exclusivas"],
+      top_producer: ["Residencial premium (ticket alto)", "Inversionistas o fondos", "Preventas exclusivas", "Rentas corporativas"]
     }
   },
   {
     id: "maturity",
     icon: Database,
-    label: "¿Dónde guardas hoy la información de tu negocio?",
-    insight: "Para que nuestro motor de IA funcione como una máquina de imprimir dinero, necesitamos conectarlo directamente a la fuente de tu inventario.",
+    label: "¿Dónde guardas hoy la información de tus clientes?",
+    insight: "Para que la IA responda con datos reales, necesita conectarse a donde ya tienes tu inventario y tus contactos.",
     options: [
-      { value: "low", label: "El Caos (WhatsApp y Excel)", desc: "Si un asesor renuncia, se lleva mi cartera. No hay procesos, dependo 100% de la memoria humana y notas de voz." },
-      { value: "medium", label: "CRM Inmobiliario Tradicional", desc: "Uso Tokko, EasyBroker o similar. El inventario está ahí, pero el seguimiento y las respuestas en WhatsApp siguen siendo manuales." },
-      { value: "advanced", label: "Ecosistema CRM Avanzado", desc: "Tengo HubSpot o Salesforce. Solo me falta la capa de IA autónoma (Voz y RAG) para cerrar el ciclo sin humanos." }
+      { value: "low", label: "WhatsApp y Excel", desc: "Si un asesor se va, se lleva su cartera. Casi todo depende de la memoria del equipo y de notas sueltas." },
+      { value: "medium", label: "Un CRM inmobiliario", desc: "Uso EasyBroker, Tokko o similar. El inventario está ahí, pero el seguimiento y WhatsApp siguen siendo manuales." },
+      { value: "advanced", label: "Un CRM avanzado", desc: "Uso HubSpot, Salesforce o parecido. Solo me falta sumar la capa de IA para responder y dar seguimiento solo." }
     ],
-    dynamicPrompt: "Marca las herramientas que pagan tu nómina hoy:",
+    dynamicPrompt: "¿Qué herramientas usas hoy?",
     quickTags: {
-      low: ["WhatsApp Personal", "Google Sheets", "Libretas físicas", "Memoria del equipo"],
-      medium: ["EasyBroker", "Tokko Broker", "Nocnok", "Wasi / AlterEstate"],
+      low: ["WhatsApp personal", "Google Sheets", "Libretas", "Memoria del equipo"],
+      medium: ["EasyBroker", "Tokko", "Nocnok", "Wasi / AlterEstate"],
       advanced: ["HubSpot", "Salesforce", "Make / Zapier", "ActiveCampaign"]
     }
   },
   {
     id: "primaryGoal",
     icon: Target,
-    label: "Si resolviéramos UN solo cuello de botella en los próximos 7 días, ¿cuál eliges?",
-    insight: "El enfoque radical trae resultados radicales. Instalamos un motor, lo hacemos hiper-rentable y luego escalamos al resto de la agencia.",
+    label: "Si pudiéramos resolver un solo problema esta semana, ¿cuál eliges?",
+    insight: "Empezamos por un punto concreto, lo dejamos funcionando bien y desde ahí escalamos al resto de tu operación.",
     options: [
-      { value: "ai_whatsapp", label: "El Cerrador de WhatsApp (IA Conversacional)", desc: "Un Agente IA que entiende audios, busca en mi inventario, descarta curiosos y me agenda visitas calificadas 24/7." },
-      { value: "ai_callcenter", label: "Centro de Llamadas Autónomo (Voz IA en 5 seg)", desc: "Una IA que llama al lead 5 segundos después de que deja sus datos en Meta, evalúa su crédito y me transfiere la llamada caliente." },
-      { value: "full_iaos", label: "Dominio Total del Mercado (Sistema Integral de IA)", desc: "El ecosistema definitivo: Voz, WhatsApp y CRM sincronizados en un solo sistema para absorber a toda la competencia de tu zona." }
+      { value: "ai_whatsapp", label: "Atender WhatsApp automáticamente", desc: "Un asistente de IA que entiende audios, busca en tu inventario, filtra curiosos y agenda visitas a cualquier hora." },
+      { value: "ai_callcenter", label: "Llamar a los leads al instante", desc: "Una IA que llama al lead segundos después de que deja sus datos, valida su interés y te pasa la llamada lista." },
+      { value: "full_iaos", label: "Integrar todo en un solo sistema", desc: "WhatsApp, llamadas y CRM conectados, para ordenar toda la operación en un mismo lugar." }
     ],
-    dynamicPrompt: "¿Qué métrica te urge reventar este trimestre?",
+    dynamicPrompt: "¿Qué te gustaría mejorar primero?",
     quickTags: {
-      ai_whatsapp: ["Citas Efectivas (+200%)", "Filtro Automático de Crédito", "Seguimiento a 6 meses", "Automatización de Fichas Técnicas"],
-      ai_callcenter: ["Tiempo de Contacto (< 1 min)", "Calificación de Presupuesto Inmediata", "Transferencia en vivo a cerradores", "Reducir CPA drásticamente"],
-      full_iaos: ["Escalabilidad absoluta (Cero contrataciones)", "Recuperar leads de hace 1 año", "Control militar de la data", "Posicionamiento Dominante"]
+      ai_whatsapp: ["Más citas agendadas", "Filtrar leads automáticamente", "Seguimiento constante", "Fichas técnicas automáticas"],
+      ai_callcenter: ["Contacto en menos de 1 min", "Validar presupuesto al instante", "Pasar la llamada en vivo", "Reducir el costo por lead"],
+      full_iaos: ["Escalar sin contratar más", "Recuperar leads viejos", "Centralizar la información", "Ordenar todo el proceso"]
     }
   }
 ];
@@ -177,7 +177,7 @@ function estimateLeak(answers) {
   // 1) Leads nuevos al mes (estimado por perfil). Banda, no número falso-preciso.
   let leadsMes = role.includes('broker_owner') ? 120 : 50;
   if (has('5+')) leadsMes += 70;            // "Equipo de 5+ asesores"
-  if (has('múltiples') || has('multiples')) leadsMes += 30; // varios desarrollos
+  if (has('desarrollos')) leadsMes += 30; // varios desarrollos
   if (has('cpa')) leadsMes += 20;           // pauta pagada = más volumen
 
   // 2) Comisión promedio por cierre (USD que gana la agencia, no precio del inmueble).
@@ -862,11 +862,11 @@ export default function Diagnostico() {
 
               <div className="grid md:grid-cols-2 gap-8">
                 <div className="p-10 rounded-3xl bg-[#060A11] border border-red-500/10 shadow-[inset_0_2px_20px_rgba(239,68,68,0.03)] print:border-black/20">
-                  <h4 className="text-[11px] uppercase tracking-[0.2em] font-bold text-red-400 mb-5 flex items-center gap-3"><XCircle size={16}/> Modelo Actual (Infierno)</h4>
+                  <h4 className="text-[11px] uppercase tracking-[0.2em] font-bold text-red-400 mb-5 flex items-center gap-3"><XCircle size={16}/> Cómo trabajas hoy</h4>
                   <p className="text-[15px] text-slate-400 font-light leading-relaxed print:text-black/70">Tu equipo no puede escalar sin aumentar costos. Los leads se enfrían por falta de seguimiento inmediato y pierdes comisiones en el caos.</p>
                 </div>
                 <div className="p-10 rounded-3xl bg-[#34d399]/[0.02] border border-[#34d399]/20 shadow-[0_0_30px_rgba(52,211,153,0.05)] print:border-black">
-                  <h4 className="text-[11px] uppercase tracking-[0.2em] font-bold text-[#34d399] mb-5 flex items-center gap-3"><Check size={16} className="shrink-0"/> Con Stratos (Cielo)</h4>
+                  <h4 className="text-[11px] uppercase tracking-[0.2em] font-bold text-[#34d399] mb-5 flex items-center gap-3"><Check size={16} className="shrink-0"/> Cómo trabajarías con Stratos</h4>
                   <p className="text-[15px] text-emerald-50 font-light leading-relaxed print:text-black">{reportData.futureStateText}</p>
                 </div>
               </div>
