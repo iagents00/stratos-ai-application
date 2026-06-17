@@ -324,7 +324,7 @@ const AnticipationLoader = ({ text, subtext }) => (
       <Network className="absolute w-12 h-12 text-[#34d399] animate-[pulse_1.5s_ease-in-out_infinite] drop-shadow-[0_0_15px_rgba(52,211,153,0.8)]" strokeWidth={1.5} />
     </div>
     <h3 className="text-2xl font-light text-white mb-2 tracking-tight">{text}</h3>
-    <p className="text-[#34d399] font-mono text-[10px] uppercase tracking-[0.3em] font-medium">{subtext}</p>
+    <p className="text-[#34d399] font-mono text-[11px] uppercase tracking-[0.16em] font-medium">{subtext}</p>
   </div>
 );
 
@@ -440,7 +440,7 @@ export default function Diagnostico() {
   }
   if (viewMode && viewError) {
     return (
-      <div className="min-h-screen bg-[#060A11] text-white flex items-center justify-center p-6 font-sans">
+      <div className="min-h-screen bg-[#060A11] text-white flex items-center justify-center p-6 font-sans antialiased">
         <div className="max-w-md w-full text-center">
           <div className="w-16 h-16 mx-auto mb-6 rounded-2xl border border-red-500/30 bg-red-500/10 flex items-center justify-center">
             <XCircle className="w-8 h-8 text-red-400" strokeWidth={1.5} />
@@ -452,7 +452,7 @@ export default function Diagnostico() {
           </p>
           <a
             href="/diagnostico"
-            className="inline-flex items-center gap-3 px-8 py-3.5 bg-[#34d399] text-[#030508] text-[12px] font-bold uppercase tracking-[0.18em] rounded-full hover:bg-[#2dd4bf] transition-all"
+            className="inline-flex items-center gap-3 px-8 py-3.5 bg-[#34d399] text-[#030508] text-[12px] font-bold uppercase tracking-[0.12em] rounded-full hover:bg-[#2dd4bf] transition-all"
           >
             Iniciar un diagnóstico nuevo <ArrowRight size={14} strokeWidth={2.5} />
           </a>
@@ -542,7 +542,7 @@ export default function Diagnostico() {
   /* ── STAGE: GATE (hero) ───────────────────────────────────────────────── */
   if (stage === 'gate') {
     return (
-      <div className="min-h-screen bg-[#060A11] text-white flex flex-col items-center justify-center p-6 relative overflow-hidden font-sans selection:bg-[#34d399]/30">
+      <div className="min-h-screen bg-[#060A11] text-white flex flex-col items-center justify-center p-6 relative overflow-hidden font-sans antialiased selection:bg-[#34d399]/30">
         <style>{`
           @keyframes stratosAuroraA{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(9%,7%) scale(1.22)}}
           @keyframes stratosAuroraB{0%,100%{transform:translate(0,0) scale(1.15)}50%{transform:translate(-8%,-6%) scale(1)}}
@@ -561,12 +561,12 @@ export default function Diagnostico() {
         <div className="z-10 max-w-5xl text-center flex flex-col items-center animate-[stratosRise_0.9s_ease-out_both]">
           <div className="mb-10 px-5 py-2.5 rounded-full border border-white/10 bg-white/[0.03] backdrop-blur-md inline-flex items-center gap-2">
             <Atom className="w-3.5 h-3.5 text-[#34d399]" strokeWidth={1.75} />
-            <span className="text-[11px] md:text-xs font-bold tracking-[0.3em] uppercase text-slate-300">
+            <span className="text-[11px] md:text-xs font-bold tracking-[0.16em] uppercase text-slate-300">
               Auditoría Ejecutiva Stratos
             </span>
           </div>
 
-          <h1 className="text-[2.5rem] sm:text-5xl md:text-[5.5rem] lg:text-[6.5rem] font-medium tracking-tighter leading-[1.05] md:leading-[1.02] text-white mb-8 md:mb-10 w-full px-1 sm:px-2 [text-shadow:0_0_60px_rgba(255,255,255,0.07)]">
+          <h1 className="text-[2.5rem] sm:text-5xl md:text-[5.5rem] lg:text-[6.5rem] font-medium tracking-tight leading-[1.05] md:leading-[1.02] text-white mb-8 md:mb-10 w-full px-1 sm:px-2 [text-shadow:0_0_60px_rgba(255,255,255,0.07)]">
             El <span className="text-white animate-[stratosNeon_3.5s_ease-in-out_infinite]">60% de tus comisiones</span><br className="hidden md:block"/> muere en el seguimiento.
           </h1>
 
@@ -576,7 +576,7 @@ export default function Diagnostico() {
 
           <button
             onClick={() => setStage('wizard')}
-            className="relative inline-flex items-center justify-center gap-4 px-10 py-5 md:px-12 md:py-6 bg-white text-black rounded-full text-[13px] md:text-[15px] font-bold uppercase tracking-[0.15em] transition-all duration-300 hover:bg-slate-100 hover:scale-[1.02] active:scale-[0.98] shadow-[0_0_40px_rgba(255,255,255,0.12)] hover:shadow-[0_0_60px_rgba(52,211,153,0.25)] group mx-auto"
+            className="relative inline-flex items-center justify-center gap-4 px-10 py-5 md:px-12 md:py-6 bg-white text-black rounded-full text-[14px] md:text-[15px] font-bold uppercase tracking-[0.1em] transition-all duration-300 hover:bg-slate-100 hover:scale-[1.02] active:scale-[0.98] shadow-[0_0_40px_rgba(255,255,255,0.12)] hover:shadow-[0_0_60px_rgba(52,211,153,0.25)] group mx-auto"
           >
             Iniciar Diagnóstico
             <ArrowRight className="w-5 h-5 md:w-6 md:h-6 text-emerald-700 group-hover:translate-x-1 transition-transform" strokeWidth={2.5}/>
@@ -593,7 +593,7 @@ export default function Diagnostico() {
     const progress = ((step + 1) / QUESTION_BANK.length) * 100;
 
     return (
-      <div className="min-h-screen bg-[#060A11] text-white p-4 md:p-8 relative selection:bg-[#34d399]/30 pb-44 md:pb-32 overflow-x-hidden font-sans flex flex-col items-center">
+      <div className="min-h-screen bg-[#060A11] text-white p-4 md:p-8 relative selection:bg-[#34d399]/30 pb-44 md:pb-32 overflow-x-hidden font-sans antialiased flex flex-col items-center">
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff02_1px,transparent_1px),linear-gradient(to_bottom,#ffffff02_1px,transparent_1px)] bg-[size:40px_40px] pointer-events-none fixed"></div>
         <div className="absolute top-0 w-full h-[500px] bg-[#34d399]/5 blur-[150px] rounded-full pointer-events-none fixed -translate-y-1/2"></div>
 
@@ -602,11 +602,11 @@ export default function Diagnostico() {
             <button
               type="button"
               onClick={goBack}
-              className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-500 hover:text-slate-200 transition-colors mb-5 -ml-1 focus:outline-none focus-visible:text-slate-200"
+              className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.12em] text-slate-500 hover:text-slate-200 transition-colors mb-5 -ml-1 focus:outline-none focus-visible:text-slate-200"
             >
               <ArrowLeft size={14} strokeWidth={2.5} /> Volver
             </button>
-            <div className="flex justify-between items-center text-[10px] font-bold uppercase tracking-[0.3em] text-slate-500 mb-4">
+            <div className="flex justify-between items-center text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500 mb-4">
               <span>Auditoría Estructural</span>
               <span className="text-[#34d399]">Pregunta {step + 1} de {QUESTION_BANK.length}</span>
             </div>
@@ -617,12 +617,12 @@ export default function Diagnostico() {
 
           <div key={step}>
             <div className="mb-10 md:mb-14">
-              <h2 className="text-3xl md:text-5xl font-medium tracking-tighter leading-[1.1] mb-6 flex flex-col md:flex-row md:items-start gap-4 md:gap-6">
+              <h2 className="text-3xl md:text-5xl font-medium tracking-tight leading-[1.1] mb-6 flex flex-col md:flex-row md:items-start gap-4 md:gap-6">
                 <CurrentIcon className="w-8 h-8 md:w-10 md:h-10 text-[#34d399] shrink-0 mt-1 drop-shadow-[0_0_15px_rgba(52,211,153,0.5)]" strokeWidth={1.5} />
                 <span>{q.label}</span>
               </h2>
               <p className="text-slate-400 text-lg md:text-xl font-light pl-0 md:pl-16 leading-relaxed">{q.insight}</p>
-              <p className="text-[11px] uppercase tracking-[0.18em] text-[#34d399]/90 font-bold pl-0 md:pl-16 mt-5 flex items-center gap-2">
+              <p className="text-[11px] uppercase tracking-[0.12em] text-[#34d399]/90 font-bold pl-0 md:pl-16 mt-5 flex items-center gap-2">
                 <Check size={13} strokeWidth={3} className="shrink-0" /> Puedes elegir más de una opción
               </p>
             </div>
@@ -648,12 +648,12 @@ export default function Diagnostico() {
 
                     {isActive && tags.length > 0 && (
                       <div className="mt-5 ml-1 md:ml-8 border-l-2 border-[#34d399]/30 pl-4 md:pl-6 pb-2">
-                        <p className="text-[10px] uppercase tracking-[0.2em] text-[#34d399] font-bold mb-4 flex items-center gap-2"><ChevronRight size={14} className="shrink-0"/> {q.dynamicPrompt}</p>
+                        <p className="text-[11px] uppercase tracking-[0.12em] text-[#34d399] font-bold mb-4 flex items-center gap-2"><ChevronRight size={14} className="shrink-0"/> {q.dynamicPrompt}</p>
                         <div className="flex flex-wrap gap-2.5">
                           {tags.map(tag => {
                             const isTagSelected = selectedTags.includes(tag);
                             return (
-                              <button type="button" key={tag} onClick={() => handleTagToggle(tag)} aria-pressed={isTagSelected} className={`px-4 sm:px-5 py-2.5 rounded-full text-[13px] font-medium transition-all inline-flex items-center gap-2 border max-w-full text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-[#34d399]/40 ${isTagSelected ? 'bg-[#34d399]/10 border-[#34d399]/40 text-[#34d399] shadow-[0_0_15px_rgba(52,211,153,0.1)]' : 'bg-[#060A11] border-white/10 text-slate-400 hover:bg-white/5 hover:text-slate-200'}`}>
+                              <button type="button" key={tag} onClick={() => handleTagToggle(tag)} aria-pressed={isTagSelected} className={`px-4 sm:px-5 py-2.5 rounded-full text-[14px] font-medium transition-all inline-flex items-center gap-2 border max-w-full text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-[#34d399]/40 ${isTagSelected ? 'bg-[#34d399]/10 border-[#34d399]/40 text-[#34d399] shadow-[0_0_15px_rgba(52,211,153,0.1)]' : 'bg-[#060A11] border-white/10 text-slate-400 hover:bg-white/5 hover:text-slate-200'}`}>
                                 {isTagSelected && <Check size={14} strokeWidth={3} className="shrink-0"/>} {tag}
                               </button>
                             );
@@ -675,7 +675,7 @@ export default function Diagnostico() {
                 <Terminal className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
                 <input type="text" value={contextText} onChange={e => setContextText(e.target.value)} placeholder="Agrega algún detalle (opcional)…" className="w-full bg-[#030508] border border-white/10 rounded-full pl-12 pr-6 py-4 text-white text-sm focus:outline-none focus:border-[#34d399]/40 font-light placeholder:text-slate-600 shadow-[inset_0_2px_10px_rgba(0,0,0,0.5)] transition-colors" />
               </div>
-              <button type="button" onClick={submitWizardStep} className="w-full md:w-auto px-10 py-4 bg-white text-black text-xs md:text-sm font-bold uppercase tracking-[0.2em] rounded-full hover:bg-slate-200 flex items-center justify-center gap-3 transition-all active:scale-95 shrink-0 shadow-[0_0_30px_rgba(255,255,255,0.1)] hover:shadow-[0_0_40px_rgba(255,255,255,0.2)]">
+              <button type="button" onClick={submitWizardStep} className="w-full md:w-auto px-10 py-4 bg-white text-black text-xs md:text-sm font-bold uppercase tracking-[0.12em] rounded-full hover:bg-slate-200 flex items-center justify-center gap-3 transition-all active:scale-95 shrink-0 shadow-[0_0_30px_rgba(255,255,255,0.1)] hover:shadow-[0_0_40px_rgba(255,255,255,0.2)]">
                 {step === QUESTION_BANK.length - 1 ? 'Generar mi Plano' : 'Siguiente'} <ArrowRight size={16} strokeWidth={2.5}/>
               </button>
             </div>
@@ -691,7 +691,7 @@ export default function Diagnostico() {
   /* ── STAGE: FORM (squeeze) ─────────────────────────────────────────────── */
   if (stage === 'form') {
     return (
-      <div className="min-h-screen bg-[#060A11] text-white flex items-center justify-center p-6 relative font-sans">
+      <div className="min-h-screen bg-[#060A11] text-white flex items-center justify-center p-6 relative font-sans antialiased">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(52,211,153,0.05)_0%,transparent_60%)] pointer-events-none"></div>
         <div className="z-10 max-w-xl w-full">
           <div className="bg-[#030508] border border-white/10 rounded-[2rem] p-6 sm:p-10 md:p-14 shadow-[0_40px_100px_rgba(0,0,0,0.8)] relative overflow-hidden">
@@ -702,7 +702,7 @@ export default function Diagnostico() {
                 <Lock className="w-7 h-7 text-[#34d399]" strokeWidth={1.5} />
               </div>
               <h2 className="text-3xl font-medium tracking-tight text-white mb-2">Arquitectura Calculada</h2>
-              <p className="text-[10px] uppercase tracking-[0.2em] text-[#34d399] font-bold">Plano estratégico valorado en $1,500 USD</p>
+              <p className="text-[11px] uppercase tracking-[0.12em] text-[#34d399] font-bold">Plano estratégico valorado en $1,500 USD</p>
             </div>
 
             <p className="text-slate-400 text-[15px] font-light mb-10 text-center px-4 leading-relaxed">
@@ -712,21 +712,21 @@ export default function Diagnostico() {
             <form onSubmit={unlockReport} className="space-y-5">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div>
-                  <label className="text-[10px] uppercase tracking-[0.15em] text-slate-500 font-bold ml-1 block mb-2">Tu Nombre</label>
+                  <label className="text-[11px] uppercase tracking-[0.1em] text-slate-500 font-bold ml-1 block mb-2">Tu Nombre</label>
                   <input required value={contact.name} onChange={e => setContact({...contact, name: e.target.value})} className="w-full bg-[#060A11] border border-white/10 rounded-xl px-5 py-4 text-white text-sm focus:outline-none focus:border-[#34d399]/50 transition-colors placeholder:text-slate-700 shadow-[inset_0_2px_10px_rgba(0,0,0,0.3)]" placeholder="Ej. Juan Pérez" />
                 </div>
                 <div>
-                  <label className="text-[10px] uppercase tracking-[0.15em] text-slate-500 font-bold ml-1 block mb-2">Agencia / Empresa</label>
+                  <label className="text-[11px] uppercase tracking-[0.1em] text-slate-500 font-bold ml-1 block mb-2">Agencia / Empresa</label>
                   <input required value={contact.company} onChange={e => setContact({...contact, company: e.target.value})} className="w-full bg-[#060A11] border border-white/10 rounded-xl px-5 py-4 text-white text-sm focus:outline-none focus:border-[#34d399]/50 transition-colors placeholder:text-slate-700 shadow-[inset_0_2px_10px_rgba(0,0,0,0.3)]" placeholder="Ej. Inmobiliaria del Valle" />
                 </div>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div>
-                  <label className="text-[10px] uppercase tracking-[0.15em] text-slate-500 font-bold ml-1 block mb-2">Correo Profesional</label>
+                  <label className="text-[11px] uppercase tracking-[0.1em] text-slate-500 font-bold ml-1 block mb-2">Correo Profesional</label>
                   <input required type="email" value={contact.email} onChange={e => setContact({...contact, email: e.target.value})} className="w-full bg-[#060A11] border border-white/10 rounded-xl px-5 py-4 text-white text-sm focus:outline-none focus:border-[#34d399]/50 transition-colors placeholder:text-slate-700 shadow-[inset_0_2px_10px_rgba(0,0,0,0.3)]" placeholder="tucorreo@empresa.com" />
                 </div>
                 <div>
-                  <label className="text-[10px] uppercase tracking-[0.15em] text-slate-500 font-bold ml-1 block mb-2">WhatsApp Directo</label>
+                  <label className="text-[11px] uppercase tracking-[0.1em] text-slate-500 font-bold ml-1 block mb-2">WhatsApp Directo</label>
                   <div className="flex gap-2">
                     <select
                       value={contact.dialCode}
@@ -755,7 +755,7 @@ export default function Diagnostico() {
                 </div>
               </div>
 
-              <button type="submit" className="w-full mt-6 bg-[#34d399] text-[#030508] text-[13px] font-bold uppercase tracking-[0.2em] py-5 rounded-xl transition-all flex items-center justify-center gap-3 hover:bg-[#2dd4bf] active:scale-95 shadow-[0_0_30px_rgba(52,211,153,0.3)] group">
+              <button type="submit" className="w-full mt-6 bg-[#34d399] text-[#030508] text-[14px] font-bold uppercase tracking-[0.12em] py-5 rounded-xl transition-all flex items-center justify-center gap-3 hover:bg-[#2dd4bf] active:scale-95 shadow-[0_0_30px_rgba(52,211,153,0.3)] group">
                  Desbloquear mi Plano
                  <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform"/>
               </button>
@@ -769,7 +769,7 @@ export default function Diagnostico() {
   /* ── STAGE: REPORT (blueprint dashboard) ──────────────────────────────── */
   if (stage === 'report' && reportData) {
     return (
-      <div className="min-h-screen bg-[#030508] text-white py-12 md:py-20 px-4 md:px-10 relative overflow-x-hidden font-sans print:bg-white print:text-black">
+      <div className="min-h-screen bg-[#030508] text-white py-12 md:py-20 px-4 md:px-10 relative overflow-x-hidden font-sans antialiased print:bg-white print:text-black">
         {/* Sticky CTA — visible apenas el lead empieza a leer el reporte. Cierra la fricción
             de "¿y ahora qué?" al ofrecer el agendamiento en todo momento sin tener que
             scrollear hasta el final. Oculto en print. */}
@@ -777,7 +777,7 @@ export default function Diagnostico() {
           href={buildCalLink(contact)}
           target="_blank"
           rel="noopener noreferrer"
-          className="fixed top-4 right-4 md:top-6 md:right-6 z-50 px-5 py-3 md:px-6 md:py-3.5 bg-[#34d399] text-[#030508] text-[11px] md:text-[12px] font-bold uppercase tracking-[0.18em] rounded-full shadow-[0_0_30px_rgba(52,211,153,0.35)] hover:bg-[#2dd4bf] hover:scale-[1.03] active:scale-[0.97] transition-all inline-flex items-center gap-2 print:hidden"
+          className="fixed top-4 right-4 md:top-6 md:right-6 z-50 px-5 py-3 md:px-6 md:py-3.5 bg-[#34d399] text-[#030508] text-[11px] md:text-[12px] font-bold uppercase tracking-[0.12em] rounded-full shadow-[0_0_30px_rgba(52,211,153,0.35)] hover:bg-[#2dd4bf] hover:scale-[1.03] active:scale-[0.97] transition-all inline-flex items-center gap-2 print:hidden"
         >
           <CalendarDays size={14} strokeWidth={2.5} />
           <span className="hidden sm:inline">Agendar mi asesoría sin costo</span>
@@ -793,16 +793,16 @@ export default function Diagnostico() {
             <div className="space-y-5">
               <div className="inline-flex items-center gap-2 pl-2.5 pr-3.5 py-1.5 rounded-full border border-[#34d399]/20 bg-[#34d399]/[0.07] print:border-black/20 print:bg-transparent">
                 <span className="w-1.5 h-1.5 rounded-full bg-[#34d399] shadow-[0_0_8px_#34d399] print:shadow-none print:bg-black shrink-0"></span>
-                <span className="text-[10px] sm:text-[11px] uppercase tracking-[0.2em] font-bold text-[#34d399] print:text-black leading-none">Diagnóstico Estratégico Confidencial</span>
+                <span className="text-[11px] sm:text-[11px] uppercase tracking-[0.12em] font-bold text-[#34d399] print:text-black leading-none">Diagnóstico Estratégico Confidencial</span>
               </div>
-              <h1 className="text-4xl sm:text-5xl md:text-7xl font-medium tracking-tighter leading-[1.05] md:leading-none text-white">
+              <h1 className="text-4xl sm:text-5xl md:text-7xl font-medium tracking-tight leading-[1.05] md:leading-none text-white">
                 <span className="text-white [text-shadow:0_0_18px_rgba(52,211,153,0.45)]">Stratos</span> <span className="text-slate-400 font-light">· Plano Estratégico</span>
               </h1>
               <p className="text-lg text-slate-400 font-light print:text-black/60 tracking-wide">Preparado exclusivamente para: <strong className="text-white print:text-black font-medium">{reportData.fullName}</strong></p>
             </div>
             <div className="mt-10 md:mt-0 text-left md:text-right">
-              <p className="text-[10px] uppercase tracking-[0.3em] font-bold text-slate-500 mb-2">Viabilidad de Escala IA</p>
-              <div className="text-6xl font-light font-mono flex items-baseline md:justify-end tracking-tighter [text-shadow:0_0_30px_rgba(52,211,153,0.25)] print:[text-shadow:none]">{reportData.score}<span className="text-2xl text-[#34d399] ml-2 font-medium print:text-black">/100</span></div>
+              <p className="text-[11px] uppercase tracking-[0.16em] font-bold text-slate-500 mb-2">Viabilidad de Escala IA</p>
+              <div className="text-6xl font-light font-mono flex items-baseline md:justify-end tracking-tight [text-shadow:0_0_30px_rgba(52,211,153,0.25)] print:[text-shadow:none]">{reportData.score}<span className="text-2xl text-[#34d399] ml-2 font-medium print:text-black">/100</span></div>
             </div>
           </div>
 
@@ -813,23 +813,23 @@ export default function Diagnostico() {
                 <div className="rounded-[2rem] bg-[#060A11] border border-red-500/20 overflow-hidden print:border-black/30">
                   <div className="p-8 md:p-10 bg-gradient-to-r from-red-500/[0.07] to-transparent">
                     <div className="flex items-center gap-2.5 mb-4">
-                      <span className="text-[10px] uppercase tracking-[0.3em] font-bold text-red-400 print:text-black">Fuga de capital estimada</span>
-                      <span className="text-[9px] uppercase tracking-[0.18em] font-bold text-slate-500 border border-white/10 rounded-full px-2.5 py-1">Estimado</span>
+                      <span className="text-[11px] uppercase tracking-[0.16em] font-bold text-red-400 print:text-black">Fuga de capital estimada</span>
+                      <span className="text-[10px] uppercase tracking-[0.12em] font-bold text-slate-500 border border-white/10 rounded-full px-2.5 py-1">Estimado</span>
                     </div>
                     <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-                      <span className="text-4xl md:text-6xl font-light tracking-tighter text-red-400 [text-shadow:0_0_30px_rgba(239,68,68,0.2)] print:text-black print:[text-shadow:none]">
+                      <span className="text-4xl md:text-6xl font-light tracking-tight text-red-400 [text-shadow:0_0_30px_rgba(239,68,68,0.2)] print:text-black print:[text-shadow:none]">
                         {fmtUSD(reportData.leak.low)} – {fmtUSD(reportData.leak.high)}
                       </span>
                       <span className="text-base md:text-lg text-slate-400 font-light">en comisiones / mes</span>
                     </div>
-                    <p className="text-[13px] text-slate-500 font-light mt-2">
+                    <p className="text-[14px] text-slate-500 font-light mt-2">
                       ≈ {fmtUSD(reportData.leak.annualLow)} – {fmtUSD(reportData.leak.annualHigh)} al año que hoy se quedan en la mesa.
                     </p>
                   </div>
 
                   {/* La matemática — sin humo, todo a la vista */}
                   <div className="px-8 md:px-10 py-7 border-t border-white/5">
-                    <h4 className="text-[10px] uppercase tracking-[0.2em] font-bold text-slate-500 mb-4">Cómo lo calculamos</h4>
+                    <h4 className="text-[11px] uppercase tracking-[0.12em] font-bold text-slate-500 mb-4">Cómo lo calculamos</h4>
                     <ul className="space-y-2.5 mb-5">
                       {reportData.leak.assumptions.map((a, i) => (
                         <li key={i} className="flex items-start gap-3 text-[14px] text-slate-300 font-light leading-relaxed print:text-black/80">
@@ -846,8 +846,8 @@ export default function Diagnostico() {
                   {/* Lo recuperable con Stratos */}
                   <div className="px-8 md:px-10 py-7 border-t border-white/5 bg-[#34d399]/[0.03]">
                     <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-                      <span className="text-[10px] uppercase tracking-[0.2em] font-bold text-[#34d399] w-full mb-1 print:text-black">Recuperable con Stratos (≈55%)</span>
-                      <span className="text-3xl md:text-4xl font-light tracking-tighter text-[#34d399] print:text-black">
+                      <span className="text-[11px] uppercase tracking-[0.12em] font-bold text-[#34d399] w-full mb-1 print:text-black">Recuperable con Stratos (≈55%)</span>
+                      <span className="text-3xl md:text-4xl font-light tracking-tight text-[#34d399] print:text-black">
                         {fmtUSD(reportData.leak.recLow)} – {fmtUSD(reportData.leak.recHigh)}
                       </span>
                       <span className="text-[14px] text-slate-400 font-light">/ mes, sin contratar a nadie más.</span>
@@ -857,23 +857,23 @@ export default function Diagnostico() {
               )}
 
               <div className="p-10 md:p-12 rounded-[2rem] bg-gradient-to-r from-[#34d399]/10 to-transparent border-l-[3px] border-[#34d399] print:bg-black/5 print:border-black">
-                <h3 className="text-[10px] uppercase tracking-[0.3em] font-bold text-[#34d399] mb-5 print:text-black">Misión Operativa Definitiva</h3>
+                <h3 className="text-[11px] uppercase tracking-[0.16em] font-bold text-[#34d399] mb-5 print:text-black">Misión Operativa Definitiva</h3>
                 <p className="text-2xl font-light leading-relaxed tracking-tight print:text-black/80">{reportData.strategicMission}</p>
               </div>
 
               <div className="grid md:grid-cols-2 gap-8">
                 <div className="p-10 rounded-3xl bg-[#060A11] border border-red-500/10 shadow-[inset_0_2px_20px_rgba(239,68,68,0.03)] print:border-black/20">
-                  <h4 className="text-[11px] uppercase tracking-[0.2em] font-bold text-red-400 mb-5 flex items-center gap-3"><XCircle size={16}/> Cómo trabajas hoy</h4>
+                  <h4 className="text-[11px] uppercase tracking-[0.12em] font-bold text-red-400 mb-5 flex items-center gap-3"><XCircle size={16}/> Cómo trabajas hoy</h4>
                   <p className="text-[15px] text-slate-400 font-light leading-relaxed print:text-black/70">Tu equipo no puede escalar sin aumentar costos. Los leads se enfrían por falta de seguimiento inmediato y pierdes comisiones en el caos.</p>
                 </div>
                 <div className="p-10 rounded-3xl bg-[#34d399]/[0.02] border border-[#34d399]/20 shadow-[0_0_30px_rgba(52,211,153,0.05)] print:border-black">
-                  <h4 className="text-[11px] uppercase tracking-[0.2em] font-bold text-[#34d399] mb-5 flex items-center gap-3"><Check size={16} className="shrink-0"/> Cómo trabajarías con Stratos</h4>
+                  <h4 className="text-[11px] uppercase tracking-[0.12em] font-bold text-[#34d399] mb-5 flex items-center gap-3"><Check size={16} className="shrink-0"/> Cómo trabajarías con Stratos</h4>
                   <p className="text-[15px] text-emerald-50 font-light leading-relaxed print:text-black">{reportData.futureStateText}</p>
                 </div>
               </div>
 
               <div className="p-10 md:p-12 rounded-[2.5rem] bg-[#060A11] border border-white/5 print:border-black/20 print:bg-transparent">
-                <h3 className="text-[11px] uppercase tracking-[0.2em] font-bold text-slate-500 mb-8 flex items-center gap-3"><Workflow size={16}/> Motor Lógico: {reportData.module}</h3>
+                <h3 className="text-[11px] uppercase tracking-[0.12em] font-bold text-slate-500 mb-8 flex items-center gap-3"><Workflow size={16}/> Motor Lógico: {reportData.module}</h3>
                 <div className="space-y-4">
                   {reportData.architectureNodes.map((node, i) => {
                     const NIcon = node.icon;
@@ -901,22 +901,22 @@ export default function Diagnostico() {
                     <div key={i} className="p-8 rounded-3xl bg-[#060A11] border border-white/5 flex flex-col justify-center items-start print:border-black/20 print:bg-transparent relative overflow-hidden group">
                       <div className="absolute inset-0 bg-gradient-to-br from-[#34d399]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
                       <MIcon className="w-6 h-6 text-[#34d399]/50 mb-5 print:text-black" />
-                      <div className="text-4xl font-light tracking-tighter mb-2 print:text-black">{m.value}</div>
-                      <div className="text-[10px] uppercase tracking-[0.2em] font-bold text-slate-500 print:text-black/60">{m.label}</div>
+                      <div className="text-4xl font-light tracking-tight mb-2 print:text-black">{m.value}</div>
+                      <div className="text-[11px] uppercase tracking-[0.12em] font-bold text-slate-500 print:text-black/60">{m.label}</div>
                     </div>
                   );
                 })}
               </div>
 
               <div className="p-8 md:p-10 rounded-[2rem] bg-[#060A11] border border-white/5 print:border-black/20 print:bg-transparent">
-                <h3 className="text-[11px] uppercase tracking-[0.2em] font-bold text-slate-500 mb-8 flex items-center gap-3"><CalendarDays size={16} className="shrink-0"/> Plan de 7 Días</h3>
+                <h3 className="text-[11px] uppercase tracking-[0.12em] font-bold text-slate-500 mb-8 flex items-center gap-3"><CalendarDays size={16} className="shrink-0"/> Plan de 7 Días</h3>
                 <div className="relative border-l border-white/10 ml-4 space-y-8 print:border-black/20">
                   {reportData.timeline.map((step, i) => (
                     <div key={i} className="relative pl-8">
                       <div className="absolute w-2.5 h-2.5 bg-[#34d399] rounded-full -left-[5.5px] top-1.5 print:bg-black ring-4 ring-[#060A11] print:ring-white"></div>
-                      <div className="text-[9px] uppercase tracking-[0.2em] font-bold text-[#34d399] mb-1 print:text-black/50">{step.day}</div>
+                      <div className="text-[10px] uppercase tracking-[0.12em] font-bold text-[#34d399] mb-1 print:text-black/50">{step.day}</div>
                       <div className="text-[15px] font-medium text-white mb-1.5 tracking-tight print:text-black">{step.title}</div>
-                      <div className="text-[13px] font-light text-slate-400 print:text-black/70 leading-relaxed">{step.desc}</div>
+                      <div className="text-[14px] font-light text-slate-400 print:text-black/70 leading-relaxed">{step.desc}</div>
                     </div>
                   ))}
                 </div>
@@ -927,7 +927,7 @@ export default function Diagnostico() {
           {/* Acompañamiento Stratos — el valor humano: no lo haces solo */}
           <div className="mt-16 p-8 sm:p-12 rounded-[2.5rem] bg-[#060A11] border border-white/10 print:hidden">
             <div className="text-center mb-10">
-              <p className="text-[10px] uppercase tracking-[0.3em] font-bold text-[#34d399] mb-3">No lo haces solo</p>
+              <p className="text-[11px] uppercase tracking-[0.16em] font-bold text-[#34d399] mb-3">No lo haces solo</p>
               <h2 className="text-2xl md:text-3xl font-light tracking-tight text-white">Stratos lo activa <span className="text-[#34d399]">contigo</span>, paso a paso</h2>
             </div>
             <div className="grid md:grid-cols-3 gap-5">
@@ -942,7 +942,7 @@ export default function Diagnostico() {
                     <span className="text-[#34d399] font-mono text-xs font-bold">0{i + 1}</span>
                   </div>
                   <h4 className="text-[16px] font-medium text-white tracking-tight mb-2">{it.t}</h4>
-                  <p className="text-[13.5px] text-slate-400 font-light leading-relaxed">{it.d}</p>
+                  <p className="text-[14px] text-slate-400 font-light leading-relaxed">{it.d}</p>
                 </div>
               ); })}
             </div>
@@ -959,7 +959,7 @@ export default function Diagnostico() {
               href={buildCalLink(contact)}
               target="_blank"
               rel="noopener noreferrer"
-              className="px-10 py-5 bg-white text-black text-[13px] font-bold uppercase tracking-[0.2em] rounded-full hover:bg-slate-100 transition-all inline-flex items-center gap-4 relative z-10 active:scale-95 shadow-[0_0_40px_rgba(255,255,255,0.15)] hover:shadow-[0_0_60px_rgba(255,255,255,0.25)]"
+              className="px-10 py-5 bg-white text-black text-[14px] font-bold uppercase tracking-[0.12em] rounded-full hover:bg-slate-100 transition-all inline-flex items-center gap-4 relative z-10 active:scale-95 shadow-[0_0_40px_rgba(255,255,255,0.15)] hover:shadow-[0_0_60px_rgba(255,255,255,0.25)]"
             >
               Agendar mi llamada con Stratos <ArrowRight size={18} />
             </a>
