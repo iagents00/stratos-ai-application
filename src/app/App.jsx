@@ -140,6 +140,35 @@ const LP = {
   r: 16, rs: 10, rx: 6,
 };
 
+/**
+ * fetchAllPaged — Trae TODAS las filas de una query de Supabase paginando.
+ * PostgREST limita cada request a 1000 filas (Max Rows del proyecto), así que
+ * un solo `.select()` trunca silenciosamente cuando hay más de 1000 registros
+ * (p.ej. >1000 leads activos → "desaparecían" los más antiguos del CRM).
+ *
+ * `makeQuery()` debe devolver un query builder NUEVO (sin `.range`) con el
+ * filtro/orden deseado en cada llamada — los builders de Supabase son de un solo
+ * uso, así que hay que recrearlo por página. Este helper aplica el `.range`.
+ * Para que la paginación sea estable, la query debe incluir un orden determinista
+ * (ideal: un campo único como `id` de desempate).
+ */
+async function fetchAllPaged(makeQuery) {
+  const PAGE = 1000;
+  let all = [];
+  let from = 0;
+  // Tope de seguridad anti-loop (50 páginas = 50k filas) por si el backend
+  // devolviera siempre PAGE filas; en la práctica corta en cuanto baja de PAGE.
+  for (let guard = 0; guard < 50; guard++) {
+    const { data, error } = await makeQuery().range(from, from + PAGE - 1);
+    if (error) return { data: all, error };
+    const batch = data || [];
+    all = all.concat(batch);
+    if (batch.length < PAGE) break; // última página
+    from += PAGE;
+  }
+  return { data: all, error: null };
+}
+
 /* ════════════════════════════════════════
    MAIN APP
    ════════════════════════════════════════ */
@@ -382,13 +411,20 @@ export default function App() {
       return;
     }
 
-    // Modo online normal
-    const { data, error } = await supabase
-      .from('leads').select('*').is('deleted_at', null).order('created_at', { ascending: false });
-    if (!error && data) {
+    // Modo online normal — PAGINADO.
+    // Antes era un solo .select() que PostgREST truncaba en 1000 filas, así que
+    // con >1000 leads activos el CRM "perdía" los más antiguos y el contador se
+    // quedaba clavado en 1000. Paginamos para traerlos todos.
+    const { data, error } = await fetchAllPaged(() =>
+      supabase
+        .from('leads').select('*').is('deleted_at', null)
+        .order('created_at', { ascending: false })
+        .order('id', { ascending: false }) // desempate estable en el borde de página
+    );
+    if (!error) {
       setLeadsData(normalizeLeads(data));
       writeLeadsCache(data);
-    } else if (error && !cached) {
+    } else if (!cached) {
       // Supabase falló y no había cache — intentar offline como último recurso
       console.warn('[Stratos] Supabase leads falló, intentando offline:', error.message);
       try {
@@ -534,10 +570,15 @@ export default function App() {
 
   const refreshTrash = useCallback(async () => {
     if (!user || user.id === 'demo-user-local') return;
-    const { data, error } = await supabase
-      .from('leads').select('*')
-      .not('deleted_at', 'is', null)
-      .order('deleted_at', { ascending: false });
+    // Paginado por la misma razón que el fetch activo: la papelera puede superar
+    // las 1000 filas con el tiempo y PostgREST las truncaría.
+    const { data, error } = await fetchAllPaged(() =>
+      supabase
+        .from('leads').select('*')
+        .not('deleted_at', 'is', null)
+        .order('deleted_at', { ascending: false })
+        .order('id', { ascending: false })
+    );
     if (!error && data) setTrashedLeads(normalizeLeads(data));
   }, [user, normalizeLeads]);
 
