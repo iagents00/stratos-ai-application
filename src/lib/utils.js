@@ -140,6 +140,52 @@ export const parseFechaToTime = (input) => {
   return Number.isFinite(t) ? t : null;
 };
 
+/** Nombre de mes en español → índice 0-based (para el parser de orden). */
+const MESES_ES = {
+  enero: 0, febrero: 1, marzo: 2, abril: 3, mayo: 4, junio: 5,
+  julio: 6, agosto: 7, septiembre: 8, setiembre: 8, octubre: 9,
+  noviembre: 10, diciembre: 11,
+};
+
+/**
+ * parseFechaParaOrden — Como parseFechaToTime, pero además del ISO estricto
+ * TOLERA el texto largo en español que produce formatFechaLarga
+ * ("Viernes, 19 de junio, 5:00 p.m.") y que quedó guardado en next_action_date
+ * de muchos leads cuyo next_action_at venía vacío (bot/n8n, ediciones, datos
+ * viejos). Asume el AÑO ACTUAL cuando el texto no lo trae.
+ *
+ * ⚠️ SOLO para ORDENAR por proximidad (getZoomTime). NO usar para mostrar: el
+ * display sigue con parseFechaToTime (estricto) para no inventarle al cliente
+ * una fecha equivocada — ver PR #187.
+ */
+export const parseFechaParaOrden = (input) => {
+  const iso = parseFechaToTime(input);
+  if (iso !== null) return iso;
+  if (input === null || input === undefined) return null;
+  const s = String(input).toLowerCase();
+  // "… 19 de junio …" (con o sin "de 2026")
+  const md = s.match(/(\d{1,2})\s+de\s+([a-záéíóúñ]+)(?:\s+de\s+(\d{4}))?/);
+  if (!md) return null;
+  const dia = parseInt(md[1], 10);
+  const mes = MESES_ES[md[2]];
+  if (mes === undefined || dia < 1 || dia > 31) return null;
+  const anio = md[3] ? parseInt(md[3], 10) : new Date().getFullYear();
+  // Hora "5:00 p.m." / "2:30 p. m." / "17:00" — opcional (sin hora → 00:00).
+  let hora = 0, min = 0;
+  const hm = s.match(/(\d{1,2}):(\d{2})\s*([ap])\.?\s?m\.?/);
+  if (hm) {
+    hora = parseInt(hm[1], 10); min = parseInt(hm[2], 10);
+    if (hm[3] === 'p' && hora < 12) hora += 12;
+    if (hm[3] === 'a' && hora === 12) hora = 0;
+  } else {
+    const h24 = s.match(/(\d{1,2}):(\d{2})/);
+    if (h24) { hora = parseInt(h24[1], 10); min = parseInt(h24[2], 10); }
+  }
+  if (hora > 23 || min > 59) return null;
+  const t = new Date(anio, mes, dia, hora, min).getTime();
+  return Number.isFinite(t) ? t : null;
+};
+
 /**
  * formatFechaLarga — Fecha "completa con palabras" en español, para que el
  * cliente la lea sin ambigüedad. Ej: "Sábado 20 de junio, 2:30 p.m."
@@ -171,9 +217,9 @@ export const getZoomTime = (lead) => {
   const stage = lead.st ?? lead.stage;
   if (!STAGES_CON_CITA.has(stage)) return null;
   return (
-    parseFechaToTime(lead.selected_time) ??
-    parseFechaToTime(lead.next_action_at) ??
-    parseFechaToTime(lead.next_action_date)
+    parseFechaParaOrden(lead.selected_time) ??
+    parseFechaParaOrden(lead.next_action_at) ??
+    parseFechaParaOrden(lead.next_action_date)
   );
 };
 
