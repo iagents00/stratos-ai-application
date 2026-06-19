@@ -350,16 +350,21 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
     const { lead } = zoomSchedulingLead;
     const formattedDateTime = dateTimeString.replace("T", " ");
 
+    // Instante real de la cita. Es la fuente de verdad para mostrar la fecha y
+    // ordenar por proximidad (igual que selected_time/next_action_at del backend).
+    // dateTimeString viene del input datetime-local (hora local del asesor).
+    let nextActionAtISO = null;
+    try { nextActionAtISO = new Date(dateTimeString).toISOString(); } catch (_) { /* fecha inválida → null */ }
+
     // Display "con palabras" para que el cliente/asesor lea la fecha clara
-    // (ej. "Sábado 20 de junio, 2:30 p.m."). Persistimos el datetime crudo
-    // parseable en next_action_date para que el orden por proximidad y los
-    // recordatorios sigan funcionando.
+    // (ej. "Sábado, 20 de junio, 2:30 p.m."). El crudo queda en next_action_date.
     const finalizedLead = {
       ...lead,
       st: "Zoom Agendado",
       nextAction: actionText || "Zoom",
       nextActionDate: formatFechaLarga(dateTimeString) || formattedDateTime,
       next_action_date: formattedDateTime,
+      next_action_at: nextActionAtISO,
       _zoomConfirmed: true,
     };
 
@@ -710,12 +715,16 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
       campaign:         withScore.campana ?? withScore.campaign,
       source:           withScore.source,
       next_action:      withScore.nextAction ?? withScore.next_action,
-      // Preferimos el snake `next_action_date` (datetime crudo/parseable) cuando
-      // viene seteado — p.ej. al agendar Zoom guardamos ahí el datetime y en
-      // `nextActionDate` la versión larga con palabras (solo display). Así la BD
-      // conserva el valor ordenable. El resto de flujos solo setean el camel, que
-      // sigue cayendo por el fallback.
-      next_action_date: withScore.next_action_date ?? withScore.nextActionDate,
+      // Camel primero: las ediciones inline setean `nextActionDate` (el valor que
+      // teclea el asesor) y debe ganar. La fecha de la cita NO depende de este
+      // campo — vive en `next_action_at` (abajo), que es la fuente de verdad para
+      // mostrarla con palabras y ordenar. Por eso aquí no hay que proteger el
+      // datetime crudo: aunque se guarde la versión larga, no rompe el orden.
+      next_action_date: withScore.nextActionDate ?? withScore.next_action_date,
+      // Instante real de la cita (Zoom/visita). Se preserva el valor previo si
+      // este update no lo trae, para no borrar la cita que registró el backend
+      // (fn_register_appointment) en una edición no relacionada.
+      next_action_at:   withScore.next_action_at ?? prev?.next_action_at ?? null,
       last_activity:    withScore.lastActivity ?? withScore.last_activity,
       days_inactive:    withScore.daysInactive ?? withScore.days_inactive ?? 0,
       seguimientos:     withScore.seguimientos ?? 0,

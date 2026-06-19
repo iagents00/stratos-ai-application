@@ -274,7 +274,11 @@ export default function App() {
       // un datetime parseable. Texto libre ("Esta semana") se respeta tal cual.
       let displayActionDate = l.next_action_date;
       if (STAGES_CON_CITA.has(l.stage)) {
-        const larga = formatFechaLarga(l.selected_time || l.next_action_date);
+        // Preferimos los timestamps reales de la cita: selected_time (Cal.com) y
+        // next_action_at (fn_register_appointment) traen fecha + hora. En leads
+        // de Duke `next_action_date` es solo "YYYY-MM-DD" (sin hora), así que se
+        // usa de último recurso. Texto libre ("Esta semana") se respeta tal cual.
+        const larga = formatFechaLarga(l.selected_time || l.next_action_at || l.next_action_date);
         if (larga) displayActionDate = larga;
       }
       const normalized = {

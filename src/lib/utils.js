@@ -121,9 +121,21 @@ export const parseFechaToTime = (input) => {
   }
   let s = String(input).trim();
   if (!s) return null;
-  // "2026-06-20 14:30[:ss]" → ISO local. El separador con espacio lo parsea
-  // distinto cada browser; normalizar a 'T' lo hace consistente y local.
-  if (/^\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}/.test(s)) s = s.replace(" ", "T");
+  // SOLO aceptamos ISO / datetime explícito. Cualquier otro string (texto libre
+  // "Hoy"/"mañana 3pm", o formatos de display legacy como "20 jun, 14:30" /
+  // "19 May, 15:00") se RECHAZA → null. Si no, `new Date(...)` los parsearía con
+  // año 2001 y día de semana inventado, mostrándole al cliente una fecha
+  // confiadamente equivocada.
+  const ISO_RE = /^\d{4}-\d{2}-\d{2}([ T]\d{2}:\d{2}(:\d{2})?(\.\d+)?(Z|[+-]\d{2}:?\d{2})?)?$/;
+  if (!ISO_RE.test(s)) return null;
+  if (s.length === 10) {
+    // Solo fecha "YYYY-MM-DD" → medianoche LOCAL. Evita el corrimiento de día
+    // que provoca `new Date("YYYY-MM-DD")` al interpretarlo como UTC (en zonas
+    // al oeste mostraría el día anterior).
+    s = s + "T00:00";
+  } else {
+    s = s.replace(" ", "T");
+  }
   const t = new Date(s).getTime();
   return Number.isFinite(t) ? t : null;
 };
