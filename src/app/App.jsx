@@ -1118,7 +1118,9 @@ export default function App() {
         <div style={{ flex:1, width:"100%", overflowY:"auto", overflowX:"hidden", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", paddingBottom:4, gap:6 }}>
           {/* Live Plan metrics widget */}
           <div style={{ display:"flex", flexDirection:"column", alignItems:"center", paddingBottom:10, width:"100%" }}>
-            <div onClick={() => setMetaOpen(true)} style={{
+            <div onClick={() => setMetaOpen(true)}
+              title={`Avance del pipeline hacia la meta anual de ${fmt(GOAL)} · Pipeline ${fmt(totalPipe)} (${pc}%) · Score promedio ${avgScore}`}
+              style={{
               position:"relative", width:"calc(100% - 14px)", borderRadius:19, overflow:"hidden", cursor:"pointer",
               background: isLight ? "rgba(255,255,255,0.62)" : "linear-gradient(155deg, #0D1E18 0%, #080F10 55%, #040810 100%)",
               backdropFilter: isLight ? "blur(32px) saturate(180%)" : "none",
@@ -1132,15 +1134,16 @@ export default function App() {
               <div style={{ position:"absolute", top:0, left:0, right:0, height:"45%", background: isLight ? "linear-gradient(180deg, rgba(255,255,255,0.65) 0%, transparent 100%)" : "linear-gradient(180deg, rgba(52,211,153,0.07) 0%, transparent 100%)", pointerEvents:"none", borderRadius:"20px 20px 0 0" }} />
               {isLight && <div className="widget-shimmer" style={{ position:"absolute", top:0, bottom:0, left:0, width:"60%", background:"linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.07) 50%, transparent 100%)", pointerEvents:"none" }} />}
               <div style={{ position:"absolute", bottom:-6, left:"50%", transform:"translateX(-50%)", width:72, height:40, background: isLight ? "radial-gradient(ellipse, rgba(13,154,118,0.18) 0%, transparent 70%)" : "radial-gradient(ellipse, rgba(52,211,153,0.22) 0%, transparent 70%)", filter:"blur(12px)", pointerEvents:"none" }} />
-              <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", position:"relative", zIndex:1, marginBottom:8 }}>
-                <span style={{ fontSize:7.5, fontFamily:fontDisp, fontWeight:500, letterSpacing:"-0.01em", color: isLight ? "rgba(15,23,42,0.46)" : "rgba(255,255,255,0.38)" }}>{fmt(totalPipe)}</span>
-                <span style={{ fontSize:7.5, fontFamily:fontDisp, fontWeight:600, letterSpacing:"-0.01em", color: isLight ? "rgba(13,154,118,0.82)" : "rgba(52,211,153,0.72)" }}>{avgScore}</span>
-              </div>
-              <span style={{ fontSize: pc >= 100 ? 24 : 33, fontWeight:200, fontFamily:fontDisp, letterSpacing:"-0.04em", lineHeight:1, color: isLight ? "#082818" : "#FFFFFF", display:"block", position:"relative", zIndex:1, whiteSpace:"nowrap", fontVariantNumeric:"tabular-nums" }}>{pc}</span>
-              <div style={{ width:"100%", height:2.5, borderRadius:99, background: isLight ? "rgba(13,154,118,0.09)" : "rgba(255,255,255,0.08)", marginTop:9, overflow:"hidden", position:"relative", zIndex:1 }}>
+              {/* Rótulo: qué mide (avance hacia la meta anual) */}
+              <span style={{ fontSize:6, fontWeight:700, fontFamily:fontDisp, letterSpacing:"0.14em", textTransform:"uppercase", color: isLight ? "rgba(13,154,118,0.55)" : "rgba(52,211,153,0.46)", display:"block", textAlign:"center", lineHeight:1, position:"relative", zIndex:1 }}>Meta</span>
+              {/* Avance % hacia la meta */}
+              <span style={{ fontSize: pc >= 100 ? 24 : 33, fontWeight:200, fontFamily:fontDisp, letterSpacing:"-0.04em", lineHeight:1, color: isLight ? "#082818" : "#FFFFFF", display:"block", textAlign:"center", marginTop:7, position:"relative", zIndex:1, whiteSpace:"nowrap", fontVariantNumeric:"tabular-nums" }}>{pc}<span style={{ fontSize:"0.4em", fontWeight:500, letterSpacing:0, marginLeft:1, verticalAlign:"0.4em" }}>%</span></span>
+              {/* Barra de progreso */}
+              <div style={{ width:"100%", height:2.5, borderRadius:99, background: isLight ? "rgba(13,154,118,0.09)" : "rgba(255,255,255,0.08)", marginTop:8, overflow:"hidden", position:"relative", zIndex:1 }}>
                 <div style={{ width:`${pc}%`, height:"100%", borderRadius:99, background: isLight ? "linear-gradient(90deg, #0D9A76, #34D399)" : "linear-gradient(90deg, #34D399, #6EE7C2)", boxShadow: isLight ? "none" : "0 0 8px rgba(52,211,153,0.55)", transition:"width 1.1s cubic-bezier(0.4,0,0.2,1)" }} />
               </div>
-              <span style={{ fontSize:5.5, fontWeight:700, fontFamily:fontDisp, letterSpacing:"0.17em", textTransform:"uppercase", color: isLight ? "rgba(13,154,118,0.48)" : "rgba(52,211,153,0.36)", display:"block", marginTop:8, position:"relative", zIndex:1 }}>META</span>
+              {/* Contexto: pipeline actual */}
+              <span style={{ fontSize:7, fontWeight:600, fontFamily:fontDisp, letterSpacing:"-0.01em", color: isLight ? "rgba(15,23,42,0.50)" : "rgba(255,255,255,0.44)", display:"block", textAlign:"center", marginTop:7, whiteSpace:"nowrap", position:"relative", zIndex:1 }}>{fmt(totalPipe)}</span>
             </div>
             <div style={{ width:32, height:1, marginTop:10, background: isLight ? "linear-gradient(90deg, transparent, rgba(15,23,42,0.07), transparent)" : "linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent)" }} />
           </div>
