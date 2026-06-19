@@ -887,25 +887,28 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
   const prefsKey = user?.id ? `stratos_crm_prio_${user.id}` : null;
 
   // Defaults que se aplican cuando el usuario aún no tiene prefs guardadas.
-  // sortField='fechaIngreso' + sortDir='desc' → los más recientes arriba.
+  // sortField='proxZoom' → los Zooms más próximos arriba. Degrada solo a "más
+  // recientes" cuando no hay citas (p.ej. clientes white-label sin Zoom).
   const DEFAULT_PREFS = {
     pinned: [], pinnedOrder: [], dismissed: [], order: [], prioritySort: 'manual',
     customAsesores: [], customProyectos: [], customCampanas: [],
-    sortField: 'fechaIngreso', sortDir: 'desc',
+    sortField: 'proxZoom', sortDir: 'desc',
     filterStage: 'TODO', filterAsesor: 'TODO',
     viewMode: 'list',
   };
 
   const normalizePrefs = (raw) => {
     if (!raw || typeof raw !== 'object') return { ...DEFAULT_PREFS };
-    // Migración silenciosa: usuarios que tenían el viejo default ('sc desc')
-    // se migran automáticamente a 'fechaIngreso desc'. Asumimos que si nunca
-    // cambiaron el sort, querían "lo más reciente arriba" todo el tiempo.
-    // Si el usuario explícitamente cambió a otro campo (asesor, presupuesto,
-    // etc.), respetamos esa decisión.
-    const rawSortField = typeof raw.sortField === 'string' ? raw.sortField : 'fechaIngreso';
+    // Migración silenciosa del orden por defecto. Históricamente el default fue
+    // 'sc desc' y luego 'fechaIngreso desc'. Quien quedó en cualquiera de esos
+    // (= nunca eligió un orden propio) se mueve al nuevo default 'proxZoom'
+    // (Zooms más próximos arriba). Si el usuario eligió explícitamente otro
+    // campo (presupuesto, score, etc.), respetamos su decisión.
+    const rawSortField = typeof raw.sortField === 'string' ? raw.sortField : 'proxZoom';
     const rawSortDir   = typeof raw.sortDir === 'string'   ? raw.sortDir   : 'desc';
-    const migrated = (rawSortField === 'sc' && rawSortDir === 'desc');
+    const onLegacyDefault =
+      (rawSortField === 'sc'           && rawSortDir === 'desc') ||
+      (rawSortField === 'fechaIngreso' && rawSortDir === 'desc');
     return {
       pinned:          Array.isArray(raw.pinned)          ? raw.pinned          : [],
       pinnedOrder:     Array.isArray(raw.pinnedOrder)     ? raw.pinnedOrder     : [],
@@ -915,8 +918,8 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
       customAsesores:  Array.isArray(raw.customAsesores)  ? raw.customAsesores  : [],
       customProyectos: Array.isArray(raw.customProyectos) ? raw.customProyectos : [],
       customCampanas:  Array.isArray(raw.customCampanas)  ? raw.customCampanas  : [],
-      sortField:       migrated ? 'fechaIngreso' : rawSortField,
-      sortDir:         migrated ? 'desc'         : rawSortDir,
+      sortField:       onLegacyDefault ? 'proxZoom' : rawSortField,
+      sortDir:         onLegacyDefault ? 'desc'     : rawSortDir,
       filterStage:     typeof raw.filterStage === 'string'    ? raw.filterStage     : 'TODO',
       filterAsesor:    typeof raw.filterAsesor === 'string'   ? raw.filterAsesor    : 'TODO',
       viewMode:        typeof raw.viewMode === 'string'       ? raw.viewMode        : 'list',
@@ -1202,6 +1205,29 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
         const ai = pinnedOrder.indexOf(a.id);
         const bi = pinnedOrder.indexOf(b.id);
         if (ai !== bi) return bi - ai; // mayor índice = más reciente = primero
+      }
+      // "Próximo Zoom" — orden por proximidad de la cita. Define su propio
+      // orden total (citas futuras por cercanía → pasadas por recencia → sin
+      // cita al fondo), así que ignora sortDir. Mismo criterio que el panel de
+      // prioridad (getZoomTime, PR #187), ahora también en la tabla. Cuando un
+      // lead no tiene cita (incl. clientes white-label sin Zoom), cae al grupo
+      // final ordenado por recencia = el viejo "más reciente arriba".
+      if (sortField === "proxZoom") {
+        const now = Date.now();
+        const rank = (l) => {
+          const t = getZoomTime(l);
+          if (t === null) return [2, 0];   // sin cita → fondo
+          if (t >= now)   return [0, t];   // futura → la más próxima arriba
+          return [1, -t];                  // pasada → la más reciente primero
+        };
+        const [ga, va] = rank(a);
+        const [gb, vb] = rank(b);
+        if (ga !== gb) return ga - gb;
+        if (va !== vb) return va - vb;
+        // tiebreak: lead más reciente primero
+        const ar = a.created_at ? new Date(a.created_at).getTime() : 0;
+        const br = b.created_at ? new Date(b.created_at).getTime() : 0;
+        return br - ar;
       }
       let av = a[sortField], bv = b[sortField];
       // fechaIngreso usa el ISO created_at real (no el string formateado en
@@ -3497,6 +3523,44 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                 }}>
                   <option value="TODO">Todas las etapas</option>
                   {STAGES.map(s => <option key={s} value={s} style={{ background: isLight ? "#FFFFFF" : "#111318", color: isLight ? "#0B1220" : "#E2E8F0" }}>{s}</option>)}
+                </select>
+                <ChevronDown size={10} color={selClr} strokeWidth={2.2} style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", pointerEvents: "none", flexShrink: 0 }} />
+              </div>
+            );
+          })()}
+
+          {/* Orden de la lista — "Próximo Zoom" (default) sube las citas más
+              próximas. Desktop-only, igual que el filtro de etapa; en mobile el
+              orden por defecto ya aplica aunque el control no se muestre. */}
+          {!isMobile && (() => {
+            const SORT_OPTS = [
+              { v: 'proxZoom',     label: 'Próximo Zoom' },
+              { v: 'fechaIngreso', label: 'Más recientes' },
+              { v: 'presupuesto',  label: 'Mayor presupuesto' },
+              { v: 'sc',           label: 'Mayor score' },
+            ];
+            const known  = SORT_OPTS.some(o => o.v === sortField);
+            const active = sortField === 'proxZoom';
+            const selBg  = isLight ? (active ? `${T.accent}10` : "rgba(255,255,255,0.70)") : (active ? "rgba(255,255,255,0.07)" : "rgba(255,255,255,0.042)");
+            const selBdr = isLight ? (active ? `${T.accent}40` : "rgba(15,23,42,0.09)") : (active ? "rgba(255,255,255,0.18)" : "rgba(255,255,255,0.08)");
+            const selClr = isLight ? (active ? T.accent : "rgba(15,23,42,0.45)") : (active ? "rgba(255,255,255,0.85)" : "rgba(255,255,255,0.42)");
+            return (
+              <div style={{ position: "relative", display: "flex", alignItems: "center", flexShrink: 0 }}>
+                <select
+                  value={known ? sortField : '__custom'}
+                  onChange={e => { const v = e.target.value; if (v === '__custom') return; setSortField(v); setSortDir('desc'); }}
+                  title="Ordenar la lista"
+                  style={{
+                    height: 32, padding: "0 30px 0 12px",
+                    borderRadius: 9, appearance: "none", WebkitAppearance: "none", MozAppearance: "none",
+                    background: selBg, border: `1px solid ${selBdr}`,
+                    fontSize: 11, color: selClr, cursor: "pointer", outline: "none",
+                    fontFamily: fontDisp, fontWeight: active ? 600 : 400, transition: "all 0.18s",
+                  }}>
+                  {SORT_OPTS.map(o => (
+                    <option key={o.v} value={o.v} style={{ background: isLight ? "#FFFFFF" : "#111318", color: isLight ? "#0B1220" : "#E2E8F0" }}>{o.label}</option>
+                  ))}
+                  {!known && <option value="__custom" disabled style={{ background: isLight ? "#FFFFFF" : "#111318", color: isLight ? "#0B1220" : "#E2E8F0" }}>Orden personalizado</option>}
                 </select>
                 <ChevronDown size={10} color={selClr} strokeWidth={2.2} style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", pointerEvents: "none", flexShrink: 0 }} />
               </div>
