@@ -93,7 +93,11 @@
 //   transitorio) ya NO se hace rollback; la reasignación se encola en la misma
 //   cola offline que el resto (overlay + stratos_pending_sync) y el
 //   auto-recovery la sincroniza al volver la conexión. Nada se pierde, ni en F5.
-const CACHE_VERSION = 'stratos-v31';
+// v32 — fuerza la entrega del orden por Zoom en el CRM (PRs #187/#190/#191/#192):
+//   fechas con palabras, tabla ordenada por proximidad, parser tolerante al texto
+//   largo y agrupación de HOY como bloque arriba. El bump invalida el shell viejo
+//   para que todos bajen el bundle nuevo en la próxima carga, sin limpiar caché.
+const CACHE_VERSION = 'stratos-v32';
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 
