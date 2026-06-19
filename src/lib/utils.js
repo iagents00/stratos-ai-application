@@ -223,6 +223,45 @@ export const getZoomTime = (lead) => {
   );
 };
 
+/** Medianoche local del timestamp ms (para comparar por DÍA, no por instante). */
+const inicioDelDia = (ms) => { const d = new Date(ms); d.setHours(0, 0, 0, 0); return d.getTime(); };
+
+/**
+ * zoomRank — Clave [grupo, valor] para ordenar leads por proximidad de cita,
+ * relativa a `now`. La agrupación es por DÍA (no por la hora exacta vs el reloj):
+ *   grupo 0 = HOY          → valor = timestamp (las de hoy juntas, en orden de hora)
+ *   grupo 1 = días futuros → valor = timestamp (el día/hora más cercano primero)
+ *   grupo 2 = días pasados → valor = -timestamp (el más reciente primero)
+ *   grupo 3 = sin cita     → al fondo
+ *
+ * Clave del diseño: un asesor piensa su día como un BLOQUE. Si a las 3pm ya
+ * pasó la hora de un Zoom de las 8am de HOY, ese Zoom NO debe irse debajo de los
+ * de mañana/la otra semana — sigue siendo de hoy. Por eso "hoy" es el grupo de
+ * arriba completo, no solo lo que aún no da la hora.
+ */
+export const zoomRank = (lead, now = Date.now()) => {
+  const t = getZoomTime(lead);
+  if (t === null) return [3, 0];
+  const dia = Math.round((inicioDelDia(t) - inicioDelDia(now)) / 86400000);
+  if (dia === 0) return [0, t];   // hoy → en orden cronológico
+  if (dia > 0)   return [1, t];   // futuro → el más cercano primero
+  return [2, -t];                 // pasado → el más reciente primero
+};
+
+/**
+ * compareZoomProximity — Comparador listo para Array.sort que sube las citas por
+ * proximidad usando zoomRank (HOY arriba como bloque → futuro → pasado → sin
+ * cita). Empata en 0; quien llama decide el desempate (p.ej. recencia). Lo usan
+ * tanto la tabla como el panel de prioridad del CRM, para no divergir.
+ */
+export const compareZoomProximity = (a, b, now = Date.now()) => {
+  const [ga, va] = zoomRank(a, now);
+  const [gb, vb] = zoomRank(b, now);
+  if (ga !== gb) return ga - gb;
+  if (va !== vb) return va - vb;
+  return 0;
+};
+
 /**
  * buildTelegramSummary — Genera el resumen de un lead para Telegram.
  */
