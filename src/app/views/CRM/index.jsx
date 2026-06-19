@@ -30,7 +30,7 @@ import { useIsMobile } from "../../../hooks/useViewport";
 import { useClient } from "../../../hooks/useClient";
 import { P, LP, font, fontDisp, STAGES } from "../../../design-system/tokens";
 import { G, KPI, Pill, Ico, ChipSelect } from "../../SharedComponents";
-import { parseBudget, formatBudget, buildTelegramSummary, fmtNow, genId, formatFechaLarga, getZoomTime } from "../../../lib/utils";
+import { parseBudget, formatBudget, buildTelegramSummary, fmtNow, genId, formatFechaLarga, compareZoomProximity } from "../../../lib/utils";
 import { StratosAtom, StratosAtomHex } from "../../components/Logo";
 import HistoryDrawer from "../../components/HistoryDrawer";
 import SuggestActionsModal from "../../components/SuggestActionsModal";
@@ -1180,6 +1180,9 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
     // del grupo isNew: addNewLead prepende, así que el más reciente tiene
     // menor índice y queda #1 entre los recién registrados.
     const idxOf = new Map(data.map((l, i) => [l.id, i]));
+    // "Ahora" estable para todo el sort por proximidad de Zoom (un solo Date.now
+    // para que la comparación sea consistente y no cruce medianoche a mitad).
+    const sortNow = Date.now();
     return [...data].sort((a, b) => {
       // 0. Cliente registrado en esta sesión SIEMPRE en posición #1.
       if (justRegisteredId && a.id === justRegisteredId) return -1;
@@ -1206,24 +1209,14 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
         const bi = pinnedOrder.indexOf(b.id);
         if (ai !== bi) return bi - ai; // mayor índice = más reciente = primero
       }
-      // "Próximo Zoom" — orden por proximidad de la cita. Define su propio
-      // orden total (citas futuras por cercanía → pasadas por recencia → sin
-      // cita al fondo), así que ignora sortDir. Mismo criterio que el panel de
-      // prioridad (getZoomTime, PR #187), ahora también en la tabla. Cuando un
-      // lead no tiene cita (incl. clientes white-label sin Zoom), cae al grupo
+      // "Próximo Zoom" — orden por proximidad de la cita, agrupando por DÍA:
+      // HOY arriba como bloque → días futuros → días pasados → sin cita al fondo
+      // (compareZoomProximity, compartido con el panel). Ignora sortDir. Cuando
+      // un lead no tiene cita (incl. clientes white-label sin Zoom), cae al grupo
       // final ordenado por recencia = el viejo "más reciente arriba".
       if (sortField === "proxZoom") {
-        const now = Date.now();
-        const rank = (l) => {
-          const t = getZoomTime(l);
-          if (t === null) return [2, 0];   // sin cita → fondo
-          if (t >= now)   return [0, t];   // futura → la más próxima arriba
-          return [1, -t];                  // pasada → la más reciente primero
-        };
-        const [ga, va] = rank(a);
-        const [gb, vb] = rank(b);
-        if (ga !== gb) return ga - gb;
-        if (va !== vb) return va - vb;
+        const c = compareZoomProximity(a, b, sortNow);
+        if (c !== 0) return c;
         // tiebreak: lead más reciente primero
         const ar = a.created_at ? new Date(a.created_at).getTime() : 0;
         const br = b.created_at ? new Date(b.created_at).getTime() : 0;
@@ -1652,21 +1645,14 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
           return bCon - aCon || b.sc - a.sc;
         });
       case "proxZoom": {
-        // "Los más próximos a Zoom que se vean arriba." Citas futuras primero,
-        // ordenadas por cercanía (la más próxima al frente); luego las pasadas
-        // (la más reciente primero); al fondo los leads sin cita.
+        // "Los más próximos a Zoom arriba", agrupando por DÍA: HOY como bloque →
+        // días futuros → días pasados → sin cita (compareZoomProximity, el MISMO
+        // criterio que la tabla). Así las citas de hoy quedan juntas arriba aunque
+        // ya haya pasado su hora, en vez de irse debajo de las de mañana.
         const now = Date.now();
-        const rank = (l) => {
-          const t = getZoomTime(l);
-          if (t === null) return [2, 0];   // sin cita → fondo
-          if (t >= now)   return [0, t];   // futura → más cercana primero
-          return [1, -t];                  // pasada → más reciente primero
-        };
         return arr.sort((a, b) => {
-          const [ga, va] = rank(a);
-          const [gb, vb] = rank(b);
-          if (ga !== gb) return ga - gb;
-          if (va !== vb) return va - vb;
+          const c = compareZoomProximity(a, b, now);
+          if (c !== 0) return c;
           return recency(b) - recency(a); // tiebreak: lead más reciente
         });
       }
