@@ -30,7 +30,7 @@ import { useIsMobile } from "../../../hooks/useViewport";
 import { useClient } from "../../../hooks/useClient";
 import { P, LP, font, fontDisp, STAGES } from "../../../design-system/tokens";
 import { G, KPI, Pill, Ico, ChipSelect } from "../../SharedComponents";
-import { parseBudget, formatBudget, buildTelegramSummary, fmtNow, genId } from "../../../lib/utils";
+import { parseBudget, formatBudget, buildTelegramSummary, fmtNow, genId, formatFechaLarga, getZoomTime } from "../../../lib/utils";
 import { StratosAtom, StratosAtomHex } from "../../components/Logo";
 import HistoryDrawer from "../../components/HistoryDrawer";
 import SuggestActionsModal from "../../components/SuggestActionsModal";
@@ -350,11 +350,21 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
     const { lead } = zoomSchedulingLead;
     const formattedDateTime = dateTimeString.replace("T", " ");
 
+    // Instante real de la cita. Es la fuente de verdad para mostrar la fecha y
+    // ordenar por proximidad (igual que selected_time/next_action_at del backend).
+    // dateTimeString viene del input datetime-local (hora local del asesor).
+    let nextActionAtISO = null;
+    try { nextActionAtISO = new Date(dateTimeString).toISOString(); } catch (_) { /* fecha inválida → null */ }
+
+    // Display "con palabras" para que el cliente/asesor lea la fecha clara
+    // (ej. "Sábado, 20 de junio, 2:30 p.m."). El crudo queda en next_action_date.
     const finalizedLead = {
       ...lead,
       st: "Zoom Agendado",
       nextAction: actionText || "Zoom",
-      nextActionDate: formattedDateTime,
+      nextActionDate: formatFechaLarga(dateTimeString) || formattedDateTime,
+      next_action_date: formattedDateTime,
+      next_action_at: nextActionAtISO,
       _zoomConfirmed: true,
     };
 
@@ -705,7 +715,16 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
       campaign:         withScore.campana ?? withScore.campaign,
       source:           withScore.source,
       next_action:      withScore.nextAction ?? withScore.next_action,
+      // Camel primero: las ediciones inline setean `nextActionDate` (el valor que
+      // teclea el asesor) y debe ganar. La fecha de la cita NO depende de este
+      // campo — vive en `next_action_at` (abajo), que es la fuente de verdad para
+      // mostrarla con palabras y ordenar. Por eso aquí no hay que proteger el
+      // datetime crudo: aunque se guarde la versión larga, no rompe el orden.
       next_action_date: withScore.nextActionDate ?? withScore.next_action_date,
+      // Instante real de la cita (Zoom/visita). Se preserva el valor previo si
+      // este update no lo trae, para no borrar la cita que registró el backend
+      // (fn_register_appointment) en una edición no relacionada.
+      next_action_at:   withScore.next_action_at ?? prev?.next_action_at ?? null,
       last_activity:    withScore.lastActivity ?? withScore.last_activity,
       days_inactive:    withScore.daysInactive ?? withScore.days_inactive ?? 0,
       seguimientos:     withScore.seguimientos ?? 0,
@@ -1606,6 +1625,25 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
           const bCon = b.st === "Seguimiento" ? 1 : 0;
           return bCon - aCon || b.sc - a.sc;
         });
+      case "proxZoom": {
+        // "Los más próximos a Zoom que se vean arriba." Citas futuras primero,
+        // ordenadas por cercanía (la más próxima al frente); luego las pasadas
+        // (la más reciente primero); al fondo los leads sin cita.
+        const now = Date.now();
+        const rank = (l) => {
+          const t = getZoomTime(l);
+          if (t === null) return [2, 0];   // sin cita → fondo
+          if (t >= now)   return [0, t];   // futura → más cercana primero
+          return [1, -t];                  // pasada → más reciente primero
+        };
+        return arr.sort((a, b) => {
+          const [ga, va] = rank(a);
+          const [gb, vb] = rank(b);
+          if (ga !== gb) return ga - gb;
+          if (va !== vb) return va - vb;
+          return recency(b) - recency(a); // tiebreak: lead más reciente
+        });
+      }
       case "manual":
       default:
         return priorityOrder.length
@@ -2066,6 +2104,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                     }}
                   >
                     <option value="manual"     style={{ background: isLight ? "#FFFFFF" : "#111318", color: T.txt }}>Manual (arrastra)</option>
+                    <option value="proxZoom"   style={{ background: isLight ? "#FFFFFF" : "#111318", color: T.txt }}>Próximo Zoom</option>
                     <option value="newest"     style={{ background: isLight ? "#FFFFFF" : "#111318", color: T.txt }}>Nuevos primero</option>
                     <option value="oldest"     style={{ background: isLight ? "#FFFFFF" : "#111318", color: T.txt }}>Nuevos al fondo</option>
                     <option value="concretado" style={{ background: isLight ? "#FFFFFF" : "#111318", color: T.txt }}>En Seguimiento</option>
