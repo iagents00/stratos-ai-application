@@ -7,6 +7,7 @@
  */
 import { useState, useEffect, useRef, useCallback, useMemo, startTransition, lazy, Suspense } from "react";
 import { supabase } from "../lib/supabase";
+import { formatFechaLarga, STAGES_CON_CITA } from "../lib/utils";
 import LoginScreen from "../landing/LoginScreen.jsx";
 import PricingScreen from "../landing/PricingScreen.jsx";
 import { useAuth } from "../hooks/useAuth";
@@ -267,16 +268,14 @@ export default function App() {
       // entrada del lead en lugar de la fecha del Zoom — esto lo resuelve
       // sin tocar la DB. Solo aplica a etapas con cita; para el resto se
       // mantiene `next_action_date` tal cual.
-      const STAGES_CON_CITA = new Set([
-        'Zoom Agendado', 'Reactivar Zoom', 'Visita Agendada', 'Zoom Concretado'
-      ]);
+      // Fecha de cita/zoom "completa con palabras" para que el cliente la lea
+      // claro (ej. "Sábado 20 de junio, 2:30 p.m."). Preferimos selected_time
+      // (cita real de Cal.com); si no, intentamos next_action_date cuando trae
+      // un datetime parseable. Texto libre ("Esta semana") se respeta tal cual.
       let displayActionDate = l.next_action_date;
-      if (l.selected_time && STAGES_CON_CITA.has(l.stage)) {
-        try {
-          displayActionDate = new Date(l.selected_time).toLocaleString('es-MX', {
-            day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'
-          });
-        } catch (_) { /* keep raw next_action_date as fallback */ }
+      if (STAGES_CON_CITA.has(l.stage)) {
+        const larga = formatFechaLarga(l.selected_time || l.next_action_date);
+        if (larga) displayActionDate = larga;
       }
       const normalized = {
         ...l,

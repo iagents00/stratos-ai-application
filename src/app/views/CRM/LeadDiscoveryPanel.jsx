@@ -19,6 +19,7 @@ import { useEffect, useState } from "react";
 import { Brain } from "lucide-react";
 import { P, font, fontDisp } from "../../../design-system/tokens";
 import { supabase } from "../../../lib/supabase";
+import { formatFechaLarga } from "../../../lib/utils";
 import { useAuth } from "../../../hooks/useAuth";
 
 // Etiqueta amigable para campos comunes que la IA extrae. Si llega un campo
@@ -51,6 +52,18 @@ const prettyValue = (v) => {
   if (typeof v === "boolean") return v ? "Sí" : "No";
   if (typeof v === "object")  return JSON.stringify(v);
   return String(v);
+};
+
+// Campos del discovery que suelen traer fecha/hora → los mostramos "con
+// palabras" si parsean (ej. "Sábado 20 de junio, 2:30 p.m."). Si no es una
+// fecha (un "Sí"/"No" o texto libre), cae al render normal.
+const DATE_KEYS = new Set(["cita_pactada"]);
+const displayValue = (k, v) => {
+  if (DATE_KEYS.has(k)) {
+    const larga = formatFechaLarga(v);
+    if (larga) return larga;
+  }
+  return prettyValue(v);
 };
 
 export default function LeadDiscoveryPanel({ lead, T = P, isLight = false }) {
@@ -134,7 +147,7 @@ export default function LeadDiscoveryPanel({ lead, T = P, isLight = false }) {
                 margin: "2px 0 0", fontSize: 13, fontWeight: 500,
                 color: T.txt, fontFamily: font,
                 wordBreak: "break-word",
-              }}>{prettyValue(v)}</p>
+              }}>{displayValue(k, v)}</p>
             </div>
           ))}
         </div>

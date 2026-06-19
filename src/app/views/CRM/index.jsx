@@ -30,7 +30,7 @@ import { useIsMobile } from "../../../hooks/useViewport";
 import { useClient } from "../../../hooks/useClient";
 import { P, LP, font, fontDisp, STAGES } from "../../../design-system/tokens";
 import { G, KPI, Pill, Ico, ChipSelect } from "../../SharedComponents";
-import { parseBudget, formatBudget, buildTelegramSummary, fmtNow, genId } from "../../../lib/utils";
+import { parseBudget, formatBudget, buildTelegramSummary, fmtNow, genId, formatFechaLarga, getZoomTime } from "../../../lib/utils";
 import { StratosAtom, StratosAtomHex } from "../../components/Logo";
 import HistoryDrawer from "../../components/HistoryDrawer";
 import SuggestActionsModal from "../../components/SuggestActionsModal";
@@ -350,11 +350,16 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
     const { lead } = zoomSchedulingLead;
     const formattedDateTime = dateTimeString.replace("T", " ");
 
+    // Display "con palabras" para que el cliente/asesor lea la fecha clara
+    // (ej. "Sábado 20 de junio, 2:30 p.m."). Persistimos el datetime crudo
+    // parseable en next_action_date para que el orden por proximidad y los
+    // recordatorios sigan funcionando.
     const finalizedLead = {
       ...lead,
       st: "Zoom Agendado",
       nextAction: actionText || "Zoom",
-      nextActionDate: formattedDateTime,
+      nextActionDate: formatFechaLarga(dateTimeString) || formattedDateTime,
+      next_action_date: formattedDateTime,
       _zoomConfirmed: true,
     };
 
@@ -705,7 +710,12 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
       campaign:         withScore.campana ?? withScore.campaign,
       source:           withScore.source,
       next_action:      withScore.nextAction ?? withScore.next_action,
-      next_action_date: withScore.nextActionDate ?? withScore.next_action_date,
+      // Preferimos el snake `next_action_date` (datetime crudo/parseable) cuando
+      // viene seteado — p.ej. al agendar Zoom guardamos ahí el datetime y en
+      // `nextActionDate` la versión larga con palabras (solo display). Así la BD
+      // conserva el valor ordenable. El resto de flujos solo setean el camel, que
+      // sigue cayendo por el fallback.
+      next_action_date: withScore.next_action_date ?? withScore.nextActionDate,
       last_activity:    withScore.lastActivity ?? withScore.last_activity,
       days_inactive:    withScore.daysInactive ?? withScore.days_inactive ?? 0,
       seguimientos:     withScore.seguimientos ?? 0,
@@ -1606,6 +1616,25 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
           const bCon = b.st === "Seguimiento" ? 1 : 0;
           return bCon - aCon || b.sc - a.sc;
         });
+      case "proxZoom": {
+        // "Los más próximos a Zoom que se vean arriba." Citas futuras primero,
+        // ordenadas por cercanía (la más próxima al frente); luego las pasadas
+        // (la más reciente primero); al fondo los leads sin cita.
+        const now = Date.now();
+        const rank = (l) => {
+          const t = getZoomTime(l);
+          if (t === null) return [2, 0];   // sin cita → fondo
+          if (t >= now)   return [0, t];   // futura → más cercana primero
+          return [1, -t];                  // pasada → más reciente primero
+        };
+        return arr.sort((a, b) => {
+          const [ga, va] = rank(a);
+          const [gb, vb] = rank(b);
+          if (ga !== gb) return ga - gb;
+          if (va !== vb) return va - vb;
+          return recency(b) - recency(a); // tiebreak: lead más reciente
+        });
+      }
       case "manual":
       default:
         return priorityOrder.length
@@ -2066,6 +2095,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                     }}
                   >
                     <option value="manual"     style={{ background: isLight ? "#FFFFFF" : "#111318", color: T.txt }}>Manual (arrastra)</option>
+                    <option value="proxZoom"   style={{ background: isLight ? "#FFFFFF" : "#111318", color: T.txt }}>Próximo Zoom</option>
                     <option value="newest"     style={{ background: isLight ? "#FFFFFF" : "#111318", color: T.txt }}>Nuevos primero</option>
                     <option value="oldest"     style={{ background: isLight ? "#FFFFFF" : "#111318", color: T.txt }}>Nuevos al fondo</option>
                     <option value="concretado" style={{ background: isLight ? "#FFFFFF" : "#111318", color: T.txt }}>En Seguimiento</option>

@@ -96,6 +96,76 @@ export const genId = () =>
     : `${Date.now()}-${Math.random().toString(36).slice(2,9)}`;
 
 /**
+ * STAGES_CON_CITA — Etapas del pipeline donde el lead tiene una fecha/hora
+ * concreta de reunión con el cliente (Zoom o visita). En estas etapas la
+ * "próxima acción" ES la cita, así que la mostramos formateada con palabras
+ * y la usamos para ordenar por proximidad.
+ */
+export const STAGES_CON_CITA = new Set([
+  "Zoom Agendado", "Reactivar Zoom", "Visita Agendada", "Zoom Concretado",
+]);
+
+/**
+ * parseFechaToTime — Convierte una fecha a timestamp (ms) o null si no parsea.
+ * Acepta:
+ *   - Date
+ *   - ISO ("2026-06-20T14:30:00Z", "2026-06-20T14:30")
+ *   - "2026-06-20 14:30" (formato del modal de Zoom; hora local del browser)
+ * Texto libre ("Hoy", "Esta semana") → null.
+ */
+export const parseFechaToTime = (input) => {
+  if (input === null || input === undefined || input === "") return null;
+  if (input instanceof Date) {
+    const t = input.getTime();
+    return Number.isFinite(t) ? t : null;
+  }
+  let s = String(input).trim();
+  if (!s) return null;
+  // "2026-06-20 14:30[:ss]" → ISO local. El separador con espacio lo parsea
+  // distinto cada browser; normalizar a 'T' lo hace consistente y local.
+  if (/^\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}/.test(s)) s = s.replace(" ", "T");
+  const t = new Date(s).getTime();
+  return Number.isFinite(t) ? t : null;
+};
+
+/**
+ * formatFechaLarga — Fecha "completa con palabras" en español, para que el
+ * cliente la lea sin ambigüedad. Ej: "Sábado 20 de junio, 2:30 p.m."
+ * Devuelve "" si el input no es una fecha parseable (el texto libre lo respeta
+ * quien llama). Por defecto sin año; pasar { conAnio: true } para incluirlo.
+ */
+export const formatFechaLarga = (input, { conAnio = false } = {}) => {
+  const t = parseFechaToTime(input);
+  if (t === null) return "";
+  const opts = {
+    weekday: "long", day: "numeric", month: "long",
+    hour: "numeric", minute: "2-digit", hour12: true,
+  };
+  if (conAnio) opts.year = "numeric";
+  const out = new Date(t).toLocaleString("es-MX", opts);
+  // es-MX devuelve el día de la semana en minúscula ("sábado…"); capitalizamos
+  // la inicial para que se vea como título.
+  return out.charAt(0).toUpperCase() + out.slice(1);
+};
+
+/**
+ * getZoomTime — Timestamp (ms) de la cita/zoom de un lead, o null si la etapa
+ * no tiene cita o la fecha no es parseable. Prioriza selected_time (cita real
+ * de Cal.com) → next_action_at → next_action_date. Sirve para ordenar por
+ * proximidad ("los más próximos a Zoom que se vean arriba").
+ */
+export const getZoomTime = (lead) => {
+  if (!lead) return null;
+  const stage = lead.st ?? lead.stage;
+  if (!STAGES_CON_CITA.has(stage)) return null;
+  return (
+    parseFechaToTime(lead.selected_time) ??
+    parseFechaToTime(lead.next_action_at) ??
+    parseFechaToTime(lead.next_action_date)
+  );
+};
+
+/**
  * buildTelegramSummary — Genera el resumen de un lead para Telegram.
  */
 export const buildTelegramSummary = (lead) => {
