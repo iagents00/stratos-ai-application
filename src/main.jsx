@@ -181,6 +181,17 @@ if ("serviceWorker" in navigator && import.meta.env.PROD) {
     let refreshing = false;
     const forceReload = () => {
       if (refreshing) return;
+      // Guard CROSS-RELOAD (fix loop iOS "Ocurrió un problema varias veces"):
+      // el flag `refreshing` vive solo en memoria y se reinicia al recargar. En
+      // iOS Safari, controllerchange/SW_UPDATED puede dispararse en CADA carga →
+      // reload → loop infinito. Sumamos un guard por sessionStorage: si ya
+      // recargamos por el SW hace <30s, NO recargamos otra vez (corta el loop),
+      // pero permite updates legítimos más tarde en la misma sesión.
+      try {
+        const last = +(sessionStorage.getItem("stratos_sw_reload_at") || 0);
+        if (last && Date.now() - last < 30000) return;
+        sessionStorage.setItem("stratos_sw_reload_at", String(Date.now()));
+      } catch (_) { /* sessionStorage bloqueado → queda el guard en memoria */ }
       refreshing = true;
       window.location.reload();
     };
