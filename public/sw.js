@@ -102,7 +102,10 @@
 //   Antes, al reasignar un lead a otro asesor el asesor_id quedaba viejo y el
 //   nuevo asesor no lo veía en pipeline/buscador (ni sus notas), aunque la RLS
 //   sí se lo entregaba. Además updateLead ya no arrastra el asesor_id anterior.
-const CACHE_VERSION = 'stratos-v33';
+// v34 — fix loop de recarga en iOS ("Ocurrió un problema varias veces"): el
+//   forceReload de main.jsx ahora tiene guard cross-reload (sessionStorage) para
+//   no recargar en loop cuando iOS dispara controllerchange en cada carga.
+const CACHE_VERSION = 'stratos-v34';
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 
