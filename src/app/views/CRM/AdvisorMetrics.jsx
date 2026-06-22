@@ -15,7 +15,7 @@
  */
 import { useMemo, useState } from "react";
 import { Users, Phone, BadgeCheck, CalendarDays, CheckCircle2, Activity, RefreshCw } from "lucide-react";
-import { P, LP, font, fontDisp, STAGES } from "../../../design-system/tokens";
+import { P, LP, font, fontDisp, STAGES, STAGE_COLORS } from "../../../design-system/tokens";
 
 const STAGE_INDEX = Object.fromEntries(STAGES.map((s, i) => [s, i]));
 const IDX_PRIMER_CONTACTO = STAGE_INDEX["Segundo Intento"];
@@ -168,10 +168,11 @@ export const INDICATORS = [
   },
 ];
 
-export default function AdvisorMetrics({ leadsData = [], theme = "dark" }) {
+export default function AdvisorMetrics({ leadsData = [], theme = "dark", onOpenLead = null }) {
   const isLight = theme === "light";
   const T = isLight ? LP : P;
   const [periodId, setPeriodId] = useState("month");
+  const [zoomAsesor, setZoomAsesor] = useState("__all__"); // filtro de la lista Filtro 2
 
   const startTs = useMemo(() => periodStart(periodId), [periodId]);
 
@@ -238,6 +239,45 @@ export default function AdvisorMetrics({ leadsData = [], theme = "dark" }) {
     t.zoomDone = zd;
     return t;
   }, [leadsData, startTs, zoomAgg]);
+
+  // ── Filtro 2: lista de clientes que realizaron Zoom ───────────────────────
+  // Una fila por lead con Zoom hecho: cliente, presentador (quién lo dio),
+  // fecha del Zoom, dueño actual, etapa actual y siguiente paso. Filtrable por
+  // período (fecha del Zoom) y por presentador. Es el "cliente por cliente" que
+  // pidió dirección, no solo el número.
+  const zoomClients = useMemo(() => {
+    const out = [];
+    for (const l of leadsData) {
+      const { done } = zoomEventsOf(l);
+      if (!done) continue;
+      if (!eventInPeriod(done.at, startTs)) continue;
+      const presentador = done.by || l.asesor || "—";
+      if (zoomAsesor !== "__all__" && presentador !== zoomAsesor) continue;
+      out.push({
+        lead: l,
+        cliente: l.name || l.n || "(sin nombre)",
+        presentador,
+        fecha: done.at || l.created_at || null,
+        dueno: l.asesor || "—",
+        etapa: l.st || "—",
+        siguiente: l.nextAction || l.next_action || "—",
+      });
+    }
+    // Más reciente primero.
+    out.sort((a, b) => {
+      const ta = a.fecha ? new Date(a.fecha).getTime() : 0;
+      const tb = b.fecha ? new Date(b.fecha).getTime() : 0;
+      return tb - ta;
+    });
+    return out;
+  }, [leadsData, startTs, zoomAsesor]);
+
+  const fmtFecha = (iso) => {
+    if (!iso) return "—";
+    const d = new Date(iso);
+    if (Number.isNaN(d.getTime())) return "—";
+    return d.toLocaleDateString("es-MX", { day: "2-digit", month: "short", year: "2-digit" });
+  };
 
   const headerBg   = isLight ? "rgba(15,23,42,0.04)" : "rgba(255,255,255,0.04)";
   const rowBorder  = isLight ? "rgba(15,23,42,0.06)" : "rgba(255,255,255,0.05)";
@@ -349,6 +389,88 @@ export default function AdvisorMetrics({ leadsData = [], theme = "dark" }) {
       <p style={{ margin: "10px 4px 0", fontSize: 10.5, color: T.txt3, fontFamily: font, lineHeight: 1.5 }}>
         Asignados / Contactados / Calificados / Activos se filtran por fecha de creación del lead y reflejan su etapa actual. Las columnas <strong>Zooms Ag./Real.</strong> son históricas: cuentan cada lead que alguna vez pasó por esa fase (aunque hoy esté en otra etapa o haya sido reasignado), acreditadas a <strong>quién dio el Zoom</strong> y filtradas por la fecha real del evento.
       </p>
+
+      {/* ── Filtro 2 — Clientes que realizaron Zoom (cliente por cliente) ──── */}
+      <div style={{ marginTop: 28 }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12, marginBottom: 12 }}>
+          <div>
+            <h3 style={{ margin: 0, fontSize: 18, fontWeight: 600, fontFamily: fontDisp, color: T.txt, letterSpacing: "-0.02em" }}>
+              Clientes con Zoom realizado
+            </h3>
+            <p style={{ margin: "4px 0 0", fontSize: 12, color: T.txt3, fontFamily: font }}>
+              {zoomClients.length} {zoomClients.length === 1 ? "cliente" : "clientes"} en el período · quién dio el Zoom, etapa actual y siguiente paso.
+            </p>
+          </div>
+          <select
+            value={zoomAsesor}
+            onChange={(e) => setZoomAsesor(e.target.value)}
+            aria-label="Filtrar por presentador"
+            style={{
+              padding: "8px 12px", borderRadius: 9, fontFamily: font, fontSize: 12.5,
+              background: headerBg, color: T.txt, border: `1px solid ${rowBorder}`, cursor: "pointer",
+            }}
+          >
+            <option value="__all__">Todos los presentadores</option>
+            {asesores.map(a => <option key={a} value={a}>{a}</option>)}
+          </select>
+        </div>
+
+        <div style={{
+          borderRadius: 14,
+          background: isLight ? "rgba(255,255,255,0.6)" : "rgba(255,255,255,0.02)",
+          border: `1px solid ${rowBorder}`, overflow: "hidden", overflowX: "auto",
+        }}>
+          <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 760 }}>
+            <thead>
+              <tr style={{ background: headerBg }}>
+                <th style={{ ...thStyle(T), textAlign: "left", paddingLeft: 16 }}>Cliente</th>
+                <th style={thStyle(T)}>Presentador</th>
+                <th style={thStyle(T)}>Fecha Zoom</th>
+                <th style={thStyle(T)}>Dueño actual</th>
+                <th style={thStyle(T)}>Etapa actual</th>
+                <th style={{ ...thStyle(T), textAlign: "left" }}>Siguiente paso</th>
+              </tr>
+            </thead>
+            <tbody>
+              {zoomClients.length === 0 && (
+                <tr>
+                  <td colSpan={6} style={{ padding: 28, textAlign: "center", color: T.txt3, fontFamily: font, fontSize: 13 }}>
+                    No hay clientes con Zoom realizado en este período.
+                  </td>
+                </tr>
+              )}
+              {zoomClients.map(({ lead, cliente, presentador, fecha, dueno, etapa, siguiente }, i) => (
+                <tr
+                  key={lead.id || i}
+                  onClick={onOpenLead ? () => onOpenLead(lead) : undefined}
+                  style={{
+                    borderTop: i === 0 ? "none" : `1px solid ${rowBorder}`,
+                    cursor: onOpenLead ? "pointer" : "default",
+                  }}
+                  onMouseEnter={onOpenLead ? (e) => { e.currentTarget.style.background = headerBg; } : undefined}
+                  onMouseLeave={onOpenLead ? (e) => { e.currentTarget.style.background = "transparent"; } : undefined}
+                >
+                  <td style={{ padding: cellPad, paddingLeft: 16, fontFamily: fontDisp, fontWeight: 600, color: T.txt, fontSize: 13 }}>{cliente}</td>
+                  <td style={{ padding: cellPad, textAlign: "center", fontFamily: font, color: T.txt2, fontSize: 12.5 }}>{presentador}</td>
+                  <td style={{ padding: cellPad, textAlign: "center", fontFamily: font, color: T.txt2, fontSize: 12.5, whiteSpace: "nowrap" }}>{fmtFecha(fecha)}</td>
+                  <td style={{ padding: cellPad, textAlign: "center", fontFamily: font, color: T.txt2, fontSize: 12.5 }}>{dueno}</td>
+                  <td style={{ padding: cellPad, textAlign: "center", fontSize: 12 }}>
+                    <span style={{ padding: "3px 9px", borderRadius: 999, fontFamily: fontDisp, fontWeight: 600, fontSize: 11, color: STAGE_COLORS[etapa] || T.txt3, background: `${STAGE_COLORS[etapa] || T.txt3}1A` }}>
+                      {etapa}
+                    </span>
+                  </td>
+                  <td style={{ padding: cellPad, fontFamily: font, color: T.txt2, fontSize: 12.5 }}>{siguiente}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        {onOpenLead && zoomClients.length > 0 && (
+          <p style={{ margin: "8px 4px 0", fontSize: 10.5, color: T.txt3, fontFamily: font }}>
+            Toca un cliente para abrir su expediente, notas e historial.
+          </p>
+        )}
+      </div>
     </div>
   );
 }
