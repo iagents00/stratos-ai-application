@@ -25,6 +25,51 @@ const IDX_SEGUIMIENTO     = STAGE_INDEX["Seguimiento"];
 // + proyectos + corridas + dudas). Usamos ese índice para "activos post-Zoom".
 const IDX_POST_ZOOM       = STAGE_INDEX["Seguimiento"];
 
+// ── Métrica de Zooms (histórica, no por foto actual) ─────────────────────────
+// Un lead "realizó Zoom" si ALGUNA VEZ entró a Zoom Concretado o más allá
+// (Seguimiento/Apartó/Visita/Cierre/Postventa) — aunque hoy esté en otra etapa
+// o haya sido reasignado y reseteado a "Contáctame Ya". La métrica vieja solo
+// miraba la etapa actual = "Seguimiento" y sub-contaba ~4×.
+const ZOOM_DONE_STAGES = new Set([
+  "Zoom Concretado", "Seguimiento", "Apartó", "Visita Agendada", "Cierre", "Postventa",
+]);
+const ZOOM_SCHEDULED_STAGE = "Zoom Agendado";
+
+// Extrae la etapa destino de un evento de historial "Etapa: X → Y".
+function targetStage(action) {
+  if (typeof action !== "string") return null;
+  const parts = action.split("→");
+  return parts.length > 1 ? parts[parts.length - 1].trim() : null;
+}
+
+// Devuelve { scheduled, done } para un lead: el PRIMER evento de historial que
+// lo llevó a Zoom Agendado / a una etapa post-Zoom, con su autor (by = quién lo
+// dio) y fecha. Acredita el Zoom a quien lo movió, no al dueño actual, así el
+// crédito no se pierde con las reasignaciones. Si no hay historial pero la etapa
+// ACTUAL ya es de Zoom (leads sembrados o pre-historial), cae al dueño actual.
+function zoomEventsOf(lead) {
+  const hist = Array.isArray(lead.actionHistory) ? lead.actionHistory : [];
+  let scheduled = null, done = null;
+  for (const e of hist) {
+    if (!e || e.type !== "etapa") continue;
+    const t = targetStage(e.action);
+    if (!t) continue;
+    const at = e.completed_at || e.doneAt || null;
+    if (t === ZOOM_SCHEDULED_STAGE && !scheduled) scheduled = { by: e.by || lead.asesor, at };
+    if (ZOOM_DONE_STAGES.has(t) && !done)          done      = { by: e.by || lead.asesor, at };
+  }
+  if (!scheduled && lead.st === ZOOM_SCHEDULED_STAGE) scheduled = { by: lead.asesor, at: lead.created_at };
+  if (!done && ZOOM_DONE_STAGES.has(lead.st))         done      = { by: lead.asesor, at: lead.created_at };
+  return { scheduled, done };
+}
+
+function eventInPeriod(at, startTs) {
+  if (startTs === null) return true;
+  if (!at) return false;
+  const t = new Date(at).getTime();
+  return !Number.isNaN(t) && t >= startTs;
+}
+
 export const PERIODS = [
   { id: "today", label: "Hoy" },
   { id: "week",  label: "Semana" },
@@ -91,15 +136,18 @@ export const INDICATORS = [
     key: "zoomScheduled",
     label: "Zooms Ag.",
     icon: CalendarDays,
-    title: "Zooms agendados (etapa actual = Zoom Agendado).",
-    compute: (leads) => leads.filter(l => l.st === "Zoom Agendado").length,
+    title: "Zooms agendados — leads que entraron a 'Zoom Agendado' alguna vez (histórico), acreditados a quien los agendó y por la fecha del evento.",
+    // Conteo histórico a nivel lead (lo usa ComandoDirectivo: chart + totales).
+    // En la tabla por asesor, AdvisorMetrics lo sobreescribe con el crédito
+    // event-level a "quién lo dio" (ver `zoomAgg`).
+    compute: (leads) => leads.filter(l => !!zoomEventsOf(l).scheduled).length,
   },
   {
     key: "zoomDone",
     label: "Zooms Real.",
     icon: CheckCircle2,
-    title: "Zooms realizados — leads en Seguimiento (post-Mayo 2026 ya incluye lo que antes era 'Zoom Concretado').",
-    compute: (leads) => leads.filter(l => l.st === "Seguimiento").length,
+    title: "Zooms realizados — leads que alguna vez pasaron por Zoom Concretado o más allá (Seguimiento/Apartó/Visita/Cierre/Postventa), acreditados a quien dio el Zoom. Cuenta el historial, no la etapa actual.",
+    compute: (leads) => leads.filter(l => !!zoomEventsOf(l).done).length,
   },
   {
     key: "activePostZoom",
@@ -127,11 +175,38 @@ export default function AdvisorMetrics({ leadsData = [], theme = "dark" }) {
 
   const startTs = useMemo(() => periodStart(periodId), [periodId]);
 
-  // Lista de asesores únicos presentes en leadsData. Ordenado alfabético.
-  const asesores = useMemo(() => {
-    const set = new Set(leadsData.map(l => l.asesor).filter(Boolean));
-    return [...set].sort((a, b) => a.localeCompare(b, "es"));
+  // Agregación event-level de Zooms: persona → fechas de sus eventos de Zoom
+  // (agendado / realizado), deduplicados a 1 por lead (el primer evento que
+  // lo llevó a esa fase). El crédito va a `by` (quién lo dio), no al dueño hoy.
+  const zoomAgg = useMemo(() => {
+    const map = {}; // person -> { scheduled: [at...], done: [at...] }
+    const push = (person, bucket, at) => {
+      if (!person) return;
+      (map[person] = map[person] || { scheduled: [], done: [] })[bucket].push(at);
+    };
+    for (const l of leadsData) {
+      const { scheduled, done } = zoomEventsOf(l);
+      if (scheduled) push(scheduled.by, "scheduled", scheduled.at);
+      if (done)      push(done.by,      "done",      done.at);
+    }
+    return map;
   }, [leadsData]);
+
+  const countZoom = (person, bucket) => {
+    const arr = zoomAgg[person]?.[bucket];
+    if (!arr) return 0;
+    return arr.filter(at => eventInPeriod(at, startTs)).length;
+  };
+
+  // Lista de asesores: dueños actuales ∪ quienes tienen crédito de Zoom (un
+  // presentador puede ya no tener leads propios pero sí Zooms acreditados).
+  const asesores = useMemo(() => {
+    const set = new Set([
+      ...leadsData.map(l => l.asesor).filter(Boolean),
+      ...Object.keys(zoomAgg),
+    ]);
+    return [...set].sort((a, b) => a.localeCompare(b, "es"));
+  }, [leadsData, zoomAgg]);
 
   // Filas: { asesor, metrics: { key: number } }
   const rows = useMemo(() => {
@@ -141,17 +216,28 @@ export default function AdvisorMetrics({ leadsData = [], theme = "dark" }) {
       );
       const metrics = {};
       for (const ind of INDICATORS) metrics[ind.key] = ind.compute(leadsOfAsesor);
+      // Override: las columnas de Zoom son histórico/event-level, no foto actual.
+      metrics.zoomScheduled = countZoom(asesor, "scheduled");
+      metrics.zoomDone      = countZoom(asesor, "done");
       return { asesor, metrics, count: leadsOfAsesor.length };
     });
-  }, [asesores, leadsData, startTs]);
+  }, [asesores, leadsData, startTs, zoomAgg]);
 
   // Totales del equipo (fila TOTAL al pie).
   const totals = useMemo(() => {
     const leadsInPeriod = leadsData.filter(l => leadInPeriod(l, startTs));
     const t = {};
     for (const ind of INDICATORS) t[ind.key] = ind.compute(leadsInPeriod);
+    // Zooms: suma de todos los eventos del período (todas las personas).
+    let zs = 0, zd = 0;
+    for (const person of Object.keys(zoomAgg)) {
+      zs += countZoom(person, "scheduled");
+      zd += countZoom(person, "done");
+    }
+    t.zoomScheduled = zs;
+    t.zoomDone = zd;
     return t;
-  }, [leadsData, startTs]);
+  }, [leadsData, startTs, zoomAgg]);
 
   const headerBg   = isLight ? "rgba(15,23,42,0.04)" : "rgba(255,255,255,0.04)";
   const rowBorder  = isLight ? "rgba(15,23,42,0.06)" : "rgba(255,255,255,0.05)";
@@ -261,7 +347,7 @@ export default function AdvisorMetrics({ leadsData = [], theme = "dark" }) {
       </div>
 
       <p style={{ margin: "10px 4px 0", fontSize: 10.5, color: T.txt3, fontFamily: font, lineHeight: 1.5 }}>
-        Datos derivados de leads actuales filtrados por fecha de creación. Las columnas <strong>Zooms Ag./Real.</strong> y <strong>Activos</strong> reflejan la etapa actual del lead, no su historial.
+        Asignados / Contactados / Calificados / Activos se filtran por fecha de creación del lead y reflejan su etapa actual. Las columnas <strong>Zooms Ag./Real.</strong> son históricas: cuentan cada lead que alguna vez pasó por esa fase (aunque hoy esté en otra etapa o haya sido reasignado), acreditadas a <strong>quién dio el Zoom</strong> y filtradas por la fecha real del evento.
       </p>
     </div>
   );

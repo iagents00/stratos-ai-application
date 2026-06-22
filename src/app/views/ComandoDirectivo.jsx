@@ -31,6 +31,8 @@ import { P, LP, font, fontDisp } from "../../design-system/tokens";
 import { G } from "../SharedComponents";
 import AdvisorMetrics, { INDICATORS } from "./CRM/AdvisorMetrics";
 import { useClient } from "../../hooks/useClient";
+import { buildExecutivePdf, evolutionCols, asesorCols } from "./ComandoDirectivo.pdf";
+import ZoomControl from "./ZoomControl";
 
 const ICONS_BY_KEY = {
   assigned:       Users,
@@ -197,6 +199,13 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
   // Visibilidad por serie — toggleable desde la leyenda.
   const [hiddenSeries, setHiddenSeries] = useState({});
 
+  // Pestañas de nivel superior: Indicadores (vista histórica) vs Control de
+  // Zooms (panel operativo sobre zoom_agendados). La pestaña de Zooms solo
+  // aparece para clientes con features.zoomControl (hoy: Duke); el resto ve el
+  // Comando Directivo igual que siempre, sin barra de pestañas.
+  const showZoomTab = !!clientConfig?.features?.zoomControl;
+  const [tab, setTab] = useState("indicadores");
+
   const granularity = GRANULARITIES.find(g => g.id === granularityId) || GRANULARITIES[1];
   const bucketCount = bucketCounts[granularityId] ?? granularity.defaultCount;
   const setBucketCount = (n) => setBucketCounts(b => ({ ...b, [granularityId]: n }));
@@ -263,15 +272,13 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
     return t;
   }, [rangeLeads]);
 
-  // ── Export — Reporte ejecutivo HTML (imprimible / convertible a PDF) ──────
-  // Genera un documento self-contained con fondo blanco, tipografía limpia y
-  // todas las secciones ejecutivas. El archivo se descarga como .html y el
-  // usuario puede:
-  //   1) Abrirlo en cualquier navegador (incluso offline) → ver el reporte.
-  //   2) Imprimirlo / Guardar como PDF (Ctrl/Cmd+P) — el CSS @media print
-  //      ya está optimizado: márgenes consistentes, page-break-inside: avoid
-  //      en tablas, sin botones imprimibles, branding intacto.
-  const handleExport = () => {
+  // ── Export — Reporte ejecutivo en PDF (vectorial, jsPDF) ──────────────────
+  // Construye el PDF dibujando texto/tablas con jsPDF (ver ComandoDirectivo.pdf
+  // .js): texto seleccionable, peso mínimo y márgenes A4 correctos por
+  // construcción — el contenido nunca toca el borde ni se parte entre páginas.
+  // El `html` que se arma abajo queda SOLO como fallback imprimible por si el
+  // import de jsPDF fallara en algún navegador exótico.
+  const handleExport = async () => {
     const now = new Date();
     const stamp = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2,"0")}-${String(now.getDate()).padStart(2,"0")}`;
     const hhmm  = `${String(now.getHours()).padStart(2,"0")}:${String(now.getMinutes()).padStart(2,"0")}`;
@@ -638,78 +645,69 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
 </body>
 </html>`;
 
-    // Render del HTML en un iframe oculto same-origin, captura con html2canvas
-    // y descarga directa como PDF multipágina A4. Sin popups, sin diálogo de
-    // impresión: el archivo .pdf cae en la carpeta de descargas del navegador.
-    // Fallback a .html si jsPDF/html2canvas fallan en el navegador del usuario.
-    const filenameBase = `comando-directivo_${granularity.label.toLowerCase()}_${stamp}`;
-    const iframe = document.createElement("iframe");
-    iframe.setAttribute("aria-hidden", "true");
-    iframe.style.position = "fixed";
-    iframe.style.left = "-9999px";
-    iframe.style.top = "0";
-    iframe.style.width = "794px";   // A4 @ 96dpi
-    iframe.style.height = "1123px";
-    iframe.style.border = "0";
-    iframe.style.opacity = "0";
-    iframe.style.pointerEvents = "none";
-    document.body.appendChild(iframe);
+    // ── Modelo del reporte — datos planos derivados de leadsData (el mismo
+    //    array del CRM). El builder vectorial (ComandoDirectivo.pdf.js) lo
+    //    dibuja con jsPDF: márgenes correctos, tablas paginadas sin cortar
+    //    filas, texto seleccionable. Caracteres dentro de cp1252 (sin "→").
+    const dailyNote = granularityId === "day"
+      ? '"Asignados" = leads registrados ese día. Las demás columnas reflejan el estado actual de esos leads en el pipeline, no una acción puntual del día.'
+      : '"Asignados" = leads registrados en el periodo. Las demás columnas reflejan el estado actual de esos leads en el pipeline.';
 
-    const cleanupIframe = () => {
-      try { document.body.removeChild(iframe); } catch (_) { /* noop */ }
+    const model = {
+      meta: {
+        clientName: clientDisplayName,
+        stamp, hhmm,
+        granularityLabel: granularity.label,
+        periodsCount: buckets.length,
+        periodSpan,
+        totalLeadsPipeline: leadsData.length,
+        asesoresCount: asesores.length,
+      },
+      pipelineCards: [
+        { label: "Pipeline total",    value: String(leadsData.length),             sub: "leads en el CRM", color: "#10B981" },
+        { label: "Zooms agendados",   value: String(snapshotTotals.zoomScheduled),  sub: "estado actual",   color: COLORS_BY_KEY.zoomScheduled },
+        { label: "Zooms realizados",  value: String(snapshotTotals.zoomDone),       sub: "estado actual",   color: COLORS_BY_KEY.zoomDone },
+        { label: "Activos post-Zoom", value: String(snapshotTotals.activePostZoom), sub: "estado actual",   color: COLORS_BY_KEY.activePostZoom },
+      ],
+      rangeCards: [
+        { label: "Leads nuevos",         value: String(totalLeads),     sub: "creados en el rango",        color: "#6EE7C2" },
+        { label: "Tasa de calificación", value: `${tasaCalif}%`,        sub: `${rangeTotals.qualified} de ${totalLeads || 0}`, color: "#0EA5E9" },
+        { label: "Conversión a Zoom",    value: `${tasaZoomSobreCal}%`, sub: "realizados / calificados",   color: "#2563EB" },
+        { label: "Seguim. por lead",     value: String(promedioSeguim), sub: "promedio del rango",         color: "#EA580C" },
+      ],
+      indicators: INDICATORS.map(ind => ({
+        label: FULL_LABELS[ind.key] || ind.label,
+        value: snapshotTotals[ind.key] || 0,
+        color: COLORS_BY_KEY[ind.key] || "#10B981",
+      })),
+      evolution: {
+        title: `Evolución temporal  -  ${granularity.label}`,
+        note: dailyNote,
+        cols: evolutionCols(INDICATORS.length),
+        headers: ["Período", ...INDICATORS.map(i => i.label)],
+        rows: series.map(r => [r.csvLabel, ...INDICATORS.map(i => r[i.key] || 0)]),
+        totals: ["Total del rango", ...INDICATORS.map(i => rangeTotals[i.key] || 0)],
+      },
+      asesores: {
+        cols: asesorCols(INDICATORS.length),
+        headers: ["Asesor", "Leads", ...INDICATORS.map(i => i.label)],
+        rows: asesores.map(ases => {
+          const leadsOf = rangeLeads.filter(l => l.asesor === ases);
+          return [ases, leadsOf.length, ...INDICATORS.map(i => i.compute(leadsOf))];
+        }),
+      },
     };
 
-    const idoc = iframe.contentDocument || iframe.contentWindow?.document;
-    if (!idoc) {
-      cleanupIframe();
+    const filenameBase = `comando-directivo_${granularity.label.toLowerCase()}_${stamp}`;
+    try {
+      const { default: JsPDF } = await import("jspdf");
+      const doc = buildExecutivePdf(JsPDF, model);
+      doc.save(`${filenameBase}.pdf`);
+    } catch (err) {
+      // Navegador donde jsPDF no cargó: descargamos el HTML imprimible.
+      console.warn("[Comando Directivo] PDF directo falló — fallback a HTML imprimible:", err);
       downloadFile(`${filenameBase}.html`, html);
-      return;
     }
-    idoc.open();
-    idoc.write(html);
-    idoc.close();
-
-    setTimeout(async () => {
-      try {
-        const [{ default: jsPDF }, { default: html2canvas }] = await Promise.all([
-          import("jspdf"),
-          import("html2canvas"),
-        ]);
-
-        const body = idoc.body;
-        const canvas = await html2canvas(body, {
-          scale: 2,
-          backgroundColor: "#ffffff",
-          useCORS: true,
-          windowWidth: body.scrollWidth,
-          windowHeight: body.scrollHeight,
-        });
-
-        const pdf = new jsPDF({ unit: "mm", format: "a4", orientation: "portrait" });
-        const pageWidth  = pdf.internal.pageSize.getWidth();
-        const pageHeight = pdf.internal.pageSize.getHeight();
-        const imgWidth   = pageWidth;
-        const imgHeight  = (canvas.height * imgWidth) / canvas.width;
-        const imgData    = canvas.toDataURL("image/jpeg", 0.92);
-
-        let heightLeft = imgHeight;
-        let position = 0;
-        pdf.addImage(imgData, "JPEG", 0, position, imgWidth, imgHeight, undefined, "FAST");
-        heightLeft -= pageHeight;
-        while (heightLeft > 0) {
-          position = heightLeft - imgHeight;
-          pdf.addPage();
-          pdf.addImage(imgData, "JPEG", 0, position, imgWidth, imgHeight, undefined, "FAST");
-          heightLeft -= pageHeight;
-        }
-        pdf.save(`${filenameBase}.pdf`);
-      } catch (err) {
-        console.warn("[Comando Directivo] PDF export falló — fallback a .html:", err);
-        downloadFile(`${filenameBase}.html`, html);
-      } finally {
-        cleanupIframe();
-      }
-    }, 450);
   };
 
   // ── Export de la tabla — CSV plano con los indicadores por período ──────
@@ -735,6 +733,32 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+      {/* ── Pestañas: Indicadores / Control de Zooms (solo si zoomControl) ─── */}
+      {showZoomTab && (
+        <div style={{
+          display: "inline-flex", gap: 4, padding: 4, borderRadius: 14,
+          background: headerBg, border: `1px solid ${rowBorder}`, alignSelf: "flex-start",
+        }}>
+          {[
+            { id: "indicadores", label: "Indicadores" },
+            { id: "zooms", label: "Control de Zooms" },
+          ].map(t => {
+            const active = tab === t.id;
+            return (
+              <button key={t.id} onClick={() => setTab(t.id)} style={{
+                padding: "8px 16px", borderRadius: 10, border: "none", cursor: "pointer",
+                fontSize: 13, fontWeight: active ? 700 : 600, fontFamily: fontDisp,
+                background: active ? (isLight ? T.accent : `${T.accent}22`) : "transparent",
+                color: active ? (isLight ? "#06080F" : T.accent) : T.txt2,
+                transition: "all 0.15s",
+              }}>{t.label}</button>
+            );
+          })}
+        </div>
+      )}
+
+      {(!showZoomTab || tab === "indicadores") && (
+      <>
       {/* ── Header ────────────────────────────────────────────────────────── */}
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
         <div>
@@ -1089,6 +1113,10 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
             )}
           </table>
         </div>
+        <p style={{ margin: "10px 4px 0", fontSize: 10.5, color: T.txt3, fontFamily: font, lineHeight: 1.55 }}>
+          <strong style={{ color: T.txt2, fontFamily: fontDisp, fontWeight: 700 }}>Cómo leer cada {granularity.label.toLowerCase()}:</strong>{" "}
+          <strong style={{ color: T.txt2 }}>Leads asignados</strong> = lo que se registró ese {granularity.label.toLowerCase()} (leads nuevos creados). Las demás columnas muestran el <strong style={{ color: T.txt2 }}>estado actual</strong> en el pipeline de esos mismos leads, no una acción puntual del {granularity.label.toLowerCase()}.
+        </p>
       </G>
 
       {/* ── 3) KPI cards — snapshot del pipeline actual (coordina con CRM) ── */}
@@ -1162,6 +1190,12 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
 
       {/* ── 4) Desglose por asesor (coordinado con CRM) ─────────────────── */}
       <AdvisorMetrics leadsData={leadsData} theme={isLight ? "light" : "dark"} />
+      </>
+      )}
+
+      {showZoomTab && tab === "zooms" && (
+        <ZoomControl theme={isLight ? "light" : "dark"} />
+      )}
     </div>
   );
 };
