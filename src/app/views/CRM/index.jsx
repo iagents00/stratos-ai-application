@@ -593,11 +593,16 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
     const baseSc   = updated.sc ?? prev?.sc ?? 0;
     const newSc    = Math.max(0, Math.min(100, baseSc + segDelta));
 
-    // Reasignación de asesor — la sincronización de asesor_id ↔ asesor_name la
-    // hace ahora el trigger leads_sync_asesor_id de la migración 012. Aquí solo
-    // pasamos asesor_name; la DB resuelve el UUID correcto desde profiles.
-    // Si vino asesor_id explícito, lo respetamos (caso del bot).
-    const resolvedAsesorId = updated.asesor_id ?? prev?.asesor_id ?? null;
+    // Reasignación de asesor — sincronización de asesor_id ↔ asesor_name.
+    // Si vino asesor_id explícito (caso del bot), lo respetamos. Si NO vino y
+    // el asesor cambió, NO arrastramos el asesor_id del asesor anterior: eso
+    // dejaba el lead "atascado" apuntando al dueño viejo (bug de reasignación
+    // que se manifestaba cuando el trigger leads_sync_asesor_id de la migración
+    // 012 no estaba aplicado en la DB). Lo ponemos en null: la RLS y la UI
+    // filtran por asesor_name, y el trigger / la RPC fn_bulk_reassign_leads
+    // resuelven el UUID correcto del lado de la DB cuando estén disponibles.
+    const asesorChanged = !!updated.asesor && !!prev?.asesor && updated.asesor !== prev.asesor;
+    const resolvedAsesorId = updated.asesor_id ?? (asesorChanged ? null : prev?.asesor_id) ?? null;
 
     const withScore = {
       ...updated,
@@ -1027,20 +1032,29 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
 
   const sortedLeads = useMemo(() => {
     let data = visibleLeads.filter(l => {
-      const q = debouncedSearch.toLowerCase();
+      // Folding insensible a acentos: "hector zarate" debe encontrar a
+      // "Héctor Zárate". Sin esto, .includes() compara é≠e y el asesor no
+      // halla a sus propios leads con tildes (José, Hernández, Martínez…).
+      const fold = (v) => String(v || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+      const q = fold(debouncedSearch);
       // Defensivo: cualquier campo puede venir null/undefined desde Supabase.
       // Antes: l.phone.includes(q) tiraba TypeError si phone era null y rompía
       // el render del CRM completo.
-      const lc = (v) => String(v || "").toLowerCase();
       const matchQ = !q
-        || lc(l.n).includes(q)
+        || fold(l.n).includes(q)
         || String(l.phone || "").includes(q)
-        || lc(l.asesor).includes(q)
-        || lc(l.campana).includes(q)
-        || lc(l.p).includes(q)
-        || lc(l.tag).includes(q);
-      const matchStage = filterStage === "TODO" || l.st === filterStage;
-      const matchAsesor = filterAsesor === "TODO" || l.asesor === filterAsesor;
+        || fold(l.asesor).includes(q)
+        || fold(l.campana).includes(q)
+        || fold(l.p).includes(q)
+        || fold(l.tag).includes(q);
+      // Búsqueda transversal: cuando el asesor escribe algo en el buscador,
+      // busca en TODA su cuenta (todas las etapas y, para admins, todos los
+      // asesores visibles), NO solo dentro de la etapa/asesor seleccionado en
+      // las pestañas. Para un no-técnico es lo intuitivo: "buscar = encontrar
+      // lo que tengo", no "buscar dentro de la pestaña abierta". Sin texto, las
+      // pestañas de etapa/asesor filtran normal para navegar.
+      const matchStage = !!q || filterStage === "TODO" || l.st === filterStage;
+      const matchAsesor = !!q || filterAsesor === "TODO" || l.asesor === filterAsesor;
       return matchQ && matchStage && matchAsesor;
     });
     // Mapa de índice original → posición. Lo usamos como tiebreaker dentro
@@ -1804,7 +1818,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
           de los KPIs/priority/listas. Solo disponible si el cliente tiene
           el flag prendido + rol admin (ambos chequeados en metricsTabEnabled). */}
       {showMetrics && metricsTabEnabled && (
-        <AdvisorMetrics leadsData={visibleLeads} theme={theme} />
+        <AdvisorMetrics leadsData={visibleLeads} theme={theme} onOpenLead={setNotesLead} />
       )}
 
       {/* ── KPIs — solo desktop. En mobile son ruido visual: ocupan 1/3 de
