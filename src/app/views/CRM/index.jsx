@@ -1996,7 +1996,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
           de los KPIs/priority/listas. Solo disponible si el cliente tiene
           el flag prendido + rol admin (ambos chequeados en metricsTabEnabled). */}
       {showMetrics && metricsTabEnabled && (
-        <AdvisorMetrics leadsData={visibleLeads} theme={theme} />
+        <AdvisorMetrics leadsData={visibleLeads} theme={theme} onOpenLead={setNotesLead} />
       )}
 
       {/* ── KPIs — solo desktop. En mobile son ruido visual: ocupan 1/3 de
