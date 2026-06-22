@@ -74,6 +74,12 @@ export const DEFAULT_CLIENT_CONFIG = {
     // filtrable por Hoy / Semana / Mes. Default OFF — solo clientes que lo
     // necesiten explícitamente lo prenden. Visible para admin/director/ceo.
     comandoDirectivo: false,
+    // Control de Zooms: pestaña dentro de Comando Directivo para gestionar los
+    // Zooms de venta (Liner / Presentador / estatus) sobre la tabla
+    // zoom_agendados (migración 027). Reemplaza el Excel de control manual.
+    // Default OFF — workflow específico de Duke por ahora; otros clientes no
+    // ven la pestaña hasta que lo prendan.
+    zoomControl: false,
   },
 
   // Contacto y soporte
