@@ -499,10 +499,21 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
   const [kanbanScrollPos, setKanbanScrollPos] = useState(0);
 
   // visibleLeads — leads accesibles según el rol del usuario.
-  // Filtramos por asesor_id (UUID inmutable) cuando está disponible; cae al
-  // nombre solo si el lead aún no tiene asesor_id seedeado. Esto evita el bug
-  // de que dos asesores con el mismo nombre se vieran los leads cruzados, y
-  // que renombrar un asesor le "borrara" sus leads de la vista.
+  // Un lead es "mío" si me pertenece por asesor_id (UUID) O por asesor_name.
+  // CLAVE: la RLS del servidor (leads_select, migración 005) ya entrega al
+  // asesor SOLO los leads donde `asesor_name = current_user_name()`. Por eso
+  // este filtro de cliente debe estar en PARIDAD con esa regla — si fuera más
+  // estricto, escondería leads que el servidor sí considera del asesor.
+  //
+  // Antes este filtro era exclusivo (`asesor_id ? id===me : name===me`), lo que
+  // causaba un bug de trazabilidad al reasignar: al transferir un lead a otro
+  // asesor se cambia `asesor_name` pero el `asesor_id` podía quedar viejo (el
+  // del asesor anterior) hasta que el trigger de la DB lo resincronizara. El
+  // nuevo asesor recibía el lead por RLS (nombre) pero el filtro lo escondía
+  // porque el `asesor_id` no coincidía → no salía en pipeline ni buscador (solo
+  // lo encontraba el detector de duplicados, que ignora RLS) y sus notas
+  // "desaparecían". Con OR (id || nombre) el lead reaparece apenas la RLS lo
+  // entrega, sin depender de que asesor_id ya esté resincronizado.
   // useMemo: para admins devuelve la referencia estable de leadsData; para
   // asesores recalcula el filtro solo cuando cambian leadsData o el usuario,
   // no en cada render. Mantener la referencia estable evita que asesores/
@@ -511,9 +522,8 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
     canSeeAll
       ? leadsData
       : leadsData.filter(l =>
-          l.asesor_id
-            ? l.asesor_id === user?.id
-            : l.asesor === user?.name
+          (l.asesor_id && user?.id && l.asesor_id === user.id)
+          || (l.asesor && user?.name && l.asesor === user.name)
         )
   ), [canSeeAll, leadsData, user?.id, user?.name]);
 
@@ -654,10 +664,18 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
     const newSc    = Math.max(0, Math.min(100, baseSc + segDelta));
 
     // Reasignación de asesor — la sincronización de asesor_id ↔ asesor_name la
-    // hace ahora el trigger leads_sync_asesor_id de la migración 012. Aquí solo
+    // hace el trigger leads_sync_asesor_id de la migración 012. Aquí solo
     // pasamos asesor_name; la DB resuelve el UUID correcto desde profiles.
     // Si vino asesor_id explícito, lo respetamos (caso del bot).
-    const resolvedAsesorId = updated.asesor_id ?? prev?.asesor_id ?? null;
+    //
+    // IMPORTANTE: si el NOMBRE del asesor cambió y no nos dieron un asesor_id
+    // explícito, NO arrastramos `prev.asesor_id` — sería el id del asesor
+    // ANTERIOR, dejando la fila inconsistente (asesor_name nuevo + asesor_id
+    // viejo). Eso rompía la trazabilidad: el bot (que usa asesor_id) seguía
+    // viendo al asesor viejo. Mandamos null y el trigger fija el UUID correcto.
+    const asesorChanged = (updated.asesor ?? null) !== (prev?.asesor ?? null);
+    const resolvedAsesorId =
+      updated.asesor_id ?? (asesorChanged ? null : prev?.asesor_id) ?? null;
 
     const withScore = {
       ...updated,
@@ -1350,8 +1368,12 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
 
     // ── 1 sola actualización optimista (no N) — clave para la fluidez ──
     const affectedSet = new Set(affectedIds);
+    // Limpiamos asesor_id localmente: cambia el nombre del asesor, así que el
+    // UUID viejo dejó de aplicar. El trigger/refetch fija el id canónico del
+    // nuevo asesor; mientras tanto, el filtro visibleLeads cae al nombre (OR),
+    // así que el destino lo ve igual y el origen lo deja de ver sin fantasmas.
     const applyLocal = (l) => affectedSet.has(l.id)
-      ? { ...l, asesor: target, st: toContactame ? "Contáctame Ya" : l.st }
+      ? { ...l, asesor: target, asesor_id: null, st: toContactame ? "Contáctame Ya" : l.st }
       : l;
     leadsDataRef.current = leadsDataRef.current.map(applyLocal);
     setLeadsData(prev => prev.map(applyLocal));
