@@ -97,7 +97,12 @@
 //   fechas con palabras, tabla ordenada por proximidad, parser tolerante al texto
 //   largo y agrupación de HOY como bloque arriba. El bump invalida el shell viejo
 //   para que todos bajen el bundle nuevo en la próxima carga, sin limpiar caché.
-const CACHE_VERSION = 'stratos-v32';
+// v33 — trazabilidad de reasignación: el filtro del pipeline del asesor ahora
+//   está en paridad con la RLS (lead "mío" por asesor_id O por asesor_name).
+//   Antes, al reasignar un lead a otro asesor el asesor_id quedaba viejo y el
+//   nuevo asesor no lo veía en pipeline/buscador (ni sus notas), aunque la RLS
+//   sí se lo entregaba. Además updateLead ya no arrastra el asesor_id anterior.
+const CACHE_VERSION = 'stratos-v33';
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 
