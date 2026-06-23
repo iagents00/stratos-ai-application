@@ -46,12 +46,32 @@ export function zoomEventsOf(lead) {
     const t = targetStage(e.action);
     if (!t) continue;
     const at = e.completed_at || e.doneAt || null;
-    if (t === ZOOM_SCHEDULED_STAGE && !scheduled) scheduled = { by: e.by || lead.asesor, at };
-    if (ZOOM_DONE_STAGES.has(t) && !done)          done      = { by: e.by || lead.asesor, at };
+    if (t === ZOOM_SCHEDULED_STAGE && !scheduled) scheduled = { by: e.by || lead.asesor, at, to: t, inferred: false };
+    if (ZOOM_DONE_STAGES.has(t) && !done)          done      = { by: e.by || lead.asesor, at, to: t, inferred: false };
   }
-  if (!scheduled && lead.st === ZOOM_SCHEDULED_STAGE) scheduled = { by: lead.asesor, at: lead.created_at };
-  if (!done && ZOOM_DONE_STAGES.has(lead.st))         done      = { by: lead.asesor, at: lead.created_at };
+  // Inferencia: la etapa ACTUAL ya es de Zoom pero no hay movimiento registrado
+  // (el asesor no marcó el paso). Lo deducimos y lo señalamos como `inferred`,
+  // para recuperar los Zooms mal registrados sin inventar datos.
+  if (!scheduled && lead.st === ZOOM_SCHEDULED_STAGE) scheduled = { by: lead.asesor, at: lead.created_at, to: lead.st, inferred: true };
+  if (!done && ZOOM_DONE_STAGES.has(lead.st))         done      = { by: lead.asesor, at: lead.created_at, to: lead.st, inferred: true };
   return { scheduled, done };
+}
+
+/**
+ * Aplana el historial de movimientos de Zoom de toda la cartera: una fila por
+ * hito (agendado y/o realizado) por lead. Cada fila trae el lead, el tipo, quién
+ * lo dio, la fecha y si fue inferido (etapa actual implica Zoom, sin movimiento
+ * registrado). Es la evidencia cruda para visualizar TODOS los que pasaron por
+ * Zoom agendado o realizado, aunque hoy estén en una etapa posterior.
+ */
+export function zoomMovements(leadsData) {
+  const out = [];
+  for (const l of leadsData) {
+    const { scheduled, done } = zoomEventsOf(l);
+    if (scheduled) out.push({ lead: l, kind: "scheduled", by: scheduled.by, at: scheduled.at, inferred: scheduled.inferred });
+    if (done)      out.push({ lead: l, kind: "done",      by: done.by,      at: done.at,      inferred: done.inferred });
+  }
+  return out;
 }
 
 // ¿El evento (por su fecha) cae dentro del período seleccionado?
