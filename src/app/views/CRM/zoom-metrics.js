@@ -24,12 +24,18 @@ export const ZOOM_DONE_STAGES = new Set([
   "Zoom Concretado", "Seguimiento", "Apartó", "Visita Agendada", "Cierre", "Postventa",
 ]);
 export const ZOOM_SCHEDULED_STAGE = "Zoom Agendado";
+// Set de un solo elemento para reutilizar el helper genérico milestoneOf.
+const ZOOM_SCHEDULED_STAGES = new Set([ZOOM_SCHEDULED_STAGE]);
 
-// Etapas "activas post-Zoom" (cliente en proceso de cierre, ya pasó el Zoom y no
-// es terminal). Fuente única para que todos los paneles cuenten lo mismo. Excluye
-// "Zoom Concretado" (se consolidó en Seguimiento post-Mayo 2026) y "Postventa".
+// Hitos posteriores al Zoom (funnel Realizado → Recorrido → Cierre).
+export const RECORRIDO_STAGES = new Set(["Visita Agendada"]);              // visita/recorrido dado
+export const CIERRE_STAGES    = new Set(["Apartó", "Cierre", "Postventa"]); // milestone de cierre
+
+// Etapas "activas post-Zoom" (cliente que ya hizo el Zoom y sigue activo en el
+// cierre, no terminal). Fuente única para que todos los paneles cuenten igual.
+// INCLUYE "Zoom Concretado" (hay leads reales ahí); excluye solo "Postventa".
 export const ACTIVE_POST_ZOOM_STAGES = new Set([
-  "Seguimiento", "Apartó", "Visita Agendada", "Cierre",
+  "Zoom Concretado", "Seguimiento", "Apartó", "Visita Agendada", "Cierre",
 ]);
 
 // Crédito por defecto cuando no hay autor ni dueño (evita divergencias de conteo
@@ -44,28 +50,36 @@ function targetStage(action) {
 }
 
 /**
- * Para un lead, el PRIMER evento de historial que lo llevó a Zoom Agendado y a
- * una etapa post-Zoom, con su autor (`by` = quién lo dio) y fecha. Si no hay
- * historial pero la etapa ACTUAL ya es de Zoom (leads sembrados o pre-historial),
- * cae al dueño actual con la fecha de creación.
+ * Hito de un lead respecto a un conjunto de etapas: el PRIMER evento de historial
+ * que lo llevó a una etapa de `stageSet`, con su autor (`by` = quién lo movió) y
+ * fecha. Si no hay evento pero la etapa ACTUAL ya está en el set, se infiere
+ * (`inferred:true`) y se acredita al dueño actual con la fecha de creación.
+ * Devuelve { by, at, to, inferred } o null. Base común de toda la métrica de Zoom.
  */
-export function zoomEventsOf(lead) {
+export function milestoneOf(lead, stageSet) {
   const hist = Array.isArray(lead.actionHistory) ? lead.actionHistory : [];
-  let scheduled = null, done = null;
   for (const e of hist) {
     if (!e || e.type !== "etapa") continue;
     const t = targetStage(e.action);
-    if (!t) continue;
-    const at = e.completed_at || e.doneAt || null;
-    if (t === ZOOM_SCHEDULED_STAGE && !scheduled) scheduled = { by: e.by || lead.asesor || NO_OWNER, at, to: t, inferred: false };
-    if (ZOOM_DONE_STAGES.has(t) && !done)          done      = { by: e.by || lead.asesor || NO_OWNER, at, to: t, inferred: false };
+    if (t && stageSet.has(t)) {
+      return { by: e.by || lead.asesor || NO_OWNER, at: e.completed_at || e.doneAt || null, to: t, inferred: false };
+    }
   }
-  // Inferencia: la etapa ACTUAL ya es de Zoom pero no hay movimiento registrado
-  // (el asesor no marcó el paso). Lo deducimos y lo señalamos como `inferred`,
-  // para recuperar los Zooms mal registrados sin inventar datos.
-  if (!scheduled && lead.st === ZOOM_SCHEDULED_STAGE) scheduled = { by: lead.asesor || NO_OWNER, at: lead.created_at, to: lead.st, inferred: true };
-  if (!done && ZOOM_DONE_STAGES.has(lead.st))         done      = { by: lead.asesor || NO_OWNER, at: lead.created_at, to: lead.st, inferred: true };
-  return { scheduled, done };
+  if (stageSet.has(lead.st)) {
+    return { by: lead.asesor || NO_OWNER, at: lead.created_at, to: lead.st, inferred: true };
+  }
+  return null;
+}
+
+/**
+ * { scheduled, done } de un lead: hito de "Zoom agendado" y de "Zoom realizado"
+ * (Concretado o etapa posterior). Cada uno { by, at, to, inferred } o null.
+ */
+export function zoomEventsOf(lead) {
+  return {
+    scheduled: milestoneOf(lead, ZOOM_SCHEDULED_STAGES),
+    done:      milestoneOf(lead, ZOOM_DONE_STAGES),
+  };
 }
 
 /**
