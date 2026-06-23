@@ -27,6 +27,7 @@ import {
 import { P, LP, font, fontDisp, STAGES } from "../../../design-system/tokens";
 import { G, KPI, Pill, Ico, ChipSelect } from "../../SharedComponents";
 import { parseBudget, formatBudget, buildTelegramSummary, fmtNow, genId, nowLocalDateTime } from "../../../lib/utils";
+import { zoomEventsOf } from "./zoom-metrics";
 import { StratosAtom, StratosAtomHex } from "../../components/Logo";
 import { AI_AGENTS, AI_AGENT_LIST } from "../../constants/agents";
 import { stgC } from "../../constants/crm";
@@ -3697,6 +3698,15 @@ const NotesModal = ({ lead, onClose, onSave, onUpdate, onSwitchTab, onShowHistor
                         T={T} isLight={isLight} placeholder="300k · 1.5M" emptyText="Sin presupuesto"
                       />
                     </>
+                  )}
+                  {!!zoomEventsOf(lead).done && (
+                    <span title="Este cliente ya pasó por Zoom (concretado o etapa posterior)" style={{
+                      display: "inline-flex", alignItems: "center", gap: 4,
+                      fontSize: 10.5, fontWeight: 700, letterSpacing: "0.01em",
+                      color: "#10B981", background: "rgba(16,185,129,0.12)",
+                      border: "1px solid rgba(16,185,129,0.32)", padding: "2px 9px",
+                      borderRadius: 99, whiteSpace: "nowrap",
+                    }}><CheckCircle2 size={11} strokeWidth={2.5} /> Zoom Realizado</span>
                   )}
                 </div>
               </div>
