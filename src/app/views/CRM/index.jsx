@@ -5688,22 +5688,26 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
 }
 
 const ZoomSchedulingModal = ({ open, lead, isNewLead = false, onClose, onConfirm, T = P }) => {
-  const [dateVal, setDateVal] = useState("");
-  const [actionText, setActionText] = useState("Zoom");
+  const [dateVal, setDateVal] = useState(""); // "YYYY-MM-DD"
+  const [timeVal, setTimeVal] = useState(""); // "HH:MM"
   const isLight = T !== P;
 
   useEffect(() => {
     if (open) {
       setDateVal("");
-      setActionText("Zoom");
+      setTimeVal("");
     }
   }, [open]);
 
   if (!open || !lead) return null;
 
+  // Fecha y hora son campos separados; los unimos al formato que ya espera el
+  // resto del flujo (igual que un input datetime-local): "YYYY-MM-DDTHH:MM",
+  // en hora local del asesor. La "próxima acción" se fija a "Zoom" por defecto.
+  const canConfirm = !!dateVal && !!timeVal;
   const handleConfirm = () => {
-    if (!dateVal) return;
-    onConfirm(dateVal, actionText);
+    if (!canConfirm) return;
+    onConfirm(`${dateVal}T${timeVal}`, "Zoom");
   };
 
   const modalBg = isLight ? "#FFFFFF" : "#111318";
@@ -5763,43 +5767,42 @@ const ZoomSchedulingModal = ({ open, lead, isNewLead = false, onClose, onConfirm
             Para {isNewLead ? "registrar a" : "mover a"} <strong style={{ color: T.txt }}>{lead.n || lead.name}</strong> {isNewLead ? "en" : "a"} la etapa de <strong style={{ color: "#3B82F6" }}>Zoom Agendado</strong>, es obligatorio definir la fecha y hora de la sesión.
           </p>
 
-          {/* Fecha y Hora Input */}
-          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-            <label style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: T.txt3 }}>
-              Fecha y Hora del Zoom *
-            </label>
-            <input
-              type="datetime-local"
-              value={dateVal}
-              onChange={e => setDateVal(e.target.value)}
-              style={{
-                width: "100%", padding: "10px 12px", borderRadius: 8,
-                background: inputBg, border: `1px solid ${T.border}`,
-                color: T.txt, fontSize: 13, fontFamily: font,
-                outline: "none", cursor: "pointer",
-                boxSizing: "border-box",
-              }}
-            />
-          </div>
-
-          {/* Próxima Acción Input */}
-          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-            <label style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: T.txt3 }}>
-              Próxima Acción
-            </label>
-            <input
-              type="text"
-              value={actionText}
-              onChange={e => setActionText(e.target.value)}
-              placeholder="Ej: Zoom, Asistir a Zoom..."
-              style={{
-                width: "100%", padding: "10px 12px", borderRadius: 8,
-                background: inputBg, border: `1px solid ${T.border}`,
-                color: T.txt, fontSize: 13, fontFamily: font,
-                outline: "none",
-                boxSizing: "border-box",
-              }}
-            />
+          {/* Fecha y Hora — campos separados */}
+          <div style={{ display: "flex", gap: 12 }}>
+            <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 6 }}>
+              <label style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: T.txt3 }}>
+                Fecha del Zoom *
+              </label>
+              <input
+                type="date"
+                value={dateVal}
+                onChange={e => setDateVal(e.target.value)}
+                style={{
+                  width: "100%", padding: "10px 12px", borderRadius: 8,
+                  background: inputBg, border: `1px solid ${T.border}`,
+                  color: T.txt, fontSize: 13, fontFamily: font,
+                  outline: "none", cursor: "pointer",
+                  boxSizing: "border-box",
+                }}
+              />
+            </div>
+            <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 6 }}>
+              <label style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: T.txt3 }}>
+                Hora del Zoom *
+              </label>
+              <input
+                type="time"
+                value={timeVal}
+                onChange={e => setTimeVal(e.target.value)}
+                style={{
+                  width: "100%", padding: "10px 12px", borderRadius: 8,
+                  background: inputBg, border: `1px solid ${T.border}`,
+                  color: T.txt, fontSize: 13, fontFamily: font,
+                  outline: "none", cursor: "pointer",
+                  boxSizing: "border-box",
+                }}
+              />
+            </div>
           </div>
         </div>
 
@@ -5827,19 +5830,19 @@ const ZoomSchedulingModal = ({ open, lead, isNewLead = false, onClose, onConfirm
           <button
             type="button"
             onClick={handleConfirm}
-            disabled={!dateVal}
+            disabled={!canConfirm}
             style={{
               padding: "9px 18px", borderRadius: 8,
               border: "none",
-              background: dateVal ? (T.accent || "#3B82F6") : (isLight ? "rgba(15,23,42,0.06)" : "rgba(255,255,255,0.06)"),
-              color: dateVal ? "#FFFFFF" : T.txt3,
+              background: canConfirm ? (T.accent || "#3B82F6") : (isLight ? "rgba(15,23,42,0.06)" : "rgba(255,255,255,0.06)"),
+              color: canConfirm ? "#FFFFFF" : T.txt3,
               fontSize: 12, fontWeight: 700, fontFamily: font,
-              cursor: dateVal ? "pointer" : "not-allowed",
+              cursor: canConfirm ? "pointer" : "not-allowed",
               transition: "all 0.15s",
-              boxShadow: dateVal ? `0 4px 12px ${(T.accent || "#3B82F6")}33` : "none",
+              boxShadow: canConfirm ? `0 4px 12px ${(T.accent || "#3B82F6")}33` : "none",
             }}
-            onMouseEnter={e => { if (dateVal) e.currentTarget.style.opacity = 0.9; }}
-            onMouseLeave={e => { if (dateVal) e.currentTarget.style.opacity = 1; }}
+            onMouseEnter={e => { if (canConfirm) e.currentTarget.style.opacity = 0.9; }}
+            onMouseLeave={e => { if (canConfirm) e.currentTarget.style.opacity = 1; }}
           >
             Confirmar Zoom
           </button>
