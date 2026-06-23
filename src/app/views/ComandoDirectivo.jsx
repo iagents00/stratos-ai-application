@@ -34,6 +34,7 @@ import { useClient } from "../../hooks/useClient";
 import { buildExecutivePdf, evolutionCols, asesorCols } from "./ComandoDirectivo.pdf";
 import ZoomControl from "./ZoomControl";
 import ZoomBoard from "./CRM/ZoomBoard";
+import ProductividadTab from "./ProductividadTab";
 import { useZoomAgendados } from "../../hooks/useZoomAgendados";
 
 const ICONS_BY_KEY = {
@@ -749,8 +750,9 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
           background: headerBg, border: `1px solid ${rowBorder}`, alignSelf: "flex-start",
         }}>
           {[
-            { id: "indicadores", label: "Filtro 1 · Leads" },
-            { id: "zooms", label: "Filtro 2 · Zooms" },
+            { id: "indicadores", label: "Indicadores · Leads" },
+            { id: "zooms", label: "Indicadores · Zooms" },
+            { id: "productividad", label: "Indicadores · Productividad" },
           ].map(t => {
             const active = tab === t.id;
             return (
@@ -1213,6 +1215,10 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
               arriba ya cubre la métrica desde el pipeline. */}
           {!zoomTableMissing && <ZoomControl theme={isLight ? "light" : "dark"} />}
         </div>
+      )}
+
+      {showZoomTab && tab === "productividad" && (
+        <ProductividadTab T={T} isLight={isLight} />
       )}
     </div>
   );
