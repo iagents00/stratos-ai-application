@@ -146,16 +146,19 @@ export default function ZoomBoard({ leadsData = [], theme = "dark", onOpenLead =
 
       {/* Tabla por presentador */}
       <div>
-        <h3 style={{ margin: "0 0 10px", fontSize: 16, fontWeight: 600, fontFamily: fontDisp, color: T.txt }}>
-          Zooms por presentador
+        <h3 style={{ margin: "0 0 2px", fontSize: 16, fontWeight: 600, fontFamily: fontDisp, color: T.txt }}>
+          Productividad por asesor
         </h3>
+        <p style={{ margin: "0 0 10px", fontSize: 11.5, color: T.txt3, fontFamily: font }}>
+          <strong style={{ color: T.txt2 }}>Agendó</strong> = quién consiguió la cita (liner) · <strong style={{ color: T.txt2 }}>Presentó</strong> = quién corrió el Zoom.
+        </p>
         <div style={{ borderRadius: 14, background: isLight ? "rgba(255,255,255,0.6)" : "rgba(255,255,255,0.02)", border: `1px solid ${rowBorder}`, overflow: "hidden", overflowX: "auto" }}>
           <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 480 }}>
             <thead>
               <tr style={{ background: headerBg }}>
-                <th style={{ ...thStyle(T), textAlign: "left", paddingLeft: 16 }}>Presentador</th>
-                <th style={thStyle(T)}>Agendados</th>
-                <th style={thStyle(T)}>Realizados</th>
+                <th style={{ ...thStyle(T), textAlign: "left", paddingLeft: 16 }}>Asesor</th>
+                <th style={thStyle(T)}>Agendó (Liner)</th>
+                <th style={thStyle(T)}>Presentó</th>
                 <th style={thStyle(T)}>Conversión</th>
               </tr>
             </thead>

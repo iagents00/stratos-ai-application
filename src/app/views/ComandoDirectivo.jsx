@@ -34,6 +34,7 @@ import { useClient } from "../../hooks/useClient";
 import { buildExecutivePdf, evolutionCols, asesorCols } from "./ComandoDirectivo.pdf";
 import ZoomControl from "./ZoomControl";
 import ZoomBoard from "./CRM/ZoomBoard";
+import { useZoomAgendados } from "../../hooks/useZoomAgendados";
 
 const ICONS_BY_KEY = {
   assigned:       Users,
@@ -206,6 +207,13 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
   // Comando Directivo igual que siempre, sin barra de pestañas.
   const showZoomTab = !!clientConfig?.features?.zoomControl;
   const [tab, setTab] = useState("indicadores");
+
+  // El panel CRUD operativo (ZoomControl) solo tiene sentido si la tabla
+  // zoom_agendados existe (migración 027). Mientras no esté aplicada en este
+  // proyecto, lo ocultamos: el tablero ZoomBoard ya da la métrica real desde el
+  // pipeline, así que un panel vacío + aviso de migración solo confunde.
+  const { error: zoomTableError } = useZoomAgendados();
+  const zoomTableMissing = zoomTableError === "missing_table";
 
   const granularity = GRANULARITIES.find(g => g.id === granularityId) || GRANULARITIES[1];
   const bucketCount = bucketCounts[granularityId] ?? granularity.defaultCount;
@@ -1198,9 +1206,10 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
         <div style={{ display: "flex", flexDirection: "column", gap: 28 }}>
           {/* Métrica real de Zooms (pipeline + historial) — siempre con datos. */}
           <ZoomBoard leadsData={leadsData} theme={isLight ? "light" : "dark"} />
-          {/* Panel operativo CRUD sobre zoom_agendados (requiere migración 027;
-              vacío hasta que se aplique en producción). */}
-          <ZoomControl theme={isLight ? "light" : "dark"} />
+          {/* Panel operativo CRUD sobre zoom_agendados — solo si la tabla existe
+              (migración 027 aplicada). Si no, no lo mostramos: el ZoomBoard de
+              arriba ya cubre la métrica desde el pipeline. */}
+          {!zoomTableMissing && <ZoomControl theme={isLight ? "light" : "dark"} />}
         </div>
       )}
     </div>
