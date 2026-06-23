@@ -105,7 +105,10 @@
 // v34 — fix loop de recarga en iOS ("Ocurrió un problema varias veces"): el
 //   forceReload de main.jsx ahora tiene guard cross-reload (sessionStorage) para
 //   no recargar en loop cuando iOS dispara controllerchange en cada carga.
-const CACHE_VERSION = 'stratos-v34';
+// v35 — modal "Programar Zoom Agendado": campos fecha/hora separados, sin
+//   "Próxima acción", y disponible también al crear cliente nuevo en esa etapa.
+//   Bump para forzar que los navegadores tomen el bundle nuevo.
+const CACHE_VERSION = 'stratos-v35';
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 
