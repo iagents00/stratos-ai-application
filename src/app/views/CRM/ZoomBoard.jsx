@@ -98,10 +98,10 @@ export default function ZoomBoard({ leadsData = [], theme = "dark", onOpenLead =
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
         <div>
           <h2 style={{ margin: 0, fontSize: 22, fontWeight: 700, fontFamily: fontDisp, color: T.txt, letterSpacing: "-0.025em" }}>
-            Control de Zooms
+            Filtro 2 · Control de Zooms
           </h2>
           <p style={{ margin: "4px 0 0", fontSize: 12.5, color: T.txt3, fontFamily: font }}>
-            Métrica real de Zooms del equipo · derivada del pipeline e historial · acreditada a quién dio el Zoom.
+            Segundo filtro comercial · desde el Zoom: quién lo dio, estado actual del cliente y siguiente paso · acreditado a quién dio el Zoom.
           </p>
         </div>
         <div role="tablist" aria-label="Período" style={{ display: "flex", gap: 4, padding: 3, borderRadius: 10, background: headerBg, border: `1px solid ${rowBorder}` }}>
