@@ -1513,6 +1513,7 @@ export default function App() {
       <MetaPanel
         open={metaOpen}
         onClose={() => setMetaOpen(false)}
+        user={user}
         metaTab={metaTab}
         setMetaTab={setMetaTab}
         metaActions={metaActions}
