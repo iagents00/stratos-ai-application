@@ -14,10 +14,10 @@
  * ─────────────────────────────────────────────────────────────────────────────
  */
 import { useMemo, useState } from "react";
-import { CheckCircle2, CalendarDays, TrendingUp, Activity } from "lucide-react";
+import { CheckCircle2, CalendarDays, TrendingUp, Activity, History, ChevronDown } from "lucide-react";
 import { P, LP, font, fontDisp, STAGE_COLORS } from "../../../design-system/tokens";
 import { PERIODS, periodStart } from "./AdvisorMetrics";
-import { zoomEventsOf, eventInPeriod, ZOOM_DONE_STAGES } from "./zoom-metrics";
+import { zoomEventsOf, eventInPeriod, ZOOM_DONE_STAGES, zoomMovements } from "./zoom-metrics";
 
 const fmtFecha = (iso) => {
   if (!iso) return "—";
@@ -31,8 +31,24 @@ export default function ZoomBoard({ leadsData = [], theme = "dark", onOpenLead =
   const T = isLight ? LP : P;
   const [periodId, setPeriodId] = useState("month");
   const [presentadorFilter, setPresentadorFilter] = useState("__all__");
+  const [histOpen, setHistOpen] = useState(false);
+  const [histKind, setHistKind] = useState("all"); // all | scheduled | done
 
   const startTs = useMemo(() => periodStart(periodId), [periodId]);
+
+  // Historial de movimientos de Zoom (toda la cartera): cada lead que pasó por
+  // Zoom agendado y/o realizado, con fecha, quién lo dio y si fue inferido de la
+  // etapa actual (registro faltante). Respeta el período y el filtro de presentador.
+  const historial = useMemo(() => {
+    let rows = zoomMovements(leadsData)
+      .filter(m => eventInPeriod(m.at, startTs))
+      .filter(m => histKind === "all" || m.kind === histKind)
+      .filter(m => presentadorFilter === "__all__" || (m.by || m.lead.asesor) === presentadorFilter);
+    rows.sort((a, b) => (b.at ? new Date(b.at).getTime() : 0) - (a.at ? new Date(a.at).getTime() : 0));
+    return rows;
+  }, [leadsData, startTs, histKind, presentadorFilter]);
+
+  const inferidos = useMemo(() => historial.filter(m => m.inferred).length, [historial]);
 
   // Agregación por presentador (quién dio el Zoom) dentro del período.
   const { byPresenter, totals, presenters } = useMemo(() => {
@@ -242,6 +258,93 @@ export default function ZoomBoard({ leadsData = [], theme = "dark", onOpenLead =
         </div>
         {onOpenLead && clientes.length > 0 && (
           <p style={{ margin: "8px 4px 0", fontSize: 10.5, color: T.txt3, fontFamily: font }}>Toca un cliente para abrir su expediente, notas e historial.</p>
+        )}
+      </div>
+
+      {/* ── Historial de movimientos de Zoom (colapsable) ─────────────────── */}
+      <div>
+        <button
+          onClick={() => setHistOpen(o => !o)}
+          style={{
+            display: "flex", alignItems: "center", gap: 8, width: "100%",
+            padding: "12px 14px", borderRadius: 12, cursor: "pointer",
+            background: headerBg, border: `1px solid ${rowBorder}`, color: T.txt,
+            fontFamily: fontDisp, fontWeight: 600, fontSize: 14,
+          }}
+        >
+          <History size={15} color={accent} strokeWidth={2.2} />
+          <span>Historial de movimientos de Zoom</span>
+          <span style={{ fontSize: 12, fontWeight: 500, color: T.txt3 }}>· {historial.length} movimientos{inferidos ? ` · ${inferidos} inferidos` : ""}</span>
+          <ChevronDown size={16} color={T.txt3} style={{ marginLeft: "auto", transform: histOpen ? "rotate(180deg)" : "none", transition: "transform 0.15s" }} />
+        </button>
+
+        {histOpen && (
+          <div style={{ marginTop: 10 }}>
+            <div role="tablist" aria-label="Tipo" style={{ display: "inline-flex", gap: 4, padding: 3, borderRadius: 10, background: headerBg, border: `1px solid ${rowBorder}`, marginBottom: 10 }}>
+              {[{ id: "all", l: "Todos" }, { id: "scheduled", l: "Agendados" }, { id: "done", l: "Realizados" }].map(t => {
+                const active = histKind === t.id;
+                return (
+                  <button key={t.id} onClick={() => setHistKind(t.id)} style={{
+                    padding: "6px 14px", borderRadius: 7, border: "none", cursor: "pointer",
+                    background: active ? accent : "transparent",
+                    color: active ? (isLight ? "#0B1220" : "#06080F") : T.txt2,
+                    fontSize: 12, fontWeight: active ? 700 : 500, fontFamily: fontDisp,
+                  }}>{t.l}</button>
+                );
+              })}
+            </div>
+
+            <div style={{ borderRadius: 14, background: isLight ? "rgba(255,255,255,0.6)" : "rgba(255,255,255,0.02)", border: `1px solid ${rowBorder}`, overflow: "hidden", overflowX: "auto", maxHeight: 460, overflowY: "auto" }}>
+              <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 720 }}>
+                <thead>
+                  <tr style={{ background: headerBg }}>
+                    <th style={{ ...thStyle(T), textAlign: "left", paddingLeft: 16 }}>Cliente</th>
+                    <th style={thStyle(T)}>Movimiento</th>
+                    <th style={thStyle(T)}>Quién</th>
+                    <th style={thStyle(T)}>Fecha</th>
+                    <th style={thStyle(T)}>Etapa actual</th>
+                    <th style={thStyle(T)}>Registro</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {historial.length === 0 && (
+                    <tr><td colSpan={6} style={{ padding: 26, textAlign: "center", color: T.txt3, fontFamily: font, fontSize: 13 }}>Sin movimientos de Zoom en este período.</td></tr>
+                  )}
+                  {historial.map((m, i) => {
+                    const esRealizado = m.kind === "done";
+                    const movColor = esRealizado ? "#10B981" : "#2563EB";
+                    const movLabel = esRealizado ? "Realizado" : "Agendado";
+                    return (
+                      <tr key={(m.lead.id || i) + m.kind}
+                        onClick={onOpenLead ? () => onOpenLead(m.lead) : undefined}
+                        style={{ borderTop: i === 0 ? "none" : `1px solid ${rowBorder}`, cursor: onOpenLead ? "pointer" : "default" }}
+                        onMouseEnter={onOpenLead ? (e) => { e.currentTarget.style.background = headerBg; } : undefined}
+                        onMouseLeave={onOpenLead ? (e) => { e.currentTarget.style.background = "transparent"; } : undefined}
+                      >
+                        <td style={{ padding: cellPad, paddingLeft: 16, fontFamily: fontDisp, fontWeight: 600, color: T.txt, fontSize: 13 }}>{m.lead.name || m.lead.n || "(sin nombre)"}</td>
+                        <td style={{ padding: cellPad, textAlign: "center", fontSize: 12 }}>
+                          <span style={{ padding: "3px 9px", borderRadius: 999, fontFamily: fontDisp, fontWeight: 600, fontSize: 11, color: movColor, background: `${movColor}1A` }}>{movLabel}</span>
+                        </td>
+                        <td style={{ padding: cellPad, textAlign: "center", fontFamily: font, color: T.txt2, fontSize: 12.5 }}>{m.by || m.lead.asesor || "—"}</td>
+                        <td style={{ padding: cellPad, textAlign: "center", fontFamily: font, color: T.txt2, fontSize: 12.5, whiteSpace: "nowrap" }}>{fmtFecha(m.at)}</td>
+                        <td style={{ padding: cellPad, textAlign: "center", fontSize: 12 }}>
+                          <span style={{ padding: "3px 9px", borderRadius: 999, fontFamily: fontDisp, fontWeight: 600, fontSize: 11, color: STAGE_COLORS[m.lead.st] || T.txt3, background: `${STAGE_COLORS[m.lead.st] || T.txt3}1A` }}>{m.lead.st || "—"}</span>
+                        </td>
+                        <td style={{ padding: cellPad, textAlign: "center", fontSize: 11.5 }}>
+                          {m.inferred
+                            ? <span title="La etapa actual implica Zoom, pero el movimiento no se registró. Lo inferimos." style={{ color: "#F59E0B", fontFamily: fontDisp, fontWeight: 600 }}>Inferido</span>
+                            : <span style={{ color: T.txt3, fontFamily: font }}>Registrado</span>}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+            <p style={{ margin: "8px 4px 0", fontSize: 10.5, color: T.txt3, fontFamily: font, lineHeight: 1.5 }}>
+              <strong style={{ color: "#F59E0B" }}>Inferido</strong> = la etapa actual del lead implica que hubo Zoom, pero el asesor no marcó el movimiento. Lo recuperamos de la etapa para no perder la métrica; conviene que se registre correctamente.
+            </p>
+          </div>
         )}
       </div>
     </div>
