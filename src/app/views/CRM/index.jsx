@@ -1461,6 +1461,12 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
 
   const addNewLead = async () => {
     if (!newLead.n.trim()) return;
+    // Un admin DEBE asignar asesor: si no, el lead queda huérfano (sin dueño,
+    // sin recordatorios proactivos). Bloqueamos el registro y avisamos.
+    if (isAdminRole && !String(newLead.asesor || "").trim()) {
+      showToast("Asigná un asesor para registrar el cliente.", "error");
+      return;
+    }
     // Guardia idempotente síncrona: si ya hay un submit en vuelo, ignoramos.
     // useRef se actualiza al instante; useState quedaría desfasado un render
     // y dejaría pasar todos los clics rápidos.
@@ -3177,6 +3183,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
               <div style={{ gridColumn: "1 / -1" }}>
                 <label style={labelStyle}>
                   <Users size={9} color={T.txt3} /> Asesor asignado
+                  {isAdminRole && <span style={{ color: "#F87171", fontWeight: 700 }}> *</span>}
                 </label>
                 <ClickDropdown
                   value={newLead.asesor || ""}
@@ -3188,6 +3195,11 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                   createLabel="Nuevo asesor"
                   T={T} isLight={isLight}
                 />
+                {isAdminRole && !String(newLead.asesor || "").trim() && (
+                  <div style={{ marginTop: 6, fontSize: 11, color: "#F87171", fontFamily: font, lineHeight: 1.35 }}>
+                    Obligatorio: asigná un asesor. Si no, el cliente queda sin dueño y sin recordatorios.
+                  </div>
+                )}
               </div>
 
               {/* Etapa — selector compacto con menú desplegable */}
@@ -3356,7 +3368,9 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
               // Si is_mine, no bloqueamos (es decisión del asesor crear otro lead
               // con el mismo contacto — quizá es un caso distinto).
               const dupBlocks = !!(duplicateMatch && !duplicateOverride && !duplicateMatch.is_mine);
-              const canSubmit = newLead.n.trim() && !dupBlocks;
+              // Un admin debe asignar asesor (no dejar leads huérfanos sin dueño).
+              const asesorMissing = isAdminRole && !String(newLead.asesor || "").trim();
+              const canSubmit = newLead.n.trim() && !dupBlocks && !asesorMissing;
               const primaryBg = canSubmit
                 ? (isLight
                     ? `linear-gradient(135deg, ${T.accent} 0%, #14B892 100%)`
@@ -3388,7 +3402,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
               <button
                 onClick={addNewLead}
                 disabled={!canSubmit || submittingLead}
-                title={dupBlocks ? "Confirma el aviso de duplicado antes de registrar" : undefined}
+                title={dupBlocks ? "Confirma el aviso de duplicado antes de registrar" : (asesorMissing ? "Asigná un asesor para registrar el cliente" : undefined)}
                 style={{
                 flex: 2.4, height: 40, borderRadius: 10,
                 background: primaryBg,
@@ -3420,7 +3434,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                 }}
               >
                 <UserCheck size={13} strokeWidth={2.4} />
-                {dupBlocks ? "Ya existe en el CRM" : "Registrar cliente"}
+                {dupBlocks ? "Ya existe en el CRM" : (asesorMissing ? "Asigná un asesor" : "Registrar cliente")}
               </button>
             </div>
               );
