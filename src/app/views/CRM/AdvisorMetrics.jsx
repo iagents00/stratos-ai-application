@@ -16,15 +16,11 @@
 import { useMemo, useState } from "react";
 import { Users, Phone, BadgeCheck, CalendarDays, CheckCircle2, Activity, RefreshCw } from "lucide-react";
 import { P, LP, font, fontDisp, STAGES, STAGE_COLORS } from "../../../design-system/tokens";
-import { zoomEventsOf, eventInPeriod } from "./zoom-metrics";
+import { zoomEventsOf, eventInPeriod, ACTIVE_POST_ZOOM_STAGES } from "./zoom-metrics";
 
 const STAGE_INDEX = Object.fromEntries(STAGES.map((s, i) => [s, i]));
 const IDX_PRIMER_CONTACTO = STAGE_INDEX["Segundo Intento"];
 const IDX_SEGUIMIENTO     = STAGE_INDEX["Seguimiento"];
-// Post-Mayo 2026 "Zoom Concretado" se consolidó en "Seguimiento": cualquier
-// lead en Seguimiento ya tuvo su Zoom (es la etapa donde corre la negociación
-// + proyectos + corridas + dudas). Usamos ese índice para "activos post-Zoom".
-const IDX_POST_ZOOM       = STAGE_INDEX["Seguimiento"];
 
 // La métrica de Zooms (histórica, acreditada a quién la dio) vive en
 // ./zoom-metrics.js — fuente única compartida con ZoomBoard.
@@ -112,11 +108,8 @@ export const INDICATORS = [
     key: "activePostZoom",
     label: "Activos",
     icon: Activity,
-    title: "Activos post-Zoom — etapa ≥ Seguimiento, excluye Postventa.",
-    compute: (leads) => leads.filter(l =>
-      stageIdx(l.st) >= IDX_POST_ZOOM
-      && l.st !== "Postventa"
-    ).length,
+    title: "Activos post-Zoom — hizo el Zoom y sigue activo (Zoom Concretado / Seguimiento / Apartó / Visita / Cierre). Mismo criterio que Filtro 2.",
+    compute: (leads) => leads.filter(l => ACTIVE_POST_ZOOM_STAGES.has(l.st)).length,
   },
   {
     key: "followUps",
