@@ -33,6 +33,7 @@ import AdvisorMetrics, { INDICATORS } from "./CRM/AdvisorMetrics";
 import { useClient } from "../../hooks/useClient";
 import { buildExecutivePdf, evolutionCols, asesorCols } from "./ComandoDirectivo.pdf";
 import ZoomControl from "./ZoomControl";
+import ZoomBoard from "./CRM/ZoomBoard";
 
 const ICONS_BY_KEY = {
   assigned:       Users,
@@ -1194,7 +1195,13 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
       )}
 
       {showZoomTab && tab === "zooms" && (
-        <ZoomControl theme={isLight ? "light" : "dark"} />
+        <div style={{ display: "flex", flexDirection: "column", gap: 28 }}>
+          {/* Métrica real de Zooms (pipeline + historial) — siempre con datos. */}
+          <ZoomBoard leadsData={leadsData} theme={isLight ? "light" : "dark"} />
+          {/* Panel operativo CRUD sobre zoom_agendados (requiere migración 027;
+              vacío hasta que se aplique en producción). */}
+          <ZoomControl theme={isLight ? "light" : "dark"} />
+        </div>
       )}
     </div>
   );
