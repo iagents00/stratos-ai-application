@@ -17,7 +17,7 @@ import { useMemo, useState } from "react";
 import { CheckCircle2, CalendarDays, TrendingUp, Activity, History, ChevronDown } from "lucide-react";
 import { P, LP, font, fontDisp, STAGE_COLORS } from "../../../design-system/tokens";
 import { PERIODS, periodStart } from "./AdvisorMetrics";
-import { zoomEventsOf, eventInPeriod, ZOOM_DONE_STAGES, zoomMovements } from "./zoom-metrics";
+import { zoomEventsOf, eventInPeriod, ACTIVE_POST_ZOOM_STAGES, zoomMovements } from "./zoom-metrics";
 
 const fmtFecha = (iso) => {
   if (!iso) return "—";
@@ -54,29 +54,35 @@ export default function ZoomBoard({ leadsData = [], theme = "dark", onOpenLead =
   const { byPresenter, totals, presenters } = useMemo(() => {
     const map = {}; // person -> { scheduled, done }
     const bump = (p, k) => { (map[p] = map[p] || { scheduled: 0, done: 0 })[k]++; };
-    let tScheduled = 0, tDone = 0, tDoneInferred = 0;
+    let tScheduled = 0, tDone = 0, tDoneInferred = 0, tSchedAndDone = 0;
     for (const l of leadsData) {
       const { scheduled, done } = zoomEventsOf(l);
-      if (scheduled && eventInPeriod(scheduled.at, startTs)) { bump(scheduled.by || "—", "scheduled"); tScheduled++; }
-      if (done && eventInPeriod(done.at, startTs))           { bump(done.by || "—", "done"); tDone++; if (done.inferred) tDoneInferred++; }
+      if (scheduled && eventInPeriod(scheduled.at, startTs)) {
+        bump(scheduled.by, "scheduled"); tScheduled++;
+        if (done) tSchedAndDone++; // de los agendados, cuántos se realizaron
+      }
+      if (done && eventInPeriod(done.at, startTs))           { bump(done.by, "done"); tDone++; if (done.inferred) tDoneInferred++; }
     }
     const list = Object.entries(map)
       .map(([asesor, m]) => ({ asesor, ...m }))
       .sort((a, b) => b.done - a.done || b.scheduled - a.scheduled);
     return {
       byPresenter: list,
-      totals: { scheduled: tScheduled, done: tDone, doneInferred: tDoneInferred, doneRegistered: tDone - tDoneInferred },
+      totals: { scheduled: tScheduled, done: tDone, doneInferred: tDoneInferred, doneRegistered: tDone - tDoneInferred, schedAndDone: tSchedAndDone },
       presenters: list.map(r => r.asesor),
     };
   }, [leadsData, startTs]);
 
-  // Activos post-Zoom = etapa actual en una fase post-Zoom y no terminal.
+  // Activos post-Zoom = etapa actual en una fase post-Zoom activa (set compartido).
   const activosPostZoom = useMemo(
-    () => leadsData.filter(l => ZOOM_DONE_STAGES.has(l.st) && l.st !== "Postventa").length,
+    () => leadsData.filter(l => ACTIVE_POST_ZOOM_STAGES.has(l.st)).length,
     [leadsData],
   );
 
-  const conversion = totals.scheduled ? Math.round((totals.done / totals.scheduled) * 100) : 0;
+  // Conversión honesta: de los AGENDADOS, cuántos se realizaron (siempre ≤100%).
+  // No usamos done/scheduled total porque hay realizados inferidos sin agendado,
+  // que darían >100% y restarían credibilidad al tablero.
+  const conversion = totals.scheduled ? Math.round((totals.schedAndDone / totals.scheduled) * 100) : 0;
 
   // Lista cliente-por-cliente con Zoom realizado en el período.
   const clientes = useMemo(() => {
@@ -108,7 +114,7 @@ export default function ZoomBoard({ leadsData = [], theme = "dark", onOpenLead =
   const KPIS = [
     { key: "done",      label: "Zooms realizados",   value: totals.done,     icon: CheckCircle2, color: "#10B981", sub: totals.doneInferred ? `${totals.doneRegistered} registrados · ${totals.doneInferred} inferidos` : "pasaron por Zoom (histórico)" },
     { key: "scheduled", label: "Zooms agendados",    value: totals.scheduled,icon: CalendarDays, color: "#2563EB", sub: "llegaron a agendarse" },
-    { key: "conv",      label: "Conversión a Zoom",  value: `${conversion}%`,icon: TrendingUp,   color: accent,    sub: "realizados / agendados" },
+    { key: "conv",      label: "Conversión a Zoom",  value: `${conversion}%`,icon: TrendingUp,   color: accent,    sub: "de los agendados, % que se realizó" },
     { key: "active",    label: "Activos post-Zoom",  value: activosPostZoom, icon: Activity,     color: "#F59E0B", sub: "en cierre ahora" },
   ];
 
@@ -179,24 +185,19 @@ export default function ZoomBoard({ leadsData = [], theme = "dark", onOpenLead =
                 <th style={{ ...thStyle(T), textAlign: "left", paddingLeft: 16 }}>Asesor</th>
                 <th style={thStyle(T)}>Agendó (Liner)</th>
                 <th style={thStyle(T)}>Presentó</th>
-                <th style={thStyle(T)}>Conversión</th>
               </tr>
             </thead>
             <tbody>
               {byPresenter.length === 0 && (
-                <tr><td colSpan={4} style={{ padding: 26, textAlign: "center", color: T.txt3, fontFamily: font, fontSize: 13 }}>Sin Zooms en este período.</td></tr>
+                <tr><td colSpan={3} style={{ padding: 26, textAlign: "center", color: T.txt3, fontFamily: font, fontSize: 13 }}>Sin Zooms en este período.</td></tr>
               )}
-              {byPresenter.map((r, i) => {
-                const conv = r.scheduled ? Math.round((r.done / r.scheduled) * 100) : 0;
-                return (
+              {byPresenter.map((r, i) => (
                   <tr key={r.asesor} style={{ borderTop: i === 0 ? "none" : `1px solid ${rowBorder}` }}>
                     <td style={{ padding: cellPad, paddingLeft: 16, fontFamily: fontDisp, fontWeight: 600, color: T.txt, fontSize: 13 }}>{r.asesor}</td>
                     <td style={{ padding: cellPad, textAlign: "center", fontFamily: fontDisp, color: T.txt2, fontSize: 14 }}>{r.scheduled}</td>
                     <td style={{ padding: cellPad, textAlign: "center", fontFamily: fontDisp, fontWeight: 700, color: "#10B981", fontSize: 14 }}>{r.done}</td>
-                    <td style={{ padding: cellPad, textAlign: "center", fontFamily: fontDisp, color: T.txt2, fontSize: 13 }}>{conv}%</td>
                   </tr>
-                );
-              })}
+              ))}
             </tbody>
             {byPresenter.length > 0 && (
               <tfoot>
@@ -204,7 +205,6 @@ export default function ZoomBoard({ leadsData = [], theme = "dark", onOpenLead =
                   <td style={{ padding: cellPad, paddingLeft: 16, fontFamily: fontDisp, fontWeight: 700, color: T.txt2, fontSize: 12, textTransform: "uppercase", letterSpacing: "0.04em" }}>Total</td>
                   <td style={{ padding: cellPad, textAlign: "center", fontFamily: fontDisp, fontWeight: 700, color: accent, fontSize: 14 }}>{totals.scheduled}</td>
                   <td style={{ padding: cellPad, textAlign: "center", fontFamily: fontDisp, fontWeight: 700, color: accent, fontSize: 14 }}>{totals.done}</td>
-                  <td style={{ padding: cellPad, textAlign: "center", fontFamily: fontDisp, fontWeight: 700, color: accent, fontSize: 13 }}>{conversion}%</td>
                 </tr>
               </tfoot>
             )}
