@@ -749,8 +749,8 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
           background: headerBg, border: `1px solid ${rowBorder}`, alignSelf: "flex-start",
         }}>
           {[
-            { id: "indicadores", label: "Indicadores" },
-            { id: "zooms", label: "Control de Zooms" },
+            { id: "indicadores", label: "Filtro 1 · Leads" },
+            { id: "zooms", label: "Filtro 2 · Zooms" },
           ].map(t => {
             const active = tab === t.id;
             return (
@@ -772,10 +772,12 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
         <div>
           <h2 style={{ margin: 0, fontSize: 22, fontWeight: 700, fontFamily: fontDisp, color: T.txt, letterSpacing: "-0.025em" }}>
-            Comando Directivo
+            {showZoomTab ? "Filtro 1 · Control de Leads" : "Comando Directivo"}
           </h2>
           <p style={{ margin: "4px 0 0", fontSize: 12.5, color: T.txt3, fontFamily: font }}>
-            Indicadores ejecutivos del equipo · vista <strong style={{ color: T.txt2 }}>{granularity.label}</strong> · {rangeLeads.length} leads en el rango
+            {showZoomTab
+              ? <>Primer filtro comercial · del lead al Zoom (entrada → contacto → calificación → Zoom) · vista <strong style={{ color: T.txt2 }}>{granularity.label}</strong> · {rangeLeads.length} leads en el rango</>
+              : <>Indicadores ejecutivos del equipo · vista <strong style={{ color: T.txt2 }}>{granularity.label}</strong> · {rangeLeads.length} leads en el rango</>}
           </p>
         </div>
 
