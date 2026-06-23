@@ -24,7 +24,8 @@ import {
   FilePlus, RefreshCw, ListChecks,
   UserCheck, List, Mail,
   Save, Minus,
-  History as HistoryIcon
+  History as HistoryIcon,
+  Video
 } from "lucide-react";
 import { useIsMobile } from "../../../hooks/useViewport";
 import { useClient } from "../../../hooks/useClient";
@@ -56,6 +57,7 @@ import {
 } from "./components";
 import AdvisorMetrics from "./AdvisorMetrics";
 import ScheduledCallBadge from "./ScheduledCallBadge";
+import { zoomEventsOf } from "./zoom-metrics";
 import { useScheduledCalls } from "../../../hooks/useScheduledCalls";
 
 // Tamaño de "página" de render de la lista. La lista NO se virtualiza con una
@@ -4527,6 +4529,10 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                     {stLeadsCapped.map(l => {
                       const sc = l.sc;
                       const isDragging = dragLeadId === l.id;
+                      // ¿Este lead ya pasó por el Zoom? (Concretado o etapa
+                      // posterior, ahora o en su historial). Misma fuente que la
+                      // métrica de Filtro 2, así la etiqueta siempre cuadra.
+                      const didZoom = !!zoomEventsOf(l).done;
                       return (
                         <div key={l.id}
                           draggable
@@ -4557,6 +4563,15 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                                   <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{l.n}</span>
                                 </p>
                                 <p style={{ fontSize: 9.5, color: T.txt3 }}>{l.asesor?.split(" ")[0]} · {l.campana}</p>
+                                {didZoom && (
+                                  <span title="Este cliente ya pasó por Zoom (concretado o etapa posterior)" style={{
+                                    display: "inline-flex", alignItems: "center", gap: 3, marginTop: 4,
+                                    fontSize: 8.5, fontWeight: 800, letterSpacing: "0.05em",
+                                    color: "#2DD4BF", background: "rgba(45,212,191,0.12)",
+                                    border: "1px solid rgba(45,212,191,0.30)", padding: "2px 7px",
+                                    borderRadius: 99, textTransform: "uppercase",
+                                  }}><Video size={9} strokeWidth={2.5} /> Zoom dado</span>
+                                )}
                               </div>
                               <p style={{ fontSize: 12, fontWeight: 700, color: isLight ? T.txt : "#FFF", fontFamily: fontDisp, letterSpacing: "-0.02em", flexShrink: 0 }}>{l.budget}</p>
                             </div>
