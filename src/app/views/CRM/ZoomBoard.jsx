@@ -14,10 +14,10 @@
  * ─────────────────────────────────────────────────────────────────────────────
  */
 import { useMemo, useState } from "react";
-import { CheckCircle2, CalendarDays, TrendingUp, Activity, History, ChevronDown } from "lucide-react";
+import { CalendarDays, CheckCircle2, MapPin, Handshake, History, ChevronDown } from "lucide-react";
 import { P, LP, font, fontDisp, STAGE_COLORS } from "../../../design-system/tokens";
 import { PERIODS, periodStart } from "./AdvisorMetrics";
-import { zoomEventsOf, eventInPeriod, ACTIVE_POST_ZOOM_STAGES, zoomMovements } from "./zoom-metrics";
+import { zoomEventsOf, milestoneOf, eventInPeriod, ACTIVE_POST_ZOOM_STAGES, RECORRIDO_STAGES, CIERRE_STAGES, zoomMovements } from "./zoom-metrics";
 
 const fmtFecha = (iso) => {
   if (!iso) return "—";
@@ -54,13 +54,10 @@ export default function ZoomBoard({ leadsData = [], theme = "dark", onOpenLead =
   const { byPresenter, totals, presenters } = useMemo(() => {
     const map = {}; // person -> { scheduled, done }
     const bump = (p, k) => { (map[p] = map[p] || { scheduled: 0, done: 0 })[k]++; };
-    let tScheduled = 0, tDone = 0, tDoneInferred = 0, tSchedAndDone = 0;
+    let tScheduled = 0, tDone = 0, tDoneInferred = 0;
     for (const l of leadsData) {
       const { scheduled, done } = zoomEventsOf(l);
-      if (scheduled && eventInPeriod(scheduled.at, startTs)) {
-        bump(scheduled.by, "scheduled"); tScheduled++;
-        if (done) tSchedAndDone++; // de los agendados, cuántos se realizaron
-      }
+      if (scheduled && eventInPeriod(scheduled.at, startTs)) { bump(scheduled.by, "scheduled"); tScheduled++; }
       if (done && eventInPeriod(done.at, startTs))           { bump(done.by, "done"); tDone++; if (done.inferred) tDoneInferred++; }
     }
     const list = Object.entries(map)
@@ -68,7 +65,7 @@ export default function ZoomBoard({ leadsData = [], theme = "dark", onOpenLead =
       .sort((a, b) => b.done - a.done || b.scheduled - a.scheduled);
     return {
       byPresenter: list,
-      totals: { scheduled: tScheduled, done: tDone, doneInferred: tDoneInferred, doneRegistered: tDone - tDoneInferred, schedAndDone: tSchedAndDone },
+      totals: { scheduled: tScheduled, done: tDone, doneInferred: tDoneInferred, doneRegistered: tDone - tDoneInferred },
       presenters: list.map(r => r.asesor),
     };
   }, [leadsData, startTs]);
@@ -79,10 +76,18 @@ export default function ZoomBoard({ leadsData = [], theme = "dark", onOpenLead =
     [leadsData],
   );
 
-  // Conversión honesta: de los AGENDADOS, cuántos se realizaron (siempre ≤100%).
-  // No usamos done/scheduled total porque hay realizados inferidos sin agendado,
-  // que darían >100% y restarían credibilidad al tablero.
-  const conversion = totals.scheduled ? Math.round((totals.schedAndDone / totals.scheduled) * 100) : 0;
+  // Funnel posterior al Zoom: Recorridos (visita) y Cierres (Apartó/Cierre),
+  // contados como hitos históricos dentro del período (mismo criterio que el Zoom).
+  const { recorridos, cierres } = useMemo(() => {
+    let rec = 0, cie = 0;
+    for (const l of leadsData) {
+      const r = milestoneOf(l, RECORRIDO_STAGES);
+      const c = milestoneOf(l, CIERRE_STAGES);
+      if (r && eventInPeriod(r.at, startTs)) rec++;
+      if (c && eventInPeriod(c.at, startTs)) cie++;
+    }
+    return { recorridos: rec, cierres: cie };
+  }, [leadsData, startTs]);
 
   // Lista cliente-por-cliente con Zoom realizado en el período.
   const clientes = useMemo(() => {
@@ -111,11 +116,13 @@ export default function ZoomBoard({ leadsData = [], theme = "dark", onOpenLead =
   const cellPad   = "10px 12px";
   const accent    = T.accent;
 
+  // Funnel comercial de Oscar (de izquierda a derecha): Agendado → Realizado →
+  // Recorrido → Cierre. Cada uno es un hito histórico (pasó por ahí alguna vez).
   const KPIS = [
-    { key: "done",      label: "Zooms realizados",   value: totals.done,     icon: CheckCircle2, color: "#10B981", sub: totals.doneInferred ? `${totals.doneRegistered} registrados · ${totals.doneInferred} inferidos` : "pasaron por Zoom (histórico)" },
-    { key: "scheduled", label: "Zooms agendados",    value: totals.scheduled,icon: CalendarDays, color: "#2563EB", sub: "llegaron a agendarse" },
-    { key: "conv",      label: "Conversión a Zoom",  value: `${conversion}%`,icon: TrendingUp,   color: accent,    sub: "de los agendados, % que se realizó" },
-    { key: "active",    label: "Activos post-Zoom",  value: activosPostZoom, icon: Activity,     color: "#F59E0B", sub: "en cierre ahora" },
+    { key: "scheduled", label: "Zooms agendados",  value: totals.scheduled, icon: CalendarDays, color: "#2563EB", sub: "llegaron a agendar Zoom" },
+    { key: "done",      label: "Zooms realizados", value: totals.done,      icon: CheckCircle2, color: "#10B981", sub: totals.doneInferred ? `${totals.doneRegistered} registrados · ${totals.doneInferred} inferidos` : "se dieron (histórico)" },
+    { key: "rec",       label: "Recorridos",       value: recorridos,       icon: MapPin,       color: "#06B6D4", sub: "clientes que llegaron a visita" },
+    { key: "close",     label: "Apartó / Cierre",  value: cierres,          icon: Handshake,    color: accent,    sub: "milestones de cierre" },
   ];
 
   return (
@@ -127,7 +134,7 @@ export default function ZoomBoard({ leadsData = [], theme = "dark", onOpenLead =
             Filtro 2 · Control de Zooms
           </h2>
           <p style={{ margin: "4px 0 0", fontSize: 12.5, color: T.txt3, fontFamily: font }}>
-            Segundo filtro comercial · desde el Zoom: quién lo dio, estado actual del cliente y siguiente paso · acreditado a quién dio el Zoom.
+            Segundo filtro comercial · el embudo desde el Zoom: agendado → realizado → recorrido → cierre, con el estado y el siguiente paso de cada cliente.
           </p>
         </div>
         <div role="tablist" aria-label="Período" style={{ display: "flex", gap: 4, padding: 3, borderRadius: 10, background: headerBg, border: `1px solid ${rowBorder}` }}>
@@ -168,6 +175,14 @@ export default function ZoomBoard({ leadsData = [], theme = "dark", onOpenLead =
             </div>
           );
         })}
+      </div>
+
+      {/* Leyenda: activos + nota de inferidos (el dato accionable de registro) */}
+      <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "6px 18px", margin: "-6px 2px 0", fontSize: 11.5, color: T.txt3, fontFamily: font }}>
+        <span><strong style={{ color: T.txt2 }}>Activos post-Zoom:</strong> {activosPostZoom} clientes en cierre ahora</span>
+        {totals.doneInferred > 0 && (
+          <span style={{ color: "#F59E0B" }}>{totals.doneInferred} realizados se infieren de la etapa actual (falta marcar el movimiento)</span>
+        )}
       </div>
 
       {/* Tabla por presentador */}
