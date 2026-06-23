@@ -333,6 +333,14 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
   const [zoomSchedulingLead, setZoomSchedulingLead] = useState(null);
 
   const cancelZoomScheduling = () => {
+    // Alta de cliente NUEVO: no hay nada que revertir en la lista (aún no se
+    // creó). Reabrimos el formulario con el draft intacto para que el usuario
+    // elija otra etapa o defina la cita.
+    if (zoomSchedulingLead?.isNewLead) {
+      setZoomSchedulingLead(null);
+      setAddingLead(true);
+      return;
+    }
     if (zoomSchedulingLead) {
       const { lead, originalStage } = zoomSchedulingLead;
       const revertedLead = { ...lead, st: originalStage };
@@ -347,6 +355,13 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
 
   const confirmZoomScheduling = (dateTimeString, actionText) => {
     if (!zoomSchedulingLead) return;
+    // Alta de un cliente NUEVO cuya etapa inicial es "Zoom Agendado": todavía no
+    // existe en la lista, así que completamos el alta embebiendo la cita.
+    if (zoomSchedulingLead.isNewLead) {
+      setZoomSchedulingLead(null);
+      finalizeAddLead({ dateTimeString, actionText });
+      return;
+    }
     const { lead } = zoomSchedulingLead;
     const formattedDateTime = dateTimeString.replace("T", " ");
 
@@ -1465,6 +1480,27 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
       return;
     }
 
+    // ── Etapa inicial "Zoom Agendado" → pedir fecha/hora de la cita primero ──
+    // Paridad con el interceptor de updateLead (al MOVER un lead existente a
+    // "Zoom Agendado"): no creamos el cliente sin una cita definida. Abrimos el
+    // MISMO modal de cita; el draft queda intacto en newLead por si se cancela.
+    if ((newLead.st || "") === "Zoom Agendado") {
+      setAddingLead(false);
+      setStageMenuOpen(false);
+      setBudgetMenuOpen(false);
+      setZoomSchedulingLead({ lead: { n: newLead.n.trim() }, isNewLead: true });
+      return;
+    }
+
+    await finalizeAddLead(null);
+  };
+
+  // finalizeAddLead — construye el payload + entry y persiste el lead nuevo.
+  // zoomInfo (opcional) = { dateTimeString, actionText }: cuando la etapa inicial
+  // es "Zoom Agendado" embebe la fecha/hora de la cita, igual que
+  // confirmZoomScheduling hace al mover un lead existente.
+  const finalizeAddLead = async (zoomInfo = null) => {
+    if (submittingRef.current) return;
     submittingRef.current = true;
     setSubmittingLead(true);
 
@@ -1490,6 +1526,25 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
     // Capturamos el draft antes de limpiarlo (el setState es async).
     const draft = newLead;
     const isDemo = user?.id === 'demo-user-local' || user?.isDemo;
+
+    // ── Cita del Zoom (solo si la etapa inicial es "Zoom Agendado") ─────────
+    // next_action_at es el instante real (ISO); next_action_date guarda el
+    // datetime crudo ("YYYY-MM-DD HH:MM"). El RPC create_lead persiste
+    // next_action_date, y el fetch/orden reconstruyen la fecha desde ahí
+    // (fallback de getZoomTime / formatFechaLarga). `display` va "con palabras".
+    let zoomFields = null;
+    if (zoomInfo?.dateTimeString) {
+      const rawDateTime = zoomInfo.dateTimeString.replace("T", " ");
+      let nextActionAtISO = null;
+      try { nextActionAtISO = new Date(zoomInfo.dateTimeString).toISOString(); } catch (_) { /* fecha inválida → null */ }
+      zoomFields = {
+        nextAction: (zoomInfo.actionText || "").trim() || "Zoom",
+        display: formatFechaLarga(zoomInfo.dateTimeString) || rawDateTime,
+        rawDateTime,
+        nextActionAtISO,
+      };
+    }
+
     const payload = {
       id:               localId,
       name:             draft.n.trim(),
@@ -1504,8 +1559,12 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
       project:          draft.p || null,
       campaign:         draft.campana || null,
       source:           draft.source || "manual",
-      next_action:      draft.nextAction?.trim() || "Primer contacto en las próximas 24 horas",
-      next_action_date: "Hoy",
+      next_action:      zoomFields ? zoomFields.nextAction : (draft.nextAction?.trim() || "Primer contacto en las próximas 24 horas"),
+      next_action_date: zoomFields ? zoomFields.rawDateTime : "Hoy",
+      // El RPC create_lead (mig. 008) hoy NO persiste next_action_at; lo mandamos
+      // igual por claridad/forward-compat. La fecha de la cita se preserva vía
+      // next_action_date (crudo), de donde el fetch la reconstruye.
+      next_action_at:   zoomFields ? zoomFields.nextActionAtISO : null,
       last_activity:    "Registro manual",
       days_inactive:    0,
       seguimientos:     0,
@@ -1526,8 +1585,12 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
       tag: draft.tag || draft.st || "Contáctame Ya", hot: false, isNew: true, fechaIngreso: dateStr,
       bio: "Cliente recién registrado. Pendiente primer contacto.", risk: "Sin información suficiente aún.",
       friction: "Medio",
-      nextAction: draft.nextAction?.trim() || "Primer contacto en las próximas 24 horas",
-      nextActionDate: "Hoy", lastActivity: "Registro manual", daysInactive: 0,
+      nextAction: zoomFields ? zoomFields.nextAction : (draft.nextAction?.trim() || "Primer contacto en las próximas 24 horas"),
+      nextActionDate: zoomFields ? zoomFields.display : "Hoy",
+      // Para getZoomTime / orden por proximidad sobre el objeto local recién creado.
+      next_action_date: zoomFields ? zoomFields.rawDateTime : undefined,
+      next_action_at: zoomFields ? zoomFields.nextActionAtISO : undefined,
+      lastActivity: "Registro manual", daysInactive: 0,
       email: draft.email || "",
       notas: notasVal,
       presupuesto: parsedBudget,
@@ -5309,6 +5372,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
       <ZoomSchedulingModal
         open={!!zoomSchedulingLead}
         lead={zoomSchedulingLead?.lead}
+        isNewLead={!!zoomSchedulingLead?.isNewLead}
         onClose={cancelZoomScheduling}
         onConfirm={confirmZoomScheduling}
         T={T}
@@ -5623,7 +5687,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
   );
 }
 
-const ZoomSchedulingModal = ({ open, lead, onClose, onConfirm, T = P }) => {
+const ZoomSchedulingModal = ({ open, lead, isNewLead = false, onClose, onConfirm, T = P }) => {
   const [dateVal, setDateVal] = useState("");
   const [actionText, setActionText] = useState("Zoom");
   const isLight = T !== P;
@@ -5696,7 +5760,7 @@ const ZoomSchedulingModal = ({ open, lead, onClose, onConfirm, T = P }) => {
         {/* Content */}
         <div style={{ padding: "20px 24px", display: "flex", flexDirection: "column", gap: 16 }}>
           <p style={{ margin: 0, fontSize: 12.5, color: T.txt2, lineHeight: 1.5 }}>
-            Para mover a <strong style={{ color: T.txt }}>{lead.n || lead.name}</strong> a la etapa de <strong style={{ color: "#3B82F6" }}>Zoom Agendado</strong>, es obligatorio definir la fecha y hora de la sesión.
+            Para {isNewLead ? "registrar a" : "mover a"} <strong style={{ color: T.txt }}>{lead.n || lead.name}</strong> {isNewLead ? "en" : "a"} la etapa de <strong style={{ color: "#3B82F6" }}>Zoom Agendado</strong>, es obligatorio definir la fecha y hora de la sesión.
           </p>
 
           {/* Fecha y Hora Input */}
