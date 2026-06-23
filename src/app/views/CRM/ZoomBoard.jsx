@@ -33,8 +33,47 @@ export default function ZoomBoard({ leadsData = [], theme = "dark", onOpenLead =
   const [presentadorFilter, setPresentadorFilter] = useState("__all__");
   const [histOpen, setHistOpen] = useState(false);
   const [histKind, setHistKind] = useState("all"); // all | scheduled | done
+  const [trendGran, setTrendGran] = useState("week"); // week | month
 
   const startTs = useMemo(() => periodStart(periodId), [periodId]);
+
+  // Tendencia: cuántos Zooms realizados por semana / por mes a lo largo del
+  // tiempo (lo que el equipo de Duke revisa cada domingo). Independiente del
+  // filtro de período de arriba: muestra la evolución completa reciente.
+  const trend = useMemo(() => {
+    const N = trendGran === "week" ? 10 : 8;
+    const now = new Date();
+    const buckets = [];
+    const MESES = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
+    for (let i = N - 1; i >= 0; i--) {
+      let start, end, label;
+      if (trendGran === "week") {
+        const ref = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i * 7);
+        const dow = ref.getDay();           // 0=dom..6=sáb
+        const diff = dow === 0 ? 6 : dow - 1; // lunes como inicio
+        start = new Date(ref.getFullYear(), ref.getMonth(), ref.getDate() - diff);
+        end = new Date(start.getFullYear(), start.getMonth(), start.getDate() + 7);
+        label = `${start.getDate()} ${MESES[start.getMonth()]}`;
+      } else {
+        start = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        end = new Date(now.getFullYear(), now.getMonth() - i + 1, 1);
+        label = MESES[start.getMonth()];
+      }
+      buckets.push({ label, start: start.getTime(), end: end.getTime(), done: 0, sched: 0 });
+    }
+    for (const l of leadsData) {
+      const { scheduled, done } = zoomEventsOf(l);
+      for (const [ev, key] of [[done, "done"], [scheduled, "sched"]]) {
+        if (!ev || !ev.at) continue;
+        const t = new Date(ev.at).getTime();
+        if (Number.isNaN(t)) continue;
+        const b = buckets.find(bk => t >= bk.start && t < bk.end);
+        if (b) b[key]++;
+      }
+    }
+    const max = Math.max(1, ...buckets.map(b => b.done));
+    return { buckets, max };
+  }, [leadsData, trendGran]);
 
   // Historial de movimientos de Zoom (toda la cartera): cada lead que pasó por
   // Zoom agendado y/o realizado, con fecha, quién lo dio y si fue inferido de la
@@ -183,6 +222,57 @@ export default function ZoomBoard({ leadsData = [], theme = "dark", onOpenLead =
         {totals.doneInferred > 0 && (
           <span style={{ color: "#F59E0B" }}>{totals.doneInferred} realizados se infieren de la etapa actual (falta marcar el movimiento)</span>
         )}
+      </div>
+
+      {/* Tendencia de Zooms por semana / mes — vista para la junta de domingo */}
+      <div>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12, marginBottom: 12 }}>
+          <div>
+            <h3 style={{ margin: 0, fontSize: 16, fontWeight: 600, fontFamily: fontDisp, color: T.txt }}>
+              Zooms realizados por {trendGran === "week" ? "semana" : "mes"}
+            </h3>
+            <p style={{ margin: "3px 0 0", fontSize: 11.5, color: T.txt3, fontFamily: font }}>
+              Evolución reciente · cuántos Zooms se dieron en cada {trendGran === "week" ? "semana" : "mes"}.
+            </p>
+          </div>
+          <div role="tablist" aria-label="Agrupar tendencia" style={{ display: "flex", gap: 4, padding: 3, borderRadius: 10, background: headerBg, border: `1px solid ${rowBorder}` }}>
+            {[{ id: "week", l: "Por semana" }, { id: "month", l: "Por mes" }].map(g => {
+              const active = trendGran === g.id;
+              return (
+                <button key={g.id} role="tab" aria-selected={active} onClick={() => setTrendGran(g.id)}
+                  style={{
+                    padding: "6px 14px", borderRadius: 7, border: "none", cursor: "pointer",
+                    background: active ? accent : "transparent",
+                    color: active ? (isLight ? "#0B1220" : "#06080F") : T.txt2,
+                    fontSize: 12, fontWeight: active ? 700 : 500, fontFamily: fontDisp,
+                  }}>{g.l}</button>
+              );
+            })}
+          </div>
+        </div>
+        <div style={{ borderRadius: 14, background: isLight ? "rgba(255,255,255,0.6)" : "rgba(255,255,255,0.02)", border: `1px solid ${rowBorder}`, padding: "20px 18px 12px" }}>
+          <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 8, height: 150 }}>
+            {trend.buckets.map((b, i) => {
+              const h = Math.round((b.done / trend.max) * 120);
+              return (
+                <div key={i} title={`${b.label}: ${b.done} realizados · ${b.sched} agendados`}
+                  style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 6, minWidth: 0 }}>
+                  <span style={{ fontSize: 12, fontWeight: 700, fontFamily: fontDisp, color: b.done ? T.txt : T.txt3 }}>{b.done}</span>
+                  <div style={{
+                    width: "100%", maxWidth: 38, height: Math.max(3, h), borderRadius: 6,
+                    background: b.done ? "#10B981" : (isLight ? "rgba(15,23,42,0.06)" : "rgba(255,255,255,0.05)"),
+                    transition: "height 0.2s",
+                  }} />
+                </div>
+              );
+            })}
+          </div>
+          <div style={{ display: "flex", justifyContent: "space-between", gap: 8, marginTop: 8, borderTop: `1px solid ${rowBorder}`, paddingTop: 8 }}>
+            {trend.buckets.map((b, i) => (
+              <span key={i} style={{ flex: 1, textAlign: "center", fontSize: 10.5, color: T.txt3, fontFamily: font, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{b.label}</span>
+            ))}
+          </div>
+        </div>
       </div>
 
       {/* Tabla por presentador */}
