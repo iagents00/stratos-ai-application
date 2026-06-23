@@ -108,7 +108,7 @@
 // v35 — modal "Programar Zoom Agendado": campos fecha/hora separados, sin
 //   "Próxima acción", y disponible también al crear cliente nuevo en esa etapa.
 //   Bump para forzar que los navegadores tomen el bundle nuevo.
-const CACHE_VERSION = 'stratos-v38';
+const CACHE_VERSION = 'stratos-v39';
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 

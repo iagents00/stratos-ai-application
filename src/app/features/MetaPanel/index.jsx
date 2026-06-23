@@ -161,11 +161,14 @@ export default function MetaPanel({
   // crea acá SÍ se guardan, con fecha/hora límite OBLIGATORIA (la usa el coach de Telegram).
   const [metaNewDate, setMetaNewDate] = useState("");
   const _orgId = user?.organizationId;
-  const _online = !!(_orgId && !user?._offline && user?.id !== 'demo-user-local');
+  // Persistimos si hay un usuario REAL logueado. NO exigimos conocer el org en el front:
+  // team_actions tiene DEFAULT organization_id = current_organization_id() (la DB lo pone desde el
+  // JWT) y RLS lo valida, así que guarda bien aunque user.organizationId no esté cargado en la sesión.
+  const _online = !!(user?.id && !user?._offline && user.id !== 'demo-user-local');
   useEffect(() => {
     if (!open || !_online) return;
     let cancelled = false;
-    supabase.from('team_actions').select('*').eq('organization_id', _orgId)
+    supabase.from('team_actions').select('*')   // RLS ya filtra por el org del usuario logueado
       .order('created_at', { ascending: false })
       .then(({ data, error }) => {
         if (cancelled || error || !data) { if (error) console.warn('[Stratos] team_actions load:', error.message); return; }
@@ -178,7 +181,7 @@ export default function MetaPanel({
         setMetaActions(p => { const ids = new Set(mapped.map(m => m.id)); return [...mapped, ...p.filter(a => !a._persisted && !ids.has(a.id))]; });
       });
     return () => { cancelled = true; };
-  }, [open, _online, _orgId]);
+  }, [open, _online]);
 
   const createAction = async () => {
     const txt = metaNewText.trim();
@@ -189,7 +192,7 @@ export default function MetaPanel({
     setMetaNewText(''); setMetaNewDate('');
     if (_online) {
       const { data, error } = await supabase.from('team_actions')
-        .insert({ organization_id: _orgId, text: txt, due_at: dueIso, priority: 'normal', category: 'General' })
+        .insert({ text: txt, due_at: dueIso, priority: 'normal', category: 'General' })   // org lo pone el DEFAULT current_organization_id()
         .select('id').single();
       if (!error && data) { setMetaActions(p => [{ ...base, id: data.id, _persisted: true }, ...p]); return; }
       console.warn('[Stratos] team_action insert:', error?.message);
