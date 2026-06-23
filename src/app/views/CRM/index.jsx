@@ -4643,11 +4643,11 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                                 {didZoom && (
                                   <span title="Este cliente ya pasó por Zoom (concretado o etapa posterior)" style={{
                                     display: "inline-flex", alignItems: "center", gap: 3, marginTop: 4,
-                                    fontSize: 8.5, fontWeight: 800, letterSpacing: "0.05em",
-                                    color: "#2DD4BF", background: "rgba(45,212,191,0.12)",
-                                    border: "1px solid rgba(45,212,191,0.30)", padding: "2px 7px",
-                                    borderRadius: 99, textTransform: "uppercase",
-                                  }}><Video size={9} strokeWidth={2.5} /> Zoom dado</span>
+                                    fontSize: 8.5, fontWeight: 800, letterSpacing: "0.04em",
+                                    color: "#10B981", background: "rgba(16,185,129,0.12)",
+                                    border: "1px solid rgba(16,185,129,0.32)", padding: "2px 8px",
+                                    borderRadius: 99, textTransform: "uppercase", whiteSpace: "nowrap",
+                                  }}><Video size={9} strokeWidth={2.5} /> Zoom Realizado</span>
                                 )}
                               </div>
                               <p style={{ fontSize: 12, fontWeight: 700, color: isLight ? T.txt : "#FFF", fontFamily: fontDisp, letterSpacing: "-0.02em", flexShrink: 0 }}>{l.budget}</p>
