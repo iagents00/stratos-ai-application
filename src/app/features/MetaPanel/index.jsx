@@ -9,6 +9,8 @@ import {
   Target, Plus, Check, Minus, GripVertical, TrendingUp, ChevronRight,
   AlertCircle, Bell, X, Atom,
 } from "lucide-react";
+import { useState, useEffect } from "react";
+import { supabase } from "../../../lib/supabase";
 import { font, fontDisp } from "../../../design-system/tokens";
 
 /* ── INITIAL STATE DEFAULTS (used by App.jsx to seed useState) ─────────────── */
@@ -152,7 +154,51 @@ export default function MetaPanel({
   orgBrand,          // string mostrado en header — viene de DB (org.meta_config.brand o nombre de org).
   canEdit,           // true solo si el role del usuario es super_admin o admin.
   savingConfig,      // bool — true cuando hay un cambio pendiente de guardar en DB.
+  user,              // usuario actual (org id) — para persistir acciones manuales en team_actions.
 }) {
+  // ── Persistencia de acciones MANUALES en Supabase (tabla team_actions) ──
+  // Las derivadas de leads se siembran en App.jsx (efímeras, se regeneran). Las que el usuario
+  // crea acá SÍ se guardan, con fecha/hora límite OBLIGATORIA (la usa el coach de Telegram).
+  const [metaNewDate, setMetaNewDate] = useState("");
+  const _orgId = user?.organizationId;
+  const _online = !!(_orgId && !user?._offline && user?.id !== 'demo-user-local');
+  useEffect(() => {
+    if (!open || !_online) return;
+    let cancelled = false;
+    supabase.from('team_actions').select('*').eq('organization_id', _orgId)
+      .order('created_at', { ascending: false })
+      .then(({ data, error }) => {
+        if (cancelled || error || !data) { if (error) console.warn('[Stratos] team_actions load:', error.message); return; }
+        const mapped = data.map(r => ({
+          id: r.id, text: r.text, lead: r.category || 'General', asesor: r.asesor_name || '',
+          date: r.due_at ? new Date(r.due_at).toLocaleString('es-MX',{ day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' }) : '',
+          done: r.done, priority: r.priority || 'normal', assignee: r.asesor_name || '',
+          assigneeType: r.assignee_type || 'human', due_at: r.due_at, _persisted: true,
+        }));
+        setMetaActions(p => { const ids = new Set(mapped.map(m => m.id)); return [...mapped, ...p.filter(a => !a._persisted && !ids.has(a.id))]; });
+      });
+    return () => { cancelled = true; };
+  }, [open, _online, _orgId]);
+
+  const createAction = async () => {
+    const txt = metaNewText.trim();
+    if (!txt || !metaNewDate) return;               // fecha/hora OBLIGATORIA
+    const dueIso = new Date(metaNewDate).toISOString();
+    const localDate = new Date(metaNewDate).toLocaleString('es-MX',{ day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' });
+    const base = { text: txt, lead: 'General', asesor: 'Equipo', date: localDate, done: false, priority: 'normal', assignee: '', assigneeType: 'human', due_at: dueIso };
+    setMetaNewText(''); setMetaNewDate('');
+    if (_online) {
+      const { data, error } = await supabase.from('team_actions')
+        .insert({ organization_id: _orgId, text: txt, due_at: dueIso, priority: 'normal', category: 'General' })
+        .select('id').single();
+      if (!error && data) { setMetaActions(p => [{ ...base, id: data.id, _persisted: true }, ...p]); return; }
+      console.warn('[Stratos] team_action insert:', error?.message);
+    }
+    setMetaActions(p => [{ ...base, id: Date.now() }, ...p]);   // fallback offline
+  };
+  const persistDone = (a, done) => { if (a._persisted && _online) supabase.from('team_actions').update({ done, completed_at: done ? new Date().toISOString() : null }).eq('id', a.id).then(({ error }) => { if (error) console.warn('[Stratos] team_action done:', error.message); }); };
+  const persistDelete = (a) => { if (a._persisted && _online) supabase.from('team_actions').delete().eq('id', a.id).then(({ error }) => { if (error) console.warn('[Stratos] team_action delete:', error.message); }); };
+
   if (!open) return null;
   // Brand label fallback (compat con instancias legacy que no pasen el prop)
   const brandLabel = orgBrand || 'Duke del Caribe';
@@ -313,13 +359,8 @@ export default function MetaPanel({
                 <input
                   value={metaNewText}
                   onChange={e => setMetaNewText(e.target.value)}
-                  onKeyDown={e => {
-                    if (e.key === "Enter" && metaNewText.trim()) {
-                      setMetaActions(p => [{ id:Date.now(), text:metaNewText.trim(), lead:"General", asesor:"Equipo", date:"Hoy", done:false, priority:"normal", assignee:"", assigneeType:"human" }, ...p]);
-                      setMetaNewText("");
-                    }
-                  }}
-                  placeholder="Nueva acción — escribe y presiona Enter…"
+                  onKeyDown={e => { if (e.key === "Enter") createAction(); }}
+                  placeholder="Nueva acción — escribe, elegí fecha/hora y Enter…"
                   style={{
                     flex:1, padding:"10px 15px", borderRadius:10,
                     background: isLight?"#FFFFFF":"rgba(255,255,255,0.05)",
@@ -329,30 +370,40 @@ export default function MetaPanel({
                     transition:"border 0.15s, box-shadow 0.15s",
                   }}
                 />
-                <button
-                  onClick={() => {
-                    const txt = metaNewText.trim();
-                    if (!txt) return;
-                    setMetaActions(p => [{ id:Date.now(), text:txt, lead:"General", asesor:"Equipo", date:"Hoy", done:false, priority:"normal", assignee:"", assigneeType:"human" }, ...p]);
-                    setMetaNewText("");
+                <input
+                  type="datetime-local"
+                  value={metaNewDate}
+                  onChange={e => setMetaNewDate(e.target.value)}
+                  title="Fecha y hora límite (obligatoria)"
+                  style={{
+                    padding:"10px 12px", borderRadius:10, flexShrink:0,
+                    background: isLight?"#FFFFFF":"rgba(255,255,255,0.05)",
+                    border:`1.5px solid ${metaNewDate ? T.accent : T.border}`,
+                    color:T.txt, fontSize:12, fontFamily:font, outline:"none",
+                    colorScheme: isLight ? "light" : "dark",
                   }}
+                />
+                {(() => { const canAdd = !!(metaNewText.trim() && metaNewDate); return (
+                <button
+                  onClick={createAction}
                   style={{
                     display:"flex", alignItems:"center", gap:7,
                     padding:"0 20px", borderRadius:10, border:"none",
-                    background: metaNewText
+                    background: canAdd
                       ? `linear-gradient(135deg,#0D9A76,${T.accent})`
                       : (isLight?"rgba(0,0,0,0.06)":"rgba(255,255,255,0.07)"),
-                    color: metaNewText ? "#041016" : T.txt3,
+                    color: canAdd ? "#041016" : T.txt3,
                     fontSize:12.5, fontWeight:700, fontFamily:fontDisp,
-                    cursor: metaNewText ? "pointer" : "default",
+                    cursor: canAdd ? "pointer" : "default",
                     flexShrink:0, letterSpacing:"-0.02em",
-                    boxShadow: metaNewText ? "0 2px 12px rgba(13,154,118,0.30)" : "none",
+                    boxShadow: canAdd ? "0 2px 12px rgba(13,154,118,0.30)" : "none",
                     transition:"background 0.18s, color 0.18s, box-shadow 0.18s",
                     minHeight:42,
                   }}>
                   <Plus size={14} strokeWidth={2.5} />
                   Agregar
                 </button>
+                ); })()}
               </div>
 
               {/* Pending tasks */}
@@ -405,7 +456,7 @@ export default function MetaPanel({
 
                     {/* Checkbox */}
                     <button
-                      onClick={() => setMetaActions(p => p.map(x => x.id===a.id ? {...x,done:true} : x))}
+                      onClick={() => { persistDone(a, true); setMetaActions(p => p.map(x => x.id===a.id ? {...x,done:true} : x)); }}
                       style={{ width:18, height:18, borderRadius:5, border:`1.5px solid ${T.border}`, background:"transparent", cursor:"pointer", flexShrink:0, marginTop:2, display:"flex", alignItems:"center", justifyContent:"center", transition:"all 0.15s" }}
                     />
 
@@ -481,7 +532,7 @@ export default function MetaPanel({
                         onSave={v => setMetaActions(p => p.map(x => x.id===a.id?{...x,date:v}:x))}
                         style={{ fontSize:10, fontWeight:600, fontFamily:fontDisp, color:prioColor, background:`${prioColor}13`, border:`1px solid ${prioColor}25`, padding:"2px 9px", borderRadius:99, whiteSpace:"nowrap", cursor:"text" }}
                       />
-                      <button onClick={() => setMetaActions(p => p.filter(x => x.id!==a.id))} style={{ background:"none", border:"none", cursor:"pointer", padding:2, opacity:0.25, display:"flex", alignItems:"center" }}>
+                      <button onClick={() => { persistDelete(a); setMetaActions(p => p.filter(x => x.id!==a.id)); }} style={{ background:"none", border:"none", cursor:"pointer", padding:2, opacity:0.25, display:"flex", alignItems:"center" }}>
                         <Minus size={11} color={T.txt3} />
                       </button>
                     </div>
@@ -512,7 +563,7 @@ export default function MetaPanel({
                       opacity:0.60,
                     }}>
                       <button
-                        onClick={() => setMetaActions(p => p.map(x => x.id===a.id ? {...x,done:false} : x))}
+                        onClick={() => { persistDone(a, false); setMetaActions(p => p.map(x => x.id===a.id ? {...x,done:false} : x)); }}
                         style={{ width:17, height:17, borderRadius:5, border:`1.5px solid ${T.accent}`, background:T.accent, cursor:"pointer", flexShrink:0, marginTop:2, display:"flex", alignItems:"center", justifyContent:"center" }}>
                         <Check size={9} strokeWidth={3} color="#041016" />
                       </button>
@@ -520,7 +571,7 @@ export default function MetaPanel({
                         <span style={{ fontSize:12, color:T.txt3, fontFamily:font, textDecoration:"line-through", lineHeight:1.4 }}>{a.text}</span>
                         <p style={{ margin:"2px 0 0", fontSize:10, color:T.txt3, fontFamily:font, opacity:0.7 }}>{a.lead} · {a.asesor}</p>
                       </div>
-                      <button onClick={() => setMetaActions(p => p.filter(x => x.id!==a.id))} style={{ background:"none", border:"none", cursor:"pointer", padding:2, opacity:0.25 }}>
+                      <button onClick={() => { persistDelete(a); setMetaActions(p => p.filter(x => x.id!==a.id)); }} style={{ background:"none", border:"none", cursor:"pointer", padding:2, opacity:0.25 }}>
                         <Minus size={11} color={T.txt3} />
                       </button>
                     </div>
