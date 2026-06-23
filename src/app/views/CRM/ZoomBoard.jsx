@@ -54,16 +54,20 @@ export default function ZoomBoard({ leadsData = [], theme = "dark", onOpenLead =
   const { byPresenter, totals, presenters } = useMemo(() => {
     const map = {}; // person -> { scheduled, done }
     const bump = (p, k) => { (map[p] = map[p] || { scheduled: 0, done: 0 })[k]++; };
-    let tScheduled = 0, tDone = 0;
+    let tScheduled = 0, tDone = 0, tDoneInferred = 0;
     for (const l of leadsData) {
       const { scheduled, done } = zoomEventsOf(l);
       if (scheduled && eventInPeriod(scheduled.at, startTs)) { bump(scheduled.by || "—", "scheduled"); tScheduled++; }
-      if (done && eventInPeriod(done.at, startTs))           { bump(done.by || "—", "done"); tDone++; }
+      if (done && eventInPeriod(done.at, startTs))           { bump(done.by || "—", "done"); tDone++; if (done.inferred) tDoneInferred++; }
     }
     const list = Object.entries(map)
       .map(([asesor, m]) => ({ asesor, ...m }))
       .sort((a, b) => b.done - a.done || b.scheduled - a.scheduled);
-    return { byPresenter: list, totals: { scheduled: tScheduled, done: tDone }, presenters: list.map(r => r.asesor) };
+    return {
+      byPresenter: list,
+      totals: { scheduled: tScheduled, done: tDone, doneInferred: tDoneInferred, doneRegistered: tDone - tDoneInferred },
+      presenters: list.map(r => r.asesor),
+    };
   }, [leadsData, startTs]);
 
   // Activos post-Zoom = etapa actual en una fase post-Zoom y no terminal.
@@ -102,7 +106,7 @@ export default function ZoomBoard({ leadsData = [], theme = "dark", onOpenLead =
   const accent    = T.accent;
 
   const KPIS = [
-    { key: "done",      label: "Zooms realizados",   value: totals.done,     icon: CheckCircle2, color: "#10B981", sub: "pasaron por Zoom (histórico)" },
+    { key: "done",      label: "Zooms realizados",   value: totals.done,     icon: CheckCircle2, color: "#10B981", sub: totals.doneInferred ? `${totals.doneRegistered} registrados · ${totals.doneInferred} inferidos` : "pasaron por Zoom (histórico)" },
     { key: "scheduled", label: "Zooms agendados",    value: totals.scheduled,icon: CalendarDays, color: "#2563EB", sub: "llegaron a agendarse" },
     { key: "conv",      label: "Conversión a Zoom",  value: `${conversion}%`,icon: TrendingUp,   color: accent,    sub: "realizados / agendados" },
     { key: "active",    label: "Activos post-Zoom",  value: activosPostZoom, icon: Activity,     color: "#F59E0B", sub: "en cierre ahora" },
