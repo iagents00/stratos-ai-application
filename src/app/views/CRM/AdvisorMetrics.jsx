@@ -16,6 +16,7 @@
 import { useMemo, useState } from "react";
 import { Users, Phone, BadgeCheck, CalendarDays, CheckCircle2, Activity, RefreshCw } from "lucide-react";
 import { P, LP, font, fontDisp, STAGES, STAGE_COLORS } from "../../../design-system/tokens";
+import { zoomEventsOf, eventInPeriod } from "./zoom-metrics";
 
 const STAGE_INDEX = Object.fromEntries(STAGES.map((s, i) => [s, i]));
 const IDX_PRIMER_CONTACTO = STAGE_INDEX["Segundo Intento"];
@@ -25,50 +26,8 @@ const IDX_SEGUIMIENTO     = STAGE_INDEX["Seguimiento"];
 // + proyectos + corridas + dudas). Usamos ese índice para "activos post-Zoom".
 const IDX_POST_ZOOM       = STAGE_INDEX["Seguimiento"];
 
-// ── Métrica de Zooms (histórica, no por foto actual) ─────────────────────────
-// Un lead "realizó Zoom" si ALGUNA VEZ entró a Zoom Concretado o más allá
-// (Seguimiento/Apartó/Visita/Cierre/Postventa) — aunque hoy esté en otra etapa
-// o haya sido reasignado y reseteado a "Contáctame Ya". La métrica vieja solo
-// miraba la etapa actual = "Seguimiento" y sub-contaba ~4×.
-const ZOOM_DONE_STAGES = new Set([
-  "Zoom Concretado", "Seguimiento", "Apartó", "Visita Agendada", "Cierre", "Postventa",
-]);
-const ZOOM_SCHEDULED_STAGE = "Zoom Agendado";
-
-// Extrae la etapa destino de un evento de historial "Etapa: X → Y".
-function targetStage(action) {
-  if (typeof action !== "string") return null;
-  const parts = action.split("→");
-  return parts.length > 1 ? parts[parts.length - 1].trim() : null;
-}
-
-// Devuelve { scheduled, done } para un lead: el PRIMER evento de historial que
-// lo llevó a Zoom Agendado / a una etapa post-Zoom, con su autor (by = quién lo
-// dio) y fecha. Acredita el Zoom a quien lo movió, no al dueño actual, así el
-// crédito no se pierde con las reasignaciones. Si no hay historial pero la etapa
-// ACTUAL ya es de Zoom (leads sembrados o pre-historial), cae al dueño actual.
-function zoomEventsOf(lead) {
-  const hist = Array.isArray(lead.actionHistory) ? lead.actionHistory : [];
-  let scheduled = null, done = null;
-  for (const e of hist) {
-    if (!e || e.type !== "etapa") continue;
-    const t = targetStage(e.action);
-    if (!t) continue;
-    const at = e.completed_at || e.doneAt || null;
-    if (t === ZOOM_SCHEDULED_STAGE && !scheduled) scheduled = { by: e.by || lead.asesor, at };
-    if (ZOOM_DONE_STAGES.has(t) && !done)          done      = { by: e.by || lead.asesor, at };
-  }
-  if (!scheduled && lead.st === ZOOM_SCHEDULED_STAGE) scheduled = { by: lead.asesor, at: lead.created_at };
-  if (!done && ZOOM_DONE_STAGES.has(lead.st))         done      = { by: lead.asesor, at: lead.created_at };
-  return { scheduled, done };
-}
-
-function eventInPeriod(at, startTs) {
-  if (startTs === null) return true;
-  if (!at) return false;
-  const t = new Date(at).getTime();
-  return !Number.isNaN(t) && t >= startTs;
-}
+// La métrica de Zooms (histórica, acreditada a quién la dio) vive en
+// ./zoom-metrics.js — fuente única compartida con ZoomBoard.
 
 export const PERIODS = [
   { id: "today", label: "Hoy" },
