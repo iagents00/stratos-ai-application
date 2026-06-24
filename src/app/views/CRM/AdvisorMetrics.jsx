@@ -16,7 +16,7 @@
 import { useMemo, useState } from "react";
 import { Users, Phone, BadgeCheck, CalendarDays, CheckCircle2, Activity, RefreshCw } from "lucide-react";
 import { P, LP, font, fontDisp, STAGES, STAGE_COLORS } from "../../../design-system/tokens";
-import { zoomEventsOf, eventInPeriod, ACTIVE_POST_ZOOM_STAGES } from "./zoom-metrics";
+import { zoomEventsOf, funnelEntryOf, eventInPeriod, ACTIVE_POST_ZOOM_STAGES } from "./zoom-metrics";
 
 const STAGE_INDEX = Object.fromEntries(STAGES.map((s, i) => [s, i]));
 const IDX_PRIMER_CONTACTO = STAGE_INDEX["Segundo Intento"];
@@ -91,11 +91,11 @@ export const INDICATORS = [
     key: "zoomScheduled",
     label: "Zooms Ag.",
     icon: CalendarDays,
-    title: "Zooms agendados — leads que entraron a 'Zoom Agendado' alguna vez (histórico), acreditados a quien los agendó y por la fecha del evento.",
+    title: "Zooms agendados — leads que entraron al funnel de Zoom (agendado o ya realizado). Siempre ≥ realizados. Coherente con Filtro 2.",
     // Conteo histórico a nivel lead (lo usa ComandoDirectivo: chart + totales).
     // En la tabla por asesor, AdvisorMetrics lo sobreescribe con el crédito
     // event-level a "quién lo dio" (ver `zoomAgg`).
-    compute: (leads) => leads.filter(l => !!zoomEventsOf(l).scheduled).length,
+    compute: (leads) => leads.filter(l => !!funnelEntryOf(l)).length,
   },
   {
     key: "zoomDone",
@@ -138,9 +138,12 @@ export default function AdvisorMetrics({ leadsData = [], theme = "dark", onOpenL
       (map[person] = map[person] || { scheduled: [], done: [] })[bucket].push(at);
     };
     for (const l of leadsData) {
-      const { scheduled, done } = zoomEventsOf(l);
-      if (scheduled) push(scheduled.by, "scheduled", scheduled.at);
-      if (done)      push(done.by,      "done",      done.at);
+      // "Agendado" = entró al funnel de Zoom (agendado o ya realizado), para que
+      // por asesor también sea ≥ realizados y cuadre con Filtro 2.
+      const entry = funnelEntryOf(l);
+      const { done } = zoomEventsOf(l);
+      if (entry) push(entry.by, "scheduled", entry.at);
+      if (done)  push(done.by,  "done",      done.at);
     }
     return map;
   }, [leadsData]);

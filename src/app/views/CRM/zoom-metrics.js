@@ -27,6 +27,12 @@ export const ZOOM_SCHEDULED_STAGE = "Zoom Agendado";
 // Set de un solo elemento para reutilizar el helper genérico milestoneOf.
 const ZOOM_SCHEDULED_STAGES = new Set([ZOOM_SCHEDULED_STAGE]);
 
+// "Entró al funnel de Zoom" = se agendó un Zoom (etapa Zoom Agendado) O ya hizo
+// el Zoom (etapa posterior). Clave para el conteo de AGENDADOS del embudo: si un
+// lead hizo el Zoom, necesariamente fue agendado, aunque ese paso no se haya
+// marcado. Así "agendados" SIEMPRE es ≥ "realizados" y el embudo tiene sentido.
+export const ZOOM_FUNNEL_ENTRY_STAGES = new Set([ZOOM_SCHEDULED_STAGE, ...ZOOM_DONE_STAGES]);
+
 // Hitos posteriores al Zoom (funnel Realizado → Recorrido → Cierre).
 export const RECORRIDO_STAGES = new Set(["Visita Agendada"]);              // visita/recorrido dado
 export const CIERRE_STAGES    = new Set(["Apartó", "Cierre", "Postventa"]); // milestone de cierre
@@ -80,6 +86,12 @@ export function zoomEventsOf(lead) {
     scheduled: milestoneOf(lead, ZOOM_SCHEDULED_STAGES),
     done:      milestoneOf(lead, ZOOM_DONE_STAGES),
   };
+}
+
+// Hito de "entró al funnel de Zoom" (agendado o ya realizado). Úsalo para el
+// conteo de AGENDADOS del embudo, para que sea siempre ≥ realizados.
+export function funnelEntryOf(lead) {
+  return milestoneOf(lead, ZOOM_FUNNEL_ENTRY_STAGES);
 }
 
 /**

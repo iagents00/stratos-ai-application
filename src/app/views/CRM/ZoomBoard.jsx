@@ -17,7 +17,7 @@ import { useMemo, useState } from "react";
 import { CalendarDays, CheckCircle2, MapPin, Handshake, History, ChevronDown } from "lucide-react";
 import { P, LP, font, fontDisp, STAGE_COLORS } from "../../../design-system/tokens";
 import { PERIODS, periodStart } from "./AdvisorMetrics";
-import { zoomEventsOf, milestoneOf, eventInPeriod, ACTIVE_POST_ZOOM_STAGES, RECORRIDO_STAGES, CIERRE_STAGES, zoomMovements } from "./zoom-metrics";
+import { zoomEventsOf, funnelEntryOf, milestoneOf, eventInPeriod, ACTIVE_POST_ZOOM_STAGES, RECORRIDO_STAGES, CIERRE_STAGES, zoomMovements } from "./zoom-metrics";
 
 const fmtFecha = (iso) => {
   if (!iso) return "—";
@@ -89,22 +89,30 @@ export default function ZoomBoard({ leadsData = [], theme = "dark", onOpenLead =
 
   const inferidos = useMemo(() => historial.filter(m => m.inferred).length, [historial]);
 
-  // Agregación por presentador (quién dio el Zoom) dentro del período.
+  // Totales del embudo + productividad por presentador (quién dio el Zoom).
+  // AGENDADOS = entró al funnel (agendado o ya realizado) → siempre ≥ realizados.
+  // REALIZADOS = hizo el Zoom. Ambos con split registrado/inferido.
   const { byPresenter, totals, presenters } = useMemo(() => {
-    const map = {}; // person -> { scheduled, done }
-    const bump = (p, k) => { (map[p] = map[p] || { scheduled: 0, done: 0 })[k]++; };
-    let tScheduled = 0, tDone = 0, tDoneInferred = 0;
+    const map = {}; // person -> realizados (presentó)
+    let tAg = 0, tAgInf = 0, tDone = 0, tDoneInferred = 0;
     for (const l of leadsData) {
-      const { scheduled, done } = zoomEventsOf(l);
-      if (scheduled && eventInPeriod(scheduled.at, startTs)) { bump(scheduled.by, "scheduled"); tScheduled++; }
-      if (done && eventInPeriod(done.at, startTs))           { bump(done.by, "done"); tDone++; if (done.inferred) tDoneInferred++; }
+      const entry = funnelEntryOf(l);
+      if (entry && eventInPeriod(entry.at, startTs)) { tAg++; if (entry.inferred) tAgInf++; }
+      const { done } = zoomEventsOf(l);
+      if (done && eventInPeriod(done.at, startTs)) {
+        map[done.by] = (map[done.by] || 0) + 1;
+        tDone++; if (done.inferred) tDoneInferred++;
+      }
     }
     const list = Object.entries(map)
-      .map(([asesor, m]) => ({ asesor, ...m }))
-      .sort((a, b) => b.done - a.done || b.scheduled - a.scheduled);
+      .map(([asesor, done]) => ({ asesor, done }))
+      .sort((a, b) => b.done - a.done);
     return {
       byPresenter: list,
-      totals: { scheduled: tScheduled, done: tDone, doneInferred: tDoneInferred, doneRegistered: tDone - tDoneInferred },
+      totals: {
+        scheduled: tAg, scheduledInferred: tAgInf, scheduledRegistered: tAg - tAgInf,
+        done: tDone, doneInferred: tDoneInferred, doneRegistered: tDone - tDoneInferred,
+      },
       presenters: list.map(r => r.asesor),
     };
   }, [leadsData, startTs]);
@@ -158,7 +166,7 @@ export default function ZoomBoard({ leadsData = [], theme = "dark", onOpenLead =
   // Funnel comercial de Oscar (de izquierda a derecha): Agendado → Realizado →
   // Recorrido → Cierre. Cada uno es un hito histórico (pasó por ahí alguna vez).
   const KPIS = [
-    { key: "scheduled", label: "Zooms agendados",  value: totals.scheduled, icon: CalendarDays, color: "#2563EB", sub: "llegaron a agendar Zoom" },
+    { key: "scheduled", label: "Zooms agendados",  value: totals.scheduled, icon: CalendarDays, color: "#2563EB", sub: totals.scheduledInferred ? `${totals.scheduledRegistered} registrados · ${totals.scheduledInferred} inferidos` : "entraron al funnel de Zoom" },
     { key: "done",      label: "Zooms realizados", value: totals.done,      icon: CheckCircle2, color: "#10B981", sub: totals.doneInferred ? `${totals.doneRegistered} registrados · ${totals.doneInferred} inferidos` : "se dieron (histórico)" },
     { key: "rec",       label: "Recorridos",       value: recorridos,       icon: MapPin,       color: "#06B6D4", sub: "clientes que llegaron a visita" },
     { key: "close",     label: "Apartó / Cierre",  value: cierres,          icon: Handshake,    color: accent,    sub: "milestones de cierre" },
@@ -216,11 +224,18 @@ export default function ZoomBoard({ leadsData = [], theme = "dark", onOpenLead =
         })}
       </div>
 
-      {/* Leyenda: activos + nota de inferidos (el dato accionable de registro) */}
-      <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "6px 18px", margin: "-6px 2px 0", fontSize: 11.5, color: T.txt3, fontFamily: font }}>
+      {/* Leyenda: activos + nota de inferidos (recuperación, no alarma) */}
+      <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "8px 18px", margin: "-6px 2px 0", fontSize: 11.5, color: T.txt3, fontFamily: font }}>
         <span><strong style={{ color: T.txt2 }}>Activos post-Zoom:</strong> {activosPostZoom} clientes en cierre ahora</span>
         {totals.doneInferred > 0 && (
-          <span style={{ color: "#F59E0B" }}>{totals.doneInferred} realizados se infieren de la etapa actual (falta marcar el movimiento)</span>
+          <span style={{
+            display: "inline-flex", alignItems: "center", gap: 6, padding: "3px 10px", borderRadius: 8,
+            background: "rgba(16,185,129,0.10)", border: "1px solid rgba(16,185,129,0.22)", color: T.txt2,
+          }}>
+            <CheckCircle2 size={12} color="#10B981" strokeWidth={2.5} />
+            {totals.doneRegistered} confirmados + {totals.doneInferred} recuperados por su etapa
+            <span style={{ color: T.txt3 }}>· el sistema no pierde ningún Zoom aunque no se marque el paso</span>
+          </span>
         )}
       </div>
 
@@ -278,28 +293,26 @@ export default function ZoomBoard({ leadsData = [], theme = "dark", onOpenLead =
       {/* Tabla por presentador */}
       <div>
         <h3 style={{ margin: "0 0 2px", fontSize: 16, fontWeight: 600, fontFamily: fontDisp, color: T.txt }}>
-          Productividad por asesor
+          Zooms realizados por asesor
         </h3>
         <p style={{ margin: "0 0 10px", fontSize: 11.5, color: T.txt3, fontFamily: font }}>
-          <strong style={{ color: T.txt2 }}>Agendó</strong> = quién consiguió la cita (liner) · <strong style={{ color: T.txt2 }}>Presentó</strong> = quién corrió el Zoom.
+          Quién corrió el Zoom (presentador) — acreditado a quien lo dio, no al dueño actual del lead.
         </p>
         <div style={{ borderRadius: 14, background: isLight ? "rgba(255,255,255,0.6)" : "rgba(255,255,255,0.02)", border: `1px solid ${rowBorder}`, overflow: "hidden", overflowX: "auto" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 480 }}>
+          <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 360 }}>
             <thead>
               <tr style={{ background: headerBg }}>
                 <th style={{ ...thStyle(T), textAlign: "left", paddingLeft: 16 }}>Asesor</th>
-                <th style={thStyle(T)}>Agendó (Liner)</th>
-                <th style={thStyle(T)}>Presentó</th>
+                <th style={thStyle(T)}>Zooms realizados</th>
               </tr>
             </thead>
             <tbody>
               {byPresenter.length === 0 && (
-                <tr><td colSpan={3} style={{ padding: 26, textAlign: "center", color: T.txt3, fontFamily: font, fontSize: 13 }}>Sin Zooms en este período.</td></tr>
+                <tr><td colSpan={2} style={{ padding: 26, textAlign: "center", color: T.txt3, fontFamily: font, fontSize: 13 }}>Sin Zooms en este período.</td></tr>
               )}
               {byPresenter.map((r, i) => (
                   <tr key={r.asesor} style={{ borderTop: i === 0 ? "none" : `1px solid ${rowBorder}` }}>
                     <td style={{ padding: cellPad, paddingLeft: 16, fontFamily: fontDisp, fontWeight: 600, color: T.txt, fontSize: 13 }}>{r.asesor}</td>
-                    <td style={{ padding: cellPad, textAlign: "center", fontFamily: fontDisp, color: T.txt2, fontSize: 14 }}>{r.scheduled}</td>
                     <td style={{ padding: cellPad, textAlign: "center", fontFamily: fontDisp, fontWeight: 700, color: "#10B981", fontSize: 14 }}>{r.done}</td>
                   </tr>
               ))}
@@ -308,7 +321,6 @@ export default function ZoomBoard({ leadsData = [], theme = "dark", onOpenLead =
               <tfoot>
                 <tr style={{ borderTop: `1px solid ${rowBorder}`, background: headerBg }}>
                   <td style={{ padding: cellPad, paddingLeft: 16, fontFamily: fontDisp, fontWeight: 700, color: T.txt2, fontSize: 12, textTransform: "uppercase", letterSpacing: "0.04em" }}>Total</td>
-                  <td style={{ padding: cellPad, textAlign: "center", fontFamily: fontDisp, fontWeight: 700, color: accent, fontSize: 14 }}>{totals.scheduled}</td>
                   <td style={{ padding: cellPad, textAlign: "center", fontFamily: fontDisp, fontWeight: 700, color: accent, fontSize: 14 }}>{totals.done}</td>
                 </tr>
               </tfoot>
