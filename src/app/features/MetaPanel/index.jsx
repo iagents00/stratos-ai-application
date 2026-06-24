@@ -12,6 +12,7 @@ import {
 import { useState, useEffect } from "react";
 import { supabase } from "../../../lib/supabase";
 import { font, fontDisp } from "../../../design-system/tokens";
+import { useClient } from "../../../hooks/useClient";
 
 /* ── INITIAL STATE DEFAULTS (used by App.jsx to seed useState) ─────────────── */
 export const DEFAULT_META_PLAN = {
@@ -160,15 +161,17 @@ export default function MetaPanel({
   // Las derivadas de leads se siembran en App.jsx (efímeras, se regeneran). Las que el usuario
   // crea acá SÍ se guardan, con fecha/hora límite OBLIGATORIA (la usa el coach de Telegram).
   const [metaNewDate, setMetaNewDate] = useState("");
-  const _orgId = user?.organizationId;
-  // Persistimos si hay un usuario REAL logueado. NO exigimos conocer el org en el front:
-  // team_actions tiene DEFAULT organization_id = current_organization_id() (la DB lo pone desde el
-  // JWT) y RLS lo valida, así que guarda bien aunque user.organizationId no esté cargado en la sesión.
+  const { config: _clientConfig } = useClient();
+  // Org del CLIENTE activo (Duke/Grupo28…) — fuente confiable. NO usamos el org del perfil: los
+  // super_admin ven Duke por su ROL, pero su perfil puede no tener ese org (current_organization_id()
+  // les da NULL) → con el DEFAULT el INSERT chocaba contra NOT NULL. Mandamos el org del cliente a la RPC.
+  const _clientOrg = _clientConfig?.tenant?.organizationId || user?.organizationId || null;
   const _online = !!(user?.id && !user?._offline && user.id !== 'demo-user-local');
   useEffect(() => {
     if (!open || !_online) return;
     let cancelled = false;
-    supabase.from('team_actions').select('*')   // RLS ya filtra por el org del usuario logueado
+    supabase.from('team_actions').select('*')
+      .eq('organization_id', _clientOrg)   // solo las del cliente activo (Duke/Grupo28…)
       .order('created_at', { ascending: false })
       .then(({ data, error }) => {
         if (cancelled || error || !data) { if (error) console.warn('[Stratos] team_actions load:', error.message); return; }
@@ -181,7 +184,7 @@ export default function MetaPanel({
         setMetaActions(p => { const ids = new Set(mapped.map(m => m.id)); return [...mapped, ...p.filter(a => !a._persisted && !ids.has(a.id))]; });
       });
     return () => { cancelled = true; };
-  }, [open, _online]);
+  }, [open, _online, _clientOrg]);
 
   const createAction = async () => {
     const txt = metaNewText.trim();
@@ -191,11 +194,13 @@ export default function MetaPanel({
     const base = { text: txt, lead: 'General', asesor: 'Equipo', date: localDate, done: false, priority: 'normal', assignee: '', assigneeType: 'human', due_at: dueIso };
     setMetaNewText(''); setMetaNewDate('');
     if (_online) {
-      const { data, error } = await supabase.from('team_actions')
-        .insert({ text: txt, due_at: dueIso, priority: 'normal', category: 'General' })   // org lo pone el DEFAULT current_organization_id()
-        .select('id').single();
+      // RPC SECURITY DEFINER: recibe el org del CLIENTE activo (confiable) y guarda sin depender del
+      // perfil del usuario (que en super_admins puede no tener el org de Duke).
+      const { data, error } = await supabase.rpc('app_create_team_action', {
+        p_text: txt, p_due_at: dueIso, p_org: _clientOrg,
+      });
       if (!error && data) { setMetaActions(p => [{ ...base, id: data.id, _persisted: true }, ...p]); return; }
-      console.warn('[Stratos] team_action insert:', error?.message);
+      console.warn('[Stratos] app_create_team_action:', error?.message);
     }
     setMetaActions(p => [{ ...base, id: Date.now() }, ...p]);   // fallback offline
   };
