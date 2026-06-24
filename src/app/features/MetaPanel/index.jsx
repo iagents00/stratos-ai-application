@@ -12,6 +12,7 @@ import {
 import { useState, useEffect } from "react";
 import { supabase } from "../../../lib/supabase";
 import { font, fontDisp } from "../../../design-system/tokens";
+import DocsTab from "./DocsTab";
 
 /* ── INITIAL STATE DEFAULTS (used by App.jsx to seed useState) ─────────────── */
 export const DEFAULT_META_PLAN = {
@@ -268,6 +269,10 @@ export default function MetaPanel({
     { id:"acciones",  label:"Lista de Acción" },
     { id:"plan",      label:"Plan Estratégico" },
     { id:"protocolo", label:"Protocolo de Ventas" },
+    // "Documentos" — manual de operación comercial (procesos/SOP). Solo visible
+    // para admin/super_admin (canEditFinal). Cambia la condición si quieres que
+    // todo el equipo pueda leerlo.
+    ...(canEditFinal ? [{ id:"documentos", label:"Documentos" }] : []),
   ];
 
   return (
@@ -1019,6 +1024,11 @@ export default function MetaPanel({
               </div>
 
             </div>
+          )}
+
+          {/* ═══ TAB 4: DOCUMENTOS ═══════════════════════════════════════ */}
+          {metaTab === "documentos" && (
+            <DocsTab T={T} isLight={isLight} />
           )}
 
         </div>
