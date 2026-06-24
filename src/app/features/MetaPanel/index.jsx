@@ -188,11 +188,17 @@ export default function MetaPanel({
     if (!txt || !metaNewDate) return;               // fecha/hora OBLIGATORIA
     const dueIso = new Date(metaNewDate).toISOString();
     const localDate = new Date(metaNewDate).toLocaleString('es-MX',{ day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' });
-    const base = { text: txt, lead: 'General', asesor: 'Equipo', date: localDate, done: false, priority: 'normal', assignee: '', assigneeType: 'human', due_at: dueIso };
+    // Un ASESOR que crea una acción de equipo la crea PARA SÍ MISMO → la auto-asignamos a él, así el
+    // coach de Telegram lo notifica solo. Un admin crea para otros → queda sin asignar y la asigna
+    // con "+ Responsable". (auth.js expone user.id = id de perfil, user.role y user.name.)
+    const _isAdmin = ['super_admin','admin','ceo','director'].includes(user?.role);
+    const _selfId = _isAdmin ? null : (user?.id || null);
+    const _selfName = _isAdmin ? null : (user?.name || null);
+    const base = { text: txt, lead: 'General', asesor: _selfName || 'Equipo', date: localDate, done: false, priority: 'normal', assignee: _selfName || '', assigneeType: 'human', due_at: dueIso };
     setMetaNewText(''); setMetaNewDate('');
     if (_online) {
       const { data, error } = await supabase.from('team_actions')
-        .insert({ text: txt, due_at: dueIso, priority: 'normal', category: 'General' })   // org lo pone el DEFAULT current_organization_id()
+        .insert({ text: txt, due_at: dueIso, priority: 'normal', category: 'General', asesor_id: _selfId, asesor_name: _selfName })   // org lo pone el trigger team_actions_force_org
         .select('id').single();
       if (!error && data) { setMetaActions(p => [{ ...base, id: data.id, _persisted: true }, ...p]); return; }
       console.warn('[Stratos] team_action insert:', error?.message);
