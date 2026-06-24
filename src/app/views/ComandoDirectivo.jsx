@@ -21,7 +21,7 @@
 import { useMemo, useState } from "react";
 import {
   Users, Phone, BadgeCheck, CalendarDays, CheckCircle2, Activity,
-  RefreshCw, Download,
+  RefreshCw, Download, MapPin, Handshake,
 } from "lucide-react";
 import {
   AreaChart, Area, XAxis, YAxis, Tooltip,
@@ -36,6 +36,7 @@ import ZoomControl from "./ZoomControl";
 import ZoomBoard from "./CRM/ZoomBoard";
 import ProductividadTab from "./ProductividadTab";
 import { useZoomAgendados } from "../../hooks/useZoomAgendados";
+import { milestoneOf, RECORRIDO_STAGES, CIERRE_STAGES } from "./CRM/zoom-metrics";
 
 const ICONS_BY_KEY = {
   assigned:       Users,
@@ -200,7 +201,12 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
   // de tab. Default = "lo del día/semana/mes" actual + un poco de contexto.
   const [bucketCounts, setBucketCounts] = useState({ day: 7, week: 4, month: 3 });
   // Visibilidad por serie — toggleable desde la leyenda.
-  const [hiddenSeries, setHiddenSeries] = useState({});
+  // Por defecto la gráfica de líneas muestra SOLO 2 series (agendados +
+  // realizados) para que no sea un spaghetti de 7 líneas. El resto se prende
+  // con los chips de la leyenda. El embudo de arriba es el visual principal.
+  const [hiddenSeries, setHiddenSeries] = useState({
+    assigned: true, contacted: true, qualified: true, activePostZoom: true, followUps: true,
+  });
 
   // Pestañas de nivel superior: Indicadores (vista histórica) vs Control de
   // Zooms (panel operativo sobre zoom_agendados). La pestaña de Zooms solo
@@ -275,6 +281,28 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
     for (const ind of INDICATORS) t[ind.key] = ind.compute(leadsData);
     return t;
   }, [leadsData]);
+
+  // Embudo de conversión comercial: del lead al cierre. Etapas anidadas (cada
+  // una es subconjunto de la anterior), así el embudo SIEMPRE desciende y se lee
+  // de un vistazo dónde se caen los clientes. Recorridos/Cierres se calculan aquí
+  // (no están en INDICATORS); agendados/realizados vienen del snapshot (funnel-entry).
+  const funnel = useMemo(() => {
+    let rec = 0, cie = 0;
+    for (const l of leadsData) {
+      if (milestoneOf(l, RECORRIDO_STAGES)) rec++;
+      if (milestoneOf(l, CIERRE_STAGES)) cie++;
+    }
+    const total = leadsData.length;
+    const stages = [
+      { label: "Leads totales",      value: total,                       color: "#64748B", icon: Users },
+      { label: "Zoom agendado",      value: snapshotTotals.zoomScheduled, color: "#2563EB", icon: CalendarDays },
+      { label: "Zoom realizado",     value: snapshotTotals.zoomDone,      color: "#10B981", icon: CheckCircle2 },
+      { label: "Recorrido / visita", value: rec,                          color: "#06B6D4", icon: MapPin },
+      { label: "Apartó / Cierre",    value: cie,                          color: accent,    icon: Handshake },
+    ];
+    const max = Math.max(1, ...stages.map(s => s.value));
+    return { stages, max };
+  }, [leadsData, snapshotTotals, accent]);
 
   const rangeTotals = useMemo(() => {
     const t = {};
@@ -841,6 +869,50 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
         </div>
       </div>
 
+      {/* ── 0) Embudo de conversión — el visual principal, claro de un vistazo ── */}
+      <G T={T}>
+        <div style={{ marginBottom: 16 }}>
+          <p style={{ fontSize: 14.5, fontWeight: 700, color: T.txt, fontFamily: fontDisp, margin: 0, letterSpacing: "-0.014em" }}>
+            Embudo de conversión
+          </p>
+          <p style={{ fontSize: 11, color: T.txt3, fontFamily: font, margin: "3px 0 0", lineHeight: 1.5 }}>
+            Del lead al cierre · cuántos avanzan en cada etapa y dónde se caen. Cada barra es proporcional al total de leads.
+          </p>
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          {funnel.stages.map((s, i) => {
+            const Icon = s.icon;
+            const widthPct = Math.max(4, Math.round((s.value / funnel.max) * 100));
+            const prev = i > 0 ? funnel.stages[i - 1].value : null;
+            const conv = prev ? Math.round((s.value / prev) * 100) : null;
+            return (
+              <div key={s.label} style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                <div style={{ width: 150, flexShrink: 0, display: "flex", alignItems: "center", gap: 8 }}>
+                  <span style={{ display: "inline-flex", padding: 6, borderRadius: 8, background: `${s.color}1A`, flexShrink: 0 }}>
+                    <Icon size={14} color={s.color} strokeWidth={2.2} />
+                  </span>
+                  <span style={{ fontSize: 12, fontWeight: 600, color: T.txt2, fontFamily: font, lineHeight: 1.2 }}>{s.label}</span>
+                </div>
+                <div style={{ flex: 1, minWidth: 0, display: "flex", alignItems: "center", gap: 10 }}>
+                  <div style={{ flex: 1, minWidth: 0, height: 34, borderRadius: 8, background: isLight ? "rgba(15,23,42,0.04)" : "rgba(255,255,255,0.04)", overflow: "hidden" }}>
+                    <div style={{
+                      width: `${widthPct}%`, height: "100%", borderRadius: 8,
+                      background: s.color, display: "flex", alignItems: "center", paddingLeft: 12,
+                      transition: "width 0.3s ease",
+                    }}>
+                      <span style={{ fontSize: 14, fontWeight: 800, color: "#06080F", fontFamily: fontDisp, letterSpacing: "-0.01em" }}>{s.value.toLocaleString("es-MX")}</span>
+                    </div>
+                  </div>
+                  <span style={{ width: 84, flexShrink: 0, fontSize: 11, color: T.txt3, fontFamily: font, textAlign: "right" }}>
+                    {conv !== null ? <><strong style={{ color: T.txt2 }}>{conv}%</strong> del previo</> : "100%"}
+                  </span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </G>
+
       {/* ── 1) Gráfica grande — evolución en el tiempo ─────────────────────── */}
       <G T={T}>
         <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: 12, marginBottom: 14 }}>
@@ -855,7 +927,7 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
                 ? <>Mostrando <strong style={{ color: T.txt2 }}>{bucketCount === 1 ? "esta semana" : `las últimas ${bucketCount} semanas`}</strong> — granularidad semanal.</>
                 : <>Mostrando <strong style={{ color: T.txt2 }}>{bucketCount === 1 ? "este mes" : `los últimos ${bucketCount} meses`}</strong> — granularidad mensual.</>
               }
-              {" "}Click en una serie de la leyenda para enfocarla.
+              {" "}Por defecto muestra <strong style={{ color: T.txt2 }}>Zooms agendados y realizados</strong>; prende más series con los chips de la leyenda.
             </p>
           </div>
 
