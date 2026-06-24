@@ -151,6 +151,8 @@ createRoot(document.getElementById("root")).render(
                           docTitle="Manual del Asistente de Telegram · Stratos AI"
                           docDesc="Cómo usar tu asistente de Telegram del CRM Duke del Caribe: conectar, qué pedirle, recordatorios automáticos, acciones de equipo y funciones de admin."
                           footerLabel="Asistente de Telegram v1.0"
+                          waNumber="5219842803001"
+                          waText="Hola, necesito ayuda con el asistente de Telegram"
                         />
                       : isDiagnostico
                         ? <Diagnostico />
