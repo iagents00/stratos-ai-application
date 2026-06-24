@@ -193,6 +193,7 @@ function downloadFile(filename, content, mimeType = "text/html;charset=utf-8") {
 const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
   const isLight = theme === "light";
   const T = _T || (isLight ? LP : P);
+  const accent = T.accent;
   const { config: clientConfig } = useClient();
   const clientDisplayName = clientConfig?.legalName || clientConfig?.name || "Stratos";
   const [granularityId, setGranularityId] = useState("week");
@@ -765,7 +766,6 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
   const toggleSeries = (key) => setHiddenSeries(h => ({ ...h, [key]: !h[key] }));
   const visibleIndicators = INDICATORS.filter(i => !hiddenSeries[i.key]);
 
-  const accent = T.accent;
   const headerBg  = isLight ? "rgba(15,23,42,0.04)" : "rgba(255,255,255,0.04)";
   const rowBorder = isLight ? "rgba(15,23,42,0.06)" : "rgba(255,255,255,0.05)";
 
