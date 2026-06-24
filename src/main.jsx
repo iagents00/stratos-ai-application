@@ -31,6 +31,7 @@ const DataDeletion     = lazy(() => import("./landing/DataDeletion.jsx"));
 const DeliveryHubCRM   = lazy(() => import("./landing/DeliveryHubCRM.jsx"));
 const ManualCRM        = lazy(() => import("./landing/ManualCRM.jsx"));
 const Diagnostico      = lazy(() => import("./landing/Diagnostico.jsx"));
+import { CATEGORIES_TG, MANUAL_SECTIONS_TG, searchManualTG } from "./landing/manual-telegram-content";
 
 import "./index.css";
 
@@ -73,12 +74,15 @@ const DELIVERY_PATHS = ["/entrega-crm", "/entrega"];
 // Manual operativo del CRM — público, para asesores. Diseñado para que un agente
 // IA de soporte futuro consuma window.__STRATOS_MANUAL__ y dé respuestas RAG.
 const MANUAL_PATHS = ["/manual", "/manual-crm"];
+// Manual del ASISTENTE DE TELEGRAM — público, para asesores (uso del bot).
+const MANUAL_TG_PATHS = ["/manual-asistente-telegram", "/manual_asistente_telegram", "/manual-telegram"];
 const DIAGNOSTICO_PATHS = ["/diagnostico"];
 const matchPath = (paths) => paths.some(p => pathname === p || pathname === p + "/");
 const isPrivacy = matchPath(PRIVACY_PATHS);
 const isDeletion = matchPath(DELETION_PATHS);
 const isDelivery = matchPath(DELIVERY_PATHS);
 const isManual = matchPath(MANUAL_PATHS);
+const isManualTG = matchPath(MANUAL_TG_PATHS);
 // /diagnostico (formulario público) y /diagnostico/view/<lead_id> (vista compartida
 // del Blueprint que vio el cliente — el link llega al equipo por Telegram al
 // crearse cada lead). Ambas se renderean con el mismo componente Diagnostico.jsx,
@@ -102,7 +106,7 @@ const isLanding = !isExplicitClient && (
   || (hostname === "127.0.0.1" && !params.has("app"))
 );
 
-const isApp = !isPrivacy && !isDeletion && !isDelivery && !isManual && !isDiagnostico && !isLanding;
+const isApp = !isPrivacy && !isDeletion && !isDelivery && !isManual && !isManualTG && !isDiagnostico && !isLanding;
 
 // URL de la plataforma — usada por la landing para el CTA principal
 const APP_URL = import.meta.env.VITE_APP_URL || (window.location.origin + "/?app");
@@ -138,8 +142,18 @@ createRoot(document.getElementById("root")).render(
                   ? <DeliveryHubCRM />
                   : isManual
                     ? <ManualCRM />
-                    : isDiagnostico
-                      ? <Diagnostico />
+                    : isManualTG
+                      ? <ManualCRM
+                          sections={MANUAL_SECTIONS_TG}
+                          categories={CATEGORIES_TG}
+                          search={searchManualTG}
+                          navLabel="Asistente de Telegram"
+                          docTitle="Manual del Asistente de Telegram · Stratos AI"
+                          docDesc="Cómo usar tu asistente de Telegram del CRM Duke del Caribe: conectar, qué pedirle, recordatorios automáticos, acciones de equipo y funciones de admin."
+                          footerLabel="Asistente de Telegram v1.0"
+                        />
+                      : isDiagnostico
+                        ? <Diagnostico />
                       : isApp
                         ? <App />
                         : <LandingMarketing appUrl={APP_URL} />
