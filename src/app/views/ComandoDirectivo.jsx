@@ -298,11 +298,11 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
       { label: "Zoom agendado",      value: snapshotTotals.zoomScheduled, color: "#2563EB", icon: CalendarDays },
       { label: "Zoom realizado",     value: snapshotTotals.zoomDone,      color: "#10B981", icon: CheckCircle2 },
       { label: "Recorrido / visita", value: rec,                          color: "#06B6D4", icon: MapPin },
-      { label: "Apartó / Cierre",    value: cie,                          color: accent,    icon: Handshake },
+      { label: "Apartó / Cierre",    value: cie,                          color: T.accent,  icon: Handshake },
     ];
     const max = Math.max(1, ...stages.map(s => s.value));
     return { stages, max };
-  }, [leadsData, snapshotTotals, accent]);
+  }, [leadsData, snapshotTotals, T.accent]);
 
   const rangeTotals = useMemo(() => {
     const t = {};
