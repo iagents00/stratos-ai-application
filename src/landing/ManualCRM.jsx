@@ -414,24 +414,32 @@ function ContentBlock({ block }) {
 /* ═══════════════════════════════════════════════════════════════════════════
    COMPONENTE PRINCIPAL
    ═══════════════════════════════════════════════════════════════════════════ */
-export default function ManualCRM() {
+export default function ManualCRM({
+  sections = MANUAL_SECTIONS,
+  categories = CATEGORIES,
+  search = searchManual,
+  navLabel = "Manual del CRM",
+  docTitle = "Manual del CRM · Stratos AI",
+  docDesc = "Manual operativo del CRM Stratos AI. Cómo agregar clientes, mover el pipeline, programar tareas y todo lo que tu equipo necesita para usar el sistema día a día.",
+  footerLabel = "Manual del CRM v1.0",
+} = {}) {
   const [query, setQuery] = useState("");
-  const [activeId, setActiveId] = useState(MANUAL_SECTIONS[0]?.id || "");
+  const [activeId, setActiveId] = useState(sections[0]?.id || "");
 
   // Resultados de búsqueda en vivo
-  const filtered = useMemo(() => searchManual(query), [query]);
+  const filtered = useMemo(() => search(query), [query, search]);
 
   // Sección activa = la del activeId, o la primera del filtrado si la activa no está
   const activeSection = useMemo(() => {
-    return MANUAL_SECTIONS.find(s => s.id === activeId)
+    return sections.find(s => s.id === activeId)
       || filtered[0]
-      || MANUAL_SECTIONS[0];
-  }, [activeId, filtered]);
+      || sections[0];
+  }, [activeId, filtered, sections]);
 
   // Agrupar secciones por categoría para el sidebar (solo las que pasan el filtro)
   const sectionsByCategory = useMemo(() => {
     const map = {};
-    for (const cat of CATEGORIES) map[cat.id] = [];
+    for (const cat of categories) map[cat.id] = [];
     for (const s of filtered) {
       if (map[s.category]) map[s.category].push(s);
     }
@@ -440,17 +448,14 @@ export default function ManualCRM() {
 
   // Setup inicial: title, meta, exponer manual a window
   useEffect(() => {
-    document.title = "Manual del CRM · Stratos AI";
+    document.title = docTitle;
     let metaDesc = document.querySelector('meta[name="description"]');
     if (!metaDesc) {
       metaDesc = document.createElement("meta");
       metaDesc.setAttribute("name", "description");
       document.head.appendChild(metaDesc);
     }
-    metaDesc.setAttribute(
-      "content",
-      "Manual operativo del CRM Stratos AI. Cómo agregar clientes, mover el pipeline, programar tareas y todo lo que tu equipo necesita para usar el sistema día a día."
-    );
+    metaDesc.setAttribute("content", docDesc);
     document.documentElement.lang = "es";
     exposeManualToWindow();
   }, []);
@@ -458,7 +463,7 @@ export default function ManualCRM() {
   // Soportar deep-link via hash (#agregar-cliente-manual)
   useEffect(() => {
     const fromHash = window.location.hash.replace('#', '');
-    if (fromHash && MANUAL_SECTIONS.some(s => s.id === fromHash)) {
+    if (fromHash && sections.some(s => s.id === fromHash)) {
       setActiveId(fromHash);
     }
   }, []);
@@ -498,7 +503,7 @@ export default function ManualCRM() {
             <span style={{
               marginLeft: 12, paddingLeft: 12, borderLeft: `1px solid ${P.border}`,
               fontSize: 13, fontWeight: 500, color: P.txt2, fontFamily: font,
-            }}>Manual del CRM</span>
+            }}>{navLabel}</span>
           </a>
           <a href={APP_URL} style={{
             display: "inline-flex", alignItems: "center", gap: 6,
@@ -547,7 +552,7 @@ export default function ManualCRM() {
               Prueba con otras palabras o limpia la búsqueda.
             </div>
           ) : (
-            CATEGORIES.map(cat => {
+            categories.map(cat => {
               const items = sectionsByCategory[cat.id] || [];
               if (items.length === 0) return null;
               const CatIcon = iconFor(cat.icon);
@@ -584,7 +589,7 @@ export default function ManualCRM() {
             <>
               <div className="mn-eyebrow">
                 {(() => {
-                  const cat = CATEGORIES.find(c => c.id === activeSection.category);
+                  const cat = categories.find(c => c.id === activeSection.category);
                   const Icon = iconFor(cat?.icon || 'ChevronRight');
                   return (
                     <>
@@ -706,7 +711,7 @@ export default function ManualCRM() {
           <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
             <StratosAtom size={18} color={P.accent} />
             <span style={{ color: P.txt2 }}>
-              © {new Date().getFullYear()} Stratos Capital Group · Manual del CRM v1.0
+              © {new Date().getFullYear()} Stratos Capital Group · {footerLabel}
             </span>
           </div>
           <div style={{ display: "flex", gap: 18, flexWrap: "wrap" }}>
