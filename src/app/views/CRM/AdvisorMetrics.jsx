@@ -58,6 +58,27 @@ export function leadInPeriod(lead, startTs) {
   return !Number.isNaN(t) && t >= startTs;
 }
 
+// Rango de fechas exacto que cubre el período seleccionado — para mostrarlo en
+// el selector y que no haya duda de "de cuándo a cuándo" se está contando.
+const PR_MESES = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
+export function periodRangeLabel(periodId) {
+  const now = new Date();
+  const fmt = (d) => `${d.getDate()} ${PR_MESES[d.getMonth()]}`;
+  if (periodId === "all")   return "todo el histórico";
+  if (periodId === "today") return `hoy · ${fmt(now)}`;
+  if (periodId === "week") {
+    const start = new Date(periodStart("week"));
+    const end = new Date(start); end.setDate(start.getDate() + 6);
+    return `${fmt(start)} – ${fmt(end)}`;
+  }
+  if (periodId === "month") {
+    const start = new Date(now.getFullYear(), now.getMonth(), 1);
+    const end = new Date(now.getFullYear(), now.getMonth() + 1, 0); // último día del mes
+    return `${fmt(start)} – ${fmt(end)}`;
+  }
+  return "";
+}
+
 function stageIdx(stage) {
   const idx = STAGE_INDEX[stage];
   return typeof idx === "number" ? idx : -1;
@@ -251,27 +272,32 @@ export default function AdvisorMetrics({ leadsData = [], theme = "dark", onOpenL
             Métricas por asesor calculadas desde los leads del período seleccionado.
           </p>
         </div>
-        <div role="tablist" aria-label="Período" style={{ display: "flex", gap: 4, padding: 3, borderRadius: 10, background: headerBg, border: `1px solid ${rowBorder}` }}>
-          {PERIODS.map(p => {
-            const active = p.id === periodId;
-            return (
-              <button
-                key={p.id}
-                role="tab"
-                aria-selected={active}
-                onClick={() => setPeriodId(p.id)}
-                style={{
-                  padding: "6px 14px", borderRadius: 7,
-                  background: active ? accent : "transparent",
-                  color: active ? (isLight ? "#0B1220" : "#06080F") : T.txt2,
-                  border: "none",
-                  fontSize: 12, fontWeight: active ? 700 : 500,
-                  fontFamily: fontDisp, cursor: "pointer",
-                  transition: "background 0.14s, color 0.14s",
-                }}
-              >{p.label}</button>
-            );
-          })}
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 6 }}>
+          <div role="tablist" aria-label="Período" style={{ display: "flex", gap: 4, padding: 3, borderRadius: 10, background: headerBg, border: `1px solid ${rowBorder}` }}>
+            {PERIODS.map(p => {
+              const active = p.id === periodId;
+              return (
+                <button
+                  key={p.id}
+                  role="tab"
+                  aria-selected={active}
+                  onClick={() => setPeriodId(p.id)}
+                  style={{
+                    padding: "6px 14px", borderRadius: 7,
+                    background: active ? accent : "transparent",
+                    color: active ? (isLight ? "#0B1220" : "#06080F") : T.txt2,
+                    border: "none",
+                    fontSize: 12, fontWeight: active ? 700 : 500,
+                    fontFamily: fontDisp, cursor: "pointer",
+                    transition: "background 0.14s, color 0.14s",
+                  }}
+                >{p.label}</button>
+              );
+            })}
+          </div>
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11, color: T.txt3, fontFamily: font }}>
+            <CalendarDays size={11} strokeWidth={2} /> Mostrando: <strong style={{ color: T.txt2, fontWeight: 600 }}>{periodRangeLabel(periodId)}</strong>
+          </span>
         </div>
       </div>
 

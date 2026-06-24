@@ -16,7 +16,7 @@
 import { useMemo, useState } from "react";
 import { CalendarDays, CheckCircle2, MapPin, Handshake, History, ChevronDown } from "lucide-react";
 import { P, LP, font, fontDisp, STAGE_COLORS } from "../../../design-system/tokens";
-import { PERIODS, periodStart } from "./AdvisorMetrics";
+import { PERIODS, periodStart, periodRangeLabel } from "./AdvisorMetrics";
 import { zoomEventsOf, funnelEntryOf, milestoneOf, eventInPeriod, ACTIVE_POST_ZOOM_STAGES, RECORRIDO_STAGES, CIERRE_STAGES, zoomMovements } from "./zoom-metrics";
 
 const fmtFecha = (iso) => {
@@ -185,20 +185,25 @@ export default function ZoomBoard({ leadsData = [], theme = "dark", onOpenLead =
             Segundo filtro comercial · el embudo desde el Zoom: agendado → realizado → recorrido → cierre, con el estado y el siguiente paso de cada cliente.
           </p>
         </div>
-        <div role="tablist" aria-label="Período" style={{ display: "flex", gap: 4, padding: 3, borderRadius: 10, background: headerBg, border: `1px solid ${rowBorder}` }}>
-          {PERIODS.map(p => {
-            const active = p.id === periodId;
-            return (
-              <button key={p.id} role="tab" aria-selected={active} onClick={() => setPeriodId(p.id)}
-                style={{
-                  padding: "7px 16px", borderRadius: 7,
-                  background: active ? accent : "transparent",
-                  color: active ? (isLight ? "#0B1220" : "#06080F") : T.txt2,
-                  border: "none", fontSize: 12, fontWeight: active ? 700 : 500,
-                  fontFamily: fontDisp, cursor: "pointer", transition: "background 0.14s, color 0.14s",
-                }}>{p.label}</button>
-            );
-          })}
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 6 }}>
+          <div role="tablist" aria-label="Período" style={{ display: "flex", gap: 4, padding: 3, borderRadius: 10, background: headerBg, border: `1px solid ${rowBorder}` }}>
+            {PERIODS.map(p => {
+              const active = p.id === periodId;
+              return (
+                <button key={p.id} role="tab" aria-selected={active} onClick={() => setPeriodId(p.id)}
+                  style={{
+                    padding: "7px 16px", borderRadius: 7,
+                    background: active ? accent : "transparent",
+                    color: active ? (isLight ? "#0B1220" : "#06080F") : T.txt2,
+                    border: "none", fontSize: 12, fontWeight: active ? 700 : 500,
+                    fontFamily: fontDisp, cursor: "pointer", transition: "background 0.14s, color 0.14s",
+                  }}>{p.label}</button>
+              );
+            })}
+          </div>
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11, color: T.txt3, fontFamily: font }}>
+            <CalendarDays size={11} strokeWidth={2} /> Mostrando: <strong style={{ color: T.txt2, fontWeight: 600 }}>{periodRangeLabel(periodId)}</strong>
+          </span>
         </div>
       </div>
 
