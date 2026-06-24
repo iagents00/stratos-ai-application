@@ -62,8 +62,9 @@ export default function ZoomBoard({ leadsData = [], theme = "dark", onOpenLead =
       buckets.push({ label, start: start.getTime(), end: end.getTime(), done: 0, sched: 0 });
     }
     for (const l of leadsData) {
-      const { scheduled, done } = zoomEventsOf(l);
-      for (const [ev, key] of [[done, "done"], [scheduled, "sched"]]) {
+      const done = zoomEventsOf(l).done;
+      const entry = funnelEntryOf(l); // agendados coherente con el KPI (funnel-entry)
+      for (const [ev, key] of [[done, "done"], [entry, "sched"]]) {
         if (!ev || !ev.at) continue;
         const t = new Date(ev.at).getTime();
         if (Number.isNaN(t)) continue;
