@@ -21,7 +21,7 @@ import {
   LogIn, KeyRound, Layout, UserPlus, FileSearch, MoveRight, Workflow,
   NotebookPen, CheckSquare, History, UserCheck, ShieldCheck,
   LayoutDashboard, Send, HelpCircle, AlertCircle, Users, Layers,
-  FileText, UsersRound, LineChart, LifeBuoy,
+  FileText, UsersRound, LineChart, LifeBuoy, AlarmClock, Home,
 } from "lucide-react";
 import { CATEGORIES, MANUAL_SECTIONS, searchManual, exposeManualToWindow } from "./manual-content";
 
@@ -77,7 +77,7 @@ const ICON_MAP = {
   MessageCircle, LifeBuoy,
   LogIn, KeyRound, Layout, UserPlus, FileSearch, MoveRight, Workflow,
   NotebookPen, CheckSquare, History, UserCheck, ShieldUser: ShieldCheck,
-  LayoutDashboard, Send, HelpCircle, AlertCircle,
+  LayoutDashboard, Send, HelpCircle, AlertCircle, AlarmClock, Home,
 };
 const iconFor = (name) => ICON_MAP[name] || ChevronRight;
 
