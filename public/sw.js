@@ -108,7 +108,12 @@
 // v35 — modal "Programar Zoom Agendado": campos fecha/hora separados, sin
 //   "Próxima acción", y disponible también al crear cliente nuevo en esa etapa.
 //   Bump para forzar que los navegadores tomen el bundle nuevo.
-const CACHE_VERSION = 'stratos-v42';
+// v42 — (PR #226) Manual público del Asistente de Telegram en /manual-asistente-telegram.
+// v43 — Indicadores · Productividad: desplegable por asesor con el detalle de
+//   sus acciones (Pendientes vs Completadas), estado (Pendiente/En proceso/
+//   Completada/No la hice), fecha y nota. Forward-compatible con la columna
+//   `status` de team_actions (cuando exista, enciende En proceso / No la hice).
+const CACHE_VERSION = 'stratos-v43';
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 
