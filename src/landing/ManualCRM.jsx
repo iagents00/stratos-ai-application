@@ -260,6 +260,32 @@ const CSS = `
   .mn-callout-warn .mn-callout-icon { color: ${P.warn}; }
   .mn-callout-icon { flex-shrink: 0; margin-top: 2px; }
 
+  /* Flow — diagrama de pasos (tarjetas numeradas) */
+  .mn-flow { display: flex; flex-direction: column; gap: 12px; margin: 22px 0; }
+  .mn-flow-step {
+    display: flex; gap: 14px; align-items: flex-start;
+    padding: 16px 18px; border-radius: 12px;
+    background: ${P.glass}; border: 1px solid ${P.border};
+  }
+  .mn-flow-n {
+    flex-shrink: 0; width: 30px; height: 30px; border-radius: 9px;
+    background: ${P.accentB}; color: ${P.accent};
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: 15px; font-family: ${fontD};
+  }
+  .mn-flow-title { color: ${P.w}; font-weight: 700; font-size: 14.5px; margin-bottom: 3px; font-family: ${fontD}; }
+  .mn-flow-text { color: ${P.txt2}; font-size: 14px; line-height: 1.6; }
+
+  /* Ejemplos — chips de "decile así" */
+  .mn-ex { margin: 16px 0 22px; }
+  .mn-ex-label { font-size: 12px; color: ${P.txt3}; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; margin-bottom: 8px; }
+  .mn-ex-item {
+    background: ${P.accentS}; border: 1px solid ${P.accentB};
+    border-radius: 10px; padding: 11px 14px; margin-bottom: 7px;
+    color: ${P.txt}; font-size: 14px; line-height: 1.55;
+    font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace;
+  }
+
   /* AI Assistant card (placeholder) */
   .mn-ai-card {
     margin-top: 48px;
@@ -408,6 +434,31 @@ function ContentBlock({ block }) {
       </div>
     );
   }
+  if (block.type === 'flow') {
+    return (
+      <div className="mn-block mn-flow">
+        {block.items.map((it, i) => (
+          <div key={i} className="mn-flow-step">
+            <div className="mn-flow-n">{it.n}</div>
+            <div>
+              <div className="mn-flow-title">{it.title}</div>
+              <div className="mn-flow-text">{it.text}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+  if (block.type === 'ex') {
+    return (
+      <div className="mn-block mn-ex">
+        <div className="mn-ex-label">Escribile (o mandale audio) así:</div>
+        {block.items.map((it, i) => (
+          <div key={i} className="mn-ex-item">{it}</div>
+        ))}
+      </div>
+    );
+  }
   return null;
 }
 
@@ -422,6 +473,8 @@ export default function ManualCRM({
   docTitle = "Manual del CRM · Stratos AI",
   docDesc = "Manual operativo del CRM Stratos AI. Cómo agregar clientes, mover el pipeline, programar tareas y todo lo que tu equipo necesita para usar el sistema día a día.",
   footerLabel = "Manual del CRM v1.0",
+  waNumber = "17479779711",
+  waText = "Hola, necesito ayuda con el CRM Stratos AI",
 } = {}) {
   const [query, setQuery] = useState("");
   const [activeId, setActiveId] = useState(sections[0]?.id || "");
@@ -615,7 +668,7 @@ export default function ManualCRM({
                   ¿No encuentras lo que buscas?
                 </span>
                 <a
-                  href="https://wa.me/17479779711?text=Hola%2C%20necesito%20ayuda%20con%20el%20CRM%20Stratos%20AI"
+                  href={`https://wa.me/${waNumber}?text=${encodeURIComponent(waText)}`}
                   target="_blank" rel="noopener noreferrer"
                   style={{
                     display: "inline-flex", alignItems: "center", gap: 6,
