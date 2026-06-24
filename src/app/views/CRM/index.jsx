@@ -333,6 +333,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
   const cancelInlineAction = () => setEditingActionId(null);
 
   const [zoomSchedulingLead, setZoomSchedulingLead] = useState(null);
+  const [visitaSchedulingLead, setVisitaSchedulingLead] = useState(null);
 
   const cancelZoomScheduling = () => {
     // Alta de cliente NUEVO: no hay nada que revertir en la lista (aún no se
@@ -387,6 +388,40 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
 
     updateLead(finalizedLead);
     setZoomSchedulingLead(null);
+  };
+
+  // ── Visita Agendada: cita obligatoria (paridad con Zoom) ─────────────────
+  // Sin fecha (visita_at) no salen los avisos −1mes/−15d/−7d que encola
+  // fn_proactive_scan_visitas. Por eso se bloquea el cambio de etapa hasta
+  // que el asesor define la fecha, igual que con "Zoom Agendado".
+  const cancelVisitaScheduling = () => {
+    if (visitaSchedulingLead) {
+      const { lead, originalStage } = visitaSchedulingLead;
+      const revertedLead = { ...lead, st: originalStage };
+      leadsDataRef.current = leadsDataRef.current.map(l => l.id === revertedLead.id ? revertedLead : l);
+      setLeadsData(prev => prev.map(l => l.id === revertedLead.id ? revertedLead : l));
+      if (selectedLead?.id === revertedLead.id) setSelectedLead(revertedLead);
+      if (notesLead?.id === revertedLead.id) setNotesLead(revertedLead);
+      if (analyzingLead?.id === revertedLead.id) setAnalyzingLead(revertedLead);
+    }
+    setVisitaSchedulingLead(null);
+  };
+
+  const confirmVisitaScheduling = (dateTimeString) => {
+    if (!visitaSchedulingLead) return;
+    const { lead } = visitaSchedulingLead;
+    // Instante real de la visita (ISO, hora local del asesor). Es lo que lee
+    // fn_proactive_scan_visitas para encolar los avisos.
+    let visitaAtISO = null;
+    try { visitaAtISO = new Date(dateTimeString).toISOString(); } catch (_) { /* fecha inválida → null */ }
+    const finalizedLead = {
+      ...lead,
+      st: "Visita Agendada",
+      visita_at: visitaAtISO,
+      _visitaConfirmed: true,
+    };
+    updateLead(finalizedLead);
+    setVisitaSchedulingLead(null);
   };
 
 
@@ -577,6 +612,17 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
       return;
     }
 
+    // Interceptor paralelo: "Visita Agendada" exige fecha/hora (visita_at) →
+    // sin eso no salen los avisos −1mes/−15d/−7d (fn_proactive_scan_visitas).
+    const isChangingToVisita = updated.st === "Visita Agendada" && prev?.st !== "Visita Agendada";
+    if (isTargetClient && isChangingToVisita && !updated._visitaConfirmed) {
+      setVisitaSchedulingLead({
+        lead: updated,
+        originalStage: prev?.st || "Contáctame Ya",
+      });
+      return;
+    }
+
     if (prioritySort === "manual" && priorityOrder.length === 0) {
       const snap = priorityLeadsRef.current.map(l => l.id);
       if (snap.length > 0) setPriorityOrder(snap);
@@ -760,6 +806,10 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
       // este update no lo trae, para no borrar la cita que registró el backend
       // (fn_register_appointment) en una edición no relacionada.
       next_action_at:   withScore.next_action_at ?? prev?.next_action_at ?? null,
+      // Instante real de la visita (etapa "Visita Agendada"). Se preserva el
+      // valor previo si este update no lo trae (igual que next_action_at), para
+      // no borrar la cita en ediciones no relacionadas.
+      visita_at:        withScore.visita_at ?? prev?.visita_at ?? null,
       last_activity:    withScore.lastActivity ?? withScore.last_activity,
       days_inactive:    withScore.daysInactive ?? withScore.days_inactive ?? 0,
       seguimientos:     withScore.seguimientos ?? 0,
@@ -5407,6 +5457,14 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
         T={T}
       />
 
+      <VisitaSchedulingModal
+        open={!!visitaSchedulingLead}
+        lead={visitaSchedulingLead?.lead}
+        onClose={cancelVisitaScheduling}
+        onConfirm={confirmVisitaScheduling}
+        T={T}
+      />
+
       {/* ── FAB "+ Nuevo cliente" — solo mobile ─────────────────────────────
           Floating Action Button en la zona del pulgar (bottom-right). Se
           posiciona ABOVE del bottom nav (z=200) y respeta safe-area.
@@ -5874,6 +5932,174 @@ const ZoomSchedulingModal = ({ open, lead, isNewLead = false, onClose, onConfirm
             onMouseLeave={e => { if (canConfirm) e.currentTarget.style.opacity = 1; }}
           >
             Confirmar Zoom
+          </button>
+        </div>
+      </div>
+    </div>,
+    document.body
+  );
+};
+
+// VisitaSchedulingModal — espejo de ZoomSchedulingModal para la etapa
+// "Visita Agendada". Pide fecha + hora obligatorias y las entrega como
+// "YYYY-MM-DDTHH:MM" (hora local del asesor). El que confirma (confirmVisitaScheduling)
+// las guarda en leads.visita_at, de donde fn_proactive_scan_visitas encola los
+// avisos −1mes/−15d/−7d. Acento verde para diferenciarlo del de Zoom (azul).
+const VisitaSchedulingModal = ({ open, lead, onClose, onConfirm, T = P }) => {
+  const [dateVal, setDateVal] = useState(""); // "YYYY-MM-DD"
+  const [timeVal, setTimeVal] = useState(""); // "HH:MM"
+  const isLight = T !== P;
+
+  useEffect(() => {
+    if (open) {
+      setDateVal("");
+      setTimeVal("");
+    }
+  }, [open]);
+
+  if (!open || !lead) return null;
+
+  const canConfirm = !!dateVal && !!timeVal;
+  const handleConfirm = () => {
+    if (!canConfirm) return;
+    onConfirm(`${dateVal}T${timeVal}`);
+  };
+
+  const modalBg = isLight ? "#FFFFFF" : "#111318";
+  const overlayBg = "rgba(10, 16, 28, 0.75)";
+  const borderC = isLight ? "rgba(15,23,42,0.12)" : "rgba(255,255,255,0.08)";
+  const inputBg = isLight ? "rgba(15,23,42,0.02)" : "rgba(255,255,255,0.02)";
+
+  return createPortal(
+    <div style={{
+      position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
+      zIndex: 999999, display: "flex", alignItems: "center", justifyContent: "center",
+      background: overlayBg, backdropFilter: "blur(8px)",
+      padding: 16,
+    }}>
+      <style>{`
+        @keyframes modalIn {
+          from { opacity: 0; transform: scale(0.96) translateY(10px); }
+          to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+      `}</style>
+      <div style={{
+        width: "100%", maxWidth: 420,
+        background: modalBg, border: `1px solid ${borderC}`,
+        borderRadius: 16, overflow: "hidden",
+        boxShadow: "0 20px 40px rgba(0,0,0,0.5)",
+        animation: "modalIn 0.26s cubic-bezier(0.16,1,0.3,1) both",
+      }}>
+        {/* Header */}
+        <div style={{
+          padding: "20px 24px 16px",
+          borderBottom: `1px solid ${borderC}`,
+          display: "flex", alignItems: "center", gap: 12,
+        }}>
+          <div style={{
+            width: 36, height: 36, borderRadius: 10,
+            background: "rgba(52, 211, 153, 0.15)",
+            border: "1px solid rgba(52, 211, 153, 0.3)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            color: "#34D399",
+          }}>
+            <CalendarDays size={18} strokeWidth={2.2} />
+          </div>
+          <div>
+            <h3 style={{
+              margin: 0, fontSize: 16, fontWeight: 700,
+              fontFamily: fontDisp, color: T.txt,
+            }}>Programar Visita Agendada</h3>
+            <span style={{ fontSize: 11, color: T.txt3, fontWeight: 500 }}>
+              Cita obligatoria para etapa Visita Agendada
+            </span>
+          </div>
+        </div>
+
+        {/* Content */}
+        <div style={{ padding: "20px 24px", display: "flex", flexDirection: "column", gap: 16 }}>
+          <p style={{ margin: 0, fontSize: 12.5, color: T.txt2, lineHeight: 1.5 }}>
+            Para mover a <strong style={{ color: T.txt }}>{lead.n || lead.name}</strong> a la etapa de <strong style={{ color: "#34D399" }}>Visita Agendada</strong>, es obligatorio definir la fecha y hora de la visita. El asesor recibirá avisos 1 mes, 15 días y 1 semana antes.
+          </p>
+
+          {/* Fecha y Hora — campos separados */}
+          <div style={{ display: "flex", gap: 12 }}>
+            <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 6 }}>
+              <label style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: T.txt3 }}>
+                Fecha de la visita *
+              </label>
+              <input
+                type="date"
+                value={dateVal}
+                onChange={e => setDateVal(e.target.value)}
+                style={{
+                  width: "100%", padding: "10px 12px", borderRadius: 8,
+                  background: inputBg, border: `1px solid ${T.border}`,
+                  color: T.txt, fontSize: 13, fontFamily: font,
+                  outline: "none", cursor: "pointer",
+                  boxSizing: "border-box",
+                }}
+              />
+            </div>
+            <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 6 }}>
+              <label style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: T.txt3 }}>
+                Hora de la visita *
+              </label>
+              <input
+                type="time"
+                value={timeVal}
+                onChange={e => setTimeVal(e.target.value)}
+                style={{
+                  width: "100%", padding: "10px 12px", borderRadius: 8,
+                  background: inputBg, border: `1px solid ${T.border}`,
+                  color: T.txt, fontSize: 13, fontFamily: font,
+                  outline: "none", cursor: "pointer",
+                  boxSizing: "border-box",
+                }}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Footer Actions */}
+        <div style={{
+          padding: "16px 24px 20px",
+          borderTop: `1px solid ${borderC}`,
+          background: isLight ? "rgba(15,23,42,0.01)" : "rgba(255,255,255,0.01)",
+          display: "flex", justifyContent: "flex-end", gap: 10,
+        }}>
+          <button
+            type="button"
+            onClick={onClose}
+            style={{
+              padding: "9px 16px", borderRadius: 8,
+              border: `1px solid ${T.border}`, background: "transparent",
+              color: T.txt2, fontSize: 12, fontWeight: 600, fontFamily: font,
+              cursor: "pointer", transition: "all 0.15s",
+            }}
+            onMouseEnter={e => { e.currentTarget.style.background = T.glassH; }}
+            onMouseLeave={e => { e.currentTarget.style.background = "transparent"; }}
+          >
+            Cancelar
+          </button>
+          <button
+            type="button"
+            onClick={handleConfirm}
+            disabled={!canConfirm}
+            style={{
+              padding: "9px 18px", borderRadius: 8,
+              border: "none",
+              background: canConfirm ? "#34D399" : (isLight ? "rgba(15,23,42,0.06)" : "rgba(255,255,255,0.06)"),
+              color: canConfirm ? "#04201A" : T.txt3,
+              fontSize: 12, fontWeight: 700, fontFamily: font,
+              cursor: canConfirm ? "pointer" : "not-allowed",
+              transition: "all 0.15s",
+              boxShadow: canConfirm ? "0 4px 12px rgba(52,211,153,0.25)" : "none",
+            }}
+            onMouseEnter={e => { if (canConfirm) e.currentTarget.style.opacity = 0.9; }}
+            onMouseLeave={e => { if (canConfirm) e.currentTarget.style.opacity = 1; }}
+          >
+            Confirmar Visita
           </button>
         </div>
       </div>
