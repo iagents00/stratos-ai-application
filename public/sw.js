@@ -113,7 +113,7 @@
 //   sus acciones (Pendientes vs Completadas), estado (Pendiente/En proceso/
 //   Completada/No la hice), fecha y nota. Forward-compatible con la columna
 //   `status` de team_actions (cuando exista, enciende En proceso / No la hice).
-const CACHE_VERSION = 'stratos-v50';
+const CACHE_VERSION = 'stratos-v51';
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 

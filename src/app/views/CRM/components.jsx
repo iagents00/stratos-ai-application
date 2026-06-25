@@ -783,6 +783,18 @@ const NextActionHero = ({ lead, T = P, onUpdate = null }) => {
         ? "Asistir a Zoom — preparar dossier, abrir link 5 min antes."
         : "Sin próxima acción definida. Agrega una para activar el cierre con este cliente.");
   const dateText   = lead.nextActionDate || "";
+  // Fecha compacta para el chip: quita el día de semana y abrevia el mes
+  // ("Martes, 16 de junio, 9:00 a.m." -> "16 jun, 9:00 a.m.") para que SIEMPRE
+  // entre en un solo renglón, incluso en las tarjetas angostas del carrusel.
+  const dateShort = (() => {
+    let t = (dateText || "").trim();
+    if (!t) return "";
+    t = t.replace(/^\s*[A-Za-zÁÉÍÓÚáéíóúÜüÑñ]+,\s*/, "");  // quita "Martes, "
+    t = t.replace(/\s+de\s+/gi, " ");                        // "16 de junio" -> "16 junio"
+    const M = { enero:"ene", febrero:"feb", marzo:"mar", abril:"abr", mayo:"may", junio:"jun", julio:"jul", agosto:"ago", septiembre:"sep", setiembre:"sep", octubre:"oct", noviembre:"nov", diciembre:"dic" };
+    t = t.replace(/enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|setiembre|octubre|noviembre|diciembre/gi, (m) => M[m.toLowerCase()] || m);
+    return t.replace(/\s{2,}/g, " ").trim();
+  })();
   const LONG = 160;
   const isLong   = actionText.length > LONG;
   const showFull = !isLong || expanded;
@@ -909,9 +921,9 @@ const NextActionHero = ({ lead, T = P, onUpdate = null }) => {
         }}>
           <Zap size={12} color={isLight ? "#FFFFFF" : accentStrong} strokeWidth={2.6} fill={isLight ? "#FFFFFF" : "none"} />
         </div>
-        <p style={{ margin: 0, fontSize: 10.5, fontWeight: 800, color: accentStrong, letterSpacing: "0.14em", textTransform: "uppercase", fontFamily: fontDisp }}>Próxima acción</p>
-        {dateText && !editing && (
-          <span style={{
+        <p style={{ margin: 0, fontSize: 10.5, fontWeight: 800, color: accentStrong, letterSpacing: "0.14em", textTransform: "uppercase", fontFamily: fontDisp, whiteSpace: "nowrap" }}>Próxima acción</p>
+        {dateShort && !editing && (
+          <span title={dateText} style={{
             display: "inline-flex", alignItems: "center", gap: 5,
             padding: "3px 9px", borderRadius: 99,
             background: isLight ? "#FFFFFF" : `${T.accent}12`,
@@ -921,8 +933,8 @@ const NextActionHero = ({ lead, T = P, onUpdate = null }) => {
             letterSpacing: "0.01em", whiteSpace: "nowrap", flexShrink: 0,
             boxShadow: isLight ? `0 1px 2px ${T.accent}18, inset 0 1px 0 rgba(255,255,255,0.8)` : "none",
           }}>
-            <Clock size={9} strokeWidth={2.6} />
-            {dateText}
+            <Clock size={9} strokeWidth={2.6} style={{ flexShrink: 0 }} />
+            {dateShort}
           </span>
         )}
       </div>

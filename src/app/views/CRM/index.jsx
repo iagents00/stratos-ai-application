@@ -1557,10 +1557,13 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
         const { error } = await supabase.rpc('fn_claim_lead', {
           p_lead_id: duplicateMatch.lead_id,
           p_asesor_name: targetAsesor,
-          p_stage: newLead.st || 'Contáctame Ya',
+          // Reasignar "de todas formas" SIEMPRE manda el lead a la 1ra etapa
+          // "Contáctame Ya": el nuevo asesor arranca de cero y lo ubica fácil
+          // (queda resaltado como nuevo — is_new=true lo pone fn_claim_lead).
+          p_stage: 'Contáctame Ya',
         });
         if (error) throw error;
-        showToast(`Cliente transferido a ${targetAsesor}. Se le quitó al asesor anterior.`, "success");
+        showToast(`Cliente transferido a ${targetAsesor}. Aparece resaltado en "Contáctame Ya".`, "success");
         setAddingLead(false);
         setNewLead({ n: "", asesor: canSeeAll ? "" : (user?.name || ""), phone: "", email: "", budget: "", p: "", campana: "", source: "manual", st: "Contáctame Ya", nextAction: "", notas: "" });
         setDuplicateMatch(null); setDuplicateOverride(false); setDuplicateChecking(false);
