@@ -1538,6 +1538,42 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
       return;
     }
 
+    // ── Override sobre lead de OTRO asesor → TRANSFERIR (no duplicar ni perder) ──
+    // "Registrar de todas formas" sobre un cliente que ya tiene otro asesor MUEVE el
+    // lead al asesor que lo registra (fn_claim_lead, org-scoped). Antes esto intentaba
+    // INSERTAR y chocaba con el índice único de teléfono → la RPC fallaba → la app lo
+    // tomaba como "sin conexión" y lo encolaba, pero el reintento volvía a chocar y el
+    // lead se perdía. Ahora reasignamos el existente: queda con el nuevo asesor y se le
+    // quita al anterior. NO toca el flujo de registro normal (solo override + no-mío).
+    if (duplicateOverride && duplicateMatch && !duplicateMatch.is_mine && duplicateMatch.lead_id) {
+      const targetAsesor = (newLead.asesor || user?.name || "").trim();
+      if (!targetAsesor) {
+        showToast("Asigná un asesor antes de transferir el cliente.", "error");
+        return;
+      }
+      if (submittingRef.current) return;
+      submittingRef.current = true; setSubmittingLead(true);
+      try {
+        const { error } = await supabase.rpc('fn_claim_lead', {
+          p_lead_id: duplicateMatch.lead_id,
+          p_asesor_name: targetAsesor,
+          p_stage: newLead.st || 'Contáctame Ya',
+        });
+        if (error) throw error;
+        showToast(`Cliente transferido a ${targetAsesor}. Se le quitó al asesor anterior.`, "success");
+        setAddingLead(false);
+        setNewLead({ n: "", asesor: canSeeAll ? "" : (user?.name || ""), phone: "", email: "", budget: "", p: "", campana: "", source: "manual", st: "Contáctame Ya", nextAction: "", notas: "" });
+        setDuplicateMatch(null); setDuplicateOverride(false); setDuplicateChecking(false);
+        // El lead reclamado aparece en la lista del nuevo asesor vía realtime/refetch.
+      } catch (e) {
+        console.error('[Stratos] transferir (claim) lead falló:', e?.message || e);
+        showToast(`No se pudo transferir el cliente: ${e?.message || 'error'}`, "error");
+      } finally {
+        submittingRef.current = false; setSubmittingLead(false);
+      }
+      return;
+    }
+
     // ── Etapa inicial "Zoom Agendado" → pedir fecha/hora de la cita primero ──
     // Paridad con el interceptor de updateLead (al MOVER un lead existente a
     // "Zoom Agendado"): no creamos el cliente sin una cita definida. Abrimos el
