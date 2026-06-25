@@ -1800,7 +1800,10 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
     // recency basada en created_at (Supabase usa UUID como id, no integer
     // autoincremental, así que `b.id - a.id` daría NaN). Cae a 0 si falta.
     const recency = (l) => {
-      const t = new Date(l.created_at || l.createdAt || l.fechaIngreso || 0).getTime();
+      // updated_at primero: un lead con CAMBIOS recientes (nota, etapa, reasignación,
+      // nuevo registro) sube al tope del carrusel de prioridad — no solo los recién
+      // CREADOS. Así el asesor encuentra fácil lo que se movió. (pedido Ángel 25-jun)
+      const t = new Date(l.updated_at || l.updatedAt || l.created_at || l.createdAt || l.fechaIngreso || 0).getTime();
       return Number.isFinite(t) ? t : 0;
     };
     switch (prioritySort) {
