@@ -79,6 +79,14 @@ const GRANULARITIES = [
   { id: "month", label: "Mes",    defaultCount: 3,  ranges: [3, 6, 12, 24],   unit: "meses" },
 ];
 
+function automaticGranularity(range) {
+  if (!range || range.fromTs === null) return GRANULARITIES[2];
+  const days = Math.max(1, Math.ceil((range.toTs - range.fromTs) / 86400000));
+  if (days <= 31) return GRANULARITIES[0];
+  if (days <= 180) return GRANULARITIES[1];
+  return GRANULARITIES[2];
+}
+
 const MES_ABBR     = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
 const MES_FULL     = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
 const DIA_SEM_ABBR = ["Dom","Lun","Mar","Mié","Jue","Vie","Sáb"];
@@ -252,7 +260,6 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
   const accent = T.accent;
   const { config: clientConfig } = useClient();
   const clientDisplayName = clientConfig?.legalName || clientConfig?.name || "Stratos";
-  const [granularityId, setGranularityId] = useState("week");
   // Cantidad de buckets por granularidad — independiente para cada tab.
   // Permite que el usuario haga zoom in/out sin perder el contexto al cambiar
   // de tab. Default = "lo del día/semana/mes" actual + un poco de contexto.
@@ -283,7 +290,8 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
   const { error: zoomTableError } = useZoomAgendados();
   const zoomTableMissing = zoomTableError === "missing_table";
 
-  const granularity = GRANULARITIES.find(g => g.id === granularityId) || GRANULARITIES[1];
+  const granularity = useMemo(() => automaticGranularity(activeDateRange), [activeDateRange]);
+  const granularityId = granularity.id;
 
   // Buckets temporales del período seleccionado.
   const buckets = useMemo(
@@ -871,32 +879,13 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
         </div>
 
         <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-          <div role="tablist" aria-label="Granularidad" style={{
-            display: "flex", gap: 4, padding: 3, borderRadius: 10,
+          <span style={{
+            padding: "7px 11px", borderRadius: 9,
             background: headerBg, border: `1px solid ${rowBorder}`,
+            color: T.txt3, fontSize: 11, fontFamily: font,
           }}>
-            {GRANULARITIES.map(g => {
-              const active = g.id === granularityId;
-              return (
-                <button
-                  key={g.id}
-                  role="tab"
-                  aria-selected={active}
-                  onClick={() => setGranularityId(g.id)}
-                  style={{
-                    padding: "7px 16px", borderRadius: 7,
-                    background: active ? accent : "transparent",
-                    color: active ? (isLight ? "#0B1220" : "#06080F") : T.txt2,
-                    border: "none",
-                    fontSize: 12, fontWeight: active ? 700 : 500,
-                    fontFamily: fontDisp, cursor: "pointer",
-                    transition: "background 0.14s, color 0.14s",
-                  }}
-                >{g.label}</button>
-              );
-            })}
-          </div>
-
+            Vista automática: <strong style={{ color: T.txt2 }}>{granularity.label}</strong>
+          </span>
           <button
             onClick={handleExport}
             title="Descarga el reporte ejecutivo como PDF — listo para enviar a dirección"
