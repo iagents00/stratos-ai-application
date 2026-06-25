@@ -789,6 +789,18 @@ const NextActionHero = ({ lead, T = P, onUpdate = null }) => {
   const dateShort = (() => {
     let t = (dateText || "").trim();
     if (!t) return "";
+    // ISO crudo del datetime-local ("2026-06-25T15:50" / "2026-06-25 15:50")
+    // -> "25 jun, 3:50 p.m." para que NO se vea como dato sin formatear.
+    const iso = t.match(/^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})/);
+    if (iso) {
+      const meses = ["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"];
+      const dia = parseInt(iso[3], 10);
+      const mes = meses[parseInt(iso[2], 10) - 1] || iso[2];
+      let h = parseInt(iso[4], 10); const min = iso[5];
+      const ap = h < 12 ? "a.m." : "p.m.";
+      h = h % 12; if (h === 0) h = 12;
+      return `${dia} ${mes}, ${h}:${min} ${ap}`;
+    }
     t = t.replace(/^\s*[A-Za-zÁÉÍÓÚáéíóúÜüÑñ]+,\s*/, "");  // quita "Martes, "
     t = t.replace(/\s+de\s+/gi, " ");                        // "16 de junio" -> "16 junio"
     const M = { enero:"ene", febrero:"feb", marzo:"mar", abril:"abr", mayo:"may", junio:"jun", julio:"jul", agosto:"ago", septiembre:"sep", setiembre:"sep", octubre:"oct", noviembre:"nov", diciembre:"dic" };

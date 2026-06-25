@@ -108,6 +108,7 @@ export default function CallActionButton({
     color: warnZoom ? secondaryFg : primaryFg,
     fontSize: 12.5, fontWeight: 700, fontFamily: fontDisp,
     letterSpacing: "0.01em", textDecoration: "none",
+    whiteSpace: "nowrap",  // "Llamar ahora" siempre en 1 renglón (en Windows se partía)
     boxShadow: warnZoom ? "none" : (isLight
       ? `0 3px 10px ${T.accent}40, 0 1px 3px ${T.accent}26, inset 0 1px 0 rgba(255,255,255,0.35)`
       : "0 2px 8px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.18)"),
