@@ -36,36 +36,57 @@ export default function ZoomBoard({ leadsData = [], theme = "dark", onOpenLead =
   const [presentadorFilter, setPresentadorFilter] = useState("__all__");
   const [histOpen, setHistOpen] = useState(false);
   const [histKind, setHistKind] = useState("all"); // all | scheduled | done
-  const [trendGran, setTrendGran] = useState("week"); // week | month
 
   const dateFilter = sharedDateFilter || localDateFilter;
   const dateRange = useMemo(
     () => resolveDateRange(dateFilter.preset, dateFilter.customFrom, dateFilter.customTo),
     [dateFilter],
   );
+  const trendGran = useMemo(() => {
+    if (dateRange.fromTs === null) return "month";
+    const days = Math.max(1, Math.ceil((dateRange.toTs - dateRange.fromTs) / 86400000));
+    return days <= 90 ? "week" : "month";
+  }, [dateRange]);
   // Tendencia: cuántos Zooms realizados por semana / por mes a lo largo del
   // tiempo (lo que el equipo de Duke revisa cada domingo). Independiente del
   // filtro de período de arriba: muestra la evolución completa reciente.
   const trend = useMemo(() => {
-    const N = trendGran === "week" ? 10 : 8;
     const now = new Date();
     const buckets = [];
     const MESES = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
-    for (let i = N - 1; i >= 0; i--) {
+    const fallbackStart = trendGran === "week"
+      ? new Date(now.getFullYear(), now.getMonth(), now.getDate() - 69)
+      : new Date(now.getFullYear(), now.getMonth() - 7, 1);
+    let cursor = dateRange.from || fallbackStart;
+    const rangeEnd = dateRange.to || new Date(now.getFullYear(), now.getMonth() + 1, 1);
+
+    if (trendGran === "week") {
+      const dow = cursor.getDay();
+      const diff = dow === 0 ? 6 : dow - 1;
+      cursor = new Date(cursor.getFullYear(), cursor.getMonth(), cursor.getDate() - diff);
+    } else {
+      cursor = new Date(cursor.getFullYear(), cursor.getMonth(), 1);
+    }
+
+    for (let guard = 0; guard < 120 && cursor < rangeEnd; guard++) {
       let start, end, label;
       if (trendGran === "week") {
-        const ref = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i * 7);
-        const dow = ref.getDay();           // 0=dom..6=sáb
-        const diff = dow === 0 ? 6 : dow - 1; // lunes como inicio
-        start = new Date(ref.getFullYear(), ref.getMonth(), ref.getDate() - diff);
+        start = new Date(cursor);
         end = new Date(start.getFullYear(), start.getMonth(), start.getDate() + 7);
         label = `${start.getDate()} ${MESES[start.getMonth()]}`;
       } else {
-        start = new Date(now.getFullYear(), now.getMonth() - i, 1);
-        end = new Date(now.getFullYear(), now.getMonth() - i + 1, 1);
+        start = new Date(cursor);
+        end = new Date(start.getFullYear(), start.getMonth() + 1, 1);
         label = MESES[start.getMonth()];
       }
-      buckets.push({ label, start: start.getTime(), end: end.getTime(), done: 0, sched: 0 });
+      buckets.push({
+        label,
+        start: Math.max(start.getTime(), dateRange.fromTs ?? start.getTime()),
+        end: Math.min(end.getTime(), dateRange.toTs ?? end.getTime()),
+        done: 0,
+        sched: 0,
+      });
+      cursor = end;
     }
     for (const l of leadsData) {
       const done = zoomEventsOf(l).done;
@@ -80,7 +101,7 @@ export default function ZoomBoard({ leadsData = [], theme = "dark", onOpenLead =
     }
     const max = Math.max(1, ...buckets.map(b => b.done));
     return { buckets, max };
-  }, [leadsData, trendGran]);
+  }, [dateRange, leadsData, trendGran]);
 
   // Historial de movimientos de Zoom (toda la cartera): cada lead que pasó por
   // Zoom agendado y/o realizado, con fecha, quién lo dio y si fue inferido de la
@@ -311,20 +332,13 @@ export default function ZoomBoard({ leadsData = [], theme = "dark", onOpenLead =
               Evolución reciente · cuántos Zooms se dieron en cada {trendGran === "week" ? "semana" : "mes"}.
             </p>
           </div>
-          <div role="tablist" aria-label="Agrupar tendencia" style={{ display: "flex", gap: 4, padding: 3, borderRadius: 10, background: headerBg, border: `1px solid ${rowBorder}` }}>
-            {[{ id: "week", l: "Por semana" }, { id: "month", l: "Por mes" }].map(g => {
-              const active = trendGran === g.id;
-              return (
-                <button key={g.id} role="tab" aria-selected={active} onClick={() => setTrendGran(g.id)}
-                  style={{
-                    padding: "6px 14px", borderRadius: 7, border: "none", cursor: "pointer",
-                    background: active ? accent : "transparent",
-                    color: active ? (isLight ? "#0B1220" : "#06080F") : T.txt2,
-                    fontSize: 12, fontWeight: active ? 700 : 500, fontFamily: fontDisp,
-                  }}>{g.l}</button>
-              );
-            })}
-          </div>
+          <span style={{
+            padding: "7px 11px", borderRadius: 9,
+            background: headerBg, border: `1px solid ${rowBorder}`,
+            color: T.txt3, fontSize: 11, fontFamily: font,
+          }}>
+            Agrupación automática: <strong style={{ color: T.txt2 }}>{trendGran === "week" ? "Semanal" : "Mensual"}</strong>
+          </span>
         </div>
         <div style={{ borderRadius: 14, background: isLight ? "rgba(255,255,255,0.6)" : "rgba(255,255,255,0.02)", border: `1px solid ${rowBorder}`, padding: "20px 18px 12px" }}>
           <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 8, height: 150 }}>
