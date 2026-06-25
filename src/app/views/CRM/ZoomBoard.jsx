@@ -14,10 +14,12 @@
  * ─────────────────────────────────────────────────────────────────────────────
  */
 import { useMemo, useState } from "react";
-import { CalendarDays, CheckCircle2, MapPin, Handshake, History, ChevronDown } from "lucide-react";
+import { CalendarDays, CheckCircle2, MapPin, Handshake, History, ChevronDown, ShieldCheck, AlertTriangle } from "lucide-react";
 import { P, LP, font, fontDisp, STAGE_COLORS } from "../../../design-system/tokens";
-import { PERIODS, periodStart, periodRangeLabel } from "./AdvisorMetrics";
-import { zoomEventsOf, funnelEntryOf, milestoneOf, eventInPeriod, ACTIVE_POST_ZOOM_STAGES, RECORRIDO_STAGES, CIERRE_STAGES, zoomMovements } from "./zoom-metrics";
+import { PERIODS, periodRangeLabel } from "./AdvisorMetrics";
+import { zoomEventsOf, funnelEntryOf, milestoneOf, ACTIVE_POST_ZOOM_STAGES, RECORRIDO_STAGES, CIERRE_STAGES, zoomMovements, zoomDataQuality } from "./zoom-metrics";
+import DateRangeControl from "./DateRangeControl";
+import { createDefaultDateFilter, resolveDateRange, timestampInRange } from "./date-range";
 
 const fmtFecha = (iso) => {
   if (!iso) return "—";
@@ -26,17 +28,21 @@ const fmtFecha = (iso) => {
   return d.toLocaleDateString("es-MX", { day: "2-digit", month: "short", year: "2-digit" });
 };
 
-export default function ZoomBoard({ leadsData = [], theme = "dark", onOpenLead = null }) {
+export default function ZoomBoard({ leadsData = [], theme = "dark", onOpenLead = null, dateFilter: sharedDateFilter = null }) {
   const isLight = theme === "light";
   const T = isLight ? LP : P;
   const [periodId, setPeriodId] = useState("month");
+  const [localDateFilter, setLocalDateFilter] = useState(createDefaultDateFilter);
   const [presentadorFilter, setPresentadorFilter] = useState("__all__");
   const [histOpen, setHistOpen] = useState(false);
   const [histKind, setHistKind] = useState("all"); // all | scheduled | done
   const [trendGran, setTrendGran] = useState("week"); // week | month
 
-  const startTs = useMemo(() => periodStart(periodId), [periodId]);
-
+  const dateFilter = sharedDateFilter || localDateFilter;
+  const dateRange = useMemo(
+    () => resolveDateRange(dateFilter.preset, dateFilter.customFrom, dateFilter.customTo),
+    [dateFilter],
+  );
   // Tendencia: cuántos Zooms realizados por semana / por mes a lo largo del
   // tiempo (lo que el equipo de Duke revisa cada domingo). Independiente del
   // filtro de período de arriba: muestra la evolución completa reciente.
@@ -81,14 +87,15 @@ export default function ZoomBoard({ leadsData = [], theme = "dark", onOpenLead =
   // etapa actual (registro faltante). Respeta el período y el filtro de presentador.
   const historial = useMemo(() => {
     let rows = zoomMovements(leadsData)
-      .filter(m => eventInPeriod(m.at, startTs))
+      .filter(m => !m.inferred && timestampInRange(m.at, dateRange))
       .filter(m => histKind === "all" || m.kind === histKind)
       .filter(m => presentadorFilter === "__all__" || (m.by || m.lead.asesor) === presentadorFilter);
     rows.sort((a, b) => (b.at ? new Date(b.at).getTime() : 0) - (a.at ? new Date(a.at).getTime() : 0));
     return rows;
-  }, [leadsData, startTs, histKind, presentadorFilter]);
+  }, [dateRange, leadsData, histKind, presentadorFilter]);
 
   const inferidos = useMemo(() => historial.filter(m => m.inferred).length, [historial]);
+  const quality = useMemo(() => zoomDataQuality(leadsData), [leadsData]);
 
   // Totales del embudo + productividad por presentador (quién dio el Zoom).
   // AGENDADOS = entró al funnel (agendado o ya realizado) → siempre ≥ realizados.
@@ -98,9 +105,9 @@ export default function ZoomBoard({ leadsData = [], theme = "dark", onOpenLead =
     let tAg = 0, tAgInf = 0, tDone = 0, tDoneInferred = 0;
     for (const l of leadsData) {
       const entry = funnelEntryOf(l);
-      if (entry && eventInPeriod(entry.at, startTs)) { tAg++; if (entry.inferred) tAgInf++; }
+      if (entry && !entry.inferred && timestampInRange(entry.at, dateRange)) { tAg++; if (entry.inferred) tAgInf++; }
       const { done } = zoomEventsOf(l);
-      if (done && eventInPeriod(done.at, startTs)) {
+      if (done && !done.inferred && timestampInRange(done.at, dateRange)) {
         map[done.by] = (map[done.by] || 0) + 1;
         tDone++; if (done.inferred) tDoneInferred++;
       }
@@ -116,7 +123,7 @@ export default function ZoomBoard({ leadsData = [], theme = "dark", onOpenLead =
       },
       presenters: list.map(r => r.asesor),
     };
-  }, [leadsData, startTs]);
+  }, [dateRange, leadsData]);
 
   // Activos post-Zoom = etapa actual en una fase post-Zoom activa (set compartido).
   const activosPostZoom = useMemo(
@@ -131,18 +138,18 @@ export default function ZoomBoard({ leadsData = [], theme = "dark", onOpenLead =
     for (const l of leadsData) {
       const r = milestoneOf(l, RECORRIDO_STAGES);
       const c = milestoneOf(l, CIERRE_STAGES);
-      if (r && eventInPeriod(r.at, startTs)) rec++;
-      if (c && eventInPeriod(c.at, startTs)) cie++;
+      if (r && !r.inferred && timestampInRange(r.at, dateRange)) rec++;
+      if (c && !c.inferred && timestampInRange(c.at, dateRange)) cie++;
     }
     return { recorridos: rec, cierres: cie };
-  }, [leadsData, startTs]);
+  }, [dateRange, leadsData]);
 
   // Lista cliente-por-cliente con Zoom realizado en el período.
   const clientes = useMemo(() => {
     const out = [];
     for (const l of leadsData) {
       const { done } = zoomEventsOf(l);
-      if (!done || !eventInPeriod(done.at, startTs)) continue;
+      if (!done || done.inferred || !timestampInRange(done.at, dateRange)) continue;
       const presentador = done.by || l.asesor || "—";
       if (presentadorFilter !== "__all__" && presentador !== presentadorFilter) continue;
       out.push({
@@ -157,7 +164,7 @@ export default function ZoomBoard({ leadsData = [], theme = "dark", onOpenLead =
     }
     out.sort((a, b) => (b.fecha ? new Date(b.fecha).getTime() : 0) - (a.fecha ? new Date(a.fecha).getTime() : 0));
     return out;
-  }, [leadsData, startTs, presentadorFilter]);
+  }, [dateRange, leadsData, presentadorFilter]);
 
   const headerBg  = isLight ? "rgba(15,23,42,0.04)" : "rgba(255,255,255,0.04)";
   const rowBorder = isLight ? "rgba(15,23,42,0.06)" : "rgba(255,255,255,0.05)";
@@ -185,7 +192,7 @@ export default function ZoomBoard({ leadsData = [], theme = "dark", onOpenLead =
             Segundo filtro comercial · el embudo desde el Zoom: agendado → realizado → recorrido → cierre, con el estado y el siguiente paso de cada cliente.
           </p>
         </div>
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 6 }}>
+        {!sharedDateFilter && <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 6 }}>
           <div role="tablist" aria-label="Período" style={{ display: "flex", gap: 4, padding: 3, borderRadius: 10, background: headerBg, border: `1px solid ${rowBorder}` }}>
             {PERIODS.map(p => {
               const active = p.id === periodId;
@@ -204,8 +211,18 @@ export default function ZoomBoard({ leadsData = [], theme = "dark", onOpenLead =
           <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11, color: T.txt3, fontFamily: font }}>
             <CalendarDays size={11} strokeWidth={2} /> Mostrando: <strong style={{ color: T.txt2, fontWeight: 600 }}>{periodRangeLabel(periodId)}</strong>
           </span>
-        </div>
+        </div>}
       </div>
+      {!sharedDateFilter && (
+        <DateRangeControl
+          T={T}
+          isLight={isLight}
+          value={localDateFilter}
+          onChange={setLocalDateFilter}
+          compact
+          label="Rango de Zooms"
+        />
+      )}
 
       {/* KPIs */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 12 }}>
@@ -228,6 +245,44 @@ export default function ZoomBoard({ leadsData = [], theme = "dark", onOpenLead =
             </div>
           );
         })}
+      </div>
+
+      <div style={{
+        display: "grid", gridTemplateColumns: "minmax(240px, 1.2fr) repeat(3, minmax(150px, 1fr))",
+        gap: 10, padding: 12, borderRadius: 16,
+        background: isLight
+          ? "linear-gradient(135deg, rgba(16,185,129,0.08), rgba(37,99,235,0.035))"
+          : "linear-gradient(135deg, rgba(16,185,129,0.10), rgba(37,99,235,0.055))",
+        border: "1px solid rgba(16,185,129,0.22)",
+      }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "4px 6px" }}>
+          <span style={{ display: "inline-flex", padding: 9, borderRadius: 12, background: "rgba(16,185,129,0.14)" }}>
+            <ShieldCheck size={18} color="#10B981" />
+          </span>
+          <div>
+            <div style={{ fontSize: 13, fontWeight: 750, color: T.txt, fontFamily: fontDisp }}>Calidad del dato de Zoom</div>
+            <div style={{ fontSize: 11, color: T.txt3, fontFamily: font, lineHeight: 1.45 }}>
+              Los rangos por fecha cuentan únicamente eventos con evidencia temporal confirmada.
+            </div>
+          </div>
+        </div>
+        {[
+          ["Concretados confirmados", quality.confirmedDone, "#10B981"],
+          ["Históricos por validar", quality.inferredDone, "#F59E0B"],
+          ["Concretados sin notas", quality.completedWithoutNotes, "#EF4444"],
+        ].map(([label, value, color]) => (
+          <div key={label} style={{
+            padding: "10px 12px", borderRadius: 12,
+            background: isLight ? "rgba(255,255,255,0.72)" : "rgba(3,8,16,0.32)",
+            border: `1px solid ${color}24`,
+          }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 10.5, color: T.txt3, fontFamily: font }}>
+              {color !== "#10B981" && <AlertTriangle size={11} color={color} />}
+              {label}
+            </div>
+            <div style={{ marginTop: 4, fontSize: 21, fontWeight: 800, color, fontFamily: fontDisp }}>{value}</div>
+          </div>
+        ))}
       </div>
 
       {/* Leyenda: activos + nota de inferidos (recuperación, no alarma) */}
