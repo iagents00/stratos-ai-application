@@ -612,6 +612,24 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
       return;
     }
 
+    const isConfirmingZoom = updated.st === "Zoom Concretado" && prev?.st !== "Zoom Concretado";
+    if (isConfirmingZoom) {
+      const notes = (updated.notas ?? prev?.notas ?? "").trim();
+      const nextAction = (updated.nextAction ?? updated.next_action ?? prev?.nextAction ?? "").trim();
+      if (!notes || !nextAction) {
+        setNotesLead(prev || updated);
+        showToast(
+          !notes && !nextAction
+            ? "Antes de confirmar el Zoom registra las notas y la próxima acción."
+            : !notes
+              ? "Antes de confirmar el Zoom registra las notas de la sesión."
+              : "Antes de confirmar el Zoom registra la próxima acción.",
+          "error",
+        );
+        return;
+      }
+    }
+
     // Interceptor paralelo: "Visita Agendada" exige fecha/hora (visita_at) →
     // sin eso no salen los avisos −1mes/−15d/−7d (fn_proactive_scan_visitas).
     const isChangingToVisita = updated.st === "Visita Agendada" && prev?.st !== "Visita Agendada";
