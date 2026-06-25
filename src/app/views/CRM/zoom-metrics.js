@@ -68,11 +68,23 @@ export function milestoneOf(lead, stageSet) {
     if (!e || e.type !== "etapa") continue;
     const t = targetStage(e.action);
     if (t && stageSet.has(t)) {
-      return { by: e.by || lead.asesor || NO_OWNER, at: e.completed_at || e.doneAt || null, to: t, inferred: false };
+      return {
+        by: e.by || lead.asesor || NO_OWNER,
+        at: e.completed_at || e.doneAt || e.done_at || e.created_at || null,
+        to: t,
+        inferred: false,
+        confidence: "confirmed",
+      };
     }
   }
   if (stageSet.has(lead.st)) {
-    return { by: lead.asesor || NO_OWNER, at: lead.created_at, to: lead.st, inferred: true };
+    return {
+      by: lead.asesor || NO_OWNER,
+      at: null,
+      to: lead.st,
+      inferred: true,
+      confidence: "inferred",
+    };
   }
   return null;
 }
@@ -82,16 +94,30 @@ export function milestoneOf(lead, stageSet) {
  * (Concretado o etapa posterior). Cada uno { by, at, to, inferred } o null.
  */
 export function zoomEventsOf(lead) {
+  const stageScheduled = milestoneOf(lead, ZOOM_SCHEDULED_STAGES);
+  const stageDone = milestoneOf(lead, ZOOM_DONE_STAGES);
+  const scheduledAt = lead.selected_time || lead.next_action_at || stageScheduled?.at || null;
+  const scheduled = scheduledAt
+    ? {
+        by: stageScheduled?.by || lead.asesor || NO_OWNER,
+        at: scheduledAt,
+        to: ZOOM_SCHEDULED_STAGE,
+        inferred: false,
+        confidence: lead.selected_time || lead.next_action_at ? "appointment" : "confirmed",
+      }
+    : stageScheduled;
+
   return {
-    scheduled: milestoneOf(lead, ZOOM_SCHEDULED_STAGES),
-    done:      milestoneOf(lead, ZOOM_DONE_STAGES),
+    scheduled,
+    done: stageDone,
   };
 }
 
 // Hito de "entró al funnel de Zoom" (agendado o ya realizado). Úsalo para el
 // conteo de AGENDADOS del embudo, para que sea siempre ≥ realizados.
 export function funnelEntryOf(lead) {
-  return milestoneOf(lead, ZOOM_FUNNEL_ENTRY_STAGES);
+  const { scheduled, done } = zoomEventsOf(lead);
+  return scheduled || (done ? { ...done, inferred: true, confidence: "inferred_schedule" } : null);
 }
 
 /**
@@ -117,4 +143,39 @@ export function eventInPeriod(at, startTs) {
   if (!at) return false;
   const t = new Date(at).getTime();
   return !Number.isNaN(t) && t >= startTs;
+}
+
+export function eventInDateRange(event, range) {
+  if (!event) return false;
+  if (!range || range.fromTs === null) return true;
+  if (event.inferred || !event.at) return false;
+  const timestamp = new Date(event.at).getTime();
+  return !Number.isNaN(timestamp) && timestamp >= range.fromTs && timestamp < range.toTs;
+}
+
+export function zoomDataQuality(leadsData) {
+  let confirmedDone = 0;
+  let inferredDone = 0;
+  let scheduledWithDate = 0;
+  let scheduledWithoutDate = 0;
+  let completedWithoutNotes = 0;
+
+  for (const lead of leadsData) {
+    const { scheduled, done } = zoomEventsOf(lead);
+    if (scheduled?.at && !scheduled.inferred) scheduledWithDate++;
+    else if (scheduled) scheduledWithoutDate++;
+
+    if (done?.inferred || !done?.at) inferredDone++;
+    else if (done) confirmedDone++;
+
+    if (done && !(lead.notas || "").trim()) completedWithoutNotes++;
+  }
+
+  return {
+    confirmedDone,
+    inferredDone,
+    scheduledWithDate,
+    scheduledWithoutDate,
+    completedWithoutNotes,
+  };
 }
