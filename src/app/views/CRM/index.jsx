@@ -813,7 +813,6 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
       last_activity:    withScore.lastActivity ?? withScore.last_activity,
       days_inactive:    withScore.daysInactive ?? withScore.days_inactive ?? 0,
       seguimientos:     withScore.seguimientos ?? 0,
-      notas:            withScore.notas,
       bio:              withScore.bio,
       risk:             withScore.risk,
       friction:         withScore.friction,
@@ -833,6 +832,15 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
       tasks:            Array.isArray(withScore.tasks) ? withScore.tasks : [],
       playbook:         Array.isArray(withScore.playbook) ? withScore.playbook : [],
     };
+
+    // notas: SOLO se persiste si cambió respecto a la copia en memoria. Evita que una
+    // edición de etapa / próxima acción (que arrastra una copia vieja del lead con
+    // notas=null) PISE la nota que el bot agregó por Telegram — bug reportado: la nota
+    // del registro desaparecía del expediente principal. El guardado explícito de notas
+    // (saveNotes) sí manda un valor distinto → se persiste normal.
+    if ((withScore.notas ?? '') !== (prev?.notas ?? '')) {
+      payload.notas = withScore.notas;
+    }
 
     // ── Modo offline: encolar el cambio en localStorage ─────────────────
     if (user?._offline) {
