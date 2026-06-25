@@ -787,24 +787,29 @@ const NextActionHero = ({ lead, T = P, onUpdate = null }) => {
   // ("Martes, 16 de junio, 9:00 a.m." -> "16 jun, 9:00 a.m.") para que SIEMPRE
   // entre en un solo renglón, incluso en las tarjetas angostas del carrusel.
   const dateShort = (() => {
-    let t = (dateText || "").trim();
-    if (!t) return "";
+    const t0 = (dateText || "").trim();
+    if (!t0) return "";
+    const DOW = ["Dom","Lun","Mar","Mié","Jue","Vie","Sáb"];          // por índice getDay()
+    const MON = ["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"];
     // ISO crudo del datetime-local ("2026-06-25T15:50" / "2026-06-25 15:50")
-    // -> "25 jun, 3:50 p.m." para que NO se vea como dato sin formatear.
-    const iso = t.match(/^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})/);
+    // -> "Jue 25 jun, 3:50 p.m." (día de semana abreviado, 1 renglón).
+    const iso = t0.match(/^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})/);
     if (iso) {
-      const meses = ["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"];
-      const dia = parseInt(iso[3], 10);
-      const mes = meses[parseInt(iso[2], 10) - 1] || iso[2];
-      let h = parseInt(iso[4], 10); const min = iso[5];
+      const y = +iso[1], mo = +iso[2], d = +iso[3];
+      const dow = DOW[new Date(y, mo - 1, d).getDay()] || "";
+      let h = +iso[4]; const min = iso[5];
       const ap = h < 12 ? "a.m." : "p.m.";
       h = h % 12; if (h === 0) h = 12;
-      return `${dia} ${mes}, ${h}:${min} ${ap}`;
+      return `${dow} ${d} ${MON[mo - 1] || mo}, ${h}:${min} ${ap}`;
     }
-    t = t.replace(/^\s*[A-Za-zÁÉÍÓÚáéíóúÜüÑñ]+,\s*/, "");  // quita "Martes, "
-    t = t.replace(/\s+de\s+/gi, " ");                        // "16 de junio" -> "16 junio"
-    const M = { enero:"ene", febrero:"feb", marzo:"mar", abril:"abr", mayo:"may", junio:"jun", julio:"jul", agosto:"ago", septiembre:"sep", setiembre:"sep", octubre:"oct", noviembre:"nov", diciembre:"dic" };
-    t = t.replace(/enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|setiembre|octubre|noviembre|diciembre/gi, (m) => M[m.toLowerCase()] || m);
+    // Texto largo ("Jueves, 25 de junio, 11:00 a.m.") -> abrevia día y mes,
+    // conservando el día de semana ("Jue 25 jun, 11:00 a.m.").
+    let t = t0;
+    const DMAP = { domingo:"Dom", lunes:"Lun", martes:"Mar", "miércoles":"Mié", miercoles:"Mié", jueves:"Jue", viernes:"Vie", "sábado":"Sáb", sabado:"Sáb" };
+    t = t.replace(/^\s*(domingo|lunes|martes|mi[ée]rcoles|jueves|viernes|s[áa]bado)\s*,?\s*/i, (m, w) => (DMAP[w.toLowerCase()] || w) + " ");
+    t = t.replace(/\s+de\s+/gi, " ");                       // "25 de junio" -> "25 junio"
+    const MMAP = { enero:"ene", febrero:"feb", marzo:"mar", abril:"abr", mayo:"may", junio:"jun", julio:"jul", agosto:"ago", septiembre:"sep", setiembre:"sep", octubre:"oct", noviembre:"nov", diciembre:"dic" };
+    t = t.replace(/enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|setiembre|octubre|noviembre|diciembre/gi, (m) => MMAP[m.toLowerCase()] || m);
     return t.replace(/\s{2,}/g, " ").trim();
   })();
   const LONG = 160;
