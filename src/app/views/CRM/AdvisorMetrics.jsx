@@ -13,10 +13,12 @@
  * por fecha porque no hay historial event-level disponible.
  * ─────────────────────────────────────────────────────────────────────────────
  */
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { Users, Phone, BadgeCheck, CalendarDays, CheckCircle2, Activity, RefreshCw } from "lucide-react";
 import { P, LP, font, fontDisp, STAGES, STAGE_COLORS } from "../../../design-system/tokens";
-import { zoomEventsOf, funnelEntryOf, eventInPeriod, ACTIVE_POST_ZOOM_STAGES } from "./zoom-metrics";
+import { zoomEventsOf, funnelEntryOf, ACTIVE_POST_ZOOM_STAGES } from "./zoom-metrics";
+import DateRangeControl from "./DateRangeControl";
+import { createDefaultDateFilter, resolveDateRange, timestampInRange } from "./date-range";
 
 const STAGE_INDEX = Object.fromEntries(STAGES.map((s, i) => [s, i]));
 const IDX_PRIMER_CONTACTO = STAGE_INDEX["Segundo Intento"];
@@ -24,60 +26,9 @@ const IDX_SEGUIMIENTO     = STAGE_INDEX["Seguimiento"];
 
 // La métrica de Zooms (histórica, acreditada a quién la dio) vive en
 // ./zoom-metrics.js — fuente única compartida con ZoomBoard.
-
-export const PERIODS = [
-  { id: "today", label: "Hoy" },
-  { id: "week",  label: "Semana" },
-  { id: "month", label: "Mes" },
-  { id: "all",   label: "Todo" },
-];
-
-export function periodStart(periodId) {
-  if (periodId === "all") return null;
-  const now = new Date();
-  if (periodId === "today") {
-    return new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
-  }
-  if (periodId === "week") {
-    // Lunes 00:00 de esta semana (1 = lunes, 0 = domingo).
-    const day = now.getDay();
-    const diff = day === 0 ? 6 : day - 1;
-    const monday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - diff);
-    return monday.getTime();
-  }
-  if (periodId === "month") {
-    return new Date(now.getFullYear(), now.getMonth(), 1).getTime();
-  }
-  return null;
-}
-
-export function leadInPeriod(lead, startTs) {
-  if (startTs === null) return true;
-  if (!lead.created_at) return false;
-  const t = new Date(lead.created_at).getTime();
-  return !Number.isNaN(t) && t >= startTs;
-}
-
-// Rango de fechas exacto que cubre el período seleccionado — para mostrarlo en
-// el selector y que no haya duda de "de cuándo a cuándo" se está contando.
-const PR_MESES = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
-export function periodRangeLabel(periodId) {
-  const now = new Date();
-  const fmt = (d) => `${d.getDate()} ${PR_MESES[d.getMonth()]}`;
-  if (periodId === "all")   return "todo el histórico";
-  if (periodId === "today") return `hoy · ${fmt(now)}`;
-  if (periodId === "week") {
-    const start = new Date(periodStart("week"));
-    const end = new Date(start); end.setDate(start.getDate() + 6);
-    return `${fmt(start)} – ${fmt(end)}`;
-  }
-  if (periodId === "month") {
-    const start = new Date(now.getFullYear(), now.getMonth(), 1);
-    const end = new Date(now.getFullYear(), now.getMonth() + 1, 0); // último día del mes
-    return `${fmt(start)} – ${fmt(end)}`;
-  }
-  return "";
-}
+// El período se controla con un ÚNICO control de fecha (DateRangeControl):
+// el rango global del Comando cuando se pasa `dateFilter`, o el propio del
+// componente en modo standalone. Sin selectores duplicados.
 
 function stageIdx(stage) {
   const idx = STAGE_INDEX[stage];
@@ -141,14 +92,17 @@ export const INDICATORS = [
   },
 ];
 
-export default function AdvisorMetrics({ leadsData = [], theme = "dark", onOpenLead = null }) {
+export default function AdvisorMetrics({ leadsData = [], theme = "dark", onOpenLead = null, dateFilter: sharedDateFilter = null }) {
   const isLight = theme === "light";
   const T = isLight ? LP : P;
-  const [periodId, setPeriodId] = useState("month");
+  const [localDateFilter, setLocalDateFilter] = useState(createDefaultDateFilter);
   const [zoomAsesor, setZoomAsesor] = useState("__all__"); // filtro de la lista Filtro 2
 
-  const startTs = useMemo(() => periodStart(periodId), [periodId]);
-
+  const dateFilter = sharedDateFilter || localDateFilter;
+  const dateRange = useMemo(
+    () => resolveDateRange(dateFilter.preset, dateFilter.customFrom, dateFilter.customTo),
+    [dateFilter],
+  );
   // Agregación event-level de Zooms: persona → fechas de sus eventos de Zoom
   // (agendado / realizado), deduplicados a 1 por lead (el primer evento que
   // lo llevó a esa fase). El crédito va a `by` (quién lo dio), no al dueño hoy.
@@ -163,17 +117,17 @@ export default function AdvisorMetrics({ leadsData = [], theme = "dark", onOpenL
       // por asesor también sea ≥ realizados y cuadre con Filtro 2.
       const entry = funnelEntryOf(l);
       const { done } = zoomEventsOf(l);
-      if (entry) push(entry.by, "scheduled", entry.at);
-      if (done)  push(done.by,  "done",      done.at);
+      if (entry && !entry.inferred && entry.at) push(entry.by, "scheduled", entry.at);
+      if (done && !done.inferred && done.at) push(done.by, "done", done.at);
     }
     return map;
   }, [leadsData]);
 
-  const countZoom = (person, bucket) => {
+  const countZoom = useCallback((person, bucket) => {
     const arr = zoomAgg[person]?.[bucket];
     if (!arr) return 0;
-    return arr.filter(at => eventInPeriod(at, startTs)).length;
-  };
+    return arr.filter(at => timestampInRange(at, dateRange)).length;
+  }, [dateRange, zoomAgg]);
 
   // Lista de asesores: dueños actuales ∪ quienes tienen crédito de Zoom (un
   // presentador puede ya no tener leads propios pero sí Zooms acreditados).
@@ -189,7 +143,7 @@ export default function AdvisorMetrics({ leadsData = [], theme = "dark", onOpenL
   const rows = useMemo(() => {
     return asesores.map(asesor => {
       const leadsOfAsesor = leadsData.filter(l =>
-        l.asesor === asesor && leadInPeriod(l, startTs)
+        l.asesor === asesor && timestampInRange(l.created_at, dateRange)
       );
       const metrics = {};
       for (const ind of INDICATORS) metrics[ind.key] = ind.compute(leadsOfAsesor);
@@ -198,11 +152,11 @@ export default function AdvisorMetrics({ leadsData = [], theme = "dark", onOpenL
       metrics.zoomDone      = countZoom(asesor, "done");
       return { asesor, metrics, count: leadsOfAsesor.length };
     });
-  }, [asesores, leadsData, startTs, zoomAgg]);
+  }, [asesores, countZoom, dateRange, leadsData]);
 
   // Totales del equipo (fila TOTAL al pie).
   const totals = useMemo(() => {
-    const leadsInPeriod = leadsData.filter(l => leadInPeriod(l, startTs));
+    const leadsInPeriod = leadsData.filter(l => timestampInRange(l.created_at, dateRange));
     const t = {};
     for (const ind of INDICATORS) t[ind.key] = ind.compute(leadsInPeriod);
     // Zooms: suma de todos los eventos del período (todas las personas).
@@ -214,7 +168,7 @@ export default function AdvisorMetrics({ leadsData = [], theme = "dark", onOpenL
     t.zoomScheduled = zs;
     t.zoomDone = zd;
     return t;
-  }, [leadsData, startTs, zoomAgg]);
+  }, [countZoom, dateRange, leadsData, zoomAgg]);
 
   // ── Filtro 2: lista de clientes que realizaron Zoom ───────────────────────
   // Una fila por lead con Zoom hecho: cliente, presentador (quién lo dio),
@@ -226,7 +180,7 @@ export default function AdvisorMetrics({ leadsData = [], theme = "dark", onOpenL
     for (const l of leadsData) {
       const { done } = zoomEventsOf(l);
       if (!done) continue;
-      if (!eventInPeriod(done.at, startTs)) continue;
+      if (done.inferred || !timestampInRange(done.at, dateRange)) continue;
       const presentador = done.by || l.asesor || "—";
       if (zoomAsesor !== "__all__" && presentador !== zoomAsesor) continue;
       out.push({
@@ -246,7 +200,7 @@ export default function AdvisorMetrics({ leadsData = [], theme = "dark", onOpenL
       return tb - ta;
     });
     return out;
-  }, [leadsData, startTs, zoomAsesor]);
+  }, [dateRange, leadsData, zoomAsesor]);
 
   const fmtFecha = (iso) => {
     if (!iso) return "—";
@@ -262,44 +216,26 @@ export default function AdvisorMetrics({ leadsData = [], theme = "dark", onOpenL
 
   return (
     <div style={{ marginTop: 16 }}>
-      {/* Header con título + selector de período */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12, marginBottom: 14 }}>
-        <div>
-          <h3 style={{ margin: 0, fontSize: 18, fontWeight: 600, fontFamily: fontDisp, color: T.txt, letterSpacing: "-0.02em" }}>
-            Indicadores de Asesores
-          </h3>
-          <p style={{ margin: "4px 0 0", fontSize: 12, color: T.txt3, fontFamily: font }}>
-            Métricas por asesor calculadas desde los leads del período seleccionado.
-          </p>
-        </div>
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 6 }}>
-          <div role="tablist" aria-label="Período" style={{ display: "flex", gap: 4, padding: 3, borderRadius: 10, background: headerBg, border: `1px solid ${rowBorder}` }}>
-            {PERIODS.map(p => {
-              const active = p.id === periodId;
-              return (
-                <button
-                  key={p.id}
-                  role="tab"
-                  aria-selected={active}
-                  onClick={() => setPeriodId(p.id)}
-                  style={{
-                    padding: "6px 14px", borderRadius: 7,
-                    background: active ? accent : "transparent",
-                    color: active ? (isLight ? "#0B1220" : "#06080F") : T.txt2,
-                    border: "none",
-                    fontSize: 12, fontWeight: active ? 700 : 500,
-                    fontFamily: fontDisp, cursor: "pointer",
-                    transition: "background 0.14s, color 0.14s",
-                  }}
-                >{p.label}</button>
-              );
-            })}
-          </div>
-          <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11, color: T.txt3, fontFamily: font }}>
-            <CalendarDays size={11} strokeWidth={2} /> Mostrando: <strong style={{ color: T.txt2, fontWeight: 600 }}>{periodRangeLabel(periodId)}</strong>
-          </span>
-        </div>
+      {/* Header con título — el período se controla con un único DateRangeControl */}
+      <div style={{ marginBottom: 14 }}>
+        <h3 style={{ margin: 0, fontSize: 18, fontWeight: 600, fontFamily: fontDisp, color: T.txt, letterSpacing: "-0.02em" }}>
+          Indicadores de Asesores
+        </h3>
+        <p style={{ margin: "4px 0 0", fontSize: 12, color: T.txt3, fontFamily: font }}>
+          Métricas por asesor calculadas desde los leads del período seleccionado.
+        </p>
       </div>
+      {!sharedDateFilter && (
+        <div style={{ marginBottom: 14 }}>
+          <DateRangeControl
+            T={T}
+            isLight={isLight}
+            value={localDateFilter}
+            onChange={setLocalDateFilter}
+            label="Período"
+          />
+        </div>
+      )}
 
       {/* Tabla */}
       <div style={{

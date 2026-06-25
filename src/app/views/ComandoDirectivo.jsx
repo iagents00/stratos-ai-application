@@ -37,6 +37,8 @@ import ZoomBoard from "./CRM/ZoomBoard";
 import ProductividadTab from "./ProductividadTab";
 import { useZoomAgendados } from "../../hooks/useZoomAgendados";
 import { milestoneOf, RECORRIDO_STAGES, CIERRE_STAGES } from "./CRM/zoom-metrics";
+import DateRangeControl from "./CRM/DateRangeControl";
+import { createDefaultDateFilter, resolveDateRange, timestampInRange } from "./CRM/date-range";
 
 const ICONS_BY_KEY = {
   assigned:       Users,
@@ -76,6 +78,14 @@ const GRANULARITIES = [
   { id: "week",  label: "Semana", defaultCount: 4,  ranges: [4, 8, 12, 26],   unit: "semanas" },
   { id: "month", label: "Mes",    defaultCount: 3,  ranges: [3, 6, 12, 24],   unit: "meses" },
 ];
+
+function automaticGranularity(range) {
+  if (!range || range.fromTs === null) return GRANULARITIES[2];
+  const days = Math.max(1, Math.ceil((range.toTs - range.fromTs) / 86400000));
+  if (days <= 31) return GRANULARITIES[0];
+  if (days <= 180) return GRANULARITIES[1];
+  return GRANULARITIES[2];
+}
 
 const MES_ABBR     = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
 const MES_FULL     = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
@@ -151,6 +161,60 @@ function buildBuckets(granularityId, count) {
   return buckets;
 }
 
+function buildBucketsForDateRange(granularityId, range) {
+  if (!range || range.fromTs === null) return buildBuckets(granularityId, granularityId === "day" ? 30 : granularityId === "week" ? 12 : 12);
+  const buckets = [];
+  let cursor = new Date(range.from);
+  const endTs = range.toTs;
+
+  if (granularityId === "week") {
+    const day = cursor.getDay();
+    const diff = day === 0 ? 6 : day - 1;
+    cursor = new Date(cursor.getFullYear(), cursor.getMonth(), cursor.getDate() - diff);
+  } else if (granularityId === "month") {
+    cursor = new Date(cursor.getFullYear(), cursor.getMonth(), 1);
+  }
+
+  for (let guard = 0; guard < 370 && cursor.getTime() < endTs; guard++) {
+    const start = new Date(cursor);
+    let end;
+    let label;
+    let tooltipLabel;
+    let csvLabel;
+
+    if (granularityId === "day") {
+      end = new Date(start.getFullYear(), start.getMonth(), start.getDate() + 1);
+      label = `${DIA_SEM_ABBR[start.getDay()]} ${start.getDate()}`;
+      tooltipLabel = `${DIA_SEM_ABBR[start.getDay()]} ${start.getDate()} ${MES_FULL[start.getMonth()]}`;
+      csvLabel = start.toISOString().slice(0, 10);
+    } else if (granularityId === "week") {
+      end = new Date(start.getFullYear(), start.getMonth(), start.getDate() + 7);
+      const visibleEnd = new Date(end.getFullYear(), end.getMonth(), end.getDate() - 1);
+      label = `${start.getDate()} ${MES_ABBR[start.getMonth()]}`;
+      tooltipLabel = `Sem. ${start.getDate()} ${MES_ABBR[start.getMonth()]} – ${visibleEnd.getDate()} ${MES_ABBR[visibleEnd.getMonth()]}`;
+      csvLabel = `Semana ${start.toISOString().slice(0, 10)}`;
+    } else {
+      end = new Date(start.getFullYear(), start.getMonth() + 1, 1);
+      label = `${MES_ABBR[start.getMonth()]} ${String(start.getFullYear()).slice(-2)}`;
+      tooltipLabel = `${MES_FULL[start.getMonth()]} ${start.getFullYear()}`;
+      csvLabel = `${start.getFullYear()}-${String(start.getMonth() + 1).padStart(2, "0")}`;
+    }
+
+    buckets.push({
+      key: csvLabel,
+      label,
+      tooltipLabel,
+      csvLabel,
+      startTs: Math.max(start.getTime(), range.fromTs),
+      endTs: Math.min(end.getTime(), range.toTs),
+      isCurrent: Date.now() >= start.getTime() && Date.now() < end.getTime(),
+    });
+    cursor = end;
+  }
+
+  return buckets;
+}
+
 function leadsInBucket(leads, bucket) {
   return leads.filter(l => {
     if (!l.created_at) return false;
@@ -196,11 +260,9 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
   const accent = T.accent;
   const { config: clientConfig } = useClient();
   const clientDisplayName = clientConfig?.legalName || clientConfig?.name || "Stratos";
-  const [granularityId, setGranularityId] = useState("week");
   // Cantidad de buckets por granularidad — independiente para cada tab.
   // Permite que el usuario haga zoom in/out sin perder el contexto al cambiar
   // de tab. Default = "lo del día/semana/mes" actual + un poco de contexto.
-  const [bucketCounts, setBucketCounts] = useState({ day: 7, week: 4, month: 3 });
   // Visibilidad por serie — toggleable desde la leyenda.
   // Por defecto la gráfica de líneas muestra SOLO 2 series (agendados +
   // realizados) para que no sea un spaghetti de 7 líneas. El resto se prende
@@ -215,6 +277,11 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
   // Comando Directivo igual que siempre, sin barra de pestañas.
   const showZoomTab = !!clientConfig?.features?.zoomControl;
   const [tab, setTab] = useState("indicadores");
+  const [dateFilter, setDateFilter] = useState(createDefaultDateFilter);
+  const activeDateRange = useMemo(
+    () => resolveDateRange(dateFilter.preset, dateFilter.customFrom, dateFilter.customTo),
+    [dateFilter],
+  );
 
   // El panel CRUD operativo (ZoomControl) solo tiene sentido si la tabla
   // zoom_agendados existe (migración 027). Mientras no esté aplicada en este
@@ -223,14 +290,13 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
   const { error: zoomTableError } = useZoomAgendados();
   const zoomTableMissing = zoomTableError === "missing_table";
 
-  const granularity = GRANULARITIES.find(g => g.id === granularityId) || GRANULARITIES[1];
-  const bucketCount = bucketCounts[granularityId] ?? granularity.defaultCount;
-  const setBucketCount = (n) => setBucketCounts(b => ({ ...b, [granularityId]: n }));
+  const granularity = useMemo(() => automaticGranularity(activeDateRange), [activeDateRange]);
+  const granularityId = granularity.id;
 
   // Buckets temporales del período seleccionado.
   const buckets = useMemo(
-    () => buildBuckets(granularityId, bucketCount),
-    [granularityId, bucketCount],
+    () => buildBucketsForDateRange(granularityId, activeDateRange),
+    [activeDateRange, granularityId],
   );
 
   // Para cada bucket: leads filtrados + 7 indicadores ya computados.
@@ -250,15 +316,8 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
 
   // Leads creados dentro del rango temporal visible.
   const rangeLeads = useMemo(() => {
-    const firstStart = buckets[0]?.startTs ?? null;
-    const lastEnd    = buckets[buckets.length - 1]?.endTs ?? null;
-    if (firstStart === null || lastEnd === null) return leadsData;
-    return leadsData.filter(l => {
-      if (!l.created_at) return false;
-      const t = new Date(l.created_at).getTime();
-      return !Number.isNaN(t) && t >= firstStart && t < lastEnd;
-    });
-  }, [buckets, leadsData]);
+    return leadsData.filter((lead) => timestampInRange(lead.created_at, activeDateRange));
+  }, [activeDateRange, leadsData]);
 
   // ── Dos vistas de totales, ambas reales y coordinadas con el CRM ──────────
   //
@@ -796,6 +855,14 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
         </div>
       )}
 
+      <DateRangeControl
+        T={T}
+        isLight={isLight}
+        value={dateFilter}
+        onChange={setDateFilter}
+        label="Rango global del Comando"
+      />
+
       {(!showZoomTab || tab === "indicadores") && (
       <>
       {/* ── Header ────────────────────────────────────────────────────────── */}
@@ -812,32 +879,13 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
         </div>
 
         <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-          <div role="tablist" aria-label="Granularidad" style={{
-            display: "flex", gap: 4, padding: 3, borderRadius: 10,
+          <span style={{
+            padding: "7px 11px", borderRadius: 9,
             background: headerBg, border: `1px solid ${rowBorder}`,
+            color: T.txt3, fontSize: 11, fontFamily: font,
           }}>
-            {GRANULARITIES.map(g => {
-              const active = g.id === granularityId;
-              return (
-                <button
-                  key={g.id}
-                  role="tab"
-                  aria-selected={active}
-                  onClick={() => setGranularityId(g.id)}
-                  style={{
-                    padding: "7px 16px", borderRadius: 7,
-                    background: active ? accent : "transparent",
-                    color: active ? (isLight ? "#0B1220" : "#06080F") : T.txt2,
-                    border: "none",
-                    fontSize: 12, fontWeight: active ? 700 : 500,
-                    fontFamily: fontDisp, cursor: "pointer",
-                    transition: "background 0.14s, color 0.14s",
-                  }}
-                >{g.label}</button>
-              );
-            })}
-          </div>
-
+            Vista automática: <strong style={{ color: T.txt2 }}>{granularity.label}</strong>
+          </span>
           <button
             onClick={handleExport}
             title="Descarga el reporte ejecutivo como PDF — listo para enviar a dirección"
@@ -921,48 +969,9 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
               Evolución de indicadores
             </p>
             <p style={{ fontSize: 11, color: T.txt3, fontFamily: font, margin: "3px 0 0", lineHeight: 1.5 }}>
-              {granularityId === "day"
-                ? <>Mostrando <strong style={{ color: T.txt2 }}>{bucketCount === 1 ? "hoy" : `los últimos ${bucketCount} días`}</strong> — granularidad diaria.</>
-                : granularityId === "week"
-                ? <>Mostrando <strong style={{ color: T.txt2 }}>{bucketCount === 1 ? "esta semana" : `las últimas ${bucketCount} semanas`}</strong> — granularidad semanal.</>
-                : <>Mostrando <strong style={{ color: T.txt2 }}>{bucketCount === 1 ? "este mes" : `los últimos ${bucketCount} meses`}</strong> — granularidad mensual.</>
-              }
+              Agrupación <strong style={{ color: T.txt2 }}>{granularity.label.toLowerCase()}</strong> dentro del rango global seleccionado.
               {" "}Por defecto muestra <strong style={{ color: T.txt2 }}>Zooms agendados y realizados</strong>; prende más series con los chips de la leyenda.
             </p>
-          </div>
-
-          {/* Selector de rango — chips por granularidad activa */}
-          <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-            <span style={{ fontSize: 10, fontWeight: 700, color: T.txt3, fontFamily: fontDisp, textTransform: "uppercase", letterSpacing: "0.08em" }}>
-              Rango
-            </span>
-            <div role="radiogroup" aria-label="Rango temporal" style={{
-              display: "inline-flex", gap: 2, padding: 2, borderRadius: 9,
-              background: headerBg, border: `1px solid ${rowBorder}`,
-            }}>
-              {granularity.ranges.map(n => {
-                const active = n === bucketCount;
-                return (
-                  <button
-                    key={n}
-                    role="radio"
-                    aria-checked={active}
-                    onClick={() => setBucketCount(n)}
-                    style={{
-                      padding: "5px 11px", borderRadius: 7,
-                      background: active ? accent : "transparent",
-                      color: active ? (isLight ? "#0B1220" : "#06080F") : T.txt2,
-                      border: "none",
-                      fontSize: 11, fontWeight: active ? 700 : 600,
-                      fontFamily: fontDisp, cursor: "pointer",
-                      letterSpacing: "-0.005em",
-                      fontVariantNumeric: "tabular-nums",
-                      transition: "background 0.14s, color 0.14s",
-                    }}
-                  >{n} {granularity.unit}</button>
-                );
-              })}
-            </div>
           </div>
         </div>
 
@@ -1028,11 +1037,11 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
                 tick={{ fill: T.txt3, fontSize: 10.5, fontFamily: fontDisp, fontWeight: 500 }}
                 tickLine={false}
                 axisLine={{ stroke: isLight ? "rgba(15,23,42,0.08)" : "rgba(255,255,255,0.06)" }}
-                interval={bucketCount > 20 ? "preserveStartEnd" : 0}
+                interval={series.length > 20 ? "preserveStartEnd" : 0}
                 minTickGap={6}
-                angle={granularityId === "day" && bucketCount > 14 ? -28 : 0}
-                dy={granularityId === "day" && bucketCount > 14 ? 8 : 4}
-                height={granularityId === "day" && bucketCount > 14 ? 54 : 32}
+                angle={granularityId === "day" && series.length > 14 ? -28 : 0}
+                dy={granularityId === "day" && series.length > 14 ? 8 : 4}
+                height={granularityId === "day" && series.length > 14 ? 54 : 32}
               />
               <YAxis
                 allowDecimals={false}
@@ -1042,8 +1051,7 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
                 axisLine={false}
                 width={36}
               />
-              {/* Marca "Hoy" — solo cuando hay más de un bucket, para
-                  no taparlo cuando bucketCount = 1. */}
+              {/* Marca "Hoy" — solo cuando hay más de un bucket. */}
               {series.length > 1 && (
                 <ReferenceLine
                   x={series[series.length - 1].label}
@@ -1274,14 +1282,22 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
       </div>
 
       {/* ── 4) Desglose por asesor (coordinado con CRM) ─────────────────── */}
-      <AdvisorMetrics leadsData={leadsData} theme={isLight ? "light" : "dark"} />
+      <AdvisorMetrics
+        leadsData={leadsData}
+        theme={isLight ? "light" : "dark"}
+        dateFilter={dateFilter}
+      />
       </>
       )}
 
       {showZoomTab && tab === "zooms" && (
         <div style={{ display: "flex", flexDirection: "column", gap: 28 }}>
           {/* Métrica real de Zooms (pipeline + historial) — siempre con datos. */}
-          <ZoomBoard leadsData={leadsData} theme={isLight ? "light" : "dark"} />
+          <ZoomBoard
+            leadsData={leadsData}
+            theme={isLight ? "light" : "dark"}
+            dateFilter={dateFilter}
+          />
           {/* Panel operativo CRUD sobre zoom_agendados — solo si la tabla existe
               (migración 027 aplicada). Si no, no lo mostramos: el ZoomBoard de
               arriba ya cubre la métrica desde el pipeline. */}
