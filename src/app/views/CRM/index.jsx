@@ -3060,33 +3060,49 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                                 showToast(`"${duplicateMatch.lead_name}" pertenece a ${duplicateMatch.asesor_name || "otro asesor"}. Pide al administrador acceso o reasignación.`, "info");
                               }
                             }}
+                            onMouseEnter={(e) => { e.currentTarget.style.filter = "brightness(1.18)"; e.currentTarget.style.borderColor = isLight ? "rgba(15,23,42,0.22)" : "rgba(255,255,255,0.24)"; e.currentTarget.style.transform = "translateY(-1px)"; }}
+                            onMouseLeave={(e) => { e.currentTarget.style.filter = "none"; e.currentTarget.style.borderColor = isLight ? "rgba(15,23,42,0.12)" : "rgba(255,255,255,0.12)"; e.currentTarget.style.transform = "none"; }}
                             style={{
-                              padding: "5px 11px", borderRadius: 8,
-                              background: isLight ? "rgba(15,23,42,0.05)" : "rgba(255,255,255,0.06)",
-                              border: `1px solid ${isLight ? "rgba(15,23,42,0.10)" : "rgba(255,255,255,0.10)"}`,
-                              color: T.txt2,
-                              fontSize: 10.5, fontWeight: 600, cursor: "pointer",
-                              fontFamily: font,
+                              display: "inline-flex", alignItems: "center", gap: 6,
+                              padding: "7px 13px", borderRadius: 9,
+                              background: isLight
+                                ? "linear-gradient(180deg, rgba(15,23,42,0.05), rgba(15,23,42,0.02))"
+                                : "linear-gradient(180deg, rgba(255,255,255,0.075), rgba(255,255,255,0.03))",
+                              border: `1px solid ${isLight ? "rgba(15,23,42,0.12)" : "rgba(255,255,255,0.12)"}`,
+                              color: isLight ? T.txt2 : T.txt,
+                              fontSize: 11, fontWeight: 600, letterSpacing: "0.01em",
+                              cursor: "pointer", fontFamily: font,
+                              transition: "transform .16s cubic-bezier(.4,0,.2,1), filter .16s ease, border-color .16s ease",
+                              WebkitTapHighlightColor: "transparent",
                             }}
                           >
+                            <Eye size={13} strokeWidth={2.1} style={{ opacity: 0.82, flexShrink: 0 }} />
                             Ver ficha existente
                           </button>
                           <button
                             type="button"
                             onClick={() => setDuplicateOverride(v => !v)}
+                            onMouseEnter={(e) => { e.currentTarget.style.filter = "brightness(1.08)"; e.currentTarget.style.transform = "translateY(-1px)"; e.currentTarget.style.boxShadow = duplicateOverride ? "0 5px 16px rgba(245,166,35,0.40)" : "0 2px 9px rgba(245,166,35,0.16)"; }}
+                            onMouseLeave={(e) => { e.currentTarget.style.filter = "none"; e.currentTarget.style.transform = "none"; e.currentTarget.style.boxShadow = duplicateOverride ? "0 3px 12px rgba(245,166,35,0.30)" : "none"; }}
                             style={{
-                              padding: "5px 11px", borderRadius: 8,
+                              display: "inline-flex", alignItems: "center", gap: 6,
+                              padding: "7px 14px", borderRadius: 9,
                               background: duplicateOverride
-                                ? (isLight ? "rgba(245,166,35,0.22)" : "rgba(245,166,35,0.26)")
-                                : "transparent",
-                              border: `1px solid ${duplicateOverride ? "rgba(245,166,35,0.65)" : tintBorder}`,
-                              color: duplicateOverride ? headColor : T.txt3,
-                              fontSize: 10.5, fontWeight: duplicateOverride ? 700 : 600,
-                              cursor: "pointer",
-                              fontFamily: font,
+                                ? "linear-gradient(135deg, rgba(248,176,55,0.97), rgba(229,138,18,0.94))"
+                                : (isLight ? "rgba(245,166,35,0.09)" : "rgba(245,166,35,0.07)"),
+                              border: `1px solid ${duplicateOverride ? "rgba(245,166,35,0.92)" : "rgba(245,166,35,0.42)"}`,
+                              color: duplicateOverride ? "#231800" : baseColor,
+                              fontSize: 11, fontWeight: duplicateOverride ? 700 : 600, letterSpacing: "0.01em",
+                              cursor: "pointer", fontFamily: font,
+                              boxShadow: duplicateOverride ? "0 3px 12px rgba(245,166,35,0.30)" : "none",
+                              transition: "transform .16s cubic-bezier(.4,0,.2,1), filter .16s ease, box-shadow .16s ease",
+                              WebkitTapHighlightColor: "transparent",
                             }}
                           >
-                            {duplicateOverride ? "✓ Registrar de todas formas" : "Registrar de todas formas"}
+                            {duplicateOverride
+                              ? <Check size={13} strokeWidth={2.7} style={{ flexShrink: 0 }} />
+                              : <UserCheck size={13} strokeWidth={2.1} style={{ flexShrink: 0 }} />}
+                            Registrar de todas formas
                           </button>
                         </div>
                       )}
