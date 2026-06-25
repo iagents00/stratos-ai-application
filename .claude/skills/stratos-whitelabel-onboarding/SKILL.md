@@ -214,6 +214,21 @@ en toda la base Stratos (si ya está en otro perfil, hay que desconectarlo prime
 11. **`bot_list_my_clients_v2` (del CRM base) estaba roto** → se usa `bot_mis_clientes` (creada para esto).
 12. **Aislamiento**: toda query es `WHERE organization_id = <org del asesor>`. Stratos y Gvintell son **bases
     Supabase distintas** → imposible cruce. Dentro de Stratos, cada org solo ve lo suyo.
+13. **El dispatch HONRA el tool del clasificador; la detección por texto es solo FALLBACK** (fix 25-jun-2026).
+    `bot_nlu_dispatch_gvintell` tiene un bloque de detección por texto (`^agenda`, `^clientes`, `^menu`…). Antes corría
+    SIEMPRE y pisaba el `tool_name` explícito → "Agendá un Zoom con X" se desviaba a la agenda (no agendaba). Ahora ese
+    bloque va envuelto en `if v_tool in ('','menu') then … end if` → si el clasificador YA eligió herramienta, se respeta.
+    Mató la clase entera (visita, zoom, y cualquier acción cuyo texto arranque con "agenda"/"menú"). **No volver a parchar
+    caso-por-caso en n8n (Parse Pick): la causa vive en la base.**
+14. **Resolvers de cliente por nombre: SIEMPRE accent-insensitive** (`public.unaccent(name) ilike public.unaccent('%'||v_name||'%')`).
+    `change_stage`/`set_zoom_datetime`/`update_next_action` en `_v2` lo hacían SIN unaccent → "hector prueba" no encontraba
+    "Héctor Prueba". `assign_client` ya estaba bien; ahora todos igual. (fix 25-jun-2026)
+15. **WHITE-LABEL — lógica específica de un cliente va en CONFIG por tenant, NUNCA hardcodeada.** Patrón (caso "Bay View
+    Grand", 25-jun): los DATOS del tenant viven en `organizations.meta_config` (jsonb) — p.ej. `campaign_aliases` —, y una
+    función genérica los lee: `fn_resolve_campaign(org, texto)` normaliza la campaña por alias del org (si el org no tiene
+    config, devuelve el texto tal cual → cero efecto en otros tenants). Inyectado en `bot_upsert_lead`. **Regla:** antes de
+    meter un `if cliente='Duke'` o quemar un nombre en el prompt, preguntarse "¿esto debería viajar al clonar a otro tenant?".
+    Si no, va en `meta_config`/tabla `*_config` con `organization_id`. Igual que `proactive_config`, `terminal_stages`, etc.
 
 ## 10. Smoke test (SQL, reemplaza `<TG>` por el telegram_chat_id de un asesor; Araceli Duke = 7464451486)
 
