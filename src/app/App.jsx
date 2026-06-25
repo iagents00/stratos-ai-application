@@ -272,6 +272,7 @@ export default function App() {
   /* ── Leads data — shared between Dash & CRM ── */
   const [leadsData, setLeadsData]       = useState([]);
   const [leadsLoading, setLeadsLoading] = useState(true);
+  const [leadsRefreshing, setLeadsRefreshing] = useState(false); // caché pintada, trayendo el set completo (orden final) en background
 
   // Cache de filas ya normalizadas. Clave = id, valor = { stamp, row }.
   // stamp = updated_at || created_at — si no cambió, devolvemos la MISMA
@@ -394,6 +395,7 @@ export default function App() {
     if (cached) {
       setLeadsData(normalizeLeads(cached));
       setLeadsLoading(false);
+      setLeadsRefreshing(true); // muestra "Actualizando lista…" hasta que llegue el set completo y se reordene
     } else if (!silent) {
       setLeadsLoading(true);
     }
@@ -408,6 +410,7 @@ export default function App() {
         if (!cached) setLeadsData([]);
       }
       setLeadsLoading(false);
+      setLeadsRefreshing(false);
       return;
     }
 
@@ -433,6 +436,7 @@ export default function App() {
       } catch (_) { /* noop */ }
     }
     setLeadsLoading(false);
+    setLeadsRefreshing(false);
   }, [normalizeLeads, user, readLeadsCache, writeLeadsCache]);
 
   useEffect(() => {
@@ -1448,6 +1452,12 @@ export default function App() {
         {/* CONTENT */}
         <div style={{ flex:1, display:"flex", overflow:"hidden" }}>
           <div key={v} className="stratos-content-area" style={{ flex:1, padding:"18px 22px", overflowY:"auto", animation:"fadeIn 0.28s ease", display:"flex", flexDirection:"column" }}>
+            {leadsRefreshing && v === "c" && (
+              <div style={{ position:"fixed", top:72, right:28, zIndex:200, display:"flex", alignItems:"center", gap:7, padding:"5px 12px", borderRadius:99, background:isLight?"rgba(255,255,255,0.95)":"rgba(20,28,40,0.95)", border:`1px solid ${T.accent}55`, color:T.accent, fontSize:11, fontWeight:700, fontFamily:font, boxShadow:"0 2px 12px rgba(0,0,0,0.22)" }}>
+                <span style={{ display:"inline-block", width:12, height:12, border:`2px solid ${T.accent}40`, borderTopColor:T.accent, borderRadius:"50%", animation:"spin 0.8s linear infinite" }} />
+                Actualizando lista…
+              </div>
+            )}
             {user?.role && !canAccessModule(v, user, clientConfig)
               ? <PermissionGate moduleId={v} onGoBack={() => setV("c")} />
               : <Suspense fallback={
