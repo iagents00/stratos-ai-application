@@ -160,6 +160,7 @@ export default function MetaPanel({
   // Las derivadas de leads se siembran en App.jsx (efímeras, se regeneran). Las que el usuario
   // crea acá SÍ se guardan, con fecha/hora límite OBLIGATORIA (la usa el coach de Telegram).
   const [metaNewDate, setMetaNewDate] = useState("");
+  const [teamMembers, setTeamMembers] = useState([]);   // responsables dinámicos (todos los activos del org, incl. nuevos)
   const _orgId = user?.organizationId;
   // Persistimos si hay un usuario REAL logueado. NO exigimos conocer el org en el front:
   // team_actions tiene DEFAULT organization_id = current_organization_id() (la DB lo pone desde el
@@ -180,6 +181,19 @@ export default function MetaPanel({
         }));
         setMetaActions(p => { const ids = new Set(mapped.map(m => m.id)); return [...mapped, ...p.filter(a => !a._persisted && !ids.has(a.id))]; });
       });
+    return () => { cancelled = true; };
+  }, [open, _online]);
+
+  // Lista dinámica de responsables: TODOS los activos del org (asesores + admins,
+  // incluye nuevos). Reemplaza la lista hardcodeada. fn_org_team_members es
+  // SECURITY DEFINER + org-scoped, así que el admin ve a todo su equipo.
+  useEffect(() => {
+    if (!open || !_online) return;
+    let cancelled = false;
+    supabase.rpc('fn_org_team_members').then(({ data, error }) => {
+      if (cancelled || error || !data) { if (error) console.warn('[Stratos] team members load:', error.message); return; }
+      setTeamMembers(data.map(m => m.name).filter(Boolean));
+    });
     return () => { cancelled = true; };
   }, [open, _online]);
 
@@ -500,7 +514,16 @@ export default function MetaPanel({
                       <div style={{ display:"flex", alignItems:"center", gap:5 }}>
                         <select
                           value={a.assignee || ""}
-                          onChange={e => setMetaActions(p => p.map(x => x.id===a.id ? {...x, assignee:e.target.value, assigneeType:"human"} : x))}
+                          onChange={e => {
+                            const v = e.target.value;
+                            setMetaActions(p => p.map(x => x.id===a.id ? {...x, assignee:v, assigneeType:"human"} : x));
+                            // Persistir el responsable en la DB (resuelve asesor_id; 'Todos' → broadcast).
+                            // Sin esto, el coach de Telegram no se enteraba de la asignación.
+                            if (a._persisted && _online) {
+                              supabase.rpc('fn_assign_team_action', { p_action_id: a.id, p_asesor_name: v })
+                                .then(({ error }) => { if (error) console.warn('[Stratos] assign team_action:', error.message); });
+                            }
+                          }}
                           style={{
                             fontSize:9.5, fontFamily:font, fontWeight:500,
                             color: a.assignee ? T.txt2 : T.txt3,
@@ -511,8 +534,9 @@ export default function MetaPanel({
                           }}
                         >
                           <option value="">＋ Responsable</option>
+                          <option value="Todos">👥 Todos (todo el equipo)</option>
                           <optgroup label="── Equipo Humano">
-                            {["Oscar Gálvez","Alexia Santillán","Alex Velázquez","Ken Lugo","Emmanuel Ortiz","Cecilia Mendoza"].map(n => (
+                            {(teamMembers.length ? teamMembers : ["Oscar Gálvez","Alexia Santillán","Araceli Oneto","Ken Duke","Emmanuel Ortiz","Cecilia Mendoza"]).map(n => (
                               <option key={n} value={n}>{n}</option>
                             ))}
                           </optgroup>
