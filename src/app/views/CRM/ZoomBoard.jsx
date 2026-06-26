@@ -14,9 +14,9 @@
  * ─────────────────────────────────────────────────────────────────────────────
  */
 import { useMemo, useState } from "react";
-import { CalendarDays, CheckCircle2, MapPin, Handshake, History, ChevronDown, ShieldCheck, AlertTriangle } from "lucide-react";
+import { CalendarDays, CheckCircle2, MapPin, Handshake, History, ChevronDown } from "lucide-react";
 import { P, LP, font, fontDisp, STAGE_COLORS } from "../../../design-system/tokens";
-import { zoomEventsOf, funnelEntryOf, milestoneOf, ACTIVE_POST_ZOOM_STAGES, RECORRIDO_STAGES, CIERRE_STAGES, zoomMovements, zoomDataQuality } from "./zoom-metrics";
+import { zoomEventsOf, funnelEntryOf, milestoneOf, ACTIVE_POST_ZOOM_STAGES, RECORRIDO_STAGES, CIERRE_STAGES, zoomMovements } from "./zoom-metrics";
 import DateRangeControl from "./DateRangeControl";
 import { createDefaultDateFilter, resolveDateRange, timestampInRange } from "./date-range";
 
@@ -114,12 +114,11 @@ export default function ZoomBoard({ leadsData = [], theme = "dark", onOpenLead =
   }, [dateRange, leadsData, histKind, presentadorFilter]);
 
   const inferidos = useMemo(() => historial.filter(m => m.inferred).length, [historial]);
-  const quality = useMemo(() => zoomDataQuality(leadsData), [leadsData]);
 
   // Totales del embudo + productividad por presentador (quién dio el Zoom).
   // AGENDADOS = entró al funnel (agendado o ya realizado) → siempre ≥ realizados.
   // REALIZADOS = hizo el Zoom. Ambos con split registrado/inferido.
-  const { byPresenter, totals, presenters } = useMemo(() => {
+  const { byPresenter, totals } = useMemo(() => {
     const map = {}; // person -> realizados (presentó)
     let tAg = 0, tAgInf = 0, tDone = 0, tDoneInferred = 0;
     for (const l of leadsData) {
@@ -140,7 +139,6 @@ export default function ZoomBoard({ leadsData = [], theme = "dark", onOpenLead =
         scheduled: tAg, scheduledInferred: tAgInf, scheduledRegistered: tAg - tAgInf,
         done: tDone, doneInferred: tDoneInferred, doneRegistered: tDone - tDoneInferred,
       },
-      presenters: list.map(r => r.asesor),
     };
   }, [dateRange, leadsData]);
 
@@ -163,27 +161,6 @@ export default function ZoomBoard({ leadsData = [], theme = "dark", onOpenLead =
     return { recorridos: rec, cierres: cie };
   }, [dateRange, leadsData]);
 
-  // Lista cliente-por-cliente con Zoom realizado en el período.
-  const clientes = useMemo(() => {
-    const out = [];
-    for (const l of leadsData) {
-      const { done } = zoomEventsOf(l);
-      if (!done || done.inferred || !timestampInRange(done.at, dateRange)) continue;
-      const presentador = done.by || l.asesor || "—";
-      if (presentadorFilter !== "__all__" && presentador !== presentadorFilter) continue;
-      out.push({
-        lead: l,
-        cliente: l.name || l.n || "(sin nombre)",
-        presentador,
-        fecha: done.at || l.created_at || null,
-        dueno: l.asesor || "—",
-        etapa: l.st || "—",
-        siguiente: l.nextAction || l.next_action || "—",
-      });
-    }
-    out.sort((a, b) => (b.fecha ? new Date(b.fecha).getTime() : 0) - (a.fecha ? new Date(a.fecha).getTime() : 0));
-    return out;
-  }, [dateRange, leadsData, presentadorFilter]);
 
   const headerBg  = isLight ? "rgba(15,23,42,0.04)" : "rgba(255,255,255,0.04)";
   const rowBorder = isLight ? "rgba(15,23,42,0.06)" : "rgba(255,255,255,0.05)";
@@ -243,44 +220,6 @@ export default function ZoomBoard({ leadsData = [], theme = "dark", onOpenLead =
             </div>
           );
         })}
-      </div>
-
-      <div style={{
-        display: "grid", gridTemplateColumns: "minmax(240px, 1.2fr) repeat(3, minmax(150px, 1fr))",
-        gap: 10, padding: 12, borderRadius: 16,
-        background: isLight
-          ? "linear-gradient(135deg, rgba(16,185,129,0.08), rgba(37,99,235,0.035))"
-          : "linear-gradient(135deg, rgba(16,185,129,0.10), rgba(37,99,235,0.055))",
-        border: "1px solid rgba(16,185,129,0.22)",
-      }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "4px 6px" }}>
-          <span style={{ display: "inline-flex", padding: 9, borderRadius: 12, background: "rgba(16,185,129,0.14)" }}>
-            <ShieldCheck size={18} color="#10B981" />
-          </span>
-          <div>
-            <div style={{ fontSize: 13, fontWeight: 750, color: T.txt, fontFamily: fontDisp }}>Calidad del dato de Zoom</div>
-            <div style={{ fontSize: 11, color: T.txt3, fontFamily: font, lineHeight: 1.45 }}>
-              Los rangos por fecha cuentan únicamente eventos con evidencia temporal confirmada.
-            </div>
-          </div>
-        </div>
-        {[
-          ["Concretados confirmados", quality.confirmedDone, "#10B981"],
-          ["Históricos por validar", quality.inferredDone, "#F59E0B"],
-          ["Concretados sin notas", quality.completedWithoutNotes, "#EF4444"],
-        ].map(([label, value, color]) => (
-          <div key={label} style={{
-            padding: "10px 12px", borderRadius: 12,
-            background: isLight ? "rgba(255,255,255,0.72)" : "rgba(3,8,16,0.32)",
-            border: `1px solid ${color}24`,
-          }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 10.5, color: T.txt3, fontFamily: font }}>
-              {color !== "#10B981" && <AlertTriangle size={11} color={color} />}
-              {label}
-            </div>
-            <div style={{ marginTop: 4, fontSize: 21, fontWeight: 800, color, fontFamily: fontDisp }}>{value}</div>
-          </div>
-        ))}
       </div>
 
       {/* Leyenda: activos + nota de inferidos (recuperación, no alarma) */}
@@ -379,59 +318,6 @@ export default function ZoomBoard({ leadsData = [], theme = "dark", onOpenLead =
             )}
           </table>
         </div>
-      </div>
-
-      {/* Lista cliente-por-cliente */}
-      <div>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12, marginBottom: 10 }}>
-          <h3 style={{ margin: 0, fontSize: 16, fontWeight: 600, fontFamily: fontDisp, color: T.txt }}>
-            Clientes con Zoom realizado <span style={{ fontSize: 12, fontWeight: 500, color: T.txt3 }}>· {clientes.length}</span>
-          </h3>
-          <select value={presentadorFilter} onChange={(e) => setPresentadorFilter(e.target.value)} aria-label="Filtrar por presentador"
-            style={{ padding: "8px 12px", borderRadius: 9, fontFamily: font, fontSize: 12.5, background: headerBg, color: T.txt, border: `1px solid ${rowBorder}`, cursor: "pointer" }}>
-            <option value="__all__">Todos los presentadores</option>
-            {presenters.map(a => <option key={a} value={a}>{a}</option>)}
-          </select>
-        </div>
-        <div style={{ borderRadius: 14, background: isLight ? "rgba(255,255,255,0.6)" : "rgba(255,255,255,0.02)", border: `1px solid ${rowBorder}`, overflow: "hidden", overflowX: "auto" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 760 }}>
-            <thead>
-              <tr style={{ background: headerBg }}>
-                <th style={{ ...thStyle(T), textAlign: "left", paddingLeft: 16 }}>Cliente</th>
-                <th style={thStyle(T)}>Presentador</th>
-                <th style={thStyle(T)}>Fecha Zoom</th>
-                <th style={thStyle(T)}>Dueño actual</th>
-                <th style={thStyle(T)}>Etapa actual</th>
-                <th style={{ ...thStyle(T), textAlign: "left" }}>Siguiente paso</th>
-              </tr>
-            </thead>
-            <tbody>
-              {clientes.length === 0 && (
-                <tr><td colSpan={6} style={{ padding: 26, textAlign: "center", color: T.txt3, fontFamily: font, fontSize: 13 }}>No hay clientes con Zoom realizado en este período.</td></tr>
-              )}
-              {clientes.map(({ lead, cliente, presentador, fecha, dueno, etapa, siguiente }, i) => (
-                <tr key={lead.id || i}
-                  onClick={onOpenLead ? () => onOpenLead(lead) : undefined}
-                  style={{ borderTop: i === 0 ? "none" : `1px solid ${rowBorder}`, cursor: onOpenLead ? "pointer" : "default" }}
-                  onMouseEnter={onOpenLead ? (e) => { e.currentTarget.style.background = headerBg; } : undefined}
-                  onMouseLeave={onOpenLead ? (e) => { e.currentTarget.style.background = "transparent"; } : undefined}
-                >
-                  <td style={{ padding: cellPad, paddingLeft: 16, fontFamily: fontDisp, fontWeight: 600, color: T.txt, fontSize: 13 }}>{cliente}</td>
-                  <td style={{ padding: cellPad, textAlign: "center", fontFamily: font, color: T.txt2, fontSize: 12.5 }}>{presentador}</td>
-                  <td style={{ padding: cellPad, textAlign: "center", fontFamily: font, color: T.txt2, fontSize: 12.5, whiteSpace: "nowrap" }}>{fmtFecha(fecha)}</td>
-                  <td style={{ padding: cellPad, textAlign: "center", fontFamily: font, color: T.txt2, fontSize: 12.5 }}>{dueno}</td>
-                  <td style={{ padding: cellPad, textAlign: "center", fontSize: 12, whiteSpace: "nowrap" }}>
-                    <span style={{ display: "inline-block", whiteSpace: "nowrap", padding: "3px 10px", borderRadius: 999, fontFamily: fontDisp, fontWeight: 600, fontSize: 11, color: STAGE_COLORS[etapa] || T.txt3, background: `${STAGE_COLORS[etapa] || T.txt3}1A` }}>{etapa}</span>
-                  </td>
-                  <td style={{ padding: cellPad, fontFamily: font, color: T.txt2, fontSize: 12.5 }}>{siguiente}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        {onOpenLead && clientes.length > 0 && (
-          <p style={{ margin: "8px 4px 0", fontSize: 10.5, color: T.txt3, fontFamily: font }}>Toca un cliente para abrir su expediente, notas e historial.</p>
-        )}
       </div>
 
       {/* ── Historial de movimientos de Zoom (colapsable) ─────────────────── */}
