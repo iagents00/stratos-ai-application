@@ -81,7 +81,9 @@ function text(doc, str, x, y, opts = {}) {
   doc.setFontSize(size);
   doc.setTextColor(color[0], color[1], color[2]);
   const o = { align };
-  if (spacing != null) o.charSpace = spacing;
+  // Siempre fijamos charSpace (0 por defecto): así ningún texto hereda el
+  // spacing de un text() anterior y splitTextToSize (que asume 0) calcula bien.
+  o.charSpace = spacing != null ? spacing : 0;
   doc.text(str == null ? "" : String(str), x, y, o);
 }
 
