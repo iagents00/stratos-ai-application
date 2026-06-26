@@ -339,8 +339,8 @@ export function buildExecutivePdf(JsPDF, model) {
   sectionTitle(ctx, `Resumen del rango  -  ${meta.granularityLabel || ""}`);
   drawCards(ctx, model.rangeCards || []);
 
-  // 3) Indicadores clave (estado actual).
-  sectionTitle(ctx, "Indicadores clave  -  estado actual del CRM");
+  // 3) Indicadores clave (del rango seleccionado).
+  sectionTitle(ctx, "Indicadores clave  -  del rango");
   drawIndicatorBars(ctx, model.indicators || []);
 
   // 4) Evolución temporal (por periodo — "lo registrado cada día/semana/mes").
