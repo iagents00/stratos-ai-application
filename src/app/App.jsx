@@ -977,7 +977,7 @@ export default function App() {
   const GOAL        = (effectiveMetaPlan?.goal && effectiveMetaPlan.goal > 0) ? effectiveMetaPlan.goal : 48_000_000;
   const activeLeads = leadsData.filter(l => l.presupuesto > 0);
   const totalPipe   = activeLeads.reduce((s, l) => s + (l.presupuesto || 0), 0);
-  const pc          = Math.min(100, Math.round((totalPipe / GOAL) * 100));
+  const pc          = Math.max(1, Math.min(100, Math.round((totalPipe / GOAL) * 100)));
   const avgScore    = activeLeads.length
     ? Math.round(activeLeads.reduce((s, l) => s + (l.sc || 0), 0) / activeLeads.length) : 0;
   const fmt = n => n >= 1e6 ? `$${(n/1e6).toFixed(1).replace(/\.0$/,"")}M` : `$${(n/1e3).toFixed(0)}K`;
@@ -1140,7 +1140,7 @@ export default function App() {
                 <span style={{ fontSize:7.5, fontFamily:fontDisp, fontWeight:500, letterSpacing:"-0.01em", color: isLight ? "rgba(15,23,42,0.46)" : "rgba(255,255,255,0.38)" }}>{fmt(totalPipe)}</span>
                 <span style={{ fontSize:7.5, fontFamily:fontDisp, fontWeight:600, letterSpacing:"-0.01em", color: isLight ? "rgba(13,154,118,0.82)" : "rgba(52,211,153,0.72)" }}>{avgScore}</span>
               </div>
-              <span style={{ fontSize: pc >= 100 ? 24 : 33, fontWeight:200, fontFamily:fontDisp, letterSpacing:"-0.04em", lineHeight:1, color: isLight ? "#082818" : "#FFFFFF", display:"block", position:"relative", zIndex:1, whiteSpace:"nowrap", fontVariantNumeric:"tabular-nums" }}>{pc}</span>
+              <span style={{ fontSize: pc >= 100 ? 30 : 33, fontWeight: pc >= 100 ? 400 : 200, fontFamily:fontDisp, letterSpacing:"-0.04em", lineHeight:1, color: isLight ? (pc >= 100 ? "#0D9A76" : "#082818") : (pc >= 100 ? "#34D399" : "#FFFFFF"), display:"block", position:"relative", zIndex:1, whiteSpace:"nowrap", fontVariantNumeric:"tabular-nums" }}>{pc >= 100 ? "✓" : pc}</span>
               <div style={{ width:"100%", height:2.5, borderRadius:99, background: isLight ? "rgba(13,154,118,0.09)" : "rgba(255,255,255,0.08)", marginTop:9, overflow:"hidden", position:"relative", zIndex:1 }}>
                 <div style={{ width:`${pc}%`, height:"100%", borderRadius:99, background: isLight ? "linear-gradient(90deg, #0D9A76, #34D399)" : "linear-gradient(90deg, #34D399, #6EE7C2)", boxShadow: isLight ? "none" : "0 0 8px rgba(52,211,153,0.55)", transition:"width 1.1s cubic-bezier(0.4,0,0.2,1)" }} />
               </div>
