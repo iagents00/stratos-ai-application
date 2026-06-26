@@ -62,9 +62,9 @@ export default function ZoomBoard({ leadsData = [], theme = "dark", onOpenLead =
     let tAg = 0, tAgInf = 0, tDone = 0, tDoneInferred = 0;
     for (const l of leadsData) {
       const entry = funnelEntryOf(l);
-      if (entry && !entry.inferred && timestampInRange(entry.at, dateRange)) { tAg++; if (entry.inferred) tAgInf++; }
+      if (entry && timestampInRange(entry.at, dateRange)) { tAg++; if (entry.inferred) tAgInf++; }
       const { done } = zoomEventsOf(l);
-      if (done && !done.inferred && timestampInRange(done.at, dateRange)) {
+      if (done && timestampInRange(done.at, dateRange)) {
         map[done.by] = (map[done.by] || 0) + 1;
         tDone++; if (done.inferred) tDoneInferred++;
       }
@@ -94,8 +94,8 @@ export default function ZoomBoard({ leadsData = [], theme = "dark", onOpenLead =
     for (const l of leadsData) {
       const r = milestoneOf(l, RECORRIDO_STAGES);
       const c = milestoneOf(l, CIERRE_STAGES);
-      if (r && !r.inferred && timestampInRange(r.at, dateRange)) rec++;
-      if (c && !c.inferred && timestampInRange(c.at, dateRange)) cie++;
+      if (r && timestampInRange(r.at, dateRange)) rec++;
+      if (c && timestampInRange(c.at, dateRange)) cie++;
     }
     return { recorridos: rec, cierres: cie };
   }, [dateRange, leadsData]);

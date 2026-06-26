@@ -332,19 +332,24 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
     return t;
   }, [leadsData]);
 
-  // Embudo de conversión comercial: del lead al cierre. Etapas anidadas (cada
-  // una es subconjunto de la anterior), así el embudo SIEMPRE desciende y se lee
-  // de un vistazo dónde se caen los clientes. Es una COHORTE del rango: cuenta
-  // los leads creados dentro del período seleccionado y hasta dónde avanzaron,
-  // así "Leads totales" coincide con "N leads en el rango" del encabezado y TODAS
-  // las barras cambian al mover las fechas.
+  // Embudo de conversión comercial: del lead al cierre. Los hitos de Zoom
+  // (agendado/realizado/recorrido/cierre) se cuentan POR FECHA REAL DEL EVENTO
+  // dentro del rango — exactamente el mismo criterio que ZoomBoard (Filtro 2) y
+  // que la tabla por asesor, para que "Zoom realizado" sea EL MISMO número en
+  // todos los paneles. `timestampInRange` incluye los inferidos solo en
+  // "Histórico" (no tienen fecha) y los excluye en rangos con fecha. "Leads
+  // totales" es la cohorte creada en el rango (entrada del embudo).
   const funnel = useMemo(() => {
     let rec = 0, cie = 0, zsch = 0, zdone = 0;
-    for (const l of rangeLeads) {
-      if (funnelEntryOf(l)) zsch++;
-      if (zoomEventsOf(l).done) zdone++;
-      if (milestoneOf(l, RECORRIDO_STAGES)) rec++;
-      if (milestoneOf(l, CIERRE_STAGES)) cie++;
+    for (const l of leadsData) {
+      const entry = funnelEntryOf(l);
+      if (entry && timestampInRange(entry.at, activeDateRange)) zsch++;
+      const done = zoomEventsOf(l).done;
+      if (done && timestampInRange(done.at, activeDateRange)) zdone++;
+      const r = milestoneOf(l, RECORRIDO_STAGES);
+      if (r && timestampInRange(r.at, activeDateRange)) rec++;
+      const c = milestoneOf(l, CIERRE_STAGES);
+      if (c && timestampInRange(c.at, activeDateRange)) cie++;
     }
     const total = rangeLeads.length;
     const stages = [
@@ -356,7 +361,7 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
     ];
     const max = Math.max(1, ...stages.map(s => s.value));
     return { stages, max };
-  }, [rangeLeads, accent]);
+  }, [leadsData, rangeLeads, activeDateRange, accent]);
 
   const rangeTotals = useMemo(() => {
     const t = {};

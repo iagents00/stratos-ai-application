@@ -116,8 +116,11 @@ export default function AdvisorMetrics({ leadsData = [], theme = "dark", onOpenL
       // por asesor también sea ≥ realizados y cuadre con Filtro 2.
       const entry = funnelEntryOf(l);
       const { done } = zoomEventsOf(l);
-      if (entry && !entry.inferred && entry.at) push(entry.by, "scheduled", entry.at);
-      if (done && !done.inferred && done.at) push(done.by, "done", done.at);
+      // Pushea también los inferidos (at=null): timestampInRange los incluye solo
+      // en "Histórico" y los excluye en rangos con fecha, así el total histórico
+      // cuadra con el embudo y con ZoomBoard (sin subcontar los recuperados).
+      if (entry) push(entry.by, "scheduled", entry.at);
+      if (done) push(done.by, "done", done.at);
     }
     return map;
   }, [leadsData]);
