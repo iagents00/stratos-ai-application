@@ -13,9 +13,9 @@
  * ─────────────────────────────────────────────────────────────────────────────
  */
 import { useState } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Search } from "lucide-react";
 import { fontDisp } from "../../../design-system/tokens";
-import { dateInputValue, parseDateInput } from "./date-range";
+import { dateInputValue, parseDateInput, dateRangeLabel, resolveDateRange } from "./date-range";
 
 const WEEKDAYS = ["L", "M", "M", "J", "V", "S", "D"];
 const MONTHS_FULL = [
@@ -27,7 +27,7 @@ const startOfDay = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
 const addMonths = (d, n) => new Date(d.getFullYear(), d.getMonth() + n, 1);
 const ymd = (d) => dateInputValue(d);
 
-export default function RangeCalendar({ T, isLight, fromStr, toStr, onPick }) {
+export default function RangeCalendar({ T, isLight, fromStr, toStr, onPick, onApply }) {
   const today = startOfDay(new Date());
   const fromD = parseDateInput(fromStr);
   const toD = parseDateInput(toStr);
@@ -77,7 +77,7 @@ export default function RangeCalendar({ T, isLight, fromStr, toStr, onPick }) {
   const border = isLight ? "rgba(15,23,42,0.10)" : "rgba(255,255,255,0.08)";
   const bandBg = isLight ? `${accent}26` : `${accent}1E`;
   const hoverBg = isLight ? "rgba(15,23,42,0.06)" : "rgba(255,255,255,0.06)";
-  const onAccent = isLight ? "#06140F" : "#06080F";
+  const onAccent = isLight ? "#FFFFFF" : "#06080F";
 
   const navBtn = {
     display: "inline-flex", alignItems: "center", justifyContent: "center",
@@ -179,11 +179,37 @@ export default function RangeCalendar({ T, isLight, fromStr, toStr, onPick }) {
         })}
       </div>
 
-      <p style={{ margin: "12px 2px 0", fontSize: 10.5, color: T.txt3, fontFamily: fontDisp, lineHeight: 1.5, textAlign: "center" }}>
+      <p style={{ margin: "12px 2px 8px", fontSize: 10.5, color: T.txt3, fontFamily: fontDisp, lineHeight: 1.5, textAlign: "center" }}>
         {anchor
           ? "Elige la fecha final…"
           : "Haz clic en la fecha inicial y luego en la final."}
       </p>
+
+      {/* Botón de aplicar/buscar el rango elegido */}
+      {onApply && (() => {
+        const ready = !anchor && !!fromStr && !!toStr;
+        const label = ready ? dateRangeLabel(resolveDateRange("custom", fromStr, toStr)) : "Selecciona el rango";
+        return (
+          <button
+            type="button"
+            onClick={() => ready && onApply()}
+            disabled={!ready}
+            style={{
+              display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+              width: "100%", marginTop: 2, padding: "11px 14px", borderRadius: 12,
+              border: "none", cursor: ready ? "pointer" : "not-allowed",
+              background: ready ? accent : (isLight ? "rgba(15,23,42,0.06)" : "rgba(255,255,255,0.06)"),
+              color: ready ? onAccent : T.txt3,
+              fontFamily: fontDisp, fontWeight: 750, fontSize: 13,
+              boxShadow: ready ? `0 6px 18px ${accent}45` : "none",
+              transition: "background 0.15s, box-shadow 0.15s",
+            }}
+          >
+            <Search size={15} strokeWidth={2.6} />
+            {ready ? `Ver métricas · ${label}` : label}
+          </button>
+        );
+      })()}
     </div>
   );
 }

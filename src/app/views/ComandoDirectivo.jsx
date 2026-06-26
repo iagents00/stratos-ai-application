@@ -36,7 +36,7 @@ import ZoomControl from "./ZoomControl";
 import ZoomBoard from "./CRM/ZoomBoard";
 import ProductividadTab from "./ProductividadTab";
 import { useZoomAgendados } from "../../hooks/useZoomAgendados";
-import { milestoneOf, RECORRIDO_STAGES, CIERRE_STAGES } from "./CRM/zoom-metrics";
+import { milestoneOf, funnelEntryOf, zoomEventsOf, RECORRIDO_STAGES, CIERRE_STAGES } from "./CRM/zoom-metrics";
 import DateRangeControl from "./CRM/DateRangeControl";
 import { createDefaultDateFilter, resolveDateRange, timestampInRange } from "./CRM/date-range";
 
@@ -344,25 +344,29 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
 
   // Embudo de conversión comercial: del lead al cierre. Etapas anidadas (cada
   // una es subconjunto de la anterior), así el embudo SIEMPRE desciende y se lee
-  // de un vistazo dónde se caen los clientes. Recorridos/Cierres se calculan aquí
-  // (no están en INDICATORS); agendados/realizados vienen del snapshot (funnel-entry).
+  // de un vistazo dónde se caen los clientes. Es una COHORTE del rango: cuenta
+  // los leads creados dentro del período seleccionado y hasta dónde avanzaron,
+  // así "Leads totales" coincide con "N leads en el rango" del encabezado y TODAS
+  // las barras cambian al mover las fechas.
   const funnel = useMemo(() => {
-    let rec = 0, cie = 0;
-    for (const l of leadsData) {
+    let rec = 0, cie = 0, zsch = 0, zdone = 0;
+    for (const l of rangeLeads) {
+      if (funnelEntryOf(l)) zsch++;
+      if (zoomEventsOf(l).done) zdone++;
       if (milestoneOf(l, RECORRIDO_STAGES)) rec++;
       if (milestoneOf(l, CIERRE_STAGES)) cie++;
     }
-    const total = leadsData.length;
+    const total = rangeLeads.length;
     const stages = [
-      { label: "Leads totales",      value: total,                       color: "#64748B", icon: Users },
-      { label: "Zoom agendado",      value: snapshotTotals.zoomScheduled, color: "#2563EB", icon: CalendarDays },
-      { label: "Zoom realizado",     value: snapshotTotals.zoomDone,      color: "#10B981", icon: CheckCircle2 },
-      { label: "Recorrido / visita", value: rec,                          color: "#06B6D4", icon: MapPin },
-      { label: "Apartó / Cierre",    value: cie,                          color: accent,    icon: Handshake },
+      { label: "Leads totales",      value: total, color: "#64748B", icon: Users },
+      { label: "Zoom agendado",      value: zsch,  color: "#2563EB", icon: CalendarDays },
+      { label: "Zoom realizado",     value: zdone, color: "#10B981", icon: CheckCircle2 },
+      { label: "Recorrido / visita", value: rec,   color: "#06B6D4", icon: MapPin },
+      { label: "Apartó / Cierre",    value: cie,   color: accent,    icon: Handshake },
     ];
     const max = Math.max(1, ...stages.map(s => s.value));
     return { stages, max };
-  }, [leadsData, snapshotTotals, accent]);
+  }, [rangeLeads, accent]);
 
   const rangeTotals = useMemo(() => {
     const t = {};
@@ -847,7 +851,7 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
                 padding: "8px 16px", borderRadius: 10, border: "none", cursor: "pointer",
                 fontSize: 13, fontWeight: active ? 700 : 600, fontFamily: fontDisp,
                 background: active ? (isLight ? T.accent : `${T.accent}22`) : "transparent",
-                color: active ? (isLight ? "#06080F" : T.accent) : T.txt2,
+                color: active ? (isLight ? "#FFFFFF" : T.accent) : T.txt2,
                 transition: "all 0.15s",
               }}>{t.label}</button>
             );
@@ -895,7 +899,7 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
               background: isLight
                 ? `linear-gradient(135deg, ${accent} 0%, ${accent}DD 100%)`
                 : `${accent}18`,
-              color: isLight ? "#06080F" : accent,
+              color: isLight ? "#FFFFFF" : accent,
               border: `1px solid ${isLight ? "transparent" : `${accent}55`}`,
               fontSize: 12, fontWeight: 700, fontFamily: fontDisp,
               letterSpacing: "-0.01em", cursor: "pointer",
@@ -948,7 +952,7 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
                       background: s.color, display: "flex", alignItems: "center", paddingLeft: 12,
                       transition: "width 0.3s ease",
                     }}>
-                      <span style={{ fontSize: 14, fontWeight: 800, color: "#06080F", fontFamily: fontDisp, letterSpacing: "-0.01em" }}>{s.value.toLocaleString("es-MX")}</span>
+                      <span style={{ fontSize: 14, fontWeight: 800, color: isLight ? "#FFFFFF" : "#06080F", fontFamily: fontDisp, letterSpacing: "-0.01em", textShadow: isLight ? "0 1px 2px rgba(0,0,0,0.28)" : "none" }}>{s.value.toLocaleString("es-MX")}</span>
                     </div>
                   </div>
                   <span style={{ width: 84, flexShrink: 0, fontSize: 11, color: T.txt3, fontFamily: font, textAlign: "right" }}>
