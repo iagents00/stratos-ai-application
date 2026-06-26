@@ -81,9 +81,12 @@ function text(doc, str, x, y, opts = {}) {
   doc.setFontSize(size);
   doc.setTextColor(color[0], color[1], color[2]);
   const o = { align };
-  // Siempre fijamos charSpace (0 por defecto): así ningún texto hereda el
-  // spacing de un text() anterior y splitTextToSize (que asume 0) calcula bien.
+  // Siempre fijamos charSpace (0 por defecto) Y lo aplicamos al estado GLOBAL
+  // del doc: la opción por-llamada de jsPDF no siempre resetea el spacing de un
+  // text() anterior, así que splitTextToSize (que asume 0) subestimaba el ancho
+  // y el subtítulo se salía de la hoja.
   o.charSpace = spacing != null ? spacing : 0;
+  if (typeof doc.setCharSpace === "function") doc.setCharSpace(o.charSpace);
   doc.text(str == null ? "" : String(str), x, y, o);
 }
 
@@ -133,6 +136,7 @@ function drawMastheader(ctx, meta) {
 
   const sub = `Pipeline en vivo: ${meta.totalLeadsPipeline} leads totales  -  ${meta.asesoresCount} asesores activos en el rango  -  Rango analizado: ${meta.periodSpan}`;
   doc.setFont("helvetica", "normal"); doc.setFontSize(9);
+  if (typeof doc.setCharSpace === "function") doc.setCharSpace(0);   // ancho real para que splitTextToSize parta bien
   const subLines = doc.splitTextToSize(sub, ctx.contentW);
   subLines.forEach((ln, i) => text(doc, ln, mL, y + 3.2 + i * 4.2, { size: 9, color: C.ink2 }));
   y += 3.2 + subLines.length * 4.2 + 5;
