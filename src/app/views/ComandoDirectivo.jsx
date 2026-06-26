@@ -826,9 +826,10 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
     <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
       {/* ── Pestañas: Indicadores / Control de Zooms (solo si zoomControl) ─── */}
       {showZoomTab && (
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
         <div style={{
           display: "inline-flex", gap: 4, padding: 4, borderRadius: 14,
-          background: headerBg, border: `1px solid ${rowBorder}`, alignSelf: "flex-start",
+          background: headerBg, border: `1px solid ${rowBorder}`,
         }}>
           {[
             { id: "indicadores", label: "Indicadores · Leads" },
@@ -846,6 +847,10 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
               }}>{t.label}</button>
             );
           })}
+        </div>
+        <button onClick={handleExport} title="Descarga el reporte ejecutivo como PDF" style={{ display:"inline-flex", alignItems:"center", gap:7, padding:"8px 14px", borderRadius:9, background: isLight ? `linear-gradient(135deg, ${accent} 0%, ${accent}DD 100%)` : `${accent}18`, color: isLight ? "#FFFFFF" : accent, border:`1px solid ${isLight ? "transparent" : `${accent}55`}`, fontSize:12, fontWeight:700, fontFamily:fontDisp, cursor:"pointer", boxShadow: isLight ? `0 2px 8px ${accent}40` : "none" }}>
+          <Download size={13} strokeWidth={2.4} /> Generar PDF
+        </button>
         </div>
       )}
 
@@ -880,6 +885,7 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
           }}>
             Vista automática: <strong style={{ color: T.txt2 }}>{granularity.label}</strong>
           </span>
+          {!showZoomTab && (
           <button
             onClick={handleExport}
             title="Descarga el reporte ejecutivo como PDF — listo para enviar a dirección"
@@ -908,6 +914,7 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
             <Download size={13} strokeWidth={2.4} />
             Generar PDF
           </button>
+          )}
         </div>
       </div>
 
