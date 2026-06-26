@@ -16,7 +16,7 @@
 import { useCallback, useMemo, useState } from "react";
 import { Users, Phone, BadgeCheck, CalendarDays, CheckCircle2, Activity, RefreshCw } from "lucide-react";
 import { P, LP, font, fontDisp, STAGES } from "../../../design-system/tokens";
-import { zoomEventsOf, funnelEntryOf, ACTIVE_POST_ZOOM_STAGES } from "./zoom-metrics";
+import { zoomEventsOf, funnelEntryOf, ACTIVE_POST_ZOOM_STAGES, isHiddenAdvisor } from "./zoom-metrics";
 import DateRangeControl from "./DateRangeControl";
 import { createDefaultDateFilter, resolveDateRange, timestampInRange } from "./date-range";
 
@@ -108,7 +108,7 @@ export default function AdvisorMetrics({ leadsData = [], theme = "dark", onOpenL
   const zoomAgg = useMemo(() => {
     const map = {}; // person -> { scheduled: [at...], done: [at...] }
     const push = (person, bucket, at) => {
-      if (!person) return;
+      if (!person || isHiddenAdvisor(person)) return;
       (map[person] = map[person] || { scheduled: [], done: [] })[bucket].push(at);
     };
     for (const l of leadsData) {
@@ -138,7 +138,7 @@ export default function AdvisorMetrics({ leadsData = [], theme = "dark", onOpenL
       ...leadsData.map(l => l.asesor).filter(Boolean),
       ...Object.keys(zoomAgg),
     ]);
-    return [...set].sort((a, b) => a.localeCompare(b, "es"));
+    return [...set].filter(a => !isHiddenAdvisor(a)).sort((a, b) => a.localeCompare(b, "es"));
   }, [leadsData, zoomAgg]);
 
   // Filas: { asesor, metrics: { key: number } }
@@ -158,7 +158,7 @@ export default function AdvisorMetrics({ leadsData = [], theme = "dark", onOpenL
 
   // Totales del equipo (fila TOTAL al pie).
   const totals = useMemo(() => {
-    const leadsInPeriod = leadsData.filter(l => timestampInRange(l.created_at, dateRange));
+    const leadsInPeriod = leadsData.filter(l => timestampInRange(l.created_at, dateRange) && !isHiddenAdvisor(l.asesor));
     const t = {};
     for (const ind of INDICATORS) t[ind.key] = ind.compute(leadsInPeriod);
     // Zooms: suma de todos los eventos del período (todas las personas).

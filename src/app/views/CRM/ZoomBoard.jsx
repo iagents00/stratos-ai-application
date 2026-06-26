@@ -16,7 +16,7 @@
 import { useMemo, useState } from "react";
 import { CalendarDays, CheckCircle2, MapPin, Handshake, History, ChevronDown } from "lucide-react";
 import { P, LP, font, fontDisp, STAGE_COLORS } from "../../../design-system/tokens";
-import { zoomEventsOf, funnelEntryOf, milestoneOf, ACTIVE_POST_ZOOM_STAGES, RECORRIDO_STAGES, CIERRE_STAGES, zoomMovements } from "./zoom-metrics";
+import { zoomEventsOf, funnelEntryOf, milestoneOf, ACTIVE_POST_ZOOM_STAGES, RECORRIDO_STAGES, CIERRE_STAGES, zoomMovements, isHiddenAdvisor } from "./zoom-metrics";
 import DateRangeControl from "./DateRangeControl";
 import { createDefaultDateFilter, resolveDateRange, timestampInRange } from "./date-range";
 
@@ -46,6 +46,7 @@ export default function ZoomBoard({ leadsData = [], theme = "dark", onOpenLead =
   const historial = useMemo(() => {
     let rows = zoomMovements(leadsData)
       .filter(m => !m.inferred && timestampInRange(m.at, dateRange))
+      .filter(m => !isHiddenAdvisor(m.by || m.lead.asesor))
       .filter(m => histKind === "all" || m.kind === histKind)
       .filter(m => presentadorFilter === "__all__" || (m.by || m.lead.asesor) === presentadorFilter);
     rows.sort((a, b) => (b.at ? new Date(b.at).getTime() : 0) - (a.at ? new Date(a.at).getTime() : 0));
@@ -62,9 +63,9 @@ export default function ZoomBoard({ leadsData = [], theme = "dark", onOpenLead =
     let tAg = 0, tAgInf = 0, tDone = 0, tDoneInferred = 0;
     for (const l of leadsData) {
       const entry = funnelEntryOf(l);
-      if (entry && timestampInRange(entry.at, dateRange)) { tAg++; if (entry.inferred) tAgInf++; }
+      if (entry && !isHiddenAdvisor(entry.by) && timestampInRange(entry.at, dateRange)) { tAg++; if (entry.inferred) tAgInf++; }
       const { done } = zoomEventsOf(l);
-      if (done && timestampInRange(done.at, dateRange)) {
+      if (done && !isHiddenAdvisor(done.by) && timestampInRange(done.at, dateRange)) {
         map[done.by] = (map[done.by] || 0) + 1;
         tDone++; if (done.inferred) tDoneInferred++;
       }
@@ -94,8 +95,8 @@ export default function ZoomBoard({ leadsData = [], theme = "dark", onOpenLead =
     for (const l of leadsData) {
       const r = milestoneOf(l, RECORRIDO_STAGES);
       const c = milestoneOf(l, CIERRE_STAGES);
-      if (r && timestampInRange(r.at, dateRange)) rec++;
-      if (c && timestampInRange(c.at, dateRange)) cie++;
+      if (r && !isHiddenAdvisor(r.by) && timestampInRange(r.at, dateRange)) rec++;
+      if (c && !isHiddenAdvisor(c.by) && timestampInRange(c.at, dateRange)) cie++;
     }
     return { recorridos: rec, cierres: cie };
   }, [dateRange, leadsData]);

@@ -49,6 +49,24 @@ export const ACTIVE_POST_ZOOM_STAGES = new Set([
 // entre paneles: unos descartaban el evento y otros lo contaban bajo "—").
 const NO_OWNER = "—";
 
+// Cuentas de prueba / sistema / inactivas que NO deben aparecer en los tableros
+// de métricas del Comando (ni como filas ni en los totales). Se comparan
+// normalizadas (sin acentos, minúsculas), tolerando sufijos: "Ken Lugo" cubre
+// "Ken Lugo Ríos"; "iAgents" cubre "iAgents00".
+const HIDDEN_ADVISORS = ["ken lugo", "iagents", "daniel pavon", "asesor prueba", "araceli oneto"];
+function normAdvisor(s) {
+  return (s == null ? "" : String(s))
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase().replace(/\s+/g, " ").trim();
+}
+export function isHiddenAdvisor(name) {
+  const n = normAdvisor(name);
+  if (!n) return false;
+  return HIDDEN_ADVISORS.some(h =>
+    n === h || n.startsWith(h + " ") || (!h.includes(" ") && n.startsWith(h)),
+  );
+}
+
 // Extrae la etapa destino de un evento "Etapa: X → Y", normalizada al nombre
 // canónico (etiquetas viejas como "Visita Concretada"/"Negociación" → "Seguimiento")
 // para no perder Zooms registrados con labels legacy.
