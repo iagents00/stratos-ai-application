@@ -36,7 +36,7 @@ import ZoomControl from "./ZoomControl";
 import ZoomBoard from "./CRM/ZoomBoard";
 import ProductividadTab from "./ProductividadTab";
 import { useZoomAgendados } from "../../hooks/useZoomAgendados";
-import { milestoneOf, funnelEntryOf, zoomEventsOf, RECORRIDO_STAGES, CIERRE_STAGES } from "./CRM/zoom-metrics";
+import { milestoneOf, funnelEntryOf, zoomEventsOf, RECORRIDO_STAGES, CIERRE_STAGES, isHiddenAdvisor } from "./CRM/zoom-metrics";
 import DateRangeControl from "./CRM/DateRangeControl";
 import { createDefaultDateFilter, resolveDateRange, timestampInRange } from "./CRM/date-range";
 
@@ -289,10 +289,18 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
     [activeDateRange, granularityId],
   );
 
+  // Cartera visible: oculta las cuentas de prueba/sistema/inactivas (Asesor
+  // Prueba, iAgents, etc.) de TODOS los cálculos del Comando, así filas y totales
+  // quedan consistentes y solo se ven los asesores reales.
+  const visibleLeads = useMemo(
+    () => leadsData.filter((l) => !isHiddenAdvisor(l.asesor)),
+    [leadsData],
+  );
+
   // Para cada bucket: leads filtrados + 7 indicadores ya computados.
   const series = useMemo(() => {
     return buckets.map(b => {
-      const inB = leadsInBucket(leadsData, b);
+      const inB = leadsInBucket(visibleLeads, b);
       const row = {
         label: b.label,
         tooltipLabel: b.tooltipLabel,
@@ -302,12 +310,12 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
       for (const ind of INDICATORS) row[ind.key] = ind.compute(inB);
       return row;
     });
-  }, [buckets, leadsData]);
+  }, [buckets, visibleLeads]);
 
   // Leads creados dentro del rango temporal visible.
   const rangeLeads = useMemo(() => {
-    return leadsData.filter((lead) => timestampInRange(lead.created_at, activeDateRange));
-  }, [activeDateRange, leadsData]);
+    return visibleLeads.filter((lead) => timestampInRange(lead.created_at, activeDateRange));
+  }, [activeDateRange, visibleLeads]);
 
   // ── Dos vistas de totales, ambas reales y coordinadas con el CRM ──────────
   //
@@ -328,9 +336,9 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
   // es mostrar evolución temporal.
   const snapshotTotals = useMemo(() => {
     const t = {};
-    for (const ind of INDICATORS) t[ind.key] = ind.compute(leadsData);
+    for (const ind of INDICATORS) t[ind.key] = ind.compute(visibleLeads);
     return t;
-  }, [leadsData]);
+  }, [visibleLeads]);
 
   // Embudo de conversión comercial: del lead al cierre. Los hitos de Zoom
   // (agendado/realizado/recorrido/cierre) se cuentan POR FECHA REAL DEL EVENTO
@@ -341,15 +349,15 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
   // totales" es la cohorte creada en el rango (entrada del embudo).
   const funnel = useMemo(() => {
     let rec = 0, cie = 0, zsch = 0, zdone = 0;
-    for (const l of leadsData) {
+    for (const l of visibleLeads) {
       const entry = funnelEntryOf(l);
-      if (entry && timestampInRange(entry.at, activeDateRange)) zsch++;
+      if (entry && !isHiddenAdvisor(entry.by) && timestampInRange(entry.at, activeDateRange)) zsch++;
       const done = zoomEventsOf(l).done;
-      if (done && timestampInRange(done.at, activeDateRange)) zdone++;
+      if (done && !isHiddenAdvisor(done.by) && timestampInRange(done.at, activeDateRange)) zdone++;
       const r = milestoneOf(l, RECORRIDO_STAGES);
-      if (r && timestampInRange(r.at, activeDateRange)) rec++;
+      if (r && !isHiddenAdvisor(r.by) && timestampInRange(r.at, activeDateRange)) rec++;
       const c = milestoneOf(l, CIERRE_STAGES);
-      if (c && timestampInRange(c.at, activeDateRange)) cie++;
+      if (c && !isHiddenAdvisor(c.by) && timestampInRange(c.at, activeDateRange)) cie++;
     }
     const total = rangeLeads.length;
     const stages = [
@@ -361,7 +369,7 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
     ];
     const max = Math.max(1, ...stages.map(s => s.value));
     return { stages, max };
-  }, [leadsData, rangeLeads, activeDateRange, accent]);
+  }, [visibleLeads, rangeLeads, activeDateRange, accent]);
 
   const rangeTotals = useMemo(() => {
     const t = {};
@@ -615,7 +623,7 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
 
     <h1>Reporte ejecutivo de pipeline</h1>
     <p class="subtitle">
-      Pipeline en vivo: <strong>${leadsData.length}</strong> leads totales ·
+      Pipeline en vivo: <strong>${visibleLeads.length}</strong> leads totales ·
       ${asesores.length} asesores activos en el rango ·
       Rango analizado: <strong>${htmlEscape(periodSpan)}</strong>
     </p>
@@ -624,7 +632,7 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
     <div class="summary">
       <div class="stat">
         <div class="label">Pipeline total</div>
-        <div class="value">${leadsData.length}</div>
+        <div class="value">${visibleLeads.length}</div>
         <div class="sub">leads en el CRM</div>
       </div>
       <div class="stat">
@@ -757,11 +765,11 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
         granularityLabel: granularity.label,
         periodsCount: buckets.length,
         periodSpan,
-        totalLeadsPipeline: leadsData.length,
+        totalLeadsPipeline: visibleLeads.length,
         asesoresCount: asesores.length,
       },
       pipelineCards: [
-        { label: "Pipeline total",    value: String(leadsData.length),             sub: "leads en el CRM", color: "#10B981" },
+        { label: "Pipeline total",    value: String(visibleLeads.length),             sub: "leads en el CRM", color: "#10B981" },
         { label: "Zooms agendados",   value: String(snapshotTotals.zoomScheduled),  sub: "estado actual",   color: COLORS_BY_KEY.zoomScheduled },
         { label: "Zooms realizados",  value: String(snapshotTotals.zoomDone),       sub: "estado actual",   color: COLORS_BY_KEY.zoomDone },
         { label: "Activos post-Zoom", value: String(snapshotTotals.activePostZoom), sub: "estado actual",   color: COLORS_BY_KEY.activePostZoom },
@@ -1082,7 +1090,7 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
 
       {/* ── 4) Desglose por asesor (coordinado con CRM) ─────────────────── */}
       <AdvisorMetrics
-        leadsData={leadsData}
+        leadsData={visibleLeads}
         theme={isLight ? "light" : "dark"}
         dateFilter={dateFilter}
       />
@@ -1093,7 +1101,7 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
         <div style={{ display: "flex", flexDirection: "column", gap: 28 }}>
           {/* Métrica real de Zooms (pipeline + historial) — siempre con datos. */}
           <ZoomBoard
-            leadsData={leadsData}
+            leadsData={visibleLeads}
             theme={isLight ? "light" : "dark"}
             dateFilter={dateFilter}
           />
