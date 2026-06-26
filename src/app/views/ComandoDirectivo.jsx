@@ -929,7 +929,7 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
                       background: s.color, display: "flex", alignItems: "center", paddingLeft: 12,
                       transition: "width 0.3s ease",
                     }}>
-                      <span style={{ fontSize: 14, fontWeight: 800, color: isLight ? "#FFFFFF" : "#06080F", fontFamily: fontDisp, letterSpacing: "-0.01em", textShadow: isLight ? "0 1px 2px rgba(0,0,0,0.28)" : "none" }}>{s.value.toLocaleString("es-MX")}</span>
+                      <span style={{ fontSize: 14, fontWeight: 800, color: "#FFFFFF", fontFamily: fontDisp, letterSpacing: "-0.01em", textShadow: "0 1px 3px rgba(0,0,0,0.45)" }}>{s.value.toLocaleString("es-MX")}</span>
                     </div>
                   </div>
                   <span style={{ width: 84, flexShrink: 0, fontSize: 11, color: T.txt3, fontFamily: font, textAlign: "right" }}>

@@ -28,7 +28,9 @@ export default function DateRangeControl({ T, isLight, value, onChange, label = 
     ? "linear-gradient(180deg, rgba(255,255,255,0.94), rgba(255,255,255,0.80))"
     : "linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.015))";
   const chipBorder = isLight ? "rgba(15,23,42,0.10)" : "rgba(255,255,255,0.09)";
-  const onAccent = isLight ? "#FFFFFF" : "#06080F";
+  // Relleno verde profundo para los chips activos: el blanco resalta bien (sin
+  // texto negro), tanto en claro como en oscuro.
+  const FILL = "linear-gradient(135deg, #18B795 0%, #0A7C5D 100%)";
 
   const selectPreset = (id) => {
     onChange({ ...value, preset: id });
@@ -94,11 +96,12 @@ export default function DateRangeControl({ T, isLight, value, onChange, label = 
               onClick={() => selectPreset(preset.id)}
               style={{
                 ...chipBase,
-                border: `1px solid ${active ? T.accent : chipBorder}`,
-                background: active ? T.accent : "transparent",
-                color: active ? onAccent : T.txt2,
+                border: `1px solid ${active ? "rgba(110,231,194,0.32)" : chipBorder}`,
+                background: active ? FILL : "transparent",
+                color: active ? "#FFFFFF" : T.txt2,
                 fontWeight: active ? 750 : 600,
-                boxShadow: active ? `0 4px 14px ${T.accent}40` : "none",
+                textShadow: active ? "0 1px 2px rgba(0,0,0,0.30)" : "none",
+                boxShadow: active ? "0 6px 16px rgba(10,124,93,0.42)" : "none",
               }}
             >
               {active && <Check size={13} strokeWidth={3} />}
