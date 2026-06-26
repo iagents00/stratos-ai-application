@@ -404,7 +404,7 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
       ? (rangeTotals.followUps / totalLeads).toFixed(1)
       : "0.0";
 
-    const maxIndVal = Math.max(1, ...INDICATORS.map(i => snapshotTotals[i.key] || 0));
+    const maxIndVal = Math.max(1, ...INDICATORS.map(i => rangeTotals[i.key] || 0));
 
     // ── Construcción del HTML ──────────────────────────────────────────────
     const html = `<!DOCTYPE html>
@@ -676,10 +676,10 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
       </div>
     </div>
 
-    <h2>Indicadores clave — estado actual del CRM</h2>
+    <h2>Indicadores clave — del rango</h2>
     <div class="ind-grid">
       ${INDICATORS.map(ind => {
-        const val = snapshotTotals[ind.key] || 0;
+        const val = rangeTotals[ind.key] || 0;
         const w = Math.max(2, Math.round((val / maxIndVal) * 100));
         const color = COLORS_BY_KEY[ind.key] || "#10B981";
         return `
@@ -782,7 +782,7 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
       ],
       indicators: INDICATORS.map(ind => ({
         label: FULL_LABELS[ind.key] || ind.label,
-        value: snapshotTotals[ind.key] || 0,
+        value: rangeTotals[ind.key] || 0,
         color: COLORS_BY_KEY[ind.key] || "#10B981",
       })),
       evolution: {
