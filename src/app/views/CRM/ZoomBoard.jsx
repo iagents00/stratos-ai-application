@@ -459,8 +459,9 @@ export default function ZoomBoard({ leadsData = [], theme = "dark", onOpenLead =
                 return (
                   <button key={t.id} onClick={() => setHistKind(t.id)} style={{
                     padding: "6px 14px", borderRadius: 7, border: "none", cursor: "pointer",
-                    background: active ? accent : "transparent",
-                    color: active ? (isLight ? "#FFFFFF" : "#06080F") : T.txt2,
+                    background: active ? "linear-gradient(135deg, #18B795 0%, #0A7C5D 100%)" : "transparent",
+                    color: active ? "#FFFFFF" : T.txt2,
+                    textShadow: active ? "0 1px 2px rgba(0,0,0,0.30)" : "none",
                     fontSize: 12, fontWeight: active ? 700 : 500, fontFamily: fontDisp,
                   }}>{t.l}</button>
                 );
