@@ -207,6 +207,30 @@ export const formatFechaLarga = (input, { conAnio = false } = {}) => {
 };
 
 /**
+ * fmtFechaCortaISO — Próxima acción en formato compacto de UN solo renglón
+ * "YYYY-MM-DD HH:MM" (el mismo que ya muestra una acción editada en la web).
+ * Unifica el chip de fecha de las tarjetas: si nextActionDate ya es ISO se
+ * respeta tal cual; el texto largo ("Martes, 16 de junio, 9:00 a.m.") se deriva
+ * del instante real `next_action_at` (sin inventar zona). Fallback tolerante
+ * solo para no dejar el chip vacío. Devuelve "" si no hay fecha.
+ */
+export const fmtFechaCortaISO = (lead) => {
+  if (!lead) return "";
+  const raw = String(lead.nextActionDate ?? lead.next_action_date ?? "").trim();
+  // Ya viene en ISO / datetime-local → normalizamos a "YYYY-MM-DD HH:MM" y listo
+  // (no lo derivamos de next_action_at para no introducir desfases de zona).
+  const isoMatch = raw.match(/^(\d{4}-\d{2}-\d{2})[ T](\d{2}:\d{2})/);
+  if (isoMatch) return `${isoMatch[1]} ${isoMatch[2]}`;
+  // Texto largo / vacío → usamos el instante real (fuente de verdad).
+  let t = parseFechaToTime(lead.next_action_at) ?? parseFechaToTime(lead.nextActionAt);
+  if (t === null) t = parseFechaParaOrden(raw);   // legacy sin timestamp
+  if (t === null) return raw;
+  const d = new Date(t);
+  const p = (n) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
+};
+
+/**
  * getZoomTime — Timestamp (ms) de la cita/zoom de un lead, o null si la etapa
  * no tiene cita o la fecha no es parseable. Prioriza selected_time (cita real
  * de Cal.com) → next_action_at → next_action_date. Sirve para ordenar por
