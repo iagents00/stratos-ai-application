@@ -18,6 +18,7 @@
  * `by` del evento de etapa), así no se pierde con las reasignaciones.
  * ─────────────────────────────────────────────────────────────────────────────
  */
+import { normalizeStage } from "../../../design-system/tokens";
 
 // Etapas que implican "el Zoom ya se realizó".
 export const ZOOM_DONE_STAGES = new Set([
@@ -48,11 +49,14 @@ export const ACTIVE_POST_ZOOM_STAGES = new Set([
 // entre paneles: unos descartaban el evento y otros lo contaban bajo "—").
 const NO_OWNER = "—";
 
-// Extrae la etapa destino de un evento "Etapa: X → Y".
+// Extrae la etapa destino de un evento "Etapa: X → Y", normalizada al nombre
+// canónico (etiquetas viejas como "Visita Concretada"/"Negociación" → "Seguimiento")
+// para no perder Zooms registrados con labels legacy.
 function targetStage(action) {
   if (typeof action !== "string") return null;
   const parts = action.split("→");
-  return parts.length > 1 ? parts[parts.length - 1].trim() : null;
+  if (parts.length < 2) return null;
+  return normalizeStage(parts[parts.length - 1].trim());
 }
 
 /**
@@ -77,11 +81,12 @@ export function milestoneOf(lead, stageSet) {
       };
     }
   }
-  if (stageSet.has(lead.st)) {
+  const currentStage = normalizeStage(lead.st);
+  if (stageSet.has(currentStage)) {
     return {
       by: lead.asesor || NO_OWNER,
       at: null,
-      to: lead.st,
+      to: currentStage,
       inferred: true,
       confidence: "inferred",
     };
