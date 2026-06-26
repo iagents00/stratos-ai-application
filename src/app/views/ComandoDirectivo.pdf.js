@@ -134,12 +134,15 @@ function drawMastheader(ctx, meta) {
   text(doc, "Reporte ejecutivo de pipeline", mL, y + 1, { size: 19, style: "bold", color: C.ink });
   y += 7;
 
-  const sub = `Pipeline en vivo: ${meta.totalLeadsPipeline} leads totales  -  ${meta.asesoresCount} asesores activos en el rango  -  Rango analizado: ${meta.periodSpan}`;
+  // Subtítulo en 2 líneas cortas EXPLÍCITAS: no dependemos de splitTextToSize
+  // (con el char-spacing del badge calculaba mal el ancho y se salía de la hoja).
   doc.setFont("helvetica", "normal"); doc.setFontSize(9);
-  if (typeof doc.setCharSpace === "function") doc.setCharSpace(0);   // ancho real para que splitTextToSize parta bien
-  const subLines = doc.splitTextToSize(sub, ctx.contentW);
-  subLines.forEach((ln, i) => text(doc, ln, mL, y + 3.2 + i * 4.2, { size: 9, color: C.ink2 }));
-  y += 3.2 + subLines.length * 4.2 + 5;
+  if (typeof doc.setCharSpace === "function") doc.setCharSpace(0);
+  const sub1 = `Pipeline en vivo: ${meta.totalLeadsPipeline} leads  -  ${meta.asesoresCount} asesores activos en el rango`;
+  const sub2 = `Rango analizado: ${meta.periodSpan}`;
+  text(doc, sub1, mL, y + 3.2,       { size: 9, color: C.ink2 });
+  text(doc, sub2, mL, y + 3.2 + 4.4, { size: 9, color: C.ink2 });
+  y += 3.2 + 2 * 4.4 + 5;
 
   ctx.y = y;
 }

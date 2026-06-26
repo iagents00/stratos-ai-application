@@ -806,6 +806,21 @@ export default function App() {
       }))
     );
   }, [leadsData]);
+
+  // Productividad del equipo: % de acciones de la Lista de Acción completadas
+  // (done / total de team_actions). Carga ÚNICA al montar — NO entra al polling de
+  // leads, así el indicador no fluctúa con los datos en vivo. (Iván: 5 tareas, 1 hecha => 20%.)
+  const [prodPct, setProdPct] = useState(null);
+  useEffect(() => {
+    let cancelled = false;
+    supabase.from("team_actions").select("done").then(({ data, error }) => {
+      if (cancelled || error) return;
+      const total = (data || []).length;
+      const done  = (data || []).filter(a => a.done).length;
+      setProdPct(total ? Math.round((done / total) * 100) : 0);
+    });
+    return () => { cancelled = true; };
+  }, []);
   const [metaNewText, setMetaNewText]   = useState("");
   const [doneCollapsed, setDoneCollapsed] = useState(true);
   const [metaPlan, setMetaPlan]         = useState(DEFAULT_META_PLAN);
@@ -977,7 +992,7 @@ export default function App() {
   const GOAL        = (effectiveMetaPlan?.goal && effectiveMetaPlan.goal > 0) ? effectiveMetaPlan.goal : 48_000_000;
   const activeLeads = leadsData.filter(l => l.presupuesto > 0);
   const totalPipe   = activeLeads.reduce((s, l) => s + (l.presupuesto || 0), 0);
-  const pc          = Math.max(1, Math.min(100, Math.round((totalPipe / GOAL) * 100)));
+  const pc          = Math.max(1, Math.min(100, prodPct != null ? prodPct : 1));   // % de acciones completadas del equipo
   const avgScore    = activeLeads.length
     ? Math.round(activeLeads.reduce((s, l) => s + (l.sc || 0), 0) / activeLeads.length) : 0;
   const fmt = n => n >= 1e6 ? `$${(n/1e6).toFixed(1).replace(/\.0$/,"")}M` : `$${(n/1e3).toFixed(0)}K`;
@@ -1144,7 +1159,7 @@ export default function App() {
               <div style={{ width:"100%", height:2.5, borderRadius:99, background: isLight ? "rgba(13,154,118,0.09)" : "rgba(255,255,255,0.08)", marginTop:9, overflow:"hidden", position:"relative", zIndex:1 }}>
                 <div style={{ width:`${pc}%`, height:"100%", borderRadius:99, background: isLight ? "linear-gradient(90deg, #0D9A76, #34D399)" : "linear-gradient(90deg, #34D399, #6EE7C2)", boxShadow: isLight ? "none" : "0 0 8px rgba(52,211,153,0.55)", transition:"width 1.1s cubic-bezier(0.4,0,0.2,1)" }} />
               </div>
-              <span style={{ fontSize:5.5, fontWeight:700, fontFamily:fontDisp, letterSpacing:"0.17em", textTransform:"uppercase", color: isLight ? "rgba(13,154,118,0.48)" : "rgba(52,211,153,0.36)", display:"block", marginTop:8, position:"relative", zIndex:1 }}>META</span>
+              <span style={{ fontSize:5.5, fontWeight:700, fontFamily:fontDisp, letterSpacing:"0.17em", textTransform:"uppercase", color: isLight ? "rgba(13,154,118,0.48)" : "rgba(52,211,153,0.36)", display:"block", marginTop:8, position:"relative", zIndex:1 }}>AVANCE</span>
             </div>
             <div style={{ width:32, height:1, marginTop:10, background: isLight ? "linear-gradient(90deg, transparent, rgba(15,23,42,0.07), transparent)" : "linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent)" }} />
           </div>
