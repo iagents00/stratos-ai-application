@@ -28,7 +28,7 @@ export default function DateRangeControl({ T, isLight, value, onChange, label = 
     ? "linear-gradient(180deg, rgba(255,255,255,0.94), rgba(255,255,255,0.80))"
     : "linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.015))";
   const chipBorder = isLight ? "rgba(15,23,42,0.10)" : "rgba(255,255,255,0.09)";
-  const onAccent = isLight ? "#06140F" : "#06080F";
+  const onAccent = isLight ? "#FFFFFF" : "#06080F";
 
   const selectPreset = (id) => {
     onChange({ ...value, preset: id });
@@ -131,6 +131,7 @@ export default function DateRangeControl({ T, isLight, value, onChange, label = 
           fromStr={value.customFrom}
           toStr={value.customTo}
           onPick={(from, to) => onChange({ ...value, preset: "custom", customFrom: from, customTo: to })}
+          onApply={() => setCalOpen(false)}
         />
       )}
     </div>
