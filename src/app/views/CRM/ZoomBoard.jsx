@@ -40,67 +40,6 @@ export default function ZoomBoard({ leadsData = [], theme = "dark", onOpenLead =
     () => resolveDateRange(dateFilter.preset, dateFilter.customFrom, dateFilter.customTo),
     [dateFilter],
   );
-  const trendGran = useMemo(() => {
-    if (dateRange.fromTs === null) return "month";
-    const days = Math.max(1, Math.ceil((dateRange.toTs - dateRange.fromTs) / 86400000));
-    return days <= 90 ? "week" : "month";
-  }, [dateRange]);
-  // Tendencia: cuántos Zooms realizados por semana / por mes a lo largo del
-  // tiempo (lo que el equipo de Duke revisa cada domingo). Independiente del
-  // filtro de período de arriba: muestra la evolución completa reciente.
-  const trend = useMemo(() => {
-    const now = new Date();
-    const buckets = [];
-    const MESES = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
-    const fallbackStart = trendGran === "week"
-      ? new Date(now.getFullYear(), now.getMonth(), now.getDate() - 69)
-      : new Date(now.getFullYear(), now.getMonth() - 7, 1);
-    let cursor = dateRange.from || fallbackStart;
-    const rangeEnd = dateRange.to || new Date(now.getFullYear(), now.getMonth() + 1, 1);
-
-    if (trendGran === "week") {
-      const dow = cursor.getDay();
-      const diff = dow === 0 ? 6 : dow - 1;
-      cursor = new Date(cursor.getFullYear(), cursor.getMonth(), cursor.getDate() - diff);
-    } else {
-      cursor = new Date(cursor.getFullYear(), cursor.getMonth(), 1);
-    }
-
-    for (let guard = 0; guard < 120 && cursor < rangeEnd; guard++) {
-      let start, end, label;
-      if (trendGran === "week") {
-        start = new Date(cursor);
-        end = new Date(start.getFullYear(), start.getMonth(), start.getDate() + 7);
-        label = `${start.getDate()} ${MESES[start.getMonth()]}`;
-      } else {
-        start = new Date(cursor);
-        end = new Date(start.getFullYear(), start.getMonth() + 1, 1);
-        label = MESES[start.getMonth()];
-      }
-      buckets.push({
-        label,
-        start: Math.max(start.getTime(), dateRange.fromTs ?? start.getTime()),
-        end: Math.min(end.getTime(), dateRange.toTs ?? end.getTime()),
-        done: 0,
-        sched: 0,
-      });
-      cursor = end;
-    }
-    for (const l of leadsData) {
-      const done = zoomEventsOf(l).done;
-      const entry = funnelEntryOf(l); // agendados coherente con el KPI (funnel-entry)
-      for (const [ev, key] of [[done, "done"], [entry, "sched"]]) {
-        if (!ev || !ev.at) continue;
-        const t = new Date(ev.at).getTime();
-        if (Number.isNaN(t)) continue;
-        const b = buckets.find(bk => t >= bk.start && t < bk.end);
-        if (b) b[key]++;
-      }
-    }
-    const max = Math.max(1, ...buckets.map(b => b.done));
-    return { buckets, max };
-  }, [dateRange, leadsData, trendGran]);
-
   // Historial de movimientos de Zoom (toda la cartera): cada lead que pasó por
   // Zoom agendado y/o realizado, con fecha, quién lo dio y si fue inferido de la
   // etapa actual (registro faltante). Respeta el período y el filtro de presentador.
@@ -235,50 +174,6 @@ export default function ZoomBoard({ leadsData = [], theme = "dark", onOpenLead =
             <span style={{ color: T.txt3 }}>· el sistema no pierde ningún Zoom aunque no se marque el paso</span>
           </span>
         )}
-      </div>
-
-      {/* Tendencia de Zooms por semana / mes — vista para la junta de domingo */}
-      <div>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12, marginBottom: 12 }}>
-          <div>
-            <h3 style={{ margin: 0, fontSize: 16, fontWeight: 600, fontFamily: fontDisp, color: T.txt }}>
-              Zooms realizados por {trendGran === "week" ? "semana" : "mes"}
-            </h3>
-            <p style={{ margin: "3px 0 0", fontSize: 11.5, color: T.txt3, fontFamily: font }}>
-              Evolución reciente · cuántos Zooms se dieron en cada {trendGran === "week" ? "semana" : "mes"}.
-            </p>
-          </div>
-          <span style={{
-            padding: "7px 11px", borderRadius: 9,
-            background: headerBg, border: `1px solid ${rowBorder}`,
-            color: T.txt3, fontSize: 11, fontFamily: font,
-          }}>
-            Agrupación automática: <strong style={{ color: T.txt2 }}>{trendGran === "week" ? "Semanal" : "Mensual"}</strong>
-          </span>
-        </div>
-        <div style={{ borderRadius: 14, background: isLight ? "rgba(255,255,255,0.6)" : "rgba(255,255,255,0.02)", border: `1px solid ${rowBorder}`, padding: "20px 18px 12px" }}>
-          <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 8, height: 150 }}>
-            {trend.buckets.map((b, i) => {
-              const h = Math.round((b.done / trend.max) * 120);
-              return (
-                <div key={i} title={`${b.label}: ${b.done} realizados · ${b.sched} agendados`}
-                  style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 6, minWidth: 0 }}>
-                  <span style={{ fontSize: 12, fontWeight: 700, fontFamily: fontDisp, color: b.done ? T.txt : T.txt3 }}>{b.done}</span>
-                  <div style={{
-                    width: "100%", maxWidth: 38, height: Math.max(3, h), borderRadius: 6,
-                    background: b.done ? "#10B981" : (isLight ? "rgba(15,23,42,0.06)" : "rgba(255,255,255,0.05)"),
-                    transition: "height 0.2s",
-                  }} />
-                </div>
-              );
-            })}
-          </div>
-          <div style={{ display: "flex", justifyContent: "space-between", gap: 8, marginTop: 8, borderTop: `1px solid ${rowBorder}`, paddingTop: 8 }}>
-            {trend.buckets.map((b, i) => (
-              <span key={i} style={{ flex: 1, textAlign: "center", fontSize: 10.5, color: T.txt3, fontFamily: font, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{b.label}</span>
-            ))}
-          </div>
-        </div>
       </div>
 
       {/* Tabla por presentador */}
