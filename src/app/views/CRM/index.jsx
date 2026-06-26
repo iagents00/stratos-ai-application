@@ -31,7 +31,7 @@ import { useIsMobile } from "../../../hooks/useViewport";
 import { useClient } from "../../../hooks/useClient";
 import { P, LP, font, fontDisp, STAGES } from "../../../design-system/tokens";
 import { G, KPI, Pill, Ico, ChipSelect } from "../../SharedComponents";
-import { parseBudget, formatBudget, buildTelegramSummary, fmtNow, genId, formatFechaLarga, compareZoomProximity } from "../../../lib/utils";
+import { parseBudget, formatBudget, buildTelegramSummary, fmtNow, genId, formatFechaLarga, compareZoomProximity, fmtFechaCortaISO } from "../../../lib/utils";
 import { StratosAtom, StratosAtomHex } from "../../components/Logo";
 import HistoryDrawer from "../../components/HistoryDrawer";
 import SuggestActionsModal from "../../components/SuggestActionsModal";
@@ -2643,7 +2643,8 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                                   padding: "2px 8px", borderRadius: 99, fontFamily: fontDisp,
                                   border: isLight ? `1px solid ${meta.color}28` : "1px solid rgba(255,255,255,0.08)",
                                   letterSpacing: "0.01em",
-                                }}>{l.nextActionDate}</span>
+                                  whiteSpace: "nowrap", flexShrink: 0,
+                                }}>{(l.st === "Zoom Agendado" || l.stage === "Zoom Agendado") ? l.nextActionDate : fmtFechaCortaISO(l)}</span>
                               )}
                             </div>
                             {!isEditingAction && (
