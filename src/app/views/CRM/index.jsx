@@ -823,7 +823,17 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
       // Instante real de la cita (Zoom/visita). Se preserva el valor previo si
       // este update no lo trae, para no borrar la cita que registró el backend
       // (fn_register_appointment) en una edición no relacionada.
-      next_action_at:   withScore.next_action_at ?? prev?.next_action_at ?? null,
+      next_action_at:   (() => {
+        // Si la edición trae una fecha ISO/datetime-local en nextActionDate, la
+        // usamos como el instante real. Antes la edición solo guardaba
+        // next_action_date (texto) y NO next_action_at; como el display de las
+        // etapas-con-cita (normalizeLeads) lee next_action_at, la fecha "volvía"
+        // a la vieja al recargar. Texto libre / no-fecha → se preserva el previo.
+        const _ed = String(withScore.nextActionDate ?? '');
+        const _m = _ed.match(/^(\d{4}-\d{2}-\d{2})[ T](\d{2}:\d{2})/);
+        if (_m) { try { return new Date(`${_m[1]}T${_m[2]}`).toISOString(); } catch (_) {} }
+        return withScore.next_action_at ?? prev?.next_action_at ?? null;
+      })(),
       // Instante real de la visita (etapa "Visita Agendada"). Se preserva el
       // valor previo si este update no lo trae (igual que next_action_at), para
       // no borrar la cita en ediciones no relacionadas.
