@@ -128,6 +128,23 @@ export const MANUAL_SECTIONS_TG = [
       ]},
       { type: 'p', text: 'Queda creado, asignado a vos, y con su primera próxima acción cargada. Por defecto entra en la etapa "Contáctame Ya".' },
       { type: 'tip', text: '¿Qué pasa si no decís la etapa? El bot la pone en "Contáctame Ya" (la de contacto inmediato) y te avisa. Si querés otra, agregá "…en etapa Segundo Intento".' },
+      { type: 'tip', text: 'El asistente reconoce la campaña aunque la digas o escribas un poco mal. Por ejemplo, "Bay View Grand" la entiende aunque pongas "bayview" o "BVG".' },
+    ],
+  },
+  {
+    id: 'registro-masivo',
+    category: 'pedidos',
+    icon: 'Users',
+    title: 'Registrar muchos clientes de una vez',
+    summary: 'Pegá una lista de clientes (nombre y teléfono) en un solo mensaje y el asistente los registra todos juntos.',
+    tags: ['masivo', 'varios clientes', 'lista', 'cargar muchos', 'importar', 'lote', 'varios a la vez'],
+    content: [
+      { type: 'p', text: 'Si tenés una lista de varios clientes para cargar, no los registres uno por uno. Pegá la lista entera en un solo mensaje —una línea por cliente, con nombre y teléfono (y la campaña si querés)— y el asistente los registra a todos juntos.' },
+      { type: 'ex', items: [
+        '"Registra estos clientes: Juan Pérez, 5215511112222 — María López, 5215533334444 Bay View Grand"',
+      ]},
+      { type: 'p', text: 'Te responde con un resumen (por ejemplo "Procesé 14 clientes: 14 nuevos"). Todos quedan en "Contáctame Ya". Si alguno ya existía, lo reasigna conservando su historial; y si a alguno le falta el nombre, te avisa cuál para que lo corrijas.' },
+      { type: 'tip', text: 'Lo único obligatorio por cada cliente es el nombre y el teléfono. La campaña es opcional.' },
     ],
   },
   {
@@ -208,6 +225,7 @@ export const MANUAL_SECTIONS_TG = [
         '(audio) "programá la visita de Mariana el viernes 2pm"',
       ]},
       { type: 'p', text: 'El cliente pasa a la etapa Visita Agendada con la fecha que diste, y el asistente se encarga de recordártela a tiempo (ver "Recordatorios de tus visitas").' },
+      { type: 'warn', text: 'La fecha y hora de la visita es obligatoria. Si pasás un cliente a "Visita Agendada" sin decir cuándo, el asistente te la pide antes de guardar (igual que con el Zoom).' },
       { type: 'tip', text: 'También podés agendar la visita desde el CRM web: al mover un cliente a "Visita Agendada" te pide la fecha y hora. En ambos casos salen los mismos recordatorios.' },
     ],
   },
@@ -475,6 +493,23 @@ export const MANUAL_SECTIONS_TG = [
         'Recibir las escalaciones: cuando un asesor no confirma su plan de Zoom o responde "No la hice" a una acción de equipo, te llega el aviso para apoyarlo.',
       ]},
       { type: 'warn', text: 'Para recibir las escalaciones en Telegram, tu perfil de admin también tiene que estar conectado al bot (mismo paso de "Conectá tu Telegram"). Si no, las escalaciones se registran en el CRM pero no te llegan al chat.' },
+    ],
+  },
+  {
+    id: 'admin-accion-equipo',
+    category: 'admin',
+    icon: 'UsersRound',
+    title: 'Crear una acción de equipo desde el chat',
+    summary: 'Como admin, registrá una tarea para un asesor (o para todo el equipo) directo desde Telegram, sin abrir el CRM.',
+    tags: ['accion de equipo', 'tarea equipo', 'asignar tarea', 'responsable', 'todos', 'crear accion equipo'],
+    content: [
+      { type: 'p', text: 'Si sos admin, podés crear acciones de equipo hablándole al asistente. Decile la acción, para quién es (un asesor por su nombre, o "Todos") y para cuándo.' },
+      { type: 'ex', items: [
+        '"en la lista de acción de equipo registrá: tomar la capacitación con Iván, para todos, en 3 horas"',
+        '"crea una acción de equipo para Carlos: enviar 3 proyectos al cliente, mañana 10am"',
+      ]},
+      { type: 'p', text: 'Si no decís para cuándo, el asistente te pide la fecha y hora antes de crearla. Si ponés "Todos", la acción es para todo el equipo y le llega el recordatorio a cada asesor conectado.' },
+      { type: 'warn', text: 'Solo los admins pueden crear acciones de equipo. Si un asesor normal lo intenta, el asistente le avisa que no tiene permiso.' },
     ],
   },
   {
