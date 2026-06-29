@@ -3929,6 +3929,49 @@ const NotesModal = ({ lead, onClose, onSave, onUpdate, onSwitchTab, onShowHistor
               onFocus={e => { e.currentTarget.style.borderColor = T.borderH; e.currentTarget.style.background = isLight ? "rgba(15,23,42,0.04)" : "rgba(255,255,255,0.045)"; }}
             />
 
+            {/* Enlaces detectados — los links pegados en las notas (Drive, PDF,
+                web…) se muestran como botones azules clickeables. El textarea es
+                texto plano, así que los links viven acá debajo, evidentes y
+                redirigibles. Solo aparece si hay al menos un link. */}
+            {(() => {
+              const urls = (notesDraft || "").match(/(https?:\/\/[^\s]+|www\.[^\s]+)/gi) || [];
+              if (!urls.length) return null;
+              const seen = new Set();
+              const uniq = urls.filter(u => (seen.has(u) ? false : seen.add(u)));
+              return (
+                <div style={{ marginTop: 11, display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center" }}>
+                  <span style={{ fontSize: 10, fontWeight: 800, color: T.txt3, letterSpacing: "0.06em", textTransform: "uppercase", fontFamily: fontDisp }}>Enlaces</span>
+                  {uniq.map((u, i) => {
+                    const href = u.startsWith("http") ? u : `https://${u}`;
+                    const lower = u.toLowerCase();
+                    const label = (lower.includes("drive.google") || lower.includes("docs.google")) ? "Google Drive"
+                      : lower.includes("dropbox.com") ? "Dropbox"
+                      : (lower.includes("onedrive") || lower.includes("sharepoint")) ? "OneDrive"
+                      : lower.includes("wetransfer") ? "WeTransfer"
+                      : lower.endsWith(".pdf") ? "PDF"
+                      : (() => { try { return new URL(href).hostname.replace(/^www\./, ""); } catch { return "Abrir enlace"; } })();
+                    return (
+                      <a key={i} href={href} target="_blank" rel="noopener noreferrer" title={href}
+                        onClick={e => e.stopPropagation()}
+                        style={{
+                          display: "inline-flex", alignItems: "center", gap: 6,
+                          padding: "5px 11px", borderRadius: 8,
+                          background: `${T.blue}1A`, border: `1px solid ${T.blue}4D`, color: T.blue,
+                          fontSize: 12, fontWeight: 700, fontFamily: font, textDecoration: "none",
+                          cursor: "pointer", maxWidth: 280, overflow: "hidden",
+                          textOverflow: "ellipsis", whiteSpace: "nowrap", transition: "all 0.15s",
+                        }}
+                        onMouseEnter={e => { e.currentTarget.style.background = `${T.blue}2E`; }}
+                        onMouseLeave={e => { e.currentTarget.style.background = `${T.blue}1A`; }}>
+                        <ExternalLink size={12} strokeWidth={2.4} style={{ flexShrink: 0 }} />
+                        {label}
+                      </a>
+                    );
+                  })}
+                </div>
+              );
+            })()}
+
             {/* CTA primario "+ Agregar nota adicional" + toggle subtle de
                 cronograma. El CTA expande la timeline y arranca el flujo de
                 captura en LeadNotesTimeline vía addNoteTrigger. */}
