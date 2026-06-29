@@ -39,13 +39,16 @@ const ROLE_LABEL = {
   asesor:      "Asesor",
 };
 
-const BOT_USERNAME = import.meta.env.VITE_TELEGRAM_BOT_USERNAME || "";
-
 export default function Profile({ theme = "dark", T: Tprop }) {
   const { user } = useAuth();
   const { config: clientConfig } = useClient();
   const isLight = theme === "light";
   const T = Tprop || (isLight ? LP : P);
+
+  // Bot de Telegram POR CLIENTE: cada tenant tiene su propio bot (config.tenant
+  // .botUsername). Fallback al env var global (VITE_TELEGRAM_BOT_USERNAME) para
+  // que Duke/Stratos sigan igual mientras no tengan botUsername en su config.
+  const botUsername = clientConfig?.tenant?.botUsername || import.meta.env.VITE_TELEGRAM_BOT_USERNAME || "";
 
   return (
     <div style={{ padding: "32px 28px 80px", maxWidth: 760, margin: "0 auto", fontFamily: font }}>
@@ -76,7 +79,7 @@ export default function Profile({ theme = "dark", T: Tprop }) {
       <PasswordPanel T={T} isLight={isLight} user={user} />
       <SupportPanel T={T} isLight={isLight} clientConfig={clientConfig} />
       <TimezonePanel T={T} isLight={isLight} user={user} />
-      <ConnectTelegramPanel T={T} isLight={isLight} />
+      <ConnectTelegramPanel T={T} isLight={isLight} botUsername={botUsername} />
       <RecentBotActivity T={T} isLight={isLight} />
     </div>
   );
@@ -385,7 +388,7 @@ function TimezonePanel({ T = P, isLight = false, user }) {
 /*  Conectar Telegram                                                       */
 /* ─────────────────────────────────────────────────────────────────────── */
 
-function ConnectTelegramPanel({ T = P, isLight = false }) {
+function ConnectTelegramPanel({ T = P, isLight = false, botUsername = "" }) {
   const [status, setStatus] = useState({ loading: true, paired: false, pairedAt: null });
   const [busy, setBusy]     = useState(false);
   const [errorMsg, setErrorMsg] = useState(null);
@@ -447,9 +450,9 @@ function ConnectTelegramPanel({ T = P, isLight = false }) {
       return;
     }
 
-    if (BOT_USERNAME) {
+    if (botUsername) {
       // Deep link: abre Telegram con START prellenado
-      window.open(`https://t.me/${BOT_USERNAME}?start=${r.code}`, "_blank", "noopener,noreferrer");
+      window.open(`https://t.me/${botUsername}?start=${r.code}`, "_blank", "noopener,noreferrer");
       startPolling();
     } else {
       // Sin bot username configurado → flujo manual
@@ -501,7 +504,7 @@ function ConnectTelegramPanel({ T = P, isLight = false }) {
             Conectar Telegram
           </h2>
           <p style={{ margin: 0, fontSize: 12, color: T.txt2 }}>
-            Gestiona tus leads desde el chat del bot de Stratos.
+            Gestiona tus leads desde el chat del bot en Telegram.
           </p>
         </div>
         {status.paired && <Pill color={T.accent} isLight={isLight}>Conectado</Pill>}
@@ -509,11 +512,11 @@ function ConnectTelegramPanel({ T = P, isLight = false }) {
 
       <div style={{ marginTop: 18, paddingTop: 18, borderTop: `1px solid ${T.border}` }}>
         {status.paired ? (
-          <PairedView pairedAt={status.pairedAt} onUnpair={handleUnpair} unpairing={busy} T={T} isLight={isLight} />
+          <PairedView pairedAt={status.pairedAt} onUnpair={handleUnpair} unpairing={busy} T={T} isLight={isLight} botUsername={botUsername} />
         ) : manualCode ? (
           <ManualCodeView code={manualCode} T={T} isLight={isLight} />
         ) : (
-          <NotPairedView onConnect={handleConnect} busy={busy} T={T} />
+          <NotPairedView onConnect={handleConnect} busy={busy} T={T} botUsername={botUsername} />
         )}
 
         {errorMsg && (
@@ -533,11 +536,11 @@ function ConnectTelegramPanel({ T = P, isLight = false }) {
 }
 
 /* ── Vista por defecto: un botón ── */
-function NotPairedView({ onConnect, busy, T = P }) {
+function NotPairedView({ onConnect, busy, T = P, botUsername = "" }) {
   return (
     <div>
       <div style={{ margin: "0 0 16px", fontSize: 13, color: T.txt2, lineHeight: 1.55 }}>
-        {BOT_USERNAME ? (
+        {botUsername ? (
           "Te abrimos Telegram. Solo dale START en el bot — listo."
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
@@ -564,7 +567,7 @@ function NotPairedView({ onConnect, busy, T = P }) {
           boxShadow: `0 4px 14px ${T.accent}55`,
         }}
       >
-        {busy ? "Abriendo…" : (BOT_USERNAME ? "Conectar mi Telegram" : "Generar código")}
+        {busy ? "Abriendo…" : (botUsername ? "Conectar mi Telegram" : "Generar código")}
         {!busy && <ExternalLink size={14} strokeWidth={2.2} />}
       </button>
     </div>
@@ -619,7 +622,7 @@ function ManualCodeView({ code, T = P, isLight = false }) {
 }
 
 /* ── Vista: ya pareado ── */
-function PairedView({ pairedAt, onUnpair, unpairing, T = P, isLight = false }) {
+function PairedView({ pairedAt, onUnpair, unpairing, T = P, isLight = false, botUsername = "" }) {
   const fechaTxt = pairedAt
     ? new Date(pairedAt).toLocaleDateString("es-MX", {
         day: "numeric", month: "long", year: "numeric",
@@ -627,8 +630,8 @@ function PairedView({ pairedAt, onUnpair, unpairing, T = P, isLight = false }) {
     : null;
 
   const handleOpenBot = () => {
-    if (BOT_USERNAME) {
-      window.open(`https://t.me/${BOT_USERNAME}`, "_blank", "noopener,noreferrer");
+    if (botUsername) {
+      window.open(`https://t.me/${botUsername}`, "_blank", "noopener,noreferrer");
     }
   };
 
@@ -651,7 +654,7 @@ function PairedView({ pairedAt, onUnpair, unpairing, T = P, isLight = false }) {
       )}
 
       <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-        {BOT_USERNAME && (
+        {botUsername && (
           <button
             type="button"
             onClick={handleOpenBot}
