@@ -141,6 +141,14 @@ export const DEFAULT_CLIENT_CONFIG = {
     // lateral de 460px (Duke). true → modal centrado casi-fullscreen (Vega).
     expedienteCentered: false,
 
+    // Modo PROYECTO — para clientes cuyo "cliente" del CRM es un proyecto (obra,
+    // licitación), no un lead/persona. Cuando está ON, el detalle (NotesModal)
+    // deja solo Próxima acción + Expediente (notas) y oculta los datos de lead:
+    // el bloque "Datos generales del cliente" (teléfono, correo, etiqueta,
+    // campaña, fricción, perfil, riesgo) y el campo inline de teléfono.
+    // Default OFF → Duke y el resto NO cambian.
+    projectMode: false,
+
     // Sincronización realtime del tablero de prioridad (profiles.crm_prefs).
     // Cuando el bot de Telegram reordena/pinea un cliente, el CRM abierto en el
     // browser pisaba ese cambio al re-guardar su snapshot en memoria
