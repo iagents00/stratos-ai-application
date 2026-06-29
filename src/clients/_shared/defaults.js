@@ -61,6 +61,11 @@ export const DEFAULT_CLIENT_CONFIG = {
     clientId:        "default",
     organizationId:  null,   // null → no hay org asociada (fallback genérico)
     supabaseRef:     null,
+    // Username del bot de Telegram de ESTE cliente (sin @). Cada tenant tiene
+    // su propio bot. Default "" → la vista de Perfil cae al env var global
+    // VITE_TELEGRAM_BOT_USERNAME, así Duke/Stratos siguen IGUAL hasta que un
+    // cliente declare el suyo acá.
+    botUsername:     "",
   },
 
   // Features habilitadas — cada módulo del CRM puede prenderse/apagarse
