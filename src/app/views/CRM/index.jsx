@@ -2077,6 +2077,19 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
   const zoomsAgendados   = visibleLeads.filter(l => l.st === "Zoom Agendado").length;
   // Post-Mayo 2026 "Zoom Concretado" se consolidó en "Seguimiento".
   const zoomsConcretados = visibleLeads.filter(l => l.st === "Seguimiento").length;
+
+  // KPIs config-driven (clientes con `crm.kpis`, ej. Vega). Resuelve el valor
+  // de un spec sobre los leads visibles. Duke no usa esto (su bloque es el else).
+  const kpiCustom = Array.isArray(clientConfig?.crm?.kpis) ? clientConfig.crm.kpis : null;
+  const kpiValue = (spec) => {
+    if (!spec) return "";
+    if (spec.type === "total") return visibleLeads.length;
+    if (spec.type === "money") return `$${(totalPipeline / 1000000).toFixed(1)}M`;
+    if (spec.type === "count") return visibleLeads.filter(l => l.st === spec.stage).length;
+    return "";
+  };
+  const KPI_ICON_MAP = { Building2, Search, Trophy, DollarSign, Users, Target, CalendarDays, FileText };
+  const KPI_COLOR_MAP = { blue: T.blue, cyan: T.cyan, accent: T.accent, emerald: T.emerald, violet: T.violet };
   const kanbanStages = STAGES.filter(s => s !== "Postventa");
 
   /* Responsive grid columns — 6 columnas en modo full, 5 en compact.
@@ -2207,10 +2220,24 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
           el header mobile. ── */}
       {!showMetrics && !isMobile && (
         <div style={{ display: "grid", gridTemplateColumns: co ? "repeat(2, 1fr)" : "repeat(4, 1fr)", gap: 12 }}>
-          <KPI T={T} label="Clientes en Pipeline" value={visibleLeads.length} sub={`${hotLeads} activos hoy`} icon={Users} color={T.blue} />
-          <KPI T={T} label="Score Promedio" value={avgScore} sub={`promedio del pipeline`} icon={Target} color={T.cyan} />
-          <KPI T={T} label="Zooms Agendados" value={zoomsAgendados} sub={`${zoomsConcretados} concretados`} icon={CalendarDays} color={T.accent} />
-          <KPI T={T} label="Valor Total Pipeline" value={`$${(totalPipeline/1000000).toFixed(1)}M`} sub={`${nearCloseLeads} en cierre`} icon={DollarSign} color={T.emerald} />
+          {kpiCustom ? (
+            // KPIs custom por cliente (ej. Vega: métricas de obra).
+            kpiCustom.map((k, i) => (
+              <KPI key={i} T={T} label={k.label}
+                value={kpiValue(k.value)}
+                sub={`${kpiValue(k.sub)} ${k.sub?.suffix || ""}`.trim()}
+                icon={KPI_ICON_MAP[k.icon] || Users}
+                color={KPI_COLOR_MAP[k.color] || T.blue} />
+            ))
+          ) : (
+            // KPIs históricas de Stratos/Duke (sin cambios).
+            <>
+              <KPI T={T} label="Clientes en Pipeline" value={visibleLeads.length} sub={`${hotLeads} activos hoy`} icon={Users} color={T.blue} />
+              <KPI T={T} label="Score Promedio" value={avgScore} sub={`promedio del pipeline`} icon={Target} color={T.cyan} />
+              <KPI T={T} label="Zooms Agendados" value={zoomsAgendados} sub={`${zoomsConcretados} concretados`} icon={CalendarDays} color={T.accent} />
+              <KPI T={T} label="Valor Total Pipeline" value={`$${(totalPipeline/1000000).toFixed(1)}M`} sub={`${nearCloseLeads} en cierre`} icon={DollarSign} color={T.emerald} />
+            </>
+          )}
         </div>
       )}
 

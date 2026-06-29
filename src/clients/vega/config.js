@@ -129,6 +129,28 @@ const vegaConfig = {
       viewDetail:            "Ver detalle del proyecto",
       openProfile:           "Abrir detalle del proyecto",
     },
+
+    // ── KPIs de arriba del CRM (solo Vega) ────────────────────────────────────
+    // Reemplaza las 4 tarjetas de Stratos (Score, Zooms…) por métricas de obra.
+    // El CRM las renderiza si `crm.kpis` es un array (default null → KPIs Duke).
+    //   value/sub.type: "total" (cantidad de proyectos) · "count" (de una etapa)
+    //                   · "money" (suma de presupuestos, en $M)
+    //   icon: nombre de ícono lucide ya importado en el CRM
+    //   color: clave de la paleta (blue · cyan · accent · emerald · violet)
+    kpis: [
+      { label: "Proyectos en pipeline", value: { type: "total" },
+        sub: { type: "count", stage: "En Análisis", suffix: "en análisis" },
+        icon: "Building2",  color: "blue" },
+      { label: "En análisis",           value: { type: "count", stage: "En Análisis" },
+        sub: { type: "count", stage: "Detectada", suffix: "detectadas" },
+        icon: "Search",     color: "cyan" },
+      { label: "Adjudicadas",           value: { type: "count", stage: "Adjudicada" },
+        sub: { type: "count", stage: "En Ejecución", suffix: "en ejecución" },
+        icon: "Trophy",     color: "accent" },
+      { label: "Valor en juego",        value: { type: "money" },
+        sub: { type: "count", stage: "Finalizada", suffix: "finalizadas" },
+        icon: "DollarSign", color: "emerald" },
+    ],
   },
 };
 
