@@ -66,6 +66,14 @@ export const DEFAULT_CLIENT_CONFIG = {
     // VITE_TELEGRAM_BOT_USERNAME, así Duke/Stratos siguen IGUAL hasta que un
     // cliente declare el suyo acá.
     botUsername:     "",
+    // Flujo de pareo en Perfil → Conectar Telegram:
+    //   false (default) = DEEP LINK: botón "Conectar mi Telegram" que abre
+    //     t.me/<bot>?start=<código>. Es lo de Duke; queda IGUAL.
+    //   true            = MANUAL: muestra el código de 8 dígitos + instrucciones
+    //     "/conectar <código>" (más un botón deep link como extra). Sirve para
+    //     conectar desde la app de Telegram del celular sin depender de que el
+    //     navegador tenga sesión iniciada.
+    telegramManualPairing: false,
   },
 
   // Features habilitadas — cada módulo del CRM puede prenderse/apagarse
