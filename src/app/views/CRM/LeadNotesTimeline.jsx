@@ -15,7 +15,7 @@
  * RPCs y tablas relacionadas: ver supabase/migrations/008_*.sql
  */
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Plus, Send, StickyNote, Sparkles, ExternalLink } from "lucide-react";
+import { Plus, Send, StickyNote, Sparkles, ExternalLink, Pencil } from "lucide-react";
 import { P, font, fontDisp } from "../../../design-system/tokens";
 import { supabase } from "../../../lib/supabase";
 import { useAuth } from "../../../hooks/useAuth";
@@ -116,6 +116,22 @@ export default function LeadNotesTimeline({ lead, T = P, isLight = false, autoSt
   const [saving, setSaving] = useState(false);
   const [errorMsg, setErrorMsg] = useState(null);
   const textareaRef = useRef(null);
+  // Edición in-line de una nota ya guardada (RLS: admin de la org o autor).
+  const [editingId, setEditingId] = useState(null);
+  const [editDraft, setEditDraft] = useState("");
+  const [savingEdit, setSavingEdit] = useState(false);
+  const startEdit  = (n) => { setErrorMsg(null); setEditingId(n.id); setEditDraft(n.descripcion || ""); };
+  const cancelEdit = () => { setEditingId(null); setEditDraft(""); };
+  const saveEdit = async (n) => {
+    const trimmed = editDraft.trim();
+    if (!trimmed || trimmed === (n.descripcion || "")) { cancelEdit(); return; }
+    setSavingEdit(true);
+    const { error } = await supabase.from("expediente_items").update({ descripcion: trimmed }).eq("id", n.id);
+    setSavingEdit(false);
+    if (error) { setErrorMsg("No se pudo guardar la edición. Reintenta."); return; }
+    setNotes((prev) => prev.map((x) => (x.id === n.id ? { ...x, descripcion: trimmed } : x)));
+    cancelEdit();
+  };
 
   const reload = useCallback(async () => {
     if (!lead?.id) return;
@@ -360,6 +376,14 @@ export default function LeadNotesTimeline({ lead, T = P, isLight = false, autoSt
                       {n.titulo}
                     </span>
                   )}
+                  {!v.isAi && editingId !== n.id && (
+                    <button type="button" onClick={() => startEdit(n)} title="Editar nota"
+                      style={{ marginLeft: "auto", display: "inline-flex", alignItems: "center", gap: 4, background: "transparent", border: "none", color: T.txt3, cursor: "pointer", padding: "2px 4px", fontFamily: font, fontSize: 10.5, opacity: 0.75, transition: "opacity 0.15s, color 0.15s" }}
+                      onMouseEnter={e => { e.currentTarget.style.opacity = "1"; e.currentTarget.style.color = T.accent; }}
+                      onMouseLeave={e => { e.currentTarget.style.opacity = "0.75"; e.currentTarget.style.color = T.txt3; }}>
+                      <Pencil size={11} strokeWidth={2.2} /> Editar
+                    </button>
+                  )}
                 </div>
                 {v.isAi ? (
                   <div style={{
@@ -368,6 +392,31 @@ export default function LeadNotesTimeline({ lead, T = P, isLight = false, autoSt
                     wordBreak: "break-word",
                   }}>
                     {renderMarkdown(n.descripcion || "(nota vacía)")}
+                  </div>
+                ) : editingId === n.id ? (
+                  <div>
+                    <textarea
+                      value={editDraft}
+                      onChange={(e) => setEditDraft(e.target.value)}
+                      autoFocus
+                      rows={4}
+                      style={{
+                        width: "100%", boxSizing: "border-box", padding: "9px 11px",
+                        borderRadius: 9, background: isLight ? "rgba(15,23,42,0.03)" : "rgba(255,255,255,0.04)",
+                        border: `1px solid ${T.accent}55`, color: T.txt, fontSize: 13,
+                        fontFamily: font, lineHeight: 1.55, outline: "none", resize: "vertical",
+                      }}
+                    />
+                    <div style={{ display: "flex", gap: 8, marginTop: 8, justifyContent: "flex-end" }}>
+                      <button type="button" onClick={cancelEdit} disabled={savingEdit}
+                        style={{ padding: "5px 12px", borderRadius: 8, background: "transparent", border: `1px solid ${T.border}`, color: T.txt3, cursor: "pointer", fontSize: 12, fontWeight: 600, fontFamily: font }}>
+                        Cancelar
+                      </button>
+                      <button type="button" onClick={() => saveEdit(n)} disabled={savingEdit || !editDraft.trim()}
+                        style={{ padding: "5px 14px", borderRadius: 8, background: editDraft.trim() ? T.accent : T.border, border: "none", color: editDraft.trim() ? "#041016" : T.txt3, cursor: editDraft.trim() ? "pointer" : "default", fontSize: 12, fontWeight: 700, fontFamily: font }}>
+                        {savingEdit ? "Guardando…" : "Guardar"}
+                      </button>
+                    </div>
                   </div>
                 ) : (
                   <p style={{
