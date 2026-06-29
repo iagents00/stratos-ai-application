@@ -146,6 +146,12 @@ export const DEFAULT_CLIENT_CONFIG = {
     // que quiera cambiar (ej. Vega: "cliente" → "proyecto"); el resto hereda
     // Duke. Duke nunca se ve afectado mientras esto siga en null.
     labels: null,
+
+    // KPIs de arriba del CRM custom por cliente. Default null → las 4 tarjetas
+    // históricas de Stratos (Clientes en Pipeline / Score / Zooms / Valor). Si
+    // un cliente declara un array (ej. Vega: métricas de obra), el CRM renderiza
+    // esas. Shape de cada KPI: { label, value:{type,stage?}, sub:{type,stage?,suffix}, icon, color }.
+    kpis: null,
   },
 };
 
