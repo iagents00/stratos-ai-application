@@ -103,6 +103,8 @@ const vegaConfig = {
     // Oculta el "Centro de Agentes IA" (agentes de venta de Stratos: reactivar,
     // seguimiento, callcenter, calificar). No aplica a obra. Default true = se ve.
     aiAgentsPanel: false,
+    // Expediente como modal centrado casi-fullscreen (no drawer lateral).
+    expedienteCentered: true,
 
     // ── Pipeline de OBRAS / LICITACIONES (solo Vega) ──────────────────────────
     // Pocas etapas, las esenciales, alineadas al flujo real que describió

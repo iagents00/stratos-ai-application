@@ -5500,6 +5500,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
         asesoresMaster={asesoresMaster}
         currentUserName={user?.name || null}
         discoverySimplified={clientConfig?.crm?.discoverySimplified === true}
+        centered={clientConfig?.crm?.expedienteCentered === true}
         onSwitchTab={(tab) => openDrawerTab(tab, notesLead)}
         onShowHistory={() => setHistoryLead(notesLead)}
         onShowSuggest={() => setSuggestLead(notesLead)}
