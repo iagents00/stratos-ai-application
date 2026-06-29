@@ -765,7 +765,7 @@ const FollowUpBadge = ({ lead, onUpdate, T = P, compact = false, fullWidth = fal
      accionable, no solo decorativo.
    · Theme-aware (claro/oscuro), márgenes matemáticos 12-18-20.
    · Placeholder cálido en cursiva cuando no hay acción registrada. */
-const NextActionHero = ({ lead, T = P, onUpdate = null }) => {
+const NextActionHero = ({ lead, T = P, onUpdate = null, projectMode = false }) => {
   const [expanded, setExpanded] = useState(false);
   const [editing, setEditing]   = useState(false);
   const [draftA, setDraftA]     = useState("");
@@ -1214,8 +1214,10 @@ const NextActionHero = ({ lead, T = P, onUpdate = null }) => {
 
         {/* Sin teléfono → mini-form para agregarlo en un click. Esto evita
             que el asesor tenga que abrir el modo edición completo solo
-            para registrar un número que necesita usar ya. */}
-        {!editing && !phoneClean && canEdit && (
+            para registrar un número que necesita usar ya.
+            En projectMode (Vega) el "cliente" es un proyecto de obra, no una
+            persona → ocultamos el campo de teléfono. */}
+        {!editing && !phoneClean && canEdit && !projectMode && (
           <AddPhoneInline lead={lead} onUpdate={onUpdate} T={T} isLight={isLight} />
         )}
     </div>
@@ -3501,7 +3503,7 @@ const DiscoveryGeneralData = ({ lead, onUpdate, T = P, isLight = false }) => {
   );
 };
 
-const NotesModal = ({ lead, onClose, onSave, onUpdate, onSwitchTab, onShowHistory, onDelete, asesoresMaster = [], currentUserName = null, discoverySimplified = false, centered = false, T = P }) => {
+const NotesModal = ({ lead, onClose, onSave, onUpdate, onSwitchTab, onShowHistory, onDelete, asesoresMaster = [], currentUserName = null, discoverySimplified = false, projectMode = false, centered = false, T = P }) => {
   const isMobile = useIsMobile();
   const [confirmDelete, setConfirmDelete] = useState(false);
   // Llamadas programadas (Retell) — pendientes para este lead.
@@ -3877,7 +3879,7 @@ const NotesModal = ({ lead, onClose, onSave, onUpdate, onSwitchTab, onShowHistor
         <div style={{ padding: isMobile ? "16px 16px 110px" : "18px 24px 90px", overflowY: "auto", overscrollBehavior: "contain", WebkitOverflowScrolling: "touch", scrollBehavior: "smooth", flex: 1, display: "flex", flexDirection: "column", gap: 18 }}>
 
           {/* 1. PRÓXIMA ACCIÓN — hero mint, lo primero accionable */}
-          <NextActionHero lead={lead} T={T} onUpdate={onUpdate} />
+          <NextActionHero lead={lead} T={T} onUpdate={onUpdate} projectMode={projectMode} />
 
           {/* 1.5. PERFILAMIENTO IA — perfilamiento extraído por Retell desde
               la llamada de voz. Solo aparece si discovery_data tiene contenido
@@ -4048,8 +4050,11 @@ const NotesModal = ({ lead, onClose, onSave, onUpdate, onSwitchTab, onShowHistor
 
           {/* 5. DATOS GENERALES DEL CLIENTE — colapsable en Discovery
               simplificado (Duke). En otros clientes se muestra siempre
-              (mantiene compat con el comportamiento histórico). */}
-          {discoverySimplified ? (
+              (mantiene compat con el comportamiento histórico).
+              En projectMode (Vega) se oculta por completo: el "cliente" es un
+              proyecto de obra, no una persona — sus datos de lead (teléfono,
+              correo, etiqueta, campaña, fricción, perfil, riesgo) no aplican. */}
+          {discoverySimplified && !projectMode ? (
             <div>
               <CollapsibleSectionToggle
                 expanded={showGeneralData}
