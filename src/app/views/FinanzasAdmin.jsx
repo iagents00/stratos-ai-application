@@ -8,7 +8,7 @@ import {
   ChevronDown, ChevronUp, BarChart3, Activity, Banknote, Percent,
   ArrowUpRight, Shield, Calendar, CalendarDays, Check,
   AlertTriangle, CheckSquare, Clock, Home, Maximize2,
-  User, Wallet,
+  User, Wallet, Download,
 } from "lucide-react";
 import { AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import { P, LP, font, fontDisp } from "../../design-system/tokens";
