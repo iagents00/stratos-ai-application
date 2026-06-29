@@ -1020,7 +1020,7 @@ export default function App() {
       <div style={{ display:"flex", flexDirection:"column", alignItems:"center", gap:4, width:"100%", padding:"0 8px" }}>
         <button
           onClick={() => { setV(n.id); if (n.more) setSidebarMore(true); }}
-          title={n.l + (!hasAccess ? " · Sin acceso" : "")}
+          title={(clientConfig?.navLabels?.[n.id] ?? n.l) + (!hasAccess ? " · Sin acceso" : "")}
           style={{
             width:48, height:40, borderRadius:12,
             cursor: hasAccess ? "pointer" : "not-allowed",
@@ -1047,7 +1047,7 @@ export default function App() {
         <span style={{ fontSize:7, fontFamily:fontDisp, fontWeight: a ? 600 : 400, letterSpacing: a ? "0.01em" : "0.005em", textAlign:"center",
           color: a ? activeColor : (isLight ? "rgba(15,23,42,0.38)" : "rgba(255,255,255,0.22)"),
           lineHeight:1, userSelect:"none", transition:"color 0.18s ease",
-        }}>{n.l}</span>
+        }}>{clientConfig?.navLabels?.[n.id] ?? n.l}</span>
       </div>
     );
   };
@@ -1510,7 +1510,7 @@ export default function App() {
           return (
             <button key={n.id} onClick={() => setV(n.id)} style={{ flex:1, height:"100%", border:"none", background:"transparent", cursor:"pointer", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:3, outline:"none" }}>
               <n.i size={22} color={a ? activeColor : (isLight ? "rgba(15,23,42,0.38)" : "rgba(255,255,255,0.30)")} strokeWidth={a ? 1.9 : 1.5} />
-              <span style={{ fontSize:9, fontFamily:fontDisp, fontWeight: a ? 700 : 400, color: a ? activeColor : (isLight ? "rgba(15,23,42,0.38)" : "rgba(255,255,255,0.28)"), lineHeight:1 }}>{n.l}</span>
+              <span style={{ fontSize:9, fontFamily:fontDisp, fontWeight: a ? 700 : 400, color: a ? activeColor : (isLight ? "rgba(15,23,42,0.38)" : "rgba(255,255,255,0.28)"), lineHeight:1 }}>{clientConfig?.navLabels?.[n.id] ?? n.l}</span>
             </button>
           );
         })}
@@ -1526,7 +1526,7 @@ export default function App() {
               return (
                 <button key={n.id} onClick={() => { setV(n.id); setSidebarMore(false); }} style={{ display:"flex", flexDirection:"column", alignItems:"center", gap:4, padding:"10px 14px", borderRadius:14, border:"none", cursor:"pointer", background: a ? `${activeColor}14` : (isLight ? "rgba(0,0,0,0.04)" : "rgba(255,255,255,0.05)"), minWidth:70 }}>
                   <n.i size={20} color={a ? activeColor : (isLight ? "rgba(15,23,42,0.45)" : "rgba(255,255,255,0.35)")} strokeWidth={a ? 1.9 : 1.5} />
-                  <span style={{ fontSize:9.5, fontFamily:fontDisp, fontWeight: a ? 700 : 400, color: a ? activeColor : (isLight ? "rgba(15,23,42,0.45)" : "rgba(255,255,255,0.35)"), lineHeight:1 }}>{n.l}</span>
+                  <span style={{ fontSize:9.5, fontFamily:fontDisp, fontWeight: a ? 700 : 400, color: a ? activeColor : (isLight ? "rgba(15,23,42,0.45)" : "rgba(255,255,255,0.35)"), lineHeight:1 }}>{clientConfig?.navLabels?.[n.id] ?? n.l}</span>
                 </button>
               );
             })}
