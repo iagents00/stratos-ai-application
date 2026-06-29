@@ -35,6 +35,11 @@ const vegaConfig = {
   legalName: "Constructora Vega",
   tagline:   "Gestión de obra y licitaciones",
 
+  // Renombra etiquetas del menú lateral por módulo (id de nav → texto). Para
+  // Vega el CRM se presenta como "ERP" (gestión de obra). Default {}: usa el
+  // label histórico de navigation.js. Solo afecta el texto, no el routing.
+  navLabels: { c: "ERP" },
+
   brand: {
     logoText:                "Constructora Vega",
     // Hereda el menta del design system por ahora (el accent por cliente es un
@@ -128,6 +133,10 @@ const vegaConfig = {
       deleteEntity:          "Eliminar proyecto (mover a papelera)",
       viewDetail:            "Ver detalle del proyecto",
       openProfile:           "Abrir detalle del proyecto",
+      // Título del header: "Constructora Vega" (en vez de "CRM Asesores").
+      pageTitle:             "Constructora",
+      pageTitleAccent:       "Vega",
+      pageTitleMobile:       "Constructora Vega",
     },
 
     // ── KPIs de arriba del CRM (solo Vega) ────────────────────────────────────

@@ -2126,13 +2126,13 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
             color: isLight ? T.txt : "#FFFFFF", fontFamily: fontDisp, margin: 0,
             lineHeight: 1,
           }}>
-            CRM
+            {L.pageTitleMobile}
           </h2>
           <span style={{
             fontSize: 13, fontWeight: 500, color: T.txt3, fontFamily: fontDisp,
             letterSpacing: "-0.01em",
           }}>
-            {visibleLeads.length} {visibleLeads.length === 1 ? "cliente" : "clientes"}
+            {visibleLeads.length} {visibleLeads.length === 1 ? L.entity : L.entityPlural}
           </span>
           <span style={{ marginLeft: "auto", fontSize: 11.5, color: T.txt3, fontFamily: font, fontWeight: 500 }}>
             ${(totalPipeline/1000000).toFixed(1)}M
@@ -2144,8 +2144,8 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
           <div>
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
               <h2 style={{ fontSize: 20, fontWeight: 400, color: isLight ? T.txt : "#FFFFFF", fontFamily: fontDisp, letterSpacing: "-0.025em", margin: 0 }}>
-                CRM{" "}
-                <span style={{ fontWeight: 300, color: isLight ? T.txt3 : "rgba(255,255,255,0.38)" }}>Asesores</span>
+                {L.pageTitle}{" "}
+                <span style={{ fontWeight: 300, color: isLight ? T.txt3 : "rgba(255,255,255,0.38)" }}>{L.pageTitleAccent}</span>
               </h2>
               <span style={{ fontSize: 10, fontWeight: 700, color: T.txt3, background: T.glass, border: `1px solid ${T.border}`, padding: "3px 9px", borderRadius: 99, letterSpacing: "0.06em" }}>{visibleLeads.length} {L.entityPlural}</span>
               {!canSeeAll && <span style={{ fontSize: 10, fontWeight: 700, color: T.amber, background: `${T.amber}10`, border: `1px solid ${T.amber}28`, padding: "3px 9px", borderRadius: 99, letterSpacing: "0.04em" }}>Vista personal</span>}

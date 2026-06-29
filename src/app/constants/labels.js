@@ -29,6 +29,11 @@ const DEFAULT_LABELS = {
   deleteEntity:          "Eliminar cliente (mover a papelera)",
   viewDetail:            "Ver Discovery del cliente",        // tooltip abrir drawer
   openProfile:           "Abrir perfil del cliente",         // tooltip abrir perfil
+  // Título del header del CRM. Desktop = pageTitle (fuerte) + pageTitleAccent
+  // (tenue); mobile = pageTitleMobile (una línea). Duke: "CRM Asesores" / "CRM".
+  pageTitle:             "CRM",
+  pageTitleAccent:       "Asesores",
+  pageTitleMobile:       "CRM",
 };
 
 const _cfg = (() => {

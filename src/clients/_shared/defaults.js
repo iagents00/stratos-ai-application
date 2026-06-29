@@ -25,6 +25,12 @@ export const DEFAULT_CLIENT_CONFIG = {
   // path /<cliente>. Default vacío → el cliente se resuelve por path/subdominio.
   domains: [],
 
+  // Renombra etiquetas del menú lateral por módulo: { <navId>: "<texto>" }.
+  // Default {} → cada módulo usa su label histórico de navigation.js. Un cliente
+  // puede presentar un módulo con otro nombre (ej. Vega: CRM → "ERP"). Solo
+  // cambia el texto visible, no el routing ni los permisos.
+  navLabels: {},
+
   // Branding visual (overrides opcionales del design system)
   brand: {
     logoText:              "Stratos",
