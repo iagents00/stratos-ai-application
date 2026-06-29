@@ -61,10 +61,13 @@ const vegaConfig = {
     // Comparte el proyecto Supabase de Duke/Grupo28/TGenius — aislamiento por
     // organization_id + RLS, no por proyecto separado.
     supabaseRef:    "glulgyhkrqpykxmujodb",
-    // Bot de Telegram propio de Vega. La vista de Perfil arma el deep link
-    // https://t.me/<botUsername> con esto (sin @). Así el botón "Conectar mi
-    // Telegram" de Vega abre SU bot, no el de Stratos.
+    // Bot de Telegram propio de Vega (sin @). Se usa para el @nombre en las
+    // instrucciones y para el deep link t.me/<botUsername>.
     botUsername:    "ASISTENTE_CRM_VEGA_BOT",
+    // Vega usa el flujo MANUAL: el equipo se conecta desde la app de Telegram
+    // del celular (código + /conectar), sin depender de que el navegador tenga
+    // sesión iniciada (el deep link a t.me/... abre Telegram web y fallaba).
+    telegramManualPairing: true,
   },
 
   // Mismo set probado y aislado que Grupo 28 / TradeGenius. Los módulos internos

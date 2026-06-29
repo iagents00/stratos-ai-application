@@ -50,6 +50,14 @@ export default function Profile({ theme = "dark", T: Tprop }) {
   // que Duke/Stratos sigan igual mientras no tengan botUsername en su config.
   const botUsername = clientConfig?.tenant?.botUsername || import.meta.env.VITE_TELEGRAM_BOT_USERNAME || "";
 
+  // Flujo de pareo: por defecto DEEP LINK (abre Telegram con START prellenado),
+  // que es lo de Duke. Un tenant puede pedir el flujo MANUAL (código de 8
+  // dígitos + instrucciones /conectar) con tenant.telegramManualPairing=true.
+  // El manual funciona desde la app de Telegram del celular sin depender de que
+  // el navegador tenga sesión iniciada (el deep link a t.me/... abre Telegram
+  // web y falla si no hay sesión).
+  const manualPairing = !!clientConfig?.tenant?.telegramManualPairing;
+
   return (
     <div style={{ padding: "32px 28px 80px", maxWidth: 760, margin: "0 auto", fontFamily: font }}>
       <div style={{ marginBottom: 28 }}>
@@ -79,7 +87,7 @@ export default function Profile({ theme = "dark", T: Tprop }) {
       <PasswordPanel T={T} isLight={isLight} user={user} />
       <SupportPanel T={T} isLight={isLight} clientConfig={clientConfig} />
       <TimezonePanel T={T} isLight={isLight} user={user} />
-      <ConnectTelegramPanel T={T} isLight={isLight} botUsername={botUsername} />
+      <ConnectTelegramPanel T={T} isLight={isLight} botUsername={botUsername} manualPairing={manualPairing} />
       <RecentBotActivity T={T} isLight={isLight} />
     </div>
   );
@@ -388,12 +396,15 @@ function TimezonePanel({ T = P, isLight = false, user }) {
 /*  Conectar Telegram                                                       */
 /* ─────────────────────────────────────────────────────────────────────── */
 
-function ConnectTelegramPanel({ T = P, isLight = false, botUsername = "" }) {
+function ConnectTelegramPanel({ T = P, isLight = false, botUsername = "", manualPairing = false }) {
   const [status, setStatus] = useState({ loading: true, paired: false, pairedAt: null });
   const [busy, setBusy]     = useState(false);
   const [errorMsg, setErrorMsg] = useState(null);
-  const [manualCode, setManualCode] = useState(null);   // solo si no hay BOT_USERNAME
+  const [manualCode, setManualCode] = useState(null);   // código mostrado en el flujo manual
   const pollRef = useRef(null);
+
+  // Modo deep link: solo si hay bot Y el tenant NO pidió pareo manual.
+  const deepLinkMode = !!botUsername && !manualPairing;
 
   // Estado inicial
   useEffect(() => {
@@ -450,12 +461,13 @@ function ConnectTelegramPanel({ T = P, isLight = false, botUsername = "" }) {
       return;
     }
 
-    if (botUsername) {
+    if (deepLinkMode) {
       // Deep link: abre Telegram con START prellenado
       window.open(`https://t.me/${botUsername}?start=${r.code}`, "_blank", "noopener,noreferrer");
       startPolling();
     } else {
-      // Sin bot username configurado → flujo manual
+      // Flujo manual: mostramos el código + instrucciones /conectar. Funciona
+      // desde la app de Telegram del celular sin depender del navegador.
       setManualCode(r.code);
       startPolling();
     }
@@ -514,9 +526,9 @@ function ConnectTelegramPanel({ T = P, isLight = false, botUsername = "" }) {
         {status.paired ? (
           <PairedView pairedAt={status.pairedAt} onUnpair={handleUnpair} unpairing={busy} T={T} isLight={isLight} botUsername={botUsername} />
         ) : manualCode ? (
-          <ManualCodeView code={manualCode} T={T} isLight={isLight} />
+          <ManualCodeView code={manualCode} T={T} isLight={isLight} botUsername={botUsername} />
         ) : (
-          <NotPairedView onConnect={handleConnect} busy={busy} T={T} botUsername={botUsername} />
+          <NotPairedView onConnect={handleConnect} busy={busy} T={T} botUsername={botUsername} deepLinkMode={deepLinkMode} />
         )}
 
         {errorMsg && (
@@ -536,15 +548,16 @@ function ConnectTelegramPanel({ T = P, isLight = false, botUsername = "" }) {
 }
 
 /* ── Vista por defecto: un botón ── */
-function NotPairedView({ onConnect, busy, T = P, botUsername = "" }) {
+function NotPairedView({ onConnect, busy, T = P, botUsername = "", deepLinkMode = false }) {
+  const botName = botUsername || "Strato_sasistente_crm_bot";
   return (
     <div>
       <div style={{ margin: "0 0 16px", fontSize: 13, color: T.txt2, lineHeight: 1.55 }}>
-        {botUsername ? (
+        {deepLinkMode ? (
           "Te abrimos Telegram. Solo dale START en el bot — listo."
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-            <span>1. Busca en Telegram: <strong>@Strato_sasistente_crm_bot</strong> y presiona <strong>/start</strong></span>
+            <span>1. Busca en Telegram: <strong>@{botName}</strong> y presiona <strong>/start</strong></span>
             <span>2. Da clic en "Generar código" aquí abajo.</span>
             <span>3. Mándale el código al bot.</span>
           </div>
@@ -567,15 +580,16 @@ function NotPairedView({ onConnect, busy, T = P, botUsername = "" }) {
           boxShadow: `0 4px 14px ${T.accent}55`,
         }}
       >
-        {busy ? "Abriendo…" : (botUsername ? "Conectar mi Telegram" : "Generar código")}
+        {busy ? "Abriendo…" : (deepLinkMode ? "Conectar mi Telegram" : "Generar código")}
         {!busy && <ExternalLink size={14} strokeWidth={2.2} />}
       </button>
     </div>
   );
 }
 
-/* ── Vista fallback: sin bot username configurado, mostramos código manual ── */
-function ManualCodeView({ code, T = P, isLight = false }) {
+/* ── Vista flujo manual: código de 8 dígitos + instrucciones /conectar ── */
+function ManualCodeView({ code, T = P, isLight = false, botUsername = "" }) {
+  const botName = botUsername || "Strato_sasistente_crm_bot";
   return (
     <div>
       <p style={{
@@ -601,7 +615,7 @@ function ManualCodeView({ code, T = P, isLight = false }) {
       </div>
 
       <p style={{ margin: "0 0 8px", fontSize: 12.5, color: T.txt2 }}>
-        Abre el bot <strong>@Strato_sasistente_crm_bot</strong> en Telegram y envía:
+        Abre el bot <strong>@{botName}</strong> en Telegram y envía:
       </p>
       <code style={{
         display: "block", padding: "10px 12px",
@@ -614,6 +628,27 @@ function ManualCodeView({ code, T = P, isLight = false }) {
       }}>
         /conectar {code}
       </code>
+
+      {/* Opción extra: si hay bot, ofrecemos abrir Telegram directo con el código
+          prellenado. Es un atajo para quien tenga la app/sesión; el código de
+          arriba sigue siendo el camino principal (funciona en cualquier caso). */}
+      {botUsername && (
+        <button
+          type="button"
+          onClick={() => window.open(`https://t.me/${botUsername}?start=${code}`, "_blank", "noopener,noreferrer")}
+          style={{
+            display: "inline-flex", alignItems: "center", gap: 8,
+            marginTop: 12, padding: "9px 14px", borderRadius: 11,
+            background: "transparent", border: `1px solid ${T.accent}40`,
+            color: T.txt, fontSize: 12.5, fontWeight: 700, fontFamily: fontDisp,
+            cursor: "pointer", transition: "all 0.18s",
+          }}
+        >
+          <Send size={13} strokeWidth={2.2} />
+          Abrir el bot en Telegram
+        </button>
+      )}
+
       <p style={{ margin: "10px 0 0", fontSize: 11, color: T.txt3 }}>
         Esta pantalla se actualiza sola cuando el bot reciba el código.
       </p>
