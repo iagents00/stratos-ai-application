@@ -15,11 +15,54 @@
  * RPCs y tablas relacionadas: ver supabase/migrations/008_*.sql
  */
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Plus, Send, StickyNote, Sparkles } from "lucide-react";
+import { Plus, Send, StickyNote, Sparkles, ExternalLink } from "lucide-react";
 import { P, font, fontDisp } from "../../../design-system/tokens";
 import { supabase } from "../../../lib/supabase";
 import { useAuth } from "../../../hooks/useAuth";
 import { renderMarkdown } from "../../../lib/markdown";
+
+/* ── Detección de links en el texto de una nota ──────────────────────────────
+   Si el usuario pega un link (Drive, PDF, web…), en vez de mostrarlo como texto
+   plano lo renderiza como un botón/chip clickeable que indica a dónde lleva.
+   El resto del texto queda igual. */
+const URL_SPLIT = /(https?:\/\/[^\s]+|www\.[^\s]+)/gi;
+const isUrl = (s) => /^(https?:\/\/|www\.)/i.test(s || "");
+function linkKind(url) {
+  const u = url.toLowerCase();
+  if (u.includes("drive.google") || u.includes("docs.google")) return "Google Drive";
+  if (u.includes("dropbox.com"))   return "Dropbox";
+  if (u.includes("onedrive") || u.includes("sharepoint")) return "OneDrive";
+  if (u.includes("wetransfer"))    return "WeTransfer";
+  if (u.endsWith(".pdf"))          return "PDF";
+  try { return new URL(url.startsWith("http") ? url : `https://${url}`).hostname.replace(/^www\./, ""); }
+  catch { return "Abrir enlace"; }
+}
+function renderNoteText(text, T) {
+  const str = String(text ?? "");
+  if (!URL_SPLIT.test(str)) return str;          // sin links → texto tal cual
+  URL_SPLIT.lastIndex = 0;
+  return str.split(URL_SPLIT).map((part, i) => {
+    if (!part) return null;
+    if (!isUrl(part)) return <span key={i}>{part}</span>;
+    const href = part.startsWith("http") ? part : `https://${part}`;
+    return (
+      <a key={i} href={href} target="_blank" rel="noopener noreferrer"
+         onClick={(e) => e.stopPropagation()}
+         title={href}
+         style={{
+           display: "inline-flex", alignItems: "center", gap: 5, verticalAlign: "middle",
+           margin: "1px 2px", padding: "2px 9px 2px 7px", borderRadius: 7,
+           background: `${T.accent}14`, border: `1px solid ${T.accent}38`,
+           color: T.accent, fontSize: 11.5, fontWeight: 700, fontFamily: font,
+           textDecoration: "none", lineHeight: 1.4, cursor: "pointer",
+           maxWidth: 220, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+         }}>
+        <ExternalLink size={11} strokeWidth={2.4} style={{ flexShrink: 0 }} />
+        {linkKind(part)}
+      </a>
+    );
+  });
+}
 
 const fmtDateTime = (iso) => {
   if (!iso) return "";
@@ -332,7 +375,7 @@ export default function LeadNotesTimeline({ lead, T = P, isLight = false, autoSt
                     fontFamily: font, lineHeight: 1.55,
                     whiteSpace: "pre-wrap", wordBreak: "break-word",
                   }}>
-                    {n.descripcion || "(nota vacía)"}
+                    {renderNoteText(n.descripcion || "(nota vacía)", T)}
                   </p>
                 )}
               </div>

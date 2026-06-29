@@ -119,6 +119,11 @@ export const DEFAULT_CLIENT_CONFIG = {
     // + Perfil + Análisis IA con sección de Tareas visible).
     discoverySimplified: false,
 
+    // "Centro de Agentes IA" (equipo virtual de venta: reactivar/seguimiento/
+    // callcenter/calificar). Default true → se muestra. Clientes que no venden
+    // (ej. Vega: obra/licitaciones) lo apagan con false.
+    aiAgentsPanel: true,
+
     // Sincronización realtime del tablero de prioridad (profiles.crm_prefs).
     // Cuando el bot de Telegram reordena/pinea un cliente, el CRM abierto en el
     // browser pisaba ese cambio al re-guardar su snapshot en memoria

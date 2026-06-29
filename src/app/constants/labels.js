@@ -34,6 +34,9 @@ const DEFAULT_LABELS = {
   pageTitle:             "CRM",
   pageTitleAccent:       "Asesores",
   pageTitleMobile:       "CRM",
+  // Sub-vista que en Stratos se llama "Discovery" (expediente + perfil del lead).
+  discoveryTab:          "Discovery",
+  discoveryTabShort:     "Dyscov.",
 };
 
 const _cfg = (() => {

@@ -4891,6 +4891,8 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
 
       {/* ── CENTRO DE AGENTES IA — equipo virtual que trabaja con los asesores ── */}
       {(() => {
+        // Clientes que no venden (ej. Vega) ocultan el panel de agentes de venta.
+        if (clientConfig?.crm?.aiAgentsPanel === false) return null;
         // Cola por agente, derivada del pipeline real
         const reactivarQueue   = visibleLeads.filter(l => (l.daysInactive || 0) >= 5).sort((a, b) => (b.daysInactive || 0) - (a.daysInactive || 0));
         const seguimientoQueue = visibleLeads.filter(l => ["Segundo Intento", "Seguimiento"].includes(l.st) && !l.hot).sort((a, b) => b.sc - a.sc);

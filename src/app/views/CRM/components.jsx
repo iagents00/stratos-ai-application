@@ -1343,7 +1343,7 @@ const AddPhoneInline = ({ lead, onUpdate, T = P, isLight = false }) => {
 ═══════════════════════════════════════════ */
 const DRAWER_TABS = [
   // Discovery = Expediente + Perfil unificados (el asesor pasa 90% aquí)
-  { id: "discovery", label: "Discovery",  shortLabel: "Dyscov.", colorKey: "blue"   },
+  { id: "discovery", label: L.discoveryTab,  shortLabel: L.discoveryTabShort, colorKey: "blue"   },
   // Análisis IA bloqueado por ahora — se desbloqueará en siguiente etapa
   { id: "analisis",  label: "Análisis IA", shortLabel: "IA",     colorKey: "accent", locked: true, lockReason: "Próximamente" },
 ];
