@@ -105,6 +105,11 @@ const vegaConfig = {
     aiAgentsPanel: false,
     // Expediente como modal centrado casi-fullscreen (no drawer lateral).
     expedienteCentered: true,
+    // Modo PROYECTO (solo Vega): el "cliente" del CRM es un proyecto de obra,
+    // no un lead inmobiliario. En el detalle deja solo Próxima acción +
+    // Expediente y oculta los datos de lead (bloque "Datos generales del
+    // cliente" + el campo de teléfono). Default false → Duke/otros sin cambios.
+    projectMode: true,
 
     // ── Pipeline de OBRAS / LICITACIONES (solo Vega) ──────────────────────────
     // Pocas etapas, las esenciales, alineadas al flujo real que describió
