@@ -126,6 +126,26 @@ export const DEFAULT_CLIENT_CONFIG = {
     // arriba del pipeline. Clientes pueden setear esto a false para preservar
     // la etapa actual en cada lead al reasignar.
     bulkReassignToContactameByDefault: true,
+
+    // Pipeline (etapas del kanban) custom por cliente. Default null → el CRM
+    // usa el pipeline histórico de Duke (STAGES de design-system/tokens). Si un
+    // cliente declara un array, ESE pipeline reemplaza al de Duke SOLO para ese
+    // cliente (resuelto en src/app/constants/pipeline.js al boot). Duke nunca
+    // se ve afectado mientras este campo siga en null.
+    //
+    // Shape: [{ name: string, color: "#RRGGBB" }, ...]
+    // - El orden define las columnas del kanban (izq → der).
+    // - La primera etapa es donde caen los registros nuevos (DEFAULT_STAGE).
+    // - `name` es el string EXACTO que se guarda en leads.stage — n8n debe
+    //   escribir ese mismo string para que el registro caiga en la columna.
+    pipeline: null,
+
+    // Vocabulario del CRM (etiquetas visibles) custom por cliente. Default null
+    // → se usa el vocabulario histórico de Duke (DEFAULT_LABELS en
+    // src/app/constants/labels.js). Un cliente puede declarar solo las claves
+    // que quiera cambiar (ej. Vega: "cliente" → "proyecto"); el resto hereda
+    // Duke. Duke nunca se ve afectado mientras esto siga en null.
+    labels: null,
   },
 };
 
