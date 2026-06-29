@@ -103,8 +103,10 @@ const vegaConfig = {
     // Oculta el "Centro de Agentes IA" (agentes de venta de Stratos: reactivar,
     // seguimiento, callcenter, calificar). No aplica a obra. Default true = se ve.
     aiAgentsPanel: false,
-    // Expediente como modal centrado casi-fullscreen (no drawer lateral).
-    expedienteCentered: true,
+    // Expediente como DRAWER LATERAL derecho (igual que Duke), no modal
+    // centrado. Ricardo/Macarena lo prefieren pegado a la derecha para ver el
+    // tablero detrás. (Antes estaba en true = centrado; se volvió a lateral.)
+    expedienteCentered: false,
     // Modo PROYECTO (solo Vega): el "cliente" del CRM es un proyecto de obra,
     // no un lead inmobiliario. En el detalle deja solo Próxima acción +
     // Expediente y oculta los datos de lead (bloque "Datos generales del
