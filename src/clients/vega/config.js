@@ -93,6 +93,9 @@ const vegaConfig = {
     advisorMetricsTab: true,
     // Discovery simplificado (patrón validado en Duke, Grupo 28 y TGenius).
     discoverySimplified: true,
+    // Oculta el "Centro de Agentes IA" (agentes de venta de Stratos: reactivar,
+    // seguimiento, callcenter, calificar). No aplica a obra. Default true = se ve.
+    aiAgentsPanel: false,
 
     // ── Pipeline de OBRAS / LICITACIONES (solo Vega) ──────────────────────────
     // Pocas etapas, las esenciales, alineadas al flujo real que describió
@@ -137,6 +140,9 @@ const vegaConfig = {
       pageTitle:             "Constructora",
       pageTitleAccent:       "Vega",
       pageTitleMobile:       "Constructora Vega",
+      // El "Discovery" de Stratos acá es el "Expediente" de la obra.
+      discoveryTab:          "Expediente",
+      discoveryTabShort:     "Exped.",
     },
 
     // ── KPIs de arriba del CRM (solo Vega) ────────────────────────────────────
