@@ -24,13 +24,15 @@ import {
   UserCheck, List, SlidersHorizontal, Mail,
   Pencil, Save, Minus, GripVertical, ChevronsDown
 } from "lucide-react";
-import { P, LP, font, fontDisp, STAGES } from "../../../design-system/tokens";
+import { P, LP, font, fontDisp } from "../../../design-system/tokens";
 import { G, KPI, Pill, Ico, ChipSelect } from "../../SharedComponents";
 import { parseBudget, formatBudget, buildTelegramSummary, fmtNow, genId, nowLocalDateTime } from "../../../lib/utils";
 import { zoomEventsOf } from "./zoom-metrics";
 import { StratosAtom, StratosAtomHex } from "../../components/Logo";
 import { AI_AGENTS, AI_AGENT_LIST } from "../../constants/agents";
-import { stgC } from "../../constants/crm";
+// Pipeline + vocabulario activos por cliente (Duke: idéntico; Vega: su pipeline / "proyecto").
+import { STAGES, stgC } from "../../constants/pipeline";
+import { L } from "../../constants/labels";
 import LeadNotesTimeline from "./LeadNotesTimeline";
 import { getEntityHistory, fieldLabel, actionLabel } from "../../../lib/audit";
 import { canTriggerIaActions } from "../../../lib/iagents-actions";
@@ -3747,7 +3749,7 @@ const NotesModal = ({ lead, onClose, onSave, onUpdate, onSwitchTab, onShowHistor
                 {typeof onDelete === 'function' && (
                   <button
                     onClick={() => setConfirmDelete(true)}
-                    title="Eliminar cliente (mover a papelera)"
+                    title={L.deleteEntity}
                     aria-label="Eliminar cliente"
                     style={{
                       width: 32, height: 32, borderRadius: 9,
@@ -4264,7 +4266,7 @@ const LeadPanel = ({ lead, onClose, oc, onUpdate, onSwitchTab, onShowHistory, on
               {typeof onDelete === 'function' && (
                 <button
                   onClick={() => setConfirmDeleteLP(true)}
-                  title="Eliminar cliente (mover a papelera)"
+                  title={L.deleteEntity}
                   aria-label="Eliminar cliente"
                   style={{ width: 30, height: 30, borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.18s" }}
                   onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(239,68,68,0.45)"; e.currentTarget.style.background = "rgba(239,68,68,0.08)"; }}
@@ -4453,7 +4455,7 @@ const LeadPanel = ({ lead, onClose, oc, onUpdate, onSwitchTab, onShowHistory, on
               const accentC = isLight ? `color-mix(in srgb, ${T.accent} 58%, #0B1220 42%)` : T.accent;
               return (
                 <div style={{ padding: "4px 2px" }}>
-                  <p style={{ fontSize: 10, fontWeight: 800, color: T.txt3, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 8, fontFamily: fontDisp }}>Perfil del cliente</p>
+                  <p style={{ fontSize: 10, fontWeight: 800, color: T.txt3, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 8, fontFamily: fontDisp }}>{L.entityProfile}</p>
                   <div style={{
                     fontSize: 12.5, color: T.txt2, lineHeight: 1.7, margin: 0,
                     ...(showBio ? {} : { display: "-webkit-box", WebkitLineClamp: 4, WebkitBoxOrient: "vertical", overflow: "hidden" }),
