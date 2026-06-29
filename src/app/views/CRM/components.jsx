@@ -3501,7 +3501,7 @@ const DiscoveryGeneralData = ({ lead, onUpdate, T = P, isLight = false }) => {
   );
 };
 
-const NotesModal = ({ lead, onClose, onSave, onUpdate, onSwitchTab, onShowHistory, onDelete, asesoresMaster = [], currentUserName = null, discoverySimplified = false, T = P }) => {
+const NotesModal = ({ lead, onClose, onSave, onUpdate, onSwitchTab, onShowHistory, onDelete, asesoresMaster = [], currentUserName = null, discoverySimplified = false, centered = false, T = P }) => {
   const isMobile = useIsMobile();
   const [confirmDelete, setConfirmDelete] = useState(false);
   // Llamadas programadas (Retell) — pendientes para este lead.
@@ -3646,6 +3646,16 @@ const NotesModal = ({ lead, onClose, onSave, onUpdate, onSwitchTab, onShowHistor
         animation: "slideInUp 0.28s cubic-bezier(0.32,0.72,0,1)",
         boxShadow: T === P ? "0 -24px 80px rgba(0,0,0,0.55)" : "0 -16px 60px rgba(15,23,42,0.16)",
         paddingBottom: "env(safe-area-inset-bottom, 0px)",
+      } : centered ? {
+        // ── DESKTOP (centered): modal casi-fullscreen centrado ──
+        position: "fixed", top: "50%", left: "50%", transform: "translate(-50%,-50%)", zIndex: 401,
+        width: "min(960px, 94vw)", height: "min(880px, 90vh)", maxHeight: "90vh",
+        background: T === P ? "#111318" : "#FFFFFF",
+        border: `1px solid ${T.borderH}`,
+        borderRadius: 20,
+        display: "flex", flexDirection: "column", overflow: "hidden",
+        animation: "modalPop 0.26s cubic-bezier(0.32,0.72,0,1)",
+        boxShadow: T === P ? "0 40px 120px rgba(0,0,0,0.62)" : "0 40px 120px rgba(15,23,42,0.18)",
       } : {
         // ── DESKTOP: drawer lateral 460px ──
         position: "fixed", right: 0, top: 0, bottom: 0, zIndex: 401, width: 460,
@@ -3658,6 +3668,7 @@ const NotesModal = ({ lead, onClose, onSave, onUpdate, onSwitchTab, onShowHistor
         <style>{`
           @keyframes slideInRight{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
           @keyframes slideInUp{from{transform:translateY(100%);opacity:0}to{transform:translateY(0);opacity:1}}
+          @keyframes modalPop{from{transform:translate(-50%,-50%) scale(0.97);opacity:0}to{transform:translate(-50%,-50%) scale(1);opacity:1}}
         `}</style>
         {isMobile && (
           /* Drag handle visual — el sheet es full-width así que el handle solo es indicador */

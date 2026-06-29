@@ -137,6 +137,10 @@ export const DEFAULT_CLIENT_CONFIG = {
     // (ej. Vega: obra/licitaciones) lo apagan con false.
     aiAgentsPanel: true,
 
+    // Layout del Expediente (NotesModal) en desktop. Default false → drawer
+    // lateral de 460px (Duke). true → modal centrado casi-fullscreen (Vega).
+    expedienteCentered: false,
+
     // Sincronización realtime del tablero de prioridad (profiles.crm_prefs).
     // Cuando el bot de Telegram reordena/pinea un cliente, el CRM abierto en el
     // browser pisaba ese cambio al re-guardar su snapshot en memoria
