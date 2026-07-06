@@ -99,15 +99,21 @@ Deno.serve(async (req) => {
       if (data && (data as any).sent === true) {
         const recovery_email = (data as any).recovery_email as string;
         const name = ((data as any).name as string) || "";
+        // Timeout duro para no colgar la función si n8n tarda.
+        const ctrl = new AbortController();
+        const timer = setTimeout(() => ctrl.abort(), 12000);
         try {
           const r = await fetch(N8N_WEBHOOK_URL, {
             method: "POST",
             headers: { "content-type": "application/json", "x-recovery-secret": N8N_RECOVERY_SECRET },
             body: JSON.stringify({ recovery_email, code, name, ttl_minutes: CODE_TTL_MINUTES }),
+            signal: ctrl.signal,
           });
           if (!r.ok) console.error("[recovery] n8n webhook status:", r.status);
         } catch (e) {
           console.error("[recovery] n8n webhook failed:", (e as Error).message);
+        } finally {
+          clearTimeout(timer);
         }
       }
     } catch (e) {

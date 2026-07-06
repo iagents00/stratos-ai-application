@@ -58,3 +58,8 @@ export const supabase = createClient(
     },
   }
 )
+
+// URL + anon key resueltas, para llamadas que NO deben pasar por el SDK de auth
+// (p.ej. la recuperación de contraseña: no puede depender del lock de sesión).
+export const SUPABASE_URL = supabaseUrl
+export const SUPABASE_ANON_KEY = supabaseKey
