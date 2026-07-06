@@ -252,7 +252,7 @@ export function AuthProvider({ children }) {
 
     let data, authError;
     if (opts?.isRegister) {
-      ({ data, error: authError } = await signUp(opts.name ?? "", email, password));
+      ({ data, error: authError } = await signUp(opts.name ?? "", email, password, opts.recoveryEmail ?? ""));
     } else {
       ({ data, error: authError } = await signIn(email, password));
     }
