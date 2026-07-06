@@ -99,6 +99,11 @@ export const DEFAULT_CLIENT_CONFIG = {
     // Default OFF — workflow específico de Duke por ahora; otros clientes no
     // ven la pestaña hasta que lo prendan.
     zoomControl: false,
+    // Propiedades: catálogo de proyectos por plaza/rango con links de Drive
+    // (tabla `properties`, migración 055). Reemplaza el Sheet de drives; el
+    // bot de Telegram lo consulta ("top inversiones de Cancún"). Default OFF —
+    // cada cliente lo prende en su config (Duke lo tiene ON).
+    propiedades: false,
   },
 
   // Contacto y soporte

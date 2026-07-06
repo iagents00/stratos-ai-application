@@ -53,6 +53,10 @@ const dukeConfig = {
     // agendados_roles" con un panel CRUD (tabla zoom_agendados, migración 027)
     // dentro de Comando Directivo. Solo admins/director/ceo.
     zoomControl: true,
+    // Propiedades activo en Duke — catálogo de proyectos con links de Drive
+    // (reemplaza el Sheet "DRIVES DUKE DEL CARIBE"). Todo el equipo, asesores
+    // incluidos; el bot de Telegram consulta la misma tabla.
+    propiedades: true,
   },
 
   support: {
