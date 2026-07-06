@@ -17,7 +17,7 @@
  * Workflow:  n8n/workflows/stratos-telegram-bot-v3-asesor.json
  */
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Send, Check, X, ExternalLink, MessageCircle, RefreshCw, User, Bot, Lock, PhoneCall, Globe } from "lucide-react";
+import { Send, Check, X, ExternalLink, MessageCircle, RefreshCw, User, Bot, Lock, PhoneCall, Globe, Mail } from "lucide-react";
 import { P, LP, font, fontDisp } from "../../design-system/tokens";
 import { G, Pill } from "../SharedComponents";
 import { useAuth } from "../../hooks/useAuth";
@@ -85,6 +85,7 @@ export default function Profile({ theme = "dark", T: Tprop }) {
       </div>
 
       <PasswordPanel T={T} isLight={isLight} user={user} />
+      <RecoveryEmailPanel T={T} isLight={isLight} user={user} />
       <SupportPanel T={T} isLight={isLight} clientConfig={clientConfig} />
       <TimezonePanel T={T} isLight={isLight} user={user} />
       <ConnectTelegramPanel T={T} isLight={isLight} botUsername={botUsername} manualPairing={manualPairing} />
@@ -206,6 +207,103 @@ function PasswordPanel({ T = P, isLight = false, user }) {
           {busy ? "Actualizando..." : "Actualizar contrasena"}
         </button>
       </form>
+      {(message || errorMsg) && (
+        <div style={{ marginTop: 12, padding: "10px 12px", borderRadius: 10, fontSize: 12, color: errorMsg ? (isLight ? "#B91C1C" : "#FCA5A5") : (isLight ? "#047857" : "#6EE7C2"), background: errorMsg ? (isLight ? "rgba(225,29,72,0.08)" : "rgba(248,113,113,0.08)") : `${T.accent}12`, border: `1px solid ${errorMsg ? (isLight ? "rgba(225,29,72,0.22)" : "rgba(248,113,113,0.22)") : `${T.accent}2A`}` }}>
+          {errorMsg || message}
+        </div>
+      )}
+    </G>
+  );
+}
+
+/* ─────────────────────────────────────────────────────────────────────── */
+/*  RecoveryEmailPanel — correo REAL de recuperación (para "olvidé mi clave") */
+/* ─────────────────────────────────────────────────────────────────────── */
+
+function RecoveryEmailPanel({ T = P, isLight = false, user }) {
+  const [current, setCurrent] = useState(null);
+  const [draft, setDraft]     = useState("");
+  const [loading, setLoading] = useState(true);
+  const [busy, setBusy]       = useState(false);
+  const [message, setMessage] = useState("");
+  const [errorMsg, setErrorMsg] = useState("");
+  const disabled = user?.isDemo || user?._offline;
+
+  useEffect(() => {
+    let mounted = true;
+    if (disabled) { setLoading(false); return; }
+    supabase.rpc("fn_get_my_recovery_email").then(({ data, error }) => {
+      if (!mounted) return;
+      const val = (!error && data) ? String(data) : "";
+      setCurrent(val || null);
+      setDraft(val || "");
+      setLoading(false);
+    });
+    return () => { mounted = false; };
+  }, [disabled]);
+
+  const save = async () => {
+    setMessage(""); setErrorMsg("");
+    if (disabled) return setErrorMsg("Conéctate a tu cuenta real para configurar el correo de recuperación.");
+    const clean = draft.trim().toLowerCase();
+    if (clean && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(clean)) return setErrorMsg("Ingresa un correo válido.");
+    setBusy(true);
+    const { data, error } = await supabase.rpc("fn_set_my_recovery_email", { p_email: clean });
+    setBusy(false);
+    if (error) return setErrorMsg("No se pudo guardar. Intenta de nuevo.");
+    const saved = data ? String(data) : null;
+    setCurrent(saved);
+    setDraft(saved || "");
+    setMessage(saved ? "Correo de recuperación guardado." : "Correo de recuperación eliminado.");
+  };
+
+  const dirty = draft.trim().toLowerCase() !== (current || "").toLowerCase();
+
+  return (
+    <G T={T} style={{ padding: 24, marginBottom: 18 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 14 }}>
+        <div style={{ width: 40, height: 40, borderRadius: 12, background: `${T.accent}14`, border: `1px solid ${T.accent}2A`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+          <Mail size={18} color={T.accent} strokeWidth={1.9} />
+        </div>
+        <div style={{ minWidth: 0 }}>
+          <h2 style={{ margin: "0 0 2px", fontSize: 17, fontWeight: 600, color: T.txt, fontFamily: fontDisp }}>Correo de recuperación</h2>
+          <p style={{ margin: 0, fontSize: 12, color: T.txt2 }}>
+            Si olvidas tu contraseña, te enviamos un código a este correo. Usa uno al que sí tengas acceso.
+          </p>
+        </div>
+      </div>
+
+      {loading ? (
+        <div style={{ fontSize: 12, color: T.txt3 }}>Cargando…</div>
+      ) : (
+        <>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+            <input
+              type="email"
+              value={draft}
+              onChange={(e) => setDraft(e.target.value)}
+              placeholder="tucorreo@ejemplo.com"
+              autoComplete="email"
+              disabled={disabled || busy}
+              style={{ ...inputStyle(T, isLight), flex: 1, minWidth: 200 }}
+            />
+            <button
+              type="button"
+              onClick={save}
+              disabled={disabled || busy || !dirty}
+              style={{ height: 40, padding: "0 16px", borderRadius: 11, border: "none", background: (disabled || busy || !dirty) ? (isLight ? "rgba(15,23,42,0.08)" : "rgba(255,255,255,0.08)") : T.accent, color: (disabled || busy || !dirty) ? T.txt3 : "#06120E", fontWeight: 800, fontFamily: fontDisp, fontSize: 13, cursor: (disabled || busy || !dirty) ? "not-allowed" : "pointer" }}
+            >
+              {busy ? "Guardando..." : "Guardar"}
+            </button>
+          </div>
+          <div style={{ marginTop: 10, fontSize: 12, color: T.txt3 }}>
+            {current
+              ? <>Actual: <strong style={{ color: T.txt }}>{current}</strong></>
+              : <>Aún no configuras un correo de recuperación.</>}
+          </div>
+        </>
+      )}
+
       {(message || errorMsg) && (
         <div style={{ marginTop: 12, padding: "10px 12px", borderRadius: 10, fontSize: 12, color: errorMsg ? (isLight ? "#B91C1C" : "#FCA5A5") : (isLight ? "#047857" : "#6EE7C2"), background: errorMsg ? (isLight ? "rgba(225,29,72,0.08)" : "rgba(248,113,113,0.08)") : `${T.accent}12`, border: `1px solid ${errorMsg ? (isLight ? "rgba(225,29,72,0.22)" : "rgba(248,113,113,0.22)") : `${T.accent}2A`}` }}>
           {errorMsg || message}
