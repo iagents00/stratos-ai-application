@@ -9,6 +9,7 @@ import { X, CheckCircle2 } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import { pingSupabase } from "../lib/offline-mode";
 import { useClient } from "../hooks/useClient";
+import { requestRecoveryCode, verifyRecoveryCode } from "../lib/recovery";
 
 const font  = `-apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif`;
 const fontD = `-apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif`;
@@ -92,11 +93,13 @@ export default function LoginScreen({ onLogin }) {
     return () => { cancelled = true; };
   }, []);
 
-  const [mode, setMode]       = useState(initialMode); // login | register | forgot | forgot-sent
+  const [mode, setMode]       = useState(initialMode); // login | register | forgot | forgot-code | forgot-done
   const [name, setName]       = useState("");
   const [email, setEmail]     = useState("");
   const [password, setPass]   = useState("");
   const [confirm, setConfirm] = useState("");
+  const [code, setCode]       = useState("");                 // código de recuperación (6 dígitos)
+  const [recoveryEmail, setRecoveryEmail] = useState("");     // correo de recuperación (registro)
   const [showP, setShowP]     = useState(false);
   const [showC, setShowC]     = useState(false);
   const [error, setError]     = useState("");
@@ -129,7 +132,7 @@ export default function LoginScreen({ onLogin }) {
   const strengthColor = ["#E8818C","#F59E0B","#67B7D1","#6EE7C2"][pw - 1] || P.txt3;
   const strengthLabel = ["Muy débil","Débil","Buena","Fuerte"][pw - 1] || "";
 
-  const reset = () => { setName(""); setEmail(""); setPass(""); setConfirm(""); setError(""); };
+  const reset = () => { setName(""); setEmail(""); setPass(""); setConfirm(""); setCode(""); setRecoveryEmail(""); setError(""); };
   const go    = (m) => { setMode(m); reset(); };
 
   const inputStyle = (field, hasErr) => ({
@@ -163,16 +166,33 @@ export default function LoginScreen({ onLogin }) {
     if (password.length < 6) { setError("Mínimo 6 caracteres en la contraseña."); return; }
     if (password !== confirm) { setError("Las contraseñas no coinciden."); return; }
     setLoad(true);
-    const result = await onLogin(email.trim().toLowerCase(), password, { name: name.trim(), isRegister: true });
+    const result = await onLogin(email.trim().toLowerCase(), password, { name: name.trim(), isRegister: true, recoveryEmail: recoveryEmail.trim().toLowerCase() });
     if (result?.error) { setError(result.error); setLoad(false); }
   };
 
-  const doForgot = () => {
+  // Paso 1 — pedir el código de recuperación (se envía al correo de recuperación).
+  const doForgot = async () => {
     setError("");
     if (!email.trim()) { setError("Ingresa tu correo."); return; }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { setError("Correo inválido."); return; }
     setLoad(true);
-    setTimeout(() => { setLoad(false); setMode("forgot-sent"); }, 900);
+    const r = await requestRecoveryCode(email.trim().toLowerCase());
+    setLoad(false);
+    if (r.ok) { setPass(""); setConfirm(""); setCode(""); setError(""); setMode("forgot-code"); }
+    else setError(r.error || "No se pudo enviar el código. Intenta de nuevo.");
+  };
+
+  // Paso 2 — validar el código y fijar la nueva contraseña.
+  const doVerifyCode = async () => {
+    setError("");
+    if (!/^\d{6}$/.test(code.trim())) { setError("Ingresa el código de 6 dígitos que te llegó."); return; }
+    if (password.length < 8) { setError("La nueva contraseña debe tener al menos 8 caracteres."); return; }
+    if (password !== confirm) { setError("Las contraseñas no coinciden."); return; }
+    setLoad(true);
+    const r = await verifyRecoveryCode(email.trim().toLowerCase(), code.trim(), password);
+    setLoad(false);
+    if (r.ok) { setPass(""); setConfirm(""); setCode(""); setError(""); setMode("forgot-done"); }
+    else setError(r.error || "Código incorrecto.");
   };
 
   const doDemo = async () => {
@@ -186,6 +206,7 @@ export default function LoginScreen({ onLogin }) {
     if (mode === "login") doLogin();
     else if (mode === "register") doRegister();
     else if (mode === "forgot") doForgot();
+    else if (mode === "forgot-code") doVerifyCode();
   };
 
   return (
@@ -251,8 +272,8 @@ export default function LoginScreen({ onLogin }) {
       }}>
         <div style={{ width: "100%", maxWidth: 380, animation: "fadeUp 0.35s ease both" }}>
 
-          {/* ─ EMAIL ENVIADO ─ */}
-          {mode === "forgot-sent" ? (
+          {/* ─ CONTRASEÑA ACTUALIZADA ─ */}
+          {mode === "forgot-done" ? (
             <div style={{ textAlign: "center" }}>
               <div style={{
                 width: 60, height: 60, borderRadius: "50%",
@@ -262,21 +283,103 @@ export default function LoginScreen({ onLogin }) {
               }}>
                 <CheckCircle2 size={28} color={P.accent} />
               </div>
-              <h2 style={{ fontSize: 20, fontWeight: 700, color: "#FFFFFF", fontFamily: fontD, marginBottom: 8 }}>Revisa tu correo</h2>
+              <h2 style={{ fontSize: 20, fontWeight: 700, color: "#FFFFFF", fontFamily: fontD, marginBottom: 8 }}>¡Listo!</h2>
               <p style={{ fontSize: 13, color: P.txt2, lineHeight: 1.7, marginBottom: 6 }}>
-                Enviamos un enlace de recuperación a
+                Tu contraseña fue actualizada.
               </p>
-              <p style={{ fontSize: 13, color: "#FFFFFF", fontWeight: 600, marginBottom: 24 }}>{email}</p>
-              <div style={{ padding: "10px 14px", borderRadius: 9, background: P.accentS, border: `1px solid ${P.accentB}`, marginBottom: 20, textAlign: "left" }}>
-                <p style={{ fontSize: 11, color: "rgba(110,231,194,0.8)", lineHeight: 1.6 }}>
-                  Revisa también tu carpeta de spam. El enlace expira en 24 horas.
-                </p>
-              </div>
+              <p style={{ fontSize: 13, color: "#FFFFFF", fontWeight: 600, marginBottom: 24 }}>
+                Ya puedes iniciar sesión con tu nueva contraseña.
+              </p>
               <button onClick={() => go("login")} style={{
-                width: "100%", padding: "11px", borderRadius: 10,
-                border: `1px solid ${P.border}`, background: "rgba(255,255,255,0.04)",
-                color: P.txt, fontSize: 13, fontWeight: 500, fontFamily: font, cursor: "pointer",
-              }}>← Volver al inicio de sesión</button>
+                width: "100%", padding: "12px", borderRadius: 10, border: "none",
+                background: "linear-gradient(135deg, #6EE7C2 0%, #3BC9A8 100%)",
+                color: "#04080F", fontSize: 13, fontWeight: 700, fontFamily: fontD, cursor: "pointer",
+              }}>Ir al inicio de sesión →</button>
+            </div>
+          ) : mode === "forgot-code" ? (
+            <div>
+              <div style={{ marginBottom: 24 }}>
+                <p style={{ fontSize: 11, color: P.accent, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 8 }}>
+                  Recuperar acceso
+                </p>
+                <h2 style={{ fontSize: 24, fontWeight: 700, color: "#FFFFFF", fontFamily: fontD, letterSpacing: "-0.02em" }}>
+                  Ingresa el código
+                </h2>
+              </div>
+
+              <p style={{ fontSize: 13, color: P.txt2, lineHeight: 1.6, marginBottom: 18 }}>
+                Enviamos un código de 6 dígitos a tu correo de recuperación. Escríbelo aquí y elige tu nueva contraseña. El código vence en 15 minutos.
+              </p>
+
+              <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 16 }}>
+                {/* Código */}
+                <div>
+                  <Label text="Código de 6 dígitos" />
+                  <input type="text" inputMode="numeric" maxLength={6} value={code}
+                    onChange={e => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))} onKeyDown={onKey}
+                    onFocus={() => setFocused("code")} onBlur={() => setFocused(null)}
+                    placeholder="000000"
+                    style={{ ...inputStyle("code", false), letterSpacing: "0.35em", textAlign: "center", fontSize: 18, fontWeight: 600 }}
+                    autoComplete="one-time-code" />
+                </div>
+
+                {/* Nueva contraseña */}
+                <div>
+                  <Label text="Nueva contraseña" right={password ? (
+                    <span style={{ fontSize: 10, color: strengthColor, fontWeight: 600, fontFamily: font }}>{strengthLabel}</span>
+                  ) : null} />
+                  <div style={{ position: "relative" }}>
+                    <input type={showP ? "text" : "password"} value={password} onChange={e => setPass(e.target.value)} onKeyDown={onKey}
+                      onFocus={() => setFocused("pass")} onBlur={() => setFocused(null)}
+                      placeholder="Mínimo 8 caracteres"
+                      style={{ ...inputStyle("pass", false), paddingRight: 52 }}
+                      autoComplete="new-password" />
+                    <button type="button" onClick={() => setShowP(s => !s)} style={{
+                      position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)",
+                      background: "none", border: "none", cursor: "pointer",
+                      color: P.txt3, fontSize: 11, fontFamily: font, padding: 0,
+                    }}>{showP ? "Ocultar" : "Ver"}</button>
+                  </div>
+                </div>
+
+                {/* Confirmar nueva contraseña */}
+                <div>
+                  <Label text="Confirmar nueva contraseña" />
+                  <input type={showP ? "text" : "password"} value={confirm} onChange={e => setConfirm(e.target.value)} onKeyDown={onKey}
+                    onFocus={() => setFocused("confirm")} onBlur={() => setFocused(null)}
+                    placeholder="Repite la nueva contraseña"
+                    style={inputStyle("confirm", confirm && password !== confirm)}
+                    autoComplete="new-password" />
+                </div>
+              </div>
+
+              {error && (
+                <div style={{ padding: "10px 13px", borderRadius: 8, background: "rgba(232,129,140,0.07)", border: "1px solid rgba(232,129,140,0.2)", marginBottom: 14 }}>
+                  <p style={{ fontSize: 12, color: "#E8A0A0", fontFamily: font }}>{error}</p>
+                </div>
+              )}
+
+              <button type="button" onClick={doVerifyCode} disabled={loading} style={{
+                width: "100%", padding: "13px 0", borderRadius: 11, border: "none",
+                cursor: loading ? "not-allowed" : "pointer",
+                background: loading ? "rgba(110,231,194,0.25)" : "linear-gradient(135deg, #6EE7C2 0%, #3BC9A8 100%)",
+                color: "#04080F", fontSize: 14, fontWeight: 700, fontFamily: fontD, marginBottom: 12,
+              }}>
+                {loading ? loadingLabel : "Cambiar contraseña →"}
+              </button>
+
+              <div style={{ display: "flex", gap: 8 }}>
+                <button type="button" onClick={doForgot} disabled={loading} style={{
+                  flex: 1, padding: "10px", borderRadius: 10, cursor: loading ? "not-allowed" : "pointer",
+                  border: `1px solid ${P.border}`, background: "transparent",
+                  color: P.txt2, fontSize: 12, fontFamily: font,
+                }}>Reenviar código</button>
+                <button type="button" onClick={() => go("login")} style={{
+                  flex: 1, padding: "10px", borderRadius: 10, cursor: "pointer",
+                  border: `1px solid ${P.border}`, background: "transparent",
+                  color: P.txt2, fontSize: 12, fontFamily: font,
+                }}>← Cancelar</button>
+              </div>
             </div>
           ) : (
             <>
@@ -373,6 +476,14 @@ export default function LoginScreen({ onLogin }) {
                           color: P.txt3, fontSize: 11, fontFamily: font, padding: 0,
                         }}>{showC ? "Ocultar" : "Ver"}</button>
                       </div>
+                    </div>
+
+                    {/* Correo de recuperación (opcional) — a donde llega el código si olvidas la clave */}
+                    <div>
+                      <Label text="Correo de recuperación (opcional)" />
+                      <input type="email" value={recoveryEmail} onChange={e => setRecoveryEmail(e.target.value)} onKeyDown={onKey}
+                        onFocus={() => setFocused("recovery")} onBlur={() => setFocused(null)}
+                        placeholder="Para recuperar tu acceso si olvidas la clave" style={inputStyle("recovery", false)} autoComplete="email" />
                     </div>
                   </div>
 
@@ -494,7 +605,7 @@ export default function LoginScreen({ onLogin }) {
                     onMouseLeave={e => (e.currentTarget.style.boxShadow = loading ? "none" : "0 4px 20px rgba(110,231,194,0.20)")}
                   >
                     {loading ? loadingLabel :
-                      mode === "login" ? "Iniciar sesión →" : "Enviar enlace de recuperación →"}
+                      mode === "login" ? "Iniciar sesión →" : "Enviar código de recuperación →"}
                   </button>
 
                   {/* ─ Volver (forgot) ─ */}
