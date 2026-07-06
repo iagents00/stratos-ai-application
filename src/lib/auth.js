@@ -262,12 +262,17 @@ export async function signIn(email, password) {
   }
 }
 
-export async function signUp(name, email, password) {
+export async function signUp(name, email, password, recoveryEmail = '') {
   try {
+    // El correo de recuperación se guarda en la metadata; el trigger handle_new_user
+    // lo copia a profiles.recovery_email al crear el perfil (migración 055).
+    const meta = { name, role: 'asesor' }
+    const cleanRecovery = String(recoveryEmail || '').trim().toLowerCase()
+    if (cleanRecovery) meta.recovery_email = cleanRecovery
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
-      options: { data: { name, role: 'asesor' } },
+      options: { data: meta },
     })
     if (error) return { data: null, error: error.message }
 
