@@ -94,6 +94,7 @@ import Dash          from "./views/Dash";
 import ComandoDirectivo from "./views/ComandoDirectivo";
 import CRM           from "./views/CRM";
 const ERP           = lazy(() => import("./views/ERP"));
+const Propiedades   = lazy(() => import("./views/Propiedades"));
 const Team          = lazy(() => import("./views/Team"));
 const IACRM         = lazy(() => import("./views/IACRM"));
 const LandingPages  = lazy(() => import("./views/LandingPages"));
@@ -1488,6 +1489,7 @@ export default function App() {
                   {v === "trash"  && <Trash trashedLeads={trashedLeads} onRestore={restoreLead} onHardDelete={hardDeleteLead} onRefresh={refreshTrash} T={T} />}
                   {v === "ia"     && <IACRM oc={oc} T={T} theme={theme} />}
                   {v === "e"      && <ERP oc={oc} T={T} />}
+                  {v === "props"  && <Propiedades T={T} />}
                   {v === "a"      && <Team oc={oc} T={T} />}
                   {v === "lp"     && <LandingPages T={T} />}
                   {v === "fa"     && <FinanzasAdmin T={T} />}
