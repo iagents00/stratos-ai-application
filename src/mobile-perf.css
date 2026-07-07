@@ -1,0 +1,87 @@
+/* ─────────────────────────────────────────────────────────────────────────────
+ * mobile-perf.css — Mitigación del crash de Safari en iPhone
+ * ("Ocurrió un problema varias veces en …/stratos-sales")
+ * ─────────────────────────────────────────────────────────────────────────────
+ * QUÉ PASA: iOS/Safari (WebKit) mata el proceso de la pestaña por presión de
+ * memoria de compositing cuando hay MUCHAS capas con `backdrop-filter: blur`
+ * pesado (la tarjeta base GlassCard usa blur(32px), y hay blur(40/24/20px) por
+ * toda la app) + animaciones continuas que repintan cada frame. Al caerse,
+ * Safari recarga, se vuelve a caer, y muestra esa pantalla. En PC no pasa:
+ * más RAM y otro motor gráfico.
+ *
+ * ESTRATEGIA EN CAPAS (todo por CSS, sin tocar componentes):
+ *   1) Móvil/táctil normal → bajar el radio del blur de vidrio y frenar SOLO
+ *      las animaciones infinitas (las de entrada de una sola vez se conservan).
+ *   2) Pestaña oculta (html[data-hidden]) → pausar animaciones (menos repaint
+ *      en segundo plano). El atributo lo pone el script de index.html.
+ *   3) Modo seguro (html[data-lowfx]) → se activa SOLO si el arranque detectó
+ *      un loop de crash (≥3 recargas en <12s). Quita TODO el blur y las
+ *      animaciones: se ve más plano, pero carga sí o sí con memoria mínima.
+ *
+ * REVERSIBLE: borrar este archivo + su `import "./mobile-perf.css"` en main.jsx
+ * (y opcionalmente el <script> de index.html) deja todo exactamente como estaba.
+ * ───────────────────────────────────────────────────────────────────────────── */
+
+/* ── 1) MÓVIL / TÁCTIL: aliviar memoria sin cambiar el layout ──────────────────
+ * `pointer: coarse` = dedos (iPhone/iPad/Android). El OR con max-width cubre
+ * ventanas chicas y navegadores viejos sin soporte de `pointer`.
+ * Las PC con mouse quedan intactas (siguen con el diseño full). */
+@media (pointer: coarse), (max-width: 820px) {
+  /* Bajar el blur de TODA capa de vidrio. El selector [style*="backdrop-filter"]
+     matchea los estilos inline de React (GlassCard y demás) — ahí está el 90%
+     del costo. 32/40/24px → 4px: se mantiene el efecto "frost" pero el backing
+     store que iOS tiene que guardar por capa es mínimo. */
+  [style*="backdrop-filter"],
+  [style*="backdropFilter"],
+  [style*="blur("][style*="backdrop"],
+  .glass,
+  [data-glass] {
+    backdrop-filter: blur(4px) !important;
+    -webkit-backdrop-filter: blur(4px) !important;
+  }
+
+  /* Frenar SOLO animaciones continuas: los estilos inline continuos contienen
+     "infinite" (ej. priorityBreathe con box-shadow, orbitSmart/orbitColor).
+     Las animaciones de entrada de una sola vez (fadeInUp/scaleIn "… both") NO
+     llevan "infinite", así que NO se matchean y siguen corriendo normal. */
+  [style*="infinite"] {
+    animation: none !important;
+  }
+
+  /* Respeto extra a quien pidió menos movimiento a nivel sistema. */
+  @media (prefers-reduced-motion: reduce) {
+    [style*="animation"] { animation: none !important; }
+  }
+}
+
+/* ── 2) PESTAÑA OCULTA: pausar (no resetear) animaciones ───────────────────────
+ * `animation-play-state: paused` congela sin perder el estado. Baja el repaint
+ * cuando la app está en segundo plano (otra pestaña/app), que es cuando iOS más
+ * agresivamente reclama memoria. El atributo data-hidden lo togglea el script. */
+html[data-hidden] *,
+html[data-hidden] *::before,
+html[data-hidden] *::after {
+  animation-play-state: paused !important;
+}
+
+/* ── 3) MODO SEGURO (html[data-lowfx]): red anti-crash ─────────────────────────
+ * Se enciende solo cuando el arranque detectó un loop de crash. Reducción máxima
+ * de memoria: sin blur (se quita la capa entera, no solo el radio), sin
+ * animaciones, sin transiciones ni will-change. Fondo un poco más sólido para
+ * que las tarjetas sigan siendo legibles sin el blur. */
+html[data-lowfx] [style*="backdrop-filter"],
+html[data-lowfx] [style*="backdropFilter"],
+html[data-lowfx] .glass,
+html[data-lowfx] [data-glass] {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  background-color: rgba(9, 18, 37, 0.72) !important;
+}
+
+html[data-lowfx] *,
+html[data-lowfx] *::before,
+html[data-lowfx] *::after {
+  animation: none !important;
+  transition: none !important;
+  will-change: auto !important;
+}
