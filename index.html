@@ -55,6 +55,45 @@
   </head>
   <body>
     <div id="root"></div>
+    <!-- ─── Mitigación de crash en Safari iOS ("Ocurrió un problema varias
+         veces") ───
+         Corre ANTES de la app. Solo pone atributos en <html> que consume
+         mobile-perf.css; NUNCA recarga (no crea loops).
+           · data-hidden  → pausa animaciones cuando la pestaña está oculta.
+           · data-lowfx   → "modo seguro": si la pestaña se cae y recarga ≥3
+                            veces en <12s (firma del crash-loop de iOS),
+                            quitamos blur + animaciones para que cargue con
+                            memoria mínima. Se auto-desactiva al dejar de
+                            recargarse. -->
+    <script>
+      (function () {
+        var el = document.documentElement;
+
+        // Pausar animaciones cuando la pestaña no está visible (menos repaint
+        // en segundo plano → menos presión de memoria en iOS).
+        function syncHidden() {
+          if (document.hidden) el.setAttribute("data-hidden", "1");
+          else el.removeAttribute("data-hidden");
+        }
+        document.addEventListener("visibilitychange", syncHidden);
+        syncHidden();
+
+        // Detector de loop de crash: cuenta recargas recientes en sessionStorage
+        // (sobrevive a la recarga de la misma pestaña). ≥3 en <12s → modo seguro.
+        try {
+          var KEY = "stratos_reload_ticks";
+          var now = Date.now();
+          var ticks = [];
+          try { ticks = JSON.parse(sessionStorage.getItem(KEY) || "[]"); } catch (e) {}
+          if (!Array.isArray(ticks)) ticks = [];
+          ticks.push(now);
+          ticks = ticks.filter(function (t) { return now - t < 12000; });
+          try { sessionStorage.setItem(KEY, JSON.stringify(ticks)); } catch (e) {}
+          if (ticks.length >= 3) el.setAttribute("data-lowfx", "1");
+        } catch (e) { /* sin sessionStorage → el modo seguro no auto-activa;
+                         la reducción de blur de móvil (CSS puro) igual aplica. */ }
+      })();
+    </script>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
