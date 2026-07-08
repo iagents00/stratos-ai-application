@@ -7,7 +7,8 @@ import { createPortal } from "react-dom";
 import {
   TrendingUp, Target, Plus, Heart, Users, Crown, Building2,
   Globe, Palmtree, Waves, Wand2, Image, Download, ExternalLink,
-  Copy, Check, Trash2, ChevronDown, ChevronRight, Eye, Share2,
+  Copy, Check, Trash2, ChevronDown, ChevronRight, ChevronUp, Eye, Share2,
+  ArrowRight, CheckCircle2,
   DollarSign, Shield, MapPin, FileText, X, Phone, CalendarDays, User
 } from "lucide-react";
 import { P, font, fontDisp } from "../../../design-system/tokens";
