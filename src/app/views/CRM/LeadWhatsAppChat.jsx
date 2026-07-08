@@ -28,7 +28,7 @@
  * ─────────────────────────────────────────────────────────────────────────────
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { MessageCircle, Send, Clock, AlertTriangle, RefreshCw, Lock, Paperclip, X, FileText, Download } from "lucide-react";
+import { MessageCircle, Send, Clock, AlertTriangle, RefreshCw, Lock, Paperclip, X, FileText, Download, Mic, Square } from "lucide-react";
 import { P, font, fontDisp } from "../../../design-system/tokens";
 import { supabase } from "../../../lib/supabase";
 import { useAuth } from "../../../hooks/useAuth";
@@ -98,6 +98,15 @@ function MediaAttachment({ m, T, isLight }) {
 const POLL_MS = 20000;
 const REALTIME_DEBOUNCE_MS = 300;
 const NEAR_BOTTOM_PX = 90;
+/** Tope de una nota de voz (5 min ≈ un audio largo de WhatsApp). */
+const REC_MAX_SECS = 300;
+
+/* Formatos de grabación en orden de preferencia. Meta/WhatsApp acepta
+   audio/mp4 (AAC) y audio/ogg (opus); audio/webm queda de último recurso
+   (llega como archivo). Chrome moderno soporta audio/mp4; Firefox, ogg. */
+const REC_MIME_CANDIDATES = ["audio/mp4", "audio/ogg;codecs=opus", "audio/webm;codecs=opus", "audio/webm"];
+
+const fmtRecSecs = (s) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
 
 const fmtTime = (iso) => {
   if (!iso) return "";
@@ -127,6 +136,12 @@ export default function LeadWhatsAppChat({ lead, T = P, isLight = false, threadM
   const [sendError, setSendError] = useState(null);
   const [retrying, setRetrying] = useState(null); // outboxId en reintento
   const [pendingFile, setPendingFile] = useState(null); // File por enviar
+  const [recording, setRecording] = useState(false);
+  const [recordSecs, setRecordSecs] = useState(0);
+  const recorderRef = useRef(null);   // MediaRecorder activo
+  const recordTimerRef = useRef(null);
+  const recBusyRef = useRef(false);   // getUserMedia en vuelo (anti doble-click)
+  const mountedRef = useRef(true);
   const fileInputRef = useRef(null);
   const scrollRef = useRef(null);
   const nearBottomRef = useRef(true);
@@ -231,9 +246,124 @@ export default function LeadWhatsAppChat({ lead, T = P, isLight = false, threadM
     setPendingFile(f);
   }, []);
 
+  /* ── Nota de voz (grabar con el micrófono, como WhatsApp) ──────────────── */
+  const stopRecTracks = (rec) => {
+    try { rec?.stream?.getTracks?.().forEach((t) => t.stop()); } catch { /* ya cerrado */ }
+  };
+
+  // Termina la grabación y ADJUNTA el audio (onstop arma el File → pendingFile).
+  const finishRecording = useCallback(() => {
+    const rec = recorderRef.current;
+    recorderRef.current = null; // libre para una nueva grabación; onstop usa su closure
+    if (recordTimerRef.current) { clearInterval(recordTimerRef.current); recordTimerRef.current = null; }
+    setRecording(false);
+    setRecordSecs(0);
+    try { if (rec && rec.state !== "inactive") rec.stop(); } catch { /* ya parado */ }
+  }, []);
+
+  // Descarta la grabación sin adjuntar (flag de cancelado en el recorder).
+  const cancelRecording = useCallback(() => {
+    const rec = recorderRef.current;
+    recorderRef.current = null;
+    if (recordTimerRef.current) { clearInterval(recordTimerRef.current); recordTimerRef.current = null; }
+    setRecording(false);
+    setRecordSecs(0);
+    if (rec) rec.__cancelled = true;
+    try { if (rec && rec.state !== "inactive") rec.stop(); } catch { /* ya parado */ }
+    stopRecTracks(rec);
+  }, []);
+
+  const startRecording = useCallback(async () => {
+    // recBusyRef cubre la ventana del await (doble-click / carrera con unmount):
+    // `recording` recién se prende DESPUÉS de que getUserMedia resuelve.
+    if (recording || sending || recBusyRef.current) return;
+    recBusyRef.current = true;
+    setSendError(null);
+    let stream;
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    } catch {
+      recBusyRef.current = false;
+      if (mountedRef.current) setSendError("Sin permiso de micrófono — dale permiso en el candado de la barra del navegador");
+      return;
+    }
+    // Si el chat se desmontó mientras el usuario respondía el permiso: soltar
+    // el micrófono YA (nunca dejar la luz roja prendida en un componente muerto).
+    if (!mountedRef.current) {
+      try { stream.getTracks().forEach((t) => t.stop()); } catch { /* noop */ }
+      recBusyRef.current = false;
+      return;
+    }
+    const mime = (window.MediaRecorder &&
+      REC_MIME_CANDIDATES.find((m) => MediaRecorder.isTypeSupported(m))) || "";
+    let rec;
+    try {
+      rec = new MediaRecorder(stream, mime ? { mimeType: mime } : undefined);
+    } catch {
+      stream.getTracks().forEach((t) => t.stop());
+      recBusyRef.current = false;
+      setSendError("Este navegador no soporta grabar audio");
+      return;
+    }
+    const chunks = []; // POR grabación (closure) — dos grabaciones nunca se mezclan
+    rec.ondataavailable = (e) => { if (e.data && e.data.size > 0) chunks.push(e.data); };
+    rec.onstop = () => {
+      stopRecTracks(rec);
+      if (rec.__cancelled || chunks.length === 0) return;
+      const fullType = rec.mimeType || mime || "audio/webm";
+      const baseType = fullType.split(";")[0];
+      const ext = baseType === "audio/mp4" ? "m4a" : baseType === "audio/ogg" ? "ogg" : "webm";
+      const d = new Date();
+      const hhmmss = [d.getHours(), d.getMinutes(), d.getSeconds()].map((n) => String(n).padStart(2, "0")).join("");
+      const file = new File(chunks, `nota-de-voz-${hhmmss}.${ext}`, { type: baseType });
+      if (!mountedRef.current) return; // nada de setState en un componente muerto
+      if (file.size > WA_MEDIA_MAX_BYTES) { setSendError("El audio supera 16MB"); return; }
+      setPendingFile(file); // entra al MISMO camino de envío que un adjunto
+    };
+    recorderRef.current = rec;
+    setRecording(true);
+    setRecordSecs(0);
+    recBusyRef.current = false;
+    rec.start(250);
+    recordTimerRef.current = setInterval(() => {
+      setRecordSecs((s) => {
+        const next = s + 1;
+        if (next >= REC_MAX_SECS) queueMicrotask(finishRecording); // tope 5 min
+        return next;
+      });
+    }, 1000);
+  }, [recording, sending, finishRecording]);
+
+  // Al desmontar: soltar el micrófono SIEMPRE (nunca dejar la luz roja prendida).
+  useEffect(() => () => {
+    mountedRef.current = false;
+    const rec = recorderRef.current;
+    recorderRef.current = null;
+    if (recordTimerRef.current) clearInterval(recordTimerRef.current);
+    if (rec) rec.__cancelled = true;
+    try { if (rec && rec.state !== "inactive") rec.stop(); } catch { /* ya parado */ }
+    stopRecTracks(rec);
+  }, []);
+
+  // Si el composer desaparece a mitad de grabación (p.ej. la ventana de 24h se
+  // cerró en un refetch), NO dejar el micrófono grabando sin controles visibles.
+  useEffect(() => {
+    if (recording && !canSend) cancelRecording();
+  }, [recording, canSend, cancelRecording]);
+
+  // Preview del adjunto pendiente cuando es audio (escucharlo antes de enviar).
+  // Object URL con ciclo de vida en un EFFECT (crear+revocar en pareja).
+  const [pendingUrl, setPendingUrl] = useState(null);
+  useEffect(() => {
+    if (!pendingFile || !pendingFile.type?.startsWith("audio/")) { setPendingUrl(null); return; }
+    const url = URL.createObjectURL(pendingFile);
+    setPendingUrl(url);
+    return () => { URL.revokeObjectURL(url); };
+  }, [pendingFile]);
+
   const handleSend = useCallback(async () => {
     const clean = draft.trim();
-    if ((!clean && !pendingFile) || sending || !canSend) return;
+    if ((!clean && !pendingFile) || sending || !canSend || recording) return;
     setSending(true);
     setSendError(null);
 
@@ -272,7 +402,7 @@ export default function LeadWhatsAppChat({ lead, T = P, isLight = false, threadM
     if (!ping.ok) {
       setSendError(`El disparo falló (${ping.error}) — usa "reintentar" en el mensaje`);
     }
-  }, [draft, pendingFile, sending, canSend, lead?.id, orgId, conversationId, user?.name]);
+  }, [draft, pendingFile, sending, canSend, recording, lead?.id, orgId, conversationId, user?.name]);
 
   const handleRetry = useCallback(async (outboxId) => {
     setRetrying(outboxId);
@@ -482,8 +612,9 @@ export default function LeadWhatsAppChat({ lead, T = P, isLight = false, threadM
           {/* Composer / aviso de ventana */}
           {canSend ? (
             <div style={{ marginTop: 10 }}>
-              {/* Chip del archivo elegido (aún no enviado) */}
-              {pendingFile && (
+              {/* Chip del archivo elegido (aún no enviado) — el audio se puede
+                  escuchar antes de mandarlo */}
+              {pendingFile && !recording && (
                 <div
                   style={{
                     display: "flex", alignItems: "center", gap: 8, marginBottom: 8,
@@ -492,10 +623,19 @@ export default function LeadWhatsAppChat({ lead, T = P, isLight = false, threadM
                     border: `1px solid ${outBd}`,
                   }}
                 >
-                  <Paperclip size={13} color={accentStrong} style={{ flexShrink: 0 }} />
-                  <span style={{ flex: 1, minWidth: 0, fontSize: 12, color: T.txt, fontFamily: font, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                    {pendingFile.name}
-                  </span>
+                  {pendingUrl ? (
+                    <>
+                      <Mic size={13} color={accentStrong} style={{ flexShrink: 0 }} />
+                      <audio controls preload="metadata" src={pendingUrl} style={{ flex: 1, minWidth: 0, height: 32 }} />
+                    </>
+                  ) : (
+                    <>
+                      <Paperclip size={13} color={accentStrong} style={{ flexShrink: 0 }} />
+                      <span style={{ flex: 1, minWidth: 0, fontSize: 12, color: T.txt, fontFamily: font, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        {pendingFile.name}
+                      </span>
+                    </>
+                  )}
                   <span style={{ fontSize: 10, color: subC, fontFamily: font, flexShrink: 0 }}>
                     {(pendingFile.size / 1024).toFixed(0)} KB
                   </span>
@@ -505,6 +645,46 @@ export default function LeadWhatsAppChat({ lead, T = P, isLight = false, threadM
                     style={{ background: "transparent", border: "none", cursor: "pointer", padding: 2, display: "flex", flexShrink: 0 }}
                   >
                     <X size={13} color={T.txt3} />
+                  </button>
+                </div>
+              )}
+
+              {/* Barra de grabación en curso */}
+              {recording && (
+                <div
+                  style={{
+                    display: "flex", alignItems: "center", gap: 10, marginBottom: 8,
+                    padding: "8px 12px", borderRadius: 9,
+                    background: "rgba(239,68,68,0.07)", border: "1px solid rgba(239,68,68,0.30)",
+                  }}
+                >
+                  <span style={{ width: 9, height: 9, borderRadius: "50%", background: "#EF4444", flexShrink: 0, animation: "pulse 1.2s ease-in-out infinite" }} />
+                  <span style={{ flex: 1, fontSize: 12, fontWeight: 700, color: isLight ? "#B91C1C" : "#FCA5A5", fontFamily: fontDisp }}>
+                    Grabando nota de voz · {fmtRecSecs(recordSecs)}
+                  </span>
+                  <button
+                    onClick={cancelRecording}
+                    title="Descartar grabación"
+                    style={{
+                      display: "inline-flex", alignItems: "center", gap: 4, padding: "4px 10px",
+                      borderRadius: 7, cursor: "pointer", background: "transparent",
+                      border: `1px solid ${isLight ? "rgba(15,23,42,0.14)" : "rgba(255,255,255,0.14)"}`,
+                      color: T.txt2, fontSize: 11, fontWeight: 600, fontFamily: font,
+                    }}
+                  >
+                    <X size={11} /> Cancelar
+                  </button>
+                  <button
+                    onClick={finishRecording}
+                    title="Terminar y adjuntar"
+                    style={{
+                      display: "inline-flex", alignItems: "center", gap: 4, padding: "4px 10px",
+                      borderRadius: 7, cursor: "pointer", border: "none",
+                      background: "#EF4444", color: "#FFF",
+                      fontSize: 11, fontWeight: 700, fontFamily: font,
+                    }}
+                  >
+                    <Square size={10} /> Listo
                   </button>
                 </div>
               )}
@@ -549,8 +729,23 @@ export default function LeadWhatsAppChat({ lead, T = P, isLight = false, threadM
                   onFocus={(e) => { e.currentTarget.style.borderColor = T.borderH || T.accent; }}
                   onBlur={(e) => { e.currentTarget.style.borderColor = T.border; }}
                 />
+                <button
+                  onClick={recording ? finishRecording : startRecording}
+                  disabled={sending}
+                  title={recording ? "Terminar grabación" : "Grabar nota de voz"}
+                  style={{
+                    display: "inline-flex", alignItems: "center", justifyContent: "center",
+                    width: 38, height: 38, borderRadius: 9, flexShrink: 0,
+                    background: recording ? "rgba(239,68,68,0.14)" : (isLight ? "rgba(15,23,42,0.04)" : "rgba(255,255,255,0.04)"),
+                    border: `1px solid ${recording ? "rgba(239,68,68,0.45)" : T.border}`,
+                    color: recording ? "#EF4444" : T.txt2,
+                    cursor: sending ? "default" : "pointer",
+                  }}
+                >
+                  {recording ? <Square size={14} /> : <Mic size={15} />}
+                </button>
                 {(() => {
-                  const active = (draft.trim() || pendingFile) && !sending;
+                  const active = (draft.trim() || pendingFile) && !sending && !recording;
                   return (
                     <button
                       onClick={handleSend}

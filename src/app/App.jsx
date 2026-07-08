@@ -258,6 +258,46 @@ export default function App() {
     setWaOpenLead({ id: leadId, ts: Date.now() });
     setBellOpen(false);
   }, []);
+  // Click en el nombre del cliente en la bandeja de WhatsApp → abre su
+  // EXPEDIENTE en el CRM (mismo panel que un click en la fila del CRM).
+  const [crmAutoOpenLead, setCrmAutoOpenLead] = useState(null); // {id, ts}
+  const openLeadExpediente = useCallback((leadId) => {
+    if (!leadId) return;
+    setV("c");
+    setCrmAutoOpenLead({ id: leadId, ts: Date.now() });
+  }, []);
+
+  // ── Notificaciones de WhatsApp ────────────────────────────────────────────
+  // (a) Contador en el título de la pestaña: "(3) Stratos AI" — se ve aunque
+  //     la asesora esté en otra pestaña. (b) Notificación nativa del navegador
+  //     cuando entra un mensaje y NO está mirando la bandeja.
+  const baseTitleRef = useRef(typeof document !== "undefined" ? document.title : "Stratos AI");
+  useEffect(() => {
+    document.title = waUnread > 0
+      ? `(${waUnread > 99 ? "99+" : waUnread}) ${baseTitleRef.current}`
+      : baseTitleRef.current;
+    return () => { document.title = baseTitleRef.current; };
+  }, [waUnread]);
+
+  const waPrevUnreadRef = useRef(0);
+  useEffect(() => {
+    const prev = waPrevUnreadRef.current;
+    waPrevUnreadRef.current = waUnread;
+    if (!waEnabled || waUnread <= prev) return;
+    // Solo avisar si NO está viendo la bandeja (otra vista o pestaña oculta).
+    if (v === "wa" && !document.hidden) return;
+    try {
+      if (typeof Notification === "undefined") return;
+      if (Notification.permission === "default") { Notification.requestPermission(); return; }
+      if (Notification.permission !== "granted") return;
+      const n = new Notification("WhatsApp · Stratos CRM", {
+        body: `${waUnread} mensaje${waUnread !== 1 ? "s" : ""} de cliente${waUnread !== 1 ? "s" : ""} sin leer`,
+        tag: "stratos-wa-unread", // reemplaza el aviso anterior, no apila
+      });
+      n.onclick = () => { try { window.focus(); setV("wa"); n.close(); } catch { /* noop */ } };
+    } catch { /* sin soporte/permiso de Notification — el badge de la campana sigue */ }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [waUnread, waEnabled]);
 
   /* ── Theme ── */
   const [theme, setThemeState] = useState(() => {
@@ -1612,8 +1652,8 @@ export default function App() {
                   {v === "d"      && (clientConfig?.features?.comandoDirectivo
                     ? <ComandoDirectivo leadsData={leadsData} T={T} theme={theme} />
                     : <Dash oc={oc} leadsData={leadsData} T={T} />)}
-                  {v === "c"      && <CRM oc={oc} leadsData={leadsData} setLeadsData={setLeadsData} theme={theme} setTheme={setTheme} autoOpenPriority1={autoOpenPriority1} onAutoOpenHandled={() => setAutoOpenPriority1(0)} softDeleteLead={softDeleteLead} />}
-                  {v === "wa"     && canAccessModule("wa", user, clientConfig) && <WhatsAppInbox T={T} isLight={isLight} inbox={waInbox} openLead={waOpenLead} />}
+                  {v === "c"      && <CRM oc={oc} leadsData={leadsData} setLeadsData={setLeadsData} theme={theme} setTheme={setTheme} autoOpenPriority1={autoOpenPriority1} onAutoOpenHandled={() => setAutoOpenPriority1(0)} softDeleteLead={softDeleteLead} autoOpenLead={crmAutoOpenLead} onAutoOpenLeadHandled={() => setCrmAutoOpenLead(null)} />}
+                  {v === "wa"     && canAccessModule("wa", user, clientConfig) && <WhatsAppInbox T={T} isLight={isLight} inbox={waInbox} openLead={waOpenLead} openExpediente={openLeadExpediente} />}
                   {v === "trash"  && <Trash trashedLeads={trashedLeads} onRestore={restoreLead} onHardDelete={hardDeleteLead} onRefresh={refreshTrash} T={T} />}
                   {v === "ia"     && <IACRM oc={oc} T={T} theme={theme} />}
                   {v === "e"      && <ERP oc={oc} T={T} />}

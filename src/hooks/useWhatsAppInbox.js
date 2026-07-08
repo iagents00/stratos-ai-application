@@ -47,8 +47,10 @@ export function useWhatsAppInbox({ enabled }) {
 
     // Cliente escribió (o llegó cualquier mensaje) → refrescar la bandeja.
     // La RLS de realtime entrega a cada usuario solo lo que puede ver.
+    // OJO: NO se pausa con la pestaña oculta — es justo cuando el contador del
+    // título y la notificación nativa tienen que dispararse (un refetch
+    // debounced disparado por evento es barato; el POLL sí queda pausado).
     const onWaMessage = () => {
-      if (document.hidden) return;
       if (debounceTimer) clearTimeout(debounceTimer);
       debounceTimer = setTimeout(load, DEBOUNCE_MS);
     };
