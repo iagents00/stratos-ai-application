@@ -150,7 +150,10 @@
 //   (tab Chat): hilo real espejado desde Chatwoot (whatsapp_messages) +
 //   composer para responder desde el CRM (whatsapp_outbox → n8n → Chatwoot).
 //   Feature flag `whatsappChat` (solo Duke). Ventana 24h de Meta respetada.
-const CACHE_VERSION = 'stratos-v85';
+// v86 — fix(whatsapp): el chat en vivo también se monta en el panel de notas
+//   (NotesModal) — Duke usa discoverySimplified, así que el click en el lead
+//   abre ESE panel y no el LeadPanel con tabs; el chat no se veía.
+const CACHE_VERSION = 'stratos-v86';
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 
