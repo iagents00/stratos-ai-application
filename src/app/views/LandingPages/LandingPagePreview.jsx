@@ -8,9 +8,10 @@ import {
   Globe, Palmtree, Waves, Wand2, Image, Download, ExternalLink,
   Copy, Check, Trash2, ChevronDown, ChevronRight, Eye, Share2,
   DollarSign, Shield, MapPin, FileText, X, Phone, CalendarDays, User,
-  Calendar, Home, Maximize2,
+  Calendar, Home, Maximize2, CheckCircle2,
 } from "lucide-react";
 import { P, font, fontDisp } from "../../../design-system/tokens";
+import { StratosAtom } from "../../../design-system/primitives";
 import { G, KPI, Pill, Ico } from "../../SharedComponents";
 
 const LandingPagePreview = ({ client, asesor, asesorWA = "", asesorCal = "", mensaje, agencyName = "STRATOS REALTY", properties, onClose, onCopyLink, copied, driveLinks = {}, T = P }) => {
