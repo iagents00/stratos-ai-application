@@ -188,3 +188,9 @@ BEGIN
   );
 END;
 $function$;
+
+-- SECURITY DEFINER de escritura a prod: SOLO service_role (n8n) puede
+-- ejecutarla. Sin este REVOKE, anon/authenticated podían crear/reasignar
+-- leads de Duke saltando RLS (hallazgo ALTA de la revisión — ver 073).
+REVOKE ALL ON FUNCTION public.fn_upsert_lead_from_chatwoot_asesor(jsonb, text)
+  FROM PUBLIC, anon, authenticated;
