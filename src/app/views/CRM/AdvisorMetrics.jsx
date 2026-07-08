@@ -16,7 +16,7 @@
 import { useCallback, useMemo, useState } from "react";
 import { Users, Phone, BadgeCheck, CalendarDays, CheckCircle2, Activity, RefreshCw } from "lucide-react";
 import { P, LP, font, fontDisp, STAGES, normalizeStage } from "../../../design-system/tokens";
-import { zoomEventsOf, funnelEntryOf, ACTIVE_POST_ZOOM_STAGES, isHiddenAdvisor } from "./zoom-metrics";
+import { zoomEventsOf, funnelEntryOf, ACTIVE_POST_ZOOM_STAGES, advisorDisplayGroup, INACTIVE_ADVISOR_GROUP } from "./zoom-metrics";
 import DateRangeControl from "./DateRangeControl";
 import { createDefaultDateFilter, resolveDateRange, timestampInRange } from "./date-range";
 
@@ -109,8 +109,11 @@ export default function AdvisorMetrics({ leadsData = [], theme = "dark", onOpenL
   // lo llevó a esa fase). El crédito va a `by` (quién lo dio), no al dueño hoy.
   const zoomAgg = useMemo(() => {
     const map = {}; // person -> { scheduled: [at...], done: [at...] }
-    const push = (person, bucket, at) => {
-      if (!person || isHiddenAdvisor(person)) return;
+    // Las cuentas ocultas se agrupan bajo INACTIVE_ADVISOR_GROUP: sus Zooms son
+    // reales y cuentan en los totales, solo se colapsan como una fila.
+    const push = (rawPerson, bucket, at) => {
+      if (!rawPerson) return;
+      const person = advisorDisplayGroup(rawPerson);
       (map[person] = map[person] || { scheduled: [], done: [] })[bucket].push(at);
     };
     for (const l of leadsData) {
@@ -135,19 +138,24 @@ export default function AdvisorMetrics({ leadsData = [], theme = "dark", onOpenL
 
   // Lista de asesores: dueños actuales ∪ quienes tienen crédito de Zoom (un
   // presentador puede ya no tener leads propios pero sí Zooms acreditados).
+  // Las cuentas ocultas aparecen colapsadas como una sola fila al final.
   const asesores = useMemo(() => {
     const set = new Set([
-      ...leadsData.map(l => l.asesor).filter(Boolean),
+      ...leadsData.map(l => l.asesor).filter(Boolean).map(advisorDisplayGroup),
       ...Object.keys(zoomAgg),
     ]);
-    return [...set].filter(a => !isHiddenAdvisor(a)).sort((a, b) => a.localeCompare(b, "es"));
+    return [...set].sort((a, b) => {
+      if (a === INACTIVE_ADVISOR_GROUP) return 1;
+      if (b === INACTIVE_ADVISOR_GROUP) return -1;
+      return a.localeCompare(b, "es");
+    });
   }, [leadsData, zoomAgg]);
 
   // Filas: { asesor, metrics: { key: number } }
   const rows = useMemo(() => {
     return asesores.map(asesor => {
       const leadsOfAsesor = leadsData.filter(l =>
-        l.asesor === asesor && timestampInRange(l.created_at, dateRange)
+        advisorDisplayGroup(l.asesor) === asesor && timestampInRange(l.created_at, dateRange)
       );
       const metrics = {};
       for (const ind of INDICATORS) metrics[ind.key] = ind.compute(leadsOfAsesor);
@@ -158,9 +166,10 @@ export default function AdvisorMetrics({ leadsData = [], theme = "dark", onOpenL
     });
   }, [asesores, countZoom, dateRange, leadsData]);
 
-  // Totales del equipo (fila TOTAL al pie).
+  // Totales del equipo (fila TOTAL al pie) — TODO el pipeline del período,
+  // incluidas las cuentas inactivas, para cuadrar con el CRM y con el Comando.
   const totals = useMemo(() => {
-    const leadsInPeriod = leadsData.filter(l => timestampInRange(l.created_at, dateRange) && !isHiddenAdvisor(l.asesor));
+    const leadsInPeriod = leadsData.filter(l => timestampInRange(l.created_at, dateRange));
     const t = {};
     for (const ind of INDICATORS) t[ind.key] = ind.compute(leadsInPeriod);
     // Zooms: suma de todos los eventos del período (todas las personas).
@@ -270,7 +279,7 @@ export default function AdvisorMetrics({ leadsData = [], theme = "dark", onOpenL
       </div>
 
       <p style={{ margin: "10px 4px 0", fontSize: 10.5, color: T.txt3, fontFamily: font, lineHeight: 1.5 }}>
-        Asignados / Contactados / Calificados / Activos se filtran por fecha de creación del lead y reflejan su etapa actual. Las columnas <strong>Zooms Ag./Real.</strong> son históricas: cuentan cada lead que alguna vez pasó por esa fase (aunque hoy esté en otra etapa o haya sido reasignado), acreditadas a <strong>quién dio el Zoom</strong> y filtradas por la fecha real del evento.
+        Asignados / Contactados / Calificados / Activos se filtran por fecha de creación del lead y reflejan su etapa actual. Las columnas <strong>Zooms Ag./Real.</strong> son históricas: cuentan cada lead que alguna vez pasó por esa fase (aunque hoy esté en otra etapa o haya sido reasignado), acreditadas a <strong>quién dio el Zoom</strong> y filtradas por la fecha real del evento. La fila <strong>{INACTIVE_ADVISOR_GROUP}</strong> agrupa ex-asesores y cuentas de prueba/sistema: sus leads y Zooms cuentan en el total para que cuadre con el pipeline del CRM.
       </p>
 
     </div>
