@@ -131,7 +131,11 @@
 //   cálculos: sus leads/Zooms cuentan en totales, embudo y gráfica, y en las
 //   tablas por asesor se colapsan en una fila "Cuentas inactivas". Antes el
 //   cliente veía 1485 en el pipeline y menos en el Comando (Histórico).
-const CACHE_VERSION = 'stratos-v80';
+// v81 — feat(meta): pestaña "Documentos" en el panel de la meta (links a Google
+//   Docs/Drive/Notion etc., guardados en organizations.meta_config.documents)
+//   y Lista de Acción rediseñada: tipografía más grande y legible, checkboxes
+//   redondos, más aire. Bump para que el bundle nuevo baje a todos.
+const CACHE_VERSION = 'stratos-v81';
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 
