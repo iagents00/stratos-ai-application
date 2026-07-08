@@ -812,6 +812,7 @@ export default function App() {
   // (done / total de team_actions). Carga ÚNICA al montar — NO entra al polling de
   // leads, así el indicador no fluctúa con los datos en vivo. (Iván: 5 tareas, 1 hecha => 20%.)
   const [prodPct, setProdPct] = useState(null);
+  const [actStats, setActStats] = useState({ done: 0, total: 0 });  // Lista de Acción: hechas / total
   useEffect(() => {
     let cancelled = false;
     supabase.from("team_actions").select("done").then(({ data, error }) => {
@@ -819,6 +820,7 @@ export default function App() {
       const total = (data || []).length;
       const done  = (data || []).filter(a => a.done).length;
       setProdPct(total ? Math.round((done / total) * 100) : 0);
+      setActStats({ done, total });
     });
     return () => { cancelled = true; };
   }, []);
@@ -1023,12 +1025,7 @@ export default function App() {
   // GOAL viene de la organización si la tiene configurada; si no, el default Duke ($48M).
   // Si la org tiene goal=0 (placeholder Grupo 28) lo tratamos como sin configurar.
   const GOAL        = (effectiveMetaPlan?.goal && effectiveMetaPlan.goal > 0) ? effectiveMetaPlan.goal : 48_000_000;
-  const activeLeads = leadsData.filter(l => l.presupuesto > 0);
-  const totalPipe   = activeLeads.reduce((s, l) => s + (l.presupuesto || 0), 0);
   const pc          = Math.max(1, Math.min(100, prodPct != null ? prodPct : 1));   // % de acciones completadas del equipo
-  const avgScore    = activeLeads.length
-    ? Math.round(activeLeads.reduce((s, l) => s + (l.sc || 0), 0) / activeLeads.length) : 0;
-  const fmt = n => n >= 1e6 ? `$${(n/1e6).toFixed(1).replace(/\.0$/,"")}M` : `$${(n/1e3).toFixed(0)}K`;
 
   // Sidebar primaria: solo módulos a los que el usuario tiene acceso (rol + org).
   // Para clientes externos (Grupo 28 etc.) esto deja CRM como única opción visible.
@@ -1184,9 +1181,16 @@ export default function App() {
               <div style={{ position:"absolute", top:0, left:0, right:0, height:"45%", background: isLight ? "linear-gradient(180deg, rgba(255,255,255,0.65) 0%, transparent 100%)" : "linear-gradient(180deg, rgba(52,211,153,0.07) 0%, transparent 100%)", pointerEvents:"none", borderRadius:"20px 20px 0 0" }} />
               {isLight && <div className="widget-shimmer" style={{ position:"absolute", top:0, bottom:0, left:0, width:"60%", background:"linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.07) 50%, transparent 100%)", pointerEvents:"none" }} />}
               <div style={{ position:"absolute", bottom:-6, left:"50%", transform:"translateX(-50%)", width:72, height:40, background: isLight ? "radial-gradient(ellipse, rgba(13,154,118,0.18) 0%, transparent 70%)" : "radial-gradient(ellipse, rgba(52,211,153,0.22) 0%, transparent 70%)", filter:"blur(12px)", pointerEvents:"none" }} />
-              <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", position:"relative", zIndex:1, marginBottom:8 }}>
-                <span style={{ fontSize:7.5, fontFamily:fontDisp, fontWeight:500, letterSpacing:"-0.01em", color: isLight ? "rgba(15,23,42,0.46)" : "rgba(255,255,255,0.38)" }}>{fmt(totalPipe)}</span>
-                <span style={{ fontSize:7.5, fontFamily:fontDisp, fontWeight:600, letterSpacing:"-0.01em", color: isLight ? "rgba(13,154,118,0.82)" : "rgba(52,211,153,0.72)" }}>{avgScore}</span>
+              <div style={{ display:"flex", justifyContent:"center", position:"relative", zIndex:1, marginBottom:8 }}>
+                <span style={{
+                  display:"inline-flex", alignItems:"center", gap:2.5,
+                  maxWidth:"100%", whiteSpace:"nowrap",
+                  padding:"1.5px 5px", borderRadius:99,
+                  background: isLight ? "rgba(13,154,118,0.08)" : "rgba(52,211,153,0.13)",
+                }}>
+                  <span style={{ fontSize:5.5, fontFamily:fontDisp, fontWeight:700, letterSpacing:"0.06em", color: isLight ? "rgba(13,154,118,0.60)" : "rgba(52,211,153,0.52)" }}>ACT</span>
+                  <span style={{ fontSize:7.5, fontFamily:fontDisp, fontWeight:600, letterSpacing:"-0.01em", fontVariantNumeric:"tabular-nums", color: isLight ? "rgba(15,23,42,0.66)" : "rgba(255,255,255,0.62)" }}>{actStats.done}/{actStats.total}</span>
+                </span>
               </div>
               <span style={{ fontSize: pc >= 100 ? 30 : 33, fontWeight: pc >= 100 ? 400 : 200, fontFamily:fontDisp, letterSpacing:"-0.04em", lineHeight:1, color: isLight ? (pc >= 100 ? "#0D9A76" : "#082818") : (pc >= 100 ? "#34D399" : "#FFFFFF"), display:"block", position:"relative", zIndex:1, whiteSpace:"nowrap", fontVariantNumeric:"tabular-nums" }}>{pc >= 100 ? "✓" : pc}</span>
               <div style={{ width:"100%", height:2.5, borderRadius:99, background: isLight ? "rgba(13,154,118,0.09)" : "rgba(255,255,255,0.08)", marginTop:9, overflow:"hidden", position:"relative", zIndex:1 }}>

@@ -135,11 +135,18 @@
 //   Docs/Drive/Notion etc., guardados en organizations.meta_config.documents)
 //   y Lista de Acción rediseñada: tipografía más grande y legible, checkboxes
 //   redondos, más aire. Bump para que el bundle nuevo baje a todos.
-// v82 — feat(caja): módulo "Caja" en el menú lateral (feature flag `caja`, hoy
+// v82 — HOTFIX: crear landing pages crasheaba (pantalla en blanco al dar
+//   "Nueva Landing Page"): ArrowRight/CheckCircle2/ChevronUp usados sin
+//   importar en LandingPages/index.jsx y CheckCircle2/StratosAtom en
+//   LandingPagePreview.jsx. Solo imports, cero cambios de lógica.
+// v83 — feat(ui): el widget del plan (barra lateral) muestra la etiqueta
+//   "ACT hechas/total" (Lista de Acción) arriba del % de avance, en vez del
+//   valor de pipeline + score. Compacta y centrada para no salirse del ancho.
+// v84 — feat(caja): módulo "Caja" en el menú lateral (feature flag `caja`, hoy
 //   solo Vega): cuentas, ingresos y egresos sobre team_expenses. Los gastos
 //   registrados por Telegram aparecen ahí solos; cualquier rol registra desde
-//   la web. Migración 066 (tipo + account en team_expenses).
-const CACHE_VERSION = 'stratos-v82';
+//   la web. Migraciones 066-069 (tipo+account, source web, aviso a admins).
+const CACHE_VERSION = 'stratos-v84';
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 
