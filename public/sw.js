@@ -131,7 +131,9 @@
 //   se guarda (tabla landing_pages) y produce link público /p/<slug> que el
 //   cliente abre sin login, con el nombre del cliente y datos vivos del
 //   catálogo; contador de vistas real ("Vista" en Campañas Recientes).
-const CACHE_VERSION = 'stratos-v80';
+// v81 — landing exprés: desde la ficha técnica, con el nombre del cliente y
+//   un click se genera la landing personalizada con su link público.
+const CACHE_VERSION = 'stratos-v81';
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 
