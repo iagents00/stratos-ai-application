@@ -160,7 +160,11 @@
 //   chats + no-leídos por conversación) + notificaciones en la campanita
 //   cuando un cliente escribe. Multimedia: enviar/recibir imágenes, audios,
 //   video y archivos (whatsapp_messages.media + bucket wa-outbound).
-const CACHE_VERSION = 'stratos-v88';
+// v89 — fix(ui): el widget del plan (barra lateral) cuenta lo MISMO que el panel
+//   "Acciones del Equipo" (metaActions: derivadas de leads + creadas a mano en
+//   team_actions), no solo la tabla team_actions. Así "ACT hechas/total" y el %
+//   de AVANCE cuadran con las "N pendientes · M completadas" del panel.
+const CACHE_VERSION = 'stratos-v89';
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 
