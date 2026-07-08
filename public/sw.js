@@ -120,7 +120,13 @@
 //   un detector de loop de crash en index.html activa un "modo seguro" (sin blur
 //   ni animaciones) si aún así recarga en loop. Bump para bajar el fix a iPhones
 //   con el bundle viejo cacheado.
-const CACHE_VERSION = 'stratos-v77';
+// v79 — fix(comando): métricas de Zoom correctas. next_action_at ya no fabrica
+//   "Zoom agendado" (todos los leads nuevos lo traen por la llamada de rescate),
+//   milestoneOf toma el hito MÁS ANTIGUO del historial (se guarda newest-first,
+//   antes re-fechaba el Zoom en cada avance de etapa), etapas legacy
+//   normalizadas en los conteos, y gráfica/totales del Comando cuentan Zooms
+//   por fecha real del evento (cuadran con embudo, ZoomBoard y tabla asesor).
+const CACHE_VERSION = 'stratos-v79';
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 

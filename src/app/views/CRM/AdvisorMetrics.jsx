@@ -15,7 +15,7 @@
  */
 import { useCallback, useMemo, useState } from "react";
 import { Users, Phone, BadgeCheck, CalendarDays, CheckCircle2, Activity, RefreshCw } from "lucide-react";
-import { P, LP, font, fontDisp, STAGES } from "../../../design-system/tokens";
+import { P, LP, font, fontDisp, STAGES, normalizeStage } from "../../../design-system/tokens";
 import { zoomEventsOf, funnelEntryOf, ACTIVE_POST_ZOOM_STAGES, isHiddenAdvisor } from "./zoom-metrics";
 import DateRangeControl from "./DateRangeControl";
 import { createDefaultDateFilter, resolveDateRange, timestampInRange } from "./date-range";
@@ -31,7 +31,9 @@ const IDX_SEGUIMIENTO     = STAGE_INDEX["Seguimiento"];
 // componente en modo standalone. Sin selectores duplicados.
 
 function stageIdx(stage) {
-  const idx = STAGE_INDEX[stage];
+  // Normalizamos labels legacy ("Visita Concretada" → "Seguimiento", etc.) para
+  // que los leads con etiquetas viejas no queden fuera de Contactados/Calificados.
+  const idx = STAGE_INDEX[normalizeStage(stage)];
   return typeof idx === "number" ? idx : -1;
 }
 
@@ -81,7 +83,7 @@ export const INDICATORS = [
     label: "Activos",
     icon: Activity,
     title: "Activos post-Zoom — hizo el Zoom y sigue activo (Zoom Concretado / Seguimiento / Apartó / Visita / Cierre). Mismo criterio que Filtro 2.",
-    compute: (leads) => leads.filter(l => ACTIVE_POST_ZOOM_STAGES.has(l.st)).length,
+    compute: (leads) => leads.filter(l => ACTIVE_POST_ZOOM_STAGES.has(normalizeStage(l.st))).length,
   },
   {
     key: "followUps",
