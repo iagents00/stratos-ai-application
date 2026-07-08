@@ -7,12 +7,13 @@ import { createPortal } from "react-dom";
 import {
   TrendingUp, Target, Plus, Heart, Users, Crown, Building2,
   Globe, Palmtree, Waves, Wand2, Image, Download, ExternalLink,
-  Copy, Check, Trash2, ChevronDown, ChevronRight, Eye, Share2,
+  Copy, Check, Trash2, ChevronDown, ChevronRight, ChevronUp, Eye, Share2,
   DollarSign, Shield, MapPin, FileText, X, Phone, CalendarDays, User
 } from "lucide-react";
 import { P, font, fontDisp } from "../../../design-system/tokens";
 import { G, KPI, Pill, Ico } from "../../SharedComponents";
 import LandingPagePreview from "./LandingPagePreview";
+import FichasTecnicas from "./FichasTecnicas";
 
 const team = [
   { n: "Oscar Gálvez",      r: "CEO Ejecutivo",           wa: "+52 998 000 0001", cal: "" },
@@ -1234,6 +1235,9 @@ const LandingPages = ({ T = P }) => {
           </div>
         ))}
       </G>
+
+      {/* Fichas técnicas de desarrollos — catálogo real (Supabase, sync con el Sheet) */}
+      <FichasTecnicas T={T} />
 
       {/* Catálogo de Propiedades */}
       <G np T={T}>
