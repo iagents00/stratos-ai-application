@@ -813,35 +813,35 @@ export default function App() {
   const [metaTab, setMetaTab]       = useState("acciones");
   const [metaActions, setMetaActions] = useState([]);
   const metaActionsSeeded = useRef(false);
+  // Siembra la Lista de Acción con el MISMO universo que muestra el panel "Acciones del
+  // Equipo": las acciones derivadas de cada lead con próxima acción (efímeras) + las que el
+  // equipo crea a mano y se guardan en team_actions (persistidas, con su `done` real). Así el
+  // widget de la barra lateral (ACT hechas/total y % de AVANCE) cuadra con lo que muestra el
+  // panel. RLS filtra team_actions por el org del usuario. El panel vuelve a mergear al abrirse
+  // (de-dup por id), así que esto solo adelanta el conteo para el widget.
   useEffect(() => {
     if (metaActionsSeeded.current || leadsData.length === 0) return;
     metaActionsSeeded.current = true;
-    setMetaActions(
-      leadsData.filter(l => l.nextAction).map(l => ({
-        id: l.id, text: l.nextAction, lead: l.n,
-        asesor: (l.asesor || '').split(' ')[0], date: l.nextActionDate,
-        done: false, priority: l.hot ? 'urgente' : l.daysInactive >= 7 ? 'alto' : 'normal',
-        assignee: l.asesor, assigneeType: 'human',
-      }))
-    );
+    const derived = leadsData.filter(l => l.nextAction).map(l => ({
+      id: l.id, text: l.nextAction, lead: l.n,
+      asesor: (l.asesor || '').split(' ')[0], date: l.nextActionDate,
+      done: false, priority: l.hot ? 'urgente' : l.daysInactive >= 7 ? 'alto' : 'normal',
+      assignee: l.asesor, assigneeType: 'human',
+    }));
+    setMetaActions(derived);
+    supabase.from("team_actions").select("*").order("created_at", { ascending: false })
+      .then(({ data, error }) => {
+        if (error || !data) return;
+        const mapped = data.map(r => ({
+          id: r.id, text: r.text, lead: r.category || 'General', asesor: r.asesor_name || '',
+          date: r.due_at ? new Date(r.due_at).toLocaleString('es-MX', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' }) : '',
+          done: r.done, priority: r.priority || 'normal', assignee: r.asesor_name || '',
+          assigneeType: r.assignee_type || 'human', due_at: r.due_at, _persisted: true,
+        }));
+        const ids = new Set(mapped.map(m => m.id));
+        setMetaActions(prev => [...mapped, ...prev.filter(a => !a._persisted && !ids.has(a.id))]);
+      });
   }, [leadsData]);
-
-  // Productividad del equipo: % de acciones de la Lista de Acción completadas
-  // (done / total de team_actions). Carga ÚNICA al montar — NO entra al polling de
-  // leads, así el indicador no fluctúa con los datos en vivo. (Iván: 5 tareas, 1 hecha => 20%.)
-  const [prodPct, setProdPct] = useState(null);
-  const [actStats, setActStats] = useState({ done: 0, total: 0 });  // Lista de Acción: hechas / total
-  useEffect(() => {
-    let cancelled = false;
-    supabase.from("team_actions").select("done").then(({ data, error }) => {
-      if (cancelled || error) return;
-      const total = (data || []).length;
-      const done  = (data || []).filter(a => a.done).length;
-      setProdPct(total ? Math.round((done / total) * 100) : 0);
-      setActStats({ done, total });
-    });
-    return () => { cancelled = true; };
-  }, []);
   const [metaNewText, setMetaNewText]   = useState("");
   const [doneCollapsed, setDoneCollapsed] = useState(true);
   const [metaPlan, setMetaPlan]         = useState(DEFAULT_META_PLAN);
@@ -1043,7 +1043,10 @@ export default function App() {
   // GOAL viene de la organización si la tiene configurada; si no, el default Duke ($48M).
   // Si la org tiene goal=0 (placeholder Grupo 28) lo tratamos como sin configurar.
   const GOAL        = (effectiveMetaPlan?.goal && effectiveMetaPlan.goal > 0) ? effectiveMetaPlan.goal : 48_000_000;
-  const pc          = Math.max(1, Math.min(100, prodPct != null ? prodPct : 1));   // % de acciones completadas del equipo
+  // ACT / AVANCE: mismas cuentas que el panel "Acciones del Equipo" (metaActions).
+  const actDone     = metaActions.filter(a => a.done).length;   // acciones completadas
+  const actTotal    = metaActions.length;                       // total (derivadas de leads + creadas a mano)
+  const pc          = Math.max(1, Math.min(100, actTotal ? Math.round((actDone / actTotal) * 100) : 1));   // % de avance
 
   // Sidebar primaria: solo módulos a los que el usuario tiene acceso (rol + org).
   // Para clientes externos (Grupo 28 etc.) esto deja CRM como única opción visible.
@@ -1207,7 +1210,7 @@ export default function App() {
                   background: isLight ? "rgba(13,154,118,0.08)" : "rgba(52,211,153,0.13)",
                 }}>
                   <span style={{ fontSize:5.5, fontFamily:fontDisp, fontWeight:700, letterSpacing:"0.06em", color: isLight ? "rgba(13,154,118,0.60)" : "rgba(52,211,153,0.52)" }}>ACT</span>
-                  <span style={{ fontSize:7.5, fontFamily:fontDisp, fontWeight:600, letterSpacing:"-0.01em", fontVariantNumeric:"tabular-nums", color: isLight ? "rgba(15,23,42,0.66)" : "rgba(255,255,255,0.62)" }}>{actStats.done}/{actStats.total}</span>
+                  <span style={{ fontSize:7.5, fontFamily:fontDisp, fontWeight:600, letterSpacing:"-0.01em", fontVariantNumeric:"tabular-nums", color: isLight ? "rgba(15,23,42,0.66)" : "rgba(255,255,255,0.62)" }}>{actDone}/{actTotal}</span>
                 </span>
               </div>
               <span style={{ fontSize: pc >= 100 ? 30 : 33, fontWeight: pc >= 100 ? 400 : 200, fontFamily:fontDisp, letterSpacing:"-0.04em", lineHeight:1, color: isLight ? (pc >= 100 ? "#0D9A76" : "#082818") : (pc >= 100 ? "#34D399" : "#FFFFFF"), display:"block", position:"relative", zIndex:1, whiteSpace:"nowrap", fontVariantNumeric:"tabular-nums" }}>{pc >= 100 ? "✓" : pc}</span>
