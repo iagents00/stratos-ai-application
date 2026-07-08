@@ -153,7 +153,10 @@
 // v86 — fix(whatsapp): el chat en vivo también se monta en el panel de notas
 //   (NotesModal) — Duke usa discoverySimplified, así que el click en el lead
 //   abre ESE panel y no el LeadPanel con tabs; el chat no se veía.
-const CACHE_VERSION = 'stratos-v86';
+// v87 — feat(caja): módulo Caja disponible para TODOS los clientes por defecto
+//   (Duke, Grupo 28, …) para roles de mando; rediseño visual (glass + tokens
+//   del theme). Vega conserva acceso de asesores vía `cajaAsesores`.
+const CACHE_VERSION = 'stratos-v87';
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 

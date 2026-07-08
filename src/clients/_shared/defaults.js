@@ -100,10 +100,17 @@ export const DEFAULT_CLIENT_CONFIG = {
     // ven la pestaña hasta que lo prendan.
     zoomControl: false,
     // Caja: libro de cuentas / ingresos / egresos sobre team_expenses (los
-    // gastos que el equipo registra por Telegram aparecen ahí solos). Visible
-    // para TODOS los roles del cliente (incluye asesor). Default OFF — hoy
-    // solo Constructora Vega lo prende en su config.
-    caja: false,
+    // gastos que el equipo registra por Telegram aparecen ahí solos). Default
+    // ON para TODOS los clientes (Duke, Grupo 28, Vega, …): la ven los roles de
+    // mando (admin/director/ceo/super_admin). Un cliente que NO la quiera la
+    // apaga con `caja: false` en su config.
+    caja: true,
+    // Caja para asesores/empleados (no mando): default OFF. Prendido solo por
+    // clientes donde el equipo de campo carga sus propios gastos desde la web
+    // (ej. Constructora Vega). Se separa de `caja` porque la RLS de
+    // team_expenses es org-scoped (no por rol): sin este flag, un asesor con el
+    // módulo vería TODO el libro de la organización.
+    cajaAsesores: false,
     // WhatsApp en vivo en el expediente del lead (tab Chat): hilo real de
     // WhatsApp espejado desde Chatwoot (tabla whatsapp_messages) + composer
     // para responder desde el CRM (cola whatsapp_outbox → n8n → Chatwoot).
