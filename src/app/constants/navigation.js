@@ -29,9 +29,13 @@ export const nav = [
 export const MODULE_ROLES = {
   d:      ["super_admin","admin","director","ceo"],
   c:      ["super_admin","admin","director","ceo","asesor"],
-  // Caja: registrar cuentas/ingresos/egresos es para TODO el equipo, no solo
-  // mando — los asesores/empleados cargan sus gastos igual que por Telegram.
-  caja:   ["super_admin","admin","director","ceo","asesor"],
+  // Caja: cuentas / ingresos / egresos sobre team_expenses. Por defecto SOLO
+  // mando (admin/director/ceo): la RLS de team_expenses filtra únicamente por
+  // organización (no por rol), así que dar el módulo a los asesores les
+  // mostraría TODO el libro de la org. Los clientes que quieran que sus
+  // asesores/empleados también carguen desde la web (ej. Constructora Vega)
+  // lo habilitan con `features.cajaAsesores: true` en su config.
+  caja:   ["super_admin","admin","director","ceo"],
   ia:     ["super_admin","admin","director","ceo"],
   e:      ["super_admin","admin","director","ceo"],
   a:      ["super_admin","admin","director","ceo"],
@@ -83,12 +87,18 @@ export function canAccessModule(moduleId, user, clientConfig = null) {
   // (1) Restricción per-usuario — gana sobre todo lo demás.
   if (user.crmOnly === true && !CRM_ONLY_MODULES.has(moduleId)) return false;
 
-  // Caja (cuentas / ingresos / egresos) es 100% por feature flag del cliente:
-  // sin `features.caja: true` en su config, nadie la ve (ni la org de Stratos).
-  // Con el flag prendido, el rol decide (MODULE_ROLES.caja incluye asesor).
+  // Caja (cuentas / ingresos / egresos) es 100% por feature flag del cliente,
+  // y se evalúa ANTES del aislamiento por org para que también aplique a los
+  // tenants externos (Grupo 28, Vega, …). Con `features.caja: true` los roles
+  // de mando (admin/director/ceo/super_admin) la ven. Los asesores/empleados
+  // SOLO la ven si el cliente además prende `features.cajaAsesores: true`
+  // (ej. Vega, donde el equipo de campo registra gastos por Telegram/web).
+  // Se separa así porque la RLS de team_expenses es org-scoped, no por rol.
   if (moduleId === "caja") {
     if (clientConfig?.features?.caja !== true) return false;
-    return MODULE_ROLES.caja.includes(user.role);
+    if (MODULE_ROLES.caja.includes(user.role)) return true;
+    if (user.role === "asesor" && clientConfig?.features?.cajaAsesores === true) return true;
+    return false;
   }
 
   if (!isStratosOrg(user.organizationId) && !EXTERNAL_ORG_MODULES.has(moduleId)) {

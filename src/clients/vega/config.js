@@ -87,7 +87,10 @@ const vegaConfig = {
     // Caja: cuentas / ingresos / egresos sobre team_expenses. Los gastos que
     // el equipo carga por Telegram (texto/audio/ticket) aparecen ahí solos, y
     // desde la web CUALQUIER rol (admin o empleado) registra ingresos/egresos.
+    // `cajaAsesores` conserva el acceso de los asesores/empleados de campo de
+    // Vega (el default global de Caja es solo mando: admin/director/ceo).
     caja:         true,
+    cajaAsesores: true,
   },
 
   support: {
