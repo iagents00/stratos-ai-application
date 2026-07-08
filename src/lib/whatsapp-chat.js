@@ -50,14 +50,14 @@ export async function fetchWhatsAppThread(leadId) {
     supabase
       .from("whatsapp_messages")
       .select(
-        "id, direction, content, content_type, sender_name, message_created_at, chatwoot_message_id, chatwoot_conversation_id, organization_id"
+        "id, direction, content, content_type, media, sender_name, message_created_at, chatwoot_message_id, chatwoot_conversation_id, organization_id"
       )
       .eq("lead_id", leadId)
       .order("message_created_at", { ascending: false })
       .limit(500),
     supabase
       .from("whatsapp_outbox")
-      .select("id, content, status, error, chatwoot_message_id, sender_name, created_at, updated_at")
+      .select("id, content, status, error, chatwoot_message_id, sender_name, created_at, updated_at, media_type, media_filename")
       .eq("lead_id", leadId)
       .order("created_at", { ascending: false })
       .limit(100),
@@ -123,6 +123,7 @@ export function mergeThread(messages, outbox) {
     kind: "message",
     direction: m.direction,
     content: m.content,
+    media: Array.isArray(m.media) ? m.media : null,
     senderName:
       (m.direction === "out" &&
         m.chatwoot_message_id != null &&
@@ -133,14 +134,34 @@ export function mergeThread(messages, outbox) {
     status: "delivered",
   }));
 
-  const mirrorHasSameOutContent = (o) => {
-    const oAt = new Date(o.created_at || 0).getTime();
-    return messages.some(
-      (m) =>
-        m.direction === "out" &&
-        m.content === o.content &&
-        new Date(m.message_created_at || 0).getTime() >= oAt - 10000
-    );
+  // Espejos de mensajes SALIENTES con adjunto (viejo→nuevo), para emparejar
+  // 1:1 con las burbujas optimistas de media. Sin esto, un solo espejo tapaba
+  // TODAS las burbujas pending con adjunto (mandás 2 fotos seguidas y la 2ª
+  // desaparecía hasta que llegaba su propio espejo).
+  const mediaMirrorPool = messages
+    .filter((m) => m.direction === "out" && Array.isArray(m.media) && m.media.length > 0)
+    .sort((a, b) => new Date(a.message_created_at || 0) - new Date(b.message_created_at || 0));
+  const usedMirror = new Set();
+
+  // ¿El mensaje real de esta fila de la cola ya está espejado? (ojo: para media
+  // consume un espejo del pool → efecto de lado intencional, 1 llamada por fila.)
+  const mirroredOutAfter = (o) => {
+    const oAt = new Date(o.created_at || 0).getTime() - 10000;
+    if (o.media_type) {
+      for (const m of mediaMirrorPool) {
+        if (usedMirror.has(m.id)) continue;
+        if (new Date(m.message_created_at || 0).getTime() < oAt) continue;
+        usedMirror.add(m.id); // reclamado por ESTA fila; no vuelve a tapar otra
+        return true;
+      }
+      return false;
+    }
+    // texto: mismo contenido, más nuevo que la fila
+    return messages.some((m) => {
+      if (m.direction !== "out") return false;
+      if (new Date(m.message_created_at || 0).getTime() < oAt) return false;
+      return m.content && m.content === o.content;
+    });
   };
 
   for (const o of outbox) {
@@ -150,7 +171,7 @@ export function mergeThread(messages, outbox) {
     ) {
       continue; // ya está (o estará vía dedup) en el espejo
     }
-    if ((o.status === "pending" || o.status === "sending") && mirrorHasSameOutContent(o)) {
+    if ((o.status === "pending" || o.status === "sending") && mirroredOutAfter(o)) {
       continue; // el espejo se adelantó al finish de n8n — no pintar doble
     }
     thread.push({
@@ -158,6 +179,8 @@ export function mergeThread(messages, outbox) {
       kind: "outbox",
       direction: "out",
       content: o.content,
+      mediaType: o.media_type || null,        // image|audio|file|video (optimista)
+      mediaFilename: o.media_filename || null,
       senderName: o.sender_name || null,
       at: o.created_at,
       status: o.status === "sent" ? "delivered" : o.status, // sent sin espejo aún → entregado
@@ -209,10 +232,44 @@ export async function pingSendWebhook(outboxId) {
   }
 }
 
+export const WA_MEDIA_MAX_BYTES = 16 * 1024 * 1024; // 16MB (tope WhatsApp)
+
+/** image|audio|video|file según el mime del archivo. */
+export function mediaTypeFromMime(mime = "") {
+  if (mime.startsWith("image/")) return "image";
+  if (mime.startsWith("audio/")) return "audio";
+  if (mime.startsWith("video/")) return "video";
+  return "file";
+}
+
+/**
+ * Sube un archivo al bucket privado wa-outbound bajo {org}/{lead}/{ts-name}.
+ * Devuelve { ok, path?, type?, mime?, filename?, error? } — nunca throw.
+ */
+export async function uploadOutboundMedia({ file, organizationId, leadId, stamp }) {
+  if (!file) return { ok: false, error: "no_file" };
+  if (file.size > WA_MEDIA_MAX_BYTES) return { ok: false, error: "too_large" };
+  if (!organizationId || !leadId) return { ok: false, error: "missing_context" };
+  const safeName = String(file.name || "archivo").replace(/[^\w.\-]+/g, "_").slice(-80);
+  const ts = stamp || Date.now();
+  const path = `${organizationId}/${leadId}/${ts}-${safeName}`;
+  const { error } = await supabase.storage
+    .from("wa-outbound")
+    .upload(path, file, { contentType: file.type || "application/octet-stream", upsert: false });
+  if (error) return { ok: false, error: error.message || "upload_failed" };
+  return {
+    ok: true,
+    path,
+    type: mediaTypeFromMime(file.type || ""),
+    mime: file.type || "application/octet-stream",
+    filename: file.name || safeName,
+  };
+}
+
 /**
  * Encola el mensaje (INSERT en whatsapp_outbox). NO pinguea — el caller
  * pinta la burbuja optimista primero y dispara el ping después.
- * Devuelve { ok, row?, error? } — nunca lanza throw.
+ * Acepta texto y/o adjunto (media). Devuelve { ok, row?, error? }.
  */
 export async function queueWhatsAppMessage({
   leadId,
@@ -220,9 +277,10 @@ export async function queueWhatsAppMessage({
   conversationId,
   content,
   senderName,
+  media, // { path, type, mime, filename } | null
 }) {
   const clean = String(content || "").trim();
-  if (!clean) return { ok: false, error: "empty" };
+  if (!clean && !media) return { ok: false, error: "empty" };
   if (clean.length > WA_MAX_LEN) return { ok: false, error: "too_long" };
   if (!leadId || !organizationId || conversationId == null) {
     return { ok: false, error: "missing_context" };
@@ -234,10 +292,14 @@ export async function queueWhatsAppMessage({
       organization_id: organizationId,
       lead_id: leadId,
       chatwoot_conversation_id: conversationId,
-      content: clean,
+      content: clean || null,
       sender_name: senderName || null,
+      media_path: media?.path || null,
+      media_type: media?.type || null,
+      media_mime: media?.mime || null,
+      media_filename: media?.filename || null,
     })
-    .select("id, content, status, error, chatwoot_message_id, sender_name, created_at, updated_at")
+    .select("id, content, status, error, chatwoot_message_id, sender_name, created_at, updated_at, media_type, media_filename")
     .single();
 
   if (error) return { ok: false, error: error.message || "insert_failed" };

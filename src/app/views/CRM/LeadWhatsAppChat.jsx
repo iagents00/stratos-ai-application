@@ -28,7 +28,7 @@
  * ─────────────────────────────────────────────────────────────────────────────
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { MessageCircle, Send, Clock, AlertTriangle, RefreshCw, Lock } from "lucide-react";
+import { MessageCircle, Send, Clock, AlertTriangle, RefreshCw, Lock, Paperclip, X, FileText, Download } from "lucide-react";
 import { P, font, fontDisp } from "../../../design-system/tokens";
 import { supabase } from "../../../lib/supabase";
 import { useAuth } from "../../../hooks/useAuth";
@@ -41,11 +41,59 @@ import {
   resolveConversationId,
   resolveOrgId,
   queueWhatsAppMessage,
+  uploadOutboundMedia,
   pingSendWebhook,
   retryOutboxMessage,
+  mediaTypeFromMime,
   WA_MAX_LEN,
   WA_STUCK_MS,
+  WA_MEDIA_MAX_BYTES,
 } from "../../../lib/whatsapp-chat";
+
+/* Render de un adjunto (imagen / audio / video / archivo). */
+function MediaAttachment({ m, T, isLight }) {
+  const type = m.type || mediaTypeFromMime(m.mime || "");
+  const url = m.url;
+  if (type === "image") {
+    return (
+      <a href={url} target="_blank" rel="noreferrer" style={{ display: "block" }}>
+        <img
+          src={m.thumb || url}
+          alt="imagen"
+          style={{ maxWidth: 220, maxHeight: 240, borderRadius: 10, display: "block", objectFit: "cover" }}
+          loading="lazy"
+        />
+      </a>
+    );
+  }
+  if (type === "audio") {
+    return <audio controls preload="none" src={url} style={{ width: 220, height: 38 }} />;
+  }
+  if (type === "video") {
+    return <video controls preload="none" src={url} style={{ maxWidth: 240, maxHeight: 260, borderRadius: 10 }} />;
+  }
+  // archivo genérico
+  const fname = m.filename || (m.ext ? `archivo.${m.ext}` : "archivo");
+  return (
+    <a
+      href={url}
+      target="_blank"
+      rel="noreferrer"
+      style={{
+        display: "inline-flex", alignItems: "center", gap: 8, textDecoration: "none",
+        padding: "8px 12px", borderRadius: 10, maxWidth: 240,
+        background: isLight ? "rgba(15,23,42,0.05)" : "rgba(255,255,255,0.05)",
+        border: `1px solid ${T.border}`, color: T.txt,
+      }}
+    >
+      <FileText size={16} color={T.txt2} />
+      <span style={{ fontSize: 12, fontFamily: font, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+        {fname}
+      </span>
+      <Download size={13} color={T.txt3} />
+    </a>
+  );
+}
 
 const POLL_MS = 20000;
 const REALTIME_DEBOUNCE_MS = 300;
@@ -67,7 +115,7 @@ const fmtTime = (iso) => {
 
 const isUuid = (id) => /^[0-9a-f]{8}-/.test(String(id || ""));
 
-export default function LeadWhatsAppChat({ lead, T = P, isLight = false }) {
+export default function LeadWhatsAppChat({ lead, T = P, isLight = false, threadMaxHeight = 360 }) {
   const { user } = useAuth();
   const { isFeatureEnabled } = useClient();
 
@@ -78,6 +126,8 @@ export default function LeadWhatsAppChat({ lead, T = P, isLight = false }) {
   const [sending, setSending] = useState(false);
   const [sendError, setSendError] = useState(null);
   const [retrying, setRetrying] = useState(null); // outboxId en reintento
+  const [pendingFile, setPendingFile] = useState(null); // File por enviar
+  const fileInputRef = useRef(null);
   const scrollRef = useRef(null);
   const nearBottomRef = useRef(true);
   const loadSeqRef = useRef(0);
@@ -172,17 +222,39 @@ export default function LeadWhatsAppChat({ lead, T = P, isLight = false }) {
   }, [thread.length]);
 
   /* ── Enviar ─────────────────────────────────────────────────────────────── */
+  const handleFile = useCallback((e) => {
+    const f = e.target.files?.[0];
+    if (e.target) e.target.value = ""; // permitir re-elegir el mismo archivo
+    if (!f) return;
+    if (f.size > WA_MEDIA_MAX_BYTES) { setSendError("El archivo supera 16MB (tope de WhatsApp)"); return; }
+    setSendError(null);
+    setPendingFile(f);
+  }, []);
+
   const handleSend = useCallback(async () => {
     const clean = draft.trim();
-    if (!clean || sending || !canSend) return;
+    if ((!clean && !pendingFile) || sending || !canSend) return;
     setSending(true);
     setSendError(null);
+
+    let media = null;
+    if (pendingFile) {
+      const up = await uploadOutboundMedia({ file: pendingFile, organizationId: orgId, leadId: lead.id });
+      if (!up.ok) {
+        setSending(false);
+        setSendError(up.error === "too_large" ? "El archivo supera 16MB" : `No se pudo subir el archivo (${up.error})`);
+        return;
+      }
+      media = { path: up.path, type: up.type, mime: up.mime, filename: up.filename };
+    }
+
     const ins = await queueWhatsAppMessage({
       leadId: lead.id,
       organizationId: orgId,
       conversationId,
       content: clean,
       senderName: user?.name || null,
+      media,
     });
     setSending(false);
     if (!ins.ok) {
@@ -192,6 +264,7 @@ export default function LeadWhatsAppChat({ lead, T = P, isLight = false }) {
     // Burbuja optimista ANTES del ping, con dedupe (realtime/poll pueden
     // haber traído la fila ya).
     setDraft("");
+    setPendingFile(null);
     setOutbox((prev) =>
       prev.some((r) => r.id === ins.row.id) ? prev : [...prev, ins.row]
     );
@@ -199,7 +272,7 @@ export default function LeadWhatsAppChat({ lead, T = P, isLight = false }) {
     if (!ping.ok) {
       setSendError(`El disparo falló (${ping.error}) — usa "reintentar" en el mensaje`);
     }
-  }, [draft, sending, canSend, lead?.id, orgId, conversationId, user?.name]);
+  }, [draft, pendingFile, sending, canSend, lead?.id, orgId, conversationId, user?.name]);
 
   const handleRetry = useCallback(async (outboxId) => {
     setRetrying(outboxId);
@@ -312,7 +385,7 @@ export default function LeadWhatsAppChat({ lead, T = P, isLight = false }) {
             ref={scrollRef}
             onScroll={handleScroll}
             style={{
-              maxHeight: 360, overflowY: "auto", display: "flex",
+              maxHeight: threadMaxHeight, overflowY: "auto", display: "flex",
               flexDirection: "column", gap: 8, padding: "4px 2px",
             }}
           >
@@ -343,14 +416,38 @@ export default function LeadWhatsAppChat({ lead, T = P, isLight = false }) {
                         {m.senderName}
                       </p>
                     )}
-                    <pre
-                      style={{
-                        margin: 0, fontSize: 12.5, color: T.txt, fontFamily: font,
-                        lineHeight: 1.5, whiteSpace: "pre-wrap", wordBreak: "break-word",
-                      }}
-                    >
-                      {m.content}
-                    </pre>
+                    {Array.isArray(m.media) && m.media.length > 0 && (
+                      <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: m.content ? 6 : 0 }}>
+                        {m.media.map((att, i) => (
+                          <MediaAttachment key={i} m={att} T={T} isLight={isLight} />
+                        ))}
+                      </div>
+                    )}
+                    {!m.media && m.mediaType && (
+                      <div
+                        style={{
+                          display: "inline-flex", alignItems: "center", gap: 6,
+                          padding: "6px 10px", borderRadius: 8, marginBottom: m.content ? 6 : 0,
+                          background: isLight ? "rgba(15,23,42,0.05)" : "rgba(255,255,255,0.05)",
+                          border: `1px solid ${T.border}`,
+                        }}
+                      >
+                        <Paperclip size={12} color={T.txt2} />
+                        <span style={{ fontSize: 11.5, color: T.txt2, fontFamily: font, maxWidth: 180, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                          {m.mediaType === "image" ? "Foto" : m.mediaType === "audio" ? "Audio" : m.mediaType === "video" ? "Video" : (m.mediaFilename || "Archivo")}
+                        </span>
+                      </div>
+                    )}
+                    {m.content && (
+                      <pre
+                        style={{
+                          margin: 0, fontSize: 12.5, color: T.txt, fontFamily: font,
+                          lineHeight: 1.5, whiteSpace: "pre-wrap", wordBreak: "break-word",
+                        }}
+                      >
+                        {m.content}
+                      </pre>
+                    )}
                     <div style={{ display: "flex", alignItems: "center", gap: 5, marginTop: 4, justifyContent: "flex-end" }}>
                       {inFlight && <Clock size={9} color={T.txt3} />}
                       {failed && <AlertTriangle size={9} color="#EF4444" />}
@@ -385,7 +482,54 @@ export default function LeadWhatsAppChat({ lead, T = P, isLight = false }) {
           {/* Composer / aviso de ventana */}
           {canSend ? (
             <div style={{ marginTop: 10 }}>
+              {/* Chip del archivo elegido (aún no enviado) */}
+              {pendingFile && (
+                <div
+                  style={{
+                    display: "flex", alignItems: "center", gap: 8, marginBottom: 8,
+                    padding: "6px 10px", borderRadius: 9,
+                    background: isLight ? "rgba(13,154,118,0.06)" : "rgba(110,231,194,0.06)",
+                    border: `1px solid ${outBd}`,
+                  }}
+                >
+                  <Paperclip size={13} color={accentStrong} style={{ flexShrink: 0 }} />
+                  <span style={{ flex: 1, minWidth: 0, fontSize: 12, color: T.txt, fontFamily: font, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    {pendingFile.name}
+                  </span>
+                  <span style={{ fontSize: 10, color: subC, fontFamily: font, flexShrink: 0 }}>
+                    {(pendingFile.size / 1024).toFixed(0)} KB
+                  </span>
+                  <button
+                    onClick={() => setPendingFile(null)}
+                    title="Quitar adjunto"
+                    style={{ background: "transparent", border: "none", cursor: "pointer", padding: 2, display: "flex", flexShrink: 0 }}
+                  >
+                    <X size={13} color={T.txt3} />
+                  </button>
+                </div>
+              )}
               <div style={{ display: "flex", gap: 8, alignItems: "flex-end" }}>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  onChange={handleFile}
+                  style={{ display: "none" }}
+                  accept="image/*,audio/*,video/mp4,application/pdf,.doc,.docx,.xls,.xlsx,.txt"
+                />
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={sending}
+                  title="Adjuntar imagen, audio o archivo"
+                  style={{
+                    display: "inline-flex", alignItems: "center", justifyContent: "center",
+                    width: 38, height: 38, borderRadius: 9, flexShrink: 0,
+                    background: isLight ? "rgba(15,23,42,0.04)" : "rgba(255,255,255,0.04)",
+                    border: `1px solid ${T.border}`, color: T.txt2,
+                    cursor: sending ? "default" : "pointer",
+                  }}
+                >
+                  <Paperclip size={15} />
+                </button>
                 <textarea
                   value={draft}
                   onChange={(e) => setDraft(e.target.value)}
@@ -405,21 +549,26 @@ export default function LeadWhatsAppChat({ lead, T = P, isLight = false }) {
                   onFocus={(e) => { e.currentTarget.style.borderColor = T.borderH || T.accent; }}
                   onBlur={(e) => { e.currentTarget.style.borderColor = T.border; }}
                 />
-                <button
-                  onClick={handleSend}
-                  disabled={!draft.trim() || sending}
-                  title="Enviar (Enter)"
-                  style={{
-                    display: "inline-flex", alignItems: "center", justifyContent: "center",
-                    width: 38, height: 38, borderRadius: 9, flexShrink: 0,
-                    background: draft.trim() && !sending ? T.accent : T.border,
-                    border: "none",
-                    color: draft.trim() && !sending ? "#041016" : T.txt3,
-                    cursor: draft.trim() && !sending ? "pointer" : "default",
-                  }}
-                >
-                  <Send size={15} />
-                </button>
+                {(() => {
+                  const active = (draft.trim() || pendingFile) && !sending;
+                  return (
+                    <button
+                      onClick={handleSend}
+                      disabled={!active}
+                      title="Enviar (Enter)"
+                      style={{
+                        display: "inline-flex", alignItems: "center", justifyContent: "center",
+                        width: 38, height: 38, borderRadius: 9, flexShrink: 0,
+                        background: active ? T.accent : T.border,
+                        border: "none",
+                        color: active ? "#041016" : T.txt3,
+                        cursor: active ? "pointer" : "default",
+                      }}
+                    >
+                      <Send size={15} />
+                    </button>
+                  );
+                })()}
               </div>
               <div style={{ display: "flex", justifyContent: "space-between", marginTop: 4 }}>
                 <span style={{ fontSize: 9.5, color: sendError ? "#EF4444" : subC, fontFamily: font }}>
