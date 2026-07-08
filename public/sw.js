@@ -120,6 +120,25 @@
 //   un detector de loop de crash en index.html activa un "modo seguro" (sin blur
 //   ni animaciones) si aún así recarga en loop. Bump para bajar el fix a iPhones
 //   con el bundle viejo cacheado.
+// v79 — fix(comando): métricas de Zoom correctas. next_action_at ya no fabrica
+//   "Zoom agendado" (todos los leads nuevos lo traen por la llamada de rescate),
+//   milestoneOf toma el hito MÁS ANTIGUO del historial (se guarda newest-first,
+//   antes re-fechaba el Zoom en cada avance de etapa), etapas legacy
+//   normalizadas en los conteos, y gráfica/totales del Comando cuentan Zooms
+//   por fecha real del evento (cuadran con embudo, ZoomBoard y tabla asesor).
+// v80 — fix(comando): los totales del Comando cuadran con el pipeline del CRM.
+//   Las cuentas ocultas (ex-asesores, prueba/sistema) ya NO se excluyen de los
+//   cálculos: sus leads/Zooms cuentan en totales, embudo y gráfica, y en las
+//   tablas por asesor se colapsan en una fila "Cuentas inactivas". Antes el
+//   cliente veía 1485 en el pipeline y menos en el Comando (Histórico).
+// v81 — feat(meta): pestaña "Documentos" en el panel de la meta (links a Google
+//   Docs/Drive/Notion etc., guardados en organizations.meta_config.documents)
+//   y Lista de Acción rediseñada: tipografía más grande y legible, checkboxes
+//   redondos, más aire. Bump para que el bundle nuevo baje a todos.
+// v82 — HOTFIX: crear landing pages crasheaba (pantalla en blanco al dar
+//   "Nueva Landing Page"): ArrowRight/CheckCircle2/ChevronUp usados sin
+//   importar en LandingPages/index.jsx y CheckCircle2/StratosAtom en
+//   LandingPagePreview.jsx. Solo imports, cero cambios de lógica.
 // v78 — feat(propiedades): catálogo de propiedades (módulo Propiedades) +
 //   fichas técnicas de desarrollos en el Marketing Studio (Create), leídas de
 //   Supabase `properties` y sincronizadas del Sheet DRIVES vía n8n cada 6 h.
@@ -133,7 +152,7 @@
 //   catálogo; contador de vistas real ("Vista" en Campañas Recientes).
 // v81 — landing exprés: desde la ficha técnica, con el nombre del cliente y
 //   un click se genera la landing personalizada con su link público.
-const CACHE_VERSION = 'stratos-v81';
+const CACHE_VERSION = 'stratos-v83';
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 

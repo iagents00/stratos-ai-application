@@ -832,6 +832,8 @@ export default function App() {
   // Si meta_config es NULL → caemos a DEFAULT_META_* (compat legacy / Stratos = Duke).
   // Esto permite isolación total: Grupo 28 nunca ve contenido de Duke y viceversa.
   const [orgMetaConfig, setOrgMetaConfig] = useState(null);
+  const [metaDocs, setMetaDocs] = useState([]);
+  const metaCfgLoaded = useRef(false);   // evita escribir meta_config antes de saber qué hay en DB
   useEffect(() => {
     const orgId = user?.organizationId;
     if (!orgId || user?._offline || user?.id === 'demo-user-local') return;
@@ -845,6 +847,8 @@ export default function App() {
         if (cancelled) return;
         if (error) { console.warn('[Stratos] org meta_config fetch falló:', error.message); return; }
         if (data?.meta_config) setOrgMetaConfig({ ...data.meta_config, _orgName: data.name });
+        setMetaDocs(Array.isArray(data?.meta_config?.documents) ? data.meta_config.documents : []);
+        metaCfgLoaded.current = true;
       });
     return () => { cancelled = true; };
   }, [user?.organizationId, user?._offline, user?.id]);
@@ -871,28 +875,56 @@ export default function App() {
   // Setters envueltos: si la org tiene meta_config en DB, las ediciones
   // van a orgMetaConfig (con auto-save debounceado). Si no (Stratos legacy),
   // siguen yendo al estado local metaPlan/metaProtocol (compat).
+  // Base para el updater: si la org tiene meta_config pero SIN la clave plan/protocol
+  // (ej. Duke solo trae campaign_aliases), la primera edición debe partir de los
+  // defaults en memoria — no de {} — o el updater truena al leer p.coreValues etc.
   const handleSetMetaPlan = useCallback((updater) => {
     if (orgMetaConfig) {
       setOrgMetaConfig(prev => {
         if (!prev) return prev;
-        const nextPlan = typeof updater === 'function' ? updater(prev.plan ?? {}) : updater;
+        const nextPlan = typeof updater === 'function' ? updater(prev.plan ?? metaPlan) : updater;
         return { ...prev, plan: nextPlan, _dirty: true };
       });
     } else {
       setMetaPlan(updater);
     }
-  }, [orgMetaConfig]);
+  }, [orgMetaConfig, metaPlan]);
   const handleSetMetaProtocol = useCallback((updater) => {
     if (orgMetaConfig) {
       setOrgMetaConfig(prev => {
         if (!prev) return prev;
-        const nextProto = typeof updater === 'function' ? updater(prev.protocol ?? {}) : updater;
+        const nextProto = typeof updater === 'function' ? updater(prev.protocol ?? metaProtocol) : updater;
         return { ...prev, protocol: nextProto, _dirty: true };
       });
     } else {
       setMetaProtocol(updater);
     }
-  }, [orgMetaConfig]);
+  }, [orgMetaConfig, metaProtocol]);
+
+  // Documentos del equipo (links a Google Docs/Drive/Notion/etc) — viven en
+  // meta_config.documents. Si la org ya tiene meta_config cargado viajan con el
+  // auto-save debounceado (preserva las demás claves); si meta_config es NULL
+  // (ej. Stratos Sales) se escribe directo solo con la clave documents.
+  // RLS (organizations_update_meta) limita la escritura a super_admin/admin.
+  const handleSetMetaDocs = useCallback((nextDocs) => {
+    setMetaDocs(nextDocs);
+    if (orgMetaConfig) {
+      setOrgMetaConfig(prev => prev ? { ...prev, documents: nextDocs, _dirty: true } : prev);
+      return;
+    }
+    const orgId = user?.organizationId;
+    if (!orgId || user?._offline || user?.id === 'demo-user-local') return;
+    // Solo escribimos meta_config completo si YA sabemos que en DB estaba NULL;
+    // si el fetch inicial no ha vuelto, escribir {documents} pisaría plan/protocol.
+    if (!metaCfgLoaded.current) return;
+    supabase
+      .from('organizations')
+      .update({ meta_config: { documents: nextDocs } })
+      .eq('id', orgId)
+      .then(({ error }) => {
+        if (error) console.warn('[Stratos] No se pudo guardar documentos:', error.message);
+      });
+  }, [orgMetaConfig, user?.organizationId, user?._offline, user?.id]);
 
   // Auto-save debounceado de la config de org. Espera 1.5s sin cambios y persiste.
   // RLS solo permite UPDATE a super_admin/admin de la misma org — si un asesor
@@ -1553,6 +1585,8 @@ export default function App() {
         setMetaPlan={handleSetMetaPlan}
         metaProtocol={effectiveMetaProtocol}
         setMetaProtocol={handleSetMetaProtocol}
+        metaDocs={metaDocs}
+        setMetaDocs={handleSetMetaDocs}
         leadsData={leadsData}
         T={T}
         isLight={isLight}
