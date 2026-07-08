@@ -160,7 +160,15 @@
 //   chats + no-leídos por conversación) + notificaciones en la campanita
 //   cuando un cliente escribe. Multimedia: enviar/recibir imágenes, audios,
 //   video y archivos (whatsapp_messages.media + bucket wa-outbound).
-const CACHE_VERSION = 'stratos-v88';
+// v89 — feat(whatsapp): nota de voz grabada desde el chat (micrófono, como
+//   WhatsApp: grabar → preview → enviar) + gestión del lead desde la bandeja
+//   (cambiar etapa y reasignar asesor sin salir del chat) + click en el nombre
+//   abre el expediente completo en el CRM + notificaciones (contador en el
+//   título de la pestaña y notificación nativa del navegador). Leads de
+//   campaña entran frescos y MUY visibles (mig 078: sin texto placeholder
+//   legacy, is_new también al revivir, revival de etapas tempranas a
+//   Contáctame Ya — caso Camila).
+const CACHE_VERSION = 'stratos-v89';
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 

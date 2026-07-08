@@ -20,11 +20,19 @@
  *              la campanita de notificaciones.
  * ─────────────────────────────────────────────────────────────────────────────
  */
-import { useEffect, useMemo, useState } from "react";
-import { MessageCircle, Search, ArrowLeft, Phone } from "lucide-react";
-import { P, font, fontDisp } from "../../design-system/tokens";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { MessageCircle, Search, ArrowLeft, Phone, UserRound, FolderOpen } from "lucide-react";
+import { P, font, fontDisp, STAGES, STAGE_COLORS } from "../../design-system/tokens";
 import { useIsMobile } from "../../hooks/useViewport";
+import { useAuth } from "../../hooks/useAuth";
+import { supabase } from "../../lib/supabase";
 import LeadWhatsAppChat from "./CRM/LeadWhatsAppChat";
+
+/* Etapas que el CRM protege con interceptores (Zoom/Visita exigen fecha vía
+   modal; Zoom Concretado exige notas + próxima acción). Desde acá no hay
+   modal → esas se cambian desde el expediente. */
+const STAGES_CON_MODAL = new Set(["Zoom Agendado", "Visita Agendada", "Zoom Concretado"]);
+const ROLES_MANDO = new Set(["super_admin", "admin", "director", "ceo"]);
 
 const fmtWhen = (iso) => {
   if (!iso) return "";
@@ -50,14 +58,72 @@ const initials = (name) =>
     .join("")
     .toUpperCase() || "?";
 
-export default function WhatsAppInbox({ T = P, isLight = false, inbox, openLead }) {
+export default function WhatsAppInbox({ T = P, isLight = false, inbox, openLead, openExpediente }) {
   const isMobile = useIsMobile();
+  const { user } = useAuth();
   const [selectedId, setSelectedId] = useState(null);
   const [query, setQuery] = useState("");
   const [mobileShowChat, setMobileShowChat] = useState(false);
+  const [teamNames, setTeamNames] = useState([]);   // equipo (profiles) para reasignar
+  const [savingLead, setSavingLead] = useState(false);
+  const [actionMsg, setActionMsg] = useState(null); // feedback corto de etapa/asesor
+  const msgTimerRef = useRef(null);
 
   const conversations = inbox?.conversations || [];
   const loading = inbox?.loading ?? true;
+  const isMando = ROLES_MANDO.has(user?.role);
+
+  // Equipo para el selector de reasignación (solo mando lo ve). Misma fuente
+  // que Caja: profiles org-scoped (la RLS filtra sola).
+  useEffect(() => {
+    if (!isMando || !user?.organizationId) return;
+    let alive = true;
+    supabase
+      .from("profiles")
+      .select("name")
+      .eq("organization_id", user.organizationId)
+      .then(({ data }) => {
+        if (!alive || !Array.isArray(data)) return;
+        const names = [...new Set(data.map((p) => p.name).filter(Boolean))]
+          .sort((a, b) => a.localeCompare(b, "es"));
+        setTeamNames(names);
+      });
+    return () => { alive = false; };
+  }, [isMando, user?.organizationId]);
+
+  // Mensajito de feedback que se borra solo (timer limpiado en cleanup).
+  const flashMsg = (msg) => {
+    setActionMsg(msg);
+    if (msgTimerRef.current) clearTimeout(msgTimerRef.current);
+    msgTimerRef.current = setTimeout(() => setActionMsg(null), 3500);
+  };
+  useEffect(() => () => { if (msgTimerRef.current) clearTimeout(msgTimerRef.current); }, []);
+
+  // Cambiar la ETAPA del lead directo desde la bandeja. Escritura directa a
+  // leads.stage (la RLS valida permisos: asesor su lead, admin todos).
+  const changeStage = async (leadId, stage) => {
+    if (!leadId || !stage || savingLead) return;
+    setSavingLead(true);
+    const { error } = await supabase.from("leads").update({ stage }).eq("id", leadId);
+    setSavingLead(false);
+    if (error) { flashMsg("⚠ No se pudo cambiar la etapa"); return; }
+    flashMsg(`Etapa → ${stage}`);
+    inbox?.refresh?.();
+  };
+
+  // Reasignar el lead a otro miembro del equipo. MISMA RPC que usa el CRM
+  // (fn_bulk_reassign_leads: resuelve asesor_id server-side y audita).
+  const reassignLead = async (leadId, name) => {
+    if (!leadId || !name || savingLead) return;
+    setSavingLead(true);
+    const { error } = await supabase.rpc("fn_bulk_reassign_leads", {
+      p_ids: [leadId], p_asesor_name: name, p_to_contactame: false,
+    });
+    setSavingLead(false);
+    if (error) { flashMsg("⚠ No se pudo reasignar"); return; }
+    flashMsg(`Asignado a ${name}`);
+    inbox?.refresh?.();
+  };
 
   // Apertura directa desde la campanita (nonce {id, ts})
   useEffect(() => {
@@ -97,6 +163,13 @@ export default function WhatsAppInbox({ T = P, isLight = false, inbox, openLead 
     setSelectedId(c.lead_id);
     setMobileShowChat(true);
     if (Number(c.unread_count || 0) > 0) inbox?.markRead?.(c.lead_id);
+    // Pedir permiso de notificaciones DESDE UN GESTO del usuario (Safari
+    // ignora requests fuera de gesto; Chrome los degrada a prompt silencioso).
+    try {
+      if (typeof Notification !== "undefined" && Notification.permission === "default") {
+        Notification.requestPermission();
+      }
+    } catch { /* sin soporte */ }
   };
 
   const subC = isLight ? "rgba(15,23,42,0.55)" : "rgba(255,255,255,0.45)";
@@ -232,35 +305,135 @@ export default function WhatsAppInbox({ T = P, isLight = false, inbox, openLead 
     >
       {selected ? (
         <>
-          <div style={{ display: "flex", alignItems: "center", gap: 10, paddingBottom: 12, borderBottom: `1px solid ${T.border}`, marginBottom: 12 }}>
-            {isMobile && (
-              <button
-                onClick={() => setMobileShowChat(false)}
-                style={{ background: "transparent", border: "none", cursor: "pointer", padding: 4, display: "flex" }}
+          <div style={{ display: "flex", flexDirection: "column", gap: 10, paddingBottom: 12, borderBottom: `1px solid ${T.border}`, marginBottom: 12 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              {isMobile && (
+                <button
+                  onClick={() => setMobileShowChat(false)}
+                  style={{ background: "transparent", border: "none", cursor: "pointer", padding: 4, display: "flex" }}
+                >
+                  <ArrowLeft size={16} color={T.txt2} />
+                </button>
+              )}
+              <div
+                style={{
+                  width: 34, height: 34, borderRadius: 10, flexShrink: 0,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  background: isLight ? "rgba(13,154,118,0.10)" : "rgba(110,231,194,0.09)",
+                  color: accentStrong, fontSize: 12, fontWeight: 800, fontFamily: fontDisp,
+                }}
               >
-                <ArrowLeft size={16} color={T.txt2} />
+                {initials(selected.lead_name)}
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                {/* Click en el nombre → expediente completo en el CRM */}
+                <button
+                  onClick={() => openExpediente?.(selected.lead_id)}
+                  title="Abrir el expediente completo del cliente"
+                  style={{
+                    display: "block", maxWidth: "100%", padding: 0, textAlign: "left",
+                    background: "transparent", border: "none", cursor: "pointer",
+                    fontSize: 13.5, fontWeight: 700, color: T.txt, fontFamily: fontDisp,
+                    whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
+                  }}
+                  onMouseEnter={(e) => { e.currentTarget.style.color = accentStrong; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.color = T.txt; }}
+                >
+                  {selected.lead_name || "Cliente"}
+                </button>
+                <p style={{ fontSize: 10.5, color: subC, fontFamily: font, display: "flex", alignItems: "center", gap: 4 }}>
+                  <Phone size={9} />
+                  {selected.lead_phone || "—"}
+                </p>
+              </div>
+              <button
+                onClick={() => openExpediente?.(selected.lead_id)}
+                title="Abrir el expediente completo"
+                style={{
+                  display: "inline-flex", alignItems: "center", gap: 5, flexShrink: 0,
+                  padding: "5px 10px", borderRadius: 8, cursor: "pointer",
+                  background: isLight ? "rgba(13,154,118,0.07)" : "rgba(110,231,194,0.07)",
+                  border: `1px solid ${isLight ? "rgba(13,154,118,0.25)" : "rgba(110,231,194,0.2)"}`,
+                  color: accentStrong, fontSize: 10.5, fontWeight: 700, fontFamily: font,
+                }}
+              >
+                <FolderOpen size={11} />
+                {isMobile ? "" : "Expediente"}
               </button>
-            )}
-            <div
-              style={{
-                width: 34, height: 34, borderRadius: 10,
-                display: "flex", alignItems: "center", justifyContent: "center",
-                background: isLight ? "rgba(13,154,118,0.10)" : "rgba(110,231,194,0.09)",
-                color: accentStrong, fontSize: 12, fontWeight: 800, fontFamily: fontDisp,
-              }}
-            >
-              {initials(selected.lead_name)}
+              {actionMsg && (
+                <span style={{ fontSize: 10.5, color: actionMsg.startsWith("⚠") ? "#EF4444" : accentStrong, fontFamily: font, fontWeight: 600, flexShrink: 0 }}>
+                  {actionMsg}
+                </span>
+              )}
+              {savingLead && !actionMsg && (
+                <span style={{ fontSize: 10.5, color: T.txt3, fontFamily: font, flexShrink: 0 }}>Guardando…</span>
+              )}
             </div>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <p style={{ fontSize: 13.5, fontWeight: 700, color: T.txt, fontFamily: fontDisp }}>
-                {selected.lead_name || "Cliente"}
-              </p>
-              <p style={{ fontSize: 10.5, color: subC, fontFamily: font, display: "flex", alignItems: "center", gap: 4 }}>
-                <Phone size={9} />
-                {selected.lead_phone || "—"}
-                {selected.stage ? ` · ${selected.stage}` : ""}
-                {selected.asesor_name ? ` · ${selected.asesor_name}` : ""}
-              </p>
+
+            {/* Gestión del lead sin salir del chat: etapa + asesor */}
+            <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+              <select
+                value={selected.stage || ""}
+                onChange={(e) => changeStage(selected.lead_id, e.target.value)}
+                disabled={savingLead}
+                title="Cambiar la etapa del lead"
+                style={{
+                  height: 30, padding: "0 8px", borderRadius: 8, cursor: "pointer",
+                  background: isLight ? "rgba(255,255,255,0.9)" : "rgba(255,255,255,0.04)",
+                  border: `1px solid ${STAGE_COLORS?.[selected.stage] || T.border}`,
+                  color: STAGE_COLORS?.[selected.stage] || T.txt,
+                  fontSize: 11, fontWeight: 700, fontFamily: font, outline: "none",
+                  maxWidth: isMobile ? 150 : 190,
+                }}
+              >
+                {!selected.stage && <option value="">Etapa…</option>}
+                {/* etapa legacy fuera de la lista actual: mostrarla igual */}
+                {selected.stage && !STAGES.includes(selected.stage) && (
+                  <option value={selected.stage} style={{ color: "#0B1220" }}>{selected.stage}</option>
+                )}
+                {STAGES.map((s) => (
+                  <option
+                    key={s}
+                    value={s}
+                    /* Zoom/Visita exigen fecha (modal del expediente) — acá no */
+                    disabled={STAGES_CON_MODAL.has(s) && s !== selected.stage}
+                    style={{ color: "#0B1220" }}
+                  >
+                    {s}{STAGES_CON_MODAL.has(s) && s !== selected.stage ? " (desde el expediente)" : ""}
+                  </option>
+                ))}
+              </select>
+
+              {isMando ? (
+                <label style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
+                  <UserRound size={12} color={T.txt3} />
+                  <select
+                    value={selected.asesor_name || ""}
+                    onChange={(e) => reassignLead(selected.lead_id, e.target.value)}
+                    disabled={savingLead}
+                    title="Reasignar el lead a otro asesor"
+                    style={{
+                      height: 30, padding: "0 8px", borderRadius: 8, cursor: "pointer",
+                      background: isLight ? "rgba(255,255,255,0.9)" : "rgba(255,255,255,0.04)",
+                      border: `1px solid ${T.border}`, color: T.txt,
+                      fontSize: 11, fontWeight: 600, fontFamily: font, outline: "none",
+                      maxWidth: isMobile ? 140 : 180,
+                    }}
+                  >
+                    {!selected.asesor_name && <option value="">Sin asesor…</option>}
+                    {/* el asesor actual siempre aparece aunque no esté en profiles */}
+                    {[...new Set([selected.asesor_name, ...teamNames].filter(Boolean))].map((n) => (
+                      <option key={n} value={n} style={{ color: "#0B1220" }}>{n}</option>
+                    ))}
+                  </select>
+                </label>
+              ) : (
+                selected.asesor_name && (
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 10.5, color: subC, fontFamily: font }}>
+                    <UserRound size={11} /> {selected.asesor_name}
+                  </span>
+                )
+              )}
             </div>
           </div>
           <div style={{ flex: 1, minHeight: 0, overflowY: "auto" }}>
