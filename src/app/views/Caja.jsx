@@ -11,7 +11,10 @@
  * RLS filtra por organization_id; acá además se filtra explícito (defensa en
  * profundidad, mismo patrón que el resto del CRM).
  *
- * Aesthetic: mismo design system que el resto (inline styles, T de theme).
+ * Aesthetic: usa la paleta `T` del theme de App.jsx (glass/border/txt/txt2/txt3/
+ * accent) + glassmorphism, igual que el resto del CRM. La detección de light se
+ * hace por luminancia del bg (antes comparaba hexes fijos y fallaba con el dark
+ * real #030810 → texto casi invisible y tarjetas planas).
  */
 import { useState, useEffect, useCallback, useMemo } from "react";
 import {
@@ -22,9 +25,6 @@ import { font, fontDisp } from "../../design-system/tokens";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../hooks/useAuth";
 import { useIsMobile } from "../../hooks/useViewport";
-
-const GREEN = "#34D399";
-const RED   = "#F87171";
 
 const fmtMoney = (amount, currency = "ARS") => {
   const n = Number(amount || 0);
@@ -51,15 +51,29 @@ const EMPTY_FORM = { tipo: "egreso", amount: "", account: "", category: "", proj
 export default function Caja({ T }) {
   const { user } = useAuth();
   const isMobile = useIsMobile();
-  const isLight = T?.bg !== "#060A11" && T?.bg !== "#04080F";
-  const subTxt  = isLight ? "rgba(15,23,42,0.55)" : "rgba(255,255,255,0.55)";
-  const dimTxt  = isLight ? "rgba(15,23,42,0.38)" : "rgba(255,255,255,0.32)";
-  const cardBg  = isLight ? "rgba(15,23,42,0.04)" : "rgba(255,255,255,0.03)";
-  const border  = isLight ? "1px solid rgba(15,23,42,0.10)" : "1px solid rgba(255,255,255,0.07)";
+
+  // ── Paleta theme-aware (tomada del `T` de App.jsx, igual que el resto del CRM).
+  // isLight por LUMINANCIA del bg (robusto): antes se comparaban hexes fijos y
+  // con el dark real (#030810) daba isLight=true → texto oscuro invisible.
+  const isLight = parseInt(String(T?.bg || "#000000").replace("#", "").slice(0, 2), 16) > 128;
+  const txt    = T?.txt     || (isLight ? "#0B1220" : "#E2E8F0");
+  const txt2   = T?.txt2    || (isLight ? "#3B4A61" : "#8B99AE");
+  const txt3   = T?.txt3    || (isLight ? "#7A8699" : "#4A5568");
+  const accent = T?.accent  || (isLight ? "#0D9A76" : "#6EE7C2");
+  const glass  = T?.glass   || (isLight ? "rgba(255,255,255,0.72)" : "rgba(255,255,255,0.032)");
+  const bd     = T?.border  || (isLight ? "rgba(15,23,42,0.08)" : "rgba(255,255,255,0.07)");
+  const POS    = isLight ? "#0E9F6E" : "#34D399";  // ingreso (verde)
+  const NEG    = isLight ? "#E02424" : "#F87171";  // egreso (rojo)
+
+  // Contenedor glass estándar del CRM (blur + borde suave).
+  const card = {
+    background: glass, border: `1px solid ${bd}`, borderRadius: 16,
+    backdropFilter: "blur(22px)", WebkitBackdropFilter: "blur(22px)",
+  };
   const inputStyle = {
-    background: isLight ? "#fff" : "rgba(255,255,255,0.05)", color: T.txt,
-    border, borderRadius: 10, padding: "10px 12px", fontSize: 13, fontFamily: font,
-    outline: "none", width: "100%", boxSizing: "border-box",
+    background: isLight ? "#FFFFFF" : "rgba(255,255,255,0.045)", color: txt,
+    border: `1px solid ${bd}`, borderRadius: 10, padding: "11px 13px",
+    fontSize: 13.5, fontFamily: font, outline: "none", width: "100%", boxSizing: "border-box",
   };
 
   const [rows, setRows] = useState([]);
@@ -162,45 +176,49 @@ export default function Caja({ T }) {
   };
 
   const KpiCard = ({ label, value, icon: Icon, color }) => (
-    <div style={{ flex: 1, minWidth: isMobile ? "100%" : 180, background: cardBg, border, borderRadius: 16, padding: "16px 18px", display: "flex", alignItems: "center", gap: 14 }}>
-      <div style={{ width: 38, height: 38, borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "center", background: `${color}18`, border: `1px solid ${color}33` }}>
-        <Icon size={18} color={color} />
+    <div style={{ ...card, flex: 1, minWidth: isMobile ? "100%" : 200, padding: "18px 20px", display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12 }}>
+      <div style={{ minWidth: 0 }}>
+        <div style={{ fontSize: 12.5, color: txt2, fontFamily: font, marginBottom: 10, whiteSpace: "nowrap" }}>{label}</div>
+        <div style={{ fontSize: isMobile ? 23 : 28, fontWeight: 400, color: txt, fontFamily: fontDisp, letterSpacing: "-0.02em", lineHeight: 1 }}>{value}</div>
       </div>
-      <div>
-        <div style={{ fontSize: 11, color: subTxt, fontFamily: font }}>{label}</div>
-        <div style={{ fontSize: 19, fontWeight: 700, color: T.txt, fontFamily: fontDisp }}>{value}</div>
+      <div style={{ width: 38, height: 38, borderRadius: 11, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", background: `${color}1F`, border: `1px solid ${color}33` }}>
+        <Icon size={18} color={color} strokeWidth={1.9} />
       </div>
     </div>
   );
 
   const chip = (id, label) => (
     <button key={id} onClick={() => setTipoFilter(id)} style={{
-      padding: "6px 14px", borderRadius: 999, cursor: "pointer", fontSize: 12, fontFamily: font,
-      border: tipoFilter === id ? `1px solid ${T.accent}66` : border,
-      background: tipoFilter === id ? `${T.accent}1A` : "transparent",
-      color: tipoFilter === id ? T.accent : subTxt, fontWeight: tipoFilter === id ? 700 : 400,
+      padding: "7px 15px", borderRadius: 999, cursor: "pointer", fontSize: 12.5, fontFamily: font,
+      border: `1px solid ${tipoFilter === id ? accent : bd}`,
+      background: tipoFilter === id ? `${accent}1A` : "transparent",
+      color: tipoFilter === id ? accent : txt2, fontWeight: tipoFilter === id ? 700 : 500,
+      transition: "all .15s ease",
     }}>{label}</button>
   );
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 18, color: T.txt, fontFamily: font }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: 18, color: txt, fontFamily: font, maxWidth: 1080, width: "100%", margin: "0 auto" }}>
       {/* Header */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
-        <div>
-          <h1 style={{ margin: 0, fontSize: isMobile ? 20 : 24, fontFamily: fontDisp, fontWeight: 800, display: "flex", alignItems: "center", gap: 10 }}>
-            <Wallet size={22} color={T.accent} /> Caja
-          </h1>
-          <p style={{ margin: "4px 0 0", fontSize: 12.5, color: subTxt }}>
-            Cuentas, ingresos y egresos · los gastos por Telegram entran solos
-          </p>
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <div style={{ width: 40, height: 40, borderRadius: 12, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", background: `${accent}18`, border: `1px solid ${accent}33` }}>
+            <Wallet size={20} color={accent} strokeWidth={1.9} />
+          </div>
+          <div>
+            <h1 style={{ margin: 0, fontSize: isMobile ? 19 : 22, fontFamily: fontDisp, fontWeight: 700, letterSpacing: "-0.01em", color: txt }}>Caja</h1>
+            <p style={{ margin: "3px 0 0", fontSize: 12.5, color: txt2 }}>
+              Cuentas, ingresos y egresos · los gastos por Telegram entran solos
+            </p>
+          </div>
         </div>
         <div style={{ display: "flex", gap: 8 }}>
-          <button onClick={load} title="Actualizar" style={{ background: "transparent", border, borderRadius: 10, padding: "8px 10px", cursor: "pointer", color: subTxt, display: "flex", alignItems: "center" }}>
+          <button onClick={load} title="Actualizar" style={{ background: glass, border: `1px solid ${bd}`, borderRadius: 10, padding: "9px 11px", cursor: "pointer", color: txt2, display: "flex", alignItems: "center" }}>
             <RefreshCw size={15} style={loading ? { animation: "spin 1s linear infinite" } : undefined} />
           </button>
           <button onClick={() => setShowForm(s => !s)} style={{
-            background: showForm ? "transparent" : `${T.accent}1A`, border: `1px solid ${T.accent}55`,
-            borderRadius: 10, padding: "8px 14px", cursor: "pointer", color: T.accent,
+            background: showForm ? "transparent" : `${accent}1A`, border: `1px solid ${accent}55`,
+            borderRadius: 10, padding: "9px 15px", cursor: "pointer", color: accent,
             fontSize: 12.5, fontWeight: 700, fontFamily: font, display: "flex", alignItems: "center", gap: 6,
           }}>
             {showForm ? <X size={14} /> : <Plus size={14} />} {showForm ? "Cerrar" : "Nuevo movimiento"}
@@ -210,22 +228,23 @@ export default function Caja({ T }) {
 
       {/* KPIs del mes */}
       <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-        <KpiCard label="Ingresos del mes" value={fmtMoney(kpis.ing)} icon={ArrowUpRight} color={GREEN} />
-        <KpiCard label="Egresos del mes" value={fmtMoney(kpis.egr)} icon={ArrowDownRight} color={RED} />
-        <KpiCard label="Balance del mes" value={fmtMoney(kpis.bal)} icon={Scale} color={kpis.bal >= 0 ? GREEN : RED} />
+        <KpiCard label="Ingresos del mes" value={fmtMoney(kpis.ing)} icon={ArrowUpRight} color={POS} />
+        <KpiCard label="Egresos del mes" value={fmtMoney(kpis.egr)} icon={ArrowDownRight} color={NEG} />
+        <KpiCard label="Balance del mes" value={fmtMoney(kpis.bal)} icon={Scale} color={kpis.bal >= 0 ? POS : NEG} />
       </div>
 
       {/* Form de registro */}
       {showForm && (
-        <form onSubmit={submit} style={{ background: cardBg, border, borderRadius: 16, padding: 18, display: "flex", flexDirection: "column", gap: 12 }}>
+        <form onSubmit={submit} style={{ ...card, padding: 18, display: "flex", flexDirection: "column", gap: 12 }}>
           <div style={{ display: "flex", gap: 8 }}>
-            {[["egreso", "Egreso", RED], ["ingreso", "Ingreso", GREEN]].map(([id, label, color]) => (
+            {[["egreso", "Egreso", NEG], ["ingreso", "Ingreso", POS]].map(([id, label, color]) => (
               <button type="button" key={id} onClick={() => setForm(f => ({ ...f, tipo: id }))} style={{
-                flex: isMobile ? 1 : "none", padding: "8px 22px", borderRadius: 10, cursor: "pointer",
+                flex: isMobile ? 1 : "none", padding: "9px 24px", borderRadius: 10, cursor: "pointer",
                 fontSize: 13, fontWeight: 700, fontFamily: font,
-                border: form.tipo === id ? `1px solid ${color}66` : border,
+                border: `1px solid ${form.tipo === id ? color : bd}`,
                 background: form.tipo === id ? `${color}1A` : "transparent",
-                color: form.tipo === id ? color : subTxt,
+                color: form.tipo === id ? color : txt2,
+                transition: "all .15s ease",
               }}>{label}</button>
             ))}
           </div>
@@ -248,52 +267,53 @@ export default function Caja({ T }) {
             <input placeholder="Descripción / detalle (opcional)" value={form.description}
               onChange={e => setForm(f => ({ ...f, description: e.target.value }))} style={inputStyle} />
             <button type="submit" disabled={saving} style={{
-              background: `${T.accent}1A`, border: `1px solid ${T.accent}66`, borderRadius: 10,
-              padding: "10px 20px", cursor: saving ? "wait" : "pointer", color: T.accent,
-              fontSize: 13, fontWeight: 700, fontFamily: font, display: "flex", alignItems: "center", gap: 8, justifyContent: "center",
+              background: accent, border: `1px solid ${accent}`, borderRadius: 10,
+              padding: "10px 22px", cursor: saving ? "wait" : "pointer", color: isLight ? "#FFFFFF" : "#04140F",
+              fontSize: 13, fontWeight: 800, fontFamily: font, display: "flex", alignItems: "center", gap: 8, justifyContent: "center",
+              opacity: saving ? 0.65 : 1,
             }}>
               <Send size={14} /> {saving ? "Guardando…" : "Registrar"}
             </button>
           </div>
-          {error && <div style={{ fontSize: 12.5, color: RED }}>{error}</div>}
+          {error && <div style={{ fontSize: 12.5, color: NEG }}>{error}</div>}
         </form>
       )}
 
       {/* Filtros */}
       <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
         {chip("todos", "Todos")}{chip("ingreso", "Ingresos")}{chip("egreso", "Egresos")}
-        <div style={{ flex: 1, minWidth: 160, position: "relative" }}>
-          <Search size={14} color={dimTxt} style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)" }} />
+        <div style={{ flex: 1, minWidth: 180, position: "relative" }}>
+          <Search size={15} color={txt3} style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)" }} />
           <input placeholder="Buscar por categoría, obra, persona…" value={searchQ}
-            onChange={e => setSearchQ(e.target.value)} style={{ ...inputStyle, paddingLeft: 34 }} />
+            onChange={e => setSearchQ(e.target.value)} style={{ ...inputStyle, paddingLeft: 36 }} />
         </div>
       </div>
 
       {/* Lista de movimientos */}
       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-        {loading && <div style={{ color: subTxt, fontSize: 13, padding: 20, textAlign: "center" }}>Cargando movimientos…</div>}
+        {loading && <div style={{ color: txt2, fontSize: 13, padding: 24, textAlign: "center" }}>Cargando movimientos…</div>}
         {!loading && filtered.length === 0 && (
-          <div style={{ color: subTxt, fontSize: 13, padding: 28, textAlign: "center", background: cardBg, border, borderRadius: 16 }}>
+          <div style={{ ...card, color: txt2, fontSize: 13, padding: 32, textAlign: "center" }}>
             Sin movimientos todavía. Registrá el primero acá arriba, o mandá un gasto por Telegram.
           </div>
         )}
         {filtered.map(r => {
           const tipo = r.tipo || "egreso";
-          const color = tipo === "ingreso" ? GREEN : RED;
+          const color = tipo === "ingreso" ? POS : NEG;
           const obra = obras.find(o => o.id === r.project_id)?.name;
           const quien = people[r.created_by];
           const porTelegram = r.source && r.source !== "web";
           return (
-            <div key={r.id} style={{ background: cardBg, border, borderRadius: 14, padding: "12px 16px", display: "flex", alignItems: "center", gap: 12, flexWrap: isMobile ? "wrap" : "nowrap" }}>
-              <div style={{ width: 32, height: 32, borderRadius: 10, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", background: `${color}15`, border: `1px solid ${color}30` }}>
-                {tipo === "ingreso" ? <ArrowUpRight size={15} color={color} /> : <ArrowDownRight size={15} color={color} />}
+            <div key={r.id} style={{ ...card, borderRadius: 14, padding: "13px 16px", display: "flex", alignItems: "center", gap: 13, flexWrap: isMobile ? "wrap" : "nowrap" }}>
+              <div style={{ width: 34, height: 34, borderRadius: 10, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", background: `${color}1A`, border: `1px solid ${color}33` }}>
+                {tipo === "ingreso" ? <ArrowUpRight size={16} color={color} /> : <ArrowDownRight size={16} color={color} />}
               </div>
-              <div style={{ flex: 1, minWidth: isMobile ? "60%" : 0 }}>
-                <div style={{ fontSize: 13.5, fontWeight: 600, color: T.txt }}>
+              <div style={{ flex: 1, minWidth: isMobile ? "55%" : 0 }}>
+                <div style={{ fontSize: 13.5, fontWeight: 600, color: txt }}>
                   {r.category || (tipo === "ingreso" ? "Ingreso" : "Gasto")}
-                  {obra && <span style={{ color: subTxt, fontWeight: 400 }}> · {obra}</span>}
+                  {obra && <span style={{ color: txt2, fontWeight: 400 }}> · {obra}</span>}
                 </div>
-                <div style={{ fontSize: 11.5, color: dimTxt, display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap", marginTop: 2 }}>
+                <div style={{ fontSize: 11.5, color: txt3, display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap", marginTop: 3 }}>
                   {fmtDate(r.spent_at)}
                   {quien && <span>· {quien}</span>}
                   {r.account && <span>· {r.account}</span>}
@@ -301,9 +321,9 @@ export default function Caja({ T }) {
                     · {porTelegram ? <MessageCircle size={11} /> : <Monitor size={11} />} {porTelegram ? "Telegram" : "Web"}
                   </span>
                 </div>
-                {r.description && <div style={{ fontSize: 11.5, color: subTxt, marginTop: 2 }}>{r.description}</div>}
+                {r.description && <div style={{ fontSize: 11.5, color: txt2, marginTop: 3 }}>{r.description}</div>}
               </div>
-              <div style={{ fontSize: 15, fontWeight: 800, fontFamily: fontDisp, color, whiteSpace: "nowrap" }}>
+              <div style={{ fontSize: 15.5, fontWeight: 800, fontFamily: fontDisp, color, whiteSpace: "nowrap" }}>
                 {tipo === "ingreso" ? "+" : "−"}{fmtMoney(r.amount, r.currency)}
               </div>
             </div>
