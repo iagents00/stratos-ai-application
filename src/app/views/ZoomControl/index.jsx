@@ -92,19 +92,24 @@ const ZoomControl = ({ theme = "dark" }) => {
   const kpis = useMemo(() => {
     const wk = weekRange();
     const n7 = next7Range();
-    let hoy = 0, semana = 0, prox7 = 0, porConfirmar = 0, asistio = 0, noShow = 0;
+    let hoy = 0, semana = 0, prox7 = 0, porConfirmar = 0, vencidos = 0, asistio = 0, noShow = 0;
     for (const r of rows) {
       const f = r.fecha_zoom;
       if (f === today) hoy++;
       if (inRange(f, wk.start, wk.end)) semana++;
       if (inRange(f, n7.start, n7.end) && ESTATUS_ACTIVOS.has(r.estatus)) prox7++;
-      if (r.estatus === "Agendado") porConfirmar++;
+      // "Por confirmar" = Agendado con fecha hoy/futura (o sin fecha aún).
+      // Un Agendado con fecha pasada ya no se puede confirmar: es un VENCIDO
+      // que hay que resolver (Asistió / No show / Reagendado). Antes se
+      // acumulaban aquí para siempre y el KPI crecía sin sentido.
+      if (r.estatus === "Agendado" && (!f || f >= today)) porConfirmar++;
+      if (f && f < today && ESTATUS_ACTIVOS.has(r.estatus)) vencidos++;
       if (r.estatus === ESTATUS_ASISTIO) asistio++;
       if (r.estatus === ESTATUS_NO_SHOW) noShow++;
     }
     const base = asistio + noShow;
     const tasa = base ? Math.round((asistio / base) * 100) : null;
-    return { hoy, semana, prox7, porConfirmar, asistio, noShow, tasa };
+    return { hoy, semana, prox7, porConfirmar, vencidos, asistio, noShow, tasa };
   }, [rows, today]);
 
   // ── Productividad por Liner / Presentador ────────────────────────────────
@@ -319,7 +324,7 @@ const ZoomControl = ({ theme = "dark" }) => {
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 12 }}>
         <KPI T={T} label="Zooms hoy"        value={kpis.hoy}    icon={CalendarDays} color={accent}     sub="agendados para hoy" />
         <KPI T={T} label="Esta semana"      value={kpis.semana} icon={Video}        color={T.blue}     sub="lunes a domingo" />
-        <KPI T={T} label="Por confirmar"    value={kpis.porConfirmar} icon={Clock3} color="#F59E0B"    sub="estatus Agendado" />
+        <KPI T={T} label="Por confirmar"    value={kpis.porConfirmar} icon={Clock3} color="#F59E0B"    sub={kpis.vencidos ? `+ ${kpis.vencidos} vencidos sin resolver` : "Agendados hoy o a futuro"} />
         <KPI T={T} label="Tasa de asistencia" value={kpis.tasa == null ? "—" : `${kpis.tasa}%`} icon={UserCheck} color="#10B981" sub={`${kpis.asistio} asistió · ${kpis.noShow} no show`} />
       </div>
 
