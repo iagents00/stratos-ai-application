@@ -50,9 +50,31 @@ import {
   WA_MEDIA_MAX_BYTES,
 } from "../../../lib/whatsapp-chat";
 
+/* Limpia nombres con fuga del header Content-Disposition (ej. "archivo.jpg-filename*=")
+   y detecta el tipo por la extensión del nombre. */
+const IMG_EXT = /\.(jpe?g|png|gif|webp|bmp|heic|heif)$/i;
+const AUD_EXT = /\.(mp3|m4a|ogg|oga|opus|wav|aac|amr)$/i;
+const VID_EXT = /\.(mp4|mov|webm|3gp|mkv|avi)$/i;
+function cleanFileName(raw, ext) {
+  let s = String(raw || "").trim();
+  s = s.split(/;|filename\*?=/i)[0];                       // corta la fuga de Content-Disposition
+  s = s.replace(/^["']|["']$/g, "").replace(/[\s\-*=_"']+$/g, "").trim();
+  if (!s || !/[a-z0-9]/i.test(s)) return ext ? `archivo.${ext}` : "Archivo";
+  return s.slice(0, 80);
+}
+function typeFromName(name) {
+  if (IMG_EXT.test(name)) return "image";
+  if (AUD_EXT.test(name)) return "audio";
+  if (VID_EXT.test(name)) return "video";
+  return null;
+}
+
 /* Render de un adjunto (imagen / audio / video / archivo). */
 function MediaAttachment({ m, T, isLight }) {
-  const type = m.type || mediaTypeFromMime(m.mime || "");
+  const fname = cleanFileName(m.filename, m.ext);
+  let type = m.type || mediaTypeFromMime(m.mime || "");
+  // Si el mime no clasificó (o dio genérico) pero el NOMBRE tiene extensión conocida, inferir.
+  if (!["image", "audio", "video"].includes(type)) type = typeFromName(fname) || type || "file";
   const url = m.url;
   if (type === "image") {
     return (
@@ -72,8 +94,7 @@ function MediaAttachment({ m, T, isLight }) {
   if (type === "video") {
     return <video controls preload="none" src={url} style={{ maxWidth: 240, maxHeight: 260, borderRadius: 10 }} />;
   }
-  // archivo genérico
-  const fname = m.filename || (m.ext ? `archivo.${m.ext}` : "archivo");
+  // archivo genérico (fname ya viene limpio de arriba)
   return (
     <a
       href={url}
@@ -564,7 +585,7 @@ export default function LeadWhatsAppChat({ lead, T = P, isLight = false, threadM
                       >
                         <Paperclip size={12} color={T.txt2} />
                         <span style={{ fontSize: 11.5, color: T.txt2, fontFamily: font, maxWidth: 180, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                          {m.mediaType === "image" ? "Foto" : m.mediaType === "audio" ? "Audio" : m.mediaType === "video" ? "Video" : (m.mediaFilename || "Archivo")}
+                          {m.mediaType === "image" ? "Foto" : m.mediaType === "audio" ? "Audio" : m.mediaType === "video" ? "Video" : cleanFileName(m.mediaFilename)}
                         </span>
                       </div>
                     )}
