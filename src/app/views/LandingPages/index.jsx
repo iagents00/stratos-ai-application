@@ -17,6 +17,7 @@ import LandingPagePreview from "./LandingPagePreview";
 import FichasTecnicas, { fichaToLandingProp } from "./FichasTecnicas";
 import { supabase } from "../../../lib/supabase";
 import { useClient } from "../../../hooks/useClient";
+import { useAuth } from "../../../hooks/useAuth";
 
 const team = [
   { n: "Oscar Gálvez",      r: "CEO Ejecutivo",           wa: "+52 998 000 0001", cal: "" },
@@ -1036,7 +1037,10 @@ const LandingPages = ({ T = P }) => {
   const [editLinkValue, setEditLinkValue] = useState("");
   const [agencyName, setAgencyName] = useState(() => localStorage.getItem("stratos_agency_name") || "STRATOS REALTY");
   const { isFeatureEnabled } = useClient();
+  const { user } = useAuth();
   const catalogEnabled = isFeatureEnabled("propiedades");
+  const [generatedSlug, setGeneratedSlug] = useState(null);
+  const publicUrlFor = (slug) => `${window.location.origin}/p/${slug}`;
   const [catalogRows, setCatalogRows] = useState([]);
   const [propQuery, setPropQuery] = useState("");
 
@@ -1053,6 +1057,30 @@ const LandingPages = ({ T = P }) => {
     return () => { alive = false; };
   }, [catalogEnabled]);
   const catalogProps = useMemo(() => catalogRows.map(fichaToLandingProp), [catalogRows]);
+
+  // Landings ya generadas (persistidas en Supabase, org-scoped). Si hay reales,
+  // reemplazan a las filas demo; el contador de vistas viene del link público.
+  useEffect(() => {
+    let alive = true;
+    supabase.from("landing_pages")
+      .select("id, slug, client_name, asesor_name, budget_label, property_ids, props_snapshot, views, created_at")
+      .is("deleted_at", null).order("created_at", { ascending: false }).limit(30)
+      .then(({ data, error }) => {
+        if (!alive || error || !data || data.length === 0) return;
+        setSavedPages(data.map(r => ({
+          id: r.id,
+          slug: r.slug,
+          client: r.client_name,
+          date: new Date(r.created_at).toLocaleDateString("es-MX", { day: "numeric", month: "short", year: "numeric" }),
+          props: (r.property_ids?.length || 0) + (Array.isArray(r.props_snapshot) ? r.props_snapshot.length : 0),
+          status: r.views > 0 ? "Vista" : "Generada",
+          opens: r.views,
+          budget: r.budget_label || "—",
+          asesor: r.asesor_name,
+        })));
+      });
+    return () => { alive = false; };
+  }, []);
 
   // Persist drive links to localStorage whenever they change
   useEffect(() => {
@@ -1140,9 +1168,11 @@ const LandingPages = ({ T = P }) => {
     setSelectedProps(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
   };
 
-  const handleGenerate = () => {
+  const handleGenerate = async () => {
     const newId = Date.now();
+    const budgetLabel = `$${(clientBudgetMin / 1000).toFixed(0)}K-$${(clientBudgetMax / 1000).toFixed(0)}K`;
     setGeneratedId(newId);
+    setGeneratedSlug(null);
     setSavedPages(prev => [{
       id: newId,
       client: clientName || "Cliente",
@@ -1150,15 +1180,44 @@ const LandingPages = ({ T = P }) => {
       propIds: [...selectedProps],
       props: selectedProps.length,
       status: "Generada",
-      budget: `$${(clientBudgetMin / 1000).toFixed(0)}K-$${(clientBudgetMax / 1000).toFixed(0)}K`,
+      budget: budgetLabel,
       asesor,
     }, ...prev]);
     setPreviewOpen(true);
+
+    // Persistir para que el link público /p/<slug> funcione (landing con el
+    // nombre del cliente). Las fichas del catálogo van por id (datos en vivo);
+    // las demo/custom, congeladas. Si falla (p.ej. tabla aún sin migrar), el
+    // preview sigue funcionando — solo no hay link compartible.
+    const slug = (crypto.randomUUID ? crypto.randomUUID().replace(/-/g, "") : `${Math.random().toString(36).slice(2)}${Date.now().toString(36)}`).slice(0, 16);
+    const catalogIds = selectedProps.filter(id => String(id).startsWith("cat-")).map(id => String(id).slice(4));
+    const snapshot = allProperties
+      .filter(p => selectedProps.includes(p.id) && !String(p.id).startsWith("cat-"))
+      .map(p => ({ ...p, driveLink: driveLinks[p.id] || p.driveLink || "" }));
+    const { error } = await supabase.from("landing_pages").insert({
+      organization_id: user?.organizationId,
+      slug,
+      client_name: clientName || "Cliente",
+      agency_name: agencyName,
+      asesor_name: asesor,
+      asesor_wa: asesorWA,
+      asesor_cal: asesorCal,
+      mensaje,
+      budget_label: budgetLabel,
+      property_ids: catalogIds,
+      props_snapshot: snapshot,
+      created_by: user?.id || null,
+    });
+    if (error) { console.warn("[Stratos] guardar landing:", error.message); return; }
+    setGeneratedSlug(slug);
+    setSavedPages(prev => prev.map(pg => (pg.id === newId ? { ...pg, slug } : pg)));
   };
 
   const handleCopyLink = () => {
-    const demoUrl = `${window.location.origin}${window.location.pathname}?lp=${generatedId || "preview"}&c=${encodeURIComponent(clientName || "cliente")}`;
-    navigator.clipboard.writeText(demoUrl).catch(() => {});
+    const url = generatedSlug
+      ? publicUrlFor(generatedSlug)
+      : `${window.location.origin}${window.location.pathname}?lp=${generatedId || "preview"}&c=${encodeURIComponent(clientName || "cliente")}`;
+    navigator.clipboard.writeText(url).catch(() => {});
     setCopied(true);
     setTimeout(() => setCopied(false), 2500);
   };
@@ -1172,6 +1231,7 @@ const LandingPages = ({ T = P }) => {
     setSelectedProps([]);
     setMensaje("");
     setGeneratedId(null);
+    setGeneratedSlug(null);
     setShowShareModal(false);
   };
 
@@ -1253,9 +1313,9 @@ const LandingPages = ({ T = P }) => {
             <Pill color={statusColors[pg.status] || T.txt3} s isLight={isLight}>{pg.status}</Pill>
             <span style={{ fontSize: 11, color: T.txt2, fontFamily: font, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{pg.asesor?.split(" ")[0] || "—"}</span>
             <div style={{ display: "flex", gap: 5 }}>
-              <button onClick={() => { setClientName(pg.client); setSelectedProps(pg.propIds || allProperties.slice(0, pg.props).map(p => p.id)); setPreviewOpen(true); }} style={{ padding: "5px 7px", borderRadius: 6, border: `1px solid ${T.border}`, background: T.glass, cursor: "pointer", display: "flex", alignItems: "center" }}><Eye size={11} color={T.txt2} /></button>
-              <button onClick={handleCopyLink} style={{ padding: "5px 7px", borderRadius: 6, border: `1px solid ${T.border}`, background: T.glass, cursor: "pointer", display: "flex", alignItems: "center" }}>{copied ? <Check size={11} color={T.accent} /> : <Copy size={11} color={T.txt2} />}</button>
-              <button style={{ padding: "5px 7px", borderRadius: 6, border: `1px solid ${T.border}`, background: T.glass, cursor: "pointer", display: "flex", alignItems: "center" }}><Share2 size={11} color={T.txt2} /></button>
+              <button title={pg.slug ? "Abrir landing del cliente" : "Vista previa"} onClick={() => { if (pg.slug) { window.open(publicUrlFor(pg.slug), "_blank"); return; } setClientName(pg.client); setSelectedProps(pg.propIds || allProperties.slice(0, pg.props).map(p => p.id)); setPreviewOpen(true); }} style={{ padding: "5px 7px", borderRadius: 6, border: `1px solid ${T.border}`, background: T.glass, cursor: "pointer", display: "flex", alignItems: "center" }}><Eye size={11} color={T.txt2} /></button>
+              <button title="Copiar link" onClick={() => { if (pg.slug) { navigator.clipboard.writeText(publicUrlFor(pg.slug)).catch(() => {}); setCopied(true); setTimeout(() => setCopied(false), 2500); return; } handleCopyLink(); }} style={{ padding: "5px 7px", borderRadius: 6, border: `1px solid ${T.border}`, background: T.glass, cursor: "pointer", display: "flex", alignItems: "center" }}>{copied ? <Check size={11} color={T.accent} /> : <Copy size={11} color={T.txt2} />}</button>
+              <button title="Enviar por WhatsApp" onClick={() => { if (!pg.slug) return; window.open(`https://wa.me/?text=${encodeURIComponent(`Hola ${pg.client} 🏡 Te comparto tu presentación personalizada de propiedades:\n${publicUrlFor(pg.slug)}`)}`, "_blank"); }} style={{ padding: "5px 7px", borderRadius: 6, border: `1px solid ${T.border}`, background: T.glass, cursor: pg.slug ? "pointer" : "not-allowed", display: "flex", alignItems: "center", opacity: pg.slug ? 1 : 0.5 }}><Share2 size={11} color={T.txt2} /></button>
             </div>
           </div>
         ))}
@@ -1969,6 +2029,7 @@ const LandingPages = ({ T = P }) => {
       {/* Full-screen Landing Page Preview */}
       {previewOpen && createPortal(
         <LandingPagePreview
+          shareUrl={generatedSlug ? publicUrlFor(generatedSlug) : null}
           client={clientName}
           asesor={asesor}
           asesorWA={asesorWA}

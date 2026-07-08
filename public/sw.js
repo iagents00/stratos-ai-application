@@ -127,7 +127,11 @@
 //   integra al generador de landing pages (selección, precios reales por ticket,
 //   guards sin ROI inventado) + fix imports rotos (ArrowRight, CheckCircle2,
 //   StratosAtom) que crasheaban los pasos 1-2 y el preview.
-const CACHE_VERSION = 'stratos-v79';
+// v80 — landings personalizadas persistentes: cada landing generada en Create
+//   se guarda (tabla landing_pages) y produce link público /p/<slug> que el
+//   cliente abre sin login, con el nombre del cliente y datos vivos del
+//   catálogo; contador de vistas real ("Vista" en Campañas Recientes).
+const CACHE_VERSION = 'stratos-v80';
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 
