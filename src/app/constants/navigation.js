@@ -6,16 +6,17 @@
  * ─────────────────────────────────────────────────────────────────────────────
  */
 import {
-  Users, Hexagon, Activity, Building2, Atom,
+  Users, Hexagon, Activity, Building2, Atom, FolderOpen,
   Trophy, Landmark, UserCheck, CreditCard, Shield, User, Trash2
 } from "lucide-react";
 
 export const nav = [
-  { id: "c",     l: "CRM",       i: Users      },
-  { id: "lp",    l: "Create",    i: Hexagon    },
-  { id: "d",     l: "Comando",   i: Activity   },
-  { id: "e",     l: "ERP",       i: Building2  },
-  { id: "ia",    l: "iAgents",   i: Atom       },
+  { id: "c",     l: "CRM",         i: Users      },
+  { id: "props", l: "Propiedades", i: FolderOpen },
+  { id: "lp",    l: "Create",      i: Hexagon    },
+  { id: "d",     l: "Comando",     i: Activity   },
+  { id: "e",     l: "ERP",         i: Building2  },
+  { id: "ia",    l: "iAgents",     i: Atom       },
   { id: "a",     l: "Asesores",  i: Trophy,    more: true },
   { id: "fa",    l: "Finanzas",  i: Landmark,  more: true },
   { id: "rrhh",  l: "Personas",  i: UserCheck, more: true },
@@ -28,6 +29,9 @@ export const nav = [
 export const MODULE_ROLES = {
   d:      ["super_admin","admin","director","ceo"],
   c:      ["super_admin","admin","director","ceo","asesor"],
+  // Propiedades: catálogo de proyectos con links de Drive. Los asesores lo
+  // usan a diario para mandar links a clientes → acceso para todos los roles.
+  props:  ["super_admin","admin","director","ceo","asesor"],
   ia:     ["super_admin","admin","director","ceo"],
   e:      ["super_admin","admin","director","ceo"],
   a:      ["super_admin","admin","director","ceo"],
@@ -41,7 +45,7 @@ export const MODULE_ROLES = {
 };
 
 export const MODULE_NAMES = {
-  d: "Comando", c: "CRM", ia: "iAgents", e: "ERP",
+  d: "Comando", c: "CRM", ia: "iAgents", e: "ERP", props: "Propiedades",
   a: "Asesores", lp: "Campañas", fa: "Finanzas",
   rrhh: "Personas", trash: "Papelera",
   planes: "Planes", perfil: "Perfil", admin: "Usuarios",
@@ -85,7 +89,12 @@ export function canAccessModule(moduleId, user, clientConfig = null) {
     const isComandoDirectivoOpenIn = (
       moduleId === "d" && clientConfig?.features?.comandoDirectivo === true
     );
-    if (!isComandoDirectivoOpenIn) return false;
+    // Misma excepción para el catálogo de Propiedades (`props`): un cliente
+    // externo lo prende con features.propiedades = true en su config.
+    const isPropiedadesOpenIn = (
+      moduleId === "props" && clientConfig?.features?.propiedades === true
+    );
+    if (!isComandoDirectivoOpenIn && !isPropiedadesOpenIn) return false;
   }
   const roles = MODULE_ROLES[moduleId];
   if (!roles) return true;

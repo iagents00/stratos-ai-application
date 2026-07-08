@@ -14,7 +14,7 @@ import { P, font, fontDisp } from "../../../design-system/tokens";
 import { StratosAtom } from "../../../design-system/primitives";
 import { G, KPI, Pill, Ico } from "../../SharedComponents";
 
-const LandingPagePreview = ({ client, asesor, asesorWA = "", asesorCal = "", mensaje, agencyName = "STRATOS REALTY", properties, onClose, onCopyLink, copied, driveLinks = {}, T = P }) => {
+const LandingPagePreview = ({ client, asesor = "", asesorWA = "", asesorCal = "", mensaje, agencyName = "STRATOS REALTY", properties, onClose, onCopyLink, copied, driveLinks = {}, publicMode = false, shareUrl = null, T = P }) => {
   const [activeProperty, setActiveProperty] = useState(0);
   const [showSharePanel, setShowSharePanel] = useState(false);
 
@@ -29,7 +29,7 @@ const LandingPagePreview = ({ client, asesor, asesorWA = "", asesorCal = "", men
   const waUrl = waPhone ? `https://wa.me/${waPhone}?text=${waText}` : null;
   const calUrl = asesorCal || null;
 
-  const demoShareUrl = `${window.location.origin}${window.location.pathname}?lp=preview&c=${encodeURIComponent(client || "cliente")}`;
+  const demoShareUrl = shareUrl || `${window.location.origin}${window.location.pathname}?lp=preview&c=${encodeURIComponent(client || "cliente")}`;
 
   const handleWhatsAppAdvisor = () => {
     if (waUrl) window.open(waUrl, "_blank");
@@ -138,7 +138,8 @@ const LandingPagePreview = ({ client, asesor, asesorWA = "", asesorCal = "", men
         </div>
       )}
 
-      {/* Top Bar */}
+      {/* Top Bar — solo en modo asesor (preview); el cliente no la ve */}
+      {!publicMode && (
       <div style={{
         position: "fixed", top: 0, left: 0, right: 0, zIndex: 100001,
         padding: "12px 24px", display: "flex", justifyContent: "space-between", alignItems: "center",
@@ -178,9 +179,10 @@ const LandingPagePreview = ({ client, asesor, asesorWA = "", asesorCal = "", men
           </button>
         </div>
       </div>
+      )}
 
       {/* ─── LANDING PAGE CONTENT ─── */}
-      <div style={{ paddingTop: 60 }}>
+      <div style={{ paddingTop: publicMode ? 0 : 60 }}>
         {/* HERO SECTION */}
         <div style={{
           minHeight: "100vh", position: "relative",
@@ -247,7 +249,7 @@ const LandingPagePreview = ({ client, asesor, asesorWA = "", asesorCal = "", men
                 }}>
                   <CalendarDays size={15} style={{ verticalAlign: "middle" }} /> Agendar Llamada
                 </a>
-              ) : (
+              ) : !publicMode && (
                 <button onClick={() => setShowSharePanel(true)} style={{
                   padding: "14px 32px", borderRadius: 12, border: "none",
                   background: "#FFFFFF", color: "#000000",
@@ -267,7 +269,7 @@ const LandingPagePreview = ({ client, asesor, asesorWA = "", asesorCal = "", men
                 }}>
                   <Phone size={14} /> WhatsApp
                 </a>
-              ) : (
+              ) : !publicMode && (
                 <button onClick={() => setShowSharePanel(true)} style={{
                   padding: "14px 32px", borderRadius: 12,
                   border: "1px solid rgba(255,255,255,0.2)", background: "rgba(255,255,255,0.05)",
@@ -324,8 +326,9 @@ const LandingPagePreview = ({ client, asesor, asesorWA = "", asesorCal = "", men
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
                       <div>
                         <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
-                          <Pill color={prop.accent}>{prop.type}</Pill>
-                          <Pill color={T.emerald}>ROI {prop.roi}</Pill>
+                          {prop.type && <Pill color={prop.accent}>{prop.type}</Pill>}
+                          {prop.roi && <Pill color={T.emerald}>ROI {prop.roi}</Pill>}
+                          {prop.badge && <Pill color={prop.accent}>{prop.badge}</Pill>}
                         </div>
                         <h3 style={{ fontSize: 32, fontWeight: 300, color: T.txt, fontFamily: fontDisp, letterSpacing: "-0.02em" }}>
                           {prop.name} <span style={{ color: "rgba(255,255,255,0.4)", fontWeight: 200 }}>{prop.brand}</span>
@@ -333,14 +336,30 @@ const LandingPagePreview = ({ client, asesor, asesorWA = "", asesorCal = "", men
                         <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 8 }}>
                           <MapPin size={14} color="rgba(255,255,255,0.5)" />
                           <span style={{ fontSize: 13, color: "rgba(255,255,255,0.6)", fontFamily: font }}>{prop.location} — {prop.zone}</span>
+                          {prop.mapsUrl && (
+                            <a href={prop.mapsUrl} target="_blank" rel="noreferrer" style={{ fontSize: 11, color: prop.accent, textDecoration: "none", marginLeft: 6 }}>Ver mapa ↗</a>
+                          )}
                         </div>
                       </div>
                       <div style={{ textAlign: "right" }}>
-                        <p style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", letterSpacing: "0.05em", textTransform: "uppercase", marginBottom: 4 }}>DESDE</p>
-                        <p style={{ fontSize: 38, fontWeight: 300, color: T.txt, fontFamily: fontDisp, letterSpacing: "-0.03em" }}>
-                          {fmtPrice(prop.priceFrom)}
-                        </p>
-                        <p style={{ fontSize: 12, color: "rgba(255,255,255,0.4)" }}>hasta {fmtPrice(prop.priceTo)} USD</p>
+                        {prop.ticket ? (
+                          <>
+                            <p style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", letterSpacing: "0.05em", textTransform: "uppercase", marginBottom: 4 }}>PRECIO</p>
+                            <p style={{ fontSize: 30, fontWeight: 300, color: T.txt, fontFamily: fontDisp, letterSpacing: "-0.02em" }}>
+                              {prop.ticket}
+                            </p>
+                          </>
+                        ) : prop.priceFrom > 0 ? (
+                          <>
+                            <p style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", letterSpacing: "0.05em", textTransform: "uppercase", marginBottom: 4 }}>DESDE</p>
+                            <p style={{ fontSize: 38, fontWeight: 300, color: T.txt, fontFamily: fontDisp, letterSpacing: "-0.03em" }}>
+                              {fmtPrice(prop.priceFrom)}
+                            </p>
+                            <p style={{ fontSize: 12, color: "rgba(255,255,255,0.4)" }}>hasta {fmtPrice(prop.priceTo)} USD</p>
+                          </>
+                        ) : (
+                          <p style={{ fontSize: 15, color: "rgba(255,255,255,0.55)", fontFamily: fontDisp }}>Precio a consultar</p>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -353,13 +372,13 @@ const LandingPagePreview = ({ client, asesor, asesorWA = "", asesorCal = "", men
                   </p>
 
                   {/* Key Metrics */}
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16, marginBottom: 28 }}>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 16, marginBottom: 28 }}>
                     {[
                       { label: "Recámaras", value: prop.bedrooms, icon: Home, c: prop.accent },
                       { label: "ROI Anual", value: prop.roi, icon: TrendingUp, c: T.emerald },
                       { label: "Entrega", value: prop.delivery, icon: Calendar, c: T.blue },
-                      { label: "Tamaños", value: prop.sizes[0] + " – " + prop.sizes[prop.sizes.length - 1], icon: Maximize2, c: T.violet },
-                    ].map(m => (
+                      { label: "Tamaños", value: (prop.sizes || []).length ? (prop.sizes.length > 1 ? prop.sizes[0] + " – " + prop.sizes[prop.sizes.length - 1] : prop.sizes[0]) : "", icon: Maximize2, c: T.violet },
+                    ].filter(m => m.value && m.value !== "—").map(m => (
                       <div key={m.label} style={{
                         padding: "16px", borderRadius: 12,
                         background: `${m.c}08`, border: `1px solid ${m.c}15`,
@@ -374,6 +393,7 @@ const LandingPagePreview = ({ client, asesor, asesorWA = "", asesorCal = "", men
                   </div>
 
                   {/* Highlights */}
+                  {(prop.highlights || []).length > 0 && (
                   <div style={{ marginBottom: 24 }}>
                     <p style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 12, fontWeight: 600 }}>Por qué esta propiedad</p>
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
@@ -385,8 +405,10 @@ const LandingPagePreview = ({ client, asesor, asesorWA = "", asesorCal = "", men
                       ))}
                     </div>
                   </div>
+                  )}
 
                   {/* Amenities */}
+                  {(prop.amenities || []).length > 0 && (
                   <div style={{ marginBottom: 24 }}>
                     <p style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 12, fontWeight: 600 }}>Amenidades</p>
                     <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
@@ -398,6 +420,7 @@ const LandingPagePreview = ({ client, asesor, asesorWA = "", asesorCal = "", men
                       ))}
                     </div>
                   </div>
+                  )}
 
                   {/* Gallery / Drive link CTA */}
                   <div style={{
@@ -569,10 +592,10 @@ const LandingPagePreview = ({ client, asesor, asesorWA = "", asesorCal = "", men
 
             <div style={{ marginTop: 60, padding: "20px 0", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
               <p style={{ fontSize: 11, color: "rgba(255,255,255,0.25)" }}>
-                Stratos Realty · Riviera Maya, México · Presentación confidencial generada para {client}
+                {agencyName} · Riviera Maya, México · Presentación confidencial generada para {client}
               </p>
               <p style={{ fontSize: 10, color: "rgba(255,255,255,0.15)", marginTop: 6 }}>
-                Asesor: {asesor} · Abril 2026 · Todos los precios en USD · Sujeto a disponibilidad
+                Asesor: {asesor} · {new Date().toLocaleDateString("es-MX", { month: "long", year: "numeric" })} · Precios sujetos a cambio y disponibilidad
               </p>
             </div>
           </div>

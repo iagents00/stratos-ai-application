@@ -14,6 +14,10 @@ import {
 import { P, font, fontDisp } from "../../../design-system/tokens";
 import { G, KPI, Pill, Ico } from "../../SharedComponents";
 import LandingPagePreview from "./LandingPagePreview";
+import FichasTecnicas, { fichaToLandingProp } from "./FichasTecnicas";
+import { supabase } from "../../../lib/supabase";
+import { useClient } from "../../../hooks/useClient";
+import { useAuth } from "../../../hooks/useAuth";
 
 const team = [
   { n: "Oscar Gálvez",      r: "CEO Ejecutivo",           wa: "+52 998 000 0001", cal: "" },
@@ -856,6 +860,79 @@ const NewPropertyModal = ({ onClose, onSave, initialData = null, T = P }) => {
   );
 };
 
+/* ─── Landing exprés: de la ficha a la landing en un click ─── */
+const ExpressLandingModal = ({ ficha, defaultWA = "", onClose, onGenerate, onStepByStep, T = P }) => {
+  const isLight = T?.bg !== P.bg;
+  const [name, setName] = useState("");
+  const [wa, setWa] = useState(defaultWA);
+  const [msg, setMsg] = useState("");
+  const canGo = name.trim().length > 0;
+  const inputStyle = {
+    width: "100%", padding: "11px 14px", borderRadius: 10, fontSize: 13,
+    background: T.glass, border: `1px solid ${T.border}`, color: T.txt,
+    fontFamily: font, outline: "none", boxSizing: "border-box",
+  };
+  const labelStyle = { fontSize: 10, color: T.txt2, display: "block", marginBottom: 5, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", fontFamily: font };
+  return createPortal(
+    <>
+      <div onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)", backdropFilter: "blur(10px)", zIndex: 200000 }} />
+      <div style={{
+        position: "fixed", top: "50%", left: "50%", transform: "translate(-50%,-50%)", zIndex: 200001,
+        width: "min(480px, 94vw)", maxHeight: "90vh", overflowY: "auto",
+        background: isLight ? "#FFFFFF" : "#0B1120", border: `1px solid ${T.accent}30`, borderRadius: 20, padding: 26,
+        boxShadow: "0 40px 100px rgba(0,0,0,0.65)",
+      }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 18 }}>
+          <div>
+            <p style={{ fontSize: 16, fontWeight: 800, color: T.txt, fontFamily: fontDisp }}>Landing exprés</p>
+            <p style={{ fontSize: 12, color: T.accent, fontWeight: 700, fontFamily: font, marginTop: 3 }}>{ficha.name} · {ficha.plaza}</p>
+          </div>
+          <button onClick={onClose} style={{ width: 30, height: 30, borderRadius: 8, border: `1px solid ${T.border}`, background: T.glass, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <X size={14} color={T.txt2} />
+          </button>
+        </div>
+
+        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+          <div>
+            <label style={labelStyle}>Nombre del cliente *</label>
+            <input autoFocus value={name} onChange={e => setName(e.target.value)}
+              onKeyDown={e => { if (e.key === "Enter" && canGo) onGenerate({ clientName: name.trim(), asesorWA: wa.trim(), mensaje: msg.trim() }); }}
+              placeholder="Ej: Familia Rodríguez" style={inputStyle} />
+          </div>
+          <div>
+            <label style={labelStyle}>Tu WhatsApp (botón de contacto en la landing)</label>
+            <input value={wa} onChange={e => setWa(e.target.value)} placeholder="+52 998 000 0000" style={inputStyle} />
+            <p style={{ fontSize: 10, color: T.txt3, marginTop: 4, fontFamily: font }}>Se recuerda para la próxima.</p>
+          </div>
+          <div>
+            <label style={labelStyle}>Mensaje para el cliente (opcional)</label>
+            <textarea value={msg} onChange={e => setMsg(e.target.value)} rows={3}
+              placeholder="Si lo dejas vacío se genera uno automático con el nombre del cliente y la propiedad."
+              style={{ ...inputStyle, resize: "vertical", lineHeight: 1.5 }} />
+          </div>
+
+          <button disabled={!canGo} onClick={() => onGenerate({ clientName: name.trim(), asesorWA: wa.trim(), mensaje: msg.trim() })} style={{
+            padding: "13px", borderRadius: 11, border: "none",
+            cursor: canGo ? "pointer" : "not-allowed",
+            background: canGo ? T.accent : T.glass, color: canGo ? "#06110D" : T.txt3,
+            fontSize: 13.5, fontWeight: 800, fontFamily: fontDisp,
+            boxShadow: canGo ? `0 4px 18px ${T.accent}40` : "none",
+          }}>
+            Generar landing para {name.trim() || "el cliente"} →
+          </button>
+          <button onClick={onStepByStep} style={{
+            background: "none", border: "none", cursor: "pointer", padding: 0,
+            fontSize: 11.5, color: T.txt3, fontFamily: font, textDecoration: "underline",
+          }}>
+            Prefiero configurarla paso a paso (más propiedades, presupuesto, agenda…)
+          </button>
+        </div>
+      </div>
+    </>,
+    document.body
+  );
+};
+
 /* ─── ROI Calculator ─── */
 const ROICalc = ({ prop, T = P }) => {
   const [inv, setInv] = useState(prop.priceFrom);
@@ -1032,6 +1109,52 @@ const LandingPages = ({ T = P }) => {
   const [editingLinkId, setEditingLinkId] = useState(null);
   const [editLinkValue, setEditLinkValue] = useState("");
   const [agencyName, setAgencyName] = useState(() => localStorage.getItem("stratos_agency_name") || "STRATOS REALTY");
+  const { isFeatureEnabled } = useClient();
+  const { user } = useAuth();
+  const catalogEnabled = isFeatureEnabled("propiedades");
+  const [generatedSlug, setGeneratedSlug] = useState(null);
+  const [expressFicha, setExpressFicha] = useState(null);   // ficha → landing exprés
+  const publicUrlFor = (slug) => `${window.location.origin}/p/${slug}`;
+  const [catalogRows, setCatalogRows] = useState([]);
+  const [propQuery, setPropQuery] = useState("");
+
+  // Catálogo real: fichas técnicas del equipo (tabla properties, RLS org-scoped).
+  useEffect(() => {
+    if (!catalogEnabled) return;
+    let alive = true;
+    supabase.from("properties").select("*").is("deleted_at", null)
+      .then(({ data, error }) => {
+        if (!alive) return;
+        if (error) { console.warn("[Stratos] catálogo landing:", error.message); return; }
+        setCatalogRows((data || []).filter(r => r.active !== false));
+      });
+    return () => { alive = false; };
+  }, [catalogEnabled]);
+  const catalogProps = useMemo(() => catalogRows.map(fichaToLandingProp), [catalogRows]);
+
+  // Landings ya generadas (persistidas en Supabase, org-scoped). Si hay reales,
+  // reemplazan a las filas demo; el contador de vistas viene del link público.
+  useEffect(() => {
+    let alive = true;
+    supabase.from("landing_pages")
+      .select("id, slug, client_name, asesor_name, budget_label, property_ids, props_snapshot, views, created_at")
+      .is("deleted_at", null).order("created_at", { ascending: false }).limit(30)
+      .then(({ data, error }) => {
+        if (!alive || error || !data || data.length === 0) return;
+        setSavedPages(data.map(r => ({
+          id: r.id,
+          slug: r.slug,
+          client: r.client_name,
+          date: new Date(r.created_at).toLocaleDateString("es-MX", { day: "numeric", month: "short", year: "numeric" }),
+          props: (r.property_ids?.length || 0) + (Array.isArray(r.props_snapshot) ? r.props_snapshot.length : 0),
+          status: r.views > 0 ? "Vista" : "Generada",
+          opens: r.views,
+          budget: r.budget_label || "—",
+          asesor: r.asesor_name,
+        })));
+      });
+    return () => { alive = false; };
+  }, []);
 
   // Persist drive links to localStorage whenever they change
   useEffect(() => {
@@ -1063,7 +1186,12 @@ const LandingPages = ({ T = P }) => {
   // When asesor changes, auto-fill contact info from team data
   useEffect(() => {
     const member = team.find(t => t.n === asesor);
-    if (member) { setAsesorWA(member.wa || ""); setAsesorCal(member.cal || ""); }
+    if (member) {
+      // Solo autollenar si están vacíos: los números de `team` son placeholder
+      // y no deben pisar un WhatsApp real capturado por el asesor.
+      setAsesorWA(prev => prev || member.wa || "");
+      setAsesorCal(prev => prev || member.cal || "");
+    }
   }, [asesor]);
 
   const budgetOptions = [
@@ -1088,14 +1216,18 @@ const LandingPages = ({ T = P }) => {
     { key: "boutique", label: "Boutique/Exclusivo", icon: Crown },
   ];
 
-  const allProperties = useMemo(() => [...rivieraProperties, ...customProperties], [customProperties]);
+  const allProperties = useMemo(() => [...catalogProps, ...customProperties, ...rivieraProperties], [catalogProps, customProperties]);
 
-  const inBudget = (p) => p.priceFrom <= clientBudgetMax && p.priceTo >= clientBudgetMin;
+  const inBudget = (p) => !p.priceTo ? true : (p.priceFrom <= clientBudgetMax && p.priceTo >= clientBudgetMin);
   const filteredProperties = useMemo(() => {
-    const inB = allProperties.filter(p => inBudget(p));
-    const outB = allProperties.filter(p => !inBudget(p));
+    const nq = propQuery.trim().toLowerCase();
+    const base = nq
+      ? allProperties.filter(p => [p.name, p.location, p.zone, p.brand].filter(Boolean).join(" ").toLowerCase().includes(nq))
+      : allProperties;
+    const inB = base.filter(p => inBudget(p));
+    const outB = base.filter(p => !inBudget(p));
     return [...inB, ...outB];
-  }, [allProperties, clientBudgetMin, clientBudgetMax]);
+  }, [allProperties, clientBudgetMin, clientBudgetMax, propQuery]);
 
   const saveDriveLink = (propId) => {
     setDriveLinks(prev => ({ ...prev, [propId]: editLinkValue }));
@@ -1115,25 +1247,68 @@ const LandingPages = ({ T = P }) => {
     setSelectedProps(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
   };
 
-  const handleGenerate = () => {
+  const handleGenerate = async (opts) => {
+    // Modo exprés (desde una ficha): recibe cliente/propiedad/WA/mensaje sin
+    // pasar por los pasos 1-2. onClick normal pasa el evento → se ignora.
+    const ex = opts && opts.express ? opts : null;
+    const cn = ((ex ? ex.clientName : clientName) || "Cliente").trim();
+    const sel = ex ? ex.selectedIds : selectedProps;
+    const wa = ex ? (ex.asesorWA || "") : asesorWA;
+    const msg = ex ? (ex.mensaje || "") : mensaje;
+    const asesorName = ex ? (ex.asesorName || asesor) : asesor;
+    if (ex) {
+      setClientName(cn); setSelectedProps(sel); setAsesorWA(wa);
+      setMensaje(msg); setAsesor(asesorName);
+    }
     const newId = Date.now();
+    const budgetLabel = ex ? "—" : `$${(clientBudgetMin / 1000).toFixed(0)}K-$${(clientBudgetMax / 1000).toFixed(0)}K`;
     setGeneratedId(newId);
+    setGeneratedSlug(null);
     setSavedPages(prev => [{
       id: newId,
-      client: clientName || "Cliente",
+      client: cn,
       date: new Date().toLocaleDateString("es-MX", { day: "numeric", month: "short", year: "numeric" }),
-      propIds: [...selectedProps],
-      props: selectedProps.length,
+      propIds: [...sel],
+      props: sel.length,
       status: "Generada",
-      budget: `$${(clientBudgetMin / 1000).toFixed(0)}K-$${(clientBudgetMax / 1000).toFixed(0)}K`,
-      asesor,
+      budget: budgetLabel,
+      asesor: asesorName,
     }, ...prev]);
     setPreviewOpen(true);
+
+    // Persistir para que el link público /p/<slug> funcione (landing con el
+    // nombre del cliente). Las fichas del catálogo van por id (datos en vivo);
+    // las demo/custom, congeladas. Si falla (p.ej. tabla aún sin migrar), el
+    // preview sigue funcionando — solo no hay link compartible.
+    const slug = (crypto.randomUUID ? crypto.randomUUID().replace(/-/g, "") : `${Math.random().toString(36).slice(2)}${Date.now().toString(36)}`).slice(0, 16);
+    const catalogIds = sel.filter(id => String(id).startsWith("cat-")).map(id => String(id).slice(4));
+    const snapshot = allProperties
+      .filter(p => sel.includes(p.id) && !String(p.id).startsWith("cat-"))
+      .map(p => ({ ...p, driveLink: driveLinks[p.id] || p.driveLink || "" }));
+    const { error } = await supabase.from("landing_pages").insert({
+      organization_id: user?.organizationId,
+      slug,
+      client_name: cn,
+      agency_name: agencyName,
+      asesor_name: asesorName,
+      asesor_wa: wa,
+      asesor_cal: asesorCal,
+      mensaje: msg,
+      budget_label: budgetLabel,
+      property_ids: catalogIds,
+      props_snapshot: snapshot,
+      created_by: user?.id || null,
+    });
+    if (error) { console.warn("[Stratos] guardar landing:", error.message); return; }
+    setGeneratedSlug(slug);
+    setSavedPages(prev => prev.map(pg => (pg.id === newId ? { ...pg, slug } : pg)));
   };
 
   const handleCopyLink = () => {
-    const demoUrl = `${window.location.origin}${window.location.pathname}?lp=${generatedId || "preview"}&c=${encodeURIComponent(clientName || "cliente")}`;
-    navigator.clipboard.writeText(demoUrl).catch(() => {});
+    const url = generatedSlug
+      ? publicUrlFor(generatedSlug)
+      : `${window.location.origin}${window.location.pathname}?lp=${generatedId || "preview"}&c=${encodeURIComponent(clientName || "cliente")}`;
+    navigator.clipboard.writeText(url).catch(() => {});
     setCopied(true);
     setTimeout(() => setCopied(false), 2500);
   };
@@ -1147,6 +1322,7 @@ const LandingPages = ({ T = P }) => {
     setSelectedProps([]);
     setMensaje("");
     setGeneratedId(null);
+    setGeneratedSlug(null);
     setShowShareModal(false);
   };
 
@@ -1195,7 +1371,7 @@ const LandingPages = ({ T = P }) => {
       {/* KPIs */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 14 }}>
         <KPI label="Pages Generadas" value={savedPages.length} sub="total" icon={Globe} color={T.blue} T={T} />
-        <KPI label="Propiedades en catálogo" value={rivieraProperties.length + customProperties.length} sub={`${customProperties.length} registradas`} icon={Building2} color={T.emerald} T={T} />
+        <KPI label="Propiedades en catálogo" value={allProperties.length} sub={`${catalogProps.length} del inventario`} icon={Building2} color={T.emerald} T={T} />
         <KPI label="Tasa de Apertura" value="87%" sub="+12%" icon={Eye} color={T.accent} T={T} />
         <KPI label="Conversión a Zoom" value="34%" sub="+8pp" icon={Target} color={T.violet} T={T} />
       </div>
@@ -1228,13 +1404,16 @@ const LandingPages = ({ T = P }) => {
             <Pill color={statusColors[pg.status] || T.txt3} s isLight={isLight}>{pg.status}</Pill>
             <span style={{ fontSize: 11, color: T.txt2, fontFamily: font, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{pg.asesor?.split(" ")[0] || "—"}</span>
             <div style={{ display: "flex", gap: 5 }}>
-              <button onClick={() => { setClientName(pg.client); setSelectedProps(pg.propIds || allProperties.slice(0, pg.props).map(p => p.id)); setPreviewOpen(true); }} style={{ padding: "5px 7px", borderRadius: 6, border: `1px solid ${T.border}`, background: T.glass, cursor: "pointer", display: "flex", alignItems: "center" }}><Eye size={11} color={T.txt2} /></button>
-              <button onClick={handleCopyLink} style={{ padding: "5px 7px", borderRadius: 6, border: `1px solid ${T.border}`, background: T.glass, cursor: "pointer", display: "flex", alignItems: "center" }}>{copied ? <Check size={11} color={T.accent} /> : <Copy size={11} color={T.txt2} />}</button>
-              <button style={{ padding: "5px 7px", borderRadius: 6, border: `1px solid ${T.border}`, background: T.glass, cursor: "pointer", display: "flex", alignItems: "center" }}><Share2 size={11} color={T.txt2} /></button>
+              <button title={pg.slug ? "Abrir landing del cliente" : "Vista previa"} onClick={() => { if (pg.slug) { window.open(publicUrlFor(pg.slug), "_blank"); return; } setClientName(pg.client); setSelectedProps(pg.propIds || allProperties.slice(0, pg.props).map(p => p.id)); setPreviewOpen(true); }} style={{ padding: "5px 7px", borderRadius: 6, border: `1px solid ${T.border}`, background: T.glass, cursor: "pointer", display: "flex", alignItems: "center" }}><Eye size={11} color={T.txt2} /></button>
+              <button title="Copiar link" onClick={() => { if (pg.slug) { navigator.clipboard.writeText(publicUrlFor(pg.slug)).catch(() => {}); setCopied(true); setTimeout(() => setCopied(false), 2500); return; } handleCopyLink(); }} style={{ padding: "5px 7px", borderRadius: 6, border: `1px solid ${T.border}`, background: T.glass, cursor: "pointer", display: "flex", alignItems: "center" }}>{copied ? <Check size={11} color={T.accent} /> : <Copy size={11} color={T.txt2} />}</button>
+              <button title="Enviar por WhatsApp" onClick={() => { if (!pg.slug) return; window.open(`https://wa.me/?text=${encodeURIComponent(`Hola ${pg.client} 🏡 Te comparto tu presentación personalizada de propiedades:\n${publicUrlFor(pg.slug)}`)}`, "_blank"); }} style={{ padding: "5px 7px", borderRadius: 6, border: `1px solid ${T.border}`, background: T.glass, cursor: pg.slug ? "pointer" : "not-allowed", display: "flex", alignItems: "center", opacity: pg.slug ? 1 : 0.5 }}><Share2 size={11} color={T.txt2} /></button>
             </div>
           </div>
         ))}
       </G>
+
+      {/* Fichas técnicas de desarrollos — catálogo real (Supabase, sync con el Sheet) */}
+      <FichasTecnicas T={T} onCreateLanding={(row) => setExpressFicha(row)} />
 
       {/* Catálogo de Propiedades */}
       <G np T={T}>
@@ -1462,6 +1641,50 @@ const LandingPages = ({ T = P }) => {
           T={T}
         />
       )}
+
+      {/* Landing exprés: nombre del cliente + un click → landing con link */}
+      {expressFicha && (
+        <ExpressLandingModal
+          ficha={expressFicha}
+          defaultWA={localStorage.getItem("stratos_asesor_wa") || ""}
+          onClose={() => setExpressFicha(null)}
+          onStepByStep={() => { setSelectedProps([`cat-${expressFicha.id}`]); setExpressFicha(null); setStep(1); }}
+          onGenerate={(data) => {
+            const row = expressFicha;
+            const autoMsg = data.mensaje || `Hola ${data.clientName.split(" ")[0]}, te preparé esta presentación de ${row.name} con la información completa: precios, entrega y fotos. Cualquier duda, aquí estoy para ayudarte.`;
+            if (data.asesorWA) { try { localStorage.setItem("stratos_asesor_wa", data.asesorWA); } catch {} }
+            setExpressFicha(null);
+            handleGenerate({
+              express: true,
+              clientName: data.clientName,
+              selectedIds: [`cat-${row.id}`],
+              asesorWA: data.asesorWA,
+              mensaje: autoMsg,
+              asesorName: user?.name || asesor,
+            });
+          }}
+          T={T}
+        />
+      )}
+
+      {/* Preview accesible también desde el paso 0 (landing exprés) */}
+      {previewOpen && createPortal(
+        <LandingPagePreview
+          shareUrl={generatedSlug ? publicUrlFor(generatedSlug) : null}
+          client={clientName}
+          asesor={asesor}
+          asesorWA={asesorWA}
+          asesorCal={asesorCal}
+          mensaje={mensaje}
+          agencyName={agencyName}
+          properties={allProperties.filter(p => selectedProps.includes(p.id))}
+          driveLinks={driveLinks}
+          onClose={() => { setPreviewOpen(false); resetForm(); }}
+          onCopyLink={handleCopyLink}
+          copied={copied}
+        />,
+        document.body
+      )}
     </div>
   );
 
@@ -1680,6 +1903,11 @@ const LandingPages = ({ T = P }) => {
           <span style={{ fontSize: 11, color: T.accent, fontWeight: 600, fontFamily: font }}>{filteredProperties.filter(inBudget).length} en presupuesto</span>
           <span style={{ fontSize: 11, color: T.txt3, fontFamily: font }}>· {filteredProperties.length} totales</span>
         </div>
+        <input
+          value={propQuery} onChange={e => setPropQuery(e.target.value)}
+          placeholder="Buscar desarrollo o plaza…"
+          style={{ padding: "7px 12px", borderRadius: 8, fontSize: 12, background: T.glass, border: `1px solid ${T.border}`, color: T.txt, fontFamily: font, outline: "none", width: 210, marginLeft: "auto", marginRight: 10 }}
+        />
         <button
           onClick={() => setShowNewPropModal(true)}
           style={{
@@ -1763,10 +1991,16 @@ const LandingPages = ({ T = P }) => {
                 {/* Property Details */}
                 <div style={{ padding: "14px 16px 10px" }}>
                   <div style={{ display: "flex", gap: 8, marginBottom: 10, flexWrap: "wrap" }}>
-                    <Pill color={prop.accent} s isLight={isLight}>{prop.type}</Pill>
-                    <Pill color={T.emerald} s isLight={isLight}>ROI {prop.roi}</Pill>
-                    <Pill color={T.txt2} s isLight={isLight}>{prop.bedrooms}</Pill>
+                    {prop.type && <Pill color={prop.accent} s isLight={isLight}>{prop.type}</Pill>}
+                    {prop.roi && <Pill color={T.emerald} s isLight={isLight}>ROI {prop.roi}</Pill>}
+                    {prop.bedrooms && <Pill color={T.txt2} s isLight={isLight}>{prop.bedrooms}</Pill>}
                   </div>
+                  {prop.ticket ? (
+                    <div style={{ padding: "8px 10px", borderRadius: 8, background: `${prop.accent}0A`, border: `1px solid ${prop.accent}18`, marginBottom: 10 }}>
+                      <p style={{ fontSize: 9, color: T.txt3, marginBottom: 2 }}>Precio</p>
+                      <p style={{ fontSize: 15, fontWeight: 700, color: prop.accent, fontFamily: fontDisp }}>{prop.ticket}</p>
+                    </div>
+                  ) : prop.priceFrom > 0 ? (
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 10 }}>
                     <div style={{ padding: "8px 10px", borderRadius: 8, background: `${prop.accent}0A`, border: `1px solid ${prop.accent}18` }}>
                       <p style={{ fontSize: 9, color: T.txt3, marginBottom: 2 }}>Desde</p>
@@ -1777,6 +2011,12 @@ const LandingPages = ({ T = P }) => {
                       <p style={{ fontSize: 16, fontWeight: 700, color: T.txt, fontFamily: fontDisp }}>${(prop.priceTo / 1000).toFixed(0)}K</p>
                     </div>
                   </div>
+                  ) : (
+                    <div style={{ padding: "8px 10px", borderRadius: 8, background: T.glass, border: `1px solid ${T.border}`, marginBottom: 10 }}>
+                      <p style={{ fontSize: 9, color: T.txt3, marginBottom: 2 }}>Precio</p>
+                      <p style={{ fontSize: 13, fontWeight: 600, color: T.txt2, fontFamily: fontDisp }}>A consultar</p>
+                    </div>
+                  )}
                   <p style={{ fontSize: 11, color: T.txt2, lineHeight: 1.5, fontFamily: font, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{prop.description}</p>
                   <div style={{ display: "flex", flexDirection: "column", gap: 4, marginTop: 10 }}>
                     {prop.highlights.slice(0, 3).map((h, i) => (
@@ -1924,6 +2164,7 @@ const LandingPages = ({ T = P }) => {
       {/* Full-screen Landing Page Preview */}
       {previewOpen && createPortal(
         <LandingPagePreview
+          shareUrl={generatedSlug ? publicUrlFor(generatedSlug) : null}
           client={clientName}
           asesor={asesor}
           asesorWA={asesorWA}

@@ -139,7 +139,20 @@
 //   "Nueva Landing Page"): ArrowRight/CheckCircle2/ChevronUp usados sin
 //   importar en LandingPages/index.jsx y CheckCircle2/StratosAtom en
 //   LandingPagePreview.jsx. Solo imports, cero cambios de lógica.
-const CACHE_VERSION = 'stratos-v82';
+// v78 — feat(propiedades): catálogo de propiedades (módulo Propiedades) +
+//   fichas técnicas de desarrollos en el Marketing Studio (Create), leídas de
+//   Supabase `properties` y sincronizadas del Sheet DRIVES vía n8n cada 6 h.
+// v79 — Create como generador de fichas-landing: el catálogo real (Sheet) se
+//   integra al generador de landing pages (selección, precios reales por ticket,
+//   guards sin ROI inventado) + fix imports rotos (ArrowRight, CheckCircle2,
+//   StratosAtom) que crasheaban los pasos 1-2 y el preview.
+// v80 — landings personalizadas persistentes: cada landing generada en Create
+//   se guarda (tabla landing_pages) y produce link público /p/<slug> que el
+//   cliente abre sin login, con el nombre del cliente y datos vivos del
+//   catálogo; contador de vistas real ("Vista" en Campañas Recientes).
+// v81 — landing exprés: desde la ficha técnica, con el nombre del cliente y
+//   un click se genera la landing personalizada con su link público.
+const CACHE_VERSION = 'stratos-v83';
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 
