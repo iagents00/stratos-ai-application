@@ -7,11 +7,12 @@
  */
 import {
   Users, Hexagon, Activity, Building2, Atom,
-  Trophy, Landmark, UserCheck, CreditCard, Shield, User, Trash2, Wallet
+  Trophy, Landmark, UserCheck, CreditCard, Shield, User, Trash2, Wallet, MessageCircle
 } from "lucide-react";
 
 export const nav = [
   { id: "c",     l: "CRM",       i: Users      },
+  { id: "wa",    l: "WhatsApp",  i: MessageCircle },
   { id: "lp",    l: "Create",    i: Hexagon    },
   { id: "d",     l: "Comando",   i: Activity   },
   { id: "caja",  l: "Caja",      i: Wallet     },
@@ -36,6 +37,9 @@ export const MODULE_ROLES = {
   // asesores/empleados también carguen desde la web (ej. Constructora Vega)
   // lo habilitan con `features.cajaAsesores: true` en su config.
   caja:   ["super_admin","admin","director","ceo"],
+  // WhatsApp: bandeja de conversaciones — el asesor DEBE verla (es donde se
+  // entera de que un cliente le escribió). Gateada por flag whatsappModule.
+  wa:     ["super_admin","admin","director","ceo","asesor"],
   ia:     ["super_admin","admin","director","ceo"],
   e:      ["super_admin","admin","director","ceo"],
   a:      ["super_admin","admin","director","ceo"],
@@ -52,6 +56,7 @@ export const MODULE_NAMES = {
   d: "Comando", c: "CRM", ia: "iAgents", e: "ERP",
   a: "Asesores", lp: "Campañas", fa: "Finanzas",
   rrhh: "Personas", trash: "Papelera", caja: "Caja",
+  wa: "WhatsApp",
   planes: "Planes", perfil: "Perfil", admin: "Usuarios",
 };
 
@@ -99,6 +104,15 @@ export function canAccessModule(moduleId, user, clientConfig = null) {
     if (MODULE_ROLES.caja.includes(user.role)) return true;
     if (user.role === "asesor" && clientConfig?.features?.cajaAsesores === true) return true;
     return false;
+  }
+
+  // WhatsApp (bandeja de conversaciones): igual que Caja, 100% por feature flag.
+  // Sin `features.whatsappModule: true` nadie lo ve. Con el flag, el rol decide
+  // (incluye asesor: es justo quien necesita enterarse de los mensajes nuevos).
+  if (moduleId === "wa") {
+    if (clientConfig?.features?.whatsappModule !== true) return false;
+    if (user.isDemo) return false; // la cuenta demo no tiene datos reales de WhatsApp
+    return MODULE_ROLES.wa.includes(user.role);
   }
 
   if (!isStratosOrg(user.organizationId) && !EXTERNAL_ORG_MODULES.has(moduleId)) {
