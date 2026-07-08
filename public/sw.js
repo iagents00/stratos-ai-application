@@ -146,7 +146,11 @@
 //   solo Vega): cuentas, ingresos y egresos sobre team_expenses. Los gastos
 //   registrados por Telegram aparecen ahí solos; cualquier rol registra desde
 //   la web. Migraciones 066-069 (tipo+account, source web, aviso a admins).
-const CACHE_VERSION = 'stratos-v84';
+// v85 — feat(whatsapp): chat de WhatsApp EN VIVO en el expediente del lead
+//   (tab Chat): hilo real espejado desde Chatwoot (whatsapp_messages) +
+//   composer para responder desde el CRM (whatsapp_outbox → n8n → Chatwoot).
+//   Feature flag `whatsappChat` (solo Duke). Ventana 24h de Meta respetada.
+const CACHE_VERSION = 'stratos-v85';
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 

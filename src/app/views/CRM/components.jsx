@@ -39,6 +39,7 @@ import { canTriggerIaActions } from "../../../lib/iagents-actions";
 import LeadDiscoveryPanel from "./LeadDiscoveryPanel";
 import LeadVoiceCalls from "./LeadVoiceCalls";
 import LeadChatHistory from "./LeadChatHistory";
+import LeadWhatsAppChat from "./LeadWhatsAppChat";
 import CallActionButton from "./CallActionButton";
 import RequiresHumanButton from "./RequiresHumanButton";
 import ScheduledCallBadge from "./ScheduledCallBadge";
@@ -4630,12 +4631,18 @@ const LeadPanel = ({ lead, onClose, oc, onUpdate, onSwitchTab, onShowHistory, on
           {/* Pipeline tab removed — no longer available */}
 
           {/* ══════════════════════════════════════════════════
-              TAB: CHAT — Historial de WhatsApp/Chatwoot
-              Render limpio, sin mezclar con notas humanas o resúmenes IA.
-              Datos vienen de expediente_items donde tipo='historial_chat'.
+              TAB: CHAT — WhatsApp en vivo + Historial Chatwoot
+              1) LeadWhatsAppChat: hilo REAL de WhatsApp con composer para
+                 responder desde el CRM (feature flag `whatsappChat`; se
+                 auto-oculta si el flag está apagado — hoy solo Duke).
+              2) LeadChatHistory: historial legacy de expediente_items
+                 (tipo='historial_chat'), se mantiene como registro.
           ══════════════════════════════════════════════════ */}
           {activeTab === "chat" && (
-            <LeadChatHistory lead={lead} T={T} isLight={isLight} />
+            <>
+              <LeadWhatsAppChat lead={lead} T={T} isLight={isLight} />
+              <LeadChatHistory lead={lead} T={T} isLight={isLight} />
+            </>
           )}
 
           {/* ══════════════════════════════════════════════════
