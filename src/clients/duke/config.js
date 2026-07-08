@@ -53,6 +53,11 @@ const dukeConfig = {
     // agendados_roles" con un panel CRUD (tabla zoom_agendados, migración 027)
     // dentro de Comando Directivo. Solo admins/director/ceo.
     zoomControl: true,
+    // WhatsApp en vivo en el expediente (tab Chat): ver y RESPONDER el
+    // WhatsApp real del lead sin salir del CRM. Caso de uso: la asesora
+    // Cecilia con su número dedicado (+1 747). Espejo whatsapp_messages +
+    // cola whatsapp_outbox vía n8n/Chatwoot.
+    whatsappChat: true,
   },
 
   support: {
