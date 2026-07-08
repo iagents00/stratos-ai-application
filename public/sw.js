@@ -123,7 +123,11 @@
 // v78 — feat(propiedades): catálogo de propiedades (módulo Propiedades) +
 //   fichas técnicas de desarrollos en el Marketing Studio (Create), leídas de
 //   Supabase `properties` y sincronizadas del Sheet DRIVES vía n8n cada 6 h.
-const CACHE_VERSION = 'stratos-v78';
+// v79 — Create como generador de fichas-landing: el catálogo real (Sheet) se
+//   integra al generador de landing pages (selección, precios reales por ticket,
+//   guards sin ROI inventado) + fix imports rotos (ArrowRight, CheckCircle2,
+//   StratosAtom) que crasheaban los pasos 1-2 y el preview.
+const CACHE_VERSION = 'stratos-v79';
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 
