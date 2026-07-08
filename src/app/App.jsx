@@ -99,6 +99,7 @@ const IACRM         = lazy(() => import("./views/IACRM"));
 const LandingPages  = lazy(() => import("./views/LandingPages"));
 const FinanzasAdmin = lazy(() => import("./views/FinanzasAdmin"));
 const RRHHModule    = lazy(() => import("./views/RRHHModule"));
+const Caja          = lazy(() => import("./views/Caja"));
 const Profile       = lazy(() => import("./views/Profile"));
 const Trash         = lazy(() => import("./views/Trash"));
 
@@ -1523,6 +1524,7 @@ export default function App() {
                   {v === "a"      && <Team oc={oc} T={T} />}
                   {v === "lp"     && <LandingPages T={T} />}
                   {v === "fa"     && <FinanzasAdmin T={T} />}
+                  {v === "caja"   && canAccessModule("caja", user, clientConfig) && <Caja T={T} />}
                   {v === "rrhh"   && <RRHHModule T={T} />}
                   {v === "planes" && <PricingScreen embedded onBack={() => setV(isAsesorRole ? "c" : "d")} />}
                   {v === "perfil" && <Profile theme={theme} T={T} />}

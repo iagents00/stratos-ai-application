@@ -135,7 +135,11 @@
 //   Docs/Drive/Notion etc., guardados en organizations.meta_config.documents)
 //   y Lista de Acción rediseñada: tipografía más grande y legible, checkboxes
 //   redondos, más aire. Bump para que el bundle nuevo baje a todos.
-const CACHE_VERSION = 'stratos-v81';
+// v82 — feat(caja): módulo "Caja" en el menú lateral (feature flag `caja`, hoy
+//   solo Vega): cuentas, ingresos y egresos sobre team_expenses. Los gastos
+//   registrados por Telegram aparecen ahí solos; cualquier rol registra desde
+//   la web. Migración 066 (tipo + account en team_expenses).
+const CACHE_VERSION = 'stratos-v82';
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 

@@ -84,6 +84,10 @@ const vegaConfig = {
     rrhh:         false,   // datos mock de Stratos
     trash:        true,    // Papelera del propio CRM
     comandoDirectivo: true, // Tablero de mando para Ricardo (org-scoped, seguro)
+    // Caja: cuentas / ingresos / egresos sobre team_expenses. Los gastos que
+    // el equipo carga por Telegram (texto/audio/ticket) aparecen ahí solos, y
+    // desde la web CUALQUIER rol (admin o empleado) registra ingresos/egresos.
+    caja:         true,
   },
 
   support: {
