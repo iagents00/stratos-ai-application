@@ -172,7 +172,12 @@
 //   campaña entran frescos y MUY visibles (migs 078/079: sin texto placeholder
 //   legacy, captura solo al vincular la conversación, revival de etapas
 //   tempranas a Contáctame Ya — caso Camila).
-const CACHE_VERSION = 'stratos-v90';
+// v91 — pulido UI: nombres de adjuntos de WhatsApp limpios (se cortaba la fuga
+//   del header Content-Disposition, ej. "archivo.jpg-filename*=") + detección de
+//   imagen/audio/video por extensión del nombre; "Próxima acción" en un solo
+//   renglón en todos los dispositivos (texto completo en el tooltip); Caja
+//   muestra la foto del comprobante (bucket evidencia, URL firmada al abrir).
+const CACHE_VERSION = 'stratos-v91';
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 
