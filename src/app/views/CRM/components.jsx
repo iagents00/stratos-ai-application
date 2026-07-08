@@ -963,7 +963,7 @@ const NextActionHero = ({ lead, T = P, onUpdate = null, projectMode = false }) =
       {!editing && (
         <p
           onClick={canEdit ? openEdit : undefined}
-          title={canEdit ? "Click para editar" : undefined}
+          title={actionText || (canEdit ? "Click para editar" : undefined)}
           style={{
             margin: 0,
             fontSize: 15, lineHeight: 1.5,
@@ -977,9 +977,12 @@ const NextActionHero = ({ lead, T = P, onUpdate = null, projectMode = false }) =
             borderRadius: 8,
             padding: "4px 6px",
             margin: "-4px -6px",
+            maxWidth: "100%",
             transition: "background 0.14s",
+            // Próxima acción SIEMPRE en un solo renglón (todos los dispositivos);
+            // el texto completo queda en el tooltip. `showFull` sigue expandiendo.
             ...(showFull ? {} : {
-              display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden",
+              whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
             }),
           }}
           onMouseEnter={e => { if (canEdit) e.currentTarget.style.background = isLight ? `${T.accent}0C` : "rgba(255,255,255,0.05)"; }}

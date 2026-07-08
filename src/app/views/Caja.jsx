@@ -19,7 +19,7 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import {
   Wallet, ArrowUpRight, ArrowDownRight, Scale, Plus, Search,
-  RefreshCw, Send, X, MessageCircle, Monitor,
+  RefreshCw, Send, X, MessageCircle, Monitor, Paperclip, ExternalLink,
 } from "lucide-react";
 import { font, fontDisp } from "../../design-system/tokens";
 import { supabase } from "../../lib/supabase";
@@ -86,8 +86,26 @@ export default function Caja({ T }) {
   const [tipoFilter, setTipoFilter] = useState("todos"); // todos | ingreso | egreso
   const [showForm, setShowForm] = useState(!isMobile);
   const [form, setForm] = useState(EMPTY_FORM);
+  const [viewer, setViewer] = useState(null);   // comprobante abierto: { loading } | { url }
 
   const orgId = user?.organizationId;
+
+  // Abre el comprobante (foto/ticket) de un gasto. La evidencia vive en el bucket
+  // privado `evidencia`, así que se pide una URL firmada al vuelo. Si evidence_path
+  // ya fuese una URL http, se abre directo.
+  const openEvidence = useCallback(async (path) => {
+    if (!path) return;
+    if (/^https?:\/\//i.test(path)) { setViewer({ url: path }); return; }
+    setViewer({ loading: true });
+    try {
+      const { data, error: e } = await supabase.storage.from("evidencia").createSignedUrl(path, 3600);
+      if (e) throw e;
+      setViewer({ url: data.signedUrl });
+    } catch {
+      setViewer(null);
+      setError("No pude abrir el comprobante. Probá de nuevo.");
+    }
+  }, []);
 
   const load = useCallback(async () => {
     if (!orgId) return;
@@ -322,6 +340,16 @@ export default function Caja({ T }) {
                   </span>
                 </div>
                 {r.description && <div style={{ fontSize: 11.5, color: txt2, marginTop: 3 }}>{r.description}</div>}
+                {r.evidence_path && (
+                  <button type="button" onClick={() => openEvidence(r.evidence_path)} style={{
+                    marginTop: 6, display: "inline-flex", alignItems: "center", gap: 5,
+                    padding: "4px 10px", borderRadius: 8, cursor: "pointer",
+                    background: `${accent}14`, border: `1px solid ${accent}40`, color: accent,
+                    fontSize: 11, fontWeight: 700, fontFamily: font,
+                  }}>
+                    <Paperclip size={11} /> Ver comprobante
+                  </button>
+                )}
               </div>
               <div style={{ fontSize: 15.5, fontWeight: 800, fontFamily: fontDisp, color, whiteSpace: "nowrap" }}>
                 {tipo === "ingreso" ? "+" : "−"}{fmtMoney(r.amount, r.currency)}
@@ -330,6 +358,34 @@ export default function Caja({ T }) {
           );
         })}
       </div>
+
+      {/* Visor de comprobante */}
+      {viewer && (
+        <div onClick={() => setViewer(null)} style={{
+          position: "fixed", inset: 0, zIndex: 100000, background: "rgba(3,8,16,0.82)",
+          backdropFilter: "blur(6px)", WebkitBackdropFilter: "blur(6px)",
+          display: "flex", alignItems: "center", justifyContent: "center", padding: 20,
+        }}>
+          <button onClick={() => setViewer(null)} title="Cerrar" style={{
+            position: "absolute", top: 18, right: 18, background: "rgba(255,255,255,0.12)",
+            border: "none", borderRadius: 10, padding: 8, cursor: "pointer", color: "#fff", display: "flex",
+          }}><X size={18} /></button>
+          {viewer.loading ? (
+            <div style={{ color: "#fff", fontSize: 14, fontFamily: font }}>Abriendo comprobante…</div>
+          ) : (
+            <div onClick={e => e.stopPropagation()} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12, maxWidth: "94vw" }}>
+              <img src={viewer.url} alt="Comprobante"
+                style={{ maxWidth: "94vw", maxHeight: "82vh", borderRadius: 12, objectFit: "contain", boxShadow: "0 12px 48px rgba(0,0,0,0.5)" }} />
+              <a href={viewer.url} target="_blank" rel="noreferrer" style={{
+                display: "inline-flex", alignItems: "center", gap: 6, color: "#fff", fontSize: 12.5,
+                fontFamily: font, textDecoration: "none", opacity: 0.85,
+              }}>
+                <ExternalLink size={13} /> Abrir original (o descargar si es PDF)
+              </a>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
