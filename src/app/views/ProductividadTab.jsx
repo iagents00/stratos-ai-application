@@ -24,6 +24,7 @@ import { useState, useEffect } from "react";
 import { ChevronRight } from "lucide-react";
 import { supabase } from "../../lib/supabase";
 import { font, fontDisp } from "../../design-system/tokens";
+import { isHiddenAdvisor } from "./CRM/zoom-metrics";
 
 // Deriva el estado mostrable de una acción a partir de los campos de la DB.
 // `done` manda (es la fuente de verdad del avance); `status` solo afina los no-hechos.
@@ -50,6 +51,8 @@ export default function ProductividadTab({ T, isLight }) {
         if (error) { console.warn("[Stratos] productividad load:", error.message); setRows([]); return; }
         const byAsesor = {};
         (data || []).forEach(a => {
+          // Cuentas de prueba/sistema fuera — mismo criterio que el resto del Comando.
+          if (isHiddenAdvisor(a.asesor_name)) return;
           const k = (a.asesor_name && a.asesor_name.trim()) || "Sin asignar";
           byAsesor[k] = byAsesor[k] || { asesor: k, items: [] };
           byAsesor[k].items.push({

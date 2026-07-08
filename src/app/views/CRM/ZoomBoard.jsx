@@ -15,7 +15,7 @@
  */
 import { useMemo, useState } from "react";
 import { CalendarDays, CheckCircle2, MapPin, Handshake, History, ChevronDown } from "lucide-react";
-import { P, LP, font, fontDisp, STAGE_COLORS } from "../../../design-system/tokens";
+import { P, LP, font, fontDisp, STAGE_COLORS, normalizeStage } from "../../../design-system/tokens";
 import { zoomEventsOf, funnelEntryOf, milestoneOf, ACTIVE_POST_ZOOM_STAGES, RECORRIDO_STAGES, CIERRE_STAGES, zoomMovements, isHiddenAdvisor } from "./zoom-metrics";
 import DateRangeControl from "./DateRangeControl";
 import { createDefaultDateFilter, resolveDateRange, timestampInRange } from "./date-range";
@@ -53,8 +53,6 @@ export default function ZoomBoard({ leadsData = [], theme = "dark", onOpenLead =
     return rows;
   }, [dateRange, leadsData, histKind, presentadorFilter]);
 
-  const inferidos = useMemo(() => historial.filter(m => m.inferred).length, [historial]);
-
   // Totales del embudo + productividad por presentador (quién dio el Zoom).
   // AGENDADOS = entró al funnel (agendado o ya realizado) → siempre ≥ realizados.
   // REALIZADOS = hizo el Zoom. Ambos con split registrado/inferido.
@@ -84,7 +82,7 @@ export default function ZoomBoard({ leadsData = [], theme = "dark", onOpenLead =
 
   // Activos post-Zoom = etapa actual en una fase post-Zoom activa (set compartido).
   const activosPostZoom = useMemo(
-    () => leadsData.filter(l => ACTIVE_POST_ZOOM_STAGES.has(l.st)).length,
+    () => leadsData.filter(l => ACTIVE_POST_ZOOM_STAGES.has(normalizeStage(l.st))).length,
     [leadsData],
   );
 
@@ -229,7 +227,7 @@ export default function ZoomBoard({ leadsData = [], theme = "dark", onOpenLead =
         >
           <History size={15} color={accent} strokeWidth={2.2} />
           <span>Historial de movimientos de Zoom</span>
-          <span style={{ fontSize: 12, fontWeight: 500, color: T.txt3 }}>· {historial.length} movimientos{inferidos ? ` · ${inferidos} inferidos` : ""}</span>
+          <span style={{ fontSize: 12, fontWeight: 500, color: T.txt3 }}>· {historial.length} movimientos</span>
           <ChevronDown size={16} color={T.txt3} style={{ marginLeft: "auto", transform: histOpen ? "rotate(180deg)" : "none", transition: "transform 0.15s" }} />
         </button>
 
