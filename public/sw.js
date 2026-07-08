@@ -160,15 +160,19 @@
 //   chats + no-leídos por conversación) + notificaciones en la campanita
 //   cuando un cliente escribe. Multimedia: enviar/recibir imágenes, audios,
 //   video y archivos (whatsapp_messages.media + bucket wa-outbound).
-// v89 — feat(whatsapp): nota de voz grabada desde el chat (micrófono, como
+// v89 — fix(ui): el widget del plan (barra lateral) cuenta lo MISMO que el panel
+//   "Acciones del Equipo" (metaActions: derivadas de leads + creadas a mano en
+//   team_actions), no solo la tabla team_actions. Así "ACT hechas/total" y el %
+//   de AVANCE cuadran con las "N pendientes · M completadas" del panel.
+// v90 — feat(whatsapp): nota de voz grabada desde el chat (micrófono, como
 //   WhatsApp: grabar → preview → enviar) + gestión del lead desde la bandeja
 //   (cambiar etapa y reasignar asesor sin salir del chat) + click en el nombre
 //   abre el expediente completo en el CRM + notificaciones (contador en el
 //   título de la pestaña y notificación nativa del navegador). Leads de
-//   campaña entran frescos y MUY visibles (mig 078: sin texto placeholder
-//   legacy, is_new también al revivir, revival de etapas tempranas a
-//   Contáctame Ya — caso Camila).
-const CACHE_VERSION = 'stratos-v89';
+//   campaña entran frescos y MUY visibles (migs 078/079: sin texto placeholder
+//   legacy, captura solo al vincular la conversación, revival de etapas
+//   tempranas a Contáctame Ya — caso Camila).
+const CACHE_VERSION = 'stratos-v90';
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 
