@@ -122,7 +122,7 @@ function useDebounced(value, ms = 200) {
   return debounced;
 }
 
-function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () => {}, autoOpenPriority1 = 0, onAutoOpenHandled, softDeleteLead }) {
+function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () => {}, autoOpenPriority1 = 0, onAutoOpenHandled, softDeleteLead, autoOpenLead = null, onAutoOpenLeadHandled = () => {} }) {
   const { user } = useAuth();
   const { config: clientConfig, clientId } = useClient();
   const { get: getScheduledCall } = useScheduledCalls();
@@ -183,6 +183,24 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
   const [suggestLead, setSuggestLead]   = useState(null);
   // Lead activo en cualquiera de los 3 drawers — base para el botón "Historial"
   const activeDrawerLead = analyzingLead || selectedLead || notesLead;
+
+  // Apertura del expediente pedida desde OTRO módulo (ej. click en el nombre
+  // del cliente en la bandeja de WhatsApp). Nonce {id, ts}: espera a que el
+  // lead esté en leadsData (por si el CRM recién carga) y abre el MISMO panel
+  // que un click en la fila (NotesModal).
+  const autoOpenHandledRef = useRef(0);
+  useEffect(() => {
+    if (!autoOpenLead?.id || !autoOpenLead?.ts) return;
+    if (autoOpenHandledRef.current === autoOpenLead.ts) return;
+    const lead = leadsData.find((l) => l.id === autoOpenLead.id);
+    if (!lead) return; // leadsData aún cargando: reintenta cuando cambie
+    autoOpenHandledRef.current = autoOpenLead.ts;
+    setNotesLead(lead);
+    // Avisar al App para que limpie el nonce — sin esto, el CRM se desmonta al
+    // cambiar de vista y al volver re-abriría este expediente para siempre.
+    onAutoOpenLeadHandled();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoOpenLead?.ts, leadsData]);
 
   // ID del último cliente registrado en esta sesión. Determina el lead con
   // pulso animado + posición #1 garantizada. Decae a los 10 s (sólo afecta
