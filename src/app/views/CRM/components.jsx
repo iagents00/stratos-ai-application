@@ -4049,6 +4049,17 @@ const NotesModal = ({ lead, onClose, onSave, onUpdate, onSwitchTab, onShowHistor
             </div>
           )}
 
+          {/* 4.9 WHATSAPP EN VIVO — hilo real de WhatsApp + responder desde
+              el CRM. Clientes con discoverySimplified (Duke) abren ESTE panel
+              al clickear el lead (no el LeadPanel con tabs), así que el chat
+              debe vivir acá también. El componente se auto-oculta si el flag
+              `whatsappChat` está apagado; en projectMode (Vega) no aplica. */}
+          {!projectMode && (
+            <div style={{ marginTop: 14 }}>
+              <LeadWhatsAppChat lead={lead} T={T} isLight={isLight} />
+            </div>
+          )}
+
           {/* 5. DATOS GENERALES DEL CLIENTE — colapsable en Discovery
               simplificado (Duke). En otros clientes se muestra siempre
               (mantiene compat con el comportamiento histórico).
