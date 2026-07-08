@@ -104,6 +104,11 @@ export const DEFAULT_CLIENT_CONFIG = {
     // para TODOS los roles del cliente (incluye asesor). Default OFF — hoy
     // solo Constructora Vega lo prende en su config.
     caja: false,
+    // WhatsApp en vivo en el expediente del lead (tab Chat): hilo real de
+    // WhatsApp espejado desde Chatwoot (tabla whatsapp_messages) + composer
+    // para responder desde el CRM (cola whatsapp_outbox → n8n → Chatwoot).
+    // Default OFF — hoy solo Duke lo prende (caso asesora Cecilia).
+    whatsappChat: false,
   },
 
   // Contacto y soporte
