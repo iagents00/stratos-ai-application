@@ -8,12 +8,15 @@ import {
   TrendingUp, Target, Plus, Heart, Users, Crown, Building2,
   Globe, Palmtree, Waves, Wand2, Image, Download, ExternalLink,
   Copy, Check, Trash2, ChevronDown, ChevronRight, ChevronUp, Eye, Share2,
+  ArrowRight, CheckCircle2,
   DollarSign, Shield, MapPin, FileText, X, Phone, CalendarDays, User
 } from "lucide-react";
 import { P, font, fontDisp } from "../../../design-system/tokens";
 import { G, KPI, Pill, Ico } from "../../SharedComponents";
 import LandingPagePreview from "./LandingPagePreview";
-import FichasTecnicas from "./FichasTecnicas";
+import FichasTecnicas, { fichaToLandingProp } from "./FichasTecnicas";
+import { supabase } from "../../../lib/supabase";
+import { useClient } from "../../../hooks/useClient";
 
 const team = [
   { n: "Oscar Gálvez",      r: "CEO Ejecutivo",           wa: "+52 998 000 0001", cal: "" },
@@ -1032,6 +1035,24 @@ const LandingPages = ({ T = P }) => {
   const [editingLinkId, setEditingLinkId] = useState(null);
   const [editLinkValue, setEditLinkValue] = useState("");
   const [agencyName, setAgencyName] = useState(() => localStorage.getItem("stratos_agency_name") || "STRATOS REALTY");
+  const { isFeatureEnabled } = useClient();
+  const catalogEnabled = isFeatureEnabled("propiedades");
+  const [catalogRows, setCatalogRows] = useState([]);
+  const [propQuery, setPropQuery] = useState("");
+
+  // Catálogo real: fichas técnicas del equipo (tabla properties, RLS org-scoped).
+  useEffect(() => {
+    if (!catalogEnabled) return;
+    let alive = true;
+    supabase.from("properties").select("*").is("deleted_at", null)
+      .then(({ data, error }) => {
+        if (!alive) return;
+        if (error) { console.warn("[Stratos] catálogo landing:", error.message); return; }
+        setCatalogRows((data || []).filter(r => r.active !== false));
+      });
+    return () => { alive = false; };
+  }, [catalogEnabled]);
+  const catalogProps = useMemo(() => catalogRows.map(fichaToLandingProp), [catalogRows]);
 
   // Persist drive links to localStorage whenever they change
   useEffect(() => {
@@ -1088,14 +1109,18 @@ const LandingPages = ({ T = P }) => {
     { key: "boutique", label: "Boutique/Exclusivo", icon: Crown },
   ];
 
-  const allProperties = useMemo(() => [...rivieraProperties, ...customProperties], [customProperties]);
+  const allProperties = useMemo(() => [...catalogProps, ...customProperties, ...rivieraProperties], [catalogProps, customProperties]);
 
-  const inBudget = (p) => p.priceFrom <= clientBudgetMax && p.priceTo >= clientBudgetMin;
+  const inBudget = (p) => !p.priceTo ? true : (p.priceFrom <= clientBudgetMax && p.priceTo >= clientBudgetMin);
   const filteredProperties = useMemo(() => {
-    const inB = allProperties.filter(p => inBudget(p));
-    const outB = allProperties.filter(p => !inBudget(p));
+    const nq = propQuery.trim().toLowerCase();
+    const base = nq
+      ? allProperties.filter(p => [p.name, p.location, p.zone, p.brand].filter(Boolean).join(" ").toLowerCase().includes(nq))
+      : allProperties;
+    const inB = base.filter(p => inBudget(p));
+    const outB = base.filter(p => !inBudget(p));
     return [...inB, ...outB];
-  }, [allProperties, clientBudgetMin, clientBudgetMax]);
+  }, [allProperties, clientBudgetMin, clientBudgetMax, propQuery]);
 
   const saveDriveLink = (propId) => {
     setDriveLinks(prev => ({ ...prev, [propId]: editLinkValue }));
@@ -1195,7 +1220,7 @@ const LandingPages = ({ T = P }) => {
       {/* KPIs */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 14 }}>
         <KPI label="Pages Generadas" value={savedPages.length} sub="total" icon={Globe} color={T.blue} T={T} />
-        <KPI label="Propiedades en catálogo" value={rivieraProperties.length + customProperties.length} sub={`${customProperties.length} registradas`} icon={Building2} color={T.emerald} T={T} />
+        <KPI label="Propiedades en catálogo" value={allProperties.length} sub={`${catalogProps.length} del inventario`} icon={Building2} color={T.emerald} T={T} />
         <KPI label="Tasa de Apertura" value="87%" sub="+12%" icon={Eye} color={T.accent} T={T} />
         <KPI label="Conversión a Zoom" value="34%" sub="+8pp" icon={Target} color={T.violet} T={T} />
       </div>
@@ -1237,7 +1262,7 @@ const LandingPages = ({ T = P }) => {
       </G>
 
       {/* Fichas técnicas de desarrollos — catálogo real (Supabase, sync con el Sheet) */}
-      <FichasTecnicas T={T} />
+      <FichasTecnicas T={T} onCreateLanding={(row) => { setSelectedProps([`cat-${row.id}`]); setStep(1); }} />
 
       {/* Catálogo de Propiedades */}
       <G np T={T}>
@@ -1683,6 +1708,11 @@ const LandingPages = ({ T = P }) => {
           <span style={{ fontSize: 11, color: T.accent, fontWeight: 600, fontFamily: font }}>{filteredProperties.filter(inBudget).length} en presupuesto</span>
           <span style={{ fontSize: 11, color: T.txt3, fontFamily: font }}>· {filteredProperties.length} totales</span>
         </div>
+        <input
+          value={propQuery} onChange={e => setPropQuery(e.target.value)}
+          placeholder="Buscar desarrollo o plaza…"
+          style={{ padding: "7px 12px", borderRadius: 8, fontSize: 12, background: T.glass, border: `1px solid ${T.border}`, color: T.txt, fontFamily: font, outline: "none", width: 210, marginLeft: "auto", marginRight: 10 }}
+        />
         <button
           onClick={() => setShowNewPropModal(true)}
           style={{
@@ -1766,10 +1796,16 @@ const LandingPages = ({ T = P }) => {
                 {/* Property Details */}
                 <div style={{ padding: "14px 16px 10px" }}>
                   <div style={{ display: "flex", gap: 8, marginBottom: 10, flexWrap: "wrap" }}>
-                    <Pill color={prop.accent} s isLight={isLight}>{prop.type}</Pill>
-                    <Pill color={T.emerald} s isLight={isLight}>ROI {prop.roi}</Pill>
-                    <Pill color={T.txt2} s isLight={isLight}>{prop.bedrooms}</Pill>
+                    {prop.type && <Pill color={prop.accent} s isLight={isLight}>{prop.type}</Pill>}
+                    {prop.roi && <Pill color={T.emerald} s isLight={isLight}>ROI {prop.roi}</Pill>}
+                    {prop.bedrooms && <Pill color={T.txt2} s isLight={isLight}>{prop.bedrooms}</Pill>}
                   </div>
+                  {prop.ticket ? (
+                    <div style={{ padding: "8px 10px", borderRadius: 8, background: `${prop.accent}0A`, border: `1px solid ${prop.accent}18`, marginBottom: 10 }}>
+                      <p style={{ fontSize: 9, color: T.txt3, marginBottom: 2 }}>Precio</p>
+                      <p style={{ fontSize: 15, fontWeight: 700, color: prop.accent, fontFamily: fontDisp }}>{prop.ticket}</p>
+                    </div>
+                  ) : prop.priceFrom > 0 ? (
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 10 }}>
                     <div style={{ padding: "8px 10px", borderRadius: 8, background: `${prop.accent}0A`, border: `1px solid ${prop.accent}18` }}>
                       <p style={{ fontSize: 9, color: T.txt3, marginBottom: 2 }}>Desde</p>
@@ -1780,6 +1816,12 @@ const LandingPages = ({ T = P }) => {
                       <p style={{ fontSize: 16, fontWeight: 700, color: T.txt, fontFamily: fontDisp }}>${(prop.priceTo / 1000).toFixed(0)}K</p>
                     </div>
                   </div>
+                  ) : (
+                    <div style={{ padding: "8px 10px", borderRadius: 8, background: T.glass, border: `1px solid ${T.border}`, marginBottom: 10 }}>
+                      <p style={{ fontSize: 9, color: T.txt3, marginBottom: 2 }}>Precio</p>
+                      <p style={{ fontSize: 13, fontWeight: 600, color: T.txt2, fontFamily: fontDisp }}>A consultar</p>
+                    </div>
+                  )}
                   <p style={{ fontSize: 11, color: T.txt2, lineHeight: 1.5, fontFamily: font, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{prop.description}</p>
                   <div style={{ display: "flex", flexDirection: "column", gap: 4, marginTop: 10 }}>
                     {prop.highlights.slice(0, 3).map((h, i) => (

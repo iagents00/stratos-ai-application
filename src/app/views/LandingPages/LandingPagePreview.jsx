@@ -8,9 +8,10 @@ import {
   Globe, Palmtree, Waves, Wand2, Image, Download, ExternalLink,
   Copy, Check, Trash2, ChevronDown, ChevronRight, Eye, Share2,
   DollarSign, Shield, MapPin, FileText, X, Phone, CalendarDays, User,
-  Calendar, Home, Maximize2,
+  Calendar, Home, Maximize2, CheckCircle2,
 } from "lucide-react";
 import { P, font, fontDisp } from "../../../design-system/tokens";
+import { StratosAtom } from "../../../design-system/primitives";
 import { G, KPI, Pill, Ico } from "../../SharedComponents";
 
 const LandingPagePreview = ({ client, asesor, asesorWA = "", asesorCal = "", mensaje, agencyName = "STRATOS REALTY", properties, onClose, onCopyLink, copied, driveLinks = {}, T = P }) => {
@@ -323,8 +324,9 @@ const LandingPagePreview = ({ client, asesor, asesorWA = "", asesorCal = "", men
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
                       <div>
                         <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
-                          <Pill color={prop.accent}>{prop.type}</Pill>
-                          <Pill color={T.emerald}>ROI {prop.roi}</Pill>
+                          {prop.type && <Pill color={prop.accent}>{prop.type}</Pill>}
+                          {prop.roi && <Pill color={T.emerald}>ROI {prop.roi}</Pill>}
+                          {prop.badge && <Pill color={prop.accent}>{prop.badge}</Pill>}
                         </div>
                         <h3 style={{ fontSize: 32, fontWeight: 300, color: T.txt, fontFamily: fontDisp, letterSpacing: "-0.02em" }}>
                           {prop.name} <span style={{ color: "rgba(255,255,255,0.4)", fontWeight: 200 }}>{prop.brand}</span>
@@ -332,14 +334,30 @@ const LandingPagePreview = ({ client, asesor, asesorWA = "", asesorCal = "", men
                         <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 8 }}>
                           <MapPin size={14} color="rgba(255,255,255,0.5)" />
                           <span style={{ fontSize: 13, color: "rgba(255,255,255,0.6)", fontFamily: font }}>{prop.location} — {prop.zone}</span>
+                          {prop.mapsUrl && (
+                            <a href={prop.mapsUrl} target="_blank" rel="noreferrer" style={{ fontSize: 11, color: prop.accent, textDecoration: "none", marginLeft: 6 }}>Ver mapa ↗</a>
+                          )}
                         </div>
                       </div>
                       <div style={{ textAlign: "right" }}>
-                        <p style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", letterSpacing: "0.05em", textTransform: "uppercase", marginBottom: 4 }}>DESDE</p>
-                        <p style={{ fontSize: 38, fontWeight: 300, color: T.txt, fontFamily: fontDisp, letterSpacing: "-0.03em" }}>
-                          {fmtPrice(prop.priceFrom)}
-                        </p>
-                        <p style={{ fontSize: 12, color: "rgba(255,255,255,0.4)" }}>hasta {fmtPrice(prop.priceTo)} USD</p>
+                        {prop.ticket ? (
+                          <>
+                            <p style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", letterSpacing: "0.05em", textTransform: "uppercase", marginBottom: 4 }}>PRECIO</p>
+                            <p style={{ fontSize: 30, fontWeight: 300, color: T.txt, fontFamily: fontDisp, letterSpacing: "-0.02em" }}>
+                              {prop.ticket}
+                            </p>
+                          </>
+                        ) : prop.priceFrom > 0 ? (
+                          <>
+                            <p style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", letterSpacing: "0.05em", textTransform: "uppercase", marginBottom: 4 }}>DESDE</p>
+                            <p style={{ fontSize: 38, fontWeight: 300, color: T.txt, fontFamily: fontDisp, letterSpacing: "-0.03em" }}>
+                              {fmtPrice(prop.priceFrom)}
+                            </p>
+                            <p style={{ fontSize: 12, color: "rgba(255,255,255,0.4)" }}>hasta {fmtPrice(prop.priceTo)} USD</p>
+                          </>
+                        ) : (
+                          <p style={{ fontSize: 15, color: "rgba(255,255,255,0.55)", fontFamily: fontDisp }}>Precio a consultar</p>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -352,13 +370,13 @@ const LandingPagePreview = ({ client, asesor, asesorWA = "", asesorCal = "", men
                   </p>
 
                   {/* Key Metrics */}
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16, marginBottom: 28 }}>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 16, marginBottom: 28 }}>
                     {[
                       { label: "Recámaras", value: prop.bedrooms, icon: Home, c: prop.accent },
                       { label: "ROI Anual", value: prop.roi, icon: TrendingUp, c: T.emerald },
                       { label: "Entrega", value: prop.delivery, icon: Calendar, c: T.blue },
-                      { label: "Tamaños", value: prop.sizes[0] + " – " + prop.sizes[prop.sizes.length - 1], icon: Maximize2, c: T.violet },
-                    ].map(m => (
+                      { label: "Tamaños", value: (prop.sizes || []).length ? (prop.sizes.length > 1 ? prop.sizes[0] + " – " + prop.sizes[prop.sizes.length - 1] : prop.sizes[0]) : "", icon: Maximize2, c: T.violet },
+                    ].filter(m => m.value && m.value !== "—").map(m => (
                       <div key={m.label} style={{
                         padding: "16px", borderRadius: 12,
                         background: `${m.c}08`, border: `1px solid ${m.c}15`,
@@ -373,6 +391,7 @@ const LandingPagePreview = ({ client, asesor, asesorWA = "", asesorCal = "", men
                   </div>
 
                   {/* Highlights */}
+                  {(prop.highlights || []).length > 0 && (
                   <div style={{ marginBottom: 24 }}>
                     <p style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 12, fontWeight: 600 }}>Por qué esta propiedad</p>
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
@@ -384,8 +403,10 @@ const LandingPagePreview = ({ client, asesor, asesorWA = "", asesorCal = "", men
                       ))}
                     </div>
                   </div>
+                  )}
 
                   {/* Amenities */}
+                  {(prop.amenities || []).length > 0 && (
                   <div style={{ marginBottom: 24 }}>
                     <p style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 12, fontWeight: 600 }}>Amenidades</p>
                     <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
@@ -397,6 +418,7 @@ const LandingPagePreview = ({ client, asesor, asesorWA = "", asesorCal = "", men
                       ))}
                     </div>
                   </div>
+                  )}
 
                   {/* Gallery / Drive link CTA */}
                   <div style={{
@@ -568,10 +590,10 @@ const LandingPagePreview = ({ client, asesor, asesorWA = "", asesorCal = "", men
 
             <div style={{ marginTop: 60, padding: "20px 0", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
               <p style={{ fontSize: 11, color: "rgba(255,255,255,0.25)" }}>
-                Stratos Realty · Riviera Maya, México · Presentación confidencial generada para {client}
+                {agencyName} · Riviera Maya, México · Presentación confidencial generada para {client}
               </p>
               <p style={{ fontSize: 10, color: "rgba(255,255,255,0.15)", marginTop: 6 }}>
-                Asesor: {asesor} · Abril 2026 · Todos los precios en USD · Sujeto a disponibilidad
+                Asesor: {asesor} · {new Date().toLocaleDateString("es-MX", { month: "long", year: "numeric" })} · Precios sujetos a cambio y disponibilidad
               </p>
             </div>
           </div>

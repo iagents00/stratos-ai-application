@@ -18,7 +18,7 @@ import { createPortal } from "react-dom";
 import {
   Building2, MapPin, Search, X, FolderOpen, Map, Copy, Check, Star,
   CalendarDays, CreditCard, KeyRound, BedDouble, Wrench, Tag, Eye, EyeOff,
-  ChevronDown, RefreshCw, FileText,
+  ChevronDown, RefreshCw, FileText, Wand2,
 } from "lucide-react";
 import { supabase } from "../../../lib/supabase";
 import { useClient } from "../../../hooks/useClient";
@@ -35,10 +35,63 @@ const tierLabel = (id) => TIERS.find(t => t.id === id)?.label || id || "";
 
 // Acento determinista por nombre — misma propiedad, mismo color siempre.
 const ACCENTS = ["#6EE7C2", "#7EB8F0", "#A78BFA", "#F0B86E", "#5DC8D9", "#86EFAC", "#F0A3BB", "#93C5FD"];
-const accentFor = (name = "") => {
+export const accentFor = (name = "") => {
   let h = 0;
   for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) >>> 0;
   return ACCENTS[h % ACCENTS.length];
+};
+
+// Rango aproximado en USD por tier — para el filtro de presupuesto del generador.
+export const TIER_BOUNDS = {
+  "80-150K": [80000, 150000], "200-350K": [200000, 350000],
+  "500-800K": [500000, 800000], "LUXURY": [800000, 2500000],
+};
+
+/**
+ * Convierte una fila de `properties` (ficha del Sheet) al formato que consume
+ * el generador de landing pages. Sin inventar datos: si no hay ROI/amenidades/
+ * precio numérico, van vacíos y la landing los omite.
+ */
+export const fichaToLandingProp = (r) => {
+  const accent = accentFor(r.name);
+  const [pf, pt] = TIER_BOUNDS[r.price_tier] || [0, 0];
+  const highlights = [
+    ...(r.highlights ? r.highlights.split(/[;,]/).map(s => s.trim()).filter(Boolean) : []),
+    r.entrega && `Entrega: ${r.entrega}`,
+    r.financiamiento && `Financiamiento: ${r.financiamiento === "SI" ? "disponible" : r.financiamiento.toLowerCase()}`,
+    r.como_se_entrega && `Se entrega: ${r.como_se_entrega}`,
+    r.mantenimiento && `Mantenimiento: ${r.mantenimiento}`,
+  ].filter(Boolean);
+  return {
+    id: `cat-${r.id}`,
+    name: r.name,
+    brand: r.clasificacion || "",
+    location: r.plaza,
+    zone: r.zona || r.plaza,
+    type: "Desarrollo",
+    sizes: [],
+    bedrooms: r.tipologia || "",
+    priceFrom: pf, priceTo: pt,
+    ticket: r.ticket || "",
+    roi: "", roiNum: 0,
+    delivery: r.entrega || "",
+    badge: r.is_top ? "TOP INVERSIÓN" : "CATÁLOGO",
+    unitsAvailable: 0, totalUnits: 0,
+    featured: !!r.is_top,
+    amenities: [],
+    highlights,
+    description: [
+      `${r.name} en ${r.plaza}${r.zona ? ` (${r.zona})` : ""}.`,
+      r.tipologia && `Tipología: ${r.tipologia}.`,
+      r.entrega && `Entrega ${r.entrega}.`,
+      "Ficha del catálogo oficial del equipo, sincronizada con el inventario.",
+    ].filter(Boolean).join(" "),
+    img: `linear-gradient(135deg, ${accent}30 0%, ${accent}0A 45%, #020406 100%)`,
+    accent,
+    driveLink: r.drive_url || "",
+    mapsUrl: r.maps_url || "",
+    fromCatalog: true,
+  };
 };
 
 const entregaColor = (entrega, T) => {
@@ -69,7 +122,7 @@ const buildResumen = (r) => [
 ].filter(Boolean).join("\n");
 
 /* ─── Modo presentación: la ficha que ve el cliente ─── */
-const FichaModal = ({ r, onClose, T = P }) => {
+const FichaModal = ({ r, onClose, T = P, onCreateLanding }) => {
   const isLight = T?.bg !== P.bg;
   const accent = accentFor(r.name);
   const [showInternal, setShowInternal] = useState(false);
@@ -190,6 +243,15 @@ const FichaModal = ({ r, onClose, T = P }) => {
               border: `1px solid ${copied ? T.emerald : T.border}`, color: copied ? T.emerald : T.txt,
               fontSize: 12.5, fontWeight: 700, fontFamily: fontDisp,
             }}>{copied ? <Check size={15} /> : <Copy size={14} />} {copied ? "Copiado" : "Copiar resumen"}</button>
+            {onCreateLanding && (
+              <button onClick={() => { onClose(); onCreateLanding(r); }} style={{
+                flex: "1 1 180px", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 7,
+                padding: "14px 16px", borderRadius: 13, cursor: "pointer",
+                background: isLight ? "rgba(15,23,42,0.05)" : "rgba(255,255,255,0.06)",
+                border: `1px solid ${T.border}`, color: T.txt,
+                fontSize: 12.5, fontWeight: 700, fontFamily: fontDisp,
+              }}><Wand2 size={14} /> Crear landing page</button>
+            )}
           </div>
 
           {/* Datos internos — nunca se presentan al cliente */}
@@ -225,7 +287,7 @@ const FichaModal = ({ r, onClose, T = P }) => {
 };
 
 /* ─── Sección: catálogo de fichas en el Marketing Studio ─── */
-const FichasTecnicas = ({ T = P }) => {
+const FichasTecnicas = ({ T = P, onCreateLanding }) => {
   const isLight = T?.bg !== P.bg;
   const { isFeatureEnabled } = useClient();
   const enabled = isFeatureEnabled("propiedades");
@@ -372,6 +434,14 @@ const FichasTecnicas = ({ T = P }) => {
                         color: "#06110D", fontSize: 11.5, fontWeight: 800, fontFamily: fontDisp,
                         boxShadow: `0 3px 12px ${accent}30`,
                       }}><FileText size={12} strokeWidth={2.5} /> Ver ficha</button>
+                      {onCreateLanding && (
+                        <button onClick={() => onCreateLanding(r)} title="Crear landing page con esta ficha" style={{
+                          display: "inline-flex", alignItems: "center", justifyContent: "center", width: 36,
+                          borderRadius: 10, cursor: "pointer",
+                          background: isLight ? "rgba(15,23,42,0.05)" : "rgba(255,255,255,0.06)",
+                          border: `1px solid ${T.border}`,
+                        }}><Wand2 size={13} color={T.txt2} /></button>
+                      )}
                       {r.drive_url && (
                         <a href={r.drive_url} target="_blank" rel="noopener noreferrer" title="Abrir Drive" style={{
                           display: "inline-flex", alignItems: "center", justifyContent: "center", width: 36,
@@ -389,7 +459,7 @@ const FichasTecnicas = ({ T = P }) => {
         </div>
       )}
 
-      {ficha && <FichaModal r={ficha} onClose={() => setFicha(null)} T={T} />}
+      {ficha && <FichaModal r={ficha} onClose={() => setFicha(null)} T={T} onCreateLanding={onCreateLanding} />}
     </G>
   );
 };
