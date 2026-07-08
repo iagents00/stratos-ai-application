@@ -69,6 +69,16 @@ export function isHiddenAdvisor(name) {
   );
 }
 
+// Etiqueta bajo la que se AGRUPAN las cuentas ocultas en las tablas por asesor.
+// Sus leads y Zooms SÍ cuentan en todos los totales (si no, el "Leads totales"
+// del Comando no cuadra con el "Clientes en Pipeline" del CRM — el cliente vio
+// 1485 en el pipeline y menos en el Comando); solo se colapsan como una fila
+// para no ensuciar la tabla con nombres de ex-asesores / cuentas de prueba.
+export const INACTIVE_ADVISOR_GROUP = "Cuentas inactivas";
+export function advisorDisplayGroup(name) {
+  return isHiddenAdvisor(name) ? INACTIVE_ADVISOR_GROUP : name;
+}
+
 // Extrae la etapa destino de un evento "Etapa: X → Y", normalizada al nombre
 // canónico (etiquetas viejas como "Visita Concretada"/"Negociación" → "Seguimiento")
 // para no perder Zooms registrados con labels legacy.
