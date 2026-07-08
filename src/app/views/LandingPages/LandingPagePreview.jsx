@@ -14,7 +14,7 @@ import { P, font, fontDisp } from "../../../design-system/tokens";
 import { StratosAtom } from "../../../design-system/primitives";
 import { G, KPI, Pill, Ico } from "../../SharedComponents";
 
-const LandingPagePreview = ({ client, asesor, asesorWA = "", asesorCal = "", mensaje, agencyName = "STRATOS REALTY", properties, onClose, onCopyLink, copied, driveLinks = {}, T = P }) => {
+const LandingPagePreview = ({ client, asesor = "", asesorWA = "", asesorCal = "", mensaje, agencyName = "STRATOS REALTY", properties, onClose, onCopyLink, copied, driveLinks = {}, publicMode = false, shareUrl = null, T = P }) => {
   const [activeProperty, setActiveProperty] = useState(0);
   const [showSharePanel, setShowSharePanel] = useState(false);
 
@@ -29,7 +29,7 @@ const LandingPagePreview = ({ client, asesor, asesorWA = "", asesorCal = "", men
   const waUrl = waPhone ? `https://wa.me/${waPhone}?text=${waText}` : null;
   const calUrl = asesorCal || null;
 
-  const demoShareUrl = `${window.location.origin}${window.location.pathname}?lp=preview&c=${encodeURIComponent(client || "cliente")}`;
+  const demoShareUrl = shareUrl || `${window.location.origin}${window.location.pathname}?lp=preview&c=${encodeURIComponent(client || "cliente")}`;
 
   const handleWhatsAppAdvisor = () => {
     if (waUrl) window.open(waUrl, "_blank");
@@ -138,7 +138,8 @@ const LandingPagePreview = ({ client, asesor, asesorWA = "", asesorCal = "", men
         </div>
       )}
 
-      {/* Top Bar */}
+      {/* Top Bar — solo en modo asesor (preview); el cliente no la ve */}
+      {!publicMode && (
       <div style={{
         position: "fixed", top: 0, left: 0, right: 0, zIndex: 100001,
         padding: "12px 24px", display: "flex", justifyContent: "space-between", alignItems: "center",
@@ -178,9 +179,10 @@ const LandingPagePreview = ({ client, asesor, asesorWA = "", asesorCal = "", men
           </button>
         </div>
       </div>
+      )}
 
       {/* ─── LANDING PAGE CONTENT ─── */}
-      <div style={{ paddingTop: 60 }}>
+      <div style={{ paddingTop: publicMode ? 0 : 60 }}>
         {/* HERO SECTION */}
         <div style={{
           minHeight: "100vh", position: "relative",
@@ -247,7 +249,7 @@ const LandingPagePreview = ({ client, asesor, asesorWA = "", asesorCal = "", men
                 }}>
                   <CalendarDays size={15} style={{ verticalAlign: "middle" }} /> Agendar Llamada
                 </a>
-              ) : (
+              ) : !publicMode && (
                 <button onClick={() => setShowSharePanel(true)} style={{
                   padding: "14px 32px", borderRadius: 12, border: "none",
                   background: "#FFFFFF", color: "#000000",
@@ -267,7 +269,7 @@ const LandingPagePreview = ({ client, asesor, asesorWA = "", asesorCal = "", men
                 }}>
                   <Phone size={14} /> WhatsApp
                 </a>
-              ) : (
+              ) : !publicMode && (
                 <button onClick={() => setShowSharePanel(true)} style={{
                   padding: "14px 32px", borderRadius: 12,
                   border: "1px solid rgba(255,255,255,0.2)", background: "rgba(255,255,255,0.05)",
