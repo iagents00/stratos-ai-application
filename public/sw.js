@@ -113,7 +113,17 @@
 //   sus acciones (Pendientes vs Completadas), estado (Pendiente/En proceso/
 //   Completada/No la hice), fecha y nota. Forward-compatible con la columna
 //   `status` de team_actions (cuando exista, enciende En proceso / No la hice).
-const CACHE_VERSION = 'stratos-v76';
+// v77 — fix(iOS): crash de Safari en iPhone ("Ocurrió un problema varias veces").
+//   WebKit mata la pestaña por memoria de compositing (muchas capas con
+//   backdrop-filter: blur(32px) de GlassCard + animaciones infinitas). En móvil
+//   se baja el blur a 4px y se frenan las animaciones continuas (mobile-perf.css);
+//   un detector de loop de crash en index.html activa un "modo seguro" (sin blur
+//   ni animaciones) si aún así recarga en loop. Bump para bajar el fix a iPhones
+//   con el bundle viejo cacheado.
+// v78 — feat(propiedades): catálogo de propiedades (módulo Propiedades) +
+//   fichas técnicas de desarrollos en el Marketing Studio (Create), leídas de
+//   Supabase `properties` y sincronizadas del Sheet DRIVES vía n8n cada 6 h.
+const CACHE_VERSION = 'stratos-v78';
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 
