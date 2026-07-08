@@ -15,8 +15,8 @@
  */
 import { useMemo, useState } from "react";
 import { CalendarDays, CheckCircle2, MapPin, Handshake, History, ChevronDown } from "lucide-react";
-import { P, LP, font, fontDisp, STAGE_COLORS } from "../../../design-system/tokens";
-import { zoomEventsOf, funnelEntryOf, milestoneOf, ACTIVE_POST_ZOOM_STAGES, RECORRIDO_STAGES, CIERRE_STAGES, zoomMovements, isHiddenAdvisor } from "./zoom-metrics";
+import { P, LP, font, fontDisp, STAGE_COLORS, normalizeStage } from "../../../design-system/tokens";
+import { zoomEventsOf, funnelEntryOf, milestoneOf, ACTIVE_POST_ZOOM_STAGES, RECORRIDO_STAGES, CIERRE_STAGES, zoomMovements, advisorDisplayGroup } from "./zoom-metrics";
 import DateRangeControl from "./DateRangeControl";
 import { createDefaultDateFilter, resolveDateRange, timestampInRange } from "./date-range";
 
@@ -46,14 +46,11 @@ export default function ZoomBoard({ leadsData = [], theme = "dark", onOpenLead =
   const historial = useMemo(() => {
     let rows = zoomMovements(leadsData)
       .filter(m => !m.inferred && timestampInRange(m.at, dateRange))
-      .filter(m => !isHiddenAdvisor(m.by || m.lead.asesor))
       .filter(m => histKind === "all" || m.kind === histKind)
       .filter(m => presentadorFilter === "__all__" || (m.by || m.lead.asesor) === presentadorFilter);
     rows.sort((a, b) => (b.at ? new Date(b.at).getTime() : 0) - (a.at ? new Date(a.at).getTime() : 0));
     return rows;
   }, [dateRange, leadsData, histKind, presentadorFilter]);
-
-  const inferidos = useMemo(() => historial.filter(m => m.inferred).length, [historial]);
 
   // Totales del embudo + productividad por presentador (quién dio el Zoom).
   // AGENDADOS = entró al funnel (agendado o ya realizado) → siempre ≥ realizados.
@@ -63,10 +60,13 @@ export default function ZoomBoard({ leadsData = [], theme = "dark", onOpenLead =
     let tAg = 0, tAgInf = 0, tDone = 0, tDoneInferred = 0;
     for (const l of leadsData) {
       const entry = funnelEntryOf(l);
-      if (entry && !isHiddenAdvisor(entry.by) && timestampInRange(entry.at, dateRange)) { tAg++; if (entry.inferred) tAgInf++; }
+      if (entry && timestampInRange(entry.at, dateRange)) { tAg++; if (entry.inferred) tAgInf++; }
       const { done } = zoomEventsOf(l);
-      if (done && !isHiddenAdvisor(done.by) && timestampInRange(done.at, dateRange)) {
-        map[done.by] = (map[done.by] || 0) + 1;
+      if (done && timestampInRange(done.at, dateRange)) {
+        // Zooms de cuentas hoy inactivas cuentan (son históricos reales);
+        // en la tabla se agrupan bajo una sola fila.
+        const person = advisorDisplayGroup(done.by);
+        map[person] = (map[person] || 0) + 1;
         tDone++; if (done.inferred) tDoneInferred++;
       }
     }
@@ -84,7 +84,7 @@ export default function ZoomBoard({ leadsData = [], theme = "dark", onOpenLead =
 
   // Activos post-Zoom = etapa actual en una fase post-Zoom activa (set compartido).
   const activosPostZoom = useMemo(
-    () => leadsData.filter(l => ACTIVE_POST_ZOOM_STAGES.has(l.st)).length,
+    () => leadsData.filter(l => ACTIVE_POST_ZOOM_STAGES.has(normalizeStage(l.st))).length,
     [leadsData],
   );
 
@@ -95,8 +95,8 @@ export default function ZoomBoard({ leadsData = [], theme = "dark", onOpenLead =
     for (const l of leadsData) {
       const r = milestoneOf(l, RECORRIDO_STAGES);
       const c = milestoneOf(l, CIERRE_STAGES);
-      if (r && !isHiddenAdvisor(r.by) && timestampInRange(r.at, dateRange)) rec++;
-      if (c && !isHiddenAdvisor(c.by) && timestampInRange(c.at, dateRange)) cie++;
+      if (r && timestampInRange(r.at, dateRange)) rec++;
+      if (c && timestampInRange(c.at, dateRange)) cie++;
     }
     return { recorridos: rec, cierres: cie };
   }, [dateRange, leadsData]);
@@ -229,7 +229,7 @@ export default function ZoomBoard({ leadsData = [], theme = "dark", onOpenLead =
         >
           <History size={15} color={accent} strokeWidth={2.2} />
           <span>Historial de movimientos de Zoom</span>
-          <span style={{ fontSize: 12, fontWeight: 500, color: T.txt3 }}>· {historial.length} movimientos{inferidos ? ` · ${inferidos} inferidos` : ""}</span>
+          <span style={{ fontSize: 12, fontWeight: 500, color: T.txt3 }}>· {historial.length} movimientos</span>
           <ChevronDown size={16} color={T.txt3} style={{ marginLeft: "auto", transform: histOpen ? "rotate(180deg)" : "none", transition: "transform 0.15s" }} />
         </button>
 

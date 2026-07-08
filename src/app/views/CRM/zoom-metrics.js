@@ -25,14 +25,16 @@ export const ZOOM_DONE_STAGES = new Set([
   "Zoom Concretado", "Seguimiento", "Apartó", "Visita Agendada", "Cierre", "Postventa",
 ]);
 export const ZOOM_SCHEDULED_STAGE = "Zoom Agendado";
-// Set de un solo elemento para reutilizar el helper genérico milestoneOf.
-const ZOOM_SCHEDULED_STAGES = new Set([ZOOM_SCHEDULED_STAGE]);
+// Etapas que implican "hubo un Zoom agendado": la etapa de agenda y el no-show
+// (Reactivar Zoom = se agendó pero el cliente no asistió; sin este set el
+// no-show desaparecía del conteo de agendados).
+const ZOOM_SCHEDULED_STAGES = new Set([ZOOM_SCHEDULED_STAGE, "Reactivar Zoom"]);
 
 // "Entró al funnel de Zoom" = se agendó un Zoom (etapa Zoom Agendado) O ya hizo
 // el Zoom (etapa posterior). Clave para el conteo de AGENDADOS del embudo: si un
 // lead hizo el Zoom, necesariamente fue agendado, aunque ese paso no se haya
 // marcado. Así "agendados" SIEMPRE es ≥ "realizados" y el embudo tiene sentido.
-export const ZOOM_FUNNEL_ENTRY_STAGES = new Set([ZOOM_SCHEDULED_STAGE, ...ZOOM_DONE_STAGES]);
+export const ZOOM_FUNNEL_ENTRY_STAGES = new Set([...ZOOM_SCHEDULED_STAGES, ...ZOOM_DONE_STAGES]);
 
 // Hitos posteriores al Zoom (funnel Realizado → Recorrido → Cierre).
 export const RECORRIDO_STAGES = new Set(["Visita Agendada"]);              // visita/recorrido dado
@@ -67,6 +69,16 @@ export function isHiddenAdvisor(name) {
   );
 }
 
+// Etiqueta bajo la que se AGRUPAN las cuentas ocultas en las tablas por asesor.
+// Sus leads y Zooms SÍ cuentan en todos los totales (si no, el "Leads totales"
+// del Comando no cuadra con el "Clientes en Pipeline" del CRM — el cliente vio
+// 1485 en el pipeline y menos en el Comando); solo se colapsan como una fila
+// para no ensuciar la tabla con nombres de ex-asesores / cuentas de prueba.
+export const INACTIVE_ADVISOR_GROUP = "Cuentas inactivas";
+export function advisorDisplayGroup(name) {
+  return isHiddenAdvisor(name) ? INACTIVE_ADVISOR_GROUP : name;
+}
+
 // Extrae la etapa destino de un evento "Etapa: X → Y", normalizada al nombre
 // canónico (etiquetas viejas como "Visita Concretada"/"Negociación" → "Seguimiento")
 // para no perder Zooms registrados con labels legacy.
@@ -86,19 +98,37 @@ function targetStage(action) {
  */
 export function milestoneOf(lead, stageSet) {
   const hist = Array.isArray(lead.actionHistory) ? lead.actionHistory : [];
+  // OJO: el historial se guarda con lo MÁS RECIENTE arriba (el CRM hace
+  // prepend de eventos nuevos), así que NO basta tomar el primer match del
+  // array — ese es el último movimiento, no el hito original. Nos quedamos
+  // con el evento de fecha MÁS ANTIGUA; si no, cada movimiento posterior
+  // dentro del set (ej. Seguimiento → Apartó) re-fecha el Zoom al presente,
+  // infla los conteos del período actual y acredita al asesor equivocado.
+  let earliest = null;
+  let earliestTs = Infinity;
+  let undated = null;
   for (const e of hist) {
     if (!e || e.type !== "etapa") continue;
     const t = targetStage(e.action);
-    if (t && stageSet.has(t)) {
-      return {
-        by: e.by || lead.asesor || NO_OWNER,
-        at: e.completed_at || e.doneAt || e.done_at || e.created_at || null,
-        to: t,
-        inferred: false,
-        confidence: "confirmed",
-      };
+    if (!t || !stageSet.has(t)) continue;
+    const at = e.completed_at || e.doneAt || e.done_at || e.created_at || null;
+    const hit = {
+      by: e.by || lead.asesor || NO_OWNER,
+      at,
+      to: t,
+      inferred: false,
+      confidence: "confirmed",
+    };
+    const ts = at ? new Date(at).getTime() : NaN;
+    if (Number.isFinite(ts)) {
+      if (ts < earliestTs) { earliestTs = ts; earliest = hit; }
+    } else {
+      // Sin fecha parseable: respaldo. Con prepend, el último match del
+      // recorrido es el más antiguo del historial.
+      undated = hit;
     }
   }
+  if (earliest || undated) return earliest || undated;
   const currentStage = normalizeStage(lead.st);
   if (stageSet.has(currentStage)) {
     return {
@@ -112,23 +142,37 @@ export function milestoneOf(lead, stageSet) {
   return null;
 }
 
+// Etapas donde la "próxima acción" del lead ES la cita de Zoom: solo en ellas
+// selected_time (Cal.com) / next_action_at representan la fecha del Zoom. En
+// cualquier otra etapa esos campos son recordatorios genéricos — p.ej. la
+// llamada de rescate a +5 min que el flujo de entrada setea en TODOS los leads
+// nuevos, o la fecha de una visita — y NO deben tocar la métrica de Zooms.
+const ZOOM_CITA_STAGES = new Set(["Zoom Agendado", "Reactivar Zoom", "Zoom Concretado"]);
+
 /**
  * { scheduled, done } de un lead: hito de "Zoom agendado" y de "Zoom realizado"
  * (Concretado o etapa posterior). Cada uno { by, at, to, inferred } o null.
+ *
+ * La cita real (selected_time / next_action_at) solo REFINA la fecha de un
+ * hito que ya existe por etapa/historial — nunca lo crea. La versión anterior
+ * contaba como "Zoom agendado" a cualquier lead con next_action_at seteado,
+ * aunque jamás pisara el funnel de Zoom: eso inflaba los agendados hasta casi
+ * igualar el total de leads registrados.
  */
 export function zoomEventsOf(lead) {
   const stageScheduled = milestoneOf(lead, ZOOM_SCHEDULED_STAGES);
   const stageDone = milestoneOf(lead, ZOOM_DONE_STAGES);
-  const scheduledAt = lead.selected_time || lead.next_action_at || stageScheduled?.at || null;
-  const scheduled = scheduledAt
-    ? {
-        by: stageScheduled?.by || lead.asesor || NO_OWNER,
-        at: scheduledAt,
-        to: ZOOM_SCHEDULED_STAGE,
-        inferred: false,
-        confidence: lead.selected_time || lead.next_action_at ? "appointment" : "confirmed",
-      }
-    : stageScheduled;
+
+  let scheduled = stageScheduled;
+  if (stageScheduled) {
+    const current = normalizeStage(lead.st);
+    const apptAt = ZOOM_CITA_STAGES.has(current)
+      ? (lead.selected_time || lead.next_action_at || null)
+      : null;
+    if (apptAt) {
+      scheduled = { ...stageScheduled, at: apptAt, inferred: false, confidence: "appointment" };
+    }
+  }
 
   return {
     scheduled,
@@ -160,45 +204,3 @@ export function zoomMovements(leadsData) {
   return out;
 }
 
-// ¿El evento (por su fecha) cae dentro del período seleccionado?
-export function eventInPeriod(at, startTs) {
-  if (startTs === null) return true;
-  if (!at) return false;
-  const t = new Date(at).getTime();
-  return !Number.isNaN(t) && t >= startTs;
-}
-
-export function eventInDateRange(event, range) {
-  if (!event) return false;
-  if (!range || range.fromTs === null) return true;
-  if (event.inferred || !event.at) return false;
-  const timestamp = new Date(event.at).getTime();
-  return !Number.isNaN(timestamp) && timestamp >= range.fromTs && timestamp < range.toTs;
-}
-
-export function zoomDataQuality(leadsData) {
-  let confirmedDone = 0;
-  let inferredDone = 0;
-  let scheduledWithDate = 0;
-  let scheduledWithoutDate = 0;
-  let completedWithoutNotes = 0;
-
-  for (const lead of leadsData) {
-    const { scheduled, done } = zoomEventsOf(lead);
-    if (scheduled?.at && !scheduled.inferred) scheduledWithDate++;
-    else if (scheduled) scheduledWithoutDate++;
-
-    if (done?.inferred || !done?.at) inferredDone++;
-    else if (done) confirmedDone++;
-
-    if (done && !(lead.notas || "").trim()) completedWithoutNotes++;
-  }
-
-  return {
-    confirmedDone,
-    inferredDone,
-    scheduledWithDate,
-    scheduledWithoutDate,
-    completedWithoutNotes,
-  };
-}
