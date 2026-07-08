@@ -99,6 +99,11 @@ export const DEFAULT_CLIENT_CONFIG = {
     // Default OFF — workflow específico de Duke por ahora; otros clientes no
     // ven la pestaña hasta que lo prendan.
     zoomControl: false,
+    // Caja: libro de cuentas / ingresos / egresos sobre team_expenses (los
+    // gastos que el equipo registra por Telegram aparecen ahí solos). Visible
+    // para TODOS los roles del cliente (incluye asesor). Default OFF — hoy
+    // solo Constructora Vega lo prende en su config.
+    caja: false,
   },
 
   // Contacto y soporte

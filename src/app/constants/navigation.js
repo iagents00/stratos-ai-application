@@ -7,13 +7,14 @@
  */
 import {
   Users, Hexagon, Activity, Building2, Atom,
-  Trophy, Landmark, UserCheck, CreditCard, Shield, User, Trash2
+  Trophy, Landmark, UserCheck, CreditCard, Shield, User, Trash2, Wallet
 } from "lucide-react";
 
 export const nav = [
   { id: "c",     l: "CRM",       i: Users      },
   { id: "lp",    l: "Create",    i: Hexagon    },
   { id: "d",     l: "Comando",   i: Activity   },
+  { id: "caja",  l: "Caja",      i: Wallet     },
   { id: "e",     l: "ERP",       i: Building2  },
   { id: "ia",    l: "iAgents",   i: Atom       },
   { id: "a",     l: "Asesores",  i: Trophy,    more: true },
@@ -28,6 +29,9 @@ export const nav = [
 export const MODULE_ROLES = {
   d:      ["super_admin","admin","director","ceo"],
   c:      ["super_admin","admin","director","ceo","asesor"],
+  // Caja: registrar cuentas/ingresos/egresos es para TODO el equipo, no solo
+  // mando — los asesores/empleados cargan sus gastos igual que por Telegram.
+  caja:   ["super_admin","admin","director","ceo","asesor"],
   ia:     ["super_admin","admin","director","ceo"],
   e:      ["super_admin","admin","director","ceo"],
   a:      ["super_admin","admin","director","ceo"],
@@ -43,7 +47,7 @@ export const MODULE_ROLES = {
 export const MODULE_NAMES = {
   d: "Comando", c: "CRM", ia: "iAgents", e: "ERP",
   a: "Asesores", lp: "Campañas", fa: "Finanzas",
-  rrhh: "Personas", trash: "Papelera",
+  rrhh: "Personas", trash: "Papelera", caja: "Caja",
   planes: "Planes", perfil: "Perfil", admin: "Usuarios",
 };
 
@@ -78,6 +82,14 @@ export function canAccessModule(moduleId, user, clientConfig = null) {
   if (!user) return false;
   // (1) Restricción per-usuario — gana sobre todo lo demás.
   if (user.crmOnly === true && !CRM_ONLY_MODULES.has(moduleId)) return false;
+
+  // Caja (cuentas / ingresos / egresos) es 100% por feature flag del cliente:
+  // sin `features.caja: true` en su config, nadie la ve (ni la org de Stratos).
+  // Con el flag prendido, el rol decide (MODULE_ROLES.caja incluye asesor).
+  if (moduleId === "caja") {
+    if (clientConfig?.features?.caja !== true) return false;
+    return MODULE_ROLES.caja.includes(user.role);
+  }
 
   if (!isStratosOrg(user.organizationId) && !EXTERNAL_ORG_MODULES.has(moduleId)) {
     // Excepción: si el cliente externo prendió Comando Directivo (`d`)
