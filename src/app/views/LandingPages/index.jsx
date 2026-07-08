@@ -860,6 +860,79 @@ const NewPropertyModal = ({ onClose, onSave, initialData = null, T = P }) => {
   );
 };
 
+/* ─── Landing exprés: de la ficha a la landing en un click ─── */
+const ExpressLandingModal = ({ ficha, defaultWA = "", onClose, onGenerate, onStepByStep, T = P }) => {
+  const isLight = T?.bg !== P.bg;
+  const [name, setName] = useState("");
+  const [wa, setWa] = useState(defaultWA);
+  const [msg, setMsg] = useState("");
+  const canGo = name.trim().length > 0;
+  const inputStyle = {
+    width: "100%", padding: "11px 14px", borderRadius: 10, fontSize: 13,
+    background: T.glass, border: `1px solid ${T.border}`, color: T.txt,
+    fontFamily: font, outline: "none", boxSizing: "border-box",
+  };
+  const labelStyle = { fontSize: 10, color: T.txt2, display: "block", marginBottom: 5, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", fontFamily: font };
+  return createPortal(
+    <>
+      <div onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)", backdropFilter: "blur(10px)", zIndex: 200000 }} />
+      <div style={{
+        position: "fixed", top: "50%", left: "50%", transform: "translate(-50%,-50%)", zIndex: 200001,
+        width: "min(480px, 94vw)", maxHeight: "90vh", overflowY: "auto",
+        background: isLight ? "#FFFFFF" : "#0B1120", border: `1px solid ${T.accent}30`, borderRadius: 20, padding: 26,
+        boxShadow: "0 40px 100px rgba(0,0,0,0.65)",
+      }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 18 }}>
+          <div>
+            <p style={{ fontSize: 16, fontWeight: 800, color: T.txt, fontFamily: fontDisp }}>Landing exprés</p>
+            <p style={{ fontSize: 12, color: T.accent, fontWeight: 700, fontFamily: font, marginTop: 3 }}>{ficha.name} · {ficha.plaza}</p>
+          </div>
+          <button onClick={onClose} style={{ width: 30, height: 30, borderRadius: 8, border: `1px solid ${T.border}`, background: T.glass, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <X size={14} color={T.txt2} />
+          </button>
+        </div>
+
+        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+          <div>
+            <label style={labelStyle}>Nombre del cliente *</label>
+            <input autoFocus value={name} onChange={e => setName(e.target.value)}
+              onKeyDown={e => { if (e.key === "Enter" && canGo) onGenerate({ clientName: name.trim(), asesorWA: wa.trim(), mensaje: msg.trim() }); }}
+              placeholder="Ej: Familia Rodríguez" style={inputStyle} />
+          </div>
+          <div>
+            <label style={labelStyle}>Tu WhatsApp (botón de contacto en la landing)</label>
+            <input value={wa} onChange={e => setWa(e.target.value)} placeholder="+52 998 000 0000" style={inputStyle} />
+            <p style={{ fontSize: 10, color: T.txt3, marginTop: 4, fontFamily: font }}>Se recuerda para la próxima.</p>
+          </div>
+          <div>
+            <label style={labelStyle}>Mensaje para el cliente (opcional)</label>
+            <textarea value={msg} onChange={e => setMsg(e.target.value)} rows={3}
+              placeholder="Si lo dejas vacío se genera uno automático con el nombre del cliente y la propiedad."
+              style={{ ...inputStyle, resize: "vertical", lineHeight: 1.5 }} />
+          </div>
+
+          <button disabled={!canGo} onClick={() => onGenerate({ clientName: name.trim(), asesorWA: wa.trim(), mensaje: msg.trim() })} style={{
+            padding: "13px", borderRadius: 11, border: "none",
+            cursor: canGo ? "pointer" : "not-allowed",
+            background: canGo ? T.accent : T.glass, color: canGo ? "#06110D" : T.txt3,
+            fontSize: 13.5, fontWeight: 800, fontFamily: fontDisp,
+            boxShadow: canGo ? `0 4px 18px ${T.accent}40` : "none",
+          }}>
+            Generar landing para {name.trim() || "el cliente"} →
+          </button>
+          <button onClick={onStepByStep} style={{
+            background: "none", border: "none", cursor: "pointer", padding: 0,
+            fontSize: 11.5, color: T.txt3, fontFamily: font, textDecoration: "underline",
+          }}>
+            Prefiero configurarla paso a paso (más propiedades, presupuesto, agenda…)
+          </button>
+        </div>
+      </div>
+    </>,
+    document.body
+  );
+};
+
 /* ─── ROI Calculator ─── */
 const ROICalc = ({ prop, T = P }) => {
   const [inv, setInv] = useState(prop.priceFrom);
@@ -1040,6 +1113,7 @@ const LandingPages = ({ T = P }) => {
   const { user } = useAuth();
   const catalogEnabled = isFeatureEnabled("propiedades");
   const [generatedSlug, setGeneratedSlug] = useState(null);
+  const [expressFicha, setExpressFicha] = useState(null);   // ficha → landing exprés
   const publicUrlFor = (slug) => `${window.location.origin}/p/${slug}`;
   const [catalogRows, setCatalogRows] = useState([]);
   const [propQuery, setPropQuery] = useState("");
@@ -1112,7 +1186,12 @@ const LandingPages = ({ T = P }) => {
   // When asesor changes, auto-fill contact info from team data
   useEffect(() => {
     const member = team.find(t => t.n === asesor);
-    if (member) { setAsesorWA(member.wa || ""); setAsesorCal(member.cal || ""); }
+    if (member) {
+      // Solo autollenar si están vacíos: los números de `team` son placeholder
+      // y no deben pisar un WhatsApp real capturado por el asesor.
+      setAsesorWA(prev => prev || member.wa || "");
+      setAsesorCal(prev => prev || member.cal || "");
+    }
   }, [asesor]);
 
   const budgetOptions = [
@@ -1168,20 +1247,32 @@ const LandingPages = ({ T = P }) => {
     setSelectedProps(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
   };
 
-  const handleGenerate = async () => {
+  const handleGenerate = async (opts) => {
+    // Modo exprés (desde una ficha): recibe cliente/propiedad/WA/mensaje sin
+    // pasar por los pasos 1-2. onClick normal pasa el evento → se ignora.
+    const ex = opts && opts.express ? opts : null;
+    const cn = ((ex ? ex.clientName : clientName) || "Cliente").trim();
+    const sel = ex ? ex.selectedIds : selectedProps;
+    const wa = ex ? (ex.asesorWA || "") : asesorWA;
+    const msg = ex ? (ex.mensaje || "") : mensaje;
+    const asesorName = ex ? (ex.asesorName || asesor) : asesor;
+    if (ex) {
+      setClientName(cn); setSelectedProps(sel); setAsesorWA(wa);
+      setMensaje(msg); setAsesor(asesorName);
+    }
     const newId = Date.now();
-    const budgetLabel = `$${(clientBudgetMin / 1000).toFixed(0)}K-$${(clientBudgetMax / 1000).toFixed(0)}K`;
+    const budgetLabel = ex ? "—" : `$${(clientBudgetMin / 1000).toFixed(0)}K-$${(clientBudgetMax / 1000).toFixed(0)}K`;
     setGeneratedId(newId);
     setGeneratedSlug(null);
     setSavedPages(prev => [{
       id: newId,
-      client: clientName || "Cliente",
+      client: cn,
       date: new Date().toLocaleDateString("es-MX", { day: "numeric", month: "short", year: "numeric" }),
-      propIds: [...selectedProps],
-      props: selectedProps.length,
+      propIds: [...sel],
+      props: sel.length,
       status: "Generada",
       budget: budgetLabel,
-      asesor,
+      asesor: asesorName,
     }, ...prev]);
     setPreviewOpen(true);
 
@@ -1190,19 +1281,19 @@ const LandingPages = ({ T = P }) => {
     // las demo/custom, congeladas. Si falla (p.ej. tabla aún sin migrar), el
     // preview sigue funcionando — solo no hay link compartible.
     const slug = (crypto.randomUUID ? crypto.randomUUID().replace(/-/g, "") : `${Math.random().toString(36).slice(2)}${Date.now().toString(36)}`).slice(0, 16);
-    const catalogIds = selectedProps.filter(id => String(id).startsWith("cat-")).map(id => String(id).slice(4));
+    const catalogIds = sel.filter(id => String(id).startsWith("cat-")).map(id => String(id).slice(4));
     const snapshot = allProperties
-      .filter(p => selectedProps.includes(p.id) && !String(p.id).startsWith("cat-"))
+      .filter(p => sel.includes(p.id) && !String(p.id).startsWith("cat-"))
       .map(p => ({ ...p, driveLink: driveLinks[p.id] || p.driveLink || "" }));
     const { error } = await supabase.from("landing_pages").insert({
       organization_id: user?.organizationId,
       slug,
-      client_name: clientName || "Cliente",
+      client_name: cn,
       agency_name: agencyName,
-      asesor_name: asesor,
-      asesor_wa: asesorWA,
+      asesor_name: asesorName,
+      asesor_wa: wa,
       asesor_cal: asesorCal,
-      mensaje,
+      mensaje: msg,
       budget_label: budgetLabel,
       property_ids: catalogIds,
       props_snapshot: snapshot,
@@ -1322,7 +1413,7 @@ const LandingPages = ({ T = P }) => {
       </G>
 
       {/* Fichas técnicas de desarrollos — catálogo real (Supabase, sync con el Sheet) */}
-      <FichasTecnicas T={T} onCreateLanding={(row) => { setSelectedProps([`cat-${row.id}`]); setStep(1); }} />
+      <FichasTecnicas T={T} onCreateLanding={(row) => setExpressFicha(row)} />
 
       {/* Catálogo de Propiedades */}
       <G np T={T}>
@@ -1549,6 +1640,50 @@ const LandingPages = ({ T = P }) => {
           initialData={editingProp}
           T={T}
         />
+      )}
+
+      {/* Landing exprés: nombre del cliente + un click → landing con link */}
+      {expressFicha && (
+        <ExpressLandingModal
+          ficha={expressFicha}
+          defaultWA={localStorage.getItem("stratos_asesor_wa") || ""}
+          onClose={() => setExpressFicha(null)}
+          onStepByStep={() => { setSelectedProps([`cat-${expressFicha.id}`]); setExpressFicha(null); setStep(1); }}
+          onGenerate={(data) => {
+            const row = expressFicha;
+            const autoMsg = data.mensaje || `Hola ${data.clientName.split(" ")[0]}, te preparé esta presentación de ${row.name} con la información completa: precios, entrega y fotos. Cualquier duda, aquí estoy para ayudarte.`;
+            if (data.asesorWA) { try { localStorage.setItem("stratos_asesor_wa", data.asesorWA); } catch {} }
+            setExpressFicha(null);
+            handleGenerate({
+              express: true,
+              clientName: data.clientName,
+              selectedIds: [`cat-${row.id}`],
+              asesorWA: data.asesorWA,
+              mensaje: autoMsg,
+              asesorName: user?.name || asesor,
+            });
+          }}
+          T={T}
+        />
+      )}
+
+      {/* Preview accesible también desde el paso 0 (landing exprés) */}
+      {previewOpen && createPortal(
+        <LandingPagePreview
+          shareUrl={generatedSlug ? publicUrlFor(generatedSlug) : null}
+          client={clientName}
+          asesor={asesor}
+          asesorWA={asesorWA}
+          asesorCal={asesorCal}
+          mensaje={mensaje}
+          agencyName={agencyName}
+          properties={allProperties.filter(p => selectedProps.includes(p.id))}
+          driveLinks={driveLinks}
+          onClose={() => { setPreviewOpen(false); resetForm(); }}
+          onCopyLink={handleCopyLink}
+          copied={copied}
+        />,
+        document.body
       )}
     </div>
   );
