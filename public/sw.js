@@ -126,7 +126,12 @@
 //   antes re-fechaba el Zoom en cada avance de etapa), etapas legacy
 //   normalizadas en los conteos, y gráfica/totales del Comando cuentan Zooms
 //   por fecha real del evento (cuadran con embudo, ZoomBoard y tabla asesor).
-const CACHE_VERSION = 'stratos-v79';
+// v80 — fix(comando): los totales del Comando cuadran con el pipeline del CRM.
+//   Las cuentas ocultas (ex-asesores, prueba/sistema) ya NO se excluyen de los
+//   cálculos: sus leads/Zooms cuentan en totales, embudo y gráfica, y en las
+//   tablas por asesor se colapsan en una fila "Cuentas inactivas". Antes el
+//   cliente veía 1485 en el pipeline y menos en el Comando (Histórico).
+const CACHE_VERSION = 'stratos-v80';
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 

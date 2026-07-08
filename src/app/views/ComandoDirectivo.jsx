@@ -36,7 +36,7 @@ import ZoomControl from "./ZoomControl";
 import ZoomBoard from "./CRM/ZoomBoard";
 import ProductividadTab from "./ProductividadTab";
 import { useZoomAgendados } from "../../hooks/useZoomAgendados";
-import { milestoneOf, funnelEntryOf, zoomEventsOf, RECORRIDO_STAGES, CIERRE_STAGES, isHiddenAdvisor } from "./CRM/zoom-metrics";
+import { milestoneOf, funnelEntryOf, zoomEventsOf, RECORRIDO_STAGES, CIERRE_STAGES, advisorDisplayGroup, INACTIVE_ADVISOR_GROUP } from "./CRM/zoom-metrics";
 import DateRangeControl from "./CRM/DateRangeControl";
 import { createDefaultDateFilter, resolveDateRange, timestampInRange } from "./CRM/date-range";
 
@@ -289,19 +289,19 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
     [activeDateRange, granularityId],
   );
 
-  // Cartera visible: oculta las cuentas de prueba/sistema/inactivas (Asesor
-  // Prueba, iAgents, etc.) de TODOS los cálculos del Comando, así filas y totales
-  // quedan consistentes y solo se ven los asesores reales.
-  const visibleLeads = useMemo(
-    () => leadsData.filter((l) => !isHiddenAdvisor(l.asesor)),
-    [leadsData],
-  );
+  // TODOS los leads cuentan en los totales del Comando — el mismo universo que
+  // el KPI "Clientes en Pipeline" del CRM, para que ambos números cuadren
+  // siempre. Las cuentas de prueba/sistema/inactivas (Asesor Prueba, iAgents,
+  // ex-asesores) NO se excluyen de los cálculos: se agrupan como una sola fila
+  // "Cuentas inactivas" en las tablas por asesor (ver advisorDisplayGroup).
+  const visibleLeads = leadsData;
 
-  // Timestamps de los eventos de Zoom de la cartera visible (1 por lead y por
+  // Timestamps de los eventos de Zoom de toda la cartera (1 por lead y por
   // fase, deduplicados en zoomEventsOf). Fuente única para la gráfica, los
   // totales del rango y el embudo: TODOS cuentan por la FECHA REAL del evento,
   // igual que ZoomBoard y la tabla por asesor. `null` = hito inferido sin fecha
-  // (solo cuenta en "Histórico", como en el resto de paneles).
+  // (solo cuenta en "Histórico", como en el resto de paneles). Los Zooms dados
+  // por cuentas hoy inactivas también cuentan: son Zooms reales del histórico.
   const zoomEventTimes = useMemo(() => {
     const toTs = (at) => {
       if (!at) return null;
@@ -312,9 +312,9 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
     const done = [];
     for (const l of visibleLeads) {
       const entry = funnelEntryOf(l);
-      if (entry && !isHiddenAdvisor(entry.by)) sched.push(toTs(entry.at));
+      if (entry) sched.push(toTs(entry.at));
       const d = zoomEventsOf(l).done;
-      if (d && !isHiddenAdvisor(d.by)) done.push(toTs(d.at));
+      if (d) done.push(toTs(d.at));
     }
     return { sched, done };
   }, [visibleLeads]);
@@ -386,9 +386,9 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
     const zdone = countZoomEvents(zoomEventTimes.done, activeDateRange);
     for (const l of visibleLeads) {
       const r = milestoneOf(l, RECORRIDO_STAGES);
-      if (r && !isHiddenAdvisor(r.by) && timestampInRange(r.at, activeDateRange)) rec++;
+      if (r && timestampInRange(r.at, activeDateRange)) rec++;
       const c = milestoneOf(l, CIERRE_STAGES);
-      if (c && !isHiddenAdvisor(c.by) && timestampInRange(c.at, activeDateRange)) cie++;
+      if (c && timestampInRange(c.at, activeDateRange)) cie++;
     }
     const total = rangeLeads.length;
     const stages = [
@@ -427,8 +427,14 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
       ? `${buckets[0].csvLabel} → ${buckets[buckets.length - 1].csvLabel}`
       : "—";
 
-    const asesores = [...new Set(rangeLeads.map(l => l.asesor).filter(Boolean))]
-      .sort((a, b) => a.localeCompare(b, "es"));
+    // Cuentas ocultas agrupadas bajo una sola etiqueta (al final de la tabla)
+    // para que las filas sumen el total sin ensuciar con nombres inactivos.
+    const asesores = [...new Set(rangeLeads.map(l => l.asesor).filter(Boolean).map(advisorDisplayGroup))]
+      .sort((a, b) => {
+        if (a === INACTIVE_ADVISOR_GROUP) return 1;
+        if (b === INACTIVE_ADVISOR_GROUP) return -1;
+        return a.localeCompare(b, "es");
+      });
 
     // KPIs derivados — útiles para dirección.
     const totalLeads     = rangeLeads.length;
@@ -766,7 +772,7 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
         </thead>
         <tbody>
           ${asesores.map(ases => {
-            const leadsOf = rangeLeads.filter(l => l.asesor === ases);
+            const leadsOf = rangeLeads.filter(l => advisorDisplayGroup(l.asesor) === ases);
             return `
             <tr>
               <td>${htmlEscape(ases)}</td>
@@ -833,7 +839,7 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
         cols: asesorCols(INDICATORS.length),
         headers: ["Asesor", "Leads", ...INDICATORS.map(i => i.label)],
         rows: asesores.map(ases => {
-          const leadsOf = rangeLeads.filter(l => l.asesor === ases);
+          const leadsOf = rangeLeads.filter(l => advisorDisplayGroup(l.asesor) === ases);
           return [ases, leadsOf.length, ...INDICATORS.map(i => i.compute(leadsOf))];
         }),
       },
