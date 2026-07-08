@@ -116,6 +116,12 @@ export const DEFAULT_CLIENT_CONFIG = {
     // para responder desde el CRM (cola whatsapp_outbox → n8n → Chatwoot).
     // Default OFF — hoy solo Duke lo prende (caso asesora Cecilia).
     whatsappChat: false,
+    // Módulo "WhatsApp" en el sidebar: bandeja con TODAS las conversaciones
+    // de los clientes (estilo GoHighLevel) + notificaciones en la campanita
+    // cuando un cliente escribe. Reutiliza el chat del expediente. Default
+    // OFF — hoy solo Duke lo prende (que la asesora vea al instante quién le
+    // escribió). Requiere también whatsappChat para el composer.
+    whatsappModule: false,
   },
 
   // Contacto y soporte

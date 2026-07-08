@@ -156,7 +156,11 @@
 // v87 — feat(caja): módulo Caja disponible para TODOS los clientes por defecto
 //   (Duke, Grupo 28, …) para roles de mando; rediseño visual (glass + tokens
 //   del theme). Vega conserva acceso de asesores vía `cajaAsesores`.
-const CACHE_VERSION = 'stratos-v87';
+// v88 — feat(whatsapp): módulo "WhatsApp" en el sidebar (bandeja con todos los
+//   chats + no-leídos por conversación) + notificaciones en la campanita
+//   cuando un cliente escribe. Multimedia: enviar/recibir imágenes, audios,
+//   video y archivos (whatsapp_messages.media + bucket wa-outbound).
+const CACHE_VERSION = 'stratos-v88';
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 

@@ -58,6 +58,10 @@ const dukeConfig = {
     // Cecilia con su número dedicado (+1 747). Espejo whatsapp_messages +
     // cola whatsapp_outbox vía n8n/Chatwoot.
     whatsappChat: true,
+    // Módulo "WhatsApp" en el sidebar: bandeja con todas las conversaciones
+    // + campanita que avisa cuando un cliente escribe. Para que Cecilia sepa
+    // al instante que le escribieron sin tener que abrir cada expediente.
+    whatsappModule: true,
   },
 
   support: {

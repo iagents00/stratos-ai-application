@@ -12,6 +12,7 @@ import LoginScreen from "../landing/LoginScreen.jsx";
 import PricingScreen from "../landing/PricingScreen.jsx";
 import { useAuth } from "../hooks/useAuth";
 import { useClient } from "../hooks/useClient";
+import { useWhatsAppInbox } from "../hooks/useWhatsAppInbox";
 import {
   getOfflineLeads,
   updateOfflineLead,
@@ -23,7 +24,7 @@ import {
 } from "../lib/offline-mode";
 
 import {
-  Search, Bell, Settings, LogOut, Sun, Moon, ChevronDown, ChevronsDown, PhoneCall,
+  Search, Bell, Settings, LogOut, Sun, Moon, ChevronDown, ChevronsDown, PhoneCall, MessageCircle,
 } from "lucide-react";
 import "./App.css";
 
@@ -100,6 +101,7 @@ const LandingPages  = lazy(() => import("./views/LandingPages"));
 const FinanzasAdmin = lazy(() => import("./views/FinanzasAdmin"));
 const RRHHModule    = lazy(() => import("./views/RRHHModule"));
 const Caja          = lazy(() => import("./views/Caja"));
+const WhatsAppInbox = lazy(() => import("./views/WhatsApp"));
 const Profile       = lazy(() => import("./views/Profile"));
 const Trash         = lazy(() => import("./views/Trash"));
 
@@ -240,6 +242,22 @@ export default function App() {
   // Dropdown de la campana — abierto/cerrado
   const [bellOpen, setBellOpen] = useState(false);
   const bellRef = useRef(null);
+
+  // Bandeja de WhatsApp (módulo + notificaciones de la campana). Una sola
+  // suscripción realtime compartida. Gateada por el flag whatsappModule.
+  const [waOpenLead, setWaOpenLead] = useState(null); // {id, ts} abrir chat desde campanita
+  // MISMO predicado que el render del módulo (canAccessModule) para que la
+  // campanita nunca muestre avisos que naveguen a una pantalla en blanco:
+  // exige el flag + rol permitido + no-demo.
+  const waEnabled = !!user && !user.isDemo && canAccessModule("wa", user, clientConfig);
+  const waInbox = useWhatsAppInbox({ enabled: waEnabled });
+  const waUnread = waEnabled ? (waInbox.totalUnread || 0) : 0;
+  // Abre una conversación en el módulo WhatsApp desde la campanita.
+  const openWaConversation = useCallback((leadId) => {
+    setV("wa");
+    setWaOpenLead({ id: leadId, ts: Date.now() });
+    setBellOpen(false);
+  }, []);
 
   /* ── Theme ── */
   const [theme, setThemeState] = useState(() => {
@@ -1306,7 +1324,13 @@ export default function App() {
                    usuarios sigue siendo solo el icono. */}
                 <div ref={bellRef} style={{ position:"relative" }}>
                   <button
-                    title={pendingSync > 0 ? `${pendingSync} cambios pendientes de sincronizar` : "Notificaciones"}
+                    title={
+                      waUnread > 0
+                        ? `${waUnread} mensaje${waUnread !== 1 ? "s" : ""} de WhatsApp sin leer`
+                        : pendingSync > 0
+                          ? `${pendingSync} cambios pendientes de sincronizar`
+                          : "Notificaciones"
+                    }
                     onClick={() => setBellOpen(o => !o)}
                     style={{ ...iBtnBase, position:"relative" }}
                     onMouseEnter={onIco}
@@ -1315,7 +1339,18 @@ export default function App() {
                     onMouseUp={upIco}
                   >
                     <Bell size={14} color={icoRest} strokeWidth={2} />
-                    {pendingSync > 0 ? (
+                    {waUnread > 0 ? (
+                      /* WhatsApp sin leer manda: verde (lo más accionable para el asesor). */
+                      <div style={{
+                        position:"absolute", top:-2, right:-2,
+                        minWidth:14, height:14, padding:"0 3.5px", borderRadius:99,
+                        background:T.accent, color:"#041016",
+                        border:`1.5px solid ${isLight ? "#F5FAF8" : "#050507"}`,
+                        fontSize:8.5, fontWeight:800, fontFamily:fontDisp,
+                        display:"flex", alignItems:"center", justifyContent:"center",
+                        lineHeight:1,
+                      }}>{waUnread > 99 ? "99+" : waUnread}</div>
+                    ) : pendingSync > 0 ? (
                       <div style={{
                         position:"absolute", top:-2, right:-2,
                         minWidth:14, height:14, padding:"0 3.5px", borderRadius:99,
@@ -1347,8 +1382,61 @@ export default function App() {
                           <span style={{ fontSize:11, fontWeight:700, letterSpacing:"0.06em", textTransform:"uppercase", color:isLight ? T.txt2 : "rgba(255,255,255,0.55)", fontFamily:fontDisp }}>Notificaciones</span>
                         </div>
 
-                        {/* Estado: sin pendientes ni offline */}
-                        {!user?._offline && pendingSync === 0 && (
+                        {/* ── WhatsApp: clientes que escribieron y siguen sin leer ── */}
+                        {waEnabled && waUnread > 0 && (
+                          <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
+                            <div style={{ display:"flex", alignItems:"center", gap:6 }}>
+                              <MessageCircle size={12} color={T.accent} strokeWidth={2.4} />
+                              <span style={{ fontSize:10.5, fontWeight:800, letterSpacing:"0.04em", textTransform:"uppercase", color:T.accent, fontFamily:fontDisp }}>
+                                WhatsApp · {waUnread} sin leer
+                              </span>
+                            </div>
+                            {waInbox.unreadConversations.slice(0, 6).map(c => {
+                              const u = Number(c.unread_count || 0);
+                              return (
+                                <button
+                                  key={c.lead_id}
+                                  onClick={() => openWaConversation(c.lead_id)}
+                                  style={{
+                                    display:"flex", alignItems:"center", gap:9, textAlign:"left",
+                                    padding:"8px 9px", borderRadius:9, cursor:"pointer", width:"100%",
+                                    background: isLight ? "rgba(13,154,118,0.06)" : "rgba(110,231,194,0.06)",
+                                    border:`1px solid ${isLight ? "rgba(13,154,118,0.22)" : "rgba(110,231,194,0.18)"}`,
+                                    transition:"background 0.14s",
+                                  }}
+                                  onMouseEnter={e => { e.currentTarget.style.background = isLight ? "rgba(13,154,118,0.11)" : "rgba(110,231,194,0.11)"; }}
+                                  onMouseLeave={e => { e.currentTarget.style.background = isLight ? "rgba(13,154,118,0.06)" : "rgba(110,231,194,0.06)"; }}
+                                >
+                                  <div style={{ flex:1, minWidth:0 }}>
+                                    <div style={{ fontSize:12, fontWeight:700, color:T.txt, fontFamily:fontDisp, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>
+                                      {c.lead_name || c.lead_phone || "Cliente"}
+                                    </div>
+                                    <div style={{ fontSize:10.5, color:isLight ? T.txt2 : "rgba(255,255,255,0.55)", fontFamily:font, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>
+                                      {c.last_content || "Nuevo mensaje"}
+                                    </div>
+                                  </div>
+                                  <span style={{
+                                    minWidth:16, height:16, padding:"0 5px", borderRadius:99, flexShrink:0,
+                                    background:T.accent, color:"#041016",
+                                    fontSize:9, fontWeight:800, fontFamily:fontDisp,
+                                    display:"flex", alignItems:"center", justifyContent:"center",
+                                  }}>{u > 99 ? "99+" : u}</span>
+                                </button>
+                              );
+                            })}
+                            <button
+                              onClick={() => { setV("wa"); setWaOpenLead(null); setBellOpen(false); }}
+                              style={{
+                                marginTop:2, padding:"6px 0", borderRadius:7, cursor:"pointer",
+                                background:"transparent", border:"none",
+                                color:T.accent, fontSize:11, fontWeight:700, fontFamily:font,
+                              }}
+                            >Ver todas las conversaciones →</button>
+                          </div>
+                        )}
+
+                        {/* Estado: sin pendientes ni offline ni WhatsApp sin leer */}
+                        {!user?._offline && pendingSync === 0 && waUnread === 0 && (
                           <div style={{ fontSize:12, color: isLight ? T.txt3 : "rgba(255,255,255,0.45)", fontFamily:font, padding:"8px 0" }}>
                             Sin notificaciones nuevas.
                           </div>
@@ -1522,6 +1610,7 @@ export default function App() {
                     ? <ComandoDirectivo leadsData={leadsData} T={T} theme={theme} />
                     : <Dash oc={oc} leadsData={leadsData} T={T} />)}
                   {v === "c"      && <CRM oc={oc} leadsData={leadsData} setLeadsData={setLeadsData} theme={theme} setTheme={setTheme} autoOpenPriority1={autoOpenPriority1} onAutoOpenHandled={() => setAutoOpenPriority1(0)} softDeleteLead={softDeleteLead} />}
+                  {v === "wa"     && canAccessModule("wa", user, clientConfig) && <WhatsAppInbox T={T} isLight={isLight} inbox={waInbox} openLead={waOpenLead} />}
                   {v === "trash"  && <Trash trashedLeads={trashedLeads} onRestore={restoreLead} onHardDelete={hardDeleteLead} onRefresh={refreshTrash} T={T} />}
                   {v === "ia"     && <IACRM oc={oc} T={T} theme={theme} />}
                   {v === "e"      && <ERP oc={oc} T={T} />}
