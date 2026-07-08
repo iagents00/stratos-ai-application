@@ -1,13 +1,15 @@
 /**
  * app/features/MetaPanel/index.jsx
  * ─────────────────────────────────────────────────────────────────────────────
- * Modal de tres pestañas: Lista de Acción · Plan Estratégico · Protocolo de Ventas
+ * Modal de cuatro pestañas: Lista de Acción · Documentos · Plan Estratégico · Protocolo de Ventas
  * Extraído de App.jsx (ex líneas 3204–3998).
  * ─────────────────────────────────────────────────────────────────────────────
  */
 import {
   Target, Plus, Check, Minus, GripVertical, TrendingUp, ChevronRight,
   AlertCircle, Bell, X, Atom,
+  FileText, Table, Presentation, ClipboardList, HardDrive, BookOpen,
+  PenTool, Palette, Video, Globe, Cloud, ExternalLink, Trash2, FolderOpen,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "../../../lib/supabase";
@@ -131,6 +133,32 @@ export const DEFAULT_META_PROTOCOL = {
   cierre: "Un lead solo se cierra si: compra, se descarta con motivo claro, o deja de ser viable.",
 };
 
+/* ── Detección de proveedor para el apartado Documentos ────────────────────── */
+const DOC_PROVIDERS = [
+  { test: u => u.includes("docs.google.com/document"),               name: "Google Docs",   color: "#4285F4", Icon: FileText },
+  { test: u => u.includes("docs.google.com/spreadsheets"),           name: "Google Sheets", color: "#34A853", Icon: Table },
+  { test: u => u.includes("docs.google.com/presentation"),           name: "Google Slides", color: "#F4B400", Icon: Presentation },
+  { test: u => u.includes("docs.google.com/forms"),                  name: "Google Forms",  color: "#A78BFA", Icon: ClipboardList },
+  { test: u => u.includes("drive.google.com"),                       name: "Google Drive",  color: "#4285F4", Icon: HardDrive },
+  { test: u => u.includes("notion.so") || u.includes("notion.site"), name: "Notion",        color: "#94A3B8", Icon: BookOpen },
+  { test: u => u.includes("figma.com"),                              name: "Figma",         color: "#A259FF", Icon: PenTool },
+  { test: u => u.includes("canva.com"),                              name: "Canva",         color: "#00C4CC", Icon: Palette },
+  { test: u => u.includes("dropbox.com"),                            name: "Dropbox",       color: "#0061FF", Icon: Cloud },
+  { test: u => u.includes("onedrive") || u.includes("sharepoint"),   name: "OneDrive",      color: "#0078D4", Icon: Cloud },
+  { test: u => u.includes("loom.com"),                               name: "Loom",          color: "#625DF5", Icon: Video },
+  { test: u => u.includes("youtube.com") || u.includes("youtu.be"),  name: "YouTube",       color: "#F87171", Icon: Video },
+  { test: u => /\.pdf(\?|#|$)/.test(u),                              name: "PDF",           color: "#EF4444", Icon: FileText },
+];
+const detectDocProvider = (url) => {
+  const u = (url || "").toLowerCase();
+  const hit = DOC_PROVIDERS.find(p => p.test(u));
+  if (hit) return hit;
+  let host = "";
+  try { host = new URL(u).hostname.replace(/^www\./, ""); } catch { /* url inválida */ }
+  return { name: host || "Enlace", color: "#7EB8F0", Icon: Globe };
+};
+const docHost = (url) => { try { return new URL(url).hostname.replace(/^www\./, ""); } catch { return ""; } };
+
 /* ── Component ─────────────────────────────────────────────────────────────── */
 export default function MetaPanel({
   open,
@@ -147,6 +175,8 @@ export default function MetaPanel({
   setMetaPlan,
   metaProtocol,
   setMetaProtocol,
+  metaDocs,
+  setMetaDocs,
   leadsData,
   T,
   isLight,
@@ -222,6 +252,27 @@ export default function MetaPanel({
   const persistDone = (a, done) => { if (a._persisted && _online) supabase.from('team_actions').update({ done, completed_at: done ? new Date().toISOString() : null }).eq('id', a.id).then(({ error }) => { if (error) console.warn('[Stratos] team_action done:', error.message); }); };
   const persistDelete = (a) => { if (a._persisted && _online) supabase.from('team_actions').delete().eq('id', a.id).then(({ error }) => { if (error) console.warn('[Stratos] team_action delete:', error.message); }); };
 
+  // ── Documentos del equipo (links) — persisten vía setMetaDocs (App.jsx → meta_config.documents)
+  const [docUrl, setDocUrl] = useState("");
+  const [docTitle, setDocTitle] = useState("");
+  const addDoc = () => {
+    let u = docUrl.trim();
+    if (!u) return;
+    if (!/^https?:\/\//i.test(u)) u = `https://${u}`;
+    try { new URL(u); } catch { return; }          // enlace inválido → no agregar
+    const prov = detectDocProvider(u);
+    const doc = {
+      id: (typeof crypto !== "undefined" && crypto.randomUUID) ? crypto.randomUUID() : String(Date.now()),
+      url: u,
+      title: docTitle.trim() || prov.name,
+      addedBy: user?.name || "",
+      addedAt: new Date().toISOString(),
+    };
+    setMetaDocs([doc, ...(metaDocs || [])]);
+    setDocUrl(""); setDocTitle("");
+  };
+  const removeDoc = (id) => setMetaDocs((metaDocs || []).filter(d => d.id !== id));
+
   if (!open) return null;
   // Brand label fallback (compat con instancias legacy que no pasen el prop)
   const brandLabel = orgBrand || 'Duke del Caribe';
@@ -286,6 +337,7 @@ export default function MetaPanel({
 
   const tabs = [
     { id:"acciones",  label:"Lista de Acción" },
+    { id:"docs",      label:"Documentos" },
     { id:"plan",      label:"Plan Estratégico" },
     { id:"protocolo", label:"Protocolo de Ventas" },
   ];
@@ -365,30 +417,30 @@ export default function MetaPanel({
 
           {/* ═══ TAB 1: LISTA DE ACCIÓN ══════════════════════════════════ */}
           {metaTab === "acciones" && (
-            <div>
+            <div style={{ maxWidth:800, margin:"0 auto" }}>
               {/* Header */}
-              <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:14 }}>
+              <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:18 }}>
                 <div>
-                  <h3 style={{ margin:0, fontSize:15, fontWeight:700, fontFamily:fontDisp, letterSpacing:"-0.03em", color:T.txt }}>Acciones del Equipo</h3>
-                  <p style={{ margin:"3px 0 0", fontSize:11, color:T.txt3, fontFamily:font }}>
+                  <h3 style={{ margin:0, fontSize:19, fontWeight:700, fontFamily:fontDisp, letterSpacing:"-0.035em", color:T.txt }}>Acciones del Equipo</h3>
+                  <p style={{ margin:"5px 0 0", fontSize:12.5, color:T.txt3, fontFamily:font }}>
                     {metaActions.filter(a=>!a.done).length} pendientes · {metaActions.filter(a=>a.done).length} completadas
-                    <span style={{ marginLeft:8, opacity:0.45, fontSize:10 }}>· Arrastra para reordenar</span>
+                    <span style={{ marginLeft:8, opacity:0.5, fontSize:11.5 }}>· Arrastra para reordenar</span>
                   </p>
                 </div>
               </div>
 
               {/* Quick-add bar */}
-              <div style={{ display:"flex", gap:8, marginBottom:18, alignItems:"stretch" }}>
+              <div style={{ display:"flex", gap:9, marginBottom:22, alignItems:"stretch" }}>
                 <input
                   value={metaNewText}
                   onChange={e => setMetaNewText(e.target.value)}
                   onKeyDown={e => { if (e.key === "Enter") createAction(); }}
                   placeholder="Nueva acción — escribe, elegí fecha/hora y Enter…"
                   style={{
-                    flex:1, padding:"10px 15px", borderRadius:10,
+                    flex:1, padding:"13px 17px", borderRadius:13,
                     background: isLight?"#FFFFFF":"rgba(255,255,255,0.05)",
                     border:`1.5px solid ${metaNewText ? T.accent : T.border}`,
-                    color:T.txt, fontSize:12.5, fontFamily:font, outline:"none",
+                    color:T.txt, fontSize:14, fontFamily:font, outline:"none",
                     boxShadow: metaNewText ? `0 0 0 3px ${T.accent}18` : "none",
                     transition:"border 0.15s, box-shadow 0.15s",
                   }}
@@ -399,10 +451,10 @@ export default function MetaPanel({
                   onChange={e => setMetaNewDate(e.target.value)}
                   title="Fecha y hora límite (obligatoria)"
                   style={{
-                    padding:"10px 12px", borderRadius:10, flexShrink:0,
+                    padding:"13px 14px", borderRadius:13, flexShrink:0,
                     background: isLight?"#FFFFFF":"rgba(255,255,255,0.05)",
                     border:`1.5px solid ${metaNewDate ? T.accent : T.border}`,
-                    color:T.txt, fontSize:12, fontFamily:font, outline:"none",
+                    color:T.txt, fontSize:13, fontFamily:font, outline:"none",
                     colorScheme: isLight ? "light" : "dark",
                   }}
                 />
@@ -411,19 +463,19 @@ export default function MetaPanel({
                   onClick={createAction}
                   style={{
                     display:"flex", alignItems:"center", gap:7,
-                    padding:"0 20px", borderRadius:10, border:"none",
+                    padding:"0 22px", borderRadius:13, border:"none",
                     background: canAdd
                       ? `linear-gradient(135deg,#0D9A76,${T.accent})`
                       : (isLight?"rgba(0,0,0,0.06)":"rgba(255,255,255,0.07)"),
                     color: canAdd ? "#041016" : T.txt3,
-                    fontSize:12.5, fontWeight:700, fontFamily:fontDisp,
+                    fontSize:13.5, fontWeight:700, fontFamily:fontDisp,
                     cursor: canAdd ? "pointer" : "default",
                     flexShrink:0, letterSpacing:"-0.02em",
                     boxShadow: canAdd ? "0 2px 12px rgba(13,154,118,0.30)" : "none",
                     transition:"background 0.18s, color 0.18s, box-shadow 0.18s",
-                    minHeight:42,
+                    minHeight:48,
                   }}>
-                  <Plus size={14} strokeWidth={2.5} />
+                  <Plus size={15} strokeWidth={2.5} />
                   Agregar
                 </button>
                 ); })()}
@@ -431,16 +483,16 @@ export default function MetaPanel({
 
               {/* Pending tasks */}
               {metaActions.filter(a=>!a.done).length === 0 && (
-                <div style={{ textAlign:"center", padding:"30px 0 20px", color:T.txt3, fontSize:12, fontFamily:font, opacity:0.5 }}>
+                <div style={{ textAlign:"center", padding:"38px 0 26px", color:T.txt3, fontSize:13.5, fontFamily:font, opacity:0.55 }}>
                   Sin acciones pendientes · Agrega la primera arriba
                 </div>
               )}
               {metaActions.filter(a=>!a.done).map(a => {
                 const isUrgent = a.priority==="urgente" || a.date?.toLowerCase().includes("hoy");
                 const isHigh   = !isUrgent && (a.priority==="alto" || a.date?.toLowerCase().includes("mañana") || a.date?.toLowerCase().includes("semana"));
-                const prioColor = isUrgent ? "#EF4444" : isHigh ? "#F59E0B" : T.txt3;
+                const prioColor = isUrgent ? "#EF4444" : isHigh ? "#F59E0B" : T.txt2;
                 const prioNext = a.priority==="normal" ? "alto" : a.priority==="alto" ? "urgente" : "normal";
-                const prioDot  = isUrgent ? "#EF4444" : isHigh ? "#F59E0B" : (isLight?"#94A3B8":"#475569");
+                const prioDot  = isUrgent ? "#EF4444" : isHigh ? "#F59E0B" : (isLight?"#94A3B8":"#64748B");
                 const prioLabel = a.priority==="urgente" ? "Urgente" : a.priority==="alto" ? "Alto" : "Normal";
                 return (
                   <div
@@ -448,7 +500,7 @@ export default function MetaPanel({
                     draggable
                     onDragStart={e => { e.dataTransfer.setData("maDragId", String(a.id)); e.currentTarget.style.opacity="0.35"; }}
                     onDragEnd={e => { e.currentTarget.style.opacity="1"; e.currentTarget.style.outline="none"; }}
-                    onDragOver={e => { e.preventDefault(); e.currentTarget.style.outline=`2px solid ${T.accent}55`; e.currentTarget.style.borderRadius="10px"; }}
+                    onDragOver={e => { e.preventDefault(); e.currentTarget.style.outline=`2px solid ${T.accent}55`; e.currentTarget.style.borderRadius="14px"; }}
                     onDragLeave={e => { e.currentTarget.style.outline="none"; }}
                     onDrop={e => {
                       e.preventDefault(); e.currentTarget.style.outline="none";
@@ -465,8 +517,8 @@ export default function MetaPanel({
                       });
                     }}
                     style={{
-                      display:"flex", alignItems:"flex-start", gap:8,
-                      padding:"10px 12px", borderRadius:10, marginBottom:5,
+                      display:"flex", alignItems:"flex-start", gap:12,
+                      padding:"14px 16px", borderRadius:14, marginBottom:8,
                       background: isUrgent
                         ? (isLight?"rgba(239,68,68,0.03)":"rgba(239,68,68,0.04)")
                         : (isLight?"#FFFFFF":"rgba(255,255,255,0.03)"),
@@ -475,12 +527,13 @@ export default function MetaPanel({
                     }}
                   >
                     {/* Drag handle */}
-                    <GripVertical size={13} color={T.txt3} style={{ cursor:"grab", flexShrink:0, marginTop:4, opacity:0.30 }} />
+                    <GripVertical size={15} color={T.txt3} style={{ cursor:"grab", flexShrink:0, marginTop:6, opacity:0.30 }} />
 
-                    {/* Checkbox */}
+                    {/* Checkbox — redondo estilo Apple Reminders, borde visible */}
                     <button
                       onClick={() => { persistDone(a, true); setMetaActions(p => p.map(x => x.id===a.id ? {...x,done:true} : x)); }}
-                      style={{ width:18, height:18, borderRadius:5, border:`1.5px solid ${T.border}`, background:"transparent", cursor:"pointer", flexShrink:0, marginTop:2, display:"flex", alignItems:"center", justifyContent:"center", transition:"all 0.15s" }}
+                      title="Marcar como completada"
+                      style={{ width:22, height:22, borderRadius:"50%", border:`1.5px solid ${isLight?"rgba(15,23,42,0.28)":"rgba(255,255,255,0.32)"}`, background:"transparent", cursor:"pointer", flexShrink:0, marginTop:3, display:"flex", alignItems:"center", justifyContent:"center", transition:"all 0.15s" }}
                     />
 
                     {/* Content */}
@@ -488,30 +541,30 @@ export default function MetaPanel({
                       <E
                         val={a.text}
                         onSave={v => setMetaActions(p => p.map(x => x.id===a.id ? {...x,text:v} : x))}
-                        style={{ fontSize:12.5, fontWeight:500, color:T.txt, fontFamily:font, lineHeight:1.4, marginBottom:4 }}
+                        style={{ fontSize:15, fontWeight:500, color:T.txt, fontFamily:font, lineHeight:1.45, letterSpacing:"-0.01em", marginBottom:7 }}
                       />
-                      <div style={{ display:"flex", alignItems:"center", gap:6, marginBottom:6, flexWrap:"wrap" }}>
-                        <E val={a.lead}   onSave={v => setMetaActions(p => p.map(x => x.id===a.id?{...x,lead:v}:x))}   style={{ fontSize:10.5, color:T.txt3, fontFamily:font }} />
-                        <span style={{ fontSize:8.5, color:T.txt3, opacity:0.4 }}>·</span>
-                        <E val={a.asesor} onSave={v => setMetaActions(p => p.map(x => x.id===a.id?{...x,asesor:v}:x))} style={{ fontSize:10.5, color:T.txt3, fontFamily:font }} />
+                      <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:9, flexWrap:"wrap" }}>
+                        <E val={a.lead}   onSave={v => setMetaActions(p => p.map(x => x.id===a.id?{...x,lead:v}:x))}   style={{ fontSize:12, color:T.txt3, fontFamily:font }} />
+                        <span style={{ fontSize:10, color:T.txt3, opacity:0.4 }}>·</span>
+                        <E val={a.asesor} onSave={v => setMetaActions(p => p.map(x => x.id===a.id?{...x,asesor:v}:x))} style={{ fontSize:12, color:T.txt3, fontFamily:font }} />
                         {/* Priority cycle pill */}
                         <button
                           onClick={() => setMetaActions(p => p.map(x => x.id===a.id?{...x,priority:prioNext}:x))}
                           title="Click para cambiar prioridad"
                           style={{
-                            display:"inline-flex", alignItems:"center", gap:4,
-                            fontSize:9.5, fontWeight:600, fontFamily:font,
+                            display:"inline-flex", alignItems:"center", gap:5,
+                            fontSize:11, fontWeight:600, fontFamily:font,
                             color:prioColor, background:`${prioDot}10`,
                             border:`1px solid ${prioDot}28`, borderRadius:99,
-                            padding:"2px 8px 2px 6px", cursor:"pointer",
+                            padding:"3px 10px 3px 8px", cursor:"pointer",
                             letterSpacing:"0.01em", transition:"all 0.15s",
                           }}>
-                          <span style={{ width:6, height:6, borderRadius:"50%", background:prioDot, display:"inline-block", flexShrink:0 }} />
+                          <span style={{ width:7, height:7, borderRadius:"50%", background:prioDot, display:"inline-block", flexShrink:0 }} />
                           {prioLabel}
                         </button>
                       </div>
                       {/* Assignee row */}
-                      <div style={{ display:"flex", alignItems:"center", gap:5 }}>
+                      <div style={{ display:"flex", alignItems:"center", gap:6 }}>
                         <select
                           value={a.assignee || ""}
                           onChange={e => {
@@ -525,12 +578,12 @@ export default function MetaPanel({
                             }
                           }}
                           style={{
-                            fontSize:9.5, fontFamily:font, fontWeight:500,
+                            fontSize:11.5, fontFamily:font, fontWeight:500,
                             color: a.assignee ? T.txt2 : T.txt3,
                             background: isLight ? "rgba(15,23,42,0.04)" : "rgba(255,255,255,0.05)",
                             border:`1px solid ${a.assignee ? T.accentB : T.border}`,
-                            borderRadius:6, padding:"2px 6px",
-                            cursor:"pointer", outline:"none", maxWidth:140,
+                            borderRadius:8, padding:"4px 9px",
+                            cursor:"pointer", outline:"none", maxWidth:170,
                           }}
                         >
                           <option value="">＋ Responsable</option>
@@ -545,28 +598,28 @@ export default function MetaPanel({
                           disabled
                           title="Próximamente — Asignación directa a iAgents IA"
                           style={{
-                            display:"flex", alignItems:"center", gap:3,
-                            padding:"2px 7px", borderRadius:6,
+                            display:"flex", alignItems:"center", gap:4,
+                            padding:"4px 9px", borderRadius:8,
                             border:`1px solid ${T.blue}28`,
                             background:`${T.blue}07`,
-                            color:T.blue, fontSize:9, fontFamily:font, fontWeight:600,
+                            color:T.blue, fontSize:10.5, fontFamily:font, fontWeight:600,
                             cursor:"not-allowed", opacity:0.38,
                           }}
                         >
-                          <Atom size={9} />iAgent IA
+                          <Atom size={10} />iAgent IA
                         </button>
                       </div>
                     </div>
 
                     {/* Date + delete */}
-                    <div style={{ display:"flex", flexDirection:"column", alignItems:"flex-end", gap:5, flexShrink:0 }}>
+                    <div style={{ display:"flex", flexDirection:"column", alignItems:"flex-end", gap:7, flexShrink:0 }}>
                       <E
                         val={a.date || "—"}
                         onSave={v => setMetaActions(p => p.map(x => x.id===a.id?{...x,date:v}:x))}
-                        style={{ fontSize:10, fontWeight:600, fontFamily:fontDisp, color:prioColor, background:`${prioColor}13`, border:`1px solid ${prioColor}25`, padding:"2px 9px", borderRadius:99, whiteSpace:"nowrap", cursor:"text" }}
+                        style={{ fontSize:12, fontWeight:600, fontFamily:fontDisp, color:prioColor, background:`${prioColor}13`, border:`1px solid ${prioColor}25`, padding:"4px 12px", borderRadius:99, whiteSpace:"nowrap", cursor:"text" }}
                       />
-                      <button onClick={() => { persistDelete(a); setMetaActions(p => p.filter(x => x.id!==a.id)); }} style={{ background:"none", border:"none", cursor:"pointer", padding:2, opacity:0.25, display:"flex", alignItems:"center" }}>
-                        <Minus size={11} color={T.txt3} />
+                      <button onClick={() => { persistDelete(a); setMetaActions(p => p.filter(x => x.id!==a.id)); }} title="Eliminar acción" style={{ background:"none", border:"none", cursor:"pointer", padding:3, opacity:0.30, display:"flex", alignItems:"center" }}>
+                        <Minus size={13} color={T.txt3} />
                       </button>
                     </div>
                   </div>
@@ -575,37 +628,38 @@ export default function MetaPanel({
 
               {/* Completed tasks — collapsible */}
               {metaActions.filter(a=>a.done).length > 0 && (
-                <div style={{ marginTop:14 }}>
+                <div style={{ marginTop:18 }}>
                   <button
                     onClick={() => setDoneCollapsed(x => !x)}
-                    style={{ display:"flex", alignItems:"center", gap:7, background:"none", border:"none", cursor:"pointer", padding:"6px 0", width:"100%" }}>
+                    style={{ display:"flex", alignItems:"center", gap:8, background:"none", border:"none", cursor:"pointer", padding:"8px 0", width:"100%" }}>
                     <div style={{ flex:1, height:1, background:T.border }} />
-                    <span style={{ fontSize:10.5, fontWeight:600, color:T.txt3, fontFamily:font, whiteSpace:"nowrap", display:"flex", alignItems:"center", gap:5 }}>
-                      <Check size={11} color={T.accent} />
+                    <span style={{ fontSize:12, fontWeight:600, color:T.txt3, fontFamily:font, whiteSpace:"nowrap", display:"flex", alignItems:"center", gap:6 }}>
+                      <Check size={12} color={T.accent} />
                       {metaActions.filter(a=>a.done).length} completadas
-                      <span style={{ fontSize:9, opacity:0.6 }}>{doneCollapsed ? "▸ ver" : "▾ ocultar"}</span>
+                      <span style={{ fontSize:10.5, opacity:0.6 }}>{doneCollapsed ? "▸ ver" : "▾ ocultar"}</span>
                     </span>
                     <div style={{ flex:1, height:1, background:T.border }} />
                   </button>
                   {!doneCollapsed && metaActions.filter(a=>a.done).map(a => (
                     <div key={a.id} style={{
-                      display:"flex", alignItems:"flex-start", gap:8,
-                      padding:"8px 12px", borderRadius:10, marginBottom:4,
+                      display:"flex", alignItems:"flex-start", gap:11,
+                      padding:"11px 16px", borderRadius:12, marginBottom:6,
                       background: isLight?"rgba(52,211,153,0.03)":"rgba(52,211,153,0.025)",
                       border:`1px solid ${T.accent}14`,
-                      opacity:0.60,
+                      opacity:0.65,
                     }}>
                       <button
                         onClick={() => { persistDone(a, false); setMetaActions(p => p.map(x => x.id===a.id ? {...x,done:false} : x)); }}
-                        style={{ width:17, height:17, borderRadius:5, border:`1.5px solid ${T.accent}`, background:T.accent, cursor:"pointer", flexShrink:0, marginTop:2, display:"flex", alignItems:"center", justifyContent:"center" }}>
-                        <Check size={9} strokeWidth={3} color="#041016" />
+                        title="Marcar como pendiente"
+                        style={{ width:20, height:20, borderRadius:"50%", border:`1.5px solid ${T.accent}`, background:T.accent, cursor:"pointer", flexShrink:0, marginTop:1, display:"flex", alignItems:"center", justifyContent:"center" }}>
+                        <Check size={11} strokeWidth={3} color="#041016" />
                       </button>
                       <div style={{ flex:1, minWidth:0 }}>
-                        <span style={{ fontSize:12, color:T.txt3, fontFamily:font, textDecoration:"line-through", lineHeight:1.4 }}>{a.text}</span>
-                        <p style={{ margin:"2px 0 0", fontSize:10, color:T.txt3, fontFamily:font, opacity:0.7 }}>{a.lead} · {a.asesor}</p>
+                        <span style={{ fontSize:13.5, color:T.txt3, fontFamily:font, textDecoration:"line-through", lineHeight:1.45 }}>{a.text}</span>
+                        <p style={{ margin:"3px 0 0", fontSize:11.5, color:T.txt3, fontFamily:font, opacity:0.7 }}>{a.lead} · {a.asesor}</p>
                       </div>
-                      <button onClick={() => { persistDelete(a); setMetaActions(p => p.filter(x => x.id!==a.id)); }} style={{ background:"none", border:"none", cursor:"pointer", padding:2, opacity:0.25 }}>
-                        <Minus size={11} color={T.txt3} />
+                      <button onClick={() => { persistDelete(a); setMetaActions(p => p.filter(x => x.id!==a.id)); }} title="Eliminar acción" style={{ background:"none", border:"none", cursor:"pointer", padding:3, opacity:0.30 }}>
+                        <Minus size={13} color={T.txt3} />
                       </button>
                     </div>
                   ))}
@@ -614,7 +668,141 @@ export default function MetaPanel({
             </div>
           )}
 
-          {/* ═══ TAB 2: PLAN ESTRATÉGICO ════════════════════════════════ */}
+          {/* ═══ TAB 2: DOCUMENTOS ═══════════════════════════════════════ */}
+          {metaTab === "docs" && (
+            <div style={{ maxWidth:800, margin:"0 auto" }}>
+              {/* Header */}
+              <div style={{ marginBottom:18 }}>
+                <h3 style={{ margin:0, fontSize:19, fontWeight:700, fontFamily:fontDisp, letterSpacing:"-0.035em", color:T.txt }}>Documentos del Equipo</h3>
+                <p style={{ margin:"5px 0 0", fontSize:12.5, color:T.txt3, fontFamily:font, lineHeight:1.5 }}>
+                  Enlaces a Google Docs, Drive, Notion, Figma y más — siempre a la mano para todo el equipo.
+                </p>
+              </div>
+
+              {/* Add bar — solo admins (RLS solo les permite escribir a ellos) */}
+              {canEditFinal && (
+                <div style={{ display:"flex", gap:9, marginBottom:22, alignItems:"stretch", flexWrap:"wrap" }}>
+                  <input
+                    value={docUrl}
+                    onChange={e => setDocUrl(e.target.value)}
+                    onKeyDown={e => { if (e.key === "Enter") addDoc(); }}
+                    placeholder="Pega el enlace — https://docs.google.com/…"
+                    style={{
+                      flex:"2 1 280px", padding:"13px 17px", borderRadius:13,
+                      background: isLight?"#FFFFFF":"rgba(255,255,255,0.05)",
+                      border:`1.5px solid ${docUrl ? T.accent : T.border}`,
+                      color:T.txt, fontSize:14, fontFamily:font, outline:"none",
+                      boxShadow: docUrl ? `0 0 0 3px ${T.accent}18` : "none",
+                      transition:"border 0.15s, box-shadow 0.15s",
+                    }}
+                  />
+                  <input
+                    value={docTitle}
+                    onChange={e => setDocTitle(e.target.value)}
+                    onKeyDown={e => { if (e.key === "Enter") addDoc(); }}
+                    placeholder="Nombre (opcional)"
+                    style={{
+                      flex:"1 1 170px", padding:"13px 17px", borderRadius:13,
+                      background: isLight?"#FFFFFF":"rgba(255,255,255,0.05)",
+                      border:`1.5px solid ${T.border}`,
+                      color:T.txt, fontSize:14, fontFamily:font, outline:"none",
+                    }}
+                  />
+                  {(() => { const canAdd = !!docUrl.trim(); return (
+                  <button
+                    onClick={addDoc}
+                    style={{
+                      display:"flex", alignItems:"center", gap:7,
+                      padding:"0 22px", borderRadius:13, border:"none",
+                      background: canAdd
+                        ? `linear-gradient(135deg,#0D9A76,${T.accent})`
+                        : (isLight?"rgba(0,0,0,0.06)":"rgba(255,255,255,0.07)"),
+                      color: canAdd ? "#041016" : T.txt3,
+                      fontSize:13.5, fontWeight:700, fontFamily:fontDisp,
+                      cursor: canAdd ? "pointer" : "default",
+                      flexShrink:0, letterSpacing:"-0.02em",
+                      boxShadow: canAdd ? "0 2px 12px rgba(13,154,118,0.30)" : "none",
+                      transition:"background 0.18s, color 0.18s, box-shadow 0.18s",
+                      minHeight:48,
+                    }}>
+                    <Plus size={15} strokeWidth={2.5} />
+                    Agregar
+                  </button>
+                  ); })()}
+                </div>
+              )}
+
+              {/* Empty state */}
+              {(!metaDocs || metaDocs.length === 0) && (
+                <div style={{ textAlign:"center", padding:"52px 20px 40px" }}>
+                  <div style={{ width:60, height:60, borderRadius:18, background:`${T.accent}0D`, border:`1px solid ${T.accent}1F`, display:"flex", alignItems:"center", justifyContent:"center", margin:"0 auto 16px" }}>
+                    <FolderOpen size={26} color={T.accent} strokeWidth={1.6} style={{ opacity:0.75 }} />
+                  </div>
+                  <p style={{ margin:"0 0 5px", fontSize:14.5, fontWeight:600, fontFamily:fontDisp, letterSpacing:"-0.02em", color:T.txt }}>Aún no hay documentos</p>
+                  <p style={{ margin:0, fontSize:12.5, color:T.txt3, fontFamily:font, lineHeight:1.55, maxWidth:380, marginLeft:"auto", marginRight:"auto" }}>
+                    {canEditFinal
+                      ? "Pega arriba un enlace de Google Docs, Drive, Notion o cualquier otra herramienta para tenerlo a la mano del equipo."
+                      : "Un administrador puede agregar aquí los enlaces importantes del equipo."}
+                  </p>
+                </div>
+              )}
+
+              {/* Document list */}
+              {(metaDocs || []).map(d => {
+                const prov = detectDocProvider(d.url);
+                const host = docHost(d.url);
+                const added = d.addedAt ? new Date(d.addedAt).toLocaleDateString("es-MX", { day:"numeric", month:"short" }) : "";
+                const meta = [prov.name, host, d.addedBy, added].filter(Boolean).join(" · ");
+                return (
+                  <a
+                    key={d.id}
+                    href={d.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onMouseEnter={e => { e.currentTarget.style.borderColor = `${prov.color}50`; }}
+                    onMouseLeave={e => { e.currentTarget.style.borderColor = T.border; }}
+                    style={{
+                      display:"flex", alignItems:"center", gap:13,
+                      padding:"13px 16px", borderRadius:14, marginBottom:8,
+                      background: isLight?"#FFFFFF":"rgba(255,255,255,0.03)",
+                      border:`1px solid ${T.border}`,
+                      textDecoration:"none",
+                      transition:"border-color 0.15s, background 0.15s",
+                    }}
+                  >
+                    <div style={{ width:40, height:40, borderRadius:11, background:`${prov.color}14`, border:`1px solid ${prov.color}26`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+                      <prov.Icon size={18} color={prov.color} strokeWidth={1.9} />
+                    </div>
+                    <div style={{ flex:1, minWidth:0 }}>
+                      <p style={{ margin:0, fontSize:14.5, fontWeight:600, fontFamily:fontDisp, letterSpacing:"-0.015em", color:T.txt, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>{d.title}</p>
+                      <p style={{ margin:"3px 0 0", fontSize:12, color:T.txt3, fontFamily:font, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>{meta}</p>
+                    </div>
+                    <ExternalLink size={15} color={T.txt3} style={{ flexShrink:0, opacity:0.45 }} />
+                    {canEditFinal && (
+                      <button
+                        onClick={e => { e.preventDefault(); e.stopPropagation(); removeDoc(d.id); }}
+                        title="Eliminar documento"
+                        style={{ background:"none", border:"none", cursor:"pointer", padding:4, opacity:0.35, display:"flex", flexShrink:0, transition:"opacity 0.15s" }}
+                        onMouseEnter={e => { e.currentTarget.style.opacity = "0.85"; }}
+                        onMouseLeave={e => { e.currentTarget.style.opacity = "0.35"; }}
+                      >
+                        <Trash2 size={15} color="#F87171" />
+                      </button>
+                    )}
+                  </a>
+                );
+              })}
+
+              {/* Nota para asesores (solo lectura) */}
+              {!canEditFinal && (metaDocs || []).length > 0 && (
+                <p style={{ margin:"14px 0 0", fontSize:11.5, color:T.txt3, fontFamily:font, textAlign:"center", opacity:0.7 }}>
+                  Solo los administradores pueden agregar o quitar documentos.
+                </p>
+              )}
+            </div>
+          )}
+
+          {/* ═══ TAB 3: PLAN ESTRATÉGICO ════════════════════════════════ */}
           {metaTab === "plan" && (
             <div>
               <div style={{ textAlign:"center", marginBottom:18 }}>
@@ -759,7 +947,7 @@ export default function MetaPanel({
             </div>
           )}
 
-          {/* ═══ TAB 3: PROTOCOLO DE VENTAS ══════════════════════════════ */}
+          {/* ═══ TAB 4: PROTOCOLO DE VENTAS ══════════════════════════════ */}
           {metaTab === "protocolo" && (
             <div>
 
