@@ -139,7 +139,10 @@
 //   "Nueva Landing Page"): ArrowRight/CheckCircle2/ChevronUp usados sin
 //   importar en LandingPages/index.jsx y CheckCircle2/StratosAtom en
 //   LandingPagePreview.jsx. Solo imports, cero cambios de lógica.
-const CACHE_VERSION = 'stratos-v82';
+// v83 — feat(ui): el widget del plan (barra lateral) muestra la etiqueta
+//   "ACT hechas/total" (Lista de Acción) arriba del % de avance, en vez del
+//   valor de pipeline + score. Compacta y centrada para no salirse del ancho.
+const CACHE_VERSION = 'stratos-v83';
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 
