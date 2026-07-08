@@ -34,6 +34,10 @@ const Diagnostico      = lazy(() => import("./landing/Diagnostico.jsx"));
 import { CATEGORIES_TG, MANUAL_SECTIONS_TG, searchManualTG } from "./landing/manual-telegram-content";
 
 import "./index.css";
+// Mitigación de crash en Safari iOS (memoria de compositing): baja el blur de
+// vidrio y frena animaciones continuas en móvil. Reversible: borrar el archivo
+// + este import. Ver src/mobile-perf.css.
+import "./mobile-perf.css";
 
 // ─── BOOT GUARD: limpieza de tokens legacy ──────────────────────────────────
 // Versiones anteriores guardaban basura en localStorage que rompía sesiones:
