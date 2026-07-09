@@ -78,20 +78,49 @@
         document.addEventListener("visibilitychange", syncHidden);
         syncHidden();
 
-        // Detector de loop de crash: cuenta recargas recientes en sessionStorage
-        // (sobrevive a la recarga de la misma pestaña). ≥3 en <12s → modo seguro.
+        // Detector de crash v2 [guard:BOOT-HEALTH] — dos señales + memoria:
+        //  a) Loop rápido: ≥3 recargas en <12s (sessionStorage, misma pestaña).
+        //  b) Arranques que no llegan a "sano": si la página muere antes de
+        //     vivir 15s, cuenta un intento fallido en localStorage. Con ≥3
+        //     seguidos (aunque el usuario recargue A MANO minutos después,
+        //     que era el hueco de la v1) → modo seguro.
+        //  Cualquiera de las dos deja el modo seguro PEGAJOSO por 48h
+        //  (stratos_lowfx_until): el iPhone carga plano-pero-estable aunque
+        //  siga recargando. Pasadas 48h sin crashes, vuelve solo al look full.
         try {
-          var KEY = "stratos_reload_ticks";
           var now = Date.now();
+          var LOWFX_UNTIL = "stratos_lowfx_until";
+          var BOOT_FAILS = "stratos_boot_fails";
+          var stick = 0;
+          try { stick = +localStorage.getItem(LOWFX_UNTIL) || 0; } catch (e) {}
+          var lowfx = stick > now;
+
+          // (a) loop rápido en la misma pestaña
+          var KEY = "stratos_reload_ticks";
           var ticks = [];
           try { ticks = JSON.parse(sessionStorage.getItem(KEY) || "[]"); } catch (e) {}
           if (!Array.isArray(ticks)) ticks = [];
           ticks.push(now);
           ticks = ticks.filter(function (t) { return now - t < 12000; });
           try { sessionStorage.setItem(KEY, JSON.stringify(ticks)); } catch (e) {}
-          if (ticks.length >= 3) el.setAttribute("data-lowfx", "1");
-        } catch (e) { /* sin sessionStorage → el modo seguro no auto-activa;
-                         la reducción de blur de móvil (CSS puro) igual aplica. */ }
+          if (ticks.length >= 3) lowfx = true;
+
+          // (b) arranques fallidos consecutivos (sobrevive a recargas manuales)
+          var fails = 0;
+          try { fails = (+localStorage.getItem(BOOT_FAILS) || 0) + 1; } catch (e) {}
+          try { localStorage.setItem(BOOT_FAILS, String(fails)); } catch (e) {}
+          if (fails >= 3) lowfx = true;
+          // si la página vive 15s, el arranque fue sano → resetear el contador
+          setTimeout(function () {
+            try { localStorage.setItem(BOOT_FAILS, "0"); } catch (e) {}
+          }, 15000);
+
+          if (lowfx) {
+            el.setAttribute("data-lowfx", "1");
+            try { localStorage.setItem(LOWFX_UNTIL, String(now + 48 * 3600 * 1000)); } catch (e) {}
+          }
+        } catch (e) { /* sin storage → el modo seguro no auto-activa;
+                         el apagado de blur de móvil (CSS puro) igual aplica. */ }
       })();
     </script>
     <script type="module" src="/src/main.jsx"></script>
