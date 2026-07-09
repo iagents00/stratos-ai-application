@@ -173,8 +173,19 @@ export default function LeadWhatsAppChat({ lead, T = P, isLight = false, threadM
   const loadSeqRef = useRef(0);
   const loadRef = useRef(() => {});
 
-  const enabled =
+  const flagOn =
     typeof isFeatureEnabled === "function" ? isFeatureEnabled("whatsappChat") : false;
+  // ⏸️ OCULTO temporalmente (09-jul-2026): el chat de WhatsApp en el expediente
+  // NO se muestra a los asesores todavía (los números se conectan por
+  // COEXISTENCIA directo a Meta — ver context/whatsapp-multicliente-plan.md del
+  // AIOS). Solo super_admin (nosotros) lo ve, igual que el módulo. El componente
+  // se usa en el expediente Y en el módulo WhatsApp; con este gate ambos quedan
+  // super_admin-only de forma consistente.
+  //   • Reactivar para TODOS: quitar `&& user?.role === "super_admin"`.
+  //   • Para dejarlo SOLO-LECTURA a asesores en el futuro (leer sin enviar,
+  //     cuando la coexistencia esté consolidada): abrir `enabled` por rol pero
+  //     ocultar el composer si el rol no es de mando.
+  const enabled = flagOn && user?.role === "super_admin";
   const canQuery = enabled && !!lead?.id && isUuid(lead.id) && !user?.isDemo;
 
   /* ── Carga + realtime (debounced) + polling de respaldo ─────────────────── */
