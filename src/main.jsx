@@ -57,6 +57,23 @@ try {
   }
 } catch (_) { /* localStorage bloqueado — ignorar */ }
 
+// ─── AUTO-RECOVERY: chunk viejo tras un deploy ──────────────────────────────
+// Cada deploy cambia el hash de los chunks (assets/App-XXXX.js). Una pestaña
+// abierta durante el deploy intenta lazy-importar el chunk viejo, Vercel ya
+// no lo tiene y el usuario veía "⚠️ Algo salió mal / Importing a module
+// script failed". Vite emite `vite:preloadError` justo en ese caso: recargamos
+// una vez para tomar el index.html nuevo (con los hashes nuevos). El guard en
+// sessionStorage evita un bucle de recargas si el fallo fuera por red caída.
+window.addEventListener("vite:preloadError", (event) => {
+  const GUARD_KEY = "stratos.chunk.reloaded.at";
+  let last = 0;
+  try { last = Number(sessionStorage.getItem(GUARD_KEY) || 0); } catch (_) { /* noop */ }
+  if (Date.now() - last < 60_000) return; // ya recargamos hace <1min — dejar que el ErrorBoundary muestre el fallo real
+  event.preventDefault(); // que el import no reviente el árbol: nos encargamos recargando
+  try { sessionStorage.setItem(GUARD_KEY, String(Date.now())); } catch (_) { /* noop */ }
+  window.location.reload();
+});
+
 // ─── DECISIÓN DE EXPERIENCIA ─────────────────────────────────────────────────
 // LÓGICA: mostrar Landing SOLO en los dominios públicos conocidos.
 // Todo lo demás (Vercel, subdominio app., localhost con ?app) → Plataforma.
