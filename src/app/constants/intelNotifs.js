@@ -15,7 +15,7 @@ const MS_DAY = 86400000;
 // nombre / score / presupuesto con fallbacks (el modelo usa campos cortos: n, sc)
 const nom = (l) => l.n ?? l.nombre ?? l.name ?? "Cliente";
 const score = (l) => l.sc ?? l.score ?? 0;
-const monto = (l) => l.presupuesto ?? l.budget ?? 0;
+const monto = (l) => Number(l.presupuesto) || Number(l.budget) || 0;
 
 // Días sin movimiento: usa daysInactive si viene con dato; si no (está en 0 para
 // todos = campo stale), lo calcula desde la última fecha real conocida.
