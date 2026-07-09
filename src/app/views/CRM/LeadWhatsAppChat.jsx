@@ -122,9 +122,9 @@ const NEAR_BOTTOM_PX = 90;
 /** Tope de una nota de voz (5 min ≈ un audio largo de WhatsApp). */
 const REC_MAX_SECS = 300;
 
-/* Formatos de grabación en orden de preferencia. Meta/WhatsApp acepta
-   audio/mp4 (AAC) y audio/ogg (opus); audio/webm queda de último recurso
-   (llega como archivo). Chrome moderno soporta audio/mp4; Firefox, ogg. */
+/* Formatos del MOTOR DE RESPALDO (MediaRecorder), solo si el encoder OGG/OPUS
+   wasm no carga. Estos contenedores llegan como DOCUMENTO (Meta los rechaza
+   como "audio"; el flujo n8n los degrada — ver nodo "Audio → documento"). */
 const REC_MIME_CANDIDATES = ["audio/mp4", "audio/ogg;codecs=opus", "audio/webm;codecs=opus", "audio/webm"];
 
 const fmtRecSecs = (s) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
@@ -267,39 +267,121 @@ export default function LeadWhatsAppChat({ lead, T = P, isLight = false, threadM
     setPendingFile(f);
   }, []);
 
-  /* ── Nota de voz (grabar con el micrófono, como WhatsApp) ──────────────── */
+  /* ── Nota de voz (grabar con el micrófono, como WhatsApp) ────────────────
+     DOS motores, en orden de preferencia:
+       1) OGG/OPUS vía opus-recorder (wasm, en un Worker): el formato NATIVO
+          de voz de WhatsApp → llega como burbuja de voz real. La librería se
+          carga PEREZOSA (solo al presionar el micrófono; ~380KB una vez) y se
+          libera al terminar (close() suelta mic + AudioContext + worker).
+       2) Respaldo: MediaRecorder (m4a/webm) → el flujo n8n lo entrega como
+          DOCUMENTO (Meta rechaza esos contenedores como "audio").
+     recorderRef guarda la SESIÓN activa: { finish(), cancel() }.            */
   const stopRecTracks = (rec) => {
     try { rec?.stream?.getTracks?.().forEach((t) => t.stop()); } catch { /* ya cerrado */ }
   };
 
-  // Termina la grabación y ADJUNTA el audio (onstop arma el File → pendingFile).
+  const voiceFileName = (ext) => {
+    const d = new Date();
+    const hhmmss = [d.getHours(), d.getMinutes(), d.getSeconds()].map((n) => String(n).padStart(2, "0")).join("");
+    return `nota-de-voz-${hhmmss}.${ext}`;
+  };
+
+  // Adjunta el audio terminado (entra al MISMO camino de envío que un adjunto).
+  const attachVoiceFile = useCallback((parts, mime, ext) => {
+    if (!mountedRef.current) return; // nada de setState en un componente muerto
+    const file = new File(parts, voiceFileName(ext), { type: mime });
+    if (file.size > WA_MEDIA_MAX_BYTES) { setSendError("El audio supera 16MB"); return; }
+    setPendingFile(file);
+  }, []);
+
+  // Termina la grabación y ADJUNTA (la sesión arma el File → pendingFile).
   const finishRecording = useCallback(() => {
-    const rec = recorderRef.current;
-    recorderRef.current = null; // libre para una nueva grabación; onstop usa su closure
+    const session = recorderRef.current;
+    recorderRef.current = null; // libre para una nueva grabación
     if (recordTimerRef.current) { clearInterval(recordTimerRef.current); recordTimerRef.current = null; }
     setRecording(false);
     setRecordSecs(0);
-    try { if (rec && rec.state !== "inactive") rec.stop(); } catch { /* ya parado */ }
+    try { session?.finish(); } catch { /* ya cerrada */ }
   }, []);
 
-  // Descarta la grabación sin adjuntar (flag de cancelado en el recorder).
+  // Descarta la grabación sin adjuntar.
   const cancelRecording = useCallback(() => {
-    const rec = recorderRef.current;
+    const session = recorderRef.current;
     recorderRef.current = null;
     if (recordTimerRef.current) { clearInterval(recordTimerRef.current); recordTimerRef.current = null; }
     setRecording(false);
     setRecordSecs(0);
-    if (rec) rec.__cancelled = true;
-    try { if (rec && rec.state !== "inactive") rec.stop(); } catch { /* ya parado */ }
-    stopRecTracks(rec);
+    try { session?.cancel(); } catch { /* ya cerrada */ }
   }, []);
 
+  const startRecTimer = useCallback(() => {
+    recordTimerRef.current = setInterval(() => {
+      setRecordSecs((s) => {
+        const next = s + 1;
+        if (next >= REC_MAX_SECS) queueMicrotask(finishRecording); // tope 5 min
+        return next;
+      });
+    }, 1000);
+  }, [finishRecording]);
+
   const startRecording = useCallback(async () => {
-    // recBusyRef cubre la ventana del await (doble-click / carrera con unmount):
-    // `recording` recién se prende DESPUÉS de que getUserMedia resuelve.
+    // recBusyRef cubre la ventana de los await (doble-click / carrera con
+    // unmount): `recording` recién se prende cuando el motor ya arrancó.
     if (recording || sending || recBusyRef.current) return;
     recBusyRef.current = true;
     setSendError(null);
+
+    /* ── Motor 1: OGG/OPUS → nota de voz NATIVA de WhatsApp ── */
+    try {
+      const [recMod, urlMod] = await Promise.all([
+        import("opus-recorder"),
+        import("opus-recorder/dist/encoderWorker.min.js?url"),
+      ]);
+      const Recorder = recMod.default || recMod;
+      if (mountedRef.current && Recorder?.isRecordingSupported?.()) {
+        const rec = new Recorder({
+          encoderPath: urlMod.default || urlMod,
+          numberOfChannels: 1,      // mono — requisito de Meta para voz
+          encoderApplication: 2048, // perfil "Voice" de Opus
+        });
+        let cancelled = false;
+        rec.ondataavailable = (buf) => {
+          try { rec.close(); } catch { /* ya cerrado */ } // suelta mic+worker SIEMPRE
+          if (cancelled || !buf || !buf.byteLength) return;
+          attachVoiceFile([buf], "audio/ogg", "ogg");
+        };
+        try {
+          await rec.start(); // pide el micrófono (viene de un gesto del usuario)
+        } catch (e) {
+          try { rec.close(); } catch { /* noop */ } // no dejar mic/worker a medias
+          throw e; // → Motor 2
+        }
+        if (!mountedRef.current) {
+          cancelled = true;
+          try { rec.stop(); } catch { /* noop */ }
+          try { rec.close(); } catch { /* noop */ }
+          recBusyRef.current = false;
+          return;
+        }
+        recorderRef.current = {
+          finish: () => { try { rec.stop(); } catch { try { rec.close(); } catch { /* noop */ } } },
+          cancel: () => {
+            cancelled = true;
+            try { rec.stop(); } catch { /* noop */ }
+            try { rec.close(); } catch { /* noop */ }
+          },
+        };
+        setRecording(true);
+        setRecordSecs(0);
+        recBusyRef.current = false;
+        startRecTimer();
+        return;
+      }
+    } catch { /* wasm no cargó (offline / navegador raro) → Motor 2 */ }
+
+    if (!mountedRef.current) { recBusyRef.current = false; return; }
+
+    /* ── Motor 2 (respaldo): MediaRecorder → llega como documento ── */
     let stream;
     try {
       stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -327,43 +409,37 @@ export default function LeadWhatsAppChat({ lead, T = P, isLight = false, threadM
       return;
     }
     const chunks = []; // POR grabación (closure) — dos grabaciones nunca se mezclan
+    let cancelled = false;
     rec.ondataavailable = (e) => { if (e.data && e.data.size > 0) chunks.push(e.data); };
     rec.onstop = () => {
       stopRecTracks(rec);
-      if (rec.__cancelled || chunks.length === 0) return;
-      const fullType = rec.mimeType || mime || "audio/webm";
-      const baseType = fullType.split(";")[0];
+      if (cancelled || chunks.length === 0) return;
+      const baseType = (rec.mimeType || mime || "audio/webm").split(";")[0];
       const ext = baseType === "audio/mp4" ? "m4a" : baseType === "audio/ogg" ? "ogg" : "webm";
-      const d = new Date();
-      const hhmmss = [d.getHours(), d.getMinutes(), d.getSeconds()].map((n) => String(n).padStart(2, "0")).join("");
-      const file = new File(chunks, `nota-de-voz-${hhmmss}.${ext}`, { type: baseType });
-      if (!mountedRef.current) return; // nada de setState en un componente muerto
-      if (file.size > WA_MEDIA_MAX_BYTES) { setSendError("El audio supera 16MB"); return; }
-      setPendingFile(file); // entra al MISMO camino de envío que un adjunto
+      attachVoiceFile(chunks, baseType, ext);
     };
-    recorderRef.current = rec;
+    recorderRef.current = {
+      finish: () => { try { if (rec.state !== "inactive") rec.stop(); } catch { /* ya parado */ } },
+      cancel: () => {
+        cancelled = true;
+        try { if (rec.state !== "inactive") rec.stop(); } catch { /* ya parado */ }
+        stopRecTracks(rec);
+      },
+    };
     setRecording(true);
     setRecordSecs(0);
     recBusyRef.current = false;
     rec.start(250);
-    recordTimerRef.current = setInterval(() => {
-      setRecordSecs((s) => {
-        const next = s + 1;
-        if (next >= REC_MAX_SECS) queueMicrotask(finishRecording); // tope 5 min
-        return next;
-      });
-    }, 1000);
-  }, [recording, sending, finishRecording]);
+    startRecTimer();
+  }, [recording, sending, startRecTimer, attachVoiceFile]);
 
   // Al desmontar: soltar el micrófono SIEMPRE (nunca dejar la luz roja prendida).
   useEffect(() => () => {
     mountedRef.current = false;
-    const rec = recorderRef.current;
+    const session = recorderRef.current;
     recorderRef.current = null;
     if (recordTimerRef.current) clearInterval(recordTimerRef.current);
-    if (rec) rec.__cancelled = true;
-    try { if (rec && rec.state !== "inactive") rec.stop(); } catch { /* ya parado */ }
-    stopRecTracks(rec);
+    try { session?.cancel(); } catch { /* ya cerrada */ }
   }, []);
 
   // Si el composer desaparece a mitad de grabación (p.ej. la ventana de 24h se

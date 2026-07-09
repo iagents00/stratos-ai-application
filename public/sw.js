@@ -177,7 +177,12 @@
 //   imagen/audio/video por extensión del nombre; "Próxima acción" en un solo
 //   renglón en todos los dispositivos (texto completo en el tooltip); Caja
 //   muestra la foto del comprobante (bucket evidencia, URL firmada al abrir).
-const CACHE_VERSION = 'stratos-v91';
+// v92 — feat(whatsapp): la nota de voz del CRM llega como NOTA DE VOZ NATIVA
+//   de WhatsApp (burbuja con onda). Se graba directo en OGG/OPUS (el formato
+//   de voz de Meta) vía opus-recorder (wasm en un Worker, carga perezosa de
+//   ~380KB SOLO al presionar el micrófono; cero costo al boot). Si el encoder
+//   no carga, respaldo automático al camino anterior (m4a → documento).
+const CACHE_VERSION = 'stratos-v92';
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 
