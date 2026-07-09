@@ -9,7 +9,7 @@
  *   2) QUÉ PUEDE HACER → carrusel de funciones (INTEL_FEATURES) + tutorial por función
  * ─────────────────────────────────────────────────────────────────────────────
  */
-import { useState, useRef, useEffect } from "react";
+import { useState } from "react";
 import { createPortal } from "react-dom";
 import {
   X, ChevronRight, ChevronLeft, Crown,
@@ -40,23 +40,6 @@ const DynIsland = ({ onExpand, notifications = [], theme = "dark", beamIdx = 0 }
   ];
 
   const expanded = isOpen || selectedNotif || selectedFeature;
-
-  // ─── Carrusel: auto-desliza suave; se pausa en hover; se apaga con reduced-motion ───
-  const trackRef = useRef(null);
-  const pausedRef = useRef(false);
-  useEffect(() => {
-    if (!isOpen || selectedNotif || selectedFeature) return;
-    const el = trackRef.current;
-    if (!el) return;
-    const reduce = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
-    if (reduce) return; // accesibilidad + performance móvil
-    const iv = setInterval(() => {
-      if (pausedRef.current || !el) return;
-      if (el.scrollLeft + el.clientWidth >= el.scrollWidth - 1) el.scrollLeft = 0;
-      else el.scrollLeft += 1;
-    }, 40);
-    return () => clearInterval(iv);
-  }, [isOpen, selectedNotif, selectedFeature]);
 
   const closeAll = () => { setIsOpen(false); setSelectedNotif(null); setSelectedFeature(null); };
 
@@ -137,8 +120,7 @@ const DynIsland = ({ onExpand, notifications = [], theme = "dark", beamIdx = 0 }
             animation: "fadeSlideDown 0.22s cubic-bezier(0.4,0,0.2,1)",
           }}>
             <style>{`@keyframes fadeSlideDown{from{opacity:0;transform:translateX(-50%) translateY(-8px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
-              .intel-track::-webkit-scrollbar{height:0;display:none}
-              .intel-track{scrollbar-width:none}`}</style>
+              @keyframes intelMarquee{from{transform:translateX(0)}to{transform:translateX(-50%)}}`}</style>
 
             {isOpen && !selectedNotif && !selectedFeature && (
               <div style={{ padding: "18px 0 6px" }}>
@@ -184,48 +166,48 @@ const DynIsland = ({ onExpand, notifications = [], theme = "dark", beamIdx = 0 }
                   <p style={{ margin: "0 0 2px", fontSize: 10, color: "rgba(255,255,255,0.55)", fontWeight: 700, fontFamily: fontDisp, letterSpacing: "0.10em", textTransform: "uppercase" }}>Qué puede hacer el sistema</p>
                   <p style={{ margin: 0, fontSize: 9.5, color: "rgba(255,255,255,0.34)", fontFamily: font }}>Tocá una función para ver cómo se usa</p>
                 </div>
-                <div
-                  ref={trackRef}
-                  className="intel-track"
-                  onMouseEnter={() => { pausedRef.current = true; }}
-                  onMouseLeave={() => { pausedRef.current = false; }}
-                  style={{ display: "flex", gap: 10, overflowX: "auto", padding: "10px 20px 16px", scrollSnapType: "x proximity" }}
-                >
-                  {INTEL_FEATURES.map((f) => {
-                    const Ic = FEATURE_ICONS[f.icon] || Sparkles;
-                    const isAgent = f.kind === "agente";
-                    const chan = f.where.includes("Telegram")
-                      ? (f.where.includes("CRM") ? "Telegram · CRM" : "Telegram")
-                      : (f.where.includes("CRM") ? "En el CRM" : "Automático");
-                    return (
-                      <div key={f.id} onClick={() => setSelectedFeature(f)}
-                        style={{
-                          flex: "0 0 auto", width: 166, scrollSnapAlign: "start",
-                          borderRadius: 16, padding: "14px 14px 15px", cursor: "pointer",
-                          background: `linear-gradient(160deg, ${f.color}14 0%, rgba(255,255,255,0.02) 60%)`,
-                          border: `1px solid ${f.color}22`,
-                          transition: "transform 0.16s cubic-bezier(0.34,1.56,0.64,1), border-color 0.16s",
-                        }}
-                        onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-3px)"; e.currentTarget.style.borderColor = `${f.color}66`; }}
-                        onMouseLeave={e => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.borderColor = `${f.color}22`; }}
-                      >
-                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 11 }}>
-                          <div style={{ width: 34, height: 34, borderRadius: 10, background: `${f.color}1E`, border: `1px solid ${f.color}33`, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                            <Ic size={17} color={f.color} strokeWidth={2} />
+                <div style={{ overflow: "hidden", padding: "10px 0 16px", WebkitMaskImage: "linear-gradient(90deg,transparent,#000 5%,#000 95%,transparent)", maskImage: "linear-gradient(90deg,transparent,#000 5%,#000 95%,transparent)" }}>
+                  <div
+                    style={{ display: "flex", gap: 12, width: "max-content", paddingLeft: 20, animation: "intelMarquee 34s linear infinite", willChange: "transform" }}
+                    onMouseEnter={e => { e.currentTarget.style.animationPlayState = "paused"; }}
+                    onMouseLeave={e => { e.currentTarget.style.animationPlayState = "running"; }}
+                  >
+                    {[...INTEL_FEATURES, ...INTEL_FEATURES].map((f, idx) => {
+                      const Ic = FEATURE_ICONS[f.icon] || Sparkles;
+                      const isAgent = f.kind === "agente";
+                      const chan = f.where.includes("Telegram")
+                        ? (f.where.includes("CRM") ? "Telegram · CRM" : "Telegram")
+                        : (f.where.includes("CRM") ? "En el CRM" : "Automático");
+                      return (
+                        <div key={f.id + "-" + idx} onClick={() => setSelectedFeature(f)}
+                          style={{
+                            flex: "0 0 auto", width: 166,
+                            borderRadius: 16, padding: "14px 14px 15px", cursor: "pointer",
+                            background: `linear-gradient(160deg, ${f.color}14 0%, rgba(255,255,255,0.02) 60%)`,
+                            border: `1px solid ${f.color}22`,
+                            transition: "border-color 0.16s",
+                          }}
+                          onMouseEnter={e => { e.currentTarget.style.borderColor = `${f.color}66`; }}
+                          onMouseLeave={e => { e.currentTarget.style.borderColor = `${f.color}22`; }}
+                        >
+                          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 11 }}>
+                            <div style={{ width: 34, height: 34, borderRadius: 10, background: `${f.color}1E`, border: `1px solid ${f.color}33`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                              <Ic size={17} color={f.color} strokeWidth={2} />
+                            </div>
+                            <span style={{ fontSize: 8, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: isAgent ? "#6EE7C2" : "rgba(255,255,255,0.46)", background: isAgent ? "rgba(110,231,194,0.10)" : "rgba(255,255,255,0.05)", border: `1px solid ${isAgent ? "rgba(110,231,194,0.22)" : "rgba(255,255,255,0.08)"}`, borderRadius: 6, padding: "3px 6px" }}>
+                              {isAgent ? "Auto" : "Vos pedís"}
+                            </span>
                           </div>
-                          <span style={{ fontSize: 8, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: isAgent ? "#6EE7C2" : "rgba(255,255,255,0.46)", background: isAgent ? "rgba(110,231,194,0.10)" : "rgba(255,255,255,0.05)", border: `1px solid ${isAgent ? "rgba(110,231,194,0.22)" : "rgba(255,255,255,0.08)"}`, borderRadius: 6, padding: "3px 6px" }}>
-                            {isAgent ? "Auto" : "Vos pedís"}
-                          </span>
+                          <p style={{ margin: "0 0 4px", fontSize: 13, color: "rgba(255,255,255,0.92)", fontWeight: 600, fontFamily: fontDisp, lineHeight: 1.2 }}>{f.label}</p>
+                          <p style={{ margin: 0, fontSize: 10.5, color: "rgba(255,255,255,0.44)", fontFamily: font, lineHeight: 1.4, display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{f.tagline}</p>
+                          <div style={{ display: "flex", alignItems: "center", gap: 5, marginTop: 10, paddingTop: 9, borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+                            <MapPin size={10} color={f.color} strokeWidth={2.4} style={{ flexShrink: 0 }} />
+                            <span style={{ fontSize: 9, color: f.color, opacity: 0.9, fontWeight: 600, fontFamily: font }}>{chan}</span>
+                          </div>
                         </div>
-                        <p style={{ margin: "0 0 4px", fontSize: 13, color: "rgba(255,255,255,0.92)", fontWeight: 600, fontFamily: fontDisp, lineHeight: 1.2 }}>{f.label}</p>
-                        <p style={{ margin: 0, fontSize: 10.5, color: "rgba(255,255,255,0.44)", fontFamily: font, lineHeight: 1.4, display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{f.tagline}</p>
-                        <div style={{ display: "flex", alignItems: "center", gap: 5, marginTop: 10, paddingTop: 9, borderTop: "1px solid rgba(255,255,255,0.06)" }}>
-                          <MapPin size={10} color={f.color} strokeWidth={2.4} style={{ flexShrink: 0 }} />
-                          <span style={{ fontSize: 9, color: f.color, opacity: 0.9, fontWeight: 600, fontFamily: font }}>{chan}</span>
-                        </div>
-                      </div>
-                    );
-                  })}
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
             )}
