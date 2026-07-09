@@ -12,9 +12,18 @@
 import { fontDisp } from "../../design-system/tokens";
 
 export default function IAOSIsland({ leadsData, isLight, idx, brandLabel = "Duke" }) {
+  const now       = Date.now();
   const hot       = leadsData.filter(l => l.hot).length;
-  const inact     = leadsData.filter(l => l.daysInactive >= 5).length;
-  const totalPipe = (leadsData.reduce((s, l) => s + (l.presupuesto || 0), 0) / 1e6).toFixed(1);
+  // "Sin actividad": daysInactive suele venir en 0 (campo stale) → calculamos la
+  // recencia real desde la última fecha conocida (updated_at / created_at).
+  const inact     = leadsData.filter(l => {
+    if (l.daysInactive && l.daysInactive >= 5) return true;
+    const d = l.updated_at || l.updatedAt || l.created_at || l.fechaIngreso;
+    if (!d) return false;
+    const t = new Date(d).getTime();
+    return !isNaN(t) && (now - t) / 86400000 >= 5;
+  }).length;
+  const totalPipe = (leadsData.reduce((s, l) => s + (l.presupuesto || l.budget || 0), 0) / 1e6).toFixed(1);
 
   // Forma corta del brand para el indicador chico (primer token o "Duke" como fallback).
   // Ej: "Duke del Caribe" → "Duke" · "Grupo 28" → "Grupo 28".
