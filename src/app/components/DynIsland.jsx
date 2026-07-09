@@ -122,8 +122,9 @@ const DynIsland = ({ onExpand, notifications = [], theme = "dark", beamIdx = 0 }
           <div style={{
             position: "fixed", top: 66, left: "50%", transform: "translateX(-50%)",
             zIndex: 99999,
-            width: selectedNotif || selectedFeature ? 520 : 480,
+            width: selectedNotif || selectedFeature ? 600 : 580,
             maxWidth: "calc(100vw - 24px)",
+            maxHeight: "calc(100vh - 90px)", overflowY: "auto",
             borderRadius: 20,
             background: selectedNotif
               ? `radial-gradient(ellipse at top, ${selectedNotif.c}10 0%, #03060F 70%)`
@@ -193,28 +194,35 @@ const DynIsland = ({ onExpand, notifications = [], theme = "dark", beamIdx = 0 }
                   {INTEL_FEATURES.map((f) => {
                     const Ic = FEATURE_ICONS[f.icon] || Sparkles;
                     const isAgent = f.kind === "agente";
+                    const chan = f.where.includes("Telegram")
+                      ? (f.where.includes("CRM") ? "Telegram · CRM" : "Telegram")
+                      : (f.where.includes("CRM") ? "En el CRM" : "Automático");
                     return (
                       <div key={f.id} onClick={() => setSelectedFeature(f)}
                         style={{
-                          flex: "0 0 auto", width: 132, scrollSnapAlign: "start",
-                          borderRadius: 14, padding: "12px 12px 13px", cursor: "pointer",
+                          flex: "0 0 auto", width: 166, scrollSnapAlign: "start",
+                          borderRadius: 16, padding: "14px 14px 15px", cursor: "pointer",
                           background: `linear-gradient(160deg, ${f.color}14 0%, rgba(255,255,255,0.02) 60%)`,
                           border: `1px solid ${f.color}22`,
                           transition: "transform 0.16s cubic-bezier(0.34,1.56,0.64,1), border-color 0.16s",
                         }}
-                        onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.borderColor = `${f.color}55`; }}
+                        onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-3px)"; e.currentTarget.style.borderColor = `${f.color}66`; }}
                         onMouseLeave={e => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.borderColor = `${f.color}22`; }}
                       >
-                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 9 }}>
-                          <div style={{ width: 30, height: 30, borderRadius: 9, background: `${f.color}1E`, border: `1px solid ${f.color}33`, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                            <Ic size={15} color={f.color} strokeWidth={2} />
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 11 }}>
+                          <div style={{ width: 34, height: 34, borderRadius: 10, background: `${f.color}1E`, border: `1px solid ${f.color}33`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                            <Ic size={17} color={f.color} strokeWidth={2} />
                           </div>
-                          <span style={{ fontSize: 7.5, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: isAgent ? "#6EE7C2" : "rgba(255,255,255,0.42)", background: isAgent ? "rgba(110,231,194,0.10)" : "rgba(255,255,255,0.05)", border: `1px solid ${isAgent ? "rgba(110,231,194,0.22)" : "rgba(255,255,255,0.08)"}`, borderRadius: 5, padding: "2px 5px" }}>
+                          <span style={{ fontSize: 8, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: isAgent ? "#6EE7C2" : "rgba(255,255,255,0.46)", background: isAgent ? "rgba(110,231,194,0.10)" : "rgba(255,255,255,0.05)", border: `1px solid ${isAgent ? "rgba(110,231,194,0.22)" : "rgba(255,255,255,0.08)"}`, borderRadius: 6, padding: "3px 6px" }}>
                             {isAgent ? "Auto" : "Vos pedís"}
                           </span>
                         </div>
-                        <p style={{ margin: "0 0 3px", fontSize: 11.5, color: "rgba(255,255,255,0.90)", fontWeight: 600, fontFamily: fontDisp, lineHeight: 1.2 }}>{f.label}</p>
-                        <p style={{ margin: 0, fontSize: 9.5, color: "rgba(255,255,255,0.40)", fontFamily: font, lineHeight: 1.35, display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{f.tagline}</p>
+                        <p style={{ margin: "0 0 4px", fontSize: 13, color: "rgba(255,255,255,0.92)", fontWeight: 600, fontFamily: fontDisp, lineHeight: 1.2 }}>{f.label}</p>
+                        <p style={{ margin: 0, fontSize: 10.5, color: "rgba(255,255,255,0.44)", fontFamily: font, lineHeight: 1.4, display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{f.tagline}</p>
+                        <div style={{ display: "flex", alignItems: "center", gap: 5, marginTop: 10, paddingTop: 9, borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+                          <MapPin size={10} color={f.color} strokeWidth={2.4} style={{ flexShrink: 0 }} />
+                          <span style={{ fontSize: 9, color: f.color, opacity: 0.9, fontWeight: 600, fontFamily: font }}>{chan}</span>
+                        </div>
                       </div>
                     );
                   })}
@@ -242,7 +250,7 @@ const DynIsland = ({ onExpand, notifications = [], theme = "dark", beamIdx = 0 }
                 <p style={{ fontSize: 13, color: "rgba(255,255,255,0.65)", lineHeight: 1.65, fontFamily: font, marginBottom: 20 }}>{selectedNotif.detail}</p>
 
                 <button
-                  onClick={() => { onExpand(selectedNotif.action); setIsOpen(false); setSelectedNotif(null); }}
+                  onClick={closeAll}
                   style={{
                     width: "100%", padding: "13px 16px", borderRadius: 12,
                     background: "rgba(255,255,255,0.92)", color: "#06080F",
@@ -279,7 +287,16 @@ const DynIsland = ({ onExpand, notifications = [], theme = "dark", beamIdx = 0 }
                     ><X size={13} /></button>
                   </div>
 
-                  <p style={{ fontSize: 12.5, color: "rgba(255,255,255,0.66)", lineHeight: 1.6, fontFamily: font, margin: "0 0 16px" }}>{selectedFeature.tagline}</p>
+                  <p style={{ fontSize: 12.5, color: "rgba(255,255,255,0.66)", lineHeight: 1.6, fontFamily: font, margin: "0 0 14px" }}>{selectedFeature.tagline}</p>
+
+                  {/* DÓNDE se usa — lo primero que el asesor necesita saber */}
+                  <div style={{ display: "flex", alignItems: "center", gap: 9, padding: "10px 13px", borderRadius: 11, background: `${selectedFeature.color}12`, border: `1px solid ${selectedFeature.color}2A`, marginBottom: 18 }}>
+                    <MapPin size={14} color={selectedFeature.color} strokeWidth={2.2} style={{ flexShrink: 0 }} />
+                    <div>
+                      <span style={{ display: "block", fontSize: 8.5, color: "rgba(255,255,255,0.40)", fontWeight: 700, fontFamily: fontDisp, letterSpacing: "0.09em", textTransform: "uppercase" }}>Dónde</span>
+                      <span style={{ fontSize: 12.5, color: "rgba(255,255,255,0.88)", fontFamily: fontDisp, fontWeight: 600 }}>{selectedFeature.where}</span>
+                    </div>
+                  </div>
 
                   <p style={{ margin: "0 0 9px", fontSize: 9.5, color: "rgba(255,255,255,0.42)", fontWeight: 700, fontFamily: fontDisp, letterSpacing: "0.08em", textTransform: "uppercase" }}>Cómo se usa</p>
                   <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
