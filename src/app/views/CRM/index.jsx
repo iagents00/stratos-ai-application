@@ -1029,12 +1029,12 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
   const prefsKey = user?.id ? `stratos_crm_prio_${user.id}` : null;
 
   // Defaults que se aplican cuando el usuario aún no tiene prefs guardadas.
-  // sortField='proxZoom' → los Zooms más próximos arriba. Degrada solo a "más
-  // recientes" cuando no hay citas (p.ej. clientes white-label sin Zoom).
+  // sortField='fechaIngreso' desc → los leads que llegaron más recientemente
+  // SIEMPRE arriba de la tabla (pedido explícito del cliente, jul-2026).
   const DEFAULT_PREFS = {
     pinned: [], pinnedOrder: [], dismissed: [], order: [], prioritySort: 'manual',
     customAsesores: [], customProyectos: [], customCampanas: [],
-    sortField: 'proxZoom', sortDir: 'desc',
+    sortField: 'fechaIngreso', sortDir: 'desc',
     filterStage: 'TODO', filterAsesor: 'TODO',
     viewMode: 'list',
   };
@@ -1042,15 +1042,18 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
   const normalizePrefs = (raw) => {
     if (!raw || typeof raw !== 'object') return { ...DEFAULT_PREFS };
     // Migración silenciosa del orden por defecto. Históricamente el default fue
-    // 'sc desc' y luego 'fechaIngreso desc'. Quien quedó en cualquiera de esos
-    // (= nunca eligió un orden propio) se mueve al nuevo default 'proxZoom'
-    // (Zooms más próximos arriba). Si el usuario eligió explícitamente otro
+    // 'sc desc' → 'fechaIngreso desc' → 'proxZoom desc'. Desde jul-2026 el
+    // cliente pidió que los recién llegados estén SIEMPRE arriba, así que
+    // cualquier usuario que quedó en un default viejo ('sc' o 'proxZoom')
+    // vuelve a 'fechaIngreso desc'. Nota: esto también hace que "Próximo Zoom"
+    // del selector sea un orden de sesión (al recargar vuelve a "Más
+    // recientes") — es intencional. Si el usuario eligió explícitamente otro
     // campo (presupuesto, score, etc.), respetamos su decisión.
-    const rawSortField = typeof raw.sortField === 'string' ? raw.sortField : 'proxZoom';
+    const rawSortField = typeof raw.sortField === 'string' ? raw.sortField : 'fechaIngreso';
     const rawSortDir   = typeof raw.sortDir === 'string'   ? raw.sortDir   : 'desc';
     const onLegacyDefault =
-      (rawSortField === 'sc'           && rawSortDir === 'desc') ||
-      (rawSortField === 'fechaIngreso' && rawSortDir === 'desc');
+      (rawSortField === 'sc'       && rawSortDir === 'desc') ||
+      (rawSortField === 'proxZoom' && rawSortDir === 'desc');
     return {
       pinned:          Array.isArray(raw.pinned)          ? raw.pinned          : [],
       pinnedOrder:     Array.isArray(raw.pinnedOrder)     ? raw.pinnedOrder     : [],
@@ -1060,8 +1063,8 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
       customAsesores:  Array.isArray(raw.customAsesores)  ? raw.customAsesores  : [],
       customProyectos: Array.isArray(raw.customProyectos) ? raw.customProyectos : [],
       customCampanas:  Array.isArray(raw.customCampanas)  ? raw.customCampanas  : [],
-      sortField:       onLegacyDefault ? 'proxZoom' : rawSortField,
-      sortDir:         onLegacyDefault ? 'desc'     : rawSortDir,
+      sortField:       onLegacyDefault ? 'fechaIngreso' : rawSortField,
+      sortDir:         onLegacyDefault ? 'desc'         : rawSortDir,
       filterStage:     typeof raw.filterStage === 'string'    ? raw.filterStage     : 'TODO',
       filterAsesor:    typeof raw.filterAsesor === 'string'   ? raw.filterAsesor    : 'TODO',
       viewMode:        typeof raw.viewMode === 'string'       ? raw.viewMode        : 'list',
@@ -3818,18 +3821,19 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
             );
           })()}
 
-          {/* Orden de la lista — "Próximo Zoom" (default) sube las citas más
-              próximas. Desktop-only, igual que el filtro de etapa; en mobile el
-              orden por defecto ya aplica aunque el control no se muestre. */}
+          {/* Orden de la lista — "Más recientes" (default) mantiene a los
+              leads recién llegados arriba. Desktop-only, igual que el filtro
+              de etapa; en mobile el orden por defecto ya aplica aunque el
+              control no se muestre. */}
           {!isMobile && (() => {
             const SORT_OPTS = [
-              { v: 'proxZoom',     label: 'Próximo Zoom' },
               { v: 'fechaIngreso', label: 'Más recientes' },
+              { v: 'proxZoom',     label: 'Próximo Zoom' },
               { v: 'presupuesto',  label: 'Mayor presupuesto' },
               { v: 'sc',           label: 'Mayor score' },
             ];
             const known  = SORT_OPTS.some(o => o.v === sortField);
-            const active = sortField === 'proxZoom';
+            const active = sortField !== 'fechaIngreso';
             const selBg  = isLight ? (active ? `${T.accent}10` : "rgba(255,255,255,0.70)") : (active ? "rgba(255,255,255,0.07)" : "rgba(255,255,255,0.042)");
             const selBdr = isLight ? (active ? `${T.accent}40` : "rgba(15,23,42,0.09)") : (active ? "rgba(255,255,255,0.18)" : "rgba(255,255,255,0.08)");
             const selClr = isLight ? (active ? T.accent : "rgba(15,23,42,0.45)") : (active ? "rgba(255,255,255,0.85)" : "rgba(255,255,255,0.42)");
