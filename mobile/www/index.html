@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Stratos AI</title>
+  <!--
+    Página LOCAL de respaldo del shell nativo (Capacitor).
+    En operación normal NUNCA se ve: capacitor.config.json carga directo
+    https://app.stratoscapitalgroup.com (server.url). Esta página solo aparece
+    si el WebView no pudo cargar la URL remota (p. ej. primer arranque sin
+    internet). Ofrece reintentar.
+  -->
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      height: 100%;
+      background: #030810;
+      color: #E2E8F0;
+      font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .box { text-align: center; padding: 32px; max-width: 320px; }
+    .atom { width: 72px; height: 72px; margin: 0 auto 20px; }
+    h1 { font-size: 20px; font-weight: 700; letter-spacing: -0.01em; margin-bottom: 8px; }
+    p  { font-size: 13.5px; line-height: 1.55; color: rgba(255,255,255,0.55); margin-bottom: 24px; }
+    button {
+      background: #6EE7C2; color: #041016; border: none; cursor: pointer;
+      padding: 12px 28px; border-radius: 12px; font-size: 14px; font-weight: 700;
+    }
+  </style>
+</head>
+<body>
+  <div class="box">
+    <svg class="atom" viewBox="0 0 32 32" fill="none">
+      <g fill="none" stroke-width="1" stroke="#6EE7C2" stroke-linecap="round" opacity="0.8">
+        <ellipse cx="16" cy="16" rx="12.6" ry="4.6" />
+        <ellipse cx="16" cy="16" rx="12.6" ry="4.6" transform="rotate(60 16 16)" />
+        <ellipse cx="16" cy="16" rx="12.6" ry="4.6" transform="rotate(120 16 16)" />
+      </g>
+      <circle cx="16" cy="16" r="2.4" fill="#FFFFFF" />
+      <circle cx="16" cy="16" r="2.4" fill="none" stroke="#6EE7C2" stroke-width="0.4" />
+    </svg>
+    <h1>Sin conexión</h1>
+    <p>No se pudo conectar con Stratos AI. Revisa tu internet y vuelve a intentar.</p>
+    <button onclick="window.location.href='https://app.stratoscapitalgroup.com'">Reintentar</button>
+  </div>
+</body>
+</html>
