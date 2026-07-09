@@ -1,0 +1,75 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# android-apk.yml — Compila el APK de la app móvil "Stratos AI" (mobile/)
+#
+# QUÉ HACE: en cada cambio dentro de mobile/** (o a mano con "Run workflow"),
+# compila el APK Android firmado con el keystore de pruebas y lo publica en el
+# release "android-latest" del repo → descargar e instalar en cualquier Android.
+#
+# La app es un shell nativo (Capacitor) que carga app.stratoscapitalgroup.com:
+# las actualizaciones del CRM llegan SOLAS a la app (no hay que recompilar).
+# Este workflow solo corre cuando cambia el SHELL (ícono, permisos, config).
+#
+# Instalar: GitHub → Releases → "App Android (última)" → stratos-ai.apk
+# (Android pide permitir "instalar apps de origen desconocido" la primera vez.)
+# ─────────────────────────────────────────────────────────────────────────────
+name: Android APK (Stratos AI móvil)
+
+on:
+  push:
+    branches: [main]
+    paths: ['mobile/**', '.github/workflows/android-apk.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: write   # publicar el release con el APK
+
+jobs:
+  build-apk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Instalar dependencias de Capacitor
+        working-directory: mobile
+        run: npm ci
+
+      - name: Sincronizar proyecto Android
+        working-directory: mobile
+        run: npx cap sync android
+
+      - name: Compilar APK (release, firmado con keystore de pruebas)
+        working-directory: mobile/android
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleRelease --no-daemon
+
+      - name: Preparar APK
+        run: |
+          cp mobile/android/app/build/outputs/apk/release/app-release.apk stratos-ai.apk
+          ls -lh stratos-ai.apk
+
+      - name: Subir artifact (respaldo por corrida)
+        uses: actions/upload-artifact@v4
+        with:
+          name: stratos-ai-apk
+          path: stratos-ai.apk
+          retention-days: 30
+
+      - name: Publicar en el release "android-latest" (link fijo de descarga)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete android-latest --yes --cleanup-tag || true
+          gh release create android-latest stratos-ai.apk \
+            --title "App Android (última) — Stratos AI" \
+            --notes "APK de la app móvil Stratos AI (shell que carga el CRM — las actualizaciones del CRM llegan solas). Compilado automáticamente del commit ${GITHUB_SHA::7}. Instalar: descargar stratos-ai.apk en el Android y abrirlo (permitir 'orígenes desconocidos' la primera vez). Firma de pruebas: instala encima de versiones anteriores sin desinstalar."
