@@ -211,7 +211,12 @@
 //   el orden default la tabla es puro created_at desc (halo y estrella siguen
 //   visibles; los pins conservan su efecto en el carrusel y en los otros
 //   órdenes del selector).
-const CACHE_VERSION = 'stratos-v97';
+// v98 — fix(crm): los filtros de etapa/asesor tampoco se restauran al abrir.
+//   Una cuenta con filtro guardado (etapa "Contáctame Ya" + asesor "Cecilia")
+//   solo veía ese subconjunto y los leads de hoy (de otros asesores) quedaban
+//   ocultos → el CRM parecía "desordenado" aunque el orden era correcto.
+//   Abrir el CRM = ver TODO con lo más nuevo arriba, siempre.
+const CACHE_VERSION = 'stratos-v98';
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 

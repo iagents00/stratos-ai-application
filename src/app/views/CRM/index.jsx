@@ -1059,8 +1059,14 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
       // durante la sesión; al recargar vuelve a "Más recientes".
       sortField:       'fechaIngreso',
       sortDir:         'desc',
-      filterStage:     typeof raw.filterStage === 'string'    ? raw.filterStage     : 'TODO',
-      filterAsesor:    typeof raw.filterAsesor === 'string'   ? raw.filterAsesor    : 'TODO',
+      // Los filtros de etapa/asesor tampoco se restauran al abrir (misma
+      // regla que el orden): un filtro guardado (p.ej. etapa "Contáctame Ya"
+      // + asesor "Cecilia") ocultaba los leads recién llegados de los demás
+      // asesores y el CRM parecía "desordenado" aunque el orden era correcto.
+      // Abrir el CRM = ver TODO con lo más nuevo arriba. Durante la sesión
+      // los filtros funcionan normal; al recargar se limpian.
+      filterStage:     'TODO',
+      filterAsesor:    'TODO',
       viewMode:        typeof raw.viewMode === 'string'       ? raw.viewMode        : 'list',
     };
   };
