@@ -65,7 +65,7 @@ const DynIsland = ({ onExpand, notifications = [], theme = "dark", beamIdx = 0 }
       {/* ─── PILL — Centro de Inteligencia ─────────────────────────────── */}
       <div
         title={centerLabel}
-        onClick={() => { if (!expanded) { onExpand?.(); } }}
+        onClick={() => { if (!expanded) { setIsOpen(true); } }}
         style={{
           position: "relative",
           height: 30, borderRadius: 50,
