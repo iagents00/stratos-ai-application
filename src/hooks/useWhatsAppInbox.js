@@ -4,9 +4,10 @@
  * Bandeja de WhatsApp: lista de conversaciones (última msg + no-leídos por
  * usuario) para el módulo "WhatsApp" y las notificaciones de la campanita.
  *
- * Fuente: RPC `fn_wa_conversations()` (SECURITY INVOKER → la RLS filtra sola:
- * asesor ve SUS leads, admin ve todos los de la org) + realtime en
- * whatsapp_messages para refrescar al instante cuando escribe un cliente.
+ * Fuente: RPC `fn_wa_conversations()` (mig 081: SECURITY DEFINER con el MISMO
+ * modelo de permisos que la RLS, evaluado UNA vez — admin/director/superadmin
+ * ven toda la org; el asesor SOLO sus leads) + realtime en whatsapp_messages
+ * para refrescar al instante cuando escribe un cliente.
  *
  * Se instancia UNA vez en App.jsx (evita suscripciones duplicadas) y se pasa
  * por props a la vista y a la campanita.
@@ -18,23 +19,54 @@
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "../lib/supabase";
+import { useAuth } from "./useAuth";
 
 const POLL_MS = 45000;
 const DEBOUNCE_MS = 400;
+/* Caché local POR USUARIO para pintado instantáneo de la bandeja (mismo patrón
+   que el caché de leads del CRM): se muestra al abrir y la red refresca detrás.
+   La clave incluye el user id → un asesor nunca ve el caché de otro. */
+const CACHE_PREFIX = "stratos_wa_inbox_";
+const CACHE_MAX = 100;
 
 export function useWhatsAppInbox({ enabled }) {
+  const { user } = useAuth();
+  const cacheKey = user?.id ? `${CACHE_PREFIX}${user.id}` : null;
   const [conversations, setConversations] = useState([]);
   const [loading, setLoading] = useState(true);
   const seqRef = useRef(0);
+  const hydratedRef = useRef(false);
+
+  // Pintado INSTANTÁNEO desde el caché del usuario (una sola vez por sesión).
+  useEffect(() => {
+    if (!enabled || !cacheKey || hydratedRef.current) return;
+    hydratedRef.current = true;
+    try {
+      const raw = localStorage.getItem(cacheKey);
+      if (raw) {
+        const arr = JSON.parse(raw);
+        if (Array.isArray(arr) && arr.length) {
+          setConversations((prev) => (prev.length ? prev : arr));
+          setLoading(false);
+        }
+      }
+    } catch { /* caché corrupto: se ignora y la red manda */ }
+  }, [enabled, cacheKey]);
 
   const load = useCallback(async () => {
     if (!enabled) return;
     const seq = ++seqRef.current;
     const { data, error } = await supabase.rpc("fn_wa_conversations");
     if (seq !== seqRef.current) return; // respuesta vieja: descartar
-    if (!error && Array.isArray(data)) setConversations(data);
+    if (!error && Array.isArray(data)) {
+      setConversations(data);
+      if (cacheKey) {
+        try { localStorage.setItem(cacheKey, JSON.stringify(data.slice(0, CACHE_MAX))); }
+        catch { /* cuota llena: el caché es solo una mejora */ }
+      }
+    }
     setLoading(false);
-  }, [enabled]);
+  }, [enabled, cacheKey]);
 
   useEffect(() => {
     if (!enabled) {

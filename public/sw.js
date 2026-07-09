@@ -216,7 +216,13 @@
 //   solo veía ese subconjunto y los leads de hoy (de otros asesores) quedaban
 //   ocultos → el CRM parecía "desordenado" aunque el orden era correcto.
 //   Abrir el CRM = ver TODO con lo más nuevo arriba, siempre.
-const CACHE_VERSION = 'stratos-v98';
+// v99 — perf(whatsapp): la bandeja carga al instante. (1) fn_wa_conversations
+//   reescrita (mig 081): permisos evaluados UNA vez + últimos mensajes por
+//   índice — ~5ms aunque haya miles de conversaciones (antes la RLS corría por
+//   cada mensaje). (2) Caché local POR USUARIO: la lista pinta de inmediato y
+//   la red refresca detrás. Permisos confirmados: super_admin/admin/director
+//   ven todas; el asesor SOLO sus leads (listo para multi-canal por asesor).
+const CACHE_VERSION = 'stratos-v99';
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 
