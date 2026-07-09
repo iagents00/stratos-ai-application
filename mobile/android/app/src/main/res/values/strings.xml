@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Stratos AI</string>
+    <string name="title_activity_main">Stratos AI</string>
+    <string name="package_name">com.stratoscapitalgroup.crm</string>
+    <string name="custom_url_scheme">com.stratoscapitalgroup.crm</string>
+</resources>
