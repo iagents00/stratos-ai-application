@@ -59,6 +59,15 @@ input, textarea, select, button {
   width: 100%;
   height: 100vh;
 }
+/* iOS Safari: 100vh incluye la zona bajo la barra de URL → el documento
+   excedía el viewport visible y la página scrolleaba ~60px (el composer del
+   chat quedaba tapado). dvh sigue el viewport REAL. El shell (.stratos-app,
+   App.jsx) lleva el mismo override — deben ir en pareja. */
+@supports (height: 100dvh) {
+  #root {
+    height: 100dvh;
+  }
+}
 
 /* ── Móvil: ajustes globales de UX táctil ───────────────────────────────
    · iOS hace zoom automático cuando el foco cae en un input con

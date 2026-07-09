@@ -4,10 +4,11 @@
  * Bandeja de WhatsApp: lista de conversaciones (última msg + no-leídos por
  * usuario) para el módulo "WhatsApp" y las notificaciones de la campanita.
  *
- * Fuente: RPC `fn_wa_conversations()` (mig 081: SECURITY DEFINER con el MISMO
- * modelo de permisos que la RLS, evaluado UNA vez — admin/director/superadmin
- * ven toda la org; el asesor SOLO sus leads) + realtime en whatsapp_messages
- * para refrescar al instante cuando escribe un cliente.
+ * Fuente: RPC `fn_wa_conversations()` (mig 081/082: SECURITY DEFINER con el
+ * MISMO modelo de permisos que la RLS, evaluado UNA vez — admin/director/
+ * superadmin ven toda la org; el asesor SOLO sus leads; devuelve `pinned` y
+ * ordena pineados primero) + realtime en whatsapp_messages para refrescar al
+ * instante cuando escribe un cliente.
  *
  * Se instancia UNA vez en App.jsx (evita suscripciones duplicadas) y se pasa
  * por props a la vista y a la campanita.
@@ -128,6 +129,35 @@ export function useWhatsAppInbox({ enabled }) {
     [enabled]
   );
 
+  /** Pinea/despinea una conversación (optimista + RPC + refresh).
+      El server NUNCA marca leído al pinear (mig 082: insert con 'epoch'). */
+  const togglePin = useCallback(
+    async (leadId) => {
+      if (!enabled || !leadId) return;
+      // Optimista: voltear el pin y reordenar igual que lo hará el server
+      // (pineados primero, luego por último mensaje).
+      setConversations((prev) => {
+        const next = prev.map((c) =>
+          c.lead_id === leadId ? { ...c, pinned: !c.pinned } : c
+        );
+        next.sort(
+          (a, b) =>
+            (b.pinned === true) - (a.pinned === true) ||
+            new Date(b.last_at || 0) - new Date(a.last_at || 0)
+        );
+        return next;
+      });
+      const { data, error } = await supabase.rpc("fn_wa_toggle_pin", { p_lead_id: leadId });
+      // Falló (red/RLS/lead inexistente): load() de abajo revierte el optimista
+      // al estado real del server — la UI nunca queda mintiendo.
+      if (error || data?.ok === false) {
+        console.warn("[wa] no se pudo fijar/soltar el chat:", error?.message || data?.error);
+      }
+      load(); // reconciliar con el server (por si otro tab movió algo)
+    },
+    [enabled, load]
+  );
+
   const totalUnread = useMemo(
     () => conversations.reduce((s, c) => s + Number(c.unread_count || 0), 0),
     [conversations]
@@ -141,7 +171,7 @@ export function useWhatsAppInbox({ enabled }) {
   // recibe `inbox` por props) re-renderiza en cada render del App (p.ej. el
   // poll de 5s), aunque los datos no cambien.
   return useMemo(
-    () => ({ conversations, unreadConversations, totalUnread, loading, refresh: load, markRead }),
-    [conversations, unreadConversations, totalUnread, loading, load, markRead]
+    () => ({ conversations, unreadConversations, totalUnread, loading, refresh: load, markRead, togglePin }),
+    [conversations, unreadConversations, totalUnread, loading, load, markRead, togglePin]
   );
 }

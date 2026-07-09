@@ -2,9 +2,10 @@
  * views/WhatsApp.jsx — Módulo "WhatsApp" (bandeja de conversaciones)
  * ─────────────────────────────────────────────────────────────────────────────
  * Todos los chats de WhatsApp de los clientes en un solo lugar (estilo
- * GoHighLevel): lista ordenada por último mensaje con contador de NO LEÍDOS
- * por conversación + el hilo seleccionado con composer para responder
- * (reutiliza LeadWhatsAppChat, el mismo del expediente).
+ * GoHighLevel): lista ordenada por último mensaje (los PINEADOS primero) con
+ * contador de NO LEÍDOS, filtro por etapa del pipeline y toggle "No leídos" +
+ * el hilo seleccionado a PANTALLA COMPLETA con composer fijo abajo (reutiliza
+ * LeadWhatsAppChat en modo `fill`; el expediente lo usa en modo normal).
  *
  * Caso de uso central: que la asesora (Cecilia) SEPA al instante cuándo un
  * cliente le escribió y pueda responder sin salir del CRM.
@@ -21,7 +22,7 @@
  * ─────────────────────────────────────────────────────────────────────────────
  */
 import { useEffect, useMemo, useRef, useState } from "react";
-import { MessageCircle, Search, ArrowLeft, Phone, UserRound, FolderOpen } from "lucide-react";
+import { MessageCircle, Search, ArrowLeft, Phone, UserRound, FolderOpen, Pin } from "lucide-react";
 import { P, font, fontDisp, STAGES, STAGE_COLORS } from "../../design-system/tokens";
 import { useIsMobile } from "../../hooks/useViewport";
 import { useAuth } from "../../hooks/useAuth";
@@ -63,6 +64,8 @@ export default function WhatsAppInbox({ T = P, isLight = false, inbox, openLead,
   const { user } = useAuth();
   const [selectedId, setSelectedId] = useState(null);
   const [query, setQuery] = useState("");
+  const [stageFilter, setStageFilter] = useState("");   // "" = todas las etapas
+  const [unreadOnly, setUnreadOnly] = useState(false);  // solo chats con no-leídos
   const [mobileShowChat, setMobileShowChat] = useState(false);
   const [teamNames, setTeamNames] = useState([]);   // equipo (profiles) para reasignar
   const [savingLead, setSavingLead] = useState(false);
@@ -135,16 +138,30 @@ export default function WhatsAppInbox({ T = P, isLight = false, inbox, openLead,
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [openLead?.ts]);
 
+  // Etapas para el filtro: solo las que EXISTEN en la bandeja, en el orden del
+  // pipeline (las legacy que ya no están en STAGES van al final).
+  const stageOptions = useMemo(() => {
+    const present = new Set(conversations.map((c) => c.stage).filter(Boolean));
+    const inOrder = STAGES.filter((s) => present.has(s));
+    const legacy = [...present].filter((s) => !STAGES.includes(s)).sort((a, b) => a.localeCompare(b, "es"));
+    return [...inOrder, ...legacy];
+  }, [conversations]);
+
+  // El server ya manda el orden final (pineados primero, luego más reciente);
+  // acá solo se FILTRA sin reordenar.
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    if (!q) return conversations;
-    return conversations.filter(
-      (c) =>
+    return conversations.filter((c) => {
+      if (unreadOnly && !(Number(c.unread_count || 0) > 0)) return false;
+      if (stageFilter && c.stage !== stageFilter) return false;
+      if (!q) return true;
+      return (
         (c.lead_name || "").toLowerCase().includes(q) ||
         (c.lead_phone || "").toLowerCase().includes(q) ||
         (c.asesor_name || "").toLowerCase().includes(q)
-    );
-  }, [conversations, query]);
+      );
+    });
+  }, [conversations, query, stageFilter, unreadOnly]);
 
   const selected = useMemo(
     () => conversations.find((c) => c.lead_id === selectedId) || null,
@@ -204,6 +221,43 @@ export default function WhatsAppInbox({ T = P, isLight = false, inbox, openLead,
         />
       </div>
 
+      {/* Filtros rápidos: etapa del pipeline + solo no-leídos */}
+      <div style={{ display: "flex", gap: 6 }}>
+        <select
+          value={stageFilter}
+          onChange={(e) => setStageFilter(e.target.value)}
+          title="Filtrar conversaciones por etapa del lead"
+          style={{
+            flex: 1, minWidth: 0, height: 30, padding: "0 8px", borderRadius: 8,
+            cursor: "pointer", outline: "none",
+            background: isLight ? "rgba(255,255,255,0.85)" : T.glass,
+            border: `1px solid ${stageFilter ? (STAGE_COLORS?.[stageFilter] || T.border) : T.border}`,
+            color: stageFilter ? (STAGE_COLORS?.[stageFilter] || T.txt) : T.txt2,
+            fontSize: 11, fontWeight: 600, fontFamily: font,
+          }}
+        >
+          <option value="" style={{ color: "#0B1220" }}>Todas las etapas</option>
+          {stageOptions.map((s) => (
+            <option key={s} value={s} style={{ color: "#0B1220" }}>{s}</option>
+          ))}
+        </select>
+        <button
+          onClick={() => setUnreadOnly((v) => !v)}
+          title="Mostrar solo conversaciones con mensajes sin leer"
+          style={{
+            height: 30, padding: "0 10px", borderRadius: 8, cursor: "pointer",
+            flexShrink: 0, fontSize: 11, fontWeight: 700, fontFamily: font,
+            background: unreadOnly
+              ? (isLight ? "rgba(13,154,118,0.10)" : "rgba(110,231,194,0.10)")
+              : (isLight ? "rgba(255,255,255,0.85)" : T.glass),
+            border: `1px solid ${unreadOnly ? (isLight ? "rgba(13,154,118,0.35)" : "rgba(110,231,194,0.3)") : T.border}`,
+            color: unreadOnly ? accentStrong : T.txt2,
+          }}
+        >
+          No leídos{inbox?.totalUnread > 0 ? ` · ${inbox.totalUnread}` : ""}
+        </button>
+      </div>
+
       <div style={{ flex: 1, overflowY: "auto", display: "flex", flexDirection: "column", gap: 6, minHeight: 0 }}>
         {loading ? (
           <div style={{ padding: 14, fontSize: 12, color: T.txt3, fontFamily: font }}>Cargando conversaciones…</div>
@@ -215,7 +269,7 @@ export default function WhatsAppInbox({ T = P, isLight = false, inbox, openLead,
               fontFamily: font, lineHeight: 1.55,
             }}
           >
-            {query ? "Sin resultados para esa búsqueda." : (
+            {(query || stageFilter || unreadOnly) ? "Sin conversaciones con esos filtros." : (
               <>Sin conversaciones todavía.<br />Cuando un cliente escriba por WhatsApp, aparecerá acá.</>
             )}
           </div>
@@ -223,10 +277,24 @@ export default function WhatsAppInbox({ T = P, isLight = false, inbox, openLead,
           filtered.map((c) => {
             const unread = Number(c.unread_count || 0);
             const active = c.lead_id === selectedId;
+            const pinned = c.pinned === true;
+            const stageC = STAGE_COLORS?.[c.stage];
             return (
-              <button
+              /* div role=button (no <button>): adentro vive el botón del pin y
+                 anidar botones es HTML inválido (Safari dispara los dos). */
+              <div
                 key={c.lead_id}
+                role="button"
+                tabIndex={0}
                 onClick={() => handleSelect(c)}
+                onKeyDown={(e) => {
+                  // Solo cuando el foco está EN LA FILA: si está en el botón del
+                  // pin (hijo focusable), Enter/Espacio deben activar EL PIN —
+                  // sin este guard el preventDefault mataba el click nativo del
+                  // botón y seleccionaba el chat en su lugar.
+                  if (e.target !== e.currentTarget) return;
+                  if (e.key === "Enter" || e.key === " ") { e.preventDefault(); handleSelect(c); }
+                }}
                 style={{
                   display: "flex", alignItems: "center", gap: 10, textAlign: "left",
                   padding: "10px 12px", borderRadius: 12, cursor: "pointer",
@@ -248,15 +316,30 @@ export default function WhatsAppInbox({ T = P, isLight = false, inbox, openLead,
                   {initials(c.lead_name)}
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 6 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                     <span
                       style={{
+                        flex: 1, minWidth: 0,
                         fontSize: 12.5, fontWeight: unread > 0 ? 800 : 600, color: T.txt,
                         fontFamily: fontDisp, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
                       }}
                     >
                       {c.lead_name || c.lead_phone || "Cliente"}
                     </span>
+                    {/* Pin: fijar/soltar el chat arriba de la lista (por usuario) */}
+                    <button
+                      onClick={(e) => { e.stopPropagation(); inbox?.togglePin?.(c.lead_id); }}
+                      title={pinned ? "Desfijar este chat" : "Fijar este chat arriba"}
+                      style={{
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        width: 22, height: 22, borderRadius: 6, flexShrink: 0,
+                        background: "transparent", border: "none", cursor: "pointer",
+                        color: pinned ? accentStrong : T.txt3,
+                        opacity: pinned ? 1 : 0.45,
+                      }}
+                    >
+                      <Pin size={12} fill={pinned ? "currentColor" : "none"} style={{ transform: pinned ? "none" : "rotate(45deg)" }} />
+                    </button>
                     <span style={{ fontSize: 9.5, color: unread > 0 ? accentStrong : subC, fontFamily: font, flexShrink: 0, fontWeight: unread > 0 ? 700 : 400 }}>
                       {fmtWhen(c.last_at)}
                     </span>
@@ -284,8 +367,32 @@ export default function WhatsAppInbox({ T = P, isLight = false, inbox, openLead,
                       </span>
                     )}
                   </div>
+                  {/* Etapa del pipeline de un vistazo (+ asesor, para mando) */}
+                  {(c.stage || (isMando && c.asesor_name)) && (
+                    <div style={{ display: "flex", alignItems: "center", gap: 5, marginTop: 4, minWidth: 0 }}>
+                      {c.stage && (
+                        <span
+                          style={{
+                            fontSize: 8.5, fontWeight: 700, fontFamily: fontDisp,
+                            padding: "1.5px 7px", borderRadius: 99, flexShrink: 0,
+                            color: stageC || subC,
+                            background: stageC ? `${stageC}14` : "transparent",
+                            border: `1px solid ${stageC ? `${stageC}55` : T.border}`,
+                            whiteSpace: "nowrap", maxWidth: 150, overflow: "hidden", textOverflow: "ellipsis",
+                          }}
+                        >
+                          {c.stage}
+                        </span>
+                      )}
+                      {isMando && c.asesor_name && (
+                        <span style={{ fontSize: 9, color: subC, fontFamily: font, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                          {c.asesor_name}
+                        </span>
+                      )}
+                    </div>
+                  )}
                 </div>
-              </button>
+              </div>
             );
           })
         )}
@@ -300,12 +407,12 @@ export default function WhatsAppInbox({ T = P, isLight = false, inbox, openLead,
         flex: 1, minWidth: 0, minHeight: 0, display: "flex", flexDirection: "column",
         borderRadius: 14, border: `1px solid ${T.border}`,
         background: isLight ? "rgba(255,255,255,0.7)" : "rgba(255,255,255,0.02)",
-        padding: 16,
+        padding: isMobile ? "10px 10px 12px" : 16,
       }}
     >
       {selected ? (
         <>
-          <div style={{ display: "flex", flexDirection: "column", gap: 10, paddingBottom: 12, borderBottom: `1px solid ${T.border}`, marginBottom: 12 }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 10, paddingBottom: 12, borderBottom: `1px solid ${T.border}`, marginBottom: 12, flexShrink: 0 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
               {isMobile && (
                 <button
@@ -436,7 +543,9 @@ export default function WhatsAppInbox({ T = P, isLight = false, inbox, openLead,
               )}
             </div>
           </div>
-          <div style={{ flex: 1, minHeight: 0, overflowY: "auto" }}>
+          {/* Columna flex SIN overflow propio: el chat en modo `fill` reparte
+              el alto (hilo scrollea adentro; composer SIEMPRE fijo abajo). */}
+          <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>
             {/* key por conversación: al cambiar de chat se MONTA una instancia
                 nueva → el borrador/adjunto y los mensajes NO se arrastran al
                 siguiente cliente (evita responder a B con lo que ibas a mandar
@@ -446,7 +555,7 @@ export default function WhatsAppInbox({ T = P, isLight = false, inbox, openLead,
               lead={{ id: selected.lead_id, n: selected.lead_name, name: selected.lead_name }}
               T={T}
               isLight={isLight}
-              threadMaxHeight={isMobile ? 340 : 460}
+              fill
             />
           </div>
         </>
@@ -467,34 +576,42 @@ export default function WhatsAppInbox({ T = P, isLight = false, inbox, openLead,
   );
 
   return (
+    /* flex:1 + minHeight:0 → el módulo ocupa EXACTO el alto del área de
+       contenido (nunca la desborda): la página no scrollea y el composer
+       queda fijo abajo, en PC y en celular. El padding móvil es mínimo
+       porque .stratos-content-area ya trae el suyo (14px + 72px del nav). */
     <div
       style={{
-        display: "flex", flexDirection: "column", gap: 14,
-        height: "100%", minHeight: 0, padding: isMobile ? "14px 12px 90px" : "22px 26px",
+        display: "flex", flexDirection: "column", gap: isMobile ? 10 : 14,
+        flex: "1 1 0%", minHeight: 0, padding: isMobile ? "4px 0 0" : "22px 26px",
         boxSizing: "border-box",
       }}
     >
-      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-        <div
-          style={{
-            width: 34, height: 34, borderRadius: 10,
-            display: "flex", alignItems: "center", justifyContent: "center",
-            background: isLight ? "rgba(13,154,118,0.10)" : "rgba(110,231,194,0.08)",
-            border: `1px solid ${isLight ? "rgba(13,154,118,0.25)" : "rgba(110,231,194,0.18)"}`,
-          }}
-        >
-          <MessageCircle size={16} color={accentStrong} />
+      {/* En móvil, con un chat abierto, el header del módulo se oculta:
+          cada pixel de alto es hilo de conversación. */}
+      {!(isMobile && mobileShowChat) && (
+        <div style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
+          <div
+            style={{
+              width: 34, height: 34, borderRadius: 10,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              background: isLight ? "rgba(13,154,118,0.10)" : "rgba(110,231,194,0.08)",
+              border: `1px solid ${isLight ? "rgba(13,154,118,0.25)" : "rgba(110,231,194,0.18)"}`,
+            }}
+          >
+            <MessageCircle size={16} color={accentStrong} />
+          </div>
+          <div>
+            <h1 style={{ fontSize: 17, fontWeight: 700, color: T.txt, fontFamily: fontDisp, letterSpacing: "-0.01em" }}>
+              WhatsApp
+            </h1>
+            <p style={{ fontSize: 11, color: subC, fontFamily: font }}>
+              Conversaciones de tus clientes
+              {inbox?.totalUnread > 0 ? ` · ${inbox.totalUnread} sin leer` : ""}
+            </p>
+          </div>
         </div>
-        <div>
-          <h1 style={{ fontSize: 17, fontWeight: 700, color: T.txt, fontFamily: fontDisp, letterSpacing: "-0.01em" }}>
-            WhatsApp
-          </h1>
-          <p style={{ fontSize: 11, color: subC, fontFamily: font }}>
-            Conversaciones de tus clientes
-            {inbox?.totalUnread > 0 ? ` · ${inbox.totalUnread} sin leer` : ""}
-          </p>
-        </div>
-      </div>
+      )}
 
       <div style={{ flex: 1, minHeight: 0, display: "flex", gap: 14 }}>
         {showList && listPane}
