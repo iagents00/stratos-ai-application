@@ -165,8 +165,13 @@ export function mergeThread(messages, outbox) {
   };
 
   for (const o of outbox) {
+    // Nota de voz enviada DIRECTO a la API de Meta (sin pasar por Chatwoot):
+    // nunca va a tener espejo ni chatwoot_message_id → la fila del outbox ES
+    // el registro permanente y se pinta como entregada.
+    const vozDirectaMeta = o.chatwoot_message_id == null && o.media_type != null;
     if (
       o.status === "sent" &&
+      !vozDirectaMeta &&
       (o.chatwoot_message_id == null || mirroredIds.has(String(o.chatwoot_message_id)))
     ) {
       continue; // ya está (o estará vía dedup) en el espejo
