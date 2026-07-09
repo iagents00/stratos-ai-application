@@ -199,7 +199,13 @@
 //   recientes arriba. Ahora la tabla SIEMPRE carga "Más recientes"
 //   (created_at desc) en toda cuenta y dispositivo; el selector funciona
 //   como orden de sesión.
-const CACHE_VERSION = 'stratos-v95';
+// v96 — fix(boot): auto-recovery de "chunk viejo tras deploy". Una pestaña
+//   abierta durante un deploy lazy-importaba un asset con hash viejo (ya
+//   inexistente en Vercel) y el usuario veía "⚠️ Algo salió mal / Importing a
+//   module script failed". Ahora: listener vite:preloadError en main.jsx +
+//   detección en ErrorBoundary → recarga automática (1 vez/min máx) que toma
+//   el index.html nuevo. "Reintentar" también recarga en ese caso.
+const CACHE_VERSION = 'stratos-v96';
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 

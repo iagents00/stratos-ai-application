@@ -5,6 +5,28 @@
  */
 import { Component } from "react";
 
+// Detecta el fallo de "chunk viejo tras deploy": el hash del asset cambió y
+// el lazy import pide un archivo que ya no existe en Vercel. Los mensajes
+// varían por navegador (Safari: "Importing a module script failed", Chrome:
+// "Failed to fetch dynamically imported module", Firefox: "error loading
+// dynamically imported module").
+const isStaleChunkError = (error) =>
+  /importing a module script failed|dynamically imported module|chunkloaderror|loading chunk/i
+    .test(error?.message || "");
+
+// Mismo guard anti-bucle que el listener vite:preloadError de main.jsx:
+// recargamos máximo una vez por minuto; si sigue fallando (red caída), se
+// muestra la pantalla de error normal.
+const reloadOnceForStaleChunk = () => {
+  const GUARD_KEY = "stratos.chunk.reloaded.at";
+  let last = 0;
+  try { last = Number(sessionStorage.getItem(GUARD_KEY) || 0); } catch (_) { /* noop */ }
+  if (Date.now() - last < 60_000) return false;
+  try { sessionStorage.setItem(GUARD_KEY, String(Date.now())); } catch (_) { /* noop */ }
+  window.location.reload();
+  return true;
+};
+
 export default class ErrorBoundary extends Component {
   constructor(props) {
     super(props);
@@ -16,6 +38,9 @@ export default class ErrorBoundary extends Component {
   }
 
   componentDidCatch(error, info) {
+    // Chunk viejo tras un deploy → recargar toma el index.html nuevo con los
+    // hashes nuevos. Auto-recovery silencioso; el usuario no debe ver esto.
+    if (isStaleChunkError(error) && reloadOnceForStaleChunk()) return;
     // En producción puedes enviar este error a Sentry / LogRocket aquí
     console.error("[Stratos ErrorBoundary]", error, info.componentStack);
   }
@@ -48,7 +73,12 @@ export default class ErrorBoundary extends Component {
           {this.state.error?.message || "Error inesperado en la aplicación."}
         </p>
         <button
-          onClick={() => { this.setState({ hasError: false, error: null }); }}
+          onClick={() => {
+            // Con chunk viejo, re-render volvería a pedir el mismo archivo
+            // inexistente: la única salida real es recargar.
+            if (isStaleChunkError(this.state.error)) { window.location.reload(); return; }
+            this.setState({ hasError: false, error: null });
+          }}
           style={{
             marginTop: 8,
             padding: "10px 24px",
