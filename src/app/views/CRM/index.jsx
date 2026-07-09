@@ -1029,28 +1029,18 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
   const prefsKey = user?.id ? `stratos_crm_prio_${user.id}` : null;
 
   // Defaults que se aplican cuando el usuario aún no tiene prefs guardadas.
-  // sortField='proxZoom' → los Zooms más próximos arriba. Degrada solo a "más
-  // recientes" cuando no hay citas (p.ej. clientes white-label sin Zoom).
+  // sortField='fechaIngreso' desc → los leads que llegaron más recientemente
+  // SIEMPRE arriba de la tabla (pedido explícito del cliente, jul-2026).
   const DEFAULT_PREFS = {
     pinned: [], pinnedOrder: [], dismissed: [], order: [], prioritySort: 'manual',
     customAsesores: [], customProyectos: [], customCampanas: [],
-    sortField: 'proxZoom', sortDir: 'desc',
+    sortField: 'fechaIngreso', sortDir: 'desc',
     filterStage: 'TODO', filterAsesor: 'TODO',
     viewMode: 'list',
   };
 
   const normalizePrefs = (raw) => {
     if (!raw || typeof raw !== 'object') return { ...DEFAULT_PREFS };
-    // Migración silenciosa del orden por defecto. Históricamente el default fue
-    // 'sc desc' y luego 'fechaIngreso desc'. Quien quedó en cualquiera de esos
-    // (= nunca eligió un orden propio) se mueve al nuevo default 'proxZoom'
-    // (Zooms más próximos arriba). Si el usuario eligió explícitamente otro
-    // campo (presupuesto, score, etc.), respetamos su decisión.
-    const rawSortField = typeof raw.sortField === 'string' ? raw.sortField : 'proxZoom';
-    const rawSortDir   = typeof raw.sortDir === 'string'   ? raw.sortDir   : 'desc';
-    const onLegacyDefault =
-      (rawSortField === 'sc'           && rawSortDir === 'desc') ||
-      (rawSortField === 'fechaIngreso' && rawSortDir === 'desc');
     return {
       pinned:          Array.isArray(raw.pinned)          ? raw.pinned          : [],
       pinnedOrder:     Array.isArray(raw.pinnedOrder)     ? raw.pinnedOrder     : [],
@@ -1060,10 +1050,23 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
       customAsesores:  Array.isArray(raw.customAsesores)  ? raw.customAsesores  : [],
       customProyectos: Array.isArray(raw.customProyectos) ? raw.customProyectos : [],
       customCampanas:  Array.isArray(raw.customCampanas)  ? raw.customCampanas  : [],
-      sortField:       onLegacyDefault ? 'proxZoom' : rawSortField,
-      sortDir:         onLegacyDefault ? 'desc'     : rawSortDir,
-      filterStage:     typeof raw.filterStage === 'string'    ? raw.filterStage     : 'TODO',
-      filterAsesor:    typeof raw.filterAsesor === 'string'   ? raw.filterAsesor    : 'TODO',
+      // El orden de la TABLA ya NO se lee de prefs guardadas (ni server ni
+      // localStorage): el cliente pidió (jul-2026) que los leads recién
+      // llegados estén SIEMPRE hasta arriba en cada carga, en toda cuenta y
+      // dispositivo. Antes se respetaban órdenes guardados (proxZoom,
+      // presupuesto, nombre, score…) y varios usuarios nunca veían los
+      // recientes arriba. El selector y los headers siguen funcionando
+      // durante la sesión; al recargar vuelve a "Más recientes".
+      sortField:       'fechaIngreso',
+      sortDir:         'desc',
+      // Los filtros de etapa/asesor tampoco se restauran al abrir (misma
+      // regla que el orden): un filtro guardado (p.ej. etapa "Contáctame Ya"
+      // + asesor "Cecilia") ocultaba los leads recién llegados de los demás
+      // asesores y el CRM parecía "desordenado" aunque el orden era correcto.
+      // Abrir el CRM = ver TODO con lo más nuevo arriba. Durante la sesión
+      // los filtros funcionan normal; al recargar se limpian.
+      filterStage:     'TODO',
+      filterAsesor:    'TODO',
       viewMode:        typeof raw.viewMode === 'string'       ? raw.viewMode        : 'list',
     };
   };
@@ -1338,6 +1341,19 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
       // 0. Cliente registrado en esta sesión SIEMPRE en posición #1.
       if (justRegisteredId && a.id === justRegisteredId) return -1;
       if (justRegisteredId && b.id === justRegisteredId) return 1;
+      // "Más recientes" (el orden con el que SIEMPRE carga la tabla) es
+      // ESTRICTO por llegada: sin saltos de grupo. Antes isNew y los pins
+      // brincaban arriba y el cliente veía leads viejos tapando a los recién
+      // llegados (pedido explícito jul-2026: los más recientes hasta arriba,
+      // sin excepciones). El halo de "nuevo" y la estrella siguen visibles
+      // en la fila; los pins conservan su efecto en el carrusel de prioridad
+      // y en los demás órdenes del selector.
+      if (sortField === "fechaIngreso") {
+        const ar = a.created_at ? new Date(a.created_at).getTime() : 0;
+        const br = b.created_at ? new Date(b.created_at).getTime() : 0;
+        if (ar !== br) return sortDir === "asc" ? ar - br : br - ar;
+        return 0;
+      }
       // 1. Clientes recién registrados (isNew=true) primero. Halo verde menta
       //    + posición arriba los hace inconfundibles. La marca se limpia
       //    cuando el asesor abre el lead (auto-clear via useEffect).
@@ -1374,13 +1390,8 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
         return br - ar;
       }
       let av = a[sortField], bv = b[sortField];
-      // fechaIngreso usa el ISO created_at real (no el string formateado en
-      // español que está en a.fechaIngreso). Si no hay created_at, fallback
-      // a 0 para que esos leads queden al final del orden desc.
-      if (sortField === "fechaIngreso") {
-        av = a.created_at ? new Date(a.created_at).getTime() : 0;
-        bv = b.created_at ? new Date(b.created_at).getTime() : 0;
-      } else if (sortField === "presupuesto" || sortField === "sc" || sortField === "daysInactive") {
+      // ("fechaIngreso" nunca llega aquí: se resuelve estricto arriba.)
+      if (sortField === "presupuesto" || sortField === "sc" || sortField === "daysInactive") {
         av = Number(av) || 0; bv = Number(bv) || 0;
       } else {
         av = String(av || "").toLowerCase(); bv = String(bv || "").toLowerCase();
@@ -3818,18 +3829,19 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
             );
           })()}
 
-          {/* Orden de la lista — "Próximo Zoom" (default) sube las citas más
-              próximas. Desktop-only, igual que el filtro de etapa; en mobile el
-              orden por defecto ya aplica aunque el control no se muestre. */}
+          {/* Orden de la lista — "Más recientes" (default) mantiene a los
+              leads recién llegados arriba. Desktop-only, igual que el filtro
+              de etapa; en mobile el orden por defecto ya aplica aunque el
+              control no se muestre. */}
           {!isMobile && (() => {
             const SORT_OPTS = [
-              { v: 'proxZoom',     label: 'Próximo Zoom' },
               { v: 'fechaIngreso', label: 'Más recientes' },
+              { v: 'proxZoom',     label: 'Próximo Zoom' },
               { v: 'presupuesto',  label: 'Mayor presupuesto' },
               { v: 'sc',           label: 'Mayor score' },
             ];
             const known  = SORT_OPTS.some(o => o.v === sortField);
-            const active = sortField === 'proxZoom';
+            const active = sortField !== 'fechaIngreso';
             const selBg  = isLight ? (active ? `${T.accent}10` : "rgba(255,255,255,0.70)") : (active ? "rgba(255,255,255,0.07)" : "rgba(255,255,255,0.042)");
             const selBdr = isLight ? (active ? `${T.accent}40` : "rgba(15,23,42,0.09)") : (active ? "rgba(255,255,255,0.18)" : "rgba(255,255,255,0.08)");
             const selClr = isLight ? (active ? T.accent : "rgba(15,23,42,0.45)") : (active ? "rgba(255,255,255,0.85)" : "rgba(255,255,255,0.42)");

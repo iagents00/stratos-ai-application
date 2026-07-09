@@ -187,13 +187,42 @@
 //   falla con 131053 en cualquier formato. En el CRM, la nota de voz enviada
 //   se sigue mostrando en el hilo (la fila del outbox es el registro — no hay
 //   espejo de Chatwoot para estos mensajes).
-// v94 — perf(whatsapp): la bandeja carga al instante. (1) fn_wa_conversations
+// v94 — fix(crm): la tabla vuelve a ordenar por "Más recientes" (created_at
+//   desc) por defecto: los leads que llegaron más recientemente SIEMPRE
+//   arriba. Los usuarios que quedaron en el default viejo 'proxZoom' migran
+//   solos; "Próximo Zoom" sigue disponible en el selector como orden de
+//   sesión (al recargar vuelve a "Más recientes").
+// v95 — fix(crm): el orden de la tabla ya NO se lee de prefs guardadas.
+//   La v94 migraba solo los defaults viejos ('sc'/'proxZoom' desc) pero
+//   respetaba órdenes explícitos (nombre, presupuesto, seguimientos, score)
+//   guardados en server o localStorage → esas cuentas seguían sin ver los
+//   recientes arriba. Ahora la tabla SIEMPRE carga "Más recientes"
+//   (created_at desc) en toda cuenta y dispositivo; el selector funciona
+//   como orden de sesión.
+// v96 — fix(boot): auto-recovery de "chunk viejo tras deploy". Una pestaña
+//   abierta durante un deploy lazy-importaba un asset con hash viejo (ya
+//   inexistente en Vercel) y el usuario veía "⚠️ Algo salió mal / Importing a
+//   module script failed". Ahora: listener vite:preloadError en main.jsx +
+//   detección en ErrorBoundary → recarga automática (1 vez/min máx) que toma
+//   el index.html nuevo. "Reintentar" también recarga en ese caso.
+// v97 — fix(crm): "Más recientes" es orden ESTRICTO por llegada. Antes los
+//   grupos isNew (nuevo sin abrir) y pinned (estrella) brincaban arriba de la
+//   tabla aunque fueran más viejos, tapando a los recién llegados. Ahora con
+//   el orden default la tabla es puro created_at desc (halo y estrella siguen
+//   visibles; los pins conservan su efecto en el carrusel y en los otros
+//   órdenes del selector).
+// v98 — fix(crm): los filtros de etapa/asesor tampoco se restauran al abrir.
+//   Una cuenta con filtro guardado (etapa "Contáctame Ya" + asesor "Cecilia")
+//   solo veía ese subconjunto y los leads de hoy (de otros asesores) quedaban
+//   ocultos → el CRM parecía "desordenado" aunque el orden era correcto.
+//   Abrir el CRM = ver TODO con lo más nuevo arriba, siempre.
+// v99 — perf(whatsapp): la bandeja carga al instante. (1) fn_wa_conversations
 //   reescrita (mig 081): permisos evaluados UNA vez + últimos mensajes por
 //   índice — ~5ms aunque haya miles de conversaciones (antes la RLS corría por
 //   cada mensaje). (2) Caché local POR USUARIO: la lista pinta de inmediato y
 //   la red refresca detrás. Permisos confirmados: super_admin/admin/director
 //   ven todas; el asesor SOLO sus leads (listo para multi-canal por asesor).
-const CACHE_VERSION = 'stratos-v94';
+const CACHE_VERSION = 'stratos-v99';
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 
