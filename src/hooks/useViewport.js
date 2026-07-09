@@ -16,7 +16,7 @@
  */
 import { useEffect, useState } from "react";
 
-const MOBILE_MAX  = 768;   // < 768 → mobile
+const MOBILE_MAX  = 768;   // <= 768 → mobile (alineado con @media max-width:768px)
 const TABLET_MAX  = 1024;  // < 1024 → tablet (incluye iPad portrait)
 
 const getViewport = () => {
@@ -26,8 +26,8 @@ const getViewport = () => {
   const w = window.innerWidth;
   return {
     width: w,
-    isMobile:  w < MOBILE_MAX,
-    isTablet:  w >= MOBILE_MAX && w < TABLET_MAX,
+    isMobile:  w <= MOBILE_MAX,
+    isTablet:  w > MOBILE_MAX && w < TABLET_MAX,
     isDesktop: w >= TABLET_MAX,
   };
 };

@@ -63,7 +63,7 @@ const WriterSection = ({ value, onChange, clientName, T = P }) => {
       </label>
 
       {/* Templates */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8, marginBottom: 12 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(130px, 100%), 1fr))", gap: 8, marginBottom: 12 }}>
         {Object.entries(templates).map(([key, template]) => (
           <button
             key={key}
@@ -590,7 +590,7 @@ const NewPropertyModal = ({ onClose, onSave, initialData = null, T = P }) => {
       <div onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)", backdropFilter: "blur(10px)", zIndex: 200000 }} />
       <div style={{
         position: "fixed", top: "50%", left: "50%", transform: "translate(-50%,-50%)", zIndex: 200001,
-        width: 680, maxHeight: "92vh", overflowY: "auto",
+        width: "min(680px, calc(100vw - 24px))", maxHeight: "92vh", overflowY: "auto",
         background: isLight ? "#FFFFFF" : "#111318", border: `1px solid ${T.border}`, borderRadius: 22,
         boxShadow: isLight ? T.shadow3 || "0 40px 100px rgba(15,23,42,0.15)" : "0 40px 100px rgba(0,0,0,0.7)",
       }}>
@@ -641,7 +641,7 @@ const NewPropertyModal = ({ onClose, onSave, initialData = null, T = P }) => {
                   onFocus={e=>e.target.style.borderColor=form.accent+"80"} onBlur={e=>e.target.style.borderColor=T.border} />
               </div>
             </div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(140px, 100%), 1fr))", gap: 12 }}>
               <div>
                 <label style={labelStyle}>Ubicación</label>
                 <select value={form.location} onChange={e=>set("location",e.target.value)} style={{ ...inputStyle("location"), background: T.surface || T.glass, cursor: "pointer" }}>
@@ -665,7 +665,7 @@ const NewPropertyModal = ({ onClose, onSave, initialData = null, T = P }) => {
           {/* SECCIÓN 2 — Precios y financiero */}
           <div style={{ paddingTop: 4, borderTop: `1px solid ${T.border}` }}>
             <p style={{ ...sectionTitle(form.accent), marginTop: 14 }}>Precios y financiero</p>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 12 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(130px, 100%), 1fr))", gap: 12 }}>
               {[
                 {k:"priceFrom",label:"Precio desde (USD) *",ph:"155000"},
                 {k:"priceTo",label:"Precio hasta (USD) *",ph:"500000"},
@@ -697,7 +697,7 @@ const NewPropertyModal = ({ onClose, onSave, initialData = null, T = P }) => {
           {/* SECCIÓN 3 — Características */}
           <div style={{ paddingTop: 4, borderTop: `1px solid ${T.border}` }}>
             <p style={{ ...sectionTitle(form.accent), marginTop: 14 }}>Características</p>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 12, marginBottom: 12 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(130px, 100%), 1fr))", gap: 12, marginBottom: 12 }}>
               <div>
                 <label style={labelStyle}>Tipo</label>
                 <select value={form.type} onChange={e=>set("type",e.target.value)} style={{ ...inputStyle("type"), background: T.surface || T.glass, cursor: "pointer" }}>
@@ -890,7 +890,7 @@ const ROICalc = ({ prop, T = P }) => {
           </div>
         </div>
         {/* Projections */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 14 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(150px, 100%), 1fr))", gap: 14 }}>
           {projections.map(pr=>(
             <div key={pr.y} style={{ padding: "18px 16px", borderRadius: 14, background: `${prop.accent}06`, border: `1px solid ${prop.accent}15` }}>
               <p style={{ fontSize: 10, color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 14 }}>{pr.y} {pr.y===1?"AÑO":"AÑOS"}</p>
@@ -1163,9 +1163,10 @@ const LandingPages = ({ T = P }) => {
           </p>
           <p style={{ fontSize: 12, color: T.txt3, fontFamily: font, marginTop: 4 }}>Crea campañas y presentaciones de propiedades con IA en un clic</p>
         </div>
-        <div style={{ display: "flex", gap: 10 }}>
+        <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
           <button onClick={() => setShowNewPropModal(true)} style={{
-            display: "flex", alignItems: "center", gap: 7, padding: "11px 18px",
+            display: "flex", alignItems: "center", justifyContent: "center", gap: 7, padding: "11px 18px",
+            flex: "1 1 auto",
             borderRadius: 11, border: `1px solid ${T.accent}40`, background: T.accentS,
             cursor: "pointer", color: T.accent, fontSize: 13, fontWeight: 600, fontFamily: fontDisp,
             transition: "all 0.22s",
@@ -1176,7 +1177,8 @@ const LandingPages = ({ T = P }) => {
             <Plus size={15} /> Registrar propiedad
           </button>
           <button onClick={() => setStep(1)} style={{
-            display: "flex", alignItems: "center", gap: 8, padding: "11px 22px",
+            display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "11px 22px",
+            flex: "1 1 auto",
             borderRadius: 11, border: isLight ? "none" : "none", cursor: "pointer",
             background: isLight ? T.accent : "rgba(255,255,255,0.95)",
             color: isLight ? "#FFFFFF" : "#0A0F18",
@@ -1193,7 +1195,7 @@ const LandingPages = ({ T = P }) => {
       </div>
 
       {/* KPIs */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 14 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(150px, 100%), 1fr))", gap: 14 }}>
         <KPI label="Pages Generadas" value={savedPages.length} sub="total" icon={Globe} color={T.blue} T={T} />
         <KPI label="Propiedades en catálogo" value={rivieraProperties.length + customProperties.length} sub={`${customProperties.length} registradas`} icon={Building2} color={T.emerald} T={T} />
         <KPI label="Tasa de Apertura" value="87%" sub="+12%" icon={Eye} color={T.accent} T={T} />
@@ -1206,14 +1208,18 @@ const LandingPages = ({ T = P }) => {
           <p style={{ fontSize: 14, fontWeight: 700, color: T.txt, fontFamily: fontDisp }}>Campañas Recientes</p>
           <Pill color={T.accent} s isLight={isLight}>{savedPages.length} páginas</Pill>
         </div>
-        <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 0.8fr 0.8fr 1fr 0.8fr 0.8fr", gap: 10, padding: "10px 20px", borderBottom: `1px solid ${T.border}`, fontSize: 10, color: T.txt3, textTransform: "uppercase", letterSpacing: "0.07em", fontWeight: 600 }}>
+        {/* La tabla scrollea DENTRO de su tarjeta en pantallas angostas
+            (7 columnas nunca caben en 360px): header+filas comparten un
+            contenedor con overflow-x y un ancho mínimo común. */}
+        <div style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 0.8fr 0.8fr 1fr 0.8fr 0.8fr", gap: 10, padding: "10px 20px", borderBottom: `1px solid ${T.border}`, fontSize: 10, color: T.txt3, textTransform: "uppercase", letterSpacing: "0.07em", fontWeight: 600, minWidth: 620 }}>
           <span>Cliente</span><span>Fecha</span><span>Props.</span><span>Presupuesto</span><span>Status</span><span>Asesor</span><span>Acciones</span>
         </div>
         {savedPages.map(pg => (
           <div key={pg.id} style={{
             display: "grid", gridTemplateColumns: "2fr 1fr 0.8fr 0.8fr 1fr 0.8fr 0.8fr",
             gap: 10, alignItems: "center", padding: "13px 20px", borderBottom: `1px solid ${T.border}`,
-            transition: "background 0.2s",
+            transition: "background 0.2s", minWidth: 620,
           }}
             onMouseEnter={e => e.currentTarget.style.background = isLight ? "rgba(0,0,0,0.03)" : "rgba(255,255,255,0.02)"}
             onMouseLeave={e => e.currentTarget.style.background = "transparent"}
@@ -1234,6 +1240,7 @@ const LandingPages = ({ T = P }) => {
             </div>
           </div>
         ))}
+        </div>
       </G>
 
       {/* Catálogo de Propiedades */}
@@ -1396,7 +1403,7 @@ const LandingPages = ({ T = P }) => {
       </G>
 
       {/* Quick Market Stats */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 14 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(220px, 100%), 1fr))", gap: 14 }}>
         <G T={T}>
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
             <Ico icon={TrendingUp} sz={32} is={15} c={T.emerald} />
@@ -1603,7 +1610,7 @@ const LandingPages = ({ T = P }) => {
 
         <div style={{ marginBottom: 18 }}>
           <label style={{ fontSize: 11, color: T.txt2, display: "block", marginBottom: 8, fontWeight: 600, letterSpacing: "0.03em" }}>Preferencias del cliente</label>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(130px, 100%), 1fr))", gap: 8 }}>
             {prefOptions.map(pref => {
               const active = clientPrefs[pref.key];
               return (
@@ -1695,7 +1702,7 @@ const LandingPages = ({ T = P }) => {
         </button>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 16 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(560px, 100%), 1fr))", gap: 16 }}>
         {filteredProperties.map(prop => {
           const selected = selectedProps.includes(prop.id);
           const driveLink = driveLinks[prop.id] || prop.driveLink || "";

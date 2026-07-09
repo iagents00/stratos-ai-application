@@ -30,7 +30,9 @@ export default function IAOSIsland({ leadsData, isLight, idx, brandLabel = "Duke
   ];
 
   return (
-    <div style={{
+    /* className: en móvil el bloque CSS global (App.jsx) lo hace COMPRESIBLE
+       (flex-shrink + min-width 0) para que nunca desborde bajo los íconos. */
+    <div className="stratos-iaos-pill" style={{
       display: "flex", alignItems: "center", gap: 0,
       background: isLight ? "rgba(13,154,118,0.06)" : "rgba(110,231,194,0.05)",
       borderRadius: 10, padding: "5px 10px",
@@ -49,11 +51,12 @@ export default function IAOSIsland({ leadsData, isLight, idx, brandLabel = "Duke
       <div style={{ width: 1, height: 10, background: isLight ? "rgba(13,154,118,0.20)" : "rgba(110,231,194,0.15)", flexShrink: 0, marginRight: 8 }} />
 
       {/* Slide text left→right — key on idx re-mounts span triggering CSS animation */}
-      <div style={{ overflow: "hidden", height: 14, width: 118, flexShrink: 0 }}>
+      <div className="stratos-iaos-ticker" style={{ overflow: "hidden", height: 14, width: 118, flexShrink: 0 }}>
         <span key={idx} style={{
           display: "block",
           fontSize: 10.5, fontFamily: fontDisp, fontWeight: 500,
           letterSpacing: "-0.012em", whiteSpace: "nowrap",
+          overflow: "hidden", textOverflow: "ellipsis",
           color: isLight ? "rgba(10,20,15,0.62)" : "rgba(255,255,255,0.62)",
           animation: "iaosSlideIn 0.40s cubic-bezier(0.22,1,0.36,1) both",
         }}>{phrases[idx]}</span>

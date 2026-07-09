@@ -2095,6 +2095,20 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
   };
 
   const carouselRef = useRef(null);
+  // FAB "dodge": mientras el carrusel de Prioridad está EN PANTALLA, el FAB
+  // se esconde (tapaba el botón "Tomar acción" de la card en móvil). Al
+  // scrollear hacia la lista, reaparece.
+  const [fabDodge, setFabDodge] = useState(false);
+  useEffect(() => {
+    if (!isMobile || !carouselRef.current || typeof IntersectionObserver === "undefined") { setFabDodge(false); return; }
+    const obs = new IntersectionObserver(
+      // el ÚLTIMO registro del batch es el estado actual (IO puede encolar varios)
+      (entries) => setFabDodge(entries[entries.length - 1].isIntersecting),
+      { threshold: 0.15 }
+    );
+    obs.observe(carouselRef.current);
+    return () => obs.disconnect();
+  }, [isMobile, priorityLeads.length, showMetrics]);
   const [prioScrollX, setPrioScrollX] = useState(0);
   const scrollCarousel = (dir) => carouselRef.current?.scrollBy({ left: dir * 310, behavior: "smooth" });
   const totalPipeline = visibleLeads.reduce((s, l) => s + (l.presupuesto || 0), 0);
@@ -2138,6 +2152,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
     <div style={{
       display: "flex", flexDirection: "column", gap: 18,
       color: T.txt,
+      paddingBottom: isMobile ? 96 : 0,
       transition: "color 0.3s ease",
     }}>
 
@@ -2425,7 +2440,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
             <div ref={carouselRef}
               onDragOver={handleCarouselDragOver}
               onDrop={handleCarouselDrop}
-              onScroll={e => setPrioScrollX(e.currentTarget.scrollLeft)}
+              onScroll={isMobile ? undefined : (e => setPrioScrollX(e.currentTarget.scrollLeft))}
               className="carousel-no-scroll"
               style={{
                 display: "flex", gap: 12, overflowX: "auto",
@@ -2872,7 +2887,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                 La flecha izquierda aparece solo cuando hay scroll previo.
                 Ambas tienen glass backdrop + fade en los bordes del mask.
                 ─────────────────────────────────────────────────────────────── */}
-            {priorityLeads.length > 2 && (() => {
+            {!isMobile && priorityLeads.length > 2 && (() => {
               // Botones discretos: baja opacidad en reposo, se afirman solo en hover.
               // Sin backdrop blur ni sombra pesada — deben ser utilidad, no protagonistas.
               const base = {
@@ -4307,7 +4322,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                                   whiteSpace: "nowrap", flexShrink: 0, minWidth: 0,
                                   margin: 0, fontStyle: "normal",
                                 }}
-                                editStyle={{ fontSize: 11, fontFamily: font, width: 180 }}
+                                editStyle={{ fontSize: 11, fontFamily: font, width: isMobile ? "100%" : 180, maxWidth: "100%" }}
                               />
                             </span>
 
@@ -4351,7 +4366,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                                   whiteSpace: "nowrap", flexShrink: 1, minWidth: 0,
                                   margin: 0, fontStyle: "normal",
                                 }}
-                                editStyle={{ fontSize: 11, fontFamily: font, width: 240 }}
+                                editStyle={{ fontSize: 11, fontFamily: font, width: isMobile ? "100%" : 240, maxWidth: "100%" }}
                               />
                             </span>
                           </div>
@@ -5638,6 +5653,11 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
             right: 18,
             bottom: `calc(58px + env(safe-area-inset-bottom, 0px) + 16px)`,
             zIndex: 199,
+            /* dodge: invisible e inerte mientras el carrusel de Prioridad está
+               a la vista (tapaba "Tomar acción"); reaparece al scrollear. */
+            opacity: fabDodge ? 0 : 1,
+            transform: fabDodge ? "scale(0.5)" : "scale(1)",
+            pointerEvents: fabDodge ? "none" : "auto",
             width: 56, height: 56, borderRadius: 999,
             border: "none",
             background: isLight
@@ -5649,10 +5669,10 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
             boxShadow: isLight
               ? `0 6px 16px ${T.accent}55, 0 12px 28px rgba(15,23,42,0.18)`
               : `0 4px 14px ${T.accent}44, 0 16px 32px rgba(0,0,0,0.55)`,
-            transition: "transform 0.2s ease, box-shadow 0.2s ease",
+            transition: "transform 0.22s ease, opacity 0.22s ease, box-shadow 0.2s ease",
           }}
-          onTouchStart={e => { e.currentTarget.style.transform = "scale(0.94)"; }}
-          onTouchEnd={e => { e.currentTarget.style.transform = "scale(1)"; }}
+          onTouchStart={e => { if (!fabDodge) e.currentTarget.style.transform = "scale(0.94)"; }}
+          onTouchEnd={e => { if (!fabDodge) e.currentTarget.style.transform = "scale(1)"; }}
         >
           <Plus size={24} strokeWidth={2.4} />
         </button>,

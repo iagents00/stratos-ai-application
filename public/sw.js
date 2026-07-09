@@ -243,7 +243,19 @@
 //   esconde mientras los números se conectan por coexistencia directo a Meta.
 //   Reversible: quitar el gate de super_admin en navigation.js (`wa`) y en
 //   LeadWhatsAppChat (`enabled`). No toca datos ni backend.
-const CACHE_VERSION = 'stratos-v107';
+// v108 — RESPONSIVE MÓVIL integral (360-430px, para la app y el navegador del
+//   celular; desktop INTACTO, verificado con capturas 1440px): (1) header sin
+//   encimados — pill IAOS compresible con ellipsis, teléfono oculto en móvil,
+//   toggle de tema oculto <430px, wordmark truncable, dropdown campana a lo
+//   ancho; (2) KPI compartido responsive (ícono ya no pisa el label, número
+//   28px con ellipsis) + grids 4→2 col por auto-fit en Create/ERP/proyecciones;
+//   (3) tabla Campañas con scroll propio; (4) Perfil ya no desborda (width
+//   100% + minWidth 0 + email quebrable); (5) CRM: FAB se aparta del carrusel
+//   (IntersectionObserver), flechas solo desktop, clearance inferior; (6)
+//   pestañas Comando scrolleables + embudo envolvente; (7) bottom nav 4
+//   primarios + Más (resto al sheet) + safe-areas iPhone/Android en header,
+//   nav, sheet y contenido; overflow-x global bloqueado en móvil.
+const CACHE_VERSION = 'stratos-v108';
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 

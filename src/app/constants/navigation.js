@@ -27,6 +27,12 @@ export const nav = [
   { id: "admin", l: "Usuarios",  i: Shield,    more: true, adminOnly: true },
 ];
 
+/* Módulos PRIMARIOS del bottom-nav móvil (máximo 4 + "Más"): con los 8 de
+   antes cada botón quedaba en ~45px a 360px — labels cortados y targets por
+   debajo del mínimo táctil. Los demás módulos viven en el sheet "Más".
+   (El sidebar de desktop NO usa esta lista — muestra todo como siempre.) */
+export const MOBILE_PRIMARY_NAV = ["c", "wa", "d", "e"];
+
 export const MODULE_ROLES = {
   d:      ["super_admin","admin","director","ceo"],
   c:      ["super_admin","admin","director","ceo","asesor"],
