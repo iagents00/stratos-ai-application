@@ -6,6 +6,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Users, Search, Plus, X, ChevronDown, Check } from "lucide-react";
 import { P, font, fontDisp } from "../design-system/tokens";
+import { useIsMobile } from "../hooks/useViewport";
 
 /* ── GlassCard (G) ── */
 export const G = ({ children, style, hover, onClick, np, T: Tprop }) => {
@@ -70,6 +71,7 @@ export const Ico = ({ icon: I, sz = 34, is = 16, c = P.accent }) => (
 /* ── KPI Card ── */
 export const KPI = ({ label, value, sub, icon: I, color, T: Tprop }) => {
   const [h, setH] = useState(false);
+  const isMobile = useIsMobile();
   const T = Tprop || P;
   const isLight = T?.bg !== P.bg;
   const c = color || T.accent;
@@ -79,8 +81,8 @@ export const KPI = ({ label, value, sub, icon: I, color, T: Tprop }) => {
       onMouseEnter={() => setH(true)}
       onMouseLeave={() => setH(false)}
       style={{
-        position: "relative", overflow: "hidden",
-        padding: "22px 20px 20px",
+        position: "relative", overflow: "hidden", minWidth: 0,
+        padding: isMobile ? "16px 14px 14px" : "22px 20px 20px",
         borderRadius: 20,
         background: isLight
           ? "rgba(255,255,255,0.90)"
@@ -117,33 +119,37 @@ export const KPI = ({ label, value, sub, icon: I, color, T: Tprop }) => {
 
       {/* Icon — naked, branded color, no box */}
       <div style={{
-        position: "absolute", top: 20, right: 20,
+        position: "absolute", top: isMobile ? 15 : 20, right: isMobile ? 13 : 20,
         display: "flex", alignItems: "center", justifyContent: "center",
         opacity: isLight ? 0.80 : 0.90,
       }}>
-        <I size={17} color={c} strokeWidth={1.6} />
+        <I size={isMobile ? 15 : 17} color={c} strokeWidth={1.6} />
       </div>
 
+      {/* label con espacio RESERVADO para el ícono absoluto (paddingRight) +
+          ellipsis: en tarjetas angostas de móvil el ícono ya no se encima. */}
       <p style={{
-        margin: "0 0 14px",
+        margin: isMobile ? "0 0 10px" : "0 0 14px",
         fontSize: 9.5, fontFamily: fontDisp, fontWeight: 600,
         letterSpacing: "0.14em", textTransform: "uppercase",
         color: isLight ? "rgba(15,23,42,0.38)" : "rgba(255,255,255,0.28)",
-        whiteSpace: "nowrap",
+        whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
+        paddingRight: isMobile ? 22 : 28,
       }}>{label}</p>
 
       <p style={{
         margin: 0,
-        fontSize: 40, fontWeight: 250,
+        fontSize: isMobile ? 28 : 40, fontWeight: isMobile ? 300 : 250,
         letterSpacing: "-0.025em", lineHeight: 1,
         fontFamily: fontDisp,
         color: isLight ? "rgba(15,23,42,0.93)" : "#FFFFFF",
+        overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
       }}>{value}</p>
 
       {sub && (
         <div style={{
-          marginTop: 14,
-          display: "flex", alignItems: "center", gap: 7,
+          marginTop: isMobile ? 10 : 14,
+          display: "flex", alignItems: "center", gap: 7, minWidth: 0,
         }}>
           <div style={{
             width: 2, height: 12, borderRadius: 2, flexShrink: 0,
@@ -153,7 +159,7 @@ export const KPI = ({ label, value, sub, icon: I, color, T: Tprop }) => {
             fontSize: 10.5, fontFamily: fontDisp, fontWeight: 500,
             letterSpacing: "-0.008em",
             color: isLight ? "rgba(15,23,42,0.44)" : "rgba(255,255,255,0.36)",
-            whiteSpace: "nowrap",
+            whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
           }}>{sub}</span>
         </div>
       )}
