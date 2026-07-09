@@ -1335,6 +1335,19 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
       // 0. Cliente registrado en esta sesión SIEMPRE en posición #1.
       if (justRegisteredId && a.id === justRegisteredId) return -1;
       if (justRegisteredId && b.id === justRegisteredId) return 1;
+      // "Más recientes" (el orden con el que SIEMPRE carga la tabla) es
+      // ESTRICTO por llegada: sin saltos de grupo. Antes isNew y los pins
+      // brincaban arriba y el cliente veía leads viejos tapando a los recién
+      // llegados (pedido explícito jul-2026: los más recientes hasta arriba,
+      // sin excepciones). El halo de "nuevo" y la estrella siguen visibles
+      // en la fila; los pins conservan su efecto en el carrusel de prioridad
+      // y en los demás órdenes del selector.
+      if (sortField === "fechaIngreso") {
+        const ar = a.created_at ? new Date(a.created_at).getTime() : 0;
+        const br = b.created_at ? new Date(b.created_at).getTime() : 0;
+        if (ar !== br) return sortDir === "asc" ? ar - br : br - ar;
+        return 0;
+      }
       // 1. Clientes recién registrados (isNew=true) primero. Halo verde menta
       //    + posición arriba los hace inconfundibles. La marca se limpia
       //    cuando el asesor abre el lead (auto-clear via useEffect).
@@ -1371,13 +1384,8 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
         return br - ar;
       }
       let av = a[sortField], bv = b[sortField];
-      // fechaIngreso usa el ISO created_at real (no el string formateado en
-      // español que está en a.fechaIngreso). Si no hay created_at, fallback
-      // a 0 para que esos leads queden al final del orden desc.
-      if (sortField === "fechaIngreso") {
-        av = a.created_at ? new Date(a.created_at).getTime() : 0;
-        bv = b.created_at ? new Date(b.created_at).getTime() : 0;
-      } else if (sortField === "presupuesto" || sortField === "sc" || sortField === "daysInactive") {
+      // ("fechaIngreso" nunca llega aquí: se resuelve estricto arriba.)
+      if (sortField === "presupuesto" || sortField === "sc" || sortField === "daysInactive") {
         av = Number(av) || 0; bv = Number(bv) || 0;
       } else {
         av = String(av || "").toLowerCase(); bv = String(bv || "").toLowerCase();
