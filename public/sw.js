@@ -187,7 +187,12 @@
 //   falla con 131053 en cualquier formato. En el CRM, la nota de voz enviada
 //   se sigue mostrando en el hilo (la fila del outbox es el registro — no hay
 //   espejo de Chatwoot para estos mensajes).
-const CACHE_VERSION = 'stratos-v93';
+// v94 — fix(crm): la tabla vuelve a ordenar por "Más recientes" (created_at
+//   desc) por defecto: los leads que llegaron más recientemente SIEMPRE
+//   arriba. Los usuarios que quedaron en el default viejo 'proxZoom' migran
+//   solos; "Próximo Zoom" sigue disponible en el selector como orden de
+//   sesión (al recargar vuelve a "Más recientes").
+const CACHE_VERSION = 'stratos-v94';
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 
