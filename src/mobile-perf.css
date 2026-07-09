@@ -27,23 +27,37 @@
  * ventanas chicas y navegadores viejos sin soporte de `pointer`.
  * Las PC con mouse quedan intactas (siguen con el diseño full). */
 @media (pointer: coarse), (max-width: 820px) {
-  /* Bajar el blur de TODA capa de vidrio. El selector [style*="backdrop-filter"]
-     matchea los estilos inline de React (GlassCard y demás) — ahí está el 90%
-     del costo. 32/40/24px → 4px: se mantiene el efecto "frost" pero el backing
-     store que iOS tiene que guardar por capa es mínimo. */
-  [style*="backdrop-filter"],
-  [style*="backdropFilter"],
-  [style*="blur("][style*="backdrop"],
-  .glass,
-  [data-glass] {
-    backdrop-filter: blur(4px) !important;
-    -webkit-backdrop-filter: blur(4px) !important;
+  /* v2 (09-jul — el crash VOLVIÓ): bajar el blur a 4px NO alcanzó. El costo
+     real en iOS es LA CAPA de compositing que CADA backdrop-filter fuerza
+     (aunque el radio sea mínimo), y la app creció desde el fix de julio-7
+     (módulo WhatsApp, campanita, más tarjetas → más capas vivas a la vez).
+     En móvil el vidrio se APAGA POR COMPLETO con selector UNIVERSAL: cubre
+     estilos inline, clases y CUALQUIER blur que un PR futuro agregue — a
+     prueba de regresiones POR CONSTRUCCIÓN. Las tarjetas conservan su fondo
+     translúcido propio (se ven más planas; layout idéntico). En PC no cambia
+     nada. ⚠️ NO aflojar esta regla sin leer memory/lessons.md (2026-07-07 y
+     2026-07-09) del AIOS. [guard:MOBILE-KILL-BACKDROP] */
+  *,
+  *::before,
+  *::after {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+
+  /* will-change fuerza capas de compositing igual que el blur: en móvil, que
+     el navegador decida (auto). Menos capas vivas = menos memoria WebKit.
+     [guard:MOBILE-KILL-WILLCHANGE] */
+  [style*="will-change"] {
+    will-change: auto !important;
   }
 
   /* Frenar SOLO animaciones continuas: los estilos inline continuos contienen
-     "infinite" (ej. priorityBreathe con box-shadow, orbitSmart/orbitColor).
-     Las animaciones de entrada de una sola vez (fadeInUp/scaleIn "… both") NO
-     llevan "infinite", así que NO se matchean y siguen corriendo normal. */
+     "infinite" (ej. priorityBreathe con box-shadow, orbitSmart/orbitColor,
+     pulse del grabador de voz). Las animaciones de entrada de una sola vez
+     (fadeInUp/scaleIn "… both") NO llevan "infinite" y siguen corriendo.
+     Las animaciones infinitas POR CLASE en archivos .css están PROHIBIDAS por
+     el guard del build (tools/check_mobile_perf.mjs) — usar inline o registrar.
+     [guard:MOBILE-KILL-INFINITE] */
   [style*="infinite"] {
     animation: none !important;
   }
