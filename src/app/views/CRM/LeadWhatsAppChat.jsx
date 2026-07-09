@@ -25,6 +25,10 @@
  *  - Autoscroll solo si el usuario estaba pegado al fondo (no lo arrastra).
  *
  * Props: { lead, T = P, isLight = false } — contrato estándar del drawer.
+ *  - `threadMaxHeight`: alto máximo del hilo en el modo NORMAL (expediente).
+ *  - `fill`: modo del MÓDULO WhatsApp — el chat ocupa TODO el alto disponible
+ *    (columna flex): el hilo scrollea adentro y el composer queda SIEMPRE
+ *    fijo abajo (no se pierde al hacer scroll). El expediente no lo usa.
  * ─────────────────────────────────────────────────────────────────────────────
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -145,7 +149,7 @@ const fmtTime = (iso) => {
 
 const isUuid = (id) => /^[0-9a-f]{8}-/.test(String(id || ""));
 
-export default function LeadWhatsAppChat({ lead, T = P, isLight = false, threadMaxHeight = 360 }) {
+export default function LeadWhatsAppChat({ lead, T = P, isLight = false, threadMaxHeight = 360, fill = false }) {
   const { user } = useAuth();
   const { isFeatureEnabled } = useClient();
 
@@ -539,9 +543,15 @@ export default function LeadWhatsAppChat({ lead, T = P, isLight = false, threadM
 
   /* ── Render ─────────────────────────────────────────────────────────────── */
   return (
-    <div style={{ marginBottom: 20 }}>
+    <div
+      style={
+        fill
+          ? { display: "flex", flexDirection: "column", flex: "1 1 0%", minHeight: 0 }
+          : { marginBottom: 20 }
+      }
+    >
       {/* Header */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 10 }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 10, flexShrink: 0 }}>
         <span
           style={{
             display: "inline-flex", alignItems: "center", gap: 6,
@@ -607,12 +617,17 @@ export default function LeadWhatsAppChat({ lead, T = P, isLight = false, threadM
         </div>
       ) : (
         <>
-          {/* Hilo */}
+          {/* Hilo — en modo fill toma TODO el alto sobrante y scrollea adentro
+              (el composer de abajo nunca se mueve); en modo normal (expediente)
+              conserva el tope fijo de siempre. */}
           <div
             ref={scrollRef}
             onScroll={handleScroll}
             style={{
-              maxHeight: threadMaxHeight, overflowY: "auto", display: "flex",
+              ...(fill
+                ? { flex: "1 1 0%", minHeight: 0 }
+                : { maxHeight: threadMaxHeight }),
+              overflowY: "auto", display: "flex",
               flexDirection: "column", gap: 8, padding: "4px 2px",
             }}
           >
@@ -706,9 +721,10 @@ export default function LeadWhatsAppChat({ lead, T = P, isLight = false, threadM
             })}
           </div>
 
-          {/* Composer / aviso de ventana */}
+          {/* Composer / aviso de ventana — flexShrink 0: en modo fill jamás se
+              comprime ni se pierde (el hilo es el único que scrollea). */}
           {canSend ? (
-            <div style={{ marginTop: 10 }}>
+            <div style={{ marginTop: 10, flexShrink: 0 }}>
               {/* Chip del archivo elegido (aún no enviado) — el audio se puede
                   escuchar antes de mandarlo */}
               {pendingFile && !recording && (
@@ -874,7 +890,7 @@ export default function LeadWhatsAppChat({ lead, T = P, isLight = false, threadM
           ) : hasThread ? (
             <div
               style={{
-                marginTop: 10, padding: "10px 12px", borderRadius: 10,
+                marginTop: 10, flexShrink: 0, padding: "10px 12px", borderRadius: 10,
                 background: "rgba(251,191,36,0.07)", border: "1px solid rgba(251,191,36,0.22)",
                 fontSize: 11.5, color: isLight ? "#92600A" : T.amber,
                 fontFamily: font, lineHeight: 1.5,

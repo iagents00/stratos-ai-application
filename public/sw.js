@@ -231,7 +231,13 @@
 //   GUARDIÁN DE BUILD (tools/check_mobile_perf.mjs, prebuild): ningún PR futuro
 //   puede borrar/aflojar estas defensas ni meter animaciones infinitas por
 //   clase — el build falla con la explicación.
-const CACHE_VERSION = 'stratos-v100';
+// v101 — rediseño del módulo WhatsApp: (1) el chat ocupa TODA la pantalla y el
+//   composer queda FIJO abajo (PC y móvil; ya no se pierde al hacer scroll —
+//   solo el hilo scrollea) + shell en 100dvh (la barra de Safari iOS ya no tapa
+//   el borde inferior); (2) conversaciones PINEABLES (fijar arriba, por
+//   usuario; mig 082) + filtro por etapa del pipeline + toggle "No leídos";
+//   (3) cada fila muestra la etapa (pill de color) y el asesor (para mando).
+const CACHE_VERSION = 'stratos-v101';
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 

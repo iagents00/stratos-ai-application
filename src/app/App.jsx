@@ -1174,6 +1174,12 @@ export default function App() {
         *{box-sizing:border-box;margin:0}
         ::-webkit-scrollbar{width:4px}
         ::-webkit-scrollbar-track{background:transparent}
+        /* iOS Safari: 100vh mide el viewport SIN descontar la barra de URL →
+           el borde inferior (composer del chat de WhatsApp, bottom nav) queda
+           tapado por la barra. dvh sigue el viewport visible REAL y se ajusta
+           cuando la barra aparece/desaparece. Navegador viejo sin dvh: ignora
+           esta regla y sigue con el 100vh inline de siempre. */
+        @supports (height: 100dvh){ .stratos-app{ height:100dvh!important } }
         .stratos-bottomnav{display:none}
         @media(max-width:768px){
           .stratos-sidebar{display:none!important}
