@@ -222,7 +222,16 @@
 //   cada mensaje). (2) Caché local POR USUARIO: la lista pinta de inmediato y
 //   la red refresca detrás. Permisos confirmados: super_admin/admin/director
 //   ven todas; el asesor SOLO sus leads (listo para multi-canal por asesor).
-const CACHE_VERSION = 'stratos-v99';
+// v100 — fix DEFINITIVO del crash de iPhone ("Ocurrió un problema varias
+//   veces"): (1) en móvil el backdrop-filter se APAGA por completo con selector
+//   universal (bajar el radio no alcanzaba: el costo es LA CAPA de compositing,
+//   y la app creció) — cubre también cualquier blur futuro; (2) el modo seguro
+//   ahora es PEGAJOSO 48h y detecta crashes aunque recargues a mano (contador
+//   de arranques fallidos en localStorage, no solo el loop rápido); (3) nuevo
+//   GUARDIÁN DE BUILD (tools/check_mobile_perf.mjs, prebuild): ningún PR futuro
+//   puede borrar/aflojar estas defensas ni meter animaciones infinitas por
+//   clase — el build falla con la explicación.
+const CACHE_VERSION = 'stratos-v100';
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 
