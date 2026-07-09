@@ -182,7 +182,12 @@
 //   de voz de Meta) vía opus-recorder (wasm en un Worker, carga perezosa de
 //   ~380KB SOLO al presionar el micrófono; cero costo al boot). Si el encoder
 //   no carga, respaldo automático al camino anterior (m4a → documento).
-const CACHE_VERSION = 'stratos-v92';
+// v93 — fix(whatsapp): las notas de voz ahora VIAJAN DIRECTO a la API de Meta
+//   (upload + send por media_id) porque el envío de audio por link de Chatwoot
+//   falla con 131053 en cualquier formato. En el CRM, la nota de voz enviada
+//   se sigue mostrando en el hilo (la fila del outbox es el registro — no hay
+//   espejo de Chatwoot para estos mensajes).
+const CACHE_VERSION = 'stratos-v93';
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 
