@@ -1041,19 +1041,6 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
 
   const normalizePrefs = (raw) => {
     if (!raw || typeof raw !== 'object') return { ...DEFAULT_PREFS };
-    // Migración silenciosa del orden por defecto. Históricamente el default fue
-    // 'sc desc' → 'fechaIngreso desc' → 'proxZoom desc'. Desde jul-2026 el
-    // cliente pidió que los recién llegados estén SIEMPRE arriba, así que
-    // cualquier usuario que quedó en un default viejo ('sc' o 'proxZoom')
-    // vuelve a 'fechaIngreso desc'. Nota: esto también hace que "Próximo Zoom"
-    // del selector sea un orden de sesión (al recargar vuelve a "Más
-    // recientes") — es intencional. Si el usuario eligió explícitamente otro
-    // campo (presupuesto, score, etc.), respetamos su decisión.
-    const rawSortField = typeof raw.sortField === 'string' ? raw.sortField : 'fechaIngreso';
-    const rawSortDir   = typeof raw.sortDir === 'string'   ? raw.sortDir   : 'desc';
-    const onLegacyDefault =
-      (rawSortField === 'sc'       && rawSortDir === 'desc') ||
-      (rawSortField === 'proxZoom' && rawSortDir === 'desc');
     return {
       pinned:          Array.isArray(raw.pinned)          ? raw.pinned          : [],
       pinnedOrder:     Array.isArray(raw.pinnedOrder)     ? raw.pinnedOrder     : [],
@@ -1063,8 +1050,15 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
       customAsesores:  Array.isArray(raw.customAsesores)  ? raw.customAsesores  : [],
       customProyectos: Array.isArray(raw.customProyectos) ? raw.customProyectos : [],
       customCampanas:  Array.isArray(raw.customCampanas)  ? raw.customCampanas  : [],
-      sortField:       onLegacyDefault ? 'fechaIngreso' : rawSortField,
-      sortDir:         onLegacyDefault ? 'desc'         : rawSortDir,
+      // El orden de la TABLA ya NO se lee de prefs guardadas (ni server ni
+      // localStorage): el cliente pidió (jul-2026) que los leads recién
+      // llegados estén SIEMPRE hasta arriba en cada carga, en toda cuenta y
+      // dispositivo. Antes se respetaban órdenes guardados (proxZoom,
+      // presupuesto, nombre, score…) y varios usuarios nunca veían los
+      // recientes arriba. El selector y los headers siguen funcionando
+      // durante la sesión; al recargar vuelve a "Más recientes".
+      sortField:       'fechaIngreso',
+      sortDir:         'desc',
       filterStage:     typeof raw.filterStage === 'string'    ? raw.filterStage     : 'TODO',
       filterAsesor:    typeof raw.filterAsesor === 'string'   ? raw.filterAsesor    : 'TODO',
       viewMode:        typeof raw.viewMode === 'string'       ? raw.viewMode        : 'list',

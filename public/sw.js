@@ -192,7 +192,14 @@
 //   arriba. Los usuarios que quedaron en el default viejo 'proxZoom' migran
 //   solos; "Próximo Zoom" sigue disponible en el selector como orden de
 //   sesión (al recargar vuelve a "Más recientes").
-const CACHE_VERSION = 'stratos-v94';
+// v95 — fix(crm): el orden de la tabla ya NO se lee de prefs guardadas.
+//   La v94 migraba solo los defaults viejos ('sc'/'proxZoom' desc) pero
+//   respetaba órdenes explícitos (nombre, presupuesto, seguimientos, score)
+//   guardados en server o localStorage → esas cuentas seguían sin ver los
+//   recientes arriba. Ahora la tabla SIEMPRE carga "Más recientes"
+//   (created_at desc) en toda cuenta y dispositivo; el selector funciona
+//   como orden de sesión.
+const CACHE_VERSION = 'stratos-v95';
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 
