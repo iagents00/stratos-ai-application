@@ -205,7 +205,13 @@
 //   module script failed". Ahora: listener vite:preloadError en main.jsx +
 //   detección en ErrorBoundary → recarga automática (1 vez/min máx) que toma
 //   el index.html nuevo. "Reintentar" también recarga en ese caso.
-const CACHE_VERSION = 'stratos-v96';
+// v97 — fix(crm): "Más recientes" es orden ESTRICTO por llegada. Antes los
+//   grupos isNew (nuevo sin abrir) y pinned (estrella) brincaban arriba de la
+//   tabla aunque fueran más viejos, tapando a los recién llegados. Ahora con
+//   el orden default la tabla es puro created_at desc (halo y estrella siguen
+//   visibles; los pins conservan su efecto en el carrusel y en los otros
+//   órdenes del selector).
+const CACHE_VERSION = 'stratos-v97';
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 
