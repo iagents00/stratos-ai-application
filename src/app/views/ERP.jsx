@@ -1,121 +1,295 @@
+import { useState, useMemo } from "react";
 import { P, font, fontDisp } from "../../design-system/tokens";
 import { G, KPI, Pill } from "../SharedComponents";
-import { Building2, CheckCircle2, Banknote, Percent, MapPin } from "lucide-react";
+import {
+  Building2, MapPin, FolderOpen, Search, Phone, HardDrive,
+  Map as MapIcon, Layers, Briefcase, X, Tag,
+} from "lucide-react";
+import { CATALOGO_SECCIONES } from "../data/catalogoProyectos";
+
+/* Color por rango de ticket */
+const ticketColor = (t, T) => {
+  const s = (t || "").toLowerCase();
+  if (s.includes("450") || s.includes("500") || s.includes("800") || s.includes("luxury")) return T.violet;
+  if (s.includes("250") || s.includes("350")) return T.amber;
+  if (s.includes("150")) return T.emerald;
+  return T.blue;
+};
+
+const summary = (it) => [
+  it.desarrollo,
+  it.ubicacion && `Ubicación: ${it.ubicacion}`,
+  it.ticket && `Ticket: ${it.ticket}`,
+  it.clasificacion && `Clasificación: ${it.clasificacion}`,
+  it.tipologia && `Tipología: ${it.tipologia}`,
+  it.masterbroker && `Masterbroker: ${it.masterbroker}`,
+  it.contacto && `Contacto: ${it.contacto}`,
+  it.drive && `Drive: ${it.drive}`,
+].filter(Boolean).join(" · ");
 
 const ERP = ({ oc, T: _T }) => {
   const isLight = !!_T && _T?.bg !== P.bg;
   const T = _T || P;
-  const erpProjects = [
-    { id: 1, n: "Gobernador 28", loc: "Playa del Carmen", st: "Construcción", c: P.blue, roi: "24%", u: 48, s: 36, v: "$4.2M", m: 31, f: "Q2 2026", t: "Residencial Premium" },
-    { id: 2, n: "Monarca 28", loc: "Playa del Carmen", st: "Preventa", c: P.emerald, roi: "28%", u: 56, s: 42, v: "$5.8M", m: 29, f: "Q3 2026", t: "Condominios de Lujo" },
-    { id: 3, n: "Portofino", loc: "Cancún", st: "Disponible", c: P.amber, roi: "26%", u: 32, s: 26, v: "$3.8M", m: 32, f: "Q1 2026", t: "Casas Residenciales" },
-    { id: 4, n: "Casa Blanca", loc: "Playa del Carmen", st: "Reserva", c: P.violet, roi: "22%", u: 20, s: 14, v: "$2.2M", m: 27, f: "Q4 2025", t: "Villas Exclusivas" },
-  ];
 
-  const inventorySummary = {
-    total: 156,
-    sold: 118,
-    available: 38,
-    reserved: 28,
-    value: "$72.4M",
-    avgMargin: "26.5%",
-    absorption: 75.6,
-    pipeline: "$18.7M"
-  };
+  const [secId, setSecId] = useState(CATALOGO_SECCIONES[0].id);
+  const [q, setQ] = useState("");
+  const [ticket, setTicket] = useState("");
+  const [limit, setLimit] = useState(60);
+
+  const sec = useMemo(
+    () => CATALOGO_SECCIONES.find((s) => s.id === secId) || CATALOGO_SECCIONES[0],
+    [secId]
+  );
+
+  const kpis = useMemo(() => {
+    const all = CATALOGO_SECCIONES.flatMap((s) => s.items);
+    const conDrive = all.filter((i) => i.drive).length;
+    const ubic = new Set(all.map((i) => (i.ubicacion || "").trim()).filter(Boolean));
+    const secciones = CATALOGO_SECCIONES.filter((s) => s.items.length).length;
+    return { total: all.length, conDrive, ubic: ubic.size, secciones };
+  }, []);
+
+  const tickets = useMemo(
+    () => Array.from(new Set(sec.items.map((i) => i.ticket).filter(Boolean))),
+    [sec]
+  );
+
+  const filtered = useMemo(() => {
+    const needle = q.trim().toLowerCase();
+    return sec.items.filter((i) => {
+      if (ticket && i.ticket !== ticket) return false;
+      if (!needle) return true;
+      return [
+        i.desarrollo, i.ubicacion, i.zona, i.masterbroker, i.contacto,
+        i.clasificacion, i.tipologia, i.highlights, i.asesor,
+      ].filter(Boolean).join(" ").toLowerCase().includes(needle);
+    });
+  }, [sec, q, ticket]);
+
+  const shown = filtered.slice(0, limit);
+
+  const pickSection = (id) => { setSecId(id); setQ(""); setTicket(""); setLimit(60); };
+
+  const btnStyle = (color) => ({
+    display: "inline-flex", alignItems: "center", gap: 5,
+    padding: "6px 11px", borderRadius: 9, textDecoration: "none",
+    fontSize: 11, fontWeight: 700, fontFamily: fontDisp, letterSpacing: "-0.01em",
+    color, background: `${color}14`, border: `1px solid ${color}2E`,
+    whiteSpace: "nowrap", transition: "background 0.15s, border-color 0.15s",
+  });
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
-      {/* KPIs Principales */}
+      {/* KPIs */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 14 }}>
-        <KPI label="Unidades Totales" value={inventorySummary.total} sub="Portafolio" icon={Building2} color={T.blue} T={T} />
-        <KPI label="Unidades Vendidas" value={inventorySummary.sold} sub={`${inventorySummary.absorption.toFixed(1)}%`} icon={CheckCircle2} color={T.emerald} T={T} />
-        <KPI label="Valor Inventario" value={inventorySummary.value} sub="Valuación" icon={Banknote} T={T} />
-        <KPI label="Margen Promedio" value={inventorySummary.avgMargin} sub="Rentabilidad" icon={Percent} color={T.violet} T={T} />
+        <KPI label="Desarrollos" value={kpis.total} sub="Catálogo total" icon={Building2} color={T.blue} T={T} />
+        <KPI label="Con carpeta Drive" value={kpis.conDrive} sub="Material listo" icon={HardDrive} color={T.emerald} T={T} />
+        <KPI label="Ubicaciones" value={kpis.ubic} sub="Zonas cubiertas" icon={MapPin} color={T.amber} T={T} />
+        <KPI label="Secciones" value={kpis.secciones} sub="Del Google Sheet" icon={Layers} color={T.violet} T={T} />
       </div>
 
-      {/* Matriz de Proyectos */}
+      {/* Catálogo */}
       <G np T={T}>
-        <div style={{ padding: "18px 22px", borderBottom: `1px solid ${T.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <p style={{ fontSize: 14, fontWeight: 700, color: T.txt, fontFamily: fontDisp }}>Portafolio de Proyectos</p>
-          <Pill color={T.blue} s isLight={isLight}>{erpProjects.length} Proyectos Activos</Pill>
-        </div>
-        <div style={{ display: "grid", gridTemplateColumns: "1.8fr 1fr 1fr 1fr 1.2fr 1fr 1fr", gap: 12, padding: "14px 22px", borderBottom: `1px solid ${T.border}`, fontSize: 10, color: T.txt3, textTransform: "uppercase", letterSpacing: "0.07em", fontWeight: 600 }}>
-          <span>Proyecto</span><span>Ubicación</span><span>Estado</span><span>Unidades</span><span>Venta Rápida</span><span>Margen</span><span>Cierre</span>
-        </div>
-        {erpProjects.map((proj) => (
-          <div key={proj.id} onClick={() => oc(`Análisis detallado de ${proj.n}: Inventario ${proj.s}/${proj.u}, ROI ${proj.roi}, Absorción ${((proj.s / proj.u) * 100).toFixed(1)}%, Próximo: ${proj.f}`)} style={{
-            display: "grid", gridTemplateColumns: "1.8fr 1fr 1fr 1fr 1.2fr 1fr 1fr",
-            gap: 12, padding: "16px 22px", borderBottom: `1px solid ${T.border}`,
-            cursor: "pointer", transition: "all 0.2s",
-          }} onMouseEnter={e => e.currentTarget.style.background = isLight ? "rgba(15,23,42,0.04)" : "rgba(255,255,255,0.03)"} onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+        {/* Header + secciones */}
+        <div style={{ padding: "18px 22px 14px", borderBottom: `1px solid ${T.border}` }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap", marginBottom: 14 }}>
             <div>
-              <p style={{ fontSize: 13, fontWeight: 700, color: T.txt, fontFamily: fontDisp, marginBottom: 3 }}>{proj.n}</p>
-              <p style={{ fontSize: 10, color: T.txt3, fontFamily: font }}>{proj.t}</p>
+              <p style={{ fontSize: 14, fontWeight: 700, color: T.txt, fontFamily: fontDisp, margin: 0 }}>Catálogo de Proyectos</p>
+              <p style={{ fontSize: 10.5, color: T.txt3, fontFamily: font, margin: "3px 0 0" }}>
+                Duke del Caribe · fuente: Google Sheet «DRIVES DUKE DEL CARIBE»
+              </p>
             </div>
-            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-              <MapPin size={12} color={T.txt3} />
-              <span style={{ fontSize: 11, color: T.txt2, fontFamily: font }}>{proj.loc}</span>
-            </div>
-            <Pill color={proj.c} s isLight={isLight}>{proj.st}</Pill>
-            <div style={{ textAlign: "center" }}>
-              <p style={{ fontSize: 12, fontWeight: 700, color: T.txt, fontFamily: fontDisp }}>{proj.s}/{proj.u}</p>
-              <p style={{ fontSize: 10, color: T.txt3, fontFamily: font }}>Vendidas</p>
-            </div>
-            <div>
-              <div style={{ height: 5, background: T.glass, borderRadius: 3, marginBottom: 4, overflow: "hidden" }}>
-                <div style={{ width: `${(proj.s / proj.u) * 100}%`, height: "100%", background: proj.c, borderRadius: 3 }} />
-              </div>
-              <p style={{ fontSize: 10, color: T.txt3, textAlign: "center" }}>{((proj.s / proj.u) * 100).toFixed(0)}%</p>
-            </div>
-            <p style={{ fontSize: 12, fontWeight: 700, color: proj.m > 28 ? T.emerald : proj.m > 25 ? T.blue : T.amber, fontFamily: fontDisp, textAlign: "center" }}>{proj.m}%</p>
-            <p style={{ fontSize: 11, color: T.txt2, fontFamily: font, textAlign: "center" }}>{proj.f}</p>
+            <Pill color={T.blue} s isLight={isLight}>{filtered.length} de {sec.items.length}</Pill>
           </div>
-        ))}
-      </G>
 
-      {/* Análisis de Inventario */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
-        <G T={T}>
-          <p style={{ fontSize: 13, fontWeight: 700, color: T.txt, marginBottom: 14, fontFamily: fontDisp }}>Distribución de Inventario</p>
-          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            {[
-              { label: "Vendidas", val: inventorySummary.sold, c: T.emerald },
-              { label: "Disponibles", val: inventorySummary.available, c: T.blue },
-              { label: "Reservadas", val: inventorySummary.reserved, c: T.amber },
-            ].map(s => (
-              <div key={s.label} style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                <span style={{ fontSize: 11, color: T.txt2, fontFamily: font, minWidth: 80 }}>{s.label}</span>
-                <div style={{ flex: 1, height: 8, background: T.glass, borderRadius: 4, overflow: "hidden" }}>
-                  <div style={{ width: `${(s.val / inventorySummary.total) * 100}%`, height: "100%", background: s.c }} />
+          {/* Section tabs */}
+          <div style={{ display: "flex", gap: 7, overflowX: "auto", paddingBottom: 4 }}>
+            {CATALOGO_SECCIONES.map((s) => {
+              const active = s.id === secId;
+              return (
+                <button
+                  key={s.id}
+                  onClick={() => pickSection(s.id)}
+                  style={{
+                    display: "flex", alignItems: "center", gap: 7, whiteSpace: "nowrap",
+                    padding: "8px 13px", borderRadius: 10, cursor: "pointer",
+                    border: `1px solid ${active ? `${T.accent}55` : T.border}`,
+                    background: active ? `${T.accent}18` : (isLight ? "rgba(15,23,42,0.02)" : "rgba(255,255,255,0.02)"),
+                    color: active ? T.accent : T.txt2,
+                    fontSize: 12, fontWeight: active ? 700 : 500, fontFamily: fontDisp, letterSpacing: "-0.01em",
+                    transition: "all 0.15s",
+                  }}
+                >
+                  {s.nombre}
+                  <span style={{
+                    fontSize: 10, fontWeight: 700, padding: "1px 6px", borderRadius: 99,
+                    background: active ? `${T.accent}26` : (isLight ? "rgba(15,23,42,0.06)" : "rgba(255,255,255,0.06)"),
+                    color: active ? T.accent : T.txt3,
+                  }}>{s.items.length}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Toolbar: search + ticket filter */}
+        {sec.items.length > 0 && (
+          <div style={{ padding: "14px 22px", borderBottom: `1px solid ${T.border}`, display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, flex: "1 1 240px", padding: "9px 13px", borderRadius: 11, background: isLight ? "#FFFFFF" : "rgba(255,255,255,0.04)", border: `1px solid ${q ? T.accent : T.border}` }}>
+              <Search size={14} color={T.txt3} />
+              <input
+                value={q}
+                onChange={(e) => { setQ(e.target.value); setLimit(60); }}
+                placeholder="Buscar desarrollo, zona, masterbroker, contacto…"
+                style={{ flex: 1, border: "none", background: "transparent", outline: "none", color: T.txt, fontSize: 13, fontFamily: font, minWidth: 0 }}
+              />
+              {q && <X size={13} color={T.txt3} style={{ cursor: "pointer" }} onClick={() => setQ("")} />}
+            </div>
+            {tickets.length > 0 && (
+              <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                {tickets.map((tk) => {
+                  const active = ticket === tk;
+                  const c = ticketColor(tk, T);
+                  return (
+                    <button
+                      key={tk}
+                      onClick={() => { setTicket(active ? "" : tk); setLimit(60); }}
+                      style={{
+                        display: "inline-flex", alignItems: "center", gap: 5, padding: "6px 11px", borderRadius: 99,
+                        cursor: "pointer", fontSize: 10.5, fontWeight: 700, fontFamily: fontDisp,
+                        border: `1px solid ${active ? c : T.border}`,
+                        background: active ? `${c}22` : "transparent",
+                        color: active ? c : T.txt3, transition: "all 0.15s",
+                      }}
+                    >
+                      <Tag size={10} /> {tk}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Body */}
+        <div style={{ padding: 18 }}>
+          {sec.items.length === 0 ? (
+            <div style={{ textAlign: "center", padding: "48px 20px 40px" }}>
+              <div style={{ width: 58, height: 58, borderRadius: 17, background: `${T.accent}0D`, border: `1px solid ${T.accent}1F`, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 14px" }}>
+                <FolderOpen size={25} color={T.accent} strokeWidth={1.6} style={{ opacity: 0.75 }} />
+              </div>
+              <p style={{ margin: "0 0 4px", fontSize: 14, fontWeight: 600, fontFamily: fontDisp, color: T.txt }}>Sección sin registros todavía</p>
+              <p style={{ margin: 0, fontSize: 12, color: T.txt3, fontFamily: font }}>Esta pestaña existe en el Sheet pero aún no tiene desarrollos cargados.</p>
+            </div>
+          ) : filtered.length === 0 ? (
+            <div style={{ textAlign: "center", padding: "40px 20px", fontSize: 13, color: T.txt3, fontFamily: font }}>
+              Sin coincidencias para «{q}»{ticket && ` · ${ticket}`}.
+            </div>
+          ) : (
+            <>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(288px, 1fr))", gap: 12 }}>
+                {shown.map((it, idx) => {
+                  const c = ticketColor(it.ticket, T);
+                  return (
+                    <div
+                      key={idx}
+                      onClick={() => oc(summary(it))}
+                      onMouseEnter={(e) => (e.currentTarget.style.borderColor = `${c}50`)}
+                      onMouseLeave={(e) => (e.currentTarget.style.borderColor = T.border)}
+                      style={{
+                        display: "flex", flexDirection: "column", gap: 9, padding: "14px 15px",
+                        borderRadius: 14, background: isLight ? "#FFFFFF" : "rgba(255,255,255,0.03)",
+                        border: `1px solid ${T.border}`, cursor: "pointer", transition: "border-color 0.15s",
+                      }}
+                    >
+                      {/* Title row */}
+                      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8 }}>
+                        <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: T.txt, fontFamily: fontDisp, letterSpacing: "-0.02em", lineHeight: 1.25 }}>{it.desarrollo}</p>
+                        {it.ticket && <Pill color={c} s isLight={isLight}>{it.ticket}</Pill>}
+                      </div>
+
+                      {/* Meta */}
+                      {(it.ubicacion || it.clasificacion) && (
+                        <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+                          {it.ubicacion && (
+                            <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 11, color: T.txt2, fontFamily: font }}>
+                              <MapPin size={11} color={T.txt3} /> {it.ubicacion}
+                            </span>
+                          )}
+                          {it.clasificacion && (
+                            <span style={{ fontSize: 10, color: T.txt3, fontFamily: font, textTransform: "uppercase", letterSpacing: "0.04em" }}>· {it.clasificacion}</span>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Detail lines */}
+                      {(it.tipologia || it.highlights || it.entrega) && (
+                        <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
+                          {it.tipologia && <span style={{ fontSize: 11, color: T.txt2, fontFamily: font }}>{it.tipologia}</span>}
+                          {it.highlights && <span style={{ fontSize: 11, color: T.txt3, fontFamily: font, fontStyle: "italic" }}>“{it.highlights}”</span>}
+                          {it.entrega && <span style={{ fontSize: 10.5, color: T.txt3, fontFamily: font }}>Entrega: {it.entrega}</span>}
+                        </div>
+                      )}
+
+                      {/* Broker / asesor / contacto */}
+                      {(it.masterbroker || it.asesor || it.contacto) && (
+                        <div style={{ display: "flex", flexDirection: "column", gap: 3, paddingTop: 2 }}>
+                          {it.masterbroker && (
+                            <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 10.5, color: T.txt3, fontFamily: font }}>
+                              <Briefcase size={10} /> {it.masterbroker}
+                            </span>
+                          )}
+                          {it.asesor && (
+                            <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 10.5, color: T.txt3, fontFamily: font }}>
+                              <Building2 size={10} /> Asesor: {it.asesor}
+                            </span>
+                          )}
+                          {it.contacto && (
+                            <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 10.5, color: T.txt3, fontFamily: font }}>
+                              <Phone size={10} /> {it.contacto}
+                            </span>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Actions */}
+                      {(it.drive || it.maps) && (
+                        <div style={{ display: "flex", gap: 7, marginTop: "auto", paddingTop: 4 }}>
+                          {it.drive && (
+                            <a href={it.drive} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} style={btnStyle(T.emerald)}>
+                              <HardDrive size={12} /> Drive
+                            </a>
+                          )}
+                          {it.maps && (
+                            <a href={it.maps} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} style={btnStyle(T.blue)}>
+                              <MapIcon size={12} /> Maps
+                            </a>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+
+              {filtered.length > limit && (
+                <div style={{ textAlign: "center", marginTop: 16 }}>
+                  <button
+                    onClick={() => setLimit((l) => l + 60)}
+                    style={{
+                      padding: "10px 20px", borderRadius: 11, cursor: "pointer",
+                      background: `${T.accent}14`, border: `1px solid ${T.accent}33`,
+                      color: T.accent, fontSize: 12.5, fontWeight: 700, fontFamily: fontDisp,
+                    }}
+                  >
+                    Ver más ({filtered.length - limit} restantes)
+                  </button>
                 </div>
-                <span style={{ fontSize: 12, fontWeight: 700, color: s.c, fontFamily: fontDisp, minWidth: 45, textAlign: "right" }}>{s.val}</span>
-              </div>
-            ))}
-          </div>
-        </G>
-
-        <G T={T}>
-          <p style={{ fontSize: 13, fontWeight: 700, color: T.txt, marginBottom: 14, fontFamily: fontDisp }}>Métricas Financieras</p>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-            <div style={{ padding: "12px", borderRadius: 8, background: T.glass, border: `1px solid ${T.border}` }}>
-              <p style={{ fontSize: 10, color: T.txt3, fontFamily: font, marginBottom: 6 }}>Valor Generado</p>
-              <p style={{ fontSize: 16, fontWeight: 800, color: T.emerald, fontFamily: fontDisp }}>${(inventorySummary.sold * 0.6).toFixed(1)}M</p>
-            </div>
-            <div style={{ padding: "12px", borderRadius: 8, background: T.glass, border: `1px solid ${T.border}` }}>
-              <p style={{ fontSize: 10, color: T.txt3, fontFamily: font, marginBottom: 6 }}>Pipeline Activo</p>
-              <p style={{ fontSize: 16, fontWeight: 800, color: T.blue, fontFamily: fontDisp }}>{inventorySummary.pipeline}</p>
-            </div>
-            <div style={{ padding: "12px", borderRadius: 8, background: T.glass, border: `1px solid ${T.border}` }}>
-              <p style={{ fontSize: 10, color: T.txt3, fontFamily: font, marginBottom: 6 }}>Tiempo Absorción</p>
-              <p style={{ fontSize: 16, fontWeight: 800, color: T.violet, fontFamily: fontDisp }}>6.8 meses</p>
-            </div>
-            <div style={{ padding: "12px", borderRadius: 8, background: T.glass, border: `1px solid ${T.border}` }}>
-              <p style={{ fontSize: 10, color: T.txt3, fontFamily: font, marginBottom: 6 }}>Proyección Q4</p>
-              <p style={{ fontSize: 16, fontWeight: 800, color: T.amber, fontFamily: fontDisp }}>142 Sold</p>
-            </div>
-          </div>
-        </G>
-      </div>
+              )}
+            </>
+          )}
+        </div>
+      </G>
     </div>
   );
 };
