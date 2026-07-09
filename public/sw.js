@@ -237,7 +237,7 @@
 //   el borde inferior); (2) conversaciones PINEABLES (fijar arriba, por
 //   usuario; mig 082) + filtro por etapa del pipeline + toggle "No leídos";
 //   (3) cada fila muestra la etapa (pill de color) y el asesor (para mando).
-const CACHE_VERSION = 'stratos-v101';
+const CACHE_VERSION = 'stratos-v102';
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 
