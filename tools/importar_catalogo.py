@@ -182,6 +182,40 @@ def build(sheets):
                              "drive": url(row, dc_), "ticket": labels.get(pc, ""),
                              "asesor": asesor, "ubicacion": "Tulum", "zona": "Tulum"})
     sections.append({"id": "drives-dc", "nombre": "Drives DC (por asesor)", "items": dc_items})
+
+    # Pestañas ocultas "sastre" (base detallada por zona) — otro esquema de columnas.
+    SASTRE = [("tulum-sastre", "Tulum (Sastre)", "PTULUMSASTRE", "Tulum"),
+              ("pdc-sastre", "Playa del Carmen (Sastre)", "PPDCSASTRE", "Playa del Carmen")]
+    SFIELD = {"DESARROLLO": "desarrollo", "DESAROLLO": "desarrollo", "MASTER BROKER": "masterbroker",
+              "FECHA DE ENTREGA": "entrega", "# DE HAB": "tipologia",
+              "UBICACIÓN": "ubicacion", "UBICACION": "ubicacion", "CONTACTO": "contacto", "DRIVE": "drive"}
+    for sid, sname, tab, zona in SASTRE:
+        rows = sheets.get(tab, [])
+        items = []
+        if rows:
+            colmap = {}
+            for c in rows[0]:
+                f = SFIELD.get(c["v"].strip().upper())
+                if f:
+                    colmap[f] = re.match(r"([A-Z]+)", c["ref"]).group(1)
+            for row in rows[1:]:
+                it = {f: clean(val(row, col)) for f, col in colmap.items() if f != "drive"}
+                nc = cell(row, colmap.get("desarrollo", "A"))
+                nurl = unwrap(nc["url"]) if (nc and nc.get("url", "").startswith("http")) else ""
+                drive = url(row, colmap["drive"]) if "drive" in colmap else ""
+                if not drive and "drive.google" in nurl:
+                    drive = nurl
+                if "/maps" in nurl or "maps.google" in nurl or "goo.gl/maps" in nurl:
+                    it["maps"] = nurl
+                it["drive"] = drive
+                it["entrega"] = fmt_entrega(it.get("entrega", ""))
+                it["zona"] = zona
+                if not it.get("ubicacion"):
+                    it["ubicacion"] = zona
+                if it.get("desarrollo"):
+                    items.append(it)
+        sections.append({"id": sid, "nombre": sname, "items": items})
+
     return sections
 
 

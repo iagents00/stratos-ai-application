@@ -3,7 +3,7 @@ import { P, font, fontDisp } from "../../design-system/tokens";
 import { G, KPI, Pill } from "../SharedComponents";
 import {
   Building2, MapPin, FolderOpen, Search, Phone, HardDrive,
-  Map as MapIcon, Layers, Briefcase, X, Tag,
+  Map as MapIcon, Layers, Briefcase, X, Tag, LayoutGrid, Table as TableIcon,
 } from "lucide-react";
 import { CATALOGO_SECCIONES } from "../data/catalogoProyectos";
 
@@ -35,6 +35,7 @@ const ERP = ({ oc, T: _T }) => {
   const [q, setQ] = useState("");
   const [ticket, setTicket] = useState("");
   const [limit, setLimit] = useState(60);
+  const [view, setView] = useState("cards"); // "cards" | "table"
 
   const sec = useMemo(
     () => CATALOGO_SECCIONES.find((s) => s.id === secId) || CATALOGO_SECCIONES[0],
@@ -76,6 +77,16 @@ const ERP = ({ oc, T: _T }) => {
     fontSize: 11, fontWeight: 700, fontFamily: fontDisp, letterSpacing: "-0.01em",
     color, background: `${color}14`, border: `1px solid ${color}2E`,
     whiteSpace: "nowrap", transition: "background 0.15s, border-color 0.15s",
+  });
+
+  const tdBase = {
+    padding: "11px 13px", fontSize: 12, color: T.txt2, fontFamily: font,
+    borderBottom: `1px solid ${T.border}`, verticalAlign: "middle", whiteSpace: "nowrap",
+  };
+  const iconLink = (color) => ({
+    display: "inline-flex", alignItems: "center", justifyContent: "center",
+    width: 28, height: 28, borderRadius: 8, textDecoration: "none",
+    color, background: `${color}14`, border: `1px solid ${color}2E`, flexShrink: 0,
   });
 
   return (
@@ -168,6 +179,29 @@ const ERP = ({ oc, T: _T }) => {
                 })}
               </div>
             )}
+            <div style={{ marginLeft: "auto", display: "flex", gap: 3, padding: 3, borderRadius: 11, border: `1px solid ${T.border}`, background: isLight ? "rgba(15,23,42,0.02)" : "rgba(255,255,255,0.02)" }}>
+              {[
+                { id: "cards", label: "Tarjetas", Icon: LayoutGrid },
+                { id: "table", label: "Tabla", Icon: TableIcon },
+              ].map(({ id, label, Icon }) => {
+                const active = view === id;
+                return (
+                  <button
+                    key={id}
+                    onClick={() => setView(id)}
+                    title={label}
+                    style={{
+                      display: "inline-flex", alignItems: "center", gap: 6, padding: "7px 12px", borderRadius: 9, cursor: "pointer",
+                      border: "none", background: active ? `${T.accent}1E` : "transparent",
+                      color: active ? T.accent : T.txt3, fontSize: 12, fontWeight: active ? 700 : 500, fontFamily: fontDisp,
+                      transition: "all 0.15s",
+                    }}
+                  >
+                    <Icon size={13} /> {label}
+                  </button>
+                );
+              })}
+            </div>
           </div>
         )}
 
@@ -187,6 +221,7 @@ const ERP = ({ oc, T: _T }) => {
             </div>
           ) : (
             <>
+              {view === "cards" ? (
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(288px, 1fr))", gap: 12 }}>
                 {shown.map((it, idx) => {
                   const c = ticketColor(it.ticket, T);
@@ -271,6 +306,58 @@ const ERP = ({ oc, T: _T }) => {
                   );
                 })}
               </div>
+              ) : (
+              <div style={{ overflowX: "auto", borderRadius: 12, border: `1px solid ${T.border}` }}>
+                <table style={{ width: "100%", minWidth: 960, borderCollapse: "collapse", fontFamily: font }}>
+                  <thead>
+                    <tr>
+                      {["Desarrollo", "Ubicación", "Ticket", "Clase", "Tipología", "Broker / Asesor", "Entrega", "Contacto", "Enlaces"].map((h) => (
+                        <th key={h} style={{
+                          textAlign: "left", padding: "11px 13px", fontSize: 9.5, fontWeight: 600, color: T.txt3,
+                          textTransform: "uppercase", letterSpacing: "0.07em", fontFamily: fontDisp,
+                          borderBottom: `1px solid ${T.border}`, whiteSpace: "nowrap",
+                          background: isLight ? "rgba(15,23,42,0.03)" : "rgba(255,255,255,0.03)",
+                        }}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {shown.map((it, idx) => {
+                      const c = ticketColor(it.ticket, T);
+                      return (
+                        <tr
+                          key={idx}
+                          onClick={() => oc(summary(it))}
+                          onMouseEnter={(e) => (e.currentTarget.style.background = isLight ? "rgba(15,23,42,0.03)" : "rgba(255,255,255,0.025)")}
+                          onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+                          style={{ cursor: "pointer", transition: "background 0.15s" }}
+                        >
+                          <td style={{ ...tdBase, color: T.txt, fontWeight: 700, fontFamily: fontDisp, whiteSpace: "normal", minWidth: 150 }}>{it.desarrollo}</td>
+                          <td style={tdBase}>
+                            {it.ubicacion
+                              ? <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><MapPin size={11} color={T.txt3} />{it.ubicacion}</span>
+                              : <span style={{ color: T.txt3 }}>—</span>}
+                          </td>
+                          <td style={tdBase}>{it.ticket ? <Pill color={c} s isLight={isLight}>{it.ticket}</Pill> : <span style={{ color: T.txt3 }}>—</span>}</td>
+                          <td style={{ ...tdBase, textTransform: "uppercase", fontSize: 10.5, letterSpacing: "0.03em" }}>{it.clasificacion || "—"}</td>
+                          <td style={tdBase}>{it.tipologia || "—"}</td>
+                          <td style={tdBase}>{it.masterbroker || it.asesor || "—"}</td>
+                          <td style={tdBase}>{it.entrega || "—"}</td>
+                          <td style={{ ...tdBase, maxWidth: 180, overflow: "hidden", textOverflow: "ellipsis" }}>{it.contacto || "—"}</td>
+                          <td style={{ ...tdBase }}>
+                            <div style={{ display: "flex", gap: 6 }}>
+                              {it.drive && <a href={it.drive} target="_blank" rel="noopener noreferrer" title="Carpeta de Drive" onClick={(e) => e.stopPropagation()} style={iconLink(T.emerald)}><HardDrive size={13} /></a>}
+                              {it.maps && <a href={it.maps} target="_blank" rel="noopener noreferrer" title="Google Maps" onClick={(e) => e.stopPropagation()} style={iconLink(T.blue)}><MapIcon size={13} /></a>}
+                              {!it.drive && !it.maps && <span style={{ color: T.txt3 }}>—</span>}
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+              )}
 
               {filtered.length > limit && (
                 <div style={{ textAlign: "center", marginTop: 16 }}>
