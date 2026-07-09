@@ -187,7 +187,13 @@
 //   falla con 131053 en cualquier formato. En el CRM, la nota de voz enviada
 //   se sigue mostrando en el hilo (la fila del outbox es el registro — no hay
 //   espejo de Chatwoot para estos mensajes).
-const CACHE_VERSION = 'stratos-v93';
+// v94 — perf(whatsapp): la bandeja carga al instante. (1) fn_wa_conversations
+//   reescrita (mig 081): permisos evaluados UNA vez + últimos mensajes por
+//   índice — ~5ms aunque haya miles de conversaciones (antes la RLS corría por
+//   cada mensaje). (2) Caché local POR USUARIO: la lista pinta de inmediato y
+//   la red refresca detrás. Permisos confirmados: super_admin/admin/director
+//   ven todas; el asesor SOLO sus leads (listo para multi-canal por asesor).
+const CACHE_VERSION = 'stratos-v94';
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 
