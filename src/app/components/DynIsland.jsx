@@ -250,7 +250,7 @@ const DynIsland = ({ onExpand, notifications = [], theme = "dark", beamIdx = 0 }
                 <p style={{ fontSize: 13, color: "rgba(255,255,255,0.65)", lineHeight: 1.65, fontFamily: font, marginBottom: 20 }}>{selectedNotif.detail}</p>
 
                 <button
-                  onClick={closeAll}
+                  onClick={() => { onExpand?.(); closeAll(); }}
                   style={{
                     width: "100%", padding: "13px 16px", borderRadius: 12,
                     background: "rgba(255,255,255,0.92)", color: "#06080F",

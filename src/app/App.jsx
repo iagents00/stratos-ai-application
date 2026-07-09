@@ -35,6 +35,7 @@ import { font, fontDisp } from "../design-system/tokens";
 import { StratosAtomHex } from "./components/Logo";
 import DynIsland          from "./components/DynIsland";
 import IAOSIsland         from "./components/IAOSIsland";
+import { buildIntelNotifs } from "./constants/intelNotifs";
 import PermissionGate     from "./components/PermissionGate";
 import Chat, { getResp }  from "./features/ChatPanel";
 import MetaPanel,
@@ -1013,9 +1014,10 @@ export default function App() {
 
   useEffect(() => {
     if (!user) return;
-    const { TrendingUp, AlertCircle, Star, Home, Banknote, Trophy } = {};
-    // Notifications are defined in DynIsland defaults; this effect stays for extensibility
-  }, [user]);
+    // Notificaciones REALES del Centro de Inteligencia a partir de los leads del CRM
+    // (reemplaza los placeholders demo). Se recalculan cuando cambian los leads.
+    setNotifs(buildIntelNotifs(leadsData));
+  }, [user, leadsData]);
 
   /* ── oc — chat callback passed to views ── */
   const oc = useCallback((t, leadData) => {
