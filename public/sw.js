@@ -237,7 +237,13 @@
 //   el borde inferior); (2) conversaciones PINEABLES (fijar arriba, por
 //   usuario; mig 082) + filtro por etapa del pipeline + toggle "No leídos";
 //   (3) cada fila muestra la etapa (pill de color) y el asesor (para mando).
-const CACHE_VERSION = 'stratos-v106';
+// v107 — WhatsApp OCULTO temporalmente para el equipo de Duke: el módulo del
+//   sidebar y el chat del expediente quedan **solo super_admin** (nosotros),
+//   los asesores no lo ven. La funcionalidad está COMPLETA e intacta — solo se
+//   esconde mientras los números se conectan por coexistencia directo a Meta.
+//   Reversible: quitar el gate de super_admin en navigation.js (`wa`) y en
+//   LeadWhatsAppChat (`enabled`). No toca datos ni backend.
+const CACHE_VERSION = 'stratos-v107';
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 

@@ -112,6 +112,14 @@ export function canAccessModule(moduleId, user, clientConfig = null) {
   if (moduleId === "wa") {
     if (clientConfig?.features?.whatsappModule !== true) return false;
     if (user.isDemo) return false; // la cuenta demo no tiene datos reales de WhatsApp
+    // ⏸️ OCULTO temporalmente (09-jul-2026): la funcionalidad está COMPLETA pero
+    // NO se expone a los asesores todavía — los números se están conectando por
+    // COEXISTENCIA directo a Meta (ver context/whatsapp-multicliente-plan.md del
+    // AIOS + changelog 09-jul cont. 7). Mientras tanto solo super_admin (nosotros)
+    // lo ve, para seguir probando/demostrando sin desbloquearlo al equipo.
+    //   • Reactivar para TODOS: borrar esta línea.
+    //   • Apagarlo del todo (ni super_admin): whatsappModule:false en el config.
+    if (user.role !== "super_admin") return false;
     return MODULE_ROLES.wa.includes(user.role);
   }
 
