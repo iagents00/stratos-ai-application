@@ -3,20 +3,32 @@
  * ─────────────────────────────────────────────────────────────────────────────
  * Centro de Inteligencia — Dynamic Island con soporte de tema y animaciones.
  * Versión actualizada extraída de App.jsx (soporta theme y beamIdx).
+ *
+ * Panel expandido = 2 zonas:
+ *   1) NOVEDADES  → notificaciones (idealmente datos reales vía prop `notifications`)
+ *   2) QUÉ PUEDE HACER → carrusel de funciones (INTEL_FEATURES) + tutorial por función
  * ─────────────────────────────────────────────────────────────────────────────
  */
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { X, ChevronRight, Crown } from "lucide-react";
+import {
+  X, ChevronRight, ChevronLeft, Crown,
+  Mic, FileText, Video, MapPin, GitBranch, Search, BarChart3, Bell, Sparkles, Zap, Gauge, UsersRound,
+} from "lucide-react";
 import { P, font, fontDisp } from "../../design-system/tokens";
 import { StratosAtom } from "./Logo";
 import { AgentIcons } from "../constants/agents";
 import { useClient } from "../../hooks/useClient";
+import { INTEL_FEATURES } from "../constants/intelFeatures";
+
+// Mapa nombre→componente de ícono (los datos guardan solo el string)
+const FEATURE_ICONS = { Mic, FileText, Video, MapPin, GitBranch, Search, BarChart3, Bell, Sparkles, Zap, Gauge, UsersRound };
 
 const DynIsland = ({ onExpand, notifications = [], theme = "dark", beamIdx = 0 }) => {
   const isLight = theme === "light";
   const [isOpen, setIsOpen] = useState(false);
   const [selectedNotif, setSelectedNotif] = useState(null);
+  const [selectedFeature, setSelectedFeature] = useState(null);
   const { config: clientConfig } = useClient();
   const centerLabel = clientConfig?.brand?.intelligenceCenterLabel || "Centro de Inteligencia";
 
@@ -27,7 +39,26 @@ const DynIsland = ({ onExpand, notifications = [], theme = "dark", beamIdx = 0 }
     { agent: "Agente de Ventas", text: "Alerta de Riesgo: James Mitchell.", detail: "Inactividad detectada en últimas 72h. Se recomienda activar protocolo de confianza para evitar enfriamiento.", c: P.rose, icon: AgentIcons.asistente, btn: "Enviar Avance", action: "Dossier: James Mitchell" },
   ];
 
-  const expanded = isOpen || selectedNotif;
+  const expanded = isOpen || selectedNotif || selectedFeature;
+
+  // ─── Carrusel: auto-desliza suave; se pausa en hover; se apaga con reduced-motion ───
+  const trackRef = useRef(null);
+  const pausedRef = useRef(false);
+  useEffect(() => {
+    if (!isOpen || selectedNotif || selectedFeature) return;
+    const el = trackRef.current;
+    if (!el) return;
+    const reduce = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
+    if (reduce) return; // accesibilidad + performance móvil
+    const iv = setInterval(() => {
+      if (pausedRef.current || !el) return;
+      if (el.scrollLeft + el.clientWidth >= el.scrollWidth - 1) el.scrollLeft = 0;
+      else el.scrollLeft += 1;
+    }, 40);
+    return () => clearInterval(iv);
+  }, [isOpen, selectedNotif, selectedFeature]);
+
+  const closeAll = () => { setIsOpen(false); setSelectedNotif(null); setSelectedFeature(null); };
 
   return (
     <>
@@ -86,24 +117,29 @@ const DynIsland = ({ onExpand, notifications = [], theme = "dark", beamIdx = 0 }
         <>
           <div
             style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.48)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)", zIndex: 99998 }}
-            onClick={() => { setIsOpen(false); setSelectedNotif(null); }}
+            onClick={closeAll}
           />
           <div style={{
             position: "fixed", top: 66, left: "50%", transform: "translateX(-50%)",
             zIndex: 99999,
-            width: selectedNotif ? 520 : 480,
+            width: selectedNotif || selectedFeature ? 520 : 480,
+            maxWidth: "calc(100vw - 24px)",
             borderRadius: 20,
             background: selectedNotif
               ? `radial-gradient(ellipse at top, ${selectedNotif.c}10 0%, #03060F 70%)`
+              : selectedFeature
+              ? `radial-gradient(ellipse at top, ${selectedFeature.color}12 0%, #03060F 70%)`
               : "#03060F",
             border: "0.5px solid rgba(255,255,255,0.08)",
             boxShadow: "0 24px 80px rgba(0,0,0,0.75), 0 0 0 0.5px rgba(255,255,255,0.04)",
             overflow: "hidden",
             animation: "fadeSlideDown 0.22s cubic-bezier(0.4,0,0.2,1)",
           }}>
-            <style>{`@keyframes fadeSlideDown{from{opacity:0;transform:translateX(-50%) translateY(-8px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}`}</style>
+            <style>{`@keyframes fadeSlideDown{from{opacity:0;transform:translateX(-50%) translateY(-8px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+              .intel-track::-webkit-scrollbar{height:0;display:none}
+              .intel-track{scrollbar-width:none}`}</style>
 
-            {isOpen && !selectedNotif && (
+            {isOpen && !selectedNotif && !selectedFeature && (
               <div style={{ padding: "18px 0 6px" }}>
                 {/* Header */}
                 <div style={{ padding: "0 20px 12px", display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
@@ -141,9 +177,52 @@ const DynIsland = ({ onExpand, notifications = [], theme = "dark", beamIdx = 0 }
                     </div>
                   ))}
                 </div>
+
+                {/* ─── QUÉ PUEDE HACER EL SISTEMA — carrusel de funciones ─── */}
+                <div style={{ padding: "10px 20px 4px", borderTop: "1px solid rgba(255,255,255,0.05)" }}>
+                  <p style={{ margin: "0 0 2px", fontSize: 10, color: "rgba(255,255,255,0.55)", fontWeight: 700, fontFamily: fontDisp, letterSpacing: "0.10em", textTransform: "uppercase" }}>Qué puede hacer el sistema</p>
+                  <p style={{ margin: 0, fontSize: 9.5, color: "rgba(255,255,255,0.34)", fontFamily: font }}>Tocá una función para ver cómo se usa</p>
+                </div>
+                <div
+                  ref={trackRef}
+                  className="intel-track"
+                  onMouseEnter={() => { pausedRef.current = true; }}
+                  onMouseLeave={() => { pausedRef.current = false; }}
+                  style={{ display: "flex", gap: 10, overflowX: "auto", padding: "10px 20px 16px", scrollSnapType: "x proximity" }}
+                >
+                  {INTEL_FEATURES.map((f) => {
+                    const Ic = FEATURE_ICONS[f.icon] || Sparkles;
+                    const isAgent = f.kind === "agente";
+                    return (
+                      <div key={f.id} onClick={() => setSelectedFeature(f)}
+                        style={{
+                          flex: "0 0 auto", width: 132, scrollSnapAlign: "start",
+                          borderRadius: 14, padding: "12px 12px 13px", cursor: "pointer",
+                          background: `linear-gradient(160deg, ${f.color}14 0%, rgba(255,255,255,0.02) 60%)`,
+                          border: `1px solid ${f.color}22`,
+                          transition: "transform 0.16s cubic-bezier(0.34,1.56,0.64,1), border-color 0.16s",
+                        }}
+                        onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.borderColor = `${f.color}55`; }}
+                        onMouseLeave={e => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.borderColor = `${f.color}22`; }}
+                      >
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 9 }}>
+                          <div style={{ width: 30, height: 30, borderRadius: 9, background: `${f.color}1E`, border: `1px solid ${f.color}33`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                            <Ic size={15} color={f.color} strokeWidth={2} />
+                          </div>
+                          <span style={{ fontSize: 7.5, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: isAgent ? "#6EE7C2" : "rgba(255,255,255,0.42)", background: isAgent ? "rgba(110,231,194,0.10)" : "rgba(255,255,255,0.05)", border: `1px solid ${isAgent ? "rgba(110,231,194,0.22)" : "rgba(255,255,255,0.08)"}`, borderRadius: 5, padding: "2px 5px" }}>
+                            {isAgent ? "Auto" : "Vos pedís"}
+                          </span>
+                        </div>
+                        <p style={{ margin: "0 0 3px", fontSize: 11.5, color: "rgba(255,255,255,0.90)", fontWeight: 600, fontFamily: fontDisp, lineHeight: 1.2 }}>{f.label}</p>
+                        <p style={{ margin: 0, fontSize: 9.5, color: "rgba(255,255,255,0.40)", fontFamily: font, lineHeight: 1.35, display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{f.tagline}</p>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             )}
 
+            {/* ─── Detalle de una NOTIFICACIÓN ─── */}
             {selectedNotif && (
               <div style={{ padding: "20px", animation: "fadeSlideDown 0.2s cubic-bezier(0.4,0,0.2,1)" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
@@ -177,6 +256,43 @@ const DynIsland = ({ onExpand, notifications = [], theme = "dark", beamIdx = 0 }
                 >{selectedNotif.btn}</button>
               </div>
             )}
+
+            {/* ─── TUTORIAL de una FUNCIÓN ─── */}
+            {selectedFeature && (() => {
+              const Ic = FEATURE_ICONS[selectedFeature.icon] || Sparkles;
+              const isAgent = selectedFeature.kind === "agente";
+              return (
+                <div style={{ padding: "18px 20px 22px", animation: "fadeSlideDown 0.2s cubic-bezier(0.4,0,0.2,1)" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 14 }}>
+                    <button onClick={() => setSelectedFeature(null)} style={{ background: "rgba(255,255,255,0.06)", border: "none", color: "rgba(255,255,255,0.55)", borderRadius: 8, width: 28, height: 28, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", flexShrink: 0, transition: "all 0.16s" }}
+                      onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.12)"; e.currentTarget.style.color = "#FFF"; }}
+                      onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.06)"; e.currentTarget.style.color = "rgba(255,255,255,0.55)"; }}
+                    ><ChevronLeft size={15} /></button>
+                    <div style={{ width: 34, height: 34, borderRadius: 10, background: `${selectedFeature.color}18`, border: `1px solid ${selectedFeature.color}2E`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                      <Ic size={16} color={selectedFeature.color} strokeWidth={2} />
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <p style={{ margin: 0, fontSize: 14, color: "#FFFFFF", fontWeight: 700, fontFamily: fontDisp, letterSpacing: "-0.01em" }}>{selectedFeature.label}</p>
+                      <p style={{ margin: 0, fontSize: 10, color: isAgent ? "#6EE7C2" : "rgba(255,255,255,0.40)", fontFamily: font, marginTop: 2, fontWeight: 600 }}>{isAgent ? "El sistema lo hace solo" : "Se lo pedís al asistente"}</p>
+                    </div>
+                    <button onClick={closeAll} style={{ background: "rgba(255,255,255,0.06)", border: "none", color: "rgba(255,255,255,0.55)", borderRadius: 8, width: 28, height: 28, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", flexShrink: 0 }}
+                    ><X size={13} /></button>
+                  </div>
+
+                  <p style={{ fontSize: 12.5, color: "rgba(255,255,255,0.66)", lineHeight: 1.6, fontFamily: font, margin: "0 0 16px" }}>{selectedFeature.tagline}</p>
+
+                  <p style={{ margin: "0 0 9px", fontSize: 9.5, color: "rgba(255,255,255,0.42)", fontWeight: 700, fontFamily: fontDisp, letterSpacing: "0.08em", textTransform: "uppercase" }}>Cómo se usa</p>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                    {selectedFeature.how.map((step, i) => (
+                      <div key={i} style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
+                        <div style={{ width: 18, height: 18, borderRadius: 6, background: `${selectedFeature.color}1A`, border: `1px solid ${selectedFeature.color}30`, color: selectedFeature.color, fontSize: 9.5, fontWeight: 700, fontFamily: fontDisp, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 1 }}>{i + 1}</div>
+                        <p style={{ margin: 0, fontSize: 12, color: "rgba(255,255,255,0.74)", fontFamily: font, lineHeight: 1.5 }}>{step}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })()}
           </div>
         </>,
         document.body
