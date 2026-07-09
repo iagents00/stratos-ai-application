@@ -59,7 +59,7 @@ export default function Profile({ theme = "dark", T: Tprop }) {
   const manualPairing = !!clientConfig?.tenant?.telegramManualPairing;
 
   return (
-    <div style={{ padding: "32px 28px 80px", maxWidth: 760, margin: "0 auto", fontFamily: font }}>
+    <div style={{ padding: "clamp(18px, 4vw, 32px) clamp(12px, 4vw, 28px) 90px", maxWidth: 760, width: "100%", minWidth: 0, margin: "0 auto", fontFamily: font, boxSizing: "border-box" }}>
       <div style={{ marginBottom: 28 }}>
         <p style={{
           margin: "0 0 8px",
@@ -77,8 +77,8 @@ export default function Profile({ theme = "dark", T: Tprop }) {
         }}>
           {user?.name || "Sin nombre"}
         </h1>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <span style={{ fontSize: 13, color: T.txt2 }}>{user?.email}</span>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+          <span style={{ fontSize: 13, color: T.txt2, minWidth: 0, overflowWrap: "anywhere" }}>{user?.email}</span>
           <span style={{ color: T.txt3 }}>·</span>
           <Pill color={T.violet} isLight={isLight}>{ROLE_LABEL[user?.role] || user?.role}</Pill>
         </div>
@@ -703,7 +703,7 @@ function ManualCodeView({ code, T = P, isLight = false, botUsername = "" }) {
         padding: "20px 22px",
         background: `${T.accent}0A`, border: `1px solid ${T.accent}2E`,
         borderRadius: 14,
-        fontSize: 36, fontWeight: 300, letterSpacing: "0.10em",
+        fontSize: "clamp(24px, 8vw, 36px)", fontWeight: 300, letterSpacing: "0.10em",
         fontFamily: fontDisp, color: T.txt,
         fontVariantNumeric: "tabular-nums",
         textAlign: "center",

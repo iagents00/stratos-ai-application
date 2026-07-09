@@ -533,7 +533,7 @@ function ZoomModal({ T, isLight, accent, editing, form, setField, formErr, busy,
           <button onClick={onCancel} style={iconBtn(T, isLight)}><X size={16} /></button>
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(230px, 100%), 1fr))", gap: 12 }}>
           <Field T={T} label="Cliente *" full>
             <input value={form.cliente} onChange={(e) => setField("cliente", e.target.value)} placeholder="Nombre del cliente" style={{ ...inputStyle(T, isLight), width: "100%" }} autoFocus />
           </Field>

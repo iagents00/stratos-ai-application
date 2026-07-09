@@ -45,7 +45,7 @@ import MetaPanel,
 const AdminPanel = lazy(() => import("./features/Admin/AdminPanel"));
 
 /* ── Navigation & roles ── */
-import { nav, MODULE_ROLES, canAccessModule } from "./constants/navigation";
+import { nav, MODULE_ROLES, MOBILE_PRIMARY_NAV, canAccessModule } from "./constants/navigation";
 
 // Vistas que NO se persisten entre F5: son flujos efímeros (entrar a Planes
 // desde una promo, abrir admin desde un settings click). El F5 te regresa
@@ -237,6 +237,21 @@ export default function App() {
   const [co, setCo]      = useState(false);
   const [autoOpenPriority1, setAutoOpenPriority1] = useState(0);
   const [sidebarMore, setSidebarMore] = useState(false);
+  // Bottom-nav móvil: 4 slots primarios + "Más". Los primarios salen de
+  // MOBILE_PRIMARY_NAV, pero si a este usuario le faltan (p.ej. WhatsApp está
+  // gateado, o el asesor no ve Comando/ERP) se RELLENAN con los siguientes
+  // módulos accesibles — así la barra nunca queda con 1-2 botones sueltos.
+  const accessibleBarNav = nav.filter(n => !n.more && canAccessModule(n.id, user, clientConfig));
+  const mobilePrimaryBar = [
+    ...accessibleBarNav.filter(n => MOBILE_PRIMARY_NAV.includes(n.id)),
+    ...accessibleBarNav.filter(n => !MOBILE_PRIMARY_NAV.includes(n.id)),
+  ].slice(0, 4);
+  // Sheet "Más": los módulos `more` de siempre + los no-more que no entraron a la barra.
+  const mobileMoreNav = nav.filter(n =>
+    (n.more || !mobilePrimaryBar.some(p => p.id === n.id)) &&
+    (!n.adminOnly || ["super_admin", "admin"].includes(user?.role)) &&
+    canAccessModule(n.id, user, clientConfig)
+  );
   const [msgs, setMsgs]  = useState([]);
   const [inp, setInp]    = useState("");
   const [notifs, setNotifs] = useState([]);
@@ -1183,22 +1198,50 @@ export default function App() {
            esta regla y sigue con el 100vh inline de siempre. */
         @supports (height: 100dvh){ .stratos-app{ height:100dvh!important } }
         .stratos-bottomnav{display:none}
+        /* Safe areas (notch iPhone / status bar edge-to-edge): env() = 0 en
+           navegadores normales, así que estas reglas solo actúan donde hace falta. */
+        .stratos-header{height:calc(52px + env(safe-area-inset-top, 0px))!important;padding-top:env(safe-area-inset-top, 0px)!important}
+        /* El DynIsland centrado es position:absolute (no reserva espacio): entre
+           769-900px colisiona con la fila derecha → se oculta también ahí. */
+        @media(max-width:900px){
+          .stratos-header-center{display:none!important}
+        }
         @media(max-width:768px){
           .stratos-sidebar{display:none!important}
-          .stratos-content-area{padding:14px 14px 72px 14px!important}
+          /* padding inferior = holgura sobre el nav (58px) + safe area (home
+             indicator iPhone / gestos Android). overflow-x:hidden = clamp
+             defensivo global: ninguna vista puede panear la página horizontal. */
+          .stratos-content-area{padding:14px 14px calc(72px + env(safe-area-inset-bottom, 0px)) 14px!important;overflow-x:hidden!important}
           .stratos-bottomnav{
             display:flex!important;position:fixed;bottom:0;left:0;right:0;
-            height:58px;z-index:200;align-items:center;justify-content:space-around;
+            height:calc(58px + env(safe-area-inset-bottom, 0px));
+            padding-bottom:env(safe-area-inset-bottom, 0px);
+            z-index:200;align-items:center;justify-content:space-around;
             border-top:1px solid rgba(255,255,255,0.07);
           }
-          .stratos-header{padding:0 10px!important;gap:6px!important}
-          .stratos-header-left{gap:6px!important;min-width:0!important;flex:0 1 auto!important}
-          .stratos-header-right{gap:2px!important}
+          .stratos-header{padding-left:10px!important;padding-right:10px!important;gap:6px!important}
+          .stratos-header-left{gap:6px!important;min-width:0!important;flex:1 1 auto!important;overflow:hidden!important}
+          .stratos-header-right{gap:2px!important;flex-shrink:0!important}
           .stratos-header-center{display:none!important}
           .stratos-header-search{display:none!important}
           .stratos-header-divider{display:none!important}
+          .stratos-header-phone{display:none!important}
           .stratos-userpill{padding:0!important;gap:0!important}
           .stratos-userpill-text{display:none!important}
+          /* Wordmark truncable (tenants con nombre largo no rompen el header) */
+          .stratos-wordmark{max-width:110px!important;overflow:hidden!important;text-overflow:ellipsis!important}
+          /* Pill IAOS compresible: el ticker cede ancho con ellipsis en vez de
+             desbordar bajo los íconos de la derecha. */
+          .stratos-iaos-pill{flex-shrink:1!important;min-width:0!important;overflow:hidden!important}
+          .stratos-iaos-ticker{width:auto!important;max-width:112px!important;min-width:0!important}
+          /* Dropdown de la campanita: a lo ancho de la pantalla (antes width
+             fija 300px anclada a la campana → se salía por la izquierda). */
+          .stratos-bell-dropdown{position:fixed!important;top:calc(60px + env(safe-area-inset-top, 0px))!important;left:10px!important;right:10px!important;width:auto!important;max-height:calc(100dvh - 150px)!important;overflow-y:auto!important}
+        }
+        /* En pantallas MUY angostas el toggle de tema se va (se cambia desde
+           Perfil); la campana/avatar/salir siempre quedan. */
+        @media(max-width:430px){
+          .stratos-theme-toggle{display:none!important}
         }
       `}</style>
       <style>{dynamicStyles}</style>
@@ -1352,7 +1395,7 @@ export default function App() {
             <div className="stratos-header" style={{ position:"relative", flexShrink:0, padding:"0 20px", height:52, borderBottom:`1px solid ${hBorder}`, display:"flex", justifyContent:"space-between", alignItems:"center", background:hBg, backdropFilter: isLight ? "blur(24px) saturate(180%)" : "none", WebkitBackdropFilter: isLight ? "blur(24px) saturate(180%)" : "none", boxShadow: isLight ? "inset 0 -1px 0 rgba(13,154,118,0.08), 0 2px 16px rgba(15,23,42,0.04)" : "none", transition:"background 0.3s ease" }}>
               {/* LEFT */}
               <div className="stratos-header-left" style={{ display:"flex", alignItems:"center", gap:10 }}>
-                <p style={{ margin:0, fontSize:14, fontFamily:fontDisp, letterSpacing:"-0.030em", fontWeight:600, color: isLight ? T.txt : "#FFFFFF", lineHeight:1, whiteSpace:"nowrap" }}>
+                <p className="stratos-wordmark" style={{ margin:0, fontSize:14, fontFamily:fontDisp, letterSpacing:"-0.030em", fontWeight:600, color: isLight ? T.txt : "#FFFFFF", lineHeight:1, whiteSpace:"nowrap" }}>
                   {clientConfig?.brand?.appWordmark
                     ? clientConfig.brand.appWordmark
                     : <>Stratos<span style={{ marginLeft:3, fontWeight:600, color: isLight ? "rgba(15,23,42,0.38)" : "rgba(255,255,255,0.30)", letterSpacing:"0.01em" }}>AI</span></>}
@@ -1420,7 +1463,10 @@ export default function App() {
                     <>
                       {/* Overlay para cerrar el dropdown clickeando fuera */}
                       <div onClick={() => setBellOpen(false)} style={{ position:"fixed", inset:0, zIndex:998 }} />
-                      <div style={{
+                      {/* className: en móvil el CSS global lo vuelve position:fixed
+                          a lo ancho de la pantalla (300px anclado a la campana se
+                          salía por la izquierda en 360px). */}
+                      <div className="stratos-bell-dropdown" style={{
                         position:"absolute", top:38, right:0, zIndex:999,
                         width:300, padding:14, borderRadius:12,
                         background: isLight ? "#FFFFFF" : "rgba(10,15,28,0.98)",
@@ -1572,6 +1618,7 @@ export default function App() {
                 {supportPhoneHref && (
                   <>
                     <a href={supportPhoneHref}
+                      className="stratos-header-phone"
                       title={`Soporte ${supportPhoneLabel}`}
                       aria-label={`Llamar soporte ${supportPhoneLabel}`}
                       style={{ ...iBtnBase, textDecoration:"none" }}
@@ -1586,6 +1633,7 @@ export default function App() {
                   </>
                 )}
                 <button onClick={() => setTheme(isLight ? "dark" : "light")} title={isLight ? "Modo oscuro" : "Modo claro"}
+                  className="stratos-theme-toggle"
                   style={{ width:42, height:24, borderRadius:12, border:"none", padding:0, flexShrink:0, background: isLight ? `linear-gradient(135deg, ${T.accent} 0%, #12B48A 100%)` : "rgba(255,255,255,0.09)", cursor:"pointer", position:"relative", transition:"background 0.28s ease", boxShadow: isLight ? `0 2px 8px ${T.accent}40, inset 0 1px 0 rgba(255,255,255,0.28)` : "inset 0 1px 3px rgba(0,0,0,0.35), 0 0 0 1px rgba(255,255,255,0.08)" }}>
                   <div style={{ position:"absolute", top:3, left: isLight ? 21 : 3, width:18, height:18, borderRadius:"50%", background:"#FFFFFF", boxShadow:"0 1px 4px rgba(0,0,0,0.22), 0 2px 6px rgba(0,0,0,0.12)", transition:"left 0.28s cubic-bezier(0.34,1.56,0.64,1)", display:"flex", alignItems:"center", justifyContent:"center" }}>
                     {isLight ? <Sun size={9} color={T.accent} strokeWidth={2.4} /> : <Moon size={8} color="#64748B" strokeWidth={2} fill="#64748B" />}
@@ -1682,23 +1730,27 @@ export default function App() {
 
       {/* ══ MOBILE BOTTOM NAV ══ */}
       <div className="stratos-bottomnav" style={{ backdropFilter:"blur(24px)", WebkitBackdropFilter:"blur(24px)", background: isLight ? "rgba(246,248,247,0.97)" : "rgba(2,4,11,0.97)" }}>
-        {nav.filter(n => !n.more && canAccessModule(n.id, user, clientConfig)).map(n => {
+        {/* Máximo 4 módulos primarios + "Más": con los 8 de antes cada botón
+            quedaba en ~45px a 360px (labels apretados, targets al límite).
+            5 slots = ~72px por botón, íconos grandes y cómodos (dirección
+            Apple-Music que pidió Iván). El resto vive en el sheet "Más". */}
+        {mobilePrimaryBar.map(n => {
           const a = v === n.id;
           const activeColor = isLight ? T.accent : "#6EE7C2";
           return (
-            <button key={n.id} onClick={() => setV(n.id)} style={{ flex:1, height:"100%", border:"none", background:"transparent", cursor:"pointer", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:3, outline:"none" }}>
+            <button key={n.id} onClick={() => setV(n.id)} style={{ flex:1, height:"100%", minWidth:0, border:"none", background:"transparent", cursor:"pointer", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:3, outline:"none" }}>
               <n.i size={22} color={a ? activeColor : (isLight ? "rgba(15,23,42,0.38)" : "rgba(255,255,255,0.30)")} strokeWidth={a ? 1.9 : 1.5} />
-              <span style={{ fontSize:9, fontFamily:fontDisp, fontWeight: a ? 700 : 400, color: a ? activeColor : (isLight ? "rgba(15,23,42,0.38)" : "rgba(255,255,255,0.28)"), lineHeight:1 }}>{clientConfig?.navLabels?.[n.id] ?? n.l}</span>
+              <span style={{ fontSize:9, fontFamily:fontDisp, fontWeight: a ? 700 : 400, color: a ? activeColor : (isLight ? "rgba(15,23,42,0.38)" : "rgba(255,255,255,0.28)"), lineHeight:1, whiteSpace:"nowrap", overflow:"hidden", maxWidth:"100%" }}>{clientConfig?.navLabels?.[n.id] ?? n.l}</span>
             </button>
           );
         })}
-        <button onClick={() => setSidebarMore(p => !p)} style={{ flex:1, height:"100%", border:"none", background:"transparent", cursor:"pointer", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:3, outline:"none" }}>
-          <ChevronsDown size={22} color={nav.filter(n=>n.more).some(n=>n.id===v) ? (isLight ? T.accent : "#6EE7C2") : (isLight ? "rgba(15,23,42,0.38)" : "rgba(255,255,255,0.30)")} strokeWidth={1.5} style={{ transform: sidebarMore ? "rotate(180deg)" : "none", transition:"transform 0.22s" }} />
-          <span style={{ fontSize:9, fontFamily:fontDisp, fontWeight:400, color: nav.filter(n=>n.more).some(n=>n.id===v) ? (isLight ? T.accent : "#6EE7C2") : (isLight ? "rgba(15,23,42,0.38)" : "rgba(255,255,255,0.28)"), lineHeight:1 }}>Más</span>
+        <button onClick={() => setSidebarMore(p => !p)} style={{ flex:1, height:"100%", minWidth:0, border:"none", background:"transparent", cursor:"pointer", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:3, outline:"none" }}>
+          <ChevronsDown size={22} color={mobileMoreNav.some(n=>n.id===v) ? (isLight ? T.accent : "#6EE7C2") : (isLight ? "rgba(15,23,42,0.38)" : "rgba(255,255,255,0.30)")} strokeWidth={1.5} style={{ transform: sidebarMore ? "rotate(180deg)" : "none", transition:"transform 0.22s" }} />
+          <span style={{ fontSize:9, fontFamily:fontDisp, fontWeight:400, color: mobileMoreNav.some(n=>n.id===v) ? (isLight ? T.accent : "#6EE7C2") : (isLight ? "rgba(15,23,42,0.38)" : "rgba(255,255,255,0.28)"), lineHeight:1 }}>Más</span>
         </button>
         {sidebarMore && (
-          <div style={{ position:"fixed", bottom:58, left:0, right:0, zIndex:199, display:"flex", flexWrap:"wrap", justifyContent:"center", gap:8, padding:"14px 16px", background: isLight ? "rgba(246,248,247,0.97)" : "rgba(4,8,18,0.97)", backdropFilter:"blur(24px)", WebkitBackdropFilter:"blur(24px)", borderTop:`1px solid ${isLight ? "rgba(0,0,0,0.07)" : "rgba(255,255,255,0.07)"}` }}>
-            {nav.filter(n => n.more && (!n.adminOnly || ["super_admin","admin"].includes(user?.role)) && canAccessModule(n.id, user, clientConfig)).map(n => {
+          <div style={{ position:"fixed", bottom:"calc(58px + env(safe-area-inset-bottom, 0px))", left:0, right:0, zIndex:199, display:"flex", flexWrap:"wrap", justifyContent:"center", gap:8, padding:"14px 16px", background: isLight ? "rgba(246,248,247,0.97)" : "rgba(4,8,18,0.97)", backdropFilter:"blur(24px)", WebkitBackdropFilter:"blur(24px)", borderTop:`1px solid ${isLight ? "rgba(0,0,0,0.07)" : "rgba(255,255,255,0.07)"}` }}>
+            {mobileMoreNav.map(n => {
               const a = v === n.id;
               const activeColor = n.adminOnly ? "#A78BFA" : (isLight ? T.accent : "#6EE7C2");
               return (

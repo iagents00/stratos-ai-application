@@ -870,8 +870,9 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
       {showZoomTab && (
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
         <div style={{
-          display: "inline-flex", gap: 4, padding: 4, borderRadius: 14,
+          display: "flex", gap: 4, padding: 4, borderRadius: 14,
           background: headerBg, border: `1px solid ${rowBorder}`,
+          maxWidth: "100%", overflowX: "auto", WebkitOverflowScrolling: "touch",
         }}>
           {[
             { id: "indicadores", label: "Indicadores · Leads" },
@@ -882,6 +883,7 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
             return (
               <button key={t.id} onClick={() => setTab(t.id)} style={{
                 padding: "8px 16px", borderRadius: 10, border: "none", cursor: "pointer",
+                whiteSpace: "nowrap", flexShrink: 0,
                 fontSize: 13, fontWeight: active ? 700 : 600, fontFamily: fontDisp,
                 background: active ? (isLight ? T.accent : `${T.accent}22`) : "transparent",
                 color: active ? (isLight ? "#FFFFFF" : T.accent) : T.txt2,
@@ -977,14 +979,14 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
             const prev = i > 0 ? funnel.stages[i - 1].value : null;
             const conv = prev ? Math.round((s.value / prev) * 100) : null;
             return (
-              <div key={s.label} style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              <div key={s.label} style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
                 <div style={{ width: 150, flexShrink: 0, display: "flex", alignItems: "center", gap: 8 }}>
                   <span style={{ display: "inline-flex", padding: 6, borderRadius: 8, background: `${s.color}1A`, flexShrink: 0 }}>
                     <Icon size={14} color={s.color} strokeWidth={2.2} />
                   </span>
                   <span style={{ fontSize: 12, fontWeight: 600, color: T.txt2, fontFamily: font, lineHeight: 1.2 }}>{s.label}</span>
                 </div>
-                <div style={{ flex: 1, minWidth: 0, display: "flex", alignItems: "center", gap: 10 }}>
+                <div style={{ flex: 1, minWidth: 220, display: "flex", alignItems: "center", gap: 10 }}>
                   <div style={{ flex: 1, minWidth: 0, height: 34, borderRadius: 8, background: isLight ? "rgba(15,23,42,0.04)" : "rgba(255,255,255,0.04)", overflow: "hidden" }}>
                     <div style={{
                       width: `${widthPct}%`, height: "100%", borderRadius: 8,

@@ -92,7 +92,7 @@ const ERP = ({ oc, T: _T }) => {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
       {/* KPIs */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 14 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(150px, 100%), 1fr))", gap: 14 }}>
         <KPI label="Desarrollos" value={kpis.total} sub="Catálogo total" icon={Building2} color={T.blue} T={T} />
         <KPI label="Con carpeta Drive" value={kpis.conDrive} sub="Material listo" icon={HardDrive} color={T.emerald} T={T} />
         <KPI label="Ubicaciones" value={kpis.ubic} sub="Zonas cubiertas" icon={MapPin} color={T.amber} T={T} />
@@ -222,7 +222,7 @@ const ERP = ({ oc, T: _T }) => {
           ) : (
             <>
               {view === "cards" ? (
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(288px, 1fr))", gap: 12 }}>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(min(288px, 100%), 1fr))", gap: 12 }}>
                 {shown.map((it, idx) => {
                   const c = ticketColor(it.ticket, T);
                   return (
@@ -238,7 +238,7 @@ const ERP = ({ oc, T: _T }) => {
                       }}
                     >
                       {/* Title row */}
-                      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8 }}>
+                      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8, flexWrap: "wrap" }}>
                         <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: T.txt, fontFamily: fontDisp, letterSpacing: "-0.02em", lineHeight: 1.25 }}>{it.desarrollo}</p>
                         {it.ticket && <Pill color={c} s isLight={isLight}>{it.ticket}</Pill>}
                       </div>
