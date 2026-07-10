@@ -14,7 +14,7 @@
  */
 import { useMemo, useState, useCallback } from "react";
 import {
-  Video, Plus, RefreshCw, Search, X, Pencil, Trash2,
+  Video, Plus, RefreshCw, Search, X, Pencil, Trash2, Flame,
   CalendarDays, CheckCircle2, UserCheck, Clock3, AlertTriangle,
 } from "lucide-react";
 import { P, LP, font, fontDisp } from "../../../design-system/tokens";
@@ -25,41 +25,8 @@ import {
   ESTATUS_ASISTIO, ESTATUS_NO_SHOW, ESTATUS_ACTIVOS,
   estatusColor, suggestPresentador, suggestApoyo,
 } from "./constants";
-
-// ── Helpers de fecha (comparación lexicográfica sobre YYYY-MM-DD = cronológica,
-//    evita líos de zona horaria) ───────────────────────────────────────────────
-const pad = (n) => String(n).padStart(2, "0");
-const ymd = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
-function todayStr() { return ymd(new Date()); }
-function addDays(base, n) {
-  const d = new Date(base);
-  d.setDate(d.getDate() + n);
-  return d;
-}
-function weekRange() {
-  const now = new Date();
-  const dow = now.getDay();             // 0=Dom … 6=Sáb
-  const back = (dow + 6) % 7;           // días desde el lunes
-  const monday = addDays(now, -back);
-  return { start: ymd(monday), end: ymd(addDays(monday, 6)) };
-}
-function next7Range() {
-  const now = new Date();
-  return { start: ymd(now), end: ymd(addDays(now, 6)) };
-}
-function inRange(dateStr, start, end) {
-  return !!dateStr && dateStr >= start && dateStr <= end;
-}
-// "2026-06-03" → "mié 3 jun"
-const DOW = ["dom", "lun", "mar", "mié", "jue", "vie", "sáb"];
-const MON = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
-function prettyDate(s) {
-  if (!s) return "—";
-  const [y, m, d] = s.split("-").map(Number);
-  if (!y || !m || !d) return s;
-  const dt = new Date(y, m - 1, d);
-  return `${DOW[dt.getDay()]} ${d} ${MON[m - 1]}`;
-}
+import ResumenZooms from "./Resumen";
+import { todayStr, weekRange, next7Range, inRange, prettyDate } from "./dates";
 
 const RANGES = [
   { id: "hoy",   label: "Hoy" },
@@ -73,10 +40,11 @@ const ZoomControl = ({ theme = "dark" }) => {
   const T = isLight ? LP : P;
   const accent = T.accent;
 
-  const { rows, loading, error, refetch, createRow, updateRow, removeRow } = useZoomAgendados();
+  const { rows, loading, error, hasExtCols, refetch, createRow, updateRow, removeRow } = useZoomAgendados();
 
   const [range, setRange] = useState("prox7");
   const [statusFilter, setStatusFilter] = useState("Todos");
+  const [hotOnly, setHotOnly] = useState(false);
   const [q, setQ] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -112,29 +80,6 @@ const ZoomControl = ({ theme = "dark" }) => {
     return { hoy, semana, prox7, porConfirmar, vencidos, asistio, noShow, tasa };
   }, [rows, today]);
 
-  // ── Productividad por Liner / Presentador ────────────────────────────────
-  const productividad = useMemo(() => {
-    const byLiner = new Map();
-    const byPres = new Map();
-    const bump = (map, key, asistio) => {
-      if (!key) return;
-      const cur = map.get(key) || { total: 0, asistio: 0 };
-      cur.total++;
-      if (asistio) cur.asistio++;
-      map.set(key, cur);
-    };
-    for (const r of rows) {
-      const a = r.estatus === ESTATUS_ASISTIO;
-      bump(byLiner, r.liner, a);
-      bump(byPres, r.presentador_principal, a);
-    }
-    const toSorted = (map) =>
-      [...map.entries()]
-        .map(([name, v]) => ({ name, ...v }))
-        .sort((x, y) => y.total - x.total);
-    return { liners: toSorted(byLiner), presentadores: toSorted(byPres) };
-  }, [rows]);
-
   // ── Lista filtrada + ordenada ────────────────────────────────────────────
   const filtered = useMemo(() => {
     const wk = weekRange();
@@ -147,9 +92,11 @@ const ZoomControl = ({ theme = "dark" }) => {
       if (range === "prox7" && !inRange(r.fecha_zoom, n7.start, n7.end)) return false;
       // estatus
       if (statusFilter !== "Todos" && r.estatus !== statusFilter) return false;
+      // calentitos (señal de cierre detectada en el Zoom)
+      if (hotOnly && !r.calentito) return false;
       // texto
       if (needle) {
-        const hay = [r.cliente, r.proyecto, r.liner, r.presentador_principal, r.presentador_apoyo, r.comentarios]
+        const hay = [r.cliente, r.proyecto, r.liner, r.presentador_principal, r.presentador_apoyo, r.comentarios, r.discovery]
           .filter(Boolean).join(" ").toLowerCase();
         if (!hay.includes(needle)) return false;
       }
@@ -163,7 +110,7 @@ const ZoomControl = ({ theme = "dark" }) => {
       return (a.hora || "").localeCompare(b.hora || "");
     });
     return list;
-  }, [rows, range, statusFilter, q, today]);
+  }, [rows, range, statusFilter, hotOnly, q, today]);
 
   // ── Form helpers ─────────────────────────────────────────────────────────
   const openCreate = useCallback(() => {
@@ -172,6 +119,7 @@ const ZoomControl = ({ theme = "dark" }) => {
       fecha_agendado: today, fecha_zoom: "", hora: "",
       liner: "", presentador_principal: "", presentador_apoyo: "",
       cliente: "", proyecto: "", estatus: ESTATUS_DEFAULT, comentarios: "",
+      discovery: "", calentito: false,
     });
     setFormErr("");
     setModalOpen(true);
@@ -190,6 +138,8 @@ const ZoomControl = ({ theme = "dark" }) => {
       proyecto: row.proyecto || "",
       estatus: row.estatus || ESTATUS_DEFAULT,
       comentarios: row.comentarios || "",
+      discovery: row.discovery || "",
+      calentito: !!row.calentito,
     });
     setFormErr("");
     setModalOpen(true);
@@ -229,6 +179,14 @@ const ZoomControl = ({ theme = "dark" }) => {
     if (estatus === row.estatus) return;
     setBusy(true);
     await updateRow(row.id, { estatus });
+    setBusy(false);
+  };
+
+  // Marca/desmarca "calentito" directo desde la tabla — señal de cierre
+  // detectada en el Zoom (carta oferta / identificación / cuentas de apartado).
+  const onToggleHot = async (row) => {
+    setBusy(true);
+    await updateRow(row.id, { calentito: !row.calentito });
     setBusy(false);
   };
 
@@ -320,7 +278,7 @@ const ZoomControl = ({ theme = "dark" }) => {
         </G>
       )}
 
-      {/* ── KPIs ───────────────────────────────────────────────────────────── */}
+      {/* ── KPIs operativos ────────────────────────────────────────────────── */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 12 }}>
         <KPI T={T} label="Zooms hoy"        value={kpis.hoy}    icon={CalendarDays} color={accent}     sub="agendados para hoy" />
         <KPI T={T} label="Esta semana"      value={kpis.semana} icon={Video}        color={T.blue}     sub="lunes a domingo" />
@@ -328,11 +286,8 @@ const ZoomControl = ({ theme = "dark" }) => {
         <KPI T={T} label="Tasa de asistencia" value={kpis.tasa == null ? "—" : `${kpis.tasa}%`} icon={UserCheck} color="#10B981" sub={`${kpis.asistio} asistió · ${kpis.noShow} no show`} />
       </div>
 
-      {/* ── Productividad por Liner / Presentador ──────────────────────────── */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 12 }}>
-        <ProdPanel T={T} isLight={isLight} title="Productividad por Liner" subtitle="Quién agenda más Zooms" rows={productividad.liners} accent={accent} />
-        <ProdPanel T={T} isLight={isLight} title="Productividad por Presentador" subtitle="Quién corre más Zooms" rows={productividad.presentadores} accent={T.blue} />
-      </div>
+      {/* ── Resumen automático (réplica del sheet del director comercial) ──── */}
+      <ResumenZooms rows={rows} T={T} isLight={isLight} />
 
       {/* ── Toolbar de filtros ─────────────────────────────────────────────── */}
       <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
@@ -361,6 +316,25 @@ const ZoomControl = ({ theme = "dark" }) => {
           {ESTATUS.map((s) => <option key={s} value={s}>{s}</option>)}
         </select>
 
+        {/* Calentitos — señal de cierre detectada en el Zoom */}
+        {hasExtCols && (
+          <button
+            onClick={() => setHotOnly(h => !h)}
+            title="Solo clientes calentitos (señal de cierre detectada en el Zoom)"
+            style={{
+              display: "inline-flex", alignItems: "center", gap: 6,
+              padding: "8px 13px", borderRadius: 10, cursor: "pointer",
+              fontSize: 12, fontWeight: hotOnly ? 700 : 600, fontFamily: fontDisp,
+              background: hotOnly ? "rgba(234,88,12,0.16)" : subtleBg,
+              color: hotOnly ? "#EA580C" : T.txt2,
+              border: `1px solid ${hotOnly ? "rgba(234,88,12,0.45)" : cardBorder}`,
+            }}
+          >
+            <Flame size={13} strokeWidth={2.4} color={hotOnly ? "#EA580C" : T.txt3} />
+            Calentitos
+          </button>
+        )}
+
         {/* Búsqueda */}
         <div style={{ position: "relative", flex: "1 1 220px", minWidth: 180 }}>
           <Search size={14} color={T.txt3} style={{ position: "absolute", left: 11, top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }} />
@@ -383,36 +357,55 @@ const ZoomControl = ({ theme = "dark" }) => {
           <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 860 }}>
             <thead>
               <tr style={{ background: isLight ? "rgba(15,23,42,0.035)" : "rgba(255,255,255,0.035)" }}>
-                {["Fecha del Zoom", "Cliente", "Proyecto", "Liner", "Presentador", "Estatus", ""].map((h, i) => (
-                  <th key={i} style={thStyle(T, i === 0 ? "left" : i >= 5 ? "center" : "left")}>{h}</th>
+                {["Fecha del Zoom", "Cliente", "Proyecto", ...(hasExtCols ? ["Disc."] : []), "Liner", "Presentador", "Estatus", ""].map((h, i) => (
+                  <th key={i} style={thStyle(T, i === 0 ? "left" : h === "Disc." || h === "Estatus" || h === "" ? "center" : "left")}>{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {loading && (
-                <tr><td colSpan={7} style={{ ...tdStyle(T, "center"), padding: "32px", color: T.txt3 }}>Cargando Zooms…</td></tr>
+                <tr><td colSpan={hasExtCols ? 8 : 7} style={{ ...tdStyle(T, "center"), padding: "32px", color: T.txt3 }}>Cargando Zooms…</td></tr>
               )}
               {!loading && filtered.length === 0 && (
-                <tr><td colSpan={7} style={{ ...tdStyle(T, "center"), padding: "36px 20px", color: T.txt3 }}>
+                <tr><td colSpan={hasExtCols ? 8 : 7} style={{ ...tdStyle(T, "center"), padding: "36px 20px", color: T.txt3 }}>
                   {rows.length === 0
                     ? "Aún no hay Zooms registrados. Crea el primero con “Nuevo Zoom”."
                     : "Ningún Zoom coincide con este filtro."}
                 </td></tr>
               )}
-              {!loading && filtered.map((r) => (
+              {!loading && filtered.map((r) => {
+                // Calentito = fila teñida (como el rojo del sheet del director).
+                const hotBg = r.calentito ? "rgba(234,88,12,0.07)" : "transparent";
+                return (
                 <tr
                   key={r.id}
                   onClick={() => openEdit(r)}
-                  style={{ borderTop: `1px solid ${rowBorder}`, cursor: "pointer", transition: "background 0.15s" }}
+                  style={{ borderTop: `1px solid ${rowBorder}`, cursor: "pointer", transition: "background 0.15s", background: hotBg }}
                   onMouseEnter={(e) => { e.currentTarget.style.background = isLight ? "rgba(15,23,42,0.025)" : "rgba(255,255,255,0.02)"; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = hotBg; }}
                 >
                   <td style={tdStyle(T, "left")}>
                     <div style={{ fontWeight: 600, color: T.txt }}>{prettyDate(r.fecha_zoom)}</div>
                     <div style={{ fontSize: 11, color: T.txt3 }}>{r.hora || "sin hora"}</div>
                   </td>
-                  <td style={{ ...tdStyle(T, "left"), fontWeight: 600, color: T.txt }}>{r.cliente || "—"}</td>
+                  <td style={{ ...tdStyle(T, "left"), fontWeight: 600, color: T.txt }}>
+                    <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
+                      {r.calentito && <Flame size={13} color="#EA580C" strokeWidth={2.6} title="Calentito — señal de cierre en el Zoom" />}
+                      {r.cliente || "—"}
+                    </span>
+                  </td>
                   <td style={tdStyle(T, "left")}>{r.proyecto || "—"}</td>
+                  {hasExtCols && (
+                    <td style={{ ...tdStyle(T, "center") }} title={r.discovery || "Sin discovery registrado"}>
+                      <span style={{
+                        display: "inline-block", padding: "2px 9px", borderRadius: 99,
+                        fontSize: 10.5, fontWeight: 700, fontFamily: fontDisp,
+                        color: r.discovery ? "#10B981" : T.txt3,
+                        background: r.discovery ? "rgba(16,185,129,0.12)" : (isLight ? "rgba(15,23,42,0.05)" : "rgba(255,255,255,0.05)"),
+                        border: `1px solid ${r.discovery ? "rgba(16,185,129,0.30)" : "transparent"}`,
+                      }}>{r.discovery ? "Sí" : "No"}</span>
+                    </td>
+                  )}
                   <td style={tdStyle(T, "left")}>{r.liner || "—"}</td>
                   <td style={tdStyle(T, "left")}>
                     <div>{r.presentador_principal || "—"}</div>
@@ -422,6 +415,21 @@ const ZoomControl = ({ theme = "dark" }) => {
                     <StatusSelect T={T} isLight={isLight} value={r.estatus} onChange={(s) => onInlineStatus(r, s)} />
                   </td>
                   <td style={{ ...tdStyle(T, "center"), padding: "8px 10px", whiteSpace: "nowrap" }} onClick={(e) => e.stopPropagation()}>
+                    {hasExtCols && (
+                      <button
+                        onClick={() => onToggleHot(r)}
+                        title={r.calentito ? "Quitar marca de calentito" : "Marcar calentito (señal de cierre en el Zoom)"}
+                        style={{
+                          ...iconBtn(T, isLight),
+                          color: r.calentito ? "#EA580C" : T.txt3,
+                          background: r.calentito ? "rgba(234,88,12,0.14)" : iconBtn(T, isLight).background,
+                          border: `1px solid ${r.calentito ? "rgba(234,88,12,0.40)" : (isLight ? "rgba(15,23,42,0.08)" : "rgba(255,255,255,0.07)")}`,
+                          marginRight: 4,
+                        }}
+                      >
+                        <Flame size={14} strokeWidth={2.4} />
+                      </button>
+                    )}
                     <button onClick={() => openEdit(r)} title="Editar" style={iconBtn(T, isLight)}>
                       <Pencil size={14} />
                     </button>
@@ -430,7 +438,8 @@ const ZoomControl = ({ theme = "dark" }) => {
                     </button>
                   </td>
                 </tr>
-              ))}
+                );
+              })}
             </tbody>
           </table>
         </div>
@@ -441,45 +450,13 @@ const ZoomControl = ({ theme = "dark" }) => {
         <ZoomModal
           T={T} isLight={isLight} accent={accent}
           editing={!!editingId} form={form} setField={setField}
-          formErr={formErr} busy={busy}
+          formErr={formErr} busy={busy} hasExtCols={hasExtCols}
           onCancel={closeModal} onSave={save}
         />
       )}
     </div>
   );
 };
-
-// ── Sub-componente: panel de productividad ───────────────────────────────────
-function ProdPanel({ T, isLight, title, subtitle, rows, accent }) {
-  const max = rows.reduce((m, r) => Math.max(m, r.total), 0) || 1;
-  return (
-    <G T={T} style={{ border: `1px solid ${isLight ? "rgba(15,23,42,0.07)" : "rgba(255,255,255,0.06)"}` }}>
-      <div style={{ marginBottom: 12 }}>
-        <div style={{ fontSize: 13.5, fontWeight: 800, color: T.txt, fontFamily: fontDisp, letterSpacing: "-0.01em" }}>{title}</div>
-        <div style={{ fontSize: 11.5, color: T.txt3, fontFamily: font }}>{subtitle}</div>
-      </div>
-      {rows.length === 0 && (
-        <div style={{ fontSize: 12, color: T.txt3, fontFamily: font, padding: "6px 0" }}>Sin datos todavía.</div>
-      )}
-      <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
-        {rows.slice(0, 6).map((r) => (
-          <div key={r.name} style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <div style={{ flex: "0 0 38%", fontSize: 12.5, color: T.txt, fontFamily: fontDisp, fontWeight: 600, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-              {r.name}
-            </div>
-            <div style={{ flex: 1, height: 7, borderRadius: 99, background: isLight ? "rgba(15,23,42,0.06)" : "rgba(255,255,255,0.06)", overflow: "hidden" }}>
-              <div style={{ width: `${Math.round((r.total / max) * 100)}%`, height: "100%", borderRadius: 99, background: accent }} />
-            </div>
-            <div style={{ flex: "0 0 auto", fontSize: 12, color: T.txt2, fontFamily: fontDisp, fontVariantNumeric: "tabular-nums", whiteSpace: "nowrap" }}>
-              <strong style={{ color: T.txt }}>{r.total}</strong>
-              <span style={{ color: T.txt3 }}> · {r.asistio} asist.</span>
-            </div>
-          </div>
-        ))}
-      </div>
-    </G>
-  );
-}
 
 // ── Sub-componente: select de estatus inline (pill coloreado) ────────────────
 function StatusSelect({ T, isLight, value, onChange }) {
@@ -505,7 +482,7 @@ function StatusSelect({ T, isLight, value, onChange }) {
 }
 
 // ── Sub-componente: modal de alta/edición ────────────────────────────────────
-function ZoomModal({ T, isLight, accent, editing, form, setField, formErr, busy, onCancel, onSave }) {
+function ZoomModal({ T, isLight, accent, editing, form, setField, formErr, busy, hasExtCols, onCancel, onSave }) {
   return (
     <div
       onClick={onCancel}
@@ -568,9 +545,43 @@ function ZoomModal({ T, isLight, accent, editing, form, setField, formErr, busy,
             <input type="date" value={form.fecha_agendado} onChange={(e) => setField("fecha_agendado", e.target.value)} style={{ ...inputStyle(T, isLight), width: "100%" }} />
           </Field>
 
+          {hasExtCols && (
+            <Field T={T} label="Discovery — qué se le va a presentar" full>
+              <textarea value={form.discovery} onChange={(e) => setField("discovery", e.target.value)} rows={2} placeholder="Presupuesto, ubicación, intereses del cliente… (lo que el presentador necesita saber)" style={{ ...inputStyle(T, isLight), width: "100%", resize: "vertical", fontFamily: font }} />
+            </Field>
+          )}
+
           <Field T={T} label="Comentarios" full>
             <textarea value={form.comentarios} onChange={(e) => setField("comentarios", e.target.value)} rows={2} placeholder="Notas del Zoom (opcional)" style={{ ...inputStyle(T, isLight), width: "100%", resize: "vertical", fontFamily: font }} />
           </Field>
+
+          {hasExtCols && (
+            <div
+              onClick={() => setField("calentito", !form.calentito)}
+              role="checkbox"
+              aria-checked={!!form.calentito}
+              style={{
+                gridColumn: "1 / -1",
+                display: "flex", alignItems: "center", gap: 10,
+                padding: "10px 12px", borderRadius: 10, cursor: "pointer", userSelect: "none",
+                background: form.calentito ? "rgba(234,88,12,0.10)" : (isLight ? "rgba(15,23,42,0.03)" : "rgba(255,255,255,0.03)"),
+                border: `1px solid ${form.calentito ? "rgba(234,88,12,0.45)" : (isLight ? "rgba(15,23,42,0.10)" : "rgba(255,255,255,0.09)")}`,
+              }}
+            >
+              <Flame size={16} color={form.calentito ? "#EA580C" : T.txt3} strokeWidth={2.4} />
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 12.5, fontWeight: 700, color: form.calentito ? "#EA580C" : T.txt, fontFamily: fontDisp }}>
+                  Cliente calentito
+                </div>
+                <div style={{ fontSize: 11, color: T.txt3, fontFamily: font }}>
+                  Señal de cierre en el Zoom: carta oferta, mandó identificación o pidió cuentas para apartar.
+                </div>
+              </div>
+              <span style={{ fontSize: 11.5, fontWeight: 700, fontFamily: fontDisp, color: form.calentito ? "#EA580C" : T.txt3 }}>
+                {form.calentito ? "Sí" : "No"}
+              </span>
+            </div>
+          )}
         </div>
 
         {formErr && (
