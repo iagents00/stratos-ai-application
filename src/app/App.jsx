@@ -372,6 +372,47 @@ export default function App() {
       window.removeEventListener("wheel", cancelPin);
     };
   }, [theme]);
+
+  // [guard:SCROLL-DRIFT] — guardián PERMANENTE del tope en móvil (v1.8).
+  // Historia: en el WebView del celular el área de contenido aparecía corrida
+  // unos px hacia arriba (título del módulo bajo el header) en momentos que NO
+  // podemos enumerar por completo (cambio de tema, datos que llegan, reflows
+  // tardíos; reportes de Ángel v1.5-v1.7 — el pin del tema no alcanzó para el
+  // CRM). Regla estructural: el contenido NUNCA puede quedar EN REPOSO corrido
+  // 1-60px sin que el usuario haya arrastrado — esa franja solo la produce el
+  // drift. Cómo: escucha scroll en captura (document) del .stratos-content-area
+  // (sobrevive al remount key={v}); cuando el scroll SE ASIENTA (260ms sin
+  // eventos) dentro de la franja y no hubo arrastre real (touchmove/rueda) en
+  // los últimos 1.2s, vuelve al tope. Un scroll legítimo del usuario siempre
+  // viene de un arrastre → jamás se pelea con el dedo; los scrolls suaves
+  // programáticos largos (ej. centrar el lead recién registrado) terminan
+  // fuera de la franja y tampoco se tocan. Solo pointer coarse (celular).
+  useEffect(() => {
+    if (!window.matchMedia || !window.matchMedia("(pointer: coarse)").matches) return undefined;
+    let lastDrag = 0;
+    let settleTimer = 0;
+    const markDrag = () => { lastDrag = Date.now(); };
+    const onAnyScroll = (e) => {
+      const ca = e.target;
+      if (!(ca instanceof Element) || !ca.classList || !ca.classList.contains("stratos-content-area")) return;
+      clearTimeout(settleTimer);
+      settleTimer = setTimeout(() => {
+        try {
+          const st = ca.scrollTop;
+          if (st > 0 && st <= 60 && Date.now() - lastDrag > 1200) ca.scrollTop = 0;
+        } catch { /* noop */ }
+      }, 260);
+    };
+    window.addEventListener("touchmove", markDrag, { passive: true });
+    window.addEventListener("wheel", markDrag, { passive: true });
+    document.addEventListener("scroll", onAnyScroll, true);
+    return () => {
+      clearTimeout(settleTimer);
+      window.removeEventListener("touchmove", markDrag);
+      window.removeEventListener("wheel", markDrag);
+      document.removeEventListener("scroll", onAnyScroll, true);
+    };
+  }, []);
   const setTheme = useCallback((next) => {
     try { localStorage.setItem("stratos_crm_theme", next); } catch {}
     // Transición suave: agregamos una clase a <html> que activa transiciones
@@ -1943,7 +1984,7 @@ export default function App() {
                 nativo carga la web remota: un APK nuevo NO garantiza web nueva
                 (SW/deploy). Con esto cualquiera puede reportar "web vNNN" y se
                 acaba el adivinar. Mantener en sync con CACHE_VERSION (sw.js). */}
-            <p style={{ margin:"12px 0 0", textAlign:"center", fontSize:9.5, fontFamily:font, letterSpacing:"0.02em", color: isLight ? "rgba(15,23,42,0.35)" : "rgba(255,255,255,0.28)" }}>Stratos CRM AI · web v137</p>
+            <p style={{ margin:"12px 0 0", textAlign:"center", fontSize:9.5, fontFamily:font, letterSpacing:"0.02em", color: isLight ? "rgba(15,23,42,0.35)" : "rgba(255,255,255,0.28)" }}>Stratos CRM AI · web v138</p>
           </div>
         </>,
         document.body
