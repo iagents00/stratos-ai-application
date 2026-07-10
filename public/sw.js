@@ -291,7 +291,14 @@
 //   click en un día → despliega la lista de sus Zooms (hora, cliente, liner,
 //   presentador, estatus, calentito) y cada Zoom abre su modal de edición.
 //   Antes parecían botones y no hacían nada (feedback de Ivan).
-const CACHE_VERSION = 'stratos-v116';
+// v117 — feat(zooms): apartados bajo el excel con navegación tipo Apple
+//   (segmented control): Resumen · Gráficas · Calentitos · Reactivación —
+//   los apartados del sheet de Ema, uno a la vez. Gráficas nuevas (skill
+//   dataviz): tendencia semanal apilada por resultado, dona del mes con
+//   total al centro, barras por Liner y Presentador en un solo tono con
+//   etiquetas directas; leyendas con nombre (identidad nunca por color
+//   solo), gaps de 2px entre segmentos, tooltips y tema claro/oscuro.
+const CACHE_VERSION = 'stratos-v117';
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 
