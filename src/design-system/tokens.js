@@ -88,11 +88,11 @@ export const PL = {
 
 // ─── PALETA — LIGHT MODE (modo blanco premium de la plataforma) ──────────────
 export const LP = {
-  bg: "#EDF3F0", bgSoft: "#F6FAF8", bgCool: "#EAF0EE",
+  bg: "#E8EEEC", bgSoft: "#F4F8F6", bgCool: "#E3EAE7",
   glass: "rgba(255,255,255,0.70)", glassH: "rgba(255,255,255,0.92)",
   glassStrong: "rgba(255,255,255,0.96)",
   glassMint: "rgba(236,251,246,0.75)",
-  border: "rgba(15,23,42,0.08)", borderH: "rgba(15,23,42,0.16)",
+  border: "rgba(15,23,42,0.07)", borderH: "rgba(15,23,42,0.14)",
   borderMint: "rgba(15,158,122,0.18)",
   surface: "#FFFFFF",
   accent: "#0D9A76", accentDark: "#067A5E",
@@ -101,10 +101,13 @@ export const LP = {
   blue: "#2563EB", violet: "#7C3AED", amber: "#D97706",
   rose: "#E11D48", emerald: "#059669", cyan: "#0891B2",
   txt: "#0B1220", txt2: "#3B4A61", txt3: "#7A8699",
-  shadow1: "0 1px 2px rgba(15,23,42,0.05), 0 2px 4px rgba(15,23,42,0.04)",
-  shadow2: "0 1px 3px rgba(15,23,42,0.06), 0 8px 24px rgba(15,23,42,0.07), 0 16px 40px rgba(15,23,42,0.04)",
-  shadow3: "0 4px 12px rgba(15,23,42,0.08), 0 20px 56px rgba(15,23,42,0.10), 0 32px 80px rgba(15,23,42,0.06)",
-  shadowMint: "0 2px 8px rgba(13,154,118,0.10), 0 8px 28px rgba(13,154,118,0.08)",
+  // Sombras estilo Apple (Jul 2026, auditoría tema claro): near-shadow nítida +
+  // ambient profunda en capas → las tarjetas blancas "flotan" sobre el lienzo
+  // gris-menta (más presencia). NO usar sombras planas de una sola capa.
+  shadow1: "0 1px 1.5px rgba(15,23,42,0.06), 0 1px 2px rgba(15,23,42,0.04)",
+  shadow2: "0 1px 2px rgba(15,23,42,0.05), 0 4px 12px rgba(15,23,42,0.08), 0 18px 40px rgba(15,23,42,0.10)",
+  shadow3: "0 2px 6px rgba(15,23,42,0.07), 0 12px 32px rgba(15,23,42,0.12), 0 32px 72px rgba(15,23,42,0.14)",
+  shadowMint: "0 2px 8px rgba(13,154,118,0.12), 0 10px 30px rgba(13,154,118,0.10)",
   r: 16, rs: 10, rx: 6,
 };
 
