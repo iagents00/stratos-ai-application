@@ -1265,7 +1265,7 @@ export default function App() {
       background: isLight
         ? `radial-gradient(1400px 900px at 50% -10%, rgba(13,154,118,0.07) 0%, rgba(13,154,118,0.028) 34%, transparent 60%),
            radial-gradient(1200px 800px at 50% 112%, rgba(20,184,146,0.055) 0%, rgba(20,184,146,0.02) 34%, transparent 60%),
-           linear-gradient(180deg, #E7EEEB 0%, #ECF1EF 46%, #E4EBE8 100%)`
+           linear-gradient(180deg, #E2E8E6 0%, #E8EDEB 46%, #DFE6E3 100%)`
         : `radial-gradient(1200px 600px at 30% -5%, rgba(80,120,255,0.025) 0%, transparent 55%), #030810`,
       transition:"background 0.3s ease, color 0.3s ease",
     }}>
@@ -1309,7 +1309,7 @@ export default function App() {
           /* padding inferior = holgura sobre el nav (58px) + safe area (home
              indicator iPhone / gestos Android). overflow-x:hidden = clamp
              defensivo global: ninguna vista puede panear la página horizontal. */
-          .stratos-content-area{padding:14px 14px calc(96px + var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px))) 14px!important;overflow-x:hidden!important;overflow-anchor:none}
+          .stratos-content-area{padding:20px 14px calc(96px + var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px))) 14px!important;overflow-x:hidden!important;overflow-anchor:none}
           /* Wrapper transparente de la nav flotante estilo Apple Music:
              la CÁPSULA con los tabs + el botón "+" viven como hijos. El
              wrapper no captura taps (pointer-events) para no tapar contenido
@@ -2002,7 +2002,7 @@ export default function App() {
                 nativo carga la web remota: un APK nuevo NO garantiza web nueva
                 (SW/deploy). Con esto cualquiera puede reportar "web vNNN" y se
                 acaba el adivinar. Mantener en sync con CACHE_VERSION (sw.js). */}
-            <p style={{ margin:"12px 0 0", textAlign:"center", fontSize:9.5, fontFamily:font, letterSpacing:"0.02em", color: isLight ? "rgba(15,23,42,0.35)" : "rgba(255,255,255,0.28)" }}>Stratos CRM AI · web v141</p>
+            <p style={{ margin:"12px 0 0", textAlign:"center", fontSize:9.5, fontFamily:font, letterSpacing:"0.02em", color: isLight ? "rgba(15,23,42,0.35)" : "rgba(255,255,255,0.28)" }}>Stratos CRM AI · web v142</p>
           </div>
         </>,
         document.body

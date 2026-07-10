@@ -397,10 +397,10 @@ export default function MetaPanel({
             </div>
           </div>
           {/* Tabs */}
-          <div style={{ display:"flex", gap:2, background:T.glass, border:`1px solid ${T.border}`, borderRadius:12, padding:3, order: isMobile ? 3 : 0, flexBasis: isMobile ? "100%" : "auto", maxWidth:"100%", overflowX: isMobile ? "auto" : "visible", WebkitOverflowScrolling:"touch" }}>
+          <div style={{ display: isMobile ? "grid" : "flex", gridTemplateColumns: isMobile ? "1fr 1fr" : undefined, gap: isMobile ? 3 : 2, background:T.glass, border:`1px solid ${T.border}`, borderRadius:12, padding:3, order: isMobile ? 3 : 0, flexBasis: isMobile ? "100%" : "auto", maxWidth:"100%" }}>
             {tabs.map(({ id, label }) => (
               <button key={id} onClick={() => setMetaTab(id)} style={{
-                padding: isMobile ? "8px 13px" : "7px 16px", borderRadius:9, border:"none", flexShrink:0, whiteSpace:"nowrap",
+                padding: isMobile ? "9px 6px" : "7px 16px", borderRadius:9, border:"none", flexShrink:0, whiteSpace:"nowrap", textAlign:"center",
                 background: metaTab===id ? (isLight?"#FFFFFF":"rgba(255,255,255,0.09)") : "transparent",
                 color: metaTab===id ? T.txt : T.txt2,
                 fontSize:12, fontWeight: metaTab===id ? 600 : 500,
@@ -419,7 +419,8 @@ export default function MetaPanel({
         </div>
 
         {/* ── Scrollable body ── */}
-        <div style={{ flex:1, overflowY:"auto", padding: isMobile ? "16px 14px calc(22px + var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px)))" : "22px 24px 28px" }}>
+        <div className="meta-body" style={{ flex:1, overflowY:"auto", padding: isMobile ? "16px 14px calc(22px + var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px)))" : "22px 24px 28px" }}>
+          {isMobile && <style>{`.meta-body [style*="grid-template-columns"]{grid-template-columns:1fr !important} .meta-body [style*="min-width"]{min-width:0 !important}`}</style>}
 
           {/* ═══ TAB 1: LISTA DE ACCIÓN ══════════════════════════════════ */}
           {metaTab === "acciones" && (
@@ -436,7 +437,7 @@ export default function MetaPanel({
               </div>
 
               {/* Quick-add bar */}
-              <div style={{ display:"flex", gap:9, marginBottom:22, alignItems:"stretch" }}>
+              <div style={{ display:"flex", gap:9, marginBottom:22, alignItems:"stretch", flexWrap: isMobile ? "wrap" : "nowrap" }}>
                 <input
                   value={metaNewText}
                   onChange={e => setMetaNewText(e.target.value)}
@@ -958,7 +959,7 @@ export default function MetaPanel({
             <div>
 
               {/* ── Hero Header ── */}
-              <div style={{ marginBottom:14, padding:"18px 20px", borderRadius:15, background:isLight?"linear-gradient(135deg,rgba(110,231,194,0.08),rgba(126,184,240,0.06))":"linear-gradient(135deg,rgba(110,231,194,0.06),rgba(126,184,240,0.04))", border:`1px solid ${T.accent}20`, display:"flex", alignItems:"center", justifyContent:"space-between", gap:16 }}>
+              <div style={{ marginBottom:14, padding:"18px 20px", borderRadius:15, background:isLight?"linear-gradient(135deg,rgba(110,231,194,0.08),rgba(126,184,240,0.06))":"linear-gradient(135deg,rgba(110,231,194,0.06),rgba(126,184,240,0.04))", border:`1px solid ${T.accent}20`, display:"flex", flexDirection: isMobile ? "column" : "row", alignItems: isMobile ? "flex-start" : "center", justifyContent:"space-between", gap:16 }}>
                 <div>
                   <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:5 }}>
                     <div style={{ width:3, height:18, borderRadius:2, background:`linear-gradient(180deg,${T.accent},${T.blue})` }} />
@@ -967,7 +968,7 @@ export default function MetaPanel({
                   <p style={{ margin:"0 0 3px", fontSize:21, fontWeight:800, color:T.txt, fontFamily:fontDisp, letterSpacing:"-0.04em" }}>Protocolo {brandLabel}</p>
                   <p style={{ margin:0, fontSize:11, color:T.txt2, fontFamily:font }}>Sistema de ventas consultivo · Riviera Maya · Alta inversión</p>
                 </div>
-                <div style={{ display:"flex", gap:8, flexShrink:0 }}>
+                <div style={{ display:"flex", gap:8, flexShrink:0, flexWrap: isMobile ? "wrap" : "nowrap", width: isMobile ? "100%" : "auto" }}>
                   {[
                     { label:"Etapas", value:"10", color:T.accent },
                     { label:"SLA Contacto", value:"5 min", color:T.blue },
