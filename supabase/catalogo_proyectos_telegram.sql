@@ -8,7 +8,7 @@
 --   2) Carga: 572 desarrollos del Sheet "DRIVES DUKE DEL CARIBE" (import por http
 --      desde tools/catalogo.seed.json; regenerable con tools/importar_catalogo.py).
 --   3) bot_buscar_proyectos(tg, args): el "cerebro" que responde consultas del
---      catálogo (zona, top-N, campo libre) con links de Drive.
+--      catálogo (zona, top-N, precio, recámaras, "cerca del mar", campo libre) con links de Drive.
 --   4) Wrapper de bot_nlu_dispatch_gvintell: rutea las consultas de catálogo a
 --      bot_buscar_proyectos y delega TODO lo demás al dispatcher original intacto
 --      (renombrado a *_orig). No se reescribió la lógica existente del bot.
@@ -79,6 +79,12 @@ create policy catalogo_delete_admin on public.catalogo_proyectos
 --      jsonb_array_elements(t.j) as e;
 
 -- 3) CEREBRO: búsqueda del catálogo --------------------------------------------
+-- Diseño (2026-07-10): el precio del Sheet está incompleto (~75% de las filas sin
+-- ticket, y las que lo tienen en formatos mezclados MDP/USD/K). Por eso:
+--   • ZONA es el único filtro DURO (zona/ubicacion están bien cargadas).
+--   • Recámaras / "cerca del mar" / texto libre → filtran si hay match; si no,
+--     caen a best-effort (mejores opciones) en vez de "no encontré".
+--   • PRECIO → solo RANKEA (nunca excluye) + nota de transparencia al usuario.
 create or replace function public.bot_buscar_proyectos(p_telegram_chat_id bigint, p_args jsonb default '{}'::jsonb)
 returns jsonb
 language plpgsql
@@ -91,14 +97,20 @@ declare
   v_norm   text;
   v_rest   text;
   v_zona   text := nullif(trim(coalesce(p_args->>'zona', p_args->>'ubicacion','')),'');
-  v_ticket text := nullif(trim(coalesce(p_args->>'ticket','')),'');
   v_top    int  := coalesce(nullif(p_args->>'top','')::int, nullif(p_args->>'limit','')::int, 0);
-  v_terms  text[];
+  v_terms  text[] := '{}';          -- criterios de texto (filtran si hay match; si no, best-effort)
+  v_price  text[] := '{}';          -- tokens de precio: SOLO rankean (datos incompletos)
+  v_beds   int := 0;
+  v_has_price boolean := false;
+  v_has_criteria boolean := false;
+  v_matched int := 0;
+  v_use_filter boolean := false;
   v_total  int := 0;
   v_shown  int := 0;
   v_lines  text := '';
   v_head   text;
-  v_filtros text := '';
+  v_note   text := '';
+  v_num    text;
   r record;
 begin
   select p.organization_id into v_org
@@ -115,18 +127,20 @@ begin
 
   v_norm := public.unaccent(lower(coalesce(v_text,'')));
 
+  -- ZONA (único filtro DURO)
   if v_zona is null then
-    if v_norm ~ 'playa del carmen|(^| )playa( |$)|(^| )pdc( |$)' then v_zona := 'Playa del Carmen';
-    elsif v_norm ~ 'tulum' then v_zona := 'Tulum';
-    elsif v_norm ~ 'cancun' then v_zona := 'Cancun';
-    elsif v_norm ~ 'merida' then v_zona := 'Merida';
+    if    v_norm ~ 'playa del carmen|(^| )playa( |$)|(^| )pdc( |$)' then v_zona := 'Playa del Carmen';
+    elsif v_norm ~ 'tulum'            then v_zona := 'Tulum';
+    elsif v_norm ~ 'cancun'           then v_zona := 'Cancun';
+    elsif v_norm ~ 'merida'           then v_zona := 'Merida';
     elsif v_norm ~ 'los cabos|(^| )cabo' then v_zona := 'Cabo';
     end if;
   end if;
 
+  -- TOP N
   if v_top = 0 then
     v_top := coalesce((regexp_match(v_norm,'top\s*(\d+)'))[1]::int,
-                      (regexp_match(v_norm,'(\d+)\s*(mejores|proyectos|propiedades|opciones|desarrollos)'))[1]::int, 0);
+                      (regexp_match(v_norm,'(\d+)\s*(mejores|proyectos|propiedades|opciones|desarrollos|villas?|departamentos?|casas?)'))[1]::int, 0);
     if v_top = 0 then
       if    v_norm ~ '(^| )(un|uno|una)( |$)' then v_top := 1;
       elsif v_norm ~ '(^| )dos( |$)'          then v_top := 2;
@@ -139,69 +153,91 @@ begin
   if v_top <= 0 then v_top := 5; end if;
   if v_top > 15 then v_top := 15; end if;
 
-  if v_ticket is null then
-    if    v_norm ~ 'luxury|de lujo'                 then v_ticket := 'luxury';
-    elsif v_norm ~ '450|500|800'                    then v_ticket := '450';
-    elsif v_norm ~ '350'                            then v_ticket := '350';
-    elsif v_norm ~ '250'                            then v_ticket := '250';
-    elsif v_norm ~ '150|80k|economic|barat'         then v_ticket := '150';
+  -- PRECIO / PRESUPUESTO -> SOLO ranking (el ~75% del catálogo no tiene precio cargado)
+  v_has_price := v_norm ~ '\d+\s*(k|mil|mdp|millon|usd|dolar|pesos|dls|dlls)|\$\s*\d|presupuesto|economic|barat|de lujo|luxury|premium';
+  for v_num in select (arr)[1] from regexp_matches(v_norm, '(\d{2,4})\s*(k|mil|mdp)', 'g') arr loop
+    v_price := v_price || array[v_num];
+  end loop;
+  if v_norm ~ 'de lujo|luxury|premium' then v_price := v_price || array['lux']; end if;
+
+  -- RECÁMARAS -> criterio de texto (suave)
+  v_beds := coalesce((regexp_match(v_norm,'(\d+)\s*(recamara|recamaras|habitacion|habitaciones|cuarto|cuartos|dormitor|rec|bd|br)'))[1]::int, 0);
+  if v_beds > 0 then
+    v_terms := v_terms || array[v_beds||' bd', v_beds||'bd', v_beds||' rec', v_beds||' recamara', v_beds||' hab'];
+  end if;
+
+  -- CERCA DEL MAR / FRENTE A LA PLAYA
+  if v_norm ~ '(^| )mar( |$)|al mar|frente al mar|cerca del mar|vista al mar|beach' then
+    v_terms := v_terms || array['mar'];
+  end if;
+
+  -- TÉRMINOS de texto libres (villa, terreno, condo, nombre del desarrollo, masterbroker…)
+  v_rest := v_norm;
+  v_rest := regexp_replace(v_rest, 'top\s*\d+|\d+\s*(mejores|opciones|recamaras?|habitacion(es)?|cuartos?|bd|br|rec)|propiedad(es)?|proyectos?|desarrollos?|catalogo|busca(me|r)?|dame|muestrame|ensename|quiero|necesito|mejores|opciones|cerca del|frente al|vista al|de lujo|luxury|premium', ' ', 'g');
+  v_rest := regexp_replace(v_rest, 'playa del carmen|tulum|cancun|merida|los cabos|(^| )cabo|(^| )pdc|(^| )playa', ' ', 'g');
+  v_rest := regexp_replace(v_rest, '\d+\s*(k|mil|mdp|millon(es)?|usd|dolar(es)?|pesos|dls|dlls)|\$|\d{2,}', ' ', 'g');
+  v_terms := v_terms || coalesce((
+    select array_agg(w) from (
+      select distinct w
+      from regexp_split_to_table(v_rest, '\s+') w
+      where length(w) >= 4
+        and w !~ '^(que|como|cual|cuales|cuantas|cuantos|donde|hay|tienes|tiene|para|con|los|las|una|unos|unas|del|mas|mar|zona|precio|rango|entre|desde|hasta|sobre|opcion|opciones|cerca|frente|vista|quiero|tengo|busco)$'
+    ) z
+  ), '{}'::text[]);
+
+  v_has_criteria := coalesce(array_length(v_terms,1),0) > 0;
+
+  -- ¿cuántos matchean los criterios de texto (dentro de la zona si hay)?
+  if v_has_criteria then
+    select count(*) into v_matched
+    from public.catalogo_proyectos cp
+    where cp.organization_id = v_org and cp.visible = true
+      and (v_zona is null or public.unaccent(lower(coalesce(cp.zona,'')||' '||coalesce(cp.ubicacion,''))) like '%'||public.unaccent(lower(v_zona))||'%')
+      and (select count(*) from unnest(v_terms) t(term)
+             where public.unaccent(lower(concat_ws(' ', cp.desarrollo, cp.ubicacion, cp.zona, cp.masterbroker, cp.ticket, cp.clasificacion, cp.tipologia, cp.highlights, cp.contacto))) like '%'||term||'%') > 0;
+    v_use_filter := v_matched > 0;
+  end if;
+
+  if v_use_filter then
+    v_total := v_matched;
+  else
+    select count(*) into v_total
+    from public.catalogo_proyectos cp
+    where cp.organization_id = v_org and cp.visible = true
+      and (v_zona is null or public.unaccent(lower(coalesce(cp.zona,'')||' '||coalesce(cp.ubicacion,''))) like '%'||public.unaccent(lower(v_zona))||'%');
+    if v_total = 0 and v_zona is not null then
+      v_zona := null;
+      select count(*) into v_total
+      from public.catalogo_proyectos cp
+      where cp.organization_id = v_org and cp.visible = true;
     end if;
   end if;
 
-  v_rest := v_norm;
-  v_rest := regexp_replace(v_rest, 'recamaras?|habitacion(es)?|cuartos?', 'hab', 'g');
-  v_rest := regexp_replace(v_rest, 'top\s*\d+|\d+\s*(mejores|opciones)|propiedad(es)?|proyectos?|desarrollos?|catalogo|busca(me|r)?|dame|muestrame|ensename|quiero|necesito|mejores|opciones|cerca del|frente al|vista al', ' ', 'g');
-  v_rest := regexp_replace(v_rest, 'playa del carmen|tulum|cancun|merida|los cabos|(^| )cabo|(^| )pdc', ' ', 'g');
-  select array_agg(w) into v_terms
-  from (
-    select distinct w
-    from regexp_split_to_table(v_rest, '\s+') w
-    where length(w) >= 3
-      and w !~ '^(que|como|cual|cuales|cuantas|donde|hay|tienes|tiene|para|con|los|las|una|uno|del|mas|mar|zona|precio|rango)$'
-  ) z
-  where w is not null and w <> '';
-  if v_norm ~ '(^| )mar( |$)|al mar|beach|frente al mar' then
-    v_terms := coalesce(v_terms, '{}'::text[]) || array['mar'];
-  end if;
-
-  select count(*) into v_total
-  from public.catalogo_proyectos cp
-  where cp.organization_id = v_org
-    and cp.visible = true
-    and (v_zona is null or public.unaccent(lower(coalesce(cp.zona,'')||' '||coalesce(cp.ubicacion,''))) like '%'||public.unaccent(lower(v_zona))||'%')
-    and (v_ticket is null
-         or (v_ticket = 'luxury' and (lower(coalesce(cp.ticket,'')) like '%luxury%' or lower(coalesce(cp.clasificacion,'')) like '%lux%'))
-         or lower(coalesce(cp.ticket,'')) like '%'||v_ticket||'%')
-    and (coalesce(array_length(v_terms,1),0) = 0
-         or (select count(*) from unnest(v_terms) t(term)
-             where public.unaccent(lower(concat_ws(' ', cp.desarrollo, cp.ubicacion, cp.zona, cp.masterbroker, cp.ticket, cp.clasificacion, cp.tipologia, cp.highlights, cp.contacto))) like '%'||term||'%') > 0);
-
   if v_total = 0 then
     return jsonb_build_object('ok', true, 'reply', jsonb_build_object(
-      'text', 'No encontré desarrollos que cuadren con eso 🤔. Probá con una zona (Cancún, Tulum, Playa del Carmen, Mérida…), un rango de precio, o una característica (ej: "top 3", "villa 2 recámaras").',
+      'text', 'Todavía no hay propiedades cargadas en el catálogo. Avisá al equipo para publicarlas.',
       'inline_keyboard', '[]'::jsonb));
+  end if;
+
+  if v_has_criteria and not v_use_filter then
+    v_note := E'\n\nNo encontré algo que cuadre exacto con eso, pero acá van las mejores opciones del catálogo 👇';
+  elsif v_has_price then
+    v_note := E'\n\n💡 Ojo: no todas las propiedades tienen precio cargado, así que el filtro por presupuesto es orientativo.';
   end if;
 
   for r in
     select cp.*,
-      (select count(*) from unnest(coalesce(v_terms,'{}'::text[])) t(term)
-         where public.unaccent(lower(concat_ws(' ', cp.desarrollo, cp.ubicacion, cp.zona, cp.masterbroker, cp.ticket, cp.clasificacion, cp.tipologia, cp.highlights, cp.contacto))) like '%'||term||'%') as score
+      ( (select count(*) from unnest(v_terms) t(term)
+           where public.unaccent(lower(concat_ws(' ', cp.desarrollo, cp.ubicacion, cp.zona, cp.masterbroker, cp.ticket, cp.clasificacion, cp.tipologia, cp.highlights, cp.contacto))) like '%'||term||'%')
+        + (select count(*) from unnest(v_price) pp(tok)
+           where public.unaccent(lower(coalesce(cp.ticket,''))) like '%'||tok||'%') ) as score
     from public.catalogo_proyectos cp
-    where cp.organization_id = v_org
-      and cp.visible = true
+    where cp.organization_id = v_org and cp.visible = true
       and (v_zona is null or public.unaccent(lower(coalesce(cp.zona,'')||' '||coalesce(cp.ubicacion,''))) like '%'||public.unaccent(lower(v_zona))||'%')
-      and (v_ticket is null
-           or (v_ticket = 'luxury' and (lower(coalesce(cp.ticket,'')) like '%luxury%' or lower(coalesce(cp.clasificacion,'')) like '%lux%'))
-           or lower(coalesce(cp.ticket,'')) like '%'||v_ticket||'%')
-      and (coalesce(array_length(v_terms,1),0) = 0
+      and (not v_use_filter
            or (select count(*) from unnest(v_terms) t(term)
-               where public.unaccent(lower(concat_ws(' ', cp.desarrollo, cp.ubicacion, cp.zona, cp.masterbroker, cp.ticket, cp.clasificacion, cp.tipologia, cp.highlights, cp.contacto))) like '%'||term||'%') > 0)
-    order by
-      (select count(*) from unnest(coalesce(v_terms,'{}'::text[])) t(term)
-         where public.unaccent(lower(concat_ws(' ', cp.desarrollo, cp.ubicacion, cp.zona, cp.masterbroker, cp.ticket, cp.clasificacion, cp.tipologia, cp.highlights, cp.contacto))) like '%'||term||'%') desc,
-      (cp.seccion = 'top-desarrollos') desc,
-      (cp.drive is not null) desc,
-      cp.desarrollo asc
+                 where public.unaccent(lower(concat_ws(' ', cp.desarrollo, cp.ubicacion, cp.zona, cp.masterbroker, cp.ticket, cp.clasificacion, cp.tipologia, cp.highlights, cp.contacto))) like '%'||term||'%') > 0)
+    order by score desc, (cp.drive is not null) desc, cp.desarrollo asc
     limit v_top
   loop
     v_shown := v_shown + 1;
@@ -217,41 +253,89 @@ begin
       || case when r.drive is not null then E'\n   📁 ' || r.drive else '' end;
   end loop;
 
-  if v_zona is not null then v_filtros := v_filtros || ' · ' || v_zona; end if;
-  if v_ticket is not null then v_filtros := v_filtros || ' · ' || (case v_ticket when 'luxury' then 'Luxury' when '450' then '450k+' else v_ticket||'k' end); end if;
-
-  v_head := format('🏗️ Catálogo Duke%s — %s resultado%s', v_filtros, v_total, case when v_total=1 then '' else 's' end);
+  v_head := '🏗️ Catálogo Duke'
+    || case when v_zona is not null then ' · ' || v_zona else '' end
+    || case when v_use_filter or v_zona is not null
+            then format(' — %s resultado%s', v_total, case when v_total=1 then '' else 's' end)
+            else format(' — top %s', v_shown) end;
 
   return jsonb_build_object('ok', true, 'reply', jsonb_build_object(
     'text', v_head || v_lines
-      || case when v_total > v_shown then format(E'\n\n… y %s más. Afiná por zona o rango de precio para verlos.', v_total - v_shown) else '' end,
+      || case when v_total > v_shown then format(E'\n\n… y %s más. Afiná por zona, característica o precio para acotar.', v_total - v_shown) else '' end
+      || v_note,
     'inline_keyboard', '[]'::jsonb));
 end;
 $function$;
 
--- 4) WRAPPER del dispatcher (rename + wrap; el original NO se reescribe) ---------
+-- 4) WRAPPER de ruteo -----------------------------------------------------------
+-- El dispatcher original se renombró UNA vez a *_orig (idempotencia: correr solo si aún no existe):
 -- alter function public.bot_nlu_dispatch_gvintell(bigint, text, jsonb) rename to bot_nlu_dispatch_gvintell_orig;
 --
--- create or replace function public.bot_nlu_dispatch_gvintell(p_telegram_chat_id bigint, p_tool_name text, p_args jsonb default '{}'::jsonb)
--- returns jsonb language plpgsql security definer set search_path to 'public','pg_temp' as $wrap$
--- declare v_tool text := lower(coalesce(p_tool_name,'')); v_args jsonb := coalesce(p_args,'{}'::jsonb); v_text text; v_norm text;
--- begin
---   if jsonb_typeof(v_args->'query') = 'object' then
---     if v_tool = '' then v_tool := lower(coalesce(v_args#>>'{query,tool_name}','')); end if;
---     if jsonb_typeof(v_args#>'{query,args}') = 'object' then v_args := v_args#>'{query,args}'; end if;
---   end if;
---   v_text := trim(coalesce(v_args->>'input_text', v_args->>'text', v_args->>'texto', v_args->>'query',''));
---   v_norm := public.unaccent(lower(coalesce(v_text,'')));
---   if v_tool in ('buscar_proyectos','buscar_propiedades','buscar_catalogo','catalogo','propiedades','proyectos_catalogo') then
---     return public.bot_buscar_proyectos(p_telegram_chat_id, v_args || jsonb_build_object('input_text', v_text));
---   end if;
---   if v_tool in ('', 'menu') and (
---        v_norm ~ '(propiedad|propiedades|proyecto|proyectos|desarrollo|desarrollos|departamento|departamentos|villa|villas|condo|condos|terreno|terrenos)\s+(en|de|cerca|con|para|arriba|baj|econom|barat)'
---     or v_norm ~ 'catalogo'
---     or v_norm ~ '(que|cuales|cuantas|muestrame|dame|busca|buscame|ensename|hay|tienes?)\s.*(propiedad|proyecto|desarrollo|departamento|villa|condo|terreno)'
---     or v_norm ~ 'top\s*\d+.*(propiedad|proyecto|desarrollo|departamento|villa|condo|zona|tulum|playa|cancun|merida|cabo)'
---   ) then
---     return public.bot_buscar_proyectos(p_telegram_chat_id, v_args || jsonb_build_object('input_text', v_text));
---   end if;
---   return public.bot_nlu_dispatch_gvintell_orig(p_telegram_chat_id, p_tool_name, p_args);
--- end; $wrap$;
+-- El wrapper detecta intención de CATÁLOGO y delega el resto al *_orig intacto.
+-- Capas de ruteo:
+--   (A) el LLM eligió explícitamente una herramienta de catálogo (buscar_proyectos, …).
+--   (B) el LLM no eligió herramienta ('' / 'menu') y el texto tiene señal amplia de catálogo.
+--   (B') el LLM mandó la consulta a una herramienta de LECTURA del CRM (quick_search,
+--        dashboard, list_clients, …) PERO el texto es claramente de catálogo (señal fuerte).
+--        Esto cubre el caso en que el clasificador confunde "propiedades" con "buscar cliente".
+--        Las herramientas de ESCRITURA (upsert_lead, change_stage, assign_client, …) NO se
+--        interceptan: nunca se desvía un registro/asignación al catálogo.
+--   (C) todo lo demás → bot_nlu_dispatch_gvintell_orig (comportamiento original intacto).
+create or replace function public.bot_nlu_dispatch_gvintell(p_telegram_chat_id bigint, p_tool_name text, p_args jsonb default '{}'::jsonb)
+returns jsonb
+language plpgsql
+security definer
+set search_path to 'public','pg_temp'
+as $function$
+declare
+  v_tool text := lower(coalesce(p_tool_name,''));
+  v_args jsonb := coalesce(p_args,'{}'::jsonb);
+  v_text text;
+  v_norm text;
+  v_broad  boolean;
+  v_strong boolean;
+begin
+  if jsonb_typeof(v_args->'query') = 'object' then
+    if v_tool = '' then v_tool := lower(coalesce(v_args#>>'{query,tool_name}','')); end if;
+    if jsonb_typeof(v_args#>'{query,args}') = 'object' then v_args := v_args#>'{query,args}'; end if;
+  end if;
+  v_text := trim(coalesce(v_args->>'input_text', v_args->>'text', v_args->>'texto', v_args->>'query',''));
+  v_norm := public.unaccent(lower(coalesce(v_text,'')));
+
+  -- (A) Herramienta de catálogo elegida explícitamente por el LLM
+  if v_tool in ('buscar_proyectos','buscar_propiedades','buscar_catalogo','catalogo','propiedades','proyectos_catalogo') then
+    return public.bot_buscar_proyectos(p_telegram_chat_id, v_args || jsonb_build_object('input_text', v_text));
+  end if;
+
+  -- Señales de intención de CATÁLOGO (inventario de inmuebles en venta)
+  v_broad :=
+       v_norm ~ '(propiedad|propiedades|proyecto|proyectos|desarrollo|desarrollos|departamento|departamentos|villa|villas|condo|condos|terreno|terrenos|inmueble|inmuebles)'
+    or v_norm ~ 'catalogo'
+    or v_norm ~ '(recamara|recamaras|habitacion|habitaciones)'
+    or v_norm ~ '(cerca del mar|frente al mar|frente a la playa|vista al mar)'
+    or v_norm ~ '\d+\s*(k|mil|mdp)\s*(a|-|y|hasta)\s*\d+'
+    or (v_norm ~ 'top\s*\d+' and v_norm ~ '(\d+\s*(k|mil|mdp|usd|millon)|playa del carmen|tulum|cancun|merida|(^| )cabo)');
+
+  v_strong :=
+       v_norm ~ 'catalogo'
+    or v_norm ~ '(propiedad|propiedades|proyecto|proyectos|desarrollo|desarrollos|inmueble|inmuebles|departamento|departamentos|villa|villas|condo|condos|terreno|terrenos)\s+(en|de|cerca|con|para|frente|dispon|hay|arriba|baj|econom|barat)'
+    or v_norm ~ '(que|cuales|cuantas|cuantos|dame|muestrame|ensename|busca|buscame|hay|tienes?)\s.*(propiedad|propiedades|proyecto|proyectos|desarrollo|desarrollos|inmueble|inmuebles|departamento|villa|condo|terreno)'
+    or v_norm ~ '(propiedad|propiedades|proyecto|proyectos|desarrollo|desarrollos|inmueble|departamento|villa|condo|terreno).*(playa del carmen|tulum|cancun|merida|(^| )cabo)'
+    or v_norm ~ '\d+\s*(k|mil|mdp)\s*(a|-|y|hasta)\s*\d+'
+    or (v_norm ~ 'top\s*\d+' and v_norm ~ '(\d+\s*(k|mil|mdp|usd|millon)|playa del carmen|tulum|cancun|merida|(^| )cabo|propiedad|proyecto|desarrollo|villa|departamento|terreno)')
+    or ((v_norm ~ 'cerca del mar|frente al mar|frente a la playa|vista al mar') and v_norm ~ '(propiedad|proyecto|desarrollo|departamento|villa|condo|recamara|recamaras)');
+
+  -- (B) El LLM no eligió herramienta (o mandó menú): señal amplia basta
+  if v_tool in ('', 'menu') and v_broad then
+    return public.bot_buscar_proyectos(p_telegram_chat_id, v_args || jsonb_build_object('input_text', v_text));
+  end if;
+
+  -- (B') El LLM eligió una herramienta de LECTURA del CRM pero el texto es claramente de catálogo
+  if v_tool in ('quick_search','list_clients','view_lead','dashboard','pipeline_summary','list_pending','list_expediente','search','lead_history') and v_strong then
+    return public.bot_buscar_proyectos(p_telegram_chat_id, v_args || jsonb_build_object('input_text', v_text));
+  end if;
+
+  -- (C) Todo lo demás: comportamiento ORIGINAL intacto
+  return public.bot_nlu_dispatch_gvintell_orig(p_telegram_chat_id, p_tool_name, p_args);
+end;
+$function$;
