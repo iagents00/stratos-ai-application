@@ -269,7 +269,12 @@
 //   más grandes y con más tinta (KPIs 28px, tablas 13.5px, headers 11.5px,
 //   grises tenues promovidos a txt2/txt), tarjetas de día de la semana más
 //   presentes. Pedido de Ivan: "letras y números que no se batallen para ver".
-const CACHE_VERSION = 'stratos-v111';
+// v112 — feat(zooms): la tabla se usa como el sheet del director comercial:
+//   vista completa por default (próximos y HOY arriba, histórico abajo),
+//   columna Comentarios visible con tooltip y pill HOY en los zooms del día.
+//   La migración 085 (staged) sincroniza el CRM → Control de Zooms por
+//   trigger en leads; pendiente de autorización para aplicar a prod.
+const CACHE_VERSION = 'stratos-v112';
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 

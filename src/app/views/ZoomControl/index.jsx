@@ -42,7 +42,7 @@ const ZoomControl = ({ theme = "dark" }) => {
 
   const { rows, loading, error, hasExtCols, refetch, createRow, updateRow, removeRow } = useZoomAgendados();
 
-  const [range, setRange] = useState("prox7");
+  const [range, setRange] = useState("todos"); // vista completa por default, como el sheet
   const [statusFilter, setStatusFilter] = useState("Todos");
   const [hotOnly, setHotOnly] = useState(false);
   const [q, setQ] = useState("");
@@ -102,11 +102,12 @@ const ZoomControl = ({ theme = "dark" }) => {
       }
       return true;
     });
-    // orden: por fecha_zoom asc (sin fecha al final), luego hora
+    // orden: fecha desc — lo que viene y lo de hoy arriba, el histórico
+    // abajo (sin fecha al fondo); dentro del día, por hora ascendente.
     list = [...list].sort((a, b) => {
-      const fa = a.fecha_zoom || "9999-12-31";
-      const fb = b.fecha_zoom || "9999-12-31";
-      if (fa !== fb) return fa < fb ? -1 : 1;
+      const fa = a.fecha_zoom || "0000-00-00";
+      const fb = b.fecha_zoom || "0000-00-00";
+      if (fa !== fb) return fa > fb ? -1 : 1;
       return (a.hora || "").localeCompare(b.hora || "");
     });
     return list;
@@ -354,20 +355,20 @@ const ZoomControl = ({ theme = "dark" }) => {
       {/* ── Tabla ──────────────────────────────────────────────────────────── */}
       <G T={T} np style={{ overflow: "hidden", border: `1px solid ${cardBorder}` }}>
         <div style={{ overflowX: "auto" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 860 }}>
+          <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 1020 }}>
             <thead>
               <tr style={{ background: isLight ? "rgba(15,23,42,0.035)" : "rgba(255,255,255,0.035)" }}>
-                {["Fecha del Zoom", "Cliente", "Proyecto", ...(hasExtCols ? ["Disc."] : []), "Liner", "Presentador", "Estatus", ""].map((h, i) => (
+                {["Fecha del Zoom", "Cliente", "Proyecto", ...(hasExtCols ? ["Disc."] : []), "Liner", "Presentador", "Estatus", "Comentarios", ""].map((h, i) => (
                   <th key={i} style={thStyle(T, i === 0 ? "left" : h === "Disc." || h === "Estatus" || h === "" ? "center" : "left")}>{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {loading && (
-                <tr><td colSpan={hasExtCols ? 8 : 7} style={{ ...tdStyle(T, "center"), padding: "32px", color: T.txt3 }}>Cargando Zooms…</td></tr>
+                <tr><td colSpan={hasExtCols ? 9 : 8} style={{ ...tdStyle(T, "center"), padding: "32px", color: T.txt3 }}>Cargando Zooms…</td></tr>
               )}
               {!loading && filtered.length === 0 && (
-                <tr><td colSpan={hasExtCols ? 8 : 7} style={{ ...tdStyle(T, "center"), padding: "36px 20px", color: T.txt3 }}>
+                <tr><td colSpan={hasExtCols ? 9 : 8} style={{ ...tdStyle(T, "center"), padding: "36px 20px", color: T.txt3 }}>
                   {rows.length === 0
                     ? "Aún no hay Zooms registrados. Crea el primero con “Nuevo Zoom”."
                     : "Ningún Zoom coincide con este filtro."}
@@ -385,7 +386,12 @@ const ZoomControl = ({ theme = "dark" }) => {
                   onMouseLeave={(e) => { e.currentTarget.style.background = hotBg; }}
                 >
                   <td style={tdStyle(T, "left")}>
-                    <div style={{ fontWeight: 600, color: T.txt }}>{prettyDate(r.fecha_zoom)}</div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6, fontWeight: 600, color: T.txt }}>
+                      {prettyDate(r.fecha_zoom)}
+                      {r.fecha_zoom === today && (
+                        <span style={{ padding: "1px 7px", borderRadius: 99, fontSize: 10, fontWeight: 800, letterSpacing: "0.05em", color: isLight ? "#06080F" : accent, background: isLight ? accent : `${accent}22`, border: `1px solid ${accent}55` }}>HOY</span>
+                      )}
+                    </div>
                     <div style={{ fontSize: 12, fontWeight: 500, color: T.txt2 }}>{r.hora || "sin hora"}</div>
                   </td>
                   <td style={{ ...tdStyle(T, "left"), fontWeight: 600, color: T.txt }}>
@@ -413,6 +419,9 @@ const ZoomControl = ({ theme = "dark" }) => {
                   </td>
                   <td style={{ ...tdStyle(T, "center"), padding: "8px 10px" }} onClick={(e) => e.stopPropagation()}>
                     <StatusSelect T={T} isLight={isLight} value={r.estatus} onChange={(s) => onInlineStatus(r, s)} />
+                  </td>
+                  <td style={{ ...tdStyle(T, "left"), maxWidth: 230, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontWeight: 500, fontSize: 12.5, fontFamily: font }} title={r.comentarios || ""}>
+                    {r.comentarios || "—"}
                   </td>
                   <td style={{ ...tdStyle(T, "center"), padding: "8px 10px", whiteSpace: "nowrap" }} onClick={(e) => e.stopPropagation()}>
                     {hasExtCols && (
