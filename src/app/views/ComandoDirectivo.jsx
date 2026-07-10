@@ -1150,16 +1150,16 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
 
       {showZoomTab && tab === "zooms" && (
         <div style={{ display: "flex", flexDirection: "column", gap: 28 }}>
-          {/* Métrica real de Zooms (pipeline + historial) — siempre con datos. */}
+          {/* El "excel" del director comercial va HASTA ARRIBA (pedido de Ivan):
+              al abrir la pestaña aterriza directo en su tabla de Zooms. Solo si
+              la tabla zoom_agendados existe (migración 027/083). */}
+          {!zoomTableMissing && <ZoomControl theme={isLight ? "light" : "dark"} />}
+          {/* Métrica de Zooms del pipeline (histórico por etapas) — debajo. */}
           <ZoomBoard
             leadsData={visibleLeads}
             theme={isLight ? "light" : "dark"}
             dateFilter={dateFilter}
           />
-          {/* Panel operativo CRUD sobre zoom_agendados — solo si la tabla existe
-              (migración 027 aplicada). Si no, no lo mostramos: el ZoomBoard de
-              arriba ya cubre la métrica desde el pipeline. */}
-          {!zoomTableMissing && <ZoomControl theme={isLight ? "light" : "dark"} />}
         </div>
       )}
 
