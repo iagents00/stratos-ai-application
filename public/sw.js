@@ -279,7 +279,12 @@
 //   conteo y marca HOY), alcance Quincena en Resumen y PDF, export CSV con
 //   las columnas exactas del sheet (Semana ISO/Mes/Día/¿Zoom hoy? derivadas
 //   sin errores) y tooltip con la fecha en que se agendó cada Zoom.
-const CACHE_VERSION = 'stratos-v113';
+// v114 — feat(zooms): tabla con las MISMAS columnas y nombres del sheet del
+//   director (Fecha en que se agendó, Fecha del Zoom, Hora, Liner, Presentador
+//   principal/apoyo, Cliente, Desarrollo/Proyecto, Estatus, Comentarios,
+//   Semana, Mes, Día del Zoom, ¿Zoom hoy?, Discovery) para adopción inmediata,
+//   y encabezado + banda del día FIJADOS (sticky) al hacer scroll.
+const CACHE_VERSION = 'stratos-v114';
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 
