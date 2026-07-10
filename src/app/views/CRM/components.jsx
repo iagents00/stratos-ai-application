@@ -1363,7 +1363,7 @@ const DrawerTabIsland = ({ current, onSwitch, T = P }) => {
       position: "absolute",
       // En mobile el drawer es bottom-sheet con safe-area; bajamos el island
       // un poco más para no chocar con el indicador inferior del iPhone.
-      bottom: "max(20px, env(safe-area-inset-bottom, 20px))",
+      bottom: "max(20px, var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 20px)))",
       left: "50%",
       transform: "translateX(-50%)",
       zIndex: 10,
@@ -3651,7 +3651,7 @@ const NotesModal = ({ lead, onClose, onSave, onUpdate, onSwitchTab, onShowHistor
         display: "flex", flexDirection: "column",
         animation: "slideInUp 0.28s cubic-bezier(0.32,0.72,0,1)",
         boxShadow: T === P ? "0 -24px 80px rgba(0,0,0,0.55)" : "0 -16px 60px rgba(15,23,42,0.16)",
-        paddingBottom: "env(safe-area-inset-bottom, 0px)",
+        paddingBottom: "var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px))",
       } : centered ? {
         // ── DESKTOP (centered): modal casi-fullscreen centrado ──
         position: "fixed", top: "50%", left: "50%", transform: "translate(-50%,-50%)", zIndex: 401,
@@ -4282,7 +4282,7 @@ const LeadPanel = ({ lead, onClose, oc, onUpdate, onSwitchTab, onShowHistory, on
         display: "flex", flexDirection: "column",
         animation: "slideInUp 0.28s cubic-bezier(0.32,0.72,0,1)",
         boxShadow: T === P ? "0 -24px 80px rgba(0,0,0,0.55)" : "0 -16px 60px rgba(15,23,42,0.16)",
-        paddingBottom: "env(safe-area-inset-bottom, 0px)",
+        paddingBottom: "var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px))",
       } : {
         position: "fixed", right: 0, top: 0, bottom: 0, zIndex: 401, width: 440,
         background: T === P ? "#111318" : "#FFFFFF",
@@ -5120,7 +5120,7 @@ const AnalysisDrawer = ({ lead, onClose, oc, onUpdate, onSwitchTab, T = P }) => 
         display: "flex", flexDirection: "column",
         animation: "slideInUp 0.28s cubic-bezier(0.32,0.72,0,1)",
         boxShadow: T === P ? "0 -24px 80px rgba(0,0,0,0.55)" : "0 -16px 60px rgba(15,23,42,0.16)",
-        paddingBottom: "env(safe-area-inset-bottom, 0px)",
+        paddingBottom: "var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px))",
       } : {
         position: "fixed", right: 0, top: 0, bottom: 0, zIndex: 401, width: 480,
         background: T === P ? "#111318" : "#FFFFFF",
