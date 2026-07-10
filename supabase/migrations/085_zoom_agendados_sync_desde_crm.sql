@@ -1,8 +1,8 @@
 -- ════════════════════════════════════════════════════════════════════════
 -- 085 — Sincronización CRM → Control de Zooms (Duke del Caribe)
 -- ────────────────────────────────────────────────────────────────────────
--- ⚠️ PENDIENTE DE APLICAR A PROD — requiere autorización explícita de Ivan
--- (crea un trigger sobre public.leads, tabla compartida crítica).
+-- ✅ APLICADA A PROD el 2026-07-10 (autorizada por Ivan) y verificada con
+-- transacción + ROLLBACK: el trigger creó el registro esperado y se revirtió.
 --
 -- Pedido de Ivan (2026-07-10): "que todo esté sincronizado a los datos
 -- reales del CRM". El Control de Zooms deja de ser captura manual paralela:
