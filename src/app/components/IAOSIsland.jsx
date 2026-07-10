@@ -11,7 +11,7 @@
  */
 import { fontDisp } from "../../design-system/tokens";
 
-export default function IAOSIsland({ leadsData, isLight, idx, brandLabel = "Duke" }) {
+export default function IAOSIsland({ leadsData, isLight, idx, brandLabel = "Duke", onOpen }) {
   const hot       = leadsData.filter(l => l.hot).length;
   // "Sin actividad": el campo daysInactive viene en 0 (stale) → daba siempre 0.
   // Proxy real y puro: leads sin próxima acción agendada (nadie definió el siguiente paso).
@@ -31,13 +31,16 @@ export default function IAOSIsland({ leadsData, isLight, idx, brandLabel = "Duke
 
   return (
     /* className: en móvil el bloque CSS global (App.jsx) lo hace COMPRESIBLE
-       (flex-shrink + min-width 0) para que nunca desborde bajo los íconos. */
-    <div className="stratos-iaos-pill" style={{
+       (flex-shrink + min-width 0) para que nunca desborde bajo los íconos.
+       onOpen: tocar la pill abre el Centro de Inteligencia — en móvil es el
+       acceso SIEMPRE visible (la pill del DynIsland está oculta ahí). */
+    <div className="stratos-iaos-pill" onClick={onOpen} role={onOpen ? "button" : undefined} style={{
       display: "flex", alignItems: "center", gap: 0,
       background: isLight ? "rgba(13,154,118,0.06)" : "rgba(110,231,194,0.05)",
       borderRadius: 10, padding: "5px 10px",
       border: `1px solid ${isLight ? "rgba(13,154,118,0.14)" : "rgba(110,231,194,0.10)"}`,
       flexShrink: 0, overflow: "hidden",
+      cursor: onOpen ? "pointer" : "default",
     }}>
       {/* IAOS label */}
       <span style={{
