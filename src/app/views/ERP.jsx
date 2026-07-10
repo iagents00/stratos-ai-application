@@ -7,6 +7,11 @@ import {
 } from "lucide-react";
 import { CATALOGO_SECCIONES } from "../data/catalogoProyectos";
 
+// Solo se MUESTRAN estas secciones del catálogo (control = pestaña "DRIVES DC" del Sheet).
+// Las demás propiedades quedan guardadas en la data pero ocultas en la UI (y en el bot de Telegram).
+const VISIBLE_SECCIONES = ["drives-dc"];
+const SECCIONES = CATALOGO_SECCIONES.filter((s) => VISIBLE_SECCIONES.includes(s.id));
+
 /* Color por rango de ticket */
 const ticketColor = (t, T) => {
   const s = (t || "").toLowerCase();
@@ -31,22 +36,22 @@ const ERP = ({ oc, T: _T }) => {
   const isLight = !!_T && _T?.bg !== P.bg;
   const T = _T || P;
 
-  const [secId, setSecId] = useState(CATALOGO_SECCIONES[0].id);
+  const [secId, setSecId] = useState(SECCIONES[0].id);
   const [q, setQ] = useState("");
   const [ticket, setTicket] = useState("");
   const [limit, setLimit] = useState(60);
   const [view, setView] = useState("cards"); // "cards" | "table"
 
   const sec = useMemo(
-    () => CATALOGO_SECCIONES.find((s) => s.id === secId) || CATALOGO_SECCIONES[0],
+    () => SECCIONES.find((s) => s.id === secId) || SECCIONES[0],
     [secId]
   );
 
   const kpis = useMemo(() => {
-    const all = CATALOGO_SECCIONES.flatMap((s) => s.items);
+    const all = SECCIONES.flatMap((s) => s.items);
     const conDrive = all.filter((i) => i.drive).length;
     const ubic = new Set(all.map((i) => (i.ubicacion || "").trim()).filter(Boolean));
-    const secciones = CATALOGO_SECCIONES.filter((s) => s.items.length).length;
+    const secciones = SECCIONES.filter((s) => s.items.length).length;
     return { total: all.length, conDrive, ubic: ubic.size, secciones };
   }, []);
 
@@ -118,7 +123,7 @@ const ERP = ({ oc, T: _T }) => {
           </p>
         </div>
         <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-          {["Propiedades en Playa del Carmen", "Top 3 en Tulum", "Villa cerca del mar"].map((ex) => (
+          {["Propiedades en Tulum", "Top 3 destacados", "Villa cerca del mar"].map((ex) => (
             <span key={ex} style={{ fontSize: 10.5, color: T.txt2, fontFamily: font, padding: "5px 10px", borderRadius: 99, background: isLight ? "rgba(15,23,42,0.03)" : "rgba(255,255,255,0.03)", border: `1px solid ${T.border}`, whiteSpace: "nowrap" }}>
               “{ex}”
             </span>
@@ -140,9 +145,9 @@ const ERP = ({ oc, T: _T }) => {
             <Pill color={T.blue} s isLight={isLight}>{filtered.length} de {sec.items.length}</Pill>
           </div>
 
-          {/* Section tabs */}
-          <div style={{ display: "flex", gap: 7, overflowX: "auto", paddingBottom: 4 }}>
-            {CATALOGO_SECCIONES.map((s) => {
+          {/* Section tabs (solo si hay más de una sección visible) */}
+          <div style={{ display: SECCIONES.length > 1 ? "flex" : "none", gap: 7, overflowX: "auto", paddingBottom: 4 }}>
+            {SECCIONES.map((s) => {
               const active = s.id === secId;
               return (
                 <button
