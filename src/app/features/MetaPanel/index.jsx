@@ -342,6 +342,9 @@ export default function MetaPanel({
     { id:"protocolo", label:"Protocolo de Ventas" },
   ];
 
+  // En móvil la barra lateral (widget AVANCE que abre este panel en desktop)
+  // no existe; el panel se abre desde el menú "+" y debe encajar en pantalla.
+  const isMobile = typeof window !== "undefined" && (window.matchMedia?.("(pointer: coarse)")?.matches || window.innerWidth <= 768);
   return (
     <>
       {/* Backdrop */}
@@ -355,10 +358,11 @@ export default function MetaPanel({
       {/* Modal */}
       <div style={{
         position:"fixed", top:"50%", left:"50%",
-        width:"min(1020px, 96vw)", height:"min(720px, 94vh)",
+        transform:"translate(-50%,-50%)",
+        width: isMobile ? "95vw" : "min(1020px, 96vw)", height: isMobile ? "90dvh" : "min(720px, 94vh)",
         zIndex:601,
         background: isLight ? "#FFFFFF" : "#090D18",
-        borderRadius:22,
+        borderRadius: isMobile ? 20 : 22,
         border:`1px solid ${isLight ? "rgba(13,154,118,0.11)" : "rgba(255,255,255,0.07)"}`,
         boxShadow: isLight
           ? "0 40px 120px rgba(15,23,42,0.15), 0 8px 32px rgba(15,23,42,0.08)"
@@ -371,11 +375,12 @@ export default function MetaPanel({
         {/* ── Header ── */}
         <div style={{
           display:"flex", alignItems:"center", justifyContent:"space-between",
-          padding:"17px 24px 15px",
+          padding: isMobile ? "14px 16px 12px" : "17px 24px 15px",
           borderBottom:`1px solid ${T.border}`,
           flexShrink:0,
+          flexWrap: isMobile ? "wrap" : "nowrap", rowGap: isMobile ? 10 : 0,
         }}>
-          <div style={{ display:"flex", alignItems:"center", gap:11 }}>
+          <div style={{ display:"flex", alignItems:"center", gap:11, order: isMobile ? 1 : 0 }}>
             <div style={{ width:36, height:36, borderRadius:10, background:`${T.accent}12`, border:`1px solid ${T.accent}24`, display:"flex", alignItems:"center", justifyContent:"center" }}>
               <Target size={17} color={T.accent} strokeWidth={2} />
             </div>
@@ -392,10 +397,10 @@ export default function MetaPanel({
             </div>
           </div>
           {/* Tabs */}
-          <div style={{ display:"flex", gap:2, background:T.glass, border:`1px solid ${T.border}`, borderRadius:12, padding:3 }}>
+          <div style={{ display:"flex", gap:2, background:T.glass, border:`1px solid ${T.border}`, borderRadius:12, padding:3, order: isMobile ? 3 : 0, flexBasis: isMobile ? "100%" : "auto", maxWidth:"100%", overflowX: isMobile ? "auto" : "visible", WebkitOverflowScrolling:"touch" }}>
             {tabs.map(({ id, label }) => (
               <button key={id} onClick={() => setMetaTab(id)} style={{
-                padding:"7px 16px", borderRadius:9, border:"none",
+                padding: isMobile ? "8px 13px" : "7px 16px", borderRadius:9, border:"none", flexShrink:0, whiteSpace:"nowrap",
                 background: metaTab===id ? (isLight?"#FFFFFF":"rgba(255,255,255,0.09)") : "transparent",
                 color: metaTab===id ? T.txt : T.txt2,
                 fontSize:12, fontWeight: metaTab===id ? 600 : 500,
@@ -407,13 +412,14 @@ export default function MetaPanel({
           </div>
           <button onClick={onClose} style={{
             width:32, height:32, borderRadius:"50%", border:`1px solid ${T.border}`,
+            order: isMobile ? 2 : 0, flexShrink:0,
             background:T.glass, color:T.txt3, cursor:"pointer", fontSize:18,
             display:"flex", alignItems:"center", justifyContent:"center",
           }}>×</button>
         </div>
 
         {/* ── Scrollable body ── */}
-        <div style={{ flex:1, overflowY:"auto", padding:"22px 24px 28px" }}>
+        <div style={{ flex:1, overflowY:"auto", padding: isMobile ? "16px 14px calc(22px + var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px)))" : "22px 24px 28px" }}>
 
           {/* ═══ TAB 1: LISTA DE ACCIÓN ══════════════════════════════════ */}
           {metaTab === "acciones" && (

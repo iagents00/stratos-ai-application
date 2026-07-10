@@ -29,7 +29,7 @@ import {
 import { isNativeApp, ensureNotifPermission, notifyUser, addNotificationTapListener } from "../lib/native";
 
 import {
-  Search, Bell, Settings, LogOut, Sun, Moon, ChevronDown, Plus, X, LayoutGrid, PhoneCall, MessageCircle,
+  Search, Bell, Settings, LogOut, Sun, Moon, ChevronDown, Plus, X, LayoutGrid, PhoneCall, MessageCircle, Target,
 } from "lucide-react";
 import "./App.css";
 
@@ -1949,6 +1949,24 @@ export default function App() {
               </div>
             </button>
 
+            {/* Plan Estratégico (MetaPanel) — en móvil la barra lateral con el
+                widget AVANCE no existe; ESTE es su punto de entrada. Abre Lista
+                de Acción · Documentos · Plan Estratégico · Protocolo de Ventas. */}
+            <button onClick={() => { setPlusOpen(false); setMetaOpen(true); }} style={{
+              width:"100%", display:"flex", alignItems:"center", gap:11, padding:"12px 13px",
+              borderRadius:16, marginBottom:12, cursor:"pointer", textAlign:"left",
+              background: isLight ? "linear-gradient(135deg, rgba(37,99,235,0.10), rgba(13,154,118,0.05))" : "linear-gradient(135deg, rgba(126,184,240,0.12), rgba(110,231,194,0.05))",
+              border:`1px solid ${isLight ? "rgba(37,99,235,0.22)" : "rgba(126,184,240,0.25)"}`,
+            }}>
+              <div style={{ width:36, height:36, borderRadius:11, background: isLight ? "rgba(37,99,235,0.10)" : "rgba(126,184,240,0.14)", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+                <Target size={19} color={isLight ? "#2563EB" : "#7EB8F0"} strokeWidth={2} />
+              </div>
+              <div style={{ minWidth:0 }}>
+                <p style={{ margin:0, fontSize:13, fontWeight:700, fontFamily:fontDisp, letterSpacing:"-0.015em", color: isLight ? T.txt : "#FFFFFF" }}>Plan Estratégico</p>
+                <p style={{ margin:"2px 0 0", fontSize:10.5, fontFamily:font, color: isLight ? T.txt3 : "rgba(255,255,255,0.42)" }}>Lista de acción · Documentos · Plan · Protocolo de ventas</p>
+              </div>
+            </button>
+
             {/* TODOS los módulos */}
             <div style={{ display:"grid", gridTemplateColumns:"repeat(3, 1fr)", gap:8 }}>
               {mobileAllNav.map(n => {
@@ -1984,7 +2002,7 @@ export default function App() {
                 nativo carga la web remota: un APK nuevo NO garantiza web nueva
                 (SW/deploy). Con esto cualquiera puede reportar "web vNNN" y se
                 acaba el adivinar. Mantener en sync con CACHE_VERSION (sw.js). */}
-            <p style={{ margin:"12px 0 0", textAlign:"center", fontSize:9.5, fontFamily:font, letterSpacing:"0.02em", color: isLight ? "rgba(15,23,42,0.35)" : "rgba(255,255,255,0.28)" }}>Stratos CRM AI · web v139</p>
+            <p style={{ margin:"12px 0 0", textAlign:"center", fontSize:9.5, fontFamily:font, letterSpacing:"0.02em", color: isLight ? "rgba(15,23,42,0.35)" : "rgba(255,255,255,0.28)" }}>Stratos CRM AI · web v141</p>
           </div>
         </>,
         document.body
