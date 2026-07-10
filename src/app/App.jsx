@@ -1232,7 +1232,7 @@ export default function App() {
         .stratos-bottomnav{display:none}
         /* Safe areas (notch iPhone / status bar edge-to-edge): env() = 0 en
            navegadores normales, así que estas reglas solo actúan donde hace falta. */
-        .stratos-header{height:calc(52px + env(safe-area-inset-top, 0px))!important;padding-top:env(safe-area-inset-top, 0px)!important}
+        .stratos-header{height:calc(52px + var(--safe-area-inset-top, env(safe-area-inset-top, 0px)))!important;padding-top:var(--safe-area-inset-top, env(safe-area-inset-top, 0px))!important}
         /* El DynIsland centrado es position:absolute (no reserva espacio): entre
            769-900px colisiona con la fila derecha → se oculta también ahí. */
         @media(max-width:900px){
@@ -1243,14 +1243,14 @@ export default function App() {
           /* padding inferior = holgura sobre el nav (58px) + safe area (home
              indicator iPhone / gestos Android). overflow-x:hidden = clamp
              defensivo global: ninguna vista puede panear la página horizontal. */
-          .stratos-content-area{padding:14px 14px calc(96px + env(safe-area-inset-bottom, 0px)) 14px!important;overflow-x:hidden!important}
+          .stratos-content-area{padding:14px 14px calc(96px + var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px))) 14px!important;overflow-x:hidden!important}
           /* Wrapper transparente de la nav flotante estilo Apple Music:
              la CÁPSULA con los tabs + el botón "+" viven como hijos. El
              wrapper no captura taps (pointer-events) para no tapar contenido
              en los costados de la pill. */
           .stratos-bottomnav{
             display:flex!important;position:fixed;left:0;right:0;
-            bottom:calc(12px + env(safe-area-inset-bottom, 0px));
+            bottom:calc(12px + var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px)));
             z-index:200;align-items:center;justify-content:center;gap:10px;
             padding:0 12px;pointer-events:none;
           }
@@ -1272,7 +1272,7 @@ export default function App() {
           .stratos-iaos-ticker{width:auto!important;max-width:112px!important;min-width:0!important}
           /* Dropdown de la campanita: a lo ancho de la pantalla (antes width
              fija 300px anclada a la campana → se salía por la izquierda). */
-          .stratos-bell-dropdown{position:fixed!important;top:calc(60px + env(safe-area-inset-top, 0px))!important;left:10px!important;right:10px!important;width:auto!important;max-height:calc(100dvh - 150px)!important;overflow-y:auto!important}
+          .stratos-bell-dropdown{position:fixed!important;top:calc(60px + var(--safe-area-inset-top, env(safe-area-inset-top, 0px)))!important;left:10px!important;right:10px!important;width:auto!important;max-height:calc(100dvh - 150px)!important;overflow-y:auto!important}
         }
         /* En pantallas MUY angostas el toggle de tema se va (se cambia desde
            Perfil); la campana/avatar/salir siempre quedan. */

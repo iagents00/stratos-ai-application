@@ -669,7 +669,7 @@ export default function Diagnostico() {
         </div>
 
         {activeSelections.length > 0 && (
-          <div className="fixed bottom-0 left-0 w-full bg-[#060A11]/90 backdrop-blur-2xl border-t border-white/10 px-5 pt-5 pb-[calc(env(safe-area-inset-bottom)+1.25rem)] md:px-6 md:pt-6 md:pb-6 z-50">
+          <div className="fixed bottom-0 left-0 w-full bg-[#060A11]/90 backdrop-blur-2xl border-t border-white/10 px-5 pt-5 pb-[calc(var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px))+1.25rem)] md:px-6 md:pt-6 md:pb-6 z-50">
             <div className="max-w-3xl mx-auto flex flex-col md:flex-row gap-4 items-center md:pl-16">
               <div className="relative w-full flex-1">
                 <Terminal className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />

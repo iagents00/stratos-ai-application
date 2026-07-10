@@ -2955,7 +2955,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
             borderRadius: 0,
             boxShadow: "none",
             animation: "modalInMobile 0.24s cubic-bezier(0.16,1,0.3,1) both",
-            paddingBottom: "env(safe-area-inset-bottom, 0px)",
+            paddingBottom: "var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px))",
           } : {
             position: "fixed", top: "50%", left: "50%",
             zIndex: 501, width: "min(720px, 96vw)", maxHeight: "94vh",
@@ -5644,7 +5644,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
       {canBulkReassign && bulkMode && createPortal(
         <div style={{
           position: "fixed", left: "50%",
-          bottom: isMobile ? "calc(env(safe-area-inset-bottom, 0px) + 96px)" : 26,
+          bottom: isMobile ? "calc(var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px)) + 96px)" : 26,
           transform: "translateX(-50%)", zIndex: 600,
           display: "flex", alignItems: "center", gap: 10,
           padding: "9px 10px 9px 14px", borderRadius: 14, maxWidth: "94vw",
@@ -5717,7 +5717,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
             width: "100vw", height: "100dvh", display: "flex", flexDirection: "column",
             background: isLight ? "#FFFFFF" : "#111318",
             animation: "modalInMobile 0.24s cubic-bezier(0.16,1,0.3,1) both",
-            paddingBottom: "env(safe-area-inset-bottom, 0px)",
+            paddingBottom: "var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px))",
           } : {
             position: "fixed", top: "50%", left: "50%", transform: "translate(-50%, -50%)",
             zIndex: 701, width: "min(460px, 96vw)", maxHeight: "88vh",
