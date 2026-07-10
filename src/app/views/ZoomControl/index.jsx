@@ -346,7 +346,7 @@ const ZoomControl = ({ theme = "dark" }) => {
           />
         </div>
 
-        <span style={{ fontSize: 11.5, color: T.txt3, fontFamily: fontDisp, whiteSpace: "nowrap" }}>
+        <span style={{ fontSize: 12.5, fontWeight: 600, color: T.txt2, fontFamily: fontDisp, whiteSpace: "nowrap" }}>
           {filtered.length} {filtered.length === 1 ? "Zoom" : "Zooms"}
         </span>
       </div>
@@ -386,7 +386,7 @@ const ZoomControl = ({ theme = "dark" }) => {
                 >
                   <td style={tdStyle(T, "left")}>
                     <div style={{ fontWeight: 600, color: T.txt }}>{prettyDate(r.fecha_zoom)}</div>
-                    <div style={{ fontSize: 11, color: T.txt3 }}>{r.hora || "sin hora"}</div>
+                    <div style={{ fontSize: 12, fontWeight: 500, color: T.txt2 }}>{r.hora || "sin hora"}</div>
                   </td>
                   <td style={{ ...tdStyle(T, "left"), fontWeight: 600, color: T.txt }}>
                     <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
@@ -399,7 +399,7 @@ const ZoomControl = ({ theme = "dark" }) => {
                     <td style={{ ...tdStyle(T, "center") }} title={r.discovery || "Sin discovery registrado"}>
                       <span style={{
                         display: "inline-block", padding: "2px 9px", borderRadius: 99,
-                        fontSize: 10.5, fontWeight: 700, fontFamily: fontDisp,
+                        fontSize: 11.5, fontWeight: 700, fontFamily: fontDisp,
                         color: r.discovery ? "#10B981" : T.txt3,
                         background: r.discovery ? "rgba(16,185,129,0.12)" : (isLight ? "rgba(15,23,42,0.05)" : "rgba(255,255,255,0.05)"),
                         border: `1px solid ${r.discovery ? "rgba(16,185,129,0.30)" : "transparent"}`,
@@ -469,7 +469,7 @@ function StatusSelect({ T, isLight, value, onChange }) {
       style={{
         appearance: "none", WebkitAppearance: "none",
         padding: "5px 12px", borderRadius: 99, cursor: "pointer",
-        fontSize: 11.5, fontWeight: 700, fontFamily: fontDisp,
+        fontSize: 12.5, fontWeight: 700, fontFamily: fontDisp,
         color: textColor,
         background: isLight ? `${c}1F` : `${c}22`,
         border: `1px solid ${c}55`,
@@ -635,7 +635,7 @@ function EditableSelect({ T, isLight, value, options, onChange, placeholder }) {
 function Field({ T, label, children, full }) {
   return (
     <div style={{ gridColumn: full ? "1 / -1" : "auto", display: "flex", flexDirection: "column", gap: 5 }}>
-      <label style={{ fontSize: 11, fontWeight: 700, color: T.txt2, fontFamily: fontDisp, textTransform: "uppercase", letterSpacing: "0.04em" }}>{label}</label>
+      <label style={{ fontSize: 11.5, fontWeight: 700, color: T.txt2, fontFamily: fontDisp, textTransform: "uppercase", letterSpacing: "0.04em" }}>{label}</label>
       {children}
     </div>
   );
@@ -645,8 +645,8 @@ function Field({ T, label, children, full }) {
 function inputStyle(T, isLight) {
   return {
     boxSizing: "border-box",
-    padding: "9px 12px", borderRadius: 10,
-    fontSize: 13, fontFamily: fontDisp, color: T.txt,
+    padding: "10px 12px", borderRadius: 10,
+    fontSize: 13.5, fontFamily: fontDisp, color: T.txt,
     background: isLight ? "#FFFFFF" : "rgba(255,255,255,0.03)",
     border: `1px solid ${isLight ? "rgba(15,23,42,0.12)" : "rgba(255,255,255,0.10)"}`,
     outline: "none",
@@ -670,15 +670,15 @@ function iconBtn(T, isLight) {
 }
 function thStyle(T, align) {
   return {
-    padding: "11px 14px", textAlign: align,
-    fontSize: 10.5, fontWeight: 700, color: T.txt2, fontFamily: fontDisp,
+    padding: "12px 14px", textAlign: align,
+    fontSize: 11.5, fontWeight: 700, color: T.txt2, fontFamily: fontDisp,
     textTransform: "uppercase", letterSpacing: "0.06em", whiteSpace: "nowrap",
   };
 }
 function tdStyle(T, align) {
   return {
-    padding: "11px 14px", textAlign: align,
-    fontSize: 12.5, fontWeight: 500, color: T.txt2, fontFamily: fontDisp,
+    padding: "12px 14px", textAlign: align,
+    fontSize: 13.5, fontWeight: 600, color: T.txt2, fontFamily: fontDisp,
     verticalAlign: "middle",
   };
 }
