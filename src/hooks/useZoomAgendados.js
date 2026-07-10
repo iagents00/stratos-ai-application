@@ -118,6 +118,19 @@ export function useZoomAgendados() {
     return () => document.removeEventListener("visibilitychange", onVis);
   }, [refetch]);
 
+  // Realtime: los triggers del CRM (migración 087) escriben en zoom_agendados;
+  // esta suscripción refresca el panel solo, sin que el usuario recargue.
+  // RLS filtra los eventos por organización. removeChannel SIEMPRE en cleanup
+  // (regla de performance del proyecto).
+  useEffect(() => {
+    if (!orgId || isDemo) return;
+    const ch = supabase
+      .channel("zoom-agendados-live")
+      .on("postgres_changes", { event: "*", schema: "public", table: TABLE }, () => refetch())
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
+  }, [orgId, isDemo, refetch]);
+
   // ── Mutaciones ──────────────────────────────────────────────────────────
   // org se fija explícito en el INSERT (la policy WITH CHECK exige que coincida
   // con current_organization_id(); fijarlo evita depender del default).
