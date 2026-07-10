@@ -255,7 +255,14 @@
 //   pestañas Comando scrolleables + embudo envolvente; (7) bottom nav 4
 //   primarios + Más (resto al sheet) + safe-areas iPhone/Android en header,
 //   nav, sheet y contenido; overflow-x global bloqueado en móvil.
-const CACHE_VERSION = 'stratos-v108';
+// v109 — feat(zooms): Control de Zooms v2 según reunión con el director
+//   comercial (09-jul): Resumen automático (KPIs de hoy por estatus, semana
+//   L-D con 7 días, tablas por Liner hoy/semana y por Presentador, próximos
+//   7 días) con PDF propio para los socios; campo Discovery con indicador
+//   Sí/No; flag "calentito" (señal de cierre) con filtro y toggle en tabla.
+//   Requiere migración 083 (discovery/calentito); sin ella el panel funciona
+//   igual que antes (feature-detect de columnas).
+const CACHE_VERSION = 'stratos-v109';
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 
