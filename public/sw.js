@@ -353,7 +353,7 @@
 //   scroll del WebView → el título de la vista queda bajo el header. Fix:
 //   overflow-anchor:none en .stratos-content-area + scroll a tope al cambiar
 //   de tema. (La app además se renombra "Stratos CRM AI" — cambio nativo.)
-const CACHE_VERSION = 'stratos-v137'; // v1.7: pin multi-shot del scroll tras cambio de tema + chats sin scrollIntoView + sello de versión en Menú
+const CACHE_VERSION = 'stratos-v138'; // v1.8: guardián permanente anti-drift del scroll (guard:SCROLL-DRIFT) — el contenido no puede quedar en reposo corrido 1-60px
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 
