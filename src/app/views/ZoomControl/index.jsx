@@ -567,7 +567,7 @@ const ZoomControl = ({ theme = "dark" }) => {
       </div>
 
       {/* ── Resumen automático (réplica del sheet del director comercial) ──── */}
-      <ResumenZooms rows={rows} T={T} isLight={isLight} />
+      <ResumenZooms rows={rows} T={T} isLight={isLight} onOpenZoom={openEdit} />
 
 
       {/* ── Modal de alta / edición ────────────────────────────────────────── */}

@@ -18,11 +18,11 @@
  * ─────────────────────────────────────────────────────────────────────────────
  */
 import { useMemo, useState } from "react";
-import { FileDown, CalendarRange } from "lucide-react";
+import { FileDown, CalendarRange, Flame, X } from "lucide-react";
 import { font, fontDisp } from "../../../design-system/tokens";
 import { G } from "../../SharedComponents";
 import { useClient } from "../../../hooks/useClient";
-import { LINERS, PRESENTADORES, ESTATUS_ASISTIO } from "./constants";
+import { LINERS, PRESENTADORES, ESTATUS_ASISTIO, estatusColor } from "./constants";
 import { todayStr, addDays, weekRange, quincenaRange, monthRange, inRange, ymd, DOW, MON } from "./dates";
 
 // Conteo por estatus de un subconjunto de Zooms. `total` incluye TODOS los
@@ -57,10 +57,13 @@ const ESTATUS_COLS = [
   { key: "cancelados",  label: "Canc." },
 ];
 
-export default function ResumenZooms({ rows = [], T, isLight }) {
+export default function ResumenZooms({ rows = [], T, isLight, onOpenZoom = null }) {
   const { config: clientConfig } = useClient();
   const [linerScope, setLinerScope] = useState("hoy"); // hoy | semana
   const [pdfBusy, setPdfBusy] = useState(false);
+  // Día seleccionado en la semana / próximos 7 — despliega la lista de sus
+  // Zooms debajo de la tira (las tarjetas SON botones, no solo tarjetas).
+  const [selectedDay, setSelectedDay] = useState(null);
 
   const today = todayStr();
   const wk = weekRange();
@@ -250,19 +253,88 @@ export default function ResumenZooms({ rows = [], T, isLight }) {
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(7, minmax(92px, 1fr))", gap: 6, overflowX: "auto" }}>
           {semanaDias.map(d => (
-            <div key={d.key} title={`${d.longLabel}: ${d.total} Zooms · ${d.confirmados} confirmados · ${d.asistieron} asistieron`} style={{
-              borderRadius: 10, padding: "10px 10px", textAlign: "center",
-              background: d.isToday ? `${accent}14` : (isLight ? "rgba(255,255,255,0.6)" : "rgba(255,255,255,0.02)"),
-              border: d.isToday ? `2px solid ${accent}77` : `1px solid ${rowBorder}`,
-            }}>
+            <button
+              key={d.key}
+              onClick={() => setSelectedDay(selectedDay === d.key ? null : d.key)}
+              title={`${d.longLabel}: ${d.total} Zooms · ${d.confirmados} confirmados · ${d.asistieron} asistieron — click para ver el detalle`}
+              style={{
+                borderRadius: 10, padding: "10px 10px", textAlign: "center", cursor: "pointer",
+                fontFamily: "inherit", transition: "border-color 0.12s, transform 0.12s",
+                background: selectedDay === d.key ? `${accent}1F` : d.isToday ? `${accent}14` : (isLight ? "rgba(255,255,255,0.6)" : "rgba(255,255,255,0.02)"),
+                border: selectedDay === d.key ? `2px solid ${accent}` : d.isToday ? `2px solid ${accent}77` : `1px solid ${rowBorder}`,
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.borderColor = accent; }}
+              onMouseLeave={(e) => { e.currentTarget.style.borderColor = selectedDay === d.key ? accent : d.isToday ? `${accent}77` : ""; }}
+            >
               <div style={{ fontSize: 11, fontWeight: 700, color: d.isToday ? accent : T.txt2, fontFamily: fontDisp, textTransform: "uppercase", letterSpacing: "0.04em", whiteSpace: "nowrap" }}>
                 {d.label}{d.isToday ? " · hoy" : ""}
               </div>
               <div style={{ fontSize: 24, fontWeight: 800, color: T.txt, fontFamily: fontDisp, marginTop: 2, fontVariantNumeric: "tabular-nums" }}>{d.total}</div>
               <div style={{ fontSize: 10.5, fontWeight: 500, color: T.txt2, fontFamily: font, whiteSpace: "nowrap" }}>{d.confirmados} conf. · {d.asistieron} asist.</div>
-            </div>
+            </button>
           ))}
         </div>
+
+        {/* Detalle del día seleccionado — los Zooms de ese día, clickeables. */}
+        {selectedDay && (() => {
+          const delDia = rows
+            .filter(r => r.fecha_zoom === selectedDay)
+            .sort((a, b) => (a.hora || "").localeCompare(b.hora || ""));
+          const [yy, mm, dd] = selectedDay.split("-").map(Number);
+          const dt = new Date(yy, mm - 1, dd);
+          const titulo = `${DOW[dt.getDay()]} ${dd} ${MON[dt.getMonth()]}`;
+          return (
+            <div style={{ marginTop: 10, borderRadius: 12, border: `2px solid ${accent}55`, overflow: "hidden" }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, padding: "9px 12px", background: `${accent}12` }}>
+                <span style={{ fontSize: 12.5, fontWeight: 800, color: T.txt, fontFamily: fontDisp, textTransform: "uppercase", letterSpacing: "0.04em" }}>
+                  {titulo} · {delDia.length} {delDia.length === 1 ? "Zoom" : "Zooms"}{selectedDay === today ? " · HOY" : ""}
+                </span>
+                <button onClick={() => setSelectedDay(null)} title="Cerrar detalle" style={{
+                  display: "inline-flex", alignItems: "center", justifyContent: "center",
+                  width: 24, height: 24, borderRadius: 7, cursor: "pointer",
+                  background: "transparent", border: `1px solid ${rowBorder}`, color: T.txt2,
+                }}><X size={13} /></button>
+              </div>
+              {delDia.length === 0 && (
+                <div style={{ padding: "14px 12px", fontSize: 12.5, color: T.txt3, fontFamily: font }}>
+                  Sin Zooms agendados este día.
+                </div>
+              )}
+              {delDia.map((r, i) => {
+                const c = estatusColor(r.estatus);
+                return (
+                  <div
+                    key={r.id}
+                    onClick={onOpenZoom ? () => onOpenZoom(r) : undefined}
+                    title={onOpenZoom ? "Abrir este Zoom" : undefined}
+                    style={{
+                      display: "flex", alignItems: "center", gap: 12, padding: "9px 12px",
+                      borderTop: i === 0 ? "none" : `1px solid ${rowBorder}`,
+                      cursor: onOpenZoom ? "pointer" : "default",
+                      background: r.calentito ? "rgba(234,88,12,0.07)" : "transparent",
+                    }}
+                    onMouseEnter={(e) => { e.currentTarget.style.background = isLight ? "rgba(15,23,42,0.03)" : "rgba(255,255,255,0.03)"; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.background = r.calentito ? "rgba(234,88,12,0.07)" : "transparent"; }}
+                  >
+                    <span style={{ width: 46, flexShrink: 0, fontSize: 12.5, fontWeight: 700, color: T.txt, fontFamily: fontDisp, fontVariantNumeric: "tabular-nums" }}>{r.hora || "—"}</span>
+                    <span style={{ flex: "1 1 30%", minWidth: 0, display: "inline-flex", alignItems: "center", gap: 5, fontSize: 13, fontWeight: 700, color: T.txt, fontFamily: fontDisp, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      {r.calentito && <Flame size={13} color="#EA580C" strokeWidth={2.6} />}
+                      {r.cliente || "—"}
+                    </span>
+                    <span style={{ flex: "1 1 20%", minWidth: 0, fontSize: 12, color: T.txt2, fontFamily: font, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.liner || "—"}</span>
+                    <span style={{ flex: "1 1 20%", minWidth: 0, fontSize: 12, color: T.txt2, fontFamily: font, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.presentador_principal || "—"}</span>
+                    <span style={{
+                      flexShrink: 0, padding: "3px 10px", borderRadius: 99,
+                      fontSize: 11, fontWeight: 700, fontFamily: fontDisp,
+                      color: isLight ? `color-mix(in srgb, ${c} 62%, #0B1220 38%)` : c,
+                      background: isLight ? `${c}1F` : `${c}22`, border: `1px solid ${c}55`,
+                    }}>{r.estatus}</span>
+                  </div>
+                );
+              })}
+            </div>
+          );
+        })()}
       </div>
 
       {/* 3+4+5) Tablas: por Liner (toggle hoy/semana), por Presentador, próximos 7 */}
@@ -363,7 +435,12 @@ export default function ResumenZooms({ rows = [], T, isLight }) {
             </thead>
             <tbody>
               {proximos7.map((d, i) => (
-                <tr key={d.key} style={{ borderTop: `1px solid ${rowBorder}`, opacity: d.total === 0 ? 0.55 : 1 }}>
+                <tr
+                  key={d.key}
+                  onClick={() => setSelectedDay(selectedDay === d.key ? null : d.key)}
+                  title="Click para ver el detalle del día (arriba, junto a la semana)"
+                  style={{ borderTop: `1px solid ${rowBorder}`, opacity: d.total === 0 ? 0.55 : 1, cursor: "pointer" }}
+                >
                   <td style={{ ...miniTd(T, "left"), fontWeight: i === 0 ? 800 : 600, color: T.txt }}>{d.label}{i === 0 ? " · hoy" : ""}</td>
                   <td style={miniTd(T)}>{d.total}</td>
                   <td style={{ ...miniTd(T), color: "#0EA5E9", fontWeight: 600 }}>{d.confirmados}</td>
