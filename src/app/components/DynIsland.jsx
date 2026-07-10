@@ -24,7 +24,7 @@ import { INTEL_FEATURES } from "../constants/intelFeatures";
 // Mapa nombre→componente de ícono (los datos guardan solo el string)
 const FEATURE_ICONS = { Mic, FileText, Video, MapPin, GitBranch, Search, BarChart3, Bell, Sparkles, Zap, Gauge, UsersRound };
 
-const DynIsland = ({ onExpand, notifications = [], theme = "dark", beamIdx = 0 }) => {
+const DynIsland = ({ onExpand, onOpenLead, notifications = [], theme = "dark", beamIdx = 0 }) => {
   const isLight = theme === "light";
   const [isOpen, setIsOpen] = useState(false);
   const [selectedNotif, setSelectedNotif] = useState(null);
@@ -232,7 +232,7 @@ const DynIsland = ({ onExpand, notifications = [], theme = "dark", beamIdx = 0 }
                 <p style={{ fontSize: 13, color: "rgba(255,255,255,0.65)", lineHeight: 1.65, fontFamily: font, marginBottom: 20 }}>{selectedNotif.detail}</p>
 
                 <button
-                  onClick={() => { onExpand?.(); closeAll(); }}
+                  onClick={() => { if (selectedNotif.leadId) { onOpenLead?.(selectedNotif.leadId); } else { onExpand?.(); } closeAll(); }}
                   style={{
                     width: "100%", padding: "13px 16px", borderRadius: 12,
                     background: "rgba(255,255,255,0.92)", color: "#06080F",

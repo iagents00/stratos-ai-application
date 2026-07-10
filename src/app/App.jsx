@@ -1404,7 +1404,7 @@ export default function App() {
               </div>
               {/* CENTER */}
               <div className="stratos-header-center" style={{ position:"absolute", left:"50%", transform:"translateX(-50%)" }}>
-                <DynIsland onExpand={openPriorityLead} notifications={notifs} theme={theme} beamIdx={iaosIdx} />
+                <DynIsland onExpand={openPriorityLead} onOpenLead={openLeadExpediente} notifications={notifs} theme={theme} beamIdx={iaosIdx} />
               </div>
               {/* RIGHT */}
               <div className="stratos-header-right" style={{ display:"flex", alignItems:"center", gap:4 }}>
