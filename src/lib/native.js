@@ -65,8 +65,15 @@ export async function notifyUser({ title, body, tag, onClick }) {
   const ln = nativePlugin("LocalNotifications");
   if (ln) {
     try {
+      // Si el permiso no está dado, se pide UNA vez con await y se sigue si lo
+      // conceden en ese mismo diálogo (antes: requestPermissions sin await y
+      // return false → el diálogo salía en momentos raros y la notificación
+      // que lo gatilló se perdía aunque el usuario aceptara).
       const st = await ln.checkPermissions();
-      if (st?.display !== "granted") { ln.requestPermissions(); return false; }
+      if (st?.display !== "granted") {
+        const req = await ln.requestPermissions();
+        if (req?.display !== "granted") return false;
+      }
       // id de 32 bits estable por tag (Java int) — mismo tag = reemplaza.
       let id = 1;
       if (tag) { id = 0; for (const ch of tag) id = ((id * 31) + ch.charCodeAt(0)) % 2147483647; id = id || 1; }
@@ -93,13 +100,14 @@ export function addNotificationTapListener(callback) {
   const ln = nativePlugin("LocalNotifications");
   if (!ln) return () => {};
   let handle;
+  let removed = false; // por si el cleanup corre ANTES de que la promesa resuelva
   try {
     const res = ln.addListener("localNotificationActionPerformed", () => { try { callback(); } catch { /* noop */ } });
     // addListener puede devolver el handle directo o una promesa de handle.
-    if (res?.then) res.then(h => { handle = h; }).catch(() => {});
+    if (res?.then) res.then(h => { if (removed) h?.remove?.(); else handle = h; }).catch(() => {});
     else handle = res;
   } catch { /* noop */ }
-  return () => { try { handle?.remove?.(); } catch { /* noop */ } };
+  return () => { removed = true; try { handle?.remove?.(); } catch { /* noop */ } };
 }
 
 /* ── Archivos / PDF ──────────────────────────────────────────────────────────
@@ -116,11 +124,12 @@ export async function savePdfDoc(doc, filename) {
     if (fs) {
       const base64 = doc.output("datauristring").split(",")[1];
       const res = await fs.writeFile({ path: filename, data: base64, directory: "CACHE" });
-      if (share) {
-        try {
-          await share.share({ title: filename, url: res.uri, dialogTitle: "Guardar o compartir el PDF" });
-        } catch { /* usuario cerró la hoja de compartir — no es un error */ }
-      }
+      // Sin Share no hay forma de mostrarle el archivo al usuario: mejor
+      // fallar ruidoso (el catch del caller avisa) que un "listo" silencioso.
+      if (!share) throw new Error("plugin Share no disponible en el shell");
+      try {
+        await share.share({ title: filename, url: res.uri, dialogTitle: "Guardar o compartir el PDF" });
+      } catch { /* usuario cerró la hoja de compartir — no es un error */ }
       return true;
     }
   }
