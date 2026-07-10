@@ -347,7 +347,13 @@
 //   --safe-area-inset-* correctas → todos los usos pasan al patrón
 //   var(--safe-area-inset-X, env(safe-area-inset-X, 0px)). En navegador no
 //   cambia nada (la var no existe → cae a env como siempre).
-const CACHE_VERSION = 'stratos-v135';
+// v136 — fix(móvil): "algo tapa la parte de arriba SOLO en tema claro"
+//   (reporte de Ángel en la app): al alternar el tema, el re-render completo
+//   puede dejar el scroll del contenido corrido unos px por el anclaje de
+//   scroll del WebView → el título de la vista queda bajo el header. Fix:
+//   overflow-anchor:none en .stratos-content-area + scroll a tope al cambiar
+//   de tema. (La app además se renombra "Stratos CRM AI" — cambio nativo.)
+const CACHE_VERSION = 'stratos-v136';
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 

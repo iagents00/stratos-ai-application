@@ -346,6 +346,11 @@ export default function App() {
   // al boot; acá lo mantenemos en sync cuando el usuario alterna el tema.
   useEffect(() => {
     try { document.documentElement.setAttribute("data-theme", theme); } catch { /* noop */ }
+    // El re-skin del tema re-renderiza TODO y el anclaje de scroll del WebView
+    // puede dejar el contenido corrido unos px hacia arriba (la parte superior
+    // "tapada" bajo el header — reporte de Ángel, solo tras pasar a claro).
+    // Un tema nuevo = pantalla nueva: arrancar arriba siempre.
+    try { document.querySelector(".stratos-content-area")?.scrollTo({ top: 0 }); } catch { /* noop */ }
   }, [theme]);
   const setTheme = useCallback((next) => {
     try { localStorage.setItem("stratos_crm_theme", next); } catch {}
@@ -1243,7 +1248,7 @@ export default function App() {
           /* padding inferior = holgura sobre el nav (58px) + safe area (home
              indicator iPhone / gestos Android). overflow-x:hidden = clamp
              defensivo global: ninguna vista puede panear la página horizontal. */
-          .stratos-content-area{padding:14px 14px calc(96px + var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px))) 14px!important;overflow-x:hidden!important}
+          .stratos-content-area{padding:14px 14px calc(96px + var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px))) 14px!important;overflow-x:hidden!important;overflow-anchor:none}
           /* Wrapper transparente de la nav flotante estilo Apple Music:
              la CÁPSULA con los tabs + el botón "+" viven como hijos. El
              wrapper no captura taps (pointer-events) para no tapar contenido
