@@ -326,7 +326,7 @@
 // v124 — style(zooms): editor de Discovery rediseñado (tarjeta Apple-style,
 //   textarea que crece con el texto, ⌘↵/Esc, Copiar para el presentador,
 //   Guardar sólo cuando hay cambios) + pill "Añadir/Sí" refinado.
-const CACHE_VERSION = 'stratos-v129';
+const CACHE_VERSION = 'stratos-v130';
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 

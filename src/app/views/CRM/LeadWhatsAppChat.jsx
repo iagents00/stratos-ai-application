@@ -32,6 +32,7 @@
  * ─────────────────────────────────────────────────────────────────────────────
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { MessageCircle, Send, Clock, AlertTriangle, RefreshCw, Lock, Paperclip, X, FileText, Download, Mic, Square } from "lucide-react";
 import { P, font, fontDisp } from "../../../design-system/tokens";
 import { supabase } from "../../../lib/supabase";
@@ -75,21 +76,37 @@ function typeFromName(name) {
 
 /* Render de un adjunto (imagen / audio / video / archivo). */
 function MediaAttachment({ m, T, isLight }) {
+  const [zoom, setZoom] = useState(false);
   const fname = cleanFileName(m.filename, m.ext);
   let type = m.type || mediaTypeFromMime(m.mime || "");
   // Si el mime no clasificó (o dio genérico) pero el NOMBRE tiene extensión conocida, inferir.
   if (!["image", "audio", "video"].includes(type)) type = typeFromName(fname) || type || "file";
   const url = m.url;
   if (type === "image") {
+    // Click → visor GRANDE DENTRO del CRM (lightbox). Antes abría el link crudo de
+    // Chatwoot en otra pestaña: exponía el host del VPS/EasyPanel y sacaba al asesor del CRM.
     return (
-      <a href={url} target="_blank" rel="noreferrer" style={{ display: "block" }}>
+      <>
         <img
           src={m.thumb || url}
           alt="imagen"
-          style={{ maxWidth: 220, maxHeight: 240, borderRadius: 10, display: "block", objectFit: "cover" }}
+          onClick={() => setZoom(true)}
+          style={{ maxWidth: 220, maxHeight: 240, borderRadius: 10, display: "block", objectFit: "cover", cursor: "zoom-in" }}
           loading="lazy"
         />
-      </a>
+        {zoom && createPortal(
+          <div onClick={() => setZoom(false)}
+            style={{ position: "fixed", inset: 0, zIndex: 100000, background: "rgba(0,0,0,0.88)", display: "flex", alignItems: "center", justifyContent: "center", padding: 24, cursor: "zoom-out", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)" }}>
+            <img src={url} alt="imagen" onClick={e => e.stopPropagation()}
+              style={{ maxWidth: "94vw", maxHeight: "92vh", borderRadius: 12, objectFit: "contain", boxShadow: "0 24px 80px rgba(0,0,0,0.6)" }} />
+            <button onClick={() => setZoom(false)} aria-label="Cerrar"
+              style={{ position: "fixed", top: 18, right: 18, width: 40, height: 40, borderRadius: 12, border: "none", background: "rgba(255,255,255,0.14)", color: "#fff", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <X size={20} />
+            </button>
+          </div>,
+          document.body
+        )}
+      </>
     );
   }
   if (type === "audio") {
