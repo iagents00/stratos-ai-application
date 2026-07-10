@@ -28,6 +28,20 @@ import {
 import ResumenZooms from "./Resumen";
 import { todayStr, weekRange, next7Range, inRange, prettyDate, isoWeekNumber, DOW_FULL, MES_FULL } from "./dates";
 
+// Mes y día (nombre completo) de un YYYY-MM-DD — columnas "Mes" y "Día del
+// Zoom" del sheet, ahora derivadas y siempre correctas.
+function mesDelZoom(f) {
+  if (!f) return "—";
+  const m = Number(f.split("-")[1]);
+  return m ? MES_FULL[m - 1] : "—";
+}
+function diaDelZoom(f) {
+  if (!f) return "—";
+  const [y, m, d] = f.split("-").map(Number);
+  if (!y || !m || !d) return "—";
+  return DOW_FULL[new Date(y, m - 1, d).getDay()];
+}
+
 const RANGES = [
   { id: "hoy",   label: "Hoy" },
   { id: "semana", label: "Esta semana" },
@@ -247,6 +261,10 @@ const ZoomControl = ({ theme = "dark" }) => {
   const cardBorder = isLight ? "rgba(15,23,42,0.07)" : "rgba(255,255,255,0.06)";
   const subtleBg = isLight ? "rgba(15,23,42,0.04)" : "rgba(255,255,255,0.04)";
   const rowBorder = isLight ? "rgba(15,23,42,0.06)" : "rgba(255,255,255,0.05)";
+  // Fondos SÓLIDOS para las partes fijadas (sticky) — si fueran translúcidos,
+  // las filas se verían a través del encabezado al hacer scroll.
+  const stickyBg = isLight ? "#FFFFFF" : "#0B1220";
+  const sepBg    = isLight ? "#EEF3F1" : "#101B30";
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
@@ -417,23 +435,37 @@ const ZoomControl = ({ theme = "dark" }) => {
         </span>
       </div>
 
-      {/* ── Tabla ──────────────────────────────────────────────────────────── */}
+      {/* ── Tabla — MISMAS columnas y nombres que el sheet del director, para
+             que el equipo la reconozca al instante. El encabezado y la banda
+             del día quedan FIJADOS (sticky) al hacer scroll. ───────────────── */}
       <G T={T} np style={{ overflow: "hidden", border: `1px solid ${cardBorder}` }}>
-        <div style={{ overflowX: "auto" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 1020 }}>
+        <div style={{ overflow: "auto", maxHeight: "72vh" }}>
+          <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 1720 }}>
             <thead>
-              <tr style={{ background: isLight ? "rgba(15,23,42,0.035)" : "rgba(255,255,255,0.035)" }}>
-                {["Fecha del Zoom", "Cliente", "Proyecto", ...(hasExtCols ? ["Disc."] : []), "Liner", "Presentador", "Estatus", "Comentarios", ""].map((h, i) => (
-                  <th key={i} style={thStyle(T, i === 0 ? "left" : h === "Disc." || h === "Estatus" || h === "" ? "center" : "left")}>{h}</th>
+              <tr>
+                {[
+                  ["Fecha en que se agendó", "left"], ["Fecha del Zoom", "left"], ["Hora", "center"],
+                  ["Liner", "left"], ["Presentador principal", "left"], ["Presentador apoyo", "left"],
+                  ["Cliente", "left"], ["Desarrollo / Proyecto", "left"], ["Estatus", "center"],
+                  ["Comentarios", "left"], ["Semana", "center"], ["Mes", "center"],
+                  ["Día del Zoom", "center"], ["¿Zoom hoy?", "center"],
+                  ...(hasExtCols ? [["Discovery", "center"]] : []), ["", "center"],
+                ].map(([h, align], i) => (
+                  <th key={i} style={{
+                    ...thStyle(T, align), lineHeight: "14px",
+                    position: "sticky", top: 0, zIndex: 3,
+                    background: stickyBg,
+                    boxShadow: `inset 0 -1px 0 ${rowBorder}`,
+                  }}>{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {loading && (
-                <tr><td colSpan={hasExtCols ? 9 : 8} style={{ ...tdStyle(T, "center"), padding: "32px", color: T.txt3 }}>Cargando Zooms…</td></tr>
+                <tr><td colSpan={hasExtCols ? 16 : 15} style={{ ...tdStyle(T, "center"), padding: "32px", color: T.txt3 }}>Cargando Zooms…</td></tr>
               )}
               {!loading && filtered.length === 0 && (
-                <tr><td colSpan={hasExtCols ? 9 : 8} style={{ ...tdStyle(T, "center"), padding: "36px 20px", color: T.txt3 }}>
+                <tr><td colSpan={hasExtCols ? 16 : 15} style={{ ...tdStyle(T, "center"), padding: "36px 20px", color: T.txt3 }}>
                   {rows.length === 0
                     ? "Aún no hay Zooms registrados. Crea el primero con “Nuevo Zoom”."
                     : "Ningún Zoom coincide con este filtro."}
@@ -444,9 +476,11 @@ const ZoomControl = ({ theme = "dark" }) => {
                   const esHoy = item.fecha === today;
                   return (
                     <tr key={`sep-${item.fecha || idx}`}>
-                      <td colSpan={hasExtCols ? 9 : 8} style={{
-                        padding: "8px 14px", background: subtleBg,
-                        borderTop: `1px solid ${rowBorder}`,
+                      {/* Banda del día FIJADA bajo el encabezado mientras se recorre ese día. */}
+                      <td colSpan={hasExtCols ? 16 : 15} style={{
+                        padding: "8px 14px", background: sepBg,
+                        position: "sticky", top: 39, zIndex: 2,
+                        boxShadow: `inset 0 1px 0 ${rowBorder}, inset 0 -1px 0 ${rowBorder}`,
                         fontSize: 11.5, fontWeight: 800, fontFamily: fontDisp,
                         textTransform: "uppercase", letterSpacing: "0.05em",
                         color: esHoy ? accent : T.txt2,
@@ -467,18 +501,31 @@ const ZoomControl = ({ theme = "dark" }) => {
                   onMouseEnter={(e) => { e.currentTarget.style.background = isLight ? "rgba(15,23,42,0.025)" : "rgba(255,255,255,0.02)"; }}
                   onMouseLeave={(e) => { e.currentTarget.style.background = hotBg; }}
                 >
-                  {/* La marca HOY vive en el separador del día; aquí solo fecha+hora. */}
-                  <td style={tdStyle(T, "left")} title={r.fecha_agendado ? `Se agendó el ${prettyDate(r.fecha_agendado)}` : undefined}>
-                    <div style={{ fontWeight: 600, color: T.txt }}>{prettyDate(r.fecha_zoom)}</div>
-                    <div style={{ fontSize: 12, fontWeight: 500, color: T.txt2 }}>{r.hora || "sin hora"}</div>
-                  </td>
-                  <td style={{ ...tdStyle(T, "left"), fontWeight: 600, color: T.txt }}>
+                  <td style={{ ...tdStyle(T, "left"), fontWeight: 500, color: T.txt2 }}>{prettyDate(r.fecha_agendado)}</td>
+                  <td style={{ ...tdStyle(T, "left"), fontWeight: 700, color: T.txt }}>{prettyDate(r.fecha_zoom)}</td>
+                  <td style={{ ...tdStyle(T, "center"), color: T.txt }}>{r.hora || "—"}</td>
+                  <td style={tdStyle(T, "left")}>{r.liner || "—"}</td>
+                  <td style={tdStyle(T, "left")}>{r.presentador_principal || "—"}</td>
+                  <td style={{ ...tdStyle(T, "left"), color: T.txt2 }}>{r.presentador_apoyo || "—"}</td>
+                  <td style={{ ...tdStyle(T, "left"), fontWeight: 700, color: T.txt }}>
                     <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
                       {r.calentito && <Flame size={13} color="#EA580C" strokeWidth={2.6} title="Calentito — señal de cierre en el Zoom" />}
                       {r.cliente || "—"}
                     </span>
                   </td>
                   <td style={tdStyle(T, "left")}>{r.proyecto || "—"}</td>
+                  <td style={{ ...tdStyle(T, "center"), padding: "8px 10px" }} onClick={(e) => e.stopPropagation()}>
+                    <StatusSelect T={T} isLight={isLight} value={r.estatus} onChange={(s) => onInlineStatus(r, s)} />
+                  </td>
+                  <td style={{ ...tdStyle(T, "left"), maxWidth: 230, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontWeight: 500, fontSize: 12.5, fontFamily: font }} title={r.comentarios || ""}>
+                    {r.comentarios || "—"}
+                  </td>
+                  <td style={tdStyle(T, "center")}>{isoWeekNumber(r.fecha_zoom) || "—"}</td>
+                  <td style={tdStyle(T, "center")}>{mesDelZoom(r.fecha_zoom)}</td>
+                  <td style={tdStyle(T, "center")}>{diaDelZoom(r.fecha_zoom)}</td>
+                  <td style={{ ...tdStyle(T, "center"), fontWeight: 800, color: r.fecha_zoom === today ? accent : T.txt3 }}>
+                    {r.fecha_zoom === today ? "Sí" : "No"}
+                  </td>
                   {hasExtCols && (
                     <td style={{ ...tdStyle(T, "center") }} title={r.discovery || "Sin discovery registrado"}>
                       <span style={{
@@ -490,17 +537,6 @@ const ZoomControl = ({ theme = "dark" }) => {
                       }}>{r.discovery ? "Sí" : "No"}</span>
                     </td>
                   )}
-                  <td style={tdStyle(T, "left")}>{r.liner || "—"}</td>
-                  <td style={tdStyle(T, "left")}>
-                    <div>{r.presentador_principal || "—"}</div>
-                    {r.presentador_apoyo && <div style={{ fontSize: 11, color: T.txt3 }}>+ {r.presentador_apoyo}</div>}
-                  </td>
-                  <td style={{ ...tdStyle(T, "center"), padding: "8px 10px" }} onClick={(e) => e.stopPropagation()}>
-                    <StatusSelect T={T} isLight={isLight} value={r.estatus} onChange={(s) => onInlineStatus(r, s)} />
-                  </td>
-                  <td style={{ ...tdStyle(T, "left"), maxWidth: 230, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontWeight: 500, fontSize: 12.5, fontFamily: font }} title={r.comentarios || ""}>
-                    {r.comentarios || "—"}
-                  </td>
                   <td style={{ ...tdStyle(T, "center"), padding: "8px 10px", whiteSpace: "nowrap" }} onClick={(e) => e.stopPropagation()}>
                     {hasExtCols && (
                       <button
@@ -609,17 +645,17 @@ function ZoomModal({ T, isLight, accent, editing, form, setField, formErr, busy,
             <input type="time" value={form.hora} onChange={(e) => setField("hora", e.target.value)} style={{ ...inputStyle(T, isLight), width: "100%" }} />
           </Field>
 
-          <Field T={T} label="Liner (agenda)">
+          <Field T={T} label="Liner">
             <EditableSelect T={T} isLight={isLight} value={form.liner} options={LINERS} onChange={(v) => setField("liner", v)} placeholder="Quién agenda" />
           </Field>
-          <Field T={T} label="Proyecto / Desarrollo">
+          <Field T={T} label="Desarrollo / Proyecto">
             <input value={form.proyecto} onChange={(e) => setField("proyecto", e.target.value)} placeholder="Ej. Grupo 28" style={{ ...inputStyle(T, isLight), width: "100%" }} />
           </Field>
 
           <Field T={T} label="Presentador principal">
             <EditableSelect T={T} isLight={isLight} value={form.presentador_principal} options={PRESENTADORES} onChange={(v) => setField("presentador_principal", v)} placeholder="Quién corre el Zoom" />
           </Field>
-          <Field T={T} label="Presentador de apoyo">
+          <Field T={T} label="Presentador apoyo">
             <EditableSelect T={T} isLight={isLight} value={form.presentador_apoyo} options={PRESENTADORES} onChange={(v) => setField("presentador_apoyo", v)} placeholder="Opcional" />
           </Field>
 
