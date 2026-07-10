@@ -333,7 +333,7 @@
 //   notificaciones nativas de WhatsApp en la app (Notification API no existe
 //   en el WebView) + permiso al entrar; Gestión de Usuarios responsive
 //   (tarjetas en móvil, botones full-width).
-const CACHE_VERSION = 'stratos-v131';
+const CACHE_VERSION = 'stratos-v132';
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 
