@@ -265,7 +265,11 @@
 // v110 — feat(zooms): alcance Mes en el Resumen (toggle Hoy|Semana|Mes por
 //   Liner, columna Mes en Presentador, seccion mensual en el PDF). Bump para
 //   que los SW con v109 pre-Mes tomen el bundle nuevo.
-const CACHE_VERSION = 'stratos-v110';
+// v111 — style(zooms): legibilidad del Control de Zooms — números y letras
+//   más grandes y con más tinta (KPIs 28px, tablas 13.5px, headers 11.5px,
+//   grises tenues promovidos a txt2/txt), tarjetas de día de la semana más
+//   presentes. Pedido de Ivan: "letras y números que no se batallen para ver".
+const CACHE_VERSION = 'stratos-v111';
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 
