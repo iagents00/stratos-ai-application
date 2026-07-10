@@ -340,7 +340,14 @@
 //   detector de crash ya NO cuenta cierres normales de la app como intentos
 //   fallidos (abrir/cerrar 3 veces probando una APK activaba el modo seguro
 //   48h) y las claves pasan a _v2 para liberar a los dispositivos atascados.
-const CACHE_VERSION = 'stratos-v134';
+// v135 — fix(app Android): la parte de arriba salía CORTADA en el celular
+//   (el título "CRM" bajo el header). Android 15+/16 fuerza edge-to-edge y en
+//   algunos WebView env(safe-area-inset-*) queda en 0 aunque la app dibuje
+//   bajo la barra de estado. Capacitor 8 SIEMPRE inyecta las variables CSS
+//   --safe-area-inset-* correctas → todos los usos pasan al patrón
+//   var(--safe-area-inset-X, env(safe-area-inset-X, 0px)). En navegador no
+//   cambia nada (la var no existe → cae a env como siempre).
+const CACHE_VERSION = 'stratos-v135';
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 

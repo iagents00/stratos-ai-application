@@ -116,11 +116,11 @@ const DynIsland = ({ onExpand, onOpenLead, notifications = [], theme = "dark", b
           <div style={{
             /* top con safe-area: en la app nativa (notch/status bar) el panel
                no debe quedar debajo de la barra de estado. */
-            position: "fixed", top: "calc(66px + env(safe-area-inset-top, 0px))", left: "50%", transform: "translateX(-50%)",
+            position: "fixed", top: "calc(66px + var(--safe-area-inset-top, env(safe-area-inset-top, 0px)))", left: "50%", transform: "translateX(-50%)",
             zIndex: 99999,
             width: selectedNotif || selectedFeature ? 600 : 580,
             maxWidth: "calc(100vw - 24px)",
-            maxHeight: "calc(100dvh - 90px - env(safe-area-inset-top, 0px))", overflowY: "auto",
+            maxHeight: "calc(100dvh - 90px - var(--safe-area-inset-top, env(safe-area-inset-top, 0px)))", overflowY: "auto",
             borderRadius: 20,
             background: selectedNotif
               ? `radial-gradient(ellipse at top, ${selectedNotif.c}10 0%, #03060F 70%)`
