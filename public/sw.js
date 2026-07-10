@@ -306,7 +306,14 @@
 //   pill (Sí / + Añadir) que despliega un panel elegante bajo la fila del
 //   Zoom (acento verde, textarea, Guardar/Cancelar). Cerrado no ocupa nada;
 //   solo se ve completo al hacer click. Pedido de Ivan.
-const CACHE_VERSION = 'stratos-v119';
+// v120 — fix(crítico): app en blanco al abrir con la pestaña en segundo
+//   plano. La capa data-hidden de mobile-perf.css (v108) pausaba TODAS las
+//   animaciones → las de ENTRADA (fadeIn del contenedor de vistas) quedaban
+//   congeladas en opacity 0 y la app entera se veía vacía aunque el DOM
+//   estuviera completo. Ahora solo se pausan las animaciones INFINITAS
+//   (mismo criterio que la capa móvil); el beneficio anti-crash de iOS se
+//   conserva. Diagnóstico en vivo con el navegador de Ivan.
+const CACHE_VERSION = 'stratos-v120';
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 
