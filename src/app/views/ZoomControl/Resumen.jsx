@@ -187,11 +187,11 @@ export default function ResumenZooms({ rows = [], T, isLight }) {
       {/* Header del resumen */}
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12, flexWrap: "wrap", marginBottom: 14 }}>
         <div>
-          <p style={{ margin: 0, fontSize: 14.5, fontWeight: 700, color: T.txt, fontFamily: fontDisp, letterSpacing: "-0.014em" }}>
+          <p style={{ margin: 0, fontSize: 16, fontWeight: 700, color: T.txt, fontFamily: fontDisp, letterSpacing: "-0.014em" }}>
             Resumen automático de Zooms
           </p>
-          <p style={{ margin: "3px 0 0", fontSize: 11, color: T.txt3, fontFamily: font }}>
-            Fecha de revisión: <strong style={{ color: T.txt2 }}>{today}</strong> · se actualiza solo con cada cambio de estatus · listo para mandar a los socios.
+          <p style={{ margin: "3px 0 0", fontSize: 12.5, color: T.txt2, fontFamily: font }}>
+            Fecha de revisión: <strong style={{ color: T.txt }}>{today}</strong> · se actualiza solo con cada cambio de estatus · listo para mandar a los socios.
           </p>
         </div>
         <button
@@ -225,12 +225,12 @@ export default function ResumenZooms({ rows = [], T, isLight }) {
           { label: "Cancelados",  value: kpisHoy.cancelados,  color: "#64748B" },
         ].map(k => (
           <div key={k.label} style={{
-            borderRadius: 12, padding: "10px 12px",
+            borderRadius: 12, padding: "12px 14px",
             background: isLight ? "rgba(255,255,255,0.6)" : "rgba(255,255,255,0.02)",
-            border: `1px solid ${rowBorder}`, borderTop: `2px solid ${k.color}`,
+            border: `1px solid ${rowBorder}`, borderTop: `3px solid ${k.color}`,
           }}>
-            <div style={{ fontSize: 10, fontWeight: 700, color: T.txt3, fontFamily: fontDisp, textTransform: "uppercase", letterSpacing: "0.05em" }}>{k.label}</div>
-            <div style={{ fontSize: 22, fontWeight: 700, color: T.txt, fontFamily: fontDisp, marginTop: 2, fontVariantNumeric: "tabular-nums" }}>{k.value}</div>
+            <div style={{ fontSize: 11, fontWeight: 700, color: T.txt2, fontFamily: fontDisp, textTransform: "uppercase", letterSpacing: "0.05em", whiteSpace: "nowrap" }}>{k.label}</div>
+            <div style={{ fontSize: 28, fontWeight: 800, color: T.txt, fontFamily: fontDisp, marginTop: 3, fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em" }}>{k.value}</div>
           </div>
         ))}
       </div>
@@ -238,22 +238,22 @@ export default function ResumenZooms({ rows = [], T, isLight }) {
       {/* 2) Semana actual L-D */}
       <div style={{ marginBottom: 16 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 8 }}>
-          <CalendarRange size={14} color={accent} strokeWidth={2.2} />
-          <span style={{ fontSize: 12.5, fontWeight: 700, color: T.txt, fontFamily: fontDisp }}>Semana actual · lunes a domingo</span>
-          <span style={{ fontSize: 11, color: T.txt3, fontFamily: font }}>· {countsOf(semanaRows).total} Zooms esta semana</span>
+          <CalendarRange size={15} color={accent} strokeWidth={2.2} />
+          <span style={{ fontSize: 14, fontWeight: 700, color: T.txt, fontFamily: fontDisp }}>Semana actual · lunes a domingo</span>
+          <span style={{ fontSize: 12.5, fontWeight: 600, color: T.txt2, fontFamily: font }}>· {countsOf(semanaRows).total} Zooms esta semana</span>
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(7, minmax(92px, 1fr))", gap: 6, overflowX: "auto" }}>
           {semanaDias.map(d => (
             <div key={d.key} title={`${d.longLabel}: ${d.total} Zooms · ${d.confirmados} confirmados · ${d.asistieron} asistieron`} style={{
-              borderRadius: 10, padding: "8px 10px", textAlign: "center",
-              background: d.isToday ? (isLight ? `${accent}14` : `${accent}14`) : (isLight ? "rgba(255,255,255,0.6)" : "rgba(255,255,255,0.02)"),
-              border: `1px solid ${d.isToday ? `${accent}55` : rowBorder}`,
+              borderRadius: 10, padding: "10px 10px", textAlign: "center",
+              background: d.isToday ? `${accent}14` : (isLight ? "rgba(255,255,255,0.6)" : "rgba(255,255,255,0.02)"),
+              border: d.isToday ? `2px solid ${accent}77` : `1px solid ${rowBorder}`,
             }}>
-              <div style={{ fontSize: 10, fontWeight: 700, color: d.isToday ? accent : T.txt3, fontFamily: fontDisp, textTransform: "uppercase", letterSpacing: "0.04em" }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: d.isToday ? accent : T.txt2, fontFamily: fontDisp, textTransform: "uppercase", letterSpacing: "0.04em", whiteSpace: "nowrap" }}>
                 {d.label}{d.isToday ? " · hoy" : ""}
               </div>
-              <div style={{ fontSize: 20, fontWeight: 700, color: T.txt, fontFamily: fontDisp, marginTop: 1, fontVariantNumeric: "tabular-nums" }}>{d.total}</div>
-              <div style={{ fontSize: 9.5, color: T.txt3, fontFamily: font }}>{d.confirmados} conf. · {d.asistieron} asist.</div>
+              <div style={{ fontSize: 24, fontWeight: 800, color: T.txt, fontFamily: fontDisp, marginTop: 2, fontVariantNumeric: "tabular-nums" }}>{d.total}</div>
+              <div style={{ fontSize: 10.5, fontWeight: 500, color: T.txt2, fontFamily: font, whiteSpace: "nowrap" }}>{d.confirmados} conf. · {d.asistieron} asist.</div>
             </div>
           ))}
         </div>
@@ -264,14 +264,14 @@ export default function ResumenZooms({ rows = [], T, isLight }) {
         {/* Por Liner */}
         <div style={{ borderRadius: 12, border: `1px solid ${rowBorder}`, overflow: "hidden" }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, padding: "10px 12px", background: headerBg }}>
-            <span style={{ fontSize: 12, fontWeight: 700, color: T.txt, fontFamily: fontDisp }}>Por Liner</span>
+            <span style={{ fontSize: 13.5, fontWeight: 700, color: T.txt, fontFamily: fontDisp }}>Por Liner</span>
             <div style={{ display: "inline-flex", gap: 3, padding: 2, borderRadius: 8, border: `1px solid ${rowBorder}` }}>
               {[{ id: "hoy", l: "Hoy" }, { id: "semana", l: "Semana" }, { id: "mes", l: "Mes" }].map(s => {
                 const active = linerScope === s.id;
                 return (
                   <button key={s.id} onClick={() => setLinerScope(s.id)} style={{
-                    padding: "4px 10px", borderRadius: 6, border: "none", cursor: "pointer",
-                    fontSize: 10.5, fontWeight: active ? 700 : 600, fontFamily: fontDisp,
+                    padding: "5px 12px", borderRadius: 6, border: "none", cursor: "pointer",
+                    fontSize: 11.5, fontWeight: active ? 700 : 600, fontFamily: fontDisp,
                     background: active ? (isLight ? accent : `${accent}22`) : "transparent",
                     color: active ? (isLight ? "#06080F" : accent) : T.txt3,
                   }}>{s.l}</button>
@@ -312,8 +312,8 @@ export default function ResumenZooms({ rows = [], T, isLight }) {
         {/* Por Presentador */}
         <div style={{ borderRadius: 12, border: `1px solid ${rowBorder}`, overflow: "hidden" }}>
           <div style={{ padding: "10px 12px", background: headerBg }}>
-            <span style={{ fontSize: 12, fontWeight: 700, color: T.txt, fontFamily: fontDisp }}>Por Presentador</span>
-            <span style={{ fontSize: 10.5, color: T.txt3, fontFamily: font, marginLeft: 6 }}>quién corre el Zoom</span>
+            <span style={{ fontSize: 13.5, fontWeight: 700, color: T.txt, fontFamily: fontDisp }}>Por Presentador</span>
+            <span style={{ fontSize: 11.5, color: T.txt2, fontFamily: font, marginLeft: 6 }}>quién corre el Zoom</span>
           </div>
           <div style={{ overflowX: "auto" }}>
             <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 280 }}>
@@ -344,8 +344,8 @@ export default function ResumenZooms({ rows = [], T, isLight }) {
         {/* Próximos 7 días */}
         <div style={{ borderRadius: 12, border: `1px solid ${rowBorder}`, overflow: "hidden" }}>
           <div style={{ padding: "10px 12px", background: headerBg }}>
-            <span style={{ fontSize: 12, fontWeight: 700, color: T.txt, fontFamily: fontDisp }}>Próximos 7 días</span>
-            <span style={{ fontSize: 10.5, color: T.txt3, fontFamily: font, marginLeft: 6 }}>lo que viene en agenda</span>
+            <span style={{ fontSize: 13.5, fontWeight: 700, color: T.txt, fontFamily: fontDisp }}>Próximos 7 días</span>
+            <span style={{ fontSize: 11.5, color: T.txt2, fontFamily: font, marginLeft: 6 }}>lo que viene en agenda</span>
           </div>
           <table style={{ width: "100%", borderCollapse: "collapse" }}>
             <thead>
@@ -358,7 +358,7 @@ export default function ResumenZooms({ rows = [], T, isLight }) {
             <tbody>
               {proximos7.map((d, i) => (
                 <tr key={d.key} style={{ borderTop: `1px solid ${rowBorder}`, opacity: d.total === 0 ? 0.55 : 1 }}>
-                  <td style={{ ...miniTd(T, "left"), fontWeight: i === 0 ? 700 : 500, color: T.txt }}>{d.label}{i === 0 ? " · hoy" : ""}</td>
+                  <td style={{ ...miniTd(T, "left"), fontWeight: i === 0 ? 800 : 600, color: T.txt }}>{d.label}{i === 0 ? " · hoy" : ""}</td>
                   <td style={miniTd(T)}>{d.total}</td>
                   <td style={{ ...miniTd(T), color: "#0EA5E9", fontWeight: 600 }}>{d.confirmados}</td>
                 </tr>
@@ -371,17 +371,19 @@ export default function ResumenZooms({ rows = [], T, isLight }) {
   );
 }
 
+// Tipografía de tablas del Resumen — tamaños generosos y tinta oscura:
+// dirección lo lee en juntas y pantallas compartidas, nada de grises tenues.
 function miniTh(T, align = "center") {
   return {
-    padding: "8px 10px", textAlign: align,
-    fontSize: 9.5, fontWeight: 700, color: T.txt3, fontFamily: fontDisp,
+    padding: "9px 11px", textAlign: align,
+    fontSize: 10.5, fontWeight: 700, color: T.txt2, fontFamily: fontDisp,
     textTransform: "uppercase", letterSpacing: "0.05em", whiteSpace: "nowrap",
   };
 }
 function miniTd(T, align = "center") {
   return {
-    padding: "7px 10px", textAlign: align,
-    fontSize: 12, color: T.txt2, fontFamily: fontDisp,
+    padding: "9px 11px", textAlign: align,
+    fontSize: 13.5, fontWeight: 600, color: T.txt, fontFamily: fontDisp,
     fontVariantNumeric: "tabular-nums", whiteSpace: "nowrap",
   };
 }
