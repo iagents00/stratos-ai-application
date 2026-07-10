@@ -197,7 +197,7 @@ const ZoomControl = ({ theme = "dark" }) => {
       const dt = new Date(y, m - 1, d);
       return [MES_FULL[dt.getMonth()], DOW_FULL[dt.getDay()]];
     };
-    const headers = ["Fecha en que se agendó", "Fecha del Zoom", "Hora", "Liner", "Presentador principal", "Presentador apoyo", "Cliente", "Desarrollo / Proyecto", "Estatus", "Comentarios", "Discovery", "Calentito", "Semana", "Mes", "Día del Zoom", "¿Zoom hoy?"];
+    const headers = ["Fecha en que se agendó", "Fecha del Zoom", "Hora", "Liner", "Presentador principal", "Presentador apoyo", "Cliente", "Desarrollo / Proyecto", "Estatus", "Comentarios", "Discovery", "Alta intención", "Semana", "Mes", "Día del Zoom", "¿Zoom hoy?"];
     const lines = filtered.map(r => {
       const [mes, dia] = dowMes(r.fecha_zoom);
       return [
@@ -433,18 +433,18 @@ const ZoomControl = ({ theme = "dark" }) => {
         {hasExtCols && (
           <button
             onClick={() => setHotOnly(h => !h)}
-            title="Solo clientes calentitos (señal de cierre detectada en el Zoom)"
+            title="Solo clientes con alta intención de cierre (señal detectada en el Zoom)"
             style={{
               display: "inline-flex", alignItems: "center", gap: 6,
               padding: "8px 13px", borderRadius: 10, cursor: "pointer",
               fontSize: 12, fontWeight: hotOnly ? 700 : 600, fontFamily: fontDisp,
-              background: hotOnly ? "rgba(234,88,12,0.16)" : subtleBg,
-              color: hotOnly ? "#EA580C" : T.txt2,
-              border: `1px solid ${hotOnly ? "rgba(234,88,12,0.45)" : cardBorder}`,
+              background: hotOnly ? "rgba(220,38,38,0.14)" : subtleBg,
+              color: hotOnly ? "#DC2626" : T.txt2,
+              border: `1px solid ${hotOnly ? "rgba(220,38,38,0.45)" : cardBorder}`,
             }}
           >
-            <Flame size={13} strokeWidth={2.4} color={hotOnly ? "#EA580C" : T.txt3} />
-            Calentitos
+            <Flame size={13} strokeWidth={2.4} color={hotOnly ? "#DC2626" : T.txt3} />
+            Alta intención
           </button>
         )}
 
@@ -520,8 +520,8 @@ const ZoomControl = ({ theme = "dark" }) => {
                   );
                 }
                 const r = item.r;
-                // Calentito = fila teñida (como el rojo del sheet del director).
-                const hotBg = r.calentito ? "rgba(234,88,12,0.07)" : "transparent";
+                // Alta intención = fila EN ROJO, como en el sheet del director.
+                const hotBg = r.calentito ? "rgba(220,38,38,0.12)" : "transparent";
                 return (
                 <Fragment key={r.id}>
                 <tr
@@ -531,7 +531,7 @@ const ZoomControl = ({ theme = "dark" }) => {
                   onMouseEnter={(e) => { e.currentTarget.style.background = isLight ? "rgba(15,23,42,0.025)" : "rgba(255,255,255,0.02)"; }}
                   onMouseLeave={(e) => { e.currentTarget.style.background = hotBg; }}
                 >
-                  <td style={{ ...tdStyle(T, "left"), fontWeight: 500, color: T.txt2 }}>{prettyDate(r.fecha_agendado)}</td>
+                  <td style={{ ...tdStyle(T, "left"), fontWeight: 500, color: T.txt2, borderLeft: r.calentito ? "3px solid #DC2626" : "3px solid transparent" }}>{prettyDate(r.fecha_agendado)}</td>
                   <td style={{ ...tdStyle(T, "left"), fontWeight: 700, color: T.txt }}>{prettyDate(r.fecha_zoom)}</td>
                   <td style={{ ...tdStyle(T, "center"), color: T.txt }}>{r.hora || "—"}</td>
                   <td style={tdStyle(T, "left")}>{r.liner || "—"}</td>
@@ -539,7 +539,7 @@ const ZoomControl = ({ theme = "dark" }) => {
                   <td style={{ ...tdStyle(T, "left"), color: T.txt2 }}>{r.presentador_apoyo || "—"}</td>
                   <td style={{ ...tdStyle(T, "left"), fontWeight: 700, color: T.txt }}>
                     <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
-                      {r.calentito && <Flame size={13} color="#EA580C" strokeWidth={2.6} title="Calentito — señal de cierre en el Zoom" />}
+                      {r.calentito && <Flame size={13} color="#DC2626" strokeWidth={2.6} title="Alta intención — señal de cierre en el Zoom" />}
                       {r.cliente || "—"}
                     </span>
                   </td>
@@ -580,12 +580,12 @@ const ZoomControl = ({ theme = "dark" }) => {
                     {hasExtCols && (
                       <button
                         onClick={() => onToggleHot(r)}
-                        title={r.calentito ? "Quitar marca de calentito" : "Marcar calentito (señal de cierre en el Zoom)"}
+                        title={r.calentito ? "Quitar marca de alta intención" : "Marcar alta intención (señal de cierre en el Zoom)"}
                         style={{
                           ...iconBtn(T, isLight),
-                          color: r.calentito ? "#EA580C" : T.txt3,
-                          background: r.calentito ? "rgba(234,88,12,0.14)" : iconBtn(T, isLight).background,
-                          border: `1px solid ${r.calentito ? "rgba(234,88,12,0.40)" : (isLight ? "rgba(15,23,42,0.08)" : "rgba(255,255,255,0.07)")}`,
+                          color: r.calentito ? "#DC2626" : T.txt3,
+                          background: r.calentito ? "rgba(220,38,38,0.12)" : iconBtn(T, isLight).background,
+                          border: `1px solid ${r.calentito ? "rgba(220,38,38,0.40)" : (isLight ? "rgba(15,23,42,0.08)" : "rgba(255,255,255,0.07)")}`,
                           marginRight: 4,
                         }}
                       >
@@ -669,7 +669,7 @@ const ZoomControl = ({ theme = "dark" }) => {
           {[
             { id: "resumen",      l: "Resumen",      Icon: ClipboardList, badge: 0 },
             { id: "graficas",     l: "Gráficas",     Icon: BarChart3,     badge: 0 },
-            ...(hasExtCols ? [{ id: "calentitos", l: "Calentitos", Icon: Flame, badge: calientes.length, badgeColor: "#EA580C" }] : []),
+            ...(hasExtCols ? [{ id: "calentitos", l: "Alta intención", Icon: Flame, badge: calientes.length, badgeColor: "#DC2626" }] : []),
             { id: "reactivacion", l: "Reactivación", Icon: RotateCcw, badge: paraReactivar.length, badgeColor: "#F59E0B" },
           ].map(({ id, l, Icon, badge, badgeColor }) => {
             const active = seccion === id;
@@ -723,14 +723,14 @@ const ZoomControl = ({ theme = "dark" }) => {
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           <div>
             <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, fontFamily: fontDisp, color: T.txt, display: "inline-flex", alignItems: "center", gap: 8 }}>
-              <Flame size={16} color="#EA580C" strokeWidth={2.4} /> Clientes calentitos
+              <Flame size={16} color="#DC2626" strokeWidth={2.4} /> Clientes de alta intención
             </h3>
             <p style={{ margin: "3px 0 0", fontSize: 12.5, color: T.txt2, fontFamily: font }}>
-              Señal de cierre detectada en el Zoom: carta oferta, mandó identificación o pidió cuentas para apartar. Toca uno para abrirlo.
+              Señal de cierre detectada en el Zoom: carta oferta, identificación enviada o cuentas solicitadas para apartar. Toca un cliente para abrirlo.
             </p>
           </div>
           <ZoomLista items={calientes} T={T} isLight={isLight} onOpenZoom={openEdit}
-            emptyMsg="Aún no hay calentitos marcados — se marcan con la flama 🔥 en la tabla o al editar un Zoom." />
+            emptyMsg="Aún no hay clientes marcados con alta intención — se marcan con la flama en la tabla o al editar un Zoom." />
         </div>
       )}
 
@@ -869,20 +869,20 @@ function ZoomModal({ T, isLight, accent, editing, form, setField, formErr, busy,
                 gridColumn: "1 / -1",
                 display: "flex", alignItems: "center", gap: 10,
                 padding: "10px 12px", borderRadius: 10, cursor: "pointer", userSelect: "none",
-                background: form.calentito ? "rgba(234,88,12,0.10)" : (isLight ? "rgba(15,23,42,0.03)" : "rgba(255,255,255,0.03)"),
-                border: `1px solid ${form.calentito ? "rgba(234,88,12,0.45)" : (isLight ? "rgba(15,23,42,0.10)" : "rgba(255,255,255,0.09)")}`,
+                background: form.calentito ? "rgba(220,38,38,0.10)" : (isLight ? "rgba(15,23,42,0.03)" : "rgba(255,255,255,0.03)"),
+                border: `1px solid ${form.calentito ? "rgba(220,38,38,0.45)" : (isLight ? "rgba(15,23,42,0.10)" : "rgba(255,255,255,0.09)")}`,
               }}
             >
-              <Flame size={16} color={form.calentito ? "#EA580C" : T.txt3} strokeWidth={2.4} />
+              <Flame size={16} color={form.calentito ? "#DC2626" : T.txt3} strokeWidth={2.4} />
               <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 12.5, fontWeight: 700, color: form.calentito ? "#EA580C" : T.txt, fontFamily: fontDisp }}>
-                  Cliente calentito
+                <div style={{ fontSize: 12.5, fontWeight: 700, color: form.calentito ? "#DC2626" : T.txt, fontFamily: fontDisp }}>
+                  Alta intención de cierre
                 </div>
                 <div style={{ fontSize: 11, color: T.txt3, fontFamily: font }}>
-                  Señal de cierre en el Zoom: carta oferta, mandó identificación o pidió cuentas para apartar.
+                  Señal de cierre en el Zoom: carta oferta, identificación enviada o cuentas solicitadas para apartar.
                 </div>
               </div>
-              <span style={{ fontSize: 11.5, fontWeight: 700, fontFamily: fontDisp, color: form.calentito ? "#EA580C" : T.txt3 }}>
+              <span style={{ fontSize: 11.5, fontWeight: 700, fontFamily: fontDisp, color: form.calentito ? "#DC2626" : T.txt3 }}>
                 {form.calentito ? "Sí" : "No"}
               </span>
             </div>

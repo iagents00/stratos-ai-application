@@ -311,14 +311,14 @@ export default function ResumenZooms({ rows = [], T, isLight, onOpenZoom = null 
                       display: "flex", alignItems: "center", gap: 12, padding: "9px 12px",
                       borderTop: i === 0 ? "none" : `1px solid ${rowBorder}`,
                       cursor: onOpenZoom ? "pointer" : "default",
-                      background: r.calentito ? "rgba(234,88,12,0.07)" : "transparent",
+                      background: r.calentito ? "rgba(220,38,38,0.12)" : "transparent",
                     }}
                     onMouseEnter={(e) => { e.currentTarget.style.background = isLight ? "rgba(15,23,42,0.03)" : "rgba(255,255,255,0.03)"; }}
-                    onMouseLeave={(e) => { e.currentTarget.style.background = r.calentito ? "rgba(234,88,12,0.07)" : "transparent"; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.background = r.calentito ? "rgba(220,38,38,0.12)" : "transparent"; }}
                   >
                     <span style={{ width: 46, flexShrink: 0, fontSize: 12.5, fontWeight: 700, color: T.txt, fontFamily: fontDisp, fontVariantNumeric: "tabular-nums" }}>{r.hora || "—"}</span>
                     <span style={{ flex: "1 1 30%", minWidth: 0, display: "inline-flex", alignItems: "center", gap: 5, fontSize: 13, fontWeight: 700, color: T.txt, fontFamily: fontDisp, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                      {r.calentito && <Flame size={13} color="#EA580C" strokeWidth={2.6} />}
+                      {r.calentito && <Flame size={13} color="#DC2626" strokeWidth={2.6} />}
                       {r.cliente || "—"}
                     </span>
                     <span style={{ flex: "1 1 20%", minWidth: 0, fontSize: 12, color: T.txt2, fontFamily: font, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.liner || "—"}</span>
