@@ -16,6 +16,7 @@ import { useMemo, useState, useCallback } from "react";
 import {
   Video, Plus, RefreshCw, Search, X, Pencil, Trash2, Flame, Download,
   CalendarDays, CheckCircle2, UserCheck, Clock3, AlertTriangle,
+  ClipboardList, BarChart3, RotateCcw,
 } from "lucide-react";
 import { P, LP, font, fontDisp } from "../../../design-system/tokens";
 import { G, KPI } from "../../SharedComponents";
@@ -26,6 +27,8 @@ import {
   estatusColor, suggestPresentador, suggestApoyo,
 } from "./constants";
 import ResumenZooms from "./Resumen";
+import GraficasZooms from "./Graficas";
+import ZoomLista from "./ZoomLista";
 import { todayStr, weekRange, next7Range, inRange, prettyDate, isoWeekNumber, DOW_FULL, MES_FULL } from "./dates";
 
 // Mes y día (nombre completo) de un YYYY-MM-DD — columnas "Mes" y "Día del
@@ -59,6 +62,8 @@ const ZoomControl = ({ theme = "dark" }) => {
   const [range, setRange] = useState("todos"); // vista completa por default, como el sheet
   const [statusFilter, setStatusFilter] = useState("Todos");
   const [hotOnly, setHotOnly] = useState(false);
+  // Apartado activo bajo la tabla: Resumen | Gráficas | Calentitos | Reactivación.
+  const [seccion, setSeccion] = useState("resumen");
   const [q, setQ] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -142,6 +147,25 @@ const ZoomControl = ({ theme = "dark" }) => {
     }
     return items;
   }, [filtered]);
+
+  // Apartados del sheet de Ema: calentitos (señal de cierre) y reactivación
+  // (No show / Cancelado / vencidos sin resolver — los que hay que recuperar).
+  const ordenFechaDesc = (a, b) => {
+    const fa = a.fecha_zoom || "0000-00-00", fb = b.fecha_zoom || "0000-00-00";
+    if (fa !== fb) return fa > fb ? -1 : 1;
+    return (a.hora || "").localeCompare(b.hora || "");
+  };
+  const calientes = useMemo(
+    () => rows.filter(r => r.calentito).sort(ordenFechaDesc),
+    [rows],
+  );
+  const paraReactivar = useMemo(
+    () => rows.filter(r =>
+      r.estatus === "No show" || r.estatus === "Cancelado" ||
+      (r.fecha_zoom && r.fecha_zoom < today && ESTATUS_ACTIVOS.has(r.estatus))
+    ).sort(ordenFechaDesc),
+    [rows, today],
+  );
 
   // ── Export CSV — el formato de su sheet, con las columnas derivadas
   //    (Semana ISO, Mes, Día, ¿Zoom hoy?) calculadas sin errores ────────────
@@ -557,17 +581,97 @@ const ZoomControl = ({ theme = "dark" }) => {
         </div>
       </G>
 
-      {/* ── KPIs y Resumen — DEBAJO de la tabla: el "excel" va hasta arriba
-             (pedido de Ivan: que Ema aterrice directo en su tabla). ───────── */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 12 }}>
-        <KPI T={T} label="Zooms hoy"        value={kpis.hoy}    icon={CalendarDays} color={accent}     sub="agendados para hoy" />
-        <KPI T={T} label="Esta semana"      value={kpis.semana} icon={Video}        color={T.blue}     sub="lunes a domingo" />
-        <KPI T={T} label="Por confirmar"    value={kpis.porConfirmar} icon={Clock3} color="#F59E0B"    sub={kpis.vencidos ? `+ ${kpis.vencidos} vencidos sin resolver` : "Agendados hoy o a futuro"} />
-        <KPI T={T} label="Tasa de asistencia" value={kpis.tasa == null ? "—" : `${kpis.tasa}%`} icon={UserCheck} color="#10B981" sub={`${kpis.asistio} asistió · ${kpis.noShow} no show`} />
+      {/* ── Apartados bajo el excel — los del sheet de Ema, uno a la vez.
+             Navegación tipo segmented control (estilo Apple): Resumen,
+             Gráficas, Calentitos y Reactivación. ───────────────────────────── */}
+      <div style={{ display: "flex", justifyContent: "flex-start" }}>
+        <div style={{
+          display: "inline-flex", gap: 4, padding: 4, borderRadius: 14,
+          background: subtleBg, border: `1px solid ${cardBorder}`,
+          overflowX: "auto", maxWidth: "100%",
+        }}>
+          {[
+            { id: "resumen",      l: "Resumen",      Icon: ClipboardList, badge: 0 },
+            { id: "graficas",     l: "Gráficas",     Icon: BarChart3,     badge: 0 },
+            ...(hasExtCols ? [{ id: "calentitos", l: "Calentitos", Icon: Flame, badge: calientes.length, badgeColor: "#EA580C" }] : []),
+            { id: "reactivacion", l: "Reactivación", Icon: RotateCcw, badge: paraReactivar.length, badgeColor: "#F59E0B" },
+          ].map(({ id, l, Icon, badge, badgeColor }) => {
+            const active = seccion === id;
+            return (
+              <button
+                key={id}
+                onClick={() => setSeccion(id)}
+                style={{
+                  display: "inline-flex", alignItems: "center", gap: 7,
+                  padding: "9px 16px", borderRadius: 10, border: "none", cursor: "pointer",
+                  fontSize: 12.5, fontWeight: active ? 700 : 600, fontFamily: fontDisp,
+                  whiteSpace: "nowrap", transition: "all 0.15s",
+                  background: active ? (isLight ? "#FFFFFF" : "rgba(255,255,255,0.08)") : "transparent",
+                  color: active ? T.txt : T.txt2,
+                  boxShadow: active ? (isLight ? "0 1px 4px rgba(15,23,42,0.12)" : "0 1px 4px rgba(0,0,0,0.35)") : "none",
+                }}
+              >
+                <Icon size={14} strokeWidth={2.3} color={active ? accent : T.txt3} />
+                {l}
+                {badge > 0 && (
+                  <span style={{
+                    minWidth: 18, height: 18, padding: "0 5px", borderRadius: 99,
+                    display: "inline-flex", alignItems: "center", justifyContent: "center",
+                    fontSize: 10, fontWeight: 800, fontFamily: fontDisp,
+                    color: "#FFFFFF", background: badgeColor,
+                  }}>{badge}</span>
+                )}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
-      {/* ── Resumen automático (réplica del sheet del director comercial) ──── */}
-      <ResumenZooms rows={rows} T={T} isLight={isLight} onOpenZoom={openEdit} />
+      {seccion === "resumen" && (
+        <>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 12 }}>
+            <KPI T={T} label="Zooms hoy"        value={kpis.hoy}    icon={CalendarDays} color={accent}     sub="agendados para hoy" />
+            <KPI T={T} label="Esta semana"      value={kpis.semana} icon={Video}        color={T.blue}     sub="lunes a domingo" />
+            <KPI T={T} label="Por confirmar"    value={kpis.porConfirmar} icon={Clock3} color="#F59E0B"    sub={kpis.vencidos ? `+ ${kpis.vencidos} vencidos sin resolver` : "Agendados hoy o a futuro"} />
+            <KPI T={T} label="Tasa de asistencia" value={kpis.tasa == null ? "—" : `${kpis.tasa}%`} icon={UserCheck} color="#10B981" sub={`${kpis.asistio} asistió · ${kpis.noShow} no show`} />
+          </div>
+          <ResumenZooms rows={rows} T={T} isLight={isLight} onOpenZoom={openEdit} />
+        </>
+      )}
+
+      {seccion === "graficas" && (
+        <GraficasZooms rows={rows} T={T} isLight={isLight} />
+      )}
+
+      {seccion === "calentitos" && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          <div>
+            <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, fontFamily: fontDisp, color: T.txt, display: "inline-flex", alignItems: "center", gap: 8 }}>
+              <Flame size={16} color="#EA580C" strokeWidth={2.4} /> Clientes calentitos
+            </h3>
+            <p style={{ margin: "3px 0 0", fontSize: 12.5, color: T.txt2, fontFamily: font }}>
+              Señal de cierre detectada en el Zoom: carta oferta, mandó identificación o pidió cuentas para apartar. Toca uno para abrirlo.
+            </p>
+          </div>
+          <ZoomLista items={calientes} T={T} isLight={isLight} onOpenZoom={openEdit}
+            emptyMsg="Aún no hay calentitos marcados — se marcan con la flama 🔥 en la tabla o al editar un Zoom." />
+        </div>
+      )}
+
+      {seccion === "reactivacion" && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          <div>
+            <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, fontFamily: fontDisp, color: T.txt, display: "inline-flex", alignItems: "center", gap: 8 }}>
+              <RotateCcw size={16} color="#F59E0B" strokeWidth={2.4} /> Reactivación
+            </h3>
+            <p style={{ margin: "3px 0 0", fontSize: 12.5, color: T.txt2, fontFamily: font }}>
+              No shows, cancelados y Zooms vencidos sin resolver — los clientes que hay que recuperar. Toca uno para darle seguimiento.
+            </p>
+          </div>
+          <ZoomLista items={paraReactivar} T={T} isLight={isLight} onOpenZoom={openEdit}
+            emptyMsg="Nada por reactivar — todos los Zooms están al día." />
+        </div>
+      )}
 
 
       {/* ── Modal de alta / edición ────────────────────────────────────────── */}
