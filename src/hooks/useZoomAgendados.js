@@ -120,15 +120,30 @@ export function useZoomAgendados() {
 
   // Realtime: los triggers del CRM (migración 087) escriben en zoom_agendados;
   // esta suscripción refresca el panel solo, sin que el usuario recargue.
-  // RLS filtra los eventos por organización. removeChannel SIEMPRE en cleanup
-  // (regla de performance del proyecto).
+  // RLS filtra los eventos por organización. removeChannel SIEMPRE en cleanup.
+  //
+  // ⚠️ El nombre del canal debe ser ÚNICO POR MONTAJE: supabase.channel(nombre)
+  // devuelve la MISMA instancia si el nombre ya existe, y agregarle callbacks
+  // a un canal ya suscrito lanza "cannot add postgres_changes callbacks ...
+  // after subscribe()" — con nombre fijo, salir y volver a entrar a la
+  // pestaña de Zooms tumbaba el panel entero ("Algo salió mal", bug de Ivan).
+  // Además: el realtime es un extra, nunca debe poder romper el panel →
+  // try/catch alrededor de todo.
   useEffect(() => {
     if (!orgId || isDemo) return;
-    const ch = supabase
-      .channel("zoom-agendados-live")
-      .on("postgres_changes", { event: "*", schema: "public", table: TABLE }, () => refetch())
-      .subscribe();
-    return () => { supabase.removeChannel(ch); };
+    let ch = null;
+    try {
+      ch = supabase
+        .channel(`zoom-agendados-live-${Math.random().toString(36).slice(2)}`)
+        .on("postgres_changes", { event: "*", schema: "public", table: TABLE }, () => refetch())
+        .subscribe();
+    } catch (e) {
+      console.warn("[Control de Zooms] realtime no disponible:", e?.message || e);
+      return;
+    }
+    return () => {
+      try { if (ch) supabase.removeChannel(ch); } catch (_) { /* noop */ }
+    };
   }, [orgId, isDemo, refetch]);
 
   // ── Mutaciones ──────────────────────────────────────────────────────────
