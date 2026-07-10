@@ -323,7 +323,7 @@
 //   supabase.channel() reutiliza la instancia ya suscrita → throw en el
 //   effect → error boundary. Fix: nombre único por montaje + try/catch
 //   (el realtime nunca puede tumbar el panel).
-const CACHE_VERSION = 'stratos-v122';
+const CACHE_VERSION = 'stratos-v123';
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 
