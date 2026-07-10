@@ -3050,7 +3050,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
               const hasParsed = parsed > 0 && String(newLead.budget || "").trim() !== "";
               const budgetBorder = hasParsed ? `${T.accent}55` : inputBorder;
               return (
-            <div style={{ padding: "12px 18px 0", display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: isMobile ? "10px" : "10px 12px" }}>
+            <div style={{ padding: "12px 18px 0", display: "grid", gridTemplateColumns: isMobile ? "minmax(0, 1fr)" : "minmax(0, 1fr) minmax(0, 1fr)", gap: isMobile ? "10px" : "10px 12px" }}>
 
               {/* Nombre — full width */}
               <div style={{ gridColumn: "1 / -1" }}>

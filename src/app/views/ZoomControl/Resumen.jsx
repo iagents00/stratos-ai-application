@@ -24,6 +24,7 @@ import { G } from "../../SharedComponents";
 import { useClient } from "../../../hooks/useClient";
 import { LINERS, PRESENTADORES, ESTATUS_ASISTIO, estatusColor } from "./constants";
 import { todayStr, addDays, weekRange, quincenaRange, monthRange, inRange, ymd, DOW, MON } from "./dates";
+import { savePdfDoc, isNativeApp } from "../../../lib/native";
 
 // Conteo por estatus de un subconjunto de Zooms. `total` incluye TODOS los
 // estatus (igual que "Total Zooms hoy" del sheet).
@@ -180,9 +181,13 @@ export default function ResumenZooms({ rows = [], T, isLight, onOpenZoom = null 
         },
       };
       const doc = buildZoomResumenPdf(JsPDF, model);
-      doc.save(`resumen-zooms_${stamp}.pdf`);
+      // En la app nativa doc.save (blob download) no hace nada en el WebView:
+      // savePdfDoc guarda al caché y abre la hoja de compartir del sistema.
+      await savePdfDoc(doc, `resumen-zooms_${stamp}.pdf`);
     } catch (err) {
       console.warn("[Control de Zooms] PDF del resumen falló:", err);
+      // En la app el botón quedaría "muerto" en silencio: avisar.
+      if (isNativeApp()) window.alert("No se pudo generar el PDF en la app. Probá de nuevo.");
     }
     setPdfBusy(false);
   };

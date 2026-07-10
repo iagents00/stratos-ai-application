@@ -5,7 +5,7 @@ import {
   Clock, Calendar, Building2, Briefcase, FileText, Activity,
   ChevronDown, ChevronRight, SlidersHorizontal, Mail, Phone,
   Shield, Atom, RefreshCw, ListChecks,
-  BadgeCheck, Banknote, ClipboardList, Workflow,
+  BadgeCheck, Banknote, ClipboardList, Workflow, ExternalLink,
 } from "lucide-react";
 import { AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import { P, LP, font, fontDisp } from "../../design-system/tokens";

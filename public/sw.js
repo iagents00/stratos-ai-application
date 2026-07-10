@@ -326,7 +326,14 @@
 // v124 — style(zooms): editor de Discovery rediseñado (tarjeta Apple-style,
 //   textarea que crece con el texto, ⌘↵/Esc, Copiar para el presentador,
 //   Guardar sólo cuando hay cambios) + pill "Añadir/Sí" refinado.
-const CACHE_VERSION = 'stratos-v130';
+// v131 — feat(móvil/app): bottom-nav estilo Apple Music (4 módulos grandes +
+//   botón "+" que abre un cuadro centrado con TODAS las opciones, Centro de
+//   Inteligencia, tema y salir — antes el Centro era inaccesible en móvil);
+//   PDFs vía puente nativo Capacitor (en la APK doc.save no descargaba nada);
+//   notificaciones nativas de WhatsApp en la app (Notification API no existe
+//   en el WebView) + permiso al entrar; Gestión de Usuarios responsive
+//   (tarjetas en móvil, botones full-width).
+const CACHE_VERSION = 'stratos-v131';
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 
