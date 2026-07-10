@@ -18,7 +18,15 @@ const Chat = ({ open, onClose, msgs, setMsgs, inp, setInp }) => {
   const [typing, setTyping] = useState(false);
   const [rec, setRec] = useState(false);
 
-  useEffect(() => { endRef.current?.scrollIntoView({ behavior: "smooth" }); }, [msgs, typing]);
+  // Autoscroll SOLO dentro del propio panel de mensajes. scrollIntoView
+  // scrollea TODOS los ancestros scrolleables: en móvil corría también el
+  // .stratos-content-area y el título del módulo quedaba bajo el header.
+  useEffect(() => {
+    const end = endRef.current; if (!end) return;
+    let box = end.parentElement;
+    while (box && !/(auto|scroll)/.test(getComputedStyle(box).overflowY)) box = box.parentElement;
+    if (box && !box.classList.contains("stratos-content-area")) box.scrollTop = box.scrollHeight;
+  }, [msgs, typing]);
 
   const send = (t) => {
     if (!t?.trim()) return;

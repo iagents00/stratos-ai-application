@@ -346,11 +346,31 @@ export default function App() {
   // al boot; acá lo mantenemos en sync cuando el usuario alterna el tema.
   useEffect(() => {
     try { document.documentElement.setAttribute("data-theme", theme); } catch { /* noop */ }
-    // El re-skin del tema re-renderiza TODO y el anclaje de scroll del WebView
-    // puede dejar el contenido corrido unos px hacia arriba (la parte superior
-    // "tapada" bajo el header — reporte de Ángel, solo tras pasar a claro).
-    // Un tema nuevo = pantalla nueva: arrancar arriba siempre.
-    try { document.querySelector(".stratos-content-area")?.scrollTo({ top: 0 }); } catch { /* noop */ }
+    // El re-skin del tema re-renderiza TODO; en el WebView de Android el área
+    // de contenido puede quedar corrida unos px hacia arriba DESPUÉS del primer
+    // frame (reflows tardíos / scrolls programáticos) → el título del módulo
+    // "tapado" bajo el header (reporte de Ángel v1.5/v1.6, solo al pasar a
+    // claro). Un único scrollTo en el efecto llegaba demasiado TEMPRANO: acá se
+    // re-afirma el tope varias veces mientras el re-skin asienta. El primer
+    // gesto del usuario cancela el pin (no peleamos con un swipe legítimo).
+    let cancelled = false;
+    const cancelPin = () => { cancelled = true; };
+    window.addEventListener("touchstart", cancelPin, { once: true, passive: true });
+    window.addEventListener("wheel", cancelPin, { once: true, passive: true });
+    const pin = () => {
+      if (cancelled) return;
+      try { const ca = document.querySelector(".stratos-content-area"); if (ca && ca.scrollTop !== 0) ca.scrollTop = 0; } catch { /* noop */ }
+    };
+    pin();
+    const raf = requestAnimationFrame(pin);
+    const timers = [120, 300, 650, 1100].map(ms => setTimeout(pin, ms));
+    return () => {
+      cancelled = true;
+      cancelAnimationFrame(raf);
+      timers.forEach(clearTimeout);
+      window.removeEventListener("touchstart", cancelPin);
+      window.removeEventListener("wheel", cancelPin);
+    };
   }, [theme]);
   const setTheme = useCallback((next) => {
     try { localStorage.setItem("stratos_crm_theme", next); } catch {}
@@ -1918,6 +1938,12 @@ export default function App() {
                 <span style={{ fontSize:11.5, fontWeight:600, fontFamily:fontDisp, color: isLight ? "#BE123C" : "#E8818C" }}>Salir</span>
               </button>
             </div>
+
+            {/* Sello de la versión web que corre ESTE dispositivo. El shell
+                nativo carga la web remota: un APK nuevo NO garantiza web nueva
+                (SW/deploy). Con esto cualquiera puede reportar "web vNNN" y se
+                acaba el adivinar. Mantener en sync con CACHE_VERSION (sw.js). */}
+            <p style={{ margin:"12px 0 0", textAlign:"center", fontSize:9.5, fontFamily:font, letterSpacing:"0.02em", color: isLight ? "rgba(15,23,42,0.35)" : "rgba(255,255,255,0.28)" }}>Stratos CRM AI · web v137</p>
           </div>
         </>,
         document.body
