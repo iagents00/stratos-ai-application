@@ -302,7 +302,11 @@
 //   refresca SOLO vía realtime cuando los triggers del CRM (migración 087)
 //   escriben: rebooking de cita, regresión de etapa → Cancelado, brinco a
 //   Concretado → Asistió, papelera/borrado → Cancelado. Todo automático.
-const CACHE_VERSION = 'stratos-v118';
+// v119 — feat(zooms): Discovery con espacio propio — la celda es un botón
+//   pill (Sí / + Añadir) que despliega un panel elegante bajo la fila del
+//   Zoom (acento verde, textarea, Guardar/Cancelar). Cerrado no ocupa nada;
+//   solo se ve completo al hacer click. Pedido de Ivan.
+const CACHE_VERSION = 'stratos-v119';
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 

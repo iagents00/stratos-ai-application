@@ -12,11 +12,11 @@
  * resto de Comando Directivo. Sin librerías nuevas, todo inline styles.
  * ─────────────────────────────────────────────────────────────────────────────
  */
-import { useMemo, useState, useCallback } from "react";
+import { Fragment, useMemo, useState, useCallback } from "react";
 import {
   Video, Plus, RefreshCw, Search, X, Pencil, Trash2, Flame, Download,
   CalendarDays, CheckCircle2, UserCheck, Clock3, AlertTriangle,
-  ClipboardList, BarChart3, RotateCcw,
+  ClipboardList, BarChart3, RotateCcw, FileText, ChevronDown,
 } from "lucide-react";
 import { P, LP, font, fontDisp } from "../../../design-system/tokens";
 import { G, KPI } from "../../SharedComponents";
@@ -64,6 +64,22 @@ const ZoomControl = ({ theme = "dark" }) => {
   const [hotOnly, setHotOnly] = useState(false);
   // Apartado activo bajo la tabla: Resumen | Gráficas | Calentitos | Reactivación.
   const [seccion, setSeccion] = useState("resumen");
+  // Panel inline de Discovery: se abre bajo la fila del Zoom al hacer click en
+  // su celda — cerrado no ocupa nada; abierto muestra el texto completo editable.
+  const [discoveryOpenId, setDiscoveryOpenId] = useState(null);
+  const [discoveryDraft, setDiscoveryDraft] = useState("");
+
+  const toggleDiscovery = (r) => {
+    if (discoveryOpenId === r.id) { setDiscoveryOpenId(null); return; }
+    setDiscoveryDraft(r.discovery || "");
+    setDiscoveryOpenId(r.id);
+  };
+  const saveDiscovery = async (r) => {
+    setBusy(true);
+    await updateRow(r.id, { discovery: discoveryDraft });
+    setBusy(false);
+    setDiscoveryOpenId(null);
+  };
   const [q, setQ] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -507,6 +523,7 @@ const ZoomControl = ({ theme = "dark" }) => {
                 // Calentito = fila teñida (como el rojo del sheet del director).
                 const hotBg = r.calentito ? "rgba(234,88,12,0.07)" : "transparent";
                 return (
+                <Fragment key={r.id}>
                 <tr
                   key={r.id}
                   onClick={() => openEdit(r)}
@@ -540,14 +557,23 @@ const ZoomControl = ({ theme = "dark" }) => {
                     {r.fecha_zoom === today ? "Sí" : "No"}
                   </td>
                   {hasExtCols && (
-                    <td style={{ ...tdStyle(T, "center") }} title={r.discovery || "Sin discovery registrado"}>
-                      <span style={{
-                        display: "inline-block", padding: "2px 9px", borderRadius: 99,
-                        fontSize: 11.5, fontWeight: 700, fontFamily: fontDisp,
-                        color: r.discovery ? "#10B981" : T.txt3,
-                        background: r.discovery ? "rgba(16,185,129,0.12)" : (isLight ? "rgba(15,23,42,0.05)" : "rgba(255,255,255,0.05)"),
-                        border: `1px solid ${r.discovery ? "rgba(16,185,129,0.30)" : "transparent"}`,
-                      }}>{r.discovery ? "Sí" : "No"}</span>
+                    <td style={{ ...tdStyle(T, "center") }} onClick={(e) => e.stopPropagation()}>
+                      <button
+                        onClick={() => toggleDiscovery(r)}
+                        title={r.discovery ? "Ver / editar el discovery" : "Añadir discovery"}
+                        style={{
+                          display: "inline-flex", alignItems: "center", gap: 5,
+                          padding: "3px 10px", borderRadius: 99, cursor: "pointer",
+                          fontSize: 11.5, fontWeight: 700, fontFamily: fontDisp,
+                          color: r.discovery ? "#10B981" : T.txt3,
+                          background: r.discovery ? "rgba(16,185,129,0.12)" : (isLight ? "rgba(15,23,42,0.05)" : "rgba(255,255,255,0.05)"),
+                          border: `1px solid ${r.discovery ? "rgba(16,185,129,0.35)" : (isLight ? "rgba(15,23,42,0.12)" : "rgba(255,255,255,0.12)")}`,
+                          transition: "all 0.12s",
+                        }}
+                      >
+                        {r.discovery ? "Sí" : "+ Añadir"}
+                        <ChevronDown size={11} strokeWidth={2.6} style={{ transform: discoveryOpenId === r.id ? "rotate(180deg)" : "none", transition: "transform 0.15s" }} />
+                      </button>
                     </td>
                   )}
                   <td style={{ ...tdStyle(T, "center"), padding: "8px 10px", whiteSpace: "nowrap" }} onClick={(e) => e.stopPropagation()}>
@@ -574,6 +600,56 @@ const ZoomControl = ({ theme = "dark" }) => {
                     </button>
                   </td>
                 </tr>
+                {/* ── Espacio de Discovery — solo existe al abrirlo, elegante y
+                       sin desacomodar la tabla. Se cierra al guardar/cancelar. ── */}
+                {hasExtCols && discoveryOpenId === r.id && (
+                  <tr>
+                    <td colSpan={16} style={{ padding: 0, borderTop: `1px solid ${rowBorder}` }}>
+                      <div style={{
+                        padding: "14px 18px 16px",
+                        background: isLight ? "rgba(16,185,129,0.05)" : "rgba(16,185,129,0.06)",
+                        borderLeft: "3px solid #10B981",
+                      }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                          <FileText size={14} color="#10B981" strokeWidth={2.3} />
+                          <span style={{ fontSize: 13, fontWeight: 700, color: T.txt, fontFamily: fontDisp }}>
+                            Discovery · {r.cliente || "—"}
+                          </span>
+                        </div>
+                        <p style={{ margin: "0 0 10px", fontSize: 11.5, color: T.txt2, fontFamily: font }}>
+                          Presupuesto, ubicación, intereses — lo que el presentador necesita saber antes del Zoom.
+                        </p>
+                        <textarea
+                          value={discoveryDraft}
+                          onChange={(e) => setDiscoveryDraft(e.target.value)}
+                          rows={3}
+                          autoFocus
+                          placeholder="Escribe aquí el discovery del cliente…"
+                          style={{
+                            ...inputStyle(T, isLight), width: "100%", resize: "vertical",
+                            fontFamily: font, fontSize: 13, lineHeight: 1.5,
+                            background: isLight ? "#FFFFFF" : "rgba(255,255,255,0.04)",
+                          }}
+                        />
+                        <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginTop: 10 }}>
+                          <button onClick={() => setDiscoveryOpenId(null)} disabled={busy} style={{
+                            padding: "8px 14px", borderRadius: 9, cursor: busy ? "default" : "pointer",
+                            fontSize: 12, fontWeight: 600, fontFamily: fontDisp,
+                            background: "transparent", color: T.txt2,
+                            border: `1px solid ${isLight ? "rgba(15,23,42,0.12)" : "rgba(255,255,255,0.12)"}`,
+                          }}>Cancelar</button>
+                          <button onClick={() => saveDiscovery(r)} disabled={busy} style={{
+                            padding: "8px 16px", borderRadius: 9, cursor: busy ? "default" : "pointer",
+                            fontSize: 12, fontWeight: 700, fontFamily: fontDisp,
+                            background: "#10B981", color: "#FFFFFF", border: "none",
+                            boxShadow: "0 2px 8px rgba(16,185,129,0.35)", opacity: busy ? 0.7 : 1,
+                          }}>{busy ? "Guardando…" : "Guardar discovery"}</button>
+                        </div>
+                      </div>
+                    </td>
+                  </tr>
+                )}
+                </Fragment>
                 );
               })}
             </tbody>
