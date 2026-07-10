@@ -3,7 +3,7 @@ import { P, font, fontDisp } from "../../design-system/tokens";
 import { G, KPI, Pill } from "../SharedComponents";
 import {
   Building2, MapPin, FolderOpen, Search, Phone, HardDrive,
-  Map as MapIcon, Layers, Briefcase, X, Tag, LayoutGrid, Table as TableIcon,
+  Map as MapIcon, Layers, Briefcase, X, Tag, LayoutGrid, Table as TableIcon, Send,
 } from "lucide-react";
 import { CATALOGO_SECCIONES } from "../data/catalogoProyectos";
 
@@ -97,6 +97,33 @@ const ERP = ({ oc, T: _T }) => {
         <KPI label="Con carpeta Drive" value={kpis.conDrive} sub="Material listo" icon={HardDrive} color={T.emerald} T={T} />
         <KPI label="Ubicaciones" value={kpis.ubic} sub="Zonas cubiertas" icon={MapPin} color={T.amber} T={T} />
         <KPI label="Secciones" value={kpis.secciones} sub="Del Google Sheet" icon={Layers} color={T.violet} T={T} />
+      </div>
+
+      {/* Consulta del catálogo por Telegram */}
+      <div style={{
+        display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap",
+        padding: "14px 18px", borderRadius: 16,
+        background: isLight ? "rgba(126,184,240,0.08)" : "rgba(126,184,240,0.06)",
+        border: `1px solid ${T.blue}2E`,
+      }}>
+        <div style={{ width: 40, height: 40, borderRadius: 12, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", background: `${T.blue}18`, border: `1px solid ${T.blue}33` }}>
+          <Send size={18} color={T.blue} />
+        </div>
+        <div style={{ flex: "1 1 260px", minWidth: 0 }}>
+          <p style={{ margin: 0, fontSize: 13.5, fontWeight: 700, color: T.txt, fontFamily: fontDisp }}>
+            Pregúntale al catálogo por Telegram
+          </p>
+          <p style={{ margin: "3px 0 0", fontSize: 11.5, color: T.txt3, fontFamily: font }}>
+            Por voz o texto en <span style={{ color: T.blue, fontWeight: 600 }}>@Strato_sasistente_crm_bot</span> — filtra por zona, precio o característica.
+          </p>
+        </div>
+        <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+          {["Propiedades en Playa del Carmen", "Top 3 en Tulum", "Villa cerca del mar"].map((ex) => (
+            <span key={ex} style={{ fontSize: 10.5, color: T.txt2, fontFamily: font, padding: "5px 10px", borderRadius: 99, background: isLight ? "rgba(15,23,42,0.03)" : "rgba(255,255,255,0.03)", border: `1px solid ${T.border}`, whiteSpace: "nowrap" }}>
+              “{ex}”
+            </span>
+          ))}
+        </div>
       </div>
 
       {/* Catálogo */}
