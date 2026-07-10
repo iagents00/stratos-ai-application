@@ -43,7 +43,7 @@ export function buildIntelNotifs(leadsData, now = Date.now()) {
       detail: `${nom(top)} está en "${top.st || "—"}"${monto(top) ? ` · ${Math.round(monto(top) / 1000)}K USD` : ""}. ${
         top.nextAction ? `Próxima acción: ${top.nextAction}.` : "Sin próxima acción registrada — agendá el siguiente paso."
       }`,
-      c: "#34D399", icon: Target, btn: "Ver en el CRM", action: null,
+      c: "#34D399", icon: Target, btn: "Ver en el CRM", action: null, leadId: top.id,
     });
   }
 
@@ -58,7 +58,7 @@ export function buildIntelNotifs(leadsData, now = Date.now()) {
       agent: "En riesgo de enfriarse",
       text: `${nom(riesgo.l)} · ${riesgo.inact} días sin avance`,
       detail: `${nom(riesgo.l)} (score ${score(riesgo.l)}) lleva ~${riesgo.inact} días sin movimiento. Reactivalo antes de que se enfríe.`,
-      c: "#F43F5E", icon: AlertTriangle, btn: "Ver en el CRM", action: null,
+      c: "#F43F5E", icon: AlertTriangle, btn: "Ver en el CRM", action: null, leadId: riesgo.l.id,
     });
   }
 
