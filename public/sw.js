@@ -317,7 +317,13 @@
 //   pedido de Ivan) en chip, apartado, modal, tooltips y CSV; el marcado
 //   pasa a ROJO real como el sheet del director: fila teñida rojo + barra
 //   lateral 3px + flama roja (#DC2626) en tabla, listas y detalle del día.
-const CACHE_VERSION = 'stratos-v121';
+// v122 — fix(crítico): "Algo salió mal — cannot add postgres_changes
+//   callbacks for realtime:zoom-agendados-live after subscribe()" al volver
+//   a entrar a Indicadores·Zooms. El canal realtime usaba nombre FIJO y
+//   supabase.channel() reutiliza la instancia ya suscrita → throw en el
+//   effect → error boundary. Fix: nombre único por montaje + try/catch
+//   (el realtime nunca puede tumbar el panel).
+const CACHE_VERSION = 'stratos-v122';
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 
