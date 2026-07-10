@@ -1263,9 +1263,9 @@ export default function App() {
     <div className="stratos-app" style={{
       height:"100vh", display:"flex", fontFamily:font, color:T.txt,
       background: isLight
-        ? `radial-gradient(1400px 900px at 50% -10%, rgba(13,154,118,0.10) 0%, rgba(13,154,118,0.04) 35%, transparent 65%),
-           radial-gradient(1200px 800px at 50% 110%, rgba(20,184,146,0.08) 0%, rgba(20,184,146,0.03) 35%, transparent 65%),
-           linear-gradient(180deg, #F4F9F6 0%, #F8FBF9 45%, #F4F9F6 100%)`
+        ? `radial-gradient(1400px 900px at 50% -10%, rgba(13,154,118,0.07) 0%, rgba(13,154,118,0.028) 34%, transparent 60%),
+           radial-gradient(1200px 800px at 50% 112%, rgba(20,184,146,0.055) 0%, rgba(20,184,146,0.02) 34%, transparent 60%),
+           linear-gradient(180deg, #E7EEEB 0%, #ECF1EF 46%, #E4EBE8 100%)`
         : `radial-gradient(1200px 600px at 30% -5%, rgba(80,120,255,0.025) 0%, transparent 55%), #030810`,
       transition:"background 0.3s ease, color 0.3s ease",
     }}>
@@ -1984,7 +1984,7 @@ export default function App() {
                 nativo carga la web remota: un APK nuevo NO garantiza web nueva
                 (SW/deploy). Con esto cualquiera puede reportar "web vNNN" y se
                 acaba el adivinar. Mantener en sync con CACHE_VERSION (sw.js). */}
-            <p style={{ margin:"12px 0 0", textAlign:"center", fontSize:9.5, fontFamily:font, letterSpacing:"0.02em", color: isLight ? "rgba(15,23,42,0.35)" : "rgba(255,255,255,0.28)" }}>Stratos CRM AI · web v138</p>
+            <p style={{ margin:"12px 0 0", textAlign:"center", fontSize:9.5, fontFamily:font, letterSpacing:"0.02em", color: isLight ? "rgba(15,23,42,0.35)" : "rgba(255,255,255,0.28)" }}>Stratos CRM AI · web v139</p>
           </div>
         </>,
         document.body
