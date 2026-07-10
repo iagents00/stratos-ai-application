@@ -9,7 +9,7 @@ import { CATALOGO_SECCIONES } from "../data/catalogoProyectos";
 
 // Solo se MUESTRAN estas secciones del catálogo (control = pestaña "DRIVES DC" del Sheet).
 // Las demás propiedades quedan guardadas en la data pero ocultas en la UI (y en el bot de Telegram).
-const VISIBLE_SECCIONES = ["drives-dc"];
+const VISIBLE_SECCIONES = ["top-desarrollos"];
 const SECCIONES = CATALOGO_SECCIONES.filter((s) => VISIBLE_SECCIONES.includes(s.id));
 
 /* Color por rango de ticket */
@@ -123,7 +123,7 @@ const ERP = ({ oc, T: _T }) => {
           </p>
         </div>
         <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-          {["Propiedades en Tulum", "Top 3 destacados", "Villa cerca del mar"].map((ex) => (
+          {["Top 5 destacados", "Propiedades en Cancún", "Villa cerca del mar"].map((ex) => (
             <span key={ex} style={{ fontSize: 10.5, color: T.txt2, fontFamily: font, padding: "5px 10px", borderRadius: 99, background: isLight ? "rgba(15,23,42,0.03)" : "rgba(255,255,255,0.03)", border: `1px solid ${T.border}`, whiteSpace: "nowrap" }}>
               “{ex}”
             </span>

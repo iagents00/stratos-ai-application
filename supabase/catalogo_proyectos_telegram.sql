@@ -40,11 +40,11 @@ create table if not exists public.catalogo_proyectos (
   created_at      timestamptz not null default now()
 );
 
--- Visibilidad: solo se muestran las propiedades de la pestaña "DRIVES DC" del Sheet.
--- (No se borra nada; las demás quedan visible=false.) Para cambiar el set visible,
--- se edita esa pestaña, se re-importa y se corre este UPDATE.
+-- Visibilidad: solo se muestran las propiedades de la pestaña "Top Desarrollos" del Sheet
+-- (seccion = 'top-desarrollos'). (No se borra nada; las demás quedan visible=false.)
+-- Para cambiar el set visible, se ajusta qué seccion queda visible y se corre este UPDATE.
 -- alter table public.catalogo_proyectos add column if not exists visible boolean not null default false;
--- update public.catalogo_proyectos set visible = (seccion = 'drives-dc')
+-- update public.catalogo_proyectos set visible = (seccion = 'top-desarrollos')
 --   where organization_id = '00000000-0000-0000-0000-000000000001';
 create index if not exists idx_catalogo_org on public.catalogo_proyectos(organization_id);
 create index if not exists idx_catalogo_ubicacion on public.catalogo_proyectos(organization_id, lower(ubicacion));
@@ -178,7 +178,7 @@ begin
 
   if v_total = 0 then
     return jsonb_build_object('ok', true, 'reply', jsonb_build_object(
-      'text', 'No encontré desarrollos que cuadren con eso 🤔. Probá con una zona (Playa del Carmen, Tulum, Cancún…), un rango de precio, o una característica (ej: "2 recámaras cerca del mar", "top 3 en Tulum").',
+      'text', 'No encontré desarrollos que cuadren con eso 🤔. Probá con una zona (Cancún, Tulum, Playa del Carmen, Mérida…), un rango de precio, o una característica (ej: "top 3", "villa 2 recámaras").',
       'inline_keyboard', '[]'::jsonb));
   end if;
 
