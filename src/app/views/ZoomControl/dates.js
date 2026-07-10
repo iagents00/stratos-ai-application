@@ -27,6 +27,16 @@ export function next7Range() {
   const now = new Date();
   return { start: ymd(now), end: ymd(addDays(now, 6)) };
 }
+// Quincena actual (1-15 / 16-fin) — el corte quincenal que pidió el director
+// comercial para sus reportes.
+export function quincenaRange() {
+  const now = new Date();
+  const y = now.getFullYear(), m = now.getMonth();
+  const primera = now.getDate() <= 15;
+  const first = primera ? new Date(y, m, 1) : new Date(y, m, 16);
+  const last  = primera ? new Date(y, m, 15) : new Date(y, m + 1, 0);
+  return { start: ymd(first), end: ymd(last), label: `${primera ? "1ra" : "2da"} qna. ${MON[m]}` };
+}
 // Mes calendario actual — para el reporte mensual que pide dirección.
 export function monthRange() {
   const now = new Date();
@@ -46,4 +56,20 @@ export function prettyDate(s) {
   if (!y || !m || !d) return s;
   const dt = new Date(y, m - 1, d);
   return `${DOW[dt.getDay()]} ${d} ${MON[m - 1]}`;
+}
+
+// Nombres completos (para el export CSV con las columnas del sheet original).
+export const DOW_FULL = ["domingo", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado"];
+export const MES_FULL = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
+// Número de semana ISO-8601 de un YYYY-MM-DD (la columna "Semana" del sheet,
+// que a mano salía con errores; aquí es siempre consistente).
+export function isoWeekNumber(dateStr) {
+  if (!dateStr) return "";
+  const [y, m, d] = dateStr.split("-").map(Number);
+  if (!y || !m || !d) return "";
+  const date = new Date(Date.UTC(y, m - 1, d));
+  const day = date.getUTCDay() || 7;             // lunes=1 … domingo=7
+  date.setUTCDate(date.getUTCDate() + 4 - day);  // jueves de esa semana
+  const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
+  return Math.ceil(((date - yearStart) / 86400000 + 1) / 7);
 }
