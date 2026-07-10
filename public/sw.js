@@ -313,7 +313,11 @@
 //   estuviera completo. Ahora solo se pausan las animaciones INFINITAS
 //   (mismo criterio que la capa móvil); el beneficio anti-crash de iOS se
 //   conserva. Diagnóstico en vivo con el navegador de Ivan.
-const CACHE_VERSION = 'stratos-v120';
+// v121 — feat(zooms): "Calentitos" → "Alta intención" (nombre profesional,
+//   pedido de Ivan) en chip, apartado, modal, tooltips y CSV; el marcado
+//   pasa a ROJO real como el sheet del director: fila teñida rojo + barra
+//   lateral 3px + flama roja (#DC2626) en tabla, listas y detalle del día.
+const CACHE_VERSION = 'stratos-v121';
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 
