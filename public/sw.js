@@ -274,7 +274,12 @@
 //   columna Comentarios visible con tooltip y pill HOY en los zooms del día.
 //   La migración 085 (staged) sincroniza el CRM → Control de Zooms por
 //   trigger en leads; pendiente de autorización para aplicar a prod.
-const CACHE_VERSION = 'stratos-v112';
+// v113 — feat(zooms): ajustes finos pedidos por el director comercial:
+//   separadores por día en la tabla (lectura agrupada como su sheet, con
+//   conteo y marca HOY), alcance Quincena en Resumen y PDF, export CSV con
+//   las columnas exactas del sheet (Semana ISO/Mes/Día/¿Zoom hoy? derivadas
+//   sin errores) y tooltip con la fecha en que se agendó cada Zoom.
+const CACHE_VERSION = 'stratos-v113';
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 
