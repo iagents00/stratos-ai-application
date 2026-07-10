@@ -2477,7 +2477,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                       ? `${meta.color}30`
                       : `rgba(255,255,255,0.07)`;
                     const restShadow = isLight
-                      ? `0 1px 3px rgba(15,23,42,0.05), 0 4px 16px rgba(15,23,42,0.07), inset 0 1px 0 rgba(255,255,255,1)`
+                      ? `0 1px 2px rgba(15,23,42,0.05), 0 6px 20px rgba(15,23,42,0.10), 0 16px 40px rgba(15,23,42,0.08), inset 0 1px 0 rgba(255,255,255,1)`
                       : `0 2px 8px rgba(0,0,0,0.55), 0 12px 44px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.06)`;
                     const hoverBorder = isLight ? `${meta.color}68` : `rgba(255,255,255,0.14)`;
                     const hoverShadow = isLight
@@ -4436,14 +4436,32 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                           border: `1px solid ${uc}28`,
                         }}>{l.daysInactive}d</span>
                       )}
-                      <span style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 4 }}>
-                        <span style={{
-                          fontSize: 11, fontWeight: 700, color: T.txt2,
-                          fontFamily: fontDisp,
-                        }}>{sc}</span>
-                        <span style={{ fontSize: 9, color: T.txt3, fontFamily: fontDisp }}>score</span>
-                        <ChevronRight size={14} color={T.txt3} strokeWidth={2.2} style={{ marginLeft: 4 }} />
-                      </span>
+                      {/* Número/score = BOTÓN explícito que abre el EXPEDIENTE del
+                          lead (Próxima acción · Lista de acciones · Documentos ·
+                          Protocolo Duke) — igual que "presionar el número" en la web.
+                          Antes el tap caía en los campos editables de la tarjeta y no
+                          abría nada; ahora es un control claro. handleRowOpen ignora
+                          los <button>, así que no hay doble apertura. */}
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setNotesLead(l); }}
+                        title={`Abrir expediente de ${l.n}`}
+                        aria-label={`Abrir expediente de ${l.n}`}
+                        style={{
+                          marginLeft: "auto", flexShrink: 0,
+                          display: "inline-flex", alignItems: "center", gap: 5,
+                          padding: "5px 8px 5px 11px", borderRadius: 99, cursor: "pointer",
+                          border: `1px solid ${isLight ? "rgba(15,23,42,0.10)" : "rgba(255,255,255,0.10)"}`,
+                          background: isLight ? "rgba(15,23,42,0.025)" : "rgba(255,255,255,0.04)",
+                          WebkitTapHighlightColor: "transparent",
+                          transition: "transform 0.12s ease, background 0.15s ease, border-color 0.15s ease",
+                        }}
+                        onTouchStart={(e) => { e.currentTarget.style.transform = "scale(0.93)"; e.currentTarget.style.background = isLight ? `${T.accent}12` : `${T.accent}1A`; e.currentTarget.style.borderColor = `${T.accent}55`; }}
+                        onTouchEnd={(e) => { e.currentTarget.style.transform = "scale(1)"; e.currentTarget.style.background = isLight ? "rgba(15,23,42,0.025)" : "rgba(255,255,255,0.04)"; e.currentTarget.style.borderColor = isLight ? "rgba(15,23,42,0.10)" : "rgba(255,255,255,0.10)"; }}
+                      >
+                        <span style={{ fontSize: 12.5, fontWeight: 800, color: sc >= 80 ? T.emerald : sc >= 60 ? T.blue : sc >= 40 ? T.cyan : T.violet, fontFamily: fontDisp, letterSpacing: "-0.01em" }}>{sc}</span>
+                        <span style={{ fontSize: 8, color: T.txt3, fontFamily: fontDisp, fontWeight: 800, letterSpacing: "0.07em", textTransform: "uppercase" }}>score</span>
+                        <ChevronRight size={13} color={T.accent} strokeWidth={2.6} style={{ marginLeft: 1 }} />
+                      </button>
                     </div>
                   )}
 
