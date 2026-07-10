@@ -14,7 +14,7 @@
  */
 import { useMemo, useState, useCallback } from "react";
 import {
-  Video, Plus, RefreshCw, Search, X, Pencil, Trash2, Flame,
+  Video, Plus, RefreshCw, Search, X, Pencil, Trash2, Flame, Download,
   CalendarDays, CheckCircle2, UserCheck, Clock3, AlertTriangle,
 } from "lucide-react";
 import { P, LP, font, fontDisp } from "../../../design-system/tokens";
@@ -26,7 +26,7 @@ import {
   estatusColor, suggestPresentador, suggestApoyo,
 } from "./constants";
 import ResumenZooms from "./Resumen";
-import { todayStr, weekRange, next7Range, inRange, prettyDate } from "./dates";
+import { todayStr, weekRange, next7Range, inRange, prettyDate, isoWeekNumber, DOW_FULL, MES_FULL } from "./dates";
 
 const RANGES = [
   { id: "hoy",   label: "Hoy" },
@@ -111,6 +111,56 @@ const ZoomControl = ({ theme = "dark" }) => {
     });
     return list;
   }, [rows, range, statusFilter, hotOnly, q, today]);
+
+  // Tabla con separadores por día — la misma lectura agrupada del sheet:
+  // una banda por fecha con su conteo, y debajo los Zooms de ese día.
+  const tableItems = useMemo(() => {
+    const items = [];
+    let prev = "__none__";
+    for (const r of filtered) {
+      const f = r.fecha_zoom || "";
+      if (f !== prev) {
+        prev = f;
+        items.push({ type: "sep", fecha: r.fecha_zoom, count: filtered.filter(x => (x.fecha_zoom || "") === f).length });
+      }
+      items.push({ type: "row", r });
+    }
+    return items;
+  }, [filtered]);
+
+  // ── Export CSV — el formato de su sheet, con las columnas derivadas
+  //    (Semana ISO, Mes, Día, ¿Zoom hoy?) calculadas sin errores ────────────
+  const exportCsv = useCallback(() => {
+    const esc = (v) => {
+      const t = v == null ? "" : String(v);
+      return /[",\n;]/.test(t) ? `"${t.replace(/"/g, '""')}"` : t;
+    };
+    const dowMes = (f) => {
+      if (!f) return ["", ""];
+      const [y, m, d] = f.split("-").map(Number);
+      if (!y || !m || !d) return ["", ""];
+      const dt = new Date(y, m - 1, d);
+      return [MES_FULL[dt.getMonth()], DOW_FULL[dt.getDay()]];
+    };
+    const headers = ["Fecha en que se agendó", "Fecha del Zoom", "Hora", "Liner", "Presentador principal", "Presentador apoyo", "Cliente", "Desarrollo / Proyecto", "Estatus", "Comentarios", "Discovery", "Calentito", "Semana", "Mes", "Día del Zoom", "¿Zoom hoy?"];
+    const lines = filtered.map(r => {
+      const [mes, dia] = dowMes(r.fecha_zoom);
+      return [
+        r.fecha_agendado, r.fecha_zoom, r.hora, r.liner, r.presentador_principal, r.presentador_apoyo,
+        r.cliente, r.proyecto, r.estatus, r.comentarios, r.discovery, r.calentito ? "Sí" : "No",
+        isoWeekNumber(r.fecha_zoom), mes, dia, r.fecha_zoom === today ? "Sí" : "No",
+      ].map(esc).join(",");
+    });
+    const csv = "\ufeff" + headers.join(",") + "\n" + lines.join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `control-zooms_${today}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 200);
+  }, [filtered, today]);
 
   // ── Form helpers ─────────────────────────────────────────────────────────
   const openCreate = useCallback(() => {
@@ -236,6 +286,21 @@ const ZoomControl = ({ theme = "dark" }) => {
           >
             <RefreshCw size={14} style={busy ? { animation: "spin 0.8s linear infinite" } : undefined} />
             Recargar
+          </button>
+          <button
+            onClick={exportCsv}
+            title="Descarga la tabla (con los filtros aplicados) como CSV — el mismo formato del sheet"
+            style={{
+              display: "inline-flex", alignItems: "center", gap: 7,
+              padding: "9px 13px", borderRadius: 10,
+              fontSize: 12.5, fontWeight: 600, fontFamily: fontDisp,
+              cursor: "pointer",
+              background: subtleBg, color: T.txt2,
+              border: `1px solid ${cardBorder}`,
+            }}
+          >
+            <Download size={14} />
+            CSV
           </button>
           <button
             onClick={openCreate}
@@ -373,7 +438,24 @@ const ZoomControl = ({ theme = "dark" }) => {
                     : "Ningún Zoom coincide con este filtro."}
                 </td></tr>
               )}
-              {!loading && filtered.map((r) => {
+              {!loading && tableItems.map((item, idx) => {
+                if (item.type === "sep") {
+                  const esHoy = item.fecha === today;
+                  return (
+                    <tr key={`sep-${item.fecha || idx}`}>
+                      <td colSpan={hasExtCols ? 9 : 8} style={{
+                        padding: "8px 14px", background: subtleBg,
+                        borderTop: `1px solid ${rowBorder}`,
+                        fontSize: 11.5, fontWeight: 800, fontFamily: fontDisp,
+                        textTransform: "uppercase", letterSpacing: "0.05em",
+                        color: esHoy ? accent : T.txt2,
+                      }}>
+                        {prettyDate(item.fecha)} · {item.count} {item.count === 1 ? "Zoom" : "Zooms"}{esHoy ? " · HOY" : ""}
+                      </td>
+                    </tr>
+                  );
+                }
+                const r = item.r;
                 // Calentito = fila teñida (como el rojo del sheet del director).
                 const hotBg = r.calentito ? "rgba(234,88,12,0.07)" : "transparent";
                 return (
