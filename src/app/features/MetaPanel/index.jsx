@@ -191,6 +191,10 @@ export default function MetaPanel({
   // crea acá SÍ se guardan, con fecha/hora límite OBLIGATORIA (la usa el coach de Telegram).
   const [metaNewDate, setMetaNewDate] = useState("");
   const [teamMembers, setTeamMembers] = useState([]);   // responsables dinámicos (todos los activos del org, incl. nuevos)
+  // Búsqueda + filtro por prioridad de la Lista de Acción — con 100+ acciones la
+  // lista es inmanejable sin esto. Solo filtran la VISTA, no mutan metaActions.
+  const [actionSearch, setActionSearch] = useState("");
+  const [prioFilter, setPrioFilter] = useState("todas");
   const _orgId = user?.organizationId;
   // Persistimos si hay un usuario REAL logueado. NO exigimos conocer el org en el front:
   // team_actions tiene DEFAULT organization_id = current_organization_id() (la DB lo pone desde el
@@ -288,6 +292,27 @@ export default function MetaPanel({
   const pct2   = hasGoal ? Math.min(100, Math.round((pipe2 / GOAL2) * 100)) : 0;
   const avgSc  = aLeads.length ? Math.round(aLeads.reduce((s, l) => s + (l.sc || 0), 0) / aLeads.length) : 0;
   const fmtM   = n => n >= 1e6 ? `$${(n/1e6).toFixed(1).replace(/\.0$/,"")}M` : `$${(n/1e3).toFixed(0)}K`;
+
+  // ── Métricas ACT — mismas cuentas que el widget ACT/AVANCE de la barra lateral ──
+  const actDone    = metaActions.filter(a => a.done).length;
+  const actTotal   = metaActions.length;
+  const actPc      = actTotal ? Math.min(100, Math.round((actDone / actTotal) * 100)) : 0;
+  const pendientes = metaActions.filter(a => !a.done);
+  const urgentes   = pendientes.filter(a => a.priority === "urgente").length;
+  // Filtros de la vista (búsqueda por texto/lead/responsable + chip de prioridad)
+  const searchQ = actionSearch.trim().toLowerCase();
+  const matchesFilters = (a) =>
+    (prioFilter === "todas" || (a.priority || "normal") === prioFilter) &&
+    (!searchQ || [a.text, a.lead, a.asesor, a.assignee].some(x => (x || "").toLowerCase().includes(searchQ)));
+  const pendingVisible = pendientes.filter(matchesFilters);
+  const doneVisible    = metaActions.filter(a => a.done && matchesFilters(a));
+  const filtersActive  = !!searchQ || prioFilter !== "todas";
+  const PRIO_CHIPS = [
+    { id: "todas",   label: "Todas",   dot: T.accent },
+    { id: "urgente", label: "Urgente", dot: "#EF4444" },
+    { id: "alto",    label: "Alto",    dot: "#F59E0B" },
+    { id: "normal",  label: "Normal",  dot: isLight ? "#94A3B8" : "#64748B" },
+  ];
 
   /* ── Helpers ── */
   const sectionHd = (label, color) => (
@@ -418,14 +443,43 @@ export default function MetaPanel({
           {/* ═══ TAB 1: LISTA DE ACCIÓN ══════════════════════════════════ */}
           {metaTab === "acciones" && (
             <div style={{ maxWidth:800, margin:"0 auto" }}>
-              {/* Header */}
-              <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:18 }}>
+              {/* Header + resumen de avance — el detalle del widget ACT/AVANCE de la barra lateral */}
+              <div style={{ display:"flex", alignItems:"flex-end", justifyContent:"space-between", gap:14, flexWrap:"wrap", marginBottom:14 }}>
                 <div>
                   <h3 style={{ margin:0, fontSize:19, fontWeight:700, fontFamily:fontDisp, letterSpacing:"-0.035em", color:T.txt }}>Acciones del Equipo</h3>
                   <p style={{ margin:"5px 0 0", fontSize:12.5, color:T.txt3, fontFamily:font }}>
-                    {metaActions.filter(a=>!a.done).length} pendientes · {metaActions.filter(a=>a.done).length} completadas
+                    {pendientes.length} pendientes · {actDone} completadas
+                    {urgentes > 0 && <span style={{ color:"#EF4444", fontWeight:600 }}> · {urgentes} urgentes</span>}
                     <span style={{ marginLeft:8, opacity:0.5, fontSize:11.5 }}>· Arrastra para reordenar</span>
                   </p>
+                </div>
+                <div style={{ display:"flex", alignItems:"baseline", gap:6 }}>
+                  <span style={{ fontSize:26, fontWeight:200, fontFamily:fontDisp, letterSpacing:"-0.04em", lineHeight:1, fontVariantNumeric:"tabular-nums", color: actPc >= 100 ? T.accent : T.txt }}>{actPc}%</span>
+                  <span style={{ fontSize:10, fontWeight:700, fontFamily:fontDisp, letterSpacing:"0.14em", textTransform:"uppercase", color:T.txt3 }}>avance</span>
+                </div>
+              </div>
+              {/* Barra de avance — misma métrica que el widget (ACT hechas / total) */}
+              <div style={{ marginBottom:20, padding:"12px 14px", borderRadius:14,
+                background: isLight ? "rgba(13,154,118,0.045)" : "rgba(52,211,153,0.05)",
+                border:`1px solid ${isLight ? "rgba(13,154,118,0.13)" : "rgba(52,211,153,0.16)"}`,
+                boxShadow: isLight ? "inset 0 1px 0 rgba(255,255,255,0.80)" : "inset 0 1px 0 rgba(52,211,153,0.10)",
+              }}>
+                <div style={{ display:"flex", justifyContent:"space-between", alignItems:"baseline", marginBottom:8 }}>
+                  <span style={{ fontSize:9.5, fontWeight:800, fontFamily:fontDisp, letterSpacing:"0.16em", textTransform:"uppercase", color: isLight ? "rgba(13,154,118,0.72)" : "rgba(52,211,153,0.72)" }}>ACT</span>
+                  <span style={{ fontSize:12, fontWeight:600, fontFamily:fontDisp, fontVariantNumeric:"tabular-nums", color:T.txt2 }}>
+                    <span style={{ color: isLight ? "#0D9A76" : "#6EE7C2", fontWeight:700 }}>{actDone}</span>
+                    <span style={{ opacity:0.55 }}> / {actTotal} acciones</span>
+                  </span>
+                </div>
+                <div style={{ width:"100%", height:5, borderRadius:99, overflow:"hidden",
+                  background: isLight ? "rgba(13,154,118,0.10)" : "rgba(255,255,255,0.07)",
+                  boxShadow: isLight ? "inset 0 0.5px 1.5px rgba(15,23,42,0.07)" : "inset 0 1px 2px rgba(0,0,0,0.50)",
+                }}>
+                  <div style={{ width:`${Math.max(actPc, actTotal ? 1 : 0)}%`, height:"100%", borderRadius:99,
+                    background: isLight ? "linear-gradient(90deg, #0D9A76, #34D399)" : "linear-gradient(90deg, #34D399, #6EE7C2)",
+                    boxShadow: isLight ? "0 0 6px rgba(13,154,118,0.35)" : "0 0 10px rgba(52,211,153,0.60)",
+                    transition:"width 0.9s cubic-bezier(0.4,0,0.2,1)",
+                  }} />
                 </div>
               </div>
 
@@ -481,13 +535,55 @@ export default function MetaPanel({
                 ); })()}
               </div>
 
+              {/* Buscador + filtro por prioridad — indispensable con 100+ acciones */}
+              {actTotal > 0 && (
+                <div style={{ display:"flex", gap:8, marginBottom:18, alignItems:"center", flexWrap:"wrap" }}>
+                  <input
+                    value={actionSearch}
+                    onChange={e => setActionSearch(e.target.value)}
+                    placeholder="Buscar por acción, lead o responsable…"
+                    style={{
+                      flex:"1 1 220px", padding:"9px 14px", borderRadius:11,
+                      background: isLight ? "#FFFFFF" : "rgba(255,255,255,0.04)",
+                      border:`1px solid ${actionSearch ? T.accentB : T.border}`,
+                      color:T.txt, fontSize:12.5, fontFamily:font, outline:"none",
+                      transition:"border 0.15s",
+                    }}
+                  />
+                  <div style={{ display:"flex", gap:5, flexWrap:"wrap" }}>
+                    {PRIO_CHIPS.map(c => {
+                      const on = prioFilter === c.id;
+                      return (
+                        <button key={c.id} onClick={() => setPrioFilter(c.id)} style={{
+                          display:"inline-flex", alignItems:"center", gap:5,
+                          padding:"6px 11px", borderRadius:99, cursor:"pointer",
+                          fontSize:11, fontWeight:600, fontFamily:font, letterSpacing:"0.01em",
+                          background: on ? `${c.dot}14` : "transparent",
+                          border:`1px solid ${on ? `${c.dot}45` : T.border}`,
+                          color: on ? c.dot : T.txt3,
+                          transition:"all 0.15s",
+                        }}>
+                          <span style={{ width:6, height:6, borderRadius:"50%", background:c.dot, opacity: on ? 1 : 0.45, display:"inline-block", flexShrink:0 }} />
+                          {c.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
               {/* Pending tasks */}
-              {metaActions.filter(a=>!a.done).length === 0 && (
+              {pendientes.length === 0 && (
                 <div style={{ textAlign:"center", padding:"38px 0 26px", color:T.txt3, fontSize:13.5, fontFamily:font, opacity:0.55 }}>
                   Sin acciones pendientes · Agrega la primera arriba
                 </div>
               )}
-              {metaActions.filter(a=>!a.done).map(a => {
+              {pendientes.length > 0 && pendingVisible.length === 0 && (
+                <div style={{ textAlign:"center", padding:"38px 0 26px", color:T.txt3, fontSize:13.5, fontFamily:font, opacity:0.55 }}>
+                  Sin resultados con ese filtro · Ajusta la búsqueda o la prioridad
+                </div>
+              )}
+              {pendingVisible.map(a => {
                 const isUrgent = a.priority==="urgente" || a.date?.toLowerCase().includes("hoy");
                 const isHigh   = !isUrgent && (a.priority==="alto" || a.date?.toLowerCase().includes("mañana") || a.date?.toLowerCase().includes("semana"));
                 const prioColor = isUrgent ? "#EF4444" : isHigh ? "#F59E0B" : T.txt2;
@@ -516,6 +612,16 @@ export default function MetaPanel({
                         return arr;
                       });
                     }}
+                    onMouseEnter={e => {
+                      e.currentTarget.style.borderColor = isUrgent ? "rgba(239,68,68,0.34)" : (isLight ? "rgba(13,154,118,0.26)" : "rgba(110,231,194,0.22)");
+                      e.currentTarget.style.boxShadow = isLight ? "0 4px 14px rgba(15,23,42,0.06)" : "0 4px 18px rgba(0,0,0,0.30)";
+                      e.currentTarget.style.transform = "translateY(-1px)";
+                    }}
+                    onMouseLeave={e => {
+                      e.currentTarget.style.borderColor = isUrgent ? "rgba(239,68,68,0.18)" : T.border;
+                      e.currentTarget.style.boxShadow = "none";
+                      e.currentTarget.style.transform = "translateY(0)";
+                    }}
                     style={{
                       display:"flex", alignItems:"flex-start", gap:12,
                       padding:"14px 16px", borderRadius:14, marginBottom:8,
@@ -523,7 +629,7 @@ export default function MetaPanel({
                         ? (isLight?"rgba(239,68,68,0.03)":"rgba(239,68,68,0.04)")
                         : (isLight?"#FFFFFF":"rgba(255,255,255,0.03)"),
                       border:`1px solid ${isUrgent ? "rgba(239,68,68,0.18)" : T.border}`,
-                      transition:"background 0.15s, border 0.15s",
+                      transition:"background 0.15s, border-color 0.15s, box-shadow 0.18s ease, transform 0.18s ease",
                     }}
                   >
                     {/* Drag handle */}
@@ -626,8 +732,8 @@ export default function MetaPanel({
                 );
               })}
 
-              {/* Completed tasks — collapsible */}
-              {metaActions.filter(a=>a.done).length > 0 && (
+              {/* Completed tasks — collapsible (respeta búsqueda/filtro activos) */}
+              {doneVisible.length > 0 && (
                 <div style={{ marginTop:18 }}>
                   <button
                     onClick={() => setDoneCollapsed(x => !x)}
@@ -635,12 +741,12 @@ export default function MetaPanel({
                     <div style={{ flex:1, height:1, background:T.border }} />
                     <span style={{ fontSize:12, fontWeight:600, color:T.txt3, fontFamily:font, whiteSpace:"nowrap", display:"flex", alignItems:"center", gap:6 }}>
                       <Check size={12} color={T.accent} />
-                      {metaActions.filter(a=>a.done).length} completadas
+                      {doneVisible.length}{filtersActive ? ` de ${actDone}` : ""} completadas
                       <span style={{ fontSize:10.5, opacity:0.6 }}>{doneCollapsed ? "▸ ver" : "▾ ocultar"}</span>
                     </span>
                     <div style={{ flex:1, height:1, background:T.border }} />
                   </button>
-                  {!doneCollapsed && metaActions.filter(a=>a.done).map(a => (
+                  {!doneCollapsed && doneVisible.map(a => (
                     <div key={a.id} style={{
                       display:"flex", alignItems:"flex-start", gap:11,
                       padding:"11px 16px", borderRadius:12, marginBottom:6,

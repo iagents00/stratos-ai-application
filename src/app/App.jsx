@@ -1103,7 +1103,19 @@ export default function App() {
   // ACT / AVANCE: mismas cuentas que el panel "Acciones del Equipo" (metaActions).
   const actDone     = metaActions.filter(a => a.done).length;   // acciones completadas
   const actTotal    = metaActions.length;                       // total (derivadas de leads + creadas a mano)
-  const pc          = Math.max(1, Math.min(100, actTotal ? Math.round((actDone / actTotal) * 100) : 1));   // % de avance
+  const pcReal      = actTotal ? Math.min(100, Math.round((actDone / actTotal) * 100)) : 0;   // % de avance real (el que se muestra)
+  const pc          = Math.max(1, pcReal);                      // ancho de la barra (mínimo 1% para que siempre se vea)
+  // Borde/sombras del widget ACT (base y hover). El widget es clickeable, así que
+  // el hover lo eleva y aviva el borde; los strings viven acá para poder
+  // revertirlos en onMouseLeave sin duplicarlos en el JSX.
+  const actWBorder      = isLight ? "1px solid rgba(13,154,118,0.16)" : "1px solid rgba(52,211,153,0.26)";
+  const actWBorderHover = isLight ? "1px solid rgba(13,154,118,0.38)" : "1px solid rgba(52,211,153,0.48)";
+  const actWShadow      = isLight
+    ? "inset 0 1.5px 0 rgba(255,255,255,1), 0 6px 28px rgba(13,154,118,0.10)"
+    : ["inset 0 1px 0 rgba(52,211,153,0.38)","inset 0 -1px 0 rgba(0,0,0,0.40)","inset 1px 0 0 rgba(52,211,153,0.10)","inset -1px 0 0 rgba(52,211,153,0.10)","0 0 0 1px rgba(52,211,153,0.06)","0 0 28px rgba(52,211,153,0.10)","0 16px 48px rgba(0,0,0,0.70)"].join(", ");
+  const actWShadowHover = isLight
+    ? "inset 0 1.5px 0 rgba(255,255,255,1), 0 10px 34px rgba(13,154,118,0.20), 0 0 0 1px rgba(13,154,118,0.08)"
+    : ["inset 0 1px 0 rgba(52,211,153,0.52)","inset 0 -1px 0 rgba(0,0,0,0.40)","inset 1px 0 0 rgba(52,211,153,0.16)","inset -1px 0 0 rgba(52,211,153,0.16)","0 0 0 1px rgba(52,211,153,0.14)","0 0 36px rgba(52,211,153,0.22)","0 18px 52px rgba(0,0,0,0.75)"].join(", ");
 
   // Sidebar primaria: solo módulos a los que el usuario tiene acceso (rol + org).
   // Para clientes externos (Grupo 28 etc.) esto deja CRM como única opción visible.
@@ -1279,36 +1291,49 @@ export default function App() {
         <div style={{ flex:1, width:"100%", overflowY:"auto", overflowX:"hidden", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", paddingBottom:4, gap:6 }}>
           {/* Live Plan metrics widget */}
           <div style={{ display:"flex", flexDirection:"column", alignItems:"center", paddingBottom:10, width:"100%" }}>
-            <div onClick={() => setMetaOpen(true)} style={{
+            <div
+              onClick={() => setMetaOpen(true)}
+              title={`${actDone} de ${actTotal} acciones completadas · ${pcReal}% de avance — click para ver el detalle`}
+              onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-1px)"; e.currentTarget.style.border = actWBorderHover; e.currentTarget.style.boxShadow = actWShadowHover; }}
+              onMouseLeave={e => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.border = actWBorder; e.currentTarget.style.boxShadow = actWShadow; }}
+              style={{
               position:"relative", width:"calc(100% - 14px)", borderRadius:19, overflow:"hidden", cursor:"pointer",
               background: isLight ? "rgba(255,255,255,0.62)" : "linear-gradient(155deg, #0D1E18 0%, #080F10 55%, #040810 100%)",
               backdropFilter: isLight ? "blur(32px) saturate(180%)" : "none",
               WebkitBackdropFilter: isLight ? "blur(32px) saturate(180%)" : "none",
-              border: isLight ? "1px solid rgba(255,255,255,0.92)" : "1px solid rgba(52,211,153,0.22)",
-              boxShadow: isLight
-                ? "inset 0 1.5px 0 rgba(255,255,255,1), 0 6px 28px rgba(13,154,118,0.10)"
-                : ["inset 0 1px 0 rgba(52,211,153,0.38)","inset 0 -1px 0 rgba(0,0,0,0.40)","inset 1px 0 0 rgba(52,211,153,0.10)","inset -1px 0 0 rgba(52,211,153,0.10)","0 0 0 1px rgba(52,211,153,0.06)","0 0 28px rgba(52,211,153,0.10)","0 16px 48px rgba(0,0,0,0.70)"].join(", "),
-              padding:"11px 9px 12px",
+              border: actWBorder,
+              boxShadow: actWShadow,
+              padding:"11px 8px 12px",
+              transition:"transform 0.24s cubic-bezier(0.34,1.56,0.64,1), border 0.24s ease, box-shadow 0.24s ease",
             }}>
               <div style={{ position:"absolute", top:0, left:0, right:0, height:"45%", background: isLight ? "linear-gradient(180deg, rgba(255,255,255,0.65) 0%, transparent 100%)" : "linear-gradient(180deg, rgba(52,211,153,0.07) 0%, transparent 100%)", pointerEvents:"none", borderRadius:"20px 20px 0 0" }} />
               {isLight && <div className="widget-shimmer" style={{ position:"absolute", top:0, bottom:0, left:0, width:"60%", background:"linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.07) 50%, transparent 100%)", pointerEvents:"none" }} />}
               <div style={{ position:"absolute", bottom:-6, left:"50%", transform:"translateX(-50%)", width:72, height:40, background: isLight ? "radial-gradient(ellipse, rgba(13,154,118,0.18) 0%, transparent 70%)" : "radial-gradient(ellipse, rgba(52,211,153,0.22) 0%, transparent 70%)", filter:"blur(12px)", pointerEvents:"none" }} />
-              <div style={{ display:"flex", justifyContent:"center", position:"relative", zIndex:1, marginBottom:8 }}>
-                <span style={{
-                  display:"inline-flex", alignItems:"center", gap:2.5,
-                  maxWidth:"100%", whiteSpace:"nowrap",
-                  padding:"1.5px 5px", borderRadius:99,
-                  background: isLight ? "rgba(13,154,118,0.08)" : "rgba(52,211,153,0.13)",
-                }}>
-                  <span style={{ fontSize:5.5, fontFamily:fontDisp, fontWeight:700, letterSpacing:"0.06em", color: isLight ? "rgba(13,154,118,0.60)" : "rgba(52,211,153,0.52)" }}>ACT</span>
-                  <span style={{ fontSize:7.5, fontFamily:fontDisp, fontWeight:600, letterSpacing:"-0.01em", fontVariantNumeric:"tabular-nums", color: isLight ? "rgba(15,23,42,0.66)" : "rgba(255,255,255,0.62)" }}>{actDone}/{actTotal}</span>
+              {/* ACT · hechas/total — apilado (label arriba, conteo abajo) para que
+                  respire y no se apriete con totales de 3 dígitos (ej. 1/133). */}
+              <div style={{
+                position:"relative", zIndex:1, marginBottom:8, borderRadius:11, padding:"5px 2px 6px",
+                display:"flex", flexDirection:"column", alignItems:"center", gap:3,
+                background: isLight ? "rgba(13,154,118,0.07)" : "rgba(52,211,153,0.09)",
+                border: isLight ? "1px solid rgba(13,154,118,0.13)" : "1px solid rgba(52,211,153,0.18)",
+                boxShadow: isLight ? "inset 0 1px 0 rgba(255,255,255,0.85)" : "inset 0 1px 0 rgba(52,211,153,0.14)",
+              }}>
+                <span style={{ fontSize:6, fontFamily:fontDisp, fontWeight:800, letterSpacing:"0.22em", textTransform:"uppercase", lineHeight:1, color: isLight ? "rgba(13,154,118,0.65)" : "rgba(52,211,153,0.62)" }}>ACT</span>
+                <span style={{ display:"inline-flex", alignItems:"baseline", whiteSpace:"nowrap", fontFamily:fontDisp, fontVariantNumeric:"tabular-nums", letterSpacing:"-0.02em", lineHeight:1 }}>
+                  <span style={{ fontSize: actTotal > 99 ? 9.5 : 10.5, fontWeight:700, color: isLight ? "#0D9A76" : "#6EE7C2", textShadow: isLight ? "none" : "0 0 10px rgba(110,231,194,0.35)" }}>{actDone}</span>
+                  <span style={{ fontSize: actTotal > 99 ? 8 : 9, fontWeight:600, color: isLight ? "rgba(15,23,42,0.42)" : "rgba(255,255,255,0.40)" }}>/{actTotal}</span>
                 </span>
               </div>
-              <span style={{ fontSize: pc >= 100 ? 30 : 33, fontWeight: pc >= 100 ? 400 : 200, fontFamily:fontDisp, letterSpacing:"-0.04em", lineHeight:1, color: isLight ? (pc >= 100 ? "#0D9A76" : "#082818") : (pc >= 100 ? "#34D399" : "#FFFFFF"), display:"block", position:"relative", zIndex:1, whiteSpace:"nowrap", fontVariantNumeric:"tabular-nums" }}>{pc >= 100 ? "✓" : pc}</span>
-              <div style={{ width:"100%", height:2.5, borderRadius:99, background: isLight ? "rgba(13,154,118,0.09)" : "rgba(255,255,255,0.08)", marginTop:9, overflow:"hidden", position:"relative", zIndex:1 }}>
-                <div style={{ width:`${pc}%`, height:"100%", borderRadius:99, background: isLight ? "linear-gradient(90deg, #0D9A76, #34D399)" : "linear-gradient(90deg, #34D399, #6EE7C2)", boxShadow: isLight ? "none" : "0 0 8px rgba(52,211,153,0.55)", transition:"width 1.1s cubic-bezier(0.4,0,0.2,1)" }} />
+              <span style={{ fontSize: pcReal >= 100 ? 30 : 31, fontWeight: pcReal >= 100 ? 400 : 200, fontFamily:fontDisp, letterSpacing:"-0.04em", lineHeight:1, color: isLight ? (pcReal >= 100 ? "#0D9A76" : "#082818") : (pcReal >= 100 ? "#34D399" : "#FFFFFF"), display:"block", position:"relative", zIndex:1, whiteSpace:"nowrap", fontVariantNumeric:"tabular-nums" }}>
+                {pcReal >= 100 ? "✓" : (<>
+                  {pcReal}
+                  <span style={{ fontSize:11.5, fontWeight:500, marginLeft:1.5, letterSpacing:0, color: isLight ? "rgba(8,40,24,0.42)" : "rgba(255,255,255,0.40)" }}>%</span>
+                </>)}
+              </span>
+              <div style={{ width:"100%", height:3, borderRadius:99, background: isLight ? "rgba(13,154,118,0.10)" : "rgba(255,255,255,0.07)", boxShadow: isLight ? "inset 0 0.5px 1px rgba(15,23,42,0.06)" : "inset 0 1px 2px rgba(0,0,0,0.50)", marginTop:9, overflow:"hidden", position:"relative", zIndex:1 }}>
+                <div style={{ width:`${pc}%`, height:"100%", borderRadius:99, background: isLight ? "linear-gradient(90deg, #0D9A76, #34D399)" : "linear-gradient(90deg, #34D399, #6EE7C2)", boxShadow: isLight ? "0 0 6px rgba(13,154,118,0.35)" : "0 0 10px rgba(52,211,153,0.65)", transition:"width 1.1s cubic-bezier(0.4,0,0.2,1)" }} />
               </div>
-              <span style={{ fontSize:5.5, fontWeight:700, fontFamily:fontDisp, letterSpacing:"0.17em", textTransform:"uppercase", color: isLight ? "rgba(13,154,118,0.48)" : "rgba(52,211,153,0.36)", display:"block", marginTop:8, position:"relative", zIndex:1 }}>AVANCE</span>
+              <span style={{ fontSize:5.5, fontWeight:800, fontFamily:fontDisp, letterSpacing:"0.2em", textTransform:"uppercase", color: isLight ? "rgba(13,154,118,0.52)" : "rgba(52,211,153,0.44)", display:"block", marginTop:8, position:"relative", zIndex:1 }}>AVANCE</span>
             </div>
             <div style={{ width:32, height:1, marginTop:10, background: isLight ? "linear-gradient(90deg, transparent, rgba(15,23,42,0.07), transparent)" : "linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent)" }} />
           </div>
