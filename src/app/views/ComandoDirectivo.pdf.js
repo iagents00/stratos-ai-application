@@ -471,12 +471,20 @@ export function buildZoomResumenPdf(JsPDF, model) {
     sectionTitle(ctx, model.linerSemana.title);
     drawTable(ctx, { cols: statusCols, headers: model.linerSemana.headers, rows: model.linerSemana.rows, emptyMsg: "Sin Zooms esta semana." });
   }
+  if (model.linerMes) {
+    sectionTitle(ctx, model.linerMes.title);
+    drawTable(ctx, { cols: statusCols, headers: model.linerMes.headers, rows: model.linerMes.rows, emptyMsg: "Sin Zooms este mes." });
+  }
 
-  // 5) Por Presentador.
+  // 5) Por Presentador — columnas numéricas repartidas según los headers.
   if (model.presentadores) {
     sectionTitle(ctx, model.presentadores.title);
+    const nNum = Math.max(1, model.presentadores.headers.length - 1);
     drawTable(ctx, {
-      cols: [{ w: 62, align: "left" }, { w: 40, align: "right" }, { w: 40, align: "right" }, { w: 40, align: "right" }],
+      cols: [
+        { w: 50, align: "left" },
+        ...Array.from({ length: nNum }, () => ({ w: (contentW - 50) / nNum, align: "right" })),
+      ],
       headers: model.presentadores.headers,
       rows: model.presentadores.rows,
       emptyMsg: "Sin presentadores con Zooms.",
