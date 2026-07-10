@@ -29,6 +29,7 @@ const DynIsland = ({ onExpand, onOpenLead, notifications = [], theme = "dark", b
   const [isOpen, setIsOpen] = useState(false);
   const [selectedNotif, setSelectedNotif] = useState(null);
   const [selectedFeature, setSelectedFeature] = useState(null);
+  const [showAll, setShowAll] = useState(false);
 
   // Apertura EXTERNA (móvil): la pill vive en el header y en móvil está
   // display:none, así que el panel "+" del bottom-nav manda un contador que
@@ -50,9 +51,9 @@ const DynIsland = ({ onExpand, onOpenLead, notifications = [], theme = "dark", b
     { agent: "Agente de Ventas", text: "Alerta de Riesgo: James Mitchell.", detail: "Inactividad detectada en últimas 72h. Se recomienda activar protocolo de confianza para evitar enfriamiento.", c: P.rose, icon: AgentIcons.asistente, btn: "Enviar Avance", action: "Dossier: James Mitchell" },
   ];
 
-  const expanded = isOpen || selectedNotif || selectedFeature;
+  const expanded = isOpen || selectedNotif || selectedFeature || showAll;
 
-  const closeAll = () => { setIsOpen(false); setSelectedNotif(null); setSelectedFeature(null); };
+  const closeAll = () => { setIsOpen(false); setSelectedNotif(null); setSelectedFeature(null); setShowAll(false); };
 
   return (
     <>
@@ -135,7 +136,7 @@ const DynIsland = ({ onExpand, onOpenLead, notifications = [], theme = "dark", b
             <style>{`@keyframes fadeSlideDown{from{opacity:0;transform:translateX(-50%) translateY(-8px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
               @keyframes intelMarquee{from{transform:translateX(0)}to{transform:translateX(-50%)}}`}</style>
 
-            {isOpen && !selectedNotif && !selectedFeature && (
+            {isOpen && !selectedNotif && !selectedFeature && !showAll && (
               <div style={{ padding: "18px 0 6px" }}>
                 {/* Header */}
                 <div style={{ padding: "0 20px 12px", display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
@@ -175,9 +176,16 @@ const DynIsland = ({ onExpand, onOpenLead, notifications = [], theme = "dark", b
                 </div>
 
                 {/* ─── QUÉ PUEDE HACER EL SISTEMA — carrusel de funciones ─── */}
-                <div style={{ padding: "10px 20px 4px", borderTop: "1px solid rgba(255,255,255,0.05)" }}>
-                  <p style={{ margin: "0 0 2px", fontSize: 10, color: "rgba(255,255,255,0.55)", fontWeight: 700, fontFamily: fontDisp, letterSpacing: "0.10em", textTransform: "uppercase" }}>Qué puede hacer el sistema</p>
-                  <p style={{ margin: 0, fontSize: 9.5, color: "rgba(255,255,255,0.34)", fontFamily: font }}>Tocá una función para ver cómo se usa</p>
+                <div style={{ padding: "10px 20px 4px", borderTop: "1px solid rgba(255,255,255,0.05)", display: "flex", justifyContent: "space-between", alignItems: "flex-end", gap: 10 }}>
+                  <div style={{ minWidth: 0 }}>
+                    <p style={{ margin: "0 0 2px", fontSize: 10, color: "rgba(255,255,255,0.55)", fontWeight: 700, fontFamily: fontDisp, letterSpacing: "0.10em", textTransform: "uppercase" }}>Qué puede hacer el sistema</p>
+                    <p style={{ margin: 0, fontSize: 9.5, color: "rgba(255,255,255,0.34)", fontFamily: font }}>Tocá una función para ver cómo se usa</p>
+                  </div>
+                  <button onClick={() => setShowAll(true)}
+                    style={{ flexShrink: 0, display: "flex", alignItems: "center", gap: 4, background: "rgba(110,231,194,0.10)", border: "1px solid rgba(110,231,194,0.22)", color: "#6EE7C2", borderRadius: 8, padding: "6px 10px", fontSize: 10.5, fontWeight: 700, fontFamily: fontDisp, cursor: "pointer", whiteSpace: "nowrap", transition: "background 0.16s" }}
+                    onMouseEnter={e => { e.currentTarget.style.background = "rgba(110,231,194,0.18)"; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = "rgba(110,231,194,0.10)"; }}
+                  >Ver todas <span style={{ opacity: 0.7 }}>({INTEL_FEATURES.length})</span><ChevronRight size={12} strokeWidth={2.4} /></button>
                 </div>
                 <div style={{ overflow: "hidden", padding: "10px 0 16px", WebkitMaskImage: "linear-gradient(90deg,transparent,#000 5%,#000 95%,transparent)", maskImage: "linear-gradient(90deg,transparent,#000 5%,#000 95%,transparent)" }}>
                   <div
@@ -221,6 +229,59 @@ const DynIsland = ({ onExpand, onOpenLead, notifications = [], theme = "dark", b
                       );
                     })}
                   </div>
+                </div>
+              </div>
+            )}
+
+            {/* ─── TODAS LAS FUNCIONES (grid completo) ─── */}
+            {showAll && !selectedFeature && (
+              <div style={{ padding: "18px 0 8px", animation: "fadeSlideDown 0.2s cubic-bezier(0.4,0,0.2,1)" }}>
+                {/* Header */}
+                <div style={{ padding: "0 20px 12px", display: "flex", alignItems: "center", gap: 12, borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+                  <button onClick={() => setShowAll(false)} style={{ background: "rgba(255,255,255,0.06)", border: "none", color: "rgba(255,255,255,0.55)", borderRadius: 8, width: 28, height: 28, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", flexShrink: 0, transition: "all 0.16s" }}
+                    onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.12)"; e.currentTarget.style.color = "#FFF"; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.06)"; e.currentTarget.style.color = "rgba(255,255,255,0.55)"; }}
+                  ><ChevronLeft size={15} /></button>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <p style={{ margin: 0, fontSize: 13.5, color: "#FFFFFF", fontWeight: 700, fontFamily: fontDisp, letterSpacing: "-0.01em" }}>Todas las funciones</p>
+                    <p style={{ margin: 0, fontSize: 10, color: "rgba(255,255,255,0.40)", fontFamily: font, marginTop: 2 }}>{INTEL_FEATURES.length} funciones · tocá una para ver cómo se usa</p>
+                  </div>
+                  <button onClick={() => setShowAll(false)} style={{ background: "rgba(255,255,255,0.05)", border: "none", cursor: "pointer", width: 26, height: 26, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", color: "rgba(255,255,255,0.50)", flexShrink: 0, transition: "all 0.16s" }}
+                    onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.10)"; e.currentTarget.style.color = "#FFF"; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.05)"; e.currentTarget.style.color = "rgba(255,255,255,0.50)"; }}
+                  ><X size={13} /></button>
+                </div>
+                {/* Grid 2 columnas con TODAS las funciones */}
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, padding: "14px 20px 18px" }}>
+                  {INTEL_FEATURES.map((f) => {
+                    const Ic = FEATURE_ICONS[f.icon] || Sparkles;
+                    const isAgent = f.kind === "agente";
+                    const chan = f.where.includes("Telegram")
+                      ? (f.where.includes("CRM") ? "Telegram · CRM" : "Telegram")
+                      : (f.where.includes("CRM") ? "En el CRM" : "Automático");
+                    return (
+                      <div key={f.id} onClick={() => setSelectedFeature(f)}
+                        style={{ borderRadius: 14, padding: "13px 13px 14px", cursor: "pointer", background: `linear-gradient(160deg, ${f.color}14 0%, rgba(255,255,255,0.02) 60%)`, border: `1px solid ${f.color}22`, transition: "border-color 0.16s" }}
+                        onMouseEnter={e => { e.currentTarget.style.borderColor = `${f.color}66`; }}
+                        onMouseLeave={e => { e.currentTarget.style.borderColor = `${f.color}22`; }}
+                      >
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+                          <div style={{ width: 32, height: 32, borderRadius: 9, background: `${f.color}1E`, border: `1px solid ${f.color}33`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                            <Ic size={16} color={f.color} strokeWidth={2} />
+                          </div>
+                          <span style={{ fontSize: 8, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: isAgent ? "#6EE7C2" : "rgba(255,255,255,0.46)", background: isAgent ? "rgba(110,231,194,0.10)" : "rgba(255,255,255,0.05)", border: `1px solid ${isAgent ? "rgba(110,231,194,0.22)" : "rgba(255,255,255,0.08)"}`, borderRadius: 6, padding: "3px 6px" }}>
+                            {isAgent ? "Auto" : "Vos pedís"}
+                          </span>
+                        </div>
+                        <p style={{ margin: "0 0 4px", fontSize: 12.5, color: "rgba(255,255,255,0.92)", fontWeight: 600, fontFamily: fontDisp, lineHeight: 1.2 }}>{f.label}</p>
+                        <p style={{ margin: 0, fontSize: 10, color: "rgba(255,255,255,0.44)", fontFamily: font, lineHeight: 1.4, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{f.tagline}</p>
+                        <div style={{ display: "flex", alignItems: "center", gap: 5, marginTop: 9, paddingTop: 8, borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+                          <MapPin size={10} color={f.color} strokeWidth={2.4} style={{ flexShrink: 0 }} />
+                          <span style={{ fontSize: 9, color: f.color, opacity: 0.9, fontWeight: 600, fontFamily: font }}>{chan}</span>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             )}
