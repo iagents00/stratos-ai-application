@@ -16,7 +16,7 @@ export const nav = [
   { id: "lp",    l: "Create",    i: Hexagon    },
   { id: "d",     l: "Comando",   i: Activity   },
   { id: "caja",  l: "Caja",      i: Wallet     },
-  { id: "e",     l: "ERP",       i: Building2  },
+  { id: "e",     l: "Proyectos", i: Building2  },
   { id: "ia",    l: "iAgents",   i: Atom       },
   { id: "a",     l: "Asesores",  i: Trophy,    more: true },
   { id: "fa",    l: "Finanzas",  i: Landmark,  more: true },
@@ -59,7 +59,7 @@ export const MODULE_ROLES = {
 };
 
 export const MODULE_NAMES = {
-  d: "Comando", c: "CRM", ia: "iAgents", e: "ERP",
+  d: "Comando", c: "CRM", ia: "iAgents", e: "Proyectos",
   a: "Asesores", lp: "Campañas", fa: "Finanzas",
   rrhh: "Personas", trash: "Papelera", caja: "Caja",
   wa: "WhatsApp",
