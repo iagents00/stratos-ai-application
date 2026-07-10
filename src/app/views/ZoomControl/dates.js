@@ -27,6 +27,13 @@ export function next7Range() {
   const now = new Date();
   return { start: ymd(now), end: ymd(addDays(now, 6)) };
 }
+// Mes calendario actual — para el reporte mensual que pide dirección.
+export function monthRange() {
+  const now = new Date();
+  const first = new Date(now.getFullYear(), now.getMonth(), 1);
+  const last  = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+  return { start: ymd(first), end: ymd(last), label: `${MON[now.getMonth()]} ${now.getFullYear()}` };
+}
 export function inRange(dateStr, start, end) {
   return !!dateStr && dateStr >= start && dateStr <= end;
 }
