@@ -284,7 +284,10 @@
 //   principal/apoyo, Cliente, Desarrollo/Proyecto, Estatus, Comentarios,
 //   Semana, Mes, Día del Zoom, ¿Zoom hoy?, Discovery) para adopción inmediata,
 //   y encabezado + banda del día FIJADOS (sticky) al hacer scroll.
-const CACHE_VERSION = 'stratos-v114';
+// v115 — feat(zooms): el "excel" hasta arriba — al abrir Indicadores · Zooms
+//   lo primero es la tabla del director (toolbar + tabla), y debajo los KPIs,
+//   el Resumen automático y la métrica del pipeline (ZoomBoard).
+const CACHE_VERSION = 'stratos-v115';
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 
