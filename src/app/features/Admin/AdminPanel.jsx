@@ -16,9 +16,11 @@ import { adminGetAllUsers, adminCreateUser, adminUpdateUser, adminDeleteUser, ad
 import { downloadBackup } from "../../../lib/backup";
 import { G } from "../../SharedComponents";
 import { ROLE_META, RoleBadge } from "./RoleBadge";
+import { useIsMobile } from "../../../hooks/useViewport";
 
 export default function AdminPanel() {
   const { user: me } = useAuth();
+  const isMobile = useIsMobile();
   // BUG-FIX: adminGetAllUsers() es async (devuelve Promise). Antes lo
   // pasabamos crudo a useState con useState(() => adminGetAllUsers()), lo
   // que dejaba a `users` como una Promise. Cuando users.filter(...) corria
@@ -159,13 +161,13 @@ export default function AdminPanel() {
   };
 
   return (
-    <div style={{ padding: "28px 28px 0", display: "flex", flexDirection: "column", gap: 20, height: "100%" }}>
+    <div style={{ padding: isMobile ? "10px 0 0" : "28px 28px 0", display: "flex", flexDirection: "column", gap: isMobile ? 14 : 20, height: "100%" }}>
 
       {/* ── Header ── */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 12 }}>
         <div>
-          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
-            <h2 style={{ fontSize: 20, fontWeight: 700, color: "#FFFFFF", fontFamily: fontDisp, letterSpacing: "-0.025em", margin: 0 }}>Gestión de Usuarios</h2>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4, flexWrap: "wrap" }}>
+            <h2 style={{ fontSize: isMobile ? 18 : 20, fontWeight: 700, color: "#FFFFFF", fontFamily: fontDisp, letterSpacing: "-0.025em", margin: 0 }}>Gestión de Usuarios</h2>
             <span style={{ fontSize: 10, fontWeight: 700, color: P.txt3, background: P.glass, border: `1px solid ${P.border}`, padding: "3px 9px", borderRadius: 99, letterSpacing: "0.06em" }}>{users.length} usuarios</span>
           </div>
           <p style={{ fontSize: 11.5, color: P.txt3, margin: 0 }}>
@@ -173,12 +175,15 @@ export default function AdminPanel() {
           </p>
         </div>
         {canManage && (
-          <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0, flexWrap: "wrap" }}>
+          /* En móvil los botones ocupan el ancho completo (antes "Nuevo Usuario"
+             quedaba cortado contra el borde derecho a 360px). */
+          <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0, flexWrap: "wrap", width: isMobile ? "100%" : "auto" }}>
             <button
               onClick={handleDownloadBackup}
               disabled={backupState.loading}
               title="Descargar respaldo completo en JSON (perfiles, leads, auditoría)"
               style={{
+                flex: isMobile ? 1 : "none", justifyContent: "center", whiteSpace: "nowrap",
                 display: "flex", alignItems: "center", gap: 7, padding: "10px 18px",
                 borderRadius: 11, background: P.glass,
                 border: `1px solid ${P.border}`, color: P.txt2, fontSize: 12.5, fontWeight: 600,
@@ -191,6 +196,7 @@ export default function AdminPanel() {
               <Download size={13} /> {backupState.loading ? "Generando..." : "Descargar respaldo"}
             </button>
             <button onClick={openCreate} style={{
+              flex: isMobile ? 1 : "none", justifyContent: "center", whiteSpace: "nowrap",
               display: "flex", alignItems: "center", gap: 7, padding: "10px 20px",
               borderRadius: 11, background: "linear-gradient(135deg, rgba(110,231,194,0.16), rgba(110,231,194,0.07))",
               border: `1px solid ${P.accentB}`, color: P.accent, fontSize: 12.5, fontWeight: 700,
@@ -258,12 +264,14 @@ export default function AdminPanel() {
           <span style={{ marginLeft: "auto", fontSize: 11, color: P.txt3 }}>{filtered.length} resultado{filtered.length !== 1 ? "s" : ""}</span>
         </div>
 
-        {/* ── Table header ── */}
-        <div style={{ display: "grid", gridTemplateColumns: "2.2fr 2fr 1fr 1fr 100px", gap: 0, padding: "9px 20px", borderBottom: `1px solid ${P.border}` }}>
-          {["Usuario", "Email", "Rol", "Estado", "Acciones"].map((h, i) => (
-            <span key={h} style={{ fontSize: 9, fontWeight: 700, color: P.txt3, letterSpacing: "0.08em", textTransform: "uppercase", textAlign: i === 4 ? "center" : "left" }}>{h}</span>
-          ))}
-        </div>
+        {/* ── Table header — solo desktop (en móvil las filas son tarjetas) ── */}
+        {!isMobile && (
+          <div style={{ display: "grid", gridTemplateColumns: "2.2fr 2fr 1fr 1fr 100px", gap: 0, padding: "9px 20px", borderBottom: `1px solid ${P.border}` }}>
+            {["Usuario", "Email", "Rol", "Estado", "Acciones"].map((h, i) => (
+              <span key={h} style={{ fontSize: 9, fontWeight: 700, color: P.txt3, letterSpacing: "0.08em", textTransform: "uppercase", textAlign: i === 4 ? "center" : "left" }}>{h}</span>
+            ))}
+          </div>
+        )}
 
         {/* ── User rows ── */}
         <div style={{ overflowY: "auto", maxHeight: "calc(100vh - 380px)" }}>
@@ -280,6 +288,55 @@ export default function AdminPanel() {
             const initials = (u.name || "?").split(" ").map(w => w[0]).join("").toUpperCase().slice(0, 2);
             const avatarColors = ["#A78BFA", "#7EB8F0", "#6EE7C2", "#F59E0B", "#5DC8D9", "#E8818C"];
             const ac = avatarColors[u.id % avatarColors.length];
+            /* Botones de acción compartidos entre la fila desktop y la tarjeta
+               móvil (mismo comportamiento, distinto layout). */
+            const actionBtns = canEdit ? (
+              <>
+                <button onClick={() => openEdit(u)} title="Editar usuario" style={{ width: 28, height: 28, borderRadius: 8, border: `1px solid ${P.border}`, background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.15s" }}
+                  onMouseEnter={e => { e.currentTarget.style.background = "rgba(126,184,240,0.1)"; e.currentTarget.style.borderColor = "rgba(126,184,240,0.35)"; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = P.border; }}
+                ><User size={12} color={P.blue} /></button>
+                <button onClick={() => handleToggleActive(u)} title={active ? "Desactivar" : "Activar"} style={{ width: 28, height: 28, borderRadius: 8, border: `1px solid ${P.border}`, background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.15s" }}
+                  onMouseEnter={e => { e.currentTarget.style.background = active ? "rgba(232,129,140,0.1)" : "rgba(110,231,194,0.1)"; e.currentTarget.style.borderColor = active ? "rgba(232,129,140,0.35)" : "rgba(110,231,194,0.35)"; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = P.border; }}
+                >{active ? <X size={12} color={P.rose} /> : <CheckCircle2 size={12} color={P.emerald} />}</button>
+                {!isMe && (
+                  <button onClick={() => setDeleteConfirm(u.id)} title="Eliminar usuario" style={{ width: 28, height: 28, borderRadius: 8, border: `1px solid ${P.border}`, background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.15s" }}
+                    onMouseEnter={e => { e.currentTarget.style.background = "rgba(232,129,140,0.1)"; e.currentTarget.style.borderColor = "rgba(232,129,140,0.35)"; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = P.border; }}
+                  ><Trash2 size={12} color={P.rose} /></button>
+                )}
+              </>
+            ) : (
+              <span style={{ fontSize: 10, color: P.txt3, fontStyle: "italic" }}>—</span>
+            );
+
+            /* ── Tarjeta MÓVIL: la grilla de 5 columnas no entra en 360px —
+               avatar+nombre+acciones arriba, email debajo, rol+estado al pie. */
+            if (isMobile) return (
+              <div key={u.id} style={{ padding: "13px 14px", borderBottom: idx < filtered.length - 1 ? `1px solid ${P.border}` : "none", display: "flex", flexDirection: "column", gap: 9 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 11 }}>
+                  <div style={{ width: 34, height: 34, borderRadius: 10, background: `${ac}18`, border: `1.5px solid ${ac}30`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 800, color: ac, fontFamily: fontDisp, flexShrink: 0 }}>{initials}</div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <p style={{ fontSize: 13, fontWeight: 600, color: active ? "#FFFFFF" : P.txt3, fontFamily: fontDisp, letterSpacing: "-0.01em", margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      {u.name}
+                      {isMe && <span style={{ fontSize: 9, color: P.accent, fontWeight: 700, marginLeft: 7, background: `${P.accent}12`, border: `1px solid ${P.accentB}`, padding: "1px 7px", borderRadius: 99 }}>Tú</span>}
+                    </p>
+                    <p style={{ fontSize: 11, color: active ? P.txt2 : P.txt3, fontFamily: font, margin: "2px 0 0", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{u.email}</p>
+                  </div>
+                  <div style={{ display: "flex", gap: 5, flexShrink: 0 }}>{actionBtns}</div>
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+                  <RoleBadge role={u.role} />
+                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                    <div style={{ width: 7, height: 7, borderRadius: "50%", background: active ? P.emerald : P.txt3, boxShadow: active ? `0 0 6px ${P.emerald}80` : "none" }} />
+                    <span style={{ fontSize: 11, color: active ? P.txt2 : P.txt3, fontWeight: active ? 600 : 400 }}>{active ? "Activo" : "Inactivo"}</span>
+                  </div>
+                  <span style={{ fontSize: 10.5, color: P.txt3, marginLeft: "auto" }}>ID #{u.id}</span>
+                </div>
+              </div>
+            );
+
             return (
               <div key={u.id} style={{
                 display: "grid", gridTemplateColumns: "2.2fr 2fr 1fr 1fr 100px",
@@ -314,28 +371,7 @@ export default function AdminPanel() {
                 </div>
 
                 {/* Actions */}
-                <div style={{ display: "flex", gap: 5, justifyContent: "center" }}>
-                  {canEdit ? (
-                    <>
-                      <button onClick={() => openEdit(u)} title="Editar usuario" style={{ width: 28, height: 28, borderRadius: 8, border: `1px solid ${P.border}`, background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.15s" }}
-                        onMouseEnter={e => { e.currentTarget.style.background = "rgba(126,184,240,0.1)"; e.currentTarget.style.borderColor = "rgba(126,184,240,0.35)"; }}
-                        onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = P.border; }}
-                      ><User size={12} color={P.blue} /></button>
-                      <button onClick={() => handleToggleActive(u)} title={active ? "Desactivar" : "Activar"} style={{ width: 28, height: 28, borderRadius: 8, border: `1px solid ${P.border}`, background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.15s" }}
-                        onMouseEnter={e => { e.currentTarget.style.background = active ? "rgba(232,129,140,0.1)" : "rgba(110,231,194,0.1)"; e.currentTarget.style.borderColor = active ? "rgba(232,129,140,0.35)" : "rgba(110,231,194,0.35)"; }}
-                        onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = P.border; }}
-                      >{active ? <X size={12} color={P.rose} /> : <CheckCircle2 size={12} color={P.emerald} />}</button>
-                      {!isMe && (
-                        <button onClick={() => setDeleteConfirm(u.id)} title="Eliminar usuario" style={{ width: 28, height: 28, borderRadius: 8, border: `1px solid ${P.border}`, background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.15s" }}
-                          onMouseEnter={e => { e.currentTarget.style.background = "rgba(232,129,140,0.1)"; e.currentTarget.style.borderColor = "rgba(232,129,140,0.35)"; }}
-                          onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = P.border; }}
-                        ><Trash2 size={12} color={P.rose} /></button>
-                      )}
-                    </>
-                  ) : (
-                    <span style={{ fontSize: 10, color: P.txt3, fontStyle: "italic" }}>—</span>
-                  )}
-                </div>
+                <div style={{ display: "flex", gap: 5, justifyContent: "center" }}>{actionBtns}</div>
               </div>
             );
           })}
@@ -367,7 +403,7 @@ export default function AdminPanel() {
       {modal !== null && createPortal(
         <>
           <div onClick={() => setModal(null)} style={{ position: "fixed", inset: 0, background: "rgba(2,5,12,0.78)", backdropFilter: "blur(8px)", zIndex: 500 }} />
-          <div style={{ position: "fixed", top: "50%", left: "50%", transform: "translate(-50%,-50%)", zIndex: 501, width: "min(500px, 94vw)", background: "#111318", border: `1px solid ${P.borderH}`, borderRadius: 22, boxShadow: "0 48px 96px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.04)", animation: "fadeIn 0.22s ease" }}>
+          <div style={{ position: "fixed", top: "50%", left: "50%", transform: "translate(-50%,-50%)", zIndex: 501, width: "min(500px, 94vw)", maxHeight: "90dvh", overflowY: "auto", background: "#111318", border: `1px solid ${P.borderH}`, borderRadius: 22, boxShadow: "0 48px 96px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.04)", animation: "fadeIn 0.22s ease" }}>
             <div style={{ height: 3, background: `linear-gradient(90deg, ${P.accent}, ${P.accent}40)`, borderRadius: "22px 22px 0 0" }} />
             <div style={{ padding: "22px 26px 18px", borderBottom: `1px solid ${P.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <div>

@@ -38,6 +38,7 @@ import ProductividadTab from "./ProductividadTab";
 import { useZoomAgendados } from "../../hooks/useZoomAgendados";
 import { milestoneOf, funnelEntryOf, zoomEventsOf, RECORRIDO_STAGES, CIERRE_STAGES, advisorDisplayGroup, INACTIVE_ADVISOR_GROUP } from "./CRM/zoom-metrics";
 import DateRangeControl from "./CRM/DateRangeControl";
+import { savePdfDoc, isNativeApp } from "../../lib/native";
 import { createDefaultDateFilter, resolveDateRange, timestampInRange } from "./CRM/date-range";
 
 const FULL_LABELS = {
@@ -849,11 +850,20 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
     try {
       const { default: JsPDF } = await import("jspdf");
       const doc = buildExecutivePdf(JsPDF, model);
-      doc.save(`${filenameBase}.pdf`);
+      // savePdfDoc: en la APP nativa escribe el PDF al caché y abre la hoja
+      // de compartir del sistema (doc.save por <a download>/blob no hace NADA
+      // en el WebView — era el bug "Generar PDF no funciona en la app").
+      await savePdfDoc(doc, `${filenameBase}.pdf`);
     } catch (err) {
-      // Navegador donde jsPDF no cargó: descargamos el HTML imprimible.
-      console.warn("[Comando Directivo] PDF directo falló — fallback a HTML imprimible:", err);
-      downloadFile(`${filenameBase}.html`, html);
+      console.warn("[Comando Directivo] PDF directo falló:", err);
+      if (isNativeApp()) {
+        // En la app el fallback de <a download> no hace nada: avisar en vez
+        // de dejar el botón "muerto" en silencio.
+        window.alert("No se pudo generar el PDF en la app. Probá de nuevo; si sigue, generalo desde el navegador.");
+      } else {
+        // Navegador donde jsPDF no cargó: descargamos el HTML imprimible.
+        downloadFile(`${filenameBase}.html`, html);
+      }
     }
   };
 
