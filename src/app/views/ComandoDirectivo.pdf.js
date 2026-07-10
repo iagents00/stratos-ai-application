@@ -471,6 +471,10 @@ export function buildZoomResumenPdf(JsPDF, model) {
     sectionTitle(ctx, model.linerSemana.title);
     drawTable(ctx, { cols: statusCols, headers: model.linerSemana.headers, rows: model.linerSemana.rows, emptyMsg: "Sin Zooms esta semana." });
   }
+  if (model.linerQuincena) {
+    sectionTitle(ctx, model.linerQuincena.title);
+    drawTable(ctx, { cols: statusCols, headers: model.linerQuincena.headers, rows: model.linerQuincena.rows, emptyMsg: "Sin Zooms esta quincena." });
+  }
   if (model.linerMes) {
     sectionTitle(ctx, model.linerMes.title);
     drawTable(ctx, { cols: statusCols, headers: model.linerMes.headers, rows: model.linerMes.rows, emptyMsg: "Sin Zooms este mes." });
