@@ -23,7 +23,7 @@ import { font, fontDisp } from "../../../design-system/tokens";
 import { G } from "../../SharedComponents";
 import { useClient } from "../../../hooks/useClient";
 import { LINERS, PRESENTADORES, ESTATUS_ASISTIO } from "./constants";
-import { todayStr, addDays, weekRange, monthRange, inRange, ymd, DOW, MON } from "./dates";
+import { todayStr, addDays, weekRange, quincenaRange, monthRange, inRange, ymd, DOW, MON } from "./dates";
 
 // Conteo por estatus de un subconjunto de Zooms. `total` incluye TODOS los
 // estatus (igual que "Total Zooms hoy" del sheet).
@@ -64,10 +64,12 @@ export default function ResumenZooms({ rows = [], T, isLight }) {
 
   const today = todayStr();
   const wk = weekRange();
+  const qna = quincenaRange();
   const mo = monthRange();
 
   const hoyRows    = useMemo(() => rows.filter(r => r.fecha_zoom === today), [rows, today]);
   const semanaRows = useMemo(() => rows.filter(r => inRange(r.fecha_zoom, wk.start, wk.end)), [rows, wk.start, wk.end]);
+  const qnaRows    = useMemo(() => rows.filter(r => inRange(r.fecha_zoom, qna.start, qna.end)), [rows, qna.start, qna.end]);
   const mesRows    = useMemo(() => rows.filter(r => inRange(r.fecha_zoom, mo.start, mo.end)), [rows, mo.start, mo.end]);
   const kpisHoy    = useMemo(() => countsOf(hoyRows), [hoyRows]);
 
@@ -89,10 +91,13 @@ export default function ResumenZooms({ rows = [], T, isLight }) {
 
   // Por Liner (hoy | semana | mes) y por Presentador (principal — quien corre el Zoom).
   const porLiner = useMemo(() => {
-    const scope = linerScope === "hoy" ? hoyRows : linerScope === "semana" ? semanaRows : mesRows;
+    const scope = linerScope === "hoy" ? hoyRows
+      : linerScope === "semana" ? semanaRows
+      : linerScope === "qna" ? qnaRows
+      : mesRows;
     return peopleList(LINERS, rows, "liner")
       .map(name => ({ name, ...countsOf(scope.filter(r => (r.liner || "").trim() === name)) }));
-  }, [linerScope, hoyRows, semanaRows, mesRows, rows]);
+  }, [linerScope, hoyRows, semanaRows, qnaRows, mesRows, rows]);
 
   const porPresentador = useMemo(() => {
     return peopleList(PRESENTADORES, rows, "presentador_principal")
@@ -139,7 +144,7 @@ export default function ResumenZooms({ rows = [], T, isLight }) {
         meta: {
           clientName: clientConfig?.legalName || clientConfig?.name || "Stratos",
           stamp, hhmm,
-          subtitle1: `Hoy (${stamp}): ${kpisHoy.total} Zooms  -  Semana ${wk.start} a ${wk.end}: ${semanaCounts.total}  -  Mes (${mo.label}): ${countsOf(mesRows).total}`,
+          subtitle1: `Hoy (${stamp}): ${kpisHoy.total} Zooms  -  Semana: ${semanaCounts.total}  -  ${qna.label}: ${countsOf(qnaRows).total}  -  Mes (${mo.label}): ${countsOf(mesRows).total}`,
           subtitle2: `Fecha de revisión: ${stamp} ${hhmm}`,
         },
         cardsHoy: [
@@ -158,6 +163,7 @@ export default function ResumenZooms({ rows = [], T, isLight }) {
         },
         linerHoy:    { title: "Por Liner - hoy",    headers: ["Liner", "Zooms", "Conf.", "Asistió", "No show", "Reag.", "Canc."], rows: linerTable(hoyRows) },
         linerSemana: { title: "Por Liner - semana", headers: ["Liner", "Zooms", "Conf.", "Asistió", "No show", "Reag.", "Canc."], rows: linerTable(semanaRows) },
+        linerQuincena: { title: `Por Liner - quincena (${qna.label})`, headers: ["Liner", "Zooms", "Conf.", "Asistió", "No show", "Reag.", "Canc."], rows: linerTable(qnaRows) },
         linerMes:    { title: `Por Liner - mes (${mo.label})`, headers: ["Liner", "Zooms", "Conf.", "Asistió", "No show", "Reag.", "Canc."], rows: linerTable(mesRows) },
         presentadores: {
           title: "Por Presentador",
@@ -266,7 +272,7 @@ export default function ResumenZooms({ rows = [], T, isLight }) {
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, padding: "10px 12px", background: headerBg }}>
             <span style={{ fontSize: 13.5, fontWeight: 700, color: T.txt, fontFamily: fontDisp }}>Por Liner</span>
             <div style={{ display: "inline-flex", gap: 3, padding: 2, borderRadius: 8, border: `1px solid ${rowBorder}` }}>
-              {[{ id: "hoy", l: "Hoy" }, { id: "semana", l: "Semana" }, { id: "mes", l: "Mes" }].map(s => {
+              {[{ id: "hoy", l: "Hoy" }, { id: "semana", l: "Semana" }, { id: "qna", l: "Qna." }, { id: "mes", l: "Mes" }].map(s => {
                 const active = linerScope === s.id;
                 return (
                   <button key={s.id} onClick={() => setLinerScope(s.id)} style={{
