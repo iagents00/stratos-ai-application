@@ -9,7 +9,7 @@
  *   2) QUÉ PUEDE HACER → carrusel de funciones (INTEL_FEATURES) + tutorial por función
  * ─────────────────────────────────────────────────────────────────────────────
  */
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { createPortal } from "react-dom";
 import {
   X, ChevronRight, ChevronLeft, Crown,
@@ -33,8 +33,13 @@ const DynIsland = ({ onExpand, onOpenLead, notifications = [], theme = "dark", b
   // Apertura EXTERNA (móvil): la pill vive en el header y en móvil está
   // display:none, así que el panel "+" del bottom-nav manda un contador que
   // incrementa en cada tap → acá abrimos. El panel expandido es un portal a
-  // <body>, así que se ve aunque la pill esté oculta.
-  useEffect(() => { if (openSignal > 0) setIsOpen(true); }, [openSignal]);
+  // <body>, así que se ve aunque la pill esté oculta. Patrón "ajustar estado
+  // durante el render" (sin useEffect: ni render extra ni lint de setState).
+  const [seenSignal, setSeenSignal] = useState(0);
+  if (openSignal !== seenSignal) {
+    setSeenSignal(openSignal);
+    if (openSignal > 0) setIsOpen(true);
+  }
   const { config: clientConfig } = useClient();
   const centerLabel = clientConfig?.brand?.intelligenceCenterLabel || "Centro de Inteligencia";
 
