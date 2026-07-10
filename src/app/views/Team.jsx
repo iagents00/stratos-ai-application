@@ -2,6 +2,7 @@ import { User, Gauge, Timer, Trophy, Flame, Crosshair, Lightbulb } from "lucide-
 import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, ResponsiveContainer } from "recharts";
 import { P, font, fontDisp } from "../../design-system/tokens";
 import { G, KPI, Ico } from "../SharedComponents";
+import { useIsMobile } from "../../hooks/useViewport";
 
 const team = [
   { n: "Oscar Gálvez",      r: "CEO Ejecutivo",           d: 28, rv: "$24.8M", e: 98, sk: 12, role: "CEO",       c: P.violet,  wa: "+52 998 000 0001", cal: "" },
@@ -15,9 +16,11 @@ const team = [
 const Team = ({ T: _T }) => {
   const isLight = !!_T && _T?.bg !== P.bg;
   const T = _T || P;
+  // Móvil: 4 KPIs en fila cortaban los números ("87…"); 2×2 respira.
+  const isMobile = useIsMobile();
   return (
-  <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
-    <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 14 }}>
+  <div style={{ display: "flex", flexDirection: "column", gap: isMobile ? 14 : 18 }}>
+    <div style={{ display: "grid", gridTemplateColumns: isMobile ? "repeat(2, minmax(0, 1fr))" : "repeat(4, 1fr)", gap: isMobile ? 10 : 14 }}>
       <KPI label="Eficiencia Operativa" value="87.5%" sub="+5.2%" icon={Gauge} color={T.emerald} T={T} />
       <KPI label="Horas de Concentración" value="24.6h" icon={Timer} color={T.violet} T={T} />
       <KPI label="Ventas Cerradas (Trim.)" value="42" sub="+18%" icon={Trophy} T={T} />
@@ -27,6 +30,10 @@ const Team = ({ T: _T }) => {
       <div style={{ padding: "16px 20px", borderBottom: `1px solid ${T.border}` }}>
         <p style={{ fontSize: 13, fontWeight: 500, color: T.txt, fontFamily: font }}>Rendimiento del Equipo</p>
       </div>
+      {/* La tabla mide ~640px de columnas fijas: en móvil scrollea horizontal
+          DENTRO de la tarjeta (encabezado y filas juntos) en vez de cortarse. */}
+      <div style={{ overflowX: isMobile ? "auto" : "visible", WebkitOverflowScrolling: "touch" }}>
+      <div style={{ minWidth: isMobile ? 700 : 0 }}>
       {/* Header row */}
       <div style={{
         display: "grid", gridTemplateColumns: "220px 60px 80px 100px 90px 50px",
@@ -68,8 +75,11 @@ const Team = ({ T: _T }) => {
           </div>
         </div>
       ))}
+      </div>
+      </div>
     </G>
-    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+    {/* Móvil: Metodología y Revenue apilados (lado a lado truncaba los nombres) */}
+    <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 14 }}>
       <G T={T}>
         <p style={{ fontSize: 13, fontWeight: 500, color: T.txt, marginBottom: 12, fontFamily: font }}>Metodología</p>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
