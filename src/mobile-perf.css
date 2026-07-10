@@ -68,13 +68,21 @@
   }
 }
 
-/* ── 2) PESTAÑA OCULTA: pausar (no resetear) animaciones ───────────────────────
- * `animation-play-state: paused` congela sin perder el estado. Baja el repaint
- * cuando la app está en segundo plano (otra pestaña/app), que es cuando iOS más
- * agresivamente reclama memoria. El atributo data-hidden lo togglea el script. */
-html[data-hidden] *,
-html[data-hidden] *::before,
-html[data-hidden] *::after {
+/* ── 2) PESTAÑA OCULTA: pausar SOLO las animaciones CONTINUAS ──────────────────
+ * v2 (10-jul): la versión anterior pausaba TODAS las animaciones con
+ * `html[data-hidden] *`. Bug real en producción: si el contenido se monta
+ * mientras la pestaña está oculta (tab en segundo plano, ventana tapada en
+ * macOS), las animaciones de ENTRADA de una sola vez (ej. el contenedor de
+ * vistas de App.jsx: `animation: fadeIn 0.28s`, keyframe from opacity:0)
+ * quedan congeladas en su 0% → LA APP ENTERA SE VE EN BLANCO aunque el DOM
+ * esté completo ("no me deja entrar a ver esa parte", reporte de Ivan).
+ * El repaint de fondo que esta capa quiere evitar viene de las animaciones
+ * INFINITAS (mismo criterio que la capa 1 móvil): pausamos solo esas; las
+ * one-shot terminan en <1s y no repintan en segundo plano.
+ * [guard:HIDDEN-PAUSE-SOLO-INFINITE] */
+html[data-hidden] [style*="infinite"],
+html[data-hidden] [style*="infinite"]::before,
+html[data-hidden] [style*="infinite"]::after {
   animation-play-state: paused !important;
 }
 
