@@ -95,6 +95,40 @@ export const MANUAL_SECTIONS = [
       { type: 'tip', text: 'Hoy la entrega oficial es solamente el módulo CRM. Los demás módulos del menú están en construcción y se van a entregar en próximas fases.' },
     ],
   },
+  {
+    id: 'centro-inteligencia',
+    category: 'empezar',
+    icon: 'Sparkles',
+    title: 'El Centro de Inteligencia (la barra que brilla arriba)',
+    summary: 'El panel de arriba que te muestra tus clientes prioritarios reales y todo lo que el sistema puede hacer por vos.',
+    tags: ['centro de inteligencia', 'dynamic island', 'notificaciones', 'prioridad', 'funciones', 'que puede hacer'],
+    content: [
+      { type: 'p', text: 'Arriba en el centro, la barra que dice "Centro de Inteligencia" (con un punto verde que brilla) es tu resumen inteligente. Tocala y se abre un panel con dos cosas:' },
+      { type: 'list', items: [
+        'Tus novedades reales: tu cliente más caliente, los que están por enfriarse, tu día (Zooms y clientes nuevos por contactar) y tu pipeline.',
+        'Qué puede hacer el sistema: un carrusel con todas las funciones del asistente (registrar por voz, agendar Zoom, buscar ficha, reactivar dormidos…). Tocá cualquiera y te explica cómo se usa y desde dónde.',
+      ]},
+      { type: 'tip', text: 'En cada novedad de un cliente, el botón "Ver en el CRM" te abre justo el expediente de ESE cliente.' },
+    ],
+  },
+  {
+    id: 'app-movil',
+    category: 'empezar',
+    icon: 'Smartphone',
+    title: 'Usá Stratos desde tu celular (la app)',
+    summary: 'Además del navegador, hay una app instalable en el celular con todo el CRM.',
+    tags: ['app', 'movil', 'celular', 'android', 'apk', 'instalar', 'aplicacion', 'telefono'],
+    content: [
+      { type: 'p', text: 'Ya podés usar Stratos como una app en tu celular (Android), no solo desde el navegador. Está pensada para el teléfono: menú abajo con íconos grandes y un botón "+" central con todas las herramientas.' },
+      { type: 'steps', items: [
+        'Pedile a tu administrador el link de descarga (te llega por Telegram cuando hay versión nueva).',
+        'Descargá e instalá el archivo (Android te pide permitir "instalar apps de esta fuente" — es normal).',
+        'Abrila e iniciá sesión con tu mismo correo y contraseña del CRM.',
+      ]},
+      { type: 'tip', text: 'La app siempre está al día: cuando mejoramos el CRM, los cambios te llegan solos, sin reinstalar nada.' },
+      { type: 'p', text: 'La versión para iPhone está lista y se habilita pronto.' },
+    ],
+  },
 
   /* ─── CLIENTES ─── */
   {

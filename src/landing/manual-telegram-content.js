@@ -280,6 +280,25 @@ export const MANUAL_SECTIONS_TG = [
       ]},
     ],
   },
+  {
+    id: 'catalogo-propiedades',
+    category: 'pedidos',
+    icon: 'Building2',
+    title: 'Preguntale por propiedades del catálogo',
+    summary: 'El asistente conoce el catálogo de desarrollos y te responde por zona, precio, recámaras o cercanía al mar.',
+    tags: ['propiedades', 'catalogo', 'desarrollos', 'inmuebles', 'zona', 'precio', 'recamaras', 'mar', 'drive', 'proyectos'],
+    content: [
+      { type: 'p', text: 'El asistente ya conoce el catálogo de desarrollos. Preguntale en lenguaje normal (o por audio) y te responde al instante con los proyectos que mejor coinciden y sus links de Drive para ver fotos y detalles.' },
+      { type: 'ex', items: [
+        '"¿Qué propiedades hay en Playa del Carmen?"',
+        '"Top 3 de 250 a 350 mil"',
+        '"2 recámaras cerca del mar"',
+        '"Desarrollos en Tulum"',
+      ]},
+      { type: 'tip', text: 'Podés pedir un "top 3" o "top 5" para acotar la lista. Filtra por zona, y también entiende recámaras o "cerca del mar".' },
+      { type: 'warn', text: 'Algunos desarrollos todavía no tienen el precio cargado, así que el filtro por presupuesto ordena por cercanía pero puede no ser exacto — se va afinando.' },
+    ],
+  },
 
   /* ═══════════ FECHAS Y HORAS ═══════════ */
   {
