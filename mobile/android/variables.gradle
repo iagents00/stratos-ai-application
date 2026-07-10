@@ -1,7 +1,15 @@
 ext {
     minSdkVersion = 24
     compileSdkVersion = 36
-    targetSdkVersion = 36
+    // targetSdk 34 A PROPÓSITO (10-jul-2026): con target 35/36 Android fuerza
+    // edge-to-edge → la app dibuja BAJO la barra de estado y en varios WebView
+    // los safe-area insets llegan en 0 → "la parte de arriba sale cortada"
+    // (reporte de Ángel, celular real). Con 34 la ventana queda DEBAJO de la
+    // barra en todos los Android: determinista, sin depender de insets.
+    // ⚠️ Si algún día va a Google Play: Play exige target 35+ → subirlo y
+    // resolver los insets con dispositivo real en mano (ver skill
+    // stratos-mobile-app del AIOS).
+    targetSdkVersion = 34
     androidxActivityVersion = '1.11.0'
     androidxAppCompatVersion = '1.7.1'
     androidxCoordinatorLayoutVersion = '1.3.0'
