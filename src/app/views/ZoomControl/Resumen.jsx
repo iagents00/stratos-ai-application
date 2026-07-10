@@ -23,7 +23,7 @@ import { font, fontDisp } from "../../../design-system/tokens";
 import { G } from "../../SharedComponents";
 import { useClient } from "../../../hooks/useClient";
 import { LINERS, PRESENTADORES, ESTATUS_ASISTIO } from "./constants";
-import { todayStr, addDays, weekRange, inRange, ymd, DOW, MON } from "./dates";
+import { todayStr, addDays, weekRange, monthRange, inRange, ymd, DOW, MON } from "./dates";
 
 // Conteo por estatus de un subconjunto de Zooms. `total` incluye TODOS los
 // estatus (igual que "Total Zooms hoy" del sheet).
@@ -64,9 +64,11 @@ export default function ResumenZooms({ rows = [], T, isLight }) {
 
   const today = todayStr();
   const wk = weekRange();
+  const mo = monthRange();
 
   const hoyRows    = useMemo(() => rows.filter(r => r.fecha_zoom === today), [rows, today]);
   const semanaRows = useMemo(() => rows.filter(r => inRange(r.fecha_zoom, wk.start, wk.end)), [rows, wk.start, wk.end]);
+  const mesRows    = useMemo(() => rows.filter(r => inRange(r.fecha_zoom, mo.start, mo.end)), [rows, mo.start, mo.end]);
   const kpisHoy    = useMemo(() => countsOf(hoyRows), [hoyRows]);
 
   // Semana L-D: 7 días con sus conteos.
@@ -85,12 +87,12 @@ export default function ResumenZooms({ rows = [], T, isLight }) {
     });
   }, [rows, wk.monday, today]);
 
-  // Por Liner (hoy | semana) y por Presentador (principal — quien corre el Zoom).
+  // Por Liner (hoy | semana | mes) y por Presentador (principal — quien corre el Zoom).
   const porLiner = useMemo(() => {
-    const scope = linerScope === "hoy" ? hoyRows : semanaRows;
+    const scope = linerScope === "hoy" ? hoyRows : linerScope === "semana" ? semanaRows : mesRows;
     return peopleList(LINERS, rows, "liner")
       .map(name => ({ name, ...countsOf(scope.filter(r => (r.liner || "").trim() === name)) }));
-  }, [linerScope, hoyRows, semanaRows, rows]);
+  }, [linerScope, hoyRows, semanaRows, mesRows, rows]);
 
   const porPresentador = useMemo(() => {
     return peopleList(PRESENTADORES, rows, "presentador_principal")
@@ -101,10 +103,11 @@ export default function ResumenZooms({ rows = [], T, isLight }) {
           name,
           hoy: mine(hoyRows).length,
           semana: week.length,
+          mes: mine(mesRows).length,
           asistioSemana: week.filter(r => r.estatus === ESTATUS_ASISTIO).length,
         };
       });
-  }, [hoyRows, semanaRows, rows]);
+  }, [hoyRows, semanaRows, mesRows, rows]);
 
   const proximos7 = useMemo(() => {
     return Array.from({ length: 7 }, (_, i) => {
@@ -136,7 +139,7 @@ export default function ResumenZooms({ rows = [], T, isLight }) {
         meta: {
           clientName: clientConfig?.legalName || clientConfig?.name || "Stratos",
           stamp, hhmm,
-          subtitle1: `Hoy (${stamp}): ${kpisHoy.total} Zooms  -  Semana ${wk.start} a ${wk.end}: ${semanaCounts.total} Zooms`,
+          subtitle1: `Hoy (${stamp}): ${kpisHoy.total} Zooms  -  Semana ${wk.start} a ${wk.end}: ${semanaCounts.total}  -  Mes (${mo.label}): ${countsOf(mesRows).total}`,
           subtitle2: `Fecha de revisión: ${stamp} ${hhmm}`,
         },
         cardsHoy: [
@@ -155,10 +158,11 @@ export default function ResumenZooms({ rows = [], T, isLight }) {
         },
         linerHoy:    { title: "Por Liner - hoy",    headers: ["Liner", "Zooms", "Conf.", "Asistió", "No show", "Reag.", "Canc."], rows: linerTable(hoyRows) },
         linerSemana: { title: "Por Liner - semana", headers: ["Liner", "Zooms", "Conf.", "Asistió", "No show", "Reag.", "Canc."], rows: linerTable(semanaRows) },
+        linerMes:    { title: `Por Liner - mes (${mo.label})`, headers: ["Liner", "Zooms", "Conf.", "Asistió", "No show", "Reag.", "Canc."], rows: linerTable(mesRows) },
         presentadores: {
           title: "Por Presentador",
-          headers: ["Presentador", "Zooms hoy", "Zooms semana", "Asistieron (semana)"],
-          rows: porPresentador.map(p => [p.name, p.hoy, p.semana, p.asistioSemana]),
+          headers: ["Presentador", "Zooms hoy", "Zooms semana", "Zooms mes", "Asistieron (semana)"],
+          rows: porPresentador.map(p => [p.name, p.hoy, p.semana, p.mes, p.asistioSemana]),
         },
         proximos7: {
           title: "Próximos 7 días",
@@ -262,7 +266,7 @@ export default function ResumenZooms({ rows = [], T, isLight }) {
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, padding: "10px 12px", background: headerBg }}>
             <span style={{ fontSize: 12, fontWeight: 700, color: T.txt, fontFamily: fontDisp }}>Por Liner</span>
             <div style={{ display: "inline-flex", gap: 3, padding: 2, borderRadius: 8, border: `1px solid ${rowBorder}` }}>
-              {[{ id: "hoy", l: "Hoy" }, { id: "semana", l: "Semana" }].map(s => {
+              {[{ id: "hoy", l: "Hoy" }, { id: "semana", l: "Semana" }, { id: "mes", l: "Mes" }].map(s => {
                 const active = linerScope === s.id;
                 return (
                   <button key={s.id} onClick={() => setLinerScope(s.id)} style={{
@@ -318,15 +322,17 @@ export default function ResumenZooms({ rows = [], T, isLight }) {
                   <th style={miniTh(T, "left")}>Presentador</th>
                   <th style={miniTh(T)}>Hoy</th>
                   <th style={miniTh(T)}>Semana</th>
+                  <th style={miniTh(T)}>Mes</th>
                   <th style={miniTh(T)}>Asistió (sem.)</th>
                 </tr>
               </thead>
               <tbody>
                 {porPresentador.map(p => (
-                  <tr key={p.name} style={{ borderTop: `1px solid ${rowBorder}`, opacity: p.semana === 0 && p.hoy === 0 ? 0.55 : 1 }}>
+                  <tr key={p.name} style={{ borderTop: `1px solid ${rowBorder}`, opacity: p.mes === 0 && p.hoy === 0 ? 0.55 : 1 }}>
                     <td style={{ ...miniTd(T, "left"), fontWeight: 600, color: T.txt }}>{p.name}</td>
                     <td style={miniTd(T)}>{p.hoy}</td>
                     <td style={miniTd(T)}>{p.semana}</td>
+                    <td style={miniTd(T)}>{p.mes}</td>
                     <td style={{ ...miniTd(T), color: "#10B981", fontWeight: 700 }}>{p.asistioSemana}</td>
                   </tr>
                 ))}
