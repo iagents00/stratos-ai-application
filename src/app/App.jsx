@@ -1101,8 +1101,12 @@ export default function App() {
   // Si la org tiene goal=0 (placeholder Grupo 28) lo tratamos como sin configurar.
   const GOAL        = (effectiveMetaPlan?.goal && effectiveMetaPlan.goal > 0) ? effectiveMetaPlan.goal : 48_000_000;
   // ACT / AVANCE: mismas cuentas que el panel "Acciones del Equipo" (metaActions).
-  const actDone     = metaActions.filter(a => a.done).length;   // acciones completadas
-  const actTotal    = metaActions.length;                       // total (derivadas de leads + creadas a mano)
+  // Solo acciones de equipo REALES (team_actions persistidas). Las derivadas de leads
+  // (la "próxima acción" de cada lead) nunca se marcan hechas → inflaban el total y
+  // dejaban el % pegado en 1. Estas SÍ se completan (checkbox o el coach del bot por Telegram).
+  const realActions = metaActions.filter(a => a._persisted);
+  const actDone     = realActions.filter(a => a.done).length;   // completadas
+  const actTotal    = realActions.length;                       // total de acciones de equipo reales
   const pc          = Math.max(1, Math.min(100, actTotal ? Math.round((actDone / actTotal) * 100) : 1));   // % de avance
 
   // Sidebar primaria: solo módulos a los que el usuario tiene acceso (rol + org).
