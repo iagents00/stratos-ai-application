@@ -341,6 +341,12 @@ export default function App() {
   const [theme, setThemeState] = useState(() => {
     try { return localStorage.getItem("stratos_crm_theme") || "dark"; } catch { return "dark"; }
   });
+  // data-theme en <html>: mobile-perf.css lo usa para que el fondo forzado
+  // del MODO SEGURO (data-lowfx) respete el tema claro. index.html lo setea
+  // al boot; acá lo mantenemos en sync cuando el usuario alterna el tema.
+  useEffect(() => {
+    try { document.documentElement.setAttribute("data-theme", theme); } catch { /* noop */ }
+  }, [theme]);
   const setTheme = useCallback((next) => {
     try { localStorage.setItem("stratos_crm_theme", next); } catch {}
     // Transición suave: agregamos una clase a <html> que activa transiciones

@@ -333,7 +333,14 @@
 //   notificaciones nativas de WhatsApp en la app (Notification API no existe
 //   en el WebView) + permiso al entrar; Gestión de Usuarios responsive
 //   (tarjetas en móvil, botones full-width).
-const CACHE_VERSION = 'stratos-v133';
+// v134 — fix(móvil/tema claro): el MODO SEGURO anti-crash (data-lowfx)
+//   forzaba fondo azul-oscuro a todas las tarjetas con blur sin importar el
+//   tema → en claro quedaban tarjetas oscuras con texto oscuro (capturas de
+//   Ángel en BlueStacks). Ahora el fondo respeta data-theme. Además el
+//   detector de crash ya NO cuenta cierres normales de la app como intentos
+//   fallidos (abrir/cerrar 3 veces probando una APK activaba el modo seguro
+//   48h) y las claves pasan a _v2 para liberar a los dispositivos atascados.
+const CACHE_VERSION = 'stratos-v134';
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 
