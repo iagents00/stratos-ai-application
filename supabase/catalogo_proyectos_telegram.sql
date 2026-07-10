@@ -36,8 +36,16 @@ create table if not exists public.catalogo_proyectos (
   asesor          text,
   drive           text,
   maps            text,
+  visible         boolean not null default false,  -- solo las visibles se muestran (web + bot); el resto queda guardado y oculto
   created_at      timestamptz not null default now()
 );
+
+-- Visibilidad: solo se muestran las propiedades de la pestaña "DRIVES DC" del Sheet.
+-- (No se borra nada; las demás quedan visible=false.) Para cambiar el set visible,
+-- se edita esa pestaña, se re-importa y se corre este UPDATE.
+-- alter table public.catalogo_proyectos add column if not exists visible boolean not null default false;
+-- update public.catalogo_proyectos set visible = (seccion = 'drives-dc')
+--   where organization_id = '00000000-0000-0000-0000-000000000001';
 create index if not exists idx_catalogo_org on public.catalogo_proyectos(organization_id);
 create index if not exists idx_catalogo_ubicacion on public.catalogo_proyectos(organization_id, lower(ubicacion));
 
@@ -159,6 +167,7 @@ begin
   select count(*) into v_total
   from public.catalogo_proyectos cp
   where cp.organization_id = v_org
+    and cp.visible = true
     and (v_zona is null or public.unaccent(lower(coalesce(cp.zona,'')||' '||coalesce(cp.ubicacion,''))) like '%'||public.unaccent(lower(v_zona))||'%')
     and (v_ticket is null
          or (v_ticket = 'luxury' and (lower(coalesce(cp.ticket,'')) like '%luxury%' or lower(coalesce(cp.clasificacion,'')) like '%lux%'))
@@ -179,6 +188,7 @@ begin
          where public.unaccent(lower(concat_ws(' ', cp.desarrollo, cp.ubicacion, cp.zona, cp.masterbroker, cp.ticket, cp.clasificacion, cp.tipologia, cp.highlights, cp.contacto))) like '%'||term||'%') as score
     from public.catalogo_proyectos cp
     where cp.organization_id = v_org
+      and cp.visible = true
       and (v_zona is null or public.unaccent(lower(coalesce(cp.zona,'')||' '||coalesce(cp.ubicacion,''))) like '%'||public.unaccent(lower(v_zona))||'%')
       and (v_ticket is null
            or (v_ticket = 'luxury' and (lower(coalesce(cp.ticket,'')) like '%luxury%' or lower(coalesce(cp.clasificacion,'')) like '%lux%'))
