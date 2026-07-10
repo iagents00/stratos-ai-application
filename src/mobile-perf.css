@@ -100,6 +100,17 @@ html[data-lowfx] [data-glass] {
   background-color: rgba(9, 18, 37, 0.72) !important;
 }
 
+/* En TEMA CLARO el fondo forzado de arriba (azul-oscuro) dejaba las tarjetas
+   oscuras con texto oscuro — ilegible (capturas de Ángel, 10-jul). El atributo
+   data-theme lo pone index.html al boot (localStorage stratos_crm_theme) y
+   App.jsx lo mantiene al alternar el tema. [guard:LOWFX-LIGHT-BG] */
+html[data-lowfx][data-theme="light"] [style*="backdrop-filter"],
+html[data-lowfx][data-theme="light"] [style*="backdropFilter"],
+html[data-lowfx][data-theme="light"] .glass,
+html[data-lowfx][data-theme="light"] [data-glass] {
+  background-color: rgba(255, 255, 255, 0.92) !important;
+}
+
 html[data-lowfx] *,
 html[data-lowfx] *::before,
 html[data-lowfx] *::after {
