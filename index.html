@@ -69,6 +69,12 @@
       (function () {
         var el = document.documentElement;
 
+        // Tema en <html> ANTES del primer paint: mobile-perf.css lo necesita
+        // para que el fondo forzado del modo seguro respete el tema claro
+        // (sin esto, las tarjetas quedaban azul-oscuro con texto oscuro).
+        // App.jsx lo mantiene en sync al alternar el tema.
+        try { el.setAttribute("data-theme", localStorage.getItem("stratos_crm_theme") || "dark"); } catch (e) {}
+
         // Pausar animaciones cuando la pestaña no está visible (menos repaint
         // en segundo plano → menos presión de memoria en iOS).
         function syncHidden() {
@@ -89,8 +95,14 @@
         //  siga recargando. Pasadas 48h sin crashes, vuelve solo al look full.
         try {
           var now = Date.now();
-          var LOWFX_UNTIL = "stratos_lowfx_until";
-          var BOOT_FAILS = "stratos_boot_fails";
+          // Claves _v2 (10-jul): la v1 tenía un FALSO POSITIVO en la APP
+          // nativa — cerrar la app antes de los 15s contaba como "crash";
+          // abrir/cerrar 3 veces probando una APK clavaba el modo seguro 48h
+          // (pasó en BlueStacks). Renombrar las claves libera al instante a
+          // los dispositivos atascados por ese bug; los contadores nuevos ya
+          // no cuentan cierres normales (ver markHealthy abajo).
+          var LOWFX_UNTIL = "stratos_lowfx_until_v2";
+          var BOOT_FAILS = "stratos_boot_fails_v2";
           var stick = 0;
           try { stick = +localStorage.getItem(LOWFX_UNTIL) || 0; } catch (e) {}
           var lowfx = stick > now;
@@ -111,9 +123,18 @@
           try { localStorage.setItem(BOOT_FAILS, String(fails)); } catch (e) {}
           if (fails >= 3) lowfx = true;
           // si la página vive 15s, el arranque fue sano → resetear el contador
-          setTimeout(function () {
+          function markHealthy() {
             try { localStorage.setItem(BOOT_FAILS, "0"); } catch (e) {}
-          }, 15000);
+          }
+          setTimeout(markHealthy, 15000);
+          // Un cierre NORMAL tampoco es un crash: al cerrar/ocultar la app o
+          // la pestaña disparan pagehide/visibilitychange — un crash real
+          // NUNCA los dispara. Sin esto, salir de la app antes de los 15s
+          // contaba como intento fallido (falso positivo de la APP nativa).
+          window.addEventListener("pagehide", markHealthy);
+          document.addEventListener("visibilitychange", function () {
+            if (document.hidden) markHealthy();
+          });
 
           if (lowfx) {
             el.setAttribute("data-lowfx", "1");
