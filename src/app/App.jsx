@@ -29,7 +29,7 @@ import {
 import { isNativeApp, ensureNotifPermission, notifyUser, addNotificationTapListener } from "../lib/native";
 
 import {
-  Search, Bell, Settings, LogOut, Sun, Moon, ChevronDown, Plus, X, PhoneCall, MessageCircle,
+  Search, Bell, Settings, LogOut, Sun, Moon, ChevronDown, Plus, X, LayoutGrid, PhoneCall, MessageCircle,
 } from "lucide-react";
 import "./App.css";
 
@@ -244,6 +244,10 @@ export default function App() {
   const [sidebarMore, setSidebarMore] = useState(false);
   // Panel "+" del bottom-nav móvil (independiente del "Más" del sidebar desktop)
   const [plusOpen, setPlusOpen] = useState(false);
+  // Botón "+" del bottom-nav: abre el form de NUEVO CLIENTE en el CRM desde
+  // cualquier vista (contador que CRM/index.jsx escucha — pedido de Ángel:
+  // el FAB que aparecía/desaparecía se eliminó).
+  const [crmNewLeadTick, setCrmNewLeadTick] = useState(0);
   // Bottom-nav móvil: 4 slots primarios + "Más". Los primarios salen de
   // MOBILE_PRIMARY_NAV, pero si a este usuario le faltan (p.ej. WhatsApp está
   // gateado, o el asesor no ve Comando/ERP) se RELLENAN con los siguientes
@@ -252,7 +256,7 @@ export default function App() {
   const mobilePrimaryBar = [
     ...accessibleBarNav.filter(n => MOBILE_PRIMARY_NAV.includes(n.id)),
     ...accessibleBarNav.filter(n => !MOBILE_PRIMARY_NAV.includes(n.id)),
-  ].slice(0, 4);
+  ].slice(0, 3);
   // Cuadro "+" (todas las opciones): TODOS los módulos accesibles — también
   // los 4 de la barra, así el cuadro es el mapa completo de la app.
   const mobileAllNav = nav.filter(n =>
@@ -1233,14 +1237,18 @@ export default function App() {
           /* padding inferior = holgura sobre el nav (58px) + safe area (home
              indicator iPhone / gestos Android). overflow-x:hidden = clamp
              defensivo global: ninguna vista puede panear la página horizontal. */
-          .stratos-content-area{padding:14px 14px calc(72px + env(safe-area-inset-bottom, 0px)) 14px!important;overflow-x:hidden!important}
+          .stratos-content-area{padding:14px 14px calc(96px + env(safe-area-inset-bottom, 0px)) 14px!important;overflow-x:hidden!important}
+          /* Wrapper transparente de la nav flotante estilo Apple Music:
+             la CÁPSULA con los tabs + el botón "+" viven como hijos. El
+             wrapper no captura taps (pointer-events) para no tapar contenido
+             en los costados de la pill. */
           .stratos-bottomnav{
-            display:flex!important;position:fixed;bottom:0;left:0;right:0;
-            height:calc(58px + env(safe-area-inset-bottom, 0px));
-            padding-bottom:env(safe-area-inset-bottom, 0px);
-            z-index:200;align-items:center;justify-content:space-around;
-            border-top:1px solid rgba(255,255,255,0.07);
+            display:flex!important;position:fixed;left:0;right:0;
+            bottom:calc(12px + env(safe-area-inset-bottom, 0px));
+            z-index:200;align-items:center;justify-content:center;gap:10px;
+            padding:0 12px;pointer-events:none;
           }
+          .stratos-bottomnav > *{pointer-events:auto}
           .stratos-header{padding-left:10px!important;padding-right:10px!important;gap:6px!important}
           .stratos-header-left{gap:6px!important;min-width:0!important;flex:1 1 auto!important;overflow:hidden!important}
           .stratos-header-right{gap:2px!important;flex-shrink:0!important}
@@ -1422,7 +1430,7 @@ export default function App() {
                     ? clientConfig.brand.appWordmark
                     : <>Stratos<span style={{ marginLeft:3, fontWeight:600, color: isLight ? "rgba(15,23,42,0.38)" : "rgba(255,255,255,0.30)", letterSpacing:"0.01em" }}>AI</span></>}
                 </p>
-                <IAOSIsland leadsData={leadsData} isLight={isLight} idx={iaosIdx} brandLabel={orgBrand} />
+                <IAOSIsland leadsData={leadsData} isLight={isLight} idx={iaosIdx} brandLabel={orgBrand} onOpen={() => setIntelOpenTick(t => t + 1)} />
               </div>
               {/* CENTER */}
               <div className="stratos-header-center" style={{ position:"absolute", left:"50%", transform:"translateX(-50%)" }}>
@@ -1730,7 +1738,7 @@ export default function App() {
                   {v === "d"      && (clientConfig?.features?.comandoDirectivo
                     ? <ComandoDirectivo leadsData={leadsData} T={T} theme={theme} />
                     : <Dash oc={oc} leadsData={leadsData} T={T} />)}
-                  {v === "c"      && <CRM oc={oc} leadsData={leadsData} setLeadsData={setLeadsData} theme={theme} setTheme={setTheme} autoOpenPriority1={autoOpenPriority1} onAutoOpenHandled={() => setAutoOpenPriority1(0)} softDeleteLead={softDeleteLead} autoOpenLead={crmAutoOpenLead} onAutoOpenLeadHandled={() => setCrmAutoOpenLead(null)} />}
+                  {v === "c"      && <CRM oc={oc} leadsData={leadsData} setLeadsData={setLeadsData} theme={theme} setTheme={setTheme} autoOpenPriority1={autoOpenPriority1} onAutoOpenHandled={() => setAutoOpenPriority1(0)} softDeleteLead={softDeleteLead} autoOpenLead={crmAutoOpenLead} onAutoOpenLeadHandled={() => setCrmAutoOpenLead(null)} autoOpenNewLead={crmNewLeadTick} onNewLeadHandled={() => setCrmNewLeadTick(0)} />}
                   {v === "wa"     && canAccessModule("wa", user, clientConfig) && <WhatsAppInbox T={T} isLight={isLight} inbox={waInbox} openLead={waOpenLead} openExpediente={openLeadExpediente} />}
                   {v === "trash"  && <Trash trashedLeads={trashedLeads} onRestore={restoreLead} onHardDelete={hardDeleteLead} onRefresh={refreshTrash} T={T} />}
                   {v === "ia"     && <IACRM oc={oc} T={T} theme={theme} />}
@@ -1750,35 +1758,78 @@ export default function App() {
         </div>
       </div>
 
-      {/* ══ MOBILE BOTTOM NAV — estilo Apple Music ══ */}
-      {/* 4 módulos primarios con íconos grandes + botón "+" que abre un cuadro
-          CENTRADO con TODAS las opciones (lo que pidió Iván: "la lupa se
-          convierte en un más… se abre un cuadro en el medio de la pantalla,
-          lo de atrás se pone tenue y aparecen todas las opciones y el menú de
-          configuración"). */}
-      <div className="stratos-bottomnav" style={{ backdropFilter:"blur(24px)", WebkitBackdropFilter:"blur(24px)", background: isLight ? "rgba(246,248,247,0.97)" : "rgba(2,4,11,0.97)" }}>
-        {mobilePrimaryBar.map(n => {
-          const a = v === n.id;
-          const activeColor = isLight ? T.accent : "#6EE7C2";
-          return (
-            <button key={n.id} onClick={() => { setV(n.id); setPlusOpen(false); }} style={{ flex:1, height:"100%", minWidth:0, border:"none", background:"transparent", cursor:"pointer", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:4, outline:"none", WebkitTapHighlightColor:"transparent", padding:0 }}>
-              <n.i size={24} color={a ? activeColor : (isLight ? "rgba(15,23,42,0.40)" : "rgba(255,255,255,0.32)")} strokeWidth={a ? 2 : 1.6} style={{ transform: a ? "translateY(-1px)" : "none", transition:"transform 0.18s ease" }} />
-              <span style={{ fontSize:10, fontFamily:fontDisp, fontWeight: a ? 700 : 500, letterSpacing:"-0.01em", color: a ? activeColor : (isLight ? "rgba(15,23,42,0.40)" : "rgba(255,255,255,0.30)"), lineHeight:1, whiteSpace:"nowrap", overflow:"hidden", maxWidth:"100%" }}>{clientConfig?.navLabels?.[n.id] ?? n.l}</span>
-            </button>
-          );
-        })}
-        {/* Botón "+" — abre/cierra el cuadro de todas las opciones */}
-        <button onClick={() => setPlusOpen(p => !p)} aria-label="Todas las opciones" style={{ flex:1, height:"100%", minWidth:0, border:"none", background:"transparent", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", outline:"none", WebkitTapHighlightColor:"transparent", padding:0 }}>
-          <div style={{
-            width:42, height:42, borderRadius:999,
+      {/* ══ MOBILE BOTTOM NAV — cápsula flotante estilo Apple Music ══ */}
+      {/* Como la referencia que mandó Iván/Ángel: una CÁPSULA flotante con
+          3 módulos + tab "Menú" (burbuja resaltada en el activo) y un botón
+          CIRCULAR "+" separado a la derecha que CREA UN CLIENTE (reemplaza
+          al FAB del CRM que aparecía y desaparecía). El fondo es casi opaco
+          a propósito: mobile-perf.css mata el backdrop-filter en móvil. */}
+      <div className="stratos-bottomnav">
+        <div style={{
+          display:"flex", alignItems:"center", gap:2,
+          padding:"6px 7px", borderRadius:999,
+          background: isLight ? "rgba(255,255,255,0.97)" : "rgba(13,17,26,0.97)",
+          border:`1px solid ${isLight ? "rgba(15,23,42,0.09)" : "rgba(255,255,255,0.09)"}`,
+          boxShadow: isLight
+            ? "0 10px 30px rgba(15,23,42,0.16), 0 2px 8px rgba(15,23,42,0.08)"
+            : "0 12px 34px rgba(0,0,0,0.55), 0 2px 10px rgba(0,0,0,0.35)",
+          backdropFilter:"blur(24px)", WebkitBackdropFilter:"blur(24px)",
+          minWidth:0,
+        }}>
+          {mobilePrimaryBar.map(n => {
+            const a = v === n.id && !plusOpen;
+            const activeColor = isLight ? T.accent : "#6EE7C2";
+            return (
+              <button key={n.id} onClick={() => { setV(n.id); setPlusOpen(false); }} style={{
+                display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:3,
+                minWidth:64, padding:"8px 10px", borderRadius:999, border:"none", cursor:"pointer",
+                background: a ? (isLight ? `${T.accent}14` : "rgba(110,231,194,0.13)") : "transparent",
+                outline:"none", WebkitTapHighlightColor:"transparent",
+                transition:"background 0.2s ease",
+              }}>
+                <n.i size={23} color={a ? activeColor : (isLight ? "rgba(15,23,42,0.42)" : "rgba(255,255,255,0.38)")} strokeWidth={a ? 2 : 1.6} />
+                <span style={{ fontSize:9.5, fontFamily:fontDisp, fontWeight: a ? 700 : 500, letterSpacing:"-0.01em", color: a ? activeColor : (isLight ? "rgba(15,23,42,0.42)" : "rgba(255,255,255,0.34)"), lineHeight:1, whiteSpace:"nowrap", overflow:"hidden", maxWidth:"100%" }}>{clientConfig?.navLabels?.[n.id] ?? n.l}</span>
+              </button>
+            );
+          })}
+          {/* Tab "Menú" — abre el cuadro centrado con TODOS los módulos +
+              Centro de Inteligencia + configuración */}
+          {(() => {
+            const inBar = mobilePrimaryBar.some(n => n.id === v);
+            const a = plusOpen || !inBar;
+            const activeColor = isLight ? T.accent : "#6EE7C2";
+            return (
+              <button onClick={() => setPlusOpen(p => !p)} aria-label="Menú — todas las opciones" style={{
+                display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:3,
+                minWidth:64, padding:"8px 10px", borderRadius:999, border:"none", cursor:"pointer",
+                background: a ? (isLight ? `${T.accent}14` : "rgba(110,231,194,0.13)") : "transparent",
+                outline:"none", WebkitTapHighlightColor:"transparent",
+                transition:"background 0.2s ease",
+              }}>
+                <LayoutGrid size={23} color={a ? activeColor : (isLight ? "rgba(15,23,42,0.42)" : "rgba(255,255,255,0.38)")} strokeWidth={a ? 2 : 1.6} />
+                <span style={{ fontSize:9.5, fontFamily:fontDisp, fontWeight: a ? 700 : 500, color: a ? activeColor : (isLight ? "rgba(15,23,42,0.42)" : "rgba(255,255,255,0.34)"), lineHeight:1 }}>Menú</span>
+              </button>
+            );
+          })()}
+        </div>
+
+        {/* Botón "+" circular — NUEVO CLIENTE (siempre visible, desde
+            cualquier vista: navega al CRM y abre el form) */}
+        <button
+          onClick={() => { setPlusOpen(false); setV("c"); setCrmNewLeadTick(t => t + 1); }}
+          aria-label="Nuevo cliente"
+          style={{
+            width:58, height:58, borderRadius:999, border:"none", cursor:"pointer", flexShrink:0,
             background: isLight ? `linear-gradient(135deg, ${T.accent}, ${T.accent}CC)` : "linear-gradient(135deg, #6EE7C2, #34D399)",
             display:"flex", alignItems:"center", justifyContent:"center",
-            boxShadow: isLight ? `0 4px 14px ${T.accent}55` : "0 4px 16px rgba(52,211,153,0.35)",
-            transform: plusOpen ? "rotate(45deg) scale(1.04)" : "rotate(0deg)",
-            transition:"transform 0.28s cubic-bezier(0.34,1.56,0.64,1)",
-          }}>
-            <Plus size={24} color={isLight ? "#FFFFFF" : "#04121C"} strokeWidth={2.6} />
-          </div>
+            boxShadow: isLight ? `0 8px 22px ${T.accent}55, 0 2px 8px rgba(15,23,42,0.14)` : "0 8px 24px rgba(52,211,153,0.38), 0 2px 10px rgba(0,0,0,0.40)",
+            outline:"none", WebkitTapHighlightColor:"transparent",
+          }}
+          onTouchStart={e => { e.currentTarget.style.transform = "scale(0.93)"; }}
+          onTouchEnd={e => { e.currentTarget.style.transform = "scale(1)"; }}
+          onTouchCancel={e => { e.currentTarget.style.transform = "scale(1)"; }}
+        >
+          <Plus size={27} color={isLight ? "#FFFFFF" : "#04121C"} strokeWidth={2.6} />
         </button>
       </div>
 

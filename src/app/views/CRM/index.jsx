@@ -122,7 +122,7 @@ function useDebounced(value, ms = 200) {
   return debounced;
 }
 
-function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () => {}, autoOpenPriority1 = 0, onAutoOpenHandled, softDeleteLead, autoOpenLead = null, onAutoOpenLeadHandled = () => {} }) {
+function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () => {}, autoOpenPriority1 = 0, onAutoOpenHandled, softDeleteLead, autoOpenLead = null, onAutoOpenLeadHandled = () => {}, autoOpenNewLead = 0, onNewLeadHandled = () => {} }) {
   const { user } = useAuth();
   const { config: clientConfig, clientId } = useClient();
   const { get: getScheduledCall } = useScheduledCalls();
@@ -288,6 +288,19 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
     onAutoOpenHandled?.();
   }, [autoOpenPriority1]); // priorityLeadsRef is a ref, always current
   const [addingLead, setAddingLead]     = useState(false);
+  // Botón "+" del bottom-nav móvil (App.jsx): manda un contador para abrir
+  // este form desde cualquier vista. Ajuste de estado durante el render +
+  // reset del tick en el PADRE (en microtask, fuera del render): a diferencia
+  // del DynIsland, el CRM se DESMONTA al cambiar de vista (key={v}) — sin el
+  // reset, el tick viejo re-abría el form en cada re-entrada al CRM.
+  const [seenNewLeadTick, setSeenNewLeadTick] = useState(0);
+  if (autoOpenNewLead !== seenNewLeadTick) {
+    setSeenNewLeadTick(autoOpenNewLead);
+    if (autoOpenNewLead > 0) {
+      setAddingLead(true);
+      queueMicrotask(() => onNewLeadHandled());
+    }
+  }
   // Vista "Indicadores de Asesores" — solo se ofrece si el cliente activo
   // tiene crm.advisorMetricsTab=true Y el usuario es admin/director/super_admin/ceo.
   const [showMetrics, setShowMetrics]   = useState(false);
@@ -2095,20 +2108,6 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
   };
 
   const carouselRef = useRef(null);
-  // FAB "dodge": mientras el carrusel de Prioridad está EN PANTALLA, el FAB
-  // se esconde (tapaba el botón "Tomar acción" de la card en móvil). Al
-  // scrollear hacia la lista, reaparece.
-  const [fabDodge, setFabDodge] = useState(false);
-  useEffect(() => {
-    if (!isMobile || !carouselRef.current || typeof IntersectionObserver === "undefined") { setFabDodge(false); return; }
-    const obs = new IntersectionObserver(
-      // el ÚLTIMO registro del batch es el estado actual (IO puede encolar varios)
-      (entries) => setFabDodge(entries[entries.length - 1].isIntersecting),
-      { threshold: 0.15 }
-    );
-    obs.observe(carouselRef.current);
-    return () => obs.disconnect();
-  }, [isMobile, priorityLeads.length, showMetrics]);
   const [prioScrollX, setPrioScrollX] = useState(0);
   const scrollCarousel = (dir) => carouselRef.current?.scrollBy({ left: dir * 310, behavior: "smooth" });
   const totalPipeline = visibleLeads.reduce((s, l) => s + (l.presupuesto || 0), 0);
@@ -5639,53 +5638,13 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
         T={T}
       />
 
-      {/* ── FAB "+ Nuevo cliente" — solo mobile ─────────────────────────────
-          Floating Action Button en la zona del pulgar (bottom-right). Se
-          posiciona ABOVE del bottom nav (z=200) y respeta safe-area.
-          Cuando hay un drawer abierto se oculta para no chocar con el
-          bottom-sheet (z drawer=401, FAB z=199). ─────────────────────── */}
-      {isMobile && !notesLead && !selectedLead && !analyzingLead && !addingLead && createPortal(
-        <button
-          onClick={() => setAddingLead(true)}
-          aria-label={L.newEntity}
-          style={{
-            position: "fixed",
-            right: 18,
-            bottom: `calc(58px + env(safe-area-inset-bottom, 0px) + 16px)`,
-            zIndex: 199,
-            /* dodge: invisible e inerte mientras el carrusel de Prioridad está
-               a la vista (tapaba "Tomar acción"); reaparece al scrollear. */
-            opacity: fabDodge ? 0 : 1,
-            transform: fabDodge ? "scale(0.5)" : "scale(1)",
-            pointerEvents: fabDodge ? "none" : "auto",
-            width: 56, height: 56, borderRadius: 999,
-            border: "none",
-            background: isLight
-              ? `linear-gradient(135deg, ${T.accent}, ${T.emerald || T.accent})`
-              : `linear-gradient(135deg, ${T.accent}, color-mix(in srgb, ${T.accent} 60%, #0B1220 40%))`,
-            color: "#FFFFFF",
-            cursor: "pointer",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            boxShadow: isLight
-              ? `0 6px 16px ${T.accent}55, 0 12px 28px rgba(15,23,42,0.18)`
-              : `0 4px 14px ${T.accent}44, 0 16px 32px rgba(0,0,0,0.55)`,
-            transition: "transform 0.22s ease, opacity 0.22s ease, box-shadow 0.2s ease",
-          }}
-          onTouchStart={e => { if (!fabDodge) e.currentTarget.style.transform = "scale(0.94)"; }}
-          onTouchEnd={e => { if (!fabDodge) e.currentTarget.style.transform = "scale(1)"; }}
-        >
-          <Plus size={24} strokeWidth={2.4} />
-        </button>,
-        document.body
-      )}
-
       {/* ── Barra de "Reasignar varios" ──────────────────────────────────────
             Visible mientras bulkMode está activo. Centro-abajo, sobre el
             contenido. Permite seleccionar todos, reasignar el grupo o salir. */}
       {canBulkReassign && bulkMode && createPortal(
         <div style={{
           position: "fixed", left: "50%",
-          bottom: isMobile ? "calc(env(safe-area-inset-bottom, 0px) + 74px)" : 26,
+          bottom: isMobile ? "calc(env(safe-area-inset-bottom, 0px) + 96px)" : 26,
           transform: "translateX(-50%)", zIndex: 600,
           display: "flex", alignItems: "center", gap: 10,
           padding: "9px 10px 9px 14px", borderRadius: 14, maxWidth: "94vw",
