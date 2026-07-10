@@ -287,7 +287,11 @@
 // v115 — feat(zooms): el "excel" hasta arriba — al abrir Indicadores · Zooms
 //   lo primero es la tabla del director (toolbar + tabla), y debajo los KPIs,
 //   el Resumen automático y la métrica del pipeline (ZoomBoard).
-const CACHE_VERSION = 'stratos-v115';
+// v116 — feat(zooms): los días de la semana y de "Próximos 7" son BOTONES:
+//   click en un día → despliega la lista de sus Zooms (hora, cliente, liner,
+//   presentador, estatus, calentito) y cada Zoom abre su modal de edición.
+//   Antes parecían botones y no hacían nada (feedback de Ivan).
+const CACHE_VERSION = 'stratos-v116';
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 
