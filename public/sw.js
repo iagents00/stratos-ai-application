@@ -298,7 +298,11 @@
 //   total al centro, barras por Liner y Presentador en un solo tono con
 //   etiquetas directas; leyendas con nombre (identidad nunca por color
 //   solo), gaps de 2px entre segmentos, tooltips y tema claro/oscuro.
-const CACHE_VERSION = 'stratos-v117';
+// v118 — feat(zooms): sync v2 en vivo — el panel de Control de Zooms se
+//   refresca SOLO vía realtime cuando los triggers del CRM (migración 087)
+//   escriben: rebooking de cita, regresión de etapa → Cancelado, brinco a
+//   Concretado → Asistió, papelera/borrado → Cancelado. Todo automático.
+const CACHE_VERSION = 'stratos-v118';
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 
