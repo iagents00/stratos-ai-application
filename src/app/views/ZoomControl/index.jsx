@@ -16,7 +16,7 @@ import { Fragment, useMemo, useState, useCallback } from "react";
 import {
   Video, Plus, RefreshCw, Search, X, Pencil, Trash2, Flame, Download,
   CalendarDays, CheckCircle2, UserCheck, Clock3, AlertTriangle,
-  ClipboardList, BarChart3, RotateCcw, FileText, ChevronDown,
+  ClipboardList, BarChart3, RotateCcw, FileText, ChevronDown, Copy, Check,
 } from "lucide-react";
 import { P, LP, font, fontDisp } from "../../../design-system/tokens";
 import { G, KPI } from "../../SharedComponents";
@@ -68,17 +68,29 @@ const ZoomControl = ({ theme = "dark" }) => {
   // su celda — cerrado no ocupa nada; abierto muestra el texto completo editable.
   const [discoveryOpenId, setDiscoveryOpenId] = useState(null);
   const [discoveryDraft, setDiscoveryDraft] = useState("");
+  const [discCopied, setDiscCopied] = useState(false);
 
   const toggleDiscovery = (r) => {
     if (discoveryOpenId === r.id) { setDiscoveryOpenId(null); return; }
     setDiscoveryDraft(r.discovery || "");
+    setDiscCopied(false);
     setDiscoveryOpenId(r.id);
   };
+  // Guardar sólo tiene sentido si el texto cambió — el botón se apaga si no.
+  const discDirtyFor = (r) => discoveryDraft !== (r.discovery || "");
   const saveDiscovery = async (r) => {
+    if (busy) return;
     setBusy(true);
     await updateRow(r.id, { discovery: discoveryDraft });
     setBusy(false);
     setDiscoveryOpenId(null);
+  };
+  const copyDiscovery = async () => {
+    try {
+      await navigator.clipboard.writeText(discoveryDraft);
+      setDiscCopied(true);
+      setTimeout(() => setDiscCopied(false), 1600);
+    } catch { /* clipboard no disponible (http/permiso) — sin drama */ }
   };
   const [q, setQ] = useState("");
   const [busy, setBusy] = useState(false);
@@ -563,16 +575,21 @@ const ZoomControl = ({ theme = "dark" }) => {
                         title={r.discovery ? "Ver / editar el discovery" : "Añadir discovery"}
                         style={{
                           display: "inline-flex", alignItems: "center", gap: 5,
-                          padding: "3px 10px", borderRadius: 99, cursor: "pointer",
-                          fontSize: 11.5, fontWeight: 700, fontFamily: fontDisp,
-                          color: r.discovery ? "#10B981" : T.txt3,
-                          background: r.discovery ? "rgba(16,185,129,0.12)" : (isLight ? "rgba(15,23,42,0.05)" : "rgba(255,255,255,0.05)"),
+                          padding: "4px 11px", borderRadius: 99, cursor: "pointer",
+                          fontSize: 11.5, fontWeight: 700, fontFamily: fontDisp, lineHeight: 1.4,
+                          color: r.discovery ? "#10B981" : T.txt2,
+                          background: discoveryOpenId === r.id
+                            ? (r.discovery ? "rgba(16,185,129,0.20)" : (isLight ? "rgba(15,23,42,0.09)" : "rgba(255,255,255,0.10)"))
+                            : (r.discovery ? "rgba(16,185,129,0.12)" : (isLight ? "rgba(15,23,42,0.05)" : "rgba(255,255,255,0.05)")),
                           border: `1px solid ${r.discovery ? "rgba(16,185,129,0.35)" : (isLight ? "rgba(15,23,42,0.12)" : "rgba(255,255,255,0.12)")}`,
-                          transition: "all 0.12s",
+                          boxShadow: discoveryOpenId === r.id ? "0 2px 10px rgba(16,185,129,0.18)" : "none",
+                          transition: "background 0.15s, box-shadow 0.15s, color 0.15s",
                         }}
                       >
-                        {r.discovery ? "Sí" : "+ Añadir"}
-                        <ChevronDown size={11} strokeWidth={2.6} style={{ transform: discoveryOpenId === r.id ? "rotate(180deg)" : "none", transition: "transform 0.15s" }} />
+                        {r.discovery
+                          ? <><span style={{ width: 5, height: 5, borderRadius: 99, background: "#10B981", flexShrink: 0 }} />Sí</>
+                          : <><Plus size={11} strokeWidth={2.8} style={{ flexShrink: 0 }} />Añadir</>}
+                        <ChevronDown size={11} strokeWidth={2.6} style={{ flexShrink: 0, transform: discoveryOpenId === r.id ? "rotate(180deg)" : "none", transition: "transform 0.18s cubic-bezier(0.32,0.72,0,1)" }} />
                       </button>
                     </td>
                   )}
@@ -606,44 +623,95 @@ const ZoomControl = ({ theme = "dark" }) => {
                   <tr>
                     <td colSpan={16} style={{ padding: 0, borderTop: `1px solid ${rowBorder}` }}>
                       <div style={{
-                        padding: "14px 18px 16px",
+                        padding: "12px 16px 14px",
                         background: isLight ? "rgba(16,185,129,0.05)" : "rgba(16,185,129,0.06)",
                         borderLeft: "3px solid #10B981",
                       }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
-                          <FileText size={14} color="#10B981" strokeWidth={2.3} />
-                          <span style={{ fontSize: 13, fontWeight: 700, color: T.txt, fontFamily: fontDisp }}>
-                            Discovery · {r.cliente || "—"}
-                          </span>
-                        </div>
-                        <p style={{ margin: "0 0 10px", fontSize: 11.5, color: T.txt2, fontFamily: font }}>
-                          Presupuesto, ubicación, intereses — lo que el presentador necesita saber antes del Zoom.
-                        </p>
-                        <textarea
-                          value={discoveryDraft}
-                          onChange={(e) => setDiscoveryDraft(e.target.value)}
-                          rows={3}
-                          autoFocus
-                          placeholder="Escribe aquí el discovery del cliente…"
-                          style={{
-                            ...inputStyle(T, isLight), width: "100%", resize: "vertical",
-                            fontFamily: font, fontSize: 13, lineHeight: 1.5,
-                            background: isLight ? "#FFFFFF" : "rgba(255,255,255,0.04)",
-                          }}
-                        />
-                        <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginTop: 10 }}>
-                          <button onClick={() => setDiscoveryOpenId(null)} disabled={busy} style={{
-                            padding: "8px 14px", borderRadius: 9, cursor: busy ? "default" : "pointer",
-                            fontSize: 12, fontWeight: 600, fontFamily: fontDisp,
-                            background: "transparent", color: T.txt2,
-                            border: `1px solid ${isLight ? "rgba(15,23,42,0.12)" : "rgba(255,255,255,0.12)"}`,
-                          }}>Cancelar</button>
-                          <button onClick={() => saveDiscovery(r)} disabled={busy} style={{
-                            padding: "8px 16px", borderRadius: 9, cursor: busy ? "default" : "pointer",
-                            fontSize: 12, fontWeight: 700, fontFamily: fontDisp,
-                            background: "#10B981", color: "#FFFFFF", border: "none",
-                            boxShadow: "0 2px 8px rgba(16,185,129,0.35)", opacity: busy ? 0.7 : 1,
-                          }}>{busy ? "Guardando…" : "Guardar discovery"}</button>
+                        {/* Tarjeta del editor — revelado one-shot (seguro con el
+                               guard HIDDEN-PAUSE-SOLO-INFINITE de mobile-perf). */}
+                        <div style={{
+                          maxWidth: 860, borderRadius: 14, padding: "14px 16px 12px",
+                          background: isLight ? "#FFFFFF" : "rgba(255,255,255,0.04)",
+                          border: `1px solid ${isLight ? "rgba(15,23,42,0.08)" : "rgba(255,255,255,0.09)"}`,
+                          boxShadow: isLight ? "0 8px 24px rgba(15,23,42,0.07)" : "0 8px 24px rgba(0,0,0,0.30)",
+                          animation: "discReveal 0.24s cubic-bezier(0.32,0.72,0,1)",
+                        }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
+                            <span style={{
+                              display: "inline-flex", alignItems: "center", justifyContent: "center",
+                              width: 28, height: 28, borderRadius: 8, flexShrink: 0,
+                              background: "rgba(16,185,129,0.14)", border: "1px solid rgba(16,185,129,0.30)",
+                            }}>
+                              <FileText size={14} color="#10B981" strokeWidth={2.3} />
+                            </span>
+                            <div style={{ minWidth: 0 }}>
+                              <div style={{ fontSize: 13.5, fontWeight: 700, color: T.txt, fontFamily: fontDisp, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                                Discovery — {r.cliente || "—"}
+                              </div>
+                              <div style={{ fontSize: 11, color: T.txt3, fontFamily: font }}>
+                                Presupuesto, ubicación, intereses — lo que el presentador necesita antes del Zoom.
+                              </div>
+                            </div>
+                            <button onClick={() => setDiscoveryOpenId(null)} title="Cerrar (Esc)" style={{ ...iconBtn(T, isLight), width: 26, height: 26, marginLeft: "auto", flexShrink: 0 }}>
+                              <X size={13} />
+                            </button>
+                          </div>
+                          <textarea
+                            value={discoveryDraft}
+                            onChange={(e) => setDiscoveryDraft(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === "Escape") { e.preventDefault(); setDiscoveryOpenId(null); }
+                              else if ((e.metaKey || e.ctrlKey) && e.key === "Enter") { e.preventDefault(); if (discDirtyFor(r)) saveDiscovery(r); }
+                            }}
+                            rows={Math.min(16, Math.max(5, discoveryDraft.split("\n").length + 1))}
+                            autoFocus
+                            placeholder="Escribe aquí el discovery del cliente…"
+                            style={{
+                              ...inputStyle(T, isLight), width: "100%", resize: "vertical",
+                              fontFamily: font, fontSize: 13, lineHeight: 1.55,
+                              background: isLight ? "rgba(15,23,42,0.025)" : "rgba(255,255,255,0.03)",
+                            }}
+                          />
+                          {/* Barra de acciones a la mano, pegada al texto. */}
+                          <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 10, flexWrap: "wrap" }}>
+                            <span style={{ fontSize: 10.5, color: T.txt3, fontFamily: font }}>
+                              {discoveryDraft ? `${discoveryDraft.length.toLocaleString("es-MX")} caracteres` : "Sin texto aún"}
+                              <span style={{ opacity: 0.7 }}>  ·  ⌘↵ Guardar  ·  Esc Cerrar</span>
+                            </span>
+                            <div style={{ display: "flex", gap: 8, marginLeft: "auto" }}>
+                              {!!discoveryDraft && (
+                                <button onClick={copyDiscovery} disabled={busy} title="Copiar el discovery al portapapeles" style={{
+                                  display: "inline-flex", alignItems: "center", gap: 6,
+                                  padding: "8px 12px", borderRadius: 9, cursor: busy ? "default" : "pointer",
+                                  fontSize: 12, fontWeight: 600, fontFamily: fontDisp,
+                                  background: "transparent", color: discCopied ? "#10B981" : T.txt2,
+                                  border: `1px solid ${discCopied ? "rgba(16,185,129,0.40)" : (isLight ? "rgba(15,23,42,0.12)" : "rgba(255,255,255,0.12)")}`,
+                                  transition: "color 0.15s, border-color 0.15s",
+                                }}>
+                                  {discCopied ? <Check size={13} strokeWidth={2.6} /> : <Copy size={13} strokeWidth={2.2} />}
+                                  {discCopied ? "Copiado" : "Copiar"}
+                                </button>
+                              )}
+                              <button onClick={() => setDiscoveryOpenId(null)} disabled={busy} style={{
+                                padding: "8px 14px", borderRadius: 9, cursor: busy ? "default" : "pointer",
+                                fontSize: 12, fontWeight: 600, fontFamily: fontDisp,
+                                background: "transparent", color: T.txt2,
+                                border: `1px solid ${isLight ? "rgba(15,23,42,0.12)" : "rgba(255,255,255,0.12)"}`,
+                              }}>Cancelar</button>
+                              <button onClick={() => saveDiscovery(r)} disabled={busy || !discDirtyFor(r)} style={{
+                                display: "inline-flex", alignItems: "center", gap: 6,
+                                padding: "8px 16px", borderRadius: 9,
+                                cursor: busy || !discDirtyFor(r) ? "default" : "pointer",
+                                fontSize: 12, fontWeight: 700, fontFamily: fontDisp,
+                                background: "#10B981", color: "#FFFFFF", border: "none",
+                                boxShadow: busy || !discDirtyFor(r) ? "none" : "0 2px 8px rgba(16,185,129,0.35)",
+                                opacity: busy ? 0.7 : (!discDirtyFor(r) ? 0.45 : 1),
+                                transition: "opacity 0.15s, box-shadow 0.15s",
+                              }}>
+                                {busy ? "Guardando…" : <><Check size={13} strokeWidth={2.8} />Guardar</>}
+                              </button>
+                            </div>
+                          </div>
                         </div>
                       </div>
                     </td>
