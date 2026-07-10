@@ -262,7 +262,10 @@
 //   Sí/No; flag "calentito" (señal de cierre) con filtro y toggle en tabla.
 //   Requiere migración 083 (discovery/calentito); sin ella el panel funciona
 //   igual que antes (feature-detect de columnas).
-const CACHE_VERSION = 'stratos-v109';
+// v110 — feat(zooms): alcance Mes en el Resumen (toggle Hoy|Semana|Mes por
+//   Liner, columna Mes en Presentador, seccion mensual en el PDF). Bump para
+//   que los SW con v109 pre-Mes tomen el bundle nuevo.
+const CACHE_VERSION = 'stratos-v110';
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 
