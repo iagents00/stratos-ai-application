@@ -404,4 +404,98 @@ export function asesorCols(nIndicators) {
   ];
 }
 
+// ═════════════════════════════════════════════════════════════════════════
+// PDF "Resumen automático de Zooms" — lo que el director comercial manda a
+// los socios (ver ZoomControl/Resumen.jsx, que arma el `model`). Reutiliza
+// los mismos helpers del reporte ejecutivo para que la marca sea idéntica.
+// ═════════════════════════════════════════════════════════════════════════
+export function buildZoomResumenPdf(JsPDF, model) {
+  const doc = new JsPDF({ unit: "mm", format: "a4", orientation: "portrait" });
+  const ctx = makeCtx(doc);
+  const meta = model.meta || {};
+
+  // Masthead compacto — badge propio "CONTROL DE ZOOMS".
+  {
+    const { mL, W, mR } = ctx;
+    let y = ctx.y;
+    const clientName = meta.clientName || "Stratos";
+    doc.setFont("helvetica", "bold"); doc.setFontSize(16);
+    const nameW = doc.getTextWidth(clientName);
+    text(doc, clientName, mL, y + 3, { size: 16, style: "bold", color: C.ink });
+
+    const badge = "CONTROL DE ZOOMS";
+    const badgeCS = 0.3;
+    doc.setFont("helvetica", "bold"); doc.setFontSize(6.5);
+    const badgeTextW = doc.getTextWidth(badge) + badgeCS * (badge.length - 1);
+    doc.setFillColor(...hexToRgb("#2563EB"));
+    doc.roundedRect(mL + nameW + 4, y - 1.6, badgeTextW + 6, 5.2, 2.6, 2.6, "F");
+    text(doc, badge, mL + nameW + 7, y + 1.9, { size: 6.5, style: "bold", color: C.white, spacing: badgeCS });
+
+    text(doc, `Generado: ${meta.stamp} - ${meta.hhmm}`, W - mR, y, { size: 7.6, color: C.ink3, align: "right" });
+
+    y += 8.5;
+    doc.setDrawColor(...C.ink); doc.setLineWidth(0.5);
+    doc.line(mL, y, W - mR, y);
+    y += 8;
+
+    text(doc, "Resumen automático de Zooms", mL, y + 1, { size: 19, style: "bold", color: C.ink });
+    y += 7;
+    if (typeof doc.setCharSpace === "function") doc.setCharSpace(0);
+    text(doc, meta.subtitle1 || "", mL, y + 3.2,       { size: 9, color: C.ink2 });
+    text(doc, meta.subtitle2 || "", mL, y + 3.2 + 4.4, { size: 9, color: C.ink2 });
+    ctx.y = y + 3.2 + 2 * 4.4 + 5;
+  }
+
+  const contentW = A4.W - A4.mL - A4.mR; // 182
+  const statusCols = [
+    { w: 62, align: "left" },
+    ...Array.from({ length: 6 }, () => ({ w: (contentW - 62) / 6, align: "right" })),
+  ];
+
+  // 1) KPIs de hoy.
+  sectionTitle(ctx, "Zooms de hoy");
+  drawCards(ctx, model.cardsHoy || []);
+
+  // 2) Semana actual L-D.
+  if (model.semana) {
+    sectionTitle(ctx, model.semana.title);
+    drawTable(ctx, { cols: statusCols, headers: model.semana.headers, rows: model.semana.rows, totals: model.semana.totals, emptyMsg: "Sin Zooms esta semana." });
+  }
+
+  // 3+4) Por Liner (hoy y semana).
+  if (model.linerHoy) {
+    sectionTitle(ctx, model.linerHoy.title);
+    drawTable(ctx, { cols: statusCols, headers: model.linerHoy.headers, rows: model.linerHoy.rows, emptyMsg: "Sin Zooms hoy." });
+  }
+  if (model.linerSemana) {
+    sectionTitle(ctx, model.linerSemana.title);
+    drawTable(ctx, { cols: statusCols, headers: model.linerSemana.headers, rows: model.linerSemana.rows, emptyMsg: "Sin Zooms esta semana." });
+  }
+
+  // 5) Por Presentador.
+  if (model.presentadores) {
+    sectionTitle(ctx, model.presentadores.title);
+    drawTable(ctx, {
+      cols: [{ w: 62, align: "left" }, { w: 40, align: "right" }, { w: 40, align: "right" }, { w: 40, align: "right" }],
+      headers: model.presentadores.headers,
+      rows: model.presentadores.rows,
+      emptyMsg: "Sin presentadores con Zooms.",
+    });
+  }
+
+  // 6) Próximos 7 días.
+  if (model.proximos7) {
+    sectionTitle(ctx, model.proximos7.title);
+    drawTable(ctx, {
+      cols: [{ w: 82, align: "left" }, { w: 50, align: "right" }, { w: 50, align: "right" }],
+      headers: model.proximos7.headers,
+      rows: model.proximos7.rows,
+      emptyMsg: "Sin Zooms agendados en los próximos 7 días.",
+    });
+  }
+
+  drawFooters(ctx, meta);
+  return doc;
+}
+
 export { hexToRgb };
