@@ -6,6 +6,7 @@
  * ─────────────────────────────────────────────────────────────────────────────
  */
 import { useState, useEffect, useRef, useCallback, useMemo, startTransition, lazy, Suspense } from "react";
+import { createPortal } from "react-dom";
 import { supabase } from "../lib/supabase";
 import { formatFechaLarga, STAGES_CON_CITA } from "../lib/utils";
 import LoginScreen from "../landing/LoginScreen.jsx";
@@ -23,8 +24,12 @@ import {
   discardPendingSync,
 } from "../lib/offline-mode";
 
+/* Puente con la app nativa (Capacitor): notificaciones nativas y archivos.
+   En navegador cada helper cae al comportamiento web de siempre. */
+import { isNativeApp, ensureNotifPermission, notifyUser, addNotificationTapListener } from "../lib/native";
+
 import {
-  Search, Bell, Settings, LogOut, Sun, Moon, ChevronDown, ChevronsDown, PhoneCall, MessageCircle,
+  Search, Bell, Settings, LogOut, Sun, Moon, ChevronDown, Plus, X, PhoneCall, MessageCircle,
 } from "lucide-react";
 import "./App.css";
 
@@ -237,6 +242,8 @@ export default function App() {
   const [co, setCo]      = useState(false);
   const [autoOpenPriority1, setAutoOpenPriority1] = useState(0);
   const [sidebarMore, setSidebarMore] = useState(false);
+  // Panel "+" del bottom-nav móvil (independiente del "Más" del sidebar desktop)
+  const [plusOpen, setPlusOpen] = useState(false);
   // Bottom-nav móvil: 4 slots primarios + "Más". Los primarios salen de
   // MOBILE_PRIMARY_NAV, pero si a este usuario le faltan (p.ej. WhatsApp está
   // gateado, o el asesor no ve Comando/ERP) se RELLENAN con los siguientes
@@ -246,9 +253,9 @@ export default function App() {
     ...accessibleBarNav.filter(n => MOBILE_PRIMARY_NAV.includes(n.id)),
     ...accessibleBarNav.filter(n => !MOBILE_PRIMARY_NAV.includes(n.id)),
   ].slice(0, 4);
-  // Sheet "Más": los módulos `more` de siempre + los no-more que no entraron a la barra.
-  const mobileMoreNav = nav.filter(n =>
-    (n.more || !mobilePrimaryBar.some(p => p.id === n.id)) &&
+  // Cuadro "+" (todas las opciones): TODOS los módulos accesibles — también
+  // los 4 de la barra, así el cuadro es el mapa completo de la app.
+  const mobileAllNav = nav.filter(n =>
     (!n.adminOnly || ["super_admin", "admin"].includes(user?.role)) &&
     canAccessModule(n.id, user, clientConfig)
   );
@@ -257,6 +264,9 @@ export default function App() {
   const [notifs, setNotifs] = useState([]);
   // Dropdown de la campana — abierto/cerrado
   const [bellOpen, setBellOpen] = useState(false);
+  // Centro de Inteligencia desde el "+" del bottom-nav móvil: contador que
+  // DynIsland escucha vía prop openSignal (la pill del header está oculta ahí).
+  const [intelOpenTick, setIntelOpenTick] = useState(0);
   const bellRef = useRef(null);
 
   // Bandeja de WhatsApp (módulo + notificaciones de la campana). Una sola
@@ -302,18 +312,26 @@ export default function App() {
     if (!waEnabled || waUnread <= prev) return;
     // Solo avisar si NO está viendo la bandeja (otra vista o pestaña oculta).
     if (v === "wa" && !document.hidden) return;
-    try {
-      if (typeof Notification === "undefined") return;
-      if (Notification.permission === "default") { Notification.requestPermission(); return; }
-      if (Notification.permission !== "granted") return;
-      const n = new Notification("WhatsApp · Stratos CRM", {
-        body: `${waUnread} mensaje${waUnread !== 1 ? "s" : ""} de cliente${waUnread !== 1 ? "s" : ""} sin leer`,
-        tag: "stratos-wa-unread", // reemplaza el aviso anterior, no apila
-      });
-      n.onclick = () => { try { window.focus(); setV("wa"); n.close(); } catch { /* noop */ } };
-    } catch { /* sin soporte/permiso de Notification — el badge de la campana sigue */ }
+    // notifyUser decide el canal: notificación NATIVA dentro de la app móvil
+    // (la Notification API no existe en el WebView) o Notification web afuera.
+    notifyUser({
+      title: "WhatsApp · Stratos CRM",
+      body: `${waUnread} mensaje${waUnread !== 1 ? "s" : ""} de cliente${waUnread !== 1 ? "s" : ""} sin leer`,
+      tag: "stratos-wa-unread", // reemplaza el aviso anterior, no apila
+      onClick: () => setV("wa"),
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [waUnread, waEnabled]);
+
+  // App NATIVA: pedir el permiso de notificaciones al entrar (Android 13+ lo
+  // exige en runtime; el diálogo sale una sola vez) y navegar a la bandeja de
+  // WhatsApp cuando el usuario toca una notificación.
+  useEffect(() => {
+    if (!user || !isNativeApp()) return;
+    ensureNotifPermission();
+    return addNotificationTapListener(() => setV("wa"));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
 
   /* ── Theme ── */
   const [theme, setThemeState] = useState(() => {
@@ -1408,7 +1426,7 @@ export default function App() {
               </div>
               {/* CENTER */}
               <div className="stratos-header-center" style={{ position:"absolute", left:"50%", transform:"translateX(-50%)" }}>
-                <DynIsland onExpand={openPriorityLead} onOpenLead={openLeadExpediente} notifications={notifs} theme={theme} beamIdx={iaosIdx} />
+                <DynIsland onExpand={openPriorityLead} onOpenLead={openLeadExpediente} notifications={notifs} theme={theme} beamIdx={iaosIdx} openSignal={intelOpenTick} />
               </div>
               {/* RIGHT */}
               <div className="stratos-header-right" style={{ display:"flex", alignItems:"center", gap:4 }}>
@@ -1732,41 +1750,116 @@ export default function App() {
         </div>
       </div>
 
-      {/* ══ MOBILE BOTTOM NAV ══ */}
+      {/* ══ MOBILE BOTTOM NAV — estilo Apple Music ══ */}
+      {/* 4 módulos primarios con íconos grandes + botón "+" que abre un cuadro
+          CENTRADO con TODAS las opciones (lo que pidió Iván: "la lupa se
+          convierte en un más… se abre un cuadro en el medio de la pantalla,
+          lo de atrás se pone tenue y aparecen todas las opciones y el menú de
+          configuración"). */}
       <div className="stratos-bottomnav" style={{ backdropFilter:"blur(24px)", WebkitBackdropFilter:"blur(24px)", background: isLight ? "rgba(246,248,247,0.97)" : "rgba(2,4,11,0.97)" }}>
-        {/* Máximo 4 módulos primarios + "Más": con los 8 de antes cada botón
-            quedaba en ~45px a 360px (labels apretados, targets al límite).
-            5 slots = ~72px por botón, íconos grandes y cómodos (dirección
-            Apple-Music que pidió Iván). El resto vive en el sheet "Más". */}
         {mobilePrimaryBar.map(n => {
           const a = v === n.id;
           const activeColor = isLight ? T.accent : "#6EE7C2";
           return (
-            <button key={n.id} onClick={() => setV(n.id)} style={{ flex:1, height:"100%", minWidth:0, border:"none", background:"transparent", cursor:"pointer", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:3, outline:"none" }}>
-              <n.i size={22} color={a ? activeColor : (isLight ? "rgba(15,23,42,0.38)" : "rgba(255,255,255,0.30)")} strokeWidth={a ? 1.9 : 1.5} />
-              <span style={{ fontSize:9, fontFamily:fontDisp, fontWeight: a ? 700 : 400, color: a ? activeColor : (isLight ? "rgba(15,23,42,0.38)" : "rgba(255,255,255,0.28)"), lineHeight:1, whiteSpace:"nowrap", overflow:"hidden", maxWidth:"100%" }}>{clientConfig?.navLabels?.[n.id] ?? n.l}</span>
+            <button key={n.id} onClick={() => { setV(n.id); setPlusOpen(false); }} style={{ flex:1, height:"100%", minWidth:0, border:"none", background:"transparent", cursor:"pointer", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:4, outline:"none", WebkitTapHighlightColor:"transparent", padding:0 }}>
+              <n.i size={24} color={a ? activeColor : (isLight ? "rgba(15,23,42,0.40)" : "rgba(255,255,255,0.32)")} strokeWidth={a ? 2 : 1.6} style={{ transform: a ? "translateY(-1px)" : "none", transition:"transform 0.18s ease" }} />
+              <span style={{ fontSize:10, fontFamily:fontDisp, fontWeight: a ? 700 : 500, letterSpacing:"-0.01em", color: a ? activeColor : (isLight ? "rgba(15,23,42,0.40)" : "rgba(255,255,255,0.30)"), lineHeight:1, whiteSpace:"nowrap", overflow:"hidden", maxWidth:"100%" }}>{clientConfig?.navLabels?.[n.id] ?? n.l}</span>
             </button>
           );
         })}
-        <button onClick={() => setSidebarMore(p => !p)} style={{ flex:1, height:"100%", minWidth:0, border:"none", background:"transparent", cursor:"pointer", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:3, outline:"none" }}>
-          <ChevronsDown size={22} color={mobileMoreNav.some(n=>n.id===v) ? (isLight ? T.accent : "#6EE7C2") : (isLight ? "rgba(15,23,42,0.38)" : "rgba(255,255,255,0.30)")} strokeWidth={1.5} style={{ transform: sidebarMore ? "rotate(180deg)" : "none", transition:"transform 0.22s" }} />
-          <span style={{ fontSize:9, fontFamily:fontDisp, fontWeight:400, color: mobileMoreNav.some(n=>n.id===v) ? (isLight ? T.accent : "#6EE7C2") : (isLight ? "rgba(15,23,42,0.38)" : "rgba(255,255,255,0.28)"), lineHeight:1 }}>Más</span>
-        </button>
-        {sidebarMore && (
-          <div style={{ position:"fixed", bottom:"calc(58px + env(safe-area-inset-bottom, 0px))", left:0, right:0, zIndex:199, display:"flex", flexWrap:"wrap", justifyContent:"center", gap:8, padding:"14px 16px", background: isLight ? "rgba(246,248,247,0.97)" : "rgba(4,8,18,0.97)", backdropFilter:"blur(24px)", WebkitBackdropFilter:"blur(24px)", borderTop:`1px solid ${isLight ? "rgba(0,0,0,0.07)" : "rgba(255,255,255,0.07)"}` }}>
-            {mobileMoreNav.map(n => {
-              const a = v === n.id;
-              const activeColor = n.adminOnly ? "#A78BFA" : (isLight ? T.accent : "#6EE7C2");
-              return (
-                <button key={n.id} onClick={() => { setV(n.id); setSidebarMore(false); }} style={{ display:"flex", flexDirection:"column", alignItems:"center", gap:4, padding:"10px 14px", borderRadius:14, border:"none", cursor:"pointer", background: a ? `${activeColor}14` : (isLight ? "rgba(0,0,0,0.04)" : "rgba(255,255,255,0.05)"), minWidth:70 }}>
-                  <n.i size={20} color={a ? activeColor : (isLight ? "rgba(15,23,42,0.45)" : "rgba(255,255,255,0.35)")} strokeWidth={a ? 1.9 : 1.5} />
-                  <span style={{ fontSize:9.5, fontFamily:fontDisp, fontWeight: a ? 700 : 400, color: a ? activeColor : (isLight ? "rgba(15,23,42,0.45)" : "rgba(255,255,255,0.35)"), lineHeight:1 }}>{clientConfig?.navLabels?.[n.id] ?? n.l}</span>
-                </button>
-              );
-            })}
+        {/* Botón "+" — abre/cierra el cuadro de todas las opciones */}
+        <button onClick={() => setPlusOpen(p => !p)} aria-label="Todas las opciones" style={{ flex:1, height:"100%", minWidth:0, border:"none", background:"transparent", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", outline:"none", WebkitTapHighlightColor:"transparent", padding:0 }}>
+          <div style={{
+            width:42, height:42, borderRadius:999,
+            background: isLight ? `linear-gradient(135deg, ${T.accent}, ${T.accent}CC)` : "linear-gradient(135deg, #6EE7C2, #34D399)",
+            display:"flex", alignItems:"center", justifyContent:"center",
+            boxShadow: isLight ? `0 4px 14px ${T.accent}55` : "0 4px 16px rgba(52,211,153,0.35)",
+            transform: plusOpen ? "rotate(45deg) scale(1.04)" : "rotate(0deg)",
+            transition:"transform 0.28s cubic-bezier(0.34,1.56,0.64,1)",
+          }}>
+            <Plus size={24} color={isLight ? "#FFFFFF" : "#04121C"} strokeWidth={2.6} />
           </div>
-        )}
+        </button>
       </div>
+
+      {/* ── Cuadro CENTRADO "todas las opciones" — PORTAL a <body>: dentro del
+          .stratos-bottomnav el backdrop-filter crea un containing block y el
+          position:fixed del cuadro quedaba anclado a la barra (cortado abajo).
+          Solo se abre desde el "+" (visible únicamente en móvil). ── */}
+      {plusOpen && createPortal(
+        <>
+          <div onClick={() => setPlusOpen(false)} style={{ position:"fixed", inset:0, zIndex:202, background: isLight ? "rgba(15,23,42,0.34)" : "rgba(1,3,9,0.66)", animation:"fadeIn 0.18s ease both" }} />
+          <div style={{
+            /* transform INLINE (no via animación): mobile-perf.css apaga las
+               animaciones inline en móvil y el translate del keyframe modalIn
+               se perdería → cuadro descentrado. */
+            position:"fixed", top:"50%", left:"50%", transform:"translate(-50%,-50%)", zIndex:203,
+            width:"min(92vw, 400px)", maxHeight:"min(76dvh, 620px)", overflowY:"auto",
+            borderRadius:26, padding:"16px 16px 18px",
+            background: isLight ? "#FFFFFF" : "#0A0F1C",
+            border:`1px solid ${isLight ? "rgba(15,23,42,0.08)" : "rgba(255,255,255,0.09)"}`,
+            boxShadow: isLight ? "0 24px 70px rgba(15,23,42,0.28)" : "0 24px 80px rgba(0,0,0,0.72), 0 0 0 1px rgba(255,255,255,0.03)",
+            animation:"modalIn 0.24s cubic-bezier(0.16,1,0.3,1) both",
+          }}>
+            {/* Header del cuadro */}
+            <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:12 }}>
+              <span style={{ fontSize:13, fontWeight:700, fontFamily:fontDisp, letterSpacing:"-0.02em", color: isLight ? T.txt : "#FFFFFF" }}>Todas las opciones</span>
+              <button onClick={() => setPlusOpen(false)} aria-label="Cerrar" style={{ width:28, height:28, borderRadius:9, border:"none", cursor:"pointer", background: isLight ? "rgba(15,23,42,0.05)" : "rgba(255,255,255,0.06)", display:"flex", alignItems:"center", justifyContent:"center" }}>
+                <X size={14} color={isLight ? T.txt2 : "rgba(255,255,255,0.55)"} />
+              </button>
+            </div>
+
+            {/* Centro de Inteligencia — destacado (en móvil la pill del header
+                no existe; este es SU punto de entrada) */}
+            <button onClick={() => { setPlusOpen(false); setIntelOpenTick(t => t + 1); }} style={{
+              width:"100%", display:"flex", alignItems:"center", gap:11, padding:"12px 13px",
+              borderRadius:16, marginBottom:12, cursor:"pointer", textAlign:"left",
+              background: isLight ? `linear-gradient(135deg, ${T.accent}12, ${T.accent}06)` : "linear-gradient(135deg, rgba(110,231,194,0.12), rgba(110,231,194,0.04))",
+              border:`1px solid ${isLight ? `${T.accent}33` : "rgba(110,231,194,0.25)"}`,
+            }}>
+              <div style={{ width:36, height:36, borderRadius:11, background: isLight ? `${T.accent}16` : "rgba(110,231,194,0.12)", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+                <StratosAtomHex size={20} color={isLight ? "#0D9A76" : "#6EE7C2"} edge={isLight ? "#34D399" : "#C8DED8"} />
+              </div>
+              <div style={{ minWidth:0 }}>
+                <p style={{ margin:0, fontSize:13, fontWeight:700, fontFamily:fontDisp, letterSpacing:"-0.015em", color: isLight ? T.txt : "#FFFFFF" }}>{clientConfig?.brand?.intelligenceCenterLabel || "Centro de Inteligencia"}</p>
+                <p style={{ margin:"2px 0 0", fontSize:10.5, fontFamily:font, color: isLight ? T.txt3 : "rgba(255,255,255,0.42)" }}>Novedades del equipo IA y qué puede hacer el sistema</p>
+              </div>
+            </button>
+
+            {/* TODOS los módulos */}
+            <div style={{ display:"grid", gridTemplateColumns:"repeat(3, 1fr)", gap:8 }}>
+              {mobileAllNav.map(n => {
+                const a = v === n.id;
+                const activeColor = n.adminOnly ? "#A78BFA" : (isLight ? T.accent : "#6EE7C2");
+                return (
+                  <button key={n.id} onClick={() => { setV(n.id); setPlusOpen(false); }} style={{
+                    display:"flex", flexDirection:"column", alignItems:"center", gap:6, padding:"13px 4px 11px",
+                    borderRadius:16, border:`1px solid ${a ? `${activeColor}30` : (isLight ? "rgba(15,23,42,0.06)" : "rgba(255,255,255,0.05)")}`,
+                    cursor:"pointer", minWidth:0,
+                    background: a ? `${activeColor}12` : (isLight ? "rgba(15,23,42,0.03)" : "rgba(255,255,255,0.035)"),
+                  }}>
+                    <n.i size={22} color={a ? activeColor : (isLight ? "rgba(15,23,42,0.55)" : "rgba(255,255,255,0.55)")} strokeWidth={a ? 2 : 1.6} />
+                    <span style={{ fontSize:10, fontFamily:fontDisp, fontWeight: a ? 700 : 500, color: a ? activeColor : (isLight ? "rgba(15,23,42,0.55)" : "rgba(255,255,255,0.50)"), lineHeight:1, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis", maxWidth:"100%" }}>{clientConfig?.navLabels?.[n.id] ?? n.l}</span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Configuración: tema + salir */}
+            <div style={{ display:"flex", gap:8, marginTop:12 }}>
+              <button onClick={() => setTheme(isLight ? "dark" : "light")} style={{ flex:1, display:"flex", alignItems:"center", justifyContent:"center", gap:7, padding:"11px 8px", borderRadius:13, border:`1px solid ${isLight ? "rgba(15,23,42,0.08)" : "rgba(255,255,255,0.07)"}`, background: isLight ? "rgba(15,23,42,0.03)" : "rgba(255,255,255,0.04)", cursor:"pointer" }}>
+                {isLight ? <Moon size={15} color={T.txt2} /> : <Sun size={15} color="rgba(255,255,255,0.60)" />}
+                <span style={{ fontSize:11.5, fontWeight:600, fontFamily:fontDisp, color: isLight ? T.txt2 : "rgba(255,255,255,0.60)" }}>{isLight ? "Modo oscuro" : "Modo claro"}</span>
+              </button>
+              <button onClick={() => { setPlusOpen(false); onLogout(); }} style={{ flex:1, display:"flex", alignItems:"center", justifyContent:"center", gap:7, padding:"11px 8px", borderRadius:13, border:`1px solid ${isLight ? "rgba(225,29,72,0.16)" : "rgba(232,129,140,0.18)"}`, background: isLight ? "rgba(225,29,72,0.05)" : "rgba(232,129,140,0.07)", cursor:"pointer" }}>
+                <LogOut size={15} color={isLight ? "#BE123C" : "#E8818C"} />
+                <span style={{ fontSize:11.5, fontWeight:600, fontFamily:fontDisp, color: isLight ? "#BE123C" : "#E8818C" }}>Salir</span>
+              </button>
+            </div>
+          </div>
+        </>,
+        document.body
+      )}
 
       {/* ══ META PANEL ══ */}
       <MetaPanel

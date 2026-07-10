@@ -9,7 +9,7 @@
  *   2) QUÉ PUEDE HACER → carrusel de funciones (INTEL_FEATURES) + tutorial por función
  * ─────────────────────────────────────────────────────────────────────────────
  */
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import {
   X, ChevronRight, ChevronLeft, Crown,
@@ -24,11 +24,17 @@ import { INTEL_FEATURES } from "../constants/intelFeatures";
 // Mapa nombre→componente de ícono (los datos guardan solo el string)
 const FEATURE_ICONS = { Mic, FileText, Video, MapPin, GitBranch, Search, BarChart3, Bell, Sparkles, Zap, Gauge, UsersRound };
 
-const DynIsland = ({ onExpand, onOpenLead, notifications = [], theme = "dark", beamIdx = 0 }) => {
+const DynIsland = ({ onExpand, onOpenLead, notifications = [], theme = "dark", beamIdx = 0, openSignal = 0 }) => {
   const isLight = theme === "light";
   const [isOpen, setIsOpen] = useState(false);
   const [selectedNotif, setSelectedNotif] = useState(null);
   const [selectedFeature, setSelectedFeature] = useState(null);
+
+  // Apertura EXTERNA (móvil): la pill vive en el header y en móvil está
+  // display:none, así que el panel "+" del bottom-nav manda un contador que
+  // incrementa en cada tap → acá abrimos. El panel expandido es un portal a
+  // <body>, así que se ve aunque la pill esté oculta.
+  useEffect(() => { if (openSignal > 0) setIsOpen(true); }, [openSignal]);
   const { config: clientConfig } = useClient();
   const centerLabel = clientConfig?.brand?.intelligenceCenterLabel || "Centro de Inteligencia";
 
@@ -103,11 +109,13 @@ const DynIsland = ({ onExpand, onOpenLead, notifications = [], theme = "dark", b
             onClick={closeAll}
           />
           <div style={{
-            position: "fixed", top: 66, left: "50%", transform: "translateX(-50%)",
+            /* top con safe-area: en la app nativa (notch/status bar) el panel
+               no debe quedar debajo de la barra de estado. */
+            position: "fixed", top: "calc(66px + env(safe-area-inset-top, 0px))", left: "50%", transform: "translateX(-50%)",
             zIndex: 99999,
             width: selectedNotif || selectedFeature ? 600 : 580,
             maxWidth: "calc(100vw - 24px)",
-            maxHeight: "calc(100vh - 90px)", overflowY: "auto",
+            maxHeight: "calc(100dvh - 90px - env(safe-area-inset-top, 0px))", overflowY: "auto",
             borderRadius: 20,
             background: selectedNotif
               ? `radial-gradient(ellipse at top, ${selectedNotif.c}10 0%, #03060F 70%)`
