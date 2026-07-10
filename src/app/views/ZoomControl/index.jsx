@@ -467,13 +467,9 @@ const ZoomControl = ({ theme = "dark" }) => {
                   onMouseEnter={(e) => { e.currentTarget.style.background = isLight ? "rgba(15,23,42,0.025)" : "rgba(255,255,255,0.02)"; }}
                   onMouseLeave={(e) => { e.currentTarget.style.background = hotBg; }}
                 >
-                  <td style={tdStyle(T, "left")}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 6, fontWeight: 600, color: T.txt }}>
-                      {prettyDate(r.fecha_zoom)}
-                      {r.fecha_zoom === today && (
-                        <span style={{ padding: "1px 7px", borderRadius: 99, fontSize: 10, fontWeight: 800, letterSpacing: "0.05em", color: isLight ? "#06080F" : accent, background: isLight ? accent : `${accent}22`, border: `1px solid ${accent}55` }}>HOY</span>
-                      )}
-                    </div>
+                  {/* La marca HOY vive en el separador del día; aquí solo fecha+hora. */}
+                  <td style={tdStyle(T, "left")} title={r.fecha_agendado ? `Se agendó el ${prettyDate(r.fecha_agendado)}` : undefined}>
+                    <div style={{ fontWeight: 600, color: T.txt }}>{prettyDate(r.fecha_zoom)}</div>
                     <div style={{ fontSize: 12, fontWeight: 500, color: T.txt2 }}>{r.hora || "sin hora"}</div>
                   </td>
                   <td style={{ ...tdStyle(T, "left"), fontWeight: 600, color: T.txt }}>
