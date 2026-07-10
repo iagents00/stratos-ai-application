@@ -362,17 +362,6 @@ const ZoomControl = ({ theme = "dark" }) => {
         </G>
       )}
 
-      {/* ── KPIs operativos ────────────────────────────────────────────────── */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 12 }}>
-        <KPI T={T} label="Zooms hoy"        value={kpis.hoy}    icon={CalendarDays} color={accent}     sub="agendados para hoy" />
-        <KPI T={T} label="Esta semana"      value={kpis.semana} icon={Video}        color={T.blue}     sub="lunes a domingo" />
-        <KPI T={T} label="Por confirmar"    value={kpis.porConfirmar} icon={Clock3} color="#F59E0B"    sub={kpis.vencidos ? `+ ${kpis.vencidos} vencidos sin resolver` : "Agendados hoy o a futuro"} />
-        <KPI T={T} label="Tasa de asistencia" value={kpis.tasa == null ? "—" : `${kpis.tasa}%`} icon={UserCheck} color="#10B981" sub={`${kpis.asistio} asistió · ${kpis.noShow} no show`} />
-      </div>
-
-      {/* ── Resumen automático (réplica del sheet del director comercial) ──── */}
-      <ResumenZooms rows={rows} T={T} isLight={isLight} />
-
       {/* ── Toolbar de filtros ─────────────────────────────────────────────── */}
       <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
         {/* Rango */}
@@ -567,6 +556,19 @@ const ZoomControl = ({ theme = "dark" }) => {
           </table>
         </div>
       </G>
+
+      {/* ── KPIs y Resumen — DEBAJO de la tabla: el "excel" va hasta arriba
+             (pedido de Ivan: que Ema aterrice directo en su tabla). ───────── */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 12 }}>
+        <KPI T={T} label="Zooms hoy"        value={kpis.hoy}    icon={CalendarDays} color={accent}     sub="agendados para hoy" />
+        <KPI T={T} label="Esta semana"      value={kpis.semana} icon={Video}        color={T.blue}     sub="lunes a domingo" />
+        <KPI T={T} label="Por confirmar"    value={kpis.porConfirmar} icon={Clock3} color="#F59E0B"    sub={kpis.vencidos ? `+ ${kpis.vencidos} vencidos sin resolver` : "Agendados hoy o a futuro"} />
+        <KPI T={T} label="Tasa de asistencia" value={kpis.tasa == null ? "—" : `${kpis.tasa}%`} icon={UserCheck} color="#10B981" sub={`${kpis.asistio} asistió · ${kpis.noShow} no show`} />
+      </div>
+
+      {/* ── Resumen automático (réplica del sheet del director comercial) ──── */}
+      <ResumenZooms rows={rows} T={T} isLight={isLight} />
+
 
       {/* ── Modal de alta / edición ────────────────────────────────────────── */}
       {modalOpen && form && (
