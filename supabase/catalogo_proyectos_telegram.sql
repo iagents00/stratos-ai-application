@@ -237,7 +237,7 @@ begin
       and (not v_use_filter
            or (select count(*) from unnest(v_terms) t(term)
                  where public.unaccent(lower(concat_ws(' ', cp.desarrollo, cp.ubicacion, cp.zona, cp.masterbroker, cp.ticket, cp.clasificacion, cp.tipologia, cp.highlights, cp.contacto))) like '%'||term||'%') > 0)
-    order by score desc, (cp.drive is not null) desc, cp.desarrollo asc
+    order by score desc, (cp.drive is not null and cp.drive <> '') desc, cp.desarrollo asc
     limit v_top
   loop
     v_shown := v_shown + 1;
@@ -250,7 +250,9 @@ begin
       || case when r.highlights is not null then E'\n   ➤ ' || r.highlights else '' end
       || case when r.masterbroker is not null then E'\n   🏢 ' || r.masterbroker else '' end
       || case when r.contacto is not null then E'\n   ☎ ' || r.contacto else '' end
-      || case when r.drive is not null then E'\n   📁 ' || r.drive else '' end;
+      || case when r.drive is not null and r.drive <> '' then E'\n   📁 Ver detalle (Drive): ' || r.drive
+              when r.maps is not null and r.maps <> ''   then E'\n   📍 Ubicación (Maps): ' || r.maps
+              else E'\n   📁 Detalle en Drive: pendiente de cargar (pídeselo al equipo)' end;
   end loop;
 
   v_head := '🏗️ Catálogo Duke'
@@ -262,6 +264,7 @@ begin
   return jsonb_build_object('ok', true, 'reply', jsonb_build_object(
     'text', v_head || v_lines
       || case when v_total > v_shown then format(E'\n\n… y %s más. Afiná por zona, característica o precio para acotar.', v_total - v_shown) else '' end
+      || E'\n\n📂 Abrí el enlace 📁 de cada propiedad para ver fotos, planos y más detalle.'
       || v_note,
     'inline_keyboard', '[]'::jsonb));
 end;
