@@ -106,6 +106,11 @@ export function canAccessModule(moduleId, user, clientConfig = null) {
   // (ej. Vega, donde el equipo de campo registra gastos por Telegram/web).
   // Se separa así porque la RLS de team_expenses es org-scoped, no por rol.
   if (moduleId === "caja") {
+    // Caja ahora vive como PESTAÑA dentro de Finanzas. Si el usuario tiene
+    // acceso a Finanzas, no la mostramos como opción suelta (evita duplicar).
+    // Los tenants con Caja pero SIN Finanzas (p.ej. Vega asesores) la siguen
+    // viendo standalone.
+    if (canAccessModule("fa", user, clientConfig)) return false;
     if (clientConfig?.features?.caja !== true) return false;
     if (MODULE_ROLES.caja.includes(user.role)) return true;
     if (user.role === "asesor" && clientConfig?.features?.cajaAsesores === true) return true;
