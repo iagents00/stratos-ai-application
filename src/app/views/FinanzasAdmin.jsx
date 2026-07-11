@@ -13,6 +13,7 @@ import {
 import { AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import { P, LP, font, fontDisp } from "../../design-system/tokens";
 import { G, KPI, Pill, Ico } from "../SharedComponents";
+import Caja from "./Caja";
 
 const FinanzasAdmin = ({ T: _T }) => {
   const T = _T || P;
@@ -112,6 +113,7 @@ const FinanzasAdmin = ({ T: _T }) => {
     { id: "cfdi", label: "Facturación CFDI 4.0", icon: Receipt },
     { id: "fiscal", label: "Obligaciones Fiscales", icon: ListChecks },
     { id: "cuentas", label: "Cuentas CxC / CxP", icon: Wallet },
+    { id: "caja", label: "Caja", icon: Banknote },
     { id: "flujo", label: "Flujo de Caja", icon: TrendingUp },
   ];
 
@@ -645,6 +647,9 @@ const FinanzasAdmin = ({ T: _T }) => {
       {/* ═══════════════════════════════
           TAB 5: FLUJO DE CAJA
           ═══════════════════════════════ */}
+      {/* TAB: CAJA (movimientos / ingresos-egresos) — antes módulo suelto */}
+      {tab === "caja" && <Caja T={T} />}
+
       {tab === "flujo" && (
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
