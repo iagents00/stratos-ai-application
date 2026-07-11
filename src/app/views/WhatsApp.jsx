@@ -406,7 +406,8 @@ export default function WhatsAppInbox({ T = P, isLight = false, inbox, openLead,
       style={{
         flex: 1, minWidth: 0, minHeight: 0, display: "flex", flexDirection: "column",
         borderRadius: 14, border: `1px solid ${T.border}`,
-        background: isLight ? "rgba(255,255,255,0.7)" : "rgba(255,255,255,0.02)",
+        background: isLight ? "rgba(255,255,255,0.9)" : "rgba(255,255,255,0.02)",
+        boxShadow: isLight ? T.shadow2 : "none",
         padding: isMobile ? "10px 10px 12px" : 16,
       }}
     >

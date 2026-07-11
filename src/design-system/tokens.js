@@ -88,7 +88,11 @@ export const PL = {
 
 // ─── PALETA — LIGHT MODE (modo blanco premium de la plataforma) ──────────────
 export const LP = {
-  bg: "#E8EEEC", bgSoft: "#F4F8F6", bgCool: "#E3EAE7",
+  // Canvas estilo Apple (systemGroupedBackground): gris frío NEUTRO y luminoso,
+  // sin tinte verde. El brand (menta) vive en acentos/tarjetas, NO en el lienzo.
+  // Auditoría 2026-07-11: antes #E8EEEC/#E3EAE7 arrastraban un verde apagado que
+  // "ensuciaba" el fondo. Ahora #F1F3F6 → tarjetas blancas flotan con las sombras.
+  bg: "#F1F3F6", bgSoft: "#F6F7F9", bgCool: "#EBEEF2",
   glass: "rgba(255,255,255,0.70)", glassH: "rgba(255,255,255,0.92)",
   glassStrong: "rgba(255,255,255,0.96)",
   glassMint: "rgba(236,251,246,0.75)",
@@ -100,7 +104,7 @@ export const LP = {
   accentG: "linear-gradient(135deg, #0D9A76 0%, #14B892 50%, #34D4AA 100%)",
   blue: "#2563EB", violet: "#7C3AED", amber: "#D97706",
   rose: "#E11D48", emerald: "#059669", cyan: "#0891B2",
-  txt: "#0B1220", txt2: "#3B4A61", txt3: "#7A8699",
+  txt: "#0B1220", txt2: "#3B4A61", txt3: "#5C6B82",
   // Sombras estilo Apple (Jul 2026, auditoría tema claro): near-shadow nítida +
   // ambient profunda en capas → las tarjetas blancas "flotan" sobre el lienzo
   // gris-menta (más presencia). NO usar sombras planas de una sola capa.
