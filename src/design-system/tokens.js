@@ -88,7 +88,11 @@ export const PL = {
 
 // ─── PALETA — LIGHT MODE (modo blanco premium de la plataforma) ──────────────
 export const LP = {
-  bg: "#E8EEEC", bgSoft: "#F4F8F6", bgCool: "#E3EAE7",
+  // Canvas estilo Apple (systemGroupedBackground): gris frío NEUTRO y luminoso,
+  // sin tinte verde. El brand (menta) vive en acentos/tarjetas, NO en el lienzo.
+  // Auditoría 2026-07-11: antes #E8EEEC/#E3EAE7 arrastraban un verde apagado que
+  // "ensuciaba" el fondo. Ahora #F1F3F6 → tarjetas blancas flotan con las sombras.
+  bg: "#F1F3F6", bgSoft: "#F6F7F9", bgCool: "#EBEEF2",
   glass: "rgba(255,255,255,0.70)", glassH: "rgba(255,255,255,0.92)",
   glassStrong: "rgba(255,255,255,0.96)",
   glassMint: "rgba(236,251,246,0.75)",
