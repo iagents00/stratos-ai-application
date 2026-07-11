@@ -353,7 +353,7 @@
 //   scroll del WebView → el título de la vista queda bajo el header. Fix:
 //   overflow-anchor:none en .stratos-content-area + scroll a tope al cambiar
 //   de tema. (La app además se renombra "Stratos CRM AI" — cambio nativo.)
-const CACHE_VERSION = 'stratos-v148'; // v148: MetaPanel en PC a ancho completo (sin márgenes laterales, padding tipo Apple) + tipografía más grande (barra superior, títulos, filas) + fila de Lista de Acción rediseñada tipo gestor pro (título crece a la izquierda · prioridad/responsable/fecha alineados a la derecha)
+const CACHE_VERSION = 'stratos-v149'; // v149: MetaPanel Lista de Acción — layout móvil dedicado tipo Apple Reminders/Things (check alineado a la 1ª línea del título, título a ancho completo, contexto y chips indentados debajo, borrar visible en touch); PC mantiene la fila en una línea
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 

@@ -567,11 +567,106 @@ export default function MetaPanel({
                 const prioNext = a.priority==="normal" ? "alto" : a.priority==="alto" ? "urgente" : "normal";
                 const prioDot  = isUrgent ? "#EF4444" : isHigh ? "#F59E0B" : (isLight?"#94A3B8":"#64748B");
                 const prioLabel = a.priority==="urgente" ? "Urgente" : a.priority==="alto" ? "Alto" : "Normal";
+                // ── Elementos compartidos (misma lógica, se acomodan distinto en PC vs iPhone) ──
+                const checkBtn = (
+                  <button
+                    className="mp-check"
+                    onClick={() => { persistDone(a, true); setMetaActions(p => p.map(x => x.id===a.id ? {...x,done:true} : x)); }}
+                    title="Marcar como completada"
+                    style={{ width:24, height:24, borderRadius:"50%", border:`1.5px solid ${isLight?"rgba(15,23,42,0.26)":"rgba(255,255,255,0.30)"}`, background:"transparent", cursor:"pointer", flexShrink:0 }}
+                  />
+                );
+                const titleEl = (
+                  <E val={a.text} onSave={v => setMetaActions(p => p.map(x => x.id===a.id ? {...x,text:v} : x))}
+                    style={{ fontSize:16.5, fontWeight:560, color:T.txt, fontFamily:font, lineHeight:1.35, letterSpacing:"-0.014em" }} />
+                );
+                const metaEl = (
+                  <div style={{ display:"flex", alignItems:"center", gap:7, flexWrap:"wrap" }}>
+                    <E val={a.lead}   onSave={v => setMetaActions(p => p.map(x => x.id===a.id?{...x,lead:v}:x))}   style={{ fontSize:12.5, color:T.txt3, fontFamily:font }} />
+                    <span style={{ fontSize:10, color:T.txt3, opacity:0.4 }}>·</span>
+                    <E val={a.asesor} onSave={v => setMetaActions(p => p.map(x => x.id===a.id?{...x,asesor:v}:x))} style={{ fontSize:12.5, color:T.txt3, fontFamily:font }} />
+                  </div>
+                );
+                const prioBtn = (
+                  <button
+                    onClick={() => setMetaActions(p => p.map(x => x.id===a.id?{...x,priority:prioNext}:x))}
+                    title="Cambiar prioridad"
+                    style={{
+                      display:"inline-flex", alignItems:"center", gap:6,
+                      fontSize:12, fontWeight:600, fontFamily:font,
+                      color:prioColor, background:`${prioDot}12`,
+                      border:`1px solid ${prioDot}2E`, borderRadius:99,
+                      padding:"6px 12px 6px 10px", cursor:"pointer",
+                      letterSpacing:"0.01em", transition:"background 0.15s, border 0.15s",
+                    }}>
+                    <span style={{ width:7, height:7, borderRadius:"50%", background:prioDot, display:"inline-block", flexShrink:0 }} />
+                    {prioLabel}
+                  </button>
+                );
+                const assigneeSel = (
+                  <select
+                    className="mp-select"
+                    value={a.assignee || ""}
+                    onChange={e => {
+                      const v = e.target.value;
+                      setMetaActions(p => p.map(x => x.id===a.id ? {...x, assignee:v, assigneeType:"human"} : x));
+                      // Persistir el responsable en la DB (resuelve asesor_id; 'Todos' → broadcast).
+                      // Sin esto, el coach de Telegram no se enteraba de la asignación.
+                      if (a._persisted && _online) {
+                        supabase.rpc('fn_assign_team_action', { p_action_id: a.id, p_asesor_name: v })
+                          .then(({ error }) => { if (error) console.warn('[Stratos] assign team_action:', error.message); });
+                      }
+                    }}
+                    style={{
+                      fontSize:12.5, fontFamily:font, fontWeight:500,
+                      color: a.assignee ? T.txt2 : T.txt3,
+                      background: isLight ? "rgba(15,23,42,0.035)" : "rgba(255,255,255,0.045)",
+                      border:`1px solid ${a.assignee ? T.accentB : T.border}`,
+                      borderRadius:10, padding:"7px 12px",
+                      cursor:"pointer", outline:"none", maxWidth: isMobile ? 200 : 190,
+                    }}
+                  >
+                    <option value="">＋ Responsable</option>
+                    <option value="Todos">👥 Todos (todo el equipo)</option>
+                    <optgroup label="── Equipo Humano">
+                      {(teamMembers.length ? teamMembers : ["Oscar Gálvez","Alexia Santillán","Araceli Oneto","Ken Duke","Emmanuel Ortiz","Cecilia Mendoza"]).map(n => (
+                        <option key={n} value={n}>{n}</option>
+                      ))}
+                    </optgroup>
+                  </select>
+                );
+                const iagentBtn = (
+                  <button
+                    className="mp-ghost"
+                    disabled
+                    title="Próximamente — Asignación directa a iAgents IA"
+                    style={{
+                      display:"flex", alignItems:"center", gap:5,
+                      padding:"7px 12px", borderRadius:10,
+                      border:`1px solid ${T.blue}28`,
+                      background:`${T.blue}07`,
+                      color:T.blue, fontSize:11.5, fontFamily:font, fontWeight:600,
+                      cursor:"not-allowed", opacity:0.4,
+                    }}
+                  >
+                    <Atom size={11} />iAgent IA
+                  </button>
+                );
+                const dateEl = (
+                  <E val={a.date || "—"} onSave={v => setMetaActions(p => p.map(x => x.id===a.id?{...x,date:v}:x))}
+                    style={{ fontSize:12.5, fontWeight:600, fontFamily:fontDisp, color:prioColor, background:`${prioColor}14`, border:`1px solid ${prioColor}28`, padding:"6px 14px", borderRadius:99, whiteSpace:"nowrap", letterSpacing:"-0.01em" }} />
+                );
+                const delBtn = (
+                  <button className={isMobile ? "" : "mp-del"} onClick={() => { persistDelete(a); setMetaActions(p => p.filter(x => x.id!==a.id)); }} title="Eliminar acción" style={{ background:"none", border:"none", cursor:"pointer", padding:4, display:"flex", alignItems:"center", opacity: isMobile ? 0.5 : undefined }}>
+                    <Trash2 size={15} color={T.txt3} />
+                  </button>
+                );
+
                 return (
                   <div
                     key={a.id}
                     className="mp-row"
-                    draggable
+                    draggable={!isMobile}
                     onDragStart={e => { e.dataTransfer.setData("maDragId", String(a.id)); e.currentTarget.style.opacity="0.35"; }}
                     onDragEnd={e => { e.currentTarget.style.opacity="1"; e.currentTarget.style.outline="none"; }}
                     onDragOver={e => { e.preventDefault(); e.currentTarget.style.outline=`2px solid ${ring}`; e.currentTarget.style.outlineOffset="-1px"; }}
@@ -591,8 +686,8 @@ export default function MetaPanel({
                       });
                     }}
                     style={{
-                      display:"flex", alignItems:"center", gap:14, flexWrap:"wrap",
-                      padding:"16px 20px 16px 12px", borderRadius:18, marginBottom:10,
+                      padding: isMobile ? "14px 16px" : "16px 20px 16px 12px",
+                      borderRadius:18, marginBottom:10,
                       background: isUrgent
                         ? (isLight?"rgba(239,68,68,0.045)":"rgba(239,68,68,0.05)")
                         : (isLight?"#FFFFFF":"rgba(255,255,255,0.028)"),
@@ -600,106 +695,36 @@ export default function MetaPanel({
                       boxShadow: isLight ? "0 1px 2px rgba(15,23,42,0.05)" : "none",
                     }}
                   >
-                    {/* Drag handle — visible al pasar el cursor */}
-                    <GripVertical className="mp-grip" size={16} color={T.txt3} style={{ cursor:"grab", flexShrink:0 }} />
-
-                    {/* Checkbox — redondo estilo Apple Reminders */}
-                    <button
-                      className="mp-check"
-                      onClick={() => { persistDone(a, true); setMetaActions(p => p.map(x => x.id===a.id ? {...x,done:true} : x)); }}
-                      title="Marcar como completada"
-                      style={{ width:24, height:24, borderRadius:"50%", border:`1.5px solid ${isLight?"rgba(15,23,42,0.26)":"rgba(255,255,255,0.30)"}`, background:"transparent", cursor:"pointer", flexShrink:0 }}
-                    />
-
-                    {/* Título + contexto (crece) */}
-                    <div style={{ flex:"1 1 360px", minWidth:0 }}>
-                      <E
-                        val={a.text}
-                        onSave={v => setMetaActions(p => p.map(x => x.id===a.id ? {...x,text:v} : x))}
-                        style={{ fontSize:16.5, fontWeight:560, color:T.txt, fontFamily:font, lineHeight:1.35, letterSpacing:"-0.014em", marginBottom:5 }}
-                      />
-                      <div style={{ display:"flex", alignItems:"center", gap:7, flexWrap:"wrap" }}>
-                        <E val={a.lead}   onSave={v => setMetaActions(p => p.map(x => x.id===a.id?{...x,lead:v}:x))}   style={{ fontSize:12.5, color:T.txt3, fontFamily:font }} />
-                        <span style={{ fontSize:10, color:T.txt3, opacity:0.4 }}>·</span>
-                        <E val={a.asesor} onSave={v => setMetaActions(p => p.map(x => x.id===a.id?{...x,asesor:v}:x))} style={{ fontSize:12.5, color:T.txt3, fontFamily:font }} />
+                    {isMobile ? (
+                      /* ── iPhone: tarjeta apilada estilo Reminders/Things ── */
+                      <>
+                        {/* Fila 1 — check alineado a la 1ª línea del título; el título usa todo el ancho */}
+                        <div style={{ display:"flex", alignItems:"flex-start", gap:12 }}>
+                          <div style={{ flexShrink:0, marginTop:1 }}>{checkBtn}</div>
+                          <div style={{ flex:1, minWidth:0 }}>{titleEl}</div>
+                        </div>
+                        {/* Fila 2 — contexto indentado bajo el título */}
+                        <div style={{ paddingLeft:36, marginTop:8 }}>{metaEl}</div>
+                        {/* Fila 3 — prioridad · fecha · responsable · iAgent + borrar, indentados */}
+                        <div style={{ paddingLeft:36, marginTop:12, display:"flex", alignItems:"center", gap:8, flexWrap:"wrap" }}>
+                          {prioBtn}{dateEl}{assigneeSel}{iagentBtn}
+                          <div style={{ marginLeft:"auto" }}>{delBtn}</div>
+                        </div>
+                      </>
+                    ) : (
+                      /* ── PC: una línea (título crece · prioridad·responsable·fecha a la derecha) ── */
+                      <div style={{ display:"flex", alignItems:"center", gap:14 }}>
+                        <GripVertical className="mp-grip" size={16} color={T.txt3} style={{ cursor:"grab", flexShrink:0 }} />
+                        {checkBtn}
+                        <div style={{ flex:"1 1 360px", minWidth:0 }}>
+                          <div style={{ marginBottom:5 }}>{titleEl}</div>
+                          {metaEl}
+                        </div>
+                        <div style={{ display:"flex", alignItems:"center", gap:9, flexWrap:"wrap", flex:"0 0 auto", justifyContent:"flex-end" }}>
+                          {prioBtn}{assigneeSel}{iagentBtn}{dateEl}{delBtn}
+                        </div>
                       </div>
-                    </div>
-
-                    {/* Grupo derecho — prioridad · responsable · iAgent · fecha (llena el ancho) */}
-                    <div style={{ display:"flex", alignItems:"center", gap:9, flexWrap:"wrap", flex: isMobile ? "1 1 100%" : "0 0 auto", justifyContent: isMobile ? "flex-start" : "flex-end", marginTop: isMobile ? 4 : 0 }}>
-                      {/* Prioridad (ciclable) */}
-                      <button
-                        onClick={() => setMetaActions(p => p.map(x => x.id===a.id?{...x,priority:prioNext}:x))}
-                        title="Click para cambiar prioridad"
-                        style={{
-                          display:"inline-flex", alignItems:"center", gap:6,
-                          fontSize:12, fontWeight:600, fontFamily:font,
-                          color:prioColor, background:`${prioDot}12`,
-                          border:`1px solid ${prioDot}2E`, borderRadius:99,
-                          padding:"6px 12px 6px 10px", cursor:"pointer",
-                          letterSpacing:"0.01em", transition:"background 0.15s, border 0.15s",
-                        }}>
-                        <span style={{ width:7, height:7, borderRadius:"50%", background:prioDot, display:"inline-block", flexShrink:0 }} />
-                        {prioLabel}
-                      </button>
-                      {/* Responsable */}
-                      <select
-                        className="mp-select"
-                        value={a.assignee || ""}
-                        onChange={e => {
-                          const v = e.target.value;
-                          setMetaActions(p => p.map(x => x.id===a.id ? {...x, assignee:v, assigneeType:"human"} : x));
-                          // Persistir el responsable en la DB (resuelve asesor_id; 'Todos' → broadcast).
-                          // Sin esto, el coach de Telegram no se enteraba de la asignación.
-                          if (a._persisted && _online) {
-                            supabase.rpc('fn_assign_team_action', { p_action_id: a.id, p_asesor_name: v })
-                              .then(({ error }) => { if (error) console.warn('[Stratos] assign team_action:', error.message); });
-                          }
-                        }}
-                        style={{
-                          fontSize:12.5, fontFamily:font, fontWeight:500,
-                          color: a.assignee ? T.txt2 : T.txt3,
-                          background: isLight ? "rgba(15,23,42,0.035)" : "rgba(255,255,255,0.045)",
-                          border:`1px solid ${a.assignee ? T.accentB : T.border}`,
-                          borderRadius:10, padding:"7px 12px",
-                          cursor:"pointer", outline:"none", maxWidth:190,
-                        }}
-                      >
-                        <option value="">＋ Responsable</option>
-                        <option value="Todos">👥 Todos (todo el equipo)</option>
-                        <optgroup label="── Equipo Humano">
-                          {(teamMembers.length ? teamMembers : ["Oscar Gálvez","Alexia Santillán","Araceli Oneto","Ken Duke","Emmanuel Ortiz","Cecilia Mendoza"]).map(n => (
-                            <option key={n} value={n}>{n}</option>
-                          ))}
-                        </optgroup>
-                      </select>
-                      {/* iAgent (próximamente) */}
-                      <button
-                        className="mp-ghost"
-                        disabled
-                        title="Próximamente — Asignación directa a iAgents IA"
-                        style={{
-                          display:"flex", alignItems:"center", gap:5,
-                          padding:"7px 12px", borderRadius:10,
-                          border:`1px solid ${T.blue}28`,
-                          background:`${T.blue}07`,
-                          color:T.blue, fontSize:11.5, fontFamily:font, fontWeight:600,
-                          cursor:"not-allowed", opacity:0.4,
-                        }}
-                      >
-                        <Atom size={11} />iAgent IA
-                      </button>
-                      {/* Fecha */}
-                      <E
-                        val={a.date || "—"}
-                        onSave={v => setMetaActions(p => p.map(x => x.id===a.id?{...x,date:v}:x))}
-                        style={{ fontSize:12.5, fontWeight:600, fontFamily:fontDisp, color:prioColor, background:`${prioColor}14`, border:`1px solid ${prioColor}28`, padding:"6px 14px", borderRadius:99, whiteSpace:"nowrap", letterSpacing:"-0.01em" }}
-                      />
-                      {/* Eliminar (aparece al pasar) */}
-                      <button className="mp-del" onClick={() => { persistDelete(a); setMetaActions(p => p.filter(x => x.id!==a.id)); }} title="Eliminar acción" style={{ background:"none", border:"none", cursor:"pointer", padding:4, display:"flex", alignItems:"center" }}>
-                        <Trash2 size={15} color={T.txt3} />
-                      </button>
-                    </div>
+                    )}
                   </div>
                 );
               })}
