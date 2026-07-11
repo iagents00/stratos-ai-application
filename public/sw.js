@@ -353,7 +353,7 @@
 //   scroll del WebView → el título de la vista queda bajo el header. Fix:
 //   overflow-anchor:none en .stratos-content-area + scroll a tope al cambiar
 //   de tema. (La app además se renombra "Stratos CRM AI" — cambio nativo.)
-const CACHE_VERSION = 'stratos-v150'; // v150: dark del menú deja de verse gris -> vidrio sutilmente MENTA; bordes superiores de widget AVANCE y cápsula refinados (highlight suave, sin línea dura ni ring)
+const CACHE_VERSION = 'stratos-v151'; // v151: cápsula del menú = vidrio NEGRO con detalles glass + selección activa más sutil; íconos mejorados (Comando pulse->speedometer, Caja->cash, Finanzas->bar-chart)
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 
