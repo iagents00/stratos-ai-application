@@ -2443,7 +2443,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
               className="carousel-no-scroll"
               style={{
                 display: "flex", gap: 12, overflowX: "auto",
-                padding: isMobile ? "8px 16px 18px" : "10px 24px 20px 8px",
+                padding: isMobile ? "8px 16px 22px" : "26px 30px 52px 28px",
                 scrollbarWidth: "none", msOverflowStyle: "none",
                 WebkitOverflowScrolling: "touch",
                 // En mobile: scroll-snap para que cada card "encaje" tras swipe.
@@ -2469,20 +2469,20 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                   {(() => {
                     // ── Shadow budget ───────────────────────────────────────────────────
                     // The carousel is overflow-x:auto → overflow-y also clips.
-                    // Carousel bottom-padding = 20px.  Hover translateY = -2px.
+                    // Carousel padding = 26px top / 52px bottom.  Hover translateY = -2px.
                     // Max downward shadow reach = -2 (translate) + y-offset + blur-radius.
-                    // All shadow values below are sized so that reach ≤ 18px  (< 20px padding).
+                    // Shadow reach is kept within that padding so overflow-x:auto no las recorta.
                     // ────────────────────────────────────────────────────────────────────
                     const restBorder = isLight
                       ? `${meta.color}30`
                       : `rgba(255,255,255,0.07)`;
                     const restShadow = isLight
-                      ? `0 1px 2px rgba(15,23,42,0.05), 0 6px 20px rgba(15,23,42,0.10), 0 16px 40px rgba(15,23,42,0.08), inset 0 1px 0 rgba(255,255,255,1)`
-                      : `0 2px 8px rgba(0,0,0,0.55), 0 12px 44px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.06)`;
+                      ? `0 1px 2px rgba(15,23,42,0.05), 0 6px 18px rgba(15,23,42,0.09), 0 12px 30px rgba(15,23,42,0.07), inset 0 1px 0 rgba(255,255,255,1)`
+                      : `0 2px 8px rgba(0,0,0,0.55), 0 10px 32px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.06)`;
                     const hoverBorder = isLight ? `${meta.color}68` : `rgba(255,255,255,0.14)`;
                     const hoverShadow = isLight
-                      ? `0 2px 6px rgba(15,23,42,0.07), 0 8px 22px rgba(15,23,42,0.10), inset 0 1px 0 rgba(255,255,255,1)`
-                      : `0 6px 20px rgba(0,0,0,0.62), 0 20px 60px rgba(0,0,0,0.52), inset 0 1px 0 rgba(255,255,255,0.08)`;
+                      ? `0 2px 6px rgba(15,23,42,0.07), 0 10px 26px rgba(15,23,42,0.11), inset 0 1px 0 rgba(255,255,255,1)`
+                      : `0 6px 18px rgba(0,0,0,0.60), 0 14px 38px rgba(0,0,0,0.50), inset 0 1px 0 rgba(255,255,255,0.08)`;
                     const droppedBorder = isLight ? `${meta.color}80` : `rgba(255,255,255,0.20)`;
                     const droppedShadow = isLight
                       ? `0 0 0 3px ${meta.color}18, 0 4px 14px rgba(15,23,42,0.08)`
