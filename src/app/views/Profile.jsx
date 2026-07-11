@@ -95,7 +95,7 @@ export default function Profile({ theme = "dark", T: Tprop }) {
 }
 
 /* ─────────────────────────────────────────────────────────────────────── */
-/*  System (cambio de contrasena) + Soporte directo                         */
+/*  System (cambio de contraseña) + Soporte directo                         */
 /* ─────────────────────────────────────────────────────────────────────── */
 
 function normalizePhoneHref(value) {
@@ -120,17 +120,17 @@ function PasswordPanel({ T = P, isLight = false, user }) {
     e.preventDefault();
     setMessage("");
     setErrorMsg("");
-    if (disabled) return setErrorMsg("Conectate a Supabase para cambiar la contrasena.");
+    if (disabled) return setErrorMsg("Conéctate a Supabase para cambiar la contraseña.");
     if (password.length < 8) return setErrorMsg("Usa minimo 8 caracteres.");
-    if (password !== confirmPassword) return setErrorMsg("Las contrasenas no coinciden.");
+    if (password !== confirmPassword) return setErrorMsg("Las contraseñas no coinciden.");
 
     setBusy(true);
 
-    // ── Asegurar una sesion VIVA antes de tocar la contrasena ──────────────
+    // ── Asegurar una sesion VIVA antes de tocar la contraseña ──────────────
     // En movil / redes lentas la app corre con la sesion cacheada de 24h
     // (_fromCache): la UI se ve logueada pero el SDK NO tiene un token vivo en
     // memoria. En ese estado supabase.auth.updateUser() falla ("Auth session
-    // missing") o no llega al servidor → la contrasena NUNCA cambia y la vieja
+    // missing") o no llega al servidor → la contraseña NUNCA cambia y la vieja
     // sigue sirviendo.
     //
     // OBJETIVO: que un asesor pueda cambiar su clave desde CUALQUIER lugar
@@ -164,7 +164,7 @@ function PasswordPanel({ T = P, isLight = false, user }) {
     if (!liveSession) {
       setBusy(false);
       return setErrorMsg(
-        "Tu sesion expiro. Vuelve a iniciar sesion y cambia tu contrasena de nuevo.",
+        "Tu sesión expiró. Vuelve a iniciar sesión y cambia tu contraseña de nuevo.",
       );
     }
 
@@ -175,7 +175,7 @@ function PasswordPanel({ T = P, isLight = false, user }) {
       logAuthEvent("PASSWORD_UPDATE", liveSession.user?.id || null, {
         email: liveSession.user?.email, success: false, reason: error.message,
       });
-      return setErrorMsg(error.message || "No se pudo actualizar la contrasena.");
+      return setErrorMsg(error.message || "No se pudo actualizar la contraseña.");
     }
     // Solo declarar exito si el servidor devolvio el usuario actualizado.
     if (!updated?.user) {
@@ -197,14 +197,14 @@ function PasswordPanel({ T = P, isLight = false, user }) {
         </div>
         <div>
           <h2 style={{ margin: "0 0 2px", fontSize: 17, fontWeight: 600, color: T.txt, fontFamily: fontDisp }}>System</h2>
-          <p style={{ margin: 0, fontSize: 12, color: T.txt2 }}>Cambia tu contrasena de acceso sin pedir soporte.</p>
+          <p style={{ margin: 0, fontSize: 12, color: T.txt2 }}>Cambia tu contraseña de acceso sin pedir soporte.</p>
         </div>
       </div>
       <form onSubmit={handleSubmit} style={{ display: "grid", gap: 10 }}>
-        <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Nueva contrasena" autoComplete="new-password" disabled={disabled || busy} style={inputStyle(T, isLight)} />
-        <input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="Confirmar contrasena" autoComplete="new-password" disabled={disabled || busy} style={inputStyle(T, isLight)} />
+        <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Nueva contraseña" autoComplete="new-password" disabled={disabled || busy} style={inputStyle(T, isLight)} />
+        <input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="Confirmar contraseña" autoComplete="new-password" disabled={disabled || busy} style={inputStyle(T, isLight)} />
         <button type="submit" disabled={disabled || busy} style={{ height: 40, borderRadius: 11, border: "none", background: disabled || busy ? (isLight ? "rgba(15,23,42,0.08)" : "rgba(255,255,255,0.08)") : T.accent, color: disabled || busy ? T.txt3 : "#06120E", fontWeight: 800, fontFamily: fontDisp, cursor: disabled || busy ? "not-allowed" : "pointer" }}>
-          {busy ? "Actualizando..." : "Actualizar contrasena"}
+          {busy ? "Actualizando..." : "Actualizar contraseña"}
         </button>
       </form>
       {(message || errorMsg) && (
@@ -327,7 +327,7 @@ function SupportPanel({ T = P, isLight = false, clientConfig }) {
         </div>
         <div style={{ minWidth: 0 }}>
           <h2 style={{ margin: "0 0 2px", fontSize: 17, fontWeight: 600, color: T.txt, fontFamily: fontDisp }}>Soporte directo</h2>
-          <p style={{ margin: 0, fontSize: 12, color: T.txt2 }}>Mientras activamos mas funciones, llama o escribe a soporte.</p>
+          <p style={{ margin: 0, fontSize: 12, color: T.txt2 }}>Mientras activamos más funciones, llama o escribe a soporte.</p>
         </div>
       </div>
       <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
@@ -401,7 +401,7 @@ function TimezonePanel({ T = P, isLight = false, user }) {
 
   const save = async (tz) => {
     setMessage(""); setErrorMsg("");
-    if (disabled) return setErrorMsg("Conectate a Supabase para cambiar la zona horaria.");
+    if (disabled) return setErrorMsg("Conéctate a Supabase para cambiar la zona horaria.");
     if (!tz) return;
     setBusy(true);
     const { data, error } = await supabase.rpc("fn_set_my_timezone", { p_tz: tz });
