@@ -1225,6 +1225,7 @@ export default function App() {
     const hasAccess = canAccessModule(n.id, user, clientConfig);
     const mintC = isAdmin ? "#A78BFA" : "#6EE7C2";
     const activeColor = isAdmin ? "#A78BFA" : (isLight ? T.accent : mintC);
+    const activeIcon  = isLight ? activeColor : (isAdmin ? "#ECE6FF" : "#E9FCF4");
     return (
       <div style={{ display:"flex", flexDirection:"column", alignItems:"center", gap:4, width:54, padding:0 }}>
         <button
@@ -1235,10 +1236,10 @@ export default function App() {
             cursor: hasAccess ? "pointer" : "not-allowed",
             opacity: hasAccess ? 1 : 0.32,
             outline:"none",
-            background: a ? (isLight ? `linear-gradient(180deg, rgba(255,255,255,0.92), ${activeColor}1C)` : `linear-gradient(180deg, rgba(255,255,255,0.11), ${activeColor}10)`) : "transparent",
-            border: a ? (isLight ? `1px solid ${activeColor}45` : "1px solid rgba(255,255,255,0.13)") : "1px solid transparent",
-            boxShadow: a ? (isLight ? `inset 0 1px 0 rgba(255,255,255,0.75), 0 4px 12px ${activeColor}33` : `inset 0 1px 0 rgba(255,255,255,0.14), 0 4px 12px rgba(0,0,0,0.35)`) : "none",
-            backdropFilter: "none", WebkitBackdropFilter: "none",
+            background: a ? (isLight ? `linear-gradient(180deg, rgba(255,255,255,0.95), ${activeColor}16)` : "linear-gradient(180deg, rgba(255,255,255,0.16), rgba(233,252,244,0.055))") : "transparent",
+            border: a ? (isLight ? `1px solid ${activeColor}40` : "1px solid rgba(233,252,244,0.20)") : "1px solid transparent",
+            boxShadow: a ? (isLight ? `inset 0 1px 0 rgba(255,255,255,0.85), 0 4px 12px ${activeColor}2E` : "inset 0 1px 0 rgba(255,255,255,0.22), inset 0 -1px 0 rgba(0,0,0,0.18), 0 4px 12px rgba(0,0,0,0.38)") : "none",
+            backdropFilter: a ? "blur(8px) saturate(160%)" : "none", WebkitBackdropFilter: a ? "blur(8px) saturate(160%)" : "none",
             display:"flex", alignItems:"center", justifyContent:"center",
             transition:"background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease",
             position:"relative",
@@ -1248,10 +1249,10 @@ export default function App() {
           onMouseDown={e => { if (hasAccess) e.currentTarget.style.transform = "scale(0.94)"; }}
           onMouseUp={e => { if (hasAccess && !a) e.currentTarget.style.transform = "scale(1.04)"; }}
         >
-          <IosIcon name={n.id} filled={a} size={20} color={a ? activeColor : (isLight ? "rgba(15,23,42,0.45)" : "rgba(255,255,255,0.32)")} />
+          <IosIcon name={n.id} filled={a} size={20} color={a ? activeIcon : (isLight ? "rgba(15,23,42,0.45)" : "rgba(255,255,255,0.40)")} />
         </button>
         <span style={{ fontSize:7, fontFamily:fontDisp, fontWeight: a ? 600 : 400, letterSpacing: a ? "0.01em" : "0.005em", textAlign:"center",
-          color: a ? activeColor : (isLight ? "rgba(15,23,42,0.38)" : "rgba(255,255,255,0.22)"),
+          color: a ? activeIcon : (isLight ? "rgba(15,23,42,0.38)" : "rgba(255,255,255,0.28)"),
           lineHeight:1, userSelect:"none", transition:"color 0.18s ease",
         }}>{clientConfig?.navLabels?.[n.id] ?? n.l}</span>
       </div>
@@ -1417,7 +1418,7 @@ export default function App() {
             <div style={{ width:32, height:1, marginTop:10, background: isLight ? "linear-gradient(90deg, transparent, rgba(15,23,42,0.07), transparent)" : "linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent)" }} />
           </div>
 
-          <div style={{ display:"flex", flexDirection:"column", alignItems:"center", gap:5, width:58, padding:"7px 0", borderRadius:19, background: isLight ? "rgba(255,255,255,0.50)" : "rgba(24,30,44,0.44)", backdropFilter:"blur(22px) saturate(180%)", WebkitBackdropFilter:"blur(22px) saturate(180%)", border: isLight ? "1px solid rgba(255,255,255,0.80)" : "1px solid rgba(255,255,255,0.10)", boxShadow: isLight ? "inset 0 1px 0 rgba(255,255,255,1), 0 10px 30px rgba(15,23,42,0.10)" : "inset 0 1px 0 rgba(255,255,255,0.12), inset 0 -1px 0 rgba(0,0,0,0.30), 0 12px 34px rgba(0,0,0,0.50)" }}>
+          <div style={{ display:"flex", flexDirection:"column", alignItems:"center", gap:5, width:58, padding:"7px 0", borderRadius:19, background: isLight ? "linear-gradient(180deg, rgba(255,255,255,0.58), rgba(255,255,255,0.40))" : "linear-gradient(180deg, rgba(255,255,255,0.07), rgba(255,255,255,0.022))", backdropFilter:"blur(26px) saturate(185%)", WebkitBackdropFilter:"blur(26px) saturate(185%)", border: isLight ? "1px solid rgba(255,255,255,0.92)" : "1px solid rgba(255,255,255,0.11)", boxShadow: isLight ? "inset 0 1px 0 rgba(255,255,255,1), inset 0 -1px 0 rgba(15,23,42,0.04), 0 10px 30px rgba(15,23,42,0.10)" : "inset 0 1px 0 rgba(255,255,255,0.16), inset 0 -1px 0 rgba(0,0,0,0.28), inset 0 0 0 1px rgba(255,255,255,0.03), 0 14px 38px rgba(0,0,0,0.52)" }}>
           {primary.map(n => <NavBtn key={n.id} n={n} />)}
 
           {/* More toggle */}
@@ -2006,7 +2007,7 @@ export default function App() {
                 nativo carga la web remota: un APK nuevo NO garantiza web nueva
                 (SW/deploy). Con esto cualquiera puede reportar "web vNNN" y se
                 acaba el adivinar. Mantener en sync con CACHE_VERSION (sw.js). */}
-            <p style={{ margin:"12px 0 0", textAlign:"center", fontSize:9.5, fontFamily:font, letterSpacing:"0.02em", color: isLight ? "rgba(15,23,42,0.35)" : "rgba(255,255,255,0.28)" }}>Stratos CRM AI · web v148</p>
+            <p style={{ margin:"12px 0 0", textAlign:"center", fontSize:9.5, fontFamily:font, letterSpacing:"0.02em", color: isLight ? "rgba(15,23,42,0.35)" : "rgba(255,255,255,0.28)" }}>Stratos CRM AI · web v149</p>
           </div>
         </>,
         document.body
