@@ -1241,10 +1241,10 @@ export default function App() {
             transition:"background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease",
             position:"relative",
           }}
-          onMouseEnter={e => { if (!a && hasAccess) { e.currentTarget.style.background = isLight ? "rgba(15,23,42,0.035)" : "rgba(255,255,255,0.05)"; e.currentTarget.style.transform = "scale(1.05)"; } }}
-          onMouseLeave={e => { if (!a) { e.currentTarget.style.background = "transparent"; e.currentTarget.style.transform = "scale(1)"; } }}
-          onMouseDown={e => { if (hasAccess) e.currentTarget.style.transform = "scale(0.94)"; }}
-          onMouseUp={e => { if (hasAccess && !a) e.currentTarget.style.transform = "scale(1.04)"; }}
+          onMouseEnter={e => { if (!a && hasAccess) { e.currentTarget.style.background = isLight ? "rgba(15,23,42,0.03)" : "rgba(255,255,255,0.045)"; e.currentTarget.style.borderColor = isLight ? `${activeColor}22` : "rgba(190,245,225,0.09)"; } }}
+          onMouseLeave={e => { if (!a) { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = "transparent"; e.currentTarget.style.transform = "scale(1)"; } }}
+          onMouseDown={e => { if (hasAccess) e.currentTarget.style.transform = "scale(0.95)"; }}
+          onMouseUp={e => { if (hasAccess) e.currentTarget.style.transform = "scale(1)"; }}
         >
           <IosIcon name={n.id} filled={a} size={20} color={a ? activeIcon : (isLight ? "rgba(15,23,42,0.45)" : "rgba(255,255,255,0.40)")} />
         </button>
@@ -1422,9 +1422,9 @@ export default function App() {
           <div style={{ display:"flex", flexDirection:"column", alignItems:"center", gap:4, marginTop:4, width:54, padding:0 }}>
             <div style={{ height:1, width:32, background: isLight ? "rgba(0,0,0,0.06)" : "rgba(255,255,255,0.05)" }} />
             <button onClick={() => setSidebarMore(true)} title="Todas las apps"
-              style={{ width:48, height:40, borderRadius:14, border: appsActive ? (isLight ? `1px solid ${T.accent}40` : "1px solid rgba(190,245,225,0.14)") : "1px solid transparent", background: appsActive ? (isLight ? `${T.accent}12` : "rgba(255,255,255,0.05)") : "transparent", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", transition:"background 0.18s ease, border-color 0.18s ease, transform 0.15s ease" }}
-              onMouseEnter={e => { if(!appsActive) e.currentTarget.style.background = isLight ? "rgba(15,23,42,0.035)" : "rgba(255,255,255,0.05)"; e.currentTarget.style.transform="scale(1.05)"; }}
-              onMouseLeave={e => { e.currentTarget.style.background = appsActive ? (isLight ? `${T.accent}12` : "rgba(255,255,255,0.05)") : "transparent"; e.currentTarget.style.transform="scale(1)"; }}
+              style={{ width:48, height:42, borderRadius:14, border: appsActive ? (isLight ? `1px solid ${T.accent}40` : "1px solid rgba(190,245,225,0.14)") : "1px solid transparent", background: appsActive ? (isLight ? `${T.accent}12` : "rgba(255,255,255,0.05)") : "transparent", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", transition:"background 0.18s ease, border-color 0.18s ease, transform 0.15s ease" }}
+              onMouseEnter={e => { if(!appsActive){ e.currentTarget.style.background = isLight ? "rgba(15,23,42,0.03)" : "rgba(255,255,255,0.045)"; e.currentTarget.style.borderColor = isLight ? `${T.accent}22` : "rgba(190,245,225,0.09)"; } }}
+              onMouseLeave={e => { e.currentTarget.style.background = appsActive ? (isLight ? `${T.accent}12` : "rgba(255,255,255,0.05)") : "transparent"; e.currentTarget.style.borderColor = appsActive ? (isLight ? `${T.accent}40` : "rgba(190,245,225,0.14)") : "transparent"; }}
             >
               <IosIcon name="menu" filled={appsActive} size={20} color={appsActive ? (isLight ? T.accent : "#E9FCF4") : (isLight ? "rgba(15,23,42,0.45)" : "rgba(255,255,255,0.40)")} />
             </button>
@@ -1998,7 +1998,7 @@ export default function App() {
                 nativo carga la web remota: un APK nuevo NO garantiza web nueva
                 (SW/deploy). Con esto cualquiera puede reportar "web vNNN" y se
                 acaba el adivinar. Mantener en sync con CACHE_VERSION (sw.js). */}
-            <p style={{ margin:"12px 0 0", textAlign:"center", fontSize:9.5, fontFamily:font, letterSpacing:"0.02em", color: isLight ? "rgba(15,23,42,0.35)" : "rgba(255,255,255,0.28)" }}>Stratos CRM AI · web v154</p>
+            <p style={{ margin:"12px 0 0", textAlign:"center", fontSize:9.5, fontFamily:font, letterSpacing:"0.02em", color: isLight ? "rgba(15,23,42,0.35)" : "rgba(255,255,255,0.28)" }}>Stratos CRM AI · web v155</p>
           </div>
         </>,
         document.body
