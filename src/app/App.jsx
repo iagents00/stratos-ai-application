@@ -1965,7 +1965,7 @@ export default function App() {
 
             {/* TODOS los módulos */}
             <div style={{ display:"grid", gridTemplateColumns:"repeat(3, 1fr)", gap:8 }}>
-              {mobileAllNav.map(n => {
+              {mobileAllNav.filter(n => n.id !== "admin").map(n => {
                 const a = v === n.id;
                 const activeColor = n.adminOnly ? "#A78BFA" : (isLight ? T.accent : "#6EE7C2");
                 return (
@@ -1982,8 +1982,18 @@ export default function App() {
               })}
             </div>
 
-            {/* Configuración: tema + salir */}
-            <div style={{ display:"flex", gap:8, marginTop:12 }}>
+            {/* Configuración: usuarios (admin) + tema + salir */}
+            {mobileAllNav.some(n => n.id === "admin") && (
+              <button onClick={() => { setV("admin"); setPlusOpen(false); }} style={{
+                width:"100%", display:"flex", alignItems:"center", gap:10, padding:"11px 13px", marginTop:12, borderRadius:13, cursor:"pointer", textAlign:"left",
+                border:`1px solid ${isLight ? "rgba(167,139,250,0.28)" : "rgba(167,139,250,0.30)"}`,
+                background: isLight ? "rgba(167,139,250,0.08)" : "rgba(167,139,250,0.10)",
+              }}>
+                <IosIcon name="admin" filled size={16} color="#A78BFA" />
+                <span style={{ fontSize:12.5, fontWeight:600, fontFamily:fontDisp, color: isLight ? "#6D45C9" : "#C9B8F5" }}>Gestión de usuarios</span>
+              </button>
+            )}
+            <div style={{ display:"flex", gap:8, marginTop:8 }}>
               <button onClick={() => setTheme(isLight ? "dark" : "light")} style={{ flex:1, display:"flex", alignItems:"center", justifyContent:"center", gap:7, padding:"11px 8px", borderRadius:13, border:`1px solid ${isLight ? "rgba(15,23,42,0.08)" : "rgba(255,255,255,0.07)"}`, background: isLight ? "rgba(15,23,42,0.03)" : "rgba(255,255,255,0.04)", cursor:"pointer" }}>
                 {isLight ? <IosIcon name="moon" filled size={15} color={T.txt2} /> : <IosIcon name="sun" filled size={15} color="rgba(255,255,255,0.60)" />}
                 <span style={{ fontSize:11.5, fontWeight:600, fontFamily:fontDisp, color: isLight ? T.txt2 : "rgba(255,255,255,0.60)" }}>{isLight ? "Modo oscuro" : "Modo claro"}</span>
@@ -1998,7 +2008,7 @@ export default function App() {
                 nativo carga la web remota: un APK nuevo NO garantiza web nueva
                 (SW/deploy). Con esto cualquiera puede reportar "web vNNN" y se
                 acaba el adivinar. Mantener en sync con CACHE_VERSION (sw.js). */}
-            <p style={{ margin:"12px 0 0", textAlign:"center", fontSize:9.5, fontFamily:font, letterSpacing:"0.02em", color: isLight ? "rgba(15,23,42,0.35)" : "rgba(255,255,255,0.28)" }}>Stratos CRM AI · web v157</p>
+            <p style={{ margin:"12px 0 0", textAlign:"center", fontSize:9.5, fontFamily:font, letterSpacing:"0.02em", color: isLight ? "rgba(15,23,42,0.35)" : "rgba(255,255,255,0.28)" }}>Stratos CRM AI · web v159</p>
           </div>
         </>,
         document.body
@@ -2016,7 +2026,7 @@ export default function App() {
               </button>
             </div>
             <div style={{ display:"grid", gridTemplateColumns:"repeat(4, 1fr)", gap:12 }}>
-              {accessibleAll.map(n => {
+              {accessibleAll.filter(n => n.id !== "admin").map(n => {
                 const act = v === n.id;
                 const acol = n.adminOnly ? "#A78BFA" : (isLight ? T.accent : "#E9FCF4");
                 return (
@@ -2035,6 +2045,27 @@ export default function App() {
                 );
               })}
             </div>
+            {/* Configuración: Usuarios (Gestión de usuarios) vive acá, no en la grilla de apps */}
+            {accessibleAll.some(n => n.id === "admin") && (
+              <>
+                <div style={{ height:1, margin:"18px 2px 14px", background: isLight ? "rgba(15,23,42,0.06)" : "rgba(255,255,255,0.05)" }} />
+                <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", gap:12 }}>
+                  <span style={{ fontSize:10.5, fontWeight:700, fontFamily:fontDisp, letterSpacing:"0.08em", textTransform:"uppercase", color: isLight ? "rgba(15,23,42,0.42)" : "rgba(255,255,255,0.36)" }}>Configuración</span>
+                  <button onClick={() => { setV("admin"); setSidebarMore(false); }} style={{
+                    display:"flex", alignItems:"center", gap:9, padding:"10px 16px", borderRadius:14, cursor:"pointer",
+                    border: `1px solid ${v === "admin" ? "rgba(167,139,250,0.45)" : (isLight ? "rgba(15,23,42,0.08)" : "rgba(255,255,255,0.07)")}`,
+                    background: v === "admin" ? "rgba(167,139,250,0.12)" : (isLight ? "rgba(15,23,42,0.03)" : "rgba(255,255,255,0.03)"),
+                    transition:"background 0.18s ease, border-color 0.18s ease",
+                  }}
+                  onMouseEnter={e => { if(v !== "admin") e.currentTarget.style.background = isLight ? "rgba(167,139,250,0.08)" : "rgba(167,139,250,0.08)"; }}
+                  onMouseLeave={e => { if(v !== "admin") e.currentTarget.style.background = isLight ? "rgba(15,23,42,0.03)" : "rgba(255,255,255,0.03)"; }}
+                  >
+                    <IosIcon name="admin" filled={v === "admin"} size={18} color="#A78BFA" />
+                    <span style={{ fontSize:12.5, fontFamily:fontDisp, fontWeight:600, color: isLight ? T.txt2 : "rgba(255,255,255,0.74)" }}>Usuarios</span>
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </>,
         document.body
