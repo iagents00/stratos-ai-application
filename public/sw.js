@@ -353,7 +353,7 @@
 //   scroll del WebView → el título de la vista queda bajo el header. Fix:
 //   overflow-anchor:none en .stratos-content-area + scroll a tope al cambiar
 //   de tema. (La app además se renombra "Stratos CRM AI" — cambio nativo.)
-const CACHE_VERSION = 'stratos-v154'; // v154: Caja deja de ser modulo suelto -> pestana DENTRO de Finanzas; se oculta del menu para quien tiene Finanzas (Vega asesores la siguen viendo standalone)
+const CACHE_VERSION = 'stratos-v155'; // v155: sidebar izq -> hover/seleccion con margenes parejos (quita el scale que agrandaba la caja y desalineaba); hover y activo comparten la misma geometria de chip
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 
