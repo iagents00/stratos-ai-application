@@ -316,7 +316,7 @@ const ZoomControl = ({ theme = "dark" }) => {
   // Fondos SÓLIDOS para las partes fijadas (sticky) — si fueran translúcidos,
   // las filas se verían a través del encabezado al hacer scroll.
   const stickyBg = isLight ? "#FFFFFF" : "#0B1220";
-  const sepBg    = isLight ? "#EEF3F1" : "#101B30";
+  const sepBg    = isLight ? "#EBEEF2" : "#101B30";
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>

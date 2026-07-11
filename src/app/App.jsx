@@ -131,22 +131,24 @@ const P = {
 };
 
 const LP = {
-  bg: "#EDF3F0", bgSoft: "#F6FAF8", bgCool: "#EAF0EE",
+  // Canvas Apple neutro (ver design-system/tokens.js). Gris frío luminoso, sin
+  // tinte verde: el lienzo queda limpio y las tarjetas blancas "flotan".
+  bg: "#F1F3F6", bgSoft: "#F6F7F9", bgCool: "#EBEEF2",
   glass: "rgba(255,255,255,0.70)", glassH: "rgba(255,255,255,0.92)",
   glassStrong: "rgba(255,255,255,0.96)",
   glassMint: "rgba(236,251,246,0.75)",
-  border: "rgba(15,23,42,0.08)", borderH: "rgba(15,23,42,0.16)",
+  border: "rgba(15,23,42,0.07)", borderH: "rgba(15,23,42,0.14)",
   borderMint: "rgba(15,158,122,0.18)", surface: "#FFFFFF",
   accent: "#0D9A76", accentDark: "#067A5E",
   accentS: "rgba(13,154,118,0.08)", accentB: "rgba(13,154,118,0.28)",
   accentG: "linear-gradient(135deg, #0D9A76 0%, #14B892 50%, #34D4AA 100%)",
   blue: "#2563EB", violet: "#7C3AED", amber: "#D97706",
   rose: "#E11D48", emerald: "#059669", cyan: "#0891B2",
-  txt: "#0B1220", txt2: "#3B4A61", txt3: "#7A8699",
-  shadow1: "0 1px 2px rgba(15,23,42,0.05), 0 2px 4px rgba(15,23,42,0.04)",
-  shadow2: "0 1px 3px rgba(15,23,42,0.06), 0 8px 24px rgba(15,23,42,0.07), 0 16px 40px rgba(15,23,42,0.04)",
-  shadow3: "0 4px 12px rgba(15,23,42,0.08), 0 20px 56px rgba(15,23,42,0.10), 0 32px 80px rgba(15,23,42,0.06)",
-  shadowMint: "0 2px 8px rgba(13,154,118,0.10), 0 8px 28px rgba(13,154,118,0.08)",
+  txt: "#0B1220", txt2: "#3B4A61", txt3: "#5C6B82",
+  shadow1: "0 1px 1.5px rgba(15,23,42,0.06), 0 1px 2px rgba(15,23,42,0.04)",
+  shadow2: "0 1px 2px rgba(15,23,42,0.05), 0 4px 12px rgba(15,23,42,0.08), 0 18px 40px rgba(15,23,42,0.10)",
+  shadow3: "0 2px 6px rgba(15,23,42,0.07), 0 12px 32px rgba(15,23,42,0.12), 0 32px 72px rgba(15,23,42,0.14)",
+  shadowMint: "0 2px 8px rgba(13,154,118,0.12), 0 10px 30px rgba(13,154,118,0.10)",
   r: 16, rs: 10, rx: 6,
 };
 
@@ -1264,9 +1266,11 @@ export default function App() {
     <div className="stratos-app" style={{
       height:"100vh", display:"flex", fontFamily:font, color:T.txt,
       background: isLight
-        ? `radial-gradient(1400px 900px at 50% -10%, rgba(13,154,118,0.07) 0%, rgba(13,154,118,0.028) 34%, transparent 60%),
-           radial-gradient(1200px 800px at 50% 112%, rgba(20,184,146,0.055) 0%, rgba(20,184,146,0.02) 34%, transparent 60%),
-           linear-gradient(180deg, #E2E8E6 0%, #E8EDEB 46%, #DFE6E3 100%)`
+        // Lienzo Apple: gris frío neutro luminoso (desde tokens) + un tenue halo
+        // de "luz desde arriba" en slate neutro (NO menta). Brand vive en acentos.
+        ? `radial-gradient(1300px 880px at 50% -12%, rgba(148,163,196,0.07) 0%, rgba(148,163,196,0.022) 34%, transparent 60%),
+           radial-gradient(1100px 760px at 50% 114%, rgba(100,116,150,0.045) 0%, transparent 58%),
+           linear-gradient(180deg, ${T.bgSoft} 0%, ${T.bg} 52%, ${T.bgCool} 100%)`
         : `radial-gradient(1200px 600px at 30% -5%, rgba(80,120,255,0.025) 0%, transparent 55%), #030810`,
       transition:"background 0.3s ease, color 0.3s ease",
     }}>
@@ -1359,7 +1363,7 @@ export default function App() {
         borderRight:`1px solid ${isLight ? "rgba(0,0,0,0.06)" : "rgba(255,255,255,0.05)"}`,
         display:"flex", flexDirection:"column", alignItems:"center",
         paddingTop:0, paddingBottom:0, position:"relative", overflow:"hidden",
-        background: isLight ? "linear-gradient(180deg, rgba(255,255,255,0.80), rgba(246,248,247,0.66))" : "linear-gradient(180deg, rgba(14,20,32,0.66), rgba(2,4,11,0.58))",
+        background: isLight ? "linear-gradient(180deg, rgba(253,253,255,0.82), rgba(249,250,252,0.64))" : "linear-gradient(180deg, rgba(14,20,32,0.66), rgba(2,4,11,0.58))",
         backdropFilter:"blur(30px) saturate(165%)", WebkitBackdropFilter:"blur(30px) saturate(165%)",
         transition:"background 0.35s ease, border-color 0.35s ease, box-shadow 0.35s ease",
         boxShadow: isLight ? "inset -1px 0 0 rgba(255,255,255,0.55), 1px 0 0 rgba(0,0,0,0.05)" : "inset 1px 1px 0 rgba(255,255,255,0.06), 1px 0 0 rgba(255,255,255,0.04), 8px 0 28px rgba(0,0,0,0.30)",
@@ -1483,7 +1487,7 @@ export default function App() {
       <div style={{ flex:1, display:"flex", flexDirection:"column", minWidth:0 }}>
         {/* HEADER */}
         {(() => {
-          const hBg = isLight ? "linear-gradient(180deg,rgba(255,255,255,0.82) 0%,rgba(248,253,250,0.70) 100%)" : "linear-gradient(180deg, rgba(7,12,22,0.72) 0%, rgba(2,5,14,0.60) 100%)";
+          const hBg = isLight ? "linear-gradient(180deg,rgba(255,255,255,0.82) 0%,rgba(249,250,252,0.70) 100%)" : "linear-gradient(180deg, rgba(7,12,22,0.72) 0%, rgba(2,5,14,0.60) 100%)";
           const hBorder = isLight ? "rgba(13,154,118,0.10)" : "rgba(255,255,255,0.06)";
           const iBtnBase = { width:32, height:32, borderRadius:8, border:"none", background:"transparent", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, transition:"background 0.14s ease" };
           const iBtnHoverBg  = isLight ? `${T.accent}0D` : "rgba(255,255,255,0.07)";
@@ -2003,7 +2007,7 @@ export default function App() {
                 nativo carga la web remota: un APK nuevo NO garantiza web nueva
                 (SW/deploy). Con esto cualquiera puede reportar "web vNNN" y se
                 acaba el adivinar. Mantener en sync con CACHE_VERSION (sw.js). */}
-            <p style={{ margin:"12px 0 0", textAlign:"center", fontSize:9.5, fontFamily:font, letterSpacing:"0.02em", color: isLight ? "rgba(15,23,42,0.35)" : "rgba(255,255,255,0.28)" }}>Stratos CRM AI · web v144</p>
+            <p style={{ margin:"12px 0 0", textAlign:"center", fontSize:9.5, fontFamily:font, letterSpacing:"0.02em", color: isLight ? "rgba(15,23,42,0.35)" : "rgba(255,255,255,0.28)" }}>Stratos CRM AI · web v145</p>
           </div>
         </>,
         document.body
