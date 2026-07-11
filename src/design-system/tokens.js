@@ -104,7 +104,7 @@ export const LP = {
   accentG: "linear-gradient(135deg, #0D9A76 0%, #14B892 50%, #34D4AA 100%)",
   blue: "#2563EB", violet: "#7C3AED", amber: "#D97706",
   rose: "#E11D48", emerald: "#059669", cyan: "#0891B2",
-  txt: "#0B1220", txt2: "#3B4A61", txt3: "#7A8699",
+  txt: "#0B1220", txt2: "#3B4A61", txt3: "#5C6B82",
   // Sombras estilo Apple (Jul 2026, auditoría tema claro): near-shadow nítida +
   // ambient profunda en capas → las tarjetas blancas "flotan" sobre el lienzo
   // gris-menta (más presencia). NO usar sombras planas de una sola capa.
