@@ -21,6 +21,7 @@ import { ClientProvider } from "./contexts/ClientContext";
 import { ClientOrgGuard } from "./contexts/ClientOrgGuard";
 import { resolveClientFromLocation, matchClientFromLocation } from "./clients";
 import ErrorBoundary   from "./components/ErrorBoundary.jsx";
+import { recoverFromStaleChunk } from "./lib/chunk-recovery.js";
 
 // Code-splitting: solo se carga el bundle de la experiencia que el usuario
 // realmente abrió. Antes este import era estático y arrastraba todo a 922KB.
@@ -65,13 +66,8 @@ try {
 // una vez para tomar el index.html nuevo (con los hashes nuevos). El guard en
 // sessionStorage evita un bucle de recargas si el fallo fuera por red caída.
 window.addEventListener("vite:preloadError", (event) => {
-  const GUARD_KEY = "stratos.chunk.reloaded.at";
-  let last = 0;
-  try { last = Number(sessionStorage.getItem(GUARD_KEY) || 0); } catch (_) { /* noop */ }
-  if (Date.now() - last < 60_000) return; // ya recargamos hace <1min — dejar que el ErrorBoundary muestre el fallo real
-  event.preventDefault(); // que el import no reviente el árbol: nos encargamos recargando
-  try { sessionStorage.setItem(GUARD_KEY, String(Date.now())); } catch (_) { /* noop */ }
-  window.location.reload();
+  event.preventDefault(); // que el import fallido no reviente el árbol: nos encargamos nosotros
+  recoverFromStaleChunk(); // escala: reload suave y, si no alcanza, limpieza dura de cachés/SW
 });
 
 // ─── DECISIÓN DE EXPERIENCIA ─────────────────────────────────────────────────
