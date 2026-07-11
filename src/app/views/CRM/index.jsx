@@ -4854,9 +4854,9 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                           onDragEnd={handleDragEnd}
                           // content-visibility: el navegador omite layout/paint de
                           // tarjetas fuera de viewport en columnas largas (fluidez).
-                          style={{ borderRadius: 13, background: "rgba(255,255,255,0.032)", border: `1px solid ${T.border}`, overflow: "hidden", transition: "all 0.2s", cursor: "grab", opacity: isDragging ? 0.4 : 1, contentVisibility: "auto", containIntrinsicSize: "0 168px" }}
-                          onMouseEnter={e => { if (!isDragging) { e.currentTarget.style.background = "rgba(255,255,255,0.052)"; e.currentTarget.style.borderColor = T.borderH; e.currentTarget.style.transform = "translateY(-1px)"; e.currentTarget.style.boxShadow = "0 6px 24px rgba(0,0,0,0.28)"; } }}
-                          onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.032)"; e.currentTarget.style.borderColor = T.border; e.currentTarget.style.transform = "none"; e.currentTarget.style.boxShadow = "none"; }}
+                          style={{ borderRadius: 13, background: isLight ? "#FFFFFF" : "rgba(255,255,255,0.032)", border: `1px solid ${T.border}`, boxShadow: isLight ? T.shadow1 : "none", overflow: "hidden", transition: "all 0.2s", cursor: "grab", opacity: isDragging ? 0.4 : 1, contentVisibility: "auto", containIntrinsicSize: "0 168px" }}
+                          onMouseEnter={e => { if (!isDragging) { e.currentTarget.style.background = isLight ? "#FFFFFF" : "rgba(255,255,255,0.052)"; e.currentTarget.style.borderColor = T.borderH; e.currentTarget.style.transform = "translateY(-1px)"; e.currentTarget.style.boxShadow = isLight ? T.shadow2 : "0 6px 24px rgba(0,0,0,0.28)"; } }}
+                          onMouseLeave={e => { e.currentTarget.style.background = isLight ? "#FFFFFF" : "rgba(255,255,255,0.032)"; e.currentTarget.style.borderColor = T.border; e.currentTarget.style.transform = "none"; e.currentTarget.style.boxShadow = isLight ? T.shadow1 : "none"; }}
                         >
                           <div style={{ height: 2, background: `linear-gradient(90deg, ${c}AA, transparent)` }} />
                           <div style={{ padding: "12px 13px" }}>
@@ -5496,7 +5496,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                 padding: "10px 18px 14px",
                 borderTop: `1px solid ${isLight ? T.borderMint : T.border}`,
                 background: isLight
-                  ? `linear-gradient(180deg, rgba(240,252,247,0.5) 0%, rgba(255,255,255,0.3) 100%)`
+                  ? `linear-gradient(180deg, rgba(235,238,242,0.6) 0%, rgba(255,255,255,0.3) 100%)`
                   : "rgba(255,255,255,0.01)",
               }}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
@@ -5517,7 +5517,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                       <div key={agent.key} style={{
                         display: "flex", alignItems: "center", gap: 8, padding: "6px 9px", borderRadius: 8,
                         background: isLight
-                          ? `linear-gradient(135deg, rgba(255,255,255,0.88) 0%, rgba(248,252,250,0.72) 100%)`
+                          ? `linear-gradient(135deg, rgba(255,255,255,0.88) 0%, rgba(248,250,252,0.72) 100%)`
                           : "rgba(255,255,255,0.02)",
                         border: `1px solid ${T.border}`,
                         boxShadow: isLight ? "0 1px 2px rgba(15,23,42,0.03), inset 0 1px 0 rgba(255,255,255,0.6)" : "none",
