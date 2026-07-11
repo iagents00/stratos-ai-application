@@ -353,7 +353,7 @@
 //   scroll del WebView → el título de la vista queda bajo el header. Fix:
 //   overflow-anchor:none en .stratos-content-area + scroll a tope al cambiar
 //   de tema. (La app además se renombra "Stratos CRM AI" — cambio nativo.)
-const CACHE_VERSION = 'stratos-v155'; // v155: sidebar izq -> hover/seleccion con margenes parejos (quita el scale que agrandaba la caja y desalineaba); hover y activo comparten la misma geometria de chip
+const CACHE_VERSION = 'stratos-v156'; // v156: Finanzas ahora es REAL (datos en vivo de team_expenses, igual que Caja): Resumen (KPIs del mes/saldo, grafica 12m, ultimos movimientos, egresos por categoria) + Flujo de caja mensual + pestana Caja. Se quitaron los tabs demo estilo SAT (CFDI/Obligaciones/CxC-CxP) y los botones muertos; "Exportar" ahora baja un CSV real. Sin integracion SAT (proyecto aparte)
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 
