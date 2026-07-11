@@ -1236,9 +1236,9 @@ export default function App() {
             cursor: hasAccess ? "pointer" : "not-allowed",
             opacity: hasAccess ? 1 : 0.32,
             outline:"none",
-            background: a ? (isLight ? `linear-gradient(180deg, rgba(255,255,255,0.95), ${activeColor}16)` : "linear-gradient(180deg, rgba(150,240,214,0.17), rgba(110,231,194,0.06))") : "transparent",
-            border: a ? (isLight ? `1px solid ${activeColor}40` : "1px solid rgba(170,246,224,0.30)") : "1px solid transparent",
-            boxShadow: a ? (isLight ? `inset 0 1px 0 rgba(255,255,255,0.85), 0 4px 12px ${activeColor}2E` : "inset 0 1px 0 rgba(205,255,242,0.20), inset 0 -1px 0 rgba(0,0,0,0.14), 0 4px 12px rgba(0,0,0,0.34)") : "none",
+            background: a ? (isLight ? `linear-gradient(180deg, rgba(255,255,255,0.95), ${activeColor}16)` : "linear-gradient(180deg, rgba(255,255,255,0.06), rgba(110,231,194,0.028))") : "transparent",
+            border: a ? (isLight ? `1px solid ${activeColor}40` : "1px solid rgba(190,245,225,0.14)") : "1px solid transparent",
+            boxShadow: a ? (isLight ? `inset 0 1px 0 rgba(255,255,255,0.85), 0 4px 12px ${activeColor}2E` : "inset 0 1px 0 rgba(210,255,244,0.12), 0 2px 8px rgba(0,0,0,0.28)") : "none",
             backdropFilter: a ? "blur(8px) saturate(160%)" : "none", WebkitBackdropFilter: a ? "blur(8px) saturate(160%)" : "none",
             display:"flex", alignItems:"center", justifyContent:"center",
             transition:"background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease",
@@ -1418,7 +1418,7 @@ export default function App() {
             <div style={{ width:32, height:1, marginTop:10, background: isLight ? "linear-gradient(90deg, transparent, rgba(15,23,42,0.07), transparent)" : "linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent)" }} />
           </div>
 
-          <div style={{ display:"flex", flexDirection:"column", alignItems:"center", gap:5, width:58, padding:"7px 0", borderRadius:19, background: isLight ? "linear-gradient(180deg, rgba(255,255,255,0.58), rgba(255,255,255,0.40))" : "linear-gradient(180deg, rgba(110,231,194,0.075), rgba(110,231,194,0.026))", backdropFilter:"blur(26px) saturate(185%)", WebkitBackdropFilter:"blur(26px) saturate(185%)", border: isLight ? "1px solid rgba(255,255,255,0.92)" : "1px solid rgba(150,240,218,0.14)", boxShadow: isLight ? "inset 0 1px 0 rgba(255,255,255,1), inset 0 -1px 0 rgba(15,23,42,0.04), 0 10px 30px rgba(15,23,42,0.10)" : "inset 0 1px 0 rgba(198,251,238,0.10), inset 0 -1px 0 rgba(0,0,0,0.22), 0 16px 40px rgba(0,0,0,0.50)" }}>
+          <div style={{ display:"flex", flexDirection:"column", alignItems:"center", gap:5, width:58, padding:"7px 0", borderRadius:19, background: isLight ? "linear-gradient(180deg, rgba(255,255,255,0.58), rgba(255,255,255,0.40))" : "linear-gradient(180deg, rgba(16,22,30,0.50) 0%, rgba(5,8,13,0.60) 100%)", backdropFilter:"blur(26px) saturate(185%)", WebkitBackdropFilter:"blur(26px) saturate(185%)", border: isLight ? "1px solid rgba(255,255,255,0.92)" : "1px solid rgba(255,255,255,0.07)", boxShadow: isLight ? "inset 0 1px 0 rgba(255,255,255,1), inset 0 -1px 0 rgba(15,23,42,0.04), 0 10px 30px rgba(15,23,42,0.10)" : "inset 0 1px 0 rgba(190,245,225,0.09), inset 0 -1px 0 rgba(0,0,0,0.30), inset 0 0 24px rgba(0,0,0,0.22), 0 18px 44px rgba(0,0,0,0.55)" }}>
           {primary.map(n => <NavBtn key={n.id} n={n} />)}
 
           {/* More toggle */}
@@ -2007,7 +2007,7 @@ export default function App() {
                 nativo carga la web remota: un APK nuevo NO garantiza web nueva
                 (SW/deploy). Con esto cualquiera puede reportar "web vNNN" y se
                 acaba el adivinar. Mantener en sync con CACHE_VERSION (sw.js). */}
-            <p style={{ margin:"12px 0 0", textAlign:"center", fontSize:9.5, fontFamily:font, letterSpacing:"0.02em", color: isLight ? "rgba(15,23,42,0.35)" : "rgba(255,255,255,0.28)" }}>Stratos CRM AI · web v150</p>
+            <p style={{ margin:"12px 0 0", textAlign:"center", fontSize:9.5, fontFamily:font, letterSpacing:"0.02em", color: isLight ? "rgba(15,23,42,0.35)" : "rgba(255,255,255,0.28)" }}>Stratos CRM AI · web v151</p>
           </div>
         </>,
         document.body
