@@ -29,7 +29,7 @@ import {
 import { isNativeApp, ensureNotifPermission, notifyUser, addNotificationTapListener } from "../lib/native";
 
 import {
-  Search, Bell, Settings, LogOut, Sun, Moon, ChevronDown, Plus, X, LayoutGrid, PhoneCall, MessageCircle, Target,
+  Search, Bell, Settings, LogOut, Sun, Moon, ChevronDown, X, PhoneCall, MessageCircle, Target,
 } from "lucide-react";
 import "./App.css";
 
@@ -42,6 +42,7 @@ import DynIsland          from "./components/DynIsland";
 import IAOSIsland         from "./components/IAOSIsland";
 import { buildIntelNotifs } from "./constants/intelNotifs";
 import PermissionGate     from "./components/PermissionGate";
+import { IosIcon }        from "./icons/ios-icons";
 import Chat, { getResp }  from "./features/ChatPanel";
 import MetaPanel,
   { DEFAULT_META_PLAN, DEFAULT_META_PROTOCOL } from "./features/MetaPanel";
@@ -1859,7 +1860,7 @@ export default function App() {
                 outline:"none", WebkitTapHighlightColor:"transparent",
                 transition:"background 0.2s ease",
               }}>
-                <n.i size={23} color={a ? activeColor : (isLight ? "rgba(15,23,42,0.42)" : "rgba(255,255,255,0.38)")} strokeWidth={a ? 2 : 1.6} />
+                <IosIcon name={n.id} filled={a} size={23} color={a ? activeColor : (isLight ? "rgba(15,23,42,0.42)" : "rgba(255,255,255,0.38)")} />
                 <span style={{ fontSize:9.5, fontFamily:fontDisp, fontWeight: a ? 700 : 500, letterSpacing:"-0.01em", color: a ? activeColor : (isLight ? "rgba(15,23,42,0.42)" : "rgba(255,255,255,0.34)"), lineHeight:1, whiteSpace:"nowrap", overflow:"hidden", maxWidth:"100%" }}>{clientConfig?.navLabels?.[n.id] ?? n.l}</span>
               </button>
             );
@@ -1878,7 +1879,7 @@ export default function App() {
                 outline:"none", WebkitTapHighlightColor:"transparent",
                 transition:"background 0.2s ease",
               }}>
-                <LayoutGrid size={23} color={a ? activeColor : (isLight ? "rgba(15,23,42,0.42)" : "rgba(255,255,255,0.38)")} strokeWidth={a ? 2 : 1.6} />
+                <IosIcon name="menu" filled={a} size={23} color={a ? activeColor : (isLight ? "rgba(15,23,42,0.42)" : "rgba(255,255,255,0.38)")} />
                 <span style={{ fontSize:9.5, fontFamily:fontDisp, fontWeight: a ? 700 : 500, color: a ? activeColor : (isLight ? "rgba(15,23,42,0.42)" : "rgba(255,255,255,0.34)"), lineHeight:1 }}>Menú</span>
               </button>
             );
@@ -1901,7 +1902,7 @@ export default function App() {
           onTouchEnd={e => { e.currentTarget.style.transform = "scale(1)"; }}
           onTouchCancel={e => { e.currentTarget.style.transform = "scale(1)"; }}
         >
-          <Plus size={27} color={isLight ? "#FFFFFF" : "#04121C"} strokeWidth={2.6} />
+          <IosIcon name="add" filled size={28} color={isLight ? "#FFFFFF" : "#04121C"} />
         </button>
       </div>
 
@@ -1979,7 +1980,7 @@ export default function App() {
                     cursor:"pointer", minWidth:0,
                     background: a ? `${activeColor}12` : (isLight ? "rgba(15,23,42,0.03)" : "rgba(255,255,255,0.035)"),
                   }}>
-                    <n.i size={22} color={a ? activeColor : (isLight ? "rgba(15,23,42,0.55)" : "rgba(255,255,255,0.55)")} strokeWidth={a ? 2 : 1.6} />
+                    <IosIcon name={n.id} filled={a} size={22} color={a ? activeColor : (isLight ? "rgba(15,23,42,0.55)" : "rgba(255,255,255,0.55)")} />
                     <span style={{ fontSize:10, fontFamily:fontDisp, fontWeight: a ? 700 : 500, color: a ? activeColor : (isLight ? "rgba(15,23,42,0.55)" : "rgba(255,255,255,0.50)"), lineHeight:1, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis", maxWidth:"100%" }}>{clientConfig?.navLabels?.[n.id] ?? n.l}</span>
                   </button>
                 );
@@ -1989,11 +1990,11 @@ export default function App() {
             {/* Configuración: tema + salir */}
             <div style={{ display:"flex", gap:8, marginTop:12 }}>
               <button onClick={() => setTheme(isLight ? "dark" : "light")} style={{ flex:1, display:"flex", alignItems:"center", justifyContent:"center", gap:7, padding:"11px 8px", borderRadius:13, border:`1px solid ${isLight ? "rgba(15,23,42,0.08)" : "rgba(255,255,255,0.07)"}`, background: isLight ? "rgba(15,23,42,0.03)" : "rgba(255,255,255,0.04)", cursor:"pointer" }}>
-                {isLight ? <Moon size={15} color={T.txt2} /> : <Sun size={15} color="rgba(255,255,255,0.60)" />}
+                {isLight ? <IosIcon name="moon" filled size={15} color={T.txt2} /> : <IosIcon name="sun" filled size={15} color="rgba(255,255,255,0.60)" />}
                 <span style={{ fontSize:11.5, fontWeight:600, fontFamily:fontDisp, color: isLight ? T.txt2 : "rgba(255,255,255,0.60)" }}>{isLight ? "Modo oscuro" : "Modo claro"}</span>
               </button>
               <button onClick={() => { setPlusOpen(false); onLogout(); }} style={{ flex:1, display:"flex", alignItems:"center", justifyContent:"center", gap:7, padding:"11px 8px", borderRadius:13, border:`1px solid ${isLight ? "rgba(225,29,72,0.16)" : "rgba(232,129,140,0.18)"}`, background: isLight ? "rgba(225,29,72,0.05)" : "rgba(232,129,140,0.07)", cursor:"pointer" }}>
-                <LogOut size={15} color={isLight ? "#BE123C" : "#E8818C"} />
+                <IosIcon name="exit" filled size={15} color={isLight ? "#BE123C" : "#E8818C"} />
                 <span style={{ fontSize:11.5, fontWeight:600, fontFamily:fontDisp, color: isLight ? "#BE123C" : "#E8818C" }}>Salir</span>
               </button>
             </div>
@@ -2002,7 +2003,7 @@ export default function App() {
                 nativo carga la web remota: un APK nuevo NO garantiza web nueva
                 (SW/deploy). Con esto cualquiera puede reportar "web vNNN" y se
                 acaba el adivinar. Mantener en sync con CACHE_VERSION (sw.js). */}
-            <p style={{ margin:"12px 0 0", textAlign:"center", fontSize:9.5, fontFamily:font, letterSpacing:"0.02em", color: isLight ? "rgba(15,23,42,0.35)" : "rgba(255,255,255,0.28)" }}>Stratos CRM AI · web v142</p>
+            <p style={{ margin:"12px 0 0", textAlign:"center", fontSize:9.5, fontFamily:font, letterSpacing:"0.02em", color: isLight ? "rgba(15,23,42,0.35)" : "rgba(255,255,255,0.28)" }}>Stratos CRM AI · web v143</p>
           </div>
         </>,
         document.body
