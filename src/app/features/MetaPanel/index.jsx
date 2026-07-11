@@ -291,13 +291,13 @@ export default function MetaPanel({
 
   /* ── Helpers ── */
   const sectionHd = (label, color) => (
-    <div style={{ display:"flex", alignItems:"center", gap:7, marginBottom:12 }}>
-      <div style={{ width:3, height:14, borderRadius:2, background:color }} />
-      <span style={{ fontSize:9.5, fontWeight:800, fontFamily:fontDisp, letterSpacing:"0.11em", textTransform:"uppercase", color }}>{label}</span>
+    <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:13 }}>
+      <div style={{ width:3, height:16, borderRadius:2, background:color }} />
+      <span style={{ fontSize:11, fontWeight:800, fontFamily:fontDisp, letterSpacing:"0.1em", textTransform:"uppercase", color }}>{label}</span>
     </div>
   );
   const colHd = txt => (
-    <p style={{ margin:"0 0 8px", fontSize:10, fontWeight:700, fontFamily:fontDisp, color:T.txt2, letterSpacing:"0.05em", textTransform:"uppercase" }}>{txt}</p>
+    <p style={{ margin:"0 0 9px", fontSize:11.5, fontWeight:700, fontFamily:fontDisp, color:T.txt2, letterSpacing:"0.04em", textTransform:"uppercase" }}>{txt}</p>
   );
   // Componente in-line: editable solo si canEditFinal (super_admin/admin); en
   // modo solo-lectura se renderiza como <span> normal sin borde dashed ni cursor text,
@@ -381,8 +381,8 @@ export default function MetaPanel({
     .mp-body::-webkit-scrollbar-thumb{background:var(--mp-scroll);border-radius:99px;border:4px solid transparent;background-clip:padding-box}
     .mp-body::-webkit-scrollbar-thumb:hover{background:var(--mp-txt3)}
     .mp-topbar{position:sticky;top:0;z-index:20;flex-shrink:0;background:var(--mp-topbar);backdrop-filter:saturate(180%) blur(24px);-webkit-backdrop-filter:saturate(180%) blur(24px);border-bottom:1px solid var(--mp-hairline)}
-    .mp-seg{display:inline-flex;gap:2px;padding:3px;border-radius:13px;background:var(--mp-seg-bg);border:1px solid var(--mp-hairline)}
-    .mp-seg>button{appearance:none;-webkit-appearance:none;border:none;background:transparent;cursor:pointer;font-family:inherit;font-size:12.5px;font-weight:600;letter-spacing:-.01em;color:var(--mp-txt2);padding:7px 15px;border-radius:10px;white-space:nowrap;transition:color .2s ease,background .2s ease,box-shadow .2s ease}
+    .mp-seg{display:inline-flex;gap:2px;padding:4px;border-radius:15px;background:var(--mp-seg-bg);border:1px solid var(--mp-hairline)}
+    .mp-seg>button{appearance:none;-webkit-appearance:none;border:none;background:transparent;cursor:pointer;font-family:inherit;font-size:13.5px;font-weight:600;letter-spacing:-.015em;color:var(--mp-txt2);padding:9px 20px;border-radius:11px;white-space:nowrap;transition:color .2s ease,background .2s ease,box-shadow .2s ease}
     .mp-seg>button:hover{color:var(--mp-txt)}
     .mp-seg>button[data-on="1"]{color:var(--mp-txt);background:var(--mp-seg-on);box-shadow:0 1px 3px rgba(0,0,0,.16),0 0 0 .5px rgba(255,255,255,.05)}
     .mp-edit{border-radius:6px;margin:0 -4px;padding:0 4px;transition:background .15s ease,box-shadow .15s ease;cursor:text}
@@ -417,27 +417,27 @@ export default function MetaPanel({
         {/* ── Barra superior (sticky, translúcida, alineada al contenedor) ── */}
         <div className="mp-topbar">
           <div style={{
-            width:"100%", maxWidth:1120, margin:"0 auto",
-            padding: isMobile ? "12px 16px" : "0 32px",
-            minHeight: isMobile ? 0 : 64,
+            width:"100%", maxWidth:1840, margin:"0 auto",
+            padding: isMobile ? "12px 16px" : "0 48px",
+            minHeight: isMobile ? 0 : 72,
             display: isMobile ? "flex" : "grid",
             gridTemplateColumns: isMobile ? undefined : "1fr auto 1fr",
             alignItems:"center", gap:16,
             flexWrap: isMobile ? "wrap" : undefined, rowGap: isMobile ? 12 : 0,
           }}>
             {/* Marca */}
-            <div style={{ display:"flex", alignItems:"center", gap:12, minWidth:0, order: isMobile ? 1 : 0 }}>
-              <div style={{ width:38, height:38, borderRadius:12, background:`linear-gradient(135deg, ${T.accent}26, ${T.accent}08)`, border:`1px solid ${T.accent}30`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, boxShadow:`inset 0 1px 0 ${T.accent}1F` }}>
-                <Target size={18} color={T.accent} strokeWidth={2} />
+            <div style={{ display:"flex", alignItems:"center", gap:13, minWidth:0, order: isMobile ? 1 : 0 }}>
+              <div style={{ width:42, height:42, borderRadius:13, background:`linear-gradient(135deg, ${T.accent}26, ${T.accent}08)`, border:`1px solid ${T.accent}30`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, boxShadow:`inset 0 1px 0 ${T.accent}1F` }}>
+                <Target size={20} color={T.accent} strokeWidth={2} />
               </div>
               <div style={{ minWidth:0 }}>
-                <p style={{ margin:0, fontSize:15, fontWeight:700, fontFamily:fontDisp, letterSpacing:"-0.02em", color:T.txt, display:"flex", alignItems:"center", gap:8, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>
+                <p style={{ margin:0, fontSize:17, fontWeight:700, fontFamily:fontDisp, letterSpacing:"-0.025em", color:T.txt, display:"flex", alignItems:"center", gap:8, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>
                   {brandLabel}
                   {savingConfig && (
-                    <span style={{ fontSize:9.5, fontWeight:600, color:T.accent, background:`${T.accent}18`, borderRadius:99, padding:"2px 8px", letterSpacing:0, flexShrink:0 }}>guardando…</span>
+                    <span style={{ fontSize:10, fontWeight:600, color:T.accent, background:`${T.accent}18`, borderRadius:99, padding:"2px 9px", letterSpacing:0, flexShrink:0 }}>guardando…</span>
                   )}
                 </p>
-                <p style={{ margin:"1.5px 0 0", fontSize:10.5, color:T.txt3, fontFamily:font, letterSpacing:"0.02em", whiteSpace:"nowrap" }}>Plan Estratégico · Scaling Up · 2026</p>
+                <p style={{ margin:"2px 0 0", fontSize:11.5, color:T.txt3, fontFamily:font, letterSpacing:"0.02em", whiteSpace:"nowrap" }}>Plan Estratégico · Scaling Up · 2026</p>
               </div>
             </div>
             {/* Control segmentado */}
@@ -449,23 +449,23 @@ export default function MetaPanel({
             {/* Cerrar */}
             <button onClick={onClose} title="Cerrar" style={{
               order: isMobile ? 2 : 0, justifySelf:"end", flexShrink:0,
-              width:34, height:34, borderRadius:"50%", border:`1px solid ${T.border}`,
+              width:38, height:38, borderRadius:"50%", border:`1px solid ${T.border}`,
               background:T.glass, color:T.txt2, cursor:"pointer",
               display:"flex", alignItems:"center", justifyContent:"center",
-            }}><X size={17} strokeWidth={2} /></button>
+            }}><X size={18} strokeWidth={2} /></button>
           </div>
         </div>
 
         {/* ── Cuerpo scrolleable ── */}
         <div className={"mp-body meta-body" + (isMobile ? " mp-mobilebody" : "")}>
           <div className="mp-fade" key={metaTab} style={{
-            width:"100%", maxWidth:1120, margin:"0 auto",
-            padding: isMobile ? "18px 16px calc(28px + var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px)))" : "34px 32px 56px",
+            width:"100%", maxWidth:1840, margin:"0 auto",
+            padding: isMobile ? "18px 16px calc(28px + var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px)))" : "40px 48px 72px",
           }}>
 
           {/* ═══ TAB 1: LISTA DE ACCIÓN ══════════════════════════════════ */}
           {metaTab === "acciones" && (
-            <div style={{ maxWidth:900, margin:"0 auto" }}>
+            <div style={{ width:"100%" }}>
               {/* Header + progreso */}
               {(() => {
                 const pend = metaActions.filter(a=>!a.done).length;
@@ -473,20 +473,20 @@ export default function MetaPanel({
                 const total = pend + done;
                 const pct = total ? Math.round((done/total)*100) : 0;
                 return (
-                  <div style={{ display:"flex", alignItems:"flex-end", justifyContent:"space-between", gap:20, flexWrap:"wrap", marginBottom:22 }}>
+                  <div style={{ display:"flex", alignItems:"flex-end", justifyContent:"space-between", gap:24, flexWrap:"wrap", marginBottom:26 }}>
                     <div>
-                      <h3 style={{ margin:0, fontSize:22, fontWeight:800, fontFamily:fontDisp, letterSpacing:"-0.04em", color:T.txt }}>Acciones del Equipo</h3>
-                      <p style={{ margin:"6px 0 0", fontSize:12.5, color:T.txt3, fontFamily:font }}>
+                      <h3 style={{ margin:0, fontSize:28, fontWeight:800, fontFamily:fontDisp, letterSpacing:"-0.045em", color:T.txt }}>Acciones del Equipo</h3>
+                      <p style={{ margin:"8px 0 0", fontSize:14, color:T.txt3, fontFamily:font }}>
                         <span style={{ color:T.txt2, fontWeight:600 }}>{pend}</span> pendientes · {done} completadas
                         <span style={{ marginLeft:8, opacity:0.55 }}>· Arrastra para reordenar</span>
                       </p>
                     </div>
                     {total > 0 && (
-                      <div style={{ display:"flex", alignItems:"center", gap:11, minWidth:190, flex: isMobile ? "1 1 100%" : "0 1 260px" }}>
-                        <div style={{ flex:1, height:6, borderRadius:99, background: isLight?"rgba(15,23,42,0.07)":"rgba(255,255,255,0.07)", overflow:"hidden" }}>
+                      <div style={{ display:"flex", alignItems:"center", gap:12, minWidth:210, flex: isMobile ? "1 1 100%" : "0 1 300px" }}>
+                        <div style={{ flex:1, height:7, borderRadius:99, background: isLight?"rgba(15,23,42,0.07)":"rgba(255,255,255,0.07)", overflow:"hidden" }}>
                           <div style={{ width:`${pct}%`, height:"100%", borderRadius:99, background:`linear-gradient(90deg, #0D9A76, ${T.accent})`, transition:"width .5s cubic-bezier(.16,1,.3,1)" }} />
                         </div>
-                        <span style={{ fontSize:12, fontWeight:700, fontFamily:fontDisp, color:T.txt2, whiteSpace:"nowrap", minWidth:32, textAlign:"right" }}>{pct}%</span>
+                        <span style={{ fontSize:13.5, fontWeight:700, fontFamily:fontDisp, color:T.txt2, whiteSpace:"nowrap", minWidth:38, textAlign:"right" }}>{pct}%</span>
                       </div>
                     )}
                   </div>
@@ -494,7 +494,7 @@ export default function MetaPanel({
               })()}
 
               {/* Barra de agregar */}
-              <div style={{ display:"flex", gap:10, marginBottom:24, alignItems:"stretch", flexWrap: isMobile ? "wrap" : "nowrap" }}>
+              <div style={{ display:"flex", gap:12, marginBottom:28, alignItems:"stretch", flexWrap: isMobile ? "wrap" : "nowrap" }}>
                 <input
                   className="mp-input"
                   value={metaNewText}
@@ -502,10 +502,10 @@ export default function MetaPanel({
                   onKeyDown={e => { if (e.key === "Enter") createAction(); }}
                   placeholder="Nueva acción — escribe, elegí fecha/hora y Enter…"
                   style={{
-                    flex: isMobile ? "1 1 100%" : "1 1 0%", padding:"14px 18px", borderRadius:14,
+                    flex: isMobile ? "1 1 100%" : "1 1 0%", padding:"16px 20px", borderRadius:16,
                     background: isLight?"#FFFFFF":"rgba(255,255,255,0.04)",
                     border:`1px solid ${metaNewText ? T.accent : T.border}`,
-                    color:T.txt, fontSize:14.5, fontFamily:font, outline:"none",
+                    color:T.txt, fontSize:16, fontFamily:font, outline:"none",
                     boxShadow: metaNewText ? `0 0 0 3px ${ringSoft}` : (isLight?"0 1px 2px rgba(15,23,42,0.04)":"none"),
                   }}
                 />
@@ -516,10 +516,10 @@ export default function MetaPanel({
                   onChange={e => setMetaNewDate(e.target.value)}
                   title="Fecha y hora límite (obligatoria)"
                   style={{
-                    padding:"14px 15px", borderRadius:14, flexShrink:0,
+                    padding:"16px 16px", borderRadius:16, flexShrink:0,
                     background: isLight?"#FFFFFF":"rgba(255,255,255,0.04)",
                     border:`1px solid ${metaNewDate ? T.accent : T.border}`,
-                    color:T.txt, fontSize:13, fontFamily:font, outline:"none",
+                    color:T.txt, fontSize:14, fontFamily:font, outline:"none",
                     colorScheme: isLight ? "light" : "dark",
                   }}
                 />
@@ -527,24 +527,24 @@ export default function MetaPanel({
                 <button
                   onClick={createAction}
                   style={{
-                    display:"flex", alignItems:"center", justifyContent:"center", gap:7,
-                    padding:"0 24px", borderRadius:14, border:"none",
+                    display:"flex", alignItems:"center", justifyContent:"center", gap:8,
+                    padding:"0 28px", borderRadius:16, border:"none",
                     background: canAdd
                       ? `linear-gradient(135deg,#0D9A76,${T.accent})`
                       : (isLight?"rgba(0,0,0,0.05)":"rgba(255,255,255,0.06)"),
                     color: canAdd ? "#041016" : T.txt3,
-                    fontSize:13.5, fontWeight:700, fontFamily:fontDisp,
+                    fontSize:15, fontWeight:700, fontFamily:fontDisp,
                     cursor: canAdd ? "pointer" : "default",
                     flexShrink:0, letterSpacing:"-0.02em",
                     boxShadow: canAdd ? `0 4px 16px ${_hex(T.accent,'40') }` : "none",
                     transition:"background 0.18s, color 0.18s, box-shadow 0.18s, transform 0.12s",
-                    minHeight:50, flex: isMobile ? "1 1 auto" : "0 0 auto",
+                    minHeight:56, flex: isMobile ? "1 1 auto" : "0 0 auto",
                   }}
                   onMouseDown={e => { if(canAdd) e.currentTarget.style.transform="scale(0.97)"; }}
                   onMouseUp={e => { e.currentTarget.style.transform="scale(1)"; }}
                   onMouseLeave={e => { e.currentTarget.style.transform="scale(1)"; }}
                 >
-                  <Plus size={16} strokeWidth={2.5} />
+                  <Plus size={17} strokeWidth={2.5} />
                   Agregar
                 </button>
                 ); })()}
@@ -591,8 +591,8 @@ export default function MetaPanel({
                       });
                     }}
                     style={{
-                      display:"flex", alignItems:"flex-start", gap:13,
-                      padding:"15px 16px 15px 10px", borderRadius:16, marginBottom:9,
+                      display:"flex", alignItems:"center", gap:14, flexWrap:"wrap",
+                      padding:"16px 20px 16px 12px", borderRadius:18, marginBottom:10,
                       background: isUrgent
                         ? (isLight?"rgba(239,68,68,0.045)":"rgba(239,68,68,0.05)")
                         : (isLight?"#FFFFFF":"rgba(255,255,255,0.028)"),
@@ -601,102 +601,103 @@ export default function MetaPanel({
                     }}
                   >
                     {/* Drag handle — visible al pasar el cursor */}
-                    <GripVertical className="mp-grip" size={15} color={T.txt3} style={{ cursor:"grab", flexShrink:0, marginTop:5 }} />
+                    <GripVertical className="mp-grip" size={16} color={T.txt3} style={{ cursor:"grab", flexShrink:0 }} />
 
                     {/* Checkbox — redondo estilo Apple Reminders */}
                     <button
                       className="mp-check"
                       onClick={() => { persistDone(a, true); setMetaActions(p => p.map(x => x.id===a.id ? {...x,done:true} : x)); }}
                       title="Marcar como completada"
-                      style={{ width:22, height:22, borderRadius:"50%", border:`1.5px solid ${isLight?"rgba(15,23,42,0.26)":"rgba(255,255,255,0.30)"}`, background:"transparent", cursor:"pointer", flexShrink:0, marginTop:2 }}
+                      style={{ width:24, height:24, borderRadius:"50%", border:`1.5px solid ${isLight?"rgba(15,23,42,0.26)":"rgba(255,255,255,0.30)"}`, background:"transparent", cursor:"pointer", flexShrink:0 }}
                     />
 
-                    {/* Content */}
-                    <div style={{ flex:1, minWidth:0 }}>
+                    {/* Título + contexto (crece) */}
+                    <div style={{ flex:"1 1 360px", minWidth:0 }}>
                       <E
                         val={a.text}
                         onSave={v => setMetaActions(p => p.map(x => x.id===a.id ? {...x,text:v} : x))}
-                        style={{ fontSize:15, fontWeight:550, color:T.txt, fontFamily:font, lineHeight:1.4, letterSpacing:"-0.011em", marginBottom:8 }}
+                        style={{ fontSize:16.5, fontWeight:560, color:T.txt, fontFamily:font, lineHeight:1.35, letterSpacing:"-0.014em", marginBottom:5 }}
                       />
-                      <div style={{ display:"flex", alignItems:"center", gap:7, marginBottom:10, flexWrap:"wrap" }}>
-                        <E val={a.lead}   onSave={v => setMetaActions(p => p.map(x => x.id===a.id?{...x,lead:v}:x))}   style={{ fontSize:12, color:T.txt3, fontFamily:font }} />
+                      <div style={{ display:"flex", alignItems:"center", gap:7, flexWrap:"wrap" }}>
+                        <E val={a.lead}   onSave={v => setMetaActions(p => p.map(x => x.id===a.id?{...x,lead:v}:x))}   style={{ fontSize:12.5, color:T.txt3, fontFamily:font }} />
                         <span style={{ fontSize:10, color:T.txt3, opacity:0.4 }}>·</span>
-                        <E val={a.asesor} onSave={v => setMetaActions(p => p.map(x => x.id===a.id?{...x,asesor:v}:x))} style={{ fontSize:12, color:T.txt3, fontFamily:font }} />
-                        {/* Priority cycle pill */}
-                        <button
-                          onClick={() => setMetaActions(p => p.map(x => x.id===a.id?{...x,priority:prioNext}:x))}
-                          title="Click para cambiar prioridad"
-                          style={{
-                            display:"inline-flex", alignItems:"center", gap:5,
-                            fontSize:11, fontWeight:600, fontFamily:font,
-                            color:prioColor, background:`${prioDot}12`,
-                            border:`1px solid ${prioDot}2E`, borderRadius:99,
-                            padding:"3px 10px 3px 8px", cursor:"pointer",
-                            letterSpacing:"0.01em", transition:"background 0.15s, border 0.15s",
-                          }}>
-                          <span style={{ width:6, height:6, borderRadius:"50%", background:prioDot, display:"inline-block", flexShrink:0 }} />
-                          {prioLabel}
-                        </button>
-                      </div>
-                      {/* Assignee row */}
-                      <div style={{ display:"flex", alignItems:"center", gap:7 }}>
-                        <select
-                          className="mp-select"
-                          value={a.assignee || ""}
-                          onChange={e => {
-                            const v = e.target.value;
-                            setMetaActions(p => p.map(x => x.id===a.id ? {...x, assignee:v, assigneeType:"human"} : x));
-                            // Persistir el responsable en la DB (resuelve asesor_id; 'Todos' → broadcast).
-                            // Sin esto, el coach de Telegram no se enteraba de la asignación.
-                            if (a._persisted && _online) {
-                              supabase.rpc('fn_assign_team_action', { p_action_id: a.id, p_asesor_name: v })
-                                .then(({ error }) => { if (error) console.warn('[Stratos] assign team_action:', error.message); });
-                            }
-                          }}
-                          style={{
-                            fontSize:11.5, fontFamily:font, fontWeight:500,
-                            color: a.assignee ? T.txt2 : T.txt3,
-                            background: isLight ? "rgba(15,23,42,0.035)" : "rgba(255,255,255,0.045)",
-                            border:`1px solid ${a.assignee ? T.accentB : T.border}`,
-                            borderRadius:9, padding:"5px 10px",
-                            cursor:"pointer", outline:"none", maxWidth:180,
-                          }}
-                        >
-                          <option value="">＋ Responsable</option>
-                          <option value="Todos">👥 Todos (todo el equipo)</option>
-                          <optgroup label="── Equipo Humano">
-                            {(teamMembers.length ? teamMembers : ["Oscar Gálvez","Alexia Santillán","Araceli Oneto","Ken Duke","Emmanuel Ortiz","Cecilia Mendoza"]).map(n => (
-                              <option key={n} value={n}>{n}</option>
-                            ))}
-                          </optgroup>
-                        </select>
-                        <button
-                          className="mp-ghost"
-                          disabled
-                          title="Próximamente — Asignación directa a iAgents IA"
-                          style={{
-                            display:"flex", alignItems:"center", gap:4,
-                            padding:"5px 10px", borderRadius:9,
-                            border:`1px solid ${T.blue}28`,
-                            background:`${T.blue}07`,
-                            color:T.blue, fontSize:10.5, fontFamily:font, fontWeight:600,
-                            cursor:"not-allowed", opacity:0.4,
-                          }}
-                        >
-                          <Atom size={10} />iAgent IA
-                        </button>
+                        <E val={a.asesor} onSave={v => setMetaActions(p => p.map(x => x.id===a.id?{...x,asesor:v}:x))} style={{ fontSize:12.5, color:T.txt3, fontFamily:font }} />
                       </div>
                     </div>
 
-                    {/* Date + delete */}
-                    <div style={{ display:"flex", flexDirection:"column", alignItems:"flex-end", gap:8, flexShrink:0 }}>
+                    {/* Grupo derecho — prioridad · responsable · iAgent · fecha (llena el ancho) */}
+                    <div style={{ display:"flex", alignItems:"center", gap:9, flexWrap:"wrap", flex: isMobile ? "1 1 100%" : "0 0 auto", justifyContent: isMobile ? "flex-start" : "flex-end", marginTop: isMobile ? 4 : 0 }}>
+                      {/* Prioridad (ciclable) */}
+                      <button
+                        onClick={() => setMetaActions(p => p.map(x => x.id===a.id?{...x,priority:prioNext}:x))}
+                        title="Click para cambiar prioridad"
+                        style={{
+                          display:"inline-flex", alignItems:"center", gap:6,
+                          fontSize:12, fontWeight:600, fontFamily:font,
+                          color:prioColor, background:`${prioDot}12`,
+                          border:`1px solid ${prioDot}2E`, borderRadius:99,
+                          padding:"6px 12px 6px 10px", cursor:"pointer",
+                          letterSpacing:"0.01em", transition:"background 0.15s, border 0.15s",
+                        }}>
+                        <span style={{ width:7, height:7, borderRadius:"50%", background:prioDot, display:"inline-block", flexShrink:0 }} />
+                        {prioLabel}
+                      </button>
+                      {/* Responsable */}
+                      <select
+                        className="mp-select"
+                        value={a.assignee || ""}
+                        onChange={e => {
+                          const v = e.target.value;
+                          setMetaActions(p => p.map(x => x.id===a.id ? {...x, assignee:v, assigneeType:"human"} : x));
+                          // Persistir el responsable en la DB (resuelve asesor_id; 'Todos' → broadcast).
+                          // Sin esto, el coach de Telegram no se enteraba de la asignación.
+                          if (a._persisted && _online) {
+                            supabase.rpc('fn_assign_team_action', { p_action_id: a.id, p_asesor_name: v })
+                              .then(({ error }) => { if (error) console.warn('[Stratos] assign team_action:', error.message); });
+                          }
+                        }}
+                        style={{
+                          fontSize:12.5, fontFamily:font, fontWeight:500,
+                          color: a.assignee ? T.txt2 : T.txt3,
+                          background: isLight ? "rgba(15,23,42,0.035)" : "rgba(255,255,255,0.045)",
+                          border:`1px solid ${a.assignee ? T.accentB : T.border}`,
+                          borderRadius:10, padding:"7px 12px",
+                          cursor:"pointer", outline:"none", maxWidth:190,
+                        }}
+                      >
+                        <option value="">＋ Responsable</option>
+                        <option value="Todos">👥 Todos (todo el equipo)</option>
+                        <optgroup label="── Equipo Humano">
+                          {(teamMembers.length ? teamMembers : ["Oscar Gálvez","Alexia Santillán","Araceli Oneto","Ken Duke","Emmanuel Ortiz","Cecilia Mendoza"]).map(n => (
+                            <option key={n} value={n}>{n}</option>
+                          ))}
+                        </optgroup>
+                      </select>
+                      {/* iAgent (próximamente) */}
+                      <button
+                        className="mp-ghost"
+                        disabled
+                        title="Próximamente — Asignación directa a iAgents IA"
+                        style={{
+                          display:"flex", alignItems:"center", gap:5,
+                          padding:"7px 12px", borderRadius:10,
+                          border:`1px solid ${T.blue}28`,
+                          background:`${T.blue}07`,
+                          color:T.blue, fontSize:11.5, fontFamily:font, fontWeight:600,
+                          cursor:"not-allowed", opacity:0.4,
+                        }}
+                      >
+                        <Atom size={11} />iAgent IA
+                      </button>
+                      {/* Fecha */}
                       <E
                         val={a.date || "—"}
                         onSave={v => setMetaActions(p => p.map(x => x.id===a.id?{...x,date:v}:x))}
-                        style={{ fontSize:11.5, fontWeight:600, fontFamily:fontDisp, color:prioColor, background:`${prioColor}14`, border:`1px solid ${prioColor}28`, padding:"4px 12px", borderRadius:99, whiteSpace:"nowrap", letterSpacing:"-0.01em" }}
+                        style={{ fontSize:12.5, fontWeight:600, fontFamily:fontDisp, color:prioColor, background:`${prioColor}14`, border:`1px solid ${prioColor}28`, padding:"6px 14px", borderRadius:99, whiteSpace:"nowrap", letterSpacing:"-0.01em" }}
                       />
-                      <button className="mp-del" onClick={() => { persistDelete(a); setMetaActions(p => p.filter(x => x.id!==a.id)); }} title="Eliminar acción" style={{ background:"none", border:"none", cursor:"pointer", padding:3, display:"flex", alignItems:"center" }}>
-                        <Trash2 size={13} color={T.txt3} />
+                      {/* Eliminar (aparece al pasar) */}
+                      <button className="mp-del" onClick={() => { persistDelete(a); setMetaActions(p => p.filter(x => x.id!==a.id)); }} title="Eliminar acción" style={{ background:"none", border:"none", cursor:"pointer", padding:4, display:"flex", alignItems:"center" }}>
+                        <Trash2 size={15} color={T.txt3} />
                       </button>
                     </div>
                   </div>
@@ -747,11 +748,11 @@ export default function MetaPanel({
 
           {/* ═══ TAB 2: DOCUMENTOS ═══════════════════════════════════════ */}
           {metaTab === "docs" && (
-            <div style={{ maxWidth:900, margin:"0 auto" }}>
+            <div style={{ width:"100%" }}>
               {/* Header */}
               <div style={{ marginBottom:22 }}>
-                <h3 style={{ margin:0, fontSize:22, fontWeight:800, fontFamily:fontDisp, letterSpacing:"-0.04em", color:T.txt }}>Documentos del Equipo</h3>
-                <p style={{ margin:"6px 0 0", fontSize:12.5, color:T.txt3, fontFamily:font, lineHeight:1.5 }}>
+                <h3 style={{ margin:0, fontSize:26, fontWeight:800, fontFamily:fontDisp, letterSpacing:"-0.045em", color:T.txt }}>Documentos del Equipo</h3>
+                <p style={{ margin:"8px 0 0", fontSize:13.5, color:T.txt3, fontFamily:font, lineHeight:1.5 }}>
                   Enlaces a Google Docs, Drive, Notion, Figma y más — siempre a la mano para todo el equipo.
                 </p>
               </div>
@@ -884,8 +885,8 @@ export default function MetaPanel({
           {metaTab === "plan" && (
             <div>
               <div style={{ textAlign:"center", marginBottom:18 }}>
-                <p style={{ margin:0, fontSize:19, fontWeight:800, fontFamily:fontDisp, letterSpacing:"-0.04em", color:T.txt }}>{brandLabel.toUpperCase()}</p>
-                <p style={{ margin:"3px 0 0", fontSize:10, color:T.txt3, fontFamily:font, letterSpacing:"0.08em", textTransform:"uppercase" }}>Plan Estratégico · Una Página · Scaling Up® · Q2 2026</p>
+                <p style={{ margin:0, fontSize:25, fontWeight:800, fontFamily:fontDisp, letterSpacing:"-0.045em", color:T.txt }}>{brandLabel.toUpperCase()}</p>
+                <p style={{ margin:"4px 0 0", fontSize:11.5, color:T.txt3, fontFamily:font, letterSpacing:"0.07em", textTransform:"uppercase" }}>Plan Estratégico · Una Página · Scaling Up® · Q2 2026</p>
               </div>
 
               {/* CORE */}
@@ -1036,8 +1037,8 @@ export default function MetaPanel({
                     <div style={{ width:3, height:18, borderRadius:2, background:`linear-gradient(180deg,${T.accent},${T.blue})` }} />
                     <span style={{ fontSize:8, fontWeight:800, letterSpacing:"0.16em", textTransform:"uppercase", color:T.txt3, fontFamily:fontDisp }}>Protocolo Operativo · Stratos Capital Group</span>
                   </div>
-                  <p style={{ margin:"0 0 3px", fontSize:21, fontWeight:800, color:T.txt, fontFamily:fontDisp, letterSpacing:"-0.04em" }}>Protocolo {brandLabel}</p>
-                  <p style={{ margin:0, fontSize:11, color:T.txt2, fontFamily:font }}>Sistema de ventas consultivo · Riviera Maya · Alta inversión</p>
+                  <p style={{ margin:"0 0 4px", fontSize:25, fontWeight:800, color:T.txt, fontFamily:fontDisp, letterSpacing:"-0.045em" }}>Protocolo {brandLabel}</p>
+                  <p style={{ margin:0, fontSize:12.5, color:T.txt2, fontFamily:font }}>Sistema de ventas consultivo · Riviera Maya · Alta inversión</p>
                 </div>
                 <div style={{ display:"flex", gap:8, flexShrink:0, flexWrap: isMobile ? "wrap" : "nowrap", width: isMobile ? "100%" : "auto" }}>
                   {[
