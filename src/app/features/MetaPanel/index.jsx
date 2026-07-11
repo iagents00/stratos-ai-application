@@ -355,22 +355,18 @@ export default function MetaPanel({
         animation:"fadeIn 0.22s ease both",
       }} />
 
-      {/* Modal */}
+      {/* Panel — PANTALLA COMPLETA (como una vista del CRM, no un recuadro centrado). */}
       <div style={{
-        position:"fixed", top:"50%", left:"50%",
-        transform:"translate(-50%,-50%)",
-        width: isMobile ? "95vw" : "min(1020px, 96vw)", height: isMobile ? "90dvh" : "min(720px, 94vh)",
+        position:"fixed", inset:0,
         zIndex:601,
         background: isLight ? "#FFFFFF" : "#090D18",
-        borderRadius: isMobile ? 20 : 22,
-        border:`1px solid ${isLight ? "rgba(13,154,118,0.11)" : "rgba(255,255,255,0.07)"}`,
-        boxShadow: isLight
-          ? "0 40px 120px rgba(15,23,42,0.15), 0 8px 32px rgba(15,23,42,0.08)"
-          : "0 40px 120px rgba(0,0,0,0.70), 0 8px 32px rgba(0,0,0,0.40)",
+        borderRadius:0, border:"none",
         display:"flex", flexDirection:"column",
         overflow:"hidden",
-        animation:"modalIn 0.28s cubic-bezier(0.16,1,0.3,1) both",
+        animation:"metaPanelIn 0.28s cubic-bezier(0.16,1,0.3,1) both",
       }}>
+        {/* Fundido propio: el keyframe modalIn depende del translate centrado y en pantalla completa lo movería fuera. */}
+        <style>{`@keyframes metaPanelIn{from{opacity:0;transform:scale(0.992)}to{opacity:1;transform:scale(1)}}`}</style>
 
         {/* ── Header ── */}
         <div style={{
@@ -419,12 +415,12 @@ export default function MetaPanel({
         </div>
 
         {/* ── Scrollable body ── */}
-        <div className="meta-body" style={{ flex:1, overflowY:"auto", padding: isMobile ? "16px 14px calc(22px + var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px)))" : "22px 24px 28px" }}>
+        <div className="meta-body" style={{ flex:1, overflowY:"auto", width:"100%", maxWidth: isMobile ? "100%" : 1200, margin:"0 auto", padding: isMobile ? "16px 14px calc(22px + var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px)))" : "26px 28px 40px" }}>
           {isMobile && <style>{`.meta-body [style*="grid-template-columns"]{grid-template-columns:1fr !important} .meta-body [style*="min-width"]{min-width:0 !important}`}</style>}
 
           {/* ═══ TAB 1: LISTA DE ACCIÓN ══════════════════════════════════ */}
           {metaTab === "acciones" && (
-            <div style={{ maxWidth:800, margin:"0 auto" }}>
+            <div style={{ maxWidth:960, margin:"0 auto" }}>
               {/* Header */}
               <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:18 }}>
                 <div>
@@ -677,7 +673,7 @@ export default function MetaPanel({
 
           {/* ═══ TAB 2: DOCUMENTOS ═══════════════════════════════════════ */}
           {metaTab === "docs" && (
-            <div style={{ maxWidth:800, margin:"0 auto" }}>
+            <div style={{ maxWidth:960, margin:"0 auto" }}>
               {/* Header */}
               <div style={{ marginBottom:18 }}>
                 <h3 style={{ margin:0, fontSize:19, fontWeight:700, fontFamily:fontDisp, letterSpacing:"-0.035em", color:T.txt }}>Documentos del Equipo</h3>
