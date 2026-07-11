@@ -1238,7 +1238,7 @@ export default function App() {
             outline:"none",
             background: a ? (isLight ? `linear-gradient(180deg, rgba(255,255,255,0.95), ${activeColor}16)` : "linear-gradient(180deg, rgba(255,255,255,0.06), rgba(110,231,194,0.028))") : "transparent",
             border: a ? (isLight ? `1px solid ${activeColor}40` : "1px solid rgba(190,245,225,0.14)") : "1px solid transparent",
-            boxShadow: a ? (isLight ? `inset 0 1px 0 rgba(255,255,255,0.85), 0 4px 12px ${activeColor}2E` : "inset 0 1px 0 rgba(210,255,244,0.12), 0 2px 8px rgba(0,0,0,0.28)") : "none",
+            boxShadow: a ? (isLight ? `0 4px 12px ${activeColor}2E` : "0 2px 8px rgba(0,0,0,0.28)") : "none",
             backdropFilter: a ? "blur(8px) saturate(160%)" : "none", WebkitBackdropFilter: a ? "blur(8px) saturate(160%)" : "none",
             display:"flex", alignItems:"center", justifyContent:"center",
             transition:"background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease",
@@ -2007,7 +2007,7 @@ export default function App() {
                 nativo carga la web remota: un APK nuevo NO garantiza web nueva
                 (SW/deploy). Con esto cualquiera puede reportar "web vNNN" y se
                 acaba el adivinar. Mantener en sync con CACHE_VERSION (sw.js). */}
-            <p style={{ margin:"12px 0 0", textAlign:"center", fontSize:9.5, fontFamily:font, letterSpacing:"0.02em", color: isLight ? "rgba(15,23,42,0.35)" : "rgba(255,255,255,0.28)" }}>Stratos CRM AI · web v151</p>
+            <p style={{ margin:"12px 0 0", textAlign:"center", fontSize:9.5, fontFamily:font, letterSpacing:"0.02em", color: isLight ? "rgba(15,23,42,0.35)" : "rgba(255,255,255,0.28)" }}>Stratos CRM AI · web v152</p>
           </div>
         </>,
         document.body
