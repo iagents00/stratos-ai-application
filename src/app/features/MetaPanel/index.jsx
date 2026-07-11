@@ -395,6 +395,11 @@ export default function MetaPanel({
     .mp-del{opacity:0;transition:opacity .16s ease}
     .mp-row:hover .mp-del{opacity:.5}
     .mp-del:hover{opacity:1!important}
+    .mp-actions{transition:transform .2s cubic-bezier(.16,1,.3,1)}
+    .mp-row:hover .mp-actions{transform:translateX(-34px)}
+    .mp-rowdel{position:absolute;right:16px;top:50%;transform:translateY(-50%);opacity:0;transition:opacity .18s ease}
+    .mp-row:hover .mp-rowdel{opacity:.55}
+    .mp-rowdel:hover{opacity:1!important}
     .mp-check{transition:border-color .16s ease,background .16s ease,box-shadow .16s ease}
     .mp-check:hover{border-color:var(--mp-accent)!important;box-shadow:0 0 0 4px var(--mp-ringSoft)}
     .mp-select{appearance:none;-webkit-appearance:none;background-image:var(--mp-chevron);background-repeat:no-repeat;background-position:right 9px center;background-size:10px;padding-right:26px!important;transition:border-color .16s ease,background-color .16s ease}
@@ -686,7 +691,8 @@ export default function MetaPanel({
                       });
                     }}
                     style={{
-                      padding: isMobile ? "14px 16px" : "16px 20px 16px 12px",
+                      position:"relative",
+                      padding: isMobile ? "14px 16px" : "16px 18px",
                       borderRadius:18, marginBottom:10,
                       background: isUrgent
                         ? (isLight?"rgba(239,68,68,0.045)":"rgba(239,68,68,0.05)")
@@ -696,34 +702,49 @@ export default function MetaPanel({
                     }}
                   >
                     {isMobile ? (
-                      /* ── iPhone: tarjeta apilada estilo Reminders/Things ── */
+                      /* ── iPhone: tarjeta apilada, TODO alineado al borde izquierdo (sin
+                            gutter). El check va a la derecha (trailing) para no crear el
+                            "margen" lateral izquierdo. ── */
                       <>
-                        {/* Fila 1 — check alineado a la 1ª línea del título; el título usa todo el ancho */}
+                        {/* Fila 1 — título a ancho completo (flush-left) + check a la derecha */}
                         <div style={{ display:"flex", alignItems:"flex-start", gap:12 }}>
-                          <div style={{ flexShrink:0, marginTop:1 }}>{checkBtn}</div>
                           <div style={{ flex:1, minWidth:0 }}>{titleEl}</div>
+                          <div style={{ flexShrink:0, marginTop:1 }}>{checkBtn}</div>
                         </div>
-                        {/* Fila 2 — contexto indentado bajo el título */}
-                        <div style={{ paddingLeft:36, marginTop:8 }}>{metaEl}</div>
-                        {/* Fila 3 — prioridad · fecha · responsable · iAgent + borrar, indentados */}
-                        <div style={{ paddingLeft:36, marginTop:12, display:"flex", alignItems:"center", gap:8, flexWrap:"wrap" }}>
+                        {/* Fila 2 — contexto, flush-left */}
+                        <div style={{ marginTop:8 }}>{metaEl}</div>
+                        {/* Fila 3 — prioridad · fecha · responsable · iAgent + borrar, flush-left */}
+                        <div style={{ marginTop:13, display:"flex", alignItems:"center", gap:8, flexWrap:"wrap" }}>
                           {prioBtn}{dateEl}{assigneeSel}{iagentBtn}
                           <div style={{ marginLeft:"auto" }}>{delBtn}</div>
                         </div>
                       </>
                     ) : (
-                      /* ── PC: una línea (título crece · prioridad·responsable·fecha a la derecha) ── */
-                      <div style={{ display:"flex", alignItems:"center", gap:14 }}>
-                        <GripVertical className="mp-grip" size={16} color={T.txt3} style={{ cursor:"grab", flexShrink:0 }} />
-                        {checkBtn}
-                        <div style={{ flex:"1 1 360px", minWidth:0 }}>
-                          <div style={{ marginBottom:5 }}>{titleEl}</div>
-                          {metaEl}
+                      /* ── PC: una línea. Contexto + responsable a la IZQUIERDA;
+                            prioridad y fecha en columnas de ancho fijo a la derecha con
+                            margen limpio y constante; borrar flota al pasar (no reserva
+                            espacio, así la fecha no queda desfasada del borde). ── */
+                      <>
+                        <div style={{ display:"flex", alignItems:"center", gap:14 }}>
+                          {checkBtn}
+                          <div style={{ flex:"1 1 360px", minWidth:0 }}>
+                            <div style={{ marginBottom:7 }}>{titleEl}</div>
+                            <div style={{ display:"flex", alignItems:"center", gap:9, flexWrap:"wrap" }}>
+                              {metaEl}
+                              {assigneeSel}
+                              {iagentBtn}
+                            </div>
+                          </div>
+                          <div className="mp-actions" style={{ display:"flex", alignItems:"center", gap:18, flexShrink:0 }}>
+                            <div style={{ display:"flex", justifyContent:"flex-end", width:92 }}>{prioBtn}</div>
+                            <div style={{ display:"flex", justifyContent:"flex-end", width:132 }}>{dateEl}</div>
+                          </div>
                         </div>
-                        <div style={{ display:"flex", alignItems:"center", gap:9, flexWrap:"wrap", flex:"0 0 auto", justifyContent:"flex-end" }}>
-                          {prioBtn}{assigneeSel}{iagentBtn}{dateEl}{delBtn}
-                        </div>
-                      </div>
+                        {/* Eliminar — flota a la derecha, aparece al pasar (no reserva espacio) */}
+                        <button className="mp-rowdel" onClick={() => { persistDelete(a); setMetaActions(p => p.filter(x => x.id!==a.id)); }} title="Eliminar acción" style={{ background:"none", border:"none", cursor:"pointer", padding:4, display:"flex", alignItems:"center" }}>
+                          <Trash2 size={15} color={T.txt3} />
+                        </button>
+                      </>
                     )}
                   </div>
                 );
