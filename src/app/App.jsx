@@ -1249,7 +1249,7 @@ export default function App() {
               boxShadow: isAdmin ? "0 0 8px rgba(167,139,250,0.60)" : "0 0 8px rgba(110,231,194,0.55)",
             }} />
           )}
-          <n.i size={20} color={a ? activeColor : (isLight ? "rgba(15,23,42,0.45)" : "rgba(255,255,255,0.32)")} strokeWidth={a ? 1.8 : 1.5} />
+          <IosIcon name={n.id} filled={a} size={20} color={a ? activeColor : (isLight ? "rgba(15,23,42,0.45)" : "rgba(255,255,255,0.32)")} />
         </button>
         <span style={{ fontSize:7, fontFamily:fontDisp, fontWeight: a ? 600 : 400, letterSpacing: a ? "0.01em" : "0.005em", textAlign:"center",
           color: a ? activeColor : (isLight ? "rgba(15,23,42,0.38)" : "rgba(255,255,255,0.22)"),
@@ -1359,10 +1359,10 @@ export default function App() {
         borderRight:`1px solid ${isLight ? "rgba(0,0,0,0.06)" : "rgba(255,255,255,0.05)"}`,
         display:"flex", flexDirection:"column", alignItems:"center",
         paddingTop:0, paddingBottom:0, position:"relative", overflow:"hidden",
-        background: isLight ? "rgba(246,248,247,0.98)" : "rgba(2,4,11,0.98)",
-        backdropFilter:"blur(28px)", WebkitBackdropFilter:"blur(28px)",
+        background: isLight ? "linear-gradient(180deg, rgba(255,255,255,0.80), rgba(246,248,247,0.66))" : "linear-gradient(180deg, rgba(14,20,32,0.66), rgba(2,4,11,0.58))",
+        backdropFilter:"blur(30px) saturate(165%)", WebkitBackdropFilter:"blur(30px) saturate(165%)",
         transition:"background 0.35s ease, border-color 0.35s ease, box-shadow 0.35s ease",
-        boxShadow: isLight ? "1px 0 0 rgba(0,0,0,0.05)" : "1px 0 0 rgba(255,255,255,0.04), 8px 0 28px rgba(0,0,0,0.30)",
+        boxShadow: isLight ? "inset -1px 0 0 rgba(255,255,255,0.55), 1px 0 0 rgba(0,0,0,0.05)" : "inset 1px 1px 0 rgba(255,255,255,0.06), 1px 0 0 rgba(255,255,255,0.04), 8px 0 28px rgba(0,0,0,0.30)",
       }}>
         {/* TOP: Atom identity */}
         <div style={{ display:"flex", flexDirection:"column", alignItems:"center", paddingTop:11, paddingBottom:10, flexShrink:0, gap:6 }}>
@@ -1483,7 +1483,7 @@ export default function App() {
       <div style={{ flex:1, display:"flex", flexDirection:"column", minWidth:0 }}>
         {/* HEADER */}
         {(() => {
-          const hBg = isLight ? "linear-gradient(180deg,#FFFFFF 0%,rgba(248,253,250,0.96) 100%)" : "#02050E";
+          const hBg = isLight ? "linear-gradient(180deg,rgba(255,255,255,0.82) 0%,rgba(248,253,250,0.70) 100%)" : "linear-gradient(180deg, rgba(7,12,22,0.72) 0%, rgba(2,5,14,0.60) 100%)";
           const hBorder = isLight ? "rgba(13,154,118,0.10)" : "rgba(255,255,255,0.06)";
           const iBtnBase = { width:32, height:32, borderRadius:8, border:"none", background:"transparent", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, transition:"background 0.14s ease" };
           const iBtnHoverBg  = isLight ? `${T.accent}0D` : "rgba(255,255,255,0.07)";
@@ -1495,7 +1495,7 @@ export default function App() {
           const dnIco  = e => { e.currentTarget.style.background = iBtnActiveBg; e.currentTarget.style.transform="scale(0.92)"; };
           const upIco  = e => { e.currentTarget.style.background = iBtnHoverBg;  e.currentTarget.style.transform="scale(1)"; };
           return (
-            <div className="stratos-header" style={{ position:"relative", flexShrink:0, padding:"0 20px", height:52, borderBottom:`1px solid ${hBorder}`, display:"flex", justifyContent:"space-between", alignItems:"center", background:hBg, backdropFilter: isLight ? "blur(24px) saturate(180%)" : "none", WebkitBackdropFilter: isLight ? "blur(24px) saturate(180%)" : "none", boxShadow: isLight ? "inset 0 -1px 0 rgba(13,154,118,0.08), 0 2px 16px rgba(15,23,42,0.04)" : "none", transition:"background 0.3s ease" }}>
+            <div className="stratos-header" style={{ position:"relative", flexShrink:0, padding:"0 20px", height:52, borderBottom:`1px solid ${hBorder}`, display:"flex", justifyContent:"space-between", alignItems:"center", background:hBg, backdropFilter: "blur(24px) saturate(170%)", WebkitBackdropFilter: "blur(24px) saturate(170%)", boxShadow: isLight ? "0 2px 16px rgba(15,23,42,0.05)" : "0 3px 20px rgba(0,0,0,0.30)", transition:"background 0.3s ease" }}>
               {/* LEFT */}
               <div className="stratos-header-left" style={{ display:"flex", alignItems:"center", gap:10 }}>
                 <p className="stratos-wordmark" style={{ margin:0, fontSize:14, fontFamily:fontDisp, letterSpacing:"-0.030em", fontWeight:600, color: isLight ? T.txt : "#FFFFFF", lineHeight:1, whiteSpace:"nowrap" }}>
@@ -1512,7 +1512,7 @@ export default function App() {
               {/* RIGHT */}
               <div className="stratos-header-right" style={{ display:"flex", alignItems:"center", gap:4 }}>
                 <button className="stratos-header-search" title="Buscar (⌘K)" onClick={openHeaderSearch} style={iBtnBase} onMouseEnter={onIco} onMouseLeave={offIco} onMouseDown={dnIco} onMouseUp={upIco}>
-                  <Search size={14} color={icoRest} strokeWidth={2} />
+                  <IosIcon name="search" size={16} color={icoRest} />
                 </button>
                 {/* ── Campana de notificaciones ──
                    Cuando hay cambios pendientes de sincronizar (modo offline
@@ -1535,7 +1535,7 @@ export default function App() {
                     onMouseDown={dnIco}
                     onMouseUp={upIco}
                   >
-                    <Bell size={14} color={icoRest} strokeWidth={2} />
+                    <IosIcon name="bell" size={16} color={icoRest} />
                     {waUnread > 0 ? (
                       /* WhatsApp sin leer manda: verde (lo más accionable para el asesor). */
                       <div style={{
@@ -1784,7 +1784,7 @@ export default function App() {
                   onMouseDown={e => { e.currentTarget.style.background = isLight ? "rgba(225,29,72,0.13)" : "rgba(239,68,68,0.18)"; }}
                   onMouseUp={e => { e.currentTarget.style.background = isLight ? "rgba(225,29,72,0.07)" : "rgba(239,68,68,0.10)"; }}
                 >
-                  <LogOut size={13} color={icoRest} strokeWidth={2.4} />
+                  <IosIcon name="exit" size={15} color={icoRest} />
                 </button>
               </div>
             </div>
@@ -2003,7 +2003,7 @@ export default function App() {
                 nativo carga la web remota: un APK nuevo NO garantiza web nueva
                 (SW/deploy). Con esto cualquiera puede reportar "web vNNN" y se
                 acaba el adivinar. Mantener en sync con CACHE_VERSION (sw.js). */}
-            <p style={{ margin:"12px 0 0", textAlign:"center", fontSize:9.5, fontFamily:font, letterSpacing:"0.02em", color: isLight ? "rgba(15,23,42,0.35)" : "rgba(255,255,255,0.28)" }}>Stratos CRM AI · web v143</p>
+            <p style={{ margin:"12px 0 0", textAlign:"center", fontSize:9.5, fontFamily:font, letterSpacing:"0.02em", color: isLight ? "rgba(15,23,42,0.35)" : "rgba(255,255,255,0.28)" }}>Stratos CRM AI · web v144</p>
           </div>
         </>,
         document.body
