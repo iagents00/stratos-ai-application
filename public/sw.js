@@ -353,7 +353,7 @@
 //   scroll del WebView → el título de la vista queda bajo el header. Fix:
 //   overflow-anchor:none en .stratos-content-area + scroll a tope al cambiar
 //   de tema. (La app además se renombra "Stratos CRM AI" — cambio nativo.)
-const CACHE_VERSION = 'stratos-v150'; // v150: MetaPanel Lista de Acción — PC: responsable a la izquierda junto al contexto, prioridad y fecha en columnas alineadas con margen derecho limpio, borrar flotante que aparece al pasar (con leve deslizamiento) sin reservar espacio. iPhone: check a la derecha (trailing) y todo alineado al borde izquierdo, sin gutter/margen lateral
+const CACHE_VERSION = 'stratos-v158'; // v158: MetaPanel (Plan Estratégico) — pantalla completa como una vista del CRM + rediseño ERP×Apple: barra superior sticky translúcida, edición discreta en hover/focus, filas con hover elevado; Lista de Acción a ancho completo con tipografía más grande, responsable a la izquierda y prioridad/fecha en columnas alineadas (borrar flotante), y layout móvil dedicado con el check a la derecha (sin gutter izquierdo). (v157: fix "Importing a module script failed" — recuperación escalonada de chunk viejo tras deploy, se conserva.)
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 

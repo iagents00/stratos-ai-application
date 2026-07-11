@@ -1206,18 +1206,15 @@ export default function App() {
   const actTotal    = realActions.length;                       // total de acciones de equipo reales
   const pc          = Math.max(1, Math.min(100, actTotal ? Math.round((actDone / actTotal) * 100) : 1));   // % de avance
 
-  // Sidebar primaria: solo módulos a los que el usuario tiene acceso (rol + org).
-  // Para clientes externos (Grupo 28 etc.) esto deja CRM como única opción visible.
-  const primary   = nav.filter(n => !n.more && canAccessModule(n.id, user, clientConfig));
-  // El menú "Más" se filtra también por permisos del módulo. Así un asesor no
-  // ve módulos a los que no tiene acceso (Asesores, Finanzas, Personas) y solo
-  // ve los que le aplican (Planes, Perfil). Mantiene el adminOnly check.
-  const secondary = nav.filter(n =>
-    n.more
-    && (!n.adminOnly || ["super_admin","admin"].includes(user?.role))
+  // Sidebar: TODOS los módulos accesibles (rol + org). Se muestran los 5
+  // primeros en la barra; el resto vive en un modal centrado "Aplicaciones".
+  const accessibleAll = nav.filter(n =>
+    (!n.adminOnly || ["super_admin","admin"].includes(user?.role))
     && canAccessModule(n.id, user, clientConfig)
   );
-  const hasActiveMore = secondary.some(n => n.id === v);
+  const sidebarTop  = accessibleAll.slice(0, 5);
+  const hasMoreApps = accessibleAll.length > 5;
+  const appsActive  = sidebarMore || !sidebarTop.some(n => n.id === v);
 
   const NavBtn = ({ n }) => {
     const a = v === n.id;
@@ -1225,36 +1222,34 @@ export default function App() {
     const hasAccess = canAccessModule(n.id, user, clientConfig);
     const mintC = isAdmin ? "#A78BFA" : "#6EE7C2";
     const activeColor = isAdmin ? "#A78BFA" : (isLight ? T.accent : mintC);
+    const activeIcon  = isLight ? activeColor : (isAdmin ? "#ECE6FF" : "#E9FCF4");
     return (
-      <div style={{ display:"flex", flexDirection:"column", alignItems:"center", gap:4, width:"100%", padding:"0 8px" }}>
+      <div style={{ display:"flex", flexDirection:"column", alignItems:"center", gap:4, width:54, padding:0 }}>
         <button
-          onClick={() => { setV(n.id); if (n.more) setSidebarMore(true); }}
+          onClick={() => { setV(n.id); setSidebarMore(false); }}
           title={(clientConfig?.navLabels?.[n.id] ?? n.l) + (!hasAccess ? " · Sin acceso" : "")}
           style={{
-            width:48, height:40, borderRadius:12,
+            width:48, height:42, borderRadius:14,
             cursor: hasAccess ? "pointer" : "not-allowed",
             opacity: hasAccess ? 1 : 0.32,
-            border:"none", outline:"none",
-            background: a ? (isLight ? `${T.accent}18` : "rgba(110,231,194,0.11)") : "transparent",
+            outline:"none",
+            background: a ? (isLight ? `linear-gradient(180deg, rgba(255,255,255,0.95), ${activeColor}16)` : "linear-gradient(180deg, rgba(255,255,255,0.06), rgba(110,231,194,0.028))") : "transparent",
+            border: a ? (isLight ? `1px solid ${activeColor}40` : "1px solid rgba(190,245,225,0.14)") : "1px solid transparent",
+            boxShadow: a ? (isLight ? `0 4px 12px ${activeColor}2E` : "0 2px 8px rgba(0,0,0,0.28)") : "none",
+            backdropFilter: a ? "blur(8px) saturate(160%)" : "none", WebkitBackdropFilter: a ? "blur(8px) saturate(160%)" : "none",
             display:"flex", alignItems:"center", justifyContent:"center",
-            transition:"background 0.18s ease, transform 0.15s ease",
+            transition:"background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease",
             position:"relative",
           }}
-          onMouseEnter={e => { if (!a && hasAccess) { e.currentTarget.style.background = isLight ? "rgba(0,0,0,0.04)" : "rgba(255,255,255,0.06)"; e.currentTarget.style.transform = "scale(1.04)"; } }}
-          onMouseLeave={e => { if (!a) { e.currentTarget.style.background = "transparent"; e.currentTarget.style.transform = "scale(1)"; } }}
-          onMouseDown={e => { if (hasAccess) e.currentTarget.style.transform = "scale(0.94)"; }}
-          onMouseUp={e => { if (hasAccess && !a) e.currentTarget.style.transform = "scale(1.04)"; }}
+          onMouseEnter={e => { if (!a && hasAccess) { e.currentTarget.style.background = isLight ? "rgba(15,23,42,0.03)" : "rgba(255,255,255,0.045)"; e.currentTarget.style.borderColor = isLight ? `${activeColor}22` : "rgba(190,245,225,0.09)"; } }}
+          onMouseLeave={e => { if (!a) { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = "transparent"; e.currentTarget.style.transform = "scale(1)"; } }}
+          onMouseDown={e => { if (hasAccess) e.currentTarget.style.transform = "scale(0.95)"; }}
+          onMouseUp={e => { if (hasAccess) e.currentTarget.style.transform = "scale(1)"; }}
         >
-          {a && (
-            <div style={{ position:"absolute", left:0, top:"50%", transform:"translateY(-50%)", width:3, height:20, borderRadius:"0 3px 3px 0",
-              background: isAdmin ? "#A78BFA" : "#6EE7C2",
-              boxShadow: isAdmin ? "0 0 8px rgba(167,139,250,0.60)" : "0 0 8px rgba(110,231,194,0.55)",
-            }} />
-          )}
-          <IosIcon name={n.id} filled={a} size={20} color={a ? activeColor : (isLight ? "rgba(15,23,42,0.45)" : "rgba(255,255,255,0.32)")} />
+          <IosIcon name={n.id} filled={a} size={20} color={a ? activeIcon : (isLight ? "rgba(15,23,42,0.45)" : "rgba(255,255,255,0.40)")} />
         </button>
         <span style={{ fontSize:7, fontFamily:fontDisp, fontWeight: a ? 600 : 400, letterSpacing: a ? "0.01em" : "0.005em", textAlign:"center",
-          color: a ? activeColor : (isLight ? "rgba(15,23,42,0.38)" : "rgba(255,255,255,0.22)"),
+          color: a ? activeIcon : (isLight ? "rgba(15,23,42,0.38)" : "rgba(255,255,255,0.28)"),
           lineHeight:1, userSelect:"none", transition:"color 0.18s ease",
         }}>{clientConfig?.navLabels?.[n.id] ?? n.l}</span>
       </div>
@@ -1391,15 +1386,15 @@ export default function App() {
               background: isLight ? "rgba(255,255,255,0.62)" : "linear-gradient(155deg, #0D1E18 0%, #080F10 55%, #040810 100%)",
               backdropFilter: isLight ? "blur(32px) saturate(180%)" : "none",
               WebkitBackdropFilter: isLight ? "blur(32px) saturate(180%)" : "none",
-              border: isLight ? "1px solid rgba(255,255,255,0.92)" : "1px solid rgba(52,211,153,0.22)",
+              border: isLight ? "1px solid rgba(255,255,255,0.92)" : "1px solid rgba(110,231,194,0.17)",
               boxShadow: isLight
                 ? "inset 0 1.5px 0 rgba(255,255,255,1), 0 6px 28px rgba(13,154,118,0.10)"
-                : ["inset 0 1px 0 rgba(52,211,153,0.38)","inset 0 -1px 0 rgba(0,0,0,0.40)","inset 1px 0 0 rgba(52,211,153,0.10)","inset -1px 0 0 rgba(52,211,153,0.10)","0 0 0 1px rgba(52,211,153,0.06)","0 0 28px rgba(52,211,153,0.10)","0 16px 48px rgba(0,0,0,0.70)"].join(", "),
+                : ["inset 0 1px 0 rgba(198,251,238,0.09)","inset 0 -1px 0 rgba(0,0,0,0.30)","0 14px 40px rgba(0,0,0,0.55)"].join(", "),
               padding:"11px 9px 12px",
             }}>
               <div style={{ position:"absolute", top:0, left:0, right:0, height:"45%", background: isLight ? "linear-gradient(180deg, rgba(255,255,255,0.65) 0%, transparent 100%)" : "linear-gradient(180deg, rgba(52,211,153,0.07) 0%, transparent 100%)", pointerEvents:"none", borderRadius:"20px 20px 0 0" }} />
               {isLight && <div className="widget-shimmer" style={{ position:"absolute", top:0, bottom:0, left:0, width:"60%", background:"linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.07) 50%, transparent 100%)", pointerEvents:"none" }} />}
-              <div style={{ position:"absolute", bottom:-6, left:"50%", transform:"translateX(-50%)", width:72, height:40, background: isLight ? "radial-gradient(ellipse, rgba(13,154,118,0.18) 0%, transparent 70%)" : "radial-gradient(ellipse, rgba(52,211,153,0.22) 0%, transparent 70%)", filter:"blur(12px)", pointerEvents:"none" }} />
+              <div style={{ position:"absolute", bottom:-6, left:"50%", transform:"translateX(-50%)", width:72, height:40, background: isLight ? "radial-gradient(ellipse, rgba(13,154,118,0.18) 0%, transparent 70%)" : "radial-gradient(ellipse, rgba(52,211,153,0.12) 0%, transparent 70%)", filter:"blur(12px)", pointerEvents:"none" }} />
               <div style={{ display:"flex", justifyContent:"center", position:"relative", zIndex:1, marginBottom:8 }}>
                 <span style={{
                   display:"inline-flex", alignItems:"center", gap:2.5,
@@ -1420,26 +1415,22 @@ export default function App() {
             <div style={{ width:32, height:1, marginTop:10, background: isLight ? "linear-gradient(90deg, transparent, rgba(15,23,42,0.07), transparent)" : "linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent)" }} />
           </div>
 
-          {primary.map(n => <NavBtn key={n.id} n={n} />)}
+          <div style={{ display:"flex", flexDirection:"column", alignItems:"center", gap:5, width:58, padding:"7px 0", borderRadius:19, background: isLight ? "linear-gradient(180deg, rgba(255,255,255,0.58), rgba(255,255,255,0.40))" : "linear-gradient(180deg, rgba(16,22,30,0.50) 0%, rgba(5,8,13,0.60) 100%)", backdropFilter:"blur(26px) saturate(185%)", WebkitBackdropFilter:"blur(26px) saturate(185%)", border: isLight ? "1px solid rgba(255,255,255,0.92)" : "1px solid rgba(255,255,255,0.07)", boxShadow: isLight ? "inset 0 1px 0 rgba(255,255,255,1), inset 0 -1px 0 rgba(15,23,42,0.04), 0 10px 30px rgba(15,23,42,0.10)" : "inset 0 1px 0 rgba(190,245,225,0.09), inset 0 -1px 0 rgba(0,0,0,0.30), inset 0 0 24px rgba(0,0,0,0.22), 0 18px 44px rgba(0,0,0,0.55)" }}>
+          {sidebarTop.map(n => <NavBtn key={n.id} n={n} />)}
 
-          {/* More toggle */}
-          <div style={{ display:"flex", flexDirection:"column", alignItems:"center", gap:4, marginTop:4, width:"100%", padding:"0 8px" }}>
+          {hasMoreApps && (
+          <div style={{ display:"flex", flexDirection:"column", alignItems:"center", gap:4, marginTop:4, width:54, padding:0 }}>
             <div style={{ height:1, width:32, background: isLight ? "rgba(0,0,0,0.06)" : "rgba(255,255,255,0.05)" }} />
-            <button onClick={() => setSidebarMore(s => !s)} title={sidebarMore ? "Ocultar" : "Más"}
-              style={{ width:48, height:30, borderRadius:10, border:"none", background:(sidebarMore || hasActiveMore) ? (isLight ? `${T.accent}14` : "rgba(110,231,194,0.09)") : "transparent", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", gap:4, transition:"background 0.18s ease" }}
-              onMouseEnter={e => { e.currentTarget.style.background = isLight ? "rgba(0,0,0,0.04)" : "rgba(255,255,255,0.06)"; }}
-              onMouseLeave={e => { e.currentTarget.style.background = (sidebarMore || hasActiveMore) ? (isLight ? `${T.accent}14` : "rgba(110,231,194,0.09)") : "transparent"; }}
+            <button onClick={() => setSidebarMore(true)} title="Todas las apps"
+              style={{ width:48, height:42, borderRadius:14, border: appsActive ? (isLight ? `1px solid ${T.accent}40` : "1px solid rgba(190,245,225,0.14)") : "1px solid transparent", background: appsActive ? (isLight ? `${T.accent}12` : "rgba(255,255,255,0.05)") : "transparent", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", transition:"background 0.18s ease, border-color 0.18s ease, transform 0.15s ease" }}
+              onMouseEnter={e => { if(!appsActive){ e.currentTarget.style.background = isLight ? "rgba(15,23,42,0.03)" : "rgba(255,255,255,0.045)"; e.currentTarget.style.borderColor = isLight ? `${T.accent}22` : "rgba(190,245,225,0.09)"; } }}
+              onMouseLeave={e => { e.currentTarget.style.background = appsActive ? (isLight ? `${T.accent}12` : "rgba(255,255,255,0.05)") : "transparent"; e.currentTarget.style.borderColor = appsActive ? (isLight ? `${T.accent}40` : "rgba(190,245,225,0.14)") : "transparent"; }}
             >
-              <ChevronDown size={13} color={(sidebarMore || hasActiveMore) ? (isLight ? T.accent : "#6EE7C2") : (isLight ? "rgba(15,23,42,0.30)" : "rgba(255,255,255,0.25)")} strokeWidth={1.8} style={{ transform: sidebarMore ? "rotate(180deg)" : "rotate(0deg)", transition:"transform 0.26s cubic-bezier(0.34,1.56,0.64,1)" }} />
+              <IosIcon name="menu" filled={appsActive} size={20} color={appsActive ? (isLight ? T.accent : "#E9FCF4") : (isLight ? "rgba(15,23,42,0.45)" : "rgba(255,255,255,0.40)")} />
             </button>
-            <span style={{ fontSize:7, fontFamily:fontDisp, fontWeight:400, letterSpacing:"0.01em", userSelect:"none", color:(sidebarMore || hasActiveMore) ? (isLight ? T.accent : "#6EE7C2") : (isLight ? "rgba(15,23,42,0.28)" : "rgba(255,255,255,0.20)"), transition:"color 0.18s ease" }}>
-              {sidebarMore ? "Menos" : "Más"}
-            </span>
+            <span style={{ fontSize:7, fontFamily:fontDisp, fontWeight: appsActive ? 600 : 400, letterSpacing:"0.01em", userSelect:"none", color: appsActive ? (isLight ? T.accent : "#E9FCF4") : (isLight ? "rgba(15,23,42,0.38)" : "rgba(255,255,255,0.28)"), transition:"color 0.18s ease" }}>Apps</span>
           </div>
-
-          <div style={{ width:"100%", overflow:"hidden", maxHeight: sidebarMore ? `${secondary.length * 66}px` : "0px", opacity: sidebarMore ? 1 : 0, transition:"max-height 0.38s cubic-bezier(0.4,0,0.2,1), opacity 0.26s ease", display:"flex", flexDirection:"column", alignItems:"center" }}>
-            <div style={{ height:1, width:34, background: isLight ? "rgba(13,154,118,0.08)" : "rgba(255,255,255,0.05)", margin:"4px 0 4px" }} />
-            {secondary.map(n => <NavBtn key={n.id} n={n} />)}
+          )}
           </div>
         </div>
 
@@ -2007,7 +1998,43 @@ export default function App() {
                 nativo carga la web remota: un APK nuevo NO garantiza web nueva
                 (SW/deploy). Con esto cualquiera puede reportar "web vNNN" y se
                 acaba el adivinar. Mantener en sync con CACHE_VERSION (sw.js). */}
-            <p style={{ margin:"12px 0 0", textAlign:"center", fontSize:9.5, fontFamily:font, letterSpacing:"0.02em", color: isLight ? "rgba(15,23,42,0.35)" : "rgba(255,255,255,0.28)" }}>Stratos CRM AI · web v145</p>
+            <p style={{ margin:"12px 0 0", textAlign:"center", fontSize:9.5, fontFamily:font, letterSpacing:"0.02em", color: isLight ? "rgba(15,23,42,0.35)" : "rgba(255,255,255,0.28)" }}>Stratos CRM AI · web v157</p>
+          </div>
+        </>,
+        document.body
+      )}
+
+      {/* ══ MODAL "Aplicaciones" (desktop) — grid centrado con TODAS las apps ══ */}
+      {sidebarMore && createPortal(
+        <>
+          <div onClick={() => setSidebarMore(false)} style={{ position:"fixed", inset:0, zIndex:240, background: isLight ? "rgba(15,23,42,0.28)" : "rgba(2,4,9,0.60)", backdropFilter:"blur(6px)", WebkitBackdropFilter:"blur(6px)", animation:"fadeIn 0.18s ease both" }} />
+          <div style={{ position:"fixed", top:"50%", left:"50%", transform:"translate(-50%,-50%)", zIndex:241, width:"min(90vw, 560px)", borderRadius:26, padding:"22px 22px 24px", background: isLight ? "linear-gradient(180deg, rgba(255,255,255,0.88), rgba(248,250,252,0.80))" : "linear-gradient(180deg, rgba(18,24,32,0.85), rgba(7,10,15,0.90))", backdropFilter:"blur(30px) saturate(185%)", WebkitBackdropFilter:"blur(30px) saturate(185%)", border: isLight ? "1px solid rgba(255,255,255,0.90)" : "1px solid rgba(255,255,255,0.08)", boxShadow: isLight ? "0 30px 80px rgba(15,23,42,0.28)" : "inset 0 1px 0 rgba(190,245,225,0.08), inset 0 -1px 0 rgba(0,0,0,0.4), 0 30px 90px rgba(0,0,0,0.72)", animation:"modalIn 0.24s cubic-bezier(0.16,1,0.3,1) both" }}>
+            <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:18 }}>
+              <span style={{ fontSize:15, fontWeight:700, fontFamily:fontDisp, letterSpacing:"-0.02em", color: isLight ? T.txt : "#FFFFFF" }}>Aplicaciones</span>
+              <button onClick={() => setSidebarMore(false)} aria-label="Cerrar" style={{ width:30, height:30, borderRadius:10, border:"none", cursor:"pointer", background: isLight ? "rgba(15,23,42,0.05)" : "rgba(255,255,255,0.06)", display:"flex", alignItems:"center", justifyContent:"center" }}>
+                <X size={16} color={isLight ? T.txt2 : "rgba(255,255,255,0.55)"} />
+              </button>
+            </div>
+            <div style={{ display:"grid", gridTemplateColumns:"repeat(4, 1fr)", gap:12 }}>
+              {accessibleAll.map(n => {
+                const act = v === n.id;
+                const acol = n.adminOnly ? "#A78BFA" : (isLight ? T.accent : "#E9FCF4");
+                return (
+                  <button key={n.id} onClick={() => { setV(n.id); setSidebarMore(false); }} style={{
+                    display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:9, padding:"18px 6px", borderRadius:18, cursor:"pointer",
+                    border: act ? (isLight ? `1px solid ${acol}45` : "1px solid rgba(190,245,225,0.16)") : (isLight ? "1px solid rgba(15,23,42,0.06)" : "1px solid rgba(255,255,255,0.05)"),
+                    background: act ? (isLight ? `linear-gradient(180deg, rgba(255,255,255,0.95), ${acol}12)` : "linear-gradient(180deg, rgba(255,255,255,0.06), rgba(110,231,194,0.03))") : (isLight ? "rgba(15,23,42,0.02)" : "rgba(255,255,255,0.025)"),
+                    transition:"transform 0.14s ease, background 0.18s ease, border-color 0.18s ease",
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.transform="translateY(-2px)"; if(!act) e.currentTarget.style.background = isLight ? "rgba(15,23,42,0.04)" : "rgba(255,255,255,0.05)"; }}
+                  onMouseLeave={e => { e.currentTarget.style.transform="none"; if(!act) e.currentTarget.style.background = isLight ? "rgba(15,23,42,0.02)" : "rgba(255,255,255,0.025)"; }}
+                  >
+                    <IosIcon name={n.id} filled={act} size={26} color={act ? acol : (isLight ? "rgba(15,23,42,0.50)" : "rgba(255,255,255,0.55)")} />
+                    <span style={{ fontSize:11, fontFamily:fontDisp, fontWeight: act ? 700 : 500, letterSpacing:"-0.01em", color: act ? acol : (isLight ? "rgba(15,23,42,0.60)" : "rgba(255,255,255,0.62)"), lineHeight:1, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis", maxWidth:"100%" }}>{clientConfig?.navLabels?.[n.id] ?? n.l}</span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </>,
         document.body

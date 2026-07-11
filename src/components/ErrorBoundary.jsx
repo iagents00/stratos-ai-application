@@ -4,28 +4,7 @@
  * en vez de dejar la pantalla en blanco.
  */
 import { Component } from "react";
-
-// Detecta el fallo de "chunk viejo tras deploy": el hash del asset cambió y
-// el lazy import pide un archivo que ya no existe en Vercel. Los mensajes
-// varían por navegador (Safari: "Importing a module script failed", Chrome:
-// "Failed to fetch dynamically imported module", Firefox: "error loading
-// dynamically imported module").
-const isStaleChunkError = (error) =>
-  /importing a module script failed|dynamically imported module|chunkloaderror|loading chunk/i
-    .test(error?.message || "");
-
-// Mismo guard anti-bucle que el listener vite:preloadError de main.jsx:
-// recargamos máximo una vez por minuto; si sigue fallando (red caída), se
-// muestra la pantalla de error normal.
-const reloadOnceForStaleChunk = () => {
-  const GUARD_KEY = "stratos.chunk.reloaded.at";
-  let last = 0;
-  try { last = Number(sessionStorage.getItem(GUARD_KEY) || 0); } catch (_) { /* noop */ }
-  if (Date.now() - last < 60_000) return false;
-  try { sessionStorage.setItem(GUARD_KEY, String(Date.now())); } catch (_) { /* noop */ }
-  window.location.reload();
-  return true;
-};
+import { isStaleChunkError, recoverFromStaleChunk, hardRecover } from "../lib/chunk-recovery.js";
 
 export default class ErrorBoundary extends Component {
   constructor(props) {
@@ -38,9 +17,9 @@ export default class ErrorBoundary extends Component {
   }
 
   componentDidCatch(error, info) {
-    // Chunk viejo tras un deploy → recargar toma el index.html nuevo con los
-    // hashes nuevos. Auto-recovery silencioso; el usuario no debe ver esto.
-    if (isStaleChunkError(error) && reloadOnceForStaleChunk()) return;
+    // Chunk viejo tras un deploy → recuperación escalonada (reload suave y, si
+    // no alcanza, limpieza dura de cachés/SW). Silencioso; el usuario no ve esto.
+    if (isStaleChunkError(error) && recoverFromStaleChunk()) return;
     // En producción puedes enviar este error a Sentry / LogRocket aquí
     console.error("[Stratos ErrorBoundary]", error, info.componentStack);
   }
@@ -75,8 +54,8 @@ export default class ErrorBoundary extends Component {
         <button
           onClick={() => {
             // Con chunk viejo, re-render volvería a pedir el mismo archivo
-            // inexistente: la única salida real es recargar.
-            if (isStaleChunkError(this.state.error)) { window.location.reload(); return; }
+            // inexistente: hay que limpiar cachés/SW y recargar fresco.
+            if (isStaleChunkError(this.state.error)) { hardRecover(); return; }
             this.setState({ hasError: false, error: null });
           }}
           style={{
@@ -94,7 +73,12 @@ export default class ErrorBoundary extends Component {
           Reintentar
         </button>
         <button
-          onClick={() => window.location.reload()}
+          onClick={() => {
+            // "Recargar" es el botón de "sácame de acá": si es chunk viejo,
+            // limpia cachés/SW; si no, recarga normal.
+            if (isStaleChunkError(this.state.error)) { hardRecover(); return; }
+            window.location.reload();
+          }}
           style={{
             padding: "10px 24px",
             background: "transparent",
