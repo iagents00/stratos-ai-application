@@ -353,7 +353,7 @@
 //   scroll del WebView → el título de la vista queda bajo el header. Fix:
 //   overflow-anchor:none en .stratos-content-area + scroll a tope al cambiar
 //   de tema. (La app además se renombra "Stratos CRM AI" — cambio nativo.)
-const CACHE_VERSION = 'stratos-v156'; // v156: Finanzas ahora es REAL (datos en vivo de team_expenses, igual que Caja): Resumen (KPIs del mes/saldo, grafica 12m, ultimos movimientos, egresos por categoria) + Flujo de caja mensual + pestana Caja. Se quitaron los tabs demo estilo SAT (CFDI/Obligaciones/CxC-CxP) y los botones muertos; "Exportar" ahora baja un CSV real. Sin integracion SAT (proyecto aparte)
+const CACHE_VERSION = 'stratos-v157'; // v157: fix "Algo salio mal / Importing a module script failed" (chunk viejo tras deploy que dejaba la app sin abrir). La recuperacion ahora ESCALA: 1er fallo reload suave; 2do fallo limpia Cache Storage + desregistra el SW y recarga fresco (nunca toca la sesion). Los botones Reintentar/Recargar hacen esa limpieza dura. Sin esto, si el SW servia el chunk viejo desde su cache el reload caia en lo mismo y el usuario quedaba atascado
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 
