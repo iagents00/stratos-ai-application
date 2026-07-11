@@ -241,17 +241,21 @@ begin
     limit v_top
   loop
     v_shown := v_shown + 1;
+    -- Markdown-safe (Telegram envía con parse_mode Markdown por defecto): los links van como
+    -- [texto](url) para PROTEGER los "_" de las URLs de Drive (si van crudos, un "_" abre cursiva
+    -- y rompe el mensaje → Telegram lo rechaza con "can't parse entities" → silencio). Los campos
+    -- de texto pasan por translate para neutralizar _ * [ ] por si algún dato los trae.
     v_lines := v_lines
-      || format(E'\n\n%s. %s', v_shown, r.desarrollo)
-      || case when coalesce(r.ubicacion, r.zona) is not null then ' — ' || coalesce(r.ubicacion, r.zona) else '' end
-      || case when r.ticket is not null then ' · ' || r.ticket else '' end
-      || case when r.tipologia is not null then ' · ' || r.tipologia else '' end
-      || case when r.clasificacion is not null and r.tipologia is null then ' · ' || r.clasificacion else '' end
-      || case when r.highlights is not null then E'\n   ➤ ' || r.highlights else '' end
-      || case when r.masterbroker is not null then E'\n   🏢 ' || r.masterbroker else '' end
-      || case when r.contacto is not null then E'\n   ☎ ' || r.contacto else '' end
-      || case when r.drive is not null and r.drive <> '' then E'\n   📁 Ver detalle (Drive): ' || r.drive
-              when r.maps is not null and r.maps <> ''   then E'\n   📍 Ubicación (Maps): ' || r.maps
+      || format(E'\n\n%s. %s', v_shown, translate(coalesce(r.desarrollo,''),'_*[]','    '))
+      || case when coalesce(r.ubicacion, r.zona) is not null then ' — ' || translate(coalesce(r.ubicacion, r.zona),'_*[]','    ') else '' end
+      || case when r.ticket is not null then ' · ' || translate(r.ticket,'_*[]','    ') else '' end
+      || case when r.tipologia is not null then ' · ' || translate(r.tipologia,'_*[]','    ') else '' end
+      || case when r.clasificacion is not null and r.tipologia is null then ' · ' || translate(r.clasificacion,'_*[]','    ') else '' end
+      || case when r.highlights is not null then E'\n   ➤ ' || translate(r.highlights,'_*[]','    ') else '' end
+      || case when r.masterbroker is not null then E'\n   🏢 ' || translate(r.masterbroker,'_*[]','    ') else '' end
+      || case when r.contacto is not null then E'\n   ☎ ' || translate(r.contacto,'_*[]','    ') else '' end
+      || case when r.drive is not null and r.drive <> '' then E'\n   📁 [Ver detalle en Drive](' || r.drive || ')'
+              when r.maps is not null and r.maps <> ''   then E'\n   📍 [Ubicación en Maps](' || r.maps || ')'
               else E'\n   📁 Detalle en Drive: pendiente de cargar (pídeselo al equipo)' end;
   end loop;
 
@@ -264,7 +268,7 @@ begin
   return jsonb_build_object('ok', true, 'reply', jsonb_build_object(
     'text', v_head || v_lines
       || case when v_total > v_shown then format(E'\n\n… y %s más. Afiná por zona, característica o precio para acotar.', v_total - v_shown) else '' end
-      || E'\n\n📂 Abrí el enlace 📁 de cada propiedad para ver fotos, planos y más detalle.'
+      || E'\n\n📂 Tocá "Ver detalle en Drive" en cada propiedad para ver fotos, planos y más info.'
       || v_note,
     'inline_keyboard', '[]'::jsonb));
 end;
