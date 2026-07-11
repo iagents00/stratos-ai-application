@@ -353,7 +353,7 @@
 //   scroll del WebView → el título de la vista queda bajo el header. Fix:
 //   overflow-anchor:none en .stratos-content-area + scroll a tope al cambiar
 //   de tema. (La app además se renombra "Stratos CRM AI" — cambio nativo.)
-const CACHE_VERSION = 'stratos-v146'; // v146: Plan Estratégico (MetaPanel) a pantalla completa como una vista del CRM — ya no un recuadro centrado; contenido centrado con ancho máximo cómodo
+const CACHE_VERSION = 'stratos-v147'; // v147: MetaPanel (Plan Estratégico) rediseño "ERP pro × Apple" — barra superior sticky translúcida + control segmentado alineado, afordancia de edición en hover/focus (sin subrayados), filas con hover elevado + grip/borrar revelados, chips/selects refinados, barra de progreso en Lista de Acción, scrollbar fina, transición al cambiar de pestaña
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 
