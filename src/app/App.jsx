@@ -1417,7 +1417,7 @@ export default function App() {
             <div style={{ width:32, height:1, marginTop:10, background: isLight ? "linear-gradient(90deg, transparent, rgba(15,23,42,0.07), transparent)" : "linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent)" }} />
           </div>
 
-          <div style={{ display:"flex", flexDirection:"column", alignItems:"center", gap:5, width:58, padding:"7px 0", borderRadius:26, background: isLight ? "rgba(255,255,255,0.50)" : "rgba(24,30,44,0.44)", backdropFilter:"blur(22px) saturate(180%)", WebkitBackdropFilter:"blur(22px) saturate(180%)", border: isLight ? "1px solid rgba(255,255,255,0.80)" : "1px solid rgba(255,255,255,0.10)", boxShadow: isLight ? "inset 0 1px 0 rgba(255,255,255,1), 0 10px 30px rgba(15,23,42,0.10)" : "inset 0 1px 0 rgba(255,255,255,0.12), inset 0 -1px 0 rgba(0,0,0,0.30), 0 12px 34px rgba(0,0,0,0.50)" }}>
+          <div style={{ display:"flex", flexDirection:"column", alignItems:"center", gap:5, width:58, padding:"7px 0", borderRadius:19, background: isLight ? "rgba(255,255,255,0.50)" : "rgba(24,30,44,0.44)", backdropFilter:"blur(22px) saturate(180%)", WebkitBackdropFilter:"blur(22px) saturate(180%)", border: isLight ? "1px solid rgba(255,255,255,0.80)" : "1px solid rgba(255,255,255,0.10)", boxShadow: isLight ? "inset 0 1px 0 rgba(255,255,255,1), 0 10px 30px rgba(15,23,42,0.10)" : "inset 0 1px 0 rgba(255,255,255,0.12), inset 0 -1px 0 rgba(0,0,0,0.30), 0 12px 34px rgba(0,0,0,0.50)" }}>
           {primary.map(n => <NavBtn key={n.id} n={n} />)}
 
           {/* More toggle */}
@@ -2006,7 +2006,7 @@ export default function App() {
                 nativo carga la web remota: un APK nuevo NO garantiza web nueva
                 (SW/deploy). Con esto cualquiera puede reportar "web vNNN" y se
                 acaba el adivinar. Mantener en sync con CACHE_VERSION (sw.js). */}
-            <p style={{ margin:"12px 0 0", textAlign:"center", fontSize:9.5, fontFamily:font, letterSpacing:"0.02em", color: isLight ? "rgba(15,23,42,0.35)" : "rgba(255,255,255,0.28)" }}>Stratos CRM AI · web v146</p>
+            <p style={{ margin:"12px 0 0", textAlign:"center", fontSize:9.5, fontFamily:font, letterSpacing:"0.02em", color: isLight ? "rgba(15,23,42,0.35)" : "rgba(255,255,255,0.28)" }}>Stratos CRM AI · web v147</p>
           </div>
         </>,
         document.body
