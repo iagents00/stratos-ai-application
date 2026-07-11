@@ -1235,9 +1235,9 @@ export default function App() {
             cursor: hasAccess ? "pointer" : "not-allowed",
             opacity: hasAccess ? 1 : 0.32,
             outline:"none",
-            background: a ? (isLight ? `linear-gradient(180deg, rgba(255,255,255,0.92), ${activeColor}1C)` : `linear-gradient(180deg, rgba(255,255,255,0.17), ${activeColor}18)`) : "transparent",
-            border: a ? `1px solid ${activeColor}45` : "1px solid transparent",
-            boxShadow: a ? (isLight ? `inset 0 1px 0 rgba(255,255,255,0.75), 0 4px 12px ${activeColor}33` : `inset 0 1px 0 rgba(255,255,255,0.12), 0 6px 16px ${activeColor}30`) : "none",
+            background: a ? (isLight ? `linear-gradient(180deg, rgba(255,255,255,0.92), ${activeColor}1C)` : `linear-gradient(180deg, rgba(255,255,255,0.11), ${activeColor}10)`) : "transparent",
+            border: a ? (isLight ? `1px solid ${activeColor}45` : "1px solid rgba(255,255,255,0.13)") : "1px solid transparent",
+            boxShadow: a ? (isLight ? `inset 0 1px 0 rgba(255,255,255,0.75), 0 4px 12px ${activeColor}33` : `inset 0 1px 0 rgba(255,255,255,0.14), 0 4px 12px rgba(0,0,0,0.35)`) : "none",
             backdropFilter: "none", WebkitBackdropFilter: "none",
             display:"flex", alignItems:"center", justifyContent:"center",
             transition:"background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease",
@@ -1388,15 +1388,15 @@ export default function App() {
               background: isLight ? "rgba(255,255,255,0.62)" : "linear-gradient(155deg, #0D1E18 0%, #080F10 55%, #040810 100%)",
               backdropFilter: isLight ? "blur(32px) saturate(180%)" : "none",
               WebkitBackdropFilter: isLight ? "blur(32px) saturate(180%)" : "none",
-              border: isLight ? "1px solid rgba(255,255,255,0.92)" : "1px solid rgba(52,211,153,0.22)",
+              border: isLight ? "1px solid rgba(255,255,255,0.92)" : "1px solid rgba(52,211,153,0.13)",
               boxShadow: isLight
                 ? "inset 0 1.5px 0 rgba(255,255,255,1), 0 6px 28px rgba(13,154,118,0.10)"
-                : ["inset 0 1px 0 rgba(52,211,153,0.38)","inset 0 -1px 0 rgba(0,0,0,0.40)","inset 1px 0 0 rgba(52,211,153,0.10)","inset -1px 0 0 rgba(52,211,153,0.10)","0 0 0 1px rgba(52,211,153,0.06)","0 0 28px rgba(52,211,153,0.10)","0 16px 48px rgba(0,0,0,0.70)"].join(", "),
+                : ["inset 0 1px 0 rgba(255,255,255,0.07)","inset 0 -1px 0 rgba(0,0,0,0.35)","0 0 0 1px rgba(255,255,255,0.03)","0 14px 40px rgba(0,0,0,0.60)"].join(", "),
               padding:"11px 9px 12px",
             }}>
               <div style={{ position:"absolute", top:0, left:0, right:0, height:"45%", background: isLight ? "linear-gradient(180deg, rgba(255,255,255,0.65) 0%, transparent 100%)" : "linear-gradient(180deg, rgba(52,211,153,0.07) 0%, transparent 100%)", pointerEvents:"none", borderRadius:"20px 20px 0 0" }} />
               {isLight && <div className="widget-shimmer" style={{ position:"absolute", top:0, bottom:0, left:0, width:"60%", background:"linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.07) 50%, transparent 100%)", pointerEvents:"none" }} />}
-              <div style={{ position:"absolute", bottom:-6, left:"50%", transform:"translateX(-50%)", width:72, height:40, background: isLight ? "radial-gradient(ellipse, rgba(13,154,118,0.18) 0%, transparent 70%)" : "radial-gradient(ellipse, rgba(52,211,153,0.22) 0%, transparent 70%)", filter:"blur(12px)", pointerEvents:"none" }} />
+              <div style={{ position:"absolute", bottom:-6, left:"50%", transform:"translateX(-50%)", width:72, height:40, background: isLight ? "radial-gradient(ellipse, rgba(13,154,118,0.18) 0%, transparent 70%)" : "radial-gradient(ellipse, rgba(52,211,153,0.12) 0%, transparent 70%)", filter:"blur(12px)", pointerEvents:"none" }} />
               <div style={{ display:"flex", justifyContent:"center", position:"relative", zIndex:1, marginBottom:8 }}>
                 <span style={{
                   display:"inline-flex", alignItems:"center", gap:2.5,
@@ -2006,7 +2006,7 @@ export default function App() {
                 nativo carga la web remota: un APK nuevo NO garantiza web nueva
                 (SW/deploy). Con esto cualquiera puede reportar "web vNNN" y se
                 acaba el adivinar. Mantener en sync con CACHE_VERSION (sw.js). */}
-            <p style={{ margin:"12px 0 0", textAlign:"center", fontSize:9.5, fontFamily:font, letterSpacing:"0.02em", color: isLight ? "rgba(15,23,42,0.35)" : "rgba(255,255,255,0.28)" }}>Stratos CRM AI · web v147</p>
+            <p style={{ margin:"12px 0 0", textAlign:"center", fontSize:9.5, fontFamily:font, letterSpacing:"0.02em", color: isLight ? "rgba(15,23,42,0.35)" : "rgba(255,255,255,0.28)" }}>Stratos CRM AI · web v148</p>
           </div>
         </>,
         document.body
