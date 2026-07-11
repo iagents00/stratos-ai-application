@@ -353,7 +353,7 @@
 //   scroll del WebView → el título de la vista queda bajo el header. Fix:
 //   overflow-anchor:none en .stratos-content-area + scroll a tope al cambiar
 //   de tema. (La app además se renombra "Stratos CRM AI" — cambio nativo.)
-const CACHE_VERSION = 'stratos-v142'; // v2.1: MetaPanel (Plan Estratégico) responsive en móvil — grillas apiladas, pestañas 2x2, header/stats sin cortes + más aire arriba
+const CACHE_VERSION = 'stratos-v143'; // Auditoría tema claro Apple: lienzo/sidebar/header a gris frío neutro (sin tinte verde) — tarjetas blancas flotan más limpio
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 

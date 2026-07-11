@@ -130,7 +130,9 @@ const P = {
 };
 
 const LP = {
-  bg: "#EDF3F0", bgSoft: "#F6FAF8", bgCool: "#EAF0EE",
+  // Canvas Apple neutro (ver design-system/tokens.js). Gris frío luminoso, sin
+  // tinte verde: el lienzo queda limpio y las tarjetas blancas "flotan".
+  bg: "#F1F3F6", bgSoft: "#F6F7F9", bgCool: "#EBEEF2",
   glass: "rgba(255,255,255,0.70)", glassH: "rgba(255,255,255,0.92)",
   glassStrong: "rgba(255,255,255,0.96)",
   glassMint: "rgba(236,251,246,0.75)",
@@ -1263,9 +1265,11 @@ export default function App() {
     <div className="stratos-app" style={{
       height:"100vh", display:"flex", fontFamily:font, color:T.txt,
       background: isLight
-        ? `radial-gradient(1400px 900px at 50% -10%, rgba(13,154,118,0.07) 0%, rgba(13,154,118,0.028) 34%, transparent 60%),
-           radial-gradient(1200px 800px at 50% 112%, rgba(20,184,146,0.055) 0%, rgba(20,184,146,0.02) 34%, transparent 60%),
-           linear-gradient(180deg, #E2E8E6 0%, #E8EDEB 46%, #DFE6E3 100%)`
+        // Lienzo Apple: gris frío neutro luminoso (desde tokens) + un tenue halo
+        // de "luz desde arriba" en slate neutro (NO menta). Brand vive en acentos.
+        ? `radial-gradient(1300px 880px at 50% -12%, rgba(148,163,196,0.07) 0%, rgba(148,163,196,0.022) 34%, transparent 60%),
+           radial-gradient(1100px 760px at 50% 114%, rgba(100,116,150,0.045) 0%, transparent 58%),
+           linear-gradient(180deg, ${T.bgSoft} 0%, ${T.bg} 52%, ${T.bgCool} 100%)`
         : `radial-gradient(1200px 600px at 30% -5%, rgba(80,120,255,0.025) 0%, transparent 55%), #030810`,
       transition:"background 0.3s ease, color 0.3s ease",
     }}>
@@ -1358,7 +1362,7 @@ export default function App() {
         borderRight:`1px solid ${isLight ? "rgba(0,0,0,0.06)" : "rgba(255,255,255,0.05)"}`,
         display:"flex", flexDirection:"column", alignItems:"center",
         paddingTop:0, paddingBottom:0, position:"relative", overflow:"hidden",
-        background: isLight ? "rgba(246,248,247,0.98)" : "rgba(2,4,11,0.98)",
+        background: isLight ? "rgba(249,250,252,0.96)" : "rgba(2,4,11,0.98)",
         backdropFilter:"blur(28px)", WebkitBackdropFilter:"blur(28px)",
         transition:"background 0.35s ease, border-color 0.35s ease, box-shadow 0.35s ease",
         boxShadow: isLight ? "1px 0 0 rgba(0,0,0,0.05)" : "1px 0 0 rgba(255,255,255,0.04), 8px 0 28px rgba(0,0,0,0.30)",
@@ -1482,7 +1486,7 @@ export default function App() {
       <div style={{ flex:1, display:"flex", flexDirection:"column", minWidth:0 }}>
         {/* HEADER */}
         {(() => {
-          const hBg = isLight ? "linear-gradient(180deg,#FFFFFF 0%,rgba(248,253,250,0.96) 100%)" : "#02050E";
+          const hBg = isLight ? "linear-gradient(180deg,#FFFFFF 0%,rgba(249,250,252,0.94) 100%)" : "#02050E";
           const hBorder = isLight ? "rgba(13,154,118,0.10)" : "rgba(255,255,255,0.06)";
           const iBtnBase = { width:32, height:32, borderRadius:8, border:"none", background:"transparent", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, transition:"background 0.14s ease" };
           const iBtnHoverBg  = isLight ? `${T.accent}0D` : "rgba(255,255,255,0.07)";
@@ -1494,7 +1498,7 @@ export default function App() {
           const dnIco  = e => { e.currentTarget.style.background = iBtnActiveBg; e.currentTarget.style.transform="scale(0.92)"; };
           const upIco  = e => { e.currentTarget.style.background = iBtnHoverBg;  e.currentTarget.style.transform="scale(1)"; };
           return (
-            <div className="stratos-header" style={{ position:"relative", flexShrink:0, padding:"0 20px", height:52, borderBottom:`1px solid ${hBorder}`, display:"flex", justifyContent:"space-between", alignItems:"center", background:hBg, backdropFilter: isLight ? "blur(24px) saturate(180%)" : "none", WebkitBackdropFilter: isLight ? "blur(24px) saturate(180%)" : "none", boxShadow: isLight ? "inset 0 -1px 0 rgba(13,154,118,0.08), 0 2px 16px rgba(15,23,42,0.04)" : "none", transition:"background 0.3s ease" }}>
+            <div className="stratos-header" style={{ position:"relative", flexShrink:0, padding:"0 20px", height:52, borderBottom:`1px solid ${hBorder}`, display:"flex", justifyContent:"space-between", alignItems:"center", background:hBg, backdropFilter: isLight ? "blur(24px) saturate(180%)" : "none", WebkitBackdropFilter: isLight ? "blur(24px) saturate(180%)" : "none", boxShadow: isLight ? "inset 0 -1px 0 rgba(15,23,42,0.05), 0 2px 16px rgba(15,23,42,0.04)" : "none", transition:"background 0.3s ease" }}>
               {/* LEFT */}
               <div className="stratos-header-left" style={{ display:"flex", alignItems:"center", gap:10 }}>
                 <p className="stratos-wordmark" style={{ margin:0, fontSize:14, fontFamily:fontDisp, letterSpacing:"-0.030em", fontWeight:600, color: isLight ? T.txt : "#FFFFFF", lineHeight:1, whiteSpace:"nowrap" }}>
