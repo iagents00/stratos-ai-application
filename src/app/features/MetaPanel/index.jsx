@@ -291,13 +291,13 @@ export default function MetaPanel({
 
   /* ── Helpers ── */
   const sectionHd = (label, color) => (
-    <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:13 }}>
-      <div style={{ width:3, height:16, borderRadius:2, background:color }} />
-      <span style={{ fontSize:11, fontWeight:800, fontFamily:fontDisp, letterSpacing:"0.1em", textTransform:"uppercase", color }}>{label}</span>
+    <div style={{ display:"flex", alignItems:"center", gap:7, marginBottom:12 }}>
+      <div style={{ width:3, height:14, borderRadius:2, background:color }} />
+      <span style={{ fontSize:9.5, fontWeight:800, fontFamily:fontDisp, letterSpacing:"0.11em", textTransform:"uppercase", color }}>{label}</span>
     </div>
   );
   const colHd = txt => (
-    <p style={{ margin:"0 0 9px", fontSize:11.5, fontWeight:700, fontFamily:fontDisp, color:T.txt2, letterSpacing:"0.04em", textTransform:"uppercase" }}>{txt}</p>
+    <p style={{ margin:"0 0 8px", fontSize:10, fontWeight:700, fontFamily:fontDisp, color:T.txt2, letterSpacing:"0.05em", textTransform:"uppercase" }}>{txt}</p>
   );
   // Componente in-line: editable solo si canEditFinal (super_admin/admin); en
   // modo solo-lectura se renderiza como <span> normal sin borde dashed ni cursor text,
@@ -311,12 +311,8 @@ export default function MetaPanel({
     if (!canEditFinal) {
       return <span style={{ display:"block", ...style }}>{displayVal}</span>;
     }
-    // Afordancia de edición discreta (estilo Apple): texto limpio por defecto;
-    // el resalte y el anillo de foco aparecen solo en hover/focus (clase .mp-edit).
-    // Adiós al subrayado punteado permanente que ensuciaba las 4 pestañas.
     return (
       <span
-        className="mp-edit"
         contentEditable suppressContentEditableWarning
         onFocus={e => { if (isEmptyHint) e.currentTarget.textContent = ''; }}
         onBlur={e => {
@@ -328,9 +324,10 @@ export default function MetaPanel({
         onKeyDown={e => { if(!multi && e.key==="Enter"){ e.preventDefault(); e.currentTarget.blur(); } }}
         title="Click para editar"
         style={{
-          display:"block", width:"fit-content", maxWidth:"100%",
-          outline:"none", minWidth:20,
-          opacity: isEmptyHint ? 0.5 : 1,
+          display:"block", outline:"none",
+          borderBottom:`1px dashed ${isLight?"rgba(0,0,0,0.12)":"rgba(255,255,255,0.12)"}`,
+          cursor:"text", minWidth:20,
+          opacity: isEmptyHint ? 0.45 : 1,
           fontStyle: isEmptyHint ? 'italic' : (style.fontStyle || 'normal'),
           ...style,
         }}
@@ -348,186 +345,123 @@ export default function MetaPanel({
   // En móvil la barra lateral (widget AVANCE que abre este panel en desktop)
   // no existe; el panel se abre desde el menú "+" y debe encajar en pantalla.
   const isMobile = typeof window !== "undefined" && (window.matchMedia?.("(pointer: coarse)")?.matches || window.innerWidth <= 768);
-
-  // ── Lenguaje visual del panel (auditoría "ERP pro × Apple", Jul 2026) ─────────
-  // Variables CSS por tema + una capa <style> para hover/focus/afinaciones que el
-  // estilo inline no puede expresar (pseudo-clases, scrollbar, transiciones al hover).
-  const _hex = (c, a) => (typeof c === "string" && c[0] === "#" && c.length === 7) ? c + a : c;
-  const ring     = _hex(T.accent, "66");
-  const ringSoft = _hex(T.accent, "26");
-  const chevron  = `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='${isLight ? "%235C6B82" : "%238B99AE"}' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'><path d='M6 9l6 6 6-6'/></svg>")`;
-  const panelBg  = isLight
-    ? "#F1F3F6"
-    : "radial-gradient(130% 90% at 50% -25%, rgba(110,231,194,0.06), rgba(126,184,240,0.028) 34%, transparent 62%), #080C15";
-  const mpVars = {
-    "--mp-txt": T.txt, "--mp-txt2": T.txt2, "--mp-txt3": T.txt3,
-    "--mp-accent": T.accent, "--mp-border": T.border, "--mp-borderH": T.borderH,
-    "--mp-hairline": isLight ? "rgba(15,23,42,0.08)" : "rgba(255,255,255,0.06)",
-    "--mp-bg": panelBg,
-    "--mp-topbar": isLight ? "rgba(244,246,249,0.82)" : "rgba(10,14,22,0.72)",
-    "--mp-seg-bg": isLight ? "rgba(15,23,42,0.05)" : "rgba(255,255,255,0.045)",
-    "--mp-seg-on": isLight ? "#FFFFFF" : "rgba(255,255,255,0.10)",
-    "--mp-edit": isLight ? "rgba(15,23,42,0.05)" : "rgba(255,255,255,0.06)",
-    "--mp-ring": ring, "--mp-ringSoft": ringSoft,
-    "--mp-scroll": isLight ? "rgba(15,23,42,0.16)" : "rgba(255,255,255,0.12)",
-    "--mp-rowShadow": isLight ? "0 1px 2px rgba(15,23,42,0.05), 0 10px 28px rgba(15,23,42,0.08)" : "0 1px 2px rgba(0,0,0,0.40), 0 12px 32px rgba(0,0,0,0.32)",
-    "--mp-chevron": chevron,
-  };
-  const MP_CSS = `
-    .mp{position:fixed;inset:0;z-index:601;display:flex;flex-direction:column;overflow:hidden;background:var(--mp-bg);animation:mpIn .3s ease both;-webkit-font-smoothing:antialiased}
-    @keyframes mpIn{from{opacity:0}to{opacity:1}}
-    .mp-body{flex:1;overflow-y:auto;overflow-x:hidden;scrollbar-width:thin;scrollbar-color:var(--mp-scroll) transparent}
-    .mp-body::-webkit-scrollbar{width:12px;height:12px}
-    .mp-body::-webkit-scrollbar-thumb{background:var(--mp-scroll);border-radius:99px;border:4px solid transparent;background-clip:padding-box}
-    .mp-body::-webkit-scrollbar-thumb:hover{background:var(--mp-txt3)}
-    .mp-topbar{position:sticky;top:0;z-index:20;flex-shrink:0;background:var(--mp-topbar);backdrop-filter:saturate(180%) blur(24px);-webkit-backdrop-filter:saturate(180%) blur(24px);border-bottom:1px solid var(--mp-hairline)}
-    .mp-seg{display:inline-flex;gap:2px;padding:4px;border-radius:15px;background:var(--mp-seg-bg);border:1px solid var(--mp-hairline)}
-    .mp-seg>button{appearance:none;-webkit-appearance:none;border:none;background:transparent;cursor:pointer;font-family:inherit;font-size:13.5px;font-weight:600;letter-spacing:-.015em;color:var(--mp-txt2);padding:9px 20px;border-radius:11px;white-space:nowrap;transition:color .2s ease,background .2s ease,box-shadow .2s ease}
-    .mp-seg>button:hover{color:var(--mp-txt)}
-    .mp-seg>button[data-on="1"]{color:var(--mp-txt);background:var(--mp-seg-on);box-shadow:0 1px 3px rgba(0,0,0,.16),0 0 0 .5px rgba(255,255,255,.05)}
-    .mp-edit{border-radius:6px;margin:0 -4px;padding:0 4px;transition:background .15s ease,box-shadow .15s ease;cursor:text}
-    .mp-edit:hover{background:var(--mp-edit)}
-    .mp-edit:focus{background:var(--mp-edit);box-shadow:0 0 0 2px var(--mp-ring)}
-    .mp-row{transition:background .18s ease,border-color .18s ease,box-shadow .2s ease}
-    .mp-row:hover{border-color:var(--mp-borderH)!important;box-shadow:var(--mp-rowShadow)}
-    .mp-grip{opacity:0;transition:opacity .16s ease}
-    .mp-row:hover .mp-grip{opacity:.4}
-    .mp-del{opacity:0;transition:opacity .16s ease}
-    .mp-row:hover .mp-del{opacity:.5}
-    .mp-del:hover{opacity:1!important}
-    .mp-actions{transition:transform .2s cubic-bezier(.16,1,.3,1)}
-    .mp-row:hover .mp-actions{transform:translateX(-34px)}
-    .mp-rowdel{position:absolute;right:16px;top:50%;transform:translateY(-50%);opacity:0;transition:opacity .18s ease}
-    .mp-row:hover .mp-rowdel{opacity:.55}
-    .mp-rowdel:hover{opacity:1!important}
-    .mp-check{transition:border-color .16s ease,background .16s ease,box-shadow .16s ease}
-    .mp-check:hover{border-color:var(--mp-accent)!important;box-shadow:0 0 0 4px var(--mp-ringSoft)}
-    .mp-select{appearance:none;-webkit-appearance:none;background-image:var(--mp-chevron);background-repeat:no-repeat;background-position:right 9px center;background-size:10px;padding-right:26px!important;transition:border-color .16s ease,background-color .16s ease}
-    .mp-select:hover{border-color:var(--mp-borderH)!important}
-    .mp-input{transition:border-color .16s ease,box-shadow .16s ease,background-color .16s ease}
-    .mp-input::placeholder{color:var(--mp-txt3);opacity:1}
-    .mp-ghost{transition:background .16s ease,border-color .16s ease,color .16s ease}
-    .mp-fade{animation:mpFade .3s cubic-bezier(.16,1,.3,1) both}
-    @keyframes mpFade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
-    @media(max-width:768px){.mp-seg{display:grid;grid-template-columns:1fr 1fr;width:100%}.mp-mobilebody [style*="grid-template-columns"]{grid-template-columns:1fr!important}.mp-mobilebody [style*="min-width"]{min-width:0!important}}
-  `;
-
   return (
     <>
-      {/* Panel como SECCIÓN dentro del contenido: en escritorio se confina al área
-          de contenido (debajo del header de 52px y a la derecha del sidebar de 72px),
-          dejando visibles el header y el menú izquierdo. En móvil (sin sidebar) ocupa
-          toda la pantalla. La clase .mp trae position:fixed; inset:0 — acá sólo movemos
-          top/left para dejar el marco de la app a la vista. */}
-      <div className="mp" style={{ ...mpVars, top: isMobile ? 0 : 52, left: isMobile ? 0 : 72 }}>
-        <style>{MP_CSS}</style>
+      {/* Backdrop */}
+      <div onClick={onClose} style={{
+        position:"fixed", inset:0, zIndex:600,
+        background: isLight ? "rgba(0,0,0,0.28)" : "rgba(0,0,0,0.72)",
+        backdropFilter:"blur(10px)",
+        animation:"fadeIn 0.22s ease both",
+      }} />
 
-        {/* ── Barra superior (sticky, translúcida, alineada al contenedor) ── */}
-        <div className="mp-topbar">
-          <div style={{
-            width:"100%", maxWidth:1840, margin:"0 auto",
-            padding: isMobile ? "12px 16px" : "0 48px",
-            minHeight: isMobile ? 0 : 72,
-            display: isMobile ? "flex" : "grid",
-            gridTemplateColumns: isMobile ? undefined : "1fr auto 1fr",
-            alignItems:"center", gap:16,
-            flexWrap: isMobile ? "wrap" : undefined, rowGap: isMobile ? 12 : 0,
-          }}>
-            {/* Marca */}
-            <div style={{ display:"flex", alignItems:"center", gap:13, minWidth:0, order: isMobile ? 1 : 0 }}>
-              <div style={{ width:42, height:42, borderRadius:13, background:`linear-gradient(135deg, ${T.accent}26, ${T.accent}08)`, border:`1px solid ${T.accent}30`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, boxShadow:`inset 0 1px 0 ${T.accent}1F` }}>
-                <Target size={20} color={T.accent} strokeWidth={2} />
-              </div>
-              <div style={{ minWidth:0 }}>
-                <p style={{ margin:0, fontSize:17, fontWeight:700, fontFamily:fontDisp, letterSpacing:"-0.025em", color:T.txt, display:"flex", alignItems:"center", gap:8, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>
-                  {brandLabel}
-                  {savingConfig && (
-                    <span style={{ fontSize:10, fontWeight:600, color:T.accent, background:`${T.accent}18`, borderRadius:99, padding:"2px 9px", letterSpacing:0, flexShrink:0 }}>guardando…</span>
-                  )}
-                </p>
-                <p style={{ margin:"2px 0 0", fontSize:11.5, color:T.txt3, fontFamily:font, letterSpacing:"0.02em", whiteSpace:"nowrap" }}>Plan Estratégico · Scaling Up · 2026</p>
-              </div>
+      {/* Modal */}
+      <div style={{
+        position:"fixed", top:"50%", left:"50%",
+        transform:"translate(-50%,-50%)",
+        width: isMobile ? "95vw" : "min(1020px, 96vw)", height: isMobile ? "90dvh" : "min(720px, 94vh)",
+        zIndex:601,
+        background: isLight ? "#FFFFFF" : "#090D18",
+        borderRadius: isMobile ? 20 : 22,
+        border:`1px solid ${isLight ? "rgba(13,154,118,0.11)" : "rgba(255,255,255,0.07)"}`,
+        boxShadow: isLight
+          ? "0 40px 120px rgba(15,23,42,0.15), 0 8px 32px rgba(15,23,42,0.08)"
+          : "0 40px 120px rgba(0,0,0,0.70), 0 8px 32px rgba(0,0,0,0.40)",
+        display:"flex", flexDirection:"column",
+        overflow:"hidden",
+        animation:"modalIn 0.28s cubic-bezier(0.16,1,0.3,1) both",
+      }}>
+
+        {/* ── Header ── */}
+        <div style={{
+          display:"flex", alignItems:"center", justifyContent:"space-between",
+          padding: isMobile ? "14px 16px 12px" : "17px 24px 15px",
+          borderBottom:`1px solid ${T.border}`,
+          flexShrink:0,
+          flexWrap: isMobile ? "wrap" : "nowrap", rowGap: isMobile ? 10 : 0,
+        }}>
+          <div style={{ display:"flex", alignItems:"center", gap:11, order: isMobile ? 1 : 0 }}>
+            <div style={{ width:36, height:36, borderRadius:10, background:`${T.accent}12`, border:`1px solid ${T.accent}24`, display:"flex", alignItems:"center", justifyContent:"center" }}>
+              <Target size={17} color={T.accent} strokeWidth={2} />
             </div>
-            {/* Control segmentado */}
-            <div className="mp-seg" style={{ order: isMobile ? 3 : 0, flexBasis: isMobile ? "100%" : "auto", justifySelf:"center" }}>
-              {tabs.map(({ id, label }) => (
-                <button key={id} data-on={metaTab===id ? "1" : "0"} onClick={() => setMetaTab(id)}>{label}</button>
-              ))}
+            <div>
+              <p style={{ margin:0, fontSize:15.5, fontWeight:700, fontFamily:fontDisp, letterSpacing:"-0.03em", color:T.txt }}>
+                {brandLabel}
+                {savingConfig && (
+                  <span style={{ marginLeft:10, fontSize:9.5, fontWeight:500, color:T.txt3, fontStyle:'italic' }}>
+                    · guardando…
+                  </span>
+                )}
+              </p>
+              <p style={{ margin:"1px 0 0", fontSize:10, color:T.txt3, fontFamily:font }}>Plan Estratégico · Scaling Up · 2026</p>
             </div>
-            {/* Cerrar */}
-            <button onClick={onClose} title="Cerrar" style={{
-              order: isMobile ? 2 : 0, justifySelf:"end", flexShrink:0,
-              width:38, height:38, borderRadius:"50%", border:`1px solid ${T.border}`,
-              background:T.glass, color:T.txt2, cursor:"pointer",
-              display:"flex", alignItems:"center", justifyContent:"center",
-            }}><X size={18} strokeWidth={2} /></button>
           </div>
+          {/* Tabs */}
+          <div style={{ display: isMobile ? "grid" : "flex", gridTemplateColumns: isMobile ? "1fr 1fr" : undefined, gap: isMobile ? 3 : 2, background:T.glass, border:`1px solid ${T.border}`, borderRadius:12, padding:3, order: isMobile ? 3 : 0, flexBasis: isMobile ? "100%" : "auto", maxWidth:"100%" }}>
+            {tabs.map(({ id, label }) => (
+              <button key={id} onClick={() => setMetaTab(id)} style={{
+                padding: isMobile ? "9px 6px" : "7px 16px", borderRadius:9, border:"none", flexShrink:0, whiteSpace:"nowrap", textAlign:"center",
+                background: metaTab===id ? (isLight?"#FFFFFF":"rgba(255,255,255,0.09)") : "transparent",
+                color: metaTab===id ? T.txt : T.txt2,
+                fontSize:12, fontWeight: metaTab===id ? 600 : 500,
+                fontFamily:font, cursor:"pointer",
+                boxShadow: metaTab===id ? (isLight?"0 1px 6px rgba(15,23,42,0.08)":"0 1px 4px rgba(0,0,0,0.30)") : "none",
+                transition:"all 0.15s",
+              }}>{label}</button>
+            ))}
+          </div>
+          <button onClick={onClose} style={{
+            width:32, height:32, borderRadius:"50%", border:`1px solid ${T.border}`,
+            order: isMobile ? 2 : 0, flexShrink:0,
+            background:T.glass, color:T.txt3, cursor:"pointer", fontSize:18,
+            display:"flex", alignItems:"center", justifyContent:"center",
+          }}>×</button>
         </div>
 
-        {/* ── Cuerpo scrolleable ── */}
-        <div className={"mp-body meta-body" + (isMobile ? " mp-mobilebody" : "")}>
-          <div className="mp-fade" key={metaTab} style={{
-            width:"100%", maxWidth:1840, margin:"0 auto",
-            padding: isMobile ? "18px 16px calc(28px + var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px)))" : "40px 48px 72px",
-          }}>
+        {/* ── Scrollable body ── */}
+        <div className="meta-body" style={{ flex:1, overflowY:"auto", padding: isMobile ? "16px 14px calc(22px + var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px)))" : "22px 24px 28px" }}>
+          {isMobile && <style>{`.meta-body [style*="grid-template-columns"]{grid-template-columns:1fr !important} .meta-body [style*="min-width"]{min-width:0 !important}`}</style>}
 
           {/* ═══ TAB 1: LISTA DE ACCIÓN ══════════════════════════════════ */}
           {metaTab === "acciones" && (
-            <div style={{ width:"100%" }}>
-              {/* Header + progreso */}
-              {(() => {
-                const pend = metaActions.filter(a=>!a.done).length;
-                const done = metaActions.filter(a=>a.done).length;
-                const total = pend + done;
-                const pct = total ? Math.round((done/total)*100) : 0;
-                return (
-                  <div style={{ display:"flex", alignItems:"flex-end", justifyContent:"space-between", gap:24, flexWrap:"wrap", marginBottom:26 }}>
-                    <div>
-                      <h3 style={{ margin:0, fontSize:28, fontWeight:800, fontFamily:fontDisp, letterSpacing:"-0.045em", color:T.txt }}>Acciones del Equipo</h3>
-                      <p style={{ margin:"8px 0 0", fontSize:14, color:T.txt3, fontFamily:font }}>
-                        <span style={{ color:T.txt2, fontWeight:600 }}>{pend}</span> pendientes · {done} completadas
-                        <span style={{ marginLeft:8, opacity:0.55 }}>· Arrastra para reordenar</span>
-                      </p>
-                    </div>
-                    {total > 0 && (
-                      <div style={{ display:"flex", alignItems:"center", gap:12, minWidth:210, flex: isMobile ? "1 1 100%" : "0 1 300px" }}>
-                        <div style={{ flex:1, height:7, borderRadius:99, background: isLight?"rgba(15,23,42,0.07)":"rgba(255,255,255,0.07)", overflow:"hidden" }}>
-                          <div style={{ width:`${pct}%`, height:"100%", borderRadius:99, background:`linear-gradient(90deg, #0D9A76, ${T.accent})`, transition:"width .5s cubic-bezier(.16,1,.3,1)" }} />
-                        </div>
-                        <span style={{ fontSize:13.5, fontWeight:700, fontFamily:fontDisp, color:T.txt2, whiteSpace:"nowrap", minWidth:38, textAlign:"right" }}>{pct}%</span>
-                      </div>
-                    )}
-                  </div>
-                );
-              })()}
+            <div style={{ maxWidth:800, margin:"0 auto" }}>
+              {/* Header */}
+              <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:18 }}>
+                <div>
+                  <h3 style={{ margin:0, fontSize:19, fontWeight:700, fontFamily:fontDisp, letterSpacing:"-0.035em", color:T.txt }}>Acciones del Equipo</h3>
+                  <p style={{ margin:"5px 0 0", fontSize:12.5, color:T.txt3, fontFamily:font }}>
+                    {metaActions.filter(a=>!a.done).length} pendientes · {metaActions.filter(a=>a.done).length} completadas
+                    <span style={{ marginLeft:8, opacity:0.5, fontSize:11.5 }}>· Arrastra para reordenar</span>
+                  </p>
+                </div>
+              </div>
 
-              {/* Barra de agregar */}
-              <div style={{ display:"flex", gap:12, marginBottom:28, alignItems:"stretch", flexWrap: isMobile ? "wrap" : "nowrap" }}>
+              {/* Quick-add bar */}
+              <div style={{ display:"flex", gap:9, marginBottom:22, alignItems:"stretch", flexWrap: isMobile ? "wrap" : "nowrap" }}>
                 <input
-                  className="mp-input"
                   value={metaNewText}
                   onChange={e => setMetaNewText(e.target.value)}
                   onKeyDown={e => { if (e.key === "Enter") createAction(); }}
                   placeholder="Nueva acción — escribe, elegí fecha/hora y Enter…"
                   style={{
-                    flex: isMobile ? "1 1 100%" : "1 1 0%", padding:"16px 20px", borderRadius:16,
-                    background: isLight?"#FFFFFF":"rgba(255,255,255,0.04)",
-                    border:`1px solid ${metaNewText ? T.accent : T.border}`,
-                    color:T.txt, fontSize:16, fontFamily:font, outline:"none",
-                    boxShadow: metaNewText ? `0 0 0 3px ${ringSoft}` : (isLight?"0 1px 2px rgba(15,23,42,0.04)":"none"),
+                    flex:1, padding:"13px 17px", borderRadius:13,
+                    background: isLight?"#FFFFFF":"rgba(255,255,255,0.05)",
+                    border:`1.5px solid ${metaNewText ? T.accent : T.border}`,
+                    color:T.txt, fontSize:14, fontFamily:font, outline:"none",
+                    boxShadow: metaNewText ? `0 0 0 3px ${T.accent}18` : "none",
+                    transition:"border 0.15s, box-shadow 0.15s",
                   }}
                 />
                 <input
                   type="datetime-local"
-                  className="mp-input"
                   value={metaNewDate}
                   onChange={e => setMetaNewDate(e.target.value)}
                   title="Fecha y hora límite (obligatoria)"
                   style={{
-                    padding:"16px 16px", borderRadius:16, flexShrink:0,
-                    background: isLight?"#FFFFFF":"rgba(255,255,255,0.04)",
-                    border:`1px solid ${metaNewDate ? T.accent : T.border}`,
-                    color:T.txt, fontSize:14, fontFamily:font, outline:"none",
+                    padding:"13px 14px", borderRadius:13, flexShrink:0,
+                    background: isLight?"#FFFFFF":"rgba(255,255,255,0.05)",
+                    border:`1.5px solid ${metaNewDate ? T.accent : T.border}`,
+                    color:T.txt, fontSize:13, fontFamily:font, outline:"none",
                     colorScheme: isLight ? "light" : "dark",
                   }}
                 />
@@ -535,37 +469,29 @@ export default function MetaPanel({
                 <button
                   onClick={createAction}
                   style={{
-                    display:"flex", alignItems:"center", justifyContent:"center", gap:8,
-                    padding:"0 28px", borderRadius:16, border:"none",
+                    display:"flex", alignItems:"center", gap:7,
+                    padding:"0 22px", borderRadius:13, border:"none",
                     background: canAdd
                       ? `linear-gradient(135deg,#0D9A76,${T.accent})`
-                      : (isLight?"rgba(0,0,0,0.05)":"rgba(255,255,255,0.06)"),
+                      : (isLight?"rgba(0,0,0,0.06)":"rgba(255,255,255,0.07)"),
                     color: canAdd ? "#041016" : T.txt3,
-                    fontSize:15, fontWeight:700, fontFamily:fontDisp,
+                    fontSize:13.5, fontWeight:700, fontFamily:fontDisp,
                     cursor: canAdd ? "pointer" : "default",
                     flexShrink:0, letterSpacing:"-0.02em",
-                    boxShadow: canAdd ? `0 4px 16px ${_hex(T.accent,'40') }` : "none",
-                    transition:"background 0.18s, color 0.18s, box-shadow 0.18s, transform 0.12s",
-                    minHeight:56, flex: isMobile ? "1 1 auto" : "0 0 auto",
-                  }}
-                  onMouseDown={e => { if(canAdd) e.currentTarget.style.transform="scale(0.97)"; }}
-                  onMouseUp={e => { e.currentTarget.style.transform="scale(1)"; }}
-                  onMouseLeave={e => { e.currentTarget.style.transform="scale(1)"; }}
-                >
-                  <Plus size={17} strokeWidth={2.5} />
+                    boxShadow: canAdd ? "0 2px 12px rgba(13,154,118,0.30)" : "none",
+                    transition:"background 0.18s, color 0.18s, box-shadow 0.18s",
+                    minHeight:48,
+                  }}>
+                  <Plus size={15} strokeWidth={2.5} />
                   Agregar
                 </button>
                 ); })()}
               </div>
 
-              {/* Empty state */}
+              {/* Pending tasks */}
               {metaActions.filter(a=>!a.done).length === 0 && (
-                <div style={{ textAlign:"center", padding:"56px 20px 44px" }}>
-                  <div style={{ width:56, height:56, borderRadius:16, background:`${T.accent}0D`, border:`1px solid ${T.accent}1F`, display:"flex", alignItems:"center", justifyContent:"center", margin:"0 auto 16px" }}>
-                    <Check size={24} color={T.accent} strokeWidth={1.8} style={{ opacity:0.8 }} />
-                  </div>
-                  <p style={{ margin:"0 0 5px", fontSize:15, fontWeight:600, fontFamily:fontDisp, letterSpacing:"-0.02em", color:T.txt }}>Todo al día</p>
-                  <p style={{ margin:0, fontSize:12.5, color:T.txt3, fontFamily:font }}>Sin acciones pendientes — agrega la primera arriba.</p>
+                <div style={{ textAlign:"center", padding:"38px 0 26px", color:T.txt3, fontSize:13.5, fontFamily:font, opacity:0.55 }}>
+                  Sin acciones pendientes · Agrega la primera arriba
                 </div>
               )}
               {metaActions.filter(a=>!a.done).map(a => {
@@ -575,109 +501,13 @@ export default function MetaPanel({
                 const prioNext = a.priority==="normal" ? "alto" : a.priority==="alto" ? "urgente" : "normal";
                 const prioDot  = isUrgent ? "#EF4444" : isHigh ? "#F59E0B" : (isLight?"#94A3B8":"#64748B");
                 const prioLabel = a.priority==="urgente" ? "Urgente" : a.priority==="alto" ? "Alto" : "Normal";
-                // ── Elementos compartidos (misma lógica, se acomodan distinto en PC vs iPhone) ──
-                const checkBtn = (
-                  <button
-                    className="mp-check"
-                    onClick={() => { persistDone(a, true); setMetaActions(p => p.map(x => x.id===a.id ? {...x,done:true} : x)); }}
-                    title="Marcar como completada"
-                    style={{ width:24, height:24, borderRadius:"50%", border:`1.5px solid ${isLight?"rgba(15,23,42,0.26)":"rgba(255,255,255,0.30)"}`, background:"transparent", cursor:"pointer", flexShrink:0 }}
-                  />
-                );
-                const titleEl = (
-                  <E val={a.text} onSave={v => setMetaActions(p => p.map(x => x.id===a.id ? {...x,text:v} : x))}
-                    style={{ fontSize:16.5, fontWeight:560, color:T.txt, fontFamily:font, lineHeight:1.35, letterSpacing:"-0.014em" }} />
-                );
-                const metaEl = (
-                  <div style={{ display:"flex", alignItems:"center", gap:7, flexWrap:"wrap" }}>
-                    <E val={a.lead}   onSave={v => setMetaActions(p => p.map(x => x.id===a.id?{...x,lead:v}:x))}   style={{ fontSize:12.5, color:T.txt3, fontFamily:font }} />
-                    <span style={{ fontSize:10, color:T.txt3, opacity:0.4 }}>·</span>
-                    <E val={a.asesor} onSave={v => setMetaActions(p => p.map(x => x.id===a.id?{...x,asesor:v}:x))} style={{ fontSize:12.5, color:T.txt3, fontFamily:font }} />
-                  </div>
-                );
-                const prioBtn = (
-                  <button
-                    onClick={() => setMetaActions(p => p.map(x => x.id===a.id?{...x,priority:prioNext}:x))}
-                    title="Cambiar prioridad"
-                    style={{
-                      display:"inline-flex", alignItems:"center", gap:6,
-                      fontSize:12, fontWeight:600, fontFamily:font,
-                      color:prioColor, background:`${prioDot}12`,
-                      border:`1px solid ${prioDot}2E`, borderRadius:99,
-                      padding:"6px 12px 6px 10px", cursor:"pointer",
-                      letterSpacing:"0.01em", transition:"background 0.15s, border 0.15s",
-                    }}>
-                    <span style={{ width:7, height:7, borderRadius:"50%", background:prioDot, display:"inline-block", flexShrink:0 }} />
-                    {prioLabel}
-                  </button>
-                );
-                const assigneeSel = (
-                  <select
-                    className="mp-select"
-                    value={a.assignee || ""}
-                    onChange={e => {
-                      const v = e.target.value;
-                      setMetaActions(p => p.map(x => x.id===a.id ? {...x, assignee:v, assigneeType:"human"} : x));
-                      // Persistir el responsable en la DB (resuelve asesor_id; 'Todos' → broadcast).
-                      // Sin esto, el coach de Telegram no se enteraba de la asignación.
-                      if (a._persisted && _online) {
-                        supabase.rpc('fn_assign_team_action', { p_action_id: a.id, p_asesor_name: v })
-                          .then(({ error }) => { if (error) console.warn('[Stratos] assign team_action:', error.message); });
-                      }
-                    }}
-                    style={{
-                      fontSize:12.5, fontFamily:font, fontWeight:500,
-                      color: a.assignee ? T.txt2 : T.txt3,
-                      background: isLight ? "rgba(15,23,42,0.035)" : "rgba(255,255,255,0.045)",
-                      border:`1px solid ${a.assignee ? T.accentB : T.border}`,
-                      borderRadius:10, padding:"7px 12px",
-                      cursor:"pointer", outline:"none", maxWidth: isMobile ? 200 : 190,
-                    }}
-                  >
-                    <option value="">＋ Responsable</option>
-                    <option value="Todos">👥 Todos (todo el equipo)</option>
-                    <optgroup label="── Equipo Humano">
-                      {(teamMembers.length ? teamMembers : ["Oscar Gálvez","Alexia Santillán","Araceli Oneto","Ken Duke","Emmanuel Ortiz","Cecilia Mendoza"]).map(n => (
-                        <option key={n} value={n}>{n}</option>
-                      ))}
-                    </optgroup>
-                  </select>
-                );
-                const iagentBtn = (
-                  <button
-                    className="mp-ghost"
-                    disabled
-                    title="Próximamente — Asignación directa a iAgents IA"
-                    style={{
-                      display:"flex", alignItems:"center", gap:5,
-                      padding:"7px 12px", borderRadius:10,
-                      border:`1px solid ${T.blue}28`,
-                      background:`${T.blue}07`,
-                      color:T.blue, fontSize:11.5, fontFamily:font, fontWeight:600,
-                      cursor:"not-allowed", opacity:0.4,
-                    }}
-                  >
-                    <Atom size={11} />iAgent IA
-                  </button>
-                );
-                const dateEl = (
-                  <E val={a.date || "—"} onSave={v => setMetaActions(p => p.map(x => x.id===a.id?{...x,date:v}:x))}
-                    style={{ fontSize:12.5, fontWeight:600, fontFamily:fontDisp, color:prioColor, background:`${prioColor}14`, border:`1px solid ${prioColor}28`, padding:"6px 14px", borderRadius:99, whiteSpace:"nowrap", letterSpacing:"-0.01em" }} />
-                );
-                const delBtn = (
-                  <button className={isMobile ? "" : "mp-del"} onClick={() => { persistDelete(a); setMetaActions(p => p.filter(x => x.id!==a.id)); }} title="Eliminar acción" style={{ background:"none", border:"none", cursor:"pointer", padding:4, display:"flex", alignItems:"center", opacity: isMobile ? 0.5 : undefined }}>
-                    <Trash2 size={15} color={T.txt3} />
-                  </button>
-                );
-
                 return (
                   <div
                     key={a.id}
-                    className="mp-row"
-                    draggable={!isMobile}
+                    draggable
                     onDragStart={e => { e.dataTransfer.setData("maDragId", String(a.id)); e.currentTarget.style.opacity="0.35"; }}
                     onDragEnd={e => { e.currentTarget.style.opacity="1"; e.currentTarget.style.outline="none"; }}
-                    onDragOver={e => { e.preventDefault(); e.currentTarget.style.outline=`2px solid ${ring}`; e.currentTarget.style.outlineOffset="-1px"; }}
+                    onDragOver={e => { e.preventDefault(); e.currentTarget.style.outline=`2px solid ${T.accent}55`; e.currentTarget.style.borderRadius="14px"; }}
                     onDragLeave={e => { e.currentTarget.style.outline="none"; }}
                     onDrop={e => {
                       e.preventDefault(); e.currentTarget.style.outline="none";
@@ -694,61 +524,111 @@ export default function MetaPanel({
                       });
                     }}
                     style={{
-                      position:"relative",
-                      padding: isMobile ? "14px 16px" : "16px 18px",
-                      borderRadius:18, marginBottom:10,
+                      display:"flex", alignItems:"flex-start", gap:12,
+                      padding:"14px 16px", borderRadius:14, marginBottom:8,
                       background: isUrgent
-                        ? (isLight?"rgba(239,68,68,0.045)":"rgba(239,68,68,0.05)")
-                        : (isLight?"#FFFFFF":"rgba(255,255,255,0.028)"),
-                      border:`1px solid ${isUrgent ? "rgba(239,68,68,0.20)" : T.border}`,
-                      boxShadow: isLight ? "0 1px 2px rgba(15,23,42,0.05)" : "none",
+                        ? (isLight?"rgba(239,68,68,0.03)":"rgba(239,68,68,0.04)")
+                        : (isLight?"#FFFFFF":"rgba(255,255,255,0.03)"),
+                      border:`1px solid ${isUrgent ? "rgba(239,68,68,0.18)" : T.border}`,
+                      transition:"background 0.15s, border 0.15s",
                     }}
                   >
-                    {isMobile ? (
-                      /* ── iPhone: tarjeta apilada, TODO alineado al borde izquierdo (sin
-                            gutter). El check va a la derecha (trailing) para no crear el
-                            "margen" lateral izquierdo. ── */
-                      <>
-                        {/* Fila 1 — título a ancho completo (flush-left) + check a la derecha */}
-                        <div style={{ display:"flex", alignItems:"flex-start", gap:12 }}>
-                          <div style={{ flex:1, minWidth:0 }}>{titleEl}</div>
-                          <div style={{ flexShrink:0, marginTop:1 }}>{checkBtn}</div>
-                        </div>
-                        {/* Fila 2 — contexto, flush-left */}
-                        <div style={{ marginTop:8 }}>{metaEl}</div>
-                        {/* Fila 3 — prioridad · fecha · responsable · iAgent + borrar, flush-left */}
-                        <div style={{ marginTop:13, display:"flex", alignItems:"center", gap:8, flexWrap:"wrap" }}>
-                          {prioBtn}{dateEl}{assigneeSel}{iagentBtn}
-                          <div style={{ marginLeft:"auto" }}>{delBtn}</div>
-                        </div>
-                      </>
-                    ) : (
-                      /* ── PC: una línea. Contexto + responsable a la IZQUIERDA;
-                            prioridad y fecha en columnas de ancho fijo a la derecha con
-                            margen limpio y constante; borrar flota al pasar (no reserva
-                            espacio, así la fecha no queda desfasada del borde). ── */
-                      <>
-                        <div style={{ display:"flex", alignItems:"center", gap:14 }}>
-                          {checkBtn}
-                          <div style={{ flex:"1 1 360px", minWidth:0 }}>
-                            <div style={{ marginBottom:7 }}>{titleEl}</div>
-                            <div style={{ display:"flex", alignItems:"center", gap:9, flexWrap:"wrap" }}>
-                              {metaEl}
-                              {assigneeSel}
-                              {iagentBtn}
-                            </div>
-                          </div>
-                          <div className="mp-actions" style={{ display:"flex", alignItems:"center", gap:18, flexShrink:0 }}>
-                            <div style={{ display:"flex", justifyContent:"flex-end", width:92 }}>{prioBtn}</div>
-                            <div style={{ display:"flex", justifyContent:"flex-end", width:132 }}>{dateEl}</div>
-                          </div>
-                        </div>
-                        {/* Eliminar — flota a la derecha, aparece al pasar (no reserva espacio) */}
-                        <button className="mp-rowdel" onClick={() => { persistDelete(a); setMetaActions(p => p.filter(x => x.id!==a.id)); }} title="Eliminar acción" style={{ background:"none", border:"none", cursor:"pointer", padding:4, display:"flex", alignItems:"center" }}>
-                          <Trash2 size={15} color={T.txt3} />
+                    {/* Drag handle */}
+                    <GripVertical size={15} color={T.txt3} style={{ cursor:"grab", flexShrink:0, marginTop:6, opacity:0.30 }} />
+
+                    {/* Checkbox — redondo estilo Apple Reminders, borde visible */}
+                    <button
+                      onClick={() => { persistDone(a, true); setMetaActions(p => p.map(x => x.id===a.id ? {...x,done:true} : x)); }}
+                      title="Marcar como completada"
+                      style={{ width:22, height:22, borderRadius:"50%", border:`1.5px solid ${isLight?"rgba(15,23,42,0.28)":"rgba(255,255,255,0.32)"}`, background:"transparent", cursor:"pointer", flexShrink:0, marginTop:3, display:"flex", alignItems:"center", justifyContent:"center", transition:"all 0.15s" }}
+                    />
+
+                    {/* Content */}
+                    <div style={{ flex:1, minWidth:0 }}>
+                      <E
+                        val={a.text}
+                        onSave={v => setMetaActions(p => p.map(x => x.id===a.id ? {...x,text:v} : x))}
+                        style={{ fontSize:15, fontWeight:500, color:T.txt, fontFamily:font, lineHeight:1.45, letterSpacing:"-0.01em", marginBottom:7 }}
+                      />
+                      <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:9, flexWrap:"wrap" }}>
+                        <E val={a.lead}   onSave={v => setMetaActions(p => p.map(x => x.id===a.id?{...x,lead:v}:x))}   style={{ fontSize:12, color:T.txt3, fontFamily:font }} />
+                        <span style={{ fontSize:10, color:T.txt3, opacity:0.4 }}>·</span>
+                        <E val={a.asesor} onSave={v => setMetaActions(p => p.map(x => x.id===a.id?{...x,asesor:v}:x))} style={{ fontSize:12, color:T.txt3, fontFamily:font }} />
+                        {/* Priority cycle pill */}
+                        <button
+                          onClick={() => setMetaActions(p => p.map(x => x.id===a.id?{...x,priority:prioNext}:x))}
+                          title="Click para cambiar prioridad"
+                          style={{
+                            display:"inline-flex", alignItems:"center", gap:5,
+                            fontSize:11, fontWeight:600, fontFamily:font,
+                            color:prioColor, background:`${prioDot}10`,
+                            border:`1px solid ${prioDot}28`, borderRadius:99,
+                            padding:"3px 10px 3px 8px", cursor:"pointer",
+                            letterSpacing:"0.01em", transition:"all 0.15s",
+                          }}>
+                          <span style={{ width:7, height:7, borderRadius:"50%", background:prioDot, display:"inline-block", flexShrink:0 }} />
+                          {prioLabel}
                         </button>
-                      </>
-                    )}
+                      </div>
+                      {/* Assignee row */}
+                      <div style={{ display:"flex", alignItems:"center", gap:6 }}>
+                        <select
+                          value={a.assignee || ""}
+                          onChange={e => {
+                            const v = e.target.value;
+                            setMetaActions(p => p.map(x => x.id===a.id ? {...x, assignee:v, assigneeType:"human"} : x));
+                            // Persistir el responsable en la DB (resuelve asesor_id; 'Todos' → broadcast).
+                            // Sin esto, el coach de Telegram no se enteraba de la asignación.
+                            if (a._persisted && _online) {
+                              supabase.rpc('fn_assign_team_action', { p_action_id: a.id, p_asesor_name: v })
+                                .then(({ error }) => { if (error) console.warn('[Stratos] assign team_action:', error.message); });
+                            }
+                          }}
+                          style={{
+                            fontSize:11.5, fontFamily:font, fontWeight:500,
+                            color: a.assignee ? T.txt2 : T.txt3,
+                            background: isLight ? "rgba(15,23,42,0.04)" : "rgba(255,255,255,0.05)",
+                            border:`1px solid ${a.assignee ? T.accentB : T.border}`,
+                            borderRadius:8, padding:"4px 9px",
+                            cursor:"pointer", outline:"none", maxWidth:170,
+                          }}
+                        >
+                          <option value="">＋ Responsable</option>
+                          <option value="Todos">👥 Todos (todo el equipo)</option>
+                          <optgroup label="── Equipo Humano">
+                            {(teamMembers.length ? teamMembers : ["Oscar Gálvez","Alexia Santillán","Araceli Oneto","Ken Duke","Emmanuel Ortiz","Cecilia Mendoza"]).map(n => (
+                              <option key={n} value={n}>{n}</option>
+                            ))}
+                          </optgroup>
+                        </select>
+                        <button
+                          disabled
+                          title="Próximamente — Asignación directa a iAgents IA"
+                          style={{
+                            display:"flex", alignItems:"center", gap:4,
+                            padding:"4px 9px", borderRadius:8,
+                            border:`1px solid ${T.blue}28`,
+                            background:`${T.blue}07`,
+                            color:T.blue, fontSize:10.5, fontFamily:font, fontWeight:600,
+                            cursor:"not-allowed", opacity:0.38,
+                          }}
+                        >
+                          <Atom size={10} />iAgent IA
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Date + delete */}
+                    <div style={{ display:"flex", flexDirection:"column", alignItems:"flex-end", gap:7, flexShrink:0 }}>
+                      <E
+                        val={a.date || "—"}
+                        onSave={v => setMetaActions(p => p.map(x => x.id===a.id?{...x,date:v}:x))}
+                        style={{ fontSize:12, fontWeight:600, fontFamily:fontDisp, color:prioColor, background:`${prioColor}13`, border:`1px solid ${prioColor}25`, padding:"4px 12px", borderRadius:99, whiteSpace:"nowrap", cursor:"text" }}
+                      />
+                      <button onClick={() => { persistDelete(a); setMetaActions(p => p.filter(x => x.id!==a.id)); }} title="Eliminar acción" style={{ background:"none", border:"none", cursor:"pointer", padding:3, opacity:0.30, display:"flex", alignItems:"center" }}>
+                        <Minus size={13} color={T.txt3} />
+                      </button>
+                    </div>
                   </div>
                 );
               })}
@@ -797,63 +677,62 @@ export default function MetaPanel({
 
           {/* ═══ TAB 2: DOCUMENTOS ═══════════════════════════════════════ */}
           {metaTab === "docs" && (
-            <div style={{ width:"100%" }}>
+            <div style={{ maxWidth:800, margin:"0 auto" }}>
               {/* Header */}
-              <div style={{ marginBottom:22 }}>
-                <h3 style={{ margin:0, fontSize:26, fontWeight:800, fontFamily:fontDisp, letterSpacing:"-0.045em", color:T.txt }}>Documentos del Equipo</h3>
-                <p style={{ margin:"8px 0 0", fontSize:13.5, color:T.txt3, fontFamily:font, lineHeight:1.5 }}>
+              <div style={{ marginBottom:18 }}>
+                <h3 style={{ margin:0, fontSize:19, fontWeight:700, fontFamily:fontDisp, letterSpacing:"-0.035em", color:T.txt }}>Documentos del Equipo</h3>
+                <p style={{ margin:"5px 0 0", fontSize:12.5, color:T.txt3, fontFamily:font, lineHeight:1.5 }}>
                   Enlaces a Google Docs, Drive, Notion, Figma y más — siempre a la mano para todo el equipo.
                 </p>
               </div>
 
               {/* Add bar — solo admins (RLS solo les permite escribir a ellos) */}
               {canEditFinal && (
-                <div style={{ display:"flex", gap:10, marginBottom:24, alignItems:"stretch", flexWrap:"wrap" }}>
+                <div style={{ display:"flex", gap:9, marginBottom:22, alignItems:"stretch", flexWrap:"wrap" }}>
                   <input
-                    className="mp-input"
                     value={docUrl}
                     onChange={e => setDocUrl(e.target.value)}
                     onKeyDown={e => { if (e.key === "Enter") addDoc(); }}
                     placeholder="Pega el enlace — https://docs.google.com/…"
                     style={{
-                      flex:"2 1 280px", padding:"14px 18px", borderRadius:14,
-                      background: isLight?"#FFFFFF":"rgba(255,255,255,0.04)",
-                      border:`1px solid ${docUrl ? T.accent : T.border}`,
-                      color:T.txt, fontSize:14.5, fontFamily:font, outline:"none",
-                      boxShadow: docUrl ? `0 0 0 3px ${ringSoft}` : (isLight?"0 1px 2px rgba(15,23,42,0.04)":"none"),
+                      flex:"2 1 280px", padding:"13px 17px", borderRadius:13,
+                      background: isLight?"#FFFFFF":"rgba(255,255,255,0.05)",
+                      border:`1.5px solid ${docUrl ? T.accent : T.border}`,
+                      color:T.txt, fontSize:14, fontFamily:font, outline:"none",
+                      boxShadow: docUrl ? `0 0 0 3px ${T.accent}18` : "none",
+                      transition:"border 0.15s, box-shadow 0.15s",
                     }}
                   />
                   <input
-                    className="mp-input"
                     value={docTitle}
                     onChange={e => setDocTitle(e.target.value)}
                     onKeyDown={e => { if (e.key === "Enter") addDoc(); }}
                     placeholder="Nombre (opcional)"
                     style={{
-                      flex:"1 1 170px", padding:"14px 18px", borderRadius:14,
-                      background: isLight?"#FFFFFF":"rgba(255,255,255,0.04)",
-                      border:`1px solid ${T.border}`,
-                      color:T.txt, fontSize:14.5, fontFamily:font, outline:"none",
+                      flex:"1 1 170px", padding:"13px 17px", borderRadius:13,
+                      background: isLight?"#FFFFFF":"rgba(255,255,255,0.05)",
+                      border:`1.5px solid ${T.border}`,
+                      color:T.txt, fontSize:14, fontFamily:font, outline:"none",
                     }}
                   />
                   {(() => { const canAdd = !!docUrl.trim(); return (
                   <button
                     onClick={addDoc}
                     style={{
-                      display:"flex", alignItems:"center", justifyContent:"center", gap:7,
-                      padding:"0 24px", borderRadius:14, border:"none",
+                      display:"flex", alignItems:"center", gap:7,
+                      padding:"0 22px", borderRadius:13, border:"none",
                       background: canAdd
                         ? `linear-gradient(135deg,#0D9A76,${T.accent})`
-                        : (isLight?"rgba(0,0,0,0.05)":"rgba(255,255,255,0.06)"),
+                        : (isLight?"rgba(0,0,0,0.06)":"rgba(255,255,255,0.07)"),
                       color: canAdd ? "#041016" : T.txt3,
                       fontSize:13.5, fontWeight:700, fontFamily:fontDisp,
                       cursor: canAdd ? "pointer" : "default",
                       flexShrink:0, letterSpacing:"-0.02em",
-                      boxShadow: canAdd ? `0 4px 16px ${_hex(T.accent,'40')}` : "none",
+                      boxShadow: canAdd ? "0 2px 12px rgba(13,154,118,0.30)" : "none",
                       transition:"background 0.18s, color 0.18s, box-shadow 0.18s",
-                      minHeight:50,
+                      minHeight:48,
                     }}>
-                    <Plus size={16} strokeWidth={2.5} />
+                    <Plus size={15} strokeWidth={2.5} />
                     Agregar
                   </button>
                   ); })()}
@@ -934,8 +813,8 @@ export default function MetaPanel({
           {metaTab === "plan" && (
             <div>
               <div style={{ textAlign:"center", marginBottom:18 }}>
-                <p style={{ margin:0, fontSize:25, fontWeight:800, fontFamily:fontDisp, letterSpacing:"-0.045em", color:T.txt }}>{brandLabel.toUpperCase()}</p>
-                <p style={{ margin:"4px 0 0", fontSize:11.5, color:T.txt3, fontFamily:font, letterSpacing:"0.07em", textTransform:"uppercase" }}>Plan Estratégico · Una Página · Scaling Up® · Q2 2026</p>
+                <p style={{ margin:0, fontSize:19, fontWeight:800, fontFamily:fontDisp, letterSpacing:"-0.04em", color:T.txt }}>{brandLabel.toUpperCase()}</p>
+                <p style={{ margin:"3px 0 0", fontSize:10, color:T.txt3, fontFamily:font, letterSpacing:"0.08em", textTransform:"uppercase" }}>Plan Estratégico · Una Página · Scaling Up® · Q2 2026</p>
               </div>
 
               {/* CORE */}
@@ -1086,8 +965,8 @@ export default function MetaPanel({
                     <div style={{ width:3, height:18, borderRadius:2, background:`linear-gradient(180deg,${T.accent},${T.blue})` }} />
                     <span style={{ fontSize:8, fontWeight:800, letterSpacing:"0.16em", textTransform:"uppercase", color:T.txt3, fontFamily:fontDisp }}>Protocolo Operativo · Stratos Capital Group</span>
                   </div>
-                  <p style={{ margin:"0 0 4px", fontSize:25, fontWeight:800, color:T.txt, fontFamily:fontDisp, letterSpacing:"-0.045em" }}>Protocolo {brandLabel}</p>
-                  <p style={{ margin:0, fontSize:12.5, color:T.txt2, fontFamily:font }}>Sistema de ventas consultivo · Riviera Maya · Alta inversión</p>
+                  <p style={{ margin:"0 0 3px", fontSize:21, fontWeight:800, color:T.txt, fontFamily:fontDisp, letterSpacing:"-0.04em" }}>Protocolo {brandLabel}</p>
+                  <p style={{ margin:0, fontSize:11, color:T.txt2, fontFamily:font }}>Sistema de ventas consultivo · Riviera Maya · Alta inversión</p>
                 </div>
                 <div style={{ display:"flex", gap:8, flexShrink:0, flexWrap: isMobile ? "wrap" : "nowrap", width: isMobile ? "100%" : "auto" }}>
                   {[
@@ -1367,9 +1246,8 @@ export default function MetaPanel({
             </div>
           )}
 
-          </div>{/* /.mp-fade */}
-        </div>{/* /.mp-body */}
-      </div>{/* /.mp */}
+        </div>
+      </div>
     </>
   );
 }
