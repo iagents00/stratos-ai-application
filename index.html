@@ -86,11 +86,13 @@
         // ventana/pestaña, o restaura de bfcache con "pageshow" sin ese evento →
         // data-hidden="1" queda PEGADO y mobile-perf.css congela las animaciones
         // infinitas (átomo, dot "Live", anillo del "Centro de Inteligencia").
-        // Re-sincronizamos también en pageshow y focus para destrabarlas. Como
-        // syncHidden solo QUITA el flag si !document.hidden, es seguro. (Chrome no
-        // lo necesita, pero no le hace daño.)
-        window.addEventListener("pageshow", syncHidden);
-        window.addEventListener("focus", syncHidden);
+        // En focus/pageshow la página SÍ está visible, así que FORZAMOS quitar el
+        // flag SIN confiar en document.hidden (que Safari a veces deja "stale" en
+        // true). Solo lo quita, nunca lo pone → seguro. (Chrome no lo necesita.)
+        function forceShown() { el.removeAttribute("data-hidden"); }
+        window.addEventListener("pageshow", forceShown);
+        window.addEventListener("focus", forceShown);
+        document.addEventListener("visibilitychange", function () { if (!document.hidden) forceShown(); });
         syncHidden();
 
         // Detector de crash v2 [guard:BOOT-HEALTH] — dos señales + memoria:

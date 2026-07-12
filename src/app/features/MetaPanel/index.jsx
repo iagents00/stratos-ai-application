@@ -414,9 +414,12 @@ export default function MetaPanel({
 
   return (
     <>
-      {/* Panel — PANTALLA COMPLETA (como una vista del CRM). Barra superior sticky
-          translúcida + contenido alineado a un contenedor, estilo Apple/ERP pro. */}
-      <div className="mp" style={mpVars}>
+      {/* Panel como SECCIÓN dentro del contenido: en escritorio se confina al área
+          de contenido (debajo del header de 52px y a la derecha del sidebar de 72px),
+          dejando visibles el header y el menú izquierdo. En móvil (sin sidebar) ocupa
+          toda la pantalla. La clase .mp trae position:fixed; inset:0 — acá sólo movemos
+          top/left para dejar el marco de la app a la vista. */}
+      <div className="mp" style={{ ...mpVars, top: isMobile ? 0 : 52, left: isMobile ? 0 : 72 }}>
         <style>{MP_CSS}</style>
 
         {/* ── Barra superior (sticky, translúcida, alineada al contenedor) ── */}
