@@ -84,22 +84,19 @@ const DynIsland = ({ onExpand, onOpenLead, notifications = [], theme = "dark", b
         onMouseUp={e => { e.currentTarget.style.transition = "transform 0.20s cubic-bezier(0.34,1.56,0.64,1)"; e.currentTarget.style.transform = "scale(1.022)"; }}
       >
         {/* Shimmer beam */}
-        {/* will-change: Safari congela animaciones dentro de un ancestro con
-            backdrop-filter (el header). Promoverlo a su propia capa GPU lo destraba. */}
         <div key={beamIdx} style={{
           position: "absolute", top: 0, bottom: 0, left: 0, width: "52%",
           background: isLight
             ? "linear-gradient(90deg, transparent 0%, rgba(13,154,118,0.11) 50%, transparent 100%)"
             : "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.22) 50%, transparent 100%)",
           animation: "pillBeamOnce 1.8s ease-in-out both",
-          willChange: "transform, opacity",
           pointerEvents: "none",
         }} />
 
         {/* Content */}
         <div style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
           <div style={{ position: "relative", flexShrink: 0 }}>
-            <div style={{ position: "absolute", inset: -2, borderRadius: "50%", background: "rgba(52,211,153,0.20)", animation: "pulse 2.6s ease-in-out infinite", willChange: "transform, opacity" }} />
+            <div style={{ position: "absolute", inset: -2, borderRadius: "50%", background: "rgba(52,211,153,0.20)", animation: "pulse 2.6s ease-in-out infinite" }} />
             <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#34D399", boxShadow: "0 0 6px rgba(52,211,153,0.85), 0 0 12px rgba(52,211,153,0.30)" }} />
           </div>
           <span style={{
