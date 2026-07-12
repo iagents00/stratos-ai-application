@@ -1230,7 +1230,7 @@ export default function App() {
     const mintC = isAdmin ? "#A78BFA" : "#6EE7C2";
     const activeColor = isAdmin ? "#A78BFA" : (isLight ? T.accent : mintC);
     const activeIcon  = isLight ? activeColor : (isAdmin ? "#ECE6FF" : "#E9FCF4");
-    const iconSize = n.id === "d" ? 24 : n.id === "ia" ? 23 : n.id === "lp" ? 23 : n.id === "e" ? 22 : n.id === "c" ? 22 : 20;
+    const iconSize = n.id === "d" ? 24 : n.id === "ia" ? 22 : n.id === "lp" ? 23 : n.id === "e" ? 21 : n.id === "c" ? 21 : 20;
     return (
       <div style={{ display:"flex", flexDirection:"column", alignItems:"center", gap:4, width:54, padding:0 }}>
         <button
