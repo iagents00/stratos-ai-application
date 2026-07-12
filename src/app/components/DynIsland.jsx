@@ -99,7 +99,7 @@ const DynIsland = ({ onExpand, onOpenLead, notifications = [], theme = "dark", b
         {/* Content */}
         <div style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
           <div style={{ position: "relative", flexShrink: 0 }}>
-            <div style={{ position: "absolute", inset: -2, borderRadius: "50%", background: "rgba(52,211,153,0.20)", animation: "pulse 2.6s ease-in-out infinite", willChange: "transform, opacity" }} />
+            <div data-brand-motion="true" style={{ position: "absolute", inset: -2, borderRadius: "50%", background: "rgba(52,211,153,0.20)", animation: "pulse 2.6s ease-in-out infinite", willChange: "transform, opacity" }} />
             <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#34D399", boxShadow: "0 0 6px rgba(52,211,153,0.85), 0 0 12px rgba(52,211,153,0.30)" }} />
           </div>
           <span style={{
@@ -137,6 +137,7 @@ const DynIsland = ({ onExpand, onOpenLead, notifications = [], theme = "dark", b
             animation: "fadeSlideDown 0.22s cubic-bezier(0.4,0,0.2,1)",
           }}>
             <style>{`@keyframes fadeSlideDown{from{opacity:0;transform:translateX(-50%) translateY(-8px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+              @keyframes stratosAtomSpin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
               @keyframes intelMarquee{from{transform:translateX(0)}to{transform:translateX(-50%)}}`}</style>
 
             {isOpen && !selectedNotif && !selectedFeature && !showAll && (
@@ -144,7 +145,7 @@ const DynIsland = ({ onExpand, onOpenLead, notifications = [], theme = "dark", b
                 {/* Header */}
                 <div style={{ padding: "0 20px 12px", display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
-                    <div style={{ animation: "stratosAtomSpin 20s linear infinite", filter: "drop-shadow(0 0 5px rgba(110,231,194,0.35))" }}>
+                    <div data-brand-motion="true" style={{ animation: "stratosAtomSpin 20s linear infinite", transformOrigin: "center", display: "flex", filter: "drop-shadow(0 0 5px rgba(110,231,194,0.35))" }}>
                       <StratosAtom size={14} color="#6EE7C2" />
                     </div>
                     <div>
