@@ -18,8 +18,8 @@ const G = {"c":{"s":"<path d=\"M336 256c-20.56 0-40.44-9.18-56-25.84-15.13-16.25
 
 const PREMIUM_ICON_OVERRIDES = {
   c: {
-    s: "<circle cx=\"224\" cy=\"190\" r=\"58\" fill=\"currentColor\"/><path d=\"M96 390c22-82 86-128 160-128s138 46 160 128\" fill=\"none\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"30\"/><circle cx=\"372\" cy=\"160\" r=\"30\" fill=\"currentColor\" opacity=\"0.72\"/>",
-    o: "<circle cx=\"224\" cy=\"190\" r=\"58\" fill=\"none\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"30\"/><path d=\"M96 390c22-82 86-128 160-128s138 46 160 128\" fill=\"none\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"30\"/><circle cx=\"372\" cy=\"160\" r=\"30\" fill=\"none\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"30\" opacity=\"0.72\"/>",
+    s: "<g transform=\"scale(21.333333)\" fill=\"none\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"1.45\"><path d=\"M16 2v2\"/><path d=\"M17.915 22a6 6 0 0 0-12 0\"/><path d=\"M8 2v2\"/><circle cx=\"12\" cy=\"12\" r=\"4\"/><rect x=\"3\" y=\"4\" width=\"18\" height=\"18\" rx=\"2\"/></g>",
+    o: "<g transform=\"scale(21.333333)\" fill=\"none\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"1.45\"><path d=\"M16 2v2\"/><path d=\"M17.915 22a6 6 0 0 0-12 0\"/><path d=\"M8 2v2\"/><circle cx=\"12\" cy=\"12\" r=\"4\"/><rect x=\"3\" y=\"4\" width=\"18\" height=\"18\" rx=\"2\"/></g>",
   },
   lp: {
     s: "<polygon points=\"256 64 422 160 422 352 256 448 90 352 90 160\" fill=\"currentColor\"/><polygon points=\"256 64 422 160 422 352 256 448 90 352 90 160\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"24\" stroke-linejoin=\"round\"/>",
