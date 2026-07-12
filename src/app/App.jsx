@@ -1800,12 +1800,6 @@ export default function App() {
         {/* CONTENT */}
         <div style={{ flex:1, display:"flex", overflow:"hidden" }}>
           <div key={v} className="stratos-content-area" style={{ flex:1, padding:"18px 22px", overflowY:"auto", animation:"fadeIn 0.28s ease", display:"flex", flexDirection:"column" }}>
-            {leadsRefreshing && v === "c" && (
-              <div style={{ position:"fixed", top:72, right:28, zIndex:200, display:"flex", alignItems:"center", gap:7, padding:"5px 12px", borderRadius:99, background:isLight?"rgba(255,255,255,0.95)":"rgba(20,28,40,0.95)", border:`1px solid ${T.accent}55`, color:T.accent, fontSize:11, fontWeight:700, fontFamily:font, boxShadow:"0 2px 12px rgba(0,0,0,0.22)" }}>
-                <span style={{ display:"inline-block", width:12, height:12, border:`2px solid ${T.accent}40`, borderTopColor:T.accent, borderRadius:"50%", animation:"spin 0.8s linear infinite" }} />
-                Actualizando lista…
-              </div>
-            )}
             {user?.role && !canAccessModule(v, user, clientConfig)
               ? <PermissionGate moduleId={v} onGoBack={() => setV("c")} />
               : <Suspense fallback={
@@ -1817,7 +1811,7 @@ export default function App() {
                   {v === "d"      && (clientConfig?.features?.comandoDirectivo
                     ? <ComandoDirectivo leadsData={leadsData} T={T} theme={theme} />
                     : <Dash oc={oc} leadsData={leadsData} T={T} />)}
-                  {v === "c"      && <CRM oc={oc} leadsData={leadsData} setLeadsData={setLeadsData} theme={theme} setTheme={setTheme} autoOpenPriority1={autoOpenPriority1} onAutoOpenHandled={() => setAutoOpenPriority1(0)} softDeleteLead={softDeleteLead} autoOpenLead={crmAutoOpenLead} onAutoOpenLeadHandled={() => setCrmAutoOpenLead(null)} autoOpenNewLead={crmNewLeadTick} onNewLeadHandled={() => setCrmNewLeadTick(0)} />}
+                  {v === "c"      && <CRM oc={oc} leadsData={leadsData} setLeadsData={setLeadsData} theme={theme} setTheme={setTheme} isRefreshing={leadsRefreshing} autoOpenPriority1={autoOpenPriority1} onAutoOpenHandled={() => setAutoOpenPriority1(0)} softDeleteLead={softDeleteLead} autoOpenLead={crmAutoOpenLead} onAutoOpenLeadHandled={() => setCrmAutoOpenLead(null)} autoOpenNewLead={crmNewLeadTick} onNewLeadHandled={() => setCrmNewLeadTick(0)} />}
                   {v === "wa"     && canAccessModule("wa", user, clientConfig) && <WhatsAppInbox T={T} isLight={isLight} inbox={waInbox} openLead={waOpenLead} openExpediente={openLeadExpediente} />}
                   {v === "trash"  && <Trash trashedLeads={trashedLeads} onRestore={restoreLead} onHardDelete={hardDeleteLead} onRefresh={refreshTrash} T={T} />}
                   {v === "ia"     && <IACRM oc={oc} T={T} theme={theme} />}

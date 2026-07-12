@@ -122,7 +122,7 @@ function useDebounced(value, ms = 200) {
   return debounced;
 }
 
-function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () => {}, autoOpenPriority1 = 0, onAutoOpenHandled, softDeleteLead, autoOpenLead = null, onAutoOpenLeadHandled = () => {}, autoOpenNewLead = 0, onNewLeadHandled = () => {} }) {
+function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () => {}, isRefreshing = false, autoOpenPriority1 = 0, onAutoOpenHandled, softDeleteLead, autoOpenLead = null, onAutoOpenLeadHandled = () => {}, autoOpenNewLead = 0, onNewLeadHandled = () => {} }) {
   const { user } = useAuth();
   const { config: clientConfig, clientId } = useClient();
   const { get: getScheduledCall } = useScheduledCalls();
@@ -2193,9 +2193,30 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
               <span style={{ fontSize: 10, fontWeight: 700, color: T.txt3, background: T.glass, border: `1px solid ${T.border}`, padding: "3px 9px", borderRadius: 99, letterSpacing: "0.06em" }}>{visibleLeads.length} {L.entityPlural}</span>
               {!canSeeAll && <span style={{ fontSize: 10, fontWeight: 700, color: T.amber, background: `${T.amber}10`, border: `1px solid ${T.amber}28`, padding: "3px 9px", borderRadius: 99, letterSpacing: "0.04em" }}>Vista personal</span>}
             </div>
-            <p style={{ fontSize: 11.5, color: T.txt3, fontFamily: font, margin: 0 }}>
-              <span style={{ color: T.txt2 }}>${(totalPipeline/1000000).toFixed(1)}M</span> en pipeline · <span style={{ color: T.emerald }}>{hotLeads} activos</span> · Score promedio <span style={{ color: T.blue }}>{avgScore}</span>
-            </p>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+              <p style={{ fontSize: 11.5, color: T.txt3, fontFamily: font, margin: 0 }}>
+                <span style={{ color: T.txt2 }}>${(totalPipeline/1000000).toFixed(1)}M</span> en pipeline · <span style={{ color: T.emerald }}>{hotLeads} activos</span> · Score promedio <span style={{ color: T.blue }}>{avgScore}</span>
+              </p>
+              {isRefreshing && (
+                <span
+                  role="status"
+                  aria-live="polite"
+                  style={{
+                    display: "inline-flex", alignItems: "center", gap: 6,
+                    padding: "4px 9px", borderRadius: 99,
+                    background: isLight ? "rgba(255,255,255,0.72)" : "rgba(15,23,42,0.56)",
+                    border: `1px solid ${isLight ? "rgba(16,185,129,0.20)" : "rgba(110,231,194,0.18)"}`,
+                    color: T.accent,
+                    fontSize: 10.5, fontWeight: 750, fontFamily: font,
+                    letterSpacing: "0.01em",
+                    boxShadow: isLight ? "0 1px 2px rgba(15,23,42,0.04)" : "none",
+                  }}
+                >
+                  <span style={{ display:"inline-block", width:10, height:10, border:`2px solid ${T.accent}38`, borderTopColor:T.accent, borderRadius:"50%", animation:"spin 0.8s linear infinite" }} />
+                  Actualizando lista…
+                </span>
+              )}
+            </div>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
             {metricsTabEnabled && (
