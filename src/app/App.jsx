@@ -963,6 +963,11 @@ export default function App() {
 
   /* ── MetaPanel state ── */
   const [metaOpen, setMetaOpen]     = useState(false);
+  // El MetaPanel es una SECCIÓN dentro del contenido (deja header + menú a la vista),
+  // no un overlay a pantalla completa. Al navegar a otra vista (cambia `v`) se cierra
+  // solo, para que no quede tapando la vista nueva. Deps SOLO [v]: abrir el panel no
+  // cambia `v`, así que no se auto-cierra al abrirlo.
+  useEffect(() => { setMetaOpen(false); }, [v]);
   const [metaTab, setMetaTab]       = useState("acciones");
   const [metaActions, setMetaActions] = useState([]);
   const metaActionsSeeded = useRef(false);
