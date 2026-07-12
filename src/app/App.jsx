@@ -1214,6 +1214,8 @@ export default function App() {
   // Sidebar: TODOS los módulos accesibles (rol + org). Se muestran los 5
   // primeros en la barra; el resto vive en un modal centrado "Aplicaciones".
   const accessibleAll = nav.filter(n =>
+    n.id !== "wa"
+    &&
     (!n.adminOnly || ["super_admin","admin"].includes(user?.role))
     && canAccessModule(n.id, user, clientConfig)
   );
@@ -1238,15 +1240,15 @@ export default function App() {
             cursor: hasAccess ? "pointer" : "not-allowed",
             opacity: hasAccess ? 1 : 0.32,
             outline:"none",
-            background: a ? (isLight ? `linear-gradient(180deg, rgba(255,255,255,0.95), ${activeColor}16)` : "linear-gradient(180deg, rgba(255,255,255,0.06), rgba(110,231,194,0.028))") : "transparent",
-            border: a ? (isLight ? `1px solid ${activeColor}40` : "1px solid rgba(190,245,225,0.14)") : "1px solid transparent",
-            boxShadow: a ? (isLight ? `0 4px 12px ${activeColor}2E` : "0 2px 8px rgba(0,0,0,0.28)") : "none",
-            backdropFilter: a ? "blur(8px) saturate(160%)" : "none", WebkitBackdropFilter: a ? "blur(8px) saturate(160%)" : "none",
+            background: a ? (isLight ? "linear-gradient(180deg, rgba(255,255,255,0.78), rgba(255,255,255,0.50))" : "linear-gradient(180deg, rgba(255,255,255,0.06), rgba(110,231,194,0.028))") : "transparent",
+            border: a ? (isLight ? "1px solid rgba(255,255,255,0.92)" : "1px solid rgba(190,245,225,0.14)") : "1px solid transparent",
+            boxShadow: a ? (isLight ? "inset 0 1px 0 rgba(255,255,255,0.95), 0 1px 8px rgba(15,23,42,0.055)" : "0 2px 8px rgba(0,0,0,0.28)") : "none",
+            backdropFilter: a ? "blur(18px) saturate(180%)" : "none", WebkitBackdropFilter: a ? "blur(18px) saturate(180%)" : "none",
             display:"flex", alignItems:"center", justifyContent:"center",
             transition:"background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease",
             position:"relative",
           }}
-          onMouseEnter={e => { if (!a && hasAccess) { e.currentTarget.style.background = isLight ? "rgba(15,23,42,0.03)" : "rgba(255,255,255,0.045)"; e.currentTarget.style.borderColor = isLight ? `${activeColor}22` : "rgba(190,245,225,0.09)"; } }}
+          onMouseEnter={e => { if (!a && hasAccess) { e.currentTarget.style.background = isLight ? "rgba(255,255,255,0.42)" : "rgba(255,255,255,0.045)"; e.currentTarget.style.borderColor = isLight ? "rgba(255,255,255,0.72)" : "rgba(190,245,225,0.09)"; } }}
           onMouseLeave={e => { if (!a) { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = "transparent"; e.currentTarget.style.transform = "scale(1)"; } }}
           onMouseDown={e => { if (hasAccess) e.currentTarget.style.transform = "scale(0.95)"; }}
           onMouseUp={e => { if (hasAccess) e.currentTarget.style.transform = "scale(1)"; }}
@@ -1431,9 +1433,9 @@ export default function App() {
           <div style={{ display:"flex", flexDirection:"column", alignItems:"center", gap:4, marginTop:4, width:54, padding:0 }}>
             <div style={{ height:1, width:32, background: isLight ? "rgba(0,0,0,0.06)" : "rgba(255,255,255,0.05)" }} />
             <button onClick={() => setSidebarMore(true)} title="Todas las apps"
-              style={{ width:48, height:42, borderRadius:14, border: appsActive ? (isLight ? `1px solid ${T.accent}40` : "1px solid rgba(190,245,225,0.14)") : "1px solid transparent", background: appsActive ? (isLight ? `${T.accent}12` : "rgba(255,255,255,0.05)") : "transparent", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", transition:"background 0.18s ease, border-color 0.18s ease, transform 0.15s ease" }}
-              onMouseEnter={e => { if(!appsActive){ e.currentTarget.style.background = isLight ? "rgba(15,23,42,0.03)" : "rgba(255,255,255,0.045)"; e.currentTarget.style.borderColor = isLight ? `${T.accent}22` : "rgba(190,245,225,0.09)"; } }}
-              onMouseLeave={e => { e.currentTarget.style.background = appsActive ? (isLight ? `${T.accent}12` : "rgba(255,255,255,0.05)") : "transparent"; e.currentTarget.style.borderColor = appsActive ? (isLight ? `${T.accent}40` : "rgba(190,245,225,0.14)") : "transparent"; }}
+              style={{ width:48, height:42, borderRadius:14, border: appsActive ? (isLight ? "1px solid rgba(255,255,255,0.92)" : "1px solid rgba(190,245,225,0.14)") : "1px solid transparent", background: appsActive ? (isLight ? "linear-gradient(180deg, rgba(255,255,255,0.78), rgba(255,255,255,0.50))" : "rgba(255,255,255,0.05)") : "transparent", boxShadow: appsActive && isLight ? "inset 0 1px 0 rgba(255,255,255,0.95), 0 1px 8px rgba(15,23,42,0.055)" : "none", backdropFilter: appsActive ? "blur(18px) saturate(180%)" : "none", WebkitBackdropFilter: appsActive ? "blur(18px) saturate(180%)" : "none", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", transition:"background 0.18s ease, border-color 0.18s ease, transform 0.15s ease" }}
+              onMouseEnter={e => { if(!appsActive){ e.currentTarget.style.background = isLight ? "rgba(255,255,255,0.42)" : "rgba(255,255,255,0.045)"; e.currentTarget.style.borderColor = isLight ? "rgba(255,255,255,0.72)" : "rgba(190,245,225,0.09)"; } }}
+              onMouseLeave={e => { e.currentTarget.style.background = appsActive ? (isLight ? "linear-gradient(180deg, rgba(255,255,255,0.78), rgba(255,255,255,0.50))" : "rgba(255,255,255,0.05)") : "transparent"; e.currentTarget.style.borderColor = appsActive ? (isLight ? "rgba(255,255,255,0.92)" : "rgba(190,245,225,0.14)") : "transparent"; }}
             >
               <IosIcon name="menu" filled={appsActive} size={20} color={appsActive ? (isLight ? T.accent : "#E9FCF4") : (isLight ? "rgba(15,23,42,0.45)" : "rgba(255,255,255,0.40)")} />
             </button>

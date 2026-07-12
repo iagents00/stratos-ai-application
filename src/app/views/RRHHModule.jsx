@@ -84,6 +84,16 @@ const RRHHModule = ({ T: _T }) => {
   const totalPostulados = vacantes.reduce((s, v) => s + v.postulados, 0);
   const enProceso = candidates.filter(c => !["Contratado", "Rechazado"].includes(c.etapa)).length;
   const tasaConversion = Math.round((candidates.filter(c => c.etapa === "Contratado").length / candidates.length) * 100);
+  const isLight = T.bg === "#F1F3F6" || T.surface === "#FFFFFF";
+  const peopleCard = {
+    background: isLight
+      ? "linear-gradient(180deg, rgba(255,255,255,0.92), rgba(255,255,255,0.72))"
+      : "linear-gradient(180deg, rgba(255,255,255,0.055), rgba(255,255,255,0.028))",
+    border: `1px solid ${isLight ? "rgba(255,255,255,0.86)" : T.border}`,
+    boxShadow: isLight ? "0 1px 2px rgba(15,23,42,0.04), 0 14px 34px rgba(15,23,42,0.055)" : "0 14px 36px rgba(0,0,0,0.26)",
+    backdropFilter: "blur(22px) saturate(180%)",
+    WebkitBackdropFilter: "blur(22px) saturate(180%)",
+  };
 
   const simulateAIScan = () => {
     setAiScanning(true);
@@ -123,40 +133,40 @@ const RRHHModule = ({ T: _T }) => {
   ];
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 20, fontFamily: font }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: 18, fontFamily: font }}>
       {/* Header */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 16, padding: "2px 0 4px" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
           {/* Atom icon container */}
-          <div style={{ width: 48, height: 48, borderRadius: 14, background: `${T.violet}14`, border: `1.5px solid ${T.violet}30`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, boxShadow: `0 0 24px ${T.violet}18` }}>
+          <div style={{ width: 52, height: 52, borderRadius: 18, background: isLight ? "linear-gradient(180deg, rgba(255,255,255,0.96), rgba(124,58,237,0.08))" : `${T.violet}14`, border: `1px solid ${isLight ? "rgba(124,58,237,0.18)" : `${T.violet}30`}`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, boxShadow: isLight ? "0 10px 28px rgba(124,58,237,0.10), inset 0 1px 0 rgba(255,255,255,0.95)" : `0 0 24px ${T.violet}18` }}>
             <AIAtom size={28} color={T.violet} />
           </div>
           <div>
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <p style={{ fontSize: 22, fontWeight: 300, color: "#FFF", fontFamily: fontDisp, letterSpacing: "-0.03em" }}>
+              <p style={{ margin: 0, fontSize: 24, fontWeight: 650, color: T.txt, fontFamily: fontDisp, letterSpacing: "-0.045em" }}>
                 Stratos <span style={{ fontWeight: 700, color: T.violet }}>People</span>
               </p>
-              <span style={{ fontSize: 9, fontWeight: 700, color: T.violet, background: `${T.violet}15`, border: `1px solid ${T.violet}30`, padding: "2px 8px", borderRadius: 5, letterSpacing: "0.06em" }}>2026</span>
+              <span style={{ fontSize: 10, fontWeight: 800, color: T.violet, background: `${T.violet}12`, border: `1px solid ${T.violet}22`, padding: "4px 9px", borderRadius: 8, letterSpacing: "0.04em" }}>2026</span>
             </div>
-            <p style={{ fontSize: 11, color: T.txt3, marginTop: 3 }}>
+            <p style={{ margin: "5px 0 0", fontSize: 12.5, color: T.txt2, fontWeight: 500 }}>
               Recursos Humanos · <span style={{ color: T.violet }}>Selección con IA</span> · Gestión de Talento
             </p>
           </div>
         </div>
         {/* Stats rápidas */}
-        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+        <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap", justifyContent: "flex-end" }}>
           {[
             { v: candidates.filter(c=>c.etapa!=="Rechazado").length, l: "En proceso", c: T.blue },
             { v: vacantes.filter(x=>x.status==="Activa").length, l: "Vacantes", c: T.violet },
             { v: `${tasaConversion}%`, l: "Conversión", c: T.emerald },
           ].map(s => (
-            <div key={s.l} style={{ padding: "7px 14px", borderRadius: 9, background: `${s.c}08`, border: `1px solid ${s.c}20`, textAlign: "center" }}>
-              <p style={{ fontSize: 16, fontWeight: 700, color: s.c, fontFamily: fontDisp, lineHeight: 1 }}>{s.v}</p>
-              <p style={{ fontSize: 9, color: T.txt3, marginTop: 3, fontWeight: 600 }}>{s.l}</p>
+            <div key={s.l} style={{ padding: "9px 16px", borderRadius: 14, background: isLight ? "#FFFFFFAA" : `${s.c}08`, border: `1px solid ${isLight ? "rgba(15,23,42,0.07)" : `${s.c}20`}`, textAlign: "center", minWidth: 96, boxShadow: isLight ? "0 1px 2px rgba(15,23,42,0.04)" : "none" }}>
+              <p style={{ margin: 0, fontSize: 18, fontWeight: 800, color: s.c, fontFamily: fontDisp, lineHeight: 1 }}>{s.v}</p>
+              <p style={{ margin: "5px 0 0", fontSize: 10, color: T.txt2, fontWeight: 700 }}>{s.l}</p>
             </div>
           ))}
           <div style={{ width: 1, height: 32, background: T.border, margin: "0 4px" }} />
-          <button onClick={() => setTab("ia_scan")} style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 18px", borderRadius: 10, border: `1.5px solid ${T.violet}45`, background: `${T.violet}0D`, cursor: "pointer", color: T.violet, fontSize: 12, fontWeight: 700, fontFamily: fontDisp, transition: "all 0.2s" }}
+          <button onClick={() => setTab("ia_scan")} style={{ display: "flex", alignItems: "center", gap: 8, padding: "12px 18px", borderRadius: 14, border: `1px solid ${T.violet}32`, background: isLight ? "rgba(124,58,237,0.08)" : `${T.violet}0D`, cursor: "pointer", color: T.violet, fontSize: 12.5, fontWeight: 800, fontFamily: fontDisp, transition: "all 0.2s" }}
             onMouseEnter={e => { e.currentTarget.style.background = `${T.violet}18`; e.currentTarget.style.borderColor = `${T.violet}70`; }}
             onMouseLeave={e => { e.currentTarget.style.background = `${T.violet}0D`; e.currentTarget.style.borderColor = `${T.violet}45`; }}
           >
@@ -169,36 +179,37 @@ const RRHHModule = ({ T: _T }) => {
               navigator.clipboard?.writeText(url).then(() => {}).catch(() => {});
               window.open(url, "_blank");
             }}
-            style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 18px", borderRadius: 10, border: `1px solid rgba(110,231,194,0.3)`, background: "rgba(110,231,194,0.07)", cursor: "pointer", color: T.accent, fontSize: 12, fontWeight: 700, fontFamily: fontDisp }}
+            style={{ display: "flex", alignItems: "center", gap: 8, padding: "12px 18px", borderRadius: 14, border: `1px solid ${T.accent}24`, background: isLight ? "rgba(13,154,118,0.07)" : "rgba(110,231,194,0.07)", cursor: "pointer", color: T.accent, fontSize: 12.5, fontWeight: 800, fontFamily: fontDisp }}
           >
             <ExternalLink size={13} /> Portal Candidatos
           </button>
-          <button onClick={() => setShowNewVacante(true)} style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 20px", borderRadius: 10, border: "none", background: "rgba(255,255,255,0.93)", cursor: "pointer", color: "#080D14", fontSize: 12, fontWeight: 700, fontFamily: fontDisp, boxShadow: "0 2px 14px rgba(255,255,255,0.10)" }}>
+          <button onClick={() => setShowNewVacante(true)} style={{ display: "flex", alignItems: "center", gap: 8, padding: "12px 20px", borderRadius: 14, border: isLight ? "1px solid rgba(255,255,255,0.88)" : "none", background: isLight ? "#FFFFFF" : "rgba(255,255,255,0.93)", cursor: "pointer", color: "#080D14", fontSize: 12.5, fontWeight: 800, fontFamily: fontDisp, boxShadow: isLight ? "0 1px 2px rgba(15,23,42,0.05)" : "0 2px 14px rgba(255,255,255,0.10)" }}>
             <Plus size={13} /> Nueva Vacante
           </button>
         </div>
       </div>
 
       {/* Tabs */}
-      <div style={{ display: "flex", gap: 3, padding: "4px", borderRadius: 13, background: "rgba(255,255,255,0.02)", border: `1px solid ${T.border}` }}>
+      <div style={{ display: "flex", gap: 6, padding: "6px", borderRadius: 22, ...peopleCard }}>
         {tabs.map(t => {
           const active = tab === t.id;
           const isAI = t.id === "ia_scan";
           return (
             <button key={t.id} onClick={() => setTab(t.id)} style={{
               flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 4,
-              padding: "10px 8px", borderRadius: 10, border: "none", cursor: "pointer",
-              background: active ? (isAI ? `${T.violet}14` : "rgba(255,255,255,0.07)") : "transparent",
+              padding: "13px 10px", borderRadius: 16, border: "none", cursor: "pointer",
+              background: active ? (isLight ? "#FFFFFF" : (isAI ? `${T.violet}14` : "rgba(255,255,255,0.07)")) : "transparent",
               color: active ? T.txt : T.txt3, fontSize: 11, fontWeight: active ? 700 : 400,
               fontFamily: fontDisp, transition: "all 0.2s",
-              outline: active && isAI ? `1px solid ${T.violet}35` : "none",
+              outline: "none",
+              boxShadow: active && isLight ? "0 1px 2px rgba(15,23,42,0.05), 0 8px 18px rgba(15,23,42,0.06)" : "none",
             }}>
               <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                 {isAI
                   ? <AIAtom size={13} color={active ? T.violet : T.txt3} />
                   : <t.icon size={13} color={active ? (isAI ? T.violet : T.accent) : T.txt3} />
                 }
-                <span style={{ color: active ? (isAI ? T.violet : "#FFF") : T.txt3 }}>{t.label}</span>
+                <span style={{ color: active ? (isAI ? T.violet : T.txt) : T.txt3 }}>{t.label}</span>
               </div>
               <span style={{ fontSize: 9, color: active ? (isAI ? `${T.violet}90` : T.txt3) : T.txt3, fontWeight: 400 }}>{t.hint}</span>
             </button>
@@ -217,38 +228,38 @@ const RRHHModule = ({ T: _T }) => {
               { l: "Contratados Mes", v: candidates.filter(c => c.etapa === "Contratado").length, c: T.emerald, i: BadgeCheck, sub: "activos" },
               { l: "Tasa de Conversión", v: `${tasaConversion}%`, c: T.amber, i: Target, sub: "postulado→hire" },
             ].map(k => (
-              <G key={k.l} hover style={{ padding: 16 }}>
+              <G key={k.l} hover style={{ padding: 18, ...peopleCard }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
-                  <p style={{ fontSize: 10, color: T.txt2, fontWeight: 600, lineHeight: 1.4 }}>{k.l}</p>
+                  <p style={{ margin: 0, fontSize: 11, color: T.txt2, fontWeight: 750, lineHeight: 1.4, letterSpacing: "-0.01em" }}>{k.l}</p>
                   <Ico icon={k.i} sz={28} is={13} c={k.c} />
                 </div>
-                <p style={{ fontSize: 26, fontWeight: 300, color: "#FFF", fontFamily: fontDisp, letterSpacing: "-0.04em" }}>{k.v}</p>
-                <p style={{ fontSize: 10, color: k.c, fontWeight: 600, marginTop: 4 }}>{k.sub}</p>
+                <p style={{ margin: "18px 0 0", fontSize: 30, fontWeight: 650, color: T.txt, fontFamily: fontDisp, letterSpacing: "-0.055em", lineHeight: 1 }}>{k.v}</p>
+                <p style={{ fontSize: 10.5, color: k.c, fontWeight: 800, marginTop: 8 }}>{k.sub}</p>
               </G>
             ))}
           </div>
 
           {/* Pipeline visual */}
-          <G>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 18 }}>
+          <G style={{ padding: 24, ...peopleCard }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 26 }}>
               <div>
-                <p style={{ fontSize: 14, fontWeight: 700, color: T.txt, fontFamily: fontDisp }}>Pipeline de Selección — Resumen</p>
-                <p style={{ fontSize: 11, color: T.txt3, marginTop: 2 }}>Estado actual de todos los candidatos</p>
+                <p style={{ margin: 0, fontSize: 18, fontWeight: 800, color: T.txt, fontFamily: fontDisp, letterSpacing: "-0.035em" }}>Pipeline de Selección</p>
+                <p style={{ margin: "5px 0 0", fontSize: 12.5, color: T.txt2 }}>Distribución actual de candidatos por etapa</p>
               </div>
-              <button onClick={() => setTab("pipeline")} style={{ fontSize: 11, color: T.violet, background: "none", border: "none", cursor: "pointer" }}>Ver pipeline completo →</button>
+              <button onClick={() => setTab("pipeline")} style={{ fontSize: 12.5, color: T.violet, background: isLight ? `${T.violet}0F` : "none", border: isLight ? `1px solid ${T.violet}22` : "none", borderRadius: 999, padding: "8px 12px", cursor: "pointer", fontWeight: 800, fontFamily: fontDisp }}>Ver pipeline completo →</button>
             </div>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 6 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 10, alignItems: "end" }}>
               {etapas.map(e => {
                 const count = candidates.filter(c => c.etapa === e).length;
                 const pct = (count / candidates.length) * 100;
                 return (
-                  <div key={e} style={{ textAlign: "center" }}>
-                    <div style={{ height: 60, display: "flex", alignItems: "flex-end", justifyContent: "center", marginBottom: 8 }}>
-                      <div style={{ width: 32, borderRadius: 4, background: `${etapaColor[e]}30`, border: `1px solid ${etapaColor[e]}40`, height: `${Math.max(pct * 0.6, 8)}px`, position: "relative" }}>
-                        <div style={{ position: "absolute", top: -20, left: "50%", transform: "translateX(-50%)", fontSize: 13, fontWeight: 700, color: etapaColor[e], fontFamily: fontDisp }}>{count}</div>
+                  <div key={e} style={{ textAlign: "center", padding: "10px 8px", borderRadius: 16, background: isLight ? "rgba(15,23,42,0.025)" : "rgba(255,255,255,0.025)" }}>
+                    <div style={{ height: 70, display: "flex", alignItems: "flex-end", justifyContent: "center", marginBottom: 10 }}>
+                      <div style={{ width: 42, borderRadius: 999, background: `${etapaColor[e]}18`, border: `1px solid ${etapaColor[e]}2E`, height: `${Math.max(pct * 0.88, 10)}px`, position: "relative" }}>
+                        <div style={{ position: "absolute", top: -24, left: "50%", transform: "translateX(-50%)", fontSize: 14, fontWeight: 850, color: etapaColor[e], fontFamily: fontDisp }}>{count}</div>
                       </div>
                     </div>
-                    <p style={{ fontSize: 9, color: etapaColor[e], fontWeight: 700, letterSpacing: "0.04em" }}>{e.toUpperCase()}</p>
+                    <p style={{ margin: 0, fontSize: 10, color: etapaColor[e], fontWeight: 850, letterSpacing: "0.035em" }}>{e.toUpperCase()}</p>
                   </div>
                 );
               })}
