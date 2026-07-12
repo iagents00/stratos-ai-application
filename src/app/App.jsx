@@ -1366,12 +1366,16 @@ export default function App() {
         {/* TOP: Atom identity */}
         <div style={{ display:"flex", flexDirection:"column", alignItems:"center", paddingTop:11, paddingBottom:10, flexShrink:0, gap:6 }}>
           <div style={{ animation:"atomSpin 16s linear infinite",
+            // Safari congela las animaciones dentro de un ancestro con backdrop-filter
+            // (el sidebar). will-change: transform lo promueve a su propia capa GPU para
+            // que no lo "aplane" esa capa y siga girando (fix del bug de WebKit).
+            willChange:"transform",
             filter: isLight ? "drop-shadow(0 0 5px rgba(13,154,118,0.45)) drop-shadow(0 0 12px rgba(52,211,153,0.18))" : "drop-shadow(0 0 4px rgba(255,255,255,0.40)) drop-shadow(0 0 10px rgba(255,255,255,0.10))",
           }}>
             <StratosAtomHex size={30} color={isLight ? "#0D9A76" : "#FFFFFF"} edge={isLight ? "#34D399" : "#C8DED8"} />
           </div>
           <div style={{ display:"flex", alignItems:"center", gap:4 }}>
-            <div style={{ width:4, height:4, borderRadius:"50%", background:"#34D399", boxShadow:"0 0 5px rgba(52,211,153,0.80), 0 0 10px rgba(52,211,153,0.30)", animation:"pulse 2.2s ease-in-out infinite" }} />
+            <div style={{ width:4, height:4, borderRadius:"50%", background:"#34D399", boxShadow:"0 0 5px rgba(52,211,153,0.80), 0 0 10px rgba(52,211,153,0.30)", animation:"pulse 2.2s ease-in-out infinite", willChange:"transform, opacity" }} />
             <span style={{ fontSize:7, fontFamily:fontDisp, fontWeight:700, letterSpacing:"0.18em", textTransform:"uppercase", color: isLight ? "rgba(15,23,42,0.32)" : "rgba(255,255,255,0.28)", lineHeight:1 }}>Live</span>
           </div>
           <div style={{ width:28, height:1, background: isLight ? "linear-gradient(90deg, transparent, rgba(13,154,118,0.18), transparent)" : "linear-gradient(90deg, transparent, rgba(110,231,194,0.12), transparent)" }} />
