@@ -11,7 +11,7 @@ import {
   FileText, Table, Presentation, ClipboardList, HardDrive, BookOpen,
   PenTool, Palette, Video, Globe, Cloud, ExternalLink, Trash2, FolderOpen,
 } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { supabase } from "../../../lib/supabase";
 import { font, fontDisp } from "../../../design-system/tokens";
 
@@ -193,6 +193,8 @@ export default function MetaPanel({
   // Las derivadas de leads se siembran en App.jsx (efímeras, se regeneran). Las que el usuario
   // crea acá SÍ se guardan, con fecha/hora límite OBLIGATORIA (la usa el coach de Telegram).
   const [metaNewDate, setMetaNewDate] = useState("");
+  const actionDateInputRef = useRef(null);
+  const actionTimeInputRef = useRef(null);
   const [teamMembers, setTeamMembers] = useState([]);   // responsables dinámicos (todos los activos del org, incl. nuevos)
   const _orgId = user?.organizationId;
   // Persistimos si hay un usuario REAL logueado. NO exigimos conocer el org en el front:
@@ -360,6 +362,30 @@ export default function MetaPanel({
   const ringSoft = _hex(T.accent, "26");
   const selectedDueDate = metaNewDate ? metaNewDate.slice(0, 10) : "";
   const selectedDueTime = metaNewDate ? metaNewDate.slice(11, 16) : "";
+  const addDays = (days) => {
+    const next = new Date();
+    next.setDate(next.getDate() + days);
+    return localYmd(next);
+  };
+  const openPicker = (ref) => {
+    const input = ref.current;
+    if (!input) return;
+    if (typeof input.showPicker === "function") input.showPicker();
+    else input.click();
+  };
+  const dateChipLabel = (dateValue) => {
+    if (!dateValue) return "Fecha";
+    const today = localYmd(new Date());
+    const tomorrow = addDays(1);
+    if (dateValue === today) return "Hoy";
+    if (dateValue === tomorrow) return "Mañana";
+    const date = new Date(`${dateValue}T12:00:00`);
+    return date.toLocaleDateString("es-MX", { weekday:"short", day:"numeric", month:"short" }).replace(".", "");
+  };
+  const timeChipLabel = (timeValue) => {
+    if (!timeValue) return "Hora";
+    return new Date(`2026-01-01T${timeValue}:00`).toLocaleTimeString("es-MX", { hour:"numeric", minute:"2-digit" }).replace(/\s/g, " ");
+  };
   const setActionDueDate = (dateValue) => {
     setMetaNewDate(dateValue ? `${dateValue}T${selectedDueTime || "09:00"}` : "");
   };
@@ -417,6 +443,12 @@ export default function MetaPanel({
     .mp-select:hover{border-color:var(--mp-borderH)!important}
     .mp-input{transition:border-color .16s ease,box-shadow .16s ease,background-color .16s ease}
     .mp-input::placeholder{color:var(--mp-txt3);opacity:1}
+    .mp-picker-native{position:absolute;opacity:0;pointer-events:none;width:1px;height:1px;inset:auto auto 0 0}
+    .mp-datechip{transition:transform .14s ease,background .16s ease,border-color .16s ease,box-shadow .16s ease,color .16s ease}
+    .mp-datechip:hover{transform:translateY(-1px);border-color:var(--mp-borderH)!important;box-shadow:0 10px 24px rgba(15,23,42,.08)}
+    .mp-datechip:active{transform:translateY(0) scale(.98)}
+    .mp-quickchip{transition:background .14s ease,border-color .14s ease,color .14s ease,transform .14s ease}
+    .mp-quickchip:hover{transform:translateY(-1px);border-color:var(--mp-accent)!important;color:var(--mp-accent)!important}
     .mp-ghost{transition:background .16s ease,border-color .16s ease,color .16s ease}
     .mp-fade{animation:mpFade .3s cubic-bezier(.16,1,.3,1) both}
     @keyframes mpFade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
@@ -515,17 +547,17 @@ export default function MetaPanel({
               {/* Barra de agregar */}
               <div style={{
                 display:"grid",
-                gridTemplateColumns: isMobile ? "1fr" : "minmax(360px,1fr) 180px 150px auto",
-                gap:12,
+                gridTemplateColumns: isMobile ? "1fr" : "minmax(360px,1fr) minmax(360px,500px) auto",
+                gap:14,
                 marginBottom:28,
-                alignItems:"stretch",
+                alignItems:"start",
               }}>
                 <label style={{
                   display:"flex", alignItems:"center", gap:12,
-                  padding:"0 18px", minHeight:58, borderRadius:18,
+                  padding:"0 18px", minHeight:74, borderRadius:22,
                   background: isLight?"#FFFFFF":"rgba(255,255,255,0.045)",
                   border:`1px solid ${metaNewText ? T.accent : T.border}`,
-                  boxShadow: metaNewText ? `0 0 0 3px ${ringSoft}` : (isLight?"0 1px 2px rgba(15,23,42,0.04)":"none"),
+                  boxShadow: metaNewText ? `0 0 0 3px ${ringSoft}` : (isLight?"0 16px 36px rgba(15,23,42,0.055)":"none"),
                 }}>
                   <Plus size={18} color={metaNewText ? T.accent : T.txt3} strokeWidth={2.4} style={{ flexShrink:0 }} />
                   <input
@@ -533,61 +565,127 @@ export default function MetaPanel({
                     value={metaNewText}
                     onChange={e => setMetaNewText(e.target.value)}
                     onKeyDown={e => { if (e.key === "Enter") createAction(); }}
-                    placeholder="Escribe la próxima acción…"
+                    placeholder="Nueva acción del equipo…"
                     style={{
-                      width:"100%", height:"100%", minHeight:56, border:"none", background:"transparent",
+                      width:"100%", height:"100%", minHeight:72, border:"none", background:"transparent",
                       color:T.txt, fontSize:16, fontFamily:font, outline:"none", padding:0,
                     }}
                   />
                 </label>
-                <label style={{
-                  display:"flex", alignItems:"center", gap:10,
-                  padding:"0 14px", minHeight:58, borderRadius:18,
-                  background: isLight?"#FFFFFF":"rgba(255,255,255,0.045)",
-                  border:`1px solid ${selectedDueDate ? T.accent : T.border}`,
-                  boxShadow: selectedDueDate ? `0 0 0 3px ${ringSoft}` : (isLight?"0 1px 2px rgba(15,23,42,0.04)":"none"),
+                <div style={{
+                  position:"relative",
+                  minHeight:74,
+                  padding:8,
+                  borderRadius:22,
+                  background: isLight
+                    ? "linear-gradient(180deg, rgba(255,255,255,0.94), rgba(255,255,255,0.76))"
+                    : "rgba(255,255,255,0.045)",
+                  border:`1px solid ${metaNewDate ? T.accent : T.border}`,
+                  boxShadow: metaNewDate ? `0 0 0 3px ${ringSoft}` : (isLight?"0 16px 36px rgba(15,23,42,0.055)":"none"),
+                  backdropFilter:"saturate(180%) blur(18px)",
+                  WebkitBackdropFilter:"saturate(180%) blur(18px)",
                 }}>
-                  <CalendarDays size={17} color={selectedDueDate ? T.accent : T.txt3} strokeWidth={2.2} style={{ flexShrink:0 }} />
                   <input
-                    className="mp-input"
+                    ref={actionDateInputRef}
+                    className="mp-picker-native"
                     type="date"
                     value={selectedDueDate}
                     onChange={e => setActionDueDate(e.target.value)}
                     title="Fecha límite"
-                    style={{
-                      width:"100%", border:"none", background:"transparent", color:T.txt,
-                      fontSize:14.5, fontWeight:650, fontFamily:fontDisp, outline:"none",
-                      colorScheme: isLight ? "light" : "dark", padding:0,
-                    }}
+                    tabIndex={-1}
                   />
-                </label>
-                <label style={{
-                  display:"flex", alignItems:"center", gap:10,
-                  padding:"0 14px", minHeight:58, borderRadius:18,
-                  background: isLight?"#FFFFFF":"rgba(255,255,255,0.045)",
-                  border:`1px solid ${selectedDueTime ? T.accent : T.border}`,
-                  boxShadow: selectedDueTime ? `0 0 0 3px ${ringSoft}` : (isLight?"0 1px 2px rgba(15,23,42,0.04)":"none"),
-                }}>
-                  <Clock size={17} color={selectedDueTime ? T.accent : T.txt3} strokeWidth={2.2} style={{ flexShrink:0 }} />
                   <input
-                    className="mp-input"
+                    ref={actionTimeInputRef}
+                    className="mp-picker-native"
                     type="time"
                     value={selectedDueTime}
                     onChange={e => setActionDueTime(e.target.value)}
                     title="Hora límite"
-                    style={{
-                      width:"100%", border:"none", background:"transparent", color:T.txt,
-                      fontSize:14.5, fontWeight:650, fontFamily:fontDisp, outline:"none",
-                      colorScheme: isLight ? "light" : "dark", padding:0,
-                    }}
+                    tabIndex={-1}
                   />
-                </label>
+                  <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8 }}>
+                    <button
+                      type="button"
+                      className="mp-datechip"
+                      onClick={() => openPicker(actionDateInputRef)}
+                      style={{
+                        height:46, borderRadius:16, border:`1px solid ${selectedDueDate ? `${T.accent}66` : T.border}`,
+                        background: selectedDueDate ? `${T.accent}12` : (isLight?"rgba(248,250,252,0.86)":"rgba(255,255,255,0.045)"),
+                        color: selectedDueDate ? T.txt : T.txt2, cursor:"pointer", fontFamily:fontDisp,
+                        display:"flex", alignItems:"center", justifyContent:"center", gap:9,
+                        fontSize:15, fontWeight:750, letterSpacing:"-0.02em",
+                      }}
+                    >
+                      <CalendarDays size={17} color={selectedDueDate ? T.accent : T.txt3} strokeWidth={2.25} />
+                      {dateChipLabel(selectedDueDate)}
+                    </button>
+                    <button
+                      type="button"
+                      className="mp-datechip"
+                      onClick={() => openPicker(actionTimeInputRef)}
+                      style={{
+                        height:46, borderRadius:16, border:`1px solid ${selectedDueTime ? `${T.accent}66` : T.border}`,
+                        background: selectedDueTime ? `${T.accent}12` : (isLight?"rgba(248,250,252,0.86)":"rgba(255,255,255,0.045)"),
+                        color: selectedDueTime ? T.txt : T.txt2, cursor:"pointer", fontFamily:fontDisp,
+                        display:"flex", alignItems:"center", justifyContent:"center", gap:9,
+                        fontSize:15, fontWeight:750, letterSpacing:"-0.02em",
+                      }}
+                    >
+                      <Clock size={17} color={selectedDueTime ? T.accent : T.txt3} strokeWidth={2.25} />
+                      {timeChipLabel(selectedDueTime)}
+                    </button>
+                  </div>
+                  <div style={{
+                    display:"flex", alignItems:"center", gap:6, flexWrap:"wrap",
+                    padding:"8px 3px 0",
+                  }}>
+                    {[
+                      ["Hoy", addDays(0)],
+                      ["Mañana", addDays(1)],
+                      ["+2 días", addDays(2)],
+                    ].map(([label, value]) => (
+                      <button
+                        key={label}
+                        type="button"
+                        className="mp-quickchip"
+                        onClick={() => setActionDueDate(value)}
+                        style={{
+                          border:`1px solid ${selectedDueDate === value ? `${T.accent}66` : "transparent"}`,
+                          background:selectedDueDate === value ? `${T.accent}12` : "transparent",
+                          color:selectedDueDate === value ? T.accent : T.txt3,
+                          borderRadius:99, padding:"5px 9px", fontSize:11.5, fontWeight:750,
+                          fontFamily:fontDisp, cursor:"pointer", letterSpacing:"-0.01em",
+                        }}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                    <span style={{ width:1, height:16, background:T.border, margin:"0 2px" }} />
+                    {["09:00", "11:00", "16:00"].map((timeValue) => (
+                      <button
+                        key={timeValue}
+                        type="button"
+                        className="mp-quickchip"
+                        onClick={() => setActionDueTime(timeValue)}
+                        style={{
+                          border:`1px solid ${selectedDueTime === timeValue ? `${T.accent}66` : "transparent"}`,
+                          background:selectedDueTime === timeValue ? `${T.accent}12` : "transparent",
+                          color:selectedDueTime === timeValue ? T.accent : T.txt3,
+                          borderRadius:99, padding:"5px 9px", fontSize:11.5, fontWeight:750,
+                          fontFamily:fontDisp, cursor:"pointer", letterSpacing:"-0.01em",
+                        }}
+                      >
+                        {timeValue}
+                      </button>
+                    ))}
+                  </div>
+                </div>
                 {(() => { const canAdd = !!(metaNewText.trim() && metaNewDate); return (
                 <button
                   onClick={createAction}
                   style={{
                     display:"flex", alignItems:"center", justifyContent:"center", gap:8,
-                    padding:"0 28px", borderRadius:16, border:"none",
+                    padding:"0 28px", borderRadius:20, border:"none",
                     background: canAdd
                       ? `linear-gradient(135deg,#0D9A76,${T.accent})`
                       : (isLight?"rgba(0,0,0,0.05)":"rgba(255,255,255,0.06)"),
@@ -597,7 +695,7 @@ export default function MetaPanel({
                     flexShrink:0, letterSpacing:"-0.02em",
                     boxShadow: canAdd ? `0 4px 16px ${_hex(T.accent,'40') }` : "none",
                     transition:"background 0.18s, color 0.18s, box-shadow 0.18s, transform 0.12s",
-                    minHeight:58,
+                    minHeight:74,
                   }}
                   onMouseDown={e => { if(canAdd) e.currentTarget.style.transform="scale(0.97)"; }}
                   onMouseUp={e => { e.currentTarget.style.transform="scale(1)"; }}
