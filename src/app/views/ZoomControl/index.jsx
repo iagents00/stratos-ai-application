@@ -317,6 +317,7 @@ const ZoomControl = ({ theme = "dark" }) => {
   // las filas se verían a través del encabezado al hacer scroll.
   const stickyBg = isLight ? "#FFFFFF" : "#0B1220";
   const sepBg    = isLight ? "#EBEEF2" : "#101B30";
+  const zoomTableHeaderHeight = 56;
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
@@ -481,7 +482,7 @@ const ZoomControl = ({ theme = "dark" }) => {
              del día quedan FIJADOS (sticky) al hacer scroll. ───────────────── */}
       <G T={T} np style={{ overflow: "hidden", border: `1px solid ${cardBorder}` }}>
         <div style={{ overflow: "auto", maxHeight: "72vh" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 1720 }}>
+          <table style={{ width: "100%", borderCollapse: "separate", borderSpacing: 0, minWidth: 1720 }}>
             <thead>
               <tr>
                 {[
@@ -494,9 +495,13 @@ const ZoomControl = ({ theme = "dark" }) => {
                 ].map(([h, align], i) => (
                   <th key={i} style={{
                     ...thStyle(T, align), lineHeight: "14px",
-                    position: "sticky", top: 0, zIndex: 3,
+                    position: "sticky", top: 0, zIndex: 4,
+                    height: zoomTableHeaderHeight,
+                    minHeight: zoomTableHeaderHeight,
+                    boxSizing: "border-box",
                     background: stickyBg,
-                    boxShadow: `inset 0 -1px 0 ${rowBorder}`,
+                    backgroundClip: "padding-box",
+                    boxShadow: `inset 0 -1px 0 ${rowBorder}, 0 1px 0 ${stickyBg}`,
                   }}>{h}</th>
                 ))}
               </tr>
@@ -520,8 +525,9 @@ const ZoomControl = ({ theme = "dark" }) => {
                       {/* Banda del día FIJADA bajo el encabezado mientras se recorre ese día. */}
                       <td colSpan={hasExtCols ? 16 : 15} style={{
                         padding: "8px 14px", background: sepBg,
-                        position: "sticky", top: 39, zIndex: 2,
-                        boxShadow: `inset 0 1px 0 ${rowBorder}, inset 0 -1px 0 ${rowBorder}`,
+                        position: "sticky", top: zoomTableHeaderHeight, zIndex: 3,
+                        backgroundClip: "padding-box",
+                        boxShadow: `0 -1px 0 ${sepBg}, inset 0 1px 0 ${rowBorder}, inset 0 -1px 0 ${rowBorder}`,
                         fontSize: 11.5, fontWeight: 800, fontFamily: fontDisp,
                         textTransform: "uppercase", letterSpacing: "0.05em",
                         color: esHoy ? accent : T.txt2,

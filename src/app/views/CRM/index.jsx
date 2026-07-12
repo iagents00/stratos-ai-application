@@ -2329,7 +2329,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
               alignItems: isMobile ? "stretch" : "center",
               justifyContent: "space-between",
               gap: isMobile ? 8 : 0,
-              marginBottom: isMobile ? 10 : 14,
+              marginBottom: isMobile ? 8 : 8,
             }}>
               <div style={{ display: "flex", alignItems: "center", gap: isMobile ? 8 : 12 }}>
                 {isMobile ? (
@@ -2433,8 +2433,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
             <div style={{ position: "relative" }}>
             <div style={{
               position: "relative",
-              maskImage: "linear-gradient(90deg, #000 0%, #000 97%, transparent 100%)",
-              WebkitMaskImage: "linear-gradient(90deg, #000 0%, #000 97%, transparent 100%)",
+              overflow: "visible",
             }}>
             <div ref={carouselRef}
               onDragOver={handleCarouselDragOver}
@@ -2443,7 +2442,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
               className="carousel-no-scroll"
               style={{
                 display: "flex", gap: 12, overflowX: "auto",
-                padding: isMobile ? "8px 16px 22px" : "26px 30px 52px 28px",
+                padding: isMobile ? "6px 12px 16px" : "10px 10px 18px 0",
                 scrollbarWidth: "none", msOverflowStyle: "none",
                 WebkitOverflowScrolling: "touch",
                 // En mobile: scroll-snap para que cada card "encaje" tras swipe.
@@ -2467,26 +2466,16 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                       <div style={{ width: 3, borderRadius: 3, background: T.accent, boxShadow: `0 0 12px ${T.accent}80`, marginRight: 4, alignSelf: "stretch", flexShrink: 0, transition: "opacity 0.15s" }} />
                     )}
                   {(() => {
-                    // ── Shadow budget ───────────────────────────────────────────────────
-                    // The carousel is overflow-x:auto → overflow-y also clips.
-                    // Carousel padding = 26px top / 52px bottom.  Hover translateY = -2px.
-                    // Max downward shadow reach = -2 (translate) + y-offset + blur-radius.
-                    // Shadow reach is kept within that padding so overflow-x:auto no las recorta.
-                    // ────────────────────────────────────────────────────────────────────
                     const restBorder = isLight
-                      ? `${meta.color}30`
+                      ? `${meta.color}26`
                       : `rgba(255,255,255,0.07)`;
-                    const restShadow = isLight
-                      ? `0 1px 2px rgba(15,23,42,0.05), 0 6px 18px rgba(15,23,42,0.09), 0 12px 30px rgba(15,23,42,0.07), inset 0 1px 0 rgba(255,255,255,1)`
-                      : `0 2px 8px rgba(0,0,0,0.55), 0 10px 32px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.06)`;
+                    const restShadow = isLight ? "none" : "inset 0 1px 0 rgba(255,255,255,0.06)";
                     const hoverBorder = isLight ? `${meta.color}68` : `rgba(255,255,255,0.14)`;
-                    const hoverShadow = isLight
-                      ? `0 2px 6px rgba(15,23,42,0.07), 0 10px 26px rgba(15,23,42,0.11), inset 0 1px 0 rgba(255,255,255,1)`
-                      : `0 6px 18px rgba(0,0,0,0.60), 0 14px 38px rgba(0,0,0,0.50), inset 0 1px 0 rgba(255,255,255,0.08)`;
+                    const hoverShadow = isLight ? "none" : "inset 0 1px 0 rgba(255,255,255,0.08)";
                     const droppedBorder = isLight ? `${meta.color}80` : `rgba(255,255,255,0.20)`;
                     const droppedShadow = isLight
-                      ? `0 0 0 3px ${meta.color}18, 0 4px 14px rgba(15,23,42,0.08)`
-                      : `0 0 0 1px rgba(255,255,255,0.12), 0 8px 28px rgba(0,0,0,0.55)`;
+                      ? `0 0 0 2px ${meta.color}14`
+                      : `0 0 0 1px rgba(255,255,255,0.12)`;
                     return (
                   <div
                     data-priority-id={l.id}
@@ -2513,14 +2502,14 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                       border: `1px solid ${isJustDropped ? droppedBorder : restBorder}`,
                       boxShadow: isJustDropped ? droppedShadow : restShadow,
                       display: "flex", flexDirection: "column",
-                      transition: "transform 0.22s cubic-bezier(0.34,1.4,0.64,1), box-shadow 0.22s ease, border-color 0.22s ease",
+                      transition: "transform 0.18s ease, border-color 0.18s ease",
                       opacity: isDraggingCard ? 0.35 : 1,
                       cursor: dragCardId ? (isDraggingCard ? "grabbing" : "copy") : "pointer",
                       transform: isDraggingCard ? "scale(0.97)" : "none",
                     }}
                     onMouseEnter={e => {
                       if (!dragCardId) {
-                        e.currentTarget.style.transform = "translateY(-2px)";
+                        e.currentTarget.style.transform = "translateY(-1px)";
                         e.currentTarget.style.boxShadow = hoverShadow;
                         e.currentTarget.style.borderColor = hoverBorder;
                       }
@@ -2843,17 +2832,18 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                             transition: "all 0.20s ease",
                             display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
                             boxShadow: isLight ? "0 2px 12px rgba(13,154,118,0.30)" : "0 2px 16px rgba(255,255,255,0.12)",
+                            boxShadow: "none",
                           }}
                           onMouseEnter={e => {
                             e.currentTarget.style.background = isLight ? T.accentDark : "rgba(238,244,255,0.97)";
-                            e.currentTarget.style.boxShadow = isLight ? "0 4px 18px rgba(13,154,118,0.40)" : "0 4px 22px rgba(255,255,255,0.20)";
+                            e.currentTarget.style.boxShadow = "none";
                             e.currentTarget.style.transform = "translateY(-1px)";
                             e.currentTarget.querySelector(".arr").style.opacity = "1";
                             e.currentTarget.querySelector(".arr").style.transform = "translateX(2px)";
                           }}
                           onMouseLeave={e => {
                             e.currentTarget.style.background = isLight ? T.accentG : "#FFFFFF";
-                            e.currentTarget.style.boxShadow = isLight ? "0 2px 12px rgba(13,154,118,0.30)" : "0 2px 16px rgba(255,255,255,0.12)";
+                            e.currentTarget.style.boxShadow = "none";
                             e.currentTarget.style.transform = "none";
                             e.currentTarget.querySelector(".arr").style.opacity = "0";
                             e.currentTarget.querySelector(".arr").style.transform = "translateX(-3px)";
