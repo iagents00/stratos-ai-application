@@ -26,8 +26,8 @@ const PREMIUM_ICON_OVERRIDES = {
     o: "<polygon points=\"256 64 422 160 422 352 256 448 90 352 90 160\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"30\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/>",
   },
   d: {
-    s: "<circle cx=\"256\" cy=\"256\" r=\"176\" fill=\"none\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"30\"/><circle cx=\"256\" cy=\"256\" r=\"42\"/>",
-    o: "<circle cx=\"256\" cy=\"256\" r=\"176\" fill=\"none\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"30\"/><circle cx=\"256\" cy=\"256\" r=\"24\"/>",
+    s: "<circle cx=\"256\" cy=\"256\" r=\"172\" fill=\"none\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"28\"/><circle cx=\"256\" cy=\"256\" r=\"76\" fill=\"none\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"24\" opacity=\"0.72\"/><circle cx=\"256\" cy=\"256\" r=\"30\" fill=\"currentColor\"/>",
+    o: "<circle cx=\"256\" cy=\"256\" r=\"172\" fill=\"none\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"28\"/><circle cx=\"256\" cy=\"256\" r=\"76\" fill=\"none\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"24\" opacity=\"0.72\"/><circle cx=\"256\" cy=\"256\" r=\"18\" fill=\"currentColor\"/>",
   },
   e: {
     s: "<path d=\"M92 178c0-29 23-52 52-52h74l38 42h112c29 0 52 23 52 52v126c0 29-23 52-52 52H144c-29 0-52-23-52-52V178z\" fill=\"none\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"28\"/><path d=\"M152 254h208M152 310h138\" fill=\"none\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-width=\"28\"/><circle cx=\"360\" cy=\"310\" r=\"18\" fill=\"currentColor\"/>",
