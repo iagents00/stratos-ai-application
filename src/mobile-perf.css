@@ -47,7 +47,7 @@
   /* will-change fuerza capas de compositing igual que el blur: en móvil, que
      el navegador decida (auto). Menos capas vivas = menos memoria WebKit.
      [guard:MOBILE-KILL-WILLCHANGE] */
-  [style*="will-change"] {
+  [style*="will-change"]:not([data-brand-motion="true"]) {
     will-change: auto !important;
   }
 
@@ -58,7 +58,7 @@
      Las animaciones infinitas POR CLASE en archivos .css están PROHIBIDAS por
      el guard del build (tools/check_mobile_perf.mjs) — usar inline o registrar.
      [guard:MOBILE-KILL-INFINITE] */
-  [style*="infinite"] {
+  [style*="infinite"]:not([data-brand-motion="true"]) {
     animation: none !important;
   }
 
