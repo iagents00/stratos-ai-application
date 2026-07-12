@@ -1230,14 +1230,15 @@ export default function App() {
     const mintC = isAdmin ? "#A78BFA" : "#6EE7C2";
     const activeColor = isAdmin ? "#A78BFA" : (isLight ? T.accent : mintC);
     const activeIcon  = isLight ? activeColor : (isAdmin ? "#ECE6FF" : "#E9FCF4");
-    const iconSize = n.id === "d" ? 24 : n.id === "ia" ? 22 : n.id === "lp" ? 23 : n.id === "e" ? 21 : n.id === "c" ? 22 : 20;
+    const iconSize = n.id === "d" ? 23 : n.id === "ia" ? 22 : n.id === "lp" ? 22 : n.id === "e" ? 21 : n.id === "c" ? 22 : 20;
     return (
-      <div style={{ display:"flex", flexDirection:"column", alignItems:"center", gap:4, width:54, padding:0 }}>
+      <div style={{ display:"flex", flexDirection:"column", alignItems:"center", gap:2, width:54, padding:0 }}>
         <button
           onClick={() => { setV(n.id); setSidebarMore(false); }}
           title={(clientConfig?.navLabels?.[n.id] ?? n.l) + (!hasAccess ? " · Sin acceso" : "")}
           style={{
-            width:48, height:42, borderRadius:14,
+            width:46, height:38, borderRadius:13,
+            padding:0, lineHeight:0,
             cursor: hasAccess ? "pointer" : "not-allowed",
             opacity: hasAccess ? 1 : 0.32,
             outline:"none",
@@ -1256,7 +1257,7 @@ export default function App() {
         >
           <IosIcon name={n.id} filled={a} size={iconSize} color={a ? activeIcon : (isLight ? "rgba(15,23,42,0.45)" : "rgba(255,255,255,0.40)")} />
         </button>
-        <span style={{ fontSize:7, fontFamily:fontDisp, fontWeight: a ? 600 : 400, letterSpacing: a ? "0.01em" : "0.005em", textAlign:"center",
+        <span style={{ fontSize:7.2, fontFamily:fontDisp, fontWeight: a ? 650 : 430, letterSpacing: a ? "0.01em" : "0.005em", textAlign:"center",
           color: a ? activeIcon : (isLight ? "rgba(15,23,42,0.38)" : "rgba(255,255,255,0.28)"),
           lineHeight:1, userSelect:"none", transition:"color 0.18s ease",
         }}>{clientConfig?.navLabels?.[n.id] ?? n.l}</span>
@@ -1430,20 +1431,20 @@ export default function App() {
             <div style={{ width:32, height:1, marginTop:10, background: isLight ? "linear-gradient(90deg, transparent, rgba(15,23,42,0.07), transparent)" : "linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent)" }} />
           </div>
 
-          <div style={{ display:"flex", flexDirection:"column", alignItems:"center", gap:5, width:58, padding:"7px 0", borderRadius:19, background: isLight ? "linear-gradient(180deg, rgba(255,255,255,0.58), rgba(255,255,255,0.40))" : "linear-gradient(180deg, rgba(16,22,30,0.50) 0%, rgba(5,8,13,0.60) 100%)", backdropFilter:"blur(26px) saturate(185%)", WebkitBackdropFilter:"blur(26px) saturate(185%)", border: isLight ? "1px solid rgba(255,255,255,0.92)" : "1px solid rgba(255,255,255,0.07)", boxShadow: isLight ? "inset 0 1px 0 rgba(255,255,255,1), inset 0 -1px 0 rgba(15,23,42,0.04), 0 10px 30px rgba(15,23,42,0.10)" : "inset 0 1px 0 rgba(190,245,225,0.09), inset 0 -1px 0 rgba(0,0,0,0.30), inset 0 0 24px rgba(0,0,0,0.22), 0 18px 44px rgba(0,0,0,0.55)" }}>
+          <div style={{ display:"flex", flexDirection:"column", alignItems:"center", gap:6, width:58, padding:"8px 0", borderRadius:19, background: isLight ? "linear-gradient(180deg, rgba(255,255,255,0.58), rgba(255,255,255,0.40))" : "linear-gradient(180deg, rgba(16,22,30,0.50) 0%, rgba(5,8,13,0.60) 100%)", backdropFilter:"blur(26px) saturate(185%)", WebkitBackdropFilter:"blur(26px) saturate(185%)", border: isLight ? "1px solid rgba(255,255,255,0.92)" : "1px solid rgba(255,255,255,0.07)", boxShadow: isLight ? "inset 0 1px 0 rgba(255,255,255,1), inset 0 -1px 0 rgba(15,23,42,0.04), 0 10px 30px rgba(15,23,42,0.10)" : "inset 0 1px 0 rgba(190,245,225,0.09), inset 0 -1px 0 rgba(0,0,0,0.30), inset 0 0 24px rgba(0,0,0,0.22), 0 18px 44px rgba(0,0,0,0.55)" }}>
           {sidebarTop.map(n => <NavBtn key={n.id} n={n} />)}
 
           {hasMoreApps && (
-          <div style={{ display:"flex", flexDirection:"column", alignItems:"center", gap:4, marginTop:4, width:54, padding:0 }}>
+          <div style={{ display:"flex", flexDirection:"column", alignItems:"center", gap:2, marginTop:2, width:54, padding:0 }}>
             <div style={{ height:1, width:32, background: isLight ? "rgba(0,0,0,0.06)" : "rgba(255,255,255,0.05)" }} />
             <button onClick={() => setSidebarMore(true)} title="Todas las apps"
-              style={{ width:48, height:42, borderRadius:14, border: appsActive ? (isLight ? "1px solid rgba(255,255,255,0.92)" : "1px solid rgba(190,245,225,0.14)") : "1px solid transparent", background: appsActive ? (isLight ? "linear-gradient(180deg, rgba(255,255,255,0.78), rgba(255,255,255,0.50))" : "rgba(255,255,255,0.05)") : "transparent", boxShadow: appsActive && isLight ? "inset 0 1px 0 rgba(255,255,255,0.95), 0 1px 8px rgba(15,23,42,0.055)" : "none", backdropFilter: appsActive ? "blur(18px) saturate(180%)" : "none", WebkitBackdropFilter: appsActive ? "blur(18px) saturate(180%)" : "none", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", transition:"background 0.18s ease, border-color 0.18s ease, transform 0.15s ease" }}
+              style={{ width:46, height:38, borderRadius:13, padding:0, lineHeight:0, border: appsActive ? (isLight ? "1px solid rgba(255,255,255,0.92)" : "1px solid rgba(190,245,225,0.14)") : "1px solid transparent", background: appsActive ? (isLight ? "linear-gradient(180deg, rgba(255,255,255,0.78), rgba(255,255,255,0.50))" : "rgba(255,255,255,0.05)") : "transparent", boxShadow: appsActive && isLight ? "inset 0 1px 0 rgba(255,255,255,0.95), 0 1px 8px rgba(15,23,42,0.055)" : "none", backdropFilter: appsActive ? "blur(18px) saturate(180%)" : "none", WebkitBackdropFilter: appsActive ? "blur(18px) saturate(180%)" : "none", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", transition:"background 0.18s ease, border-color 0.18s ease, transform 0.15s ease" }}
               onMouseEnter={e => { if(!appsActive){ e.currentTarget.style.background = isLight ? "rgba(255,255,255,0.42)" : "rgba(255,255,255,0.045)"; e.currentTarget.style.borderColor = isLight ? "rgba(255,255,255,0.72)" : "rgba(190,245,225,0.09)"; } }}
               onMouseLeave={e => { e.currentTarget.style.background = appsActive ? (isLight ? "linear-gradient(180deg, rgba(255,255,255,0.78), rgba(255,255,255,0.50))" : "rgba(255,255,255,0.05)") : "transparent"; e.currentTarget.style.borderColor = appsActive ? (isLight ? "rgba(255,255,255,0.92)" : "rgba(190,245,225,0.14)") : "transparent"; }}
             >
-              <IosIcon name="menu" filled={appsActive} size={20} color={appsActive ? (isLight ? T.accent : "#E9FCF4") : (isLight ? "rgba(15,23,42,0.45)" : "rgba(255,255,255,0.40)")} />
+              <IosIcon name="menu" filled={appsActive} size={19} color={appsActive ? (isLight ? T.accent : "#E9FCF4") : (isLight ? "rgba(15,23,42,0.45)" : "rgba(255,255,255,0.40)")} />
             </button>
-            <span style={{ fontSize:7, fontFamily:fontDisp, fontWeight: appsActive ? 600 : 400, letterSpacing:"0.01em", userSelect:"none", color: appsActive ? (isLight ? T.accent : "#E9FCF4") : (isLight ? "rgba(15,23,42,0.38)" : "rgba(255,255,255,0.28)"), transition:"color 0.18s ease" }}>Apps</span>
+            <span style={{ fontSize:7.2, fontFamily:fontDisp, fontWeight: appsActive ? 650 : 430, letterSpacing:"0.01em", userSelect:"none", color: appsActive ? (isLight ? T.accent : "#E9FCF4") : (isLight ? "rgba(15,23,42,0.38)" : "rgba(255,255,255,0.28)"), transition:"color 0.18s ease" }}>Apps</span>
           </div>
           )}
           </div>
