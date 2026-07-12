@@ -1230,6 +1230,7 @@ export default function App() {
     const mintC = isAdmin ? "#A78BFA" : "#6EE7C2";
     const activeColor = isAdmin ? "#A78BFA" : (isLight ? T.accent : mintC);
     const activeIcon  = isLight ? activeColor : (isAdmin ? "#ECE6FF" : "#E9FCF4");
+    const iconSize = n.id === "d" ? 24 : n.id === "ia" ? 23 : n.id === "lp" ? 23 : 20;
     return (
       <div style={{ display:"flex", flexDirection:"column", alignItems:"center", gap:4, width:54, padding:0 }}>
         <button
@@ -1253,7 +1254,7 @@ export default function App() {
           onMouseDown={e => { if (hasAccess) e.currentTarget.style.transform = "scale(0.95)"; }}
           onMouseUp={e => { if (hasAccess) e.currentTarget.style.transform = "scale(1)"; }}
         >
-          <IosIcon name={n.id} filled={a} size={20} color={a ? activeIcon : (isLight ? "rgba(15,23,42,0.45)" : "rgba(255,255,255,0.40)")} />
+          <IosIcon name={n.id} filled={a} size={iconSize} color={a ? activeIcon : (isLight ? "rgba(15,23,42,0.45)" : "rgba(255,255,255,0.40)")} />
         </button>
         <span style={{ fontSize:7, fontFamily:fontDisp, fontWeight: a ? 600 : 400, letterSpacing: a ? "0.01em" : "0.005em", textAlign:"center",
           color: a ? activeIcon : (isLight ? "rgba(15,23,42,0.38)" : "rgba(255,255,255,0.28)"),
