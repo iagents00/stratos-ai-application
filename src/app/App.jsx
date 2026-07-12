@@ -963,11 +963,6 @@ export default function App() {
 
   /* ── MetaPanel state ── */
   const [metaOpen, setMetaOpen]     = useState(false);
-  // El MetaPanel es una SECCIÓN dentro del contenido (deja header + menú a la vista),
-  // no un overlay a pantalla completa. Al navegar a otra vista (cambia `v`) se cierra
-  // solo, para que no quede tapando la vista nueva. Deps SOLO [v]: abrir el panel no
-  // cambia `v`, así que no se auto-cierra al abrirlo.
-  useEffect(() => { setMetaOpen(false); }, [v]);
   const [metaTab, setMetaTab]       = useState("acciones");
   const [metaActions, setMetaActions] = useState([]);
   const metaActionsSeeded = useRef(false);
@@ -1371,16 +1366,12 @@ export default function App() {
         {/* TOP: Atom identity */}
         <div style={{ display:"flex", flexDirection:"column", alignItems:"center", paddingTop:11, paddingBottom:10, flexShrink:0, gap:6 }}>
           <div style={{ animation:"atomSpin 16s linear infinite",
-            // Safari congela las animaciones dentro de un ancestro con backdrop-filter
-            // (el sidebar). will-change: transform lo promueve a su propia capa GPU para
-            // que no lo "aplane" esa capa y siga girando (fix del bug de WebKit).
-            willChange:"transform",
             filter: isLight ? "drop-shadow(0 0 5px rgba(13,154,118,0.45)) drop-shadow(0 0 12px rgba(52,211,153,0.18))" : "drop-shadow(0 0 4px rgba(255,255,255,0.40)) drop-shadow(0 0 10px rgba(255,255,255,0.10))",
           }}>
             <StratosAtomHex size={30} color={isLight ? "#0D9A76" : "#FFFFFF"} edge={isLight ? "#34D399" : "#C8DED8"} />
           </div>
           <div style={{ display:"flex", alignItems:"center", gap:4 }}>
-            <div style={{ width:4, height:4, borderRadius:"50%", background:"#34D399", boxShadow:"0 0 5px rgba(52,211,153,0.80), 0 0 10px rgba(52,211,153,0.30)", animation:"pulse 2.2s ease-in-out infinite", willChange:"transform, opacity" }} />
+            <div style={{ width:4, height:4, borderRadius:"50%", background:"#34D399", boxShadow:"0 0 5px rgba(52,211,153,0.80), 0 0 10px rgba(52,211,153,0.30)", animation:"pulse 2.2s ease-in-out infinite" }} />
             <span style={{ fontSize:7, fontFamily:fontDisp, fontWeight:700, letterSpacing:"0.18em", textTransform:"uppercase", color: isLight ? "rgba(15,23,42,0.32)" : "rgba(255,255,255,0.28)", lineHeight:1 }}>Live</span>
           </div>
           <div style={{ width:28, height:1, background: isLight ? "linear-gradient(90deg, transparent, rgba(13,154,118,0.18), transparent)" : "linear-gradient(90deg, transparent, rgba(110,231,194,0.12), transparent)" }} />
@@ -1974,7 +1965,7 @@ export default function App() {
 
             {/* TODOS los módulos */}
             <div style={{ display:"grid", gridTemplateColumns:"repeat(3, 1fr)", gap:8 }}>
-              {mobileAllNav.filter(n => n.id !== "admin").map(n => {
+              {mobileAllNav.map(n => {
                 const a = v === n.id;
                 const activeColor = n.adminOnly ? "#A78BFA" : (isLight ? T.accent : "#6EE7C2");
                 return (
@@ -1991,18 +1982,8 @@ export default function App() {
               })}
             </div>
 
-            {/* Configuración: usuarios (admin) + tema + salir */}
-            {mobileAllNav.some(n => n.id === "admin") && (
-              <button onClick={() => { setV("admin"); setPlusOpen(false); }} style={{
-                width:"100%", display:"flex", alignItems:"center", gap:10, padding:"11px 13px", marginTop:12, borderRadius:13, cursor:"pointer", textAlign:"left",
-                border:`1px solid ${isLight ? "rgba(167,139,250,0.28)" : "rgba(167,139,250,0.30)"}`,
-                background: isLight ? "rgba(167,139,250,0.08)" : "rgba(167,139,250,0.10)",
-              }}>
-                <IosIcon name="admin" filled size={16} color="#A78BFA" />
-                <span style={{ fontSize:12.5, fontWeight:600, fontFamily:fontDisp, color: isLight ? "#6D45C9" : "#C9B8F5" }}>Gestión de usuarios</span>
-              </button>
-            )}
-            <div style={{ display:"flex", gap:8, marginTop:8 }}>
+            {/* Configuración: tema + salir */}
+            <div style={{ display:"flex", gap:8, marginTop:12 }}>
               <button onClick={() => setTheme(isLight ? "dark" : "light")} style={{ flex:1, display:"flex", alignItems:"center", justifyContent:"center", gap:7, padding:"11px 8px", borderRadius:13, border:`1px solid ${isLight ? "rgba(15,23,42,0.08)" : "rgba(255,255,255,0.07)"}`, background: isLight ? "rgba(15,23,42,0.03)" : "rgba(255,255,255,0.04)", cursor:"pointer" }}>
                 {isLight ? <IosIcon name="moon" filled size={15} color={T.txt2} /> : <IosIcon name="sun" filled size={15} color="rgba(255,255,255,0.60)" />}
                 <span style={{ fontSize:11.5, fontWeight:600, fontFamily:fontDisp, color: isLight ? T.txt2 : "rgba(255,255,255,0.60)" }}>{isLight ? "Modo oscuro" : "Modo claro"}</span>
@@ -2017,7 +1998,7 @@ export default function App() {
                 nativo carga la web remota: un APK nuevo NO garantiza web nueva
                 (SW/deploy). Con esto cualquiera puede reportar "web vNNN" y se
                 acaba el adivinar. Mantener en sync con CACHE_VERSION (sw.js). */}
-            <p style={{ margin:"12px 0 0", textAlign:"center", fontSize:9.5, fontFamily:font, letterSpacing:"0.02em", color: isLight ? "rgba(15,23,42,0.35)" : "rgba(255,255,255,0.28)" }}>Stratos CRM AI · web v159</p>
+            <p style={{ margin:"12px 0 0", textAlign:"center", fontSize:9.5, fontFamily:font, letterSpacing:"0.02em", color: isLight ? "rgba(15,23,42,0.35)" : "rgba(255,255,255,0.28)" }}>Stratos CRM AI · web v157</p>
           </div>
         </>,
         document.body
@@ -2035,7 +2016,7 @@ export default function App() {
               </button>
             </div>
             <div style={{ display:"grid", gridTemplateColumns:"repeat(4, 1fr)", gap:12 }}>
-              {accessibleAll.filter(n => n.id !== "admin").map(n => {
+              {accessibleAll.map(n => {
                 const act = v === n.id;
                 const acol = n.adminOnly ? "#A78BFA" : (isLight ? T.accent : "#E9FCF4");
                 return (
@@ -2054,27 +2035,6 @@ export default function App() {
                 );
               })}
             </div>
-            {/* Configuración: Usuarios (Gestión de usuarios) vive acá, no en la grilla de apps */}
-            {accessibleAll.some(n => n.id === "admin") && (
-              <>
-                <div style={{ height:1, margin:"18px 2px 14px", background: isLight ? "rgba(15,23,42,0.06)" : "rgba(255,255,255,0.05)" }} />
-                <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", gap:12 }}>
-                  <span style={{ fontSize:10.5, fontWeight:700, fontFamily:fontDisp, letterSpacing:"0.08em", textTransform:"uppercase", color: isLight ? "rgba(15,23,42,0.42)" : "rgba(255,255,255,0.36)" }}>Configuración</span>
-                  <button onClick={() => { setV("admin"); setSidebarMore(false); }} style={{
-                    display:"flex", alignItems:"center", gap:9, padding:"10px 16px", borderRadius:14, cursor:"pointer",
-                    border: `1px solid ${v === "admin" ? "rgba(167,139,250,0.45)" : (isLight ? "rgba(15,23,42,0.08)" : "rgba(255,255,255,0.07)")}`,
-                    background: v === "admin" ? "rgba(167,139,250,0.12)" : (isLight ? "rgba(15,23,42,0.03)" : "rgba(255,255,255,0.03)"),
-                    transition:"background 0.18s ease, border-color 0.18s ease",
-                  }}
-                  onMouseEnter={e => { if(v !== "admin") e.currentTarget.style.background = isLight ? "rgba(167,139,250,0.08)" : "rgba(167,139,250,0.08)"; }}
-                  onMouseLeave={e => { if(v !== "admin") e.currentTarget.style.background = isLight ? "rgba(15,23,42,0.03)" : "rgba(255,255,255,0.03)"; }}
-                  >
-                    <IosIcon name="admin" filled={v === "admin"} size={18} color="#A78BFA" />
-                    <span style={{ fontSize:12.5, fontFamily:fontDisp, fontWeight:600, color: isLight ? T.txt2 : "rgba(255,255,255,0.74)" }}>Usuarios</span>
-                  </button>
-                </div>
-              </>
-            )}
           </div>
         </>,
         document.body
