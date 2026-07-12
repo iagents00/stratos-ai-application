@@ -713,7 +713,23 @@ export default function MetaPanel({
                 );
                 const dateEl = (
                   <E val={a.date || "—"} onSave={v => setMetaActions(p => p.map(x => x.id===a.id?{...x,date:v}:x))}
-                    style={{ fontSize:12.5, fontWeight:600, fontFamily:fontDisp, color:prioColor, background:`${prioColor}14`, border:`1px solid ${prioColor}28`, padding:"6px 14px", borderRadius:99, whiteSpace:"nowrap", letterSpacing:"-0.01em" }} />
+                    style={{
+                      display:"block",
+                      maxWidth:"100%",
+                      overflow:"hidden",
+                      textOverflow:"ellipsis",
+                      fontSize:12.5,
+                      fontWeight:650,
+                      fontFamily:fontDisp,
+                      color:prioColor,
+                      background:`${prioColor}14`,
+                      border:`1px solid ${prioColor}28`,
+                      padding:"6px 14px",
+                      borderRadius:99,
+                      whiteSpace:"nowrap",
+                      letterSpacing:"-0.01em",
+                      textAlign:"left",
+                    }} />
                 );
                 const delBtn = (
                   <button className={isMobile ? "" : "mp-del"} onClick={() => { persistDelete(a); setMetaActions(p => p.filter(x => x.id!==a.id)); }} title="Eliminar acción" style={{ background:"none", border:"none", cursor:"pointer", padding:4, display:"flex", alignItems:"center", opacity: isMobile ? 0.5 : undefined }}>
@@ -767,17 +783,19 @@ export default function MetaPanel({
                         </div>
                         {/* Fila 2 — contexto, flush-left */}
                         <div style={{ marginTop:8 }}>{metaEl}</div>
-                        {/* Fila 3 — prioridad · fecha · responsable · iAgent + borrar, flush-left */}
+                        {/* Fila 3 — fecha primero, estatus a la derecha; después responsables */}
                         <div style={{ marginTop:13, display:"flex", alignItems:"center", gap:8, flexWrap:"wrap" }}>
-                          {prioBtn}{dateEl}{assigneeSel}{iagentBtn}
+                          <div style={{ flex:"1 1 210px", minWidth:0 }}>{dateEl}</div>
+                          <div style={{ flexShrink:0 }}>{prioBtn}</div>
+                          {assigneeSel}{iagentBtn}
                           <div style={{ marginLeft:"auto" }}>{delBtn}</div>
                         </div>
                       </>
                     ) : (
                       /* ── PC: una línea. Contexto + responsable a la IZQUIERDA;
-                            prioridad y fecha en columnas de ancho fijo a la derecha con
-                            margen limpio y constante; borrar flota al pasar (no reserva
-                            espacio, así la fecha no queda desfasada del borde). ── */
+                            fecha a la izquierda del bloque de metadatos y estatus a la
+                            derecha. Sin columnas fijas: evita recortes cuando la fecha
+                            es larga. Borrar flota al pasar (no reserva espacio). ── */
                       <>
                         <div style={{ display:"flex", alignItems:"center", gap:14 }}>
                           {checkBtn}
@@ -789,9 +807,9 @@ export default function MetaPanel({
                               {iagentBtn}
                             </div>
                           </div>
-                          <div className="mp-actions" style={{ display:"flex", alignItems:"center", gap:18, flexShrink:0 }}>
-                            <div style={{ display:"flex", justifyContent:"flex-end", width:92 }}>{prioBtn}</div>
-                            <div style={{ display:"flex", justifyContent:"flex-end", width:132 }}>{dateEl}</div>
+                          <div className="mp-actions" style={{ display:"flex", alignItems:"center", gap:10, flex:"0 1 390px", minWidth:240, justifyContent:"flex-end", overflow:"hidden" }}>
+                            <div style={{ flex:"1 1 auto", minWidth:0, display:"flex", justifyContent:"flex-start" }}>{dateEl}</div>
+                            <div style={{ flex:"0 0 auto", display:"flex", justifyContent:"flex-end" }}>{prioBtn}</div>
                           </div>
                         </div>
                         {/* Eliminar — flota a la derecha, aparece al pasar (no reserva espacio) */}
