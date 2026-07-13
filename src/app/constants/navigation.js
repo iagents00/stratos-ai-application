@@ -31,7 +31,7 @@ export const nav = [
    antes cada botón quedaba en ~45px a 360px — labels cortados y targets por
    debajo del mínimo táctil. Los demás módulos viven en el sheet "Más".
    (El sidebar de desktop NO usa esta lista — muestra todo como siempre.) */
-export const MOBILE_PRIMARY_NAV = ["c", "wa", "d", "e"];
+export const MOBILE_PRIMARY_NAV = ["c", "d", "lp", "wa", "e"];
 
 export const MODULE_ROLES = {
   d:      ["super_admin","admin","director","ceo"],
