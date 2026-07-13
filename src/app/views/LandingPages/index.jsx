@@ -1028,6 +1028,7 @@ const LandingPages = ({ T = P }) => {
   const [showCatalog, setShowCatalog] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
   const [propSearch, setPropSearch] = useState("");
+  const [catSearch, setCatSearch] = useState("");
   // Drive links per property (id → url), persisted in localStorage
   const [driveLinks, setDriveLinks] = useState(() => {
     try { return JSON.parse(localStorage.getItem("stratos_drive_links") || "{}"); } catch { return {}; }
@@ -1206,7 +1207,7 @@ const LandingPages = ({ T = P }) => {
             onMouseEnter={e => { e.currentTarget.style.background = isLight ? (T.accentDark || T.accent) : "#FFFFFF"; e.currentTarget.style.transform = "translateY(-1px)"; }}
             onMouseLeave={e => { e.currentTarget.style.background = isLight ? T.accent : "rgba(255,255,255,0.95)"; e.currentTarget.style.transform = "translateY(0)"; }}
           >
-            <Wand2 size={15} /> Nueva Landing Page
+            Nueva Landing Page
           </button>
         </div>
       </div>
@@ -1248,7 +1249,7 @@ const LandingPages = ({ T = P }) => {
             <span style={{ fontSize: 11, color: T.txt2, fontFamily: font }}>{pg.date}</span>
             <span style={{ fontSize: 12, color: T.txt, fontWeight: 500, fontFamily: fontDisp }}>{pg.props}</span>
             <span style={{ fontSize: 11, color: T.emerald, fontWeight: 600, fontFamily: fontDisp }}>{pg.budget}</span>
-            <Pill color={statusColors[pg.status] || T.txt3} s isLight={isLight}>{pg.status}</Pill>
+            <div style={{ display: "flex", minWidth: 0 }}><Pill color={statusColors[pg.status] || T.txt3} s isLight={isLight}>{pg.status}</Pill></div>
             <span style={{ fontSize: 11, color: T.txt2, fontFamily: font, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{pg.asesor?.split(" ")[0] || "—"}</span>
             <div style={{ display: "flex", gap: 5 }}>
               <button onClick={() => { setClientName(pg.client); setSelectedProps(pg.propIds || allProperties.slice(0, pg.props).map(p => p.id)); setPreviewOpen(true); }} style={{ padding: "5px 7px", borderRadius: 6, border: `1px solid ${T.border}`, background: T.glass, cursor: "pointer", display: "flex", alignItems: "center" }}><Eye size={11} color={T.txt2} /></button>
@@ -1269,7 +1270,7 @@ const LandingPages = ({ T = P }) => {
             <div>
               <p style={{ fontSize: 14, fontWeight: 700, color: T.txt, fontFamily: fontDisp }}>Catálogo de Propiedades</p>
               <p style={{ fontSize: 11, color: T.txt3, marginTop: 1 }}>
-                {rivieraProperties.length} predeterminadas · <span style={{ color: customProperties.length > 0 ? T.accent : T.txt3 }}>{customProperties.length} registradas por el equipo</span>
+<span style={{ color: T.accent, fontWeight: 700 }}>{catalogProps.length}</span> desarrollos del inventario{customProperties.length > 0 ? ` · ${customProperties.length} del equipo` : ""} · {rivieraProperties.length} demo
               </p>
             </div>
           </div>
@@ -1355,51 +1356,55 @@ const LandingPages = ({ T = P }) => {
               </div>
             )}
 
-            {/* Default properties summary */}
+            {/* Catálogo real del equipo — proyectos con carpeta de Drive */}
             <div>
-              <p style={{ fontSize: 11, color: T.txt2, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 12 }}>
-                Propiedades Riviera Maya ({rivieraProperties.length})
-              </p>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 10 }}>
-                {rivieraProperties.map(prop => {
-                  const dl = driveLinks[prop.id] || prop.driveLink || "";
-                  return (
-                    <div key={prop.id} style={{
-                      padding: "12px 14px", borderRadius: 10,
-                      background: `${prop.accent}06`, border: `1px solid ${prop.accent}18`,
-                      display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8,
-                    }}>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <p style={{ fontSize: 12, fontWeight: 700, color: T.txt, fontFamily: fontDisp, letterSpacing: "-0.01em" }}>{prop.name}</p>
-                        <p style={{ fontSize: 10, color: T.txt3 }}>{prop.location} · ${(prop.priceFrom/1000).toFixed(0)}K–${(prop.priceTo/1000).toFixed(0)}K · ROI {prop.roi}</p>
-                      </div>
-                      <div onClick={e => e.stopPropagation()} style={{ display: "flex", alignItems: "center", gap: 5, flexShrink: 0 }}>
-                        {editingLinkId === prop.id ? (
-                          <div style={{ display: "flex", gap: 5, alignItems: "center" }}>
-                            <input
-                              autoFocus
-                              value={editLinkValue}
-                              onChange={e => setEditLinkValue(e.target.value)}
-                              onKeyDown={e => { if (e.key === "Enter") saveDriveLink(prop.id); if (e.key === "Escape") { setEditingLinkId(null); setEditLinkValue(""); } }}
-                              placeholder="Link Drive..."
-                              style={{ padding: "4px 8px", borderRadius: 6, fontSize: 10, background: T.glass, border: `1px solid ${T.accent}50`, color: T.txt, fontFamily: font, outline: "none", width: 180 }}
-                            />
-                            <button onClick={() => saveDriveLink(prop.id)} style={{ padding: "4px 9px", borderRadius: 5, border: "none", background: T.accent, color: "#000", fontSize: 10, fontWeight: 700, cursor: "pointer" }}>OK</button>
-                            <button onClick={() => { setEditingLinkId(null); setEditLinkValue(""); }} style={{ padding: "4px 6px", borderRadius: 5, border: `1px solid ${T.border}`, background: T.glass, cursor: "pointer", color: T.txt3 }}><X size={10} /></button>
-                          </div>
-                        ) : (
-                          <div style={{ display: "flex", gap: 5, alignItems: "center" }}>
-                            {dl && <a href={dl} target="_blank" rel="noreferrer" style={{ display: "flex", alignItems: "center", gap: 4, padding: "4px 9px", borderRadius: 6, border: `1px solid ${prop.accent}40`, background: `${prop.accent}10`, color: prop.accent, fontSize: 10, fontWeight: 700, textDecoration: "none" }}><Image size={10} /> Galería</a>}
-                            <button onClick={e => { e.stopPropagation(); startEditLink(prop.id, dl, e); }} style={{ display: "flex", alignItems: "center", gap: 3, padding: "4px 9px", borderRadius: 6, border: `1px solid ${T.border}`, background: T.glass, cursor: "pointer", color: T.txt2, fontSize: 10, fontFamily: font }}>
-                              <FileText size={9} /> {dl ? "Editar link" : "Añadir link"}
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginBottom: 12, flexWrap: "wrap" }}>
+                <p style={{ fontSize: 11, color: T.txt2, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase" }}>
+                  Catálogo del equipo ({catalogProps.length})
+                </p>
+                <div style={{ position: "relative" }}>
+                  <Search size={13} color={T.txt3} style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)" }} />
+                  <input value={catSearch} onChange={e => setCatSearch(e.target.value)} placeholder="Buscar desarrollo o zona…"
+                    style={{ padding: "7px 12px 7px 30px", borderRadius: 9, fontSize: 12, width: 240, maxWidth: "60vw", background: T.glass, border: `1px solid ${T.border}`, color: T.txt, fontFamily: font, outline: "none" }} />
+                </div>
               </div>
+              {(() => {
+                const nq = catSearch.trim().toLowerCase();
+                const list = nq
+                  ? catalogProps.filter(p => [p.name, p.location, p.zone, p.ticket].filter(Boolean).join(" ").toLowerCase().includes(nq))
+                  : catalogProps;
+                const shown = list.slice(0, 60);
+                return (
+                  <>
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 10 }}>
+                      {shown.map(prop => (
+                        <div key={prop.id} style={{
+                          padding: "12px 14px", borderRadius: 10,
+                          background: `${prop.accent}06`, border: `1px solid ${prop.accent}18`,
+                          display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8,
+                        }}>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <p style={{ fontSize: 12, fontWeight: 700, color: T.txt, fontFamily: fontDisp, letterSpacing: "-0.01em", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{prop.name}</p>
+                            <p style={{ fontSize: 10, color: T.txt3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{prop.location}{prop.ticket ? ` · ${prop.ticket}` : ""}</p>
+                          </div>
+                          <div style={{ display: "flex", alignItems: "center", gap: 5, flexShrink: 0 }}>
+                            {prop.driveLink && <a href={prop.driveLink} target="_blank" rel="noreferrer" title="Abrir carpeta de Drive" style={{ display: "flex", alignItems: "center", padding: "5px 7px", borderRadius: 6, border: `1px solid ${prop.accent}40`, background: `${prop.accent}10`, color: prop.accent, textDecoration: "none" }}><Image size={11} /></a>}
+                            <button onClick={() => { setSelectedProps([prop.id]); setStep(1); }} style={{ display: "flex", alignItems: "center", gap: 4, padding: "5px 11px", borderRadius: 6, border: `1px solid ${T.accent}40`, background: T.accentS, cursor: "pointer", color: T.accent, fontSize: 10, fontWeight: 700, fontFamily: fontDisp, whiteSpace: "nowrap" }}>Crear landing</button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    {list.length > shown.length && (
+                      <p style={{ fontSize: 11, color: T.txt3, marginTop: 12, textAlign: "center", fontFamily: font }}>
+                        Mostrando {shown.length} de {list.length} · busca arriba para encontrar cualquier desarrollo, o úsalos todos desde “Nueva Landing Page”.
+                      </p>
+                    )}
+                    {list.length === 0 && (
+                      <p style={{ fontSize: 12, color: T.txt3, textAlign: "center", padding: "16px 0", fontFamily: font }}>Sin resultados para “{catSearch}”.</p>
+                    )}
+                  </>
+                );
+              })()}
             </div>
 
             {customProperties.length === 0 && (
