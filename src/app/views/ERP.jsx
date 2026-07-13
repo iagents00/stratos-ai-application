@@ -63,6 +63,7 @@ const ERP = ({ oc, T: _T }) => {
   const filtered = useMemo(() => {
     const needle = q.trim().toLowerCase();
     return sec.items.filter((i) => {
+      if (!i.drive) return false; // Solo desarrollos con carpeta Drive disponible
       if (ticket && i.ticket !== ticket) return false;
       if (!needle) return true;
       return [
@@ -142,7 +143,7 @@ const ERP = ({ oc, T: _T }) => {
                 Duke del Caribe · fuente: Google Sheet «DRIVES DUKE DEL CARIBE»
               </p>
             </div>
-            <Pill color={T.blue} s isLight={isLight}>{filtered.length} de {sec.items.length}</Pill>
+            <Pill color={T.blue} s isLight={isLight}>{filtered.length} de {sec.items.filter((i) => i.drive).length}</Pill>
           </div>
 
           {/* Section tabs (solo si hay más de una sección visible) */}
@@ -261,12 +262,14 @@ const ERP = ({ oc, T: _T }) => {
                     <div
                       key={idx}
                       onClick={() => oc(summary(it))}
-                      onMouseEnter={(e) => (e.currentTarget.style.borderColor = `${c}50`)}
-                      onMouseLeave={(e) => (e.currentTarget.style.borderColor = T.border)}
+                      onMouseEnter={(e) => { e.currentTarget.style.borderColor = `${c}55`; e.currentTarget.style.transform = "translateY(-3px)"; e.currentTarget.style.boxShadow = isLight ? "0 8px 24px rgba(15,23,42,0.10)" : "0 12px 30px rgba(0,0,0,0.42)"; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = isLight ? "0 1px 2px rgba(15,23,42,0.05), 0 4px 14px rgba(15,23,42,0.05)" : "none"; }}
                       style={{
-                        display: "flex", flexDirection: "column", gap: 9, padding: "14px 15px",
-                        borderRadius: 14, background: isLight ? "#FFFFFF" : "rgba(255,255,255,0.03)",
-                        border: `1px solid ${T.border}`, cursor: "pointer", transition: "border-color 0.15s",
+                        display: "flex", flexDirection: "column", gap: 9, padding: "15px 16px",
+                        borderRadius: 16, background: isLight ? "#FFFFFF" : "rgba(255,255,255,0.03)",
+                        border: `1px solid ${T.border}`, cursor: "pointer",
+                        boxShadow: isLight ? "0 1px 2px rgba(15,23,42,0.05), 0 4px 14px rgba(15,23,42,0.05)" : "none",
+                        transition: "border-color 0.16s ease, transform 0.16s ease, box-shadow 0.16s ease",
                       }}
                     >
                       {/* Title row */}
