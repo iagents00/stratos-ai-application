@@ -22,8 +22,8 @@ const dukeConfig = {
     accent:      null,   // usa el accent del design system (verde menta #6EE7C2)
     accentLight: null,
     favicon:     "/favicon.ico",
-    // El pill del header (DynIsland) muestra sólo "Inteligencia" (no "Centro de Inteligencia").
-    intelligenceCenterLabel: "Inteligencia",
+    // El pill del header (DynIsland) muestra sólo "Intelligence" (no "Centro de Inteligencia").
+    intelligenceCenterLabel: "Intelligence",
   },
 
   tenant: {
