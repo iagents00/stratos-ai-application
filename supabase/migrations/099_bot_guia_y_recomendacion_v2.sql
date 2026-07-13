@@ -1,0 +1,26 @@
+-- ============================================================================
+-- 099 — Bot Telegram (Stratos): guía/manual + recomendación v2. Aplicado en
+--       stratos-prod vía MCP (2026-07-13). Sin tocar n8n.
+--
+-- 1) GUÍA/MANUAL: bot_smart_queries — "¿cómo funciona el asistente?",
+--    "¿tienes la guía?", "manual" (aguanta typo "CMO") -> capacidades con el
+--    link del manual (organizations.meta_config.manual_tg_url).
+--
+-- 2) RECOMENDACIÓN v2: bot_recomendar_propiedades(chat, ref, p_context) —
+--    recomienda propiedades a un cliente usando señales reales:
+--      - CAMPAÑA del cliente (proyecto por el que entró; ej. "Bay View Grand"
+--        que está en catalogo_proyectos) -> lidera con ese desarrollo.
+--      - UBICACIÓN (catalogo_proyectos.ubicacion): se puede pedir
+--        "propiedades en Cancún para X" -> filtra por ubicacion.
+--      - PRECIO (ticket) visible por opción + presupuesto del cliente de referencia.
+--    El ENTRY pasa el texto (v_norm) como 3er arg para leer la zona pedida.
+--
+-- NOTA de datos: en catalogo_proyectos, `zona` está casi vacío y muchos `ticket`
+--   también; por eso se usa `ubicacion` + campaña + precio visible, en vez de un
+--   filtro por monto que el dato no soporta de forma fiable.
+--
+-- Cuerpos completos: en la base (pg_get_functiondef). REVERT: restaurar
+--   bot_recomendar_propiedades (2 args) y bot_smart_queries previas + recrear el
+--   entry sin el 3er argumento en la llamada de recomendación.
+-- ============================================================================
+-- (resumen; detalle en la base y en el changelog/reporte del AIOS)
