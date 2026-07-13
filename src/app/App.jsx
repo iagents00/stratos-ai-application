@@ -1250,20 +1250,19 @@ export default function App() {
     const activeIcon  = isLight ? activeColor : (isAdmin ? "#ECE6FF" : "#E9FCF4");
     const iconSize = n.id === "d" ? 23 : n.id === "ia" ? 22 : n.id === "lp" ? 22 : n.id === "e" ? 21 : n.id === "c" ? 22 : 20;
     return (
-      <div style={{ display:"flex", flexDirection:"column", alignItems:"center", gap:2, width:54, padding:0 }}>
+      <div style={{ display:"flex", flexDirection:"column", alignItems:"center", gap:3, width:56, padding:0 }}>
         <button
           onClick={() => { setV(n.id); setSidebarMore(false); }}
           title={(clientConfig?.navLabels?.[n.id] ?? n.l) + (!hasAccess ? " · Sin acceso" : "")}
           style={{
-            width:46, height:38, borderRadius:13,
+            width:48, height:40, borderRadius:14,
             padding:0, lineHeight:0,
             cursor: hasAccess ? "pointer" : "not-allowed",
             opacity: hasAccess ? 1 : 0.32,
             outline:"none",
-            background: a ? (isLight ? "linear-gradient(180deg, rgba(255,255,255,0.78), rgba(255,255,255,0.50))" : "linear-gradient(180deg, rgba(255,255,255,0.06), rgba(110,231,194,0.028))") : "transparent",
-            border: a ? (isLight ? "1px solid rgba(255,255,255,0.92)" : "1px solid rgba(190,245,225,0.14)") : "1px solid transparent",
-            boxShadow: a ? (isLight ? "inset 0 1px 0 rgba(255,255,255,0.95), 0 1px 8px rgba(15,23,42,0.055)" : "0 2px 8px rgba(0,0,0,0.28)") : "none",
-            backdropFilter: a ? "blur(18px) saturate(180%)" : "none", WebkitBackdropFilter: a ? "blur(18px) saturate(180%)" : "none",
+            background: a ? (isLight ? "linear-gradient(180deg, rgba(255,255,255,0.86), rgba(248,250,252,0.68))" : "linear-gradient(180deg, rgba(255,255,255,0.065), rgba(110,231,194,0.022))") : "transparent",
+            border: a ? (isLight ? "1px solid rgba(15,23,42,0.10)" : "1px solid rgba(190,245,225,0.16)") : "1px solid transparent",
+            boxShadow: a ? (isLight ? "0 3px 10px rgba(15,23,42,0.06)" : "0 3px 10px rgba(0,0,0,0.24)") : "none",
             display:"flex", alignItems:"center", justifyContent:"center",
             transition:"background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease",
             position:"relative",
@@ -1275,7 +1274,7 @@ export default function App() {
         >
           <IosIcon name={n.id} filled={a} size={iconSize} color={a ? activeIcon : (isLight ? "rgba(15,23,42,0.45)" : "rgba(255,255,255,0.40)")} />
         </button>
-        <span style={{ fontSize:7.2, fontFamily:fontDisp, fontWeight: a ? 650 : 430, letterSpacing: a ? "0.01em" : "0.005em", textAlign:"center",
+        <span style={{ width:"100%", fontSize:7.2, fontFamily:fontDisp, fontWeight: a ? 650 : 430, letterSpacing: a ? "0.01em" : "0.005em", textAlign:"center",
           color: a ? activeIcon : (isLight ? "rgba(15,23,42,0.38)" : "rgba(255,255,255,0.28)"),
           lineHeight:1, userSelect:"none", transition:"color 0.18s ease",
         }}>{clientConfig?.navLabels?.[n.id] ?? n.l}</span>
@@ -1383,13 +1382,13 @@ export default function App() {
       {/* ══ SIDEBAR ══ */}
       <div className="stratos-sidebar" style={{
         width:72, flexShrink:0, zIndex:10,
-        borderRight:`1px solid ${isLight ? "rgba(0,0,0,0.06)" : "rgba(255,255,255,0.05)"}`,
+        borderRight:`1px solid ${isLight ? "rgba(15,23,42,0.08)" : "rgba(190,245,225,0.075)"}`,
         display:"flex", flexDirection:"column", alignItems:"center",
         paddingTop:0, paddingBottom:0, position:"relative", overflow:"hidden",
         background: isLight ? "linear-gradient(180deg, rgba(253,253,255,0.82), rgba(249,250,252,0.64))" : "linear-gradient(180deg, rgba(14,20,32,0.66), rgba(2,4,11,0.58))",
         backdropFilter:"blur(30px) saturate(165%)", WebkitBackdropFilter:"blur(30px) saturate(165%)",
         transition:"background 0.35s ease, border-color 0.35s ease, box-shadow 0.35s ease",
-        boxShadow: isLight ? "inset -1px 0 0 rgba(255,255,255,0.55), 1px 0 0 rgba(0,0,0,0.05)" : "inset 1px 1px 0 rgba(255,255,255,0.06), 1px 0 0 rgba(255,255,255,0.04), 8px 0 28px rgba(0,0,0,0.30)",
+        boxShadow: isLight ? "4px 0 18px rgba(15,23,42,0.035)" : "6px 0 22px rgba(0,0,0,0.22)",
       }}>
         {/* TOP: Atom identity */}
         <div style={{ display:"flex", flexDirection:"column", alignItems:"center", paddingTop:11, paddingBottom:10, flexShrink:0, gap:6 }}>
