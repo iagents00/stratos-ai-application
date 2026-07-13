@@ -18,7 +18,9 @@ const G = {"c":{"s":"<path d=\"M336 256c-20.56 0-40.44-9.18-56-25.84-15.13-16.25
 
 const PREMIUM_ICON_OVERRIDES = {
   c: {
-    s: "<g transform=\"translate(32 32) scale(18.666667)\" fill=\"none\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"1.65\"><path d=\"M18 21a8 8 0 0 0-16 0\"/><circle cx=\"10\" cy=\"8\" r=\"5\"/><path d=\"M22 20c0-3.37-2-6.5-4-8a5 5 0 0 0-.45-8.3\"/></g>",
+    // Activo: siluetas sólidas para que la selección sea inequívoca.
+    // Inactivo: conserva el dibujo premium de línea fina.
+    s: G.c.s,
     o: "<g transform=\"translate(32 32) scale(18.666667)\" fill=\"none\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"1.65\"><path d=\"M18 21a8 8 0 0 0-16 0\"/><circle cx=\"10\" cy=\"8\" r=\"5\"/><path d=\"M22 20c0-3.37-2-6.5-4-8a5 5 0 0 0-.45-8.3\"/></g>",
   },
   lp: {
