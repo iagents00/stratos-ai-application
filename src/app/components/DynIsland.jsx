@@ -70,8 +70,8 @@ const DynIsland = ({ onExpand, onOpenLead, notifications = [], theme = "dark", b
           100% { transform: rotate(360deg) scale(1); opacity: 0.16; }
         }
         @keyframes stratosIntelPulseDot {
-          0%, 100% { transform: scale(0.92); box-shadow: 0 0 0 0 rgba(52,211,153,0.28), 0 0 7px rgba(52,211,153,0.82), 0 0 15px rgba(52,211,153,0.22); }
-          50% { transform: scale(1.16); box-shadow: 0 0 0 6px rgba(52,211,153,0), 0 0 12px rgba(52,211,153,0.96), 0 0 22px rgba(52,211,153,0.34); }
+          0%, 100% { opacity: 0.72; transform: scale(0.98); }
+          50% { opacity: 1; transform: scale(1.03); }
         }
       `}</style>
       {/* ─── PILL — Centro de Inteligencia ─────────────────────────────── */}
@@ -135,8 +135,7 @@ const DynIsland = ({ onExpand, onOpenLead, notifications = [], theme = "dark", b
         {/* Content */}
         <div style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
           <div style={{ position: "relative", flexShrink: 0 }}>
-            <div data-brand-motion="true" style={{ position: "absolute", inset: -4, borderRadius: "50%", background: "rgba(52,211,153,0.20)", animation: "stratosIntelPulseDot 2.2s ease-in-out infinite", willChange: "transform, opacity, box-shadow" }} />
-            <div data-brand-motion="true" style={{ width: 6.5, height: 6.5, borderRadius: "50%", background: "#34D399", animation: "stratosIntelPulseDot 2.2s ease-in-out infinite", willChange: "transform, box-shadow" }} />
+            <div data-brand-motion="true" style={{ width: 6, height: 6, borderRadius: "50%", background: "#34D399", boxShadow: "0 0 5px rgba(52,211,153,0.42)", animation: "stratosIntelPulseDot 3.4s ease-in-out infinite", willChange: "transform, opacity" }} />
           </div>
           <span style={{
             fontSize: 12.5, fontWeight: 600, letterSpacing: "-0.025em", fontFamily: fontDisp,
