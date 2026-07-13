@@ -55,6 +55,38 @@ const DynIsland = ({ onExpand, onOpenLead, notifications = [], theme = "dark", b
 
   const closeAll = () => { setIsOpen(false); setSelectedNotif(null); setSelectedFeature(null); setShowAll(false); };
 
+  // Panel expandido — colores tema-aware (antes estaba hardcodeado en oscuro).
+  const D = {
+    bg:   isLight ? "#FFFFFF" : "#03060F",
+    bd:   isLight ? "rgba(15,23,42,0.10)" : "rgba(255,255,255,0.08)",
+    line: isLight ? "rgba(15,23,42,0.07)" : "rgba(255,255,255,0.05)",
+    sh:   isLight ? "0 24px 70px rgba(15,23,42,0.16), 0 0 0 0.5px rgba(15,23,42,0.05)" : "0 24px 80px rgba(0,0,0,0.75), 0 0 0 0.5px rgba(255,255,255,0.04)",
+    t92:  isLight ? "#0B1220" : "rgba(255,255,255,0.92)",
+    t88:  isLight ? "rgba(11,18,32,0.90)" : "rgba(255,255,255,0.88)",
+    t74:  isLight ? "rgba(11,18,32,0.70)" : "rgba(255,255,255,0.74)",
+    t66:  isLight ? "rgba(11,18,32,0.62)" : "rgba(255,255,255,0.66)",
+    t65:  isLight ? "rgba(11,18,32,0.62)" : "rgba(255,255,255,0.65)",
+    t55:  isLight ? "rgba(11,18,32,0.55)" : "rgba(255,255,255,0.55)",
+    t50:  isLight ? "rgba(11,18,32,0.52)" : "rgba(255,255,255,0.50)",
+    t46:  isLight ? "rgba(11,18,32,0.48)" : "rgba(255,255,255,0.46)",
+    t44:  isLight ? "rgba(11,18,32,0.46)" : "rgba(255,255,255,0.44)",
+    t42:  isLight ? "rgba(11,18,32,0.44)" : "rgba(255,255,255,0.42)",
+    t40:  isLight ? "rgba(11,18,32,0.42)" : "rgba(255,255,255,0.40)",
+    t38:  isLight ? "rgba(11,18,32,0.42)" : "rgba(255,255,255,0.38)",
+    t34:  isLight ? "rgba(11,18,32,0.38)" : "rgba(255,255,255,0.34)",
+    t22:  isLight ? "rgba(11,18,32,0.28)" : "rgba(255,255,255,0.22)",
+    w:    isLight ? "#0B1220" : "#FFFFFF",
+    hov:  isLight ? "rgba(15,23,42,0.04)" : "rgba(255,255,255,0.03)",
+    btn:  isLight ? "rgba(15,23,42,0.05)" : "rgba(255,255,255,0.06)",
+    btnH: isLight ? "rgba(15,23,42,0.10)" : "rgba(255,255,255,0.12)",
+    acc:  isLight ? "#0D9A76" : "#6EE7C2",
+    cardG2: isLight ? "rgba(15,23,42,0.015)" : "rgba(255,255,255,0.02)",
+    ctaBg:  isLight ? "#0D9A76" : "rgba(255,255,255,0.92)",
+    ctaTxt: isLight ? "#FFFFFF" : "#06080F",
+    ctaSh:  isLight ? "0 4px 16px rgba(13,154,118,0.30)" : "0 2px 10px rgba(255,255,255,0.12)",
+    ctaHov: isLight ? "#0B8A69" : "#FFFFFF",
+  };
+
   return (
     <>
       <style>{`
@@ -162,12 +194,12 @@ const DynIsland = ({ onExpand, onOpenLead, notifications = [], theme = "dark", b
             maxHeight: "calc(100dvh - 90px - var(--safe-area-inset-top, env(safe-area-inset-top, 0px)))", overflowY: "auto",
             borderRadius: 20,
             background: selectedNotif
-              ? `radial-gradient(ellipse at top, ${selectedNotif.c}10 0%, #03060F 70%)`
+              ? `radial-gradient(ellipse at top, ${selectedNotif.c}10 0%, ${D.bg} 70%)`
               : selectedFeature
-              ? `radial-gradient(ellipse at top, ${selectedFeature.color}12 0%, #03060F 70%)`
-              : "#03060F",
-            border: "0.5px solid rgba(255,255,255,0.08)",
-            boxShadow: "0 24px 80px rgba(0,0,0,0.75), 0 0 0 0.5px rgba(255,255,255,0.04)",
+              ? `radial-gradient(ellipse at top, ${selectedFeature.color}12 0%, ${D.bg} 70%)`
+              : D.bg,
+            border: `0.5px solid ${D.bd}`,
+            boxShadow: D.sh,
             overflow: "hidden",
             animation: "fadeSlideDown 0.22s cubic-bezier(0.4,0,0.2,1)",
           }}>
@@ -178,19 +210,19 @@ const DynIsland = ({ onExpand, onOpenLead, notifications = [], theme = "dark", b
             {isOpen && !selectedNotif && !selectedFeature && !showAll && (
               <div style={{ padding: "18px 0 6px" }}>
                 {/* Header */}
-                <div style={{ padding: "0 20px 12px", display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+                <div style={{ padding: "0 20px 12px", display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: `1px solid ${D.line}` }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
                     <div data-brand-motion="true" style={{ animation: "stratosAtomSpin 20s linear infinite", transformOrigin: "center", display: "flex", filter: "drop-shadow(0 0 5px rgba(110,231,194,0.35))" }}>
-                      <StratosAtom size={14} color="#6EE7C2" />
+                      <StratosAtom size={14} color={D.acc} />
                     </div>
                     <div>
-                      <p style={{ margin: 0, fontSize: 11.5, color: "rgba(255,255,255,0.88)", fontWeight: 700, fontFamily: fontDisp, letterSpacing: "-0.01em" }}>{centerLabel}</p>
-                      <p style={{ margin: 0, fontSize: 9.5, color: "rgba(255,255,255,0.38)", fontFamily: font, letterSpacing: "0.02em", marginTop: 1 }}>{msgs.length} actualizaciones del equipo IA</p>
+                      <p style={{ margin: 0, fontSize: 11.5, color: D.t88, fontWeight: 700, fontFamily: fontDisp, letterSpacing: "-0.01em" }}>{centerLabel}</p>
+                      <p style={{ margin: 0, fontSize: 9.5, color: D.t38, fontFamily: font, letterSpacing: "0.02em", marginTop: 1 }}>{msgs.length} actualizaciones del equipo IA</p>
                     </div>
                   </div>
-                  <button onClick={() => setIsOpen(false)} style={{ background: "rgba(255,255,255,0.05)", border: "none", cursor: "pointer", width: 26, height: 26, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", color: "rgba(255,255,255,0.50)", transition: "all 0.16s" }}
-                    onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.10)"; e.currentTarget.style.color = "#FFF"; }}
-                    onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.05)"; e.currentTarget.style.color = "rgba(255,255,255,0.50)"; }}
+                  <button onClick={() => setIsOpen(false)} style={{ background: D.btn, border: "none", cursor: "pointer", width: 26, height: 26, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", color: D.t50, transition: "all 0.16s" }}
+                    onMouseEnter={e => { e.currentTarget.style.background = D.btnH; e.currentTarget.style.color = D.w; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = D.btn; e.currentTarget.style.color = D.t50; }}
                   ><X size={13} /></button>
                 </div>
 
@@ -199,29 +231,29 @@ const DynIsland = ({ onExpand, onOpenLead, notifications = [], theme = "dark", b
                   {msgs.map((m, i) => (
                     <div key={i} onClick={() => setSelectedNotif(m)}
                       style={{ display: "flex", alignItems: "center", gap: 13, padding: "11px 20px", cursor: "pointer", transition: "background 0.16s" }}
-                      onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.03)"}
+                      onMouseEnter={e => e.currentTarget.style.background = D.hov}
                       onMouseLeave={e => e.currentTarget.style.background = "transparent"}
                     >
                       <div style={{ width: 32, height: 32, borderRadius: 9, background: `${m.c}12`, border: `1px solid ${m.c}20`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                         <m.icon size={14} color={m.c} strokeWidth={2} />
                       </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <p style={{ margin: 0, fontSize: 12.5, color: "rgba(255,255,255,0.88)", fontWeight: 600, fontFamily: fontDisp, marginBottom: 2 }}>{m.agent}</p>
-                        <p style={{ margin: 0, fontSize: 11, color: "rgba(255,255,255,0.42)", fontFamily: font, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{m.text}</p>
+                        <p style={{ margin: 0, fontSize: 12.5, color: D.t88, fontWeight: 600, fontFamily: fontDisp, marginBottom: 2 }}>{m.agent}</p>
+                        <p style={{ margin: 0, fontSize: 11, color: D.t42, fontFamily: font, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{m.text}</p>
                       </div>
-                      <ChevronRight size={13} color="rgba(255,255,255,0.22)" strokeWidth={2} />
+                      <ChevronRight size={13} color={D.t22} strokeWidth={2} />
                     </div>
                   ))}
                 </div>
 
                 {/* ─── QUÉ PUEDE HACER EL SISTEMA — carrusel de funciones ─── */}
-                <div style={{ padding: "10px 20px 4px", borderTop: "1px solid rgba(255,255,255,0.05)", display: "flex", justifyContent: "space-between", alignItems: "flex-end", gap: 10 }}>
+                <div style={{ padding: "10px 20px 4px", borderTop: `1px solid ${D.line}`, display: "flex", justifyContent: "space-between", alignItems: "flex-end", gap: 10 }}>
                   <div style={{ minWidth: 0 }}>
-                    <p style={{ margin: "0 0 2px", fontSize: 10, color: "rgba(255,255,255,0.55)", fontWeight: 700, fontFamily: fontDisp, letterSpacing: "0.10em", textTransform: "uppercase" }}>Qué puede hacer el sistema</p>
-                    <p style={{ margin: 0, fontSize: 9.5, color: "rgba(255,255,255,0.34)", fontFamily: font }}>Tocá una función para ver cómo se usa</p>
+                    <p style={{ margin: "0 0 2px", fontSize: 10, color: D.t55, fontWeight: 700, fontFamily: fontDisp, letterSpacing: "0.10em", textTransform: "uppercase" }}>Qué puede hacer el sistema</p>
+                    <p style={{ margin: 0, fontSize: 9.5, color: D.t34, fontFamily: font }}>Tocá una función para ver cómo se usa</p>
                   </div>
                   <button onClick={() => setShowAll(true)}
-                    style={{ flexShrink: 0, display: "flex", alignItems: "center", gap: 4, background: "rgba(110,231,194,0.10)", border: "1px solid rgba(110,231,194,0.22)", color: "#6EE7C2", borderRadius: 8, padding: "6px 10px", fontSize: 10.5, fontWeight: 700, fontFamily: fontDisp, cursor: "pointer", whiteSpace: "nowrap", transition: "background 0.16s" }}
+                    style={{ flexShrink: 0, display: "flex", alignItems: "center", gap: 4, background: "rgba(110,231,194,0.10)", border: "1px solid rgba(110,231,194,0.22)", color: D.acc, borderRadius: 8, padding: "6px 10px", fontSize: 10.5, fontWeight: 700, fontFamily: fontDisp, cursor: "pointer", whiteSpace: "nowrap", transition: "background 0.16s" }}
                     onMouseEnter={e => { e.currentTarget.style.background = "rgba(110,231,194,0.18)"; }}
                     onMouseLeave={e => { e.currentTarget.style.background = "rgba(110,231,194,0.10)"; }}
                   >Ver todas <span style={{ opacity: 0.7 }}>({INTEL_FEATURES.length})</span><ChevronRight size={12} strokeWidth={2.4} /></button>
@@ -243,7 +275,7 @@ const DynIsland = ({ onExpand, onOpenLead, notifications = [], theme = "dark", b
                           style={{
                             flex: "0 0 auto", width: 166,
                             borderRadius: 16, padding: "14px 14px 15px", cursor: "pointer",
-                            background: `linear-gradient(160deg, ${f.color}14 0%, rgba(255,255,255,0.02) 60%)`,
+                            background: `linear-gradient(160deg, ${f.color}14 0%, ${D.cardG2} 60%)`,
                             border: `1px solid ${f.color}22`,
                             transition: "border-color 0.16s",
                           }}
@@ -254,13 +286,13 @@ const DynIsland = ({ onExpand, onOpenLead, notifications = [], theme = "dark", b
                             <div style={{ width: 34, height: 34, borderRadius: 10, background: `${f.color}1E`, border: `1px solid ${f.color}33`, display: "flex", alignItems: "center", justifyContent: "center" }}>
                               <Ic size={17} color={f.color} strokeWidth={2} />
                             </div>
-                            <span style={{ fontSize: 8, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: isAgent ? "#6EE7C2" : "rgba(255,255,255,0.46)", background: isAgent ? "rgba(110,231,194,0.10)" : "rgba(255,255,255,0.05)", border: `1px solid ${isAgent ? "rgba(110,231,194,0.22)" : "rgba(255,255,255,0.08)"}`, borderRadius: 6, padding: "3px 6px" }}>
+                            <span style={{ fontSize: 8, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: isAgent ? D.acc : D.t46, background: isAgent ? "rgba(110,231,194,0.10)" : D.btn, border: `1px solid ${isAgent ? "rgba(110,231,194,0.22)" : D.bd}`, borderRadius: 6, padding: "3px 6px" }}>
                               {isAgent ? "Auto" : "Vos pedís"}
                             </span>
                           </div>
-                          <p style={{ margin: "0 0 4px", fontSize: 13, color: "rgba(255,255,255,0.92)", fontWeight: 600, fontFamily: fontDisp, lineHeight: 1.2 }}>{f.label}</p>
-                          <p style={{ margin: 0, fontSize: 10.5, color: "rgba(255,255,255,0.44)", fontFamily: font, lineHeight: 1.4, display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{f.tagline}</p>
-                          <div style={{ display: "flex", alignItems: "center", gap: 5, marginTop: 10, paddingTop: 9, borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+                          <p style={{ margin: "0 0 4px", fontSize: 13, color: D.t92, fontWeight: 600, fontFamily: fontDisp, lineHeight: 1.2 }}>{f.label}</p>
+                          <p style={{ margin: 0, fontSize: 10.5, color: D.t44, fontFamily: font, lineHeight: 1.4, display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{f.tagline}</p>
+                          <div style={{ display: "flex", alignItems: "center", gap: 5, marginTop: 10, paddingTop: 9, borderTop: `1px solid ${D.line}` }}>
                             <MapPin size={10} color={f.color} strokeWidth={2.4} style={{ flexShrink: 0 }} />
                             <span style={{ fontSize: 9, color: f.color, opacity: 0.9, fontWeight: 600, fontFamily: font }}>{chan}</span>
                           </div>
@@ -276,18 +308,18 @@ const DynIsland = ({ onExpand, onOpenLead, notifications = [], theme = "dark", b
             {showAll && !selectedFeature && (
               <div style={{ padding: "18px 0 8px", animation: "fadeSlideDown 0.2s cubic-bezier(0.4,0,0.2,1)" }}>
                 {/* Header */}
-                <div style={{ padding: "0 20px 12px", display: "flex", alignItems: "center", gap: 12, borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
-                  <button onClick={() => setShowAll(false)} style={{ background: "rgba(255,255,255,0.06)", border: "none", color: "rgba(255,255,255,0.55)", borderRadius: 8, width: 28, height: 28, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", flexShrink: 0, transition: "all 0.16s" }}
-                    onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.12)"; e.currentTarget.style.color = "#FFF"; }}
-                    onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.06)"; e.currentTarget.style.color = "rgba(255,255,255,0.55)"; }}
+                <div style={{ padding: "0 20px 12px", display: "flex", alignItems: "center", gap: 12, borderBottom: `1px solid ${D.line}` }}>
+                  <button onClick={() => setShowAll(false)} style={{ background: D.btn, border: "none", color: D.t55, borderRadius: 8, width: 28, height: 28, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", flexShrink: 0, transition: "all 0.16s" }}
+                    onMouseEnter={e => { e.currentTarget.style.background = D.btnH; e.currentTarget.style.color = D.w; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = D.btn; e.currentTarget.style.color = D.t55; }}
                   ><ChevronLeft size={15} /></button>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <p style={{ margin: 0, fontSize: 13.5, color: "#FFFFFF", fontWeight: 700, fontFamily: fontDisp, letterSpacing: "-0.01em" }}>Todas las funciones</p>
-                    <p style={{ margin: 0, fontSize: 10, color: "rgba(255,255,255,0.40)", fontFamily: font, marginTop: 2 }}>{INTEL_FEATURES.length} funciones · tocá una para ver cómo se usa</p>
+                    <p style={{ margin: 0, fontSize: 13.5, color: D.w, fontWeight: 700, fontFamily: fontDisp, letterSpacing: "-0.01em" }}>Todas las funciones</p>
+                    <p style={{ margin: 0, fontSize: 10, color: D.t40, fontFamily: font, marginTop: 2 }}>{INTEL_FEATURES.length} funciones · tocá una para ver cómo se usa</p>
                   </div>
-                  <button onClick={() => setShowAll(false)} style={{ background: "rgba(255,255,255,0.05)", border: "none", cursor: "pointer", width: 26, height: 26, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", color: "rgba(255,255,255,0.50)", flexShrink: 0, transition: "all 0.16s" }}
-                    onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.10)"; e.currentTarget.style.color = "#FFF"; }}
-                    onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.05)"; e.currentTarget.style.color = "rgba(255,255,255,0.50)"; }}
+                  <button onClick={() => setShowAll(false)} style={{ background: D.btn, border: "none", cursor: "pointer", width: 26, height: 26, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", color: D.t50, flexShrink: 0, transition: "all 0.16s" }}
+                    onMouseEnter={e => { e.currentTarget.style.background = D.btnH; e.currentTarget.style.color = D.w; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = D.btn; e.currentTarget.style.color = D.t50; }}
                   ><X size={13} /></button>
                 </div>
                 {/* Grid 2 columnas con TODAS las funciones */}
@@ -300,7 +332,7 @@ const DynIsland = ({ onExpand, onOpenLead, notifications = [], theme = "dark", b
                       : (f.where.includes("CRM") ? "En el CRM" : "Automático");
                     return (
                       <div key={f.id} onClick={() => setSelectedFeature(f)}
-                        style={{ borderRadius: 14, padding: "13px 13px 14px", cursor: "pointer", background: `linear-gradient(160deg, ${f.color}14 0%, rgba(255,255,255,0.02) 60%)`, border: `1px solid ${f.color}22`, transition: "border-color 0.16s" }}
+                        style={{ borderRadius: 14, padding: "13px 13px 14px", cursor: "pointer", background: `linear-gradient(160deg, ${f.color}14 0%, ${D.cardG2} 60%)`, border: `1px solid ${f.color}22`, transition: "border-color 0.16s" }}
                         onMouseEnter={e => { e.currentTarget.style.borderColor = `${f.color}66`; }}
                         onMouseLeave={e => { e.currentTarget.style.borderColor = `${f.color}22`; }}
                       >
@@ -308,13 +340,13 @@ const DynIsland = ({ onExpand, onOpenLead, notifications = [], theme = "dark", b
                           <div style={{ width: 32, height: 32, borderRadius: 9, background: `${f.color}1E`, border: `1px solid ${f.color}33`, display: "flex", alignItems: "center", justifyContent: "center" }}>
                             <Ic size={16} color={f.color} strokeWidth={2} />
                           </div>
-                          <span style={{ fontSize: 8, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: isAgent ? "#6EE7C2" : "rgba(255,255,255,0.46)", background: isAgent ? "rgba(110,231,194,0.10)" : "rgba(255,255,255,0.05)", border: `1px solid ${isAgent ? "rgba(110,231,194,0.22)" : "rgba(255,255,255,0.08)"}`, borderRadius: 6, padding: "3px 6px" }}>
+                          <span style={{ fontSize: 8, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: isAgent ? D.acc : D.t46, background: isAgent ? "rgba(110,231,194,0.10)" : D.btn, border: `1px solid ${isAgent ? "rgba(110,231,194,0.22)" : D.bd}`, borderRadius: 6, padding: "3px 6px" }}>
                             {isAgent ? "Auto" : "Vos pedís"}
                           </span>
                         </div>
-                        <p style={{ margin: "0 0 4px", fontSize: 12.5, color: "rgba(255,255,255,0.92)", fontWeight: 600, fontFamily: fontDisp, lineHeight: 1.2 }}>{f.label}</p>
-                        <p style={{ margin: 0, fontSize: 10, color: "rgba(255,255,255,0.44)", fontFamily: font, lineHeight: 1.4, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{f.tagline}</p>
-                        <div style={{ display: "flex", alignItems: "center", gap: 5, marginTop: 9, paddingTop: 8, borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+                        <p style={{ margin: "0 0 4px", fontSize: 12.5, color: D.t92, fontWeight: 600, fontFamily: fontDisp, lineHeight: 1.2 }}>{f.label}</p>
+                        <p style={{ margin: 0, fontSize: 10, color: D.t44, fontFamily: font, lineHeight: 1.4, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{f.tagline}</p>
+                        <div style={{ display: "flex", alignItems: "center", gap: 5, marginTop: 9, paddingTop: 8, borderTop: `1px solid ${D.line}` }}>
                           <MapPin size={10} color={f.color} strokeWidth={2.4} style={{ flexShrink: 0 }} />
                           <span style={{ fontSize: 9, color: f.color, opacity: 0.9, fontWeight: 600, fontFamily: font }}>{chan}</span>
                         </div>
@@ -333,29 +365,29 @@ const DynIsland = ({ onExpand, onOpenLead, notifications = [], theme = "dark", b
                     <selectedNotif.icon size={15} color={selectedNotif.c} strokeWidth={2} />
                   </div>
                   <div style={{ flex: 1 }}>
-                    <p style={{ margin: 0, fontSize: 14, color: "#FFFFFF", fontWeight: 700, fontFamily: fontDisp, letterSpacing: "-0.01em" }}>{selectedNotif.agent}</p>
-                    <p style={{ margin: 0, fontSize: 10.5, color: "rgba(255,255,255,0.40)", fontFamily: font, marginTop: 2 }}>Actualización del sistema</p>
+                    <p style={{ margin: 0, fontSize: 14, color: D.w, fontWeight: 700, fontFamily: fontDisp, letterSpacing: "-0.01em" }}>{selectedNotif.agent}</p>
+                    <p style={{ margin: 0, fontSize: 10.5, color: D.t40, fontFamily: font, marginTop: 2 }}>Actualización del sistema</p>
                   </div>
-                  <button onClick={() => setSelectedNotif(null)} style={{ background: "rgba(255,255,255,0.06)", border: "none", color: "rgba(255,255,255,0.55)", borderRadius: 8, width: 28, height: 28, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", transition: "all 0.16s" }}
-                    onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.12)"; e.currentTarget.style.color = "#FFF"; }}
-                    onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.06)"; e.currentTarget.style.color = "rgba(255,255,255,0.55)"; }}
+                  <button onClick={() => setSelectedNotif(null)} style={{ background: D.btn, border: "none", color: D.t55, borderRadius: 8, width: 28, height: 28, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", transition: "all 0.16s" }}
+                    onMouseEnter={e => { e.currentTarget.style.background = D.btnH; e.currentTarget.style.color = D.w; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = D.btn; e.currentTarget.style.color = D.t55; }}
                   ><X size={13} /></button>
                 </div>
 
-                <p style={{ fontSize: 13, color: "rgba(255,255,255,0.65)", lineHeight: 1.65, fontFamily: font, marginBottom: 20 }}>{selectedNotif.detail}</p>
+                <p style={{ fontSize: 13, color: D.t65, lineHeight: 1.65, fontFamily: font, marginBottom: 20 }}>{selectedNotif.detail}</p>
 
                 <button
                   onClick={() => { if (selectedNotif.leadId) { onOpenLead?.(selectedNotif.leadId); } else { onExpand?.(); } closeAll(); }}
                   style={{
                     width: "100%", padding: "13px 16px", borderRadius: 12,
-                    background: "rgba(255,255,255,0.92)", color: "#06080F",
+                    background: D.ctaBg, color: D.ctaTxt,
                     border: "none", fontSize: 13, fontWeight: 700, cursor: "pointer",
                     fontFamily: fontDisp, letterSpacing: "0.005em",
                     transition: "all 0.2s cubic-bezier(0.4,0,0.2,1)",
-                    boxShadow: "0 2px 10px rgba(255,255,255,0.12)",
+                    boxShadow: D.ctaSh,
                   }}
-                  onMouseEnter={e => { e.currentTarget.style.background = "#FFFFFF"; e.currentTarget.style.boxShadow = "0 4px 20px rgba(255,255,255,0.22)"; }}
-                  onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.92)"; e.currentTarget.style.boxShadow = "0 2px 10px rgba(255,255,255,0.12)"; }}
+                  onMouseEnter={e => { e.currentTarget.style.background = D.ctaHov; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = D.ctaBg; }}
                 >{selectedNotif.btn}</button>
               </div>
             )}
@@ -367,38 +399,38 @@ const DynIsland = ({ onExpand, onOpenLead, notifications = [], theme = "dark", b
               return (
                 <div style={{ padding: "18px 20px 22px", animation: "fadeSlideDown 0.2s cubic-bezier(0.4,0,0.2,1)" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 14 }}>
-                    <button onClick={() => setSelectedFeature(null)} style={{ background: "rgba(255,255,255,0.06)", border: "none", color: "rgba(255,255,255,0.55)", borderRadius: 8, width: 28, height: 28, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", flexShrink: 0, transition: "all 0.16s" }}
-                      onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.12)"; e.currentTarget.style.color = "#FFF"; }}
-                      onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.06)"; e.currentTarget.style.color = "rgba(255,255,255,0.55)"; }}
+                    <button onClick={() => setSelectedFeature(null)} style={{ background: D.btn, border: "none", color: D.t55, borderRadius: 8, width: 28, height: 28, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", flexShrink: 0, transition: "all 0.16s" }}
+                      onMouseEnter={e => { e.currentTarget.style.background = D.btnH; e.currentTarget.style.color = D.w; }}
+                      onMouseLeave={e => { e.currentTarget.style.background = D.btn; e.currentTarget.style.color = D.t55; }}
                     ><ChevronLeft size={15} /></button>
                     <div style={{ width: 34, height: 34, borderRadius: 10, background: `${selectedFeature.color}18`, border: `1px solid ${selectedFeature.color}2E`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                       <Ic size={16} color={selectedFeature.color} strokeWidth={2} />
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <p style={{ margin: 0, fontSize: 14, color: "#FFFFFF", fontWeight: 700, fontFamily: fontDisp, letterSpacing: "-0.01em" }}>{selectedFeature.label}</p>
-                      <p style={{ margin: 0, fontSize: 10, color: isAgent ? "#6EE7C2" : "rgba(255,255,255,0.40)", fontFamily: font, marginTop: 2, fontWeight: 600 }}>{isAgent ? "El sistema lo hace solo" : "Se lo pedís al asistente"}</p>
+                      <p style={{ margin: 0, fontSize: 14, color: D.w, fontWeight: 700, fontFamily: fontDisp, letterSpacing: "-0.01em" }}>{selectedFeature.label}</p>
+                      <p style={{ margin: 0, fontSize: 10, color: isAgent ? D.acc : D.t40, fontFamily: font, marginTop: 2, fontWeight: 600 }}>{isAgent ? "El sistema lo hace solo" : "Se lo pedís al asistente"}</p>
                     </div>
-                    <button onClick={closeAll} style={{ background: "rgba(255,255,255,0.06)", border: "none", color: "rgba(255,255,255,0.55)", borderRadius: 8, width: 28, height: 28, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", flexShrink: 0 }}
+                    <button onClick={closeAll} style={{ background: D.btn, border: "none", color: D.t55, borderRadius: 8, width: 28, height: 28, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", flexShrink: 0 }}
                     ><X size={13} /></button>
                   </div>
 
-                  <p style={{ fontSize: 12.5, color: "rgba(255,255,255,0.66)", lineHeight: 1.6, fontFamily: font, margin: "0 0 14px" }}>{selectedFeature.tagline}</p>
+                  <p style={{ fontSize: 12.5, color: D.t66, lineHeight: 1.6, fontFamily: font, margin: "0 0 14px" }}>{selectedFeature.tagline}</p>
 
                   {/* DÓNDE se usa — lo primero que el asesor necesita saber */}
                   <div style={{ display: "flex", alignItems: "center", gap: 9, padding: "10px 13px", borderRadius: 11, background: `${selectedFeature.color}12`, border: `1px solid ${selectedFeature.color}2A`, marginBottom: 18 }}>
                     <MapPin size={14} color={selectedFeature.color} strokeWidth={2.2} style={{ flexShrink: 0 }} />
                     <div>
-                      <span style={{ display: "block", fontSize: 8.5, color: "rgba(255,255,255,0.40)", fontWeight: 700, fontFamily: fontDisp, letterSpacing: "0.09em", textTransform: "uppercase" }}>Dónde</span>
-                      <span style={{ fontSize: 12.5, color: "rgba(255,255,255,0.88)", fontFamily: fontDisp, fontWeight: 600 }}>{selectedFeature.where}</span>
+                      <span style={{ display: "block", fontSize: 8.5, color: D.t40, fontWeight: 700, fontFamily: fontDisp, letterSpacing: "0.09em", textTransform: "uppercase" }}>Dónde</span>
+                      <span style={{ fontSize: 12.5, color: D.t88, fontFamily: fontDisp, fontWeight: 600 }}>{selectedFeature.where}</span>
                     </div>
                   </div>
 
-                  <p style={{ margin: "0 0 9px", fontSize: 9.5, color: "rgba(255,255,255,0.42)", fontWeight: 700, fontFamily: fontDisp, letterSpacing: "0.08em", textTransform: "uppercase" }}>Cómo se usa</p>
+                  <p style={{ margin: "0 0 9px", fontSize: 9.5, color: D.t42, fontWeight: 700, fontFamily: fontDisp, letterSpacing: "0.08em", textTransform: "uppercase" }}>Cómo se usa</p>
                   <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                     {selectedFeature.how.map((step, i) => (
                       <div key={i} style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
                         <div style={{ width: 18, height: 18, borderRadius: 6, background: `${selectedFeature.color}1A`, border: `1px solid ${selectedFeature.color}30`, color: selectedFeature.color, fontSize: 9.5, fontWeight: 700, fontFamily: fontDisp, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 1 }}>{i + 1}</div>
-                        <p style={{ margin: 0, fontSize: 12, color: "rgba(255,255,255,0.74)", fontFamily: font, lineHeight: 1.5 }}>{step}</p>
+                        <p style={{ margin: 0, fontSize: 12, color: D.t74, fontFamily: font, lineHeight: 1.5 }}>{step}</p>
                       </div>
                     ))}
                   </div>
