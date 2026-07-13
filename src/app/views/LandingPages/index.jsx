@@ -9,11 +9,12 @@ import {
   Globe, Palmtree, Waves, Wand2, Image, Download, ExternalLink,
   Copy, Check, Trash2, ChevronDown, ChevronRight, ChevronUp, Eye, Share2,
   ArrowRight, CheckCircle2,
-  DollarSign, Shield, MapPin, FileText, X, Phone, CalendarDays, User
+  DollarSign, Shield, MapPin, FileText, X, Phone, CalendarDays, User, Search,
 } from "lucide-react";
 import { P, font, fontDisp } from "../../../design-system/tokens";
 import { G, KPI, Pill, Ico } from "../../SharedComponents";
 import LandingPagePreview from "./LandingPagePreview";
+import { catalogToLandingProps, encodeLanding } from "./catalogAdapter";
 
 const team = [
   { n: "Oscar Gálvez",      r: "CEO Ejecutivo",         wa: "+52 998 000 0001", cal: "" },
@@ -1026,6 +1027,7 @@ const LandingPages = ({ T = P }) => {
   const [copied, setCopied] = useState(false);
   const [showCatalog, setShowCatalog] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
+  const [propSearch, setPropSearch] = useState("");
   // Drive links per property (id → url), persisted in localStorage
   const [driveLinks, setDriveLinks] = useState(() => {
     try { return JSON.parse(localStorage.getItem("stratos_drive_links") || "{}"); } catch { return {}; }
@@ -1089,14 +1091,20 @@ const LandingPages = ({ T = P }) => {
     { key: "boutique", label: "Boutique/Exclusivo", icon: Crown },
   ];
 
-  const allProperties = useMemo(() => [...rivieraProperties, ...customProperties], [customProperties]);
+  const catalogProps = useMemo(() => catalogToLandingProps(), []);
+  const allProperties = useMemo(() => [...customProperties, ...catalogProps, ...rivieraProperties], [customProperties, catalogProps]);
 
-  const inBudget = (p) => p.priceFrom <= clientBudgetMax && p.priceTo >= clientBudgetMin;
+  const inBudget = (p) => (!p.priceTo || p.priceTo <= 0) ? true : (p.priceFrom <= clientBudgetMax && p.priceTo >= clientBudgetMin);
   const filteredProperties = useMemo(() => {
-    const inB = allProperties.filter(p => inBudget(p));
-    const outB = allProperties.filter(p => !inBudget(p));
+    const nq = propSearch.trim().toLowerCase();
+    const base = nq
+      ? allProperties.filter(p => [p.name, p.location, p.zone, p.bedrooms, p.ticket]
+          .filter(Boolean).join(" ").toLowerCase().includes(nq))
+      : allProperties;
+    const inB = base.filter(p => inBudget(p));
+    const outB = base.filter(p => !inBudget(p));
     return [...inB, ...outB];
-  }, [allProperties, clientBudgetMin, clientBudgetMax]);
+  }, [allProperties, clientBudgetMin, clientBudgetMax, propSearch]);
 
   const saveDriveLink = (propId) => {
     setDriveLinks(prev => ({ ...prev, [propId]: editLinkValue }));
@@ -1132,9 +1140,17 @@ const LandingPages = ({ T = P }) => {
     setPreviewOpen(true);
   };
 
+  // Link auto-contenido: toda la presentación va codificada en la URL (#d=...),
+  // el cliente la abre sin login y sin backend. Ver PublicLanding.jsx.
+  const buildPublicUrl = () => {
+    const props = allProperties.filter(p => selectedProps.includes(p.id));
+    if (props.length === 0) return null;
+    const d = encodeLanding({ client: clientName, mensaje, asesor, asesorWA, asesorCal, agencyName, properties: props, driveLinks });
+    return `${window.location.origin}/p#d=${d}`;
+  };
   const handleCopyLink = () => {
-    const demoUrl = `${window.location.origin}${window.location.pathname}?lp=${generatedId || "preview"}&c=${encodeURIComponent(clientName || "cliente")}`;
-    navigator.clipboard.writeText(demoUrl).catch(() => {});
+    const url = buildPublicUrl() || `${window.location.origin}/p`;
+    navigator.clipboard.writeText(url).catch(() => {});
     setCopied(true);
     setTimeout(() => setCopied(false), 2500);
   };
@@ -1198,7 +1214,7 @@ const LandingPages = ({ T = P }) => {
       {/* KPIs */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(150px, 100%), 1fr))", gap: 14 }}>
         <KPI label="Pages Generadas" value={savedPages.length} sub="total" icon={Globe} color={T.blue} T={T} />
-        <KPI label="Propiedades en catálogo" value={rivieraProperties.length + customProperties.length} sub={`${customProperties.length} registradas`} icon={Building2} color={T.emerald} T={T} />
+        <KPI label="Propiedades en catálogo" value={allProperties.length} sub={`${catalogProps.length} del inventario`} icon={Building2} color={T.emerald} T={T} />
         <KPI label="Tasa de Apertura" value="87%" sub="+12%" icon={Eye} color={T.accent} T={T} />
         <KPI label="Conversión a Zoom" value="34%" sub="+8pp" icon={Target} color={T.violet} T={T} />
       </div>
@@ -1689,6 +1705,12 @@ const LandingPages = ({ T = P }) => {
           <span style={{ fontSize: 11, color: T.accent, fontWeight: 600, fontFamily: font }}>{filteredProperties.filter(inBudget).length} en presupuesto</span>
           <span style={{ fontSize: 11, color: T.txt3, fontFamily: font }}>· {filteredProperties.length} totales</span>
         </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <div style={{ position: "relative" }}>
+            <Search size={13} color={T.txt3} style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)" }} />
+            <input value={propSearch} onChange={e => setPropSearch(e.target.value)} placeholder="Buscar desarrollo o zona…"
+              style={{ padding: "8px 12px 8px 30px", borderRadius: 9, fontSize: 12, width: 220, background: T.glass, border: `1px solid ${T.border}`, color: T.txt, fontFamily: font, outline: "none" }} />
+          </div>
         <button
           onClick={() => setShowNewPropModal(true)}
           style={{
@@ -1702,6 +1724,7 @@ const LandingPages = ({ T = P }) => {
         >
           <Plus size={14} /> Registrar propiedad
         </button>
+        </div>
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(560px, 100%), 1fr))", gap: 16 }}>
@@ -1772,10 +1795,16 @@ const LandingPages = ({ T = P }) => {
                 {/* Property Details */}
                 <div style={{ padding: "14px 16px 10px" }}>
                   <div style={{ display: "flex", gap: 8, marginBottom: 10, flexWrap: "wrap" }}>
-                    <Pill color={prop.accent} s isLight={isLight}>{prop.type}</Pill>
-                    <Pill color={T.emerald} s isLight={isLight}>ROI {prop.roi}</Pill>
-                    <Pill color={T.txt2} s isLight={isLight}>{prop.bedrooms}</Pill>
+                    {prop.type && <Pill color={prop.accent} s isLight={isLight}>{prop.type}</Pill>}
+                    {prop.roi && <Pill color={T.emerald} s isLight={isLight}>ROI {prop.roi}</Pill>}
+                    {prop.bedrooms && <Pill color={T.txt2} s isLight={isLight}>{prop.bedrooms}</Pill>}
                   </div>
+                  {prop.ticket ? (
+                    <div style={{ padding: "8px 10px", borderRadius: 8, background: `${prop.accent}0A`, border: `1px solid ${prop.accent}18`, marginBottom: 10 }}>
+                      <p style={{ fontSize: 9, color: T.txt3, marginBottom: 2 }}>Precio</p>
+                      <p style={{ fontSize: 15, fontWeight: 700, textTransform: "uppercase", color: isLight ? `color-mix(in srgb, ${prop.accent}, #04120c 45%)` : prop.accent, fontFamily: fontDisp }}>{prop.ticket}</p>
+                    </div>
+                  ) : prop.priceFrom > 0 ? (
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 10 }}>
                     <div style={{ padding: "8px 10px", borderRadius: 8, background: `${prop.accent}0A`, border: `1px solid ${prop.accent}18` }}>
                       <p style={{ fontSize: 9, color: T.txt3, marginBottom: 2 }}>Desde</p>
@@ -1786,6 +1815,12 @@ const LandingPages = ({ T = P }) => {
                       <p style={{ fontSize: 16, fontWeight: 700, color: T.txt, fontFamily: fontDisp }}>${(prop.priceTo / 1000).toFixed(0)}K</p>
                     </div>
                   </div>
+                  ) : (
+                    <div style={{ padding: "8px 10px", borderRadius: 8, background: T.glass, border: `1px solid ${T.border}`, marginBottom: 10 }}>
+                      <p style={{ fontSize: 9, color: T.txt3, marginBottom: 2 }}>Precio</p>
+                      <p style={{ fontSize: 14, fontWeight: 600, color: T.txt2, fontFamily: fontDisp }}>A consultar</p>
+                    </div>
+                  )}
                   <p style={{ fontSize: 11, color: T.txt2, lineHeight: 1.5, fontFamily: font, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{prop.description}</p>
                   <div style={{ display: "flex", flexDirection: "column", gap: 4, marginTop: 10 }}>
                     {prop.highlights.slice(0, 3).map((h, i) => (
@@ -1933,6 +1968,7 @@ const LandingPages = ({ T = P }) => {
       {/* Full-screen Landing Page Preview */}
       {previewOpen && createPortal(
         <LandingPagePreview
+          shareUrl={buildPublicUrl()}
           client={clientName}
           asesor={asesor}
           asesorWA={asesorWA}

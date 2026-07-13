@@ -28,6 +28,7 @@ import { recoverFromStaleChunk } from "./lib/chunk-recovery.js";
 const App              = lazy(() => import("./app/App.jsx"));
 const LandingMarketing = lazy(() => import("./landing/LandingMarketing.jsx"));
 const PrivacyPolicy    = lazy(() => import("./landing/PrivacyPolicy.jsx"));
+const PublicLanding    = lazy(() => import("./app/views/LandingPages/PublicLanding.jsx"));
 const DataDeletion     = lazy(() => import("./landing/DataDeletion.jsx"));
 const DeliveryHubCRM   = lazy(() => import("./landing/DeliveryHubCRM.jsx"));
 const ManualCRM        = lazy(() => import("./landing/ManualCRM.jsx"));
@@ -107,6 +108,11 @@ const isManualTG = matchPath(MANUAL_TG_PATHS);
 const isDiagnosticoView = /^\/diagnostico\/view\/[A-Za-z0-9-]+\/?$/.test(pathname);
 const isDiagnostico = matchPath(DIAGNOSTICO_PATHS) || isDiagnosticoView;
 
+// Landing personalizada para el CLIENTE FINAL — pública, sin login. El asesor
+// la genera en el Marketing Studio (Create) y comparte /p#d=<payload>. Todo va
+// en la URL; PublicLanding la decodifica. Nunca expone datos internos del CRM.
+const isPublicLanding = pathname === "/p" || pathname === "/p/";
+
 // ─── RESOLUCIÓN DE CLIENTE (multi-tenant) ────────────────────────────────────
 // Se detecta el cliente activo según hostname/path:
 //   · grupo28.stratoscapitalgroup.com  o  /grupo28   →  cliente "grupo28"
@@ -123,7 +129,7 @@ const isLanding = !isExplicitClient && (
   || (hostname === "127.0.0.1" && !params.has("app"))
 );
 
-const isApp = !isPrivacy && !isDeletion && !isDelivery && !isManual && !isManualTG && !isDiagnostico && !isLanding;
+const isApp = !isPrivacy && !isDeletion && !isDelivery && !isManual && !isManualTG && !isDiagnostico && !isPublicLanding && !isLanding;
 
 // URL de la plataforma — usada por la landing para el CTA principal
 const APP_URL = import.meta.env.VITE_APP_URL || (window.location.origin + "/?app");
@@ -151,7 +157,9 @@ createRoot(document.getElementById("root")).render(
               públicas (privacy, deletion, etc.) no necesitan este guardrail. */}
           {isApp && <ClientOrgGuard />}
           <Suspense fallback={null}>
-            {isPrivacy
+            {isPublicLanding
+              ? <PublicLanding />
+              : isPrivacy
               ? <PrivacyPolicy />
               : isDeletion
                 ? <DataDeletion />
