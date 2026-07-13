@@ -1,0 +1,37 @@
+-- ============================================================================
+-- 098 — Bot Telegram (Stratos): auditoría 2ª ronda de pruebas. Aplicado en
+--       stratos-prod vía MCP (2026-07-13). Sin tocar n8n.
+--
+-- 1) ESTILO PROFESIONAL: menos emojis, etiquetas claras (ficha, más hot,
+--    próxima/última acción, KPIs, capacidades, documentos, listas).
+-- 2) RESOLUCIÓN DE NOMBRES ROBUSTA: fn_bot_name_candidates con fallback FUZZY
+--    (pg_trgm word_similarity >= 0.45); _bot_extract_person limpia "cliente/
+--    cleinte" y verbos ("puedes mandarme"). Arregla "Ángel Garzón" + typos.
+-- 3) MI ESPACIO ROBUSTO: _bot_is_docs_query tolera typos (espaico/docuemntos),
+--    "busca el documento SOP"; bot_documentos_espacio lista bien "mis documentos"
+--    (ya no confunde el verbo con el nombre) + fuzzy de títulos.
+-- 4) RECOMENDAR PROPIEDADES: bot_recomendar_propiedades + _bot_reco_client;
+--    "qué le recomiendo a <cliente>" -> cliente -> presupuesto -> catalogo_proyectos.
+--    Enganchado en el ENTRY antes del catálogo.
+-- 5) "ficha/expediente de <cliente>" -> ficha del cliente (no catálogo):
+--    _bot_ficha_client + guard en el ENTRY.
+--
+-- NOTA: el catálogo (bot_buscar_proyectos) conserva su diseño premium (🏗️/📁).
+--   El precio del catálogo (catalogo_proyectos.ticket) es texto libre mezclado
+--   (MDP/USD) -> no se puede filtrar por monto de forma fiable; la recomendación
+--   muestra opciones con el presupuesto del cliente como referencia.
+--
+-- Cuerpos completos: en la base (pg_get_functiondef). Guards en el ENTRY
+-- (bot_nlu_dispatch_gvintell): docs -> reco -> ficha, todos ANTES del catálogo.
+-- REVERT: restaurar funciones previas (CREATE OR REPLACE) + recrear el ENTRY sin
+--   los guards de reco/ficha (dejar solo el de documentos, o ninguno).
+-- ============================================================================
+
+-- (resumen; el detalle vive en la base y en memory/reports del AIOS)
+-- Funciones nuevas: bot_recomendar_propiedades, _bot_reco_client, _bot_ficha_client.
+-- Modificadas: fn_bot_name_candidates (fuzzy), _bot_extract_person (stopwords),
+--   _bot_is_docs_query, bot_documentos_espacio, bot_ficha_cliente,
+--   bot_proxima_accion_cliente, bot_ultima_accion, bot_top_hot_asesor,
+--   bot_kpis_asesor, bot_render_capabilities, bot_clientes_de_asesor,
+--   bot_buscar_presupuesto, bot_asesor_info (texto profesional).
+-- ENTRY bot_nlu_dispatch_gvintell: guards docs/reco/ficha antes del catálogo.
