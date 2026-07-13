@@ -23,7 +23,7 @@ export const StratosAtom = ({ size = 20, color = "#FFFFFF" }) => (
  * StratosAtomHex — Logo con 3 órbitas elípticas rotadas + núcleo brillante.
  * Usado exclusivamente en el Centro de Agentes IA.
  */
-export const StratosAtomHex = ({ size = 22, color = "#FFFFFF", edge = "#6EE7C2" }) => {
+export const StratosAtomHex = ({ size = 22, color = "#FFFFFF", edge = "#6EE7C2", motion = false }) => {
   const uid = `atomhex-${size}-${String(color).replace(/[^a-z0-9]/gi, "")}`;
   return (
     <svg width={size} height={size} viewBox="0 0 32 32" fill="none" style={{ display: "block" }}>
@@ -39,16 +39,44 @@ export const StratosAtomHex = ({ size = 22, color = "#FFFFFF", edge = "#6EE7C2" 
           <stop offset="100%" stopColor={edge}  stopOpacity="0.55" />
         </linearGradient>
       </defs>
+      {motion && (
+        <style>{`
+          @keyframes ${uid}-orbit-flow {
+            0% { stroke-dashoffset: 0; opacity: .62; }
+            38% { stroke-dashoffset: -15; opacity: .92; }
+            68% { stroke-dashoffset: -31; opacity: .72; }
+            100% { stroke-dashoffset: -48; opacity: .62; }
+          }
+          @keyframes ${uid}-core-breathe {
+            0%, 100% { opacity: .86; transform: scale(.96); }
+            50% { opacity: 1; transform: scale(1.04); }
+          }
+        `}</style>
+      )}
 
       {/* Tres órbitas elípticas — 0°, 60°, 120° */}
-      <g fill="none" strokeWidth="1" stroke={`url(#${uid}-ring)`} strokeLinecap="round">
+      <g
+        data-brand-motion={motion ? "true" : undefined}
+        fill="none"
+        strokeWidth="1"
+        stroke={`url(#${uid}-ring)`}
+        strokeLinecap="round"
+        style={motion ? { strokeDasharray: "24 14", animation: `${uid}-orbit-flow 7.4s cubic-bezier(.45,0,.15,1) infinite` } : undefined}
+      >
         <ellipse cx="16" cy="16" rx="12.6" ry="4.6" />
         <ellipse cx="16" cy="16" rx="12.6" ry="4.6" transform="rotate(60 16 16)" />
         <ellipse cx="16" cy="16" rx="12.6" ry="4.6" transform="rotate(120 16 16)" />
       </g>
 
       {/* Núcleo — blanco brillante con borde mint sutil */}
-      <circle cx="16" cy="16" r="2.4" fill={`url(#${uid}-core)`} />
+      <circle
+        data-brand-motion={motion ? "true" : undefined}
+        cx="16"
+        cy="16"
+        r="2.4"
+        fill={`url(#${uid}-core)`}
+        style={motion ? { transformOrigin: "center", animation: `${uid}-core-breathe 5.8s ease-in-out infinite` } : undefined}
+      />
       <circle cx="16" cy="16" r="2.4" fill="none" stroke={edge} strokeWidth="0.4" opacity="0.9" />
     </svg>
   );
