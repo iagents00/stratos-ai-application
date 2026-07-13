@@ -1977,7 +1977,7 @@ export default function App() {
                 <StratosAtomHex size={20} color={isLight ? "#0D9A76" : "#6EE7C2"} edge={isLight ? "#34D399" : "#C8DED8"} />
               </div>
               <div style={{ minWidth:0 }}>
-                <p style={{ margin:0, fontSize:13, fontWeight:700, fontFamily:fontDisp, letterSpacing:"-0.015em", color: isLight ? T.txt : "#FFFFFF" }}>{clientConfig?.brand?.intelligenceCenterLabel || "Centro de Inteligencia"}</p>
+                <p style={{ margin:0, fontSize:13, fontWeight:700, fontFamily:fontDisp, letterSpacing:"-0.015em", color: isLight ? T.txt : "#FFFFFF" }}>{clientConfig?.brand?.intelligenceCenterLabelMobile || clientConfig?.brand?.intelligenceCenterLabel || "Centro de Inteligencia"}</p>
                 <p style={{ margin:"2px 0 0", fontSize:10.5, fontFamily:font, color: isLight ? T.txt3 : "rgba(255,255,255,0.42)" }}>Novedades del equipo IA y qué puede hacer el sistema</p>
               </div>
             </button>
@@ -2045,7 +2045,7 @@ export default function App() {
                 nativo carga la web remota: un APK nuevo NO garantiza web nueva
                 (SW/deploy). Con esto cualquiera puede reportar "web vNNN" y se
                 acaba el adivinar. Mantener en sync con CACHE_VERSION (sw.js). */}
-            <p style={{ margin:"12px 0 0", textAlign:"center", fontSize:9.5, fontFamily:font, letterSpacing:"0.02em", color: isLight ? "rgba(15,23,42,0.35)" : "rgba(255,255,255,0.28)" }}>Stratos CRM AI · web v172</p>
+            <p style={{ margin:"12px 0 0", textAlign:"center", fontSize:9.5, fontFamily:font, letterSpacing:"0.02em", color: isLight ? "rgba(15,23,42,0.35)" : "rgba(255,255,255,0.28)" }}>Stratos CRM AI · web v174</p>
           </div>
         </>,
         document.body
