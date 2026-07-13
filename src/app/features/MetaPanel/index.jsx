@@ -417,6 +417,10 @@ export default function MetaPanel({
     next.setDate(next.getDate() + days);
     return localYmd(next);
   };
+  const currentTimeValue = () => {
+    const now = new Date();
+    return `${pad2(now.getHours())}:${pad2(now.getMinutes())}`;
+  };
   const openDuePicker = (mode) => {
     if (mode === "date" && selectedDueDate) setCalendarMonth(new Date(`${selectedDueDate}T12:00:00`));
     setDuePickerOpen(prev => prev === mode ? null : mode);
@@ -921,31 +925,73 @@ export default function MetaPanel({
                             </div>
                             <button type="button" onClick={() => setDuePickerOpen("date")} className="mp-quickchip" style={{ border:`1px solid ${T.border}`, background:isLight?"rgba(15,23,42,0.035)":"rgba(255,255,255,0.045)", color:T.txt2, borderRadius:99, padding:"7px 11px", fontSize:11.5, fontWeight:800, fontFamily:fontDisp, cursor:"pointer" }}>Cambiar fecha</button>
                           </div>
-                          <label style={{
-                            display:"flex", alignItems:"center", justifyContent:"space-between", gap:12,
-                            minHeight:54, borderRadius:17, padding:"0 14px", marginBottom:10,
-                            border:`1px solid ${selectedDueTime ? _hex(T.accent,"55") : (isLight ? "rgba(15,23,42,0.10)" : "rgba(255,255,255,0.10)")}`,
-                            background:selectedDueTime ? `${T.accent}0E` : (isLight ? "rgba(248,250,252,0.92)" : "rgba(255,255,255,0.045)"),
-                          }}>
-                            <span style={{ display:"flex", flexDirection:"column", gap:2 }}>
-                              <span style={{ color:T.txt, fontSize:13.5, fontWeight:850, fontFamily:fontDisp, letterSpacing:"-0.02em" }}>Hora exacta</span>
-                              <span style={{ color:T.txt3, fontSize:10.5, fontWeight:650, fontFamily:font }}>Elige cualquier hora y minuto</span>
-                            </span>
-                            <input
-                              type="time"
-                              step="60"
-                              value={selectedDueTime}
-                              onChange={e => setActionDueTime(e.target.value)}
-                              onKeyDown={e => { if (e.key === "Enter" && selectedDueTime) setDuePickerOpen(null); }}
-                              style={{
-                                minWidth:118, height:38, borderRadius:12,
-                                border:`1px solid ${isLight ? "rgba(15,23,42,0.10)" : "rgba(255,255,255,0.10)"}`,
-                                background:isLight ? "#FFFFFF" : "rgba(255,255,255,0.055)",
-                                color:T.txt, fontSize:15, fontWeight:850, fontFamily:fontDisp,
-                                padding:"0 9px", outline:"none", colorScheme:isLight ? "light" : "dark",
+                          <div style={{ marginBottom:10 }}>
+                            <label
+                              onClick={e => {
+                                const input = e.currentTarget.querySelector("input");
+                                if (e.target !== input && typeof input?.showPicker === "function") input.showPicker();
                               }}
-                            />
-                          </label>
+                              style={{
+                                display:"grid",
+                                gridTemplateColumns:isMobile ? "1fr" : "1fr minmax(170px, 220px)",
+                                alignItems:"center",
+                                gap:12,
+                                minHeight:74,
+                                borderRadius:20,
+                                padding:"12px",
+                                border:`1px solid ${selectedDueTime ? _hex(T.accent,"62") : (isLight ? "rgba(15,23,42,0.10)" : "rgba(255,255,255,0.10)")}`,
+                                background:selectedDueTime ? `${T.accent}10` : (isLight ? "rgba(248,250,252,0.94)" : "rgba(255,255,255,0.048)"),
+                                boxShadow:selectedDueTime ? `inset 0 0 0 1px ${_hex(T.accent,"18")}` : "none",
+                                cursor:"pointer",
+                              }}
+                            >
+                              <span style={{ display:"flex", flexDirection:"column", gap:3, minWidth:0 }}>
+                                <span style={{ color:T.txt, fontSize:14, fontWeight:850, fontFamily:fontDisp, letterSpacing:"-0.02em" }}>Hora exacta</span>
+                                <span style={{ color:T.txt3, fontSize:11, fontWeight:650, fontFamily:font, lineHeight:1.35 }}>Toca el campo y elige cualquier hora/minuto</span>
+                              </span>
+                              <span style={{
+                                display:"flex", alignItems:"center", gap:9,
+                                height:50, borderRadius:16, padding:"0 12px",
+                                border:`1px solid ${isLight ? "rgba(15,23,42,0.11)" : "rgba(255,255,255,0.11)"}`,
+                                background:isLight ? "#FFFFFF" : "rgba(255,255,255,0.06)",
+                              }}>
+                                <Clock size={17} color={selectedDueTime ? T.accent : T.txt3} strokeWidth={2.25} />
+                                <input
+                                  type="time"
+                                  step="60"
+                                  value={selectedDueTime}
+                                  aria-label="Hora exacta de la acción"
+                                  onChange={e => setActionDueTime(e.target.value)}
+                                  onKeyDown={e => { if (e.key === "Enter" && selectedDueTime) setDuePickerOpen(null); }}
+                                  style={{
+                                    width:"100%", minWidth:0, height:48, border:"none",
+                                    background:"transparent", color:T.txt, fontSize:18,
+                                    fontWeight:900, fontFamily:fontDisp, letterSpacing:"-0.03em",
+                                    outline:"none", colorScheme:isLight ? "light" : "dark",
+                                    cursor:"pointer",
+                                  }}
+                                />
+                              </span>
+                            </label>
+                            <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", gap:8, marginTop:8, padding:"0 2px" }}>
+                              <button
+                                type="button"
+                                className="mp-quickchip"
+                                onClick={() => setActionDueTime(currentTimeValue())}
+                                style={{
+                                  border:`1px solid ${T.border}`,
+                                  background:isLight ? "rgba(15,23,42,0.035)" : "rgba(255,255,255,0.045)",
+                                  color:T.txt2, borderRadius:99, padding:"7px 11px",
+                                  fontSize:11.5, fontWeight:850, fontFamily:fontDisp, cursor:"pointer",
+                                }}
+                              >
+                                Ahora
+                              </button>
+                              <span style={{ color:T.txt3, fontSize:10.5, fontWeight:650, fontFamily:font, textAlign:"right" }}>
+                                También puedes escribir la hora con teclado
+                              </span>
+                            </div>
+                          </div>
                           <div style={{ display:"grid", gridTemplateColumns:isMobile ? "repeat(3,1fr)" : "repeat(4,1fr)", gap:8 }}>
                             {dueTimeSlots.map(timeValue => {
                               const isSelected = selectedDueTime === timeValue;
