@@ -3,7 +3,7 @@ import { P, font, fontDisp } from "../../design-system/tokens";
 import { G, KPI, Pill } from "../SharedComponents";
 import {
   Building2, MapPin, FolderOpen, Search, Phone, HardDrive,
-  Map as MapIcon, Layers, Briefcase, X, Wallet, LayoutGrid, Table as TableIcon, Send,
+  Map as MapIcon, Layers, Briefcase, X, Wallet, SlidersHorizontal, LayoutGrid, Table as TableIcon, Send,
 } from "lucide-react";
 import { CATALOGO_SECCIONES } from "../data/catalogoProyectos";
 
@@ -67,6 +67,15 @@ const BUCKETS = [
 ];
 const bucketMatch = (p, b) => !!p && !p.land && p.min <= b.hi && p.max >= b.lo;
 
+/* Rango de presupuesto a medida (sliders). */
+const RANGE_MAX = 2000000;   // tope del slider en USD (el catálogo llega ~$2M)
+const RANGE_STEP = 25000;
+const fmtMoney = (v) => {
+  if (v >= 1e6) return "$" + (v / 1e6).toFixed(v % 1e6 === 0 ? 0 : 1).replace(/\.0$/, "") + "M";
+  if (v >= 1e3) return "$" + Math.round(v / 1e3) + "k";
+  return "$" + v;
+};
+
 const summary = (it) => [
   it.desarrollo,
   it.ubicacion && `Ubicación: ${it.ubicacion}`,
@@ -84,8 +93,11 @@ const ERP = ({ oc, T: _T }) => {
 
   const [secId, setSecId] = useState(SECCIONES[0].id);
   const [q, setQ] = useState("");
-  const [zona, setZona] = useState("");     // zona canónica seleccionada ("" = todas)
-  const [presu, setPresu] = useState("");   // id de bucket o "terrenos" ("" = todos)
+  const [zona, setZona] = useState("");             // zona canónica seleccionada ("" = todas)
+  const [zonaLibre, setZonaLibre] = useState("");   // zona escrita a mano por el asesor
+  const [presu, setPresu] = useState("");           // id de bucket, "terrenos", "custom" o "" (todos)
+  const [rMin, setRMin] = useState(0);              // rango a medida (USD)
+  const [rMax, setRMax] = useState(RANGE_MAX);
   const [limit, setLimit] = useState(60);
   const [view, setView] = useState("cards"); // "cards" | "table"
 
@@ -124,27 +136,34 @@ const ERP = ({ oc, T: _T }) => {
 
   const filtered = useMemo(() => {
     const needle = q.trim().toLowerCase();
-    const bucket = presu && presu !== "terrenos" ? BUCKETS.find((b) => b.id === presu) : null;
+    const zLibre = zonaLibre.trim().toLowerCase();
+    const bucket = presu && presu !== "terrenos" && presu !== "custom" ? BUCKETS.find((b) => b.id === presu) : null;
+    const hiCustom = rMax >= RANGE_MAX ? Infinity : rMax;
     return sec.items.filter((i) => {
       if (!i.drive) return false; // Solo desarrollos con carpeta Drive disponible
-      if (zona && canonZona(i.ubicacion) !== zona) return false;
+      // Zona: la escrita a mano tiene prioridad; si no, la seleccionada.
+      if (zLibre) {
+        if (!`${i.ubicacion || ""} ${i.zona || ""}`.toLowerCase().includes(zLibre)) return false;
+      } else if (zona && canonZona(i.ubicacion) !== zona) return false;
+      // Presupuesto: preset, terrenos o rango a medida.
       if (presu) {
         const p = parseTicketUSD(i.ticket);
         if (!p) return false;
         if (presu === "terrenos") { if (!p.land) return false; }
+        else if (presu === "custom") { if (p.land || !(p.min <= hiCustom && p.max >= rMin)) return false; }
         else if (!bucketMatch(p, bucket)) return false;
       }
       if (!needle) return true;
       return [
-        i.desarrollo, i.ubicacion, i.zona, i.masterbroker, i.contacto,
+        i.desarrollo, i.masterbroker, i.contacto,
         i.clasificacion, i.tipologia, i.highlights, i.asesor,
       ].filter(Boolean).join(" ").toLowerCase().includes(needle);
     });
-  }, [sec, q, zona, presu]);
+  }, [sec, q, zona, zonaLibre, presu, rMin, rMax]);
 
   const shown = filtered.slice(0, limit);
 
-  const pickSection = (id) => { setSecId(id); setQ(""); setZona(""); setPresu(""); setLimit(60); };
+  const pickSection = (id) => { setSecId(id); setQ(""); setZona(""); setZonaLibre(""); setPresu(""); setRMin(0); setRMax(RANGE_MAX); setLimit(60); };
 
   const btnStyle = (color) => ({
     display: "inline-flex", alignItems: "center", gap: 5,
@@ -297,11 +316,18 @@ const ERP = ({ oc, T: _T }) => {
             {zonas.length > 0 && (
               <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
                 <span style={fLabel}><MapPin size={12} /> Zona</span>
-                <div style={{ display: "flex", gap: 7, flexWrap: "wrap" }}>
-                  <button style={fBtn(!zona, T.blue)} onClick={() => { setZona(""); setLimit(60); }}>Todas</button>
+                <div style={{ display: "flex", gap: 7, flexWrap: "wrap", alignItems: "center" }}>
+                  <button style={fBtn(!zona && !zonaLibre, T.blue)} onClick={() => { setZona(""); setZonaLibre(""); setLimit(60); }}>Todas</button>
                   {zonas.map((z) => (
-                    <button key={z} style={fBtn(zona === z, T.blue)} onClick={() => { setZona(zona === z ? "" : z); setLimit(60); }}>{z}</button>
+                    <button key={z} style={fBtn(zona === z && !zonaLibre, T.blue)} onClick={() => { setZonaLibre(""); setZona(zona === z ? "" : z); setLimit(60); }}>{z}</button>
                   ))}
+                  <input
+                    value={zonaLibre}
+                    onChange={(e) => { setZonaLibre(e.target.value); if (e.target.value) setZona(""); setLimit(60); }}
+                    placeholder="Otra zona…"
+                    style={{ width: 118, padding: "6px 12px", borderRadius: 99, outline: "none", fontSize: 11, fontFamily: font, color: T.txt,
+                      border: `1px solid ${zonaLibre ? T.blue : T.border}`, background: isLight ? "#FFFFFF" : "rgba(255,255,255,0.03)" }}
+                  />
                 </div>
               </div>
             )}
@@ -318,12 +344,47 @@ const ERP = ({ oc, T: _T }) => {
                   {buckets.hasLand && (
                     <button style={fBtn(presu === "terrenos", T.emerald)} onClick={() => { setPresu(presu === "terrenos" ? "" : "terrenos"); setLimit(60); }}>Terrenos</button>
                   )}
+                  <button style={fBtn(presu === "custom", T.emerald)} onClick={() => { setPresu(presu === "custom" ? "" : "custom"); setLimit(60); }}>
+                    <SlidersHorizontal size={12} /> A mi medida
+                  </button>
                 </div>
-                {(zona || presu || q) && (
-                  <button onClick={() => { setZona(""); setPresu(""); setQ(""); setLimit(60); }}
+                {(zona || zonaLibre || presu || q) && (
+                  <button onClick={() => { setZona(""); setZonaLibre(""); setPresu(""); setRMin(0); setRMax(RANGE_MAX); setQ(""); setLimit(60); }}
                     style={{ marginLeft: "auto", display: "inline-flex", alignItems: "center", gap: 4, padding: "6px 10px", borderRadius: 8, cursor: "pointer", border: "none", background: "transparent", color: T.txt3, fontSize: 11, fontWeight: 600, fontFamily: font }}>
                     <X size={12} /> Limpiar
                   </button>
+                )}
+
+                {/* Rango de presupuesto a medida (2 sliders: Desde / Hasta) */}
+                {presu === "custom" && (
+                  <div style={{ flexBasis: "100%", maxWidth: 470, padding: "10px 2px 2px", display: "flex", flexDirection: "column", gap: 13 }}>
+                    <style>{`
+                      .erp-range { -webkit-appearance:none; appearance:none; height:6px; border-radius:6px; outline:none; cursor:pointer; }
+                      .erp-range::-webkit-slider-thumb { -webkit-appearance:none; appearance:none; width:18px; height:18px; border-radius:50%; background:#fff; border:2px solid ${T.emerald}; box-shadow:0 1px 4px rgba(0,0,0,0.25); cursor:pointer; }
+                      .erp-range::-moz-range-thumb { width:16px; height:16px; border-radius:50%; background:#fff; border:2px solid ${T.emerald}; cursor:pointer; }
+                    `}</style>
+                    {[
+                      { key: "min", label: "Desde", val: rMin, set: (v) => setRMin(Math.min(v, rMax)), show: fmtMoney(rMin) },
+                      { key: "max", label: "Hasta", val: rMax, set: (v) => setRMax(Math.max(v, rMin)), show: rMax >= RANGE_MAX ? "Sin límite" : fmtMoney(rMax) },
+                    ].map((s) => {
+                      const pct = Math.round((s.val / RANGE_MAX) * 100);
+                      const trackBg = isLight ? "rgba(15,23,42,0.12)" : "rgba(255,255,255,0.14)";
+                      return (
+                        <div key={s.key}>
+                          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 5 }}>
+                            <span style={{ fontSize: 10, color: T.txt3, fontFamily: fontDisp, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase" }}>{s.label}</span>
+                            <span style={{ fontSize: 13, color: T.emerald, fontFamily: fontDisp, fontWeight: 800 }}>{s.show}</span>
+                          </div>
+                          <input className="erp-range" type="range" min={0} max={RANGE_MAX} step={RANGE_STEP} value={s.val}
+                            onChange={(e) => { s.set(Number(e.target.value)); setLimit(60); }}
+                            style={{ width: "100%", background: `linear-gradient(to right, ${T.emerald} ${pct}%, ${trackBg} ${pct}%)` }} />
+                        </div>
+                      );
+                    })}
+                    <span style={{ fontSize: 11, color: T.txt3, fontFamily: font }}>
+                      Mostrando propiedades entre <b style={{ color: T.txt2 }}>{fmtMoney(rMin)}</b> y <b style={{ color: T.txt2 }}>{rMax >= RANGE_MAX ? "sin límite" : fmtMoney(rMax)}</b>.
+                    </span>
+                  </div>
                 )}
               </div>
             )}
