@@ -111,9 +111,9 @@ html[data-lowfx][data-theme="light"] [data-glass] {
   background-color: rgba(255, 255, 255, 0.92) !important;
 }
 
-html[data-lowfx] *,
-html[data-lowfx] *::before,
-html[data-lowfx] *::after {
+html[data-lowfx] *:not([data-brand-motion="true"]),
+html[data-lowfx] *:not([data-brand-motion="true"])::before,
+html[data-lowfx] *:not([data-brand-motion="true"])::after {
   animation: none !important;
   transition: none !important;
   will-change: auto !important;
