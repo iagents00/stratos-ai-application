@@ -616,10 +616,10 @@ export default function MetaPanel({
                 return (
                   <div style={{ display:"flex", alignItems:"flex-end", justifyContent:"space-between", gap:24, flexWrap:"wrap", marginBottom:26 }}>
                     <div>
-                      <h3 style={{ margin:0, fontSize:28, fontWeight:800, fontFamily:fontDisp, letterSpacing:"-0.045em", color:T.txt }}>
+                      <h3 style={{ margin:0, fontSize:28, fontWeight:500, fontFamily:fontDisp, letterSpacing:"-0.01em", color:T.txt }}>
                         Agenda personal y profesional
                       </h3>
-                      <p style={{ margin:"8px 0 0", fontSize:14, color:T.txt3, fontFamily:font }}>
+                      <p style={{ margin:"8px 0 0", fontSize:14, color:T.txt3, fontFamily:font, letterSpacing:"0.01em" }}>
                         <span style={{ color:T.txt2, fontWeight:600 }}>{pend}</span> pendientes · {done} completadas
                         <span style={{ marginLeft:8, opacity:0.55 }}>
                           · {isTeamView ? "Vista de todo el equipo" : "Tu espacio de trabajo"}
@@ -1319,7 +1319,7 @@ export default function MetaPanel({
                         margin:index === 0 ? "2px 0 12px" : "26px 0 12px",
                       }}>
                         <div style={{ width:9, height:9, borderRadius:"50%", background:categoryMeta.accent, boxShadow:`0 0 0 5px ${categoryMeta.accent}12` }} />
-                        <h4 style={{ margin:0, fontSize:15, fontWeight:800, fontFamily:fontDisp, color:T.txt, letterSpacing:"-0.025em" }}>
+                        <h4 style={{ margin:0, fontSize:15, fontWeight:600, fontFamily:fontDisp, color:T.txt, letterSpacing:"-0.005em" }}>
                           Agenda {categoryMeta.label}
                         </h4>
                         <span style={{ fontSize:11.5, fontFamily:font, color:T.txt3 }}>
@@ -1460,7 +1460,7 @@ export default function MetaPanel({
             <div style={{ width:"100%" }}>
               {/* Header */}
               <div style={{ marginBottom:22 }}>
-                <h3 style={{ margin:0, fontSize:26, fontWeight:800, fontFamily:fontDisp, letterSpacing:"-0.045em", color:T.txt }}>Documentos del Equipo</h3>
+                <h3 style={{ margin:0, fontSize:26, fontWeight:500, fontFamily:fontDisp, letterSpacing:"-0.01em", color:T.txt }}>Documentos del Equipo</h3>
                 <p style={{ margin:"8px 0 0", fontSize:13.5, color:T.txt3, fontFamily:font, lineHeight:1.5 }}>
                   Enlaces a Google Docs, Drive, Notion, Figma y más — siempre a la mano para todo el equipo.
                 </p>
