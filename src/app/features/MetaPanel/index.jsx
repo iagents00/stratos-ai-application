@@ -502,7 +502,7 @@ export default function MetaPanel({
     .mp-datechip:hover{transform:translateY(-1px);border-color:var(--mp-borderH)!important;box-shadow:0 10px 24px rgba(15,23,42,.08)}
     .mp-datechip:active{transform:translateY(0) scale(.98)}
     .mp-due-popover{animation:mpPop .16s cubic-bezier(.16,1,.3,1) both}
-    @keyframes mpPop{from{opacity:0;transform:translateY(8px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
+    @keyframes mpPop{from{opacity:0}to{opacity:1}}
     .mp-calday,.mp-timebtn,.mp-iconbtn{transition:background .14s ease,border-color .14s ease,color .14s ease,transform .12s ease,box-shadow .14s ease}
     .mp-calday:hover,.mp-timebtn:hover,.mp-iconbtn:hover{transform:translateY(-1px);border-color:var(--mp-accent)!important;box-shadow:0 10px 22px rgba(15,23,42,.10)}
     .mp-calday:active,.mp-timebtn:active,.mp-iconbtn:active{transform:translateY(0) scale(.97)}
@@ -798,13 +798,10 @@ export default function MetaPanel({
                     <div
                       className="mp-due-popover"
                       style={{
-                        position:isMobile ? "static" : "absolute",
-                        top:isMobile ? "auto" : "calc(100% + 12px)",
-                        left:isMobile ? "auto" : "auto",
-                        right:isMobile ? "auto" : 0,
-                        width:isMobile ? "100%" : 344,
-                        zIndex:40,
-                        marginTop:isMobile ? 10 : 0,
+                        position:"static",
+                        width:"100%",
+                        zIndex:1,
+                        marginTop:12,
                         padding:12,
                         borderRadius:24,
                         background:isLight ? "rgba(255,255,255,0.96)" : "rgba(13,18,29,0.98)",
