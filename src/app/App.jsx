@@ -1864,13 +1864,16 @@ export default function App() {
           a propósito: mobile-perf.css mata el backdrop-filter en móvil. */}
       <div className="stratos-bottomnav">
         <div style={{
-          display:"flex", alignItems:"center", gap:2,
-          padding:"6px 7px", borderRadius:999,
-          background: isLight ? "rgba(255,255,255,0.97)" : "rgba(13,17,26,0.97)",
-          border:`1px solid ${isLight ? "rgba(15,23,42,0.09)" : "rgba(255,255,255,0.09)"}`,
+          display:"flex", alignItems:"center", gap:4,
+          padding:"6px 8px", borderRadius:20,
+          // Cápsula con el MISMO lenguaje que el sidebar de PC: rect. redondeado (no pill),
+          // gradiente vertical + biseles internos (highlight arriba / sombra abajo). Opaca
+          // porque en móvil mobile-perf.css apaga el backdrop-filter.
+          background: isLight ? "linear-gradient(180deg, rgba(255,255,255,0.98), rgba(248,250,252,0.96))" : "linear-gradient(180deg, rgba(18,24,32,0.98) 0%, rgba(9,12,18,0.99) 100%)",
+          border:`1px solid ${isLight ? "rgba(255,255,255,0.92)" : "rgba(255,255,255,0.08)"}`,
           boxShadow: isLight
-            ? "0 10px 30px rgba(15,23,42,0.16), 0 2px 8px rgba(15,23,42,0.08)"
-            : "0 12px 34px rgba(0,0,0,0.55), 0 2px 10px rgba(0,0,0,0.35)",
+            ? "inset 0 1px 0 rgba(255,255,255,1), inset 0 -1px 0 rgba(15,23,42,0.04), 0 10px 30px rgba(15,23,42,0.14), 0 2px 8px rgba(15,23,42,0.08)"
+            : "inset 0 1px 0 rgba(190,245,225,0.08), inset 0 -1px 0 rgba(0,0,0,0.35), 0 14px 38px rgba(0,0,0,0.55), 0 2px 10px rgba(0,0,0,0.35)",
           backdropFilter:"blur(24px)", WebkitBackdropFilter:"blur(24px)",
           minWidth:0,
         }}>
@@ -2042,7 +2045,7 @@ export default function App() {
                 nativo carga la web remota: un APK nuevo NO garantiza web nueva
                 (SW/deploy). Con esto cualquiera puede reportar "web vNNN" y se
                 acaba el adivinar. Mantener en sync con CACHE_VERSION (sw.js). */}
-            <p style={{ margin:"12px 0 0", textAlign:"center", fontSize:9.5, fontFamily:font, letterSpacing:"0.02em", color: isLight ? "rgba(15,23,42,0.35)" : "rgba(255,255,255,0.28)" }}>Stratos CRM AI · web v164</p>
+            <p style={{ margin:"12px 0 0", textAlign:"center", fontSize:9.5, fontFamily:font, letterSpacing:"0.02em", color: isLight ? "rgba(15,23,42,0.35)" : "rgba(255,255,255,0.28)" }}>Stratos CRM AI · web v166</p>
           </div>
         </>,
         document.body
