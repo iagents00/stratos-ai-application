@@ -1,0 +1,23 @@
+-- ============================================================================
+-- 100 — Bot Telegram (Stratos): reactivación de leads personalizada + intent.
+--       Aplicado en stratos-prod vía MCP (2026-07-13). Sin tocar n8n.
+--
+-- 1) fn_reactivar_draft v2: el mensaje de reactivación (WhatsApp) que se le
+--    sugiere al asesor ahora es PERSONALIZADO con la propiedad que le interesa
+--    al cliente (matchea la campaña del lead con catalogo_proyectos; ej.
+--    "Sé que te había interesado Bay View Grand 2 en Cancún…"). Antes era genérico.
+--    Lo usa el motor proactivo (reactivador de leads dormidos) y el bot.
+--
+-- 2) bot_reactivar_cliente(chat, ref): intent a demanda en el bot —
+--    "¿qué le escribo a Juan para reactivarlo?" / "reactivar a Ana" /
+--    "cómo recupero a X" -> borrador editable + botón "Abrir WhatsApp".
+--    Router (bot_smart_queries): rama (4.5) antes de la próxima acción.
+--
+-- Manual del asistente actualizado en src/landing/manual-telegram-content.js
+-- (+4 secciones: documentos Mi Espacio, recomendar propiedades, reactivar,
+-- memoria; + KPIs/ficha con frases nuevas).
+--
+-- REVERT: restaurar fn_reactivar_draft / bot_smart_queries previas + drop
+--   bot_reactivar_cliente.
+-- ============================================================================
+-- (resumen; cuerpos completos en la base — pg_get_functiondef)
