@@ -16,12 +16,13 @@ import { G, KPI, Pill, Ico } from "../../SharedComponents";
 import LandingPagePreview from "./LandingPagePreview";
 
 const team = [
-  { n: "Oscar Gálvez",      r: "CEO Ejecutivo",           wa: "+52 998 000 0001", cal: "" },
-  { n: "Emmanuel Ortiz",    r: "Director de Ventas",      wa: "+52 998 000 0002", cal: "" },
-  { n: "Alexia Santillán",  r: "Directora Administrativa",wa: "+52 998 000 0003", cal: "" },
-  { n: "Alex Velázquez",    r: "Director de Marketing",   wa: "+52 998 000 0004", cal: "" },
-  { n: "Ken Lugo Ríos",     r: "Asesor Senior",           wa: "+52 998 000 0005", cal: "" },
-  { n: "Cecilia Mendoza",   r: "Asesora Premium",         wa: "+52 998 000 0007", cal: "" },
+  { n: "Oscar Gálvez",      r: "CEO Ejecutivo",         wa: "+52 998 000 0001", cal: "" },
+  { n: "Emmanuel Ortiz",    r: "Director de Ventas",    wa: "+52 998 000 0002", cal: "" },
+  { n: "Alex Velázquez",    r: "Director de Marketing", wa: "+52 998 000 0004", cal: "" },
+  { n: "Ken Lugo Ríos",     r: "Asesor Senior",         wa: "+52 998 000 0005", cal: "" },
+  { n: "Cecilia Mendoza",   r: "Asesora Premium",       wa: "+52 998 000 0007", cal: "" },
+  { n: "Gael Velasco",      r: "Asesor Senior",         wa: "+52 998 000 0008", cal: "" },
+  { n: "Carlos Ayala",      r: "Asesor Senior",         wa: "+52 998 000 0009", cal: "" },
 ];
 
 const WriterSection = ({ value, onChange, clientName, T = P }) => {
@@ -1633,6 +1634,7 @@ const LandingPages = ({ T = P }) => {
       </G>
 
       <button onClick={() => setStep(2)} disabled={!clientName.trim()} style={{
+        display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
         padding: "14px 28px", borderRadius: 12, border: "none", cursor: clientName.trim() ? "pointer" : "not-allowed",
         background: clientName.trim() ? (isLight ? T.accent : "rgba(255,255,255,0.95)") : T.glass,
         color: clientName.trim() ? (isLight ? "#FFFFFF" : "#0A0F18") : T.txt3,
@@ -1640,7 +1642,7 @@ const LandingPages = ({ T = P }) => {
         boxShadow: clientName.trim() ? (isLight ? T.shadowMint || "0 4px 16px rgba(13,154,118,0.25)" : "0 4px 20px rgba(255,255,255,0.15)") : "none",
         transition: "all 0.25s", width: "100%",
       }}>
-        Seleccionar Propiedades <ArrowRight size={16} style={{ marginLeft: 8, verticalAlign: "middle" }} />
+        Seleccionar Propiedades <ArrowRight size={16} />
       </button>
     </div>
   );
