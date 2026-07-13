@@ -1351,7 +1351,8 @@ export default function App() {
           .stratos-header{padding-left:10px!important;padding-right:10px!important;gap:6px!important}
           .stratos-header-left{gap:6px!important;min-width:0!important;flex:1 1 auto!important;overflow:hidden!important}
           .stratos-header-right{gap:2px!important;flex-shrink:0!important}
-          .stratos-header-center{display:none!important}
+          /* El Centro de Inteligencia (DynIsland) SÍ va centrado en móvil (rótulo "Inteligencia" para Duke). */
+          .stratos-header-center{display:block!important}
           .stratos-header-search{display:none!important}
           .stratos-header-divider{display:none!important}
           .stratos-header-phone{display:none!important}
@@ -1359,10 +1360,9 @@ export default function App() {
           .stratos-userpill-text{display:none!important}
           /* Wordmark truncable (tenants con nombre largo no rompen el header) */
           .stratos-wordmark{max-width:110px!important;overflow:hidden!important;text-overflow:ellipsis!important}
-          /* Pill IAOS compresible: el ticker cede ancho con ellipsis en vez de
-             desbordar bajo los íconos de la derecha. */
-          .stratos-iaos-pill{flex-shrink:1!important;min-width:0!important;overflow:hidden!important}
-          .stratos-iaos-ticker{width:auto!important;max-width:112px!important;min-width:0!important}
+          /* En móvil la pill IAOS del header se OCULTA por completo: el acceso al
+             Centro de Inteligencia ("Inteligencia") vive centrado (DynIsland). */
+          .stratos-iaos-pill{display:none!important}
           /* Dropdown de la campanita: a lo ancho de la pantalla (antes width
              fija 300px anclada a la campana → se salía por la izquierda). */
           .stratos-bell-dropdown{position:fixed!important;top:calc(60px + var(--safe-area-inset-top, env(safe-area-inset-top, 0px)))!important;left:10px!important;right:10px!important;width:auto!important;max-height:calc(100dvh - 150px)!important;overflow-y:auto!important}
@@ -2045,7 +2045,7 @@ export default function App() {
                 nativo carga la web remota: un APK nuevo NO garantiza web nueva
                 (SW/deploy). Con esto cualquiera puede reportar "web vNNN" y se
                 acaba el adivinar. Mantener en sync con CACHE_VERSION (sw.js). */}
-            <p style={{ margin:"12px 0 0", textAlign:"center", fontSize:9.5, fontFamily:font, letterSpacing:"0.02em", color: isLight ? "rgba(15,23,42,0.35)" : "rgba(255,255,255,0.28)" }}>Stratos CRM AI · web v167</p>
+            <p style={{ margin:"12px 0 0", textAlign:"center", fontSize:9.5, fontFamily:font, letterSpacing:"0.02em", color: isLight ? "rgba(15,23,42,0.35)" : "rgba(255,255,255,0.28)" }}>Stratos CRM AI · web v170</p>
           </div>
         </>,
         document.body
