@@ -1881,13 +1881,13 @@ export default function App() {
               <button key={n.id} onClick={() => { setV(n.id); setPlusOpen(false); }} style={{
                 display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:3,
                 minWidth:64, padding:"7px 10px", borderRadius:14, cursor:"pointer",
-                border: a ? (isLight ? `1px solid ${T.accent}40` : "1px solid rgba(190,245,225,0.14)") : "1px solid transparent",
-                background: a ? (isLight ? `linear-gradient(180deg, rgba(255,255,255,0.95), ${T.accent}16)` : "linear-gradient(180deg, rgba(255,255,255,0.06), rgba(110,231,194,0.028))") : "transparent",
-                boxShadow: a ? (isLight ? `0 4px 12px ${T.accent}2E` : "0 2px 8px rgba(0,0,0,0.28)") : "none",
+                border: a ? (isLight ? "1px solid rgba(15,23,42,0.10)" : "1px solid rgba(190,245,225,0.16)") : "1px solid transparent",
+                background: a ? (isLight ? "linear-gradient(180deg, rgba(255,255,255,0.86), rgba(248,250,252,0.68))" : "linear-gradient(180deg, rgba(255,255,255,0.065), rgba(110,231,194,0.022))") : "transparent",
+                boxShadow: a ? (isLight ? "0 3px 10px rgba(15,23,42,0.06)" : "0 3px 10px rgba(0,0,0,0.24)") : "none",
                 outline:"none", WebkitTapHighlightColor:"transparent",
                 transition:"background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease",
               }}>
-                <IosIcon name={n.id} filled={a} size={23} color={a ? activeColor : (isLight ? "rgba(15,23,42,0.42)" : "rgba(255,255,255,0.38)")} />
+                <IosIcon name={n.id} filled={a} size={n.id === "d" ? 23 : n.id === "ia" ? 22 : n.id === "lp" ? 22 : n.id === "e" ? 21 : n.id === "c" ? 22 : 20} color={a ? activeColor : (isLight ? "rgba(15,23,42,0.45)" : "rgba(255,255,255,0.40)")} />
                 <span style={{ fontSize:9.5, fontFamily:fontDisp, fontWeight: a ? 700 : 500, letterSpacing:"-0.01em", color: a ? activeColor : (isLight ? "rgba(15,23,42,0.42)" : "rgba(255,255,255,0.34)"), lineHeight:1, whiteSpace:"nowrap", overflow:"hidden", maxWidth:"100%" }}>{clientConfig?.navLabels?.[n.id] ?? n.l}</span>
               </button>
             );
@@ -1902,13 +1902,13 @@ export default function App() {
               <button onClick={() => setPlusOpen(p => !p)} aria-label="Menú — todas las opciones" style={{
                 display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:3,
                 minWidth:64, padding:"7px 10px", borderRadius:14, cursor:"pointer",
-                border: a ? (isLight ? `1px solid ${T.accent}40` : "1px solid rgba(190,245,225,0.14)") : "1px solid transparent",
-                background: a ? (isLight ? `linear-gradient(180deg, rgba(255,255,255,0.95), ${T.accent}16)` : "linear-gradient(180deg, rgba(255,255,255,0.06), rgba(110,231,194,0.028))") : "transparent",
-                boxShadow: a ? (isLight ? `0 4px 12px ${T.accent}2E` : "0 2px 8px rgba(0,0,0,0.28)") : "none",
+                border: a ? (isLight ? "1px solid rgba(15,23,42,0.10)" : "1px solid rgba(190,245,225,0.16)") : "1px solid transparent",
+                background: a ? (isLight ? "linear-gradient(180deg, rgba(255,255,255,0.86), rgba(248,250,252,0.68))" : "linear-gradient(180deg, rgba(255,255,255,0.065), rgba(110,231,194,0.022))") : "transparent",
+                boxShadow: a ? (isLight ? "0 3px 10px rgba(15,23,42,0.06)" : "0 3px 10px rgba(0,0,0,0.24)") : "none",
                 outline:"none", WebkitTapHighlightColor:"transparent",
                 transition:"background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease",
               }}>
-                <IosIcon name="menu" filled={a} size={23} color={a ? activeColor : (isLight ? "rgba(15,23,42,0.42)" : "rgba(255,255,255,0.38)")} />
+                <IosIcon name="menu" filled={a} size={20} color={a ? activeColor : (isLight ? "rgba(15,23,42,0.45)" : "rgba(255,255,255,0.40)")} />
                 <span style={{ fontSize:9.5, fontFamily:fontDisp, fontWeight: a ? 700 : 500, color: a ? activeColor : (isLight ? "rgba(15,23,42,0.42)" : "rgba(255,255,255,0.34)"), lineHeight:1 }}>Menú</span>
               </button>
             );
