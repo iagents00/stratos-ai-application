@@ -60,14 +60,14 @@ const DynIsland = ({ onExpand, onOpenLead, notifications = [], theme = "dark", b
       <style>{`
         @keyframes stratosIntelSweepLoop {
           0% { transform: translate3d(-110px, 0, 0) skewX(-18deg); opacity: 0; }
-          12% { opacity: 0.78; }
-          48% { opacity: 0.52; }
+          16% { opacity: 0.38; }
+          48% { opacity: 0.24; }
           100% { transform: translate3d(260px, 0, 0) skewX(-18deg); opacity: 0; }
         }
         @keyframes stratosIntelAuraLoop {
-          0% { transform: rotate(0deg) scale(1); opacity: 0.34; }
-          50% { transform: rotate(180deg) scale(1.02); opacity: 0.68; }
-          100% { transform: rotate(360deg) scale(1); opacity: 0.34; }
+          0% { transform: rotate(0deg) scale(1); opacity: 0.16; }
+          50% { transform: rotate(180deg) scale(1.01); opacity: 0.30; }
+          100% { transform: rotate(360deg) scale(1); opacity: 0.16; }
         }
         @keyframes stratosIntelPulseDot {
           0%, 100% { transform: scale(0.92); box-shadow: 0 0 0 0 rgba(52,211,153,0.28), 0 0 7px rgba(52,211,153,0.82), 0 0 15px rgba(52,211,153,0.22); }
@@ -103,19 +103,19 @@ const DynIsland = ({ onExpand, onOpenLead, notifications = [], theme = "dark", b
         <div data-brand-motion="true" style={{
           position: "absolute", inset: -18, borderRadius: "50%",
           background: isLight
-            ? "conic-gradient(from 0deg, transparent 0deg, rgba(13,154,118,0.00) 122deg, rgba(13,154,118,0.12) 178deg, rgba(255,255,255,0.70) 204deg, rgba(13,154,118,0.00) 246deg, transparent 360deg)"
-            : "conic-gradient(from 0deg, transparent 0deg, rgba(52,211,153,0.00) 122deg, rgba(52,211,153,0.22) 178deg, rgba(255,255,255,0.30) 204deg, rgba(52,211,153,0.00) 246deg, transparent 360deg)",
-          filter: "blur(8px)",
-          animation: "stratosIntelAuraLoop 5.6s linear infinite",
+            ? "conic-gradient(from 0deg, transparent 0deg, rgba(13,154,118,0.00) 128deg, rgba(13,154,118,0.06) 182deg, rgba(255,255,255,0.30) 204deg, rgba(13,154,118,0.00) 238deg, transparent 360deg)"
+            : "conic-gradient(from 0deg, transparent 0deg, rgba(52,211,153,0.00) 128deg, rgba(52,211,153,0.11) 182deg, rgba(255,255,255,0.14) 204deg, rgba(52,211,153,0.00) 238deg, transparent 360deg)",
+          filter: "blur(10px)",
+          animation: "stratosIntelAuraLoop 8.5s linear infinite",
           willChange: "transform, opacity",
           pointerEvents: "none",
         }} />
         <div data-brand-motion="true" style={{
           position: "absolute", top: -1, bottom: -1, left: 0, width: 72,
           background: isLight
-            ? "linear-gradient(90deg, transparent, rgba(13,154,118,0.10), rgba(255,255,255,0.72), rgba(13,154,118,0.10), transparent)"
-            : "linear-gradient(90deg, transparent, rgba(110,231,194,0.09), rgba(255,255,255,0.26), rgba(110,231,194,0.09), transparent)",
-          animation: "stratosIntelSweepLoop 3.7s cubic-bezier(0.16,1,0.3,1) infinite",
+            ? "linear-gradient(90deg, transparent, rgba(13,154,118,0.045), rgba(255,255,255,0.30), rgba(13,154,118,0.045), transparent)"
+            : "linear-gradient(90deg, transparent, rgba(110,231,194,0.045), rgba(255,255,255,0.12), rgba(110,231,194,0.045), transparent)",
+          animation: "stratosIntelSweepLoop 6.2s cubic-bezier(0.16,1,0.3,1) infinite",
           willChange: "transform, opacity",
           pointerEvents: "none",
         }} />
