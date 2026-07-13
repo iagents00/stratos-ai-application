@@ -25,6 +25,23 @@ const DynIsland = ({ onExpand, notifications = [] }) => {
 
   return (
     <>
+      <style>{`
+        @keyframes stratosIntelBeam {
+          0% { transform: translateX(-135%) skewX(-18deg); opacity: 0; }
+          18% { opacity: 0.85; }
+          54% { opacity: 0.55; }
+          100% { transform: translateX(335%) skewX(-18deg); opacity: 0; }
+        }
+        @keyframes stratosIntelHalo {
+          0% { transform: rotate(0deg); opacity: 0.38; }
+          50% { opacity: 0.72; }
+          100% { transform: rotate(360deg); opacity: 0.38; }
+        }
+        @keyframes stratosIntelDot {
+          0%, 100% { transform: scale(0.92); box-shadow: 0 0 0 0 rgba(52,211,153,0.26), 0 0 9px rgba(52,211,153,0.82); }
+          50% { transform: scale(1.12); box-shadow: 0 0 0 6px rgba(52,211,153,0), 0 0 15px rgba(52,211,153,0.95); }
+        }
+      `}</style>
       {/* Collapsed pill */}
       <div
         onClick={() => !selectedNotif && !isOpen && setIsOpen(true)}
@@ -36,25 +53,29 @@ const DynIsland = ({ onExpand, notifications = [] }) => {
           display: expanded ? "none" : "flex", alignItems: "center", justifyContent: "center",
           padding: "0 14px", gap: 8, overflow: "hidden",
           cursor: "pointer",
+          boxShadow: "inset 0 1px 0 rgba(255,255,255,0.08), 0 0 0 1px rgba(110,231,194,0.035), 0 10px 28px rgba(0,0,0,0.34)",
         }}>
         <div style={{
           position: "absolute", inset: 0, pointerEvents: "none", borderRadius: "inherit", overflow: "hidden"
         }}>
           <div style={{
-            position: "absolute", top: -20, left: -20, width: 40, height: 40,
-            borderRadius: "50%", background: "radial-gradient(circle, rgba(255,255,255,0.6) 0%, transparent 75%)",
-            filter: "blur(10px)",
-            offsetPath: "path('M 19 0 H 201 A 19 19 0 0 1 201 38 H 19 A 19 19 0 0 1 19 0 Z')",
-            animation: "orbitSmart 7s cubic-bezier(0.19, 1, 0.22, 1) infinite, orbitColor 7s linear infinite"
+            position: "absolute", inset: -24,
+            borderRadius: "50%",
+            background: "conic-gradient(from 0deg, transparent 0deg, rgba(52,211,153,0.00) 120deg, rgba(52,211,153,0.26) 178deg, rgba(255,255,255,0.34) 204deg, rgba(52,211,153,0.00) 244deg, transparent 360deg)",
+            filter: "blur(8px)",
+            animation: "stratosIntelHalo 6.5s linear infinite",
+            willChange: "transform, opacity",
           }} />
           <div style={{
-            position: "absolute", top: 0, left: "-100%", width: "50%", height: "100%",
-            background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.03), transparent)",
-            animation: "shine 6s ease-in-out infinite"
+            position: "absolute", top: -1, left: 0, width: "42%", height: "calc(100% + 2px)",
+            background: "linear-gradient(90deg, transparent, rgba(110,231,194,0.08), rgba(255,255,255,0.24), rgba(110,231,194,0.08), transparent)",
+            filter: "blur(0.3px)",
+            animation: "stratosIntelBeam 4.2s cubic-bezier(0.16,1,0.3,1) infinite",
+            willChange: "transform, opacity",
           }} />
         </div>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, width: "100%" }}>
-          <div style={{ filter: `drop-shadow(0 0 4px ${P.accent}44)`, display: "flex" }}>
+          <div style={{ filter: `drop-shadow(0 0 4px ${P.accent}44)`, display: "flex", animation: "stratosIntelDot 2.35s ease-in-out infinite", borderRadius: "50%" }}>
             <StratosAtom size={16} color={P.accent} />
           </div>
           <span style={{ fontSize: 13, color: "rgba(255,255,255,0.9)", fontWeight: 500, letterSpacing: "-0.01em", fontFamily: fontDisp }}>Centro de Inteligencia</span>
