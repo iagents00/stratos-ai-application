@@ -24,9 +24,9 @@ export const StratosAtom = ({ size = 20, color = "#FFFFFF" }) => (
  * Usado exclusivamente en el Centro de Agentes IA.
  */
 export const StratosAtomHex = ({ size = 22, color = "#FFFFFF", edge = "#6EE7C2", motion = false }) => {
-  const uid = `atomhex-${size}-${String(color).replace(/[^a-z0-9]/gi, "")}`;
+  const uid = `atomhex-${size}-${String(color + edge).replace(/[^a-z0-9]/gi, "")}`;
   return (
-    <svg width={size} height={size} viewBox="0 0 32 32" fill="none" style={{ display: "block" }}>
+    <svg width={size} height={size} viewBox="0 0 32 32" fill="none" style={{ display: "block", overflow: "visible" }}>
       <defs>
         <radialGradient id={`${uid}-core`} cx="50%" cy="50%" r="50%">
           <stop offset="0%"  stopColor="#FFFFFF" stopOpacity="1" />
@@ -41,15 +41,9 @@ export const StratosAtomHex = ({ size = 22, color = "#FFFFFF", edge = "#6EE7C2",
       </defs>
       {motion && (
         <style>{`
-          @keyframes ${uid}-orbit-flow {
-            0% { stroke-dashoffset: 0; opacity: .62; }
-            38% { stroke-dashoffset: -15; opacity: .92; }
-            68% { stroke-dashoffset: -31; opacity: .72; }
-            100% { stroke-dashoffset: -48; opacity: .62; }
-          }
           @keyframes ${uid}-core-breathe {
-            0%, 100% { opacity: .86; transform: scale(.96); }
-            50% { opacity: 1; transform: scale(1.04); }
+            0%, 100% { opacity: .9; transform: scale(.985); }
+            50% { opacity: 1; transform: scale(1.035); }
           }
         `}</style>
       )}
@@ -58,14 +52,25 @@ export const StratosAtomHex = ({ size = 22, color = "#FFFFFF", edge = "#6EE7C2",
       <g
         data-brand-motion={motion ? "true" : undefined}
         fill="none"
-        strokeWidth="1"
-        stroke={`url(#${uid}-ring)`}
+        strokeWidth="1.05"
         strokeLinecap="round"
-        style={motion ? { strokeDasharray: "24 14", animation: `${uid}-orbit-flow 7.4s cubic-bezier(.45,0,.15,1) infinite` } : undefined}
+        style={motion ? { transformOrigin: "16px 16px", transformBox: "view-box", willChange: "transform" } : undefined}
       >
-        <ellipse cx="16" cy="16" rx="12.6" ry="4.6" />
-        <ellipse cx="16" cy="16" rx="12.6" ry="4.6" transform="rotate(60 16 16)" />
-        <ellipse cx="16" cy="16" rx="12.6" ry="4.6" transform="rotate(120 16 16)" />
+        {motion && (
+          <animateTransform
+            attributeName="transform"
+            type="rotate"
+            values="0 16 16; 34 16 16; 118 16 16; 205 16 16; 282 16 16; 360 16 16"
+            keyTimes="0; .18; .42; .66; .84; 1"
+            calcMode="spline"
+            keySplines=".46 0 .24 1; .18 .82 .24 1; .58 0 .3 1; .18 .72 .28 1; .44 0 .2 1"
+            dur="10.8s"
+            repeatCount="indefinite"
+          />
+        )}
+        <ellipse cx="16" cy="16" rx="12.6" ry="4.6" stroke={`url(#${uid}-ring)`} opacity="1" />
+        <ellipse cx="16" cy="16" rx="12.6" ry="4.6" transform="rotate(60 16 16)" stroke={motion ? edge : `url(#${uid}-ring)`} opacity={motion ? "0.62" : "1"} />
+        <ellipse cx="16" cy="16" rx="12.6" ry="4.6" transform="rotate(120 16 16)" stroke={motion ? color : `url(#${uid}-ring)`} opacity={motion ? "0.78" : "1"} />
       </g>
 
       {/* Núcleo — blanco brillante con borde mint sutil */}
