@@ -1177,7 +1177,7 @@ const LandingPages = ({ T = P }) => {
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
         <div>
           <p style={{ fontSize: 21, fontWeight: 400, color: isLight ? T.txt : "#FFFFFF", fontFamily: fontDisp, letterSpacing: "-0.02em" }}>
-            Marketing <span style={{ fontWeight: 300, color: isLight ? T.txt3 : "rgba(255,255,255,0.4)" }}>Studio</span>
+            Create <span style={{ fontWeight: 300, color: isLight ? T.txt3 : "rgba(255,255,255,0.4)" }}>Studio</span>
           </p>
           <p style={{ fontSize: 12, color: T.txt3, fontFamily: font, marginTop: 4 }}>Crea campañas y presentaciones de propiedades con IA en un clic</p>
         </div>
