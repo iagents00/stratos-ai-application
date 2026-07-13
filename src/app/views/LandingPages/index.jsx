@@ -19,10 +19,10 @@ const team = [
   { n: "Oscar Gálvez",      r: "CEO Ejecutivo",         wa: "+52 998 000 0001", cal: "" },
   { n: "Emmanuel Ortiz",    r: "Director de Ventas",    wa: "+52 998 000 0002", cal: "" },
   { n: "Alex Velázquez",    r: "Director de Marketing", wa: "+52 998 000 0004", cal: "" },
-  { n: "Ken Lugo Ríos",     r: "Asesor Senior",         wa: "+52 998 000 0005", cal: "" },
-  { n: "Cecilia Mendoza",   r: "Asesora Premium",       wa: "+52 998 000 0007", cal: "" },
-  { n: "Gael Velasco",      r: "Asesor Senior",         wa: "+52 998 000 0008", cal: "" },
-  { n: "Carlos Ayala",      r: "Asesor Senior",         wa: "+52 998 000 0009", cal: "" },
+  { n: "Ken Lugo Ríos",     r: "Asesor Senior",         wa: "+52 984 218 1660", cal: "" },
+  { n: "Cecilia Mendoza",   r: "Asesora Premium",       wa: "+52 984 254 0664", cal: "" },
+  { n: "Gael Velasco",      r: "Asesor Senior",         wa: "+52 984 877 9295", cal: "" },
+  { n: "Carlos Ayala",      r: "Asesor Senior",         wa: "+52 984 876 3357", cal: "" },
 ];
 
 const WriterSection = ({ value, onChange, clientName, T = P }) => {
