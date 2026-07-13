@@ -1876,16 +1876,18 @@ export default function App() {
         }}>
           {mobilePrimaryBar.map(n => {
             const a = v === n.id && !plusOpen;
-            const activeColor = isLight ? T.accent : "#6EE7C2";
+            const activeColor = isLight ? T.accent : "#E9FCF4";
             return (
               <button key={n.id} onClick={() => { setV(n.id); setPlusOpen(false); }} style={{
                 display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:3,
-                minWidth:64, padding:"8px 10px", borderRadius:999, border:"none", cursor:"pointer",
-                background: a ? (isLight ? `${T.accent}14` : "rgba(110,231,194,0.13)") : "transparent",
+                minWidth:64, padding:"7px 10px", borderRadius:14, cursor:"pointer",
+                border: a ? (isLight ? "1px solid rgba(15,23,42,0.10)" : "1px solid rgba(190,245,225,0.16)") : "1px solid transparent",
+                background: a ? (isLight ? "linear-gradient(180deg, rgba(255,255,255,0.86), rgba(248,250,252,0.68))" : "linear-gradient(180deg, rgba(255,255,255,0.065), rgba(110,231,194,0.022))") : "transparent",
+                boxShadow: a ? (isLight ? "0 3px 10px rgba(15,23,42,0.06)" : "0 3px 10px rgba(0,0,0,0.24)") : "none",
                 outline:"none", WebkitTapHighlightColor:"transparent",
-                transition:"background 0.2s ease",
+                transition:"background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease",
               }}>
-                <IosIcon name={n.id} filled={a} size={23} color={a ? activeColor : (isLight ? "rgba(15,23,42,0.42)" : "rgba(255,255,255,0.38)")} />
+                <IosIcon name={n.id} filled={a} size={n.id === "d" ? 23 : n.id === "ia" ? 22 : n.id === "lp" ? 22 : n.id === "e" ? 21 : n.id === "c" ? 22 : 20} color={a ? activeColor : (isLight ? "rgba(15,23,42,0.45)" : "rgba(255,255,255,0.40)")} />
                 <span style={{ fontSize:9.5, fontFamily:fontDisp, fontWeight: a ? 700 : 500, letterSpacing:"-0.01em", color: a ? activeColor : (isLight ? "rgba(15,23,42,0.42)" : "rgba(255,255,255,0.34)"), lineHeight:1, whiteSpace:"nowrap", overflow:"hidden", maxWidth:"100%" }}>{clientConfig?.navLabels?.[n.id] ?? n.l}</span>
               </button>
             );
@@ -1895,16 +1897,18 @@ export default function App() {
           {(() => {
             const inBar = mobilePrimaryBar.some(n => n.id === v);
             const a = plusOpen || !inBar;
-            const activeColor = isLight ? T.accent : "#6EE7C2";
+            const activeColor = isLight ? T.accent : "#E9FCF4";
             return (
               <button onClick={() => setPlusOpen(p => !p)} aria-label="Menú — todas las opciones" style={{
                 display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:3,
-                minWidth:64, padding:"8px 10px", borderRadius:999, border:"none", cursor:"pointer",
-                background: a ? (isLight ? `${T.accent}14` : "rgba(110,231,194,0.13)") : "transparent",
+                minWidth:64, padding:"7px 10px", borderRadius:14, cursor:"pointer",
+                border: a ? (isLight ? "1px solid rgba(15,23,42,0.10)" : "1px solid rgba(190,245,225,0.16)") : "1px solid transparent",
+                background: a ? (isLight ? "linear-gradient(180deg, rgba(255,255,255,0.86), rgba(248,250,252,0.68))" : "linear-gradient(180deg, rgba(255,255,255,0.065), rgba(110,231,194,0.022))") : "transparent",
+                boxShadow: a ? (isLight ? "0 3px 10px rgba(15,23,42,0.06)" : "0 3px 10px rgba(0,0,0,0.24)") : "none",
                 outline:"none", WebkitTapHighlightColor:"transparent",
-                transition:"background 0.2s ease",
+                transition:"background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease",
               }}>
-                <IosIcon name="menu" filled={a} size={23} color={a ? activeColor : (isLight ? "rgba(15,23,42,0.42)" : "rgba(255,255,255,0.38)")} />
+                <IosIcon name="menu" filled={a} size={20} color={a ? activeColor : (isLight ? "rgba(15,23,42,0.45)" : "rgba(255,255,255,0.40)")} />
                 <span style={{ fontSize:9.5, fontFamily:fontDisp, fontWeight: a ? 700 : 500, color: a ? activeColor : (isLight ? "rgba(15,23,42,0.42)" : "rgba(255,255,255,0.34)"), lineHeight:1 }}>Menú</span>
               </button>
             );
@@ -1997,13 +2001,13 @@ export default function App() {
             <div style={{ display:"grid", gridTemplateColumns:"repeat(3, 1fr)", gap:8 }}>
               {mobileAllNav.filter(n => n.id !== "admin").map(n => {
                 const a = v === n.id;
-                const activeColor = n.adminOnly ? "#A78BFA" : (isLight ? T.accent : "#6EE7C2");
+                const activeColor = n.adminOnly ? "#A78BFA" : (isLight ? T.accent : "#E9FCF4");
                 return (
                   <button key={n.id} onClick={() => { setV(n.id); setPlusOpen(false); }} style={{
                     display:"flex", flexDirection:"column", alignItems:"center", gap:6, padding:"13px 4px 11px",
-                    borderRadius:16, border:`1px solid ${a ? `${activeColor}30` : (isLight ? "rgba(15,23,42,0.06)" : "rgba(255,255,255,0.05)")}`,
+                    borderRadius:16, border: a ? (isLight ? `1px solid ${activeColor}45` : "1px solid rgba(190,245,225,0.16)") : (isLight ? "1px solid rgba(15,23,42,0.06)" : "1px solid rgba(255,255,255,0.05)"),
                     cursor:"pointer", minWidth:0,
-                    background: a ? `${activeColor}12` : (isLight ? "rgba(15,23,42,0.03)" : "rgba(255,255,255,0.035)"),
+                    background: a ? (isLight ? `linear-gradient(180deg, rgba(255,255,255,0.95), ${activeColor}12)` : "linear-gradient(180deg, rgba(255,255,255,0.06), rgba(110,231,194,0.03))") : (isLight ? "rgba(15,23,42,0.02)" : "rgba(255,255,255,0.025)"),
                   }}>
                     <IosIcon name={n.id} filled={a} size={22} color={a ? activeColor : (isLight ? "rgba(15,23,42,0.55)" : "rgba(255,255,255,0.55)")} />
                     <span style={{ fontSize:10, fontFamily:fontDisp, fontWeight: a ? 700 : 500, color: a ? activeColor : (isLight ? "rgba(15,23,42,0.55)" : "rgba(255,255,255,0.50)"), lineHeight:1, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis", maxWidth:"100%" }}>{clientConfig?.navLabels?.[n.id] ?? n.l}</span>
@@ -2038,7 +2042,7 @@ export default function App() {
                 nativo carga la web remota: un APK nuevo NO garantiza web nueva
                 (SW/deploy). Con esto cualquiera puede reportar "web vNNN" y se
                 acaba el adivinar. Mantener en sync con CACHE_VERSION (sw.js). */}
-            <p style={{ margin:"12px 0 0", textAlign:"center", fontSize:9.5, fontFamily:font, letterSpacing:"0.02em", color: isLight ? "rgba(15,23,42,0.35)" : "rgba(255,255,255,0.28)" }}>Stratos CRM AI · web v159</p>
+            <p style={{ margin:"12px 0 0", textAlign:"center", fontSize:9.5, fontFamily:font, letterSpacing:"0.02em", color: isLight ? "rgba(15,23,42,0.35)" : "rgba(255,255,255,0.28)" }}>Stratos CRM AI · web v164</p>
           </div>
         </>,
         document.body
