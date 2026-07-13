@@ -882,7 +882,32 @@ export default function MetaPanel({
                               );
                             })}
                           </div>
-                          <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", gap:8, marginTop:12, paddingTop:10, borderTop:`1px solid ${T.border}` }}>
+                          <div style={{ display:"grid", gridTemplateColumns:isMobile ? "1fr" : "1fr auto auto", alignItems:"center", gap:8, marginTop:12, paddingTop:10, borderTop:`1px solid ${T.border}` }}>
+                            <label style={{
+                              display:"flex", alignItems:"center", gap:8,
+                              minHeight:36, borderRadius:13, padding:"0 11px",
+                              border:`1px solid ${isLight ? "rgba(15,23,42,0.10)" : "rgba(255,255,255,0.10)"}`,
+                              background:isLight ? "rgba(248,250,252,0.88)" : "rgba(255,255,255,0.045)",
+                              color:T.txt2, fontSize:11.5, fontWeight:800, fontFamily:fontDisp,
+                            }}>
+                              Fecha exacta
+                              <input
+                                type="date"
+                                value={selectedDueDate}
+                                onChange={e => {
+                                  const value = e.target.value;
+                                  if (!value) return;
+                                  setCalendarMonth(new Date(`${value}T12:00:00`));
+                                  setActionDueDate(value);
+                                  setDuePickerOpen("time");
+                                }}
+                                style={{
+                                  minWidth:132, border:"none", outline:"none", background:"transparent",
+                                  color:T.txt, fontSize:12.5, fontWeight:800, fontFamily:fontDisp,
+                                  colorScheme:isLight ? "light" : "dark",
+                                }}
+                              />
+                            </label>
                             <button type="button" onClick={() => { const today = localYmd(new Date()); setCalendarMonth(new Date(`${today}T12:00:00`)); setActionDueDate(today); setDuePickerOpen("time"); }} className="mp-quickchip" style={{ border:`1px solid ${T.border}`, background:isLight?"rgba(15,23,42,0.035)":"rgba(255,255,255,0.045)", color:T.txt2, borderRadius:99, padding:"7px 11px", fontSize:11.5, fontWeight:800, fontFamily:fontDisp, cursor:"pointer" }}>Hoy</button>
                             <button type="button" onClick={clearActionDue} className="mp-quickchip" style={{ border:"1px solid transparent", background:"transparent", color:T.txt3, borderRadius:99, padding:"7px 11px", fontSize:11.5, fontWeight:750, fontFamily:fontDisp, cursor:"pointer" }}>Limpiar</button>
                           </div>
@@ -896,6 +921,31 @@ export default function MetaPanel({
                             </div>
                             <button type="button" onClick={() => setDuePickerOpen("date")} className="mp-quickchip" style={{ border:`1px solid ${T.border}`, background:isLight?"rgba(15,23,42,0.035)":"rgba(255,255,255,0.045)", color:T.txt2, borderRadius:99, padding:"7px 11px", fontSize:11.5, fontWeight:800, fontFamily:fontDisp, cursor:"pointer" }}>Cambiar fecha</button>
                           </div>
+                          <label style={{
+                            display:"flex", alignItems:"center", justifyContent:"space-between", gap:12,
+                            minHeight:54, borderRadius:17, padding:"0 14px", marginBottom:10,
+                            border:`1px solid ${selectedDueTime ? _hex(T.accent,"55") : (isLight ? "rgba(15,23,42,0.10)" : "rgba(255,255,255,0.10)")}`,
+                            background:selectedDueTime ? `${T.accent}0E` : (isLight ? "rgba(248,250,252,0.92)" : "rgba(255,255,255,0.045)"),
+                          }}>
+                            <span style={{ display:"flex", flexDirection:"column", gap:2 }}>
+                              <span style={{ color:T.txt, fontSize:13.5, fontWeight:850, fontFamily:fontDisp, letterSpacing:"-0.02em" }}>Hora exacta</span>
+                              <span style={{ color:T.txt3, fontSize:10.5, fontWeight:650, fontFamily:font }}>Elige cualquier hora y minuto</span>
+                            </span>
+                            <input
+                              type="time"
+                              step="60"
+                              value={selectedDueTime}
+                              onChange={e => setActionDueTime(e.target.value)}
+                              onKeyDown={e => { if (e.key === "Enter" && selectedDueTime) setDuePickerOpen(null); }}
+                              style={{
+                                minWidth:118, height:38, borderRadius:12,
+                                border:`1px solid ${isLight ? "rgba(15,23,42,0.10)" : "rgba(255,255,255,0.10)"}`,
+                                background:isLight ? "#FFFFFF" : "rgba(255,255,255,0.055)",
+                                color:T.txt, fontSize:15, fontWeight:850, fontFamily:fontDisp,
+                                padding:"0 9px", outline:"none", colorScheme:isLight ? "light" : "dark",
+                              }}
+                            />
+                          </label>
                           <div style={{ display:"grid", gridTemplateColumns:isMobile ? "repeat(3,1fr)" : "repeat(4,1fr)", gap:8 }}>
                             {dueTimeSlots.map(timeValue => {
                               const isSelected = selectedDueTime === timeValue;
@@ -922,8 +972,9 @@ export default function MetaPanel({
                               );
                             })}
                           </div>
-                          <div style={{ display:"flex", justifyContent:"flex-end", marginTop:12, paddingTop:10, borderTop:`1px solid ${T.border}` }}>
+                          <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", gap:8, marginTop:12, paddingTop:10, borderTop:`1px solid ${T.border}` }}>
                             <button type="button" onClick={clearActionDue} className="mp-quickchip" style={{ border:"1px solid transparent", background:"transparent", color:T.txt3, borderRadius:99, padding:"7px 11px", fontSize:11.5, fontWeight:750, fontFamily:fontDisp, cursor:"pointer" }}>Limpiar fecha y hora</button>
+                            <button type="button" onClick={() => selectedDueTime && setDuePickerOpen(null)} className="mp-quickchip" style={{ border:`1px solid ${selectedDueTime ? _hex(T.accent,"60") : "transparent"}`, background:selectedDueTime ? `${T.accent}12` : "transparent", color:selectedDueTime ? T.accent : T.txt3, borderRadius:99, padding:"7px 12px", fontSize:11.5, fontWeight:850, fontFamily:fontDisp, cursor:selectedDueTime ? "pointer" : "default" }}>Listo</button>
                           </div>
                         </>
                       )}
