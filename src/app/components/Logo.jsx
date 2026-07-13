@@ -41,14 +41,6 @@ export const StratosAtomHex = ({ size = 22, color = "#FFFFFF", edge = "#6EE7C2",
       </defs>
       {motion && (
         <style>{`
-          @keyframes ${uid}-orbit-fan {
-            0% { transform: rotate(0deg); animation-timing-function: cubic-bezier(.46,0,.24,1); }
-            18% { transform: rotate(34deg); animation-timing-function: cubic-bezier(.18,.82,.24,1); }
-            42% { transform: rotate(118deg); animation-timing-function: cubic-bezier(.58,0,.3,1); }
-            66% { transform: rotate(205deg); animation-timing-function: cubic-bezier(.18,.72,.28,1); }
-            84% { transform: rotate(282deg); animation-timing-function: cubic-bezier(.44,0,.2,1); }
-            100% { transform: rotate(360deg); }
-          }
           @keyframes ${uid}-core-breathe {
             0%, 100% { opacity: .9; transform: scale(.985); }
             50% { opacity: 1; transform: scale(1.035); }
@@ -62,8 +54,20 @@ export const StratosAtomHex = ({ size = 22, color = "#FFFFFF", edge = "#6EE7C2",
         fill="none"
         strokeWidth="1.05"
         strokeLinecap="round"
-        style={motion ? { transformOrigin: "16px 16px", transformBox: "view-box", animation: `${uid}-orbit-fan 10.8s infinite`, willChange: "transform" } : undefined}
       >
+        {motion && (
+          <animateTransform
+            attributeName="transform"
+            attributeType="XML"
+            type="rotate"
+            values="0 16 16; 36 16 16; 120 16 16; 204 16 16; 282 16 16; 360 16 16"
+            keyTimes="0; .18; .42; .66; .84; 1"
+            calcMode="spline"
+            keySplines=".46 0 .24 1; .18 .82 .24 1; .58 0 .3 1; .18 .72 .28 1; .44 0 .2 1"
+            dur="10.8s"
+            repeatCount="indefinite"
+          />
+        )}
         <ellipse cx="16" cy="16" rx="12.6" ry="4.6" stroke={`url(#${uid}-ring)`} opacity="1" />
         <ellipse cx="16" cy="16" rx="12.6" ry="4.6" transform="rotate(60 16 16)" stroke={motion ? edge : `url(#${uid}-ring)`} opacity={motion ? "0.62" : "1"} />
         <ellipse cx="16" cy="16" rx="12.6" ry="4.6" transform="rotate(120 16 16)" stroke={motion ? color : `url(#${uid}-ring)`} opacity={motion ? "0.78" : "1"} />
