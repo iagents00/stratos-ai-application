@@ -428,19 +428,32 @@ export default function App() {
     // se satura, el usuario ve carga en vez de una interfaz a medio recolorear.
     root.classList.remove("theme-loading-light", "theme-loading-dark");
     root.classList.add(`theme-loading-${next}`, "theme-loading-active");
+    root.setAttribute("aria-busy", "true");
     const shownAt = performance.now();
+    let safetyTimer = 0;
+    const finishThemeSwitch = () => {
+      window.clearTimeout(safetyTimer);
+      root.classList.remove("theme-loading-active", "theme-loading-light", "theme-loading-dark");
+      root.removeAttribute("aria-busy");
+      themeSwitchingRef.current = false;
+    };
+    // Última red de seguridad: ninguna excepción o throttling extremo puede
+    // dejar la cortina bloqueada permanentemente.
+    safetyTimer = window.setTimeout(finishThemeSwitch, 3000);
 
     requestAnimationFrame(() => requestAnimationFrame(() => {
-      flushSync(() => setThemeState(next));
-      root.setAttribute("data-theme", next);
+      try {
+        flushSync(() => setThemeState(next));
+        root.setAttribute("data-theme", next);
+      } catch {
+        finishThemeSwitch();
+        return;
+      }
 
       // Evita un flash en equipos rápidos. En uno lento la cortina permanece
       // naturalmente hasta que el commit completo termina detrás de ella.
       const remaining = Math.max(0, 220 - (performance.now() - shownAt));
-      window.setTimeout(() => requestAnimationFrame(() => {
-        root.classList.remove("theme-loading-active", "theme-loading-light", "theme-loading-dark");
-        themeSwitchingRef.current = false;
-      }), remaining);
+      window.setTimeout(() => requestAnimationFrame(finishThemeSwitch), remaining);
     }));
   }, []);
   const isLight = theme === "light";
