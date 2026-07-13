@@ -605,6 +605,8 @@ export default function MetaPanel({
 
               {/* Composer premium */}
               <div style={{
+                position:"relative",
+                zIndex: duePickerOpen ? 80 : 1,
                 display:"grid",
                 gridTemplateColumns: isMobile ? "1fr" : "minmax(420px, 1.08fr) minmax(380px, 0.78fr) 156px",
                 gap:12,
@@ -702,6 +704,8 @@ export default function MetaPanel({
                 </div>
                 <div style={{
                   position:"relative",
+                  zIndex: duePickerOpen ? 90 : 1,
+                  overflow:"visible",
                   minHeight:118,
                   padding:12,
                   borderRadius:30,
@@ -798,17 +802,23 @@ export default function MetaPanel({
                     <div
                       className="mp-due-popover"
                       style={{
-                        position:"static",
-                        width:"100%",
-                        zIndex:1,
-                        marginTop:12,
-                        padding:12,
+                        position:isMobile ? "fixed" : "absolute",
+                        top:isMobile ? "auto" : "calc(100% + 12px)",
+                        left:isMobile ? 14 : 0,
+                        right:isMobile ? 14 : 0,
+                        bottom:isMobile ? "calc(16px + var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px)))" : "auto",
+                        width:isMobile ? "auto" : "100%",
+                        maxHeight:isMobile ? "70dvh" : "min(470px, calc(100vh - 260px))",
+                        overflowY:"auto",
+                        zIndex:120,
+                        marginTop:0,
+                        padding:14,
                         borderRadius:24,
-                        background:isLight ? "rgba(255,255,255,0.96)" : "rgba(13,18,29,0.98)",
+                        background:isLight ? "#FFFFFF" : "#0D121D",
                         border:`1px solid ${isLight ? "rgba(15,23,42,0.10)" : "rgba(255,255,255,0.12)"}`,
-                        boxShadow:isLight ? "0 22px 60px rgba(15,23,42,0.16), 0 1px 2px rgba(15,23,42,0.08)" : "0 24px 70px rgba(0,0,0,0.48), inset 0 1px 0 rgba(255,255,255,0.04)",
-                        backdropFilter:"saturate(180%) blur(22px)",
-                        WebkitBackdropFilter:"saturate(180%) blur(22px)",
+                        boxShadow:isLight ? "0 30px 80px rgba(15,23,42,0.24), 0 2px 8px rgba(15,23,42,0.10)" : "0 34px 90px rgba(0,0,0,0.62), inset 0 1px 0 rgba(255,255,255,0.05)",
+                        backdropFilter:"none",
+                        WebkitBackdropFilter:"none",
                       }}
                     >
                       {duePickerOpen === "date" ? (
