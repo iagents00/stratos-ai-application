@@ -43,6 +43,9 @@ const DynIsland = ({ onExpand, onOpenLead, notifications = [], theme = "dark", b
   }
   const { config: clientConfig } = useClient();
   const centerLabel = clientConfig?.brand?.intelligenceCenterLabel || "Centro de Inteligencia";
+  // Rótulo distinto en móvil (opcional por cliente). Duke: "Intelligence" en móvil,
+  // "Centro de Inteligencia" en escritorio. Si el cliente no define el móvil, usa el mismo.
+  const centerLabelMobile = clientConfig?.brand?.intelligenceCenterLabelMobile || centerLabel;
 
   const msgs = notifications.length > 0 ? notifications : [
     { agent: "Agente Estratégico", text: "Optimización de cierre: Familia Rodríguez.", detail: "Probabilidad de cierre detectada al 92%. Dossier de alta fidelidad preparado para envío inmediato.", c: P.blue, icon: AgentIcons.gerente, btn: "Ejecutar Protocolo", action: "¿Cuáles son mis leads prioritarios hoy?" },
@@ -104,6 +107,13 @@ const DynIsland = ({ onExpand, onOpenLead, notifications = [], theme = "dark", b
         @keyframes stratosIntelPulseDot {
           0%, 100% { opacity: 0.72; transform: scale(0.98); }
           50% { opacity: 1; transform: scale(1.03); }
+        }
+        /* Rótulo del pill: escritorio muestra el largo (centerLabel), móvil el
+           corto (centerLabelMobile, ej. "Intelligence" para Duke). */
+        .dyn-lbl-mob { display: none; }
+        @media (max-width: 768px) {
+          .dyn-lbl-desk { display: none; }
+          .dyn-lbl-mob { display: inline; }
         }
       `}</style>
       {/* ─── PILL — Centro de Inteligencia ─────────────────────────────── */}
@@ -169,11 +179,16 @@ const DynIsland = ({ onExpand, onOpenLead, notifications = [], theme = "dark", b
           <div style={{ position: "relative", flexShrink: 0 }}>
             <div data-brand-motion="true" style={{ width: 6, height: 6, borderRadius: "50%", background: "#34D399", boxShadow: "0 0 5px rgba(52,211,153,0.42)", animation: "stratosIntelPulseDot 3.4s ease-in-out infinite", willChange: "transform, opacity" }} />
           </div>
-          <span style={{
+          <span className="dyn-lbl-desk" style={{
             fontSize: 12.5, fontWeight: 600, letterSpacing: "-0.025em", fontFamily: fontDisp,
             color: isLight ? "#0A0A0A" : "rgba(255,255,255,0.88)",
             whiteSpace: "nowrap", flexShrink: 0,
           }}>{centerLabel}</span>
+          <span className="dyn-lbl-mob" style={{
+            fontSize: 12.5, fontWeight: 600, letterSpacing: "-0.025em", fontFamily: fontDisp,
+            color: isLight ? "#0A0A0A" : "rgba(255,255,255,0.88)",
+            whiteSpace: "nowrap", flexShrink: 0,
+          }}>{centerLabelMobile}</span>
         </div>
       </div>
 
