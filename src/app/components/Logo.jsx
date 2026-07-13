@@ -60,17 +60,17 @@ export const StratosAtomHex = ({ size = 22, color = "#FFFFFF", edge = "#6EE7C2",
             attributeName="transform"
             attributeType="XML"
             type="rotate"
-            values="0 16 16; 36 16 16; 120 16 16; 204 16 16; 282 16 16; 360 16 16"
-            keyTimes="0; .18; .42; .66; .84; 1"
+            values="0 16 16; 42 16 16; 118 16 16; 202 16 16; 292 16 16; 360 16 16"
+            keyTimes="0; .2; .44; .68; .88; 1"
             calcMode="spline"
-            keySplines=".46 0 .24 1; .18 .82 .24 1; .58 0 .3 1; .18 .72 .28 1; .44 0 .2 1"
-            dur="10.8s"
+            keySplines=".42 0 .18 1; .2 .72 .2 1; .42 0 .2 1; .22 .74 .2 1; .34 0 .16 1"
+            dur="14s"
             repeatCount="indefinite"
           />
         )}
-        <ellipse cx="16" cy="16" rx="12.6" ry="4.6" stroke={`url(#${uid}-ring)`} opacity="1" />
-        <ellipse cx="16" cy="16" rx="12.6" ry="4.6" transform="rotate(60 16 16)" stroke={motion ? edge : `url(#${uid}-ring)`} opacity={motion ? "0.62" : "1"} />
-        <ellipse cx="16" cy="16" rx="12.6" ry="4.6" transform="rotate(120 16 16)" stroke={motion ? color : `url(#${uid}-ring)`} opacity={motion ? "0.78" : "1"} />
+        <ellipse cx="16" cy="16" rx="12.6" ry="4.6" stroke={motion ? color : `url(#${uid}-ring)`} opacity={motion ? "0.92" : "1"} />
+        <ellipse cx="16" cy="16" rx="12.6" ry="4.6" transform="rotate(60 16 16)" stroke={motion ? color : `url(#${uid}-ring)`} opacity={motion ? "0.68" : "1"} />
+        <ellipse cx="16" cy="16" rx="12.6" ry="4.6" transform="rotate(120 16 16)" stroke={motion ? color : `url(#${uid}-ring)`} opacity={motion ? "0.8" : "1"} />
       </g>
 
       {/* Núcleo — blanco brillante con borde mint sutil */}
