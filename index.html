@@ -114,6 +114,17 @@
           // no cuentan cierres normales (ver markHealthy abajo).
           var LOWFX_UNTIL = "stratos_lowfx_until_v2";
           var BOOT_FAILS = "stratos_boot_fails_v2";
+          var LOWFX_SCOPE = false;
+          try {
+            LOWFX_SCOPE =
+              window.matchMedia("(pointer: coarse), (max-width: 820px)").matches ||
+              /iPhone|iPad|iPod|Android/i.test(navigator.userAgent || "");
+          } catch (e) {}
+          if (!LOWFX_SCOPE) {
+            try { localStorage.removeItem(LOWFX_UNTIL); localStorage.removeItem(BOOT_FAILS); } catch (e) {}
+            try { sessionStorage.removeItem("stratos_reload_ticks"); } catch (e) {}
+            return;
+          }
           var stick = 0;
           try { stick = +localStorage.getItem(LOWFX_UNTIL) || 0; } catch (e) {}
           var lowfx = stick > now;
