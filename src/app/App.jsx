@@ -1289,7 +1289,7 @@ export default function App() {
         @keyframes pulse{0%,100%{opacity:.5}50%{opacity:1}}
         @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
         @keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
-        @keyframes atomSpin{0%{transform:translateZ(0) rotate(0deg) scale(1)}50%{transform:translateZ(0) rotate(180deg) scale(1.025)}100%{transform:translateZ(0) rotate(360deg) scale(1)}}
+        @keyframes atomSpin{0%{transform:translateZ(0) rotate(0deg)}100%{transform:translateZ(0) rotate(360deg)}}
         @keyframes stratosAtomSpin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
         @keyframes scanLine{0%{top:0}100%{top:100%}}
         @keyframes stepFade{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:translateX(0)}}
@@ -1375,16 +1375,23 @@ export default function App() {
       }}>
         {/* TOP: Atom identity */}
         <div style={{ display:"flex", flexDirection:"column", alignItems:"center", paddingTop:11, paddingBottom:10, flexShrink:0, gap:6 }}>
-          <div data-brand-motion="true" style={{ animation:"atomSpin 8.5s linear infinite",
+          <div data-brand-motion="true" style={{ animation:"atomSpin 5.8s linear infinite",
             // Safari congela las animaciones dentro de un ancestro con backdrop-filter
             // (el sidebar). will-change: transform lo promueve a su propia capa GPU para
             // que no lo "aplane" esa capa y siga girando (fix del bug de WebKit).
             willChange:"transform",
             transformOrigin:"center",
+            position:"relative",
+            width:30,
+            height:30,
             display:"flex",
+            alignItems:"center",
+            justifyContent:"center",
+            backfaceVisibility:"hidden",
             filter: isLight ? "drop-shadow(0 0 5px rgba(13,154,118,0.45)) drop-shadow(0 0 12px rgba(52,211,153,0.18))" : "drop-shadow(0 0 4px rgba(255,255,255,0.40)) drop-shadow(0 0 10px rgba(255,255,255,0.10))",
           }}>
             <StratosAtomHex size={30} color={isLight ? "#0D9A76" : "#FFFFFF"} edge={isLight ? "#34D399" : "#C8DED8"} />
+            <span style={{ position:"absolute", top:3, right:4, width:3.5, height:3.5, borderRadius:"50%", background:isLight ? "#10B981" : "#6EE7C2", boxShadow:isLight ? "0 0 6px rgba(16,185,129,0.72)" : "0 0 7px rgba(110,231,194,0.72)" }} />
           </div>
           <div style={{ display:"flex", alignItems:"center", gap:4 }}>
             <div style={{ width:4, height:4, borderRadius:"50%", background:"#34D399", boxShadow:"0 0 5px rgba(52,211,153,0.80), 0 0 10px rgba(52,211,153,0.30)", animation:"pulse 2.2s ease-in-out infinite", willChange:"transform, opacity" }} />

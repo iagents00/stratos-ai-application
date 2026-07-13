@@ -57,6 +57,23 @@ const DynIsland = ({ onExpand, onOpenLead, notifications = [], theme = "dark", b
 
   return (
     <>
+      <style>{`
+        @keyframes stratosIntelSweepLoop {
+          0% { transform: translate3d(-110px, 0, 0) skewX(-18deg); opacity: 0; }
+          12% { opacity: 0.78; }
+          48% { opacity: 0.52; }
+          100% { transform: translate3d(260px, 0, 0) skewX(-18deg); opacity: 0; }
+        }
+        @keyframes stratosIntelAuraLoop {
+          0% { transform: rotate(0deg) scale(1); opacity: 0.34; }
+          50% { transform: rotate(180deg) scale(1.02); opacity: 0.68; }
+          100% { transform: rotate(360deg) scale(1); opacity: 0.34; }
+        }
+        @keyframes stratosIntelPulseDot {
+          0%, 100% { transform: scale(0.92); box-shadow: 0 0 0 0 rgba(52,211,153,0.28), 0 0 7px rgba(52,211,153,0.82), 0 0 15px rgba(52,211,153,0.22); }
+          50% { transform: scale(1.16); box-shadow: 0 0 0 6px rgba(52,211,153,0), 0 0 12px rgba(52,211,153,0.96), 0 0 22px rgba(52,211,153,0.34); }
+        }
+      `}</style>
       {/* ─── PILL — Centro de Inteligencia ─────────────────────────────── */}
       <div
         title={centerLabel}
@@ -83,6 +100,25 @@ const DynIsland = ({ onExpand, onOpenLead, notifications = [], theme = "dark", b
         onMouseDown={e => { e.currentTarget.style.transform = "scale(0.972)"; e.currentTarget.style.transition = "transform 0.08s ease"; }}
         onMouseUp={e => { e.currentTarget.style.transition = "transform 0.20s cubic-bezier(0.34,1.56,0.64,1)"; e.currentTarget.style.transform = "scale(1.022)"; }}
       >
+        <div style={{
+          position: "absolute", inset: -18, borderRadius: "50%",
+          background: isLight
+            ? "conic-gradient(from 0deg, transparent 0deg, rgba(13,154,118,0.00) 122deg, rgba(13,154,118,0.12) 178deg, rgba(255,255,255,0.70) 204deg, rgba(13,154,118,0.00) 246deg, transparent 360deg)"
+            : "conic-gradient(from 0deg, transparent 0deg, rgba(52,211,153,0.00) 122deg, rgba(52,211,153,0.22) 178deg, rgba(255,255,255,0.30) 204deg, rgba(52,211,153,0.00) 246deg, transparent 360deg)",
+          filter: "blur(8px)",
+          animation: "stratosIntelAuraLoop 5.6s linear infinite",
+          willChange: "transform, opacity",
+          pointerEvents: "none",
+        }} />
+        <div style={{
+          position: "absolute", top: -1, bottom: -1, left: 0, width: 72,
+          background: isLight
+            ? "linear-gradient(90deg, transparent, rgba(13,154,118,0.10), rgba(255,255,255,0.72), rgba(13,154,118,0.10), transparent)"
+            : "linear-gradient(90deg, transparent, rgba(110,231,194,0.09), rgba(255,255,255,0.26), rgba(110,231,194,0.09), transparent)",
+          animation: "stratosIntelSweepLoop 3.7s cubic-bezier(0.16,1,0.3,1) infinite",
+          willChange: "transform, opacity",
+          pointerEvents: "none",
+        }} />
         {/* Shimmer beam */}
         {/* will-change: Safari congela animaciones dentro de un ancestro con
             backdrop-filter (el header). Promoverlo a su propia capa GPU lo destraba. */}
@@ -99,8 +135,8 @@ const DynIsland = ({ onExpand, onOpenLead, notifications = [], theme = "dark", b
         {/* Content */}
         <div style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
           <div style={{ position: "relative", flexShrink: 0 }}>
-            <div data-brand-motion="true" style={{ position: "absolute", inset: -2, borderRadius: "50%", background: "rgba(52,211,153,0.20)", animation: "pulse 2.6s ease-in-out infinite", willChange: "transform, opacity" }} />
-            <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#34D399", boxShadow: "0 0 6px rgba(52,211,153,0.85), 0 0 12px rgba(52,211,153,0.30)" }} />
+            <div data-brand-motion="true" style={{ position: "absolute", inset: -4, borderRadius: "50%", background: "rgba(52,211,153,0.20)", animation: "stratosIntelPulseDot 2.2s ease-in-out infinite", willChange: "transform, opacity, box-shadow" }} />
+            <div style={{ width: 6.5, height: 6.5, borderRadius: "50%", background: "#34D399", animation: "stratosIntelPulseDot 2.2s ease-in-out infinite", willChange: "transform, box-shadow" }} />
           </div>
           <span style={{
             fontSize: 12.5, fontWeight: 600, letterSpacing: "-0.025em", fontFamily: fontDisp,
