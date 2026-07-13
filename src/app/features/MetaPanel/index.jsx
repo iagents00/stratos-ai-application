@@ -7,11 +7,11 @@
  */
 import {
   Target, Plus, Check, Minus, GripVertical, TrendingUp, ChevronRight,
-  AlertCircle, Bell, X, Atom, CalendarDays, Clock,
+  AlertCircle, Bell, X, Atom, CalendarDays, Clock, ChevronLeft,
   FileText, Table, Presentation, ClipboardList, HardDrive, BookOpen,
   PenTool, Palette, Video, Globe, Cloud, ExternalLink, Trash2, FolderOpen,
 } from "lucide-react";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "../../../lib/supabase";
 import { font, fontDisp } from "../../../design-system/tokens";
 
@@ -161,6 +161,16 @@ const docHost = (url) => { try { return new URL(url).hostname.replace(/^www\./, 
 
 const pad2 = (n) => String(n).padStart(2, "0");
 const localYmd = (d) => `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+const AGENDA_CATEGORIES = [
+  { id: "personal", label: "Personal", accent: "#10B981" },
+  { id: "profesional", label: "Profesional", accent: "#3B82F6" },
+];
+const normalizeAgendaCategory = (value) => {
+  const v = String(value || "").trim().toLowerCase();
+  return v === "personal" ? "personal" : "profesional";
+};
+const agendaCategoryMeta = (value) =>
+  AGENDA_CATEGORIES.find(c => c.id === normalizeAgendaCategory(value)) || AGENDA_CATEGORIES[0];
 
 /* ── Component ─────────────────────────────────────────────────────────────── */
 export default function MetaPanel({
@@ -193,10 +203,13 @@ export default function MetaPanel({
   // Las derivadas de leads se siembran en App.jsx (efímeras, se regeneran). Las que el usuario
   // crea acá SÍ se guardan, con fecha/hora límite OBLIGATORIA (la usa el coach de Telegram).
   const [metaNewDate, setMetaNewDate] = useState("");
-  const actionDateInputRef = useRef(null);
-  const actionTimeInputRef = useRef(null);
+  const [metaNewCategory, setMetaNewCategory] = useState("profesional");
+  const [metaNewAssignee, setMetaNewAssignee] = useState("");
+  const [duePickerOpen, setDuePickerOpen] = useState(null);
+  const [calendarMonth, setCalendarMonth] = useState(() => new Date());
   const [teamMembers, setTeamMembers] = useState([]);   // responsables dinámicos (todos los activos del org, incl. nuevos)
   const _orgId = user?.organizationId;
+  const _isManager = ['super_admin','admin','ceo','director'].includes(user?.role);
   // Persistimos si hay un usuario REAL logueado. NO exigimos conocer el org en el front:
   // team_actions tiene DEFAULT organization_id = current_organization_id() (la DB lo pone desde el
   // JWT) y RLS lo valida, así que guarda bien aunque user.organizationId no esté cargado en la sesión.
@@ -209,10 +222,13 @@ export default function MetaPanel({
       .then(({ data, error }) => {
         if (cancelled || error || !data) { if (error) console.warn('[Stratos] team_actions load:', error.message); return; }
         const mapped = data.map(r => ({
-          id: r.id, text: r.text, lead: r.category || 'General', asesor: r.asesor_name || '',
+          id: r.id, text: r.text,
+          lead: r.category && !['personal','profesional'].includes(String(r.category).toLowerCase()) ? r.category : agendaCategoryMeta(r.category).label,
+          agendaCategory: normalizeAgendaCategory(r.agenda_scope || r.category),
+          asesor: r.asesor_name || '',
           date: r.due_at ? new Date(r.due_at).toLocaleString('es-MX',{ day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' }) : '',
           done: r.done, priority: r.priority || 'normal', assignee: r.asesor_name || '',
-          assigneeType: r.assignee_type || 'human', due_at: r.due_at, _persisted: true,
+          assigneeType: r.assignee_type || 'human', due_at: r.due_at, status: r.status || 'pending', _persisted: true,
         }));
         setMetaActions(p => { const ids = new Set(mapped.map(m => m.id)); return [...mapped, ...p.filter(a => !a._persisted && !ids.has(a.id))]; });
       });
@@ -235,26 +251,47 @@ export default function MetaPanel({
   const createAction = async () => {
     const txt = metaNewText.trim();
     if (!txt || !metaNewDate) return;               // fecha/hora OBLIGATORIA
+    if (_isManager && !metaNewAssignee) return;      // responsable OBLIGATORIO para que Telegram recuerde a la persona correcta
     const dueIso = new Date(metaNewDate).toISOString();
     const localDate = new Date(metaNewDate).toLocaleString('es-MX',{ day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' });
     // Un ASESOR que crea una acción de equipo la crea PARA SÍ MISMO → la auto-asignamos a él, así el
     // coach de Telegram lo notifica solo. Un admin crea para otros → queda sin asignar y la asigna
     // con "+ Responsable". (auth.js expone user.id = id de perfil, user.role y user.name.)
-    const _isAdmin = ['super_admin','admin','ceo','director'].includes(user?.role);
-    const _selfId = _isAdmin ? null : (user?.id || null);
-    const _selfName = _isAdmin ? null : (user?.name || null);
-    const base = { text: txt, lead: 'General', asesor: _selfName || 'Equipo', date: localDate, done: false, priority: 'normal', assignee: _selfName || '', assigneeType: 'human', due_at: dueIso };
+    const _selfId = _isManager ? null : (user?.id || null);
+    const _selfName = _isManager ? null : (user?.name || null);
+    const assigneeName = _isManager ? metaNewAssignee : _selfName;
+    const category = normalizeAgendaCategory(metaNewCategory);
+    const base = {
+      text: txt,
+      lead: agendaCategoryMeta(category).label,
+      agendaCategory: category,
+      asesor: assigneeName || 'Equipo',
+      date: localDate,
+      done: false,
+      priority: 'normal',
+      assignee: assigneeName || '',
+      assigneeType: 'human',
+      due_at: dueIso,
+      status: 'pending',
+    };
     setMetaNewText(''); setMetaNewDate('');
     if (_online) {
       const { data, error } = await supabase.from('team_actions')
-        .insert({ text: txt, due_at: dueIso, priority: 'normal', category: 'General', asesor_id: _selfId, asesor_name: _selfName })   // org lo pone el trigger team_actions_force_org
+        .insert({ text: txt, due_at: dueIso, priority: 'normal', category, asesor_id: _selfId, asesor_name: assigneeName })   // org lo pone el trigger team_actions_force_org
         .select('id').single();
-      if (!error && data) { setMetaActions(p => [{ ...base, id: data.id, _persisted: true }, ...p]); return; }
+      if (!error && data) {
+        if (assigneeName) {
+          supabase.rpc('fn_assign_team_action', { p_action_id: data.id, p_asesor_name: assigneeName })
+            .then(({ error }) => { if (error) console.warn('[Stratos] assign team_action:', error.message); });
+        }
+        setMetaActions(p => [{ ...base, id: data.id, _persisted: true }, ...p]);
+        return;
+      }
       console.warn('[Stratos] team_action insert:', error?.message);
     }
     setMetaActions(p => [{ ...base, id: Date.now() }, ...p]);   // fallback offline
   };
-  const persistDone = (a, done) => { if (a._persisted && _online) supabase.from('team_actions').update({ done, completed_at: done ? new Date().toISOString() : null }).eq('id', a.id).then(({ error }) => { if (error) console.warn('[Stratos] team_action done:', error.message); }); };
+  const persistDone = (a, done) => { if (a._persisted && _online) supabase.from('team_actions').update({ done, status: done ? 'done' : 'pending', completed_at: done ? new Date().toISOString() : null, last_response_at: done ? new Date().toISOString() : null }).eq('id', a.id).then(({ error }) => { if (error) console.warn('[Stratos] team_action done:', error.message); }); };
   const persistDelete = (a) => { if (a._persisted && _online) supabase.from('team_actions').delete().eq('id', a.id).then(({ error }) => { if (error) console.warn('[Stratos] team_action delete:', error.message); }); };
 
   // ── Documentos del equipo (links) — persisten vía setMetaDocs (App.jsx → meta_config.documents)
@@ -362,16 +399,30 @@ export default function MetaPanel({
   const ringSoft = _hex(T.accent, "26");
   const selectedDueDate = metaNewDate ? metaNewDate.slice(0, 10) : "";
   const selectedDueTime = metaNewDate ? metaNewDate.slice(11, 16) : "";
+  const dueTimeSlots = ["08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00"];
+  const dayNames = ["L", "M", "M", "J", "V", "S", "D"];
+  const monthLabel = calendarMonth.toLocaleDateString("es-MX", { month:"long", year:"numeric" }).replace(/^\w/, c => c.toUpperCase());
+  const calendarDays = (() => {
+    const y = calendarMonth.getFullYear();
+    const m = calendarMonth.getMonth();
+    const first = new Date(y, m, 1);
+    const startOffset = (first.getDay() + 6) % 7;
+    return Array.from({ length: 42 }, (_, i) => {
+      const d = new Date(y, m, 1 - startOffset + i);
+      return { date: d, value: localYmd(d), inMonth: d.getMonth() === m };
+    });
+  })();
   const addDays = (days) => {
     const next = new Date();
     next.setDate(next.getDate() + days);
     return localYmd(next);
   };
-  const openPicker = (ref) => {
-    const input = ref.current;
-    if (!input) return;
-    if (typeof input.showPicker === "function") input.showPicker();
-    else input.click();
+  const openDuePicker = (mode) => {
+    if (mode === "date" && selectedDueDate) setCalendarMonth(new Date(`${selectedDueDate}T12:00:00`));
+    setDuePickerOpen(prev => prev === mode ? null : mode);
+  };
+  const moveCalendarMonth = (delta) => {
+    setCalendarMonth(prev => new Date(prev.getFullYear(), prev.getMonth() + delta, 1));
   };
   const dateChipLabel = (dateValue) => {
     if (!dateValue) return "Fecha";
@@ -391,6 +442,10 @@ export default function MetaPanel({
   };
   const setActionDueTime = (timeValue) => {
     setMetaNewDate(timeValue ? `${selectedDueDate || localYmd(new Date())}T${timeValue}` : "");
+  };
+  const clearActionDue = () => {
+    setMetaNewDate("");
+    setDuePickerOpen(null);
   };
   const chevron  = `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='${isLight ? "%235C6B82" : "%238B99AE"}' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'><path d='M6 9l6 6 6-6'/></svg>")`;
   const panelBg  = isLight
@@ -443,10 +498,14 @@ export default function MetaPanel({
     .mp-select:hover{border-color:var(--mp-borderH)!important}
     .mp-input{transition:border-color .16s ease,box-shadow .16s ease,background-color .16s ease}
     .mp-input::placeholder{color:var(--mp-txt3);opacity:1}
-    .mp-picker-native{position:absolute;opacity:0;pointer-events:none;width:1px;height:1px;inset:auto auto 0 0}
     .mp-datechip{transition:transform .14s ease,background .16s ease,border-color .16s ease,box-shadow .16s ease,color .16s ease}
     .mp-datechip:hover{transform:translateY(-1px);border-color:var(--mp-borderH)!important;box-shadow:0 10px 24px rgba(15,23,42,.08)}
     .mp-datechip:active{transform:translateY(0) scale(.98)}
+    .mp-due-popover{animation:mpPop .16s cubic-bezier(.16,1,.3,1) both}
+    @keyframes mpPop{from{opacity:0;transform:translateY(8px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
+    .mp-calday,.mp-timebtn,.mp-iconbtn{transition:background .14s ease,border-color .14s ease,color .14s ease,transform .12s ease,box-shadow .14s ease}
+    .mp-calday:hover,.mp-timebtn:hover,.mp-iconbtn:hover{transform:translateY(-1px);border-color:var(--mp-accent)!important;box-shadow:0 10px 22px rgba(15,23,42,.10)}
+    .mp-calday:active,.mp-timebtn:active,.mp-iconbtn:active{transform:translateY(0) scale(.97)}
     .mp-quickchip{transition:background .14s ease,border-color .14s ease,color .14s ease,transform .14s ease}
     .mp-quickchip:hover{transform:translateY(-1px);border-color:var(--mp-accent)!important;color:var(--mp-accent)!important}
     .mp-ghost{transition:background .16s ease,border-color .16s ease,color .16s ease}
@@ -544,158 +603,342 @@ export default function MetaPanel({
                 );
               })()}
 
-              {/* Barra de agregar */}
+              {/* Composer premium */}
               <div style={{
                 display:"grid",
-                gridTemplateColumns: isMobile ? "1fr" : "minmax(360px,1fr) minmax(360px,500px) auto",
-                gap:14,
-                marginBottom:28,
-                alignItems:"start",
+                gridTemplateColumns: isMobile ? "1fr" : "minmax(420px, 1.08fr) minmax(380px, 0.78fr) 156px",
+                gap:12,
+                marginBottom:30,
+                alignItems:"stretch",
               }}>
-                <label style={{
-                  display:"flex", alignItems:"center", gap:12,
-                  padding:"0 18px", minHeight:74, borderRadius:22,
-                  background: isLight?"#FFFFFF":"rgba(255,255,255,0.045)",
-                  border:`1px solid ${metaNewText ? T.accent : T.border}`,
-                  boxShadow: metaNewText ? `0 0 0 3px ${ringSoft}` : (isLight?"0 16px 36px rgba(15,23,42,0.055)":"none"),
+                <div style={{
+                  minHeight:118,
+                  borderRadius:30,
+                  padding:14,
+                  background:isLight
+                    ? "linear-gradient(180deg, rgba(255,255,255,0.92), rgba(255,255,255,0.72))"
+                    : "linear-gradient(180deg, rgba(255,255,255,0.055), rgba(255,255,255,0.028))",
+                  border:`1px solid ${metaNewText ? _hex(T.accent,"70") : (isLight ? "rgba(15,23,42,0.08)" : "rgba(255,255,255,0.085)")}`,
+                  boxShadow: metaNewText
+                    ? `0 0 0 1px ${_hex(T.accent,"22")}, 0 18px 48px ${_hex(T.accent,"12")}`
+                    : (isLight ? "0 20px 55px rgba(15,23,42,0.075), inset 0 1px 0 rgba(255,255,255,0.75)" : "inset 0 1px 0 rgba(255,255,255,0.055)"),
+                  backdropFilter:"saturate(180%) blur(22px)",
+                  WebkitBackdropFilter:"saturate(180%) blur(22px)",
                 }}>
-                  <Plus size={18} color={metaNewText ? T.accent : T.txt3} strokeWidth={2.4} style={{ flexShrink:0 }} />
-                  <input
-                    className="mp-input"
-                    value={metaNewText}
-                    onChange={e => setMetaNewText(e.target.value)}
-                    onKeyDown={e => { if (e.key === "Enter") createAction(); }}
-                    placeholder="Nueva acción del equipo…"
-                    style={{
-                      width:"100%", height:"100%", minHeight:72, border:"none", background:"transparent",
-                      color:T.txt, fontSize:16, fontFamily:font, outline:"none", padding:0,
-                    }}
-                  />
-                </label>
+                  <label style={{ display:"flex", alignItems:"center", gap:13, minHeight:48 }}>
+                    <span style={{
+                      width:34, height:34, borderRadius:14, flexShrink:0,
+                      display:"flex", alignItems:"center", justifyContent:"center",
+                      background: metaNewText ? `${T.accent}18` : (isLight ? "rgba(15,23,42,0.045)" : "rgba(255,255,255,0.055)"),
+                      color: metaNewText ? T.accent : T.txt3,
+                    }}>
+                      <Plus size={18} strokeWidth={2.35} />
+                    </span>
+                    <input
+                      className="mp-input"
+                      value={metaNewText}
+                      onChange={e => setMetaNewText(e.target.value)}
+                      onKeyDown={e => { if (e.key === "Enter") createAction(); }}
+                      placeholder="Escribe la siguiente acción…"
+                      style={{
+                        width:"100%", border:"none", background:"transparent",
+                        color:T.txt, fontSize:isMobile ? 16 : 17, fontWeight:520,
+                        fontFamily:font, outline:"none", padding:"4px 0",
+                        letterSpacing:"-0.025em",
+                      }}
+                    />
+                  </label>
+                  <div style={{
+                    display:"flex", alignItems:"center", gap:8, flexWrap:"wrap",
+                    marginTop:12, paddingTop:12,
+                    borderTop:`1px solid ${isLight ? "rgba(15,23,42,0.06)" : "rgba(255,255,255,0.065)"}`,
+                  }}>
+                    <select
+                      className="mp-select"
+                      value={metaNewCategory}
+                      onChange={e => {
+                        const value = e.target.value;
+                        setMetaNewCategory(value);
+                        if (value === "personal" && metaNewAssignee === "Todos") setMetaNewAssignee("");
+                      }}
+                      title="Tipo de agenda"
+                      style={{
+                        height:36, borderRadius:999, padding:"0 30px 0 13px",
+                        background:isLight ? "rgba(248,250,252,0.92)" : "rgba(255,255,255,0.052)",
+                        border:`1px solid ${isLight ? "rgba(15,23,42,0.075)" : "rgba(255,255,255,0.085)"}`,
+                        color:T.txt2, fontSize:12.5, fontWeight:800, fontFamily:fontDisp,
+                        outline:"none", cursor:"pointer",
+                      }}
+                    >
+                      {AGENDA_CATEGORIES.map(c => <option key={c.id} value={c.id}>{c.label}</option>)}
+                    </select>
+                    <select
+                      className="mp-select"
+                      value={_isManager ? metaNewAssignee : (user?.name || "")}
+                      disabled={!_isManager}
+                      onChange={e => setMetaNewAssignee(e.target.value)}
+                      title="Responsable"
+                      style={{
+                        height:36, maxWidth:isMobile ? "100%" : 260,
+                        borderRadius:999, padding:"0 30px 0 13px",
+                        background:isLight ? "rgba(248,250,252,0.92)" : "rgba(255,255,255,0.052)",
+                        border:`1px solid ${(_isManager ? metaNewAssignee : user?.name) ? _hex(T.accent,"45") : (isLight ? "rgba(15,23,42,0.075)" : "rgba(255,255,255,0.085)")}`,
+                        color:(_isManager ? metaNewAssignee : user?.name) ? T.txt2 : T.txt3,
+                        fontSize:12.5, fontWeight:750, fontFamily:font,
+                        outline:"none", cursor:_isManager ? "pointer" : "default",
+                        opacity:_isManager ? 1 : 0.82,
+                      }}
+                    >
+                      <option value="">{_isManager ? "Responsable" : (user?.name || "Para mí")}</option>
+                      {metaNewCategory !== "personal" && <option value="Todos">Todos (equipo)</option>}
+                      {(teamMembers.length ? teamMembers : ["Oscar Gálvez","Alexia Santillán","Araceli Oneto","Ken Duke","Emmanuel Ortiz","Cecilia Mendoza"]).map(n => (
+                        <option key={n} value={n}>{n}</option>
+                      ))}
+                    </select>
+                    <span style={{ marginLeft:"auto", fontSize:11.5, fontFamily:font, color:T.txt3, whiteSpace:"nowrap" }}>
+                      Enter crea si está completo
+                    </span>
+                  </div>
+                </div>
                 <div style={{
                   position:"relative",
-                  minHeight:74,
-                  padding:8,
-                  borderRadius:22,
-                  background: isLight
-                    ? "linear-gradient(180deg, rgba(255,255,255,0.94), rgba(255,255,255,0.76))"
-                    : "rgba(255,255,255,0.045)",
-                  border:`1px solid ${metaNewDate ? T.accent : T.border}`,
-                  boxShadow: metaNewDate ? `0 0 0 3px ${ringSoft}` : (isLight?"0 16px 36px rgba(15,23,42,0.055)":"none"),
-                  backdropFilter:"saturate(180%) blur(18px)",
-                  WebkitBackdropFilter:"saturate(180%) blur(18px)",
+                  minHeight:118,
+                  padding:12,
+                  borderRadius:30,
+                  background:isLight
+                    ? "linear-gradient(180deg, rgba(255,255,255,0.90), rgba(255,255,255,0.68))"
+                    : "linear-gradient(180deg, rgba(255,255,255,0.055), rgba(255,255,255,0.026))",
+                  border:`1px solid ${metaNewDate ? _hex(T.accent,"58") : (isLight ? "rgba(15,23,42,0.08)" : "rgba(255,255,255,0.085)")}`,
+                  boxShadow: metaNewDate
+                    ? `0 0 0 1px ${_hex(T.accent,"18")}, 0 18px 48px ${_hex(T.accent,"10")}`
+                    : (isLight ? "0 20px 55px rgba(15,23,42,0.075), inset 0 1px 0 rgba(255,255,255,0.75)" : "inset 0 1px 0 rgba(255,255,255,0.055)"),
+                  backdropFilter:"saturate(180%) blur(22px)",
+                  WebkitBackdropFilter:"saturate(180%) blur(22px)",
                 }}>
-                  <input
-                    ref={actionDateInputRef}
-                    className="mp-picker-native"
-                    type="date"
-                    value={selectedDueDate}
-                    onChange={e => setActionDueDate(e.target.value)}
-                    title="Fecha límite"
-                    tabIndex={-1}
-                  />
-                  <input
-                    ref={actionTimeInputRef}
-                    className="mp-picker-native"
-                    type="time"
-                    value={selectedDueTime}
-                    onChange={e => setActionDueTime(e.target.value)}
-                    title="Hora límite"
-                    tabIndex={-1}
-                  />
-                  <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8 }}>
+                  <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
                     <button
                       type="button"
                       className="mp-datechip"
-                      onClick={() => openPicker(actionDateInputRef)}
+                      onClick={() => openDuePicker("date")}
                       style={{
-                        height:46, borderRadius:16, border:`1px solid ${selectedDueDate ? `${T.accent}66` : T.border}`,
-                        background: selectedDueDate ? `${T.accent}12` : (isLight?"rgba(248,250,252,0.86)":"rgba(255,255,255,0.045)"),
+                        height:50, borderRadius:18, border:`1px solid ${duePickerOpen === "date" || selectedDueDate ? _hex(T.accent,"58") : (isLight ? "rgba(15,23,42,0.075)" : "rgba(255,255,255,0.085)")}`,
+                        background: duePickerOpen === "date" || selectedDueDate ? `${T.accent}11` : (isLight?"rgba(248,250,252,0.82)":"rgba(255,255,255,0.045)"),
                         color: selectedDueDate ? T.txt : T.txt2, cursor:"pointer", fontFamily:fontDisp,
                         display:"flex", alignItems:"center", justifyContent:"center", gap:9,
-                        fontSize:15, fontWeight:750, letterSpacing:"-0.02em",
+                        fontSize:14.5, fontWeight:800, letterSpacing:"-0.025em",
                       }}
                     >
-                      <CalendarDays size={17} color={selectedDueDate ? T.accent : T.txt3} strokeWidth={2.25} />
+                      <CalendarDays size={17} color={duePickerOpen === "date" || selectedDueDate ? T.accent : T.txt3} strokeWidth={2.25} />
                       {dateChipLabel(selectedDueDate)}
                     </button>
                     <button
                       type="button"
                       className="mp-datechip"
-                      onClick={() => openPicker(actionTimeInputRef)}
+                      onClick={() => openDuePicker("time")}
                       style={{
-                        height:46, borderRadius:16, border:`1px solid ${selectedDueTime ? `${T.accent}66` : T.border}`,
-                        background: selectedDueTime ? `${T.accent}12` : (isLight?"rgba(248,250,252,0.86)":"rgba(255,255,255,0.045)"),
+                        height:50, borderRadius:18, border:`1px solid ${duePickerOpen === "time" || selectedDueTime ? _hex(T.accent,"58") : (isLight ? "rgba(15,23,42,0.075)" : "rgba(255,255,255,0.085)")}`,
+                        background: duePickerOpen === "time" || selectedDueTime ? `${T.accent}11` : (isLight?"rgba(248,250,252,0.82)":"rgba(255,255,255,0.045)"),
                         color: selectedDueTime ? T.txt : T.txt2, cursor:"pointer", fontFamily:fontDisp,
                         display:"flex", alignItems:"center", justifyContent:"center", gap:9,
-                        fontSize:15, fontWeight:750, letterSpacing:"-0.02em",
+                        fontSize:14.5, fontWeight:800, letterSpacing:"-0.025em",
                       }}
                     >
-                      <Clock size={17} color={selectedDueTime ? T.accent : T.txt3} strokeWidth={2.25} />
+                      <Clock size={17} color={duePickerOpen === "time" || selectedDueTime ? T.accent : T.txt3} strokeWidth={2.25} />
                       {timeChipLabel(selectedDueTime)}
                     </button>
                   </div>
                   <div style={{
-                    display:"flex", alignItems:"center", gap:6, flexWrap:"wrap",
-                    padding:"8px 3px 0",
+                    display:"flex", alignItems:"center", justifyContent:"space-between", gap:8, flexWrap:"wrap",
+                    padding:"12px 4px 0",
                   }}>
-                    {[
-                      ["Hoy", addDays(0)],
-                      ["Mañana", addDays(1)],
-                      ["+2 días", addDays(2)],
-                    ].map(([label, value]) => (
-                      <button
-                        key={label}
-                        type="button"
-                        className="mp-quickchip"
-                        onClick={() => setActionDueDate(value)}
-                        style={{
-                          border:`1px solid ${selectedDueDate === value ? `${T.accent}66` : "transparent"}`,
-                          background:selectedDueDate === value ? `${T.accent}12` : "transparent",
-                          color:selectedDueDate === value ? T.accent : T.txt3,
-                          borderRadius:99, padding:"5px 9px", fontSize:11.5, fontWeight:750,
-                          fontFamily:fontDisp, cursor:"pointer", letterSpacing:"-0.01em",
-                        }}
-                      >
-                        {label}
-                      </button>
-                    ))}
-                    <span style={{ width:1, height:16, background:T.border, margin:"0 2px" }} />
-                    {["09:00", "11:00", "16:00"].map((timeValue) => (
-                      <button
-                        key={timeValue}
-                        type="button"
-                        className="mp-quickchip"
-                        onClick={() => setActionDueTime(timeValue)}
-                        style={{
-                          border:`1px solid ${selectedDueTime === timeValue ? `${T.accent}66` : "transparent"}`,
-                          background:selectedDueTime === timeValue ? `${T.accent}12` : "transparent",
-                          color:selectedDueTime === timeValue ? T.accent : T.txt3,
-                          borderRadius:99, padding:"5px 9px", fontSize:11.5, fontWeight:750,
-                          fontFamily:fontDisp, cursor:"pointer", letterSpacing:"-0.01em",
-                        }}
-                      >
-                        {timeValue}
-                      </button>
-                    ))}
+                    <div style={{ display:"flex", alignItems:"center", gap:6, flexWrap:"wrap" }}>
+                      {[
+                        ["Hoy", addDays(0)],
+                        ["Mañana", addDays(1)],
+                        ["+2 días", addDays(2)],
+                      ].map(([label, value]) => (
+                        <button
+                          key={label}
+                          type="button"
+                          className="mp-quickchip"
+                          onClick={() => { setActionDueDate(value); setCalendarMonth(new Date(`${value}T12:00:00`)); }}
+                          style={{
+                            border:`1px solid ${selectedDueDate === value ? _hex(T.accent,"58") : "transparent"}`,
+                            background:selectedDueDate === value ? `${T.accent}12` : "transparent",
+                            color:selectedDueDate === value ? T.accent : T.txt3,
+                            borderRadius:99, padding:"6px 10px", fontSize:11.5, fontWeight:800,
+                            fontFamily:fontDisp, cursor:"pointer", letterSpacing:"-0.01em",
+                          }}
+                        >
+                          {label}
+                        </button>
+                      ))}
+                    </div>
+                    <div style={{ display:"flex", alignItems:"center", gap:6, flexWrap:"wrap" }}>
+                      {["09:00", "11:00", "16:00"].map((timeValue) => (
+                        <button
+                          key={timeValue}
+                          type="button"
+                          className="mp-quickchip"
+                          onClick={() => setActionDueTime(timeValue)}
+                          style={{
+                            border:`1px solid ${selectedDueTime === timeValue ? _hex(T.accent,"58") : "transparent"}`,
+                            background:selectedDueTime === timeValue ? `${T.accent}12` : "transparent",
+                            color:selectedDueTime === timeValue ? T.accent : T.txt3,
+                            borderRadius:99, padding:"6px 10px", fontSize:11.5, fontWeight:800,
+                            fontFamily:fontDisp, cursor:"pointer", letterSpacing:"-0.01em",
+                          }}
+                        >
+                          {timeValue}
+                        </button>
+                      ))}
+                    </div>
                   </div>
+                  {duePickerOpen && (
+                    <div
+                      className="mp-due-popover"
+                      style={{
+                        position:isMobile ? "static" : "absolute",
+                        top:isMobile ? "auto" : "calc(100% + 12px)",
+                        left:isMobile ? "auto" : "auto",
+                        right:isMobile ? "auto" : 0,
+                        width:isMobile ? "100%" : 344,
+                        zIndex:40,
+                        marginTop:isMobile ? 10 : 0,
+                        padding:12,
+                        borderRadius:24,
+                        background:isLight ? "rgba(255,255,255,0.96)" : "rgba(13,18,29,0.98)",
+                        border:`1px solid ${isLight ? "rgba(15,23,42,0.10)" : "rgba(255,255,255,0.12)"}`,
+                        boxShadow:isLight ? "0 22px 60px rgba(15,23,42,0.16), 0 1px 2px rgba(15,23,42,0.08)" : "0 24px 70px rgba(0,0,0,0.48), inset 0 1px 0 rgba(255,255,255,0.04)",
+                        backdropFilter:"saturate(180%) blur(22px)",
+                        WebkitBackdropFilter:"saturate(180%) blur(22px)",
+                      }}
+                    >
+                      {duePickerOpen === "date" ? (
+                        <>
+                          <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", gap:10, marginBottom:12 }}>
+                            <button
+                              type="button"
+                              className="mp-iconbtn"
+                              onClick={() => moveCalendarMonth(-1)}
+                              title="Mes anterior"
+                              style={{ width:34, height:34, borderRadius:12, border:`1px solid ${T.border}`, background:isLight?"rgba(15,23,42,0.035)":"rgba(255,255,255,0.055)", color:T.txt2, display:"flex", alignItems:"center", justifyContent:"center", cursor:"pointer" }}
+                            >
+                              <ChevronLeft size={16} />
+                            </button>
+                            <div style={{ textAlign:"center", minWidth:0 }}>
+                              <p style={{ margin:0, fontSize:14.5, fontWeight:800, fontFamily:fontDisp, color:T.txt, letterSpacing:"-0.02em" }}>{monthLabel}</p>
+                              <p style={{ margin:"2px 0 0", fontSize:10.5, fontFamily:font, color:T.txt3 }}>Selecciona el día del pendiente</p>
+                            </div>
+                            <button
+                              type="button"
+                              className="mp-iconbtn"
+                              onClick={() => moveCalendarMonth(1)}
+                              title="Mes siguiente"
+                              style={{ width:34, height:34, borderRadius:12, border:`1px solid ${T.border}`, background:isLight?"rgba(15,23,42,0.035)":"rgba(255,255,255,0.055)", color:T.txt2, display:"flex", alignItems:"center", justifyContent:"center", cursor:"pointer" }}
+                            >
+                              <ChevronRight size={16} />
+                            </button>
+                          </div>
+                          <div style={{ display:"grid", gridTemplateColumns:"repeat(7,1fr)", gap:5, marginBottom:6 }}>
+                            {dayNames.map((d, i) => (
+                              <div key={`${d}-${i}`} style={{ height:22, display:"flex", alignItems:"center", justifyContent:"center", fontSize:10.5, fontWeight:800, fontFamily:fontDisp, color:T.txt3 }}>
+                                {d}
+                              </div>
+                            ))}
+                          </div>
+                          <div style={{ display:"grid", gridTemplateColumns:"repeat(7,1fr)", gap:5 }}>
+                            {calendarDays.map(({ date, value, inMonth }) => {
+                              const isSelected = selectedDueDate === value;
+                              const isToday = value === localYmd(new Date());
+                              return (
+                                <button
+                                  key={value}
+                                  type="button"
+                                  className="mp-calday"
+                                  onClick={() => { setActionDueDate(value); setDuePickerOpen("time"); }}
+                                  style={{
+                                    height:34,
+                                    borderRadius:11,
+                                    border:`1px solid ${isSelected ? `${T.accent}88` : isToday ? `${T.accent}35` : "transparent"}`,
+                                    background:isSelected ? `linear-gradient(135deg, ${T.accent}, #0D9A76)` : isToday ? `${T.accent}10` : "transparent",
+                                    color:isSelected ? "#041016" : inMonth ? T.txt : T.txt3,
+                                    opacity:inMonth ? 1 : 0.38,
+                                    fontSize:13,
+                                    fontWeight:isSelected || isToday ? 800 : 650,
+                                    fontFamily:fontDisp,
+                                    cursor:"pointer",
+                                  }}
+                                >
+                                  {date.getDate()}
+                                </button>
+                              );
+                            })}
+                          </div>
+                          <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", gap:8, marginTop:12, paddingTop:10, borderTop:`1px solid ${T.border}` }}>
+                            <button type="button" onClick={() => { const today = localYmd(new Date()); setCalendarMonth(new Date(`${today}T12:00:00`)); setActionDueDate(today); setDuePickerOpen("time"); }} className="mp-quickchip" style={{ border:`1px solid ${T.border}`, background:isLight?"rgba(15,23,42,0.035)":"rgba(255,255,255,0.045)", color:T.txt2, borderRadius:99, padding:"7px 11px", fontSize:11.5, fontWeight:800, fontFamily:fontDisp, cursor:"pointer" }}>Hoy</button>
+                            <button type="button" onClick={clearActionDue} className="mp-quickchip" style={{ border:"1px solid transparent", background:"transparent", color:T.txt3, borderRadius:99, padding:"7px 11px", fontSize:11.5, fontWeight:750, fontFamily:fontDisp, cursor:"pointer" }}>Limpiar</button>
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", gap:12, marginBottom:12 }}>
+                            <div>
+                              <p style={{ margin:0, fontSize:14.5, fontWeight:800, fontFamily:fontDisp, color:T.txt, letterSpacing:"-0.02em" }}>Horario</p>
+                              <p style={{ margin:"2px 0 0", fontSize:10.5, fontFamily:font, color:T.txt3 }}>{dateChipLabel(selectedDueDate)} · recordatorio automático</p>
+                            </div>
+                            <button type="button" onClick={() => setDuePickerOpen("date")} className="mp-quickchip" style={{ border:`1px solid ${T.border}`, background:isLight?"rgba(15,23,42,0.035)":"rgba(255,255,255,0.045)", color:T.txt2, borderRadius:99, padding:"7px 11px", fontSize:11.5, fontWeight:800, fontFamily:fontDisp, cursor:"pointer" }}>Cambiar fecha</button>
+                          </div>
+                          <div style={{ display:"grid", gridTemplateColumns:isMobile ? "repeat(3,1fr)" : "repeat(4,1fr)", gap:8 }}>
+                            {dueTimeSlots.map(timeValue => {
+                              const isSelected = selectedDueTime === timeValue;
+                              return (
+                                <button
+                                  key={timeValue}
+                                  type="button"
+                                  className="mp-timebtn"
+                                  onClick={() => { setActionDueTime(timeValue); setDuePickerOpen(null); }}
+                                  style={{
+                                    minHeight:40,
+                                    borderRadius:13,
+                                    border:`1px solid ${isSelected ? `${T.accent}88` : T.border}`,
+                                    background:isSelected ? `linear-gradient(135deg, ${T.accent}, #0D9A76)` : isLight ? "rgba(15,23,42,0.035)" : "rgba(255,255,255,0.045)",
+                                    color:isSelected ? "#041016" : T.txt,
+                                    fontSize:13,
+                                    fontWeight:800,
+                                    fontFamily:fontDisp,
+                                    cursor:"pointer",
+                                  }}
+                                >
+                                  {timeValue}
+                                </button>
+                              );
+                            })}
+                          </div>
+                          <div style={{ display:"flex", justifyContent:"flex-end", marginTop:12, paddingTop:10, borderTop:`1px solid ${T.border}` }}>
+                            <button type="button" onClick={clearActionDue} className="mp-quickchip" style={{ border:"1px solid transparent", background:"transparent", color:T.txt3, borderRadius:99, padding:"7px 11px", fontSize:11.5, fontWeight:750, fontFamily:fontDisp, cursor:"pointer" }}>Limpiar fecha y hora</button>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  )}
                 </div>
-                {(() => { const canAdd = !!(metaNewText.trim() && metaNewDate); return (
+                {(() => { const canAdd = !!(metaNewText.trim() && metaNewDate && (!_isManager || metaNewAssignee)); return (
                 <button
                   onClick={createAction}
                   style={{
-                    display:"flex", alignItems:"center", justifyContent:"center", gap:8,
-                    padding:"0 28px", borderRadius:20, border:"none",
+                    display:"flex", alignItems:"center", justifyContent:"center", gap:9,
+                    padding:"0 22px", borderRadius:30, border:"none",
                     background: canAdd
                       ? `linear-gradient(135deg,#0D9A76,${T.accent})`
-                      : (isLight?"rgba(0,0,0,0.05)":"rgba(255,255,255,0.06)"),
+                      : (isLight?"rgba(15,23,42,0.055)":"rgba(255,255,255,0.055)"),
                     color: canAdd ? "#041016" : T.txt3,
-                    fontSize:15, fontWeight:700, fontFamily:fontDisp,
+                    fontSize:15.5, fontWeight:800, fontFamily:fontDisp,
                     cursor: canAdd ? "pointer" : "default",
                     flexShrink:0, letterSpacing:"-0.02em",
-                    boxShadow: canAdd ? `0 4px 16px ${_hex(T.accent,'40') }` : "none",
+                    boxShadow: canAdd ? `0 18px 42px ${_hex(T.accent,'32')}, inset 0 1px 0 rgba(255,255,255,0.24)` : (isLight ? "inset 0 1px 0 rgba(255,255,255,0.55)" : "inset 0 1px 0 rgba(255,255,255,0.05)"),
                     transition:"background 0.18s, color 0.18s, box-shadow 0.18s, transform 0.12s",
-                    minHeight:74,
+                    minHeight:118,
                   }}
                   onMouseDown={e => { if(canAdd) e.currentTarget.style.transform="scale(0.97)"; }}
                   onMouseUp={e => { e.currentTarget.style.transform="scale(1)"; }}
@@ -717,18 +960,43 @@ export default function MetaPanel({
                   <p style={{ margin:0, fontSize:12.5, color:T.txt3, fontFamily:font }}>Sin acciones pendientes — agrega la primera arriba.</p>
                 </div>
               )}
-              {metaActions.filter(a=>!a.done).map(a => {
+              {metaActions.filter(a=>!a.done).slice().sort((a, b) => {
+                const order = { personal: 0, profesional: 1 };
+                const ca = normalizeAgendaCategory(a.agendaCategory || a.category || a.lead);
+                const cb = normalizeAgendaCategory(b.agendaCategory || b.category || b.lead);
+                return (order[ca] ?? 9) - (order[cb] ?? 9);
+              }).map((a, index, arr) => {
                 const isUrgent = a.priority==="urgente" || a.date?.toLowerCase().includes("hoy");
                 const isHigh   = !isUrgent && (a.priority==="alto" || a.date?.toLowerCase().includes("mañana") || a.date?.toLowerCase().includes("semana"));
                 const prioColor = isUrgent ? "#EF4444" : isHigh ? "#F59E0B" : T.txt2;
                 const prioNext = a.priority==="normal" ? "alto" : a.priority==="alto" ? "urgente" : "normal";
                 const prioDot  = isUrgent ? "#EF4444" : isHigh ? "#F59E0B" : (isLight?"#94A3B8":"#64748B");
                 const prioLabel = a.priority==="urgente" ? "Urgente" : a.priority==="alto" ? "Alto" : "Normal";
+                const categoryMeta = agendaCategoryMeta(a.agendaCategory || a.category || a.lead);
+                const previousCategory = index > 0 ? normalizeAgendaCategory(arr[index - 1].agendaCategory || arr[index - 1].category || arr[index - 1].lead) : null;
+                const showCategoryHeader = index === 0 || previousCategory !== categoryMeta.id;
+                const countInCategory = arr.filter(x => normalizeAgendaCategory(x.agendaCategory || x.category || x.lead) === categoryMeta.id).length;
+                const categoryChip = (
+                  <span style={{
+                    display:"inline-flex", alignItems:"center", gap:6,
+                    padding:"4px 9px", borderRadius:99,
+                    background:`${categoryMeta.accent}12`,
+                    border:`1px solid ${categoryMeta.accent}28`,
+                    color:categoryMeta.accent,
+                    fontSize:11,
+                    fontWeight:750,
+                    fontFamily:fontDisp,
+                    letterSpacing:"-0.01em",
+                  }}>
+                    <span style={{ width:6, height:6, borderRadius:"50%", background:categoryMeta.accent }} />
+                    {categoryMeta.label}
+                  </span>
+                );
                 // ── Elementos compartidos (misma lógica, se acomodan distinto en PC vs iPhone) ──
                 const checkBtn = (
                   <button
                     className="mp-check"
-                    onClick={() => { persistDone(a, true); setMetaActions(p => p.map(x => x.id===a.id ? {...x,done:true} : x)); }}
+                    onClick={() => { persistDone(a, true); setMetaActions(p => p.map(x => x.id===a.id ? {...x,done:true,status:'done'} : x)); }}
                     title="Marcar como completada"
                     style={{ width:24, height:24, borderRadius:"50%", border:`1.5px solid ${isLight?"rgba(15,23,42,0.26)":"rgba(255,255,255,0.30)"}`, background:"transparent", cursor:"pointer", flexShrink:0 }}
                   />
@@ -739,6 +1007,7 @@ export default function MetaPanel({
                 );
                 const metaEl = (
                   <div style={{ display:"flex", alignItems:"center", gap:7, flexWrap:"wrap" }}>
+                    {categoryChip}
                     <E val={a.lead}   onSave={v => setMetaActions(p => p.map(x => x.id===a.id?{...x,lead:v}:x))}   style={{ fontSize:12.5, color:T.txt3, fontFamily:font }} />
                     <span style={{ fontSize:10, color:T.txt3, opacity:0.4 }}>·</span>
                     <E val={a.asesor} onSave={v => setMetaActions(p => p.map(x => x.id===a.id?{...x,asesor:v}:x))} style={{ fontSize:12.5, color:T.txt3, fontFamily:font }} />
@@ -836,8 +1105,23 @@ export default function MetaPanel({
                 );
 
                 return (
+                  <div key={a.id}>
+                    {showCategoryHeader && (
+                      <div style={{
+                        display:"flex", alignItems:"center", gap:10,
+                        margin:index === 0 ? "2px 0 12px" : "26px 0 12px",
+                      }}>
+                        <div style={{ width:9, height:9, borderRadius:"50%", background:categoryMeta.accent, boxShadow:`0 0 0 5px ${categoryMeta.accent}12` }} />
+                        <h4 style={{ margin:0, fontSize:15, fontWeight:800, fontFamily:fontDisp, color:T.txt, letterSpacing:"-0.025em" }}>
+                          Agenda {categoryMeta.label}
+                        </h4>
+                        <span style={{ fontSize:11.5, fontFamily:font, color:T.txt3 }}>
+                          {countInCategory} pendiente{countInCategory !== 1 ? "s" : ""}
+                        </span>
+                        <div style={{ flex:1, height:1, background:T.border }} />
+                      </div>
+                    )}
                   <div
-                    key={a.id}
                     className="mp-row"
                     draggable={!isMobile}
                     onDragStart={e => { e.dataTransfer.setData("maDragId", String(a.id)); e.currentTarget.style.opacity="0.35"; }}
@@ -846,13 +1130,14 @@ export default function MetaPanel({
                     onDragLeave={e => { e.currentTarget.style.outline="none"; }}
                     onDrop={e => {
                       e.preventDefault(); e.currentTarget.style.outline="none";
-                      const fromId = Number(e.dataTransfer.getData("maDragId"));
-                      const toId = a.id;
+                      const fromId = e.dataTransfer.getData("maDragId");
+                      const toId = String(a.id);
                       if (fromId === toId) return;
                       setMetaActions(p => {
                         const arr=[...p];
-                        const fi=arr.findIndex(x=>x.id===fromId);
-                        const ti=arr.findIndex(x=>x.id===toId);
+                        const fi=arr.findIndex(x=>String(x.id)===fromId);
+                        const ti=arr.findIndex(x=>String(x.id)===toId);
+                        if (fi < 0 || ti < 0) return p;
                         const [item]=arr.splice(fi,1);
                         arr.splice(ti,0,item);
                         return arr;
@@ -917,6 +1202,7 @@ export default function MetaPanel({
                       </>
                     )}
                   </div>
+                  </div>
                 );
               })}
 
@@ -943,7 +1229,7 @@ export default function MetaPanel({
                       opacity:0.65,
                     }}>
                       <button
-                        onClick={() => { persistDone(a, false); setMetaActions(p => p.map(x => x.id===a.id ? {...x,done:false} : x)); }}
+                        onClick={() => { persistDone(a, false); setMetaActions(p => p.map(x => x.id===a.id ? {...x,done:false,status:'pending'} : x)); }}
                         title="Marcar como pendiente"
                         style={{ width:20, height:20, borderRadius:"50%", border:`1.5px solid ${T.accent}`, background:T.accent, cursor:"pointer", flexShrink:0, marginTop:1, display:"flex", alignItems:"center", justifyContent:"center" }}>
                         <Check size={11} strokeWidth={3} color="#041016" />
