@@ -60,11 +60,9 @@ export const StratosAtomHex = ({ size = 22, color = "#FFFFFF", edge = "#6EE7C2",
             attributeName="transform"
             attributeType="XML"
             type="rotate"
-            values="0 16 16; 42 16 16; 118 16 16; 202 16 16; 292 16 16; 360 16 16"
-            keyTimes="0; .2; .44; .68; .88; 1"
-            calcMode="spline"
-            keySplines=".42 0 .18 1; .2 .72 .2 1; .42 0 .2 1; .22 .74 .2 1; .34 0 .16 1"
-            dur="14s"
+            from="0 16 16"
+            to="360 16 16"
+            dur="12s"
             repeatCount="indefinite"
           />
         )}
