@@ -80,9 +80,9 @@
  * INFINITAS (mismo criterio que la capa 1 móvil): pausamos solo esas; las
  * one-shot terminan en <1s y no repintan en segundo plano.
  * [guard:HIDDEN-PAUSE-SOLO-INFINITE] */
-html[data-hidden] [style*="infinite"],
-html[data-hidden] [style*="infinite"]::before,
-html[data-hidden] [style*="infinite"]::after {
+html[data-hidden] [style*="infinite"]:not([data-brand-motion="true"]),
+html[data-hidden] [style*="infinite"]:not([data-brand-motion="true"])::before,
+html[data-hidden] [style*="infinite"]:not([data-brand-motion="true"])::after {
   animation-play-state: paused !important;
 }
 
