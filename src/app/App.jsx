@@ -1391,7 +1391,6 @@ export default function App() {
             filter: isLight ? "drop-shadow(0 0 5px rgba(13,154,118,0.45)) drop-shadow(0 0 12px rgba(52,211,153,0.18))" : "drop-shadow(0 0 4px rgba(255,255,255,0.40)) drop-shadow(0 0 10px rgba(255,255,255,0.10))",
           }}>
             <StratosAtomHex size={30} color={isLight ? "#0D9A76" : "#FFFFFF"} edge={isLight ? "#34D399" : "#C8DED8"} />
-            <span style={{ position:"absolute", top:3, right:4, width:3.5, height:3.5, borderRadius:"50%", background:isLight ? "#10B981" : "#6EE7C2", boxShadow:isLight ? "0 0 6px rgba(16,185,129,0.72)" : "0 0 7px rgba(110,231,194,0.72)" }} />
           </div>
           <div style={{ display:"flex", alignItems:"center", gap:4 }}>
             <div style={{ width:4, height:4, borderRadius:"50%", background:"#34D399", boxShadow:"0 0 5px rgba(52,211,153,0.80), 0 0 10px rgba(52,211,153,0.30)", animation:"pulse 2.2s ease-in-out infinite", willChange:"transform, opacity" }} />
