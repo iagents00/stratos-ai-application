@@ -7,34 +7,44 @@ body {
   text-rendering: optimizeLegibility;
 }
 
-/* THEME SWITCH — una sola capa barata para CPU/GPU.
-   El tema debajo cambia de forma atómica; esta capa conserva el color anterior
-   y sale con opacity, propiedad que el compositor puede mover sin repintar el
-   árbol completo. Funciona igual aunque fuentes/datos sigan llegando por red. */
-html.theme-cover-dark::after,
-html.theme-cover-light::after {
+/* THEME SWITCH — cortina de carga de costo constante.
+   Se pinta antes del re-render y permanece hasta que el tema nuevo está listo;
+   así nunca se expone el árbol a medio recolorear en equipos saturados. */
+html.theme-loading-active::before {
   content: "";
   position: fixed;
   inset: 0;
   z-index: 2147483647;
   pointer-events: none;
-  opacity: 0;
   background: #030810;
-  transition: opacity 180ms cubic-bezier(.22, .61, .36, 1);
-  will-change: opacity;
   contain: strict;
 }
 
-html.theme-cover-light::after { background: #f7f8fa; }
+html.theme-loading-light::before { background: #f7f8fa; }
 
-html.theme-cover-active::after {
-  opacity: 1;
-  transition: none;
+html.theme-loading-active::after {
+  content: "Cambiando tema";
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  z-index: 2147483647;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  padding-top: 42px;
+  color: rgba(255, 255, 255, 0.72);
+  font: 600 11px/1.2 "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  background: radial-gradient(circle at 50% 14px, transparent 9px, currentColor 10px 11px, transparent 12px);
+  animation: themeLoadingPulse 700ms ease-in-out 3 alternate;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  html.theme-cover-dark::after,
-  html.theme-cover-light::after { transition-duration: 0ms; }
+html.theme-loading-light::after { color: rgba(15, 23, 42, 0.62); }
+
+@keyframes themeLoadingPulse {
+  from { opacity: 0.42; }
+  to { opacity: 1; }
 }
 
 /* ── FORCE FONT INHERITANCE — form controls por defecto usan fuente del sistema
