@@ -344,6 +344,7 @@ export default function App() {
   const [theme, setThemeState] = useState(() => {
     try { return localStorage.getItem("stratos_crm_theme") || "dark"; } catch { return "dark"; }
   });
+  const themeSwitchingRef = useRef(false);
   // data-theme en <html>: mobile-perf.css lo usa para que el fondo forzado
   // del MODO SEGURO (data-lowfx) respete el tema claro. index.html lo setea
   // al boot; acá lo mantenemos en sync cuando el usuario alterna el tema.
@@ -417,29 +418,30 @@ export default function App() {
     };
   }, []);
   const setTheme = useCallback((next) => {
+    if (themeSwitchingRef.current) return;
+    themeSwitchingRef.current = true;
     try { localStorage.setItem("stratos_crm_theme", next); } catch { /* storage puede estar bloqueado */ }
     const root = document.documentElement;
-    const previous = root.getAttribute("data-theme") === "light" ? "light" : "dark";
 
-    // Una sola capa opaca conserva visualmente el tema anterior mientras React
-    // aplica el nuevo de forma atómica. Después esa capa se desvanece usando
-    // únicamente opacity (compositor): no recalculamos ni animamos miles de
-    // fondos, bordes, sombras y blurs, y tampoco capturamos un bitmap gigante.
-    root.classList.remove("theme-cover-active", "theme-cover-dark", "theme-cover-light");
-    root.classList.add(`theme-cover-${previous}`, "theme-cover-active");
-    // Materializar la capa antes del commit. Esta lectura intencional evita que
-    // el navegador fusione ambos estados cuando el equipo está bajo carga.
-    void root.offsetWidth;
+    // Primero pintamos una pantalla de espera independiente del árbol React.
+    // Dos frames garantizan que aparezca ANTES del re-render pesado; si la CPU
+    // se satura, el usuario ve carga en vez de una interfaz a medio recolorear.
+    root.classList.remove("theme-loading-light", "theme-loading-dark");
+    root.classList.add(`theme-loading-${next}`, "theme-loading-active");
+    const shownAt = performance.now();
 
-    flushSync(() => setThemeState(next));
-    root.setAttribute("data-theme", next);
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      flushSync(() => setThemeState(next));
+      root.setAttribute("data-theme", next);
 
-    requestAnimationFrame(() => {
-      root.classList.remove("theme-cover-active");
-      window.setTimeout(() => {
-        root.classList.remove("theme-cover-dark", "theme-cover-light");
-      }, 240);
-    });
+      // Evita un flash en equipos rápidos. En uno lento la cortina permanece
+      // naturalmente hasta que el commit completo termina detrás de ella.
+      const remaining = Math.max(0, 220 - (performance.now() - shownAt));
+      window.setTimeout(() => requestAnimationFrame(() => {
+        root.classList.remove("theme-loading-active", "theme-loading-light", "theme-loading-dark");
+        themeSwitchingRef.current = false;
+      }), remaining);
+    }));
   }, []);
   const isLight = theme === "light";
   const T = isLight ? LP : P;
