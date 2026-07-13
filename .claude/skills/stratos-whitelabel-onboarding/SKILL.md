@@ -141,6 +141,11 @@ intercepta **LECTURA**; si nada matchea, delega a `_inner` → comportamiento or
 - Revert: en `_orig` volver la llamada final `bot_smart_queries`→`bot_nlu_dispatch_gvintell_inner` (bloque comentado en `095`).
 - ⚠️ Pendiente aparte (no de estos fixes): `"ficha de <cliente>"` a veces cae al catálogo (capa de catálogo).
 
+### Documentos de "Mi Espacio" + más intenciones (Fase 2/2b, migración `096`)
+- **Documentos (Mi Espacio):** `bot_documentos_espacio` lee `organizations.meta_config->'documents'` (array `{id,url,title,addedBy,addedAt}`, a nivel de org/equipo). Guard `_bot_is_docs_query` en el ENTRY (`bot_nlu_dispatch_gvintell`) **arriba del catálogo**. Convención: **"mi espacio"** / "mis documentos" / nombrar proveedor (notion/excel/sheet/figma/sop) = DOCUMENTOS; propiedades/proyectos/zona/precio/"drive de \<proyecto\>" = CATÁLOGO. Resuelve por título + tipo (`_bot_doc_prov`), envía `[Abrir](url)`, re-pregunta si hay varios. El detector NO roba notas/recordatorios/acciones.
+- **Nuevas intenciones en `bot_smart_queries`:** `bot_kpis_asesor` ("kpis de \<asesor\>"), `bot_proxima_accion_cliente` ("próxima acción de \<cliente\>", READ), `bot_ficha_cliente` ("presupuesto/teléfono/etapa/datos de \<cliente\>"). "clientes de \<asesor\>" ahora es flexible ("clientes recientes de gael"). `bot_buscar_presupuesto` acepta filtro por asesor. `fn_parse_budget_k` prefiere el número con unidad.
+- **Roles (verificado airtight):** asesor normal jamás ve KPIs/clientes/más-hot de otro asesor (deniega); admin/ver-todo sí.
+
 **Fechas (determinista):** `parse_relative_or_abs_es(texto, tz)` + `parse_es_datetime_tgenius`:
 `en/dentro de N (min|horas|días|semanas)`, `media hora`, `hoy/mañana HH`, `lunes..domingo HH` (próxima
 ocurrencia), `dd/mm[/yyyy] HH:MM`, ISO. Para Duke tz = `America/Cancun` (regla). Aplicar con prefer-future +
