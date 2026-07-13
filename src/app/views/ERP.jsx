@@ -3,7 +3,7 @@ import { P, font, fontDisp } from "../../design-system/tokens";
 import { G, KPI, Pill } from "../SharedComponents";
 import {
   Building2, MapPin, FolderOpen, Search, Phone, HardDrive,
-  Map as MapIcon, Layers, Briefcase, X, Tag, LayoutGrid, Table as TableIcon, Send,
+  Map as MapIcon, Layers, Briefcase, X, Wallet, LayoutGrid, Table as TableIcon, Send,
 } from "lucide-react";
 import { CATALOGO_SECCIONES } from "../data/catalogoProyectos";
 
@@ -20,6 +20,52 @@ const ticketColor = (t, T) => {
   if (s.includes("150")) return T.emerald;
   return T.blue;
 };
+
+/* Normaliza la ubicación a una zona canónica (corrige typos: CANUCN/CANNCUN → Cancún). */
+const canonZona = (raw) => {
+  const s = (raw || "").trim().toLowerCase();
+  if (!s) return "";
+  if (s.startsWith("can")) return "Cancún";               // cancun / canucn / canncun
+  if (s.includes("playa")) return "Playa del Carmen";
+  if (s.includes("tulum")) return "Tulum";
+  if (s.includes("puerto morelos")) return "Puerto Morelos";
+  if (s.includes("costa mujeres")) return "Costa Mujeres";
+  if (s.includes("country")) return "Country Club";
+  return raw.trim().replace(/\w\S*/g, (w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase());
+};
+
+/* Convierte el "ticket" (formato libre: "3.2 A 6.4 MDP", "235 K USD", "0 a 150 k", "TERRENOS"…)
+   a un rango aproximado en USD, para agrupar por presupuesto en pocos rangos limpios. Peso≈17.5/USD. */
+const parseTicketUSD = (raw) => {
+  if (!raw) return null;
+  const s = String(raw).toUpperCase();
+  if (s.includes("TERRENO") || s.includes("LOTE")) return { land: true, min: 0, max: Infinity };
+  const t = s.replace(/(\d),(\d{3})(?!\d)/g, "$1$2").replace(/(\d),(\d{1,2})(?!\d)/g, "$1.$2");
+  const nums = (t.match(/\d+(?:\.\d+)?/g) || []).map(Number);
+  if (!nums.length) return null;
+  const MDP = t.includes("MDP");
+  const USD = t.includes("USD") || t.includes("DLL");
+  const K = t.includes("K");
+  const M_USD = USD && /\dM/.test(t);
+  const toUSD = (n) => {
+    if (MDP) return (n * 1e6) / 17.5;                 // millones de pesos → USD
+    if (M_USD && n <= 50) return n * 1e6;             // "2M USD" → 2,000,000
+    if (USD) return n >= 5000 ? n : n * 1e3;          // 581,241 USD absoluto ; "235 K USD" → 235k
+    if (K) return n * 1e3;                            // miles USD
+    return n <= 50 ? (n * 1e6) / 17.5 : n * 1e3;      // sin unidad: chico→MDP, grande→miles USD
+  };
+  const vals = nums.map(toUSD);
+  return { land: false, min: Math.min(...vals), max: Math.max(...vals) };
+};
+
+/* Rangos de presupuesto (USD) — pocos y claros para un asesor. */
+const BUCKETS = [
+  { id: "b1", label: "Hasta $250k", lo: 0, hi: 250000 },
+  { id: "b2", label: "$250k – $500k", lo: 250000, hi: 500000 },
+  { id: "b3", label: "$500k – $1M", lo: 500000, hi: 1000000 },
+  { id: "b4", label: "Más de $1M", lo: 1000000, hi: Infinity },
+];
+const bucketMatch = (p, b) => !!p && !p.land && p.min <= b.hi && p.max >= b.lo;
 
 const summary = (it) => [
   it.desarrollo,
@@ -38,7 +84,8 @@ const ERP = ({ oc, T: _T }) => {
 
   const [secId, setSecId] = useState(SECCIONES[0].id);
   const [q, setQ] = useState("");
-  const [ticket, setTicket] = useState("");
+  const [zona, setZona] = useState("");     // zona canónica seleccionada ("" = todas)
+  const [presu, setPresu] = useState("");   // id de bucket o "terrenos" ("" = todos)
   const [limit, setLimit] = useState(60);
   const [view, setView] = useState("cards"); // "cards" | "table"
 
@@ -50,32 +97,54 @@ const ERP = ({ oc, T: _T }) => {
   const kpis = useMemo(() => {
     const all = SECCIONES.flatMap((s) => s.items);
     const conDrive = all.filter((i) => i.drive).length;
-    const ubic = new Set(all.map((i) => (i.ubicacion || "").trim()).filter(Boolean));
+    const ubic = new Set(all.map((i) => canonZona(i.ubicacion)).filter(Boolean));
     const secciones = SECCIONES.filter((s) => s.items.length).length;
     return { total: all.length, conDrive, ubic: ubic.size, secciones };
   }, []);
 
-  const tickets = useMemo(
-    () => Array.from(new Set(sec.items.map((i) => i.ticket).filter(Boolean))),
-    [sec]
-  );
+  // Zonas presentes (canónicas, ordenadas por cantidad) — para los botones de filtro.
+  const zonas = useMemo(() => {
+    const count = new Map();
+    sec.items.forEach((i) => {
+      if (!i.drive) return;
+      const z = canonZona(i.ubicacion);
+      if (z) count.set(z, (count.get(z) || 0) + 1);
+    });
+    return [...count.entries()].sort((a, b) => b[1] - a[1]).map(([z]) => z);
+  }, [sec]);
+
+  // Rangos de presupuesto que realmente tienen proyectos (+ si hay terrenos).
+  const buckets = useMemo(() => {
+    const ps = sec.items.filter((i) => i.drive).map((i) => parseTicketUSD(i.ticket)).filter(Boolean);
+    return {
+      ranges: BUCKETS.filter((b) => ps.some((p) => bucketMatch(p, b))),
+      hasLand: ps.some((p) => p.land),
+    };
+  }, [sec]);
 
   const filtered = useMemo(() => {
     const needle = q.trim().toLowerCase();
+    const bucket = presu && presu !== "terrenos" ? BUCKETS.find((b) => b.id === presu) : null;
     return sec.items.filter((i) => {
       if (!i.drive) return false; // Solo desarrollos con carpeta Drive disponible
-      if (ticket && i.ticket !== ticket) return false;
+      if (zona && canonZona(i.ubicacion) !== zona) return false;
+      if (presu) {
+        const p = parseTicketUSD(i.ticket);
+        if (!p) return false;
+        if (presu === "terrenos") { if (!p.land) return false; }
+        else if (!bucketMatch(p, bucket)) return false;
+      }
       if (!needle) return true;
       return [
         i.desarrollo, i.ubicacion, i.zona, i.masterbroker, i.contacto,
         i.clasificacion, i.tipologia, i.highlights, i.asesor,
       ].filter(Boolean).join(" ").toLowerCase().includes(needle);
     });
-  }, [sec, q, ticket]);
+  }, [sec, q, zona, presu]);
 
   const shown = filtered.slice(0, limit);
 
-  const pickSection = (id) => { setSecId(id); setQ(""); setTicket(""); setLimit(60); };
+  const pickSection = (id) => { setSecId(id); setQ(""); setZona(""); setPresu(""); setLimit(60); };
 
   const btnStyle = (color) => ({
     display: "inline-flex", alignItems: "center", gap: 5,
@@ -94,6 +163,19 @@ const ERP = ({ oc, T: _T }) => {
     width: 28, height: 28, borderRadius: 8, textDecoration: "none",
     color, background: `${color}14`, border: `1px solid ${color}2E`, flexShrink: 0,
   });
+  // Botón de filtro (Zona / Presupuesto): claro, grande y con estado activo evidente.
+  const fBtn = (active, color) => ({
+    display: "inline-flex", alignItems: "center", gap: 5, padding: "7px 13px", borderRadius: 99,
+    cursor: "pointer", fontSize: 11.5, fontWeight: 700, fontFamily: fontDisp, whiteSpace: "nowrap",
+    border: `1px solid ${active ? color : T.border}`,
+    background: active ? `${color}1E` : (isLight ? "#FFFFFF" : "rgba(255,255,255,0.03)"),
+    color: active ? color : T.txt2, transition: "all 0.15s",
+  });
+  const fLabel = {
+    display: "inline-flex", alignItems: "center", gap: 5, minWidth: 96, flexShrink: 0,
+    fontSize: 10, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase",
+    color: T.txt3, fontFamily: fontDisp,
+  };
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
@@ -176,65 +258,75 @@ const ERP = ({ oc, T: _T }) => {
           </div>
         </div>
 
-        {/* Toolbar: search + ticket filter */}
+        {/* Toolbar: buscador + filtros simples (Zona · Presupuesto) + vista */}
         {sec.items.length > 0 && (
-          <div style={{ padding: "14px 22px", borderBottom: `1px solid ${T.border}`, display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, flex: "1 1 240px", padding: "9px 13px", borderRadius: 11, background: isLight ? "#FFFFFF" : "rgba(255,255,255,0.04)", border: `1px solid ${q ? T.accent : T.border}` }}>
-              <Search size={14} color={T.txt3} />
-              <input
-                value={q}
-                onChange={(e) => { setQ(e.target.value); setLimit(60); }}
-                placeholder="Buscar desarrollo, zona, masterbroker, contacto…"
-                style={{ flex: 1, border: "none", background: "transparent", outline: "none", color: T.txt, fontSize: 13, fontFamily: font, minWidth: 0 }}
-              />
-              {q && <X size={13} color={T.txt3} style={{ cursor: "pointer" }} onClick={() => setQ("")} />}
-            </div>
-            {tickets.length > 0 && (
-              <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-                {tickets.map((tk) => {
-                  const active = ticket === tk;
-                  const c = ticketColor(tk, T);
+          <div style={{ padding: "14px 22px", borderBottom: `1px solid ${T.border}`, display: "flex", flexDirection: "column", gap: 11 }}>
+            {/* Fila 1: buscador + toggle de vista */}
+            <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, flex: "1 1 240px", padding: "9px 13px", borderRadius: 11, background: isLight ? "#FFFFFF" : "rgba(255,255,255,0.04)", border: `1px solid ${q ? T.accent : T.border}` }}>
+                <Search size={14} color={T.txt3} />
+                <input
+                  value={q}
+                  onChange={(e) => { setQ(e.target.value); setLimit(60); }}
+                  placeholder="Buscar por nombre, masterbroker o contacto…"
+                  style={{ flex: 1, border: "none", background: "transparent", outline: "none", color: T.txt, fontSize: 13, fontFamily: font, minWidth: 0 }}
+                />
+                {q && <X size={13} color={T.txt3} style={{ cursor: "pointer" }} onClick={() => setQ("")} />}
+              </div>
+              <div style={{ marginLeft: "auto", display: "flex", gap: 3, padding: 3, borderRadius: 11, border: `1px solid ${T.border}`, background: isLight ? "rgba(15,23,42,0.02)" : "rgba(255,255,255,0.02)" }}>
+                {[
+                  { id: "cards", label: "Tarjetas", Icon: LayoutGrid },
+                  { id: "table", label: "Tabla", Icon: TableIcon },
+                ].map((v) => {
+                  const active = view === v.id;
                   return (
-                    <button
-                      key={tk}
-                      onClick={() => { setTicket(active ? "" : tk); setLimit(60); }}
+                    <button key={v.id} onClick={() => setView(v.id)} title={v.label}
                       style={{
-                        display: "inline-flex", alignItems: "center", gap: 5, padding: "6px 11px", borderRadius: 99,
-                        cursor: "pointer", fontSize: 10.5, fontWeight: 700, fontFamily: fontDisp,
-                        border: `1px solid ${active ? c : T.border}`,
-                        background: active ? `${c}22` : "transparent",
-                        color: active ? c : T.txt3, transition: "all 0.15s",
-                      }}
-                    >
-                      <Tag size={10} /> {tk}
+                        display: "inline-flex", alignItems: "center", gap: 6, padding: "7px 12px", borderRadius: 9, cursor: "pointer",
+                        border: "none", background: active ? `${T.accent}1E` : "transparent",
+                        color: active ? T.accent : T.txt3, fontSize: 12, fontWeight: active ? 700 : 500, fontFamily: fontDisp, transition: "all 0.15s",
+                      }}>
+                      <v.Icon size={13} /> {v.label}
                     </button>
                   );
                 })}
               </div>
-            )}
-            <div style={{ marginLeft: "auto", display: "flex", gap: 3, padding: 3, borderRadius: 11, border: `1px solid ${T.border}`, background: isLight ? "rgba(15,23,42,0.02)" : "rgba(255,255,255,0.02)" }}>
-              {[
-                { id: "cards", label: "Tarjetas", Icon: LayoutGrid },
-                { id: "table", label: "Tabla", Icon: TableIcon },
-              ].map(({ id, label, Icon }) => {
-                const active = view === id;
-                return (
-                  <button
-                    key={id}
-                    onClick={() => setView(id)}
-                    title={label}
-                    style={{
-                      display: "inline-flex", alignItems: "center", gap: 6, padding: "7px 12px", borderRadius: 9, cursor: "pointer",
-                      border: "none", background: active ? `${T.accent}1E` : "transparent",
-                      color: active ? T.accent : T.txt3, fontSize: 12, fontWeight: active ? 700 : 500, fontFamily: fontDisp,
-                      transition: "all 0.15s",
-                    }}
-                  >
-                    <Icon size={13} /> {label}
-                  </button>
-                );
-              })}
             </div>
+
+            {/* Fila 2: Zona */}
+            {zonas.length > 0 && (
+              <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+                <span style={fLabel}><MapPin size={12} /> Zona</span>
+                <div style={{ display: "flex", gap: 7, flexWrap: "wrap" }}>
+                  <button style={fBtn(!zona, T.blue)} onClick={() => { setZona(""); setLimit(60); }}>Todas</button>
+                  {zonas.map((z) => (
+                    <button key={z} style={fBtn(zona === z, T.blue)} onClick={() => { setZona(zona === z ? "" : z); setLimit(60); }}>{z}</button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Fila 3: Presupuesto */}
+            {(buckets.ranges.length > 0 || buckets.hasLand) && (
+              <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+                <span style={fLabel}><Wallet size={12} /> Presupuesto</span>
+                <div style={{ display: "flex", gap: 7, flexWrap: "wrap" }}>
+                  <button style={fBtn(!presu, T.emerald)} onClick={() => { setPresu(""); setLimit(60); }}>Todos</button>
+                  {buckets.ranges.map((b) => (
+                    <button key={b.id} style={fBtn(presu === b.id, T.emerald)} onClick={() => { setPresu(presu === b.id ? "" : b.id); setLimit(60); }}>{b.label}</button>
+                  ))}
+                  {buckets.hasLand && (
+                    <button style={fBtn(presu === "terrenos", T.emerald)} onClick={() => { setPresu(presu === "terrenos" ? "" : "terrenos"); setLimit(60); }}>Terrenos</button>
+                  )}
+                </div>
+                {(zona || presu || q) && (
+                  <button onClick={() => { setZona(""); setPresu(""); setQ(""); setLimit(60); }}
+                    style={{ marginLeft: "auto", display: "inline-flex", alignItems: "center", gap: 4, padding: "6px 10px", borderRadius: 8, cursor: "pointer", border: "none", background: "transparent", color: T.txt3, fontSize: 11, fontWeight: 600, fontFamily: font }}>
+                    <X size={12} /> Limpiar
+                  </button>
+                )}
+              </div>
+            )}
           </div>
         )}
 
@@ -250,7 +342,7 @@ const ERP = ({ oc, T: _T }) => {
             </div>
           ) : filtered.length === 0 ? (
             <div style={{ textAlign: "center", padding: "40px 20px", fontSize: 13, color: T.txt3, fontFamily: font }}>
-              Sin coincidencias para «{q}»{ticket && ` · ${ticket}`}.
+              No hay desarrollos con esos filtros{q && ` para «${q}»`}. Probá quitar alguno.
             </div>
           ) : (
             <>
@@ -283,7 +375,7 @@ const ERP = ({ oc, T: _T }) => {
                         <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
                           {it.ubicacion && (
                             <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 11, color: T.txt2, fontFamily: font }}>
-                              <MapPin size={11} color={T.txt3} /> {it.ubicacion}
+                              <MapPin size={11} color={T.txt3} /> {canonZona(it.ubicacion)}
                             </span>
                           )}
                           {it.clasificacion && (
@@ -370,7 +462,7 @@ const ERP = ({ oc, T: _T }) => {
                           <td style={{ ...tdBase, color: T.txt, fontWeight: 700, fontFamily: fontDisp, whiteSpace: "normal", minWidth: 150 }}>{it.desarrollo}</td>
                           <td style={tdBase}>
                             {it.ubicacion
-                              ? <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><MapPin size={11} color={T.txt3} />{it.ubicacion}</span>
+                              ? <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><MapPin size={11} color={T.txt3} />{canonZona(it.ubicacion)}</span>
                               : <span style={{ color: T.txt3 }}>—</span>}
                           </td>
                           <td style={tdBase}>{it.ticket ? <Pill color={c} s isLight={isLight}>{it.ticket}</Pill> : <span style={{ color: T.txt3 }}>—</span>}</td>
