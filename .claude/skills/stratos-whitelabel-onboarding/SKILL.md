@@ -125,6 +125,22 @@ view_lead, list_pending, upsert_lead, update_fields, add_*`, etc.).
 > ⚠️ FORK: en Stratos se ELIMINÓ el guard `if v_org <> '<org gvintell>' then return bot_nlu_dispatch(...)`
 > de `_v2`, para que atienda TODAS las orgs de Stratos (Duke/Sales/Grupo28). Cada query es org-scoped.
 
+### Capa `bot_smart_queries` — consultas inteligentes (2026-07-13, migración `095`)
+Capa NUEVA insertada entre `_orig` y `_inner` (misma cadena de responsabilidad que catálogo/agenda). Solo
+intercepta **LECTURA**; si nada matchea, delega a `_inner` → comportamiento original intacto. Org-scoped + rol
+(asesor ve lo suyo; admin/ver-todo ve el equipo). Detección determinista por texto (`input_text`). Intenciones:
+- **capacidades** ("¿qué podés hacer?", "enlístame las funciones", "ayuda") → `bot_render_capabilities` (lista con ejemplos; branch obra para Vega).
+- **presupuesto** ("clientes con presupuesto de 200K / entre X y Y / más de 1M") → `bot_buscar_presupuesto`.
+  `fn_parse_budget_k` parsea el monto; `fn_presupuesto_k` normaliza a **miles** (datos mezclados: `200` y `200000` = 200K). **NO** confundir con teléfono.
+- **más hot** ("el más hot de <asesor>" / "mi cliente más hot") → `bot_top_hot_asesor` (order `hot desc, score desc`).
+- **clientes de <asesor>** → `bot_clientes_de_asesor` (solo si el nombre resuelve a asesor; admin ve de cualquiera).
+- **info de asesor** ("info del asesor X") → `bot_asesor_info`.
+- **última acción de <cliente>** → `bot_ultima_accion` (accent-insensitive vía `fn_bot_name_candidates`). Si el nombre es asesor → redirige a `bot_asesor_info`. Si es **cliente Y asesor** → RE-PREGUNTA con botón "Ver cliente".
+- Helpers: `fn_bot_find_asesores` (asesores por nombre, sin acentos), `_bot_extract_person` (saca el nombre de la frase quitando muletillas), `_bot_requester`, `_bot_smart_reask`, `_bot_fmt_k`.
+- **Regla (fix 7):** ante ambigüedad, RE-PREGUNTAR, nunca adivinar. **También** se hizo `bot_list_expediente_v2` accent-insensitive.
+- Revert: en `_orig` volver la llamada final `bot_smart_queries`→`bot_nlu_dispatch_gvintell_inner` (bloque comentado en `095`).
+- ⚠️ Pendiente aparte (no de estos fixes): `"ficha de <cliente>"` a veces cae al catálogo (capa de catálogo).
+
 **Fechas (determinista):** `parse_relative_or_abs_es(texto, tz)` + `parse_es_datetime_tgenius`:
 `en/dentro de N (min|horas|días|semanas)`, `media hora`, `hoy/mañana HH`, `lunes..domingo HH` (próxima
 ocurrencia), `dd/mm[/yyyy] HH:MM`, ISO. Para Duke tz = `America/Cancun` (regla). Aplicar con prefer-future +
@@ -238,6 +254,15 @@ from (values ('mis clientes'),('/clientes'),('agenda'),('que tengo hoy'),('kpis'
              ('pipeline'),('menu'),('busca a Diana')) x(t);
 select public.parse_relative_or_abs_es('en 3 horas','America/Cancun');
 select public.parse_relative_or_abs_es('el jueves 3pm','America/Cancun');
+
+-- Consultas inteligentes (capa bot_smart_queries). <TG_ADMIN> = admin con view_all; <TG_ASESOR> = asesor normal.
+select t, public.bot_nlu_dispatch_gvintell(<TG_ADMIN>,'',jsonb_build_object('input_text',t))#>>'{reply,text}'
+from (values ('enlístame las funciones que puedes hacer'),
+             ('clientes con presupuesto de 200K'),('presupuesto entre 200k y 300k'),
+             ('cuál es el cliente más hot de Cecilia'),('clientes de Víctor Benítez'),
+             ('última acción de Sebastián Andrés'),('info del asesor Víctor Benítez')) x(t);
+-- Permisos: un asesor normal NO ve la cartera de otro (debe negar amablemente)
+select public.bot_nlu_dispatch_gvintell(<TG_ASESOR>,'',jsonb_build_object('input_text','clientes de Cecilia'))#>>'{reply,text}';
 ```
 En Telegram (`@Strato_sasistente_crm_bot`): `mis clientes`, `agenda`, `kpis`, crear cliente con próx. acción
 "en 4 horas", reagendar respondiendo "mañana 3pm", tocar "Ver ficha del cliente" en un recordatorio de zoom,
