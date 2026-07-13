@@ -1731,8 +1731,8 @@ const LandingPages = ({ T = P }) => {
                   <div style={{ position: "relative", zIndex: 1, width: "100%" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
                       <div>
-                        <p style={{ fontSize: 18, fontWeight: 700, color: T.txt, fontFamily: fontDisp, letterSpacing: "-0.02em" }}>{prop.name}</p>
-                        {prop.brand && <p style={{ fontSize: 11, color: "rgba(255,255,255,0.6)", fontFamily: font }}>{prop.brand}</p>}
+                        <p style={{ fontSize: 18, fontWeight: 700, color: "#FFFFFF", fontFamily: fontDisp, letterSpacing: "-0.02em", textShadow: "0 1px 8px rgba(0,0,0,0.55)" }}>{prop.name}</p>
+                        {prop.brand && <p style={{ fontSize: 11, color: "rgba(255,255,255,0.75)", fontFamily: font, textShadow: "0 1px 6px rgba(0,0,0,0.5)" }}>{prop.brand}</p>}
                       </div>
                       <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                         <MapPin size={12} color="rgba(255,255,255,0.7)" />
@@ -1777,7 +1777,7 @@ const LandingPages = ({ T = P }) => {
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 10 }}>
                     <div style={{ padding: "8px 10px", borderRadius: 8, background: `${prop.accent}0A`, border: `1px solid ${prop.accent}18` }}>
                       <p style={{ fontSize: 9, color: T.txt3, marginBottom: 2 }}>Desde</p>
-                      <p style={{ fontSize: 16, fontWeight: 700, color: prop.accent, fontFamily: fontDisp }}>${(prop.priceFrom / 1000).toFixed(0)}K</p>
+                      <p style={{ fontSize: 16, fontWeight: 700, color: isLight ? `color-mix(in srgb, ${prop.accent}, #04120c 45%)` : prop.accent, fontFamily: fontDisp }}>${(prop.priceFrom / 1000).toFixed(0)}K</p>
                     </div>
                     <div style={{ padding: "8px 10px", borderRadius: 8, background: T.glass, border: `1px solid ${T.border}` }}>
                       <p style={{ fontSize: 9, color: T.txt3, marginBottom: 2 }}>Hasta</p>
