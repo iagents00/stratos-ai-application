@@ -266,12 +266,15 @@ export default function MetaPanel({
     return () => { cancelled = true; };
   }, [open, _online]);
 
-  const createAction = async () => {
+  const createAction = async (opts = {}) => {
+    const noDate = opts.noDate === true;             // "Registrar sin fecha"
     const txt = metaNewText.trim();
-    if (!txt || !metaNewDate) return;               // fecha/hora OBLIGATORIA
+    if (!txt) return;
+    if (!noDate && !metaNewDate) return;             // con fecha: la fecha es OBLIGATORIA
     if (creatingForTeam && !metaNewAssignee) return; // responsable OBLIGATORIO para que Telegram recuerde a la persona correcta
-    const dueIso = new Date(metaNewDate).toISOString();
-    const localDate = new Date(metaNewDate).toLocaleString('es-MX',{ day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' });
+    const useDate = !noDate && !!metaNewDate;
+    const dueIso = useDate ? new Date(metaNewDate).toISOString() : null;
+    const localDate = useDate ? new Date(metaNewDate).toLocaleString('es-MX',{ day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' }) : '';
     // Mi agenda se auto-asigna al usuario logueado. En modo equipo el admin elige
     // responsable explícito para que el recordatorio llegue a la persona correcta.
     const _selfId = creatingForTeam ? null : (user?.id || null);
@@ -702,9 +705,9 @@ export default function MetaPanel({
                 position:"relative",
                 zIndex: duePickerOpen ? 80 : 1,
                 display:"grid",
-                gridTemplateColumns: isMobile ? "1fr" : "minmax(420px, 1.08fr) minmax(380px, 0.78fr) 156px",
+                gridTemplateColumns: isMobile ? "1fr" : "minmax(420px, 1.12fr) minmax(380px, 0.82fr)",
                 gap:12,
-                marginBottom:30,
+                marginBottom: metaNewText.trim() ? 14 : 30,
                 alignItems:"stretch",
               }}>
                 <div style={{
@@ -1130,32 +1133,30 @@ export default function MetaPanel({
                     </div>
                   )}
                 </div>
-                {(() => { const canAdd = !!(metaNewText.trim() && metaNewDate && (!creatingForTeam || metaNewAssignee)); return (
-                <button
-                  onClick={createAction}
-                  style={{
-                    display:"flex", alignItems:"center", justifyContent:"center", gap:9,
-                    padding:"0 22px", borderRadius:30, border:"none",
-                    background: canAdd
-                      ? `linear-gradient(135deg,#0D9A76,${T.accent})`
-                      : (isLight?"rgba(15,23,42,0.055)":"rgba(255,255,255,0.055)"),
-                    color: canAdd ? "#041016" : T.txt3,
-                    fontSize:15.5, fontWeight:800, fontFamily:fontDisp,
-                    cursor: canAdd ? "pointer" : "default",
-                    flexShrink:0, letterSpacing:"-0.02em",
-                    boxShadow: canAdd ? `0 18px 42px ${_hex(T.accent,'32')}, inset 0 1px 0 rgba(255,255,255,0.24)` : (isLight ? "inset 0 1px 0 rgba(255,255,255,0.55)" : "inset 0 1px 0 rgba(255,255,255,0.05)"),
-                    transition:"background 0.18s, color 0.18s, box-shadow 0.18s, transform 0.12s",
-                    minHeight:118,
-                  }}
-                  onMouseDown={e => { if(canAdd) e.currentTarget.style.transform="scale(0.97)"; }}
-                  onMouseUp={e => { e.currentTarget.style.transform="scale(1)"; }}
-                  onMouseLeave={e => { e.currentTarget.style.transform="scale(1)"; }}
-                >
-                  <Plus size={17} strokeWidth={2.5} />
-                  Agregar
-                </button>
-                ); })()}
               </div>
+
+                {metaNewText.trim() && (() => {
+                  const missingAssignee = creatingForTeam && !metaNewAssignee;
+                  const canAdd = !!(metaNewDate && !missingAssignee);
+                  return (
+                    <div style={{ display:"flex", alignItems:"center", gap:12, flexWrap:"wrap", marginBottom:28 }}>
+                      <span style={{ marginRight:"auto", fontSize:12.5, fontFamily:font, color:T.txt3, letterSpacing:"-0.01em" }}>
+                        {missingAssignee ? "Elegí a quién se asigna arriba" : (metaNewDate ? "Listo para agregar" : "Poné fecha y hora — o registralo sin fecha")}
+                      </span>
+                      <button type="button" onClick={() => createAction({ noDate: true })} disabled={missingAssignee}
+                        style={{ display:"inline-flex", alignItems:"center", gap:7, padding:"12px 18px", borderRadius:16, cursor: missingAssignee ? "default" : "pointer", border:`1px solid ${isLight ? "rgba(15,23,42,0.12)" : "rgba(255,255,255,0.14)"}`, background:"transparent", color: missingAssignee ? T.txt3 : T.txt2, fontSize:14, fontWeight:700, fontFamily:fontDisp, letterSpacing:"-0.01em", opacity: missingAssignee ? 0.5 : 1, transition:"background 0.16s, border-color 0.16s" }}
+                        onMouseEnter={e => { if(!missingAssignee){ e.currentTarget.style.background = isLight ? "rgba(15,23,42,0.04)" : "rgba(255,255,255,0.05)"; } }}
+                        onMouseLeave={e => { e.currentTarget.style.background = "transparent"; }}
+                      >Registrar sin fecha</button>
+                      <button type="button" onClick={() => createAction()} disabled={!canAdd}
+                        style={{ display:"inline-flex", alignItems:"center", gap:8, padding:"12px 22px", borderRadius:16, border:"none", cursor: canAdd ? "pointer" : "default", background: canAdd ? `linear-gradient(135deg,#0D9A76,${T.accent})` : (isLight?"rgba(15,23,42,0.055)":"rgba(255,255,255,0.06)"), color: canAdd ? "#041016" : T.txt3, fontSize:14.5, fontWeight:800, fontFamily:fontDisp, letterSpacing:"-0.02em", boxShadow: canAdd ? `0 12px 30px ${_hex(T.accent,"30")}, inset 0 1px 0 rgba(255,255,255,0.24)` : "none", transition:"background 0.16s, box-shadow 0.16s, transform 0.12s" }}
+                        onMouseDown={e => { if(canAdd) e.currentTarget.style.transform="scale(0.97)"; }}
+                        onMouseUp={e => { e.currentTarget.style.transform="scale(1)"; }}
+                        onMouseLeave={e => { e.currentTarget.style.transform="scale(1)"; }}
+                      ><Plus size={16} strokeWidth={2.5} /> Agregar</button>
+                    </div>
+                  );
+                })()}
 
               {/* Empty state */}
               {pendingAgendaActions.length === 0 && (
