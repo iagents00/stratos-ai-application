@@ -569,12 +569,12 @@ export default function MetaPanel({
               </div>
               <div style={{ minWidth:0 }}>
                 <p style={{ margin:0, fontSize:17, fontWeight:700, fontFamily:fontDisp, letterSpacing:"-0.025em", color:T.txt, display:"flex", alignItems:"center", gap:8, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>
-                  {brandLabel}
+                  Mi Espacio
                   {savingConfig && (
                     <span style={{ fontSize:10, fontWeight:600, color:T.accent, background:`${T.accent}18`, borderRadius:99, padding:"2px 9px", letterSpacing:0, flexShrink:0 }}>guardando…</span>
                   )}
                 </p>
-                <p style={{ margin:"2px 0 0", fontSize:11.5, color:T.txt3, fontFamily:font, letterSpacing:"0.02em", whiteSpace:"nowrap" }}>Plan Estratégico · Scaling Up · 2026</p>
+                <p style={{ margin:"2px 0 0", fontSize:11.5, color:T.txt3, fontFamily:font, letterSpacing:"0.02em", whiteSpace:"nowrap" }}>{user?.name || "Plan Estratégico · Scaling Up · 2026"}</p>
               </div>
             </div>
             {/* Control segmentado */}
@@ -1290,10 +1290,7 @@ export default function MetaPanel({
                 const dateEl = (
                   <E val={a.date || "—"} onSave={v => setMetaActions(p => p.map(x => x.id===a.id?{...x,date:v}:x))}
                     style={{
-                      display:"block",
-                      maxWidth:"100%",
-                      overflow:"hidden",
-                      textOverflow:"ellipsis",
+                      display:"inline-block",
                       fontSize:12.5,
                       fontWeight:650,
                       fontFamily:fontDisp,
@@ -1304,7 +1301,7 @@ export default function MetaPanel({
                       borderRadius:99,
                       whiteSpace:"nowrap",
                       letterSpacing:"-0.01em",
-                      textAlign:"left",
+                      textAlign:"center",
                     }} />
                 );
                 const delBtn = (
@@ -1399,9 +1396,9 @@ export default function MetaPanel({
                               {iagentBtn}
                             </div>
                           </div>
-                          <div className="mp-actions" style={{ display:"flex", alignItems:"center", gap:10, flex:"0 1 390px", minWidth:240, justifyContent:"flex-end", overflow:"hidden" }}>
-                            <div style={{ flex:"1 1 auto", minWidth:0, display:"flex", justifyContent:"flex-start" }}>{dateEl}</div>
-                            <div style={{ flex:"0 0 auto", display:"flex", justifyContent:"flex-end" }}>{prioBtn}</div>
+                          <div className="mp-actions" style={{ display:"flex", alignItems:"center", gap:12, flexShrink:0, justifyContent:"flex-end" }}>
+                            <div style={{ flexShrink:0 }}>{dateEl}</div>
+                            <div style={{ flexShrink:0 }}>{prioBtn}</div>
                           </div>
                         </div>
                         {/* Eliminar — flota a la derecha, aparece al pasar (no reserva espacio) */}
