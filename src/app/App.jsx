@@ -5,8 +5,8 @@
  * Todos los componentes y lógica de negocio viven en sus propios módulos.
  * ─────────────────────────────────────────────────────────────────────────────
  */
-import { useState, useEffect, useRef, useCallback, useMemo, startTransition, lazy, Suspense } from "react";
-import { createPortal } from "react-dom";
+import { useState, useEffect, useRef, useCallback, useMemo, lazy, Suspense } from "react";
+import { createPortal, flushSync } from "react-dom";
 import { supabase } from "../lib/supabase";
 import { formatFechaLarga, STAGES_CON_CITA } from "../lib/utils";
 import LoginScreen from "../landing/LoginScreen.jsx";
@@ -417,26 +417,29 @@ export default function App() {
     };
   }, []);
   const setTheme = useCallback((next) => {
-    try { localStorage.setItem("stratos_crm_theme", next); } catch {}
-    // Transición suave: agregamos una clase a <html> que activa transiciones
-    // CSS globales para background, color, border, fill y shadow durante
-    // 260ms. Pasado ese tiempo la quitamos para que los hovers y otras
-    // interacciones vuelvan a su comportamiento normal sin overhead.
-    //
-    // Bonus: si el navegador soporta View Transitions API (Chrome 111+),
-    // usamos un cross-fade nativo que se ve aún más suave.
-    const applyChange = () => startTransition(() => setThemeState(next));
+    try { localStorage.setItem("stratos_crm_theme", next); } catch { /* storage puede estar bloqueado */ }
     const root = document.documentElement;
-    if (typeof document.startViewTransition === "function") {
-      // View Transitions: el navegador captura un snapshot, aplica el
-      // cambio, y hace un cross-fade automático contra el nuevo estado.
-      document.startViewTransition(() => applyChange());
-    } else {
-      // Fallback CSS: clase con transitions !important durante 260ms.
-      root.classList.add("theme-transitioning");
-      applyChange();
-      setTimeout(() => root.classList.remove("theme-transitioning"), 280);
-    }
+    const previous = root.getAttribute("data-theme") === "light" ? "light" : "dark";
+
+    // Una sola capa opaca conserva visualmente el tema anterior mientras React
+    // aplica el nuevo de forma atómica. Después esa capa se desvanece usando
+    // únicamente opacity (compositor): no recalculamos ni animamos miles de
+    // fondos, bordes, sombras y blurs, y tampoco capturamos un bitmap gigante.
+    root.classList.remove("theme-cover-active", "theme-cover-dark", "theme-cover-light");
+    root.classList.add(`theme-cover-${previous}`, "theme-cover-active");
+    // Materializar la capa antes del commit. Esta lectura intencional evita que
+    // el navegador fusione ambos estados cuando el equipo está bajo carga.
+    void root.offsetWidth;
+
+    flushSync(() => setThemeState(next));
+    root.setAttribute("data-theme", next);
+
+    requestAnimationFrame(() => {
+      root.classList.remove("theme-cover-active");
+      window.setTimeout(() => {
+        root.classList.remove("theme-cover-dark", "theme-cover-light");
+      }, 240);
+    });
   }, []);
   const isLight = theme === "light";
   const T = isLight ? LP : P;
