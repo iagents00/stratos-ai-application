@@ -450,9 +450,9 @@ export default function App() {
         return;
       }
 
-      // Evita un flash en equipos rápidos. En uno lento la cortina permanece
-      // naturalmente hasta que el commit completo termina detrás de ella.
-      const remaining = Math.max(0, 220 - (performance.now() - shownAt));
+      // La cortina debe alcanzar a percibirse también en equipos rápidos. En
+      // uno lento permanece naturalmente hasta que el commit termina detrás.
+      const remaining = Math.max(0, 650 - (performance.now() - shownAt));
       window.setTimeout(() => requestAnimationFrame(finishThemeSwitch), remaining);
     }));
   }, []);
