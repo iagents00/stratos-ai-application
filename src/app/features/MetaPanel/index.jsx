@@ -815,7 +815,7 @@ export default function MetaPanel({
                 <div style={{
                   position:"relative",
                   zIndex: duePickerOpen ? 90 : 1,
-                  overflow:"visible",
+                  overflow:"visible", display:"flex", flexDirection:"column", justifyContent:"space-between",
                   minHeight:118,
                   padding:12,
                   borderRadius:30,
@@ -835,7 +835,7 @@ export default function MetaPanel({
                       className="mp-datechip"
                       onClick={() => openDuePicker("date")}
                       style={{
-                        height:50, borderRadius:18, border:`1px solid ${duePickerOpen === "date" || selectedDueDate ? _hex(T.accent,"58") : (isLight ? "rgba(15,23,42,0.075)" : "rgba(255,255,255,0.085)")}`,
+                        height:54, borderRadius:18, border:`1px solid ${duePickerOpen === "date" || selectedDueDate ? _hex(T.accent,"58") : (isLight ? "rgba(15,23,42,0.075)" : "rgba(255,255,255,0.085)")}`,
                         background: duePickerOpen === "date" || selectedDueDate ? `${T.accent}11` : (isLight?"rgba(248,250,252,0.82)":"rgba(255,255,255,0.045)"),
                         color: selectedDueDate ? T.txt : T.txt2, cursor:"pointer", fontFamily:fontDisp,
                         display:"flex", alignItems:"center", justifyContent:"center", gap:9,
@@ -850,7 +850,7 @@ export default function MetaPanel({
                       className="mp-datechip"
                       onClick={() => openDuePicker("time")}
                       style={{
-                        height:50, borderRadius:18, border:`1px solid ${duePickerOpen === "time" || selectedDueTime ? _hex(T.accent,"58") : (isLight ? "rgba(15,23,42,0.075)" : "rgba(255,255,255,0.085)")}`,
+                        height:54, borderRadius:18, border:`1px solid ${duePickerOpen === "time" || selectedDueTime ? _hex(T.accent,"58") : (isLight ? "rgba(15,23,42,0.075)" : "rgba(255,255,255,0.085)")}`,
                         background: duePickerOpen === "time" || selectedDueTime ? `${T.accent}11` : (isLight?"rgba(248,250,252,0.82)":"rgba(255,255,255,0.045)"),
                         color: selectedDueTime ? T.txt : T.txt2, cursor:"pointer", fontFamily:fontDisp,
                         display:"flex", alignItems:"center", justifyContent:"center", gap:9,
@@ -862,10 +862,10 @@ export default function MetaPanel({
                     </button>
                   </div>
                   <div style={{
-                    display:"flex", alignItems:"center", justifyContent:"space-between", gap:8, flexWrap:"wrap",
-                    padding:"12px 4px 0",
+                    display:"grid", gridTemplateColumns:"1fr 1fr", alignItems:"center", gap:10,
+                    padding:"14px 2px 2px",
                   }}>
-                    <div style={{ display:"flex", alignItems:"center", gap:6, flexWrap:"wrap" }}>
+                    <div style={{ display:"flex", alignItems:"center", justifyContent:"center", gap:7, flexWrap:"wrap" }}>
                       {[
                         ["Hoy", addDays(0)],
                         ["Mañana", addDays(1)],
@@ -877,10 +877,10 @@ export default function MetaPanel({
                           className="mp-quickchip"
                           onClick={() => { setActionDueDate(value); setCalendarMonth(new Date(`${value}T12:00:00`)); }}
                           style={{
-                            border:`1px solid ${selectedDueDate === value ? _hex(T.accent,"58") : "transparent"}`,
-                            background:selectedDueDate === value ? `${T.accent}12` : "transparent",
-                            color:selectedDueDate === value ? T.accent : T.txt3,
-                            borderRadius:99, padding:"6px 10px", fontSize:11.5, fontWeight:800,
+                            border:`1px solid ${selectedDueDate === value ? _hex(T.accent,"58") : (isLight ? "rgba(15,23,42,0.07)" : "rgba(255,255,255,0.08)")}`,
+                            background:selectedDueDate === value ? `${T.accent}16` : (isLight ? "rgba(15,23,42,0.045)" : "rgba(255,255,255,0.05)"),
+                            color:selectedDueDate === value ? T.accent : T.txt2,
+                            borderRadius:13, padding:"9px 14px", fontSize:12.5, fontWeight:600,
                             fontFamily:fontDisp, cursor:"pointer", letterSpacing:"-0.01em",
                           }}
                         >
@@ -888,7 +888,7 @@ export default function MetaPanel({
                         </button>
                       ))}
                     </div>
-                    <div style={{ display:"flex", alignItems:"center", gap:6, flexWrap:"wrap" }}>
+                    <div style={{ display:"flex", alignItems:"center", justifyContent:"center", gap:7, flexWrap:"wrap" }}>
                       {["09:00", "11:00", "16:00"].map((timeValue) => (
                         <button
                           key={timeValue}
@@ -896,10 +896,10 @@ export default function MetaPanel({
                           className="mp-quickchip"
                           onClick={() => setActionDueTime(timeValue)}
                           style={{
-                            border:`1px solid ${selectedDueTime === timeValue ? _hex(T.accent,"58") : "transparent"}`,
-                            background:selectedDueTime === timeValue ? `${T.accent}12` : "transparent",
-                            color:selectedDueTime === timeValue ? T.accent : T.txt3,
-                            borderRadius:99, padding:"6px 10px", fontSize:11.5, fontWeight:800,
+                            border:`1px solid ${selectedDueTime === timeValue ? _hex(T.accent,"58") : (isLight ? "rgba(15,23,42,0.07)" : "rgba(255,255,255,0.08)")}`,
+                            background:selectedDueTime === timeValue ? `${T.accent}16` : (isLight ? "rgba(15,23,42,0.045)" : "rgba(255,255,255,0.05)"),
+                            color:selectedDueTime === timeValue ? T.accent : T.txt2,
+                            borderRadius:13, padding:"9px 14px", fontSize:12.5, fontWeight:600,
                             fontFamily:fontDisp, cursor:"pointer", letterSpacing:"-0.01em",
                           }}
                         >
