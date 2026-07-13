@@ -10,6 +10,7 @@ import {
   AlertCircle, Bell, X, Atom, CalendarDays, Clock, ChevronLeft,
   FileText, Table, Presentation, ClipboardList, HardDrive, BookOpen,
   PenTool, Palette, Video, Globe, Cloud, ExternalLink, Trash2, FolderOpen,
+  Users, UserRound,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "../../../lib/supabase";
@@ -205,11 +206,23 @@ export default function MetaPanel({
   const [metaNewDate, setMetaNewDate] = useState("");
   const [metaNewCategory, setMetaNewCategory] = useState("profesional");
   const [metaNewAssignee, setMetaNewAssignee] = useState("");
+  const [agendaView, setAgendaView] = useState("mine");
   const [duePickerOpen, setDuePickerOpen] = useState(null);
   const [calendarMonth, setCalendarMonth] = useState(() => new Date());
   const [teamMembers, setTeamMembers] = useState([]);   // responsables dinámicos (todos los activos del org, incl. nuevos)
   const _orgId = user?.organizationId;
   const _isManager = ['super_admin','admin','ceo','director'].includes(user?.role);
+  const _selfName = user?.name || user?.fullName || user?.email || "Admin";
+  const _nameKey = (value) => String(value || "").trim().toLowerCase();
+  const _actionOwner = (action) => action?.assignee || action?.asesor || "";
+  const _isOwnAction = (action) => {
+    const owner = _nameKey(_actionOwner(action));
+    if (!_isManager) return true;
+    return owner && owner !== "todos" && owner !== "equipo" && owner === _nameKey(_selfName);
+  };
+  const fallbackTeamMembers = ["Oscar Gálvez","Alexia Santillán","Araceli Oneto","Ken Duke","Emmanuel Ortiz","Cecilia Mendoza"];
+  const teamMemberOptions = teamMembers.length ? teamMembers : fallbackTeamMembers;
+  const creatingForTeam = _isManager && agendaView === "team";
   // Persistimos si hay un usuario REAL logueado. NO exigimos conocer el org en el front:
   // team_actions tiene DEFAULT organization_id = current_organization_id() (la DB lo pone desde el
   // JWT) y RLS lo valida, así que guarda bien aunque user.organizationId no esté cargado en la sesión.
@@ -235,6 +248,11 @@ export default function MetaPanel({
     return () => { cancelled = true; };
   }, [open, _online]);
 
+  useEffect(() => {
+    if (!_isManager && agendaView !== "mine") setAgendaView("mine");
+    if (_isManager && agendaView === "mine" && metaNewAssignee) setMetaNewAssignee("");
+  }, [_isManager, agendaView, metaNewAssignee]);
+
   // Lista dinámica de responsables: TODOS los activos del org (asesores + admins,
   // incluye nuevos). Reemplaza la lista hardcodeada. fn_org_team_members es
   // SECURITY DEFINER + org-scoped, así que el admin ve a todo su equipo.
@@ -251,15 +269,13 @@ export default function MetaPanel({
   const createAction = async () => {
     const txt = metaNewText.trim();
     if (!txt || !metaNewDate) return;               // fecha/hora OBLIGATORIA
-    if (_isManager && !metaNewAssignee) return;      // responsable OBLIGATORIO para que Telegram recuerde a la persona correcta
+    if (creatingForTeam && !metaNewAssignee) return; // responsable OBLIGATORIO para que Telegram recuerde a la persona correcta
     const dueIso = new Date(metaNewDate).toISOString();
     const localDate = new Date(metaNewDate).toLocaleString('es-MX',{ day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' });
-    // Un ASESOR que crea una acción de equipo la crea PARA SÍ MISMO → la auto-asignamos a él, así el
-    // coach de Telegram lo notifica solo. Un admin crea para otros → queda sin asignar y la asigna
-    // con "+ Responsable". (auth.js expone user.id = id de perfil, user.role y user.name.)
-    const _selfId = _isManager ? null : (user?.id || null);
-    const _selfName = _isManager ? null : (user?.name || null);
-    const assigneeName = _isManager ? metaNewAssignee : _selfName;
+    // Mi agenda se auto-asigna al usuario logueado. En modo equipo el admin elige
+    // responsable explícito para que el recordatorio llegue a la persona correcta.
+    const _selfId = creatingForTeam ? null : (user?.id || null);
+    const assigneeName = creatingForTeam ? metaNewAssignee : _selfName;
     const category = normalizeAgendaCategory(metaNewCategory);
     const base = {
       text: txt,
@@ -381,7 +397,7 @@ export default function MetaPanel({
   };
 
   const tabs = [
-    { id:"acciones",  label:"Lista de Acción" },
+    { id:"acciones",  label:"Agenda" },
     { id:"docs",      label:"Documentos" },
     { id:"plan",      label:"Plan Estratégico" },
     { id:"protocolo", label:"Protocolo de Ventas" },
@@ -451,6 +467,13 @@ export default function MetaPanel({
     setMetaNewDate("");
     setDuePickerOpen(null);
   };
+  const agendaActions = (_isManager && agendaView === "team")
+    ? metaActions
+    : metaActions.filter(_isOwnAction);
+  const pendingAgendaActions = agendaActions.filter(a => !a.done);
+  const completedAgendaActions = agendaActions.filter(a => a.done);
+  const ownPendingCount = metaActions.filter(a => !a.done && _isOwnAction(a)).length;
+  const teamPendingCount = metaActions.filter(a => !a.done).length;
   const chevron  = `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='${isLight ? "%235C6B82" : "%238B99AE"}' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'><path d='M6 9l6 6 6-6'/></svg>")`;
   const panelBg  = isLight
     ? "#F1F3F6"
@@ -582,17 +605,22 @@ export default function MetaPanel({
             <div style={{ width:"100%" }}>
               {/* Header + progreso */}
               {(() => {
-                const pend = metaActions.filter(a=>!a.done).length;
-                const done = metaActions.filter(a=>a.done).length;
+                const pend = pendingAgendaActions.length;
+                const done = completedAgendaActions.length;
                 const total = pend + done;
                 const pct = total ? Math.round((done/total)*100) : 0;
+                const isTeamView = _isManager && agendaView === "team";
                 return (
                   <div style={{ display:"flex", alignItems:"flex-end", justifyContent:"space-between", gap:24, flexWrap:"wrap", marginBottom:26 }}>
                     <div>
-                      <h3 style={{ margin:0, fontSize:28, fontWeight:800, fontFamily:fontDisp, letterSpacing:"-0.045em", color:T.txt }}>Acciones del Equipo</h3>
+                      <h3 style={{ margin:0, fontSize:28, fontWeight:800, fontFamily:fontDisp, letterSpacing:"-0.045em", color:T.txt }}>
+                        Agenda personal y profesional
+                      </h3>
                       <p style={{ margin:"8px 0 0", fontSize:14, color:T.txt3, fontFamily:font }}>
                         <span style={{ color:T.txt2, fontWeight:600 }}>{pend}</span> pendientes · {done} completadas
-                        <span style={{ marginLeft:8, opacity:0.55 }}>· Arrastra para reordenar</span>
+                        <span style={{ marginLeft:8, opacity:0.55 }}>
+                          · {isTeamView ? "Vista de todo el equipo" : "Tu espacio de trabajo"}
+                        </span>
                       </p>
                     </div>
                     {total > 0 && (
@@ -606,6 +634,68 @@ export default function MetaPanel({
                   </div>
                 );
               })()}
+
+              {_isManager && (
+                <div style={{
+                  display:"grid",
+                  gridTemplateColumns:isMobile ? "1fr" : "repeat(2, minmax(220px, 1fr))",
+                  gap:10,
+                  margin:"-10px 0 18px",
+                }}>
+                  {[
+                    { id:"mine", title:"Mi agenda", sub:"Personal y profesional del admin", count:ownPendingCount, Icon:UserRound },
+                    { id:"team", title:"Equipo completo", sub:"Ver y asignar actividades", count:teamPendingCount, Icon:Users },
+                  ].map(({ id, title, sub, count, Icon }) => {
+                    const active = agendaView === id;
+                    return (
+                      <button
+                        key={id}
+                        type="button"
+                        onClick={() => setAgendaView(id)}
+                        style={{
+                          minHeight:74,
+                          borderRadius:24,
+                          padding:"14px 16px",
+                          display:"flex",
+                          alignItems:"center",
+                          gap:13,
+                          textAlign:"left",
+                          cursor:"pointer",
+                          border:`1px solid ${active ? _hex(T.accent,"58") : (isLight ? "rgba(15,23,42,0.075)" : "rgba(255,255,255,0.085)")}`,
+                          background:active
+                            ? `linear-gradient(135deg, ${_hex(T.accent,"16")}, ${isLight ? "rgba(255,255,255,0.82)" : "rgba(255,255,255,0.05)"})`
+                            : (isLight ? "rgba(255,255,255,0.68)" : "rgba(255,255,255,0.035)"),
+                          boxShadow:active ? `0 14px 34px ${_hex(T.accent,"14")}, inset 0 1px 0 rgba(255,255,255,0.48)` : "none",
+                        }}
+                      >
+                        <span style={{
+                          width:42, height:42, borderRadius:17,
+                          display:"flex", alignItems:"center", justifyContent:"center",
+                          color:active ? T.accent : T.txt3,
+                          background:active ? `${T.accent}14` : (isLight ? "rgba(15,23,42,0.045)" : "rgba(255,255,255,0.055)"),
+                          flexShrink:0,
+                        }}>
+                          <Icon size={19} strokeWidth={2.05} />
+                        </span>
+                        <span style={{ minWidth:0, flex:1 }}>
+                          <span style={{ display:"block", color:T.txt, fontSize:14.5, fontWeight:850, fontFamily:fontDisp, letterSpacing:"-0.025em" }}>{title}</span>
+                          <span style={{ display:"block", color:T.txt3, fontSize:11.5, fontWeight:650, fontFamily:font, marginTop:2 }}>{sub}</span>
+                        </span>
+                        <span style={{
+                          minWidth:34, height:28, padding:"0 10px", borderRadius:999,
+                          display:"flex", alignItems:"center", justifyContent:"center",
+                          color:active ? T.accent : T.txt2,
+                          background:active ? `${T.accent}12` : (isLight ? "rgba(15,23,42,0.045)" : "rgba(255,255,255,0.05)"),
+                          border:`1px solid ${active ? _hex(T.accent,"26") : "transparent"}`,
+                          fontSize:12.5, fontWeight:850, fontFamily:fontDisp,
+                        }}>
+                          {count}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
 
               {/* Composer premium */}
               <div style={{
@@ -678,29 +768,42 @@ export default function MetaPanel({
                     >
                       {AGENDA_CATEGORIES.map(c => <option key={c.id} value={c.id}>{c.label}</option>)}
                     </select>
-                    <select
-                      className="mp-select"
-                      value={_isManager ? metaNewAssignee : (user?.name || "")}
-                      disabled={!_isManager}
-                      onChange={e => setMetaNewAssignee(e.target.value)}
-                      title="Responsable"
-                      style={{
-                        height:36, maxWidth:isMobile ? "100%" : 260,
-                        borderRadius:999, padding:"0 30px 0 13px",
+                    {creatingForTeam ? (
+                      <select
+                        className="mp-select"
+                        value={metaNewAssignee}
+                        onChange={e => setMetaNewAssignee(e.target.value)}
+                        title="Asignar responsable"
+                        style={{
+                          height:36, maxWidth:isMobile ? "100%" : 280,
+                          borderRadius:999, padding:"0 30px 0 13px",
+                          background:isLight ? "rgba(248,250,252,0.92)" : "rgba(255,255,255,0.052)",
+                          border:`1px solid ${metaNewAssignee ? _hex(T.accent,"45") : (isLight ? "rgba(15,23,42,0.075)" : "rgba(255,255,255,0.085)")}`,
+                          color:metaNewAssignee ? T.txt2 : T.txt3,
+                          fontSize:12.5, fontWeight:750, fontFamily:font,
+                          outline:"none", cursor:"pointer",
+                        }}
+                      >
+                        <option value="">Asignar a un asesor</option>
+                        {metaNewCategory !== "personal" && <option value="Todos">Todos (equipo)</option>}
+                        {teamMemberOptions.map(n => (
+                          <option key={n} value={n}>{n}</option>
+                        ))}
+                      </select>
+                    ) : (
+                      <span style={{
+                        height:36, maxWidth:isMobile ? "100%" : 280,
+                        borderRadius:999, padding:"0 13px",
+                        display:"inline-flex", alignItems:"center", gap:8,
                         background:isLight ? "rgba(248,250,252,0.92)" : "rgba(255,255,255,0.052)",
-                        border:`1px solid ${(_isManager ? metaNewAssignee : user?.name) ? _hex(T.accent,"45") : (isLight ? "rgba(15,23,42,0.075)" : "rgba(255,255,255,0.085)")}`,
-                        color:(_isManager ? metaNewAssignee : user?.name) ? T.txt2 : T.txt3,
+                        border:`1px solid ${_hex(T.accent,"35")}`,
+                        color:T.txt2,
                         fontSize:12.5, fontWeight:750, fontFamily:font,
-                        outline:"none", cursor:_isManager ? "pointer" : "default",
-                        opacity:_isManager ? 1 : 0.82,
-                      }}
-                    >
-                      <option value="">{_isManager ? "Responsable" : (user?.name || "Para mí")}</option>
-                      {metaNewCategory !== "personal" && <option value="Todos">Todos (equipo)</option>}
-                      {(teamMembers.length ? teamMembers : ["Oscar Gálvez","Alexia Santillán","Araceli Oneto","Ken Duke","Emmanuel Ortiz","Cecilia Mendoza"]).map(n => (
-                        <option key={n} value={n}>{n}</option>
-                      ))}
-                    </select>
+                      }}>
+                        <UserRound size={13} color={T.accent} strokeWidth={2.2} />
+                        Para mí · {_selfName}
+                      </span>
+                    )}
                     <span style={{ marginLeft:"auto", fontSize:11.5, fontFamily:font, color:T.txt3, whiteSpace:"nowrap" }}>
                       Enter crea si está completo
                     </span>
@@ -1027,7 +1130,7 @@ export default function MetaPanel({
                     </div>
                   )}
                 </div>
-                {(() => { const canAdd = !!(metaNewText.trim() && metaNewDate && (!_isManager || metaNewAssignee)); return (
+                {(() => { const canAdd = !!(metaNewText.trim() && metaNewDate && (!creatingForTeam || metaNewAssignee)); return (
                 <button
                   onClick={createAction}
                   style={{
@@ -1055,16 +1158,18 @@ export default function MetaPanel({
               </div>
 
               {/* Empty state */}
-              {metaActions.filter(a=>!a.done).length === 0 && (
+              {pendingAgendaActions.length === 0 && (
                 <div style={{ textAlign:"center", padding:"56px 20px 44px" }}>
                   <div style={{ width:56, height:56, borderRadius:16, background:`${T.accent}0D`, border:`1px solid ${T.accent}1F`, display:"flex", alignItems:"center", justifyContent:"center", margin:"0 auto 16px" }}>
                     <Check size={24} color={T.accent} strokeWidth={1.8} style={{ opacity:0.8 }} />
                   </div>
                   <p style={{ margin:"0 0 5px", fontSize:15, fontWeight:600, fontFamily:fontDisp, letterSpacing:"-0.02em", color:T.txt }}>Todo al día</p>
-                  <p style={{ margin:0, fontSize:12.5, color:T.txt3, fontFamily:font }}>Sin acciones pendientes — agrega la primera arriba.</p>
+                  <p style={{ margin:0, fontSize:12.5, color:T.txt3, fontFamily:font }}>
+                    {creatingForTeam ? "Sin pendientes del equipo — asigna la primera arriba." : "Sin pendientes en tu agenda — agrega la primera arriba."}
+                  </p>
                 </div>
               )}
-              {metaActions.filter(a=>!a.done).slice().sort((a, b) => {
+              {pendingAgendaActions.slice().sort((a, b) => {
                 const order = { personal: 0, profesional: 1 };
                 const ca = normalizeAgendaCategory(a.agendaCategory || a.category || a.lead);
                 const cb = normalizeAgendaCategory(b.agendaCategory || b.category || b.lead);
@@ -1159,7 +1264,7 @@ export default function MetaPanel({
                     <option value="">＋ Responsable</option>
                     <option value="Todos">👥 Todos (todo el equipo)</option>
                     <optgroup label="── Equipo Humano">
-                      {(teamMembers.length ? teamMembers : ["Oscar Gálvez","Alexia Santillán","Araceli Oneto","Ken Duke","Emmanuel Ortiz","Cecilia Mendoza"]).map(n => (
+                      {teamMemberOptions.map(n => (
                         <option key={n} value={n}>{n}</option>
                       ))}
                     </optgroup>
@@ -1311,7 +1416,7 @@ export default function MetaPanel({
               })}
 
               {/* Completed tasks — collapsible */}
-              {metaActions.filter(a=>a.done).length > 0 && (
+              {completedAgendaActions.length > 0 && (
                 <div style={{ marginTop:18 }}>
                   <button
                     onClick={() => setDoneCollapsed(x => !x)}
@@ -1319,12 +1424,12 @@ export default function MetaPanel({
                     <div style={{ flex:1, height:1, background:T.border }} />
                     <span style={{ fontSize:12, fontWeight:600, color:T.txt3, fontFamily:font, whiteSpace:"nowrap", display:"flex", alignItems:"center", gap:6 }}>
                       <Check size={12} color={T.accent} />
-                      {metaActions.filter(a=>a.done).length} completadas
+                      {completedAgendaActions.length} completadas
                       <span style={{ fontSize:10.5, opacity:0.6 }}>{doneCollapsed ? "▸ ver" : "▾ ocultar"}</span>
                     </span>
                     <div style={{ flex:1, height:1, background:T.border }} />
                   </button>
-                  {!doneCollapsed && metaActions.filter(a=>a.done).map(a => (
+                  {!doneCollapsed && completedAgendaActions.map(a => (
                     <div key={a.id} style={{
                       display:"flex", alignItems:"flex-start", gap:11,
                       padding:"11px 16px", borderRadius:12, marginBottom:6,
