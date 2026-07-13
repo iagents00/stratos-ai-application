@@ -7,36 +7,34 @@ body {
   text-rendering: optimizeLegibility;
 }
 
-/* ══════════════════════════════════════════════════════════════════
-   THEME SWITCH — transición suave entre modo oscuro y claro.
-   La clase .theme-transitioning se aplica a <html> por ~260 ms durante
-   el cambio. Solo entonces los colores se interpolan; el resto del
-   tiempo los cambios son instantáneos (hovers, focus, etc. mantienen
-   su sensación habitual sin overhead).
-   En navegadores con View Transitions API (Chrome 111+), preferimos
-   ese mecanismo nativo y este bloque queda como fallback.
-   ══════════════════════════════════════════════════════════════════ */
-html.theme-transitioning,
-html.theme-transitioning *,
-html.theme-transitioning *::before,
-html.theme-transitioning *::after {
-  transition:
-    background-color 260ms ease,
-    background 260ms ease,
-    color 260ms ease,
-    border-color 260ms ease,
-    fill 260ms ease,
-    stroke 260ms ease,
-    box-shadow 260ms ease,
-    backdrop-filter 260ms ease !important;
+/* THEME SWITCH — una sola capa barata para CPU/GPU.
+   El tema debajo cambia de forma atómica; esta capa conserva el color anterior
+   y sale con opacity, propiedad que el compositor puede mover sin repintar el
+   árbol completo. Funciona igual aunque fuentes/datos sigan llegando por red. */
+html.theme-cover-dark::after,
+html.theme-cover-light::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 2147483647;
+  pointer-events: none;
+  opacity: 0;
+  background: #030810;
+  transition: opacity 180ms cubic-bezier(.22, .61, .36, 1);
+  will-change: opacity;
+  contain: strict;
 }
 
-/* View Transitions (Chrome/Edge 111+): cross-fade nativo. El navegador
-   compone un snapshot del estado anterior y lo mezcla contra el nuevo. */
-::view-transition-old(root),
-::view-transition-new(root) {
-  animation-duration: 280ms;
-  animation-timing-function: ease;
+html.theme-cover-light::after { background: #f7f8fa; }
+
+html.theme-cover-active::after {
+  opacity: 1;
+  transition: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html.theme-cover-dark::after,
+  html.theme-cover-light::after { transition-duration: 0ms; }
 }
 
 /* ── FORCE FONT INHERITANCE — form controls por defecto usan fuente del sistema
