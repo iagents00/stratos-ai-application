@@ -122,7 +122,7 @@ function useDebounced(value, ms = 200) {
   return debounced;
 }
 
-function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () => {}, isRefreshing = false, autoOpenPriority1 = 0, onAutoOpenHandled, softDeleteLead, autoOpenLead = null, onAutoOpenLeadHandled = () => {}, autoOpenNewLead = 0, onNewLeadHandled = () => {} }) {
+function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () => {}, isRefreshing = false, autoOpenPriority1 = 0, onAutoOpenHandled, softDeleteLead, autoOpenLead = null, onAutoOpenLeadHandled = () => {}, autoOpenNewLead = 0, onNewLeadHandled = () => {}, onOpenComando = null }) {
   const { user } = useAuth();
   const { config: clientConfig, clientId } = useClient();
   const { get: getScheduledCall } = useScheduledCalls();
@@ -305,6 +305,11 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
   // tiene crm.advisorMetricsTab=true Y el usuario es admin/director/super_admin/ceo.
   const [showMetrics, setShowMetrics]   = useState(false);
   const metricsTabEnabled = clientConfig?.crm?.advisorMetricsTab === true && canSeeAll;
+  // Si el cliente tiene Comando Directivo (dashboard ejecutivo que YA incluye la
+  // tabla de indicadores por asesor + evolución + PDF), el botón "Indicadores"
+  // lleva ahí en vez de mostrar la tabla suelta acá. Sin Comando Directivo,
+  // conserva el comportamiento previo (toggle de la tabla inline).
+  const comandoDirectivoEnabled = clientConfig?.features?.comandoDirectivo === true && typeof onOpenComando === "function";
   // Bloqueo de doble submit:
   //   · submittingRef    → guard SÍNCRONO. Imprescindible porque React
   //     useState es async: 10 clics en el mismo tick verían el state
@@ -2221,8 +2226,10 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
           <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
             {metricsTabEnabled && (
               <button
-                onClick={() => setShowMetrics(v => !v)}
-                title={showMetrics ? "Volver al CRM" : "Ver indicadores de asesores"}
+                onClick={() => (comandoDirectivoEnabled ? onOpenComando() : setShowMetrics(v => !v))}
+                title={comandoDirectivoEnabled
+                  ? "Ir al Comando Directivo (indicadores por asesor)"
+                  : (showMetrics ? "Volver al CRM" : "Ver indicadores de asesores")}
                 style={{
                   display: "flex", alignItems: "center", gap: 7, padding: "9px 14px",
                   borderRadius: 11,
