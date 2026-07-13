@@ -705,8 +705,8 @@ export default function MetaPanel({
                 position:"relative",
                 zIndex: duePickerOpen ? 80 : 1,
                 display:"grid",
-                gridTemplateColumns: isMobile ? "1fr" : "minmax(420px, 1.12fr) minmax(380px, 0.82fr)",
-                gap:12,
+                gridTemplateColumns: isMobile ? "1fr" : "repeat(2, minmax(220px, 1fr))",
+                gap:10,
                 marginBottom: metaNewText.trim() ? 14 : 30,
                 alignItems:"stretch",
               }}>
@@ -839,7 +839,7 @@ export default function MetaPanel({
                         background: duePickerOpen === "date" || selectedDueDate ? `${T.accent}11` : (isLight?"rgba(248,250,252,0.82)":"rgba(255,255,255,0.045)"),
                         color: selectedDueDate ? T.txt : T.txt2, cursor:"pointer", fontFamily:fontDisp,
                         display:"flex", alignItems:"center", justifyContent:"center", gap:9,
-                        fontSize:14.5, fontWeight:800, letterSpacing:"-0.025em",
+                        fontSize:15, fontWeight:500, letterSpacing:"0.02em",
                       }}
                     >
                       <CalendarDays size={17} color={duePickerOpen === "date" || selectedDueDate ? T.accent : T.txt3} strokeWidth={2.25} />
@@ -854,7 +854,7 @@ export default function MetaPanel({
                         background: duePickerOpen === "time" || selectedDueTime ? `${T.accent}11` : (isLight?"rgba(248,250,252,0.82)":"rgba(255,255,255,0.045)"),
                         color: selectedDueTime ? T.txt : T.txt2, cursor:"pointer", fontFamily:fontDisp,
                         display:"flex", alignItems:"center", justifyContent:"center", gap:9,
-                        fontSize:14.5, fontWeight:800, letterSpacing:"-0.025em",
+                        fontSize:15, fontWeight:500, letterSpacing:"0.02em",
                       }}
                     >
                       <Clock size={17} color={duePickerOpen === "time" || selectedDueTime ? T.accent : T.txt3} strokeWidth={2.25} />
