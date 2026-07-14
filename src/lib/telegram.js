@@ -120,23 +120,86 @@ export async function getCopilotActivity(limit = 40) {
   }
 }
 
+const N8N_TELEGRAM_BOT_WEBHOOK = "https://personal-n8n.suwsiw.easypanel.host/webhook/3acfc71b-4861-4f8a-a7fa-a27459372fc7";
+
 /**
  * COPILOT — envía un mensaje al asistente (mismo cerebro que el bot de Telegram).
- * El RPC copilot_send resuelve el chat_id del usuario autenticado, llama a
- * bot_nlu_dispatch_gvintell (que responde y registra user+ai en tg_bot_activity)
- * y devuelve el texto de la respuesta.
+ * El RPC copilot_send resuelve comandos rápidos deterministas (mis clientes, agenda,
+ * kpis, pipeline, menu). Si el texto es libre, NLU, audios o preguntas complejas
+ * (ej. manual de ventas, recomendaciones), copilot_send devuelve "No conozco esa accion"
+ * y automáticamente derivamos la consulta al webhook de n8n (@Strato_sasistente_crm_bot)
+ * para que el LLM de OpenAI procese y responda al usuario.
  *
  * @param {string} text
  * @returns {Promise<{ reply: string|null, error: string|null }>}
  */
 export async function sendCopilotMessage(text) {
   try {
-    const { data, error } = await supabase.rpc('copilot_send', { p_text: text })
-    if (error) return { reply: null, error: error.message }
-    if (data === '__NOT_PAIRED__') return { reply: null, error: 'not_paired' }
-    return { reply: typeof data === 'string' ? data : '', error: null }
+    const { data, error } = await supabase.rpc('copilot_send', { p_text: text });
+    if (error) return { reply: null, error: error.message };
+    if (data === '__NOT_PAIRED__') return { reply: null, error: 'not_paired' };
+
+    const replyText = typeof data === 'string' ? data : '';
+
+    // Si el SQL determinista respondió exitosamente (comandos cortos / menú), lo retornamos
+    if (replyText && !replyText.toLowerCase().includes('no conozco esa accion') && !replyText.toLowerCase().includes('no conozco esa acción')) {
+      return { reply: replyText, error: null };
+    }
+
+    // Si es texto libre o pregunta NLU / LLM ("mándame el manual", audios, etc.),
+    // derivamos directamente al webhook v5 en n8n con el telegram_chat_id del asesor.
+    const { data: { session } } = await withTimeout(supabase.auth.getSession(), GETSESSION_TIMEOUT, 'getSession');
+    if (!session?.user?.id) return { reply: replyText || "Recibido.", error: null };
+
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('telegram_chat_id')
+      .eq('id', session.user.id)
+      .single();
+
+    if (profile?.telegram_chat_id) {
+      const chatId = Number(profile.telegram_chat_id);
+
+      // Limpiamos de tg_bot_activity el registro "No conozco esa accion" que insertó copilot_send
+      try {
+        await supabase
+          .from('tg_bot_activity')
+          .delete()
+          .eq('telegram_chat_id', chatId)
+          .ilike('content', '%No conozco esa accion%');
+      } catch { /* noop */ }
+
+      // Disparamos el cerebro LLM en n8n simulando el evento entrante de Telegram
+      try {
+        await fetch(N8N_TELEGRAM_BOT_WEBHOOK, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            message: {
+              from: { id: chatId },
+              chat: { id: chatId },
+              text: text
+            }
+          })
+        });
+      } catch { /* noop */ }
+
+      // Insertamos una confirmación provisional del bot mientras el LLM termina (2-4s)
+      const nluMsg = "✨ Procesando tu consulta con el asistente de IA y el manual de ventas en la nube (te responderá en un momento y también por Telegram)...";
+      try {
+        await supabase
+          .from('tg_bot_activity')
+          .insert([
+            { telegram_chat_id: chatId, role: 'ai', content: nluMsg, occurred_at: new Date().toISOString() }
+          ]);
+      } catch { /* noop */ }
+
+      return { reply: nluMsg, error: null };
+    }
+
+    return { reply: replyText, error: null };
   } catch (e) {
-    return { reply: null, error: e?.message || 'Error de conexión' }
+    return { reply: null, error: e?.message || 'Error de conexión' };
   }
 }
 

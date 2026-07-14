@@ -52,8 +52,14 @@
     <link rel="preconnect" href="https://glulgyhkrqpykxmujodb.supabase.co" crossorigin />
     <link rel="dns-prefetch" href="https://glulgyhkrqpykxmujodb.supabase.co" />
     <title>Stratos AI | Sistema Operativo</title>
-    <!-- Tailwind CDN: usado solo por la pagina /diagnostico. Cero impacto en el resto de la app porque ninguna otra pagina usa classes Tailwind. -->
-  <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Tailwind CDN: cargado dinámicamente sólo en la landing /diagnostico para no generar warnings ni retrasar la carga en el CRM -->
+    <script>
+      if (window.location.pathname.startsWith('/diagnostico')) {
+        var s = document.createElement('script');
+        s.src = "https://cdn.tailwindcss.com";
+        document.head.appendChild(s);
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>
