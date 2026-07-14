@@ -63,7 +63,7 @@ const Team = ({ T: _T }) => {
             <span style={{ fontSize: 11, color: m.e > 85 ? T.emerald : m.e > 70 ? T.blue : T.rose, fontWeight: 400, fontFamily: fontDisp }}>{m.e}%</span>
           </div>
           <div style={{ height: 28 }}>
-            <ResponsiveContainer width="100%" height={28}>
+            <ResponsiveContainer width="100%" height={28} minWidth={100} minHeight={10}>
               <AreaChart data={[{ v: 2 }, { v: 5 }, { v: 3 }, { v: 7 }, { v: 5 }, { v: 8 }]}>
                 <Area type="monotone" dataKey="v" stroke={T.accent} strokeWidth={1.2} fill={`${T.accent}14`} />
               </AreaChart>
@@ -101,7 +101,7 @@ const Team = ({ T: _T }) => {
       </G>
       <G T={T}>
         <p style={{ fontSize: 13, fontWeight: 500, color: T.txt, marginBottom: 12 }}>Revenue por asesor</p>
-        <ResponsiveContainer width="100%" height={190}>
+        <ResponsiveContainer width="100%" height={190} minWidth={100} minHeight={100}>
           <BarChart data={team} layout="vertical">
             <XAxis type="number" tick={{ fill: T.txt3, fontSize: 10, fontFamily: fontDisp }} axisLine={false} tickLine={false} />
             <YAxis type="category" dataKey="n" tick={{ fill: T.txt2, fontSize: 10, fontFamily: font }} axisLine={false} tickLine={false} width={95} />
