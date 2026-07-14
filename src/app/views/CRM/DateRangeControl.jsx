@@ -55,6 +55,7 @@ export default function DateRangeControl({ T, isLight, value, onChange, label = 
 
   return (
     <div style={{
+      position: "relative",
       display: "flex", flexDirection: "column", gap: 12,
       padding: 14, borderRadius: 18,
       background: surface, border: `1px solid ${border}`,
@@ -126,16 +127,24 @@ export default function DateRangeControl({ T, isLight, value, onChange, label = 
         </button>
       </div>
 
-      {/* Calendario de selección por clicks */}
+      {/* Calendario de selección por clicks — FLOTA sobre el contenido (no empuja
+          el layout). Backdrop invisible para cerrar al hacer clic afuera. */}
       {calOpen && (
-        <RangeCalendar
-          T={T}
-          isLight={isLight}
-          fromStr={value.customFrom}
-          toStr={value.customTo}
-          onPick={(from, to) => onChange({ ...value, preset: "custom", customFrom: from, customTo: to })}
-          onApply={() => setCalOpen(false)}
-        />
+        <>
+          <div
+            onClick={() => setCalOpen(false)}
+            style={{ position: "fixed", inset: 0, zIndex: 69 }}
+          />
+          <div style={{ position: "absolute", top: "100%", left: 14, marginTop: 8, zIndex: 70 }}>
+            <RangeCalendar
+              isLight={isLight}
+              fromStr={value.customFrom}
+              toStr={value.customTo}
+              onPick={(from, to) => onChange({ ...value, preset: "custom", customFrom: from, customTo: to })}
+              onApply={() => setCalOpen(false)}
+            />
+          </div>
+        </>
       )}
     </div>
   );
