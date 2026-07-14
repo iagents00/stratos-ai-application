@@ -1239,10 +1239,10 @@ export default function App() {
   );
   const sidebarTop  = accessibleAll.slice(0, 5);
   const hasMoreApps = accessibleAll.length > 5;
-  const appsActive  = sidebarMore || !sidebarTop.some(n => n.id === v);
+  const appsActive  = !metaOpen && (sidebarMore || !sidebarTop.some(n => n.id === v));
 
   const NavBtn = ({ n }) => {
-    const a = v === n.id;
+    const a = v === n.id && !metaOpen;
     const isAdmin = n.adminOnly;
     const hasAccess = canAccessModule(n.id, user, clientConfig);
     const mintC = isAdmin ? "#A78BFA" : "#6EE7C2";
@@ -1252,7 +1252,7 @@ export default function App() {
     return (
       <div style={{ display:"flex", flexDirection:"column", alignItems:"center", gap:3, width:56, padding:0 }}>
         <button
-          onClick={() => { setV(n.id); setSidebarMore(false); }}
+          onClick={() => { setV(n.id); setSidebarMore(false); setMetaOpen(false); }}
           title={(clientConfig?.navLabels?.[n.id] ?? n.l) + (!hasAccess ? " · Sin acceso" : "")}
           style={{
             width:48, height:40, borderRadius:14,
@@ -1422,10 +1422,10 @@ export default function App() {
               background: isLight ? "rgba(255,255,255,0.62)" : "linear-gradient(155deg, #0D1E18 0%, #080F10 55%, #040810 100%)",
               backdropFilter: isLight ? "blur(32px) saturate(180%)" : "none",
               WebkitBackdropFilter: isLight ? "blur(32px) saturate(180%)" : "none",
-              border: isLight ? "1px solid rgba(255,255,255,0.92)" : "1px solid rgba(110,231,194,0.17)",
+              border: metaOpen ? (isLight ? "1.5px solid rgba(13,154,118,0.55)" : "1.5px solid rgba(110,231,194,0.5)") : (isLight ? "1px solid rgba(255,255,255,0.92)" : "1px solid rgba(110,231,194,0.17)"),
               boxShadow: isLight
-                ? "inset 0 1.5px 0 rgba(255,255,255,1), 0 6px 28px rgba(13,154,118,0.10)"
-                : ["inset 0 1px 0 rgba(198,251,238,0.09)","inset 0 -1px 0 rgba(0,0,0,0.30)","0 14px 40px rgba(0,0,0,0.55)"].join(", "),
+                ? (metaOpen ? "0 0 0 3px rgba(13,154,118,0.14), inset 0 1.5px 0 rgba(255,255,255,1), 0 6px 28px rgba(13,154,118,0.18)" : "inset 0 1.5px 0 rgba(255,255,255,1), 0 6px 28px rgba(13,154,118,0.10)")
+                : (metaOpen ? "0 0 0 3px rgba(110,231,194,0.18), inset 0 1px 0 rgba(198,251,238,0.09), 0 14px 40px rgba(0,0,0,0.55)" : ["inset 0 1px 0 rgba(198,251,238,0.09)","inset 0 -1px 0 rgba(0,0,0,0.30)","0 14px 40px rgba(0,0,0,0.55)"].join(", ")),
               padding:"11px 9px 12px",
             }}>
               <div style={{ position:"absolute", top:0, left:0, right:0, height:"45%", background: isLight ? "linear-gradient(180deg, rgba(255,255,255,0.65) 0%, transparent 100%)" : "linear-gradient(180deg, rgba(52,211,153,0.07) 0%, transparent 100%)", pointerEvents:"none", borderRadius:"20px 20px 0 0" }} />
@@ -1475,7 +1475,7 @@ export default function App() {
           <div style={{ height:1, width:34, background: isLight ? "rgba(13,154,118,0.10)" : "rgba(255,255,255,0.06)", margin:"4px auto 8px" }} />
           <div style={{ display:"flex", flexDirection:"column", alignItems:"center", gap:3 }}>
             <button title={canAccessModule("admin", user) ? "Gestión de Usuarios" : "System - contrasena y soporte"}
-              onClick={() => canAccessModule("admin", user) ? setV("admin") : setV("perfil")}
+              onClick={() => { setMetaOpen(false); canAccessModule("admin", user) ? setV("admin") : setV("perfil"); }}
               style={{
                 width:44, height:44, borderRadius:13, cursor:"pointer",
                 background: v==="admin"
@@ -2067,7 +2067,7 @@ export default function App() {
                 const act = v === n.id;
                 const acol = n.adminOnly ? "#A78BFA" : (isLight ? T.accent : "#E9FCF4");
                 return (
-                  <button key={n.id} onClick={() => { setV(n.id); setSidebarMore(false); }} style={{
+                  <button key={n.id} onClick={() => { setV(n.id); setSidebarMore(false); setMetaOpen(false); }} style={{
                     display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:9, padding:"18px 6px", borderRadius:18, cursor:"pointer",
                     border: act ? (isLight ? `1px solid ${acol}45` : "1px solid rgba(190,245,225,0.16)") : (isLight ? "1px solid rgba(15,23,42,0.06)" : "1px solid rgba(255,255,255,0.05)"),
                     background: act ? (isLight ? `linear-gradient(180deg, rgba(255,255,255,0.95), ${acol}12)` : "linear-gradient(180deg, rgba(255,255,255,0.06), rgba(110,231,194,0.03))") : (isLight ? "rgba(15,23,42,0.02)" : "rgba(255,255,255,0.025)"),
