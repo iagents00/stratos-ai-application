@@ -15,6 +15,7 @@ import { P, font, fontDisp } from "../../../design-system/tokens";
 import { G, KPI, Pill, Ico } from "../../SharedComponents";
 import LandingPagePreview from "./LandingPagePreview";
 import { catalogToLandingProps, encodeLanding } from "./catalogAdapter";
+import { useAuth } from "../../../hooks/useAuth";
 
 const team = [
   { n: "Oscar Gálvez",      r: "CEO Ejecutivo",         wa: "+52 998 000 0001", cal: "" },
@@ -1018,9 +1019,12 @@ const LandingPages = ({ T = P }) => {
     { id: 2, client: "James Mitchell", date: "2 Abr 2026", props: 4, status: "Vista", budget: "$180K-$650K", opens: 2, asesor: "Emmanuel Ortiz" },
     { id: 3, client: "Sarah Williams", date: "1 Abr 2026", props: 2, status: "Generada", budget: "$300K-$600K", opens: 0, asesor: "Cecilia Mendoza" },
   ]);
-  const [asesor, setAsesor] = useState("Emmanuel Ortiz");
-  const [asesorWA, setAsesorWA] = useState("+52 998 000 0002");
+  const [asesor, setAsesor] = useState("");
+  const [asesorWA, setAsesorWA] = useState("");
   const [asesorCal, setAsesorCal] = useState("");
+  const { user } = useAuth();
+  const isAdmin = ["admin", "super_admin", "owner"].includes(user?.role);
+  const [advOpen, setAdvOpen] = useState(false);
   const [mensaje, setMensaje] = useState("");
   const [lpTheme, setLpTheme] = useState("dark");
   const [generatedId, setGeneratedId] = useState(null);
@@ -1065,10 +1069,14 @@ const LandingPages = ({ T = P }) => {
   };
 
   // When asesor changes, auto-fill contact info from team data
+  // El asesor sale de la CUENTA (no se le pide). El admin puede sobreescribir
+  // en "Opciones avanzadas"; mientras esté cerrado, se sincroniza con la cuenta.
   useEffect(() => {
-    const member = team.find(t => t.n === asesor);
-    if (member) { setAsesorWA(member.wa || ""); setAsesorCal(member.cal || ""); }
-  }, [asesor]);
+    if (!user || advOpen) return;
+    setAsesor(user.name || "");
+    setAsesorWA(user.phone || "");
+    if (!isAdmin) setAsesorCal("");
+  }, [user, advOpen, isAdmin]);
 
   const budgetOptions = [
     { label: "$120K", value: 120000 },
@@ -1146,7 +1154,7 @@ const LandingPages = ({ T = P }) => {
   const buildPublicUrl = () => {
     const props = allProperties.filter(p => selectedProps.includes(p.id));
     if (props.length === 0) return null;
-    const d = encodeLanding({ client: clientName, mensaje, asesor, asesorWA, asesorCal, agencyName, properties: props, driveLinks });
+    const d = encodeLanding({ client: clientName, mensaje, asesor, asesorWA, asesorCal, properties: props, driveLinks });
     return `${window.location.origin}/p#d=${d}`;
   };
   const handleCopyLink = () => {
@@ -1531,68 +1539,47 @@ const LandingPages = ({ T = P }) => {
           />
         </div>
 
-        <div style={{ marginBottom: 18 }}>
-          <label style={{ fontSize: 11, color: T.txt2, display: "flex", alignItems: "center", gap: 6, marginBottom: 6, fontWeight: 400, letterSpacing: "0.03em" }}>
-            <Building2 size={11} color={T.accent} /> Nombre de la agencia / bróker
-          </label>
-          <input
-            type="text" value={agencyName}
-            onChange={e => { setAgencyName(e.target.value); localStorage.setItem("stratos_agency_name", e.target.value); }}
-            placeholder="Ej: STRATOS REALTY, Inmobiliaria Azul, RE/MAX Elite…"
-            style={{ width: "100%", padding: "10px 14px", borderRadius: 9, fontSize: 13, background: T.glass, border: `1px solid ${T.accentB}`, color: T.txt, fontFamily: font, outline: "none" }}
-            onFocus={e => e.target.style.borderColor = T.accent + "60"}
-            onBlur={e => e.target.style.borderColor = T.accentB}
-          />
-          <p style={{ fontSize: 10, color: T.txt3, marginTop: 4 }}>Aparece en el encabezado de la landing page del cliente. Se guarda automáticamente.</p>
-        </div>
 
-        <div style={{ marginBottom: 18 }}>
-          <label style={{ fontSize: 11, color: T.txt2, display: "block", marginBottom: 6, fontWeight: 400, letterSpacing: "0.03em" }}>Asesor asignado</label>
-          <select value={asesor} onChange={e => setAsesor(e.target.value)} style={{
-            width: "100%", padding: "12px 16px", borderRadius: 10, fontSize: 13,
-            background: T.surface || T.glass, border: `1px solid ${T.border}`, color: T.txt,
-            fontFamily: font, cursor: "pointer",
-          }}>
-            {team.map(t => <option key={t.n} value={t.n}>{t.n} — {t.r}</option>)}
-          </select>
-        </div>
-
-        {/* Asesor contact info */}
-        <div style={{ marginBottom: 18, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-          <div>
-            <label style={{ fontSize: 11, color: T.txt2, display: "flex", alignItems: "center", gap: 5, marginBottom: 6, fontWeight: 400, letterSpacing: "0.03em" }}>
-              <Phone size={11} color={T.emerald} /> WhatsApp del asesor
-            </label>
-            <input
-              type="text" value={asesorWA} onChange={e => setAsesorWA(e.target.value)}
-              placeholder="+52 998 000 0000"
-              style={{ width: "100%", padding: "10px 14px", borderRadius: 9, fontSize: 13, background: T.glass, border: `1px solid ${asesorWA ? T.emerald + "50" : T.border}`, color: T.txt, fontFamily: font, outline: "none" }}
-              onFocus={e => e.target.style.borderColor = T.emerald + "70"}
-              onBlur={e => e.target.style.borderColor = asesorWA ? T.emerald + "50" : T.border}
-            />
-            {asesorWA && (
-              <a href={`https://wa.me/${asesorWA.replace(/\D/g,"")}`} target="_blank" rel="noreferrer" style={{ fontSize: 10, color: T.emerald, marginTop: 4, display: "inline-block" }}>
-                Verificar número →
-              </a>
+        {/* Asesor: se toma de la CUENTA. Solo el admin puede usar otros datos. */}
+        <div style={{ marginBottom: 18, padding: "12px 14px", borderRadius: 10, background: T.glass, border: `1px solid ${T.border}` }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, flexWrap: "wrap" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
+              <Ico icon={User} sz={34} is={15} c={T.accent} />
+              <div style={{ minWidth: 0 }}>
+                <p style={{ fontSize: 13, fontWeight: 600, color: T.txt, fontFamily: fontDisp }}>{asesor || "Tu cuenta"}</p>
+                <p style={{ fontSize: 11, color: T.txt3, fontFamily: font }}>
+                  {asesorWA || "Agrega tu WhatsApp en tu perfil"}{asesorCal ? " · agenda ✓" : ""}
+                </p>
+              </div>
+            </div>
+            {isAdmin && (
+              <button onClick={() => setAdvOpen(o => !o)} style={{ padding: "7px 13px", borderRadius: 9, border: `1px solid ${advOpen ? T.accent + "60" : T.border}`, background: advOpen ? T.accentS : T.glass, cursor: "pointer", color: advOpen ? T.accent : T.txt2, fontSize: 11, fontWeight: 600, fontFamily: font, whiteSpace: "nowrap" }}>
+                {advOpen ? "Usar mi cuenta" : "Otros datos"}
+              </button>
             )}
           </div>
-          <div>
-            <label style={{ fontSize: 11, color: T.txt2, display: "flex", alignItems: "center", gap: 5, marginBottom: 6, fontWeight: 400, letterSpacing: "0.03em" }}>
-              <CalendarDays size={11} color={T.blue} /> Link de agenda (Calendly, Cal.com…)
-            </label>
-            <input
-              type="text" value={asesorCal} onChange={e => setAsesorCal(e.target.value)}
-              placeholder="https://calendly.com/..."
-              style={{ width: "100%", padding: "10px 14px", borderRadius: 9, fontSize: 13, background: T.glass, border: `1px solid ${asesorCal ? T.blue + "50" : T.border}`, color: T.txt, fontFamily: font, outline: "none" }}
-              onFocus={e => e.target.style.borderColor = T.blue + "70"}
-              onBlur={e => e.target.style.borderColor = asesorCal ? T.blue + "50" : T.border}
-            />
-            {asesorCal && (
-              <a href={asesorCal} target="_blank" rel="noreferrer" style={{ fontSize: 10, color: T.blue, marginTop: 4, display: "inline-block" }}>
-                Verificar link →
-              </a>
-            )}
-          </div>
+          <p style={{ fontSize: 10, color: T.txt3, marginTop: 8, fontFamily: font }}>
+            El cliente verá estos datos de contacto en la landing. Se toman de tu cuenta automáticamente.
+          </p>
+          {isAdmin && advOpen && (
+            <div style={{ marginTop: 12, paddingTop: 12, borderTop: `1px dashed ${T.border}`, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+              <div style={{ gridColumn: "1 / -1" }}>
+                <label style={{ fontSize: 10, color: T.txt2, display: "block", marginBottom: 5, fontWeight: 600 }}>Nombre del asesor a mostrar</label>
+                <input value={asesor} onChange={e => setAsesor(e.target.value)} placeholder="Nombre del asesor"
+                  style={{ width: "100%", padding: "9px 12px", borderRadius: 9, fontSize: 13, background: T.surface || T.glass, border: `1px solid ${T.border}`, color: T.txt, fontFamily: font, outline: "none", boxSizing: "border-box" }} />
+              </div>
+              <div>
+                <label style={{ fontSize: 10, color: T.txt2, display: "flex", alignItems: "center", gap: 5, marginBottom: 5, fontWeight: 600 }}><Phone size={10} color={T.emerald} /> WhatsApp</label>
+                <input value={asesorWA} onChange={e => setAsesorWA(e.target.value)} placeholder="+52 998 000 0000"
+                  style={{ width: "100%", padding: "9px 12px", borderRadius: 9, fontSize: 13, background: T.surface || T.glass, border: `1px solid ${T.border}`, color: T.txt, fontFamily: font, outline: "none", boxSizing: "border-box" }} />
+              </div>
+              <div>
+                <label style={{ fontSize: 10, color: T.txt2, display: "flex", alignItems: "center", gap: 5, marginBottom: 5, fontWeight: 600 }}><CalendarDays size={10} color={T.blue} /> Agenda (opcional)</label>
+                <input value={asesorCal} onChange={e => setAsesorCal(e.target.value)} placeholder="https://calendly.com/..."
+                  style={{ width: "100%", padding: "9px 12px", borderRadius: 9, fontSize: 13, background: T.surface || T.glass, border: `1px solid ${T.border}`, color: T.txt, fontFamily: font, outline: "none", boxSizing: "border-box" }} />
+              </div>
+            </div>
+          )}
         </div>
 
         <div style={{ marginBottom: 18 }}>
@@ -1979,7 +1966,7 @@ const LandingPages = ({ T = P }) => {
           asesorWA={asesorWA}
           asesorCal={asesorCal}
           mensaje={mensaje}
-          agencyName={agencyName}
+          agencyName=""
           properties={allProperties.filter(p => selectedProps.includes(p.id))}
           driveLinks={driveLinks}
           onClose={() => { setPreviewOpen(false); resetForm(); }}
