@@ -293,7 +293,7 @@ const FinanzasAdmin = ({ T: _T }) => {
                 </div>
                 <Pill color={POS} s isLight={isLight}>en vivo</Pill>
               </div>
-              <ResponsiveContainer width="100%" height={220}>
+              <ResponsiveContainer width="100%" height={220} minWidth={100} minHeight={100}>
                 <AreaChart data={series} margin={{ top: 5, right: 5, bottom: 0, left: 0 }}>
                   <defs>
                     <linearGradient id="faIng" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor={POS} stopOpacity={0.25} /><stop offset="95%" stopColor={POS} stopOpacity={0} /></linearGradient>
@@ -403,7 +403,7 @@ const FinanzasAdmin = ({ T: _T }) => {
                 ))}
               </div>
             </div>
-            <ResponsiveContainer width="100%" height={300}>
+            <ResponsiveContainer width="100%" height={300} minWidth={100} minHeight={100}>
               <BarChart data={series} margin={{ top: 5, right: 10, bottom: 0, left: 0 }} barGap={3}>
                 <XAxis dataKey="mes" tick={{ fontSize: 10, fill: T.txt3 }} axisLine={false} tickLine={false} />
                 <YAxis tick={{ fontSize: 9, fill: T.txt3 }} axisLine={false} tickLine={false} tickFormatter={v => money(v)} width={52} />
