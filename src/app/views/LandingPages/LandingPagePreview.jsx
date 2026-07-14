@@ -23,7 +23,8 @@ const LandingPagePreview = ({ client, asesor, asesorWA = "", asesorCal = "", men
 
   const fmtPrice = (n) => n >= 1000000 ? `$${(n / 1000000).toFixed(1)}M` : `$${(n / 1000).toFixed(0)}K`;
 
-  const waPhone = asesorWA.replace(/\D/g, "");
+  const waDigits = asesorWA.replace(/\D/g, "");
+  const waPhone = waDigits.length === 10 ? "52" + waDigits : waDigits; // MX sin código de país
   const propNames = properties.map(p => p.name).join(", ");
   const waText = encodeURIComponent(`Hola ${asesor.split(" ")[0]}, acabo de revisar la presentación de propiedades que me enviaste (${propNames}). Me gustaría conocer más detalles.`);
   const waUrl = waPhone ? `https://wa.me/${waPhone}?text=${waText}` : null;
@@ -214,15 +215,15 @@ const LandingPagePreview = ({ client, asesor, asesorWA = "", asesorCal = "", men
           <div style={{ position: "relative", zIndex: 1, maxWidth: 900, margin: "0 auto", padding: "0 40px", width: "100%" }}>
             {/* Branding */}
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 30, animation: "fadeInUp 0.6s ease both" }}>
-              <StratosAtom size={24} color={currentProp.accent} />
-              <span style={{ fontSize: 14, color: "rgba(255,255,255,0.5)", fontWeight: 400, fontFamily: fontDisp, letterSpacing: "0.1em" }}>{agencyName}</span>
+              <StratosAtom size={22} color={currentProp.accent} />
+              <span style={{ fontSize: 12, color: "rgba(255,255,255,0.55)", fontWeight: 500, fontFamily: fontDisp, letterSpacing: "0.22em", textTransform: "uppercase" }}>Portafolio Privado</span>
             </div>
 
             {/* Personalized greeting */}
             <p style={{ fontSize: 16, color: "rgba(255,255,255,0.6)", fontFamily: font, marginBottom: 8, fontWeight: 400, animation: "fadeInUp 0.65s 0.08s ease both" }}>
               Preparado exclusivamente para
             </p>
-            <h1 style={{ fontSize: 52, fontWeight: 300, color: T.txt, fontFamily: fontDisp, letterSpacing: "-0.03em", lineHeight: 1.1, marginBottom: 20, animation: "floatSoft 5s 0.3s ease-in-out infinite, fadeInUp 0.7s 0.15s ease both" }}>
+            <h1 style={{ fontSize: "clamp(32px, 8.5vw, 52px)", fontWeight: 300, color: T.txt, fontFamily: fontDisp, letterSpacing: "-0.03em", lineHeight: 1.1, marginBottom: 20, animation: "floatSoft 5s 0.3s ease-in-out infinite, fadeInUp 0.7s 0.15s ease both" }}>
               {client || "Estimado Cliente"}
             </h1>
 
@@ -584,7 +585,7 @@ const LandingPagePreview = ({ client, asesor, asesorWA = "", asesorCal = "", men
 
             <div style={{ marginTop: 60, padding: "20px 0", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
               <p style={{ fontSize: 11, color: "rgba(255,255,255,0.25)" }}>
-                {agencyName} · Riviera Maya, México · Presentación confidencial generada para {client}
+                Riviera Maya, México · Presentación confidencial generada para {client}
               </p>
               <p style={{ fontSize: 10, color: "rgba(255,255,255,0.15)", marginTop: 6 }}>
                 Asesor: {asesor} · Abril 2026 · Todos los precios en USD · Sujeto a disponibilidad
