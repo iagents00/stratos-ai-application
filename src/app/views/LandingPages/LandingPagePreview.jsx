@@ -39,6 +39,41 @@ const LandingPagePreview = ({ client, asesor, asesorWA = "", asesorCal = "", men
     if (calUrl) window.open(calUrl, "_blank");
   };
 
+  // ── Sistema de diseño del entregable (Apple-grade) ──
+  const UI = {
+    page:  "#0A0B0D", panel: "#0E0F13", card: "rgba(255,255,255,0.045)",
+    hair:  "rgba(255,255,255,0.10)", hair2: "rgba(255,255,255,0.06)",
+    hi:    "#F6F8FB", mid: "rgba(246,248,251,0.66)", lo: "rgba(246,248,251,0.42)",
+    pad:   "clamp(22px, 5vw, 44px)", sec: "clamp(76px, 12vw, 136px)", maxW: 1080,
+  };
+  const acc = currentProp.accent || (T.accent || "#6EE7C2");
+  const primaryHref = calUrl || waUrl || null;
+  const primaryLabel = calUrl ? "Agendar llamada" : (waUrl ? "Escríbeme por WhatsApp" : "Contactar asesor");
+  const sPrimary = {
+    display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 9,
+    padding: "15px 30px", borderRadius: 980, border: "none", cursor: "pointer", textDecoration: "none",
+    background: "linear-gradient(180deg,#FFFFFF 0%,#E9ECEF 100%)", color: "#0A0C10",
+    fontSize: 15, fontWeight: 600, fontFamily: fontDisp, letterSpacing: "-0.01em",
+    boxShadow: "0 16px 44px -14px rgba(255,255,255,0.5), inset 0 1px 0 rgba(255,255,255,0.95)",
+  };
+  const sGhost = {
+    display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 8,
+    padding: "15px 26px", borderRadius: 980, cursor: "pointer", textDecoration: "none",
+    background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.16)",
+    color: "#F6F8FB", fontSize: 15, fontWeight: 600, fontFamily: fontDisp, backdropFilter: "blur(10px)",
+  };
+  const renderCTAs = (size) => {
+    const pad = size === "lg" ? "17px 36px" : "15px 30px";
+    const PIcon = calUrl ? CalendarDays : Phone;
+    const primary = primaryHref
+      ? <a href={primaryHref} target="_blank" rel="noreferrer" style={{ ...sPrimary, padding: pad }}><PIcon size={16} /> {primaryLabel}</a>
+      : (!publicMode ? <button onClick={() => setShowSharePanel(true)} style={{ ...sPrimary, padding: pad }}><CalendarDays size={16} /> {primaryLabel}</button> : null);
+    const secondary = (calUrl && waUrl)
+      ? <a href={waUrl} target="_blank" rel="noreferrer" style={{ ...sGhost, padding: pad, color: "#3DDC84", borderColor: "rgba(61,220,132,0.32)", background: "rgba(61,220,132,0.08)" }}><Phone size={15} /> WhatsApp</a>
+      : null;
+    return <>{primary}{secondary}</>;
+  };
+
   return (
     <div style={{
       position: "fixed", inset: 0, zIndex: 100000,
@@ -182,419 +217,234 @@ const LandingPagePreview = ({ client, asesor, asesorWA = "", asesorCal = "", men
       </div>
       </>)}
 
-      {/* ─── LANDING PAGE CONTENT ─── */}
-      <div style={{ paddingTop: publicMode ? 0 : 60 }}>
-        {/* HERO SECTION */}
-        <div style={{
-          minHeight: "100vh", position: "relative",
-          background: currentProp.img,
-          display: "flex", flexDirection: "column", justifyContent: "flex-end",
-          padding: "0 0 60px 0",
-        }}>
-          <div style={{ position: "absolute", inset: 0, background: `radial-gradient(125% 80% at 12% 10%, ${currentProp.accent}22 0%, transparent 46%), linear-gradient(0deg, rgba(4,5,8,0.95) 0%, rgba(4,5,8,0.55) 44%, rgba(4,5,8,0.10) 100%)` }} />
+      {/* ─── LANDING PAGE CONTENT · rediseño Apple-grade ─── */}
+      <div style={{ paddingTop: publicMode ? 0 : 56, background: UI.page }}>
 
-          {/* Floating nav dots */}
+        {/* HERO */}
+        <section style={{
+          position: "relative", minHeight: publicMode ? "100svh" : "calc(100svh - 56px)",
+          display: "flex", flexDirection: "column", justifyContent: "center",
+          padding: `clamp(88px, 15vh, 168px) ${UI.pad} clamp(64px, 11vh, 112px)`, overflow: "hidden",
+        }}>
+          <div style={{ position: "absolute", inset: 0, pointerEvents: "none", background: `radial-gradient(80% 55% at 16% 6%, ${acc}2A 0%, transparent 55%), radial-gradient(70% 50% at 104% 108%, ${acc}14 0%, transparent 60%)` }} />
+          <div style={{ position: "absolute", inset: 0, pointerEvents: "none", background: "radial-gradient(130% 100% at 50% -10%, transparent 58%, rgba(0,0,0,0.55) 100%)" }} />
+
           {properties.length > 1 && (
-            <div style={{
-              position: "absolute", right: 30, top: "50%", transform: "translateY(-50%)",
-              display: "flex", flexDirection: "column", gap: 12,
-            }}>
+            <div style={{ position: "absolute", right: "clamp(14px,4vw,32px)", top: "50%", transform: "translateY(-50%)", display: "flex", flexDirection: "column", gap: 10, zIndex: 2 }}>
               {properties.map((p, i) => (
-                <button key={p.id} onClick={() => setActiveProperty(i)} style={{
-                  width: i === activeProperty ? 12 : 8,
-                  height: i === activeProperty ? 12 : 8,
-                  borderRadius: "50%", border: "none", cursor: "pointer",
-                  background: i === activeProperty ? p.accent : "rgba(255,255,255,0.3)",
-                  boxShadow: i === activeProperty ? `0 0 12px ${p.accent}60` : "none",
-                  transition: "all 0.3s",
-                }} title={p.name} />
+                <button key={p.id} onClick={() => setActiveProperty(i)} title={p.name} style={{
+                  width: 7, height: i === activeProperty ? 22 : 7, borderRadius: 8, border: "none", cursor: "pointer", padding: 0,
+                  background: i === activeProperty ? acc : "rgba(255,255,255,0.25)",
+                  boxShadow: i === activeProperty ? `0 0 14px ${acc}70` : "none", transition: "all .35s cubic-bezier(.2,.8,.2,1)",
+                }} />
               ))}
             </div>
           )}
 
-          <div style={{ position: "relative", zIndex: 1, maxWidth: 900, margin: "0 auto", padding: "0 40px", width: "100%" }}>
-            {/* Branding */}
-            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 30, animation: "fadeInUp 0.6s ease both" }}>
-              <StratosAtom size={22} color={currentProp.accent} />
-              <span style={{ fontSize: 12, color: "rgba(255,255,255,0.55)", fontWeight: 500, fontFamily: fontDisp, letterSpacing: "0.22em", textTransform: "uppercase" }}>Portafolio Privado</span>
+          <div style={{ position: "relative", zIndex: 1, maxWidth: UI.maxW, margin: "0 auto", width: "100%" }}>
+            <div style={{ display: "inline-flex", alignItems: "center", gap: 10, marginBottom: 26, animation: "fadeInUp .6s ease both" }}>
+              <StratosAtom size={20} color={acc} />
+              <span style={{ fontSize: 11.5, color: UI.mid, fontWeight: 600, fontFamily: fontDisp, letterSpacing: "0.24em", textTransform: "uppercase" }}>Portafolio Privado</span>
             </div>
-
-            {/* Personalized greeting */}
-            <p style={{ fontSize: 12, color: "rgba(255,255,255,0.5)", fontFamily: font, marginBottom: 12, fontWeight: 500, letterSpacing: "0.16em", textTransform: "uppercase", animation: "fadeInUp 0.65s 0.08s ease both" }}>
-              Preparado exclusivamente para
+            <p style={{ fontSize: 13, color: UI.lo, fontFamily: font, marginBottom: 14, fontWeight: 600, letterSpacing: "0.15em", textTransform: "uppercase", animation: "fadeInUp .65s .06s ease both" }}>Preparado para</p>
+            <h1 style={{ fontSize: "clamp(42px, 8.6vw, 84px)", fontWeight: 600, color: UI.hi, fontFamily: fontDisp, letterSpacing: "-0.035em", lineHeight: 1.01, marginBottom: 22, animation: "fadeInUp .7s .12s ease both" }}>{client || "Estimado Cliente"}</h1>
+            <p style={{ fontSize: "clamp(15px, 2.1vw, 19px)", color: UI.mid, fontFamily: font, lineHeight: 1.6, maxWidth: 620, marginBottom: 34, animation: "fadeInUp .72s .18s ease both" }}>
+              {mensaje || "Una selección curada de las mejores oportunidades de inversión en la Riviera Maya, elegidas específicamente para tus objetivos."}
             </p>
-            <h1 style={{ fontSize: "clamp(32px, 8.5vw, 52px)", fontWeight: 300, color: T.txt, fontFamily: fontDisp, letterSpacing: "-0.03em", lineHeight: 1.1, marginBottom: 20, animation: "floatSoft 5s 0.3s ease-in-out infinite, fadeInUp 0.7s 0.15s ease both" }}>
-              {client || "Estimado Cliente"}
-            </h1>
-
-            {mensaje && (
-              <p style={{ fontSize: 15, color: "rgba(255,255,255,0.7)", fontFamily: font, lineHeight: 1.7, maxWidth: 600, marginBottom: 28 }}>
-                {mensaje || `Es un placer presentarle una selección curada de las mejores oportunidades de inversión en la Riviera Maya, seleccionadas específicamente para sus objetivos.`}
-              </p>
-            )}
-
-            {!mensaje && (
-              <p style={{ fontSize: 15, color: "rgba(255,255,255,0.7)", fontFamily: font, lineHeight: 1.7, maxWidth: 600, marginBottom: 28 }}>
-                Es un placer presentarle una selección curada de las mejores oportunidades de inversión en la Riviera Maya, seleccionadas específicamente para sus objetivos.
-              </p>
-            )}
-
-            <div style={{ display: "flex", gap: 14, alignItems: "center", flexWrap: "wrap", animation: "fadeInUp 0.7s 0.25s ease both" }}>
-              {calUrl ? (
-                <a href={calUrl} target="_blank" rel="noreferrer" style={{
-                  padding: "15px 32px", borderRadius: 980, border: "none",
-                  background: "linear-gradient(180deg, #FFFFFF 0%, #EDF0F3 100%)", color: "#0A0C10",
-                  fontSize: 14, fontWeight: 500, fontFamily: fontDisp,
-                  boxShadow: "0 12px 36px -10px rgba(255,255,255,0.4), inset 0 1px 0 rgba(255,255,255,0.9)", textDecoration: "none",
-                  display: "inline-flex", alignItems: "center", gap: 8,
-                }}>
-                  <CalendarDays size={15} style={{ verticalAlign: "middle" }} /> Agendar Llamada
-                </a>
-              ) : (
-                <button onClick={() => setShowSharePanel(true)} style={{
-                  padding: "15px 32px", borderRadius: 980, border: "none",
-                  background: "linear-gradient(180deg, #FFFFFF 0%, #EDF0F3 100%)", color: "#0A0C10",
-                  fontSize: 14, fontWeight: 500, fontFamily: fontDisp, cursor: "pointer",
-                  boxShadow: "0 12px 36px -10px rgba(255,255,255,0.4), inset 0 1px 0 rgba(255,255,255,0.9)",
-                }}>
-                  <CalendarDays size={15} style={{ marginRight: 8, verticalAlign: "middle" }} />Agendar Llamada
-                </button>
-              )}
-              {waUrl ? (
-                <a href={waUrl} target="_blank" rel="noreferrer" style={{
-                  padding: "15px 32px", borderRadius: 980,
-                  border: "1px solid rgba(37,211,102,0.3)", background: "rgba(37,211,102,0.08)",
-                  color: "#25D366", fontSize: 14, fontWeight: 400, fontFamily: fontDisp,
-                  backdropFilter: "blur(10px)", textDecoration: "none",
-                  display: "inline-flex", alignItems: "center", gap: 8,
-                }}>
-                  <Phone size={14} /> WhatsApp
-                </a>
-              ) : (
-                <button onClick={() => setShowSharePanel(true)} style={{
-                  padding: "15px 32px", borderRadius: 980,
-                  border: "1px solid rgba(255,255,255,0.2)", background: "rgba(255,255,255,0.05)",
-                  color: "#FFFFFF", fontSize: 14, fontWeight: 500, fontFamily: fontDisp, cursor: "pointer",
-                  backdropFilter: "blur(10px)",
-                }}>
-                  Contactar Asesor
-                </button>
-              )}
+            <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap", animation: "fadeInUp .74s .24s ease both" }}>
+              {renderCTAs()}
             </div>
-
-            {/* Quick stats */}
-            <div style={{ display: "flex", gap: 0, marginTop: 56, flexWrap: "wrap" }}>
+            <div style={{ display: "flex", marginTop: "clamp(44px, 7vh, 72px)", flexWrap: "wrap", rowGap: 22, animation: "fadeInUp .78s .3s ease both" }}>
               {[
-                { label: "Propiedades", value: properties.length },
-                { label: "ROI Estimado", value: "8-13%" },
-                { label: "Ubicaciones", value: [...new Set(properties.map(p => p.location))].length },
-              ].map((s, i) => (
-                <div key={s.label} style={{ paddingLeft: i ? 32 : 0, marginLeft: i ? 32 : 0, borderLeft: i ? "1px solid rgba(255,255,255,0.14)" : "none" }}>
-                  <p style={{ fontSize: 30, fontWeight: 300, color: T.txt, fontFamily: fontDisp, letterSpacing: "-0.03em" }}>{s.value}</p>
-                  <p style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", fontFamily: font, letterSpacing: "0.05em", textTransform: "uppercase", marginTop: 4 }}>{s.label}</p>
+                { l: "Propiedades", v: properties.length },
+                { l: "ROI estimado", v: "8–13%" },
+                { l: "Ubicaciones", v: [...new Set(properties.map(p => p.location))].length },
+              ].map((st, i) => (
+                <div key={st.l} style={{ paddingLeft: i ? "clamp(20px,4vw,42px)" : 0, marginLeft: i ? "clamp(20px,4vw,42px)" : 0, borderLeft: i ? `1px solid ${UI.hair}` : "none" }}>
+                  <p style={{ fontSize: "clamp(28px, 4vw, 40px)", fontWeight: 600, color: UI.hi, fontFamily: fontDisp, letterSpacing: "-0.03em", lineHeight: 1 }}>{st.v}</p>
+                  <p style={{ fontSize: 11.5, color: UI.lo, fontFamily: font, letterSpacing: "0.08em", textTransform: "uppercase", marginTop: 9 }}>{st.l}</p>
                 </div>
               ))}
             </div>
           </div>
-        </div>
+        </section>
 
-        {/* PROPERTIES SECTION */}
-        <div style={{ background: "#08090C", padding: "clamp(64px, 10vw, 120px) 24px" }}>
-          <div style={{ maxWidth: 1100, margin: "0 auto" }}>
-            <div style={{ textAlign: "center", marginBottom: 60 }}>
-              <p style={{ fontSize: 11, color: currentProp.accent, fontWeight: 500, letterSpacing: "0.15em", textTransform: "uppercase", marginBottom: 12 }}>PORTAFOLIO EXCLUSIVO</p>
-              <h2 style={{ fontSize: "clamp(26px, 5.5vw, 38px)", fontWeight: 300, color: T.txt, fontFamily: fontDisp, letterSpacing: "-0.025em" }}>
-                Propiedades Seleccionadas
-              </h2>
-              <p style={{ fontSize: 14, color: "rgba(255,255,255,0.5)", marginTop: 12, fontFamily: font }}>
-                Cada propiedad ha sido elegida en base a sus criterios de inversión
-              </p>
+        {/* PROPIEDADES */}
+        <section style={{ background: UI.panel, padding: `${UI.sec} ${UI.pad}`, borderTop: `1px solid ${UI.hair2}` }}>
+          <div style={{ maxWidth: UI.maxW, margin: "0 auto" }}>
+            <div style={{ marginBottom: "clamp(34px,6vw,60px)" }}>
+              <p style={{ fontSize: 12, color: acc, fontWeight: 600, letterSpacing: "0.18em", textTransform: "uppercase", marginBottom: 14, fontFamily: fontDisp }}>Portafolio · {properties.length} {properties.length === 1 ? "propiedad" : "propiedades"}</p>
+              <h2 style={{ fontSize: "clamp(28px,5.4vw,46px)", fontWeight: 600, color: UI.hi, fontFamily: fontDisp, letterSpacing: "-0.03em", lineHeight: 1.05, maxWidth: 720 }}>Propiedades seleccionadas para ti</h2>
             </div>
 
-            {properties.map((prop, idx) => (
-              <div key={prop.id} style={{
-                marginBottom: 44, borderRadius: 24, overflow: "hidden",
-                background: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.08)",
-                boxShadow: "0 30px 80px -34px rgba(0,0,0,0.75), inset 0 1px 0 rgba(255,255,255,0.06)",
-                animation: `scaleIn 0.55s ${idx * 0.1}s ease both`,
-              }}>
-                {/* Property Header */}
-                <div style={{
-                  height: 300, background: prop.img, position: "relative",
-                  display: "flex", alignItems: "flex-end", padding: "clamp(20px, 4vw, 34px)",
-                }}>
-                  <div style={{ position: "absolute", inset: 0, background: "linear-gradient(0deg, rgba(4,5,8,0.94) 0%, rgba(4,5,8,0.35) 56%, transparent 100%)" }} />
-                  <div style={{ position: "relative", zIndex: 1, width: "100%" }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
-                      <div>
-                        <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
-                          <Pill color={prop.accent}>{prop.type}</Pill>
-                          <Pill color={T.emerald}>ROI {prop.roi}</Pill>
-                        </div>
-                        <h3 style={{ fontSize: "clamp(24px, 5vw, 34px)", fontWeight: 300, color: T.txt, fontFamily: fontDisp, letterSpacing: "-0.025em", lineHeight: 1.12 }}>
-                          {prop.name} <span style={{ color: "rgba(255,255,255,0.4)", fontWeight: 200 }}>{prop.brand}</span>
-                        </h3>
-                        <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 8 }}>
-                          <MapPin size={14} color="rgba(255,255,255,0.5)" />
-                          <span style={{ fontSize: 13, color: "rgba(255,255,255,0.6)", fontFamily: font }}>{prop.location} — {prop.zone}</span>
-                        </div>
-                      </div>
-                      <div style={{ textAlign: "right" }}>
-                        {prop.ticket ? (
-                          <>
-                            <p style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", letterSpacing: "0.05em", textTransform: "uppercase", marginBottom: 4 }}>PRECIO</p>
-                            <p style={{ fontSize: 30, fontWeight: 300, color: T.txt, fontFamily: fontDisp, letterSpacing: "-0.02em", textTransform: "uppercase" }}>{prop.ticket}</p>
-                          </>
-                        ) : prop.priceFrom > 0 ? (
-                          <>
-                            <p style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", letterSpacing: "0.05em", textTransform: "uppercase", marginBottom: 4 }}>DESDE</p>
-                            <p style={{ fontSize: 38, fontWeight: 300, color: T.txt, fontFamily: fontDisp, letterSpacing: "-0.03em" }}>{fmtPrice(prop.priceFrom)}</p>
-                            {prop.priceTo > prop.priceFrom && <p style={{ fontSize: 12, color: "rgba(255,255,255,0.4)" }}>hasta {fmtPrice(prop.priceTo)} USD</p>}
-                          </>
-                        ) : (
-                          <p style={{ fontSize: 15, color: "rgba(255,255,255,0.55)", fontFamily: fontDisp }}>Precio a consultar</p>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Property Body */}
-                <div style={{ padding: "clamp(22px, 4vw, 34px)" }}>
-                  <p style={{ fontSize: 14, color: "rgba(255,255,255,0.7)", lineHeight: 1.7, fontFamily: font, marginBottom: 28, maxWidth: 800 }}>
-                    {prop.description}
-                  </p>
-
-                  {/* Key Metrics */}
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 16, marginBottom: 28 }}>
-                    {[
-                      { label: "Recámaras", value: prop.bedrooms, icon: Home, c: prop.accent },
-                      { label: "ROI Anual", value: prop.roi, icon: TrendingUp, c: T.emerald },
-                      { label: "Entrega", value: prop.delivery, icon: Calendar, c: T.blue },
-                      { label: "Tamaños", value: (prop.sizes && prop.sizes.length) ? (prop.sizes.length > 1 ? `${prop.sizes[0]} – ${prop.sizes[prop.sizes.length - 1]}` : prop.sizes[0]) : "", icon: Maximize2, c: T.violet },
-                    ].filter(m => m.value && String(m.value).trim() && m.value !== "—").map(m => (
-                      <div key={m.label} style={{
-                        padding: "18px 16px", borderRadius: 16,
-                        background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)",
-                        boxShadow: "inset 0 1px 0 rgba(255,255,255,0.05)",
-                      }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
-                          <m.icon size={14} color={m.c} />
-                          <span style={{ fontSize: 10, color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: "0.05em" }}>{m.label}</span>
-                        </div>
-                        <p style={{ fontSize: 16, fontWeight: 400, color: T.txt, fontFamily: fontDisp }}>{m.value}</p>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Highlights */}
-                  {(prop.highlights || []).length > 0 && (
-                  <div style={{ marginBottom: 24 }}>
-                    <p style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 12, fontWeight: 400 }}>Por qué esta propiedad</p>
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-                      {prop.highlights.map((h, i) => (
-                        <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", borderRadius: 10, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.05)" }}>
-                          <CheckCircle2 size={16} color={prop.accent} />
-                          <span style={{ fontSize: 12, color: "rgba(255,255,255,0.75)", fontFamily: font }}>{h}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                  )}
-
-                  {/* Amenities */}
-                  {(prop.amenities || []).length > 0 && (
-                  <div style={{ marginBottom: 24 }}>
-                    <p style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 12, fontWeight: 400 }}>Amenidades</p>
-                    <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-                      {prop.amenities.map((a, i) => (
-                        <span key={i} style={{
-                          fontSize: 11, color: "rgba(255,255,255,0.6)", padding: "5px 12px",
-                          borderRadius: 6, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)",
-                        }}>{a}</span>
-                      ))}
-                    </div>
-                  </div>
-                  )}
-
-                  {/* Gallery / Drive link CTA */}
-                  <div style={{
-                    marginTop: 8, padding: "20px 24px", borderRadius: 14,
-                    background: (driveLinks[prop.id] || prop.driveLink) ? `${prop.accent}08` : "rgba(255,255,255,0.02)",
-                    border: `1px solid ${(driveLinks[prop.id] || prop.driveLink) ? prop.accent + "30" : "rgba(255,255,255,0.05)"}`,
-                    display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap",
+            <div style={{ display: "flex", flexDirection: "column", gap: "clamp(20px,3vw,30px)" }}>
+              {properties.map((prop, idx) => {
+                const pacc = prop.accent || acc;
+                const dl = driveLinks[prop.id] || prop.driveLink;
+                const specs = [
+                  prop.bedrooms && { l: "Tipología", v: prop.bedrooms },
+                  prop.delivery && { l: "Entrega", v: prop.delivery },
+                  prop.roi && { l: "ROI anual", v: prop.roi },
+                  (prop.zone && prop.zone !== prop.location) && { l: "Zona", v: prop.zone },
+                ].filter(Boolean);
+                const priceLabel = prop.ticket
+                  ? prop.ticket
+                  : (prop.priceFrom > 0 ? (prop.priceTo > prop.priceFrom ? `${fmtPrice(prop.priceFrom)} – ${fmtPrice(prop.priceTo)}` : `Desde ${fmtPrice(prop.priceFrom)}`) : "A consultar");
+                return (
+                  <article key={prop.id} style={{
+                    borderRadius: 26, overflow: "hidden", background: UI.card, border: `1px solid ${UI.hair}`,
+                    boxShadow: "0 44px 100px -56px rgba(0,0,0,0.9), inset 0 1px 0 rgba(255,255,255,0.06)",
+                    animation: `fadeInUp .6s ${Math.min(idx * 0.08, 0.4)}s ease both`,
                   }}>
-                    <div>
-                      <p style={{ fontSize: 13, fontWeight: 400, color: T.txt, fontFamily: fontDisp, marginBottom: 4 }}>
-                        {(driveLinks[prop.id] || prop.driveLink) ? "Galería de imágenes disponible" : "Galería de imágenes"}
-                      </p>
-                      <p style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", fontFamily: font }}>
-                        {(driveLinks[prop.id] || prop.driveLink)
-                          ? "Fotos reales del proyecto, renders y planos disponibles"
-                          : "El asesor puede agregar un link a la galería de fotos desde el panel"}
-                      </p>
-                    </div>
-                    {(driveLinks[prop.id] || prop.driveLink) ? (
-                      <a
-                        href={driveLinks[prop.id] || prop.driveLink}
-                        target="_blank" rel="noreferrer"
-                        style={{
-                          display: "inline-flex", alignItems: "center", gap: 8,
-                          padding: "12px 24px", borderRadius: 10,
-                          border: `1px solid ${prop.accent}50`,
-                          background: `${prop.accent}15`,
-                          color: prop.accent, textDecoration: "none",
-                          fontSize: 13, fontWeight: 500, fontFamily: fontDisp,
-                          whiteSpace: "nowrap",
-                        }}
-                      >
-                        <Image size={15} /> Ver galería <ExternalLink size={12} />
-                      </a>
-                    ) : (
-                      <div style={{
-                        display: "inline-flex", alignItems: "center", gap: 8,
-                        padding: "12px 24px", borderRadius: 10,
-                        border: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.03)",
-                        color: "rgba(255,255,255,0.25)", fontSize: 12, fontFamily: fontDisp,
-                      }}>
-                        <Image size={14} /> Galería no configurada
+                    {/* Cover: gradiente refinado (sin foto falsa) */}
+                    <div style={{ position: "relative", padding: "clamp(24px,4vw,40px)", minHeight: 172, display: "flex", flexDirection: "column", justifyContent: "space-between", gap: 20,
+                      background: `radial-gradient(130% 150% at 100% 0%, ${pacc}40 0%, transparent 55%), linear-gradient(135deg, ${pacc}22 0%, rgba(255,255,255,0.02) 42%, transparent 100%)`,
+                      borderBottom: `1px solid ${UI.hair2}` }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12 }}>
+                        <span style={{ fontSize: 12, fontWeight: 600, color: UI.lo, fontFamily: fontDisp, letterSpacing: "0.06em" }}>{String(idx + 1).padStart(2, "0")}</span>
+                        <div style={{ display: "flex", gap: 7, flexWrap: "wrap", justifyContent: "flex-end" }}>
+                          {prop.badge && <span style={{ fontSize: 10.5, fontWeight: 600, letterSpacing: "0.06em", textTransform: "uppercase", padding: "5px 10px", borderRadius: 999, color: pacc, background: `${pacc}1F`, border: `1px solid ${pacc}3A`, fontFamily: fontDisp, whiteSpace: "nowrap" }}>{prop.badge}</span>}
+                          {prop.type && <span style={{ fontSize: 10.5, fontWeight: 600, letterSpacing: "0.06em", textTransform: "uppercase", padding: "5px 10px", borderRadius: 999, color: "#F6F8FB", background: "rgba(255,255,255,0.09)", border: "1px solid rgba(255,255,255,0.15)", fontFamily: fontDisp, whiteSpace: "nowrap" }}>{prop.type}</span>}
+                        </div>
                       </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+                      <div>
+                        <h3 style={{ fontSize: "clamp(25px,4.6vw,40px)", fontWeight: 600, color: UI.hi, fontFamily: fontDisp, letterSpacing: "-0.03em", lineHeight: 1.05 }}>{prop.name}</h3>
+                        <div style={{ display: "flex", alignItems: "center", gap: 7, marginTop: 11 }}>
+                          <MapPin size={14} color={pacc} />
+                          <span style={{ fontSize: 13.5, color: UI.mid, fontFamily: font }}>{prop.location}{prop.zone && prop.zone !== prop.location ? ` · ${prop.zone}` : ""}</span>
+                        </div>
+                      </div>
+                    </div>
 
-        {/* MARKET DATA SECTION */}
-        <div style={{ background: "#060709", padding: "clamp(64px, 10vw, 120px) 24px" }}>
-          <div style={{ maxWidth: 900, margin: "0 auto" }}>
-            <div style={{ textAlign: "center", marginBottom: 50 }}>
-              <p style={{ fontSize: 11, color: T.accent, fontWeight: 500, letterSpacing: "0.15em", textTransform: "uppercase", marginBottom: 12 }}>DATOS DEL MERCADO 2026</p>
-              <h2 style={{ fontSize: "clamp(24px, 5vw, 34px)", fontWeight: 300, color: T.txt, fontFamily: fontDisp, letterSpacing: "-0.025em" }}>
-                ¿Por qué la Riviera Maya?
-              </h2>
+                    {/* Body */}
+                    <div style={{ padding: "clamp(24px,4vw,40px)" }}>
+                      <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 16, flexWrap: "wrap", marginBottom: 26, paddingBottom: 24, borderBottom: `1px solid ${UI.hair2}` }}>
+                        <div>
+                          <p style={{ fontSize: 11, color: UI.lo, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 7, fontFamily: font }}>Precio</p>
+                          <p style={{ fontSize: "clamp(24px,3.6vw,34px)", fontWeight: 600, color: UI.hi, fontFamily: fontDisp, letterSpacing: "-0.02em", textTransform: "uppercase", lineHeight: 1 }}>{priceLabel}</p>
+                        </div>
+                        {dl && <a href={dl} target="_blank" rel="noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "12px 20px", borderRadius: 980, textDecoration: "none", fontSize: 13.5, fontWeight: 600, fontFamily: fontDisp, whiteSpace: "nowrap", color: pacc, background: `${pacc}14`, border: `1px solid ${pacc}4D` }}><Image size={15} /> Ver galería <ExternalLink size={13} /></a>}
+                      </div>
+
+                      <p style={{ fontSize: "clamp(14px,1.7vw,15.5px)", color: UI.mid, lineHeight: 1.65, fontFamily: font, marginBottom: specs.length || (prop.highlights || []).length ? 26 : 0, maxWidth: 760 }}>{prop.description}</p>
+
+                      {specs.length > 0 && (
+                        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px,1fr))", gap: 1, background: UI.hair2, borderRadius: 16, overflow: "hidden", border: `1px solid ${UI.hair2}`, marginBottom: (prop.highlights || []).length ? 24 : 0 }}>
+                          {specs.map(sp => (
+                            <div key={sp.l} style={{ background: UI.panel, padding: "16px 18px" }}>
+                              <p style={{ fontSize: 10.5, color: UI.lo, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 8, fontFamily: font }}>{sp.l}</p>
+                              <p style={{ fontSize: 14.5, color: UI.hi, fontWeight: 500, fontFamily: fontDisp, lineHeight: 1.3 }}>{sp.v}</p>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      {(prop.highlights || []).length > 0 && (
+                        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px,1fr))", gap: 11 }}>
+                          {prop.highlights.map((h, i) => (
+                            <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
+                              <span style={{ flexShrink: 0, width: 18, height: 18, borderRadius: 999, background: `${pacc}22`, display: "inline-flex", alignItems: "center", justifyContent: "center", marginTop: 1 }}><Check size={11} color={pacc} strokeWidth={3} /></span>
+                              <span style={{ fontSize: 13.5, color: UI.mid, fontFamily: font, lineHeight: 1.5 }}>{h}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      {(prop.amenities || []).length > 0 && (
+                        <div style={{ display: "flex", flexWrap: "wrap", gap: 7, marginTop: 20 }}>
+                          {prop.amenities.map((a, i) => (
+                            <span key={i} style={{ fontSize: 12, color: UI.mid, padding: "6px 12px", borderRadius: 999, background: "rgba(255,255,255,0.04)", border: `1px solid ${UI.hair2}`, fontFamily: font }}>{a}</span>
+                          ))}
+                        </div>
+                      )}
+
+                      {!dl && (
+                        <div style={{ marginTop: 22, padding: "14px 16px", borderRadius: 14, background: "rgba(255,255,255,0.02)", border: `1px dashed ${UI.hair}`, fontSize: 12.5, color: UI.lo, fontFamily: font, display: "flex", alignItems: "center", gap: 8 }}>
+                          <Image size={14} /> Galería de imágenes disponible con tu asesor
+                        </div>
+                      )}
+                    </div>
+                  </article>
+                );
+              })}
             </div>
+          </div>
+        </section>
 
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 20, marginBottom: 40 }}>
+        {/* MERCADO */}
+        <section style={{ background: UI.page, padding: `${UI.sec} ${UI.pad}`, borderTop: `1px solid ${UI.hair2}` }}>
+          <div style={{ maxWidth: UI.maxW, margin: "0 auto" }}>
+            <div style={{ marginBottom: "clamp(30px,5vw,50px)", maxWidth: 640 }}>
+              <p style={{ fontSize: 12, color: acc, fontWeight: 600, letterSpacing: "0.18em", textTransform: "uppercase", marginBottom: 14, fontFamily: fontDisp }}>El mercado</p>
+              <h2 style={{ fontSize: "clamp(26px,5vw,42px)", fontWeight: 600, color: UI.hi, fontFamily: fontDisp, letterSpacing: "-0.03em", lineHeight: 1.06 }}>¿Por qué la Riviera Maya?</h2>
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px,1fr))", gap: 1, background: UI.hair2, border: `1px solid ${UI.hair2}`, borderRadius: 20, overflow: "hidden", marginBottom: 20 }}>
               {[
-                { label: "Crecimiento Anual", value: "14%", sub: "Nominal YoY", icon: TrendingUp, c: T.emerald },
-                { label: "ROI por Rentas", value: "8-15%", sub: "Neto anual", icon: DollarSign, c: T.accent },
-                { label: "Ocupación", value: "75-90%", sub: "Promedio anual", icon: Building2, c: T.blue },
-              ].map(s => (
-                <div key={s.label} style={{
-                  padding: 28, borderRadius: 16, textAlign: "center",
-                  background: `${s.c}06`, border: `1px solid ${s.c}15`,
-                }}>
-                  <s.icon size={24} color={s.c} style={{ margin: "0 auto 14px" }} />
-                  <p style={{ fontSize: 36, fontWeight: 300, color: T.txt, fontFamily: fontDisp, letterSpacing: "-0.03em" }}>{s.value}</p>
-                  <p style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", marginTop: 6, letterSpacing: "0.05em" }}>{s.label}</p>
-                  <p style={{ fontSize: 10, color: s.c, marginTop: 2 }}>{s.sub}</p>
+                { l: "Crecimiento anual", v: "14%", s: "Nominal YoY" },
+                { l: "ROI por rentas", v: "8–15%", s: "Neto anual" },
+                { l: "Ocupación", v: "75–90%", s: "Promedio anual" },
+              ].map(x => (
+                <div key={x.l} style={{ background: UI.panel, padding: "26px 24px" }}>
+                  <p style={{ fontSize: "clamp(30px,4vw,44px)", fontWeight: 600, color: UI.hi, fontFamily: fontDisp, letterSpacing: "-0.03em", lineHeight: 1 }}>{x.v}</p>
+                  <p style={{ fontSize: 13, color: UI.mid, marginTop: 10, fontFamily: font }}>{x.l}</p>
+                  <p style={{ fontSize: 11.5, color: acc, marginTop: 3, fontFamily: font }}>{x.s}</p>
                 </div>
               ))}
             </div>
-
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
-              <div style={{ padding: 28, borderRadius: 16, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)" }}>
-                <p style={{ fontSize: 14, fontWeight: 500, color: T.txt, fontFamily: fontDisp, marginBottom: 18 }}>Ventajas para Inversionistas</p>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px,1fr))", gap: 14 }}>
+              <div style={{ padding: "26px 24px", borderRadius: 20, background: UI.card, border: `1px solid ${UI.hair2}` }}>
+                <p style={{ fontSize: 13.5, fontWeight: 600, color: UI.hi, fontFamily: fontDisp, marginBottom: 18 }}>Ventajas para inversionistas</p>
                 {[
-                  "Propiedad 100% legal para extranjeros via fideicomiso",
-                  "Impuestos prediales mínimos vs EE.UU./Canadá",
+                  "Propiedad 100% legal para extranjeros vía fideicomiso",
+                  "Impuestos prediales mínimos vs EE.UU. / Canadá",
                   "Nuevo Aeropuerto Internacional de Tulum",
                   "Tren Maya conectando toda la región",
-                  "Turismo 365 días — clima cálido todo el año",
+                  "Turismo los 365 días del año",
                   "Mercado de nómadas digitales en expansión",
                 ].map((v, i) => (
-                  <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 10, marginBottom: 12 }}>
-                    <CheckCircle2 size={16} color={T.accent} style={{ flexShrink: 0, marginTop: 2 }} />
-                    <span style={{ fontSize: 13, color: "rgba(255,255,255,0.7)", lineHeight: 1.5 }}>{v}</span>
+                  <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 11, marginBottom: 13 }}>
+                    <span style={{ flexShrink: 0, width: 18, height: 18, borderRadius: 999, background: `${acc}22`, display: "inline-flex", alignItems: "center", justifyContent: "center", marginTop: 1 }}><Check size={11} color={acc} strokeWidth={3} /></span>
+                    <span style={{ fontSize: 13.5, color: UI.mid, lineHeight: 1.5, fontFamily: font }}>{v}</span>
                   </div>
                 ))}
               </div>
-
-              <div style={{ padding: 28, borderRadius: 16, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)" }}>
-                <p style={{ fontSize: 14, fontWeight: 500, color: T.txt, fontFamily: fontDisp, marginBottom: 18 }}>Infraestructura</p>
+              <div style={{ padding: "26px 24px", borderRadius: 20, background: UI.card, border: `1px solid ${UI.hair2}` }}>
+                <p style={{ fontSize: 13.5, fontWeight: 600, color: UI.hi, fontFamily: fontDisp, marginBottom: 18 }}>Infraestructura</p>
                 {[
-                  { title: "Aeropuerto de Tulum", desc: "Nuevo aeropuerto internacional, abrió en 2025" },
-                  { title: "Tren Maya", desc: "Conectividad ferroviaria regional — impulsa plusvalía" },
-                  { title: "Precio promedio por m²", desc: "$3,600 USD/m² — potencial de apreciación significativo" },
-                  { title: "Plusvalía real", desc: "8% anual después de inflación" },
+                  { t: "Aeropuerto de Tulum", d: "Nuevo aeropuerto internacional, en operación" },
+                  { t: "Tren Maya", d: "Conectividad ferroviaria que impulsa la plusvalía" },
+                  { t: "Precio por m²", d: "≈ $3,600 USD/m² con recorrido de apreciación" },
+                  { t: "Plusvalía real", d: "≈ 8% anual después de inflación" },
                 ].map((inf, i) => (
-                  <div key={i} style={{ marginBottom: 16, padding: "12px 14px", borderRadius: 10, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.04)" }}>
-                    <p style={{ fontSize: 13, fontWeight: 400, color: T.txt, fontFamily: fontDisp }}>{inf.title}</p>
-                    <p style={{ fontSize: 11, color: "rgba(255,255,255,0.5)", marginTop: 4, lineHeight: 1.4 }}>{inf.desc}</p>
+                  <div key={i} style={{ marginBottom: 12, padding: "13px 15px", borderRadius: 12, background: "rgba(255,255,255,0.02)", border: `1px solid ${UI.hair2}` }}>
+                    <p style={{ fontSize: 13.5, fontWeight: 600, color: UI.hi, fontFamily: fontDisp }}>{inf.t}</p>
+                    <p style={{ fontSize: 12, color: UI.lo, marginTop: 4, lineHeight: 1.45, fontFamily: font }}>{inf.d}</p>
                   </div>
                 ))}
               </div>
             </div>
           </div>
-        </div>
+        </section>
 
-        {/* CTA SECTION */}
-        <div style={{ background: "#050608", padding: "clamp(72px, 11vw, 128px) 24px", textAlign: "center" }}>
-          <div style={{ maxWidth: 600, margin: "0 auto" }}>
-            <StratosAtom size={40} color={T.accent} />
-            <h2 style={{ fontSize: "clamp(25px, 5vw, 34px)", fontWeight: 300, color: T.txt, fontFamily: fontDisp, letterSpacing: "-0.025em", marginTop: 22, marginBottom: 12 }}>
-              ¿Listo para dar el siguiente paso?
-            </h2>
-            <p style={{ fontSize: 14, color: "rgba(255,255,255,0.5)", lineHeight: 1.6, marginBottom: 32 }}>
-              Agenda una llamada con <strong style={{ color: "rgba(255,255,255,0.8)" }}>{asesor}</strong> para conocer todos los detalles, resolver tus dudas y asegurar la mejor oportunidad de inversión.
+        {/* CTA */}
+        <section style={{ position: "relative", overflow: "hidden", background: UI.panel, padding: `${UI.sec} ${UI.pad}`, textAlign: "center", borderTop: `1px solid ${UI.hair2}` }}>
+          <div style={{ position: "absolute", inset: 0, pointerEvents: "none", background: `radial-gradient(60% 60% at 50% 0%, ${acc}1C 0%, transparent 62%)` }} />
+          <div style={{ position: "relative", maxWidth: 640, margin: "0 auto" }}>
+            <StratosAtom size={34} color={acc} />
+            <h2 style={{ fontSize: "clamp(26px,5vw,44px)", fontWeight: 600, color: UI.hi, fontFamily: fontDisp, letterSpacing: "-0.03em", marginTop: 22, marginBottom: 16, lineHeight: 1.05 }}>¿Listo para dar el siguiente paso?</h2>
+            <p style={{ fontSize: "clamp(15px,2vw,18px)", color: UI.mid, lineHeight: 1.6, marginBottom: 34, fontFamily: font }}>
+              {asesor ? <>Agenda una llamada con <strong style={{ color: UI.hi, fontWeight: 600 }}>{asesor}</strong> para conocer todos los detalles y asegurar la mejor oportunidad.</> : "Contáctanos para conocer todos los detalles y asegurar la mejor oportunidad de inversión."}
             </p>
-            <div style={{ display: "flex", gap: 14, justifyContent: "center", flexWrap: "wrap" }}>
-              {calUrl ? (
-                <a href={calUrl} target="_blank" rel="noreferrer" style={{
-                  padding: "16px 38px", borderRadius: 980, border: "none",
-                  background: "linear-gradient(180deg, #FFFFFF 0%, #EDF0F3 100%)", color: "#0A0C10",
-                  fontSize: 15, fontWeight: 500, fontFamily: fontDisp,
-                  boxShadow: "0 12px 36px -10px rgba(255,255,255,0.4), inset 0 1px 0 rgba(255,255,255,0.9)", textDecoration: "none",
-                  display: "inline-flex", alignItems: "center", gap: 8,
-                }}>
-                  <CalendarDays size={16} /> Agendar con {asesor.split(" ")[0]}
-                </a>
-              ) : (
-                <button style={{
-                  padding: "16px 38px", borderRadius: 980, border: "none",
-                  background: "linear-gradient(180deg, #FFFFFF 0%, #EDF0F3 100%)", color: "#0A0C10",
-                  fontSize: 15, fontWeight: 500, fontFamily: fontDisp, cursor: "pointer",
-                  boxShadow: "0 12px 36px -10px rgba(255,255,255,0.4), inset 0 1px 0 rgba(255,255,255,0.9)",
-                }}>
-                  Agendar Llamada con {asesor.split(" ")[0]}
-                </button>
-              )}
-              {waUrl ? (
-                <a href={`https://wa.me/${waPhone}?text=${encodeURIComponent(`Hola ${asesor.split(" ")[0]}, vi tu presentación de propiedades y me interesa agendar una llamada. ¿Cuándo tienes disponibilidad?`)}`}
-                  target="_blank" rel="noreferrer"
-                  style={{
-                    padding: "16px 38px", borderRadius: 980,
-                    border: "1px solid rgba(37,211,102,0.3)", background: "rgba(37,211,102,0.08)",
-                    color: "#25D366", fontSize: 15, fontWeight: 400, fontFamily: fontDisp,
-                    textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 8,
-                  }}
-                >
-                  <Phone size={15} /> WhatsApp
-                </a>
-              ) : (
-                <button style={{
-                  padding: "16px 38px", borderRadius: 980,
-                  border: "1px solid rgba(255,255,255,0.15)", background: "transparent",
-                  color: "#FFFFFF", fontSize: 15, fontWeight: 500, fontFamily: fontDisp, cursor: "pointer",
-                }}>
-                  Contactar Asesor
-                </button>
-              )}
-            </div>
-
-            <div style={{ marginTop: 60, padding: "20px 0", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
-              <p style={{ fontSize: 11, color: "rgba(255,255,255,0.25)" }}>
-                Riviera Maya, México · Presentación confidencial generada para {client}
-              </p>
-              <p style={{ fontSize: 10, color: "rgba(255,255,255,0.15)", marginTop: 6 }}>
-                Asesor: {asesor} · {new Date().toLocaleDateString("es-MX", { month: "long", year: "numeric" })} · Precios en USD · Sujeto a disponibilidad
-              </p>
-            </div>
+            <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>{renderCTAs("lg")}</div>
           </div>
-        </div>
+        </section>
+
+        {/* FOOTER */}
+        <footer style={{ background: UI.page, padding: `40px ${UI.pad}`, borderTop: `1px solid ${UI.hair2}`, textAlign: "center" }}>
+          <p style={{ fontSize: 11.5, color: UI.lo, fontFamily: font, lineHeight: 1.7 }}>Riviera Maya, México · Presentación confidencial para {client || "el cliente"}</p>
+          <p style={{ fontSize: 10.5, color: "rgba(246,248,251,0.28)", marginTop: 6, fontFamily: font }}>{asesor ? `Asesor: ${asesor} · ` : ""}{new Date().toLocaleDateString("es-MX", { month: "long", year: "numeric" })} · Precios en USD · Sujeto a disponibilidad</p>
+        </footer>
+
       </div>
     </div>
   );
