@@ -122,6 +122,11 @@ export const DEFAULT_CLIENT_CONFIG = {
     // OFF — hoy solo Duke lo prende (que la asesora vea al instante quién le
     // escribió). Requiere también whatsappChat para el composer.
     whatsappModule: false,
+    // Módulo "Copilot" en el sidebar: chat con el asistente IA (el mismo cerebro
+    // que el bot de Telegram @Strato_sasistente_crm_bot) embebido en el CRM.
+    // El asesor conecta su Telegram una vez y opera sus leads desde el chat del
+    // CRM (mismas acciones que el bot). Default OFF — se prende por tenant.
+    copilotModule: false,
   },
 
   // Contacto y soporte
