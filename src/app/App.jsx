@@ -109,6 +109,7 @@ const FinanzasAdmin = lazy(() => import("./views/FinanzasAdmin"));
 const RRHHModule    = lazy(() => import("./views/RRHHModule"));
 const Caja          = lazy(() => import("./views/Caja"));
 const WhatsAppInbox = lazy(() => import("./views/WhatsApp"));
+const Copilot       = lazy(() => import("./views/Copilot"));
 const Profile       = lazy(() => import("./views/Profile"));
 const Trash         = lazy(() => import("./views/Trash"));
 
@@ -1838,6 +1839,7 @@ export default function App() {
                     : <Dash oc={oc} leadsData={leadsData} T={T} />)}
                   {v === "c"      && <CRM oc={oc} leadsData={leadsData} setLeadsData={setLeadsData} theme={theme} setTheme={setTheme} isRefreshing={leadsRefreshing} autoOpenPriority1={autoOpenPriority1} onAutoOpenHandled={() => setAutoOpenPriority1(0)} softDeleteLead={softDeleteLead} autoOpenLead={crmAutoOpenLead} onAutoOpenLeadHandled={() => setCrmAutoOpenLead(null)} autoOpenNewLead={crmNewLeadTick} onNewLeadHandled={() => setCrmNewLeadTick(0)} onOpenComando={() => setV("d")} />}
                   {v === "wa"     && canAccessModule("wa", user, clientConfig) && <WhatsAppInbox T={T} isLight={isLight} inbox={waInbox} openLead={waOpenLead} openExpediente={openLeadExpediente} />}
+                  {v === "copilot" && canAccessModule("copilot", user, clientConfig) && <Copilot T={T} isLight={isLight} theme={theme} />}
                   {v === "trash"  && <Trash trashedLeads={trashedLeads} onRestore={restoreLead} onHardDelete={hardDeleteLead} onRefresh={refreshTrash} T={T} />}
                   {v === "ia"     && <IACRM oc={oc} T={T} theme={theme} />}
                   {v === "e"      && <ERP oc={oc} T={T} />}

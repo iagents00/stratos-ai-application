@@ -103,6 +103,44 @@ export async function getRecentBotActivity(limit = 20) {
 }
 
 /**
+ * COPILOT — historial LIMPIO de la conversación con el asistente.
+ * Lee de tg_bot_activity (role user/ai + texto real), no de n8n_chat_histories
+ * (que guarda el JSON del clasificador). Devuelve más reciente primero.
+ *
+ * @param {number} limit  máximo de mensajes (default 40, máx 200)
+ * @returns {Promise<{ messages: Array<{id:number, occurred_at:string, role:string, content:string}>, error: string|null }>}
+ */
+export async function getCopilotActivity(limit = 40) {
+  try {
+    const { data, error } = await supabase.rpc('get_my_copilot_activity', { p_limit: limit })
+    if (error) return { messages: [], error: error.message }
+    return { messages: Array.isArray(data) ? data : [], error: null }
+  } catch (e) {
+    return { messages: [], error: e?.message || 'Error de conexión' }
+  }
+}
+
+/**
+ * COPILOT — envía un mensaje al asistente (mismo cerebro que el bot de Telegram).
+ * El RPC copilot_send resuelve el chat_id del usuario autenticado, llama a
+ * bot_nlu_dispatch_gvintell (que responde y registra user+ai en tg_bot_activity)
+ * y devuelve el texto de la respuesta.
+ *
+ * @param {string} text
+ * @returns {Promise<{ reply: string|null, error: string|null }>}
+ */
+export async function sendCopilotMessage(text) {
+  try {
+    const { data, error } = await supabase.rpc('copilot_send', { p_text: text })
+    if (error) return { reply: null, error: error.message }
+    if (data === '__NOT_PAIRED__') return { reply: null, error: 'not_paired' }
+    return { reply: typeof data === 'string' ? data : '', error: null }
+  } catch (e) {
+    return { reply: null, error: e?.message || 'Error de conexión' }
+  }
+}
+
+/**
  * Desempareja el Telegram del perfil. El bot dejará de reconocer al usuario.
  * Útil si el asesor cambia de teléfono o quiere bloquear el acceso del bot.
  *

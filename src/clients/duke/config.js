@@ -65,6 +65,9 @@ const dukeConfig = {
     // + campanita que avisa cuando un cliente escribe. Para que Cecilia sepa
     // al instante que le escribieron sin tener que abrir cada expediente.
     whatsappModule: true,
+    // Copilot: chat del asistente IA embebido en el CRM (mismo cerebro que el
+    // bot de Telegram). Los asesores operan sus leads desde el chat del CRM.
+    copilotModule: true,
   },
 
   support: {

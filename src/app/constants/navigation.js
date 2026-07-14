@@ -7,11 +7,12 @@
  */
 import {
   Users, Hexagon, Activity, Building2, Atom,
-  Trophy, Landmark, UserCheck, CreditCard, Shield, User, Trash2, Wallet, MessageCircle
+  Trophy, Landmark, UserCheck, CreditCard, Shield, User, Trash2, Wallet, MessageCircle, Bot
 } from "lucide-react";
 
 export const nav = [
   { id: "c",     l: "CRM",       i: Users      },
+  { id: "copilot", l: "Copilot", i: Bot        },
   { id: "wa",    l: "WhatsApp",  i: MessageCircle },
   { id: "lp",    l: "Create",    i: Hexagon    },
   { id: "d",     l: "Comando",   i: Activity   },
@@ -36,6 +37,10 @@ export const MOBILE_PRIMARY_NAV = ["c", "d", "lp", "wa", "e"];
 export const MODULE_ROLES = {
   d:      ["super_admin","admin","director","ceo"],
   c:      ["super_admin","admin","director","ceo","asesor"],
+  // Copilot: chat con el asistente IA (el mismo del bot de Telegram) embebido en
+  // el CRM. Es para el asesor (su asistente para operar leads), así que todos los
+  // roles lo ven. Gateado por features.copilotModule.
+  copilot: ["super_admin","admin","director","ceo","asesor"],
   // Caja: cuentas / ingresos / egresos sobre team_expenses. Por defecto SOLO
   // mando (admin/director/ceo): la RLS de team_expenses filtra únicamente por
   // organización (no por rol), así que dar el módulo a los asesores les
@@ -62,7 +67,7 @@ export const MODULE_NAMES = {
   d: "Comando", c: "CRM", ia: "iAgents", e: "Proyectos",
   a: "Asesores", lp: "Campañas", fa: "Finanzas",
   rrhh: "Personas", trash: "Papelera", caja: "Caja",
-  wa: "WhatsApp",
+  wa: "WhatsApp", copilot: "Copilot",
   planes: "Planes", perfil: "Perfil", admin: "Usuarios",
 };
 
@@ -132,6 +137,16 @@ export function canAccessModule(moduleId, user, clientConfig = null) {
     //   • Apagarlo del todo (ni super_admin): whatsappModule:false en el config.
     if (user.role !== "super_admin") return false;
     return MODULE_ROLES.wa.includes(user.role);
+  }
+
+  // Copilot (chat del asistente IA): igual que WhatsApp/Caja, 100% por feature flag.
+  // Sin `features.copilotModule: true` nadie lo ve. Con el flag, el rol decide
+  // (incluye asesor: es justo quien usa el asistente para operar sus leads).
+  // Se evalúa ANTES del aislamiento por org para que también aplique a tenants
+  // externos que lo habiliten (usan el mismo bot multi-tenant).
+  if (moduleId === "copilot") {
+    if (clientConfig?.features?.copilotModule !== true) return false;
+    return MODULE_ROLES.copilot.includes(user.role);
   }
 
   if (!isStratosOrg(user.organizationId) && !EXTERNAL_ORG_MODULES.has(moduleId)) {
