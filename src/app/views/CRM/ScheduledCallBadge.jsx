@@ -102,7 +102,7 @@ export default function ScheduledCallBadge({
     return (
       <span style={{
         display: "inline-flex", alignItems: "center", gap: 3,
-        fontSize: 10.5, fontWeight: 700, color: palette.fg,
+        fontSize: 10.5, fontWeight: 500, color: palette.fg,
         fontFamily: fontDisp, letterSpacing: "0.01em",
       }} title={`Llamada IA programada: ${fmt.label}`}>
         <CalendarClock size={11} strokeWidth={2.4} />
@@ -117,7 +117,7 @@ export default function ScheduledCallBadge({
         display: "inline-flex", alignItems: "center", gap: 6,
         padding: "4px 10px", borderRadius: 99,
         background: palette.bg, border: `1px solid ${palette.bd}`,
-        color: palette.fg, fontSize: 11, fontWeight: 700,
+        color: palette.fg, fontSize: 11, fontWeight: 500,
         fontFamily: fontDisp, letterSpacing: "0.02em",
         textTransform: "uppercase",
       }} title="Esta llamada la dispara el CRON de n8n cuando vence el horario">
@@ -133,7 +133,7 @@ export default function ScheduledCallBadge({
       display: "inline-flex", alignItems: "center", gap: 5,
       padding: "2px 8px", borderRadius: 99,
       background: palette.bg, border: `1px solid ${palette.bd}`,
-      color: palette.fg, fontSize: 10, fontWeight: 700,
+      color: palette.fg, fontSize: 10, fontWeight: 500,
       fontFamily: fontDisp, letterSpacing: "0.02em",
     }} title={`Llamada IA programada: ${fmt.label}`}>
       <CalendarClock size={10} strokeWidth={2.4} />

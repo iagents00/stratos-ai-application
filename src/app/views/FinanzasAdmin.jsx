@@ -227,7 +227,7 @@ const FinanzasAdmin = ({ T: _T }) => {
           <Ico icon={Landmark} sz={42} is={20} c={ACC} />
           <div>
             <p style={{ fontSize: 22, fontWeight: 300, color: isLight ? T.txt : "#FFF", fontFamily: fontDisp, letterSpacing: "-0.03em" }}>
-              Finanzas <span style={{ fontWeight: 600, color: ACC }}>&amp;</span> Administración
+              Finanzas <span style={{ fontWeight: 400, color: ACC }}>&amp;</span> Administración
             </p>
             <p style={{ fontSize: 11, color: T.txt3, marginTop: 2, letterSpacing: "0.01em" }}>
               Ingresos, egresos y flujo de caja · datos en vivo{curSuffix ? ` · ${currency}` : ""}
@@ -235,14 +235,14 @@ const FinanzasAdmin = ({ T: _T }) => {
           </div>
         </div>
         <div style={{ display: "flex", gap: 8 }}>
-          <button onClick={load} title="Actualizar" style={{ display: "flex", alignItems: "center", gap: 6, padding: "9px 16px", borderRadius: 9, border: `1px solid ${T.border}`, background: T.glass, cursor: "pointer", color: T.txt2, fontSize: 12, fontWeight: 600, fontFamily: fontDisp }}>
+          <button onClick={load} title="Actualizar" style={{ display: "flex", alignItems: "center", gap: 6, padding: "9px 16px", borderRadius: 9, border: `1px solid ${T.border}`, background: T.glass, cursor: "pointer", color: T.txt2, fontSize: 12, fontWeight: 400, fontFamily: fontDisp }}>
             <RefreshCw size={13} style={loading ? { animation: "spin 1s linear infinite" } : undefined} /> Actualizar
           </button>
           <button onClick={exportCSV} disabled={!rows.length} title={rows.length ? "Descargar movimientos en CSV" : "Sin movimientos para exportar"}
-            style={{ display: "flex", alignItems: "center", gap: 6, padding: "9px 16px", borderRadius: 9, border: `1px solid ${T.border}`, background: T.glass, cursor: rows.length ? "pointer" : "not-allowed", opacity: rows.length ? 1 : 0.5, color: T.txt2, fontSize: 12, fontWeight: 600, fontFamily: fontDisp }}>
+            style={{ display: "flex", alignItems: "center", gap: 6, padding: "9px 16px", borderRadius: 9, border: `1px solid ${T.border}`, background: T.glass, cursor: rows.length ? "pointer" : "not-allowed", opacity: rows.length ? 1 : 0.5, color: T.txt2, fontSize: 12, fontWeight: 400, fontFamily: fontDisp }}>
             <Download size={13} /> Exportar CSV
           </button>
-          <button onClick={() => setTab("caja")} style={{ display: "flex", alignItems: "center", gap: 8, padding: "9px 20px", borderRadius: 9, border: "none", background: isLight ? ACC : "rgba(255,255,255,0.95)", cursor: "pointer", color: isLight ? "#FFF" : "#0A0F18", fontSize: 12, fontWeight: 700, fontFamily: fontDisp, boxShadow: isLight ? `0 4px 18px ${ACC}44` : "0 4px 18px rgba(255,255,255,0.12)" }}>
+          <button onClick={() => setTab("caja")} style={{ display: "flex", alignItems: "center", gap: 8, padding: "9px 20px", borderRadius: 9, border: "none", background: isLight ? ACC : "rgba(255,255,255,0.95)", cursor: "pointer", color: isLight ? "#FFF" : "#0A0F18", fontSize: 12, fontWeight: 500, fontFamily: fontDisp, boxShadow: isLight ? `0 4px 18px ${ACC}44` : "0 4px 18px rgba(255,255,255,0.12)" }}>
             <Plus size={14} /> Nuevo movimiento
           </button>
         </div>
@@ -288,7 +288,7 @@ const FinanzasAdmin = ({ T: _T }) => {
             <G T={T}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
                 <div>
-                  <p style={{ fontSize: 14, fontWeight: 700, color: T.txt, fontFamily: fontDisp }}>Ingresos vs Egresos</p>
+                  <p style={{ fontSize: 14, fontWeight: 500, color: T.txt, fontFamily: fontDisp }}>Ingresos vs Egresos</p>
                   <p style={{ fontSize: 11, color: T.txt3, marginTop: 2 }}>Últimos 12 meses</p>
                 </div>
                 <Pill color={POS} s isLight={isLight}>en vivo</Pill>
@@ -309,7 +309,7 @@ const FinanzasAdmin = ({ T: _T }) => {
             </G>
             <G T={T} np>
               <div style={{ padding: "16px 18px", borderBottom: `1px solid ${T.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <p style={{ fontSize: 13, fontWeight: 700, color: T.txt, fontFamily: fontDisp }}>Últimos movimientos</p>
+                <p style={{ fontSize: 13, fontWeight: 500, color: T.txt, fontFamily: fontDisp }}>Últimos movimientos</p>
                 <button onClick={() => setTab("caja")} style={{ fontSize: 11, color: ACC, background: "none", border: "none", cursor: "pointer" }}>Ver todo →</button>
               </div>
               {loading && <div style={{ padding: "24px 18px", color: T.txt3, fontSize: 12, textAlign: "center" }}>Cargando…</div>}
@@ -327,14 +327,14 @@ const FinanzasAdmin = ({ T: _T }) => {
                   <div key={r.id} style={{ padding: "12px 18px", borderBottom: `1px solid ${T.border}`, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10 }}>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 3 }}>
-                        <span style={{ fontSize: 9, fontWeight: 700, color: c, background: `${c}15`, padding: "2px 7px", borderRadius: 4 }}>{r.tipo === "ingreso" ? "Ingreso" : "Egreso"}</span>
+                        <span style={{ fontSize: 9, fontWeight: 500, color: c, background: `${c}15`, padding: "2px 7px", borderRadius: 4 }}>{r.tipo === "ingreso" ? "Ingreso" : "Egreso"}</span>
                         <span style={{ fontSize: 10, color: T.txt3 }}>{fmtDate(r.spent_at)}</span>
                       </div>
-                      <p style={{ fontSize: 12, color: T.txt, fontWeight: 600, fontFamily: fontDisp, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: 190 }}>
+                      <p style={{ fontSize: 12, color: T.txt, fontWeight: 400, fontFamily: fontDisp, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: 190 }}>
                         {r.category || (r.tipo === "ingreso" ? "Ingreso" : "Gasto")}{obra ? ` · ${obra}` : ""}
                       </p>
                     </div>
-                    <p style={{ fontSize: 13, fontWeight: 700, color: c, fontFamily: fontDisp, flexShrink: 0 }}>{r.tipo === "ingreso" ? "+" : "−"}{money(r.amount)}</p>
+                    <p style={{ fontSize: 13, fontWeight: 500, color: c, fontFamily: fontDisp, flexShrink: 0 }}>{r.tipo === "ingreso" ? "+" : "−"}{money(r.amount)}</p>
                   </div>
                 );
               })}
@@ -347,7 +347,7 @@ const FinanzasAdmin = ({ T: _T }) => {
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                 <Ico icon={TrendingDown} sz={32} is={14} c={NEG} />
                 <div>
-                  <p style={{ fontSize: 14, fontWeight: 700, color: T.txt, fontFamily: fontDisp }}>Egresos por categoría</p>
+                  <p style={{ fontSize: 14, fontWeight: 500, color: T.txt, fontFamily: fontDisp }}>Egresos por categoría</p>
                   <p style={{ fontSize: 11, color: T.txt3 }}>Mes en curso{curSuffix ? ` · ${currency}` : ""}</p>
                 </div>
               </div>
@@ -364,7 +364,7 @@ const FinanzasAdmin = ({ T: _T }) => {
                       <div style={{ flex: 1, height: 6, borderRadius: 3, background: T.border, overflow: "hidden" }}>
                         <div style={{ width: `${pct}%`, height: "100%", borderRadius: 3, background: NEG, opacity: 0.85 }} />
                       </div>
-                      <span style={{ fontSize: 12, fontWeight: 700, color: T.txt, fontFamily: fontDisp, width: 90, textAlign: "right", flexShrink: 0 }}>{money(val)}</span>
+                      <span style={{ fontSize: 12, fontWeight: 500, color: T.txt, fontFamily: fontDisp, width: 90, textAlign: "right", flexShrink: 0 }}>{money(val)}</span>
                       <span style={{ fontSize: 10, color: T.txt3, width: 38, textAlign: "right", flexShrink: 0 }}>{pct.toFixed(0)}%</span>
                     </div>
                   );
@@ -391,7 +391,7 @@ const FinanzasAdmin = ({ T: _T }) => {
           <G T={T}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 18, flexWrap: "wrap", gap: 8 }}>
               <div>
-                <p style={{ fontSize: 14, fontWeight: 700, color: T.txt, fontFamily: fontDisp }}>Flujo de caja mensual</p>
+                <p style={{ fontSize: 14, fontWeight: 500, color: T.txt, fontFamily: fontDisp }}>Flujo de caja mensual</p>
                 <p style={{ fontSize: 11, color: T.txt3, marginTop: 2 }}>Últimos 12 meses{curSuffix ? ` · ${currency}` : ""}</p>
               </div>
               <div style={{ display: "flex", gap: 16 }}>
@@ -418,9 +418,9 @@ const FinanzasAdmin = ({ T: _T }) => {
           {/* Detalle por mes */}
           <G T={T} np>
             <div style={{ padding: "12px 20px", borderBottom: `1px solid ${T.border}` }}>
-              <p style={{ fontSize: 13, fontWeight: 700, color: T.txt, fontFamily: fontDisp }}>Detalle mensual</p>
+              <p style={{ fontSize: 13, fontWeight: 500, color: T.txt, fontFamily: fontDisp }}>Detalle mensual</p>
             </div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr 1fr", gap: 8, padding: "9px 20px", borderBottom: `1px solid ${T.border}`, fontSize: 9, color: T.txt3, textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 700 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr 1fr", gap: 8, padding: "9px 20px", borderBottom: `1px solid ${T.border}`, fontSize: 9, color: T.txt3, textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 500 }}>
               <span>Mes</span><span>Ingresos</span><span>Egresos</span><span>Saldo</span><span>Margen</span>
             </div>
             {series.map(d => {
@@ -428,15 +428,15 @@ const FinanzasAdmin = ({ T: _T }) => {
               const mpct = Math.max(0, Math.min(100, margen));
               return (
                 <div key={d.key} style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr 1fr", gap: 8, alignItems: "center", padding: "11px 20px", borderBottom: `1px solid ${T.border}` }}>
-                  <span style={{ fontSize: 12, color: T.txt, fontWeight: 600, fontFamily: fontDisp }}>{d.mes}</span>
-                  <span style={{ fontSize: 12, fontWeight: 600, color: POS, fontFamily: fontDisp }}>{money(d.ingresos)}</span>
-                  <span style={{ fontSize: 12, fontWeight: 600, color: NEG, fontFamily: fontDisp }}>{money(d.egresos)}</span>
-                  <span style={{ fontSize: 13, fontWeight: 700, color: d.saldo >= 0 ? ACC : NEG, fontFamily: fontDisp }}>{money(d.saldo)}</span>
+                  <span style={{ fontSize: 12, color: T.txt, fontWeight: 400, fontFamily: fontDisp }}>{d.mes}</span>
+                  <span style={{ fontSize: 12, fontWeight: 400, color: POS, fontFamily: fontDisp }}>{money(d.ingresos)}</span>
+                  <span style={{ fontSize: 12, fontWeight: 400, color: NEG, fontFamily: fontDisp }}>{money(d.egresos)}</span>
+                  <span style={{ fontSize: 13, fontWeight: 500, color: d.saldo >= 0 ? ACC : NEG, fontFamily: fontDisp }}>{money(d.saldo)}</span>
                   <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                     <div style={{ flex: 1, height: 4, borderRadius: 2, background: T.border, overflow: "hidden" }}>
                       <div style={{ width: `${mpct}%`, height: "100%", background: ACC, borderRadius: 2 }} />
                     </div>
-                    <span style={{ fontSize: 10, color: T.txt3, fontWeight: 600, fontFamily: fontDisp, width: 40, textAlign: "right" }}>{margen.toFixed(0)}%</span>
+                    <span style={{ fontSize: 10, color: T.txt3, fontWeight: 400, fontFamily: fontDisp, width: 40, textAlign: "right" }}>{margen.toFixed(0)}%</span>
                   </div>
                 </div>
               );

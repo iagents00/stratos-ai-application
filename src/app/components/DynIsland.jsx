@@ -180,12 +180,12 @@ const DynIsland = ({ onExpand, onOpenLead, notifications = [], theme = "dark", b
             <div data-brand-motion="true" style={{ width: 6, height: 6, borderRadius: "50%", background: "#34D399", boxShadow: "0 0 5px rgba(52,211,153,0.42)", animation: "stratosIntelPulseDot 3.4s ease-in-out infinite", willChange: "transform, opacity" }} />
           </div>
           <span className="dyn-lbl-desk" style={{
-            fontSize: 12.5, fontWeight: 600, letterSpacing: "-0.025em", fontFamily: fontDisp,
+            fontSize: 12.5, fontWeight: 400, letterSpacing: "-0.025em", fontFamily: fontDisp,
             color: isLight ? "#0A0A0A" : "rgba(255,255,255,0.88)",
             whiteSpace: "nowrap", flexShrink: 0,
           }}>{centerLabel}</span>
           <span className="dyn-lbl-mob" style={{
-            fontSize: 12.5, fontWeight: 600, letterSpacing: "-0.025em", fontFamily: fontDisp,
+            fontSize: 12.5, fontWeight: 400, letterSpacing: "-0.025em", fontFamily: fontDisp,
             color: isLight ? "#0A0A0A" : "rgba(255,255,255,0.88)",
             whiteSpace: "nowrap", flexShrink: 0,
           }}>{centerLabelMobile}</span>
@@ -231,7 +231,7 @@ const DynIsland = ({ onExpand, onOpenLead, notifications = [], theme = "dark", b
                       <StratosAtom size={14} color={D.acc} />
                     </div>
                     <div>
-                      <p style={{ margin: 0, fontSize: 11.5, color: D.t88, fontWeight: 700, fontFamily: fontDisp, letterSpacing: "-0.01em" }}>{centerLabel}</p>
+                      <p style={{ margin: 0, fontSize: 11.5, color: D.t88, fontWeight: 500, fontFamily: fontDisp, letterSpacing: "-0.01em" }}>{centerLabel}</p>
                       <p style={{ margin: 0, fontSize: 9.5, color: D.t38, fontFamily: font, letterSpacing: "0.02em", marginTop: 1 }}>{msgs.length} actualizaciones del equipo IA</p>
                     </div>
                   </div>
@@ -253,7 +253,7 @@ const DynIsland = ({ onExpand, onOpenLead, notifications = [], theme = "dark", b
                         <m.icon size={14} color={m.c} strokeWidth={2} />
                       </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <p style={{ margin: 0, fontSize: 12.5, color: D.t88, fontWeight: 600, fontFamily: fontDisp, marginBottom: 2 }}>{m.agent}</p>
+                        <p style={{ margin: 0, fontSize: 12.5, color: D.t88, fontWeight: 400, fontFamily: fontDisp, marginBottom: 2 }}>{m.agent}</p>
                         <p style={{ margin: 0, fontSize: 11, color: D.t42, fontFamily: font, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{m.text}</p>
                       </div>
                       <ChevronRight size={13} color={D.t22} strokeWidth={2} />
@@ -264,11 +264,11 @@ const DynIsland = ({ onExpand, onOpenLead, notifications = [], theme = "dark", b
                 {/* ─── QUÉ PUEDE HACER EL SISTEMA — carrusel de funciones ─── */}
                 <div style={{ padding: "10px 20px 4px", borderTop: `1px solid ${D.line}`, display: "flex", justifyContent: "space-between", alignItems: "flex-end", gap: 10 }}>
                   <div style={{ minWidth: 0 }}>
-                    <p style={{ margin: "0 0 2px", fontSize: 10, color: D.t55, fontWeight: 700, fontFamily: fontDisp, letterSpacing: "0.10em", textTransform: "uppercase" }}>Qué puede hacer el sistema</p>
+                    <p style={{ margin: "0 0 2px", fontSize: 10, color: D.t55, fontWeight: 500, fontFamily: fontDisp, letterSpacing: "0.10em", textTransform: "uppercase" }}>Qué puede hacer el sistema</p>
                     <p style={{ margin: 0, fontSize: 9.5, color: D.t34, fontFamily: font }}>Tocá una función para ver cómo se usa</p>
                   </div>
                   <button onClick={() => setShowAll(true)}
-                    style={{ flexShrink: 0, display: "flex", alignItems: "center", gap: 4, background: "rgba(110,231,194,0.10)", border: "1px solid rgba(110,231,194,0.22)", color: D.acc, borderRadius: 8, padding: "6px 10px", fontSize: 10.5, fontWeight: 700, fontFamily: fontDisp, cursor: "pointer", whiteSpace: "nowrap", transition: "background 0.16s" }}
+                    style={{ flexShrink: 0, display: "flex", alignItems: "center", gap: 4, background: "rgba(110,231,194,0.10)", border: "1px solid rgba(110,231,194,0.22)", color: D.acc, borderRadius: 8, padding: "6px 10px", fontSize: 10.5, fontWeight: 500, fontFamily: fontDisp, cursor: "pointer", whiteSpace: "nowrap", transition: "background 0.16s" }}
                     onMouseEnter={e => { e.currentTarget.style.background = "rgba(110,231,194,0.18)"; }}
                     onMouseLeave={e => { e.currentTarget.style.background = "rgba(110,231,194,0.10)"; }}
                   >Ver todas <span style={{ opacity: 0.7 }}>({INTEL_FEATURES.length})</span><ChevronRight size={12} strokeWidth={2.4} /></button>
@@ -301,15 +301,15 @@ const DynIsland = ({ onExpand, onOpenLead, notifications = [], theme = "dark", b
                             <div style={{ width: 34, height: 34, borderRadius: 10, background: `${f.color}1E`, border: `1px solid ${f.color}33`, display: "flex", alignItems: "center", justifyContent: "center" }}>
                               <Ic size={17} color={f.color} strokeWidth={2} />
                             </div>
-                            <span style={{ fontSize: 8, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: isAgent ? D.acc : D.t46, background: isAgent ? "rgba(110,231,194,0.10)" : D.btn, border: `1px solid ${isAgent ? "rgba(110,231,194,0.22)" : D.bd}`, borderRadius: 6, padding: "3px 6px" }}>
+                            <span style={{ fontSize: 8, fontWeight: 500, letterSpacing: "0.06em", textTransform: "uppercase", color: isAgent ? D.acc : D.t46, background: isAgent ? "rgba(110,231,194,0.10)" : D.btn, border: `1px solid ${isAgent ? "rgba(110,231,194,0.22)" : D.bd}`, borderRadius: 6, padding: "3px 6px" }}>
                               {isAgent ? "Auto" : "Vos pedís"}
                             </span>
                           </div>
-                          <p style={{ margin: "0 0 4px", fontSize: 13, color: D.t92, fontWeight: 600, fontFamily: fontDisp, lineHeight: 1.2 }}>{f.label}</p>
+                          <p style={{ margin: "0 0 4px", fontSize: 13, color: D.t92, fontWeight: 400, fontFamily: fontDisp, lineHeight: 1.2 }}>{f.label}</p>
                           <p style={{ margin: 0, fontSize: 10.5, color: D.t44, fontFamily: font, lineHeight: 1.4, display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{f.tagline}</p>
                           <div style={{ display: "flex", alignItems: "center", gap: 5, marginTop: 10, paddingTop: 9, borderTop: `1px solid ${D.line}` }}>
                             <MapPin size={10} color={f.color} strokeWidth={2.4} style={{ flexShrink: 0 }} />
-                            <span style={{ fontSize: 9, color: f.color, opacity: 0.9, fontWeight: 600, fontFamily: font }}>{chan}</span>
+                            <span style={{ fontSize: 9, color: f.color, opacity: 0.9, fontWeight: 400, fontFamily: font }}>{chan}</span>
                           </div>
                         </div>
                       );
@@ -329,7 +329,7 @@ const DynIsland = ({ onExpand, onOpenLead, notifications = [], theme = "dark", b
                     onMouseLeave={e => { e.currentTarget.style.background = D.btn; e.currentTarget.style.color = D.t55; }}
                   ><ChevronLeft size={15} /></button>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <p style={{ margin: 0, fontSize: 13.5, color: D.w, fontWeight: 700, fontFamily: fontDisp, letterSpacing: "-0.01em" }}>Todas las funciones</p>
+                    <p style={{ margin: 0, fontSize: 13.5, color: D.w, fontWeight: 500, fontFamily: fontDisp, letterSpacing: "-0.01em" }}>Todas las funciones</p>
                     <p style={{ margin: 0, fontSize: 10, color: D.t40, fontFamily: font, marginTop: 2 }}>{INTEL_FEATURES.length} funciones · tocá una para ver cómo se usa</p>
                   </div>
                   <button onClick={() => setShowAll(false)} style={{ background: D.btn, border: "none", cursor: "pointer", width: 26, height: 26, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", color: D.t50, flexShrink: 0, transition: "all 0.16s" }}
@@ -355,15 +355,15 @@ const DynIsland = ({ onExpand, onOpenLead, notifications = [], theme = "dark", b
                           <div style={{ width: 32, height: 32, borderRadius: 9, background: `${f.color}1E`, border: `1px solid ${f.color}33`, display: "flex", alignItems: "center", justifyContent: "center" }}>
                             <Ic size={16} color={f.color} strokeWidth={2} />
                           </div>
-                          <span style={{ fontSize: 8, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: isAgent ? D.acc : D.t46, background: isAgent ? "rgba(110,231,194,0.10)" : D.btn, border: `1px solid ${isAgent ? "rgba(110,231,194,0.22)" : D.bd}`, borderRadius: 6, padding: "3px 6px" }}>
+                          <span style={{ fontSize: 8, fontWeight: 500, letterSpacing: "0.06em", textTransform: "uppercase", color: isAgent ? D.acc : D.t46, background: isAgent ? "rgba(110,231,194,0.10)" : D.btn, border: `1px solid ${isAgent ? "rgba(110,231,194,0.22)" : D.bd}`, borderRadius: 6, padding: "3px 6px" }}>
                             {isAgent ? "Auto" : "Vos pedís"}
                           </span>
                         </div>
-                        <p style={{ margin: "0 0 4px", fontSize: 12.5, color: D.t92, fontWeight: 600, fontFamily: fontDisp, lineHeight: 1.2 }}>{f.label}</p>
+                        <p style={{ margin: "0 0 4px", fontSize: 12.5, color: D.t92, fontWeight: 400, fontFamily: fontDisp, lineHeight: 1.2 }}>{f.label}</p>
                         <p style={{ margin: 0, fontSize: 10, color: D.t44, fontFamily: font, lineHeight: 1.4, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{f.tagline}</p>
                         <div style={{ display: "flex", alignItems: "center", gap: 5, marginTop: 9, paddingTop: 8, borderTop: `1px solid ${D.line}` }}>
                           <MapPin size={10} color={f.color} strokeWidth={2.4} style={{ flexShrink: 0 }} />
-                          <span style={{ fontSize: 9, color: f.color, opacity: 0.9, fontWeight: 600, fontFamily: font }}>{chan}</span>
+                          <span style={{ fontSize: 9, color: f.color, opacity: 0.9, fontWeight: 400, fontFamily: font }}>{chan}</span>
                         </div>
                       </div>
                     );
@@ -380,7 +380,7 @@ const DynIsland = ({ onExpand, onOpenLead, notifications = [], theme = "dark", b
                     <selectedNotif.icon size={15} color={selectedNotif.c} strokeWidth={2} />
                   </div>
                   <div style={{ flex: 1 }}>
-                    <p style={{ margin: 0, fontSize: 14, color: D.w, fontWeight: 700, fontFamily: fontDisp, letterSpacing: "-0.01em" }}>{selectedNotif.agent}</p>
+                    <p style={{ margin: 0, fontSize: 14, color: D.w, fontWeight: 500, fontFamily: fontDisp, letterSpacing: "-0.01em" }}>{selectedNotif.agent}</p>
                     <p style={{ margin: 0, fontSize: 10.5, color: D.t40, fontFamily: font, marginTop: 2 }}>Actualización del sistema</p>
                   </div>
                   <button onClick={() => setSelectedNotif(null)} style={{ background: D.btn, border: "none", color: D.t55, borderRadius: 8, width: 28, height: 28, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", transition: "all 0.16s" }}
@@ -396,7 +396,7 @@ const DynIsland = ({ onExpand, onOpenLead, notifications = [], theme = "dark", b
                   style={{
                     width: "100%", padding: "13px 16px", borderRadius: 12,
                     background: D.ctaBg, color: D.ctaTxt,
-                    border: "none", fontSize: 13, fontWeight: 700, cursor: "pointer",
+                    border: "none", fontSize: 13, fontWeight: 500, cursor: "pointer",
                     fontFamily: fontDisp, letterSpacing: "0.005em",
                     transition: "all 0.2s cubic-bezier(0.4,0,0.2,1)",
                     boxShadow: D.ctaSh,
@@ -422,8 +422,8 @@ const DynIsland = ({ onExpand, onOpenLead, notifications = [], theme = "dark", b
                       <Ic size={16} color={selectedFeature.color} strokeWidth={2} />
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <p style={{ margin: 0, fontSize: 14, color: D.w, fontWeight: 700, fontFamily: fontDisp, letterSpacing: "-0.01em" }}>{selectedFeature.label}</p>
-                      <p style={{ margin: 0, fontSize: 10, color: isAgent ? D.acc : D.t40, fontFamily: font, marginTop: 2, fontWeight: 600 }}>{isAgent ? "El sistema lo hace solo" : "Se lo pedís al asistente"}</p>
+                      <p style={{ margin: 0, fontSize: 14, color: D.w, fontWeight: 500, fontFamily: fontDisp, letterSpacing: "-0.01em" }}>{selectedFeature.label}</p>
+                      <p style={{ margin: 0, fontSize: 10, color: isAgent ? D.acc : D.t40, fontFamily: font, marginTop: 2, fontWeight: 400 }}>{isAgent ? "El sistema lo hace solo" : "Se lo pedís al asistente"}</p>
                     </div>
                     <button onClick={closeAll} style={{ background: D.btn, border: "none", color: D.t55, borderRadius: 8, width: 28, height: 28, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", flexShrink: 0 }}
                     ><X size={13} /></button>
@@ -435,16 +435,16 @@ const DynIsland = ({ onExpand, onOpenLead, notifications = [], theme = "dark", b
                   <div style={{ display: "flex", alignItems: "center", gap: 9, padding: "10px 13px", borderRadius: 11, background: `${selectedFeature.color}12`, border: `1px solid ${selectedFeature.color}2A`, marginBottom: 18 }}>
                     <MapPin size={14} color={selectedFeature.color} strokeWidth={2.2} style={{ flexShrink: 0 }} />
                     <div>
-                      <span style={{ display: "block", fontSize: 8.5, color: D.t40, fontWeight: 700, fontFamily: fontDisp, letterSpacing: "0.09em", textTransform: "uppercase" }}>Dónde</span>
-                      <span style={{ fontSize: 12.5, color: D.t88, fontFamily: fontDisp, fontWeight: 600 }}>{selectedFeature.where}</span>
+                      <span style={{ display: "block", fontSize: 8.5, color: D.t40, fontWeight: 500, fontFamily: fontDisp, letterSpacing: "0.09em", textTransform: "uppercase" }}>Dónde</span>
+                      <span style={{ fontSize: 12.5, color: D.t88, fontFamily: fontDisp, fontWeight: 400 }}>{selectedFeature.where}</span>
                     </div>
                   </div>
 
-                  <p style={{ margin: "0 0 9px", fontSize: 9.5, color: D.t42, fontWeight: 700, fontFamily: fontDisp, letterSpacing: "0.08em", textTransform: "uppercase" }}>Cómo se usa</p>
+                  <p style={{ margin: "0 0 9px", fontSize: 9.5, color: D.t42, fontWeight: 500, fontFamily: fontDisp, letterSpacing: "0.08em", textTransform: "uppercase" }}>Cómo se usa</p>
                   <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                     {selectedFeature.how.map((step, i) => (
                       <div key={i} style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
-                        <div style={{ width: 18, height: 18, borderRadius: 6, background: `${selectedFeature.color}1A`, border: `1px solid ${selectedFeature.color}30`, color: selectedFeature.color, fontSize: 9.5, fontWeight: 700, fontFamily: fontDisp, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 1 }}>{i + 1}</div>
+                        <div style={{ width: 18, height: 18, borderRadius: 6, background: `${selectedFeature.color}1A`, border: `1px solid ${selectedFeature.color}30`, color: selectedFeature.color, fontSize: 9.5, fontWeight: 500, fontFamily: fontDisp, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 1 }}>{i + 1}</div>
                         <p style={{ margin: 0, fontSize: 12, color: D.t74, fontFamily: font, lineHeight: 1.5 }}>{step}</p>
                       </div>
                     ))}

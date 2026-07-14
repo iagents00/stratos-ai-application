@@ -124,7 +124,7 @@ const ChannelBadge = ({ ch, T, isLight }) => {
   const c = ch === "wa" ? WA : TG;
   const label = ch === "wa" ? "WhatsApp" : "Telegram";
   return (
-    <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 9, fontWeight: 700, color: c, background: `${c}12`, border: `1px solid ${c}28`, padding: "2px 7px", borderRadius: 6, fontFamily: fontDisp, letterSpacing: "0.04em" }}>
+    <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 9, fontWeight: 500, color: c, background: `${c}12`, border: `1px solid ${c}28`, padding: "2px 7px", borderRadius: 6, fontFamily: fontDisp, letterSpacing: "0.04em" }}>
       <span style={{ width: 4, height: 4, borderRadius: "50%", background: c, flexShrink: 0 }} />
       {label}
     </span>
@@ -134,7 +134,7 @@ const ChannelBadge = ({ ch, T, isLight }) => {
 const StatusChip = ({ s }) => {
   const c = s === "respondió" ? "#4ADE80" : s === "leído" ? "#67E8F9" : "#64748B";
   const l = s === "respondió" ? "Respondió" : s === "leído" ? "Leído" : "Sin leer";
-  return <span style={{ fontSize: 9, fontWeight: 700, color: c, fontFamily: fontDisp }}>{l}</span>;
+  return <span style={{ fontSize: 9, fontWeight: 500, color: c, fontFamily: fontDisp }}>{l}</span>;
 };
 
 const AgentToggle = ({ active, onChange, T, isLight }) => (
@@ -147,7 +147,7 @@ const AgentToggle = ({ active, onChange, T, isLight }) => (
     <div style={{ width: 26, height: 14, borderRadius: 7, background: active ? T.accent : (isLight ? "rgba(15,23,42,0.15)" : "rgba(255,255,255,0.12)"), position: "relative", transition: "background 0.2s", flexShrink: 0 }}>
       <div style={{ width: 10, height: 10, borderRadius: "50%", background: "#FFFFFF", position: "absolute", top: 2, left: active ? 14 : 2, transition: "left 0.2s", boxShadow: "0 1px 3px rgba(0,0,0,0.25)" }} />
     </div>
-    <span style={{ fontSize: 10, fontWeight: 700, color: active ? T.accent : T.txt3, fontFamily: fontDisp }}>{active ? "Activo" : "Pausado"}</span>
+    <span style={{ fontSize: 10, fontWeight: 500, color: active ? T.accent : T.txt3, fontFamily: fontDisp }}>{active ? "Activo" : "Pausado"}</span>
   </button>
 );
 
@@ -195,7 +195,7 @@ const IACRM = ({ oc, T: _T, theme = "dark" }) => {
               animation: "pulse 2.4s ease-in-out infinite",
             }} />
             <h2 style={{
-              margin: 0, fontSize: 22, fontWeight: 800,
+              margin: 0, fontSize: 22, fontWeight: 500,
               color: T.txt, fontFamily: fontDisp, letterSpacing: "-0.03em",
             }}>
               iAgents{" "}
@@ -216,7 +216,7 @@ const IACRM = ({ oc, T: _T, theme = "dark" }) => {
             {[{ c: WA, l: "WhatsApp" }, { c: TG, l: "Telegram" }].map(({ c, l }) => (
               <div key={l} style={{ display: "flex", alignItems: "center", gap: 5, padding: "5px 11px", borderRadius: 9, background: `${c}10`, border: `1px solid ${c}28` }}>
                 <div style={{ width: 5, height: 5, borderRadius: "50%", background: c, animation: "pulse 2s ease-in-out infinite" }} />
-                <span style={{ fontSize: 10.5, fontWeight: 700, color: c, fontFamily: fontDisp }}>{l}</span>
+                <span style={{ fontSize: 10.5, fontWeight: 500, color: c, fontFamily: fontDisp }}>{l}</span>
               </div>
             ))}
           </div>
@@ -228,7 +228,7 @@ const IACRM = ({ oc, T: _T, theme = "dark" }) => {
               background: isLight ? T.accentG : `${T.accent}14`,
               border: `1px solid ${T.accent}38`,
               color: isLight ? "#FFFFFF" : T.accent,
-              fontSize: 11.5, fontWeight: 700, cursor: "pointer", fontFamily: fontDisp,
+              fontSize: 11.5, fontWeight: 500, cursor: "pointer", fontFamily: fontDisp,
               transition: "all 0.15s",
               boxShadow: isLight ? T.shadowMint : "none",
             }}
@@ -283,7 +283,7 @@ const IACRM = ({ oc, T: _T, theme = "dark" }) => {
           {/* Gráfica actividad */}
           <G T={T}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
-              <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: T.txt, fontFamily: fontDisp, letterSpacing: "-0.02em" }}>Actividad del equipo IA — hoy</p>
+              <p style={{ margin: 0, fontSize: 13, fontWeight: 500, color: T.txt, fontFamily: fontDisp, letterSpacing: "-0.02em" }}>Actividad del equipo IA — hoy</p>
               <div style={{ display: "flex", gap: 12 }}>
                 {[{ c: WA, l: "WhatsApp" }, { c: TG, l: "Telegram" }].map(({ c, l }) => (
                   <span key={l} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 10, color: T.txt3, fontFamily: font }}>
@@ -368,14 +368,14 @@ const IACRM = ({ oc, T: _T, theme = "dark" }) => {
                   {/* Info */}
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 3 }}>
-                      <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: isActive ? T.txt : T.txt3, fontFamily: fontDisp, letterSpacing: "-0.02em" }}>{agent.name}</p>
+                      <p style={{ margin: 0, fontSize: 14, fontWeight: 500, color: isActive ? T.txt : T.txt3, fontFamily: fontDisp, letterSpacing: "-0.02em" }}>{agent.name}</p>
                       <ChannelBadge ch={agent.channel === "whatsapp" ? "wa" : "tg"} />
                       {!isActive && (
-                        <span style={{ fontSize: 8.5, fontWeight: 800, color: T.txt3, background: isLight ? "rgba(15,23,42,0.06)" : "rgba(255,255,255,0.06)", padding: "2px 6px", borderRadius: 5, letterSpacing: "0.07em", fontFamily: fontDisp }}>PAUSADO</span>
+                        <span style={{ fontSize: 8.5, fontWeight: 500, color: T.txt3, background: isLight ? "rgba(15,23,42,0.06)" : "rgba(255,255,255,0.06)", padding: "2px 6px", borderRadius: 5, letterSpacing: "0.07em", fontFamily: fontDisp }}>PAUSADO</span>
                       )}
                     </div>
                     <p style={{ margin: 0, fontSize: 11, color: T.txt3, fontFamily: font }}>
-                      {agent.role} · <span style={{ color: cSafe, fontWeight: 600 }}>{agent.queue} en cola</span>
+                      {agent.role} · <span style={{ color: cSafe, fontWeight: 400 }}>{agent.queue} en cola</span>
                     </p>
                   </div>
 
@@ -387,7 +387,7 @@ const IACRM = ({ oc, T: _T, theme = "dark" }) => {
                       { l: "Convertidos",v: agent.today.converted, c2: cSafe },
                     ].map(m => (
                       <div key={m.l} style={{ textAlign: "center" }}>
-                        <p style={{ margin: 0, fontSize: 17, fontWeight: 800, color: m.c2, fontFamily: fontDisp, lineHeight: 1, letterSpacing: "-0.03em" }}>{m.v}</p>
+                        <p style={{ margin: 0, fontSize: 17, fontWeight: 500, color: m.c2, fontFamily: fontDisp, lineHeight: 1, letterSpacing: "-0.03em" }}>{m.v}</p>
                         <p style={{ margin: 0, fontSize: 8.5, color: T.txt3, fontFamily: font, textTransform: "uppercase", letterSpacing: "0.06em", marginTop: 2 }}>{m.l}</p>
                       </div>
                     ))}
@@ -405,23 +405,23 @@ const IACRM = ({ oc, T: _T, theme = "dark" }) => {
 
                     <div style={{ padding: "14px 18px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
                       <div style={{ padding: "11px 14px", borderRadius: 11, background: isLight ? `${c}08` : `${c}06`, border: `1px solid ${c}${isLight ? "20" : "14"}` }}>
-                        <p style={{ margin: "0 0 5px", fontSize: 9.5, fontWeight: 700, color: cSafe, textTransform: "uppercase", letterSpacing: "0.08em", fontFamily: fontDisp }}>Descripción</p>
+                        <p style={{ margin: "0 0 5px", fontSize: 9.5, fontWeight: 500, color: cSafe, textTransform: "uppercase", letterSpacing: "0.08em", fontFamily: fontDisp }}>Descripción</p>
                         <p style={{ margin: 0, fontSize: 11, color: T.txt2, fontFamily: font, lineHeight: 1.6 }}>{agent.description}</p>
                       </div>
                       <div style={{ padding: "11px 14px", borderRadius: 11, background: isLight ? "rgba(15,23,42,0.03)" : "rgba(255,255,255,0.025)", border: `1px solid ${T.border}` }}>
-                        <p style={{ margin: "0 0 7px", fontSize: 9.5, fontWeight: 700, color: T.txt3, textTransform: "uppercase", letterSpacing: "0.08em", fontFamily: fontDisp }}>Se activa cuando</p>
+                        <p style={{ margin: "0 0 7px", fontSize: 9.5, fontWeight: 500, color: T.txt3, textTransform: "uppercase", letterSpacing: "0.08em", fontFamily: fontDisp }}>Se activa cuando</p>
                         <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 10 }}>
                           <Zap size={12} color={cSafe} strokeWidth={2.5} />
-                          <p style={{ margin: 0, fontSize: 11.5, color: T.txt, fontFamily: fontDisp, fontWeight: 600 }}>{agent.trigger}</p>
+                          <p style={{ margin: 0, fontSize: 11.5, color: T.txt, fontFamily: fontDisp, fontWeight: 400 }}>{agent.trigger}</p>
                         </div>
-                        <p style={{ margin: "0 0 5px", fontSize: 9.5, fontWeight: 700, color: T.txt3, textTransform: "uppercase", letterSpacing: "0.08em", fontFamily: fontDisp }}>Notifica al asesor</p>
+                        <p style={{ margin: "0 0 5px", fontSize: 9.5, fontWeight: 500, color: T.txt3, textTransform: "uppercase", letterSpacing: "0.08em", fontFamily: fontDisp }}>Notifica al asesor</p>
                         <p style={{ margin: 0, fontSize: 10.5, color: isLight ? "#0066BB" : TG, fontFamily: font, lineHeight: 1.5 }}>{agent.teamAlert}</p>
                       </div>
                     </div>
 
                     {/* Conversaciones */}
                     <div style={{ padding: "0 18px 14px" }}>
-                      <p style={{ margin: "0 0 10px", fontSize: 9.5, fontWeight: 700, color: T.txt3, textTransform: "uppercase", letterSpacing: "0.08em", fontFamily: fontDisp }}>Últimas conversaciones</p>
+                      <p style={{ margin: "0 0 10px", fontSize: 9.5, fontWeight: 500, color: T.txt3, textTransform: "uppercase", letterSpacing: "0.08em", fontFamily: fontDisp }}>Últimas conversaciones</p>
                       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                         {agent.lastActions.map((a, i) => (
                           <div key={i} style={{ padding: "11px 13px", borderRadius: 12, background: isLight ? "#F7F9FC" : "rgba(255,255,255,0.025)", border: `1px solid ${T.border}`, boxShadow: isLight ? T.shadow1 : "none" }}>
@@ -431,7 +431,7 @@ const IACRM = ({ oc, T: _T, theme = "dark" }) => {
                                   <User size={13} color={cSafe} strokeWidth={2} />
                                 </div>
                                 <div>
-                                  <p style={{ margin: 0, fontSize: 12, fontWeight: 700, color: T.txt, fontFamily: fontDisp }}>{a.name}</p>
+                                  <p style={{ margin: 0, fontSize: 12, fontWeight: 500, color: T.txt, fontFamily: fontDisp }}>{a.name}</p>
                                   <ChannelBadge ch={a.channel} />
                                 </div>
                               </div>
@@ -458,7 +458,7 @@ const IACRM = ({ oc, T: _T, theme = "dark" }) => {
                             ? `linear-gradient(135deg, ${c}20, ${c}0C)`
                             : `linear-gradient(135deg, ${c}22, ${c}0C)`,
                           border: `1px solid ${c}${isLight ? "40" : "40"}`,
-                          color: cSafe, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: fontDisp,
+                          color: cSafe, fontSize: 11, fontWeight: 500, cursor: "pointer", fontFamily: fontDisp,
                           display: "flex", alignItems: "center", justifyContent: "center", gap: 6, transition: "all 0.18s",
                         }}
                         onMouseEnter={e => e.currentTarget.style.background = isLight ? `linear-gradient(135deg, ${c}30, ${c}18)` : `linear-gradient(135deg, ${c}34, ${c}18)`}
@@ -504,8 +504,8 @@ const IACRM = ({ oc, T: _T, theme = "dark" }) => {
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 3 }}>
-                        <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: T.txt, fontFamily: fontDisp, letterSpacing: "-0.02em" }}>{ch.name}</p>
-                        <span style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 9, fontWeight: 800, color: ch.color, background: `${ch.color}12`, border: `1px solid ${ch.color}28`, padding: "2px 7px", borderRadius: 6, fontFamily: fontDisp }}>
+                        <p style={{ margin: 0, fontSize: 14, fontWeight: 500, color: T.txt, fontFamily: fontDisp, letterSpacing: "-0.02em" }}>{ch.name}</p>
+                        <span style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 9, fontWeight: 500, color: ch.color, background: `${ch.color}12`, border: `1px solid ${ch.color}28`, padding: "2px 7px", borderRadius: 6, fontFamily: fontDisp }}>
                           <span style={{ width: 4, height: 4, borderRadius: "50%", background: ch.color, animation: "pulse 2s ease-in-out infinite" }} />
                           {ch.status.toUpperCase()}
                         </span>
@@ -520,14 +520,14 @@ const IACRM = ({ oc, T: _T, theme = "dark" }) => {
                       { l: "tasa respuesta", v: ch.response_rate, c: isLight ? "#059669" : "#4ADE80" },
                     ].map(({ l, v, c: mc }) => (
                       <div key={l} style={{ padding: "9px 12px", borderRadius: 10, background: isLight ? "rgba(15,23,42,0.03)" : "rgba(255,255,255,0.03)", border: `1px solid ${T.border}`, textAlign: "center" }}>
-                        <p style={{ margin: 0, fontSize: 20, fontWeight: 800, color: mc, fontFamily: fontDisp, letterSpacing: "-0.03em" }}>{v}</p>
+                        <p style={{ margin: 0, fontSize: 20, fontWeight: 500, color: mc, fontFamily: fontDisp, letterSpacing: "-0.03em" }}>{v}</p>
                         <p style={{ margin: 0, fontSize: 9.5, color: T.txt3, fontFamily: font, marginTop: 2 }}>{l}</p>
                       </div>
                     ))}
                   </div>
                   <button
                     onClick={() => oc(`Configurar canal ${ch.name}`)}
-                    style={{ width: "100%", padding: "9px", borderRadius: 10, background: `${ch.color}0C`, border: `1px solid ${ch.color}28`, color: ch.color, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: fontDisp, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, transition: "all 0.18s" }}
+                    style={{ width: "100%", padding: "9px", borderRadius: 10, background: `${ch.color}0C`, border: `1px solid ${ch.color}28`, color: ch.color, fontSize: 11, fontWeight: 500, cursor: "pointer", fontFamily: fontDisp, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, transition: "all 0.18s" }}
                     onMouseEnter={e => e.currentTarget.style.background = `${ch.color}18`}
                     onMouseLeave={e => e.currentTarget.style.background = `${ch.color}0C`}
                   >
@@ -540,7 +540,7 @@ const IACRM = ({ oc, T: _T, theme = "dark" }) => {
 
           {/* Flujo de trabajo */}
           <G T={T}>
-            <p style={{ margin: "0 0 18px", fontSize: 14, fontWeight: 700, color: T.txt, fontFamily: fontDisp, letterSpacing: "-0.02em" }}>Cómo trabaja el equipo IA</p>
+            <p style={{ margin: "0 0 18px", fontSize: 14, fontWeight: 500, color: T.txt, fontFamily: fontDisp, letterSpacing: "-0.02em" }}>Cómo trabaja el equipo IA</p>
             <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
               {[
                 { step: "1", colorKey: "accent",  icon: User,           title: "Lead nuevo entra al CRM",                     desc: "Por Facebook Ads, referido, landing page o registro manual del asesor.", channel: null },
@@ -563,7 +563,7 @@ const IACRM = ({ oc, T: _T, theme = "dark" }) => {
                     </div>
                     <div style={{ flex: 1, paddingTop: 4, minWidth: 0 }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 9, marginBottom: 4 }}>
-                        <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: T.txt, fontFamily: fontDisp, letterSpacing: "-0.018em" }}>{s.title}</p>
+                        <p style={{ margin: 0, fontSize: 13, fontWeight: 500, color: T.txt, fontFamily: fontDisp, letterSpacing: "-0.018em" }}>{s.title}</p>
                         {s.channel && <ChannelBadge ch={s.channel} />}
                       </div>
                       <p style={{ margin: 0, fontSize: 11, color: T.txt3, fontFamily: font, lineHeight: 1.55 }}>{s.desc}</p>
@@ -599,17 +599,17 @@ const IACRM = ({ oc, T: _T, theme = "dark" }) => {
                   backdropFilter: isLight ? "blur(40px)" : "none",
                 }}>
                   {plan.popular && (
-                    <div style={{ position: "absolute", top: -1, left: "50%", transform: "translateX(-50%)", fontSize: 9, fontWeight: 800, color: "#FFFFFF", background: isLight ? `color-mix(in srgb, ${pc} 80%, #000 20%)` : pc, padding: "3px 14px", borderRadius: "0 0 9px 9px", letterSpacing: "0.08em", fontFamily: fontDisp, whiteSpace: "nowrap" }}>MÁS POPULAR</div>
+                    <div style={{ position: "absolute", top: -1, left: "50%", transform: "translateX(-50%)", fontSize: 9, fontWeight: 500, color: "#FFFFFF", background: isLight ? `color-mix(in srgb, ${pc} 80%, #000 20%)` : pc, padding: "3px 14px", borderRadius: "0 0 9px 9px", letterSpacing: "0.08em", fontFamily: fontDisp, whiteSpace: "nowrap" }}>MÁS POPULAR</div>
                   )}
-                  <p style={{ margin: "0 0 3px", fontSize: 18, fontWeight: 800, color: plan.popular ? pcSafe : T.txt, fontFamily: fontDisp, letterSpacing: "-0.02em" }}>{plan.name}</p>
+                  <p style={{ margin: "0 0 3px", fontSize: 18, fontWeight: 500, color: plan.popular ? pcSafe : T.txt, fontFamily: fontDisp, letterSpacing: "-0.02em" }}>{plan.name}</p>
                   <p style={{ margin: "0 0 14px", fontSize: 11, color: T.txt3, fontFamily: font }}>{plan.desc}</p>
                   <div style={{ display: "flex", alignItems: "baseline", gap: 4, marginBottom: 7 }}>
-                    <span style={{ fontSize: 36, fontWeight: 800, color: plan.popular ? pcSafe : T.txt, fontFamily: fontDisp, lineHeight: 1, letterSpacing: "-0.04em" }}>${plan.price}</span>
+                    <span style={{ fontSize: 36, fontWeight: 500, color: plan.popular ? pcSafe : T.txt, fontFamily: fontDisp, lineHeight: 1, letterSpacing: "-0.04em" }}>${plan.price}</span>
                     <span style={{ fontSize: 12, color: T.txt3, fontFamily: font }}>/mes</span>
                   </div>
                   <div style={{ display: "flex", gap: 6, marginBottom: 18 }}>
-                    <span style={{ fontSize: 10, fontWeight: 700, color: isLight ? "#15803D" : WA, background: isLight ? "rgba(21,128,61,0.08)" : `${WA}10`, border: `1px solid ${isLight ? "rgba(21,128,61,0.20)" : WA + "25"}`, padding: "3px 8px", borderRadius: 6, fontFamily: fontDisp }}>{plan.messages.toLocaleString()} msgs</span>
-                    <span style={{ fontSize: 10, fontWeight: 700, color: T.txt2, background: isLight ? "rgba(15,23,42,0.05)" : "rgba(255,255,255,0.05)", border: `1px solid ${T.border}`, padding: "3px 8px", borderRadius: 6, fontFamily: fontDisp }}>{plan.agents} agentes</span>
+                    <span style={{ fontSize: 10, fontWeight: 500, color: isLight ? "#15803D" : WA, background: isLight ? "rgba(21,128,61,0.08)" : `${WA}10`, border: `1px solid ${isLight ? "rgba(21,128,61,0.20)" : WA + "25"}`, padding: "3px 8px", borderRadius: 6, fontFamily: fontDisp }}>{plan.messages.toLocaleString()} msgs</span>
+                    <span style={{ fontSize: 10, fontWeight: 500, color: T.txt2, background: isLight ? "rgba(15,23,42,0.05)" : "rgba(255,255,255,0.05)", border: `1px solid ${T.border}`, padding: "3px 8px", borderRadius: 6, fontFamily: fontDisp }}>{plan.agents} agentes</span>
                   </div>
                   <div style={{ display: "flex", flexDirection: "column", gap: 9, marginBottom: 22 }}>
                     {plan.features.map(f => (
@@ -628,7 +628,7 @@ const IACRM = ({ oc, T: _T, theme = "dark" }) => {
                         : (isLight ? "rgba(15,23,42,0.04)" : "rgba(255,255,255,0.05)"),
                       border: `1px solid ${plan.popular ? pc + (isLight ? "44" : "55") : T.border}`,
                       color: plan.popular ? (isLight ? "#FFFFFF" : pcSafe) : T.txt2,
-                      fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: fontDisp, letterSpacing: "0.015em", transition: "all 0.18s",
+                      fontSize: 12, fontWeight: 500, cursor: "pointer", fontFamily: fontDisp, letterSpacing: "0.015em", transition: "all 0.18s",
                     }}
                     onMouseEnter={e => { e.currentTarget.style.background = plan.popular ? (isLight ? T.accentDark : `linear-gradient(135deg, ${pc}44, ${pc}22)`) : (isLight ? "rgba(15,23,42,0.08)" : "rgba(255,255,255,0.09)"); }}
                     onMouseLeave={e => { e.currentTarget.style.background = plan.popular ? (isLight ? T.accentG : `linear-gradient(135deg, ${pc}30, ${pc}14)`) : (isLight ? "rgba(15,23,42,0.04)" : "rgba(255,255,255,0.05)"); }}
@@ -647,7 +647,7 @@ const IACRM = ({ oc, T: _T, theme = "dark" }) => {
                 <Atom size={18} color={isLight ? T.accent : T.accent} strokeWidth={1.8} />
               </div>
               <div>
-                <p style={{ margin: "0 0 2px", fontSize: 12.5, fontWeight: 700, color: T.txt, fontFamily: fontDisp, letterSpacing: "-0.015em" }}>Powered by Claude · Anthropic</p>
+                <p style={{ margin: "0 0 2px", fontSize: 12.5, fontWeight: 500, color: T.txt, fontFamily: fontDisp, letterSpacing: "-0.015em" }}>Powered by Claude · Anthropic</p>
                 <p style={{ margin: 0, fontSize: 11, color: T.txt2, fontFamily: font, lineHeight: 1.55 }}>
                   Cada agente usa los modelos más avanzados de Anthropic — Haiku para velocidad, Sonnet para razonamiento, Opus para briefings complejos. Tu equipo, amplificado.
                 </p>

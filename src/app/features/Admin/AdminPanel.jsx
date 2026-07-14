@@ -167,8 +167,8 @@ export default function AdminPanel() {
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 12 }}>
         <div>
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4, flexWrap: "wrap" }}>
-            <h2 style={{ fontSize: isMobile ? 18 : 20, fontWeight: 700, color: "#FFFFFF", fontFamily: fontDisp, letterSpacing: "-0.025em", margin: 0 }}>Gestión de Usuarios</h2>
-            <span style={{ fontSize: 10, fontWeight: 700, color: P.txt3, background: P.glass, border: `1px solid ${P.border}`, padding: "3px 9px", borderRadius: 99, letterSpacing: "0.06em" }}>{users.length} usuarios</span>
+            <h2 style={{ fontSize: isMobile ? 18 : 20, fontWeight: 500, color: "#FFFFFF", fontFamily: fontDisp, letterSpacing: "-0.025em", margin: 0 }}>Gestión de Usuarios</h2>
+            <span style={{ fontSize: 10, fontWeight: 500, color: P.txt3, background: P.glass, border: `1px solid ${P.border}`, padding: "3px 9px", borderRadius: 99, letterSpacing: "0.06em" }}>{users.length} usuarios</span>
           </div>
           <p style={{ fontSize: 11.5, color: P.txt3, margin: 0 }}>
             {users.filter(u => u.isActive !== false).length} activos · {users.filter(u => u.isActive === false).length} inactivos
@@ -186,7 +186,7 @@ export default function AdminPanel() {
                 flex: isMobile ? 1 : "none", justifyContent: "center", whiteSpace: "nowrap",
                 display: "flex", alignItems: "center", gap: 7, padding: "10px 18px",
                 borderRadius: 11, background: P.glass,
-                border: `1px solid ${P.border}`, color: P.txt2, fontSize: 12.5, fontWeight: 600,
+                border: `1px solid ${P.border}`, color: P.txt2, fontSize: 12.5, fontWeight: 400,
                 fontFamily: font, cursor: backupState.loading ? "wait" : "pointer",
                 transition: "all 0.2s", opacity: backupState.loading ? 0.7 : 1,
               }}
@@ -199,7 +199,7 @@ export default function AdminPanel() {
               flex: isMobile ? 1 : "none", justifyContent: "center", whiteSpace: "nowrap",
               display: "flex", alignItems: "center", gap: 7, padding: "10px 20px",
               borderRadius: 11, background: "linear-gradient(135deg, rgba(110,231,194,0.16), rgba(110,231,194,0.07))",
-              border: `1px solid ${P.accentB}`, color: P.accent, fontSize: 12.5, fontWeight: 700,
+              border: `1px solid ${P.accentB}`, color: P.accent, fontSize: 12.5, fontWeight: 500,
               fontFamily: fontDisp, cursor: "pointer", transition: "all 0.2s",
             }}
               onMouseEnter={e => { e.currentTarget.style.background = "linear-gradient(135deg, rgba(110,231,194,0.24), rgba(110,231,194,0.12))"; }}
@@ -235,8 +235,8 @@ export default function AdminPanel() {
             onMouseLeave={e => { if (roleFilter !== s.key) e.currentTarget.style.borderColor = P.border; }}
           >
             <div style={{ width: 8, height: 8, borderRadius: "50%", background: s.color, flexShrink: 0 }} />
-            <span style={{ fontSize: 11, fontWeight: 600, color: roleFilter === s.key ? s.color : P.txt2 }}>{s.label}</span>
-            <span style={{ fontSize: 15, fontWeight: 700, color: roleFilter === s.key ? s.color : "#FFFFFF", fontFamily: fontDisp }}>{s.count}</span>
+            <span style={{ fontSize: 11, fontWeight: 400, color: roleFilter === s.key ? s.color : P.txt2 }}>{s.label}</span>
+            <span style={{ fontSize: 15, fontWeight: 500, color: roleFilter === s.key ? s.color : "#FFFFFF", fontFamily: fontDisp }}>{s.count}</span>
           </div>
         ))}
       </div>
@@ -257,7 +257,7 @@ export default function AdminPanel() {
             {Object.entries(ROLE_META).map(([k, m]) => <option key={k} value={k} style={{ background: "#111318" }}>{m.label}</option>)}
           </select>
           {(search || roleFilter !== "ALL") && (
-            <button onClick={() => { setSearch(""); setRoleFilter("ALL"); }} style={{ height: 34, padding: "0 12px", borderRadius: 9, background: `${P.rose}0C`, border: `1px solid ${P.rose}28`, color: P.rose, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: font, display: "flex", alignItems: "center", gap: 5 }}>
+            <button onClick={() => { setSearch(""); setRoleFilter("ALL"); }} style={{ height: 34, padding: "0 12px", borderRadius: 9, background: `${P.rose}0C`, border: `1px solid ${P.rose}28`, color: P.rose, fontSize: 11, fontWeight: 400, cursor: "pointer", fontFamily: font, display: "flex", alignItems: "center", gap: 5 }}>
               <X size={11} /> Limpiar
             </button>
           )}
@@ -268,7 +268,7 @@ export default function AdminPanel() {
         {!isMobile && (
           <div style={{ display: "grid", gridTemplateColumns: "2.2fr 2fr 1fr 1fr 100px", gap: 0, padding: "9px 20px", borderBottom: `1px solid ${P.border}` }}>
             {["Usuario", "Email", "Rol", "Estado", "Acciones"].map((h, i) => (
-              <span key={h} style={{ fontSize: 9, fontWeight: 700, color: P.txt3, letterSpacing: "0.08em", textTransform: "uppercase", textAlign: i === 4 ? "center" : "left" }}>{h}</span>
+              <span key={h} style={{ fontSize: 9, fontWeight: 500, color: P.txt3, letterSpacing: "0.08em", textTransform: "uppercase", textAlign: i === 4 ? "center" : "left" }}>{h}</span>
             ))}
           </div>
         )}
@@ -316,11 +316,11 @@ export default function AdminPanel() {
             if (isMobile) return (
               <div key={u.id} style={{ padding: "13px 14px", borderBottom: idx < filtered.length - 1 ? `1px solid ${P.border}` : "none", display: "flex", flexDirection: "column", gap: 9 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 11 }}>
-                  <div style={{ width: 34, height: 34, borderRadius: 10, background: `${ac}18`, border: `1.5px solid ${ac}30`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 800, color: ac, fontFamily: fontDisp, flexShrink: 0 }}>{initials}</div>
+                  <div style={{ width: 34, height: 34, borderRadius: 10, background: `${ac}18`, border: `1.5px solid ${ac}30`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 500, color: ac, fontFamily: fontDisp, flexShrink: 0 }}>{initials}</div>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <p style={{ fontSize: 13, fontWeight: 600, color: active ? "#FFFFFF" : P.txt3, fontFamily: fontDisp, letterSpacing: "-0.01em", margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    <p style={{ fontSize: 13, fontWeight: 400, color: active ? "#FFFFFF" : P.txt3, fontFamily: fontDisp, letterSpacing: "-0.01em", margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                       {u.name}
-                      {isMe && <span style={{ fontSize: 9, color: P.accent, fontWeight: 700, marginLeft: 7, background: `${P.accent}12`, border: `1px solid ${P.accentB}`, padding: "1px 7px", borderRadius: 99 }}>Tú</span>}
+                      {isMe && <span style={{ fontSize: 9, color: P.accent, fontWeight: 500, marginLeft: 7, background: `${P.accent}12`, border: `1px solid ${P.accentB}`, padding: "1px 7px", borderRadius: 99 }}>Tú</span>}
                     </p>
                     <p style={{ fontSize: 11, color: active ? P.txt2 : P.txt3, fontFamily: font, margin: "2px 0 0", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{u.email}</p>
                   </div>
@@ -348,11 +348,11 @@ export default function AdminPanel() {
               >
                 {/* Name + avatar */}
                 <div style={{ display: "flex", alignItems: "center", gap: 11 }}>
-                  <div style={{ width: 34, height: 34, borderRadius: 10, background: `${ac}18`, border: `1.5px solid ${ac}30`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 800, color: ac, fontFamily: fontDisp, flexShrink: 0 }}>{initials}</div>
+                  <div style={{ width: 34, height: 34, borderRadius: 10, background: `${ac}18`, border: `1.5px solid ${ac}30`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 500, color: ac, fontFamily: fontDisp, flexShrink: 0 }}>{initials}</div>
                   <div>
-                    <p style={{ fontSize: 13, fontWeight: 600, color: active ? "#FFFFFF" : P.txt3, fontFamily: fontDisp, letterSpacing: "-0.01em" }}>
+                    <p style={{ fontSize: 13, fontWeight: 400, color: active ? "#FFFFFF" : P.txt3, fontFamily: fontDisp, letterSpacing: "-0.01em" }}>
                       {u.name}
-                      {isMe && <span style={{ fontSize: 9, color: P.accent, fontWeight: 700, marginLeft: 7, background: `${P.accent}12`, border: `1px solid ${P.accentB}`, padding: "1px 7px", borderRadius: 99 }}>Tú</span>}
+                      {isMe && <span style={{ fontSize: 9, color: P.accent, fontWeight: 500, marginLeft: 7, background: `${P.accent}12`, border: `1px solid ${P.accentB}`, padding: "1px 7px", borderRadius: 99 }}>Tú</span>}
                     </p>
                     <p style={{ fontSize: 10.5, color: P.txt3, marginTop: 1 }}>ID #{u.id}</p>
                   </div>
@@ -386,13 +386,13 @@ export default function AdminPanel() {
             <div style={{ width: 44, height: 44, borderRadius: 12, background: `${P.rose}12`, border: `1px solid ${P.rose}28`, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 16 }}>
               <Trash2 size={20} color={P.rose} />
             </div>
-            <p style={{ fontSize: 15, fontWeight: 700, color: "#FFFFFF", fontFamily: fontDisp, marginBottom: 8 }}>¿Eliminar usuario?</p>
+            <p style={{ fontSize: 15, fontWeight: 500, color: "#FFFFFF", fontFamily: fontDisp, marginBottom: 8 }}>¿Eliminar usuario?</p>
             <p style={{ fontSize: 12.5, color: P.txt3, lineHeight: 1.6, marginBottom: 22 }}>
               Esta acción es permanente. El usuario perderá acceso inmediatamente y no podrá recuperarse.
             </p>
             <div style={{ display: "flex", gap: 10 }}>
-              <button onClick={() => setDeleteConfirm(null)} style={{ flex: 1, height: 40, borderRadius: 10, background: "transparent", border: `1px solid ${P.border}`, color: P.txt3, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: font }}>Cancelar</button>
-              <button onClick={() => handleDelete(deleteConfirm)} style={{ flex: 1, height: 40, borderRadius: 10, background: `${P.rose}14`, border: `1px solid ${P.rose}35`, color: P.rose, fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: fontDisp }}>Eliminar</button>
+              <button onClick={() => setDeleteConfirm(null)} style={{ flex: 1, height: 40, borderRadius: 10, background: "transparent", border: `1px solid ${P.border}`, color: P.txt3, fontSize: 13, fontWeight: 400, cursor: "pointer", fontFamily: font }}>Cancelar</button>
+              <button onClick={() => handleDelete(deleteConfirm)} style={{ flex: 1, height: 40, borderRadius: 10, background: `${P.rose}14`, border: `1px solid ${P.rose}35`, color: P.rose, fontSize: 13, fontWeight: 500, cursor: "pointer", fontFamily: fontDisp }}>Eliminar</button>
             </div>
           </div>
         </>,
@@ -407,7 +407,7 @@ export default function AdminPanel() {
             <div style={{ height: 3, background: `linear-gradient(90deg, ${P.accent}, ${P.accent}40)`, borderRadius: "22px 22px 0 0" }} />
             <div style={{ padding: "22px 26px 18px", borderBottom: `1px solid ${P.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <div>
-                <p style={{ fontSize: 16, fontWeight: 700, color: "#FFFFFF", fontFamily: fontDisp, letterSpacing: "-0.02em", marginBottom: 3 }}>
+                <p style={{ fontSize: 16, fontWeight: 500, color: "#FFFFFF", fontFamily: fontDisp, letterSpacing: "-0.02em", marginBottom: 3 }}>
                   {modal.mode === "create" ? "Crear Nuevo Usuario" : modal.mode === "reset" ? "Restablecer Contraseña" : `Editar: ${modal.user?.name}`}
                 </p>
                 <p style={{ fontSize: 11, color: P.txt3 }}>
@@ -424,21 +424,21 @@ export default function AdminPanel() {
               {modal.mode !== "reset" && (
                 <>
                   <div>
-                    <p style={{ fontSize: 10, fontWeight: 700, color: P.txt3, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 7 }}>Nombre completo <span style={{ color: P.accent }}>*</span></p>
+                    <p style={{ fontSize: 10, fontWeight: 500, color: P.txt3, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 7 }}>Nombre completo <span style={{ color: P.accent }}>*</span></p>
                     <input value={form.name || ""} onChange={e => sf("name")(e.target.value)} placeholder="Ej. María González" style={inputStyle}
                       onFocus={e => e.target.style.borderColor = P.accentB}
                       onBlur={e => e.target.style.borderColor = P.border}
                     />
                   </div>
                   <div>
-                    <p style={{ fontSize: 10, fontWeight: 700, color: P.txt3, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 7 }}>Email <span style={{ color: P.accent }}>*</span></p>
+                    <p style={{ fontSize: 10, fontWeight: 500, color: P.txt3, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 7 }}>Email <span style={{ color: P.accent }}>*</span></p>
                     <input value={form.email || ""} onChange={e => sf("email")(e.target.value)} placeholder="maria@stratos.ai" type="email" style={inputStyle}
                       onFocus={e => e.target.style.borderColor = P.accentB}
                       onBlur={e => e.target.style.borderColor = P.border}
                     />
                   </div>
                   <div>
-                    <p style={{ fontSize: 10, fontWeight: 700, color: P.txt3, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 7 }}>Rol</p>
+                    <p style={{ fontSize: 10, fontWeight: 500, color: P.txt3, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 7 }}>Rol</p>
                     <select value={form.role || "asesor"} onChange={e => sf("role")(e.target.value)} style={{ ...inputStyle, cursor: "pointer" }}
                       onFocus={e => e.target.style.borderColor = P.accentB}
                       onBlur={e => e.target.style.borderColor = P.border}
@@ -460,7 +460,7 @@ export default function AdminPanel() {
 
               {modal.mode === "create" && (
                 <div>
-                  <p style={{ fontSize: 10, fontWeight: 700, color: P.txt3, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 7 }}>Contraseña inicial <span style={{ color: P.accent }}>*</span></p>
+                  <p style={{ fontSize: 10, fontWeight: 500, color: P.txt3, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 7 }}>Contraseña inicial <span style={{ color: P.accent }}>*</span></p>
                   <input value={form.password || ""} onChange={e => sf("password")(e.target.value)} placeholder="Mínimo 6 caracteres" type="password" style={inputStyle}
                     onFocus={e => e.target.style.borderColor = P.accentB}
                     onBlur={e => e.target.style.borderColor = P.border}
@@ -470,7 +470,7 @@ export default function AdminPanel() {
 
               {modal.mode === "reset" && (
                 <div>
-                  <p style={{ fontSize: 10, fontWeight: 700, color: P.txt3, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 7 }}>Nueva contraseña <span style={{ color: P.accent }}>*</span></p>
+                  <p style={{ fontSize: 10, fontWeight: 500, color: P.txt3, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 7 }}>Nueva contraseña <span style={{ color: P.accent }}>*</span></p>
                   <input value={form.password || ""} onChange={e => sf("password")(e.target.value)} placeholder="Nueva contraseña (mín. 6 caracteres)" type="password" style={inputStyle}
                     onFocus={e => e.target.style.borderColor = P.accentB}
                     onBlur={e => e.target.style.borderColor = P.border}
@@ -481,17 +481,17 @@ export default function AdminPanel() {
 
               {modal.mode === "edit" && (
                 <div>
-                  <p style={{ fontSize: 10, fontWeight: 700, color: P.txt3, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 9 }}>Estado de la cuenta</p>
+                  <p style={{ fontSize: 10, fontWeight: 500, color: P.txt3, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 9 }}>Estado de la cuenta</p>
                   <div style={{ display: "flex", gap: 8 }}>
                     {[{ v: true, label: "Activo", c: P.emerald }, { v: false, label: "Inactivo", c: P.rose }].map(o => (
-                      <button key={String(o.v)} onClick={() => sf("isActive")(o.v)} style={{ flex: 1, padding: "9px 0", borderRadius: 10, cursor: "pointer", fontSize: 12, fontWeight: 600, fontFamily: font, transition: "all 0.18s", background: form.isActive === o.v ? `${o.c}14` : "transparent", border: `1px solid ${form.isActive === o.v ? `${o.c}40` : P.border}`, color: form.isActive === o.v ? o.c : P.txt3 }}>{o.label}</button>
+                      <button key={String(o.v)} onClick={() => sf("isActive")(o.v)} style={{ flex: 1, padding: "9px 0", borderRadius: 10, cursor: "pointer", fontSize: 12, fontWeight: 400, fontFamily: font, transition: "all 0.18s", background: form.isActive === o.v ? `${o.c}14` : "transparent", border: `1px solid ${form.isActive === o.v ? `${o.c}40` : P.border}`, color: form.isActive === o.v ? o.c : P.txt3 }}>{o.label}</button>
                     ))}
                   </div>
                 </div>
               )}
 
               {modal.mode === "edit" && (
-                <button onClick={() => openReset(modal.user)} style={{ padding: "9px 0", borderRadius: 10, background: "transparent", border: `1px solid ${P.amber}28`, color: P.amber, fontSize: 11.5, fontWeight: 600, fontFamily: font, cursor: "pointer", transition: "all 0.18s" }}
+                <button onClick={() => openReset(modal.user)} style={{ padding: "9px 0", borderRadius: 10, background: "transparent", border: `1px solid ${P.amber}28`, color: P.amber, fontSize: 11.5, fontWeight: 400, fontFamily: font, cursor: "pointer", transition: "all 0.18s" }}
                   onMouseEnter={e => e.currentTarget.style.background = `${P.amber}0C`}
                   onMouseLeave={e => e.currentTarget.style.background = "transparent"}
                 >Restablecer contraseña</button>
@@ -502,10 +502,10 @@ export default function AdminPanel() {
             </div>
 
             <div style={{ padding: "16px 26px", borderTop: `1px solid ${P.border}`, display: "flex", gap: 10 }}>
-              <button onClick={() => setModal(null)} style={{ flex: 1, height: 42, borderRadius: 12, background: "transparent", border: `1px solid ${P.border}`, color: P.txt3, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: font, transition: "all 0.18s" }}>Cancelar</button>
+              <button onClick={() => setModal(null)} style={{ flex: 1, height: 42, borderRadius: 12, background: "transparent", border: `1px solid ${P.border}`, color: P.txt3, fontSize: 13, fontWeight: 400, cursor: "pointer", fontFamily: font, transition: "all 0.18s" }}>Cancelar</button>
               <button
                 onClick={modal.mode === "create" ? handleCreate : modal.mode === "reset" ? handleReset : handleEdit}
-                style={{ flex: 2, height: 42, borderRadius: 12, background: `${P.accent}16`, border: `1px solid ${P.accentB}`, color: P.accent, fontSize: 13, fontWeight: 700, fontFamily: fontDisp, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 7, transition: "background 0.18s" }}
+                style={{ flex: 2, height: 42, borderRadius: 12, background: `${P.accent}16`, border: `1px solid ${P.accentB}`, color: P.accent, fontSize: 13, fontWeight: 500, fontFamily: fontDisp, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 7, transition: "background 0.18s" }}
                 onMouseEnter={e => e.currentTarget.style.background = `${P.accent}24`}
                 onMouseLeave={e => e.currentTarget.style.background = `${P.accent}16`}
               >

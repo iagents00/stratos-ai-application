@@ -110,7 +110,7 @@ export default function LeadDiscoveryPanel({ lead, T = P, isLight = false }) {
       <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
         <span style={{
           display: "inline-flex", alignItems: "center", gap: 6,
-          fontSize: 10.5, fontWeight: 700, letterSpacing: "0.12em",
+          fontSize: 10.5, fontWeight: 500, letterSpacing: "0.12em",
           textTransform: "uppercase", color: headerC,
           fontFamily: fontDisp,
         }}>
@@ -120,7 +120,7 @@ export default function LeadDiscoveryPanel({ lead, T = P, isLight = false }) {
         <span style={{
           padding: "1px 6px", borderRadius: 4,
           background: `${T.accent}1A`, color: T.accent,
-          fontSize: 9, fontWeight: 700, textTransform: "uppercase",
+          fontSize: 9, fontWeight: 500, textTransform: "uppercase",
           letterSpacing: "0.06em",
         }}>
           Solo lectura
@@ -139,7 +139,7 @@ export default function LeadDiscoveryPanel({ lead, T = P, isLight = false }) {
           {entries.map(([k, v]) => (
             <div key={k}>
               <p style={{
-                margin: 0, fontSize: 10, fontWeight: 700,
+                margin: 0, fontSize: 10, fontWeight: 500,
                 letterSpacing: "0.08em", textTransform: "uppercase",
                 color: labelC, fontFamily: fontDisp,
               }}>{prettyLabel(k)}</p>

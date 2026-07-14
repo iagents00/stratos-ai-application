@@ -63,7 +63,7 @@ function CallRow({ log, T, isLight }) {
           </div>
           <div style={{ minWidth: 0 }}>
             <p style={{
-              margin: 0, fontSize: 12.5, fontWeight: 600,
+              margin: 0, fontSize: 12.5, fontWeight: 400,
               color: T.txt, fontFamily: fontDisp,
             }}>
               {isIncoming ? "Llamada entrante" : "Llamada saliente"}
@@ -103,7 +103,7 @@ function CallRow({ log, T, isLight }) {
           fontSize: 12.5, color: T.txt, fontFamily: font, lineHeight: 1.55,
         }}>
           <p style={{
-            margin: "0 0 4px", fontSize: 9.5, fontWeight: 700,
+            margin: "0 0 4px", fontSize: 9.5, fontWeight: 500,
             letterSpacing: "0.08em", textTransform: "uppercase",
             color: subC, fontFamily: fontDisp,
           }}>Resumen IA</p>
@@ -121,7 +121,7 @@ function CallRow({ log, T, isLight }) {
               marginTop: 8, display: "inline-flex", alignItems: "center", gap: 4,
               padding: "4px 9px", borderRadius: 6,
               background: "transparent", border: `1px solid ${T.border}`,
-              color: subC, fontSize: 10.5, fontWeight: 600, fontFamily: fontDisp,
+              color: subC, fontSize: 10.5, fontWeight: 400, fontFamily: fontDisp,
               cursor: "pointer", letterSpacing: "0.02em",
             }}
           >
@@ -183,12 +183,12 @@ export default function LeadVoiceCalls({ lead, T = P, isLight = false }) {
       <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
         <span style={{
           display: "inline-flex", alignItems: "center", gap: 6,
-          fontSize: 10.5, fontWeight: 700, letterSpacing: "0.12em",
+          fontSize: 10.5, fontWeight: 500, letterSpacing: "0.12em",
           textTransform: "uppercase", color: headerC, fontFamily: fontDisp,
         }}>
           <Phone size={11} />
           Llamadas de voz (Retell IA)
-          <span style={{ fontWeight: 600, color: T.txt3, marginLeft: 4 }}>· {logs.length}</span>
+          <span style={{ fontWeight: 400, color: T.txt3, marginLeft: 4 }}>· {logs.length}</span>
         </span>
       </div>
 

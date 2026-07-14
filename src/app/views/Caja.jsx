@@ -224,7 +224,7 @@ export default function Caja({ T }) {
             <Wallet size={20} color={accent} strokeWidth={1.9} />
           </div>
           <div>
-            <h1 style={{ margin: 0, fontSize: isMobile ? 19 : 22, fontFamily: fontDisp, fontWeight: 700, letterSpacing: "-0.01em", color: txt }}>Caja</h1>
+            <h1 style={{ margin: 0, fontSize: isMobile ? 19 : 22, fontFamily: fontDisp, fontWeight: 500, letterSpacing: "-0.01em", color: txt }}>Caja</h1>
             <p style={{ margin: "3px 0 0", fontSize: 12.5, color: txt2 }}>
               Cuentas, ingresos y egresos · los gastos por Telegram entran solos
             </p>
@@ -237,7 +237,7 @@ export default function Caja({ T }) {
           <button onClick={() => setShowForm(s => !s)} style={{
             background: showForm ? "transparent" : `${accent}1A`, border: `1px solid ${accent}55`,
             borderRadius: 10, padding: "9px 15px", cursor: "pointer", color: accent,
-            fontSize: 12.5, fontWeight: 700, fontFamily: font, display: "flex", alignItems: "center", gap: 6,
+            fontSize: 12.5, fontWeight: 500, fontFamily: font, display: "flex", alignItems: "center", gap: 6,
           }}>
             {showForm ? <X size={14} /> : <Plus size={14} />} {showForm ? "Cerrar" : "Nuevo movimiento"}
           </button>
@@ -258,7 +258,7 @@ export default function Caja({ T }) {
             {[["egreso", "Egreso", NEG], ["ingreso", "Ingreso", POS]].map(([id, label, color]) => (
               <button type="button" key={id} onClick={() => setForm(f => ({ ...f, tipo: id }))} style={{
                 flex: isMobile ? 1 : "none", padding: "9px 24px", borderRadius: 10, cursor: "pointer",
-                fontSize: 13, fontWeight: 700, fontFamily: font,
+                fontSize: 13, fontWeight: 500, fontFamily: font,
                 border: `1px solid ${form.tipo === id ? color : bd}`,
                 background: form.tipo === id ? `${color}1A` : "transparent",
                 color: form.tipo === id ? color : txt2,
@@ -287,7 +287,7 @@ export default function Caja({ T }) {
             <button type="submit" disabled={saving} style={{
               background: accent, border: `1px solid ${accent}`, borderRadius: 10,
               padding: "10px 22px", cursor: saving ? "wait" : "pointer", color: isLight ? "#FFFFFF" : "#04140F",
-              fontSize: 13, fontWeight: 800, fontFamily: font, display: "flex", alignItems: "center", gap: 8, justifyContent: "center",
+              fontSize: 13, fontWeight: 500, fontFamily: font, display: "flex", alignItems: "center", gap: 8, justifyContent: "center",
               opacity: saving ? 0.65 : 1,
             }}>
               <Send size={14} /> {saving ? "Guardando…" : "Registrar"}
@@ -327,7 +327,7 @@ export default function Caja({ T }) {
                 {tipo === "ingreso" ? <ArrowUpRight size={16} color={color} /> : <ArrowDownRight size={16} color={color} />}
               </div>
               <div style={{ flex: 1, minWidth: isMobile ? "55%" : 0 }}>
-                <div style={{ fontSize: 13.5, fontWeight: 600, color: txt }}>
+                <div style={{ fontSize: 13.5, fontWeight: 400, color: txt }}>
                   {r.category || (tipo === "ingreso" ? "Ingreso" : "Gasto")}
                   {obra && <span style={{ color: txt2, fontWeight: 400 }}> · {obra}</span>}
                 </div>
@@ -345,13 +345,13 @@ export default function Caja({ T }) {
                     marginTop: 6, display: "inline-flex", alignItems: "center", gap: 5,
                     padding: "4px 10px", borderRadius: 8, cursor: "pointer",
                     background: `${accent}14`, border: `1px solid ${accent}40`, color: accent,
-                    fontSize: 11, fontWeight: 700, fontFamily: font,
+                    fontSize: 11, fontWeight: 500, fontFamily: font,
                   }}>
                     <Paperclip size={11} /> Ver comprobante
                   </button>
                 )}
               </div>
-              <div style={{ fontSize: 15.5, fontWeight: 800, fontFamily: fontDisp, color, whiteSpace: "nowrap" }}>
+              <div style={{ fontSize: 15.5, fontWeight: 500, fontFamily: fontDisp, color, whiteSpace: "nowrap" }}>
                 {tipo === "ingreso" ? "+" : "−"}{fmtMoney(r.amount, r.currency)}
               </div>
             </div>

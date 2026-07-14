@@ -41,10 +41,10 @@ export default function ZoomLista({ items = [], T, isLight, onOpenZoom = null, e
             onMouseLeave={(e) => { e.currentTarget.style.background = r.calentito ? "rgba(220,38,38,0.12)" : "transparent"; }}
           >
             <span style={{ width: 92, flexShrink: 0 }}>
-              <span style={{ display: "block", fontSize: 12.5, fontWeight: 700, color: T.txt, fontFamily: fontDisp }}>{prettyDate(r.fecha_zoom)}</span>
+              <span style={{ display: "block", fontSize: 12.5, fontWeight: 500, color: T.txt, fontFamily: fontDisp }}>{prettyDate(r.fecha_zoom)}</span>
               <span style={{ display: "block", fontSize: 11, fontWeight: 500, color: T.txt2, fontFamily: fontDisp }}>{r.hora || "sin hora"}</span>
             </span>
-            <span style={{ flex: "1 1 26%", minWidth: 0, display: "inline-flex", alignItems: "center", gap: 5, fontSize: 13.5, fontWeight: 700, color: T.txt, fontFamily: fontDisp, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+            <span style={{ flex: "1 1 26%", minWidth: 0, display: "inline-flex", alignItems: "center", gap: 5, fontSize: 13.5, fontWeight: 500, color: T.txt, fontFamily: fontDisp, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
               {r.calentito && <Flame size={13} color="#DC2626" strokeWidth={2.6} />}
               {r.cliente || "—"}
             </span>
@@ -55,7 +55,7 @@ export default function ZoomLista({ items = [], T, isLight, onOpenZoom = null, e
             </span>
             <span style={{
               flexShrink: 0, padding: "3px 10px", borderRadius: 99,
-              fontSize: 11, fontWeight: 700, fontFamily: fontDisp,
+              fontSize: 11, fontWeight: 500, fontFamily: fontDisp,
               color: isLight ? `color-mix(in srgb, ${c} 62%, #0B1220 38%)` : c,
               background: isLight ? `${c}1F` : `${c}22`, border: `1px solid ${c}55`,
             }}>{r.estatus}</span>

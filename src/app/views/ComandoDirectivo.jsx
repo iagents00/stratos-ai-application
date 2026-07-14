@@ -501,14 +501,14 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
     gap: 24px;
   }
   .brand {
-    font-size: 22px; font-weight: 700; letter-spacing: -0.022em;
+    font-size: 22px; font-weight: 500; letter-spacing: -0.022em;
     color: var(--ink); line-height: 1.1;
   }
   .brand .badge {
     display: inline-block;
     background: linear-gradient(135deg, var(--green) 0%, var(--green-deep) 100%);
     color: #fff;
-    font-size: 9.5px; font-weight: 700; padding: 4px 10px; border-radius: 99px;
+    font-size: 9.5px; font-weight: 500; padding: 4px 10px; border-radius: 99px;
     margin-left: 10px; letter-spacing: 0.06em; text-transform: uppercase;
     vertical-align: middle; box-shadow: 0 1px 2px rgba(16,185,129,0.25);
   }
@@ -516,18 +516,18 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
     font-size: 10.5px; color: var(--ink3); text-align: right;
     line-height: 1.65; letter-spacing: 0.005em;
   }
-  .meta strong { color: var(--ink); font-weight: 600; }
+  .meta strong { color: var(--ink); font-weight: 400; }
   h1 {
-    font-size: 28px; font-weight: 700; margin: 6px 0 8px;
+    font-size: 28px; font-weight: 500; margin: 6px 0 8px;
     letter-spacing: -0.028em; color: var(--ink);
   }
   .subtitle {
     font-size: 12.5px; color: var(--ink2); margin: 0 0 32px;
     line-height: 1.55;
   }
-  .subtitle strong { color: var(--ink); font-weight: 600; }
+  .subtitle strong { color: var(--ink); font-weight: 400; }
   h2 {
-    font-size: 11.5px; font-weight: 700; text-transform: uppercase;
+    font-size: 11.5px; font-weight: 500; text-transform: uppercase;
     letter-spacing: 0.10em; color: var(--ink3);
     margin: 36px 0 14px; padding-bottom: 8px;
     border-bottom: 1px solid var(--line);
@@ -552,11 +552,11 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
     background: linear-gradient(90deg, var(--green), var(--green) 60%, transparent);
   }
   .stat .label {
-    font-size: 9.5px; font-weight: 700; color: var(--ink3);
+    font-size: 9.5px; font-weight: 500; color: var(--ink3);
     text-transform: uppercase; letter-spacing: 0.08em;
   }
   .stat .value {
-    font-size: 30px; font-weight: 700; color: var(--ink);
+    font-size: 30px; font-weight: 500; color: var(--ink);
     margin-top: 8px; letter-spacing: -0.028em; line-height: 1;
     font-variant-numeric: tabular-nums;
   }
@@ -591,7 +591,7 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
     transition: width 0.3s ease;
   }
   .ind .val {
-    font-size: 14px; font-weight: 700; color: var(--ink);
+    font-size: 14px; font-weight: 500; color: var(--ink);
     min-width: 40px; text-align: right; font-variant-numeric: tabular-nums;
   }
   table {
@@ -606,7 +606,7 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
     font-variant-numeric: tabular-nums;
   }
   table th {
-    font-size: 9.5px; font-weight: 700; text-transform: uppercase;
+    font-size: 9.5px; font-weight: 500; text-transform: uppercase;
     letter-spacing: 0.06em; color: var(--ink2);
     background: var(--line3); border-bottom: 1px solid var(--line);
     white-space: nowrap;
@@ -615,7 +615,7 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
   table tbody tr:nth-child(even) { background: #FCFDFE; }
   table tbody tr:hover { background: var(--green-soft); }
   table tfoot td {
-    font-weight: 800; background: var(--green-soft); color: var(--green-deep);
+    font-weight: 500; background: var(--green-soft); color: var(--green-deep);
     border-top: 2px solid var(--green); border-bottom: none;
     text-transform: uppercase; letter-spacing: 0.04em; font-size: 10.5px;
   }
@@ -633,7 +633,7 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
   .btn {
     padding: 9px 16px; border-radius: 9px; border: none;
     background: linear-gradient(135deg, var(--green) 0%, var(--green-deep) 100%);
-    color: #fff; font-weight: 700;
+    color: #fff; font-weight: 500;
     font-size: 12px; cursor: pointer;
     box-shadow: 0 2px 8px rgba(16,185,129,0.32);
     letter-spacing: 0.005em;
@@ -902,7 +902,7 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
             );
           })}
         </div>
-        <button onClick={handleExport} title="Descarga el reporte ejecutivo como PDF" style={{ display:"inline-flex", alignItems:"center", gap:7, padding:"8px 14px", borderRadius:9, background: isLight ? `linear-gradient(135deg, ${accent} 0%, ${accent}DD 100%)` : `${accent}18`, color: isLight ? "#FFFFFF" : accent, border:`1px solid ${isLight ? "transparent" : `${accent}55`}`, fontSize:12, fontWeight:700, fontFamily:fontDisp, cursor:"pointer", boxShadow: isLight ? `0 2px 8px ${accent}40` : "none" }}>
+        <button onClick={handleExport} title="Descarga el reporte ejecutivo como PDF" style={{ display:"inline-flex", alignItems:"center", gap:7, padding:"8px 14px", borderRadius:9, background: isLight ? `linear-gradient(135deg, ${accent} 0%, ${accent}DD 100%)` : `${accent}18`, color: isLight ? "#FFFFFF" : accent, border:`1px solid ${isLight ? "transparent" : `${accent}55`}`, fontSize:12, fontWeight:500, fontFamily:fontDisp, cursor:"pointer", boxShadow: isLight ? `0 2px 8px ${accent}40` : "none" }}>
           <Download size={13} strokeWidth={2.4} /> Generar PDF
         </button>
         </div>
@@ -921,7 +921,7 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
       {/* ── Header ────────────────────────────────────────────────────────── */}
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
         <div>
-          <h2 style={{ margin: 0, fontSize: 22, fontWeight: 700, fontFamily: fontDisp, color: T.txt, letterSpacing: "-0.025em" }}>
+          <h2 style={{ margin: 0, fontSize: 22, fontWeight: 500, fontFamily: fontDisp, color: T.txt, letterSpacing: "-0.025em" }}>
             {showZoomTab ? "Filtro 1 · Control de Leads" : "Comando Directivo"}
           </h2>
           <p style={{ margin: "4px 0 0", fontSize: 12.5, color: T.txt3, fontFamily: font }}>
@@ -951,7 +951,7 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
                 : `${accent}18`,
               color: isLight ? "#FFFFFF" : accent,
               border: `1px solid ${isLight ? "transparent" : `${accent}55`}`,
-              fontSize: 12, fontWeight: 700, fontFamily: fontDisp,
+              fontSize: 12, fontWeight: 500, fontFamily: fontDisp,
               letterSpacing: "-0.01em", cursor: "pointer",
               boxShadow: isLight ? `0 2px 8px ${accent}40` : "none",
               transition: "all 0.15s",
@@ -975,7 +975,7 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
       {/* ── 0) Embudo de conversión — el visual principal, claro de un vistazo ── */}
       <G T={T}>
         <div style={{ marginBottom: 16 }}>
-          <p style={{ fontSize: 14.5, fontWeight: 700, color: T.txt, fontFamily: fontDisp, margin: 0, letterSpacing: "-0.014em" }}>
+          <p style={{ fontSize: 14.5, fontWeight: 500, color: T.txt, fontFamily: fontDisp, margin: 0, letterSpacing: "-0.014em" }}>
             Embudo de conversión
           </p>
           <p style={{ fontSize: 11, color: T.txt3, fontFamily: font, margin: "3px 0 0", lineHeight: 1.5 }}>
@@ -994,7 +994,7 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
                   <span style={{ display: "inline-flex", padding: 6, borderRadius: 8, background: `${s.color}1A`, flexShrink: 0 }}>
                     <Icon size={14} color={s.color} strokeWidth={2.2} />
                   </span>
-                  <span style={{ fontSize: 12, fontWeight: 600, color: T.txt2, fontFamily: font, lineHeight: 1.2 }}>{s.label}</span>
+                  <span style={{ fontSize: 12, fontWeight: 400, color: T.txt2, fontFamily: font, lineHeight: 1.2 }}>{s.label}</span>
                 </div>
                 <div style={{ flex: 1, minWidth: 220, display: "flex", alignItems: "center", gap: 10 }}>
                   <div style={{ flex: 1, minWidth: 0, height: 34, borderRadius: 8, background: isLight ? "rgba(15,23,42,0.04)" : "rgba(255,255,255,0.04)", overflow: "hidden" }}>
@@ -1003,7 +1003,7 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
                       background: s.color, display: "flex", alignItems: "center", paddingLeft: 12,
                       transition: "width 0.3s ease",
                     }}>
-                      <span style={{ fontSize: 14, fontWeight: 800, color: "#FFFFFF", fontFamily: fontDisp, letterSpacing: "-0.01em", textShadow: "0 1px 3px rgba(0,0,0,0.45)" }}>{s.value.toLocaleString("es-MX")}</span>
+                      <span style={{ fontSize: 14, fontWeight: 500, color: "#FFFFFF", fontFamily: fontDisp, letterSpacing: "-0.01em", textShadow: "0 1px 3px rgba(0,0,0,0.45)" }}>{s.value.toLocaleString("es-MX")}</span>
                     </div>
                   </div>
                   <span style={{ width: 84, flexShrink: 0, fontSize: 11, color: T.txt3, fontFamily: font, textAlign: "right" }}>
@@ -1020,7 +1020,7 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
       <G T={T}>
         <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: 12, marginBottom: 14 }}>
           <div>
-            <p style={{ fontSize: 14.5, fontWeight: 700, color: T.txt, fontFamily: fontDisp, margin: 0, letterSpacing: "-0.014em" }}>
+            <p style={{ fontSize: 14.5, fontWeight: 500, color: T.txt, fontFamily: fontDisp, margin: 0, letterSpacing: "-0.014em" }}>
               Evolución de indicadores
             </p>
             <p style={{ fontSize: 11, color: T.txt3, fontFamily: font, margin: "3px 0 0", lineHeight: 1.5 }}>
@@ -1050,7 +1050,7 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
                     ? (isLight ? "rgba(15,23,42,0.10)" : "rgba(255,255,255,0.08)")
                     : `${c}55`}`,
                   color: hidden ? T.txt3 : (isLight ? `color-mix(in srgb, ${c} 60%, #0B1220)` : c),
-                  fontSize: 11, fontWeight: 600, fontFamily: fontDisp,
+                  fontSize: 11, fontWeight: 400, fontFamily: fontDisp,
                   letterSpacing: "0.005em", cursor: "pointer",
                   transition: "all 0.14s",
                   opacity: hidden ? 0.55 : 1,
@@ -1115,7 +1115,7 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
                   strokeWidth={1}
                   label={{
                     value: "Hoy", position: "top",
-                    fill: T.txt2, fontSize: 10, fontWeight: 700,
+                    fill: T.txt2, fontSize: 10, fontWeight: 500,
                     fontFamily: fontDisp,
                     dy: -2,
                   }}
@@ -1201,7 +1201,7 @@ function ChartTooltip({ active, payload, label, isLight, T, hiddenSeries }) {
       minWidth: 200,
     }}>
       <div style={{
-        fontSize: 11, fontWeight: 700, color: T.txt, fontFamily: fontDisp,
+        fontSize: 11, fontWeight: 500, color: T.txt, fontFamily: fontDisp,
         letterSpacing: "-0.005em",
         marginBottom: 8, paddingBottom: 7,
         borderBottom: `1px solid ${isLight ? "rgba(15,23,42,0.06)" : "rgba(255,255,255,0.07)"}`,
@@ -1213,7 +1213,7 @@ function ChartTooltip({ active, payload, label, isLight, T, hiddenSeries }) {
               <span style={{ width: 8, height: 8, borderRadius: 2, background: p.color, flexShrink: 0 }} />
               {FULL_LABELS[p.dataKey] || p.dataKey}
             </span>
-            <span style={{ fontSize: 12, fontWeight: 700, color: T.txt, fontVariantNumeric: "tabular-nums", fontFamily: fontDisp }}>
+            <span style={{ fontSize: 12, fontWeight: 500, color: T.txt, fontVariantNumeric: "tabular-nums", fontFamily: fontDisp }}>
               {p.value || 0}
             </span>
           </div>
@@ -1225,10 +1225,10 @@ function ChartTooltip({ active, payload, label, isLight, T, hiddenSeries }) {
           borderTop: `1px solid ${isLight ? "rgba(15,23,42,0.06)" : "rgba(255,255,255,0.07)"}`,
           display: "flex", justifyContent: "space-between", alignItems: "center",
         }}>
-          <span style={{ fontSize: 10, fontWeight: 700, color: T.txt3, fontFamily: fontDisp, textTransform: "uppercase", letterSpacing: "0.06em" }}>
+          <span style={{ fontSize: 10, fontWeight: 500, color: T.txt3, fontFamily: fontDisp, textTransform: "uppercase", letterSpacing: "0.06em" }}>
             Total
           </span>
-          <span style={{ fontSize: 13, fontWeight: 800, color: T.txt, fontVariantNumeric: "tabular-nums", fontFamily: fontDisp }}>
+          <span style={{ fontSize: 13, fontWeight: 500, color: T.txt, fontVariantNumeric: "tabular-nums", fontFamily: fontDisp }}>
             {total}
           </span>
         </div>
@@ -1242,7 +1242,7 @@ function tableHeadStyle(T, align = "right") {
   return {
     padding: "11px 14px",
     textAlign: align,
-    fontSize: 10.5, fontWeight: 700,
+    fontSize: 10.5, fontWeight: 500,
     color: T.txt2, fontFamily: fontDisp,
     textTransform: "uppercase",
     letterSpacing: "0.06em",

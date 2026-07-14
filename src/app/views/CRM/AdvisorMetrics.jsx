@@ -193,7 +193,7 @@ export default function AdvisorMetrics({ leadsData = [], theme = "dark", onOpenL
     <div style={{ marginTop: 16 }}>
       {/* Header con título — el período se controla con un único DateRangeControl */}
       <div style={{ marginBottom: 14 }}>
-        <h3 style={{ margin: 0, fontSize: 18, fontWeight: 600, fontFamily: fontDisp, color: T.txt, letterSpacing: "-0.02em" }}>
+        <h3 style={{ margin: 0, fontSize: 18, fontWeight: 400, fontFamily: fontDisp, color: T.txt, letterSpacing: "-0.02em" }}>
           Indicadores de Asesores
         </h3>
         <p style={{ margin: "4px 0 0", fontSize: 12, color: T.txt3, fontFamily: font }}>
@@ -247,14 +247,14 @@ export default function AdvisorMetrics({ leadsData = [], theme = "dark", onOpenL
             )}
             {rows.map(({ asesor, metrics, count }, i) => (
               <tr key={asesor} style={{ borderTop: i === 0 ? "none" : `1px solid ${rowBorder}` }}>
-                <td style={{ padding: cellPad, paddingLeft: 16, fontFamily: fontDisp, fontWeight: 600, color: T.txt, fontSize: 13 }}>
+                <td style={{ padding: cellPad, paddingLeft: 16, fontFamily: fontDisp, fontWeight: 400, color: T.txt, fontSize: 13 }}>
                   {asesor}
                   <span style={{ marginLeft: 8, fontSize: 11, fontWeight: 500, color: T.txt3 }}>
                     {count} {count === 1 ? "lead" : "leads"}
                   </span>
                 </td>
                 {INDICATORS.map(ind => (
-                  <td key={ind.key} style={{ padding: cellPad, textAlign: "center", fontFamily: fontDisp, fontWeight: 600, color: T.txt, fontSize: 14 }}>
+                  <td key={ind.key} style={{ padding: cellPad, textAlign: "center", fontFamily: fontDisp, fontWeight: 400, color: T.txt, fontSize: 14 }}>
                     {metrics[ind.key]}
                   </td>
                 ))}
@@ -264,11 +264,11 @@ export default function AdvisorMetrics({ leadsData = [], theme = "dark", onOpenL
           {rows.length > 0 && (
             <tfoot>
               <tr style={{ borderTop: `1px solid ${rowBorder}`, background: headerBg }}>
-                <td style={{ padding: cellPad, paddingLeft: 16, fontFamily: fontDisp, fontWeight: 700, color: T.txt2, fontSize: 12, textTransform: "uppercase", letterSpacing: "0.04em" }}>
+                <td style={{ padding: cellPad, paddingLeft: 16, fontFamily: fontDisp, fontWeight: 500, color: T.txt2, fontSize: 12, textTransform: "uppercase", letterSpacing: "0.04em" }}>
                   Total
                 </td>
                 {INDICATORS.map(ind => (
-                  <td key={ind.key} style={{ padding: cellPad, textAlign: "center", fontFamily: fontDisp, fontWeight: 700, color: accent, fontSize: 14 }}>
+                  <td key={ind.key} style={{ padding: cellPad, textAlign: "center", fontFamily: fontDisp, fontWeight: 500, color: accent, fontSize: 14 }}>
                     {totals[ind.key]}
                   </td>
                 ))}
@@ -291,7 +291,7 @@ function thStyle(T) {
     padding: "11px 12px",
     textAlign: "center",
     fontSize: 10.5,
-    fontWeight: 600,
+    fontWeight: 400,
     color: T.txt2,
     fontFamily: fontDisp,
     textTransform: "uppercase",

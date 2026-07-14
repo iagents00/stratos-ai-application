@@ -108,7 +108,7 @@ export default function RangeCalendar({ fromStr, toStr, onPick, onApply }) {
         <button type="button" onClick={() => setViewMonth(addMonths(viewMonth, -1))} style={navBtn} aria-label="Mes anterior">
           <ChevronLeft size={16} />
         </button>
-        <span style={{ fontFamily: fontDisp, fontWeight: 700, color: TXT_MONTH, fontSize: 14.5, letterSpacing: "-0.01em" }}>
+        <span style={{ fontFamily: fontDisp, fontWeight: 500, color: TXT_MONTH, fontSize: 14.5, letterSpacing: "-0.01em" }}>
           {MONTHS_FULL[viewMonth.getMonth()]} {viewMonth.getFullYear()}
         </span>
         <button
@@ -125,7 +125,7 @@ export default function RangeCalendar({ fromStr, toStr, onPick, onApply }) {
       {/* Encabezado de días de la semana */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 3, marginBottom: 7 }}>
         {WEEKDAYS.map((w, i) => (
-          <span key={i} style={{ textAlign: "center", fontSize: 10, fontWeight: 700, color: TXT_MUTE, fontFamily: fontDisp, textTransform: "uppercase", letterSpacing: "0.04em" }}>
+          <span key={i} style={{ textAlign: "center", fontSize: 10, fontWeight: 500, color: TXT_MUTE, fontFamily: fontDisp, textTransform: "uppercase", letterSpacing: "0.04em" }}>
             {w}
           </span>
         ))}
@@ -209,7 +209,7 @@ export default function RangeCalendar({ fromStr, toStr, onPick, onApply }) {
               cursor: ready ? "pointer" : "not-allowed",
               background: ready ? FILL : "rgba(255,255,255,0.05)",
               color: ready ? "#FFFFFF" : TXT_MUTE,
-              fontFamily: fontDisp, fontWeight: 750, fontSize: 13,
+              fontFamily: fontDisp, fontWeight: 500, fontSize: 13,
               textShadow: ready ? "0 1px 2px rgba(0,0,0,0.3)" : "none",
               boxShadow: ready ? "0 8px 22px rgba(16,160,120,0.45)" : "none",
               transition: "background 0.15s, box-shadow 0.15s",

@@ -65,7 +65,7 @@ export default function DateRangeControl({ T, isLight, value, onChange, label = 
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
         <span style={{
           display: "inline-flex", alignItems: "center", gap: 8,
-          color: T.txt2, fontSize: 11, fontWeight: 700, fontFamily: fontDisp,
+          color: T.txt2, fontSize: 11, fontWeight: 500, fontFamily: fontDisp,
           textTransform: "uppercase", letterSpacing: "0.07em",
         }}>
           <span style={{ display: "inline-flex", padding: 6, borderRadius: 9, background: `${T.accent}1A` }}>
@@ -78,7 +78,7 @@ export default function DateRangeControl({ T, isLight, value, onChange, label = 
           padding: "5px 11px", borderRadius: 999,
           background: isLight ? "rgba(15,23,42,0.04)" : "rgba(255,255,255,0.04)",
           border: `1px solid ${chipBorder}`,
-          fontSize: 11.5, color: T.txt2, fontFamily: font, fontWeight: 600,
+          fontSize: 11.5, color: T.txt2, fontFamily: font, fontWeight: 400,
           fontVariantNumeric: "tabular-nums",
         }}>
           {dateRangeLabel(range)}

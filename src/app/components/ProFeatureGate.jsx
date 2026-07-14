@@ -95,14 +95,14 @@ export default function ProFeatureGate({
             marginBottom: 10,
           }}>
             <Lock size={10} color={P.accent} strokeWidth={2.4} />
-            <span style={{ fontSize: 9.5, fontWeight: 800, color: P.accent, letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: fontDisp }}>
+            <span style={{ fontSize: 9.5, fontWeight: 500, color: P.accent, letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: fontDisp }}>
               Función Premium Stratos
             </span>
           </div>
 
           <h2 style={{
             margin: 0,
-            fontSize: 22, fontWeight: 800, color: P.txt,
+            fontSize: 22, fontWeight: 500, color: P.txt,
             fontFamily: fontDisp, letterSpacing: "-0.025em",
             lineHeight: 1.2,
           }}>{title}</h2>
@@ -117,7 +117,7 @@ export default function ProFeatureGate({
         {benefits.length > 0 && (
           <div style={{ padding: "20px 26px 8px" }}>
             <p style={{
-              margin: "0 0 12px", fontSize: 10, fontWeight: 800,
+              margin: "0 0 12px", fontSize: 10, fontWeight: 500,
               color: P.txt3, letterSpacing: "0.12em", textTransform: "uppercase", fontFamily: fontDisp,
             }}>
               ¿Qué obtienes al activarla?
@@ -134,7 +134,7 @@ export default function ProFeatureGate({
                   display: "flex", alignItems: "center", justifyContent: "center",
                   flexShrink: 0, marginTop: 1,
                 }}>
-                  <span style={{ fontSize: 10, color: P.accent, fontWeight: 800, fontFamily: fontDisp }}>{i + 1}</span>
+                  <span style={{ fontSize: 10, color: P.accent, fontWeight: 500, fontFamily: fontDisp }}>{i + 1}</span>
                 </div>
                 <p style={{
                   margin: 0, fontSize: 12.5, color: P.txt,
@@ -159,7 +159,7 @@ export default function ProFeatureGate({
               background: `linear-gradient(135deg, #25D366, #128C7E)`,
               color: "#FFFFFF",
               textDecoration: "none",
-              fontSize: 14, fontWeight: 700, fontFamily: fontDisp,
+              fontSize: 14, fontWeight: 500, fontFamily: fontDisp,
               display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
               boxShadow: "0 8px 24px rgba(37,211,102,0.35)",
               transition: "transform 0.18s",
@@ -181,7 +181,7 @@ export default function ProFeatureGate({
               color: P.txt,
               border: `1px solid ${P.borderH}`,
               textDecoration: "none",
-              fontSize: 13, fontWeight: 600, fontFamily: font,
+              fontSize: 13, fontWeight: 400, fontFamily: font,
               display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
               transition: "all 0.18s",
             }}
