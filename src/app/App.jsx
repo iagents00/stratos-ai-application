@@ -14,6 +14,7 @@ import PricingScreen from "../landing/PricingScreen.jsx";
 import { useAuth } from "../hooks/useAuth";
 import { useClient } from "../hooks/useClient";
 import { useWhatsAppInbox } from "../hooks/useWhatsAppInbox";
+import { useCopilotInbox } from "../hooks/useCopilotInbox";
 import {
   getOfflineLeads,
   updateOfflineLead,
@@ -286,6 +287,11 @@ export default function App() {
   const waEnabled = !!user && !user.isDemo && canAccessModule("wa", user, clientConfig);
   const waInbox = useWhatsAppInbox({ enabled: waEnabled });
   const waUnread = waEnabled ? (waInbox.totalUnread || 0) : 0;
+  const copilotEnabled = !!user && !user.isDemo && canAccessModule("copilot", user, clientConfig);
+  const copilotInbox = useCopilotInbox({ enabled: copilotEnabled, activeView: v });
+  const copilotUnread = copilotEnabled ? (copilotInbox.totalUnread || 0) : 0;
+  const totalNotifUnread = waUnread + copilotUnread;
+
   // Abre una conversación en el módulo WhatsApp desde la campanita.
   const openWaConversation = useCallback((leadId) => {
     setV("wa");
@@ -301,17 +307,17 @@ export default function App() {
     setCrmAutoOpenLead({ id: leadId, ts: Date.now() });
   }, []);
 
-  // ── Notificaciones de WhatsApp ────────────────────────────────────────────
+  // ── Notificaciones de WhatsApp & Copilot ──────────────────────────────────
   // (a) Contador en el título de la pestaña: "(3) Stratos AI" — se ve aunque
   //     la asesora esté en otra pestaña. (b) Notificación nativa del navegador
   //     cuando entra un mensaje y NO está mirando la bandeja.
   const baseTitleRef = useRef(typeof document !== "undefined" ? document.title : "Stratos AI");
   useEffect(() => {
-    document.title = waUnread > 0
-      ? `(${waUnread > 99 ? "99+" : waUnread}) ${baseTitleRef.current}`
+    document.title = totalNotifUnread > 0
+      ? `(${totalNotifUnread > 99 ? "99+" : totalNotifUnread}) ${baseTitleRef.current}`
       : baseTitleRef.current;
     return () => { document.title = baseTitleRef.current; };
-  }, [waUnread]);
+  }, [totalNotifUnread]);
 
   const waPrevUnreadRef = useRef(0);
   useEffect(() => {
@@ -330,6 +336,21 @@ export default function App() {
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [waUnread, waEnabled]);
+
+  const copilotPrevUnreadRef = useRef(0);
+  useEffect(() => {
+    const prev = copilotPrevUnreadRef.current;
+    copilotPrevUnreadRef.current = copilotUnread;
+    if (!copilotEnabled || copilotUnread <= prev) return;
+    if (v === "copilot" && !document.hidden) return;
+    notifyUser({
+      title: "Copilot AI · Stratos CRM",
+      body: copilotInbox.lastAiMessage?.content?.slice(0, 110) || "Nueva respuesta de tu asistente IA",
+      tag: "stratos-copilot-unread",
+      onClick: () => setV("copilot"),
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [copilotUnread, copilotEnabled, copilotInbox.lastAiMessage]);
 
   // App NATIVA: pedir el permiso de notificaciones al entrar (Android 13+ lo
   // exige en runtime; el diálogo sale una sola vez) y navegar a la bandeja de
@@ -1554,8 +1575,8 @@ export default function App() {
                 <div ref={bellRef} style={{ position:"relative" }}>
                   <button
                     title={
-                      waUnread > 0
-                        ? `${waUnread} mensaje${waUnread !== 1 ? "s" : ""} de WhatsApp sin leer`
+                      totalNotifUnread > 0
+                        ? `${totalNotifUnread} notificación${totalNotifUnread !== 1 ? "es" : ""} sin leer`
                         : pendingSync > 0
                           ? `${pendingSync} cambios pendientes de sincronizar`
                           : "Notificaciones"
@@ -1568,8 +1589,8 @@ export default function App() {
                     onMouseUp={upIco}
                   >
                     <IosIcon name="bell" size={16} color={icoRest} />
-                    {waUnread > 0 ? (
-                      /* WhatsApp sin leer manda: verde (lo más accionable para el asesor). */
+                    {totalNotifUnread > 0 ? (
+                      /* WhatsApp o Copilot sin leer mandan verde. */
                       <div style={{
                         position:"absolute", top:-2, right:-2,
                         minWidth:14, height:14, padding:"0 3.5px", borderRadius:99,
@@ -1578,7 +1599,7 @@ export default function App() {
                         fontSize:8.5, fontWeight:500, fontFamily:fontDisp,
                         display:"flex", alignItems:"center", justifyContent:"center",
                         lineHeight:1,
-                      }}>{waUnread > 99 ? "99+" : waUnread}</div>
+                      }}>{totalNotifUnread > 99 ? "99+" : totalNotifUnread}</div>
                     ) : pendingSync > 0 ? (
                       <div style={{
                         position:"absolute", top:-2, right:-2,
@@ -1667,8 +1688,47 @@ export default function App() {
                           </div>
                         )}
 
-                        {/* Estado: sin pendientes ni offline ni WhatsApp sin leer */}
-                        {!user?._offline && pendingSync === 0 && waUnread === 0 && (
+                        {/* ── Copilot: nuevas respuestas del asistente IA ── */}
+                        {copilotEnabled && copilotUnread > 0 && (
+                          <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
+                            <div style={{ display:"flex", alignItems:"center", gap:6 }}>
+                              <Sparkles size={12} color={T.accent} strokeWidth={2.4} />
+                              <span style={{ fontSize:10.5, fontWeight:500, letterSpacing:"0.04em", textTransform:"uppercase", color:T.accent, fontFamily:fontDisp }}>
+                                Copilot · {copilotUnread} nueva{copilotUnread !== 1 ? "s" : ""}
+                              </span>
+                            </div>
+                            <button
+                              onClick={() => { setV("copilot"); setBellOpen(false); }}
+                              style={{
+                                display:"flex", alignItems:"center", gap:9, textAlign:"left",
+                                padding:"8px 9px", borderRadius:9, cursor:"pointer", width:"100%",
+                                background: isLight ? "rgba(13,154,118,0.06)" : "rgba(110,231,194,0.06)",
+                                border:`1px solid ${isLight ? "rgba(13,154,118,0.22)" : "rgba(110,231,194,0.18)"}`,
+                                transition:"background 0.14s",
+                              }}
+                              onMouseEnter={e => { e.currentTarget.style.background = isLight ? "rgba(13,154,118,0.11)" : "rgba(110,231,194,0.11)"; }}
+                              onMouseLeave={e => { e.currentTarget.style.background = isLight ? "rgba(13,154,118,0.06)" : "rgba(110,231,194,0.06)"; }}
+                            >
+                              <div style={{ flex:1, minWidth:0 }}>
+                                <div style={{ fontSize:12, fontWeight:500, color:T.txt, fontFamily:fontDisp, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>
+                                  Asistente IA
+                                </div>
+                                <div style={{ fontSize:10.5, color:isLight ? T.txt2 : "rgba(255,255,255,0.55)", fontFamily:font, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>
+                                  {copilotInbox.lastAiMessage?.content || "Nueva respuesta disponible"}
+                                </div>
+                              </div>
+                              <span style={{
+                                minWidth:16, height:16, padding:"0 5px", borderRadius:99, flexShrink:0,
+                                background:T.accent, color:"#041016",
+                                fontSize:9, fontWeight:500, fontFamily:fontDisp,
+                                display:"flex", alignItems:"center", justifyContent:"center",
+                              }}>{copilotUnread > 99 ? "99+" : copilotUnread}</span>
+                            </button>
+                          </div>
+                        )}
+
+                        {/* Estado: sin pendientes ni offline ni notificaciones sin leer */}
+                        {!user?._offline && pendingSync === 0 && totalNotifUnread === 0 && (
                           <div style={{ fontSize:12, color: isLight ? T.txt3 : "rgba(255,255,255,0.45)", fontFamily:font, padding:"8px 0" }}>
                             Sin notificaciones nuevas.
                           </div>
