@@ -169,7 +169,7 @@ export default function GraficasZooms({ rows = [], T, isLight }) {
       {/* 1) Tendencia semanal */}
       <ChartCard T={T} isLight={isLight} title="Tendencia semanal" subtitle="Últimas 8 semanas (lunes a domingo) · resultado de cada Zoom">
         <div style={{ width: "100%", height: 230 }}>
-          <ResponsiveContainer width="100%" height="100%">
+          <ResponsiveContainer width="100%" height="100%" minWidth={100} minHeight={100}>
             <BarChart data={semanas} margin={{ top: 6, right: 6, bottom: 0, left: -18 }} barCategoryGap="28%">
               <CartesianGrid strokeDasharray="3 5" stroke={gridStroke} vertical={false} />
               <XAxis dataKey="label" tick={axisTick} tickLine={false} axisLine={{ stroke: gridStroke }} interval={0} />
@@ -207,7 +207,7 @@ export default function GraficasZooms({ rows = [], T, isLight }) {
         ) : (
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <div style={{ width: "56%", height: 230, position: "relative", flexShrink: 0 }}>
-              <ResponsiveContainer width="100%" height="100%">
+              <ResponsiveContainer width="100%" height="100%" minWidth={100} minHeight={100}>
                 <PieChart>
                   <Tooltip content={(p) => <ChartTip {...p} isLight={isLight} T={T} />} />
                   <Pie
@@ -267,7 +267,7 @@ function PersonBars({ data, color, T, isLight, gridStroke, axisTick }) {
   const h = Math.max(150, data.length * 34 + 20);
   return (
     <div style={{ width: "100%", height: h }}>
-      <ResponsiveContainer width="100%" height="100%">
+      <ResponsiveContainer width="100%" height="100%" minWidth={100} minHeight={100}>
         <BarChart data={data} layout="vertical" margin={{ top: 2, right: 34, bottom: 0, left: 8 }}>
           <CartesianGrid strokeDasharray="3 5" stroke={gridStroke} horizontal={false} />
           <XAxis type="number" allowDecimals={false} hide />

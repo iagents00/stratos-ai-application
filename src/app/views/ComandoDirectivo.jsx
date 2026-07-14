@@ -1068,7 +1068,7 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
         </div>
 
         <div style={{ width: "100%", height: 380 }}>
-          <ResponsiveContainer width="100%" height="100%">
+          <ResponsiveContainer width="100%" height="100%" minWidth={100} minHeight={100}>
             <AreaChart data={series} margin={{ top: 12, right: 18, bottom: 10, left: -6 }}>
               <defs>
                 {INDICATORS.map(ind => {

@@ -67,7 +67,7 @@ export default function Copilot({ theme = "dark", T: Tprop, isLight: isLightProp
   }
 
   return (
-    <div style={{ padding: "18px 20px 14px", height: "calc(100dvh - 118px)", minHeight: 480, display: "flex", flexDirection: "column" }}>
+    <div style={{ padding: 0, width: "100%", height: "calc(100dvh - 56px)", minHeight: 480, display: "flex", flexDirection: "column", overflow: "hidden", background: isLight ? "#F8FAFC" : "#060A12" }}>
       {status.paired
         ? <Chat T={T} isLight={isLight} botUsername={botUsername} onUnpaired={onUnpaired} />
         : <ConnectPrompt T={T} isLight={isLight} botUsername={botUsername} manualPairing={manualPairing} onPaired={onPaired} />}
@@ -145,7 +145,7 @@ function Chat({ T, isLight, botUsername, onUnpaired }) {
 
     const tmpId = `tmp-${Date.now()}`;
     const displayContent = isVoice ? (text ? `🎙️ [Nota de voz] ${text}` : `🎙️ Nota de voz enviada`) : text;
-    const payloadText = text || "mis clientes"; // Si enviaron audio puro sin dictado nativo, ejecutamos consulta base o el texto
+    const payloadText = text || (isVoice ? "Te envío esta nota de voz. ¿Me puedes resumir qué tengo hoy en agenda o darme asistencia con mis clientes?" : "");
 
     setMessages((prev) => [...prev, { id: tmpId, role: "user", content: displayContent, occurred_at: new Date().toISOString(), pending: true, isVoice, voiceUrl }]);
     setSending(true);
@@ -283,9 +283,9 @@ function Chat({ T, isLight, botUsername, onUnpaired }) {
   const bubbleAiBd = isLight ? "rgba(15,23,42,0.08)" : "rgba(255,255,255,0.09)";
 
   return (
-    <G T={T} style={{ padding: 0, display: "flex", flexDirection: "column", flex: 1, minHeight: 0, overflow: "hidden", borderRadius: 18, boxShadow: isLight ? "0 10px 30px rgba(15,23,42,0.06)" : "0 12px 36px rgba(0,0,0,0.35)", border: `1px solid ${isLight ? "rgba(15,23,42,0.10)" : "rgba(255,255,255,0.12)"}` }}>
+    <div style={{ padding: 0, display: "flex", flexDirection: "column", flex: 1, minHeight: 0, width: "100%", height: "100%", overflow: "hidden", background: isLight ? "#F8FAFC" : "#060A12" }}>
       {/* Header Premium */}
-      <div style={{ display: "flex", alignItems: "center", gap: 14, padding: "16px 20px", background: isLight ? "linear-gradient(180deg, rgba(255,255,255,0.95) 0%, rgba(248,250,252,0.9) 100%)" : "linear-gradient(180deg, rgba(16,22,36,0.95) 0%, rgba(10,15,26,0.9) 100%)", borderBottom: `1px solid ${T.border}`, flexShrink: 0, backdropFilter: "blur(12px)" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 14, padding: "16px 24px", background: isLight ? "linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(248,250,252,0.95) 100%)" : "linear-gradient(180deg, rgba(16,22,36,0.98) 0%, rgba(10,15,26,0.95) 100%)", borderBottom: `1px solid ${T.border}`, flexShrink: 0, backdropFilter: "blur(12px)", zIndex: 10 }}>
         <div style={{
           width: 42, height: 42, borderRadius: 13, background: isLight ? "linear-gradient(135deg, #E8F8F4 0%, #D1F2E8 100%)" : "linear-gradient(135deg, rgba(110,231,194,0.18) 0%, rgba(52,211,153,0.10) 100%)", border: `1px solid ${T.accent}3D`,
           display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, boxShadow: `0 4px 14px ${T.accent}20`
@@ -421,7 +421,7 @@ function Chat({ T, isLight, botUsername, onUnpaired }) {
       </div>
 
       {/* Footer conexión */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 16, padding: "10px 20px", background: isLight ? "#FFFFFF" : "rgba(10,15,26,0.92)", flexShrink: 0, borderBottomLeftRadius: 18, borderBottomRightRadius: 18 }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 16, padding: "10px 24px", background: isLight ? "#FFFFFF" : "rgba(10,15,26,0.92)", flexShrink: 0 }}>
         <span style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 11.5, color: T.txt3, fontFamily: font }}>
           <Check size={12} color={T.accent} strokeWidth={2.6} /> Conectado a @{botUsername}
         </span>
@@ -433,7 +433,7 @@ function Chat({ T, isLight, botUsername, onUnpaired }) {
         )}
         <UnpairBtn T={T} onUnpaired={onUnpaired} />
       </div>
-    </G>
+    </div>
   );
 }
 
