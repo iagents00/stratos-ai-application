@@ -446,30 +446,38 @@ function Bubble({ m, T, isLight, userBg, userTxt, aiBg, aiBd, onPick, sending })
   // Detección automática de botones de acción / teclados inline (Estilo Telegram Real)
   let inlineButtons = [];
   if (!isUser && m.content && typeof m.content === "string") {
-    const lower = m.content.toLowerCase();
-    if (lower.includes("¿confirmas?") || lower.includes("confirmas tu acción") || lower.includes("voy a registrar el siguiente lead") || lower.includes("staged_action")) {
-      inlineButtons = [
-        { label: "✅ Sí, registrar", action: "si", primary: true },
-        { label: "❌ Cancelar", action: "cancelar", primary: false }
-      ];
-    } else if (lower.includes("días sin movimiento") || lower.includes("sin movimiento") || lower.includes("lead abandonado")) {
-      inlineButtons = [
-        { label: "📞 Ya lo contacté", action: "Ya lo contacté", primary: true },
-        { label: "📅 Definir próxima acción", action: "Definir próxima acción", primary: false },
-        { label: "👤 Ver ficha del cliente", action: "Ver ficha del cliente", primary: false }
-      ];
-    } else if (lower.includes("antes de tu zoom") || lower.includes("zoom agendado") || lower.includes("este es mi plan")) {
-      inlineButtons = [
-        { label: "🧠 Ya estudié, este es mi plan", action: "Ya estudié, este es mi plan", primary: true },
-        { label: "🗓️ Reagendar", action: "Reagendar", primary: false },
-        { label: "📁 Ver expediente", action: "Ver expediente", primary: false }
-      ];
-    } else if (lower.includes("¿ya hiciste esta acción?") || lower.includes("lista de acción")) {
-      inlineButtons = [
-        { label: "✅ Ya la hice", action: "Ya la hice", primary: true },
-        { label: "⏳ En proceso", action: "En proceso", primary: false },
-        { label: "❌ No la hice", action: "No la hice", primary: false }
-      ];
+    const text = m.content.trim();
+    const lower = text.toLowerCase();
+    
+    // Evitamos inventar botones si el mensaje es un listado/reporte masivo (ej: mis clientes, agenda múltiple)
+    const bulletCount = (text.match(/^[•\-\*]\s/gm) || []).length;
+    const isMassiveReport = bulletCount > 2 || text.length > 420;
+
+    if (!isMassiveReport) {
+      if (lower.includes("¿confirmas?") || lower.includes("¿confirmas el registro?") || lower.includes("confirmas tu acción") || lower.includes("voy a registrar el siguiente lead") || lower.includes("staged_action")) {
+        inlineButtons = [
+          { label: "✅ Sí, registrar / confirmar", action: "si", primary: true },
+          { label: "❌ Cancelar", action: "cancelar", primary: false }
+        ];
+      } else if (lower.includes("días sin movimiento") || lower.includes("lead abandonado") || lower.includes("lleva sin movimiento")) {
+        inlineButtons = [
+          { label: "📞 Ya lo contacté", action: "Ya lo contacté", primary: true },
+          { label: "📅 Definir próxima acción", action: "Definir próxima acción", primary: false },
+          { label: "👤 Ver ficha del cliente", action: "Ver ficha del cliente", primary: false }
+        ];
+      } else if (lower.includes("💡 antes de tu zoom") || lower.includes("resumen ejecutivo previo al zoom") || lower.includes("este es mi plan sugerido")) {
+        inlineButtons = [
+          { label: "🧠 Ya estudié, este es mi plan", action: "Ya estudié, este es mi plan", primary: true },
+          { label: "🗓️ Reagendar", action: "Reagendar", primary: false },
+          { label: "📁 Ver expediente", action: "Ver expediente", primary: false }
+        ];
+      } else if (lower.includes("¿ya hiciste esta acción?") || lower.includes("lista de acción de equipo")) {
+        inlineButtons = [
+          { label: "✅ Ya la hice", action: "Ya la hice", primary: true },
+          { label: "⏳ En proceso", action: "En proceso", primary: false },
+          { label: "❌ No la hice", action: "No la hice", primary: false }
+        ];
+      }
     }
   }
 

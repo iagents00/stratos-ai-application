@@ -127,8 +127,8 @@ const N8N_TELEGRAM_BOT_WEBHOOK = "https://personal-n8n.suwsiw.easypanel.host/web
  * El RPC copilot_send resuelve comandos rápidos deterministas (mis clientes, agenda,
  * kpis, pipeline, menu). Si el texto es libre, NLU, audios o preguntas complejas
  * (ej. manual de ventas, recomendaciones, crear cliente, confirmar), derivamos
- * directamente al webhook de n8n (@Strato_sasistente_crm_bot) sin tocar copilot_send
- * para eliminar por completo la respuesta "No conozco esa accion".
+ * al webhook de n8n (@Strato_sasistente_crm_bot) y consultamos vía getCopilotActivity
+ * para eliminar el error "No conozco esa accion" y evitar errores 400/CORS.
  *
  * @param {string} text
  * @returns {Promise<{ reply: string|null, error: string|null }>}
@@ -150,15 +150,6 @@ export async function sendCopilotMessage(text) {
     if (!profile?.telegram_chat_id) return { reply: null, error: 'not_paired' };
     const chatId = Number(profile.telegram_chat_id);
 
-    // Limpiamos de inmediato cualquier rastro pasado de "No conozco esa accion" en este chat
-    try {
-      await supabase
-        .from('tg_bot_activity')
-        .delete()
-        .eq('telegram_chat_id', chatId)
-        .ilike('content', '%No conozco esa accion%');
-    } catch { /* noop */ }
-
     // Lista estricta de comandos deterministas que sí maneja copilot_send sin LLM
     const QUICK_COMMANDS = [
       'mis clientes', 'qué tengo hoy', 'que tengo hoy', 'cómo voy', 'como voy',
@@ -175,25 +166,18 @@ export async function sendCopilotMessage(text) {
       if (replyText && !replyText.toLowerCase().includes('no conozco esa accion') && !replyText.toLowerCase().includes('no conozco esa acción')) {
         return { reply: replyText, error: null };
       }
+    } else {
+      // Llamamos a copilot_send para que registre el intento en DB de forma segura (sin error 400 direct insert)
+      try { await supabase.rpc('copilot_send', { p_text: cleanText }); } catch { /* noop */ }
     }
 
-    // ── NLU / TEXTO LIBRE / AUDIOS / ACCIONES COMERCIALES (Crear cliente, Zoom, Etapa, Catalogo) ──
-    // 1. Guardamos el mensaje del usuario en tg_bot_activity si no fue por copilot_send
-    const startIso = new Date().toISOString();
-    try {
-      await supabase.from('tg_bot_activity').insert({
-        telegram_chat_id: chatId,
-        role: 'user',
-        content: cleanText,
-        occurred_at: startIso
-      });
-    } catch { /* noop */ }
-
-    // 2. Disparamos el webhook del cerebro de IA en n8n
+    // Disparamos el webhook del cerebro de IA en n8n usando mode 'no-cors' y text/plain
+    // para evitar que el navegador bloquee la petición con preflight OPTIONS/CORS policy.
     try {
       await fetch(N8N_TELEGRAM_BOT_WEBHOOK, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'text/plain;charset=UTF-8' },
         body: JSON.stringify({
           message: {
             from: { id: chatId },
@@ -204,34 +188,20 @@ export async function sendCopilotMessage(text) {
       });
     } catch { /* noop */ }
 
-    // 3. Polling rápido (hasta 3.2s) para capturar la respuesta real insertada por n8n en tg_bot_activity
+    // Polling inteligente consultando vía RPC getCopilotActivity (Cero error 400)
     for (let attempt = 0; attempt < 5; attempt++) {
       await new Promise(r => setTimeout(r, 640));
-      const { data: newAi } = await supabase
-        .from('tg_bot_activity')
-        .select('content, occurred_at')
-        .eq('telegram_chat_id', chatId)
-        .eq('role', 'ai')
-        .gt('occurred_at', startIso)
-        .order('occurred_at', { ascending: false })
-        .limit(1);
-
-      if (newAi && newAi.length > 0 && newAi[0].content && !newAi[0].content.toLowerCase().includes('no conozco esa accion')) {
-        return { reply: newAi[0].content, error: null };
+      const { messages: recentList } = await getCopilotActivity(6);
+      if (Array.isArray(recentList) && recentList.length > 0) {
+        const newestAi = recentList.find(m => m.role === 'ai');
+        if (newestAi && newestAi.content && !newestAi.content.toLowerCase().includes('no conozco esa accion') && !newestAi.content.toLowerCase().includes('no conozco esa acción')) {
+          return { reply: newestAi.content, error: null };
+        }
       }
     }
 
-    // 4. Si el LLM tarda un poco más en n8n (>3.2s), dejamos un mensaje de progreso
-    const progressMsg = "⚡ Procesando tu instrucción con el asistente IA en la nube (la respuesta está en camino)...";
-    try {
-      await supabase.from('tg_bot_activity').insert({
-        telegram_chat_id: chatId,
-        role: 'ai',
-        content: progressMsg,
-        occurred_at: new Date().toISOString()
-      });
-    } catch { /* noop */ }
-
+    // Si el LLM tarda un poco más en n8n (>3.2s), dejamos un mensaje de progreso elegante
+    const progressMsg = "⚡ Procesando tu instrucción con el asistente IA en la nube (la respuesta aparecerá aquí y en Telegram en un momento)...";
     return { reply: progressMsg, error: null };
   } catch (e) {
     return { reply: null, error: e?.message || 'Error de conexión' };
