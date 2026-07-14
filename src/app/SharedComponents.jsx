@@ -50,7 +50,7 @@ export const Pill = ({ children, color = P.accent, s, isLight = false }) => {
     <span style={{
       display: "inline-flex", alignItems: "center", gap: 4,
       padding: s ? "2px 8px" : "4px 11px", borderRadius: 99,
-      fontSize: s ? 10 : 11, fontWeight: 700, color: textColor,
+      fontSize: s ? 10 : 11, fontWeight: 500, color: textColor,
       background: bgGrad,
       border: `1px solid ${borderCol}`,
       boxShadow: shadow,
@@ -130,7 +130,7 @@ export const KPI = ({ label, value, sub, icon: I, color, T: Tprop }) => {
           ellipsis: en tarjetas angostas de móvil el ícono ya no se encima. */}
       <p style={{
         margin: isMobile ? "0 0 10px" : "0 0 14px",
-        fontSize: 9.5, fontFamily: fontDisp, fontWeight: 600,
+        fontSize: 9.5, fontFamily: fontDisp, fontWeight: 400,
         letterSpacing: "0.14em", textTransform: "uppercase",
         color: isLight ? "rgba(15,23,42,0.38)" : "rgba(255,255,255,0.28)",
         whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
@@ -287,7 +287,7 @@ export const ChipSelect = ({ value, onChange, options = [], onAddNew, placeholde
                       onMouseEnter={e => { if (!active) e.currentTarget.style.background = "rgba(255,255,255,0.04)"; }}
                       onMouseLeave={e => { if (!active) e.currentTarget.style.background = "transparent"; }}
                     >
-                      <div style={{ width: 22, height: 22, borderRadius: "50%", background: `${color}18`, border: `1px solid ${color}38`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 10, fontWeight: 800, color, fontFamily: fontDisp }}>
+                      <div style={{ width: 22, height: 22, borderRadius: "50%", background: `${color}18`, border: `1px solid ${color}38`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 10, fontWeight: 500, color, fontFamily: fontDisp }}>
                         {opt.charAt(0).toUpperCase()}
                       </div>
                       <span style={{ flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{opt}</span>
@@ -300,7 +300,7 @@ export const ChipSelect = ({ value, onChange, options = [], onAddNew, placeholde
                 width: "100%", padding: "10px 12px", background: `${color}08`, borderTop: `1px solid ${P.border}`, border: "none",
                 display: "flex", alignItems: "center", gap: 8,
                 cursor: "pointer", transition: "background 0.14s",
-                color, fontSize: 12, fontWeight: 700, fontFamily: fontDisp, letterSpacing: "0.01em",
+                color, fontSize: 12, fontWeight: 500, fontFamily: fontDisp, letterSpacing: "0.01em",
                 textAlign: "left",
               }}
                 onMouseEnter={e => e.currentTarget.style.background = `${color}14`}
@@ -315,7 +315,7 @@ export const ChipSelect = ({ value, onChange, options = [], onAddNew, placeholde
           )}
           {adding && (
             <div style={{ padding: 10 }}>
-              <p style={{ fontSize: 9.5, fontWeight: 700, color, letterSpacing: "0.08em", textTransform: "uppercase", fontFamily: fontDisp, margin: "0 0 7px 2px" }}>{newLabel}</p>
+              <p style={{ fontSize: 9.5, fontWeight: 500, color, letterSpacing: "0.08em", textTransform: "uppercase", fontFamily: fontDisp, margin: "0 0 7px 2px" }}>{newLabel}</p>
               <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                 <input
                   ref={inputRef}
@@ -325,10 +325,10 @@ export const ChipSelect = ({ value, onChange, options = [], onAddNew, placeholde
                   placeholder="Nombre…"
                   style={{ flex: 1, height: 34, padding: "0 11px", borderRadius: 8, background: P.glass, border: `1px solid ${color}44`, color: P.txt, fontSize: 12.5, outline: "none", fontFamily: font, boxSizing: "border-box" }}
                 />
-                <button type="button" onClick={() => { setAdding(false); setNewVal(""); }} style={{ height: 34, padding: "0 10px", borderRadius: 8, background: "transparent", border: `1px solid ${P.border}`, color: P.txt3, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: font }}>
+                <button type="button" onClick={() => { setAdding(false); setNewVal(""); }} style={{ height: 34, padding: "0 10px", borderRadius: 8, background: "transparent", border: `1px solid ${P.border}`, color: P.txt3, fontSize: 11, fontWeight: 400, cursor: "pointer", fontFamily: font }}>
                   Cancelar
                 </button>
-                <button type="button" disabled={!newVal.trim()} onClick={handleAdd} style={{ height: 34, padding: "0 12px", borderRadius: 8, background: newVal.trim() ? color : "rgba(255,255,255,0.04)", border: `1px solid ${newVal.trim() ? color : P.border}`, color: newVal.trim() ? "#041016" : P.txt3, fontSize: 11, fontWeight: 800, cursor: newVal.trim() ? "pointer" : "not-allowed", fontFamily: fontDisp, letterSpacing: "0.01em" }}>
+                <button type="button" disabled={!newVal.trim()} onClick={handleAdd} style={{ height: 34, padding: "0 12px", borderRadius: 8, background: newVal.trim() ? color : "rgba(255,255,255,0.04)", border: `1px solid ${newVal.trim() ? color : P.border}`, color: newVal.trim() ? "#041016" : P.txt3, fontSize: 11, fontWeight: 500, cursor: newVal.trim() ? "pointer" : "not-allowed", fontFamily: fontDisp, letterSpacing: "0.01em" }}>
                   Guardar
                 </button>
               </div>

@@ -20,7 +20,7 @@ export function RoleBadge({ role }) {
   return (
     <span style={{
       display: "inline-flex", alignItems: "center", padding: "3px 10px",
-      borderRadius: 99, fontSize: 10.5, fontWeight: 700,
+      borderRadius: 99, fontSize: 10.5, fontWeight: 500,
       color: m.color, background: `${m.color}12`, border: `1px solid ${m.color}28`,
       letterSpacing: "0.03em",
     }}>{m.label}</span>

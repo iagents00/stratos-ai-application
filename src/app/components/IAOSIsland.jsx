@@ -44,7 +44,7 @@ export default function IAOSIsland({ leadsData, isLight, idx, brandLabel = "Duke
     }}>
       {/* IAOS label */}
       <span style={{
-        fontSize: 9, fontFamily: fontDisp, fontWeight: 800,
+        fontSize: 9, fontFamily: fontDisp, fontWeight: 500,
         letterSpacing: "0.16em", textTransform: "uppercase", lineHeight: 1,
         color: isLight ? "rgba(13,154,118,0.70)" : "rgba(110,231,194,0.60)",
         flexShrink: 0, marginRight: 8,

@@ -38,7 +38,7 @@ const Team = ({ T: _T }) => {
       <div style={{
         display: "grid", gridTemplateColumns: "220px 60px 80px 100px 90px 50px",
         gap: 12, alignItems: "center", padding: "8px 20px", borderBottom: `1px solid ${T.border}`,
-        fontSize: 10, color: T.txt3, textTransform: "uppercase", letterSpacing: "0.07em", fontWeight: 600,
+        fontSize: 10, color: T.txt3, textTransform: "uppercase", letterSpacing: "0.07em", fontWeight: 400,
       }}>
         <span>Asesor</span><span>Deals</span><span>Revenue</span><span>Eficiencia</span><span>Tendencia</span><span style={{ textAlign: "right" }}>Racha</span>
       </div>
@@ -50,7 +50,7 @@ const Team = ({ T: _T }) => {
           <div style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 0 }}>
             <Ico icon={User} sz={36} is={15} c={T.accent} />
             <div style={{ minWidth: 0 }}>
-              <p style={{ fontSize: 13, fontWeight: 600, color: T.txt, fontFamily: font, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{m.n}</p>
+              <p style={{ fontSize: 13, fontWeight: 400, color: T.txt, fontFamily: font, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{m.n}</p>
               <p style={{ fontSize: 10, color: T.txt3, fontFamily: font, marginTop: 2 }}>{m.r}</p>
             </div>
           </div>
@@ -60,7 +60,7 @@ const Team = ({ T: _T }) => {
             <div style={{ width: 44, height: 4, borderRadius: 2, background: T.border }}>
               <div style={{ width: `${m.e}%`, height: 4, borderRadius: 2, background: m.e > 85 ? T.emerald : m.e > 70 ? T.blue : T.rose, boxShadow: `0 0 8px ${m.e > 85 ? T.emerald : m.e > 70 ? T.blue : T.rose}40` }} />
             </div>
-            <span style={{ fontSize: 11, color: m.e > 85 ? T.emerald : m.e > 70 ? T.blue : T.rose, fontWeight: 600, fontFamily: fontDisp }}>{m.e}%</span>
+            <span style={{ fontSize: 11, color: m.e > 85 ? T.emerald : m.e > 70 ? T.blue : T.rose, fontWeight: 400, fontFamily: fontDisp }}>{m.e}%</span>
           </div>
           <div style={{ height: 28 }}>
             <ResponsiveContainer width="100%" height={28}>
@@ -71,7 +71,7 @@ const Team = ({ T: _T }) => {
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 4, justifyContent: "flex-end" }}>
             <Flame size={14} color={m.sk >= 7 ? T.accent : T.txt3} />
-            <span style={{ color: T.txt, fontWeight: 600, fontSize: 15, fontFamily: fontDisp }}>{m.sk}</span>
+            <span style={{ color: T.txt, fontWeight: 400, fontSize: 15, fontFamily: fontDisp }}>{m.sk}</span>
           </div>
         </div>
       ))}
@@ -100,7 +100,7 @@ const Team = ({ T: _T }) => {
         </div>
       </G>
       <G T={T}>
-        <p style={{ fontSize: 13, fontWeight: 700, color: T.txt, marginBottom: 12 }}>Revenue por asesor</p>
+        <p style={{ fontSize: 13, fontWeight: 500, color: T.txt, marginBottom: 12 }}>Revenue por asesor</p>
         <ResponsiveContainer width="100%" height={190}>
           <BarChart data={team} layout="vertical">
             <XAxis type="number" tick={{ fill: T.txt3, fontSize: 10, fontFamily: fontDisp }} axisLine={false} tickLine={false} />

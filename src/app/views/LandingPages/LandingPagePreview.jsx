@@ -57,7 +57,7 @@ const LandingPagePreview = ({ client, asesor, asesorWA = "", asesorCal = "", men
             boxShadow: "0 40px 80px rgba(0,0,0,0.7)",
           }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-              <p style={{ fontSize: 16, fontWeight: 700, color: "#fff", fontFamily: fontDisp }}>Enviar al cliente</p>
+              <p style={{ fontSize: 16, fontWeight: 500, color: "#fff", fontFamily: fontDisp }}>Enviar al cliente</p>
               <button onClick={() => setShowSharePanel(false)} style={{ width: 30, height: 30, borderRadius: 7, border: `1px solid ${T.border}`, background: T.glass, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
                 <X size={14} color={T.txt2} />
               </button>
@@ -65,13 +65,13 @@ const LandingPagePreview = ({ client, asesor, asesorWA = "", asesorCal = "", men
 
             {/* Copy link */}
             <div style={{ marginBottom: 16 }}>
-              <p style={{ fontSize: 11, color: T.txt2, marginBottom: 8, fontWeight: 600, letterSpacing: "0.04em", textTransform: "uppercase" }}>Enlace de la landing page</p>
+              <p style={{ fontSize: 11, color: T.txt2, marginBottom: 8, fontWeight: 400, letterSpacing: "0.04em", textTransform: "uppercase" }}>Enlace de la landing page</p>
               <div style={{ display: "flex", gap: 8 }}>
                 <input readOnly value={demoShareUrl} style={{ flex: 1, padding: "10px 14px", borderRadius: 9, fontSize: 11, background: T.glass, border: `1px solid ${T.border}`, color: T.txt3, fontFamily: font, outline: "none" }} onClick={e => e.target.select()} />
                 <button onClick={() => { onCopyLink(); navigator.clipboard.writeText(demoShareUrl).catch(()=>{}); }} style={{
                   padding: "10px 18px", borderRadius: 9, border: "none",
                   background: copied ? T.emerald : T.accent, color: "#000",
-                  fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: fontDisp,
+                  fontSize: 12, fontWeight: 500, cursor: "pointer", fontFamily: fontDisp,
                   display: "flex", alignItems: "center", gap: 6, whiteSpace: "nowrap",
                   transition: "background 0.2s",
                 }}>
@@ -82,7 +82,7 @@ const LandingPagePreview = ({ client, asesor, asesorWA = "", asesorCal = "", men
 
             {/* WhatsApp option */}
             <div style={{ marginBottom: 12 }}>
-              <p style={{ fontSize: 11, color: T.txt2, marginBottom: 8, fontWeight: 600, letterSpacing: "0.04em", textTransform: "uppercase" }}>Enviar por WhatsApp</p>
+              <p style={{ fontSize: 11, color: T.txt2, marginBottom: 8, fontWeight: 400, letterSpacing: "0.04em", textTransform: "uppercase" }}>Enviar por WhatsApp</p>
               {waUrl ? (
                 <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                   <a href={`https://wa.me/${waPhone}?text=${encodeURIComponent(`Hola ${client || "estimado cliente"}, te comparto la presentación exclusiva de propiedades que seleccioné para ti:\n${demoShareUrl}`)}`}
@@ -90,7 +90,7 @@ const LandingPagePreview = ({ client, asesor, asesorWA = "", asesorCal = "", men
                     style={{
                       display: "flex", alignItems: "center", gap: 10, padding: "12px 18px",
                       borderRadius: 10, background: "rgba(37,211,102,0.1)", border: "1px solid rgba(37,211,102,0.25)",
-                      color: "#25D366", textDecoration: "none", fontSize: 13, fontWeight: 700, fontFamily: fontDisp,
+                      color: "#25D366", textDecoration: "none", fontSize: 13, fontWeight: 500, fontFamily: fontDisp,
                       transition: "all 0.2s",
                     }}
                   >
@@ -102,7 +102,7 @@ const LandingPagePreview = ({ client, asesor, asesorWA = "", asesorCal = "", men
                   }} style={{
                     display: "flex", alignItems: "center", gap: 8, padding: "10px 16px",
                     borderRadius: 9, background: T.glass, border: `1px solid ${T.border}`,
-                    color: T.txt2, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: font, transition: "all 0.18s",
+                    color: T.txt2, fontSize: 12, fontWeight: 400, cursor: "pointer", fontFamily: font, transition: "all 0.18s",
                   }}
                     onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.07)"; e.currentTarget.style.color = "#fff"; }}
                     onMouseLeave={e => { e.currentTarget.style.background = T.glass; e.currentTarget.style.color = T.txt2; }}
@@ -120,11 +120,11 @@ const LandingPagePreview = ({ client, asesor, asesorWA = "", asesorCal = "", men
             {/* Calendly / meeting link */}
             {calUrl && (
               <div>
-                <p style={{ fontSize: 11, color: T.txt2, marginBottom: 8, fontWeight: 600, letterSpacing: "0.04em", textTransform: "uppercase" }}>Agendar llamada</p>
+                <p style={{ fontSize: 11, color: T.txt2, marginBottom: 8, fontWeight: 400, letterSpacing: "0.04em", textTransform: "uppercase" }}>Agendar llamada</p>
                 <a href={calUrl} target="_blank" rel="noreferrer" style={{
                   display: "flex", alignItems: "center", gap: 10, padding: "12px 18px",
                   borderRadius: 10, background: P.blueS || "rgba(126,184,240,0.08)", border: `1px solid ${T.blue}30`,
-                  color: T.blue, textDecoration: "none", fontSize: 13, fontWeight: 700, fontFamily: fontDisp,
+                  color: T.blue, textDecoration: "none", fontSize: 13, fontWeight: 500, fontFamily: fontDisp,
                 }}>
                   <CalendarDays size={16} /> Abrir link de agenda
                 </a>
@@ -158,7 +158,7 @@ const LandingPagePreview = ({ client, asesor, asesorWA = "", asesorCal = "", men
             display: "flex", alignItems: "center", gap: 6, padding: "8px 16px",
             borderRadius: 8, border: `1px solid ${copied ? T.emerald + "50" : T.border}`,
             background: copied ? "rgba(109,212,168,0.08)" : T.glass,
-            cursor: "pointer", color: copied ? T.emerald : T.txt2, fontSize: 12, fontWeight: 600, fontFamily: font,
+            cursor: "pointer", color: copied ? T.emerald : T.txt2, fontSize: 12, fontWeight: 400, fontFamily: font,
             transition: "all 0.25s",
           }}>
             {copied ? <Check size={14} /> : <Copy size={14} />}
@@ -167,7 +167,7 @@ const LandingPagePreview = ({ client, asesor, asesorWA = "", asesorCal = "", men
           <button onClick={() => setShowSharePanel(true)} style={{
             display: "flex", alignItems: "center", gap: 6, padding: "8px 16px",
             borderRadius: 8, border: "none", background: "rgba(255,255,255,0.95)",
-            cursor: "pointer", color: "#0A0F18", fontSize: 12, fontWeight: 700, fontFamily: fontDisp,
+            cursor: "pointer", color: "#0A0F18", fontSize: 12, fontWeight: 500, fontFamily: fontDisp,
           }}>
             <Share2 size={14} /> Enviar al cliente
           </button>
@@ -243,7 +243,7 @@ const LandingPagePreview = ({ client, asesor, asesorWA = "", asesorCal = "", men
                 <a href={calUrl} target="_blank" rel="noreferrer" style={{
                   padding: "14px 32px", borderRadius: 12, border: "none",
                   background: "#FFFFFF", color: "#000000",
-                  fontSize: 14, fontWeight: 700, fontFamily: fontDisp,
+                  fontSize: 14, fontWeight: 500, fontFamily: fontDisp,
                   boxShadow: "0 4px 24px rgba(255,255,255,0.2)", textDecoration: "none",
                   display: "inline-flex", alignItems: "center", gap: 8,
                 }}>
@@ -253,7 +253,7 @@ const LandingPagePreview = ({ client, asesor, asesorWA = "", asesorCal = "", men
                 <button onClick={() => setShowSharePanel(true)} style={{
                   padding: "14px 32px", borderRadius: 12, border: "none",
                   background: "#FFFFFF", color: "#000000",
-                  fontSize: 14, fontWeight: 700, fontFamily: fontDisp, cursor: "pointer",
+                  fontSize: 14, fontWeight: 500, fontFamily: fontDisp, cursor: "pointer",
                   boxShadow: "0 4px 24px rgba(255,255,255,0.2)",
                 }}>
                   <CalendarDays size={15} style={{ marginRight: 8, verticalAlign: "middle" }} />Agendar Llamada
@@ -263,7 +263,7 @@ const LandingPagePreview = ({ client, asesor, asesorWA = "", asesorCal = "", men
                 <a href={waUrl} target="_blank" rel="noreferrer" style={{
                   padding: "14px 32px", borderRadius: 12,
                   border: "1px solid rgba(37,211,102,0.3)", background: "rgba(37,211,102,0.08)",
-                  color: "#25D366", fontSize: 14, fontWeight: 600, fontFamily: fontDisp,
+                  color: "#25D366", fontSize: 14, fontWeight: 400, fontFamily: fontDisp,
                   backdropFilter: "blur(10px)", textDecoration: "none",
                   display: "inline-flex", alignItems: "center", gap: 8,
                 }}>
@@ -301,7 +301,7 @@ const LandingPagePreview = ({ client, asesor, asesorWA = "", asesorCal = "", men
         <div style={{ background: "#050810", padding: "80px 40px" }}>
           <div style={{ maxWidth: 1100, margin: "0 auto" }}>
             <div style={{ textAlign: "center", marginBottom: 60 }}>
-              <p style={{ fontSize: 11, color: currentProp.accent, fontWeight: 700, letterSpacing: "0.15em", textTransform: "uppercase", marginBottom: 12 }}>PORTAFOLIO EXCLUSIVO</p>
+              <p style={{ fontSize: 11, color: currentProp.accent, fontWeight: 500, letterSpacing: "0.15em", textTransform: "uppercase", marginBottom: 12 }}>PORTAFOLIO EXCLUSIVO</p>
               <h2 style={{ fontSize: 36, fontWeight: 300, color: T.txt, fontFamily: fontDisp, letterSpacing: "-0.02em" }}>
                 Propiedades Seleccionadas
               </h2>
@@ -379,7 +379,7 @@ const LandingPagePreview = ({ client, asesor, asesorWA = "", asesorCal = "", men
                           <m.icon size={14} color={m.c} />
                           <span style={{ fontSize: 10, color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: "0.05em" }}>{m.label}</span>
                         </div>
-                        <p style={{ fontSize: 16, fontWeight: 600, color: T.txt, fontFamily: fontDisp }}>{m.value}</p>
+                        <p style={{ fontSize: 16, fontWeight: 400, color: T.txt, fontFamily: fontDisp }}>{m.value}</p>
                       </div>
                     ))}
                   </div>
@@ -387,7 +387,7 @@ const LandingPagePreview = ({ client, asesor, asesorWA = "", asesorCal = "", men
                   {/* Highlights */}
                   {(prop.highlights || []).length > 0 && (
                   <div style={{ marginBottom: 24 }}>
-                    <p style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 12, fontWeight: 600 }}>Por qué esta propiedad</p>
+                    <p style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 12, fontWeight: 400 }}>Por qué esta propiedad</p>
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
                       {prop.highlights.map((h, i) => (
                         <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", borderRadius: 10, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.05)" }}>
@@ -402,7 +402,7 @@ const LandingPagePreview = ({ client, asesor, asesorWA = "", asesorCal = "", men
                   {/* Amenities */}
                   {(prop.amenities || []).length > 0 && (
                   <div style={{ marginBottom: 24 }}>
-                    <p style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 12, fontWeight: 600 }}>Amenidades</p>
+                    <p style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 12, fontWeight: 400 }}>Amenidades</p>
                     <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
                       {prop.amenities.map((a, i) => (
                         <span key={i} style={{
@@ -422,7 +422,7 @@ const LandingPagePreview = ({ client, asesor, asesorWA = "", asesorCal = "", men
                     display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap",
                   }}>
                     <div>
-                      <p style={{ fontSize: 13, fontWeight: 600, color: T.txt, fontFamily: fontDisp, marginBottom: 4 }}>
+                      <p style={{ fontSize: 13, fontWeight: 400, color: T.txt, fontFamily: fontDisp, marginBottom: 4 }}>
                         {(driveLinks[prop.id] || prop.driveLink) ? "Galería de imágenes disponible" : "Galería de imágenes"}
                       </p>
                       <p style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", fontFamily: font }}>
@@ -441,7 +441,7 @@ const LandingPagePreview = ({ client, asesor, asesorWA = "", asesorCal = "", men
                           border: `1px solid ${prop.accent}50`,
                           background: `${prop.accent}15`,
                           color: prop.accent, textDecoration: "none",
-                          fontSize: 13, fontWeight: 700, fontFamily: fontDisp,
+                          fontSize: 13, fontWeight: 500, fontFamily: fontDisp,
                           whiteSpace: "nowrap",
                         }}
                       >
@@ -468,7 +468,7 @@ const LandingPagePreview = ({ client, asesor, asesorWA = "", asesorCal = "", men
         <div style={{ background: "#030508", padding: "80px 40px" }}>
           <div style={{ maxWidth: 900, margin: "0 auto" }}>
             <div style={{ textAlign: "center", marginBottom: 50 }}>
-              <p style={{ fontSize: 11, color: T.accent, fontWeight: 700, letterSpacing: "0.15em", textTransform: "uppercase", marginBottom: 12 }}>DATOS DEL MERCADO 2026</p>
+              <p style={{ fontSize: 11, color: T.accent, fontWeight: 500, letterSpacing: "0.15em", textTransform: "uppercase", marginBottom: 12 }}>DATOS DEL MERCADO 2026</p>
               <h2 style={{ fontSize: 32, fontWeight: 300, color: T.txt, fontFamily: fontDisp, letterSpacing: "-0.02em" }}>
                 ¿Por qué la Riviera Maya?
               </h2>
@@ -494,7 +494,7 @@ const LandingPagePreview = ({ client, asesor, asesorWA = "", asesorCal = "", men
 
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
               <div style={{ padding: 28, borderRadius: 16, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)" }}>
-                <p style={{ fontSize: 14, fontWeight: 700, color: T.txt, fontFamily: fontDisp, marginBottom: 18 }}>Ventajas para Inversionistas</p>
+                <p style={{ fontSize: 14, fontWeight: 500, color: T.txt, fontFamily: fontDisp, marginBottom: 18 }}>Ventajas para Inversionistas</p>
                 {[
                   "Propiedad 100% legal para extranjeros via fideicomiso",
                   "Impuestos prediales mínimos vs EE.UU./Canadá",
@@ -511,7 +511,7 @@ const LandingPagePreview = ({ client, asesor, asesorWA = "", asesorCal = "", men
               </div>
 
               <div style={{ padding: 28, borderRadius: 16, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)" }}>
-                <p style={{ fontSize: 14, fontWeight: 700, color: T.txt, fontFamily: fontDisp, marginBottom: 18 }}>Infraestructura</p>
+                <p style={{ fontSize: 14, fontWeight: 500, color: T.txt, fontFamily: fontDisp, marginBottom: 18 }}>Infraestructura</p>
                 {[
                   { title: "Aeropuerto de Tulum", desc: "Nuevo aeropuerto internacional, abrió en 2025" },
                   { title: "Tren Maya", desc: "Conectividad ferroviaria regional — impulsa plusvalía" },
@@ -519,7 +519,7 @@ const LandingPagePreview = ({ client, asesor, asesorWA = "", asesorCal = "", men
                   { title: "Plusvalía real", desc: "8% anual después de inflación" },
                 ].map((inf, i) => (
                   <div key={i} style={{ marginBottom: 16, padding: "12px 14px", borderRadius: 10, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.04)" }}>
-                    <p style={{ fontSize: 13, fontWeight: 600, color: T.txt, fontFamily: fontDisp }}>{inf.title}</p>
+                    <p style={{ fontSize: 13, fontWeight: 400, color: T.txt, fontFamily: fontDisp }}>{inf.title}</p>
                     <p style={{ fontSize: 11, color: "rgba(255,255,255,0.5)", marginTop: 4, lineHeight: 1.4 }}>{inf.desc}</p>
                   </div>
                 ))}
@@ -543,7 +543,7 @@ const LandingPagePreview = ({ client, asesor, asesorWA = "", asesorCal = "", men
                 <a href={calUrl} target="_blank" rel="noreferrer" style={{
                   padding: "16px 40px", borderRadius: 12, border: "none",
                   background: "#FFFFFF", color: "#000000",
-                  fontSize: 15, fontWeight: 700, fontFamily: fontDisp,
+                  fontSize: 15, fontWeight: 500, fontFamily: fontDisp,
                   boxShadow: "0 4px 24px rgba(255,255,255,0.2)", textDecoration: "none",
                   display: "inline-flex", alignItems: "center", gap: 8,
                 }}>
@@ -553,7 +553,7 @@ const LandingPagePreview = ({ client, asesor, asesorWA = "", asesorCal = "", men
                 <button style={{
                   padding: "16px 40px", borderRadius: 12, border: "none",
                   background: "#FFFFFF", color: "#000000",
-                  fontSize: 15, fontWeight: 700, fontFamily: fontDisp, cursor: "pointer",
+                  fontSize: 15, fontWeight: 500, fontFamily: fontDisp, cursor: "pointer",
                   boxShadow: "0 4px 24px rgba(255,255,255,0.2)",
                 }}>
                   Agendar Llamada con {asesor.split(" ")[0]}
@@ -565,7 +565,7 @@ const LandingPagePreview = ({ client, asesor, asesorWA = "", asesorCal = "", men
                   style={{
                     padding: "16px 40px", borderRadius: 12,
                     border: "1px solid rgba(37,211,102,0.3)", background: "rgba(37,211,102,0.08)",
-                    color: "#25D366", fontSize: 15, fontWeight: 600, fontFamily: fontDisp,
+                    color: "#25D366", fontSize: 15, fontWeight: 400, fontFamily: fontDisp,
                     textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 8,
                   }}
                 >

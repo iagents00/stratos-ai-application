@@ -1868,7 +1868,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
       <span onClick={() => handleSort(field)} style={{
         cursor: "pointer", userSelect: "none", display: "flex", alignItems: "center", gap: 3,
         justifyContent: justify,
-        color: active ? T.accent : T.txt3, fontSize: 9.5, fontWeight: 700,
+        color: active ? T.accent : T.txt3, fontSize: 9.5, fontWeight: 500,
         fontFamily: fontDisp, letterSpacing: "0.07em", textTransform: "uppercase",
         transition: "color 0.15s",
       }}>
@@ -2170,7 +2170,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
         // El botón de añadir se mueve al FAB (abajo) — más alcance de pulgar.
         <div style={{ display: "flex", alignItems: "baseline", gap: 10 }}>
           <h2 style={{
-            fontSize: 24, fontWeight: 600, letterSpacing: "-0.03em",
+            fontSize: 24, fontWeight: 400, letterSpacing: "-0.03em",
             color: isLight ? T.txt : "#FFFFFF", fontFamily: fontDisp, margin: 0,
             lineHeight: 1,
           }}>
@@ -2195,8 +2195,8 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                 {L.pageTitle}{" "}
                 <span style={{ fontWeight: 300, color: isLight ? T.txt3 : "rgba(255,255,255,0.38)" }}>{L.pageTitleAccent}</span>
               </h2>
-              <span style={{ fontSize: 10, fontWeight: 700, color: T.txt3, background: T.glass, border: `1px solid ${T.border}`, padding: "3px 9px", borderRadius: 99, letterSpacing: "0.06em" }}>{visibleLeads.length} {L.entityPlural}</span>
-              {!canSeeAll && <span style={{ fontSize: 10, fontWeight: 700, color: T.amber, background: `${T.amber}10`, border: `1px solid ${T.amber}28`, padding: "3px 9px", borderRadius: 99, letterSpacing: "0.04em" }}>Vista personal</span>}
+              <span style={{ fontSize: 10, fontWeight: 500, color: T.txt3, background: T.glass, border: `1px solid ${T.border}`, padding: "3px 9px", borderRadius: 99, letterSpacing: "0.06em" }}>{visibleLeads.length} {L.entityPlural}</span>
+              {!canSeeAll && <span style={{ fontSize: 10, fontWeight: 500, color: T.amber, background: `${T.amber}10`, border: `1px solid ${T.amber}28`, padding: "3px 9px", borderRadius: 99, letterSpacing: "0.04em" }}>Vista personal</span>}
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
               <p style={{ fontSize: 11.5, color: T.txt3, fontFamily: font, margin: 0 }}>
@@ -2212,7 +2212,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                     background: isLight ? "rgba(255,255,255,0.72)" : "rgba(15,23,42,0.56)",
                     border: `1px solid ${isLight ? "rgba(16,185,129,0.20)" : "rgba(110,231,194,0.18)"}`,
                     color: T.accent,
-                    fontSize: 10.5, fontWeight: 750, fontFamily: font,
+                    fontSize: 10.5, fontWeight: 500, fontFamily: font,
                     letterSpacing: "0.01em",
                     boxShadow: isLight ? "0 1px 2px rgba(15,23,42,0.04)" : "none",
                   }}
@@ -2238,7 +2238,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                     : "transparent",
                   border: `1px solid ${showMetrics ? T.accentB : T.border}`,
                   color: showMetrics ? T.accent : T.txt2,
-                  fontSize: 12, fontWeight: 600, fontFamily: fontDisp, cursor: "pointer",
+                  fontSize: 12, fontWeight: 400, fontFamily: fontDisp, cursor: "pointer",
                   letterSpacing: "0.01em", transition: "all 0.16s", flexShrink: 0,
                 }}
               ><Activity size={13} /> Indicadores</button>
@@ -2251,7 +2251,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                 : "linear-gradient(135deg, rgba(110,231,194,0.16), rgba(110,231,194,0.07))",
               border: `1px solid ${isLight ? "transparent" : T.accentB}`,
               color: isLight ? "#FFFFFF" : T.accent,
-              fontSize: 12, fontWeight: 700, fontFamily: fontDisp, cursor: "pointer",
+              fontSize: 12, fontWeight: 500, fontFamily: fontDisp, cursor: "pointer",
               letterSpacing: "0.01em", transition: "all 0.2s", flexShrink: 0,
               boxShadow: isLight ? `0 4px 14px ${T.accent}40` : "none",
             }}
@@ -2369,7 +2369,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                       alignSelf: "center",
                     }} />
                     <h3 style={{
-                      margin: 0, fontSize: 16, fontWeight: 600,
+                      margin: 0, fontSize: 16, fontWeight: 400,
                       color: isLight ? T.txt : "#FFFFFF",
                       fontFamily: fontDisp, letterSpacing: "-0.025em",
                     }}>Prioridad</h3>
@@ -2399,7 +2399,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                         animation: "priorityBreathe 2.4s ease-in-out infinite",
                       }} />
                       <span style={{
-                        fontSize: 12.5, fontWeight: 800,
+                        fontSize: 12.5, fontWeight: 500,
                         color: isLight ? T.accentDark : "#FFFFFF",
                         letterSpacing: "-0.005em", fontFamily: fontDisp,
                       }}>{L.priorityList}</span>
@@ -2407,14 +2407,14 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                     <span style={{
                       fontSize: 11, color: T.txt2, fontFamily: font, fontWeight: 500,
                     }}>
-                      <span style={{ color: T.accent, fontWeight: 700 }}>{priorityLeads.length}</span> cliente{priorityLeads.length !== 1 ? "s" : ""} esperando acción
+                      <span style={{ color: T.accent, fontWeight: 500 }}>{priorityLeads.length}</span> cliente{priorityLeads.length !== 1 ? "s" : ""} esperando acción
                     </span>
                   </>
                 )}
               </div>
               {/* Selector de orden — al costado derecho */}
               <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
-                <span style={{ fontSize: 10, color: T.txt3, fontFamily: font, letterSpacing: "0.03em", textTransform: "uppercase", fontWeight: 600 }}>Ordenar</span>
+                <span style={{ fontSize: 10, color: T.txt3, fontFamily: font, letterSpacing: "0.03em", textTransform: "uppercase", fontWeight: 400 }}>Ordenar</span>
                 <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
                   <select
                     value={prioritySort}
@@ -2429,7 +2429,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                         : `${T.accent}14`,
                       border: `1px solid ${prioritySort === "manual" ? T.border : `${T.accent}44`}`,
                       color: prioritySort === "manual" ? T.txt2 : (isLight ? T.accentDark || T.accent : T.accent),
-                      fontSize: 11, fontWeight: 600, fontFamily: font,
+                      fontSize: 11, fontWeight: 400, fontFamily: font,
                       outline: "none", cursor: "pointer",
                       transition: "background 0.15s, border-color 0.15s, color 0.15s",
                     }}
@@ -2591,7 +2591,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                                   : "rgba(255,255,255,0.07)",
                                 border: `1px solid ${isLight ? "rgba(15,23,42,0.14)" : "rgba(255,255,255,0.14)"}`,
                                 color: isLight ? "#0B1220" : "#FFFFFF",
-                                fontSize: 11.5, fontWeight: 700, fontFamily: fontDisp,
+                                fontSize: 11.5, fontWeight: 500, fontFamily: fontDisp,
                                 letterSpacing: "-0.01em",
                                 lineHeight: 1, outline: "none", cursor: "pointer",
                                 textAlign: "center", textAlignLast: "center",
@@ -2653,7 +2653,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                           {meta.pulse && (
                             <div style={{ width: 7, height: 7, borderRadius: "50%", flexShrink: 0, background: meta.color, boxShadow: `0 0 6px ${meta.color}90`, animation: "pulse 1.8s ease-in-out infinite" }} />
                           )}
-                          <p style={{ fontSize: 17, fontWeight: 700, color: isLight ? T.txt : "#FFFFFF", fontFamily: fontDisp, letterSpacing: "-0.03em", lineHeight: 1.2, margin: 0 }}>{l.n}</p>
+                          <p style={{ fontSize: 17, fontWeight: 500, color: isLight ? T.txt : "#FFFFFF", fontFamily: fontDisp, letterSpacing: "-0.03em", lineHeight: 1.2, margin: 0 }}>{l.n}</p>
                         </div>
                         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 6 }}>
                           <div style={{ display: "flex", alignItems: "center", gap: 5, minWidth: 0, flexWrap: "wrap" }}>
@@ -2666,7 +2666,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                             })()}
                             <SourceBadge source={l.source} isLight={isLight} />
                           </div>
-                          <span style={{ fontSize: 11.5, fontWeight: 600, color: isLight ? T.txt2 : "rgba(255,255,255,0.55)", fontFamily: fontDisp, letterSpacing: "-0.01em", flexShrink: 0 }}>{l.budget}</span>
+                          <span style={{ fontSize: 11.5, fontWeight: 400, color: isLight ? T.txt2 : "rgba(255,255,255,0.55)", fontFamily: fontDisp, letterSpacing: "-0.01em", flexShrink: 0 }}>{l.budget}</span>
                         </div>
                       </div>
 
@@ -2682,7 +2682,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                               <div style={{ position: "absolute", top: -2, right: -2, width: 6, height: 6, borderRadius: "50%", background: agent.color, boxShadow: `0 0 5px ${agent.color}`, animation: "pulse 2s ease-in-out infinite" }} />
                             </div>
                             <div style={{ flex: 1, minWidth: 0 }}>
-                              <p style={{ margin: 0, fontSize: 9, fontWeight: 800, color: agent.color, letterSpacing: "0.08em", textTransform: "uppercase", fontFamily: fontDisp }}>IA activa · {agent.short}</p>
+                              <p style={{ margin: 0, fontSize: 9, fontWeight: 500, color: agent.color, letterSpacing: "0.08em", textTransform: "uppercase", fontFamily: fontDisp }}>IA activa · {agent.short}</p>
                               <p style={{ margin: 0, fontSize: 9, color: T.txt3, fontFamily: font }}>Tú conservas el control</p>
                             </div>
                             <button
@@ -2730,14 +2730,14 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                                 {/* Left accent bar */}
                                 <div style={{ width: 2.5, height: 14, borderRadius: 2, background: meta.color, flexShrink: 0, opacity: 0.85 }} />
                                 <span style={{
-                                  fontSize: 9, fontWeight: 700,
+                                  fontSize: 9, fontWeight: 500,
                                   color: isLight ? "rgba(15,23,42,0.45)" : "rgba(255,255,255,0.42)",
                                   letterSpacing: "0.10em", textTransform: "uppercase", fontFamily: fontDisp,
                                 }}>Próxima acción</span>
                               </div>
                               {!isEditingAction && l.nextActionDate && (
                                 <span style={{
-                                  fontSize: 9, fontWeight: 700,
+                                  fontSize: 9, fontWeight: 500,
                                   color: isLight ? meta.color : "rgba(255,255,255,0.45)",
                                   background: isLight ? `${meta.color}12` : "rgba(255,255,255,0.06)",
                                   padding: "2px 8px", borderRadius: 99, fontFamily: fontDisp,
@@ -2801,7 +2801,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                                     background: isLight ? "#FFFFFF" : "rgba(255,255,255,0.04)",
                                     border: `1px solid ${isLight ? meta.color + "44" : meta.color + "33"}`,
                                     color: isLight ? T.txt : "#E2E8F0",
-                                    fontSize: 11, fontWeight: 600,
+                                    fontSize: 11, fontWeight: 400,
                                     fontFamily: fontDisp, letterSpacing: "0.01em",
                                     outline: "none",
                                   }}
@@ -2813,7 +2813,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                                       padding: "6px 10px", borderRadius: 7,
                                       background: "transparent",
                                       border: `1px solid ${T.border}`,
-                                      color: T.txt3, fontSize: 10.5, fontWeight: 700,
+                                      color: T.txt3, fontSize: 10.5, fontWeight: 500,
                                       fontFamily: fontDisp, letterSpacing: "0.02em",
                                       cursor: "pointer", transition: "all 0.15s",
                                     }}
@@ -2827,7 +2827,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                                         : `linear-gradient(135deg, ${meta.color}33, ${meta.color}18)`,
                                       border: `1px solid ${isLight ? "transparent" : meta.color + "55"}`,
                                       color: isLight ? "#FFFFFF" : meta.color,
-                                      fontSize: 10.5, fontWeight: 800,
+                                      fontSize: 10.5, fontWeight: 500,
                                       fontFamily: fontDisp, letterSpacing: "0.02em",
                                       cursor: "pointer", transition: "all 0.15s",
                                       display: "inline-flex", alignItems: "center", gap: 4,
@@ -2854,7 +2854,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                             background: isLight ? T.accentG : "#FFFFFF",
                             border: isLight ? "none" : "1px solid rgba(255,255,255,0.90)",
                             color: isLight ? "#FFFFFF" : "#040C18",
-                            fontSize: 12.5, fontWeight: 700, fontFamily: fontDisp,
+                            fontSize: 12.5, fontWeight: 500, fontFamily: fontDisp,
                             letterSpacing: "-0.02em",
                             cursor: "pointer",
                             transition: "all 0.20s ease",
@@ -3011,14 +3011,14 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                   <UserCheck size={14} color={isLight ? (T.accentDark || T.accent) : T.accent} strokeWidth={2.4} />
                 </div>
                 <h3 style={{
-                  fontSize: 15.5, fontWeight: 700,
+                  fontSize: 15.5, fontWeight: 500,
                   color: isLight ? T.txt : "#FFFFFF",
                   fontFamily: fontDisp, letterSpacing: "-0.025em", margin: 0,
                 }}>{L.newEntity}</h3>
                 {/* Subtítulo: oculto en mobile (no cabe y rompe el header) */}
                 {!isMobile && (
                   <span style={{
-                    fontSize: 10, fontWeight: 700,
+                    fontSize: 10, fontWeight: 500,
                     color: T.txt3, fontFamily: font, letterSpacing: "0.02em",
                     whiteSpace: "nowrap",
                   }}>· Completa los campos del formulario</span>
@@ -3044,7 +3044,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
               const chipBg        = isLight ? "rgba(15,23,42,0.04)" : "rgba(255,255,255,0.03)";
               const accentStrong  = isLight ? (T.accentDark || T.accent) : T.accent;
               const labelStyle = {
-                fontSize: 9, fontWeight: 700, color: T.txt3,
+                fontSize: 9, fontWeight: 500, color: T.txt3,
                 letterSpacing: "0.06em", textTransform: "uppercase",
                 fontFamily: fontDisp, display: "flex", alignItems: "center", gap: 4, marginBottom: 5,
               };
@@ -3160,13 +3160,13 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                   }}>
                     <AlertTriangle size={15} color={baseColor} strokeWidth={2.2} style={{ flexShrink: 0, marginTop: 1 }} />
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 12, fontWeight: 700, color: headColor, fontFamily: fontDisp, letterSpacing: "-0.01em", marginBottom: 3 }}>
+                      <div style={{ fontSize: 12, fontWeight: 500, color: headColor, fontFamily: fontDisp, letterSpacing: "-0.01em", marginBottom: 3 }}>
                         {isMine ? "Ya tienes este cliente en tu CRM" : "Este cliente ya está registrado en el CRM"}
                       </div>
                       <div style={{ fontSize: 11.5, color: T.txt2, lineHeight: 1.45 }}>
-                        <strong style={{ color: T.txt, fontWeight: 700 }}>{duplicateMatch.lead_name || "Sin nombre"}</strong>
+                        <strong style={{ color: T.txt, fontWeight: 500 }}>{duplicateMatch.lead_name || "Sin nombre"}</strong>
                         {!isMine && (
-                          <> · asignado a <strong style={{ color: T.txt, fontWeight: 700 }}>{duplicateMatch.asesor_name || "Sin asesor"}</strong></>
+                          <> · asignado a <strong style={{ color: T.txt, fontWeight: 500 }}>{duplicateMatch.asesor_name || "Sin asesor"}</strong></>
                         )}
                         {duplicateMatch.lead_stage && (
                           <> · etapa <strong style={{ color: T.txt }}>{duplicateMatch.lead_stage}</strong></>
@@ -3201,7 +3201,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                                 : "linear-gradient(180deg, rgba(255,255,255,0.075), rgba(255,255,255,0.03))",
                               border: `1px solid ${isLight ? "rgba(15,23,42,0.12)" : "rgba(255,255,255,0.12)"}`,
                               color: isLight ? T.txt2 : T.txt,
-                              fontSize: 11, fontWeight: 600, letterSpacing: "0.01em",
+                              fontSize: 11, fontWeight: 400, letterSpacing: "0.01em",
                               cursor: "pointer", fontFamily: font,
                               transition: "transform .16s cubic-bezier(.4,0,.2,1), filter .16s ease, border-color .16s ease",
                               WebkitTapHighlightColor: "transparent",
@@ -3251,7 +3251,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                               background: isLight ? `${T.accent}1C` : `${T.accent}1A`,
                               border: `1px solid ${T.accent}55`,
                               color: headColor,
-                              fontSize: 10.5, fontWeight: 700, cursor: "pointer",
+                              fontSize: 10.5, fontWeight: 500, cursor: "pointer",
                               fontFamily: font,
                             }}
                           >
@@ -3284,7 +3284,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                         <DollarSign size={9} color={T.txt3} /> Presupuesto
                       </span>
                       {hasParsed && (
-                        <span style={{ fontSize: 9, fontWeight: 700, color: accentStrong, fontFamily: fontDisp, letterSpacing: "-0.005em", textTransform: "none" }}>
+                        <span style={{ fontSize: 9, fontWeight: 500, color: accentStrong, fontFamily: fontDisp, letterSpacing: "-0.005em", textTransform: "none" }}>
                           = {formatBudget(parsed)}
                         </span>
                       )}
@@ -3421,7 +3421,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
               <div style={{ gridColumn: "1 / -1" }}>
                 <label style={labelStyle}>
                   <Users size={9} color={T.txt3} /> Asesor asignado
-                  {isAdminRole && <span style={{ color: "#F87171", fontWeight: 700 }}> *</span>}
+                  {isAdminRole && <span style={{ color: "#F87171", fontWeight: 500 }}> *</span>}
                 </label>
                 <ClickDropdown
                   value={newLead.asesor || ""}
@@ -3460,7 +3460,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                           background: isLight ? `${stageCol}0E` : `${stageCol}0C`,
                           border: `1px solid ${isLight ? `${stageCol}38` : `${stageCol}44`}`,
                           color: stageTitleC,
-                          fontSize: 13, fontWeight: 600, fontFamily: font,
+                          fontSize: 13, fontWeight: 400, fontFamily: font,
                           cursor: "pointer",
                           display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8,
                           transition: "all 0.16s",
@@ -3631,7 +3631,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                 flex: 1, height: 38, borderRadius: 10,
                 background: "transparent",
                 border: `1px solid ${isLight ? "rgba(15,23,42,0.08)" : T.border}`,
-                color: T.txt3, fontSize: 12.5, fontWeight: 600,
+                color: T.txt3, fontSize: 12.5, fontWeight: 400,
                 cursor: "pointer", fontFamily: font, transition: "all 0.18s",
               }}
                 onMouseEnter={e => { e.currentTarget.style.background = isLight ? "rgba(15,23,42,0.04)" : T.glass; e.currentTarget.style.color = T.txt2; }}
@@ -3646,7 +3646,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                 background: primaryBg,
                 border: `1px solid ${primaryBorder}`,
                 color: primaryColor,
-                fontSize: 12.5, fontWeight: 700,
+                fontSize: 12.5, fontWeight: 500,
                 cursor: (canSubmit && !submittingLead) ? "pointer" : "not-allowed",
                 fontFamily: fontDisp, letterSpacing: "-0.02em",
                 transition: "all 0.2s",
@@ -3756,7 +3756,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
               }} />
               {/* Count */}
               <span style={{
-                fontSize: 19, fontWeight: 800, lineHeight: 1,
+                fontSize: 19, fontWeight: 500, lineHeight: 1,
                 color: countColor,
                 fontFamily: fontDisp, letterSpacing: "-0.03em",
                 transition: "color 0.18s",
@@ -3951,7 +3951,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
               style={{
                 height: 32, padding: "0 12px", borderRadius: 9, flexShrink: 0,
                 display: "flex", alignItems: "center", gap: 6, cursor: "pointer",
-                fontSize: 11, fontWeight: 600, fontFamily: fontDisp,
+                fontSize: 11, fontWeight: 400, fontFamily: fontDisp,
                 border: `1px solid ${bulkMode ? T.accent : (isLight ? "rgba(15,23,42,0.12)" : "rgba(255,255,255,0.12)")}`,
                 background: bulkMode ? (isLight ? `${T.accent}18` : `${T.accent}1E`) : "transparent",
                 color: bulkMode
@@ -3968,7 +3968,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
           {/* Count badge — solo desktop. En mobile el header ya muestra el total. */}
           {!isMobile && (
             <span style={{
-              fontSize: 10.5, fontWeight: 600, fontFamily: fontDisp, letterSpacing: "0.02em",
+              fontSize: 10.5, fontWeight: 400, fontFamily: fontDisp, letterSpacing: "0.02em",
               color: isLight ? "rgba(15,23,42,0.38)" : "rgba(255,255,255,0.32)",
               background: isLight ? "rgba(15,23,42,0.04)" : "rgba(255,255,255,0.04)",
               border: `1px solid ${isLight ? "rgba(15,23,42,0.07)" : "rgba(255,255,255,0.07)"}`,
@@ -3991,7 +3991,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                 <SH label="Etapa" field="st" align="center" />
                 <SH label="Seguim." field="seguimientos" align="center" />
                 {!co && <SH label="Score" field="sc" align="center" />}
-                <span style={{ fontSize: 9.5, fontWeight: 700, color: T.txt3, fontFamily: fontDisp, letterSpacing: "0.07em", textTransform: "uppercase", textAlign: "center" }}>Acciones</span>
+                <span style={{ fontSize: 9.5, fontWeight: 500, color: T.txt3, fontFamily: fontDisp, letterSpacing: "0.07em", textTransform: "uppercase", textAlign: "center" }}>Acciones</span>
               </div>
             )}
 
@@ -4090,7 +4090,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                         ? `inset 0 1px 0 rgba(255,255,255,0.9), 0 1px 2px ${T.violet}14`
                         : `inset 0 1px 0 rgba(255,255,255,0.07)`,
                       display: "flex", alignItems: "center", justifyContent: "center",
-                      fontSize: 13, fontWeight: 800,
+                      fontSize: 13, fontWeight: 500,
                       color: isLight ? `color-mix(in srgb, ${T.violet} 62%, #0B1220 38%)` : "rgba(255,255,255,0.72)",
                       flexShrink: 0, fontFamily: fontDisp, letterSpacing: "-0.01em",
                     }}>{l.n.charAt(0)}</div>
@@ -4110,7 +4110,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                             T={T} isLight={isLight}
                             placeholder={L.entityNamePlaceholder}
                             readStyle={{
-                              fontSize: 13.5, fontWeight: 700, letterSpacing: "-0.018em",
+                              fontSize: 13.5, fontWeight: 500, letterSpacing: "-0.018em",
                               color: isLight ? T.txt : "#FFFFFF", fontFamily: fontDisp,
                               // Una sola línea con ellipsis — ya no se rompe
                               // mid-word ("Aria m" o "Migu el"). El title del
@@ -4118,13 +4118,13 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                               display: "block", maxWidth: "100%",
                               whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
                             }}
-                            editStyle={{ fontSize: 13.5, fontWeight: 700, fontFamily: fontDisp }}
+                            editStyle={{ fontSize: 13.5, fontWeight: 500, fontFamily: fontDisp }}
                           />
                         </span>
 
                         {l.isNew && (
                           <span style={{
-                            fontSize: 7, fontWeight: 800, letterSpacing: "0.09em",
+                            fontSize: 7, fontWeight: 500, letterSpacing: "0.09em",
                             color: isLight ? "rgba(15,23,42,0.40)" : "rgba(255,255,255,0.35)",
                             background: isLight ? "rgba(15,23,42,0.05)" : "rgba(255,255,255,0.05)",
                             border: `1px solid ${isLight ? "rgba(15,23,42,0.10)" : "rgba(255,255,255,0.09)"}`,
@@ -4219,7 +4219,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                                     minWidth: 200, padding: 0,
                                     background: "transparent", border: "none", outline: "none",
                                     color: isLight ? `color-mix(in srgb, ${stageC} 35%, #0B1220 65%)` : "#FFFFFF",
-                                    fontSize: 11.5, fontWeight: 800, fontFamily: font,
+                                    fontSize: 11.5, fontWeight: 500, fontFamily: font,
                                     letterSpacing: "0.005em",
                                   }}
                                 />
@@ -4242,7 +4242,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                                   color: isLight
                                     ? `color-mix(in srgb, ${stageC} 55%, #0B1220 45%)`
                                     : stageC,
-                                  fontSize: 10.5, fontWeight: 600,
+                                  fontSize: 10.5, fontWeight: 400,
                                   fontFamily: font,
                                   cursor: "text", outline: "none",
                                   transition: "background 0.14s, border-color 0.14s",
@@ -4278,7 +4278,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                                   background: "transparent",
                                   border: `1px dashed ${T.blue}${isLight ? "60" : "44"}`,
                                   color: isLight ? `color-mix(in srgb, ${T.blue} 55%, #0B1220 45%)` : T.blue,
-                                  fontSize: 10.5, fontWeight: 600, fontFamily: font,
+                                  fontSize: 10.5, fontWeight: 400, fontFamily: font,
                                   cursor: "text", outline: "none",
                                   transition: "background 0.14s, border-style 0.14s",
                                   whiteSpace: "nowrap", flexShrink: 0,
@@ -4409,7 +4409,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                       placeholder="300k · 1.5M"
                       emptyText="+ presupuesto"
                       readStyle={{
-                        fontSize: 13, fontWeight: 800, letterSpacing: "-0.022em",
+                        fontSize: 13, fontWeight: 500, letterSpacing: "-0.022em",
                         color: l.budget
                           ? (isLight ? T.txt : "#FFFFFF")
                           : (isLight ? "rgba(15,23,42,0.32)" : "rgba(255,255,255,0.30)"),
@@ -4417,7 +4417,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                         fontStyle: l.budget ? "normal" : "italic",
                         textAlign: "right",
                       }}
-                      editStyle={{ fontSize: 13, fontWeight: 800, fontFamily: fontDisp, width: 100, textAlign: "right" }}
+                      editStyle={{ fontSize: 13, fontWeight: 500, fontFamily: fontDisp, width: 100, textAlign: "right" }}
                     />
                   </div>
                   )}
@@ -4433,7 +4433,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                     }}>
                       <span style={{
                         display: "inline-flex", alignItems: "center", gap: 6,
-                        fontSize: 11, fontWeight: 700, color: isLight
+                        fontSize: 11, fontWeight: 500, color: isLight
                           ? `color-mix(in srgb, ${stageC} 55%, #0B1220 45%)`
                           : stageC,
                         fontFamily: fontDisp, letterSpacing: "0.01em",
@@ -4447,7 +4447,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                       </span>
                       {l.daysInactive >= 5 && (
                         <span style={{
-                          fontSize: 10, fontWeight: 600,
+                          fontSize: 10, fontWeight: 400,
                           color: uc, fontFamily: fontDisp,
                           background: `${uc}12`,
                           padding: "2px 7px", borderRadius: 99,
@@ -4476,8 +4476,8 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                         onTouchStart={(e) => { e.currentTarget.style.transform = "scale(0.93)"; e.currentTarget.style.background = isLight ? `${T.accent}12` : `${T.accent}1A`; e.currentTarget.style.borderColor = `${T.accent}55`; }}
                         onTouchEnd={(e) => { e.currentTarget.style.transform = "scale(1)"; e.currentTarget.style.background = isLight ? "rgba(15,23,42,0.025)" : "rgba(255,255,255,0.04)"; e.currentTarget.style.borderColor = isLight ? "rgba(15,23,42,0.10)" : "rgba(255,255,255,0.10)"; }}
                       >
-                        <span style={{ fontSize: 12.5, fontWeight: 800, color: sc >= 80 ? T.emerald : sc >= 60 ? T.blue : sc >= 40 ? T.cyan : T.violet, fontFamily: fontDisp, letterSpacing: "-0.01em" }}>{sc}</span>
-                        <span style={{ fontSize: 8, color: T.txt3, fontFamily: fontDisp, fontWeight: 800, letterSpacing: "0.07em", textTransform: "uppercase" }}>score</span>
+                        <span style={{ fontSize: 12.5, fontWeight: 500, color: sc >= 80 ? T.emerald : sc >= 60 ? T.blue : sc >= 40 ? T.cyan : T.violet, fontFamily: fontDisp, letterSpacing: "-0.01em" }}>{sc}</span>
+                        <span style={{ fontSize: 8, color: T.txt3, fontFamily: fontDisp, fontWeight: 500, letterSpacing: "0.07em", textTransform: "uppercase" }}>score</span>
                         <ChevronRight size={13} color={T.accent} strokeWidth={2.6} style={{ marginLeft: 1 }} />
                       </button>
                     </div>
@@ -4515,13 +4515,13 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                       <select value={l.st} onChange={e => { const v = e.target.value; updateLead({ ...l, st: v }); }}
                         style={{
                           background: "transparent", border: "none", padding: 0,
-                          fontSize: 10.5, fontWeight: 600,
+                          fontSize: 10.5, fontWeight: 400,
                           color: isLight ? `color-mix(in srgb, ${stageC} 50%, #0B1220 50%)` : stageC,
                           cursor: "pointer", outline: "none", appearance: "none",
                           maxWidth: "100%", overflow: "hidden", textOverflow: "ellipsis",
                           fontFamily: font, letterSpacing: "0.005em",
                         }}>
-                        {STAGES.map(s => <option key={s} value={s} style={{ background: "#111318", color: "#fff", fontWeight: 600 }}>{s}</option>)}
+                        {STAGES.map(s => <option key={s} value={s} style={{ background: "#111318", color: "#fff", fontWeight: 400 }}>{s}</option>)}
                       </select>
                       <ChevronDown size={10} strokeWidth={2}
                         style={{
@@ -4553,12 +4553,12 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                       </div>
                       {(() => {
                         const lead = l;
-                        const mbs = { width: 15, height: 15, borderRadius: 4, border: `1px solid ${T.border}`, background: "transparent", color: T.txt3, fontSize: 10, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", lineHeight: 1, padding: 0, fontFamily: fontDisp, transition: "all 0.15s" };
+                        const mbs = { width: 15, height: 15, borderRadius: 4, border: `1px solid ${T.border}`, background: "transparent", color: T.txt3, fontSize: 10, fontWeight: 500, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", lineHeight: 1, padding: 0, fontFamily: fontDisp, transition: "all 0.15s" };
                         const mbe = e => { e.currentTarget.style.background = T.glassH; e.currentTarget.style.color = T.txt; };
                         const mbl = e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = T.txt3; };
                         return (<>
                           <button onClick={e => { e.stopPropagation(); updateLead({...lead, sc: Math.max(0, sc - 1)}); }} title="-1" style={mbs} onMouseEnter={mbe} onMouseLeave={mbl}>−</button>
-                          <span style={{ fontSize: 11.5, fontWeight: 700, color: T.txt2, fontFamily: fontDisp, minWidth: 20, textAlign: "center" }}>{sc}</span>
+                          <span style={{ fontSize: 11.5, fontWeight: 500, color: T.txt2, fontFamily: fontDisp, minWidth: 20, textAlign: "center" }}>{sc}</span>
                           <button onClick={e => { e.stopPropagation(); updateLead({...lead, sc: Math.min(100, sc + 1)}); }} title="+1" style={mbs} onMouseEnter={mbe} onMouseLeave={mbl}>+</button>
                         </>);
                       })()}
@@ -4699,7 +4699,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                 <div style={{ width: 52, height: 52, borderRadius: 16, background: T.glass, border: `1px solid ${T.border}`, display: "inline-flex", alignItems: "center", justifyContent: "center", marginBottom: 16 }}>
                   <Search size={22} color={T.txt3} />
                 </div>
-                <p style={{ fontSize: 15, fontWeight: 600, color: T.txt2, fontFamily: fontDisp, marginBottom: 8 }}>Sin resultados</p>
+                <p style={{ fontSize: 15, fontWeight: 400, color: T.txt2, fontFamily: fontDisp, marginBottom: 8 }}>Sin resultados</p>
                 <p style={{ fontSize: 12, color: T.txt3, marginBottom: 20 }}>Intenta con otro término, etapa o asesor</p>
                 <button onClick={() => { setFilterStage("TODO"); setFilterAsesor("TODO"); setSearchQ(""); }} style={{ padding: "8px 20px", borderRadius: 10, background: T.glass, border: `1px solid ${T.border}`, color: T.txt2, fontSize: 12, cursor: "pointer", fontFamily: font, transition: "all 0.18s" }}
                   onMouseEnter={e => { e.currentTarget.style.background = T.glassH; e.currentTarget.style.color = T.txt; }}
@@ -4850,11 +4850,11 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                     <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
                       <div style={{ width: 10, height: 10, borderRadius: "50%", background: c, flexShrink: 0, boxShadow: `0 0 0 2px ${c}2E${isLight ? ", 0 1px 3px " + c + "55" : ""}` }} />
                       <div style={{ minWidth: 0 }}>
-                        <p style={{ fontSize: 10.5, fontWeight: 800, color: cText, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", letterSpacing: "0.01em" }}>{stage}</p>
-                        {stLeads.length > 0 && <p style={{ fontSize: 9.5, color: T.txt3, fontWeight: 600 }}>${(stVal/1000000).toFixed(1)}M</p>}
+                        <p style={{ fontSize: 10.5, fontWeight: 500, color: cText, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", letterSpacing: "0.01em" }}>{stage}</p>
+                        {stLeads.length > 0 && <p style={{ fontSize: 9.5, color: T.txt3, fontWeight: 400 }}>${(stVal/1000000).toFixed(1)}M</p>}
                       </div>
                     </div>
-                    <span style={{ fontSize: 12, fontWeight: 800, color: cText, background: countBg, border: `1px solid ${countBorder}`, padding: "2px 9px", borderRadius: 99, flexShrink: 0, fontFamily: fontDisp, boxShadow: isLight ? `inset 0 1px 0 rgba(255,255,255,0.5)` : "none" }}>{stLeads.length}</span>
+                    <span style={{ fontSize: 12, fontWeight: 500, color: cText, background: countBg, border: `1px solid ${countBorder}`, padding: "2px 9px", borderRadius: 99, flexShrink: 0, fontFamily: fontDisp, boxShadow: isLight ? `inset 0 1px 0 rgba(255,255,255,0.5)` : "none" }}>{stLeads.length}</span>
                   </div>
 
                   <div style={{ display: "flex", flexDirection: "column", gap: 7, minHeight: 60, borderRadius: 11, padding: isDragTarget ? "6px" : "0", background: isDragTarget ? "rgba(255,255,255,0.022)" : "transparent", transition: "all 0.15s" }}>
@@ -4880,7 +4880,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                           <div style={{ padding: "12px 13px" }}>
                             <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 7, gap: 6 }}>
                               <div style={{ flex: 1, minWidth: 0 }}>
-                                <p style={{ fontSize: 12.5, fontWeight: 700, color: isLight ? T.txt : "#FFF", fontFamily: fontDisp, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginBottom: 2, display: "flex", alignItems: "center", gap: 5 }}>
+                                <p style={{ fontSize: 12.5, fontWeight: 500, color: isLight ? T.txt : "#FFF", fontFamily: fontDisp, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginBottom: 2, display: "flex", alignItems: "center", gap: 5 }}>
                                   {l.tag === "requiere-humano" && (
                                     <span title="Requiere humano" style={{
                                       flexShrink: 0, fontSize: 11, lineHeight: 1,
@@ -4898,14 +4898,14 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                                 {didZoom && (
                                   <span title="Este cliente ya pasó por Zoom (concretado o etapa posterior)" style={{
                                     display: "inline-flex", alignItems: "center", gap: 3, marginTop: 4,
-                                    fontSize: 8.5, fontWeight: 800, letterSpacing: "0.04em",
+                                    fontSize: 8.5, fontWeight: 500, letterSpacing: "0.04em",
                                     color: "#10B981", background: "rgba(16,185,129,0.12)",
                                     border: "1px solid rgba(16,185,129,0.32)", padding: "2px 8px",
                                     borderRadius: 99, textTransform: "uppercase", whiteSpace: "nowrap",
                                   }}><Video size={9} strokeWidth={2.5} /> Zoom Realizado</span>
                                 )}
                               </div>
-                              <p style={{ fontSize: 12, fontWeight: 700, color: isLight ? T.txt : "#FFF", fontFamily: fontDisp, letterSpacing: "-0.02em", flexShrink: 0 }}>{l.budget}</p>
+                              <p style={{ fontSize: 12, fontWeight: 500, color: isLight ? T.txt : "#FFF", fontFamily: fontDisp, letterSpacing: "-0.02em", flexShrink: 0 }}>{l.budget}</p>
                             </div>
                             <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
                               <div style={{ flex: 1, height: 2.5, borderRadius: 2, background: "rgba(255,255,255,0.06)" }}>
@@ -4913,22 +4913,22 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                                   opacity: sc >= 80 ? 1 : sc >= 60 ? 0.85 : 0.65,
                                   boxShadow: sc >= 80 ? `0 0 6px ${T.accent}50` : "none" }} />
                               </div>
-                              <span style={{ fontSize: 10, fontWeight: 700, fontFamily: fontDisp, minWidth: 18, color: T.accent }}>{sc}</span>
+                              <span style={{ fontSize: 10, fontWeight: 500, fontFamily: fontDisp, minWidth: 18, color: T.accent }}>{sc}</span>
                             </div>
                             {l.daysInactive >= 7 && (
-                              <div style={{ fontSize: 9, fontWeight: 700, color: isLight ? "#B91C1C" : "#FF6B6B", background: isLight ? "linear-gradient(135deg, rgba(239,68,68,0.16) 0%, rgba(239,68,68,0.08) 100%)" : "rgba(255,107,107,0.10)", border: isLight ? "1px solid rgba(239,68,68,0.45)" : "1px solid rgba(255,107,107,0.22)", borderRadius: 6, padding: "2px 7px", display: "inline-flex", alignItems: "center", gap: 3, marginBottom: 7, boxShadow: isLight ? "inset 0 1px 0 rgba(255,255,255,0.55)" : "none" }}>
+                              <div style={{ fontSize: 9, fontWeight: 500, color: isLight ? "#B91C1C" : "#FF6B6B", background: isLight ? "linear-gradient(135deg, rgba(239,68,68,0.16) 0%, rgba(239,68,68,0.08) 100%)" : "rgba(255,107,107,0.10)", border: isLight ? "1px solid rgba(239,68,68,0.45)" : "1px solid rgba(255,107,107,0.22)", borderRadius: 6, padding: "2px 7px", display: "inline-flex", alignItems: "center", gap: 3, marginBottom: 7, boxShadow: isLight ? "inset 0 1px 0 rgba(255,255,255,0.55)" : "none" }}>
                                 ⚠ {l.daysInactive}d sin actividad
                               </div>
                             )}
                             {l.daysInactive >= 3 && l.daysInactive < 7 && (
-                              <div style={{ fontSize: 9, fontWeight: 700, color: isLight ? `color-mix(in srgb, ${T.amber} 55%, #0B1220 45%)` : T.amber, background: isLight ? `linear-gradient(135deg, ${T.amber}2E 0%, ${T.amber}14 100%)` : `${T.amber}12`, border: `1px solid ${isLight ? T.amber + "5C" : T.amber + "25"}`, borderRadius: 6, padding: "2px 7px", display: "inline-flex", alignItems: "center", gap: 3, marginBottom: 7, boxShadow: isLight ? "inset 0 1px 0 rgba(255,255,255,0.55)" : "none" }}>
+                              <div style={{ fontSize: 9, fontWeight: 500, color: isLight ? `color-mix(in srgb, ${T.amber} 55%, #0B1220 45%)` : T.amber, background: isLight ? `linear-gradient(135deg, ${T.amber}2E 0%, ${T.amber}14 100%)` : `${T.amber}12`, border: `1px solid ${isLight ? T.amber + "5C" : T.amber + "25"}`, borderRadius: 6, padding: "2px 7px", display: "inline-flex", alignItems: "center", gap: 3, marginBottom: 7, boxShadow: isLight ? "inset 0 1px 0 rgba(255,255,255,0.55)" : "none" }}>
                                 {l.daysInactive}d sin actividad
                               </div>
                             )}
                             {/* Selector de etapa inline */}
                             <div onClick={e => e.stopPropagation()} style={{ marginBottom: 8 }}>
                               <select value={l.st} onChange={e => updateLead({ ...l, st: e.target.value })}
-                                style={{ width: "100%", padding: "5px 8px", borderRadius: 7, background: isLight ? `linear-gradient(135deg, ${c}26 0%, ${c}12 100%)` : `${c}0C`, border: `1px solid ${isLight ? c + "55" : c + "28"}`, color: cText, fontSize: 9.5, fontWeight: 700, cursor: "pointer", outline: "none", appearance: "none", boxShadow: isLight ? "inset 0 1px 0 rgba(255,255,255,0.55)" : "none" }}>
+                                style={{ width: "100%", padding: "5px 8px", borderRadius: 7, background: isLight ? `linear-gradient(135deg, ${c}26 0%, ${c}12 100%)` : `${c}0C`, border: `1px solid ${isLight ? c + "55" : c + "28"}`, color: cText, fontSize: 9.5, fontWeight: 500, cursor: "pointer", outline: "none", appearance: "none", boxShadow: isLight ? "inset 0 1px 0 rgba(255,255,255,0.55)" : "none" }}>
                                 {STAGES.map(s => <option key={s} value={s} style={{ background: "#111318", color: "#fff" }}>{s}</option>)}
                               </select>
                             </div>
@@ -4938,7 +4938,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                               <FollowUpBadge lead={l} onUpdate={updateLead} T={T} compact />
                             </div>
                             <div style={{ display: "flex", gap: 5 }}>
-                              <button onClick={() => oc(`__crm__ ${l.n.toLowerCase()}`, l)} style={{ flex: 1, padding: "6px 0", borderRadius: 7, background: `${T.accent}10`, border: `1px solid ${T.accentB}`, color: T.accent, fontSize: 9.5, fontWeight: 600, cursor: "pointer", fontFamily: font, transition: "background 0.15s" }} onMouseEnter={e => e.currentTarget.style.background = `${T.accent}1E`} onMouseLeave={e => e.currentTarget.style.background = `${T.accent}10`}>Analizar</button>
+                              <button onClick={() => oc(`__crm__ ${l.n.toLowerCase()}`, l)} style={{ flex: 1, padding: "6px 0", borderRadius: 7, background: `${T.accent}10`, border: `1px solid ${T.accentB}`, color: T.accent, fontSize: 9.5, fontWeight: 400, cursor: "pointer", fontFamily: font, transition: "background 0.15s" }} onMouseEnter={e => e.currentTarget.style.background = `${T.accent}1E`} onMouseLeave={e => e.currentTarget.style.background = `${T.accent}10`}>Analizar</button>
                               <button onClick={() => togglePin(l.id)} title={pinnedIds.has(l.id) ? "Quitar de prioridad" : "Añadir a prioridad"} style={{ width: 28, padding: "5px 0", borderRadius: 7, background: pinnedIds.has(l.id) ? `${T.accent}12` : "transparent", border: `1px solid ${pinnedIds.has(l.id) ? `${T.accent}36` : T.border}`, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.15s" }} onMouseEnter={e => { e.currentTarget.style.background = `${T.accent}1A`; }} onMouseLeave={e => { e.currentTarget.style.background = pinnedIds.has(l.id) ? `${T.accent}12` : "transparent"; }}><Star size={10} color={pinnedIds.has(l.id) ? T.accent : T.txt3} fill={pinnedIds.has(l.id) ? T.accent : "none"} strokeWidth={2} /></button>
                               {!isDiscoverySimplified && (
                                 <button onClick={() => openLeadDrawer(l)} title="Abrir perfil" style={{ width: 28, padding: "5px 0", borderRadius: 7, background: "transparent", border: `1px solid ${T.border}`, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.15s" }} onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.06)"; e.currentTarget.style.borderColor = T.borderH; }} onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = T.border; }}><User size={10} color={T.txt3} /></button>
@@ -4950,7 +4950,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                       );
                     })}
                     {stOverflow > 0 && (
-                      <div style={{ padding: "9px 10px", textAlign: "center", fontSize: 10, fontWeight: 600, color: T.txt3, fontFamily: font, borderRadius: 9, border: `1px dashed ${T.border}`, background: isLight ? "rgba(15,23,42,0.02)" : "rgba(255,255,255,0.02)" }}>
+                      <div style={{ padding: "9px 10px", textAlign: "center", fontSize: 10, fontWeight: 400, color: T.txt3, fontFamily: font, borderRadius: 9, border: `1px dashed ${T.border}`, background: isLight ? "rgba(15,23,42,0.02)" : "rgba(255,255,255,0.02)" }}>
                         +{stOverflow} más · usa Lista o filtra para verlos
                       </div>
                     )}
@@ -5101,7 +5101,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                   </div>
                   <div style={{ minWidth: 0 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 9, flexWrap: "wrap" }}>
-                      <p style={{ fontSize: 15, fontWeight: 800, color: T.txt, fontFamily: fontDisp, margin: 0, letterSpacing: "-0.02em" }}>Centro de Agentes IA</p>
+                      <p style={{ fontSize: 15, fontWeight: 500, color: T.txt, fontFamily: fontDisp, margin: 0, letterSpacing: "-0.02em" }}>Centro de Agentes IA</p>
                       <div style={{
                         display: "inline-flex", alignItems: "center", gap: 6, padding: "3.5px 11px", borderRadius: 99,
                         background: isLight
@@ -5119,7 +5119,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                           animation: "pulse 2s ease-in-out infinite",
                         }} />
                         <span style={{
-                          fontSize: 9, fontWeight: 800,
+                          fontSize: 9, fontWeight: 500,
                           color: isLight ? `color-mix(in srgb, ${T.accent} 55%, #0B1220 45%)` : T.accent,
                           letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: font,
                           textShadow: isLight ? "0 1px 0 rgba(255,255,255,0.4)" : "none",
@@ -5150,12 +5150,12 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                     }}>
                       <p style={{
                         fontSize: 8.5, margin: 0, fontFamily: font, letterSpacing: "0.1em",
-                        textTransform: "uppercase", fontWeight: 800,
+                        textTransform: "uppercase", fontWeight: 500,
                         color: isLight ? `color-mix(in srgb, ${k.color} 55%, #0B1220 45%)` : k.color,
                         opacity: 0.85,
                       }}>{k.label}</p>
                       <p style={{
-                        fontSize: 18, fontWeight: 800, fontFamily: fontDisp, margin: "1px 0 0",
+                        fontSize: 18, fontWeight: 500, fontFamily: fontDisp, margin: "1px 0 0",
                         letterSpacing: "-0.03em", lineHeight: 1,
                         color: isLight ? `color-mix(in srgb, ${k.color} 68%, #0B1220 32%)` : k.color,
                         textShadow: isLight ? "0 1px 0 rgba(255,255,255,0.4)" : "none",
@@ -5264,7 +5264,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                             )}
                           </div>
                           <div style={{ flex: 1, minWidth: 0 }}>
-                            <p style={{ fontSize: 13, fontWeight: 800, color: T.txt, fontFamily: fontDisp, margin: 0, letterSpacing: "-0.015em" }}>{a.name}</p>
+                            <p style={{ fontSize: 13, fontWeight: 500, color: T.txt, fontFamily: fontDisp, margin: 0, letterSpacing: "-0.015em" }}>{a.name}</p>
                             <p style={{ fontSize: 10, color: T.txt3, fontFamily: font, margin: "2px 0 0", letterSpacing: "0.005em" }}>{a.role}</p>
                           </div>
                           <div style={{
@@ -5283,7 +5283,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                               : "none",
                           }}>
                             <span style={{
-                              fontSize: 12.5, fontWeight: 900,
+                              fontSize: 12.5, fontWeight: 500,
                               color: isIdle ? T.txt3 : colorText,
                               fontFamily: fontDisp, letterSpacing: "-0.02em",
                               textShadow: !isIdle && isLight ? "0 1px 0 rgba(255,255,255,0.5)" : "none",
@@ -5305,11 +5305,11 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                         }}>
                           <TrendingUp size={11} color={isIdle ? T.txt3 : colorText} strokeWidth={2.5} />
                           <span style={{
-                            fontSize: 10, fontWeight: 800,
+                            fontSize: 10, fontWeight: 500,
                             color: isIdle ? T.txt3 : colorText,
                             fontFamily: font, letterSpacing: "0.02em",
                           }}>{a.metric}</span>
-                          <span style={{ fontSize: 9, color: T.txt3, fontFamily: font, marginLeft: "auto", fontWeight: 600 }}>últ. 30 días</span>
+                          <span style={{ fontSize: 9, color: T.txt3, fontFamily: font, marginLeft: "auto", fontWeight: 400 }}>últ. 30 días</span>
                         </div>
 
                         {/* Clientes asignados por asesor */}
@@ -5327,7 +5327,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                         }}>
                           <Users size={11} color={assigned.length > 0 ? colorText : T.txt3} strokeWidth={2.5} />
                           <span style={{
-                            fontSize: 10, fontWeight: 700,
+                            fontSize: 10, fontWeight: 500,
                             color: assigned.length > 0 ? colorText : T.txt3,
                             fontFamily: font, letterSpacing: "0.015em",
                           }}>
@@ -5343,11 +5343,11 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                                     : `linear-gradient(135deg, ${color}2E 0%, ${color}14 100%)`,
                                   border: `1px solid ${isLight ? color + "7A" : color + "55"}`,
                                   display: "flex", alignItems: "center", justifyContent: "center",
-                                  fontSize: 8.5, fontWeight: 800, color: colorText, fontFamily: fontDisp,
+                                  fontSize: 8.5, fontWeight: 500, color: colorText, fontFamily: fontDisp,
                                   boxShadow: isLight ? `0 1px 2px ${color}22` : "none",
                                 }}>{l.n.charAt(0)}</div>
                               ))}
-                              {assigned.length > 3 && <span style={{ fontSize: 9, fontWeight: 800, color: colorText, fontFamily: fontDisp, alignSelf: "center", marginLeft: 2 }}>+{assigned.length - 3}</span>}
+                              {assigned.length > 3 && <span style={{ fontSize: 9, fontWeight: 500, color: colorText, fontFamily: fontDisp, alignSelf: "center", marginLeft: 2 }}>+{assigned.length - 3}</span>}
                             </div>
                           )}
                         </div>
@@ -5366,7 +5366,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                           {isIdle ? (
                             <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 7, padding: "20px 10px" }}>
                               <CheckCircle2 size={12} color={T.emerald} />
-                              <span style={{ fontSize: 10.5, color: T.txt3, fontFamily: font, fontWeight: 600 }}>Sin pendientes — todo al día</span>
+                              <span style={{ fontSize: 10.5, color: T.txt3, fontFamily: font, fontWeight: 400 }}>Sin pendientes — todo al día</span>
                             </div>
                           ) : (
                             <>
@@ -5401,9 +5401,9 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                                       : `0 0 0 1.5px ${color}28, 0 0 5px ${color}90`,
                                     flexShrink: 0,
                                   }} />
-                                  <span style={{ fontSize: 11.5, fontWeight: 700, color: isLight ? T.txt : "#FFF", fontFamily: fontDisp, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1, minWidth: 0, letterSpacing: "-0.005em" }}>{l.n}</span>
+                                  <span style={{ fontSize: 11.5, fontWeight: 500, color: isLight ? T.txt : "#FFF", fontFamily: fontDisp, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1, minWidth: 0, letterSpacing: "-0.005em" }}>{l.n}</span>
                                   <span style={{
-                                    fontSize: 9, fontWeight: 800,
+                                    fontSize: 9, fontWeight: 500,
                                     color: colorText,
                                     fontFamily: font, letterSpacing: "0.05em", textTransform: "uppercase",
                                     flexShrink: 0,
@@ -5449,7 +5449,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                                     : "rgba(255,255,255,0.015)",
                                   borderTop: `1px solid ${isLight ? color + "18" : "rgba(255,255,255,0.04)"}`,
                                 }}>
-                                  <span style={{ fontSize: 9.5, color: colorText, fontFamily: font, fontWeight: 700, letterSpacing: "0.02em" }}>+{extra} más en cola</span>
+                                  <span style={{ fontSize: 9.5, color: colorText, fontFamily: font, fontWeight: 500, letterSpacing: "0.02em" }}>+{extra} más en cola</span>
                                 </div>
                               )}
                             </>
@@ -5470,7 +5470,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                                     : `linear-gradient(135deg, ${color}18, ${color}08)`),
                               border: `1px solid ${isIdle ? T.border : (isLight ? `${color}4A` : `${color}38`)}`,
                               color: isIdle ? T.txt3 : colorText,
-                              fontSize: 11.5, fontWeight: 800, fontFamily: fontDisp, letterSpacing: "-0.005em",
+                              fontSize: 11.5, fontWeight: 500, fontFamily: fontDisp, letterSpacing: "-0.005em",
                               cursor: isIdle ? "not-allowed" : "pointer",
                               transition: "all 0.18s",
                               display: "flex", alignItems: "center", justifyContent: "center", gap: 5,
@@ -5520,10 +5520,10 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                     <Activity size={11} color={T.txt3} />
-                    <span style={{ fontSize: 9.5, fontWeight: 700, color: T.txt3, letterSpacing: "0.08em", textTransform: "uppercase", fontFamily: font }}>Actividad reciente</span>
+                    <span style={{ fontSize: 9.5, fontWeight: 500, color: T.txt3, letterSpacing: "0.08em", textTransform: "uppercase", fontFamily: font }}>Actividad reciente</span>
                   </div>
                   <button onClick={() => oc("__crm__ muestra el historial completo de acciones ejecutadas por los agentes IA hoy")}
-                    style={{ fontSize: 10, color: T.accent, background: "none", border: "none", cursor: "pointer", fontFamily: font, fontWeight: 600, padding: 0, letterSpacing: "0.01em" }}
+                    style={{ fontSize: 10, color: T.accent, background: "none", border: "none", cursor: "pointer", fontFamily: font, fontWeight: 400, padding: 0, letterSpacing: "0.01em" }}
                     onMouseEnter={e => e.currentTarget.style.textDecoration = "underline"}
                     onMouseLeave={e => e.currentTarget.style.textDecoration = "none"}
                   >Ver historial →</button>
@@ -5551,9 +5551,9 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                         </div>
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <p style={{ fontSize: 10.5, color: T.txt2, margin: 0, fontFamily: font, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                            <span style={{ color: agent.color, fontWeight: 700 }}>{agent.name}</span>
+                            <span style={{ color: agent.color, fontWeight: 500 }}>{agent.name}</span>
                             <span style={{ color: T.txt3 }}> {agent.actionText} </span>
-                            <span style={{ color: isLight ? T.txt : "#FFF", fontWeight: 600 }}>{lead.n}</span>
+                            <span style={{ color: isLight ? T.txt : "#FFF", fontWeight: 400 }}>{lead.n}</span>
                           </p>
                           <p style={{ fontSize: 9, color: T.txt3, margin: "1px 0 0", fontFamily: font }}>{time}</p>
                         </div>
@@ -5698,9 +5698,9 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
               background: selectedIds.size > 0 ? T.accent : (isLight ? "rgba(15,23,42,0.12)" : "rgba(255,255,255,0.14)"),
               color: selectedIds.size > 0 ? "#0B1220" : (isLight ? "rgba(15,23,42,0.5)" : "rgba(255,255,255,0.5)"),
               display: "inline-flex", alignItems: "center", justifyContent: "center",
-              fontSize: 12.5, fontWeight: 800, fontFamily: fontDisp,
+              fontSize: 12.5, fontWeight: 500, fontFamily: fontDisp,
             }}>{selectedIds.size}</span>
-            <span style={{ fontSize: 12.5, fontWeight: 600, color: isLight ? T.txt : "#fff", fontFamily: font, whiteSpace: "nowrap" }}>
+            <span style={{ fontSize: 12.5, fontWeight: 400, color: isLight ? T.txt : "#fff", fontFamily: font, whiteSpace: "nowrap" }}>
               {selectedIds.size === 0 ? "Elegí leads" : `seleccionado${selectedIds.size !== 1 ? "s" : ""}`}
             </span>
           </span>
@@ -5708,7 +5708,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
             height: 32, padding: "0 10px", borderRadius: 9, background: "transparent",
             border: `1px solid ${isLight ? "rgba(15,23,42,0.12)" : "rgba(255,255,255,0.14)"}`,
             color: isLight ? "rgba(15,23,42,0.6)" : "rgba(255,255,255,0.62)",
-            fontSize: 11.5, fontWeight: 600, fontFamily: font, cursor: "pointer", whiteSpace: "nowrap",
+            fontSize: 11.5, fontWeight: 400, fontFamily: font, cursor: "pointer", whiteSpace: "nowrap",
           }}>{allFilteredSelected ? "Quitar todos" : "Todos"}</button>
           <span style={{ width: 1, height: 22, background: isLight ? "rgba(15,23,42,0.10)" : "rgba(255,255,255,0.12)" }} />
           <button
@@ -5721,7 +5721,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                 ? `linear-gradient(135deg, ${T.accent}, color-mix(in srgb, ${T.accent} 70%, #0B1220 30%))`
                 : (isLight ? "rgba(15,23,42,0.1)" : "rgba(255,255,255,0.1)"),
               color: selectedIds.size > 0 ? "#0B1220" : (isLight ? "rgba(15,23,42,0.4)" : "rgba(255,255,255,0.4)"),
-              fontSize: 13, fontWeight: 700, fontFamily: fontDisp,
+              fontSize: 13, fontWeight: 500, fontFamily: fontDisp,
               cursor: selectedIds.size > 0 ? "pointer" : "not-allowed",
               whiteSpace: "nowrap", boxShadow: selectedIds.size > 0 ? `0 4px 14px ${T.accent}40` : "none",
               transition: "all 0.14s",
@@ -5733,7 +5733,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
             height: 36, padding: "0 12px", borderRadius: 10, background: "transparent",
             border: `1px solid ${isLight ? "rgba(15,23,42,0.12)" : "rgba(255,255,255,0.14)"}`,
             color: isLight ? "rgba(15,23,42,0.55)" : "rgba(255,255,255,0.6)",
-            fontSize: 12.5, fontWeight: 600, fontFamily: font, cursor: "pointer", whiteSpace: "nowrap",
+            fontSize: 12.5, fontWeight: 400, fontFamily: font, cursor: "pointer", whiteSpace: "nowrap",
           }}>Cancelar</button>
         </div>,
         document.body
@@ -5783,7 +5783,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                 }}>
                   <UserCheck size={14} color={isLight ? (T.accentDark || T.accent) : T.accent} strokeWidth={2.4} />
                 </div>
-                <h3 style={{ fontSize: 15.5, fontWeight: 700, color: isLight ? T.txt : "#FFFFFF", fontFamily: fontDisp, letterSpacing: "-0.025em", margin: 0 }}>
+                <h3 style={{ fontSize: 15.5, fontWeight: 500, color: isLight ? T.txt : "#FFFFFF", fontFamily: fontDisp, letterSpacing: "-0.025em", margin: 0 }}>
                   Reasignar {selectedIds.size} lead{selectedIds.size !== 1 ? "s" : ""}
                 </h3>
               </div>
@@ -5797,7 +5797,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
               <p style={{ margin: "0 0 12px", fontSize: 12.5, lineHeight: 1.5, color: T.txt3, fontFamily: font }}>
                 Elegí el asesor que recibirá {selectedIds.size === 1 ? "el lead" : "los leads"}.{" "}
                 {reassignToContactame
-                  ? <>Aparecerán al inicio de su pipeline en <strong style={{ color: isLight ? T.txt : "#fff", fontWeight: 700 }}>Contáctame Ya</strong>.</>
+                  ? <>Aparecerán al inicio de su pipeline en <strong style={{ color: isLight ? T.txt : "#fff", fontWeight: 500 }}>Contáctame Ya</strong>.</>
                   : "Conservarán su etapa actual."}
               </p>
 
@@ -5844,9 +5844,9 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                       <span style={{
                         width: 28, height: 28, borderRadius: "50%", background: c, color: "#fff",
                         display: "inline-flex", alignItems: "center", justifyContent: "center",
-                        fontSize: 11.5, fontWeight: 800, fontFamily: fontDisp, flexShrink: 0,
+                        fontSize: 11.5, fontWeight: 500, fontFamily: fontDisp, flexShrink: 0,
                       }}>{asesorInitials(name)}</span>
-                      <span style={{ flex: 1, minWidth: 0, fontSize: 13.5, fontWeight: 600, color: isLight ? T.txt : "#fff", fontFamily: font, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{name}</span>
+                      <span style={{ flex: 1, minWidth: 0, fontSize: 13.5, fontWeight: 400, color: isLight ? T.txt : "#fff", fontFamily: font, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{name}</span>
                       {picked && <Check size={16} strokeWidth={2.6} color={T.accent} style={{ flexShrink: 0 }} />}
                     </button>
                   );
@@ -5865,7 +5865,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                 }}>
                 <SelectCheck checked={reassignToContactame} onToggle={() => setReassignToContactame(v => !v)} size={18} title="Mover a Contáctame Ya" T={T} isLight={isLight} />
                 <span style={{ flex: 1, minWidth: 0 }}>
-                  <span style={{ display: "block", fontSize: 12.5, fontWeight: 700, color: isLight ? T.txt : "#fff", fontFamily: font }}>Mover a Contáctame Ya</span>
+                  <span style={{ display: "block", fontSize: 12.5, fontWeight: 500, color: isLight ? T.txt : "#fff", fontFamily: font }}>Mover a Contáctame Ya</span>
                   <span style={{ display: "block", fontSize: 11, color: T.txt3, fontFamily: font, lineHeight: 1.4, marginTop: 1 }}>Reinicia el lead al inicio del pipeline del nuevo asesor.</span>
                 </span>
               </div>
@@ -5881,7 +5881,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                 height: 38, padding: "0 16px", borderRadius: 10, background: "transparent",
                 border: `1px solid ${isLight ? "rgba(15,23,42,0.12)" : "rgba(255,255,255,0.14)"}`,
                 color: isLight ? "rgba(15,23,42,0.6)" : "rgba(255,255,255,0.62)",
-                fontSize: 13, fontWeight: 600, fontFamily: font, cursor: "pointer",
+                fontSize: 13, fontWeight: 400, fontFamily: font, cursor: "pointer",
               }}>Cancelar</button>
               <button
                 onClick={runReassign}
@@ -5893,7 +5893,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                     ? `linear-gradient(135deg, ${T.accent}, color-mix(in srgb, ${T.accent} 70%, #0B1220 30%))`
                     : (isLight ? "rgba(15,23,42,0.1)" : "rgba(255,255,255,0.1)"),
                   color: reassignTarget ? "#0B1220" : (isLight ? "rgba(15,23,42,0.4)" : "rgba(255,255,255,0.4)"),
-                  fontSize: 13, fontWeight: 700, fontFamily: fontDisp,
+                  fontSize: 13, fontWeight: 500, fontFamily: fontDisp,
                   cursor: reassignTarget ? "pointer" : "not-allowed",
                   boxShadow: reassignTarget ? `0 4px 14px ${T.accent}40` : "none",
                   transition: "all 0.14s",
@@ -6013,7 +6013,7 @@ const ZoomSchedulingModal = ({ open, lead, isNewLead = false, onClose, onConfirm
           </div>
           <div>
             <h3 style={{
-              margin: 0, fontSize: 16, fontWeight: 700,
+              margin: 0, fontSize: 16, fontWeight: 500,
               fontFamily: fontDisp, color: T.txt,
             }}>Programar Zoom Agendado</h3>
             <span style={{ fontSize: 11, color: T.txt3, fontWeight: 500 }}>
@@ -6031,7 +6031,7 @@ const ZoomSchedulingModal = ({ open, lead, isNewLead = false, onClose, onConfirm
           {/* Fecha y Hora — campos separados */}
           <div style={{ display: "flex", gap: 12 }}>
             <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 6 }}>
-              <label style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: T.txt3 }}>
+              <label style={{ fontSize: 11, fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.05em", color: T.txt3 }}>
                 Fecha del Zoom *
               </label>
               <input
@@ -6048,7 +6048,7 @@ const ZoomSchedulingModal = ({ open, lead, isNewLead = false, onClose, onConfirm
               />
             </div>
             <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 6 }}>
-              <label style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: T.txt3 }}>
+              <label style={{ fontSize: 11, fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.05em", color: T.txt3 }}>
                 Hora del Zoom *
               </label>
               <input
@@ -6080,7 +6080,7 @@ const ZoomSchedulingModal = ({ open, lead, isNewLead = false, onClose, onConfirm
             style={{
               padding: "9px 16px", borderRadius: 8,
               border: `1px solid ${T.border}`, background: "transparent",
-              color: T.txt2, fontSize: 12, fontWeight: 600, fontFamily: font,
+              color: T.txt2, fontSize: 12, fontWeight: 400, fontFamily: font,
               cursor: "pointer", transition: "all 0.15s",
             }}
             onMouseEnter={e => { e.currentTarget.style.background = T.glassH; }}
@@ -6097,7 +6097,7 @@ const ZoomSchedulingModal = ({ open, lead, isNewLead = false, onClose, onConfirm
               border: "none",
               background: canConfirm ? (T.accent || "#3B82F6") : (isLight ? "rgba(15,23,42,0.06)" : "rgba(255,255,255,0.06)"),
               color: canConfirm ? "#FFFFFF" : T.txt3,
-              fontSize: 12, fontWeight: 700, fontFamily: font,
+              fontSize: 12, fontWeight: 500, fontFamily: font,
               cursor: canConfirm ? "pointer" : "not-allowed",
               transition: "all 0.15s",
               boxShadow: canConfirm ? `0 4px 12px ${(T.accent || "#3B82F6")}33` : "none",
@@ -6181,7 +6181,7 @@ const VisitaSchedulingModal = ({ open, lead, onClose, onConfirm, T = P }) => {
           </div>
           <div>
             <h3 style={{
-              margin: 0, fontSize: 16, fontWeight: 700,
+              margin: 0, fontSize: 16, fontWeight: 500,
               fontFamily: fontDisp, color: T.txt,
             }}>Programar Visita Agendada</h3>
             <span style={{ fontSize: 11, color: T.txt3, fontWeight: 500 }}>
@@ -6199,7 +6199,7 @@ const VisitaSchedulingModal = ({ open, lead, onClose, onConfirm, T = P }) => {
           {/* Fecha y Hora — campos separados */}
           <div style={{ display: "flex", gap: 12 }}>
             <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 6 }}>
-              <label style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: T.txt3 }}>
+              <label style={{ fontSize: 11, fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.05em", color: T.txt3 }}>
                 Fecha de la visita *
               </label>
               <input
@@ -6216,7 +6216,7 @@ const VisitaSchedulingModal = ({ open, lead, onClose, onConfirm, T = P }) => {
               />
             </div>
             <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 6 }}>
-              <label style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: T.txt3 }}>
+              <label style={{ fontSize: 11, fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.05em", color: T.txt3 }}>
                 Hora de la visita *
               </label>
               <input
@@ -6248,7 +6248,7 @@ const VisitaSchedulingModal = ({ open, lead, onClose, onConfirm, T = P }) => {
             style={{
               padding: "9px 16px", borderRadius: 8,
               border: `1px solid ${T.border}`, background: "transparent",
-              color: T.txt2, fontSize: 12, fontWeight: 600, fontFamily: font,
+              color: T.txt2, fontSize: 12, fontWeight: 400, fontFamily: font,
               cursor: "pointer", transition: "all 0.15s",
             }}
             onMouseEnter={e => { e.currentTarget.style.background = T.glassH; }}
@@ -6265,7 +6265,7 @@ const VisitaSchedulingModal = ({ open, lead, onClose, onConfirm, T = P }) => {
               border: "none",
               background: canConfirm ? "#34D399" : (isLight ? "rgba(15,23,42,0.06)" : "rgba(255,255,255,0.06)"),
               color: canConfirm ? "#04201A" : T.txt3,
-              fontSize: 12, fontWeight: 700, fontFamily: font,
+              fontSize: 12, fontWeight: 500, fontFamily: font,
               cursor: canConfirm ? "pointer" : "not-allowed",
               transition: "all 0.15s",
               boxShadow: canConfirm ? "0 4px 12px rgba(52,211,153,0.25)" : "none",

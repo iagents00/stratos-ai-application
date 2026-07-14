@@ -23,11 +23,11 @@ export default function PermissionGate({ moduleId, onGoBack }) {
         <Shield size={32} color={P.txt3} strokeWidth={1.5} />
       </div>
       <div style={{ textAlign: "center", maxWidth: 380 }}>
-        <p style={{ fontSize: 18, fontWeight: 700, color: "#FFFFFF", fontFamily: fontDisp, letterSpacing: "-0.02em", marginBottom: 8 }}>
+        <p style={{ fontSize: 18, fontWeight: 500, color: "#FFFFFF", fontFamily: fontDisp, letterSpacing: "-0.02em", marginBottom: 8 }}>
           Acceso restringido
         </p>
         <p style={{ fontSize: 13, color: P.txt3, lineHeight: 1.7, marginBottom: 6 }}>
-          No tienes permiso para acceder al módulo <span style={{ color: P.txt2, fontWeight: 600 }}>{MODULE_NAMES[moduleId] || moduleId}</span>.
+          No tienes permiso para acceder al módulo <span style={{ color: P.txt2, fontWeight: 400 }}>{MODULE_NAMES[moduleId] || moduleId}</span>.
         </p>
         <p style={{ fontSize: 12, color: P.txt3, lineHeight: 1.6 }}>
           Contacta a tu director o administrador para solicitar acceso.
@@ -36,7 +36,7 @@ export default function PermissionGate({ moduleId, onGoBack }) {
       <button onClick={onGoBack} style={{
         marginTop: 8, padding: "10px 24px", borderRadius: 11,
         background: `${P.accent}14`, border: `1px solid ${P.accentB}`,
-        color: P.accent, fontSize: 13, fontWeight: 700,
+        color: P.accent, fontSize: 13, fontWeight: 500,
         fontFamily: fontDisp, cursor: "pointer", transition: "background 0.18s",
         display: "flex", alignItems: "center", gap: 8,
       }}

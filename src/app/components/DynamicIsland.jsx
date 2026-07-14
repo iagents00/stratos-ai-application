@@ -99,7 +99,7 @@ const DynIsland = ({ onExpand, notifications = [] }) => {
             {isOpen && !selectedNotif && (
               <div style={{ padding: "16px 0" }}>
                 <div style={{ padding: "0 24px", marginBottom: 14, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <span style={{ fontSize: 11, color: P.txt3, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: fontDisp }}>Centro de Inteligencia — Activo</span>
+                  <span style={{ fontSize: 11, color: P.txt3, fontWeight: 500, letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: fontDisp }}>Centro de Inteligencia — Activo</span>
                   <button onClick={() => { setIsOpen(false); }} style={{ background: "none", border: "none", cursor: "pointer", padding: 4, color: P.txt2, display: "flex", alignItems: "center" }}><X size={14} /></button>
                 </div>
                 {msgs.map((m, i) => (
@@ -112,7 +112,7 @@ const DynIsland = ({ onExpand, notifications = [] }) => {
                       <m.icon size={16} color={m.c} />
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <p style={{ fontSize: 13, color: "#FFFFFF", fontWeight: 600, fontFamily: fontDisp, marginBottom: 2 }}>{m.agent}</p>
+                      <p style={{ fontSize: 13, color: "#FFFFFF", fontWeight: 400, fontFamily: fontDisp, marginBottom: 2 }}>{m.agent}</p>
                       <p style={{ fontSize: 12, color: P.txt2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", fontFamily: font }}>{m.text}</p>
                     </div>
                     <ChevronRight size={14} color={P.txt3} />
@@ -128,14 +128,14 @@ const DynIsland = ({ onExpand, notifications = [] }) => {
                     <selectedNotif.icon size={16} color={selectedNotif.c} />
                   </div>
                   <div style={{ flex: 1 }}>
-                    <p style={{ fontSize: 14, color: "#FFFFFF", fontWeight: 600, fontFamily: fontDisp }}>{selectedNotif.agent}</p>
+                    <p style={{ fontSize: 14, color: "#FFFFFF", fontWeight: 400, fontFamily: fontDisp }}>{selectedNotif.agent}</p>
                     <p style={{ fontSize: 11, color: P.txt2 }}>Actualización Importante</p>
                   </div>
                   <button onClick={() => setSelectedNotif(null)} style={{ background: "rgba(255,255,255,0.05)", border: "none", color: "#FFF", borderRadius: "50%", width: 24, height: 24, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}><X size={14} /></button>
                 </div>
                 <p style={{ fontSize: 13, color: P.txt2, lineHeight: 1.6, fontFamily: font, marginBottom: 18 }}>{selectedNotif.detail}</p>
                 <button onClick={() => { onExpand(selectedNotif.action); setIsOpen(false); setSelectedNotif(null); }}
-                  style={{ width: "100%", padding: "13px 16px", borderRadius: 12, background: "rgba(255,255,255,0.95)", color: "#0A0F18", border: "none", fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: fontDisp, boxShadow: "0 4px 15px rgba(255,255,255,0.15)", letterSpacing: "0.01em", transition: "all 0.2s" }}
+                  style={{ width: "100%", padding: "13px 16px", borderRadius: 12, background: "rgba(255,255,255,0.95)", color: "#0A0F18", border: "none", fontSize: 13, fontWeight: 500, cursor: "pointer", fontFamily: fontDisp, boxShadow: "0 4px 15px rgba(255,255,255,0.15)", letterSpacing: "0.01em", transition: "all 0.2s" }}
                   onMouseEnter={e => { e.currentTarget.style.background = "#FFFFFF"; e.currentTarget.style.boxShadow = "0 6px 25px rgba(255,255,255,0.25)"; }}
                   onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.95)"; e.currentTarget.style.boxShadow = "0 4px 15px rgba(255,255,255,0.15)"; }}
                 >{selectedNotif.btn}</button>

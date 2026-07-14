@@ -107,7 +107,7 @@ export default function RequiresHumanButton({
           display: "inline-flex", alignItems: "center", gap: 7,
           padding: "9px 14px", borderRadius: 10,
           background: dangerBgIdle, border: `1px solid ${dangerBdIdle}`,
-          color: danger, fontSize: 12, fontWeight: 700, fontFamily: fontDisp,
+          color: danger, fontSize: 12, fontWeight: 500, fontFamily: fontDisp,
           letterSpacing: "0.01em", cursor: "default",
           ...styleOverride,
         }}
@@ -122,7 +122,7 @@ export default function RequiresHumanButton({
   const baseStyle = {
     display: "inline-flex", alignItems: "center", gap: 7,
     padding: "9px 14px", borderRadius: 10,
-    fontSize: 12, fontWeight: 700, fontFamily: fontDisp,
+    fontSize: 12, fontWeight: 500, fontFamily: fontDisp,
     letterSpacing: "0.01em", cursor: state === "loading" ? "wait" : "pointer",
     transition: "all 0.18s",
     ...styleOverride,

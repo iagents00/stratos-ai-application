@@ -121,7 +121,7 @@ export default function ZoomBoard({ leadsData = [], theme = "dark", onOpenLead =
       {/* Header + selector de período */}
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
         <div>
-          <h2 style={{ margin: 0, fontSize: 22, fontWeight: 700, fontFamily: fontDisp, color: T.txt, letterSpacing: "-0.025em" }}>
+          <h2 style={{ margin: 0, fontSize: 22, fontWeight: 500, fontFamily: fontDisp, color: T.txt, letterSpacing: "-0.025em" }}>
             Filtro 2 · Control de Zooms
           </h2>
           <p style={{ margin: "4px 0 0", fontSize: 12.5, color: T.txt3, fontFamily: font }}>
@@ -153,9 +153,9 @@ export default function ZoomBoard({ leadsData = [], theme = "dark", onOpenLead =
                 <span style={{ display: "inline-flex", padding: 7, borderRadius: 9, background: `${k.color}1A` }}>
                   <Icon size={15} color={k.color} strokeWidth={2.2} />
                 </span>
-                <span style={{ fontSize: 12, fontWeight: 600, color: T.txt2, fontFamily: font }}>{k.label}</span>
+                <span style={{ fontSize: 12, fontWeight: 400, color: T.txt2, fontFamily: font }}>{k.label}</span>
               </div>
-              <div style={{ fontSize: 28, fontWeight: 700, fontFamily: fontDisp, color: T.txt, letterSpacing: "-0.02em" }}>{k.value}</div>
+              <div style={{ fontSize: 28, fontWeight: 500, fontFamily: fontDisp, color: T.txt, letterSpacing: "-0.02em" }}>{k.value}</div>
               <div style={{ fontSize: 11, color: T.txt3, fontFamily: font, marginTop: 2 }}>{k.sub}</div>
             </div>
           );
@@ -179,7 +179,7 @@ export default function ZoomBoard({ leadsData = [], theme = "dark", onOpenLead =
 
       {/* Tabla por presentador */}
       <div>
-        <h3 style={{ margin: "0 0 2px", fontSize: 16, fontWeight: 600, fontFamily: fontDisp, color: T.txt }}>
+        <h3 style={{ margin: "0 0 2px", fontSize: 16, fontWeight: 400, fontFamily: fontDisp, color: T.txt }}>
           Zooms realizados por asesor
         </h3>
         <p style={{ margin: "0 0 10px", fontSize: 11.5, color: T.txt3, fontFamily: font }}>
@@ -199,16 +199,16 @@ export default function ZoomBoard({ leadsData = [], theme = "dark", onOpenLead =
               )}
               {byPresenter.map((r, i) => (
                   <tr key={r.asesor} style={{ borderTop: i === 0 ? "none" : `1px solid ${rowBorder}` }}>
-                    <td style={{ padding: cellPad, paddingLeft: 16, fontFamily: fontDisp, fontWeight: 600, color: T.txt, fontSize: 13 }}>{r.asesor}</td>
-                    <td style={{ padding: cellPad, textAlign: "center", fontFamily: fontDisp, fontWeight: 700, color: "#10B981", fontSize: 14 }}>{r.done}</td>
+                    <td style={{ padding: cellPad, paddingLeft: 16, fontFamily: fontDisp, fontWeight: 400, color: T.txt, fontSize: 13 }}>{r.asesor}</td>
+                    <td style={{ padding: cellPad, textAlign: "center", fontFamily: fontDisp, fontWeight: 500, color: "#10B981", fontSize: 14 }}>{r.done}</td>
                   </tr>
               ))}
             </tbody>
             {byPresenter.length > 0 && (
               <tfoot>
                 <tr style={{ borderTop: `1px solid ${rowBorder}`, background: headerBg }}>
-                  <td style={{ padding: cellPad, paddingLeft: 16, fontFamily: fontDisp, fontWeight: 700, color: T.txt2, fontSize: 12, textTransform: "uppercase", letterSpacing: "0.04em" }}>Total</td>
-                  <td style={{ padding: cellPad, textAlign: "center", fontFamily: fontDisp, fontWeight: 700, color: accent, fontSize: 14 }}>{totals.done}</td>
+                  <td style={{ padding: cellPad, paddingLeft: 16, fontFamily: fontDisp, fontWeight: 500, color: T.txt2, fontSize: 12, textTransform: "uppercase", letterSpacing: "0.04em" }}>Total</td>
+                  <td style={{ padding: cellPad, textAlign: "center", fontFamily: fontDisp, fontWeight: 500, color: accent, fontSize: 14 }}>{totals.done}</td>
                 </tr>
               </tfoot>
             )}
@@ -224,7 +224,7 @@ export default function ZoomBoard({ leadsData = [], theme = "dark", onOpenLead =
             display: "flex", alignItems: "center", gap: 8, width: "100%",
             padding: "12px 14px", borderRadius: 12, cursor: "pointer",
             background: headerBg, border: `1px solid ${rowBorder}`, color: T.txt,
-            fontFamily: fontDisp, fontWeight: 600, fontSize: 14,
+            fontFamily: fontDisp, fontWeight: 400, fontSize: 14,
           }}
         >
           <History size={15} color={accent} strokeWidth={2.2} />
@@ -277,18 +277,18 @@ export default function ZoomBoard({ leadsData = [], theme = "dark", onOpenLead =
                         onMouseEnter={onOpenLead ? (e) => { e.currentTarget.style.background = headerBg; } : undefined}
                         onMouseLeave={onOpenLead ? (e) => { e.currentTarget.style.background = "transparent"; } : undefined}
                       >
-                        <td style={{ padding: cellPad, paddingLeft: 16, fontFamily: fontDisp, fontWeight: 600, color: T.txt, fontSize: 13 }}>{m.lead.name || m.lead.n || "(sin nombre)"}</td>
+                        <td style={{ padding: cellPad, paddingLeft: 16, fontFamily: fontDisp, fontWeight: 400, color: T.txt, fontSize: 13 }}>{m.lead.name || m.lead.n || "(sin nombre)"}</td>
                         <td style={{ padding: cellPad, textAlign: "center", fontSize: 12 }}>
-                          <span style={{ display: "inline-block", whiteSpace: "nowrap", padding: "3px 10px", borderRadius: 999, fontFamily: fontDisp, fontWeight: 600, fontSize: 11, color: movColor, background: `${movColor}1A` }}>{movLabel}</span>
+                          <span style={{ display: "inline-block", whiteSpace: "nowrap", padding: "3px 10px", borderRadius: 999, fontFamily: fontDisp, fontWeight: 400, fontSize: 11, color: movColor, background: `${movColor}1A` }}>{movLabel}</span>
                         </td>
                         <td style={{ padding: cellPad, textAlign: "center", fontFamily: font, color: T.txt2, fontSize: 12.5 }}>{m.by || m.lead.asesor || "—"}</td>
                         <td style={{ padding: cellPad, textAlign: "center", fontFamily: font, color: T.txt2, fontSize: 12.5, whiteSpace: "nowrap" }}>{fmtFecha(m.at)}</td>
                         <td style={{ padding: cellPad, textAlign: "center", fontSize: 12, whiteSpace: "nowrap" }}>
-                          <span style={{ display: "inline-block", whiteSpace: "nowrap", padding: "3px 10px", borderRadius: 999, fontFamily: fontDisp, fontWeight: 600, fontSize: 11, color: STAGE_COLORS[m.lead.st] || T.txt3, background: `${STAGE_COLORS[m.lead.st] || T.txt3}1A` }}>{m.lead.st || "—"}</span>
+                          <span style={{ display: "inline-block", whiteSpace: "nowrap", padding: "3px 10px", borderRadius: 999, fontFamily: fontDisp, fontWeight: 400, fontSize: 11, color: STAGE_COLORS[m.lead.st] || T.txt3, background: `${STAGE_COLORS[m.lead.st] || T.txt3}1A` }}>{m.lead.st || "—"}</span>
                         </td>
                         <td style={{ padding: cellPad, textAlign: "center", fontSize: 11.5 }}>
                           {m.inferred
-                            ? <span title="La etapa actual implica Zoom, pero el movimiento no se registró. Lo inferimos." style={{ color: "#F59E0B", fontFamily: fontDisp, fontWeight: 600 }}>Inferido</span>
+                            ? <span title="La etapa actual implica Zoom, pero el movimiento no se registró. Lo inferimos." style={{ color: "#F59E0B", fontFamily: fontDisp, fontWeight: 400 }}>Inferido</span>
                             : <span style={{ color: T.txt3, fontFamily: font }}>Registrado</span>}
                         </td>
                       </tr>
@@ -309,7 +309,7 @@ export default function ZoomBoard({ leadsData = [], theme = "dark", onOpenLead =
 
 function thStyle(T) {
   return {
-    padding: "11px 12px", textAlign: "center", fontSize: 10.5, fontWeight: 600,
+    padding: "11px 12px", textAlign: "center", fontSize: 10.5, fontWeight: 400,
     color: T.txt2, fontFamily: fontDisp, textTransform: "uppercase",
     letterSpacing: "0.05em", whiteSpace: "nowrap",
   };
