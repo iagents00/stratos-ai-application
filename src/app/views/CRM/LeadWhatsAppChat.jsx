@@ -583,21 +583,21 @@ export default function LeadWhatsAppChat({ lead, T = P, isLight = false, threadM
         <span
           style={{
             display: "inline-flex", alignItems: "center", gap: 6,
-            fontSize: 10.5, fontWeight: 700, letterSpacing: "0.12em",
+            fontSize: 10.5, fontWeight: 500, letterSpacing: "0.12em",
             textTransform: "uppercase", color: headerC, fontFamily: fontDisp,
           }}
         >
           <MessageCircle size={11} />
           WhatsApp · Conversación en vivo
           {thread.length > 0 && (
-            <span style={{ fontWeight: 600, color: T.txt3, marginLeft: 4 }}>· {thread.length}</span>
+            <span style={{ fontWeight: 400, color: T.txt3, marginLeft: 4 }}>· {thread.length}</span>
           )}
         </span>
         {hasThread && (
           <span
             style={{
               display: "inline-flex", alignItems: "center", gap: 4,
-              fontSize: 9.5, fontWeight: 700, fontFamily: fontDisp,
+              fontSize: 9.5, fontWeight: 500, fontFamily: fontDisp,
               padding: "3px 8px", borderRadius: 999,
               color: windowOpen ? (isLight ? "#067A5E" : T.accent) : T.amber,
               background: windowOpen
@@ -682,7 +682,7 @@ export default function LeadWhatsAppChat({ lead, T = P, isLight = false, threadM
                     }}
                   >
                     {mine && m.senderName && (
-                      <p style={{ fontSize: 9.5, fontWeight: 700, color: accentStrong, fontFamily: fontDisp, marginBottom: 3 }}>
+                      <p style={{ fontSize: 9.5, fontWeight: 500, color: accentStrong, fontFamily: fontDisp, marginBottom: 3 }}>
                         {m.senderName}
                       </p>
                     )}
@@ -734,7 +734,7 @@ export default function LeadWhatsAppChat({ lead, T = P, isLight = false, threadM
                             padding: "1px 7px", borderRadius: 6,
                             cursor: retrying === m.outboxId ? "default" : "pointer",
                             background: "transparent", border: "1px solid rgba(239,68,68,0.4)",
-                            color: "#EF4444", fontSize: 9.5, fontWeight: 700, fontFamily: font,
+                            color: "#EF4444", fontSize: 9.5, fontWeight: 500, fontFamily: font,
                             opacity: retrying === m.outboxId ? 0.5 : 1,
                           }}
                         >
@@ -800,7 +800,7 @@ export default function LeadWhatsAppChat({ lead, T = P, isLight = false, threadM
                   }}
                 >
                   <span style={{ width: 9, height: 9, borderRadius: "50%", background: "#EF4444", flexShrink: 0, animation: "pulse 1.2s ease-in-out infinite" }} />
-                  <span style={{ flex: 1, fontSize: 12, fontWeight: 700, color: isLight ? "#B91C1C" : "#FCA5A5", fontFamily: fontDisp }}>
+                  <span style={{ flex: 1, fontSize: 12, fontWeight: 500, color: isLight ? "#B91C1C" : "#FCA5A5", fontFamily: fontDisp }}>
                     Grabando nota de voz · {fmtRecSecs(recordSecs)}
                   </span>
                   <button
@@ -810,7 +810,7 @@ export default function LeadWhatsAppChat({ lead, T = P, isLight = false, threadM
                       display: "inline-flex", alignItems: "center", gap: 4, padding: "4px 10px",
                       borderRadius: 7, cursor: "pointer", background: "transparent",
                       border: `1px solid ${isLight ? "rgba(15,23,42,0.14)" : "rgba(255,255,255,0.14)"}`,
-                      color: T.txt2, fontSize: 11, fontWeight: 600, fontFamily: font,
+                      color: T.txt2, fontSize: 11, fontWeight: 400, fontFamily: font,
                     }}
                   >
                     <X size={11} /> Cancelar
@@ -822,7 +822,7 @@ export default function LeadWhatsAppChat({ lead, T = P, isLight = false, threadM
                       display: "inline-flex", alignItems: "center", gap: 4, padding: "4px 10px",
                       borderRadius: 7, cursor: "pointer", border: "none",
                       background: "#EF4444", color: "#FFF",
-                      fontSize: 11, fontWeight: 700, fontFamily: font,
+                      fontSize: 11, fontWeight: 500, fontFamily: font,
                     }}
                   >
                     <Square size={10} /> Listo

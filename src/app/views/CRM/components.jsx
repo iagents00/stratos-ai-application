@@ -116,7 +116,7 @@ const SourceBadge = ({ source, isLight }) => {
   const c = isLight ? `color-mix(in srgb, ${meta.color} 60%, #0B1220 40%)` : meta.color;
   return (
     <span style={{
-      fontSize: 9, fontWeight: 700, letterSpacing: "0.01em",
+      fontSize: 9, fontWeight: 500, letterSpacing: "0.01em",
       color: c, background: isLight ? `${meta.color}14` : `${meta.color}16`,
       border: `1px solid ${isLight ? `${meta.color}38` : `${meta.color}30`}`,
       padding: "1px 8px", borderRadius: 99,
@@ -154,7 +154,7 @@ const ScoreInput = ({ sc, onUpdate, color, isLight, T, stopProp = false, big = f
       draggable={false}
       onDragStart={stopProp ? e => { e.preventDefault(); e.stopPropagation(); } : undefined}
     >
-      <span style={{ fontSize: 8.5, fontWeight: 700, fontFamily: fontDisp, letterSpacing: "0.08em", textTransform: "uppercase", color: isLight ? "rgba(15,23,42,0.30)" : "rgba(255,255,255,0.25)", flexShrink: 0 }}>Score</span>
+      <span style={{ fontSize: 8.5, fontWeight: 500, fontFamily: fontDisp, letterSpacing: "0.08em", textTransform: "uppercase", color: isLight ? "rgba(15,23,42,0.30)" : "rgba(255,255,255,0.25)", flexShrink: 0 }}>Score</span>
       <div
         onClick={handleBarClick}
         style={{ flex: 1, height: 3, borderRadius: 99, background: isLight ? "rgba(15,23,42,0.07)" : "rgba(255,255,255,0.09)", cursor: readOnly ? "default" : "ew-resize", position: "relative", overflow: "hidden" }}
@@ -169,13 +169,13 @@ const ScoreInput = ({ sc, onUpdate, color, isLight, T, stopProp = false, big = f
           onChange={e => setVal(e.target.value)}
           onBlur={() => commit(val)}
           onKeyDown={e => { if (e.key === "Enter") commit(val); if (e.key === "Escape") setEditSc(false); }}
-          style={{ width: big ? 44 : 36, fontSize: big ? 16 : 13, fontWeight: 700, fontFamily: fontDisp, background: "transparent", border: `1px solid ${accentColor}60`, borderRadius: 6, color: accentColor, outline: "none", padding: "1px 4px", textAlign: "center" }}
+          style={{ width: big ? 44 : 36, fontSize: big ? 16 : 13, fontWeight: 500, fontFamily: fontDisp, background: "transparent", border: `1px solid ${accentColor}60`, borderRadius: 6, color: accentColor, outline: "none", padding: "1px 4px", textAlign: "center" }}
           min={0} max={100}
         />
       ) : (
         <span
           onClick={readOnly ? undefined : e => { if (stopProp) e.stopPropagation(); setVal(String(sc)); setEditSc(true); }}
-          style={{ fontSize: big ? 16 : 13, fontWeight: 700, fontFamily: fontDisp, letterSpacing: "-0.02em", color: accentColor, flexShrink: 0, minWidth: big ? 30 : 22, textAlign: "right", cursor: readOnly ? "default" : "text", userSelect: "none" }}
+          style={{ fontSize: big ? 16 : 13, fontWeight: 500, fontFamily: fontDisp, letterSpacing: "-0.02em", color: accentColor, flexShrink: 0, minWidth: big ? 30 : 22, textAlign: "right", cursor: readOnly ? "default" : "text", userSelect: "none" }}
         >{sc}</span>
       )}
     </div>
@@ -189,7 +189,7 @@ const ScoreBar = ({ sc, compact, isLight = false }) => {
       <div style={{ flex: 1, height: 3, borderRadius: 2, background: isLight ? "rgba(15,23,42,0.09)" : "rgba(255,255,255,0.06)" }}>
         <div style={{ width: `${sc}%`, height: 3, borderRadius: 2, background: c, boxShadow: `0 0 6px ${c}40`, transition: "width 0.5s ease" }} />
       </div>
-      <span style={{ fontSize: compact ? 10 : 11, fontWeight: 700, color: c, fontFamily: fontDisp, minWidth: 20, textAlign: "right" }}>{sc}</span>
+      <span style={{ fontSize: compact ? 10 : 11, fontWeight: 500, color: c, fontFamily: fontDisp, minWidth: 20, textAlign: "right" }}>{sc}</span>
     </div>
   );
 };
@@ -239,7 +239,7 @@ const StageBadge = ({ lead, onUpdate, T = P, compact = false }) => {
           background: isLight ? `${stageColor}16` : `${stageColor}1E`,
           border: `1px solid ${isLight ? `${stageColor}55` : `${stageColor}44`}`,
           color: stageColorSafe,
-          fontSize: compact ? 10 : 11, fontWeight: 700, fontFamily: fontDisp,
+          fontSize: compact ? 10 : 11, fontWeight: 500, fontFamily: fontDisp,
           letterSpacing: "0.01em", cursor: "pointer",
           transition: "all 0.15s", whiteSpace: "nowrap",
         }}
@@ -266,7 +266,7 @@ const StageBadge = ({ lead, onUpdate, T = P, compact = false }) => {
             : "0 10px 32px rgba(0,0,0,0.55), 0 2px 6px rgba(0,0,0,0.4)",
           padding: 4, maxHeight: 320, overflowY: "auto",
         }}>
-          <p style={{ margin: "6px 10px 6px", fontSize: 9, fontWeight: 800, color: T.txt3, letterSpacing: "0.12em", textTransform: "uppercase", fontFamily: fontDisp }}>Cambiar etapa</p>
+          <p style={{ margin: "6px 10px 6px", fontSize: 9, fontWeight: 500, color: T.txt3, letterSpacing: "0.12em", textTransform: "uppercase", fontFamily: fontDisp }}>Cambiar etapa</p>
           {STAGES.map(st => {
             const c = stgC[st] || T.txt3;
             const cSafe = isLight ? `color-mix(in srgb, ${c} 62%, #0B1220 38%)` : c;
@@ -452,7 +452,7 @@ const FollowUpBadge = ({ lead, onUpdate, T = P, compact = false, fullWidth = fal
               border: "none", outline: "none",
               background: isLight ? "#FFFFFF" : "rgba(255,255,255,0.04)",
               color: accentSafe,
-              fontSize: 22, fontWeight: 800, fontFamily: fontDisp,
+              fontSize: 22, fontWeight: 500, fontFamily: fontDisp,
               letterSpacing: "-0.03em", textAlign: "center",
               fontVariantNumeric: "tabular-nums",
               boxShadow: `inset 0 0 0 2px ${accentC}55`,
@@ -479,7 +479,7 @@ const FollowUpBadge = ({ lead, onUpdate, T = P, compact = false, fullWidth = fal
               <>
                 <Phone size={11} strokeWidth={2.4} color={T.txt3} style={{ opacity: 0.75 }} />
                 <span style={{
-                  fontSize: 12, fontWeight: 600,
+                  fontSize: 12, fontWeight: 400,
                   color: T.txt3, fontFamily: font,
                   letterSpacing: "0.005em",
                 }}>
@@ -585,7 +585,7 @@ const FollowUpBadge = ({ lead, onUpdate, T = P, compact = false, fullWidth = fal
           background: isLight ? `${accentC}0C` : `${accentC}10`,
           border: `1px dashed ${isLight ? `${accentC}2E` : `${accentC}26`}`,
           color: accentSafe,
-          fontSize: compact ? 11 : 12, fontWeight: 700, fontFamily: fontDisp,
+          fontSize: compact ? 11 : 12, fontWeight: 500, fontFamily: fontDisp,
           letterSpacing: "0.01em",
           cursor: "pointer",
           transition: "all 0.18s cubic-bezier(0.4, 0, 0.2, 1)",
@@ -675,7 +675,7 @@ const FollowUpBadge = ({ lead, onUpdate, T = P, compact = false, fullWidth = fal
               border: "none", outline: "none",
               background: isLight ? "rgba(255,255,255,0.85)" : "rgba(255,255,255,0.04)",
               color: accentSafe,
-              fontSize: numFS, fontWeight: 800, fontFamily: fontDisp,
+              fontSize: numFS, fontWeight: 500, fontFamily: fontDisp,
               letterSpacing: "-0.015em", textAlign: "center",
               fontVariantNumeric: "tabular-nums",
               boxShadow: `inset 0 0 0 1.5px ${accentC}55`,
@@ -696,7 +696,7 @@ const FollowUpBadge = ({ lead, onUpdate, T = P, compact = false, fullWidth = fal
             onMouseLeave={e => e.currentTarget.style.background = "transparent"}
           >
             <span style={{
-              fontSize: numFS, fontWeight: 800, fontFamily: fontDisp,
+              fontSize: numFS, fontWeight: 500, fontFamily: fontDisp,
               letterSpacing: "-0.015em",
               fontVariantNumeric: "tabular-nums",
               minWidth: numMinW, textAlign: "center",
@@ -704,7 +704,7 @@ const FollowUpBadge = ({ lead, onUpdate, T = P, compact = false, fullWidth = fal
             }}>{count}</span>
             {!compact && (
               <span style={{
-                fontSize: 9.5, fontWeight: 700, color: `${accentC}B0`,
+                fontSize: 9.5, fontWeight: 500, color: `${accentC}B0`,
                 letterSpacing: "0.03em", fontFamily: font, textTransform: "lowercase",
                 opacity: 0.85,
                 lineHeight: 1, whiteSpace: "nowrap",
@@ -941,7 +941,7 @@ const NextActionHero = ({ lead, T = P, onUpdate = null, projectMode = false }) =
         }}>
           <Zap size={12} color={isLight ? "#FFFFFF" : accentStrong} strokeWidth={2.6} fill={isLight ? "#FFFFFF" : "none"} />
         </div>
-        <p style={{ margin: 0, fontSize: 10.5, fontWeight: 800, color: accentStrong, letterSpacing: "0.14em", textTransform: "uppercase", fontFamily: fontDisp, whiteSpace: "nowrap" }}>Próxima acción</p>
+        <p style={{ margin: 0, fontSize: 10.5, fontWeight: 500, color: accentStrong, letterSpacing: "0.14em", textTransform: "uppercase", fontFamily: fontDisp, whiteSpace: "nowrap" }}>Próxima acción</p>
         {dateShort && !editing && (
           <span title={dateText} style={{
             display: "inline-flex", alignItems: "center", gap: 5,
@@ -949,7 +949,7 @@ const NextActionHero = ({ lead, T = P, onUpdate = null, projectMode = false }) =
             background: isLight ? "#FFFFFF" : `${T.accent}12`,
             border: `1px solid ${isLight ? `${T.accent}3D` : `${T.accent}26`}`,
             color: accentStrong,
-            fontSize: 10, fontWeight: 700, fontFamily: fontDisp,
+            fontSize: 10, fontWeight: 500, fontFamily: fontDisp,
             letterSpacing: "0.01em", whiteSpace: "nowrap", flexShrink: 0,
             boxShadow: isLight ? `0 1px 2px ${T.accent}18, inset 0 1px 0 rgba(255,255,255,0.8)` : "none",
           }}>
@@ -1006,7 +1006,7 @@ const NextActionHero = ({ lead, T = P, onUpdate = null, projectMode = false }) =
               background: isLight ? "#FFFFFF" : "rgba(255,255,255,0.04)",
               border: `1px solid ${isLight ? `${T.accent}55` : T.accentB}`,
               color: textMain, fontSize: 14, lineHeight: 1.45,
-              fontFamily: fontDisp, fontWeight: 600, letterSpacing: "-0.01em",
+              fontFamily: fontDisp, fontWeight: 400, letterSpacing: "-0.01em",
               outline: "none", resize: "vertical", minHeight: 60,
               boxShadow: isLight ? `0 1px 2px ${T.accent}14, inset 0 1px 0 rgba(255,255,255,0.6)` : "none",
             }}
@@ -1027,7 +1027,7 @@ const NextActionHero = ({ lead, T = P, onUpdate = null, projectMode = false }) =
                   flex: 1, padding: "7px 11px", borderRadius: 8,
                   background: isLight ? "#FFFFFF" : "rgba(255,255,255,0.04)",
                   border: `1px solid ${isLight ? `${T.accent}44` : T.accentB}`,
-                  color: textMain, fontSize: 11.5, fontWeight: 600,
+                  color: textMain, fontSize: 11.5, fontWeight: 400,
                   fontFamily: fontDisp, letterSpacing: "0.01em",
                   outline: "none", boxSizing: "border-box",
                   colorScheme: isLight ? "light" : "dark",
@@ -1041,7 +1041,7 @@ const NextActionHero = ({ lead, T = P, onUpdate = null, projectMode = false }) =
                   padding: "7px 12px", borderRadius: 8,
                   background: "transparent",
                   border: `1px solid ${T.border}`,
-                  color: T.txt3, fontSize: 11, fontWeight: 700,
+                  color: T.txt3, fontSize: 11, fontWeight: 500,
                   fontFamily: fontDisp, letterSpacing: "0.02em",
                   cursor: "pointer", transition: "all 0.15s",
                 }}
@@ -1057,7 +1057,7 @@ const NextActionHero = ({ lead, T = P, onUpdate = null, projectMode = false }) =
                     : `linear-gradient(135deg, ${T.accent}28, ${T.accent}10)`,
                   border: `1px solid ${isLight ? "transparent" : T.accentB}`,
                   color: isLight ? "#FFFFFF" : accentStrong,
-                  fontSize: 11, fontWeight: 800,
+                  fontSize: 11, fontWeight: 500,
                   fontFamily: fontDisp, letterSpacing: "0.02em",
                   cursor: "pointer", transition: "all 0.15s",
                   display: "inline-flex", alignItems: "center", gap: 5,
@@ -1077,7 +1077,7 @@ const NextActionHero = ({ lead, T = P, onUpdate = null, projectMode = false }) =
             marginTop: 8, padding: "4px 11px", borderRadius: 99,
             background: "transparent",
             border: `1px solid ${isLight ? `${T.accent}55` : T.accentB}`,
-            color: accentStrong, fontSize: 10, fontWeight: 700,
+            color: accentStrong, fontSize: 10, fontWeight: 500,
             fontFamily: fontDisp, letterSpacing: "0.02em",
             cursor: "pointer", transition: "all 0.16s",
             display: "inline-flex", alignItems: "center", gap: 4,
@@ -1127,7 +1127,7 @@ const NextActionHero = ({ lead, T = P, onUpdate = null, projectMode = false }) =
                 background: isLight ? "#FFFFFF" : "rgba(255,255,255,0.07)",
                 border: `1px solid ${isLight ? "rgba(37,211,102,0.45)" : "rgba(255,255,255,0.12)"}`,
                 color: isLight ? "#128C7E" : "rgba(255,255,255,0.88)",
-                fontSize: 12.5, fontWeight: 700, fontFamily: fontDisp,
+                fontSize: 12.5, fontWeight: 500, fontFamily: fontDisp,
                 letterSpacing: "0.01em", textDecoration: "none",
                 boxShadow: isLight
                   ? "0 1px 3px rgba(18,140,126,0.14)"
@@ -1172,7 +1172,7 @@ const NextActionHero = ({ lead, T = P, onUpdate = null, projectMode = false }) =
                   background: "transparent",
                   border: `1px dashed ${isLight ? `${T.accent}66` : `${T.accent}55`}`,
                   color: isLight ? `color-mix(in srgb, ${T.accent} 60%, #0B1220 40%)` : T.accent,
-                  fontSize: 12.5, fontWeight: 700, fontFamily: fontDisp,
+                  fontSize: 12.5, fontWeight: 500, fontFamily: fontDisp,
                   letterSpacing: "0.01em", cursor: "pointer",
                   transition: "all 0.18s",
                 }}
@@ -1204,7 +1204,7 @@ const NextActionHero = ({ lead, T = P, onUpdate = null, projectMode = false }) =
                 background: "transparent",
                 border: `1px dashed ${isLight ? `${T.accent}66` : `${T.accent}55`}`,
                 color: isLight ? `color-mix(in srgb, ${T.accent} 60%, #0B1220 40%)` : T.accent,
-                fontSize: 12, fontWeight: 700, fontFamily: fontDisp,
+                fontSize: 12, fontWeight: 500, fontFamily: fontDisp,
                 letterSpacing: "0.01em", cursor: "pointer",
                 transition: "all 0.18s",
               }}
@@ -1267,7 +1267,7 @@ const CopyPhoneButton = ({ phone, T = P, isLight = false }) => {
         color: copied
           ? (isLight ? `color-mix(in srgb, ${T.accent} 60%, #0B1220 40%)` : T.accent)
           : (isLight ? "rgba(15,23,42,0.6)" : "rgba(255,255,255,0.7)"),
-        fontSize: 12, fontWeight: 700, fontFamily: fontDisp,
+        fontSize: 12, fontWeight: 500, fontFamily: fontDisp,
         letterSpacing: "0.01em", cursor: "pointer", transition: "all 0.18s",
       }}
     >
@@ -1325,7 +1325,7 @@ const AddPhoneInline = ({ lead, onUpdate, T = P, isLight = false }) => {
           background: val.trim() ? (isLight ? `linear-gradient(135deg, ${T.accent}, #14B892)` : T.accent) : T.glass,
           border: "none",
           color: val.trim() ? "#FFFFFF" : T.txt3,
-          fontSize: 12, fontWeight: 700, fontFamily: fontDisp,
+          fontSize: 12, fontWeight: 500, fontFamily: fontDisp,
           cursor: val.trim() ? "pointer" : "not-allowed",
           letterSpacing: "0.01em",
           boxShadow: val.trim() && isLight ? `0 3px 10px ${T.accent}40` : "none",
@@ -1661,7 +1661,7 @@ const UpdateChatPanel = ({ isOpen, onClose, expedienteItems = [], onAddItem, onR
               <RefreshCw size={14} color={accentC} strokeWidth={2.2} />
             </div>
             <div>
-              <p style={{ margin: 0, fontSize: 13, fontWeight: 800, color: titleC, fontFamily: fontDisp, letterSpacing: "-0.015em" }}>
+              <p style={{ margin: 0, fontSize: 13, fontWeight: 500, color: titleC, fontFamily: fontDisp, letterSpacing: "-0.015em" }}>
                 ¿Qué pasó con el cliente?
               </p>
               <p style={{ margin: 0, fontSize: 9.5, color: T.txt3, fontFamily: font }}>
@@ -1705,7 +1705,7 @@ const UpdateChatPanel = ({ isOpen, onClose, expedienteItems = [], onAddItem, onR
           }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
               <Wand2 size={13} color={violetC} strokeWidth={2.4} />
-              <p style={{ margin: 0, fontSize: 11, fontWeight: 800, color: violetC, fontFamily: fontDisp, letterSpacing: "0.04em", textTransform: "uppercase" }}>
+              <p style={{ margin: 0, fontSize: 11, fontWeight: 500, color: violetC, fontFamily: fontDisp, letterSpacing: "0.04em", textTransform: "uppercase" }}>
                 Necesito aclarar antes de registrar
               </p>
             </div>
@@ -1736,7 +1736,7 @@ const UpdateChatPanel = ({ isOpen, onClose, expedienteItems = [], onAddItem, onR
                   background: violetC, border: `1px solid ${violetC}`,
                   color: T === P ? "#0B1220" : "#FFF",
                   cursor: organizing ? "wait" : "pointer",
-                  fontSize: 11.5, fontWeight: 700, fontFamily: fontDisp,
+                  fontSize: 11.5, fontWeight: 500, fontFamily: fontDisp,
                   display: "flex", alignItems: "center", justifyContent: "center", gap: 5,
                 }}
               >
@@ -1763,7 +1763,7 @@ const UpdateChatPanel = ({ isOpen, onClose, expedienteItems = [], onAddItem, onR
           {expedienteItems.length === 0 ? (
             <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "24px 0", textAlign: "center" }}>
               <MessageCircle size={24} color={T.txt3} strokeWidth={1.2} style={{ opacity: 0.28, marginBottom: 10 }} />
-              <p style={{ fontSize: 12.5, fontWeight: 600, color: T.txt3, fontFamily: fontDisp, marginBottom: 5 }}>Sin actualizaciones</p>
+              <p style={{ fontSize: 12.5, fontWeight: 400, color: T.txt3, fontFamily: fontDisp, marginBottom: 5 }}>Sin actualizaciones</p>
               <p style={{ fontSize: 10.5, color: T.txt3, lineHeight: 1.55, maxWidth: 240, fontFamily: font }}>
                 Escribe, pega un mensaje de Telegram o adjunta un archivo para registrar la primera actualización.
               </p>
@@ -1786,8 +1786,8 @@ const UpdateChatPanel = ({ isOpen, onClose, expedienteItems = [], onAddItem, onR
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 3, flexWrap: "wrap" }}>
-                    <span style={{ fontSize: 8, fontWeight: 800, color: meta.safe, background: `${meta.color}14`, border: `1px solid ${meta.color}22`, padding: "1px 6px", borderRadius: 99, letterSpacing: "0.05em", textTransform: "uppercase", fontFamily: fontDisp }}>{meta.label}</span>
-                    {item.source === "telegram" && <span style={{ fontSize: 8, fontWeight: 700, color: isLight ? "#0088CC" : "#60B8E0", background: "rgba(0,136,204,0.12)", border: "1px solid rgba(0,136,204,0.20)", padding: "1px 6px", borderRadius: 99, fontFamily: fontDisp }}>Telegram</span>}
+                    <span style={{ fontSize: 8, fontWeight: 500, color: meta.safe, background: `${meta.color}14`, border: `1px solid ${meta.color}22`, padding: "1px 6px", borderRadius: 99, letterSpacing: "0.05em", textTransform: "uppercase", fontFamily: fontDisp }}>{meta.label}</span>
+                    {item.source === "telegram" && <span style={{ fontSize: 8, fontWeight: 500, color: isLight ? "#0088CC" : "#60B8E0", background: "rgba(0,136,204,0.12)", border: "1px solid rgba(0,136,204,0.20)", padding: "1px 6px", borderRadius: 99, fontFamily: fontDisp }}>Telegram</span>}
                     {item.fileName && <span style={{ fontSize: 9, color: T.txt3, fontFamily: font, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 80 }}>{item.fileName}</span>}
                     <span style={{ fontSize: 9, color: T.txt3, marginLeft: "auto", fontFamily: font, whiteSpace: "nowrap" }}>{item.fecha}</span>
                   </div>
@@ -2092,12 +2092,12 @@ const TaskChecklist = ({ lead, onUpdate, T = P }) => {
       <div style={{ padding: "10px 14px", display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: (hasContent || addingTask) ? `1px solid ${T.border}` : "none" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
           <CheckSquare size={12} color={T.txt3} strokeWidth={2} />
-          <span style={{ fontSize: 10, fontWeight: 800, color: T.txt3, letterSpacing: "0.08em", textTransform: "uppercase", fontFamily: fontDisp }}>Tareas</span>
+          <span style={{ fontSize: 10, fontWeight: 500, color: T.txt3, letterSpacing: "0.08em", textTransform: "uppercase", fontFamily: fontDisp }}>Tareas</span>
           {pending.length > 0 && (
-            <span style={{ fontSize: 9, fontWeight: 800, color: accentC, background: `${T.accent}14`, padding: "1px 6px", borderRadius: 99, fontFamily: fontDisp }}>{pending.length}</span>
+            <span style={{ fontSize: 9, fontWeight: 500, color: accentC, background: `${T.accent}14`, padding: "1px 6px", borderRadius: 99, fontFamily: fontDisp }}>{pending.length}</span>
           )}
         </div>
-        <button onClick={() => setAdding(true)} style={{ display: "flex", alignItems: "center", gap: 4, padding: "4px 10px", borderRadius: 7, background: "transparent", border: `1px solid ${T.border}`, color: T.txt3, fontSize: 10.5, fontWeight: 600, cursor: "pointer", fontFamily: font, transition: "all 0.15s" }}
+        <button onClick={() => setAdding(true)} style={{ display: "flex", alignItems: "center", gap: 4, padding: "4px 10px", borderRadius: 7, background: "transparent", border: `1px solid ${T.border}`, color: T.txt3, fontSize: 10.5, fontWeight: 400, cursor: "pointer", fontFamily: font, transition: "all 0.15s" }}
           onMouseEnter={e => { e.currentTarget.style.background = T.glassH; e.currentTarget.style.color = T.txt2; e.currentTarget.style.borderColor = T.borderH; }}
           onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = T.txt3; e.currentTarget.style.borderColor = T.border; }}
         ><Plus size={10} strokeWidth={2.5} /> Agregar</button>
@@ -2111,7 +2111,7 @@ const TaskChecklist = ({ lead, onUpdate, T = P }) => {
             placeholder="Describe la tarea..."
             style={{ flex: 1, padding: "6px 10px", borderRadius: 7, background: isLight ? "rgba(15,23,42,0.04)" : "rgba(255,255,255,0.06)", border: `1px solid ${T.borderH}`, color: T.txt, fontSize: 12, fontFamily: font, outline: "none" }}
           />
-          <button onClick={addTask} style={{ padding: "6px 12px", borderRadius: 7, background: `${T.accent}18`, border: `1px solid ${T.accentB}`, color: accentC, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: fontDisp, whiteSpace: "nowrap" }}>+ Agregar</button>
+          <button onClick={addTask} style={{ padding: "6px 12px", borderRadius: 7, background: `${T.accent}18`, border: `1px solid ${T.accentB}`, color: accentC, fontSize: 11, fontWeight: 500, cursor: "pointer", fontFamily: fontDisp, whiteSpace: "nowrap" }}>+ Agregar</button>
           <button onClick={() => { setAdding(false); setInput(""); }} style={{ width: 26, height: 26, borderRadius: 6, background: "transparent", border: "none", cursor: "pointer", color: T.txt3, display: "flex", alignItems: "center", justifyContent: "center" }}><X size={12} /></button>
         </div>
       )}
@@ -2162,7 +2162,7 @@ const TaskChecklist = ({ lead, onUpdate, T = P }) => {
       {!hasContent && !addingTask && (
         <div style={{ padding: "20px 14px", textAlign: "center" }}>
           <p style={{ fontSize: 11.5, color: T.txt3, fontFamily: font, marginBottom: 10 }}>Añade tareas concretas para este cliente</p>
-          <button onClick={() => setAdding(true)} style={{ padding: "6px 16px", borderRadius: 7, background: `${T.accent}10`, border: `1px solid ${T.accentB}`, color: accentC, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: fontDisp }}>+ Primera tarea</button>
+          <button onClick={() => setAdding(true)} style={{ padding: "6px 16px", borderRadius: 7, background: `${T.accent}10`, border: `1px solid ${T.accentB}`, color: accentC, fontSize: 11, fontWeight: 500, cursor: "pointer", fontFamily: fontDisp }}>+ Primera tarea</button>
         </div>
       )}
     </div>
@@ -2282,7 +2282,7 @@ const PlaybookSection = ({ lead, T = P, onUpdate = null, onShowSuggest = null })
           style={{
             padding: "8px 16px", borderRadius: 9,
             background: `${T.violet}14`, border: `1px solid ${T.violet}38`,
-            color: headerC, fontSize: 12, fontWeight: 700,
+            color: headerC, fontSize: 12, fontWeight: 500,
             fontFamily: fontDisp, cursor: "pointer",
             transition: "all 0.18s",
           }}
@@ -2311,7 +2311,7 @@ const PlaybookSection = ({ lead, T = P, onUpdate = null, onShowSuggest = null })
       }}>
         <div style={{ flex: 1, minWidth: 0 }}>
           <p style={{
-            margin: 0, fontSize: 11, fontWeight: 800, color: headerC,
+            margin: 0, fontSize: 11, fontWeight: 500, color: headerC,
             letterSpacing: "0.10em", textTransform: "uppercase", fontFamily: fontDisp,
           }}>
             Acciones recomendadas
@@ -2331,7 +2331,7 @@ const PlaybookSection = ({ lead, T = P, onUpdate = null, onShowSuggest = null })
               padding: "6px 10px", borderRadius: 8,
               border: `1px solid ${T.border}`,
               background: "transparent",
-              color: T.txt2, fontSize: 11, fontWeight: 600,
+              color: T.txt2, fontSize: 11, fontWeight: 400,
               fontFamily: font, cursor: "pointer",
               transition: "all 0.18s",
               whiteSpace: "nowrap",
@@ -2348,7 +2348,7 @@ const PlaybookSection = ({ lead, T = P, onUpdate = null, onShowSuggest = null })
             padding: "4px 10px", borderRadius: 99,
             background: completed > 0 ? `${T.emerald}14` : T.glass,
             border: `1px solid ${completed > 0 ? `${T.emerald}30` : T.border}`,
-            fontSize: 10.5, fontWeight: 700, fontFamily: fontDisp,
+            fontSize: 10.5, fontWeight: 500, fontFamily: fontDisp,
             color: completed > 0 ? safeC(T.emerald) : T.txt3,
             whiteSpace: "nowrap",
           }}>
@@ -2389,7 +2389,7 @@ const PlaybookSection = ({ lead, T = P, onUpdate = null, onShowSuggest = null })
                   display: "flex", alignItems: "center", justifyContent: "center",
                   transition: "all 0.16s",
                   color: "#FFFFFF",
-                  fontSize: 12, fontWeight: 800,
+                  fontSize: 12, fontWeight: 500,
                 }}
                 onMouseEnter={e => { if (!done && !isEditing) e.currentTarget.style.borderColor = T.emerald; }}
                 onMouseLeave={e => { if (!done && !isEditing) e.currentTarget.style.borderColor = isLight ? "rgba(15,23,42,0.20)" : "rgba(255,255,255,0.20)"; }}
@@ -2402,7 +2402,7 @@ const PlaybookSection = ({ lead, T = P, onUpdate = null, onShowSuggest = null })
                 {/* Etiqueta de categoría sin emoji */}
                 <div style={{ marginBottom: 6 }}>
                   <span style={{
-                    fontSize: 9, fontWeight: 800, color: catC,
+                    fontSize: 9, fontWeight: 500, color: catC,
                     background: `${catColor}${isLight ? "14" : "10"}`,
                     border: `1px solid ${catColor}${isLight ? "26" : "1E"}`,
                     padding: "2px 7px", borderRadius: 99,
@@ -2433,7 +2433,7 @@ const PlaybookSection = ({ lead, T = P, onUpdate = null, onShowSuggest = null })
                   />
                 ) : (
                   <p style={{
-                    margin: 0, fontSize: 12.5, fontWeight: 600,
+                    margin: 0, fontSize: 12.5, fontWeight: 400,
                     color: isLight ? T.txt : "#FFFFFF",
                     fontFamily: fontDisp, lineHeight: 1.45,
                     textDecoration: done ? "line-through" : "none",
@@ -2449,7 +2449,7 @@ const PlaybookSection = ({ lead, T = P, onUpdate = null, onShowSuggest = null })
                     margin: "4px 0 0", fontSize: 11, color: T.txt3,
                     fontFamily: font, lineHeight: 1.5,
                   }}>
-                    <span style={{ fontWeight: 700, color: catC }}>Técnica:</span> {item.technique}
+                    <span style={{ fontWeight: 500, color: catC }}>Técnica:</span> {item.technique}
                   </p>
                 )}
                 {!isEditing && item.reason && (
@@ -2472,7 +2472,7 @@ const PlaybookSection = ({ lead, T = P, onUpdate = null, onShowSuggest = null })
                             padding: "5px 12px", borderRadius: 7,
                             background: `${T.emerald}18`, border: `1px solid ${T.emerald}40`,
                             color: safeC(T.emerald),
-                            fontSize: 11, fontWeight: 700, fontFamily: fontDisp,
+                            fontSize: 11, fontWeight: 500, fontFamily: fontDisp,
                             cursor: "pointer",
                           }}
                         >Guardar</button>
@@ -2482,7 +2482,7 @@ const PlaybookSection = ({ lead, T = P, onUpdate = null, onShowSuggest = null })
                             padding: "5px 12px", borderRadius: 7,
                             background: "transparent", border: `1px solid ${T.border}`,
                             color: T.txt3,
-                            fontSize: 11, fontWeight: 600, fontFamily: font,
+                            fontSize: 11, fontWeight: 400, fontFamily: font,
                             cursor: "pointer",
                           }}
                         >Cancelar</button>
@@ -2496,7 +2496,7 @@ const PlaybookSection = ({ lead, T = P, onUpdate = null, onShowSuggest = null })
                             padding: "5px 10px", borderRadius: 7,
                             background: "transparent", border: `1px solid ${T.border}`,
                             color: T.txt3,
-                            fontSize: 10.5, fontWeight: 600, fontFamily: font,
+                            fontSize: 10.5, fontWeight: 400, fontFamily: font,
                             cursor: "pointer",
                             transition: "all 0.15s",
                           }}
@@ -2510,7 +2510,7 @@ const PlaybookSection = ({ lead, T = P, onUpdate = null, onShowSuggest = null })
                             padding: "5px 10px", borderRadius: 7,
                             background: "transparent", border: `1px solid ${T.border}`,
                             color: T.txt3,
-                            fontSize: 10.5, fontWeight: 600, fontFamily: font,
+                            fontSize: 10.5, fontWeight: 400, fontFamily: font,
                             cursor: "pointer",
                             transition: "all 0.15s",
                           }}
@@ -2533,7 +2533,7 @@ const PlaybookSection = ({ lead, T = P, onUpdate = null, onShowSuggest = null })
             borderTop: playbook.length > 0 ? `1px solid ${T.border}` : "none",
             background: isLight ? "rgba(15,23,42,0.02)" : "rgba(255,255,255,0.02)",
           }}>
-            <p style={{ margin: "0 0 8px", fontSize: 10, fontWeight: 800, color: T.txt3, letterSpacing: "0.08em", textTransform: "uppercase", fontFamily: fontDisp }}>
+            <p style={{ margin: "0 0 8px", fontSize: 10, fontWeight: 500, color: T.txt3, letterSpacing: "0.08em", textTransform: "uppercase", fontFamily: fontDisp }}>
               Nueva acción
             </p>
             <textarea
@@ -2564,7 +2564,7 @@ const PlaybookSection = ({ lead, T = P, onUpdate = null, onShowSuggest = null })
                   padding: "6px 14px", borderRadius: 8,
                   background: `${T.violet}20`, border: `1px solid ${T.violet}48`,
                   color: headerC,
-                  fontSize: 11.5, fontWeight: 700, fontFamily: fontDisp,
+                  fontSize: 11.5, fontWeight: 500, fontFamily: fontDisp,
                   cursor: "pointer",
                 }}
               >Agregar</button>
@@ -2574,7 +2574,7 @@ const PlaybookSection = ({ lead, T = P, onUpdate = null, onShowSuggest = null })
                   padding: "6px 14px", borderRadius: 8,
                   background: "transparent", border: `1px solid ${T.border}`,
                   color: T.txt3,
-                  fontSize: 11.5, fontWeight: 600, fontFamily: font,
+                  fontSize: 11.5, fontWeight: 400, fontFamily: font,
                   cursor: "pointer",
                 }}
               >Cancelar</button>
@@ -2597,7 +2597,7 @@ const PlaybookSection = ({ lead, T = P, onUpdate = null, onShowSuggest = null })
                 padding: "7px 14px", borderRadius: 8,
                 background: `${T.violet}12`, border: `1px solid ${T.violet}30`,
                 color: headerC,
-                fontSize: 11, fontWeight: 700, fontFamily: fontDisp,
+                fontSize: 11, fontWeight: 500, fontFamily: fontDisp,
                 cursor: "pointer",
                 transition: "all 0.18s",
               }}
@@ -2616,7 +2616,7 @@ const PlaybookSection = ({ lead, T = P, onUpdate = null, onShowSuggest = null })
                 background: "transparent",
                 border: `1px solid ${T.border}`,
                 color: T.txt3,
-                fontSize: 11, fontWeight: 600, fontFamily: font,
+                fontSize: 11, fontWeight: 400, fontFamily: font,
                 cursor: "pointer",
                 transition: "all 0.18s",
               }}
@@ -2655,7 +2655,7 @@ const ActionTimeline = ({ lead, T = P, maxItems = 6 }) => {
       <div style={{ borderRadius: 12, border: `1px dashed ${T.border}`, padding: "14px 16px", background: T.glass }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
           <ListChecks size={12} color={T.txt3} strokeWidth={2} />
-          <span style={{ fontSize: 10, fontWeight: 800, color: T.txt3, letterSpacing: "0.08em", textTransform: "uppercase", fontFamily: fontDisp }}>Lista de acciones</span>
+          <span style={{ fontSize: 10, fontWeight: 500, color: T.txt3, letterSpacing: "0.08em", textTransform: "uppercase", fontFamily: fontDisp }}>Lista de acciones</span>
         </div>
         <p style={{ margin: 0, fontSize: 12, color: T.txt3, fontFamily: font, lineHeight: 1.5 }}>
           Cada vez que registres una próxima acción, sumes un seguimiento o cambies la etapa, quedará aquí como historial del cliente.
@@ -2692,8 +2692,8 @@ const ActionTimeline = ({ lead, T = P, maxItems = 6 }) => {
       {/* Header */}
       <div style={{ padding: "10px 15px", borderBottom: `1px solid ${T.border}`, background: T.glass, display: "flex", alignItems: "center", gap: 8 }}>
         <ListChecks size={12} color={T.txt3} strokeWidth={2} />
-        <span style={{ fontSize: 10, fontWeight: 800, color: T.txt3, letterSpacing: "0.08em", textTransform: "uppercase", fontFamily: fontDisp }}>Lista de acciones</span>
-        <span style={{ fontSize: 9.5, fontWeight: 800, color: T.accent, background: `${T.accent}14`, border: `1px solid ${T.accent}28`, padding: "1px 7px", borderRadius: 99, fontFamily: fontDisp }}>{history.length}</span>
+        <span style={{ fontSize: 10, fontWeight: 500, color: T.txt3, letterSpacing: "0.08em", textTransform: "uppercase", fontFamily: fontDisp }}>Lista de acciones</span>
+        <span style={{ fontSize: 9.5, fontWeight: 500, color: T.accent, background: `${T.accent}14`, border: `1px solid ${T.accent}28`, padding: "1px 7px", borderRadius: 99, fontFamily: fontDisp }}>{history.length}</span>
         <span style={{ marginLeft: "auto", fontSize: 9, color: T.txt3, fontFamily: font, opacity: 0.7 }}>más reciente arriba</span>
       </div>
 
@@ -2717,7 +2717,7 @@ const ActionTimeline = ({ lead, T = P, maxItems = 6 }) => {
               {/* Contenido */}
               <div style={{ flex: 1, padding: "10px 14px 10px 0", minWidth: 0 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 3, flexWrap: "wrap" }}>
-                  <span style={{ fontSize: 9, fontWeight: 800, color: colSafe, background: `${col}14`, border: `1px solid ${col}28`, padding: "1px 6px", borderRadius: 99, letterSpacing: "0.06em", textTransform: "uppercase", fontFamily: fontDisp }}>{label}</span>
+                  <span style={{ fontSize: 9, fontWeight: 500, color: colSafe, background: `${col}14`, border: `1px solid ${col}28`, padding: "1px 6px", borderRadius: 99, letterSpacing: "0.06em", textTransform: "uppercase", fontFamily: fontDisp }}>{label}</span>
                   {entry.by && (
                     <span style={{ fontSize: 9, color: T.txt3, fontFamily: font }}>· {entry.by}</span>
                   )}
@@ -2947,7 +2947,7 @@ const LeadActivityTimeline = ({ lead, T = P, maxItems = 8 }) => {
       <div style={{ borderRadius: 12, border: `1px dashed ${T.border}`, padding: "14px 16px", background: T.glass }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
           <Activity size={12} color={T.txt3} strokeWidth={2} />
-          <span style={{ fontSize: 10, fontWeight: 800, color: T.txt3, letterSpacing: "0.08em", textTransform: "uppercase", fontFamily: fontDisp }}>Sin actividad registrada</span>
+          <span style={{ fontSize: 10, fontWeight: 500, color: T.txt3, letterSpacing: "0.08em", textTransform: "uppercase", fontFamily: fontDisp }}>Sin actividad registrada</span>
         </div>
         <p style={{ margin: 0, fontSize: 12, color: T.txt3, fontFamily: font, lineHeight: 1.5 }}>
           Cada cambio (reasignación, etapa, notas, próxima acción, etc.) se registrará aquí automáticamente.
@@ -2963,8 +2963,8 @@ const LeadActivityTimeline = ({ lead, T = P, maxItems = 8 }) => {
       {/* Subtle inner header: count + ordering hint */}
       <div style={{ padding: "10px 15px", borderBottom: `1px solid ${T.border}`, display: "flex", alignItems: "center", gap: 8 }}>
         <Activity size={12} color={T.txt3} strokeWidth={2} />
-        <span style={{ fontSize: 10, fontWeight: 800, color: T.txt3, letterSpacing: "0.08em", textTransform: "uppercase", fontFamily: fontDisp }}>Línea de tiempo</span>
-        <span style={{ fontSize: 9.5, fontWeight: 800, color: T.accent, background: `${T.accent}14`, border: `1px solid ${T.accent}28`, padding: "1px 7px", borderRadius: 99, fontFamily: fontDisp }}>{events.length}</span>
+        <span style={{ fontSize: 10, fontWeight: 500, color: T.txt3, letterSpacing: "0.08em", textTransform: "uppercase", fontFamily: fontDisp }}>Línea de tiempo</span>
+        <span style={{ fontSize: 9.5, fontWeight: 500, color: T.accent, background: `${T.accent}14`, border: `1px solid ${T.accent}28`, padding: "1px 7px", borderRadius: 99, fontFamily: fontDisp }}>{events.length}</span>
         <span style={{ marginLeft: "auto", fontSize: 9, color: T.txt3, fontFamily: font, opacity: 0.7 }}>más reciente arriba</span>
       </div>
 
@@ -2985,7 +2985,7 @@ const LeadActivityTimeline = ({ lead, T = P, maxItems = 8 }) => {
               </div>
               <div style={{ flex: 1, padding: "10px 14px 10px 0", minWidth: 0 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 3, flexWrap: "wrap" }}>
-                  <span style={{ fontSize: 9, fontWeight: 800, color: colSafe, background: `${col}14`, border: `1px solid ${col}28`, padding: "1px 6px", borderRadius: 99, letterSpacing: "0.06em", textTransform: "uppercase", fontFamily: fontDisp }}>
+                  <span style={{ fontSize: 9, fontWeight: 500, color: colSafe, background: `${col}14`, border: `1px solid ${col}28`, padding: "1px 6px", borderRadius: 99, letterSpacing: "0.06em", textTransform: "uppercase", fontFamily: fontDisp }}>
                     {ev.title}
                   </span>
                   {ev.actor && (
@@ -3028,7 +3028,7 @@ const SectionLabel = ({ icon: Icon, children, T = P }) => (
   <p style={{
     margin: "0 0 8px",
     display: "inline-flex", alignItems: "center", gap: 6,
-    fontSize: 10, fontWeight: 800, color: T.txt3,
+    fontSize: 10, fontWeight: 500, color: T.txt3,
     letterSpacing: "0.08em", textTransform: "uppercase",
     fontFamily: fontDisp,
   }}>
@@ -3133,7 +3133,7 @@ const AsesorPicker = ({
           background: pillBg,
           border: `1px solid ${pillBorder}`,
           color: pillTxt,
-          fontSize: pillFontSize, fontWeight: 600, fontFamily: font,
+          fontSize: pillFontSize, fontWeight: 400, fontFamily: font,
           cursor: "pointer", outline: "none",
           transition: "all 0.15s",
           width: fullWidth ? "100%" : undefined,
@@ -3149,7 +3149,7 @@ const AsesorPicker = ({
             background: value ? currentColor : `${T.txt3}40`,
             color: "#FFFFFF",
             display: "inline-flex", alignItems: "center", justifyContent: "center",
-            fontSize: Math.round(avatarSize * 0.45), fontWeight: 800, fontFamily: fontDisp,
+            fontSize: Math.round(avatarSize * 0.45), fontWeight: 500, fontFamily: fontDisp,
             flexShrink: 0,
             letterSpacing: "0.01em",
           }}>
@@ -3247,7 +3247,7 @@ const AsesorPicker = ({
                     width: 24, height: 24, borderRadius: "50%",
                     background: c, color: "#FFFFFF",
                     display: "inline-flex", alignItems: "center", justifyContent: "center",
-                    fontSize: 11, fontWeight: 800, fontFamily: fontDisp,
+                    fontSize: 11, fontWeight: 500, fontFamily: fontDisp,
                     flexShrink: 0,
                   }}>
                     {asesorInitials(name)}
@@ -3269,7 +3269,7 @@ const AsesorPicker = ({
                 style={{
                   width: "100%", padding: "10px 12px",
                   border: "none", background: "transparent",
-                  color: T.accent, fontSize: 12, fontFamily: font, fontWeight: 700,
+                  color: T.accent, fontSize: 12, fontFamily: font, fontWeight: 500,
                   cursor: "pointer", textAlign: "left",
                   display: "flex", alignItems: "center", gap: 8,
                   transition: "background 0.12s",
@@ -3308,7 +3308,7 @@ const CollapsibleSectionToggle = ({ expanded, onToggle, label, icon: Icon, count
         background: expanded ? T.glassH : T.glass,
         border: `1px solid ${expanded ? T.borderH : T.border}`,
         color: expanded ? T.txt2 : T.txt3,
-        fontSize: 12, fontWeight: 700,
+        fontSize: 12, fontWeight: 500,
         fontFamily: fontDisp, letterSpacing: "0.01em",
         cursor: "pointer",
         display: "flex", alignItems: "center", gap: 10,
@@ -3337,7 +3337,7 @@ const CollapsibleSectionToggle = ({ expanded, onToggle, label, icon: Icon, count
           borderRadius: 99,
           background: isLight ? "rgba(15,23,42,0.08)" : "rgba(255,255,255,0.08)",
           color: T.txt2,
-          fontSize: 10, fontWeight: 800, letterSpacing: "0.02em",
+          fontSize: 10, fontWeight: 500, letterSpacing: "0.02em",
           fontFamily: fontDisp, flexShrink: 0,
         }}>{count}</span>
       )}
@@ -3371,7 +3371,7 @@ const DiscoveryGeneralData = ({ lead, onUpdate, T = P, isLight = false }) => {
       <p style={{
         margin: 0,
         marginBottom: 5,
-        fontSize: 9.5, fontWeight: 800,
+        fontSize: 9.5, fontWeight: 500,
         letterSpacing: "0.08em", textTransform: "uppercase",
         color: labelC, fontFamily: fontDisp,
       }}>{label}</p>
@@ -3458,7 +3458,7 @@ const DiscoveryGeneralData = ({ lead, onUpdate, T = P, isLight = false }) => {
         <div style={{ minWidth: 0, flex: 1 }}>
           <p style={{
             margin: 0, marginBottom: 4,
-            fontSize: 9.5, fontWeight: 800, letterSpacing: "0.08em", textTransform: "uppercase",
+            fontSize: 9.5, fontWeight: 500, letterSpacing: "0.08em", textTransform: "uppercase",
             color: isLight ? `color-mix(in srgb, ${T.amber} 55%, #0B1220 45%)` : T.amber,
             fontFamily: fontDisp,
           }}>Riesgo identificado</p>
@@ -3487,7 +3487,7 @@ const DiscoveryGeneralData = ({ lead, onUpdate, T = P, isLight = false }) => {
         <div style={{ minWidth: 0, flex: 1 }}>
           <p style={{
             margin: 0, marginBottom: 2,
-            fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em",
+            fontSize: 9, fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.06em",
             color: T.txt3, fontFamily: fontDisp,
           }}>Última actividad</p>
           <div style={{ fontSize: 11.5, color: T.txt2, lineHeight: 1.4, wordBreak: "break-word" }}>
@@ -3699,7 +3699,7 @@ const NotesModal = ({ lead, onClose, onSave, onUpdate, onSwitchTab, onShowHistor
                   : `linear-gradient(145deg, ${T.blue}24 0%, ${T.blue}10 100%)`,
                 border: `1px solid ${isLight ? `${T.blue}38` : `${T.blue}44`}`,
                 display: "flex", alignItems: "center", justifyContent: "center",
-                fontSize: isMobile ? 16 : 18, fontWeight: 700,
+                fontSize: isMobile ? 16 : 18, fontWeight: 500,
                 color: isLight ? `color-mix(in srgb, ${T.blue} 60%, #0B1220 40%)` : T.blue,
                 fontFamily: fontDisp, flexShrink: 0,
                 boxShadow: isLight ? `0 1px 2px ${T.blue}18, inset 0 1px 0 rgba(255,255,255,0.6)` : "none",
@@ -3709,7 +3709,7 @@ const NotesModal = ({ lead, onClose, onSave, onUpdate, onSwitchTab, onShowHistor
                 <h2 style={{
                   margin: 0,
                   fontSize: isMobile ? 18 : 19,
-                  fontWeight: 700,
+                  fontWeight: 500,
                   letterSpacing: "-0.025em",
                   color: titleC,
                   fontFamily: fontDisp,
@@ -3750,7 +3750,7 @@ const NotesModal = ({ lead, onClose, onSave, onUpdate, onSwitchTab, onShowHistor
                   {!!zoomEventsOf(lead).done && (
                     <span title="Este cliente ya pasó por Zoom (concretado o etapa posterior)" style={{
                       display: "inline-flex", alignItems: "center", gap: 4,
-                      fontSize: 10.5, fontWeight: 700, letterSpacing: "0.01em",
+                      fontSize: 10.5, fontWeight: 500, letterSpacing: "0.01em",
                       color: "#10B981", background: "rgba(16,185,129,0.12)",
                       border: "1px solid rgba(16,185,129,0.32)", padding: "2px 9px",
                       borderRadius: 99, whiteSpace: "nowrap",
@@ -3793,7 +3793,7 @@ const NotesModal = ({ lead, onClose, onSave, onUpdate, onSwitchTab, onShowHistor
                   style={{
                     display: "inline-flex", alignItems: "center", gap: 5,
                     padding: "3px 9px", borderRadius: 99,
-                    fontSize: 10, fontWeight: 700, fontFamily: fontDisp,
+                    fontSize: 10, fontWeight: 500, fontFamily: fontDisp,
                     letterSpacing: "0.02em", whiteSpace: "nowrap",
                     border: `1px solid ${
                       saveStatus === "saved" ? `${T.accent}${isLight ? "44" : "38"}` :
@@ -3843,7 +3843,7 @@ const NotesModal = ({ lead, onClose, onSave, onUpdate, onSwitchTab, onShowHistor
                 }}>
                   <Trash2 size={20} color="#EF4444" />
                 </div>
-                <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: T.txt, fontFamily: fontDisp, letterSpacing: "-0.02em" }}>
+                <h3 style={{ margin: 0, fontSize: 16, fontWeight: 500, color: T.txt, fontFamily: fontDisp, letterSpacing: "-0.02em" }}>
                   ¿Eliminar a {lead.n}?
                 </h3>
                 <p style={{ margin: "8px 0 18px", fontSize: 12.5, color: T.txt2, lineHeight: 1.5 }}>
@@ -3853,7 +3853,7 @@ const NotesModal = ({ lead, onClose, onSave, onUpdate, onSwitchTab, onShowHistor
                   <button onClick={() => setConfirmDelete(false)} style={{
                     flex: 1, padding: "10px 14px", borderRadius: 10,
                     border: `1px solid ${T.border}`, background: "transparent",
-                    color: T.txt2, fontSize: 13, fontWeight: 600, fontFamily: fontDisp, cursor: "pointer",
+                    color: T.txt2, fontSize: 13, fontWeight: 400, fontFamily: fontDisp, cursor: "pointer",
                   }}>Cancelar</button>
                   <button onClick={async () => {
                     setConfirmDelete(false);
@@ -3863,7 +3863,7 @@ const NotesModal = ({ lead, onClose, onSave, onUpdate, onSwitchTab, onShowHistor
                     flex: 1, padding: "10px 14px", borderRadius: 10,
                     border: "1px solid rgba(239,68,68,0.4)",
                     background: "rgba(239,68,68,0.18)",
-                    color: "#FCA5A5", fontSize: 13, fontWeight: 700, fontFamily: fontDisp, cursor: "pointer",
+                    color: "#FCA5A5", fontSize: 13, fontWeight: 500, fontFamily: fontDisp, cursor: "pointer",
                   }}>Sí, eliminar</button>
                 </div>
               </div>
@@ -3946,7 +3946,7 @@ const NotesModal = ({ lead, onClose, onSave, onUpdate, onSwitchTab, onShowHistor
               const uniq = urls.filter(u => (seen.has(u) ? false : seen.add(u)));
               return (
                 <div style={{ marginTop: 11, display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center" }}>
-                  <span style={{ fontSize: 10, fontWeight: 800, color: T.txt3, letterSpacing: "0.06em", textTransform: "uppercase", fontFamily: fontDisp }}>Enlaces</span>
+                  <span style={{ fontSize: 10, fontWeight: 500, color: T.txt3, letterSpacing: "0.06em", textTransform: "uppercase", fontFamily: fontDisp }}>Enlaces</span>
                   {uniq.map((u, i) => {
                     const href = u.startsWith("http") ? u : `https://${u}`;
                     const lower = u.toLowerCase();
@@ -3963,7 +3963,7 @@ const NotesModal = ({ lead, onClose, onSave, onUpdate, onSwitchTab, onShowHistor
                           display: "inline-flex", alignItems: "center", gap: 6,
                           padding: "5px 11px", borderRadius: 8,
                           background: `${T.blue}1A`, border: `1px solid ${T.blue}4D`, color: T.blue,
-                          fontSize: 12, fontWeight: 700, fontFamily: font, textDecoration: "none",
+                          fontSize: 12, fontWeight: 500, fontFamily: font, textDecoration: "none",
                           cursor: "pointer", maxWidth: 280, overflow: "hidden",
                           textOverflow: "ellipsis", whiteSpace: "nowrap", transition: "all 0.15s",
                         }}
@@ -3993,7 +3993,7 @@ const NotesModal = ({ lead, onClose, onSave, onUpdate, onSwitchTab, onShowHistor
                     background: isLight ? `${T.accent}14` : `${T.accent}1A`,
                     border: `1px solid ${isLight ? `${T.accent}44` : `${T.accent}38`}`,
                     color: isLight ? `color-mix(in srgb, ${T.accent} 58%, #0B1220 42%)` : T.accent,
-                    fontSize: 12.5, fontWeight: 700,
+                    fontSize: 12.5, fontWeight: 500,
                     fontFamily: fontDisp, letterSpacing: "0.01em",
                     cursor: "pointer",
                     display: "flex", alignItems: "center", justifyContent: "center", gap: 7,
@@ -4257,14 +4257,14 @@ const LeadPanel = ({ lead, onClose, oc, onUpdate, onSwitchTab, onShowHistory, on
   const inputBg = isLight ? "rgba(15,23,42,0.04)" : "rgba(255,255,255,0.05)";
   const inp = (label, key, ph, full) => (
     <div style={full ? { gridColumn: "1 / -1" } : {}}>
-      <p style={{ fontSize: 9, fontWeight: 700, color: T.txt3, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 4, fontFamily: fontDisp }}>{label}</p>
+      <p style={{ fontSize: 9, fontWeight: 500, color: T.txt3, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 4, fontFamily: fontDisp }}>{label}</p>
       <input value={f(key)} onChange={e => sf(key)(e.target.value)} placeholder={ph}
         style={{ width: "100%", padding: "8px 10px", borderRadius: 9, background: inputBg, border: `1px solid ${T.borderH}`, color: T.txt, fontSize: 12, outline: "none", fontFamily: font, boxSizing: "border-box" }} />
     </div>
   );
   const textarea = (label, key, ph) => (
     <div style={{ gridColumn: "1 / -1" }}>
-      <p style={{ fontSize: 9, fontWeight: 700, color: T.txt3, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 4, fontFamily: fontDisp }}>{label}</p>
+      <p style={{ fontSize: 9, fontWeight: 500, color: T.txt3, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 4, fontFamily: fontDisp }}>{label}</p>
       <textarea value={f(key)} onChange={e => sf(key)(e.target.value)} placeholder={ph} rows={3}
         style={{ width: "100%", padding: "8px 10px", borderRadius: 9, background: inputBg, border: `1px solid ${T.borderH}`, color: T.txt, fontSize: 12, outline: "none", fontFamily: font, resize: "vertical", boxSizing: "border-box" }} />
     </div>
@@ -4308,7 +4308,7 @@ const LeadPanel = ({ lead, onClose, oc, onUpdate, onSwitchTab, onShowHistory, on
               {lead.tag === "requiere-humano" && (
                 <span title="El bot pidió que un humano tome control de la conversación" style={{
                   display: "inline-flex", alignItems: "center", gap: 4,
-                  fontSize: 9.5, fontWeight: 800, letterSpacing: "0.06em",
+                  fontSize: 9.5, fontWeight: 500, letterSpacing: "0.06em",
                   color: "#FFFFFF",
                   background: isLight ? "#DC2626" : "#EF4444",
                   border: `1px solid ${isLight ? "#B91C1C" : "#F87171"}`,
@@ -4318,15 +4318,15 @@ const LeadPanel = ({ lead, onClose, oc, onUpdate, onSwitchTab, onShowHistory, on
                 }}>🔥 Requiere Humano</span>
               )}
               {lead.hot && lead.tag !== "requiere-humano" && (
-                <span style={{ fontSize: 9, fontWeight: 700, color: T.accent, background: `${T.accent}12`, border: `1px solid ${T.accentB}`, padding: "2px 8px", borderRadius: 99 }}>HOT</span>
+                <span style={{ fontSize: 9, fontWeight: 500, color: T.accent, background: `${T.accent}12`, border: `1px solid ${T.accentB}`, padding: "2px 8px", borderRadius: 99 }}>HOT</span>
               )}
               {scheduledCall && (
                 <ScheduledCallBadge scheduledAt={scheduledCall.scheduled_at} variant="drawer" T={T} isLight={isLight} />
               )}
-              {lead.daysInactive >= 7 && <span style={{ fontSize: 9, fontWeight: 600, color: T.txt3, background: T.glass, border: `1px solid ${T.border}`, padding: "2px 8px", borderRadius: 99 }}>{lead.daysInactive}d inactivo</span>}
+              {lead.daysInactive >= 7 && <span style={{ fontSize: 9, fontWeight: 400, color: T.txt3, background: T.glass, border: `1px solid ${T.border}`, padding: "2px 8px", borderRadius: 99 }}>{lead.daysInactive}d inactivo</span>}
             </div>
             <div style={{ display: "flex", gap: 6 }}>
-              {!editing && <button onClick={startEditing} style={{ display: "flex", alignItems: "center", gap: 5, padding: "6px 12px", borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", color: T.txt3, fontSize: 11, fontWeight: 600, cursor: "pointer", transition: "all 0.18s" }} onMouseEnter={e => { e.currentTarget.style.background = T.glassH; e.currentTarget.style.color = T.txt; e.currentTarget.style.borderColor = T.borderH; }} onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = T.txt3; e.currentTarget.style.borderColor = T.border; }}>Editar</button>}
+              {!editing && <button onClick={startEditing} style={{ display: "flex", alignItems: "center", gap: 5, padding: "6px 12px", borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", color: T.txt3, fontSize: 11, fontWeight: 400, cursor: "pointer", transition: "all 0.18s" }} onMouseEnter={e => { e.currentTarget.style.background = T.glassH; e.currentTarget.style.color = T.txt; e.currentTarget.style.borderColor = T.borderH; }} onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = T.txt3; e.currentTarget.style.borderColor = T.border; }}>Editar</button>}
               <button onClick={() => { navigator.clipboard?.writeText(buildTelegramSummary(lead)).then(() => { setPanelCopied(true); setTimeout(() => setPanelCopied(false), 1800); }); }} title="Copiar resumen para Telegram" style={{ width: 30, height: 30, borderRadius: 8, border: `1px solid ${T.border}`, background: panelCopied ? `${T.accent}18` : "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.18s", color: panelCopied ? T.accent : T.txt3 }}
                 onMouseEnter={e => e.currentTarget.style.background = panelCopied ? `${T.accent}22` : T.glassH}
                 onMouseLeave={e => e.currentTarget.style.background = panelCopied ? `${T.accent}18` : "transparent"}
@@ -4359,20 +4359,20 @@ const LeadPanel = ({ lead, onClose, oc, onUpdate, onSwitchTab, onShowHistory, on
                 background: isLight ? `${T.accent}10` : `${T.accent}0E`,
                 border: `1px solid ${isLight ? `${T.accent}28` : `${T.accent}20`}`,
                 display: "flex", alignItems: "center", justifyContent: "center",
-                fontSize: 18, fontWeight: 800, color: isLight ? `color-mix(in srgb, ${T.accent} 58%, #0B1220 42%)` : T.accent,
+                fontSize: 18, fontWeight: 500, color: isLight ? `color-mix(in srgb, ${T.accent} 58%, #0B1220 42%)` : T.accent,
                 fontFamily: fontDisp,
               }}>{lead.n.charAt(0)}</div>
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
-              {editing ? <input value={f("n")} onChange={e => sf("n")(e.target.value)} style={{ width: "100%", fontSize: 17, fontWeight: 700, fontFamily: fontDisp, background: "transparent", border: "none", borderBottom: `1px solid ${T.borderH}`, color: titleC, outline: "none", paddingBottom: 3, marginBottom: 6, boxSizing: "border-box" }} />
-                : <p style={{ fontSize: 17, fontWeight: 700, color: titleC, fontFamily: fontDisp, letterSpacing: "-0.025em", marginBottom: 4, lineHeight: 1.1 }}>
-                    <InlineEdit value={lead.n} onSave={v => onUpdate?.({...lead, n: v})} T={T} isLight={isLight} placeholder="Nombre" editStyle={{ fontSize: 17, fontWeight: 700 }} />
+              {editing ? <input value={f("n")} onChange={e => sf("n")(e.target.value)} style={{ width: "100%", fontSize: 17, fontWeight: 500, fontFamily: fontDisp, background: "transparent", border: "none", borderBottom: `1px solid ${T.borderH}`, color: titleC, outline: "none", paddingBottom: 3, marginBottom: 6, boxSizing: "border-box" }} />
+                : <p style={{ fontSize: 17, fontWeight: 500, color: titleC, fontFamily: fontDisp, letterSpacing: "-0.025em", marginBottom: 4, lineHeight: 1.1 }}>
+                    <InlineEdit value={lead.n} onSave={v => onUpdate?.({...lead, n: v})} T={T} isLight={isLight} placeholder="Nombre" editStyle={{ fontSize: 17, fontWeight: 500 }} />
                   </p>}
               <p style={{ fontSize: 11, color: T.txt3, marginBottom: 6 }}>
                 {editing ? lead.tag : <InlineEdit value={lead.tag} onSave={v => onUpdate?.({...lead, tag: v})} T={T} isLight={isLight} placeholder="Etiqueta / segmento" emptyText="Sin etiqueta" />}
               </p>
               <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                {editing ? <select value={f("st")} onChange={e => sf("st")(e.target.value)} style={{ padding: "3px 8px", borderRadius: 99, background: `${stgC[f("st")]||T.txt3}18`, border: `1px solid ${stgC[f("st")]||T.txt3}30`, color: isLight ? `color-mix(in srgb, ${stgC[f("st")]||T.txt3} 60%, #0B1220 40%)` : (stgC[f("st")]||T.txt3), fontSize: 10, fontWeight: 700, cursor: "pointer", outline: "none" }}>{STAGES.map(s => <option key={s} value={s} style={{ background: isLight ? "#FFFFFF" : "#111318", color: T.txt }}>{s}</option>)}</select>
+                {editing ? <select value={f("st")} onChange={e => sf("st")(e.target.value)} style={{ padding: "3px 8px", borderRadius: 99, background: `${stgC[f("st")]||T.txt3}18`, border: `1px solid ${stgC[f("st")]||T.txt3}30`, color: isLight ? `color-mix(in srgb, ${stgC[f("st")]||T.txt3} 60%, #0B1220 40%)` : (stgC[f("st")]||T.txt3), fontSize: 10, fontWeight: 500, cursor: "pointer", outline: "none" }}>{STAGES.map(s => <option key={s} value={s} style={{ background: isLight ? "#FFFFFF" : "#111318", color: T.txt }}>{s}</option>)}</select>
                   : <Pill color={stageColor} s isLight={isLight}>{lead.st}</Pill>}
                 <span style={{ fontSize: 10, color: T.txt3 }}>·</span>
                 {editing ? (
@@ -4382,17 +4382,17 @@ const LeadPanel = ({ lead, onClose, oc, onUpdate, onSwitchTab, onShowHistory, on
                       <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
                         <input value={f("budget")} onChange={e => sf("budget")(e.target.value)} placeholder="300k"
                           title="Acepta 300k, 1.5M, 2 mdd, $500,000"
-                          style={{ fontSize: 12, fontWeight: 700, fontFamily: fontDisp, background: "transparent", border: "none", borderBottom: `1px solid ${T.border}`, color: titleC, outline: "none", width: 90 }} />
-                        {prev > 0 && <span style={{ fontSize: 10, color: T.accent, fontFamily: fontDisp, fontWeight: 700 }}>= {formatBudget(prev)}</span>}
+                          style={{ fontSize: 12, fontWeight: 500, fontFamily: fontDisp, background: "transparent", border: "none", borderBottom: `1px solid ${T.border}`, color: titleC, outline: "none", width: 90 }} />
+                        {prev > 0 && <span style={{ fontSize: 10, color: T.accent, fontFamily: fontDisp, fontWeight: 500 }}>= {formatBudget(prev)}</span>}
                       </span>
                     );
                   })()
-                ) : <span style={{ fontSize: 12, fontWeight: 700, color: titleC, fontFamily: fontDisp }}>
+                ) : <span style={{ fontSize: 12, fontWeight: 500, color: titleC, fontFamily: fontDisp }}>
                     <InlineEdit
                       value={lead.budget}
                       onSave={v => { const parsed = parseBudget(v); onUpdate?.({...lead, budget: parsed ? formatBudget(parsed) : v, presupuesto: parsed || lead.presupuesto || 0 }); }}
                       T={T} isLight={isLight} placeholder="300k · 1.5M" emptyText="Sin presupuesto"
-                      editStyle={{ fontSize: 12, fontWeight: 700, width: 110 }}
+                      editStyle={{ fontSize: 12, fontWeight: 500, width: 110 }}
                     />
                   </span>}
               </div>
@@ -4434,7 +4434,7 @@ const LeadPanel = ({ lead, onClose, oc, onUpdate, onSwitchTab, onShowHistory, on
                     background: isLight ? "#FFFFFF" : "rgba(255,255,255,0.07)",
                     border: `1px solid ${isLight ? "rgba(37,211,102,0.45)" : "rgba(255,255,255,0.12)"}`,
                     color: isLight ? "#128C7E" : "rgba(255,255,255,0.88)",
-                    fontSize: 12, fontWeight: 700, fontFamily: fontDisp, textDecoration: "none",
+                    fontSize: 12, fontWeight: 500, fontFamily: fontDisp, textDecoration: "none",
                     transition: "all 0.18s",
                   }}
                 ><MessageCircle size={12} strokeWidth={2.4} /> WhatsApp</a>
@@ -4453,12 +4453,12 @@ const LeadPanel = ({ lead, onClose, oc, onUpdate, onSwitchTab, onShowHistory, on
             const active = activeTab === id;
             const accentC = isLight ? `color-mix(in srgb, ${T.accent} 60%, #0B1220 40%)` : T.accent;
             return (
-              <button key={id} onClick={() => setActiveTab(id)} style={{ padding: "11px 0", marginRight: 20, background: "none", border: "none", cursor: "pointer", fontSize: 12, fontWeight: 600, fontFamily: font, color: active ? accentC : T.txt3, borderBottom: active ? `2px solid ${T.accent}` : "2px solid transparent", transition: "all 0.18s", marginBottom: -1, letterSpacing: "0.01em", display: "flex", alignItems: "center", gap: 5, flexShrink: 0 }}
+              <button key={id} onClick={() => setActiveTab(id)} style={{ padding: "11px 0", marginRight: 20, background: "none", border: "none", cursor: "pointer", fontSize: 12, fontWeight: 400, fontFamily: font, color: active ? accentC : T.txt3, borderBottom: active ? `2px solid ${T.accent}` : "2px solid transparent", transition: "all 0.18s", marginBottom: -1, letterSpacing: "0.01em", display: "flex", alignItems: "center", gap: 5, flexShrink: 0 }}
                 onMouseEnter={e=>{if(!active)e.currentTarget.style.color=T.txt2;}}
                 onMouseLeave={e=>{if(!active)e.currentTarget.style.color=T.txt3;}}
               >
                 {label}
-                {badge > 0 && <span style={{ fontSize: 9, fontWeight: 800, color: active ? accentC : T.txt3, background: active ? `${T.accent}18` : T.glass, border: `1px solid ${active ? T.accentB : T.border}`, padding: "1px 5px", borderRadius: 99, minWidth: 16, textAlign: "center" }}>{badge}</span>}
+                {badge > 0 && <span style={{ fontSize: 9, fontWeight: 500, color: active ? accentC : T.txt3, background: active ? `${T.accent}18` : T.glass, border: `1px solid ${active ? T.accentB : T.border}`, padding: "1px 5px", borderRadius: 99, minWidth: 16, textAlign: "center" }}>{badge}</span>}
               </button>
             );
           })}
@@ -4508,7 +4508,7 @@ const LeadPanel = ({ lead, onClose, oc, onUpdate, onSwitchTab, onShowHistory, on
                 <div key={x.l} style={{ padding: "10px 12px", borderRadius: 11, background: T.glass, border: `1px solid ${T.border}`, display: "flex", gap: 9, alignItems: "flex-start", minHeight: 48 }}>
                   <x.icon size={11} color={T.txt3} style={{ marginTop: 3, flexShrink: 0 }} />
                   <div style={{ minWidth: 0, flex: 1 }}>
-                    <p style={{ fontSize: 9, color: T.txt3, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 3, fontFamily: fontDisp }}>{x.l}</p>
+                    <p style={{ fontSize: 9, color: T.txt3, fontWeight: 500, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 3, fontFamily: fontDisp }}>{x.l}</p>
                     <div style={{ fontSize: 11.5, color: T.txt, fontWeight: 500, wordBreak: "break-word", lineHeight: 1.35 }}>
                       {x.k
                         ? <InlineEdit value={x.v} onSave={v => onUpdate?.({...lead, [x.k]: v})} T={T} isLight={isLight} placeholder={x.ph} readStyle={{ width: "100%" }} editStyle={{ fontSize: 11.5 }} />
@@ -4529,7 +4529,7 @@ const LeadPanel = ({ lead, onClose, oc, onUpdate, onSwitchTab, onShowHistory, on
               const accentC = isLight ? `color-mix(in srgb, ${T.accent} 58%, #0B1220 42%)` : T.accent;
               return (
                 <div style={{ padding: "4px 2px" }}>
-                  <p style={{ fontSize: 10, fontWeight: 800, color: T.txt3, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 8, fontFamily: fontDisp }}>{L.entityProfile}</p>
+                  <p style={{ fontSize: 10, fontWeight: 500, color: T.txt3, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 8, fontFamily: fontDisp }}>{L.entityProfile}</p>
                   <div style={{
                     fontSize: 12.5, color: T.txt2, lineHeight: 1.7, margin: 0,
                     ...(showBio ? {} : { display: "-webkit-box", WebkitLineClamp: 4, WebkitBoxOrient: "vertical", overflow: "hidden" }),
@@ -4551,7 +4551,7 @@ const LeadPanel = ({ lead, onClose, oc, onUpdate, onSwitchTab, onShowHistory, on
                       style={{
                         marginTop: 8, padding: "4px 10px", borderRadius: 99,
                         background: "transparent", border: `1px solid ${T.border}`,
-                        color: accentC, fontSize: 10.5, fontWeight: 700,
+                        color: accentC, fontSize: 10.5, fontWeight: 500,
                         fontFamily: fontDisp, letterSpacing: "0.02em",
                         cursor: "pointer", transition: "all 0.16s",
                         display: "inline-flex", alignItems: "center", gap: 4,
@@ -4578,7 +4578,7 @@ const LeadPanel = ({ lead, onClose, oc, onUpdate, onSwitchTab, onShowHistory, on
             }}>
               <AlertCircle size={13} color={isLight ? `color-mix(in srgb, ${T.amber} 55%, #0B1220 45%)` : T.amber} strokeWidth={2.2} style={{ marginTop: 1, flexShrink: 0 }} />
               <div style={{ minWidth: 0, flex: 1 }}>
-                <p style={{ fontSize: 9.5, fontWeight: 800, color: isLight ? `color-mix(in srgb, ${T.amber} 55%, #0B1220 45%)` : T.amber, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 4, fontFamily: fontDisp }}>Riesgo identificado</p>
+                <p style={{ fontSize: 9.5, fontWeight: 500, color: isLight ? `color-mix(in srgb, ${T.amber} 55%, #0B1220 45%)` : T.amber, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 4, fontFamily: fontDisp }}>Riesgo identificado</p>
                 <div style={{ fontSize: 12, color: T.txt2, lineHeight: 1.6, margin: 0, wordBreak: "break-word" }}>
                   <InlineEdit
                     value={lead.risk}
@@ -4598,7 +4598,7 @@ const LeadPanel = ({ lead, onClose, oc, onUpdate, onSwitchTab, onShowHistory, on
             <div style={{ display: "flex", gap: 10, alignItems: "center", padding: "9px 12px", borderRadius: 11, background: T.glass, border: `1px solid ${T.border}` }}>
               <Activity size={12} color={T.txt3} style={{ flexShrink: 0 }} />
               <div style={{ minWidth: 0, flex: 1 }}>
-                <p style={{ fontSize: 9, color: T.txt3, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 2, fontFamily: fontDisp }}>Última actividad</p>
+                <p style={{ fontSize: 9, color: T.txt3, fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 2, fontFamily: fontDisp }}>Última actividad</p>
                 <div style={{ fontSize: 11.5, color: T.txt2, wordBreak: "break-word", lineHeight: 1.4, margin: 0 }}>
                   <InlineEdit
                     value={lead.lastActivity}
@@ -4620,7 +4620,7 @@ const LeadPanel = ({ lead, onClose, oc, onUpdate, onSwitchTab, onShowHistory, on
               {inp("Teléfono","phone","+1 817 682...")}
               {inp("Presupuesto","budget","300k · 1.5M · 2 mdd")}
               <div>
-                <p style={{ fontSize: 9, fontWeight: 700, color: T.txt3, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 4, fontFamily: fontDisp }}>Asesor</p>
+                <p style={{ fontSize: 9, fontWeight: 500, color: T.txt3, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 4, fontFamily: fontDisp }}>Asesor</p>
                 <AsesorPicker
                   value={f("asesor")}
                   options={asesoresMaster}
@@ -4632,7 +4632,7 @@ const LeadPanel = ({ lead, onClose, oc, onUpdate, onSwitchTab, onShowHistory, on
               </div>
               {inp("Campaña / Fuente","campana","Referido, Google...")}
               <div style={{ gridColumn: "1 / -1" }}>
-                <p style={{ fontSize: 9, fontWeight: 700, color: T.txt3, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 4 }}>Etapa del pipeline</p>
+                <p style={{ fontSize: 9, fontWeight: 500, color: T.txt3, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 4 }}>Etapa del pipeline</p>
                 <select value={f("st")} onChange={e => sf("st")(e.target.value)} style={{ width: "100%", padding: "8px 10px", borderRadius: 9, background: inputBg, border: `1px solid ${T.borderH}`, color: T.txt, fontSize: 12, outline: "none", fontFamily: font, cursor: "pointer" }}>{STAGES.map(s=><option key={s} value={s} style={{ background: isLight ? "#FFFFFF" : "#111318", color: T.txt }}>{s}</option>)}</select>
               </div>
               {inp("Proyecto de interés","p","Gobernador 28, Portofino...",true)}
@@ -4703,7 +4703,7 @@ const LeadPanel = ({ lead, onClose, oc, onUpdate, onSwitchTab, onShowHistory, on
                     <FilePlus size={15} color={accentC} strokeWidth={2} />
                   </div>
                   <div>
-                    <p style={{ fontSize: 12, fontWeight: 700, color: uploadDragging ? accentC : titleC, fontFamily: fontDisp, marginBottom: 2 }}>
+                    <p style={{ fontSize: 12, fontWeight: 500, color: uploadDragging ? accentC : titleC, fontFamily: fontDisp, marginBottom: 2 }}>
                       {uploadDragging ? "Suelta para adjuntar" : "Adjuntar PDF, documento o audio"}
                     </p>
                     <p style={{ fontSize: 10.5, color: T.txt3, fontFamily: font }}>PDF, DOC, MP3, M4A, WAV · arrastra o haz clic</p>
@@ -4714,7 +4714,7 @@ const LeadPanel = ({ lead, onClose, oc, onUpdate, onSwitchTab, onShowHistory, on
                 {expedienteItems.length === 0 && (
                   <div style={{ textAlign: "center", padding: "24px 0 8px", color: T.txt3 }}>
                     <FileText size={26} color={T.txt3} strokeWidth={1.2} style={{ marginBottom: 10, opacity: 0.3 }} />
-                    <p style={{ fontSize: 12.5, fontFamily: fontDisp, fontWeight: 600, color: T.txt3, marginBottom: 4 }}>Sin registros aún</p>
+                    <p style={{ fontSize: 12.5, fontFamily: fontDisp, fontWeight: 400, color: T.txt3, marginBottom: 4 }}>Sin registros aún</p>
                     <p style={{ fontSize: 11, color: T.txt3, lineHeight: 1.55, fontFamily: font }}>
                       Adjunta PDFs, docs o usa el chat de abajo<br/>para registrar notas y mensajes del agente.
                     </p>
@@ -4738,8 +4738,8 @@ const LeadPanel = ({ lead, onClose, oc, onUpdate, onSwitchTab, onShowHistory, on
                         </div>
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4, flexWrap: "wrap" }}>
-                            <span style={{ fontSize: 8.5, fontWeight: 800, color: meta.safeColor, background: `${meta.color}14`, border: `1px solid ${meta.color}22`, padding: "1px 7px", borderRadius: 99, letterSpacing: "0.05em", textTransform: "uppercase", fontFamily: fontDisp }}>{meta.label}</span>
-                            {item.source === "telegram" && <span style={{ fontSize: 8.5, fontWeight: 700, color: isLight ? "#0088CC" : "#60B8E0", background: isLight ? "rgba(0,136,204,0.10)" : "rgba(96,184,224,0.12)", border: "1px solid rgba(0,136,204,0.22)", padding: "1px 7px", borderRadius: 99, letterSpacing: "0.04em", fontFamily: fontDisp }}>Telegram</span>}
+                            <span style={{ fontSize: 8.5, fontWeight: 500, color: meta.safeColor, background: `${meta.color}14`, border: `1px solid ${meta.color}22`, padding: "1px 7px", borderRadius: 99, letterSpacing: "0.05em", textTransform: "uppercase", fontFamily: fontDisp }}>{meta.label}</span>
+                            {item.source === "telegram" && <span style={{ fontSize: 8.5, fontWeight: 500, color: isLight ? "#0088CC" : "#60B8E0", background: isLight ? "rgba(0,136,204,0.10)" : "rgba(96,184,224,0.12)", border: "1px solid rgba(0,136,204,0.22)", padding: "1px 7px", borderRadius: 99, letterSpacing: "0.04em", fontFamily: fontDisp }}>Telegram</span>}
                             {item.fileName && <span style={{ fontSize: 10, color: T.txt3, fontFamily: font, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 90 }}>{item.fileName}</span>}
                             <span style={{ fontSize: 9.5, color: T.txt3, marginLeft: "auto", whiteSpace: "nowrap", fontFamily: font }}>{item.fecha}</span>
                           </div>
@@ -4747,7 +4747,7 @@ const LeadPanel = ({ lead, onClose, oc, onUpdate, onSwitchTab, onShowHistory, on
                             ...(isExpanded || item.content.length <= 180 ? {} : { display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden" }),
                           }}>{item.content}</p>
                           {item.content.length > 180 && !hasDetails && (
-                            <button onClick={() => setExpandedAnalysisId(isExpanded ? null : item.id)} style={{ marginTop: 5, fontSize: 10.5, color: accentC, background: "none", border: "none", cursor: "pointer", padding: 0, fontFamily: font, fontWeight: 600 }}>
+                            <button onClick={() => setExpandedAnalysisId(isExpanded ? null : item.id)} style={{ marginTop: 5, fontSize: 10.5, color: accentC, background: "none", border: "none", cursor: "pointer", padding: 0, fontFamily: font, fontWeight: 400 }}>
                               {isExpanded ? "Ver menos ↑" : "Ver más ↓"}
                             </button>
                           )}
@@ -4769,27 +4769,27 @@ const LeadPanel = ({ lead, onClose, oc, onUpdate, onSwitchTab, onShowHistory, on
                           <div style={{ margin: "0 13px 13px", borderRadius: 11, border: `1px solid ${isLight ? `${T.accent}28` : `${T.accent}20`}`, overflow: "hidden", background: `${T.accent}05` }}>
                             <div onClick={() => setExpandedAnalysisId(isExpanded ? null : item.id)} style={{ padding: "10px 12px", borderBottom: isExpanded ? `1px solid ${T.accent}14` : "none", display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }}>
                               <StratosAtom size={13} color={accentC} />
-                              <p style={{ fontSize: 10.5, fontWeight: 800, color: accentC, letterSpacing: "0.05em", textTransform: "uppercase", fontFamily: fontDisp, flex: 1 }}>Coaching IA · Análisis</p>
-                              <span style={{ fontSize: 13, fontWeight: 800, color: scoreSafe, fontFamily: fontDisp }}>{a.score}<span style={{ fontSize: 9, fontWeight: 600, color: T.txt3 }}>/100</span></span>
+                              <p style={{ fontSize: 10.5, fontWeight: 500, color: accentC, letterSpacing: "0.05em", textTransform: "uppercase", fontFamily: fontDisp, flex: 1 }}>Coaching IA · Análisis</p>
+                              <span style={{ fontSize: 13, fontWeight: 500, color: scoreSafe, fontFamily: fontDisp }}>{a.score}<span style={{ fontSize: 9, fontWeight: 400, color: T.txt3 }}>/100</span></span>
                               <ChevronDown size={12} color={T.txt3} strokeWidth={2.5} style={{ transition: "transform 0.2s", transform: isExpanded ? "rotate(180deg)" : "none" }} />
                             </div>
                             {isExpanded && (
                               <div style={{ padding: "12px 13px", display: "flex", flexDirection: "column", gap: 10 }}>
                                 <p style={{ fontSize: 11.5, color: T.txt2, lineHeight: 1.65, fontFamily: font }}>{a.resumen}</p>
                                 <div>
-                                  <p style={{ fontSize: 9, fontWeight: 800, color: accentC, letterSpacing: "0.07em", textTransform: "uppercase", marginBottom: 6, fontFamily: fontDisp }}>✓ Fortalezas</p>
+                                  <p style={{ fontSize: 9, fontWeight: 500, color: accentC, letterSpacing: "0.07em", textTransform: "uppercase", marginBottom: 6, fontFamily: fontDisp }}>✓ Fortalezas</p>
                                   {a.fortalezas.map((f, i) => <div key={i} style={{ display: "flex", gap: 7, alignItems: "flex-start", marginBottom: 4 }}><div style={{ width: 4, height: 4, borderRadius: "50%", background: T.accent, marginTop: 5, flexShrink: 0 }} /><p style={{ fontSize: 11, color: T.txt2, lineHeight: 1.5, fontFamily: font }}>{f}</p></div>)}
                                 </div>
                                 <div>
-                                  <p style={{ fontSize: 9, fontWeight: 800, color: isLight ? `color-mix(in srgb, ${T.amber} 55%, #0B1220 45%)` : T.amber, letterSpacing: "0.07em", textTransform: "uppercase", marginBottom: 6, fontFamily: fontDisp }}>⚡ Mejoras</p>
+                                  <p style={{ fontSize: 9, fontWeight: 500, color: isLight ? `color-mix(in srgb, ${T.amber} 55%, #0B1220 45%)` : T.amber, letterSpacing: "0.07em", textTransform: "uppercase", marginBottom: 6, fontFamily: fontDisp }}>⚡ Mejoras</p>
                                   {a.mejoras.map((m, i) => <div key={i} style={{ display: "flex", gap: 7, alignItems: "flex-start", marginBottom: 4 }}><div style={{ width: 4, height: 4, borderRadius: "50%", background: T.amber, marginTop: 5, flexShrink: 0 }} /><p style={{ fontSize: 11, color: T.txt2, lineHeight: 1.5, fontFamily: font }}>{m}</p></div>)}
                                 </div>
                                 <div style={{ padding: "9px 11px", borderRadius: 9, background: isLight ? `${T.violet}0E` : `${T.violet}0A`, border: `1px solid ${T.violet}${isLight ? "28" : "20"}` }}>
-                                  <p style={{ fontSize: 9, fontWeight: 800, color: violetC, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 4, fontFamily: fontDisp }}>Técnica recomendada</p>
+                                  <p style={{ fontSize: 9, fontWeight: 500, color: violetC, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 4, fontFamily: fontDisp }}>Técnica recomendada</p>
                                   <p style={{ fontSize: 11, color: T.txt2, lineHeight: 1.5, fontFamily: font }}>{a.tecnica}</p>
                                 </div>
                                 <div style={{ padding: "9px 11px", borderRadius: 9, background: isLight ? `${T.blue}0E` : `${T.blue}0A`, border: `1px solid ${T.blue}${isLight ? "28" : "1E"}` }}>
-                                  <p style={{ fontSize: 9, fontWeight: 800, color: blueC, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 4, fontFamily: fontDisp }}>Siguiente paso</p>
+                                  <p style={{ fontSize: 9, fontWeight: 500, color: blueC, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 4, fontFamily: fontDisp }}>Siguiente paso</p>
                                   <p style={{ fontSize: 11, color: T.txt2, lineHeight: 1.5, fontFamily: font }}>{a.nextStep}</p>
                                 </div>
                               </div>
@@ -4810,8 +4810,8 @@ const LeadPanel = ({ lead, onClose, oc, onUpdate, onSwitchTab, onShowHistory, on
         {editing && (
           <div style={{ padding: "13px 22px", borderTop: `1px solid ${T.border}`, flexShrink: 0, background: T === P ? "#111318" : "#FFFFFF" }}>
             <div style={{ display: "flex", gap: 8 }}>
-              <button onClick={cancelEditing} style={{ flex: 1, padding: "11px 0", borderRadius: 11, background: "transparent", border: `1px solid ${T.border}`, color: T.txt3, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: font, transition: "all 0.18s" }} onMouseEnter={e=>{e.currentTarget.style.background=T.glassH;e.currentTarget.style.color=T.txt2;}} onMouseLeave={e=>{e.currentTarget.style.background="transparent";e.currentTarget.style.color=T.txt3;}}>Cancelar</button>
-              <button onClick={saveEditing} disabled={!form?.n?.trim()} style={{ flex: 2, padding: "11px 0", borderRadius: 11, background: form?.n?.trim()?`${T.accent}18`:"transparent", border: `1px solid ${form?.n?.trim()?T.accentB:T.border}`, color: form?.n?.trim()?(isLight ? `color-mix(in srgb, ${T.accent} 60%, #0B1220 40%)` : T.accent):T.txt3, fontSize: 13, fontWeight: 700, fontFamily: fontDisp, cursor: form?.n?.trim()?"pointer":"not-allowed", display: "flex", alignItems: "center", justifyContent: "center", gap: 7, transition: "all 0.18s" }}>Guardar cambios</button>
+              <button onClick={cancelEditing} style={{ flex: 1, padding: "11px 0", borderRadius: 11, background: "transparent", border: `1px solid ${T.border}`, color: T.txt3, fontSize: 13, fontWeight: 400, cursor: "pointer", fontFamily: font, transition: "all 0.18s" }} onMouseEnter={e=>{e.currentTarget.style.background=T.glassH;e.currentTarget.style.color=T.txt2;}} onMouseLeave={e=>{e.currentTarget.style.background="transparent";e.currentTarget.style.color=T.txt3;}}>Cancelar</button>
+              <button onClick={saveEditing} disabled={!form?.n?.trim()} style={{ flex: 2, padding: "11px 0", borderRadius: 11, background: form?.n?.trim()?`${T.accent}18`:"transparent", border: `1px solid ${form?.n?.trim()?T.accentB:T.border}`, color: form?.n?.trim()?(isLight ? `color-mix(in srgb, ${T.accent} 60%, #0B1220 40%)` : T.accent):T.txt3, fontSize: 13, fontWeight: 500, fontFamily: fontDisp, cursor: form?.n?.trim()?"pointer":"not-allowed", display: "flex", alignItems: "center", justifyContent: "center", gap: 7, transition: "all 0.18s" }}>Guardar cambios</button>
             </div>
           </div>
         )}
@@ -4877,7 +4877,7 @@ const LeadPanel = ({ lead, onClose, oc, onUpdate, onSwitchTab, onShowHistory, on
               }}>
                 <Trash2 size={20} color="#EF4444" />
               </div>
-              <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: T.txt, fontFamily: fontDisp, letterSpacing: "-0.02em" }}>
+              <h3 style={{ margin: 0, fontSize: 16, fontWeight: 500, color: T.txt, fontFamily: fontDisp, letterSpacing: "-0.02em" }}>
                 ¿Eliminar a {lead.n}?
               </h3>
               <p style={{ margin: "8px 0 18px", fontSize: 12.5, color: T.txt2, lineHeight: 1.5 }}>
@@ -4887,7 +4887,7 @@ const LeadPanel = ({ lead, onClose, oc, onUpdate, onSwitchTab, onShowHistory, on
                 <button onClick={() => setConfirmDeleteLP(false)} style={{
                   flex: 1, padding: "10px 14px", borderRadius: 10,
                   border: `1px solid ${T.border}`, background: "transparent",
-                  color: T.txt2, fontSize: 13, fontWeight: 600, fontFamily: fontDisp, cursor: "pointer",
+                  color: T.txt2, fontSize: 13, fontWeight: 400, fontFamily: fontDisp, cursor: "pointer",
                 }}>Cancelar</button>
                 <button onClick={async () => {
                   setConfirmDeleteLP(false);
@@ -4897,7 +4897,7 @@ const LeadPanel = ({ lead, onClose, oc, onUpdate, onSwitchTab, onShowHistory, on
                   flex: 1, padding: "10px 14px", borderRadius: 10,
                   border: "1px solid rgba(239,68,68,0.4)",
                   background: "rgba(239,68,68,0.18)",
-                  color: "#FCA5A5", fontSize: 13, fontWeight: 700, fontFamily: fontDisp, cursor: "pointer",
+                  color: "#FCA5A5", fontSize: 13, fontWeight: 500, fontFamily: fontDisp, cursor: "pointer",
                 }}>Sí, eliminar</button>
               </div>
             </div>
@@ -5147,7 +5147,7 @@ const AnalysisDrawer = ({ lead, onClose, oc, onUpdate, onSwitchTab, T = P }) => 
                 <Zap size={15} color={T.accent} strokeWidth={2.5} />
               </div>
               <div>
-                <p style={{ margin: 0, fontSize: 10, fontWeight: 800, color: T.accent, letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: fontDisp }}>Análisis IA</p>
+                <p style={{ margin: 0, fontSize: 10, fontWeight: 500, color: T.accent, letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: fontDisp }}>Análisis IA</p>
                 <p style={{ margin: 0, fontSize: 11, color: T.txt3, fontFamily: font }}>Estrategia personalizada de cierre</p>
               </div>
             </div>
@@ -5165,22 +5165,22 @@ const AnalysisDrawer = ({ lead, onClose, oc, onUpdate, onSwitchTab, T = P }) => 
 
           {/* Lead snapshot */}
           <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", borderRadius: 12, background: T.glass, border: `1px solid ${T.border}` }}>
-            <div style={{ width: 40, height: 40, borderRadius: 11, background: `${stageColor}18`, border: `1px solid ${stageColor}44`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 15, fontWeight: 800, color: stageColor, fontFamily: fontDisp, flexShrink: 0 }}>
+            <div style={{ width: 40, height: 40, borderRadius: 11, background: `${stageColor}18`, border: `1px solid ${stageColor}44`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 15, fontWeight: 500, color: stageColor, fontFamily: fontDisp, flexShrink: 0 }}>
               {lead.n.charAt(0)}
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
-              <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: titleC, fontFamily: fontDisp, letterSpacing: "-0.02em" }}>
-                <InlineEdit value={lead.n} onSave={v => onUpdate?.({...lead, n: v})} T={T} isLight={isLight} placeholder="Nombre" editStyle={{ fontSize: 14, fontWeight: 700 }} />
+              <p style={{ margin: 0, fontSize: 14, fontWeight: 500, color: titleC, fontFamily: fontDisp, letterSpacing: "-0.02em" }}>
+                <InlineEdit value={lead.n} onSave={v => onUpdate?.({...lead, n: v})} T={T} isLight={isLight} placeholder="Nombre" editStyle={{ fontSize: 14, fontWeight: 500 }} />
               </p>
               <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 3, flexWrap: "wrap" }}>
                 <Pill color={stageColor} s isLight={isLight}>{lead.st}</Pill>
                 <span style={{ fontSize: 10.5, color: T.txt3 }}>·</span>
-                <span style={{ fontSize: 11, fontWeight: 700, color: T.txt2, fontFamily: fontDisp }}>
+                <span style={{ fontSize: 11, fontWeight: 500, color: T.txt2, fontFamily: fontDisp }}>
                   <InlineEdit
                     value={lead.budget}
                     onSave={v => { const parsed = parseBudget(v); onUpdate?.({...lead, budget: parsed ? formatBudget(parsed) : v, presupuesto: parsed || lead.presupuesto || 0 }); }}
                     T={T} isLight={isLight} placeholder="300k · 1.5M" emptyText="Sin presupuesto"
-                    editStyle={{ fontSize: 11, fontWeight: 700, width: 110 }}
+                    editStyle={{ fontSize: 11, fontWeight: 500, width: 110 }}
                   />
                 </span>
               </div>
@@ -5195,7 +5195,7 @@ const AnalysisDrawer = ({ lead, onClose, oc, onUpdate, onSwitchTab, T = P }) => 
             {lead.tag === "requiere-humano" && (
               <span title="El bot pidió que un humano tome control" style={{
                 display: "inline-flex", alignItems: "center", gap: 4,
-                fontSize: 9.5, fontWeight: 800, letterSpacing: "0.06em",
+                fontSize: 9.5, fontWeight: 500, letterSpacing: "0.06em",
                 color: "#FFFFFF",
                 background: isLight ? "#DC2626" : "#EF4444",
                 border: `1px solid ${isLight ? "#B91C1C" : "#F87171"}`,
@@ -5204,12 +5204,12 @@ const AnalysisDrawer = ({ lead, onClose, oc, onUpdate, onSwitchTab, T = P }) => 
                 animation: "rhPulse 1.8s ease-in-out infinite",
               }}>🔥 Requiere Humano</span>
             )}
-            {hot && lead.tag !== "requiere-humano" && <span style={{ fontSize: 9, fontWeight: 700, color: T.accent, background: `${T.accent}14`, border: `1px solid ${T.accentB}`, padding: "3px 9px", borderRadius: 99, letterSpacing: "0.05em" }}>HOT</span>}
+            {hot && lead.tag !== "requiere-humano" && <span style={{ fontSize: 9, fontWeight: 500, color: T.accent, background: `${T.accent}14`, border: `1px solid ${T.accentB}`, padding: "3px 9px", borderRadius: 99, letterSpacing: "0.05em" }}>HOT</span>}
             {scheduledCallNM && (
               <ScheduledCallBadge scheduledAt={scheduledCallNM.scheduled_at} variant="drawer" T={T} isLight={isLight} />
             )}
-            {inactive >= 7 && <span style={{ fontSize: 9, fontWeight: 700, color: T.rose, background: `${T.rose}14`, border: `1px solid ${T.rose}33`, padding: "3px 9px", borderRadius: 99 }}>{inactive}d inactivo</span>}
-            <span style={{ fontSize: 9, fontWeight: 700, color: T.txt3, background: T.glass, border: `1px solid ${T.border}`, padding: "3px 9px", borderRadius: 99 }}>Etapa {stageIdx + 1}/{STAGES.length}</span>
+            {inactive >= 7 && <span style={{ fontSize: 9, fontWeight: 500, color: T.rose, background: `${T.rose}14`, border: `1px solid ${T.rose}33`, padding: "3px 9px", borderRadius: 99 }}>{inactive}d inactivo</span>}
+            <span style={{ fontSize: 9, fontWeight: 500, color: T.txt3, background: T.glass, border: `1px solid ${T.border}`, padding: "3px 9px", borderRadius: 99 }}>Etapa {stageIdx + 1}/{STAGES.length}</span>
             <SourceBadge source={lead.source} isLight={isLight} />
             <style>{`@keyframes rhPulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(239,68,68,0.45); } 50% { box-shadow: 0 0 0 5px rgba(239,68,68,0); } }`}</style>
           </div>
@@ -5236,9 +5236,9 @@ const AnalysisDrawer = ({ lead, onClose, oc, onUpdate, onSwitchTab, T = P }) => 
           <section>
             <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 10 }}>
               <Atom size={12} color={T.accent} strokeWidth={2.2} />
-              <p style={{ margin: 0, fontSize: 10.5, fontWeight: 800, color: T.accent, letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: fontDisp }}>Delegar al equipo IA</p>
+              <p style={{ margin: 0, fontSize: 10.5, fontWeight: 500, color: T.accent, letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: fontDisp }}>Delegar al equipo IA</p>
               {lead.aiAgent && (
-                <button onClick={releaseAgent} style={{ marginLeft: "auto", fontSize: 9, fontWeight: 700, color: T.txt3, background: T.glass, border: `1px solid ${T.border}`, padding: "3px 9px", borderRadius: 99, cursor: "pointer", display: "flex", alignItems: "center", gap: 4, letterSpacing: "0.05em", textTransform: "uppercase", fontFamily: fontDisp, transition: "all 0.15s" }}
+                <button onClick={releaseAgent} style={{ marginLeft: "auto", fontSize: 9, fontWeight: 500, color: T.txt3, background: T.glass, border: `1px solid ${T.border}`, padding: "3px 9px", borderRadius: 99, cursor: "pointer", display: "flex", alignItems: "center", gap: 4, letterSpacing: "0.05em", textTransform: "uppercase", fontFamily: fontDisp, transition: "all 0.15s" }}
                   onMouseEnter={e => { e.currentTarget.style.color = T.accent; e.currentTarget.style.borderColor = T.accentB; }}
                   onMouseLeave={e => { e.currentTarget.style.color = T.txt3; e.currentTarget.style.borderColor = T.border; }}
                 ><X size={9} strokeWidth={2.5} /> Retomar control</button>
@@ -5271,8 +5271,8 @@ const AnalysisDrawer = ({ lead, onClose, oc, onUpdate, onSwitchTab, T = P }) => 
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
-                        <p style={{ margin: 0, fontSize: 12, fontWeight: 700, color: isActive ? (isLight ? `color-mix(in srgb, ${a.color} 60%, #0B1220 40%)` : a.color) : titleC, fontFamily: fontDisp }}>{a.short}</p>
-                        {isActive && <span style={{ fontSize: 8, fontWeight: 800, color: a.color, background: `${a.color}20`, padding: "1px 5px", borderRadius: 4, letterSpacing: "0.08em" }}>ACTIVO</span>}
+                        <p style={{ margin: 0, fontSize: 12, fontWeight: 500, color: isActive ? (isLight ? `color-mix(in srgb, ${a.color} 60%, #0B1220 40%)` : a.color) : titleC, fontFamily: fontDisp }}>{a.short}</p>
+                        {isActive && <span style={{ fontSize: 8, fontWeight: 500, color: a.color, background: `${a.color}20`, padding: "1px 5px", borderRadius: 4, letterSpacing: "0.08em" }}>ACTIVO</span>}
                       </div>
                       <p style={{ margin: "2px 0 0", fontSize: 10, color: T.txt3, lineHeight: 1.4 }}>{a.role}</p>
                     </div>
@@ -5287,7 +5287,7 @@ const AnalysisDrawer = ({ lead, onClose, oc, onUpdate, onSwitchTab, T = P }) => 
                 <div style={{ marginTop: 10, padding: "10px 12px", borderRadius: 10, background: `${a.color}08`, border: `1px solid ${a.color}2A`, display: "flex", gap: 9, alignItems: "flex-start" }}>
                   <AI size={13} color={a.color} strokeWidth={2.5} style={{ marginTop: 1, flexShrink: 0 }} />
                   <p style={{ margin: 0, fontSize: 11, color: T.txt2, lineHeight: 1.5 }}>
-                    <span style={{ color: a.color, fontWeight: 700, fontFamily: fontDisp }}>{a.name}</span> trabajará este cliente: {a.how}
+                    <span style={{ color: a.color, fontWeight: 500, fontFamily: fontDisp }}>{a.name}</span> trabajará este cliente: {a.how}
                   </p>
                 </div>
               );
@@ -5298,8 +5298,8 @@ const AnalysisDrawer = ({ lead, onClose, oc, onUpdate, onSwitchTab, T = P }) => 
           <section>
             <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 10 }}>
               <ListChecks size={12} color={T.cyan} strokeWidth={2.5} />
-              <p style={{ margin: 0, fontSize: 10.5, fontWeight: 800, color: T.cyan, letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: fontDisp }}>Calificación BANT</p>
-              <span style={{ marginLeft: "auto", fontSize: 9, fontWeight: 700, color: bantScore >= 3 ? T.accent : T.amber, background: bantScore >= 3 ? `${T.accent}12` : `${T.amber}12`, border: `1px solid ${bantScore >= 3 ? T.accentB : `${T.amber}40`}`, padding: "2px 8px", borderRadius: 99 }}>{bantPct}% completo</span>
+              <p style={{ margin: 0, fontSize: 10.5, fontWeight: 500, color: T.cyan, letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: fontDisp }}>Calificación BANT</p>
+              <span style={{ marginLeft: "auto", fontSize: 9, fontWeight: 500, color: bantScore >= 3 ? T.accent : T.amber, background: bantScore >= 3 ? `${T.accent}12` : `${T.amber}12`, border: `1px solid ${bantScore >= 3 ? T.accentB : `${T.amber}40`}`, padding: "2px 8px", borderRadius: 99 }}>{bantPct}% completo</span>
             </div>
             {/* Barra de progreso BANT */}
             <div style={{ height: 4, borderRadius: 2, background: isLight ? "rgba(15,23,42,0.08)" : "rgba(255,255,255,0.06)", marginBottom: 10, overflow: "hidden" }}>
@@ -5313,9 +5313,9 @@ const AnalysisDrawer = ({ lead, onClose, oc, onUpdate, onSwitchTab, T = P }) => 
                 { key: "T", label: "Timeline", sub: bantTimeline ? (lead.nextActionDate || "Definido") : "Sin fecha de decisión", ok: bantTimeline },
               ].map(b => (
                 <div key={b.key} style={{ padding: "8px 10px", borderRadius: 9, background: b.ok ? (isLight ? `${T.accent}08` : `${T.accent}06`) : (isLight ? "rgba(15,23,42,0.03)" : "rgba(255,255,255,0.03)"), border: `1px solid ${b.ok ? (isLight ? `${T.accent}44` : `${T.accent}22`) : T.border}`, display: "flex", gap: 8, alignItems: "flex-start" }}>
-                  <span style={{ width: 18, height: 18, borderRadius: 5, background: b.ok ? `${T.accent}1C` : "transparent", border: `1px solid ${b.ok ? T.accentB : T.border}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 9, fontWeight: 800, color: b.ok ? T.accent : T.txt3, fontFamily: fontDisp, flexShrink: 0 }}>{b.key}</span>
+                  <span style={{ width: 18, height: 18, borderRadius: 5, background: b.ok ? `${T.accent}1C` : "transparent", border: `1px solid ${b.ok ? T.accentB : T.border}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 9, fontWeight: 500, color: b.ok ? T.accent : T.txt3, fontFamily: fontDisp, flexShrink: 0 }}>{b.key}</span>
                   <div style={{ minWidth: 0 }}>
-                    <p style={{ margin: 0, fontSize: 10, fontWeight: 700, color: b.ok ? (isLight ? T.accent : T.accent) : T.txt3, fontFamily: fontDisp }}>{b.label}</p>
+                    <p style={{ margin: 0, fontSize: 10, fontWeight: 500, color: b.ok ? (isLight ? T.accent : T.accent) : T.txt3, fontFamily: fontDisp }}>{b.label}</p>
                     <p style={{ margin: 0, fontSize: 9.5, color: T.txt3, fontFamily: font, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{b.sub}</p>
                   </div>
                 </div>
@@ -5327,8 +5327,8 @@ const AnalysisDrawer = ({ lead, onClose, oc, onUpdate, onSwitchTab, T = P }) => 
           <section>
             <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 10 }}>
               <Target size={12} color={T.accent} strokeWidth={2.5} />
-              <p style={{ margin: 0, fontSize: 10.5, fontWeight: 800, color: T.accent, letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: fontDisp }}>Próximas acciones</p>
-              <span style={{ marginLeft: "auto", fontSize: 9, fontWeight: 700, color: T.txt3, background: T.glass, border: `1px solid ${T.border}`, padding: "2px 8px", borderRadius: 99 }}>{nextActions.length}</span>
+              <p style={{ margin: 0, fontSize: 10.5, fontWeight: 500, color: T.accent, letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: fontDisp }}>Próximas acciones</p>
+              <span style={{ marginLeft: "auto", fontSize: 9, fontWeight: 500, color: T.txt3, background: T.glass, border: `1px solid ${T.border}`, padding: "2px 8px", borderRadius: 99 }}>{nextActions.length}</span>
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               {nextActions.map((a, i) => {
@@ -5341,11 +5341,11 @@ const AnalysisDrawer = ({ lead, onClose, oc, onUpdate, onSwitchTab, T = P }) => 
                       </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
-                          <p style={{ margin: 0, fontSize: 12.5, fontWeight: 700, color: titleC, fontFamily: fontDisp }}>{a.title}</p>
-                          <span style={{ fontSize: 8.5, fontWeight: 800, color: a.color, background: `${a.color}18`, padding: "1px 6px", borderRadius: 4, letterSpacing: "0.08em", textTransform: "uppercase" }}>{a.priority}</span>
+                          <p style={{ margin: 0, fontSize: 12.5, fontWeight: 500, color: titleC, fontFamily: fontDisp }}>{a.title}</p>
+                          <span style={{ fontSize: 8.5, fontWeight: 500, color: a.color, background: `${a.color}18`, padding: "1px 6px", borderRadius: 4, letterSpacing: "0.08em", textTransform: "uppercase" }}>{a.priority}</span>
                         </div>
                         <p style={{ margin: 0, fontSize: 11.5, color: T.txt2, lineHeight: 1.5 }}>{a.detail}</p>
-                        <p style={{ margin: "6px 0 0", fontSize: 9.5, color: a.color, fontWeight: 700, fontFamily: fontDisp, letterSpacing: "0.05em" }}>⏱ {a.eta}</p>
+                        <p style={{ margin: "6px 0 0", fontSize: 9.5, color: a.color, fontWeight: 500, fontFamily: fontDisp, letterSpacing: "0.05em" }}>⏱ {a.eta}</p>
                       </div>
                     </div>
                   </div>
@@ -5358,7 +5358,7 @@ const AnalysisDrawer = ({ lead, onClose, oc, onUpdate, onSwitchTab, T = P }) => 
           <section>
             <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 10 }}>
               <Activity size={12} color={T.blue} strokeWidth={2.5} />
-              <p style={{ margin: 0, fontSize: 10.5, fontWeight: 800, color: T.blue, letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: fontDisp }}>Estrategias técnicas</p>
+              <p style={{ margin: 0, fontSize: 10.5, fontWeight: 500, color: T.blue, letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: fontDisp }}>Estrategias técnicas</p>
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
               {strategies.map((s, i) => {
@@ -5372,7 +5372,7 @@ const AnalysisDrawer = ({ lead, onClose, oc, onUpdate, onSwitchTab, T = P }) => 
                       <I size={12} color={T.blue} strokeWidth={2.5} />
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <p style={{ margin: "0 0 3px", fontSize: 12, fontWeight: 700, color: titleC, fontFamily: fontDisp }}>{s.title}</p>
+                      <p style={{ margin: "0 0 3px", fontSize: 12, fontWeight: 500, color: titleC, fontFamily: fontDisp }}>{s.title}</p>
                       <p style={{ margin: 0, fontSize: 11, color: T.txt2, lineHeight: 1.5 }}>{s.detail}</p>
                     </div>
                   </div>
@@ -5385,7 +5385,7 @@ const AnalysisDrawer = ({ lead, onClose, oc, onUpdate, onSwitchTab, T = P }) => 
           <section>
             <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 10 }}>
               <Zap size={12} color={T.amber} strokeWidth={2.5} />
-              <p style={{ margin: 0, fontSize: 10.5, fontWeight: 800, color: T.amber, letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: fontDisp }}>Acciones de cierre IA</p>
+              <p style={{ margin: 0, fontSize: 10.5, fontWeight: 500, color: T.amber, letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: fontDisp }}>Acciones de cierre IA</p>
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               {closingActions.map((a, i) => {
@@ -5396,11 +5396,11 @@ const AnalysisDrawer = ({ lead, onClose, oc, onUpdate, onSwitchTab, T = P }) => 
                       <I size={13} color={T.amber} strokeWidth={2.5} />
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <p style={{ margin: "0 0 2px", fontSize: 12, fontWeight: 700, color: "#FFF", fontFamily: fontDisp }}>{a.title}</p>
+                      <p style={{ margin: "0 0 2px", fontSize: 12, fontWeight: 500, color: "#FFF", fontFamily: fontDisp }}>{a.title}</p>
                       <p style={{ margin: 0, fontSize: 10.5, color: T.txt3, lineHeight: 1.45 }}>{a.detail}</p>
                     </div>
                     <button onClick={() => oc(`__crm__ ${a.title.toLowerCase()} para ${lead.n.toLowerCase()}`, lead)} style={{
-                      padding: "7px 11px", borderRadius: 8, background: `${T.amber}14`, border: `1px solid ${T.amber}40`, color: T.amber, fontSize: 10, fontWeight: 700, cursor: "pointer", fontFamily: fontDisp, letterSpacing: "0.02em", whiteSpace: "nowrap", flexShrink: 0, transition: "all 0.16s"
+                      padding: "7px 11px", borderRadius: 8, background: `${T.amber}14`, border: `1px solid ${T.amber}40`, color: T.amber, fontSize: 10, fontWeight: 500, cursor: "pointer", fontFamily: fontDisp, letterSpacing: "0.02em", whiteSpace: "nowrap", flexShrink: 0, transition: "all 0.16s"
                     }}
                       onMouseEnter={e => { e.currentTarget.style.background = `${T.amber}26`; e.currentTarget.style.boxShadow = `0 0 14px ${T.amber}30`; }}
                       onMouseLeave={e => { e.currentTarget.style.background = `${T.amber}14`; e.currentTarget.style.boxShadow = "none"; }}
@@ -5538,7 +5538,7 @@ const ClickDropdown = ({
                 }}
               />
               <button type="button" onClick={() => commitCreate(draft)}
-                style={{ padding: "0 12px", height: 34, borderRadius: 8, background: activeBg, border: `1px solid ${activeBor}`, color: activeC, fontSize: 11.5, fontWeight: 700, fontFamily: fontDisp, cursor: "pointer", letterSpacing: "0.01em" }}
+                style={{ padding: "0 12px", height: 34, borderRadius: 8, background: activeBg, border: `1px solid ${activeBor}`, color: activeC, fontSize: 11.5, fontWeight: 500, fontFamily: fontDisp, cursor: "pointer", letterSpacing: "0.01em" }}
               >Añadir</button>
             </div>
           ) : (
@@ -5604,7 +5604,7 @@ const ClickDropdown = ({
                 background: isLight ? `${T.accent}08` : `${T.accent}10`,
                 border: "none", borderTop: `1px solid ${isLight ? "rgba(15,23,42,0.06)" : "rgba(255,255,255,0.06)"}`,
                 textAlign: "left", cursor: "pointer",
-                color: activeC, fontSize: 11.5, fontWeight: 700, fontFamily: fontDisp,
+                color: activeC, fontSize: 11.5, fontWeight: 500, fontFamily: fontDisp,
                 display: "flex", alignItems: "center", gap: 7, letterSpacing: "0.01em",
                 transition: "background 0.14s",
               }}

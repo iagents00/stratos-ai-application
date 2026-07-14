@@ -332,7 +332,7 @@ const ZoomControl = ({ theme = "dark" }) => {
             <Video size={20} color={accent} />
           </div>
           <div>
-            <h2 style={{ margin: 0, fontSize: 19, fontWeight: 800, color: T.txt, fontFamily: fontDisp, letterSpacing: "-0.02em" }}>
+            <h2 style={{ margin: 0, fontSize: 19, fontWeight: 500, color: T.txt, fontFamily: fontDisp, letterSpacing: "-0.02em" }}>
               Control de Zooms
             </h2>
             <p style={{ margin: "2px 0 0", fontSize: 12.5, color: T.txt2, fontFamily: font }}>
@@ -349,7 +349,7 @@ const ZoomControl = ({ theme = "dark" }) => {
             style={{
               display: "inline-flex", alignItems: "center", gap: 7,
               padding: "9px 13px", borderRadius: 10,
-              fontSize: 12.5, fontWeight: 600, fontFamily: fontDisp,
+              fontSize: 12.5, fontWeight: 400, fontFamily: fontDisp,
               cursor: busy ? "default" : "pointer",
               background: subtleBg, color: T.txt2,
               border: `1px solid ${cardBorder}`,
@@ -365,7 +365,7 @@ const ZoomControl = ({ theme = "dark" }) => {
             style={{
               display: "inline-flex", alignItems: "center", gap: 7,
               padding: "9px 13px", borderRadius: 10,
-              fontSize: 12.5, fontWeight: 600, fontFamily: fontDisp,
+              fontSize: 12.5, fontWeight: 400, fontFamily: fontDisp,
               cursor: "pointer",
               background: subtleBg, color: T.txt2,
               border: `1px solid ${cardBorder}`,
@@ -379,7 +379,7 @@ const ZoomControl = ({ theme = "dark" }) => {
             style={{
               display: "inline-flex", alignItems: "center", gap: 7,
               padding: "9px 15px", borderRadius: 10,
-              fontSize: 12.5, fontWeight: 700, fontFamily: fontDisp,
+              fontSize: 12.5, fontWeight: 500, fontFamily: fontDisp,
               cursor: "pointer",
               background: isLight ? accent : `${accent}1F`,
               color: isLight ? "#06080F" : accent,
@@ -472,7 +472,7 @@ const ZoomControl = ({ theme = "dark" }) => {
           />
         </div>
 
-        <span style={{ fontSize: 12.5, fontWeight: 600, color: T.txt2, fontFamily: fontDisp, whiteSpace: "nowrap" }}>
+        <span style={{ fontSize: 12.5, fontWeight: 400, color: T.txt2, fontFamily: fontDisp, whiteSpace: "nowrap" }}>
           {filtered.length} {filtered.length === 1 ? "Zoom" : "Zooms"}
         </span>
       </div>
@@ -528,7 +528,7 @@ const ZoomControl = ({ theme = "dark" }) => {
                         position: "sticky", top: zoomTableHeaderHeight, zIndex: 3,
                         backgroundClip: "padding-box",
                         boxShadow: `0 -1px 0 ${sepBg}, inset 0 1px 0 ${rowBorder}, inset 0 -1px 0 ${rowBorder}`,
-                        fontSize: 11.5, fontWeight: 800, fontFamily: fontDisp,
+                        fontSize: 11.5, fontWeight: 500, fontFamily: fontDisp,
                         textTransform: "uppercase", letterSpacing: "0.05em",
                         color: esHoy ? accent : T.txt2,
                       }}>
@@ -550,12 +550,12 @@ const ZoomControl = ({ theme = "dark" }) => {
                   onMouseLeave={(e) => { e.currentTarget.style.background = hotBg; }}
                 >
                   <td style={{ ...tdStyle(T, "left"), fontWeight: 500, color: T.txt2, borderLeft: r.calentito ? "3px solid #DC2626" : "3px solid transparent" }}>{prettyDate(r.fecha_agendado)}</td>
-                  <td style={{ ...tdStyle(T, "left"), fontWeight: 700, color: T.txt }}>{prettyDate(r.fecha_zoom)}</td>
+                  <td style={{ ...tdStyle(T, "left"), fontWeight: 500, color: T.txt }}>{prettyDate(r.fecha_zoom)}</td>
                   <td style={{ ...tdStyle(T, "center"), color: T.txt }}>{r.hora || "—"}</td>
                   <td style={tdStyle(T, "left")}>{r.liner || "—"}</td>
                   <td style={tdStyle(T, "left")}>{r.presentador_principal || "—"}</td>
                   <td style={{ ...tdStyle(T, "left"), color: T.txt2 }}>{r.presentador_apoyo || "—"}</td>
-                  <td style={{ ...tdStyle(T, "left"), fontWeight: 700, color: T.txt }}>
+                  <td style={{ ...tdStyle(T, "left"), fontWeight: 500, color: T.txt }}>
                     <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
                       {r.calentito && <Flame size={13} color="#DC2626" strokeWidth={2.6} title="Alta intención — señal de cierre en el Zoom" />}
                       {r.cliente || "—"}
@@ -571,7 +571,7 @@ const ZoomControl = ({ theme = "dark" }) => {
                   <td style={tdStyle(T, "center")}>{isoWeekNumber(r.fecha_zoom) || "—"}</td>
                   <td style={tdStyle(T, "center")}>{mesDelZoom(r.fecha_zoom)}</td>
                   <td style={tdStyle(T, "center")}>{diaDelZoom(r.fecha_zoom)}</td>
-                  <td style={{ ...tdStyle(T, "center"), fontWeight: 800, color: r.fecha_zoom === today ? accent : T.txt3 }}>
+                  <td style={{ ...tdStyle(T, "center"), fontWeight: 500, color: r.fecha_zoom === today ? accent : T.txt3 }}>
                     {r.fecha_zoom === today ? "Sí" : "No"}
                   </td>
                   {hasExtCols && (
@@ -582,7 +582,7 @@ const ZoomControl = ({ theme = "dark" }) => {
                         style={{
                           display: "inline-flex", alignItems: "center", gap: 5,
                           padding: "4px 11px", borderRadius: 99, cursor: "pointer",
-                          fontSize: 11.5, fontWeight: 700, fontFamily: fontDisp, lineHeight: 1.4,
+                          fontSize: 11.5, fontWeight: 500, fontFamily: fontDisp, lineHeight: 1.4,
                           color: r.discovery ? "#10B981" : T.txt2,
                           background: discoveryOpenId === r.id
                             ? (r.discovery ? "rgba(16,185,129,0.20)" : (isLight ? "rgba(15,23,42,0.09)" : "rgba(255,255,255,0.10)"))
@@ -651,7 +651,7 @@ const ZoomControl = ({ theme = "dark" }) => {
                               <FileText size={14} color="#10B981" strokeWidth={2.3} />
                             </span>
                             <div style={{ minWidth: 0 }}>
-                              <div style={{ fontSize: 13.5, fontWeight: 700, color: T.txt, fontFamily: fontDisp, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                              <div style={{ fontSize: 13.5, fontWeight: 500, color: T.txt, fontFamily: fontDisp, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                                 Discovery — {r.cliente || "—"}
                               </div>
                               <div style={{ fontSize: 11, color: T.txt3, fontFamily: font }}>
@@ -689,7 +689,7 @@ const ZoomControl = ({ theme = "dark" }) => {
                                 <button onClick={copyDiscovery} disabled={busy} title="Copiar el discovery al portapapeles" style={{
                                   display: "inline-flex", alignItems: "center", gap: 6,
                                   padding: "8px 12px", borderRadius: 9, cursor: busy ? "default" : "pointer",
-                                  fontSize: 12, fontWeight: 600, fontFamily: fontDisp,
+                                  fontSize: 12, fontWeight: 400, fontFamily: fontDisp,
                                   background: "transparent", color: discCopied ? "#10B981" : T.txt2,
                                   border: `1px solid ${discCopied ? "rgba(16,185,129,0.40)" : (isLight ? "rgba(15,23,42,0.12)" : "rgba(255,255,255,0.12)")}`,
                                   transition: "color 0.15s, border-color 0.15s",
@@ -700,7 +700,7 @@ const ZoomControl = ({ theme = "dark" }) => {
                               )}
                               <button onClick={() => setDiscoveryOpenId(null)} disabled={busy} style={{
                                 padding: "8px 14px", borderRadius: 9, cursor: busy ? "default" : "pointer",
-                                fontSize: 12, fontWeight: 600, fontFamily: fontDisp,
+                                fontSize: 12, fontWeight: 400, fontFamily: fontDisp,
                                 background: "transparent", color: T.txt2,
                                 border: `1px solid ${isLight ? "rgba(15,23,42,0.12)" : "rgba(255,255,255,0.12)"}`,
                               }}>Cancelar</button>
@@ -708,7 +708,7 @@ const ZoomControl = ({ theme = "dark" }) => {
                                 display: "inline-flex", alignItems: "center", gap: 6,
                                 padding: "8px 16px", borderRadius: 9,
                                 cursor: busy || !discDirtyFor(r) ? "default" : "pointer",
-                                fontSize: 12, fontWeight: 700, fontFamily: fontDisp,
+                                fontSize: 12, fontWeight: 500, fontFamily: fontDisp,
                                 background: "#10B981", color: "#FFFFFF", border: "none",
                                 boxShadow: busy || !discDirtyFor(r) ? "none" : "0 2px 8px rgba(16,185,129,0.35)",
                                 opacity: busy ? 0.7 : (!discDirtyFor(r) ? 0.45 : 1),
@@ -767,7 +767,7 @@ const ZoomControl = ({ theme = "dark" }) => {
                   <span style={{
                     minWidth: 18, height: 18, padding: "0 5px", borderRadius: 99,
                     display: "inline-flex", alignItems: "center", justifyContent: "center",
-                    fontSize: 10, fontWeight: 800, fontFamily: fontDisp,
+                    fontSize: 10, fontWeight: 500, fontFamily: fontDisp,
                     color: "#FFFFFF", background: badgeColor,
                   }}>{badge}</span>
                 )}
@@ -796,7 +796,7 @@ const ZoomControl = ({ theme = "dark" }) => {
       {seccion === "calentitos" && (
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           <div>
-            <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, fontFamily: fontDisp, color: T.txt, display: "inline-flex", alignItems: "center", gap: 8 }}>
+            <h3 style={{ margin: 0, fontSize: 16, fontWeight: 500, fontFamily: fontDisp, color: T.txt, display: "inline-flex", alignItems: "center", gap: 8 }}>
               <Flame size={16} color="#DC2626" strokeWidth={2.4} /> Clientes de alta intención
             </h3>
             <p style={{ margin: "3px 0 0", fontSize: 12.5, color: T.txt2, fontFamily: font }}>
@@ -811,7 +811,7 @@ const ZoomControl = ({ theme = "dark" }) => {
       {seccion === "reactivacion" && (
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           <div>
-            <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, fontFamily: fontDisp, color: T.txt, display: "inline-flex", alignItems: "center", gap: 8 }}>
+            <h3 style={{ margin: 0, fontSize: 16, fontWeight: 500, fontFamily: fontDisp, color: T.txt, display: "inline-flex", alignItems: "center", gap: 8 }}>
               <RotateCcw size={16} color="#F59E0B" strokeWidth={2.4} /> Reactivación
             </h3>
             <p style={{ margin: "3px 0 0", fontSize: 12.5, color: T.txt2, fontFamily: font }}>
@@ -848,7 +848,7 @@ function StatusSelect({ T, isLight, value, onChange }) {
       style={{
         appearance: "none", WebkitAppearance: "none",
         padding: "5px 12px", borderRadius: 99, cursor: "pointer",
-        fontSize: 12.5, fontWeight: 700, fontFamily: fontDisp,
+        fontSize: 12.5, fontWeight: 500, fontFamily: fontDisp,
         color: textColor,
         background: isLight ? `${c}1F` : `${c}22`,
         border: `1px solid ${c}55`,
@@ -883,7 +883,7 @@ function ZoomModal({ T, isLight, accent, editing, form, setField, formErr, busy,
         }}
       >
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
-          <h3 style={{ margin: 0, fontSize: 17, fontWeight: 800, color: T.txt, fontFamily: fontDisp, letterSpacing: "-0.02em" }}>
+          <h3 style={{ margin: 0, fontSize: 17, fontWeight: 500, color: T.txt, fontFamily: fontDisp, letterSpacing: "-0.02em" }}>
             {editing ? "Editar Zoom" : "Nuevo Zoom"}
           </h3>
           <button onClick={onCancel} style={iconBtn(T, isLight)}><X size={16} /></button>
@@ -949,14 +949,14 @@ function ZoomModal({ T, isLight, accent, editing, form, setField, formErr, busy,
             >
               <Flame size={16} color={form.calentito ? "#DC2626" : T.txt3} strokeWidth={2.4} />
               <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 12.5, fontWeight: 700, color: form.calentito ? "#DC2626" : T.txt, fontFamily: fontDisp }}>
+                <div style={{ fontSize: 12.5, fontWeight: 500, color: form.calentito ? "#DC2626" : T.txt, fontFamily: fontDisp }}>
                   Alta intención de cierre
                 </div>
                 <div style={{ fontSize: 11, color: T.txt3, fontFamily: font }}>
                   Señal de cierre en el Zoom: carta oferta, identificación enviada o cuentas solicitadas para apartar.
                 </div>
               </div>
-              <span style={{ fontSize: 11.5, fontWeight: 700, fontFamily: fontDisp, color: form.calentito ? "#DC2626" : T.txt3 }}>
+              <span style={{ fontSize: 11.5, fontWeight: 500, fontFamily: fontDisp, color: form.calentito ? "#DC2626" : T.txt3 }}>
                 {form.calentito ? "Sí" : "No"}
               </span>
             </div>
@@ -970,13 +970,13 @@ function ZoomModal({ T, isLight, accent, editing, form, setField, formErr, busy,
         <div style={{ display: "flex", justifyContent: "flex-end", gap: 9, marginTop: 18 }}>
           <button onClick={onCancel} disabled={busy} style={{
             padding: "10px 16px", borderRadius: 10, cursor: busy ? "default" : "pointer",
-            fontSize: 13, fontWeight: 600, fontFamily: fontDisp,
+            fontSize: 13, fontWeight: 400, fontFamily: fontDisp,
             background: "transparent", color: T.txt2,
             border: `1px solid ${isLight ? "rgba(15,23,42,0.12)" : "rgba(255,255,255,0.12)"}`,
           }}>Cancelar</button>
           <button onClick={onSave} disabled={busy} style={{
             padding: "10px 18px", borderRadius: 10, cursor: busy ? "default" : "pointer",
-            fontSize: 13, fontWeight: 700, fontFamily: fontDisp,
+            fontSize: 13, fontWeight: 500, fontFamily: fontDisp,
             background: accent, color: "#06080F", border: "none",
             boxShadow: `0 2px 10px ${accent}50`, opacity: busy ? 0.7 : 1,
             display: "inline-flex", alignItems: "center", gap: 7,
@@ -1014,7 +1014,7 @@ function EditableSelect({ T, isLight, value, options, onChange, placeholder }) {
 function Field({ T, label, children, full }) {
   return (
     <div style={{ gridColumn: full ? "1 / -1" : "auto", display: "flex", flexDirection: "column", gap: 5 }}>
-      <label style={{ fontSize: 11.5, fontWeight: 700, color: T.txt2, fontFamily: fontDisp, textTransform: "uppercase", letterSpacing: "0.04em" }}>{label}</label>
+      <label style={{ fontSize: 11.5, fontWeight: 500, color: T.txt2, fontFamily: fontDisp, textTransform: "uppercase", letterSpacing: "0.04em" }}>{label}</label>
       {children}
     </div>
   );
@@ -1050,14 +1050,14 @@ function iconBtn(T, isLight) {
 function thStyle(T, align) {
   return {
     padding: "12px 14px", textAlign: align,
-    fontSize: 11.5, fontWeight: 700, color: T.txt2, fontFamily: fontDisp,
+    fontSize: 11.5, fontWeight: 500, color: T.txt2, fontFamily: fontDisp,
     textTransform: "uppercase", letterSpacing: "0.06em", whiteSpace: "nowrap",
   };
 }
 function tdStyle(T, align) {
   return {
     padding: "12px 14px", textAlign: align,
-    fontSize: 13.5, fontWeight: 600, color: T.txt2, fontFamily: fontDisp,
+    fontSize: 13.5, fontWeight: 400, color: T.txt2, fontFamily: fontDisp,
     verticalAlign: "middle",
   };
 }

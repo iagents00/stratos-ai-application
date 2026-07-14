@@ -78,13 +78,13 @@ export default function LeadChatHistory({ lead, T = P, isLight = false }) {
       <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 12 }}>
         <span style={{
           display: "inline-flex", alignItems: "center", gap: 6,
-          fontSize: 10.5, fontWeight: 700, letterSpacing: "0.12em",
+          fontSize: 10.5, fontWeight: 500, letterSpacing: "0.12em",
           textTransform: "uppercase", color: headerC, fontFamily: fontDisp,
         }}>
           <MessageCircle size={11} />
           Historial de chat (WhatsApp)
           {items.length > 0 && (
-            <span style={{ fontWeight: 600, color: T.txt3, marginLeft: 4 }}>· {items.length}</span>
+            <span style={{ fontWeight: 400, color: T.txt3, marginLeft: 4 }}>· {items.length}</span>
           )}
         </span>
       </div>
@@ -115,7 +115,7 @@ export default function LeadChatHistory({ lead, T = P, isLight = false }) {
                 gap: 8, marginBottom: 6,
               }}>
                 <span style={{
-                  fontSize: 11.5, fontWeight: 700, color: T.txt2,
+                  fontSize: 11.5, fontWeight: 500, color: T.txt2,
                   fontFamily: fontDisp, letterSpacing: "-0.005em",
                 }}>
                   {it.titulo || "Conversación"}

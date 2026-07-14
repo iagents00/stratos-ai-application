@@ -222,7 +222,7 @@ export default function SuggestActionsModal({ open, onClose, lead, onAddTasks })
               <Wand2 size={17} color={P.accent} strokeWidth={2.4} />
             </div>
             <div>
-              <div style={{ fontSize: 9, color: P.txt3, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", fontFamily: fontDisp, display: "flex", alignItems: "center", gap: 6 }}>
+              <div style={{ fontSize: 9, color: P.txt3, fontWeight: 500, letterSpacing: "0.12em", textTransform: "uppercase", fontFamily: fontDisp, display: "flex", alignItems: "center", gap: 6 }}>
                 <span>Tu asistente de venta</span>
                 <span style={{
                   display: "inline-flex", alignItems: "center", gap: 4,
@@ -236,7 +236,7 @@ export default function SuggestActionsModal({ open, onClose, lead, onAddTasks })
                   {source === "ai" ? "IA + Protocolo Duke" : "Protocolo Duke"}
                 </span>
               </div>
-              <div style={{ fontSize: 16, color: P.txt, fontWeight: 700, fontFamily: fontDisp, marginTop: 2 }}>
+              <div style={{ fontSize: 16, color: P.txt, fontWeight: 500, fontFamily: fontDisp, marginTop: 2 }}>
                 ¿Qué hago ahora con {lead?.n || lead?.name}?
               </div>
             </div>
@@ -277,7 +277,7 @@ export default function SuggestActionsModal({ open, onClose, lead, onAddTasks })
           {loading && (
             <div style={{ padding: 40, textAlign: "center", color: P.txt3, fontFamily: font }}>
               <RefreshCw size={28} color={P.accent} strokeWidth={2} style={{ animation: "spinAi 1s linear infinite", marginBottom: 12 }} />
-              <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: P.txt2 }}>Estoy leyendo el expediente…</p>
+              <p style={{ margin: 0, fontSize: 13, fontWeight: 400, color: P.txt2 }}>Estoy leyendo el expediente…</p>
               <p style={{ margin: "4px 0 0", fontSize: 11, color: P.txt3 }}>Pensando qué te conviene hacer para avanzar la venta</p>
               <style>{`@keyframes spinAi { to { transform: rotate(360deg); } }`}</style>
             </div>
@@ -317,14 +317,14 @@ export default function SuggestActionsModal({ open, onClose, lead, onAddTasks })
                     {/* Top row: priority + technique + checkbox */}
                     <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
                       <span style={{
-                        fontSize: 9, fontWeight: 800, color: pm.color,
+                        fontSize: 9, fontWeight: 500, color: pm.color,
                         background: `${pm.color}1A`, border: `1px solid ${pm.color}33`,
                         padding: "2px 8px", borderRadius: 99, letterSpacing: "0.08em", fontFamily: fontDisp,
                       }}>{pm.label}</span>
                       <span style={{
                         fontSize: 9.5, color: P.violet,
                         background: `${P.violet}15`, border: `1px solid ${P.violet}33`,
-                        padding: "2px 8px", borderRadius: 99, fontFamily: fontDisp, fontWeight: 700,
+                        padding: "2px 8px", borderRadius: 99, fontFamily: fontDisp, fontWeight: 500,
                       }}>{naturalTechnique(s.technique) || "Sugerencia"}</span>
                       <div style={{ flex: 1 }} />
                       <div style={{
@@ -339,7 +339,7 @@ export default function SuggestActionsModal({ open, onClose, lead, onAddTasks })
 
                     {/* Action */}
                     <p style={{
-                      margin: "0 0 6px", fontSize: 14, fontWeight: 700, color: P.txt,
+                      margin: "0 0 6px", fontSize: 14, fontWeight: 500, color: P.txt,
                       fontFamily: fontDisp, lineHeight: 1.4,
                     }}>{s.action}</p>
 
@@ -356,7 +356,7 @@ export default function SuggestActionsModal({ open, onClose, lead, onAddTasks })
                         margin: 0, fontSize: 11.5, color: P.txt2, fontFamily: font, lineHeight: 1.55,
                         paddingTop: 8, borderTop: `1px solid ${P.border}`,
                       }}>
-                        <span style={{ color: P.txt3, fontWeight: 600 }}>POR QUÉ TE LO SUGIERO · </span>
+                        <span style={{ color: P.txt3, fontWeight: 400 }}>POR QUÉ TE LO SUGIERO · </span>
                         {s.reason}
                       </p>
                     )}
@@ -403,7 +403,7 @@ export default function SuggestActionsModal({ open, onClose, lead, onAddTasks })
                 border: `1px solid ${selected.size > 0 ? P.accent : P.border}`,
                 color: selected.size > 0 ? "#0B1220" : P.txt3,
                 cursor: selected.size > 0 ? "pointer" : "not-allowed",
-                fontSize: 12.5, fontFamily: fontDisp, fontWeight: 700,
+                fontSize: 12.5, fontFamily: fontDisp, fontWeight: 500,
                 display: "flex", alignItems: "center", gap: 6,
                 transition: "all 0.18s",
               }}

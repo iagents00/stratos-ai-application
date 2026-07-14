@@ -121,7 +121,7 @@ const CandidatePortal = () => {
 
   const PortalInp = ({ label, type = "text", placeholder = "", error, val, onChange, required }) => (
     <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-      <label style={{ fontSize: 12, fontWeight: 600, color: error ? "#E8818C" : "rgba(255,255,255,0.55)", fontFamily: pfb }}>
+      <label style={{ fontSize: 12, fontWeight: 400, color: error ? "#E8818C" : "rgba(255,255,255,0.55)", fontFamily: pfb }}>
         {label}{required && <span style={{ color: "#6EE7C2", marginLeft: 3 }}>*</span>}
       </label>
       <input type={type} value={val} onChange={e => onChange(e.target.value)} placeholder={placeholder}
@@ -129,7 +129,7 @@ const CandidatePortal = () => {
         onFocus={e => e.target.style.borderColor = error ? "#E8818C80" : "#6EE7C240"}
         onBlur={e => e.target.style.borderColor = error ? "#E8818C50" : val ? "#6EE7C230" : "rgba(255,255,255,0.08)"}
       />
-      {error && <span style={{ fontSize: 10, color: "#E8818C", fontWeight: 600 }}>{error}</span>}
+      {error && <span style={{ fontSize: 10, color: "#E8818C", fontWeight: 400 }}>{error}</span>}
     </div>
   );
 
@@ -152,13 +152,13 @@ const CandidatePortal = () => {
             <StratosAtom size={21} color="#6EE7C2" />
           </div>
           <div>
-            <p style={{ fontSize: 15, fontWeight: 700, color: "#FFF", fontFamily: pf, letterSpacing: "-0.02em" }}>Stratos <span style={{ color: "#6EE7C2" }}>People</span></p>
+            <p style={{ fontSize: 15, fontWeight: 500, color: "#FFF", fontFamily: pf, letterSpacing: "-0.02em" }}>Stratos <span style={{ color: "#6EE7C2" }}>People</span></p>
             <p style={{ fontSize: 10, color: "rgba(255,255,255,0.3)", marginTop: 1 }}>Portal de Candidatos · Riviera Maya 2026</p>
           </div>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 7, padding: "6px 14px", borderRadius: 8, background: "rgba(110,231,194,0.05)", border: "1px solid rgba(110,231,194,0.12)" }}>
           <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#6EE7C2", animation: "pulse 2s infinite" }} />
-          <span style={{ fontSize: 11, color: "#6EE7C2", fontWeight: 600 }}>{PORTAL_VACANTES.length} vacantes abiertas</span>
+          <span style={{ fontSize: 11, color: "#6EE7C2", fontWeight: 400 }}>{PORTAL_VACANTES.length} vacantes abiertas</span>
         </div>
       </div>
 
@@ -171,15 +171,15 @@ const CandidatePortal = () => {
               <CheckCircle2 size={36} color="#6EE7C2" />
             </div>
             <p style={{ fontSize: 28, fontWeight: 300, color: "#FFF", fontFamily: pf, letterSpacing: "-0.04em", marginBottom: 10 }}>
-              ¡Aplicación <span style={{ fontWeight: 700, color: "#6EE7C2" }}>enviada!</span>
+              ¡Aplicación <span style={{ fontWeight: 500, color: "#6EE7C2" }}>enviada!</span>
             </p>
             <p style={{ fontSize: 14, color: "rgba(255,255,255,0.45)", lineHeight: 1.7, marginBottom: 36 }}>
               Recibimos tu aplicación para <strong style={{ color: "rgba(255,255,255,0.75)" }}>{form.vacante?.titulo}</strong>.<br />
               Te contactaremos a <strong style={{ color: "rgba(255,255,255,0.65)" }}>{form.email}</strong> en 2–5 días hábiles.
             </p>
             <div style={{ padding: "22px 36px", borderRadius: 16, background: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.07)", marginBottom: 32, display: "inline-block" }}>
-              <p style={{ fontSize: 10, color: "rgba(255,255,255,0.3)", fontWeight: 700, letterSpacing: "0.1em", marginBottom: 10 }}>NÚMERO DE FOLIO</p>
-              <p style={{ fontSize: 26, fontWeight: 700, color: "#A78BFA", fontFamily: pf, letterSpacing: "0.08em" }}>{folio}</p>
+              <p style={{ fontSize: 10, color: "rgba(255,255,255,0.3)", fontWeight: 500, letterSpacing: "0.1em", marginBottom: 10 }}>NÚMERO DE FOLIO</p>
+              <p style={{ fontSize: 26, fontWeight: 500, color: "#A78BFA", fontFamily: pf, letterSpacing: "0.08em" }}>{folio}</p>
               <p style={{ fontSize: 10, color: "rgba(255,255,255,0.25)", marginTop: 8 }}>Guarda este número para dar seguimiento</p>
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 10, maxWidth: 360, margin: "0 auto" }}>
@@ -190,7 +190,7 @@ const CandidatePortal = () => {
                 <div key={i} style={{ display: "flex", alignItems: "center", gap: 14, padding: "14px 18px", borderRadius: 12, background: `${i === 0 ? "rgba(167,139,250,0.05)" : "rgba(110,231,194,0.04)"}`, border: `1px solid ${i === 0 ? "rgba(167,139,250,0.12)" : "rgba(110,231,194,0.1)"}` }}>
                   <div style={{ flexShrink: 0 }}>{item.icon}</div>
                   <div style={{ textAlign: "left" }}>
-                    <p style={{ fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.8)" }}>{item.t}</p>
+                    <p style={{ fontSize: 12, fontWeight: 500, color: "rgba(255,255,255,0.8)" }}>{item.t}</p>
                     <p style={{ fontSize: 10, color: "rgba(255,255,255,0.35)", marginTop: 2 }}>{item.s}</p>
                   </div>
                 </div>
@@ -204,8 +204,8 @@ const CandidatePortal = () => {
           <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
             <div>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
-                <p style={{ fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.4)", fontFamily: pf }}>Pregunta {pregIdx + 1} de {totalPregs}</p>
-                <p style={{ fontSize: 11, color: "#A78BFA", fontWeight: 700 }}>{Math.round((pregIdx / totalPregs) * 100)}% completado</p>
+                <p style={{ fontSize: 12, fontWeight: 500, color: "rgba(255,255,255,0.4)", fontFamily: pf }}>Pregunta {pregIdx + 1} de {totalPregs}</p>
+                <p style={{ fontSize: 11, color: "#A78BFA", fontWeight: 500 }}>{Math.round((pregIdx / totalPregs) * 100)}% completado</p>
               </div>
               <div style={{ height: 3, borderRadius: 2, background: "rgba(255,255,255,0.06)", overflow: "hidden" }}>
                 <div style={{ height: "100%", borderRadius: 2, background: "linear-gradient(90deg, #A78BFA, #7EB8F0)", width: `${(pregIdx / totalPregs) * 100}%`, transition: "width 0.4s ease" }} />
@@ -221,7 +221,7 @@ const CandidatePortal = () => {
                     <AIAtom size={28} color="#A78BFA" spin />
                   </div>
                 </div>
-                <p style={{ fontSize: 18, fontWeight: 700, color: "#FFF", fontFamily: pf, marginBottom: 10 }}>Evaluando tu perfil con IA...</p>
+                <p style={{ fontSize: 18, fontWeight: 500, color: "#FFF", fontFamily: pf, marginBottom: 10 }}>Evaluando tu perfil con IA...</p>
                 <p style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", lineHeight: 1.8, marginBottom: 20 }}>
                   Calculando score de compatibilidad,<br />analizando respuestas y generando tu perfil.
                 </p>
@@ -236,7 +236,7 @@ const CandidatePortal = () => {
                     <div style={{ width: 36, height: 36, borderRadius: "50%", background: "rgba(167,139,250,0.1)", border: "1px solid rgba(167,139,250,0.22)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 1 }}>
                       <AIAtom size={18} color="#A78BFA" />
                     </div>
-                    <p style={{ fontSize: 15, fontWeight: 600, color: "#FFF", fontFamily: pf, lineHeight: 1.55 }}>{pregActual?.q}</p>
+                    <p style={{ fontSize: 15, fontWeight: 400, color: "#FFF", fontFamily: pf, lineHeight: 1.55 }}>{pregActual?.q}</p>
                   </div>
 
                   {pregActual?.tipo === "opciones" && (
@@ -284,7 +284,7 @@ const CandidatePortal = () => {
                   {pregIdx > 0 && <button onClick={() => setPregIdx(i => i - 1)} style={{ padding: "13px 20px", borderRadius: 11, border: "1px solid rgba(255,255,255,0.08)", background: "transparent", color: "rgba(255,255,255,0.4)", fontSize: 13, cursor: "pointer", fontFamily: pfb }}>← Anterior</button>}
                   <button onClick={handleNextPreg}
                     disabled={!respuestas[pregActual?.id] && !(multiSel[pregActual?.id]?.length > 0)}
-                    style={{ flex: 1, padding: "14px 24px", borderRadius: 11, border: "none", fontSize: 14, fontWeight: 700, cursor: (respuestas[pregActual?.id] || multiSel[pregActual?.id]?.length > 0) ? "pointer" : "default", fontFamily: pf, background: (respuestas[pregActual?.id] || multiSel[pregActual?.id]?.length > 0) ? "#FFF" : "rgba(255,255,255,0.07)", color: (respuestas[pregActual?.id] || multiSel[pregActual?.id]?.length > 0) ? "#080D14" : "rgba(255,255,255,0.2)", transition: "all 0.2s" }}>
+                    style={{ flex: 1, padding: "14px 24px", borderRadius: 11, border: "none", fontSize: 14, fontWeight: 500, cursor: (respuestas[pregActual?.id] || multiSel[pregActual?.id]?.length > 0) ? "pointer" : "default", fontFamily: pf, background: (respuestas[pregActual?.id] || multiSel[pregActual?.id]?.length > 0) ? "#FFF" : "rgba(255,255,255,0.07)", color: (respuestas[pregActual?.id] || multiSel[pregActual?.id]?.length > 0) ? "#080D14" : "rgba(255,255,255,0.2)", transition: "all 0.2s" }}>
                     {pregIdx === totalPregs - 1 ? "Enviar aplicación →" : "Siguiente →"}
                   </button>
                 </div>
@@ -308,9 +308,9 @@ const CandidatePortal = () => {
                   <div key={n} style={{ display: "flex", alignItems: "center", flex: i < stepLabels.length - 1 ? 1 : "none" }}>
                     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
                       <div style={{ width: 30, height: 30, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", border: `2px solid ${done ? "#6EE7C2" : active ? progColors[i] : "rgba(255,255,255,0.1)"}`, background: done ? "rgba(110,231,194,0.12)" : active ? `${progColors[i]}14` : "transparent", transition: "all 0.35s" }}>
-                        {done ? <Check size={13} color="#6EE7C2" /> : <span style={{ fontSize: 11, fontWeight: 700, color: active ? progColors[i] : "rgba(255,255,255,0.2)" }}>{n}</span>}
+                        {done ? <Check size={13} color="#6EE7C2" /> : <span style={{ fontSize: 11, fontWeight: 500, color: active ? progColors[i] : "rgba(255,255,255,0.2)" }}>{n}</span>}
                       </div>
-                      <span style={{ fontSize: 9, fontWeight: 700, color: active ? progColors[i] : done ? "rgba(110,231,194,0.5)" : "rgba(255,255,255,0.18)", whiteSpace: "nowrap", letterSpacing: "0.03em" }}>{label}</span>
+                      <span style={{ fontSize: 9, fontWeight: 500, color: active ? progColors[i] : done ? "rgba(110,231,194,0.5)" : "rgba(255,255,255,0.18)", whiteSpace: "nowrap", letterSpacing: "0.03em" }}>{label}</span>
                     </div>
                     {i < stepLabels.length - 1 && <div style={{ flex: 1, height: 1, background: done ? "rgba(110,231,194,0.25)" : "rgba(255,255,255,0.06)", margin: "0 6px", marginBottom: 18, transition: "background 0.4s" }} />}
                   </div>
@@ -323,7 +323,7 @@ const CandidatePortal = () => {
               <div style={{ animation: "fadeIn 0.3s ease" }}>
                 <div style={{ marginBottom: 26 }}>
                   <p style={{ fontSize: 26, fontWeight: 300, color: "#FFF", fontFamily: pf, letterSpacing: "-0.03em", marginBottom: 8 }}>
-                    Cuéntanos sobre <span style={{ fontWeight: 700, color: "#A78BFA" }}>ti</span>
+                    Cuéntanos sobre <span style={{ fontWeight: 500, color: "#A78BFA" }}>ti</span>
                   </p>
                   <p style={{ fontSize: 13, color: "rgba(255,255,255,0.38)", lineHeight: 1.6 }}>Ingresa tus datos de contacto para iniciar tu aplicación. Solo tomará 2 minutos.</p>
                 </div>
@@ -336,7 +336,7 @@ const CandidatePortal = () => {
                   <PortalInp label="Teléfono (WhatsApp)" type="tel" placeholder="+52 55 1234 5678" required val={form.telefono} onChange={v => setF("telefono", v)} error={errors.telefono} />
                   <PortalInp label="LinkedIn (opcional)" placeholder="linkedin.com/in/tu-perfil" val={form.linkedin} onChange={v => setF("linkedin", v)} />
                 </div>
-                <button onClick={() => { if (validateStep1()) setStep(2); }} style={{ marginTop: 24, width: "100%", padding: "15px", borderRadius: 12, border: "none", background: "#FFF", color: "#080D14", fontSize: 14, fontWeight: 700, cursor: "pointer", fontFamily: pf }}>
+                <button onClick={() => { if (validateStep1()) setStep(2); }} style={{ marginTop: 24, width: "100%", padding: "15px", borderRadius: 12, border: "none", background: "#FFF", color: "#080D14", fontSize: 14, fontWeight: 500, cursor: "pointer", fontFamily: pf }}>
                   Continuar →
                 </button>
               </div>
@@ -347,7 +347,7 @@ const CandidatePortal = () => {
               <div style={{ animation: "fadeIn 0.3s ease" }}>
                 <div style={{ marginBottom: 24 }}>
                   <p style={{ fontSize: 26, fontWeight: 300, color: "#FFF", fontFamily: pf, letterSpacing: "-0.03em", marginBottom: 8 }}>
-                    ¿A qué posición <span style={{ fontWeight: 700, color: "#7EB8F0" }}>aplicas?</span>
+                    ¿A qué posición <span style={{ fontWeight: 500, color: "#7EB8F0" }}>aplicas?</span>
                   </p>
                   <p style={{ fontSize: 13, color: "rgba(255,255,255,0.38)" }}>Selecciona la vacante que mejor encaje con tu perfil.</p>
                 </div>
@@ -357,12 +357,12 @@ const CandidatePortal = () => {
                     return (
                       <button key={v.id} onClick={() => setF("vacante", v)} style={{ padding: "18px 20px", borderRadius: 14, textAlign: "left", cursor: "pointer", border: `2px solid ${sel ? "#7EB8F055" : "rgba(255,255,255,0.07)"}`, background: sel ? "rgba(126,184,240,0.07)" : "rgba(255,255,255,0.02)", transition: "all 0.2s" }}>
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
-                          <p style={{ fontSize: 14, fontWeight: 700, color: sel ? "#7EB8F0" : "#FFF", fontFamily: pf }}>{v.titulo}</p>
+                          <p style={{ fontSize: 14, fontWeight: 500, color: sel ? "#7EB8F0" : "#FFF", fontFamily: pf }}>{v.titulo}</p>
                           {sel && <Check size={16} color="#7EB8F0" />}
                         </div>
                         <div style={{ display: "flex", gap: 14 }}>
                           <span style={{ fontSize: 11, color: "rgba(255,255,255,0.38)" }}>{v.dept} · {v.ubicacion}</span>
-                          <span style={{ fontSize: 11, color: sel ? "#6EE7C2" : "rgba(110,231,194,0.55)", fontWeight: 600 }}>{v.salario}</span>
+                          <span style={{ fontSize: 11, color: sel ? "#6EE7C2" : "rgba(110,231,194,0.55)", fontWeight: 400 }}>{v.salario}</span>
                         </div>
                       </button>
                     );
@@ -370,7 +370,7 @@ const CandidatePortal = () => {
                 </div>
                 <div style={{ display: "flex", gap: 10 }}>
                   <button onClick={() => setStep(1)} style={{ padding: "14px 20px", borderRadius: 11, border: "1px solid rgba(255,255,255,0.08)", background: "transparent", color: "rgba(255,255,255,0.38)", fontSize: 13, cursor: "pointer", fontFamily: pfb }}>← Atrás</button>
-                  <button onClick={() => { if (form.vacante) setStep(3); }} style={{ flex: 1, padding: "14px", borderRadius: 11, border: "none", background: form.vacante ? "#FFF" : "rgba(255,255,255,0.07)", color: form.vacante ? "#080D14" : "rgba(255,255,255,0.2)", fontSize: 14, fontWeight: 700, cursor: form.vacante ? "pointer" : "default", fontFamily: pf }}>
+                  <button onClick={() => { if (form.vacante) setStep(3); }} style={{ flex: 1, padding: "14px", borderRadius: 11, border: "none", background: form.vacante ? "#FFF" : "rgba(255,255,255,0.07)", color: form.vacante ? "#080D14" : "rgba(255,255,255,0.2)", fontSize: 14, fontWeight: 500, cursor: form.vacante ? "pointer" : "default", fontFamily: pf }}>
                     Continuar →
                   </button>
                 </div>
@@ -382,7 +382,7 @@ const CandidatePortal = () => {
               <div style={{ animation: "fadeIn 0.3s ease" }}>
                 <div style={{ marginBottom: 24 }}>
                   <p style={{ fontSize: 26, fontWeight: 300, color: "#FFF", fontFamily: pf, letterSpacing: "-0.03em", marginBottom: 8 }}>
-                    Sube tu <span style={{ fontWeight: 700, color: "#6EE7C2" }}>CV</span>
+                    Sube tu <span style={{ fontWeight: 500, color: "#6EE7C2" }}>CV</span>
                   </p>
                   <p style={{ fontSize: 13, color: "rgba(255,255,255,0.38)" }}>La IA lo analiza automáticamente para agilizar tu proceso.</p>
                 </div>
@@ -400,7 +400,7 @@ const CandidatePortal = () => {
                         <FileText size={20} color="#6EE7C2" />
                       </div>
                       <div style={{ flex: 1, textAlign: "left" }}>
-                        <p style={{ fontSize: 13, fontWeight: 700, color: "#FFF", marginBottom: 3 }}>{cvFile.name}</p>
+                        <p style={{ fontSize: 13, fontWeight: 500, color: "#FFF", marginBottom: 3 }}>{cvFile.name}</p>
                         <p style={{ fontSize: 11, color: "rgba(110,231,194,0.7)" }}>{(cvFile.size / 1024).toFixed(0)} KB · Listo para analizar con IA</p>
                       </div>
                       <button onClick={e => { e.stopPropagation(); setCvFile(null); }} style={{ width: 28, height: 28, borderRadius: "50%", border: "1px solid rgba(255,255,255,0.1)", background: "rgba(255,255,255,0.04)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -412,10 +412,10 @@ const CandidatePortal = () => {
                       <div style={{ width: 56, height: 56, borderRadius: 16, background: "rgba(110,231,194,0.07)", border: "1px solid rgba(110,231,194,0.18)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px" }}>
                         <Download size={24} color="#6EE7C2" style={{ transform: "rotate(180deg)" }} />
                       </div>
-                      <p style={{ fontSize: 15, fontWeight: 700, color: "#FFF", fontFamily: pf, marginBottom: 8 }}>{cvDragging ? "¡Suelta aquí!" : "Arrastra tu CV o haz clic"}</p>
+                      <p style={{ fontSize: 15, fontWeight: 500, color: "#FFF", fontFamily: pf, marginBottom: 8 }}>{cvDragging ? "¡Suelta aquí!" : "Arrastra tu CV o haz clic"}</p>
                       <p style={{ fontSize: 12, color: "rgba(255,255,255,0.3)", marginBottom: 14 }}>PDF, Word o imagen JPG/PNG · Máx. 10 MB</p>
                       <div style={{ display: "flex", gap: 6, justifyContent: "center" }}>
-                        {["PDF", "DOC / DOCX", "JPG / PNG"].map(f => <span key={f} style={{ fontSize: 10, color: "rgba(110,231,194,0.55)", background: "rgba(110,231,194,0.05)", border: "1px solid rgba(110,231,194,0.12)", padding: "3px 10px", borderRadius: 5, fontWeight: 600 }}>{f}</span>)}
+                        {["PDF", "DOC / DOCX", "JPG / PNG"].map(f => <span key={f} style={{ fontSize: 10, color: "rgba(110,231,194,0.55)", background: "rgba(110,231,194,0.05)", border: "1px solid rgba(110,231,194,0.12)", padding: "3px 10px", borderRadius: 5, fontWeight: 400 }}>{f}</span>)}
                       </div>
                     </>
                   )}
@@ -426,7 +426,7 @@ const CandidatePortal = () => {
                 </p>
                 <div style={{ display: "flex", gap: 10 }}>
                   <button onClick={() => setStep(2)} style={{ padding: "14px 20px", borderRadius: 11, border: "1px solid rgba(255,255,255,0.08)", background: "transparent", color: "rgba(255,255,255,0.38)", fontSize: 13, cursor: "pointer", fontFamily: pfb }}>← Atrás</button>
-                  <button onClick={() => setStep(4)} style={{ flex: 1, padding: "14px", borderRadius: 11, border: "none", background: cvFile ? "#FFF" : "rgba(255,255,255,0.07)", color: cvFile ? "#080D14" : "rgba(255,255,255,0.2)", fontSize: 14, fontWeight: 700, cursor: "pointer", fontFamily: pf }}>
+                  <button onClick={() => setStep(4)} style={{ flex: 1, padding: "14px", borderRadius: 11, border: "none", background: cvFile ? "#FFF" : "rgba(255,255,255,0.07)", color: cvFile ? "#080D14" : "rgba(255,255,255,0.2)", fontSize: 14, fontWeight: 500, cursor: "pointer", fontFamily: pf }}>
                     {cvFile ? "Analizar y continuar →" : "Continuar sin CV →"}
                   </button>
                 </div>

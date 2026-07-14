@@ -63,7 +63,7 @@ export default function Profile({ theme = "dark", T: Tprop }) {
       <div style={{ marginBottom: 28 }}>
         <p style={{
           margin: "0 0 8px",
-          fontSize: 11, fontWeight: 700, letterSpacing: "0.14em",
+          fontSize: 11, fontWeight: 500, letterSpacing: "0.14em",
           textTransform: "uppercase",
           color: isLight ? T.txt3 : "rgba(255,255,255,0.36)",
           fontFamily: fontDisp,
@@ -196,14 +196,14 @@ function PasswordPanel({ T = P, isLight = false, user }) {
           <Lock size={18} color={T.accent} strokeWidth={1.9} />
         </div>
         <div>
-          <h2 style={{ margin: "0 0 2px", fontSize: 17, fontWeight: 600, color: T.txt, fontFamily: fontDisp }}>System</h2>
+          <h2 style={{ margin: "0 0 2px", fontSize: 17, fontWeight: 400, color: T.txt, fontFamily: fontDisp }}>System</h2>
           <p style={{ margin: 0, fontSize: 12, color: T.txt2 }}>Cambia tu contraseña de acceso sin pedir soporte.</p>
         </div>
       </div>
       <form onSubmit={handleSubmit} style={{ display: "grid", gap: 10 }}>
         <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Nueva contraseña" autoComplete="new-password" disabled={disabled || busy} style={inputStyle(T, isLight)} />
         <input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="Confirmar contraseña" autoComplete="new-password" disabled={disabled || busy} style={inputStyle(T, isLight)} />
-        <button type="submit" disabled={disabled || busy} style={{ height: 40, borderRadius: 11, border: "none", background: disabled || busy ? (isLight ? "rgba(15,23,42,0.08)" : "rgba(255,255,255,0.08)") : T.accent, color: disabled || busy ? T.txt3 : "#06120E", fontWeight: 800, fontFamily: fontDisp, cursor: disabled || busy ? "not-allowed" : "pointer" }}>
+        <button type="submit" disabled={disabled || busy} style={{ height: 40, borderRadius: 11, border: "none", background: disabled || busy ? (isLight ? "rgba(15,23,42,0.08)" : "rgba(255,255,255,0.08)") : T.accent, color: disabled || busy ? T.txt3 : "#06120E", fontWeight: 500, fontFamily: fontDisp, cursor: disabled || busy ? "not-allowed" : "pointer" }}>
           {busy ? "Actualizando..." : "Actualizar contraseña"}
         </button>
       </form>
@@ -266,7 +266,7 @@ function RecoveryEmailPanel({ T = P, isLight = false, user }) {
           <Mail size={18} color={T.accent} strokeWidth={1.9} />
         </div>
         <div style={{ minWidth: 0 }}>
-          <h2 style={{ margin: "0 0 2px", fontSize: 17, fontWeight: 600, color: T.txt, fontFamily: fontDisp }}>Correo de recuperación</h2>
+          <h2 style={{ margin: "0 0 2px", fontSize: 17, fontWeight: 400, color: T.txt, fontFamily: fontDisp }}>Correo de recuperación</h2>
           <p style={{ margin: 0, fontSize: 12, color: T.txt2 }}>
             Si olvidas tu contraseña, te enviamos un código a este correo. Usa uno al que sí tengas acceso.
           </p>
@@ -291,7 +291,7 @@ function RecoveryEmailPanel({ T = P, isLight = false, user }) {
               type="button"
               onClick={save}
               disabled={disabled || busy || !dirty}
-              style={{ height: 40, padding: "0 16px", borderRadius: 11, border: "none", background: (disabled || busy || !dirty) ? (isLight ? "rgba(15,23,42,0.08)" : "rgba(255,255,255,0.08)") : T.accent, color: (disabled || busy || !dirty) ? T.txt3 : "#06120E", fontWeight: 800, fontFamily: fontDisp, fontSize: 13, cursor: (disabled || busy || !dirty) ? "not-allowed" : "pointer" }}
+              style={{ height: 40, padding: "0 16px", borderRadius: 11, border: "none", background: (disabled || busy || !dirty) ? (isLight ? "rgba(15,23,42,0.08)" : "rgba(255,255,255,0.08)") : T.accent, color: (disabled || busy || !dirty) ? T.txt3 : "#06120E", fontWeight: 500, fontFamily: fontDisp, fontSize: 13, cursor: (disabled || busy || !dirty) ? "not-allowed" : "pointer" }}
             >
               {busy ? "Guardando..." : "Guardar"}
             </button>
@@ -326,7 +326,7 @@ function SupportPanel({ T = P, isLight = false, clientConfig }) {
           <PhoneCall size={18} color={T.accent} strokeWidth={1.9} />
         </div>
         <div style={{ minWidth: 0 }}>
-          <h2 style={{ margin: "0 0 2px", fontSize: 17, fontWeight: 600, color: T.txt, fontFamily: fontDisp }}>Soporte directo</h2>
+          <h2 style={{ margin: "0 0 2px", fontSize: 17, fontWeight: 400, color: T.txt, fontFamily: fontDisp }}>Soporte directo</h2>
           <p style={{ margin: 0, fontSize: 12, color: T.txt2 }}>Mientras activamos más funciones, llama o escribe a soporte.</p>
         </div>
       </div>
@@ -343,7 +343,7 @@ function inputStyle(T, isLight) {
 }
 
 function supportButtonStyle(T, isLight, primary) {
-  return { display: "inline-flex", alignItems: "center", gap: 8, height: 38, padding: "0 13px", borderRadius: 11, textDecoration: "none", fontSize: 13, fontWeight: 800, fontFamily: fontDisp, color: primary ? "#06120E" : T.txt, background: primary ? T.accent : (isLight ? "rgba(255,255,255,0.70)" : "rgba(255,255,255,0.055)"), border: primary ? "none" : `1px solid ${T.border}` };
+  return { display: "inline-flex", alignItems: "center", gap: 8, height: 38, padding: "0 13px", borderRadius: 11, textDecoration: "none", fontSize: 13, fontWeight: 500, fontFamily: fontDisp, color: primary ? "#06120E" : T.txt, background: primary ? T.accent : (isLight ? "rgba(255,255,255,0.70)" : "rgba(255,255,255,0.055)"), border: primary ? "none" : `1px solid ${T.border}` };
 }
 
 /* ─────────────────────────────────────────────────────────────────────── */
@@ -432,7 +432,7 @@ function TimezonePanel({ T = P, isLight = false, user }) {
           <Globe size={18} color={T.accent} strokeWidth={1.9} />
         </div>
         <div style={{ minWidth: 0 }}>
-          <h2 style={{ margin: "0 0 2px", fontSize: 17, fontWeight: 600, color: T.txt, fontFamily: fontDisp }}>Zona horaria</h2>
+          <h2 style={{ margin: "0 0 2px", fontSize: 17, fontWeight: 400, color: T.txt, fontFamily: fontDisp }}>Zona horaria</h2>
           <p style={{ margin: 0, fontSize: 12, color: T.txt2 }}>
             El bot de Telegram y los recordatorios usan esta zona para interpretar y mostrar fechas. Default: Cancun.
           </p>
@@ -442,7 +442,7 @@ function TimezonePanel({ T = P, isLight = false, user }) {
       {detected && detected !== currentTz && (
         <div style={{ marginBottom: 10, padding: "8px 12px", borderRadius: 8, background: isLight ? "rgba(15,23,42,0.04)" : "rgba(255,255,255,0.04)", border: `1px solid ${T.border}`, fontSize: 12, color: T.txt2, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, flexWrap: "wrap" }}>
           <span>Detectada por tu navegador: <strong style={{ color: T.txt }}>{detected}</strong></span>
-          <button type="button" onClick={() => save(detected)} disabled={disabled || busy} style={{ padding: "5px 10px", borderRadius: 8, border: `1px solid ${T.accent}40`, background: `${T.accent}14`, color: T.txt, fontSize: 11, fontWeight: 700, fontFamily: fontDisp, cursor: disabled || busy ? "not-allowed" : "pointer" }}>
+          <button type="button" onClick={() => save(detected)} disabled={disabled || busy} style={{ padding: "5px 10px", borderRadius: 8, border: `1px solid ${T.accent}40`, background: `${T.accent}14`, color: T.txt, fontSize: 11, fontWeight: 500, fontFamily: fontDisp, cursor: disabled || busy ? "not-allowed" : "pointer" }}>
             Usar la detectada
           </button>
         </div>
@@ -475,7 +475,7 @@ function TimezonePanel({ T = P, isLight = false, user }) {
           type="button"
           onClick={() => save(draftTz)}
           disabled={disabled || busy || draftTz === currentTz}
-          style={{ height: 36, padding: "0 16px", borderRadius: 10, border: "none", background: (disabled || busy || draftTz === currentTz) ? (isLight ? "rgba(15,23,42,0.08)" : "rgba(255,255,255,0.08)") : T.accent, color: (disabled || busy || draftTz === currentTz) ? T.txt3 : "#06120E", fontWeight: 800, fontFamily: fontDisp, fontSize: 12, cursor: (disabled || busy || draftTz === currentTz) ? "not-allowed" : "pointer" }}
+          style={{ height: 36, padding: "0 16px", borderRadius: 10, border: "none", background: (disabled || busy || draftTz === currentTz) ? (isLight ? "rgba(15,23,42,0.08)" : "rgba(255,255,255,0.08)") : T.accent, color: (disabled || busy || draftTz === currentTz) ? T.txt3 : "#06120E", fontWeight: 500, fontFamily: fontDisp, fontSize: 12, cursor: (disabled || busy || draftTz === currentTz) ? "not-allowed" : "pointer" }}
         >
           {busy ? "Guardando..." : "Guardar zona horaria"}
         </button>
@@ -608,7 +608,7 @@ function ConnectTelegramPanel({ T = P, isLight = false, botUsername = "", manual
         <div style={{ minWidth: 0, flex: 1 }}>
           <h2 style={{
             margin: "0 0 2px",
-            fontSize: 17, fontWeight: 600, letterSpacing: "-0.01em",
+            fontSize: 17, fontWeight: 400, letterSpacing: "-0.01em",
             color: T.txt, fontFamily: fontDisp,
           }}>
             Conectar Telegram
@@ -672,7 +672,7 @@ function NotPairedView({ onConnect, busy, T = P, botUsername = "", deepLinkMode 
           background: busy ? `${T.accent}30` : T.accent,
           border: "none",
           color: "#FFFFFF",
-          fontSize: 14, fontWeight: 700, fontFamily: fontDisp, letterSpacing: "0.005em",
+          fontSize: 14, fontWeight: 500, fontFamily: fontDisp, letterSpacing: "0.005em",
           cursor: busy ? "default" : "pointer",
           transition: "all 0.2s",
           boxShadow: `0 4px 14px ${T.accent}55`,
@@ -692,7 +692,7 @@ function ManualCodeView({ code, T = P, isLight = false, botUsername = "" }) {
     <div>
       <p style={{
         margin: "0 0 12px",
-        fontSize: 11, fontWeight: 700, letterSpacing: "0.12em",
+        fontSize: 11, fontWeight: 500, letterSpacing: "0.12em",
         textTransform: "uppercase",
         color: T.txt3, fontFamily: fontDisp,
       }}>
@@ -738,7 +738,7 @@ function ManualCodeView({ code, T = P, isLight = false, botUsername = "" }) {
             display: "inline-flex", alignItems: "center", gap: 8,
             marginTop: 12, padding: "9px 14px", borderRadius: 11,
             background: "transparent", border: `1px solid ${T.accent}40`,
-            color: T.txt, fontSize: 12.5, fontWeight: 700, fontFamily: fontDisp,
+            color: T.txt, fontSize: 12.5, fontWeight: 500, fontFamily: fontDisp,
             cursor: "pointer", transition: "all 0.18s",
           }}
         >
@@ -776,7 +776,7 @@ function PairedView({ pairedAt, onUnpair, unpairing, T = P, isLight = false, bot
     <div>
       <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
         <Check size={14} color={T.accent} strokeWidth={2.4} />
-        <span style={{ fontSize: 13, color: T.txt, fontWeight: 600 }}>
+        <span style={{ fontSize: 13, color: T.txt, fontWeight: 400 }}>
           Tu Telegram está conectado.
         </span>
       </div>
@@ -796,7 +796,7 @@ function PairedView({ pairedAt, onUnpair, unpairing, T = P, isLight = false, bot
               padding: "10px 16px", borderRadius: 11,
               background: T.accent, border: "none",
               color: "#FFFFFF",
-              fontSize: 13, fontWeight: 700, fontFamily: fontDisp,
+              fontSize: 13, fontWeight: 500, fontFamily: fontDisp,
               cursor: "pointer", transition: "all 0.2s",
               boxShadow: `0 4px 12px ${T.accent}44`,
             }}
@@ -813,7 +813,7 @@ function PairedView({ pairedAt, onUnpair, unpairing, T = P, isLight = false, bot
             display: "inline-flex", alignItems: "center", gap: 7,
             padding: "10px 14px", borderRadius: 11,
             background: "transparent", border: `1px solid ${dangerBorder}`,
-            color: dangerColor, fontSize: 12.5, fontWeight: 600, fontFamily: font,
+            color: dangerColor, fontSize: 12.5, fontWeight: 400, fontFamily: font,
             cursor: unpairing ? "default" : "pointer",
             transition: "all 0.18s",
           }}
@@ -887,7 +887,7 @@ function RecentBotActivity({ T = P, isLight = false }) {
         <div style={{ minWidth: 0, flex: 1 }}>
           <h2 style={{
             margin: "0 0 2px",
-            fontSize: 17, fontWeight: 600, letterSpacing: "-0.01em",
+            fontSize: 17, fontWeight: 400, letterSpacing: "-0.01em",
             color: T.txt, fontFamily: fontDisp,
           }}>
             Últimas acciones desde Telegram
@@ -992,7 +992,7 @@ function BotMessageRow({ msg, T = P, isLight = false }) {
       <div style={{ minWidth: 0, flex: 1 }}>
         <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 4 }}>
           <span style={{
-            fontSize: 11, fontWeight: 700, letterSpacing: "0.04em",
+            fontSize: 11, fontWeight: 500, letterSpacing: "0.04em",
             textTransform: "uppercase", fontFamily: fontDisp,
             color: roleColor,
           }}>

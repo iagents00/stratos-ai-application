@@ -168,7 +168,7 @@ const ERP = ({ oc, T: _T }) => {
   const btnStyle = (color) => ({
     display: "inline-flex", alignItems: "center", gap: 5,
     padding: "6px 11px", borderRadius: 9, textDecoration: "none",
-    fontSize: 11, fontWeight: 700, fontFamily: fontDisp, letterSpacing: "-0.01em",
+    fontSize: 11, fontWeight: 500, fontFamily: fontDisp, letterSpacing: "-0.01em",
     color, background: `${color}14`, border: `1px solid ${color}2E`,
     whiteSpace: "nowrap", transition: "background 0.15s, border-color 0.15s",
   });
@@ -185,14 +185,14 @@ const ERP = ({ oc, T: _T }) => {
   // Botón de filtro (Zona / Presupuesto): claro, grande y con estado activo evidente.
   const fBtn = (active, color) => ({
     display: "inline-flex", alignItems: "center", gap: 5, padding: "7px 13px", borderRadius: 99,
-    cursor: "pointer", fontSize: 11.5, fontWeight: 700, fontFamily: fontDisp, whiteSpace: "nowrap",
+    cursor: "pointer", fontSize: 11.5, fontWeight: 500, fontFamily: fontDisp, whiteSpace: "nowrap",
     border: `1px solid ${active ? color : T.border}`,
     background: active ? `${color}1E` : (isLight ? "#FFFFFF" : "rgba(255,255,255,0.03)"),
     color: active ? color : T.txt2, transition: "all 0.15s",
   });
   const fLabel = {
     display: "inline-flex", alignItems: "center", gap: 5, minWidth: 96, flexShrink: 0,
-    fontSize: 10, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase",
+    fontSize: 10, fontWeight: 500, letterSpacing: "0.06em", textTransform: "uppercase",
     color: T.txt3, fontFamily: fontDisp,
   };
 
@@ -217,11 +217,11 @@ const ERP = ({ oc, T: _T }) => {
           <Send size={18} color={T.blue} />
         </div>
         <div style={{ flex: "1 1 260px", minWidth: 0 }}>
-          <p style={{ margin: 0, fontSize: 13.5, fontWeight: 700, color: T.txt, fontFamily: fontDisp }}>
+          <p style={{ margin: 0, fontSize: 13.5, fontWeight: 500, color: T.txt, fontFamily: fontDisp }}>
             Pregúntale al catálogo por Telegram
           </p>
           <p style={{ margin: "3px 0 0", fontSize: 11.5, color: T.txt3, fontFamily: font }}>
-            Por voz o texto en <span style={{ color: T.blue, fontWeight: 600 }}>@Strato_sasistente_crm_bot</span> — filtra por zona, precio o característica.
+            Por voz o texto en <span style={{ color: T.blue, fontWeight: 400 }}>@Strato_sasistente_crm_bot</span> — filtra por zona, precio o característica.
           </p>
         </div>
         <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
@@ -239,7 +239,7 @@ const ERP = ({ oc, T: _T }) => {
         <div style={{ padding: "18px 22px 14px", borderBottom: `1px solid ${T.border}` }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap", marginBottom: 14 }}>
             <div>
-              <p style={{ fontSize: 14, fontWeight: 700, color: T.txt, fontFamily: fontDisp, margin: 0 }}>Catálogo de Proyectos</p>
+              <p style={{ fontSize: 14, fontWeight: 500, color: T.txt, fontFamily: fontDisp, margin: 0 }}>Catálogo de Proyectos</p>
               <p style={{ fontSize: 10.5, color: T.txt3, fontFamily: font, margin: "3px 0 0" }}>
                 Duke del Caribe · fuente: Google Sheet «DRIVES DUKE DEL CARIBE»
               </p>
@@ -267,7 +267,7 @@ const ERP = ({ oc, T: _T }) => {
                 >
                   {s.nombre}
                   <span style={{
-                    fontSize: 10, fontWeight: 700, padding: "1px 6px", borderRadius: 99,
+                    fontSize: 10, fontWeight: 500, padding: "1px 6px", borderRadius: 99,
                     background: active ? `${T.accent}26` : (isLight ? "rgba(15,23,42,0.06)" : "rgba(255,255,255,0.06)"),
                     color: active ? T.accent : T.txt3,
                   }}>{s.items.length}</span>
@@ -350,7 +350,7 @@ const ERP = ({ oc, T: _T }) => {
                 </div>
                 {(zona || zonaLibre || presu || q) && (
                   <button onClick={() => { setZona(""); setZonaLibre(""); setPresu(""); setRMin(0); setRMax(RANGE_MAX); setQ(""); setLimit(60); }}
-                    style={{ marginLeft: "auto", display: "inline-flex", alignItems: "center", gap: 4, padding: "6px 10px", borderRadius: 8, cursor: "pointer", border: "none", background: "transparent", color: T.txt3, fontSize: 11, fontWeight: 600, fontFamily: font }}>
+                    style={{ marginLeft: "auto", display: "inline-flex", alignItems: "center", gap: 4, padding: "6px 10px", borderRadius: 8, cursor: "pointer", border: "none", background: "transparent", color: T.txt3, fontSize: 11, fontWeight: 400, fontFamily: font }}>
                     <X size={12} /> Limpiar
                   </button>
                 )}
@@ -372,8 +372,8 @@ const ERP = ({ oc, T: _T }) => {
                       return (
                         <div key={s.key}>
                           <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 5 }}>
-                            <span style={{ fontSize: 10, color: T.txt3, fontFamily: fontDisp, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase" }}>{s.label}</span>
-                            <span style={{ fontSize: 13, color: T.emerald, fontFamily: fontDisp, fontWeight: 800 }}>{s.show}</span>
+                            <span style={{ fontSize: 10, color: T.txt3, fontFamily: fontDisp, fontWeight: 500, letterSpacing: "0.06em", textTransform: "uppercase" }}>{s.label}</span>
+                            <span style={{ fontSize: 13, color: T.emerald, fontFamily: fontDisp, fontWeight: 500 }}>{s.show}</span>
                           </div>
                           <input className="erp-range" type="range" min={0} max={RANGE_MAX} step={RANGE_STEP} value={s.val}
                             onChange={(e) => { s.set(Number(e.target.value)); setLimit(60); }}
@@ -398,7 +398,7 @@ const ERP = ({ oc, T: _T }) => {
               <div style={{ width: 58, height: 58, borderRadius: 17, background: `${T.accent}0D`, border: `1px solid ${T.accent}1F`, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 14px" }}>
                 <FolderOpen size={25} color={T.accent} strokeWidth={1.6} style={{ opacity: 0.75 }} />
               </div>
-              <p style={{ margin: "0 0 4px", fontSize: 14, fontWeight: 600, fontFamily: fontDisp, color: T.txt }}>Sección sin registros todavía</p>
+              <p style={{ margin: "0 0 4px", fontSize: 14, fontWeight: 400, fontFamily: fontDisp, color: T.txt }}>Sección sin registros todavía</p>
               <p style={{ margin: 0, fontSize: 12, color: T.txt3, fontFamily: font }}>Esta pestaña existe en el Sheet pero aún no tiene desarrollos cargados.</p>
             </div>
           ) : filtered.length === 0 ? (
@@ -427,7 +427,7 @@ const ERP = ({ oc, T: _T }) => {
                     >
                       {/* Title row */}
                       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8, flexWrap: "wrap" }}>
-                        <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: T.txt, fontFamily: fontDisp, letterSpacing: "-0.02em", lineHeight: 1.25 }}>{it.desarrollo}</p>
+                        <p style={{ margin: 0, fontSize: 14, fontWeight: 500, color: T.txt, fontFamily: fontDisp, letterSpacing: "-0.02em", lineHeight: 1.25 }}>{it.desarrollo}</p>
                         {it.ticket && <Pill color={c} s isLight={isLight}>{it.ticket}</Pill>}
                       </div>
 
@@ -501,7 +501,7 @@ const ERP = ({ oc, T: _T }) => {
                     <tr>
                       {["Desarrollo", "Ubicación", "Ticket", "Clase", "Tipología", "Broker / Asesor", "Entrega", "Contacto", "Enlaces"].map((h) => (
                         <th key={h} style={{
-                          textAlign: "left", padding: "11px 13px", fontSize: 9.5, fontWeight: 600, color: T.txt3,
+                          textAlign: "left", padding: "11px 13px", fontSize: 9.5, fontWeight: 400, color: T.txt3,
                           textTransform: "uppercase", letterSpacing: "0.07em", fontFamily: fontDisp,
                           borderBottom: `1px solid ${T.border}`, whiteSpace: "nowrap",
                           background: isLight ? "rgba(15,23,42,0.03)" : "rgba(255,255,255,0.03)",
@@ -520,7 +520,7 @@ const ERP = ({ oc, T: _T }) => {
                           onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
                           style={{ cursor: "pointer", transition: "background 0.15s" }}
                         >
-                          <td style={{ ...tdBase, color: T.txt, fontWeight: 700, fontFamily: fontDisp, whiteSpace: "normal", minWidth: 150 }}>{it.desarrollo}</td>
+                          <td style={{ ...tdBase, color: T.txt, fontWeight: 500, fontFamily: fontDisp, whiteSpace: "normal", minWidth: 150 }}>{it.desarrollo}</td>
                           <td style={tdBase}>
                             {it.ubicacion
                               ? <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><MapPin size={11} color={T.txt3} />{canonZona(it.ubicacion)}</span>
@@ -554,7 +554,7 @@ const ERP = ({ oc, T: _T }) => {
                     style={{
                       padding: "10px 20px", borderRadius: 11, cursor: "pointer",
                       background: `${T.accent}14`, border: `1px solid ${T.accent}33`,
-                      color: T.accent, fontSize: 12.5, fontWeight: 700, fontFamily: fontDisp,
+                      color: T.accent, fontSize: 12.5, fontWeight: 500, fontFamily: fontDisp,
                     }}
                   >
                     Ver más ({filtered.length - limit} restantes)

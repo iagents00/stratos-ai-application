@@ -1408,7 +1408,7 @@ export default function App() {
           </div>
           <div style={{ display:"flex", alignItems:"center", gap:4 }}>
             <div style={{ width:4, height:4, borderRadius:"50%", background:"#34D399", boxShadow:"0 0 5px rgba(52,211,153,0.80), 0 0 10px rgba(52,211,153,0.30)", animation:"pulse 2.2s ease-in-out infinite", willChange:"transform, opacity" }} />
-            <span style={{ fontSize:7, fontFamily:fontDisp, fontWeight:700, letterSpacing:"0.18em", textTransform:"uppercase", color: isLight ? "rgba(15,23,42,0.32)" : "rgba(255,255,255,0.28)", lineHeight:1 }}>Live</span>
+            <span style={{ fontSize:7, fontFamily:fontDisp, fontWeight:500, letterSpacing:"0.18em", textTransform:"uppercase", color: isLight ? "rgba(15,23,42,0.32)" : "rgba(255,255,255,0.28)", lineHeight:1 }}>Live</span>
           </div>
           <div style={{ width:28, height:1, background: isLight ? "linear-gradient(90deg, transparent, rgba(13,154,118,0.18), transparent)" : "linear-gradient(90deg, transparent, rgba(110,231,194,0.12), transparent)" }} />
         </div>
@@ -1438,15 +1438,15 @@ export default function App() {
                   padding:"1.5px 5px", borderRadius:99,
                   background: isLight ? "rgba(13,154,118,0.08)" : "rgba(52,211,153,0.13)",
                 }}>
-                  <span style={{ fontSize:5.5, fontFamily:fontDisp, fontWeight:700, letterSpacing:"0.06em", color: isLight ? "rgba(13,154,118,0.60)" : "rgba(52,211,153,0.52)" }}>ACT</span>
-                  <span style={{ fontSize:7.5, fontFamily:fontDisp, fontWeight:600, letterSpacing:"-0.01em", fontVariantNumeric:"tabular-nums", color: isLight ? "rgba(15,23,42,0.66)" : "rgba(255,255,255,0.62)" }}>{actDone}/{actTotal}</span>
+                  <span style={{ fontSize:5.5, fontFamily:fontDisp, fontWeight:500, letterSpacing:"0.06em", color: isLight ? "rgba(13,154,118,0.60)" : "rgba(52,211,153,0.52)" }}>ACT</span>
+                  <span style={{ fontSize:7.5, fontFamily:fontDisp, fontWeight:400, letterSpacing:"-0.01em", fontVariantNumeric:"tabular-nums", color: isLight ? "rgba(15,23,42,0.66)" : "rgba(255,255,255,0.62)" }}>{actDone}/{actTotal}</span>
                 </span>
               </div>
               <span style={{ fontSize: pc >= 100 ? 30 : 33, fontWeight: pc >= 100 ? 400 : 200, fontFamily:fontDisp, letterSpacing:"-0.04em", lineHeight:1, color: isLight ? (pc >= 100 ? "#0D9A76" : "#082818") : (pc >= 100 ? "#34D399" : "#FFFFFF"), display:"block", position:"relative", zIndex:1, whiteSpace:"nowrap", fontVariantNumeric:"tabular-nums" }}>{pc >= 100 ? "✓" : pc}</span>
               <div style={{ width:"100%", height:2.5, borderRadius:99, background: isLight ? "rgba(13,154,118,0.09)" : "rgba(255,255,255,0.08)", marginTop:9, overflow:"hidden", position:"relative", zIndex:1 }}>
                 <div style={{ width:`${pc}%`, height:"100%", borderRadius:99, background: isLight ? "linear-gradient(90deg, #0D9A76, #34D399)" : "linear-gradient(90deg, #34D399, #6EE7C2)", boxShadow: isLight ? "none" : "0 0 8px rgba(52,211,153,0.55)", transition:"width 1.1s cubic-bezier(0.4,0,0.2,1)" }} />
               </div>
-              <span style={{ fontSize:5.5, fontWeight:700, fontFamily:fontDisp, letterSpacing:"0.17em", textTransform:"uppercase", color: isLight ? "rgba(13,154,118,0.48)" : "rgba(52,211,153,0.36)", display:"block", marginTop:8, position:"relative", zIndex:1 }}>AVANCE</span>
+              <span style={{ fontSize:5.5, fontWeight:500, fontFamily:fontDisp, letterSpacing:"0.17em", textTransform:"uppercase", color: isLight ? "rgba(13,154,118,0.48)" : "rgba(52,211,153,0.36)", display:"block", marginTop:8, position:"relative", zIndex:1 }}>AVANCE</span>
             </div>
             <div style={{ width:32, height:1, marginTop:10, background: isLight ? "linear-gradient(90deg, transparent, rgba(15,23,42,0.07), transparent)" : "linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent)" }} />
           </div>
@@ -1529,10 +1529,10 @@ export default function App() {
             <div className="stratos-header" style={{ position:"relative", flexShrink:0, padding:"0 20px", height:52, borderBottom:`1px solid ${hBorder}`, display:"flex", justifyContent:"space-between", alignItems:"center", background:hBg, backdropFilter: "blur(24px) saturate(170%)", WebkitBackdropFilter: "blur(24px) saturate(170%)", boxShadow: isLight ? "0 2px 16px rgba(15,23,42,0.05)" : "0 3px 20px rgba(0,0,0,0.30)", transition:"background 0.3s ease" }}>
               {/* LEFT */}
               <div className="stratos-header-left" style={{ display:"flex", alignItems:"center", gap:10 }}>
-                <p className="stratos-wordmark" style={{ margin:0, fontSize:14, fontFamily:fontDisp, letterSpacing:"-0.030em", fontWeight:600, color: isLight ? T.txt : "#FFFFFF", lineHeight:1, whiteSpace:"nowrap" }}>
+                <p className="stratos-wordmark" style={{ margin:0, fontSize:14, fontFamily:fontDisp, letterSpacing:"-0.030em", fontWeight:400, color: isLight ? T.txt : "#FFFFFF", lineHeight:1, whiteSpace:"nowrap" }}>
                   {clientConfig?.brand?.appWordmark
                     ? clientConfig.brand.appWordmark
-                    : <>Stratos<span style={{ marginLeft:3, fontWeight:600, color: isLight ? "rgba(15,23,42,0.38)" : "rgba(255,255,255,0.30)", letterSpacing:"0.01em" }}>AI</span></>}
+                    : <>Stratos<span style={{ marginLeft:3, fontWeight:400, color: isLight ? "rgba(15,23,42,0.38)" : "rgba(255,255,255,0.30)", letterSpacing:"0.01em" }}>AI</span></>}
                 </p>
                 <IAOSIsland leadsData={leadsData} isLight={isLight} idx={iaosIdx} brandLabel={orgBrand} onOpen={() => setIntelOpenTick(t => t + 1)} />
               </div>
@@ -1574,7 +1574,7 @@ export default function App() {
                         minWidth:14, height:14, padding:"0 3.5px", borderRadius:99,
                         background:T.accent, color:"#041016",
                         border:`1.5px solid ${isLight ? "#F5FAF8" : "#050507"}`,
-                        fontSize:8.5, fontWeight:800, fontFamily:fontDisp,
+                        fontSize:8.5, fontWeight:500, fontFamily:fontDisp,
                         display:"flex", alignItems:"center", justifyContent:"center",
                         lineHeight:1,
                       }}>{waUnread > 99 ? "99+" : waUnread}</div>
@@ -1584,7 +1584,7 @@ export default function App() {
                         minWidth:14, height:14, padding:"0 3.5px", borderRadius:99,
                         background:"#F59E0B", color:"#0B1220",
                         border:`1.5px solid ${isLight ? "#F5FAF8" : "#050507"}`,
-                        fontSize:8.5, fontWeight:800, fontFamily:fontDisp,
+                        fontSize:8.5, fontWeight:500, fontFamily:fontDisp,
                         display:"flex", alignItems:"center", justifyContent:"center",
                         lineHeight:1,
                       }}>{pendingSync > 99 ? "99+" : pendingSync}</div>
@@ -1610,7 +1610,7 @@ export default function App() {
                         display:"flex", flexDirection:"column", gap:10,
                       }}>
                         <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between" }}>
-                          <span style={{ fontSize:11, fontWeight:700, letterSpacing:"0.06em", textTransform:"uppercase", color:isLight ? T.txt2 : "rgba(255,255,255,0.55)", fontFamily:fontDisp }}>Notificaciones</span>
+                          <span style={{ fontSize:11, fontWeight:500, letterSpacing:"0.06em", textTransform:"uppercase", color:isLight ? T.txt2 : "rgba(255,255,255,0.55)", fontFamily:fontDisp }}>Notificaciones</span>
                         </div>
 
                         {/* ── WhatsApp: clientes que escribieron y siguen sin leer ── */}
@@ -1618,7 +1618,7 @@ export default function App() {
                           <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
                             <div style={{ display:"flex", alignItems:"center", gap:6 }}>
                               <MessageCircle size={12} color={T.accent} strokeWidth={2.4} />
-                              <span style={{ fontSize:10.5, fontWeight:800, letterSpacing:"0.04em", textTransform:"uppercase", color:T.accent, fontFamily:fontDisp }}>
+                              <span style={{ fontSize:10.5, fontWeight:500, letterSpacing:"0.04em", textTransform:"uppercase", color:T.accent, fontFamily:fontDisp }}>
                                 WhatsApp · {waUnread} sin leer
                               </span>
                             </div>
@@ -1639,7 +1639,7 @@ export default function App() {
                                   onMouseLeave={e => { e.currentTarget.style.background = isLight ? "rgba(13,154,118,0.06)" : "rgba(110,231,194,0.06)"; }}
                                 >
                                   <div style={{ flex:1, minWidth:0 }}>
-                                    <div style={{ fontSize:12, fontWeight:700, color:T.txt, fontFamily:fontDisp, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>
+                                    <div style={{ fontSize:12, fontWeight:500, color:T.txt, fontFamily:fontDisp, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>
                                       {c.lead_name || c.lead_phone || "Cliente"}
                                     </div>
                                     <div style={{ fontSize:10.5, color:isLight ? T.txt2 : "rgba(255,255,255,0.55)", fontFamily:font, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>
@@ -1649,7 +1649,7 @@ export default function App() {
                                   <span style={{
                                     minWidth:16, height:16, padding:"0 5px", borderRadius:99, flexShrink:0,
                                     background:T.accent, color:"#041016",
-                                    fontSize:9, fontWeight:800, fontFamily:fontDisp,
+                                    fontSize:9, fontWeight:500, fontFamily:fontDisp,
                                     display:"flex", alignItems:"center", justifyContent:"center",
                                   }}>{u > 99 ? "99+" : u}</span>
                                 </button>
@@ -1660,7 +1660,7 @@ export default function App() {
                               style={{
                                 marginTop:2, padding:"6px 0", borderRadius:7, cursor:"pointer",
                                 background:"transparent", border:"none",
-                                color:T.accent, fontSize:11, fontWeight:700, fontFamily:font,
+                                color:T.accent, fontSize:11, fontWeight:500, fontFamily:font,
                               }}
                             >Ver todas las conversaciones →</button>
                           </div>
@@ -1681,7 +1681,7 @@ export default function App() {
                             border:`1px solid ${isLight ? "rgba(245,158,11,0.32)" : "rgba(245,158,11,0.30)"}`,
                             display:"flex", flexDirection:"column", gap:4,
                           }}>
-                            <span style={{ fontSize:11.5, fontWeight:700, color:"#F59E0B", fontFamily:fontDisp }}>Modo offline</span>
+                            <span style={{ fontSize:11.5, fontWeight:500, color:"#F59E0B", fontFamily:fontDisp }}>Modo offline</span>
                             <span style={{ fontSize:11, color:isLight ? T.txt2 : "rgba(255,255,255,0.65)", fontFamily:font, lineHeight:1.4 }}>
                               Servicio respondiendo lento. Los cambios se sincronizan automáticamente al recuperar conexión.
                             </span>
@@ -1697,7 +1697,7 @@ export default function App() {
                             display:"flex", flexDirection:"column", gap:8,
                           }}>
                             <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between" }}>
-                              <span style={{ fontSize:11.5, fontWeight:700, color:"#F59E0B", fontFamily:fontDisp }}>
+                              <span style={{ fontSize:11.5, fontWeight:500, color:"#F59E0B", fontFamily:fontDisp }}>
                                 {pendingSync} cambio{pendingSync !== 1 ? "s" : ""} pendiente{pendingSync !== 1 ? "s" : ""}
                               </span>
                             </div>
@@ -1712,7 +1712,7 @@ export default function App() {
                                   flex:1, padding:"7px 10px", borderRadius:7,
                                   background: syncing ? (isLight ? "rgba(15,23,42,0.06)" : "rgba(255,255,255,0.05)") : "#F59E0B",
                                   color: syncing ? (isLight ? T.txt3 : "rgba(255,255,255,0.40)") : "#0B1220",
-                                  border:"none", fontSize:11, fontWeight:700, fontFamily:font,
+                                  border:"none", fontSize:11, fontWeight:500, fontFamily:font,
                                   cursor: syncing ? "not-allowed" : "pointer", transition:"opacity 0.16s",
                                 }}
                               >{syncing ? "Sincronizando..." : "Sincronizar ahora"}</button>
@@ -1729,7 +1729,7 @@ export default function App() {
                                   background:"transparent",
                                   color: isLight ? T.txt2 : "rgba(255,255,255,0.55)",
                                   border:`1px solid ${isLight ? "rgba(15,23,42,0.14)" : "rgba(255,255,255,0.14)"}`,
-                                  fontSize:11, fontWeight:600, fontFamily:font,
+                                  fontSize:11, fontWeight:400, fontFamily:font,
                                   cursor:"pointer", transition:"all 0.14s",
                                 }}
                                 onMouseEnter={e => { e.currentTarget.style.background = isLight ? "rgba(225,29,72,0.08)" : "rgba(239,68,68,0.10)"; e.currentTarget.style.color = isLight ? "#B91C1C" : "#FCA5A5"; e.currentTarget.style.borderColor = isLight ? "rgba(225,29,72,0.32)" : "rgba(239,68,68,0.32)"; }}
@@ -1796,14 +1796,14 @@ export default function App() {
                     ? (isLight ? `${T.accent}1A` : "rgba(110,231,194,0.10)")
                     : "transparent"; }}
                 >
-                  <div style={{ width:26, height:26, borderRadius:"50%", flexShrink:0, background: isLight ? `linear-gradient(135deg, ${T.accent} 0%, #10B48A 100%)` : `linear-gradient(145deg, rgba(110,231,194,0.28) 0%, rgba(52,211,153,0.12) 100%)`, border: isLight ? "1.5px solid rgba(255,255,255,0.30)" : `1.5px solid rgba(110,231,194,0.24)`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:10.5, fontWeight:800, fontFamily:fontDisp, color: isLight ? "#FFFFFF" : T.accent, boxShadow: isLight ? `0 2px 8px ${T.accent}45` : `inset 0 1px 0 rgba(110,231,194,0.22)` }}>
+                  <div style={{ width:26, height:26, borderRadius:"50%", flexShrink:0, background: isLight ? `linear-gradient(135deg, ${T.accent} 0%, #10B48A 100%)` : `linear-gradient(145deg, rgba(110,231,194,0.28) 0%, rgba(52,211,153,0.12) 100%)`, border: isLight ? "1.5px solid rgba(255,255,255,0.30)" : `1.5px solid rgba(110,231,194,0.24)`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:10.5, fontWeight:500, fontFamily:fontDisp, color: isLight ? "#FFFFFF" : T.accent, boxShadow: isLight ? `0 2px 8px ${T.accent}45` : `inset 0 1px 0 rgba(110,231,194,0.22)` }}>
                     {user?.name?.charAt(0).toUpperCase() || "U"}
                   </div>
                   <div className="stratos-userpill-text" style={{ display:"flex", flexDirection:"column", alignItems:"flex-start" }}>
-                    <span style={{ fontSize:11.5, fontWeight:700, fontFamily:fontDisp, letterSpacing:"-0.01em", lineHeight:1.2, color: isLight ? T.txt : "rgba(255,255,255,0.82)", whiteSpace:"nowrap" }}>
+                    <span style={{ fontSize:11.5, fontWeight:500, fontFamily:fontDisp, letterSpacing:"-0.01em", lineHeight:1.2, color: isLight ? T.txt : "rgba(255,255,255,0.82)", whiteSpace:"nowrap" }}>
                       {user?.name?.split(" ")[0] || "Usuario"}
                     </span>
-                    <span style={{ fontSize:9, fontWeight:600, fontFamily:font, letterSpacing:"0.02em", lineHeight:1.1, color: user?.isDemo ? T.amber : (isLight ? T.txt3 : "rgba(255,255,255,0.30)"), whiteSpace:"nowrap" }}>
+                    <span style={{ fontSize:9, fontWeight:400, fontFamily:font, letterSpacing:"0.02em", lineHeight:1.1, color: user?.isDemo ? T.amber : (isLight ? T.txt3 : "rgba(255,255,255,0.30)"), whiteSpace:"nowrap" }}>
                       {user?.isDemo ? "Demo" : (user?.role || "Miembro")}
                     </span>
                   </div>
@@ -1959,7 +1959,7 @@ export default function App() {
           }}>
             {/* Header del cuadro */}
             <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:12 }}>
-              <span style={{ fontSize:13, fontWeight:700, fontFamily:fontDisp, letterSpacing:"-0.02em", color: isLight ? T.txt : "#FFFFFF" }}>Todas las opciones</span>
+              <span style={{ fontSize:13, fontWeight:500, fontFamily:fontDisp, letterSpacing:"-0.02em", color: isLight ? T.txt : "#FFFFFF" }}>Todas las opciones</span>
               <button onClick={() => setPlusOpen(false)} aria-label="Cerrar" style={{ width:28, height:28, borderRadius:9, border:"none", cursor:"pointer", background: isLight ? "rgba(15,23,42,0.05)" : "rgba(255,255,255,0.06)", display:"flex", alignItems:"center", justifyContent:"center" }}>
                 <X size={14} color={isLight ? T.txt2 : "rgba(255,255,255,0.55)"} />
               </button>
@@ -1977,7 +1977,7 @@ export default function App() {
                 <StratosAtomHex size={20} color={isLight ? "#0D9A76" : "#6EE7C2"} edge={isLight ? "#34D399" : "#C8DED8"} />
               </div>
               <div style={{ minWidth:0 }}>
-                <p style={{ margin:0, fontSize:13, fontWeight:700, fontFamily:fontDisp, letterSpacing:"-0.015em", color: isLight ? T.txt : "#FFFFFF" }}>{clientConfig?.brand?.intelligenceCenterLabelMobile || clientConfig?.brand?.intelligenceCenterLabel || "Centro de Inteligencia"}</p>
+                <p style={{ margin:0, fontSize:13, fontWeight:500, fontFamily:fontDisp, letterSpacing:"-0.015em", color: isLight ? T.txt : "#FFFFFF" }}>{clientConfig?.brand?.intelligenceCenterLabelMobile || clientConfig?.brand?.intelligenceCenterLabel || "Centro de Inteligencia"}</p>
                 <p style={{ margin:"2px 0 0", fontSize:10.5, fontFamily:font, color: isLight ? T.txt3 : "rgba(255,255,255,0.42)" }}>Novedades del equipo IA y qué puede hacer el sistema</p>
               </div>
             </button>
@@ -1995,7 +1995,7 @@ export default function App() {
                 <Target size={19} color={isLight ? "#2563EB" : "#7EB8F0"} strokeWidth={2} />
               </div>
               <div style={{ minWidth:0 }}>
-                <p style={{ margin:0, fontSize:13, fontWeight:700, fontFamily:fontDisp, letterSpacing:"-0.015em", color: isLight ? T.txt : "#FFFFFF" }}>Plan Estratégico</p>
+                <p style={{ margin:0, fontSize:13, fontWeight:500, fontFamily:fontDisp, letterSpacing:"-0.015em", color: isLight ? T.txt : "#FFFFFF" }}>Plan Estratégico</p>
                 <p style={{ margin:"2px 0 0", fontSize:10.5, fontFamily:font, color: isLight ? T.txt3 : "rgba(255,255,255,0.42)" }}>Lista de acción · Documentos · Plan · Protocolo de ventas</p>
               </div>
             </button>
@@ -2027,17 +2027,17 @@ export default function App() {
                 background: isLight ? "rgba(167,139,250,0.08)" : "rgba(167,139,250,0.10)",
               }}>
                 <IosIcon name="admin" filled size={16} color="#A78BFA" />
-                <span style={{ fontSize:12.5, fontWeight:600, fontFamily:fontDisp, color: isLight ? "#6D45C9" : "#C9B8F5" }}>Gestión de usuarios</span>
+                <span style={{ fontSize:12.5, fontWeight:400, fontFamily:fontDisp, color: isLight ? "#6D45C9" : "#C9B8F5" }}>Gestión de usuarios</span>
               </button>
             )}
             <div style={{ display:"flex", gap:8, marginTop:8 }}>
               <button onClick={() => setTheme(isLight ? "dark" : "light")} style={{ flex:1, display:"flex", alignItems:"center", justifyContent:"center", gap:7, padding:"11px 8px", borderRadius:13, border:`1px solid ${isLight ? "rgba(15,23,42,0.08)" : "rgba(255,255,255,0.07)"}`, background: isLight ? "rgba(15,23,42,0.03)" : "rgba(255,255,255,0.04)", cursor:"pointer" }}>
                 {isLight ? <IosIcon name="moon" filled size={15} color={T.txt2} /> : <IosIcon name="sun" filled size={15} color="rgba(255,255,255,0.60)" />}
-                <span style={{ fontSize:11.5, fontWeight:600, fontFamily:fontDisp, color: isLight ? T.txt2 : "rgba(255,255,255,0.60)" }}>{isLight ? "Modo oscuro" : "Modo claro"}</span>
+                <span style={{ fontSize:11.5, fontWeight:400, fontFamily:fontDisp, color: isLight ? T.txt2 : "rgba(255,255,255,0.60)" }}>{isLight ? "Modo oscuro" : "Modo claro"}</span>
               </button>
               <button onClick={() => { setPlusOpen(false); onLogout(); }} style={{ flex:1, display:"flex", alignItems:"center", justifyContent:"center", gap:7, padding:"11px 8px", borderRadius:13, border:`1px solid ${isLight ? "rgba(225,29,72,0.16)" : "rgba(232,129,140,0.18)"}`, background: isLight ? "rgba(225,29,72,0.05)" : "rgba(232,129,140,0.07)", cursor:"pointer" }}>
                 <IosIcon name="exit" filled size={15} color={isLight ? "#BE123C" : "#E8818C"} />
-                <span style={{ fontSize:11.5, fontWeight:600, fontFamily:fontDisp, color: isLight ? "#BE123C" : "#E8818C" }}>Salir</span>
+                <span style={{ fontSize:11.5, fontWeight:400, fontFamily:fontDisp, color: isLight ? "#BE123C" : "#E8818C" }}>Salir</span>
               </button>
             </div>
 
@@ -2057,7 +2057,7 @@ export default function App() {
           <div onClick={() => setSidebarMore(false)} style={{ position:"fixed", inset:0, zIndex:700, background: isLight ? "rgba(15,23,42,0.28)" : "rgba(2,4,9,0.60)", backdropFilter:"blur(6px)", WebkitBackdropFilter:"blur(6px)", animation:"fadeIn 0.18s ease both" }} />
           <div style={{ position:"fixed", top:"50%", left:"50%", transform:"translate(-50%,-50%)", zIndex:701, width:"min(90vw, 560px)", borderRadius:26, padding:"22px 22px 24px", background: isLight ? "linear-gradient(180deg, rgba(255,255,255,0.88), rgba(248,250,252,0.80))" : "linear-gradient(180deg, rgba(18,24,32,0.85), rgba(7,10,15,0.90))", backdropFilter:"blur(30px) saturate(185%)", WebkitBackdropFilter:"blur(30px) saturate(185%)", border: isLight ? "1px solid rgba(255,255,255,0.90)" : "1px solid rgba(255,255,255,0.08)", boxShadow: isLight ? "0 30px 80px rgba(15,23,42,0.28)" : "inset 0 1px 0 rgba(190,245,225,0.08), inset 0 -1px 0 rgba(0,0,0,0.4), 0 30px 90px rgba(0,0,0,0.72)", animation:"modalIn 0.24s cubic-bezier(0.16,1,0.3,1) both" }}>
             <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:18 }}>
-              <span style={{ fontSize:15, fontWeight:700, fontFamily:fontDisp, letterSpacing:"-0.02em", color: isLight ? T.txt : "#FFFFFF" }}>Aplicaciones</span>
+              <span style={{ fontSize:15, fontWeight:500, fontFamily:fontDisp, letterSpacing:"-0.02em", color: isLight ? T.txt : "#FFFFFF" }}>Aplicaciones</span>
               <button onClick={() => setSidebarMore(false)} aria-label="Cerrar" style={{ width:30, height:30, borderRadius:10, border:"none", cursor:"pointer", background: isLight ? "rgba(15,23,42,0.05)" : "rgba(255,255,255,0.06)", display:"flex", alignItems:"center", justifyContent:"center" }}>
                 <X size={16} color={isLight ? T.txt2 : "rgba(255,255,255,0.55)"} />
               </button>
@@ -2087,7 +2087,7 @@ export default function App() {
               <>
                 <div style={{ height:1, margin:"18px 2px 14px", background: isLight ? "rgba(15,23,42,0.06)" : "rgba(255,255,255,0.05)" }} />
                 <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", gap:12 }}>
-                  <span style={{ fontSize:10.5, fontWeight:700, fontFamily:fontDisp, letterSpacing:"0.08em", textTransform:"uppercase", color: isLight ? "rgba(15,23,42,0.42)" : "rgba(255,255,255,0.36)" }}>Configuración</span>
+                  <span style={{ fontSize:10.5, fontWeight:500, fontFamily:fontDisp, letterSpacing:"0.08em", textTransform:"uppercase", color: isLight ? "rgba(15,23,42,0.42)" : "rgba(255,255,255,0.36)" }}>Configuración</span>
                   <button onClick={() => { setV("admin"); setSidebarMore(false); }} style={{
                     display:"flex", alignItems:"center", gap:9, padding:"10px 16px", borderRadius:14, cursor:"pointer",
                     border: `1px solid ${v === "admin" ? "rgba(167,139,250,0.45)" : (isLight ? "rgba(15,23,42,0.08)" : "rgba(255,255,255,0.07)")}`,
@@ -2098,7 +2098,7 @@ export default function App() {
                   onMouseLeave={e => { if(v !== "admin") e.currentTarget.style.background = isLight ? "rgba(15,23,42,0.03)" : "rgba(255,255,255,0.03)"; }}
                   >
                     <IosIcon name="admin" filled={v === "admin"} size={18} color="#A78BFA" />
-                    <span style={{ fontSize:12.5, fontFamily:fontDisp, fontWeight:600, color: isLight ? T.txt2 : "rgba(255,255,255,0.74)" }}>Usuarios</span>
+                    <span style={{ fontSize:12.5, fontFamily:fontDisp, fontWeight:400, color: isLight ? T.txt2 : "rgba(255,255,255,0.74)" }}>Usuarios</span>
                   </button>
                 </div>
               </>

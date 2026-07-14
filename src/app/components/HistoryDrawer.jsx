@@ -64,7 +64,7 @@ const ChangeRow = ({ field, change }) => {
       fontSize: 12, fontFamily: font,
       padding: "4px 0",
     }}>
-      <div style={{ color: P.txt3, fontWeight: 600 }}>{fieldLabel(field)}</div>
+      <div style={{ color: P.txt3, fontWeight: 400 }}>{fieldLabel(field)}</div>
       <div style={{ color: P.txt2, display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
         <span style={{
           color: P.txt3, textDecoration: "line-through",
@@ -72,7 +72,7 @@ const ChangeRow = ({ field, change }) => {
         }}>{fmtValue(old)}</span>
         <span style={{ color: P.txt3 }}>→</span>
         <span style={{
-          color: P.txt, fontWeight: 600,
+          color: P.txt, fontWeight: 400,
           fontFamily: mono, fontSize: 11,
         }}>{fmtValue(neu)}</span>
       </div>
@@ -105,7 +105,7 @@ const HistoryEntry = ({ row }) => {
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{
-            fontSize: 13, fontWeight: 700, color: P.txt,
+            fontSize: 13, fontWeight: 500, color: P.txt,
             fontFamily: fontDisp,
           }}>
             {actionLabel(row.action)}
@@ -211,13 +211,13 @@ export default function HistoryDrawer({
         }}>
           <div>
             <div style={{
-              fontSize: 11, color: P.txt3, fontWeight: 600,
+              fontSize: 11, color: P.txt3, fontWeight: 400,
               letterSpacing: "0.08em", textTransform: "uppercase",
             }}>
               Historial de cambios
             </div>
             <div style={{
-              fontSize: 17, color: P.txt, fontWeight: 700, marginTop: 4,
+              fontSize: 17, color: P.txt, fontWeight: 500, marginTop: 4,
               fontFamily: fontDisp,
               maxWidth: 380, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
             }}>

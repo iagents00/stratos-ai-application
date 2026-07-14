@@ -101,7 +101,7 @@ export default function ProductividadTab({ T, isLight }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
       <div>
-        <h2 style={{ margin: 0, fontSize: 22, fontWeight: 700, fontFamily: fontDisp, color: T.txt, letterSpacing: "-0.025em" }}>
+        <h2 style={{ margin: 0, fontSize: 22, fontWeight: 500, fontFamily: fontDisp, color: T.txt, letterSpacing: "-0.025em" }}>
           Indicadores · Productividad
         </h2>
         <p style={{ margin: "4px 0 0", fontSize: 12.5, color: T.txt3, fontFamily: font }}>
@@ -142,14 +142,14 @@ export default function ProductividadTab({ T, isLight }) {
                     style={{ color: T.txt3, flexShrink: 0, transition: "transform 0.2s", transform: isOpen ? "rotate(90deg)" : "none" }}
                   />
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 14, fontWeight: 700, fontFamily: fontDisp, color: T.txt, letterSpacing: "-0.02em" }}>{r.asesor}</div>
+                    <div style={{ fontSize: 14, fontWeight: 500, fontFamily: fontDisp, color: T.txt, letterSpacing: "-0.02em" }}>{r.asesor}</div>
                     <div style={{ fontSize: 11.5, color: T.txt3, fontFamily: font, marginTop: 2 }}>{summary(r)}</div>
                     <div style={{ height: 6, borderRadius: 6, background: rowBorder, marginTop: 8, overflow: "hidden" }}>
                       <div style={{ height: "100%", width: `${pct}%`, background: T.accent, transition: "width 0.3s" }} />
                     </div>
                   </div>
                   <div style={{ textAlign: "right", flexShrink: 0 }}>
-                    <div style={{ fontSize: 22, fontWeight: 700, fontFamily: fontDisp, color: pct >= 70 ? T.accent : T.txt, letterSpacing: "-0.03em" }}>{pct}%</div>
+                    <div style={{ fontSize: 22, fontWeight: 500, fontFamily: fontDisp, color: pct >= 70 ? T.accent : T.txt, letterSpacing: "-0.03em" }}>{pct}%</div>
                     <div style={{ fontSize: 10.5, color: T.txt3, fontFamily: font }}>avance</div>
                   </div>
                 </div>
@@ -181,7 +181,7 @@ export default function ProductividadTab({ T, isLight }) {
 function ActionGroup({ title, items, STATE_META, T, rowBorder }) {
   return (
     <div style={{ marginTop: 12 }}>
-      <div style={{ fontSize: 10.5, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: T.txt3, fontFamily: font, marginBottom: 6 }}>
+      <div style={{ fontSize: 10.5, fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.06em", color: T.txt3, fontFamily: font, marginBottom: 6 }}>
         {title}
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: 1 }}>
@@ -205,7 +205,7 @@ function ActionGroup({ title, items, STATE_META, T, rowBorder }) {
                   </div>
                 )}
               </div>
-              <span style={{ fontSize: 10.5, fontWeight: 700, color: meta.color, fontFamily: font, flexShrink: 0, marginTop: 2 }}>
+              <span style={{ fontSize: 10.5, fontWeight: 500, color: meta.color, fontFamily: font, flexShrink: 0, marginTop: 2 }}>
                 {meta.label}
               </span>
             </div>

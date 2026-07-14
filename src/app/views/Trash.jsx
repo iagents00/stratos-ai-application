@@ -62,7 +62,7 @@ export default function Trash({ trashedLeads = [], onRestore, onHardDelete, onRe
       {/* ── Header ── */}
       <div style={{ display: "flex", alignItems: "baseline", gap: 12, flexWrap: "wrap" }}>
         <h2 style={{
-          margin: 0, fontSize: isMobile ? 24 : 22, fontWeight: 600,
+          margin: 0, fontSize: isMobile ? 24 : 22, fontWeight: 400,
           letterSpacing: "-0.03em", color: isLight ? T.txt : "#FFFFFF",
           fontFamily: fontDisp,
         }}>Papelera</h2>
@@ -120,7 +120,7 @@ export default function Trash({ trashedLeads = [], onRestore, onHardDelete, onRe
           }}>
             <Trash2 size={22} color={T.txt3} />
           </div>
-          <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: T.txt2, fontFamily: fontDisp }}>
+          <p style={{ margin: 0, fontSize: 14, fontWeight: 400, color: T.txt2, fontFamily: fontDisp }}>
             La papelera está vacía
           </p>
           <p style={{ margin: "6px 0 0", fontSize: 11.5, color: T.txt3 }}>
@@ -153,13 +153,13 @@ export default function Trash({ trashedLeads = [], onRestore, onHardDelete, onRe
                   background: isLight ? "rgba(13,154,118,0.10)" : "rgba(255,255,255,0.06)",
                   border: `1px solid ${isLight ? "rgba(13,154,118,0.22)" : T.border}`,
                   display: "flex", alignItems: "center", justifyContent: "center",
-                  fontSize: 14, fontWeight: 700,
+                  fontSize: 14, fontWeight: 500,
                   color: isLight ? T.accentDark || T.accent : T.txt2,
                   fontFamily: fontDisp,
                   flexShrink: 0,
                 }}>{initial}</div>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: T.txt, fontFamily: fontDisp, letterSpacing: "-0.015em", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  <p style={{ margin: 0, fontSize: 14, fontWeight: 400, color: T.txt, fontFamily: fontDisp, letterSpacing: "-0.015em", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                     {l.n || l.name}
                   </p>
                   <p style={{ margin: "2px 0 0", fontSize: 11, color: T.txt2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
@@ -179,7 +179,7 @@ export default function Trash({ trashedLeads = [], onRestore, onHardDelete, onRe
                       border: `1px solid ${isLight ? T.accent : `${T.accent}55`}`,
                       background: isLight ? T.accent : `${T.accent}14`,
                       color: isLight ? "#FFFFFF" : T.accent,
-                      fontSize: isMobile ? 12 : 11, fontWeight: 700,
+                      fontSize: isMobile ? 12 : 11, fontWeight: 500,
                       fontFamily: fontDisp, cursor: isBusy ? "not-allowed" : "pointer",
                       transition: "all 0.16s",
                       boxShadow: isLight ? `0 2px 8px ${T.accent}3A` : "none",
@@ -246,7 +246,7 @@ export default function Trash({ trashedLeads = [], onRestore, onHardDelete, onRe
             }}>
               <AlertTriangle size={20} color="#EF4444" />
             </div>
-            <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: T.txt, fontFamily: fontDisp, letterSpacing: "-0.02em" }}>
+            <h3 style={{ margin: 0, fontSize: 16, fontWeight: 500, color: T.txt, fontFamily: fontDisp, letterSpacing: "-0.02em" }}>
               ¿Eliminar definitivamente?
             </h3>
             <p style={{ margin: "8px 0 18px", fontSize: 12.5, color: T.txt2, lineHeight: 1.5 }}>
@@ -258,7 +258,7 @@ export default function Trash({ trashedLeads = [], onRestore, onHardDelete, onRe
                 style={{
                   flex: 1, padding: "10px 14px", borderRadius: 10,
                   border: `1px solid ${T.border}`, background: "transparent",
-                  color: T.txt2, fontSize: 13, fontWeight: 600, fontFamily: fontDisp,
+                  color: T.txt2, fontSize: 13, fontWeight: 400, fontFamily: fontDisp,
                   cursor: "pointer",
                 }}
               >Cancelar</button>
@@ -268,7 +268,7 @@ export default function Trash({ trashedLeads = [], onRestore, onHardDelete, onRe
                   flex: 1, padding: "10px 14px", borderRadius: 10,
                   border: "1px solid rgba(239,68,68,0.4)",
                   background: "rgba(239,68,68,0.18)",
-                  color: "#FCA5A5", fontSize: 13, fontWeight: 700, fontFamily: fontDisp,
+                  color: "#FCA5A5", fontSize: 13, fontWeight: 500, fontFamily: fontDisp,
                   cursor: "pointer",
                 }}
               >Sí, eliminar</button>

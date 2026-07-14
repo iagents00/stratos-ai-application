@@ -59,7 +59,7 @@ const WriterSection = ({ value, onChange, clientName, T = P }) => {
 
   return (
     <div style={{ marginBottom: 18 }}>
-      <label style={{ fontSize: 11, color: T.txt2, display: "block", marginBottom: 10, fontWeight: 600, letterSpacing: "0.03em", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+      <label style={{ fontSize: 11, color: T.txt2, display: "block", marginBottom: 10, fontWeight: 400, letterSpacing: "0.03em", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <span>Mensaje personalizado</span>
         <span style={{ fontSize: 10, color: T.txt3, fontWeight: 400 }}>{charCount}/{charLimit}</span>
       </label>
@@ -71,7 +71,7 @@ const WriterSection = ({ value, onChange, clientName, T = P }) => {
             key={key}
             onClick={() => applyTemplate(key)}
             style={{
-              padding: "8px 10px", borderRadius: 8, fontSize: 11, fontWeight: 600,
+              padding: "8px 10px", borderRadius: 8, fontSize: 11, fontWeight: 400,
               border: `1px solid ${selectedTemplate === key ? T.accent + "60" : T.border}`,
               background: selectedTemplate === key ? T.accentS : T.glass,
               color: selectedTemplate === key ? T.accent : T.txt2,
@@ -113,7 +113,7 @@ const WriterSection = ({ value, onChange, clientName, T = P }) => {
       <button
         onClick={() => setShowPreview(!showPreview)}
         style={{
-          fontSize: 11, fontWeight: 600, color: T.accent, background: "transparent",
+          fontSize: 11, fontWeight: 400, color: T.accent, background: "transparent",
           border: "none", cursor: "pointer", padding: 0, marginBottom: 12,
           display: "flex", alignItems: "center", gap: 4,
         }}
@@ -125,7 +125,7 @@ const WriterSection = ({ value, onChange, clientName, T = P }) => {
       {/* Preview */}
       {showPreview && value && (
         <G T={T} style={{ padding: 16, background: `${T.accent}08`, border: `1px solid ${T.accent}1A` }}>
-          <p style={{ fontSize: 10, color: T.accent, fontWeight: 600, letterSpacing: "0.03em", marginBottom: 10, textTransform: "uppercase" }}>Cómo verá el cliente</p>
+          <p style={{ fontSize: 10, color: T.accent, fontWeight: 400, letterSpacing: "0.03em", marginBottom: 10, textTransform: "uppercase" }}>Cómo verá el cliente</p>
           <p style={{ fontSize: 14, color: T.txt, lineHeight: 1.7, fontFamily: font, fontStyle: "italic" }}>
             "{value}"
           </p>
@@ -584,8 +584,8 @@ const NewPropertyModal = ({ onClose, onSave, initialData = null, T = P }) => {
     color: T.txt, fontSize: 13, fontFamily: font, outline: "none",
     transition: "border-color 0.2s", boxSizing: "border-box",
   });
-  const labelStyle = { fontSize: 10, color: T.txt2, display: "block", marginBottom: 5, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em", fontFamily: font };
-  const sectionTitle = (accent) => ({ fontSize: 11, color: accent, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 12, fontFamily: font });
+  const labelStyle = { fontSize: 10, color: T.txt2, display: "block", marginBottom: 5, fontWeight: 400, textTransform: "uppercase", letterSpacing: "0.05em", fontFamily: font };
+  const sectionTitle = (accent) => ({ fontSize: 11, color: accent, fontWeight: 500, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 12, fontFamily: font });
 
   return createPortal(
     <>
@@ -612,7 +612,7 @@ const NewPropertyModal = ({ onClose, onSave, initialData = null, T = P }) => {
               <Building2 size={20} color={form.accent} />
             </div>
             <div>
-              <p style={{ fontSize: 16, fontWeight: 700, color: T.txt, fontFamily: fontDisp }}>
+              <p style={{ fontSize: 16, fontWeight: 500, color: T.txt, fontFamily: fontDisp }}>
                 {editing ? "Editar Propiedad" : "Registrar Propiedad"}
               </p>
               <p style={{ fontSize: 11, color: T.txt3, marginTop: 2 }}>
@@ -820,15 +820,15 @@ const NewPropertyModal = ({ onClose, onSave, initialData = null, T = P }) => {
                 display: "flex", alignItems: "center", justifyContent: "space-between",
               }}>
                 <div>
-                  <p style={{ fontSize: 13, fontWeight: 700, color: "#fff", fontFamily: fontDisp }}>{form.name || "Nombre del desarrollo"}</p>
+                  <p style={{ fontSize: 13, fontWeight: 500, color: "#fff", fontFamily: fontDisp }}>{form.name || "Nombre del desarrollo"}</p>
                   {form.brand && <p style={{ fontSize: 11, color: "rgba(255,255,255,0.5)" }}>{form.brand}</p>}
                   <div style={{ display: "flex", gap: 6, marginTop: 6, flexWrap: "wrap" }}>
-                    {form.badge && <span style={{ fontSize: 9, padding: "2px 7px", borderRadius: 4, background: `${form.accent}20`, border: `1px solid ${form.accent}30`, color: form.accent, fontWeight: 700, letterSpacing: "0.05em" }}>{form.badge}</span>}
+                    {form.badge && <span style={{ fontSize: 9, padding: "2px 7px", borderRadius: 4, background: `${form.accent}20`, border: `1px solid ${form.accent}30`, color: form.accent, fontWeight: 500, letterSpacing: "0.05em" }}>{form.badge}</span>}
                     {form.type && <span style={{ fontSize: 9, padding: "2px 7px", borderRadius: 4, background: T.glass, border: `1px solid ${T.border}`, color: T.txt2 }}>{form.type}</span>}
                   </div>
                 </div>
                 <div style={{ textAlign: "right" }}>
-                  {form.priceFrom && <p style={{ fontSize: 18, fontWeight: 700, color: form.accent, fontFamily: fontDisp }}>${(parseInt(form.priceFrom)/1000).toFixed(0)}K</p>}
+                  {form.priceFrom && <p style={{ fontSize: 18, fontWeight: 500, color: form.accent, fontFamily: fontDisp }}>${(parseInt(form.priceFrom)/1000).toFixed(0)}K</p>}
                   {form.roi && <p style={{ fontSize: 10, color: "rgba(255,255,255,0.4)", marginTop: 2 }}>ROI {form.roi}</p>}
                 </div>
               </div>
@@ -844,7 +844,7 @@ const NewPropertyModal = ({ onClose, onSave, initialData = null, T = P }) => {
               flex: 1, padding: "13px", borderRadius: 10, border: "none",
               background: canSave ? `linear-gradient(135deg, ${form.accent} 0%, ${form.accent}CC 100%)` : T.glass,
               color: canSave ? "#060A11" : T.txt3,
-              fontSize: 13, fontWeight: 700, cursor: canSave ? "pointer" : "not-allowed", fontFamily: fontDisp,
+              fontSize: 13, fontWeight: 500, cursor: canSave ? "pointer" : "not-allowed", fontFamily: fontDisp,
               transition: "all 0.2s",
               boxShadow: canSave ? `0 4px 20px ${form.accent}40` : "none",
             }}>
@@ -875,7 +875,7 @@ const ROICalc = ({ prop, T = P }) => {
   return (
     <div style={{ padding: "40px", background: "#030508", borderTop: "1px solid rgba(255,255,255,0.04)" }}>
       <div style={{ maxWidth: 900, margin: "0 auto" }}>
-        <p style={{ fontSize: 11, color: prop.accent, fontWeight: 700, letterSpacing: "0.15em", textTransform: "uppercase", marginBottom: 12 }}>CALCULADORA DE RETORNO</p>
+        <p style={{ fontSize: 11, color: prop.accent, fontWeight: 500, letterSpacing: "0.15em", textTransform: "uppercase", marginBottom: 12 }}>CALCULADORA DE RETORNO</p>
         <h3 style={{ fontSize: 26, fontWeight: 300, color: T.txt, fontFamily: fontDisp, letterSpacing: "-0.02em", marginBottom: 8 }}>Proyección de Tu Inversión</h3>
         <p style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", marginBottom: 28 }}>Basado en ROI {prop.roi} + plusvalía histórica del 10% anual en la Riviera Maya</p>
         {/* Slider */}
@@ -898,7 +898,7 @@ const ROICalc = ({ prop, T = P }) => {
               <p style={{ fontSize: 10, color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 14 }}>{pr.y} {pr.y===1?"AÑO":"AÑOS"}</p>
               <div style={{ marginBottom: 10 }}>
                 <p style={{ fontSize: 9, color: "rgba(255,255,255,0.35)", marginBottom: 2 }}>Rentas acumuladas</p>
-                <p style={{ fontSize: 16, fontWeight: 600, color: prop.accent, fontFamily: fontDisp }}>{fmt(pr.rental)}</p>
+                <p style={{ fontSize: 16, fontWeight: 400, color: prop.accent, fontFamily: fontDisp }}>{fmt(pr.rental)}</p>
               </div>
               <div style={{ marginBottom: 10 }}>
                 <p style={{ fontSize: 9, color: "rgba(255,255,255,0.35)", marginBottom: 2 }}>Plusvalía</p>
@@ -906,11 +906,11 @@ const ROICalc = ({ prop, T = P }) => {
               </div>
               <div style={{ paddingTop: 10, borderTop: "1px solid rgba(255,255,255,0.06)" }}>
                 <p style={{ fontSize: 9, color: "rgba(255,255,255,0.35)", marginBottom: 2 }}>Retorno total</p>
-                <p style={{ fontSize: 18, fontWeight: 700, color: T.txt, fontFamily: fontDisp }}>{fmt(pr.total)}</p>
+                <p style={{ fontSize: 18, fontWeight: 500, color: T.txt, fontFamily: fontDisp }}>{fmt(pr.total)}</p>
               </div>
               <div style={{ marginTop: 8, padding: "6px 8px", borderRadius: 6, background: `${prop.accent}12` }}>
                 <p style={{ fontSize: 9, color: "rgba(255,255,255,0.4)", marginBottom: 1 }}>Valor propiedad</p>
-                <p style={{ fontSize: 12, fontWeight: 600, color: prop.accent, fontFamily: fontDisp }}>{fmt(pr.propValue)}</p>
+                <p style={{ fontSize: 12, fontWeight: 400, color: prop.accent, fontFamily: fontDisp }}>{fmt(pr.propValue)}</p>
               </div>
             </div>
           ))}
@@ -940,7 +940,7 @@ const RivieraMayaMap = ({ properties, T = P }) => {
     <div style={{ padding: "60px 40px", background: "#020406" }}>
       <div style={{ maxWidth: 900, margin: "0 auto", display: "grid", gridTemplateColumns: "1fr 1.2fr", gap: 40, alignItems: "center" }}>
         <div>
-          <p style={{ fontSize: 11, color: T.accent, fontWeight: 700, letterSpacing: "0.15em", textTransform: "uppercase", marginBottom: 12 }}>UBICACIÓN</p>
+          <p style={{ fontSize: 11, color: T.accent, fontWeight: 500, letterSpacing: "0.15em", textTransform: "uppercase", marginBottom: 12 }}>UBICACIÓN</p>
           <h3 style={{ fontSize: 26, fontWeight: 300, color: T.txt, fontFamily: fontDisp, letterSpacing: "-0.02em", marginBottom: 16 }}>Riviera Maya, México</h3>
           <p style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", lineHeight: 1.7, marginBottom: 20 }}>
             La Riviera Maya se extiende a lo largo de 120 km de costa caribeña. Con el nuevo Aeropuerto Internacional de Tulum y el Tren Maya, el acceso nunca ha sido mejor.
@@ -958,7 +958,7 @@ const RivieraMayaMap = ({ properties, T = P }) => {
             {[{l:"Cancún →",d:"15-45 min"},{l:"Playa del Carmen →",d:"5-90 min"},{l:"Aeropuerto Tulum →",d:"Nuevo 2025"}].map(r=>(
               <div key={r.l} style={{ padding: "8px 12px", borderRadius: 8, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
                 <p style={{ fontSize: 10, color: "rgba(255,255,255,0.5)" }}>{r.l}</p>
-                <p style={{ fontSize: 12, fontWeight: 600, color: T.txt, fontFamily: fontDisp }}>{r.d}</p>
+                <p style={{ fontSize: 12, fontWeight: 400, color: T.txt, fontFamily: fontDisp }}>{r.d}</p>
               </div>
             ))}
           </div>
@@ -1186,7 +1186,7 @@ const LandingPages = ({ T = P }) => {
             display: "flex", alignItems: "center", justifyContent: "center", gap: 7, padding: "11px 18px",
             flex: "1 1 auto",
             borderRadius: 11, border: `1px solid ${T.accent}40`, background: T.accentS,
-            cursor: "pointer", color: T.accent, fontSize: 13, fontWeight: 600, fontFamily: fontDisp,
+            cursor: "pointer", color: T.accent, fontSize: 13, fontWeight: 400, fontFamily: fontDisp,
             transition: "all 0.22s",
           }}
             onMouseEnter={e => { e.currentTarget.style.background = T.accentB; e.currentTarget.style.borderColor = T.accent + "70"; }}
@@ -1200,7 +1200,7 @@ const LandingPages = ({ T = P }) => {
             borderRadius: 11, border: isLight ? "none" : "none", cursor: "pointer",
             background: isLight ? T.accent : "rgba(255,255,255,0.95)",
             color: isLight ? "#FFFFFF" : "#0A0F18",
-            fontSize: 13, fontWeight: 700, fontFamily: fontDisp,
+            fontSize: 13, fontWeight: 500, fontFamily: fontDisp,
             boxShadow: isLight ? T.shadowMint || "0 4px 16px rgba(13,154,118,0.25)" : "0 4px 20px rgba(255,255,255,0.15)",
             transition: "all 0.25s",
           }}
@@ -1223,14 +1223,14 @@ const LandingPages = ({ T = P }) => {
       {/* Landing Pages Recientes */}
       <G np T={T}>
         <div style={{ padding: "16px 20px", display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: `1px solid ${T.border}` }}>
-          <p style={{ fontSize: 14, fontWeight: 700, color: T.txt, fontFamily: fontDisp }}>Campañas Recientes</p>
+          <p style={{ fontSize: 14, fontWeight: 500, color: T.txt, fontFamily: fontDisp }}>Campañas Recientes</p>
           <Pill color={T.accent} s isLight={isLight}>{savedPages.length} páginas</Pill>
         </div>
         {/* La tabla scrollea DENTRO de su tarjeta en pantallas angostas
             (7 columnas nunca caben en 360px): header+filas comparten un
             contenedor con overflow-x y un ancho mínimo común. */}
         <div style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
-        <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 0.8fr 0.8fr 1fr 0.8fr 0.8fr", gap: 10, padding: "10px 20px", borderBottom: `1px solid ${T.border}`, fontSize: 10, color: T.txt3, textTransform: "uppercase", letterSpacing: "0.07em", fontWeight: 600, minWidth: 620 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 0.8fr 0.8fr 1fr 0.8fr 0.8fr", gap: 10, padding: "10px 20px", borderBottom: `1px solid ${T.border}`, fontSize: 10, color: T.txt3, textTransform: "uppercase", letterSpacing: "0.07em", fontWeight: 400, minWidth: 620 }}>
           <span>Cliente</span><span>Fecha</span><span>Props.</span><span>Presupuesto</span><span>Status</span><span>Asesor</span><span>Acciones</span>
         </div>
         {savedPages.map(pg => (
@@ -1244,11 +1244,11 @@ const LandingPages = ({ T = P }) => {
           >
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
               <Ico icon={User} sz={30} is={13} c={T.accent} />
-              <span style={{ fontSize: 13, color: T.txt, fontWeight: 600, fontFamily: fontDisp }}>{pg.client}</span>
+              <span style={{ fontSize: 13, color: T.txt, fontWeight: 400, fontFamily: fontDisp }}>{pg.client}</span>
             </div>
             <span style={{ fontSize: 11, color: T.txt2, fontFamily: font }}>{pg.date}</span>
             <span style={{ fontSize: 12, color: T.txt, fontWeight: 500, fontFamily: fontDisp }}>{pg.props}</span>
-            <span style={{ fontSize: 11, color: T.emerald, fontWeight: 600, fontFamily: fontDisp }}>{pg.budget}</span>
+            <span style={{ fontSize: 11, color: T.emerald, fontWeight: 400, fontFamily: fontDisp }}>{pg.budget}</span>
             <div style={{ display: "flex", minWidth: 0 }}><Pill color={statusColors[pg.status] || T.txt3} s isLight={isLight}>{pg.status}</Pill></div>
             <span style={{ fontSize: 11, color: T.txt2, fontFamily: font, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{pg.asesor?.split(" ")[0] || "—"}</span>
             <div style={{ display: "flex", gap: 5 }}>
@@ -1268,9 +1268,9 @@ const LandingPages = ({ T = P }) => {
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <Ico icon={Building2} sz={30} is={14} c={T.emerald} />
             <div>
-              <p style={{ fontSize: 14, fontWeight: 700, color: T.txt, fontFamily: fontDisp }}>Catálogo de Propiedades</p>
+              <p style={{ fontSize: 14, fontWeight: 500, color: T.txt, fontFamily: fontDisp }}>Catálogo de Propiedades</p>
               <p style={{ fontSize: 11, color: T.txt3, marginTop: 1 }}>
-<span style={{ color: T.accent, fontWeight: 700 }}>{catalogProps.length}</span> desarrollos del inventario{customProperties.length > 0 ? ` · ${customProperties.length} del equipo` : ""} · {rivieraProperties.length} demo
+<span style={{ color: T.accent, fontWeight: 500 }}>{catalogProps.length}</span> desarrollos del inventario{customProperties.length > 0 ? ` · ${customProperties.length} del equipo` : ""} · {rivieraProperties.length} demo
               </p>
             </div>
           </div>
@@ -1278,7 +1278,7 @@ const LandingPages = ({ T = P }) => {
             <button onClick={e => { e.stopPropagation(); setShowNewPropModal(true); }} style={{
               display: "flex", alignItems: "center", gap: 6, padding: "7px 14px",
               borderRadius: 8, border: `1px solid ${T.accent}40`, background: T.accentS,
-              cursor: "pointer", color: T.accent, fontSize: 12, fontWeight: 700, fontFamily: fontDisp,
+              cursor: "pointer", color: T.accent, fontSize: 12, fontWeight: 500, fontFamily: fontDisp,
               transition: "all 0.2s",
             }}
               onMouseEnter={e => { e.currentTarget.style.background = T.accentB; }}
@@ -1297,7 +1297,7 @@ const LandingPages = ({ T = P }) => {
             {/* Custom properties */}
             {customProperties.length > 0 && (
               <div style={{ marginBottom: 20 }}>
-                <p style={{ fontSize: 11, color: T.accent, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 12 }}>
+                <p style={{ fontSize: 11, color: T.accent, fontWeight: 500, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 12 }}>
                   Registradas por el equipo ({customProperties.length})
                 </p>
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 12 }}>
@@ -1311,14 +1311,14 @@ const LandingPages = ({ T = P }) => {
                       <div style={{ padding: "14px 16px", display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
-                            <span style={{ fontSize: 9, padding: "2px 7px", borderRadius: 4, background: `${prop.accent}20`, border: `1px solid ${prop.accent}30`, color: prop.accent, fontWeight: 700, letterSpacing: "0.05em" }}>{prop.badge}</span>
+                            <span style={{ fontSize: 9, padding: "2px 7px", borderRadius: 4, background: `${prop.accent}20`, border: `1px solid ${prop.accent}30`, color: prop.accent, fontWeight: 500, letterSpacing: "0.05em" }}>{prop.badge}</span>
                             <span style={{ fontSize: 9, color: T.txt3, fontFamily: font }}>{prop.location}</span>
                           </div>
-                          <p style={{ fontSize: 13, fontWeight: 700, color: T.txt, fontFamily: fontDisp, letterSpacing: "-0.01em" }}>{prop.name}</p>
+                          <p style={{ fontSize: 13, fontWeight: 500, color: T.txt, fontFamily: fontDisp, letterSpacing: "-0.01em" }}>{prop.name}</p>
                           {prop.brand && <p style={{ fontSize: 11, color: T.txt3 }}>{prop.brand}</p>}
                         </div>
                         <div style={{ textAlign: "right", flexShrink: 0, marginLeft: 8 }}>
-                          <p style={{ fontSize: 14, fontWeight: 700, color: prop.accent, fontFamily: fontDisp }}>${(prop.priceFrom / 1000).toFixed(0)}K</p>
+                          <p style={{ fontSize: 14, fontWeight: 500, color: prop.accent, fontFamily: fontDisp }}>${(prop.priceFrom / 1000).toFixed(0)}K</p>
                           <p style={{ fontSize: 10, color: T.txt3 }}>ROI {prop.roi}</p>
                         </div>
                       </div>
@@ -1359,7 +1359,7 @@ const LandingPages = ({ T = P }) => {
             {/* Catálogo real del equipo — proyectos con carpeta de Drive */}
             <div>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginBottom: 12, flexWrap: "wrap" }}>
-                <p style={{ fontSize: 11, color: T.txt2, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase" }}>
+                <p style={{ fontSize: 11, color: T.txt2, fontWeight: 500, letterSpacing: "0.08em", textTransform: "uppercase" }}>
                   Catálogo del equipo ({catalogProps.length})
                 </p>
                 <div style={{ position: "relative" }}>
@@ -1384,12 +1384,12 @@ const LandingPages = ({ T = P }) => {
                           display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8,
                         }}>
                           <div style={{ flex: 1, minWidth: 0 }}>
-                            <p style={{ fontSize: 12, fontWeight: 700, color: T.txt, fontFamily: fontDisp, letterSpacing: "-0.01em", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{prop.name}</p>
+                            <p style={{ fontSize: 12, fontWeight: 500, color: T.txt, fontFamily: fontDisp, letterSpacing: "-0.01em", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{prop.name}</p>
                             <p style={{ fontSize: 10, color: T.txt3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{prop.location}{prop.ticket ? ` · ${prop.ticket}` : ""}</p>
                           </div>
                           <div style={{ display: "flex", alignItems: "center", gap: 5, flexShrink: 0 }}>
                             {prop.driveLink && <a href={prop.driveLink} target="_blank" rel="noreferrer" title="Abrir carpeta de Drive" style={{ display: "flex", alignItems: "center", padding: "5px 7px", borderRadius: 6, border: `1px solid ${prop.accent}40`, background: `${prop.accent}10`, color: prop.accent, textDecoration: "none" }}><Image size={11} /></a>}
-                            <button onClick={() => { setSelectedProps([prop.id]); setStep(1); }} style={{ display: "flex", alignItems: "center", gap: 4, padding: "5px 11px", borderRadius: 6, border: `1px solid ${T.accent}40`, background: T.accentS, cursor: "pointer", color: T.accent, fontSize: 10, fontWeight: 700, fontFamily: fontDisp, whiteSpace: "nowrap" }}>Crear landing</button>
+                            <button onClick={() => { setSelectedProps([prop.id]); setStep(1); }} style={{ display: "flex", alignItems: "center", gap: 4, padding: "5px 11px", borderRadius: 6, border: `1px solid ${T.accent}40`, background: T.accentS, cursor: "pointer", color: T.accent, fontSize: 10, fontWeight: 500, fontFamily: fontDisp, whiteSpace: "nowrap" }}>Crear landing</button>
                           </div>
                         </div>
                       ))}
@@ -1414,7 +1414,7 @@ const LandingPages = ({ T = P }) => {
                 <button onClick={() => setShowNewPropModal(true)} style={{
                   display: "inline-flex", alignItems: "center", gap: 8, padding: "12px 24px",
                   borderRadius: 10, border: `1px solid ${T.accent}40`, background: T.accentS,
-                  cursor: "pointer", color: T.accent, fontSize: 13, fontWeight: 700, fontFamily: fontDisp,
+                  cursor: "pointer", color: T.accent, fontSize: 13, fontWeight: 500, fontFamily: fontDisp,
                 }}>
                   <Plus size={15} /> Registrar primera propiedad
                 </button>
@@ -1429,7 +1429,7 @@ const LandingPages = ({ T = P }) => {
         <G T={T}>
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
             <Ico icon={TrendingUp} sz={32} is={15} c={T.emerald} />
-            <p style={{ fontSize: 13, fontWeight: 700, color: T.txt, fontFamily: fontDisp }}>Mercado Riviera Maya</p>
+            <p style={{ fontSize: 13, fontWeight: 500, color: T.txt, fontFamily: fontDisp }}>Mercado Riviera Maya</p>
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             {[
@@ -1439,7 +1439,7 @@ const LandingPages = ({ T = P }) => {
             ].map(x => (
               <div key={x.l} style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", borderBottom: `1px solid ${T.border}` }}>
                 <span style={{ fontSize: 11, color: T.txt2 }}>{x.l}</span>
-                <span style={{ fontSize: 12, fontWeight: 700, color: T.emerald, fontFamily: fontDisp }}>{x.v}</span>
+                <span style={{ fontSize: 12, fontWeight: 500, color: T.emerald, fontFamily: fontDisp }}>{x.v}</span>
               </div>
             ))}
           </div>
@@ -1447,7 +1447,7 @@ const LandingPages = ({ T = P }) => {
         <G T={T}>
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
             <Ico icon={DollarSign} sz={32} is={15} c={T.accent} />
-            <p style={{ fontSize: 13, fontWeight: 700, color: T.txt, fontFamily: fontDisp }}>Rendimientos</p>
+            <p style={{ fontSize: 13, fontWeight: 500, color: T.txt, fontFamily: fontDisp }}>Rendimientos</p>
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             {[
@@ -1457,7 +1457,7 @@ const LandingPages = ({ T = P }) => {
             ].map(x => (
               <div key={x.l} style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", borderBottom: `1px solid ${T.border}` }}>
                 <span style={{ fontSize: 11, color: T.txt2 }}>{x.l}</span>
-                <span style={{ fontSize: 12, fontWeight: 700, color: T.accent, fontFamily: fontDisp }}>{x.v}</span>
+                <span style={{ fontSize: 12, fontWeight: 500, color: T.accent, fontFamily: fontDisp }}>{x.v}</span>
               </div>
             ))}
           </div>
@@ -1465,7 +1465,7 @@ const LandingPages = ({ T = P }) => {
         <G T={T}>
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
             <Ico icon={Shield} sz={32} is={15} c={T.blue} />
-            <p style={{ fontSize: 13, fontWeight: 700, color: T.txt, fontFamily: fontDisp }}>Para Inversionistas</p>
+            <p style={{ fontSize: 13, fontWeight: 500, color: T.txt, fontFamily: fontDisp }}>Para Inversionistas</p>
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             {[
@@ -1475,7 +1475,7 @@ const LandingPages = ({ T = P }) => {
             ].map(x => (
               <div key={x.l} style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", borderBottom: `1px solid ${T.border}` }}>
                 <span style={{ fontSize: 11, color: T.txt2 }}>{x.l}</span>
-                <span style={{ fontSize: 12, fontWeight: 700, color: T.blue, fontFamily: fontDisp }}>{x.v}</span>
+                <span style={{ fontSize: 12, fontWeight: 500, color: T.blue, fontFamily: fontDisp }}>{x.v}</span>
               </div>
             ))}
           </div>
@@ -1502,7 +1502,7 @@ const LandingPages = ({ T = P }) => {
           <ChevronRight size={14} style={{ transform: "rotate(180deg)" }} /> Atrás
         </button>
         <div>
-          <p style={{ fontSize: 18, fontWeight: 600, color: isLight ? T.txt : "#FFFFFF", fontFamily: fontDisp }}>Crear Landing Page</p>
+          <p style={{ fontSize: 18, fontWeight: 400, color: isLight ? T.txt : "#FFFFFF", fontFamily: fontDisp }}>Crear Landing Page</p>
           <p style={{ fontSize: 11, color: T.txt3, fontFamily: font }}>Paso 1 de 2 — Información del cliente</p>
         </div>
       </div>
@@ -1514,10 +1514,10 @@ const LandingPages = ({ T = P }) => {
       </div>
 
       <G T={T}>
-        <p style={{ fontSize: 14, fontWeight: 700, color: T.txt, marginBottom: 16, fontFamily: fontDisp }}>Datos del Cliente</p>
+        <p style={{ fontSize: 14, fontWeight: 500, color: T.txt, marginBottom: 16, fontFamily: fontDisp }}>Datos del Cliente</p>
 
         <div style={{ marginBottom: 18 }}>
-          <label style={{ fontSize: 11, color: T.txt2, display: "block", marginBottom: 6, fontWeight: 600, letterSpacing: "0.03em" }}>Nombre del cliente</label>
+          <label style={{ fontSize: 11, color: T.txt2, display: "block", marginBottom: 6, fontWeight: 400, letterSpacing: "0.03em" }}>Nombre del cliente</label>
           <input
             type="text" value={clientName} onChange={e => setClientName(e.target.value)}
             placeholder="Ej: Familia Rodríguez, James Mitchell..."
@@ -1532,7 +1532,7 @@ const LandingPages = ({ T = P }) => {
         </div>
 
         <div style={{ marginBottom: 18 }}>
-          <label style={{ fontSize: 11, color: T.txt2, display: "flex", alignItems: "center", gap: 6, marginBottom: 6, fontWeight: 600, letterSpacing: "0.03em" }}>
+          <label style={{ fontSize: 11, color: T.txt2, display: "flex", alignItems: "center", gap: 6, marginBottom: 6, fontWeight: 400, letterSpacing: "0.03em" }}>
             <Building2 size={11} color={T.accent} /> Nombre de la agencia / bróker
           </label>
           <input
@@ -1547,7 +1547,7 @@ const LandingPages = ({ T = P }) => {
         </div>
 
         <div style={{ marginBottom: 18 }}>
-          <label style={{ fontSize: 11, color: T.txt2, display: "block", marginBottom: 6, fontWeight: 600, letterSpacing: "0.03em" }}>Asesor asignado</label>
+          <label style={{ fontSize: 11, color: T.txt2, display: "block", marginBottom: 6, fontWeight: 400, letterSpacing: "0.03em" }}>Asesor asignado</label>
           <select value={asesor} onChange={e => setAsesor(e.target.value)} style={{
             width: "100%", padding: "12px 16px", borderRadius: 10, fontSize: 13,
             background: T.surface || T.glass, border: `1px solid ${T.border}`, color: T.txt,
@@ -1560,7 +1560,7 @@ const LandingPages = ({ T = P }) => {
         {/* Asesor contact info */}
         <div style={{ marginBottom: 18, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
           <div>
-            <label style={{ fontSize: 11, color: T.txt2, display: "flex", alignItems: "center", gap: 5, marginBottom: 6, fontWeight: 600, letterSpacing: "0.03em" }}>
+            <label style={{ fontSize: 11, color: T.txt2, display: "flex", alignItems: "center", gap: 5, marginBottom: 6, fontWeight: 400, letterSpacing: "0.03em" }}>
               <Phone size={11} color={T.emerald} /> WhatsApp del asesor
             </label>
             <input
@@ -1577,7 +1577,7 @@ const LandingPages = ({ T = P }) => {
             )}
           </div>
           <div>
-            <label style={{ fontSize: 11, color: T.txt2, display: "flex", alignItems: "center", gap: 5, marginBottom: 6, fontWeight: 600, letterSpacing: "0.03em" }}>
+            <label style={{ fontSize: 11, color: T.txt2, display: "flex", alignItems: "center", gap: 5, marginBottom: 6, fontWeight: 400, letterSpacing: "0.03em" }}>
               <CalendarDays size={11} color={T.blue} /> Link de agenda (Calendly, Cal.com…)
             </label>
             <input
@@ -1596,14 +1596,14 @@ const LandingPages = ({ T = P }) => {
         </div>
 
         <div style={{ marginBottom: 18 }}>
-          <label style={{ fontSize: 11, color: T.txt2, display: "block", marginBottom: 8, fontWeight: 600, letterSpacing: "0.03em" }}>Rango de presupuesto</label>
+          <label style={{ fontSize: 11, color: T.txt2, display: "block", marginBottom: 8, fontWeight: 400, letterSpacing: "0.03em" }}>Rango de presupuesto</label>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
             <div style={{ flex: 1 }}>
               <p style={{ fontSize: 10, color: T.txt3, marginBottom: 4 }}>Desde</p>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
                 {budgetOptions.slice(0, 5).map(b => (
                   <button key={b.value} onClick={() => setClientBudgetMin(b.value)} style={{
-                    padding: "6px 14px", borderRadius: 8, fontSize: 12, fontWeight: 600,
+                    padding: "6px 14px", borderRadius: 8, fontSize: 12, fontWeight: 400,
                     border: `1px solid ${clientBudgetMin === b.value ? T.accent + "60" : T.border}`,
                     background: clientBudgetMin === b.value ? T.accentS : T.glass,
                     color: clientBudgetMin === b.value ? T.accent : T.txt2,
@@ -1618,7 +1618,7 @@ const LandingPages = ({ T = P }) => {
               <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
                 {budgetOptions.slice(2).map(b => (
                   <button key={b.value} onClick={() => setClientBudgetMax(b.value)} style={{
-                    padding: "6px 14px", borderRadius: 8, fontSize: 12, fontWeight: 600,
+                    padding: "6px 14px", borderRadius: 8, fontSize: 12, fontWeight: 400,
                     border: `1px solid ${clientBudgetMax === b.value ? T.accent + "60" : T.border}`,
                     background: clientBudgetMax === b.value ? T.accentS : T.glass,
                     color: clientBudgetMax === b.value ? T.accent : T.txt2,
@@ -1631,7 +1631,7 @@ const LandingPages = ({ T = P }) => {
         </div>
 
         <div style={{ marginBottom: 18 }}>
-          <label style={{ fontSize: 11, color: T.txt2, display: "block", marginBottom: 8, fontWeight: 600, letterSpacing: "0.03em" }}>Preferencias del cliente</label>
+          <label style={{ fontSize: 11, color: T.txt2, display: "block", marginBottom: 8, fontWeight: 400, letterSpacing: "0.03em" }}>Preferencias del cliente</label>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(130px, 100%), 1fr))", gap: 8 }}>
             {prefOptions.map(pref => {
               const active = clientPrefs[pref.key];
@@ -1644,7 +1644,7 @@ const LandingPages = ({ T = P }) => {
                   cursor: "pointer", transition: "all 0.2s",
                 }}>
                   <pref.icon size={18} color={active ? T.accent : T.txt3} />
-                  <span style={{ fontSize: 10, color: active ? T.accent : T.txt2, fontWeight: 600, fontFamily: font, textAlign: "center" }}>{pref.label}</span>
+                  <span style={{ fontSize: 10, color: active ? T.accent : T.txt2, fontWeight: 400, fontFamily: font, textAlign: "center" }}>{pref.label}</span>
                 </button>
               );
             })}
@@ -1659,7 +1659,7 @@ const LandingPages = ({ T = P }) => {
         padding: "14px 28px", borderRadius: 12, border: "none", cursor: clientName.trim() ? "pointer" : "not-allowed",
         background: clientName.trim() ? (isLight ? T.accent : "rgba(255,255,255,0.95)") : T.glass,
         color: clientName.trim() ? (isLight ? "#FFFFFF" : "#0A0F18") : T.txt3,
-        fontSize: 14, fontWeight: 700, fontFamily: fontDisp,
+        fontSize: 14, fontWeight: 500, fontFamily: fontDisp,
         boxShadow: clientName.trim() ? (isLight ? T.shadowMint || "0 4px 16px rgba(13,154,118,0.25)" : "0 4px 20px rgba(255,255,255,0.15)") : "none",
         transition: "all 0.25s", width: "100%",
       }}>
@@ -1676,8 +1676,8 @@ const LandingPages = ({ T = P }) => {
           <ChevronRight size={14} style={{ transform: "rotate(180deg)" }} /> Atrás
         </button>
         <div style={{ flex: 1 }}>
-          <p style={{ fontSize: 18, fontWeight: 600, color: isLight ? T.txt : "#FFFFFF", fontFamily: fontDisp }}>Seleccionar Propiedades</p>
-          <p style={{ fontSize: 11, color: T.txt3, fontFamily: font }}>Paso 2 de 2 — Landing page para <span style={{ color: T.accent, fontWeight: 600 }}>{clientName}</span> · Presupuesto: <span style={{ color: T.emerald, fontWeight: 600 }}>${(clientBudgetMin / 1000).toFixed(0)}K – ${(clientBudgetMax / 1000).toFixed(0)}K</span></p>
+          <p style={{ fontSize: 18, fontWeight: 400, color: isLight ? T.txt : "#FFFFFF", fontFamily: fontDisp }}>Seleccionar Propiedades</p>
+          <p style={{ fontSize: 11, color: T.txt3, fontFamily: font }}>Paso 2 de 2 — Landing page para <span style={{ color: T.accent, fontWeight: 400 }}>{clientName}</span> · Presupuesto: <span style={{ color: T.emerald, fontWeight: 400 }}>${(clientBudgetMin / 1000).toFixed(0)}K – ${(clientBudgetMax / 1000).toFixed(0)}K</span></p>
         </div>
         {selectedProps.length > 0 && (
           <button onClick={handleGenerate} style={{
@@ -1685,7 +1685,7 @@ const LandingPages = ({ T = P }) => {
             borderRadius: 12, border: "none", cursor: "pointer",
             background: isLight ? T.accent : "rgba(255,255,255,0.95)",
             color: isLight ? "#FFFFFF" : "#0A0F18",
-            fontSize: 13, fontWeight: 700, fontFamily: fontDisp,
+            fontSize: 13, fontWeight: 500, fontFamily: fontDisp,
             boxShadow: isLight ? T.shadowMint || "0 4px 16px rgba(13,154,118,0.25)" : "0 4px 20px rgba(255,255,255,0.15)",
             transition: "all 0.25s",
           }}
@@ -1707,7 +1707,7 @@ const LandingPages = ({ T = P }) => {
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <Image size={14} color={T.txt3} />
           <span style={{ fontSize: 11, color: T.txt3, fontFamily: font }}>Haz clic para seleccionar · </span>
-          <span style={{ fontSize: 11, color: T.accent, fontWeight: 600, fontFamily: font }}>{filteredProperties.filter(inBudget).length} en presupuesto</span>
+          <span style={{ fontSize: 11, color: T.accent, fontWeight: 400, fontFamily: font }}>{filteredProperties.filter(inBudget).length} en presupuesto</span>
           <span style={{ fontSize: 11, color: T.txt3, fontFamily: font }}>· {filteredProperties.length} totales</span>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -1721,7 +1721,7 @@ const LandingPages = ({ T = P }) => {
           style={{
             display: "flex", alignItems: "center", gap: 7, padding: "8px 16px",
             borderRadius: 9, border: `1px solid ${T.accent}40`, background: T.accentS,
-            cursor: "pointer", color: T.accent, fontSize: 12, fontWeight: 700, fontFamily: fontDisp,
+            cursor: "pointer", color: T.accent, fontSize: 12, fontWeight: 500, fontFamily: fontDisp,
             transition: "all 0.2s", whiteSpace: "nowrap",
           }}
           onMouseEnter={e => { e.currentTarget.style.background = T.accentB; e.currentTarget.style.borderColor = T.accent + "80"; }}
@@ -1761,7 +1761,7 @@ const LandingPages = ({ T = P }) => {
                   <div style={{ position: "relative", zIndex: 1, width: "100%" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
                       <div>
-                        <p style={{ fontSize: 18, fontWeight: 700, color: "#FFFFFF", fontFamily: fontDisp, letterSpacing: "-0.02em", textShadow: "0 1px 8px rgba(0,0,0,0.55)" }}>{prop.name}</p>
+                        <p style={{ fontSize: 18, fontWeight: 500, color: "#FFFFFF", fontFamily: fontDisp, letterSpacing: "-0.02em", textShadow: "0 1px 8px rgba(0,0,0,0.55)" }}>{prop.name}</p>
                         {prop.brand && <p style={{ fontSize: 11, color: "rgba(255,255,255,0.75)", fontFamily: font, textShadow: "0 1px 6px rgba(0,0,0,0.5)" }}>{prop.brand}</p>}
                       </div>
                       <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
@@ -1807,23 +1807,23 @@ const LandingPages = ({ T = P }) => {
                   {prop.ticket ? (
                     <div style={{ padding: "8px 10px", borderRadius: 8, background: `${prop.accent}0A`, border: `1px solid ${prop.accent}18`, marginBottom: 10 }}>
                       <p style={{ fontSize: 9, color: T.txt3, marginBottom: 2 }}>Precio</p>
-                      <p style={{ fontSize: 15, fontWeight: 700, textTransform: "uppercase", color: isLight ? `color-mix(in srgb, ${prop.accent}, #04120c 45%)` : prop.accent, fontFamily: fontDisp }}>{prop.ticket}</p>
+                      <p style={{ fontSize: 15, fontWeight: 500, textTransform: "uppercase", color: isLight ? `color-mix(in srgb, ${prop.accent}, #04120c 45%)` : prop.accent, fontFamily: fontDisp }}>{prop.ticket}</p>
                     </div>
                   ) : prop.priceFrom > 0 ? (
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 10 }}>
                     <div style={{ padding: "8px 10px", borderRadius: 8, background: `${prop.accent}0A`, border: `1px solid ${prop.accent}18` }}>
                       <p style={{ fontSize: 9, color: T.txt3, marginBottom: 2 }}>Desde</p>
-                      <p style={{ fontSize: 16, fontWeight: 700, color: isLight ? `color-mix(in srgb, ${prop.accent}, #04120c 45%)` : prop.accent, fontFamily: fontDisp }}>${(prop.priceFrom / 1000).toFixed(0)}K</p>
+                      <p style={{ fontSize: 16, fontWeight: 500, color: isLight ? `color-mix(in srgb, ${prop.accent}, #04120c 45%)` : prop.accent, fontFamily: fontDisp }}>${(prop.priceFrom / 1000).toFixed(0)}K</p>
                     </div>
                     <div style={{ padding: "8px 10px", borderRadius: 8, background: T.glass, border: `1px solid ${T.border}` }}>
                       <p style={{ fontSize: 9, color: T.txt3, marginBottom: 2 }}>Hasta</p>
-                      <p style={{ fontSize: 16, fontWeight: 700, color: T.txt, fontFamily: fontDisp }}>${(prop.priceTo / 1000).toFixed(0)}K</p>
+                      <p style={{ fontSize: 16, fontWeight: 500, color: T.txt, fontFamily: fontDisp }}>${(prop.priceTo / 1000).toFixed(0)}K</p>
                     </div>
                   </div>
                   ) : (
                     <div style={{ padding: "8px 10px", borderRadius: 8, background: T.glass, border: `1px solid ${T.border}`, marginBottom: 10 }}>
                       <p style={{ fontSize: 9, color: T.txt3, marginBottom: 2 }}>Precio</p>
-                      <p style={{ fontSize: 14, fontWeight: 600, color: T.txt2, fontFamily: fontDisp }}>A consultar</p>
+                      <p style={{ fontSize: 14, fontWeight: 400, color: T.txt2, fontFamily: fontDisp }}>A consultar</p>
                     </div>
                   )}
                   <p style={{ fontSize: 11, color: T.txt2, lineHeight: 1.5, fontFamily: font, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{prop.description}</p>
@@ -1863,7 +1863,7 @@ const LandingPages = ({ T = P }) => {
                         fontFamily: font, outline: "none",
                       }}
                     />
-                    <button onClick={() => saveDriveLink(prop.id)} style={{ padding: "6px 12px", borderRadius: 7, border: "none", background: T.accent, color: "#000", fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: fontDisp, whiteSpace: "nowrap" }}>
+                    <button onClick={() => saveDriveLink(prop.id)} style={{ padding: "6px 12px", borderRadius: 7, border: "none", background: T.accent, color: "#000", fontSize: 11, fontWeight: 500, cursor: "pointer", fontFamily: fontDisp, whiteSpace: "nowrap" }}>
                       Guardar
                     </button>
                     <button onClick={() => { setEditingLinkId(null); setEditLinkValue(""); }} style={{ padding: "6px 8px", borderRadius: 7, border: `1px solid ${T.border}`, background: T.glass, cursor: "pointer", color: T.txt3 }}>
@@ -1894,7 +1894,7 @@ const LandingPages = ({ T = P }) => {
                             display: "flex", alignItems: "center", gap: 5, padding: "5px 12px",
                             borderRadius: 7, border: `1px solid ${prop.accent}50`,
                             background: `${prop.accent}12`, color: prop.accent,
-                            fontSize: 11, fontWeight: 700, textDecoration: "none",
+                            fontSize: 11, fontWeight: 500, textDecoration: "none",
                             fontFamily: fontDisp, transition: "all 0.2s",
                           }}
                         >
@@ -1929,7 +1929,7 @@ const LandingPages = ({ T = P }) => {
           <Building2 size={40} color={T.txt3} style={{ margin: "0 auto 12px", opacity: 0.4 }} />
           <p style={{ fontSize: 14, color: T.txt2, fontFamily: fontDisp }}>No hay propiedades en este rango de presupuesto</p>
           <p style={{ fontSize: 12, color: T.txt3, marginTop: 4 }}>Ajusta el rango en el paso anterior</p>
-          <button onClick={() => setShowNewPropModal(true)} style={{ marginTop: 14, padding: "10px 20px", borderRadius: 10, border: `1px solid ${T.accent}40`, background: T.accentS, color: T.accent, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: fontDisp }}>
+          <button onClick={() => setShowNewPropModal(true)} style={{ marginTop: 14, padding: "10px 20px", borderRadius: 10, border: `1px solid ${T.accent}40`, background: T.accentS, color: T.accent, fontSize: 12, fontWeight: 500, cursor: "pointer", fontFamily: fontDisp }}>
             <Plus size={13} style={{ marginRight: 6, verticalAlign: "middle" }} />Registrar propiedad nueva
           </button>
         </G>
@@ -1944,7 +1944,7 @@ const LandingPages = ({ T = P }) => {
           boxShadow: isLight ? T.shadow2 || "0 -4px 20px rgba(15,23,42,0.10)" : "0 -8px 32px rgba(0,0,0,0.4)",
         }}>
           <div>
-            <p style={{ fontSize: 13, color: T.txt, fontWeight: 600 }}>{selectedProps.length} propiedad{selectedProps.length > 1 ? "es" : ""} seleccionada{selectedProps.length > 1 ? "s" : ""}</p>
+            <p style={{ fontSize: 13, color: T.txt, fontWeight: 400 }}>{selectedProps.length} propiedad{selectedProps.length > 1 ? "es" : ""} seleccionada{selectedProps.length > 1 ? "s" : ""}</p>
             <p style={{ fontSize: 11, color: T.txt3 }}>para {clientName}</p>
           </div>
           <button onClick={handleGenerate} style={{
@@ -1952,7 +1952,7 @@ const LandingPages = ({ T = P }) => {
             borderRadius: 12, border: "none", cursor: "pointer",
             background: isLight ? T.accent : "rgba(255,255,255,0.95)",
             color: isLight ? "#FFFFFF" : "#0A0F18",
-            fontSize: 14, fontWeight: 700, fontFamily: fontDisp,
+            fontSize: 14, fontWeight: 500, fontFamily: fontDisp,
             boxShadow: isLight ? T.shadowMint || "0 4px 16px rgba(13,154,118,0.25)" : "0 4px 20px rgba(255,255,255,0.15)",
           }}>
             <Wand2 size={16} /> Generar Landing Page
