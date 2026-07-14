@@ -314,7 +314,7 @@ function Chat({ T, isLight, botUsername, onUnpaired }) {
         ) : messages.length === 0 ? (
           <EmptyState T={T} isLight={isLight} onPick={send} />
         ) : (
-          messages.map((m) => <Bubble key={m.id} m={m} T={T} isLight={isLight} userBg={bubbleUserBg} userTxt={bubbleUserTxt} aiBg={bubbleAiBg} aiBd={bubbleAiBd} />)
+          messages.map((m) => <Bubble key={m.id} m={m} T={T} isLight={isLight} userBg={bubbleUserBg} userTxt={bubbleUserTxt} aiBg={bubbleAiBg} aiBd={bubbleAiBd} onPick={send} sending={sending} />)
         )}
         {sending && <Typing T={T} aiBg={bubbleAiBg} aiBd={bubbleAiBd} />}
       </div>
@@ -437,11 +437,42 @@ function Chat({ T, isLight, botUsername, onUnpaired }) {
   );
 }
 
-function Bubble({ m, T, isLight, userBg, userTxt, aiBg, aiBd }) {
+function Bubble({ m, T, isLight, userBg, userTxt, aiBg, aiBd, onPick, sending }) {
   const isUser = m.role === "user";
   const time = m.occurred_at
     ? new Date(m.occurred_at).toLocaleString("es-MX", { hour: "2-digit", minute: "2-digit" })
     : "";
+
+  // Detección automática de botones de acción / teclados inline (Estilo Telegram Real)
+  let inlineButtons = [];
+  if (!isUser && m.content && typeof m.content === "string") {
+    const lower = m.content.toLowerCase();
+    if (lower.includes("¿confirmas?") || lower.includes("confirmas tu acción") || lower.includes("voy a registrar el siguiente lead") || lower.includes("staged_action")) {
+      inlineButtons = [
+        { label: "✅ Sí, registrar", action: "si", primary: true },
+        { label: "❌ Cancelar", action: "cancelar", primary: false }
+      ];
+    } else if (lower.includes("días sin movimiento") || lower.includes("sin movimiento") || lower.includes("lead abandonado")) {
+      inlineButtons = [
+        { label: "📞 Ya lo contacté", action: "Ya lo contacté", primary: true },
+        { label: "📅 Definir próxima acción", action: "Definir próxima acción", primary: false },
+        { label: "👤 Ver ficha del cliente", action: "Ver ficha del cliente", primary: false }
+      ];
+    } else if (lower.includes("antes de tu zoom") || lower.includes("zoom agendado") || lower.includes("este es mi plan")) {
+      inlineButtons = [
+        { label: "🧠 Ya estudié, este es mi plan", action: "Ya estudié, este es mi plan", primary: true },
+        { label: "🗓️ Reagendar", action: "Reagendar", primary: false },
+        { label: "📁 Ver expediente", action: "Ver expediente", primary: false }
+      ];
+    } else if (lower.includes("¿ya hiciste esta acción?") || lower.includes("lista de acción")) {
+      inlineButtons = [
+        { label: "✅ Ya la hice", action: "Ya la hice", primary: true },
+        { label: "⏳ En proceso", action: "En proceso", primary: false },
+        { label: "❌ No la hice", action: "No la hice", primary: false }
+      ];
+    }
+  }
+
   return (
     <div style={{ display: "flex", justifyContent: isUser ? "flex-end" : "flex-start", gap: 10, alignItems: "flex-end" }}>
       {!isUser && (
@@ -458,6 +489,27 @@ function Bubble({ m, T, isLight, userBg, userTxt, aiBg, aiBd }) {
         boxShadow: isLight ? (isUser ? `0 4px 14px ${T.accent}35` : "0 2px 8px rgba(15,23,42,0.04)") : "0 4px 12px rgba(0,0,0,0.2)"
       }}>
         {m.content}
+        {inlineButtons.length > 0 && onPick && (
+          <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 12, paddingTop: 10, borderTop: `1px solid ${isLight ? "rgba(15,23,42,0.08)" : "rgba(255,255,255,0.08)"}` }}>
+            {inlineButtons.map((btn) => (
+              <button
+                key={btn.action}
+                type="button"
+                onClick={() => !sending && onPick(btn.action)}
+                disabled={sending}
+                style={{
+                  padding: "7px 13px", borderRadius: 10, border: btn.primary ? "none" : `1px solid ${T.border}`,
+                  background: btn.primary ? T.accent : (isLight ? "#FFFFFF" : "rgba(255,255,255,0.08)"),
+                  color: btn.primary ? (isLight ? "#FFF" : "#041016") : T.txt, fontSize: 12.5, fontWeight: btn.primary ? 600 : 500,
+                  fontFamily: font, cursor: sending ? "default" : "pointer", transition: "all .15s",
+                  boxShadow: btn.primary ? `0 2px 8px ${T.accent}35` : "none"
+                }}
+              >
+                {btn.label}
+              </button>
+            ))}
+          </div>
+        )}
         {time && (
           <span style={{ display: "block", marginTop: 5, fontSize: 10.5, opacity: 0.65, textAlign: "right" }}>{time}</span>
         )}
