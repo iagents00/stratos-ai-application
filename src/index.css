@@ -55,6 +55,23 @@ input, textarea, select, button {
   font-family: inherit;
 }
 
+/* ── Tipografía UNIFICADA de botones ────────────────────────────────────
+   "Una sola letra de botón" en TODA la app: Inter semibold (600) con
+   tracking ajustado, para que todos los botones se lean como botones de
+   verdad (con presencia, pro) y no como texto de cuerpo delgado.
+   · El peso va con !important a propósito: es el contrato ÚNICO que unifica
+     los ~450 botones sin editar cada estilo inline (los estados activos que
+     hoy usan 750/500 quedan todos a 600; el énfasis activo lo dan el fill y
+     el color, no el peso).
+   · El tracking es default (sin !important) para respetar los pocos labels
+     que fijan el suyo (p.ej. "Tomar acción" a -0.02em, chips a -0.005em).
+   · La familia y features (cv11/tnum) se heredan del body — no hace falta
+     repetirlas. */
+button, [role="button"], input[type="submit"], input[type="button"] {
+  font-weight: 600 !important;
+  letter-spacing: -0.014em;
+}
+
 #root {
   width: 100%;
   height: 100vh;
