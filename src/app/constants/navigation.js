@@ -7,12 +7,12 @@
  */
 import {
   Users, Hexagon, Activity, Building2, Atom,
-  Trophy, Landmark, UserCheck, CreditCard, Shield, User, Trash2, Wallet, MessageCircle, Bot
+  Trophy, Landmark, UserCheck, CreditCard, Shield, User, Trash2, Wallet, MessageCircle, Bot, Sparkles
 } from "lucide-react";
 
 export const nav = [
   { id: "c",     l: "CRM",       i: Users      },
-  { id: "copilot", l: "Copilot", i: Bot        },
+  { id: "copilot", l: "Copilot", i: Sparkles   },
   { id: "wa",    l: "WhatsApp",  i: MessageCircle },
   { id: "lp",    l: "Create",    i: Hexagon    },
   { id: "d",     l: "Comando",   i: Activity   },
@@ -32,7 +32,7 @@ export const nav = [
    antes cada botón quedaba en ~45px a 360px — labels cortados y targets por
    debajo del mínimo táctil. Los demás módulos viven en el sheet "Más".
    (El sidebar de desktop NO usa esta lista — muestra todo como siempre.) */
-export const MOBILE_PRIMARY_NAV = ["c", "d", "lp", "wa", "e"];
+export const MOBILE_PRIMARY_NAV = ["c", "copilot", "wa", "lp", "d"];
 
 export const MODULE_ROLES = {
   d:      ["super_admin","admin","director","ceo"],

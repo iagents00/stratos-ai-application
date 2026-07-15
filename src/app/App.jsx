@@ -1885,7 +1885,7 @@ export default function App() {
 
         {/* CONTENT */}
         <div style={{ flex:1, display:"flex", overflow:"hidden" }}>
-          <div key={v} className="stratos-content-area" style={{ flex:1, padding:"18px 22px", overflowY:"auto", animation:"fadeIn 0.28s ease", display:"flex", flexDirection:"column" }}>
+          <div key={v} className="stratos-content-area" style={{ flex:1, padding: (v === "wa" || v === "copilot") ? 0 : "18px 22px", overflowY: (v === "wa" || v === "copilot") ? "hidden" : "auto", animation:"fadeIn 0.28s ease", display:"flex", flexDirection:"column" }}>
             {user?.role && !canAccessModule(v, user, clientConfig)
               ? <PermissionGate moduleId={v} onGoBack={() => setV("c")} />
               : <Suspense fallback={

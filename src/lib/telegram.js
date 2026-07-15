@@ -167,30 +167,46 @@ export async function sendCopilotMessage(text) {
         return { reply: replyText, error: null };
       }
     } else {
-      // Llamamos a copilot_send para que registre el intento en DB de forma segura (sin error 400 direct insert)
-      try { await supabase.rpc('copilot_send', { p_text: cleanText }); } catch { /* noop */ }
+      // No llamamos a copilot_send para textos libres o comandos de IA porque SQL respondería
+      // automáticamente "No conozco esa acción". Dejamos que el cerebro IA de n8n procese el texto y responda.
     }
 
-    // Disparamos el webhook del cerebro de IA en n8n usando mode 'no-cors' y text/plain
-    // para evitar que el navegador bloquee la petición con preflight OPTIONS/CORS policy.
+    // Disparamos el webhook del cerebro de IA en n8n enviando el JSON completo (`chat_id`, `text`).
     try {
       await fetch(N8N_TELEGRAM_BOT_WEBHOOK, {
         method: 'POST',
-        mode: 'no-cors',
-        headers: { 'Content-Type': 'text/plain;charset=UTF-8' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           message: {
             from: { id: chatId },
             chat: { id: chatId },
             text: cleanText
-          }
+          },
+          chat_id: chatId,
+          text: cleanText,
+          original_type: "text"
         })
       });
-    } catch { /* noop */ }
+    } catch {
+      // Si en algún entorno el navegador impide JSON por CORS preflight, fallback a no-cors text/plain
+      try {
+        await fetch(N8N_TELEGRAM_BOT_WEBHOOK, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'text/plain;charset=UTF-8' },
+          body: JSON.stringify({
+            message: { from: { id: chatId }, chat: { id: chatId }, text: cleanText },
+            chat_id: chatId,
+            text: cleanText,
+            original_type: "text"
+          })
+        });
+      } catch { /* noop */ }
+    }
 
-    // Polling inteligente consultando vía RPC getCopilotActivity (Cero error 400)
-    for (let attempt = 0; attempt < 5; attempt++) {
-      await new Promise(r => setTimeout(r, 640));
+    // Polling inteligente consultando vía RPC getCopilotActivity (Cero error 400, hasta 10 segundos para el LLM)
+    for (let attempt = 0; attempt < 12; attempt++) {
+      await new Promise(r => setTimeout(r, 800));
       const { messages: recentList } = await getCopilotActivity(6);
       if (Array.isArray(recentList) && recentList.length > 0) {
         const newestAi = recentList.find(m => m.role === 'ai');
@@ -200,8 +216,8 @@ export async function sendCopilotMessage(text) {
       }
     }
 
-    // Si el LLM tarda un poco más en n8n (>3.2s), dejamos un mensaje de progreso elegante
-    const progressMsg = "⚡ Procesando tu instrucción con el asistente IA en la nube (la respuesta aparecerá aquí y en Telegram en un momento)...";
+    // Si la operación o generación de plan de IA es extensa, informamos que ya se está ejecutando
+    const progressMsg = "⚡ Procesando tu instrucción con el asistente IA en la nube (la respuesta aparecerá aquí y en Telegram en unos segundos)...";
     return { reply: progressMsg, error: null };
   } catch (e) {
     return { reply: null, error: e?.message || 'Error de conexión' };
