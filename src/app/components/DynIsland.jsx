@@ -61,9 +61,9 @@ const DynIsland = ({ onExpand, onOpenLead, notifications = [], theme = "dark", b
   // Panel expandido — colores tema-aware (antes estaba hardcodeado en oscuro).
   const D = {
     bg:   isLight ? "#FFFFFF" : "#03060F",
-    bd:   isLight ? "rgba(15,23,42,0.10)" : "rgba(255,255,255,0.08)",
-    line: isLight ? "rgba(15,23,42,0.07)" : "rgba(255,255,255,0.05)",
-    sh:   isLight ? "0 24px 70px rgba(15,23,42,0.16), 0 0 0 0.5px rgba(15,23,42,0.05)" : "0 24px 80px rgba(0,0,0,0.75), 0 0 0 0.5px rgba(255,255,255,0.04)",
+    bd:   isLight ? "rgba(15,23,42,0.09)" : "rgba(255,255,255,0.08)",
+    line: isLight ? "rgba(15,23,42,0.08)" : "rgba(255,255,255,0.05)",
+    sh:   isLight ? "0 28px 80px rgba(15,23,42,0.22), 0 8px 24px rgba(15,23,42,0.10), 0 0 0 0.5px rgba(15,23,42,0.06)" : "0 24px 80px rgba(0,0,0,0.75), 0 0 0 0.5px rgba(255,255,255,0.04)",
     t92:  isLight ? "#0B1220" : "rgba(255,255,255,0.92)",
     t88:  isLight ? "rgba(11,18,32,0.90)" : "rgba(255,255,255,0.88)",
     t74:  isLight ? "rgba(11,18,32,0.70)" : "rgba(255,255,255,0.74)",
@@ -83,12 +83,18 @@ const DynIsland = ({ onExpand, onOpenLead, notifications = [], theme = "dark", b
     btn:  isLight ? "rgba(15,23,42,0.05)" : "rgba(255,255,255,0.06)",
     btnH: isLight ? "rgba(15,23,42,0.10)" : "rgba(255,255,255,0.12)",
     acc:  isLight ? "#0D9A76" : "#6EE7C2",
-    cardG2: isLight ? "rgba(15,23,42,0.015)" : "rgba(255,255,255,0.02)",
+    cardG2: isLight ? "#FFFFFF" : "rgba(255,255,255,0.02)",
     ctaBg:  isLight ? "#0D9A76" : "rgba(255,255,255,0.92)",
     ctaTxt: isLight ? "#FFFFFF" : "#06080F",
     ctaSh:  isLight ? "0 4px 16px rgba(13,154,118,0.30)" : "0 2px 10px rgba(255,255,255,0.12)",
     ctaHov: isLight ? "#0B8A69" : "#FFFFFF",
   };
+  const featureCardBg = (color) => isLight
+    ? `linear-gradient(180deg, #FFFFFF 0%, ${color}08 100%)`
+    : `linear-gradient(160deg, ${color}14 0%, ${D.cardG2} 60%)`;
+  const featureCardShadow = isLight
+    ? "0 10px 26px rgba(15,23,42,0.05), inset 0 1px 0 rgba(255,255,255,0.95)"
+    : "none";
 
   return (
     <>
@@ -111,6 +117,11 @@ const DynIsland = ({ onExpand, onOpenLead, notifications = [], theme = "dark", b
         /* Rótulo del pill: escritorio muestra el largo (centerLabel), móvil el
            corto (centerLabelMobile, ej. "Intelligence" para Duke). */
         .dyn-lbl-mob { display: none; }
+        .intel-scroll {
+          scrollbar-width: none;
+          -ms-overflow-style: none;
+        }
+        .intel-scroll::-webkit-scrollbar { display: none; }
         @media (max-width: 768px) {
           .dyn-lbl-desk { display: none; }
           .dyn-lbl-mob { display: inline; }
@@ -206,16 +217,15 @@ const DynIsland = ({ onExpand, onOpenLead, notifications = [], theme = "dark", b
             zIndex: 99999,
             width: selectedNotif || selectedFeature ? 600 : 580,
             maxWidth: "calc(100vw - 24px)",
-            maxHeight: "calc(100dvh - 90px - var(--safe-area-inset-top, env(safe-area-inset-top, 0px)))", overflowY: "auto",
+            maxHeight: "calc(100dvh - 90px - var(--safe-area-inset-top, env(safe-area-inset-top, 0px)))",
             borderRadius: 20,
-            background: selectedNotif
-              ? `radial-gradient(ellipse at top, ${selectedNotif.c}10 0%, ${D.bg} 70%)`
-              : selectedFeature
-              ? `radial-gradient(ellipse at top, ${selectedFeature.color}12 0%, ${D.bg} 70%)`
-              : D.bg,
+            background: D.bg,
             border: `0.5px solid ${D.bd}`,
             boxShadow: D.sh,
-            overflow: "hidden",
+            overflowY: "auto",
+            overflowX: "hidden",
+            WebkitOverflowScrolling: "touch",
+            overscrollBehavior: "contain",
             animation: "fadeSlideDown 0.22s cubic-bezier(0.4,0,0.2,1)",
           }}>
             <style>{`@keyframes fadeSlideDown{from{opacity:0;transform:translateX(-50%) translateY(-8px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
@@ -273,29 +283,29 @@ const DynIsland = ({ onExpand, onOpenLead, notifications = [], theme = "dark", b
                     onMouseLeave={e => { e.currentTarget.style.background = "rgba(110,231,194,0.10)"; }}
                   >Ver todas <span style={{ opacity: 0.7 }}>({INTEL_FEATURES.length})</span><ChevronRight size={12} strokeWidth={2.4} /></button>
                 </div>
-                <div style={{ overflow: "hidden", padding: "10px 0 16px", WebkitMaskImage: "linear-gradient(90deg,transparent,#000 5%,#000 95%,transparent)", maskImage: "linear-gradient(90deg,transparent,#000 5%,#000 95%,transparent)" }}>
+                <div className="intel-scroll" style={{ overflowX: "auto", overflowY: "hidden", padding: "10px 20px 16px", WebkitOverflowScrolling: "touch", scrollSnapType: "x proximity", overscrollBehaviorX: "contain" }}>
                   <div
-                    style={{ display: "flex", gap: 12, width: "max-content", paddingLeft: 20, animation: "intelMarquee 34s linear infinite", willChange: "transform" }}
-                    onMouseEnter={e => { e.currentTarget.style.animationPlayState = "paused"; }}
-                    onMouseLeave={e => { e.currentTarget.style.animationPlayState = "running"; }}
+                    style={{ display: "flex", gap: 12, width: "max-content", paddingRight: 2 }}
                   >
-                    {[...INTEL_FEATURES, ...INTEL_FEATURES].map((f, idx) => {
+                    {INTEL_FEATURES.map((f) => {
                       const Ic = FEATURE_ICONS[f.icon] || Sparkles;
                       const isAgent = f.kind === "agente";
                       const chan = f.where.includes("Telegram")
                         ? (f.where.includes("CRM") ? "Telegram · CRM" : "Telegram")
                         : (f.where.includes("CRM") ? "En el CRM" : "Automático");
                       return (
-                        <div key={f.id + "-" + idx} onClick={() => setSelectedFeature(f)}
+                        <div key={f.id} onClick={() => setSelectedFeature(f)}
                           style={{
-                            flex: "0 0 auto", width: 166,
+                            flex: "0 0 auto", width: 174,
                             borderRadius: 16, padding: "14px 14px 15px", cursor: "pointer",
-                            background: `linear-gradient(160deg, ${f.color}14 0%, ${D.cardG2} 60%)`,
-                            border: `1px solid ${f.color}22`,
-                            transition: "border-color 0.16s",
+                            background: featureCardBg(f.color),
+                            border: `1px solid ${isLight ? `${f.color}24` : `${f.color}22`}`,
+                            boxShadow: featureCardShadow,
+                            scrollSnapAlign: "start",
+                            transition: "border-color 0.16s, transform 0.16s",
                           }}
-                          onMouseEnter={e => { e.currentTarget.style.borderColor = `${f.color}66`; }}
-                          onMouseLeave={e => { e.currentTarget.style.borderColor = `${f.color}22`; }}
+                          onMouseEnter={e => { e.currentTarget.style.borderColor = `${f.color}66`; e.currentTarget.style.transform = "translateY(-1px)"; }}
+                          onMouseLeave={e => { e.currentTarget.style.borderColor = isLight ? `${f.color}24` : `${f.color}22`; e.currentTarget.style.transform = "translateY(0)"; }}
                         >
                           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 11 }}>
                             <div style={{ width: 34, height: 34, borderRadius: 10, background: `${f.color}1E`, border: `1px solid ${f.color}33`, display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -347,9 +357,9 @@ const DynIsland = ({ onExpand, onOpenLead, notifications = [], theme = "dark", b
                       : (f.where.includes("CRM") ? "En el CRM" : "Automático");
                     return (
                       <div key={f.id} onClick={() => setSelectedFeature(f)}
-                        style={{ borderRadius: 14, padding: "13px 13px 14px", cursor: "pointer", background: `linear-gradient(160deg, ${f.color}14 0%, ${D.cardG2} 60%)`, border: `1px solid ${f.color}22`, transition: "border-color 0.16s" }}
-                        onMouseEnter={e => { e.currentTarget.style.borderColor = `${f.color}66`; }}
-                        onMouseLeave={e => { e.currentTarget.style.borderColor = `${f.color}22`; }}
+                        style={{ borderRadius: 14, padding: "13px 13px 14px", cursor: "pointer", background: featureCardBg(f.color), border: `1px solid ${isLight ? `${f.color}24` : `${f.color}22`}`, boxShadow: featureCardShadow, transition: "border-color 0.16s, transform 0.16s" }}
+                        onMouseEnter={e => { e.currentTarget.style.borderColor = `${f.color}66`; e.currentTarget.style.transform = "translateY(-1px)"; }}
+                        onMouseLeave={e => { e.currentTarget.style.borderColor = isLight ? `${f.color}24` : `${f.color}22`; e.currentTarget.style.transform = "translateY(0)"; }}
                       >
                         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
                           <div style={{ width: 32, height: 32, borderRadius: 9, background: `${f.color}1E`, border: `1px solid ${f.color}33`, display: "flex", alignItems: "center", justifyContent: "center" }}>
