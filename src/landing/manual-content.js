@@ -402,6 +402,25 @@ export const MANUAL_SECTIONS = [
       { type: 'tip', text: 'Una vez conectado, el bot te manda alertas en tu chat privado. No te pierde una notificación importante.' },
     ],
   },
+  {
+    id: 'copilot-asistente',
+    category: 'integraciones',
+    icon: 'Bot',
+    title: 'El asistente dentro del CRM (Copilot)',
+    summary: 'El mismo asistente del bot de Telegram, pero adentro del CRM. Escribile como en un chat y hace todo por vos, sin abrir Telegram.',
+    tags: ['copilot', 'asistente', 'chat', 'ia', 'bot', 'crm', 'recomendar', 'catalogo', 'drive'],
+    content: [
+      { type: 'p', text: 'En el menú del CRM tenés la pestaña "Copilot": es el MISMO asistente inteligente del bot de Telegram, pero embebido en el sistema. Le escribís (o le mandás un audio) en lenguaje normal y opera tus clientes al instante. Ideal si no querés usar Telegram: hace exactamente lo mismo.' },
+      { type: 'list', items: [
+        'Consultá: "mis clientes", "mi agenda de hoy", "mis KPIs", "el pipeline".',
+        'Buscá y trabajá un cliente: "la ficha de Carlos", "pasá a Juan a Zoom Agendado".',
+        'Catálogo con filtro real: "propiedades en Cancún de menos de 200 mil", "en Tulum de más de 1 millón" — con su link de Drive.',
+        'Recomendaciones: "¿qué le recomiendo al cliente Pepito?" → mira su presupuesto y zona y te propone lo que encaja, con el porqué.',
+        'Si sos admin: "clientes de Gael en segunda etapa", "los últimos 2 leads de Cecilia".',
+      ]},
+      { type: 'tip', text: 'La primera vez, si te lo pide, conectá tu Telegram (mismo paso de arriba) para que el asistente sepa quién sos y te muestre TUS clientes. Después le hablás directo desde el CRM.' },
+    ],
+  },
 
   /* ─── SOPORTE ─── */
   {
