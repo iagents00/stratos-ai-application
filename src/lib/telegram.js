@@ -28,6 +28,120 @@ function withTimeout(promise, ms = GETSESSION_TIMEOUT, label = 'op') {
   ])
 }
 
+function flatKeyboard(inlineKeyboard = []) {
+  if (!Array.isArray(inlineKeyboard)) return []
+  return inlineKeyboard.flat().filter(Boolean).map((b) => ({
+    label: b.text || b.label || 'Abrir',
+    action: b.callback_data || b.action || b.url || b.text || b.label,
+    isUrl: !!b.url || !!b.isUrl,
+    primary: b.primary !== false,
+  }))
+}
+
+function buildReminderButtons(reminder) {
+  const tipo = String(reminder?.tipo || '')
+  const payload = reminder?.payload || {}
+  const leadId = reminder?.lead_id || payload.lead_id
+  const actionId = payload.action_id || payload.team_action_id
+
+  if ((tipo === 'team_action' || tipo === 'personal') && actionId) {
+    return [
+      { label: 'Ya la hice', action: `team_action:done:${actionId}`, primary: true },
+      { label: 'En proceso', action: `team_action:inprocess:${actionId}`, primary: false },
+      { label: 'No la hice', action: `team_action:notdone:${actionId}`, primary: false },
+    ]
+  }
+
+  if (!leadId) return []
+
+  if (tipo === 'inactividad' || tipo === 'inactividad_insist') {
+    return [
+      { label: 'Ya lo contacte', action: `proact_inact:contacte:${leadId}`, primary: true },
+      { label: 'Reagendar seguimiento', action: `proact_inact:reagendar:${leadId}`, primary: false },
+      { label: 'Ver ficha del cliente', action: `proact_inact:ficha:${leadId}`, primary: false },
+    ]
+  }
+
+  if (tipo === 'next_action_10min') {
+    return [
+      { label: 'Si, listo', action: `proact_next:listo:${leadId}`, primary: true },
+      { label: 'Posponer 30 min', action: `proact_next:posponer30:${leadId}`, primary: false },
+      { label: 'Cancelar', action: `proact_next:cancelar:${leadId}`, primary: false },
+    ]
+  }
+
+  if (tipo === 'zoom_brief' || tipo === 'next_action_3h' || tipo.startsWith('next_action')) {
+    return [
+      { label: 'Ya estudie, este es mi plan', action: `proact_plan:${leadId}`, primary: true },
+      { label: 'Reagendar', action: `proact_reagendar:${leadId}`, primary: false },
+      { label: 'Ver expediente', action: `proact_next:ficha:${leadId}`, primary: false },
+    ]
+  }
+
+  return []
+}
+
+function buildReminderContent(reminder) {
+  const payload = reminder?.payload || {}
+  const tipo = String(reminder?.tipo || '')
+  const text = payload.text || payload.message_hint || payload.next_action || ''
+
+  if (tipo === 'team_action') {
+    const due = payload.due_at ? new Date(payload.due_at) : null
+    const dueTxt = due && !Number.isNaN(due.getTime())
+      ? due.toLocaleString('es-MX', { weekday: 'long', day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })
+      : 'hora programada'
+    return [
+      `Hola ${reminder?.asesor_name || 'Admin Stratos'} - Recordatorio de tu agenda:`,
+      '',
+      `Tarea: ${text || 'Tarea pendiente'}`,
+      `Vence: ${dueTxt}`,
+      '',
+      'Como vas?',
+    ].join('\n')
+  }
+
+  if (tipo === 'next_action_10min') {
+    return `Estas listo y preparado para la accion con ${payload.lead_name || 'tu cliente'}?\nAccion: ${text || 'sin descripcion'}`
+  }
+
+  if (text) return `STRATOS ASISTENTE Recordatorio:\n${text}`
+  if (tipo === 'inactividad' || tipo === 'inactividad_insist') return 'IMPORTANTE\n\nTienes un cliente sin movimiento; revisalo en el CRM.'
+  if (tipo === 'zoom_brief' || tipo.startsWith('next_action')) return 'Tienes una alerta proactiva del asistente.'
+  return ''
+}
+
+function attachReminderToMessages(messages, reminderMessage) {
+  const buttons = reminderMessage.buttons || []
+  const content = reminderMessage.content || ''
+  const textProbe = String(reminderMessage.probe || content).trim()
+  const reminderTime = new Date(reminderMessage.occurred_at || 0).getTime()
+
+  let idx = messages.findIndex((m) =>
+    m.role === 'ai' &&
+    m.content &&
+    (m.content === content || (textProbe && m.content.includes(textProbe)))
+  )
+
+  if (idx < 0 && buttons.length && reminderTime) {
+    idx = messages.findIndex((m) => {
+      if (m.role !== 'ai' || !m.occurred_at || Array.isArray(m.buttons)) return false
+      const delta = Math.abs(new Date(m.occurred_at).getTime() - reminderTime)
+      return delta <= 10 * 60 * 1000
+    })
+  }
+
+  if (idx >= 0) {
+    if (buttons.length && (!Array.isArray(messages[idx].buttons) || messages[idx].buttons.length === 0)) {
+      messages[idx] = { ...messages[idx], buttons }
+    }
+    return false
+  }
+
+  messages.push(reminderMessage)
+  return true
+}
+
 /**
  * Lee el estado actual de pareo del usuario autenticado.
  * Usa SELECT directo (RLS profiles_select_own ya permite leer el propio perfil).
@@ -123,27 +237,30 @@ export async function getCopilotActivity(limit = 40) {
         const nowIso = new Date().toISOString()
         const { data: proact } = await supabase
           .from('proactive_reminders')
-          .select('id, scheduled_at, sent_at, status, payload')
+          .select('id, lead_id, asesor_name, tipo, scheduled_at, sent_at, status, payload, dedupe_key')
           .eq('asesor_id', session.user.id)
           .or(`status.eq.sent,and(status.eq.pending,scheduled_at.lte.${nowIso})`)
           .order('scheduled_at', { ascending: false })
-          .limit(15)
+          .limit(30)
 
         if (Array.isArray(proact) && proact.length > 0) {
           let hasNewSync = false
           for (const p of proact) {
-            const txt = p?.payload?.text || ''
-            if (!txt) continue
+            const txt = p?.payload?.text || p?.payload?.message_hint || p?.payload?.next_action || ''
+            const buttons = buildReminderButtons(p)
+            const content = buildReminderContent(p)
+            if (!content && buttons.length === 0) continue
             const occ = p.sent_at || p.scheduled_at
-            const exists = messages.some(m => m.role === 'ai' && m.content && m.content.includes(txt))
-            if (!exists && occ && new Date(occ).getTime() <= Date.now() + 60000) {
-              messages.push({
+            if (occ && new Date(occ).getTime() <= Date.now() + 60000) {
+              const added = attachReminderToMessages(messages, {
                 id: -(new Date(occ).getTime() || Math.floor(Math.random() * 999999)),
                 occurred_at: occ,
                 role: 'ai',
-                content: `🔔 STRATOS ASISTENTE Recordatorio:\n• ${txt}`
+                content,
+                buttons,
+                probe: txt
               })
-              hasNewSync = true
+              if (added) hasNewSync = true
             }
           }
           if (hasNewSync) {
@@ -292,14 +409,7 @@ export async function sendCopilotMessage(rawText, options = {}) {
             const reply = json?.reply || json?.output || (typeof json === 'string' ? json : null);
             if (reply && typeof reply === 'object') {
               const text = reply.text || reply.content || 'Listo.';
-              const buttons = Array.isArray(reply.inline_keyboard)
-                ? reply.inline_keyboard.flat().map(b => ({
-                    label: b.text,
-                    action: b.callback_data || b.text,
-                    isUrl: !!b.url,
-                    primary: true
-                  }))
-                : [];
+              const buttons = flatKeyboard(reply.inline_keyboard);
               const filtered = filterIntrusiveReply(text, buttons);
               return { reply: filtered.reply, buttons: filtered.buttons, error: null };
             }
