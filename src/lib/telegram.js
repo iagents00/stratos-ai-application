@@ -120,12 +120,13 @@ export async function getCopilotActivity(limit = 40) {
     try {
       const { data: { session } } = await supabase.auth.getSession()
       if (session?.user?.id) {
+        const nowIso = new Date().toISOString()
         const { data: proact } = await supabase
           .from('proactive_reminders')
-          .select('id, scheduled_at, sent_at, payload')
+          .select('id, scheduled_at, sent_at, status, payload')
           .eq('asesor_id', session.user.id)
-          .eq('status', 'sent')
-          .order('sent_at', { ascending: false })
+          .or(`status.eq.sent,and(status.eq.pending,scheduled_at.lte.${nowIso})`)
+          .order('scheduled_at', { ascending: false })
           .limit(15)
 
         if (Array.isArray(proact) && proact.length > 0) {
@@ -135,7 +136,7 @@ export async function getCopilotActivity(limit = 40) {
             if (!txt) continue
             const occ = p.sent_at || p.scheduled_at
             const exists = messages.some(m => m.role === 'ai' && m.content && m.content.includes(txt))
-            if (!exists) {
+            if (!exists && occ && new Date(occ).getTime() <= Date.now() + 60000) {
               messages.push({
                 id: -(new Date(occ).getTime() || Math.floor(Math.random() * 999999)),
                 occurred_at: occ,
