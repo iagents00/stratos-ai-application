@@ -394,6 +394,29 @@ function Chat({ T, isLight, botUsername, onUnpaired }) {
 }
 
 /* ── Burbuja de mensaje ── */
+/* Convierte el texto en nodos con links clicables: markdown [label](url) y URLs sueltas.
+   Así los Drive del catálogo/recomendación se abren con un toque (antes se veían crudos). */
+function renderRichText(text, linkColor) {
+  if (typeof text !== "string" || !text) return text;
+  const rx = /\[([^\]\n]+)\]\((https?:\/\/[^)\s]+)\)|(https?:\/\/[^\s)]+)/g;
+  const out = [];
+  let last = 0, m, key = 0;
+  while ((m = rx.exec(text)) !== null) {
+    if (m.index > last) out.push(text.slice(last, m.index));
+    const url = m[2] || m[3];
+    const label = m[1] || m[3];
+    out.push(
+      <a key={`lnk${key++}`} href={url} target="_blank" rel="noopener noreferrer"
+        onClick={(e) => e.stopPropagation()}
+        style={{ color: linkColor || "inherit", textDecoration: "underline", fontWeight: 600, wordBreak: "break-all" }}>{label}</a>
+    );
+    last = rx.lastIndex;
+  }
+  if (last === 0) return text;
+  if (last < text.length) out.push(text.slice(last));
+  return out;
+}
+
 function Bubble({ m, T, isLight, userBg, userTxt, aiBg, aiBd, onPick, sending }) {
   const isUser = m.role === "user";
   const time = m.occurred_at
@@ -481,7 +504,7 @@ function Bubble({ m, T, isLight, userBg, userTxt, aiBg, aiBd, onPick, sending })
         whiteSpace: "pre-wrap", wordBreak: "break-word", opacity: m.pending ? 0.7 : 1,
         boxShadow: isLight ? (isUser ? `0 3px 10px ${T.accent}28` : "0 1px 4px rgba(15,23,42,0.03)") : "none"
       }}>
-        {m.content}
+        {renderRichText(m.content, isUser ? "inherit" : T.accent)}
         {inlineButtons.length > 0 && (
           <div style={{ display: "flex", gap: 5, flexWrap: "wrap", marginTop: 8, paddingTop: 7, borderTop: `1px solid ${isLight ? "rgba(15,23,42,0.06)" : "rgba(255,255,255,0.06)"}` }}>
             {inlineButtons.map((btn, idx) => (
