@@ -14,7 +14,7 @@
  * ─────────────────────────────────────────────────────────────────────────────
  */
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Bot, Send, Check, ExternalLink, Sparkles, RefreshCw, Mic, Square, X, Volume2 } from "lucide-react";
+import { Send, Check, ExternalLink, Sparkles, RefreshCw, Mic, Square, X, Volume2 } from "lucide-react";
 import { P, LP, font, fontDisp } from "../../design-system/tokens";
 import { G, Pill } from "../SharedComponents";
 import { useClient } from "../../hooks/useClient";
@@ -283,27 +283,27 @@ function Chat({ T, isLight, botUsername, onUnpaired }) {
   const bubbleAiBd = isLight ? "rgba(15,23,42,0.08)" : "rgba(255,255,255,0.09)";
 
   return (
-    <div style={{ padding: 0, display: "flex", flexDirection: "column", flex: 1, minHeight: 0, width: "100%", height: "100%", overflow: "hidden", background: isLight ? "#F8FAFC" : "#060A12" }}>
-      {/* Header Premium */}
-      <div style={{ display: "flex", alignItems: "center", gap: 14, padding: "16px 24px", background: isLight ? "linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(248,250,252,0.95) 100%)" : "linear-gradient(180deg, rgba(16,22,36,0.98) 0%, rgba(10,15,26,0.95) 100%)", borderBottom: `1px solid ${T.border}`, flexShrink: 0, backdropFilter: "blur(12px)", zIndex: 10 }}>
+    <div style={{ padding: 0, margin: 0, display: "flex", flexDirection: "column", flex: 1, minHeight: 0, width: "100%", height: "100%", overflow: "hidden", background: isLight ? "#F8FAFC" : "#060A12" }}>
+      {/* Header Premium Apple Glass */}
+      <div style={{ display: "flex", alignItems: "center", gap: 14, padding: "14px 20px", background: isLight ? "linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(248,250,252,0.95) 100%)" : "linear-gradient(180deg, rgba(16,22,36,0.98) 0%, rgba(10,15,26,0.95) 100%)", borderBottom: `1px solid ${T.border}`, flexShrink: 0, backdropFilter: "blur(12px)", zIndex: 10 }}>
         <div style={{
-          width: 42, height: 42, borderRadius: 13, background: isLight ? "linear-gradient(135deg, #E8F8F4 0%, #D1F2E8 100%)" : "linear-gradient(135deg, rgba(110,231,194,0.18) 0%, rgba(52,211,153,0.10) 100%)", border: `1px solid ${T.accent}3D`,
-          display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, boxShadow: `0 4px 14px ${T.accent}20`
+          width: 44, height: 44, borderRadius: 14, background: isLight ? "linear-gradient(135deg, #E8F8F4 0%, #D1F2E8 100%)" : "linear-gradient(135deg, rgba(110,231,194,0.22) 0%, rgba(52,211,153,0.12) 100%)", border: `1px solid ${T.accent}4D`,
+          display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, boxShadow: `0 4px 16px ${T.accent}28`
         }}>
-          <Bot size={22} color={T.accent} strokeWidth={2} />
+          <Sparkles size={23} color={T.accent} strokeWidth={2.2} />
         </div>
         <div style={{ minWidth: 0, flex: 1 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <h2 style={{ margin: 0, fontSize: 17, fontWeight: 600, letterSpacing: "-0.015em", color: T.txt, fontFamily: fontDisp }}>Copilot AI</h2>
+            <h2 style={{ margin: 0, fontSize: 17, fontWeight: 700, letterSpacing: "-0.015em", color: T.txt, fontFamily: fontDisp }}>Copilot AI</h2>
             <Pill color={T.accent} isLight={isLight}>Cerebro Conectado</Pill>
           </div>
-          <p style={{ margin: "2px 0 0", fontSize: 12, color: T.txt2, fontFamily: font }}>Asistente operativo del CRM · Podés escribirle o dictarle por voz</p>
+          <p style={{ margin: "2px 0 0", fontSize: 12, color: T.txt2, fontFamily: font }}>Asistente Inteligente · Escribile, dictale o manda notas de voz</p>
         </div>
         <button
           type="button" onClick={reload} title="Refrescar conversación"
-          style={{ width: 34, height: 34, borderRadius: 10, background: isLight ? "rgba(15,23,42,0.04)" : "rgba(255,255,255,0.05)", border: `1px solid ${T.border}`, color: T.txt2, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.16s" }}
+          style={{ width: 36, height: 36, borderRadius: 11, background: isLight ? "rgba(15,23,42,0.04)" : "rgba(255,255,255,0.05)", border: `1px solid ${T.border}`, color: T.txt2, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.16s" }}
         >
-          <RefreshCw size={15} strokeWidth={2} />
+          <RefreshCw size={16} strokeWidth={2.1} />
         </button>
       </div>
 
@@ -485,11 +485,11 @@ function Bubble({ m, T, isLight, userBg, userTxt, aiBg, aiBd, onPick, sending })
     <div style={{ display: "flex", justifyContent: isUser ? "flex-end" : "flex-start", gap: 10, alignItems: "flex-end" }}>
       {!isUser && (
         <div style={{ width: 30, height: 30, borderRadius: 10, background: `${T.accent}18`, border: `1px solid ${T.accent}33`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginBottom: 2 }}>
-          <Bot size={16} color={T.accent} strokeWidth={2} />
+          <Sparkles size={16} color={T.accent} strokeWidth={2.1} />
         </div>
       )}
       <div style={{
-        maxWidth: "80%", padding: "11px 15px", borderRadius: 16,
+        maxWidth: "84%", padding: "11px 15px", borderRadius: 16,
         borderBottomRightRadius: isUser ? 4 : 16, borderBottomLeftRadius: isUser ? 16 : 4,
         background: isUser ? userBg : aiBg, border: isUser ? "none" : `1px solid ${aiBd}`,
         color: isUser ? userTxt : T.txt, fontSize: 13.8, lineHeight: 1.55, fontFamily: font,
@@ -530,7 +530,7 @@ function Typing({ T, aiBg, aiBd }) {
   return (
     <div style={{ display: "flex", justifyContent: "flex-start", gap: 10, alignItems: "flex-end" }}>
       <div style={{ width: 30, height: 30, borderRadius: 10, background: `${T.accent}18`, border: `1px solid ${T.accent}33`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginBottom: 2 }}>
-        <Bot size={16} color={T.accent} strokeWidth={2} />
+        <Sparkles size={16} color={T.accent} strokeWidth={2.1} />
       </div>
       <div style={{ padding: "13px 18px", borderRadius: 16, borderBottomLeftRadius: 4, background: aiBg, border: `1px solid ${aiBd}`, display: "flex", gap: 6, alignItems: "center" }}>
         {[0, 1, 2].map((i) => (
@@ -546,7 +546,7 @@ function EmptyState({ T, isLight, onPick }) {
   return (
     <div style={{ margin: "auto", textAlign: "center", maxWidth: 420, padding: 16 }}>
       <div style={{ width: 60, height: 60, borderRadius: 18, margin: "0 auto 16px", background: isLight ? "linear-gradient(135deg, #E8F8F4 0%, #D1F2E8 100%)" : "linear-gradient(135deg, rgba(110,231,194,0.18) 0%, rgba(52,211,153,0.10) 100%)", border: `1px solid ${T.accent}3D`, display: "flex", alignItems: "center", justifyContent: "center", boxShadow: `0 8px 24px ${T.accent}25` }}>
-        <Bot size={30} color={T.accent} strokeWidth={1.8} />
+        <Sparkles size={30} color={T.accent} strokeWidth={2} />
       </div>
       <h3 style={{ margin: "0 0 6px", fontSize: 18, fontWeight: 600, color: T.txt, fontFamily: fontDisp }}>Tu Asistente Operativo del CRM</h3>
       <p style={{ margin: "0 0 20px", fontSize: 13.5, color: T.txt3, lineHeight: 1.55, fontFamily: font }}>
