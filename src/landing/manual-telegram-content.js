@@ -38,6 +38,7 @@ export const MANUAL_SECTIONS_TG = [
         'Llegás preparado a cada reunión y a cada llamada.',
       ]},
       { type: 'tip', text: 'No hay que memorizar comandos ni botones. Hablale natural, con tus palabras. Tolera errores de dedo, y si algo no le queda claro, te lo pregunta.' },
+      { type: 'p', text: 'Y ahora también lo tenés DENTRO del CRM: en app.stratoscapitalgroup.com abrí la pestaña "Copilot" y le escribís igual que en Telegram. Es el MISMO asistente, con las mismas capacidades — usá el que te quede más cómodo (o los dos). Todo lo de este manual sirve en ambos.' },
     ],
   },
   {
@@ -289,14 +290,34 @@ export const MANUAL_SECTIONS_TG = [
     tags: ['propiedades', 'catalogo', 'desarrollos', 'inmuebles', 'zona', 'precio', 'recamaras', 'mar', 'drive', 'proyectos'],
     content: [
       { type: 'p', text: 'El asistente ya conoce el catálogo de desarrollos. Preguntale en lenguaje normal (o por audio) y te responde al instante con los proyectos que mejor coinciden y sus links de Drive para ver fotos y detalles.' },
+      { type: 'p', text: 'Ahora filtra de verdad por PRESUPUESTO y por ZONA a la vez. Decile el monto como quieras ("menos de 200 mil", "más de 1 millón", "entre 250 y 350 mil") y te muestra solo las que entran.' },
       { type: 'ex', items: [
-        '"¿Qué propiedades hay en Playa del Carmen?"',
-        '"Top 3 de 250 a 350 mil"',
+        '"Dame 3 propiedades en Cancún por menos de 200 mil"',
+        '"Propiedades en Tulum de más de 1 millón"',
+        '"Top 3 en Playa del Carmen entre 250 y 350 mil"',
         '"2 recámaras cerca del mar"',
-        '"Desarrollos en Tulum"',
       ]},
-      { type: 'tip', text: 'Podés pedir un "top 3" o "top 5" para acotar la lista. Filtra por zona, y también entiende recámaras o "cerca del mar".' },
-      { type: 'warn', text: 'Algunos desarrollos todavía no tienen el precio cargado, así que el filtro por presupuesto ordena por cercanía pero puede no ser exacto — se va afinando.' },
+      { type: 'tip', text: 'Podés pedir un "top 3" o "top 5" para acotar. Combina zona + presupuesto + recámaras + "cerca del mar" en una sola frase.' },
+      { type: 'warn', text: 'Todavía muchos desarrollos no tienen el precio cargado. Cuando pedís un presupuesto y no hay ninguno con precio en ese rango, el asistente te avisa y te muestra igual las de esa zona (no te deja sin respuesta).' },
+    ],
+  },
+  {
+    id: 'recomendar-a-cliente',
+    category: 'pedidos',
+    icon: 'Sparkles',
+    title: 'Que te recomiende propiedades para un cliente puntual',
+    summary: 'Le decís el nombre de tu cliente y el asistente mira su expediente (presupuesto y zona) y te propone las propiedades que le encajan, explicándote por qué.',
+    tags: ['recomendar', 'recomendame', 'propiedades', 'cliente', 'lead', 'presupuesto', 'zona', 'sugerir', 'que le ofrezco'],
+    content: [
+      { type: 'p', text: 'En vez de buscar a mano, dejá que el asistente arme la recomendación. Le decís "recomiéndame una propiedad para [cliente]" y él revisa el expediente de ESE cliente: cuánto tiene de presupuesto y en qué zona quiere. Con eso te propone lo que mejor le calza y te dice el porqué.' },
+      { type: 'ex', items: [
+        '"¿Qué le recomiendo al cliente Pepito?"',
+        '"Recomiéndame una propiedad para Marlene"',
+        '"Qué propiedades le ofrezco a Juan"',
+      ]},
+      { type: 'p', text: 'Ejemplo real: si Pepito tiene 200 mil de presupuesto y vive en Cancún (aunque esté escrito en sus notas), te responde algo como: "Recomendación para Pepito — vive en Cancún y su presupuesto es ~$200K, así que busco en Cancún dentro de ese monto:" y te lista las opciones con su Drive.' },
+      { type: 'tip', text: 'Si el cliente todavía no tiene presupuesto o zona cargados en su expediente, el asistente te lo dice y te muestra igual las de su zona. Cargale esos datos en las notas del cliente y las recomendaciones salen más finas.' },
+      { type: 'warn', text: 'Si tenés dos clientes con el mismo nombre, primero te pregunta a cuál te referís (nombre completo o teléfono) — así no te recomienda para el cliente equivocado.' },
     ],
   },
 
@@ -544,6 +565,24 @@ export const MANUAL_SECTIONS_TG = [
         '"pasá a Felipe al asesor Emmanuel"',
       ]},
       { type: 'p', text: 'El cliente aparece de inmediato en la lista del asesor nuevo, con todo su historial y notas. Y ese asesor empieza a recibir los recordatorios de ese cliente.' },
+    ],
+  },
+  {
+    id: 'admin-clientes-asesor',
+    category: 'admin',
+    icon: 'Users',
+    title: 'Ver la cartera de cualquier asesor',
+    summary: 'Como admin podés pedir los clientes de un asesor específico, y filtrar por etapa o por cantidad, desde el chat.',
+    tags: ['clientes de', 'leads de', 'cartera', 'asesor', 'gael', 'cecilia', 'etapa', 'ultimos', 'admin'],
+    content: [
+      { type: 'p', text: 'Un asesor solo ve su propia cartera. Como admin (o coordinador) podés pedir la de cualquiera por su nombre, y acotarla por etapa o por cantidad.' },
+      { type: 'ex', items: [
+        '"¿Cuáles son los clientes de Gael en segunda etapa?"',
+        '"Los últimos 2 leads de Cecilia"',
+        '"Clientes de Emmanuel en Zoom Agendado"',
+      ]},
+      { type: 'p', text: 'Te responde con la lista filtrada (nombre, teléfono, etapa y próxima acción) y cuántos hay en total. Si hay dos asesores con nombres parecidos, te pregunta de cuál querés.' },
+      { type: 'tip', text: 'Si sos asesor y pedís la cartera de otro, el asistente te avisa que solo podés ver la tuya — así los datos quedan protegidos por rol.' },
     ],
   },
   {

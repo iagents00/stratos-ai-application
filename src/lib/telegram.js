@@ -224,7 +224,7 @@ export async function getRecentBotActivity(limit = 20) {
  * @param {number} limit  máximo de mensajes (default 40, máx 200)
  * @returns {Promise<{ messages: Array<{id:number, occurred_at:string, role:string, content:string}>, error: string|null }>}
  */
-export async function getCopilotActivity(limit = 40) {
+export async function getCopilotActivity(limit = 50) {
   try {
     const { data, error } = await supabase.rpc('get_my_copilot_activity', { p_limit: limit })
     let messages = Array.isArray(data) ? [...data] : []
