@@ -281,8 +281,15 @@ Además de mis_clientes / agenda / kpis / pipeline / buscar / crear-editar-mover
   precio rinde poco hasta cargar precios (tarea "documentos de mi espacio").
 - **Recomendar a un lead** (`bot_recomendar_propiedades`, router `_bot_reco_client`): "recomiéndame una propiedad
   para Pepito" → lee presupuesto + zona del EXPEDIENTE del lead (campo `presupuesto` **y las NOTAS**, que es donde
-  suele estar el dato) y filtra el catálogo, explicando el porqué. Homónimos → PREGUNTA cuál (NO tira random).
-  Delega en `bot_buscar_proyectos` (reusa el filtro probado).
+  suele estar el dato) y filtra el catálogo, explicando el porqué. Delega en `bot_buscar_proyectos` (reusa el
+  filtro probado). **Homónimos → BOTONES de selección** (nombre · etapa · …últimos 4 del teléfono), igual que
+  Telegram; al tocar uno re-ejecuta la recomendación para ESE cliente. Mismo mecanismo para `bot_ficha_cliente`.
+  Cómo funciona (migración 100): reusa el pipeline probado de `pickdis` (`_bot_disambiguate` stage la acción →
+  `bot_handle_callback` fija el teléfono → `_bot_execute_pending` re-ejecuta), con 2 action_types de LECTURA
+  nuevos (`reco`,`ficha`). **Sirve en Telegram Y Copilot sin cambios de frontend/n8n** (los botones inline se
+  renderizan/enrutan genéricos por `flatKeyboard` + `Check Callback`). Si querés agregar botones a otra acción de
+  lectura, seguí ese patrón (stage con `_bot_disambiguate` + rama en `_bot_execute_pending`), NO toques la lógica
+  de write-confirm existente.
 - **Clientes de OTRO asesor** (`bot_clientes_de_asesor(chat,name,context)`, router `_bot_asesor_clients_ref`):
   "clientes de Gael en segunda etapa", "últimos 2 leads de Cecilia". Filtra por etapa + cantidad. Respeta permisos
   (asesor solo su cartera; admin/coordinador ve a todos). El detector distingue asesor (cartera) de cliente (ficha).
