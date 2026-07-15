@@ -1,38 +1,36 @@
 /**
- * app/views/Copilot.jsx
+ * app/views/Copilot.jsx — v2 (15-jul)
  * ─────────────────────────────────────────────────────────────────────────────
- * Copilot — el asistente IA del CRM (el MISMO cerebro que el bot de Telegram
- * @Strato_sasistente_crm_bot) embebido como un chat dentro del CRM.
+ * Copilot — el asistente IA del CRM, mismo cerebro que el bot de Telegram
+ * @Strato_sasistente_crm_bot, con UI rediseñada para igualar WhatsApp:
+ * chat a pantalla completa, header compacto, área de mensajes expansiva,
+ * composer minimalista abajo.
  *
- * El asesor conecta su Telegram una vez (código de pareo → profiles.telegram_chat_id)
- * y desde acá opera sus leads escribiéndole o dictándole por voz al asistente:
- *   - Envía  →  RPC copilot_send  →  bot_nlu_dispatch_gvintell (responde + loguea)
- *   - Lee    →  RPC get_my_copilot_activity  →  tg_bot_activity (conversación limpia)
- *   - Audio  →  Graba nota de voz (opus/media recorder + dictado en tiempo real)
- *
- * Gateado por features.copilotModule (hoy: Duke). Ver navigation.js.
+ * Estrategia híbrida de respuesta (telegram.js):
+ *   1. copilot_send (RPC stratos-prod) → rápido, determinista
+ *   2. Webhook n8n (GPT-4o) → respuesta directa del body
+ *   3. Polling getCopilotActivity → red de seguridad
  * ─────────────────────────────────────────────────────────────────────────────
  */
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Send, Check, ExternalLink, Sparkles, RefreshCw, Mic, Square, X, Volume2 } from "lucide-react";
+import { Send, Sparkles, RefreshCw, Mic, Square, X, Volume2, ChevronDown, ChevronUp } from "lucide-react";
 import { P, LP, font, fontDisp } from "../../design-system/tokens";
-import { G, Pill } from "../SharedComponents";
+import { G } from "../SharedComponents";
 import { useClient } from "../../hooks/useClient";
 import {
   getPairingStatus, requestPairingCode, unpairTelegram,
   getCopilotActivity, sendCopilotMessage,
 } from "../../lib/telegram";
 
-// Atajos rápidos (mismos comandos deterministas del bot)
 const SUGGESTIONS = [
   { label: "Mis clientes", text: "mis clientes" },
-  { label: "Qué tengo hoy", text: "agenda" },
-  { label: "Cómo voy", text: "kpis" },
+  { label: "Agenda", text: "agenda" },
+  { label: "KPIs", text: "kpis" },
   { label: "Pipeline", text: "pipeline" },
   { label: "Menú", text: "menu" },
 ];
 
-const REC_MAX_SECS = 300; // 5 min tope
+const REC_MAX_SECS = 300;
 const fmtRecSecs = (s) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
 
 export default function Copilot({ theme = "dark", T: Tprop, isLight: isLightProp }) {
@@ -58,25 +56,19 @@ export default function Copilot({ theme = "dark", T: Tprop, isLight: isLightProp
 
   if (status.loading) {
     return (
-      <div style={{ padding: 24 }}>
-        <G T={T} style={{ padding: 28, textAlign: "center" }}>
-          <div style={{ fontSize: 13.5, color: T.txt3, fontFamily: font }}>Cargando Copilot AI…</div>
-        </G>
+      <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <span style={{ fontSize: 13, color: T.txt3, fontFamily: font }}>Conectando con el asistente…</span>
       </div>
     );
   }
 
-  return (
-    <div style={{ padding: 0, width: "100%", height: "calc(100dvh - 56px)", minHeight: 480, display: "flex", flexDirection: "column", overflow: "hidden", background: isLight ? "#F8FAFC" : "#060A12" }}>
-      {status.paired
-        ? <Chat T={T} isLight={isLight} botUsername={botUsername} onUnpaired={onUnpaired} />
-        : <ConnectPrompt T={T} isLight={isLight} botUsername={botUsername} manualPairing={manualPairing} onPaired={onPaired} />}
-    </div>
-  );
+  return status.paired
+    ? <Chat T={T} isLight={isLight} botUsername={botUsername} onUnpaired={onUnpaired} />
+    : <ConnectPrompt T={T} isLight={isLight} botUsername={botUsername} manualPairing={manualPairing} onPaired={onPaired} />;
 }
 
 /* ─────────────────────────────────────────────────────────────────────────── */
-/*  Chat (UI Premium + Grabación de Voz / Dictado)                             */
+/* Chat — layout WhatsApp: header fino, mensajes expansivos, composer compacto */
 /* ─────────────────────────────────────────────────────────────────────────── */
 function Chat({ T, isLight, botUsername, onUnpaired }) {
   const [messages, setMessages] = useState([]);
@@ -84,11 +76,11 @@ function Chat({ T, isLight, botUsername, onUnpaired }) {
   const [sending, setSending] = useState(false);
   const [input, setInput] = useState("");
   const [errBanner, setErrBanner] = useState(null);
+  const [showSuggestions, setShowSuggestions] = useState(false);
   const scrollRef = useRef(null);
   const inputRef = useRef(null);
   const mountedRef = useRef(true);
 
-  // Estados para grabación de audios / notas de voz
   const [recording, setRecording] = useState(false);
   const [recordSecs, setRecordSecs] = useState(0);
   const [voiceTranscript, setVoiceTranscript] = useState("");
@@ -107,17 +99,11 @@ function Chat({ T, isLight, botUsername, onUnpaired }) {
 
   useEffect(() => {
     mountedRef.current = true;
-    getCopilotActivity(60).then((r) => {
-      if (!mountedRef.current) return;
-      setMessages([...(r.messages || [])].reverse());
-      setLoading(false);
-    });
+    reload();
     return () => {
       mountedRef.current = false;
-      const session = recorderRef.current;
-      recorderRef.current = null;
       if (recordTimerRef.current) clearInterval(recordTimerRef.current);
-      try { session?.cancel(); } catch { /* noop */ }
+      try { recorderRef.current?.cancel(); } catch { /* noop */ }
       try { recognitionRef.current?.stop(); } catch { /* noop */ }
     };
   }, []);
@@ -134,38 +120,33 @@ function Chat({ T, isLight, botUsername, onUnpaired }) {
     return () => URL.revokeObjectURL(url);
   }, [pendingVoiceBlob]);
 
-  const send = async (raw, isVoice = false, voiceUrl = null) => {
-    const text = (raw ?? "").trim();
-    if (!text && !isVoice) return;
-    if (sending) return;
+  const send = async (rawText) => {
+    const text = (rawText ?? "").trim();
+    if (!text || sending) return;
     setErrBanner(null);
     setInput("");
     setVoiceTranscript("");
     setPendingVoiceBlob(null);
 
     const tmpId = `tmp-${Date.now()}`;
-    const displayContent = isVoice ? (text ? `🎙️ [Nota de voz] ${text}` : `🎙️ Nota de voz enviada`) : text;
-    const payloadText = text || (isVoice ? "Te envío esta nota de voz. ¿Me puedes resumir qué tengo hoy en agenda o darme asistencia con mis clientes?" : "");
-
-    setMessages((prev) => [...prev, { id: tmpId, role: "user", content: displayContent, occurred_at: new Date().toISOString(), pending: true, isVoice, voiceUrl }]);
+    setMessages((prev) => [...prev, { id: tmpId, role: "user", content: text, occurred_at: new Date().toISOString(), pending: true }]);
     setSending(true);
-    const r = await sendCopilotMessage(payloadText);
+
+    const r = await sendCopilotMessage(text);
     setSending(false);
+
     if (r.error === "not_paired") { onUnpaired(); return; }
     if (r.error) {
       setErrBanner("No se pudo enviar. Probá de nuevo.");
       reload();
-      inputRef.current?.focus();
       return;
     }
     await reload();
     inputRef.current?.focus();
   };
 
-  /* ── Grabador de audios + dictado por voz ── */
-  const stopRecTracks = (rec) => {
-    try { rec?.stream?.getTracks?.().forEach((t) => t.stop()); } catch { /* noop */ }
-  };
+  /* ── Grabación de audio ── */
+  const stopRecTracks = (rec) => { try { rec?.stream?.getTracks?.().forEach((t) => t.stop()); } catch { /* noop */ } };
 
   const finishRecording = useCallback(() => {
     const session = recorderRef.current;
@@ -193,7 +174,6 @@ function Chat({ T, isLight, botUsername, onUnpaired }) {
     setErrBanner(null);
     setVoiceTranscript("");
 
-    // 1. Iniciar dictado en vivo del navegador si está soportado (transcripción instantánea en español)
     const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (SpeechRec) {
       try {
@@ -203,9 +183,7 @@ function Chat({ T, isLight, botUsername, onUnpaired }) {
         recSpeech.interimResults = true;
         recSpeech.onresult = (e) => {
           let t = "";
-          for (let i = 0; i < e.results.length; i++) {
-            t += e.results[i][0].transcript;
-          }
+          for (let i = 0; i < e.results.length; i++) t += e.results[i][0].transcript;
           if (mountedRef.current) setVoiceTranscript(t);
         };
         recSpeech.start();
@@ -213,29 +191,15 @@ function Chat({ T, isLight, botUsername, onUnpaired }) {
       } catch { /* noop */ }
     }
 
-    // 2. Grabar audio con MediaRecorder / micrófono del celular
     let stream;
-    try {
-      stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    } catch {
-      setErrBanner("Sin permiso de micrófono — activá el acceso en la barra del navegador.");
-      return;
-    }
-    if (!mountedRef.current) {
-      try { stream.getTracks().forEach((t) => t.stop()); } catch { /* noop */ }
-      return;
-    }
+    try { stream = await navigator.mediaDevices.getUserMedia({ audio: true }); }
+    catch { setErrBanner("Sin permiso de micrófono."); return; }
+    if (!mountedRef.current) { try { stream.getTracks().forEach((t) => t.stop()); } catch { /* noop */ } return; }
 
-    const REC_MIME_CANDIDATES = ["audio/mp4", "audio/ogg;codecs=opus", "audio/webm;codecs=opus", "audio/webm"];
-    const mime = (window.MediaRecorder && REC_MIME_CANDIDATES.find((m) => MediaRecorder.isTypeSupported(m))) || "";
+    const mime = (window.MediaRecorder && ["audio/mp4", "audio/webm;codecs=opus", "audio/webm"].find((m) => MediaRecorder.isTypeSupported(m))) || "";
     let rec;
-    try {
-      rec = new MediaRecorder(stream, mime ? { mimeType: mime } : undefined);
-    } catch {
-      stream.getTracks().forEach((t) => t.stop());
-      setErrBanner("Tu navegador no soporta la grabación de audio.");
-      return;
-    }
+    try { rec = new MediaRecorder(stream, mime ? { mimeType: mime } : undefined); }
+    catch { stream.getTracks().forEach((t) => t.stop()); setErrBanner("Grabación no soportada."); return; }
 
     const chunks = [];
     let cancelled = false;
@@ -244,73 +208,85 @@ function Chat({ T, isLight, botUsername, onUnpaired }) {
       stopRecTracks(rec);
       if (cancelled || chunks.length === 0) return;
       const blob = new Blob(chunks, { type: rec.mimeType || mime || "audio/webm" });
-      if (mountedRef.current) {
-        setPendingVoiceBlob(blob);
-      }
+      if (mountedRef.current) setPendingVoiceBlob(blob);
     };
 
     recorderRef.current = {
       finish: () => { try { if (rec.state !== "inactive") rec.stop(); } catch { /* noop */ } },
-      cancel: () => {
-        cancelled = true;
-        try { if (rec.state !== "inactive") rec.stop(); } catch { /* noop */ }
-        stopRecTracks(rec);
-      },
+      cancel: () => { cancelled = true; try { if (rec.state !== "inactive") rec.stop(); } catch { /* noop */ } stopRecTracks(rec); },
     };
 
     setRecording(true);
     setRecordSecs(0);
     rec.start(250);
     recordTimerRef.current = setInterval(() => {
-      setRecordSecs((s) => {
-        const next = s + 1;
-        if (next >= REC_MAX_SECS) queueMicrotask(finishRecording);
-        return next;
-      });
+      setRecordSecs((s) => { const next = s + 1; if (next >= REC_MAX_SECS) queueMicrotask(finishRecording); return next; });
     }, 1000);
   }, [recording, sending, finishRecording]);
 
   const onKeyDown = (e) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      send(input);
-    }
+    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(input); }
   };
 
+  /* ── Colores burbujas ── */
   const bubbleUserBg = isLight ? "linear-gradient(135deg, #0D9A76 0%, #067A5E 100%)" : "linear-gradient(135deg, #6EE7C2 0%, #34D399 100%)";
   const bubbleUserTxt = isLight ? "#FFFFFF" : "#041016";
-  const bubbleAiBg = isLight ? "rgba(255,255,255,0.85)" : "rgba(18,24,38,0.78)";
-  const bubbleAiBd = isLight ? "rgba(15,23,42,0.08)" : "rgba(255,255,255,0.09)";
+  const bubbleAiBg = isLight ? "#FFFFFF" : "rgba(18,24,38,0.82)";
+  const bubbleAiBd = isLight ? "rgba(15,23,42,0.08)" : "rgba(255,255,255,0.08)";
+  const bgArea = isLight ? "#F8FAFC" : "#060A12";
+  const composerBg = isLight ? "#FFFFFF" : "rgba(10,15,26,0.95)";
 
   return (
-    <div style={{ padding: 0, margin: 0, display: "flex", flexDirection: "column", flex: 1, minHeight: 0, width: "100%", height: "100%", overflow: "hidden", background: isLight ? "#F8FAFC" : "#060A12" }}>
-      {/* Header Premium Apple Glass */}
-      <div style={{ display: "flex", alignItems: "center", gap: 14, padding: "14px 20px", background: isLight ? "linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(248,250,252,0.95) 100%)" : "linear-gradient(180deg, rgba(16,22,36,0.98) 0%, rgba(10,15,26,0.95) 100%)", borderBottom: `1px solid ${T.border}`, flexShrink: 0, backdropFilter: "blur(12px)", zIndex: 10 }}>
+    <div style={{ flex: 1, display: "flex", flexDirection: "column", minHeight: 0, background: bgArea, overflow: "hidden" }}>
+      {/* ── Header compacto (estilo WhatsApp) ── */}
+      <div style={{
+        display: "flex", alignItems: "center", gap: 10, padding: "10px 16px", flexShrink: 0,
+        background: isLight ? "#FFFFFF" : "rgba(10,15,26,0.95)",
+        borderBottom: `1px solid ${T.border}`, zIndex: 10,
+        boxShadow: isLight ? "0 1px 3px rgba(15,23,42,0.06)" : "0 1px 3px rgba(0,0,0,0.3)"
+      }}>
         <div style={{
-          width: 44, height: 44, borderRadius: 14, background: isLight ? "linear-gradient(135deg, #E8F8F4 0%, #D1F2E8 100%)" : "linear-gradient(135deg, rgba(110,231,194,0.22) 0%, rgba(52,211,153,0.12) 100%)", border: `1px solid ${T.accent}4D`,
-          display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, boxShadow: `0 4px 16px ${T.accent}28`
+          width: 34, height: 34, borderRadius: 10, flexShrink: 0,
+          background: isLight ? "linear-gradient(135deg, #E8F8F4 0%, #D1F2E8 100%)" : "linear-gradient(135deg, rgba(110,231,194,0.22) 0%, rgba(52,211,153,0.12) 100%)",
+          border: `1px solid ${T.accent}4D`, display: "flex", alignItems: "center", justifyContent: "center"
         }}>
-          <Sparkles size={23} color={T.accent} strokeWidth={2.2} />
+          <Sparkles size={17} color={T.accent} strokeWidth={2.2} />
         </div>
         <div style={{ minWidth: 0, flex: 1 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <h2 style={{ margin: 0, fontSize: 17, fontWeight: 700, letterSpacing: "-0.015em", color: T.txt, fontFamily: fontDisp }}>Copilot AI</h2>
-            <Pill color={T.accent} isLight={isLight}>Cerebro Conectado</Pill>
-          </div>
-          <p style={{ margin: "2px 0 0", fontSize: 12, color: T.txt2, fontFamily: font }}>Asistente Inteligente · Escribile, dictale o manda notas de voz</p>
+          <div style={{ fontSize: 14, fontWeight: 600, color: T.txt, fontFamily: fontDisp, lineHeight: 1.2 }}>Copilot AI</div>
+          <div style={{ fontSize: 11, color: T.txt3, fontFamily: font, marginTop: 1 }}>@{botUsername}</div>
         </div>
-        <button
-          type="button" onClick={reload} title="Refrescar conversación"
-          style={{ width: 36, height: 36, borderRadius: 11, background: isLight ? "rgba(15,23,42,0.04)" : "rgba(255,255,255,0.05)", border: `1px solid ${T.border}`, color: T.txt2, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.16s" }}
-        >
-          <RefreshCw size={16} strokeWidth={2.1} />
+        <button type="button" onClick={reload} title="Refrescar"
+          style={{ width: 30, height: 30, borderRadius: 8, background: "transparent", border: "none", color: T.txt3, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <RefreshCw size={14} strokeWidth={2} />
+        </button>
+        <button type="button" onClick={() => setShowSuggestions(!showSuggestions)}
+          style={{ width: 30, height: 30, borderRadius: 8, background: "transparent", border: "none", color: T.txt3, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          {showSuggestions ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
         </button>
       </div>
 
-      {/* Mensajes */}
-      <div ref={scrollRef} style={{ flex: 1, minHeight: 0, overflowY: "auto", padding: "20px", display: "flex", flexDirection: "column", gap: 12, background: isLight ? "#F8FAFC" : "rgba(6,9,16,0.5)" }}>
+      {/* ── Sugerencias colapsables ── */}
+      {showSuggestions && (
+        <div style={{ display: "flex", gap: 6, padding: "8px 16px", flexWrap: "wrap", flexShrink: 0, background: composerBg, borderBottom: `1px solid ${T.border}` }}>
+          {SUGGESTIONS.map((s) => (
+            <button key={s.text} type="button" onClick={() => send(s.text)} disabled={sending}
+              style={{
+                padding: "4px 10px", borderRadius: 999, fontSize: 11.5, fontFamily: font,
+                background: isLight ? "#F1F5F9" : "rgba(255,255,255,0.06)",
+                border: `1px solid ${isLight ? "rgba(15,23,42,0.10)" : "rgba(255,255,255,0.12)"}`,
+                color: T.txt2, cursor: sending ? "default" : "pointer"
+              }}>
+              <Sparkles size={10} color={T.accent} style={{ marginRight: 4, verticalAlign: "middle" }} />{s.label}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* ── Mensajes (área expansiva) ── */}
+      <div ref={scrollRef} style={{ flex: 1, minHeight: 0, overflowY: "auto", padding: "12px 14px", display: "flex", flexDirection: "column", gap: 8 }}>
         {loading ? (
-          <div style={{ margin: "auto", color: T.txt3, fontSize: 13, fontFamily: font }}>Cargando actividad del asistente…</div>
+          <div style={{ margin: "auto", color: T.txt3, fontSize: 12, fontFamily: font }}>Cargando conversación…</div>
         ) : messages.length === 0 ? (
           <EmptyState T={T} isLight={isLight} onPick={send} />
         ) : (
@@ -319,161 +295,112 @@ function Chat({ T, isLight, botUsername, onUnpaired }) {
         {sending && <Typing T={T} aiBg={bubbleAiBg} aiBd={bubbleAiBd} />}
       </div>
 
-      {/* Sugerencias rápidas */}
-      {!loading && !recording && !pendingVoiceBlob && (
-        <div style={{ display: "flex", gap: 8, padding: "8px 20px 10px", flexWrap: "wrap", flexShrink: 0, background: isLight ? "#F8FAFC" : "rgba(6,9,16,0.5)" }}>
-          {SUGGESTIONS.map((s) => (
-            <button
-              key={s.text} type="button" onClick={() => send(s.text)} disabled={sending}
-              style={{
-                display: "inline-flex", alignItems: "center", gap: 6, padding: "7px 13px", borderRadius: 999,
-                background: isLight ? "#FFFFFF" : "rgba(255,255,255,0.06)", border: `1px solid ${isLight ? "rgba(15,23,42,0.12)" : "rgba(255,255,255,0.14)"}`,
-                color: T.txt2, fontSize: 12, fontFamily: font, cursor: sending ? "default" : "pointer", transition: "all .16s", boxShadow: isLight ? "0 2px 6px rgba(15,23,42,0.04)" : "none"
-              }}
-            >
-              <Sparkles size={12} color={T.accent} /> {s.label}
-            </button>
-          ))}
-        </div>
-      )}
-
+      {/* ── Banner de error ── */}
       {errBanner && (
-        <div style={{ margin: "0 20px 8px", padding: "10px 14px", borderRadius: 10, fontSize: 12.5, background: isLight ? "rgba(225,29,72,0.08)" : "rgba(248,113,113,0.10)", border: `1px solid ${isLight ? "rgba(225,29,72,0.28)" : "rgba(248,113,113,0.28)"}`, color: isLight ? "#B91C3A" : "#FCA5A5", fontFamily: font }}>
+        <div style={{ margin: "0 14px 4px", padding: "8px 12px", borderRadius: 8, fontSize: 12, background: isLight ? "rgba(225,29,72,0.08)" : "rgba(248,113,113,0.10)", border: `1px solid ${isLight ? "rgba(225,29,72,0.22)" : "rgba(248,113,113,0.22)"}`, color: isLight ? "#B91C3A" : "#FCA5A5", fontFamily: font, flexShrink: 0 }}>
           {errBanner}
         </div>
       )}
 
-      {/* Audio Pendiente de Envío */}
+      {/* ── Audio pendiente ── */}
       {pendingVoiceBlob && !recording && (
-        <div style={{ margin: "0 20px 8px", padding: "12px 16px", borderRadius: 14, background: isLight ? "rgba(13,154,118,0.08)" : "rgba(110,231,194,0.08)", border: `1px solid ${T.accent}40`, display: "flex", alignItems: "center", gap: 12, flexShrink: 0 }}>
-          <Volume2 size={18} color={T.accent} />
-          {pendingVoiceUrl && <audio controls src={pendingVoiceUrl} style={{ flex: 1, minWidth: 0, height: 34 }} />}
-          {voiceTranscript && (
-            <span style={{ fontSize: 12, color: T.txt, fontFamily: font, flex: 1, overflow: "hidden", textOverflow: "ellipsis" }}>
-              "{voiceTranscript}"
-            </span>
-          )}
-          <button onClick={() => { setPendingVoiceBlob(null); setVoiceTranscript(""); }} title="Descartar audio" style={{ background: "transparent", border: "none", cursor: "pointer", padding: 4, display: "flex" }}>
-            <X size={16} color={T.txt3} />
-          </button>
-          <button
-            onClick={() => send(voiceTranscript || "mis clientes", true, pendingVoiceUrl)}
-            style={{ padding: "7px 16px", borderRadius: 10, border: "none", background: T.accent, color: isLight ? "#FFF" : "#041016", fontSize: 12.5, fontWeight: 600, fontFamily: fontDisp, cursor: "pointer" }}
-          >
-            Enviar Audio
-          </button>
+        <div style={{ margin: "0 14px 4px", padding: "8px 12px", borderRadius: 10, background: isLight ? "rgba(13,154,118,0.06)" : "rgba(110,231,194,0.06)", border: `1px solid ${T.accent}33`, display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
+          <Volume2 size={15} color={T.accent} />
+          {pendingVoiceUrl && <audio controls src={pendingVoiceUrl} style={{ flex: 1, minWidth: 0, height: 28 }} />}
+          {voiceTranscript && <span style={{ fontSize: 11.5, color: T.txt, fontFamily: font, flex: 1, overflow: "hidden", textOverflow: "ellipsis" }}>"{voiceTranscript}"</span>}
+          <button onClick={() => { setPendingVoiceBlob(null); setVoiceTranscript(""); }} style={{ background: "transparent", border: "none", cursor: "pointer", padding: 2 }}><X size={14} color={T.txt3} /></button>
+          <button onClick={() => send(voiceTranscript || "mis clientes")} style={{ padding: "5px 12px", borderRadius: 8, border: "none", background: T.accent, color: isLight ? "#FFF" : "#041016", fontSize: 11.5, fontWeight: 600, fontFamily: fontDisp, cursor: "pointer" }}>Enviar</button>
         </div>
       )}
 
-      {/* Barra de Grabación en Curso */}
+      {/* ── Barra de grabación ── */}
       {recording && (
-        <div style={{ margin: "0 20px 8px", padding: "12px 16px", borderRadius: 14, background: "rgba(239,68,68,0.10)", border: "1px solid rgba(239,68,68,0.35)", display: "flex", alignItems: "center", gap: 12, flexShrink: 0 }}>
-          <span style={{ width: 10, height: 10, borderRadius: "50%", background: "#EF4444", flexShrink: 0, animation: "pulse 1.2s ease-in-out infinite" }} />
-          <span style={{ flex: 1, fontSize: 13, fontWeight: 500, color: isLight ? "#B91C1C" : "#FCA5A5", fontFamily: fontDisp }}>
-            Grabando voz · {fmtRecSecs(recordSecs)}
-            {voiceTranscript && <span style={{ fontWeight: 400, opacity: 0.9, marginLeft: 8, fontSize: 12 }}>({voiceTranscript})</span>}
+        <div style={{ margin: "0 14px 4px", padding: "8px 12px", borderRadius: 10, background: "rgba(239,68,68,0.10)", border: "1px solid rgba(239,68,68,0.30)", display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
+          <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#EF4444", flexShrink: 0, animation: "pulse 1.2s ease-in-out infinite" }} />
+          <span style={{ flex: 1, fontSize: 12, fontWeight: 500, color: isLight ? "#B91C1C" : "#FCA5A5", fontFamily: fontDisp }}>
+            Grabando {fmtRecSecs(recordSecs)}
+            {voiceTranscript ? <span style={{ fontWeight: 400, opacity: 0.9, marginLeft: 6, fontSize: 11 }}>({voiceTranscript})</span> : null}
           </span>
-          <button onClick={cancelRecording} style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "5px 12px", borderRadius: 8, cursor: "pointer", background: "transparent", border: `1px solid ${T.border}`, color: T.txt2, fontSize: 11.5, fontFamily: font }}>
-            <X size={12} /> Cancelar
-          </button>
-          <button onClick={finishRecording} style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "5px 14px", borderRadius: 8, cursor: "pointer", border: "none", background: "#EF4444", color: "#FFF", fontSize: 12, fontWeight: 600, fontFamily: fontDisp }}>
-            <Square size={11} /> Listo
-          </button>
+          <button onClick={cancelRecording} style={{ padding: "3px 8px", borderRadius: 6, background: "transparent", border: `1px solid ${T.border}`, color: T.txt2, fontSize: 11, fontFamily: font, cursor: "pointer" }}><X size={10} /> Cancelar</button>
+          <button onClick={finishRecording} style={{ padding: "3px 10px", borderRadius: 6, border: "none", background: "#EF4444", color: "#FFF", fontSize: 11, fontWeight: 600, fontFamily: fontDisp, cursor: "pointer" }}><Square size={9} /> Listo</button>
         </div>
       )}
 
-      {/* Composer estilo Apple / iOS */}
-      <div style={{ display: "flex", alignItems: "flex-end", gap: 10, padding: "14px 20px 16px", background: isLight ? "#FFFFFF" : "rgba(10,15,26,0.92)", borderTop: `1px solid ${T.border}`, flexShrink: 0 }}>
-        <textarea
-          ref={inputRef} value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={onKeyDown}
-          placeholder="Escribile o dictale al asistente… (ej: ¿qué agenda tengo hoy?)" rows={1} disabled={sending || recording}
+      {/* ── Composer compacto (estilo WhatsApp) ── */}
+      <div style={{ display: "flex", alignItems: "flex-end", gap: 8, padding: "8px 12px 10px", background: composerBg, borderTop: `1px solid ${T.border}`, flexShrink: 0 }}>
+        {/* Botón micrófono */}
+        <button type="button" onClick={recording ? finishRecording : startRecording} disabled={sending}
+          style={{ width: 36, height: 36, borderRadius: 10, flexShrink: 0, border: "none", background: "transparent", color: recording ? "#EF4444" : T.txt3, cursor: sending ? "default" : "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <Mic size={18} strokeWidth={2} />
+        </button>
+
+        {/* Input */}
+        <input
+          ref={inputRef} type="text" value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={onKeyDown}
+          placeholder="Escribile al asistente…" disabled={sending || recording}
           style={{
-            flex: 1, resize: "none", maxHeight: 120, minHeight: 44, padding: "11px 16px", borderRadius: 14,
-            background: isLight ? "#F1F5F9" : "rgba(255,255,255,0.05)", border: `1px solid ${isLight ? "rgba(15,23,42,0.08)" : "rgba(255,255,255,0.10)"}`,
-            color: T.txt, fontSize: 14, fontFamily: font, lineHeight: 1.45, outline: "none", transition: "border-color 0.18s"
+            flex: 1, minWidth: 0, height: 36, padding: "0 12px", borderRadius: 18,
+            background: isLight ? "#F1F5F9" : "rgba(255,255,255,0.06)",
+            border: `1px solid ${isLight ? "rgba(15,23,42,0.08)" : "rgba(255,255,255,0.10)"}`,
+            color: T.txt, fontSize: 13.5, fontFamily: font, outline: "none", transition: "border-color 0.15s"
           }}
           onFocus={(e) => { e.currentTarget.style.borderColor = T.accent; }}
           onBlur={(e) => { e.currentTarget.style.borderColor = isLight ? "rgba(15,23,42,0.08)" : "rgba(255,255,255,0.10)"; }}
         />
-        <button
-          type="button" onClick={recording ? finishRecording : startRecording} disabled={sending}
-          title={recording ? "Terminar grabación" : "Grabar audio para Copilot"}
-          style={{
-            width: 44, height: 44, borderRadius: 14, flexShrink: 0, border: `1px solid ${recording ? "rgba(239,68,68,0.5)" : T.border}`,
-            background: recording ? "rgba(239,68,68,0.16)" : (isLight ? "#F1F5F9" : "rgba(255,255,255,0.05)"),
-            color: recording ? "#EF4444" : T.txt2, cursor: sending ? "default" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.18s"
-          }}
-        >
-          <Mic size={19} strokeWidth={2.1} />
-        </button>
-        <button
-          type="button" onClick={() => send(input)} disabled={sending || (!input.trim() && !pendingVoiceBlob)}
-          style={{
-            width: 44, height: 44, borderRadius: 14, flexShrink: 0, border: "none",
-            background: (sending || (!input.trim() && !pendingVoiceBlob)) ? (isLight ? "#E2E8F0" : "rgba(255,255,255,0.1)") : T.accent,
-            color: (sending || (!input.trim() && !pendingVoiceBlob)) ? T.txt3 : (isLight ? "#FFF" : "#041016"),
-            cursor: (sending || (!input.trim() && !pendingVoiceBlob)) ? "default" : "pointer", display: "flex", alignItems: "center", justifyContent: "center",
-            boxShadow: (sending || (!input.trim() && !pendingVoiceBlob)) ? "none" : `0 4px 16px ${T.accent}45`, transition: "all .18s"
-          }}
-        >
-          <Send size={18} strokeWidth={2.2} />
-        </button>
-      </div>
 
-      {/* Footer conexión */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 16, padding: "10px 24px", background: isLight ? "#FFFFFF" : "rgba(10,15,26,0.92)", flexShrink: 0 }}>
-        <span style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 11.5, color: T.txt3, fontFamily: font }}>
-          <Check size={12} color={T.accent} strokeWidth={2.6} /> Conectado a @{botUsername}
-        </span>
-        {botUsername && (
-          <button type="button" onClick={() => window.open(`https://t.me/${botUsername}`, "_blank", "noopener,noreferrer")}
-            style={{ display: "inline-flex", alignItems: "center", gap: 5, background: "none", border: "none", color: T.txt2, fontSize: 11.5, cursor: "pointer", fontFamily: font }}>
-            <ExternalLink size={12} /> Telegram App
-          </button>
-        )}
-        <UnpairBtn T={T} onUnpaired={onUnpaired} />
+        {/* Botón enviar */}
+        <button type="button" onClick={() => send(input)} disabled={sending || !input.trim()}
+          style={{
+            width: 36, height: 36, borderRadius: 10, flexShrink: 0, border: "none",
+            background: (sending || !input.trim()) ? "transparent" : T.accent,
+            color: (sending || !input.trim()) ? T.txt3 : (isLight ? "#FFF" : "#041016"),
+            cursor: (sending || !input.trim()) ? "default" : "pointer", display: "flex", alignItems: "center", justifyContent: "center",
+            transition: "all .15s"
+          }}>
+          <Send size={16} strokeWidth={2.2} />
+        </button>
       </div>
     </div>
   );
 }
 
+/* ── Burbuja de mensaje ── */
 function Bubble({ m, T, isLight, userBg, userTxt, aiBg, aiBd, onPick, sending }) {
   const isUser = m.role === "user";
   const time = m.occurred_at
     ? new Date(m.occurred_at).toLocaleString("es-MX", { hour: "2-digit", minute: "2-digit" })
+    : m.created_at
+    ? new Date(m.created_at).toLocaleString("es-MX", { hour: "2-digit", minute: "2-digit" })
     : "";
 
-  // Detección automática de botones de acción / teclados inline (Estilo Telegram Real)
+  /* ── Detección de botones inline (misma lógica que Telegram) ── */
   let inlineButtons = [];
   if (!isUser && m.content && typeof m.content === "string") {
     const text = m.content.trim();
     const lower = text.toLowerCase();
-    
-    // Evitamos inventar botones si el mensaje es un listado/reporte masivo (ej: mis clientes, agenda múltiple)
-    const bulletCount = (text.match(/^[•\-\*]\s/gm) || []).length;
+    const bulletCount = (text.match(/^[•\-*]\s/gm) || []).length;
     const isMassiveReport = bulletCount > 2 || text.length > 420;
-
     if (!isMassiveReport) {
-      if (lower.includes("¿confirmas?") || lower.includes("¿confirmas el registro?") || lower.includes("confirmas tu acción") || lower.includes("voy a registrar el siguiente lead") || lower.includes("staged_action")) {
+      if (lower.includes("¿confirmas?") || lower.includes("confirmas el registro") || lower.includes("voy a registrar") || lower.includes("staged_action")) {
         inlineButtons = [
-          { label: "✅ Sí, registrar / confirmar", action: "si", primary: true },
+          { label: "✅ Sí, confirmar", action: "si", primary: true },
           { label: "❌ Cancelar", action: "cancelar", primary: false }
         ];
-      } else if (lower.includes("días sin movimiento") || lower.includes("lead abandonado") || lower.includes("lleva sin movimiento")) {
+      } else if (lower.includes("días sin movimiento") || lower.includes("lead abandonado") || lower.includes("sin movimiento")) {
         inlineButtons = [
           { label: "📞 Ya lo contacté", action: "Ya lo contacté", primary: true },
-          { label: "📅 Definir próxima acción", action: "Definir próxima acción", primary: false },
-          { label: "👤 Ver ficha del cliente", action: "Ver ficha del cliente", primary: false }
+          { label: "📅 Definir acción", action: "Definir próxima acción", primary: false },
+          { label: "👤 Ver ficha", action: "Ver ficha del cliente", primary: false }
         ];
-      } else if (lower.includes("💡 antes de tu zoom") || lower.includes("resumen ejecutivo previo al zoom") || lower.includes("este es mi plan sugerido")) {
+      } else if (lower.includes("antes de tu zoom") || lower.includes("plan sugerido")) {
         inlineButtons = [
-          { label: "🧠 Ya estudié, este es mi plan", action: "Ya estudié, este es mi plan", primary: true },
+          { label: "🧠 Ya lo estudié", action: "Ya estudié, este es mi plan", primary: true },
           { label: "🗓️ Reagendar", action: "Reagendar", primary: false },
-          { label: "📁 Ver expediente", action: "Ver expediente", primary: false }
+          { label: "📁 Expediente", action: "Ver expediente", primary: false }
         ];
-      } else if (lower.includes("¿ya hiciste esta acción?") || lower.includes("lista de acción de equipo")) {
+      } else if (lower.includes("ya hiciste esta acción") || lower.includes("lista de acción")) {
         inlineButtons = [
-          { label: "✅ Ya la hice", action: "Ya la hice", primary: true },
+          { label: "✅ Hecho", action: "Ya la hice", primary: true },
           { label: "⏳ En proceso", action: "En proceso", primary: false },
           { label: "❌ No la hice", action: "No la hice", primary: false }
         ];
@@ -482,59 +409,50 @@ function Bubble({ m, T, isLight, userBg, userTxt, aiBg, aiBd, onPick, sending })
   }
 
   return (
-    <div style={{ display: "flex", justifyContent: isUser ? "flex-end" : "flex-start", gap: 10, alignItems: "flex-end" }}>
+    <div style={{ display: "flex", justifyContent: isUser ? "flex-end" : "flex-start", gap: 8, alignItems: "flex-end" }}>
       {!isUser && (
-        <div style={{ width: 30, height: 30, borderRadius: 10, background: `${T.accent}18`, border: `1px solid ${T.accent}33`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginBottom: 2 }}>
-          <Sparkles size={16} color={T.accent} strokeWidth={2.1} />
+        <div style={{ width: 24, height: 24, borderRadius: 7, background: `${T.accent}15`, border: `1px solid ${T.accent}28`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginBottom: 2 }}>
+          <Sparkles size={13} color={T.accent} strokeWidth={2} />
         </div>
       )}
       <div style={{
-        maxWidth: "84%", padding: "11px 15px", borderRadius: 16,
-        borderBottomRightRadius: isUser ? 4 : 16, borderBottomLeftRadius: isUser ? 16 : 4,
+        maxWidth: "82%", padding: "8px 12px", borderRadius: 14,
+        borderBottomRightRadius: isUser ? 3 : 14, borderBottomLeftRadius: isUser ? 14 : 3,
         background: isUser ? userBg : aiBg, border: isUser ? "none" : `1px solid ${aiBd}`,
-        color: isUser ? userTxt : T.txt, fontSize: 13.8, lineHeight: 1.55, fontFamily: font,
-        whiteSpace: "pre-wrap", wordBreak: "break-word", opacity: m.pending ? 0.75 : 1,
-        boxShadow: isLight ? (isUser ? `0 4px 14px ${T.accent}35` : "0 2px 8px rgba(15,23,42,0.04)") : "0 4px 12px rgba(0,0,0,0.2)"
+        color: isUser ? userTxt : T.txt, fontSize: 13.2, lineHeight: 1.48, fontFamily: font,
+        whiteSpace: "pre-wrap", wordBreak: "break-word", opacity: m.pending ? 0.7 : 1,
+        boxShadow: isLight ? (isUser ? `0 3px 10px ${T.accent}28` : "0 1px 4px rgba(15,23,42,0.03)") : "none"
       }}>
         {m.content}
         {inlineButtons.length > 0 && onPick && (
-          <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 12, paddingTop: 10, borderTop: `1px solid ${isLight ? "rgba(15,23,42,0.08)" : "rgba(255,255,255,0.08)"}` }}>
+          <div style={{ display: "flex", gap: 5, flexWrap: "wrap", marginTop: 8, paddingTop: 7, borderTop: `1px solid ${isLight ? "rgba(15,23,42,0.06)" : "rgba(255,255,255,0.06)"}` }}>
             {inlineButtons.map((btn) => (
-              <button
-                key={btn.action}
-                type="button"
-                onClick={() => !sending && onPick(btn.action)}
-                disabled={sending}
+              <button key={btn.action} type="button" onClick={() => !sending && onPick(btn.action)} disabled={sending}
                 style={{
-                  padding: "7px 13px", borderRadius: 10, border: btn.primary ? "none" : `1px solid ${T.border}`,
-                  background: btn.primary ? T.accent : (isLight ? "#FFFFFF" : "rgba(255,255,255,0.08)"),
-                  color: btn.primary ? (isLight ? "#FFF" : "#041016") : T.txt, fontSize: 12.5, fontWeight: btn.primary ? 600 : 500,
-                  fontFamily: font, cursor: sending ? "default" : "pointer", transition: "all .15s",
-                  boxShadow: btn.primary ? `0 2px 8px ${T.accent}35` : "none"
-                }}
-              >
-                {btn.label}
-              </button>
+                  padding: "4px 10px", borderRadius: 7, border: btn.primary ? "none" : `1px solid ${T.border}`,
+                  background: btn.primary ? T.accent : (isLight ? "#FFFFFF" : "rgba(255,255,255,0.06)"),
+                  color: btn.primary ? (isLight ? "#FFF" : "#041016") : T.txt, fontSize: 11.5, fontWeight: btn.primary ? 600 : 500,
+                  fontFamily: font, cursor: sending ? "default" : "pointer"
+                }}>{btn.label}</button>
             ))}
           </div>
         )}
-        {time && (
-          <span style={{ display: "block", marginTop: 5, fontSize: 10.5, opacity: 0.65, textAlign: "right" }}>{time}</span>
-        )}
+        {time && <span style={{ display: "block", marginTop: 3, fontSize: 10, opacity: 0.55, textAlign: "right" }}>{time}</span>}
       </div>
     </div>
   );
 }
 
+/* ── Indicador de escritura ── */
 function Typing({ T, aiBg, aiBd }) {
   return (
-    <div style={{ display: "flex", justifyContent: "flex-start", gap: 10, alignItems: "flex-end" }}>
-      <div style={{ width: 30, height: 30, borderRadius: 10, background: `${T.accent}18`, border: `1px solid ${T.accent}33`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginBottom: 2 }}>
-        <Sparkles size={16} color={T.accent} strokeWidth={2.1} />
+    <div style={{ display: "flex", justifyContent: "flex-start", gap: 8, alignItems: "flex-end" }}>
+      <div style={{ width: 24, height: 24, borderRadius: 7, background: `${T.accent}15`, border: `1px solid ${T.accent}28`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginBottom: 2 }}>
+        <Sparkles size={13} color={T.accent} strokeWidth={2} />
       </div>
-      <div style={{ padding: "13px 18px", borderRadius: 16, borderBottomLeftRadius: 4, background: aiBg, border: `1px solid ${aiBd}`, display: "flex", gap: 6, alignItems: "center" }}>
+      <div style={{ padding: "10px 14px", borderRadius: 14, borderBottomLeftRadius: 3, background: aiBg, border: `1px solid ${aiBd}`, display: "flex", gap: 5, alignItems: "center" }}>
         {[0, 1, 2].map((i) => (
-          <span key={i} style={{ width: 6, height: 6, borderRadius: "50%", background: T.accent, display: "inline-block", animation: `copilotBlink 1.2s ${i * 0.18}s infinite ease-in-out` }} />
+          <span key={i} style={{ width: 5, height: 5, borderRadius: "50%", background: T.accent, display: "inline-block", animation: `copilotBlink 1.2s ${i * 0.18}s infinite ease-in-out` }} />
         ))}
       </div>
       <style>{`@keyframes copilotBlink { 0%,80%,100%{opacity:.25;transform:translateY(0)} 40%{opacity:1;transform:translateY(-3px)} }`}</style>
@@ -542,21 +460,22 @@ function Typing({ T, aiBg, aiBd }) {
   );
 }
 
+/* ── Estado vacío ── */
 function EmptyState({ T, isLight, onPick }) {
   return (
-    <div style={{ margin: "auto", textAlign: "center", maxWidth: 420, padding: 16 }}>
-      <div style={{ width: 60, height: 60, borderRadius: 18, margin: "0 auto 16px", background: isLight ? "linear-gradient(135deg, #E8F8F4 0%, #D1F2E8 100%)" : "linear-gradient(135deg, rgba(110,231,194,0.18) 0%, rgba(52,211,153,0.10) 100%)", border: `1px solid ${T.accent}3D`, display: "flex", alignItems: "center", justifyContent: "center", boxShadow: `0 8px 24px ${T.accent}25` }}>
-        <Sparkles size={30} color={T.accent} strokeWidth={2} />
+    <div style={{ margin: "auto", textAlign: "center", maxWidth: 340, padding: 12 }}>
+      <div style={{ width: 48, height: 48, borderRadius: 14, margin: "0 auto 12px", background: isLight ? "linear-gradient(135deg, #E8F8F4 0%, #D1F2E8 100%)" : "linear-gradient(135deg, rgba(110,231,194,0.15) 0%, rgba(52,211,153,0.08) 100%)", border: `1px solid ${T.accent}33`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <Sparkles size={24} color={T.accent} strokeWidth={2} />
       </div>
-      <h3 style={{ margin: "0 0 6px", fontSize: 18, fontWeight: 600, color: T.txt, fontFamily: fontDisp }}>Tu Asistente Operativo del CRM</h3>
-      <p style={{ margin: "0 0 20px", fontSize: 13.5, color: T.txt3, lineHeight: 1.55, fontFamily: font }}>
-        Escribile o tocá el micrófono 🎙️ para dictarle por voz. Pedile tus clientes del día, tu agenda, métricas, o buscá a alguien por su nombre.
+      <h3 style={{ margin: "0 0 4px", fontSize: 16, fontWeight: 600, color: T.txt, fontFamily: fontDisp }}>Tu Asistente Operativo</h3>
+      <p style={{ margin: "0 0 14px", fontSize: 12.5, color: T.txt3, lineHeight: 1.5, fontFamily: font }}>
+        Escribile o dictale por voz. Pedile clientes, agenda, métricas, o buscá a alguien por nombre.
       </p>
-      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "center" }}>
+      <div style={{ display: "flex", gap: 6, flexWrap: "wrap", justifyContent: "center" }}>
         {SUGGESTIONS.map((s) => (
           <button key={s.text} type="button" onClick={() => onPick(s.text)}
-            style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 15px", borderRadius: 999, background: isLight ? "#FFFFFF" : "rgba(255,255,255,0.06)", border: `1px solid ${isLight ? "rgba(15,23,42,0.12)" : "rgba(255,255,255,0.14)"}`, color: T.txt2, fontSize: 13, fontFamily: font, cursor: "pointer", transition: "all .16s" }}>
-            <Sparkles size={13} color={T.accent} /> {s.label}
+            style={{ padding: "5px 12px", borderRadius: 999, background: isLight ? "#FFFFFF" : "rgba(255,255,255,0.05)", border: `1px solid ${isLight ? "rgba(15,23,42,0.10)" : "rgba(255,255,255,0.12)"}`, color: T.txt2, fontSize: 12, fontFamily: font, cursor: "pointer" }}>
+            <Sparkles size={11} color={T.accent} style={{ marginRight: 4, verticalAlign: "middle" }} />{s.label}
           </button>
         ))}
       </div>
@@ -564,23 +483,7 @@ function EmptyState({ T, isLight, onPick }) {
   );
 }
 
-function UnpairBtn({ T, onUnpaired }) {
-  const [busy, setBusy] = useState(false);
-  const handle = async () => {
-    if (!confirm("¿Desconectar tu Telegram del asistente?\nDejarás de poder usar el Copilot y el bot hasta reconectar.")) return;
-    setBusy(true);
-    const r = await unpairTelegram();
-    setBusy(false);
-    if (!r.error) onUnpaired();
-  };
-  return (
-    <button type="button" onClick={handle} disabled={busy}
-      style={{ background: "none", border: "none", color: T.txt3, fontSize: 11.5, cursor: busy ? "default" : "pointer", fontFamily: font, opacity: 0.85 }}>
-      {busy ? "Desconectando…" : "Desconectar"}
-    </button>
-  );
-}
-
+/* ── Prompt de conexión (cuando no está pareado) ── */
 function ConnectPrompt({ T, isLight, botUsername, manualPairing, onPaired }) {
   const [busy, setBusy] = useState(false);
   const [code, setCode] = useState(null);
@@ -611,49 +514,48 @@ function ConnectPrompt({ T, isLight, botUsername, manualPairing, onPaired }) {
   };
 
   return (
-    <div style={{ margin: "auto", width: "100%", maxWidth: 480 }}>
-      <G T={T} style={{ padding: 32, textAlign: "center", borderRadius: 20, boxShadow: isLight ? "0 12px 40px rgba(15,23,42,0.08)" : "0 16px 48px rgba(0,0,0,0.4)" }}>
-        <div style={{ width: 62, height: 62, borderRadius: 18, margin: "0 auto 18px", background: isLight ? "linear-gradient(135deg, #E8F8F4 0%, #D1F2E8 100%)" : "linear-gradient(135deg, rgba(110,231,194,0.18) 0%, rgba(52,211,153,0.10) 100%)", border: `1px solid ${T.accent}3D`, display: "flex", alignItems: "center", justifyContent: "center", boxShadow: `0 8px 24px ${T.accent}25` }}>
-          <Bot size={30} color={T.accent} strokeWidth={1.8} />
+    <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
+      <G T={T} style={{ padding: 28, textAlign: "center", borderRadius: 18, maxWidth: 400, width: "100%", boxShadow: isLight ? "0 8px 32px rgba(15,23,42,0.06)" : "0 12px 40px rgba(0,0,0,0.3)" }}>
+        <div style={{ width: 52, height: 52, borderRadius: 14, margin: "0 auto 16px", background: isLight ? "linear-gradient(135deg, #E8F8F4 0%, #D1F2E8 100%)" : "linear-gradient(135deg, rgba(110,231,194,0.15) 0%, rgba(52,211,153,0.08) 100%)", border: `1px solid ${T.accent}33`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <Sparkles size={26} color={T.accent} strokeWidth={2} />
         </div>
-        <h2 style={{ margin: "0 0 8px", fontSize: 21, fontWeight: 600, color: T.txt, fontFamily: fontDisp }}>Activá tu Copilot AI</h2>
-        <p style={{ margin: "0 0 24px", fontSize: 13.8, color: T.txt2, lineHeight: 1.55, fontFamily: font }}>
-          Conectá tu Telegram una sola vez y tendrás a tu asistente operativo del CRM en esta pantalla para chatear o dictarle notas de voz.
+        <h2 style={{ margin: "0 0 6px", fontSize: 19, fontWeight: 600, color: T.txt, fontFamily: fontDisp }}>Activá tu Copilot AI</h2>
+        <p style={{ margin: "0 0 20px", fontSize: 13, color: T.txt2, lineHeight: 1.5, fontFamily: font }}>
+          Conectá tu Telegram una vez y tendrás a tu asistente del CRM en esta pantalla.
         </p>
 
         {!code ? (
           <>
             {!deepLinkMode && (
-              <div style={{ textAlign: "left", margin: "0 auto 20px", maxWidth: 360, fontSize: 13, color: T.txt3, display: "flex", flexDirection: "column", gap: 6, fontFamily: font }}>
+              <div style={{ textAlign: "left", margin: "0 auto 16px", maxWidth: 320, fontSize: 12.5, color: T.txt3, display: "flex", flexDirection: "column", gap: 4, fontFamily: font }}>
                 <span>1. Buscá en Telegram <strong style={{ color: T.txt2 }}>@{botName}</strong> y tocá <strong>/start</strong></span>
-                <span>2. Tocá "Generar código" aquí abajo</span>
+                <span>2. Tocá "Conectar mi Telegram"</span>
                 <span>3. Mandale el código al bot</span>
               </div>
             )}
             <button type="button" onClick={connect} disabled={busy}
-              style={{ display: "inline-flex", alignItems: "center", gap: 9, padding: "13px 28px", borderRadius: 14, background: busy ? `${T.accent}44` : T.accent, border: "none", color: isLight ? "#FFF" : "#041016", fontSize: 15, fontWeight: 600, fontFamily: fontDisp, cursor: busy ? "default" : "pointer", boxShadow: `0 6px 20px ${T.accent}40` }}>
-              {busy ? "Conectando…" : (deepLinkMode ? "Conectar mi Telegram" : "Generar código")}
-              {!busy && <ExternalLink size={16} strokeWidth={2.2} />}
+              style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "11px 24px", borderRadius: 12, background: busy ? `${T.accent}44` : T.accent, border: "none", color: isLight ? "#FFF" : "#041016", fontSize: 14, fontWeight: 600, fontFamily: fontDisp, cursor: busy ? "default" : "pointer" }}>
+              {busy ? "Conectando…" : "Conectar mi Telegram"}
             </button>
           </>
         ) : (
           <div>
-            <p style={{ margin: "0 0 10px", fontSize: 11.5, fontWeight: 600, letterSpacing: "0.12em", textTransform: "uppercase", color: T.txt3, fontFamily: fontDisp }}>Tu código de activación</p>
-            <div style={{ padding: "20px 24px", background: `${T.accent}0E`, border: `1px solid ${T.accent}33`, borderRadius: 16, fontSize: "clamp(28px,8vw,40px)", fontWeight: 400, letterSpacing: "0.12em", fontFamily: fontDisp, color: T.txt, fontVariantNumeric: "tabular-nums", marginBottom: 16, boxShadow: `0 4px 16px ${T.accent}15` }}>{code}</div>
-            <p style={{ margin: "0 0 10px", fontSize: 13, color: T.txt2, fontFamily: font }}>Abrí <strong>@{botName}</strong> en Telegram y enviá:</p>
-            <code style={{ display: "block", padding: "12px 14px", background: isLight ? "#F1F5F9" : "rgba(255,255,255,0.05)", border: `1px solid ${T.border}`, borderRadius: 10, fontSize: 14.5, fontFamily: "ui-monospace, SF Mono, Menlo, monospace", color: T.txt }}>/conectar {code}</code>
+            <p style={{ margin: "0 0 8px", fontSize: 11, fontWeight: 600, letterSpacing: "0.10em", textTransform: "uppercase", color: T.txt3, fontFamily: fontDisp }}>Tu código</p>
+            <div style={{ padding: "16px 20px", background: `${T.accent}0C`, border: `1px solid ${T.accent}2A`, borderRadius: 14, fontSize: "clamp(26px,7vw,36px)", fontWeight: 400, letterSpacing: "0.10em", fontFamily: fontDisp, color: T.txt, fontVariantNumeric: "tabular-nums", marginBottom: 14 }}>{code}</div>
+            <p style={{ margin: "0 0 10px", fontSize: 12.5, color: T.txt2, fontFamily: font }}>Enviá a <strong>@{botName}</strong>:</p>
+            <code style={{ display: "block", padding: "10px 12px", background: isLight ? "#F1F5F9" : "rgba(255,255,255,0.04)", border: `1px solid ${T.border}`, borderRadius: 8, fontSize: 14, fontFamily: "ui-monospace, SF Mono, monospace", color: T.txt }}>/conectar {code}</code>
             {botUsername && (
               <button type="button" onClick={() => window.open(`https://t.me/${botUsername}?start=${code}`, "_blank", "noopener,noreferrer")}
-                style={{ display: "inline-flex", alignItems: "center", gap: 8, marginTop: 14, padding: "10px 16px", borderRadius: 12, background: "transparent", border: `1px solid ${T.accent}40`, color: T.txt, fontSize: 13, fontWeight: 500, fontFamily: fontDisp, cursor: "pointer" }}>
-                <Send size={14} strokeWidth={2.2} /> Abrir el bot en Telegram
+                style={{ display: "inline-flex", alignItems: "center", gap: 6, marginTop: 12, padding: "8px 14px", borderRadius: 10, background: "transparent", border: `1px solid ${T.accent}33`, color: T.txt, fontSize: 12.5, fontWeight: 500, fontFamily: fontDisp, cursor: "pointer" }}>
+                <Send size={13} strokeWidth={2} /> Abrir en Telegram
               </button>
             )}
-            <p style={{ margin: "14px 0 0", fontSize: 11.5, color: T.txt3, fontFamily: font }}>Esta pantalla se activará sola en cuanto el bot reciba el código.</p>
+            <p style={{ margin: "12px 0 0", fontSize: 11, color: T.txt3, fontFamily: font }}>Esta pantalla se activa sola al conectar.</p>
           </div>
         )}
 
         {err && (
-          <div style={{ marginTop: 18, padding: "12px 14px", background: isLight ? "rgba(225,29,72,0.08)" : "rgba(248,113,113,0.10)", border: `1px solid ${isLight ? "rgba(225,29,72,0.28)" : "rgba(248,113,113,0.28)"}`, borderRadius: 12, fontSize: 12.5, color: isLight ? "#B91C3A" : "#FCA5A5", fontFamily: font }}>{err}</div>
+          <div style={{ marginTop: 16, padding: "10px 12px", background: isLight ? "rgba(225,29,72,0.06)" : "rgba(248,113,113,0.08)", border: `1px solid ${isLight ? "rgba(225,29,72,0.22)" : "rgba(248,113,113,0.22)"}`, borderRadius: 10, fontSize: 12, color: isLight ? "#B91C3A" : "#FCA5A5", fontFamily: font }}>{err}</div>
         )}
       </G>
     </div>
