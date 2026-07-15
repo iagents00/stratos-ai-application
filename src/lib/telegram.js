@@ -124,11 +124,14 @@ const N8N_TELEGRAM_BOT_WEBHOOK = "https://personal-n8n.suwsiw.easypanel.host/web
 
 /**
  * COPILOT — envía un mensaje al asistente (mismo cerebro que el bot de Telegram).
- * El RPC copilot_send resuelve comandos rápidos deterministas (mis clientes, agenda,
- * kpis, pipeline, menu). Si el texto es libre, NLU, audios o preguntas complejas
- * (ej. manual de ventas, recomendaciones, crear cliente, confirmar), derivamos
- * al webhook de n8n (@Strato_sasistente_crm_bot) y consultamos vía getCopilotActivity
- * para eliminar el error "No conozco esa accion" y evitar errores 400/CORS.
+ *
+ * Flujo CORREGIDO (15-jul): en vez de mandar texto libre a n8n (que apuntaba a
+ * gvintell-prod en vez de stratos-prod), llamamos SIEMPRE a copilot_send —
+ * el RPC en stratos-prod que envuelve bot_nlu_dispatch_gvintell con el chat_id
+ * correcto y maneja TODAS las acciones del CRM igual que el bot de Telegram.
+ *
+ * Para notas de voz: el audio se manda al webhook de n8n para transcripción
+ * (Whisper), y el texto transcrito se procesa igual por copilot_send.
  *
  * @param {string} text
  * @returns {Promise<{ reply: string|null, error: string|null }>}
@@ -141,6 +144,7 @@ export async function sendCopilotMessage(text) {
     const { data: { session } } = await withTimeout(supabase.auth.getSession(), GETSESSION_TIMEOUT, 'getSession');
     if (!session?.user?.id) return { reply: "Sesión expirada.", error: null };
 
+    // Verificar que el usuario tenga Telegram vinculado
     const { data: profile } = await supabase
       .from('profiles')
       .select('telegram_chat_id')
@@ -148,77 +152,18 @@ export async function sendCopilotMessage(text) {
       .single();
 
     if (!profile?.telegram_chat_id) return { reply: null, error: 'not_paired' };
-    const chatId = Number(profile.telegram_chat_id);
 
-    // Lista estricta de comandos deterministas que sí maneja copilot_send sin LLM
-    const QUICK_COMMANDS = [
-      'mis clientes', 'qué tengo hoy', 'que tengo hoy', 'cómo voy', 'como voy',
-      'pipeline', 'menú', 'menu', 'kpis', 'agenda', 'buscar', 'ayuda'
-    ];
-    const isQuick = QUICK_COMMANDS.includes(cleanText.toLowerCase()) ||
-                    /^buscar\s+[a-z0-9\s]{2,18}$/i.test(cleanText);
+    // Llamar a copilot_send para TODOS los textos — el RPC ya maneja:
+    // menú, mis clientes, agenda, kpis, pipeline, buscar, crear cliente,
+    // cambiar etapa, próxima acción, documentos, agenda personal, y
+    // cualquier texto libre (lo routea al core dispatch con LLM en n8n).
+    const { data, error } = await supabase.rpc('copilot_send', { p_text: cleanText });
 
-    if (isQuick) {
-      const { data, error } = await supabase.rpc('copilot_send', { p_text: cleanText });
-      if (error) return { reply: null, error: error.message };
-      if (data === '__NOT_PAIRED__') return { reply: null, error: 'not_paired' };
-      const replyText = typeof data === 'string' ? data : '';
-      if (replyText && !replyText.toLowerCase().includes('no conozco esa accion') && !replyText.toLowerCase().includes('no conozco esa acción')) {
-        return { reply: replyText, error: null };
-      }
-    } else {
-      // No llamamos a copilot_send para textos libres o comandos de IA porque SQL respondería
-      // automáticamente "No conozco esa acción". Dejamos que el cerebro IA de n8n procese el texto y responda.
-    }
+    if (error) return { reply: null, error: error.message };
+    if (data === '__NOT_PAIRED__') return { reply: null, error: 'not_paired' };
 
-    // Disparamos el webhook del cerebro de IA en n8n enviando el JSON completo (`chat_id`, `text`).
-    try {
-      await fetch(N8N_TELEGRAM_BOT_WEBHOOK, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          message: {
-            from: { id: chatId },
-            chat: { id: chatId },
-            text: cleanText
-          },
-          chat_id: chatId,
-          text: cleanText,
-          original_type: "text"
-        })
-      });
-    } catch {
-      // Si en algún entorno el navegador impide JSON por CORS preflight, fallback a no-cors text/plain
-      try {
-        await fetch(N8N_TELEGRAM_BOT_WEBHOOK, {
-          method: 'POST',
-          mode: 'no-cors',
-          headers: { 'Content-Type': 'text/plain;charset=UTF-8' },
-          body: JSON.stringify({
-            message: { from: { id: chatId }, chat: { id: chatId }, text: cleanText },
-            chat_id: chatId,
-            text: cleanText,
-            original_type: "text"
-          })
-        });
-      } catch { /* noop */ }
-    }
-
-    // Polling inteligente consultando vía RPC getCopilotActivity (Cero error 400, hasta 10 segundos para el LLM)
-    for (let attempt = 0; attempt < 12; attempt++) {
-      await new Promise(r => setTimeout(r, 800));
-      const { messages: recentList } = await getCopilotActivity(6);
-      if (Array.isArray(recentList) && recentList.length > 0) {
-        const newestAi = recentList.find(m => m.role === 'ai');
-        if (newestAi && newestAi.content && !newestAi.content.toLowerCase().includes('no conozco esa accion') && !newestAi.content.toLowerCase().includes('no conozco esa acción')) {
-          return { reply: newestAi.content, error: null };
-        }
-      }
-    }
-
-    // Si la operación o generación de plan de IA es extensa, informamos que ya se está ejecutando
-    const progressMsg = "⚡ Procesando tu instrucción con el asistente IA en la nube (la respuesta aparecerá aquí y en Telegram en unos segundos)...";
-    return { reply: progressMsg, error: null };
+    const replyText = typeof data === 'string' ? data : '';
+    return { reply: replyText || 'Procesando…', error: null };
   } catch (e) {
     return { reply: null, error: e?.message || 'Error de conexión' };
   }
