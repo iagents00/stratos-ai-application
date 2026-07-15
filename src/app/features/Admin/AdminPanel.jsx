@@ -18,9 +18,15 @@ import { G } from "../../SharedComponents";
 import { ROLE_META, RoleBadge } from "./RoleBadge";
 import { useIsMobile } from "../../../hooks/useViewport";
 
-export default function AdminPanel() {
+export default function AdminPanel({ T = P, isLight: isLightProp }) {
   const { user: me } = useAuth();
   const isMobile = useIsMobile();
+  // Tema activo: recibe la paleta `T` (P oscuro / LP claro) del shell, igual que
+  // el resto de las vistas. En claro los nombres/textos usan T.txt (antes eran
+  // "#FFFFFF" hardcodeado → invisibles sobre el lienzo claro). Fallback a T.
+  const isLight = isLightProp ?? (T !== P);
+  const wTxt = isLight ? T.txt : "#FFFFFF";           // texto fuerte (nombres, títulos)
+  const cardBg = isLight ? T.surface : "#111318";     // fondo de modales/opciones
   // BUG-FIX: adminGetAllUsers() es async (devuelve Promise). Antes lo
   // pasabamos crudo a useState con useState(() => adminGetAllUsers()), lo
   // que dejaba a `users` como una Promise. Cuando users.filter(...) corria
@@ -155,7 +161,7 @@ export default function AdminPanel() {
 
   const inputStyle = {
     width: "100%", height: 40, padding: "0 14px", borderRadius: 11,
-    background: P.glass, border: `1px solid ${P.border}`, color: P.txt,
+    background: T.glass, border: `1px solid ${T.border}`, color: T.txt,
     fontSize: 13, outline: "none", fontFamily: font, boxSizing: "border-box",
     transition: "border-color 0.2s",
   };
@@ -167,10 +173,10 @@ export default function AdminPanel() {
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 12 }}>
         <div>
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4, flexWrap: "wrap" }}>
-            <h2 style={{ fontSize: isMobile ? 18 : 20, fontWeight: 500, color: "#FFFFFF", fontFamily: fontDisp, letterSpacing: "-0.025em", margin: 0 }}>Gestión de Usuarios</h2>
-            <span style={{ fontSize: 10, fontWeight: 500, color: P.txt3, background: P.glass, border: `1px solid ${P.border}`, padding: "3px 9px", borderRadius: 99, letterSpacing: "0.06em" }}>{users.length} usuarios</span>
+            <h2 style={{ fontSize: isMobile ? 18 : 20, fontWeight: 500, color: wTxt, fontFamily: fontDisp, letterSpacing: "-0.025em", margin: 0 }}>Gestión de Usuarios</h2>
+            <span style={{ fontSize: 10, fontWeight: 500, color: T.txt3, background: T.glass, border: `1px solid ${T.border}`, padding: "3px 9px", borderRadius: 99, letterSpacing: "0.06em" }}>{users.length} usuarios</span>
           </div>
-          <p style={{ fontSize: 11.5, color: P.txt3, margin: 0 }}>
+          <p style={{ fontSize: 11.5, color: T.txt3, margin: 0 }}>
             {users.filter(u => u.isActive !== false).length} activos · {users.filter(u => u.isActive === false).length} inactivos
           </p>
         </div>
@@ -185,13 +191,13 @@ export default function AdminPanel() {
               style={{
                 flex: isMobile ? 1 : "none", justifyContent: "center", whiteSpace: "nowrap",
                 display: "flex", alignItems: "center", gap: 7, padding: "10px 18px",
-                borderRadius: 11, background: P.glass,
-                border: `1px solid ${P.border}`, color: P.txt2, fontSize: 12.5, fontWeight: 400,
+                borderRadius: 11, background: T.glass,
+                border: `1px solid ${T.border}`, color: T.txt2, fontSize: 12.5, fontWeight: 400,
                 fontFamily: font, cursor: backupState.loading ? "wait" : "pointer",
                 transition: "all 0.2s", opacity: backupState.loading ? 0.7 : 1,
               }}
-              onMouseEnter={e => { if (!backupState.loading) { e.currentTarget.style.borderColor = P.borderH; e.currentTarget.style.color = P.txt; } }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = P.border; e.currentTarget.style.color = P.txt2; }}
+              onMouseEnter={e => { if (!backupState.loading) { e.currentTarget.style.borderColor = T.borderH; e.currentTarget.style.color = T.txt; } }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.color = T.txt2; }}
             >
               <Download size={13} /> {backupState.loading ? "Generando..." : "Descargar respaldo"}
             </button>
@@ -199,7 +205,7 @@ export default function AdminPanel() {
               flex: isMobile ? 1 : "none", justifyContent: "center", whiteSpace: "nowrap",
               display: "flex", alignItems: "center", gap: 7, padding: "10px 20px",
               borderRadius: 11, background: "linear-gradient(135deg, rgba(110,231,194,0.16), rgba(110,231,194,0.07))",
-              border: `1px solid ${P.accentB}`, color: P.accent, fontSize: 12.5, fontWeight: 500,
+              border: `1px solid ${T.accentB}`, color: T.accent, fontSize: 12.5, fontWeight: 500,
               fontFamily: fontDisp, cursor: "pointer", transition: "all 0.2s",
             }}
               onMouseEnter={e => { e.currentTarget.style.background = "linear-gradient(135deg, rgba(110,231,194,0.24), rgba(110,231,194,0.12))"; }}
@@ -213,9 +219,9 @@ export default function AdminPanel() {
       {backupState.msg && (
         <div style={{
           padding: "10px 16px", borderRadius: 10, fontSize: 12.5,
-          background: backupState.isError ? `${P.rose}0E` : `${P.emerald}0E`,
-          border: `1px solid ${backupState.isError ? `${P.rose}30` : `${P.emerald}30`}`,
-          color: backupState.isError ? P.rose : P.emerald, fontFamily: font,
+          background: backupState.isError ? `${T.rose}0E` : `${T.emerald}0E`,
+          border: `1px solid ${backupState.isError ? `${T.rose}30` : `${T.emerald}30`}`,
+          color: backupState.isError ? T.rose : T.emerald, fontFamily: font,
         }}>
           {backupState.msg}
         </div>
@@ -227,48 +233,48 @@ export default function AdminPanel() {
           <div key={s.key} onClick={() => setRoleFilter(roleFilter === s.key ? "ALL" : s.key)}
             style={{
               display: "flex", alignItems: "center", gap: 9, padding: "10px 16px",
-              borderRadius: 12, background: roleFilter === s.key ? `${s.color}10` : P.glass,
-              border: `1px solid ${roleFilter === s.key ? `${s.color}35` : P.border}`,
+              borderRadius: 12, background: roleFilter === s.key ? `${s.color}10` : T.glass,
+              border: `1px solid ${roleFilter === s.key ? `${s.color}35` : T.border}`,
               cursor: "pointer", transition: "all 0.18s",
             }}
-            onMouseEnter={e => { if (roleFilter !== s.key) e.currentTarget.style.borderColor = P.borderH; }}
-            onMouseLeave={e => { if (roleFilter !== s.key) e.currentTarget.style.borderColor = P.border; }}
+            onMouseEnter={e => { if (roleFilter !== s.key) e.currentTarget.style.borderColor = T.borderH; }}
+            onMouseLeave={e => { if (roleFilter !== s.key) e.currentTarget.style.borderColor = T.border; }}
           >
             <div style={{ width: 8, height: 8, borderRadius: "50%", background: s.color, flexShrink: 0 }} />
-            <span style={{ fontSize: 11, fontWeight: 400, color: roleFilter === s.key ? s.color : P.txt2 }}>{s.label}</span>
-            <span style={{ fontSize: 15, fontWeight: 500, color: roleFilter === s.key ? s.color : "#FFFFFF", fontFamily: fontDisp }}>{s.count}</span>
+            <span style={{ fontSize: 11, fontWeight: 400, color: roleFilter === s.key ? s.color : T.txt2 }}>{s.label}</span>
+            <span style={{ fontSize: 15, fontWeight: 500, color: roleFilter === s.key ? s.color : wTxt, fontFamily: fontDisp }}>{s.count}</span>
           </div>
         ))}
       </div>
 
       {/* ── Toolbar ── */}
-      <G np>
-        <div style={{ padding: "12px 18px", borderBottom: `1px solid ${P.border}`, display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+      <G np T={T}>
+        <div style={{ padding: "12px 18px", borderBottom: `1px solid ${T.border}`, display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
           <div style={{ position: "relative", flex: 1, minWidth: 160, maxWidth: 300 }}>
-            <Search size={12} style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", color: P.txt3, pointerEvents: "none" }} />
+            <Search size={12} style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", color: T.txt3, pointerEvents: "none" }} />
             <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Buscar nombre o email…"
               style={{ ...inputStyle, paddingLeft: 30, height: 34, fontSize: 12 }}
-              onFocus={e => e.target.style.borderColor = P.accentB}
-              onBlur={e => e.target.style.borderColor = P.border}
+              onFocus={e => e.target.style.borderColor = T.accentB}
+              onBlur={e => e.target.style.borderColor = T.border}
             />
           </div>
-          <select value={roleFilter} onChange={e => setRoleFilter(e.target.value)} style={{ height: 34, padding: "0 12px", borderRadius: 9, background: P.glass, border: `1px solid ${P.border}`, fontSize: 11, color: P.txt3, cursor: "pointer", outline: "none", fontFamily: font }}>
+          <select value={roleFilter} onChange={e => setRoleFilter(e.target.value)} style={{ height: 34, padding: "0 12px", borderRadius: 9, background: T.glass, border: `1px solid ${T.border}`, fontSize: 11, color: T.txt3, cursor: "pointer", outline: "none", fontFamily: font }}>
             <option value="ALL">Todos los roles</option>
-            {Object.entries(ROLE_META).map(([k, m]) => <option key={k} value={k} style={{ background: "#111318" }}>{m.label}</option>)}
+            {Object.entries(ROLE_META).map(([k, m]) => <option key={k} value={k} style={{ background: cardBg }}>{m.label}</option>)}
           </select>
           {(search || roleFilter !== "ALL") && (
-            <button onClick={() => { setSearch(""); setRoleFilter("ALL"); }} style={{ height: 34, padding: "0 12px", borderRadius: 9, background: `${P.rose}0C`, border: `1px solid ${P.rose}28`, color: P.rose, fontSize: 11, fontWeight: 400, cursor: "pointer", fontFamily: font, display: "flex", alignItems: "center", gap: 5 }}>
+            <button onClick={() => { setSearch(""); setRoleFilter("ALL"); }} style={{ height: 34, padding: "0 12px", borderRadius: 9, background: `${T.rose}0C`, border: `1px solid ${T.rose}28`, color: T.rose, fontSize: 11, fontWeight: 400, cursor: "pointer", fontFamily: font, display: "flex", alignItems: "center", gap: 5 }}>
               <X size={11} /> Limpiar
             </button>
           )}
-          <span style={{ marginLeft: "auto", fontSize: 11, color: P.txt3 }}>{filtered.length} resultado{filtered.length !== 1 ? "s" : ""}</span>
+          <span style={{ marginLeft: "auto", fontSize: 11, color: T.txt3 }}>{filtered.length} resultado{filtered.length !== 1 ? "s" : ""}</span>
         </div>
 
         {/* ── Table header — solo desktop (en móvil las filas son tarjetas) ── */}
         {!isMobile && (
-          <div style={{ display: "grid", gridTemplateColumns: "2.2fr 2fr 1fr 1fr 100px", gap: 0, padding: "9px 20px", borderBottom: `1px solid ${P.border}` }}>
+          <div style={{ display: "grid", gridTemplateColumns: "2.2fr 2fr 1fr 1fr 100px", gap: 0, padding: "9px 20px", borderBottom: `1px solid ${T.border}` }}>
             {["Usuario", "Email", "Rol", "Estado", "Acciones"].map((h, i) => (
-              <span key={h} style={{ fontSize: 9, fontWeight: 500, color: P.txt3, letterSpacing: "0.08em", textTransform: "uppercase", textAlign: i === 4 ? "center" : "left" }}>{h}</span>
+              <span key={h} style={{ fontSize: 9, fontWeight: 500, color: T.txt3, letterSpacing: "0.08em", textTransform: "uppercase", textAlign: i === 4 ? "center" : "left" }}>{h}</span>
             ))}
           </div>
         )}
@@ -277,11 +283,11 @@ export default function AdminPanel() {
         <div style={{ overflowY: "auto", maxHeight: "calc(100vh - 380px)" }}>
           {filtered.length === 0 && (
             <div style={{ padding: "48px 0", textAlign: "center" }}>
-              <p style={{ fontSize: 13, color: P.txt3 }}>No se encontraron usuarios.</p>
+              <p style={{ fontSize: 13, color: T.txt3 }}>No se encontraron usuarios.</p>
             </div>
           )}
           {filtered.map((u, idx) => {
-            const m = ROLE_META[u.role] || { label: u.role, color: P.txt3 };
+            const m = ROLE_META[u.role] || { label: u.role, color: T.txt3 };
             const active = u.isActive !== false;
             const isMe = u.id === me?.id;
             const canEdit = canManage && (isSuper || (ROLE_META[u.role]?.level ?? 99) > (ROLE_META[me?.role]?.level ?? 0));
@@ -292,47 +298,47 @@ export default function AdminPanel() {
                móvil (mismo comportamiento, distinto layout). */
             const actionBtns = canEdit ? (
               <>
-                <button onClick={() => openEdit(u)} title="Editar usuario" style={{ width: 28, height: 28, borderRadius: 8, border: `1px solid ${P.border}`, background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.15s" }}
+                <button onClick={() => openEdit(u)} title="Editar usuario" style={{ width: 28, height: 28, borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.15s" }}
                   onMouseEnter={e => { e.currentTarget.style.background = "rgba(126,184,240,0.1)"; e.currentTarget.style.borderColor = "rgba(126,184,240,0.35)"; }}
-                  onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = P.border; }}
-                ><User size={12} color={P.blue} /></button>
-                <button onClick={() => handleToggleActive(u)} title={active ? "Desactivar" : "Activar"} style={{ width: 28, height: 28, borderRadius: 8, border: `1px solid ${P.border}`, background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.15s" }}
+                  onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = T.border; }}
+                ><User size={12} color={T.blue} /></button>
+                <button onClick={() => handleToggleActive(u)} title={active ? "Desactivar" : "Activar"} style={{ width: 28, height: 28, borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.15s" }}
                   onMouseEnter={e => { e.currentTarget.style.background = active ? "rgba(232,129,140,0.1)" : "rgba(110,231,194,0.1)"; e.currentTarget.style.borderColor = active ? "rgba(232,129,140,0.35)" : "rgba(110,231,194,0.35)"; }}
-                  onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = P.border; }}
-                >{active ? <X size={12} color={P.rose} /> : <CheckCircle2 size={12} color={P.emerald} />}</button>
+                  onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = T.border; }}
+                >{active ? <X size={12} color={T.rose} /> : <CheckCircle2 size={12} color={T.emerald} />}</button>
                 {!isMe && (
-                  <button onClick={() => setDeleteConfirm(u.id)} title="Eliminar usuario" style={{ width: 28, height: 28, borderRadius: 8, border: `1px solid ${P.border}`, background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.15s" }}
+                  <button onClick={() => setDeleteConfirm(u.id)} title="Eliminar usuario" style={{ width: 28, height: 28, borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.15s" }}
                     onMouseEnter={e => { e.currentTarget.style.background = "rgba(232,129,140,0.1)"; e.currentTarget.style.borderColor = "rgba(232,129,140,0.35)"; }}
-                    onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = P.border; }}
-                  ><Trash2 size={12} color={P.rose} /></button>
+                    onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = T.border; }}
+                  ><Trash2 size={12} color={T.rose} /></button>
                 )}
               </>
             ) : (
-              <span style={{ fontSize: 10, color: P.txt3, fontStyle: "italic" }}>—</span>
+              <span style={{ fontSize: 10, color: T.txt3, fontStyle: "italic" }}>—</span>
             );
 
             /* ── Tarjeta MÓVIL: la grilla de 5 columnas no entra en 360px —
                avatar+nombre+acciones arriba, email debajo, rol+estado al pie. */
             if (isMobile) return (
-              <div key={u.id} style={{ padding: "13px 14px", borderBottom: idx < filtered.length - 1 ? `1px solid ${P.border}` : "none", display: "flex", flexDirection: "column", gap: 9 }}>
+              <div key={u.id} style={{ padding: "13px 14px", borderBottom: idx < filtered.length - 1 ? `1px solid ${T.border}` : "none", display: "flex", flexDirection: "column", gap: 9 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 11 }}>
                   <div style={{ width: 34, height: 34, borderRadius: 10, background: `${ac}18`, border: `1.5px solid ${ac}30`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 500, color: ac, fontFamily: fontDisp, flexShrink: 0 }}>{initials}</div>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <p style={{ fontSize: 13, fontWeight: 400, color: active ? "#FFFFFF" : P.txt3, fontFamily: fontDisp, letterSpacing: "-0.01em", margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    <p style={{ fontSize: 13, fontWeight: 400, color: active ? wTxt : T.txt3, fontFamily: fontDisp, letterSpacing: "-0.01em", margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                       {u.name}
-                      {isMe && <span style={{ fontSize: 9, color: P.accent, fontWeight: 500, marginLeft: 7, background: `${P.accent}12`, border: `1px solid ${P.accentB}`, padding: "1px 7px", borderRadius: 99 }}>Tú</span>}
+                      {isMe && <span style={{ fontSize: 9, color: T.accent, fontWeight: 500, marginLeft: 7, background: `${T.accent}12`, border: `1px solid ${T.accentB}`, padding: "1px 7px", borderRadius: 99 }}>Tú</span>}
                     </p>
-                    <p style={{ fontSize: 11, color: active ? P.txt2 : P.txt3, fontFamily: font, margin: "2px 0 0", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{u.email}</p>
+                    <p style={{ fontSize: 11, color: active ? T.txt2 : T.txt3, fontFamily: font, margin: "2px 0 0", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{u.email}</p>
                   </div>
                   <div style={{ display: "flex", gap: 5, flexShrink: 0 }}>{actionBtns}</div>
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
                   <RoleBadge role={u.role} />
                   <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                    <div style={{ width: 7, height: 7, borderRadius: "50%", background: active ? P.emerald : P.txt3, boxShadow: active ? `0 0 6px ${P.emerald}80` : "none" }} />
-                    <span style={{ fontSize: 11, color: active ? P.txt2 : P.txt3, fontWeight: active ? 600 : 400 }}>{active ? "Activo" : "Inactivo"}</span>
+                    <div style={{ width: 7, height: 7, borderRadius: "50%", background: active ? T.emerald : T.txt3, boxShadow: active ? `0 0 6px ${T.emerald}80` : "none" }} />
+                    <span style={{ fontSize: 11, color: active ? T.txt2 : T.txt3, fontWeight: active ? 600 : 400 }}>{active ? "Activo" : "Inactivo"}</span>
                   </div>
-                  <span style={{ fontSize: 10.5, color: P.txt3, marginLeft: "auto" }}>ID #{u.id}</span>
+                  <span style={{ fontSize: 10.5, color: T.txt3, marginLeft: "auto" }}>ID #{u.id}</span>
                 </div>
               </div>
             );
@@ -340,34 +346,34 @@ export default function AdminPanel() {
             return (
               <div key={u.id} style={{
                 display: "grid", gridTemplateColumns: "2.2fr 2fr 1fr 1fr 100px",
-                padding: "13px 20px", borderBottom: idx < filtered.length - 1 ? `1px solid ${P.border}` : "none",
+                padding: "13px 20px", borderBottom: idx < filtered.length - 1 ? `1px solid ${T.border}` : "none",
                 background: "transparent", transition: "background 0.15s", alignItems: "center",
               }}
-                onMouseEnter={e => e.currentTarget.style.background = P.glass}
+                onMouseEnter={e => e.currentTarget.style.background = isLight ? "rgba(15,23,42,0.035)" : T.glass}
                 onMouseLeave={e => e.currentTarget.style.background = "transparent"}
               >
                 {/* Name + avatar */}
                 <div style={{ display: "flex", alignItems: "center", gap: 11 }}>
                   <div style={{ width: 34, height: 34, borderRadius: 10, background: `${ac}18`, border: `1.5px solid ${ac}30`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 500, color: ac, fontFamily: fontDisp, flexShrink: 0 }}>{initials}</div>
                   <div>
-                    <p style={{ fontSize: 13, fontWeight: 400, color: active ? "#FFFFFF" : P.txt3, fontFamily: fontDisp, letterSpacing: "-0.01em" }}>
+                    <p style={{ fontSize: 13, fontWeight: 400, color: active ? wTxt : T.txt3, fontFamily: fontDisp, letterSpacing: "-0.01em" }}>
                       {u.name}
-                      {isMe && <span style={{ fontSize: 9, color: P.accent, fontWeight: 500, marginLeft: 7, background: `${P.accent}12`, border: `1px solid ${P.accentB}`, padding: "1px 7px", borderRadius: 99 }}>Tú</span>}
+                      {isMe && <span style={{ fontSize: 9, color: T.accent, fontWeight: 500, marginLeft: 7, background: `${T.accent}12`, border: `1px solid ${T.accentB}`, padding: "1px 7px", borderRadius: 99 }}>Tú</span>}
                     </p>
-                    <p style={{ fontSize: 10.5, color: P.txt3, marginTop: 1 }}>ID #{u.id}</p>
+                    <p style={{ fontSize: 10.5, color: T.txt3, marginTop: 1 }}>ID #{u.id}</p>
                   </div>
                 </div>
 
                 {/* Email */}
-                <span style={{ fontSize: 12, color: active ? P.txt2 : P.txt3, fontFamily: font, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", paddingRight: 12 }}>{u.email}</span>
+                <span style={{ fontSize: 12, color: active ? T.txt2 : T.txt3, fontFamily: font, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", paddingRight: 12 }}>{u.email}</span>
 
                 {/* Role */}
                 <RoleBadge role={u.role} />
 
                 {/* Status */}
                 <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
-                  <div style={{ width: 7, height: 7, borderRadius: "50%", background: active ? P.emerald : P.txt3, boxShadow: active ? `0 0 6px ${P.emerald}80` : "none" }} />
-                  <span style={{ fontSize: 11, color: active ? P.txt2 : P.txt3, fontWeight: active ? 600 : 400 }}>{active ? "Activo" : "Inactivo"}</span>
+                  <div style={{ width: 7, height: 7, borderRadius: "50%", background: active ? T.emerald : T.txt3, boxShadow: active ? `0 0 6px ${T.emerald}80` : "none" }} />
+                  <span style={{ fontSize: 11, color: active ? T.txt2 : T.txt3, fontWeight: active ? 600 : 400 }}>{active ? "Activo" : "Inactivo"}</span>
                 </div>
 
                 {/* Actions */}
@@ -382,17 +388,17 @@ export default function AdminPanel() {
       {deleteConfirm !== null && createPortal(
         <>
           <div onClick={() => setDeleteConfirm(null)} style={{ position: "fixed", inset: 0, background: "rgba(2,5,12,0.78)", backdropFilter: "blur(8px)", zIndex: 500 }} />
-          <div style={{ position: "fixed", top: "50%", left: "50%", transform: "translate(-50%,-50%)", zIndex: 501, width: "min(400px, 92vw)", background: "#111318", border: `1px solid ${P.rose}30`, borderRadius: 20, boxShadow: "0 32px 64px rgba(0,0,0,0.7)", padding: "26px 28px", animation: "fadeIn 0.2s ease" }}>
-            <div style={{ width: 44, height: 44, borderRadius: 12, background: `${P.rose}12`, border: `1px solid ${P.rose}28`, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 16 }}>
-              <Trash2 size={20} color={P.rose} />
+          <div style={{ position: "fixed", top: "50%", left: "50%", transform: "translate(-50%,-50%)", zIndex: 501, width: "min(400px, 92vw)", background: cardBg, border: `1px solid ${T.rose}30`, borderRadius: 20, boxShadow: isLight ? T.shadow3 : "0 32px 64px rgba(0,0,0,0.7)", padding: "26px 28px", animation: "fadeIn 0.2s ease" }}>
+            <div style={{ width: 44, height: 44, borderRadius: 12, background: `${T.rose}12`, border: `1px solid ${T.rose}28`, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 16 }}>
+              <Trash2 size={20} color={T.rose} />
             </div>
-            <p style={{ fontSize: 15, fontWeight: 500, color: "#FFFFFF", fontFamily: fontDisp, marginBottom: 8 }}>¿Eliminar usuario?</p>
-            <p style={{ fontSize: 12.5, color: P.txt3, lineHeight: 1.6, marginBottom: 22 }}>
+            <p style={{ fontSize: 15, fontWeight: 500, color: wTxt, fontFamily: fontDisp, marginBottom: 8 }}>¿Eliminar usuario?</p>
+            <p style={{ fontSize: 12.5, color: T.txt3, lineHeight: 1.6, marginBottom: 22 }}>
               Esta acción es permanente. El usuario perderá acceso inmediatamente y no podrá recuperarse.
             </p>
             <div style={{ display: "flex", gap: 10 }}>
-              <button onClick={() => setDeleteConfirm(null)} style={{ flex: 1, height: 40, borderRadius: 10, background: "transparent", border: `1px solid ${P.border}`, color: P.txt3, fontSize: 13, fontWeight: 400, cursor: "pointer", fontFamily: font }}>Cancelar</button>
-              <button onClick={() => handleDelete(deleteConfirm)} style={{ flex: 1, height: 40, borderRadius: 10, background: `${P.rose}14`, border: `1px solid ${P.rose}35`, color: P.rose, fontSize: 13, fontWeight: 500, cursor: "pointer", fontFamily: fontDisp }}>Eliminar</button>
+              <button onClick={() => setDeleteConfirm(null)} style={{ flex: 1, height: 40, borderRadius: 10, background: "transparent", border: `1px solid ${T.border}`, color: T.txt3, fontSize: 13, fontWeight: 400, cursor: "pointer", fontFamily: font }}>Cancelar</button>
+              <button onClick={() => handleDelete(deleteConfirm)} style={{ flex: 1, height: 40, borderRadius: 10, background: `${T.rose}14`, border: `1px solid ${T.rose}35`, color: T.rose, fontSize: 13, fontWeight: 500, cursor: "pointer", fontFamily: fontDisp }}>Eliminar</button>
             </div>
           </div>
         </>,
@@ -403,51 +409,51 @@ export default function AdminPanel() {
       {modal !== null && createPortal(
         <>
           <div onClick={() => setModal(null)} style={{ position: "fixed", inset: 0, background: "rgba(2,5,12,0.78)", backdropFilter: "blur(8px)", zIndex: 500 }} />
-          <div style={{ position: "fixed", top: "50%", left: "50%", transform: "translate(-50%,-50%)", zIndex: 501, width: "min(500px, 94vw)", maxHeight: "90dvh", overflowY: "auto", background: "#111318", border: `1px solid ${P.borderH}`, borderRadius: 22, boxShadow: "0 48px 96px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.04)", animation: "fadeIn 0.22s ease" }}>
-            <div style={{ height: 3, background: `linear-gradient(90deg, ${P.accent}, ${P.accent}40)`, borderRadius: "22px 22px 0 0" }} />
-            <div style={{ padding: "22px 26px 18px", borderBottom: `1px solid ${P.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div style={{ position: "fixed", top: "50%", left: "50%", transform: "translate(-50%,-50%)", zIndex: 501, width: "min(500px, 94vw)", maxHeight: "90dvh", overflowY: "auto", background: cardBg, border: `1px solid ${T.borderH}`, borderRadius: 22, boxShadow: isLight ? T.shadow3 : "0 48px 96px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.04)", animation: "fadeIn 0.22s ease" }}>
+            <div style={{ height: 3, background: `linear-gradient(90deg, ${T.accent}, ${T.accent}40)`, borderRadius: "22px 22px 0 0" }} />
+            <div style={{ padding: "22px 26px 18px", borderBottom: `1px solid ${T.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <div>
-                <p style={{ fontSize: 16, fontWeight: 500, color: "#FFFFFF", fontFamily: fontDisp, letterSpacing: "-0.02em", marginBottom: 3 }}>
+                <p style={{ fontSize: 16, fontWeight: 500, color: wTxt, fontFamily: fontDisp, letterSpacing: "-0.02em", marginBottom: 3 }}>
                   {modal.mode === "create" ? "Crear Nuevo Usuario" : modal.mode === "reset" ? "Restablecer Contraseña" : `Editar: ${modal.user?.name}`}
                 </p>
-                <p style={{ fontSize: 11, color: P.txt3 }}>
+                <p style={{ fontSize: 11, color: T.txt3 }}>
                   {modal.mode === "create" ? "El usuario podrá iniciar sesión inmediatamente." : modal.mode === "reset" ? "Define una nueva contraseña temporal." : "Modifica los datos y el rol del usuario."}
                 </p>
               </div>
-              <button onClick={() => setModal(null)} style={{ width: 32, height: 32, borderRadius: 9, border: `1px solid ${P.border}`, background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}
-                onMouseEnter={e => e.currentTarget.style.background = P.glass}
+              <button onClick={() => setModal(null)} style={{ width: 32, height: 32, borderRadius: 9, border: `1px solid ${T.border}`, background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}
+                onMouseEnter={e => e.currentTarget.style.background = isLight ? "rgba(15,23,42,0.035)" : T.glass}
                 onMouseLeave={e => e.currentTarget.style.background = "transparent"}
-              ><X size={14} color={P.txt3} /></button>
+              ><X size={14} color={T.txt3} /></button>
             </div>
 
             <div style={{ padding: "22px 26px", display: "flex", flexDirection: "column", gap: 15 }}>
               {modal.mode !== "reset" && (
                 <>
                   <div>
-                    <p style={{ fontSize: 10, fontWeight: 500, color: P.txt3, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 7 }}>Nombre completo <span style={{ color: P.accent }}>*</span></p>
+                    <p style={{ fontSize: 10, fontWeight: 500, color: T.txt3, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 7 }}>Nombre completo <span style={{ color: T.accent }}>*</span></p>
                     <input value={form.name || ""} onChange={e => sf("name")(e.target.value)} placeholder="Ej. María González" style={inputStyle}
-                      onFocus={e => e.target.style.borderColor = P.accentB}
-                      onBlur={e => e.target.style.borderColor = P.border}
+                      onFocus={e => e.target.style.borderColor = T.accentB}
+                      onBlur={e => e.target.style.borderColor = T.border}
                     />
                   </div>
                   <div>
-                    <p style={{ fontSize: 10, fontWeight: 500, color: P.txt3, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 7 }}>Email <span style={{ color: P.accent }}>*</span></p>
+                    <p style={{ fontSize: 10, fontWeight: 500, color: T.txt3, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 7 }}>Email <span style={{ color: T.accent }}>*</span></p>
                     <input value={form.email || ""} onChange={e => sf("email")(e.target.value)} placeholder="maria@stratos.ai" type="email" style={inputStyle}
-                      onFocus={e => e.target.style.borderColor = P.accentB}
-                      onBlur={e => e.target.style.borderColor = P.border}
+                      onFocus={e => e.target.style.borderColor = T.accentB}
+                      onBlur={e => e.target.style.borderColor = T.border}
                     />
                   </div>
                   <div>
-                    <p style={{ fontSize: 10, fontWeight: 500, color: P.txt3, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 7 }}>Rol</p>
+                    <p style={{ fontSize: 10, fontWeight: 500, color: T.txt3, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 7 }}>Rol</p>
                     <select value={form.role || "asesor"} onChange={e => sf("role")(e.target.value)} style={{ ...inputStyle, cursor: "pointer" }}
-                      onFocus={e => e.target.style.borderColor = P.accentB}
-                      onBlur={e => e.target.style.borderColor = P.border}
+                      onFocus={e => e.target.style.borderColor = T.accentB}
+                      onBlur={e => e.target.style.borderColor = T.border}
                     >
                       {availableRoles.map(r => (
-                        <option key={r.key} value={r.key} style={{ background: "#111318" }}>{r.label} — Nivel {r.level}</option>
+                        <option key={r.key} value={r.key} style={{ background: cardBg }}>{r.label} — Nivel {r.level}</option>
                       ))}
                     </select>
-                    <p style={{ fontSize: 10, color: P.txt3, marginTop: 5 }}>
+                    <p style={{ fontSize: 10, color: T.txt3, marginTop: 5 }}>
                       {ROLE_META[form.role]?.level === 1 && "Acceso total al sistema. Puede crear y eliminar cualquier usuario."}
                       {ROLE_META[form.role]?.level === 2 && "Acceso administrativo. Gestiona directores y asesores."}
                       {ROLE_META[form.role]?.level === 3 && "Acceso ejecutivo. Ve KPIs globales y métricas del equipo."}
@@ -460,54 +466,54 @@ export default function AdminPanel() {
 
               {modal.mode === "create" && (
                 <div>
-                  <p style={{ fontSize: 10, fontWeight: 500, color: P.txt3, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 7 }}>Contraseña inicial <span style={{ color: P.accent }}>*</span></p>
+                  <p style={{ fontSize: 10, fontWeight: 500, color: T.txt3, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 7 }}>Contraseña inicial <span style={{ color: T.accent }}>*</span></p>
                   <input value={form.password || ""} onChange={e => sf("password")(e.target.value)} placeholder="Mínimo 6 caracteres" type="password" style={inputStyle}
-                    onFocus={e => e.target.style.borderColor = P.accentB}
-                    onBlur={e => e.target.style.borderColor = P.border}
+                    onFocus={e => e.target.style.borderColor = T.accentB}
+                    onBlur={e => e.target.style.borderColor = T.border}
                   />
                 </div>
               )}
 
               {modal.mode === "reset" && (
                 <div>
-                  <p style={{ fontSize: 10, fontWeight: 500, color: P.txt3, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 7 }}>Nueva contraseña <span style={{ color: P.accent }}>*</span></p>
+                  <p style={{ fontSize: 10, fontWeight: 500, color: T.txt3, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 7 }}>Nueva contraseña <span style={{ color: T.accent }}>*</span></p>
                   <input value={form.password || ""} onChange={e => sf("password")(e.target.value)} placeholder="Nueva contraseña (mín. 6 caracteres)" type="password" style={inputStyle}
-                    onFocus={e => e.target.style.borderColor = P.accentB}
-                    onBlur={e => e.target.style.borderColor = P.border}
+                    onFocus={e => e.target.style.borderColor = T.accentB}
+                    onBlur={e => e.target.style.borderColor = T.border}
                   />
-                  <p style={{ fontSize: 10.5, color: P.txt3, marginTop: 8 }}>Reseteando contraseña para: <span style={{ color: P.txt2 }}>{modal.user?.name}</span></p>
+                  <p style={{ fontSize: 10.5, color: T.txt3, marginTop: 8 }}>Reseteando contraseña para: <span style={{ color: T.txt2 }}>{modal.user?.name}</span></p>
                 </div>
               )}
 
               {modal.mode === "edit" && (
                 <div>
-                  <p style={{ fontSize: 10, fontWeight: 500, color: P.txt3, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 9 }}>Estado de la cuenta</p>
+                  <p style={{ fontSize: 10, fontWeight: 500, color: T.txt3, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 9 }}>Estado de la cuenta</p>
                   <div style={{ display: "flex", gap: 8 }}>
-                    {[{ v: true, label: "Activo", c: P.emerald }, { v: false, label: "Inactivo", c: P.rose }].map(o => (
-                      <button key={String(o.v)} onClick={() => sf("isActive")(o.v)} style={{ flex: 1, padding: "9px 0", borderRadius: 10, cursor: "pointer", fontSize: 12, fontWeight: 400, fontFamily: font, transition: "all 0.18s", background: form.isActive === o.v ? `${o.c}14` : "transparent", border: `1px solid ${form.isActive === o.v ? `${o.c}40` : P.border}`, color: form.isActive === o.v ? o.c : P.txt3 }}>{o.label}</button>
+                    {[{ v: true, label: "Activo", c: T.emerald }, { v: false, label: "Inactivo", c: T.rose }].map(o => (
+                      <button key={String(o.v)} onClick={() => sf("isActive")(o.v)} style={{ flex: 1, padding: "9px 0", borderRadius: 10, cursor: "pointer", fontSize: 12, fontWeight: 400, fontFamily: font, transition: "all 0.18s", background: form.isActive === o.v ? `${o.c}14` : "transparent", border: `1px solid ${form.isActive === o.v ? `${o.c}40` : T.border}`, color: form.isActive === o.v ? o.c : T.txt3 }}>{o.label}</button>
                     ))}
                   </div>
                 </div>
               )}
 
               {modal.mode === "edit" && (
-                <button onClick={() => openReset(modal.user)} style={{ padding: "9px 0", borderRadius: 10, background: "transparent", border: `1px solid ${P.amber}28`, color: P.amber, fontSize: 11.5, fontWeight: 400, fontFamily: font, cursor: "pointer", transition: "all 0.18s" }}
-                  onMouseEnter={e => e.currentTarget.style.background = `${P.amber}0C`}
+                <button onClick={() => openReset(modal.user)} style={{ padding: "9px 0", borderRadius: 10, background: "transparent", border: `1px solid ${T.amber}28`, color: T.amber, fontSize: 11.5, fontWeight: 400, fontFamily: font, cursor: "pointer", transition: "all 0.18s" }}
+                  onMouseEnter={e => e.currentTarget.style.background = `${T.amber}0C`}
                   onMouseLeave={e => e.currentTarget.style.background = "transparent"}
                 >Restablecer contraseña</button>
               )}
 
-              {formErr && <p style={{ fontSize: 11.5, color: P.rose, background: `${P.rose}0C`, border: `1px solid ${P.rose}22`, padding: "10px 14px", borderRadius: 10 }}>{formErr}</p>}
-              {formOk  && <p style={{ fontSize: 11.5, color: P.emerald, background: `${P.emerald}0C`, border: `1px solid ${P.emerald}22`, padding: "10px 14px", borderRadius: 10 }}>{formOk}</p>}
+              {formErr && <p style={{ fontSize: 11.5, color: T.rose, background: `${T.rose}0C`, border: `1px solid ${T.rose}22`, padding: "10px 14px", borderRadius: 10 }}>{formErr}</p>}
+              {formOk  && <p style={{ fontSize: 11.5, color: T.emerald, background: `${T.emerald}0C`, border: `1px solid ${T.emerald}22`, padding: "10px 14px", borderRadius: 10 }}>{formOk}</p>}
             </div>
 
-            <div style={{ padding: "16px 26px", borderTop: `1px solid ${P.border}`, display: "flex", gap: 10 }}>
-              <button onClick={() => setModal(null)} style={{ flex: 1, height: 42, borderRadius: 12, background: "transparent", border: `1px solid ${P.border}`, color: P.txt3, fontSize: 13, fontWeight: 400, cursor: "pointer", fontFamily: font, transition: "all 0.18s" }}>Cancelar</button>
+            <div style={{ padding: "16px 26px", borderTop: `1px solid ${T.border}`, display: "flex", gap: 10 }}>
+              <button onClick={() => setModal(null)} style={{ flex: 1, height: 42, borderRadius: 12, background: "transparent", border: `1px solid ${T.border}`, color: T.txt3, fontSize: 13, fontWeight: 400, cursor: "pointer", fontFamily: font, transition: "all 0.18s" }}>Cancelar</button>
               <button
                 onClick={modal.mode === "create" ? handleCreate : modal.mode === "reset" ? handleReset : handleEdit}
-                style={{ flex: 2, height: 42, borderRadius: 12, background: `${P.accent}16`, border: `1px solid ${P.accentB}`, color: P.accent, fontSize: 13, fontWeight: 500, fontFamily: fontDisp, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 7, transition: "background 0.18s" }}
-                onMouseEnter={e => e.currentTarget.style.background = `${P.accent}24`}
-                onMouseLeave={e => e.currentTarget.style.background = `${P.accent}16`}
+                style={{ flex: 2, height: 42, borderRadius: 12, background: `${T.accent}16`, border: `1px solid ${T.accentB}`, color: T.accent, fontSize: 13, fontWeight: 500, fontFamily: fontDisp, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 7, transition: "background 0.18s" }}
+                onMouseEnter={e => e.currentTarget.style.background = `${T.accent}24`}
+                onMouseLeave={e => e.currentTarget.style.background = `${T.accent}16`}
               >
                 {modal.mode === "create" ? <><Plus size={14} /> Crear Usuario</> : modal.mode === "reset" ? <><CheckCircle2 size={14} /> Guardar Contraseña</> : <><CheckCircle2 size={14} /> Guardar Cambios</>}
               </button>

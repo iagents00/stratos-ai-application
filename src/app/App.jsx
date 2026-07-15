@@ -1943,7 +1943,7 @@ export default function App() {
                   {v === "rrhh"   && <RRHHModule T={T} />}
                   {v === "planes" && <PricingScreen embedded onBack={() => setV(isAsesorRole ? "c" : "d")} />}
                   {v === "perfil" && <Profile theme={theme} T={T} />}
-                  {v === "admin"  && canAccessModule("admin", user) && <AdminPanel />}
+                  {v === "admin"  && canAccessModule("admin", user) && <AdminPanel T={T} isLight={isLight} />}
                 </Suspense>
             }
           </div>
