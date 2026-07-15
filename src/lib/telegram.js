@@ -125,13 +125,15 @@ const N8N_TELEGRAM_BOT_WEBHOOK = "https://personal-n8n.suwsiw.easypanel.host/web
 /**
  * COPILOT — envía un mensaje al asistente (mismo cerebro que el bot de Telegram).
  *
- * Flujo CORREGIDO (15-jul): en vez de mandar texto libre a n8n (que apuntaba a
- * gvintell-prod en vez de stratos-prod), llamamos SIEMPRE a copilot_send —
- * el RPC en stratos-prod que envuelve bot_nlu_dispatch_gvintell con el chat_id
- * correcto y maneja TODAS las acciones del CRM igual que el bot de Telegram.
- *
- * Para notas de voz: el audio se manda al webhook de n8n para transcripción
- * (Whisper), y el texto transcrito se procesa igual por copilot_send.
+ * Estrategia HÍBRIDA (15-jul v2):
+ *   1. RPC copilot_send (stratos-prod) → rápido, determinista, sin latencia.
+ *      Maneja: menú, mis clientes, agenda, kpis, pipeline, buscar.
+ *   2. Si copilot_send no pudo (texto libre / NLU / crear cliente / cambiar etapa),
+ *      disparamos el webhook de n8n (AI Agent con GPT-4o + bot_nlu_dispatch_gvintell
+ *      YA apuntando a stratos-prod) y leemos la RESPUESTA DIRECTA del webhook
+ *      (sin polling — el webhook devuelve {ok, reply} en el body).
+ *   3. Si el webhook tampoco respondió directo, polling ligero a getCopilotActivity
+ *      como última red de seguridad.
  *
  * @param {string} text
  * @returns {Promise<{ reply: string|null, error: string|null }>}
@@ -144,7 +146,6 @@ export async function sendCopilotMessage(text) {
     const { data: { session } } = await withTimeout(supabase.auth.getSession(), GETSESSION_TIMEOUT, 'getSession');
     if (!session?.user?.id) return { reply: "Sesión expirada.", error: null };
 
-    // Verificar que el usuario tenga Telegram vinculado
     const { data: profile } = await supabase
       .from('profiles')
       .select('telegram_chat_id')
@@ -152,18 +153,66 @@ export async function sendCopilotMessage(text) {
       .single();
 
     if (!profile?.telegram_chat_id) return { reply: null, error: 'not_paired' };
+    const chatId = Number(profile.telegram_chat_id);
 
-    // Llamar a copilot_send para TODOS los textos — el RPC ya maneja:
-    // menú, mis clientes, agenda, kpis, pipeline, buscar, crear cliente,
-    // cambiar etapa, próxima acción, documentos, agenda personal, y
-    // cualquier texto libre (lo routea al core dispatch con LLM en n8n).
-    const { data, error } = await supabase.rpc('copilot_send', { p_text: cleanText });
+    // ── Fase 1: RPC rápido (determinista, sin LLM, ~100ms) ──
+    const { data: rpcData, error: rpcError } = await supabase.rpc('copilot_send', { p_text: cleanText });
 
-    if (error) return { reply: null, error: error.message };
-    if (data === '__NOT_PAIRED__') return { reply: null, error: 'not_paired' };
+    if (!rpcError && rpcData && typeof rpcData === 'string') {
+      const r = rpcData;
+      const isGenericError =
+        r.toLowerCase().includes('no conozco esa accion') ||
+        r.toLowerCase().includes('no conozco esa acción') ||
+        r.toLowerCase().includes('no entendí eso');
+      if (!isGenericError) {
+        return { reply: r, error: null };
+      }
+    }
 
-    const replyText = typeof data === 'string' ? data : '';
-    return { reply: replyText || 'Procesando…', error: null };
+    // ── Fase 2: Webhook n8n con AI Agent (LLM GPT-4o, ~1-3s) ──
+    // Leemos la respuesta DIRECTA del webhook. Sin polling.
+    try {
+      const ctrl = new AbortController();
+      const timeout = setTimeout(() => ctrl.abort(), 12000);
+      const res = await fetch(N8N_TELEGRAM_BOT_WEBHOOK, {
+        method: 'POST',
+        signal: ctrl.signal,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chat_id: chatId,
+          text: cleanText,
+          original_type: "text"
+        })
+      });
+      clearTimeout(timeout);
+
+      if (res.ok) {
+        try {
+          const json = await res.json();
+          if (json?.reply && typeof json.reply === 'string' && json.reply.length > 3) {
+            return { reply: json.reply, error: null };
+          }
+        } catch { /* no JSON en respuesta */ }
+      }
+    } catch { /* webhook falló, seguimos a polling */ }
+
+    // ── Fase 3: Polling ligero como red de seguridad (~6s) ──
+    for (let attempt = 0; attempt < 7; attempt++) {
+      await new Promise(r => setTimeout(r, 900));
+      const { messages: recentList } = await getCopilotActivity(6);
+      if (Array.isArray(recentList) && recentList.length > 0) {
+        const newestAi = recentList.find(m => m.role === 'ai');
+        if (newestAi?.content &&
+            !newestAi.content.toLowerCase().includes('no conozco esa accion') &&
+            !newestAi.content.toLowerCase().includes('no conozco esa acción') &&
+            newestAi.content.length > 5) {
+          return { reply: newestAi.content, error: null };
+        }
+      }
+    }
+
+    // Nada funcionó — el asistente está procesando
+    return { reply: "Estoy procesando tu solicitud con el asistente IA. Revisá en unos segundos…", error: null };
   } catch (e) {
     return { reply: null, error: e?.message || 'Error de conexión' };
   }
