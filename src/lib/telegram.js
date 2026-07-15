@@ -120,7 +120,7 @@ export async function getCopilotActivity(limit = 40) {
   }
 }
 
-const N8N_TELEGRAM_BOT_WEBHOOK = "https://personal-n8n.suwsiw.easypanel.host/webhook/3acfc71b-4861-4f8a-a7fa-a27459372fc7";
+const N8N_TELEGRAM_BOT_WEBHOOK = "https://personal-n8n.suwsiw.easypanel.host/webhook/copilot-transcribe";
 
 /**
  * COPILOT — envía un mensaje al asistente (mismo cerebro que el bot de Telegram).

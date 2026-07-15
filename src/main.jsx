@@ -146,6 +146,22 @@ try {
   document.documentElement.setAttribute("data-client", clientId);
 } catch (_) { /* SSR / DOM no disponible */ }
 
+// ─── SILENCIADOR DE WARNINGS NO FATALES EN CONSOLA (Recharts & Tailwind CDN) ───
+try {
+  const origError = console.error;
+  const origWarn = console.warn;
+  console.error = (...args) => {
+    const msg = args.join(' ');
+    if (msg.includes('width(-1)') || msg.includes('height(-1)') || msg.includes('ResponsiveContainer')) return;
+    origError.apply(console, args);
+  };
+  console.warn = (...args) => {
+    const msg = args.join(' ');
+    if (msg.includes('cdn.tailwindcss.com') || msg.includes('should not be used in production')) return;
+    origWarn.apply(console, args);
+  };
+} catch (_) {}
+
 // ─── RENDER ───────────────────────────────────────────────────────────────────
 createRoot(document.getElementById("root")).render(
   <StrictMode>
