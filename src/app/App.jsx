@@ -33,7 +33,7 @@ import { isNativeApp, ensureNotifPermission, notifyUser, addNotificationTapListe
 import { initPushContext, enablePushNotifications, onNotificationClick } from "../lib/push";
 
 import {
-  Search, Bell, Settings, LogOut, Sun, Moon, ChevronDown, X, PhoneCall, MessageCircle, Target,
+  Search, Bell, Settings, LogOut, Sun, Moon, ChevronDown, X, PhoneCall, MessageCircle, Target, Sparkles, Bot,
 } from "lucide-react";
 import "./App.css";
 
@@ -1725,7 +1725,7 @@ export default function App() {
                         {copilotEnabled && copilotUnread > 0 && (
                           <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
                             <div style={{ display:"flex", alignItems:"center", gap:6 }}>
-                              <Sparkles size={12} color={T.accent} strokeWidth={2.4} />
+                              <Bot size={13} color={T.accent} strokeWidth={2.2} />
                               <span style={{ fontSize:10.5, fontWeight:500, letterSpacing:"0.04em", textTransform:"uppercase", color:T.accent, fontFamily:fontDisp }}>
                                 Copilot · {copilotUnread} nueva{copilotUnread !== 1 ? "s" : ""}
                               </span>

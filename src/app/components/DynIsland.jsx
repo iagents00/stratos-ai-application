@@ -13,7 +13,7 @@ import { useState } from "react";
 import { createPortal } from "react-dom";
 import {
   X, ChevronRight, ChevronLeft, Crown,
-  Mic, FileText, Video, MapPin, GitBranch, Search, BarChart3, Bell, Sparkles, Zap, Gauge, UsersRound,
+  Mic, FileText, Video, MapPin, GitBranch, Search, BarChart3, Bell, Sparkles, Zap, Gauge, UsersRound, Bot,
 } from "lucide-react";
 import { P, font, fontDisp } from "../../design-system/tokens";
 import { StratosAtom } from "./Logo";
@@ -22,7 +22,7 @@ import { useClient } from "../../hooks/useClient";
 import { INTEL_FEATURES } from "../constants/intelFeatures";
 
 // Mapa nombre→componente de ícono (los datos guardan solo el string)
-const FEATURE_ICONS = { Mic, FileText, Video, MapPin, GitBranch, Search, BarChart3, Bell, Sparkles, Zap, Gauge, UsersRound };
+const FEATURE_ICONS = { Mic, FileText, Video, MapPin, GitBranch, Search, BarChart3, Bell, Sparkles, Zap, Gauge, UsersRound, Bot };
 
 const DynIsland = ({ onExpand, onOpenLead, notifications = [], theme = "dark", beamIdx = 0, openSignal = 0 }) => {
   const isLight = theme === "light";
