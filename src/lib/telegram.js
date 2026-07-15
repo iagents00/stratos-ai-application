@@ -272,7 +272,20 @@ export async function getCopilotActivity(limit = 50) {
       console.warn('[Stratos AI] sync proactive_reminders error:', remErr?.message)
     }
 
-    return { messages: messages.slice(0, limit), error: null }
+    // Dedup de seguridad por VENTANA DE TIEMPO: si el mismo mensaje (role+contenido)
+    // se logueó dos veces en <15s (ej. frontend + un camino de backend), se muestra una
+    // sola vez. Repeticiones legítimas (mismo texto minutos después) se conservan.
+    const seenAt = new Map()
+    const deduped = []
+    for (const m of messages) {
+      const key = (m.role || '') + '|' + String(m.content || '')
+      const t = new Date(m.occurred_at || m.created_at || 0).getTime() || 0
+      const prevT = seenAt.get(key)
+      if (prevT !== undefined && Math.abs(prevT - t) < 15000) continue
+      seenAt.set(key, t)
+      deduped.push(m)
+    }
+    return { messages: deduped.slice(0, limit), error: null }
   } catch (e) {
     return { messages: [], error: e?.message || 'Error de conexión' }
   }
@@ -295,6 +308,21 @@ const N8N_COPILOT_WEBHOOK = "https://personal-n8n.suwsiw.easypanel.host/webhook/
  * @returns {Promise<{ reply: string|null, buttons?: Array, error: string|null }>}
  */
 export async function sendCopilotMessage(rawText, options = {}) {
+  const r = await _sendCopilotMessageInner(rawText, options);
+  // PERSISTENCIA: guardar SIEMPRE el mensaje del usuario y la respuesta en tg_bot_activity,
+  // pase lo que pase (comando, webhook, needs_input, manual). Antes el Copilot no guardaba
+  // sus propios mensajes → se borraban al cerrar/reabrir la app. Best-effort (no bloquea la UI).
+  try {
+    const userText = (rawText || "").trim();
+    if (userText) await supabase.rpc('copilot_log_msg', { p_role: 'user', p_content: userText });
+    if (r && typeof r.reply === 'string' && r.reply.trim()) {
+      await supabase.rpc('copilot_log_msg', { p_role: 'ai', p_content: r.reply });
+    }
+  } catch { /* logging best-effort, nunca romper el envío */ }
+  return r;
+}
+
+async function _sendCopilotMessageInner(rawText, options = {}) {
   const cleanText = (rawText || "").trim();
   if (!cleanText && !options.callback_data) return { reply: null, error: null };
 
