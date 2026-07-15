@@ -312,21 +312,6 @@ export async function sendCopilotMessage(rawText, options = {}) {
         error: null
       };
     }
-
-    // 2. Detección directa de solicitud de links, drive o catálogo de propiedades (para cualquier admin/asesor)
-    if (!options.callback_data && /(?:link|drive|carpeta|top\s*3|propiedades|catálogo|catalogue)/i.test(cleanText) && !/crea|registra|anota|nota/i.test(cleanText)) {
-      return {
-        reply: "📂 **Drive & Catálogo de Propiedades — Stratos Capital Group**\n\nAquí tienes acceso directo a las carpetas oficiales actualizadas en tiempo real (disponibles para todos los asesores y administradores del CRM):",
-        buttons: [
-          { label: "📍 Top 3 Propiedades Stratos", action: "https://drive.google.com/drive/folders/1StratosTop3Properties", isUrl: true, primary: true },
-          { label: "🌴 Catálogo Tulum & Riviera", action: "https://drive.google.com/drive/folders/1StratosTulumCat", isUrl: true, primary: true },
-          { label: "🏙️ Catálogo Cancún & Luxury", action: "https://drive.google.com/drive/folders/1StratosCancunCat", isUrl: true, primary: true },
-          { label: "📊 Fichas y Tesis de Inversión", action: "https://drive.google.com/drive/folders/1StratosInvestmentSpecs", isUrl: true, primary: true }
-        ],
-        error: null
-      };
-    }
-
     const { data: profile } = await supabase
       .from('profiles')
       .select('telegram_chat_id')
