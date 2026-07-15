@@ -170,8 +170,11 @@ export async function sendCopilotMessage(text) {
     }
 
     // ── Fase 2: Webhook n8n con AI Agent (LLM GPT-4o, ~1-3s) ──
-    // Leemos la respuesta DIRECTA del webhook. Sin polling.
+    // Incluimos el access_token del usuario para que n8n pueda llamar
+    // a la API de Supabase como el usuario autenticado (anon key no tiene
+    // permiso para funciones SECURITY DEFINER como bot_nlu_dispatch_gvintell).
     try {
+      const userToken = session.access_token || '';
       const ctrl = new AbortController();
       const timeout = setTimeout(() => ctrl.abort(), 12000);
       const res = await fetch(N8N_TELEGRAM_BOT_WEBHOOK, {
@@ -181,7 +184,8 @@ export async function sendCopilotMessage(text) {
         body: JSON.stringify({
           chat_id: chatId,
           text: cleanText,
-          original_type: "text"
+          original_type: "text",
+          user_token: userToken
         })
       });
       clearTimeout(timeout);
