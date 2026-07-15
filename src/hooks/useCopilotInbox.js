@@ -74,6 +74,11 @@ export function useCopilotInbox({ enabled, activeView }) {
         { event: "INSERT", schema: "public", table: "tg_bot_activity" },
         onCopilotActivity
       )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "proactive_reminders" },
+        onCopilotActivity
+      )
       .subscribe();
 
     const tick = () => {
