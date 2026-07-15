@@ -132,12 +132,13 @@ const N8N_COPILOT_WEBHOOK = "https://personal-n8n.suwsiw.easypanel.host/webhook/
  *      NO se llama a copilot_send para texto libre porque esa función SQL inserta
  *      "No conozco esa acción" en la DB instantáneamente.
  *
- * @param {string} text
- * @returns {Promise<{ reply: string|null, error: string|null }>}
+ * @param {string} rawText
+ * @param {object} options
+ * @returns {Promise<{ reply: string|null, buttons?: Array, error: string|null }>}
  */
-export async function sendCopilotMessage(text) {
-  const cleanText = (text || "").trim();
-  if (!cleanText) return { reply: null, error: null };
+export async function sendCopilotMessage(rawText, options = {}) {
+  const cleanText = (rawText || "").trim();
+  if (!cleanText && !options.callback_data) return { reply: null, error: null };
 
   try {
     const { data: { session } } = await withTimeout(supabase.auth.getSession(), GETSESSION_TIMEOUT, 'getSession');
@@ -152,32 +153,32 @@ export async function sendCopilotMessage(text) {
     if (!profile?.telegram_chat_id) return { reply: null, error: 'not_paired' };
     const chatId = Number(profile.telegram_chat_id);
 
-    // ── Lista ESTRICTA de comandos que copilot_send maneja bien (sin LLM) ──
-    const lower = cleanText.toLowerCase();
-    const QUICK_COMMANDS = [
-      'mis clientes', 'qué tengo hoy', 'que tengo hoy', 'cómo voy', 'como voy',
-      'pipeline', 'menú', 'menu', 'kpis', 'agenda', 'ayuda'
-    ];
-    const isQuickCommand = QUICK_COMMANDS.includes(lower) ||
-                           /^buscar\s+[a-záéíóúñ0-9\s]{2,18}$/i.test(cleanText);
+    // Si es un click en botón inline (callback_data), va directo al webhook (o RPC callback) sin evaluar QUICK_COMMANDS
+    if (!options.callback_data) {
+      const lower = cleanText.toLowerCase();
+      const QUICK_COMMANDS = [
+        'mis clientes', 'qué tengo hoy', 'que tengo hoy', 'cómo voy', 'como voy',
+        'pipeline', 'menú', 'menu', 'kpis', 'agenda', 'ayuda'
+      ];
+      const isQuickCommand = QUICK_COMMANDS.includes(lower) ||
+                             /^buscar\s+[a-záéíóúñ0-9\s]{2,18}$/i.test(cleanText);
 
-    // ── Fase 1: Solo para comandos conocidos → RPC rápido ──
-    if (isQuickCommand) {
-      try {
-        const { data: rpcData, error: rpcError } = await supabase.rpc('copilot_send', { p_text: cleanText });
-        if (!rpcError && rpcData && typeof rpcData === 'string') {
-          const isGenericError =
-            rpcData.toLowerCase().includes('no conozco esa accion') ||
-            rpcData.toLowerCase().includes('no conozco esa acción');
-          if (!isGenericError) {
-            return { reply: rpcData, error: null };
+      if (isQuickCommand) {
+        try {
+          const { data: rpcData, error: rpcError } = await supabase.rpc('copilot_send', { p_text: cleanText });
+          if (!rpcError && rpcData && typeof rpcData === 'string') {
+            const isGenericError =
+              rpcData.toLowerCase().includes('no conozco esa accion') ||
+              rpcData.toLowerCase().includes('no conozco esa acción');
+            if (!isGenericError) {
+              return { reply: rpcData, error: null };
+            }
           }
-        }
-      } catch { /* RPC falló, caemos al webhook */ }
+        } catch { /* RPC falló, caemos al webhook */ }
+      }
     }
 
-    // ── Fase 2: Webhook n8n con AI Agent GPT-4o (para TODO lo demás) ──
-    // Este webhook devuelve { ok: true, reply: "..." } directamente en el body.
+    // Webhook n8n con AI Agent GPT-4o o Router
     try {
       const ctrl = new AbortController();
       const timeout = setTimeout(() => ctrl.abort(), 15000);
@@ -188,7 +189,8 @@ export async function sendCopilotMessage(text) {
         body: JSON.stringify({
           chat_id: chatId,
           text: cleanText,
-          original_type: "text"
+          callback_data: options.callback_data || undefined,
+          original_type: options.callback_data ? "callback" : "text"
         })
       });
       clearTimeout(timeout);
@@ -199,26 +201,35 @@ export async function sendCopilotMessage(text) {
           try {
             const json = JSON.parse(raw);
             const reply = json?.reply || json?.output || (typeof json === 'string' ? json : null);
+            if (reply && typeof reply === 'object') {
+              const text = reply.text || reply.content || 'Listo.';
+              const buttons = Array.isArray(reply.inline_keyboard)
+                ? reply.inline_keyboard.flat().map(b => ({
+                    label: b.text,
+                    action: b.callback_data || b.text,
+                    isUrl: !!b.url,
+                    primary: true
+                  }))
+                : [];
+              return { reply: text, buttons, error: null };
+            }
             if (reply && typeof reply === 'string' && reply.length > 2) {
-              return { reply, error: null };
+              return { reply, buttons: [], error: null };
             }
           } catch {
-            // La respuesta no era JSON, usarla como texto directo si es razonable
             if (raw.length > 5 && !raw.includes('<html')) {
-              return { reply: raw, error: null };
+              return { reply: raw, buttons: [], error: null };
             }
           }
         }
       }
     } catch (err) {
-      // AbortError = timeout, cualquier otro error = red
       console.warn('[Copilot] webhook error:', err?.name || err?.message);
     }
 
-    // Si llegamos acá, ni el RPC ni el webhook respondieron algo útil
-    return { reply: "El asistente IA está procesando. Intentá de nuevo en unos segundos.", error: null };
+    return { reply: "El asistente IA está procesando. Intentá de nuevo en unos segundos.", buttons: [], error: null };
   } catch (e) {
-    return { reply: null, error: e?.message || 'Error de conexión' };
+    return { reply: null, buttons: [], error: e?.message || 'Error de conexión' };
   }
 }
 
