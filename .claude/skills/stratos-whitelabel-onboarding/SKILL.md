@@ -242,3 +242,64 @@ select public.parse_relative_or_abs_es('el jueves 3pm','America/Cancun');
 En Telegram (`@Strato_sasistente_crm_bot`): `mis clientes`, `agenda`, `kpis`, crear cliente con próx. acción
 "en 4 horas", reagendar respondiendo "mañana 3pm", tocar "Ver ficha del cliente" en un recordatorio de zoom,
 y responder "no tengo plan" tras "este es mi plan" para ver el escalado al coordinador.
+
+## 11. Copilot — el asistente DENTRO del CRM (MISMO cerebro, PARIDAD OBLIGATORIA) ⭐
+
+Desde jul-2026 el asistente vive en **DOS superficies con el MISMO cerebro**:
+- **Telegram** (`@Strato_sasistente_crm_bot`, BOTv5 `vM5Yu1HRmUDPOCg7`).
+- **Copilot**: chat embebido en el CRM (pestaña "Copilot" en `app.stratoscapitalgroup.com`), flujo n8n
+  `Copilot CRM` (`8ZasBukTkSx26m2A`, webhook `copilot-transcribe`). Front: `src/app/views/Copilot.jsx` +
+  `src/lib/telegram.js` (`sendCopilotMessage`/`getCopilotActivity`) + hook `useCopilotInbox.js`.
+
+> **REGLA DE ORO (paridad):** el cerebro es el MISMO RPC `bot_nlu_dispatch_gvintell`. Por eso **CUALQUIER cambio
+> a las funciones del asistente (DB) aplica AUTOMÁTICAMENTE a Telegram Y al Copilot** — no se duplica lógica.
+> **Al agregar/arreglar una capacidad del asistente, hay que probarla y dejarla andando en LAS DOS superficies.**
+> Los asesores a veces NO usan Telegram: el Copilot del CRM debe hacer TODO lo que hace el bot.
+
+Lo que SÍ es específico de cada superficie (NO viaja solo — hay que atenderlo aparte):
+- **Markdown de Telegram**: el nodo `Normalize Reply` de BOTv5 pasa el texto por `mdSafe()` — neutraliza `_ * [ ]`
+  sueltos que rompen el envío (ej. cliente "Hoston_305" tumbaba TODO el mensaje) preservando los links
+  `[label](url)`. El Copilot web NO necesita esto, pero SÍ debe **renderizar los links `[texto](url)` como
+  clicables** (hoy en el Copilot se ven crudos → pendiente en `Copilot.jsx`).
+- **Notificaciones proactivas → Copilot/campanita**: para que una alerta proactiva (Zoom 3h, lead abandonado,
+  tarea) que sale a Telegram TAMBIÉN aparezca en el Copilot y encienda la campanita del CRM, el flujo proactivo
+  debe registrar el mensaje en `tg_bot_activity` vía **`fn_log_proactive_copilot(chat_id, content, role)`**
+  (SECURITY DEFINER, salta el RLS). El front (`useCopilotInbox`) escucha `tg_bot_activity` + `proactive_reminders`
+  por Realtime. **Si una alerta llega a Telegram pero NO al Copilot** (caso reportado 15-jul con el Zoom 3h):
+  revisar que el nodo de log del flujo proactivo (`QrFPXkunxroqIKqJ`, `maeqwEsPOgsg5vLk`) esté CONECTADO a la
+  salida de envío y llame a `fn_log_proactive_copilot` (NO `POST /tg_bot_activity` con anon key → falla por RLS).
+- **Push al celular con la PWA cerrada** = Web Push (VAPID, edge function `send-push`, `public/sw.js`).
+
+## 12. Capacidades del asistente (catálogo completo — actualizado 2026-07-15)
+
+Además de mis_clientes / agenda / kpis / pipeline / buscar / crear-editar-mover lead:
+
+- **Catálogo por zona Y presupuesto** (`bot_buscar_proyectos` → `_premium_orig`): "propiedades en Tulum de más de
+  1M", "3 en Cancún de hasta 250k". Parsea el monto del texto (con gate anti-falso-positivo: "3 propiedades" NO se
+  lee como $3k) y FILTRA por rango USD vía `fn_ticket_usd`/`fn_ticket_match` (port del parser del ERP, FX 17.5).
+  Fallback honesto a la zona si no hay precios. **OJO DATO:** ~80% del catálogo tiene `ticket` vacío → el filtro por
+  precio rinde poco hasta cargar precios (tarea "documentos de mi espacio").
+- **Recomendar a un lead** (`bot_recomendar_propiedades`, router `_bot_reco_client`): "recomiéndame una propiedad
+  para Pepito" → lee presupuesto + zona del EXPEDIENTE del lead (campo `presupuesto` **y las NOTAS**, que es donde
+  suele estar el dato) y filtra el catálogo, explicando el porqué. Homónimos → PREGUNTA cuál (NO tira random).
+  Delega en `bot_buscar_proyectos` (reusa el filtro probado).
+- **Clientes de OTRO asesor** (`bot_clientes_de_asesor(chat,name,context)`, router `_bot_asesor_clients_ref`):
+  "clientes de Gael en segunda etapa", "últimos 2 leads de Cecilia". Filtra por etapa + cantidad. Respeta permisos
+  (asesor solo su cartera; admin/coordinador ve a todos). El detector distingue asesor (cartera) de cliente (ficha).
+- **Drives para TODOS los asesores** (no solo admin): cualquier asesor pide un link/drive/catálogo y lo recibe.
+
+Todas viven en `bot_nlu_dispatch_gvintell_required_fields_orig` (capa de detección por texto, intercepta ANTES de
+honrar el tool del clasificador — así funciona aunque el LLM elija "pipeline"). Orden: docs → recomendar →
+clientes-de-asesor → ficha → catálogo → agenda. **Smoke test** (reemplazar `<TG>` y nombres reales):
+```sql
+select t, public.bot_nlu_dispatch_gvintell(<TG>,'',jsonb_build_object('input_text',t))#>>'{reply,text}'
+from (values
+  ('recomiendame una propiedad para <cliente>'),
+  ('clientes de <asesor> en segunda etapa'),
+  ('ultimos 2 leads de <asesor>'),
+  ('propiedades en Tulum de mas de 1M')) x(t);
+```
+
+> ⚠️ GOTCHA 16 (15-jul): los routers de nombre (`_bot_reco_client`, `_bot_asesor_clients_ref`) deben LIMPIAR las
+> muletillas/cuantificadores ("alguna", "una", "para", "han sido", números) antes de extraer el nombre; si no, el
+> nombre sale sucio (ej. "Alguna Pepito") y el matcher pide desambiguar de más o falla. Mantener el array de stopwords.

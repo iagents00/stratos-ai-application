@@ -80,6 +80,7 @@ function Chat({ T, isLight, botUsername, onUnpaired }) {
   const scrollRef = useRef(null);
   const inputRef = useRef(null);
   const mountedRef = useRef(true);
+  const sendingRef = useRef(false);  // espejo de `sending` para el reload en foco (evita pisar el envío en curso)
 
   const [recording, setRecording] = useState(false);
   const [recordSecs, setRecordSecs] = useState(0);
@@ -90,8 +91,10 @@ function Chat({ T, isLight, botUsername, onUnpaired }) {
   const recognitionRef = useRef(null);
   const recordTimerRef = useRef(null);
 
+  // Solo los últimos 50 mensajes: el módulo carga rápido y no se sobrecarga
+  // aunque el asesor haya hablado muchísimo (el historial completo vive en la DB).
   const reload = useCallback(async () => {
-    const r = await getCopilotActivity(60);
+    const r = await getCopilotActivity(50);
     if (!mountedRef.current) return;
     setMessages([...(r.messages || [])].reverse());
     setLoading(false);
@@ -100,13 +103,23 @@ function Chat({ T, isLight, botUsername, onUnpaired }) {
   useEffect(() => {
     mountedRef.current = true;
     reload();
+    // Sincronización entre dispositivos: si hablaste con el Copilot en el celular
+    // y ahora mirás la PC (o volvés a la pestaña), refrescamos para traer lo último.
+    // Función NOMBRADA + removeEventListener en cleanup (regla de performance).
+    const onFocusReload = () => { if (!document.hidden && !sendingRef.current) reload(); };
+    document.addEventListener('visibilitychange', onFocusReload);
+    window.addEventListener('focus', onFocusReload);
     return () => {
       mountedRef.current = false;
+      document.removeEventListener('visibilitychange', onFocusReload);
+      window.removeEventListener('focus', onFocusReload);
       if (recordTimerRef.current) clearInterval(recordTimerRef.current);
       try { recorderRef.current?.cancel(); } catch { /* noop */ }
       try { recognitionRef.current?.stop(); } catch { /* noop */ }
     };
-  }, []);
+  }, [reload]);
+
+  useEffect(() => { sendingRef.current = sending; }, [sending]);
 
   useEffect(() => {
     const el = scrollRef.current;
