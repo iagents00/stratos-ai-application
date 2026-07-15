@@ -138,10 +138,24 @@ function Chat({ T, isLight, botUsername, onUnpaired }) {
     if (r.error === "not_paired") { onUnpaired(); return; }
     if (r.error) {
       setErrBanner("No se pudo enviar. Probá de nuevo.");
-      reload();
       return;
     }
-    await reload();
+
+    // Si el backend devolvió una respuesta directa, inyectarla al chat sin leer la DB
+    // (la DB de stratos-prod puede tener viejos "No conozco esa acción" que taparían la respuesta real)
+    if (r.reply) {
+      const aiMsg = {
+        id: `ai-${Date.now()}`,
+        role: "ai",
+        content: r.reply,
+        occurred_at: new Date().toISOString(),
+      };
+      setMessages((prev) => {
+        // Marcar el mensaje del usuario como confirmado (quitar pending)
+        const updated = prev.map(m => m.id === tmpId ? { ...m, pending: false } : m);
+        return [...updated, aiMsg];
+      });
+    }
     inputRef.current?.focus();
   };
 
