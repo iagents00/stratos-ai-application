@@ -191,25 +191,28 @@ export default function AdminPanel({ T = P, isLight: isLightProp }) {
               style={{
                 flex: isMobile ? 1 : "none", justifyContent: "center", whiteSpace: "nowrap",
                 display: "flex", alignItems: "center", gap: 7, padding: "10px 18px",
-                borderRadius: 11, background: T.glass,
-                border: `1px solid ${T.border}`, color: T.txt2, fontSize: 12.5, fontWeight: 400,
+                borderRadius: 11, background: isLight ? T.surface : T.glass,
+                border: `1px solid ${isLight ? T.borderH : T.border}`, color: isLight ? T.txt : T.txt2, fontSize: 12.5, fontWeight: isLight ? 500 : 400,
                 fontFamily: font, cursor: backupState.loading ? "wait" : "pointer",
+                boxShadow: isLight ? T.shadow1 : "none",
                 transition: "all 0.2s", opacity: backupState.loading ? 0.7 : 1,
               }}
-              onMouseEnter={e => { if (!backupState.loading) { e.currentTarget.style.borderColor = T.borderH; e.currentTarget.style.color = T.txt; } }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.color = T.txt2; }}
+              onMouseEnter={e => { if (!backupState.loading) { e.currentTarget.style.borderColor = isLight ? T.accentB : T.borderH; e.currentTarget.style.color = T.txt; } }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = isLight ? T.borderH : T.border; e.currentTarget.style.color = isLight ? T.txt : T.txt2; }}
             >
               <Download size={13} /> {backupState.loading ? "Generando..." : "Descargar respaldo"}
             </button>
             <button onClick={openCreate} style={{
               flex: isMobile ? 1 : "none", justifyContent: "center", whiteSpace: "nowrap",
               display: "flex", alignItems: "center", gap: 7, padding: "10px 20px",
-              borderRadius: 11, background: "linear-gradient(135deg, rgba(110,231,194,0.16), rgba(110,231,194,0.07))",
-              border: `1px solid ${T.accentB}`, color: T.accent, fontSize: 12.5, fontWeight: 500,
+              borderRadius: 11,
+              background: isLight ? T.accent : "linear-gradient(135deg, rgba(110,231,194,0.16), rgba(110,231,194,0.07))",
+              border: `1px solid ${isLight ? T.accent : T.accentB}`, color: isLight ? "#FFFFFF" : T.accent, fontSize: 12.5, fontWeight: isLight ? 600 : 500,
               fontFamily: fontDisp, cursor: "pointer", transition: "all 0.2s",
+              boxShadow: isLight ? T.shadowMint : "none",
             }}
-              onMouseEnter={e => { e.currentTarget.style.background = "linear-gradient(135deg, rgba(110,231,194,0.24), rgba(110,231,194,0.12))"; }}
-              onMouseLeave={e => { e.currentTarget.style.background = "linear-gradient(135deg, rgba(110,231,194,0.16), rgba(110,231,194,0.07))"; }}
+              onMouseEnter={e => { e.currentTarget.style.background = isLight ? T.accentDark : "linear-gradient(135deg, rgba(110,231,194,0.24), rgba(110,231,194,0.12))"; }}
+              onMouseLeave={e => { e.currentTarget.style.background = isLight ? T.accent : "linear-gradient(135deg, rgba(110,231,194,0.16), rgba(110,231,194,0.07))"; }}
             ><Plus size={14} /> Nuevo Usuario</button>
           </div>
         )}
