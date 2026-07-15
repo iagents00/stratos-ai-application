@@ -120,19 +120,20 @@ function Chat({ T, isLight, botUsername, onUnpaired }) {
     return () => URL.revokeObjectURL(url);
   }, [pendingVoiceBlob]);
 
-  const send = async (rawText) => {
+  const send = async (rawText, options = {}) => {
     const text = (rawText ?? "").trim();
-    if (!text || sending) return;
+    if (!text && !options.callback_data) return;
+    if (sending) return;
     setErrBanner(null);
     setInput("");
     setVoiceTranscript("");
     setPendingVoiceBlob(null);
 
     const tmpId = `tmp-${Date.now()}`;
-    setMessages((prev) => [...prev, { id: tmpId, role: "user", content: text, occurred_at: new Date().toISOString(), pending: true }]);
+    setMessages((prev) => [...prev, { id: tmpId, role: "user", content: text || "Acción seleccionada", occurred_at: new Date().toISOString(), pending: true }]);
     setSending(true);
 
-    const r = await sendCopilotMessage(text);
+    const r = await sendCopilotMessage(text, options);
     setSending(false);
 
     if (r.error === "not_paired") { onUnpaired(); return; }
@@ -148,6 +149,7 @@ function Chat({ T, isLight, botUsername, onUnpaired }) {
         id: `ai-${Date.now()}`,
         role: "ai",
         content: r.reply,
+        buttons: r.buttons || [],
         occurred_at: new Date().toISOString(),
       };
       setMessages((prev) => {
@@ -476,7 +478,11 @@ function Bubble({ m, T, isLight, userBg, userTxt, aiBg, aiBd, onPick, sending })
                   if (btn.isUrl) {
                     window.open(btn.action, "_blank", "noopener,noreferrer");
                   } else if (onPick) {
-                    onPick(btn.action);
+                    if (typeof btn.action === 'string' && (btn.action.startsWith('pickdis:') || btn.action.startsWith('cancel:') || btn.action.startsWith('confirm:') || btn.action.includes(':'))) {
+                      onPick(btn.label, { callback_data: btn.action });
+                    } else {
+                      onPick(btn.action);
+                    }
                   }
                 }}
                 disabled={sending && !btn.isUrl}
