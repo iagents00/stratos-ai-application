@@ -356,7 +356,7 @@ const DynIsland = ({ onExpand, onOpenLead, notifications = [], theme = "dark", b
                             <Ic size={16} color={f.color} strokeWidth={2} />
                           </div>
                           <span style={{ fontSize: 8, fontWeight: 500, letterSpacing: "0.06em", textTransform: "uppercase", color: isAgent ? D.acc : D.t46, background: isAgent ? "rgba(110,231,194,0.10)" : D.btn, border: `1px solid ${isAgent ? "rgba(110,231,194,0.22)" : D.bd}`, borderRadius: 6, padding: "3px 6px" }}>
-                            {isAgent ? "Auto" : "Vos pedís"}
+                            {isAgent ? "Auto" : "Tú pides"}
                           </span>
                         </div>
                         <p style={{ margin: "0 0 4px", fontSize: 12.5, color: D.t92, fontWeight: 400, fontFamily: fontDisp, lineHeight: 1.2 }}>{f.label}</p>
@@ -423,7 +423,7 @@ const DynIsland = ({ onExpand, onOpenLead, notifications = [], theme = "dark", b
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <p style={{ margin: 0, fontSize: 14, color: D.w, fontWeight: 500, fontFamily: fontDisp, letterSpacing: "-0.01em" }}>{selectedFeature.label}</p>
-                      <p style={{ margin: 0, fontSize: 10, color: isAgent ? D.acc : D.t40, fontFamily: font, marginTop: 2, fontWeight: 400 }}>{isAgent ? "El sistema lo hace solo" : "Se lo pedís al asistente"}</p>
+                      <p style={{ margin: 0, fontSize: 10, color: isAgent ? D.acc : D.t40, fontFamily: font, marginTop: 2, fontWeight: 400 }}>{isAgent ? "El sistema lo hace solo" : "Lo pides al asistente"}</p>
                     </div>
                     <button onClick={closeAll} style={{ background: D.btn, border: "none", color: D.t55, borderRadius: 8, width: 28, height: 28, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", flexShrink: 0 }}
                     ><X size={13} /></button>

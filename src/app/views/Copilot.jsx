@@ -13,7 +13,7 @@
  * ─────────────────────────────────────────────────────────────────────────────
  */
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Send, Sparkles, RefreshCw, Mic, Square, X, Volume2, ChevronDown, ChevronUp } from "lucide-react";
+import { Send, Sparkles, RefreshCw, Mic, Square, X, Volume2, ChevronDown, ChevronUp, Bot, BookOpen } from "lucide-react";
 import { P, LP, font, fontDisp } from "../../design-system/tokens";
 import { G } from "../SharedComponents";
 import { useClient } from "../../hooks/useClient";
@@ -27,7 +27,7 @@ const SUGGESTIONS = [
   { label: "Agenda", text: "agenda" },
   { label: "KPIs", text: "kpis" },
   { label: "Pipeline", text: "pipeline" },
-  { label: "Menú", text: "menu" },
+  { label: "Guía del asistente", text: "mandame la guia del asistente" },
 ];
 
 const REC_MAX_SECS = 300;
@@ -264,7 +264,7 @@ function Chat({ T, isLight, botUsername, onUnpaired }) {
           background: isLight ? "linear-gradient(135deg, #E8F8F4 0%, #D1F2E8 100%)" : "linear-gradient(135deg, rgba(110,231,194,0.22) 0%, rgba(52,211,153,0.12) 100%)",
           border: `1px solid ${T.accent}4D`, display: "flex", alignItems: "center", justifyContent: "center"
         }}>
-          <Sparkles size={17} color={T.accent} strokeWidth={2.2} />
+          <Bot size={18} color={T.accent} strokeWidth={2.2} />
         </div>
         <div style={{ minWidth: 0, flex: 1 }}>
           <div style={{ fontSize: 14, fontWeight: 600, color: T.txt, fontFamily: fontDisp, lineHeight: 1.2 }}>Copilot AI</div>
@@ -291,7 +291,7 @@ function Chat({ T, isLight, botUsername, onUnpaired }) {
                 border: `1px solid ${isLight ? "rgba(15,23,42,0.10)" : "rgba(255,255,255,0.12)"}`,
                 color: T.txt2, cursor: sending ? "default" : "pointer"
               }}>
-              <Sparkles size={10} color={T.accent} style={{ marginRight: 4, verticalAlign: "middle" }} />{s.label}
+              <Bot size={11} color={T.accent} style={{ marginRight: 4, verticalAlign: "middle" }} />{s.label}
             </button>
           ))}
         </div>
@@ -351,7 +351,7 @@ function Chat({ T, isLight, botUsername, onUnpaired }) {
         {/* Input */}
         <input
           ref={inputRef} type="text" value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={onKeyDown}
-          placeholder="Escribile al asistente…" disabled={sending || recording}
+          placeholder="Escríbele al asistente…" disabled={sending || recording}
           style={{
             flex: 1, minWidth: 0, height: 36, padding: "0 12px", borderRadius: 18,
             background: isLight ? "#F1F5F9" : "rgba(255,255,255,0.06)",
@@ -387,37 +387,66 @@ function Bubble({ m, T, isLight, userBg, userTxt, aiBg, aiBd, onPick, sending })
     ? new Date(m.created_at).toLocaleString("es-MX", { hour: "2-digit", minute: "2-digit" })
     : "";
 
-  /* ── Detección de botones inline (misma lógica que Telegram) ── */
+  /* ── Detección de botones inline (misma lógica que Telegram y botones explícitos) ── */
   let inlineButtons = [];
-  if (!isUser && m.content && typeof m.content === "string") {
-    const text = m.content.trim();
-    const lower = text.toLowerCase();
-    const bulletCount = (text.match(/^[•\-*]\s/gm) || []).length;
-    const isMassiveReport = bulletCount > 2 || text.length > 420;
-    if (!isMassiveReport) {
-      if (lower.includes("¿confirmas?") || lower.includes("confirmas el registro") || lower.includes("voy a registrar") || lower.includes("staged_action")) {
+  if (!isUser) {
+    if (Array.isArray(m.buttons) && m.buttons.length > 0) {
+      inlineButtons = m.buttons;
+    } else if (m.content && typeof m.content === "string") {
+      const text = m.content.trim();
+      const lower = text.toLowerCase();
+      
+      // 1) Confirmaciones explícitas o de cambio de etapa (tienen prioridad, no se limitan por longitud)
+      if (
+        lower.includes("¿confirmas?") || lower.includes("confirmas el registro") ||
+        lower.includes("voy a registrar") || lower.includes("staged_action") ||
+        lower.includes("¿procedo?") || lower.includes("confirmas mover") ||
+        lower.includes("confirmas el cambio") || lower.includes("deseas confirmar") ||
+        (lower.includes("he preparado el cambio") && lower.includes("confirmas"))
+      ) {
         inlineButtons = [
           { label: "✅ Sí, confirmar", action: "si", primary: true },
           { label: "❌ Cancelar", action: "cancelar", primary: false }
         ];
-      } else if (lower.includes("días sin movimiento") || lower.includes("lead abandonado") || lower.includes("sin movimiento")) {
+      }
+      // 2) Guía o manual del asistente
+      else if (
+        lower.includes("guía del asistente") || lower.includes("guia del asistente") ||
+        lower.includes("manual del asistente") || lower.includes("este es tu asistente operativo") ||
+        (lower.includes("aquí tienes la guía") && lower.includes("telegram")) ||
+        lower.includes("puedes consultar el manual completo")
+      ) {
         inlineButtons = [
-          { label: "📞 Ya lo contacté", action: "Ya lo contacté", primary: true },
-          { label: "📅 Definir acción", action: "Definir próxima acción", primary: false },
-          { label: "👤 Ver ficha", action: "Ver ficha del cliente", primary: false }
+          { label: "📖 Abrir Manual web", action: "https://app.stratoscapitalgroup.com/manual-asistente-telegram", isUrl: true, primary: true },
+          { label: "💡 ¿Cómo agendar Zooms?", action: "¿Cómo agendar un zoom con el asistente?", primary: false },
+          { label: "🚀 Ver comandos de voz", action: "¿Cómo registrar un cliente por voz?", primary: false }
         ];
-      } else if (lower.includes("antes de tu zoom") || lower.includes("plan sugerido")) {
-        inlineButtons = [
-          { label: "🧠 Ya lo estudié", action: "Ya estudié, este es mi plan", primary: true },
-          { label: "🗓️ Reagendar", action: "Reagendar", primary: false },
-          { label: "📁 Expediente", action: "Ver expediente", primary: false }
-        ];
-      } else if (lower.includes("ya hiciste esta acción") || lower.includes("lista de acción")) {
-        inlineButtons = [
-          { label: "✅ Hecho", action: "Ya la hice", primary: true },
-          { label: "⏳ En proceso", action: "En proceso", primary: false },
-          { label: "❌ No la hice", action: "No la hice", primary: false }
-        ];
+      }
+      // 3) Otros botones contextuales de notificaciones y seguimiento (si no es un reporte masivo)
+      else {
+        const bulletCount = (text.match(/^[•\-*]\s/gm) || []).length;
+        const isMassiveReport = bulletCount > 3 || text.length > 550;
+        if (!isMassiveReport) {
+          if (lower.includes("días sin movimiento") || lower.includes("lead abandonado") || lower.includes("sin movimiento")) {
+            inlineButtons = [
+              { label: "📞 Ya lo contacté", action: "Ya lo contacté", primary: true },
+              { label: "📅 Definir acción", action: "Definir próxima acción", primary: false },
+              { label: "👤 Ver ficha", action: "Ver ficha del cliente", primary: false }
+            ];
+          } else if (lower.includes("antes de tu zoom") || lower.includes("plan sugerido") || lower.includes("zooms en 3 horas")) {
+            inlineButtons = [
+              { label: "🧠 Ya lo estudié", action: "Ya estudié, este es mi plan", primary: true },
+              { label: "🗓️ Reagendar", action: "Reagendar", primary: false },
+              { label: "📁 Expediente", action: "Ver expediente", primary: false }
+            ];
+          } else if (lower.includes("ya hiciste esta acción") || lower.includes("lista de acción") || lower.includes("tarea pendiente")) {
+            inlineButtons = [
+              { label: "✅ Hecho", action: "Ya la hice", primary: true },
+              { label: "⏳ En proceso", action: "En proceso", primary: false },
+              { label: "❌ No la hice", action: "No la hice", primary: false }
+            ];
+          }
+        }
       }
     }
   }
@@ -426,7 +455,7 @@ function Bubble({ m, T, isLight, userBg, userTxt, aiBg, aiBd, onPick, sending })
     <div style={{ display: "flex", justifyContent: isUser ? "flex-end" : "flex-start", gap: 8, alignItems: "flex-end" }}>
       {!isUser && (
         <div style={{ width: 24, height: 24, borderRadius: 7, background: `${T.accent}15`, border: `1px solid ${T.accent}28`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginBottom: 2 }}>
-          <Sparkles size={13} color={T.accent} strokeWidth={2} />
+          <Bot size={14} color={T.accent} strokeWidth={2} />
         </div>
       )}
       <div style={{
@@ -438,15 +467,24 @@ function Bubble({ m, T, isLight, userBg, userTxt, aiBg, aiBd, onPick, sending })
         boxShadow: isLight ? (isUser ? `0 3px 10px ${T.accent}28` : "0 1px 4px rgba(15,23,42,0.03)") : "none"
       }}>
         {m.content}
-        {inlineButtons.length > 0 && onPick && (
+        {inlineButtons.length > 0 && (
           <div style={{ display: "flex", gap: 5, flexWrap: "wrap", marginTop: 8, paddingTop: 7, borderTop: `1px solid ${isLight ? "rgba(15,23,42,0.06)" : "rgba(255,255,255,0.06)"}` }}>
-            {inlineButtons.map((btn) => (
-              <button key={btn.action} type="button" onClick={() => !sending && onPick(btn.action)} disabled={sending}
+            {inlineButtons.map((btn, idx) => (
+              <button key={btn.action || idx} type="button"
+                onClick={() => {
+                  if (sending) return;
+                  if (btn.isUrl) {
+                    window.open(btn.action, "_blank", "noopener,noreferrer");
+                  } else if (onPick) {
+                    onPick(btn.action);
+                  }
+                }}
+                disabled={sending && !btn.isUrl}
                 style={{
                   padding: "4px 10px", borderRadius: 7, border: btn.primary ? "none" : `1px solid ${T.border}`,
                   background: btn.primary ? T.accent : (isLight ? "#FFFFFF" : "rgba(255,255,255,0.06)"),
                   color: btn.primary ? (isLight ? "#FFF" : "#041016") : T.txt, fontSize: 11.5, fontWeight: btn.primary ? 600 : 500,
-                  fontFamily: font, cursor: sending ? "default" : "pointer"
+                  fontFamily: font, cursor: (sending && !btn.isUrl) ? "default" : "pointer"
                 }}>{btn.label}</button>
             ))}
           </div>
@@ -462,7 +500,7 @@ function Typing({ T, aiBg, aiBd }) {
   return (
     <div style={{ display: "flex", justifyContent: "flex-start", gap: 8, alignItems: "flex-end" }}>
       <div style={{ width: 24, height: 24, borderRadius: 7, background: `${T.accent}15`, border: `1px solid ${T.accent}28`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginBottom: 2 }}>
-        <Sparkles size={13} color={T.accent} strokeWidth={2} />
+        <Bot size={14} color={T.accent} strokeWidth={2} />
       </div>
       <div style={{ padding: "10px 14px", borderRadius: 14, borderBottomLeftRadius: 3, background: aiBg, border: `1px solid ${aiBd}`, display: "flex", gap: 5, alignItems: "center" }}>
         {[0, 1, 2].map((i) => (
@@ -479,17 +517,17 @@ function EmptyState({ T, isLight, onPick }) {
   return (
     <div style={{ margin: "auto", textAlign: "center", maxWidth: 340, padding: 12 }}>
       <div style={{ width: 48, height: 48, borderRadius: 14, margin: "0 auto 12px", background: isLight ? "linear-gradient(135deg, #E8F8F4 0%, #D1F2E8 100%)" : "linear-gradient(135deg, rgba(110,231,194,0.15) 0%, rgba(52,211,153,0.08) 100%)", border: `1px solid ${T.accent}33`, display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <Sparkles size={24} color={T.accent} strokeWidth={2} />
+        <Bot size={26} color={T.accent} strokeWidth={2} />
       </div>
       <h3 style={{ margin: "0 0 4px", fontSize: 16, fontWeight: 600, color: T.txt, fontFamily: fontDisp }}>Tu Asistente Operativo</h3>
       <p style={{ margin: "0 0 14px", fontSize: 12.5, color: T.txt3, lineHeight: 1.5, fontFamily: font }}>
-        Escribile o dictale por voz. Pedile clientes, agenda, métricas, o buscá a alguien por nombre.
+        Escríbele o díctale por voz. Pídele clientes, agenda, métricas, o busca a alguien por nombre.
       </p>
       <div style={{ display: "flex", gap: 6, flexWrap: "wrap", justifyContent: "center" }}>
         {SUGGESTIONS.map((s) => (
           <button key={s.text} type="button" onClick={() => onPick(s.text)}
             style={{ padding: "5px 12px", borderRadius: 999, background: isLight ? "#FFFFFF" : "rgba(255,255,255,0.05)", border: `1px solid ${isLight ? "rgba(15,23,42,0.10)" : "rgba(255,255,255,0.12)"}`, color: T.txt2, fontSize: 12, fontFamily: font, cursor: "pointer" }}>
-            <Sparkles size={11} color={T.accent} style={{ marginRight: 4, verticalAlign: "middle" }} />{s.label}
+            <Bot size={12} color={T.accent} style={{ marginRight: 4, verticalAlign: "middle" }} />{s.label}
           </button>
         ))}
       </div>
@@ -521,7 +559,7 @@ function ConnectPrompt({ T, isLight, botUsername, manualPairing, onPaired }) {
     setBusy(true); setErr(null);
     const r = await requestPairingCode();
     setBusy(false);
-    if (r.error || !r.code) { setErr("No se pudo generar el código. Probá en un minuto."); return; }
+    if (r.error || !r.code) { setErr("No se pudo generar el código. Intenta en un minuto."); return; }
     if (deepLinkMode) window.open(`https://t.me/${botUsername}?start=${r.code}`, "_blank", "noopener,noreferrer");
     setCode(r.code);
     startPoll();
@@ -531,20 +569,20 @@ function ConnectPrompt({ T, isLight, botUsername, manualPairing, onPaired }) {
     <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
       <G T={T} style={{ padding: 28, textAlign: "center", borderRadius: 18, maxWidth: 400, width: "100%", boxShadow: isLight ? "0 8px 32px rgba(15,23,42,0.06)" : "0 12px 40px rgba(0,0,0,0.3)" }}>
         <div style={{ width: 52, height: 52, borderRadius: 14, margin: "0 auto 16px", background: isLight ? "linear-gradient(135deg, #E8F8F4 0%, #D1F2E8 100%)" : "linear-gradient(135deg, rgba(110,231,194,0.15) 0%, rgba(52,211,153,0.08) 100%)", border: `1px solid ${T.accent}33`, display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <Sparkles size={26} color={T.accent} strokeWidth={2} />
+          <Bot size={28} color={T.accent} strokeWidth={2} />
         </div>
-        <h2 style={{ margin: "0 0 6px", fontSize: 19, fontWeight: 600, color: T.txt, fontFamily: fontDisp }}>Activá tu Copilot AI</h2>
+        <h2 style={{ margin: "0 0 6px", fontSize: 19, fontWeight: 600, color: T.txt, fontFamily: fontDisp }}>Activa tu Copilot AI</h2>
         <p style={{ margin: "0 0 20px", fontSize: 13, color: T.txt2, lineHeight: 1.5, fontFamily: font }}>
-          Conectá tu Telegram una vez y tendrás a tu asistente del CRM en esta pantalla.
+          Conecta tu Telegram una vez y tendrás a tu asistente operativo del CRM en esta pantalla.
         </p>
 
         {!code ? (
           <>
             {!deepLinkMode && (
               <div style={{ textAlign: "left", margin: "0 auto 16px", maxWidth: 320, fontSize: 12.5, color: T.txt3, display: "flex", flexDirection: "column", gap: 4, fontFamily: font }}>
-                <span>1. Buscá en Telegram <strong style={{ color: T.txt2 }}>@{botName}</strong> y tocá <strong>/start</strong></span>
-                <span>2. Tocá "Conectar mi Telegram"</span>
-                <span>3. Mandale el código al bot</span>
+                <span>1. Busca en Telegram <strong style={{ color: T.txt2 }}>@{botName}</strong> y toca <strong>/start</strong></span>
+                <span>2. Toca "Conectar mi Telegram"</span>
+                <span>3. Envíale el código al bot</span>
               </div>
             )}
             <button type="button" onClick={connect} disabled={busy}
@@ -556,7 +594,7 @@ function ConnectPrompt({ T, isLight, botUsername, manualPairing, onPaired }) {
           <div>
             <p style={{ margin: "0 0 8px", fontSize: 11, fontWeight: 600, letterSpacing: "0.10em", textTransform: "uppercase", color: T.txt3, fontFamily: fontDisp }}>Tu código</p>
             <div style={{ padding: "16px 20px", background: `${T.accent}0C`, border: `1px solid ${T.accent}2A`, borderRadius: 14, fontSize: "clamp(26px,7vw,36px)", fontWeight: 400, letterSpacing: "0.10em", fontFamily: fontDisp, color: T.txt, fontVariantNumeric: "tabular-nums", marginBottom: 14 }}>{code}</div>
-            <p style={{ margin: "0 0 10px", fontSize: 12.5, color: T.txt2, fontFamily: font }}>Enviá a <strong>@{botName}</strong>:</p>
+            <p style={{ margin: "0 0 10px", fontSize: 12.5, color: T.txt2, fontFamily: font }}>Envía a <strong>@{botName}</strong>:</p>
             <code style={{ display: "block", padding: "10px 12px", background: isLight ? "#F1F5F9" : "rgba(255,255,255,0.04)", border: `1px solid ${T.border}`, borderRadius: 8, fontSize: 14, fontFamily: "ui-monospace, SF Mono, monospace", color: T.txt }}>/conectar {code}</code>
             {botUsername && (
               <button type="button" onClick={() => window.open(`https://t.me/${botUsername}?start=${code}`, "_blank", "noopener,noreferrer")}

@@ -2149,11 +2149,11 @@ export default function App() {
       {/* ══ MODAL "Aplicaciones" (desktop) — grid centrado con TODAS las apps ══ */}
       {sidebarMore && createPortal(
         <>
-          <div onClick={() => setSidebarMore(false)} style={{ position:"fixed", inset:0, zIndex:700, background: isLight ? "rgba(15,23,42,0.28)" : "rgba(2,4,9,0.60)", backdropFilter:"blur(6px)", WebkitBackdropFilter:"blur(6px)", animation:"fadeIn 0.18s ease both" }} />
-          <div style={{ position:"fixed", top:"50%", left:"50%", transform:"translate(-50%,-50%)", zIndex:701, width:"min(90vw, 560px)", borderRadius:26, padding:"22px 22px 24px", background: isLight ? "linear-gradient(180deg, rgba(255,255,255,0.88), rgba(248,250,252,0.80))" : "linear-gradient(180deg, rgba(18,24,32,0.85), rgba(7,10,15,0.90))", backdropFilter:"blur(30px) saturate(185%)", WebkitBackdropFilter:"blur(30px) saturate(185%)", border: isLight ? "1px solid rgba(255,255,255,0.90)" : "1px solid rgba(255,255,255,0.08)", boxShadow: isLight ? "0 30px 80px rgba(15,23,42,0.28)" : "inset 0 1px 0 rgba(190,245,225,0.08), inset 0 -1px 0 rgba(0,0,0,0.4), 0 30px 90px rgba(0,0,0,0.72)", animation:"modalIn 0.24s cubic-bezier(0.16,1,0.3,1) both" }}>
+          <div onClick={() => setSidebarMore(false)} style={{ position:"fixed", inset:0, zIndex:700, background: isLight ? "rgba(15,23,42,0.35)" : "rgba(2,4,9,0.68)", backdropFilter:"blur(12px)", WebkitBackdropFilter:"blur(12px)", animation:"fadeIn 0.18s ease both" }} />
+          <div style={{ position:"fixed", top:"50%", left:"50%", transform:"translate(-50%,-50%)", zIndex:701, width:"min(90vw, 560px)", borderRadius:26, padding:"22px 22px 24px", background: isLight ? "#FFFFFF" : "#0A0F1C", border: isLight ? "1px solid rgba(15,23,42,0.10)" : "1px solid rgba(255,255,255,0.10)", boxShadow: isLight ? "0 30px 80px rgba(15,23,42,0.22), 0 0 1px 1px rgba(15,23,42,0.05)" : "inset 0 1px 0 rgba(190,245,225,0.08), inset 0 -1px 0 rgba(0,0,0,0.4), 0 30px 90px rgba(0,0,0,0.72)", animation:"modalIn 0.24s cubic-bezier(0.16,1,0.3,1) both" }}>
             <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:18 }}>
-              <span style={{ fontSize:15, fontWeight:500, fontFamily:fontDisp, letterSpacing:"-0.02em", color: isLight ? T.txt : "#FFFFFF" }}>Aplicaciones</span>
-              <button onClick={() => setSidebarMore(false)} aria-label="Cerrar" style={{ width:30, height:30, borderRadius:10, border:"none", cursor:"pointer", background: isLight ? "rgba(15,23,42,0.05)" : "rgba(255,255,255,0.06)", display:"flex", alignItems:"center", justifyContent:"center" }}>
+              <span style={{ fontSize:15, fontWeight:600, fontFamily:fontDisp, letterSpacing:"-0.02em", color: isLight ? T.txt : "#FFFFFF" }}>Aplicaciones</span>
+              <button onClick={() => setSidebarMore(false)} aria-label="Cerrar" style={{ width:30, height:30, borderRadius:10, border:"none", cursor:"pointer", background: isLight ? "#F1F5F9" : "rgba(255,255,255,0.06)", display:"flex", alignItems:"center", justifyContent:"center" }}>
                 <X size={16} color={isLight ? T.txt2 : "rgba(255,255,255,0.55)"} />
               </button>
             </div>
@@ -2164,12 +2164,13 @@ export default function App() {
                 return (
                   <button key={n.id} onClick={() => { setV(n.id); setSidebarMore(false); setMetaOpen(false); }} style={{
                     display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:9, padding:"18px 6px", borderRadius:18, cursor:"pointer",
-                    border: act ? (isLight ? `1px solid ${acol}45` : "1px solid rgba(190,245,225,0.16)") : (isLight ? "1px solid rgba(15,23,42,0.06)" : "1px solid rgba(255,255,255,0.05)"),
-                    background: act ? (isLight ? `linear-gradient(180deg, rgba(255,255,255,0.95), ${acol}12)` : "linear-gradient(180deg, rgba(255,255,255,0.06), rgba(110,231,194,0.03))") : (isLight ? "rgba(15,23,42,0.02)" : "rgba(255,255,255,0.025)"),
-                    transition:"transform 0.14s ease, background 0.18s ease, border-color 0.18s ease",
+                    border: act ? (isLight ? `1.5px solid ${acol}` : "1px solid rgba(190,245,225,0.20)") : (isLight ? "1px solid rgba(15,23,42,0.08)" : "1px solid rgba(255,255,255,0.06)"),
+                    background: act ? (isLight ? `linear-gradient(180deg, #FFFFFF, ${acol}14)` : "linear-gradient(180deg, rgba(255,255,255,0.08), rgba(110,231,194,0.04))") : (isLight ? "#F8FAFC" : "rgba(255,255,255,0.03)"),
+                    boxShadow: act ? (isLight ? `0 6px 16px ${acol}22` : "0 4px 12px rgba(0,0,0,0.3)") : "none",
+                    transition:"all 0.16s ease",
                   }}
-                  onMouseEnter={e => { e.currentTarget.style.transform="translateY(-2px)"; if(!act) e.currentTarget.style.background = isLight ? "rgba(15,23,42,0.04)" : "rgba(255,255,255,0.05)"; }}
-                  onMouseLeave={e => { e.currentTarget.style.transform="none"; if(!act) e.currentTarget.style.background = isLight ? "rgba(15,23,42,0.02)" : "rgba(255,255,255,0.025)"; }}
+                  onMouseEnter={e => { e.currentTarget.style.transform="translateY(-2px)"; if(!act) { e.currentTarget.style.background = isLight ? "#FFFFFF" : "rgba(255,255,255,0.06)"; e.currentTarget.style.boxShadow = isLight ? "0 4px 12px rgba(15,23,42,0.06)" : "0 4px 12px rgba(0,0,0,0.2)"; } }}
+                  onMouseLeave={e => { e.currentTarget.style.transform="none"; if(!act) { e.currentTarget.style.background = isLight ? "#F8FAFC" : "rgba(255,255,255,0.03)"; e.currentTarget.style.boxShadow = "none"; } }}
                   >
                     <IosIcon name={n.id} filled={act} size={26} color={act ? acol : (isLight ? "rgba(15,23,42,0.50)" : "rgba(255,255,255,0.55)")} />
                     <span style={{ fontSize:11, fontFamily:fontDisp, fontWeight: act ? 700 : 500, letterSpacing:"-0.01em", color: act ? acol : (isLight ? "rgba(15,23,42,0.60)" : "rgba(255,255,255,0.62)"), lineHeight:1, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis", maxWidth:"100%" }}>{clientConfig?.navLabels?.[n.id] ?? n.l}</span>
