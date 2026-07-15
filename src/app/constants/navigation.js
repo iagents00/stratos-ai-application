@@ -12,16 +12,15 @@ import {
 
 export const nav = [
   { id: "c",     l: "CRM",       i: Users      },
-  { id: "copilot", l: "Copilot", i: Sparkles   },
+  { id: "copilot", l: "Copilot", i: Bot        },
   { id: "wa",    l: "WhatsApp",  i: MessageCircle },
   { id: "lp",    l: "Create",    i: Hexagon    },
   { id: "d",     l: "Comando",   i: Activity   },
   { id: "caja",  l: "Caja",      i: Wallet     },
   { id: "e",     l: "Proyectos", i: Building2  },
   { id: "ia",    l: "iAgents",   i: Atom       },
-  { id: "a",     l: "Asesores",  i: Trophy,    more: true },
   { id: "fa",    l: "Finanzas",  i: Landmark,  more: true },
-  { id: "rrhh",  l: "Personas",  i: UserCheck, more: true },
+  { id: "rrhh",  l: "Stratos RH",i: UserCheck, more: true },
   { id: "trash", l: "Papelera",  i: Trash2,    more: true },
   { id: "planes",l: "Planes",    i: CreditCard, more: true },
   { id: "perfil",l: "Perfil",    i: User,      more: true },
@@ -66,7 +65,7 @@ export const MODULE_ROLES = {
 export const MODULE_NAMES = {
   d: "Comando", c: "CRM", ia: "iAgents", e: "Proyectos",
   a: "Asesores", lp: "Campañas", fa: "Finanzas",
-  rrhh: "Personas", trash: "Papelera", caja: "Caja",
+  rrhh: "Stratos RH", trash: "Papelera", caja: "Caja",
   wa: "WhatsApp", copilot: "Copilot",
   planes: "Planes", perfil: "Perfil", admin: "Usuarios",
 };
