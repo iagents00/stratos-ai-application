@@ -29,6 +29,9 @@ import {
    En navegador cada helper cae al comportamiento web de siempre. */
 import { isNativeApp, ensureNotifPermission, notifyUser, addNotificationTapListener } from "../lib/native";
 
+/* Sistema de notificaciones Web Push (PWA "Agregar a inicio" en iPhone/Android) */
+import { initPushContext, enablePushNotifications, onNotificationClick } from "../lib/push";
+
 import {
   Search, Bell, Settings, LogOut, Sun, Moon, ChevronDown, X, PhoneCall, MessageCircle, Target,
 } from "lucide-react";
@@ -359,6 +362,36 @@ export default function App() {
     if (!user || !isNativeApp()) return;
     ensureNotifPermission();
     return addNotificationTapListener(() => setV("wa"));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
+
+  // WEB PUSH (PWA "Agregar a inicio"): inicializa el contexto de push,
+  // registra el handler de clicks en notificaciones, e intenta restaurar
+  // la suscripción si ya existía. El permiso SOLO se pide desde un botón
+  // visible (el diálogo nativo de iOS Safari/PWA no se puede disparar sin
+  // gesto del usuario). La app nativa (Capacitor) ya tiene su propio flujo
+  // arriba y NO pasa por acá.
+  useEffect(() => {
+    if (!user || isNativeApp()) return;
+    try {
+      // Inicializar el contexto de Supabase para guardar suscripciones
+      initPushContext(
+        import.meta.env.VITE_SUPABASE_URL || 'https://glulgyhkrqpykxmujodb.supabase.co',
+        import.meta.env.VITE_SUPABASE_ANON_KEY || '',
+      );
+      // Registrar handler de clicks en notificaciones push
+      const cleanup = onNotificationClick((data) => {
+        try {
+          // Si la notificación pide abrir una vista específica, navegar a ella
+          if (data.view && typeof setV === 'function') {
+            setV(data.view);
+          }
+          // Enfocar la ventana
+          if (typeof window !== 'undefined') window.focus();
+        } catch { /* noop */ }
+      });
+      return cleanup;
+    } catch { /* noop */ }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id]);
 

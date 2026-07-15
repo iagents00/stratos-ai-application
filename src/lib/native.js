@@ -83,7 +83,12 @@ export async function notifyUser({ title, body, tag, onClick }) {
   }
   try {
     if (typeof Notification === "undefined") return false;
-    if (Notification.permission === "default") { Notification.requestPermission(); return false; }
+    // antes: fire-and-forget (requestPermission sin await + return false)
+    // ahora: esperamos la respuesta del diálogo antes de decidir
+    if (Notification.permission === "default") {
+      const perm = await Notification.requestPermission();
+      if (perm !== "granted") return false;
+    }
     if (Notification.permission !== "granted") return false;
     const n = new Notification(title, { body, tag });
     if (onClick) n.onclick = () => { try { window.focus(); onClick(); n.close(); } catch { /* noop */ } };
