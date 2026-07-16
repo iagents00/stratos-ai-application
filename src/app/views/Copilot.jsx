@@ -13,9 +13,10 @@
  * ─────────────────────────────────────────────────────────────────────────────
  */
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Send, Sparkles, RefreshCw, Mic, Square, X, Volume2, ChevronDown, ChevronUp, Bot, BookOpen } from "lucide-react";
+import { Send, Sparkles, RefreshCw, Mic, Square, X, ChevronDown, ChevronUp, Bot, BookOpen, Play, Pause } from "lucide-react";
 import { P, LP, font, fontDisp } from "../../design-system/tokens";
 import { G } from "../SharedComponents";
+import CopilotMark from "../components/CopilotMark";
 import { useClient } from "../../hooks/useClient";
 import {
   getPairingStatus, requestPairingCode, unpairTelegram,
@@ -279,7 +280,7 @@ function Chat({ T, isLight, botUsername, onUnpaired }) {
           background: isLight ? "linear-gradient(135deg, #E8F8F4 0%, #D1F2E8 100%)" : "linear-gradient(135deg, rgba(110,231,194,0.22) 0%, rgba(52,211,153,0.12) 100%)",
           border: `1px solid ${T.accent}4D`, display: "flex", alignItems: "center", justifyContent: "center"
         }}>
-          <Bot size={18} color={T.accent} strokeWidth={2.2} />
+          <CopilotMark size={22} isLight={isLight} />
         </div>
         <div style={{ minWidth: 0, flex: 1 }}>
           <div style={{ fontSize: 14, fontWeight: 600, color: T.txt, fontFamily: fontDisp, lineHeight: 1.2 }}>Copilot AI</div>
@@ -321,7 +322,7 @@ function Chat({ T, isLight, botUsername, onUnpaired }) {
         ) : (
           messages.map((m) => <Bubble key={m.id} m={m} T={T} isLight={isLight} userBg={bubbleUserBg} userTxt={bubbleUserTxt} aiBg={bubbleAiBg} aiBd={bubbleAiBd} onPick={send} sending={sending} />)
         )}
-        {sending && <Typing T={T} aiBg={bubbleAiBg} aiBd={bubbleAiBd} />}
+        {sending && <Typing T={T} isLight={isLight} aiBg={bubbleAiBg} aiBd={bubbleAiBd} />}
       </div>
 
       {/* ── Banner de error ── */}
@@ -331,15 +332,16 @@ function Chat({ T, isLight, botUsername, onUnpaired }) {
         </div>
       )}
 
-      {/* ── Audio pendiente ── */}
-      {pendingVoiceBlob && !recording && (
-        <div style={{ margin: "0 14px 4px", padding: "8px 12px", borderRadius: 10, background: isLight ? "rgba(13,154,118,0.06)" : "rgba(110,231,194,0.06)", border: `1px solid ${T.accent}33`, display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
-          <Volume2 size={15} color={T.accent} />
-          {pendingVoiceUrl && <audio controls src={pendingVoiceUrl} style={{ flex: 1, minWidth: 0, height: 28 }} />}
-          {voiceTranscript && <span style={{ fontSize: 11.5, color: T.txt, fontFamily: font, flex: 1, overflow: "hidden", textOverflow: "ellipsis" }}>"{voiceTranscript}"</span>}
-          <button onClick={() => { setPendingVoiceBlob(null); setVoiceTranscript(""); }} style={{ background: "transparent", border: "none", cursor: "pointer", padding: 2 }}><X size={14} color={T.txt3} /></button>
-          <button onClick={() => send(voiceTranscript || "mis clientes")} style={{ padding: "5px 12px", borderRadius: 8, border: "none", background: T.accent, color: isLight ? "#FFF" : "#041016", fontSize: 11.5, fontWeight: 600, fontFamily: fontDisp, cursor: "pointer" }}>Enviar</button>
-        </div>
+      {/* ── Audio pendiente (reproductor custom, sin la caja blanca nativa) ── */}
+      {pendingVoiceBlob && !recording && pendingVoiceUrl && (
+        <VoiceNote
+          url={pendingVoiceUrl}
+          transcript={voiceTranscript}
+          T={T}
+          isLight={isLight}
+          onDiscard={() => { setPendingVoiceBlob(null); setVoiceTranscript(""); }}
+          onSend={() => send(voiceTranscript || "mis clientes")}
+        />
       )}
 
       {/* ── Barra de grabación ── */}
@@ -493,7 +495,7 @@ function Bubble({ m, T, isLight, userBg, userTxt, aiBg, aiBd, onPick, sending })
     <div style={{ display: "flex", justifyContent: isUser ? "flex-end" : "flex-start", gap: 8, alignItems: "flex-end" }}>
       {!isUser && (
         <div style={{ width: 24, height: 24, borderRadius: 7, background: `${T.accent}15`, border: `1px solid ${T.accent}28`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginBottom: 2 }}>
-          <Bot size={14} color={T.accent} strokeWidth={2} />
+          <CopilotMark size={15} isLight={isLight} animated={false} />
         </div>
       )}
       <div style={{
@@ -537,12 +539,142 @@ function Bubble({ m, T, isLight, userBg, userTxt, aiBg, aiBd, onPick, sending })
   );
 }
 
+/* ── Nota de voz: reproductor custom (reemplaza al <audio controls> nativo) ── */
+/* Barras tipo waveform + play/pause + tiempo, con la paleta de marca. La
+   transcripción se muestra debajo (se mantiene, funciona bien). */
+const VOICE_BARS = [7, 12, 20, 14, 26, 34, 22, 30, 16, 24, 38, 28, 18, 32, 40, 26, 20, 34, 14, 24, 30, 18, 12, 22, 28, 16, 10, 8];
+const fmtClock = (s) => {
+  if (!isFinite(s) || s < 0) s = 0;
+  const m = Math.floor(s / 60);
+  return `${m}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
+};
+
+function VoiceNote({ url, transcript, T, isLight, onDiscard, onSend }) {
+  const audioRef = useRef(null);
+  const [playing, setPlaying] = useState(false);
+  const [cur, setCur] = useState(0);
+  const [dur, setDur] = useState(0);
+
+  useEffect(() => { setPlaying(false); setCur(0); setDur(0); }, [url]);
+
+  const onLoaded = () => {
+    const a = audioRef.current;
+    if (!a) return;
+    // Blobs de MediaRecorder (webm) reportan duration=Infinity hasta que se
+    // fuerza un seek. Truco estándar para obtener la duración real.
+    if (!isFinite(a.duration)) {
+      const fix = () => {
+        a.currentTime = 0;
+        setDur(isFinite(a.duration) ? a.duration : 0);
+        a.removeEventListener("timeupdate", fix);
+      };
+      a.addEventListener("timeupdate", fix);
+      a.currentTime = 1e101;
+    } else {
+      setDur(a.duration);
+    }
+  };
+
+  const toggle = () => {
+    const a = audioRef.current;
+    if (!a) return;
+    if (a.paused) { a.play(); setPlaying(true); }
+    else { a.pause(); setPlaying(false); }
+  };
+
+  const seekTo = (frac) => {
+    const a = audioRef.current;
+    if (!a || !isFinite(a.duration) || a.duration <= 0) return;
+    a.currentTime = Math.max(0, Math.min(1, frac)) * a.duration;
+    setCur(a.currentTime);
+  };
+
+  const progress = dur > 0 ? cur / dur : 0;
+  const accent = T.accent;
+  const trackOff = isLight ? "rgba(15,23,42,0.16)" : "rgba(255,255,255,0.20)";
+
+  return (
+    <div style={{
+      margin: "0 14px 4px", padding: "10px 12px", borderRadius: 14, flexShrink: 0,
+      background: isLight ? "rgba(13,154,118,0.055)" : "rgba(110,231,194,0.06)",
+      border: `1px solid ${accent}33`,
+    }}>
+      <audio
+        ref={audioRef} src={url} preload="metadata"
+        onLoadedMetadata={onLoaded}
+        onTimeUpdate={(e) => setCur(e.currentTarget.currentTime)}
+        onEnded={() => { setPlaying(false); setCur(0); }}
+        style={{ display: "none" }}
+      />
+      {/* Fila reproductor */}
+      <div style={{ display: "flex", alignItems: "center", gap: 11 }}>
+        <button
+          type="button" onClick={toggle} aria-label={playing ? "Pausar" : "Reproducir"}
+          style={{
+            width: 36, height: 36, borderRadius: "50%", flexShrink: 0, border: "none", cursor: "pointer",
+            background: `linear-gradient(135deg, ${accent}, #0D9A76)`,
+            color: isLight ? "#FFFFFF" : "#041016",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            boxShadow: `0 4px 12px ${accent}44`,
+          }}
+        >
+          {playing ? <Pause size={16} strokeWidth={2.4} fill="currentColor" /> : <Play size={16} strokeWidth={2.4} fill="currentColor" style={{ marginLeft: 2 }} />}
+        </button>
+
+        {/* Waveform clicable */}
+        <div
+          onClick={(e) => { const r = e.currentTarget.getBoundingClientRect(); seekTo((e.clientX - r.left) / r.width); }}
+          style={{ flex: 1, minWidth: 0, height: 34, display: "flex", alignItems: "center", gap: 3, cursor: "pointer" }}
+        >
+          {VOICE_BARS.map((h, i) => {
+            const barFrac = (i + 0.5) / VOICE_BARS.length;
+            const on = barFrac <= progress;
+            return (
+              <span key={i} style={{
+                flex: 1, minWidth: 2, height: `${h}%`, borderRadius: 99,
+                background: on ? accent : trackOff,
+                transition: "background 0.12s linear",
+              }} />
+            );
+          })}
+        </div>
+
+        <span style={{ flexShrink: 0, fontSize: 11.5, fontWeight: 500, fontFamily: fontDisp, fontVariantNumeric: "tabular-nums", color: T.txt2, minWidth: 66, textAlign: "right" }}>
+          {fmtClock(cur)} / {fmtClock(dur)}
+        </span>
+
+        <button type="button" onClick={onDiscard} aria-label="Descartar audio"
+          style={{ flexShrink: 0, width: 28, height: 28, borderRadius: 8, background: "transparent", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: T.txt3 }}>
+          <X size={15} />
+        </button>
+      </div>
+
+      {/* Transcripción + enviar */}
+      {(transcript || true) && (
+        <div style={{ display: "flex", alignItems: "flex-end", gap: 10, marginTop: transcript ? 9 : 8, paddingTop: transcript ? 9 : 0, borderTop: transcript ? `1px solid ${accent}1F` : "none" }}>
+          {transcript ? (
+            <span style={{ flex: 1, minWidth: 0, fontSize: 12.5, lineHeight: 1.4, color: T.txt, fontFamily: font, fontStyle: "italic" }}>
+              "{transcript}"
+            </span>
+          ) : (
+            <span style={{ flex: 1, minWidth: 0, fontSize: 11.5, color: T.txt3, fontFamily: font }}>Nota de voz lista para enviar</span>
+          )}
+          <button type="button" onClick={onSend}
+            style={{ flexShrink: 0, display: "inline-flex", alignItems: "center", gap: 6, padding: "6px 14px", borderRadius: 9, border: "none", background: accent, color: isLight ? "#FFF" : "#041016", fontSize: 12, fontWeight: 600, fontFamily: fontDisp, cursor: "pointer" }}>
+            <Send size={13} strokeWidth={2.4} /> Enviar
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 /* ── Indicador de escritura ── */
-function Typing({ T, aiBg, aiBd }) {
+function Typing({ T, isLight, aiBg, aiBd }) {
   return (
     <div style={{ display: "flex", justifyContent: "flex-start", gap: 8, alignItems: "flex-end" }}>
       <div style={{ width: 24, height: 24, borderRadius: 7, background: `${T.accent}15`, border: `1px solid ${T.accent}28`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginBottom: 2 }}>
-        <Bot size={14} color={T.accent} strokeWidth={2} />
+        <CopilotMark size={15} isLight={isLight} />
       </div>
       <div style={{ padding: "10px 14px", borderRadius: 14, borderBottomLeftRadius: 3, background: aiBg, border: `1px solid ${aiBd}`, display: "flex", gap: 5, alignItems: "center" }}>
         {[0, 1, 2].map((i) => (
@@ -559,7 +691,7 @@ function EmptyState({ T, isLight, onPick }) {
   return (
     <div style={{ margin: "auto", textAlign: "center", maxWidth: 340, padding: 12 }}>
       <div style={{ width: 48, height: 48, borderRadius: 14, margin: "0 auto 12px", background: isLight ? "linear-gradient(135deg, #E8F8F4 0%, #D1F2E8 100%)" : "linear-gradient(135deg, rgba(110,231,194,0.15) 0%, rgba(52,211,153,0.08) 100%)", border: `1px solid ${T.accent}33`, display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <Bot size={26} color={T.accent} strokeWidth={2} />
+        <CopilotMark size={30} isLight={isLight} />
       </div>
       <h3 style={{ margin: "0 0 4px", fontSize: 16, fontWeight: 600, color: T.txt, fontFamily: fontDisp }}>Tu Asistente Operativo</h3>
       <p style={{ margin: "0 0 14px", fontSize: 12.5, color: T.txt3, lineHeight: 1.5, fontFamily: font }}>
@@ -611,7 +743,7 @@ function ConnectPrompt({ T, isLight, botUsername, manualPairing, onPaired }) {
     <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
       <G T={T} style={{ padding: 28, textAlign: "center", borderRadius: 18, maxWidth: 400, width: "100%", boxShadow: isLight ? "0 8px 32px rgba(15,23,42,0.06)" : "0 12px 40px rgba(0,0,0,0.3)" }}>
         <div style={{ width: 52, height: 52, borderRadius: 14, margin: "0 auto 16px", background: isLight ? "linear-gradient(135deg, #E8F8F4 0%, #D1F2E8 100%)" : "linear-gradient(135deg, rgba(110,231,194,0.15) 0%, rgba(52,211,153,0.08) 100%)", border: `1px solid ${T.accent}33`, display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <Bot size={28} color={T.accent} strokeWidth={2} />
+          <CopilotMark size={32} isLight={isLight} />
         </div>
         <h2 style={{ margin: "0 0 6px", fontSize: 19, fontWeight: 600, color: T.txt, fontFamily: fontDisp }}>Activa tu Copilot AI</h2>
         <p style={{ margin: "0 0 20px", fontSize: 13, color: T.txt2, lineHeight: 1.5, fontFamily: font }}>
