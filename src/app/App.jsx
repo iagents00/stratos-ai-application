@@ -44,6 +44,7 @@ import { font, fontDisp } from "../design-system/tokens";
 import { StratosAtomHex } from "./components/Logo";
 import DynIsland          from "./components/DynIsland";
 import IAOSIsland         from "./components/IAOSIsland";
+import CopilotMark        from "./components/CopilotMark";
 import { buildIntelNotifs } from "./constants/intelNotifs";
 import PermissionGate     from "./components/PermissionGate";
 import { IosIcon }        from "./icons/ios-icons";
@@ -1331,7 +1332,9 @@ export default function App() {
           onMouseDown={e => { if (hasAccess) e.currentTarget.style.transform = "scale(0.95)"; }}
           onMouseUp={e => { if (hasAccess) e.currentTarget.style.transform = "scale(1)"; }}
         >
-          <IosIcon name={n.id} filled={a} size={iconSize} color={a ? activeIcon : (isLight ? "rgba(15,23,42,0.45)" : "rgba(255,255,255,0.40)")} />
+          {n.id === "copilot"
+            ? <CopilotMark size={iconSize + 3} isLight={isLight} style={{ opacity: a ? 1 : (hasAccess ? 0.82 : 1) }} />
+            : <IosIcon name={n.id} filled={a} size={iconSize} color={a ? activeIcon : (isLight ? "rgba(15,23,42,0.45)" : "rgba(255,255,255,0.40)")} />}
         </button>
         <span style={{ width:"100%", fontSize:7.2, fontFamily:fontDisp, fontWeight: a ? 650 : 430, letterSpacing: a ? "0.01em" : "0.005em", textAlign:"center",
           color: a ? activeIcon : (isLight ? "rgba(15,23,42,0.38)" : "rgba(255,255,255,0.28)"),
@@ -1652,20 +1655,27 @@ export default function App() {
                     )}
                   </button>
 
-                  {bellOpen && (
+                  {bellOpen && createPortal((() => {
+                    // Anclamos el panel a la campana pero lo renderizamos en <body>
+                    // (portal). Antes vivía DENTRO del header, que tiene
+                    // backdrop-filter → creaba un stacking context propio y el panel
+                    // se "sobreponía" feo con los botones/KPIs de abajo (y en Safari
+                    // se mezclaba). Fixed a viewport + fondo OPACO = flota limpio y
+                    // por encima de todo, sin pisar el layout.
+                    const r = bellRef.current?.getBoundingClientRect();
+                    const ddTop   = r ? Math.round(r.bottom + 8) : 58;
+                    const ddRight = r ? Math.max(8, Math.round(window.innerWidth - r.right)) : 14;
+                    return (
                     <>
                       {/* Overlay para cerrar el dropdown clickeando fuera */}
-                      <div onClick={() => setBellOpen(false)} style={{ position:"fixed", inset:0, zIndex:998 }} />
-                      {/* className: en móvil el CSS global lo vuelve position:fixed
-                          a lo ancho de la pantalla (300px anclado a la campana se
-                          salía por la izquierda en 360px). */}
+                      <div onClick={() => setBellOpen(false)} style={{ position:"fixed", inset:0, zIndex:99990 }} />
+                      {/* className: en móvil el CSS global lo vuelve full-width fijo. */}
                       <div className="stratos-bell-dropdown" style={{
-                        position:"absolute", top:38, right:0, zIndex:999,
-                        width:300, padding:14, borderRadius:12,
-                        background: isLight ? "#FFFFFF" : "rgba(10,15,28,0.98)",
-                        backdropFilter: isLight ? "none" : "blur(20px) saturate(140%)",
+                        position:"fixed", top:ddTop, right:ddRight, zIndex:99991,
+                        width:300, padding:14, borderRadius:14,
+                        background: isLight ? "#FFFFFF" : "#0C1220",
                         border:`1px solid ${isLight ? "rgba(15,23,42,0.10)" : "rgba(255,255,255,0.10)"}`,
-                        boxShadow: isLight ? "0 12px 36px rgba(15,23,42,0.14)" : "0 12px 36px rgba(0,0,0,0.55)",
+                        boxShadow: isLight ? "0 18px 48px rgba(15,23,42,0.20)" : "0 20px 56px rgba(0,0,0,0.66)",
                         display:"flex", flexDirection:"column", gap:10,
                       }}>
                         <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between" }}>
@@ -1729,7 +1739,7 @@ export default function App() {
                         {copilotEnabled && copilotUnread > 0 && (
                           <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
                             <div style={{ display:"flex", alignItems:"center", gap:6 }}>
-                              <Bot size={13} color={T.accent} strokeWidth={2.2} />
+                              <CopilotMark size={15} isLight={isLight} />
                               <span style={{ fontSize:10.5, fontWeight:500, letterSpacing:"0.04em", textTransform:"uppercase", color:T.accent, fontFamily:fontDisp }}>
                                 Copilot · {copilotUnread} nueva{copilotUnread !== 1 ? "s" : ""}
                               </span>
@@ -1844,7 +1854,8 @@ export default function App() {
                         )}
                       </div>
                     </>
-                  )}
+                    );
+                  })(), document.body)}
                 </div>
                 {hDiv}
                 {supportPhoneHref && (
@@ -1989,7 +2000,9 @@ export default function App() {
                 outline:"none", WebkitTapHighlightColor:"transparent",
                 transition:"background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease",
               }}>
-                <IosIcon name={n.id} filled={a} size={n.id === "d" ? 23 : n.id === "ia" ? 22 : n.id === "lp" ? 22 : n.id === "e" ? 21 : n.id === "c" ? 22 : 20} color={a ? activeColor : (isLight ? "rgba(15,23,42,0.45)" : "rgba(255,255,255,0.40)")} />
+                {n.id === "copilot"
+                  ? <CopilotMark size={23} isLight={isLight} style={{ opacity: a ? 1 : 0.85 }} />
+                  : <IosIcon name={n.id} filled={a} size={n.id === "d" ? 23 : n.id === "ia" ? 22 : n.id === "lp" ? 22 : n.id === "e" ? 21 : n.id === "c" ? 22 : 20} color={a ? activeColor : (isLight ? "rgba(15,23,42,0.45)" : "rgba(255,255,255,0.40)")} />}
                 <span style={{ fontSize:9.5, fontFamily:fontDisp, fontWeight: a ? 700 : 500, letterSpacing:"-0.01em", color: a ? activeColor : (isLight ? "rgba(15,23,42,0.42)" : "rgba(255,255,255,0.34)"), lineHeight:1, whiteSpace:"nowrap", overflow:"hidden", maxWidth:"100%" }}>{clientConfig?.navLabels?.[n.id] ?? n.l}</span>
               </button>
             );
