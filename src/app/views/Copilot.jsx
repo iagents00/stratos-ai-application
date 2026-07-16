@@ -13,15 +13,17 @@
  * ─────────────────────────────────────────────────────────────────────────────
  */
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Send, Sparkles, RefreshCw, Mic, Square, X, ChevronDown, ChevronUp, Bot, BookOpen, Play, Pause } from "lucide-react";
+import { Send, Sparkles, RefreshCw, Mic, Square, X, ChevronDown, ChevronUp, Bot, BookOpen, Play, Pause, Bell } from "lucide-react";
 import { P, LP, font, fontDisp } from "../../design-system/tokens";
 import { G } from "../SharedComponents";
 import CopilotMark from "../components/CopilotMark";
 import { useClient } from "../../hooks/useClient";
+import { useAuth } from "../../hooks/useAuth";
 import {
   getPairingStatus, requestPairingCode, unpairTelegram,
   getCopilotActivity, sendCopilotMessage,
 } from "../../lib/telegram";
+import { getPushStatus, enablePushNotifications } from "../../lib/push";
 
 const SUGGESTIONS = [
   { label: "Mis clientes", text: "mis clientes" },
@@ -295,6 +297,9 @@ function Chat({ T, isLight, botUsername, onUnpaired }) {
           {showSuggestions ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
         </button>
       </div>
+
+      {/* ── Banner "Activar notificaciones" (push) ── */}
+      <NotifBanner T={T} isLight={isLight} />
 
       {/* ── Sugerencias colapsables ── */}
       {showSuggestions && (
@@ -705,6 +710,80 @@ function EmptyState({ T, isLight, onPick }) {
           </button>
         ))}
       </div>
+    </div>
+  );
+}
+
+/* ── Banner de activación de notificaciones push ──
+   El Copilot ya recibe TODO en el historial; esto es para que además llegue el
+   aviso al teléfono (con la app cerrada), reemplazando la dependencia de Telegram.
+   Auto-suscribe corre en App.jsx si el permiso ya está concedido; este banner
+   cubre el caso que necesita gesto del usuario (permiso 'default'). */
+function NotifBanner({ T, isLight }) {
+  const { user } = useAuth();
+  const [show, setShow] = useState(false);
+  const [needsInstall, setNeedsInstall] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState(null);
+
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      try {
+        if (sessionStorage.getItem("stratos_notif_dismissed") === "1") return;
+        const st = await getPushStatus();
+        if (!alive) return;
+        // Ocultar si no soporta, si el user bloqueó, o si ya está activo (suscrito)
+        if (!st.supported || st.permission === "denied" || st.isActive) return;
+        setNeedsInstall(!!st.needsInstall);
+        setShow(true);
+      } catch { /* noop */ }
+    })();
+    return () => { alive = false; };
+  }, []);
+
+  if (!show) return null;
+
+  const dismiss = () => {
+    try { sessionStorage.setItem("stratos_notif_dismissed", "1"); } catch { /* noop */ }
+    setShow(false);
+  };
+
+  const enable = async () => {
+    setBusy(true); setErr(null);
+    try {
+      const r = await enablePushNotifications(user?.id);
+      if (r.success) { setShow(false); }
+      else if (r.permission === "denied") { setErr("Bloqueaste las notificaciones. Actívalas desde los Ajustes del teléfono."); }
+      else { setErr("No se pudo activar. Probá de nuevo."); }
+    } catch { setErr("No se pudo activar. Probá de nuevo."); }
+    setBusy(false);
+  };
+
+  return (
+    <div style={{
+      display: "flex", alignItems: "center", gap: 10, padding: "9px 14px", flexShrink: 0,
+      background: isLight ? "rgba(13,154,118,0.07)" : "rgba(110,231,194,0.07)",
+      borderBottom: `1px solid ${T.accent}22`,
+    }}>
+      <Bell size={16} color={T.accent} strokeWidth={2} style={{ flexShrink: 0 }} />
+      <div style={{ flex: 1, minWidth: 0, fontSize: 12, color: T.txt2, fontFamily: font, lineHeight: 1.35 }}>
+        {needsInstall
+          ? <>Para recibir avisos con la app cerrada, instalala: <strong style={{ color: T.txt }}>botón Compartir → Agregar a inicio</strong>.</>
+          : (err
+              ? <span style={{ color: isLight ? "#B91C3A" : "#FCA5A5" }}>{err}</span>
+              : <>Activá las notificaciones para enterarte de tus Zooms, tareas y recordatorios aunque tengas la app cerrada.</>)}
+      </div>
+      {!needsInstall && (
+        <button type="button" onClick={enable} disabled={busy}
+          style={{ flexShrink: 0, padding: "6px 12px", borderRadius: 8, border: "none", background: busy ? `${T.accent}66` : T.accent, color: isLight ? "#FFF" : "#041016", fontSize: 12, fontWeight: 600, fontFamily: fontDisp, cursor: busy ? "default" : "pointer" }}>
+          {busy ? "Activando…" : "Activar"}
+        </button>
+      )}
+      <button type="button" onClick={dismiss} title="Ahora no"
+        style={{ flexShrink: 0, width: 26, height: 26, borderRadius: 7, background: "transparent", border: "none", color: T.txt3, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <X size={14} />
+      </button>
     </div>
   );
 }

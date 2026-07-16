@@ -159,15 +159,24 @@ export async function getPairingStatus() {
       .eq('id', session.user.id)
       .single()
 
-    if (error) return { paired: false, pairedAt: null, error: error.message }
+    if (error) return { paired: false, telegramConnected: false, pairedAt: null, error: error.message }
 
+    // Identidad del asistente:
+    //  · chat != null  → tiene identidad (el Copilot funciona). Puede ser REAL
+    //    (Telegram, chat > 0) o SINTÉTICA (chat < 0, asignada para que el Copilot
+    //    ande sin obligar a conectar Telegram).
+    //  · telegramConnected → SOLO Telegram real (chat > 0). Lo usa Perfil para
+    //    mostrar "Conectado" vs ofrecer conectar Telegram (opcional, el "plus").
+    const rawChat = data?.telegram_chat_id
+    const chatNum = rawChat == null ? null : Number(rawChat)
     return {
-      paired:   data?.telegram_chat_id != null,
-      pairedAt: data?.telegram_paired_at || null,
-      error:    null,
+      paired:            rawChat != null,
+      telegramConnected: chatNum != null && chatNum > 0,
+      pairedAt:          data?.telegram_paired_at || null,
+      error:             null,
     }
   } catch (e) {
-    return { paired: false, pairedAt: null, error: e?.message || 'Error de conexión' }
+    return { paired: false, telegramConnected: false, pairedAt: null, error: e?.message || 'Error de conexión' }
   }
 }
 
