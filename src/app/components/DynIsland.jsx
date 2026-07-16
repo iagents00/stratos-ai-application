@@ -14,6 +14,7 @@ import { createPortal } from "react-dom";
 import {
   X, ChevronRight, ChevronLeft, Crown,
   Mic, FileText, Video, MapPin, GitBranch, Search, BarChart3, Bell, Sparkles, Zap, Gauge, UsersRound, Bot,
+  Home, FolderOpen, UserPlus, Users, Smartphone,
 } from "lucide-react";
 import { P, font, fontDisp } from "../../design-system/tokens";
 import { StratosAtom } from "./Logo";
@@ -22,7 +23,7 @@ import { useClient } from "../../hooks/useClient";
 import { INTEL_FEATURES } from "../constants/intelFeatures";
 
 // Mapa nombre→componente de ícono (los datos guardan solo el string)
-const FEATURE_ICONS = { Mic, FileText, Video, MapPin, GitBranch, Search, BarChart3, Bell, Sparkles, Zap, Gauge, UsersRound, Bot };
+const FEATURE_ICONS = { Mic, FileText, Video, MapPin, GitBranch, Search, BarChart3, Bell, Sparkles, Zap, Gauge, UsersRound, Bot, Home, FolderOpen, UserPlus, Users, Smartphone };
 
 const DynIsland = ({ onExpand, onOpenLead, notifications = [], theme = "dark", beamIdx = 0, openSignal = 0 }) => {
   const isLight = theme === "light";
@@ -290,9 +291,9 @@ const DynIsland = ({ onExpand, onOpenLead, notifications = [], theme = "dark", b
                     {INTEL_FEATURES.map((f) => {
                       const Ic = FEATURE_ICONS[f.icon] || Sparkles;
                       const isAgent = f.kind === "agente";
-                      const chan = f.where.includes("Telegram")
-                        ? (f.where.includes("CRM") ? "Telegram · CRM" : "Telegram")
-                        : (f.where.includes("CRM") ? "En el CRM" : "Automático");
+                      const chan = f.chan || (f.where.includes("Copilot")
+                        ? (f.where.includes("CRM") && !f.where.includes("del CRM") ? "Copilot · CRM" : "Copilot")
+                        : f.where.includes("Telegram") ? "Telegram" : (f.where.includes("CRM") ? "En el CRM" : "Automático"));
                       return (
                         <div key={f.id} onClick={() => setSelectedFeature(f)}
                           style={{
@@ -352,9 +353,9 @@ const DynIsland = ({ onExpand, onOpenLead, notifications = [], theme = "dark", b
                   {INTEL_FEATURES.map((f) => {
                     const Ic = FEATURE_ICONS[f.icon] || Sparkles;
                     const isAgent = f.kind === "agente";
-                    const chan = f.where.includes("Telegram")
-                      ? (f.where.includes("CRM") ? "Telegram · CRM" : "Telegram")
-                      : (f.where.includes("CRM") ? "En el CRM" : "Automático");
+                    const chan = f.chan || (f.where.includes("Copilot")
+                      ? (f.where.includes("CRM") && !f.where.includes("del CRM") ? "Copilot · CRM" : "Copilot")
+                      : f.where.includes("Telegram") ? "Telegram" : (f.where.includes("CRM") ? "En el CRM" : "Automático"));
                     return (
                       <div key={f.id} onClick={() => setSelectedFeature(f)}
                         style={{ borderRadius: 14, padding: "13px 13px 14px", cursor: "pointer", background: featureCardBg(f.color), border: `1px solid ${isLight ? `${f.color}24` : `${f.color}22`}`, boxShadow: featureCardShadow, transition: "border-color 0.16s, transform 0.16s" }}

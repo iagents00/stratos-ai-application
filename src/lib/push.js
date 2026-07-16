@@ -294,8 +294,21 @@ export async function getPushStatus() {
     isActive: !!(supported && permission === 'granted' && subscription),
     subscription,
     needsPermission: supported && permission === 'default',
-    needsInstall: supported && !installed,
+    // Instalar (Agregar a inicio) SOLO es requisito en iOS: ahí el Web Push
+    // exige la PWA en pantalla de inicio. En desktop/Android el push anda en el
+    // navegador sin instalar → NO pedimos instalar, se activa directo.
+    needsInstall: !installed && isIOSDevice(),
   };
+}
+
+/** True si es un iPhone/iPad (donde el push exige instalar la PWA). */
+export function isIOSDevice() {
+  if (typeof navigator === 'undefined') return false;
+  const ua = navigator.userAgent || '';
+  const iOS = /iPad|iPhone|iPod/.test(ua);
+  // iPadOS 13+ se hace pasar por Mac; detectarlo por touch.
+  const iPadOS = /Macintosh/.test(ua) && typeof document !== 'undefined' && 'ontouchend' in document;
+  return iOS || iPadOS;
 }
 
 // ── Utilidades ──────────────────────────────────────────────────────────────
