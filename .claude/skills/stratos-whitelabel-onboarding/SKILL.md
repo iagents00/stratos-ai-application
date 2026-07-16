@@ -302,6 +302,12 @@ Además de mis_clientes / agenda / kpis / pipeline / buscar / crear-editar-mover
   "clientes de Gael en segunda etapa", "últimos 2 leads de Cecilia". Filtra por etapa + cantidad. Respeta permisos
   (asesor solo su cartera; admin/coordinador ve a todos). El detector distingue asesor (cartera) de cliente (ficha).
 - **Drives para TODOS los asesores** (no solo admin): cualquier asesor pide un link/drive/catálogo y lo recibe.
+- **Reasignar a MÍ** (`_bot_is_self_reassign` → `bot_reassign_self_from_text` → `bot_reassign_lead`): "pasa a X y asignámelo
+  a mí", "ponlo en mi cartera" → reasigna el lead al que escribe (target = usuario actual). Homónimos → botones (pickdis,
+  action_type `reassign`). Solo dispara con marcador "a mí/conmigo/mi cartera"; reasignar a OTRO asesor lo maneja el LLM
+  (`new_asesor_name`). Al reasignar, los recordatorios pendientes del lead siguen al nuevo asesor (en `bot_update_lead_fields`).
+  ⚠️ **OJO fechas:** el guard de "Zoom Agendado necesita fecha" (`_bot_has_datetime_hint`) debe usar `\y` (word boundary), NO
+  `\b` (que en Postgres = backspace) — si no, "en 3 horas", días y "19 de julio" fallan y pide hora exacta. (Fix 16-jul.)
 
 Todas viven en `bot_nlu_dispatch_gvintell_required_fields_orig` (capa de detección por texto, intercepta ANTES de
 honrar el tool del clasificador — así funciona aunque el LLM elija "pipeline"). Orden: docs → recomendar →
