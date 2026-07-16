@@ -86,7 +86,11 @@ function resolveInitialView(user) {
   // Asesores Stratos también arrancan en CRM. El resto (admin/ceo/director Stratos) en Comando.
   const isAsesorRole = !["super_admin","admin","director","ceo"].includes(user?.role);
   const isExternalOrg = user?.organizationId && user.organizationId !== "00000000-0000-0000-0000-000000000001";
-  const fallback = (isAsesorRole || isExternalOrg) ? "c" : "d";
+  // Marketing (equipo de Duke): NO tiene acceso al CRM — si cayera en "c" vería
+  // la pantalla de "sin permiso". Su casa es el Copilot.
+  const fallback = user?.role === "marketing"
+    ? "copilot"
+    : ((isAsesorRole || isExternalOrg) ? "c" : "d");
   if (!user?.id) return fallback;
   try {
     const saved = localStorage.getItem(`stratos.crm.view.${user.id}`);

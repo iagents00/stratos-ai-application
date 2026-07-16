@@ -39,7 +39,9 @@ export const MODULE_ROLES = {
   // Copilot: chat con el asistente IA (el mismo del bot de Telegram) embebido en
   // el CRM. Es para el asesor (su asistente para operar leads), así que todos los
   // roles lo ven. Gateado por features.copilotModule.
-  copilot: ["super_admin","admin","director","ceo","asesor"],
+  // `marketing` (equipo de marketing de Duke) también: es su ÚNICA casa —
+  // no ve CRM ni leads, opera su trabajo desde el chat (delegar por voz, etc.).
+  copilot: ["super_admin","admin","director","ceo","asesor","marketing"],
   // Caja: cuentas / ingresos / egresos sobre team_expenses. Por defecto SOLO
   // mando (admin/director/ceo): la RLS de team_expenses filtra únicamente por
   // organización (no por rol), así que dar el módulo a los asesores les
@@ -58,7 +60,8 @@ export const MODULE_ROLES = {
   rrhh:   ["super_admin","admin","director","ceo"],
   trash:  ["super_admin","admin","director","ceo","asesor"],
   planes: ["super_admin","admin","director","ceo","asesor"],
-  perfil: ["super_admin","admin","director","ceo","asesor"],
+  // `marketing` necesita Perfil para conectar su Telegram y cambiar su contraseña.
+  perfil: ["super_admin","admin","director","ceo","asesor","marketing"],
   admin:  ["super_admin","admin"],
 };
 
