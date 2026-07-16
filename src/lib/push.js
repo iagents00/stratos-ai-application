@@ -117,18 +117,31 @@ export async function subscribeToPush() {
 
   try {
     const registration = await navigator.serviceWorker.ready;
+    const desiredKey = urlB64ToUint8Array(VAPID_PUBLIC_KEY);
 
     // Verificar si ya está suscrito
     let subscription = await registration.pushManager.getSubscription();
+
+    // AUTO-SANACIÓN: si la suscripción existente usa OTRA VAPID key (p.ej. una
+    // versión vieja con la key en formato DER que ya no sirve), la descartamos y
+    // volvemos a suscribir con la key correcta. Sin esto, un device que quedó con
+    // una suscripción vieja nunca recibiría push (el servidor no puede firmarla).
     if (subscription) {
-      console.log('[Stratos Push] Ya estábamos suscritos');
-      return subscription;
+      const currentKey = subscription.options?.applicationServerKey;
+      if (currentKey && !sameKeyBytes(currentKey, desiredKey)) {
+        console.warn('[Stratos Push] Suscripción con VAPID key vieja → re-suscribiendo');
+        try { await subscription.unsubscribe(); } catch { /* noop */ }
+        subscription = null;
+      } else {
+        console.log('[Stratos Push] Ya estábamos suscritos (key OK)');
+        return subscription;
+      }
     }
 
-    // Suscribirse con la VAPID public key
+    // Suscribirse con la VAPID public key correcta
     subscription = await registration.pushManager.subscribe({
       userVisibleOnly: true,
-      applicationServerKey: urlB64ToUint8Array(VAPID_PUBLIC_KEY),
+      applicationServerKey: desiredKey,
     });
 
     console.log('[Stratos Push] Suscripción creada:', subscription.endpoint.substring(0, 60) + '...');
@@ -136,6 +149,19 @@ export async function subscribeToPush() {
   } catch (err) {
     console.error('[Stratos Push] Error al suscribir:', err);
     return null;
+  }
+}
+
+/** Compara dos applicationServerKey (ArrayBuffer/Uint8Array) byte a byte. */
+function sameKeyBytes(a, b) {
+  try {
+    const ua = new Uint8Array(a);
+    const ub = new Uint8Array(b);
+    if (ua.length !== ub.length) return false;
+    for (let i = 0; i < ua.length; i++) if (ua[i] !== ub[i]) return false;
+    return true;
+  } catch {
+    return false;
   }
 }
 
