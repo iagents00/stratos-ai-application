@@ -26,11 +26,11 @@ export const MANUAL_SECTIONS_TG = [
     id: 'que-es',
     category: 'empezar',
     icon: 'Sparkles',
-    title: '¿Qué es tu asistente de Telegram?',
-    summary: 'Un asistente personal dentro de Telegram, conectado en vivo a tu CRM. Le hablás (o le mandás un audio) y él hace el trabajo por vos.',
-    tags: ['asistente', 'bot', 'telegram', 'que es', 'para que sirve'],
+    title: '¿Qué es tu asistente?',
+    summary: 'Tu asistente inteligente conectado en vivo a tu CRM. Vive DENTRO del sistema (pestaña Copilot) y funciona SIN Telegram. Le hablás (o le mandás un audio) y hace el trabajo por vos. Telegram es un plus opcional.',
+    tags: ['asistente', 'bot', 'telegram', 'copilot', 'que es', 'para que sirve', 'sin telegram'],
     content: [
-      { type: 'p', text: 'Imaginá tener un asistente que conoce a todos tus clientes y nunca se olvida de nada. Eso es tu asistente de Telegram: un chat conectado en vivo a tu CRM de Duke del Caribe.' },
+      { type: 'p', text: 'Imaginá tener un asistente que conoce a todos tus clientes y nunca se olvida de nada. Eso es tu asistente del CRM: le hablás como a un compañero y hace el trabajo por vos. Lo tenés DENTRO del sistema, en la pestaña "Copilot" (app.stratoscapitalgroup.com) — funciona con solo tu login, sin que tengas que conectar nada. Telegram es un PLUS opcional, para quien además quiera usarlo desde su chat de Telegram.' },
       { type: 'p', text: 'Le escribís (o le mandás un audio) como a un compañero, y él hace el trabajo dentro del sistema: registra acciones, agenda zooms, crea clientes, busca fichas y te recuerda lo importante. Todo lo que hacés por el chat queda guardado al instante en el CRM.' },
       { type: 'list', items: [
         'Trabajás desde el celular, sin abrir la computadora.',
@@ -38,7 +38,7 @@ export const MANUAL_SECTIONS_TG = [
         'Llegás preparado a cada reunión y a cada llamada.',
       ]},
       { type: 'tip', text: 'No hay que memorizar comandos ni botones. Hablale natural, con tus palabras. Tolera errores de dedo, y si algo no le queda claro, te lo pregunta.' },
-      { type: 'p', text: 'Y ahora también lo tenés DENTRO del CRM: en app.stratoscapitalgroup.com abrí la pestaña "Copilot" y le escribís igual que en Telegram. Es el MISMO asistente, con las mismas capacidades — usá el que te quede más cómodo (o los dos). Todo lo de este manual sirve en ambos.' },
+      { type: 'p', text: 'Telegram es OPCIONAL — un plus. Si lo conectás, recibís las mismas alertas y podés operar también desde tu chat de Telegram. Es el MISMO asistente en las dos superficies (Copilot y Telegram), con las mismas capacidades: todo lo de este manual sirve en ambos. Y las notificaciones (Zoom, tareas, recordatorios) te llegan igual al teléfono desde el Copilot, con la app instalada.' },
     ],
   },
   {
@@ -63,11 +63,11 @@ export const MANUAL_SECTIONS_TG = [
     id: 'conectar',
     category: 'empezar',
     icon: 'LogIn',
-    title: 'Conectá tu Telegram (una sola vez)',
-    summary: 'Vinculá tu Telegram con tu perfil del CRM usando un código. Es por única vez y toma 2 minutos. Seguí estos 3 pasos.',
-    tags: ['conectar', 'vincular', 'codigo', 'start', 'generar codigo', 'parear', 'primera vez', 'bot'],
+    title: 'Conectá tu Telegram (opcional, una sola vez)',
+    summary: 'OPCIONAL — el Copilot ya funciona sin esto. Si querés recibir/operar también desde Telegram, vinculalo con un código (por única vez, 2 minutos). Seguí estos 3 pasos.',
+    tags: ['conectar', 'vincular', 'codigo', 'start', 'generar codigo', 'parear', 'primera vez', 'bot', 'opcional'],
     content: [
-      { type: 'p', text: 'Para que el asistente sepa quién sos y te muestre TUS clientes, conectás tu Telegram con tu perfil del CRM una sola vez. Son 3 pasos:' },
+      { type: 'p', text: 'Ojo: esto es OPCIONAL. En el Copilot del CRM el asistente ya sabe quién sos por tu login y te muestra TUS clientes — no necesitás conectar Telegram. Conectalo solo si además querés usarlo desde tu chat de Telegram. Son 3 pasos:' },
       { type: 'flow', items: [
         { n: '1', title: 'Abrí el bot en Telegram', text: 'En Telegram, en la lupa de buscar, escribí @Strato_sasistente_crm_bot. Abrí ese chat y tocá Iniciar (o escribí /start).' },
         { n: '2', title: 'Generá tu código en el CRM', text: 'Entrá a app.stratoscapitalgroup.com, iniciá sesión, y abajo buscá la sección "Conectar Telegram". Tocá "Generar código" — te da un código de 8 dígitos.' },
