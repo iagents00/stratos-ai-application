@@ -1872,9 +1872,20 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
     // sincronización con Supabase. saveLead nunca lanza; siempre resuelve.
     // ═══════════════════════════════════════════════════════════════════
     try {
-      const { savedToCloud, queuedForRetry, error: saveErr } =
+      const { savedToCloud, queuedForRetry, rejected, error: saveErr } =
         await saveLead(supabase, payload, user, { skipCloud: isDemo });
-      if (!savedToCloud) {
+      if (rejected) {
+        // La DB rechazó el alta: el cliente YA está en el CRM a nombre de otro
+        // asesor y quien registra NO es admin (candado create_lead, mig. 102).
+        // Deshacemos el optimismo: sacamos el lead de la lista y avisamos claro.
+        setLeadsData(prev => prev.filter(l => l.id !== localId));
+        if (justRegisteredTimer.current) clearTimeout(justRegisteredTimer.current);
+        setJustRegisteredId(null);
+        showToast(
+          saveErr || `No se puede registrar: "${draft.n.trim()}" ya está en el CRM a nombre de otro asesor. Pídele a un administrador que lo registre o te lo reasigne.`,
+          "error"
+        );
+      } else if (!savedToCloud) {
         if (queuedForRetry) {
           // Timeout = el INSERT probablemente sí pasó pero la respuesta
           // tardó (cold-start de Supabase, red lenta). Mensaje calmado,

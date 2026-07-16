@@ -334,6 +334,14 @@ export async function syncToSupabase(supabase) {
       opError = e
     }
 
+    // Rechazo PERMANENTE de negocio (el cliente ya existe a nombre de otro
+    // asesor; SQLSTATE 42501): reintentar nunca va a funcionar y no queremos
+    // ensuciar el dead-letter → descartamos el op de la cola.
+    if (opError && (opError.code === '42501' ||
+        /ya está registrado|solo un administrador/i.test(opError.message || ''))) {
+      continue
+    }
+
     // Hubo error → incrementar fail_count y decidir si va a dead letter.
     failed++
     const next = { ...op, fail_count: (op.fail_count || 0) + 1, last_error: opError?.message || 'unknown' }

@@ -174,6 +174,13 @@ export async function forceReconcile(supabase, opts = {}) {
     try {
       const { error } = await supabase.rpc('create_lead', { payload: e.payload })
       if (error) {
+        // Rechazo permanente (cliente ya existe con otro asesor; 42501): no es
+        // un fallo a reintentar — el lead legítimamente no debe crearse. Lo
+        // saltamos sin contarlo como error.
+        if (error.code === '42501' ||
+            /ya está registrado|solo un administrador/i.test(error.message || '')) {
+          continue
+        }
         failed++
         errors.push({ local_id: e.local_id, error: error.message })
       } else {
