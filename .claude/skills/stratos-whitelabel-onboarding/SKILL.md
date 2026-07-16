@@ -34,6 +34,14 @@ description: >-
 > ⚠️ NUNCA mezclar con GVINTELL. Gvintell usa ref `vfakuhpumgwsnmczzkhk` y org `c1d2e3f4-…`.
 > Son bases distintas: imposible que una acción cruce de tenant, pero hay que apuntar SIEMPRE al ref correcto.
 
+### Archivos de esta skill (leé el que toque)
+
+| Archivo | Para qué |
+|---|---|
+| **`SKILL.md`** (este) | Arquitectura, el cerebro, cómo editar funciones, operar/arreglar el bot. |
+| **`FLUJOS-N8N.md`** | **Catálogo de TODOS los flujos n8n**: qué hace cada uno, su ID, tenant, si está activo/legacy, y cuáles logean al Copilot. Empezá acá para "¿qué flujo hace X?" o "¿por qué X no llega al Copilot?". |
+| **`REPLICAR-WHITELABEL.md`** | **Receta para montar el asistente a una marca nueva** (p.ej. Vega): qué se comparte vs se clona, alta de tenant, bot, motores proactivos, agregar/quitar funciones, y las reglas de oro. |
+
 ## 1. Arquitectura — cómo fluye un mensaje
 
 ```
