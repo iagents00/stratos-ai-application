@@ -81,6 +81,10 @@ Conectalo DESPUÉS del nodo `TG …` que envía el aviso. Luego **publicá** el 
 
 ## 7. Caso concreto: montar el asistente para **Vega**
 
+> **Vega YA existe y funciona** (arrancó con 2 flujos: `Vega Telegram bot` `oZ1gJv1O7gAR4MRO` + `VEGA_TeamActions_Coach`
+> `7DvhtooPx7zJbvVx`; org de Vega, bot `ASISTENTE_CRM_VEGA_BOT`, zona Buenos Aires, lenguaje de obra, avisa al obrero). Es la
+> prueba viva de esta receta y el mejor molde para copiar. Ver `FLUJOS-N8N.md §E`.
+
 1. ¿Vega es del mismo CRM Stratos o una instancia aparte? Si es del mismo → nueva org + config `src/clients/vega/`. Si quiere datos
    separados → proyecto Supabase propio (más caro de mantener; evitá salvo exigencia).
 2. Decidir con Vega **qué funciones sí y cuáles no** (usar el menú de `FLUJOS-N8N.md §B` como carta). Prender solo esas.
