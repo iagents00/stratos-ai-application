@@ -16,9 +16,12 @@
  */
 
 // ── VAPID public key ──────────────────────────────────────────────────────
-// Generada para el dominio app.stratoscapitalgroup.com
-// La clave PRIVADA va en Supabase secrets (NUNCA en el frontend)
-const VAPID_PUBLIC_KEY = 'MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE05rs6s65MZsvr2G0N72CxJbPlRV4Pp8jvg8BCARk5IJauQ2_kvQ_WRVFM9cctR-9PLHODm0d7aE7eGneZmDa5g';
+// Clave PÚBLICA de VAPID en formato RAW P-256 (base64url, 87 chars) — el que
+// espera applicationServerKey de pushManager.subscribe(). La versión vieja
+// estaba en formato DER/SPKI (91 bytes) → subscribe() fallaba y por eso NADIE
+// quedaba suscrito (tabla push_subscriptions vacía). La clave PRIVADA que
+// hace pareja vive en la DB (push_secure_config.vapid_private), NUNCA en git.
+const VAPID_PUBLIC_KEY = 'BI73OWNrVS1mQwL825rbFkv7PxGCRklmJdrCgV6tvJtL2hx1cZSIbg_xs8sfnemFTBz0gtq-lBRFe_5Pypcif2o';
 
 // URL base de Supabase (se inyecta desde el contexto de la app)
 let _supabaseUrl = 'https://glulgyhkrqpykxmujodb.supabase.co';

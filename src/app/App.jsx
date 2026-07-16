@@ -30,7 +30,7 @@ import {
 import { isNativeApp, ensureNotifPermission, notifyUser, addNotificationTapListener } from "../lib/native";
 
 /* Sistema de notificaciones Web Push (PWA "Agregar a inicio" en iPhone/Android) */
-import { initPushContext, enablePushNotifications, onNotificationClick } from "../lib/push";
+import { initPushContext, enablePushNotifications, onNotificationClick, getPushStatus, subscribeToPush, saveSubscriptionToBackend } from "../lib/push";
 
 import {
   Search, Bell, Settings, LogOut, Sun, Moon, ChevronDown, X, PhoneCall, MessageCircle, Target, Sparkles, Bot,
@@ -395,6 +395,25 @@ export default function App() {
           if (typeof window !== 'undefined') window.focus();
         } catch { /* noop */ }
       });
+
+      // AUTO-SUSCRIBIR: si el permiso YA está concedido, suscribir en silencio y
+      // guardar el endpoint. `subscribe()` NO requiere gesto del usuario (solo
+      // `requestPermission()` lo requiere), así que esto se puede correr al boot.
+      // ⚠️ Es lo que FALTABA: antes la app solo inicializaba el contexto pero
+      // NUNCA llamaba a subscribe → push_subscriptions quedaba VACÍA → jamás
+      // llegaba un push real (con la app cerrada). Correrlo en cada apertura
+      // además RE-suscribe si iOS rotó/expiró la suscripción. El botón visible
+      // (banner del Copilot) cubre el caso permiso='default' (necesita gesto).
+      (async () => {
+        try {
+          const st = await getPushStatus();
+          if (st.supported && st.permission === 'granted') {
+            const sub = await subscribeToPush();
+            if (sub && user?.id) await saveSubscriptionToBackend(user.id, sub);
+          }
+        } catch { /* noop — el banner del Copilot ofrece activarlas manualmente */ }
+      })();
+
       return cleanup;
     } catch { /* noop */ }
     // eslint-disable-next-line react-hooks/exhaustive-deps

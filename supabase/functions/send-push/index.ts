@@ -1,17 +1,18 @@
 // send-push — envía notificaciones push a dispositivos suscritos via Web Push API
 // ─────────────────────────────────────────────────────────────────────────────
 // Endpoint PRIVADO (verify_jwt=false, protegido por secreto compartido).
-// Lo llaman flujos de n8n cuando hay que notificar a un usuario (WhatsApp,
-// recordatorios, Copilot, etc.).
+// Lo llaman flujos de n8n Y el trigger de DB `trg_push_on_proactive_sent`
+// (vía pg_net) cuando hay que notificar a un usuario (recordatorios, Copilot…).
 //
 // Payload esperado:
 //   POST { user_id, title, body, url?, view?, lead_id?, tag? }
 //     → Busca todas las suscripciones del usuario, envía push a cada una.
-//
 //   POST { user_ids: [...], title, body, ... }
 //     → Igual pero para múltiples usuarios a la vez.
 //
-// Requiere el secreto VAPID_PRIVATE_KEY en las variables de entorno de Supabase.
+// La VAPID private key se lee de env (VAPID_PRIVATE_KEY) o, si no está, de la
+// tabla `push_secure_config` (server-side, RLS solo service_role). Así el repo
+// NUNCA lleva el secreto pero el deploy funciona igual.
 //
 // Deploy: supabase functions deploy send-push --no-verify-jwt
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
@@ -24,21 +25,44 @@ const SUPABASE_URL =
 const SERVICE_ROLE =
   Deno.env.get("SB_SERVICE_ROLE_KEY") ?? Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 
-// VAPID keys (generadas para app.stratoscapitalgroup.com)
+// VAPID public key (raw P-256, base64url). Es PÚBLICA por diseño — puede ir en
+// el código y en el frontend (applicationServerKey). DEBE coincidir con la
+// private guardada en push_secure_config.vapid_private.
 const VAPID_SUBJECT = "mailto:angel@iagents.io";
 const VAPID_PUBLIC_KEY =
-  "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE05rs6s65MZsvr2G0N72CxJbPlRV4Pp8jvg8BCARk5IJauQ2_kvQ_WRVFM9cctR-9PLHODm0d7aE7eGneZmDa5g";
-const VAPID_PRIVATE_KEY =
-  Deno.env.get("VAPID_PRIVATE_KEY") ??
-  "__SET_VAPID_PRIVATE_KEY_IN_SUPABASE_SECRETS__";
+  "BI73OWNrVS1mQwL825rbFkv7PxGCRklmJdrCgV6tvJtL2hx1cZSIbg_xs8sfnemFTBz0gtq-lBRFe_5Pypcif2o";
 
-// Secreto compartido simple (puede ser cualquier string; debe coincidir con quien llame)
+// Secreto compartido simple (debe coincidir con quien llame: n8n / trigger DB)
 const PUSH_SECRET =
   Deno.env.get("PUSH_WEBHOOK_SECRET") ?? "stratos-push-internal-2026";
 
 const admin = createClient(SUPABASE_URL, SERVICE_ROLE, {
   auth: { autoRefreshToken: false, persistSession: false },
 });
+
+// Private key: env primero; si no, de la DB (push_secure_config). Cache en warm.
+let _vapidPrivate: string | null = null;
+async function getVapidPrivate(): Promise<string> {
+  const env = Deno.env.get("VAPID_PRIVATE_KEY");
+  if (env && !env.startsWith("__SET_")) return env;
+  if (_vapidPrivate) return _vapidPrivate;
+  try {
+    const { data, error } = await admin
+      .from("push_secure_config")
+      .select("value")
+      .eq("key", "vapid_private")
+      .maybeSingle();
+    if (error) {
+      console.error("[send-push] no pude leer vapid_private de DB:", error.message);
+      return "";
+    }
+    _vapidPrivate = data?.value ?? "";
+    return _vapidPrivate;
+  } catch (e) {
+    console.error("[send-push] excepción leyendo vapid_private:", (e as Error).message);
+    return "";
+  }
+}
 
 function cors(origin: string | null) {
   return {
@@ -69,14 +93,15 @@ Deno.serve(async (req) => {
     return json({ ok: false, error: "method_not_allowed" }, 405, origin);
   }
 
-  // Auth por secreto compartido (sin JWT — lo llaman flujos internos de n8n)
+  // Auth por secreto compartido (sin JWT — lo llaman flujos internos / trigger DB)
   const secret = req.headers.get("x-push-secret") ?? "";
   if (secret !== PUSH_SECRET) {
     return json({ ok: false, error: "unauthorized" }, 401, origin);
   }
 
+  const VAPID_PRIVATE_KEY = await getVapidPrivate();
   if (!SERVICE_ROLE || !VAPID_PRIVATE_KEY || VAPID_PRIVATE_KEY.startsWith("__SET_")) {
-    console.error("[send-push] Falta SERVICE_ROLE o VAPID_PRIVATE_KEY en secrets");
+    console.error("[send-push] Falta SERVICE_ROLE o VAPID_PRIVATE_KEY");
     return json({ ok: false, error: "server_misconfigured" }, 500, origin);
   }
 
