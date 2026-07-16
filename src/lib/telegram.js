@@ -363,6 +363,18 @@ async function _sendCopilotMessageInner(rawText, options = {}) {
     if (!profile?.telegram_chat_id) return { reply: null, error: 'not_paired' };
     const chatId = Number(profile.telegram_chat_id);
 
+    // FLUJO "Ya estudié, este es mi plan" (paridad con Telegram): el botón manda
+    // callback `proact_plan:<leadId>`. El webhook del Copilot NO orquesta el estado
+    // awaiting_plan, así que lo hacemos acá: dejamos al asistente "en escucha" del
+    // plan (fn_proactive_plan_start vía RPC). El próximo mensaje se captura abajo.
+    if (options.callback_data && /^proact_plan:/.test(options.callback_data)) {
+      const leadId = options.callback_data.split(':')[1];
+      try {
+        const { data: startReply } = await supabase.rpc('copilot_plan_start', { p_lead_id: leadId });
+        if (startReply && typeof startReply === 'string') return { reply: startReply, error: null };
+      } catch { /* si falla, cae al webhook normal */ }
+    }
+
     // Si es un click en botón inline (callback_data), va directo al webhook (o RPC callback) sin evaluar QUICK_COMMANDS
     if (!options.callback_data) {
       const lower = cleanText.toLowerCase();
@@ -386,6 +398,19 @@ async function _sendCopilotMessageInner(rawText, options = {}) {
           }
         } catch { /* RPC falló, caemos al webhook */ }
       }
+    }
+
+    // AWAITING_PLAN (paridad con Telegram): si el asesor tocó "Ya estudié, este es
+    // mi plan", el próximo texto ES el plan → lo capturamos acá ANTES del webhook
+    // (que lo trataría como una nota). Si no está en ese estado, devuelve null y
+    // el mensaje sigue su curso normal. Cubre el plan de Zoom y el de próxima acción.
+    if (!options.callback_data && cleanText) {
+      try {
+        const { data: pendingReply } = await supabase.rpc('copilot_handle_pending', { p_text: cleanText });
+        if (pendingReply && typeof pendingReply === 'string' && pendingReply.trim()) {
+          return { reply: pendingReply, error: null };
+        }
+      } catch { /* si falla, sigue al webhook normal */ }
     }
 
     // Función auxiliar para neutralizar menú intrusivo en consultas libres
