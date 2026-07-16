@@ -173,8 +173,27 @@ export async function saveLead(supabase, payload, currentUser, opts = {}) {
     )
 
     if (error) {
-      // Error duro de Supabase (RLS, validación, etc.).
-      // Encolamos para reintento con el mismo id (la RPC es idempotente).
+      // Rechazo PERMANENTE de negocio: el asesor intenta registrar un cliente
+      // que YA está en el CRM a nombre de OTRO asesor (candado en create_lead,
+      // migración 102 → SQLSTATE 42501). Reintentar nunca va a funcionar, así
+      // que NO encolamos: marcamos el espejo como fallido y devolvemos
+      // `rejected` para que la UI quite el lead optimista y muestre el aviso.
+      const isPermanentReject =
+        error.code === '42501' ||
+        /ya está registrado|solo un administrador/i.test(error.message || '')
+      if (isPermanentReject) {
+        try { storageMarkFailed(localId, error.message || 'rechazado') } catch (_) {}
+        return {
+          id,
+          savedToCloud:   false,
+          queuedForRetry: false,
+          rejected:       true,
+          error:          error.message || 'No se puede registrar: el cliente ya existe en el CRM.',
+          savedRow:       null,
+        }
+      }
+      // Error duro transitorio (RLS, validación, red): encolamos para reintento
+      // con el mismo id (la RPC es idempotente).
       enqueueLeadInsert(fullPayload, currentUser, { localId })
       return {
         id,
