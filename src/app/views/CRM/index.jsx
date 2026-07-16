@@ -455,13 +455,26 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
   const confirmVisitaScheduling = (dateTimeString) => {
     if (!visitaSchedulingLead) return;
     const { lead } = visitaSchedulingLead;
+    const formattedDateTime = dateTimeString.replace("T", " ");
     // Instante real de la visita (ISO, hora local del asesor). Es lo que lee
-    // fn_proactive_scan_visitas para encolar los avisos.
+    // fn_proactive_scan_visitas para encolar los avisos, y también la fuente
+    // de verdad para MOSTRAR la fecha en la tabla y el expediente (vía
+    // next_action_at, que normalizeLeads formatea porque "Visita Agendada"
+    // está en STAGES_CON_CITA).
     let visitaAtISO = null;
     try { visitaAtISO = new Date(dateTimeString).toISOString(); } catch (_) { /* fecha inválida → null */ }
+    // Además de visita_at (avisos), poblamos los campos de cita que la UI
+    // renderea (igual que el modal de Zoom): sin esto la fecha se guardaba
+    // pero NO se veía — la pill de la fila mostraba "Agendar fecha" y el
+    // expediente quedaba sin la cita. `nextActionDate` con palabras para que
+    // se lea claro; el crudo en next_action_date; el instante en next_action_at.
     const finalizedLead = {
       ...lead,
       st: "Visita Agendada",
+      nextAction: "Visita",
+      nextActionDate: formatFechaLarga(dateTimeString) || formattedDateTime,
+      next_action_date: formattedDateTime,
+      next_action_at: visitaAtISO,
       visita_at: visitaAtISO,
       _visitaConfirmed: true,
     };
