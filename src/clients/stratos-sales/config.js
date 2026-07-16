@@ -34,7 +34,7 @@ const stratosSalesConfig = {
     supabaseRef:    "glulgyhkrqpykxmujodb",
   },
 
-  // Modulos minimos: solo CRM + Comando Directivo + Papelera.
+  // Modulos minimos: CRM + Comando Directivo + Copilot + Papelera.
   // Modulos internos del producto Stratos (ERP/RRHH/Finanzas/etc) NO aplican
   // porque aqui no se opera el producto, se vende.
   features: {
@@ -48,6 +48,10 @@ const stratosSalesConfig = {
     rrhh:             false,
     trash:            true,
     comandoDirectivo: true,
+    // Copilot ON: el equipo NSG (Ángel, Admin NSG…) opera su cartera desde el
+    // asistente del CRM sin obligar a conectar Telegram (identidad sintética +
+    // push al teléfono ya son globales). Gate en navigation.js canAccessModule.
+    copilotModule:    true,
   },
 
   support: {
