@@ -7,7 +7,7 @@
  */
 import {
   Target, Plus, Check, Minus, GripVertical, TrendingUp, ChevronRight,
-  AlertCircle, Bell, X, Atom, CalendarDays, Clock, ChevronLeft,
+  AlertCircle, Bell, X, Atom, CalendarDays, Clock, ChevronLeft, ChevronUp, ChevronDown,
   FileText, Table, Presentation, ClipboardList, HardDrive, BookOpen,
   PenTool, Palette, Video, Globe, Cloud, ExternalLink, Trash2, FolderOpen,
   Users, UserRound,
@@ -466,6 +466,15 @@ export default function MetaPanel({
   const setActionDueTime = (timeValue) => {
     setMetaNewDate(timeValue ? `${selectedDueDate || localYmd(new Date())}T${timeValue}` : "");
   };
+  // Reloj custom (sin picker nativo): base 09:00 si aún no hay hora elegida.
+  const baseDueTime = () => selectedDueTime || "09:00";
+  const bumpDueTime = (field, delta) => {
+    let [h, m] = baseDueTime().split(":").map(Number);
+    if (field === "h") h = (h + delta + 24) % 24;
+    else m = (m + delta + 60) % 60;
+    setActionDueTime(`${pad2(h)}:${pad2(m)}`);
+  };
+  const setDueMinute = (m) => setActionDueTime(`${baseDueTime().split(":")[0]}:${pad2(m)}`);
   const clearActionDue = () => {
     setMetaNewDate("");
     setDuePickerOpen(null);
@@ -1032,70 +1041,67 @@ export default function MetaPanel({
                             <button type="button" onClick={() => setDuePickerOpen("date")} className="mp-quickchip" style={{ border:`1px solid ${T.border}`, background:isLight?"rgba(15,23,42,0.035)":"rgba(255,255,255,0.045)", color:T.txt2, borderRadius:99, padding:"7px 11px", fontSize:11.5, fontWeight:500, fontFamily:fontDisp, cursor:"pointer" }}>Cambiar fecha</button>
                           </div>
                           <div style={{ marginBottom:10 }}>
-                            <label
-                              onClick={e => {
-                                const input = e.currentTarget.querySelector("input");
-                                if (e.target !== input && typeof input?.showPicker === "function") input.showPicker();
-                              }}
-                              style={{
-                                display:"grid",
-                                gridTemplateColumns:isMobile ? "1fr" : "1fr minmax(170px, 220px)",
-                                alignItems:"center",
-                                gap:12,
-                                minHeight:74,
-                                borderRadius:20,
-                                padding:"12px",
-                                border:`1px solid ${selectedDueTime ? _hex(T.accent,"62") : (isLight ? "rgba(15,23,42,0.10)" : "rgba(255,255,255,0.10)")}`,
-                                background:selectedDueTime ? `${T.accent}10` : (isLight ? "rgba(248,250,252,0.94)" : "rgba(255,255,255,0.048)"),
-                                boxShadow:selectedDueTime ? `inset 0 0 0 1px ${_hex(T.accent,"18")}` : "none",
-                                cursor:"pointer",
-                              }}
-                            >
-                              <span style={{ display:"flex", flexDirection:"column", gap:3, minWidth:0 }}>
-                                <span style={{ color:T.txt, fontSize:14, fontWeight:500, fontFamily:fontDisp, letterSpacing:"-0.02em" }}>Hora exacta</span>
-                                <span style={{ color:T.txt3, fontSize:11, fontWeight:400, fontFamily:font, lineHeight:1.35 }}>Toca el campo y elige cualquier hora/minuto</span>
-                              </span>
-                              <span style={{
-                                display:"flex", alignItems:"center", gap:9,
-                                height:50, borderRadius:16, padding:"0 12px",
-                                border:`1px solid ${isLight ? "rgba(15,23,42,0.11)" : "rgba(255,255,255,0.11)"}`,
-                                background:isLight ? "#FFFFFF" : "rgba(255,255,255,0.06)",
-                              }}>
-                                <Clock size={17} color={selectedDueTime ? T.accent : T.txt3} strokeWidth={2.25} />
-                                <input
-                                  type="time"
-                                  step="60"
-                                  value={selectedDueTime}
-                                  aria-label="Hora exacta de la acción"
-                                  onChange={e => setActionDueTime(e.target.value)}
-                                  onKeyDown={e => { if (e.key === "Enter" && selectedDueTime) setDuePickerOpen(null); }}
-                                  style={{
-                                    width:"100%", minWidth:0, height:48, border:"none",
-                                    background:"transparent", color:T.txt, fontSize:18,
-                                    fontWeight:500, fontFamily:fontDisp, letterSpacing:"-0.03em",
-                                    outline:"none", colorScheme:isLight ? "light" : "dark",
-                                    cursor:"pointer",
-                                  }}
-                                />
-                              </span>
-                            </label>
-                            <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", gap:8, marginTop:8, padding:"0 2px" }}>
-                              <button
-                                type="button"
-                                className="mp-quickchip"
-                                onClick={() => setActionDueTime(currentTimeValue())}
-                                style={{
-                                  border:`1px solid ${T.border}`,
-                                  background:isLight ? "rgba(15,23,42,0.035)" : "rgba(255,255,255,0.045)",
-                                  color:T.txt2, borderRadius:99, padding:"7px 11px",
-                                  fontSize:11.5, fontWeight:500, fontFamily:fontDisp, cursor:"pointer",
-                                }}
-                              >
-                                Ahora
+                            {/* Reloj custom con steppers — reemplaza al picker nativo
+                                del browser (feo/poco práctico). Ajuste por toque. */}
+                            {(() => {
+                              const dispH = baseDueTime().slice(0, 2);
+                              const dispM = baseDueTime().slice(3, 5);
+                              const committed = !!selectedDueTime;
+                              const stepBtn = {
+                                width:44, height:28, borderRadius:10,
+                                border:`1px solid ${isLight ? "rgba(15,23,42,0.10)" : "rgba(255,255,255,0.10)"}`,
+                                background:isLight ? "rgba(15,23,42,0.035)" : "rgba(255,255,255,0.05)",
+                                color:T.accent, display:"flex", alignItems:"center", justifyContent:"center",
+                                cursor:"pointer", padding:0,
+                              };
+                              const Stepper = ({ field, value }) => (
+                                <div style={{ display:"flex", flexDirection:"column", alignItems:"center", gap:6 }}>
+                                  <button type="button" className="mp-iconbtn" style={stepBtn} aria-label={`Subir ${field === "h" ? "hora" : "minutos"}`} onClick={() => bumpDueTime(field, 1)}><ChevronUp size={16} strokeWidth={2.4} /></button>
+                                  <span style={{ minWidth:52, textAlign:"center", color: committed ? T.txt : T.txt2, fontSize:34, fontWeight:500, fontFamily:fontDisp, letterSpacing:"-0.03em", fontVariantNumeric:"tabular-nums", lineHeight:1 }}>{value}</span>
+                                  <button type="button" className="mp-iconbtn" style={stepBtn} aria-label={`Bajar ${field === "h" ? "hora" : "minutos"}`} onClick={() => bumpDueTime(field, -1)}><ChevronDown size={16} strokeWidth={2.4} /></button>
+                                </div>
+                              );
+                              return (
+                                <div style={{
+                                  display:"grid", gridTemplateColumns:isMobile ? "1fr" : "1fr auto",
+                                  alignItems:"center", gap:14, minHeight:74, borderRadius:20, padding:"14px 16px",
+                                  border:`1px solid ${committed ? _hex(T.accent,"62") : (isLight ? "rgba(15,23,42,0.10)" : "rgba(255,255,255,0.10)")}`,
+                                  background:committed ? `${T.accent}10` : (isLight ? "rgba(248,250,252,0.94)" : "rgba(255,255,255,0.048)"),
+                                  boxShadow:committed ? `inset 0 0 0 1px ${_hex(T.accent,"18")}` : "none",
+                                }}>
+                                  <span style={{ display:"flex", alignItems:"center", gap:10, minWidth:0 }}>
+                                    <span style={{ width:38, height:38, borderRadius:12, flexShrink:0, display:"flex", alignItems:"center", justifyContent:"center", background:committed ? `${T.accent}1E` : (isLight ? "rgba(15,23,42,0.05)" : "rgba(255,255,255,0.06)"), border:`1px solid ${committed ? _hex(T.accent,"3A") : "transparent"}` }}>
+                                      <Clock size={19} color={committed ? T.accent : T.txt3} strokeWidth={2.25} />
+                                    </span>
+                                    <span style={{ display:"flex", flexDirection:"column", gap:3, minWidth:0 }}>
+                                      <span style={{ color:T.txt, fontSize:14, fontWeight:500, fontFamily:fontDisp, letterSpacing:"-0.02em" }}>Hora exacta</span>
+                                      <span style={{ color:T.txt3, fontSize:11, fontWeight:400, fontFamily:font, lineHeight:1.35 }}>Ajústala con los botones o los accesos de abajo</span>
+                                    </span>
+                                  </span>
+                                  <div style={{ display:"flex", alignItems:"center", gap:8, justifySelf:isMobile ? "center" : "end" }}>
+                                    <Stepper field="h" value={dispH} />
+                                    <span style={{ color:T.txt2, fontSize:30, fontWeight:400, fontFamily:fontDisp, marginTop:-2 }}>:</span>
+                                    <Stepper field="m" value={dispM} />
+                                  </div>
+                                </div>
+                              );
+                            })()}
+                            <div style={{ display:"flex", alignItems:"center", gap:8, marginTop:10, flexWrap:"wrap" }}>
+                              <button type="button" className="mp-quickchip" onClick={() => setActionDueTime(currentTimeValue())}
+                                style={{ display:"inline-flex", alignItems:"center", gap:5, border:`1px solid ${_hex(T.accent,"44")}`, background:`${T.accent}12`, color:T.accent, borderRadius:99, padding:"7px 13px", fontSize:11.5, fontWeight:600, fontFamily:fontDisp, cursor:"pointer" }}>
+                                <Clock size={12} strokeWidth={2.4} /> Ahora
                               </button>
-                              <span style={{ color:T.txt3, fontSize:10.5, fontWeight:400, fontFamily:font, textAlign:"right" }}>
-                                También puedes escribir la hora con teclado
-                              </span>
+                              <span style={{ width:1, height:18, background:T.border, margin:"0 2px" }} />
+                              <span style={{ color:T.txt3, fontSize:10.5, fontWeight:500, fontFamily:fontDisp, letterSpacing:"0.02em" }}>Minutos</span>
+                              {[0, 15, 30, 45].map(mm => {
+                                const on = baseDueTime().slice(3, 5) === pad2(mm);
+                                return (
+                                  <button key={mm} type="button" className="mp-quickchip" onClick={() => setDueMinute(mm)}
+                                    style={{ border:`1px solid ${on ? _hex(T.accent,"58") : T.border}`, background:on ? `${T.accent}16` : (isLight ? "rgba(15,23,42,0.035)" : "rgba(255,255,255,0.045)"), color:on ? T.accent : T.txt2, borderRadius:99, padding:"7px 11px", fontSize:11.5, fontWeight:500, fontFamily:fontDisp, fontVariantNumeric:"tabular-nums", cursor:"pointer" }}>
+                                    :{pad2(mm)}
+                                  </button>
+                                );
+                              })}
                             </div>
                           </div>
                           <div style={{ display:"grid", gridTemplateColumns:isMobile ? "repeat(3,1fr)" : "repeat(4,1fr)", gap:8 }}>
