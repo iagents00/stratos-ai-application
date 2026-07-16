@@ -70,19 +70,37 @@
 | STRATOS_SALES_NextAction_Engine | `M7A3hIdKWfYoj5HF` |
 | STRATOS_SALES_Proactive_Engine | `k2uAYShEHjOUGxVc` |
 
-## E. LEGACY / DUPLICADOS — candidatos a ARCHIVAR (no borrar; primero confirmar con Ángel/Iván)
+## E. OTRA MARCA YA VIVA: VEGA (ejemplo real de white-label)
 
-> Están **inactivos** y quedaron de iteraciones viejas. Antes de archivar cualquiera: confirmar que no tenga webhook/cron vivo y
-> avisar. NO borrar (archivar es reversible; borrar no). Estos son la razón por la que "hay flujos duplicados muy atrás".
+> Vega YA es un tenant funcionando — prueba de que la receta de `REPLICAR-WHITELABEL.md` funciona. Es una constructora
+> (tareas de **obra**, avisa al **obrero**), org de Vega, bot propio `ASISTENTE_CRM_VEGA_BOT`, zona **Buenos Aires**. **No toca Duke.**
 
-| Flujo | ID | Por qué es legacy |
+| Flujo | ID | Rol |
 |---|---|---|
-| STR_NextAction_Engine (OFF · CRUZADO) | `9rb9xkcCmS3YWfRV` | Ya rotulado OFF; leía TGenius y enviaba por bot Stratos (cruzado). Reemplazado por `STRATOS_NextAction_Engine`. |
-| Stratos AI — Telegram CRM Bot v4 (asesor) | `oVQfe8tH5CbI0OLj` | Bot viejo v4, reemplazado por el v5 (`vM5Yu1HRmUDPOCg7`). |
-| stratos telegram bot / v5 (copias) | `2b5cyhWwvhms8yGt`, `tL5BpCeGxfSZ5rtP`, `1huf7v7oAN7OnYHV`, `O20wxeWlu3BTK091`, `rRycw3YpjVG4XZEm` | Copias/borradores viejos del bot v5. |
-| SHEET Append Nota / SHEET - AGENT | `4q8VXXjjcwZfEkP5`, `rY4Yci5OdQ6O5g8O` | Agente viejo estilo TGenius sobre Google Sheets (pre-Postgres-first). |
-| STRATOS_TeamActions_Coach (Duke) | `xyVnpym5QuoCC6uY` | Versión Duke-solo, reemplazada por la Duke+Sales (`Sv4SOmMzfGF1Nh1A`). |
-| Stratos ERP V final / Despertador 8AM / Generar Codigo Pareo / 10 - API INTERNA | `UtNA7MVIorQMtXgJ`, `b94aS5Vt4o793qvr`, `TazjcLFfFm6GMyGj`+`pA47MeX3R1GPnooK`, `fw5NTN3JUKWgNZkQ` | Experimentos/versión vieja. |
+| **Vega Telegram bot** | `oZ1gJv1O7gAR4MRO` | El bot de Telegram de Vega (token propio). |
+| **VEGA_TeamActions_Coach** | `7DvhtooPx7zJbvVx` | Motor de seguimiento de tareas de obra (clon del coach de Duke, apuntando a la org de Vega). |
+
+> Vega arrancó con SOLO estas 2 piezas (bot + 1 motor proactivo). Ese es el mínimo para una marca nueva; se le agregan más motores
+> del menú §B según lo que pida. Si Vega usa Copilot web, su motor necesitaría el nodo `Log Proactive Copilot` (hoy parece Telegram-only).
+
+## F. LEGACY / DUPLICADOS
+
+### Ya ARCHIVADOS el 2026-07-16 (reversibles: "Unarchive" en n8n)
+- `9rb9xkcCmS3YWfRV` — **STR_NextAction_Engine (OFF · CRUZADO)** — el que "leía TGenius y enviaba por bot Stratos"; **este es el que
+  confundió a otra IA** (Antigravity conectó a él). Reemplazado por `STRATOS_NextAction_Engine`.
+- `oVQfe8tH5CbI0OLj` — Telegram CRM Bot **v4** (reemplazado por el v5 `vM5Yu1HRmUDPOCg7`).
+- `O20wxeWlu3BTK091`, `rRycw3YpjVG4XZEm` — copias "Postgres-first" del bot v5.
+- `rY4Yci5OdQ6O5g8O` — **SHEET - AGENT** (agente viejo sobre Google Sheets, pre-Postgres).
+- `xyVnpym5QuoCC6uY` — **STRATOS_TeamActions_Coach (Duke)** solo (reemplazado por Duke+Sales `Sv4SOmMzfGF1Nh1A`).
+
+### Pendientes de archivar A MANO (el MCP no pudo: tienen "MCP access" apagado en su tarjeta de n8n)
+- `2b5cyhWwvhms8yGt` (stratos telegram bot), `tL5BpCeGxfSZ5rtP` (v5 copia), `1huf7v7oAN7OnYHV` (v5 copy). Los 3 **inactivos**;
+  archivarlos desde la UI de n8n (tarjeta → Archive) o prender "MCP access" y reintentar.
+
+### NO tocar (activos o de otro tenant)
+- `4q8VXXjjcwZfEkP5` **SHEET Append Nota** — **ACTIVO** (tool de sub-workflow). No archivar sin verificar quién lo llama.
+- **Familia TGenius `TG_ / TGN_`** (`WpkjVeunGdapsuvp`, `H9LHzGeCQQndT8SD`, `OlRaJTEzEUiJmZ4A`, `WYUzUvfJviPTsOu2`…) — son de **Gvintell/TGenius** (otro tenant), NO de Stratos. Viven en el mismo n8n; dejarlos.
+- Experimentos inactivos sueltos (`UtNA7MVIorQMtXgJ` ERP, `b94aS5Vt4o793qvr` Despertador, `TazjcLFfFm6GMyGj`/`pA47MeX3R1GPnooK` Codigo Pareo, `fw5NTN3JUKWgNZkQ` API INTERNA) — inactivos; archivar cuando se confirme que nada los usa.
 
 ---
 
