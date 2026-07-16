@@ -22,7 +22,7 @@ import {
   Copy, Check, Trash2,
   ChevronDown, ChevronUp,
   FilePlus, RefreshCw, ListChecks,
-  UserCheck, List, Mail,
+  UserCheck, List, Mail, Lock,
   Save, Minus,
   History as HistoryIcon,
   Video
@@ -155,6 +155,12 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
   // ofrecemos a quien ve todos los leads (admin/director). La RLS de Supabase
   // (leads_update) igual valida permisos por fila, así que es seguro.
   const canBulkReassign = canSeeAll;
+  // Registrar/reasignar un cliente que YA está en el CRM a nombre de OTRO asesor
+  // es SOLO para administradores (super_admin/admin/ceo/director). Un asesor ve
+  // el aviso de duplicado pero NO puede "quedárselo": debe pedírselo a un admin.
+  // Regla de negocio (jul 2026). El candado REAL vive además en la RPC
+  // fn_claim_lead (SECURITY DEFINER, migración 101); esto es la capa de UX.
+  const canClaimExistingLead = isAdminRole;
   // Orden por defecto: fecha de creación descendente (los más recientes
   // arriba). Antes era "sc desc" (score), lo que hacía que un lead recién
   // registrado con score bajo (5 por default) cayera abajo en cuanto se
@@ -1611,17 +1617,28 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
     if (submittingRef.current) return;
 
     // ── Guard de duplicado ────────────────────────────────────────────────
-    // Si la RPC detectó un lead con mismo phone/email y el usuario NO ha
-    // confirmado el override, bloqueamos el registro. El banner del modal
-    // muestra el botón "Registrar de todas formas" que pone override=true.
-    // Si el match es propio (is_mine), no bloqueamos pero el banner ya invita
-    // a abrir la ficha en vez de duplicar.
-    if (duplicateMatch && !duplicateOverride && !duplicateMatch.is_mine) {
-      showToast(
-        `Este cliente ya está registrado por ${duplicateMatch.asesor_name || 'otro asesor'}. Confirma el aviso del formulario antes de registrar.`,
-        'error'
-      );
-      return;
+    // Si la RPC detectó un lead con mismo phone/email que YA pertenece a OTRO
+    // asesor (is_mine=false):
+    //   · Asesor → NO puede registrarlo ni quedárselo. Solo un administrador
+    //     puede reasignar un cliente que ya está en el CRM (regla jul 2026).
+    //   · Admin  → puede, tras confirmar el override ("Registrar de todas formas").
+    // Si el match es propio (is_mine), no bloqueamos: el asesor puede decidir
+    // crear otro lead con el mismo contacto (quizá es un caso distinto).
+    if (duplicateMatch && !duplicateMatch.is_mine) {
+      if (!canClaimExistingLead) {
+        showToast(
+          `Este cliente ya está registrado por ${duplicateMatch.asesor_name || 'otro asesor'}. Solo un administrador puede registrarlo o reasignarlo.`,
+          'error'
+        );
+        return;
+      }
+      if (!duplicateOverride) {
+        showToast(
+          `Este cliente ya está registrado por ${duplicateMatch.asesor_name || 'otro asesor'}. Confirma el aviso del formulario antes de registrar.`,
+          'error'
+        );
+        return;
+      }
     }
 
     // ── Override sobre lead de OTRO asesor → TRANSFERIR (no duplicar ni perder) ──
@@ -1632,6 +1649,14 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
     // lead se perdía. Ahora reasignamos el existente: queda con el nuevo asesor y se le
     // quita al anterior. NO toca el flujo de registro normal (solo override + no-mío).
     if (duplicateOverride && duplicateMatch && !duplicateMatch.is_mine && duplicateMatch.lead_id) {
+      // Defensa en profundidad: reasignar un cliente ajeno es solo para admins.
+      // El botón de override ni se muestra al asesor, pero por si el estado
+      // quedara colgado, cerramos la puerta también acá (la RPC fn_claim_lead
+      // igual lo rechaza a nivel DB — la llave real).
+      if (!canClaimExistingLead) {
+        showToast("Solo un administrador puede reasignar un cliente que ya está registrado por otro asesor.", "error");
+        return;
+      }
       const targetAsesor = (newLead.asesor || user?.name || "").trim();
       if (!targetAsesor) {
         showToast("Asigná un asesor antes de transferir el cliente.", "error");
@@ -3210,6 +3235,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                             <Eye size={13} strokeWidth={2.1} style={{ opacity: 0.82, flexShrink: 0 }} />
                             Ver ficha existente
                           </button>
+                          {canClaimExistingLead && (
                           <button
                             type="button"
                             onClick={() => setDuplicateOverride(v => !v)}
@@ -3235,6 +3261,13 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                               : <UserCheck size={13} strokeWidth={2.1} style={{ flexShrink: 0 }} />}
                             Registrar de todas formas
                           </button>
+                          )}
+                          {!canClaimExistingLead && (
+                            <div style={{ flexBasis: "100%", display: "flex", alignItems: "flex-start", gap: 6, marginTop: 2, fontSize: 11, color: T.txt2, lineHeight: 1.45, fontFamily: font }}>
+                              <Lock size={12} strokeWidth={2.1} color={baseColor} style={{ flexShrink: 0, marginTop: 1, opacity: 0.85 }} />
+                              <span>Solo un <strong style={{ color: T.txt, fontWeight: 500 }}>administrador</strong> puede registrar o reasignar un cliente que ya está en el CRM a nombre de otro asesor. Pídeselo a tu administrador.</span>
+                            </div>
+                          )}
                         </div>
                       )}
                       {isMine && (
@@ -3605,7 +3638,11 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
               // Bloqueamos el submit si hay duplicado de OTRO asesor sin override.
               // Si is_mine, no bloqueamos (es decisión del asesor crear otro lead
               // con el mismo contacto — quizá es un caso distinto).
-              const dupBlocks = !!(duplicateMatch && !duplicateOverride && !duplicateMatch.is_mine);
+              // Un duplicado de OTRO asesor bloquea el submit salvo que un ADMIN
+              // haya confirmado el override. El asesor nunca puede: para él el
+              // botón queda deshabilitado ("Ya existe en el CRM").
+              const dupForeign = !!(duplicateMatch && !duplicateMatch.is_mine);
+              const dupBlocks  = dupForeign && (!canClaimExistingLead || !duplicateOverride);
               // Un admin debe asignar asesor (no dejar leads huérfanos sin dueño).
               const asesorMissing = isAdminRole && !String(newLead.asesor || "").trim();
               const canSubmit = newLead.n.trim() && !dupBlocks && !asesorMissing;
