@@ -93,6 +93,25 @@ Conectalo DESPUÉS del nodo `TG …` que envía el aviso. Luego **publicá** el 
 5. Arrancar en `shadow_mode=true` unos días; validar en vivo; luego apagar shadow.
 6. Registrar todo en el AIOS (changelog + este catálogo con los IDs nuevos de Vega).
 
+## 8. Copilot sin Telegram (identidad sintética) + Push al teléfono — cómo replica
+
+Desde 16-jul el Copilot **no obliga a conectar Telegram** y **avisa al teléfono** (web-push). Para una marca nueva:
+
+- **Identidad sintética (ya es global, no hay que tocar nada por marca):** todo perfil activo recibe un
+  `telegram_chat_id` — REAL si conectó Telegram (chat>0), o **sintético** (negativo, único) si no, vía el trigger
+  `trg_assign_copilot_identity` + secuencia `copilot_synthetic_chat_seq`. El cerebro keyea por ese número igual. Así el
+  Copilot de la marca funciona para todos sus asesores sin pedir Telegram. Telegram queda opcional (Perfil lo distingue
+  con `telegramConnected` = chat>0). Al conectar/desconectar Telegram el historial migra solo (`fn_merge_chat_identity`).
+- **Push al teléfono (choke-point único, ya cubre a la marca):** el trigger `trg_push_on_proactive_sent` en
+  `proactive_reminders` (status→sent) dispara UN web-push por asesor vía **pg_net → edge `send-push`**, para CUALQUIER
+  org/flujo. No hay que agregar nodos de push en los flujos n8n de la marca. Requisitos por device: el asesor abre la
+  **PWA instalada** y el permiso de notificaciones queda `granted` → `App.jsx` lo auto-suscribe (`push_subscriptions`).
+- **VAPID (una sola vez para todo el proyecto, no por marca):** public en `src/lib/push.js` + edge (raw P-256, base64url);
+  **private en la DB** `push_secure_config.vapid_private` (RLS solo service_role, NUNCA en git). El edge `send-push` la lee
+  de ahí. Si algún día se regenera la keypair, se invalidan las suscripciones (hay que re-suscribir; es transparente al abrir la app).
+- **Título del push:** hoy fijo "Copilot · Stratos" en `trg_push_on_proactive_sent`. Para marca propia, se puede
+  parametrizar por `organization_id` dentro del trigger (menor prioridad).
+
 ---
 
 ## ⭐ Reglas de oro (si respetás estas, no se rompe nada)

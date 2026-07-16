@@ -509,7 +509,10 @@ function ConnectTelegramPanel({ T = P, isLight = false, botUsername = "", manual
     let mounted = true;
     getPairingStatus().then((r) => {
       if (!mounted) return;
-      setStatus({ loading: false, paired: r.paired, pairedAt: r.pairedAt });
+      // "Conectado" en Perfil = SOLO Telegram real (chat > 0). Una identidad
+      // sintética (chat < 0) hace andar el Copilot pero NO es Telegram: el asesor
+      // debe poder conectar Telegram si quiere (es opcional, el "plus").
+      setStatus({ loading: false, paired: r.telegramConnected, pairedAt: r.pairedAt });
     });
     return () => { mounted = false; };
   }, []);
@@ -520,7 +523,7 @@ function ConnectTelegramPanel({ T = P, isLight = false, botUsername = "", manual
     if (document.hidden) return; // arranca cuando vuelva al foreground
     pollRef.current = setInterval(async () => {
       const r = await getPairingStatus();
-      if (r.paired) {
+      if (r.telegramConnected) {
         setStatus({ loading: false, paired: true, pairedAt: r.pairedAt });
         setManualCode(null);
         stopPolling();
@@ -851,14 +854,15 @@ function RecentBotActivity({ T = P, isLight = false }) {
     let mounted = true;
     getPairingStatus().then((r) => {
       if (!mounted) return;
-      setPaired(r.paired);
-      if (r.paired) load(false);
+      // "Últimas acciones desde Telegram" solo tiene sentido con Telegram REAL.
+      setPaired(r.telegramConnected);
+      if (r.telegramConnected) load(false);
       else setLoading(false);
     });
     return () => { mounted = false; };
   }, [load]);
 
-  // Si no está paireado, no mostramos esta sección (no tiene sentido)
+  // Si no tiene Telegram real conectado, no mostramos esta sección (no tiene sentido)
   if (paired === false) return null;
   if (paired === null || loading) {
     return (
