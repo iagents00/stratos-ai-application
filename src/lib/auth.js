@@ -14,9 +14,10 @@
  *  · PROFILE_TIMEOUT = 5s — query SELECT profiles tras getSession.
  *  · AUTH_TIMEOUT_MS = 20s — signInWithPassword (tolerar redes lentas).
  *  · TIMEOUT_MS = 8s — queries normales.
- *  · CACHE_TTL_MS = 24h — sesión cacheada localmente. Si getSession/profile
+ *  · CACHE_TTL_MS = 30 días — sesión cacheada localmente. Si getSession/profile
  *    fallan o tardan, fallback a esta caché (_fromCache: true) en lugar de
- *    tirar al user al LoginScreen.
+ *    tirar al user al LoginScreen. (Era 24h → los usuarios de la app instalada
+ *    quedaban en login tras un día sin abrir + una red lenta; 2026-07-17.)
  */
 import { supabase } from './supabase'
 import { logAuthEvent } from './audit'
@@ -41,7 +42,7 @@ const TIMEOUT_MS         = 8000              // queries normales (read profile, 
 const AUTH_TIMEOUT_MS    = 20000              // signInWithPassword: tolerar redes lentas
 const GETSESSION_TIMEOUT = 3500               // supabase.auth.getSession() — solo lee storage + posible refresh interno
 const PROFILE_TIMEOUT    = 5000               // SELECT profiles.* tras getSession
-const CACHE_TTL_MS = 24 * 60 * 60 * 1000   // 24 horas — sesión cacheada localmente
+const CACHE_TTL_MS = 30 * 24 * 60 * 60 * 1000   // 30 días — la app instalada NO debe pedir login por pausas largas; el logout real es SIGNED_OUT (explícito), no el paso del tiempo
 const SESSION_CACHE_KEY = 'stratos_session_cache'
 
 /**
@@ -359,7 +360,26 @@ export async function getStoredSession() {
     }
 
     if (!session) {
-      // Sin sesión activa de Supabase → limpiar caché vieja
+      // getSession sin sesión puede ser un LOGOUT real… o un refresh fallido por
+      // red móvil (radio dormida, DNS, túnel al abrir la PWA). Distinguir por la
+      // LLAVE persistida: si el token sb-*-auth-token sigue en storage, el usuario
+      // NUNCA cerró sesión → devolver la caché local y dejar que el SDK reintente
+      // el refresh en background. El logout REAL lo limpia el listener de
+      // SIGNED_OUT/USER_DELETED (AuthContext), no este camino.
+      let hasStoredToken = false
+      try {
+        for (let i = 0; i < localStorage.length; i++) {
+          const k = localStorage.key(i)
+          if (k && k.startsWith('sb-') && k.endsWith('-auth-token')) { hasStoredToken = true; break }
+        }
+      } catch (_) { /* noop */ }
+      if (hasStoredToken) {
+        const cached = readSessionCache()
+        if (cached) {
+          console.warn('[Stratos] Sesión aún no restaurada (¿refresh fallido por red?) — uso caché local')
+          return { ...cached, _fromCache: true }
+        }
+      }
       clearSessionCache()
       return null
     }
