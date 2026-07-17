@@ -5037,6 +5037,12 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
 
       {/* ── CENTRO DE AGENTES IA — equipo virtual que trabaja con los asesores ── */}
       {(() => {
+        // ⛔ OCULTO del CRM (Ángel 2026-07-17): "eso de agentes aún no se está
+        //    usando para nada; quizás en un futuro sí". Se quita de la vista del
+        //    CRM SIN borrar el código (queda listo para reactivarlo a futuro).
+        //    Para volver a mostrarlo: borrar la línea `return null` de abajo.
+        return null;
+        // eslint-disable-next-line no-unreachable
         // Clientes que no venden (ej. Vega) ocultan el panel de agentes de venta.
         if (clientConfig?.crm?.aiAgentsPanel === false) return null;
         // Cola por agente, derivada del pipeline real
