@@ -19,6 +19,7 @@ import { P, LP, font, fontDisp, STAGE_COLORS, normalizeStage } from "../../../de
 import { zoomEventsOf, funnelEntryOf, milestoneOf, ACTIVE_POST_ZOOM_STAGES, RECORRIDO_STAGES, CIERRE_STAGES, zoomMovements, advisorDisplayGroup } from "./zoom-metrics";
 import DateRangeControl from "./DateRangeControl";
 import { createDefaultDateFilter, resolveDateRange, timestampInRange } from "./date-range";
+import { useIsMobile } from "../../../hooks/useViewport";
 
 const fmtFecha = (iso) => {
   if (!iso) return "—";
@@ -30,6 +31,7 @@ const fmtFecha = (iso) => {
 export default function ZoomBoard({ leadsData = [], theme = "dark", onOpenLead = null, dateFilter: sharedDateFilter = null }) {
   const isLight = theme === "light";
   const T = isLight ? LP : P;
+  const isMobile = useIsMobile();
   const [localDateFilter, setLocalDateFilter] = useState(createDefaultDateFilter);
   const [presentadorFilter, setPresentadorFilter] = useState("__all__");
   const [histOpen, setHistOpen] = useState(false);
@@ -186,7 +188,7 @@ export default function ZoomBoard({ leadsData = [], theme = "dark", onOpenLead =
           Quién corrió el Zoom (presentador) — acreditado a quien lo dio, no al dueño actual del lead.
         </p>
         <div style={{ borderRadius: 14, background: isLight ? "rgba(255,255,255,0.6)" : "rgba(255,255,255,0.02)", border: `1px solid ${rowBorder}`, overflow: "hidden", overflowX: "auto" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 360 }}>
+          <table style={{ width: "100%", borderCollapse: "collapse" }}>
             <thead>
               <tr style={{ background: headerBg }}>
                 <th style={{ ...thStyle(T), textAlign: "left", paddingLeft: 16 }}>Asesor</th>
@@ -240,7 +242,7 @@ export default function ZoomBoard({ leadsData = [], theme = "dark", onOpenLead =
                 const active = histKind === t.id;
                 return (
                   <button key={t.id} onClick={() => setHistKind(t.id)} style={{
-                    padding: "6px 14px", borderRadius: 7, border: "none", cursor: "pointer",
+                    padding: isMobile ? "11px 16px" : "6px 14px", borderRadius: isMobile ? 9 : 7, border: "none", cursor: "pointer",
                     background: active ? "linear-gradient(135deg, #18B795 0%, #0A7C5D 100%)" : "transparent",
                     color: active ? "#FFFFFF" : T.txt2,
                     textShadow: active ? "0 1px 2px rgba(0,0,0,0.30)" : "none",
@@ -250,6 +252,37 @@ export default function ZoomBoard({ leadsData = [], theme = "dark", onOpenLead =
               })}
             </div>
 
+            {/* MÓVIL: cada movimiento como fila apilada (la tabla de 6 columnas /
+                720px obligaba a scrollear en 2 ejes dentro de un pane anidado). */}
+            {isMobile ? (
+              <div style={{ borderRadius: 14, background: isLight ? "rgba(255,255,255,0.6)" : "rgba(255,255,255,0.02)", border: `1px solid ${rowBorder}`, overflow: "hidden" }}>
+                {historial.length === 0 && (
+                  <p style={{ margin: 0, padding: 26, textAlign: "center", color: T.txt3, fontFamily: font, fontSize: 13 }}>Sin movimientos de Zoom en este período.</p>
+                )}
+                {historial.map((m, i) => {
+                  const esRealizado = m.kind === "done";
+                  const movColor = esRealizado ? "#10B981" : "#2563EB";
+                  const movLabel = esRealizado ? "Realizado" : "Agendado";
+                  const stColor = STAGE_COLORS[m.lead.st] || T.txt3;
+                  return (
+                    <div key={(m.lead.id || i) + m.kind}
+                      onClick={onOpenLead ? () => onOpenLead(m.lead) : undefined}
+                      style={{ padding: "12px 14px", borderTop: i === 0 ? "none" : `1px solid ${rowBorder}`, cursor: onOpenLead ? "pointer" : "default", WebkitTapHighlightColor: "transparent" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        <span style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontFamily: fontDisp, fontWeight: 500, color: T.txt, fontSize: 13.5 }}>{m.lead.name || m.lead.n || "(sin nombre)"}</span>
+                        <span style={{ marginLeft: "auto", flexShrink: 0, padding: "3px 10px", borderRadius: 999, fontFamily: fontDisp, fontSize: 11, color: movColor, background: `${movColor}1A` }}>{movLabel}</span>
+                      </div>
+                      <div style={{ marginTop: 3, display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap", fontSize: 12, color: T.txt2, fontFamily: font }}>
+                        <span>{m.by || m.lead.asesor || "—"}</span>
+                        <span style={{ color: T.txt3 }}>· {fmtFecha(m.at)}</span>
+                        <span style={{ padding: "2px 8px", borderRadius: 999, fontFamily: fontDisp, fontSize: 10.5, color: stColor, background: `${stColor}1A` }}>{m.lead.st || "—"}</span>
+                        {m.inferred && <span style={{ color: "#F59E0B", fontFamily: fontDisp, fontSize: 10.5 }}>Inferido</span>}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
             <div style={{ borderRadius: 14, background: isLight ? "rgba(255,255,255,0.6)" : "rgba(255,255,255,0.02)", border: `1px solid ${rowBorder}`, overflow: "hidden", overflowX: "auto", maxHeight: 460, overflowY: "auto" }}>
               <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 720 }}>
                 <thead>
@@ -297,6 +330,7 @@ export default function ZoomBoard({ leadsData = [], theme = "dark", onOpenLead =
                 </tbody>
               </table>
             </div>
+            )}
             <p style={{ margin: "8px 4px 0", fontSize: 10.5, color: T.txt3, fontFamily: font, lineHeight: 1.5 }}>
               <strong style={{ color: "#F59E0B" }}>Inferido</strong> = la etapa actual del lead implica que hubo Zoom, pero el asesor no marcó el movimiento. Lo recuperamos de la etapa para no perder la métrica; conviene que se registre correctamente.
             </p>

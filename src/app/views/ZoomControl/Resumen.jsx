@@ -256,7 +256,9 @@ export default function ResumenZooms({ rows = [], T, isLight, onOpenZoom = null 
           <span style={{ fontSize: 14, fontWeight: 500, color: T.txt, fontFamily: fontDisp }}>Semana actual · lunes a domingo</span>
           <span style={{ fontSize: 12.5, fontWeight: 400, color: T.txt2, fontFamily: font }}>· {countsOf(semanaRows).total} Zooms esta semana</span>
         </div>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(7, minmax(92px, 1fr))", gap: 6, overflowX: "auto" }}>
+        {/* En móvil los 7 días ENVUELVEN (auto-fit) y se ve la semana entera de un
+            vistazo — antes eran 7 columnas fijas (~680px) con scroll lateral. */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(88px, 23%), 1fr))", gap: 6 }}>
           {semanaDias.map(d => (
             <button
               key={d.key}
