@@ -16,6 +16,7 @@ import { G, KPI, Pill, Ico } from "../../SharedComponents";
 import LandingPagePreview from "./LandingPagePreview";
 import { catalogToLandingProps, encodeLanding } from "./catalogAdapter";
 import { useAuth } from "../../../hooks/useAuth";
+import { useIsMobile } from "../../../hooks/useViewport";
 import { supabase } from "../../../lib/supabase";
 
 const team = [
@@ -1009,6 +1010,7 @@ const LandingPages = ({ T = P }) => {
   const [clientPrefs, setClientPrefs] = useState({ beach: false, golf: false, marina: false, jungle: false, investment: false, retirement: false, family: false, boutique: false });
   const [selectedProps, setSelectedProps] = useState([]);
   const [previewOpen, setPreviewOpen] = useState(false);
+  const isMobile = useIsMobile();
   const [customProperties, setCustomProperties] = useState(() => {
     try { return JSON.parse(localStorage.getItem("stratos_custom_props") || "[]"); } catch { return []; }
   });
@@ -1168,7 +1170,7 @@ const LandingPages = ({ T = P }) => {
     if (props.length === 0) return;
     let alive = true;
     const d = encodeLanding({ client: clientName, mensaje, asesor, asesorWA, asesorCal, properties: props, driveLinks });
-    supabase.rpc("create_portfolio_link", { p_payload: d })
+    supabase.rpc("create_portfolio_link", { p_payload: d, p_slug: clientName || null })
       .then(({ data: code }) => {
         if (alive && code && typeof code === "string") setShortUrl(`${window.location.origin}/p/${code}`);
       })
@@ -1677,17 +1679,21 @@ const LandingPages = ({ T = P }) => {
   // ─── Step 2: Selección de Propiedades ───
   if (step === 2) return (
     <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+      {/* Encabezado del paso 2: en MÓVIL el CTA baja a su propia fila full-width —
+          antes competía con el título en la misma fila y trituraba el texto en
+          una columna angosta (captura IMG_8503 de Ángel). */}
+      <div style={{ display: "flex", alignItems: "center", gap: isMobile ? 10 : 14, flexWrap: "wrap" }}>
         <button onClick={() => setStep(1)} style={{ padding: "8px 12px", borderRadius: 8, border: `1px solid ${T.border}`, background: T.glass, cursor: "pointer", color: T.txt2, fontSize: 12, fontFamily: font, display: "flex", alignItems: "center", gap: 4 }}>
           <ChevronRight size={14} style={{ transform: "rotate(180deg)" }} /> Atrás
         </button>
-        <div style={{ flex: 1 }}>
+        <div style={{ flex: "1 1 220px", minWidth: 0 }}>
           <p style={{ fontSize: 18, fontWeight: 400, color: isLight ? T.txt : "#FFFFFF", fontFamily: fontDisp }}>Seleccionar Propiedades</p>
           <p style={{ fontSize: 11, color: T.txt3, fontFamily: font }}>Paso 2 de 2 — Landing page para <span style={{ color: T.accent, fontWeight: 400 }}>{clientName}</span> · Presupuesto: <span style={{ color: T.emerald, fontWeight: 400 }}>${(clientBudgetMin / 1000).toFixed(0)}K – ${(clientBudgetMax / 1000).toFixed(0)}K</span></p>
         </div>
         {selectedProps.length > 0 && (
           <button onClick={handleGenerate} style={{
-            display: "flex", alignItems: "center", gap: 8, padding: "12px 22px",
+            display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "12px 22px",
+            flex: isMobile ? "1 1 100%" : "0 0 auto",
             borderRadius: 12, border: "none", cursor: "pointer",
             background: isLight ? T.accent : "rgba(255,255,255,0.95)",
             color: isLight ? "#FFFFFF" : "#0A0F18",
@@ -1943,18 +1949,18 @@ const LandingPages = ({ T = P }) => {
 
       {selectedProps.length > 0 && (
         <div style={{
-          position: "sticky", bottom: 0, padding: "14px 20px",
+          position: "sticky", bottom: 0, padding: isMobile ? "12px 14px" : "14px 20px",
           background: isLight ? "rgba(255,255,255,0.98)" : "rgba(6,10,17,0.95)", backdropFilter: "blur(16px)",
           borderRadius: 14, border: `1px solid ${T.border}`,
-          display: "flex", justifyContent: "space-between", alignItems: "center",
+          display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 10,
           boxShadow: isLight ? T.shadow2 || "0 -4px 20px rgba(15,23,42,0.10)" : "0 -8px 32px rgba(0,0,0,0.4)",
         }}>
-          <div>
-            <p style={{ fontSize: 13, color: T.txt, fontWeight: 400 }}>{selectedProps.length} propiedad{selectedProps.length > 1 ? "es" : ""} seleccionada{selectedProps.length > 1 ? "s" : ""}</p>
-            <p style={{ fontSize: 11, color: T.txt3 }}>para {clientName}</p>
+          <div style={{ minWidth: 0 }}>
+            <p style={{ fontSize: 13, color: T.txt, fontWeight: 400 }}>{selectedProps.length} propiedad{selectedProps.length > 1 ? "es" : ""} seleccionada{selectedProps.length > 1 ? "s" : ""} <span style={{ color: T.txt3, fontWeight: 400 }}>· para {clientName}</span></p>
           </div>
           <button onClick={handleGenerate} style={{
-            display: "flex", alignItems: "center", gap: 8, padding: "12px 28px",
+            display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "12px 28px",
+            flex: isMobile ? "1 1 100%" : "0 0 auto",
             borderRadius: 12, border: "none", cursor: "pointer",
             background: isLight ? T.accent : "rgba(255,255,255,0.95)",
             color: isLight ? "#FFFFFF" : "#0A0F18",
