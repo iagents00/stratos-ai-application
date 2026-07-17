@@ -11,7 +11,12 @@
     <meta name="google" content="notranslate" />
     <meta name="theme-color" content="#030810" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <!-- "black" (opaca) y NO "black-translucent": el translúcido tiene un bug
+         conocido en iOS standalone que deja una FRANJA MUERTA de ~90pt bajo el
+         lienzo (el WKWebView no llega al borde inferior — instalación de Ángel,
+         IMG_8501/8507). Con la barra opaca iOS gestiona ambos extremos y el
+         lienzo llega abajo. iOS captura esto al AGREGAR a inicio → re-agregar. -->
+    <meta name="apple-mobile-web-app-status-bar-style" content="black" />
     <meta name="apple-mobile-web-app-title" content="Stratos AI" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="description" content="Stratos AI — Sistema operativo de ventas con IA aplicada a la operación comercial." />
@@ -225,45 +230,16 @@
               '  position: fixed; inset: 0; width: 100%; height: 100%;' +
               '  overflow: hidden; overscroll-behavior: none; touch-action: manipulation;' +
               '}' +
+              // Nota (v234): el experimento APP-FS-COMP (estirar el lienzo para
+              // "usar" la franja inferior) se REVIRTIÓ — la franja está FUERA
+              // del WKWebView (iOS la pinta él, negra/blanca según apariencia)
+              // y estirar solo empujaba la barra fuera del área visible
+              // (IMG_8507). El fix real del recorte: status-bar-style "black"
+              // (el letterbox inferior es un bug conocido de black-translucent)
+              // — requiere quitar y re-agregar el ícono una vez.
               'html[data-standalone] { background: #030810; }' +
-              'html[data-standalone][data-theme="light"] { background: #F1F3F6; }' +
-              // [guard:APP-FS-COMP] — compensación del LETTERBOX inferior de iOS.
-              // En algunas instalaciones (web-clip) iOS deja el lienzo ~60-100pt
-              // MÁS CORTO que la pantalla, solo por abajo (el fondo del html se
-              // ve como franja muerta bajo la barra — capturas IMG_8501/8502).
-              // La pantalla completa SÍ existe (la franja se pinta del color del
-              // tema) → se mide el recorte en vivo (screen.height - innerHeight)
-              // y se ESTIRA el lienzo esa cantidad: la barra baja al borde real
-              // y el contenido usa el espacio muerto. Solo iOS + app instalada
-              // + recorte detectado (data-fs-comp); en instalaciones sanas el
-              // recorte es ~0 y esto jamás se activa.
-              'html[data-fs-comp], html[data-fs-comp] body { height: calc(100% + var(--fs-extra, 0px)) !important; }' +
-              'html[data-fs-comp] .stratos-app { height: calc(100dvh + var(--fs-extra, 0px)) !important; }' +
-              'html[data-fs-comp] .stratos-bottomnav { bottom: calc(-1 * var(--fs-extra, 0px)) !important; }' +
-              'html[data-fs-comp] .stratos-bottomnav > div { padding-bottom: 42px !important; }' +
-              'html[data-fs-comp] .stratos-content-area { padding-bottom: 136px !important; }';
+              'html[data-standalone][data-theme="light"] { background: #F1F3F6; }';
             document.head.appendChild(st);
-            var fsComp = function () {
-              try {
-                if (!isIOS) return;
-                if (Math.abs(window.orientation || 0) === 90) {
-                  document.documentElement.removeAttribute('data-fs-comp');
-                  return;
-                }
-                var short = (window.screen && screen.height ? screen.height : 0) - window.innerHeight;
-                if (short > 45 && short < 220) {
-                  document.documentElement.style.setProperty('--fs-extra', short + 'px');
-                  document.documentElement.setAttribute('data-fs-comp', '1');
-                } else {
-                  document.documentElement.removeAttribute('data-fs-comp');
-                }
-              } catch (e) {}
-            };
-            fsComp();
-            setTimeout(fsComp, 400);
-            window.addEventListener('resize', function () { setTimeout(fsComp, 80); });
-            window.addEventListener('orientationchange', function () { setTimeout(fsComp, 150); });
-            window.addEventListener('pageshow', fsComp);
             // iOS IGNORA user-scalable=no (accesibilidad) → bloquear el pinch a mano:
             // (a) eventos gesture* propios de Safari, (b) touchmove con e.scale ≠ 1
             // (la señal de pinch real en iOS). Solo en la app instalada.
