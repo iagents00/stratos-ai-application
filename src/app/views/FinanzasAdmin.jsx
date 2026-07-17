@@ -32,6 +32,7 @@ import { P, font, fontDisp } from "../../design-system/tokens";
 import { G, KPI, Pill, Ico } from "../SharedComponents";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../hooks/useAuth";
+import { useIsMobile } from "../../hooks/useViewport";
 import Caja from "./Caja";
 
 const MES = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
@@ -63,6 +64,7 @@ const FinanzasAdmin = ({ T: _T }) => {
   const T = _T || P;
   const { user } = useAuth();
   const isLight = T?.bg !== P.bg;
+  const isMobile = useIsMobile();
   const orgId = user?.organizationId;
 
   const [tab, setTab] = useState("panel");
@@ -234,15 +236,18 @@ const FinanzasAdmin = ({ T: _T }) => {
             </p>
           </div>
         </div>
-        <div style={{ display: "flex", gap: 8 }}>
-          <button onClick={load} title="Actualizar" style={{ display: "flex", alignItems: "center", gap: 6, padding: "9px 16px", borderRadius: 9, border: `1px solid ${T.border}`, background: T.glass, cursor: "pointer", color: T.txt2, fontSize: 12, fontWeight: 400, fontFamily: fontDisp }}>
+        {/* Botones del header — en móvil (Android 360px incl.) se reparten a lo
+            ancho y envuelven: los 3 juntos no caben en una fila y "Nuevo
+            movimiento" se cortaba a "Nue movin". Ahora cada botón crece parejo. */}
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", width: isMobile ? "100%" : "auto", justifyContent: isMobile ? "stretch" : "flex-end" }}>
+          <button onClick={load} title="Actualizar" style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "10px 16px", flex: isMobile ? "1 1 46%" : "0 0 auto", borderRadius: 9, border: `1px solid ${T.border}`, background: T.glass, cursor: "pointer", color: T.txt2, fontSize: 12, fontWeight: 400, fontFamily: fontDisp }}>
             <RefreshCw size={13} style={loading ? { animation: "spin 1s linear infinite" } : undefined} /> Actualizar
           </button>
           <button onClick={exportCSV} disabled={!rows.length} title={rows.length ? "Descargar movimientos en CSV" : "Sin movimientos para exportar"}
-            style={{ display: "flex", alignItems: "center", gap: 6, padding: "9px 16px", borderRadius: 9, border: `1px solid ${T.border}`, background: T.glass, cursor: rows.length ? "pointer" : "not-allowed", opacity: rows.length ? 1 : 0.5, color: T.txt2, fontSize: 12, fontWeight: 400, fontFamily: fontDisp }}>
+            style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "10px 16px", flex: isMobile ? "1 1 46%" : "0 0 auto", borderRadius: 9, border: `1px solid ${T.border}`, background: T.glass, cursor: rows.length ? "pointer" : "not-allowed", opacity: rows.length ? 1 : 0.5, color: T.txt2, fontSize: 12, fontWeight: 400, fontFamily: fontDisp }}>
             <Download size={13} /> Exportar CSV
           </button>
-          <button onClick={() => setTab("caja")} style={{ display: "flex", alignItems: "center", gap: 8, padding: "9px 20px", borderRadius: 9, border: "none", background: isLight ? ACC : "rgba(255,255,255,0.95)", cursor: "pointer", color: isLight ? "#FFF" : "#0A0F18", fontSize: 12, fontWeight: 500, fontFamily: fontDisp, boxShadow: isLight ? `0 4px 18px ${ACC}44` : "0 4px 18px rgba(255,255,255,0.12)" }}>
+          <button onClick={() => setTab("caja")} style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "10px 20px", flex: isMobile ? "1 1 100%" : "0 0 auto", borderRadius: 9, border: "none", background: isLight ? ACC : "rgba(255,255,255,0.95)", cursor: "pointer", color: isLight ? "#FFF" : "#0A0F18", fontSize: 12, fontWeight: 500, fontFamily: fontDisp, boxShadow: isLight ? `0 4px 18px ${ACC}44` : "0 4px 18px rgba(255,255,255,0.12)" }}>
             <Plus size={14} /> Nuevo movimiento
           </button>
         </div>
