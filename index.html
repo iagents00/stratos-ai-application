@@ -198,8 +198,14 @@
           if (locked || !isInstalledApp()) return;
           locked = true;
           try {
+            // iOS: NO tocar el meta viewport — reescribirlo le hace PERDER el
+            // viewport-fit=cover y la PWA queda "letterboxed" (franja negra
+            // abajo, la app no usa toda la pantalla). En iOS el pinch se
+            // bloquea por eventos (abajo). Solo Android/Capacitor reescribe.
+            var isIOS = /iP(hone|ad|od)/.test(navigator.userAgent) ||
+              (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
             var vp = document.querySelector('meta[name="viewport"]');
-            if (vp) vp.setAttribute('content',
+            if (vp && !isIOS) vp.setAttribute('content',
               'width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover');
             document.documentElement.setAttribute('data-standalone', '1');
             // HARD-LOCK de app nativa: el DOCUMENTO queda clavado (position:fixed en
