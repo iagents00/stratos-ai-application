@@ -2205,7 +2205,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
     <div style={{
       display: "flex", flexDirection: "column", gap: 18,
       color: T.txt,
-      paddingBottom: isMobile ? 96 : 0,
+      paddingBottom: isMobile ? 24 : 0,
       transition: "color 0.3s ease",
     }}>
 
@@ -2471,7 +2471,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                     title="Cambiar orden de las tarjetas de prioridad"
                     style={{
                       appearance: "none", WebkitAppearance: "none", MozAppearance: "none",
-                      height: 28, padding: "0 26px 0 12px", minWidth: 168,
+                      height: isMobile ? 44 : 28, padding: "0 26px 0 12px", minWidth: 168,
                       borderRadius: 8,
                       background: prioritySort === "manual"
                         ? (isLight ? "rgba(15,23,42,0.04)" : "rgba(255,255,255,0.04)")
@@ -2519,7 +2519,8 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
               className="carousel-no-scroll"
               style={{
                 display: "flex", gap: 12, overflowX: "auto",
-                padding: isMobile ? "6px 12px 16px" : "10px 10px 18px 0",
+                margin: isMobile ? "0 -16px" : 0,
+                padding: isMobile ? "6px 16px 16px" : "10px 10px 18px 0",
                 scrollbarWidth: "none", msOverflowStyle: "none",
                 WebkitOverflowScrolling: "touch",
                 // En mobile: scroll-snap para que cada card "encaje" tras swipe.
@@ -2566,7 +2567,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                     style={{
                       // En mobile: ~88% del viewport para que aparezca el peek
                       // de la siguiente card y se sienta carousel táctil natural.
-                      width: isMobile ? "min(88vw, 360px)" : (co ? 256 : 288),
+                      width: isMobile ? "min(86vw, 360px)" : (co ? 256 : 288),
                       flexShrink: 0,
                       scrollSnapAlign: isMobile ? "start" : "none",
                       borderRadius: 18, overflow: "hidden",
@@ -2633,7 +2634,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                               onChange={e => moveToPriorityPosition(l.id, parseInt(e.target.value, 10))}
                               style={{
                                 appearance: "none", WebkitAppearance: "none", MozAppearance: "none",
-                                height: 28, padding: "0 26px 0 11px", minWidth: 108,
+                                height: isMobile ? 40 : 28, padding: "0 26px 0 11px", minWidth: 108,
                                 borderRadius: 9,
                                 background: isLight
                                   ? "rgba(255,255,255,0.88)"
@@ -2674,7 +2675,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                           onClick={e => { e.stopPropagation(); dismissPriority(l.id); }}
                           title="Quitar de prioridad"
                           style={{
-                            width: 24, height: 24, borderRadius: 7,
+                            width: isMobile ? 36 : 24, height: isMobile ? 36 : 24, borderRadius: isMobile ? 10 : 7,
                             background: isLight ? "rgba(15,23,42,0.04)" : "rgba(255,255,255,0.05)",
                             border: `1px solid ${isLight ? "rgba(15,23,42,0.08)" : "rgba(255,255,255,0.08)"}`,
                             color: T.txt3, cursor: "pointer",
@@ -2898,7 +2899,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                         <button
                           onClick={e => { e.stopPropagation(); setNotesLead(l); }}
                           style={{
-                            width: "100%", height: 40, padding: "0 16px",
+                            width: "100%", height: isMobile ? 44 : 40, padding: "0 16px",
                             boxSizing: "border-box", borderRadius: 10,
                             background: isLight ? T.accentG : "#FFFFFF",
                             border: isLight ? "none" : "1px solid rgba(255,255,255,0.90)",
@@ -2909,7 +2910,6 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                             transition: "all 0.20s ease",
                             display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
                             boxShadow: isLight ? "0 2px 12px rgba(13,154,118,0.30)" : "0 2px 16px rgba(255,255,255,0.12)",
-                            boxShadow: "none",
                           }}
                           onMouseEnter={e => {
                             e.currentTarget.style.background = isLight ? T.accentDark : "rgba(238,244,255,0.97)";
@@ -3098,7 +3098,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                 fontFamily: fontDisp, display: "flex", alignItems: "center", gap: 4, marginBottom: 5,
               };
               const inputStyle = {
-                width: "100%", height: 34, padding: "0 11px",
+                width: "100%", height: isMobile ? 44 : 34, padding: "0 12px",
                 borderRadius: 9, background: inputBg,
                 border: `1px solid ${inputBorder}`, color: T.txt,
                 fontSize: 12.5, outline: "none", fontFamily: font,
@@ -3390,7 +3390,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                         display: "flex", flexDirection: "column", gap: 10,
                       }}>
                         {/* Grid 4×3 */}
-                        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 6 }}>
+                        <div style={{ display: "grid", gridTemplateColumns: isMobile ? "repeat(2, 1fr)" : "repeat(4, 1fr)", gap: 6 }}>
                           {BUDGET_PRESETS.map(opt => {
                             const active = newLead.budget === opt.key;
                             return (
@@ -3399,7 +3399,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                                 type="button"
                                 onClick={() => { setNewLead(p => ({...p, budget: opt.key})); setBudgetMenuOpen(false); }}
                                 style={{
-                                  padding: "7px 0", borderRadius: 8, textAlign: "center",
+                                  padding: isMobile ? "12px 0" : "7px 0", borderRadius: 8, textAlign: "center",
                                   background: active ? (isLight ? `${T.accent}1A` : `${T.accent}18`) : (isLight ? "rgba(15,23,42,0.03)" : "rgba(255,255,255,0.03)"),
                                   border: `1px solid ${active ? (isLight ? `${T.accent}44` : T.accentB) : (isLight ? "rgba(15,23,42,0.08)" : "rgba(255,255,255,0.07)")}`,
                                   color: active ? accentStrong : T.txt2,
@@ -3627,7 +3627,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                     <label style={labelStyle}>
                       <Send size={9} color={T.txt3} /> Canal de origen
                     </label>
-                    <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                    <div style={{ display: isMobile ? "grid" : "flex", gridTemplateColumns: isMobile ? "repeat(auto-fill, minmax(96px, 1fr))" : undefined, gap: isMobile ? 8 : 6, flexWrap: "wrap" }}>
                       {SOURCES.map(({ key, label, color }) => {
                         const active = (newLead.source || "manual") === key;
                         const c = isLight ? `color-mix(in srgb, ${color} 60%, #0B1220 40%)` : color;
@@ -3635,7 +3635,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                           <button key={key} type="button"
                             onClick={() => setNewLead(p => ({...p, source: key}))}
                             style={{
-                              padding: "5px 13px", borderRadius: 99,
+                              padding: isMobile ? "11px 8px" : "5px 13px", borderRadius: isMobile ? 12 : 99, textAlign: "center",
                               background: active ? (isLight ? `${color}18` : `${color}14`) : inputBg,
                               border: `1px solid ${active ? (isLight ? `${color}50` : `${color}55`) : inputBorder}`,
                               color: active ? c : T.txt3,
@@ -3687,9 +3687,9 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                   ? "0 2px 16px rgba(255,255,255,0.12)"
                   : "none";
               return (
-            <div style={{ padding: "14px 18px 16px", display: "flex", gap: 8 }}>
+            <div style={{ padding: "14px 18px 16px", display: "flex", gap: 8, position: isMobile ? "sticky" : "static", bottom: 0, background: isMobile ? (isLight ? "rgba(255,255,255,0.96)" : "rgba(6,10,17,0.96)") : "transparent", backdropFilter: isMobile ? "blur(12px)" : "none", borderTop: isMobile ? `1px solid ${isLight ? "rgba(15,23,42,0.06)" : "rgba(255,255,255,0.06)"}` : "none", zIndex: 2 }}>
               <button onClick={() => setAddingLead(false)} style={{
-                flex: 1, height: 38, borderRadius: 10,
+                flex: 1, height: isMobile ? 48 : 38, borderRadius: 10,
                 background: "transparent",
                 border: `1px solid ${isLight ? "rgba(15,23,42,0.08)" : T.border}`,
                 color: T.txt3, fontSize: 12.5, fontWeight: 400,
@@ -3703,7 +3703,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                 disabled={!canSubmit || submittingLead}
                 title={dupBlocks ? "Confirma el aviso de duplicado antes de registrar" : (asesorMissing ? "Asigná un asesor para registrar el cliente" : undefined)}
                 style={{
-                flex: 2.4, height: 40, borderRadius: 10,
+                flex: 2.4, height: isMobile ? 48 : 40, borderRadius: 10,
                 background: primaryBg,
                 border: `1px solid ${primaryBorder}`,
                 color: primaryColor,
@@ -3761,6 +3761,10 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
           : "0 2px 10px rgba(0,0,0,0.22), inset 0 1px 0 rgba(255,255,255,0.04)",
         scrollSnapType: isMobile ? "x mandatory" : "none",
         WebkitOverflowScrolling: "touch",
+        // Fade al borde derecho: la etapa cortada se desvanece → se LEE que hay
+        // más al deslizar (antes el corte duro parecía un bug).
+        WebkitMaskImage: isMobile ? "linear-gradient(90deg, #000 88%, transparent 100%)" : "none",
+        maskImage: isMobile ? "linear-gradient(90deg, #000 88%, transparent 100%)" : "none",
       }}>
         {STAGES.slice(0,-1).map((stage, idx) => {
           const cnt = visibleLeads.filter(l => l.st === stage).length;
@@ -3824,12 +3828,13 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
               }}>{cnt}</span>
               {/* Stage label */}
               <span style={{
-                fontSize: 8,
+                fontSize: isMobile ? 10 : 8.5,
                 color: labelColor,
                 fontWeight: isActive ? 800 : 600,
-                letterSpacing: "0.06em", textTransform: "uppercase",
-                textAlign: "center", lineHeight: 1.25,
-                maxWidth: "100%", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+                letterSpacing: "0.05em", textTransform: "uppercase",
+                textAlign: "center", lineHeight: 1.2,
+                maxWidth: "100%", overflow: "hidden",
+                display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical",
                 fontFamily: fontDisp, transition: "color 0.18s",
               }}>{stage}</span>
             </div>
@@ -3989,7 +3994,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
           {(filterStage !== "TODO" || filterAsesor !== "TODO" || searchQ) && (
             <button onClick={() => { setFilterStage("TODO"); setFilterAsesor("TODO"); setSearchQ(""); }}
               style={{
-                height: 32, padding: "0 11px", borderRadius: 9,
+                height: isMobile ? 44 : 32, padding: "0 14px", borderRadius: isMobile ? 12 : 9,
                 background: "transparent",
                 border: `1px solid ${isLight ? "rgba(15,23,42,0.09)" : "rgba(255,255,255,0.09)"}`,
                 color: isLight ? "rgba(15,23,42,0.40)" : "rgba(255,255,255,0.35)",
@@ -4201,7 +4206,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                           vive aquí en lugar de un badge prominente — la info
                           está pero no roba protagonismo. */}
                       <div style={{
-                        fontSize: 10, fontWeight: 500,
+                        fontSize: isMobile ? 11.5 : 10, fontWeight: 500,
                         color: isLight ? "rgba(15,23,42,0.45)" : "rgba(255,255,255,0.42)",
                         fontFamily: font,
                         overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
@@ -4390,7 +4395,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                                 )}
                                 readStyle={{
                                   display: "inline-flex", alignItems: "center",
-                                  padding: "3px 10px", borderRadius: 99,
+                                  padding: isMobile ? "8px 12px" : "3px 10px", borderRadius: 99,
                                   background: "transparent",
                                   border: `1px ${l.phone ? "solid" : "dashed"} ${isLight ? "rgba(15,23,42,0.10)" : "rgba(255,255,255,0.10)"}`,
                                   color: isLight ? "rgba(15,23,42,0.55)" : "rgba(255,255,255,0.55)",
@@ -4434,7 +4439,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                                 )}
                                 readStyle={{
                                   display: "inline-flex", alignItems: "center",
-                                  padding: "3px 10px", borderRadius: 99,
+                                  padding: isMobile ? "8px 12px" : "3px 10px", borderRadius: 99,
                                   background: "transparent",
                                   border: `1px ${l.email ? "solid" : "dashed"} ${isLight ? "rgba(15,23,42,0.10)" : "rgba(255,255,255,0.10)"}`,
                                   color: isLight ? "rgba(15,23,42,0.55)" : "rgba(255,255,255,0.55)",
@@ -4528,7 +4533,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                         style={{
                           marginLeft: "auto", flexShrink: 0,
                           display: "inline-flex", alignItems: "center", gap: 5,
-                          padding: "5px 8px 5px 11px", borderRadius: 99, cursor: "pointer",
+                          padding: isMobile ? "10px 10px 10px 13px" : "5px 8px 5px 11px", borderRadius: 99, cursor: "pointer",
                           border: `1px solid ${isLight ? "rgba(15,23,42,0.10)" : "rgba(255,255,255,0.10)"}`,
                           background: isLight ? "rgba(15,23,42,0.025)" : "rgba(255,255,255,0.04)",
                           WebkitTapHighlightColor: "transparent",
@@ -4538,7 +4543,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                         onTouchEnd={(e) => { e.currentTarget.style.transform = "scale(1)"; e.currentTarget.style.background = isLight ? "rgba(15,23,42,0.025)" : "rgba(255,255,255,0.04)"; e.currentTarget.style.borderColor = isLight ? "rgba(15,23,42,0.10)" : "rgba(255,255,255,0.10)"; }}
                       >
                         <span style={{ fontSize: 12.5, fontWeight: 500, color: sc >= 80 ? T.emerald : sc >= 60 ? T.blue : sc >= 40 ? T.cyan : T.violet, fontFamily: fontDisp, letterSpacing: "-0.01em" }}>{sc}</span>
-                        <span style={{ fontSize: 8, color: T.txt3, fontFamily: fontDisp, fontWeight: 500, letterSpacing: "0.07em", textTransform: "uppercase" }}>score</span>
+                        <span style={{ fontSize: isMobile ? 10 : 8, color: T.txt3, fontFamily: fontDisp, fontWeight: 500, letterSpacing: "0.07em", textTransform: "uppercase" }}>score</span>
                         <ChevronRight size={13} color={T.accent} strokeWidth={2.6} style={{ marginLeft: 1 }} />
                       </button>
                     </div>

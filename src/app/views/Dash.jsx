@@ -69,7 +69,7 @@ const Dash = ({ oc, co, leadsData = [], T: _T }) => {
   }).sort((a, b) => b.total - a.total);
   return (
   <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
-    <div style={{ display: "grid", gridTemplateColumns: co ? "repeat(2, 1fr)" : "repeat(4, 1fr)", gap: 14 }}>
+    <div style={{ display: "grid", gridTemplateColumns: co ? "repeat(2, 1fr)" : "repeat(auto-fit, minmax(150px, 1fr))", gap: 14 }}>
       <KPI label="Pipeline Activo"     value={activos}         sub={`de ${leadsData.length} leads`} icon={Target} T={T} />
       <KPI label="Zooms Totales"       value={zooms}           sub="agendados + concretados"         icon={CalendarDays} color={T.blue}    T={T} />
       <KPI label="Tasa de Conversión"  value={`${tasaConv}%`}  sub={`${cierres} cierres`}            icon={TrendingUp}   color={T.emerald} T={T} />
@@ -210,7 +210,7 @@ const Dash = ({ oc, co, leadsData = [], T: _T }) => {
     </div>
 
     {/* Quick actions */}
-    <div style={{ display: "grid", gridTemplateColumns: co ? "repeat(2, 1fr)" : "repeat(4, 1fr)", gap: 10 }}>
+    <div style={{ display: "grid", gridTemplateColumns: co ? "repeat(2, 1fr)" : "repeat(auto-fit, minmax(150px, 1fr))", gap: 10 }}>
       {[
         { l: "Nota de voz",    i: Mic2,        c: T.accent, q: examples[0].t },
         { l: "Mis prioridades",i: Crosshair,   c: T.amber,  q: examples[1].t },
@@ -307,7 +307,7 @@ const Dash = ({ oc, co, leadsData = [], T: _T }) => {
     )}
 
     {/* Agent status strip */}
-    <div style={{ display: "grid", gridTemplateColumns: co ? "1fr" : "repeat(3, 1fr)", gap: 10 }}>
+    <div style={{ display: "grid", gridTemplateColumns: co ? "1fr" : "repeat(auto-fit, minmax(min(260px, 100%), 1fr))", gap: 10 }}>
       {[
         { n: "Estrategia",   r: "Pipeline 80/20 · Alertas",      i: AgentIcons.gerente,   c: T.emerald, s: "342 acciones" },
         { n: "Coordinación", r: "Voz→CRM · Tareas",              i: AgentIcons.asistente, c: T.blue,    s: "1,248 acciones" },
