@@ -13,7 +13,7 @@
  * ─────────────────────────────────────────────────────────────────────────────
  */
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Send, Sparkles, RefreshCw, Mic, Square, X, ChevronDown, ChevronUp, Bot, BookOpen, Play, Pause, Bell } from "lucide-react";
+import { Send, Sparkles, RefreshCw, Mic, Square, X, ChevronDown, ChevronUp, ChevronLeft, Bot, BookOpen, Play, Pause, Bell } from "lucide-react";
 import { P, LP, font, fontDisp } from "../../design-system/tokens";
 import { G } from "../SharedComponents";
 import CopilotMark from "../components/CopilotMark";
@@ -36,44 +36,30 @@ const SUGGESTIONS = [
 const REC_MAX_SECS = 300;
 const fmtRecSecs = (s) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
 
-export default function Copilot({ theme = "dark", T: Tprop, isLight: isLightProp }) {
+export default function Copilot({ theme = "dark", T: Tprop, isLight: isLightProp, onBack, score }) {
   const isLight = isLightProp != null ? isLightProp : theme === "light";
   const T = Tprop || (isLight ? LP : P);
   const { config: clientConfig } = useClient();
   const botUsername = clientConfig?.tenant?.botUsername || "Strato_sasistente_crm_bot";
-  const manualPairing = !!clientConfig?.tenant?.telegramManualPairing;
+  // (manualPairing y getPairingStatus ya no se usan acá: el Copilot no espera
+  //  el estado de Telegram para abrir — abre instantáneo, como WhatsApp.)
+  const onUnpaired = () => {};
 
-  const [status, setStatus] = useState({ loading: true, paired: false, pairedAt: null });
-
-  useEffect(() => {
-    let mounted = true;
-    getPairingStatus().then((r) => {
-      if (!mounted) return;
-      setStatus({ loading: false, paired: r.paired, pairedAt: r.pairedAt });
-    });
-    return () => { mounted = false; };
-  }, []);
-
-  const onPaired = (pairedAt) => setStatus({ loading: false, paired: true, pairedAt });
-  const onUnpaired = () => setStatus({ loading: false, paired: false, pairedAt: null });
-
-  if (status.loading) {
-    return (
-      <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <span style={{ fontSize: 13, color: T.txt3, fontFamily: font }}>Conectando con el asistente…</span>
-      </div>
-    );
-  }
-
-  return status.paired
-    ? <Chat T={T} isLight={isLight} botUsername={botUsername} onUnpaired={onUnpaired} />
-    : <ConnectPrompt T={T} isLight={isLight} botUsername={botUsername} manualPairing={manualPairing} onPaired={onPaired} />;
+  // ⭐ REGLA (Ángel 2026-07-17): el Copilot NUNCA se gatea por Telegram. Apenas
+  // se crea el usuario del asesor, la DB le asigna identidad sintética sola
+  // (trigger `trg_assign_copilot_identity`), así que su Copilot ya funciona.
+  // Conectar Telegram es OPCIONAL y vive en Perfil (para recibir los avisos ahí
+  // y poder usar el asistente desde Telegram). Por eso ACÁ se renderiza SIEMPRE
+  // el chat — jamás la vieja pantalla "Conecta tu Telegram para activar", que
+  // parecía un muro. (`ConnectPrompt` queda en el archivo por si algún tenant
+  // futuro con pairing manual lo necesita, pero no se muestra por defecto.)
+  return <Chat T={T} isLight={isLight} botUsername={botUsername} onUnpaired={onUnpaired} onBack={onBack} score={score} />;
 }
 
 /* ─────────────────────────────────────────────────────────────────────────── */
 /* Chat — layout WhatsApp: header fino, mensajes expansivos, composer compacto */
 /* ─────────────────────────────────────────────────────────────────────────── */
-function Chat({ T, isLight, botUsername, onUnpaired }) {
+function Chat({ T, isLight, botUsername, onUnpaired, onBack, score }) {
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
@@ -280,11 +266,33 @@ function Chat({ T, isLight, botUsername, onUnpaired }) {
     <div style={{ flex: 1, display: "flex", flexDirection: "column", minHeight: 0, background: bgArea, overflow: "hidden" }}>
       {/* ── Header compacto (estilo WhatsApp) ── */}
       <div style={{
-        display: "flex", alignItems: "center", gap: 10, padding: "10px 16px", flexShrink: 0,
+        display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", flexShrink: 0,
+        // Header inmersivo (estilo WhatsApp): reemplaza al header de la app en
+        // móvil → lleva el safe-area-top para no quedar bajo el reloj del iPhone.
+        paddingTop: "calc(10px + var(--safe-area-inset-top, env(safe-area-inset-top, 0px)))",
         background: isLight ? "#FFFFFF" : "rgba(10,15,26,0.95)",
         borderBottom: `1px solid ${T.border}`, zIndex: 10,
         boxShadow: isLight ? "0 1px 3px rgba(15,23,42,0.06)" : "0 1px 3px rgba(0,0,0,0.3)"
       }}>
+        {/* Flecha "‹ volver" (solo cuando hay onBack = app móvil inmersiva).
+            Blanca en oscuro, verde de marca en claro (como la referencia de
+            WhatsApp que mandó Ángel). Al lado, el SCORE del asesor (badge tipo
+            el "180" de WhatsApp). */}
+        {onBack && (
+          <button type="button" onClick={onBack} aria-label="Volver" style={{
+            display: "flex", alignItems: "center", gap: 1, padding: "4px 6px 4px 2px", marginRight: 2,
+            background: "transparent", border: "none", cursor: "pointer", flexShrink: 0,
+            WebkitTapHighlightColor: "transparent",
+          }}>
+            <ChevronLeft size={26} strokeWidth={2.4} color={isLight ? "#0D9A76" : "#FFFFFF"} />
+            {Number.isFinite(score) && score > 0 && (
+              <span title="Score de tu cartera" style={{
+                fontSize: 13, fontWeight: 700, fontFamily: fontDisp, lineHeight: 1,
+                color: isLight ? "#0D9A76" : "#FFFFFF", minWidth: 18, textAlign: "center",
+              }}>{score}</span>
+            )}
+          </button>
+        )}
         <div style={{
           width: 34, height: 34, borderRadius: 10, flexShrink: 0,
           background: isLight ? "linear-gradient(135deg, #E8F8F4 0%, #D1F2E8 100%)" : "linear-gradient(135deg, rgba(110,231,194,0.22) 0%, rgba(52,211,153,0.12) 100%)",
@@ -293,8 +301,10 @@ function Chat({ T, isLight, botUsername, onUnpaired }) {
           <CopilotMark size={22} isLight={isLight} />
         </div>
         <div style={{ minWidth: 0, flex: 1 }}>
-          <div style={{ fontSize: 14, fontWeight: 600, color: T.txt, fontFamily: fontDisp, lineHeight: 1.2 }}>Copilot AI</div>
-          <div style={{ fontSize: 11, color: T.txt3, fontFamily: font, marginTop: 1 }}>@{botUsername}</div>
+          <div style={{ fontSize: 14.5, fontWeight: 600, color: T.txt, fontFamily: fontDisp, lineHeight: 1.2 }}>Copilot AI</div>
+          <div style={{ fontSize: 11, color: T.accent, fontFamily: font, marginTop: 1, display: "flex", alignItems: "center", gap: 4 }}>
+            <span style={{ width: 6, height: 6, borderRadius: "50%", background: T.accent, boxShadow: `0 0 6px ${T.accent}` }} />En línea
+          </div>
         </div>
         <button type="button" onClick={reload} title="Refrescar"
           style={{ width: 30, height: 30, borderRadius: 8, background: "transparent", border: "none", color: T.txt3, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -371,7 +381,7 @@ function Chat({ T, isLight, botUsername, onUnpaired }) {
       )}
 
       {/* ── Composer compacto (estilo WhatsApp) ── */}
-      <div style={{ display: "flex", alignItems: "flex-end", gap: 8, padding: "8px 12px 10px", background: composerBg, borderTop: `1px solid ${T.border}`, flexShrink: 0 }}>
+      <div style={{ display: "flex", alignItems: "flex-end", gap: 8, padding: "8px 12px calc(10px + var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px)))", background: composerBg, borderTop: `1px solid ${T.border}`, flexShrink: 0 }}>
         {/* Botón micrófono */}
         <button type="button" onClick={recording ? finishRecording : startRecording} disabled={sending}
           style={{ width: 36, height: 36, borderRadius: 10, flexShrink: 0, border: "none", background: "transparent", color: recording ? "#EF4444" : T.txt3, cursor: sending ? "default" : "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -797,7 +807,7 @@ function NotifBanner({ T, isLight }) {
 }
 
 /* ── Prompt de conexión (cuando no está pareado) ── */
-function ConnectPrompt({ T, isLight, botUsername, manualPairing, onPaired }) {
+function ConnectPrompt({ T, isLight, botUsername, manualPairing, onPaired, onBack }) {
   const [busy, setBusy] = useState(false);
   const [code, setCode] = useState(null);
   const [err, setErr] = useState(null);
@@ -827,7 +837,18 @@ function ConnectPrompt({ T, isLight, botUsername, manualPairing, onPaired }) {
   };
 
   return (
-    <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
+    <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 24, position: "relative" }}>
+      {/* Flecha volver — en el modo inmersivo (sin header/nav de la app) es la
+          única salida si el asesor cae en esta pantalla sin parear. */}
+      {onBack && (
+        <button type="button" onClick={onBack} aria-label="Volver" style={{
+          position: "absolute", top: "calc(10px + var(--safe-area-inset-top, env(safe-area-inset-top, 0px)))", left: 12,
+          width: 40, height: 40, borderRadius: 12, background: "transparent", border: "none", cursor: "pointer",
+          display: "flex", alignItems: "center", justifyContent: "center", WebkitTapHighlightColor: "transparent",
+        }}>
+          <ChevronLeft size={26} strokeWidth={2.4} color={isLight ? "#0D9A76" : "#FFFFFF"} />
+        </button>
+      )}
       <G T={T} style={{ padding: 28, textAlign: "center", borderRadius: 18, maxWidth: 400, width: "100%", boxShadow: isLight ? "0 8px 32px rgba(15,23,42,0.06)" : "0 12px 40px rgba(0,0,0,0.3)" }}>
         <div style={{ width: 52, height: 52, borderRadius: 14, margin: "0 auto 16px", background: isLight ? "linear-gradient(135deg, #E8F8F4 0%, #D1F2E8 100%)" : "linear-gradient(135deg, rgba(110,231,194,0.15) 0%, rgba(52,211,153,0.08) 100%)", border: `1px solid ${T.accent}33`, display: "flex", alignItems: "center", justifyContent: "center" }}>
           <CopilotMark size={32} isLight={isLight} />
