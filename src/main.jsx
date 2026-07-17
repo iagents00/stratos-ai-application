@@ -236,7 +236,17 @@ if ("serviceWorker" in navigator && import.meta.env.PROD) {
 
     // Cuando el SW nuevo toma control, recargar para usar la última versión
     let refreshing = false;
+    // ¿La página YA estaba controlada por un SW al cargar? En la PRIMERA carga
+    // (o en incógnito) NO lo está: el SW recién se instala y "reclama" la página,
+    // lo que dispara controllerchange/SW_UPDATED. Pero en esa primera carga el
+    // bundle que ya bajó ES el más nuevo (vino de la red) → recargar es
+    // INNECESARIO. Ese reload de la primera visita era el "recorte" a los ~3s
+    // (se reiniciaba toda la página, ícono incluido). Solo recargamos cuando SÍ
+    // estábamos controlados = update real (se reemplaza un SW viejo por uno nuevo
+    // y hay que bajar el bundle nuevo). El guard anti-loop de iOS se conserva.
+    const wasControlledAtLoad = !!navigator.serviceWorker.controller;
     const forceReload = () => {
+      if (!wasControlledAtLoad) return; // primera carga: ya tenemos el bundle nuevo
       if (refreshing) return;
       // Guard CROSS-RELOAD (fix loop iOS "Ocurrió un problema varias veces"):
       // el flag `refreshing` vive solo en memoria y se reinicia al recargar. En
