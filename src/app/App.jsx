@@ -110,6 +110,7 @@ function resolveInitialView(user) {
 import Dash          from "./views/Dash";
 import ComandoDirectivo from "./views/ComandoDirectivo";
 import CRM           from "./views/CRM";
+import ErrorBoundary from "../components/ErrorBoundary.jsx";
 const ERP           = lazy(() => import("./views/ERP"));
 const Team          = lazy(() => import("./views/Team"));
 const IACRM         = lazy(() => import("./views/IACRM"));
@@ -121,6 +122,29 @@ const WhatsAppInbox = lazy(() => import("./views/WhatsApp"));
 const Copilot       = lazy(() => import("./views/Copilot"));
 const Profile       = lazy(() => import("./views/Profile"));
 const Trash         = lazy(() => import("./views/Trash"));
+
+/* ── PREFETCH de vistas ──────────────────────────────────────────────────────
+ * Mismos specifiers que los lazy() de arriba. import() dedupe por specifier, así
+ * que "warmear" acá deja LISTO el MISMO chunk que usará el lazy(). Objetivo: que
+ * navegar a Create/ERP/etc. NO dispare un import en vivo — porque tras un deploy
+ * ese import pediría un chunk con hash viejo que Vercel ya no tiene ("Failed to
+ * fetch dynamically imported module") → el ErrorBoundary raíz recargaba toda la
+ * app → parpadeo de login. Precargando contra el bundle actual, el módulo ya
+ * está en memoria y el clic es instantáneo y a prueba de deploys. */
+const PREFETCH_VIEWS = [
+  () => import("./views/ERP"),
+  () => import("./views/Team"),
+  () => import("./views/IACRM"),
+  () => import("./views/LandingPages"),
+  () => import("./views/FinanzasAdmin"),
+  () => import("./views/RRHHModule"),
+  () => import("./views/Caja"),
+  () => import("./views/WhatsApp"),
+  () => import("./views/Copilot"),
+  () => import("./views/Profile"),
+  () => import("./views/Trash"),
+  () => import("./features/Admin/AdminPanel"),
+];
 
 /* ── Mock data (demo fallback) ── */
 import { leads } from "./data/leads";
@@ -1043,6 +1067,29 @@ export default function App() {
     };
   }, [runAutoRecovery]);
 
+  // ── PREFETCH de las vistas lazy (evita "chunk viejo" al navegar tras deploy) ──
+  // Apenas la app queda ociosa, precargamos en segundo plano los chunks de todas
+  // las vistas contra el bundle ACTUAL. Los errores se tragan en silencio para no
+  // gatillar el recovery global (vite:preloadError). Corre una sola vez.
+  useEffect(() => {
+    let cancelled = false;
+    const warm = () => {
+      if (cancelled) return;
+      for (const load of PREFETCH_VIEWS) {
+        try { const p = load(); if (p && p.catch) p.catch(() => {}); } catch (_) { /* noop */ }
+      }
+    };
+    const ric = typeof window !== "undefined" && window.requestIdleCallback;
+    const id = ric ? window.requestIdleCallback(warm, { timeout: 4000 }) : setTimeout(warm, 1500);
+    return () => {
+      cancelled = true;
+      try {
+        if (ric && typeof id === "number") window.cancelIdleCallback(id);
+        else clearTimeout(id);
+      } catch (_) { /* noop */ }
+    };
+  }, []);
+
   /* ── IAOS ticker ── pausa con document.hidden para no gastar CPU en background */
   const [iaosIdx, setIaosIdx] = useState(0);
   useEffect(() => {
@@ -1955,7 +2002,8 @@ export default function App() {
           <div key={v} className="stratos-content-area" style={{ flex:1, padding: (v === "wa" || v === "copilot") ? 0 : "18px 22px", overflowY: (v === "wa" || v === "copilot") ? "hidden" : "auto", animation:"fadeIn 0.28s ease", display:"flex", flexDirection:"column" }}>
             {user?.role && !canAccessModule(v, user, clientConfig)
               ? <PermissionGate moduleId={v} onGoBack={() => setV("c")} />
-              : <Suspense fallback={
+              : <ErrorBoundary>
+                <Suspense fallback={
                   <div style={{ display:"flex", alignItems:"center", justifyContent:"center", padding:"60px 20px", color:T.txt3, fontFamily:font, fontSize:13 }}>
                     <span style={{ display:"inline-block", width:20, height:20, border:`2px solid ${T.accent}40`, borderTopColor:T.accent, borderRadius:"50%", animation:"spin 0.8s linear infinite", marginRight:10 }} />
                     Cargando…
@@ -1979,6 +2027,7 @@ export default function App() {
                   {v === "perfil" && <Profile theme={theme} T={T} />}
                   {v === "admin"  && canAccessModule("admin", user) && <AdminPanel T={T} isLight={isLight} />}
                 </Suspense>
+              </ErrorBoundary>
             }
           </div>
           <Chat open={co} onClose={() => setCo(false)} msgs={msgs} setMsgs={setMsgs} inp={inp} setInp={setInp} />
