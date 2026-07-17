@@ -320,7 +320,7 @@ const DynIsland = ({ onExpand, onOpenLead, notifications = [], theme = "dark", b
                               <Ic size={17} color={f.color} strokeWidth={2} />
                             </div>
                             <span style={{ fontSize: 8, fontWeight: 500, letterSpacing: "0.06em", textTransform: "uppercase", color: isAgent ? D.acc : D.t46, background: isAgent ? "rgba(110,231,194,0.10)" : D.btn, border: `1px solid ${isAgent ? "rgba(110,231,194,0.22)" : D.bd}`, borderRadius: 6, padding: "3px 6px" }}>
-                              {isAgent ? "Auto" : "Vos pedís"}
+                              {isAgent ? "Auto" : "Tú pides"}
                             </span>
                           </div>
                           <p style={{ margin: "0 0 4px", fontSize: 13, color: D.t92, fontWeight: 400, fontFamily: fontDisp, lineHeight: 1.2 }}>{f.label}</p>
