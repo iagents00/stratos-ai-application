@@ -55,7 +55,7 @@ export const MODULE_ROLES = {
   ia:     ["super_admin","admin","director","ceo"],
   e:      ["super_admin","admin","director","ceo"],
   a:      ["super_admin","admin","director","ceo"],
-  lp:     ["super_admin","admin","director","ceo"],
+  lp:     ["super_admin","admin","director","ceo","asesor"],   // Create para TODOS los asesores (pedido de Ángel 2026-07-17): arman sus propias landings/portafolios. El aislamiento por org sigue bloqueando a tenants externos (Grupo28/Vega).
   fa:     ["super_admin","admin","director","ceo"],
   rrhh:   ["super_admin","admin","director","ceo"],
   trash:  ["super_admin","admin","director","ceo","asesor"],
