@@ -48,12 +48,11 @@ const DynIsland = ({ onExpand, onOpenLead, notifications = [], theme = "dark", b
   // "Centro de Inteligencia" en escritorio. Si el cliente no define el móvil, usa el mismo.
   const centerLabelMobile = clientConfig?.brand?.intelligenceCenterLabelMobile || centerLabel;
 
-  const msgs = notifications.length > 0 ? notifications : [
-    { agent: "Agente Estratégico", text: "Optimización de cierre: Familia Rodríguez.", detail: "Probabilidad de cierre detectada al 92%. Dossier de alta fidelidad preparado para envío inmediato.", c: P.blue, icon: AgentIcons.gerente, btn: "Ejecutar Protocolo", action: "¿Cuáles son mis leads prioritarios hoy?" },
-    { agent: "Inteligencia de Datos", text: "Alerta de Mercado: Portofino +32%.", detail: "Demanda inusual detectada. Análisis predictivo recomienda ajuste de precios para maximizar rendimientos.", c: P.emerald, icon: AgentIcons.analista, btn: "Validar Ajuste", action: "Reporte de Riesgo: Portofino" },
-    { agent: "Equipo Stratos", text: "Actividad del Equipo: Cecilia y Alexia.", detail: "Cecilia Mendoza cerró venta de $2.1M. Alexia Santillán tiene 3 visitas VIP confirmadas para hoy.", c: P.violet, icon: Crown, btn: "Ver Reporte", action: "Resumen de rendimiento del equipo esta semana" },
-    { agent: "Agente de Ventas", text: "Alerta de Riesgo: James Mitchell.", detail: "Inactividad detectada en últimas 72h. Se recomienda activar protocolo de confianza para evitar enfriamiento.", c: P.rose, icon: AgentIcons.asistente, btn: "Enviar Avance", action: "Dossier: James Mitchell" },
-  ];
+  // SOLO datos reales (buildIntelNotifs sobre los leads). Antes había 4
+  // notificaciones DEMO de fallback ("Familia Rodríguez", "Portofino +32%"…)
+  // que aparecían cuando el asesor no tenía novedades → parecían reales y
+  // eran humo. Fuera: sin novedades se muestra un estado vacío honesto.
+  const msgs = notifications;
 
   const expanded = isOpen || selectedNotif || selectedFeature || showAll;
 
@@ -254,6 +253,14 @@ const DynIsland = ({ onExpand, onOpenLead, notifications = [], theme = "dark", b
 
                 {/* Notification items */}
                 <div style={{ padding: "6px 0 10px" }}>
+                  {msgs.length === 0 && (
+                    <div style={{ padding: "18px 20px", textAlign: "center" }}>
+                      <p style={{ margin: 0, fontSize: 12.5, color: D.t88, fontFamily: fontDisp, fontWeight: 500 }}>Todo en orden</p>
+                      <p style={{ margin: "4px 0 0", fontSize: 11, color: D.t42, fontFamily: font, lineHeight: 1.5 }}>
+                        El equipo IA está monitoreando tu cartera. Las novedades de tus clientes aparecerán aquí.
+                      </p>
+                    </div>
+                  )}
                   {msgs.map((m, i) => (
                     <div key={i} onClick={() => setSelectedNotif(m)}
                       style={{ display: "flex", alignItems: "center", gap: 13, padding: "11px 20px", cursor: "pointer", transition: "background 0.16s" }}
