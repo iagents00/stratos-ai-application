@@ -16,6 +16,7 @@ import { G, KPI, Pill, Ico } from "../../SharedComponents";
 import LandingPagePreview from "./LandingPagePreview";
 import { catalogToLandingProps, encodeLanding } from "./catalogAdapter";
 import { useAuth } from "../../../hooks/useAuth";
+import { supabase } from "../../../lib/supabase";
 
 const team = [
   { n: "Oscar Gálvez",      r: "CEO Ejecutivo",         wa: "+52 998 000 0001", cal: "" },
@@ -1149,16 +1150,34 @@ const LandingPages = ({ T = P }) => {
     setPreviewOpen(true);
   };
 
-  // Link auto-contenido: toda la presentación va codificada en la URL (#d=...),
-  // el cliente la abre sin login y sin backend. Ver PublicLanding.jsx.
+  // Link del portafolio. Antes era SOLO auto-contenido (#d=<base64 gigante>, miles
+  // de caracteres — imposible de dictar/pegar). Ahora: al abrir el preview se crea
+  // un LINK CORTO con el dominio propio (/p/<código de 8>) vía la RPC
+  // create_portfolio_link (el payload guardado es el MISMO base64 → PublicLanding
+  // lo decodifica idéntico). El largo queda como fallback si la RPC falla/offline.
   const buildPublicUrl = () => {
     const props = allProperties.filter(p => selectedProps.includes(p.id));
     if (props.length === 0) return null;
     const d = encodeLanding({ client: clientName, mensaje, asesor, asesorWA, asesorCal, properties: props, driveLinks });
     return `${window.location.origin}/p#d=${d}`;
   };
+  const [shortUrl, setShortUrl] = useState(null);
+  useEffect(() => {
+    if (!previewOpen) { setShortUrl(null); return; }
+    const props = allProperties.filter(p => selectedProps.includes(p.id));
+    if (props.length === 0) return;
+    let alive = true;
+    const d = encodeLanding({ client: clientName, mensaje, asesor, asesorWA, asesorCal, properties: props, driveLinks });
+    supabase.rpc("create_portfolio_link", { p_payload: d })
+      .then(({ data: code }) => {
+        if (alive && code && typeof code === "string") setShortUrl(`${window.location.origin}/p/${code}`);
+      })
+      .catch(() => {}); // sin red / sin sesión → queda el link largo, que siempre funciona
+    return () => { alive = false; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [previewOpen]);
   const handleCopyLink = () => {
-    const url = buildPublicUrl() || `${window.location.origin}/p`;
+    const url = shortUrl || buildPublicUrl() || `${window.location.origin}/p`;
     navigator.clipboard.writeText(url).catch(() => {});
     setCopied(true);
     setTimeout(() => setCopied(false), 2500);
@@ -1960,7 +1979,7 @@ const LandingPages = ({ T = P }) => {
       {/* Full-screen Landing Page Preview */}
       {previewOpen && createPortal(
         <LandingPagePreview
-          shareUrl={buildPublicUrl()}
+          shareUrl={shortUrl || buildPublicUrl()}
           client={clientName}
           asesor={asesor}
           asesorWA={asesorWA}
