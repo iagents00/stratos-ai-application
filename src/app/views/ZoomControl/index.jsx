@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { P, LP, font, fontDisp } from "../../../design-system/tokens";
 import { G, KPI } from "../../SharedComponents";
+import { useIsMobile } from "../../../hooks/useViewport";
 import { useZoomAgendados } from "../../../hooks/useZoomAgendados";
 import {
   LINERS, PRESENTADORES, ESTATUS, ESTATUS_DEFAULT,
@@ -56,6 +57,7 @@ const ZoomControl = ({ theme = "dark" }) => {
   const isLight = theme === "light";
   const T = isLight ? LP : P;
   const accent = T.accent;
+  const isMobile = useIsMobile();
 
   const { rows, loading, error, hasExtCols, refetch, createRow, updateRow, removeRow } = useZoomAgendados();
 
@@ -348,7 +350,7 @@ const ZoomControl = ({ theme = "dark" }) => {
             title="Recargar"
             style={{
               display: "inline-flex", alignItems: "center", gap: 7,
-              padding: "9px 13px", borderRadius: 10,
+              padding: isMobile ? "12px 15px" : "9px 13px", borderRadius: 10,
               fontSize: 12.5, fontWeight: 400, fontFamily: fontDisp,
               cursor: busy ? "default" : "pointer",
               background: subtleBg, color: T.txt2,
@@ -364,7 +366,7 @@ const ZoomControl = ({ theme = "dark" }) => {
             title="Descarga la tabla (con los filtros aplicados) como CSV — el mismo formato del sheet"
             style={{
               display: "inline-flex", alignItems: "center", gap: 7,
-              padding: "9px 13px", borderRadius: 10,
+              padding: isMobile ? "12px 15px" : "9px 13px", borderRadius: 10,
               fontSize: 12.5, fontWeight: 400, fontFamily: fontDisp,
               cursor: "pointer",
               background: subtleBg, color: T.txt2,
@@ -423,7 +425,7 @@ const ZoomControl = ({ theme = "dark" }) => {
             const active = range === r.id;
             return (
               <button key={r.id} onClick={() => setRange(r.id)} style={{
-                padding: "7px 13px", borderRadius: 9, border: "none", cursor: "pointer",
+                padding: isMobile ? "11px 15px" : "7px 13px", borderRadius: 9, border: "none", cursor: "pointer",
                 fontSize: 12, fontWeight: active ? 700 : 600, fontFamily: fontDisp,
                 background: active ? (isLight ? accent : `${accent}22`) : "transparent",
                 color: active ? (isLight ? "#06080F" : accent) : T.txt2,
@@ -449,7 +451,7 @@ const ZoomControl = ({ theme = "dark" }) => {
             title="Solo clientes con alta intención de cierre (señal detectada en el Zoom)"
             style={{
               display: "inline-flex", alignItems: "center", gap: 6,
-              padding: "8px 13px", borderRadius: 10, cursor: "pointer",
+              padding: isMobile ? "11px 15px" : "8px 13px", borderRadius: 10, cursor: "pointer",
               fontSize: 12, fontWeight: hotOnly ? 700 : 600, fontFamily: fontDisp,
               background: hotOnly ? "rgba(220,38,38,0.14)" : subtleBg,
               color: hotOnly ? "#DC2626" : T.txt2,
@@ -477,6 +479,114 @@ const ZoomControl = ({ theme = "dark" }) => {
         </span>
       </div>
 
+      {/* ── MÓVIL: lista de TARJETAS (la tabla de 16 columnas es ilegible en un
+             teléfono — obligaba a scrollear en 2 ejes). Mismos datos esenciales
+             y MISMOS handlers que la tabla; el detalle completo sigue en el
+             modal de edición (tap en la tarjeta). Desktop conserva la tabla. ── */}
+      {isMobile ? (
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          {loading && (
+            <G T={T}><p style={{ margin: 0, padding: 8, textAlign: "center", color: T.txt3, fontFamily: font, fontSize: 12.5 }}>Cargando Zooms…</p></G>
+          )}
+          {!loading && filtered.length === 0 && (
+            <G T={T}><p style={{ margin: 0, padding: 8, textAlign: "center", color: T.txt3, fontFamily: font, fontSize: 12.5 }}>
+              {rows.length === 0
+                ? "Aún no hay Zooms registrados. Crea el primero con “Nuevo Zoom”."
+                : "Ningún Zoom coincide con este filtro."}
+            </p></G>
+          )}
+          {!loading && tableItems.map((item, idx) => {
+            if (item.type === "sep") {
+              const esHoy = item.fecha === today;
+              return (
+                <div key={`msep-${item.fecha || idx}`} style={{
+                  padding: "10px 4px 0", fontSize: 11.5, fontWeight: 600, fontFamily: fontDisp,
+                  textTransform: "uppercase", letterSpacing: "0.05em",
+                  color: esHoy ? accent : T.txt2,
+                }}>
+                  {prettyDate(item.fecha)} · {item.count} {item.count === 1 ? "Zoom" : "Zooms"}{esHoy ? " · HOY" : ""}
+                </div>
+              );
+            }
+            const r = item.r;
+            return (
+              <div key={r.id} style={{
+                borderRadius: 16, padding: "12px 14px",
+                background: r.calentito ? "rgba(220,38,38,0.10)" : (isLight ? "#FFFFFF" : "rgba(255,255,255,0.03)"),
+                border: `1px solid ${r.calentito ? "rgba(220,38,38,0.35)" : cardBorder}`,
+                boxShadow: isLight ? "0 2px 10px rgba(15,23,42,0.05)" : "none",
+              }}>
+                <div onClick={() => openEdit(r)} style={{ cursor: "pointer", WebkitTapHighlightColor: "transparent" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <span style={{ fontSize: 12.5, fontWeight: 600, color: r.fecha_zoom === today ? accent : T.txt2, fontFamily: fontDisp, whiteSpace: "nowrap" }}>
+                      {r.hora || "—"} · {prettyDate(r.fecha_zoom)}
+                    </span>
+                    <span style={{ marginLeft: "auto", flexShrink: 0 }} onClick={(e) => e.stopPropagation()}>
+                      <StatusSelect T={T} isLight={isLight} value={r.estatus} onChange={(s) => onInlineStatus(r, s)} />
+                    </span>
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 6, fontSize: 15, fontWeight: 600, color: T.txt, fontFamily: fontDisp, letterSpacing: "-0.01em" }}>
+                    {r.calentito && <Flame size={14} color="#DC2626" strokeWidth={2.6} style={{ flexShrink: 0 }} />}
+                    <span style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.cliente || "—"}</span>
+                  </div>
+                  <div style={{ marginTop: 3, fontSize: 12, color: T.txt2, fontFamily: font, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    {(r.proyecto || "—")} · {(r.liner || "—")} → {(r.presentador_principal || "—")}
+                  </div>
+                  {r.comentarios && (
+                    <div style={{ marginTop: 4, fontSize: 11.5, color: T.txt3, fontFamily: font, lineHeight: 1.45, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
+                      {r.comentarios}
+                    </div>
+                  )}
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 10, paddingTop: 9, borderTop: `1px solid ${rowBorder}` }}>
+                  {hasExtCols && (
+                    <button onClick={() => toggleDiscovery(r)} style={{
+                      display: "inline-flex", alignItems: "center", gap: 6, minHeight: 40,
+                      padding: "0 14px", borderRadius: 12, cursor: "pointer",
+                      fontSize: 12, fontWeight: 500, fontFamily: fontDisp,
+                      color: r.discovery ? "#10B981" : T.txt2,
+                      background: r.discovery ? "rgba(16,185,129,0.12)" : (isLight ? "rgba(15,23,42,0.04)" : "rgba(255,255,255,0.05)"),
+                      border: `1px solid ${r.discovery ? "rgba(16,185,129,0.35)" : (isLight ? "rgba(15,23,42,0.10)" : "rgba(255,255,255,0.10)")}`,
+                      WebkitTapHighlightColor: "transparent",
+                    }}>
+                      {r.discovery ? "Discovery ✓" : "+ Discovery"}
+                    </button>
+                  )}
+                  <div style={{ display: "flex", gap: 6, marginLeft: "auto" }}>
+                    {hasExtCols && (
+                      <button onClick={() => onToggleHot(r)} title="Alta intención" style={{ ...iconBtn(T, isLight), width: 40, height: 40, borderRadius: 12, color: r.calentito ? "#DC2626" : T.txt3, background: r.calentito ? "rgba(220,38,38,0.12)" : iconBtn(T, isLight).background }}>
+                        <Flame size={16} strokeWidth={2.4} />
+                      </button>
+                    )}
+                    <button onClick={() => openEdit(r)} title="Editar" style={{ ...iconBtn(T, isLight), width: 40, height: 40, borderRadius: 12 }}>
+                      <Pencil size={16} />
+                    </button>
+                    <button onClick={() => onDelete(r)} title="Eliminar" style={{ ...iconBtn(T, isLight), width: 40, height: 40, borderRadius: 12 }}>
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
+                </div>
+                {hasExtCols && discoveryOpenId === r.id && (
+                  <div style={{ marginTop: 10, borderTop: `1px solid ${rowBorder}`, paddingTop: 10 }}>
+                    <textarea
+                      value={discoveryDraft}
+                      onChange={(e) => setDiscoveryDraft(e.target.value)}
+                      rows={Math.min(12, Math.max(4, discoveryDraft.split("\n").length + 1))}
+                      placeholder="Escribe aquí el discovery del cliente…"
+                      style={{ ...inputStyle(T, isLight), width: "100%", resize: "vertical", fontFamily: font, fontSize: 16, lineHeight: 1.5 }}
+                    />
+                    <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+                      <button onClick={() => setDiscoveryOpenId(null)} disabled={busy} style={{ flex: 1, minHeight: 44, borderRadius: 12, background: "transparent", color: T.txt2, border: `1px solid ${isLight ? "rgba(15,23,42,0.12)" : "rgba(255,255,255,0.12)"}`, fontSize: 13, fontWeight: 500, fontFamily: fontDisp, cursor: "pointer" }}>Cancelar</button>
+                      <button onClick={() => saveDiscovery(r)} disabled={busy || !discDirtyFor(r)} style={{ flex: 1, minHeight: 44, borderRadius: 12, background: "#10B981", color: "#FFF", border: "none", fontSize: 13, fontWeight: 600, fontFamily: fontDisp, cursor: "pointer", opacity: busy ? 0.7 : (!discDirtyFor(r) ? 0.45 : 1) }}>{busy ? "Guardando…" : "Guardar"}</button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      ) : (
+      <>
       {/* ── Tabla — MISMAS columnas y nombres que el sheet del director, para
              que el equipo la reconozca al instante. El encabezado y la banda
              del día quedan FIJADOS (sticky) al hacer scroll. ───────────────── */}
@@ -730,6 +840,8 @@ const ZoomControl = ({ theme = "dark" }) => {
           </table>
         </div>
       </G>
+      </>
+      )}
 
       {/* ── Apartados bajo el excel — los del sheet de Ema, uno a la vez.
              Navegación tipo segmented control (estilo Apple): Resumen,
@@ -753,7 +865,7 @@ const ZoomControl = ({ theme = "dark" }) => {
                 onClick={() => setSeccion(id)}
                 style={{
                   display: "inline-flex", alignItems: "center", gap: 7,
-                  padding: "9px 16px", borderRadius: 10, border: "none", cursor: "pointer",
+                  padding: isMobile ? "12px 18px" : "9px 16px", borderRadius: 10, border: "none", cursor: "pointer",
                   fontSize: 12.5, fontWeight: active ? 700 : 600, fontFamily: fontDisp,
                   whiteSpace: "nowrap", transition: "all 0.15s",
                   background: active ? (isLight ? "#FFFFFF" : "rgba(255,255,255,0.08)") : "transparent",
