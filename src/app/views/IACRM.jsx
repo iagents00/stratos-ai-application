@@ -211,8 +211,10 @@ const IACRM = ({ oc, T: _T, theme = "dark" }) => {
           </p>
         </div>
 
-        {/* Acciones derecha */}
-        <div style={{ display: "flex", gap: 8, alignItems: "center", flexShrink: 0 }}>
+        {/* Acciones derecha — en móvil (Android angosto 360px incl.) se reparten
+            a lo ancho y envuelven: los 2 chips + "Estado del equipo" no caben
+            en una fila junto al título → se cortaba "Estado del equip…". */}
+        <div style={{ display: "flex", gap: 8, alignItems: "center", flexShrink: 0, flexWrap: "wrap", width: isMobile ? "100%" : "auto", justifyContent: isMobile ? "flex-start" : "flex-end" }}>
           {/* Status chips */}
           <div style={{ display: "flex", gap: 6 }}>
             {[{ c: WA, l: "WhatsApp" }, { c: TG, l: "Telegram" }].map(({ c, l }) => (
@@ -226,7 +228,8 @@ const IACRM = ({ oc, T: _T, theme = "dark" }) => {
           <button
             onClick={() => oc("¿Qué leads necesitan atención urgente ahora mismo? Dame el resumen del equipo de agentes")}
             style={{
-              display: "flex", alignItems: "center", gap: 6, padding: "8px 14px", borderRadius: 10,
+              display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "8px 14px", borderRadius: 10,
+              flex: isMobile ? "1 1 100%" : "0 0 auto",
               background: isLight ? T.accentG : `${T.accent}14`,
               border: `1px solid ${T.accent}38`,
               color: isLight ? "#FFFFFF" : T.accent,
