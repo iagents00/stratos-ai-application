@@ -268,6 +268,14 @@ function Chat({ T, isLight, botUsername, onUnpaired }) {
   const bgArea = isLight ? "#F8FAFC" : "#060A12";
   const composerBg = isLight ? "#FFFFFF" : "rgba(10,15,26,0.95)";
 
+  // El motion del avatar solo vive en la ÚLTIMA respuesta del asistente (la
+  // más reciente); las burbujas anteriores quedan estáticas. Se recalcula en
+  // cada render, así el movimiento "salta" solo a la burbuja nueva.
+  let lastAiId = null;
+  for (let i = messages.length - 1; i >= 0; i--) {
+    if (messages[i].role !== "user") { lastAiId = messages[i].id; break; }
+  }
+
   return (
     <div style={{ flex: 1, display: "flex", flexDirection: "column", minHeight: 0, background: bgArea, overflow: "hidden" }}>
       {/* ── Header compacto (estilo WhatsApp) ── */}
@@ -325,7 +333,7 @@ function Chat({ T, isLight, botUsername, onUnpaired }) {
         ) : messages.length === 0 ? (
           <EmptyState T={T} isLight={isLight} onPick={send} />
         ) : (
-          messages.map((m) => <Bubble key={m.id} m={m} T={T} isLight={isLight} userBg={bubbleUserBg} userTxt={bubbleUserTxt} aiBg={bubbleAiBg} aiBd={bubbleAiBd} onPick={send} sending={sending} />)
+          messages.map((m) => <Bubble key={m.id} m={m} isLast={m.id === lastAiId} T={T} isLight={isLight} userBg={bubbleUserBg} userTxt={bubbleUserTxt} aiBg={bubbleAiBg} aiBd={bubbleAiBd} onPick={send} sending={sending} />)
         )}
         {sending && <Typing T={T} isLight={isLight} aiBg={bubbleAiBg} aiBd={bubbleAiBd} />}
       </div>
@@ -424,7 +432,7 @@ function renderRichText(text, linkColor) {
   return out;
 }
 
-function Bubble({ m, T, isLight, userBg, userTxt, aiBg, aiBd, onPick, sending }) {
+function Bubble({ m, T, isLight, userBg, userTxt, aiBg, aiBd, onPick, sending, isLast }) {
   const isUser = m.role === "user";
   const time = m.occurred_at
     ? new Date(m.occurred_at).toLocaleString("es-MX", { hour: "2-digit", minute: "2-digit" })
@@ -500,7 +508,7 @@ function Bubble({ m, T, isLight, userBg, userTxt, aiBg, aiBd, onPick, sending })
     <div style={{ display: "flex", justifyContent: isUser ? "flex-end" : "flex-start", gap: 8, alignItems: "flex-end" }}>
       {!isUser && (
         <div style={{ width: 24, height: 24, borderRadius: 7, background: `${T.accent}15`, border: `1px solid ${T.accent}28`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginBottom: 2 }}>
-          <CopilotMark size={15} isLight={isLight} animated={false} />
+          <CopilotMark size={15} isLight={isLight} animated={!!isLast && !sending} />
         </div>
       )}
       <div style={{
