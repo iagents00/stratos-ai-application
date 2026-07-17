@@ -29,6 +29,7 @@ import {
 } from "recharts";
 import { P, LP, font, fontDisp } from "../../design-system/tokens";
 import { G } from "../SharedComponents";
+import { useIsMobile } from "../../hooks/useViewport";
 import AdvisorMetrics, { INDICATORS } from "./CRM/AdvisorMetrics";
 import { useClient } from "../../hooks/useClient";
 import { buildExecutivePdf, evolutionCols, asesorCols } from "./ComandoDirectivo.pdf";
@@ -267,6 +268,7 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
   // aparece para clientes con features.zoomControl (hoy: Duke); el resto ve el
   // Comando Directivo igual que siempre, sin barra de pestañas.
   const showZoomTab = !!clientConfig?.features?.zoomControl;
+  const isMobile = useIsMobile();
   const [tab, setTab] = useState("indicadores");
   const [dateFilter, setDateFilter] = useState(createDefaultDateFilter);
   const activeDateRange = useMemo(
@@ -878,32 +880,35 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
     <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
       {/* ── Pestañas: Indicadores / Control de Zooms (solo si zoomControl) ─── */}
       {showZoomTab && (
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", gap: 10, flexDirection: isMobile ? "column" : "row", alignItems: isMobile ? "stretch" : "center" }}>
+        {/* Segmented control nativo: labels cortos (el título ya dice "Indicadores")
+            → los 3 caben sin cortarse; en móvil cada tab es flex:1 y llena el ancho. */}
         <div style={{
           display: "flex", gap: 4, padding: 4, borderRadius: 14,
           background: headerBg, border: `1px solid ${rowBorder}`,
-          maxWidth: "100%", overflowX: "auto", WebkitOverflowScrolling: "touch",
+          width: isMobile ? "100%" : "auto",
         }}>
           {[
-            { id: "indicadores", label: "Indicadores · Leads" },
-            { id: "zooms", label: "Indicadores · Zooms" },
-            { id: "productividad", label: "Indicadores · Productividad" },
+            { id: "indicadores", label: "Leads" },
+            { id: "zooms", label: "Zooms" },
+            { id: "productividad", label: "Productividad" },
           ].map(t => {
             const active = tab === t.id;
             return (
               <button key={t.id} onClick={() => setTab(t.id)} style={{
-                padding: "8px 16px", borderRadius: 10, border: "none", cursor: "pointer",
-                whiteSpace: "nowrap", flexShrink: 0,
+                flex: isMobile ? 1 : "0 0 auto", minWidth: 0, minHeight: 44,
+                padding: "0 16px", borderRadius: 10, border: "none", cursor: "pointer",
+                whiteSpace: "nowrap",
                 fontSize: 13, fontWeight: active ? 700 : 600, fontFamily: fontDisp,
                 background: active ? (isLight ? T.accent : `${T.accent}22`) : "transparent",
                 color: active ? (isLight ? "#FFFFFF" : T.accent) : T.txt2,
-                transition: "all 0.15s",
+                transition: "all 0.15s", WebkitTapHighlightColor: "transparent",
               }}>{t.label}</button>
             );
           })}
         </div>
-        <button onClick={handleExport} title="Descarga el reporte ejecutivo como PDF" style={{ display:"inline-flex", alignItems:"center", gap:7, padding:"8px 14px", borderRadius:9, background: isLight ? `linear-gradient(135deg, ${accent} 0%, ${accent}DD 100%)` : `${accent}18`, color: isLight ? "#FFFFFF" : accent, border:`1px solid ${isLight ? "transparent" : `${accent}55`}`, fontSize:12, fontWeight:500, fontFamily:fontDisp, cursor:"pointer", boxShadow: isLight ? `0 2px 8px ${accent}40` : "none" }}>
-          <Download size={13} strokeWidth={2.4} /> Generar PDF
+        <button onClick={handleExport} title="Descarga el reporte ejecutivo como PDF" style={{ display:"inline-flex", alignItems:"center", justifyContent:"center", gap:7, minHeight:44, padding:"0 16px", borderRadius:11, width: isMobile ? "100%" : "auto", background: isLight ? `linear-gradient(135deg, ${accent} 0%, ${accent}DD 100%)` : `${accent}18`, color: isLight ? "#FFFFFF" : accent, border:`1px solid ${isLight ? "transparent" : `${accent}55`}`, fontSize:13, fontWeight:600, fontFamily:fontDisp, cursor:"pointer", boxShadow: isLight ? `0 2px 8px ${accent}40` : "none", WebkitTapHighlightColor: "transparent" }}>
+          <Download size={14} strokeWidth={2.4} /> Generar PDF
         </button>
         </div>
       )}
@@ -944,17 +949,18 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
             onClick={handleExport}
             title="Descarga el reporte ejecutivo como PDF — listo para enviar a dirección"
             style={{
-              display: "inline-flex", alignItems: "center", gap: 7,
-              padding: "8px 14px", borderRadius: 9,
+              display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 7,
+              minHeight: 44, padding: "0 16px", borderRadius: 11,
+              width: isMobile ? "100%" : "auto",
               background: isLight
                 ? `linear-gradient(135deg, ${accent} 0%, ${accent}DD 100%)`
                 : `${accent}18`,
               color: isLight ? "#FFFFFF" : accent,
               border: `1px solid ${isLight ? "transparent" : `${accent}55`}`,
-              fontSize: 12, fontWeight: 500, fontFamily: fontDisp,
+              fontSize: 13, fontWeight: 600, fontFamily: fontDisp,
               letterSpacing: "-0.01em", cursor: "pointer",
               boxShadow: isLight ? `0 2px 8px ${accent}40` : "none",
-              transition: "all 0.15s",
+              transition: "all 0.15s", WebkitTapHighlightColor: "transparent",
             }}
             onMouseEnter={e => {
               e.currentTarget.style.transform = "translateY(-1px)";
@@ -989,14 +995,14 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
             const prev = i > 0 ? funnel.stages[i - 1].value : null;
             const conv = prev ? Math.round((s.value / prev) * 100) : null;
             return (
-              <div key={s.label} style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-                <div style={{ width: 150, flexShrink: 0, display: "flex", alignItems: "center", gap: 8 }}>
+              <div key={s.label} style={{ display: "flex", alignItems: isMobile ? "stretch" : "center", flexDirection: isMobile ? "column" : "row", gap: isMobile ? 6 : 12 }}>
+                <div style={{ width: isMobile ? "auto" : 150, flexShrink: 0, display: "flex", alignItems: "center", gap: 8 }}>
                   <span style={{ display: "inline-flex", padding: 6, borderRadius: 8, background: `${s.color}1A`, flexShrink: 0 }}>
                     <Icon size={14} color={s.color} strokeWidth={2.2} />
                   </span>
                   <span style={{ fontSize: 12, fontWeight: 400, color: T.txt2, fontFamily: font, lineHeight: 1.2 }}>{s.label}</span>
                 </div>
-                <div style={{ flex: 1, minWidth: 220, display: "flex", alignItems: "center", gap: 10 }}>
+                <div style={{ flex: 1, minWidth: 0, display: "flex", alignItems: "center", gap: 10 }}>
                   <div style={{ flex: 1, minWidth: 0, height: 34, borderRadius: 8, background: isLight ? "rgba(15,23,42,0.04)" : "rgba(255,255,255,0.04)", overflow: "hidden" }}>
                     <div style={{
                       width: `${widthPct}%`, height: "100%", borderRadius: 8,
@@ -1006,7 +1012,7 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
                       <span style={{ fontSize: 14, fontWeight: 500, color: "#FFFFFF", fontFamily: fontDisp, letterSpacing: "-0.01em", textShadow: "0 1px 3px rgba(0,0,0,0.45)" }}>{s.value.toLocaleString("es-MX")}</span>
                     </div>
                   </div>
-                  <span style={{ width: 84, flexShrink: 0, fontSize: 11, color: T.txt3, fontFamily: font, textAlign: "right" }}>
+                  <span style={{ minWidth: 64, flexShrink: 0, fontSize: 11, color: T.txt3, fontFamily: font, textAlign: "right", whiteSpace: "nowrap" }}>
                     {conv !== null ? <><strong style={{ color: T.txt2 }}>{conv}%</strong> del previo</> : "100%"}
                   </span>
                 </div>
@@ -1030,8 +1036,9 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
           </div>
         </div>
 
-        {/* Leyenda interactiva — chips toggleables */}
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 16 }}>
+        {/* Leyenda interactiva — chips toggleables. En móvil: grid 2-up que llena
+            el ancho (sin fila despareja) + tap target ≥40px. En desktop: flex-wrap. */}
+        <div style={{ display: isMobile ? "grid" : "flex", gridTemplateColumns: isMobile ? "repeat(2, minmax(0,1fr))" : undefined, flexWrap: "wrap", gap: 8, marginBottom: 16 }}>
           {INDICATORS.map(ind => {
             const c = COLORS_BY_KEY[ind.key] || accent;
             const hidden = !!hiddenSeries[ind.key];
@@ -1041,8 +1048,10 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
                 onClick={() => toggleSeries(ind.key)}
                 title={hidden ? "Mostrar serie" : "Ocultar serie"}
                 style={{
-                  display: "inline-flex", alignItems: "center", gap: 6,
-                  padding: "5px 10px", borderRadius: 99,
+                  display: "inline-flex", alignItems: "center", gap: 7,
+                  width: isMobile ? "100%" : "auto", minWidth: 0, minHeight: isMobile ? 42 : 30,
+                  justifyContent: "flex-start",
+                  padding: isMobile ? "9px 12px" : "5px 10px", borderRadius: isMobile ? 12 : 99,
                   background: hidden
                     ? (isLight ? "rgba(15,23,42,0.04)" : "rgba(255,255,255,0.03)")
                     : (isLight ? `${c}14` : `${c}22`),
@@ -1052,16 +1061,16 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
                   color: hidden ? T.txt3 : (isLight ? `color-mix(in srgb, ${c} 60%, #0B1220)` : c),
                   fontSize: 11, fontWeight: 400, fontFamily: fontDisp,
                   letterSpacing: "0.005em", cursor: "pointer",
-                  transition: "all 0.14s",
+                  transition: "all 0.14s", WebkitTapHighlightColor: "transparent",
                   opacity: hidden ? 0.55 : 1,
                 }}
               >
                 <span style={{
-                  width: 8, height: 8, borderRadius: "50%",
+                  width: 8, height: 8, borderRadius: "50%", flexShrink: 0,
                   background: hidden ? T.txt3 : c,
                   boxShadow: hidden ? "none" : `0 0 6px ${c}88`,
                 }} />
-                {FULL_LABELS[ind.key] || ind.label}
+                <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{FULL_LABELS[ind.key] || ind.label}</span>
               </button>
             );
           })}

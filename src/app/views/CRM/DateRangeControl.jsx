@@ -15,8 +15,10 @@ import { CalendarDays, SlidersHorizontal, Check } from "lucide-react";
 import { font, fontDisp } from "../../../design-system/tokens";
 import { DATE_PRESETS, dateRangeLabel, resolveDateRange } from "./date-range";
 import RangeCalendar from "./RangeCalendar";
+import { useIsMobile } from "../../../hooks/useViewport";
 
 export default function DateRangeControl({ T, isLight, value, onChange, label = "Período" }) {
+  const isMobile = useIsMobile();
   const range = resolveDateRange(value.preset, value.customFrom, value.customTo);
   const [calOpen, setCalOpen] = useState(value.preset === "custom");
 
@@ -47,10 +49,12 @@ export default function DateRangeControl({ T, isLight, value, onChange, label = 
   };
 
   const chipBase = {
-    display: "inline-flex", alignItems: "center", gap: 6,
-    borderRadius: 999, padding: "8px 14px", cursor: "pointer",
-    fontSize: 12, fontFamily: fontDisp, letterSpacing: "-0.005em",
+    display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6,
+    width: isMobile ? "100%" : "auto", minWidth: 0, minHeight: isMobile ? 44 : undefined,
+    borderRadius: isMobile ? 12 : 999, padding: isMobile ? "0 12px" : "8px 14px", cursor: "pointer",
+    fontSize: 12, fontFamily: fontDisp, letterSpacing: "-0.005em", whiteSpace: "nowrap",
     transition: "background 0.14s, color 0.14s, border-color 0.14s",
+    WebkitTapHighlightColor: "transparent",
   };
 
   return (
@@ -86,8 +90,9 @@ export default function DateRangeControl({ T, isLight, value, onChange, label = 
         </span>
       </div>
 
-      {/* Presets + Personalizado */}
-      <div style={{ display: "flex", gap: 7, flexWrap: "wrap" }}>
+      {/* Presets + Personalizado. En móvil: grid 3-up que llena el ancho (sin
+          margen suelto a la derecha) + celdas ≥44px. En desktop: pills flex-wrap. */}
+      <div style={{ display: isMobile ? "grid" : "flex", gridTemplateColumns: isMobile ? "repeat(3, 1fr)" : undefined, gap: isMobile ? 8 : 7, flexWrap: "wrap" }}>
         {presets.map((preset) => {
           const active = value.preset === preset.id;
           return (
@@ -135,7 +140,7 @@ export default function DateRangeControl({ T, isLight, value, onChange, label = 
             onClick={() => setCalOpen(false)}
             style={{ position: "fixed", inset: 0, zIndex: 69 }}
           />
-          <div style={{ position: "absolute", top: "100%", left: 14, marginTop: 8, zIndex: 70 }}>
+          <div style={{ position: "absolute", top: "100%", left: isMobile ? 8 : 14, right: isMobile ? 8 : "auto", marginTop: 8, zIndex: 70, display: "flex", justifyContent: "center" }}>
             <RangeCalendar
               isLight={isLight}
               fromStr={value.customFrom}
