@@ -181,7 +181,7 @@ const IACRM = ({ oc, T: _T, theme = "dark" }) => {
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
 
       {/* ══ HEADER — estilo CRM Asesores ══════════════════════════════ */}
-      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16 }}>
+      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
         <div>
           {/* Fila título */}
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 5 }}>
@@ -241,7 +241,7 @@ const IACRM = ({ oc, T: _T, theme = "dark" }) => {
       </div>
 
       {/* ══ KPIs ══════════════════════════════════════════════════════ */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 12 }}>
         <KPI label="Mensajes hoy"        value={totalSent}  sub={`${totalQueue} en cola`}               icon={MessageCircle} T={T} />
         <KPI label="Respondieron"        value={totalResp}  sub={`${Math.round(totalResp/totalSent*100)}% tasa`} icon={CheckCircle2} T={T} />
         <KPI label="Convertidos hoy"     value={totalConv}  sub="leads → acción concreta"               icon={TrendingUp}    T={T} />
@@ -581,7 +581,7 @@ const IACRM = ({ oc, T: _T, theme = "dark" }) => {
       ══════════════════════════════════════════════ */}
       {tab === "planes" && (
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 14 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(240px, 100%), 1fr))", gap: 14 }}>
             {PRICING.map(plan => {
               const pc = col(plan.colorKey);
               const pcSafe = isLight ? `color-mix(in srgb, ${pc} 58%, #0B1220 42%)` : pc;

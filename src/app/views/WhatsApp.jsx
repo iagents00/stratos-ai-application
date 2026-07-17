@@ -228,7 +228,7 @@ export default function WhatsAppInbox({ T = P, isLight = false, inbox, openLead,
           onChange={(e) => setStageFilter(e.target.value)}
           title="Filtrar conversaciones por etapa del lead"
           style={{
-            flex: 1, minWidth: 0, height: 30, padding: "0 8px", borderRadius: 8,
+            flex: 1, minWidth: 0, height: 40, padding: "0 10px", borderRadius: 10,
             cursor: "pointer", outline: "none",
             background: isLight ? "rgba(255,255,255,0.85)" : T.glass,
             border: `1px solid ${stageFilter ? (STAGE_COLORS?.[stageFilter] || T.border) : T.border}`,
@@ -245,7 +245,7 @@ export default function WhatsAppInbox({ T = P, isLight = false, inbox, openLead,
           onClick={() => setUnreadOnly((v) => !v)}
           title="Mostrar solo conversaciones con mensajes sin leer"
           style={{
-            height: 30, padding: "0 10px", borderRadius: 8, cursor: "pointer",
+            height: 40, padding: "0 12px", borderRadius: 10, cursor: "pointer",
             flexShrink: 0, fontSize: 11, fontWeight: 500, fontFamily: font,
             background: unreadOnly
               ? (isLight ? "rgba(13,154,118,0.10)" : "rgba(110,231,194,0.10)")

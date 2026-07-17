@@ -389,7 +389,7 @@ const FollowUpBadge = ({ lead, onUpdate, T = P, compact = false, fullWidth = fal
     return (
       <div onClick={e => e.stopPropagation()} style={{
         display: "flex", alignItems: "stretch", width: "100%",
-        height: 40, borderRadius: 10,
+        height: 44, borderRadius: 10,
         background: pillBg,
         border: `1px solid ${pillBorder}`,
         overflow: "hidden", position: "relative",

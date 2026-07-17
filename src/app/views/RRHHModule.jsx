@@ -595,10 +595,11 @@ const RRHHModule = ({ T: _T }) => {
             ))}
           </div>
           <G np>
-            <div className="rrhh-pipeline-scroll" style={{ display: "grid", gridTemplateColumns: "2fr 1.2fr 1fr 0.8fr 0.8fr 0.8fr", minWidth: 650, gap: 8, padding: "12px 20px", borderBottom: `1px solid ${T.border}`, fontSize: 9.5, color: T.txt3, textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 500 }}>
+            <div className="rrhh-pipeline-scroll">
+            <div style={{ display: "grid", gridTemplateColumns: "2fr 1.2fr 1fr 0.8fr 0.8fr 0.8fr", minWidth: 650, gap: 8, padding: "12px 20px", borderBottom: `1px solid ${T.border}`, fontSize: 9.5, color: T.txt3, textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 500 }}>
               <span>Empleado</span><span>Cargo / Departamento</span><span>Desde</span><span>Salario</span><span>Score</span><span>Estado</span>
             </div>
-            <div className="rrhh-pipeline-scroll" style={{ flexDirection: "column", minWidth: 650 }}>
+            <div style={{ display: "flex", flexDirection: "column", minWidth: 650 }}>
               {empleados.map(e => (
                 <div key={e.id} style={{ display: "grid", gridTemplateColumns: "2fr 1.2fr 1fr 0.8fr 0.8fr 0.8fr", gap: 8, alignItems: "center", padding: "14px 20px", borderBottom: `1px solid ${T.border}`, transition: "background 0.15s" }}
                   onMouseEnter={el => el.currentTarget.style.background = "rgba(255,255,255,0.02)"}
@@ -625,6 +626,7 @@ const RRHHModule = ({ T: _T }) => {
                   <span style={{ fontSize: 9.5, fontWeight: 500, color: e.estado === "Activo" ? T.emerald : T.amber, background: e.estado === "Activo" ? `${T.emerald}15` : `${T.amber}15`, padding: "4px 10px", borderRadius: 6, textAlign: "center" }}>{e.estado}</span>
                 </div>
               ))}
+            </div>
             </div>
           </G>
         </div>
