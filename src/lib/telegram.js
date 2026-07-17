@@ -363,15 +363,24 @@ async function _sendCopilotMessageInner(rawText, options = {}) {
     if (!profile?.telegram_chat_id) return { reply: null, error: 'not_paired' };
     const chatId = Number(profile.telegram_chat_id);
 
-    // FLUJO "Ya estudié, este es mi plan" (paridad con Telegram): el botón manda
-    // callback `proact_plan:<leadId>`. El webhook del Copilot NO orquesta el estado
-    // awaiting_plan, así que lo hacemos acá: dejamos al asistente "en escucha" del
-    // plan (fn_proactive_plan_start vía RPC). El próximo mensaje se captura abajo.
-    if (options.callback_data && /^proact_plan:/.test(options.callback_data)) {
-      const leadId = options.callback_data.split(':')[1];
+    // BOTONES DE RECORDATORIOS PROACTIVOS — paridad TOTAL con Telegram.
+    // Todos los callbacks de proactivos los resuelve `copilot_handle_callback` en la DB
+    // (el webhook del Copilot es solo audio→texto y NO orquesta estos estados; antes solo
+    // estaba cableado "Ya estudié, este es mi plan" y el resto caía al webhook, que leía la
+    // ETIQUETA como texto libre → "Ya lo contacté" salía sin cliente ("expediente de : .")
+    // y "Ver ficha del cliente" caía en el catálogo). Cubre: Ya lo contacté · Ver ficha del
+    // cliente · Reagendar · Sí listo/Posponer 30/Cancelar · Ya estudié este es mi plan ·
+    // tareas de equipo (done/en proceso/no la hice). Devuelve {text, buttons} para reofrecer
+    // los botones de seguimiento (ej. tras la ficha). El texto que el asesor escribe DESPUÉS
+    // (la fecha para reagendar, o el plan) lo captura `copilot_handle_pending`, más abajo.
+    if (options.callback_data && /^(proact_inact|proact_next|proact_plan|proact_reagendar|team_action):/.test(options.callback_data)) {
       try {
-        const { data: startReply } = await supabase.rpc('copilot_plan_start', { p_lead_id: leadId });
-        if (startReply && typeof startReply === 'string') return { reply: startReply, error: null };
+        const { data: cb } = await supabase.rpc('copilot_handle_callback', { p_callback_data: options.callback_data });
+        if (cb && typeof cb === 'object') {
+          const text = typeof cb.text === 'string' ? cb.text : '';
+          const buttons = Array.isArray(cb.buttons) ? cb.buttons : [];
+          if (text || buttons.length) return { reply: text || 'Listo.', buttons, error: null };
+        }
       } catch { /* si falla, cae al webhook normal */ }
     }
 
