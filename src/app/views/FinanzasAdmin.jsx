@@ -276,7 +276,7 @@ const FinanzasAdmin = ({ T: _T }) => {
       {tab === "panel" && (
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
           {/* KPIs reales */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 12 }}>
             <KPI T={T} label="Ingresos del mes" value={money(month.ing)} sub={curSuffix ? currency : "este mes"} icon={TrendingUp} color={POS} />
             <KPI T={T} label="Egresos del mes" value={money(month.egr)} sub={curSuffix ? currency : "este mes"} icon={TrendingDown} color={NEG} />
             <KPI T={T} label="Balance del mes" value={money(month.bal)} sub={`${month.count} movimiento${month.count === 1 ? "" : "s"}`} icon={Scale} color={month.bal >= 0 ? POS : NEG} />
@@ -284,7 +284,7 @@ const FinanzasAdmin = ({ T: _T }) => {
           </div>
 
           {/* Gráfica + últimos movimientos */}
-          <div style={{ display: "grid", gridTemplateColumns: "1.6fr 1fr", gap: 16 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(320px, 100%), 1fr))", gap: 16 }}>
             <G T={T}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
                 <div>
@@ -381,7 +381,7 @@ const FinanzasAdmin = ({ T: _T }) => {
       {/* ═══════════════════════════════ FLUJO DE CAJA ═══════════════════════════════ */}
       {tab === "flujo" && (
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 12 }}>
             <KPI T={T} label={`Ingresos ${new Date().getFullYear()}`} value={money(year.ing)} sub="año en curso" icon={TrendingUp} color={POS} />
             <KPI T={T} label={`Egresos ${new Date().getFullYear()}`} value={money(year.egr)} sub="año en curso" icon={TrendingDown} color={NEG} />
             <KPI T={T} label="Utilidad neta" value={money(year.util)} sub="ingresos − egresos" icon={PiggyBank} color={year.util >= 0 ? ACC : NEG} />
@@ -420,14 +420,14 @@ const FinanzasAdmin = ({ T: _T }) => {
             <div style={{ padding: "12px 20px", borderBottom: `1px solid ${T.border}` }}>
               <p style={{ fontSize: 13, fontWeight: 500, color: T.txt, fontFamily: fontDisp }}>Detalle mensual</p>
             </div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr 1fr", gap: 8, padding: "9px 20px", borderBottom: `1px solid ${T.border}`, fontSize: 9, color: T.txt3, textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 500 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr 1fr", gap: 8, minWidth: 560, padding: "9px 20px", borderBottom: `1px solid ${T.border}`, fontSize: 9, color: T.txt3, textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 500 }}>
               <span>Mes</span><span>Ingresos</span><span>Egresos</span><span>Saldo</span><span>Margen</span>
             </div>
             {series.map(d => {
               const margen = d.ingresos > 0 ? (d.saldo / d.ingresos * 100) : 0;
               const mpct = Math.max(0, Math.min(100, margen));
               return (
-                <div key={d.key} style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr 1fr", gap: 8, alignItems: "center", padding: "11px 20px", borderBottom: `1px solid ${T.border}` }}>
+                <div key={d.key} style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr 1fr", gap: 8, minWidth: 560, alignItems: "center", padding: "11px 20px", borderBottom: `1px solid ${T.border}` }}>
                   <span style={{ fontSize: 12, color: T.txt, fontWeight: 400, fontFamily: fontDisp }}>{d.mes}</span>
                   <span style={{ fontSize: 12, fontWeight: 400, color: POS, fontFamily: fontDisp }}>{money(d.ingresos)}</span>
                   <span style={{ fontSize: 12, fontWeight: 400, color: NEG, fontFamily: fontDisp }}>{money(d.egresos)}</span>
