@@ -25,12 +25,13 @@
  */
 import { useId } from "react";
 
-// Triángulo equilátero (punta arriba) de esquinas redondeadas, centrado en
-// (24,24) dentro de un viewBox 0 0 48 48. El centroide cae exactamente en
-// (24,24) = centro de la caja → el giro es estable y en el mismo lugar.
-const TRI_PATH =
-  "M27.25 12.63 L35.47 26.87 Q38.72 32.5 32.22 32.5 L15.78 32.5 " +
-  "Q9.28 32.5 12.53 26.87 L20.75 12.63 Q24 7 27.25 12.63 Z";
+// LAZO/lemniscata (la "cinta" ∞ verde de marca) — la forma ORIGINAL del Copilot
+// que pidió Ángel de vuelta (2026-07-17: "no el triángulo; el verde que parecía
+// un círculo o un rombo"). Centrado en (24,24) → el giro del rotor es estable.
+// Se conserva la técnica nueva de animación (rotor HTML, sin cometa turbio);
+// solo volvió la FORMA.
+const LOOP_PATH =
+  "M24 24 C18 12 6 14 6 24 C6 34 18 36 24 24 C30 12 42 14 42 24 C42 34 30 36 24 24 Z";
 
 // Inyectá los @keyframes + la regla de reduced-motion UNA sola vez, a nivel de
 // documento (no un <style> por instancia). Definir el mismo keyframe en muchos
@@ -96,13 +97,15 @@ export default function CopilotMark({ size = 24, animated = true, isLight = fals
               <stop offset="1" stopColor="#2DD4BF" />
             </linearGradient>
           </defs>
-          <path
-            d={TRI_PATH}
-            stroke={`url(#${gradId})`}
-            strokeWidth={4.6}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
+          <g transform="rotate(-16 24 24)">
+            <path
+              d={LOOP_PATH}
+              stroke={`url(#${gradId})`}
+              strokeWidth={4.6}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </g>
         </svg>
       </span>
     </span>
