@@ -142,7 +142,7 @@ export default function ProductividadTab({ T, isLight }) {
                     style={{ color: T.txt3, flexShrink: 0, transition: "transform 0.2s", transform: isOpen ? "rotate(90deg)" : "none" }}
                   />
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 14, fontWeight: 500, fontFamily: fontDisp, color: T.txt, letterSpacing: "-0.02em" }}>{r.asesor}</div>
+                    <div style={{ fontSize: 14, fontWeight: 500, fontFamily: fontDisp, color: T.txt, letterSpacing: "-0.02em", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{r.asesor}</div>
                     <div style={{ fontSize: 11.5, color: T.txt3, fontFamily: font, marginTop: 2 }}>{summary(r)}</div>
                     <div style={{ height: 6, borderRadius: 6, background: rowBorder, marginTop: 8, overflow: "hidden" }}>
                       <div style={{ height: "100%", width: `${pct}%`, background: T.accent, transition: "width 0.3s" }} />
@@ -185,12 +185,12 @@ function ActionGroup({ title, items, STATE_META, T, rowBorder }) {
         {title}
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: 1 }}>
-        {items.map(it => {
+        {items.map((it, idx) => {
           const meta = STATE_META[it.state] || STATE_META.pending;
           const when = it.state === "done" ? it.completed_at : it.due_at;
           const whenLabel = it.state === "done" ? "Completada" : "Para";
           return (
-            <div key={it.id} style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "8px 0", borderBottom: `1px solid ${rowBorder}` }}>
+            <div key={it.id} style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "8px 0", borderBottom: idx === items.length - 1 ? "none" : `1px solid ${rowBorder}` }}>
               <span style={{ width: 8, height: 8, borderRadius: "50%", background: meta.color, marginTop: 5, flexShrink: 0 }} />
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: 13, color: T.txt, fontFamily: font, lineHeight: 1.35, textDecoration: it.state === "done" ? "line-through" : "none", opacity: it.state === "done" ? 0.7 : 1 }}>
