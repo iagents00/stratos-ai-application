@@ -1464,7 +1464,7 @@ export default function App() {
           /* padding inferior = holgura sobre el nav (58px) + safe area (home
              indicator iPhone / gestos Android). overflow-x:hidden = clamp
              defensivo global: ninguna vista puede panear la página horizontal. */
-          .stratos-content-area{padding:20px 14px calc(96px + var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px))) 14px!important;overflow-x:hidden!important;overflow-anchor:none}
+          .stratos-content-area{padding:20px 16px calc(118px + var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px))) 16px!important;overflow-x:hidden!important;overflow-anchor:none}
           /* Wrapper transparente de la nav flotante estilo Apple Music:
              la CÁPSULA con los tabs + el botón "+" viven como hijos. El
              wrapper no captura taps (pointer-events) para no tapar contenido
