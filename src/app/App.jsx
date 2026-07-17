@@ -2192,7 +2192,9 @@ export default function App() {
                     cursor:"pointer", minWidth:0,
                     background: a ? (isLight ? `linear-gradient(180deg, rgba(255,255,255,0.95), ${activeColor}12)` : "linear-gradient(180deg, rgba(255,255,255,0.06), rgba(110,231,194,0.03))") : (isLight ? "rgba(15,23,42,0.02)" : "rgba(255,255,255,0.025)"),
                   }}>
-                    <IosIcon name={n.id} filled={a} size={22} color={a ? activeColor : (isLight ? "rgba(15,23,42,0.55)" : "rgba(255,255,255,0.55)")} />
+                    {n.id === "copilot"
+                      ? <CopilotMark size={22} isLight={isLight} animated={false} style={{ opacity: a ? 1 : 0.85 }} />
+                      : <IosIcon name={n.id} filled={a} size={22} color={a ? activeColor : (isLight ? "rgba(15,23,42,0.55)" : "rgba(255,255,255,0.55)")} />}
                     <span style={{ fontSize:10, fontFamily:fontDisp, fontWeight: a ? 700 : 500, color: a ? activeColor : (isLight ? "rgba(15,23,42,0.55)" : "rgba(255,255,255,0.50)"), lineHeight:1, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis", maxWidth:"100%" }}>{clientConfig?.navLabels?.[n.id] ?? n.l}</span>
                   </button>
                 );
@@ -2225,7 +2227,7 @@ export default function App() {
                 nativo carga la web remota: un APK nuevo NO garantiza web nueva
                 (SW/deploy). Con esto cualquiera puede reportar "web vNNN" y se
                 acaba el adivinar. Mantener en sync con CACHE_VERSION (sw.js). */}
-            <p style={{ margin:"12px 0 0", textAlign:"center", fontSize:9.5, fontFamily:font, letterSpacing:"0.02em", color: isLight ? "rgba(15,23,42,0.35)" : "rgba(255,255,255,0.28)" }}>Stratos CRM AI · web v175</p>
+            <p style={{ margin:"12px 0 0", textAlign:"center", fontSize:9.5, fontFamily:font, letterSpacing:"0.02em", color: isLight ? "rgba(15,23,42,0.35)" : "rgba(255,255,255,0.28)" }}>Stratos CRM AI · web v223</p>
           </div>
         </>,
         document.body

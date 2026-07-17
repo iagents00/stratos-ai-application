@@ -202,15 +202,29 @@
             if (vp) vp.setAttribute('content',
               'width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover');
             document.documentElement.setAttribute('data-standalone', '1');
-            // touch-action: manipulation → mata el doble-tap-zoom sin bloquear taps ni scroll.
+            // HARD-LOCK de app nativa: el DOCUMENTO queda clavado (position:fixed en
+            // html/body) → no hay rubber-band ni "franja blanca" abajo: el único scroll
+            // es el interno de la app (.stratos-content-area). El fondo respeta el tema
+            // por si algún frame expone el html (nunca más blanco).
             var st = document.createElement('style');
-            st.textContent = 'html[data-standalone], html[data-standalone] body { touch-action: manipulation; }';
+            st.textContent =
+              'html[data-standalone], html[data-standalone] body {' +
+              '  position: fixed; inset: 0; width: 100%; height: 100%;' +
+              '  overflow: hidden; overscroll-behavior: none; touch-action: manipulation;' +
+              '}' +
+              'html[data-standalone] { background: #030810; }' +
+              'html[data-standalone][data-theme="light"] { background: #F1F3F6; }';
             document.head.appendChild(st);
-            // iOS a veces IGNORA user-scalable=no → bloquear el pinch a mano (gesture*).
+            // iOS IGNORA user-scalable=no (accesibilidad) → bloquear el pinch a mano:
+            // (a) eventos gesture* propios de Safari, (b) touchmove con e.scale ≠ 1
+            // (la señal de pinch real en iOS). Solo en la app instalada.
             var stop = function (e) { e.preventDefault(); };
             document.addEventListener('gesturestart', stop, { passive: false });
             document.addEventListener('gesturechange', stop, { passive: false });
             document.addEventListener('gestureend', stop, { passive: false });
+            document.addEventListener('touchmove', function (e) {
+              if (e.scale !== undefined && e.scale !== 1) e.preventDefault();
+            }, { passive: false });
           } catch (e) {}
         }
         lockZoom();
