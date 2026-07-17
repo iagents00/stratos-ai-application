@@ -25,13 +25,13 @@
  */
 import { useId } from "react";
 
-// LAZO/lemniscata (la "cinta" ∞ verde de marca) — la forma ORIGINAL del Copilot
-// que pidió Ángel de vuelta (2026-07-17: "no el triángulo; el verde que parecía
-// un círculo o un rombo"). Centrado en (24,24) → el giro del rotor es estable.
-// Se conserva la técnica nueva de animación (rotor HTML, sin cometa turbio);
-// solo volvió la FORMA.
-const LOOP_PATH =
-  "M24 24 C18 12 6 14 6 24 C6 34 18 36 24 24 C30 12 42 14 42 24 C42 34 30 36 24 24 Z";
+// ANILLO HEXAGONAL redondeado — el ícono verde del Copilot que Ángel identificó
+// como el correcto (2026-07-17, con captura: "el verde que parecía un círculo o
+// un rombo" — el anillo del tab Copilot; ni el robot, ni el triángulo, ni el
+// lazo ∞). Hexágono regular centrado en (24,24), esquinas redondeadas por el
+// strokeLinejoin; el rotor HTML lo gira estable sobre su centro.
+const HEX_POINTS =
+  "24,7.5 38.29,15.75 38.29,32.25 24,40.5 9.71,32.25 9.71,15.75";
 
 // Inyectá los @keyframes + la regla de reduced-motion UNA sola vez, a nivel de
 // documento (no un <style> por instancia). Definir el mismo keyframe en muchos
@@ -97,15 +97,14 @@ export default function CopilotMark({ size = 24, animated = true, isLight = fals
               <stop offset="1" stopColor="#2DD4BF" />
             </linearGradient>
           </defs>
-          <g transform="rotate(-16 24 24)">
-            <path
-              d={LOOP_PATH}
-              stroke={`url(#${gradId})`}
-              strokeWidth={4.6}
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </g>
+          <polygon
+            points={HEX_POINTS}
+            fill="none"
+            stroke={`url(#${gradId})`}
+            strokeWidth={5}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
         </svg>
       </span>
     </span>
