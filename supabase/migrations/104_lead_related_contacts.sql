@@ -1,5 +1,5 @@
 -- ═══════════════════════════════════════════════════════════════════════════
--- 103_lead_related_contacts.sql — "Familiares o Socios" del contacto
+-- 104_lead_related_contacts.sql — "Familiares o Socios" del contacto
 -- ═══════════════════════════════════════════════════════════════════════════
 -- Pedido (jul 2026): en el expediente (sección Discovery) el asesor debe poder
 -- agregar personas ALLEGADAS al contacto — normalmente la esposa/o, un socio o
