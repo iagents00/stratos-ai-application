@@ -11,10 +11,15 @@ import {
   Calendar, Home, Maximize2, CheckCircle2,
 } from "lucide-react";
 import { P, font, fontDisp } from "../../../design-system/tokens";
+import { useIsMobile } from "../../../hooks/useViewport";
 import { StratosAtom } from "../../../design-system/primitives";
 import { G, KPI, Pill, Ico } from "../../SharedComponents";
 
 const LandingPagePreview = ({ client, asesor, asesorWA = "", asesorCal = "", mensaje, agencyName = "STRATOS REALTY", properties, onClose, onCopyLink, copied, driveLinks = {}, publicMode = false, shareUrl = null, T = P }) => {
+  const isMobile = useIsMobile();
+  // La barra del asesor en móvil ocupa 2 filas (título + botones) → el contenido
+  // arranca más abajo para no quedar tapado (captura IMG_8504: botones desbordados).
+  const topBarH = isMobile ? 104 : 56;
   const [activeProperty, setActiveProperty] = useState(0);
   const [showSharePanel, setShowSharePanel] = useState(false);
 
@@ -178,51 +183,65 @@ const LandingPagePreview = ({ client, asesor, asesorWA = "", asesorCal = "", men
       {!publicMode && (<>
       <div style={{
         position: "fixed", top: 0, left: 0, right: 0, zIndex: 100001,
-        padding: "12px 24px", display: "flex", justifyContent: "space-between", alignItems: "center",
+        padding: isMobile ? "10px 12px" : "12px 24px",
+        display: "flex", justifyContent: "space-between", alignItems: "center",
+        flexWrap: isMobile ? "wrap" : "nowrap", gap: isMobile ? 8 : 0,
         background: "rgba(0,0,0,0.85)", backdropFilter: "blur(20px)",
         borderBottom: "1px solid rgba(255,255,255,0.08)",
       }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0, flex: "1 1 auto" }}>
           <Pill color={T.accent}>Vista Previa</Pill>
-          <span style={{ fontSize: 12, color: T.txt2 }}>Landing page para {client}</span>
-          {properties.length > 1 && (
-            <span style={{ fontSize: 11, color: T.txt3 }}>· {properties.length} propiedades</span>
+          <span style={{ fontSize: 12, color: T.txt2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", minWidth: 0 }}>Landing page para {client}</span>
+          {properties.length > 1 && !isMobile && (
+            <span style={{ fontSize: 11, color: T.txt3, whiteSpace: "nowrap" }}>· {properties.length} propiedades</span>
+          )}
+          {isMobile && (
+            <button onClick={onClose} aria-label="Cerrar vista previa" style={{
+              width: 38, height: 38, borderRadius: 9, border: `1px solid ${T.border}`, marginLeft: "auto", flexShrink: 0,
+              background: T.glass, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
+            }}>
+              <X size={16} color={T.txt2} />
+            </button>
           )}
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, flex: isMobile ? "1 1 100%" : "0 0 auto" }}>
           <button onClick={onCopyLink} style={{
-            display: "flex", alignItems: "center", gap: 6, padding: "8px 16px",
+            display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+            padding: isMobile ? "11px 12px" : "8px 16px", flex: isMobile ? 1 : "0 0 auto", minWidth: 0,
             borderRadius: 8, border: `1px solid ${copied ? T.emerald + "50" : T.border}`,
             background: copied ? "rgba(109,212,168,0.08)" : T.glass,
             cursor: "pointer", color: copied ? T.emerald : T.txt2, fontSize: 12, fontWeight: 400, fontFamily: font,
-            transition: "all 0.25s",
+            transition: "all 0.25s", whiteSpace: "nowrap",
           }}>
             {copied ? <Check size={14} /> : <Copy size={14} />}
             {copied ? "Enlace copiado" : "Copiar enlace"}
           </button>
           <button onClick={() => setShowSharePanel(true)} style={{
-            display: "flex", alignItems: "center", gap: 6, padding: "8px 16px",
+            display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+            padding: isMobile ? "11px 12px" : "8px 16px", flex: isMobile ? 1 : "0 0 auto", minWidth: 0,
             borderRadius: 8, border: "none", background: "rgba(255,255,255,0.95)",
-            cursor: "pointer", color: "#0A0F18", fontSize: 12, fontWeight: 500, fontFamily: fontDisp,
+            cursor: "pointer", color: "#0A0F18", fontSize: 12, fontWeight: 500, fontFamily: fontDisp, whiteSpace: "nowrap",
           }}>
             <Share2 size={14} /> Enviar al cliente
           </button>
-          <button onClick={onClose} style={{
-            width: 36, height: 36, borderRadius: 8, border: `1px solid ${T.border}`,
-            background: T.glass, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
-          }}>
-            <X size={16} color={T.txt2} />
-          </button>
+          {!isMobile && (
+            <button onClick={onClose} style={{
+              width: 36, height: 36, borderRadius: 8, border: `1px solid ${T.border}`,
+              background: T.glass, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
+            }}>
+              <X size={16} color={T.txt2} />
+            </button>
+          )}
         </div>
       </div>
       </>)}
 
       {/* ─── LANDING PAGE CONTENT · rediseño Apple-grade ─── */}
-      <div style={{ paddingTop: publicMode ? 0 : 56, background: UI.page }}>
+      <div style={{ paddingTop: publicMode ? 0 : topBarH, background: UI.page }}>
 
         {/* HERO */}
         <section style={{
-          position: "relative", minHeight: publicMode ? "100svh" : "calc(100svh - 56px)",
+          position: "relative", minHeight: publicMode ? "100svh" : `calc(100svh - ${topBarH}px)`,
           display: "flex", flexDirection: "column", justifyContent: "center",
           padding: `clamp(88px, 15vh, 168px) ${UI.pad} clamp(64px, 11vh, 112px)`, overflow: "hidden",
         }}>
