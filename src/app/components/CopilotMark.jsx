@@ -2,19 +2,22 @@
  * app/components/CopilotMark.jsx
  * ─────────────────────────────────────────────────────────────────────────────
  * Marca animada de "Copilot AI" — un TRIÁNGULO de puntas redondeadas con la
- * PALETA DE MARCA STRATOS (verde menta → emerald → teal) y el mismo lenguaje
- * visual que los demás íconos del CRM.
+ * PALETA DE MARCA STRATOS (verde menta → emerald → teal).
  *
- * MOVIMIENTO CONTINUO Y ESTABLE (nunca se detiene): el triángulo gira LIMPIO
- * sobre su propio centro + un "cometa" de luz recorre el trazo + un halo que
- * respira. El giro se aplica a un ENVOLTORIO HTML (`.cp-rotor`), no al <g> del
- * SVG: un span HTML rota siempre sobre el centro exacto de su caja, sin la
- * ambigüedad de `transform-box`/`transform-origin` en SVG que hacía que el
- * ícono "bailara"/se saliera de centro. Como el viewBox es 0 0 48 48 y el
- * centroide del triángulo cae en (24,24) = centro de la caja, el giro queda
- * perfectamente centrado y en el mismo lugar. Todo en CSS (transform/
- * dashoffset), barato y sin trabar el compositing en móvil. Se apaga solo con
- * `prefers-reduced-motion` o pasando `animated={false}`.
+ * MOVIMIENTO: gira fluido y en su lugar, con EXACTAMENTE la misma técnica y
+ * ritmo que el "átomo" del header (DynIsland.jsx):
+ *   • Un ENVOLTORIO HTML (`.cp-rotor`) rota con `transform` — un span HTML gira
+ *     siempre sobre el centro exacto de su caja (pivote fijo, sin "bailar").
+ *     Como el viewBox es 0 0 48 48 y el centroide del triángulo cae en (24,24)
+ *     = centro de la caja, el giro queda estable y centrado.
+ *   • Solo `transform: rotate` (compositado por GPU = fluido, sin repintar cada
+ *     frame). NADA de `stroke-dashoffset`/"cometa": esa animación de PINTADO era
+ *     lo que se veía "turbio"/con recortes, sobre todo en móvil.
+ *   • `20s linear infinite` INLINE + `data-brand-motion="true"`: mismo ritmo que
+ *     el átomo, y la whitelist de `mobile-perf.css` deja que siga fluido en el
+ *     celular (el freno anti-crash congela las infinitas inline que NO llevan
+ *     ese atributo). Un halo/glow suave con `drop-shadow` (igual que el átomo).
+ *   • Solo se detiene con `prefers-reduced-motion` o pasando `animated={false}`.
  *
  * Uso:  <CopilotMark size={22} />            (animado por defecto)
  *       <CopilotMark size={16} animated={false} />
@@ -29,41 +32,25 @@ const TRI_PATH =
   "M27.25 12.63 L35.47 26.87 Q38.72 32.5 32.22 32.5 L15.78 32.5 " +
   "Q9.28 32.5 12.53 26.87 L20.75 12.63 Q24 7 27.25 12.63 Z";
 
-// Keyframes + reglas GLOBALES (nombres fijos): así todas las instancias comparten
-// el mismo CSS (no se multiplican reglas distintas por cada avatar del chat). Lo
-// único que cambia por instancia son los ids de gradiente (useId), obligatorio
-// para que no colisionen los <linearGradient> entre SVGs.
+// Keyframes globales (nombre fijo, compartido por todas las instancias). El giro
+// se aplica INLINE en el rotor (con data-brand-motion) — mismo patrón que el
+// átomo — así el freno de mobile-perf.css no lo congela en el celular. La única
+// regla por clase es el respeto a prefers-reduced-motion.
 const GLOBAL_CSS = `
-  @keyframes cpmark-spin  { to { transform: rotate(360deg); } }
-  @keyframes cpmark-comet { to { stroke-dashoffset: -100; } }
-  @keyframes cpmark-halo  {
-    0%,100% { opacity:.35; transform: scale(0.92); }
-    50%     { opacity:.7;  transform: scale(1.08); }
-  }
-  .cpmark .cp-halo  { transform-origin:center; }
-  /* El giro vive en un span HTML → pivote SIEMPRE en el centro de la caja
-     (50% 50%), estable en todo navegador. No rotar el <g> del SVG. */
-  .cpmark .cp-rotor { display:inline-flex; transform-origin:50% 50%; will-change:transform; }
-  .cpmark .cp-comet { stroke-dasharray:24 76; stroke-dashoffset:0; will-change:stroke-dashoffset; }
-  @media (prefers-reduced-motion: no-preference) {
-    .cpmark--anim .cp-halo  { animation: cpmark-halo 3.6s ease-in-out infinite; }
-    .cpmark--anim .cp-rotor { animation: cpmark-spin 9s linear infinite; }
-    .cpmark--anim .cp-comet { animation: cpmark-comet 3.2s linear infinite; }
-  }
+  @keyframes cpmark-spin { to { transform: rotate(360deg); } }
+  @media (prefers-reduced-motion: reduce) { .cpmark .cp-rotor { animation: none !important; } }
 `;
 
 export default function CopilotMark({ size = 24, animated = true, isLight = false, style, title }) {
   const uid = useId().replace(/[:]/g, "");
   const gradId = `cpg-${uid}`;
-  const cometId = `cpc-${uid}`;
-  // Halo sutil en tema claro (sobre blanco se ve "neblinoso" si es fuerte).
-  const halo = isLight
-    ? "radial-gradient(circle, rgba(13,154,118,0.22) 0%, rgba(52,211,153,0.08) 45%, transparent 70%)"
-    : "radial-gradient(circle, rgba(110,231,194,0.42) 0%, rgba(52,211,153,0.12) 45%, transparent 72%)";
+  // Glow suave estilo "átomo" (drop-shadow, NO backdrop-filter), escalado al tamaño.
+  const glow = Math.max(2, Math.round(size * 0.22));
+  const glowColor = isLight ? "rgba(13,154,118,0.30)" : "rgba(110,231,194,0.38)";
 
   return (
     <span
-      className={`cpmark${animated ? " cpmark--anim" : ""}`}
+      className="cpmark"
       role="img"
       aria-label={title || "Copilot AI"}
       style={{
@@ -79,22 +66,19 @@ export default function CopilotMark({ size = 24, animated = true, isLight = fals
     >
       <style>{GLOBAL_CSS}</style>
 
-      {/* Halo de marca detrás del triángulo (no gira; solo respira) */}
+      {/* Rotor HTML: gira estable sobre su centro (pivote = centro de la caja =
+          centroide del triángulo). Solo transform → fluido, sin recortes.
+          data-brand-motion lo mantiene vivo en móvil (whitelist mobile-perf). */}
       <span
-        className="cp-halo"
+        className="cp-rotor"
+        data-brand-motion="true"
         style={{
-          position: "absolute",
-          inset: `-${Math.round(size * 0.22)}px`,
-          borderRadius: "50%",
-          background: halo,
-          filter: "blur(1.5px)",
-          pointerEvents: "none",
+          display: "inline-flex",
+          transformOrigin: "center",
+          filter: `drop-shadow(0 0 ${glow}px ${glowColor})`,
+          ...(animated ? { animation: "cpmark-spin 20s linear infinite" } : null),
         }}
-      />
-
-      {/* Rotor HTML: gira estable sobre su centro. El SVG (triángulo + cometa)
-          vive adentro y ocupa toda la caja, así el centro del giro = (24,24). */}
-      <span className="cp-rotor" style={{ position: "relative" }}>
+      >
         <svg
           width={size}
           height={size}
@@ -108,30 +92,13 @@ export default function CopilotMark({ size = 24, animated = true, isLight = fals
               <stop offset="0.5" stopColor="#34D399" />
               <stop offset="1" stopColor="#2DD4BF" />
             </linearGradient>
-            <linearGradient id={cometId} x1="0" y1="0" x2="48" y2="0" gradientUnits="userSpaceOnUse">
-              <stop offset="0" stopColor={isLight ? "#0FB98B" : "#EAFFF8"} />
-              <stop offset="1" stopColor={isLight ? "#0D9A76" : "#6EE7C2"} />
-            </linearGradient>
           </defs>
-
-          {/* Trazo base del triángulo con gradiente de marca */}
           <path
             d={TRI_PATH}
             stroke={`url(#${gradId})`}
             strokeWidth={4.6}
             strokeLinecap="round"
             strokeLinejoin="round"
-          />
-          {/* Cometa de luz que recorre el triángulo (movimiento perpetuo) */}
-          <path
-            className="cp-comet"
-            d={TRI_PATH}
-            pathLength={100}
-            stroke={`url(#${cometId})`}
-            strokeWidth={4.6}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            style={{ filter: isLight ? "none" : "drop-shadow(0 0 2px rgba(234,255,248,0.9))" }}
           />
         </svg>
       </span>
