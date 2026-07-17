@@ -23,6 +23,9 @@ const EMPTY = { name: "", relationship: "", phone: "", email: "", notas: "" };
 
 export default function LeadRelatedContacts({ lead, T = P, isLight = false }) {
   const { user } = useAuth();
+  // Agregar/editar/borrar allegados = SOLO admin (candado real en la RLS,
+  // migración 105). El asesor los VE en lectura. Regla de negocio jul 2026.
+  const isAdmin = ["super_admin", "admin", "ceo", "director"].includes(user?.role);
   const isDemo = user?.isDemo || !/^[0-9a-f]{8}-/.test(String(lead?.id || ""));
 
   const [contacts, setContacts] = useState([]);
@@ -96,6 +99,9 @@ export default function LeadRelatedContacts({ lead, T = P, isLight = false }) {
   };
 
   if (loading) return null; // silencioso mientras carga
+  // El asesor solo LEE. Si no es admin y no hay allegados, ocultamos la sección
+  // (no le mostramos un panel vacío que no puede llenar). Solo en el expediente.
+  if (!isAdmin && contacts.length === 0) return null;
 
   // ── Estilos derivados (mismo lenguaje que LeadDiscoveryPanel) ──
   const headerC    = isLight ? "rgba(15,23,42,0.62)" : "rgba(255,255,255,0.62)";
@@ -179,7 +185,7 @@ export default function LeadRelatedContacts({ lead, T = P, isLight = false }) {
         }}>
           <Users size={11} /> Familiares o Socios
         </span>
-        {editing === null && (
+        {isAdmin && editing === null && (
           <button type="button" onClick={startNew} style={{
             display: "inline-flex", alignItems: "center", gap: 5,
             padding: "5px 11px", borderRadius: 8,
@@ -191,7 +197,7 @@ export default function LeadRelatedContacts({ lead, T = P, isLight = false }) {
 
       {/* Lista */}
       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-        {contacts.length === 0 && editing !== "new" && (
+        {isAdmin && contacts.length === 0 && editing !== "new" && (
           <p style={{ margin: 0, fontSize: 12, color: T.txt3, fontFamily: font, lineHeight: 1.5 }}>
             Sin familiares o socios aún. Agregá el contacto de la esposa/o, un socio o un familiar del cliente.
           </p>
@@ -223,10 +229,12 @@ export default function LeadRelatedContacts({ lead, T = P, isLight = false }) {
                 </div>
                 {c.notas && <p style={{ margin: "5px 0 0", fontSize: 12, color: T.txt3, fontFamily: font, lineHeight: 1.45 }}>{c.notas}</p>}
               </div>
-              <div style={{ display: "flex", gap: 4, flexShrink: 0 }}>
-                <button type="button" title="Editar" onClick={() => startEdit(c)} style={{ padding: 6, borderRadius: 7, background: "transparent", border: `1px solid ${inputBorder}`, color: T.txt3, cursor: "pointer", display: "inline-flex" }}><Pencil size={13} /></button>
-                <button type="button" title="Eliminar" onClick={() => remove(c.id)} style={{ padding: 6, borderRadius: 7, background: "transparent", border: "1px solid rgba(239,68,68,0.30)", color: "#F87171", cursor: "pointer", display: "inline-flex" }}><Trash2 size={13} /></button>
-              </div>
+              {isAdmin && (
+                <div style={{ display: "flex", gap: 4, flexShrink: 0 }}>
+                  <button type="button" title="Editar" onClick={() => startEdit(c)} style={{ padding: 6, borderRadius: 7, background: "transparent", border: `1px solid ${inputBorder}`, color: T.txt3, cursor: "pointer", display: "inline-flex" }}><Pencil size={13} /></button>
+                  <button type="button" title="Eliminar" onClick={() => remove(c.id)} style={{ padding: 6, borderRadius: 7, background: "transparent", border: "1px solid rgba(239,68,68,0.30)", color: "#F87171", cursor: "pointer", display: "inline-flex" }}><Trash2 size={13} /></button>
+                </div>
+              )}
             </div>
           )
         ))}
