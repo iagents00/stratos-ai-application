@@ -1464,7 +1464,7 @@ export default function App() {
           /* padding inferior = holgura sobre el nav (58px) + safe area (home
              indicator iPhone / gestos Android). overflow-x:hidden = clamp
              defensivo global: ninguna vista puede panear la página horizontal. */
-          .stratos-content-area{padding:20px 16px calc(92px + var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px))) 16px!important;overflow-x:hidden!important;overflow-anchor:none}
+          .stratos-content-area{padding:20px 16px calc(84px + var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px))) 16px!important;overflow-x:hidden!important;overflow-anchor:none}
           /* Barra inferior DOCKEADA al borde de la pantalla (estilo Instagram /
              apps nativas de Apple): pegada a bottom:0, full-width, y el relleno
              del home-indicator (safe-area) lo pinta la PROPIA barra — nada de
@@ -2054,10 +2054,13 @@ export default function App() {
       <div className="stratos-bottomnav">
         <div style={{
           display:"flex", alignItems:"center", gap:2, flex:1, minWidth:0,
-          // Barra DOCKEADA estilo app nativa (Instagram): full-width, pegada al
-          // borde inferior; el safe-area (home indicator) lo rellena el padding
-          // de la propia barra. Mismo lenguaje visual que el sidebar de PC.
-          padding:"8px 8px calc(10px + var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px)))",
+          // Barra DOCKEADA estilo app nativa (Instagram/Mercado Libre): full-width,
+          // pegada al borde inferior; el safe-area (home indicator) lo rellena el
+          // padding de la propia barra. El relleno EXTRA sobre el home indicator
+          // se bajó 10→3px (pedido de Ángel: aprovechar más el espacio de abajo,
+          // como MeLi) — la franja del home indicator (safe-area) se RESPETA
+          // completa para no chocar con el gesto de inicio de iOS.
+          padding:"6px 8px calc(3px + var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px)))",
           borderRadius:"18px 18px 0 0",
           background: isLight ? "linear-gradient(180deg, rgba(255,255,255,0.98), rgba(248,250,252,0.97))" : "linear-gradient(180deg, rgba(18,24,32,0.98) 0%, rgba(9,12,18,0.99) 100%)",
           borderTop:`1px solid ${isLight ? "rgba(15,23,42,0.07)" : "rgba(255,255,255,0.08)"}`,
@@ -2238,7 +2241,7 @@ export default function App() {
                 nativo carga la web remota: un APK nuevo NO garantiza web nueva
                 (SW/deploy). Con esto cualquiera puede reportar "web vNNN" y se
                 acaba el adivinar. Mantener en sync con CACHE_VERSION (sw.js). */}
-            <p style={{ margin:"12px 0 0", textAlign:"center", fontSize:9.5, fontFamily:font, letterSpacing:"0.02em", color: isLight ? "rgba(15,23,42,0.35)" : "rgba(255,255,255,0.28)" }}>Stratos CRM AI · web v234</p>
+            <p style={{ margin:"12px 0 0", textAlign:"center", fontSize:9.5, fontFamily:font, letterSpacing:"0.02em", color: isLight ? "rgba(15,23,42,0.35)" : "rgba(255,255,255,0.28)" }}>Stratos CRM AI · web v235</p>
           </div>
         </>,
         document.body
