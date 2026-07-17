@@ -1464,16 +1464,15 @@ export default function App() {
           /* padding inferior = holgura sobre el nav (58px) + safe area (home
              indicator iPhone / gestos Android). overflow-x:hidden = clamp
              defensivo global: ninguna vista puede panear la página horizontal. */
-          .stratos-content-area{padding:20px 16px calc(118px + var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px))) 16px!important;overflow-x:hidden!important;overflow-anchor:none}
-          /* Wrapper transparente de la nav flotante estilo Apple Music:
-             la CÁPSULA con los tabs + el botón "+" viven como hijos. El
-             wrapper no captura taps (pointer-events) para no tapar contenido
-             en los costados de la pill. */
+          .stratos-content-area{padding:20px 16px calc(92px + var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px))) 16px!important;overflow-x:hidden!important;overflow-anchor:none}
+          /* Barra inferior DOCKEADA al borde de la pantalla (estilo Instagram /
+             apps nativas de Apple): pegada a bottom:0, full-width, y el relleno
+             del home-indicator (safe-area) lo pinta la PROPIA barra — nada de
+             quedar "flotando" con aire abajo. Pedido de Ángel 2026-07-17. */
           .stratos-bottomnav{
-            display:flex!important;position:fixed;left:0;right:0;
-            bottom:calc(12px + var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px)));
-            z-index:200;align-items:center;justify-content:center;gap:10px;
-            padding:0 12px;pointer-events:none;
+            display:flex!important;position:fixed;left:0;right:0;bottom:0;
+            z-index:200;align-items:stretch;justify-content:stretch;gap:0;
+            padding:0;pointer-events:none;
           }
           .stratos-bottomnav > *{pointer-events:auto}
           .stratos-header{padding-left:10px!important;padding-right:10px!important;gap:6px!important}
@@ -2042,18 +2041,18 @@ export default function App() {
           a propósito: mobile-perf.css mata el backdrop-filter en móvil. */}
       <div className="stratos-bottomnav">
         <div style={{
-          display:"flex", alignItems:"center", gap:4,
-          padding:"6px 8px", borderRadius:20,
-          // Cápsula con el MISMO lenguaje que el sidebar de PC: rect. redondeado (no pill),
-          // gradiente vertical + biseles internos (highlight arriba / sombra abajo). Opaca
-          // porque en móvil mobile-perf.css apaga el backdrop-filter.
-          background: isLight ? "linear-gradient(180deg, rgba(255,255,255,0.98), rgba(248,250,252,0.96))" : "linear-gradient(180deg, rgba(18,24,32,0.98) 0%, rgba(9,12,18,0.99) 100%)",
-          border:`1px solid ${isLight ? "rgba(255,255,255,0.92)" : "rgba(255,255,255,0.08)"}`,
+          display:"flex", alignItems:"center", gap:2, flex:1, minWidth:0,
+          // Barra DOCKEADA estilo app nativa (Instagram): full-width, pegada al
+          // borde inferior; el safe-area (home indicator) lo rellena el padding
+          // de la propia barra. Mismo lenguaje visual que el sidebar de PC.
+          padding:"8px 8px calc(10px + var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px)))",
+          borderRadius:"18px 18px 0 0",
+          background: isLight ? "linear-gradient(180deg, rgba(255,255,255,0.98), rgba(248,250,252,0.97))" : "linear-gradient(180deg, rgba(18,24,32,0.98) 0%, rgba(9,12,18,0.99) 100%)",
+          borderTop:`1px solid ${isLight ? "rgba(15,23,42,0.07)" : "rgba(255,255,255,0.08)"}`,
           boxShadow: isLight
-            ? "inset 0 1px 0 rgba(255,255,255,1), inset 0 -1px 0 rgba(15,23,42,0.04), 0 10px 30px rgba(15,23,42,0.14), 0 2px 8px rgba(15,23,42,0.08)"
-            : "inset 0 1px 0 rgba(190,245,225,0.08), inset 0 -1px 0 rgba(0,0,0,0.35), 0 14px 38px rgba(0,0,0,0.55), 0 2px 10px rgba(0,0,0,0.35)",
+            ? "inset 0 1px 0 rgba(255,255,255,1), 0 -8px 26px rgba(15,23,42,0.10)"
+            : "inset 0 1px 0 rgba(190,245,225,0.07), 0 -10px 32px rgba(0,0,0,0.50)",
           backdropFilter:"blur(24px)", WebkitBackdropFilter:"blur(24px)",
-          minWidth:0,
         }}>
           {mobilePrimaryBar.map(n => {
             const a = v === n.id && !plusOpen;
@@ -2061,7 +2060,7 @@ export default function App() {
             return (
               <button key={n.id} onClick={() => { setV(n.id); setPlusOpen(false); }} style={{
                 display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:3,
-                minWidth:64, padding:"7px 10px", borderRadius:14, cursor:"pointer",
+                flex:1, minWidth:0, padding:"7px 4px", borderRadius:14, cursor:"pointer",
                 border: a ? (isLight ? "1px solid rgba(15,23,42,0.10)" : "1px solid rgba(190,245,225,0.16)") : "1px solid transparent",
                 background: a ? (isLight ? "linear-gradient(180deg, rgba(255,255,255,0.86), rgba(248,250,252,0.68))" : "linear-gradient(180deg, rgba(255,255,255,0.065), rgba(110,231,194,0.022))") : "transparent",
                 boxShadow: a ? (isLight ? "0 3px 10px rgba(15,23,42,0.06)" : "0 3px 10px rgba(0,0,0,0.24)") : "none",
@@ -2084,7 +2083,7 @@ export default function App() {
             return (
               <button onClick={() => setPlusOpen(p => !p)} aria-label="Menú — todas las opciones" style={{
                 display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:3,
-                minWidth:64, padding:"7px 10px", borderRadius:14, cursor:"pointer",
+                flex:1, minWidth:0, padding:"7px 4px", borderRadius:14, cursor:"pointer",
                 border: a ? (isLight ? "1px solid rgba(15,23,42,0.10)" : "1px solid rgba(190,245,225,0.16)") : "1px solid transparent",
                 background: a ? (isLight ? "linear-gradient(180deg, rgba(255,255,255,0.86), rgba(248,250,252,0.68))" : "linear-gradient(180deg, rgba(255,255,255,0.065), rgba(110,231,194,0.022))") : "transparent",
                 boxShadow: a ? (isLight ? "0 3px 10px rgba(15,23,42,0.06)" : "0 3px 10px rgba(0,0,0,0.24)") : "none",
@@ -2096,26 +2095,26 @@ export default function App() {
               </button>
             );
           })()}
+          {/* Botón "+" — NUEVO CLIENTE, integrado a la barra como en las apps
+              nativas (antes flotaba aparte y dejaba aire abajo) */}
+          <button
+            onClick={() => { setPlusOpen(false); setV("c"); setCrmNewLeadTick(t => t + 1); }}
+            aria-label="Nuevo cliente"
+            style={{
+              width:46, height:46, borderRadius:999, border:"none", cursor:"pointer", flexShrink:0,
+              alignSelf:"center", marginLeft:6, marginRight:2,
+              background: isLight ? `linear-gradient(135deg, ${T.accent}, ${T.accent}CC)` : "linear-gradient(135deg, #6EE7C2, #34D399)",
+              display:"flex", alignItems:"center", justifyContent:"center",
+              boxShadow: isLight ? `0 6px 16px ${T.accent}50, 0 2px 6px rgba(15,23,42,0.12)` : "0 6px 18px rgba(52,211,153,0.35), 0 2px 8px rgba(0,0,0,0.35)",
+              outline:"none", WebkitTapHighlightColor:"transparent",
+            }}
+            onTouchStart={e => { e.currentTarget.style.transform = "scale(0.93)"; }}
+            onTouchEnd={e => { e.currentTarget.style.transform = "scale(1)"; }}
+            onTouchCancel={e => { e.currentTarget.style.transform = "scale(1)"; }}
+          >
+            <IosIcon name="add" filled size={24} color={isLight ? "#FFFFFF" : "#04121C"} />
+          </button>
         </div>
-
-        {/* Botón "+" circular — NUEVO CLIENTE (siempre visible, desde
-            cualquier vista: navega al CRM y abre el form) */}
-        <button
-          onClick={() => { setPlusOpen(false); setV("c"); setCrmNewLeadTick(t => t + 1); }}
-          aria-label="Nuevo cliente"
-          style={{
-            width:58, height:58, borderRadius:999, border:"none", cursor:"pointer", flexShrink:0,
-            background: isLight ? `linear-gradient(135deg, ${T.accent}, ${T.accent}CC)` : "linear-gradient(135deg, #6EE7C2, #34D399)",
-            display:"flex", alignItems:"center", justifyContent:"center",
-            boxShadow: isLight ? `0 8px 22px ${T.accent}55, 0 2px 8px rgba(15,23,42,0.14)` : "0 8px 24px rgba(52,211,153,0.38), 0 2px 10px rgba(0,0,0,0.40)",
-            outline:"none", WebkitTapHighlightColor:"transparent",
-          }}
-          onTouchStart={e => { e.currentTarget.style.transform = "scale(0.93)"; }}
-          onTouchEnd={e => { e.currentTarget.style.transform = "scale(1)"; }}
-          onTouchCancel={e => { e.currentTarget.style.transform = "scale(1)"; }}
-        >
-          <IosIcon name="add" filled size={28} color={isLight ? "#FFFFFF" : "#04121C"} />
-        </button>
       </div>
 
       {/* ── Cuadro CENTRADO "todas las opciones" — PORTAL a <body>: dentro del
@@ -2227,7 +2226,7 @@ export default function App() {
                 nativo carga la web remota: un APK nuevo NO garantiza web nueva
                 (SW/deploy). Con esto cualquiera puede reportar "web vNNN" y se
                 acaba el adivinar. Mantener en sync con CACHE_VERSION (sw.js). */}
-            <p style={{ margin:"12px 0 0", textAlign:"center", fontSize:9.5, fontFamily:font, letterSpacing:"0.02em", color: isLight ? "rgba(15,23,42,0.35)" : "rgba(255,255,255,0.28)" }}>Stratos CRM AI · web v226</p>
+            <p style={{ margin:"12px 0 0", textAlign:"center", fontSize:9.5, fontFamily:font, letterSpacing:"0.02em", color: isLight ? "rgba(15,23,42,0.35)" : "rgba(255,255,255,0.28)" }}>Stratos CRM AI · web v227</p>
           </div>
         </>,
         document.body
