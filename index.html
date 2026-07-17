@@ -207,6 +207,13 @@
             var vp = document.querySelector('meta[name="viewport"]');
             if (vp && !isIOS) vp.setAttribute('content',
               'width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover');
+            // iOS: asegurar viewport-fit=cover SIN reescribir el meta (si algún
+            // HTML viejo cacheado no lo trae, se le AÑADE — nunca se reemplaza).
+            if (vp && isIOS) {
+              var vc = vp.getAttribute('content') || '';
+              if (vc.indexOf('viewport-fit') === -1)
+                vp.setAttribute('content', vc ? vc + ', viewport-fit=cover' : 'width=device-width, initial-scale=1.0, viewport-fit=cover');
+            }
             document.documentElement.setAttribute('data-standalone', '1');
             // HARD-LOCK de app nativa: el DOCUMENTO queda clavado (position:fixed en
             // html/body) → no hay rubber-band ni "franja blanca" abajo: el único scroll
@@ -231,6 +238,36 @@
             document.addEventListener('touchmove', function (e) {
               if (e.scale !== undefined && e.scale !== 1) e.preventDefault();
             }, { passive: false });
+            // ── [guard:APP-VIEWPORT-PIN] ── En la PWA de iOS, al abrir el TECLADO
+            // WebKit desplaza la VENTANA entera para mostrar el input; al cerrarlo,
+            // en apps standalone ese corrimiento a veces QUEDA PEGADO
+            // (window.scrollY > 0) → TODA la app corrida hacia arriba: franja
+            // muerta bajo la barra inferior ("la barra no está pegada abajo") y
+            // contenido metido bajo el reloj. El documento acá es fijo (html/body
+            // position:fixed, scroll interno), así que la ventana NUNCA debe
+            // quedar desplazada: cuando no hay un input enfocado, se re-ancla a
+            // (0,0). Mientras se escribe NO se toca (iOS necesita ese pan para
+            // mostrar el campo sobre el teclado).
+            var typing = function () {
+              var ae = document.activeElement;
+              return !!(ae && (/^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName || '') || ae.isContentEditable));
+            };
+            var resetWin = function () {
+              if (typing()) return;
+              try {
+                if (window.scrollX || window.scrollY) window.scrollTo(0, 0);
+                var se = document.scrollingElement || document.documentElement;
+                if (se.scrollTop) se.scrollTop = 0;
+                if (se.scrollLeft) se.scrollLeft = 0;
+              } catch (e) {}
+            };
+            window.addEventListener('scroll', resetWin, { passive: true });
+            window.addEventListener('pageshow', resetWin);
+            window.addEventListener('orientationchange', function () { setTimeout(resetWin, 120); });
+            document.addEventListener('focusout', function () { setTimeout(resetWin, 60); setTimeout(resetWin, 300); });
+            if (window.visualViewport)
+              window.visualViewport.addEventListener('resize', function () { setTimeout(resetWin, 60); });
+            resetWin();
           } catch (e) {}
         }
         lockZoom();
