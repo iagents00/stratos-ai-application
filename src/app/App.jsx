@@ -236,6 +236,12 @@ export default function App() {
   // del rol actual por si cambió desde la última sesión.
   const [v, setV]        = useState(() => resolveInitialView(user));
 
+  // Vista PREVIA al Copilot — la flecha "‹ volver" del Copilot inmersivo (estilo
+  // WhatsApp) regresa acá. Se guarda la última vista que NO sea copilot.
+  const prevViewRef = useRef(isAsesorRole ? "c" : "d");
+  useEffect(() => { if (v !== "copilot") prevViewRef.current = v; }, [v]);
+  const backFromCopilot = useCallback(() => setV(prevViewRef.current || (isAsesorRole ? "c" : "d")), [isAsesorRole]);
+
   // Persistir vista cuando cambia para que el próximo F5 te deje donde estabas.
   // Skip vistas efímeras (planes/admin) — esas son flujos que no queremos
   // restaurar automáticamente.
@@ -565,6 +571,13 @@ export default function App() {
   /* ── Leads data — shared between Dash & CRM ── */
   const [leadsData, setLeadsData]       = useState([]);
   const [leadsLoading, setLeadsLoading] = useState(true);
+  // Score del asesor = promedio del SCORE de su cartera visible (0-100). Se
+  // muestra como badge junto a la flecha del Copilot (estilo el "180" de
+  // WhatsApp, pero con el pulso de la cartera). Sin leads con score → null.
+  const asesorScore = useMemo(() => {
+    const s = leadsData.map(l => Number(l?.score)).filter(n => Number.isFinite(n) && n > 0);
+    return s.length ? Math.round(s.reduce((a, b) => a + b, 0) / s.length) : null;
+  }, [leadsData]);
   const [leadsRefreshing, setLeadsRefreshing] = useState(false); // caché pintada, trayendo el set completo (orden final) en background
 
   // Cache de filas ya normalizadas. Clave = id, valor = { stamp, row }.
@@ -1412,7 +1425,7 @@ export default function App() {
 
   /* ─────────────────── render ─────────────────── */
   return (
-    <div className="stratos-app" style={{
+    <div className="stratos-app" data-immersive={v === "copilot" ? "1" : undefined} style={{
       height:"100vh", display:"flex", fontFamily:font, color:T.txt,
       background: isLight
         // Lienzo Apple: gris frío neutro luminoso (desde tokens) + un tenue halo
@@ -1475,6 +1488,12 @@ export default function App() {
             padding:0;pointer-events:none;
           }
           .stratos-bottomnav > *{pointer-events:auto}
+          /* COPILOT INMERSIVO estilo WhatsApp (pedido de Ángel): dentro del
+             Copilot se ocultan el header de la app Y la barra inferior → el
+             chat ocupa TODA la pantalla; el propio header del Copilot trae la
+             flecha "‹ volver" + el score del asesor. Solo en móvil. */
+          .stratos-app[data-immersive="1"] .stratos-header{display:none!important}
+          .stratos-app[data-immersive="1"] .stratos-bottomnav{display:none!important}
           .stratos-header{padding-left:10px!important;padding-right:10px!important;gap:6px!important}
           .stratos-header-left{gap:6px!important;min-width:0!important;flex:1 1 auto!important;overflow:hidden!important}
           .stratos-header-right{gap:2px!important;flex-shrink:0!important}
@@ -2013,7 +2032,7 @@ export default function App() {
                     : <Dash oc={oc} leadsData={leadsData} T={T} />)}
                   {v === "c"      && <CRM oc={oc} leadsData={leadsData} setLeadsData={setLeadsData} theme={theme} setTheme={setTheme} isRefreshing={leadsRefreshing} autoOpenPriority1={autoOpenPriority1} onAutoOpenHandled={() => setAutoOpenPriority1(0)} softDeleteLead={softDeleteLead} autoOpenLead={crmAutoOpenLead} onAutoOpenLeadHandled={() => setCrmAutoOpenLead(null)} autoOpenNewLead={crmNewLeadTick} onNewLeadHandled={() => setCrmNewLeadTick(0)} onOpenComando={() => setV("d")} />}
                   {v === "wa"     && canAccessModule("wa", user, clientConfig) && <WhatsAppInbox T={T} isLight={isLight} inbox={waInbox} openLead={waOpenLead} openExpediente={openLeadExpediente} />}
-                  {v === "copilot" && canAccessModule("copilot", user, clientConfig) && <Copilot T={T} isLight={isLight} theme={theme} />}
+                  {v === "copilot" && canAccessModule("copilot", user, clientConfig) && <Copilot T={T} isLight={isLight} theme={theme} onBack={backFromCopilot} score={asesorScore} />}
                   {v === "trash"  && <Trash trashedLeads={trashedLeads} onRestore={restoreLead} onHardDelete={hardDeleteLead} onRefresh={refreshTrash} T={T} />}
                   {v === "ia"     && <IACRM oc={oc} T={T} theme={theme} />}
                   {v === "e"      && <ERP oc={oc} T={T} />}
@@ -2159,26 +2178,12 @@ export default function App() {
               </button>
             </div>
 
-            {/* Centro de Inteligencia — destacado (en móvil la pill del header
-                no existe; este es SU punto de entrada) */}
-            <button onClick={() => { setPlusOpen(false); setIntelOpenTick(t => t + 1); }} style={{
-              width:"100%", display:"flex", alignItems:"center", gap:11, padding:"12px 13px",
-              borderRadius:16, marginBottom:12, cursor:"pointer", textAlign:"left",
-              background: isLight ? `linear-gradient(135deg, ${T.accent}12, ${T.accent}06)` : "linear-gradient(135deg, rgba(110,231,194,0.12), rgba(110,231,194,0.04))",
-              border:`1px solid ${isLight ? `${T.accent}33` : "rgba(110,231,194,0.25)"}`,
-            }}>
-              <div style={{ width:36, height:36, borderRadius:11, background: isLight ? `${T.accent}16` : "rgba(110,231,194,0.12)", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
-                <StratosAtomHex size={20} color={isLight ? "#0D9A76" : "#6EE7C2"} edge={isLight ? "#34D399" : "#C8DED8"} />
-              </div>
-              <div style={{ minWidth:0 }}>
-                <p style={{ margin:0, fontSize:13, fontWeight:500, fontFamily:fontDisp, letterSpacing:"-0.015em", color: isLight ? T.txt : "#FFFFFF" }}>{clientConfig?.brand?.intelligenceCenterLabelMobile || clientConfig?.brand?.intelligenceCenterLabel || "Centro de Inteligencia"}</p>
-                <p style={{ margin:"2px 0 0", fontSize:10.5, fontFamily:font, color: isLight ? T.txt3 : "rgba(255,255,255,0.42)" }}>Novedades del equipo IA y qué puede hacer el sistema</p>
-              </div>
-            </button>
-
-            {/* Plan Estratégico (MetaPanel) — en móvil la barra lateral con el
-                widget AVANCE no existe; ESTE es su punto de entrada. Abre Lista
-                de Acción · Documentos · Plan Estratégico · Protocolo de Ventas. */}
+            {/* "Mi Espacio" (MetaPanel) — en móvil la barra lateral con el widget
+                AVANCE no existe; ESTE es su punto de entrada. Abre agenda, Lista
+                de Acción · Documentos · Plan · Protocolo de Ventas.
+                (Antes decía "Plan Estratégico"; y arriba había una tarjeta
+                "Centro de Inteligencia" — Ángel la quitó del menú: su acceso
+                sigue en la pastilla del header + la campanita. 2026-07-17.) */}
             <button onClick={() => { setPlusOpen(false); setMetaOpen(true); }} style={{
               width:"100%", display:"flex", alignItems:"center", gap:11, padding:"12px 13px",
               borderRadius:16, marginBottom:12, cursor:"pointer", textAlign:"left",
@@ -2189,8 +2194,8 @@ export default function App() {
                 <Target size={19} color={isLight ? "#2563EB" : "#7EB8F0"} strokeWidth={2} />
               </div>
               <div style={{ minWidth:0 }}>
-                <p style={{ margin:0, fontSize:13, fontWeight:500, fontFamily:fontDisp, letterSpacing:"-0.015em", color: isLight ? T.txt : "#FFFFFF" }}>Plan Estratégico</p>
-                <p style={{ margin:"2px 0 0", fontSize:10.5, fontFamily:font, color: isLight ? T.txt3 : "rgba(255,255,255,0.42)" }}>Lista de acción · Documentos · Plan · Protocolo de ventas</p>
+                <p style={{ margin:0, fontSize:13, fontWeight:500, fontFamily:fontDisp, letterSpacing:"-0.015em", color: isLight ? T.txt : "#FFFFFF", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>Mi Espacio{user?.name ? ` · ${user.name.split(" ")[0]}` : ""}</p>
+                <p style={{ margin:"2px 0 0", fontSize:10.5, fontFamily:font, color: isLight ? T.txt3 : "rgba(255,255,255,0.42)" }}>Agenda, lista de acción, documentos y plan</p>
               </div>
             </button>
 
@@ -2241,7 +2246,7 @@ export default function App() {
                 nativo carga la web remota: un APK nuevo NO garantiza web nueva
                 (SW/deploy). Con esto cualquiera puede reportar "web vNNN" y se
                 acaba el adivinar. Mantener en sync con CACHE_VERSION (sw.js). */}
-            <p style={{ margin:"12px 0 0", textAlign:"center", fontSize:9.5, fontFamily:font, letterSpacing:"0.02em", color: isLight ? "rgba(15,23,42,0.35)" : "rgba(255,255,255,0.28)" }}>Stratos CRM AI · web v237</p>
+            <p style={{ margin:"12px 0 0", textAlign:"center", fontSize:9.5, fontFamily:font, letterSpacing:"0.02em", color: isLight ? "rgba(15,23,42,0.35)" : "rgba(255,255,255,0.28)" }}>Stratos CRM AI · web v238</p>
           </div>
         </>,
         document.body

@@ -1,0 +1,21 @@
+import { chromium } from 'playwright-core';
+const S = '/tmp/claude-0/-home-user/b0d58481-425e-5072-bc65-9350067ad017/scratchpad';
+const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome' });
+const ctx = await b.newContext({ viewport:{width:390,height:844}, isMobile:true, hasTouch:true, deviceScaleFactor:3 });
+const p = await ctx.newPage();
+await p.goto('http://localhost:4173/?app',{waitUntil:'networkidle'});
+await p.waitForTimeout(1000);
+await p.fill('input[type="email"]','demo@stratos.ai');
+await p.fill('input[type="password"]','demo2027');
+await p.keyboard.press('Enter');
+await p.waitForTimeout(3500);
+await p.evaluate(()=>{ const b=[...document.querySelectorAll('.stratos-bottomnav button')]; b.find(x=>/Menú/.test(x.textContent))?.click(); });
+await p.waitForTimeout(700);
+const labels = await p.evaluate(()=>{
+  const out=[];
+  document.querySelectorAll('button p').forEach(el=>{ const t=el.textContent.trim(); if(t.length<40 && el.getBoundingClientRect().top>150) out.push(t); });
+  return out;
+});
+console.log('Cards del modal:', JSON.stringify(labels.slice(0,6)));
+await p.screenshot({ path: `${S}/menu2.png` });
+await b.close();
