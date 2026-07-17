@@ -8,6 +8,10 @@
       "destination": "/api/og-landing"
     },
     {
+      "source": "/p/:code",
+      "destination": "/api/og-landing"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }
