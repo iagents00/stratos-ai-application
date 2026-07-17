@@ -22,7 +22,7 @@
  * ─────────────────────────────────────────────────────────────────────────────
  */
 import { useEffect, useMemo, useRef, useState } from "react";
-import { MessageCircle, Search, ArrowLeft, Phone, UserRound, FolderOpen, Pin } from "lucide-react";
+import { MessageCircle, Search, ArrowLeft, ChevronLeft, Phone, UserRound, FolderOpen, Pin } from "lucide-react";
 import { P, font, fontDisp, STAGES, STAGE_COLORS } from "../../design-system/tokens";
 import { useIsMobile } from "../../hooks/useViewport";
 import { useAuth } from "../../hooks/useAuth";
@@ -59,7 +59,7 @@ const initials = (name) =>
     .join("")
     .toUpperCase() || "?";
 
-export default function WhatsAppInbox({ T = P, isLight = false, inbox, openLead, openExpediente }) {
+export default function WhatsAppInbox({ T = P, isLight = false, inbox, openLead, openExpediente, onBack, chatCount = 0 }) {
   const isMobile = useIsMobile();
   const { user } = useAuth();
   const [selectedId, setSelectedId] = useState(null);
@@ -408,7 +408,9 @@ export default function WhatsAppInbox({ T = P, isLight = false, inbox, openLead,
         borderRadius: 14, border: `1px solid ${T.border}`,
         background: isLight ? "rgba(255,255,255,0.9)" : "rgba(255,255,255,0.02)",
         boxShadow: isLight ? T.shadow2 : "none",
-        padding: isMobile ? "10px 10px 12px" : 16,
+        // En móvil inmersivo con el chat abierto, esta barra es lo más alto de la
+        // pantalla → safe-area-top para no quedar bajo el reloj del iPhone.
+        padding: isMobile ? "calc(10px + var(--safe-area-inset-top, env(safe-area-inset-top, 0px))) 10px 12px" : 16,
       }}
     >
       {selected ? (
@@ -584,17 +586,36 @@ export default function WhatsAppInbox({ T = P, isLight = false, inbox, openLead,
     <div
       style={{
         display: "flex", flexDirection: "column", gap: isMobile ? 10 : 14,
-        flex: "1 1 0%", minHeight: 0, padding: isMobile ? "4px 0 0" : "22px 26px",
+        flex: "1 1 0%", minHeight: 0,
+        // Móvil INMERSIVO (app instalada, sin header/nav de la app): el módulo
+        // ocupa toda la pantalla → lleva el safe-area-top para no quedar bajo el
+        // reloj, y padding lateral propio (el content-area ya no aporta el suyo).
+        padding: isMobile ? "calc(6px + var(--safe-area-inset-top, env(safe-area-inset-top, 0px))) 14px 0" : "22px 26px",
         boxSizing: "border-box",
       }}
     >
       {/* En móvil, con un chat abierto, el header del módulo se oculta:
-          cada pixel de alto es hilo de conversación. */}
+          cada pixel de alto es hilo de conversación (el chat trae su propia
+          flecha para volver a la lista). */}
       {!(isMobile && mobileShowChat) && (
         <div style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
+          {/* Flecha "‹ volver" (salir del módulo) + nº de chats — estilo WhatsApp,
+              solo en móvil inmersivo. Blanca en oscuro, verde de marca en claro. */}
+          {isMobile && onBack && (
+            <button type="button" onClick={onBack} aria-label="Volver" style={{
+              display: "flex", alignItems: "center", gap: 1, padding: "4px 4px 4px 0",
+              background: "transparent", border: "none", cursor: "pointer", flexShrink: 0,
+              WebkitTapHighlightColor: "transparent",
+            }}>
+              <ChevronLeft size={26} strokeWidth={2.4} color={isLight ? "#0D9A76" : "#FFFFFF"} />
+              {chatCount > 0 && (
+                <span title="Chats" style={{ fontSize: 13, fontWeight: 700, fontFamily: fontDisp, lineHeight: 1, color: isLight ? "#0D9A76" : "#FFFFFF", minWidth: 16, textAlign: "center" }}>{chatCount}</span>
+              )}
+            </button>
+          )}
           <div
             style={{
-              width: 34, height: 34, borderRadius: 10,
+              width: 34, height: 34, borderRadius: 10, flexShrink: 0,
               display: "flex", alignItems: "center", justifyContent: "center",
               background: isLight ? "rgba(13,154,118,0.10)" : "rgba(110,231,194,0.08)",
               border: `1px solid ${isLight ? "rgba(13,154,118,0.25)" : "rgba(110,231,194,0.18)"}`,
@@ -602,7 +623,7 @@ export default function WhatsAppInbox({ T = P, isLight = false, inbox, openLead,
           >
             <MessageCircle size={16} color={accentStrong} />
           </div>
-          <div>
+          <div style={{ minWidth: 0 }}>
             <h1 style={{ fontSize: 17, fontWeight: 500, color: T.txt, fontFamily: fontDisp, letterSpacing: "-0.01em" }}>
               WhatsApp
             </h1>

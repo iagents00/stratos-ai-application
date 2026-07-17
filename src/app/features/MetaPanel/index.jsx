@@ -567,7 +567,9 @@ export default function MetaPanel({
         <div className="mp-topbar">
           <div style={{
             width:"100%", maxWidth:1840, margin:"0 auto",
-            padding: isMobile ? "12px 16px" : "0 48px",
+            // safe-area-top en móvil: el panel es fixed inset:0 (cubre todo,
+            // incl. el reloj) → sin esto "Mi Espacio" queda bajo la hora.
+            padding: isMobile ? "calc(12px + var(--safe-area-inset-top, env(safe-area-inset-top, 0px))) 16px 12px" : "0 48px",
             minHeight: isMobile ? 0 : 72,
             display: isMobile ? "flex" : "grid",
             gridTemplateColumns: isMobile ? undefined : "1fr auto 1fr",
@@ -595,9 +597,11 @@ export default function MetaPanel({
                 <button key={id} data-on={metaTab===id ? "1" : "0"} onClick={() => setMetaTab(id)}>{label}</button>
               ))}
             </div>
-            {/* Cerrar */}
-            {isMobile && (<button onClick={onClose} title="Cerrar" style={{
-              order: isMobile ? 2 : 0, justifySelf:"end", flexShrink:0,
+            {/* Cerrar — en móvil el topbar es FLEX (no grid), así que `justifySelf`
+                no empujaba la X a la derecha: quedaba pegada al título. `marginLeft:auto`
+                sí la lleva al borde derecho de la fila. */}
+            {isMobile && (<button onClick={onClose} title="Cerrar" aria-label="Cerrar Mi Espacio" style={{
+              order: 2, marginLeft:"auto", flexShrink:0,
               width:38, height:38, borderRadius:"50%", border:`1px solid ${T.border}`,
               background:T.glass, color:T.txt2, cursor:"pointer",
               display:"flex", alignItems:"center", justifyContent:"center",
