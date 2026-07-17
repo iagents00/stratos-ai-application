@@ -405,17 +405,31 @@ export default function WhatsAppInbox({ T = P, isLight = false, inbox, openLead,
     <div
       style={{
         flex: 1, minWidth: 0, minHeight: 0, display: "flex", flexDirection: "column",
-        borderRadius: 14, border: `1px solid ${T.border}`,
-        background: isLight ? "rgba(255,255,255,0.9)" : "rgba(255,255,255,0.02)",
-        boxShadow: isLight ? T.shadow2 : "none",
-        // En móvil inmersivo con el chat abierto, esta barra es lo más alto de la
-        // pantalla → safe-area-top para no quedar bajo el reloj del iPhone.
-        padding: isMobile ? "calc(10px + var(--safe-area-inset-top, env(safe-area-inset-top, 0px))) 10px 12px" : 16,
+        ...(isMobile
+          // Móvil INMERSIVO: idéntico al Copilot — SIN marco de tarjeta (nada de
+          // border/radius/sombra ni padding lateral), borde a borde y a pantalla
+          // completa. El header interno trae su safe-area-top y el composer su
+          // safe-area-bottom. Antes tenía un recuadro que lo hacía ver "entrecortado".
+          ? { background: isLight ? "#F8FAFC" : "#060A12", overflow: "hidden" }
+          : {
+              borderRadius: 14, border: `1px solid ${T.border}`,
+              background: isLight ? "rgba(255,255,255,0.9)" : "rgba(255,255,255,0.02)",
+              boxShadow: isLight ? T.shadow2 : "none",
+              padding: 16,
+            }),
       }}
     >
       {selected ? (
         <>
-          <div style={{ display: "flex", flexDirection: "column", gap: 10, paddingBottom: 12, borderBottom: `1px solid ${T.border}`, marginBottom: 12, flexShrink: 0 }}>
+          <div style={{
+            display: "flex", flexDirection: "column", gap: 10, flexShrink: 0,
+            borderBottom: `1px solid ${T.border}`,
+            ...(isMobile
+              // Header inmersivo tipo Copilot: su propio padding + safe-area-top
+              // (es lo más alto de la pantalla) + fondo de barra; pegado al hilo.
+              ? { padding: "calc(10px + var(--safe-area-inset-top, env(safe-area-inset-top, 0px))) 14px 12px", background: isLight ? "#FFFFFF" : "rgba(10,15,26,0.95)" }
+              : { paddingBottom: 12, marginBottom: 12 }),
+          }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
               {isMobile && (
                 <button
@@ -548,7 +562,12 @@ export default function WhatsAppInbox({ T = P, isLight = false, inbox, openLead,
           </div>
           {/* Columna flex SIN overflow propio: el chat en modo `fill` reparte
               el alto (hilo scrollea adentro; composer SIEMPRE fijo abajo). */}
-          <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>
+          <div style={{
+            flex: 1, minHeight: 0, display: "flex", flexDirection: "column",
+            // Inmersivo: insets laterales suaves + safe-area-bottom para que el
+            // composer/aviso quede sobre el home indicator (como el Copilot).
+            ...(isMobile ? { padding: "6px 12px calc(6px + var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px)))" } : {}),
+          }}>
             {/* key por conversación: al cambiar de chat se MONTA una instancia
                 nueva → el borrador/adjunto y los mensajes NO se arrastran al
                 siguiente cliente (evita responder a B con lo que ibas a mandar
@@ -585,12 +604,14 @@ export default function WhatsAppInbox({ T = P, isLight = false, inbox, openLead,
        porque .stratos-content-area ya trae el suyo (14px + 72px del nav). */
     <div
       style={{
-        display: "flex", flexDirection: "column", gap: isMobile ? 10 : 14,
+        display: "flex", flexDirection: "column", gap: isMobile ? (mobileShowChat ? 0 : 10) : 14,
         flex: "1 1 0%", minHeight: 0,
-        // Móvil INMERSIVO (app instalada, sin header/nav de la app): el módulo
-        // ocupa toda la pantalla → lleva el safe-area-top para no quedar bajo el
-        // reloj, y padding lateral propio (el content-area ya no aporta el suyo).
-        padding: isMobile ? "calc(6px + var(--safe-area-inset-top, env(safe-area-inset-top, 0px))) 14px 0" : "22px 26px",
+        // Móvil INMERSIVO: con un chat ABIERTO el módulo va SIN padding (borde a
+        // borde, pantalla completa como el Copilot); en la LISTA conserva el
+        // safe-area-top + 14px lateral para el header con la flecha de volver.
+        padding: isMobile
+          ? (mobileShowChat ? "0" : "calc(6px + var(--safe-area-inset-top, env(safe-area-inset-top, 0px))) 14px 0")
+          : "22px 26px",
         boxSizing: "border-box",
       }}
     >
