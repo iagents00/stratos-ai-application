@@ -511,7 +511,7 @@ export default function MetaPanel({
     .mp-body::-webkit-scrollbar{width:12px;height:12px}
     .mp-body::-webkit-scrollbar-thumb{background:var(--mp-scroll);border-radius:99px;border:4px solid transparent;background-clip:padding-box}
     .mp-body::-webkit-scrollbar-thumb:hover{background:var(--mp-txt3)}
-    .mp-topbar{position:sticky;top:0;z-index:20;flex-shrink:0;background:var(--mp-topbar);backdrop-filter:saturate(180%) blur(24px);-webkit-backdrop-filter:saturate(180%) blur(24px);border-bottom:1px solid var(--mp-hairline)}
+    .mp-topbar{position:sticky;top:0;z-index:20;flex-shrink:0;padding-top:var(--safe-area-inset-top, env(safe-area-inset-top, 0px));background:var(--mp-topbar);backdrop-filter:saturate(180%) blur(24px);-webkit-backdrop-filter:saturate(180%) blur(24px);border-bottom:1px solid var(--mp-hairline)}
     .mp-seg{display:inline-flex;gap:2px;padding:4px;border-radius:15px;background:var(--mp-seg-bg);border:1px solid var(--mp-hairline)}
     .mp-seg>button{appearance:none;-webkit-appearance:none;border:none;background:transparent;cursor:pointer;font-family:inherit;font-size:13.5px;font-weight:500;letter-spacing:-.015em;color:var(--mp-txt2);padding:9px 20px;border-radius:11px;white-space:nowrap;transition:color .2s ease,background .2s ease,box-shadow .2s ease}
     .mp-seg>button:hover{color:var(--mp-txt)}

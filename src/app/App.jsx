@@ -2022,7 +2022,19 @@ export default function App() {
                   {v === "fa"     && <FinanzasAdmin T={T} />}
                   {v === "caja"   && canAccessModule("caja", user, clientConfig) && <Caja T={T} />}
                   {v === "rrhh"   && <RRHHModule T={T} />}
-                  {v === "planes" && <PricingScreen embedded onBack={() => setV(isAsesorRole ? "c" : "d")} />}
+                  {v === "planes" && (
+                    <div style={{
+                      // Full-bleed: cancela el gutter del content-area para que el
+                      // pricing (oscuro por diseño) ocupe TODA la pantalla y no
+                      // parezca un bloque negro flotando sobre el lienzo claro.
+                      margin: "-20px -16px calc(-92px - var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px))) -16px",
+                      background: "#04080F",
+                      minHeight: "100dvh",
+                      paddingBottom: "calc(96px + var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px)))",
+                    }}>
+                      <PricingScreen embedded onBack={() => setV(isAsesorRole ? "c" : "d")} />
+                    </div>
+                  )}
                   {v === "perfil" && <Profile theme={theme} T={T} />}
                   {v === "admin"  && canAccessModule("admin", user) && <AdminPanel T={T} isLight={isLight} />}
                 </Suspense>
@@ -2226,7 +2238,7 @@ export default function App() {
                 nativo carga la web remota: un APK nuevo NO garantiza web nueva
                 (SW/deploy). Con esto cualquiera puede reportar "web vNNN" y se
                 acaba el adivinar. Mantener en sync con CACHE_VERSION (sw.js). */}
-            <p style={{ margin:"12px 0 0", textAlign:"center", fontSize:9.5, fontFamily:font, letterSpacing:"0.02em", color: isLight ? "rgba(15,23,42,0.35)" : "rgba(255,255,255,0.28)" }}>Stratos CRM AI · web v228</p>
+            <p style={{ margin:"12px 0 0", textAlign:"center", fontSize:9.5, fontFamily:font, letterSpacing:"0.02em", color: isLight ? "rgba(15,23,42,0.35)" : "rgba(255,255,255,0.28)" }}>Stratos CRM AI · web v229</p>
           </div>
         </>,
         document.body
