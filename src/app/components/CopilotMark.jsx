@@ -4,19 +4,19 @@
  * Marca animada de "Copilot AI" — un TRIÁNGULO de puntas redondeadas con la
  * PALETA DE MARCA STRATOS (verde menta → emerald → teal).
  *
- * MOVIMIENTO: gira fluido y en su lugar, con EXACTAMENTE la misma técnica y
- * ritmo que el "átomo" del header (DynIsland.jsx):
+ * MOVIMIENTO: gira fluido y en su lugar, con la misma técnica y ritmo que el
+ * "átomo" del header (DynIsland.jsx):
  *   • Un ENVOLTORIO HTML (`.cp-rotor`) rota con `transform` — un span HTML gira
  *     siempre sobre el centro exacto de su caja (pivote fijo, sin "bailar").
- *     Como el viewBox es 0 0 48 48 y el centroide del triángulo cae en (24,24)
- *     = centro de la caja, el giro queda estable y centrado.
+ *     El centroide del triángulo cae en (24,24) = centro de la caja → estable.
  *   • Solo `transform: rotate` (compositado por GPU = fluido, sin repintar cada
  *     frame). NADA de `stroke-dashoffset`/"cometa": esa animación de PINTADO era
- *     lo que se veía "turbio"/con recortes, sobre todo en móvil.
+ *     lo que se veía "turbio"/con recortes.
  *   • `20s linear infinite` INLINE + `data-brand-motion="true"`: mismo ritmo que
  *     el átomo, y la whitelist de `mobile-perf.css` deja que siga fluido en el
- *     celular (el freno anti-crash congela las infinitas inline que NO llevan
- *     ese atributo). Un halo/glow suave con `drop-shadow` (igual que el átomo).
+ *     celular. Glow suave con `drop-shadow` (igual que el átomo).
+ *   • Los @keyframes se inyectan UNA sola vez en <head> (no por instancia), así
+ *     montar/desmontar marcas nunca re-evalúa el keyframe ni reinicia el giro.
  *   • Solo se detiene con `prefers-reduced-motion` o pasando `animated={false}`.
  *
  * Uso:  <CopilotMark size={22} />            (animado por defecto)
@@ -32,14 +32,19 @@ const TRI_PATH =
   "M27.25 12.63 L35.47 26.87 Q38.72 32.5 32.22 32.5 L15.78 32.5 " +
   "Q9.28 32.5 12.53 26.87 L20.75 12.63 Q24 7 27.25 12.63 Z";
 
-// Keyframes globales (nombre fijo, compartido por todas las instancias). El giro
-// se aplica INLINE en el rotor (con data-brand-motion) — mismo patrón que el
-// átomo — así el freno de mobile-perf.css no lo congela en el celular. La única
-// regla por clase es el respeto a prefers-reduced-motion.
-const GLOBAL_CSS = `
-  @keyframes cpmark-spin { to { transform: rotate(360deg); } }
-  @media (prefers-reduced-motion: reduce) { .cpmark .cp-rotor { animation: none !important; } }
-`;
+// Inyectá los @keyframes + la regla de reduced-motion UNA sola vez, a nivel de
+// documento (no un <style> por instancia). Definir el mismo keyframe en muchos
+// <style> que montan/desmontan puede hacer que el navegador re-evalúe la
+// animación; con una única definición estable eso no pasa nunca.
+const KEYFRAMES_ID = "cpmark-keyframes";
+if (typeof document !== "undefined" && !document.getElementById(KEYFRAMES_ID)) {
+  const el = document.createElement("style");
+  el.id = KEYFRAMES_ID;
+  el.textContent =
+    "@keyframes cpmark-spin{to{transform:rotate(360deg)}}" +
+    "@media (prefers-reduced-motion: reduce){.cpmark .cp-rotor{animation:none!important}}";
+  document.head.appendChild(el);
+}
 
 export default function CopilotMark({ size = 24, animated = true, isLight = false, style, title }) {
   const uid = useId().replace(/[:]/g, "");
@@ -64,8 +69,6 @@ export default function CopilotMark({ size = 24, animated = true, isLight = fals
         ...style,
       }}
     >
-      <style>{GLOBAL_CSS}</style>
-
       {/* Rotor HTML: gira estable sobre su centro (pivote = centro de la caja =
           centroide del triángulo). Solo transform → fluido, sin recortes.
           data-brand-motion lo mantiene vivo en móvil (whitelist mobile-perf). */}
