@@ -236,11 +236,11 @@ export default function App() {
   // del rol actual por si cambió desde la última sesión.
   const [v, setV]        = useState(() => resolveInitialView(user));
 
-  // Vista PREVIA al Copilot — la flecha "‹ volver" del Copilot inmersivo (estilo
-  // WhatsApp) regresa acá. Se guarda la última vista que NO sea copilot.
+  // Vista PREVIA a las vistas INMERSIVAS (Copilot / WhatsApp) — su flecha
+  // "‹ volver" regresa acá. Se guarda la última vista que NO sea inmersiva.
   const prevViewRef = useRef(isAsesorRole ? "c" : "d");
-  useEffect(() => { if (v !== "copilot") prevViewRef.current = v; }, [v]);
-  const backFromCopilot = useCallback(() => setV(prevViewRef.current || (isAsesorRole ? "c" : "d")), [isAsesorRole]);
+  useEffect(() => { if (v !== "copilot" && v !== "wa") prevViewRef.current = v; }, [v]);
+  const backToPrevView = useCallback(() => setV(prevViewRef.current || (isAsesorRole ? "c" : "d")), [isAsesorRole]);
 
   // Persistir vista cuando cambia para que el próximo F5 te deje donde estabas.
   // Skip vistas efímeras (planes/admin) — esas son flujos que no queremos
@@ -1425,7 +1425,7 @@ export default function App() {
 
   /* ─────────────────── render ─────────────────── */
   return (
-    <div className="stratos-app" data-immersive={v === "copilot" ? "1" : undefined} style={{
+    <div className="stratos-app" data-immersive={(v === "copilot" || v === "wa") ? "1" : undefined} style={{
       height:"100vh", display:"flex", fontFamily:font, color:T.txt,
       background: isLight
         // Lienzo Apple: gris frío neutro luminoso (desde tokens) + un tenue halo
@@ -1488,12 +1488,17 @@ export default function App() {
             padding:0;pointer-events:none;
           }
           .stratos-bottomnav > *{pointer-events:auto}
-          /* COPILOT INMERSIVO estilo WhatsApp (pedido de Ángel): dentro del
-             Copilot se ocultan el header de la app Y la barra inferior → el
-             chat ocupa TODA la pantalla; el propio header del Copilot trae la
-             flecha "‹ volver" + el score del asesor. Solo en móvil. */
+          /* COPILOT / WHATSAPP INMERSIVOS estilo WhatsApp (pedido de Ángel):
+             se ocultan el header de la app Y la barra inferior → la vista ocupa
+             TODA la pantalla; su propio header trae la flecha "‹ volver" + un
+             número (score / nº de chats). Solo en móvil. */
           .stratos-app[data-immersive="1"] .stratos-header{display:none!important}
           .stratos-app[data-immersive="1"] .stratos-bottomnav{display:none!important}
+          /* CLAVE: el content-area de móvil tiene padding !important (20px arriba
+             + 84px abajo) que le GANABA al padding:0 inline del Copilot/WhatsApp
+             → dejaba un hueco negro arriba y abajo (no llenaba la pantalla). En
+             inmersivo el relleno es 0: la vista llega borde a borde. */
+          .stratos-app[data-immersive="1"] .stratos-content-area{padding:0!important}
           .stratos-header{padding-left:10px!important;padding-right:10px!important;gap:6px!important}
           .stratos-header-left{gap:6px!important;min-width:0!important;flex:1 1 auto!important;overflow:hidden!important}
           .stratos-header-right{gap:2px!important;flex-shrink:0!important}
@@ -2031,8 +2036,8 @@ export default function App() {
                     ? <ComandoDirectivo leadsData={leadsData} T={T} theme={theme} />
                     : <Dash oc={oc} leadsData={leadsData} T={T} />)}
                   {v === "c"      && <CRM oc={oc} leadsData={leadsData} setLeadsData={setLeadsData} theme={theme} setTheme={setTheme} isRefreshing={leadsRefreshing} autoOpenPriority1={autoOpenPriority1} onAutoOpenHandled={() => setAutoOpenPriority1(0)} softDeleteLead={softDeleteLead} autoOpenLead={crmAutoOpenLead} onAutoOpenLeadHandled={() => setCrmAutoOpenLead(null)} autoOpenNewLead={crmNewLeadTick} onNewLeadHandled={() => setCrmNewLeadTick(0)} onOpenComando={() => setV("d")} />}
-                  {v === "wa"     && canAccessModule("wa", user, clientConfig) && <WhatsAppInbox T={T} isLight={isLight} inbox={waInbox} openLead={waOpenLead} openExpediente={openLeadExpediente} />}
-                  {v === "copilot" && canAccessModule("copilot", user, clientConfig) && <Copilot T={T} isLight={isLight} theme={theme} onBack={backFromCopilot} score={asesorScore} />}
+                  {v === "wa"     && canAccessModule("wa", user, clientConfig) && <WhatsAppInbox T={T} isLight={isLight} inbox={waInbox} openLead={waOpenLead} openExpediente={openLeadExpediente} onBack={backToPrevView} chatCount={waInbox.conversations?.length || 0} />}
+                  {v === "copilot" && canAccessModule("copilot", user, clientConfig) && <Copilot T={T} isLight={isLight} theme={theme} onBack={backToPrevView} score={asesorScore} />}
                   {v === "trash"  && <Trash trashedLeads={trashedLeads} onRestore={restoreLead} onHardDelete={hardDeleteLead} onRefresh={refreshTrash} T={T} />}
                   {v === "ia"     && <IACRM oc={oc} T={T} theme={theme} />}
                   {v === "e"      && <ERP oc={oc} T={T} />}
@@ -2246,7 +2251,7 @@ export default function App() {
                 nativo carga la web remota: un APK nuevo NO garantiza web nueva
                 (SW/deploy). Con esto cualquiera puede reportar "web vNNN" y se
                 acaba el adivinar. Mantener en sync con CACHE_VERSION (sw.js). */}
-            <p style={{ margin:"12px 0 0", textAlign:"center", fontSize:9.5, fontFamily:font, letterSpacing:"0.02em", color: isLight ? "rgba(15,23,42,0.35)" : "rgba(255,255,255,0.28)" }}>Stratos CRM AI · web v238</p>
+            <p style={{ margin:"12px 0 0", textAlign:"center", fontSize:9.5, fontFamily:font, letterSpacing:"0.02em", color: isLight ? "rgba(15,23,42,0.35)" : "rgba(255,255,255,0.28)" }}>Stratos CRM AI · web v239</p>
           </div>
         </>,
         document.body
