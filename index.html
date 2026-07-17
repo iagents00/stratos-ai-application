@@ -174,6 +174,51 @@
                          el apagado de blur de móvil (CSS puro) igual aplica. */ }
       })();
     </script>
+    <!-- ─── [guard:APP-NO-ZOOM] Fijar la APP como app nativa (sin zoom) SIN tocar la WEB ───
+         La app es UN SOLO bundle: la MISMA URL corre como sitio web (navegador) y como
+         app instalada (PWA en la pantalla de inicio del iPhone / Capacitor APK). En el
+         NAVEGADOR el sitio queda 100% zoomeable/accesible (NO se toca — ya está perfecto).
+         En la APP instalada queremos que se sienta nativa: sin pinch-zoom ni doble-tap-zoom,
+         todo fijo. Detectamos "standalone" (o Capacitor) y SOLO ahí bloqueamos el zoom.
+         Reversible: borrar este bloque. -->
+    <script>
+      (function () {
+        function isInstalledApp() {
+          try {
+            var mm = window.matchMedia;
+            return window.navigator.standalone === true ||
+              (mm && (mm('(display-mode: standalone)').matches ||
+                      mm('(display-mode: fullscreen)').matches ||
+                      mm('(display-mode: minimal-ui)').matches)) ||
+              !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
+          } catch (e) { return false; }
+        }
+        var locked = false;
+        function lockZoom() {
+          if (locked || !isInstalledApp()) return;
+          locked = true;
+          try {
+            var vp = document.querySelector('meta[name="viewport"]');
+            if (vp) vp.setAttribute('content',
+              'width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover');
+            document.documentElement.setAttribute('data-standalone', '1');
+            // touch-action: manipulation → mata el doble-tap-zoom sin bloquear taps ni scroll.
+            var st = document.createElement('style');
+            st.textContent = 'html[data-standalone], html[data-standalone] body { touch-action: manipulation; }';
+            document.head.appendChild(st);
+            // iOS a veces IGNORA user-scalable=no → bloquear el pinch a mano (gesture*).
+            var stop = function (e) { e.preventDefault(); };
+            document.addEventListener('gesturestart', stop, { passive: false });
+            document.addEventListener('gesturechange', stop, { passive: false });
+            document.addEventListener('gestureend', stop, { passive: false });
+          } catch (e) {}
+        }
+        lockZoom();
+        // Capacitor puede inyectar su global un instante después → reintentar al cargar.
+        window.addEventListener('DOMContentLoaded', lockZoom);
+        window.addEventListener('load', lockZoom);
+      })();
+    </script>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
