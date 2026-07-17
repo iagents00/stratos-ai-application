@@ -184,6 +184,9 @@ const LandingPagePreview = ({ client, asesor, asesorWA = "", asesorCal = "", men
       <div style={{
         position: "fixed", top: 0, left: 0, right: 0, zIndex: 100001,
         padding: isMobile ? "10px 12px" : "12px 24px",
+        // PWA iOS: la app puede dibujar bajo el RELOJ (status bar) → la primera
+        // fila necesita el safe-area-top o queda debajo de la hora (IMG_8510).
+        paddingTop: `calc(${isMobile ? 10 : 12}px + var(--safe-area-inset-top, env(safe-area-inset-top, 0px)))`,
         display: "flex", justifyContent: "space-between", alignItems: "center",
         flexWrap: isMobile ? "wrap" : "nowrap", gap: isMobile ? 8 : 0,
         background: "rgba(0,0,0,0.85)", backdropFilter: "blur(20px)",
@@ -237,11 +240,11 @@ const LandingPagePreview = ({ client, asesor, asesorWA = "", asesorCal = "", men
       </>)}
 
       {/* ─── LANDING PAGE CONTENT · rediseño Apple-grade ─── */}
-      <div style={{ paddingTop: publicMode ? 0 : topBarH, background: UI.page }}>
+      <div style={{ paddingTop: publicMode ? 0 : `calc(${topBarH}px + var(--safe-area-inset-top, env(safe-area-inset-top, 0px)))`, background: UI.page }}>
 
         {/* HERO */}
         <section style={{
-          position: "relative", minHeight: publicMode ? "100svh" : `calc(100svh - ${topBarH}px)`,
+          position: "relative", minHeight: publicMode ? "100svh" : `calc(100svh - ${topBarH}px - var(--safe-area-inset-top, env(safe-area-inset-top, 0px)))`,
           display: "flex", flexDirection: "column", justifyContent: "center",
           padding: `clamp(88px, 15vh, 168px) ${UI.pad} clamp(64px, 11vh, 112px)`, overflow: "hidden",
         }}>
