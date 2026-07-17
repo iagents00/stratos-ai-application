@@ -226,8 +226,44 @@
               '  overflow: hidden; overscroll-behavior: none; touch-action: manipulation;' +
               '}' +
               'html[data-standalone] { background: #030810; }' +
-              'html[data-standalone][data-theme="light"] { background: #F1F3F6; }';
+              'html[data-standalone][data-theme="light"] { background: #F1F3F6; }' +
+              // [guard:APP-FS-COMP] — compensación del LETTERBOX inferior de iOS.
+              // En algunas instalaciones (web-clip) iOS deja el lienzo ~60-100pt
+              // MÁS CORTO que la pantalla, solo por abajo (el fondo del html se
+              // ve como franja muerta bajo la barra — capturas IMG_8501/8502).
+              // La pantalla completa SÍ existe (la franja se pinta del color del
+              // tema) → se mide el recorte en vivo (screen.height - innerHeight)
+              // y se ESTIRA el lienzo esa cantidad: la barra baja al borde real
+              // y el contenido usa el espacio muerto. Solo iOS + app instalada
+              // + recorte detectado (data-fs-comp); en instalaciones sanas el
+              // recorte es ~0 y esto jamás se activa.
+              'html[data-fs-comp], html[data-fs-comp] body { height: calc(100% + var(--fs-extra, 0px)) !important; }' +
+              'html[data-fs-comp] .stratos-app { height: calc(100dvh + var(--fs-extra, 0px)) !important; }' +
+              'html[data-fs-comp] .stratos-bottomnav { bottom: calc(-1 * var(--fs-extra, 0px)) !important; }' +
+              'html[data-fs-comp] .stratos-bottomnav > div { padding-bottom: 42px !important; }' +
+              'html[data-fs-comp] .stratos-content-area { padding-bottom: 136px !important; }';
             document.head.appendChild(st);
+            var fsComp = function () {
+              try {
+                if (!isIOS) return;
+                if (Math.abs(window.orientation || 0) === 90) {
+                  document.documentElement.removeAttribute('data-fs-comp');
+                  return;
+                }
+                var short = (window.screen && screen.height ? screen.height : 0) - window.innerHeight;
+                if (short > 45 && short < 220) {
+                  document.documentElement.style.setProperty('--fs-extra', short + 'px');
+                  document.documentElement.setAttribute('data-fs-comp', '1');
+                } else {
+                  document.documentElement.removeAttribute('data-fs-comp');
+                }
+              } catch (e) {}
+            };
+            fsComp();
+            setTimeout(fsComp, 400);
+            window.addEventListener('resize', function () { setTimeout(fsComp, 80); });
+            window.addEventListener('orientationchange', function () { setTimeout(fsComp, 150); });
+            window.addEventListener('pageshow', fsComp);
             // iOS IGNORA user-scalable=no (accesibilidad) → bloquear el pinch a mano:
             // (a) eventos gesture* propios de Safari, (b) touchmove con e.scale ≠ 1
             // (la señal de pinch real en iOS). Solo en la app instalada.
