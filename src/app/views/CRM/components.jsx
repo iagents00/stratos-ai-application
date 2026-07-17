@@ -37,6 +37,7 @@ import LeadNotesTimeline from "./LeadNotesTimeline";
 import { getEntityHistory, fieldLabel, actionLabel } from "../../../lib/audit";
 import { canTriggerIaActions } from "../../../lib/iagents-actions";
 import LeadDiscoveryPanel from "./LeadDiscoveryPanel";
+import LeadRelatedContacts from "./LeadRelatedContacts";
 import LeadVoiceCalls from "./LeadVoiceCalls";
 import LeadChatHistory from "./LeadChatHistory";
 import LeadWhatsAppChat from "./LeadWhatsAppChat";
@@ -3889,6 +3890,10 @@ const NotesModal = ({ lead, onClose, onSave, onUpdate, onSwitchTab, onShowHistor
               la llamada de voz. Solo aparece si discovery_data tiene contenido
               (la mayoría de leads no lo tendrán). */}
           <LeadDiscoveryPanel lead={lead} T={T} isLight={isLight} />
+
+          {/* 1.6. FAMILIARES O SOCIOS — allegados del contacto (esposa/o, socio,
+              familiar) con su teléfono/email. Editable por el asesor. */}
+          <LeadRelatedContacts lead={lead} T={T} isLight={isLight} />
 
           {/* 2. ETAPA + SEGUIMIENTOS — pills compactos.
               RequiresHumanButton: solo visible para iagents@stratos.ai. */}
