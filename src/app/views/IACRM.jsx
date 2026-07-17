@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { AreaChart, Area, ResponsiveContainer, Tooltip } from "recharts";
 import { P, LP, font, fontDisp } from "../../design-system/tokens";
+import { useIsMobile } from "../../hooks/useViewport";
 import { G, KPI, Pill } from "../SharedComponents";
 
 /* ─── COLORES DE CANAL ─── */
@@ -153,6 +154,7 @@ const AgentToggle = ({ active, onChange, T, isLight }) => (
 
 /* ─── VISTA PRINCIPAL ─── */
 const IACRM = ({ oc, T: _T, theme = "dark" }) => {
+  const isMobile = useIsMobile();
   const isLight = theme === "light";
   const T = _T || (isLight ? LP : P);
 
@@ -379,7 +381,10 @@ const IACRM = ({ oc, T: _T, theme = "dark" }) => {
                     </p>
                   </div>
 
-                  {/* Métricas rápidas */}
+                  {/* Métricas rápidas — en móvil van en su PROPIA fila (abajo);
+                      inline aquí solo en desktop. Antes comprimían el subtítulo
+                      a ~60px y el texto se entrelazaba con los números. */}
+                  {!isMobile && (
                   <div style={{ display: "flex", gap: 16, alignItems: "center", flexShrink: 0 }}>
                     {[
                       { l: "Enviados",   v: agent.today.sent,      c2: T.txt2 },
@@ -392,12 +397,29 @@ const IACRM = ({ oc, T: _T, theme = "dark" }) => {
                       </div>
                     ))}
                   </div>
+                  )}
 
                   <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }} onClick={e => e.stopPropagation()}>
                     <AgentToggle active={isActive} onChange={() => toggleAgent(agent.key)} T={T} isLight={isLight} />
                     <ChevronDown size={14} color={T.txt3} strokeWidth={2} style={{ transform: expanded ? "rotate(180deg)" : "none", transition: "transform 0.2s" }} />
                   </div>
                 </div>
+
+                {/* Métricas en MÓVIL: fila propia repartida a lo ancho, sin encimarse */}
+                {isMobile && (
+                  <div style={{ display: "flex", justifyContent: "space-around", padding: "0 18px 13px", gap: 8 }}>
+                    {[
+                      { l: "Enviados",   v: agent.today.sent,      c2: T.txt2 },
+                      { l: "Respuestas", v: agent.today.responded, c2: isLight ? "#059669" : "#4ADE80" },
+                      { l: "Convertidos",v: agent.today.converted, c2: cSafe },
+                    ].map(m => (
+                      <div key={m.l} style={{ textAlign: "center", flex: 1 }}>
+                        <p style={{ margin: 0, fontSize: 17, fontWeight: 500, color: m.c2, fontFamily: fontDisp, lineHeight: 1, letterSpacing: "-0.03em" }}>{m.v}</p>
+                        <p style={{ margin: 0, fontSize: 9, color: T.txt3, fontFamily: font, textTransform: "uppercase", letterSpacing: "0.06em", marginTop: 3 }}>{m.l}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
 
                 {/* ─ Panel expandido ─ */}
                 {expanded && (
