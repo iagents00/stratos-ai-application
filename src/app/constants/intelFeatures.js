@@ -90,7 +90,7 @@ export const INTEL_FEATURES = [
     ],
   },
   {
-    id: "mover-etapa", label: "Mover de etapa", icon: "GitBranch", color: "#34D399", kind: "pedis",
+    id: "mover-etapa", label: "Mover de etapa", icon: "TrendingUp", color: "#34D399", kind: "pedis",
     chan: "Copilot · CRM",
     where: "En el Copilot, o arrastrando la tarjeta en el CRM",
     tagline: "Avanza al cliente en el pipeline con una frase (o desde el tablero).",
@@ -152,7 +152,7 @@ export const INTEL_FEATURES = [
 
   /* ─── Lo que los AGENTES hacen SOLOS ─────────────────────────────────────── */
   {
-    id: "avisos-telefono", label: "Avisos al teléfono", icon: "Smartphone", color: "#6EE7C2", kind: "agente",
+    id: "avisos-telefono", label: "Avisos al teléfono", icon: "BellRing", color: "#6EE7C2", kind: "agente",
     chan: "Automático",
     where: "Automático → notificación al teléfono (con la app cerrada)",
     tagline: "Los avisos del asistente te llegan al celular aunque tengas la app cerrada.",
@@ -162,7 +162,7 @@ export const INTEL_FEATURES = [
     ],
   },
   {
-    id: "briefing", label: "Briefing pre-Zoom", icon: "Sparkles", color: "#6EE7C2", kind: "agente",
+    id: "briefing", label: "Briefing pre-Zoom", icon: "ClipboardList", color: "#6EE7C2", kind: "agente",
     chan: "Automático",
     where: "Automático → te llega al Copilot y al teléfono",
     tagline: "Antes de cada Zoom te llega la ficha del cliente para llegar preparado.",
@@ -182,7 +182,7 @@ export const INTEL_FEATURES = [
     ],
   },
   {
-    id: "score", label: "Score automático", icon: "Gauge", color: "#F43F5E", kind: "agente",
+    id: "score", label: "Score automático", icon: "Flame", color: "#F43F5E", kind: "agente",
     chan: "En el CRM",
     where: "Automático → lo ves en el CRM",
     tagline: "Cada lead se califica solo y marca los más calientes (HOT).",
@@ -192,7 +192,7 @@ export const INTEL_FEATURES = [
     ],
   },
   {
-    id: "coach", label: "Coach de tareas", icon: "UsersRound", color: "#A78BFA", kind: "agente",
+    id: "coach", label: "Coach de tareas", icon: "ListChecks", color: "#A78BFA", kind: "agente",
     chan: "Automático",
     where: "Automático → aviso al Copilot y al teléfono",
     tagline: 'El asistente te persigue: "¿ya la hiciste?" para que nada se caiga.',
@@ -205,6 +205,6 @@ export const INTEL_FEATURES = [
 
 /** Íconos lucide-react usados por el carrusel (para importar solo lo necesario). */
 export const INTEL_ICON_NAMES = [
-  "Mic", "FileText", "Home", "FolderOpen", "Video", "MapPin", "GitBranch", "UserPlus",
-  "Search", "BarChart3", "Users", "Bell", "Smartphone", "Sparkles", "Zap", "Gauge", "UsersRound",
+  "Mic", "FileText", "Home", "FolderOpen", "Video", "MapPin", "TrendingUp", "UserPlus",
+  "Search", "BarChart3", "Users", "Bell", "BellRing", "ClipboardList", "Zap", "Flame", "ListChecks",
 ];
