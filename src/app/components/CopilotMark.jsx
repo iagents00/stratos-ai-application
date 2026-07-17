@@ -1,14 +1,17 @@
 /**
  * app/components/CopilotMark.jsx
  * ─────────────────────────────────────────────────────────────────────────────
- * Marca animada de "Copilot AI" — un lazo/cinta (estilo el remolino de Copilot)
- * pero con la PALETA DE MARCA STRATOS (verde menta → emerald → teal) y el mismo
- * lenguaje visual que los demás íconos del CRM.
+ * Marca animada de "Copilot AI" — un TRIÁNGULO de puntas redondeadas con la
+ * PALETA DE MARCA STRATOS (verde menta → emerald → teal) y el mismo lenguaje
+ * visual que los demás íconos del CRM.
  *
- * Tiene MOVIMIENTO: un "cometa" de luz recorre el lazo + un giro lento del trazo
- * + un halo que respira. Todo en CSS (transform/dashoffset) para que sea barato
- * y no trabe el compositing en móvil. Se apaga solo con `prefers-reduced-motion`
- * o pasando `animated={false}` (útil para listas largas de burbujas).
+ * MOVIMIENTO CONTINUO (nunca se detiene): un "cometa" de luz recorre el
+ * triángulo sin fin + el trazo gira lento y perpetuo + un halo que respira.
+ * Todo en CSS (transform/dashoffset) para que sea barato y no trabe el
+ * compositing en móvil. El giro y el cometa son loops seamless (`infinite`),
+ * así que el ícono siempre se ve vivo. Solo se apaga con
+ * `prefers-reduced-motion` (accesibilidad) o pasando `animated={false}`
+ * (útil para listas largas de burbujas).
  *
  * Uso:  <CopilotMark size={22} />            (animado por defecto)
  *       <CopilotMark size={16} animated={false} />
@@ -16,9 +19,11 @@
  */
 import { useId } from "react";
 
-// Lazo (lemniscata) tipo "cinta de Copilot", centrado en un viewBox 0 0 48 48.
-const LOOP_PATH =
-  "M24 24 C18 12 6 14 6 24 C6 34 18 36 24 24 C30 12 42 14 42 24 C42 34 30 36 24 24 Z";
+// Triángulo equilátero (punta arriba) de esquinas redondeadas, centrado en
+// (24,24) dentro de un viewBox 0 0 48 48. Las curvas Q redondean cada punta.
+const TRI_PATH =
+  "M27.25 12.63 L35.47 26.87 Q38.72 32.5 32.22 32.5 L15.78 32.5 " +
+  "Q9.28 32.5 12.53 26.87 L20.75 12.63 Q24 7 27.25 12.63 Z";
 
 // Keyframes + reglas GLOBALES (nombres fijos): así todas las instancias comparten
 // el mismo CSS (no se multiplican reglas distintas por cada avatar del chat). Lo
@@ -32,12 +37,12 @@ const GLOBAL_CSS = `
     50%     { opacity:.7;  transform: scale(1.08); }
   }
   .cpmark .cp-halo   { transform-origin:center; }
-  .cpmark .cp-ribbon { transform-origin:center; will-change:transform; }
-  .cpmark .cp-comet  { stroke-dasharray:22 78; stroke-dashoffset:0; will-change:stroke-dashoffset; }
+  .cpmark .cp-ribbon { transform-box:view-box; transform-origin:24px 24px; will-change:transform; }
+  .cpmark .cp-comet  { stroke-dasharray:24 76; stroke-dashoffset:0; will-change:stroke-dashoffset; }
   @media (prefers-reduced-motion: no-preference) {
     .cpmark--anim .cp-halo   { animation: cpmark-halo 3.6s ease-in-out infinite; }
-    .cpmark--anim .cp-ribbon { animation: cpmark-spin 16s linear infinite; }
-    .cpmark--anim .cp-comet  { animation: cpmark-comet 2.6s linear infinite; }
+    .cpmark--anim .cp-ribbon { animation: cpmark-spin 9s linear infinite; }
+    .cpmark--anim .cp-comet  { animation: cpmark-comet 2.4s linear infinite; }
   }
 `;
 
@@ -68,7 +73,7 @@ export default function CopilotMark({ size = 24, animated = true, isLight = fals
     >
       <style>{GLOBAL_CSS}</style>
 
-      {/* Halo de marca detrás del lazo */}
+      {/* Halo de marca detrás del triángulo */}
       <span
         className="cp-halo"
         style={{
@@ -100,19 +105,19 @@ export default function CopilotMark({ size = 24, animated = true, isLight = fals
           </linearGradient>
         </defs>
 
-        <g className="cp-ribbon" transform="rotate(-16 24 24)">
-          {/* Trazo base del lazo con gradiente de marca */}
+        <g className="cp-ribbon">
+          {/* Trazo base del triángulo con gradiente de marca */}
           <path
-            d={LOOP_PATH}
+            d={TRI_PATH}
             stroke={`url(#${gradId})`}
             strokeWidth={4.6}
             strokeLinecap="round"
             strokeLinejoin="round"
           />
-          {/* Cometa de luz que recorre el lazo (movimiento) */}
+          {/* Cometa de luz que recorre el triángulo (movimiento perpetuo) */}
           <path
             className="cp-comet"
-            d={LOOP_PATH}
+            d={TRI_PATH}
             pathLength={100}
             stroke={`url(#${cometId})`}
             strokeWidth={4.6}
