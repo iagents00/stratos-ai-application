@@ -17,7 +17,10 @@ import { useIsMobile } from "../../hooks/useViewport";
 export default function Trash({ trashedLeads = [], onRestore, onHardDelete, onRefresh, T }) {
   const { user } = useAuth();
   const isMobile = useIsMobile();
-  const isLight = T?.bg !== "#060A11" && T?.bg !== "#04080F";
+  // Tema por LUMINANCIA del token (los fondos oscuros de la app empiezan con "#0").
+  // Antes comparaba contra valores viejos hardcodeados (#060A11) y como P.bg hoy es
+  // #030810, creia estar en CLARO -> tarjetas blancas en modo oscuro (bug reportado).
+  const isLight = !/^#0/i.test(String(T?.bg || "#0"));
   const canHardDelete = ["super_admin", "admin"].includes(user?.role);
 
   const [searchQ, setSearchQ] = useState("");

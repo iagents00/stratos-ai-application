@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import { P, LP, font, fontDisp } from "../../design-system/tokens";
+import { useIsMobile } from "../../hooks/useViewport";
 import { G, KPI, Pill, Ico } from "../SharedComponents";
 
 const AIAtom = ({ size = 20, color = P.violet, spin = false }) => (
@@ -35,6 +36,7 @@ const AIAtom = ({ size = 20, color = P.violet, spin = false }) => (
    Inspirado en: Workday, Greenhouse, HireVue, Paradox AI
    ════════════════════════════════════════════════════════ */
 const RRHHModule = ({ T: _T }) => {
+  const isMobile = useIsMobile();
   const T = _T || P;
   const [tab, setTab] = useState("panel");
   const [pipelineFilter, setPipelineFilter] = useState("todos");
@@ -230,7 +232,7 @@ const RRHHModule = ({ T: _T }) => {
           </div>
         </div>
         {/* Stats rápidas */}
-        <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap", justifyContent: "flex-end" }}>
+        <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap", justifyContent: isMobile ? "stretch" : "flex-end" }}>
           {[
             { v: candidates.filter(c=>c.etapa!=="Rechazado").length, l: "En proceso", c: T.blue },
             { v: vacantes.filter(x=>x.status==="Activa").length, l: "Vacantes", c: T.violet },
@@ -241,8 +243,8 @@ const RRHHModule = ({ T: _T }) => {
               <p style={{ margin: "5px 0 0", fontSize: 10, color: T.txt2, fontWeight: 500 }}>{s.l}</p>
             </div>
           ))}
-          <div style={{ width: 1, height: 32, background: T.border, margin: "0 4px" }} />
-          <button onClick={() => setTab("ia_scan")} style={{ display: "flex", alignItems: "center", gap: 8, padding: "12px 18px", borderRadius: 14, border: `1px solid ${T.violet}32`, background: isLight ? "rgba(124,58,237,0.08)" : `${T.violet}0D`, cursor: "pointer", color: T.violet, fontSize: 12.5, fontWeight: 500, fontFamily: fontDisp, transition: "all 0.2s" }}
+          {!isMobile && <div style={{ width: 1, height: 32, background: T.border, margin: "0 4px" }} />}
+          <button onClick={() => setTab("ia_scan")} style={{ flex: isMobile ? "1 1 46%" : "0 0 auto", justifyContent: "center", display: "flex", alignItems: "center", gap: 8, padding: "12px 18px", borderRadius: 14, border: `1px solid ${T.violet}32`, background: isLight ? "rgba(124,58,237,0.08)" : `${T.violet}0D`, cursor: "pointer", color: T.violet, fontSize: 12.5, fontWeight: 500, fontFamily: fontDisp, transition: "all 0.2s" }}
             onMouseEnter={e => { e.currentTarget.style.background = `${T.violet}18`; e.currentTarget.style.borderColor = `${T.violet}70`; }}
             onMouseLeave={e => { e.currentTarget.style.background = `${T.violet}0D`; e.currentTarget.style.borderColor = `${T.violet}45`; }}
           >
@@ -255,11 +257,11 @@ const RRHHModule = ({ T: _T }) => {
               navigator.clipboard?.writeText(url).then(() => {}).catch(() => {});
               window.open(url, "_blank");
             }}
-            style={{ display: "flex", alignItems: "center", gap: 8, padding: "12px 18px", borderRadius: 14, border: `1px solid ${T.accent}24`, background: isLight ? "rgba(13,154,118,0.07)" : "rgba(110,231,194,0.07)", cursor: "pointer", color: T.accent, fontSize: 12.5, fontWeight: 500, fontFamily: fontDisp }}
+            style={{ flex: isMobile ? "1 1 46%" : "0 0 auto", justifyContent: "center", display: "flex", alignItems: "center", gap: 8, padding: "12px 18px", borderRadius: 14, border: `1px solid ${T.accent}24`, background: isLight ? "rgba(13,154,118,0.07)" : "rgba(110,231,194,0.07)", cursor: "pointer", color: T.accent, fontSize: 12.5, fontWeight: 500, fontFamily: fontDisp }}
           >
             <ExternalLink size={13} /> Portal Candidatos
           </button>
-          <button onClick={() => setShowNewVacante(true)} style={{ display: "flex", alignItems: "center", gap: 8, padding: "12px 20px", borderRadius: 14, border: isLight ? "1px solid rgba(255,255,255,0.88)" : "none", background: isLight ? "#FFFFFF" : "rgba(255,255,255,0.93)", cursor: "pointer", color: "#080D14", fontSize: 12.5, fontWeight: 500, fontFamily: fontDisp, boxShadow: isLight ? "0 1px 2px rgba(15,23,42,0.05)" : "0 2px 14px rgba(255,255,255,0.10)" }}>
+          <button onClick={() => setShowNewVacante(true)} style={{ flex: isMobile ? "1 1 100%" : "0 0 auto", justifyContent: "center", display: "flex", alignItems: "center", gap: 8, padding: "12px 20px", borderRadius: 14, border: isLight ? "1px solid rgba(255,255,255,0.88)" : "none", background: isLight ? "#FFFFFF" : "rgba(255,255,255,0.93)", cursor: "pointer", color: "#080D14", fontSize: 12.5, fontWeight: 500, fontFamily: fontDisp, boxShadow: isLight ? "0 1px 2px rgba(15,23,42,0.05)" : "0 2px 14px rgba(255,255,255,0.10)" }}>
             <Plus size={13} /> Nueva Vacante
           </button>
         </div>
