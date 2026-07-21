@@ -308,14 +308,17 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
     <div style={{ ...card, padding: 20, textAlign: "center", color: txt3, fontSize: 12.5 }}>{text}</div>
   );
 
+  // Tabs SEGMENTADOS estilo "Mi Espacio" (mockup aprobado por Iván/Ángel 21-jul):
+  // contenedor tipo pastilla, activo = pill elevada. Sin subrayados.
   const tabBtn = (id, label, badge) => (
     <button key={id} onClick={() => setTab(id)} style={{
-      padding: isMobile ? "8px 12px" : "9px 18px", borderRadius: 12, cursor: "pointer",
+      padding: isMobile ? "8px 13px" : "9px 20px", borderRadius: 12, cursor: "pointer",
       fontSize: isMobile ? 12.5 : 13.5, fontFamily: font, whiteSpace: "nowrap",
-      fontWeight: tab === id ? 700 : 500,
-      border: `1px solid ${tab === id ? `${accent}55` : "transparent"}`,
-      background: tab === id ? `${accent}16` : "transparent",
-      color: tab === id ? accent : txt2,
+      fontWeight: tab === id ? 650 : 500,
+      border: `1px solid ${tab === id ? bd : "transparent"}`,
+      background: tab === id ? (isLight ? "#FFFFFF" : "rgba(255,255,255,0.07)") : "transparent",
+      color: tab === id ? txt : txt2,
+      boxShadow: tab === id ? (isLight ? "0 1px 3px rgba(15,23,42,0.10)" : "0 2px 8px rgba(0,0,0,0.35)") : "none",
       display: "inline-flex", alignItems: "center", gap: 6, transition: "all .15s ease",
     }}>
       {label}
@@ -903,20 +906,52 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
 
   const esperandoVoz = pipeline.filter(p => p.etapa === "esperando_voz").length;
 
+  const firstName = String(user?.name || "").split(" ")[0] || "Marketing";
+  // Título + explicación EN SIMPLE por sección (la gente no es técnica: cada tab
+  // se explica sola — pedido de Ángel 21-jul).
+  const TAB_META = {
+    dia:         { title: `Hoy — ${firstName}`, sub: "Tu enfoque del día · lo vencido arriba, lo bloqueado no depende de ti" },
+    marcas:      { title: "Marcas",       sub: "Los proyectos de cada marca — la barra muestra cuánto va completado" },
+    pipeline:    { title: "Pipeline",     sub: "El tablero de los videos de propiedades — cada tarjeta avanza de izquierda a derecha hasta Publicada" },
+    solicitudes: { title: "Solicitudes",  sub: "Pedidos de diseño para el equipo — A es simple, AAA es producción compleja" },
+    equipo:      { title: "Equipo",       sub: "Cómo va cada persona — en curso, bloqueadas, vencidas y hechas de la semana" },
+  };
+  const meta = TAB_META[tab] || TAB_META.dia;
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16, color: txt, fontFamily: font, maxWidth: 1180, width: "100%", margin: "0 auto" }}>
-      {/* Header */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+      {/* Fila 1 — identidad del espacio + tabs segmentados (estilo mockup aprobado) */}
+      <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 11, minWidth: 0 }}>
           <div style={{ width: 40, height: 40, borderRadius: 12, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", background: `${accent}18`, border: `1px solid ${accent}33` }}>
             <Megaphone size={20} color={accent} strokeWidth={1.9} />
           </div>
-          <div>
-            <h1 style={{ margin: 0, fontSize: isMobile ? 19 : 22, fontFamily: fontDisp, fontWeight: 500, letterSpacing: "-0.01em", color: txt }}>
-              {tab === "dia" ? `Hoy — ${String(user?.name || "").split(" ")[0] || "Marketing"}` : "Marketing"}
-            </h1>
-            <p style={{ margin: "3px 0 0", fontSize: 12.5, color: txt2 }}>Tu enfoque del día · Marketing</p>
+          <div style={{ minWidth: 0 }}>
+            <div style={{ fontSize: 14.5, fontWeight: 650, color: txt, fontFamily: fontDisp, letterSpacing: "-0.01em" }}>Mi Espacio</div>
+            <div style={{ fontSize: 11.5, color: txt2 }}>{firstName} · Marketing</div>
           </div>
+        </div>
+        <div style={{ flex: 1 }} />
+        <div style={{
+          display: "flex", gap: 3, padding: 5, borderRadius: 16, overflowX: "auto", WebkitOverflowScrolling: "touch",
+          background: isLight ? "rgba(15,23,42,0.045)" : "rgba(255,255,255,0.035)", border: `1px solid ${bd}`,
+          maxWidth: "100%",
+        }}>
+          {tabBtn("dia", "Mi Día")}
+          {tabBtn("marcas", "Marcas")}
+          {tabBtn("pipeline", "Pipeline", esperandoVoz >= 3 ? esperandoVoz : 0)}
+          {tabBtn("solicitudes", "Solicitudes", requests.filter(r => r.estado === "nueva").length)}
+          {isAdmin && tabBtn("equipo", "Equipo")}
+        </div>
+      </div>
+
+      {/* Fila 2 — título de la sección + acciones */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+        <div>
+          <h1 style={{ margin: 0, fontSize: isMobile ? 21 : 26, fontFamily: fontDisp, fontWeight: 600, letterSpacing: "-0.02em", color: txt }}>
+            {meta.title}
+          </h1>
+          <p style={{ margin: "4px 0 0", fontSize: 12.5, color: txt2, maxWidth: 640 }}>{meta.sub}</p>
         </div>
         <div style={{ display: "flex", gap: 8 }}>
           <button onClick={load} title="Actualizar" style={{ background: glass, border: `1px solid ${bd}`, borderRadius: 10, padding: "9px 11px", cursor: "pointer", color: txt2, display: "flex", alignItems: "center" }}>
@@ -930,15 +965,6 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
             }}><Mic size={14} /> {isMobile ? "Voz" : "Crear con voz"}</button>
           )}
         </div>
-      </div>
-
-      {/* Tabs */}
-      <div style={{ display: "flex", gap: 4, overflowX: "auto", WebkitOverflowScrolling: "touch", borderBottom: `1px solid ${bd}`, paddingBottom: 8 }}>
-        {tabBtn("dia", "Mi Día")}
-        {tabBtn("marcas", "Marcas")}
-        {tabBtn("pipeline", "Pipeline", esperandoVoz >= 3 ? esperandoVoz : 0)}
-        {tabBtn("solicitudes", "Solicitudes", requests.filter(r => r.estado === "nueva").length)}
-        {isAdmin && tabBtn("equipo", "Equipo")}
       </div>
 
       {evidence && (

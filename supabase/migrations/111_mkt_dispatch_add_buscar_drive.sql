@@ -1,0 +1,8 @@
+-- 111: tool `buscar_drive` en mkt_nlu_dispatch — catálogo de propiedades con links de Drive
+-- para el equipo de marketing, reutilizando bot_buscar_proyectos (SOLO lectura, misma fuente
+-- que los asesores) y limpiando emojis del texto (regla de estilo sin emojis).
+-- APLICADA a stratos-prod el 21-jul-2026 (CREATE OR REPLACE de mkt_nlu_dispatch; el cuerpo
+-- completo vive en el historial de migraciones de Supabase — case nuevo 'buscar_drive').
+-- Además el prompt del flujo n8n `lplLwsnJapOXtFcs` ganó: tool buscar_drive, sinónimos NO
+-- técnicos por intención, y regla de FUERA DE ALCANCE (clientes/ventas → redirigir al CRM,
+-- nunca inventar limitaciones). Versión activa: e1061215-f9fe-41ab-ace3-3a27ac5648e4.
