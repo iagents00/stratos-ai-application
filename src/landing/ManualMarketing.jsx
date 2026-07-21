@@ -16,7 +16,7 @@
 import { useState, useEffect, useMemo } from "react";
 import {
   ArrowRight, Search, X, ChevronRight, Lightbulb, AlertTriangle,
-  MessageCircle, Mail, Smartphone,
+  MessageCircle, MessageSquare, Mail, Smartphone, Send,
   LayoutGrid, Sun, Building2, Clapperboard, Palette, Camera, Bot,
   Crown, HelpCircle, Mic, Lock, CircleCheck,
 } from "lucide-react";
@@ -180,6 +180,45 @@ const SECTIONS = [
     ],
   },
   {
+    id: "evidencia-llega",
+    icon: Send,
+    title: "Tu evidencia le llega a tu equipo",
+    summary: "Cuando subes una foto o un video, le llega a tu líder y a quien sigue esa tarea. Y se abre a pantalla completa como en WhatsApp.",
+    tags: ["evidencia", "foto", "video", "llega", "aviso", "notificacion", "telefono", "pantalla completa", "whatsapp", "abrir", "lider", "alex", "siguiente", "cadena", "emmanuel", "yazz"],
+    content: [
+      { type: "p", text: "Ya lo sabías: al terminar una tarea puedes adjuntar una foto o un video con el botón de cámara del Copilot. Lo nuevo es que esa evidencia ya no se queda solo guardada: le llega directo, en el chat del Copilot, a las personas que la necesitan." },
+      { type: "p", text: "Cuando subes tu foto o tu video, le llega a:" },
+      { type: "list", items: [
+        "Tu líder (Alex), para que vea cómo quedó tu trabajo.",
+        "La persona que sigue con esa tarea en la cadena: la que estaba esperando lo tuyo para poder avanzar.",
+      ]},
+      { type: "p", text: "A las dos les llega, además, un aviso al teléfono, así se enteran al momento sin tener que estar revisando." },
+      { type: "tip", text: "La foto se abre a pantalla completa con solo tocarla, igual que en el módulo de WhatsApp. Así se ve bien el detalle y no se queda en miniatura." },
+      { type: "p", text: "Mandar la foto o el video sigue siendo opcional: si no adjuntas nada, tu tarea igual queda como hecha. Pero cuando la mandas, quien la necesita la ve al instante." },
+      { type: "flow", items: [
+        { n: 1, title: "Yazz termina su tarea", text: "\"Elegir la foto de la propiedad\". Al marcarla como hecha, sube la foto que eligió con el botón de cámara." },
+        { n: 2, title: "Le llega a quien la necesita", text: "La foto le llega a Emmanuel —que sigue con el diseño y estaba esperando justo esa foto— y a Alex, el líder. A los dos les suena un aviso en el teléfono." },
+        { n: 3, title: "La abren tocándola", text: "Emmanuel y Alex tocan la foto y se abre a pantalla completa, como en WhatsApp. Emmanuel ya puede arrancar con el diseño." },
+      ]},
+    ],
+  },
+  {
+    id: "evidencia-revision",
+    icon: MessageSquare,
+    title: "Comentar o aprobar la evidencia",
+    summary: "Tu líder puede pedirte un ajuste o darte el visto bueno a tu evidencia, y te llega al momento.",
+    tags: ["evidencia", "comentar", "aprobar", "revision", "feedback", "retroalimentacion", "ajuste", "visto bueno", "aprobacion", "lider", "alex", "admin", "aviso", "telefono"],
+    content: [
+      { type: "p", text: "Cuando tu evidencia le llega a tu líder (Alex, o cualquier administrador de marketing), no solo la ve: puede responderte. Junto a tu foto o tu video le aparecen dos botones, Comentar y Aprobar." },
+      { type: "flow", items: [
+        { n: 1, title: "Comentar", text: "Si algo se puede mejorar, tu líder toca Comentar y escribe qué ajustar —por ejemplo \"mejora el encuadre\" o \"ajusta el color\"—. Ese comentario te llega a ti en tu Copilot, con aviso al teléfono, para que hagas el cambio." },
+        { n: 2, title: "Aprobar", text: "Si quedó bien, tu líder toca Aprobar y te llega el mensaje: \"[Alex] aprobó tu evidencia. ¡Bien hecho!\"." },
+      ]},
+      { type: "p", text: "Del lado del equipo, esto te quita el andar preguntando \"¿ya lo viste?, ¿está bien?\". Si tu líder quiere un cambio, te llega su comentario y sabes exactamente qué ajustar; si lo aprobó, te llega el visto bueno y sigues tranquilo con lo que viene." },
+      { type: "tip", text: "Para el líder: dar retroalimentación es tocar Comentar, escribir en una línea qué ajustar y enviar —le llega al momento a la persona en su Copilot, con aviso al teléfono—. Y cuando algo quedó bien, un toque en Aprobar cierra con un \"¡Bien hecho!\" que motiva al equipo." },
+    ],
+  },
+  {
     id: "copilot",
     icon: Bot,
     title: "El Copilot (tu asistente)",
@@ -199,6 +238,8 @@ const SECTIONS = [
         { what: "Pendientes de una persona", phrase: "\"¿qué tiene pendiente Emmanuel?\"" },
         { what: "El Drive de una propiedad", phrase: "\"pásame el drive de Bay View Grand\"" },
         { what: "Adjuntar evidencia", phrase: "Con el botón de cámara del chat: sube una foto o un video de una tarea terminada." },
+        { what: "Tu evidencia le llega a tu equipo", phrase: "Al subir una foto o un video, le llega a tu líder y a quien sigue esa tarea, con aviso al teléfono. Se abre a pantalla completa al tocarla." },
+        { what: "Comentar o aprobar evidencia (para el líder)", phrase: "Cuando te llega una evidencia, toca Comentar para pedir un ajuste o Aprobar para dar el visto bueno." },
       ]},
       { type: "warn", text: "El Copilot de marketing no maneja clientes ni ventas — eso es del CRM de los asesores. Si le preguntas algo de clientes, te lo va a decir y te va a orientar a dónde ir." },
       { type: "tip", text: "Puedes hablarle por voz: toca el micrófono y habla normal, como si le mandaras un audio a un compañero." },
