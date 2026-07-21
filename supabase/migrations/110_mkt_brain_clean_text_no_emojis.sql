@@ -1,0 +1,6 @@
+-- 110: textos del cerebro de marketing SIN emojis (regla de diseño: fuera emojis, solo
+-- tipografía limpia — pedido de Ángel/Iván 21-jul). Mismas firmas; solo cambia la salida.
+-- APLICADA a stratos-prod el 21-jul-2026. Contenido completo de las funciones en la 107
+-- + esta revisión: fn_mkt_my_day, fn_mkt_move_pipeline, fn_mkt_pipeline_summary,
+-- fn_mkt_person_pending reescritas con viñetas "•", "—" y "Ojo:" en vez de emojis.
+-- (El cuerpo exacto vive en el historial de migraciones de Supabase; este archivo es el registro.)
