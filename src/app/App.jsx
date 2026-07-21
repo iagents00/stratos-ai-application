@@ -88,9 +88,10 @@ function resolveInitialView(user) {
   const isAsesorRole = !["super_admin","admin","director","ceo"].includes(user?.role);
   const isExternalOrg = user?.organizationId && user.organizationId !== "00000000-0000-0000-0000-000000000001";
   // Marketing (equipo de Duke): NO tiene acceso al CRM — si cayera en "c" vería
-  // la pantalla de "sin permiso". Su casa es el Copilot.
+  // la pantalla de "sin permiso". Su casa es el módulo Marketing (ERP de
+  // actividades: Mi Día · Marcas · Pipeline · Solicitudes).
   const fallback = user?.role === "marketing"
-    ? "copilot"
+    ? "mkt"
     : ((isAsesorRole || isExternalOrg) ? "c" : "d");
   if (!user?.id) return fallback;
   try {
@@ -122,6 +123,7 @@ const WhatsAppInbox = lazy(() => import("./views/WhatsApp"));
 const Copilot       = lazy(() => import("./views/Copilot"));
 const Profile       = lazy(() => import("./views/Profile"));
 const Trash         = lazy(() => import("./views/Trash"));
+const Marketing     = lazy(() => import("./views/Marketing"));
 
 /* ── PREFETCH de vistas ──────────────────────────────────────────────────────
  * Mismos specifiers que los lazy() de arriba. import() dedupe por specifier, así
@@ -143,6 +145,7 @@ const PREFETCH_VIEWS = [
   () => import("./views/Copilot"),
   () => import("./views/Profile"),
   () => import("./views/Trash"),
+  () => import("./views/Marketing"),
   () => import("./features/Admin/AdminPanel"),
 ];
 
@@ -2024,7 +2027,9 @@ export default function App() {
         <div style={{ flex:1, display:"flex", overflow:"hidden" }}>
           <div key={v} className="stratos-content-area" style={{ flex:1, padding: (v === "wa" || v === "copilot") ? 0 : "18px 22px", overflowY: (v === "wa" || v === "copilot") ? "hidden" : "auto", animation:"fadeIn 0.28s ease", display:"flex", flexDirection:"column" }}>
             {user?.role && !canAccessModule(v, user, clientConfig)
-              ? <PermissionGate moduleId={v} onGoBack={() => setV("c")} />
+              ? <PermissionGate moduleId={v}
+                  onGoBack={() => setV(user?.role === "marketing" ? "mkt" : "c")}
+                  homeLabel={user?.role === "marketing" ? "Ir a mi espacio" : "Ir a mi CRM"} />
               : <ErrorBoundary>
                 <Suspense fallback={
                   <div style={{ display:"flex", alignItems:"center", justifyContent:"center", padding:"60px 20px", color:T.txt3, fontFamily:font, fontSize:13 }}>
@@ -2038,6 +2043,7 @@ export default function App() {
                   {v === "c"      && <CRM oc={oc} leadsData={leadsData} setLeadsData={setLeadsData} theme={theme} setTheme={setTheme} isRefreshing={leadsRefreshing} autoOpenPriority1={autoOpenPriority1} onAutoOpenHandled={() => setAutoOpenPriority1(0)} softDeleteLead={softDeleteLead} autoOpenLead={crmAutoOpenLead} onAutoOpenLeadHandled={() => setCrmAutoOpenLead(null)} autoOpenNewLead={crmNewLeadTick} onNewLeadHandled={() => setCrmNewLeadTick(0)} onOpenComando={() => setV("d")} />}
                   {v === "wa"     && canAccessModule("wa", user, clientConfig) && <WhatsAppInbox T={T} isLight={isLight} inbox={waInbox} openLead={waOpenLead} openExpediente={openLeadExpediente} onBack={backToPrevView} chatCount={waInbox.conversations?.length || 0} />}
                   {v === "copilot" && canAccessModule("copilot", user, clientConfig) && <Copilot T={T} isLight={isLight} theme={theme} onBack={backToPrevView} score={asesorScore} />}
+                  {v === "mkt"    && canAccessModule("mkt", user, clientConfig) && <Marketing T={T} onOpenCopilot={canAccessModule("copilot", user, clientConfig) ? () => setV("copilot") : undefined} />}
                   {v === "trash"  && <Trash trashedLeads={trashedLeads} onRestore={restoreLead} onHardDelete={hardDeleteLead} onRefresh={refreshTrash} T={T} />}
                   {v === "ia"     && <IACRM oc={oc} T={T} theme={theme} />}
                   {v === "e"      && <ERP oc={oc} T={T} />}
