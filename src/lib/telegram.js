@@ -361,11 +361,13 @@ async function _sendCopilotMessageInner(rawText, options = {}) {
 
     // 1. Detección directa de solicitud de manual / guía / instrucciones — o "¿qué puedes hacer?"
     const wantsManual = /^(?:dame |mandame |enviame |enviar |ver |mostrar |necesito |pasame )?(?:el |la )?(?:manual|guía|guia|instrucciones|ayuda)(?:\s|$)/i.test(cleanText);
-    const wantsCapabilities = /(qu[eé]\s+(cosas\s+)?(me\s+)?(puedes?|pod[eé]s|sabes?|sab[eé]s)\s+hacer|qu[eé]\s+haces|qu[eé]\s+(otras\s+)?funcion(es|alidades)|para\s+qu[eé]\s+sirves?|en\s+qu[eé]\s+(me\s+)?(puedes?|pod[eé]s)\s+ayudar|c[oó]mo\s+(me\s+)?(puedes?\s+)?ayud)/i.test(cleanText);
+    const wantsCapabilities = /(qu[eé]\s+(tanto\s+)?(cosas\s+)?(me\s+)?(puedes?|pod[eé]s|sabes?|sab[eé]s)\s+hacer|qu[eé]\s+haces|qu[eé]\s+(otras\s+)?funcion(es|alidades)|para\s+qu[eé]\s+sirves?|en\s+qu[eé]\s+(me\s+)?(puedes?|pod[eé]s)\s+ayudar|c[oó]mo\s+(me\s+)?(puedes?\s+)?ayud)/i.test(cleanText);
     if (isMarketing && !options.callback_data && (wantsManual || wantsCapabilities)) {
       return {
-        reply: "Esto es lo que puedo hacer por ti:\n\n• Decirte qué tienes hoy — \"¿qué tengo hoy?\"\n• Crear tareas para el equipo — \"créale una tarea a Luis: editar Casa Banana para el viernes\"\n• Mover propiedades del pipeline — \"mueve Bay View Grand 2 a lista\"\n• Registrar solicitudes de diseño — \"necesito un flyer AA para Mueblar el sábado\"\n• Resumen del pipeline — \"¿cómo va el pipeline?\"\n• Pendientes de una persona — \"¿qué tiene pendiente Emmanuel?\"\n\nTodo por voz o texto. Lo que creo aparece al instante en el módulo Marketing.",
-        buttons: [],
+        reply: "Esto es lo que puedo hacer por ti:\n\n• Decirte qué tienes hoy — \"¿qué tengo hoy?\"\n• Crear tareas para el equipo — \"créale una tarea a Luis: editar Casa Banana para el viernes\"\n• Mover propiedades del pipeline — \"mueve Bay View Grand 2 a lista\"\n• Registrar solicitudes de diseño — \"necesito un flyer AA para Mueblería el sábado\"\n• Cómo va el pipeline de videos — \"¿cómo van los videos?\"\n• Pendientes de una persona — \"¿qué tiene pendiente Emmanuel?\"\n• Pasarte el Drive de una propiedad — \"pásame el drive de Bay View Grand\"\n• Adjuntar evidencia — con el botón de cámara del chat subes una foto o video de una tarea terminada\n\nSolo manejo lo de marketing (no clientes ni ventas). Todo por voz o texto, y lo que creo aparece al instante en tu módulo Marketing. El manual completo, aquí:",
+        buttons: [
+          { label: "Abrir Manual de Marketing", action: "https://app.stratoscapitalgroup.com/manual-marketing", isUrl: true, primary: true }
+        ],
         error: null
       };
     }

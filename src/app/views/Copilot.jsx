@@ -381,16 +381,21 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
         </div>
       )}
 
-      {/* ── Mensajes (área expansiva) ── */}
-      <div ref={scrollRef} style={{ flex: 1, minHeight: 0, overflowY: "auto", padding: "12px 14px", display: "flex", flexDirection: "column", gap: 8 }}>
-        {loading ? (
-          <div style={{ margin: "auto", color: T.txt3, fontSize: 12, fontFamily: font }}>Cargando conversación…</div>
-        ) : messages.length === 0 ? (
-          <EmptyState T={T} isLight={isLight} onPick={send} />
-        ) : (
-          messages.map((m) => <Bubble key={m.id} m={m} isLast={m.id === lastAiId} T={T} isLight={isLight} userBg={bubbleUserBg} userTxt={bubbleUserTxt} aiBg={bubbleAiBg} aiBd={bubbleAiBd} onPick={send} sending={sending} />)
-        )}
-        {sending && <Typing T={T} isLight={isLight} aiBg={bubbleAiBg} aiBd={bubbleAiBd} />}
+      {/* ── Mensajes (área expansiva) ──
+          En pantallas anchas la conversación vive en una COLUMNA CENTRADA (max 920px),
+          estilo WhatsApp Web/ChatGPT: antes las burbujas quedaban pegadas a los bordes
+          de un lienzo de 1900px con un vacío enorme al medio (captura de Ángel 21-jul). */}
+      <div ref={scrollRef} style={{ flex: 1, minHeight: 0, overflowY: "auto", padding: "12px 14px" }}>
+        <div style={{ width: "100%", maxWidth: 920, margin: "0 auto", minHeight: "100%", display: "flex", flexDirection: "column", gap: 8 }}>
+          {loading ? (
+            <div style={{ margin: "auto", color: T.txt3, fontSize: 12, fontFamily: font }}>Cargando conversación…</div>
+          ) : messages.length === 0 ? (
+            <EmptyState T={T} isLight={isLight} onPick={send} />
+          ) : (
+            messages.map((m) => <Bubble key={m.id} m={m} isLast={m.id === lastAiId} T={T} isLight={isLight} userBg={bubbleUserBg} userTxt={bubbleUserTxt} aiBg={bubbleAiBg} aiBd={bubbleAiBd} onPick={send} sending={sending} />)
+          )}
+          {sending && <Typing T={T} isLight={isLight} aiBg={bubbleAiBg} aiBd={bubbleAiBd} />}
+        </div>
       </div>
 
       {/* ── Banner de error ── */}
@@ -425,8 +430,9 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
         </div>
       )}
 
-      {/* ── Composer compacto (estilo WhatsApp) ── */}
-      <div style={{ display: "flex", alignItems: "flex-end", gap: 8, padding: "8px 12px calc(10px + var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px)))", background: composerBg, borderTop: `1px solid ${T.border}`, flexShrink: 0 }}>
+      {/* ── Composer compacto (estilo WhatsApp) — controles centrados a la misma columna que los mensajes ── */}
+      <div style={{ padding: "8px 12px calc(10px + var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px)))", background: composerBg, borderTop: `1px solid ${T.border}`, flexShrink: 0 }}>
+       <div style={{ display: "flex", alignItems: "flex-end", gap: 8, width: "100%", maxWidth: 920, margin: "0 auto" }}>
         {/* Adjuntar evidencia (foto/video) — solo equipo de marketing */}
         {isMarketing && (
           <>
@@ -471,6 +477,7 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
           }}>
           <Send size={16} strokeWidth={2.2} />
         </button>
+       </div>
       </div>
     </div>
   );
