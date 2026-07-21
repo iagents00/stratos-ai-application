@@ -76,6 +76,7 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [attaching, setAttaching] = useState(false);  // subiendo evidencia (solo marketing)
   const [commenting, setCommenting] = useState(null);  // {taskId, fromName} — líder comentando una evidencia
+  const [pendingEvidence, setPendingEvidence] = useState(null);  // {path, tipo} — foto subida esperando que el usuario elija a cuál tarea es
   const evInputRef = useRef(null);
   const scrollRef = useRef(null);
   const inputRef = useRef(null);
@@ -158,6 +159,33 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
       setErrBanner(null);
       setMessages((prev) => [...prev, { id: `sys-${Date.now()}`, role: "ai", content: `Escribe tu comentario${fromName ? ` para ${fromName}` : ""} y se lo hago llegar. (Toca la X para cancelar.)`, occurred_at: new Date().toISOString() }]);
       setTimeout(() => inputRef.current?.focus(), 50);
+      return;
+    }
+    // El usuario ELIGE a cuál tarea pertenece la foto que envió (evita adjuntarla a la tarea equivocada).
+    if (cb.startsWith("mktevidpick:")) {
+      const taskId = cb.slice("mktevidpick:".length);
+      const pend = pendingEvidence;
+      if (taskId === "__cancel__") {
+        setPendingEvidence(null);
+        setMessages((prev) => [...prev, { id: `ai-${Date.now()}`, role: "ai", content: "Listo, no la vinculé. Cuando quieras, envíala de nuevo y elige la tarea.", occurred_at: new Date().toISOString() }]);
+        return;
+      }
+      if (!pend?.path) {
+        setMessages((prev) => [...prev, { id: `ai-${Date.now()}`, role: "ai", content: "Se perdió la foto pendiente. Vuelve a enviarla, por favor.", occurred_at: new Date().toISOString() }]);
+        return;
+      }
+      setPendingEvidence(null); setSending(true);
+      const { data, error } = await supabase.rpc("mkt_attach_evidence_to", { p_task_id: taskId, p_path: pend.path, p_tipo: pend.tipo });
+      setSending(false);
+      const reply = (!error && typeof data === "string" && data.trim())
+        ? data
+        : (error ? "No se pudo vincular la evidencia. Probá de nuevo." : "Evidencia vinculada.");
+      setMessages((prev) => [...prev, { id: `ai-${Date.now()}`, role: "ai", content: reply, occurred_at: new Date().toISOString() }]);
+      // Persistir la foto del que la envía (con su tarea) para que se siga viendo al recargar.
+      try {
+        await supabase.rpc("copilot_log_msg_media", { p_role: "user", p_content: pend.tipo === "video" ? "🎬 Evidencia enviada (video)." : "📸 Evidencia enviada (foto).", p_media_path: pend.path, p_media_type: pend.tipo });
+        await supabase.rpc("copilot_log_msg", { p_role: "ai", p_content: reply });
+      } catch { /* logging best-effort */ }
       return;
     }
 
@@ -244,31 +272,31 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
       const path = `mkt/${orgId}/copilot/${Date.now()}-${safe}`;
       const { error: upErr } = await supabase.storage.from("evidencia").upload(path, file);
       if (upErr) throw upErr;
-      const { data: replyText, error: rpcErr } = await supabase.rpc("mkt_attach_evidence", { p_path: path, p_tipo: tipo });
-      if (rpcErr) throw rpcErr;
-      const finalReply = (typeof replyText === "string" && replyText.trim())
-        ? replyText
-        : `Evidencia adjuntada (${tipo}). Suma a tu reporte.`;
+      // NO adjuntar a ciegas: la foto se pegaba a "la última tarea hecha sin evidencia" y caía en la
+      // tarea equivocada (bug de Ángel). Ahora preguntamos A CUÁL tarea pertenece y el usuario elige.
+      const { data: cands, error: cErr } = await supabase.rpc("mkt_evidence_candidates");
+      if (cErr) throw cErr;
+      const list = Array.isArray(cands) ? cands : [];
+      if (list.length === 0) {
+        setMessages((prev) => [...prev, {
+          id: `ev-${Date.now()}`, role: "ai",
+          content: "Subí tu foto, pero no encontré tareas tuyas recientes para vincularla. Dime primero «ya terminé [la tarea]» y vuelve a enviarla.",
+          occurred_at: new Date().toISOString(),
+        }]);
+        return;
+      }
+      setPendingEvidence({ path, tipo });
+      const buttons = list.slice(0, 6).map((c) => ({
+        label: c.tiene_evidencia ? `${c.titulo} · reemplazar` : c.titulo,
+        action: `mktevidpick:${c.task_id}`,
+      }));
+      buttons.push({ label: "Ninguna / cancelar", action: "mktevidpick:__cancel__" });
       setMessages((prev) => [...prev, {
-        id: `ev-${Date.now()}`,
-        role: "ai",
-        content: finalReply,
+        id: `evpick-${Date.now()}`, role: "ai",
+        content: "¿A cuál de tus tareas pertenece esta foto? Tócala para vincularla:",
+        buttons,
         occurred_at: new Date().toISOString(),
       }]);
-      // Persistir el rastro en el historial (best-effort): al recargar, la conversación
-      // muestra "Evidencia enviada (foto)" + la confirmación, aunque la miniatura local expire.
-      try {
-        // La foto/video que TÚ enviaste queda guardada (con su adjunto) para que se siga viendo
-        // al recargar, no solo el preview local que expira. Al líder y a quien sigue la tarea les
-        // llega server-side (mkt_attach_evidence, con la foto en su Copilot).
-        await supabase.rpc('copilot_log_msg_media', {
-          p_role: 'user',
-          p_content: tipo === 'video' ? '🎬 Evidencia enviada (video).' : '📸 Evidencia enviada (foto).',
-          p_media_path: path,
-          p_media_type: tipo,
-        });
-        await supabase.rpc('copilot_log_msg', { p_role: 'ai', p_content: finalReply });
-      } catch { /* logging best-effort */ }
     } catch (err) {
       setErrBanner("No se pudo subir la evidencia. Probá de nuevo.");
     } finally {
