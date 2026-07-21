@@ -106,6 +106,11 @@ export const EXTERNAL_ORG_MODULES = new Set(["c", "perfil", "trash"]);
 // Módulos visibles para usuarios con flag crm_only=true (cuentas tipo bot/IA
 // como iagents@stratos.ai). Conservan su rol pero solo navegan CRM + Perfil.
 export const CRM_ONLY_MODULES = new Set(["c", "perfil"]);
+// Admin de MARKETING (ej. Alex Velázquez): es super_admin pero LÍDER DE MARKETING.
+// Su navegación se limita a lo que necesita para operar el área — NO ve el CRM de
+// ventas, Comando, Create, Finanzas, RRHH, iAgents, Usuarios, etc.
+// Marketing (módulo con tabs) · Copilot · Proyectos (catálogo/drives para contenido) · Perfil.
+export const MARKETING_ADMIN_MODULES = new Set(["mkt", "copilot", "e", "perfil"]);
 
 export function isStratosOrg(orgId) {
   return orgId === STRATOS_ORG_ID;
@@ -124,6 +129,9 @@ export function canAccessModule(moduleId, user, clientConfig = null) {
   if (!user) return false;
   // (1) Restricción per-usuario — gana sobre todo lo demás.
   if (user.crmOnly === true && !CRM_ONLY_MODULES.has(moduleId)) return false;
+  // (1b) Admin de MARKETING (Alex): aunque su rol sea super_admin, su casa es
+  // marketing → solo ve los módulos de marketing (gana sobre el permiso por rol).
+  if (user.isMarketingAdmin === true && !MARKETING_ADMIN_MODULES.has(moduleId)) return false;
 
   // Caja (cuentas / ingresos / egresos) es 100% por feature flag del cliente,
   // y se evalúa ANTES del aislamiento por org para que también aplique a los

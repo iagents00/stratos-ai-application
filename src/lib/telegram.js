@@ -468,7 +468,7 @@ async function _sendCopilotMessageInner(rawText, options = {}) {
       const ctrl = new AbortController();
       // Marketing usa gpt-4o + tool a Supabase; algunas corridas (crear solicitud)
       // pasan de 15s. Le damos más aire para que no corte con "intenta de nuevo".
-      const timeout = setTimeout(() => ctrl.abort(), isMarketing ? 30000 : 15000);
+      const timeout = setTimeout(() => ctrl.abort(), isMarketing ? 40000 : 15000);
       const res = await fetch(isMarketing ? N8N_COPILOT_WEBHOOK_MKT : N8N_COPILOT_WEBHOOK, {
         method: 'POST',
         signal: ctrl.signal,
@@ -510,7 +510,16 @@ async function _sendCopilotMessageInner(rawText, options = {}) {
       console.warn('[Copilot] webhook error:', err?.name || err?.message);
     }
 
-    return { reply: "El asistente IA está procesando tu solicitud. Por favor intenta de nuevo en unos segundos.", buttons: [], error: null };
+    // Fallback cuando el webhook no respondió a tiempo o dio error. Para MARKETING el
+    // mensaje es honesto: si era una acción, es probable que el flujo la haya guardado
+    // igual (corre server-side aunque el cliente corte) → NO invitamos a reintentar a
+    // ciegas para no duplicar tareas/solicitudes.
+    return {
+      reply: isMarketing
+        ? "No recibí la respuesta a tiempo. Si pediste una acción (crear una tarea o solicitud, mover el pipeline), es muy probable que YA se haya guardado — revisá la sección antes de repetirla."
+        : "El asistente IA está procesando tu solicitud. Por favor intenta de nuevo en unos segundos.",
+      buttons: [], error: null
+    };
   } catch (e) {
     return { reply: null, buttons: [], error: e?.message || 'Error de conexión' };
   }

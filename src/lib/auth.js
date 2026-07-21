@@ -210,7 +210,7 @@ export async function signIn(email, password) {
     const { data: profile, error: profileError } = await withTimeout(
       supabase
         .from('profiles')
-        .select('id, name, role, phone, active, organization_id, view_all_leads, crm_only, crm_prefs')
+        .select('id, name, role, phone, active, organization_id, is_marketing_admin, view_all_leads, crm_only, crm_prefs')
         .eq('id', data.user.id)
         .single(),
       TIMEOUT_MS,
@@ -234,6 +234,9 @@ export async function signIn(email, password) {
       role:  profile.role,
       phone: profile.phone,
       organizationId: profile.organization_id,
+      // Admin de MARKETING (ej. Alex): aunque sea super_admin, su casa es marketing.
+      // Restringe su navegación a los módulos de marketing (ver navigation.js).
+      isMarketingAdmin: profile.is_marketing_admin === true,
       viewAllLeads:   profile.view_all_leads === true,
       // Si crm_only=true, el usuario solo accede al módulo CRM + Perfil.
       // Usado para cuentas tipo bot/IA (iagents@stratos.ai) que no necesitan
@@ -390,7 +393,7 @@ export async function getStoredSession() {
       const result = await withTimeout(
         supabase
           .from('profiles')
-          .select('id, name, role, phone, active, organization_id, view_all_leads, crm_only, crm_prefs')
+          .select('id, name, role, phone, active, organization_id, is_marketing_admin, view_all_leads, crm_only, crm_prefs')
           .eq('id', session.user.id)
           .single(),
         PROFILE_TIMEOUT,
@@ -434,6 +437,9 @@ export async function getStoredSession() {
       role:  profile.role,
       phone: profile.phone,
       organizationId: profile.organization_id,
+      // Admin de MARKETING (ej. Alex): aunque sea super_admin, su casa es marketing.
+      // Restringe su navegación a los módulos de marketing (ver navigation.js).
+      isMarketingAdmin: profile.is_marketing_admin === true,
       viewAllLeads:   profile.view_all_leads === true,
       crmOnly:        profile.crm_only === true,
       crmPrefs:       profile.crm_prefs && typeof profile.crm_prefs === 'object' ? profile.crm_prefs : {},
