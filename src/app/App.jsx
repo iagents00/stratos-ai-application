@@ -90,9 +90,11 @@ function resolveInitialView(user) {
   // Marketing (equipo de Duke): NO tiene acceso al CRM — si cayera en "c" vería
   // la pantalla de "sin permiso". Su casa es el módulo Marketing (ERP de
   // actividades: Mi Día · Marcas · Pipeline · Solicitudes).
-  const fallback = user?.role === "marketing"
-    ? "mkt_dia"
-    : ((isAsesorRole || isExternalOrg) ? "c" : "d");
+  const fallback = user?.isMarketingAdmin
+    ? "mkt"                              // Alex (admin de marketing) arranca en Marketing, no en Comando/ventas
+    : user?.role === "marketing"
+      ? "mkt_dia"
+      : ((isAsesorRole || isExternalOrg) ? "c" : "d");
   if (!user?.id) return fallback;
   try {
     const saved = localStorage.getItem(`stratos.crm.view.${user.id}`);
@@ -2057,8 +2059,8 @@ export default function App() {
           <div key={v} className="stratos-content-area" style={{ flex:1, padding: (v === "wa" || v === "copilot") ? 0 : "18px 22px", overflowY: (v === "wa" || v === "copilot") ? "hidden" : "auto", animation:"fadeIn 0.28s ease", display:"flex", flexDirection:"column" }}>
             {user?.role && !canAccessModule(v, user, clientConfig)
               ? <PermissionGate moduleId={v}
-                  onGoBack={() => setV(user?.role === "marketing" ? "mkt" : "c")}
-                  homeLabel={user?.role === "marketing" ? "Ir a mi espacio" : "Ir a mi CRM"} />
+                  onGoBack={() => setV((user?.role === "marketing" || user?.isMarketingAdmin) ? "mkt" : "c")}
+                  homeLabel={(user?.role === "marketing" || user?.isMarketingAdmin) ? "Ir a mi espacio" : "Ir a mi CRM"} />
               : <ErrorBoundary>
                 <Suspense fallback={
                   <div style={{ display:"flex", alignItems:"center", justifyContent:"center", padding:"60px 20px", color:T.txt3, fontFamily:font, fontSize:13 }}>
