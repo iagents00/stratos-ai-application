@@ -1,0 +1,13 @@
+-- 112: admins de MARKETING no reciben alertas proactivas de VENTAS.
+-- Nueva bandera profiles.receives_sales_alerts (default true → ningún admin de ventas
+-- cambia). Se respeta en las 4 funciones que arman recipientes de managers:
+-- fn_proactive_scan_next_action_escalations, fn_proactive_plan_giveup,
+-- fn_proactive_scan_team_overdue, fn_proactive_scan_zooms. Cambio ADITIVO (un predicado
+-- por función). Alex Velázquez (super_admin pero admin de marketing) queda en false.
+-- APLICADA (atómica) a stratos-prod el 21-jul-2026. El cuerpo completo de las 4 funciones
+-- vive en el historial de migraciones de Supabase; acá queda el registro + rollback.
+-- Rollback: quitar el predicado 'AND COALESCE(receives_sales_alerts,true)' de las 4
+-- funciones (restaurar desde pg_get_functiondef previo) + 'alter table profiles drop
+-- column receives_sales_alerts' (con OK humano).
+alter table public.profiles add column if not exists receives_sales_alerts boolean not null default true;
+-- (definición completa de las 4 funciones aplicada en la migración; ver Supabase)
