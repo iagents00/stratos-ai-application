@@ -462,7 +462,9 @@ async function _sendCopilotMessageInner(rawText, options = {}) {
     // Webhook n8n con AI Agent GPT-4o o Router
     try {
       const ctrl = new AbortController();
-      const timeout = setTimeout(() => ctrl.abort(), 15000);
+      // Marketing usa gpt-4o + tool a Supabase; algunas corridas (crear solicitud)
+      // pasan de 15s. Le damos más aire para que no corte con "intenta de nuevo".
+      const timeout = setTimeout(() => ctrl.abort(), isMarketing ? 30000 : 15000);
       const res = await fetch(isMarketing ? N8N_COPILOT_WEBHOOK_MKT : N8N_COPILOT_WEBHOOK, {
         method: 'POST',
         signal: ctrl.signal,
