@@ -9,7 +9,7 @@ import { Shield, ArrowRight } from "lucide-react";
 import { P, font, fontDisp } from "../../design-system/tokens";
 import { MODULE_NAMES } from "../constants/navigation";
 
-export default function PermissionGate({ moduleId, onGoBack }) {
+export default function PermissionGate({ moduleId, onGoBack, homeLabel = "Ir a mi CRM" }) {
   return (
     <div style={{
       flex: 1, display: "flex", alignItems: "center", justifyContent: "center",
@@ -44,7 +44,7 @@ export default function PermissionGate({ moduleId, onGoBack }) {
         onMouseLeave={e => e.currentTarget.style.background = `${P.accent}14`}
       >
         <ArrowRight size={14} style={{ transform: "rotate(180deg)" }} />
-        Ir a mi CRM
+        {homeLabel}
       </button>
     </div>
   );
