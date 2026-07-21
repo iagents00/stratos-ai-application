@@ -30,7 +30,7 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import {
   Megaphone, Plus, X, RefreshCw, Folder, ExternalLink, Lock, Check,
   ChevronLeft, ChevronRight, ChevronDown, Clapperboard, Mic, CalendarDays,
-  Search,
+  Search, Camera,
 } from "lucide-react";
 import { font, fontDisp } from "../../design-system/tokens";
 import { supabase } from "../../lib/supabase";
@@ -945,15 +945,15 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
         <div style={{ ...card, borderColor: `${accent}44`, padding: "13px 16px", display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
           <Check size={16} color={accent} strokeWidth={2.5} />
           <div style={{ flex: 1, minWidth: 180 }}>
-            <div style={{ fontSize: 13, color: txt, fontWeight: 600 }}>«{evidence.task.titulo}» completada 🎉</div>
-            <div style={{ fontSize: 11.5, color: txt2, marginTop: 2 }}>Si tienes alguna evidencia (foto, video o link), envíala — suma a tu reporte. Es opcional 😉</div>
+            <div style={{ fontSize: 13, color: txt, fontWeight: 600 }}>«{evidence.task.titulo}» completada</div>
+            <div style={{ fontSize: 11.5, color: txt2, marginTop: 2 }}>Si tienes alguna evidencia (foto, video o link), envíala — suma a tu reporte. Es opcional.</div>
           </div>
           <label style={{
             background: `${accent}12`, border: `1px dashed ${accent}55`, borderRadius: 10, padding: "9px 13px",
             cursor: evUploading ? "wait" : "pointer", color: accent, fontSize: 12.5, fontWeight: 600, fontFamily: font,
             display: "inline-flex", alignItems: "center", gap: 6, opacity: evUploading ? 0.6 : 1,
           }}>
-            📷 {evUploading ? "Subiendo…" : "Foto / video"}
+            <Camera size={14} /> {evUploading ? "Subiendo…" : "Foto / video"}
             <input type="file" accept="image/*,video/*" disabled={evUploading} style={{ display: "none" }}
               onChange={e => { const f = e.target.files && e.target.files[0]; if (f) uploadEvidence(f); e.target.value = ""; }} />
           </label>
