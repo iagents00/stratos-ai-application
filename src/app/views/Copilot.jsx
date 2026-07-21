@@ -184,22 +184,40 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
     if (attaching || sending) return;
     setErrBanner(null);
     setAttaching(true);
+    const tipo = String(file.type || "").startsWith("video") ? "video" : "foto";
+    // La evidencia SE VE en el chat (pedido de Ángel: "le mandé la foto y no se ve
+    // dónde está"): burbuja del usuario con la miniatura al instante, estilo WhatsApp.
+    const previewUrl = URL.createObjectURL(file);
+    setMessages((prev) => [...prev, {
+      id: `evu-${Date.now()}`,
+      role: "user",
+      content: tipo === "video" ? "Evidencia enviada (video)" : "Evidencia enviada (foto)",
+      imageUrl: tipo === "foto" ? previewUrl : null,
+      videoUrl: tipo === "video" ? previewUrl : null,
+      occurred_at: new Date().toISOString(),
+    }]);
     try {
       const safe = String(file.name || "archivo").replace(/[^a-zA-Z0-9._-]/g, "_").slice(-60);
       const path = `mkt/${orgId}/copilot/${Date.now()}-${safe}`;
       const { error: upErr } = await supabase.storage.from("evidencia").upload(path, file);
       if (upErr) throw upErr;
-      const tipo = String(file.type || "").startsWith("video") ? "video" : "foto";
       const { data: replyText, error: rpcErr } = await supabase.rpc("mkt_attach_evidence", { p_path: path, p_tipo: tipo });
       if (rpcErr) throw rpcErr;
+      const finalReply = (typeof replyText === "string" && replyText.trim())
+        ? replyText
+        : `Evidencia adjuntada (${tipo}). Suma a tu reporte.`;
       setMessages((prev) => [...prev, {
         id: `ev-${Date.now()}`,
         role: "ai",
-        content: (typeof replyText === "string" && replyText.trim())
-          ? replyText
-          : `Evidencia adjuntada (${tipo}). Suma a tu reporte.`,
+        content: finalReply,
         occurred_at: new Date().toISOString(),
       }]);
+      // Persistir el rastro en el historial (best-effort): al recargar, la conversación
+      // muestra "Evidencia enviada (foto)" + la confirmación, aunque la miniatura local expire.
+      try {
+        await supabase.rpc('copilot_log_msg', { p_role: 'user', p_content: `Evidencia enviada (${tipo}).` });
+        await supabase.rpc('copilot_log_msg', { p_role: 'ai', p_content: finalReply });
+      } catch { /* logging best-effort */ }
     } catch (err) {
       setErrBanner("No se pudo subir la evidencia. Probá de nuevo.");
     } finally {
@@ -594,6 +612,13 @@ function Bubble({ m, T, isLight, userBg, userTxt, aiBg, aiBd, onPick, sending, i
         whiteSpace: "pre-wrap", wordBreak: "break-word", opacity: m.pending ? 0.7 : 1,
         boxShadow: isLight ? (isUser ? `0 3px 10px ${T.accent}28` : "0 1px 4px rgba(15,23,42,0.03)") : "none"
       }}>
+        {/* Evidencia adjunta: la miniatura SE VE en el chat (foto o video) */}
+        {m.imageUrl && (
+          <img src={m.imageUrl} alt="Evidencia" style={{ display: "block", maxWidth: 220, maxHeight: 220, borderRadius: 10, marginBottom: 6, objectFit: "cover" }} />
+        )}
+        {m.videoUrl && (
+          <video src={m.videoUrl} controls style={{ display: "block", maxWidth: 240, maxHeight: 240, borderRadius: 10, marginBottom: 6, background: "#000" }} />
+        )}
         {renderRichText(m.content, isUser ? "inherit" : T.accent)}
         {inlineButtons.length > 0 && (
           <div style={{ display: "flex", gap: 5, flexWrap: "wrap", marginTop: 8, paddingTop: 7, borderTop: `1px solid ${isLight ? "rgba(15,23,42,0.06)" : "rgba(255,255,255,0.06)"}` }}>
