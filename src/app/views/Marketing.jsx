@@ -234,6 +234,27 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
     if (url) await patch("mkt_tasks", evidence.task.id, { evidencia_url: url, evidencia_tipo: "link" });
     setEvidence(null);
   }, [evidence, patch]);
+  const [evUploading, setEvUploading] = useState(false);
+  const uploadEvidence = useCallback(async (file) => {
+    if (!evidence?.task || !file) return;
+    setEvUploading(true);
+    setError("");
+    try {
+      const safe = String(file.name || "archivo").replace(/[^a-zA-Z0-9._-]/g, "_").slice(-60);
+      const path = `mkt/${orgId}/${evidence.task.id}/${Date.now()}-${safe}`;
+      const { error: e } = await supabase.storage.from("evidencia").upload(path, file);
+      if (e) throw e;
+      await patch("mkt_tasks", evidence.task.id, {
+        evidencia_url: path,
+        evidencia_tipo: String(file.type || "").startsWith("video") ? "video" : "foto",
+      });
+      setEvidence(null);
+    } catch {
+      setError("No pude subir el archivo — puedes pegar un link en su lugar.");
+    } finally {
+      setEvUploading(false);
+    }
+  }, [evidence, orgId, patch]);
 
   const setTaskState = useCallback(async (t, estado) => {
     const fields = { estado };
@@ -925,14 +946,23 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
           <Check size={16} color={accent} strokeWidth={2.5} />
           <div style={{ flex: 1, minWidth: 180 }}>
             <div style={{ fontSize: 13, color: txt, fontWeight: 600 }}>«{evidence.task.titulo}» completada 🎉</div>
-            <div style={{ fontSize: 11.5, color: txt2, marginTop: 2 }}>Si tienes alguna evidencia (link a Drive, imagen, entregable), envíala — suma a tu reporte. Es opcional.</div>
+            <div style={{ fontSize: 11.5, color: txt2, marginTop: 2 }}>Si tienes alguna evidencia (foto, video o link), envíala — suma a tu reporte. Es opcional 😉</div>
           </div>
-          <input placeholder="Pega el link aquí (opcional)" value={evidence.url}
+          <label style={{
+            background: `${accent}12`, border: `1px dashed ${accent}55`, borderRadius: 10, padding: "9px 13px",
+            cursor: evUploading ? "wait" : "pointer", color: accent, fontSize: 12.5, fontWeight: 600, fontFamily: font,
+            display: "inline-flex", alignItems: "center", gap: 6, opacity: evUploading ? 0.6 : 1,
+          }}>
+            📷 {evUploading ? "Subiendo…" : "Foto / video"}
+            <input type="file" accept="image/*,video/*" disabled={evUploading} style={{ display: "none" }}
+              onChange={e => { const f = e.target.files && e.target.files[0]; if (f) uploadEvidence(f); e.target.value = ""; }} />
+          </label>
+          <input placeholder="…o pega un link (opcional)" value={evidence.url}
             onChange={e => setEvidence(ev => ({ ...ev, url: e.target.value }))}
-            style={{ ...inputStyle, width: isMobile ? "100%" : 260 }} />
-          <button onClick={saveEvidence} style={{
+            style={{ ...inputStyle, width: isMobile ? "100%" : 220 }} />
+          <button onClick={saveEvidence} disabled={evUploading} style={{
             background: `${accent}1A`, border: `1px solid ${accent}55`, borderRadius: 10, padding: "9px 15px",
-            cursor: "pointer", color: accent, fontSize: 12.5, fontWeight: 600, fontFamily: font,
+            cursor: "pointer", color: accent, fontSize: 12.5, fontWeight: 600, fontFamily: font, opacity: evUploading ? 0.6 : 1,
           }}>{(evidence.url || "").trim() ? "Guardar evidencia" : "Listo, sin evidencia"}</button>
         </div>
       )}
