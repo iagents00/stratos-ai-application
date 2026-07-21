@@ -91,7 +91,7 @@ function resolveInitialView(user) {
   // la pantalla de "sin permiso". Su casa es el módulo Marketing (ERP de
   // actividades: Mi Día · Marcas · Pipeline · Solicitudes).
   const fallback = user?.role === "marketing"
-    ? "mkt"
+    ? "mkt_dia"
     : ((isAsesorRole || isExternalOrg) ? "c" : "d");
   if (!user?.id) return fallback;
   try {
@@ -2043,7 +2043,11 @@ export default function App() {
                   {v === "c"      && <CRM oc={oc} leadsData={leadsData} setLeadsData={setLeadsData} theme={theme} setTheme={setTheme} isRefreshing={leadsRefreshing} autoOpenPriority1={autoOpenPriority1} onAutoOpenHandled={() => setAutoOpenPriority1(0)} softDeleteLead={softDeleteLead} autoOpenLead={crmAutoOpenLead} onAutoOpenLeadHandled={() => setCrmAutoOpenLead(null)} autoOpenNewLead={crmNewLeadTick} onNewLeadHandled={() => setCrmNewLeadTick(0)} onOpenComando={() => setV("d")} />}
                   {v === "wa"     && canAccessModule("wa", user, clientConfig) && <WhatsAppInbox T={T} isLight={isLight} inbox={waInbox} openLead={waOpenLead} openExpediente={openLeadExpediente} onBack={backToPrevView} chatCount={waInbox.conversations?.length || 0} />}
                   {v === "copilot" && canAccessModule("copilot", user, clientConfig) && <Copilot T={T} isLight={isLight} theme={theme} onBack={backToPrevView} score={asesorScore} />}
-                  {v === "mkt"    && canAccessModule("mkt", user, clientConfig) && <Marketing T={T} onOpenCopilot={canAccessModule("copilot", user, clientConfig) ? () => setV("copilot") : undefined} />}
+                  {(v === "mkt" || v === "mkt_dia" || v === "mkt_marcas" || v === "mkt_pipe" || v === "mkt_sol") && canAccessModule(v, user, clientConfig) && (
+                    <Marketing T={T}
+                      initialTab={{ mkt_dia: "dia", mkt_marcas: "marcas", mkt_pipe: "pipeline", mkt_sol: "solicitudes" }[v]}
+                      onOpenCopilot={canAccessModule("copilot", user, clientConfig) ? () => setV("copilot") : undefined} />
+                  )}
                   {v === "trash"  && <Trash trashedLeads={trashedLeads} onRestore={restoreLead} onHardDelete={hardDeleteLead} onRefresh={refreshTrash} T={T} />}
                   {v === "ia"     && <IACRM oc={oc} T={T} theme={theme} />}
                   {v === "e"      && <ERP oc={oc} T={T} />}
