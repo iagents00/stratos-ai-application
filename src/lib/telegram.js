@@ -345,15 +345,19 @@ async function _sendCopilotMessageInner(rawText, options = {}) {
 
     const { data: profile } = await supabase
       .from('profiles')
-      .select('telegram_chat_id, role')
+      .select('telegram_chat_id, role, is_marketing_admin')
       .eq('id', session.user.id)
       .single();
 
     if (!profile?.telegram_chat_id) return { reply: null, error: 'not_paired' };
     const chatId = Number(profile.telegram_chat_id);
-    // Rol marketing → su propio flujo/cerebro; NO pasa por las capas CRM de asesores
-    // (quick commands copilot_send, callbacks proactivos, awaiting-plan).
-    const isMarketing = profile?.role === 'marketing';
+    // Lado MARKETING → su propio flujo/cerebro; NO pasa por las capas CRM de asesores
+    // (quick commands copilot_send, callbacks proactivos, awaiting-plan). Cubre tanto al
+    // rol `marketing` (operadores: Yazz, Luis, Emmanuel) como al ADMIN de marketing
+    // (Alex es super_admin pero opera del lado marketing → is_marketing_admin=true, mig 113).
+    // Sin esto, Alex caía en el Copilot de VENTAS (leads/brokers/emojis). Ventas intacto:
+    // ningún admin de ventas tiene is_marketing_admin (default false).
+    const isMarketing = profile?.role === 'marketing' || profile?.is_marketing_admin === true;
 
     // 1. Detección directa de solicitud de manual / guía / instrucciones — o "¿qué puedes hacer?"
     const wantsManual = /^(?:dame |mandame |enviame |enviar |ver |mostrar |necesito |pasame )?(?:el |la )?(?:manual|guía|guia|instrucciones|ayuda)(?:\s|$)/i.test(cleanText);

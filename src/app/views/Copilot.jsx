@@ -13,7 +13,7 @@
  * ─────────────────────────────────────────────────────────────────────────────
  */
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Send, Sparkles, RefreshCw, Mic, Square, X, ChevronDown, ChevronUp, ChevronLeft, Bot, BookOpen, Play, Pause, Bell } from "lucide-react";
+import { Send, Sparkles, RefreshCw, Mic, Square, X, ChevronDown, ChevronUp, ChevronLeft, Bot, BookOpen, Play, Pause, Bell, Camera } from "lucide-react";
 import { P, LP, font, fontDisp } from "../../design-system/tokens";
 import { G } from "../SharedComponents";
 import CopilotMark from "../components/CopilotMark";
@@ -24,6 +24,7 @@ import {
   getCopilotActivity, sendCopilotMessage,
 } from "../../lib/telegram";
 import { getPushStatus, enablePushNotifications } from "../../lib/push";
+import { supabase } from "../../lib/supabase";
 
 const SUGGESTIONS = [
   { label: "Mis clientes", text: "mis clientes" },
@@ -40,6 +41,12 @@ export default function Copilot({ theme = "dark", T: Tprop, isLight: isLightProp
   const isLight = isLightProp != null ? isLightProp : theme === "light";
   const T = Tprop || (isLight ? LP : P);
   const { config: clientConfig } = useClient();
+  const { user } = useAuth();
+  // Solo el equipo de marketing (rol `marketing`: Yazz, Luis, Emmanuel) adjunta evidencia
+  // desde el Copilot — son quienes completan tareas. Gate 100% contenido: si es asesor,
+  // el control NI SE RENDERIZA y el Copilot se comporta idéntico a hoy.
+  const isMarketing = user?.role === 'marketing';
+  const orgId = user?.organizationId;
   const botUsername = clientConfig?.tenant?.botUsername || "Strato_sasistente_crm_bot";
   // (manualPairing y getPairingStatus ya no se usan acá: el Copilot no espera
   //  el estado de Telegram para abrir — abre instantáneo, como WhatsApp.)
@@ -53,19 +60,21 @@ export default function Copilot({ theme = "dark", T: Tprop, isLight: isLightProp
   // el chat — jamás la vieja pantalla "Conecta tu Telegram para activar", que
   // parecía un muro. (`ConnectPrompt` queda en el archivo por si algún tenant
   // futuro con pairing manual lo necesita, pero no se muestra por defecto.)
-  return <Chat T={T} isLight={isLight} botUsername={botUsername} onUnpaired={onUnpaired} onBack={onBack} score={score} />;
+  return <Chat T={T} isLight={isLight} botUsername={botUsername} onUnpaired={onUnpaired} onBack={onBack} score={score} isMarketing={isMarketing} orgId={orgId} />;
 }
 
 /* ─────────────────────────────────────────────────────────────────────────── */
 /* Chat — layout WhatsApp: header fino, mensajes expansivos, composer compacto */
 /* ─────────────────────────────────────────────────────────────────────────── */
-function Chat({ T, isLight, botUsername, onUnpaired, onBack, score }) {
+function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing, orgId }) {
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [input, setInput] = useState("");
   const [errBanner, setErrBanner] = useState(null);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [attaching, setAttaching] = useState(false);  // subiendo evidencia (solo marketing)
+  const evInputRef = useRef(null);
   const scrollRef = useRef(null);
   const inputRef = useRef(null);
   const mountedRef = useRef(true);
@@ -161,6 +170,42 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score }) {
       });
     }
     inputRef.current?.focus();
+  };
+
+  /* ── Evidencia foto/video desde el Copilot (solo marketing) ──
+     Sube al bucket "evidencia" (mismo que el módulo) y la vincula a la última
+     tarea completada del propio usuario vía RPC mkt_attach_evidence (determinista,
+     se resuelve por auth.uid()). Muestra una burbuja de confirmación. */
+  const handlePickEvidence = async (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (e.target) e.target.value = "";
+    if (!file) return;
+    if (!orgId) { setErrBanner("No pude identificar tu organización. Actualizá la página."); return; }
+    if (attaching || sending) return;
+    setErrBanner(null);
+    setAttaching(true);
+    try {
+      const safe = String(file.name || "archivo").replace(/[^a-zA-Z0-9._-]/g, "_").slice(-60);
+      const path = `mkt/${orgId}/copilot/${Date.now()}-${safe}`;
+      const { error: upErr } = await supabase.storage.from("evidencia").upload(path, file);
+      if (upErr) throw upErr;
+      const tipo = String(file.type || "").startsWith("video") ? "video" : "foto";
+      const { data: replyText, error: rpcErr } = await supabase.rpc("mkt_attach_evidence", { p_path: path, p_tipo: tipo });
+      if (rpcErr) throw rpcErr;
+      setMessages((prev) => [...prev, {
+        id: `ev-${Date.now()}`,
+        role: "ai",
+        content: (typeof replyText === "string" && replyText.trim())
+          ? replyText
+          : `Evidencia adjuntada (${tipo}). Suma a tu reporte.`,
+        occurred_at: new Date().toISOString(),
+      }]);
+    } catch (err) {
+      setErrBanner("No se pudo subir la evidencia. Probá de nuevo.");
+    } finally {
+      setAttaching(false);
+      inputRef.current?.focus();
+    }
   };
 
   /* ── Grabación de audio ── */
@@ -382,6 +427,19 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score }) {
 
       {/* ── Composer compacto (estilo WhatsApp) ── */}
       <div style={{ display: "flex", alignItems: "flex-end", gap: 8, padding: "8px 12px calc(10px + var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px)))", background: composerBg, borderTop: `1px solid ${T.border}`, flexShrink: 0 }}>
+        {/* Adjuntar evidencia (foto/video) — solo equipo de marketing */}
+        {isMarketing && (
+          <>
+            <button type="button" title="Adjuntar foto o video de evidencia"
+              onClick={() => evInputRef.current?.click()} disabled={attaching || sending}
+              style={{ width: 36, height: 36, borderRadius: 10, flexShrink: 0, border: "none", background: "transparent", color: attaching ? T.accent : T.txt3, cursor: (attaching || sending) ? "default" : "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              {attaching
+                ? <RefreshCw size={17} strokeWidth={2} style={{ animation: "spin 1s linear infinite" }} />
+                : <Camera size={18} strokeWidth={2} />}
+            </button>
+            <input ref={evInputRef} type="file" accept="image/*,video/*" onChange={handlePickEvidence} style={{ display: "none" }} />
+          </>
+        )}
         {/* Botón micrófono */}
         <button type="button" onClick={recording ? finishRecording : startRecording} disabled={sending}
           style={{ width: 36, height: 36, borderRadius: 10, flexShrink: 0, border: "none", background: "transparent", color: recording ? "#EF4444" : T.txt3, cursor: sending ? "default" : "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
