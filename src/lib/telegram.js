@@ -301,6 +301,10 @@ export async function getCopilotActivity(limit = 50) {
 }
 
 const N8N_COPILOT_WEBHOOK = "https://personal-n8n.suwsiw.easypanel.host/webhook/copilot-transcribe";
+// COPILOT DE MARKETING (F3, jul-2026): el rol `marketing` usa su PROPIO flujo n8n
+// (webhook independiente → cerebro mkt_nlu_dispatch en stratos-prod). Flujo duplicado
+// a propósito para NO tocar el Copilot de asesores. Ver migraciones 107/108.
+const N8N_COPILOT_WEBHOOK_MKT = "https://personal-n8n.suwsiw.easypanel.host/webhook/copilot-marketing";
 
 /**
  * COPILOT — envía un mensaje al asistente IA del CRM.
@@ -339,9 +343,28 @@ async function _sendCopilotMessageInner(rawText, options = {}) {
     const { data: { session } } = await withTimeout(supabase.auth.getSession(), GETSESSION_TIMEOUT, 'getSession');
     if (!session?.user?.id) return { reply: "Sesión expirada.", error: null };
 
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('telegram_chat_id, role')
+      .eq('id', session.user.id)
+      .single();
+
+    if (!profile?.telegram_chat_id) return { reply: null, error: 'not_paired' };
+    const chatId = Number(profile.telegram_chat_id);
+    // Rol marketing → su propio flujo/cerebro; NO pasa por las capas CRM de asesores
+    // (quick commands copilot_send, callbacks proactivos, awaiting-plan).
+    const isMarketing = profile?.role === 'marketing';
+
     // 1. Detección directa de solicitud de manual / guía / instrucciones — o "¿qué puedes hacer?"
     const wantsManual = /^(?:dame |mandame |enviame |enviar |ver |mostrar |necesito |pasame )?(?:el |la )?(?:manual|guía|guia|instrucciones|ayuda)(?:\s|$)/i.test(cleanText);
     const wantsCapabilities = /(qu[eé]\s+(cosas\s+)?(me\s+)?(puedes?|pod[eé]s|sabes?|sab[eé]s)\s+hacer|qu[eé]\s+haces|qu[eé]\s+(otras\s+)?funcion(es|alidades)|para\s+qu[eé]\s+sirves?|en\s+qu[eé]\s+(me\s+)?(puedes?|pod[eé]s)\s+ayudar|c[oó]mo\s+(me\s+)?(puedes?\s+)?ayud)/i.test(cleanText);
+    if (isMarketing && !options.callback_data && (wantsManual || wantsCapabilities)) {
+      return {
+        reply: "🤖 **Esto es lo que puedo hacer por ti (marketing):**\n\n• Decirte qué tienes hoy — \"¿qué tengo hoy?\"\n• Crear tareas para el equipo — \"créale una tarea a Luis: editar Casa Banana para el viernes\"\n• Mover propiedades del pipeline — \"mueve Bay View Grand 2 a lista\"\n• Registrar solicitudes de diseño — \"necesito un flyer AA para Mueblar el sábado\"\n• Resumen del pipeline — \"¿cómo va el pipeline?\"\n• Pendientes de una persona — \"¿qué tiene pendiente Emmanuel?\"\n\nTodo por voz o texto. Lo que creo aparece al instante en el módulo Marketing.",
+        buttons: [],
+        error: null
+      };
+    }
     if (!options.callback_data && (wantsManual || wantsCapabilities)) {
       const reply = wantsCapabilities
         ? "🤖 **Esto es lo que puedo hacer por ti:**\n\n• Registrar clientes y mover su etapa\n• Buscar una ficha por nombre o teléfono\n• Recomendarte propiedades según el presupuesto y la zona de un lead\n• Enviarte el catálogo y los drives por presupuesto o ubicación\n• Consultar la cartera de un asesor (si eres admin)\n• Programar recordatorios y avisarte de tus Zooms y tareas\n\nTodo esto por voz o texto. Aquí está el manual completo con ejemplos:"
@@ -354,15 +377,6 @@ async function _sendCopilotMessageInner(rawText, options = {}) {
         error: null
       };
     }
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('telegram_chat_id')
-      .eq('id', session.user.id)
-      .single();
-
-    if (!profile?.telegram_chat_id) return { reply: null, error: 'not_paired' };
-    const chatId = Number(profile.telegram_chat_id);
-
     // BOTONES DE RECORDATORIOS PROACTIVOS — paridad TOTAL con Telegram.
     // Todos los callbacks de proactivos los resuelve `copilot_handle_callback` en la DB
     // (el webhook del Copilot es solo audio→texto y NO orquesta estos estados; antes solo
@@ -373,7 +387,7 @@ async function _sendCopilotMessageInner(rawText, options = {}) {
     // tareas de equipo (done/en proceso/no la hice). Devuelve {text, buttons} para reofrecer
     // los botones de seguimiento (ej. tras la ficha). El texto que el asesor escribe DESPUÉS
     // (la fecha para reagendar, o el plan) lo captura `copilot_handle_pending`, más abajo.
-    if (options.callback_data && /^(proact_inact|proact_next|proact_plan|proact_reagendar|team_action):/.test(options.callback_data)) {
+    if (!isMarketing && options.callback_data && /^(proact_inact|proact_next|proact_plan|proact_reagendar|team_action):/.test(options.callback_data)) {
       try {
         const { data: cb } = await supabase.rpc('copilot_handle_callback', { p_callback_data: options.callback_data });
         if (cb && typeof cb === 'object') {
@@ -385,7 +399,7 @@ async function _sendCopilotMessageInner(rawText, options = {}) {
     }
 
     // Si es un click en botón inline (callback_data), va directo al webhook (o RPC callback) sin evaluar QUICK_COMMANDS
-    if (!options.callback_data) {
+    if (!options.callback_data && !isMarketing) {
       const lower = cleanText.toLowerCase();
       const QUICK_COMMANDS = [
         'mis clientes', 'qué tengo hoy', 'que tengo hoy', 'cómo voy', 'como voy',
@@ -413,7 +427,7 @@ async function _sendCopilotMessageInner(rawText, options = {}) {
     // mi plan", el próximo texto ES el plan → lo capturamos acá ANTES del webhook
     // (que lo trataría como una nota). Si no está en ese estado, devuelve null y
     // el mensaje sigue su curso normal. Cubre el plan de Zoom y el de próxima acción.
-    if (!options.callback_data && cleanText) {
+    if (!isMarketing && !options.callback_data && cleanText) {
       try {
         const { data: pendingReply } = await supabase.rpc('copilot_handle_pending', { p_text: cleanText });
         if (pendingReply && typeof pendingReply === 'string' && pendingReply.trim()) {
@@ -449,7 +463,7 @@ async function _sendCopilotMessageInner(rawText, options = {}) {
     try {
       const ctrl = new AbortController();
       const timeout = setTimeout(() => ctrl.abort(), 15000);
-      const res = await fetch(N8N_COPILOT_WEBHOOK, {
+      const res = await fetch(isMarketing ? N8N_COPILOT_WEBHOOK_MKT : N8N_COPILOT_WEBHOOK, {
         method: 'POST',
         signal: ctrl.signal,
         headers: { 'Content-Type': 'application/json' },
