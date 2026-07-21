@@ -191,8 +191,10 @@ const SECTIONS = [
       { type: "abilities", items: [
         { what: "Tu día", phrase: "\"¿qué tengo hoy?\"" },
         { what: "Crear tareas", phrase: "\"créale una tarea a Luis: editar el video de Casa Banana para el viernes\"" },
+        { what: "Marcar tu tarea como hecha", phrase: "\"ya terminé los copys\" — la marca hecha y te invita a subir la evidencia ahí mismo" },
         { what: "Mover videos del tablero", phrase: "\"mueve Bay View Grand 2 a lista\" / \"ya se grabó Monarca 28\"" },
         { what: "Pedir diseños", phrase: "\"necesito un flyer AA para Mueblería el sábado\"" },
+        { what: "Asignar una solicitud", phrase: "\"asígnale el flyer a Emmanuel\" — y si creas una sin responsable, te lo recuerda" },
         { what: "Cómo van los videos", phrase: "\"¿cómo van los videos?\" o \"¿cómo va el pipeline?\"" },
         { what: "Pendientes de una persona", phrase: "\"¿qué tiene pendiente Emmanuel?\"" },
         { what: "El Drive de una propiedad", phrase: "\"pásame el drive de Bay View Grand\"" },
