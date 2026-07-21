@@ -91,7 +91,7 @@ function resolveInitialView(user) {
   // la pantalla de "sin permiso". Su casa es el módulo Marketing (ERP de
   // actividades: Mi Día · Marcas · Pipeline · Solicitudes).
   const fallback = user?.isMarketingAdmin
-    ? "mkt"                              // Alex (admin de marketing) arranca en Marketing, no en Comando/ventas
+    ? "mkt_dia"                          // Alex (admin de marketing) arranca en su Mi Día (secciones en el sidebar), no en Comando/ventas
     : user?.role === "marketing"
       ? "mkt_dia"
       : ((isAsesorRole || isExternalOrg) ? "c" : "d");
@@ -331,6 +331,12 @@ export default function App() {
   const waInbox = useWhatsAppInbox({ enabled: waEnabled });
   const waUnread = waEnabled ? (waInbox.totalUnread || 0) : 0;
   const copilotEnabled = !!user && !user.isDemo && canAccessModule("copilot", user, clientConfig);
+  // ¿El usuario tiene acceso al CRM de ventas? Los de MARKETING (Alex admin o rol
+  // marketing) NO — y de esto cuelga todo lo de ventas del HEADER (píldora de
+  // pipeline IAOSIsland + Centro de Inteligencia con leads) y la carga de leadsData.
+  // Sin esto, el gate de módulos no alcanzaba: el header se veía igual (Ángel vio
+  // "$1717.9M en pipeline" en la cuenta de Alex).
+  const hasCRM = !!user && canAccessModule("c", user, clientConfig);
   const copilotInbox = useCopilotInbox({ enabled: copilotEnabled, activeView: v });
   const copilotUnread = copilotEnabled ? (copilotInbox.totalUnread || 0) : 0;
   const totalNotifUnread = waUnread + copilotUnread;
@@ -752,6 +758,9 @@ export default function App() {
 
   useEffect(() => {
     if (!user) return;
+    // Marketing (Alex admin o rol marketing): NO se cargan leads de ventas. Así el
+    // header y todo lo que deriva de leadsData quedan vacíos/apagados para ellos.
+    if (!canAccessModule("c", user, clientConfig)) { setLeadsData([]); setLeadsLoading(false); return; }
     if (user.id === 'demo-user-local') {
       // Demo: los leads no tienen `created_at` (solo `fechaIngreso` formateado).
       // Para que el Comando Directivo y AdvisorMetrics muestren métricas reales
@@ -1719,11 +1728,11 @@ export default function App() {
                     ? clientConfig.brand.appWordmark
                     : <>Stratos<span style={{ marginLeft:3, fontWeight:400, color: isLight ? "rgba(15,23,42,0.38)" : "rgba(255,255,255,0.30)", letterSpacing:"0.01em" }}>AI</span></>}
                 </p>
-                <IAOSIsland leadsData={leadsData} isLight={isLight} idx={iaosIdx} brandLabel={orgBrand} onOpen={() => setIntelOpenTick(t => t + 1)} />
+                {hasCRM && <IAOSIsland leadsData={leadsData} isLight={isLight} idx={iaosIdx} brandLabel={orgBrand} onOpen={() => setIntelOpenTick(t => t + 1)} />}
               </div>
               {/* CENTER */}
               <div className="stratos-header-center" style={{ position:"absolute", left:"50%", transform:"translateX(-50%)" }}>
-                <DynIsland onExpand={openPriorityLead} onOpenLead={openLeadExpediente} notifications={notifs} theme={theme} beamIdx={iaosIdx} openSignal={intelOpenTick} />
+                {hasCRM && <DynIsland onExpand={openPriorityLead} onOpenLead={openLeadExpediente} notifications={notifs} theme={theme} beamIdx={iaosIdx} openSignal={intelOpenTick} />}
               </div>
               {/* RIGHT */}
               <div className="stratos-header-right" style={{ display:"flex", alignItems:"center", gap:4 }}>
@@ -2059,7 +2068,7 @@ export default function App() {
           <div key={v} className="stratos-content-area" style={{ flex:1, padding: (v === "wa" || v === "copilot") ? 0 : "18px 22px", overflowY: (v === "wa" || v === "copilot") ? "hidden" : "auto", animation:"fadeIn 0.28s ease", display:"flex", flexDirection:"column" }}>
             {user?.role && !canAccessModule(v, user, clientConfig)
               ? <PermissionGate moduleId={v}
-                  onGoBack={() => setV((user?.role === "marketing" || user?.isMarketingAdmin) ? "mkt" : "c")}
+                  onGoBack={() => setV((user?.role === "marketing" || user?.isMarketingAdmin) ? "mkt_dia" : "c")}
                   homeLabel={(user?.role === "marketing" || user?.isMarketingAdmin) ? "Ir a mi espacio" : "Ir a mi CRM"} />
               : <ErrorBoundary>
                 <Suspense fallback={
@@ -2176,7 +2185,9 @@ export default function App() {
             );
           })()}
           {/* Botón "+" — NUEVO CLIENTE, integrado a la barra como en las apps
-              nativas (antes flotaba aparte y dejaba aire abajo) */}
+              nativas (antes flotaba aparte y dejaba aire abajo). Solo para quien
+              tiene el CRM: para marketing (Alex/rol marketing) NO se muestra (es de ventas). */}
+          {hasCRM && (
           <button
             onClick={() => { setPlusOpen(false); setV("c"); setCrmNewLeadTick(t => t + 1); }}
             aria-label="Nuevo cliente"
@@ -2194,6 +2205,7 @@ export default function App() {
           >
             <IosIcon name="add" filled size={24} color={isLight ? "#FFFFFF" : "#04121C"} />
           </button>
+          )}
         </div>
       </div>
 

@@ -32,6 +32,7 @@ const PublicLanding    = lazy(() => import("./app/views/LandingPages/PublicLandi
 const DataDeletion     = lazy(() => import("./landing/DataDeletion.jsx"));
 const DeliveryHubCRM   = lazy(() => import("./landing/DeliveryHubCRM.jsx"));
 const ManualCRM        = lazy(() => import("./landing/ManualCRM.jsx"));
+const ManualMarketing  = lazy(() => import("./landing/ManualMarketing.jsx"));
 const Diagnostico      = lazy(() => import("./landing/Diagnostico.jsx"));
 import { CATEGORIES_TG, MANUAL_SECTIONS_TG, searchManualTG } from "./landing/manual-telegram-content";
 
@@ -94,6 +95,8 @@ const DELIVERY_PATHS = ["/entrega-crm", "/entrega"];
 const MANUAL_PATHS = ["/manual", "/manual-crm"];
 // Manual del ASISTENTE DE TELEGRAM — público, para asesores (uso del bot).
 const MANUAL_TG_PATHS = ["/manual-asistente-telegram", "/manual_asistente_telegram", "/manual-telegram"];
+// Manual del EQUIPO DE MARKETING (módulo Mi Espacio + Copilot de marketing) — público.
+const MANUAL_MKT_PATHS = ["/manual-marketing", "/manual-mkt"];
 const DIAGNOSTICO_PATHS = ["/diagnostico"];
 const matchPath = (paths) => paths.some(p => pathname === p || pathname === p + "/");
 const isPrivacy = matchPath(PRIVACY_PATHS);
@@ -101,6 +104,7 @@ const isDeletion = matchPath(DELETION_PATHS);
 const isDelivery = matchPath(DELIVERY_PATHS);
 const isManual = matchPath(MANUAL_PATHS);
 const isManualTG = matchPath(MANUAL_TG_PATHS);
+const isManualMkt = matchPath(MANUAL_MKT_PATHS);
 // /diagnostico (formulario público) y /diagnostico/view/<lead_id> (vista compartida
 // del Blueprint que vio el cliente — el link llega al equipo por Telegram al
 // crearse cada lead). Ambas se renderean con el mismo componente Diagnostico.jsx,
@@ -181,6 +185,8 @@ createRoot(document.getElementById("root")).render(
                 ? <DataDeletion />
                 : isDelivery
                   ? <DeliveryHubCRM />
+                  : isManualMkt
+                    ? <ManualMarketing />
                   : isManual
                     ? <ManualCRM />
                     : isManualTG
