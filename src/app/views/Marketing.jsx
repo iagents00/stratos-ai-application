@@ -234,6 +234,7 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
     if (url) await patch("mkt_tasks", evidence.task.id, { evidencia_url: url, evidencia_tipo: "link" });
     setEvidence(null);
   }, [evidence, patch]);
+<<<<<<< HEAD
   const [evUploading, setEvUploading] = useState(false);
   const uploadEvidence = useCallback(async (file) => {
     if (!evidence?.task || !file) return;
@@ -255,6 +256,8 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
       setEvUploading(false);
     }
   }, [evidence, orgId, patch]);
+=======
+>>>>>>> origin/main
 
   const setTaskState = useCallback(async (t, estado) => {
     const fields = { estado };
@@ -946,6 +949,7 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
           <Check size={16} color={accent} strokeWidth={2.5} />
           <div style={{ flex: 1, minWidth: 180 }}>
             <div style={{ fontSize: 13, color: txt, fontWeight: 600 }}>«{evidence.task.titulo}» completada 🎉</div>
+<<<<<<< HEAD
             <div style={{ fontSize: 11.5, color: txt2, marginTop: 2 }}>Si tienes alguna evidencia (foto, video o link), envíala — suma a tu reporte. Es opcional 😉</div>
           </div>
           <label style={{
@@ -963,6 +967,16 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
           <button onClick={saveEvidence} disabled={evUploading} style={{
             background: `${accent}1A`, border: `1px solid ${accent}55`, borderRadius: 10, padding: "9px 15px",
             cursor: "pointer", color: accent, fontSize: 12.5, fontWeight: 600, fontFamily: font, opacity: evUploading ? 0.6 : 1,
+=======
+            <div style={{ fontSize: 11.5, color: txt2, marginTop: 2 }}>Si tienes alguna evidencia (link a Drive, imagen, entregable), envíala — suma a tu reporte. Es opcional.</div>
+          </div>
+          <input placeholder="Pega el link aquí (opcional)" value={evidence.url}
+            onChange={e => setEvidence(ev => ({ ...ev, url: e.target.value }))}
+            style={{ ...inputStyle, width: isMobile ? "100%" : 260 }} />
+          <button onClick={saveEvidence} style={{
+            background: `${accent}1A`, border: `1px solid ${accent}55`, borderRadius: 10, padding: "9px 15px",
+            cursor: "pointer", color: accent, fontSize: 12.5, fontWeight: 600, fontFamily: font,
+>>>>>>> origin/main
           }}>{(evidence.url || "").trim() ? "Guardar evidencia" : "Listo, sin evidencia"}</button>
         </div>
       )}
