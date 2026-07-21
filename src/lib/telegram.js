@@ -360,7 +360,7 @@ async function _sendCopilotMessageInner(rawText, options = {}) {
     const wantsCapabilities = /(qu[eé]\s+(cosas\s+)?(me\s+)?(puedes?|pod[eé]s|sabes?|sab[eé]s)\s+hacer|qu[eé]\s+haces|qu[eé]\s+(otras\s+)?funcion(es|alidades)|para\s+qu[eé]\s+sirves?|en\s+qu[eé]\s+(me\s+)?(puedes?|pod[eé]s)\s+ayudar|c[oó]mo\s+(me\s+)?(puedes?\s+)?ayud)/i.test(cleanText);
     if (isMarketing && !options.callback_data && (wantsManual || wantsCapabilities)) {
       return {
-        reply: "🤖 **Esto es lo que puedo hacer por ti (marketing):**\n\n• Decirte qué tienes hoy — \"¿qué tengo hoy?\"\n• Crear tareas para el equipo — \"créale una tarea a Luis: editar Casa Banana para el viernes\"\n• Mover propiedades del pipeline — \"mueve Bay View Grand 2 a lista\"\n• Registrar solicitudes de diseño — \"necesito un flyer AA para Mueblar el sábado\"\n• Resumen del pipeline — \"¿cómo va el pipeline?\"\n• Pendientes de una persona — \"¿qué tiene pendiente Emmanuel?\"\n\nTodo por voz o texto. Lo que creo aparece al instante en el módulo Marketing.",
+        reply: "Esto es lo que puedo hacer por ti:\n\n• Decirte qué tienes hoy — \"¿qué tengo hoy?\"\n• Crear tareas para el equipo — \"créale una tarea a Luis: editar Casa Banana para el viernes\"\n• Mover propiedades del pipeline — \"mueve Bay View Grand 2 a lista\"\n• Registrar solicitudes de diseño — \"necesito un flyer AA para Mueblar el sábado\"\n• Resumen del pipeline — \"¿cómo va el pipeline?\"\n• Pendientes de una persona — \"¿qué tiene pendiente Emmanuel?\"\n\nTodo por voz o texto. Lo que creo aparece al instante en el módulo Marketing.",
         buttons: [],
         error: null
       };
