@@ -588,7 +588,7 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
             {newProjBrand === b.id && (
               <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
                 <input autoFocus placeholder="Nombre del proyecto *" value={projForm.nombre} onChange={e => setProjForm(f => ({ ...f, nombre: e.target.value }))} style={inputStyle} />
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr auto", gap: 7 }}>
+                <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr auto", gap: 7 }}>
                   <input type="date" value={projForm.due} onChange={e => setProjForm(f => ({ ...f, due: e.target.value }))} style={inputStyle} />
                   <input placeholder="Link Drive" value={projForm.drive} onChange={e => setProjForm(f => ({ ...f, drive: e.target.value }))} style={inputStyle} />
                   <button onClick={() => createProject(b.id)} disabled={saving || !projForm.nombre.trim()} style={{
@@ -664,7 +664,7 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
           }}>Agregar</button>
         </div>
       )}
-      <div style={{ display: "flex", gap: 10, overflowX: "auto", paddingBottom: 8, WebkitOverflowScrolling: "touch" }}>
+      <div style={{ display: "flex", gap: 10, overflowX: "auto", paddingBottom: 8, WebkitOverflowScrolling: "touch", scrollSnapType: isMobile ? "x mandatory" : undefined }}>
         {ETAPAS.map((col, colIdx) => {
           const items = pipeline.filter(p => p.etapa === col.id);
           const isCuello = col.id === "esperando_voz" && items.length >= 3;
@@ -673,7 +673,8 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
               onDragOver={e => { if (dragId) e.preventDefault(); }}
               onDrop={() => { const it = pipeline.find(p => p.id === dragId); if (it) moveStage(it, col.id); setDragId(null); }}
               style={{
-                minWidth: isMobile ? 210 : 235, width: isMobile ? 210 : 235, flexShrink: 0,
+                minWidth: isMobile ? "82vw" : 235, width: isMobile ? "82vw" : 235, maxWidth: isMobile ? 300 : undefined, flexShrink: 0,
+                scrollSnapAlign: isMobile ? "start" : undefined,
                 borderRadius: 14, padding: 10,
                 background: isLight ? "rgba(15,23,42,0.028)" : "rgba(255,255,255,0.022)",
                 border: `1px solid ${isCuello ? `${RED}55` : bd}`,
@@ -876,7 +877,7 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
           const venc     = tt.filter(t => t.estado !== "hecha" && t.due_at && dayStr(t.due_at) < hoy).length;
           const hechas7  = tt.filter(t => t.estado === "hecha" && t.updated_at && new Date(t.updated_at).getTime() > week).length;
           const stat = (label, n, color) => (
-            <div key={label} style={{ textAlign: "center", minWidth: 74 }}>
+            <div key={label} style={{ textAlign: "center", minWidth: isMobile ? 0 : 74, flex: isMobile ? "1 1 0" : "0 0 auto" }}>
               <div style={{ fontSize: 17, fontWeight: 600, color: color || txt, fontFamily: fontDisp }}>{n}</div>
               <div style={{ fontSize: 10.5, color: txt3 }}>{label}</div>
             </div>
@@ -891,10 +892,13 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
                 <div style={{ fontSize: 13.5, color: txt, fontWeight: 500 }}>{m.name}</div>
                 <div style={{ fontSize: 11, color: txt3 }}>{m.id === user?.id ? "tú" : "marketing"}</div>
               </div>
-              {stat("En curso", enCurso)}
-              {stat("Bloqueadas", bloq, bloq > 0 ? AMBER : undefined)}
-              {stat("Vencidas", venc, venc > 0 ? RED : undefined)}
-              {stat("Hechas · 7d", hechas7, hechas7 > 0 ? accent : undefined)}
+              {/* Stats: en móvil ocupan su propia fila a lo ancho, repartidas parejas */}
+              <div style={{ display: "flex", gap: isMobile ? 4 : 10, flex: isMobile ? "1 1 100%" : "0 0 auto", justifyContent: isMobile ? "space-between" : "flex-end" }}>
+                {stat("En curso", enCurso)}
+                {stat("Bloqueadas", bloq, bloq > 0 ? AMBER : undefined)}
+                {stat("Vencidas", venc, venc > 0 ? RED : undefined)}
+                {stat("Hechas · 7d", hechas7, hechas7 > 0 ? accent : undefined)}
+              </div>
             </div>
           );
         })}
@@ -922,9 +926,10 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
   const meta = TAB_META[tab] || TAB_META.dia;
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 16, color: txt, fontFamily: font, maxWidth: 1180, width: "100%", margin: "0 auto" }}>
-      {/* Fila 1 — identidad del espacio + tabs segmentados (estilo mockup aprobado) */}
-      <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: 16, color: txt, fontFamily: font, maxWidth: 1180, width: "100%", margin: "0 auto", overflowX: "hidden" }}>
+      {/* Fila 1 — identidad del espacio + tabs segmentados (estilo mockup aprobado).
+          En móvil se apila: identidad arriba, tabs a lo ancho abajo (scroll horizontal limpio). */}
+      <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", alignItems: isMobile ? "stretch" : "center", gap: isMobile ? 10 : 14, flexWrap: "wrap" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 11, minWidth: 0 }}>
           <div style={{ width: 40, height: 40, borderRadius: 12, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", background: `${accent}18`, border: `1px solid ${accent}33` }}>
             <Megaphone size={20} color={accent} strokeWidth={1.9} />
@@ -934,11 +939,11 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
             <div style={{ fontSize: 11.5, color: txt2 }}>{firstName} · Marketing</div>
           </div>
         </div>
-        <div style={{ flex: 1 }} />
+        {!isMobile && <div style={{ flex: 1 }} />}
         <div style={{
           display: "flex", gap: 3, padding: 5, borderRadius: 16, overflowX: "auto", WebkitOverflowScrolling: "touch",
           background: isLight ? "rgba(15,23,42,0.045)" : "rgba(255,255,255,0.035)", border: `1px solid ${bd}`,
-          maxWidth: "100%",
+          maxWidth: "100%", width: isMobile ? "100%" : undefined,
         }}>
           {tabBtn("dia", "Mi Día")}
           {tabBtn("marcas", "Marcas")}
