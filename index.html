@@ -8,6 +8,54 @@
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/manifest.webmanifest" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <!-- ─── [guard:FORCE-MOBILE] Blindaje: teléfono que reporta ancho de ESCRITORIO ───
+         Un iPhone puede reportar window.innerWidth > 768 por: (a) Safari en
+         "Solicitar sitio para computadora" (~980px), (b) un <meta viewport>
+         viejo/ausente en el HTML cacheado del ícono de inicio → iOS cae al
+         default de 980px, o (c) el zoom de página al 50%. En cualquiera de esos
+         casos la app caía al layout de ESCRITORIO en un celular (le pasó a Iván
+         con su iPhone, NO a Ángel). El lado corto FÍSICO de la pantalla (min de
+         screen) NO lo cambian esos modos: ≤500px = teléfono. Cuando ES un
+         teléfono Y reporta ancho de escritorio (>768), marcamos data-force-mobile
+         en <html> ANTES del primer render → el CSS del shell y el JS (useViewport)
+         aplican el layout móvil. NO afecta teléfonos sanos en vertical (<768) ni
+         PC (pantalla grande / sin táctil). Reversible: borrar este bloque + su
+         bloque CSS en App.jsx + isPhoneHardware() en useViewport.js. -->
+    <script>
+      (function () {
+        function isPhoneHardware() {
+          try {
+            var touch = (navigator.maxTouchPoints || 0) > 0 ||
+              (window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
+            var s = window.screen || {};
+            var minSide = Math.min(s.width || Infinity, s.height || Infinity);
+            return !!touch && minSide > 0 && minSide <= 500;
+          } catch (e) { return false; }
+        }
+        function apply() {
+          try {
+            var el = document.documentElement;
+            if (isPhoneHardware() && window.innerWidth > 768) {
+              el.setAttribute('data-force-mobile', '1');
+              // Best-effort: si el viewport quedó inflado por un meta viejo/ausente
+              // en el HTML cacheado, re-afirmar device-width (PRESERVANDO
+              // viewport-fit=cover del fix de letterbox). En modo "sitio de
+              // escritorio" Safari lo ignora → no hace daño. Solo actúa si falta.
+              var vp = document.querySelector('meta[name="viewport"]');
+              if (vp && (vp.getAttribute('content') || '').indexOf('width=device-width') === -1) {
+                vp.setAttribute('content', 'width=device-width, initial-scale=1.0, viewport-fit=cover');
+              }
+            } else {
+              el.removeAttribute('data-force-mobile');
+            }
+          } catch (e) {}
+        }
+        apply();
+        window.addEventListener('resize', apply, { passive: true });
+        window.addEventListener('orientationchange', function () { setTimeout(apply, 120); });
+        window.addEventListener('load', apply);
+      })();
+    </script>
     <meta name="google" content="notranslate" />
     <meta name="theme-color" content="#030810" />
     <meta name="apple-mobile-web-app-capable" content="yes" />

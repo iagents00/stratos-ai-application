@@ -18,17 +18,44 @@ import { useEffect, useState } from "react";
 
 const MOBILE_MAX  = 768;   // <= 768 → mobile (alineado con @media max-width:768px)
 const TABLET_MAX  = 1024;  // < 1024 → tablet (incluye iPad portrait)
+const PHONE_SCREEN_MAX = 500; // lado corto FÍSICO de un teléfono (iPhone Pro Max ~440); tablets ≥768
+
+/**
+ * ¿El aparato es FÍSICAMENTE un teléfono (táctil + pantalla chica), aunque el
+ * navegador reporte un ancho de ESCRITORIO?  En un iPhone, `window.innerWidth`
+ * puede inflarse por encima de 768 por: Safari en "Solicitar sitio para
+ * computadora", un <meta viewport> viejo/ausente en el HTML cacheado del ícono
+ * de inicio (iOS cae a 980px), o el zoom de página al 50%. En esos casos, sin
+ * este blindaje, la app caía al layout de ESCRITORIO en un celular (le pasó a
+ * Iván, no a Ángel). El LADO CORTO físico de la pantalla (`min` de screen) NO
+ * lo cambian esos modos: ≤500px separa limpio los teléfonos de tablets/PC.
+ */
+export const isPhoneHardware = () => {
+  if (typeof window === "undefined") return false;
+  try {
+    const touch = (navigator.maxTouchPoints || 0) > 0 ||
+      (typeof window.matchMedia === "function" && window.matchMedia("(pointer: coarse)").matches);
+    const scr = window.screen || {};
+    const minSide = Math.min(scr.width || Infinity, scr.height || Infinity);
+    return !!touch && minSide > 0 && minSide <= PHONE_SCREEN_MAX;
+  } catch { return false; }
+};
 
 const getViewport = () => {
   if (typeof window === "undefined") {
     return { width: 1280, isMobile: false, isTablet: false, isDesktop: true };
   }
   const w = window.innerWidth;
+  // isMobile por ANCHO (comportamiento de siempre, intacto para PC y para el
+  // celular sano en vertical) O por HARDWARE de teléfono (blindaje: un iPhone
+  // que reporta ancho de escritorio igual entra al layout móvil). Cuando
+  // isMobile gana por hardware, tablet/desktop quedan en false (excluyentes).
+  const isMobile = w <= MOBILE_MAX || isPhoneHardware();
   return {
     width: w,
-    isMobile:  w <= MOBILE_MAX,
-    isTablet:  w > MOBILE_MAX && w < TABLET_MAX,
-    isDesktop: w >= TABLET_MAX,
+    isMobile,
+    isTablet:  !isMobile && w < TABLET_MAX,
+    isDesktop: !isMobile && w >= TABLET_MAX,
   };
 };
 
