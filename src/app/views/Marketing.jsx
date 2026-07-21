@@ -692,7 +692,7 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
           }}>Agregar</button>
         </div>
       )}
-      <div style={{ display: "flex", gap: 10, overflowX: "auto", paddingBottom: 8, WebkitOverflowScrolling: "touch", scrollSnapType: isMobile ? "x mandatory" : undefined }}>
+      <div style={{ display: "flex", gap: isMobile ? 10 : 12, overflowX: "auto", paddingBottom: 8, alignItems: "flex-start", WebkitOverflowScrolling: "touch", scrollSnapType: isMobile ? "x mandatory" : undefined }}>
         {ETAPAS.map((col, colIdx) => {
           const items = pipeline.filter(p => p.etapa === col.id);
           const isCuello = col.id === "esperando_voz" && items.length >= 3;
@@ -701,16 +701,22 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
               onDragOver={e => { if (dragId) e.preventDefault(); }}
               onDrop={() => { const it = pipeline.find(p => p.id === dragId); if (it) moveStage(it, col.id); setDragId(null); }}
               style={{
-                minWidth: isMobile ? "82vw" : 235, width: isMobile ? "82vw" : 235, maxWidth: isMobile ? 300 : undefined, flexShrink: 0,
-                scrollSnapAlign: isMobile ? "start" : undefined,
+                // Móvil: columna ancha con snap. Web: las 7 columnas LLENAN el ancho de forma
+                // pareja (flex) — sin ancho fijo que dejaba margen feo a la derecha; se estrechan
+                // con scroll horizontal solo si la pantalla es muy angosta (minWidth 200).
+                ...(isMobile
+                  ? { minWidth: "82vw", width: "82vw", maxWidth: 300, flexShrink: 0, scrollSnapAlign: "start" }
+                  : { flex: "1 1 0", minWidth: 200 }),
                 borderRadius: 14, padding: 10,
-                background: isLight ? "rgba(15,23,42,0.028)" : "rgba(255,255,255,0.022)",
+                background: isCuello
+                  ? (isLight ? "rgba(225,29,72,0.05)" : "rgba(248,113,113,0.06)")
+                  : (isLight ? "rgba(15,23,42,0.028)" : "rgba(255,255,255,0.022)"),
                 border: `1px solid ${isCuello ? `${RED}55` : bd}`,
                 display: "flex", flexDirection: "column", gap: 8,
               }}>
               <div style={{ display: "flex", alignItems: "center", gap: 7, padding: "2px 4px" }}>
                 {col.id === "esperando_voz" && <Mic size={13} color={isCuello ? RED : txt2} />}
-                <span style={{ flex: 1, fontSize: 12, fontWeight: 700, color: isCuello ? RED : txt2, fontFamily: font, textTransform: "uppercase", letterSpacing: "0.04em" }}>{col.l}</span>
+                <span style={{ flex: 1, fontSize: 12, fontWeight: 700, color: isCuello ? RED : txt2, fontFamily: font, textTransform: "uppercase", letterSpacing: "0.04em", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{col.l}</span>
                 <span style={{
                   minWidth: 20, height: 20, borderRadius: 999, padding: "0 5px",
                   background: isCuello ? RED : (isLight ? "rgba(15,23,42,0.07)" : "rgba(255,255,255,0.08)"),
@@ -718,6 +724,8 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
                   display: "inline-flex", alignItems: "center", justifyContent: "center",
                 }}>{items.length}</span>
               </div>
+              {/* Lista de tarjetas con scroll interno: una columna llena (LISTA) ya no alarga todo el tablero */}
+              <div style={{ display: "flex", flexDirection: "column", gap: 8, overflowY: isMobile ? "visible" : "auto", maxHeight: isMobile ? "none" : "calc(100vh - 340px)", paddingRight: 1 }}>
               {items.map(it => {
                 const c = brandColor(brandById[it.brand_id]);
                 return (
@@ -762,6 +770,7 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
                 );
               })}
               {items.length === 0 && <div style={{ fontSize: 11, color: txt3, textAlign: "center", padding: "14px 0" }}>—</div>}
+              </div>
             </div>
           );
         })}
