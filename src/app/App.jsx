@@ -1521,6 +1521,35 @@ export default function App() {
              fija 300px anclada a la campana → se salía por la izquierda). */
           .stratos-bell-dropdown{position:fixed!important;top:calc(60px + var(--safe-area-inset-top, env(safe-area-inset-top, 0px)))!important;left:10px!important;right:10px!important;width:auto!important;max-height:calc(100dvh - 150px)!important;overflow-y:auto!important}
         }
+        /* ─── [guard:FORCE-MOBILE] Shell móvil forzado ───────────────────────────
+           Un iPhone puede reportar ancho de ESCRITORIO (>768) por Safari "sitio
+           para computadora", un <meta viewport> viejo cacheado (iOS → 980px) o
+           zoom 50% → el @media(max-width:768px) de arriba NO matchea y la app
+           mostraba el layout de ESCRITORIO en un celular (le pasó a Iván). El
+           boot de index.html detecta el HARDWARE de teléfono (táctil + pantalla
+           física ≤500px) y marca html[data-force-mobile="1"]; acá REPLICAMOS el
+           shell móvil aunque el @media no haya matcheado. NO toca el bloque
+           @media de arriba → teléfonos sanos en vertical y PC quedan idénticos.
+           MANTENER EN SYNC con el @media(max-width:768px) de arriba. */
+        html[data-force-mobile="1"] .stratos-sidebar{display:none!important}
+        html[data-force-mobile="1"] .stratos-content-area{padding:20px 16px calc(84px + var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px))) 16px!important;overflow-x:hidden!important;overflow-anchor:none}
+        html[data-force-mobile="1"] .stratos-bottomnav{display:flex!important;position:fixed;left:0;right:0;bottom:0;z-index:200;align-items:stretch;justify-content:stretch;gap:0;padding:0;pointer-events:none}
+        html[data-force-mobile="1"] .stratos-bottomnav > *{pointer-events:auto}
+        html[data-force-mobile="1"] .stratos-app[data-immersive="1"] .stratos-header{display:none!important}
+        html[data-force-mobile="1"] .stratos-app[data-immersive="1"] .stratos-bottomnav{display:none!important}
+        html[data-force-mobile="1"] .stratos-app[data-immersive="1"] .stratos-content-area{padding:0!important}
+        html[data-force-mobile="1"] .stratos-header{padding-left:10px!important;padding-right:10px!important;gap:6px!important}
+        html[data-force-mobile="1"] .stratos-header-left{gap:6px!important;min-width:0!important;flex:1 1 auto!important;overflow:hidden!important}
+        html[data-force-mobile="1"] .stratos-header-right{gap:2px!important;flex-shrink:0!important}
+        html[data-force-mobile="1"] .stratos-header-center{display:block!important}
+        html[data-force-mobile="1"] .stratos-header-search{display:none!important}
+        html[data-force-mobile="1"] .stratos-header-divider{display:none!important}
+        html[data-force-mobile="1"] .stratos-header-phone{display:none!important}
+        html[data-force-mobile="1"] .stratos-userpill{padding:0!important;gap:0!important}
+        html[data-force-mobile="1"] .stratos-userpill-text{display:none!important}
+        html[data-force-mobile="1"] .stratos-wordmark{max-width:110px!important;overflow:hidden!important;text-overflow:ellipsis!important}
+        html[data-force-mobile="1"] .stratos-iaos-pill{display:none!important}
+        html[data-force-mobile="1"] .stratos-bell-dropdown{position:fixed!important;top:calc(60px + var(--safe-area-inset-top, env(safe-area-inset-top, 0px)))!important;left:10px!important;right:10px!important;width:auto!important;max-height:calc(100dvh - 150px)!important;overflow-y:auto!important}
         /* En pantallas MUY angostas el toggle de tema se va (se cambia desde
            Perfil); la campana/avatar/salir siempre quedan. */
         @media(max-width:430px){
@@ -2261,7 +2290,7 @@ export default function App() {
                 nativo carga la web remota: un APK nuevo NO garantiza web nueva
                 (SW/deploy). Con esto cualquiera puede reportar "web vNNN" y se
                 acaba el adivinar. Mantener en sync con CACHE_VERSION (sw.js). */}
-            <p style={{ margin:"12px 0 0", textAlign:"center", fontSize:9.5, fontFamily:font, letterSpacing:"0.02em", color: isLight ? "rgba(15,23,42,0.35)" : "rgba(255,255,255,0.28)" }}>Stratos CRM AI · web v242</p>
+            <p style={{ margin:"12px 0 0", textAlign:"center", fontSize:9.5, fontFamily:font, letterSpacing:"0.02em", color: isLight ? "rgba(15,23,42,0.35)" : "rgba(255,255,255,0.28)" }}>Stratos CRM AI · web v252</p>
           </div>
         </>,
         document.body
