@@ -7,13 +7,22 @@
  */
 import {
   Users, Hexagon, Activity, Building2, Atom,
-  Trophy, Landmark, UserCheck, CreditCard, Shield, User, Trash2, Wallet, MessageCircle, Bot, Sparkles, Megaphone
+  Trophy, Landmark, UserCheck, CreditCard, Shield, User, Trash2, Wallet, MessageCircle, Bot, Sparkles, Megaphone,
+  CalendarDays, Layers, Clapperboard, Inbox
 } from "lucide-react";
 
 export const nav = [
   { id: "c",     l: "CRM",       i: Users      },
   { id: "copilot", l: "Copilot", i: Bot        },
-  { id: "mkt",   l: "Marketing", i: Megaphone  },
+  // Marketing: los ADMIN ven UN módulo ("Marketing"); el rol `marketing` ve las
+  // 4 secciones directas en el sidebar (pedido de Iván 21-jul: "en vez de CRM/
+  // crear/proyectos/papelera, poneles mi día, marcas, pipeline, solicitudes —
+  // en ambas, sidebar y tabs"). Mismo componente, tab inicial distinta.
+  { id: "mkt",        l: "Marketing",   i: Megaphone     },
+  { id: "mkt_dia",    l: "Mi Día",      i: CalendarDays  },
+  { id: "mkt_marcas", l: "Marcas",      i: Layers        },
+  { id: "mkt_pipe",   l: "Pipeline",    i: Clapperboard  },
+  { id: "mkt_sol",    l: "Solicitudes", i: Inbox         },
   { id: "wa",    l: "WhatsApp",  i: MessageCircle },
   { id: "lp",    l: "Create",    i: Hexagon    },
   { id: "d",     l: "Comando",   i: Activity   },
@@ -43,11 +52,15 @@ export const MODULE_ROLES = {
   // `marketing` (equipo de marketing de Duke) también: es su ÚNICA casa —
   // no ve CRM ni leads, opera su trabajo desde el chat (delegar por voz, etc.).
   copilot: ["super_admin","admin","director","ceo","asesor","marketing"],
-  // Marketing (ERP de actividades del equipo de marketing de Duke): la CASA del
-  // rol `marketing` (Mi Día · Marcas · Pipeline · Solicitudes). super_admin/admin
-  // también lo ven (Alex/nosotros operamos ambos mundos). Sin feature flag: el
-  // aislamiento por org ya bloquea a los tenants externos (Grupo28/Vega).
-  mkt:    ["super_admin","admin","marketing"],
+  // Marketing (ERP de actividades del equipo de marketing de Duke).
+  // `mkt` (módulo único con tabs) = solo admins. El rol `marketing` navega por las
+  // 4 secciones directas del sidebar (mkt_dia/mkt_marcas/mkt_pipe/mkt_sol) — pedido
+  // de Iván 21-jul. Sin feature flag: el aislamiento por org bloquea tenants externos.
+  mkt:        ["super_admin","admin"],
+  mkt_dia:    ["marketing"],
+  mkt_marcas: ["marketing"],
+  mkt_pipe:   ["marketing"],
+  mkt_sol:    ["marketing"],
   // Caja: cuentas / ingresos / egresos sobre team_expenses. Por defecto SOLO
   // mando (admin/director/ceo): la RLS de team_expenses filtra únicamente por
   // organización (no por rol), así que dar el módulo a los asesores les
@@ -76,6 +89,7 @@ export const MODULE_NAMES = {
   a: "Asesores", lp: "Campañas", fa: "Finanzas",
   rrhh: "Stratos RH", trash: "Papelera", caja: "Caja",
   wa: "WhatsApp", copilot: "Copilot", mkt: "Marketing",
+  mkt_dia: "Mi Día", mkt_marcas: "Marcas", mkt_pipe: "Pipeline", mkt_sol: "Solicitudes",
   planes: "Planes", perfil: "Perfil", admin: "Usuarios",
 };
 
