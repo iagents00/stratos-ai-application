@@ -165,7 +165,7 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
           .eq("organization_id", orgId).eq("activo", true).order("orden"),
         supabase.from("mkt_projects").select("id, brand_id, nombre, descripcion, drive_url, due_date, estado, orden, created_at")
           .eq("organization_id", orgId).is("deleted_at", null).order("orden").order("created_at"),
-        supabase.from("mkt_tasks").select("id, brand_id, project_id, titulo, descripcion, assignee_id, created_by, prioridad, estado, avance_pct, due_at, depends_on, drive_url, updated_at, created_at")
+        supabase.from("mkt_tasks").select("id, brand_id, project_id, titulo, descripcion, assignee_id, created_by, prioridad, estado, avance_pct, due_at, depends_on, drive_url, evidencia_url, evidencia_tipo, updated_at, created_at")
           .eq("organization_id", orgId).is("deleted_at", null)
           .order("due_at", { ascending: true, nullsFirst: false }).limit(600),
         supabase.from("mkt_pipeline_items").select("id, brand_id, nombre, locacion, etapa, fecha_rodaje, drive_url, ig_url, notas, orden, updated_at")
@@ -235,7 +235,10 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
   const saveEvidence = useCallback(async () => {
     if (!evidence?.task) return;
     const url = (evidence.url || "").trim();
-    if (url) await patch("mkt_tasks", evidence.task.id, { evidencia_url: url, evidencia_tipo: "link" });
+    if (url) {
+      await patch("mkt_tasks", evidence.task.id, { evidencia_url: url, evidencia_tipo: "link" });
+      setTasks(prev => prev.map(x => x.id === evidence.task.id ? { ...x, evidencia_url: url, evidencia_tipo: "link" } : x));
+    }
     setEvidence(null);
   }, [evidence, patch]);
   const [evUploading, setEvUploading] = useState(false);
@@ -248,10 +251,9 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
       const path = `mkt/${orgId}/${evidence.task.id}/${Date.now()}-${safe}`;
       const { error: e } = await supabase.storage.from("evidencia").upload(path, file);
       if (e) throw e;
-      await patch("mkt_tasks", evidence.task.id, {
-        evidencia_url: path,
-        evidencia_tipo: String(file.type || "").startsWith("video") ? "video" : "foto",
-      });
+      const tipo = String(file.type || "").startsWith("video") ? "video" : "foto";
+      await patch("mkt_tasks", evidence.task.id, { evidencia_url: path, evidencia_tipo: tipo });
+      setTasks(prev => prev.map(x => x.id === evidence.task.id ? { ...x, evidencia_url: path, evidencia_tipo: tipo } : x));
       setEvidence(null);
     } catch {
       setError("No pude subir el archivo — puedes pegar un link en su lugar.");
@@ -259,6 +261,25 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
       setEvUploading(false);
     }
   }, [evidence, orgId, patch]);
+
+  // VER la evidencia (hallazgo de la auditoría 21-jul: se subía pero no se veía en
+  // ningún lado). El bucket `evidencia` es privado → URL firmada al vuelo (mismo
+  // patrón que Caja.jsx). Los links (evidencia_tipo='link') se abren directo.
+  const [evViewer, setEvViewer] = useState(null); // { url, tipo, titulo } | { loading }
+  const openEvidence = useCallback(async (t) => {
+    const path = t?.evidencia_url;
+    if (!path) return;
+    if (/^https?:\/\//i.test(path)) { window.open(path, "_blank", "noopener"); return; }
+    setEvViewer({ loading: true });
+    try {
+      const { data, error: e } = await supabase.storage.from("evidencia").createSignedUrl(path, 3600);
+      if (e) throw e;
+      setEvViewer({ url: data.signedUrl, tipo: t.evidencia_tipo || "foto", titulo: t.titulo });
+    } catch {
+      setEvViewer(null);
+      setError("No pude abrir la evidencia. Probá de nuevo.");
+    }
+  }, []);
 
   const setTaskState = useCallback(async (t, estado) => {
     const fields = { estado };
@@ -537,6 +558,12 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
                   </span>
                   {t.assignee_id && <span style={{ fontSize: 11, color: txt2, whiteSpace: "nowrap" }}>{nameOf(t.assignee_id)}</span>}
                   {t.due_at && <span style={{ fontSize: 11, color: txt3, whiteSpace: "nowrap" }}>{fmtDia(t.due_at)}</span>}
+                  {t.evidencia_url && (
+                    <button onClick={() => openEvidence(t)} title="Ver evidencia" style={{
+                      background: "transparent", border: `1px solid ${accent}44`, borderRadius: 7,
+                      padding: "3px 7px", cursor: "pointer", color: accent, display: "inline-flex", alignItems: "center", gap: 4, fontSize: 10.5, fontFamily: font,
+                    }}><Camera size={12} /> Evidencia</button>
+                  )}
                   <select value={t.estado} onChange={e => setTaskState(t, e.target.value)} style={{ ...inputStyle, width: "auto", padding: "3px 6px", fontSize: 11 }}>
                     {TASK_STATES.map(s => <option key={s.id} value={s.id}>{s.l}</option>)}
                   </select>
@@ -876,7 +903,10 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
           const enCurso  = tt.filter(t => t.estado !== "hecha" && !isBlocked(t)).length;
           const bloq     = tt.filter(t => t.estado !== "hecha" && isBlocked(t)).length;
           const venc     = tt.filter(t => t.estado !== "hecha" && t.due_at && dayStr(t.due_at) < hoy).length;
-          const hechas7  = tt.filter(t => t.estado === "hecha" && t.updated_at && new Date(t.updated_at).getTime() > week).length;
+          // Tareas HECHAS de la semana (no solo el conteo): el admin las ve listadas
+          // con su EVIDENCIA clicable — así "le llega" la foto/video que subió cada quien.
+          const hechasSemana = tt.filter(t => t.estado === "hecha" && t.updated_at && new Date(t.updated_at).getTime() > week);
+          const hechas7  = hechasSemana.length;
           const stat = (label, n, color) => (
             <div key={label} style={{ textAlign: "center", minWidth: isMobile ? 0 : 74, flex: isMobile ? "1 1 0" : "0 0 auto" }}>
               <div style={{ fontSize: 17, fontWeight: 600, color: color || txt, fontFamily: fontDisp }}>{n}</div>
@@ -884,22 +914,44 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
             </div>
           );
           return (
-            <div key={m.id} style={{ ...card, borderRadius: 14, padding: "13px 16px", display: "flex", alignItems: "center", gap: 14, flexWrap: isMobile ? "wrap" : "nowrap" }}>
-              <div style={{
-                width: 36, height: 36, borderRadius: 999, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center",
-                background: `${accent}16`, border: `1px solid ${accent}40`, color: accent, fontSize: 14, fontWeight: 700, fontFamily: fontDisp,
-              }}>{String(m.name || "?").charAt(0).toUpperCase()}</div>
-              <div style={{ flex: 1, minWidth: 120 }}>
-                <div style={{ fontSize: 13.5, color: txt, fontWeight: 500 }}>{m.name}</div>
-                <div style={{ fontSize: 11, color: txt3 }}>{m.id === user?.id ? "tú" : "marketing"}</div>
+            <div key={m.id} style={{ ...card, borderRadius: 14, padding: "13px 16px", display: "flex", flexDirection: "column", gap: 10 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: isMobile ? "wrap" : "nowrap" }}>
+                <div style={{
+                  width: 36, height: 36, borderRadius: 999, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center",
+                  background: `${accent}16`, border: `1px solid ${accent}40`, color: accent, fontSize: 14, fontWeight: 700, fontFamily: fontDisp,
+                }}>{String(m.name || "?").charAt(0).toUpperCase()}</div>
+                <div style={{ flex: 1, minWidth: 120 }}>
+                  <div style={{ fontSize: 13.5, color: txt, fontWeight: 500 }}>{m.name}</div>
+                  <div style={{ fontSize: 11, color: txt3 }}>{m.id === user?.id ? "tú" : "marketing"}</div>
+                </div>
+                {/* Stats: en móvil ocupan su propia fila a lo ancho, repartidas parejas */}
+                <div style={{ display: "flex", gap: isMobile ? 4 : 10, flex: isMobile ? "1 1 100%" : "0 0 auto", justifyContent: isMobile ? "space-between" : "flex-end" }}>
+                  {stat("En curso", enCurso)}
+                  {stat("Bloqueadas", bloq, bloq > 0 ? AMBER : undefined)}
+                  {stat("Vencidas", venc, venc > 0 ? RED : undefined)}
+                  {stat("Hechas · 7d", hechas7, hechas7 > 0 ? accent : undefined)}
+                </div>
               </div>
-              {/* Stats: en móvil ocupan su propia fila a lo ancho, repartidas parejas */}
-              <div style={{ display: "flex", gap: isMobile ? 4 : 10, flex: isMobile ? "1 1 100%" : "0 0 auto", justifyContent: isMobile ? "space-between" : "flex-end" }}>
-                {stat("En curso", enCurso)}
-                {stat("Bloqueadas", bloq, bloq > 0 ? AMBER : undefined)}
-                {stat("Vencidas", venc, venc > 0 ? RED : undefined)}
-                {stat("Hechas · 7d", hechas7, hechas7 > 0 ? accent : undefined)}
-              </div>
+              {/* Hechas de la semana con su EVIDENCIA — el admin abre la foto/video de cada una */}
+              {hechasSemana.length > 0 && (
+                <div style={{ borderTop: `1px solid ${bd}`, paddingTop: 9, display: "flex", flexDirection: "column", gap: 5 }}>
+                  {hechasSemana.slice(0, 6).map(t => (
+                    <div key={t.id} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <Check size={12} color={accent} strokeWidth={3} style={{ flexShrink: 0 }} />
+                      <span style={{ flex: 1, fontSize: 12, color: txt2, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{t.titulo}</span>
+                      <span style={{ fontSize: 10.5, color: txt3, whiteSpace: "nowrap" }}>{fmtDia(t.updated_at)}</span>
+                      {t.evidencia_url ? (
+                        <button onClick={() => openEvidence(t)} title="Ver evidencia" style={{
+                          background: "transparent", border: `1px solid ${accent}44`, borderRadius: 7,
+                          padding: "2px 7px", cursor: "pointer", color: accent, display: "inline-flex", alignItems: "center", gap: 4, fontSize: 10.5, fontFamily: font, flexShrink: 0,
+                        }}><Camera size={11} /> Evidencia</button>
+                      ) : (
+                        <span style={{ fontSize: 10.5, color: txt3, flexShrink: 0 }}>sin evidencia</span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           );
         })}
@@ -927,7 +979,14 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
   const meta = TAB_META[tab] || TAB_META.dia;
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 16, color: txt, fontFamily: font, maxWidth: 1180, width: "100%", margin: "0 auto", overflowX: "hidden" }}>
+    <div style={{
+      display: "flex", flexDirection: "column", gap: 16, color: txt, fontFamily: font,
+      // El PIPELINE (kanban de 7 columnas ≈1700px) aprovecha TODA la pantalla en web —
+      // con el tope de 1180 quedaban márgenes muertos a los lados y más scroll interno
+      // (pedido de Ángel 21-jul). Las demás tabs conservan el ancho de lectura cómodo.
+      maxWidth: (tab === "pipeline" && !isMobile) ? "none" : 1180,
+      width: "100%", margin: "0 auto", overflowX: "hidden",
+    }}>
       {/* Fila 1 — identidad del espacio + tabs segmentados (estilo mockup aprobado).
           En móvil se apila: identidad arriba, tabs a lo ancho abajo (scroll horizontal limpio). */}
       <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", alignItems: isMobile ? "stretch" : "center", gap: isMobile ? 10 : 14, flexWrap: "wrap" }}>
@@ -1012,6 +1071,32 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
           {tab === "solicitudes" && solicitudes()}
           {tab === "equipo" && isAdmin && equipo()}
         </>
+      )}
+
+      {/* Visor de EVIDENCIA (foto/video del bucket privado, vía URL firmada) */}
+      {evViewer && (
+        <div onClick={() => setEvViewer(null)} style={{
+          position: "fixed", inset: 0, zIndex: 900, background: "rgba(0,0,0,0.78)",
+          display: "flex", alignItems: "center", justifyContent: "center", padding: 18,
+        }}>
+          <div onClick={e => e.stopPropagation()} style={{
+            background: isLight ? "#FFFFFF" : "#0B1220", border: `1px solid ${bd}`, borderRadius: 16,
+            padding: 14, maxWidth: "min(92vw, 860px)", maxHeight: "88vh", display: "flex", flexDirection: "column", gap: 10,
+          }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <Camera size={15} color={accent} />
+              <div style={{ flex: 1, fontSize: 13, color: txt, fontWeight: 600, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                {evViewer.loading ? "Abriendo evidencia…" : `Evidencia — ${evViewer.titulo || ""}`}
+              </div>
+              <button onClick={() => setEvViewer(null)} style={{ background: "transparent", border: "none", cursor: "pointer", color: txt2, padding: 4 }}><X size={16} /></button>
+            </div>
+            {!evViewer.loading && evViewer.url && (
+              evViewer.tipo === "video"
+                ? <video src={evViewer.url} controls autoPlay style={{ maxWidth: "100%", maxHeight: "72vh", borderRadius: 10, background: "#000" }} />
+                : <img src={evViewer.url} alt="Evidencia" style={{ maxWidth: "100%", maxHeight: "72vh", borderRadius: 10, objectFit: "contain" }} />
+            )}
+          </div>
+        </div>
       )}
     </div>
   );

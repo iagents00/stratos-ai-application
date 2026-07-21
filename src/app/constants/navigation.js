@@ -109,8 +109,13 @@ export const CRM_ONLY_MODULES = new Set(["c", "perfil"]);
 // Admin de MARKETING (ej. Alex Velázquez): es super_admin pero LÍDER DE MARKETING.
 // Su navegación se limita a lo que necesita para operar el área — NO ve el CRM de
 // ventas, Comando, Create, Finanzas, RRHH, iAgents, Usuarios, etc.
-// Marketing (módulo con tabs) · Copilot · Proyectos (catálogo/drives para contenido) · Perfil.
-export const MARKETING_ADMIN_MODULES = new Set(["mkt", "copilot", "e", "perfil"]);
+// Ve las MISMAS secciones que su equipo en el sidebar (Mi Día · Marcas · Pipeline ·
+// Solicitudes) + Copilot + Proyectos (catálogo/drives para contenido) + Perfil.
+// La pestaña "Equipo" (admin) la abre desde los tabs de arriba dentro del módulo.
+export const MARKETING_ADMIN_MODULES = new Set(["mkt_dia", "mkt_marcas", "mkt_pipe", "mkt_sol", "copilot", "e", "perfil"]);
+// Secciones del módulo Marketing que se muestran como items del sidebar. Las ve el
+// rol `marketing` (su equipo) Y el admin de marketing (Alex) — no los admins de ventas.
+export const MKT_SECTION_MODULES = new Set(["mkt_dia", "mkt_marcas", "mkt_pipe", "mkt_sol"]);
 
 export function isStratosOrg(orgId) {
   return orgId === STRATOS_ORG_ID;
@@ -186,6 +191,12 @@ export function canAccessModule(moduleId, user, clientConfig = null) {
       moduleId === "d" && clientConfig?.features?.comandoDirectivo === true
     );
     if (!isComandoDirectivoOpenIn) return false;
+  }
+  // Secciones de marketing en el sidebar (Mi Día/Marcas/Pipeline/Solicitudes): las ve
+  // el rol `marketing` Y el admin de marketing (Alex). NO los admins de ventas (que ven
+  // el módulo único "mkt" con tabs). Así Alex navega por secciones igual que su equipo.
+  if (MKT_SECTION_MODULES.has(moduleId)) {
+    return user.role === "marketing" || user.isMarketingAdmin === true;
   }
   const roles = MODULE_ROLES[moduleId];
   if (!roles) return true;
