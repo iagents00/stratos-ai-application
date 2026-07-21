@@ -130,6 +130,9 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
     background: isLight ? "#FFFFFF" : "rgba(255,255,255,0.045)", color: txt,
     border: `1px solid ${bd}`, borderRadius: 10, padding: "10px 12px",
     fontSize: 13, fontFamily: font, outline: "none", width: "100%", boxSizing: "border-box",
+    // colorScheme hace que el desplegable NATIVO del <select> use el tema correcto:
+    // antes en oscuro las opciones salían con fondo blanco y texto claro (ilegible).
+    colorScheme: isLight ? "light" : "dark",
   };
 
   const brandColor = useCallback(
