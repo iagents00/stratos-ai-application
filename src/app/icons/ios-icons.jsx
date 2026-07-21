@@ -46,6 +46,25 @@ const PREMIUM_ICON_OVERRIDES = {
     s: "<path d=\"M290.7 134.7 L378.4 286.6 Q413 346.7 343.7 346.7 L168.3 346.7 Q99 346.7 133.7 286.6 L221.3 134.7 Q256 74.7 290.7 134.7 Z\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"48\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/>",
     o: "<path d=\"M290.7 134.7 L378.4 286.6 Q413 346.7 343.7 346.7 L168.3 346.7 Q99 346.7 133.7 286.6 L221.3 134.7 Q256 74.7 290.7 134.7 Z\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"38\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/>",
   },
+  // ── MARKETING (jul-2026): glifos propios — sin esto caían al fallback "menu"
+  //    (los 4 cuadrados) y el sidebar del rol marketing se veía todo igual.
+  mkt: { // megáfono
+    s: "<path d=\"M344 120 L344 392 L152 328 L112 328 Q72 328 72 288 L72 224 Q72 184 112 184 L152 184 Z\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"40\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><path d=\"M392 200 Q424 256 392 312 M430 160 Q484 256 430 352\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"36\" stroke-linecap=\"round\"/><path d=\"M160 336 L160 408 Q160 432 184 432 L200 432 Q224 432 224 408 L224 356\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"36\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>",
+    o: "<path d=\"M344 120 L344 392 L152 328 L112 328 Q72 328 72 288 L72 224 Q72 184 112 184 L152 184 Z\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"30\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><path d=\"M392 200 Q424 256 392 312 M430 160 Q484 256 430 352\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"28\" stroke-linecap=\"round\"/><path d=\"M160 336 L160 408 Q160 432 184 432 L200 432 Q224 432 224 408 L224 356\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"28\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>",
+  },
+  mkt_dia: { s: G.sun.s, o: G.sun.o }, // sol = "Mi Día"
+  mkt_marcas: { // etiqueta de marca (pricetag)
+    s: "<path d=\"M88 88 h150 a28 28 0 0 1 19.8 8.2 L436 274 a28 28 0 0 1 0 39.6 L313.6 436 a28 28 0 0 1 -39.6 0 L96.2 257.8 A28 28 0 0 1 88 238 Z\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"40\" stroke-linejoin=\"round\"/><circle cx=\"172\" cy=\"172\" r=\"26\" fill=\"currentColor\"/>",
+    o: "<path d=\"M88 88 h150 a28 28 0 0 1 19.8 8.2 L436 274 a28 28 0 0 1 0 39.6 L313.6 436 a28 28 0 0 1 -39.6 0 L96.2 257.8 A28 28 0 0 1 88 238 Z\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"30\" stroke-linejoin=\"round\"/><circle cx=\"172\" cy=\"172\" r=\"22\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"24\"/>",
+  },
+  mkt_pipe: { // columnas kanban
+    s: "<rect x=\"76\" y=\"88\" width=\"100\" height=\"336\" rx=\"26\" fill=\"currentColor\"/><rect x=\"206\" y=\"88\" width=\"100\" height=\"228\" rx=\"26\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"32\"/><rect x=\"336\" y=\"88\" width=\"100\" height=\"286\" rx=\"26\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"32\"/>",
+    o: "<rect x=\"76\" y=\"88\" width=\"100\" height=\"336\" rx=\"26\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"30\"/><rect x=\"206\" y=\"88\" width=\"100\" height=\"228\" rx=\"26\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"30\"/><rect x=\"336\" y=\"88\" width=\"100\" height=\"286\" rx=\"26\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"30\"/>",
+  },
+  mkt_sol: { // pedido nuevo: burbuja con "+"
+    s: "<path d=\"M104 88 h304 a40 40 0 0 1 40 40 v180 a40 40 0 0 1 -40 40 H252 l-92 80 v-80 h-56 a40 40 0 0 1 -40 -40 V128 a40 40 0 0 1 40 -40 Z\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"40\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><path d=\"M256 158 v120 M196 218 h120\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"38\" stroke-linecap=\"round\"/>",
+    o: "<path d=\"M104 88 h304 a40 40 0 0 1 40 40 v180 a40 40 0 0 1 -40 40 H252 l-92 80 v-80 h-56 a40 40 0 0 1 -40 -40 V128 a40 40 0 0 1 40 -40 Z\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"30\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><path d=\"M256 158 v120 M196 218 h120\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"28\" stroke-linecap=\"round\"/>",
+  },
   menu: {
     s: "<rect x=\"78\" y=\"78\" width=\"132\" height=\"132\" rx=\"24\"/><rect x=\"302\" y=\"78\" width=\"132\" height=\"132\" rx=\"24\"/><rect x=\"78\" y=\"302\" width=\"132\" height=\"132\" rx=\"24\"/><rect x=\"302\" y=\"302\" width=\"132\" height=\"132\" rx=\"24\"/>",
     o: "<rect x=\"78\" y=\"78\" width=\"132\" height=\"132\" rx=\"24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"30\" stroke-linejoin=\"round\"/><rect x=\"302\" y=\"78\" width=\"132\" height=\"132\" rx=\"24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"30\" stroke-linejoin=\"round\"/><rect x=\"78\" y=\"302\" width=\"132\" height=\"132\" rx=\"24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"30\" stroke-linejoin=\"round\"/><rect x=\"302\" y=\"302\" width=\"132\" height=\"132\" rx=\"24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"30\" stroke-linejoin=\"round\"/>",
