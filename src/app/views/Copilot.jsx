@@ -13,6 +13,7 @@
  * ─────────────────────────────────────────────────────────────────────────────
  */
 import { useState, useEffect, useRef, useCallback } from "react";
+import { createPortal } from "react-dom";
 import { Send, Sparkles, RefreshCw, Mic, Square, X, ChevronDown, ChevronUp, ChevronLeft, Bot, BookOpen, Play, Pause, Bell, Camera } from "lucide-react";
 import { P, LP, font, fontDisp } from "../../design-system/tokens";
 import { G } from "../SharedComponents";
@@ -215,7 +216,15 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
       // Persistir el rastro en el historial (best-effort): al recargar, la conversación
       // muestra "Evidencia enviada (foto)" + la confirmación, aunque la miniatura local expire.
       try {
-        await supabase.rpc('copilot_log_msg', { p_role: 'user', p_content: `Evidencia enviada (${tipo}).` });
+        // La foto/video que TÚ enviaste queda guardada (con su adjunto) para que se siga viendo
+        // al recargar, no solo el preview local que expira. Al líder y a quien sigue la tarea les
+        // llega server-side (mkt_attach_evidence, con la foto en su Copilot).
+        await supabase.rpc('copilot_log_msg_media', {
+          p_role: 'user',
+          p_content: tipo === 'video' ? '🎬 Evidencia enviada (video).' : '📸 Evidencia enviada (foto).',
+          p_media_path: path,
+          p_media_type: tipo,
+        });
         await supabase.rpc('copilot_log_msg', { p_role: 'ai', p_content: finalReply });
       } catch { /* logging best-effort */ }
     } catch (err) {
@@ -527,6 +536,7 @@ function renderRichText(text, linkColor) {
 
 function Bubble({ m, T, isLight, userBg, userTxt, aiBg, aiBd, onPick, sending, isLast }) {
   const isUser = m.role === "user";
+  const [zoom, setZoom] = useState(false); // visor a pantalla completa de la evidencia (estilo WhatsApp)
   const time = m.occurred_at
     ? new Date(m.occurred_at).toLocaleString("es-MX", { hour: "2-digit", minute: "2-digit" })
     : m.created_at
@@ -612,9 +622,29 @@ function Bubble({ m, T, isLight, userBg, userTxt, aiBg, aiBd, onPick, sending, i
         whiteSpace: "pre-wrap", wordBreak: "break-word", opacity: m.pending ? 0.7 : 1,
         boxShadow: isLight ? (isUser ? `0 3px 10px ${T.accent}28` : "0 1px 4px rgba(15,23,42,0.03)") : "none"
       }}>
-        {/* Evidencia adjunta: la miniatura SE VE en el chat (foto o video) */}
+        {/* Evidencia adjunta: la miniatura SE VE en el chat y se abre a pantalla completa (estilo WhatsApp) */}
         {m.imageUrl && (
-          <img src={m.imageUrl} alt="Evidencia" style={{ display: "block", maxWidth: 220, maxHeight: 220, borderRadius: 10, marginBottom: 6, objectFit: "cover" }} />
+          <>
+            <img
+              src={m.imageUrl}
+              alt="Evidencia"
+              onClick={() => setZoom(true)}
+              loading="lazy"
+              style={{ display: "block", maxWidth: 220, maxHeight: 220, borderRadius: 10, marginBottom: 6, objectFit: "cover", cursor: "zoom-in" }}
+            />
+            {zoom && createPortal(
+              <div onClick={() => setZoom(false)}
+                style={{ position: "fixed", inset: 0, zIndex: 100000, background: "rgba(0,0,0,0.88)", display: "flex", alignItems: "center", justifyContent: "center", padding: 24, cursor: "zoom-out", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)" }}>
+                <img src={m.imageUrl} alt="Evidencia" onClick={(e) => e.stopPropagation()}
+                  style={{ maxWidth: "94vw", maxHeight: "92vh", borderRadius: 12, objectFit: "contain", boxShadow: "0 24px 80px rgba(0,0,0,0.6)" }} />
+                <button onClick={() => setZoom(false)} aria-label="Cerrar"
+                  style={{ position: "fixed", top: 18, right: 18, width: 40, height: 40, borderRadius: 12, border: "none", background: "rgba(255,255,255,0.14)", color: "#fff", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <X size={20} />
+                </button>
+              </div>,
+              document.body
+            )}
+          </>
         )}
         {m.videoUrl && (
           <video src={m.videoUrl} controls style={{ display: "block", maxWidth: 240, maxHeight: 240, borderRadius: 10, marginBottom: 6, background: "#000" }} />
