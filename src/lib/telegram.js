@@ -281,12 +281,32 @@ export async function getCopilotActivity(limit = 50) {
       console.warn('[Stratos AI] sync proactive_reminders error:', remErr?.message)
     }
 
+    // Evidencia (bucket privado 'evidencia'): firmamos una URL temporal para cada mensaje que
+    // trae adjunto → la foto/video SE VE en el chat y se puede abrir a pantalla completa (estilo
+    // WhatsApp). Mismo bucket/política que el módulo: cualquier marketing de la org puede firmarla.
+    try {
+      const withMedia = messages.filter((m) => m && m.media_path)
+      if (withMedia.length > 0) {
+        await Promise.all(withMedia.map(async (m) => {
+          try {
+            const { data: signed } = await supabase.storage.from('evidencia').createSignedUrl(m.media_path, 3600)
+            const url = signed?.signedUrl
+            if (url) {
+              if (String(m.media_type || 'foto') === 'video') m.videoUrl = url
+              else m.imageUrl = url
+            }
+          } catch { /* best-effort: si una no firma, el resto del chat igual carga */ }
+        }))
+      }
+    } catch { /* noop */ }
+
     // Dedup de seguridad por VENTANA DE TIEMPO: si el mismo mensaje (role+contenido)
     // se logueó dos veces en <15s (ej. frontend + un camino de backend), se muestra una
     // sola vez. Repeticiones legítimas (mismo texto minutos después) se conservan.
     const seenAt = new Map()
     const deduped = []
     for (const m of messages) {
+      if (m.media_path || m.imageUrl || m.videoUrl) { deduped.push(m); continue } // adjuntos: cada foto/video es único, nunca colapsar
       const key = (m.role || '') + '|' + String(m.content || '')
       const t = new Date(m.occurred_at || m.created_at || 0).getTime() || 0
       const prevT = seenAt.get(key)
