@@ -59,7 +59,7 @@ export const MODULE_ROLES = {
   // entera de que un cliente le escribió). Gateada por flag whatsappModule.
   wa:     ["super_admin","admin","director","ceo","asesor"],
   ia:     ["super_admin","admin","director","ceo"],
-  e:      ["super_admin","admin","director","ceo","asesor"],   // Proyectos (ERP inmobiliario) para TODOS los asesores (pedido de Ángel 2026-07-17): ven el catálogo de proyectos para asesorar/recomendar a sus leads. El aislamiento por org sigue bloqueando a tenants externos (Grupo28/Vega).
+  e:      ["super_admin","admin","director","ceo","asesor","marketing"],   // Proyectos (ERP inmobiliario) para TODOS los asesores (pedido de Ángel 2026-07-17) y también para `marketing` (pedido de Ángel 2026-07-21: necesitan el catálogo con sus drives/documentos/fichas para producir contenido). El aislamiento por org sigue bloqueando a tenants externos (Grupo28/Vega).
   a:      ["super_admin","admin","director","ceo"],
   lp:     ["super_admin","admin","director","ceo","asesor"],   // Create para TODOS los asesores (pedido de Ángel 2026-07-17): arman sus propias landings/portafolios. El aislamiento por org sigue bloqueando a tenants externos (Grupo28/Vega).
   fa:     ["super_admin","admin","director","ceo"],

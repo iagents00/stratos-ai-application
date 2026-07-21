@@ -2027,7 +2027,9 @@ export default function App() {
         <div style={{ flex:1, display:"flex", overflow:"hidden" }}>
           <div key={v} className="stratos-content-area" style={{ flex:1, padding: (v === "wa" || v === "copilot") ? 0 : "18px 22px", overflowY: (v === "wa" || v === "copilot") ? "hidden" : "auto", animation:"fadeIn 0.28s ease", display:"flex", flexDirection:"column" }}>
             {user?.role && !canAccessModule(v, user, clientConfig)
-              ? <PermissionGate moduleId={v} onGoBack={() => setV("c")} />
+              ? <PermissionGate moduleId={v}
+                  onGoBack={() => setV(user?.role === "marketing" ? "mkt" : "c")}
+                  homeLabel={user?.role === "marketing" ? "Ir a mi espacio" : "Ir a mi CRM"} />
               : <ErrorBoundary>
                 <Suspense fallback={
                   <div style={{ display:"flex", alignItems:"center", justifyContent:"center", padding:"60px 20px", color:T.txt3, fontFamily:font, fontSize:13 }}>
