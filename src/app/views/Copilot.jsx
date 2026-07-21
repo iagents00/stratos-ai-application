@@ -75,6 +75,7 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
   const [errBanner, setErrBanner] = useState(null);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [attaching, setAttaching] = useState(false);  // subiendo evidencia (solo marketing)
+  const [commenting, setCommenting] = useState(null);  // {taskId, fromName} — líder comentando una evidencia
   const evInputRef = useRef(null);
   const scrollRef = useRef(null);
   const inputRef = useRef(null);
@@ -136,6 +137,30 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
     const text = (rawText ?? "").trim();
     if (!text && !options.callback_data) return;
     if (sending) return;
+    const cb = options.callback_data || "";
+
+    // ── Feedback del líder sobre una evidencia (determinista, NO pasa por el cerebro n8n) ──
+    // El líder APRUEBA una evidencia → avisa al responsable.
+    if (cb.startsWith("mktapprove:")) {
+      const taskId = cb.slice("mktapprove:".length);
+      setErrBanner(null); setSending(true);
+      const { data, error } = await supabase.rpc("mkt_approve_evidence", { p_task_id: taskId });
+      setSending(false);
+      const reply = (!error && typeof data === "string" && data.trim()) ? data : "Evidencia aprobada.";
+      setMessages((prev) => [...prev, { id: `ai-${Date.now()}`, role: "ai", content: reply, occurred_at: new Date().toISOString() }]);
+      return;
+    }
+    // El líder toca "Comentar" → queda en escucha; su próximo mensaje será el comentario.
+    if (cb.startsWith("mktcomment:")) {
+      const taskId = cb.slice("mktcomment:".length);
+      const fromName = cb.split(":")[2] || "";
+      setCommenting({ taskId, fromName });
+      setErrBanner(null);
+      setMessages((prev) => [...prev, { id: `sys-${Date.now()}`, role: "ai", content: `Escribe tu comentario${fromName ? ` para ${fromName}` : ""} y se lo hago llegar. (Toca la X para cancelar.)`, occurred_at: new Date().toISOString() }]);
+      setTimeout(() => inputRef.current?.focus(), 50);
+      return;
+    }
+
     setErrBanner(null);
     setInput("");
     setVoiceTranscript("");
@@ -144,6 +169,23 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
     const tmpId = `tmp-${Date.now()}`;
     setMessages((prev) => [...prev, { id: tmpId, role: "user", content: text || "Acción seleccionada", occurred_at: new Date().toISOString(), pending: true }]);
     setSending(true);
+
+    // ── Si estamos comentando una evidencia, el texto va como COMENTARIO al responsable ──
+    if (commenting?.taskId && text) {
+      const taskId = commenting.taskId;
+      setCommenting(null);
+      const { data, error } = await supabase.rpc("mkt_comment_evidence", { p_task_id: taskId, p_comment: text });
+      setSending(false);
+      const reply = (!error && typeof data === "string" && data.trim())
+        ? data
+        : (error ? "No se pudo enviar el comentario. Probá de nuevo." : "Comentario enviado.");
+      setMessages((prev) => {
+        const updated = prev.map(m => m.id === tmpId ? { ...m, pending: false } : m);
+        return [...updated, { id: `ai-${Date.now()}`, role: "ai", content: reply, occurred_at: new Date().toISOString() }];
+      });
+      inputRef.current?.focus();
+      return;
+    }
 
     const r = await sendCopilotMessage(text, options);
     setSending(false);
@@ -457,6 +499,16 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
         </div>
       )}
 
+      {/* ── Aviso: comentando una evidencia (el próximo mensaje va como comentario) ── */}
+      {commenting && (
+        <div style={{ margin: "0 14px 4px", padding: "7px 12px", borderRadius: 10, background: `${T.accent}14`, border: `1px solid ${T.accent}40`, display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
+          <span style={{ flex: 1, fontSize: 12, fontWeight: 500, color: T.accent, fontFamily: font }}>
+            Comentando la evidencia{commenting.fromName ? ` de ${commenting.fromName}` : ""} — escribe y se lo hago llegar
+          </span>
+          <button onClick={() => setCommenting(null)} title="Cancelar comentario" style={{ padding: "3px 8px", borderRadius: 6, background: "transparent", border: `1px solid ${T.border}`, color: T.txt2, fontSize: 11, fontFamily: font, cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }}><X size={11} /> Cancelar</button>
+        </div>
+      )}
+
       {/* ── Composer compacto (estilo WhatsApp) — controles centrados a la misma columna que los mensajes ── */}
       <div style={{ padding: "8px 12px calc(10px + var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px)))", background: composerBg, borderTop: `1px solid ${T.border}`, flexShrink: 0 }}>
        <div style={{ display: "flex", alignItems: "flex-end", gap: 8, width: "100%", maxWidth: 920, margin: "0 auto" }}>
@@ -482,7 +534,7 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
         {/* Input */}
         <input
           ref={inputRef} type="text" value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={onKeyDown}
-          placeholder="Escríbele al asistente…" disabled={sending || recording}
+          placeholder={commenting ? "Escribe tu comentario…" : "Escríbele al asistente…"} disabled={sending || recording}
           style={{
             flex: 1, minWidth: 0, height: 36, padding: "0 12px", borderRadius: 18,
             background: isLight ? "#F1F5F9" : "rgba(255,255,255,0.06)",
@@ -546,7 +598,13 @@ function Bubble({ m, T, isLight, userBg, userTxt, aiBg, aiBd, onPick, sending, i
   /* ── Detección de botones inline (misma lógica que Telegram y botones explícitos) ── */
   let inlineButtons = [];
   if (!isUser) {
-    if (Array.isArray(m.buttons) && m.buttons.length > 0) {
+    if (m.meta?.can_comment && m.meta?.task_id) {
+      // Evidencia recibida por el líder: puede comentarla (feedback al que la hizo) o aprobarla.
+      inlineButtons = [
+        { label: "💬 Comentar", action: `mktcomment:${m.meta.task_id}:${m.meta.from_name || ""}`, primary: true },
+        { label: "✅ Aprobar", action: `mktapprove:${m.meta.task_id}`, primary: false },
+      ];
+    } else if (Array.isArray(m.buttons) && m.buttons.length > 0) {
       inlineButtons = m.buttons;
     } else if (m.content && typeof m.content === "string") {
       const text = m.content.trim();
