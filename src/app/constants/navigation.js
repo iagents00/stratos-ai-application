@@ -7,12 +7,13 @@
  */
 import {
   Users, Hexagon, Activity, Building2, Atom,
-  Trophy, Landmark, UserCheck, CreditCard, Shield, User, Trash2, Wallet, MessageCircle, Bot, Sparkles
+  Trophy, Landmark, UserCheck, CreditCard, Shield, User, Trash2, Wallet, MessageCircle, Bot, Sparkles, Megaphone
 } from "lucide-react";
 
 export const nav = [
   { id: "c",     l: "CRM",       i: Users      },
   { id: "copilot", l: "Copilot", i: Bot        },
+  { id: "mkt",   l: "Marketing", i: Megaphone  },
   { id: "wa",    l: "WhatsApp",  i: MessageCircle },
   { id: "lp",    l: "Create",    i: Hexagon    },
   { id: "d",     l: "Comando",   i: Activity   },
@@ -42,6 +43,11 @@ export const MODULE_ROLES = {
   // `marketing` (equipo de marketing de Duke) también: es su ÚNICA casa —
   // no ve CRM ni leads, opera su trabajo desde el chat (delegar por voz, etc.).
   copilot: ["super_admin","admin","director","ceo","asesor","marketing"],
+  // Marketing (ERP de actividades del equipo de marketing de Duke): la CASA del
+  // rol `marketing` (Mi Día · Marcas · Pipeline · Solicitudes). super_admin/admin
+  // también lo ven (Alex/nosotros operamos ambos mundos). Sin feature flag: el
+  // aislamiento por org ya bloquea a los tenants externos (Grupo28/Vega).
+  mkt:    ["super_admin","admin","marketing"],
   // Caja: cuentas / ingresos / egresos sobre team_expenses. Por defecto SOLO
   // mando (admin/director/ceo): la RLS de team_expenses filtra únicamente por
   // organización (no por rol), así que dar el módulo a los asesores les
@@ -69,7 +75,7 @@ export const MODULE_NAMES = {
   d: "Comando", c: "CRM", ia: "iAgents", e: "Proyectos",
   a: "Asesores", lp: "Campañas", fa: "Finanzas",
   rrhh: "Stratos RH", trash: "Papelera", caja: "Caja",
-  wa: "WhatsApp", copilot: "Copilot",
+  wa: "WhatsApp", copilot: "Copilot", mkt: "Marketing",
   planes: "Planes", perfil: "Perfil", admin: "Usuarios",
 };
 
