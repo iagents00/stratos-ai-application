@@ -105,7 +105,7 @@ const diasDesde = (iso) => {
 
 /* ── Componente principal ───────────────────────────────────────────────── */
 
-export default function Marketing({ T, onOpenCopilot }) {
+export default function Marketing({ T, onOpenCopilot, initialTab }) {
   const { user } = useAuth();
   const isMobile = useIsMobile();
   const orgId = user?.organizationId;
@@ -138,7 +138,10 @@ export default function Marketing({ T, onOpenCopilot }) {
   );
 
   /* ── Estado / datos ── */
-  const [tab, setTab] = useState("dia"); // dia | marcas | pipeline | solicitudes | equipo
+  // El rol marketing entra por las 4 secciones del SIDEBAR (mkt_dia/mkt_marcas/…)
+  // y los tabs siguen funcionando adentro ("en ambas" — Iván 21-jul).
+  const [tab, setTab] = useState(initialTab || "dia"); // dia | marcas | pipeline | solicitudes | equipo
+  useEffect(() => { if (initialTab) setTab(initialTab); }, [initialTab]);
   const [brands, setBrands]     = useState([]);
   const [projects, setProjects] = useState([]);
   const [tasks, setTasks]       = useState([]);
@@ -213,12 +216,24 @@ export default function Marketing({ T, onOpenCopilot }) {
     return true;
   }, [orgId]);
 
+  // Al completar: pedir EVIDENCIA de forma amigable y OPCIONAL (decisión Iván 21-jul:
+  // "si tienes alguna evidencia la puedes enviar — suma a tu reporte"). Nunca obligatoria.
+  const [evidence, setEvidence] = useState(null); // { task, url }
   const markTaskDone = useCallback(async (t, done) => {
     const ok = await patch("mkt_tasks", t.id, done
       ? { estado: "hecha", avance_pct: 100 }
       : { estado: "por_hacer" });
-    if (ok) setTasks(prev => prev.map(x => x.id === t.id ? { ...x, estado: done ? "hecha" : "por_hacer", avance_pct: done ? 100 : x.avance_pct } : x));
+    if (ok) {
+      setTasks(prev => prev.map(x => x.id === t.id ? { ...x, estado: done ? "hecha" : "por_hacer", avance_pct: done ? 100 : x.avance_pct } : x));
+      if (done) setEvidence({ task: t, url: "" });
+    }
   }, [patch]);
+  const saveEvidence = useCallback(async () => {
+    if (!evidence?.task) return;
+    const url = (evidence.url || "").trim();
+    if (url) await patch("mkt_tasks", evidence.task.id, { evidencia_url: url, evidencia_tipo: "link" });
+    setEvidence(null);
+  }, [evidence, patch]);
 
   const setTaskState = useCallback(async (t, estado) => {
     const fields = { estado };
@@ -905,6 +920,22 @@ export default function Marketing({ T, onOpenCopilot }) {
         {isAdmin && tabBtn("equipo", "Equipo")}
       </div>
 
+      {evidence && (
+        <div style={{ ...card, borderColor: `${accent}44`, padding: "13px 16px", display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+          <Check size={16} color={accent} strokeWidth={2.5} />
+          <div style={{ flex: 1, minWidth: 180 }}>
+            <div style={{ fontSize: 13, color: txt, fontWeight: 600 }}>«{evidence.task.titulo}» completada 🎉</div>
+            <div style={{ fontSize: 11.5, color: txt2, marginTop: 2 }}>Si tienes alguna evidencia (link a Drive, imagen, entregable), envíala — suma a tu reporte. Es opcional.</div>
+          </div>
+          <input placeholder="Pega el link aquí (opcional)" value={evidence.url}
+            onChange={e => setEvidence(ev => ({ ...ev, url: e.target.value }))}
+            style={{ ...inputStyle, width: isMobile ? "100%" : 260 }} />
+          <button onClick={saveEvidence} style={{
+            background: `${accent}1A`, border: `1px solid ${accent}55`, borderRadius: 10, padding: "9px 15px",
+            cursor: "pointer", color: accent, fontSize: 12.5, fontWeight: 600, fontFamily: font,
+          }}>{(evidence.url || "").trim() ? "Guardar evidencia" : "Listo, sin evidencia"}</button>
+        </div>
+      )}
       {error && <div style={{ fontSize: 12.5, color: RED }}>{error}</div>}
       {loading && tasks.length === 0 ? (
         <div style={{ color: txt2, fontSize: 13, padding: 30, textAlign: "center" }}>Cargando…</div>
