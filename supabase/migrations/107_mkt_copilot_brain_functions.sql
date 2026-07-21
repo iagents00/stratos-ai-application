@@ -107,7 +107,9 @@ create or replace function public.fn_mkt_create_task(
   p_due timestamptz default null, p_brand text default null, p_project text default null)
 returns text language plpgsql as $$
 declare
-  v_org uuid; v_asg record; v_brand record; v_proj record; v_id uuid;
+  v_org uuid; v_asg record; v_brand record;
+  -- escalares (un record sin asignar revienta al leerlo cuando no dan proyecto — bug cazado en test)
+  v_proj_id uuid; v_proj_nombre text; v_proj_brand uuid;
 begin
   select organization_id into v_org from profiles where id = p_profile_id;
   if v_org is null then return 'No encontré tu perfil.'; end if;
@@ -119,21 +121,20 @@ begin
   end if;
   select * into v_brand from _mkt_find_brand(v_org, p_brand);
   if p_project is not null then
-    select id, nombre, brand_id into v_proj from mkt_projects
+    select id, nombre, brand_id into v_proj_id, v_proj_nombre, v_proj_brand from mkt_projects
     where organization_id=v_org and deleted_at is null and nombre ilike '%'||p_project||'%'
     order by created_at desc limit 1;
   end if;
 
   insert into mkt_tasks (organization_id, brand_id, project_id, titulo, assignee_id, created_by,
                          estado, prioridad, avance_pct, due_at, origen)
-  values (v_org, coalesce(v_proj.brand_id, v_brand.id), v_proj.id, trim(p_titulo),
-          coalesce(v_asg.id, p_profile_id), p_profile_id, 'por_hacer', 'media', 0, p_due, 'copilot')
-  returning id into v_id;
+  values (v_org, coalesce(v_proj_brand, v_brand.id), v_proj_id, trim(p_titulo),
+          coalesce(v_asg.id, p_profile_id), p_profile_id, 'por_hacer', 'media', 0, p_due, 'copilot');
 
   return '✓ Tarea creada: «'||trim(p_titulo)||'»'
     || ' · para '||coalesce(v_asg.name,'ti')
     || coalesce(' · marca '||v_brand.nombre, '')
-    || coalesce(' · proyecto '||v_proj.nombre, '')
+    || coalesce(' · proyecto '||v_proj_nombre, '')
     || coalesce(' · vence '||to_char(p_due at time zone 'America/Cancun','DD Mon HH24:MI'), '')
     || '. La ves en el módulo Marketing.';
 end $$;
