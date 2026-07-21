@@ -51,6 +51,16 @@ html, body {
   *::-webkit-scrollbar-thumb:hover { background: rgba(13,154,118,0.42); background-clip: content-box; }
 }
 
+/* En dispositivos TÁCTILES (celulares/tablets) el scroll es por gesto: la barra
+   gruesa verde de 10px se veía como una franja de color pegada al borde derecho
+   (capturas de Ángel en el módulo Marketing). La ocultamos por completo — el
+   contenido sigue scrolleando normal con el dedo. En desktop (pointer:fine)
+   queda la barra delgada y sutil de siempre. */
+@media (pointer: coarse) {
+  * { scrollbar-width: none; }
+  *::-webkit-scrollbar { width: 0; height: 0; display: none; }
+}
+
 input, textarea, select, button {
   font-family: inherit;
 }
