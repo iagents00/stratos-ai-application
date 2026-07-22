@@ -44,3 +44,6 @@ team_credentials.txt
 
 # Backups temporales generados por scripts (.bak de leads.json, etc)
 *.bak
+
+# Nunca versionar dumps de datos de produccion (PII) — incidente 2026-07-22
+backups/
