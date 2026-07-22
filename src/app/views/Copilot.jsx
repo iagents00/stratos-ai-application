@@ -152,9 +152,13 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
       return;
     }
     // El líder toca "Comentar" → queda en escucha; su próximo mensaje será el comentario.
+    // OJO: el callback es "mktcomment:<uuid>:<nombre>" (3 partes). El task_id es SOLO el UUID
+    // (parts[1]); el UUID no lleva ":", así que split es seguro. (Bug: antes tomaba "<uuid>:<nombre>"
+    // como task_id → Postgres no podía castear a uuid → "No se pudo enviar el comentario".)
     if (cb.startsWith("mktcomment:")) {
-      const taskId = cb.slice("mktcomment:".length);
-      const fromName = cb.split(":")[2] || "";
+      const parts = cb.split(":");
+      const taskId = parts[1] || "";
+      const fromName = parts.slice(2).join(":") || "";
       setCommenting({ taskId, fromName });
       setErrBanner(null);
       setMessages((prev) => [...prev, { id: `sys-${Date.now()}`, role: "ai", content: `Escribe tu comentario${fromName ? ` para ${fromName}` : ""} y se lo hago llegar. (Toca la X para cancelar.)`, occurred_at: new Date().toISOString() }]);
