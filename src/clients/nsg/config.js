@@ -116,6 +116,14 @@ const nsgConfig = {
     mkt: "Proyectos",
   },
 
+  // Ajustes del módulo Proyectos (motor mkt reusado): NSG no produce videos →
+  // fuera la pestaña "Pipeline" (kanban de videos de marketing); la pestaña
+  // "Marcas" acá se llama "Proyectos" (marca NSG → proyectos → tareas).
+  mkt: {
+    hideTabs: ["pipeline"],
+    tabLabels: { marcas: "Proyectos" },
+  },
+
   support: {
     email:    null,   // cae al soporte de Stratos hasta definir el de NSG
     whatsapp: null,
