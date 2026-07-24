@@ -48,6 +48,15 @@ const MODULE_LABEL = (() => {
   catch { return "Marketing"; }
 })();
 
+// Ajustes del módulo por tenant (config `mkt` del cliente): ocultar pestañas que
+// no aplican (ej. NSG no produce videos → fuera "Pipeline") y renombrar otras
+// (NSG: "Marcas" → "Proyectos"). Duke sin config = comportamiento idéntico.
+const TENANT_MKT = (() => {
+  try { return resolveClientFromLocation()?.mkt || {}; } catch { return {}; }
+})();
+const HIDDEN_TABS = new Set(Array.isArray(TENANT_MKT.hideTabs) ? TENANT_MKT.hideTabs : []);
+const tabLabel = (id, fallback) => (TENANT_MKT.tabLabels && TENANT_MKT.tabLabels[id]) || fallback;
+
 const ETAPAS = [
   { id: "seleccionada",  l: "Seleccionada" },
   { id: "agendada",      l: "Agendada" },
@@ -153,7 +162,10 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
   /* ── Estado / datos ── */
   // El rol marketing entra por las 4 secciones del SIDEBAR (mkt_dia/mkt_marcas/…)
   // y los tabs siguen funcionando adentro ("en ambas" — Iván 21-jul).
-  const [tab, setTab] = useState(initialTab || "dia"); // dia | marcas | pipeline | solicitudes | equipo
+  const [tab, setTab] = useState(() => {
+    const t = initialTab || "dia"; // dia | marcas | pipeline | solicitudes | equipo
+    return HIDDEN_TABS.has(t) ? "dia" : t; // pestaña oculta para este tenant → Mi Día
+  });
   useEffect(() => { if (initialTab) setTab(initialTab); }, [initialTab]);
   const [brands, setBrands]     = useState([]);
   const [projects, setProjects] = useState([]);
@@ -1054,11 +1066,11 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
           background: isLight ? "rgba(15,23,42,0.045)" : "rgba(255,255,255,0.035)", border: `1px solid ${bd}`,
           maxWidth: "100%", width: isMobile ? "100%" : undefined, flexShrink: 0,
         }}>
-          {tabBtn("dia", "Mi Día")}
-          {tabBtn("marcas", "Marcas")}
-          {tabBtn("pipeline", "Pipeline", esperandoVoz >= 3 ? esperandoVoz : 0)}
-          {tabBtn("solicitudes", "Solicitudes", requests.filter(r => r.estado === "nueva").length)}
-          {isAdmin && tabBtn("equipo", "Equipo")}
+          {tabBtn("dia", tabLabel("dia", "Mi Día"))}
+          {!HIDDEN_TABS.has("marcas") && tabBtn("marcas", tabLabel("marcas", "Marcas"))}
+          {!HIDDEN_TABS.has("pipeline") && tabBtn("pipeline", tabLabel("pipeline", "Pipeline"), esperandoVoz >= 3 ? esperandoVoz : 0)}
+          {!HIDDEN_TABS.has("solicitudes") && tabBtn("solicitudes", tabLabel("solicitudes", "Solicitudes"), requests.filter(r => r.estado === "nueva").length)}
+          {isAdmin && tabBtn("equipo", tabLabel("equipo", "Equipo"))}
         </div>
         {!isMobile && <div style={{ flex: 1 }} />}
       </div>
