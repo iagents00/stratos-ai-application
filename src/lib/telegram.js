@@ -15,6 +15,23 @@
  * Migración relacionada: supabase/migrations/007_telegram_bot_asesor_mode.sql
  */
 import { supabase } from './supabase'
+import { resolveClientFromLocation } from '../clients'
+
+// ── Puerta del chat por TENANT (white-label) ─────────────────────────────────
+// Un tenant cuyo Copilot opera el motor de TAREAS (mkt_nlu_dispatch: crear/
+// empezar/terminar/posponer tareas sin fricción) en vez del CRM de ventas lo
+// declara en su config con `features.copilotBrain: "tareas"` (caso NSG). Va por
+// CONFIG, nunca hardcodeado por org (regla white-label #15 de la skill). El
+// cliente es fijo durante toda la sesión (mismo patrón que labels.js/pipeline.js).
+function getTenantCopilotConfig() {
+  try {
+    const cfg = resolveClientFromLocation()
+    return {
+      tasksBrain: cfg?.features?.copilotBrain === 'tareas',
+      mktLabel: cfg?.navLabels?.mkt || 'Marketing',
+    }
+  } catch { return { tasksBrain: false, mktLabel: 'Marketing' } }
+}
 
 // getSession() puede colgarse si el SDK auto-refresca un token caducado.
 // Mismo wrapper que auth.js — 3.5s es suficiente para lectura local + refresh.
@@ -377,11 +394,23 @@ async function _sendCopilotMessageInner(rawText, options = {}) {
     // (Alex es super_admin pero opera del lado marketing → is_marketing_admin=true, mig 113).
     // Sin esto, Alex caía en el Copilot de VENTAS (leads/brokers/emojis). Ventas intacto:
     // ningún admin de ventas tiene is_marketing_admin (default false).
-    const isMarketing = profile?.role === 'marketing' || profile?.is_marketing_admin === true;
+    // `tenant.tasksBrain` (config del cliente, ej. NSG): TODO el Copilot del tenant
+    // habla con el cerebro de tareas — misma ruta que marketing, sin tocar ventas.
+    const tenant = getTenantCopilotConfig();
+    const isMarketing = profile?.role === 'marketing' || profile?.is_marketing_admin === true || tenant.tasksBrain;
 
     // 1. Detección directa de solicitud de manual / guía / instrucciones — o "¿qué puedes hacer?"
     const wantsManual = /^(?:dame |mandame |enviame |enviar |ver |mostrar |necesito |pasame )?(?:el |la )?(?:manual|guía|guia|instrucciones|ayuda)(?:\s|$)/i.test(cleanText);
     const wantsCapabilities = /(qu[eé]\s+(tanto\s+)?(cosas\s+)?(me\s+)?(puedes?|pod[eé]s|sabes?|sab[eé]s)\s+hacer|qu[eé]\s+haces|qu[eé]\s+(otras\s+)?funcion(es|alidades)|para\s+qu[eé]\s+sirves?|en\s+qu[eé]\s+(me\s+)?(puedes?|pod[eé]s)\s+ayudar|c[oó]mo\s+(me\s+)?(puedes?\s+)?ayud)/i.test(cleanText);
+    // Tenant con cerebro de TAREAS (ej. NSG): ayuda propia, sin el branding de
+    // marketing de Duke (marcas/videos). Va ANTES del bloque isMarketing.
+    if (tenant.tasksBrain && !options.callback_data && (wantsManual || wantsCapabilities)) {
+      return {
+        reply: `Esto es lo que puedo hacer por ti:\n\n• Decirte qué tienes hoy — "¿qué tengo hoy?"\n• Crear tareas sin fricción — "ponme una tarea: enviar el reporte mañana a las 10" o "créale una tarea a Iván: llamar al prospecto"\n• Avance por texto — "ya empecé …", "ya terminé …", "pospón … para mañana a las 3"\n• Pendientes de una persona — "¿qué tiene pendiente Ángel?"\n• Registrar solicitudes y asignarlas — "necesito … para el viernes"\n\nTodo por voz o texto. Lo que creo aparece al instante en el módulo ${tenant.mktLabel}, y el sistema persigue cada tarea hasta que se cierra (avisos 1h y 10min antes de vencer, y "¿ya pudiste comenzar?").`,
+        buttons: [],
+        error: null
+      };
+    }
     if (isMarketing && !options.callback_data && (wantsManual || wantsCapabilities)) {
       return {
         reply: "Esto es lo que puedo hacer por ti:\n\n• Decirte qué tienes hoy — \"¿qué tengo hoy?\"\n• Crear tareas para el equipo — \"créale una tarea a Luis: editar Casa Banana para el viernes\"\n• Marcar tus tareas como hechas — \"ya terminé los copys\" (y ahí mismo te invito a subir la evidencia)\n• Mover propiedades del pipeline — \"mueve Bay View Grand 2 a lista\"\n• Registrar solicitudes de diseño — \"necesito un flyer AA para Mueblería el sábado\"\n• Asignar una solicitud — \"asígnale el flyer a Emmanuel\"\n• Cómo va el pipeline de videos — \"¿cómo van los videos?\"\n• Pendientes de una persona — \"¿qué tiene pendiente Emmanuel?\"\n• Pasarte el Drive de una propiedad — \"pásame el drive de Bay View Grand\"\n• Adjuntar evidencia — con el botón de cámara del chat subes una foto o video de una tarea terminada\n\nSolo manejo lo de marketing (no clientes ni ventas). Todo por voz o texto, y lo que creo aparece al instante en tu módulo Marketing. El manual completo: [Manual de Marketing](https://app.stratoscapitalgroup.com/manual-marketing)",

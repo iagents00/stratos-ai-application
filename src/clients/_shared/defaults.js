@@ -127,6 +127,15 @@ export const DEFAULT_CLIENT_CONFIG = {
     // El asesor conecta su Telegram una vez y opera sus leads desde el chat del
     // CRM (mismas acciones que el bot). Default OFF — se prende por tenant.
     copilotModule: false,
+    // Módulo de TAREAS/PROYECTOS (`mkt`): el motor mkt_* del ERP de marketing de
+    // Duke reusado como sistema de tareas genérico (Mi Día · proyectos · tareas
+    // con persecución). Org-scoped por RLS. Default OFF — lo prende el tenant que
+    // opere sus tareas acá (ej. NSG, rotulándolo "Proyectos" con navLabels.mkt).
+    mktModule: false,
+    // Cerebro de la puerta del chat (Copilot): "crm" = asistente de ventas/leads
+    // (default, asesores Duke) · "tareas" = motor de tareas sin fricción
+    // (mkt_nlu_dispatch: crear/empezar/terminar/posponer + persecución; caso NSG).
+    copilotBrain: "crm",
   },
 
   // Contacto y soporte
