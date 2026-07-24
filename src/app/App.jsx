@@ -321,6 +321,55 @@ export default function App() {
   const [intelOpenTick, setIntelOpenTick] = useState(0);
   const bellRef = useRef(null);
 
+  // ── Llamadas del equipo (tenants con features.reunionButton, hoy NSG) ──────
+  // callOpen = selector "¿a quién llamo?" (persona puntual o grupal).
+  // incomingCall = pantalla de LLAMADA ENTRANTE (overlay estilo WhatsApp) que
+  // aparece cuando OTRO compañero me llama — llega por Realtime sobre
+  // proactive_reminders (tipo 'llamada_entrante' con asesor_id = yo).
+  const [callOpen, setCallOpen] = useState(false);
+  const [callTargets, setCallTargets] = useState(null); // [{id,name}] compañeros de la org
+  const [incomingCall, setIncomingCall] = useState(null); // {caller, meet}
+  const openCallMenu = () => {
+    setCallOpen(o => !o);
+    if (callTargets === null) {
+      supabase.rpc("fn_call_targets")
+        .then(({ data }) => setCallTargets(Array.isArray(data) ? data : []))
+        .catch(() => setCallTargets([]));
+    }
+  };
+  const startTeamCall = (targetId) => {
+    setCallOpen(false);
+    // Abrir el Meet SINCRÓNICO (dentro del gesto; un window.open tras await
+    // cae en el popup blocker). El aviso + la grabación van por detrás.
+    window.open("https://meet.google.com/mus-xsur-jdc", "_blank", "noopener");
+    supabase.rpc("fn_start_team_call", { p_target_profile_id: targetId || null }).catch(() => {});
+  };
+  // Suscripción a llamadas entrantes (solo tenants con el botón; cleanup SIEMPRE).
+  useEffect(() => {
+    if (!user?.id || clientConfig?.features?.reunionButton !== true) return;
+    const ch = supabase.channel(`incoming-call-${user.id}`)
+      .on("postgres_changes",
+        { event: "INSERT", schema: "public", table: "proactive_reminders", filter: `asesor_id=eq.${user.id}` },
+        (p) => {
+          const row = p?.new;
+          if (!row || row.tipo !== "llamada_entrante") return;
+          const pay = row.payload || {};
+          setIncomingCall({
+            caller: pay.caller || "Alguien",
+            meet: pay.meet || "https://meet.google.com/mus-xsur-jdc",
+          });
+          try { if (navigator.vibrate) navigator.vibrate([300, 120, 300, 120, 300]); } catch { /* noop */ }
+        })
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
+  }, [user?.id, clientConfig?.features?.reunionButton]);
+  // La pantalla de llamada se auto-cierra a los 45s (como un teléfono que deja de sonar).
+  useEffect(() => {
+    if (!incomingCall) return;
+    const t = setTimeout(() => setIncomingCall(null), 45000);
+    return () => clearTimeout(t);
+  }, [incomingCall]);
+
   // Bandeja de WhatsApp (módulo + notificaciones de la campana). Una sola
   // suscripción realtime compartida. Gateada por el flag whatsappModule.
   const [waOpenLead, setWaOpenLead] = useState(null); // {id, ts} abrir chat desde campanita
@@ -1746,20 +1795,42 @@ export default function App() {
                    acá solo abrimos el Meet que devuelve. Si la RPC falla, se abre
                    la sala fija igual (la llamada nunca se bloquea por un aviso). */}
                 {clientConfig?.features?.reunionButton && (
-                  <button
-                    className="stratos-header-search"
-                    title="Llamar al equipo — abre el Meet, les avisa y graba la reunión"
-                    onClick={() => {
-                      // Abrir el Meet SINCRÓNICO (dentro del gesto — el popup blocker
-                      // mata los window.open tras un await); el aviso a los compañeros
-                      // + la grabación van en segundo plano, best-effort.
-                      window.open("https://meet.google.com/mus-xsur-jdc", "_blank", "noopener");
-                      supabase.rpc("fn_start_team_call").catch(() => {});
-                    }}
-                    style={iBtnBase} onMouseEnter={onIco} onMouseLeave={offIco} onMouseDown={dnIco} onMouseUp={upIco}
-                  >
-                    <PhoneCall size={16} color={icoRest} />
-                  </button>
+                  <div style={{ position: "relative" }}>
+                    {/* Clase PROPIA (no stratos-header-search, que el CSS oculta en
+                        móvil) → el 📞 se ve en PC y en el celular. */}
+                    <button
+                      className="stratos-header-call"
+                      title="Llamar a un compañero — le suena en el teléfono, graba la reunión y abre el Meet"
+                      onClick={openCallMenu}
+                      style={iBtnBase} onMouseEnter={onIco} onMouseLeave={offIco} onMouseDown={dnIco} onMouseUp={upIco}
+                    >
+                      <PhoneCall size={16} color={icoRest} />
+                    </button>
+                    {callOpen && createPortal(
+                      <>
+                        <div onClick={() => setCallOpen(false)} style={{ position: "fixed", inset: 0, zIndex: 99980 }} />
+                        <div style={{ position: "fixed", top: 56, right: 14, zIndex: 99981, minWidth: 236, borderRadius: 14, padding: 6, background: "rgba(8,13,22,0.98)", border: "1px solid rgba(255,255,255,0.10)", boxShadow: "0 18px 44px rgba(0,0,0,0.5)" }}>
+                          <div style={{ fontSize: 10.5, fontWeight: 700, letterSpacing: "0.08em", color: "rgba(255,255,255,0.45)", padding: "8px 10px 6px" }}>LLAMAR A…</div>
+                          {callTargets === null && (
+                            <div style={{ padding: "8px 10px", fontSize: 12.5, color: "rgba(255,255,255,0.6)" }}>Cargando equipo…</div>
+                          )}
+                          {Array.isArray(callTargets) && callTargets.map(t => (
+                            <button key={t.id} onClick={() => startTeamCall(t.id)}
+                              style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", textAlign: "left", padding: "10px 10px", borderRadius: 10, border: "none", background: "transparent", color: P.txt, fontSize: 13.5, cursor: "pointer" }}>
+                              <PhoneCall size={14} color={P.accent} /> {t.name}
+                            </button>
+                          ))}
+                          {Array.isArray(callTargets) && callTargets.length === 0 && (
+                            <div style={{ padding: "8px 10px", fontSize: 12.5, color: "rgba(255,255,255,0.6)" }}>No hay compañeros con acceso todavía.</div>
+                          )}
+                          <div style={{ height: 1, background: "rgba(255,255,255,0.08)", margin: "4px 8px" }} />
+                          <button onClick={() => startTeamCall(null)}
+                            style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", textAlign: "left", padding: "10px 10px", borderRadius: 10, border: "none", background: "transparent", color: P.txt, fontSize: 13.5, cursor: "pointer" }}>
+                            <PhoneCall size={14} color={P.accent} /> Llamada grupal (todo el equipo)
+                          </button>
+                        </div>
+                      </>, document.body)}
+                  </div>
                 )}
                 {/* ── Campana de notificaciones ──
                    Cuando hay cambios pendientes de sincronizar (modo offline
@@ -2235,6 +2306,30 @@ export default function App() {
           .stratos-bottomnav el backdrop-filter crea un containing block y el
           position:fixed del cuadro quedaba anclado a la barra (cortado abajo).
           Solo se abre desde el "+" (visible únicamente en móvil). ── */}
+      {/* ── LLAMADA ENTRANTE (overlay estilo WhatsApp) — tenants con reunionButton.
+          Aparece ENCIMA de todo cuando un compañero te llama (Realtime sobre
+          proactive_reminders): Contestar abre el Meet, Rechazar la cierra, y se
+          apaga sola a los 45s como un teléfono que deja de sonar. ── */}
+      {incomingCall && createPortal(
+        <div style={{ position: "fixed", inset: 0, zIndex: 99995, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 18, background: "rgba(3,7,13,0.94)", backdropFilter: "blur(14px)", WebkitBackdropFilter: "blur(14px)", padding: 24 }}>
+          <div style={{ width: 92, height: 92, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", background: `${P.accent}1c`, border: `2px solid ${P.accent}66`, animation: "stratosNewLeadPulse 1.6s ease-in-out infinite" }}>
+            <PhoneCall size={38} color={P.accent} />
+          </div>
+          <div style={{ textAlign: "center" }}>
+            <div style={{ fontSize: 22, fontWeight: 700, color: "#FFFFFF", fontFamily: fontDisp, letterSpacing: "-0.01em" }}>{incomingCall.caller}</div>
+            <div style={{ fontSize: 14, color: "rgba(255,255,255,0.65)", marginTop: 6 }}>te está llamando · Reunión de equipo</div>
+          </div>
+          <div style={{ display: "flex", gap: 14, marginTop: 10, width: "100%", maxWidth: 340 }}>
+            <button onClick={() => setIncomingCall(null)}
+              style={{ flex: 1, padding: "14px 12px", borderRadius: 999, border: "1px solid rgba(248,113,113,0.5)", background: "rgba(248,113,113,0.14)", color: "#FCA5A5", fontSize: 15, fontWeight: 600, cursor: "pointer" }}>
+              Rechazar
+            </button>
+            <button onClick={() => { const m = incomingCall.meet; setIncomingCall(null); window.open(m, "_blank", "noopener"); }}
+              style={{ flex: 1, padding: "14px 12px", borderRadius: 999, border: "none", background: P.accent, color: "#04211A", fontSize: 15, fontWeight: 700, cursor: "pointer" }}>
+              📞 Contestar
+            </button>
+          </div>
+        </div>, document.body)}
       {plusOpen && createPortal(
         <>
           <div onClick={() => setPlusOpen(false)} style={{ position:"fixed", inset:0, zIndex:202, background: isLight ? "rgba(15,23,42,0.34)" : "rgba(1,3,9,0.66)", animation:"fadeIn 0.18s ease both" }} />

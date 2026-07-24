@@ -1,0 +1,22 @@
+-- ─────────────────────────────────────────────────────────────────────────────
+-- 129 · Llamada DIRIGIDA + notificación tipo llamada (espejo)
+-- Aplicada por MCP en stratos-prod el 24-jul-2026. Pedido de Ángel (capturas):
+-- llamar a UNA persona (no a todo el mundo) y que el aviso sea como WhatsApp.
+-- ─────────────────────────────────────────────────────────────────────────────
+-- (a) `fn_start_team_call(p_target_profile_id uuid default null)` — reemplaza la
+--     versión sin argumentos (migración 127): target null = todo el equipo de la
+--     org; un id = SOLO esa persona (validado dentro de la misma org). El aviso
+--     inserta pending→sent en proactive_reminders (dispara el push) + campanita
+--     (fn_log_proactive_copilot) y dispara la grabación tl;dv vía pg_net contra
+--     organizations.meta_config->>'reunion_webhook' (secreto POR TENANT, jamás
+--     en el repo/bundle).
+-- (b) El payload del aviso viaja con title ("📞 X te está llamando"), url (el
+--     Meet), kind='llamada' y requireInteraction=true.
+-- (c) `fn_call_targets()` — compañeros activos de la org del que llama (id +
+--     nombre) para el selector "Llamar a…" del header.
+-- (d) `trg_push_on_proactive_sent` v2 (aditivo): usa payload.title/url si vienen
+--     (default idéntico al previo) y reenvía kind/requireInteraction al edge
+--     `send-push` (v4), que los pasa al Service Worker (v268: notificación fija
+--     con Contestar/Rechazar; el toque abre directo el Meet).
+-- Reversión: recrear fn/trigger de la migración 127 + edge send-push v3.
+select 'espejo migración 129 — ver definición aplicada en stratos-prod' as nota;
