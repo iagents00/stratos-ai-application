@@ -1,0 +1,16 @@
+-- 125_mkt_4b_intents_empece_posponer_horarios.sql
+-- Pieza 4b del agente sin fricción (APLICADA en stratos-prod 24-jul vía MCP; este archivo = espejo git).
+-- (1) fn_mkt_start_task: «ya empecé X» → estado='en_curso' (misma resolución fuzzy de título que complete).
+-- (2) fn_mkt_postpone_task: «pospón X [para mañana a las 10]» → corre due_at usando
+--     parse_relative_or_abs_es(cuando, tz del ASIGNADO); sin tiempo → +1 hora (explicado en la reply).
+-- (3) mkt_nlu_dispatch: + ramas start_task / postpone_task + ayuda actualizada.
+-- (4) fn_mkt_in_window: defaults OFICIALES 10:00-21:00 (Iván 24-jul: "todas las empresas 10am-9pm Cancún").
+-- (5) fn_mkt_persecucion_tick: los mensajes ofrecen las respuestas nuevas ("ya empecé…", "pospón…").
+-- Seeds aplicados aparte: Duke org completa 10:00-22:00 America/Cancun ("Duke de 10 a 10");
+--   Iván (2 cuentas) 10-22 Cancún (= jornada Duke); Ángel 9:30-16:30 America/Bogota.
+-- n8n: prompt del flujo lplLwsnJapOXtFcs actualizado con las 2 tools y PUBLICADO
+--   (activa bedc5ff8-…; revertir = republicar da1eb11a-…).
+-- Verificado: 5/5 pruebas directas de intents + QA dorado mkt 17/17.
+-- El SQL completo aplicado vive en la migración remota (supabase) con este mismo nombre;
+-- ver también la 124 para el motor base. ROLLBACK: drop de las 2 funciones nuevas +
+-- re-crear mkt_nlu_dispatch/fn_mkt_in_window/fn_mkt_persecucion_tick desde la 124.
