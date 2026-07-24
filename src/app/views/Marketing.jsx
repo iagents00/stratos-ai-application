@@ -990,16 +990,16 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
   return (
     <div style={{
       display: "flex", flexDirection: "column", gap: 16, color: txt, fontFamily: font,
-      // El PIPELINE (kanban de 7 columnas ≈1700px) aprovecha TODA la pantalla en web —
-      // con el tope de 1180 quedaban márgenes muertos a los lados y más scroll interno
-      // (pedido de Ángel 21-jul). Las demás tabs conservan el ancho de lectura cómodo.
-      maxWidth: (tab === "pipeline" && !isMobile) ? "none" : 1180,
+      // TODAS las tabs ocupan TODO el ancho como el Pipeline (decisión Ángel 24-jul):
+      // antes solo Pipeline iba full y las demás quedaban en una columna de 1180
+      // centrada, con márgenes muertos a los lados en monitor grande. Ahora parejo.
+      maxWidth: "none",
       width: "100%", margin: "0 auto", overflowX: "hidden",
     }}>
       {/* Fila 1 — identidad del espacio + tabs segmentados (estilo mockup aprobado).
           En móvil se apila: identidad arriba, tabs a lo ancho abajo (scroll horizontal limpio). */}
       <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", alignItems: isMobile ? "stretch" : "center", gap: isMobile ? 10 : 14, flexWrap: "wrap" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 11, minWidth: 0 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 11, minWidth: 0, flex: isMobile ? undefined : 1 }}>
           <div style={{ width: 40, height: 40, borderRadius: 12, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", background: `${accent}18`, border: `1px solid ${accent}33` }}>
             <Megaphone size={20} color={accent} strokeWidth={1.9} />
           </div>
@@ -1008,11 +1008,10 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
             <div style={{ fontSize: 11.5, color: txt2 }}>{firstName} · Marketing</div>
           </div>
         </div>
-        {!isMobile && <div style={{ flex: 1 }} />}
         <div style={{
           display: "flex", gap: 3, padding: 5, borderRadius: 16, overflowX: "auto", WebkitOverflowScrolling: "touch",
           background: isLight ? "rgba(15,23,42,0.045)" : "rgba(255,255,255,0.035)", border: `1px solid ${bd}`,
-          maxWidth: "100%", width: isMobile ? "100%" : undefined,
+          maxWidth: "100%", width: isMobile ? "100%" : undefined, flexShrink: 0,
         }}>
           {tabBtn("dia", "Mi Día")}
           {tabBtn("marcas", "Marcas")}
@@ -1020,6 +1019,7 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
           {tabBtn("solicitudes", "Solicitudes", requests.filter(r => r.estado === "nueva").length)}
           {isAdmin && tabBtn("equipo", "Equipo")}
         </div>
+        {!isMobile && <div style={{ flex: 1 }} />}
       </div>
 
       {/* Fila 2 — título de la sección + acciones */}
