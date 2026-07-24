@@ -18,6 +18,7 @@ import grupo28Config from "./grupo28/config";
 import tgeniusConfig from "./tgenius/config";
 import stratosSalesConfig from "./stratos-sales/config";
 import vegaConfig    from "./vega/config";
+import nsgConfig     from "./nsg/config";
 
 // Registry de todos los clientes conocidos
 const CLIENT_CONFIGS = {
@@ -26,6 +27,7 @@ const CLIENT_CONFIGS = {
   tgenius:         tgeniusConfig,
   "stratos-sales": stratosSalesConfig,
   vega:            vegaConfig,
+  nsg:             nsgConfig,
 };
 
 /**
