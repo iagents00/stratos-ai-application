@@ -7,7 +7,7 @@
  */
 import { useState, useEffect, useRef, useCallback, useMemo, lazy, Suspense } from "react";
 import { createPortal, flushSync } from "react-dom";
-import { supabase } from "../lib/supabase";
+import { supabase, SUPABASE_REST_URL, SUPABASE_ANON_KEY } from "../lib/supabase";
 import { formatFechaLarga, STAGES_CON_CITA } from "../lib/utils";
 import LoginScreen from "../landing/LoginScreen.jsx";
 import PricingScreen from "../landing/PricingScreen.jsx";
@@ -339,10 +339,36 @@ export default function App() {
   };
   const startTeamCall = (targetId) => {
     setCallOpen(false);
-    // Abrir el Meet SINCRÓNICO (dentro del gesto; un window.open tras await
-    // cae en el popup blocker). El aviso + la grabación van por detrás.
+    // ⚠️ ORDEN CRÍTICO PARA CELULAR (bug real 24-jul): al abrir el Meet, la PWA
+    // se va a background y iOS MATA los fetch normales en vuelo → el aviso "te
+    // está llamando" y el disparo del bot grabador nunca salían del teléfono
+    // (y el .catch lo tragaba en silencio). Fix: disparar PRIMERO la RPC con
+    // fetch keepalive (sobrevive al cambio de app; token leído síncrono del
+    // storage — getSession() es async y rompería el gesto del popup).
+    let fired = false;
+    try {
+      const raw = localStorage.getItem("sb-glulgyhkrqpykxmujodb-auth-token");
+      const parsed = raw ? JSON.parse(raw) : null;
+      const tok = parsed?.access_token || parsed?.currentSession?.access_token || null;
+      if (tok) {
+        fetch(`${SUPABASE_REST_URL}/rest/v1/rpc/fn_start_team_call`, {
+          method: "POST",
+          keepalive: true,
+          headers: {
+            "Content-Type": "application/json",
+            apikey: SUPABASE_ANON_KEY,
+            Authorization: `Bearer ${tok}`,
+          },
+          body: JSON.stringify({ p_target_profile_id: targetId || null }),
+        }).catch(() => {});
+        fired = true;
+      }
+    } catch { /* cae al camino SDK */ }
+    if (!fired) {
+      supabase.rpc("fn_start_team_call", { p_target_profile_id: targetId || null }).catch(() => {});
+    }
+    // Abrir el Meet en el MISMO tick del gesto (popup blocker safe).
     window.open("https://meet.google.com/mus-xsur-jdc", "_blank", "noopener");
-    supabase.rpc("fn_start_team_call", { p_target_profile_id: targetId || null }).catch(() => {});
   };
   // Suscripción a llamadas entrantes (solo tenants con el botón; cleanup SIEMPRE).
   useEffect(() => {
