@@ -1,0 +1,41 @@
+-- ─────────────────────────────────────────────────────────────────────────────
+-- 126 · A5 agente sin fricción — VENTANA LABORAL en los avisos proactivos de VENTAS
+-- (espejo del cambio aplicado por MCP en stratos-prod el 24-jul-2026)
+-- ─────────────────────────────────────────────────────────────────────────────
+-- Qué hace: fn_proactive_get_pending (el único punto por el que TODOS los motores
+-- n8n de ventas retiran avisos) ahora difiere los avisos NO críticos hasta la
+-- JORNADA LABORAL del destinatario — pieza 3 del agente sin fricción, la misma
+-- que ya corre en el motor de tareas mkt (migraciones 124/125):
+--
+--   · DIFERIBLES (esperan la jornada): inactividad*  y  next_action_3h.
+--     Fuera de jornada el aviso QUEDA 'pending' y sale solo al abrir la ventana
+--     (igual que ya hacía el quiet-hours de la org, pero POR PERSONA).
+--   · SIN CAMBIO (hora fija / último aviso / hora elegida por el usuario):
+--     zoom*, visita*, next_action_10min, team_action, personal, evidence*, admin*.
+--   · La jornada viene de profiles.work_start/work_end/work_tz vía
+--     fn_mkt_in_window (default 10:00–21:00 Cancún; Duke sembrado 10:00–22:00;
+--     Ángel 9:30–16:30 America/Bogota). ignore_quiet también salta esta ventana.
+--
+-- Verificación (24-jul, laboratorio QA ffffffff-…-0001, jamás Duke):
+--   1) jornada CERRADA → next_action_10min SALIÓ y la inactividad QUEDÓ pendiente.
+--   2) jornada ABIERTA → la inactividad salió de inmediato.
+--   3) QA dorado ventas fn_qa_run_golden(): 24/43 ANTES y DESPUÉS (idéntico).
+--
+-- Reversión: recrear fn_proactive_get_pending sin el bloque marcado
+-- "pieza 3 sin fricción (A5)" (la definición previa está en el historial /
+-- backup diario del cerebro).
+--
+-- Cambio exacto dentro del WHERE del CTE `cand` (el resto de la función igual):
+--
+--       AND (
+--         -- pieza 3 sin fricción (A5, 24-jul): lo DIFERIBLE espera la jornada del asesor
+--         NOT (r.tipo LIKE 'inactividad%' OR r.tipo = 'next_action_3h')
+--         OR r.ignore_quiet
+--         OR public.fn_mkt_in_window(pr.id, now())
+--       )
+--
+-- Este archivo es un ESPEJO documental: la función completa ya vive aplicada en
+-- stratos-prod (glulgyhkrqpykxmujodb). Si se corre en un entorno limpio, no hace
+-- nada por sí solo (la definición completa viaja con el backup del cerebro).
+-- ─────────────────────────────────────────────────────────────────────────────
+select 'espejo migración 126 — ver definición aplicada en stratos-prod' as nota;
