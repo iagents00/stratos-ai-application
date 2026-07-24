@@ -190,7 +190,16 @@ export function canAccessModule(moduleId, user, clientConfig = null) {
     const isComandoDirectivoOpenIn = (
       moduleId === "d" && clientConfig?.features?.comandoDirectivo === true
     );
-    if (!isComandoDirectivoOpenIn) return false;
+    // Excepción: módulo de TAREAS/PROYECTOS (`mkt`, el motor mkt_* del ERP de
+    // marketing reusado como sistema de tareas genérico) para tenants que lo
+    // prendan con `features.mktModule` (ej. NSG, que lo rotula "Proyectos" vía
+    // navLabels). Los datos son org-scoped (mkt_* llevan organization_id + RLS):
+    // un tenant externo solo ve SUS marcas/proyectos/tareas, jamás las de Duke.
+    // El rol decide después (MODULE_ROLES.mkt = super_admin/admin).
+    const isMktOpenIn = (
+      moduleId === "mkt" && clientConfig?.features?.mktModule === true
+    );
+    if (!isComandoDirectivoOpenIn && !isMktOpenIn) return false;
   }
   // Secciones de marketing en el sidebar (Mi Día/Marcas/Pipeline/Solicitudes): las ve
   // el rol `marketing` Y el admin de marketing (Alex). NO los admins de ventas (que ven

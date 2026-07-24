@@ -24,11 +24,13 @@
  * internos de Stratos (Finanzas/RRHH/ERP/iAgents/Campañas) quedan bloqueados —
  * usan datos mock horneados en el bundle. No se toca el control de acceso.
  *
- * Los módulos de OPERACIÓN de la v1 del plan (Mi Día · Proyectos/Sprints ·
- * Documentos) NO viven acá todavía: requieren generalizar el motor de tareas del
- * ERP de marketing (mkt_*) + un carve-out en navigation.js (archivo compartido con
- * Duke → va con review). Este archivo levanta el tenant (Nivel 1); los módulos de
- * operación son el build del Nivel 2 (ver context/nsg-stratos-ops-plan en el AIOS).
+ * Nivel 2 (24-jul): el módulo "Proyectos" (motor de tareas mkt_* org-scoped, con
+ * Mi Día · proyectos · tareas · equipo) quedó VIVO vía features.mktModule +
+ * navLabels, y el Copilot habla con el motor de tareas sin fricción
+ * (copilotBrain:"tareas" → mkt_nlu_dispatch: crear/empezar/terminar/posponer +
+ * persecución 1h/10min en la jornada de cada quien). Falta del plan: módulo
+ * Documentos y la conexión del Copilot al segundo cerebro/AIOS (Nivel 3) —
+ * ver context/nsg-stratos-ops-plan en el AIOS.
  *
  * Activación:
  *   - localhost:5173/?app&client=nsg          (dev / QA)
@@ -85,10 +87,24 @@ const nsgConfig = {
     // Telegram aparecen solos). Lo ve el mando (Ángel/Iván).
     caja:             true,
     cajaAsesores:     false,
-    // Copilot ON: la puerta del chat. Hoy usa el cerebro estándar de Stratos;
-    // el objetivo (Nivel 2/3) es conectarlo al segundo cerebro / AIOS y a los
-    // documentos de NSG. Gate en navigation.js canAccessModule.
+    // Copilot ON: la puerta del chat. Con copilotBrain:"tareas" habla con el
+    // motor de tareas sin fricción (mkt_nlu_dispatch): "ponme una tarea…",
+    // "ya empecé…", "pospón… para mañana a las 3", "¿qué tengo hoy?". La
+    // conexión al segundo cerebro / AIOS y documentos sigue siendo Nivel 3.
     copilotModule:    true,
+    copilotBrain:     "tareas",
+    // Módulo de tareas/proyectos (motor mkt_* org-scoped) — en el nav se llama
+    // "Proyectos" (navLabels). Persecución activa: organizations.meta_config
+    // .mkt_persecucion = 'on' para la org NSG (avisos 1h/10min + "¿ya pudiste
+    // comenzar?", entregados en la jornada de cada quien).
+    mktModule:        true,
+  },
+
+  // Renombres de módulos en el nav para NSG (mecanismo ya existente en App.jsx:
+  // clientConfig?.navLabels?.[id] ?? label). El motor es el mismo; el nombre
+  // habla el idioma de NSG.
+  navLabels: {
+    mkt: "Proyectos",
   },
 
   support: {

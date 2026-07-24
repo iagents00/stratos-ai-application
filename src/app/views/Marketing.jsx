@@ -36,8 +36,17 @@ import { font, fontDisp } from "../../design-system/tokens";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../hooks/useAuth";
 import { useIsMobile } from "../../hooks/useViewport";
+import { resolveClientFromLocation } from "../../clients";
 
 /* ── Constantes del dominio ─────────────────────────────────────────────── */
+
+// Rótulo del módulo por tenant: Duke lo ve como "Marketing"; un tenant que reusa
+// el motor como sistema de tareas lo renombra vía navLabels.mkt (NSG → "Proyectos").
+// El cliente es fijo durante la sesión (mismo patrón que labels.js/pipeline.js).
+const MODULE_LABEL = (() => {
+  try { return resolveClientFromLocation()?.navLabels?.mkt || "Marketing"; }
+  catch { return "Marketing"; }
+})();
 
 const ETAPAS = [
   { id: "seleccionada",  l: "Seleccionada" },
@@ -182,7 +191,7 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
       setRequests(rq.data || []);
       setPeople(pr.data || []);
     } catch (e) {
-      setError("No pude cargar el módulo de Marketing. Probá actualizar.");
+      setError(`No pude cargar el módulo de ${MODULE_LABEL}. Probá actualizar.`);
     } finally {
       setLoading(false);
     }
@@ -1037,7 +1046,7 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
           </div>
           <div style={{ minWidth: 0 }}>
             <div style={{ fontSize: 14.5, fontWeight: 650, color: txt, fontFamily: fontDisp, letterSpacing: "-0.01em" }}>Mi Espacio</div>
-            <div style={{ fontSize: 11.5, color: txt2 }}>{firstName} · Marketing</div>
+            <div style={{ fontSize: 11.5, color: txt2 }}>{firstName} · {MODULE_LABEL}</div>
           </div>
         </div>
         <div style={{
