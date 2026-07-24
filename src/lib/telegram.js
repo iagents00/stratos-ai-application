@@ -15,22 +15,26 @@
  * Migración relacionada: supabase/migrations/007_telegram_bot_asesor_mode.sql
  */
 import { supabase } from './supabase'
-import { resolveClientFromLocation } from '../clients'
+import { resolveClientFromLocation, getClientConfigByOrgId } from '../clients'
 
 // ── Puerta del chat por TENANT (white-label) ─────────────────────────────────
-// Un tenant cuyo Copilot opera el motor de TAREAS (mkt_nlu_dispatch: crear/
-// empezar/terminar/posponer tareas sin fricción) en vez del CRM de ventas lo
-// declara en su config con `features.copilotBrain: "tareas"` (caso NSG). Va por
-// CONFIG, nunca hardcodeado por org (regla white-label #15 de la skill). El
-// cliente es fijo durante toda la sesión (mismo patrón que labels.js/pipeline.js).
+// Un tenant cuyo Copilot opera el motor de TAREAS (crear/empezar/terminar/
+// posponer sin fricción + segundo cerebro) lo declara en su config con
+// `features.copilotBrain: "tareas"` y, si tiene flujo propio,
+// `tenant.copilotWebhook` (caso NSG → flujo Claude `copilot-nsg`). Va por
+// CONFIG, nunca hardcodeado por org (regla white-label #15 de la skill).
+function tenantCopilotShape(cfg) {
+  return {
+    tasksBrain: cfg?.features?.copilotBrain === 'tareas',
+    webhook: cfg?.tenant?.copilotWebhook || null,
+    mktLabel: cfg?.navLabels?.mkt || 'Marketing',
+  }
+}
+// Resolución por URL (sirve antes de conocer el perfil; mismo patrón que
+// labels.js/pipeline.js). La AUTORIDAD final es la ORG del usuario (ver inner).
 function getTenantCopilotConfig() {
-  try {
-    const cfg = resolveClientFromLocation()
-    return {
-      tasksBrain: cfg?.features?.copilotBrain === 'tareas',
-      mktLabel: cfg?.navLabels?.mkt || 'Marketing',
-    }
-  } catch { return { tasksBrain: false, mktLabel: 'Marketing' } }
+  try { return tenantCopilotShape(resolveClientFromLocation()) }
+  catch { return { tasksBrain: false, webhook: null, mktLabel: 'Marketing' } }
 }
 
 // getSession() puede colgarse si el SDK auto-refresca un token caducado.
@@ -382,7 +386,7 @@ async function _sendCopilotMessageInner(rawText, options = {}) {
 
     const { data: profile } = await supabase
       .from('profiles')
-      .select('telegram_chat_id, role, is_marketing_admin')
+      .select('telegram_chat_id, role, is_marketing_admin, organization_id')
       .eq('id', session.user.id)
       .single();
 
@@ -396,7 +400,13 @@ async function _sendCopilotMessageInner(rawText, options = {}) {
     // ningún admin de ventas tiene is_marketing_admin (default false).
     // `tenant.tasksBrain` (config del cliente, ej. NSG): TODO el Copilot del tenant
     // habla con el cerebro de tareas — misma ruta que marketing, sin tocar ventas.
-    const tenant = getTenantCopilotConfig();
+    // La URL da la 1ª foto; la ORG del usuario logueado es la AUTORIDAD (inmune a
+    // bundle cacheado, URL vieja o app instalada apuntando a la raíz).
+    let tenant = getTenantCopilotConfig();
+    try {
+      const orgCfg = getClientConfigByOrgId(profile?.organization_id);
+      if (orgCfg) tenant = tenantCopilotShape(orgCfg);
+    } catch { /* noop — se queda la resolución por URL */ }
     const isMarketing = profile?.role === 'marketing' || profile?.is_marketing_admin === true || tenant.tasksBrain;
 
     // 1. Detección directa de solicitud de manual / guía / instrucciones — o "¿qué puedes hacer?"
@@ -406,7 +416,7 @@ async function _sendCopilotMessageInner(rawText, options = {}) {
     // marketing de Duke (marcas/videos). Va ANTES del bloque isMarketing.
     if (tenant.tasksBrain && !options.callback_data && (wantsManual || wantsCapabilities)) {
       return {
-        reply: `Esto es lo que puedo hacer por ti:\n\n• Decirte qué tienes hoy — "¿qué tengo hoy?"\n• Crear tareas sin fricción — "ponme una tarea: enviar el reporte mañana a las 10" o "créale una tarea a Iván: llamar al prospecto"\n• Avance por texto — "ya empecé …", "ya terminé …", "pospón … para mañana a las 3"\n• Pendientes de una persona — "¿qué tiene pendiente Ángel?"\n• Registrar solicitudes y asignarlas — "necesito … para el viernes"\n\nTodo por voz o texto. Lo que creo aparece al instante en el módulo ${tenant.mktLabel}, y el sistema persigue cada tarea hasta que se cierra (avisos 1h y 10min antes de vencer, y "¿ya pudiste comenzar?").`,
+        reply: `Esto es lo que puedo hacer por ti:\n\n• Decirte qué tienes hoy — "¿qué tengo hoy?"\n• Crear tareas sin fricción — "ponme una tarea: enviar el reporte mañana a las 10" o "créale una tarea a Iván: llamar al prospecto"\n• Avance por texto — "ya empecé …", "ya terminé …", "pospón … para mañana a las 3"\n• Pendientes de una persona — "¿qué tiene pendiente Ángel?"\n• Consultar el segundo cerebro — "¿en qué estamos?", "¿qué se hizo hoy?", el plan de NSG, promesas, informes y reuniones\n• Registrar solicitudes y asignarlas — "necesito … para el viernes"\n\nTodo por voz o texto. Lo que creo aparece al instante en el módulo ${tenant.mktLabel}, y el sistema persigue cada tarea hasta que se cierra (avisos 1h y 10min antes de vencer, y "¿ya pudiste comenzar?").`,
         buttons: [],
         error: null
       };
@@ -520,7 +530,12 @@ async function _sendCopilotMessageInner(rawText, options = {}) {
       // Marketing usa gpt-4o + tool a Supabase; algunas corridas (crear solicitud)
       // pasan de 15s. Le damos más aire para que no corte con "intenta de nuevo".
       const timeout = setTimeout(() => ctrl.abort(), isMarketing ? 40000 : 15000);
-      const res = await fetch(isMarketing ? N8N_COPILOT_WEBHOOK_MKT : N8N_COPILOT_WEBHOOK, {
+      // Webhook por tenant (NSG → su flujo Claude propio); si no hay override,
+      // la ruta de siempre: marketing → cerebro mkt · resto → cerebro de ventas.
+      const webhookUrl = (tenant.tasksBrain && tenant.webhook)
+        ? tenant.webhook
+        : (isMarketing ? N8N_COPILOT_WEBHOOK_MKT : N8N_COPILOT_WEBHOOK);
+      const res = await fetch(webhookUrl, {
         method: 'POST',
         signal: ctrl.signal,
         headers: { 'Content-Type': 'application/json' },

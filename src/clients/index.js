@@ -143,6 +143,17 @@ export function getOrgIdByClientId(clientId) {
 }
 
 /**
+ * Config completa (mergeada con defaults) del cliente dueño de una
+ * organizationId, o null si la org no está en el registry. Útil FUERA de React
+ * para decidir por la ORG del usuario logueado (autoridad) y no por la URL —
+ * inmune a caché del Service Worker, URL vieja o app instalada (caso Copilot).
+ */
+export function getClientConfigByOrgId(organizationId) {
+  const id = getClientIdByOrgId(organizationId);
+  return id ? getClientConfig(id) : null;
+}
+
+/**
  * Decide si hay que redirigir al user a otro cliente según su organización.
  *
  * Reglas:

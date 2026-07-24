@@ -1739,6 +1739,28 @@ export default function App() {
                 <button className="stratos-header-search" title="Buscar (⌘K)" onClick={openHeaderSearch} style={iBtnBase} onMouseEnter={onIco} onMouseLeave={offIco} onMouseDown={dnIco} onMouseUp={upIco}>
                   <IosIcon name="search" size={16} color={icoRest} />
                 </button>
+                {/* ── Botón "Llamar" (tenants con features.reunionButton, hoy NSG) ──
+                   Un toque: la RPC fn_start_team_call avisa a los compañeros de la
+                   org ("📞 X te está llamando" → campanita + push al teléfono) y
+                   dispara la grabación de tl;dv (webhook secreto vive en la DB);
+                   acá solo abrimos el Meet que devuelve. Si la RPC falla, se abre
+                   la sala fija igual (la llamada nunca se bloquea por un aviso). */}
+                {clientConfig?.features?.reunionButton && (
+                  <button
+                    className="stratos-header-search"
+                    title="Llamar al equipo — abre el Meet, les avisa y graba la reunión"
+                    onClick={() => {
+                      // Abrir el Meet SINCRÓNICO (dentro del gesto — el popup blocker
+                      // mata los window.open tras un await); el aviso a los compañeros
+                      // + la grabación van en segundo plano, best-effort.
+                      window.open("https://meet.google.com/mus-xsur-jdc", "_blank", "noopener");
+                      supabase.rpc("fn_start_team_call").catch(() => {});
+                    }}
+                    style={iBtnBase} onMouseEnter={onIco} onMouseLeave={offIco} onMouseDown={dnIco} onMouseUp={upIco}
+                  >
+                    <PhoneCall size={16} color={icoRest} />
+                  </button>
+                )}
                 {/* ── Campana de notificaciones ──
                    Cuando hay cambios pendientes de sincronizar (modo offline
                    o cola residual), la campana muestra un badge ámbar con la
