@@ -29,6 +29,12 @@ if (!import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_ANON_KE
   )
 }
 
+// Export ADITIVO (24-jul, no toca el flujo de auth): el "beacon" del botón
+// Llamar necesita URL + anon key para un fetch con keepalive que sobreviva
+// cuando la PWA se va a background al abrir el Meet (bug: iOS mataba el aviso).
+export const SUPABASE_REST_URL = supabaseUrl
+export const SUPABASE_ANON_KEY = supabaseKey
+
 export const supabase = createClient(
   supabaseUrl,
   supabaseKey,
