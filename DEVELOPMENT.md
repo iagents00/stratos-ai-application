@@ -649,6 +649,37 @@ git push origin feature/mi-feature
 
 ---
 
+## 📐 Layout: márgenes y ancho (estándar web vs app) — LÉELO antes de crear un módulo
+
+**El SHELL es el ÚNICO dueño de los márgenes de página.** El contenedor `.stratos-content-area`
+en `App.jsx` (≈línea 2068) ya pone el gutter estándar (`18px 22px`). Un módulo pone su **contenido**;
+**nunca** sus márgenes laterales de página. Así no repetimos ajustes de márgenes en cada módulo nuevo.
+
+**Reglas (decididas 24-jul-2026, Ángel):**
+
+1. **Ancho: FULL, como el Pipeline.** Las vistas de contenido ocupan **todo** el ancho disponible
+   (dentro del gutter del shell). **NO** se centra el contenido en una columna angosta con
+   `maxWidth` + `margin:0 auto` — eso deja "márgenes muertos" a los lados en monitor grande.
+   Referencia visual aprobada: el tablero **Pipeline** del módulo Mi Espacio.
+2. **Menús / tabs: CENTRADOS** en el header del módulo. Patrón: identidad con `flex:1` a la izquierda
+   → caja de tabs con `flexShrink:0` (centrada) → spacer `flex:1` a la derecha. Ejemplo real:
+   `views/Marketing.jsx` (Fila 1 del header).
+3. **Vistas inmersivas (chat/Copilot, WhatsApp): full-bleed** (`padding:0` + scroll propio). En móvil
+   el modo inmersivo (`data-immersive="1"`) **oculta el header Y la barra inferior**, así que SIEMPRE
+   deben llevar su propia flecha "‹ volver" en celular/app (o el usuario queda sin salida).
+4. **Diferencias WEB vs APP → SOLO con `isNativeApp()`** (`lib/native.js`; `false` en cualquier
+   navegador, `true` solo en el shell nativo Capacitor). Ej.: la flecha "volver" del Copilot se muestra
+   con `isNativeApp() || isMobile` — el desktop web no la necesita (el sidebar navega); el iPhone/Safari
+   sí (el modo inmersivo le tapa la nav).
+5. **Diferencias por TAMAÑO de pantalla → SOLO con `useViewport()` / `useIsMobile()`**
+   (`hooks/useViewport.js`; breakpoints 768/1024 + blindaje `isPhoneHardware`). Nunca uses
+   `isNativeApp()` para responsive, ni `useIsMobile()` para decidir "es la app".
+
+**Al crear un módulo nuevo:** no seteás márgenes de página (los hereda del shell → ancho full). Si es
+un chat/inmersivo, marcalo en el shell (como `copilot`/`wa`) y ponele su flecha de volver. Nada más.
+
+---
+
 ## 📚 Recursos
 
 - [React Docs](https://react.dev)

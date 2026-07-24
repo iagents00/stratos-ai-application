@@ -26,6 +26,8 @@ import {
 } from "../../lib/telegram";
 import { getPushStatus, enablePushNotifications } from "../../lib/push";
 import { supabase } from "../../lib/supabase";
+import { isNativeApp } from "../../lib/native";
+import { useIsMobile } from "../../hooks/useViewport";
 
 const SUGGESTIONS = [
   { label: "Mis clientes", text: "mis clientes" },
@@ -68,6 +70,12 @@ export default function Copilot({ theme = "dark", T: Tprop, isLight: isLightProp
 /* Chat — layout WhatsApp: header fino, mensajes expansivos, composer compacto */
 /* ─────────────────────────────────────────────────────────────────────────── */
 function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing, orgId }) {
+  // La flecha "‹ volver" solo tiene sentido donde el header/bottom-nav se ocultan
+  // (modo inmersivo en celular) o en la app nativa. En DESKTOP WEB el sidebar
+  // siempre está a la vista → la flecha sobra (pedido de Ángel 24-jul). En iPhone/
+  // Safari (PWA "Agregar a inicio") isMobile la conserva para no dejar sin salida.
+  const isMobile = useIsMobile();
+  const showBackBtn = onBack && (isNativeApp() || isMobile);
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
@@ -424,7 +432,7 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
             Blanca en oscuro, verde de marca en claro (como la referencia de
             WhatsApp que mandó Ángel). Al lado, el SCORE del asesor (badge tipo
             el "180" de WhatsApp). */}
-        {onBack && (
+        {showBackBtn && (
           <button type="button" onClick={onBack} aria-label="Volver" style={{
             display: "flex", alignItems: "center", gap: 1, padding: "4px 6px 4px 2px", marginRight: 2,
             background: "transparent", border: "none", cursor: "pointer", flexShrink: 0,
@@ -483,11 +491,11 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
       )}
 
       {/* ── Mensajes (área expansiva) ──
-          En pantallas anchas la conversación vive en una COLUMNA CENTRADA (max 920px),
-          estilo WhatsApp Web/ChatGPT: antes las burbujas quedaban pegadas a los bordes
-          de un lienzo de 1900px con un vacío enorme al medio (captura de Ángel 21-jul). */}
+          El Copilot ocupa TODO el ancho (full-bleed como el Pipeline) — decisión de
+          Ángel 24-jul. Antes iba en una columna centrada de 920px (fix del 21-jul);
+          se revierte para que en web llene la pantalla igual que el resto de la plataforma. */}
       <div ref={scrollRef} style={{ flex: 1, minHeight: 0, overflowY: "auto", padding: "12px 14px" }}>
-        <div style={{ width: "100%", maxWidth: 920, margin: "0 auto", minHeight: "100%", display: "flex", flexDirection: "column", gap: 8 }}>
+        <div style={{ width: "100%", maxWidth: "none", minHeight: "100%", display: "flex", flexDirection: "column", gap: 8 }}>
           {loading ? (
             <div style={{ margin: "auto", color: T.txt3, fontSize: 12, fontFamily: font }}>Cargando conversación…</div>
           ) : messages.length === 0 ? (
@@ -541,9 +549,9 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
         </div>
       )}
 
-      {/* ── Composer compacto (estilo WhatsApp) — controles centrados a la misma columna que los mensajes ── */}
+      {/* ── Composer compacto (estilo WhatsApp) — full-width, misma caja que los mensajes ── */}
       <div style={{ padding: "8px 12px calc(10px + var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px)))", background: composerBg, borderTop: `1px solid ${T.border}`, flexShrink: 0 }}>
-       <div style={{ display: "flex", alignItems: "flex-end", gap: 8, width: "100%", maxWidth: 920, margin: "0 auto" }}>
+       <div style={{ display: "flex", alignItems: "flex-end", gap: 8, width: "100%", maxWidth: "none" }}>
         {/* Adjuntar evidencia (foto/video) — solo equipo de marketing */}
         {isMarketing && (
           <>
