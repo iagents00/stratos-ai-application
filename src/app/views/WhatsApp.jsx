@@ -412,10 +412,10 @@ export default function WhatsAppInbox({ T = P, isLight = false, inbox, openLead,
           // safe-area-bottom. Antes tenía un recuadro que lo hacía ver "entrecortado".
           ? { background: isLight ? "#F8FAFC" : "#060A12", overflow: "hidden" }
           : {
-              borderRadius: 14, border: `1px solid ${T.border}`,
-              background: isLight ? "rgba(255,255,255,0.9)" : "rgba(255,255,255,0.02)",
-              boxShadow: isLight ? T.shadow2 : "none",
-              padding: 16,
+              // Desktop: FLUSH como el Copilot — SIN marco de tarjeta (nada de
+              // border/radio/sombra/padding externo). El fondo del área de chat +
+              // los insets internos (header y hilo) lo dejan limpio, no "encajonado".
+              background: isLight ? "#F8FAFC" : "#060A12", overflow: "hidden",
             }),
       }}
     >
@@ -428,7 +428,7 @@ export default function WhatsAppInbox({ T = P, isLight = false, inbox, openLead,
               // Header inmersivo tipo Copilot: su propio padding + safe-area-top
               // (es lo más alto de la pantalla) + fondo de barra; pegado al hilo.
               ? { padding: "calc(10px + var(--safe-area-inset-top, env(safe-area-inset-top, 0px))) 14px 12px", background: isLight ? "#FFFFFF" : "rgba(10,15,26,0.95)" }
-              : { paddingBottom: 12, marginBottom: 12 }),
+              : { padding: "12px 16px" }),
           }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
               {isMobile && (
@@ -566,7 +566,7 @@ export default function WhatsAppInbox({ T = P, isLight = false, inbox, openLead,
             flex: 1, minHeight: 0, display: "flex", flexDirection: "column",
             // Inmersivo: insets laterales suaves + safe-area-bottom para que el
             // composer/aviso quede sobre el home indicator (como el Copilot).
-            ...(isMobile ? { padding: "6px 12px calc(6px + var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px)))" } : {}),
+            ...(isMobile ? { padding: "6px 12px calc(6px + var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px)))" } : { padding: "6px 14px 10px" }),
           }}>
             {/* key por conversación: al cambiar de chat se MONTA una instancia
                 nueva → el borrador/adjunto y los mensajes NO se arrastran al
