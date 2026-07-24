@@ -63,10 +63,14 @@ const nsgConfig = {
     // login, y RLS aísla sus datos.
     organizationId: "4a17b181-35d2-41b3-b639-6e0bd4c38acc",
     supabaseRef:    "glulgyhkrqpykxmujodb",
-    // Sin bot propio todavía: el Copilot usa el cerebro estándar de Stratos. La
-    // conexión al segundo cerebro (AIOS) es build del Nivel 2/3.
+    // Sin bot propio todavía.
     botUsername:    "",
     telegramManualPairing: false,
+    // Flujo n8n PROPIO del Copilot de NSG (24-jul): agente CLAUDE con memoria y
+    // 2 herramientas — el motor de tareas sin fricción Y el SEGUNDO CEREBRO
+    // (espejo aios_docs, refrescado por brain-sync.yml del repo iagents-aios).
+    // telegram.js lo usa cuando copilotBrain="tareas" (ruteo por ORG del usuario).
+    copilotWebhook: "https://personal-n8n.suwsiw.easypanel.host/webhook/copilot-nsg-c4d81e2f",
   },
 
   // Set mínimo y aislado (mismo patrón que Vega / Grupo 28). Los módulos internos
@@ -98,6 +102,11 @@ const nsgConfig = {
     // .mkt_persecucion = 'on' para la org NSG (avisos 1h/10min + "¿ya pudiste
     // comenzar?", entregados en la jornada de cada quien).
     mktModule:        true,
+    // Botón "Llamar" en el header: toca → avisa a los compañeros de la org
+    // "📞 X te está llamando" (campanita + push al teléfono), dispara la
+    // grabación de tl;dv y abre el Meet fijo. Todo por la RPC fn_start_team_call
+    // (el webhook secreto vive en organizations.meta_config, no en este bundle).
+    reunionButton:    true,
   },
 
   // Renombres de módulos en el nav para NSG (mecanismo ya existente en App.jsx:
