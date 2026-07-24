@@ -54,6 +54,11 @@ const nsgConfig = {
     accentLight:             "#F9A8D4",
     favicon:                 "/favicon.ico",
     intelligenceCenterLabel: "Centro de Inteligencia · NSG",
+    // Rótulo CORTO para el celular: la pill del centro es position:absolute (no
+    // reserva espacio) y con el rótulo largo se montaba ENCIMA del botón 📞
+    // Llamar del header (reporte de Ángel 24-jul). Mismo mecanismo que Duke
+    // ("Intelligence" en móvil) — DynIsland.jsx elige este en pantallas chicas.
+    intelligenceCenterLabelMobile: "NSG",
   },
 
   tenant: {

@@ -395,6 +395,54 @@ export default function App() {
     const t = setTimeout(() => setIncomingCall(null), 45000);
     return () => clearTimeout(t);
   }, [incomingCall]);
+  // ── Aviso "Activar avisos de llamada" (tenants con reunionButton) ──────────
+  // Para que el teléfono SUENE como WhatsApp cuando un compañero llama, hace
+  // falta el PERMISO de notificaciones + la suscripción push — y pedir permiso
+  // exige un gesto del usuario (regla de iOS/Chrome). El boot solo re-suscribe
+  // si el permiso YA está dado; este aviso es el gesto que faltaba. Estados:
+  //   activate → botón verde (pide permiso → suscribe → guarda endpoint)
+  //   install  → iPhone sin la app en pantalla de inicio (iOS no da push sin eso)
+  //   denied   → el navegador tiene los avisos bloqueados (se arregla en Ajustes)
+  //   done     → confirmación breve y desaparece
+  const [callPushPrompt, setCallPushPrompt] = useState(null);
+  const [callPushBusy, setCallPushBusy] = useState(false);
+  useEffect(() => {
+    if (!user?.id || clientConfig?.features?.reunionButton !== true || isNativeApp()) return;
+    try {
+      const snooze = Number(localStorage.getItem("stratos_callpush_snooze") || 0);
+      if (Date.now() - snooze < 20 * 3600 * 1000) return; // "Ahora no" ≈ 1 día
+    } catch { /* noop */ }
+    let alive = true;
+    (async () => {
+      try {
+        const st = await getPushStatus();
+        if (!alive || st.isActive) return;
+        if (st.needsInstall) setCallPushPrompt("install");
+        else if (st.permission === "denied") setCallPushPrompt("denied");
+        else setCallPushPrompt("activate");
+      } catch { /* noop */ }
+    })();
+    return () => { alive = false; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id, clientConfig?.features?.reunionButton]);
+  const snoozeCallPush = () => {
+    try { localStorage.setItem("stratos_callpush_snooze", String(Date.now())); } catch { /* noop */ }
+    setCallPushPrompt(null);
+  };
+  const activateCallPush = async () => {
+    if (callPushBusy) return;
+    setCallPushBusy(true);
+    try {
+      const r = await enablePushNotifications(user?.id);
+      if (r?.success) {
+        setCallPushPrompt("done");
+        setTimeout(() => setCallPushPrompt(p => (p === "done" ? null : p)), 6000);
+      } else if (r?.permission === "denied") {
+        setCallPushPrompt("denied");
+      }
+    } catch { /* noop */ }
+    setCallPushBusy(false);
+  };
 
   // Bandeja de WhatsApp (módulo + notificaciones de la campana). Una sola
   // suscripción realtime compartida. Gateada por el flag whatsappModule.
@@ -1594,6 +1642,10 @@ export default function App() {
           /* El Centro de Inteligencia (DynIsland) SÍ va centrado en móvil (rótulo "Inteligencia" para Duke). */
           .stratos-header-center{display:block!important}
           .stratos-header-search{display:none!important}
+          /* El 📞 Llamar SIEMPRE por encima y tapeable: la pill del centro es
+             absolute y (con rótulos largos) puede pintarse encima del botón —
+             pasó en NSG. Elevarlo garantiza que el tap le llegue al botón. */
+          .stratos-header-call{flex-shrink:0!important;position:relative!important;z-index:6!important}
           .stratos-header-divider{display:none!important}
           .stratos-header-phone{display:none!important}
           .stratos-userpill{padding:0!important;gap:0!important}
@@ -1629,6 +1681,7 @@ export default function App() {
         html[data-force-mobile="1"] .stratos-header-right{gap:2px!important;flex-shrink:0!important}
         html[data-force-mobile="1"] .stratos-header-center{display:block!important}
         html[data-force-mobile="1"] .stratos-header-search{display:none!important}
+        html[data-force-mobile="1"] .stratos-header-call{flex-shrink:0!important;position:relative!important;z-index:6!important}
         html[data-force-mobile="1"] .stratos-header-divider{display:none!important}
         html[data-force-mobile="1"] .stratos-header-phone{display:none!important}
         html[data-force-mobile="1"] .stratos-userpill{padding:0!important;gap:0!important}
@@ -2332,6 +2385,62 @@ export default function App() {
           .stratos-bottomnav el backdrop-filter crea un containing block y el
           position:fixed del cuadro quedaba anclado a la barra (cortado abajo).
           Solo se abre desde el "+" (visible únicamente en móvil). ── */}
+      {/* ── AVISO "Activa los avisos de llamada" — tenants con reunionButton.
+          Tarjeta flotante (portal a <body>, sobre el bottom-nav) que pide el
+          gesto para el permiso de notificaciones. Sin esto el teléfono no
+          suena con la app cerrada. Se posterga ~1 día con "Ahora no". ── */}
+      {callPushPrompt && createPortal(
+        <div style={{ position: "fixed", left: 12, right: 12, bottom: "calc(96px + env(safe-area-inset-bottom, 0px))", zIndex: 99960, display: "flex", justifyContent: "center", pointerEvents: "none" }}>
+          <div style={{ pointerEvents: "auto", width: "100%", maxWidth: 430, borderRadius: 18, padding: "14px 16px", fontFamily: font,
+            background: isLight ? "#FFFFFF" : "#0A1420",
+            border: `1px solid ${callPushPrompt === "done" ? "rgba(52,211,153,0.55)" : (isLight ? "rgba(15,23,42,0.14)" : "rgba(110,231,194,0.28)")}`,
+            boxShadow: isLight ? "0 18px 50px rgba(15,23,42,0.25)" : "0 18px 50px rgba(0,0,0,0.55)" }}>
+            <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
+              <div style={{ width: 38, height: 38, borderRadius: "50%", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center",
+                background: "rgba(52,211,153,0.14)", border: "1px solid rgba(52,211,153,0.45)",
+                animation: callPushPrompt === "activate" ? "stratosNewLeadPulse 1.8s ease-in-out infinite" : "none" }}>
+                <PhoneCall size={17} color="#34D399" />
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 14.5, fontWeight: 700, fontFamily: fontDisp, letterSpacing: "-0.01em", color: isLight ? "#0B1220" : "#F1F5F9" }}>
+                  {callPushPrompt === "done" ? "¡Listo! Avisos de llamada activados" :
+                   callPushPrompt === "install" ? "Falta un paso en tu iPhone" :
+                   callPushPrompt === "denied" ? "Los avisos están bloqueados" :
+                   "Activa los avisos de llamada"}
+                </div>
+                <div style={{ fontSize: 12.5, lineHeight: 1.5, marginTop: 4, color: isLight ? "rgba(11,18,32,0.62)" : "rgba(255,255,255,0.62)" }}>
+                  {callPushPrompt === "done" && "Cuando un compañero te llame, el teléfono te avisará al instante — en Android con botones Contestar / Rechazar; en iPhone tocas el aviso y entras directo a la reunión."}
+                  {callPushPrompt === "activate" && "Para que te suene cuando un compañero te llame (como WhatsApp), permite las notificaciones. En Android el aviso trae botones Contestar / Rechazar; en iPhone tocas el aviso y entras directo."}
+                  {callPushPrompt === "install" && "iPhone solo permite avisos con la app en la pantalla de inicio: abre esta página en Safari → botón Compartir → “Agregar a inicio”. Después entra desde ese ícono y vuelve a este aviso para activar."}
+                  {callPushPrompt === "denied" && "Este navegador tiene las notificaciones de Stratos bloqueadas. Actívalas en Ajustes → Notificaciones de tu teléfono (o en el candado de la barra del navegador) y vuelve a entrar."}
+                </div>
+                {callPushPrompt !== "done" && (
+                  <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
+                    {callPushPrompt === "activate" && (
+                      <button onClick={activateCallPush} disabled={callPushBusy}
+                        style={{ flex: 1, padding: "10px 12px", borderRadius: 999, border: "none", background: "#34D399", color: "#04211A",
+                          fontSize: 13, fontWeight: 700, fontFamily: font, cursor: "pointer", opacity: callPushBusy ? 0.6 : 1 }}>
+                        {callPushBusy ? "Activando…" : "🔔 Activar ahora"}
+                      </button>
+                    )}
+                    <button onClick={snoozeCallPush}
+                      style={{ flex: callPushPrompt === "activate" ? "0 0 auto" : 1, padding: "10px 14px", borderRadius: 999,
+                        border: `1px solid ${isLight ? "rgba(15,23,42,0.16)" : "rgba(255,255,255,0.16)"}`, background: "transparent",
+                        color: isLight ? "rgba(11,18,32,0.6)" : "rgba(255,255,255,0.6)", fontSize: 13, fontWeight: 600, fontFamily: font, cursor: "pointer" }}>
+                      {callPushPrompt === "activate" ? "Ahora no" : "Entendido"}
+                    </button>
+                  </div>
+                )}
+              </div>
+              <button onClick={snoozeCallPush} title="Cerrar"
+                style={{ flexShrink: 0, width: 26, height: 26, borderRadius: "50%", border: "none", background: "transparent",
+                  display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer",
+                  color: isLight ? "rgba(11,18,32,0.45)" : "rgba(255,255,255,0.45)" }}>
+                <X size={15} />
+              </button>
+            </div>
+          </div>
+        </div>, document.body)}
       {/* ── LLAMADA ENTRANTE (overlay estilo WhatsApp) — tenants con reunionButton.
           Aparece ENCIMA de todo cuando un compañero te llama (Realtime sobre
           proactive_reminders): Contestar abre el Meet, Rechazar la cierra, y se
