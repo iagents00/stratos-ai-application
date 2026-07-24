@@ -1305,15 +1305,17 @@ const LandingPages = ({ T = P }) => {
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <button onClick={e => { e.stopPropagation(); setShowNewPropModal(true); }} style={{
-              display: "flex", alignItems: "center", gap: 6, padding: "7px 14px",
-              borderRadius: 8, border: `1px solid ${T.accent}40`, background: T.accentS,
-              cursor: "pointer", color: T.accent, fontSize: 12, fontWeight: 500, fontFamily: fontDisp,
+              display: "flex", alignItems: "center", gap: 5, padding: "8px 16px",
+              borderRadius: 999, border: `1px solid ${T.accent}55`, background: T.accentB,
+              cursor: "pointer", color: T.accent, fontSize: 12.5, fontWeight: 600, fontFamily: fontDisp,
+              letterSpacing: "-0.01em", whiteSpace: "nowrap", flexShrink: 0,
+              boxShadow: `0 2px 10px ${T.accent}22`, WebkitTapHighlightColor: "transparent",
               transition: "all 0.2s",
             }}
-              onMouseEnter={e => { e.currentTarget.style.background = T.accentB; }}
-              onMouseLeave={e => { e.currentTarget.style.background = T.accentS; }}
+              onMouseEnter={e => { e.currentTarget.style.background = `${T.accent}2e`; e.currentTarget.style.borderColor = `${T.accent}80`; e.currentTarget.style.transform = "translateY(-1px)"; e.currentTarget.style.boxShadow = `0 5px 16px ${T.accent}33`; }}
+              onMouseLeave={e => { e.currentTarget.style.background = T.accentB; e.currentTarget.style.borderColor = `${T.accent}55`; e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = `0 2px 10px ${T.accent}22`; }}
             >
-              <Plus size={13} /> Registrar nueva
+              <Plus size={14} strokeWidth={2.4} /> Nueva
             </button>
             <div style={{ color: T.txt3, transition: "transform 0.2s", transform: showCatalogSection ? "rotate(180deg)" : "none" }}>
               <ChevronDown size={16} />
@@ -1417,8 +1419,14 @@ const LandingPages = ({ T = P }) => {
                             <p style={{ fontSize: 10, color: T.txt3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{prop.location}{prop.ticket ? ` · ${prop.ticket}` : ""}</p>
                           </div>
                           <div style={{ display: "flex", alignItems: "center", gap: 5, flexShrink: 0 }}>
-                            {prop.driveLink && <a href={prop.driveLink} target="_blank" rel="noreferrer" title="Abrir carpeta de Drive" style={{ display: "flex", alignItems: "center", padding: "5px 7px", borderRadius: 6, border: `1px solid ${prop.accent}40`, background: `${prop.accent}10`, color: prop.accent, textDecoration: "none" }}><Image size={11} /></a>}
-                            <button onClick={() => { setSelectedProps([prop.id]); setStep(1); }} style={{ display: "flex", alignItems: "center", gap: 4, padding: "5px 11px", borderRadius: 6, border: `1px solid ${T.accent}40`, background: T.accentS, cursor: "pointer", color: T.accent, fontSize: 10, fontWeight: 500, fontFamily: fontDisp, whiteSpace: "nowrap" }}>Crear landing</button>
+                            {prop.driveLink && <a href={prop.driveLink} target="_blank" rel="noreferrer" title="Abrir carpeta de Drive" style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 30, height: 30, borderRadius: 9, border: `1px solid ${prop.accent}45`, background: `${prop.accent}16`, color: prop.accent, textDecoration: "none", flexShrink: 0, transition: "all 0.18s" }}
+                              onMouseEnter={e => { e.currentTarget.style.background = `${prop.accent}28`; e.currentTarget.style.borderColor = `${prop.accent}70`; }}
+                              onMouseLeave={e => { e.currentTarget.style.background = `${prop.accent}16`; e.currentTarget.style.borderColor = `${prop.accent}45`; }}
+                            ><Image size={13} /></a>}
+                            <button onClick={() => { setSelectedProps([prop.id]); setStep(1); }} style={{ display: "flex", alignItems: "center", gap: 4, padding: "7px 14px", borderRadius: 999, border: `1px solid ${T.accent}4d`, background: T.accentB, cursor: "pointer", color: T.accent, fontSize: 10.5, fontWeight: 600, fontFamily: fontDisp, whiteSpace: "nowrap", boxShadow: `0 1px 6px ${T.accent}1f`, WebkitTapHighlightColor: "transparent", transition: "all 0.18s" }}
+                              onMouseEnter={e => { e.currentTarget.style.background = `${T.accent}2a`; e.currentTarget.style.borderColor = `${T.accent}75`; e.currentTarget.style.boxShadow = `0 3px 11px ${T.accent}30`; }}
+                              onMouseLeave={e => { e.currentTarget.style.background = T.accentB; e.currentTarget.style.borderColor = `${T.accent}4d`; e.currentTarget.style.boxShadow = `0 1px 6px ${T.accent}1f`; }}
+                            >Crear landing</button>
                           </div>
                         </div>
                       ))}
