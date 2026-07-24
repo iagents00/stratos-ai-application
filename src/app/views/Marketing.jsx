@@ -601,6 +601,9 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
     <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(2, 1fr)", gap: 14 }}>
       {brands.map(b => {
         const bProjects = projects.filter(p => p.brand_id === b.id && p.estado !== "terminado");
+        // Tareas de la marca SIN proyecto (ej. creadas por el Copilot): antes no se
+        // renderizaban en ningún lado de esta tab (solo viven dentro de projectCard).
+        const bLoose = tasks.filter(t => t.brand_id === b.id && !t.project_id && t.estado !== "hecha");
         const c = brandColor(b);
         return (
           <div key={b.id} style={{ ...card, padding: 16, display: "flex", flexDirection: "column", gap: 10 }}>
@@ -631,6 +634,12 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
               <div style={{ fontSize: 12, color: txt3 }}>Sin proyectos activos. Agregá el primero con “+”.</div>
             )}
             {bProjects.map(p => projectCard(p))}
+            {bLoose.length > 0 && (
+              <div style={{ display: "flex", flexDirection: "column", gap: 4, borderTop: bProjects.length ? `1px solid ${bd}` : "none", paddingTop: bProjects.length ? 8 : 0 }}>
+                <div style={{ fontSize: 11.5, color: txt3, fontWeight: 600 }}>Sin proyecto · {bLoose.length}</div>
+                {bLoose.map(t => taskRow(t, { overdue: !!(t.due_at && dayStr(t.due_at) < hoy), blocked: isBlocked(t) }))}
+              </div>
+            )}
           </div>
         );
       })}
@@ -912,6 +921,11 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
           const enCurso  = tt.filter(t => t.estado !== "hecha" && !isBlocked(t)).length;
           const bloq     = tt.filter(t => t.estado !== "hecha" && isBlocked(t)).length;
           const venc     = tt.filter(t => t.estado !== "hecha" && t.due_at && dayStr(t.due_at) < hoy).length;
+          // Pendientes LISTADAS (no solo contadas): sin esta lista, una tarea recién
+          // asignada (ej. por el Copilot) era invisible para el admin — solo el
+          // asignado la veía en SU Mi Día al llegar el día.
+          const pendientes = tt.filter(t => t.estado !== "hecha")
+            .sort((a, b) => ((a.due_at || "9999") < (b.due_at || "9999") ? -1 : 1));
           // Tareas HECHAS de la semana (no solo el conteo): el admin las ve listadas
           // con su EVIDENCIA clicable — así "le llega" la foto/video que subió cada quien.
           const hechasSemana = tt.filter(t => t.estado === "hecha" && t.updated_at && new Date(t.updated_at).getTime() > week);
@@ -941,6 +955,24 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
                   {stat("Hechas · 7d", hechas7, hechas7 > 0 ? accent : undefined)}
                 </div>
               </div>
+              {pendientes.length > 0 && (
+                <div style={{ borderTop: `1px solid ${bd}`, paddingTop: 9, display: "flex", flexDirection: "column", gap: 5 }}>
+                  {pendientes.slice(0, 8).map(t => {
+                    const vencida = t.due_at && dayStr(t.due_at) < hoy;
+                    return (
+                      <div key={t.id} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        <span style={{ width: 7, height: 7, borderRadius: 999, flexShrink: 0, background: vencida ? RED : isBlocked(t) ? AMBER : `${accent}88` }} />
+                        <span style={{ flex: 1, fontSize: 12, color: txt2, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{t.titulo}</span>
+                        {isBlocked(t) && <span style={{ fontSize: 10, color: AMBER, flexShrink: 0 }}>bloqueada</span>}
+                        <span style={{ fontSize: 10.5, color: vencida ? RED : txt3, whiteSpace: "nowrap", flexShrink: 0 }}>{t.due_at ? fmtDia(t.due_at) : "sin fecha"}</span>
+                      </div>
+                    );
+                  })}
+                  {pendientes.length > 8 && (
+                    <div style={{ fontSize: 10.5, color: txt3 }}>+{pendientes.length - 8} más</div>
+                  )}
+                </div>
+              )}
               {/* Hechas de la semana con su EVIDENCIA — el admin abre la foto/video de cada una */}
               {hechasSemana.length > 0 && (
                 <div style={{ borderTop: `1px solid ${bd}`, paddingTop: 9, display: "flex", flexDirection: "column", gap: 5 }}>
