@@ -9,6 +9,7 @@ import { useState, useEffect, useRef, useCallback, useMemo, lazy, Suspense } fro
 import { createPortal, flushSync } from "react-dom";
 import { supabase, SUPABASE_REST_URL, SUPABASE_ANON_KEY } from "../lib/supabase";
 import { formatFechaLarga, STAGES_CON_CITA } from "../lib/utils";
+import { startRing, stopRing, primeRinger } from "../lib/ringer";
 import LoginScreen from "../landing/LoginScreen.jsx";
 import PricingScreen from "../landing/PricingScreen.jsx";
 import { useAuth } from "../hooks/useAuth";
@@ -395,6 +396,24 @@ export default function App() {
     const t = setTimeout(() => setIncomingCall(null), 45000);
     return () => clearTimeout(t);
   }, [incomingCall]);
+  // TIMBRE (solo tenants con callRingtone, ej. NSG): suena mientras hay llamada entrante.
+  // Cubre las 3 salidas (Contestar/Rechazar/auto-cierre) porque todas ponen incomingCall=null.
+  useEffect(() => {
+    if (!incomingCall || clientConfig?.features?.callRingtone !== true) return;
+    startRing();
+    return () => stopRing();
+  }, [incomingCall, clientConfig?.features?.callRingtone]);
+  // Desbloquear el audio del timbre en el primer gesto del usuario (política de autoplay).
+  useEffect(() => {
+    if (clientConfig?.features?.callRingtone !== true) return;
+    const onGesture = () => primeRinger();
+    window.addEventListener("pointerdown", onGesture, { once: true });
+    window.addEventListener("keydown", onGesture, { once: true });
+    return () => {
+      window.removeEventListener("pointerdown", onGesture);
+      window.removeEventListener("keydown", onGesture);
+    };
+  }, [clientConfig?.features?.callRingtone]);
   // ── Aviso "Activar avisos de llamada" (tenants con reunionButton) ──────────
   // Para que el teléfono SUENE como WhatsApp cuando un compañero llama, hace
   // falta el PERMISO de notificaciones + la suscripción push — y pedir permiso
