@@ -132,6 +132,8 @@ export const DEFAULT_CLIENT_CONFIG = {
     // con persecución). Org-scoped por RLS. Default OFF — lo prende el tenant que
     // opere sus tareas acá (ej. NSG, rotulándolo "Proyectos" con navLabels.mkt).
     mktModule: false,
+    // Timbre sonoro en la llamada entrante (app abierta). Default OFF — lo prende el tenant (ej. NSG).
+    callRingtone: false,
     // Cerebro de la puerta del chat (Copilot): "crm" = asistente de ventas/leads
     // (default, asesores Duke) · "tareas" = motor de tareas sin fricción
     // (mkt_nlu_dispatch: crear/empezar/terminar/posponer + persecución; caso NSG).

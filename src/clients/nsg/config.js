@@ -112,6 +112,7 @@ const nsgConfig = {
     // grabación de tl;dv y abre el Meet fijo. Todo por la RPC fn_start_team_call
     // (el webhook secreto vive en organizations.meta_config, no en este bundle).
     reunionButton:    true,
+    callRingtone:     true,   // NSG: suena timbre en la llamada entrante (app abierta)
   },
 
   // Renombres de módulos en el nav para NSG (mecanismo ya existente en App.jsx:
