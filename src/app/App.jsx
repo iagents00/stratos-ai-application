@@ -371,7 +371,32 @@ export default function App() {
     // Abrir el Meet en el MISMO tick del gesto (popup blocker safe).
     window.open("https://meet.google.com/mus-xsur-jdc", "_blank", "noopener");
   };
+  // Muestra la pantalla de llamada. Ignora avisos repetidos mientras ya hay una
+  // en curso: si no, cada evento reiniciaría el timbre desde cero.
+  const showIncomingCall = useCallback((caller, meet) => {
+    setIncomingCall(prev => prev || {
+      caller: caller || "Alguien",
+      meet: meet || "https://meet.google.com/mus-xsur-jdc",
+    });
+    try { if (navigator.vibrate) navigator.vibrate([300, 120, 300, 120, 300]); } catch { /* noop */ }
+  }, []);
+  // Cierra la notificación del SO al contestar/rechazar/expirar: viaja con
+  // requireInteraction, así que sin esto se queda pegada en pantalla.
+  const closeCallNotifications = useCallback(() => {
+    try {
+      navigator.serviceWorker?.ready
+        ?.then(r => r.getNotifications({ tag: "stratos-llamada" }))
+        .then(ns => ns.forEach(n => n.close()))
+        .catch(() => { /* noop */ });
+    } catch { /* noop */ }
+  }, []);
   // Suscripción a llamadas entrantes (solo tenants con el botón; cleanup SIEMPRE).
+  // ⚠️ HOY ESTE CAMINO NO DISPARA: `proactive_reminders` no está en la publicación
+  // `supabase_realtime`, así que el INSERT nunca llega al navegador. Se deja
+  // porque es el camino correcto y funciona solo si algún día se publica la
+  // tabla; el que hace sonar el timbre es el efecto de abajo (push → SW).
+  // NO publicar la tabla sin leer el comentario de public/sw.js: Duke inserta
+  // ~1.4k filas/día y useCopilotInbox la escucha con event:'*' sin filtro.
   useEffect(() => {
     if (!user?.id || clientConfig?.features?.reunionButton !== true) return;
     const ch = supabase.channel(`incoming-call-${user.id}`)
@@ -381,21 +406,31 @@ export default function App() {
           const row = p?.new;
           if (!row || row.tipo !== "llamada_entrante") return;
           const pay = row.payload || {};
-          setIncomingCall({
-            caller: pay.caller || "Alguien",
-            meet: pay.meet || "https://meet.google.com/mus-xsur-jdc",
-          });
-          try { if (navigator.vibrate) navigator.vibrate([300, 120, 300, 120, 300]); } catch { /* noop */ }
+          showIncomingCall(pay.caller, pay.meet);
         })
       .subscribe();
     return () => { supabase.removeChannel(ch); };
-  }, [user?.id, clientConfig?.features?.reunionButton]);
+  }, [user?.id, clientConfig?.features?.reunionButton, showIncomingCall]);
+  // Llamada entrante vía PUSH — el camino que SÍ funciona con la app abierta.
+  // El SW (v272+) nos avisa por postMessage al recibir un push kind='llamada';
+  // de ahí sale la pantalla estilo WhatsApp y el timbre continuo. Sin esto solo
+  // sonaba el "din" único de la notificación del sistema.
+  useEffect(() => {
+    if (clientConfig?.features?.reunionButton !== true) return;
+    if (typeof navigator === "undefined" || !("serviceWorker" in navigator)) return;
+    const onSwMessage = (evt) => {
+      const d = evt.data;
+      if (d?.type === "INCOMING_CALL") showIncomingCall(d.caller, d.meet);
+    };
+    navigator.serviceWorker.addEventListener("message", onSwMessage);
+    return () => navigator.serviceWorker.removeEventListener("message", onSwMessage);
+  }, [clientConfig?.features?.reunionButton, showIncomingCall]);
   // La pantalla de llamada se auto-cierra a los 45s (como un teléfono que deja de sonar).
   useEffect(() => {
     if (!incomingCall) return;
-    const t = setTimeout(() => setIncomingCall(null), 45000);
+    const t = setTimeout(() => { closeCallNotifications(); setIncomingCall(null); }, 45000);
     return () => clearTimeout(t);
-  }, [incomingCall]);
+  }, [incomingCall, closeCallNotifications]);
   // TIMBRE (solo tenants con callRingtone, ej. NSG): suena mientras hay llamada entrante.
   // Cubre las 3 salidas (Contestar/Rechazar/auto-cierre) porque todas ponen incomingCall=null.
   useEffect(() => {
@@ -2474,11 +2509,11 @@ export default function App() {
             <div style={{ fontSize: 14, color: "rgba(255,255,255,0.65)", marginTop: 6 }}>te está llamando · Reunión de equipo</div>
           </div>
           <div style={{ display: "flex", gap: 14, marginTop: 10, width: "100%", maxWidth: 340 }}>
-            <button onClick={() => setIncomingCall(null)}
+            <button onClick={() => { closeCallNotifications(); setIncomingCall(null); }}
               style={{ flex: 1, padding: "14px 12px", borderRadius: 999, border: "1px solid rgba(248,113,113,0.5)", background: "rgba(248,113,113,0.14)", color: "#FCA5A5", fontSize: 15, fontWeight: 600, cursor: "pointer" }}>
               Rechazar
             </button>
-            <button onClick={() => { const m = incomingCall.meet; setIncomingCall(null); window.open(m, "_blank", "noopener"); }}
+            <button onClick={() => { const m = incomingCall.meet; closeCallNotifications(); setIncomingCall(null); window.open(m, "_blank", "noopener"); }}
               style={{ flex: 1, padding: "14px 12px", borderRadius: 999, border: "none", background: P.accent, color: "#04211A", fontSize: 15, fontWeight: 700, cursor: "pointer" }}>
               📞 Contestar
             </button>
