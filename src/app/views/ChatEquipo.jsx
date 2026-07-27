@@ -53,7 +53,7 @@ const iniciales = (nombre = "") =>
 const COLORES = ["#6EE7C2", "#F472B6", "#60A5FA", "#FBBF24", "#A78BFA", "#FB923C", "#34D399"];
 const colorDe = (id = "") => COLORES[Math.abs([...id].reduce((a, c) => a + c.charCodeAt(0), 0)) % COLORES.length];
 
-export default function ChatEquipo({ T }) {
+export default function ChatEquipo({ T, onInmersivo }) {
   const { user } = useAuth();
   const isMobile = useIsMobile();
 
@@ -233,6 +233,19 @@ export default function ChatEquipo({ T }) {
   const verLista = !isMobile || !activo;
   const verHilo  = !isMobile || !!activo;
 
+  // MODO INMERSIVO — pedido de Ángel (27-jul, con captura): «el chat aún no se
+  // expande, necesitamos que se expanda totalmente, así como el Copilot».
+  // Cuando en el celular hay un canal abierto, la app esconde su header y la
+  // barra de abajo (el mismo mecanismo del Copilot y WhatsApp) y el hilo ocupa
+  // la pantalla completa. La flecha ‹ del hilo es la única salida — por eso el
+  // aviso solo se enciende con un canal abierto, nunca en la lista de canales:
+  // si no, quedarías sin barra y sin forma de volver.
+  const inmersivo = isMobile && !!activo;
+  useEffect(() => {
+    onInmersivo?.(inmersivo);
+    return () => onInmersivo?.(false);   // al salir del módulo, la app vuelve a la normalidad
+  }, [inmersivo, onInmersivo]);
+
   const btnIcono = {
     background: "transparent", border: `1px solid ${bd}`, borderRadius: 11,
     padding: 11, cursor: "pointer", color: txt2,
@@ -240,29 +253,49 @@ export default function ChatEquipo({ T }) {
   };
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 16, color: txt, fontFamily: font, maxWidth: 1180, width: "100%", margin: "0 auto" }}>
-      {/* Header — centrado en el celular, como el resto de la app */}
-      <div style={{ display: "flex", alignItems: "center", gap: 12, flexDirection: isMobile ? "column" : "row", textAlign: isMobile ? "center" : "left" }}>
-        <div style={{ width: 40, height: 40, borderRadius: 12, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", background: `${accent}18`, border: `1px solid ${accent}33` }}>
-          <MessagesSquare size={20} color={accent} strokeWidth={1.9} />
+    <div style={{
+      display: "flex", flexDirection: "column", gap: inmersivo ? 0 : 16,
+      color: txt, fontFamily: font, width: "100%", margin: "0 auto",
+      maxWidth: inmersivo ? "none" : 1180,
+      // En inmersivo el hilo manda: ocupa el alto real de la pantalla (dvh, que en
+      // el celular descuenta la barra del navegador) menos las zonas seguras.
+      height: inmersivo ? "100dvh" : undefined,
+      paddingTop: inmersivo ? "var(--safe-area-inset-top, env(safe-area-inset-top, 0px))" : undefined,
+      paddingBottom: inmersivo ? "var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px))" : undefined,
+      overflow: inmersivo ? "hidden" : undefined,
+    }}>
+      {/* Header del módulo — centrado en el celular, como el resto de la app.
+          En inmersivo NO se dibuja: el hilo tiene su propio encabezado con la
+          flecha de volver, igual que el Copilot. */}
+      {!inmersivo && (
+        <div style={{ display: "flex", alignItems: "center", gap: 12, flexDirection: isMobile ? "column" : "row", textAlign: isMobile ? "center" : "left" }}>
+          <div style={{ width: 40, height: 40, borderRadius: 12, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", background: `${accent}18`, border: `1px solid ${accent}33` }}>
+            <MessagesSquare size={20} color={accent} strokeWidth={1.9} />
+          </div>
+          <div>
+            <h1 style={{ margin: 0, fontSize: isMobile ? 19 : 22, fontFamily: fontDisp, fontWeight: 500, letterSpacing: "-0.01em", color: txt }}>
+              Chat del equipo
+            </h1>
+            <p style={{ margin: "3px 0 0", fontSize: 12.5, color: txt2 }}>
+              {totalSinLeer > 0
+                ? `${totalSinLeer} mensaje${totalSinLeer === 1 ? "" : "s"} sin leer`
+                : "Todo lo del equipo acá adentro · mencioná con @ y le llega el aviso"}
+            </p>
+          </div>
         </div>
-        <div>
-          <h1 style={{ margin: 0, fontSize: isMobile ? 19 : 22, fontFamily: fontDisp, fontWeight: 500, letterSpacing: "-0.01em", color: txt }}>
-            Chat del equipo
-          </h1>
-          <p style={{ margin: "3px 0 0", fontSize: 12.5, color: txt2 }}>
-            {totalSinLeer > 0
-              ? `${totalSinLeer} mensaje${totalSinLeer === 1 ? "" : "s"} sin leer`
-              : "Todo lo del equipo acá adentro · mencioná con @ y le llega el aviso"}
-          </p>
-        </div>
-      </div>
+      )}
 
       {error && (
         <div style={{ ...card, padding: "12px 15px", fontSize: 12.5, color: isLight ? "#B42318" : "#F87171" }}>{error}</div>
       )}
 
-      <div style={{ display: "flex", gap: 14, alignItems: "stretch", minHeight: isMobile ? "auto" : 560 }}>
+      <div style={{
+        display: "flex", gap: inmersivo ? 0 : 14, alignItems: "stretch",
+        // minHeight:0 es lo que deja que el hijo con overflow:auto se encoja de
+        // verdad dentro de un flex; sin eso el hilo desborda la pantalla.
+        flex: inmersivo ? 1 : undefined,
+        minHeight: inmersivo ? 0 : (isMobile ? "auto" : 560),
+      }}>
         {/* Canales */}
         {verLista && (
           <div style={{ ...card, width: isMobile ? "100%" : 264, flexShrink: 0, padding: 10, display: "flex", flexDirection: "column", gap: 4 }}>
@@ -307,7 +340,11 @@ export default function ChatEquipo({ T }) {
 
         {/* Hilo */}
         {verHilo && (
-          <div style={{ ...card, flex: 1, minWidth: 0, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+          <div style={{
+            ...card, flex: 1, minWidth: 0, display: "flex", flexDirection: "column", overflow: "hidden",
+            // A pantalla completa el hilo no es una tarjeta flotante: es LA pantalla.
+            ...(inmersivo ? { borderRadius: 0, border: "none", minHeight: 0 } : null),
+          }}>
             {!activo ? (
               <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", color: txt3, fontSize: 13, padding: 40 }}>
                 Elegí un canal para empezar
@@ -327,7 +364,15 @@ export default function ChatEquipo({ T }) {
                   </div>
                 </div>
 
-                <div style={{ flex: 1, overflowY: "auto", padding: "14px 16px", display: "flex", flexDirection: "column", gap: 2, minHeight: isMobile ? "52dvh" : 0, maxHeight: isMobile ? "52dvh" : 460 }}>
+                {/* La lista de mensajes: en inmersivo crece hasta llenar la pantalla
+                    (flex:1 + minHeight:0). El 52dvh de antes era lo que dejaba ese
+                    hueco muerto abajo que reportó Ángel. */}
+                <div style={{
+                  flex: 1, overflowY: "auto", padding: "14px 16px",
+                  display: "flex", flexDirection: "column", gap: 2,
+                  minHeight: inmersivo ? 0 : (isMobile ? "52dvh" : 0),
+                  maxHeight: inmersivo ? "none" : (isMobile ? "52dvh" : 460),
+                }}>
                   {!conAgrupado.length && (
                     <div style={{ margin: "auto", textAlign: "center", color: txt3, fontSize: 13, padding: 20 }}>
                       Todavía no hay mensajes acá.<br />

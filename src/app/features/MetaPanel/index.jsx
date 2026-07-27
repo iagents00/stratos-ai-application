@@ -15,6 +15,7 @@ import {
 import { useState, useEffect } from "react";
 import { supabase } from "../../../lib/supabase";
 import { font, fontDisp } from "../../../design-system/tokens";
+import DocsStratos from "./DocsStratos";
 
 /* ── INITIAL STATE DEFAULTS (used by App.jsx to seed useState) ─────────────── */
 export const DEFAULT_META_PLAN = {
@@ -1472,9 +1473,14 @@ export default function MetaPanel({
               <div style={{ marginBottom:22 }}>
                 <h3 style={{ margin:0, fontSize:26, fontWeight:500, fontFamily:fontDisp, letterSpacing:"-0.01em", color:T.txt }}>Documentos del Equipo</h3>
                 <p style={{ margin:"8px 0 0", fontSize:13.5, color:T.txt3, fontFamily:font, lineHeight:1.5 }}>
-                  Enlaces a Google Docs, Drive, Notion, Figma y más — siempre a la mano para todo el equipo.
+                  Los que genera Stratos (se bajan en Word) y los enlaces a Google Docs, Drive o Notion.
                 </p>
               </div>
+
+              {/* Los documentos que genera el propio sistema — el manual y todo lo
+                  que se guarde desde el Informe. Van ARRIBA de los enlaces porque
+                  son los que se usan todos los días. */}
+              <DocsStratos T={T} isLight={isLight} userId={user?.id} empresa={brandLabel} />
 
               {/* Add bar — solo admins (RLS solo les permite escribir a ellos) */}
               {canEditFinal && (
@@ -1757,7 +1763,12 @@ export default function MetaPanel({
                     <span style={{ fontSize:8, fontWeight:500, letterSpacing:"0.16em", textTransform:"uppercase", color:T.txt3, fontFamily:fontDisp }}>Protocolo Operativo · Stratos Capital Group</span>
                   </div>
                   <p style={{ margin:"0 0 4px", fontSize:25, fontWeight:500, color:T.txt, fontFamily:fontDisp, letterSpacing:"-0.045em" }}>Protocolo {brandLabel}</p>
-                  <p style={{ margin:0, fontSize:12.5, color:T.txt2, fontFamily:font }}>Sistema de ventas consultivo · Riviera Maya · Alta inversión</p>
+                  {/* El subtítulo sale del protocolo de CADA empresa. Estaba fijo en
+                      «Riviera Maya · Alta inversión» — de Duke — y aparecía también
+                      en NSG, que no vende propiedades (lo reportó Ángel). */}
+                  <p style={{ margin:0, fontSize:12.5, color:T.txt2, fontFamily:font }}>
+                    {metaProtocol.subtitulo || "Sistema de ventas consultivo · Riviera Maya · Alta inversión"}
+                  </p>
                 </div>
                 <div style={{ display:"flex", gap:8, flexShrink:0, flexWrap: isMobile ? "wrap" : "nowrap", width: isMobile ? "100%" : "auto" }}>
                   {[

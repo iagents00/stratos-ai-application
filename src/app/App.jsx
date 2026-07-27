@@ -34,7 +34,7 @@ import { isNativeApp, ensureNotifPermission, notifyUser, addNotificationTapListe
 import { initPushContext, enablePushNotifications, onNotificationClick, getPushStatus, subscribeToPush, saveSubscriptionToBackend } from "../lib/push";
 
 import {
-  Search, Bell, Settings, LogOut, Sun, Moon, ChevronDown, X, PhoneCall, MessageCircle, Target, Sparkles, Bot,
+  Search, Bell, Settings, LogOut, Sun, Moon, ChevronDown, X, PhoneCall, PhoneOff, MessageCircle, Target, Sparkles, Bot,
 } from "lucide-react";
 import "./App.css";
 
@@ -1335,6 +1335,10 @@ export default function App() {
 
   /* ── MetaPanel state ── */
   const [metaOpen, setMetaOpen]     = useState(false);
+  // El chat avisa cuando abre un canal en el celular: ahí la app esconde su
+  // header y la barra de abajo y el hilo ocupa toda la pantalla, igual que el
+  // Copilot (pedido de Ángel, 27-jul).
+  const [chatInmersivo, setChatInmersivo] = useState(false);
   // El MetaPanel es una SECCIÓN dentro del contenido (deja header + menú a la vista),
   // no un overlay a pantalla completa. Al navegar a otra vista (cambia `v`) se cierra
   // solo, para que no quede tapando la vista nueva. Deps SOLO [v]: abrir el panel no
@@ -1403,14 +1407,24 @@ export default function App() {
     return () => { cancelled = true; };
   }, [user?.organizationId, user?._offline, user?.id]);
 
-  // Plan/Protocolo efectivos: org override > hardcoded default.
-  // useMemo para que las refs no cambien entre renders si no cambia la fuente.
+  // Plan/Protocolo efectivos: lo de la org va ENCIMA del default, no en lugar de él.
+  //
+  // BUG que reportó Ángel con captura (27-jul): entrar a «Protocolo de Ventas»
+  // reventaba la pantalla entera con «Cannot read properties of undefined
+  // (reading 'map')». Causa: se le cargó a NSG un `protocol` con 3 claves
+  // (stages, objections, qualification) y este memo lo usaba TAL CUAL, borrando
+  // las otras ~15 que la pantalla recorre con .map (`principios`, `kpis`,
+  // `slas`…). Una sola clave faltante tumbaba el módulo.
+  //
+  // El merge lo vuelve imposible: lo que la org define manda, lo que no define
+  // cae al default. Guardar medio protocolo ya no puede romper nada.
+  // [guard:META-MERGE-DEFAULTS]
   const effectiveMetaPlan = useMemo(
-    () => (orgMetaConfig?.plan ? orgMetaConfig.plan : metaPlan),
+    () => (orgMetaConfig?.plan ? { ...metaPlan, ...orgMetaConfig.plan } : metaPlan),
     [orgMetaConfig, metaPlan]
   );
   const effectiveMetaProtocol = useMemo(
-    () => (orgMetaConfig?.protocol ? orgMetaConfig.protocol : metaProtocol),
+    () => (orgMetaConfig?.protocol ? { ...metaProtocol, ...orgMetaConfig.protocol } : metaProtocol),
     [orgMetaConfig, metaProtocol]
   );
   // Brand label: prioridad → meta_config.brand (override explícito en DB) →
@@ -1640,7 +1654,7 @@ export default function App() {
 
   /* ─────────────────── render ─────────────────── */
   return (
-    <div className="stratos-app" data-immersive={(v === "copilot" || v === "wa") ? "1" : undefined} style={{
+    <div className="stratos-app" data-immersive={(v === "copilot" || v === "wa" || (v === "chat" && chatInmersivo)) ? "1" : undefined} style={{
       height:"100vh", display:"flex", fontFamily:font, color:T.txt,
       background: isLight
         // Lienzo Apple: gris frío neutro luminoso (desde tokens) + un tenue halo
@@ -2349,7 +2363,7 @@ export default function App() {
                   {v === "lp"     && <LandingPages T={T} />}
                   {v === "fa"     && <FinanzasAdmin T={T} />}
                   {v === "caja"   && canAccessModule("caja", user, clientConfig) && <Caja T={T} />}
-                  {v === "chat"   && canAccessModule("chat", user, clientConfig) && <ChatEquipo T={T} />}
+                  {v === "chat"   && canAccessModule("chat", user, clientConfig) && <ChatEquipo T={T} onInmersivo={setChatInmersivo} />}
                   {v === "rrhh"   && <RRHHModule T={T} />}
                   {v === "planes" && (
                     <div style={{
@@ -2529,22 +2543,33 @@ export default function App() {
           proactive_reminders): Contestar abre el Meet, Rechazar la cierra, y se
           apaga sola a los 45s como un teléfono que deja de sonar. ── */}
       {incomingCall && createPortal(
-        <div style={{ position: "fixed", inset: 0, zIndex: 99995, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 18, background: "rgba(3,7,13,0.94)", backdropFilter: "blur(14px)", WebkitBackdropFilter: "blur(14px)", padding: 24 }}>
+        /* ⚠️ SIN `backdropFilter` inline, A PROPÓSITO. [guard:CALL-OPAQUE]
+           Ángel mandó captura (27-jul): la pantalla de llamada se veía TRANSPARENTE,
+           con el chat legible por detrás. Causa exacta: en modo seguro
+           (`html[data-lowfx]`, que se enciende solo tras los cierres en negro del
+           iPhone) `mobile-perf.css` matchea CUALQUIER elemento con `backdropFilter`
+           inline y le fuerza `background-color: rgba(9,18,37,0.72)`. Esa regla está
+           pensada para las TARJETAS de vidrio, no para un velo de pantalla completa
+           — y le bajaba el fondo del 94% al 72%.
+           Por eso acá el velo es un color SÓLIDO, sin alfa y sin filtro: no depende
+           de ningún efecto que el modo seguro pueda apagar. Si alguien le vuelve a
+           poner blur, vuelve el bug. */
+        <div style={{ position: "fixed", inset: 0, zIndex: 99995, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 20, background: "#03070D", padding: 24 }}>
           <div style={{ width: 92, height: 92, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", background: `${P.accent}1c`, border: `2px solid ${P.accent}66`, animation: "stratosNewLeadPulse 1.6s ease-in-out infinite" }}>
             <PhoneCall size={38} color={P.accent} />
           </div>
-          <div style={{ textAlign: "center" }}>
-            <div style={{ fontSize: 22, fontWeight: 700, color: "#FFFFFF", fontFamily: fontDisp, letterSpacing: "-0.01em" }}>{incomingCall.caller}</div>
-            <div style={{ fontSize: 14, color: "rgba(255,255,255,0.65)", marginTop: 6 }}>te está llamando · Reunión de equipo</div>
+          <div style={{ textAlign: "center", maxWidth: 340 }}>
+            <div style={{ fontSize: 23, fontWeight: 700, color: "#FFFFFF", fontFamily: fontDisp, letterSpacing: "-0.01em", textWrap: "balance" }}>{incomingCall.caller}</div>
+            <div style={{ fontSize: 14, color: "rgba(255,255,255,0.68)", marginTop: 6 }}>te está llamando · Reunión de equipo</div>
           </div>
-          <div style={{ display: "flex", gap: 14, marginTop: 10, width: "100%", maxWidth: 340 }}>
+          <div style={{ display: "flex", gap: 12, marginTop: 8, width: "100%", maxWidth: 360 }}>
             <button onClick={() => { closeCallNotifications(); setIncomingCall(null); }}
-              style={{ flex: 1, padding: "14px 12px", borderRadius: 999, border: "1px solid rgba(248,113,113,0.5)", background: "rgba(248,113,113,0.14)", color: "#FCA5A5", fontSize: 15, fontWeight: 600, cursor: "pointer" }}>
-              Rechazar
+              style={{ flex: 1, minHeight: 54, padding: "15px 12px", borderRadius: 999, border: "1px solid #7F3B3B", background: "#2A1214", color: "#FCA5A5", fontSize: 15.5, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 7 }}>
+              <PhoneOff size={17} /> Rechazar
             </button>
             <button onClick={() => { const m = incomingCall.meet; closeCallNotifications(); setIncomingCall(null); window.open(m, "_blank", "noopener"); }}
-              style={{ flex: 1, padding: "14px 12px", borderRadius: 999, border: "none", background: P.accent, color: "#04211A", fontSize: 15, fontWeight: 700, cursor: "pointer" }}>
-              📞 Contestar
+              style={{ flex: 1, minHeight: 54, padding: "15px 12px", borderRadius: 999, border: "none", background: P.accent, color: "#04211A", fontSize: 15.5, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 7, boxShadow: `0 8px 26px ${P.accent}38` }}>
+              <PhoneCall size={17} /> Contestar
             </button>
           </div>
         </div>, document.body)}
