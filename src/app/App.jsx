@@ -114,6 +114,8 @@ function resolveInitialView(user) {
 import Dash          from "./views/Dash";
 import ComandoDirectivo from "./views/ComandoDirectivo";
 const ComandoOps    = lazy(() => import("./views/ComandoOps"));
+// Chat del equipo: lazy porque solo lo usan los tenants con features.teamChat.
+const ChatEquipo    = lazy(() => import("./views/ChatEquipo"));
 import CRM           from "./views/CRM";
 import ErrorBoundary from "../components/ErrorBoundary.jsx";
 const ERP           = lazy(() => import("./views/ERP"));
@@ -2326,6 +2328,7 @@ export default function App() {
                   {v === "lp"     && <LandingPages T={T} />}
                   {v === "fa"     && <FinanzasAdmin T={T} />}
                   {v === "caja"   && canAccessModule("caja", user, clientConfig) && <Caja T={T} />}
+                  {v === "chat"   && canAccessModule("chat", user, clientConfig) && <ChatEquipo T={T} />}
                   {v === "rrhh"   && <RRHHModule T={T} />}
                   {v === "planes" && (
                     <div style={{

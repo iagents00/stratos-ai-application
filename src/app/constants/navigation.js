@@ -8,7 +8,7 @@
 import {
   Users, Hexagon, Activity, Building2, Atom,
   Trophy, Landmark, UserCheck, CreditCard, Shield, User, Trash2, Wallet, MessageCircle, Bot, Sparkles, Megaphone,
-  CalendarDays, Layers, Clapperboard, Inbox
+  CalendarDays, Layers, Clapperboard, Inbox, MessagesSquare
 } from "lucide-react";
 
 export const nav = [
@@ -27,6 +27,9 @@ export const nav = [
   { id: "lp",    l: "Create",    i: Hexagon    },
   { id: "d",     l: "Comando",   i: Activity   },
   { id: "caja",  l: "Caja",      i: Wallet     },
+  // Chat del equipo (pedido de Angel 27-jul): que la conversacion del equipo
+  // viva DENTRO de Stratos y no en WhatsApp. Gateado por features.teamChat.
+  { id: "chat",  l: "Chat",      i: MessagesSquare },
   { id: "e",     l: "Proyectos", i: Building2  },
   { id: "ia",    l: "iAgents",   i: Atom       },
   { id: "fa",    l: "Finanzas",  i: Landmark,  more: true },
@@ -68,6 +71,9 @@ export const MODULE_ROLES = {
   // asesores/empleados también carguen desde la web (ej. Constructora Vega)
   // lo habilitan con `features.cajaAsesores: true` en su config.
   caja:   ["super_admin","admin","director","ceo"],
+  // Chat del equipo: lo ve TODO el que trabaja adentro. Si el chat fuera solo
+  // para el mando no reemplazaria al WhatsApp, que es de lo que se trata.
+  chat:   ["super_admin","admin","director","ceo","asesor","marketing"],
   // WhatsApp: bandeja de conversaciones — el asesor DEBE verla (es donde se
   // entera de que un cliente le escribió). Gateada por flag whatsappModule.
   wa:     ["super_admin","admin","director","ceo","asesor"],
@@ -88,7 +94,7 @@ export const MODULE_NAMES = {
   d: "Comando", c: "CRM", ia: "iAgents", e: "Proyectos",
   a: "Asesores", lp: "Campañas", fa: "Finanzas",
   rrhh: "Stratos RH", trash: "Papelera", caja: "Caja",
-  wa: "WhatsApp", copilot: "Copilot", mkt: "Marketing",
+  wa: "WhatsApp", copilot: "Copilot", mkt: "Marketing", chat: "Chat del equipo",
   mkt_dia: "Mi Día", mkt_marcas: "Marcas", mkt_pipe: "Pipeline", mkt_sol: "Solicitudes",
   planes: "Planes", perfil: "Perfil", admin: "Usuarios",
 };
@@ -155,6 +161,15 @@ export function canAccessModule(moduleId, user, clientConfig = null) {
     if (MODULE_ROLES.caja.includes(user.role)) return true;
     if (user.role === "asesor" && clientConfig?.features?.cajaAsesores === true) return true;
     return false;
+  }
+
+  // Chat del equipo: 100% por feature flag, y se evalúa ANTES del aislamiento por
+  // org (igual que Caja) para que también funcione en los tenants externos. Sin
+  // `features.teamChat: true` nadie lo ve, así que Duke y los demás no cambian.
+  if (moduleId === "chat") {
+    if (clientConfig?.features?.teamChat !== true) return false;
+    if (user.isDemo) return false;   // la cuenta demo no participa del chat real
+    return MODULE_ROLES.chat.includes(user.role);
   }
 
   // WhatsApp (bandeja de conversaciones): igual que Caja, 100% por feature flag.

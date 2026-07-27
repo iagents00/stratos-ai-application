@@ -119,6 +119,13 @@ const nsgConfig = {
     // (el webhook secreto vive en organizations.meta_config, no en este bundle).
     reunionButton:    true,
     callRingtone:     true,   // NSG: suena timbre en la llamada entrante (app abierta)
+    // Chat del equipo DENTRO de Stratos (27-jul). El punto no es tener un chat
+    // más: es que Iván deje de mandar el plan del día, los documentos y las
+    // capturas por WhatsApp, y que esa conversación quede donde el Copilot y el
+    // cerebro la pueden ver. Nace con canales porque cuando entren más
+    // desarrolladores un hilo único no sirve. Las @menciones avisan por la
+    // campanita. Solo NSG por ahora.
+    teamChat:         true,
   },
 
   // Renombres de módulos en el nav para NSG (mecanismo ya existente en App.jsx:
