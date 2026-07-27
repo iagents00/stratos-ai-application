@@ -1032,17 +1032,20 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
   // Título + explicación EN SIMPLE por sección (la gente no es técnica: cada tab
   // se explica sola — pedido de Ángel 21-jul).
   const TAB_META = {
-    dia:         { title: `Hoy — ${firstName}`, sub: "Tu enfoque del día · lo vencido arriba, lo bloqueado no depende de ti" },
+    // El subtítulo va CORTO a propósito: el largo ("…lo bloqueado no depende de ti")
+    // se partía en dos renglones y dejaba la palabra «ti» sola abajo — se veía roto
+    // en el iPhone (reporte de Ángel con captura, 27-jul).
+    dia:         { title: `Hoy — ${firstName}`, sub: "Lo vencido primero, después lo de hoy" },
     // El rótulo lo pone cada empresa (NSG: "Proyectos"). Antes el encabezado decía
     // "Marcas" aunque el botón ya dijera "Proyectos" — el vocabulario de marketing
     // se colaba en NSG. Duke sin config sigue viendo "Marcas".
     marcas:      { title: tabLabel("marcas", "Marcas"),
                    sub: TENANT_MKT.tabLabels?.marcas
-                     ? "Cada proyecto con su avance — la barra muestra cuánto va completado"
-                     : "Los proyectos de cada marca — la barra muestra cuánto va completado" },
-    pipeline:    { title: "Pipeline",     sub: "El tablero de los videos de propiedades — cada tarjeta avanza de izquierda a derecha hasta Publicada" },
-    solicitudes: { title: "Solicitudes",  sub: "Pedidos de diseño para el equipo — A es simple, AAA es producción compleja" },
-    equipo:      { title: "Equipo",       sub: "Cómo va cada persona — en curso, bloqueadas, vencidas y hechas de la semana" },
+                     ? "Cada proyecto con su avance"
+                     : "Los proyectos de cada marca, con su avance" },
+    pipeline:    { title: "Pipeline",     sub: "Cada video avanza hasta Publicada" },
+    solicitudes: { title: "Solicitudes",  sub: "Pedidos de diseño · A es simple, AAA es complejo" },
+    equipo:      { title: "Equipo",       sub: "Cómo va cada persona esta semana" },
   };
   const meta = TAB_META[tab] || TAB_META.dia;
 
@@ -1058,7 +1061,8 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
       {/* Fila 1 — identidad del espacio + tabs segmentados (estilo mockup aprobado).
           En móvil se apila: identidad arriba, tabs a lo ancho abajo (scroll horizontal limpio). */}
       <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", alignItems: isMobile ? "stretch" : "center", gap: isMobile ? 10 : 14, flexWrap: "wrap" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 11, minWidth: 0, flex: isMobile ? undefined : 1 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 11, minWidth: 0, flex: isMobile ? undefined : 1,
+                      justifyContent: isMobile ? "center" : "flex-start" }}>
           <div style={{ width: 40, height: 40, borderRadius: 12, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", background: `${accent}18`, border: `1px solid ${accent}33` }}>
             <Megaphone size={20} color={accent} strokeWidth={1.9} />
           </div>
@@ -1081,24 +1085,29 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
         {!isMobile && <div style={{ flex: 1 }} />}
       </div>
 
-      {/* Fila 2 — título de la sección + acciones */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
-        <div>
-          <h1 style={{ margin: 0, fontSize: isMobile ? 21 : 26, fontFamily: fontDisp, fontWeight: 600, letterSpacing: "-0.02em", color: txt }}>
+      {/* Fila 2 — título de la sección + acciones.
+          En el celular el bloque va CENTRADO y los botones a lo ancho: antes el
+          título quedaba pegado a la izquierda y los dos botoncitos abajo se veían
+          sueltos (pedido de Ángel 27-jul, con captura). */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12,
+                    flexWrap: "wrap", flexDirection: isMobile ? "column" : "row" }}>
+        <div style={{ textAlign: isMobile ? "center" : "left", width: isMobile ? "100%" : "auto" }}>
+          <h1 style={{ margin: 0, fontSize: isMobile ? 23 : 26, fontFamily: fontDisp, fontWeight: 600, letterSpacing: "-0.02em", color: txt }}>
             {meta.title}
           </h1>
-          <p style={{ margin: "4px 0 0", fontSize: 12.5, color: txt2, maxWidth: 640 }}>{meta.sub}</p>
+          <p style={{ margin: "5px auto 0", fontSize: 13, color: txt2, maxWidth: 640, textWrap: "balance" }}>{meta.sub}</p>
         </div>
-        <div style={{ display: "flex", gap: 8 }}>
-          <button onClick={load} title="Actualizar" style={{ background: glass, border: `1px solid ${bd}`, borderRadius: 10, padding: "9px 11px", cursor: "pointer", color: txt2, display: "flex", alignItems: "center" }}>
-            <RefreshCw size={15} style={loading ? { animation: "spin 1s linear infinite" } : undefined} />
+        <div style={{ display: "flex", gap: 8, width: isMobile ? "100%" : "auto" }}>
+          <button onClick={load} title="Actualizar" style={{ background: glass, border: `1px solid ${bd}`, borderRadius: 12, padding: "12px 14px", cursor: "pointer", color: txt2, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+            <RefreshCw size={16} style={loading ? { animation: "spin 1s linear infinite" } : undefined} />
           </button>
           {onOpenCopilot && (
             <button onClick={onOpenCopilot} title="Crear con voz — díctale al Copilot" style={{
-              background: "transparent", border: `1px solid ${accent}55`, borderRadius: 10, padding: "9px 15px",
-              cursor: "pointer", color: accent, fontSize: 12.5, fontWeight: 600, fontFamily: font,
-              display: "flex", alignItems: "center", gap: 7,
-            }}><Mic size={14} /> {isMobile ? "Voz" : "Crear con voz"}</button>
+              background: "transparent", border: `1px solid ${accent}55`, borderRadius: 12, padding: "12px 18px",
+              cursor: "pointer", color: accent, fontSize: 13.5, fontWeight: 600, fontFamily: font,
+              display: "flex", alignItems: "center", justifyContent: "center", gap: 7,
+              flex: isMobile ? 1 : "none",
+            }}><Mic size={15} /> Crear con voz</button>
           )}
         </div>
       </div>

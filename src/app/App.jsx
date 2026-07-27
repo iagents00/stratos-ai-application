@@ -83,7 +83,7 @@ const LEADS_CACHE_LIMIT = 150;
  *      tiene permiso para verla Y no está en la lista efímera → la usamos.
  *   2. Si no, asesor → "c" (CRM), otros roles → "d" (Comando).
  */
-function resolveInitialView(user) {
+function resolveInitialView(user, clientConfig) {
   // Clientes externos (no Stratos) siempre arrancan en CRM, independiente del rol.
   // Asesores Stratos también arrancan en CRM. El resto (admin/ceo/director Stratos) en Comando.
   const isAsesorRole = !["super_admin","admin","director","ceo"].includes(user?.role);
@@ -101,7 +101,7 @@ function resolveInitialView(user) {
     const saved = localStorage.getItem(`stratos.crm.view.${user.id}`);
     if (!saved) return fallback;
     if (NON_PERSISTABLE_VIEWS.has(saved)) return fallback;
-    if (!canAccessModule(saved, user)) return fallback;
+    if (!canAccessModule(saved, user, clientConfig)) return fallback;
     return saved;
   } catch (_) {
     return fallback;
@@ -243,7 +243,7 @@ export default function App() {
   // Vista activa persistida por usuario en localStorage. Si haces F5 estando
   // en el CRM, vuelves al CRM (no al Comando). Validamos contra los permisos
   // del rol actual por si cambió desde la última sesión.
-  const [v, setV]        = useState(() => resolveInitialView(user));
+  const [v, setV]        = useState(() => resolveInitialView(user, clientConfig));
 
   // Vista PREVIA a las vistas INMERSIVAS (Copilot / WhatsApp) — su flecha
   // "‹ volver" regresa acá. Se guarda la última vista que NO sea inmersiva.
@@ -1874,8 +1874,8 @@ export default function App() {
         <div style={{ width:"100%", display:"flex", flexDirection:"column", alignItems:"center", paddingBottom:12 }}>
           <div style={{ height:1, width:34, background: isLight ? "rgba(13,154,118,0.10)" : "rgba(255,255,255,0.06)", margin:"4px auto 8px" }} />
           <div style={{ display:"flex", flexDirection:"column", alignItems:"center", gap:3 }}>
-            <button title={canAccessModule("admin", user) ? "Gestión de Usuarios" : "System - contrasena y soporte"}
-              onClick={() => { setMetaOpen(false); canAccessModule("admin", user) ? setV("admin") : setV("perfil"); }}
+            <button title={canAccessModule("admin", user, clientConfig) ? "Gestión de Usuarios" : "System - contrasena y soporte"}
+              onClick={() => { setMetaOpen(false); canAccessModule("admin", user, clientConfig) ? setV("admin") : setV("perfil"); }}
               style={{
                 width:44, height:44, borderRadius:13, cursor:"pointer",
                 background: v==="admin"
@@ -2365,7 +2365,7 @@ export default function App() {
                     </div>
                   )}
                   {v === "perfil" && <Profile theme={theme} T={T} />}
-                  {v === "admin"  && canAccessModule("admin", user) && <AdminPanel T={T} isLight={isLight} />}
+                  {v === "admin"  && canAccessModule("admin", user, clientConfig) && <AdminPanel T={T} isLight={isLight} />}
                 </Suspense>
               </ErrorBoundary>
             }
