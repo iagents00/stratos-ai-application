@@ -33,6 +33,7 @@ const DataDeletion     = lazy(() => import("./landing/DataDeletion.jsx"));
 const DeliveryHubCRM   = lazy(() => import("./landing/DeliveryHubCRM.jsx"));
 const ManualCRM        = lazy(() => import("./landing/ManualCRM.jsx"));
 const ManualMarketing  = lazy(() => import("./landing/ManualMarketing.jsx"));
+const ManualNSG        = lazy(() => import("./landing/ManualNSG.jsx"));
 const Diagnostico      = lazy(() => import("./landing/Diagnostico.jsx"));
 import { CATEGORIES_TG, MANUAL_SECTIONS_TG, searchManualTG } from "./landing/manual-telegram-content";
 
@@ -97,6 +98,9 @@ const MANUAL_PATHS = ["/manual", "/manual-crm"];
 const MANUAL_TG_PATHS = ["/manual-asistente-telegram", "/manual_asistente_telegram", "/manual-telegram"];
 // Manual del EQUIPO DE MARKETING (módulo Mi Espacio + Copilot de marketing) — público.
 const MANUAL_MKT_PATHS = ["/manual-marketing", "/manual-mkt"];
+// Manual de uso de Stratos IA para NSG (Iván, Ángel y quien entre nuevo) — público,
+// para poder linkearlo desde "Documentos del Equipo" y mandarlo por chat.
+const MANUAL_NSG_PATHS = ["/manual-nsg", "/manual-stratos-nsg"];
 const DIAGNOSTICO_PATHS = ["/diagnostico"];
 const matchPath = (paths) => paths.some(p => pathname === p || pathname === p + "/");
 const isPrivacy = matchPath(PRIVACY_PATHS);
@@ -105,6 +109,7 @@ const isDelivery = matchPath(DELIVERY_PATHS);
 const isManual = matchPath(MANUAL_PATHS);
 const isManualTG = matchPath(MANUAL_TG_PATHS);
 const isManualMkt = matchPath(MANUAL_MKT_PATHS);
+const isManualNSG = matchPath(MANUAL_NSG_PATHS);
 // /diagnostico (formulario público) y /diagnostico/view/<lead_id> (vista compartida
 // del Blueprint que vio el cliente — el link llega al equipo por Telegram al
 // crearse cada lead). Ambas se renderean con el mismo componente Diagnostico.jsx,
@@ -133,7 +138,7 @@ const isLanding = !isExplicitClient && (
   || (hostname === "127.0.0.1" && !params.has("app"))
 );
 
-const isApp = !isPrivacy && !isDeletion && !isDelivery && !isManual && !isManualTG && !isDiagnostico && !isPublicLanding && !isLanding;
+const isApp = !isPrivacy && !isDeletion && !isDelivery && !isManual && !isManualTG && !isManualNSG && !isDiagnostico && !isPublicLanding && !isLanding;
 
 // URL de la plataforma — usada por la landing para el CTA principal
 const APP_URL = import.meta.env.VITE_APP_URL || (window.location.origin + "/?app");
@@ -185,6 +190,8 @@ createRoot(document.getElementById("root")).render(
                 ? <DataDeletion />
                 : isDelivery
                   ? <DeliveryHubCRM />
+                  : isManualNSG
+                    ? <ManualNSG />
                   : isManualMkt
                     ? <ManualMarketing />
                   : isManual

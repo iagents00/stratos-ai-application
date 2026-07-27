@@ -234,14 +234,15 @@ export default function ChatEquipo({ T }) {
   const verHilo  = !isMobile || !!activo;
 
   const btnIcono = {
-    background: "transparent", border: `1px solid ${bd}`, borderRadius: 10,
-    padding: 9, cursor: "pointer", color: txt2, display: "flex", alignItems: "center",
+    background: "transparent", border: `1px solid ${bd}`, borderRadius: 11,
+    padding: 11, cursor: "pointer", color: txt2,
+    display: "flex", alignItems: "center", justifyContent: "center",
   };
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16, color: txt, fontFamily: font, maxWidth: 1180, width: "100%", margin: "0 auto" }}>
-      {/* Header */}
-      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+      {/* Header — centrado en el celular, como el resto de la app */}
+      <div style={{ display: "flex", alignItems: "center", gap: 12, flexDirection: isMobile ? "column" : "row", textAlign: isMobile ? "center" : "left" }}>
         <div style={{ width: 40, height: 40, borderRadius: 12, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", background: `${accent}18`, border: `1px solid ${accent}33` }}>
           <MessagesSquare size={20} color={accent} strokeWidth={1.9} />
         </div>
@@ -326,7 +327,7 @@ export default function ChatEquipo({ T }) {
                   </div>
                 </div>
 
-                <div style={{ flex: 1, overflowY: "auto", padding: "14px 16px", display: "flex", flexDirection: "column", gap: 2, minHeight: isMobile ? 380 : 0, maxHeight: isMobile ? "60vh" : 460 }}>
+                <div style={{ flex: 1, overflowY: "auto", padding: "14px 16px", display: "flex", flexDirection: "column", gap: 2, minHeight: isMobile ? "52dvh" : 0, maxHeight: isMobile ? "52dvh" : 460 }}>
                   {!conAgrupado.length && (
                     <div style={{ margin: "auto", textAlign: "center", color: txt3, fontSize: 13, padding: 20 }}>
                       Todavía no hay mensajes acá.<br />

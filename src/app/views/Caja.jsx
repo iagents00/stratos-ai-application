@@ -19,7 +19,7 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import {
   Wallet, ArrowUpRight, ArrowDownRight, Scale, Plus, Search,
-  RefreshCw, Send, X, MessageCircle, Monitor, Paperclip, ExternalLink,
+  RefreshCw, Send, X, MessageCircle, Monitor, Paperclip, ExternalLink, Download, FileText,
 } from "lucide-react";
 import { font, fontDisp } from "../../design-system/tokens";
 import { supabase } from "../../lib/supabase";
@@ -29,15 +29,19 @@ import { useIsMobile } from "../../hooks/useViewport";
 import CuentasCobro from "./CuentasCobro";
 import Nomina from "./Nomina";
 
-const fmtMoney = (amount, currency = "ARS") => {
+// BUG que reportó Ángel con captura (27-jul): un pago de $82,23 se veía
+// **"+$82,229"** — o sea, ochenta y dos MIL. Causa: los pagos en cripto tienen
+// `currency = 'USDT'`, que Intl no reconoce como moneda → tiraba excepción → caía
+// al fallback `toLocaleString("es-AR")`, donde la coma es el separador DECIMAL:
+// 82.229 salía como "82,229". Plata mal leída es lo peor que puede pasar en una
+// caja. Ahora: siempre 2 decimales, formato es-CO (punto para miles, coma para
+// decimales) y la moneda como sufijo — así USDT, USD o lo que venga se ve igual
+// de claro y nunca se confunde con miles.
+const fmtMoney = (amount, currency = "USD") => {
   const n = Number(amount || 0);
-  try {
-    return new Intl.NumberFormat("es-AR", {
-      style: "currency", currency: currency || "ARS", maximumFractionDigits: n % 1 ? 2 : 0,
-    }).format(n);
-  } catch {
-    return `$${n.toLocaleString("es-AR")}`;
-  }
+  const cur = String(currency || "USD").toUpperCase();
+  const num = n.toLocaleString("es-CO", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  return cur === "USD" ? `$${num}` : `$${num} ${cur}`;
 };
 
 const fmtDate = (iso) => {
@@ -103,12 +107,19 @@ export default function Caja({ T }) {
   // ya fuese una URL http, se abre directo.
   const openEvidence = useCallback(async (path) => {
     if (!path) return;
-    if (/^https?:\/\//i.test(path)) { setViewer({ url: path }); return; }
+    const esPdf = /\.pdf($|\?)/i.test(path);
+    if (/^https?:\/\//i.test(path)) { setViewer({ url: path, esPdf }); return; }
     setViewer({ loading: true });
     try {
-      const { data, error: e } = await supabase.storage.from("evidencia").createSignedUrl(path, 3600);
-      if (e) throw e;
-      setViewer({ url: data.signedUrl });
+      // `download` en la URL firmada hace que el navegador la baje con nombre
+      // propio en vez de abrirla — así el botón "Descargar" funciona también en
+      // el iPhone, donde un click derecho no existe (pedido de Ángel 27-jul).
+      const [ver, bajar] = await Promise.all([
+        supabase.storage.from("evidencia").createSignedUrl(path, 3600),
+        supabase.storage.from("evidencia").createSignedUrl(path, 3600, { download: true }),
+      ]);
+      if (ver.error) throw ver.error;
+      setViewer({ url: ver.data.signedUrl, urlDescarga: bajar.data?.signedUrl || ver.data.signedUrl, esPdf });
     } catch {
       setViewer(null);
       setError("No pude abrir el comprobante. Probá de nuevo.");
@@ -129,8 +140,12 @@ export default function Caja({ T }) {
       const { error: e } = await supabase.from("team_expenses").update({ evidence_path: path }).eq("id", rowId);
       if (e) throw e;
       setRows(prev => prev.map(r => (r.id === rowId ? { ...r, evidence_path: path } : r)));
-    } catch {
-      setError("No pude guardar el soporte. Probá con otra imagen.");
+    } catch (e) {
+      // Antes esto decía siempre "probá con otra imagen" y tapaba la causa real:
+      // el permiso del bucket no cubría la carpeta `caja/`, así que la subida
+      // fallaba en silencio y Ángel creyó que el botón no hacía nada. Ahora se
+      // muestra el motivo de verdad.
+      setError(`No pude guardar el soporte: ${e?.message || "error desconocido"}`);
     } finally {
       setSubiendo(null);
     }
@@ -260,30 +275,34 @@ export default function Caja({ T }) {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 18, color: txt, fontFamily: font, maxWidth: 1080, width: "100%", margin: "0 auto" }}>
-      {/* Header */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+      {/* Header — en el celular el bloque va CENTRADO y el botón principal a lo
+          ancho, para que se toque cómodo con el pulgar (pedido de Ángel 27-jul:
+          «los botones centrados, el texto también, que todo sea bien en celular»). */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap", flexDirection: isMobile ? "column" : "row" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12, flexDirection: isMobile ? "column" : "row", textAlign: isMobile ? "center" : "left", width: isMobile ? "100%" : "auto" }}>
           <div style={{ width: 40, height: 40, borderRadius: 12, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", background: `${accent}18`, border: `1px solid ${accent}33` }}>
             <Wallet size={20} color={accent} strokeWidth={1.9} />
           </div>
           <div>
-            <h1 style={{ margin: 0, fontSize: isMobile ? 19 : 22, fontFamily: fontDisp, fontWeight: 500, letterSpacing: "-0.01em", color: txt }}>Caja</h1>
+            <h1 style={{ margin: 0, fontSize: isMobile ? 20 : 22, fontFamily: fontDisp, fontWeight: 500, letterSpacing: "-0.01em", color: txt }}>Caja</h1>
             <p style={{ margin: "3px 0 0", fontSize: 12.5, color: txt2 }}>
               Cuentas, ingresos y egresos · los gastos por Telegram entran solos
             </p>
           </div>
         </div>
         {seccion === "movimientos" && (
-          <div style={{ display: "flex", gap: 8 }}>
-            <button onClick={load} title="Actualizar" style={{ background: glass, border: `1px solid ${bd}`, borderRadius: 10, padding: "9px 11px", cursor: "pointer", color: txt2, display: "flex", alignItems: "center" }}>
-              <RefreshCw size={15} style={loading ? { animation: "spin 1s linear infinite" } : undefined} />
+          <div style={{ display: "flex", gap: 8, width: isMobile ? "100%" : "auto" }}>
+            <button onClick={load} title="Actualizar" style={{ background: glass, border: `1px solid ${bd}`, borderRadius: 12, padding: "12px 14px", cursor: "pointer", color: txt2, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+              <RefreshCw size={16} style={loading ? { animation: "spin 1s linear infinite" } : undefined} />
             </button>
             <button onClick={() => setShowForm(s => !s)} style={{
               background: showForm ? "transparent" : `${accent}1A`, border: `1px solid ${accent}55`,
-              borderRadius: 10, padding: "9px 15px", cursor: "pointer", color: accent,
-              fontSize: 12.5, fontWeight: 500, fontFamily: font, display: "flex", alignItems: "center", gap: 6,
+              borderRadius: 12, padding: "12px 18px", cursor: "pointer", color: accent,
+              fontSize: 13.5, fontWeight: 600, fontFamily: font,
+              display: "flex", alignItems: "center", justifyContent: "center", gap: 7,
+              flex: isMobile ? 1 : "none",
             }}>
-              {showForm ? <X size={14} /> : <Plus size={14} />} {showForm ? "Cerrar" : "Nuevo movimiento"}
+              {showForm ? <X size={15} /> : <Plus size={15} />} {showForm ? "Cerrar" : "Nuevo movimiento"}
             </button>
           </div>
         )}
@@ -293,11 +312,12 @@ export default function Caja({ T }) {
           y lo que le cobramos al cliente. La nómina tiene su propio apartado
           (pedido de Ángel) porque el monto puede cambiar y hay que poder tocarlo
           sin bucear en la lista de movimientos. */}
-      <div style={{ display: "flex", gap: 4, padding: 3, borderRadius: 12, border: `1px solid ${bd}`, alignSelf: "flex-start", flexWrap: "wrap" }}>
-        {[{ id: "movimientos", label: "Movimientos" }, { id: "nomina", label: "Nómina" }, { id: "cobros", label: "Cuentas de cobro" }].map(s => (
+      <div style={{ display: "flex", gap: 4, padding: 3, borderRadius: 12, border: `1px solid ${bd}`,
+                    alignSelf: isMobile ? "stretch" : "flex-start", width: isMobile ? "100%" : "auto" }}>
+        {[{ id: "movimientos", label: "Movimientos" }, { id: "nomina", label: "Nómina" }, { id: "cobros", label: isMobile ? "Cobros" : "Cuentas de cobro" }].map(s => (
           <button key={s.id} type="button" onClick={() => setSeccion(s.id)} style={{
-            padding: "8px 16px", borderRadius: 9, cursor: "pointer", fontSize: 13, fontFamily: font,
-            border: "1px solid transparent",
+            padding: "10px 14px", borderRadius: 9, cursor: "pointer", fontSize: 13, fontFamily: font,
+            border: "1px solid transparent", flex: isMobile ? 1 : "none", textAlign: "center",
             background: seccion === s.id ? `${accent}1A` : "transparent",
             color: seccion === s.id ? accent : txt2,
             fontWeight: seccion === s.id ? 600 : 400,
@@ -501,15 +521,35 @@ export default function Caja({ T }) {
           {viewer.loading ? (
             <div style={{ color: "#fff", fontSize: 14, fontFamily: font }}>Abriendo comprobante…</div>
           ) : (
-            <div onClick={e => e.stopPropagation()} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12, maxWidth: "94vw" }}>
-              <img src={viewer.url} alt="Comprobante"
-                style={{ maxWidth: "94vw", maxHeight: "82vh", borderRadius: 12, objectFit: "contain", boxShadow: "0 12px 48px rgba(0,0,0,0.5)" }} />
-              <a href={viewer.url} target="_blank" rel="noreferrer" style={{
-                display: "inline-flex", alignItems: "center", gap: 6, color: "#fff", fontSize: 12.5,
-                fontFamily: font, textDecoration: "none", opacity: 0.85,
-              }}>
-                <ExternalLink size={13} /> Abrir original (o descargar si es PDF)
-              </a>
+            <div onClick={e => e.stopPropagation()} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 14, maxWidth: "94vw" }}>
+              {viewer.esPdf ? (
+                // Un <img> con un PDF adentro daba un ícono roto. Se muestra una
+                // tarjeta y se baja el archivo — que es lo que se quiere hacer con
+                // un comprobante en PDF.
+                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 10, padding: "34px 40px", borderRadius: 16, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)" }}>
+                  <FileText size={38} color="#fff" strokeWidth={1.5} />
+                  <span style={{ color: "#fff", fontSize: 14, fontFamily: font }}>El comprobante es un PDF</span>
+                </div>
+              ) : (
+                <img src={viewer.url} alt="Comprobante"
+                  style={{ maxWidth: "94vw", maxHeight: "76vh", borderRadius: 12, objectFit: "contain", boxShadow: "0 12px 48px rgba(0,0,0,0.5)" }} />
+              )}
+              <div style={{ display: "flex", gap: 10, flexWrap: "wrap", justifyContent: "center" }}>
+                <a href={viewer.urlDescarga || viewer.url} download style={{
+                  display: "inline-flex", alignItems: "center", gap: 7, padding: "11px 20px", borderRadius: 999,
+                  background: "#FFFFFF", color: "#0B1220", fontSize: 13.5, fontWeight: 600,
+                  fontFamily: font, textDecoration: "none",
+                }}>
+                  <Download size={15} /> Descargar
+                </a>
+                <a href={viewer.url} target="_blank" rel="noreferrer" style={{
+                  display: "inline-flex", alignItems: "center", gap: 7, padding: "11px 20px", borderRadius: 999,
+                  border: "1px solid rgba(255,255,255,0.25)", color: "#fff", fontSize: 13.5,
+                  fontFamily: font, textDecoration: "none",
+                }}>
+                  <ExternalLink size={15} /> Abrir aparte
+                </a>
+              </div>
             </div>
           )}
         </div>
