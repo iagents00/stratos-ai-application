@@ -87,7 +87,8 @@ export default function Caja({ T }) {
   const [showForm, setShowForm] = useState(!isMobile);
   const [form, setForm] = useState(EMPTY_FORM);
   const [viewer, setViewer] = useState(null);   // comprobante abierto: { loading } | { url }
-  const [personaFilter, setPersonaFilter] = useState("mio");  // mio | equipo
+  const [personaFilter, setPersonaFilter] = useState("mio");  // mio | empresa | todo
+  const [catFilter, setCatFilter] = useState("todas");        // todas | Nómina | Servicios | Cliente
   const [subiendo, setSubiendo] = useState(null);             // id de la fila a la que se le está adjuntando soporte
 
   const orgId = user?.organizationId;
@@ -164,15 +165,19 @@ export default function Caja({ T }) {
   }, [rows]);
 
   // KPIs del mes en curso
-  // ── De quién es el dinero (pedido de Ángel, 27-jul) ──────────────────────────
-  // El dinero PASA por una persona: Duke le paga a Iván (ingreso de Iván) y de ahí
-  // Iván le paga a Ángel (egreso de Iván + ingreso de Ángel). El mismo pago es
-  // egreso para uno e ingreso para el otro, así que sumar todo junto no dice nada:
-  // por defecto cada quien ve LO SUYO, y puede cambiar a "Todo el equipo".
-  const misMovimientos = useMemo(
-    () => (personaFilter === "mio" ? rows.filter(r => r.persona_id === user?.id) : rows),
-    [rows, personaFilter, user?.id]
-  );
+  // ── De quién es el dinero (corregido con Ángel, 27-jul) ─────────────────────
+  // La contabilidad se mira desde LA EMPRESA: Duke le paga a NSG (ingreso de NSG),
+  // y NSG le paga la nómina a cada uno (egreso de NSG + ingreso de la persona).
+  // Ni Iván ni Ángel tienen egresos — ellos solo reciben. Los servicios (Claude,
+  // Retell, Sidance…) son egresos de NSG aunque los pague la tarjeta de Duke.
+  // Convención en la tabla: persona_id NULL = de la empresa · con valor = de esa persona.
+  const misMovimientos = useMemo(() => {
+    let base = rows;
+    if (personaFilter === "mio")     base = rows.filter(r => r.persona_id === user?.id);
+    if (personaFilter === "empresa") base = rows.filter(r => !r.persona_id);
+    if (catFilter !== "todas")       base = base.filter(r => (r.category || "") === catFilter);
+    return base;
+  }, [rows, personaFilter, catFilter, user?.id]);
 
   const kpis = useMemo(() => {
     const now = new Date();
@@ -279,9 +284,9 @@ export default function Caja({ T }) {
 
       {/* KPIs del mes */}
       <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-        <KpiCard label={personaFilter === "mio" ? "Lo que recibí este mes" : "Ingresos del mes"}
+        <KpiCard label={personaFilter === "mio" ? "Lo que recibí este mes" : personaFilter === "empresa" ? "Entró a NSG este mes" : "Ingresos del mes"}
                  value={fmtMoney(kpis.ing)} icon={ArrowUpRight} color={POS} />
-        <KpiCard label={personaFilter === "mio" ? "Lo que pagué este mes" : "Egresos del mes"}
+        <KpiCard label={personaFilter === "mio" ? "Lo que pagué este mes" : personaFilter === "empresa" ? "Salió de NSG este mes" : "Egresos del mes"}
                  value={fmtMoney(kpis.egr)} icon={ArrowDownRight} color={NEG} />
         <KpiCard label="Balance del mes" value={fmtMoney(kpis.bal)} icon={Scale} color={kpis.bal >= 0 ? POS : NEG} />
       </div>
@@ -339,7 +344,7 @@ export default function Caja({ T }) {
             egreso de quien paga e ingreso de quien recibe, así que sumarlo todo junto
             no significa nada. */}
         <div style={{ display: "flex", gap: 4, padding: 3, borderRadius: 10, border: `1px solid ${txt3}22` }}>
-          {[{ id: "mio", label: "Lo mío" }, { id: "equipo", label: "Todo el equipo" }].map(o => (
+          {[{ id: "mio", label: "Lo mío" }, { id: "empresa", label: "NSG" }, { id: "todo", label: "Todo" }].map(o => (
             <button key={o.id} type="button" onClick={() => setPersonaFilter(o.id)}
               style={{
                 padding: "5px 11px", borderRadius: 8, cursor: "pointer", fontSize: 12, fontFamily: font,
@@ -347,6 +352,23 @@ export default function Caja({ T }) {
                 background: personaFilter === o.id ? `${accent}1A` : "transparent",
                 color: personaFilter === o.id ? accent : txt3,
                 fontWeight: personaFilter === o.id ? 500 : 400,
+              }}>
+              {o.label}
+            </button>
+          ))}
+        </div>
+        {/* Secciones de la caja (pedido de Ángel): la nómina por un lado y los
+            servicios —Claude, Retell, Sidance…— por otro, para no mezclarlos. */}
+        <div style={{ display: "flex", gap: 4, padding: 3, borderRadius: 10, border: `1px solid ${txt3}22` }}>
+          {[{ id: "todas", label: "Todas" }, { id: "Nómina", label: "Nómina" },
+            { id: "Servicios", label: "Servicios" }, { id: "Cliente", label: "Clientes" }].map(o => (
+            <button key={o.id} type="button" onClick={() => setCatFilter(o.id)}
+              style={{
+                padding: "5px 11px", borderRadius: 8, cursor: "pointer", fontSize: 12, fontFamily: font,
+                border: "1px solid transparent",
+                background: catFilter === o.id ? `${accent}1A` : "transparent",
+                color: catFilter === o.id ? accent : txt3,
+                fontWeight: catFilter === o.id ? 500 : 400,
               }}>
               {o.label}
             </button>
