@@ -92,6 +92,12 @@ const nsgConfig = {
     rrhh:             false,  // datos mock de Stratos
     trash:            true,   // Papelera del propio CRM
     comandoDirectivo: true,   // Tablero/pulso de NSG (org-scoped, seguro)
+    // El Comando original está hecho para una inmobiliaria (embudo de leads,
+    // Zoom agendado, recorrido, apartó/cierre) — en NSG eso no dice nada porque
+    // no vendemos propiedades, entregamos sistemas. Con esta bandera el módulo
+    // muestra el tablero de OPERACIÓN: clientes con sus objetivos y avance real,
+    // el trabajo del equipo, los proyectos y la caja con los saldos de nómina.
+    comandoOps:       true,
     // Caja: libro de ingresos/egresos de NSG (los gastos que se carguen por
     // Telegram aparecen solos). Lo ve el mando (Ángel/Iván).
     caja:             true,

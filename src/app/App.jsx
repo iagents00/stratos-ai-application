@@ -113,6 +113,7 @@ function resolveInitialView(user) {
  * El resto se carga bajo demanda al cambiar de pestaña (code splitting). */
 import Dash          from "./views/Dash";
 import ComandoDirectivo from "./views/ComandoDirectivo";
+const ComandoOps    = lazy(() => import("./views/ComandoOps"));
 import CRM           from "./views/CRM";
 import ErrorBoundary from "../components/ErrorBoundary.jsx";
 const ERP           = lazy(() => import("./views/ERP"));
@@ -2303,9 +2304,13 @@ export default function App() {
                     Cargando…
                   </div>
                 }>
-                  {v === "d"      && (clientConfig?.features?.comandoDirectivo
-                    ? <ComandoDirectivo leadsData={leadsData} T={T} theme={theme} />
-                    : <Dash oc={oc} leadsData={leadsData} T={T} />)}
+                  {/* El Comando original es de una inmobiliaria (embudo de leads, Zoom, apartó/cierre).
+                      Las empresas de OPERACIÓN (NSG) ven su propio tablero: clientes, objetivos, trabajo y caja. */}
+                  {v === "d"      && (clientConfig?.features?.comandoOps
+                    ? <ComandoOps T={T} accent={clientConfig?.brand?.accent} />
+                    : clientConfig?.features?.comandoDirectivo
+                      ? <ComandoDirectivo leadsData={leadsData} T={T} theme={theme} />
+                      : <Dash oc={oc} leadsData={leadsData} T={T} />)}
                   {v === "c"      && <CRM oc={oc} leadsData={leadsData} setLeadsData={setLeadsData} theme={theme} setTheme={setTheme} isRefreshing={leadsRefreshing} autoOpenPriority1={autoOpenPriority1} onAutoOpenHandled={() => setAutoOpenPriority1(0)} softDeleteLead={softDeleteLead} autoOpenLead={crmAutoOpenLead} onAutoOpenLeadHandled={() => setCrmAutoOpenLead(null)} autoOpenNewLead={crmNewLeadTick} onNewLeadHandled={() => setCrmNewLeadTick(0)} onOpenComando={() => setV("d")} />}
                   {v === "wa"     && canAccessModule("wa", user, clientConfig) && <WhatsAppInbox T={T} isLight={isLight} inbox={waInbox} openLead={waOpenLead} openExpediente={openLeadExpediente} onBack={backToPrevView} chatCount={waInbox.conversations?.length || 0} />}
                   {v === "copilot" && canAccessModule("copilot", user, clientConfig) && <Copilot T={T} isLight={isLight} theme={theme} onBack={backToPrevView} score={asesorScore} />}
