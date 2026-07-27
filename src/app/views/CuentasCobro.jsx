@@ -15,7 +15,7 @@
 // no viaja por ningún lado y no se puede corromper en el camino.
 
 import { useState, useEffect, useCallback } from "react";
-import { FileText, Plus, RefreshCw, Download, Check, X, PenLine } from "lucide-react";
+import { FileText, Plus, RefreshCw, Download, Check, X, PenLine, UserRound } from "lucide-react";
 import { font, fontDisp } from "../../design-system/tokens";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../hooks/useAuth";
@@ -108,6 +108,9 @@ export default function CuentasCobro({ T, emisor }) {
   const crear = async (ev) => {
     ev.preventDefault();
     if (!form.cliente.trim()) { setError("Decime a qué cliente se le cobra."); return; }
+    // El monto se pide ACÁ: dejarlo para después es como terminaba una cuenta de
+    // cobro en $0 sin que nadie lo notara hasta abrir el Word.
+    if (!Number(String(form.monto).replace(",", "."))) { setError("Poné cuánto se le cobra."); return; }
     setSaving(true); setError("");
     const { data, error: e } = await supabase.rpc("fn_fin_cuenta_cobro_cliente", {
       p_profile_id: user.id,
@@ -125,11 +128,32 @@ export default function CuentasCobro({ T, emisor }) {
     load();
   };
 
+  // Ángel: «puse quinientos y me sale cero». Antes esto era un UPDATE directo a la
+  // tabla desde el navegador: si RLS o la sesión tropezaban, fallaba EN SILENCIO y
+  // el Word salía con «cero dólares». Ahora va por una función que valida y, si
+  // algo falla, lo dice. Con plata no se falla callado.
   const guardarMonto = async (id, valor) => {
-    const { error: e } = await supabase.from("fin_invoices")
-      .update({ monto: Number(valor) || 0 }).eq("id", id);
+    const monto = Number(String(valor).replace(",", "."));
+    if (!monto || monto <= 0) { setError("Poné un monto mayor que cero."); return; }
+    setError("");
+    const { data, error: e } = await supabase.rpc("fn_fin_invoice_set_monto", {
+      p_profile_id: user.id, p_invoice_id: id, p_monto: monto,
+    });
+    if (e || data?.ok === false) { setError(e?.message || data?.error || "No pude guardar el monto."); return; }
     setEditMonto(null);
-    if (e) setError(e.message); else load();
+    load();
+  };
+
+  // Cuenta de cobro MÍA a NSG (pedido de Ángel: «Duke le paga a NSG, pero Ángel
+  // le cobra a NSG»). El monto no se pide: sale del saldo real que se le debe.
+  const cobrarleALaEmpresa = async () => {
+    setError("");
+    const { data, error: e } = await supabase.rpc("fn_fin_cuenta_cobro_persona", {
+      p_profile_id: user.id,
+    });
+    if (e) { setError(e.message); return; }
+    if (typeof data === "string" && !data.startsWith("✓")) { setError(data); return; }
+    load();
   };
 
   const marcar = async (id, campo) => {
@@ -144,7 +168,15 @@ export default function CuentasCobro({ T, emisor }) {
   // Formato de cuenta de cobro estándar: quién cobra, a quién, cuánto (en número
   // y en letras), por qué concepto, el detalle de lo entregado, y el espacio de firma.
   const bajarWord = (inv) => {
-    const nombreEmisor = emisor?.nombre || "NSG";
+    // Hay DOS direcciones y el documento tiene que decir bien quién le cobra a quién
+    // (pedido de Ángel: «Duke le paga a NSG, pero Ángel le cobra a NSG»):
+    //   tipo 'cliente' → NSG le cobra a Duke   → emite NSG, deben NSG
+    //   tipo 'nomina'  → Ángel le cobra a NSG  → emite Ángel, debe la empresa
+    const esMia = inv.tipo === "nomina";
+    const nombreEmisor = esMia ? inv.beneficiario : (emisor?.nombre || "NSG");
+    const aQuien = esMia ? (inv?.detalle?.cobra_a || emisor?.nombre || "NSG") : inv.beneficiario;
+    const firmante = esMia ? inv.beneficiario : (emisor?.firmante || "");
+    const idEmisor = esMia ? null : emisor?.identificacion;
     const items = Array.isArray(inv?.detalle?.items) ? inv.detalle.items : [];
 
     const bloques = [
@@ -155,14 +187,14 @@ export default function CuentasCobro({ T, emisor }) {
       { text: "CUENTA DE COBRO", bold: true, size: 20, align: "center", after: 3 },
       { text: `N° ${inv.numero}`, size: 10.5, align: "center", color: "667085", after: 16, linea: true },
 
-      { text: [{ t: "Señores: ", bold: true }, { t: inv.beneficiario || "" }], before: 10, after: 2 },
+      { text: [{ t: "Señores: ", bold: true }, { t: aQuien || "" }], before: 10, after: 2 },
       { text: [{ t: "Periodo: ", bold: true },
                { t: `${fechaLarga(inv.periodo_desde)} al ${fechaLarga(inv.periodo_hasta)}` }], after: 14 },
 
       { text: "DEBEN A", bold: true, size: 13, align: "center", before: 6, after: 2 },
       { text: nombreEmisor, bold: true, size: 15, align: "center", after: 2 },
-      ...(emisor?.identificacion
-        ? [{ text: emisor.identificacion, size: 10.5, align: "center", color: "667085", after: 16 }]
+      ...(idEmisor
+        ? [{ text: idEmisor, size: 10.5, align: "center", color: "667085", after: 16 }]
         : [{ text: "", after: 12 }]),
 
       { text: "LA SUMA DE", bold: true, size: 11, after: 2 },
@@ -188,10 +220,10 @@ export default function CuentasCobro({ T, emisor }) {
     bloques.push(
       { text: "Agradezco su pago a nombre de la empresa.", size: 10.5, color: "667085", before: 8, after: 46 },
       { text: "______________________________________", after: 3 },
-      { text: emisor?.firmante || "", bold: true, size: 11, after: 1 },
+      { text: firmante, bold: true, size: 11, after: 1 },
       ...(emisor?.identificacionFirmante
         ? [{ text: emisor.identificacionFirmante, size: 10, color: "667085", after: 1 }] : []),
-      { text: nombreEmisor, size: 10, color: "667085" },
+      ...(esMia ? [] : [{ text: nombreEmisor, size: 10, color: "667085" }]),
     );
 
     descargarDocx(`Cuenta de cobro ${inv.numero} — ${inv.beneficiario || ""}`.trim(), bloques);
@@ -211,16 +243,26 @@ export default function CuentasCobro({ T, emisor }) {
             El borrador se arma solo con lo que se entregó en el periodo · se descarga en Word para firmarla
           </div>
         </div>
-        <div style={{ display: "flex", gap: 8 }}>
+        <div style={{ display: "flex", gap: 8, width: isMobile ? "100%" : "auto", flexWrap: "wrap" }}>
           <button onClick={load} title="Actualizar" style={{ background: glass, border: `1px solid ${bd}`, borderRadius: 10, padding: "9px 11px", cursor: "pointer", color: txt2, display: "flex", alignItems: "center" }}>
             <RefreshCw size={15} style={loading ? { animation: "spin 1s linear infinite" } : undefined} />
           </button>
+          <button onClick={cobrarleALaEmpresa} title="Armar mi cuenta de cobro por lo que se me debe"
+            style={{
+              background: "transparent", border: `1px solid ${bd}`, borderRadius: 12,
+              padding: "12px 16px", cursor: "pointer", color: txt2,
+              fontSize: 13, fontFamily: font, display: "flex", alignItems: "center",
+              justifyContent: "center", gap: 7, flex: isMobile ? 1 : "none",
+            }}>
+            <UserRound size={15} /> Lo mío
+          </button>
           <button onClick={() => setShowForm(s => !s)} style={{
             background: showForm ? "transparent" : `${accent}1A`, border: `1px solid ${accent}55`,
-            borderRadius: 10, padding: "9px 15px", cursor: "pointer", color: accent,
-            fontSize: 12.5, fontWeight: 500, fontFamily: font, display: "flex", alignItems: "center", gap: 6,
+            borderRadius: 12, padding: "12px 16px", cursor: "pointer", color: accent,
+            fontSize: 13, fontWeight: 600, fontFamily: font, display: "flex", alignItems: "center",
+            justifyContent: "center", gap: 7, flex: isMobile ? 1 : "none",
           }}>
-            {showForm ? <X size={14} /> : <Plus size={14} />} {showForm ? "Cerrar" : "Nueva cuenta de cobro"}
+            {showForm ? <X size={15} /> : <Plus size={15} />} {showForm ? "Cerrar" : "A un cliente"}
           </button>
         </div>
       </div>
@@ -252,7 +294,7 @@ export default function CuentasCobro({ T, emisor }) {
           <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "2fr 1fr", gap: 10 }}>
             <input placeholder="¿A qué cliente se le cobra? (ej: Duke)" value={form.cliente}
               onChange={e => setForm(f => ({ ...f, cliente: e.target.value }))} style={inputStyle} />
-            <input type="number" step="0.01" placeholder="Cuánto (se puede poner después)" value={form.monto}
+            <input type="number" step="0.01" placeholder="Cuánto se le cobra" value={form.monto}
               onChange={e => setForm(f => ({ ...f, monto: e.target.value }))} style={inputStyle} />
           </div>
           <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 10 }}>
@@ -295,7 +337,9 @@ export default function CuentasCobro({ T, emisor }) {
                 <div style={{ minWidth: 0 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
                     <span style={{ fontSize: 14, fontWeight: 500, color: txt, fontFamily: fontDisp }}>
-                      {inv.beneficiario}
+                      {inv.tipo === "nomina"
+                        ? `${inv.beneficiario} → ${inv?.detalle?.cobra_a || "NSG"}`
+                        : `NSG → ${inv.beneficiario}`}
                     </span>
                     <span style={{ fontSize: 11, color: txt3 }}>{inv.numero}</span>
                     <span style={{
