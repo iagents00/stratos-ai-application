@@ -340,9 +340,9 @@ export default function Caja({ T }) {
       {/* Filtros */}
       <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
         {chip("todos", "Todos")}{chip("ingreso", "Ingresos")}{chip("egreso", "Egresos")}
-        {/* De quién es el dinero: por defecto cada uno ve LO SUYO. El mismo pago es
-            egreso de quien paga e ingreso de quien recibe, así que sumarlo todo junto
-            no significa nada. */}
+        {/* De quién es el dinero: por defecto cada uno ve LO SUYO. "NSG" muestra el
+            movimiento de la empresa (lo que cobra a clientes y lo que paga), y "Todo"
+            las dos caras juntas — que sumadas se cancelan, por eso no es el default. */}
         <div style={{ display: "flex", gap: 4, padding: 3, borderRadius: 10, border: `1px solid ${txt3}22` }}>
           {[{ id: "mio", label: "Lo mío" }, { id: "empresa", label: "NSG" }, { id: "todo", label: "Todo" }].map(o => (
             <button key={o.id} type="button" onClick={() => setPersonaFilter(o.id)}
