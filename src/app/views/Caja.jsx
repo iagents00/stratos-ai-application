@@ -87,6 +87,8 @@ export default function Caja({ T }) {
   const [showForm, setShowForm] = useState(!isMobile);
   const [form, setForm] = useState(EMPTY_FORM);
   const [viewer, setViewer] = useState(null);   // comprobante abierto: { loading } | { url }
+  const [personaFilter, setPersonaFilter] = useState("mio");  // mio | equipo
+  const [subiendo, setSubiendo] = useState(null);             // id de la fila a la que se le está adjuntando soporte
 
   const orgId = user?.organizationId;
 
@@ -107,6 +109,27 @@ export default function Caja({ T }) {
     }
   }, []);
 
+  // Adjuntar el soporte a un pago YA registrado (pedido de Ángel: los pagos viejos
+  // se cargaron sin comprobante y hay que poder ponerles la captura después).
+  const adjuntarSoporte = useCallback(async (rowId, file) => {
+    if (!file || !orgId) return;
+    setSubiendo(rowId);
+    setError("");
+    try {
+      const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
+      const path = `caja/${orgId}/${rowId}-${Date.now()}.${ext}`;
+      const up = await supabase.storage.from("evidencia").upload(path, file, { upsert: true });
+      if (up.error) throw up.error;
+      const { error: e } = await supabase.from("team_expenses").update({ evidence_path: path }).eq("id", rowId);
+      if (e) throw e;
+      setRows(prev => prev.map(r => (r.id === rowId ? { ...r, evidence_path: path } : r)));
+    } catch {
+      setError("No pude guardar el soporte. Probá con otra imagen.");
+    } finally {
+      setSubiendo(null);
+    }
+  }, [orgId]);
+
   const load = useCallback(async () => {
     if (!orgId) return;
     setLoading(true);
@@ -114,7 +137,7 @@ export default function Caja({ T }) {
     try {
       const [mov, profs, leads] = await Promise.all([
         supabase.from("team_expenses")
-          .select("id, tipo, amount, currency, account, category, description, spent_at, created_by, project_id, source, evidence_path")
+          .select("id, tipo, amount, currency, account, category, description, spent_at, created_by, project_id, source, evidence_path, persona_id, contraparte")
           .eq("organization_id", orgId)
           .order("spent_at", { ascending: false })
           .limit(400),
@@ -141,26 +164,36 @@ export default function Caja({ T }) {
   }, [rows]);
 
   // KPIs del mes en curso
+  // ── De quién es el dinero (pedido de Ángel, 27-jul) ──────────────────────────
+  // El dinero PASA por una persona: Duke le paga a Iván (ingreso de Iván) y de ahí
+  // Iván le paga a Ángel (egreso de Iván + ingreso de Ángel). El mismo pago es
+  // egreso para uno e ingreso para el otro, así que sumar todo junto no dice nada:
+  // por defecto cada quien ve LO SUYO, y puede cambiar a "Todo el equipo".
+  const misMovimientos = useMemo(
+    () => (personaFilter === "mio" ? rows.filter(r => r.persona_id === user?.id) : rows),
+    [rows, personaFilter, user?.id]
+  );
+
   const kpis = useMemo(() => {
     const now = new Date();
     const first = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
     let ing = 0, egr = 0;
-    rows.forEach(r => {
+    misMovimientos.forEach(r => {
       if (new Date(r.spent_at).getTime() < first) return;
       if (r.tipo === "ingreso") ing += Number(r.amount || 0);
       else egr += Number(r.amount || 0);
     });
     return { ing, egr, bal: ing - egr };
-  }, [rows]);
+  }, [misMovimientos]);
 
-  const filtered = useMemo(() => rows.filter(r => {
+  const filtered = useMemo(() => misMovimientos.filter(r => {
     if (tipoFilter !== "todos" && (r.tipo || "egreso") !== tipoFilter) return false;
     if (!searchQ) return true;
     const q = searchQ.toLowerCase();
     const obra = obras.find(o => o.id === r.project_id)?.name || "";
-    return [r.category, r.description, r.account, people[r.created_by], obra]
+    return [r.category, r.description, r.account, people[r.created_by], r.contraparte, obra]
       .some(s => String(s || "").toLowerCase().includes(q));
-  }), [rows, tipoFilter, searchQ, obras, people]);
+  }), [misMovimientos, tipoFilter, searchQ, obras, people]);
 
   const submit = async (e) => {
     e?.preventDefault?.();
@@ -246,8 +279,10 @@ export default function Caja({ T }) {
 
       {/* KPIs del mes */}
       <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-        <KpiCard label="Ingresos del mes" value={fmtMoney(kpis.ing)} icon={ArrowUpRight} color={POS} />
-        <KpiCard label="Egresos del mes" value={fmtMoney(kpis.egr)} icon={ArrowDownRight} color={NEG} />
+        <KpiCard label={personaFilter === "mio" ? "Lo que recibí este mes" : "Ingresos del mes"}
+                 value={fmtMoney(kpis.ing)} icon={ArrowUpRight} color={POS} />
+        <KpiCard label={personaFilter === "mio" ? "Lo que pagué este mes" : "Egresos del mes"}
+                 value={fmtMoney(kpis.egr)} icon={ArrowDownRight} color={NEG} />
         <KpiCard label="Balance del mes" value={fmtMoney(kpis.bal)} icon={Scale} color={kpis.bal >= 0 ? POS : NEG} />
       </div>
 
@@ -300,6 +335,23 @@ export default function Caja({ T }) {
       {/* Filtros */}
       <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
         {chip("todos", "Todos")}{chip("ingreso", "Ingresos")}{chip("egreso", "Egresos")}
+        {/* De quién es el dinero: por defecto cada uno ve LO SUYO. El mismo pago es
+            egreso de quien paga e ingreso de quien recibe, así que sumarlo todo junto
+            no significa nada. */}
+        <div style={{ display: "flex", gap: 4, padding: 3, borderRadius: 10, border: `1px solid ${txt3}22` }}>
+          {[{ id: "mio", label: "Lo mío" }, { id: "equipo", label: "Todo el equipo" }].map(o => (
+            <button key={o.id} type="button" onClick={() => setPersonaFilter(o.id)}
+              style={{
+                padding: "5px 11px", borderRadius: 8, cursor: "pointer", fontSize: 12, fontFamily: font,
+                border: "1px solid transparent",
+                background: personaFilter === o.id ? `${accent}1A` : "transparent",
+                color: personaFilter === o.id ? accent : txt3,
+                fontWeight: personaFilter === o.id ? 500 : 400,
+              }}>
+              {o.label}
+            </button>
+          ))}
+        </div>
         <div style={{ flex: 1, minWidth: 180, position: "relative" }}>
           <Search size={15} color={txt3} style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)" }} />
           <input placeholder="Buscar por categoría, obra, persona…" value={searchQ}
@@ -340,7 +392,7 @@ export default function Caja({ T }) {
                   </span>
                 </div>
                 {r.description && <div style={{ fontSize: 11.5, color: txt2, marginTop: 3 }}>{r.description}</div>}
-                {r.evidence_path && (
+                {r.evidence_path ? (
                   <button type="button" onClick={() => openEvidence(r.evidence_path)} style={{
                     marginTop: 6, display: "inline-flex", alignItems: "center", gap: 5,
                     padding: "4px 10px", borderRadius: 8, cursor: "pointer",
@@ -349,6 +401,29 @@ export default function Caja({ T }) {
                   }}>
                     <Paperclip size={11} /> Ver comprobante
                   </button>
+                ) : (
+                  // Sin soporte: se puede adjuntar la captura del pago cuando sea
+                  // (los movimientos viejos se cargaron sin comprobante).
+                  <label style={{
+                    marginTop: 6, display: "inline-flex", alignItems: "center", gap: 5,
+                    padding: "4px 10px", borderRadius: 8, cursor: subiendo === r.id ? "wait" : "pointer",
+                    background: "transparent", border: `1px dashed ${txt3}55`, color: txt3,
+                    fontSize: 11, fontWeight: 500, fontFamily: font,
+                  }}>
+                    <Paperclip size={11} />
+                    {subiendo === r.id ? "Guardando…" : "Agregar soporte"}
+                    <input
+                      type="file"
+                      accept="image/*,application/pdf"
+                      style={{ display: "none" }}
+                      disabled={subiendo === r.id}
+                      onChange={(ev) => {
+                        const f = ev.target.files?.[0];
+                        ev.target.value = "";
+                        if (f) adjuntarSoporte(r.id, f);
+                      }}
+                    />
+                  </label>
                 )}
               </div>
               <div style={{ fontSize: 15.5, fontWeight: 500, fontFamily: fontDisp, color, whiteSpace: "nowrap" }}>
