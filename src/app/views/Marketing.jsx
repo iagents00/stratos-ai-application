@@ -466,7 +466,7 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
       )}
 
       {sectionTitle("Para hoy")}
-      {paraHoy.length === 0 && emptyRow(`Nada pendiente para hoy. Creá una tarea desde Marcas${onOpenCopilot ? " o dictala con voz" : ""}.`)}
+      {paraHoy.length === 0 && emptyRow(`Nada pendiente para hoy. Crea una tarea desde ${tabLabel("marcas", "Marcas")}${onOpenCopilot ? " o dictala con voz" : ""}.`)}
       {paraHoy.map(t => taskRow(t))}
 
       {bloqueadas.length > 0 && (
@@ -1033,7 +1033,13 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
   // se explica sola — pedido de Ángel 21-jul).
   const TAB_META = {
     dia:         { title: `Hoy — ${firstName}`, sub: "Tu enfoque del día · lo vencido arriba, lo bloqueado no depende de ti" },
-    marcas:      { title: "Marcas",       sub: "Los proyectos de cada marca — la barra muestra cuánto va completado" },
+    // El rótulo lo pone cada empresa (NSG: "Proyectos"). Antes el encabezado decía
+    // "Marcas" aunque el botón ya dijera "Proyectos" — el vocabulario de marketing
+    // se colaba en NSG. Duke sin config sigue viendo "Marcas".
+    marcas:      { title: tabLabel("marcas", "Marcas"),
+                   sub: TENANT_MKT.tabLabels?.marcas
+                     ? "Cada proyecto con su avance — la barra muestra cuánto va completado"
+                     : "Los proyectos de cada marca — la barra muestra cuánto va completado" },
     pipeline:    { title: "Pipeline",     sub: "El tablero de los videos de propiedades — cada tarjeta avanza de izquierda a derecha hasta Publicada" },
     solicitudes: { title: "Solicitudes",  sub: "Pedidos de diseño para el equipo — A es simple, AAA es producción compleja" },
     equipo:      { title: "Equipo",       sub: "Cómo va cada persona — en curso, bloqueadas, vencidas y hechas de la semana" },
