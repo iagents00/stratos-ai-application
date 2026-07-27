@@ -108,6 +108,12 @@ const nsgConfig = {
     // conexión al segundo cerebro / AIOS y documentos sigue siendo Nivel 3.
     copilotModule:    true,
     copilotBrain:     "tareas",
+    // Botón de adjuntar en el Copilot: mandás la captura de un pago y te pregunta
+    // si entró o salió plata; queda registrado en la Caja CON la captura de
+    // soporte (pedido de Ángel 27-jul, igual que en Vega). A propósito NO se lee
+    // el monto de la imagen: se pregunta, porque inventar una cifra es peor que
+    // pedirla.
+    copilotGastoFoto: true,
     // Módulo de tareas/proyectos (motor mkt_* org-scoped) — en el nav se llama
     // "Proyectos" (navLabels). Persecución activa: organizations.meta_config
     // .mkt_persecucion = 'on' para la org NSG (avisos 1h/10min + "¿ya pudiste

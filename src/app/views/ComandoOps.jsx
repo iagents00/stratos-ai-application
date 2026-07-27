@@ -248,12 +248,12 @@ const ComandoOps = ({ T, accent = "#F472B6" }) => {
 
       {/* ── Caja y nómina ── */}
       <G T={T}>
-        {titulo("Caja del mes", "Lo que entró, lo que se pagó y cuánto se le debe a cada quien")}
+        {titulo("Caja del mes", "Lo de NSG como empresa: lo que cobró, lo que pagó y cuánto le debe a cada quien")}
         <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
-          <Tarjeta icon={Wallet} label="Entró" valor={money(caja.entro)} color="#22C55E" T={T} />
-          <Tarjeta icon={Wallet} label="Nómina pagada" valor={money(caja.nomina)} color="#3B82F6" T={T} />
-          <Tarjeta icon={Wallet} label="Servicios" valor={money(caja.servicios)} color="#F59E0B" T={T} />
-          <Tarjeta icon={Wallet} label="Diferencia" valor={money(balance)}
+          <Tarjeta icon={Wallet} label="Cobró a clientes" valor={money(caja.entro)} color="#22C55E" T={T} />
+          <Tarjeta icon={Wallet} label="Pagó de nómina" valor={money(caja.nomina)} color="#3B82F6" T={T} />
+          <Tarjeta icon={Wallet} label="Pagó de servicios" valor={money(caja.servicios)} color="#F59E0B" T={T} />
+          <Tarjeta icon={Wallet} label="Le quedó" valor={money(balance)}
                    color={balance >= 0 ? "#22C55E" : "#EF4444"} T={T} />
         </div>
 
@@ -267,18 +267,31 @@ const ComandoOps = ({ T, accent = "#F472B6" }) => {
                 const debe = Math.max(0, Number(n.devengado || 0) - Number(n.pagado || 0));
                 const pct = n.devengado > 0 ? Math.round((Number(n.pagado || 0) / Number(n.devengado)) * 100) : 0;
                 return (
+                  // El nombre y el saldo van SOLOS en la primera línea, y el
+                  // "$500 USD quincenal" baja a la segunda. Antes iban los tres
+                  // juntos con space-between y en el iPhone el saldo de Iván se
+                  // partía de línea mientras el de Ángel no — se veía roto
+                  // (reporte de Ángel con captura, 27-jul).
                   <div key={n.persona}>
-                    <div style={{ display: "flex", justifyContent: "space-between", gap: 10, marginBottom: 5, flexWrap: "wrap" }}>
-                      <span style={{ fontSize: 12.5, color: T.txt2, fontFamily: font }}>
-                        {n.persona} <span style={{ color: T.txt3, fontSize: 11 }}>· {money(n.monto)} {n.moneda} {n.periodicidad}</span>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 10, marginBottom: 2 }}>
+                      <span style={{ fontSize: 13, color: T.txt, fontFamily: font, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        {n.persona}
                       </span>
-                      <span style={{ fontSize: 12.5, color: debe > 0 ? "#F59E0B" : "#22C55E", fontFamily: font, fontWeight: 500, whiteSpace: "nowrap" }}>
-                        {debe > 0 ? `se le debe ${money(debe)}` : "al día"}
+                      <span style={{ fontSize: 13, color: debe > 0 ? "#F59E0B" : "#22C55E", fontFamily: font, fontWeight: 600, whiteSpace: "nowrap", flexShrink: 0 }}>
+                        {debe > 0 ? money(debe) : "al día"}
                       </span>
                     </div>
+                    <div style={{ display: "flex", justifyContent: "space-between", gap: 8, marginBottom: 6 }}>
+                      <span style={{ fontSize: 11, color: T.txt3, fontFamily: font }}>
+                        {money(n.monto)} {n.moneda} {n.periodicidad}
+                      </span>
+                      {debe > 0 && (
+                        <span style={{ fontSize: 11, color: T.txt3, fontFamily: font, whiteSpace: "nowrap" }}>pendiente</span>
+                      )}
+                    </div>
                     <Barra pct={pct} color={debe > 0 ? "#F59E0B" : "#22C55E"} T={T} />
-                    <p style={{ margin: "4px 0 0", fontSize: 10.5, color: T.txt3, fontFamily: font }}>
-                      acumulado {money(n.devengado)} · pagado {money(n.pagado)}
+                    <p style={{ margin: "5px 0 0", fontSize: 10.5, color: T.txt3, fontFamily: font }}>
+                      lleva ganado {money(n.devengado)} · ya cobró {money(n.pagado)}
                     </p>
                   </div>
                 );

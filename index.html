@@ -116,6 +116,104 @@
   </head>
   <body>
     <div id="root"></div>
+
+    <!-- ─── [guard:BOOT-BLANK] LA PANTALLA NEGRA DEL IPHONE ───────────────────
+         Reporte de Ángel (27-jul, con captura): «a veces me meto a la app en el
+         iPhone y se pone negro y no inicia».
+
+         Por qué pasa: la app se instala en la pantalla de inicio (PWA) y iOS la
+         SUSPENDE. Cuando volvés, o cuando desplegamos mientras la tenías abierta,
+         puede quedar un index.html que apunta a un archivo .js que ya cambió de
+         nombre. Ese archivo no carga → React NUNCA monta → no hay ErrorBoundary,
+         no hay chunk-recovery, no corre NADA de la app: solo queda el fondo, que
+         es casi negro. Por eso la recuperación tiene que vivir ACÁ, en un script
+         suelto del HTML: es lo único que se ejecuta en ese escenario.
+
+         Cómo recupera (escalando, y nunca en bucle):
+           1er intento  → recarga simple (el index.html es network-first → baja el nuevo).
+           2do intento  → borra TODAS las cachés + desregistra el Service Worker y recarga.
+           3ro          → deja de recargar y muestra un mensaje con botón, para que
+                          el usuario no se quede mirando una pantalla negra muda.
+         Nunca toca localStorage → la sesión de Supabase se conserva. -->
+    <script>
+      (function () {
+        var TRIES = "stratos_blank_recover_v1";
+        var ESPERA_MS = 12000;   // margen amplio: un iPhone viejo en 3G tarda
+
+        function montada() {
+          var r = document.getElementById("root");
+          return !!(r && r.childElementCount > 0);
+        }
+        function intentos() { try { return +sessionStorage.getItem(TRIES) || 0; } catch (e) { return 0; } }
+        function setIntentos(n) { try { sessionStorage.setItem(TRIES, String(n)); } catch (e) {} }
+
+        function recargar(duro) {
+          var destino = location.pathname + location.search + location.hash;
+          if (!duro) { location.replace(destino); return; }
+          var p = Promise.resolve();
+          try {
+            if (typeof caches !== "undefined") {
+              p = caches.keys().then(function (ks) {
+                return Promise.all(ks.map(function (k) { return caches.delete(k); }));
+              });
+            }
+            if (navigator.serviceWorker && navigator.serviceWorker.getRegistrations) {
+              p = p.then(function () { return navigator.serviceWorker.getRegistrations(); })
+                   .then(function (rs) { return Promise.all(rs.map(function (r) { return r.unregister(); })); });
+            }
+          } catch (e) {}
+          p.catch(function () {}).then(function () { location.replace(destino); });
+        }
+
+        function avisar() {
+          if (document.getElementById("stratos-blank-aviso")) return;
+          var d = document.createElement("div");
+          d.id = "stratos-blank-aviso";
+          d.setAttribute("style",
+            "position:fixed;inset:0;z-index:2147483647;display:flex;flex-direction:column;" +
+            "align-items:center;justify-content:center;gap:14px;padding:28px;text-align:center;" +
+            "background:#060A11;color:#E2E8F0;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text',sans-serif;");
+          d.innerHTML =
+            '<div style="font-size:17px;font-weight:600">La app no terminó de abrir</div>' +
+            '<div style="font-size:14px;opacity:.7;max-width:300px;line-height:1.5">' +
+            'Suele pasar cuando el celular guardó una versión vieja. Tocá el botón y se baja de nuevo.</div>' +
+            '<button id="stratos-blank-btn" style="margin-top:6px;padding:13px 26px;border:none;border-radius:999px;' +
+            'background:#6EE7C2;color:#04211A;font-size:15px;font-weight:700">Volver a intentar</button>';
+          document.body.appendChild(d);
+          var b = document.getElementById("stratos-blank-btn");
+          if (b) b.addEventListener("click", function () { setIntentos(0); recargar(true); });
+        }
+
+        function revisar() {
+          if (montada()) { setIntentos(0); return; }
+          var n = intentos() + 1;
+          setIntentos(n);
+          if (n === 1) return recargar(false);
+          if (n === 2) return recargar(true);
+          avisar();
+        }
+
+        // (a) el bundle no llegó a montar en un tiempo razonable
+        window.addEventListener("load", function () { setTimeout(revisar, ESPERA_MS); });
+
+        // (b) el .js principal devolvió 404 → no hay por qué esperar los 12s
+        window.addEventListener("error", function (ev) {
+          var t = ev && ev.target;
+          if (t && t.tagName === "SCRIPT" && String(t.src || "").indexOf("/assets/") >= 0 && !montada()) {
+            setTimeout(revisar, 400);
+          }
+        }, true);
+
+        // (c) iOS devuelve la PWA suspendida con la vista en blanco
+        document.addEventListener("visibilitychange", function () {
+          if (!document.hidden && !montada()) setTimeout(revisar, 3000);
+        });
+        window.addEventListener("pageshow", function (ev) {
+          if (ev && ev.persisted && !montada()) setTimeout(revisar, 3000);
+        });
+      })();
+    </script>
+
     <!-- ─── Mitigación de crash en Safari iOS ("Ocurrió un problema varias
          veces") ───
          Corre ANTES de la app. Solo pone atributos en <html> que consume
