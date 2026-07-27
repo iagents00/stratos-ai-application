@@ -163,6 +163,18 @@ export function canAccessModule(moduleId, user, clientConfig = null) {
     return false;
   }
 
+  // Usuarios (dar de alta gente del equipo): 100% por feature flag, evaluado
+  // ANTES del aislamiento por org. Pedido de Ángel (27-jul): «yo puedo agregar
+  // ahí en el grupo otro desarrollador, si es que hay, que va a tener otro
+  // perfil». Sin poder crear usuarios, el chat del equipo se queda en dos
+  // personas para siempre. Solo lo ven los roles de mando de esa org, y el
+  // módulo ya es org-scoped: un admin de NSG jamás ve gente de Duke.
+  if (moduleId === "admin") {
+    if (isStratosOrg(user.organizationId)) return MODULE_ROLES.admin.includes(user.role);
+    if (clientConfig?.features?.teamAdmin !== true) return false;
+    return MODULE_ROLES.admin.includes(user.role);
+  }
+
   // Chat del equipo: 100% por feature flag, y se evalúa ANTES del aislamiento por
   // org (igual que Caja) para que también funcione en los tenants externos. Sin
   // `features.teamChat: true` nadie lo ve, así que Duke y los demás no cambian.

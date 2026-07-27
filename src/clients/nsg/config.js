@@ -132,6 +132,11 @@ const nsgConfig = {
     // desarrolladores un hilo único no sirve. Las @menciones avisan por la
     // campanita. Solo NSG por ahora.
     teamChat:         true,
+    // Módulo "Usuarios": dar de alta gente del equipo. Pedido de Ángel (27-jul):
+    // «yo puedo agregar ahí en el grupo otro desarrollador, que va a tener otro
+    // perfil». Sin esto el chat del equipo se queda en dos personas para siempre.
+    // Es org-scoped: un admin de NSG no ve ni toca gente de Duke.
+    teamAdmin:        true,
   },
 
   // Renombres de módulos en el nav para NSG (mecanismo ya existente en App.jsx:
