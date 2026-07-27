@@ -90,6 +90,7 @@ const BRAND_HEX = {
   "nk23":            { d: "#7EB8F0", l: "#2563EB" },
   "casa-agata":      { d: "#A78BFA", l: "#7C3AED" },
   "nsg":             { d: "#F472B6", l: "#DB2777" },
+  "legacy-design":   { d: "#A3E635", l: "#65A30D" },
 };
 const BRAND_FALLBACK = { d: "#5DC8D9", l: "#0891B2" };
 
