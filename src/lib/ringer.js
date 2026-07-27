@@ -25,7 +25,7 @@ function beep(c, at, freq, dur) {
   o.type = "sine";
   o.frequency.value = freq;
   g.gain.setValueAtTime(0.0001, at);
-  g.gain.exponentialRampToValueAtTime(0.22, at + 0.03);
+  g.gain.exponentialRampToValueAtTime(0.5, at + 0.03);   // volumen alto: es un timbre de llamada
   g.gain.exponentialRampToValueAtTime(0.0001, at + dur);
   o.connect(g); g.connect(c.destination);
   o.start(at); o.stop(at + dur + 0.02);
@@ -34,7 +34,11 @@ function beep(c, at, freq, dur) {
 function ringOnce() {
   const c = ac();
   if (!c) return;
-  if (c.state === "suspended") { try { c.resume(); } catch { /* noop */ } }
+  // Si el navegador lo tiene suspendido (autoplay/background), reintentar destrabarlo SIEMPRE.
+  if (c.state === "suspended") { try { c.resume().then(() => tones(c)).catch(() => {}); } catch { /* noop */ } return; }
+  tones(c);
+}
+function tones(c) {
   const t = c.currentTime;
   beep(c, t, 480, 0.4);          // "ring"
   beep(c, t + 0.5, 440, 0.4);    // "ring"

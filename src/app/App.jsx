@@ -403,15 +403,18 @@ export default function App() {
     startRing();
     return () => stopRing();
   }, [incomingCall, clientConfig?.features?.callRingtone]);
-  // Desbloquear el audio del timbre en el primer gesto del usuario (política de autoplay).
+  // Desbloquear el audio del timbre en CADA gesto (no solo el primero): el AudioContext se
+  // suspende al volver de background, y si no se re-desbloquea el timbre no suena.
   useEffect(() => {
     if (clientConfig?.features?.callRingtone !== true) return;
     const onGesture = () => primeRinger();
-    window.addEventListener("pointerdown", onGesture, { once: true });
-    window.addEventListener("keydown", onGesture, { once: true });
+    window.addEventListener("pointerdown", onGesture);
+    window.addEventListener("keydown", onGesture);
+    document.addEventListener("visibilitychange", onGesture);
     return () => {
       window.removeEventListener("pointerdown", onGesture);
       window.removeEventListener("keydown", onGesture);
+      document.removeEventListener("visibilitychange", onGesture);
     };
   }, [clientConfig?.features?.callRingtone]);
   // ── Aviso "Activar avisos de llamada" (tenants con reunionButton) ──────────
