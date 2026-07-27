@@ -170,6 +170,35 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
         }]);
         return;
       }
+      // La imagen es la EVIDENCIA de una tarea → se pregunta a cuál, igual que
+      // en marketing. Nunca se pega a ciegas a "la última tarea hecha": ese bug
+      // ya lo tuvimos y la foto caía en la tarea equivocada.
+      if (cual === "__evidencia__") {
+        const path = cajaPathRef.current;
+        setCajaForm(null);
+        const { data: cands } = await supabase.rpc("mkt_evidence_candidates");
+        const list = Array.isArray(cands) ? cands : [];
+        if (!list.length) {
+          setMessages((prev) => [...prev, {
+            id: `ai-${Date.now()}`, role: "ai",
+            content: "La imagen quedó guardada, pero no encontré tareas tuyas recientes para vincularla. Decime primero «ya terminé [la tarea]» y mandámela de nuevo.",
+            occurred_at: new Date().toISOString(),
+          }]);
+          return;
+        }
+        setPendingEvidence({ path, tipo: "foto" });
+        const buttons = list.slice(0, 6).map((c) => ({
+          label: c.tiene_evidencia ? `${c.titulo} · reemplazar` : c.titulo,
+          action: `mktevidpick:${c.task_id}`,
+        }));
+        buttons.push({ label: "Ninguna / cancelar", action: "mktevidpick:__cancel__" });
+        setMessages((prev) => [...prev, {
+          id: `evpick-${Date.now()}`, role: "ai",
+          content: "¿A cuál de tus tareas pertenece?", buttons,
+          occurred_at: new Date().toISOString(),
+        }]);
+        return;
+      }
       setCajaForm({
         path: cajaPathRef.current,
         tipo: cual === "ingreso" ? "ingreso" : "egreso",
@@ -319,11 +348,15 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
       cajaPathRef.current = path;
       setMessages((prev) => [...prev, {
         id: `cjq-${Date.now()}`, role: "ai",
-        content: "Guardé la captura. ¿Qué registro con ella?",
+        content: "Guardé la imagen. ¿Qué hago con ella?",
         buttons: [
-          { label: "Entró plata (ingreso)", action: "cajapick:ingreso" },
-          { label: "Salió plata (gasto)",   action: "cajapick:egreso" },
-          { label: "Solo guardala",          action: "cajapick:__cancel__" },
+          { label: "Entró plata (ingreso)",    action: "cajapick:ingreso" },
+          { label: "Salió plata (gasto)",      action: "cajapick:egreso" },
+          // Iván en la llamada del 24-jul: el seguimiento tiene que ir
+          // «pidiendo evidencia». Reusa el mismo motor que ya usa marketing
+          // (mkt_evidence_candidates / mkt_attach_evidence, ambos org-scoped).
+          { label: "Es evidencia de una tarea", action: "cajapick:__evidencia__" },
+          { label: "Solo guardala",             action: "cajapick:__cancel__" },
         ],
         occurred_at: new Date().toISOString(),
       }]);
