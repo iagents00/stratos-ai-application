@@ -962,7 +962,12 @@ function Bubble({ m, T, isLight, userBg, userTxt, aiBg, aiBd, onPick, sending, i
             />
             {zoom && createPortal(
               <div onClick={() => setZoom(false)}
-                style={{ position: "fixed", inset: 0, zIndex: 100000, background: "rgba(0,0,0,0.88)", display: "flex", alignItems: "center", justifyContent: "center", padding: 24, cursor: "zoom-out", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)" }}>
+                /* Fondo SÓLIDO y sin `backdropFilter` inline, por el mismo motivo
+                   que el velo de llamada: en modo seguro (`html[data-lowfx]`)
+                   `mobile-perf.css` le fuerza un fondo al 72% a todo lo que tenga
+                   blur inline, y el comprobante quedaba mirándose con el chat de
+                   fondo. Un visor de imágenes tiene que tapar. [guard:CALL-OPAQUE] */
+                style={{ position: "fixed", inset: 0, zIndex: 100000, background: "#000000", display: "flex", alignItems: "center", justifyContent: "center", padding: 24, cursor: "zoom-out" }}>
                 <img src={m.imageUrl} alt="Evidencia" onClick={(e) => e.stopPropagation()}
                   style={{ maxWidth: "94vw", maxHeight: "92vh", borderRadius: 12, objectFit: "contain", boxShadow: "0 24px 80px rgba(0,0,0,0.6)" }} />
                 <button onClick={() => setZoom(false)} aria-label="Cerrar"
