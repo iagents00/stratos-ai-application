@@ -27,6 +27,7 @@ import { useAuth } from "../../hooks/useAuth";
 import { useClient } from "../../hooks/useClient";
 import { useIsMobile } from "../../hooks/useViewport";
 import CuentasCobro from "./CuentasCobro";
+import Nomina from "./Nomina";
 
 const fmtMoney = (amount, currency = "ARS") => {
   const n = Number(amount || 0);
@@ -90,7 +91,7 @@ export default function Caja({ T }) {
   const [showForm, setShowForm] = useState(!isMobile);
   const [form, setForm] = useState(EMPTY_FORM);
   const [viewer, setViewer] = useState(null);   // comprobante abierto: { loading } | { url }
-  const [seccion, setSeccion] = useState("movimientos");      // movimientos | cobros
+  const [seccion, setSeccion] = useState("movimientos");      // movimientos | nomina | cobros
   const [personaFilter, setPersonaFilter] = useState("mio");  // mio | empresa | todo
   const [catFilter, setCatFilter] = useState("todas");        // todas | Nómina | Servicios | Cliente
   const [subiendo, setSubiendo] = useState(null);             // id de la fila a la que se le está adjuntando soporte
@@ -288,9 +289,12 @@ export default function Caja({ T }) {
         )}
       </div>
 
-      {/* Las dos caras de la Caja: lo que se movió, y lo que le cobramos al cliente. */}
-      <div style={{ display: "flex", gap: 4, padding: 3, borderRadius: 12, border: `1px solid ${bd}`, alignSelf: "flex-start" }}>
-        {[{ id: "movimientos", label: "Movimientos" }, { id: "cobros", label: "Cuentas de cobro" }].map(s => (
+      {/* Las tres caras de la Caja: lo que se movió, lo que se le debe al equipo,
+          y lo que le cobramos al cliente. La nómina tiene su propio apartado
+          (pedido de Ángel) porque el monto puede cambiar y hay que poder tocarlo
+          sin bucear en la lista de movimientos. */}
+      <div style={{ display: "flex", gap: 4, padding: 3, borderRadius: 12, border: `1px solid ${bd}`, alignSelf: "flex-start", flexWrap: "wrap" }}>
+        {[{ id: "movimientos", label: "Movimientos" }, { id: "nomina", label: "Nómina" }, { id: "cobros", label: "Cuentas de cobro" }].map(s => (
           <button key={s.id} type="button" onClick={() => setSeccion(s.id)} style={{
             padding: "8px 16px", borderRadius: 9, cursor: "pointer", fontSize: 13, fontFamily: font,
             border: "1px solid transparent",
@@ -300,6 +304,8 @@ export default function Caja({ T }) {
           }}>{s.label}</button>
         ))}
       </div>
+
+      {seccion === "nomina" && <Nomina T={T} />}
 
       {seccion === "cobros" && (
         <CuentasCobro T={T} emisor={clientConfig?.facturacion} />

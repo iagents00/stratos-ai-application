@@ -14,7 +14,7 @@
  */
 import { useState, useEffect, useRef, useCallback } from "react";
 import { createPortal } from "react-dom";
-import { Send, Sparkles, RefreshCw, Mic, Square, X, ChevronDown, ChevronUp, ChevronLeft, Bot, BookOpen, Play, Pause, Bell, Camera } from "lucide-react";
+import { Send, Sparkles, RefreshCw, Mic, Square, X, ChevronDown, ChevronUp, ChevronLeft, Bot, BookOpen, Play, Pause, Bell, Camera, Paperclip } from "lucide-react";
 import { P, LP, font, fontDisp } from "../../design-system/tokens";
 import { G } from "../SharedComponents";
 import CopilotMark from "../components/CopilotMark";
@@ -49,6 +49,11 @@ export default function Copilot({ theme = "dark", T: Tprop, isLight: isLightProp
   // desde el Copilot — son quienes completan tareas. Gate 100% contenido: si es asesor,
   // el control NI SE RENDERIZA y el Copilot se comporta idéntico a hoy.
   const isMarketing = user?.role === 'marketing';
+  // Adjuntar una CAPTURA DE PAGO al Copilot y que quede registrada en la Caja con
+  // su soporte (pedido de Ángel 27-jul: «el Copilot no tiene el símbolo para
+  // adjuntar… que funcione como en Vega: mandás la imagen y te pregunta si es un
+  // gasto o un ingreso»). Gateado por tenant: hoy solo NSG.
+  const puedeCajaFoto = clientConfig?.features?.copilotGastoFoto === true;
   const orgId = user?.organizationId;
   const botUsername = clientConfig?.tenant?.botUsername || "Strato_sasistente_crm_bot";
   // (manualPairing y getPairingStatus ya no se usan acá: el Copilot no espera
@@ -63,13 +68,13 @@ export default function Copilot({ theme = "dark", T: Tprop, isLight: isLightProp
   // el chat — jamás la vieja pantalla "Conecta tu Telegram para activar", que
   // parecía un muro. (`ConnectPrompt` queda en el archivo por si algún tenant
   // futuro con pairing manual lo necesita, pero no se muestra por defecto.)
-  return <Chat T={T} isLight={isLight} botUsername={botUsername} onUnpaired={onUnpaired} onBack={onBack} score={score} isMarketing={isMarketing} orgId={orgId} />;
+  return <Chat T={T} isLight={isLight} botUsername={botUsername} onUnpaired={onUnpaired} onBack={onBack} score={score} isMarketing={isMarketing} puedeCajaFoto={puedeCajaFoto} orgId={orgId} />;
 }
 
 /* ─────────────────────────────────────────────────────────────────────────── */
 /* Chat — layout WhatsApp: header fino, mensajes expansivos, composer compacto */
 /* ─────────────────────────────────────────────────────────────────────────── */
-function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing, orgId }) {
+function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing, puedeCajaFoto, orgId }) {
   // La flecha "‹ volver" solo tiene sentido donde el header/bottom-nav se ocultan
   // (modo inmersivo en celular) o en la app nativa. En DESKTOP WEB el sidebar
   // siempre está a la vista → la flecha sobra (pedido de Ángel 24-jul). En iPhone/
@@ -85,6 +90,9 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
   const [attaching, setAttaching] = useState(false);  // subiendo evidencia (solo marketing)
   const [commenting, setCommenting] = useState(null);  // {taskId, fromName} — líder comentando una evidencia
   const [pendingEvidence, setPendingEvidence] = useState(null);  // {path, tipo} — foto subida esperando que el usuario elija a cuál tarea es
+  // Captura de un pago mandada al Copilot, esperando que digan qué es y de cuánto.
+  const [cajaForm, setCajaForm] = useState(null);   // {path, tipo:'ingreso'|'egreso', amount, category, description}
+  const cajaPathRef = useRef(null);                 // la última captura subida (sobrevive al re-render)
   const evInputRef = useRef(null);
   const scrollRef = useRef(null);
   const inputRef = useRef(null);
@@ -147,6 +155,30 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
     if (!text && !options.callback_data) return;
     if (sending) return;
     const cb = options.callback_data || "";
+
+    // ── La persona dice qué es la captura de pago que acaba de mandar ──
+    // No va al cerebro: es una decisión de UI, se resuelve acá y abre el formulario.
+    if (cb.startsWith("cajapick:")) {
+      const cual = cb.slice("cajapick:".length);
+      if (cual === "__cancel__") {
+        cajaPathRef.current = null;
+        setCajaForm(null);
+        setMessages((prev) => [...prev, {
+          id: `ai-${Date.now()}`, role: "ai",
+          content: "Listo, la dejo guardada nomás. Si después querés registrarla, mandámela de nuevo.",
+          occurred_at: new Date().toISOString(),
+        }]);
+        return;
+      }
+      setCajaForm({
+        path: cajaPathRef.current,
+        tipo: cual === "ingreso" ? "ingreso" : "egreso",
+        amount: "",
+        category: cual === "ingreso" ? "Nómina" : "Servicios",
+        description: "",
+      });
+      return;
+    }
 
     // ── Feedback del líder sobre una evidencia (determinista, NO pasa por el cerebro n8n) ──
     // El líder APRUEBA una evidencia → avisa al responsable.
@@ -253,6 +285,87 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
       });
     }
     inputRef.current?.focus();
+  };
+
+  /* ── Captura de un PAGO desde el Copilot → queda registrada en la Caja ──
+     Pedido de Ángel (27-jul): «con una captura de pantalla que enviamos de lo que
+     Iván me manda, que se la mande al Copilot y se registre el pago y quede el
+     soporte en Caja». Funciona como en Vega: mandás la imagen y te pregunta si es
+     un gasto o un ingreso.
+
+     A propósito NO se intenta leer el monto de la imagen: preferimos preguntarlo a
+     inventarlo. La captura queda SIEMPRE como soporte, aunque después se corrija
+     el monto. */
+  const handlePickCaja = async (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (e.target) e.target.value = "";
+    if (!file) return;
+    if (!orgId) { setErrBanner("No pude identificar tu organización. Actualizá la página."); return; }
+    if (attaching || sending) return;
+    setErrBanner(null);
+    setAttaching(true);
+
+    const previewUrl = URL.createObjectURL(file);
+    setMessages((prev) => [...prev, {
+      id: `cju-${Date.now()}`, role: "user", content: "Captura del pago",
+      imageUrl: previewUrl, occurred_at: new Date().toISOString(),
+    }]);
+
+    try {
+      const ext = (String(file.name || "").split(".").pop() || "jpg").toLowerCase().slice(0, 5);
+      const path = `caja/${orgId}/copilot-${Date.now()}.${ext}`;
+      const { error: upErr } = await supabase.storage.from("evidencia").upload(path, file);
+      if (upErr) throw upErr;
+      cajaPathRef.current = path;
+      setMessages((prev) => [...prev, {
+        id: `cjq-${Date.now()}`, role: "ai",
+        content: "Guardé la captura. ¿Qué registro con ella?",
+        buttons: [
+          { label: "Entró plata (ingreso)", action: "cajapick:ingreso" },
+          { label: "Salió plata (gasto)",   action: "cajapick:egreso" },
+          { label: "Solo guardala",          action: "cajapick:__cancel__" },
+        ],
+        occurred_at: new Date().toISOString(),
+      }]);
+    } catch (err) {
+      setErrBanner("No pude subir la captura. Probá con otra imagen.");
+    } finally {
+      setAttaching(false);
+    }
+  };
+
+  // Registra el movimiento con la captura pegada como soporte.
+  const guardarCaja = async () => {
+    if (!cajaForm || !orgId) return;
+    const monto = Number(String(cajaForm.amount).replace(",", "."));
+    if (!monto || monto <= 0) { setErrBanner("Poné el monto para poder registrarlo."); return; }
+    setSending(true);
+    try {
+      const { error } = await supabase.from("team_expenses").insert({
+        organization_id: orgId,
+        tipo: cajaForm.tipo,
+        amount: monto,
+        currency: "USD",
+        category: cajaForm.category || null,
+        description: cajaForm.description?.trim() || (cajaForm.tipo === "ingreso" ? "Ingreso registrado desde el Copilot" : "Gasto registrado desde el Copilot"),
+        spent_at: new Date().toISOString().slice(0, 10),
+        source: "web",
+        evidence_path: cajaForm.path || null,
+      });
+      if (error) throw error;
+      setMessages((prev) => [...prev, {
+        id: `cjok-${Date.now()}`, role: "ai",
+        content: `Listo. Quedó registrado en la Caja: ${cajaForm.tipo === "ingreso" ? "entraron" : "salieron"} $${monto.toFixed(2)} USD` +
+                 `${cajaForm.category ? ` · ${cajaForm.category}` : ""}, con la captura como soporte.`,
+        occurred_at: new Date().toISOString(),
+      }]);
+      setCajaForm(null);
+      cajaPathRef.current = null;
+    } catch (err) {
+      setErrBanner("No pude registrarlo en la Caja. Probá de nuevo.");
+    } finally {
+      setSending(false);
+    }
   };
 
   /* ── Evidencia foto/video desde el Copilot (solo marketing) ──
@@ -549,20 +662,67 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
         </div>
       )}
 
+      {/* ── Registrar el pago de la captura (pedido de Ángel: como en Vega) ──
+          No se lee el monto de la imagen: se pregunta. Preferimos preguntar a
+          inventar una cifra. La captura ya está guardada como soporte. ── */}
+      {cajaForm && (
+        <div style={{ margin: "0 12px 6px", padding: 12, borderRadius: 12, background: `${T.accent}0F`, border: `1px solid ${T.accent}3A`, flexShrink: 0 }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 9 }}>
+            <span style={{ fontSize: 12.5, fontWeight: 600, color: T.accent, fontFamily: font }}>
+              {cajaForm.tipo === "ingreso" ? "Entró plata" : "Salió plata"} · con la captura de soporte
+            </span>
+            <button onClick={() => setCajaForm(null)} title="Cancelar"
+              style={{ background: "transparent", border: "none", cursor: "pointer", color: T.txt3, display: "flex" }}>
+              <X size={14} />
+            </button>
+          </div>
+          <div style={{ display: "flex", gap: 7, flexWrap: "wrap" }}>
+            <input autoFocus type="number" step="0.01" inputMode="decimal" placeholder="¿Cuánto?"
+              value={cajaForm.amount}
+              onChange={(e) => setCajaForm(f => ({ ...f, amount: e.target.value }))}
+              onKeyDown={(e) => { if (e.key === "Enter") guardarCaja(); }}
+              style={{ width: 108, height: 36, padding: "0 11px", borderRadius: 10, border: `1px solid ${T.border}`, background: isLight ? "#FFF" : "rgba(255,255,255,0.05)", color: T.txt, fontSize: 13.5, fontFamily: font, outline: "none" }} />
+            <select value={cajaForm.category}
+              onChange={(e) => setCajaForm(f => ({ ...f, category: e.target.value }))}
+              style={{ height: 36, padding: "0 9px", borderRadius: 10, border: `1px solid ${T.border}`, background: isLight ? "#FFF" : "rgba(255,255,255,0.05)", color: T.txt, fontSize: 13, fontFamily: font, outline: "none" }}>
+              <option value="Nómina">Nómina</option>
+              <option value="Servicios">Servicios</option>
+              <option value="Cliente">Cliente</option>
+              <option value="">Otro</option>
+            </select>
+            <input type="text" placeholder="¿De qué es? (opcional)"
+              value={cajaForm.description}
+              onChange={(e) => setCajaForm(f => ({ ...f, description: e.target.value }))}
+              onKeyDown={(e) => { if (e.key === "Enter") guardarCaja(); }}
+              style={{ flex: 1, minWidth: 130, height: 36, padding: "0 11px", borderRadius: 10, border: `1px solid ${T.border}`, background: isLight ? "#FFF" : "rgba(255,255,255,0.05)", color: T.txt, fontSize: 13.5, fontFamily: font, outline: "none" }} />
+            <button onClick={guardarCaja} disabled={sending}
+              style={{ height: 36, padding: "0 16px", borderRadius: 10, border: "none", background: T.accent, color: isLight ? "#FFF" : "#04211A", fontSize: 13, fontWeight: 700, fontFamily: font, cursor: sending ? "wait" : "pointer" }}>
+              Registrar
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* ── Composer compacto (estilo WhatsApp) — full-width, misma caja que los mensajes ── */}
       <div style={{ padding: "8px 12px calc(10px + var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px)))", background: composerBg, borderTop: `1px solid ${T.border}`, flexShrink: 0 }}>
        <div style={{ display: "flex", alignItems: "flex-end", gap: 8, width: "100%", maxWidth: "none" }}>
-        {/* Adjuntar evidencia (foto/video) — solo equipo de marketing */}
-        {isMarketing && (
+        {/* Adjuntar: evidencia de tarea (marketing) o captura de un pago (tenants
+            con copilotGastoFoto, hoy NSG). Es el mismo botón; cambia a dónde va
+            la imagen. Si el tenant no tiene ninguno de los dos, ni se renderiza. */}
+        {(isMarketing || puedeCajaFoto) && (
           <>
-            <button type="button" title="Adjuntar foto o video de evidencia"
+            <button type="button"
+              title={isMarketing ? "Adjuntar foto o video de evidencia" : "Mandar la captura de un pago"}
               onClick={() => evInputRef.current?.click()} disabled={attaching || sending}
               style={{ width: 36, height: 36, borderRadius: 10, flexShrink: 0, border: "none", background: "transparent", color: attaching ? T.accent : T.txt3, cursor: (attaching || sending) ? "default" : "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
               {attaching
                 ? <RefreshCw size={17} strokeWidth={2} style={{ animation: "spin 1s linear infinite" }} />
-                : <Camera size={18} strokeWidth={2} />}
+                : isMarketing ? <Camera size={18} strokeWidth={2} /> : <Paperclip size={18} strokeWidth={2} />}
             </button>
-            <input ref={evInputRef} type="file" accept="image/*,video/*" onChange={handlePickEvidence} style={{ display: "none" }} />
+            <input ref={evInputRef} type="file"
+              accept={isMarketing ? "image/*,video/*" : "image/*"}
+              onChange={isMarketing ? handlePickEvidence : handlePickCaja}
+              style={{ display: "none" }} />
           </>
         )}
         {/* Botón micrófono */}

@@ -428,6 +428,27 @@ export default function App() {
     navigator.serviceWorker.addEventListener("message", onSwMessage);
     return () => navigator.serviceWorker.removeEventListener("message", onSwMessage);
   }, [clientConfig?.features?.reunionButton, showIncomingCall]);
+  // «Contestar también desde la app» (pedido de Ángel 27-jul). Los dos caminos de
+  // arriba solo funcionan si la app YA estaba abierta cuando llegó el aviso. Si ves
+  // la notificación en el iPhone y abrís la app en vez de tocar el aviso, la llamada
+  // era invisible: no había a qué darle Contestar. Acá preguntamos «¿me están
+  // llamando ahora?» al abrir y cada vez que volvés a la app, con una ventana de
+  // 60s (lo que dura un teléfono sonando). Handler nombrado + cleanup, como manda
+  // la regla de performance del CRM.
+  useEffect(() => {
+    if (!user?.id || clientConfig?.features?.reunionButton !== true) return;
+    let vivo = true;
+    const revisarLlamada = () => {
+      if (document.hidden) return;
+      supabase.rpc("fn_llamada_en_curso", { p_profile_id: user.id })
+        .then(({ data }) => { if (vivo && data?.meet) showIncomingCall(data.caller, data.meet); })
+        .catch(() => { /* si falla, quedan los otros dos caminos */ });
+    };
+    revisarLlamada();
+    const onVisible = () => { if (!document.hidden) revisarLlamada(); };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => { vivo = false; document.removeEventListener("visibilitychange", onVisible); };
+  }, [user?.id, clientConfig?.features?.reunionButton, showIncomingCall]);
   // La pantalla de llamada se auto-cierra a los 45s (como un teléfono que deja de sonar).
   useEffect(() => {
     if (!incomingCall) return;
