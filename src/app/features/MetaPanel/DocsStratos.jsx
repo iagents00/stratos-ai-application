@@ -12,11 +12,19 @@
 // lo que corrompía los .docx cuando los mandábamos por otro lado.
 
 import { useState, useEffect, useCallback } from "react";
-import { FileText, Download, RefreshCw, BookOpen, Eye } from "lucide-react";
+import { FileText, Download, RefreshCw, BookOpen, Eye, Cloud, Check } from "lucide-react";
 import { font, fontDisp } from "../../../design-system/tokens";
 import { supabase } from "../../../lib/supabase";
 import { descargarDocx } from "../../../lib/docx";
 import { MANUAL, manualEnBloques, manualEnTexto } from "../../../lib/manual-stratos-doc";
+
+// Sube el documento al Drive de la cuenta OPERATIVA del negocio, no a la personal
+// de quien lo genera. Es la lección del 24-jul: un archivo en la cuenta de uno,
+// aunque esté compartido, no lo puede abrir el resto del equipo sin pedir permiso.
+// El flujo de n8n lo crea como Google Doc (editable) y le abre el permiso a
+// «cualquiera con el enlace, como editor» — y verifica la respuesta antes de
+// devolver el link.
+const SUBIR_URL = "https://personal-n8n.suwsiw.easypanel.host/webhook/nsg-subir-doc";
 
 const MESES = ["enero", "febrero", "marzo", "abril", "mayo", "junio",
                "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
@@ -56,6 +64,9 @@ export default function DocsStratos({ T, isLight, userId, empresa = "NSG" }) {
   const [docs, setDocs] = useState([]);
   const [cargando, setCargando] = useState(true);
   const [abierto, setAbierto] = useState(null);   // documento que se está leyendo
+  const [subiendo, setSubiendo] = useState(null); // id del que se está subiendo
+  const [subido, setSubido] = useState({});       // id -> link de Drive
+  const [aviso, setAviso] = useState("");
 
   const load = useCallback(async () => {
     if (!userId) return;
@@ -72,6 +83,37 @@ export default function DocsStratos({ T, isLight, userId, empresa = "NSG" }) {
   };
   const bajarDoc = (d) => {
     descargarDocx(d.titulo, textoABloques(d.contenido, empresa, d.fecha));
+  };
+
+  // A Drive, en un toque. Queda como Google Doc editable, y desde ahí Google lo
+  // baja en Word o en PDF — que es lo que pidió Ángel: «la mayoría en Word, y en
+  // PDF mejor». El enlace se guarda además en Documentos del Equipo.
+  const aDrive = async (clave, titulo, texto) => {
+    if (subiendo) return;
+    setSubiendo(clave); setAviso("");
+    try {
+      const r = await fetch(SUBIR_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ nombre: titulo, texto }),
+      });
+      const j = await r.json();
+      // Se exige la confirmación del permiso. Si el archivo queda restringido, el
+      // link no le sirve a nadie más del equipo — es peor que no haberlo subido,
+      // porque parece que está y al abrirlo pide acceso. (Le pasó a Ángel el 24-jul.)
+      if (!j?.ok || !j?.link || j?.permiso?.type !== "anyone") {
+        throw new Error("Se subió pero quedó restringido. Avisá para revisarlo.");
+      }
+      const link = j.link;
+      setSubido((s) => ({ ...s, [clave]: link }));
+      if (userId) {
+        await supabase.rpc("fn_doc_link_agregar", { p_profile_id: userId, p_titulo: titulo, p_url: link });
+      }
+    } catch (e) {
+      setAviso(e?.message || "No pude subirlo a Drive. Probá de nuevo en un minuto.");
+    } finally {
+      setSubiendo(null);
+    }
   };
 
   const fila = {
@@ -115,7 +157,24 @@ export default function DocsStratos({ T, isLight, userId, empresa = "NSG" }) {
           style={{ ...btn, borderColor: `${accent}55`, color: accent, background: `${accent}14`, fontWeight: 600 }}>
           <Download size={14} /> Word
         </button>
+        {subido.manual ? (
+          <a href={subido.manual} target="_blank" rel="noreferrer" title="Abrirlo en Drive"
+            style={{ ...btn, borderColor: `${accent}55`, color: accent, textDecoration: "none" }}>
+            <Check size={14} /> En Drive
+          </a>
+        ) : (
+          <button onClick={() => aDrive("manual", `Manual de ${MANUAL.titulo}`, manualEnTexto())}
+            disabled={!!subiendo} title="Subirlo a Drive: queda editable y se baja en Word o PDF" style={btn}>
+            {subiendo === "manual"
+              ? <RefreshCw size={14} style={{ animation: "spin 1s linear infinite" }} />
+              : <Cloud size={14} />} Drive
+          </button>
+        )}
       </div>
+
+      {aviso && (
+        <div style={{ ...fila, borderColor: "#F8717155", color: txt2, fontSize: 12.5 }}>{aviso}</div>
+      )}
 
       {/* Lo que se fue guardando desde el sistema (informes, reportes, notas) */}
       {cargando && (
@@ -141,6 +200,19 @@ export default function DocsStratos({ T, isLight, userId, empresa = "NSG" }) {
           <button onClick={() => bajarDoc(d)} title="Descargar en Word" style={btn}>
             <Download size={14} /> Word
           </button>
+          {subido[d.id] ? (
+            <a href={subido[d.id]} target="_blank" rel="noreferrer" title="Abrirlo en Drive"
+              style={{ ...btn, borderColor: `${accent}55`, color: accent, textDecoration: "none" }}>
+              <Check size={14} />
+            </a>
+          ) : (
+            <button onClick={() => aDrive(d.id, d.titulo, d.contenido)} disabled={!!subiendo}
+              title="Subirlo a Drive: queda editable y se baja en Word o PDF" style={btn}>
+              {subiendo === d.id
+                ? <RefreshCw size={14} style={{ animation: "spin 1s linear infinite" }} />
+                : <Cloud size={14} />}
+            </button>
+          )}
         </div>
       ))}
 
