@@ -136,6 +136,20 @@ const nsgConfig = {
     tabLabels: { marcas: "Proyectos" },
   },
 
+  // ── Quién emite las cuentas de cobro ────────────────────────────────────────
+  // Se usa en el .docx que se descarga desde Caja → Cuentas de cobro, para que
+  // Ángel lo firme a mano (pedido explícito: en Word, no en PDF).
+  // ⚠️ El NIT de NSG y la cédula de quien firma están en null A PROPÓSITO: no los
+  // sabemos y NO se inventan. Mientras estén vacíos el documento sale sin esas
+  // líneas y la pantalla lo avisa. Cuando Ángel los pase, se escriben acá.
+  facturacion: {
+    nombre:                  "NSG Intelligence",
+    identificacion:          null,   // ej: "NIT 900.123.456-7"
+    firmante:                "Ángel Garzón",
+    identificacionFirmante:  null,   // ej: "C.C. 1.234.567.890"
+    ciudad:                  "Bogotá",
+  },
+
   support: {
     email:    null,   // cae al soporte de Stratos hasta definir el de NSG
     whatsapp: null,

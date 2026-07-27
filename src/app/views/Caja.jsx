@@ -24,7 +24,9 @@ import {
 import { font, fontDisp } from "../../design-system/tokens";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../hooks/useAuth";
+import { useClient } from "../../hooks/useClient";
 import { useIsMobile } from "../../hooks/useViewport";
+import CuentasCobro from "./CuentasCobro";
 
 const fmtMoney = (amount, currency = "ARS") => {
   const n = Number(amount || 0);
@@ -50,6 +52,7 @@ const EMPTY_FORM = { tipo: "egreso", amount: "", account: "", category: "", proj
 
 export default function Caja({ T }) {
   const { user } = useAuth();
+  const { config: clientConfig } = useClient();
   const isMobile = useIsMobile();
 
   // ── Paleta theme-aware (tomada del `T` de App.jsx, igual que el resto del CRM).
@@ -87,6 +90,7 @@ export default function Caja({ T }) {
   const [showForm, setShowForm] = useState(!isMobile);
   const [form, setForm] = useState(EMPTY_FORM);
   const [viewer, setViewer] = useState(null);   // comprobante abierto: { loading } | { url }
+  const [seccion, setSeccion] = useState("movimientos");      // movimientos | cobros
   const [personaFilter, setPersonaFilter] = useState("mio");  // mio | empresa | todo
   const [catFilter, setCatFilter] = useState("todas");        // todas | Nómina | Servicios | Cliente
   const [subiendo, setSubiendo] = useState(null);             // id de la fila a la que se le está adjuntando soporte
@@ -268,20 +272,40 @@ export default function Caja({ T }) {
             </p>
           </div>
         </div>
-        <div style={{ display: "flex", gap: 8 }}>
-          <button onClick={load} title="Actualizar" style={{ background: glass, border: `1px solid ${bd}`, borderRadius: 10, padding: "9px 11px", cursor: "pointer", color: txt2, display: "flex", alignItems: "center" }}>
-            <RefreshCw size={15} style={loading ? { animation: "spin 1s linear infinite" } : undefined} />
-          </button>
-          <button onClick={() => setShowForm(s => !s)} style={{
-            background: showForm ? "transparent" : `${accent}1A`, border: `1px solid ${accent}55`,
-            borderRadius: 10, padding: "9px 15px", cursor: "pointer", color: accent,
-            fontSize: 12.5, fontWeight: 500, fontFamily: font, display: "flex", alignItems: "center", gap: 6,
-          }}>
-            {showForm ? <X size={14} /> : <Plus size={14} />} {showForm ? "Cerrar" : "Nuevo movimiento"}
-          </button>
-        </div>
+        {seccion === "movimientos" && (
+          <div style={{ display: "flex", gap: 8 }}>
+            <button onClick={load} title="Actualizar" style={{ background: glass, border: `1px solid ${bd}`, borderRadius: 10, padding: "9px 11px", cursor: "pointer", color: txt2, display: "flex", alignItems: "center" }}>
+              <RefreshCw size={15} style={loading ? { animation: "spin 1s linear infinite" } : undefined} />
+            </button>
+            <button onClick={() => setShowForm(s => !s)} style={{
+              background: showForm ? "transparent" : `${accent}1A`, border: `1px solid ${accent}55`,
+              borderRadius: 10, padding: "9px 15px", cursor: "pointer", color: accent,
+              fontSize: 12.5, fontWeight: 500, fontFamily: font, display: "flex", alignItems: "center", gap: 6,
+            }}>
+              {showForm ? <X size={14} /> : <Plus size={14} />} {showForm ? "Cerrar" : "Nuevo movimiento"}
+            </button>
+          </div>
+        )}
       </div>
 
+      {/* Las dos caras de la Caja: lo que se movió, y lo que le cobramos al cliente. */}
+      <div style={{ display: "flex", gap: 4, padding: 3, borderRadius: 12, border: `1px solid ${bd}`, alignSelf: "flex-start" }}>
+        {[{ id: "movimientos", label: "Movimientos" }, { id: "cobros", label: "Cuentas de cobro" }].map(s => (
+          <button key={s.id} type="button" onClick={() => setSeccion(s.id)} style={{
+            padding: "8px 16px", borderRadius: 9, cursor: "pointer", fontSize: 13, fontFamily: font,
+            border: "1px solid transparent",
+            background: seccion === s.id ? `${accent}1A` : "transparent",
+            color: seccion === s.id ? accent : txt2,
+            fontWeight: seccion === s.id ? 600 : 400,
+          }}>{s.label}</button>
+        ))}
+      </div>
+
+      {seccion === "cobros" && (
+        <CuentasCobro T={T} emisor={clientConfig?.facturacion} />
+      )}
+
+      {seccion === "movimientos" && <>
       {/* KPIs del mes */}
       <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
         <KpiCard label={personaFilter === "mio" ? "Lo que recibí este mes" : personaFilter === "empresa" ? "Entró a NSG este mes" : "Ingresos del mes"}
@@ -455,6 +479,7 @@ export default function Caja({ T }) {
           );
         })}
       </div>
+      </>}
 
       {/* Visor de comprobante */}
       {viewer && (
