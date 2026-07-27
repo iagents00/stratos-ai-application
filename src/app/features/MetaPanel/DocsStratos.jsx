@@ -15,15 +15,16 @@ import { useState, useEffect, useCallback } from "react";
 import { FileText, Download, RefreshCw, BookOpen, Eye, Cloud, Check } from "lucide-react";
 import { font, fontDisp } from "../../../design-system/tokens";
 import { supabase } from "../../../lib/supabase";
-import { descargarDocx } from "../../../lib/docx";
-import { MANUAL, manualEnBloques, manualEnTexto } from "../../../lib/manual-stratos-doc";
+import { descargarDocx, buildDocx } from "../../../lib/docx";
+import { MANUAL, manualEnBloques } from "../../../lib/manual-stratos-doc";
 
 // Sube el documento al Drive de la cuenta OPERATIVA del negocio, no a la personal
 // de quien lo genera. Es la lección del 24-jul: un archivo en la cuenta de uno,
 // aunque esté compartido, no lo puede abrir el resto del equipo sin pedir permiso.
-// El flujo de n8n lo crea como Google Doc (editable) y le abre el permiso a
+// El flujo de n8n sube el .docx TAL CUAL (con su formato) y le abre el permiso a
 // «cualquiera con el enlace, como editor» — y verifica la respuesta antes de
-// devolver el link.
+// devolver el link. En Drive un .docx se abre y se edita en Google Docs, y desde
+// ahí se baja en PDF: por eso no hace falta mantener tres archivos distintos.
 const SUBIR_URL = "https://personal-n8n.suwsiw.easypanel.host/webhook/nsg-subir-doc";
 
 const MESES = ["enero", "febrero", "marzo", "abril", "mayo", "junio",
@@ -85,17 +86,29 @@ export default function DocsStratos({ T, isLight, userId, empresa = "NSG" }) {
     descargarDocx(d.titulo, textoABloques(d.contenido, empresa, d.fecha));
   };
 
-  // A Drive, en un toque. Queda como Google Doc editable, y desde ahí Google lo
-  // baja en Word o en PDF — que es lo que pidió Ángel: «la mayoría en Word, y en
-  // PDF mejor». El enlace se guarda además en Documentos del Equipo.
-  const aDrive = async (clave, titulo, texto) => {
+  // A Drive, en un toque. Sube el Word con su formato; en Drive se abre, se edita
+  // y se baja en PDF — «la mayoría en Word, y en PDF mejor». El enlace se guarda
+  // además en Documentos del Equipo.
+  const aDrive = async (clave, titulo, bloques) => {
     if (subiendo) return;
     setSubiendo(clave); setAviso("");
     try {
+      // Se sube el .docx CON su formato, no el texto pelado. La primera versión
+      // mandaba texto y en Drive salía un bloque plano sin títulos ni tamaños:
+      // «no se ve bien», con razón. El Word se arma acá con la misma plantilla de
+      // la cuenta de cobro y viaja como base64.
+      const blob = buildDocx(bloques);
+      const base64 = await new Promise((ok, err) => {
+        const fr = new FileReader();
+        fr.onload = () => ok(String(fr.result).split(",")[1] || "");
+        fr.onerror = () => err(new Error("No pude preparar el archivo."));
+        fr.readAsDataURL(blob);
+      });
+
       const r = await fetch(SUBIR_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ nombre: titulo, texto }),
+        body: JSON.stringify({ nombre: `${titulo}.docx`, base64 }),
       });
       const j = await r.json();
       // Se exige la confirmación del permiso. Si el archivo queda restringido, el
@@ -163,7 +176,7 @@ export default function DocsStratos({ T, isLight, userId, empresa = "NSG" }) {
             <Check size={14} /> En Drive
           </a>
         ) : (
-          <button onClick={() => aDrive("manual", `Manual de ${MANUAL.titulo}`, manualEnTexto())}
+          <button onClick={() => aDrive("manual", `Manual de ${MANUAL.titulo}`, manualEnBloques(new Date().toISOString()))}
             disabled={!!subiendo} title="Subirlo a Drive: queda editable y se baja en Word o PDF" style={btn}>
             {subiendo === "manual"
               ? <RefreshCw size={14} style={{ animation: "spin 1s linear infinite" }} />
@@ -206,7 +219,7 @@ export default function DocsStratos({ T, isLight, userId, empresa = "NSG" }) {
               <Check size={14} />
             </a>
           ) : (
-            <button onClick={() => aDrive(d.id, d.titulo, d.contenido)} disabled={!!subiendo}
+            <button onClick={() => aDrive(d.id, d.titulo, textoABloques(d.contenido, empresa, d.fecha))} disabled={!!subiendo}
               title="Subirlo a Drive: queda editable y se baja en Word o PDF" style={btn}>
               {subiendo === d.id
                 ? <RefreshCw size={14} style={{ animation: "spin 1s linear infinite" }} />

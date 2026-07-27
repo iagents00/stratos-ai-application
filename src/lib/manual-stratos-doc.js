@@ -156,36 +156,55 @@ export const MANUAL = {
   ],
 };
 
-/** Convierte el manual en los bloques que entiende `docx.js`. */
+/** Convierte el manual en los bloques que entiende `docx.js`.
+ *
+ *  Sigue la MISMA plantilla que la cuenta de cobro y los reportes de Stratos:
+ *  marca arriba a la derecha, título grande centrado, una raya, y secciones
+ *  numeradas con su propia raya. Ángel: «recordá la plantilla de Stratos de Word
+ *  que hemos estado haciendo en otros documentos, y buen tamaño de letra».
+ *
+ *  Los tamaños son de documento impreso, no de pantalla: cuerpo en 11.5, que es
+ *  lo que se lee cómodo en una hoja; nada por debajo de 10.5 salvo el pie.
+ */
 export function manualEnBloques(fechaISO) {
   const MESES = ["enero", "febrero", "marzo", "abril", "mayo", "junio",
                  "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
   const [y, m, d] = String(fechaISO || new Date().toISOString()).slice(0, 10).split("-").map(Number);
 
-  const b = [
-    { text: "NSG", bold: true, size: 12, align: "right", after: 0, color: "667085" },
-    { text: `${d} de ${MESES[m - 1]} de ${y}`, size: 10, align: "right", after: 22, color: "667085" },
+  const VERDE = "0D9A76";   // el verde de Stratos, en versión impresa
+  const GRIS  = "667085";
+  const TINTA = "1D2939";
 
-    { text: MANUAL.titulo.toUpperCase(), bold: true, size: 22, align: "center", after: 4 },
-    { text: MANUAL.bajada, size: 11.5, align: "center", color: "667085", after: 10 },
-    { text: MANUAL.regla, size: 11, align: "center", bold: true, after: 20, linea: true },
+  const b = [
+    { text: "NSG", bold: true, size: 12.5, align: "right", after: 0, color: GRIS },
+    { text: `${d} de ${MESES[m - 1]} de ${y}`, size: 10.5, align: "right", after: 30, color: GRIS },
+
+    { text: MANUAL.titulo.toUpperCase(), bold: true, size: 25, align: "center", after: 8, color: TINTA },
+    { text: MANUAL.bajada, size: 12.5, align: "center", color: GRIS, after: 14 },
+    { text: MANUAL.regla, size: 12, align: "center", bold: true, color: VERDE, after: 8 },
+    { text: "", after: 20, linea: true },
   ];
 
   MANUAL.secciones.forEach((s, i) => {
-    b.push({ text: `${i + 1}. ${s.titulo.toUpperCase()}`, bold: true, size: 13, before: 16, after: 4, linea: true });
-    if (s.intro) b.push({ text: s.intro, size: 11, color: "475467", after: 10 });
+    // Cada sección arranca con su número en verde y el título en tinta, con la
+    // raya abajo — igual que los apartados de la cuenta de cobro.
+    b.push({
+      text: [{ t: `${i + 1}.  `, bold: true, color: VERDE }, { t: s.titulo.toUpperCase(), bold: true, color: TINTA }],
+      size: 14, before: 22, after: 5, linea: true,
+    });
+    if (s.intro) b.push({ text: s.intro, size: 11.5, color: "475467", italic: true, after: 12 });
 
     s.items.forEach((it) => {
-      b.push({ text: it.que, bold: true, size: 11.5, before: 6, after: 2 });
-      if (it.como)   b.push({ text: [{ t: "Cómo: ", bold: true, color: "667085" }, { t: it.como }], size: 10.5, indent: 12, after: 2 });
-      if (it.cambia) b.push({ text: [{ t: "Qué cambia: ", bold: true, color: "0D9A76" }, { t: it.cambia }], size: 10.5, indent: 12, after: 8 });
+      b.push({ text: it.que, bold: true, size: 12, color: TINTA, before: 10, after: 3 });
+      if (it.como)   b.push({ text: [{ t: "Cómo:  ", bold: true, color: GRIS }, { t: it.como }], size: 11.5, indent: 16, after: 3 });
+      if (it.cambia) b.push({ text: [{ t: "Qué cambia:  ", bold: true, color: VERDE }, { t: it.cambia }], size: 11.5, indent: 16, after: 6 });
     });
   });
 
   b.push(
-    { text: "", after: 14 },
-    { text: "Este documento se genera desde el propio sistema: si algo cambia, se vuelve a bajar y sale actualizado.",
-      size: 9.5, color: "667085", align: "center", before: 14 },
+    { text: "", after: 22, linea: true },
+    { text: "Este documento lo genera el propio sistema: si algo cambia, se vuelve a bajar y sale actualizado.",
+      size: 10, color: GRIS, align: "center", before: 10 },
   );
 
   return b;
