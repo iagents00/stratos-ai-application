@@ -195,3 +195,12 @@ input:-webkit-autofill:active {
   font-variant-numeric: tabular-nums;
   font-feature-settings: "tnum" 1;
 }
+
+/* [guard:HUERFANAS] Ninguna frase debe dejar una palabra sola en el último
+   renglón. Reporte de Ángel (27-jul, con captura): el subtítulo de "Mi Día" se
+   partía y dejaba la palabra «ti» sola abajo — se veía roto en el iPhone.
+   `text-wrap: pretty` le pide al navegador que reparta las líneas para evitar
+   huérfanas. Donde no esté soportado no pasa nada: el texto se ve como antes. */
+h1, h2, h3, h4, p {
+  text-wrap: pretty;
+}

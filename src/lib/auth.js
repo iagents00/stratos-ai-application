@@ -19,7 +19,7 @@
  *    tirar al user al LoginScreen. (Era 24h → los usuarios de la app instalada
  *    quedaban en login tras un día sin abrir + una red lenta; 2026-07-17.)
  */
-import { supabase } from './supabase'
+import { supabase, SUPABASE_REST_URL, SUPABASE_ANON_KEY } from './supabase'
 import { logAuthEvent } from './audit'
 import {
   isOfflineForced,
@@ -459,11 +459,24 @@ export async function getStoredSession() {
 }
 
 /* ── Funciones admin ─────────────────────────────────────── */
-export async function adminGetAllUsers() {
+/**
+ * La gente del equipo, con su CORREO.
+ *
+ * Antes leía `profiles` directo, pero esa tabla NO guarda el correo (vive en
+ * auth.users): la lista salía sin él y el botón de cambiar contraseña no tenía
+ * a dónde mandar el mail. Ahora usa `fn_team_users`, que lo trae y además acota
+ * a la organización de quien pregunta (defensa en profundidad sobre la RLS).
+ * Si por lo que sea falla, cae a la lectura directa para no dejar la pantalla vacía.
+ */
+export async function adminGetAllUsers(profileId = null) {
   try {
+    if (profileId) {
+      const { data, error } = await supabase.rpc('fn_team_users', { p_profile_id: profileId })
+      if (!error && Array.isArray(data)) return data
+    }
     const { data, error } = await supabase
       .from('profiles')
-      .select('id, name, role, phone, active, created_at')
+      .select('id, name, role, phone, active, created_at, organization_id')
       .order('created_at')
     return error ? [] : data
   } catch (e) {
@@ -499,9 +512,60 @@ export async function adminDeleteUser(id, currentUserId) {
   }
 }
 
-export function adminCreateUser() {
-  return { data: null, error: 'Crear usuarios desde Supabase Dashboard → Authentication → Users' }
+/**
+ * Dar de alta a alguien del equipo desde el propio CRM.
+ *
+ * Hasta el 27-jul esto era un stub que devolvía "creá el usuario desde el
+ * Dashboard de Supabase" → el formulario de Gestión de Usuarios SIEMPRE fallaba.
+ * Lo encontró la auditoría cuando Ángel pidió poder sumar otro desarrollador.
+ *
+ * Ahora llama a la edge function `admin-create-user`, que corre con service_role
+ * y — esto es lo importante — **toma la organización del perfil de quien llama**,
+ * no del navegador. Un admin de NSG solo puede crear gente en NSG, aunque
+ * manipule el request.
+ *
+ * Devuelve una clave temporal para pasarle a la persona; que la cambie al entrar.
+ */
+export async function adminCreateUser({ name, email, role = 'asesor', phone = null } = {}) {
+  try {
+    const { data: sesion } = await supabase.auth.getSession()
+    const token = sesion?.session?.access_token
+    if (!token) return { data: null, error: 'Tu sesión venció. Volvé a entrar y probá de nuevo.' }
+
+    const url = `${SUPABASE_REST_URL}/functions/v1/admin-create-user`
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        apikey: SUPABASE_ANON_KEY,
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ name, email, role, phone }),
+    })
+    const out = await res.json().catch(() => ({}))
+    if (!res.ok || out?.ok === false) {
+      return { data: null, error: out?.error || 'No se pudo crear el usuario.' }
+    }
+    return { data: out, error: null }
+  } catch (e) {
+    return { data: null, error: 'Error de conexión al crear el usuario.' }
+  }
 }
-export function adminResetPassword() {
-  return { data: null, error: 'Resetear desde Supabase Dashboard → Authentication → Users' }
+
+/**
+ * Mandarle a alguien el correo para que se ponga una contraseña nueva.
+ * Reusa el mismo camino que "olvidé mi contraseña" del login, así que no hace
+ * falta ningún permiso especial ni entrar al Dashboard.
+ */
+export async function adminResetPassword(email) {
+  try {
+    if (!email) return { data: null, error: 'Falta el correo.' }
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/`,
+    })
+    if (error) return { data: null, error: error.message }
+    return { data: { sent: true }, error: null }
+  } catch (e) {
+    return { data: null, error: 'Error de conexión al mandar el correo.' }
+  }
 }

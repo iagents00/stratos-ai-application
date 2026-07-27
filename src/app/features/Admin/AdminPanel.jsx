@@ -65,21 +65,21 @@ export default function AdminPanel({ T = P, isLight: isLightProp }) {
   const refresh = useCallback(async () => {
     setLoadingUsers(true);
     try {
-      const data = await adminGetAllUsers();
+      const data = await adminGetAllUsers(me?.id);
       setUsers(Array.isArray(data) ? data : []);
     } catch (_) {
       setUsers([]);
     } finally {
       setLoadingUsers(false);
     }
-  }, []);
+  }, [me?.id]);
 
   // Carga inicial.
   useEffect(() => {
     let active = true;
     (async () => {
       try {
-        const data = await adminGetAllUsers();
+        const data = await adminGetAllUsers(me?.id);
         if (active) setUsers(Array.isArray(data) ? data : []);
       } catch (_) {
         if (active) setUsers([]);
@@ -88,7 +88,7 @@ export default function AdminPanel({ T = P, isLight: isLightProp }) {
       }
     })();
     return () => { active = false; };
-  }, []);
+  }, [me?.id]);
 
   const sf = (k) => (v) => setForm(p => ({ ...p, [k]: typeof v === "string" ? v : v.target.value }));
 
@@ -110,38 +110,50 @@ export default function AdminPanel({ T = P, isLight: isLightProp }) {
     setModal({ mode: "reset", user: u });
   };
 
-  const handleCreate = () => {
-    if (!form.name?.trim()) { setFormErr("El nombre es requerido."); return; }
-    if (!form.email?.trim() || !form.email.includes("@")) { setFormErr("Email inválido."); return; }
-    if (!form.password || form.password.length < 6) { setFormErr("La contraseña debe tener al menos 6 caracteres."); return; }
-    const { data, error } = adminCreateUser({ name: form.name.trim(), email: form.email.trim().toLowerCase(), password: form.password, role: form.role });
+  // ⚠️ TODOS estos handlers llaman funciones ASYNC. Antes NO tenían `await`:
+  // destructuraban `{ data, error }` de una Promesa, así que `error` quedaba
+  // siempre undefined → la pantalla decía "creado exitosamente" aunque no se
+  // hubiera creado nada. Lo encontró la auditoría del 27-jul.
+  const handleCreate = async () => {
+    if (!form.name?.trim()) { setFormErr("Falta el nombre."); return; }
+    if (!form.email?.trim() || !form.email.includes("@")) { setFormErr("Ese correo no parece válido."); return; }
+    setFormErr(""); setFormOk("");
+    const { data, error } = await adminCreateUser({
+      name: form.name.trim(), email: form.email.trim().toLowerCase(), role: form.role,
+    });
     if (error) { setFormErr(error); return; }
-    refresh(); setFormOk(`Usuario ${data.name} creado exitosamente.`);
-    setTimeout(() => setModal(null), 1400);
+    await refresh();
+    // La clave temporal se muestra UNA vez: es lo que hay que pasarle a la persona.
+    setFormOk(`Listo. Pasale el correo ${data.email} y esta clave temporal: ${data.temp_password} — que la cambie al entrar.`);
   };
 
-  const handleEdit = () => {
-    if (!form.name?.trim()) { setFormErr("El nombre es requerido."); return; }
-    const { data, error } = adminUpdateUser(modal.user.id, { name: form.name.trim(), email: form.email.trim().toLowerCase(), role: form.role, isActive: form.isActive });
+  const handleEdit = async () => {
+    if (!form.name?.trim()) { setFormErr("Falta el nombre."); return; }
+    const { error } = await adminUpdateUser(modal.user.id, { name: form.name.trim(), role: form.role, active: form.isActive });
     if (error) { setFormErr(error); return; }
-    refresh(); setFormOk("Cambios guardados."); setTimeout(() => setModal(null), 1000);
+    await refresh(); setFormOk("Cambios guardados."); setTimeout(() => setModal(null), 1000);
   };
 
-  const handleReset = () => {
-    if (!form.password || form.password.length < 6) { setFormErr("Mínimo 6 caracteres."); return; }
-    const { error } = adminResetPassword(modal.user.id, form.password);
+  // Ya no se escribe una contraseña a mano: se le manda el correo para que ella
+  // se ponga la suya (mismo camino que "olvidé mi contraseña" del login).
+  const handleReset = async () => {
+    const correo = modal?.user?.email;
+    if (!correo) { setFormErr("Esa persona no tiene correo cargado."); return; }
+    setFormErr(""); setFormOk("");
+    const { error } = await adminResetPassword(correo);
     if (error) { setFormErr(error); return; }
-    setFormOk("Contraseña actualizada."); setTimeout(() => setModal(null), 1000);
+    setFormOk(`Le mandé el correo a ${correo} para que ponga una contraseña nueva.`);
+    setTimeout(() => setModal(null), 2200);
   };
 
-  const handleDelete = (id) => {
-    const { error } = adminDeleteUser(id, me?.id);
+  const handleDelete = async (id) => {
+    const { error } = await adminDeleteUser(id, me?.id);
     if (error) return;
-    setDeleteConfirm(null); refresh();
+    setDeleteConfirm(null); await refresh();
   };
 
-  const handleToggleActive = (u) => {
-    adminUpdateUser(u.id, { isActive: !u.isActive }); refresh();
+  const handleToggleActive = async (u) => {
+    await adminUpdateUser(u.id, { active: !u.isActive }); await refresh();
   };
 
   const filtered = users.filter(u => {
@@ -467,24 +479,24 @@ export default function AdminPanel({ T = P, isLight: isLightProp }) {
                 </>
               )}
 
+              {/* Ya no se escribe una contraseña a mano: el sistema genera una
+                  temporal y la muestra UNA vez, para pasársela a la persona.
+                  Así nadie tiene que inventar una clave ni mandarla por chat. */}
               {modal.mode === "create" && (
-                <div>
-                  <p style={{ fontSize: 10, fontWeight: 500, color: T.txt3, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 7 }}>Contraseña inicial <span style={{ color: T.accent }}>*</span></p>
-                  <input value={form.password || ""} onChange={e => sf("password")(e.target.value)} placeholder="Mínimo 6 caracteres" type="password" style={inputStyle}
-                    onFocus={e => e.target.style.borderColor = T.accentB}
-                    onBlur={e => e.target.style.borderColor = T.border}
-                  />
+                <div style={{ padding: "12px 14px", borderRadius: 10, background: `${T.accent}12`, border: `1px solid ${T.accent}33` }}>
+                  <p style={{ fontSize: 12, color: T.txt2, margin: 0, lineHeight: 1.55 }}>
+                    Al crearla te doy una <strong style={{ color: T.txt }}>clave temporal</strong> para pasarle a la persona.
+                    Entra con ella y se pone la suya.
+                  </p>
                 </div>
               )}
 
               {modal.mode === "reset" && (
-                <div>
-                  <p style={{ fontSize: 10, fontWeight: 500, color: T.txt3, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 7 }}>Nueva contraseña <span style={{ color: T.accent }}>*</span></p>
-                  <input value={form.password || ""} onChange={e => sf("password")(e.target.value)} placeholder="Nueva contraseña (mín. 6 caracteres)" type="password" style={inputStyle}
-                    onFocus={e => e.target.style.borderColor = T.accentB}
-                    onBlur={e => e.target.style.borderColor = T.border}
-                  />
-                  <p style={{ fontSize: 10.5, color: T.txt3, marginTop: 8 }}>Reseteando contraseña para: <span style={{ color: T.txt2 }}>{modal.user?.name}</span></p>
+                <div style={{ padding: "12px 14px", borderRadius: 10, background: `${T.accent}12`, border: `1px solid ${T.accent}33` }}>
+                  <p style={{ fontSize: 12, color: T.txt2, margin: 0, lineHeight: 1.55 }}>
+                    Le voy a mandar un correo a <strong style={{ color: T.txt }}>{modal.user?.email || modal.user?.name}</strong> para
+                    que ponga una contraseña nueva. Vos no tenés que elegirla.
+                  </p>
                 </div>
               )}
 
