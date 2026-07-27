@@ -37,6 +37,9 @@ const SUGGESTIONS = [
   { label: "Guía del asistente", text: "mandame la guia del asistente" },
 ];
 
+// Lector de comprobantes (Claude lee la imagen y saca el monto). Vive en n8n
+// porque ahí está la credencial de Anthropic; el CRM nunca la toca.
+const OCR_COMPROBANTE_URL = "https://personal-n8n.suwsiw.easypanel.host/webhook/nsg-leer-comprobante";
 const REC_MAX_SECS = 300;
 const fmtRecSecs = (s) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
 
@@ -93,6 +96,7 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
   // Captura de un pago mandada al Copilot, esperando que digan qué es y de cuánto.
   const [cajaForm, setCajaForm] = useState(null);   // {path, tipo:'ingreso'|'egreso', amount, category, description}
   const cajaPathRef = useRef(null);                 // la última captura subida (sobrevive al re-render)
+  const cajaLeidoRef = useRef(null);                // lo que el OCR pudo leer del comprobante
   const evInputRef = useRef(null);
   const scrollRef = useRef(null);
   const inputRef = useRef(null);
@@ -199,13 +203,15 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
         }]);
         return;
       }
+      const leido = cajaLeidoRef.current;
       setCajaForm({
         path: cajaPathRef.current,
         tipo: cual === "ingreso" ? "ingreso" : "egreso",
-        amount: "",
+        amount: leido?.monto || "",
         category: cual === "ingreso" ? "Nómina" : "Servicios",
-        description: "",
+        description: leido?.concepto || "",
       });
+      cajaLeidoRef.current = null;
       return;
     }
 
@@ -346,9 +352,40 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
       const { error: upErr } = await supabase.storage.from("evidencia").upload(path, file);
       if (upErr) throw upErr;
       cajaPathRef.current = path;
+
+      // OCR: se le pide a Claude que LEA el comprobante para no hacerle escribir
+      // el monto a mano (pedido de Ángel). Es best-effort a propósito: si el
+      // lector no contesta o no está seguro, el formulario sale vacío y la
+      // persona lo escribe. Nunca se rellena una cifra "aproximada".
+      try {
+        const { data: firmada } = await supabase.storage.from("evidencia").createSignedUrl(path, 600);
+        if (firmada?.signedUrl) {
+          const r = await fetch(OCR_COMPROBANTE_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ url: firmada.signedUrl }),
+            signal: AbortSignal.timeout(25000),
+          });
+          const leido = await r.json();
+          // Solo se usa si el lector quedó CONFORME con lo que vio.
+          if (leido?.monto && leido.confianza !== "baja") {
+            cajaLeidoRef.current = {
+              monto: String(leido.monto),
+              // Acá casi todo es en dólares (Ángel, 27-jul): si no se ve la
+              // moneda, se asume USD en vez de dejarlo en blanco.
+              moneda: leido.moneda || "USD",
+              concepto: leido.concepto || "",
+            };
+          }
+        }
+      } catch { /* sin OCR se sigue a mano; no es un error para el usuario */ }
+
+      const leido = cajaLeidoRef.current;
       setMessages((prev) => [...prev, {
         id: `cjq-${Date.now()}`, role: "ai",
-        content: "Guardé la imagen. ¿Qué hago con ella?",
+        content: leido
+          ? `Leí el comprobante: $${leido.monto}${leido.concepto ? ` · ${leido.concepto}` : ""}. ¿Qué registro?`
+          : "Guardé la imagen. ¿Qué hago con ella?",
         buttons: [
           { label: "Entró plata (ingreso)",    action: "cajapick:ingreso" },
           { label: "Salió plata (gasto)",      action: "cajapick:egreso" },
