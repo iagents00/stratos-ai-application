@@ -4,13 +4,10 @@ import { G, KPI, Pill } from "../SharedComponents";
 import {
   Building2, MapPin, FolderOpen, Search, Phone, HardDrive,
   Map as MapIcon, Layers, Briefcase, X, Wallet, SlidersHorizontal, LayoutGrid, Table as TableIcon, Send,
+  Plus, Pencil, RefreshCw, CloudOff,
 } from "lucide-react";
-import { CATALOGO_SECCIONES } from "../data/catalogoProyectos";
-
-// Solo se MUESTRAN estas secciones del catálogo (control = pestaña "DRIVES DC" del Sheet).
-// Las demás propiedades quedan guardadas en la data pero ocultas en la UI (y en el bot de Telegram).
-const VISIBLE_SECCIONES = ["top-desarrollos"];
-const SECCIONES = CATALOGO_SECCIONES.filter((s) => VISIBLE_SECCIONES.includes(s.id));
+import { useCatalogo } from "../../hooks/useCatalogo";
+import ProyectoModal from "./ProyectoModal";
 
 /* Color por rango de ticket */
 const ticketColor = (t, T) => {
@@ -91,7 +88,12 @@ const ERP = ({ oc, T: _T }) => {
   const isLight = !!_T && _T?.bg !== P.bg;
   const T = _T || P;
 
-  const [secId, setSecId] = useState(SECCIONES[0].id);
+  // Catálogo VIVO desde Supabase (con la semilla del repo como respaldo).
+  // El equipo de Duke registra y actualiza acá; el bot de Telegram lee la misma tabla.
+  const { items, loading, source, canEdit, save, toggleVisible, refresh } = useCatalogo();
+  const [modalOpen, setModalOpen] = useState(false);
+  const [editing, setEditing] = useState(null);
+
   const [q, setQ] = useState("");
   const [zona, setZona] = useState("");             // zona canónica seleccionada ("" = todas)
   const [zonaLibre, setZonaLibre] = useState("");   // zona escrita a mano por el asesor
@@ -101,45 +103,39 @@ const ERP = ({ oc, T: _T }) => {
   const [limit, setLimit] = useState(60);
   const [view, setView] = useState("cards"); // "cards" | "table"
 
-  const sec = useMemo(
-    () => SECCIONES.find((s) => s.id === secId) || SECCIONES[0],
-    [secId]
-  );
-
   const kpis = useMemo(() => {
-    const all = SECCIONES.flatMap((s) => s.items);
-    const conDrive = all.filter((i) => i.drive).length;
-    const ubic = new Set(all.map((i) => canonZona(i.ubicacion)).filter(Boolean));
-    const secciones = SECCIONES.filter((s) => s.items.length).length;
-    return { total: all.length, conDrive, ubic: ubic.size, secciones };
-  }, []);
+    const conDrive = items.filter((i) => i.drive).length;
+    const ubic = new Set(items.map((i) => canonZona(i.ubicacion)).filter(Boolean));
+    const propios = items.filter((i) => i.source === "db").length;
+    return { total: items.length, conDrive, ubic: ubic.size, propios };
+  }, [items]);
 
   // Zonas presentes (canónicas, ordenadas por cantidad) — para los botones de filtro.
   const zonas = useMemo(() => {
     const count = new Map();
-    sec.items.forEach((i) => {
+    items.forEach((i) => {
       if (!i.drive) return;
       const z = canonZona(i.ubicacion);
       if (z) count.set(z, (count.get(z) || 0) + 1);
     });
     return [...count.entries()].sort((a, b) => b[1] - a[1]).map(([z]) => z);
-  }, [sec]);
+  }, [items]);
 
   // Rangos de presupuesto que realmente tienen proyectos (+ si hay terrenos).
   const buckets = useMemo(() => {
-    const ps = sec.items.filter((i) => i.drive).map((i) => parseTicketUSD(i.ticket)).filter(Boolean);
+    const ps = items.filter((i) => i.drive).map((i) => parseTicketUSD(i.ticket)).filter(Boolean);
     return {
       ranges: BUCKETS.filter((b) => ps.some((p) => bucketMatch(p, b))),
       hasLand: ps.some((p) => p.land),
     };
-  }, [sec]);
+  }, [items]);
 
   const filtered = useMemo(() => {
     const needle = q.trim().toLowerCase();
     const zLibre = zonaLibre.trim().toLowerCase();
     const bucket = presu && presu !== "terrenos" && presu !== "custom" ? BUCKETS.find((b) => b.id === presu) : null;
     const hiCustom = rMax >= RANGE_MAX ? Infinity : rMax;
-    return sec.items.filter((i) => {
+    return items.filter((i) => {
       if (!i.drive) return false; // Solo desarrollos con carpeta Drive disponible
       // Zona: la escrita a mano tiene prioridad; si no, la seleccionada.
       if (zLibre) {
@@ -159,11 +155,13 @@ const ERP = ({ oc, T: _T }) => {
         i.clasificacion, i.tipologia, i.highlights, i.asesor,
       ].filter(Boolean).join(" ").toLowerCase().includes(needle);
     });
-  }, [sec, q, zona, zonaLibre, presu, rMin, rMax]);
+  }, [items, q, zona, zonaLibre, presu, rMin, rMax]);
 
   const shown = filtered.slice(0, limit);
+  const conDrive = useMemo(() => items.filter((i) => i.drive).length, [items]);
 
-  const pickSection = (id) => { setSecId(id); setQ(""); setZona(""); setZonaLibre(""); setPresu(""); setRMin(0); setRMax(RANGE_MAX); setLimit(60); };
+  const openNuevo = () => { setEditing(null); setModalOpen(true); };
+  const openEditar = (it) => { setEditing(it); setModalOpen(true); };
 
   const btnStyle = (color) => ({
     display: "inline-flex", alignItems: "center", gap: 5,
@@ -203,7 +201,7 @@ const ERP = ({ oc, T: _T }) => {
         <KPI label="Desarrollos" value={kpis.total} sub="Catálogo total" icon={Building2} color={T.blue} T={T} />
         <KPI label="Con carpeta Drive" value={kpis.conDrive} sub="Material listo" icon={HardDrive} color={T.emerald} T={T} />
         <KPI label="Ubicaciones" value={kpis.ubic} sub="Zonas cubiertas" icon={MapPin} color={T.amber} T={T} />
-        <KPI label="Secciones" value={kpis.secciones} sub="Del Google Sheet" icon={Layers} color={T.violet} T={T} />
+        <KPI label="Registrados aquí" value={kpis.propios} sub="Editables por el equipo" icon={Layers} color={T.violet} T={T} />
       </div>
 
       {/* Consulta del catálogo por Telegram */}
@@ -237,48 +235,46 @@ const ERP = ({ oc, T: _T }) => {
       <G np T={T}>
         {/* Header + secciones */}
         <div style={{ padding: "18px 22px 14px", borderBottom: `1px solid ${T.border}` }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap", marginBottom: 14 }}>
-            <div>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+            <div style={{ minWidth: 0 }}>
               <p style={{ fontSize: 14, fontWeight: 500, color: T.txt, fontFamily: fontDisp, margin: 0 }}>Catálogo de Proyectos</p>
               <p style={{ fontSize: 10.5, color: T.txt3, fontFamily: font, margin: "3px 0 0" }}>
-                Duke del Caribe · fuente: Google Sheet «DRIVES DUKE DEL CARIBE»
+                {source === "db"
+                  ? "Duke del Caribe · lo actualiza el equipo desde aquí; el asistente de Telegram lee lo mismo"
+                  : "Duke del Caribe · catálogo de respaldo del repositorio (sin conexión con la base)"}
               </p>
             </div>
-            <Pill color={T.blue} s isLight={isLight}>{filtered.length} de {sec.items.filter((i) => i.drive).length}</Pill>
-          </div>
-
-          {/* Section tabs (solo si hay más de una sección visible) */}
-          <div style={{ display: SECCIONES.length > 1 ? "flex" : "none", gap: 7, overflowX: "auto", paddingBottom: 4 }}>
-            {SECCIONES.map((s) => {
-              const active = s.id === secId;
-              return (
-                <button
-                  key={s.id}
-                  onClick={() => pickSection(s.id)}
-                  style={{
-                    display: "flex", alignItems: "center", gap: 7, whiteSpace: "nowrap",
-                    padding: "8px 13px", borderRadius: 10, cursor: "pointer",
-                    border: `1px solid ${active ? `${T.accent}55` : T.border}`,
-                    background: active ? `${T.accent}18` : (isLight ? "rgba(15,23,42,0.02)" : "rgba(255,255,255,0.02)"),
-                    color: active ? T.accent : T.txt2,
-                    fontSize: 12, fontWeight: active ? 700 : 500, fontFamily: fontDisp, letterSpacing: "-0.01em",
-                    transition: "all 0.15s",
-                  }}
-                >
-                  {s.nombre}
-                  <span style={{
-                    fontSize: 10, fontWeight: 500, padding: "1px 6px", borderRadius: 99,
-                    background: active ? `${T.accent}26` : (isLight ? "rgba(15,23,42,0.06)" : "rgba(255,255,255,0.06)"),
-                    color: active ? T.accent : T.txt3,
-                  }}>{s.items.length}</span>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+              <Pill color={T.blue} s isLight={isLight}>{filtered.length} de {conDrive}</Pill>
+              {source === "seed" && (
+                <span title="No se pudo leer el catálogo en vivo; se muestra el del repositorio."
+                  style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "5px 10px", borderRadius: 99, fontSize: 10.5, fontFamily: font, color: T.amber, background: `${T.amber}14`, border: `1px solid ${T.amber}33` }}>
+                  <CloudOff size={12} /> Modo respaldo
+                </span>
+              )}
+              <button onClick={refresh} disabled={loading} title="Actualizar catálogo"
+                style={{
+                  display: "inline-flex", alignItems: "center", justifyContent: "center", width: 32, height: 32,
+                  borderRadius: 9, cursor: loading ? "default" : "pointer",
+                  border: `1px solid ${T.border}`, background: isLight ? "#FFFFFF" : "rgba(255,255,255,0.03)", color: T.txt3,
+                }}>
+                <RefreshCw size={13} style={loading ? { animation: "spin 0.9s linear infinite" } : undefined} />
+              </button>
+              {canEdit && (
+                <button onClick={openNuevo} style={{
+                  display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 14px", borderRadius: 10,
+                  cursor: "pointer", border: `1px solid ${T.accent}40`, background: `${T.accent}16`,
+                  color: T.accent, fontSize: 12, fontWeight: 600, fontFamily: fontDisp, whiteSpace: "nowrap",
+                }}>
+                  <Plus size={14} /> Registrar proyecto
                 </button>
-              );
-            })}
+              )}
+            </div>
           </div>
         </div>
 
         {/* Toolbar: buscador + filtros simples (Zona · Presupuesto) + vista */}
-        {sec.items.length > 0 && (
+        {items.length > 0 && (
           <div style={{ padding: "14px 22px", borderBottom: `1px solid ${T.border}`, display: "flex", flexDirection: "column", gap: 11 }}>
             {/* Fila 1: buscador + toggle de vista */}
             <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
@@ -393,13 +389,19 @@ const ERP = ({ oc, T: _T }) => {
 
         {/* Body */}
         <div style={{ padding: 18 }}>
-          {sec.items.length === 0 ? (
+          {loading && items.length === 0 ? (
+            <div style={{ textAlign: "center", padding: "48px 20px 40px", fontSize: 13, color: T.txt3, fontFamily: font }}>
+              Cargando el catálogo…
+            </div>
+          ) : items.length === 0 ? (
             <div style={{ textAlign: "center", padding: "48px 20px 40px" }}>
               <div style={{ width: 58, height: 58, borderRadius: 17, background: `${T.accent}0D`, border: `1px solid ${T.accent}1F`, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 14px" }}>
                 <FolderOpen size={25} color={T.accent} strokeWidth={1.6} style={{ opacity: 0.75 }} />
               </div>
-              <p style={{ margin: "0 0 4px", fontSize: 14, fontWeight: 400, fontFamily: fontDisp, color: T.txt }}>Sección sin registros todavía</p>
-              <p style={{ margin: 0, fontSize: 12, color: T.txt3, fontFamily: font }}>Esta pestaña existe en el Sheet pero aún no tiene desarrollos cargados.</p>
+              <p style={{ margin: "0 0 4px", fontSize: 14, fontWeight: 400, fontFamily: fontDisp, color: T.txt }}>Todavía no hay proyectos cargados</p>
+              <p style={{ margin: 0, fontSize: 12, color: T.txt3, fontFamily: font }}>
+                {canEdit ? "Registra el primero con el botón «Registrar proyecto» y pega su carpeta de Drive." : "Pídele a un administrador que registre los desarrollos."}
+              </p>
             </div>
           ) : filtered.length === 0 ? (
             <div style={{ textAlign: "center", padding: "40px 20px", fontSize: 13, color: T.txt3, fontFamily: font }}>
@@ -413,7 +415,7 @@ const ERP = ({ oc, T: _T }) => {
                   const c = ticketColor(it.ticket, T);
                   return (
                     <div
-                      key={idx}
+                      key={it.id || idx}
                       onClick={() => oc(summary(it))}
                       onMouseEnter={(e) => { e.currentTarget.style.borderColor = `${c}55`; e.currentTarget.style.transform = "translateY(-3px)"; e.currentTarget.style.boxShadow = isLight ? "0 8px 24px rgba(15,23,42,0.10)" : "0 12px 30px rgba(0,0,0,0.42)"; }}
                       onMouseLeave={(e) => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = isLight ? "0 1px 2px rgba(15,23,42,0.05), 0 4px 14px rgba(15,23,42,0.05)" : "none"; }}
@@ -476,8 +478,8 @@ const ERP = ({ oc, T: _T }) => {
                       )}
 
                       {/* Actions */}
-                      {(it.drive || it.maps) && (
-                        <div style={{ display: "flex", gap: 7, marginTop: "auto", paddingTop: 4 }}>
+                      {(it.drive || it.maps || canEdit) && (
+                        <div style={{ display: "flex", gap: 7, marginTop: "auto", paddingTop: 4, flexWrap: "wrap" }}>
                           {it.drive && (
                             <a href={it.drive} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} style={btnStyle(T.emerald)}>
                               <HardDrive size={12} /> Drive
@@ -487,6 +489,12 @@ const ERP = ({ oc, T: _T }) => {
                             <a href={it.maps} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} style={btnStyle(T.blue)}>
                               <MapIcon size={12} /> Maps
                             </a>
+                          )}
+                          {canEdit && (
+                            <button onClick={(e) => { e.stopPropagation(); openEditar(it); }}
+                              style={{ ...btnStyle(T.txt3), marginLeft: "auto", cursor: "pointer" }}>
+                              <Pencil size={12} /> Editar
+                            </button>
                           )}
                         </div>
                       )}
@@ -514,7 +522,7 @@ const ERP = ({ oc, T: _T }) => {
                       const c = ticketColor(it.ticket, T);
                       return (
                         <tr
-                          key={idx}
+                          key={it.id || idx}
                           onClick={() => oc(summary(it))}
                           onMouseEnter={(e) => (e.currentTarget.style.background = isLight ? "rgba(15,23,42,0.03)" : "rgba(255,255,255,0.025)")}
                           onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
@@ -536,7 +544,8 @@ const ERP = ({ oc, T: _T }) => {
                             <div style={{ display: "flex", gap: 6 }}>
                               {it.drive && <a href={it.drive} target="_blank" rel="noopener noreferrer" title="Carpeta de Drive" onClick={(e) => e.stopPropagation()} style={iconLink(T.emerald)}><HardDrive size={13} /></a>}
                               {it.maps && <a href={it.maps} target="_blank" rel="noopener noreferrer" title="Google Maps" onClick={(e) => e.stopPropagation()} style={iconLink(T.blue)}><MapIcon size={13} /></a>}
-                              {!it.drive && !it.maps && <span style={{ color: T.txt3 }}>—</span>}
+                              {canEdit && <button title="Editar proyecto" onClick={(e) => { e.stopPropagation(); openEditar(it); }} style={{ ...iconLink(T.txt3), cursor: "pointer" }}><Pencil size={13} /></button>}
+                              {!it.drive && !it.maps && !canEdit && <span style={{ color: T.txt3 }}>—</span>}
                             </div>
                           </td>
                         </tr>
@@ -565,6 +574,19 @@ const ERP = ({ oc, T: _T }) => {
           )}
         </div>
       </G>
+
+      {/* Alta / edición de un desarrollo — escribe en `catalogo_proyectos` y con eso
+          queda visible para los asesores, para Create y para el bot de Telegram. */}
+      {modalOpen && (
+        <ProyectoModal
+          T={T}
+          canEdit={canEdit}
+          initialData={editing}
+          onSave={save}
+          onHide={editing?.id && editing.source === "db" ? (id) => toggleVisible(id, false) : undefined}
+          onClose={() => { setModalOpen(false); setEditing(null); }}
+        />
+      )}
     </div>
   );
 };

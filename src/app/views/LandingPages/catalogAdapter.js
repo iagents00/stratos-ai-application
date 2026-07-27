@@ -63,6 +63,7 @@ const EXCLUDE_CLASS = new Set(["VENDIDO", "REPETIDO"]);
 
 /** Convierte una fila del catálogo maestro al shape de landing prop. */
 const itemToProp = (it, secId, idx) => {
+  const propId = it.id != null ? `cat:${it.id}` : `cat:${secId}:${idx}`;
   const name = (it.desarrollo || "").trim();
   const accent = accentForName(name);
   const location = titleCase(it.ubicacion || "") || "Riviera Maya";
@@ -74,7 +75,7 @@ const itemToProp = (it, secId, idx) => {
     it.mantenimiento && `Mantenimiento ${it.mantenimiento}`,
   ].filter(Boolean);
   return {
-    id: `cat:${secId}:${idx}`,
+    id: propId,
     name,
     brand: "",
     location,
@@ -105,21 +106,29 @@ const itemToProp = (it, secId, idx) => {
   };
 };
 
-/** Todas las propiedades del catálogo con carpeta de Drive, listas para el selector. */
-export const catalogToLandingProps = () => {
+/**
+ * Todas las propiedades del catálogo con carpeta de Drive, listas para el selector.
+ *
+ * `items` = catálogo VIVO de Supabase (useCatalogo), ya aplanado y con `seccion`
+ * en cada fila. Si no se pasa nada, cae al catálogo estático del repo — así el
+ * generador de landings sigue funcionando aunque la base no responda.
+ */
+export const catalogToLandingProps = (items = null) => {
+  const rows = items
+    ? items.map((it) => ({ it, secId: it.seccion || "catalogo" }))
+    : (CATALOGO_SECCIONES || []).flatMap((sec) => (sec.items || []).map((it) => ({ it, secId: sec.id })));
+
   const out = [];
   const seen = new Set();
-  for (const sec of CATALOGO_SECCIONES || []) {
-    (sec.items || []).forEach((it, idx) => {
-      const name = (it.desarrollo || "").trim();
-      if (!name || !it.drive) return; // solo desarrollos con material de Drive
-      if (EXCLUDE_CLASS.has((it.clasificacion || "").trim().toUpperCase())) return;
-      const key = name.toLowerCase();
-      if (seen.has(key)) return; // el mismo desarrollo puede repetirse entre pestañas
-      seen.add(key);
-      out.push(itemToProp(it, sec.id, idx));
-    });
-  }
+  rows.forEach(({ it, secId }, idx) => {
+    const name = (it.desarrollo || "").trim();
+    if (!name || !it.drive) return; // solo desarrollos con material de Drive
+    if (EXCLUDE_CLASS.has((it.clasificacion || "").trim().toUpperCase())) return;
+    const key = name.toLowerCase();
+    if (seen.has(key)) return; // el mismo desarrollo puede repetirse entre pestañas
+    seen.add(key);
+    out.push(itemToProp(it, secId, idx));
+  });
   return out.sort((a, b) => (b.featured - a.featured) || a.location.localeCompare(b.location, "es") || a.name.localeCompare(b.name, "es"));
 };
 

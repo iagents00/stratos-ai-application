@@ -340,6 +340,7 @@ Tras la auditoría de performance y los fixes del [PR #54](https://github.com/ia
 | `src/contexts/AuthContext.jsx` | `value` del `AuthContext.Provider` | **`useMemo`** con deps explícitas | Sin `useMemo`, el objeto `value` se crea nuevo en cada render → React.Context dispara re-render de TODOS los consumers (App, CRM, Dash, Sidebar, KPIs). Era una cascada masiva. **No quitar el useMemo ni dejar deps vacías.** |
 | `src/main.jsx` | Boot guard | Limpieza síncrona de `stratos.supabase.*`, `*-code-verifier`, `sb-*-pkce*` | Mantiene navegadores libres de basura legacy. NO tocar `sb-<projectref>-auth-token`. |
 | `public/sw.js` | `CACHE_VERSION` | Bumpear cuando se cambia auth/schema/perf crítico | Sin bump, navegadores con SW viejo siguen sirviendo bundle pre-fix. |
+| `src/app/views/CRM/DateRangeControl.jsx` | popover del calendario | **`createPortal` a `document.body`** — NO como hijo del div raíz | La tarjeta del control usa `backdrop-filter`, que (a) crea contexto de apilamiento propio → el z-index del calendario quedaba encerrado y las tarjetas de abajo se pintaban ENCIMA, y (b) vuelve a la tarjeta el bloque contenedor de los hijos `position: fixed` → el backdrop de «cerrar al hacer clic afuera» solo cubría la tarjeta. Si lo devolvés adentro, vuelve el bug (jul 2026). |
 
 ### Reglas generales de performance que ya están aplicadas
 
@@ -361,6 +362,44 @@ Si en algún momento la app vuelve a sentirse lenta tras agregar features:
 6. **Virtualizar lista de leads con `react-window`** — `CRM/index.jsx:2747` (2-3 horas, requiere testing del realtime).
 
 **NUNCA hagas estas optimizaciones sin haber identificado un problema concreto.** El estado actual ya es fluido en PC normal.
+
+---
+
+## ⚠️ ZONA CRÍTICA — EL CATÁLOGO DE PROYECTOS LO EDITA EL EQUIPO (Julio 2026)
+
+Antes, dar de alta un desarrollo era: el equipo de Duke mandaba la carpeta de Drive
+→ alguien regeneraba `src/app/data/catalogoProyectos.js` desde el Google Sheet →
+redeploy. El equipo no podía mantener su propio catálogo. **Eso ya no es así.**
+
+### Una sola fuente de verdad: `catalogo_proyectos` (Supabase `glulgyhkrqpykxmujodb`)
+
+| Pieza | Archivo | Rol |
+|---|---|---|
+| Capa de datos | `src/lib/catalogo-proyectos.js` | lee/escribe la tabla, normaliza links de Drive |
+| Hook | `src/hooks/useCatalogo.js` | catálogo vivo + respaldo + permisos |
+| Modal de alta/edición | `src/app/views/ProyectoModal.jsx` | el mismo en Proyectos y en Create |
+| Proyectos | `src/app/views/ERP.jsx` | lista, filtra, registra y edita |
+| Create | `src/app/views/LandingPages/` | usa el catálogo vivo para armar landings |
+| Bot / Copilot | `bot_buscar_proyectos` (Supabase) | **lee la misma tabla** |
+
+**Reglas que no hay que romper:**
+
+1. **NO edites `src/app/data/catalogoProyectos.js` para agregar proyectos.** Es solo
+   la **semilla de respaldo**: `useCatalogo` la muestra únicamente si Supabase no
+   responde o la tabla está vacía, para que el módulo nunca quede en blanco.
+2. **Registrar en el CRM = visible en las tres superficies** (Proyectos, Create y
+   el asistente de Telegram), porque las tres leen `catalogo_proyectos`. Si tocas
+   el shape de la tabla, revisá `bot_buscar_proyectos` también.
+3. **Nada se borra.** «Quitar del catálogo» es `visible = false`; la fila queda.
+4. **Permisos:** escribir exige `is_admin_or_above()` (super_admin, admin, ceo,
+   director). Los asesores ven pero no editan — y en Create su botón «Registrar
+   propiedad» sigue guardando una propiedad suelta en su navegador (para armar una
+   landing puntual sin tocar el catálogo de la empresa). Si algún día se quiere
+   que los asesores registren en el catálogo, es cambiar la política
+   `catalogo_insert_admin`: **es decisión de negocio, no la tomes solo.**
+5. **La migración `172_catalogo_editable_desde_crm.sql` es opcional** (solo agrega
+   columnas de auditoría). El CRM funciona con o sin ella: `saveProyecto` reintenta
+   el guardado sin esos campos si todavía no se aplicó.
 
 ---
 

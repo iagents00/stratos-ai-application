@@ -12,6 +12,14 @@
 --   4) Wrapper de bot_nlu_dispatch_gvintell: rutea las consultas de catálogo a
 --      bot_buscar_proyectos y delega TODO lo demás al dispatcher original intacto
 --      (renombrado a *_orig). No se reescribió la lógica existente del bot.
+--
+-- ⚠️ ACTUALIZACIÓN 2026-07-27: esta tabla ya NO se carga solo por import del Sheet.
+--    El CRM escribe acá: los módulos Proyectos y Create registran y editan
+--    desarrollos (src/lib/catalogo-proyectos.js + src/hooks/useCatalogo.js), así
+--    que el equipo de Duke mantiene su propio catálogo sin mandar los Drives ni
+--    esperar un redeploy. El bot sigue leyendo exactamente lo mismo → lo que
+--    registran en el CRM aparece de una en Telegram. Ver migración
+--    172_catalogo_editable_desde_crm.sql.
 -- ─────────────────────────────────────────────────────────────────────────────
 
 -- 1) TABLA ---------------------------------------------------------------------

@@ -8,19 +8,77 @@
  *
  * value  = { preset, customFrom, customTo }   (customFrom/To en "YYYY-MM-DD")
  * onChange(nextValue)
+ *
+ * ⚠️ El calendario se monta en un PORTAL a document.body, NO como hijo de esta
+ * tarjeta. Motivo (bug 2026-07-27): la tarjeta usa `backdrop-filter`, que crea un
+ * contexto de apilamiento propio → el z-index del popover quedaba encerrado ahí
+ * dentro y las tarjetas siguientes (Embudo, gráficas) se pintaban ENCIMA del
+ * calendario. Ese mismo `backdrop-filter` además vuelve a la tarjeta el bloque
+ * contenedor de los hijos `position: fixed`, así que el backdrop de "cerrar al
+ * hacer clic afuera" solo cubría la tarjeta. Con el portal se arreglan las dos.
+ * Si mueves esto de vuelta adentro del div raíz, vuelve el bug.
  * ─────────────────────────────────────────────────────────────────────────────
  */
-import { useState } from "react";
+import { useState, useRef, useCallback, useLayoutEffect } from "react";
+import { createPortal } from "react-dom";
 import { CalendarDays, SlidersHorizontal, Check } from "lucide-react";
 import { font, fontDisp } from "../../../design-system/tokens";
 import { DATE_PRESETS, dateRangeLabel, resolveDateRange } from "./date-range";
 import RangeCalendar from "./RangeCalendar";
 import { useIsMobile } from "../../../hooks/useViewport";
 
+// Ancho del popover: RangeCalendar es maxWidth 330 + 16px de padding a cada lado
+// (no hay reset global de box-sizing), o sea 362 reales. 366 le deja aire.
+const CAL_W = 366;
+const CAL_MIN_H = 380;    // alto aproximado; debajo de esto conviene abrir hacia arriba
+const Z_BACKDROP = 99920; // sobre el contenido de la página, debajo de los modales (100000+)
+const Z_PANEL = 99921;
+
 export default function DateRangeControl({ T, isLight, value, onChange, label = "Período" }) {
   const isMobile = useIsMobile();
   const range = resolveDateRange(value.preset, value.customFrom, value.customTo);
   const [calOpen, setCalOpen] = useState(value.preset === "custom");
+  const rootRef = useRef(null);
+  const [calPos, setCalPos] = useState(null);
+
+  // Ancla el popover a la tarjeta y lo mantiene dentro de la pantalla.
+  const placeCalendar = useCallback(() => {
+    const el = rootRef.current;
+    if (!el) return;
+    const r = el.getBoundingClientRect();
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const width = Math.min(CAL_W, vw - 16);
+    const left = Math.max(8, Math.min(r.left + (isMobile ? 8 : 14), vw - width - 8));
+    const spaceBelow = vh - r.bottom - 12;
+    const spaceAbove = r.top - 12;
+    // Abre hacia abajo salvo que no quepa y arriba haya más aire.
+    const below = spaceBelow >= CAL_MIN_H || spaceBelow >= spaceAbove;
+    setCalPos({
+      left, width,
+      top: below ? r.bottom + 8 : undefined,
+      bottom: below ? undefined : vh - r.top + 8,
+      maxHeight: Math.max(240, below ? spaceBelow : spaceAbove),
+    });
+  }, [isMobile]);
+
+  // Reposiciona al abrir y ante scroll/resize; Escape cierra.
+  useLayoutEffect(() => {
+    if (!calOpen) return undefined;
+    placeCalendar();
+    const onScroll = () => placeCalendar();
+    const onResize = () => placeCalendar();
+    const onKeyDown = (e) => { if (e.key === "Escape") setCalOpen(false); };
+    // capture: el scroll real ocurre en un contenedor interno, no en window.
+    window.addEventListener("scroll", onScroll, true);
+    window.addEventListener("resize", onResize);
+    window.addEventListener("keydown", onKeyDown);
+    return () => {
+      window.removeEventListener("scroll", onScroll, true);
+      window.removeEventListener("resize", onResize);
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, [calOpen, placeCalendar]);
 
   const isCustom = value.preset === "custom";
   const presets = DATE_PRESETS.filter((p) => p.id !== "custom");
@@ -58,7 +116,7 @@ export default function DateRangeControl({ T, isLight, value, onChange, label = 
   };
 
   return (
-    <div style={{
+    <div ref={rootRef} style={{
       position: "relative",
       display: "flex", flexDirection: "column", gap: 12,
       padding: 14, borderRadius: 18,
@@ -132,15 +190,21 @@ export default function DateRangeControl({ T, isLight, value, onChange, label = 
         </button>
       </div>
 
-      {/* Calendario de selección por clicks — FLOTA sobre el contenido (no empuja
-          el layout). Backdrop invisible para cerrar al hacer clic afuera. */}
-      {calOpen && (
+      {/* Calendario de selección por clicks — FLOTA sobre TODO el contenido vía
+          portal (ver nota del encabezado). Backdrop invisible a pantalla completa
+          para cerrar al hacer clic afuera. */}
+      {calOpen && calPos && createPortal(
         <>
           <div
             onClick={() => setCalOpen(false)}
-            style={{ position: "fixed", inset: 0, zIndex: 69 }}
+            style={{ position: "fixed", inset: 0, zIndex: Z_BACKDROP }}
           />
-          <div style={{ position: "absolute", top: "100%", left: isMobile ? 8 : 14, right: isMobile ? 8 : "auto", marginTop: 8, zIndex: 70, display: "flex", justifyContent: "center" }}>
+          <div style={{
+            position: "fixed",
+            left: calPos.left, top: calPos.top, bottom: calPos.bottom,
+            width: calPos.width, maxHeight: calPos.maxHeight, overflowY: "auto",
+            zIndex: Z_PANEL, display: "flex", justifyContent: "center",
+          }}>
             <RangeCalendar
               isLight={isLight}
               fromStr={value.customFrom}
@@ -149,7 +213,8 @@ export default function DateRangeControl({ T, isLight, value, onChange, label = 
               onApply={() => setCalOpen(false)}
             />
           </div>
-        </>
+        </>,
+        document.body
       )}
     </div>
   );

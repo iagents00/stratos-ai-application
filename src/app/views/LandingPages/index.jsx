@@ -16,8 +16,10 @@ import { G, KPI, Pill, Ico } from "../../SharedComponents";
 import LandingPagePreview from "./LandingPagePreview";
 import { catalogToLandingProps, encodeLanding } from "./catalogAdapter";
 import { useAuth } from "../../../hooks/useAuth";
+import { useCatalogo } from "../../../hooks/useCatalogo";
 import { useIsMobile } from "../../../hooks/useViewport";
 import { supabase } from "../../../lib/supabase";
+import ProyectoModal from "../ProyectoModal";
 
 const team = [
   { n: "Oscar Gálvez",      r: "CEO Ejecutivo",         wa: "+52 998 000 0001", cal: "" },
@@ -1016,6 +1018,11 @@ const LandingPages = ({ T = P }) => {
   });
   const [showNewPropModal, setShowNewPropModal] = useState(false);
   const [editingProp, setEditingProp] = useState(null);
+  // Catálogo compartido (Supabase). Registrar acá lo deja visible para TODO el
+  // equipo y para el asistente de Telegram — no solo en este navegador, como
+  // pasaba con las propiedades "custom" de localStorage (que se conservan abajo).
+  const { items: catalogoItems, canEdit: canEditCatalogo, save: saveProyectoCatalogo } = useCatalogo();
+  const [showProyectoModal, setShowProyectoModal] = useState(false);
   const [showCatalogSection, setShowCatalogSection] = useState(false);
   const [savedPages, setSavedPages] = useState([
     { id: 1, client: "Fam. Rodríguez", date: "3 Abr 2026", props: 3, status: "Enviada", budget: "$280K-$1.2M", opens: 4, asesor: "Ken Lugo Ríos" },
@@ -1053,6 +1060,20 @@ const LandingPages = ({ T = P }) => {
   useEffect(() => {
     try { localStorage.setItem("stratos_custom_props", JSON.stringify(customProperties)); } catch {}
   }, [customProperties]);
+
+  /**
+   * "Registrar propiedad" tiene DOS destinos según quién lo aprieta:
+   *  · Admin / director → el CATÁLOGO compartido (Supabase). Es lo que reemplaza
+   *    el "mándanos el Drive": queda para todo el equipo y para el bot.
+   *  · Asesor → propiedad suelta guardada en su navegador, para armar una landing
+   *    puntual sin tocar el catálogo de la empresa (comportamiento de siempre).
+   * El modal de cada caso dice en pantalla dónde se guarda.
+   */
+  const openRegistrarPropiedad = () => {
+    if (canEditCatalogo) { setShowProyectoModal(true); return; }
+    setEditingProp(null);
+    setShowNewPropModal(true);
+  };
 
   const saveCustomProp = (prop) => {
     setCustomProperties(prev => {
@@ -1103,7 +1124,9 @@ const LandingPages = ({ T = P }) => {
     { key: "boutique", label: "Boutique/Exclusivo", icon: Crown },
   ];
 
-  const catalogProps = useMemo(() => catalogToLandingProps(), []);
+  // Catálogo vivo → props del selector. Un proyecto registrado desde aquí (o desde
+  // Proyectos) aparece en cuanto se guarda, sin redeploy.
+  const catalogProps = useMemo(() => catalogToLandingProps(catalogoItems), [catalogoItems]);
   const allProperties = useMemo(() => [...customProperties, ...catalogProps, ...rivieraProperties], [customProperties, catalogProps]);
 
   const inBudget = (p) => (!p.priceTo || p.priceTo <= 0) ? true : (p.priceFrom <= clientBudgetMax && p.priceTo >= clientBudgetMin);
@@ -1211,7 +1234,7 @@ const LandingPages = ({ T = P }) => {
           <p style={{ fontSize: 12, color: T.txt3, fontFamily: font, marginTop: 4 }}>Crea campañas y presentaciones de propiedades con IA en un clic</p>
         </div>
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-          <button onClick={() => setShowNewPropModal(true)} style={{
+          <button onClick={openRegistrarPropiedad} style={{
             display: "flex", alignItems: "center", justifyContent: "center", gap: 7, padding: "11px 18px",
             flex: "1 1 auto",
             borderRadius: 11, border: `1px solid ${T.accent}40`, background: T.accentS,
@@ -1304,7 +1327,7 @@ const LandingPages = ({ T = P }) => {
             </div>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <button onClick={e => { e.stopPropagation(); setShowNewPropModal(true); }} style={{
+            <button onClick={e => { e.stopPropagation(); openRegistrarPropiedad(); }} style={{
               display: "flex", alignItems: "center", gap: 5, padding: "8px 16px",
               borderRadius: 999, border: `1px solid ${T.accent}55`, background: T.accentB,
               cursor: "pointer", color: T.accent, fontSize: 12.5, fontWeight: 600, fontFamily: fontDisp,
@@ -1448,7 +1471,7 @@ const LandingPages = ({ T = P }) => {
               <div style={{ textAlign: "center", padding: "24px 0 8px" }}>
                 <p style={{ fontSize: 13, color: T.txt2, fontFamily: fontDisp, marginBottom: 8 }}>Aún no has registrado propiedades personalizadas</p>
                 <p style={{ fontSize: 11, color: T.txt3, marginBottom: 16 }}>Registra desarrollos adicionales para incluirlos en tus landing pages</p>
-                <button onClick={() => setShowNewPropModal(true)} style={{
+                <button onClick={openRegistrarPropiedad} style={{
                   display: "inline-flex", alignItems: "center", gap: 8, padding: "12px 24px",
                   borderRadius: 10, border: `1px solid ${T.accent}40`, background: T.accentS,
                   cursor: "pointer", color: T.accent, fontSize: 13, fontWeight: 500, fontFamily: fontDisp,
@@ -1526,6 +1549,17 @@ const LandingPages = ({ T = P }) => {
           onSave={saveCustomProp}
           initialData={editingProp}
           T={T}
+        />
+      )}
+
+      {/* Alta en el CATÁLOGO compartido (admins) — el proyecto queda para todo el
+          equipo, para Proyectos y para el asistente de Telegram. */}
+      {showProyectoModal && (
+        <ProyectoModal
+          T={T}
+          canEdit={canEditCatalogo}
+          onSave={saveProyectoCatalogo}
+          onClose={() => setShowProyectoModal(false)}
         />
       )}
     </div>
@@ -1737,7 +1771,7 @@ const LandingPages = ({ T = P }) => {
               style={{ padding: "8px 12px 8px 30px", borderRadius: 9, fontSize: 12, width: 220, background: T.glass, border: `1px solid ${T.border}`, color: T.txt, fontFamily: font, outline: "none" }} />
           </div>
         <button
-          onClick={() => setShowNewPropModal(true)}
+          onClick={openRegistrarPropiedad}
           style={{
             display: "flex", alignItems: "center", gap: 7, padding: "8px 16px",
             borderRadius: 9, border: `1px solid ${T.accent}40`, background: T.accentS,
@@ -1949,7 +1983,7 @@ const LandingPages = ({ T = P }) => {
           <Building2 size={40} color={T.txt3} style={{ margin: "0 auto 12px", opacity: 0.4 }} />
           <p style={{ fontSize: 14, color: T.txt2, fontFamily: fontDisp }}>No hay propiedades en este rango de presupuesto</p>
           <p style={{ fontSize: 12, color: T.txt3, marginTop: 4 }}>Ajusta el rango en el paso anterior</p>
-          <button onClick={() => setShowNewPropModal(true)} style={{ marginTop: 14, padding: "10px 20px", borderRadius: 10, border: `1px solid ${T.accent}40`, background: T.accentS, color: T.accent, fontSize: 12, fontWeight: 500, cursor: "pointer", fontFamily: fontDisp }}>
+          <button onClick={openRegistrarPropiedad} style={{ marginTop: 14, padding: "10px 20px", borderRadius: 10, border: `1px solid ${T.accent}40`, background: T.accentS, color: T.accent, fontSize: 12, fontWeight: 500, cursor: "pointer", fontFamily: fontDisp }}>
             <Plus size={13} style={{ marginRight: 6, verticalAlign: "middle" }} />Registrar propiedad nueva
           </button>
         </G>
@@ -1987,6 +2021,16 @@ const LandingPages = ({ T = P }) => {
           onSave={saveCustomProp}
           initialData={editingProp}
           T={T}
+        />
+      )}
+
+      {/* Alta en el CATÁLOGO compartido (admins) — ver nota del step 0. */}
+      {showProyectoModal && (
+        <ProyectoModal
+          T={T}
+          canEdit={canEditCatalogo}
+          onSave={saveProyectoCatalogo}
+          onClose={() => setShowProyectoModal(false)}
         />
       )}
 

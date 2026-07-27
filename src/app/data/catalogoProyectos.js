@@ -1,6 +1,12 @@
 // AUTO-GENERADO desde el Google Sheet "DRIVES DUKE DEL CARIBE" (10 pestañas).
 // Catálogo maestro de proyectos de corretaje de Duke del Caribe.
 // Regenerar: python3 tools/importar_catalogo.py <export.xlsx>. NO editar a mano.
+//
+// ⚠️ YA NO ES LA FUENTE DE VERDAD (2026-07-27). El catálogo vivo es la tabla
+// `catalogo_proyectos` de Supabase, que el equipo edita desde el CRM (Proyectos
+// y Create) y que lee el asistente de Telegram. Este archivo quedó como SEMILLA
+// DE RESPALDO: useCatalogo.js lo muestra solo si la base no responde o la tabla
+// está vacía, para que el módulo nunca quede en blanco.
 
 export const CATALOGO_SECCIONES = [
   {
