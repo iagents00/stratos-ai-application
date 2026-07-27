@@ -28,6 +28,7 @@ import { useClient } from "../../hooks/useClient";
 import { useIsMobile } from "../../hooks/useViewport";
 import CuentasCobro from "./CuentasCobro";
 import Nomina from "./Nomina";
+import InformeAvances from "./InformeAvances";
 
 // BUG que reportó Ángel con captura (27-jul): un pago de $82,23 se veía
 // **"+$82,229"** — o sea, ochenta y dos MIL. Causa: los pagos en cripto tienen
@@ -95,7 +96,7 @@ export default function Caja({ T }) {
   const [showForm, setShowForm] = useState(!isMobile);
   const [form, setForm] = useState(EMPTY_FORM);
   const [viewer, setViewer] = useState(null);   // comprobante abierto: { loading } | { url }
-  const [seccion, setSeccion] = useState("movimientos");      // movimientos | nomina | cobros
+  const [seccion, setSeccion] = useState("movimientos");      // movimientos | nomina | cobros | informe
   const [personaFilter, setPersonaFilter] = useState("mio");  // mio | empresa | todo
   const [catFilter, setCatFilter] = useState("todas");        // todas | Nómina | Servicios | Cliente
   const [subiendo, setSubiendo] = useState(null);             // id de la fila a la que se le está adjuntando soporte
@@ -308,13 +309,19 @@ export default function Caja({ T }) {
         )}
       </div>
 
-      {/* Las tres caras de la Caja: lo que se movió, lo que se le debe al equipo,
-          y lo que le cobramos al cliente. La nómina tiene su propio apartado
-          (pedido de Ángel) porque el monto puede cambiar y hay que poder tocarlo
-          sin bucear en la lista de movimientos. */}
+      {/* Las cuatro caras de la Caja: lo que se movió, lo que se le debe al equipo,
+          lo que le cobramos al cliente, y el informe de lo que se hizo. La nómina
+          tiene su propio apartado (pedido de Ángel) porque el monto puede cambiar
+          y hay que poder tocarlo sin bucear en la lista de movimientos. El informe
+          vive acá porque es lo que acompaña a la cuenta de cobro: «esto es lo que
+          se entregó por lo que estamos cobrando». */}
       <div style={{ display: "flex", gap: 4, padding: 3, borderRadius: 12, border: `1px solid ${bd}`,
-                    alignSelf: isMobile ? "stretch" : "flex-start", width: isMobile ? "100%" : "auto" }}>
-        {[{ id: "movimientos", label: "Movimientos" }, { id: "nomina", label: "Nómina" }, { id: "cobros", label: isMobile ? "Cobros" : "Cuentas de cobro" }].map(s => (
+                    alignSelf: isMobile ? "stretch" : "flex-start", width: isMobile ? "100%" : "auto",
+                    flexWrap: isMobile ? "wrap" : "nowrap" }}>
+        {[{ id: "movimientos", label: isMobile ? "Movim." : "Movimientos" },
+          { id: "nomina", label: "Nómina" },
+          { id: "cobros", label: isMobile ? "Cobros" : "Cuentas de cobro" },
+          { id: "informe", label: "Informe" }].map(s => (
           <button key={s.id} type="button" onClick={() => setSeccion(s.id)} style={{
             padding: "10px 14px", borderRadius: 9, cursor: "pointer", fontSize: 13, fontFamily: font,
             border: "1px solid transparent", flex: isMobile ? 1 : "none", textAlign: "center",
@@ -330,6 +337,8 @@ export default function Caja({ T }) {
       {seccion === "cobros" && (
         <CuentasCobro T={T} emisor={clientConfig?.facturacion} />
       )}
+
+      {seccion === "informe" && <InformeAvances T={T} />}
 
       {seccion === "movimientos" && <>
       {/* KPIs del mes */}
