@@ -20,7 +20,7 @@
 // vivo no es un informe, es una promesa.
 
 import { useState, useCallback, useRef, useEffect } from "react";
-import { FileBarChart, Download, RefreshCw, Sparkles, AlertTriangle } from "lucide-react";
+import { FileBarChart, Download, RefreshCw, Sparkles, AlertTriangle, Save, Check } from "lucide-react";
 import { font, fontDisp } from "../../design-system/tokens";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../hooks/useAuth";
@@ -75,6 +75,8 @@ export default function InformeAvances({ T }) {
   const [texto, setTexto] = useState("");
   const [meta, setMeta] = useState(null);      // { empresa, cliente, periodo, redactado }
   const [error, setError] = useState("");
+  const [guardando, setGuardando] = useState(false);
+  const [guardado, setGuardado] = useState(false);
   const pasoTimer = useRef(null);
 
   // El intervalo de los pasos se limpia siempre — si no, sigue corriendo después
@@ -127,6 +129,7 @@ export default function InformeAvances({ T }) {
 
       setTexto(salida);
       setMeta(info);
+      setGuardado(false);   // informe nuevo = todavía sin guardar
     } catch (err) {
       setError(err?.message || "No pude generar el informe.");
     } finally {
@@ -134,6 +137,23 @@ export default function InformeAvances({ T }) {
       setCargando(false);
     }
   }, [user?.id, dias, cargando]);
+
+  // Guardar en Stratos — pedido de Ángel: «ponle un botón de guardar… y que se
+  // guarde en el AIOS y también en mis documentos». Queda en Mi Espacio →
+  // Documentos, se puede bajar en Word desde ahí, y al equipo le llega el aviso
+  // por el Copilot.
+  const guardar = async () => {
+    if (!texto || !user?.id || guardando) return;
+    setGuardando(true); setError("");
+    const nombre = `Informe de avances · ${meta?.periodo?.desde || ""} al ${meta?.periodo?.hasta || ""}`.trim();
+    const { data, error: e } = await supabase.rpc("fn_doc_guardar", {
+      p_profile_id: user.id, p_titulo: nombre, p_contenido: texto,
+      p_tipo: "informe", p_desde: meta?.periodo?.desde || null, p_hasta: meta?.periodo?.hasta || null,
+    });
+    setGuardando(false);
+    if (e || data?.ok === false) { setError(e?.message || data?.error || "No pude guardarlo."); return; }
+    setGuardado(true);
+  };
 
   // El Word. Se arma en esta misma máquina, así que el archivo no viaja por
   // ningún lado y no se puede corromper en el camino (lección de la primera
@@ -265,13 +285,28 @@ export default function InformeAvances({ T }) {
                 </div>
               </div>
             </div>
-            <button onClick={bajarWord} title="Descargar en Word" style={{
-              background: "transparent", border: `1px solid ${bd}`, borderRadius: 10,
-              padding: "10px 14px", cursor: "pointer", color: txt2, fontSize: 12.5,
-              fontFamily: font, display: "flex", alignItems: "center", justifyContent: "center", gap: 7,
-            }}>
-              <Download size={14} /> Word
-            </button>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              <button onClick={guardar} disabled={guardando || guardado}
+                title={guardado ? "Ya quedó en Mi Espacio → Documentos" : "Guardarlo en Stratos y avisarle al equipo"}
+                style={{
+                  background: guardado ? `${accent}14` : "transparent",
+                  border: `1px solid ${guardado ? `${accent}55` : bd}`, borderRadius: 10,
+                  padding: "10px 14px", cursor: (guardando || guardado) ? "default" : "pointer",
+                  color: guardado ? accent : txt2, fontSize: 12.5, fontFamily: font,
+                  display: "flex", alignItems: "center", justifyContent: "center", gap: 7,
+                }}>
+                {guardando ? <RefreshCw size={14} style={{ animation: "spin 1s linear infinite" }} />
+                  : guardado ? <Check size={14} /> : <Save size={14} />}
+                {guardando ? "Guardando…" : guardado ? "Guardado" : "Guardar en Stratos"}
+              </button>
+              <button onClick={bajarWord} title="Descargar en Word" style={{
+                background: "transparent", border: `1px solid ${bd}`, borderRadius: 10,
+                padding: "10px 14px", cursor: "pointer", color: txt2, fontSize: 12.5,
+                fontFamily: font, display: "flex", alignItems: "center", justifyContent: "center", gap: 7,
+              }}>
+                <Download size={14} /> Word
+              </button>
+            </div>
           </div>
 
           <pre style={{
