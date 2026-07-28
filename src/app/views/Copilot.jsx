@@ -15,7 +15,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { Send, Sparkles, RefreshCw, Mic, Square, X, ChevronDown, ChevronUp, ChevronLeft, Bot, BookOpen, Play, Pause, Bell, Camera, Paperclip } from "lucide-react";
-import { P, LP, font, fontDisp } from "../../design-system/tokens";
+import { P, LP, font, fontDisp, chatType } from "../../design-system/tokens";
 import { G } from "../SharedComponents";
 import CopilotMark from "../components/CopilotMark";
 import { useClient } from "../../hooks/useClient";
@@ -638,8 +638,8 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
           <CopilotMark size={22} isLight={isLight} />
         </div>
         <div style={{ minWidth: 0, flex: 1 }}>
-          <div style={{ fontSize: 14.5, fontWeight: 600, color: T.txt, fontFamily: fontDisp, lineHeight: 1.2 }}>Copilot AI</div>
-          <div style={{ fontSize: 11, color: T.accent, fontFamily: font, marginTop: 1, display: "flex", alignItems: "center", gap: 4 }}>
+          <div style={{ fontSize: chatType.title, fontWeight: 600, color: T.txt, fontFamily: fontDisp, lineHeight: 1.2 }}>Copilot AI</div>
+          <div style={{ fontSize: chatType.meta, color: T.accent, fontFamily: font, marginTop: 1, display: "flex", alignItems: "center", gap: 4 }}>
             <span style={{ width: 6, height: 6, borderRadius: "50%", background: T.accent, boxShadow: `0 0 6px ${T.accent}` }} />En línea
           </div>
         </div>
@@ -662,7 +662,7 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
           {SUGGESTIONS.map((s) => (
             <button key={s.text} type="button" onClick={() => send(s.text)} disabled={sending}
               style={{
-                padding: "4px 10px", borderRadius: 999, fontSize: 11.5, fontFamily: font,
+                padding: "5px 12px", borderRadius: 999, fontSize: chatType.chip, fontFamily: font,
                 background: isLight ? "#F1F5F9" : "rgba(255,255,255,0.06)",
                 border: `1px solid ${isLight ? "rgba(15,23,42,0.10)" : "rgba(255,255,255,0.12)"}`,
                 color: T.txt2, cursor: sending ? "default" : "pointer"
@@ -806,10 +806,10 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
           ref={inputRef} type="text" value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={onKeyDown}
           placeholder={commenting ? "Escribe tu comentario…" : "Escríbele al asistente…"} disabled={sending || recording}
           style={{
-            flex: 1, minWidth: 0, height: 36, padding: "0 12px", borderRadius: 18,
+            flex: 1, minWidth: 0, height: 40, padding: "0 14px", borderRadius: 20,
             background: isLight ? "#F1F5F9" : "rgba(255,255,255,0.06)",
             border: `1px solid ${isLight ? "rgba(15,23,42,0.08)" : "rgba(255,255,255,0.10)"}`,
-            color: T.txt, fontSize: 13.5, fontFamily: font, outline: "none", transition: "border-color 0.15s"
+            color: T.txt, fontSize: chatType.input, fontFamily: font, outline: "none", transition: "border-color 0.15s"
           }}
           onFocus={(e) => { e.currentTarget.style.borderColor = T.accent; }}
           onBlur={(e) => { e.currentTarget.style.borderColor = isLight ? "rgba(15,23,42,0.08)" : "rgba(255,255,255,0.10)"; }}
@@ -946,7 +946,7 @@ function Bubble({ m, T, isLight, userBg, userTxt, aiBg, aiBd, onPick, sending, i
         maxWidth: "82%", padding: "8px 12px", borderRadius: 14,
         borderBottomRightRadius: isUser ? 3 : 14, borderBottomLeftRadius: isUser ? 14 : 3,
         background: isUser ? userBg : aiBg, border: isUser ? "none" : `1px solid ${aiBd}`,
-        color: isUser ? userTxt : T.txt, fontSize: 13.2, lineHeight: 1.48, fontFamily: font,
+        color: isUser ? userTxt : T.txt, fontSize: chatType.body, lineHeight: chatType.bodyLh, fontFamily: font,
         whiteSpace: "pre-wrap", wordBreak: "break-word", opacity: m.pending ? 0.7 : 1,
         boxShadow: isLight ? (isUser ? `0 3px 10px ${T.accent}28` : "0 1px 4px rgba(15,23,42,0.03)") : "none"
       }}>
@@ -1003,13 +1003,13 @@ function Bubble({ m, T, isLight, userBg, userTxt, aiBg, aiBd, onPick, sending, i
                 style={{
                   padding: "4px 10px", borderRadius: 7, border: btn.primary ? "none" : `1px solid ${T.border}`,
                   background: btn.primary ? T.accent : (isLight ? "#FFFFFF" : "rgba(255,255,255,0.06)"),
-                  color: btn.primary ? (isLight ? "#FFF" : "#041016") : T.txt, fontSize: 11.5, fontWeight: btn.primary ? 600 : 500,
+                  color: btn.primary ? (isLight ? "#FFF" : "#041016") : T.txt, fontSize: chatType.chip, fontWeight: btn.primary ? 600 : 500,
                   fontFamily: font, cursor: (sending && !btn.isUrl) ? "default" : "pointer"
                 }}>{btn.label}</button>
             ))}
           </div>
         )}
-        {time && <span style={{ display: "block", marginTop: 3, fontSize: 10, opacity: 0.55, textAlign: "right" }}>{time}</span>}
+        {time && <span style={{ display: "block", marginTop: 4, fontSize: chatType.time, opacity: 0.55, textAlign: "right" }}>{time}</span>}
       </div>
     </div>
   );
@@ -1170,14 +1170,14 @@ function EmptyState({ T, isLight, onPick }) {
         <CopilotMark size={30} isLight={isLight} />
       </div>
       <h3 style={{ margin: "0 0 4px", fontSize: 16, fontWeight: 600, color: T.txt, fontFamily: fontDisp }}>Tu Asistente Operativo</h3>
-      <p style={{ margin: "0 0 14px", fontSize: 12.5, color: T.txt3, lineHeight: 1.5, fontFamily: font }}>
+      <p style={{ margin: "0 0 14px", fontSize: chatType.chip + 1, color: T.txt3, lineHeight: 1.5, fontFamily: font }}>
         Escríbele o díctale por voz. Pídele clientes, agenda, métricas, o busca a alguien por nombre.
       </p>
       <div style={{ display: "flex", gap: 6, flexWrap: "wrap", justifyContent: "center" }}>
         {SUGGESTIONS.map((s) => (
           <button key={s.text} type="button" onClick={() => onPick(s.text)}
-            style={{ padding: "5px 12px", borderRadius: 999, background: isLight ? "#FFFFFF" : "rgba(255,255,255,0.05)", border: `1px solid ${isLight ? "rgba(15,23,42,0.10)" : "rgba(255,255,255,0.12)"}`, color: T.txt2, fontSize: 12, fontFamily: font, cursor: "pointer" }}>
-            <Bot size={12} color={T.accent} style={{ marginRight: 4, verticalAlign: "middle" }} />{s.label}
+            style={{ padding: "6px 13px", borderRadius: 999, background: isLight ? "#FFFFFF" : "rgba(255,255,255,0.05)", border: `1px solid ${isLight ? "rgba(15,23,42,0.10)" : "rgba(255,255,255,0.12)"}`, color: T.txt2, fontSize: chatType.chip, fontFamily: font, cursor: "pointer" }}>
+            <Bot size={13} color={T.accent} style={{ marginRight: 4, verticalAlign: "middle" }} />{s.label}
           </button>
         ))}
       </div>
