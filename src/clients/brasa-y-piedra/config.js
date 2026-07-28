@@ -17,6 +17,20 @@
  *    misma de Duke). Si operan en otra plaza, se corrige `timezone` en
  *    proactive_config y listo.
  *
+ * ⚠️⚠️ HONESTIDAD SOBRE EL PIPELINE DE RESERVAS (leer antes de venderlo):
+ *    El embudo de reservas/eventos de abajo es una PROPUESTA nuestra, no algo que
+ *    el restaurante haya pedido. Lo que sí está registrado de boca de Iván es que
+ *    el día de Brasa son "actividades cortas y entre ellos": pedidos y proteínas,
+ *    mandar algo a marketing, un platillo nuevo, buscar cocinero o mesero — y por
+ *    eso [[plan-replicacion-corporativo]] concluye que Brasa "no necesita CRM de
+ *    ventas ni ERP de proyectos: necesita tareas rápidas, recordatorios y el chat".
+ *    Además Alex dijo en la reunión del 27-jul: «en Brasa no veo dónde funcione
+ *    Stratos, en Mueblería tampoco».
+ *    → Por eso acá se prende el CHAT (lo que el plan sí pide) y se deja el tablero
+ *      de reservas como la hipótesis a validar con quien maneje el restaurante.
+ *      Si al sentarse con ellos las reservas no son un dolor real, este pipeline se
+ *      cambia o se apaga (`features.crm: false`) sin tocar nada del resto.
+ *
  * Aislamiento: comparte código y proyecto Supabase (glulgyhkrqpykxmujodb) pero sus
  * datos viven bajo su propia organization_id (ea74b69a-…) + RLS. Como su org NO es
  * STRATOS_ORG_ID, canAccessModule() la limita automáticamente a CRM + Perfil +
@@ -85,7 +99,17 @@ const brasaYPiedraConfig = {
     cajaAsesores:     true,
     // Copilot APAGADO hasta que vinculen Telegram (el chat enruta por
     // telegram_chat_id). Se prende con copilotModule: true cuando conecten el bot.
+    // ⭐ Para este tenant el Copilot por Telegram es LA pieza que más importa: el
+    // plan del corporativo dice que Brasa "es casi todo Copilot por Telegram"
+    // (tareas cortas entre ellos: pedidos y proteínas, un platillo nuevo, buscar
+    // cocinero). Es el primer paso a darle cuando haya bot.
     copilotModule:    false,
+    // Chat del equipo: ⭐ esto SÍ es lo que el plan dice que Brasa necesita
+    // ("tareas rápidas, recordatorios y el chat"). Funciona solo, org-scoped, y el
+    // primer admin crea su canal desde la misma pantalla.
+    teamChat:         true,
+    // Alta de usuarios propios (gerente, capitán, cocina) sin depender de nosotros.
+    teamAdmin:        true,
   },
 
   support: {

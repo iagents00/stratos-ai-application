@@ -5,16 +5,36 @@
  * inmobiliario (white-label del CRM Stratos).
  *
  * Qué es este tenant:
- *   Un despacho que diseña y además desarrolla. El CRM se reusa como PIPELINE DE
- *   PROYECTOS: cada registro es un encargo, desde la consulta inicial hasta la
- *   entrega de obra, pasando por propuesta, anteproyecto, proyecto ejecutivo y
- *   ejecución. Es el pariente cercano de Constructora Vega (obra/licitaciones),
- *   pero acá el trabajo arranca en el DISEÑO, no en la licitación.
+ *   La cuarta empresa del corporativo de Duke: diseña y construye casas (Tulum
+ *   Country, Amares Riviera). El CRM se reusa como su CONTROL DE PROYECTOS: cada
+ *   registro es una CASA, con su cliente, su modelo de negocio y en qué punto de
+ *   la construcción va. Es el pariente cercano de Constructora Vega (obra), pero
+ *   acá el trabajo arranca en el DISEÑO, no en la licitación.
  *
  * ⚠️ Por qué NO es un clon de Duke aunque suene "inmobiliario": Duke vende
- *    unidades de un catálogo (embudo de venta, zooms, cierre). Legacy Design
- *    ENTREGA proyectos (contrato, fases de diseño, obra). Mismo motor, pipeline y
- *    vocabulario distintos — y datos completamente separados.
+ *    unidades de un catálogo (embudo de venta, zooms, cierre). Legacy ENTREGA
+ *    casas. Mismo motor, pipeline y vocabulario distintos — y datos separados.
+ *
+ * ⚠️⚠️ LEER ANTES DE CONSTRUIRLE MÁS (importante, no es un detalle):
+ *   1. Esta config es el ESQUELETO del tenant (marca, vocabulario, tablero), no
+ *      el módulo de Control de Proyectos completo. **Alex pidió expresamente
+ *      dejar Legacy para el final** («yo esto lo pondría a posterior… primero el
+ *      CRM sin fallas, luego actividades, luego tareas, y de ahí Legacy/NSG») y
+ *      **pidió una reunión previa** para revisar qué falta y qué sobra.
+ *      Construir el módulo sin esa reunión es ir contra la prioridad del cliente.
+ *   2. Lo que su hoja tiene y ACÁ TODAVÍA NO: campo **CONSTRUCTOR** (distinto de
+ *      arquitecto — Alex lo detectó en vivo), **Ubicación/Lote**, **Arquitecto**,
+ *      adjuntos de **Pagos / comprobantes**, y el **enlace a Drive** por casa,
+ *      que es el corazón del expediente (bitácoras, contratos, licencias,
+ *      pólizas, reportes fotográficos). Hoy eso se puede pegar en el expediente
+ *      del proyecto, pero no son campos propios todavía.
+ *   3. **Permisos que pidió Alex y que hoy NO están enforced**: solo **Shadai** y
+ *      **Mario Coria** editan; toda la dirección (Alex incluido) es SOLO LECTURA.
+ *      El CRM aún no tiene ese rol de "lectura por módulo" — hay que resolverlo
+ *      antes de darles acceso, o se lo damos a editar a quien pidió no tenerlo.
+ *   4. **Alex NO quiere avisos para Legacy** (los quiere para su equipo de
+ *      marketing). Por eso el motor proactivo queda apagado (ver migración 179).
+ *   Detalle completo: nota [[legacy-design-control-proyectos]] del AIOS.
  *
  * Aislamiento: comparte código y proyecto Supabase (glulgyhkrqpykxmujodb) pero sus
  * datos viven bajo su propia organization_id (281caa01-…) + RLS. Como su org NO es
@@ -76,6 +96,11 @@ const legacyDesignConfig = {
     // Copilot APAGADO hasta que vinculen Telegram (el chat enruta por
     // telegram_chat_id). Se prende con copilotModule: true cuando conecten el bot.
     copilotModule:    false,
+    // Chat del equipo (org-scoped, sin dependencias externas): el hilo entre
+    // Shadai, Mario y la dirección, donde hoy va por WhatsApp.
+    teamChat:         true,
+    // Alta de usuarios propios (arquitectos, constructores) sin depender de nosotros.
+    teamAdmin:        true,
   },
 
   support: {
@@ -84,14 +109,13 @@ const legacyDesignConfig = {
   },
 
   crm: {
-    // Tipo de encargo, para etiquetar cada proyecto en el alta.
+    // El "MODELO" de su hoja real: NO es el modelo de casa, es el modelo de
+    // NEGOCIO del cliente. Son los tres valores que usan hoy.
+    // (Corregido con la hoja real el 29-jul; ver [[legacy-design-control-proyectos]].)
     defaultProjects: [
-      "Residencial",
-      "Comercial",
-      "Interiorismo",
-      "Desarrollo propio",
-      "Remodelación",
-      "Consultoría / peritaje",
+      "Venta",
+      "Retiro",
+      "Renta vacacional",
     ],
     // Métricas por persona: cuántos proyectos lleva cada arquitecto.
     advisorMetricsTab: true,
@@ -106,27 +130,35 @@ const legacyDesignConfig = {
     // en false, cada proyecto conserva su etapa al reasignarlo de arquitecto.
     bulkReassignToContactameByDefault: false,
 
-    // ── Pipeline de PROYECTOS — solo Legacy Design ────────────────────────────
-    // El camino real de un encargo de arquitectura: consulta → reunión de brief →
-    // propuesta de honorarios → contrato firmado → anteproyecto → proyecto
-    // ejecutivo → obra → entrega.
+    // ── Pipeline = el ESTADO de su hoja real — solo Legacy Design ─────────────
+    // ⚠️ ESTA ES LA DECISIÓN IMPORTANTE DE ESTE TENANT, y va contra el instinto:
+    // NO se inventa un kanban de etapas de obra (consulta → anteproyecto →
+    // ejecutivo → obra…). Su hoja de Control de Proyectos ya tiene DOS campos
+    // distintos y hay que respetar la diferencia:
+    //
+    //   · "PROCESO" → TEXTO LIBRE, una frase propia por casa ("Colocación de
+    //     tapial, inicio de cimientos", "Licencias de tala y desmonte"). Volverlo
+    //     columnas fijas PIERDE información — está advertido explícitamente en
+    //     [[legacy-design-control-proyectos]] §2.1. Ese texto vive en la
+    //     "Próxima acción" / el expediente del proyecto, NO en la etapa.
+    //   · "ESTADO"  → catálogo corto y real de 3 valores. ESE es el kanban.
+    //
+    // Se agrega "Entregada" porque su hoja tiene "Fecha de finalización" y sin un
+    // estado final las casas terminadas se quedarían para siempre en "En curso".
+    // Los colores son LOS SUYOS (amarillo=en curso, rojo=pendiente, morado=no
+    // iniciada), para que la pantalla se lea igual que la hoja que ya conocen.
+    //
+    // El catálogo real de etapas de obra solo puede salir de sentarse con Shadai
+    // (dueña de la hoja). Hasta entonces, esto respeta su dato tal cual.
     //
     // ⚠️ CONTRATO CON n8n / con el asistente: estos `name` son los strings EXACTOS
-    // que se guardan en leads.stage. Un flujo que dé de alta consultas debe
-    // escribir "Consulta" (primera etapa) o el registro no cae en ninguna columna.
-    //
-    // "Reunión" es la etapa de CITA del tenant: proactive_config.zoom_stage_label
-    // = 'Reunión' → el asistente avisa 3 h antes de la junta con el cliente.
+    // que se guardan en leads.stage. Un flujo que dé de alta proyectos debe
+    // escribir "No iniciada" (primera etapa) o el registro no cae en ninguna columna.
     pipeline: [
-      { name: "Consulta",           color: "#94A3B8" }, // llegó un interesado
-      { name: "Reunión",            color: "#38BDF8" }, // junta / levantamiento agendado
-      { name: "Propuesta",          color: "#FBBF24" }, // honorarios y alcance enviados
-      { name: "Contratado",         color: "#A78BFA" }, // firmó / dio anticipo
-      { name: "Anteproyecto",       color: "#FB923C" }, // primeras plantas y volumetría
-      { name: "Proyecto ejecutivo", color: "#22D3EE" }, // planos constructivos
-      { name: "Obra",               color: "#818CF8" }, // ejecución / supervisión
-      { name: "Entregado",          color: "#34D399" }, // entregado al cliente
-      { name: "Descartado",         color: "#F87171" }, // no procedió
+      { name: "No iniciada", color: "#A78BFA" }, // morado en su hoja — "Por definir"
+      { name: "Pendiente",   color: "#F87171" }, // rojo — esperando algo (terreno, contrato, reunión)
+      { name: "En curso",    color: "#FBBF24" }, // amarillo — avanzando (proyecto, licencias, obra)
+      { name: "Entregada",   color: "#34D399" }, // terminada y entregada al cliente
     ],
 
     // ── Vocabulario del CRM — solo Legacy Design ─────────────────────────────
@@ -137,7 +169,10 @@ const legacyDesignConfig = {
       newEntity:             "Nuevo proyecto",
       priorityList:          "Proyectos en prioridad",
       emptyList:             "Sin proyectos",
-      entityNamePlaceholder: "Nombre del proyecto o del cliente",
+      // En su hoja solo 3 de 11 proyectos tienen nombre: el nombre NACE cuando el
+      // proyecto arranca (los demás van como "S/N"). Por eso el placeholder acepta
+      // las dos formas.
+      entityNamePlaceholder: "Casa … o el cliente (si aún no tiene nombre)",
       entityProfile:         "Detalle del proyecto",
       deleteEntity:          "Eliminar proyecto (mover a papelera)",
       viewDetail:            "Ver detalle del proyecto",
@@ -151,19 +186,22 @@ const legacyDesignConfig = {
     },
 
     // ── KPIs de arriba del CRM — solo Legacy Design ──────────────────────────
+    // Responden la pregunta con la que Alex justificó la hoja: "¿cuándo se
+    // entrega Casa Ágata?" → cuántas casas hay, cuántas avanzan, cuántas están
+    // trabadas esperando algo, y cuántas ya se entregaron.
     kpis: [
-      { label: "Proyectos activos",  value: { type: "total" },
-        sub: { type: "count", stage: "Propuesta", suffix: "con propuesta" },
+      { label: "Casas en cartera", value: { type: "total" },
+        sub: { type: "count", stage: "En curso", suffix: "en curso" },
         icon: "Building2",  color: "blue" },
-      { label: "En diseño",          value: { type: "count", stage: "Anteproyecto" },
-        sub: { type: "count", stage: "Proyecto ejecutivo", suffix: "en ejecutivo" },
-        icon: "FileText",   color: "cyan" },
-      { label: "En obra",            value: { type: "count", stage: "Obra" },
-        sub: { type: "count", stage: "Entregado", suffix: "entregados" },
-        icon: "Trophy",     color: "accent" },
-      { label: "Valor contratado",   value: { type: "money" },
-        sub: { type: "count", stage: "Reunión", suffix: "reuniones agendadas" },
-        icon: "DollarSign", color: "emerald" },
+      { label: "En curso",         value: { type: "count", stage: "En curso" },
+        sub: { type: "count", stage: "No iniciada", suffix: "sin iniciar" },
+        icon: "Target",     color: "cyan" },
+      { label: "Pendientes",       value: { type: "count", stage: "Pendiente" },
+        sub: { type: "count", stage: "No iniciada", suffix: "no iniciadas" },
+        icon: "FileText",   color: "accent" },
+      { label: "Entregadas",       value: { type: "count", stage: "Entregada" },
+        sub: { type: "total", suffix: "en cartera" },
+        icon: "Trophy",     color: "emerald" },
     ],
   },
 };

@@ -16,6 +16,23 @@
  *   que el cliente pregunta hasta que se entrega instalado. No es un embudo de
  *   venta inmobiliaria, es un flujo de producción.
  *
+ * ⭐ POR QUÉ ESTA EMPRESA IMPORTA MÁS DE LO QUE PARECE (Iván, 24-jul):
+ *   «Si el sistema se adapta a mueblería (los más rústicos), ya con eso se adapta
+ *   a todas». Es el benchmark de adaptabilidad del corporativo.
+ *   Consecuencia de diseño, y hay que tomarla en serio: **acá la gente no vive
+ *   frente a una computadora.** La entrada natural es **Telegram y la voz**, y la
+ *   evidencia de avance es **una foto**, no un texto. Esta web es el tablero del
+ *   dueño para VER lo que entra; el taller no va a cargar formularios.
+ *   → Por eso lo próximo y más valioso para este tenant NO es otro módulo web:
+ *     es su bot de Telegram + el Copilot (ver `features.copilotModule`).
+ *
+ * ⚠️ Las etapas internas del taller (corte, armado, laca) NO son columnas del
+ *    kanban a propósito: viven como próxima acción / notas dentro del pedido.
+ *    Volverlas columnas duplicaría el tablero y hay que verlo con el taller real
+ *    antes. Y ojo con la tensión abierta: Alex dijo el 27-jul «en Mueblería
+ *    tampoco veo dónde funcione Stratos» — conviene reconciliarlo con Iván
+ *    (que la puso de benchmark) antes de invertirle mucho más.
+ *
  * Aislamiento: comparte código y proyecto Supabase (glulgyhkrqpykxmujodb) pero sus
  * datos viven bajo su propia organization_id (e583eb98-…) + RLS. Como su org NO es
  * STRATOS_ORG_ID, canAccessModule() la limita automáticamente a CRM + Perfil +
@@ -86,6 +103,14 @@ const muebleriaConfig = {
     // (copilotModule: true) el día que conecten el bot — no antes, para no darles
     // un módulo que no responde.
     copilotModule:    false,
+    // Chat del equipo: funciona solo (org-scoped, sin depender de n8n) y el primer
+    // admin crea su canal desde la misma pantalla. Para gente que no vive frente a
+    // la computadora, tener el hilo del taller acá adentro vale más que un módulo más.
+    teamChat:         true,
+    // Alta de usuarios: sin esto el tenant no puede sumar a su propia gente y
+    // dependería de nosotros para cada carpintero. Es org-scoped: un admin de la
+    // mueblería jamás ve gente de Duke.
+    teamAdmin:        true,
   },
 
   support: {

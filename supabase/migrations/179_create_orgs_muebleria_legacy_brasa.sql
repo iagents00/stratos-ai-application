@@ -95,9 +95,13 @@ WHERE NOT EXISTS (
    WHERE organization_id = 'e583eb98-ff00-4920-a69c-db39f3841b31'::uuid
 );
 
--- Legacy Design: la cita es la REUNIÓN con el cliente. Se avisa 3 h antes.
--- Inactividad más laxa (7 días): un proyecto de arquitectura respira distinto
--- que un lead inmobiliario; avisar a los 3 días sería ruido.
+-- Legacy Design: SIN etapa de cita a propósito. Su kanban es el ESTADO de la casa
+-- (No iniciada / Pendiente / En curso / Entregada), no una agenda — y Alex pidió
+-- explícitamente NO tener avisos para Legacy (los quiere para su equipo de
+-- marketing). `zoom_stage_label` queda con un valor que NO matchea ninguna etapa
+-- para que el escáner de citas no encuentre nada ni aunque alguien encienda el
+-- motor por error. Inactividad larga (30 días): una casa puede pasar semanas
+-- esperando una licencia sin que eso sea un descuido.
 INSERT INTO proactive_config (
   organization_id, enabled, shadow_mode, zoom_stage_label, zoom_reminder_hours,
   terminal_stages, timezone, inactivity_days
@@ -105,10 +109,10 @@ INSERT INTO proactive_config (
 SELECT
   '281caa01-7414-4eef-b3b6-afa1e7623ab3'::uuid,
   false, true,
-  'Reunión', 3,
-  ARRAY['Entregado','Descartado']::text[],
+  'Sin etapa de cita', 3,
+  ARRAY['Entregada']::text[],
   'America/Cancun',
-  7
+  30
 WHERE NOT EXISTS (
   SELECT 1 FROM proactive_config
    WHERE organization_id = '281caa01-7414-4eef-b3b6-afa1e7623ab3'::uuid
