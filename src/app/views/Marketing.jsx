@@ -199,7 +199,7 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
         supabase.from("mkt_requests").select("id, brand_id, titulo, detalle, objetivo, complejidad, ref_image_url, fecha_entrega, solicitante, assignee_id, estado, created_at")
           .eq("organization_id", orgId).is("deleted_at", null).order("created_at", { ascending: false }).limit(200),
         supabase.from("profiles").select("id, name, role").eq("organization_id", orgId),
-        supabase.from("mkt_daily_reports").select("id, profile_id, fecha, texto, evidencia_url, origen, created_at")
+        supabase.from("mkt_daily_reports").select("id, profile_id, fecha, texto, evidencia_url, origen, created_at, brand_id, tiempo_texto")
           .eq("organization_id", orgId)
           .order("fecha", { ascending: false }).order("created_at", { ascending: false }).limit(400),
       ]);
@@ -520,15 +520,14 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
         <div style={{ ...card, borderRadius: 13, padding: "11px 15px", display: "flex", alignItems: "center", gap: 11, flexWrap: "wrap" }}>
           <CircleCheck size={16} color={txt3} style={{ flexShrink: 0 }} />
           <div style={{ flex: 1, minWidth: 170, fontSize: 12.5, color: txt2, lineHeight: 1.45 }}>
-            Todavía no cuentas tu bitácora de hoy.
-            <span style={{ color: txt3 }}> Dile al Copilot qué hiciste, con tus palabras.</span>
+            Todavía no cuentas tu reporte de hoy.
+            <span style={{ color: txt3 }}> Son dos minutos y tu líder ya no tiene que preguntarte.</span>
           </div>
-          {onOpenCopilot && (
-            <button onClick={onOpenCopilot} style={{
-              background: "transparent", border: `1px solid ${accent}44`, borderRadius: 9, padding: "5px 11px",
-              cursor: "pointer", color: accent, fontSize: 12, fontFamily: font, whiteSpace: "nowrap",
-            }}>Contarlo ahora</button>
-          )}
+          {/* Lleva a la CAJA, no al chat: es donde Alex pidió que se reporte. */}
+          <button onClick={() => setTab("reporte")} style={{
+            background: "transparent", border: `1px solid ${accent}44`, borderRadius: 9, padding: "5px 11px",
+            cursor: "pointer", color: accent, fontSize: 12, fontFamily: font, whiteSpace: "nowrap",
+          }}>Contarlo ahora</button>
         </div>
       )}
 
@@ -1039,97 +1038,238 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
 
   /* ════════════════════ TAB: EQUIPO (solo admin) ════════════════════ */
 
+  /* ── Bloque de texto de un reporte: plegado a 2 líneas, con "ver todo" y su
+     evidencia. Se usa igual en el panel de hoy y en el historial de la
+     persona, para que el líder no tenga que aprender dos formatos. ── */
+  /* ════════════ REPORTE DE ACTIVIDADES ════════════
+     La caja que pidió Alex en la llamada del 27-jul: «que se metan a una pestaña
+     como reporte de actividades y automáticamente ya te aparezca el día de hoy:
+     ¿qué hiciste hoy, Luis Ángel Landeros?».
+     Reemplaza al Google Form. Cuatro campos y un botón — él insistió cuatro veces
+     en lo mismo: «entre menos rutas y menos botones tenga, mejor». */
+  const [repForm, setRepForm]   = useState({ empresa: "", texto: "", tiempo: "", evidencia: "" });
+  const [repSaving, setRepSaving] = useState(false);
+  const [repOtro, setRepOtro]   = useState(false); // ya reportó pero quiere sumar otro
+
+  const misReportesHoy = useMemo(
+    () => bitacora.filter(r => r.profile_id === user?.id && r.fecha === hoy),
+    [bitacora, user?.id, hoy]);
+
+  const saveReporte = useCallback(async () => {
+    const texto = String(repForm.texto || "").trim();
+    if (!texto || !orgId) return;
+    setRepSaving(true);
+    const { error: e } = await supabase.from("mkt_daily_reports").insert({
+      organization_id: orgId,
+      profile_id: user?.id,
+      fecha: hoy,
+      texto,
+      brand_id: repForm.empresa || null,
+      tiempo_texto: String(repForm.tiempo || "").trim() || null,
+      evidencia_url: String(repForm.evidencia || "").trim() || null,
+      origen: "web",
+    });
+    setRepSaving(false);
+    if (e) { setError("No pude guardar tu reporte. Probá de nuevo."); return; }
+    // Se conserva la empresa elegida: casi siempre es la misma en el mismo día.
+    setRepForm(f => ({ empresa: f.empresa, texto: "", tiempo: "", evidencia: "" }));
+    setRepOtro(false);
+    load();
+  }, [repForm, orgId, user?.id, hoy, load]);
+
+  const reporteTexto = (r) => {
+    const abierta = bitaAbierta.has(r.id);
+    const texto = String(r.texto || "").trim();
+    const largo = texto.length > 110 || texto.includes("\n");
+    return (
+      <div style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{
+            fontSize: 12, color: txt2, lineHeight: 1.5, whiteSpace: "pre-wrap", wordBreak: "break-word",
+            ...(abierta ? {} : { display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }),
+          }}>{texto || "Sin detalle"}</div>
+          {largo && (
+            <button onClick={() => toggleBita(r.id)} style={{
+              background: "transparent", border: "none", padding: "2px 0 0", cursor: "pointer",
+              color: accent, fontSize: 10.5, fontFamily: font,
+            }}>{abierta ? "ver menos" : "ver todo"}</button>
+          )}
+        </div>
+        {r.evidencia_url && (
+          <a href={r.evidencia_url} target="_blank" rel="noreferrer" title="Abrir evidencia" style={{
+            border: `1px solid ${accent}44`, borderRadius: 7, padding: "2px 7px", flexShrink: 0,
+            color: accent, display: "inline-flex", alignItems: "center", gap: 4, fontSize: 10.5, textDecoration: "none",
+          }}><Folder size={11} /> Evidencia</a>
+        )}
+      </div>
+    );
+  };
+
+  /* ════════════ TAB: ACTIVIDADES (la pantalla de entrada de marketing) ════════════ */
+
+  const reporteTab = () => {
+    const primerNombre = String(user?.name || "").split(" ")[0] || "";
+    const yaReporte    = misReportesHoy.length > 0;
+    const mostrarCaja  = !yaReporte || repOtro;
+    const puedeGuardar = String(repForm.texto || "").trim().length > 0 && !repSaving;
+
+    // Para el líder: qué reportó su gente hoy, arriba de su propia caja.
+    const reportesHoy = bitacora.filter(r => r.fecha === hoy);
+    const equipoHoy   = assignees
+      .filter(m => m.id !== user?.id)
+      .map(m => ({ m, rs: reportesHoy.filter(r => r.profile_id === m.id) }))
+      .sort((a, b) => (b.rs.length > 0) - (a.rs.length > 0));
+    const reportaron  = equipoHoy.filter(p => p.rs.length > 0).length;
+
+    return (
+      <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+
+        {/* ── LA CAJA ── */}
+        {mostrarCaja ? (
+          <div style={{ ...card, borderRadius: 15, padding: isMobile ? "15px 15px" : "18px 20px", display: "flex", flexDirection: "column", gap: 12 }}>
+            <div>
+              <div style={{ fontSize: isMobile ? 17 : 19, fontWeight: 600, color: txt, fontFamily: fontDisp, lineHeight: 1.25 }}>
+                ¿Qué hiciste hoy{primerNombre ? `, ${primerNombre}` : ""}?
+              </div>
+              <div style={{ fontSize: 11.5, color: txt3, marginTop: 3 }}>
+                Cuéntalo con tus palabras, como se lo dirías a un compañero · {fmtDia(hoy)}
+              </div>
+            </div>
+
+            <textarea
+              autoFocus={!isMobile}
+              rows={isMobile ? 6 : 5}
+              value={repForm.texto}
+              onChange={e => setRepForm(f => ({ ...f, texto: e.target.value }))}
+              placeholder={"De 9 a 9:30 generé dos fichas técnicas.\nDe 9:30 a 12 edición del video de Casa Sol y Luna.\nDe 1 a 3 ensamble del proyecto…"}
+              style={{ ...inputStyle, resize: "vertical", lineHeight: 1.55, fontSize: 13.5, padding: "11px 12px" }} />
+
+            <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 9 }}>
+              <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                <span style={{ fontSize: 10.5, color: txt3 }}>¿En qué empresa?</span>
+                <select value={repForm.empresa} onChange={e => setRepForm(f => ({ ...f, empresa: e.target.value }))} style={inputStyle}>
+                  <option value="">— elegir —</option>
+                  {brands.map(b => <option key={b.id} value={b.id}>{b.nombre}</option>)}
+                </select>
+              </label>
+              <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                <span style={{ fontSize: 10.5, color: txt3 }}>¿Cuánto te llevó? (opcional)</span>
+                <input value={repForm.tiempo} onChange={e => setRepForm(f => ({ ...f, tiempo: e.target.value }))}
+                  placeholder="de 9 a 12 · 3 hrs · toda la tarde" style={inputStyle} />
+              </label>
+            </div>
+
+            <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+              <span style={{ fontSize: 10.5, color: txt3 }}>Evidencia (opcional) — el enlace de la carpeta o el archivo</span>
+              <input value={repForm.evidencia} onChange={e => setRepForm(f => ({ ...f, evidencia: e.target.value }))}
+                placeholder="Pegá el enlace de Drive" style={inputStyle} />
+            </label>
+
+            <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+              <button onClick={saveReporte} disabled={!puedeGuardar} style={{
+                padding: "10px 22px", borderRadius: 10, fontFamily: font, fontSize: 13.5, fontWeight: 600,
+                cursor: puedeGuardar ? "pointer" : "default", background: `${accent}1C`,
+                border: `1px solid ${accent}66`, color: accent, opacity: puedeGuardar ? 1 : 0.55,
+              }}>{repSaving ? "Guardando…" : "Guardar"}</button>
+              {yaReporte && (
+                <button onClick={() => setRepOtro(false)} style={{
+                  background: "transparent", border: "none", cursor: "pointer", color: txt3, fontSize: 12, fontFamily: font,
+                }}>Cancelar</button>
+              )}
+              {onOpenCopilot && (
+                <span style={{ fontSize: 11, color: txt3, marginLeft: "auto" }}>
+                  ¿Vas manejando?{" "}
+                  <button onClick={onOpenCopilot} style={{
+                    background: "transparent", border: "none", padding: 0, cursor: "pointer", color: accent, fontSize: 11, fontFamily: font,
+                  }}>cuéntaselo al Copilot por voz</button>
+                </span>
+              )}
+            </div>
+          </div>
+        ) : (
+          <div style={{ ...card, borderRadius: 15, padding: "15px 18px", display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+            <Check size={17} color={accent} strokeWidth={3} />
+            <div style={{ flex: 1, minWidth: 180 }}>
+              <div style={{ fontSize: 14, color: txt, fontWeight: 500, fontFamily: fontDisp }}>Ya reportaste hoy</div>
+              <div style={{ fontSize: 11.5, color: txt3 }}>Gracias. Si hiciste algo más, súmalo.</div>
+            </div>
+            <button onClick={() => setRepOtro(true)} style={{
+              padding: "7px 14px", borderRadius: 9, cursor: "pointer", fontFamily: font, fontSize: 12.5,
+              background: "transparent", border: `1px solid ${accent}44`, color: accent,
+            }}>Agregar otro</button>
+          </div>
+        )}
+
+        {/* ── Lo que ya cargó hoy ── */}
+        {misReportesHoy.length > 0 && (
+          <div style={{ ...card, borderRadius: 14, padding: "13px 16px", display: "flex", flexDirection: "column", gap: 9 }}>
+            <div style={{ fontSize: 10.5, color: txt3, letterSpacing: 0.5, textTransform: "uppercase" }}>Tu reporte de hoy</div>
+            {misReportesHoy.map(r => (
+              <div key={r.id} style={{ display: "flex", gap: 9, alignItems: "flex-start", borderTop: `1px solid ${bd}`, paddingTop: 9 }}>
+                <span style={{ fontSize: 10.5, color: txt3, whiteSpace: "nowrap", flexShrink: 0, minWidth: 38, paddingTop: 1 }}>{fmtHora(r.created_at)}</span>
+                <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 4 }}>
+                  {(r.brand_id || r.tiempo_texto) && (
+                    <div style={{ display: "flex", gap: 7, flexWrap: "wrap", fontSize: 10.5, color: txt2 }}>
+                      {r.brand_id && <span>{brandById[r.brand_id]?.nombre || ""}</span>}
+                      {r.tiempo_texto && <span style={{ color: txt3 }}>· {r.tiempo_texto}</span>}
+                    </div>
+                  )}
+                  {reporteTexto(r)}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* ── Para el líder: qué reportó su gente hoy ── */}
+        {isAdmin && equipoHoy.length > 0 && (
+          <div style={{ ...card, borderRadius: 14, padding: "13px 16px", display: "flex", flexDirection: "column", gap: 10 }}>
+            <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 10, flexWrap: "wrap" }}>
+              <div style={{ fontSize: 14, fontWeight: 600, color: txt, fontFamily: fontDisp }}>Tu equipo hoy</div>
+              <div style={{
+                fontSize: 11.5, whiteSpace: "nowrap", padding: "2px 9px", borderRadius: 999,
+                color: reportaron === equipoHoy.length ? accent : reportaron === 0 ? txt3 : AMBER,
+                border: `1px solid ${reportaron === equipoHoy.length ? `${accent}44` : reportaron === 0 ? bd : `${AMBER}44`}`,
+              }}>{reportaron} de {equipoHoy.length} reportaron</div>
+            </div>
+            {equipoHoy.map(({ m, rs }) => (
+              <div key={m.id} style={{ display: "flex", gap: 9, alignItems: "flex-start", borderTop: `1px solid ${bd}`, paddingTop: 9 }}>
+                <span style={{
+                  width: 8, height: 8, borderRadius: 999, flexShrink: 0, marginTop: 5,
+                  background: rs.length > 0 ? accent : "transparent",
+                  border: rs.length > 0 ? "none" : `1.5px solid ${txt3}66`,
+                }} />
+                <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 5 }}>
+                  <div style={{ display: "flex", alignItems: "baseline", gap: 8, flexWrap: "wrap" }}>
+                    <span style={{ fontSize: 12.5, color: rs.length > 0 ? txt : txt2, fontWeight: 500 }}>{m.name}</span>
+                    {rs.length > 0
+                      ? <span style={{ fontSize: 10.5, color: txt3 }}>
+                          {fmtHora(rs[0].created_at)}
+                          {rs[0].brand_id ? ` · ${brandById[rs[0].brand_id]?.nombre || ""}` : ""}
+                          {rs.length > 1 ? ` · ${rs.length} reportes` : ""}
+                        </span>
+                      : <span style={{ fontSize: 11, color: txt3 }}>todavía no reportó</span>}
+                  </div>
+                  {rs.map(r => <div key={r.id}>{reporteTexto(r)}</div>)}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  };
+
   const equipo = () => {
     const week = Date.now() - 7 * 86400000;
 
-    /* ── Bloque de texto de un reporte: plegado a 2 líneas, con "ver todo" y su
-       evidencia. Se usa igual en el panel de hoy y en el historial de la
-       persona, para que el líder no tenga que aprender dos formatos. ── */
-    const reporteTexto = (r) => {
-      const abierta = bitaAbierta.has(r.id);
-      const texto = String(r.texto || "").trim();
-      const largo = texto.length > 110 || texto.includes("\n");
-      return (
-        <div style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{
-              fontSize: 12, color: txt2, lineHeight: 1.5, whiteSpace: "pre-wrap", wordBreak: "break-word",
-              ...(abierta ? {} : { display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }),
-            }}>{texto || "Sin detalle"}</div>
-            {largo && (
-              <button onClick={() => toggleBita(r.id)} style={{
-                background: "transparent", border: "none", padding: "2px 0 0", cursor: "pointer",
-                color: accent, fontSize: 10.5, fontFamily: font,
-              }}>{abierta ? "ver menos" : "ver todo"}</button>
-            )}
-          </div>
-          {r.evidencia_url && (
-            <a href={r.evidencia_url} target="_blank" rel="noreferrer" title="Abrir evidencia" style={{
-              border: `1px solid ${accent}44`, borderRadius: 7, padding: "2px 7px", flexShrink: 0,
-              color: accent, display: "inline-flex", alignItems: "center", gap: 4, fontSize: 10.5, textDecoration: "none",
-            }}><Folder size={11} /> Evidencia</a>
-          )}
-        </div>
-      );
-    };
-
-    /* ── LO PRIMERO QUE VE EL LÍDER AL ENTRAR ──
-       Su trabajo diario es saber qué hizo su gente hoy. Antes tenía que abrir
-       una hoja de cálculo aparte; ahora es la primera pantalla de su cuenta.
-       Los que reportaron van arriba (con lo que dijeron) y los que faltan
-       quedan abajo, para que se vea de un vistazo a quién hay que buscar. ── */
-    const reportesHoy  = bitacora.filter(r => r.fecha === hoy);
-    const porPersonaHoy = assignees
-      .map(m => ({ m, rs: reportesHoy.filter(r => r.profile_id === m.id) }))
-      .sort((a, b) => (b.rs.length > 0) - (a.rs.length > 0));
-    const cuantosReportaron = porPersonaHoy.filter(p => p.rs.length > 0).length;
-
-    const panelHoy = assignees.length > 0 && (
-      <div style={{ ...card, borderRadius: 14, padding: "14px 16px", display: "flex", flexDirection: "column", gap: 11 }}>
-        <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 10, flexWrap: "wrap" }}>
-          <div>
-            <div style={{ fontSize: 15, fontWeight: 600, color: txt, fontFamily: fontDisp }}>Bitácora de hoy</div>
-            <div style={{ fontSize: 11.5, color: txt3 }}>Lo que reportó cada quien · {fmtDia(hoy)}</div>
-          </div>
-          <div style={{
-            fontSize: 12, whiteSpace: "nowrap", padding: "3px 10px", borderRadius: 999,
-            color: cuantosReportaron === assignees.length ? accent : cuantosReportaron === 0 ? txt3 : AMBER,
-            border: `1px solid ${cuantosReportaron === assignees.length ? `${accent}44` : cuantosReportaron === 0 ? bd : `${AMBER}44`}`,
-          }}>{cuantosReportaron} de {assignees.length} reportaron</div>
-        </div>
-
-        {porPersonaHoy.map(({ m, rs }) => (
-          <div key={m.id} style={{ display: "flex", gap: 10, alignItems: "flex-start", borderTop: `1px solid ${bd}`, paddingTop: 10 }}>
-            <span style={{
-              width: 8, height: 8, borderRadius: 999, flexShrink: 0, marginTop: 5,
-              background: rs.length > 0 ? accent : "transparent",
-              border: rs.length > 0 ? "none" : `1.5px solid ${txt3}66`,
-            }} />
-            <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 6 }}>
-              <div style={{ display: "flex", alignItems: "baseline", gap: 8, flexWrap: "wrap" }}>
-                <span style={{ fontSize: 12.5, color: rs.length > 0 ? txt : txt2, fontWeight: 500 }}>{m.name}</span>
-                {rs.length > 0
-                  ? <span style={{ fontSize: 10.5, color: txt3 }}>
-                      {fmtHora(rs[0].created_at)}{rs.length > 1 ? ` · ${rs.length} reportes` : ""}
-                    </span>
-                  : <span style={{ fontSize: 11, color: txt3 }}>todavía no reportó</span>}
-              </div>
-              {rs.map(r => <div key={r.id}>{reporteTexto(r)}</div>)}
-            </div>
-          </div>
-        ))}
-
-        <div style={{ fontSize: 10.5, color: txt3, borderTop: `1px solid ${bd}`, paddingTop: 9, lineHeight: 1.5 }}>
-          El equipo reporta contándoselo al Copilot, con sus palabras: «hoy edité el video de Casa Lago 3 horas
-          y grabé en Brasa y Piedra». Si te falta el detalle de alguien, pregúntale al Copilot por su bitácora.
-        </div>
-      </div>
-    );
+    /* El panel del día ya no vive acá: se mudó a la pestaña Actividades, que es
+       la pantalla de entrada. Equipo queda para la vista PROFUNDA de la semana
+       (avance por persona, evidencia y bitácora de días anteriores). */
 
     return (
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
         {assignees.length === 0 && emptyRow("Sin usuarios con rol marketing en la organización.")}
-        {panelHoy}
         {assignees.map(m => {
           const tt = tasks.filter(t => t.assignee_id === m.id);
           const enCurso  = tt.filter(t => t.estado !== "hecha" && !isBlocked(t)).length;
@@ -1253,6 +1393,7 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
     // El subtítulo va CORTO a propósito: el largo ("…lo bloqueado no depende de ti")
     // se partía en dos renglones y dejaba la palabra «ti» sola abajo — se veía roto
     // en el iPhone (reporte de Ángel con captura, 27-jul).
+    reporte:     { title: "Reporte de actividades", sub: "Lo que hiciste hoy · queda registrado al instante" },
     dia:         { title: `Hoy — ${firstName}`, sub: "Lo vencido primero, después lo de hoy" },
     // El rótulo lo pone cada empresa (NSG: "Proyectos"). Antes el encabezado decía
     // "Marcas" aunque el botón ya dijera "Proyectos" — el vocabulario de marketing
@@ -1294,6 +1435,7 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
           background: isLight ? "rgba(15,23,42,0.045)" : "rgba(255,255,255,0.035)", border: `1px solid ${bd}`,
           maxWidth: "100%", width: isMobile ? "100%" : undefined, flexShrink: 0,
         }}>
+          {tabBtn("reporte", tabLabel("reporte", "Actividades"))}
           {tabBtn("dia", tabLabel("dia", "Mi Día"))}
           {!HIDDEN_TABS.has("marcas") && tabBtn("marcas", tabLabel("marcas", "Marcas"))}
           {!HIDDEN_TABS.has("pipeline") && tabBtn("pipeline", tabLabel("pipeline", "Pipeline"), esperandoVoz >= 3 ? esperandoVoz : 0)}
@@ -1360,6 +1502,7 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
         <div style={{ color: txt2, fontSize: 13, padding: 30, textAlign: "center" }}>Cargando…</div>
       ) : (
         <>
+          {tab === "reporte" && reporteTab()}
           {tab === "dia" && miDia()}
           {tab === "marcas" && marcas()}
           {tab === "pipeline" && pipelineTab()}

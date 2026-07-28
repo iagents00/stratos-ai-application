@@ -275,12 +275,14 @@ const SECTIONS = [
   {
     id: "bitacora",
     icon: CircleCheck,
-    title: "Tu bitácora del día",
-    summary: "Cuéntale al Copilot qué hiciste y queda registrado, sin llenar formularios.",
+    title: "Actividades — tu reporte del día",
+    summary: "La primera pantalla al entrar: cuentas qué hiciste y queda registrado. Sin formularios.",
     tags: ["bitacora", "reporte", "reporte diario", "formulario", "google form", "que hice", "mi dia", "actividades", "horas", "evidencia", "drive"],
     content: [
-      { type: "p", text: "Antes el reporte del día se llenaba en un formulario aparte, fuera del sistema. Ahora se lo cuentas al Copilot con tus palabras y queda guardado, sin salir de aquí." },
-      { type: "p", text: "Solo escríbele (o díctale) lo que hiciste, como se lo contarías a un compañero:" },
+      { type: "p", text: "Antes el reporte del día se llenaba en un formulario aparte, fuera del sistema. Ahora es lo primero que ves al entrar: la sección Actividades, con una sola pregunta — ¿qué hiciste hoy?" },
+      { type: "p", text: "Escribes lo que hiciste con tus palabras, eliges en qué empresa trabajaste, y si quieres pones cuánto te llevó y el enlace de la carpeta. Un botón, Guardar, y listo. Toma un par de minutos." },
+      { type: "tip", text: "En el celular puedes usar el dictado del teclado: tocas el micrófono y hablas. Y si vas manejando, se lo cuentas al Copilot por voz — llega al mismo lugar." },
+      { type: "p", text: "También funciona hablándole al Copilot, con tus palabras:" },
       { type: "list", items: [
         "\"Hoy edité el video de Casa Lago 3 horas, grabé coctelería en Brasa y Piedra 2 horas y dejé el menú del sitio al 90 por ciento.\"",
         "Puedes reportar varias veces al mismo día: cada reporte se suma, no se pisa.",
