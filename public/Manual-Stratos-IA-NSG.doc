@@ -78,7 +78,8 @@
   <div class="lead">
     <b>La regla que resume todo:</b> si pasó, va adentro de Stratos. Este manual cuenta cada cosa que hace el
     sistema en tres líneas: <b>qué es</b>, <b>cómo se usa</b> y —la que importa— <b>qué cambia en el trabajo</b>.
-    Son <b>9 módulos</b> y <b>34 funciones</b>.
+    Son <b>9 módulos</b> y <b>34 funciones</b>. Y al final, la sección <b>10</b>: qué se actualiza solo, qué nos
+    toca a nosotros, y cuáles son <b>nuestras nuevas responsabilidades</b>.
   </div>
 
   <h2>1 · Cómo se entra</h2>
@@ -285,6 +286,111 @@
       <td><b>Es replicable.</b> Cada empresa nueva es una configuración, no un sistema nuevo. Lo que se construyó para NSG se enciende para Duke, Mueblería, Legacy Design y Brasa y Piedra.</td>
     </tr>
   </table>
+
+  <h2>10 · Qué se actualiza solo y qué nos toca a nosotros</h2>
+  <p>La pregunta de Ángel, que es la correcta: <i>«si trabajo con Claude Code o con Codex, ¿todo eso se registra
+  solo en el segundo cerebro? ¿los porcentajes de los proyectos se actualizan en tiempo real, o hay que hacer
+  algo a mano?»</i>. La respuesta tiene dos mitades, y conviene tenerlas claras.</p>
+
+  <h3 style="color:#0D9A76;margin-top:14px;">10.1 · Lo que pasa solo (nadie tiene que acordarse)</h3>
+
+  <table>
+    <tr><th style="width:38%">Qué</th><th>Cuándo</th></tr>
+    <tr>
+      <td><b>El % de cada proyecto</b></td>
+      <td>Al instante. No hay un botón de «recalcular»: el porcentaje <b>se calcula cuando lo mirás</b>, dividiendo
+        las tareas cerradas entre el total. Cerrás una tarea y en el mismo segundo el número ya es otro.</td>
+    </tr>
+    <tr>
+      <td><b>Saldos, caja del mes, KPIs del Comando</b></td>
+      <td>Igual: se calculan al leerlos. Nunca hay un número «viejo» esperando que alguien lo actualice.</td>
+    </tr>
+    <tr>
+      <td><b>La persecución</b></td>
+      <td>Sola. Una hora antes y diez minutos antes de que algo se venza, en el horario y la zona de cada quien.
+        Si se vence, insiste.</td>
+    </tr>
+    <tr>
+      <td><b>El resumen de la mañana</b></td>
+      <td>Todos los días, sin pedirlo.</td>
+    </tr>
+    <tr>
+      <td><b>Avisos del chat y de documento nuevo</b></td>
+      <td>Al instante, al teléfono de los dos.</td>
+    </tr>
+    <tr>
+      <td><b>Las transcripciones de las reuniones</b></td>
+      <td>Solas. Un servicio en el servidor las baja cada 20 minutos y las guarda en el segundo cerebro.</td>
+    </tr>
+    <tr>
+      <td><b>El segundo cerebro que lee el Copilot</b></td>
+      <td>Se refresca <b>en cada cambio que se sube al cerebro</b> (~1 minuto después). Por eso el Copilot puede
+        contestar hoy sobre algo que se escribió hace un rato.</td>
+    </tr>
+  </table>
+
+  <h3 style="color:#0D9A76;margin-top:16px;">10.2 · Lo que NO pasa solo</h3>
+
+  <div class="lead" style="background:#FFF7ED;border-left-color:#FB923C;">
+    <b>Lo más importante de esta página:</b> trabajar con Claude Code o con Codex <b>no deja rastro por sí solo</b>.
+    Cuando una sesión toca la base de datos o un flujo de n8n, eso <b>no genera ningún commit</b> — las funciones
+    viven en la base y los flujos en n8n, no en el repositorio. Si la sesión no escribe su nota antes de cerrar,
+    para el sistema <b>eso no pasó</b>: no aparece en el informe, ni en el changelog, ni el Copilot lo sabe.
+    Es una <b>regla nuestra</b>, no una función de la máquina.
+  </div>
+
+  <div class="mod">
+    <div class="t">Cerrar la tarea</div>
+    <div class="como"><span class="lbl">Quién:</span> el que la hizo, en el momento.</div>
+    <div class="cambia"><span class="lblv">Por qué importa:</span> el porcentaje sube cuando alguien dice «ya terminé X».
+      El sistema persigue, pero no adivina. Son cinco segundos por voz.</div>
+  </div>
+  <div class="mod">
+    <div class="t">Que cada sesión de IA deje su nota</div>
+    <div class="como"><span class="lbl">Quién:</span> la propia sesión, antes de cerrar (está en las reglas del AIOS).</div>
+    <div class="cambia"><span class="lblv">Por qué importa:</span> es lo único que hace visible el trabajo hecho
+      por fuera del repositorio. Sin eso, el informe de avances sale corto y parece que no se hizo nada.</div>
+  </div>
+  <div class="mod">
+    <div class="t">El pulso del negocio (el «en qué estamos»)</div>
+    <div class="como"><span class="lbl">Quién:</span> la sesión que hace algo grande.</div>
+    <div class="cambia"><span class="lblv">Por qué importa:</span> si no se escribe, el bot y el Copilot responden
+      con una foto vieja.</div>
+  </div>
+  <div class="mod">
+    <div class="t">La plata</div>
+    <div class="como"><span class="lbl">Quién:</span> quien paga o cobra.</div>
+    <div class="cambia"><span class="lblv">Por qué importa:</span> mandar la foto del comprobante es el acto manual;
+      de ahí en adelante el sistema lee el monto y lo registra. Los montos de nómina y los datos fiscales también
+      se cargan una vez a mano.</div>
+  </div>
+  <div class="mod">
+    <div class="t">El avance de los objetivos del cliente</div>
+    <div class="como"><span class="lbl">Quién:</span> quien lleva la relación.</div>
+    <div class="cambia"><span class="lblv">Por qué importa:</span> «vamos en 2 de 4 empresas» lo sabe una persona,
+      no el sistema. Se dice por voz y queda.</div>
+  </div>
+  <div class="mod">
+    <div class="t">Guardar los documentos</div>
+    <div class="como"><span class="lbl">Quién:</span> quien lo genera, con el botón.</div>
+    <div class="cambia"><span class="lblv">Por qué importa:</span> un informe que no se guarda se pierde al cerrar
+      la pantalla.</div>
+  </div>
+
+  <h3 style="color:#0D9A76;margin-top:16px;">10.3 · Nuestras nuevas responsabilidades, en tres</h3>
+  <ul>
+    <li><b>Cerrar en el momento, no al final del día.</b> Todo lo demás se calcula solo <i>a partir de eso</i>.
+      Es el único dato que el sistema no puede deducir.</li>
+    <li><b>Que ninguna sesión de IA cierre sin dejar su nota.</b> Vale para Claude Code, para Codex y para
+      cualquiera que venga después. Lo que no queda escrito, no existe.</li>
+    <li><b>Una revisión el viernes.</b> Diez minutos: mirar el informe del periodo y cerrar lo que quedó abierto.
+      Es la red que atrapa lo que se escapó durante la semana.</li>
+  </ul>
+
+  <p style="margin-top:10px;"><b>El resumen honesto:</b> el sistema se encarga de <b>acordarse, calcular, avisar y
+  perseguir</b> —que es donde antes se perdía todo—. Nosotros nos encargamos de <b>decirle qué pasó</b>. Esa frontera
+  es a propósito: un sistema que adivina lo que hiciste termina inventando, y con la plata y con los avances de un
+  cliente eso no se negocia.</p>
 
   <div class="foot">
     NSG · Manual de Stratos IA — lo genera el propio sistema: si algo cambia, se vuelve a bajar y sale actualizado.
