@@ -30,7 +30,7 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import {
   Megaphone, Plus, X, RefreshCw, Folder, ExternalLink, Lock, Check,
   ChevronLeft, ChevronRight, ChevronDown, Clapperboard, Mic, CalendarDays,
-  Search, Camera, CircleCheck,
+  Search, Camera, CircleCheck, Layers,
 } from "lucide-react";
 import { font, fontDisp } from "../../design-system/tokens";
 import { supabase } from "../../lib/supabase";
@@ -194,7 +194,7 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
         supabase.from("mkt_tasks").select("id, brand_id, project_id, titulo, descripcion, assignee_id, created_by, prioridad, estado, avance_pct, due_at, depends_on, drive_url, evidencia_url, evidencia_tipo, updated_at, created_at")
           .eq("organization_id", orgId).is("deleted_at", null)
           .order("due_at", { ascending: true, nullsFirst: false }).limit(600),
-        supabase.from("mkt_pipeline_items").select("id, brand_id, nombre, locacion, etapa, fecha_rodaje, drive_url, ig_url, notas, orden, updated_at")
+        supabase.from("mkt_pipeline_items").select("id, brand_id, nombre, locacion, etapa, fecha_rodaje, fecha_publicacion, precio, tipo, drive_url, ig_url, crudos_url, video_url, story_url, cine_url, ficha_url, info_url, notas, orden, updated_at")
           .eq("organization_id", orgId).is("deleted_at", null).order("orden").order("updated_at"),
         supabase.from("mkt_requests").select("id, brand_id, titulo, detalle, objetivo, complejidad, ref_image_url, fecha_entrega, solicitante, assignee_id, estado, created_at")
           .eq("organization_id", orgId).is("deleted_at", null).order("created_at", { ascending: false }).limit(200),
@@ -311,6 +311,46 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
   // ningún lado). El bucket `evidencia` es privado → URL firmada al vuelo (mismo
   // patrón que Caja.jsx). Los links (evidencia_tipo='link') se abren directo.
   const [evViewer, setEvViewer] = useState(null); // { url, tipo, titulo } | { loading }
+  /* ── FICHA DE LA PROPIEDAD ──
+     Es el reemplazo del renglón de la hoja de cálculo: todo lo que había en el
+     Sheet (precio, tipo, fechas y los seis enlaces) editable desde la tarjeta.
+     Se abre tocando el nombre en el tablero. ── */
+  const [ficha, setFicha] = useState(null);   // { id, ...campos como texto }
+  const [fichaSaving, setFichaSaving] = useState(false);
+
+  const openFicha = useCallback((it) => {
+    setFicha({
+      id: it.id, nombre: it.nombre || "", locacion: it.locacion || "",
+      precio: it.precio || "", tipo: it.tipo || "",
+      fecha_rodaje: it.fecha_rodaje || "", fecha_publicacion: it.fecha_publicacion || "",
+      crudos_url: it.crudos_url || "", video_url: it.video_url || "", ig_url: it.ig_url || "",
+      story_url: it.story_url || "", cine_url: it.cine_url || "", ficha_url: it.ficha_url || "",
+      info_url: it.info_url || "", drive_url: it.drive_url || "", notas: it.notas || "",
+    });
+  }, []);
+
+  const saveFicha = useCallback(async () => {
+    if (!ficha?.id) return;
+    setFichaSaving(true);
+    // Los vacíos se guardan como null, no como "": así un campo sin llenar no
+    // se distingue de uno borrado y las condiciones `if (it.video_url)` siguen
+    // funcionando en la tarjeta.
+    const limpio = (s) => (String(s || "").trim() || null);
+    const { error: e } = await supabase.from("mkt_pipeline_items").update({
+      nombre: limpio(ficha.nombre) || ficha.nombre, locacion: limpio(ficha.locacion),
+      precio: limpio(ficha.precio), tipo: limpio(ficha.tipo),
+      fecha_rodaje: ficha.fecha_rodaje || null, fecha_publicacion: ficha.fecha_publicacion || null,
+      crudos_url: limpio(ficha.crudos_url), video_url: limpio(ficha.video_url), ig_url: limpio(ficha.ig_url),
+      story_url: limpio(ficha.story_url), cine_url: limpio(ficha.cine_url), ficha_url: limpio(ficha.ficha_url),
+      info_url: limpio(ficha.info_url), drive_url: limpio(ficha.drive_url), notas: limpio(ficha.notas),
+      updated_at: new Date().toISOString(),
+    }).eq("id", ficha.id);
+    setFichaSaving(false);
+    if (e) { setError("No pude guardar la ficha. Probá de nuevo."); return; }
+    setFicha(null);
+    load();
+  }, [ficha, load]);
+
   const openEvidence = useCallback(async (t) => {
     const path = t?.evidencia_url;
     if (!path) return;
@@ -819,18 +859,37 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
                     }}>
                     <div style={{ display: "flex", alignItems: "flex-start", gap: 7 }}>
                       <span style={{ width: 8, height: 8, borderRadius: 999, background: c, marginTop: 5, flexShrink: 0 }} />
-                      <div style={{ flex: 1, fontSize: 12.5, color: txt, fontWeight: 500, lineHeight: 1.3 }}>{it.nombre}</div>
+                      {/* El nombre abre la ficha: es el renglón de la hoja de cálculo,
+                          con precio, tipo, fechas y todos los enlaces. */}
+                      <button onClick={() => openFicha(it)} title="Abrir la ficha de la propiedad" style={{
+                        flex: 1, textAlign: "left", background: "transparent", border: "none", padding: 0,
+                        cursor: "pointer", fontSize: 12.5, color: txt, fontWeight: 500, lineHeight: 1.3, fontFamily: font,
+                      }}>{it.nombre}</button>
                     </div>
                     <div style={{ display: "flex", alignItems: "center", gap: 7, flexWrap: "wrap" }}>
                       {it.locacion && <span style={{ fontSize: 10.5, color: txt2, padding: "2px 8px", borderRadius: 999, background: isLight ? "rgba(15,23,42,0.05)" : "rgba(255,255,255,0.06)", border: `1px solid ${bd}` }}>{it.locacion}</span>}
+                      {it.precio && <span style={{ fontSize: 10.5, color: txt2 }}>{it.precio}</span>}
+                      {it.tipo && <span style={{ fontSize: 10.5, color: txt3 }}>{it.tipo}</span>}
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 7, flexWrap: "wrap" }}>
                       {it.fecha_rodaje && (
-                        <span style={{ fontSize: 10.5, color: it.fecha_rodaje === hoy ? accent : txt3, display: "inline-flex", alignItems: "center", gap: 3 }}>
+                        <span style={{ fontSize: 10.5, color: it.fecha_rodaje === hoy ? accent : txt3, display: "inline-flex", alignItems: "center", gap: 3 }} title="Fecha de rodaje">
                           <CalendarDays size={10} /> {fmtDia(it.fecha_rodaje)}
                         </span>
                       )}
+                      {it.fecha_publicacion && (
+                        <span style={{ fontSize: 10.5, color: txt3, display: "inline-flex", alignItems: "center", gap: 3 }} title="Fecha de publicación">
+                          <ExternalLink size={10} /> {fmtDia(it.fecha_publicacion)}
+                        </span>
+                      )}
                       <span style={{ flex: 1 }} />
-                      {it.drive_url && <a href={it.drive_url} target="_blank" rel="noreferrer" title="Drive" style={{ color: txt3, display: "flex" }}><Folder size={13} /></a>}
-                      {it.ig_url && <a href={it.ig_url} target="_blank" rel="noreferrer" title="Ver publicación" style={{ color: txt3, display: "flex" }}><ExternalLink size={13} /></a>}
+                      {/* Los enlaces del registro, cada uno con su ícono. Se muestran
+                          solo los que existen: una tarjeta a medio llenar no se ve rota. */}
+                      {it.crudos_url && <a href={it.crudos_url} target="_blank" rel="noreferrer" title="Carpeta de crudos" style={{ color: txt3, display: "flex" }}><Folder size={13} /></a>}
+                      {it.video_url  && <a href={it.video_url}  target="_blank" rel="noreferrer" title="Video editado" style={{ color: txt3, display: "flex" }}><Clapperboard size={13} /></a>}
+                      {it.ficha_url  && <a href={it.ficha_url}  target="_blank" rel="noreferrer" title="Ficha técnica" style={{ color: txt3, display: "flex" }}><Search size={13} /></a>}
+                      {it.drive_url  && <a href={it.drive_url}  target="_blank" rel="noreferrer" title="Drive" style={{ color: txt3, display: "flex" }}><Layers size={13} /></a>}
+                      {it.ig_url     && <a href={it.ig_url}     target="_blank" rel="noreferrer" title="Ver publicación" style={{ color: txt3, display: "flex" }}><ExternalLink size={13} /></a>}
                     </div>
                     <div style={{ display: "flex", gap: 5 }}>
                       <button disabled={colIdx === 0} onClick={() => moveStage(it, -1)} title="Etapa anterior" style={{
@@ -1331,6 +1390,87 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
                 ? <video src={evViewer.url} controls autoPlay style={{ maxWidth: "100%", maxHeight: "72vh", borderRadius: 10, background: "#000" }} />
                 : <img src={evViewer.url} alt="Evidencia" style={{ maxWidth: "100%", maxHeight: "72vh", borderRadius: 10, objectFit: "contain" }} />
             )}
+          </div>
+        </div>
+      )}
+
+      {/* FICHA DE LA PROPIEDAD — el renglón de la hoja de cálculo, adentro del CRM.
+          Todo lo que el registro guardaba en Sheets se llena y se lee acá. */}
+      {ficha && (
+        <div onClick={() => setFicha(null)} style={{
+          position: "fixed", inset: 0, zIndex: 900, background: "rgba(0,0,0,0.78)",
+          display: "flex", alignItems: "center", justifyContent: "center", padding: 18,
+        }}>
+          <div onClick={e => e.stopPropagation()} style={{
+            background: isLight ? "#FFFFFF" : "#0B1220", border: `1px solid ${bd}`, borderRadius: 16,
+            padding: 16, width: "min(94vw, 620px)", maxHeight: "88vh", overflowY: "auto",
+            display: "flex", flexDirection: "column", gap: 12,
+          }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <Clapperboard size={15} color={accent} />
+              <div style={{ flex: 1, fontSize: 13.5, color: txt, fontWeight: 600, fontFamily: fontDisp }}>Ficha de la propiedad</div>
+              <button onClick={() => setFicha(null)} style={{ background: "transparent", border: "none", cursor: "pointer", color: txt2, padding: 4 }}><X size={16} /></button>
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 9 }}>
+              {[
+                ["nombre",            "Propiedad",            "text",  "Casa Lago"],
+                ["locacion",          "Ubicación",            "text",  "Tulum, Cancún, PDC…"],
+                ["precio",            "Precio",               "text",  "$22.88 MDP · $2.1M USD · Reservado"],
+                ["tipo",              "Tipo",                 "text",  "Casa - Villa · Depto · Terreno"],
+                ["fecha_rodaje",      "Fecha de rodaje",      "date",  ""],
+                ["fecha_publicacion", "Fecha de publicación", "date",  ""],
+              ].map(([k, label, type, ph]) => (
+                <label key={k} style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                  <span style={{ fontSize: 10.5, color: txt3 }}>{label}</span>
+                  <input type={type} placeholder={ph} value={ficha[k]}
+                    onChange={e => setFicha(f => ({ ...f, [k]: e.target.value }))} style={inputStyle} />
+                </label>
+              ))}
+            </div>
+
+            <div style={{ fontSize: 10.5, color: txt3, letterSpacing: 0.4, textTransform: "uppercase", paddingTop: 2 }}>Enlaces</div>
+            <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 9 }}>
+              {[
+                ["crudos_url", "Carpeta de crudos"],
+                ["video_url",  "Video editado"],
+                ["ig_url",     "Reel de Instagram"],
+                ["story_url",  "Versión story"],
+                ["cine_url",   "Versión cine"],
+                ["ficha_url",  "Ficha técnica"],
+                ["info_url",   "Carpeta de información"],
+                ["drive_url",  "Drive de la propiedad"],
+              ].map(([k, label]) => (
+                <label key={k} style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                  <span style={{ fontSize: 10.5, color: txt3, display: "flex", alignItems: "center", gap: 6 }}>
+                    {label}
+                    {ficha[k] && <a href={ficha[k]} target="_blank" rel="noreferrer" style={{ color: accent, display: "inline-flex" }} title="Abrir"><ExternalLink size={11} /></a>}
+                  </span>
+                  <input placeholder="Pegá el enlace" value={ficha[k]}
+                    onChange={e => setFicha(f => ({ ...f, [k]: e.target.value }))} style={inputStyle} />
+                </label>
+              ))}
+            </div>
+
+            <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+              <span style={{ fontSize: 10.5, color: txt3 }}>Notas</span>
+              <textarea rows={2} placeholder="Lo que haga falta recordar de esta propiedad" value={ficha.notas}
+                onChange={e => setFicha(f => ({ ...f, notas: e.target.value }))}
+                style={{ ...inputStyle, resize: "vertical", lineHeight: 1.5 }} />
+            </label>
+
+            <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", paddingTop: 2 }}>
+              <button onClick={() => setFicha(null)} style={{
+                padding: "8px 14px", borderRadius: 9, cursor: "pointer", fontFamily: font, fontSize: 12.5,
+                background: "transparent", border: `1px solid ${bd}`, color: txt2,
+              }}>Cancelar</button>
+              <button onClick={saveFicha} disabled={fichaSaving || !String(ficha.nombre || "").trim()} style={{
+                padding: "8px 16px", borderRadius: 9, fontFamily: font, fontSize: 12.5, fontWeight: 600,
+                cursor: fichaSaving ? "default" : "pointer", background: `${accent}18`,
+                border: `1px solid ${accent}55`, color: accent,
+                opacity: fichaSaving || !String(ficha.nombre || "").trim() ? 0.6 : 1,
+              }}>{fichaSaving ? "Guardando…" : "Guardar"}</button>
+            </div>
           </div>
         </div>
       )}
