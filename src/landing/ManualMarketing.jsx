@@ -248,6 +248,31 @@ const SECTIONS = [
     ],
   },
   {
+    id: "ficha-propiedad",
+    icon: Clapperboard,
+    title: "La ficha de cada propiedad",
+    summary: "Precio, tipo, fechas y todos los enlaces, adentro del sistema. Ya no hace falta el Excel.",
+    tags: ["ficha", "propiedad", "excel", "hoja", "sheet", "registro", "grabaciones", "precio", "tipo", "crudos", "video", "reel", "story", "cine", "ficha tecnica", "drive", "enlaces", "publicacion"],
+    content: [
+      { type: "p", text: "El registro de grabaciones vivía en una hoja de cálculo aparte. Ahora cada propiedad del tablero guarda lo mismo, adentro: toca su nombre en el Pipeline y se abre su ficha." },
+      { type: "p", text: "Lo que guarda cada propiedad:" },
+      { type: "list", items: [
+        "Precio y tipo (Casa - Villa, Depto, Terreno).",
+        "Fecha de rodaje y fecha de publicación.",
+        "Los enlaces: carpeta de crudos, video editado, reel de Instagram, versión story, versión cine, ficha técnica, carpeta de información y el Drive de la propiedad.",
+        "Notas, para lo que no entre en ningún campo.",
+      ]},
+      { type: "p", text: "También se llena hablando, sin abrir nada: díselo al Copilot y él lo guarda." },
+      { type: "list", items: [
+        "\"Los crudos de Casa Lago están en <enlace>\"",
+        "\"El precio de Villa Candela es 22.88 MDP\"",
+        "\"Amayal Aldea Zama se publicó el 25 de julio\"",
+        "\"¿Cómo va Casa Lago?\" — te devuelve su ficha completa con todos sus enlaces",
+      ]},
+      { type: "tip", text: "Si hay dos propiedades con nombre parecido, el Copilot te pregunta cuál antes de guardar. Prefiere preguntar a escribir en la equivocada." },
+    ],
+  },
+  {
     id: "bitacora",
     icon: CircleCheck,
     title: "Tu bitácora del día",
