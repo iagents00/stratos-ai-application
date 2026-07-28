@@ -91,11 +91,13 @@ function resolveInitialView(user, clientConfig) {
   // Marketing (equipo de Duke): NO tiene acceso al CRM — si cayera en "c" vería
   // la pantalla de "sin permiso". Su casa es el módulo Marketing (ERP de
   // actividades: Mi Día · Marcas · Pipeline · Solicitudes).
-  const fallback = user?.isMarketingAdmin
-    ? "mkt_equipo"                       // Alex (líder de marketing) abre en Equipo: lo primero que necesita es qué hizo su gente hoy (28-jul)
-    : user?.role === "marketing"
-      ? "mkt_dia"
-      : ((isAsesorRole || isExternalOrg) ? "c" : "d");
+  // Marketing entra por ACTIVIDADES — el reporte del día. Para el equipo es donde
+  // cuenta lo que hizo; para Alex, lo primero que necesita ver es qué hizo su
+  // gente hoy. Pedido de Alex (llamada 27-jul): que aparezca al iniciar sesión,
+  // sin buscarlo. Si tiene que buscarlo, no se usa.
+  const fallback = (user?.isMarketingAdmin || user?.role === "marketing")
+    ? "mkt_reporte"
+    : ((isAsesorRole || isExternalOrg) ? "c" : "d");
   if (!user?.id) return fallback;
   try {
     const saved = localStorage.getItem(`stratos.crm.view.${user.id}`);
@@ -2332,7 +2334,7 @@ export default function App() {
           <div key={v} className="stratos-content-area" style={{ flex:1, padding: (v === "wa" || v === "copilot") ? 0 : "18px 22px", overflowY: (v === "wa" || v === "copilot") ? "hidden" : "auto", animation:"fadeIn 0.28s ease", display:"flex", flexDirection:"column" }}>
             {user?.role && !canAccessModule(v, user, clientConfig)
               ? <PermissionGate moduleId={v}
-                  onGoBack={() => setV(user?.isMarketingAdmin ? "mkt_equipo" : user?.role === "marketing" ? "mkt_dia" : "c")}
+                  onGoBack={() => setV((user?.isMarketingAdmin || user?.role === "marketing") ? "mkt_reporte" : "c")}
                   homeLabel={(user?.role === "marketing" || user?.isMarketingAdmin) ? "Ir a mi espacio" : "Ir a mi CRM"} />
               : <ErrorBoundary>
                 <Suspense fallback={
@@ -2351,9 +2353,9 @@ export default function App() {
                   {v === "c"      && <CRM oc={oc} leadsData={leadsData} setLeadsData={setLeadsData} theme={theme} setTheme={setTheme} isRefreshing={leadsRefreshing} autoOpenPriority1={autoOpenPriority1} onAutoOpenHandled={() => setAutoOpenPriority1(0)} softDeleteLead={softDeleteLead} autoOpenLead={crmAutoOpenLead} onAutoOpenLeadHandled={() => setCrmAutoOpenLead(null)} autoOpenNewLead={crmNewLeadTick} onNewLeadHandled={() => setCrmNewLeadTick(0)} onOpenComando={() => setV("d")} />}
                   {v === "wa"     && canAccessModule("wa", user, clientConfig) && <WhatsAppInbox T={T} isLight={isLight} inbox={waInbox} openLead={waOpenLead} openExpediente={openLeadExpediente} onBack={backToPrevView} chatCount={waInbox.conversations?.length || 0} />}
                   {v === "copilot" && canAccessModule("copilot", user, clientConfig) && <Copilot T={T} isLight={isLight} theme={theme} onBack={backToPrevView} score={asesorScore} />}
-                  {(v === "mkt" || v === "mkt_equipo" || v === "mkt_dia" || v === "mkt_marcas" || v === "mkt_pipe" || v === "mkt_sol") && canAccessModule(v, user, clientConfig) && (
+                  {(v === "mkt" || v === "mkt_reporte" || v === "mkt_equipo" || v === "mkt_dia" || v === "mkt_marcas" || v === "mkt_pipe" || v === "mkt_sol") && canAccessModule(v, user, clientConfig) && (
                     <Marketing T={T}
-                      initialTab={{ mkt_equipo: "equipo", mkt_dia: "dia", mkt_marcas: "marcas", mkt_pipe: "pipeline", mkt_sol: "solicitudes" }[v]}
+                      initialTab={{ mkt_reporte: "reporte", mkt_equipo: "equipo", mkt_dia: "dia", mkt_marcas: "marcas", mkt_pipe: "pipeline", mkt_sol: "solicitudes" }[v]}
                       onOpenCopilot={canAccessModule("copilot", user, clientConfig) ? () => setV("copilot") : undefined} />
                   )}
                   {v === "trash"  && <Trash trashedLeads={trashedLeads} onRestore={restoreLead} onHardDelete={hardDeleteLead} onRefresh={refreshTrash} T={T} />}
