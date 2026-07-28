@@ -1,0 +1,50 @@
+-- 184 · VENTAS FULL + roles + recordatorios cortos + limpieza
+--
+-- ═══════════════════════════════════════════════════════════════════════════
+-- Espejo de las migraciones 200-203 aplicadas en la base el 29-jul-2026.
+-- El SQL completo quedó registrado en supabase_migrations.schema_migrations
+-- (200_ventas_dictado_multiple_parser_y_singular · 201_..._cableado_y_confirmacion
+--  · 202_roles_en_person_pending_y_recordatorios_cortos · 203_limpiar_las_pruebas).
+-- ═══════════════════════════════════════════════════════════════════════════
+--
+-- 1 · EL DICTADO DE EMMANUEL, VIVO EN VENTAS (200+201).
+--   «A ver, vamos a organizar el día de mañana…» — el flujo de ventas no está
+--   accesible por MCP, pero no hizo falta: TODO el ruteo vive en la base
+--   (bot_nlu_dispatch_gvintell_inner). Piezas nuevas, todas aditivas:
+--   · fn_ventas_split_dictado — separa el dictado corrido en cláusulas
+--     {texto, responsable, cuando}, con herencia de responsable («pídele a
+--     Luis que suba los crudos y que revise el drone» → las dos de Luis).
+--     Determinista, sin LLM. Su imperfección la cubre la CONFIRMACIÓN.
+--   · bot_create_team_actions — agrupa por persona, enumera, muestra el plan
+--     y pregunta «¿Confirmas?» (el web ya muestra botones Sí/Cancelar con esa
+--     palabra). El «sí» vive en bot_pending_confirm (action='team_plan',
+--     columna payload nueva) — el mismo mecanismo del borrado con confirmación.
+--   · bot_create_team_action (singular) mejorado con contrato IDÉNTICO:
+--     horas en letras + desempate por jornada (fn_due_ventas), apodos
+--     (_ventas_find_profile), título limpio, y si nombrás a alguien que no
+--     existe PREGUNTA en vez de mandárselo a «Todos» en silencio.
+--   · Fallback por texto: «organiza(me) el día/semana» → dictado de equipo,
+--     solo para admins, aunque el clasificador no elija ninguna tool.
+--   PROBADO por la cadena completa (bot_nlu_dispatch_gvintell) con el QA Admin:
+--   plan de 4 → «sí» registra las 4 → «no» cancela → asesor no puede →
+--   desconocido pregunta → singular intacto («cuatro y media» → 4:30 p.m.).
+--
+-- 2 · ROLES EN MARKETING (202). Yazmin (rol marketing) preguntó «¿tengo tareas
+--   para la siguiente semana?» y el modelo, arrastrado por la memoria, le
+--   mostró las tareas de LUIS. Regla determinista: los pendientes de OTRO los
+--   ve solo el líder; el equipo siempre recibe LOS SUYOS — el error del modelo
+--   se vuelve inofensivo. Igual para la bitácora del equipo.
+--
+-- 3 · RECORDATORIOS CORTOS (202). «Recuérdame en 2 minutos…» creó la tarea y
+--   el aviso JAMÁS salió (verificado en proactive_reminders): el motor corre
+--   cada 5 min y su ventana empezaba EN now() — una tarea a 2 minutos ya
+--   estaba vencida al llegar el tick. La ventana ahora arranca 5 min atrás y
+--   si la hora ya pasó el texto es honesto: «Es la hora: …». Vale para TODOS
+--   los tenants del motor mkt (Duke marketing, NSG, white-labels).
+--
+-- 4 · LIMPIEZA CON RESPALDO (203). Pedido de Ángel: las tareas/bitácoras/
+--   acciones de PRUEBA de hoy en Duke se archivaron (44 filas respaldadas en
+--   *_respaldo_20260729; las tareas viejas de otros días quedaron intactas).
+--
+-- REVERTIR: cada migración de la base documenta su rollback; los respaldos
+--   permiten reinsertar todo tal cual.

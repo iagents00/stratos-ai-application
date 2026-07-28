@@ -230,6 +230,8 @@ const SECTIONS = [
       { type: "abilities", items: [
         { what: "Tu día", phrase: "\"¿qué tengo hoy?\"" },
         { what: "Crear tareas", phrase: "\"créale una tarea a Luis: editar el video de Casa Banana para el viernes\"" },
+        { what: "Organizar el día completo (para el líder)", phrase: "Dicta todo de corrido —\"que Yazz mande el reporte el viernes a las diez, que Luis suba los crudos mañana al mediodía y que revise el drone\"— y el Copilot lo separa por persona, lo enumera y te muestra el plan ANTES de registrarlo. Le dices \"sí\" y cada tarea cae en la agenda de cada quien." },
+        { what: "Recordatorios rápidos", phrase: "\"recuérdame en 20 minutos llamar al proveedor\" — crea la tarea y te avisa cuando llega la hora" },
         { what: "Marcar tu tarea como hecha", phrase: "\"ya terminé los copys\" — la marca hecha y te invita a subir la evidencia ahí mismo" },
         { what: "Mover videos del tablero", phrase: "\"mueve Bay View Grand 2 a lista\" / \"ya se grabó Monarca 28\"" },
         { what: "Pedir diseños", phrase: "\"necesito un flyer AA para Mueblería el sábado\"" },
@@ -245,6 +247,7 @@ const SECTIONS = [
       ]},
       { type: "warn", text: "El Copilot de marketing no maneja clientes ni ventas — eso es del CRM de los asesores. Si le preguntas algo de clientes, te lo va a decir y te va a orientar a dónde ir." },
       { type: "tip", text: "Puedes hablarle por voz: toca el micrófono y habla normal, como si le mandaras un audio a un compañero." },
+      { type: "tip", text: "Las horas se entienden como las dices: \"a las doce\", \"a la una de la tarde\", \"a las tres y media\", \"al mediodía\". Y si dices una hora ambigua (\"a las tres\"), el sistema la acomoda dentro del horario laboral: 3:30 de la tarde, no de la madrugada." },
     ],
   },
   {

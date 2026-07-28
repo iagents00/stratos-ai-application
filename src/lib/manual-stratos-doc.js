@@ -48,6 +48,8 @@ export const MANUAL = {
           cambia: "El contexto del negocio deja de estar en la cabeza de uno y queda disponible para los dos." },
         { que: "Perseguir sin que se lo pidan", como: "Avisa una hora antes y diez minutos antes de que algo se venza, dentro de tu horario laboral.",
           cambia: "Nadie tiene que acordarse de acordarse. Y si algo se vence, insiste." },
+        { que: "Recordatorios cortos", como: "«Recuérdame en 20 minutos llamar al proveedor» — crea la tarea y avisa cuando llega la hora, aunque falten pocos minutos.",
+          cambia: "Antes un recordatorio muy corto podía caer en la rendija entre chequeos y no sonar; eso ya está cerrado." },
       ],
     },
 
