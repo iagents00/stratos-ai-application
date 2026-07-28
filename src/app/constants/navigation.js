@@ -30,7 +30,9 @@ export const nav = [
   { id: "mkt_equipo", l: "Equipo",      i: UserCheck     },
   { id: "mkt_dia",    l: "Mi Día",      i: CalendarDays  },
   { id: "mkt_marcas", l: "Marcas",      i: Layers        },
-  { id: "mkt_pipe",   l: "Pipeline",    i: Clapperboard  },
+  // «Pipeline» era jerga nuestra. El equipo de Alex lo llama «Registro de
+  // Propiedades» — el nombre de su hoja de siempre. Se llama como ellos lo llaman.
+  { id: "mkt_pipe",   l: "Propiedades", i: Clapperboard  },
   { id: "mkt_sol",    l: "Solicitudes", i: Inbox         },
   { id: "wa",    l: "WhatsApp",  i: MessageCircle },
   { id: "lp",    l: "Create",    i: Hexagon    },
@@ -104,7 +106,7 @@ export const MODULE_NAMES = {
   a: "Asesores", lp: "Campañas", fa: "Finanzas",
   rrhh: "Stratos RH", trash: "Papelera", caja: "Caja",
   wa: "WhatsApp", copilot: "Copilot", mkt: "Marketing", chat: "Chat del equipo",
-  mkt_dia: "Mi Día", mkt_marcas: "Marcas", mkt_pipe: "Pipeline", mkt_sol: "Solicitudes",
+  mkt_dia: "Mi Día", mkt_marcas: "Marcas", mkt_pipe: "Registro de Propiedades", mkt_sol: "Solicitudes",
   mkt_equipo: "Equipo", mkt_reporte: "Actividades",
   planes: "Planes", perfil: "Perfil", admin: "Usuarios",
 };
