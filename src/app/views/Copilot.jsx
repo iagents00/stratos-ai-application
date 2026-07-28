@@ -112,12 +112,42 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
   const recognitionRef = useRef(null);
   const recordTimerRef = useRef(null);
 
-  // Solo los últimos 50 mensajes: el módulo carga rápido y no se sobrecarga
-  // aunque el asesor haya hablado muchísimo (el historial completo vive en la DB).
-  const reload = useCallback(async () => {
+  /* ── El refresco NO puede pisar lo que acabás de escribir ──────────────────
+     BUG que reportó Ángel (29-jul): «a veces se desaparecen los mensajes que
+     uno envía».
+
+     Causa: tu mensaje vive SOLO en pantalla (id `tmp-…`) hasta que el backend
+     lo persiste, y `reload()` reemplazaba la lista entera con lo que devuelve
+     el servidor. Si en ese hueco entraba un `focus` o un `visibilitychange`,
+     tu mensaje y la respuesta desaparecían. En el celular pasa todo el tiempo:
+     el teclado al abrirse y cerrarse dispara esos eventos.
+
+     Tres arreglos, y ninguno es "esperar más":
+       1. El refresco MEZCLA en vez de reemplazar: lo que está en pantalla y el
+          servidor todavía no tiene, se conserva.
+       2. Ventana de silencio tras enviar: el log del backend es asíncrono y
+          llega tarde; durante ese rato no se refresca.
+       3. El refresco por foco va con freno (máx. 1 cada 20s). Antes cada
+          cambio de pestaña hacía una consulta de 50 mensajes y re-renderizaba
+          todo el chat — eso es parte de la lentitud que se siente. */
+  const lastSendRef = useRef(0);
+  const lastReloadRef = useRef(0);
+
+  const reload = useCallback(async (opts = {}) => {
     const r = await getCopilotActivity(50);
     if (!mountedRef.current) return;
-    setMessages([...(r.messages || [])].reverse());
+    lastReloadRef.current = Date.now();
+    const delServidor = [...(r.messages || [])].reverse();
+    setMessages((prev) => {
+      if (!opts.merge) return delServidor;
+      // Se conserva lo LOCAL que el servidor todavía no refleja (comparando por
+      // rol + texto). Sin esto, un refresco a destiempo te borra el mensaje.
+      const enServidor = new Set(delServidor.map((m) => `${m.role}|${(m.content || "").trim()}`));
+      const huerfanos = prev.filter(
+        (m) => String(m.id || "").startsWith("tmp-") || String(m.id || "").startsWith("ai-")
+      ).filter((m) => !enServidor.has(`${m.role}|${(m.content || "").trim()}`));
+      return huerfanos.length ? [...delServidor, ...huerfanos] : delServidor;
+    });
     setLoading(false);
   }, []);
 
@@ -127,7 +157,13 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
     // Sincronización entre dispositivos: si hablaste con el Copilot en el celular
     // y ahora mirás la PC (o volvés a la pestaña), refrescamos para traer lo último.
     // Función NOMBRADA + removeEventListener en cleanup (regla de performance).
-    const onFocusReload = () => { if (!document.hidden && !sendingRef.current) reload(); };
+    const onFocusReload = () => {
+      if (document.hidden || sendingRef.current) return;
+      const ahora = Date.now();
+      if (ahora - lastSendRef.current < 15000) return;    // recién enviaste: no pises nada
+      if (ahora - lastReloadRef.current < 20000) return;  // freno: no en cada foco
+      reload({ merge: true });
+    };
     document.addEventListener('visibilitychange', onFocusReload);
     window.addEventListener('focus', onFocusReload);
     return () => {
@@ -274,6 +310,7 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
     setPendingVoiceBlob(null);
 
     const tmpId = `tmp-${Date.now()}`;
+    lastSendRef.current = Date.now();
     setMessages((prev) => [...prev, { id: tmpId, role: "user", content: text || "Acción seleccionada", occurred_at: new Date().toISOString(), pending: true }]);
     setSending(true);
 
