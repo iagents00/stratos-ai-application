@@ -1,0 +1,294 @@
+<html xmlns:o="urn:schemas-microsoft-com:office:office"
+      xmlns:w="urn:schemas-microsoft-com:office:word"
+      xmlns="http://www.w3.org/TR/REC-html40">
+<head>
+<meta charset="UTF-8">
+<meta name="ProgId" content="Word.Document">
+<meta name="Generator" content="Microsoft Word 15">
+<!--[if gte mso 9]><xml>
+ <w:WordDocument><w:View>Print</w:View><w:Zoom>100</w:Zoom></w:WordDocument>
+</xml><![endif]-->
+<title>NSG · Manual de Stratos IA — módulo por módulo</title>
+<!--
+  Plantilla ESTÁNDAR de documentos de NSG (la misma de NSG-Stratos-Ops-Plan),
+  con el acento en VERDE en vez de rosa — pedido de Ángel (28-jul):
+  «así quiero que se vea, pero de color verde en vez de rosa».
+
+  Se escribe en HTML y se convierte con LibreOffice:
+      soffice --convert-to docx  → Word real, con esta misma pinta
+      soffice --convert-to pdf   → el PDF
+  Es el mismo camino con el que se generó el plan de Ops, que es el que a Ángel
+  le gustó. Hacerlo a mano en OOXML no llega ni cerca.
+-->
+<style>
+  @page { size: A4; margin: 18mm 16mm 16mm 16mm; }
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
+    color: #1E293B; font-size: 11.2px; line-height: 1.55; margin: 0;
+  }
+  .accent { color: #0D9A76; }
+  h1 { font-size: 25px; margin: 0 0 2px; color: #0F172A; letter-spacing: -0.4px; }
+  h2 {
+    font-size: 15px; color: #0D9A76; margin: 22px 0 8px;
+    padding-bottom: 5px; border-bottom: 2px solid #A7F3D0;
+  }
+  h3 { font-size: 12.5px; margin: 12px 0 3px; color: #0F172A; }
+  p { margin: 6px 0; }
+  ul { margin: 6px 0 6px 0; padding-left: 18px; }
+  li { margin: 3px 0; }
+  .lead {
+    background: #ECFDF5; border-left: 4px solid #34D399; border-radius: 6px;
+    padding: 12px 16px; margin: 14px 0; font-size: 12px;
+  }
+  .header {
+    display: flex; align-items: baseline; justify-content: space-between;
+    border-bottom: 3px solid #34D399; padding-bottom: 10px; margin-bottom: 4px;
+  }
+  .wordmark { font-size: 22px; font-weight: 800; color: #0D9A76; letter-spacing: 1px; }
+  .meta { font-size: 10px; color: #64748B; text-align: right; }
+  .sub { color: #64748B; font-size: 11px; margin-top: 2px; }
+  .mod {
+    border: 1px solid #E2E8F0; border-radius: 8px; padding: 10px 14px; margin: 8px 0;
+    break-inside: avoid;
+  }
+  .mod .t { font-weight: 700; color:#0F172A; }
+  .mod .como { color:#334155; margin-top:3px; }
+  .mod .cambia { color:#047857; margin-top:2px; }
+  .lbl { font-weight: 700; color:#64748B; }
+  .lblv { font-weight: 700; color:#0D9A76; }
+  table { width:100%; border-collapse: collapse; margin: 10px 0; font-size: 10.5px; }
+  th { background:#ECFDF5; color:#065F46; text-align:left; padding:6px 8px; border:1px solid #A7F3D0; }
+  td { padding:6px 8px; border:1px solid #E2E8F0; vertical-align: top; }
+  .foot { margin-top:22px; padding-top:8px; border-top:1px solid #E2E8F0;
+    font-size:9.5px; color:#94A3B8; text-align:center; }
+</style>
+</head>
+<body>
+
+  <div class="header">
+    <div>
+      <div class="wordmark">NSG</div>
+      <h1 style="margin-top:4px;">Manual de <span class="accent">Stratos IA</span></h1>
+      <div class="sub">Todo lo que hace el sistema, <b>módulo por módulo y función por función</b></div>
+    </div>
+    <div class="meta">app.stratoscapitalgroup.com/nsg<br>28 de julio de 2026</div>
+  </div>
+
+  <div class="lead">
+    <b>La regla que resume todo:</b> si pasó, va adentro de Stratos. Este manual cuenta cada cosa que hace el
+    sistema en tres líneas: <b>qué es</b>, <b>cómo se usa</b> y —la que importa— <b>qué cambia en el trabajo</b>.
+    Son <b>9 módulos</b> y <b>34 funciones</b>.
+  </div>
+
+  <h2>1 · Cómo se entra</h2>
+  <p>Un solo lugar, tres formas de abrirlo. Es la misma cuenta en todas.</p>
+
+  <div class="mod">
+    <div class="t">En la computadora</div>
+    <div class="como"><span class="lbl">Cómo:</span> app.stratoscapitalgroup.com/nsg, con tu correo y tu clave.</div>
+    <div class="cambia"><span class="lblv">Qué cambia:</span> No hay que instalar nada ni pedirle acceso a nadie.</div>
+  </div>
+  <div class="mod">
+    <div class="t">En Android</div>
+    <div class="como"><span class="lbl">Cómo:</span> Se instala el APK desde el link fijo del equipo.</div>
+    <div class="cambia"><span class="lblv">Qué cambia:</span> Queda como una app más del teléfono, con su ícono.</div>
+  </div>
+  <div class="mod">
+    <div class="t">En iPhone</div>
+    <div class="como"><span class="lbl">Cómo:</span> Se abre en Safari, botón Compartir → «Agregar a inicio».</div>
+    <div class="cambia"><span class="lblv">Qué cambia:</span> Mismo resultado que una app, sin pasar por la App Store.</div>
+  </div>
+  <div class="mod">
+    <div class="t">Los avisos</div>
+    <div class="como"><span class="lbl">Cómo:</span> La primera vez el teléfono pregunta si permitís notificaciones. Hay que decir que sí.</div>
+    <div class="cambia"><span class="lblv">Qué cambia:</span> De eso dependen las llamadas, las menciones del chat y el resumen de la mañana.</div>
+  </div>
+
+  <h2>2 · El Copilot — el asistente</h2>
+  <p>Es la puerta de entrada a todo. Se le habla como a una persona: por texto, por voz o mandándole una foto.</p>
+
+  <div class="mod">
+    <div class="t">Hablarle por texto o por voz</div>
+    <div class="como"><span class="lbl">Cómo:</span> «Creá una tarea para revisar el CRM mañana a las 9», «¿qué tengo hoy?», «¿cuánto le debo a Ángel?».</div>
+    <div class="cambia"><span class="lblv">Qué cambia:</span> No hay que aprender dónde está cada botón: se pide y se hace.</div>
+  </div>
+  <div class="mod">
+    <div class="t">Mandarle una foto</div>
+    <div class="como"><span class="lbl">Cómo:</span> Botón del clip. Pregunta qué es: entró plata, salió plata, evidencia de una tarea, o solo guardarla.</div>
+    <div class="cambia"><span class="lblv">Qué cambia:</span> Un comprobante deja de vivir en la galería del teléfono y pasa a ser un movimiento con soporte.</div>
+  </div>
+  <div class="mod">
+    <div class="t">Leer el comprobante solo (OCR)</div>
+    <div class="como"><span class="lbl">Cómo:</span> Al mandar la captura de un pago, lee el monto y el concepto y los deja escritos.</div>
+    <div class="cambia"><span class="lblv">Qué cambia:</span> Registrar un pago pasa de escribir todo a confirmar lo que ya leyó. Si no lo ve claro, deja el campo vacío en vez de inventar una cifra.</div>
+  </div>
+  <div class="mod">
+    <div class="t">Consultar el segundo cerebro</div>
+    <div class="como"><span class="lbl">Cómo:</span> «¿en qué estamos?», «¿qué se hizo esta semana?», «¿por qué decidimos X?».</div>
+    <div class="cambia"><span class="lblv">Qué cambia:</span> El contexto del negocio deja de estar en la cabeza de uno y queda disponible para los dos.</div>
+  </div>
+  <div class="mod">
+    <div class="t">Perseguir sin que se lo pidan</div>
+    <div class="como"><span class="lbl">Cómo:</span> Avisa una hora antes y diez minutos antes de que algo se venza, dentro de tu horario laboral.</div>
+    <div class="cambia"><span class="lblv">Qué cambia:</span> Nadie tiene que acordarse de acordarse. Y si algo se vence, insiste.</div>
+  </div>
+
+  <h2>3 · Proyectos y tareas</h2>
+  <p>El trabajo de verdad, con dueño y con fecha. El porcentaje de cada proyecto sale de sus propias tareas, no de una opinión.</p>
+
+  <div class="mod">
+    <div class="t">Crear una tarea</div>
+    <div class="como"><span class="lbl">Cómo:</span> Por el Copilot o desde el módulo. Lleva responsable y vencimiento.</div>
+    <div class="cambia"><span class="lblv">Qué cambia:</span> Deja de existir la tarea que «alguien dijo en una llamada» y nadie anotó.</div>
+  </div>
+  <div class="mod">
+    <div class="t">Empezar, completar, posponer</div>
+    <div class="como"><span class="lbl">Cómo:</span> «Ya terminé X», «pasalo para el jueves». También con un toque desde la pantalla.</div>
+    <div class="cambia"><span class="lblv">Qué cambia:</span> El estado del trabajo está siempre al día, sin reuniones de status.</div>
+  </div>
+  <div class="mod">
+    <div class="t">Eliminar</div>
+    <div class="como"><span class="lbl">Cómo:</span> Eliminar es archivar: se puede restaurar.</div>
+    <div class="cambia"><span class="lblv">Qué cambia:</span> Nadie borra nada por error de forma definitiva.</div>
+  </div>
+  <div class="mod">
+    <div class="t">Evidencia</div>
+    <div class="como"><span class="lbl">Cómo:</span> Al cerrar una tarea se puede adjuntar una foto o un video.</div>
+    <div class="cambia"><span class="lblv">Qué cambia:</span> «Está hecho» deja de ser una afirmación y pasa a ser algo que se puede ver.</div>
+  </div>
+  <div class="mod">
+    <div class="t">Proyectos</div>
+    <div class="como"><span class="lbl">Cómo:</span> Agrupan tareas y muestran el avance real en una barra.</div>
+    <div class="cambia"><span class="lblv">Qué cambia:</span> Se puede responder «¿cómo vamos?» sin abrir nada más.</div>
+  </div>
+
+  <h2>4 · Comando — el tablero de operación</h2>
+  <p>La foto del negocio en una pantalla. Está pensado para NSG, no para una inmobiliaria.</p>
+
+  <div class="mod">
+    <div class="t">Clientes con objetivos</div>
+    <div class="como"><span class="lbl">Cómo:</span> Cada cliente tiene sus objetivos con meta y avance.</div>
+    <div class="cambia"><span class="lblv">Qué cambia:</span> La relación con el cliente se mide, no se recuerda.</div>
+  </div>
+  <div class="mod">
+    <div class="t">Pulso del equipo</div>
+    <div class="como"><span class="lbl">Cómo:</span> Vencido, para hoy, en curso y cerrado en los últimos 7 días.</div>
+    <div class="cambia"><span class="lblv">Qué cambia:</span> Se ve dónde está trabado el trabajo sin preguntarle a nadie.</div>
+  </div>
+  <div class="mod">
+    <div class="t">Proyectos y caja</div>
+    <div class="como"><span class="lbl">Cómo:</span> El avance de cada proyecto y el dinero del mes, en el mismo lugar.</div>
+    <div class="cambia"><span class="lblv">Qué cambia:</span> Operación y plata dejan de ser dos mundos separados.</div>
+  </div>
+
+  <h2>5 · Caja — el dinero</h2>
+  <p>Contada desde NSG: Duke le paga a NSG (entra), NSG paga la nómina (sale). Las personas reciben; no tienen egresos propios.</p>
+
+  <div class="mod">
+    <div class="t">Movimientos</div>
+    <div class="como"><span class="lbl">Cómo:</span> Todo lo que entra y sale, con su comprobante adjunto.</div>
+    <div class="cambia"><span class="lblv">Qué cambia:</span> Se puede abrir cualquier pago y ver la captura, meses después.</div>
+  </div>
+  <div class="mod">
+    <div class="t">Nómina</div>
+    <div class="como"><span class="lbl">Cómo:</span> El monto y la periodicidad de cada quien, editables. Muestra lo devengado, lo pagado y el saldo.</div>
+    <div class="cambia"><span class="lblv">Qué cambia:</span> «¿Cuánto me deben?» tiene una respuesta con números, no una charla incómoda.</div>
+  </div>
+  <div class="mod">
+    <div class="t">Cuentas de cobro</div>
+    <div class="como"><span class="lbl">Cómo:</span> Se arman solas con el trabajo que de verdad se cerró en el periodo, y se bajan en Word para firmarlas a mano.</div>
+    <div class="cambia"><span class="lblv">Qué cambia:</span> Cobrar deja de ser una tarde de trabajo. Y va en las dos direcciones: NSG le cobra al cliente, y cada quien le cobra a NSG.</div>
+  </div>
+  <div class="mod">
+    <div class="t">Informe de avances</div>
+    <div class="como"><span class="lbl">Cómo:</span> Se elige el periodo y el sistema junta lo que se hizo y lo cuenta sin tecnicismos.</div>
+    <div class="cambia"><span class="lblv">Qué cambia:</span> Se le puede mandar al cliente sin que nadie se siente a escribirlo.</div>
+  </div>
+
+  <h2>6 · Chat del equipo</h2>
+  <p>Para reemplazar el WhatsApp del trabajo. La diferencia es que acá la conversación queda donde el sistema la puede ver.</p>
+
+  <div class="mod">
+    <div class="t">Canales</div>
+    <div class="como"><span class="lbl">Cómo:</span> Un canal por tema. Con dos personas da igual; con cinco, no.</div>
+    <div class="cambia"><span class="lblv">Qué cambia:</span> Nace ordenado en vez de ser un hilo infinito.</div>
+  </div>
+  <div class="mod">
+    <div class="t">Avisos al teléfono</div>
+    <div class="como"><span class="lbl">Cómo:</span> Cada mensaje suena; mencionando con @ le llega directo a esa persona.</div>
+    <div class="cambia"><span class="lblv">Qué cambia:</span> Se puede dejar de mirar WhatsApp para el trabajo.</div>
+  </div>
+  <div class="mod">
+    <div class="t">Adjuntos y respuestas</div>
+    <div class="como"><span class="lbl">Cómo:</span> Se mandan imágenes y se responde a un mensaje puntual.</div>
+    <div class="cambia"><span class="lblv">Qué cambia:</span> Lo que se comparte queda adentro del sistema, no en la galería de un teléfono.</div>
+  </div>
+
+  <h2>7 · Mi Espacio</h2>
+  <p>Lo tuyo y lo de la empresa: agenda, documentos, el plan y el protocolo.</p>
+
+  <div class="mod">
+    <div class="t">Agenda</div>
+    <div class="como"><span class="lbl">Cómo:</span> Lo personal y lo profesional en la misma vista.</div>
+    <div class="cambia"><span class="lblv">Qué cambia:</span> Un solo lugar para saber qué sigue.</div>
+  </div>
+  <div class="mod">
+    <div class="t">Documentos</div>
+    <div class="como"><span class="lbl">Cómo:</span> Los manuales, los informes y los reportes. Se bajan en Word para leerlos o editarlos.</div>
+    <div class="cambia"><span class="lblv">Qué cambia:</span> Deja de haber documentos que solo existen en el chat de alguien.</div>
+  </div>
+  <div class="mod">
+    <div class="t">Plan Estratégico</div>
+    <div class="como"><span class="lbl">Cómo:</span> El propósito, la meta grande, los objetivos del trimestre.</div>
+    <div class="cambia"><span class="lblv">Qué cambia:</span> La estrategia deja de ser una conversación y pasa a ser algo que se abre y se revisa.</div>
+  </div>
+  <div class="mod">
+    <div class="t">Protocolo</div>
+    <div class="como"><span class="lbl">Cómo:</span> Cómo se prospecta en NSG, paso a paso, con las reglas que no se negocian.</div>
+    <div class="cambia"><span class="lblv">Qué cambia:</span> Cuando entre alguien nuevo, no hay que explicárselo de memoria.</div>
+  </div>
+
+  <h2>8 · Equipo y llamadas</h2>
+  <p>El sistema crece con la gente que entra.</p>
+
+  <div class="mod">
+    <div class="t">Dar de alta a alguien</div>
+    <div class="como"><span class="lbl">Cómo:</span> Desde el CRM: nombre, correo y rol. Sale una clave temporal para pasarle.</div>
+    <div class="cambia"><span class="lblv">Qué cambia:</span> Sumar un desarrollador no depende de tocar la base de datos.</div>
+  </div>
+  <div class="mod">
+    <div class="t">Llamar y contestar</div>
+    <div class="como"><span class="lbl">Cómo:</span> Botón de llamar en el encabezado; al otro le suena el teléfono con Contestar o Rechazar.</div>
+    <div class="cambia"><span class="lblv">Qué cambia:</span> No hace falta salir a otra app para hablar.</div>
+  </div>
+
+  <h2>9 · Qué cambia, en resumen</h2>
+  <p>Si hubiera que explicarlo en una reunión, es esto:</p>
+
+  <table>
+    <tr><th style="width:34%">Antes</th><th>Ahora</th></tr>
+    <tr>
+      <td>Se avisaba, y el que se acordaba avisaba</td>
+      <td><b>El sistema persigue.</b> Los recordatorios salen solos, en el horario de cada quien y en su zona horaria. El seguimiento deja de depender de la memoria de alguien.</td>
+    </tr>
+    <tr>
+      <td>Se contaba en la reunión</td>
+      <td><b>Se muestra.</b> Cada avance tiene evidencia y cada proyecto un porcentaje que sale de sus tareas. Las reuniones se usan para decidir, no para averiguar cómo vamos.</td>
+    </tr>
+    <tr>
+      <td>Cada cosa en un lado</td>
+      <td><b>Está junto.</b> Tareas, dinero, documentos, conversación y contexto en un solo lugar. Se deja de perder tiempo buscando dónde quedó algo.</td>
+    </tr>
+    <tr>
+      <td>Era nuestro sistema</td>
+      <td><b>Es replicable.</b> Cada empresa nueva es una configuración, no un sistema nuevo. Lo que se construyó para NSG se enciende para Duke, Mueblería, Legacy Design y Brasa y Piedra.</td>
+    </tr>
+  </table>
+
+  <div class="foot">
+    NSG · Manual de Stratos IA — lo genera el propio sistema: si algo cambia, se vuelve a bajar y sale actualizado.
+  </div>
+
+</body>
+</html>
