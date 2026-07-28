@@ -18,7 +18,7 @@ import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import {
   MessagesSquare, Send, Plus, X, Hash, Paperclip, ArrowLeft, CornerUpLeft, ExternalLink,
 } from "lucide-react";
-import { font, fontDisp } from "../../design-system/tokens";
+import { font, fontDisp, chatType } from "../../design-system/tokens";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../hooks/useAuth";
 import { useIsMobile } from "../../hooks/useViewport";
@@ -411,10 +411,10 @@ export default function ChatEquipo({ T, onInmersivo }) {
                           <div style={{ flex: 1, minWidth: 0 }}>
                             {!m.seguido && (
                               <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 3 }}>
-                                <span style={{ fontSize: 13, fontWeight: 600, color: mio ? accent : txt }}>
+                                <span style={{ fontSize: chatType.chip + 0.5, fontWeight: 600, color: mio ? accent : txt }}>
                                   {mio ? "Vos" : m.autor}
                                 </span>
-                                <span style={{ fontSize: 10.5, color: txt3 }}>{cuando(m.created_at)}</span>
+                                <span style={{ fontSize: chatType.time, color: txt3 }}>{cuando(m.created_at)}</span>
                               </div>
                             )}
                             {m.reply_to && (
@@ -422,7 +422,7 @@ export default function ChatEquipo({ T, onInmersivo }) {
                                 <span style={{ color: txt2 }}>{m.reply_autor || "alguien"}</span>: {m.reply_body}
                               </div>
                             )}
-                            <div style={{ fontSize: 13.5, color: txt, lineHeight: 1.5, whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
+                            <div style={{ fontSize: chatType.body, color: txt, lineHeight: chatType.bodyLh, whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
                               {m.body}
                             </div>
                             {m.attachment_path && (
@@ -466,7 +466,7 @@ export default function ChatEquipo({ T, onInmersivo }) {
                         <button key={p.id} onClick={() => ponerMencion(p.name)} style={{
                           display: "flex", alignItems: "center", gap: 8, width: "100%", textAlign: "left",
                           padding: "8px 10px", borderRadius: 9, cursor: "pointer", border: "none",
-                          background: "transparent", color: txt, fontSize: 13, fontFamily: font,
+                          background: "transparent", color: txt, fontSize: chatType.input, fontFamily: font,
                         }}>
                           <span style={{ width: 22, height: 22, borderRadius: 7, background: `${colorDe(p.id)}22`, color: colorDe(p.id), display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 700 }}>
                             {iniciales(p.name)}

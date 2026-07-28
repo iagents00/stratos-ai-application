@@ -231,3 +231,28 @@ option {
     box-shadow: inset 4px 0 0 #6EE7C2, 0 0 0 2px rgba(110,231,194,0.55), 0 0 28px rgba(110,231,194,0.45);
   }
 }
+
+/* ── Desplegables nativos: que se lean en los DOS temas ─────────────────────
+   Bug reportado por Ángel el 29-jul en «¿En qué empresa?» de Actividades: al
+   abrir el desplegable solo se leía la opción resaltada; las demás eran texto
+   casi blanco sobre fondo blanco.
+
+   Por qué pasa: el navegador dibuja la lista del <select> con el fondo del
+   SISTEMA (blanco en Windows/Chrome), pero cada <option> HEREDA el `color` que
+   le pusimos al <select> — que en tema oscuro es casi blanco. Blanco sobre
+   blanco.
+
+   Se arregla acá, una vez, y no pantalla por pantalla: hay 41 <select> en 15
+   archivos. Cualquier desplegable nuevo queda cubierto solo.
+   (En macOS/Safari el sistema ignora estos colores y usa los suyos, que ya son
+   legibles — no rompe nada.) */
+select option,
+select optgroup {
+  background-color: #0C1628;
+  color: #E2E8F0;
+}
+:root[data-theme="light"] select option,
+:root[data-theme="light"] select optgroup {
+  background-color: #FFFFFF;
+  color: #0B1220;
+}

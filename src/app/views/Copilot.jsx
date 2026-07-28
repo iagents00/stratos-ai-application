@@ -943,7 +943,11 @@ function Bubble({ m, T, isLight, userBg, userTxt, aiBg, aiBd, onPick, sending, i
         </div>
       )}
       <div style={{
-        maxWidth: "82%", padding: "8px 12px", borderRadius: 14,
+        /* Ancho de LECTURA, no de pantalla. En un monitor ancho el 82% daba
+           renglones de ~1.400px y el ojo se pierde al volver al principio de la
+           línea. ~74 caracteres es el ancho cómodo de lectura — es lo que hace
+           que ChatGPT/Codex (la referencia que mandó Iván) se lean bien. */
+        maxWidth: "min(82%, 62ch)", padding: "10px 14px", borderRadius: 14,
         borderBottomRightRadius: isUser ? 3 : 14, borderBottomLeftRadius: isUser ? 14 : 3,
         background: isUser ? userBg : aiBg, border: isUser ? "none" : `1px solid ${aiBd}`,
         color: isUser ? userTxt : T.txt, fontSize: chatType.body, lineHeight: chatType.bodyLh, fontFamily: font,
