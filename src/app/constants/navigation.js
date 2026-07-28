@@ -19,6 +19,10 @@ export const nav = [
   // crear/proyectos/papelera, poneles mi día, marcas, pipeline, solicitudes —
   // en ambas, sidebar y tabs"). Mismo componente, tab inicial distinta.
   { id: "mkt",        l: "Marketing",   i: Megaphone     },
+  // "Equipo" va PRIMERO y solo para el líder de marketing (Alex): es su pantalla
+  // de entrada porque su trabajo diario es saber qué hizo su gente. El equipo no
+  // la ve — nadie necesita leer la bitácora de sus compañeros.
+  { id: "mkt_equipo", l: "Equipo",      i: UserCheck     },
   { id: "mkt_dia",    l: "Mi Día",      i: CalendarDays  },
   { id: "mkt_marcas", l: "Marcas",      i: Layers        },
   { id: "mkt_pipe",   l: "Pipeline",    i: Clapperboard  },
@@ -96,6 +100,7 @@ export const MODULE_NAMES = {
   rrhh: "Stratos RH", trash: "Papelera", caja: "Caja",
   wa: "WhatsApp", copilot: "Copilot", mkt: "Marketing", chat: "Chat del equipo",
   mkt_dia: "Mi Día", mkt_marcas: "Marcas", mkt_pipe: "Pipeline", mkt_sol: "Solicitudes",
+  mkt_equipo: "Equipo",
   planes: "Planes", perfil: "Perfil", admin: "Usuarios",
 };
 
@@ -118,10 +123,10 @@ export const CRM_ONLY_MODULES = new Set(["c", "perfil"]);
 // Ve las MISMAS secciones que su equipo en el sidebar (Mi Día · Marcas · Pipeline ·
 // Solicitudes) + Copilot + Proyectos (catálogo/drives para contenido) + Perfil.
 // La pestaña "Equipo" (admin) la abre desde los tabs de arriba dentro del módulo.
-export const MARKETING_ADMIN_MODULES = new Set(["mkt_dia", "mkt_marcas", "mkt_pipe", "mkt_sol", "copilot", "e", "perfil"]);
+export const MARKETING_ADMIN_MODULES = new Set(["mkt_equipo", "mkt_dia", "mkt_marcas", "mkt_pipe", "mkt_sol", "copilot", "e", "perfil"]);
 // Secciones del módulo Marketing que se muestran como items del sidebar. Las ve el
 // rol `marketing` (su equipo) Y el admin de marketing (Alex) — no los admins de ventas.
-export const MKT_SECTION_MODULES = new Set(["mkt_dia", "mkt_marcas", "mkt_pipe", "mkt_sol"]);
+export const MKT_SECTION_MODULES = new Set(["mkt_equipo", "mkt_dia", "mkt_marcas", "mkt_pipe", "mkt_sol"]);
 
 export function isStratosOrg(orgId) {
   return orgId === STRATOS_ORG_ID;
@@ -231,6 +236,11 @@ export function canAccessModule(moduleId, user, clientConfig = null) {
   // Secciones de marketing en el sidebar (Mi Día/Marcas/Pipeline/Solicitudes): las ve
   // el rol `marketing` Y el admin de marketing (Alex). NO los admins de ventas (que ven
   // el módulo único "mkt" con tabs). Así Alex navega por secciones igual que su equipo.
+  // "Equipo" es del LÍDER, no del equipo: ahí se ve la bitácora y el avance de
+  // cada persona. Va antes del bloque de secciones porque, a diferencia de las
+  // otras cuatro, el rol `marketing` NO debe verla. Los admins de VENTAS tampoco
+  // la ven suelta en el sidebar: ellos la abren como pestaña dentro de "mkt".
+  if (moduleId === "mkt_equipo") return user.isMarketingAdmin === true;
   if (MKT_SECTION_MODULES.has(moduleId)) {
     return user.role === "marketing" || user.isMarketingAdmin === true;
   }
