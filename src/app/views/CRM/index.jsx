@@ -1347,12 +1347,24 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
       // halla a sus propios leads con tildes (José, Hernández, Martínez…).
       const fold = (v) => String(v || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
       const q = fold(debouncedSearch);
+      // Telefonos: comparar SOLO digitos. En la base conviven tres formatos para
+      // el mismo numero: "+1 (775) 764-0703", "16106808458" y "+16094312767".
+      // Con el .includes() literal de abajo, el asesor solo encuentra al lead si
+      // adivina con que formato quedo guardado: buscar "+17757640703" NO hallaba
+      // a H Martin aunque estaba ahi, en su etapa y con su asesor. Comparando
+      // digitos pelados, cualquier forma de escribirlo (con +, espacios, guiones
+      // o parentesis) encuentra al lead. Minimo 4 digitos para no listar medio
+      // CRM al teclear "1".
+      const onlyDigits = (v) => String(v || "").replace(/[^0-9]/g, "");
+      const qDigits = onlyDigits(debouncedSearch);
+      const matchPhone = qDigits.length >= 4 && onlyDigits(l.phone).includes(qDigits);
       // Defensivo: cualquier campo puede venir null/undefined desde Supabase.
       // Antes: l.phone.includes(q) tiraba TypeError si phone era null y rompía
       // el render del CRM completo.
       const matchQ = !q
         || fold(l.n).includes(q)
         || String(l.phone || "").includes(q)
+        || matchPhone
         || fold(l.asesor).includes(q)
         || fold(l.campana).includes(q)
         || fold(l.p).includes(q)
