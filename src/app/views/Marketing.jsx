@@ -67,6 +67,19 @@ const ETAPAS = [
   { id: "publicada",     l: "Publicada" },
 ];
 
+/* Colores de la columna «Estatus» del registro que trae Alex, para que la tabla
+   se lea IGUAL que su hoja: verde lo aprobado/publicado, ámbar lo que espera,
+   rojo lo que pide cambios. No es decoración — es cómo él escanea el estado. */
+const ETAPA_HEX = {
+  seleccionada:  { d: "#64748B", l: "#64748B" },
+  agendada:      { d: "#7EB8F0", l: "#2563EB" },
+  grabada:       { d: "#A78BFA", l: "#7C3AED" },
+  en_edicion:    { d: "#FBBF24", l: "#D97706" },
+  esperando_voz: { d: "#F87171", l: "#DC2626" },
+  lista:         { d: "#6EE7C2", l: "#0D9A76" },
+  publicada:     { d: "#34D399", l: "#059669" },
+};
+
 const TASK_STATES = [
   { id: "por_hacer",   l: "Por hacer" },
   { id: "en_curso",    l: "En curso" },
@@ -779,9 +792,223 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
     load();
   };
 
+  /* ════════════ LAS DOS HOJAS, COMO HOJAS ════════════
+     Alex y su equipo vienen de dos Google Sheets y así es como leen su trabajo:
+     de corrido, con filtros y con el color del estatus. El tablero kanban y la
+     caja de reporte sirven para OPERAR; estas tablas sirven para MIRAR — que es
+     lo que él hace cuando pregunta «¿cuáles casas grabamos en Cancún?».
+     Ambas viven al lado de su vista operativa, no la reemplazan. */
+
+  const hoja = {
+    wrap:  { ...card, borderRadius: 14, overflowX: "auto", WebkitOverflowScrolling: "touch" },
+    table: { borderCollapse: "separate", borderSpacing: 0, width: "100%", minWidth: 1180, fontFamily: font },
+    th: {
+      position: "sticky", top: 0, zIndex: 1, textAlign: "left", whiteSpace: "nowrap",
+      padding: "9px 11px", fontSize: 10.5, fontWeight: 600, letterSpacing: 0.3,
+      color: txt2, background: isLight ? "#EEF2F7" : "rgba(255,255,255,0.055)",
+      borderBottom: `1px solid ${bd}`,
+    },
+    td: { padding: "9px 11px", fontSize: 12, color: txt2, borderBottom: `1px solid ${bd}`, verticalAlign: "top" },
+  };
+  const chip = (texto, color) => (
+    <span style={{
+      display: "inline-block", padding: "2px 9px", borderRadius: 999, whiteSpace: "nowrap",
+      fontSize: 10.5, fontWeight: 600, color, background: `${color}1E`, border: `1px solid ${color}44`,
+    }}>{texto}</span>
+  );
+  const linkCel = (url, label) => url
+    ? <a href={url} target="_blank" rel="noreferrer" style={{ color: accent, fontSize: 11.5, textDecoration: "none", whiteSpace: "nowrap" }}>{label}</a>
+    : <span style={{ color: txt3, fontSize: 11.5 }}>—</span>;
+
+  /* ── HOJA 1: el registro de propiedades y grabaciones ── */
+  const [pipeVista, setPipeVista]   = useState("tablero");   // tablero | tabla
+  const [pipeFiltro, setPipeFiltro] = useState({ q: "", locacion: "", tipo: "", etapa: "" });
+
+  const pipeFiltrado = useMemo(() => {
+    const q = pipeFiltro.q.trim().toLowerCase();
+    return pipeline.filter(p =>
+      (!q || `${p.nombre} ${p.locacion || ""} ${p.notas || ""}`.toLowerCase().includes(q)) &&
+      (!pipeFiltro.locacion || p.locacion === pipeFiltro.locacion) &&
+      (!pipeFiltro.tipo     || p.tipo === pipeFiltro.tipo) &&
+      (!pipeFiltro.etapa    || p.etapa === pipeFiltro.etapa)
+    );
+  }, [pipeline, pipeFiltro]);
+
+  const locaciones = useMemo(() => [...new Set(pipeline.map(p => p.locacion).filter(Boolean))].sort(), [pipeline]);
+  const tipos      = useMemo(() => [...new Set(pipeline.map(p => p.tipo).filter(Boolean))].sort(), [pipeline]);
+
+  const pipelineTabla = () => (
+    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+        <div style={{ position: "relative", flex: isMobile ? "1 1 100%" : "0 0 230px" }}>
+          <Search size={13} color={txt3} style={{ position: "absolute", left: 10, top: 12 }} />
+          <input value={pipeFiltro.q} onChange={e => setPipeFiltro(f => ({ ...f, q: e.target.value }))}
+            placeholder="Buscar propiedad…" style={{ ...inputStyle, paddingLeft: 30 }} />
+        </div>
+        <select value={pipeFiltro.locacion} onChange={e => setPipeFiltro(f => ({ ...f, locacion: e.target.value }))} style={{ ...inputStyle, width: "auto", minWidth: 130 }}>
+          <option value="">Toda ubicación</option>
+          {locaciones.map(l => <option key={l} value={l}>{l}</option>)}
+        </select>
+        <select value={pipeFiltro.tipo} onChange={e => setPipeFiltro(f => ({ ...f, tipo: e.target.value }))} style={{ ...inputStyle, width: "auto", minWidth: 120 }}>
+          <option value="">Todo tipo</option>
+          {tipos.map(t => <option key={t} value={t}>{t}</option>)}
+        </select>
+        <select value={pipeFiltro.etapa} onChange={e => setPipeFiltro(f => ({ ...f, etapa: e.target.value }))} style={{ ...inputStyle, width: "auto", minWidth: 140 }}>
+          <option value="">Todo estatus</option>
+          {ETAPAS.map(s => <option key={s.id} value={s.id}>{s.l}</option>)}
+        </select>
+        <span style={{ fontSize: 11.5, color: txt3, marginLeft: "auto", whiteSpace: "nowrap" }}>
+          {pipeFiltrado.length} de {pipeline.length}
+        </span>
+      </div>
+
+      <div style={hoja.wrap}>
+        <table style={hoja.table}>
+          <thead>
+            <tr>
+              {["Propiedad", "Rodaje", "Publicación", "Estatus", "Ubicación", "Precio", "Tipo",
+                "Crudos", "Video", "Reel", "Story", "Cine", "Ficha téc.", "Info", "Drive"]
+                .map(h => <th key={h} style={hoja.th}>{h}</th>)}
+            </tr>
+          </thead>
+          <tbody>
+            {pipeFiltrado.map(p => {
+              const col = (ETAPA_HEX[p.etapa] || ETAPA_HEX.seleccionada)[isLight ? "l" : "d"];
+              return (
+                <tr key={p.id}>
+                  <td style={{ ...hoja.td, minWidth: 170 }}>
+                    <button onClick={() => openFicha(p)} title="Abrir la ficha" style={{
+                      background: "transparent", border: "none", padding: 0, cursor: "pointer", textAlign: "left",
+                      color: txt, fontSize: 12.5, fontWeight: 500, fontFamily: font,
+                    }}>{p.nombre}</button>
+                  </td>
+                  <td style={{ ...hoja.td, whiteSpace: "nowrap" }}>{p.fecha_rodaje ? fmtDia(p.fecha_rodaje) : "—"}</td>
+                  <td style={{ ...hoja.td, whiteSpace: "nowrap" }}>{p.fecha_publicacion ? fmtDia(p.fecha_publicacion) : "—"}</td>
+                  <td style={hoja.td}>{chip(ETAPAS.find(e => e.id === p.etapa)?.l || p.etapa, col)}</td>
+                  <td style={{ ...hoja.td, whiteSpace: "nowrap" }}>{p.locacion || "—"}</td>
+                  <td style={{ ...hoja.td, whiteSpace: "nowrap", color: txt }}>{p.precio || "—"}</td>
+                  <td style={{ ...hoja.td, whiteSpace: "nowrap" }}>{p.tipo || "—"}</td>
+                  <td style={hoja.td}>{linkCel(p.crudos_url, "Abrir")}</td>
+                  <td style={hoja.td}>{linkCel(p.video_url,  "Abrir")}</td>
+                  <td style={hoja.td}>{linkCel(p.ig_url,     "Abrir")}</td>
+                  <td style={hoja.td}>{linkCel(p.story_url,  "Abrir")}</td>
+                  <td style={hoja.td}>{linkCel(p.cine_url,   "Abrir")}</td>
+                  <td style={hoja.td}>{linkCel(p.ficha_url,  "Abrir")}</td>
+                  <td style={hoja.td}>{linkCel(p.info_url,   "Abrir")}</td>
+                  <td style={hoja.td}>{linkCel(p.drive_url,  "Abrir")}</td>
+                </tr>
+              );
+            })}
+            {pipeFiltrado.length === 0 && (
+              <tr><td colSpan={15} style={{ ...hoja.td, textAlign: "center", color: txt3, padding: "18px 0" }}>
+                Ninguna propiedad coincide con ese filtro.
+              </td></tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+      <div style={{ fontSize: 10.5, color: txt3 }}>
+        Toca el nombre de una propiedad para abrir su ficha y editar cualquier dato o enlace.
+      </div>
+    </div>
+  );
+
+  /* ── HOJA 2: el registro de actividades (el morado) ── */
+  const [repFiltro, setRepFiltro] = useState({ q: "", persona: "", fecha: "" });
+
+  const bitacoraFiltrada = useMemo(() => {
+    const q = repFiltro.q.trim().toLowerCase();
+    return bitacora.filter(r =>
+      (!q || String(r.texto || "").toLowerCase().includes(q)) &&
+      (!repFiltro.persona || r.profile_id === repFiltro.persona) &&
+      (!repFiltro.fecha   || r.fecha === repFiltro.fecha)
+    );
+  }, [bitacora, repFiltro]);
+
+  const puestoDe = useCallback((id) => {
+    const r = people.find(p => p.id === id)?.role;
+    return r === "marketing" ? "Marketing"
+      : r === "asesor" ? "Ventas"
+      : r === "director" ? "Dirección"
+      : r ? "Administración" : "—";
+  }, [people]);
+
+  const reporteTabla = () => (
+    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+        <div style={{ position: "relative", flex: isMobile ? "1 1 100%" : "0 0 240px" }}>
+          <Search size={13} color={txt3} style={{ position: "absolute", left: 10, top: 12 }} />
+          <input value={repFiltro.q} onChange={e => setRepFiltro(f => ({ ...f, q: e.target.value }))}
+            placeholder="Buscar en las actividades…" style={{ ...inputStyle, paddingLeft: 30 }} />
+        </div>
+        <select value={repFiltro.persona} onChange={e => setRepFiltro(f => ({ ...f, persona: e.target.value }))} style={{ ...inputStyle, width: "auto", minWidth: 150 }}>
+          <option value="">Todo el equipo</option>
+          {assignees.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
+        </select>
+        <input type="date" value={repFiltro.fecha} onChange={e => setRepFiltro(f => ({ ...f, fecha: e.target.value }))}
+          title="Filtrar por día" style={{ ...inputStyle, width: "auto" }} />
+        {(repFiltro.q || repFiltro.persona || repFiltro.fecha) && (
+          <button onClick={() => setRepFiltro({ q: "", persona: "", fecha: "" })} style={{
+            background: "transparent", border: "none", cursor: "pointer", color: txt3, fontSize: 11.5, fontFamily: font,
+          }}>Limpiar</button>
+        )}
+        <span style={{ fontSize: 11.5, color: txt3, marginLeft: "auto", whiteSpace: "nowrap" }}>
+          {bitacoraFiltrada.length} de {bitacora.length}
+        </span>
+      </div>
+
+      <div style={hoja.wrap}>
+        <table style={{ ...hoja.table, minWidth: 900 }}>
+          <thead>
+            <tr>
+              {["Fecha", "Nombre", "Puesto / Área", "Empresa", "Actividades realizadas", "Tiempo", "Evidencia"]
+                .map(h => <th key={h} style={hoja.th}>{h}</th>)}
+            </tr>
+          </thead>
+          <tbody>
+            {bitacoraFiltrada.map(r => (
+              <tr key={r.id}>
+                <td style={{ ...hoja.td, whiteSpace: "nowrap" }}>
+                  {fmtDia(r.fecha)}
+                  <div style={{ fontSize: 10, color: txt3 }}>{fmtHora(r.created_at)}</div>
+                </td>
+                <td style={{ ...hoja.td, whiteSpace: "nowrap", color: txt }}>{nameOf(r.profile_id)}</td>
+                <td style={{ ...hoja.td, whiteSpace: "nowrap" }}>{puestoDe(r.profile_id)}</td>
+                <td style={{ ...hoja.td, whiteSpace: "nowrap" }}>{r.brand_id ? (brandById[r.brand_id]?.nombre || "—") : "—"}</td>
+                <td style={{ ...hoja.td, minWidth: 330, maxWidth: 520 }}>{reporteTexto(r)}</td>
+                <td style={{ ...hoja.td, whiteSpace: "nowrap" }}>{r.tiempo_texto || "—"}</td>
+                <td style={hoja.td}>{linkCel(r.evidencia_url, "Abrir")}</td>
+              </tr>
+            ))}
+            {bitacoraFiltrada.length === 0 && (
+              <tr><td colSpan={7} style={{ ...hoja.td, textAlign: "center", color: txt3, padding: "18px 0" }}>
+                {bitacora.length === 0
+                  ? "Todavía no hay reportes. En cuanto alguien cuente su día, aparece acá."
+                  : "Ningún reporte coincide con ese filtro."}
+              </td></tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+
   const pipelineTab = () => (
     <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-      <div style={{ display: "flex", justifyContent: "flex-end" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+        {/* Tablero para OPERAR (mover etapas) · Tabla para MIRAR (la hoja de Alex,
+            con sus filtros). Conviven: cada una sirve para algo distinto. */}
+        <div style={{ display: "flex", gap: 3, padding: 4, borderRadius: 12, border: `1px solid ${bd}`,
+          background: isLight ? "rgba(15,23,42,0.04)" : "rgba(255,255,255,0.03)" }}>
+          {[["tablero", "Tablero"], ["tabla", "Tabla"]].map(([id, l]) => (
+            <button key={id} onClick={() => setPipeVista(id)} style={{
+              padding: "5px 13px", borderRadius: 9, cursor: "pointer", fontFamily: font, fontSize: 12,
+              fontWeight: pipeVista === id ? 600 : 500, border: "none",
+              background: pipeVista === id ? (isLight ? "#FFFFFF" : "rgba(255,255,255,0.09)") : "transparent",
+              color: pipeVista === id ? txt : txt3,
+            }}>{l}</button>
+          ))}
+        </div>
         <button onClick={() => setShowPipeForm(s => !s)} style={{
           background: showPipeForm ? "transparent" : `${accent}1A`, border: `1px solid ${accent}55`,
           borderRadius: 10, padding: "9px 15px", cursor: "pointer", color: accent,
@@ -809,6 +1036,8 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
           }}>Agregar</button>
         </div>
       )}
+      {pipeVista === "tabla" && pipelineTabla()}
+      {pipeVista === "tablero" && (
       <div style={{ display: "flex", gap: isMobile ? 10 : 12, overflowX: "auto", paddingBottom: 8, alignItems: "flex-start", WebkitOverflowScrolling: "touch", scrollSnapType: isMobile ? "x mandatory" : undefined }}>
         {ETAPAS.map((col, colIdx) => {
           const items = pipeline.filter(p => p.etapa === col.id);
@@ -911,6 +1140,7 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
           );
         })}
       </div>
+      )}
     </div>
   );
 
@@ -1050,6 +1280,7 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
   const [repForm, setRepForm]   = useState({ empresa: "", texto: "", tiempo: "", evidencia: "" });
   const [repSaving, setRepSaving] = useState(false);
   const [repOtro, setRepOtro]   = useState(false); // ya reportó pero quiere sumar otro
+  const [repVista, setRepVista] = useState("hoy");  // hoy | registro (la hoja completa, solo líder)
 
   const misReportesHoy = useMemo(
     () => bitacora.filter(r => r.profile_id === user?.id && r.fecha === hoy),
@@ -1123,6 +1354,26 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
 
     return (
       <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+
+        {/* Hoy = capturar y ver el día · Registro = la hoja completa con filtros.
+            El Registro es SOLO del líder: nadie del equipo necesita leer la
+            bitácora de sus compañeros (misma regla que la sección Equipo). */}
+        {isAdmin && (
+          <div style={{ display: "flex", gap: 3, padding: 4, borderRadius: 12, border: `1px solid ${bd}`, alignSelf: "flex-start",
+            background: isLight ? "rgba(15,23,42,0.04)" : "rgba(255,255,255,0.03)" }}>
+            {[["hoy", "Hoy"], ["registro", "Registro completo"]].map(([id, l]) => (
+              <button key={id} onClick={() => setRepVista(id)} style={{
+                padding: "5px 13px", borderRadius: 9, cursor: "pointer", fontFamily: font, fontSize: 12,
+                fontWeight: repVista === id ? 600 : 500, border: "none",
+                background: repVista === id ? (isLight ? "#FFFFFF" : "rgba(255,255,255,0.09)") : "transparent",
+                color: repVista === id ? txt : txt3,
+              }}>{l}</button>
+            ))}
+          </div>
+        )}
+
+        {isAdmin && repVista === "registro" && reporteTabla()}
+        {(!isAdmin || repVista === "hoy") && (<>
 
         {/* ── LA CAJA ── */}
         {mostrarCaja ? (
@@ -1256,6 +1507,7 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
             ))}
           </div>
         )}
+        </>)}
       </div>
     );
   };
