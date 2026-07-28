@@ -8,7 +8,7 @@
 import {
   Users, Hexagon, Activity, Building2, Atom,
   Trophy, Landmark, UserCheck, CreditCard, Shield, User, Trash2, Wallet, MessageCircle, Bot, Sparkles, Megaphone,
-  CalendarDays, Layers, Clapperboard, Inbox, MessagesSquare, ClipboardList
+  CalendarDays, Layers, Clapperboard, Inbox, MessagesSquare, ClipboardList, NotebookPen
 } from "lucide-react";
 
 export const nav = [
@@ -24,7 +24,7 @@ export const nav = [
   // en la llamada del 27-jul: la caja de «¿qué hiciste hoy?» para quien reporta,
   // y arriba, para el líder, lo que reportó su gente. Va primera a propósito: si
   // hay que buscarla, no se usa.
-  { id: "mkt_reporte", l: "Actividades", i: ClipboardList },
+  { id: "mkt_reporte", l: "Actividades", i: NotebookPen },
   // "Equipo" es la vista PROFUNDA del líder (cómo viene la semana de cada quien).
   // Solo la ve él — nadie del equipo necesita leer la bitácora de sus compañeros.
   { id: "mkt_equipo", l: "Equipo",      i: UserCheck     },
