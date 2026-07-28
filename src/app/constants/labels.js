@@ -37,6 +37,13 @@ const DEFAULT_LABELS = {
   // Sub-vista que en Stratos se llama "Discovery" (expediente + perfil del lead).
   discoveryTab:          "Discovery",
   discoveryTabShort:     "Dyscov.",
+  // Cómo se llama la PERSONA que lleva cada registro. En Duke es el "Asesor";
+  // en un taller o una clínica esa palabra no se usa. Lo consume la tabla de
+  // indicadores por persona (AdvisorMetrics). Default = Duke → nada cambia para
+  // quien no lo declare.
+  advisor:               "asesor",
+  advisorCap:            "Asesor",
+  advisorPlural:         "asesores",
 };
 
 const _cfg = (() => {

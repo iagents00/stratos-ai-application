@@ -183,6 +183,10 @@ const brasaYPiedraConfig = {
       // menú acordado, quién es el festejado.
       discoveryTab:          "Detalles",
       discoveryTabShort:     "Detal.",
+      // Quien tomó la reserva (host, RP o quien atienda el teléfono).
+      advisor:               "responsable",
+      advisorCap:            "Responsable",
+      advisorPlural:         "responsables",
     },
 
     // ── KPIs de arriba del CRM — solo Brasa y Piedra ─────────────────────────

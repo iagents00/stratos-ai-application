@@ -54,6 +54,11 @@ const muebleriaConfig = {
   legalName: "Mueblería",
   tagline:   "Taller de muebles a medida",
 
+  // En el menú lateral el CRM no se llama "CRM" — en el taller nadie dice CRM.
+  // Se llama "Pedidos", que es lo que de verdad lleva. El mecanismo ya existe
+  // (App.jsx lee navLabels[id]); solo cambia el texto, no el routing ni permisos.
+  navLabels: { c: "Pedidos" },
+
   brand: {
     logoText:                "Mueblería",
     appWordmark:             "Mueblería",
@@ -190,6 +195,11 @@ const muebleriaConfig = {
       // materiales, fotos del avance.
       discoveryTab:          "Expediente",
       discoveryTabShort:     "Exped.",
+      // Quien lleva el pedido en el taller. NO "asesor": acá nadie asesora, alguien se
+      // hace cargo del mueble de punta a punta.
+      advisor:               "responsable",
+      advisorCap:            "Responsable",
+      advisorPlural:         "responsables",
     },
 
     // ── KPIs de arriba del CRM — solo Mueblería ──────────────────────────────

@@ -31,6 +31,8 @@ import { P, LP, font, fontDisp } from "../../design-system/tokens";
 import { G } from "../SharedComponents";
 import { useIsMobile } from "../../hooks/useViewport";
 import AdvisorMetrics, { INDICATORS } from "./CRM/AdvisorMetrics";
+import { IS_CUSTOM_PIPELINE } from "../constants/pipeline";
+import { L } from "../constants/labels";
 import { useClient } from "../../hooks/useClient";
 import { buildExecutivePdf, evolutionCols, asesorCols } from "./ComandoDirectivo.pdf";
 import ZoomControl from "./ZoomControl";
@@ -259,9 +261,17 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
   // Por defecto la gráfica de líneas muestra SOLO 2 series (agendados +
   // realizados) para que no sea un spaghetti de 7 líneas. El resto se prende
   // con los chips de la leyenda. El embudo de arriba es el visual principal.
-  const [hiddenSeries, setHiddenSeries] = useState({
-    assigned: true, contacted: true, qualified: true, activePostZoom: true, followUps: true,
-  });
+  // Para un cliente con pipeline propio las claves de arriba no existen (sus
+  // series son sus propias etapas). Si dejáramos este mapa fijo, ninguna serie
+  // quedaría oculta… pero tampoco pasaría nada raro; lo que sí importa es NO
+  // ocultar claves que no existen. Regla para pipelines propios: se muestran
+  // las etapas (que es justo la evolución de SU tablero) y se ocultan las dos
+  // series de contexto, que si no aplastan la escala.
+  const [hiddenSeries, setHiddenSeries] = useState(
+    IS_CUSTOM_PIPELINE
+      ? { assigned: true, followUps: true }
+      : { assigned: true, contacted: true, qualified: true, activePostZoom: true, followUps: true },
+  );
 
   // Pestañas de nivel superior: Indicadores (vista histórica) vs Control de
   // Zooms (panel operativo sobre zoom_agendados). La pestaña de Zooms solo
@@ -450,6 +460,56 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
       : "0.0";
 
     const maxIndVal = Math.max(1, ...INDICATORS.map(i => rangeTotals[i.key] || 0));
+
+    // ── Tarjetas del reporte, según el tablero del cliente ──────────────────
+    // Para Duke (pipeline histórico) son las de siempre: Zooms agendados,
+    // realizados y activos post-Zoom, más las tasas de calificación/conversión.
+    // Para un cliente con pipeline PROPIO esas cifras no existen (y salían
+    // vacías): se reemplazan por las primeras etapas de SU tablero y por
+    // métricas que sí se pueden calcular en cualquier negocio.
+    const stageInds = INDICATORS.filter(i => String(i.key).startsWith("stage:"));
+    const pipelineCards = IS_CUSTOM_PIPELINE
+      ? [
+          { label: "Total en el tablero", value: String(visibleLeads.length), sub: `${L.entityPlural} en el CRM`, color: "#10B981" },
+          ...stageInds.slice(0, 3).map(i => ({
+            label: i.label,
+            value: String(snapshotTotals[i.key] ?? 0),
+            sub: "estado actual",
+            color: i.color || "#10B981",
+          })),
+        ]
+      : [
+          { label: "Pipeline total",    value: String(visibleLeads.length),           sub: "leads en el CRM",        color: "#10B981" },
+          { label: "Zooms agendados",   value: String(snapshotTotals.zoomScheduled),  sub: "histórico del pipeline", color: COLORS_BY_KEY.zoomScheduled },
+          { label: "Zooms realizados",  value: String(snapshotTotals.zoomDone),       sub: "histórico del pipeline", color: COLORS_BY_KEY.zoomDone },
+          { label: "Activos post-Zoom", value: String(snapshotTotals.activePostZoom), sub: "estado actual",          color: COLORS_BY_KEY.activePostZoom },
+        ];
+    // Etapa con más movimiento en el rango: el equivalente honesto a la "tasa de
+    // conversión" cuando no sabemos qué etapa de ese negocio es un cierre.
+    const topStage = stageInds.reduce(
+      (best, i) => ((rangeTotals[i.key] || 0) > (rangeTotals[best?.key] || -1) ? i : best),
+      null,
+    );
+    const rangeCards = IS_CUSTOM_PIPELINE
+      ? [
+          { label: `${L.entityCap}s nuevos`, value: String(totalLeads), sub: "creados en el rango", color: "#6EE7C2" },
+          { label: "Etapa con más volumen", value: topStage ? topStage.label : "—",
+            sub: topStage ? `${rangeTotals[topStage.key] || 0} en el rango` : "sin movimiento", color: topStage?.color || "#0EA5E9" },
+          { label: `${L.advisorPlural} activos`, value: String(asesores.length), sub: "con registros en el rango", color: "#2563EB" },
+          { label: "Seguim. por registro", value: String(promedioSeguim), sub: "promedio del rango", color: "#EA580C" },
+        ]
+      : [
+          { label: "Leads nuevos",         value: String(totalLeads),     sub: "creados en el rango",                           color: "#6EE7C2" },
+          { label: "Tasa de calificación", value: `${tasaCalif}%`,        sub: `${rangeTotals.qualified} de ${totalLeads || 0}`, color: "#0EA5E9" },
+          { label: "Conversión a Zoom",    value: `${tasaZoomSobreCal}%`, sub: "realizados / calificados",                      color: "#2563EB" },
+          { label: "Seguim. por lead",     value: String(promedioSeguim), sub: "promedio del rango",                            color: "#EA580C" },
+        ];
+    const statHtml = (c) => `
+      <div class="stat">
+        <div class="label">${htmlEscape(c.label)}</div>
+        <div class="value">${htmlEscape(c.value)}</div>
+        <div class="sub">${htmlEscape(c.sub)}</div>
+      </div>`;
 
     // ── Construcción del HTML ──────────────────────────────────────────────
     const html = `<!DOCTYPE html>
@@ -668,56 +728,23 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
 
     <h1>Reporte ejecutivo de pipeline</h1>
     <p class="subtitle">
-      Pipeline en vivo: <strong>${visibleLeads.length}</strong> leads totales ·
-      ${asesores.length} asesores activos en el rango ·
+      Pipeline en vivo: <strong>${visibleLeads.length}</strong> ${htmlEscape(L.entityPlural)} en total ·
+      ${asesores.length} ${htmlEscape(L.advisorPlural)} activos en el rango ·
       Rango analizado: <strong>${htmlEscape(periodSpan)}</strong>
     </p>
 
     <h2>Pipeline actual</h2>
     <div class="summary">
-      <div class="stat">
-        <div class="label">Pipeline total</div>
-        <div class="value">${visibleLeads.length}</div>
-        <div class="sub">leads en el CRM</div>
-      </div>
-      <div class="stat">
-        <div class="label">Zooms agendados</div>
-        <div class="value">${snapshotTotals.zoomScheduled}</div>
-        <div class="sub">histórico del pipeline</div>
-      </div>
-      <div class="stat">
-        <div class="label">Zooms realizados</div>
-        <div class="value">${snapshotTotals.zoomDone}</div>
-        <div class="sub">histórico del pipeline</div>
-      </div>
-      <div class="stat">
-        <div class="label">Activos post-Zoom</div>
-        <div class="value">${snapshotTotals.activePostZoom}</div>
-        <div class="sub">estado actual</div>
-      </div>
+      ${pipelineCards.map(statHtml).join("")}
     </div>
 
     <h2>Resumen del rango — ${htmlEscape(granularity.label)}</h2>
     <div class="summary">
+      ${rangeCards.slice(0, 3).map(statHtml).join("")}
       <div class="stat">
-        <div class="label">Leads nuevos</div>
-        <div class="value">${totalLeads}</div>
-        <div class="sub">creados en el rango</div>
-      </div>
-      <div class="stat">
-        <div class="label">Tasa de calificación</div>
-        <div class="value">${tasaCalif}%</div>
-        <div class="sub">${rangeTotals.qualified} de ${totalLeads || 0}</div>
-      </div>
-      <div class="stat">
-        <div class="label">Conversión a Zoom</div>
-        <div class="value">${tasaZoomSobreCal}%</div>
-        <div class="sub">zooms realizados / calificados</div>
-      </div>
-      <div class="stat">
-        <div class="label">Seguim. por lead</div>
-        <div class="value">${promedioSeguim}</div>
-        <div class="sub">promedio del rango</div>
+        <div class="label">${htmlEscape(rangeCards[3].label)}</div>
+        <div class="value">${htmlEscape(rangeCards[3].value)}</div>
+        <div class="sub">${htmlEscape(rangeCards[3].sub)}</div>
       </div>
     </div>
 
@@ -726,7 +753,7 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
       ${INDICATORS.map(ind => {
         const val = rangeTotals[ind.key] || 0;
         const w = Math.max(2, Math.round((val / maxIndVal) * 100));
-        const color = COLORS_BY_KEY[ind.key] || "#10B981";
+        const color = COLORS_BY_KEY[ind.key] || ind.color || "#10B981";
         return `
         <div class="ind">
           <div class="name">
@@ -813,22 +840,14 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
         totalLeadsPipeline: visibleLeads.length,
         asesoresCount: asesores.length,
       },
-      pipelineCards: [
-        { label: "Pipeline total",    value: String(visibleLeads.length),             sub: "leads en el CRM", color: "#10B981" },
-        { label: "Zooms agendados",   value: String(snapshotTotals.zoomScheduled),  sub: "histórico del pipeline", color: COLORS_BY_KEY.zoomScheduled },
-        { label: "Zooms realizados",  value: String(snapshotTotals.zoomDone),       sub: "histórico del pipeline", color: COLORS_BY_KEY.zoomDone },
-        { label: "Activos post-Zoom", value: String(snapshotTotals.activePostZoom), sub: "estado actual",   color: COLORS_BY_KEY.activePostZoom },
-      ],
-      rangeCards: [
-        { label: "Leads nuevos",         value: String(totalLeads),     sub: "creados en el rango",        color: "#6EE7C2" },
-        { label: "Tasa de calificación", value: `${tasaCalif}%`,        sub: `${rangeTotals.qualified} de ${totalLeads || 0}`, color: "#0EA5E9" },
-        { label: "Conversión a Zoom",    value: `${tasaZoomSobreCal}%`, sub: "realizados / calificados",   color: "#2563EB" },
-        { label: "Seguim. por lead",     value: String(promedioSeguim), sub: "promedio del rango",         color: "#EA580C" },
-      ],
+      // Mismas tarjetas que el reporte HTML (se arman una sola vez arriba, y ya
+      // vienen adaptadas al tablero del cliente).
+      pipelineCards,
+      rangeCards,
       indicators: INDICATORS.map(ind => ({
         label: FULL_LABELS[ind.key] || ind.label,
         value: rangeTotals[ind.key] || 0,
-        color: COLORS_BY_KEY[ind.key] || "#10B981",
+        color: COLORS_BY_KEY[ind.key] || ind.color || "#10B981",
       })),
       evolution: {
         title: `Evolución temporal  -  ${granularity.label}`,
@@ -1031,7 +1050,10 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
             </p>
             <p style={{ fontSize: 11, color: T.txt3, fontFamily: font, margin: "3px 0 0", lineHeight: 1.5 }}>
               Agrupación <strong style={{ color: T.txt2 }}>{granularity.label.toLowerCase()}</strong> dentro del rango global seleccionado.
-              {" "}Por defecto muestra <strong style={{ color: T.txt2 }}>Zooms agendados y realizados</strong>; prende más series con los chips de la leyenda.
+              {" "}Por defecto muestra{" "}
+              <strong style={{ color: T.txt2 }}>
+                {IS_CUSTOM_PIPELINE ? "las etapas de tu tablero" : "Zooms agendados y realizados"}
+              </strong>; prende o apaga series con los chips de la leyenda.
             </p>
           </div>
         </div>
@@ -1040,7 +1062,7 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
             el ancho (sin fila despareja) + tap target ≥40px. En desktop: flex-wrap. */}
         <div style={{ display: isMobile ? "grid" : "flex", gridTemplateColumns: isMobile ? "repeat(2, minmax(0,1fr))" : undefined, flexWrap: "wrap", gap: 8, marginBottom: 16 }}>
           {INDICATORS.map(ind => {
-            const c = COLORS_BY_KEY[ind.key] || accent;
+            const c = COLORS_BY_KEY[ind.key] || ind.color || accent;
             const hidden = !!hiddenSeries[ind.key];
             return (
               <button
@@ -1081,7 +1103,7 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
             <AreaChart data={series} margin={{ top: 12, right: 18, bottom: 10, left: -6 }}>
               <defs>
                 {INDICATORS.map(ind => {
-                  const c = COLORS_BY_KEY[ind.key] || accent;
+                  const c = COLORS_BY_KEY[ind.key] || ind.color || accent;
                   return (
                     <linearGradient key={ind.key} id={`grad-${ind.key}`} x1="0" y1="0" x2="0" y2="1">
                       <stop offset="0%"   stopColor={c} stopOpacity={visibleIndicators.length <= 2 ? 0.30 : 0.14} />
@@ -1137,7 +1159,7 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
                 )}
               />
               {visibleIndicators.map(ind => {
-                const c = COLORS_BY_KEY[ind.key] || accent;
+                const c = COLORS_BY_KEY[ind.key] || ind.color || accent;
                 return (
                   <Area
                     key={ind.key}

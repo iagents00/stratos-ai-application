@@ -56,6 +56,10 @@ const legacyDesignConfig = {
   legalName: "Legacy Design",
   tagline:   "Arquitectura y desarrollo inmobiliario",
 
+  // En el menú lateral el CRM se llama "Proyectos": es la palabra que ellos ya
+  // usan en su propia hoja ("Control de Proyectos"), no una que les inventamos.
+  navLabels: { c: "Proyectos" },
+
   brand: {
     logoText:                "Legacy Design",
     appWordmark:             "Legacy",
@@ -183,6 +187,11 @@ const legacyDesignConfig = {
       // El expediente del proyecto: brief, planos, acuerdos, avances de obra.
       discoveryTab:          "Expediente",
       discoveryTabShort:     "Exped.",
+      // Quien lleva la casa. En su hoja real aparecen el constructor y el arquitecto;
+      // hasta que el CRM tenga esos campos, es un único responsable.
+      advisor:               "responsable",
+      advisorCap:            "Responsable",
+      advisorPlural:         "responsables",
     },
 
     // ── KPIs de arriba del CRM — solo Legacy Design ──────────────────────────

@@ -209,6 +209,12 @@ const clinicaDentalConfig = {
       // sesiones, cómo va a pagar, quién lo atiende.
       discoveryTab:          "Tratamiento",
       discoveryTabShort:     "Trat.",
+      // Quien lleva al paciente. Se deja "Responsable" y no "Doctor" a propósito: al
+      // principio lo agenda recepción y recién después lo toma un odontólogo. Si la
+      // clínica prefiere "Doctor", es cambiar esta palabra.
+      advisor:               "responsable",
+      advisorCap:            "Responsable",
+      advisorPlural:         "responsables",
     },
 
     // ── KPIs de arriba del CRM — solo Clínica Dental ─────────────────────────

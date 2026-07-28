@@ -14,8 +14,12 @@
  * ─────────────────────────────────────────────────────────────────────────────
  */
 import { useCallback, useMemo, useState } from "react";
-import { Users, Phone, BadgeCheck, CalendarDays, CheckCircle2, Activity, RefreshCw } from "lucide-react";
+import { Users, Phone, BadgeCheck, CalendarDays, CheckCircle2, Activity, RefreshCw, Circle } from "lucide-react";
 import { P, LP, font, fontDisp, STAGES, normalizeStage } from "../../../design-system/tokens";
+// Pipeline y vocabulario del cliente ACTIVO (resueltos una vez al cargar el
+// módulo, misma fuente que el resto del CRM).
+import { STAGES as PIPELINE_STAGES, stgC, IS_CUSTOM_PIPELINE } from "../../constants/pipeline";
+import { L } from "../../constants/labels";
 import { zoomEventsOf, funnelEntryOf, ACTIVE_POST_ZOOM_STAGES, advisorDisplayGroup, INACTIVE_ADVISOR_GROUP } from "./zoom-metrics";
 import DateRangeControl from "./DateRangeControl";
 import { createDefaultDateFilter, resolveDateRange, timestampInRange } from "./date-range";
@@ -39,7 +43,15 @@ function stageIdx(stage) {
 
 // 7 indicadores pedidos en el ticket. Cada uno recibe el array de leads ya
 // filtrado por período + asesor y devuelve un número.
-export const INDICATORS = [
+//
+// ⚠️ OJO: estos 7 están atados a las etapas de DUKE ("Segundo Intento",
+// "Seguimiento", "Zoom Agendado", "Apartó"…). Para un cliente con pipeline
+// PROPIO ninguna de esas etapas existe, así que 5 de los 7 daban CERO para
+// siempre y las columnas decían "Zooms" en negocios que no hacen Zooms (pasaba
+// en Vega, NSG y los tenants de jul-2026). Por eso abajo se arma un set
+// alternativo desde el pipeline del cliente. Duke y todo el que use el pipeline
+// histórico siguen con ESTE set, byte-idéntico.
+const DUKE_INDICATORS = [
   {
     key: "assigned",
     label: "Asignados",
@@ -93,6 +105,44 @@ export const INDICATORS = [
     compute: (leads) => leads.reduce((s, l) => s + (l.seguimientos || 0), 0),
   },
 ];
+
+// ── Indicadores para clientes con PIPELINE PROPIO ────────────────────────────
+// No inventamos hitos ("contactado", "calificado") que en un taller o una
+// clínica no significan nada: se muestra UNA columna por etapa DEL TABLERO DE
+// ESA EMPRESA, con su propio color, más quién tiene registros asignados y los
+// seguimientos. Cero interpretación nuestra y responde la pregunta real del
+// dueño: quién tiene qué, y en qué etapa está.
+const CUSTOM_INDICATORS = [
+  {
+    key: "assigned",
+    label: "Asignados",
+    icon: Users,
+    title: `${L.entityPlural} del período con ${L.advisor} asignado.`,
+    compute: (leads) => leads.filter(l => l.asesor).length,
+  },
+  ...PIPELINE_STAGES.map(stage => ({
+    key: `stage:${stage}`,
+    label: stage,
+    icon: Circle,
+    color: stgC[stage],                 // el mismo color que la columna del kanban
+    title: `${L.entityPlural} en la etapa "${stage}".`,
+    compute: (leads) => leads.filter(l => normalizeStage(l.st) === stage).length,
+  })),
+  {
+    key: "followUps",
+    label: "Seguim.",
+    icon: RefreshCw,
+    title: "Suma de seguimientos registrados en el período.",
+    compute: (leads) => leads.reduce((s, l) => s + (l.seguimientos || 0), 0),
+  },
+];
+
+/**
+ * Indicadores del cliente activo. Los consume esta tabla Y el Comando Directivo
+ * (gráfica, tarjetas, CSV y PDF) recorriéndolos de forma genérica, así que con
+ * cambiar esta constante el tablero entero pasa a hablar el idioma de la empresa.
+ */
+export const INDICATORS = IS_CUSTOM_PIPELINE ? CUSTOM_INDICATORS : DUKE_INDICATORS;
 
 export default function AdvisorMetrics({ leadsData = [], theme = "dark", onOpenLead = null, dateFilter: sharedDateFilter = null }) {
   const isLight = theme === "light";
@@ -160,8 +210,11 @@ export default function AdvisorMetrics({ leadsData = [], theme = "dark", onOpenL
       const metrics = {};
       for (const ind of INDICATORS) metrics[ind.key] = ind.compute(leadsOfAsesor);
       // Override: las columnas de Zoom son histórico/event-level, no foto actual.
-      metrics.zoomScheduled = countZoom(asesor, "scheduled");
-      metrics.zoomDone      = countZoom(asesor, "done");
+      // Solo aplica al set de Duke — un pipeline propio no tiene columnas de Zoom.
+      if (!IS_CUSTOM_PIPELINE) {
+        metrics.zoomScheduled = countZoom(asesor, "scheduled");
+        metrics.zoomDone      = countZoom(asesor, "done");
+      }
       return { asesor, metrics, count: leadsOfAsesor.length };
     });
   }, [asesores, countZoom, dateRange, leadsData]);
@@ -223,7 +276,7 @@ export default function AdvisorMetrics({ leadsData = [], theme = "dark", onOpenL
         <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 720 }}>
           <thead>
             <tr style={{ background: headerBg }}>
-              <th style={{ ...thStyle(T), textAlign: "left", paddingLeft: 16 }}>Asesor</th>
+              <th style={{ ...thStyle(T), textAlign: "left", paddingLeft: 16 }}>{L.advisorCap}</th>
               {INDICATORS.map(ind => {
                 const Icon = ind.icon;
                 return (
@@ -241,7 +294,7 @@ export default function AdvisorMetrics({ leadsData = [], theme = "dark", onOpenL
             {rows.length === 0 && (
               <tr>
                 <td colSpan={INDICATORS.length + 1} style={{ padding: 28, textAlign: "center", color: T.txt3, fontFamily: font, fontSize: 13 }}>
-                  No hay asesores con leads en este período.
+                  No hay {L.advisorPlural} con {L.entityPlural} en este período.
                 </td>
               </tr>
             )}
@@ -250,7 +303,7 @@ export default function AdvisorMetrics({ leadsData = [], theme = "dark", onOpenL
                 <td style={{ padding: cellPad, paddingLeft: 16, fontFamily: fontDisp, fontWeight: 400, color: T.txt, fontSize: 13 }}>
                   {asesor}
                   <span style={{ marginLeft: 8, fontSize: 11, fontWeight: 500, color: T.txt3 }}>
-                    {count} {count === 1 ? "lead" : "leads"}
+                    {count} {count === 1 ? L.entity : L.entityPlural}
                   </span>
                 </td>
                 {INDICATORS.map(ind => (
