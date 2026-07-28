@@ -835,6 +835,63 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
 /* ── Burbuja de mensaje ── */
 /* Convierte el texto en nodos con links clicables: markdown [label](url) y URLs sueltas.
    Así los Drive del catálogo/recomendación se abren con un toque (antes se veían crudos). */
+/* Trozo de línea con **negrita** y enlaces. La negrita se renderiza porque el
+   modelo la produce sola al armar listas y planes — antes se veía el `**` crudo
+   en pantalla, que es exactamente lo contrario de lo que pidió Iván. */
+function renderInline(text, linkColor, key) {
+  const partes = [];
+  let resto = String(text), i = 0;
+  const rxB = /\*\*([^*\n]+)\*\*/;
+  let m;
+  while ((m = rxB.exec(resto)) !== null) {
+    if (m.index > 0) partes.push(renderRichText(resto.slice(0, m.index), linkColor));
+    partes.push(<strong key={`b${key}-${i++}`} style={{ fontWeight: 600 }}>{m[1]}</strong>);
+    resto = resto.slice(m.index + m[0].length);
+  }
+  if (resto) partes.push(renderRichText(resto, linkColor));
+  return partes;
+}
+
+/* Da forma de LISTA a lo que llega como texto: numeradas (1.), viñetas
+   (· - •) y encabezados de persona (▸ Yazmin Ledesma).
+   Iván, 28-jul: «que el sistema le organice, le seccione, le separe por
+   párrafos, para que todo quede claro, bonito, entendible». Con `pre-wrap` a
+   secas los renglones existían pero no se leían como una lista: sin sangría
+   colgante, un título largo volvía al margen y se mezclaba con el siguiente. */
+function renderBloques(text, linkColor, accent) {
+  if (typeof text !== "string" || !text) return text;
+  const lineas = text.split("\n");
+  return lineas.map((ln, i) => {
+    const l = ln.trimEnd();
+    if (l.trim() === "") return <div key={`e${i}`} style={{ height: 8 }} />;
+
+    const persona = l.match(/^\s*▸\s*(.+)$/);
+    if (persona) return (
+      <div key={`p${i}`} style={{ marginTop: i === 0 ? 0 : 10, marginBottom: 3, fontWeight: 600, color: accent }}>
+        {persona[1]}
+      </div>
+    );
+
+    const num = l.match(/^\s*(\d{1,2})[.)]\s+(.*)$/);
+    if (num) return (
+      <div key={`n${i}`} style={{ display: "flex", gap: 8, marginBottom: 2 }}>
+        <span style={{ flexShrink: 0, opacity: 0.65, minWidth: 16, textAlign: "right" }}>{num[1]}.</span>
+        <span style={{ minWidth: 0 }}>{renderInline(num[2], linkColor, i)}</span>
+      </div>
+    );
+
+    const vin = l.match(/^\s*[·•\-]\s+(.*)$/);
+    if (vin) return (
+      <div key={`v${i}`} style={{ display: "flex", gap: 8, marginBottom: 2 }}>
+        <span style={{ flexShrink: 0, opacity: 0.65 }}>·</span>
+        <span style={{ minWidth: 0 }}>{renderInline(vin[1], linkColor, i)}</span>
+      </div>
+    );
+
+    return <div key={`t${i}`} style={{ marginBottom: 2 }}>{renderInline(l, linkColor, i)}</div>;
+  });
+}
+
 function renderRichText(text, linkColor) {
   if (typeof text !== "string" || !text) return text;
   const rx = /\[([^\]\n]+)\]\((https?:\/\/[^)\s]+)\)|(https?:\/\/[^\s)]+)/g;
@@ -951,7 +1008,7 @@ function Bubble({ m, T, isLight, userBg, userTxt, aiBg, aiBd, onPick, sending, i
         borderBottomRightRadius: isUser ? 3 : 14, borderBottomLeftRadius: isUser ? 14 : 3,
         background: isUser ? userBg : aiBg, border: isUser ? "none" : `1px solid ${aiBd}`,
         color: isUser ? userTxt : T.txt, fontSize: chatType.body, lineHeight: chatType.bodyLh, fontFamily: font,
-        whiteSpace: "pre-wrap", wordBreak: "break-word", opacity: m.pending ? 0.7 : 1,
+        wordBreak: "break-word", opacity: m.pending ? 0.7 : 1,
         boxShadow: isLight ? (isUser ? `0 3px 10px ${T.accent}28` : "0 1px 4px rgba(15,23,42,0.03)") : "none"
       }}>
         {/* Evidencia adjunta: la miniatura SE VE en el chat y se abre a pantalla completa (estilo WhatsApp) */}
@@ -986,7 +1043,7 @@ function Bubble({ m, T, isLight, userBg, userTxt, aiBg, aiBd, onPick, sending, i
         {m.videoUrl && (
           <video src={m.videoUrl} controls style={{ display: "block", maxWidth: 240, maxHeight: 240, borderRadius: 10, marginBottom: 6, background: "#000" }} />
         )}
-        {renderRichText(m.content, isUser ? "inherit" : T.accent)}
+        {renderBloques(m.content, isUser ? "inherit" : T.accent, isUser ? "inherit" : T.accent)}
         {inlineButtons.length > 0 && (
           <div style={{ display: "flex", gap: 5, flexWrap: "wrap", marginTop: 8, paddingTop: 7, borderTop: `1px solid ${isLight ? "rgba(15,23,42,0.06)" : "rgba(255,255,255,0.06)"}` }}>
             {inlineButtons.map((btn, idx) => (
