@@ -30,7 +30,7 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import {
   Megaphone, Plus, X, RefreshCw, Folder, ExternalLink, Lock, Check,
   ChevronLeft, ChevronRight, ChevronDown, Clapperboard, Mic, CalendarDays,
-  Search, Camera,
+  Search, Camera, CircleCheck,
 } from "lucide-react";
 import { font, fontDisp } from "../../design-system/tokens";
 import { supabase } from "../../lib/supabase";
@@ -405,6 +405,10 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
 
   const hoy = todayStr(), man = tomorrowStr();
   const rodajesHoy = useMemo(() => pipeline.filter(p => p.fecha_rodaje === hoy), [pipeline, hoy]);
+  // ¿Esta persona ya contó su día? Decide si mostrarle el recordatorio en Mi Día.
+  const yaReporteHoy = useMemo(
+    () => bitacora.some(r => r.profile_id === user?.id && r.fecha === hoy),
+    [bitacora, user?.id, hoy]);
   const mine = useMemo(() => tasks.filter(t => t.assignee_id === user?.id && t.estado !== "hecha"), [tasks, user?.id]);
   const vencidas   = useMemo(() => mine.filter(t => t.due_at && dayStr(t.due_at) < hoy && !isBlocked(t)), [mine, hoy, isBlocked]);
   const paraHoy    = useMemo(() => mine.filter(t => !isBlocked(t) && (!t.due_at || dayStr(t.due_at) === hoy)), [mine, hoy, isBlocked]);
@@ -468,6 +472,26 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
 
   const miDia = () => (
     <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+      {/* Recordatorio de la bitácora. El líder solo ve el trabajo del equipo si
+          el equipo lo cuenta, así que acá va el empujón — discreto, una sola
+          línea, y desaparece en cuanto la persona reportó. No es obligatorio:
+          si alguien no reporta, no pasa nada y nadie lo persigue. */}
+      {!yaReporteHoy && (
+        <div style={{ ...card, borderRadius: 13, padding: "11px 15px", display: "flex", alignItems: "center", gap: 11, flexWrap: "wrap" }}>
+          <CircleCheck size={16} color={txt3} style={{ flexShrink: 0 }} />
+          <div style={{ flex: 1, minWidth: 170, fontSize: 12.5, color: txt2, lineHeight: 1.45 }}>
+            Todavía no cuentas tu bitácora de hoy.
+            <span style={{ color: txt3 }}> Dile al Copilot qué hiciste, con tus palabras.</span>
+          </div>
+          {onOpenCopilot && (
+            <button onClick={onOpenCopilot} style={{
+              background: "transparent", border: `1px solid ${accent}44`, borderRadius: 9, padding: "5px 11px",
+              cursor: "pointer", color: accent, fontSize: 12, fontFamily: font, whiteSpace: "nowrap",
+            }}>Contarlo ahora</button>
+          )}
+        </div>
+      )}
+
       {rodajesHoy.map(r => (
         <div key={r.id} style={{ ...card, borderRadius: 13, padding: "11px 15px", display: "flex", alignItems: "center", gap: 11 }}>
           <Clapperboard size={16} color={accent} />
@@ -958,9 +982,95 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
 
   const equipo = () => {
     const week = Date.now() - 7 * 86400000;
+
+    /* ── Bloque de texto de un reporte: plegado a 2 líneas, con "ver todo" y su
+       evidencia. Se usa igual en el panel de hoy y en el historial de la
+       persona, para que el líder no tenga que aprender dos formatos. ── */
+    const reporteTexto = (r) => {
+      const abierta = bitaAbierta.has(r.id);
+      const texto = String(r.texto || "").trim();
+      const largo = texto.length > 110 || texto.includes("\n");
+      return (
+        <div style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{
+              fontSize: 12, color: txt2, lineHeight: 1.5, whiteSpace: "pre-wrap", wordBreak: "break-word",
+              ...(abierta ? {} : { display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }),
+            }}>{texto || "Sin detalle"}</div>
+            {largo && (
+              <button onClick={() => toggleBita(r.id)} style={{
+                background: "transparent", border: "none", padding: "2px 0 0", cursor: "pointer",
+                color: accent, fontSize: 10.5, fontFamily: font,
+              }}>{abierta ? "ver menos" : "ver todo"}</button>
+            )}
+          </div>
+          {r.evidencia_url && (
+            <a href={r.evidencia_url} target="_blank" rel="noreferrer" title="Abrir evidencia" style={{
+              border: `1px solid ${accent}44`, borderRadius: 7, padding: "2px 7px", flexShrink: 0,
+              color: accent, display: "inline-flex", alignItems: "center", gap: 4, fontSize: 10.5, textDecoration: "none",
+            }}><Folder size={11} /> Evidencia</a>
+          )}
+        </div>
+      );
+    };
+
+    /* ── LO PRIMERO QUE VE EL LÍDER AL ENTRAR ──
+       Su trabajo diario es saber qué hizo su gente hoy. Antes tenía que abrir
+       una hoja de cálculo aparte; ahora es la primera pantalla de su cuenta.
+       Los que reportaron van arriba (con lo que dijeron) y los que faltan
+       quedan abajo, para que se vea de un vistazo a quién hay que buscar. ── */
+    const reportesHoy  = bitacora.filter(r => r.fecha === hoy);
+    const porPersonaHoy = assignees
+      .map(m => ({ m, rs: reportesHoy.filter(r => r.profile_id === m.id) }))
+      .sort((a, b) => (b.rs.length > 0) - (a.rs.length > 0));
+    const cuantosReportaron = porPersonaHoy.filter(p => p.rs.length > 0).length;
+
+    const panelHoy = assignees.length > 0 && (
+      <div style={{ ...card, borderRadius: 14, padding: "14px 16px", display: "flex", flexDirection: "column", gap: 11 }}>
+        <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 10, flexWrap: "wrap" }}>
+          <div>
+            <div style={{ fontSize: 15, fontWeight: 600, color: txt, fontFamily: fontDisp }}>Bitácora de hoy</div>
+            <div style={{ fontSize: 11.5, color: txt3 }}>Lo que reportó cada quien · {fmtDia(hoy)}</div>
+          </div>
+          <div style={{
+            fontSize: 12, whiteSpace: "nowrap", padding: "3px 10px", borderRadius: 999,
+            color: cuantosReportaron === assignees.length ? accent : cuantosReportaron === 0 ? txt3 : AMBER,
+            border: `1px solid ${cuantosReportaron === assignees.length ? `${accent}44` : cuantosReportaron === 0 ? bd : `${AMBER}44`}`,
+          }}>{cuantosReportaron} de {assignees.length} reportaron</div>
+        </div>
+
+        {porPersonaHoy.map(({ m, rs }) => (
+          <div key={m.id} style={{ display: "flex", gap: 10, alignItems: "flex-start", borderTop: `1px solid ${bd}`, paddingTop: 10 }}>
+            <span style={{
+              width: 8, height: 8, borderRadius: 999, flexShrink: 0, marginTop: 5,
+              background: rs.length > 0 ? accent : "transparent",
+              border: rs.length > 0 ? "none" : `1.5px solid ${txt3}66`,
+            }} />
+            <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 6 }}>
+              <div style={{ display: "flex", alignItems: "baseline", gap: 8, flexWrap: "wrap" }}>
+                <span style={{ fontSize: 12.5, color: rs.length > 0 ? txt : txt2, fontWeight: 500 }}>{m.name}</span>
+                {rs.length > 0
+                  ? <span style={{ fontSize: 10.5, color: txt3 }}>
+                      {fmtHora(rs[0].created_at)}{rs.length > 1 ? ` · ${rs.length} reportes` : ""}
+                    </span>
+                  : <span style={{ fontSize: 11, color: txt3 }}>todavía no reportó</span>}
+              </div>
+              {rs.map(r => <div key={r.id}>{reporteTexto(r)}</div>)}
+            </div>
+          </div>
+        ))}
+
+        <div style={{ fontSize: 10.5, color: txt3, borderTop: `1px solid ${bd}`, paddingTop: 9, lineHeight: 1.5 }}>
+          El equipo reporta contándoselo al Copilot, con sus palabras: «hoy edité el video de Casa Lago 3 horas
+          y grabé en Brasa y Piedra». Si te falta el detalle de alguien, pregúntale al Copilot por su bitácora.
+        </div>
+      </div>
+    );
+
     return (
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
         {assignees.length === 0 && emptyRow("Sin usuarios con rol marketing en la organización.")}
+        {panelHoy}
         {assignees.map(m => {
           const tt = tasks.filter(t => t.assignee_id === m.id);
           const enCurso  = tt.filter(t => t.estado !== "hecha" && !isBlocked(t)).length;
@@ -975,9 +1085,9 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
           // con su EVIDENCIA clicable — así "le llega" la foto/video que subió cada quien.
           const hechasSemana = tt.filter(t => t.estado === "hecha" && t.updated_at && new Date(t.updated_at).getTime() > week);
           const hechas7  = hechasSemana.length;
-          // Bitácora: los últimos días que reportó. Se muestran 3 y el resto se
-          // cuenta — la tarjeta es un pulso, no el archivo histórico.
-          const bita = bitacoraPor[m.id] || [];
+          // Bitácora de DÍAS ANTERIORES. Lo de hoy ya está arriba en el panel:
+          // repetirlo acá haría que el líder lea dos veces lo mismo.
+          const bita = (bitacoraPor[m.id] || []).filter(r => r.fecha !== hoy);
           const bitaVisible = bita.slice(0, 3);
           const stat = (label, n, color) => (
             <div key={label} style={{ textAlign: "center", minWidth: isMobile ? 0 : 74, flex: isMobile ? "1 1 0" : "0 0 auto" }}>
@@ -1047,37 +1157,15 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
                   trabajo que nadie había pedido en una lista. */}
               {bitaVisible.length > 0 && (
                 <div style={{ borderTop: `1px solid ${bd}`, paddingTop: 9, display: "flex", flexDirection: "column", gap: 8 }}>
-                  <div style={{ fontSize: 10, color: txt3, letterSpacing: 0.5, textTransform: "uppercase" }}>Bitácora</div>
-                  {bitaVisible.map(r => {
-                    const abierta = bitaAbierta.has(r.id);
-                    const texto = String(r.texto || "").trim();
-                    const largo = texto.length > 110 || texto.includes("\n");
-                    return (
-                      <div key={r.id} style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
-                        <span style={{ fontSize: 10.5, color: txt3, whiteSpace: "nowrap", flexShrink: 0, minWidth: 40, paddingTop: 1 }}>
-                          {fmtDia(r.fecha)}
-                        </span>
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{
-                            fontSize: 12, color: txt2, lineHeight: 1.5, whiteSpace: "pre-wrap", wordBreak: "break-word",
-                            ...(abierta ? {} : { display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }),
-                          }}>{texto || "Sin detalle"}</div>
-                          {largo && (
-                            <button onClick={() => toggleBita(r.id)} style={{
-                              background: "transparent", border: "none", padding: "2px 0 0", cursor: "pointer",
-                              color: accent, fontSize: 10.5, fontFamily: font,
-                            }}>{abierta ? "ver menos" : "ver todo"}</button>
-                          )}
-                        </div>
-                        {r.evidencia_url && (
-                          <a href={r.evidencia_url} target="_blank" rel="noreferrer" title="Abrir evidencia del día" style={{
-                            border: `1px solid ${accent}44`, borderRadius: 7, padding: "2px 7px", flexShrink: 0,
-                            color: accent, display: "inline-flex", alignItems: "center", gap: 4, fontSize: 10.5, textDecoration: "none",
-                          }}><Folder size={11} /> Evidencia</a>
-                        )}
-                      </div>
-                    );
-                  })}
+                  <div style={{ fontSize: 10, color: txt3, letterSpacing: 0.5, textTransform: "uppercase" }}>Días anteriores</div>
+                  {bitaVisible.map(r => (
+                    <div key={r.id} style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
+                      <span style={{ fontSize: 10.5, color: txt3, whiteSpace: "nowrap", flexShrink: 0, minWidth: 40, paddingTop: 1 }}>
+                        {fmtDia(r.fecha)}
+                      </span>
+                      <div style={{ flex: 1, minWidth: 0 }}>{reporteTexto(r)}</div>
+                    </div>
+                  ))}
                   {bita.length > bitaVisible.length && (
                     <div style={{ fontSize: 10.5, color: txt3 }}>
                       +{bita.length - bitaVisible.length} {bita.length - bitaVisible.length === 1 ? "reporte anterior" : "reportes anteriores"}
@@ -1116,7 +1204,7 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
                      : "Los proyectos de cada marca, con su avance" },
     pipeline:    { title: "Pipeline",     sub: "Cada video avanza hasta Publicada" },
     solicitudes: { title: "Solicitudes",  sub: "Pedidos de diseño · A es simple, AAA es complejo" },
-    equipo:      { title: "Equipo",       sub: "Cómo va cada persona y qué reportó" },
+    equipo:      { title: "Equipo",       sub: "Qué hizo hoy cada quien, y cómo viene la semana" },
   };
   const meta = TAB_META[tab] || TAB_META.dia;
 
