@@ -15,7 +15,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { Send, Sparkles, RefreshCw, Mic, Square, X, ChevronDown, ChevronUp, ChevronLeft, Bot, BookOpen, Play, Pause, Bell, Camera, Paperclip } from "lucide-react";
-import { P, LP, font, fontDisp } from "../../design-system/tokens";
+import { P, LP, font, fontDisp, chatType } from "../../design-system/tokens";
 import { G } from "../SharedComponents";
 import CopilotMark from "../components/CopilotMark";
 import { useClient } from "../../hooks/useClient";
@@ -112,12 +112,42 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
   const recognitionRef = useRef(null);
   const recordTimerRef = useRef(null);
 
-  // Solo los últimos 50 mensajes: el módulo carga rápido y no se sobrecarga
-  // aunque el asesor haya hablado muchísimo (el historial completo vive en la DB).
-  const reload = useCallback(async () => {
+  /* ── El refresco NO puede pisar lo que acabás de escribir ──────────────────
+     BUG que reportó Ángel (29-jul): «a veces se desaparecen los mensajes que
+     uno envía».
+
+     Causa: tu mensaje vive SOLO en pantalla (id `tmp-…`) hasta que el backend
+     lo persiste, y `reload()` reemplazaba la lista entera con lo que devuelve
+     el servidor. Si en ese hueco entraba un `focus` o un `visibilitychange`,
+     tu mensaje y la respuesta desaparecían. En el celular pasa todo el tiempo:
+     el teclado al abrirse y cerrarse dispara esos eventos.
+
+     Tres arreglos, y ninguno es "esperar más":
+       1. El refresco MEZCLA en vez de reemplazar: lo que está en pantalla y el
+          servidor todavía no tiene, se conserva.
+       2. Ventana de silencio tras enviar: el log del backend es asíncrono y
+          llega tarde; durante ese rato no se refresca.
+       3. El refresco por foco va con freno (máx. 1 cada 20s). Antes cada
+          cambio de pestaña hacía una consulta de 50 mensajes y re-renderizaba
+          todo el chat — eso es parte de la lentitud que se siente. */
+  const lastSendRef = useRef(0);
+  const lastReloadRef = useRef(0);
+
+  const reload = useCallback(async (opts = {}) => {
     const r = await getCopilotActivity(50);
     if (!mountedRef.current) return;
-    setMessages([...(r.messages || [])].reverse());
+    lastReloadRef.current = Date.now();
+    const delServidor = [...(r.messages || [])].reverse();
+    setMessages((prev) => {
+      if (!opts.merge) return delServidor;
+      // Se conserva lo LOCAL que el servidor todavía no refleja (comparando por
+      // rol + texto). Sin esto, un refresco a destiempo te borra el mensaje.
+      const enServidor = new Set(delServidor.map((m) => `${m.role}|${(m.content || "").trim()}`));
+      const huerfanos = prev.filter(
+        (m) => String(m.id || "").startsWith("tmp-") || String(m.id || "").startsWith("ai-")
+      ).filter((m) => !enServidor.has(`${m.role}|${(m.content || "").trim()}`));
+      return huerfanos.length ? [...delServidor, ...huerfanos] : delServidor;
+    });
     setLoading(false);
   }, []);
 
@@ -127,7 +157,13 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
     // Sincronización entre dispositivos: si hablaste con el Copilot en el celular
     // y ahora mirás la PC (o volvés a la pestaña), refrescamos para traer lo último.
     // Función NOMBRADA + removeEventListener en cleanup (regla de performance).
-    const onFocusReload = () => { if (!document.hidden && !sendingRef.current) reload(); };
+    const onFocusReload = () => {
+      if (document.hidden || sendingRef.current) return;
+      const ahora = Date.now();
+      if (ahora - lastSendRef.current < 15000) return;    // recién enviaste: no pises nada
+      if (ahora - lastReloadRef.current < 20000) return;  // freno: no en cada foco
+      reload({ merge: true });
+    };
     document.addEventListener('visibilitychange', onFocusReload);
     window.addEventListener('focus', onFocusReload);
     return () => {
@@ -274,6 +310,7 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
     setPendingVoiceBlob(null);
 
     const tmpId = `tmp-${Date.now()}`;
+    lastSendRef.current = Date.now();
     setMessages((prev) => [...prev, { id: tmpId, role: "user", content: text || "Acción seleccionada", occurred_at: new Date().toISOString(), pending: true }]);
     setSending(true);
 
@@ -638,8 +675,8 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
           <CopilotMark size={22} isLight={isLight} />
         </div>
         <div style={{ minWidth: 0, flex: 1 }}>
-          <div style={{ fontSize: 14.5, fontWeight: 600, color: T.txt, fontFamily: fontDisp, lineHeight: 1.2 }}>Copilot AI</div>
-          <div style={{ fontSize: 11, color: T.accent, fontFamily: font, marginTop: 1, display: "flex", alignItems: "center", gap: 4 }}>
+          <div style={{ fontSize: chatType.title, fontWeight: 600, color: T.txt, fontFamily: fontDisp, lineHeight: 1.2 }}>Copilot AI</div>
+          <div style={{ fontSize: chatType.meta, color: T.accent, fontFamily: font, marginTop: 1, display: "flex", alignItems: "center", gap: 4 }}>
             <span style={{ width: 6, height: 6, borderRadius: "50%", background: T.accent, boxShadow: `0 0 6px ${T.accent}` }} />En línea
           </div>
         </div>
@@ -662,7 +699,7 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
           {SUGGESTIONS.map((s) => (
             <button key={s.text} type="button" onClick={() => send(s.text)} disabled={sending}
               style={{
-                padding: "4px 10px", borderRadius: 999, fontSize: 11.5, fontFamily: font,
+                padding: "5px 12px", borderRadius: 999, fontSize: chatType.chip, fontFamily: font,
                 background: isLight ? "#F1F5F9" : "rgba(255,255,255,0.06)",
                 border: `1px solid ${isLight ? "rgba(15,23,42,0.10)" : "rgba(255,255,255,0.12)"}`,
                 color: T.txt2, cursor: sending ? "default" : "pointer"
@@ -806,10 +843,10 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
           ref={inputRef} type="text" value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={onKeyDown}
           placeholder={commenting ? "Escribe tu comentario…" : "Escríbele al asistente…"} disabled={sending || recording}
           style={{
-            flex: 1, minWidth: 0, height: 36, padding: "0 12px", borderRadius: 18,
+            flex: 1, minWidth: 0, height: 40, padding: "0 14px", borderRadius: 20,
             background: isLight ? "#F1F5F9" : "rgba(255,255,255,0.06)",
             border: `1px solid ${isLight ? "rgba(15,23,42,0.08)" : "rgba(255,255,255,0.10)"}`,
-            color: T.txt, fontSize: 13.5, fontFamily: font, outline: "none", transition: "border-color 0.15s"
+            color: T.txt, fontSize: chatType.input, fontFamily: font, outline: "none", transition: "border-color 0.15s"
           }}
           onFocus={(e) => { e.currentTarget.style.borderColor = T.accent; }}
           onBlur={(e) => { e.currentTarget.style.borderColor = isLight ? "rgba(15,23,42,0.08)" : "rgba(255,255,255,0.10)"; }}
@@ -835,6 +872,63 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
 /* ── Burbuja de mensaje ── */
 /* Convierte el texto en nodos con links clicables: markdown [label](url) y URLs sueltas.
    Así los Drive del catálogo/recomendación se abren con un toque (antes se veían crudos). */
+/* Trozo de línea con **negrita** y enlaces. La negrita se renderiza porque el
+   modelo la produce sola al armar listas y planes — antes se veía el `**` crudo
+   en pantalla, que es exactamente lo contrario de lo que pidió Iván. */
+function renderInline(text, linkColor, key) {
+  const partes = [];
+  let resto = String(text), i = 0;
+  const rxB = /\*\*([^*\n]+)\*\*/;
+  let m;
+  while ((m = rxB.exec(resto)) !== null) {
+    if (m.index > 0) partes.push(renderRichText(resto.slice(0, m.index), linkColor));
+    partes.push(<strong key={`b${key}-${i++}`} style={{ fontWeight: 600 }}>{m[1]}</strong>);
+    resto = resto.slice(m.index + m[0].length);
+  }
+  if (resto) partes.push(renderRichText(resto, linkColor));
+  return partes;
+}
+
+/* Da forma de LISTA a lo que llega como texto: numeradas (1.), viñetas
+   (· - •) y encabezados de persona (▸ Yazmin Ledesma).
+   Iván, 28-jul: «que el sistema le organice, le seccione, le separe por
+   párrafos, para que todo quede claro, bonito, entendible». Con `pre-wrap` a
+   secas los renglones existían pero no se leían como una lista: sin sangría
+   colgante, un título largo volvía al margen y se mezclaba con el siguiente. */
+function renderBloques(text, linkColor, accent) {
+  if (typeof text !== "string" || !text) return text;
+  const lineas = text.split("\n");
+  return lineas.map((ln, i) => {
+    const l = ln.trimEnd();
+    if (l.trim() === "") return <div key={`e${i}`} style={{ height: 8 }} />;
+
+    const persona = l.match(/^\s*▸\s*(.+)$/);
+    if (persona) return (
+      <div key={`p${i}`} style={{ marginTop: i === 0 ? 0 : 10, marginBottom: 3, fontWeight: 600, color: accent }}>
+        {persona[1]}
+      </div>
+    );
+
+    const num = l.match(/^\s*(\d{1,2})[.)]\s+(.*)$/);
+    if (num) return (
+      <div key={`n${i}`} style={{ display: "flex", gap: 8, marginBottom: 2 }}>
+        <span style={{ flexShrink: 0, opacity: 0.65, minWidth: 16, textAlign: "right" }}>{num[1]}.</span>
+        <span style={{ minWidth: 0 }}>{renderInline(num[2], linkColor, i)}</span>
+      </div>
+    );
+
+    const vin = l.match(/^\s*[·•\-]\s+(.*)$/);
+    if (vin) return (
+      <div key={`v${i}`} style={{ display: "flex", gap: 8, marginBottom: 2 }}>
+        <span style={{ flexShrink: 0, opacity: 0.65 }}>·</span>
+        <span style={{ minWidth: 0 }}>{renderInline(vin[1], linkColor, i)}</span>
+      </div>
+    );
+
+    return <div key={`t${i}`} style={{ marginBottom: 2 }}>{renderInline(l, linkColor, i)}</div>;
+  });
+}
+
 function renderRichText(text, linkColor) {
   if (typeof text !== "string" || !text) return text;
   const rx = /\[([^\]\n]+)\]\((https?:\/\/[^)\s]+)\)|(https?:\/\/[^\s)]+)/g;
@@ -943,11 +1037,15 @@ function Bubble({ m, T, isLight, userBg, userTxt, aiBg, aiBd, onPick, sending, i
         </div>
       )}
       <div style={{
-        maxWidth: "82%", padding: "8px 12px", borderRadius: 14,
+        /* Ancho de LECTURA, no de pantalla. En un monitor ancho el 82% daba
+           renglones de ~1.400px y el ojo se pierde al volver al principio de la
+           línea. ~74 caracteres es el ancho cómodo de lectura — es lo que hace
+           que ChatGPT/Codex (la referencia que mandó Iván) se lean bien. */
+        maxWidth: "min(82%, 62ch)", padding: "10px 14px", borderRadius: 14,
         borderBottomRightRadius: isUser ? 3 : 14, borderBottomLeftRadius: isUser ? 14 : 3,
         background: isUser ? userBg : aiBg, border: isUser ? "none" : `1px solid ${aiBd}`,
-        color: isUser ? userTxt : T.txt, fontSize: 13.2, lineHeight: 1.48, fontFamily: font,
-        whiteSpace: "pre-wrap", wordBreak: "break-word", opacity: m.pending ? 0.7 : 1,
+        color: isUser ? userTxt : T.txt, fontSize: chatType.body, lineHeight: chatType.bodyLh, fontFamily: font,
+        wordBreak: "break-word", opacity: m.pending ? 0.7 : 1,
         boxShadow: isLight ? (isUser ? `0 3px 10px ${T.accent}28` : "0 1px 4px rgba(15,23,42,0.03)") : "none"
       }}>
         {/* Evidencia adjunta: la miniatura SE VE en el chat y se abre a pantalla completa (estilo WhatsApp) */}
@@ -982,7 +1080,7 @@ function Bubble({ m, T, isLight, userBg, userTxt, aiBg, aiBd, onPick, sending, i
         {m.videoUrl && (
           <video src={m.videoUrl} controls style={{ display: "block", maxWidth: 240, maxHeight: 240, borderRadius: 10, marginBottom: 6, background: "#000" }} />
         )}
-        {renderRichText(m.content, isUser ? "inherit" : T.accent)}
+        {renderBloques(m.content, isUser ? "inherit" : T.accent, isUser ? "inherit" : T.accent)}
         {inlineButtons.length > 0 && (
           <div style={{ display: "flex", gap: 5, flexWrap: "wrap", marginTop: 8, paddingTop: 7, borderTop: `1px solid ${isLight ? "rgba(15,23,42,0.06)" : "rgba(255,255,255,0.06)"}` }}>
             {inlineButtons.map((btn, idx) => (
@@ -1003,13 +1101,13 @@ function Bubble({ m, T, isLight, userBg, userTxt, aiBg, aiBd, onPick, sending, i
                 style={{
                   padding: "4px 10px", borderRadius: 7, border: btn.primary ? "none" : `1px solid ${T.border}`,
                   background: btn.primary ? T.accent : (isLight ? "#FFFFFF" : "rgba(255,255,255,0.06)"),
-                  color: btn.primary ? (isLight ? "#FFF" : "#041016") : T.txt, fontSize: 11.5, fontWeight: btn.primary ? 600 : 500,
+                  color: btn.primary ? (isLight ? "#FFF" : "#041016") : T.txt, fontSize: chatType.chip, fontWeight: btn.primary ? 600 : 500,
                   fontFamily: font, cursor: (sending && !btn.isUrl) ? "default" : "pointer"
                 }}>{btn.label}</button>
             ))}
           </div>
         )}
-        {time && <span style={{ display: "block", marginTop: 3, fontSize: 10, opacity: 0.55, textAlign: "right" }}>{time}</span>}
+        {time && <span style={{ display: "block", marginTop: 4, fontSize: chatType.time, opacity: 0.55, textAlign: "right" }}>{time}</span>}
       </div>
     </div>
   );
@@ -1170,14 +1268,14 @@ function EmptyState({ T, isLight, onPick }) {
         <CopilotMark size={30} isLight={isLight} />
       </div>
       <h3 style={{ margin: "0 0 4px", fontSize: 16, fontWeight: 600, color: T.txt, fontFamily: fontDisp }}>Tu Asistente Operativo</h3>
-      <p style={{ margin: "0 0 14px", fontSize: 12.5, color: T.txt3, lineHeight: 1.5, fontFamily: font }}>
+      <p style={{ margin: "0 0 14px", fontSize: chatType.chip + 1, color: T.txt3, lineHeight: 1.5, fontFamily: font }}>
         Escríbele o díctale por voz. Pídele clientes, agenda, métricas, o busca a alguien por nombre.
       </p>
       <div style={{ display: "flex", gap: 6, flexWrap: "wrap", justifyContent: "center" }}>
         {SUGGESTIONS.map((s) => (
           <button key={s.text} type="button" onClick={() => onPick(s.text)}
-            style={{ padding: "5px 12px", borderRadius: 999, background: isLight ? "#FFFFFF" : "rgba(255,255,255,0.05)", border: `1px solid ${isLight ? "rgba(15,23,42,0.10)" : "rgba(255,255,255,0.12)"}`, color: T.txt2, fontSize: 12, fontFamily: font, cursor: "pointer" }}>
-            <Bot size={12} color={T.accent} style={{ marginRight: 4, verticalAlign: "middle" }} />{s.label}
+            style={{ padding: "6px 13px", borderRadius: 999, background: isLight ? "#FFFFFF" : "rgba(255,255,255,0.05)", border: `1px solid ${isLight ? "rgba(15,23,42,0.10)" : "rgba(255,255,255,0.12)"}`, color: T.txt2, fontSize: chatType.chip, fontFamily: font, cursor: "pointer" }}>
+            <Bot size={13} color={T.accent} style={{ marginRight: 4, verticalAlign: "middle" }} />{s.label}
           </button>
         ))}
       </div>

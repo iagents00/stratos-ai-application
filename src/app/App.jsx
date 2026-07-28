@@ -47,6 +47,7 @@ import DynIsland          from "./components/DynIsland";
 import IAOSIsland         from "./components/IAOSIsland";
 import CopilotMark        from "./components/CopilotMark";
 import { buildIntelNotifs } from "./constants/intelNotifs";
+import { buildMktIntelNotifs, buildMktIntelPhrases } from "./constants/intelMkt";
 import PermissionGate     from "./components/PermissionGate";
 import { IosIcon }        from "./icons/ios-icons";
 import Chat, { getResp }  from "./features/ChatPanel";
@@ -340,6 +341,9 @@ export default function App() {
   const [msgs, setMsgs]  = useState([]);
   const [inp, setInp]    = useState("");
   const [notifs, setNotifs] = useState([]);
+  // Centro de Inteligencia de MARKETING (Alex y su equipo no tienen leads:
+  // ven sus tareas vencidas, videos parados y quién no reportó bitácora).
+  const [mktIntel, setMktIntel] = useState(null);
   // Dropdown de la campana — abierto/cerrado
   const [bellOpen, setBellOpen] = useState(false);
   // Centro de Inteligencia desde el "+" del bottom-nav móvil: contador que
@@ -1544,6 +1548,25 @@ export default function App() {
     setNotifs(buildIntelNotifs(leadsData));
   }, [user, leadsData]);
 
+  // Marketing: su propio Centro de Inteligencia, desde el cerebro (fn_mkt_intel).
+  // Se refresca al entrar y cada 5 minutos — no hace falta más: son tareas del
+  // día, no un chat. Se corta cuando la pestaña está oculta (regla de perf).
+  const esMkt = !!user && (user.role === "marketing" || user.isMarketingAdmin === true);
+  useEffect(() => {
+    if (!esMkt || !user?.id) { setMktIntel(null); return; }
+    let vivo = true;
+    const cargar = async () => {
+      if (document.hidden) return;
+      try {
+        const { data } = await supabase.rpc("fn_mkt_intel", { p_profile_id: user.id });
+        if (vivo && data?.ok) setMktIntel(data);
+      } catch { /* si falla, la isla simplemente no muestra nada */ }
+    };
+    cargar();
+    const t = setInterval(cargar, 300000);
+    return () => { vivo = false; clearInterval(t); };
+  }, [esMkt, user?.id]);
+
   /* ── oc — chat callback passed to views ── */
   const oc = useCallback((t, leadData) => {
     if (t) setTimeout(() => {
@@ -1971,10 +1994,12 @@ export default function App() {
                     : <>Stratos<span style={{ marginLeft:3, fontWeight:400, color: isLight ? "rgba(15,23,42,0.38)" : "rgba(255,255,255,0.30)", letterSpacing:"0.01em" }}>AI</span></>}
                 </p>
                 {hasCRM && <IAOSIsland leadsData={leadsData} isLight={isLight} idx={iaosIdx} brandLabel={orgBrand} onOpen={() => setIntelOpenTick(t => t + 1)} />}
+                {!hasCRM && esMkt && mktIntel && <IAOSIsland isLight={isLight} idx={iaosIdx} brandLabel={orgBrand} phrases={buildMktIntelPhrases(mktIntel, orgBrand)} onOpen={() => setIntelOpenTick(t => t + 1)} />}
               </div>
               {/* CENTER */}
               <div className="stratos-header-center" style={{ position:"absolute", left:"50%", transform:"translateX(-50%)" }}>
                 {hasCRM && <DynIsland onExpand={openPriorityLead} onOpenLead={openLeadExpediente} notifications={notifs} theme={theme} beamIdx={iaosIdx} openSignal={intelOpenTick} />}
+                {!hasCRM && esMkt && mktIntel && <DynIsland notifications={buildMktIntelNotifs(mktIntel)} theme={theme} beamIdx={iaosIdx} openSignal={intelOpenTick} />}
               </div>
               {/* RIGHT */}
               <div className="stratos-header-right" style={{ display:"flex", alignItems:"center", gap:4 }}>

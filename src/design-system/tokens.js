@@ -126,6 +126,27 @@ export const font     = `"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI V
 export const fontDisp = `"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI Variable", "Segoe UI", Roboto, Helvetica, Arial, sans-serif`;
 export const mono     = `"SF Mono", "Cascadia Code", "Consolas", "Fira Code", monospace`;
 
+// ─── TIPOGRAFÍA DEL CHAT (Copilot) ────────────────────────────────────────────
+// Iván, 28-jul-2026: «Detesto leer letras chiquitas… es parte de la comodidad y
+// la experiencia del usuario.»
+//
+// El Copilot es la pantalla donde la gente pasa el día, y la mitad del equipo lo
+// usa desde el celular. Por eso su tipografía es DELIBERADAMENTE más grande que
+// el resto de la app — no es un descuido de consistencia, es una decisión.
+//
+// ⚠️ Vale para TODOS los tenants (Duke, marketing, NSG y white-labels). Si hay
+// que agrandar o achicar el chat, se toca ACÁ y en ningún otro lado: un parche
+// por pantalla deja a los demás clientes con la letra vieja.
+export const chatType = {
+  body:   15.5,  // el mensaje — lo que se lee todo el día (antes 13.2)
+  bodyLh: 1.55,  // aire entre renglones; 1.48 apretaba los mensajes largos
+  input:  15.5,  // lo que se escribe, del mismo tamaño que lo que se lee
+  title:  16,    // "Copilot AI"
+  chip:   13,    // botones y sugerencias dentro del chat
+  meta:   12,    // estados y etiquetas
+  time:   11,    // la hora del mensaje
+};
+
 // ─── ESPACIADO ────────────────────────────────────────────────────────────────
 export const spacing = {
   1:  4,

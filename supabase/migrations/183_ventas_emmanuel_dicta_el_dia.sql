@@ -1,0 +1,40 @@
+-- 183 · VENTAS: que Emmanuel pueda dictar el día de sus vendedores
+--
+-- ═══════════════════════════════════════════════════════════════════════════
+-- Estado final de las migraciones 198-199 (base), 29-jul-2026.
+-- ═══════════════════════════════════════════════════════════════════════════
+--
+-- POR QUÉ. Iván, 28-jul — es la tesis del producto:
+--   «El sistema es bueno si se adapta a una persona como Macarena o como
+--    EMMANUEL. Porque eso es lo que representa el potencial que tiene.»
+--   Su ejemplo: «A ver, vamos a organizar el día de mañana. Mañana necesito
+--   que los vendedores todos hagan tal cosa, y luego que hagan tal cosa.»
+--
+-- EL HUECO QUE HABÍA: todo lo que se construyó ese día para exactamente eso
+-- —dictar varias actividades de corrido, agrupar por persona, entender «a las
+-- doce», los apodos— quedó SOLO en el cerebro de MARKETING. Y Emmanuel Ortiz
+-- es director de VENTAS. El caso que Iván puso como la tesis no funcionaba en
+-- el lado donde esa persona trabaja.
+--
+-- CÓMO, SIN ROMPER NADA (regla de oro: marketing ≠ ventas):
+--   · Ventas tiene su tabla (team_actions) y su cerebro. NO se comparte una
+--     función con marketing: se PORTA la lógica.
+--   · Todo es ADITIVO. Ni una línea toca leads, pipeline, etapas ni el CRM de
+--     los asesores. bot_create_team_action (la de siempre) queda intacta.
+--
+-- LOS DOS DEFECTOS QUE SALIERON DE LEER EL PLAN, no de leer el código:
+--   1. «que Daniel llame al arquitecto» → la acción quedaba para TODOS,
+--      porque «no lo encontré» se trataba igual que «no dijiste a quién».
+--      (Daniel Pavón existe pero está inactivo.) Es el mismo error silencioso
+--      que ya nos mordió en marketing: Emmanuel nombra a una persona y le
+--      llega a los doce vendedores sin que nadie vea un error.
+--   2. «registrale a Gael que actualice el pipeline» quedaba como título
+--      «A Gael que actualice el pipeline» — el nombre ya está en su columna.
+--
+-- ⚠️ FALTA EL ÚLTIMO PASO: enseñarle la tool nueva al agente de ventas
+--    (flujo n8n 8ZasBukTkSx26m2A). Sin eso esto existe pero nadie lo llama.
+--    Se dejó sin hacer a propósito: ese flujo lo usan los asesores de Duke
+--    todos los días y merece una sesión con cabeza, no el final de una.
+--
+-- REVERTIR: las funciones nuevas se pueden dropear sin efecto sobre lo existente.
+-- (cuerpo aplicado en la base como migraciones 198 y 199; ver Supabase)
