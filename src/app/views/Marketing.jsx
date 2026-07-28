@@ -1079,7 +1079,9 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
                     );
                   })}
                   {bita.length > bitaVisible.length && (
-                    <div style={{ fontSize: 10.5, color: txt3 }}>+{bita.length - bitaVisible.length} días más reportados</div>
+                    <div style={{ fontSize: 10.5, color: txt3 }}>
+                      +{bita.length - bitaVisible.length} {bita.length - bitaVisible.length === 1 ? "reporte anterior" : "reportes anteriores"}
+                    </div>
                   )}
                 </div>
               )}
