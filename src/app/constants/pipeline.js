@@ -45,3 +45,19 @@ export const DEFAULT_STAGE = STAGES[0];
 
 /** true si el cliente activo usa un pipeline custom (útil para apagar lógica Duke-específica). */
 export const IS_CUSTOM_PIPELINE = !!_custom;
+
+// ── Ajustes del cliente para las piezas que dependían de las etapas de Duke ──
+// (lista de prioridad y score). Ver `_shared/defaults.js` para el porqué.
+
+/** Etapas que entran solas a la lista de prioridad. Vacío → solo señales genéricas. */
+export const PRIORITY_STAGES = new Set(
+  Array.isArray(_cfg?.crm?.priorityStages) ? _cfg.crm.priorityStages : [],
+);
+
+/** Etapas que no cuentan como avance (cierre perdido y estados de excepción). */
+export const NO_PROGRESS_STAGES = new Set(
+  Array.isArray(_cfg?.crm?.noProgressStages) ? _cfg.crm.noProgressStages : [],
+);
+
+/** Cuánto vale un trabajo típico de este negocio (escala del score). null → umbrales de Duke. */
+export const TICKET_REFERENCIA = Number(_cfg?.crm?.ticketReferencia) || null;

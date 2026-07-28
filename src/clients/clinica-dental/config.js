@@ -154,6 +154,21 @@ const clinicaDentalConfig = {
     // en false, cada paciente conserva su etapa al reasignarlo de doctor.
     bulkReassignToContactameByDefault: false,
 
+    // ── Ajustes que antes se calculaban con las etapas de Duke ───────────────
+    // ⭐ Las tres cosas que dan plata en una clínica, juntas en la lista de
+    // prioridad: la cita de mañana (confirmarla baja las faltas), el presupuesto
+    // que ya escuchó el precio y no contestó, y el que NO vino (es dinero
+    // recuperable, por eso también aparece acá y no solo en su columna).
+    priorityStages: ["Cita agendada", "Presupuesto", "No asistió"],
+    // No cuentan como avance NI el que dijo que no NI el que faltó. Ojo: faltar
+    // no es perder — "No asistió" sigue arriba en priorityStages para perseguirlo;
+    // lo que no puede es puntuar como si hubiera avanzado (medido: puntuaba MÁS
+    // que un paciente que terminó su tratamiento).
+    noProgressStages: ["No aceptó", "No asistió"],
+    // ⚠️ SUPUESTO A CONFIRMAR CON LA CLÍNICA: un tratamiento típico ~$25.000 MXN
+    // (una limpieza es mucho menos; una ortodoncia u implantes, varias veces más).
+    ticketReferencia: 25000,
+
     // ── Pipeline de PACIENTES — solo Clínica Dental ───────────────────────────
     // El camino real de una clínica: alguien pregunta → se le da cita → viene a
     // valoración → se le presenta el plan con precio → lo acepta y se trata →

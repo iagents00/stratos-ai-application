@@ -38,7 +38,7 @@ import SuggestActionsModal from "../../components/SuggestActionsModal";
 import { AI_AGENTS, AI_AGENT_LIST } from "../../constants/agents";
 // Pipeline + vocabulario activos resueltos por cliente. Para Duke devuelven
 // exactamente STAGES/stgC/labels históricos; Vega usa su pipeline y "proyecto".
-import { STAGES, stgC, DEFAULT_STAGE, IS_CUSTOM_PIPELINE } from "../../constants/pipeline";
+import { STAGES, stgC, DEFAULT_STAGE, IS_CUSTOM_PIPELINE, PRIORITY_STAGES } from "../../constants/pipeline";
 import { L } from "../../constants/labels";
 import {
   calculateLeadScore,
@@ -1930,7 +1930,18 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
   // Lead automáticamente "prioritario" en la cola del asesor.
   // Pipeline Mayo 2026: Zoom Agendado | Reactivar Zoom (antes "No Show") |
   // Apartó (milestone reciente) | Seguimiento activo (antes "Zoom Concretado").
-  const isAutoPriority = (l) => (l.isNew || l.st === "Zoom Agendado" || l.st === "Reactivar Zoom" || l.st === "Apartó" || l.st === "Seguimiento" || l.hot || l.daysInactive <= 3) && !dismissedIds.has(l.id);
+  // En un cliente con tablero propio, ninguna de esas etapas existe: la lista de
+  // prioridad quedaba viviendo solo de "nuevo / en caliente / movido hace poco" y
+  // NUNCA levantaba lo que de verdad hay que atender hoy en ese negocio (la cita
+  // de mañana, el presupuesto esperando respuesta, el que no vino). Cada empresa
+  // declara esas etapas en `crm.priorityStages`; si no declara ninguna, se
+  // comporta como antes. Duke usa la lista histórica, sin cambios.
+  const isAutoPriority = (l) => (
+    l.isNew || l.hot || l.daysInactive <= 3 ||
+    (IS_CUSTOM_PIPELINE
+      ? PRIORITY_STAGES.has(l.st)
+      : (l.st === "Zoom Agendado" || l.st === "Reactivar Zoom" || l.st === "Apartó" || l.st === "Seguimiento"))
+  ) && !dismissedIds.has(l.id);
   const rawPriorityLeads = visibleLeads.filter(l => pinnedIds.has(l.id) || isAutoPriority(l));
   // Orden final: modo manual respeta drag & dropdown de posición; los demás aplican criterio
   const priorityLeadsFull = (() => {

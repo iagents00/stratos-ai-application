@@ -140,6 +140,15 @@ const brasaYPiedraConfig = {
     // en false, cada reserva conserva su etapa al reasignarla.
     bulkReassignToContactameByDefault: false,
 
+    // ── Ajustes que antes se calculaban con las etapas de Duke ───────────────
+    // La reserva confirmada (hay que montarla) y la solicitud sin responder
+    // (se enfría en horas) son lo que hay que mirar hoy.
+    priorityStages: ["Confirmada", "Solicitud"],
+    // No cuentan como avance: no vino, o avisó que no venía.
+    noProgressStages: ["No asistió", "Cancelada"],
+    // ⚠️ SUPUESTO A CONFIRMAR CON EL RESTAURANTE: un evento típico ~$15.000 MXN.
+    ticketReferencia: 15000,
+
     // ── Pipeline de RESERVAS Y EVENTOS — solo Brasa y Piedra ──────────────────
     // El camino real: entra la solicitud → se responde y se acuerda → si es
     // evento se cotiza → se confirma (con anticipo) → llega el día y se atiende.

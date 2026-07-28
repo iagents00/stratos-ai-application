@@ -222,6 +222,34 @@ export const DEFAULT_CLIENT_CONFIG = {
     // Duke. Duke nunca se ve afectado mientras esto siga en null.
     labels: null,
 
+    // ── Ajustes para clientes con PIPELINE PROPIO ────────────────────────────
+    // Los tres campos de acá abajo existen porque dos piezas del CRM estaban
+    // calculadas con las etapas y los montos de Duke, y en otro rubro quedaban
+    // inservibles: la LISTA DE PRIORIDAD (no levantaba nada) y el SCORE (no podía
+    // pasar de ~25/100). Default null → nada cambia para quien usa el pipeline
+    // histórico.
+
+    // Etapas que meten un registro SOLO en la lista de prioridad, además de las
+    // señales genéricas (nuevo, marcado en caliente, movimiento reciente). Son
+    // "lo que hay que atender hoy" en ese negocio: la cita de mañana, el
+    // presupuesto esperando respuesta, el que faltó. Shape: ["Etapa", ...].
+    priorityStages: null,
+
+    // Etapas que NO son avance: cierres perdidos (canceló, no aceptó) Y estados
+    // de excepción (no vino). Importan para el score, que premia avanzar en el
+    // tablero: sin esto, las últimas columnas puntúan altísimo — y en casi todos
+    // estos tableros las últimas columnas son justamente la pérdida y el no-show.
+    // Medido: en la clínica, el paciente que FALTÓ puntuaba más que el que
+    // terminó su tratamiento. Ojo: "no es avance" no significa "abandonar" — el
+    // no-show puede estar a la vez en `priorityStages` para perseguirlo.
+    noProgressStages: null,
+
+    // Ticket de referencia del negocio, en pesos: cuánto vale un trabajo TÍPICO.
+    // El score reparte los puntos de presupuesto en escala a este número (los
+    // umbrales fijos de Duke —2M, 1M, 500k— dejaban a un taller o una clínica
+    // siempre en el escalón más bajo). null → se usan los umbrales históricos.
+    ticketReferencia: null,
+
     // KPIs de arriba del CRM custom por cliente. Default null → las 4 tarjetas
     // históricas de Stratos (Clientes en Pipeline / Score / Zooms / Valor). Si
     // un cliente declara un array (ej. Vega: métricas de obra), el CRM renderiza

@@ -31,7 +31,7 @@ import { zoomEventsOf } from "./zoom-metrics";
 import { StratosAtom, StratosAtomHex } from "../../components/Logo";
 import { AI_AGENTS, AI_AGENT_LIST } from "../../constants/agents";
 // Pipeline + vocabulario activos por cliente (Duke: idéntico; Vega: su pipeline / "proyecto").
-import { STAGES, stgC, IS_CUSTOM_PIPELINE } from "../../constants/pipeline";
+import { STAGES, stgC, IS_CUSTOM_PIPELINE, NO_PROGRESS_STAGES, TICKET_REFERENCIA } from "../../constants/pipeline";
 import { L } from "../../constants/labels";
 import LeadNotesTimeline from "./LeadNotesTimeline";
 import { getEntityHistory, fieldLabel, actionLabel } from "../../../lib/audit";
@@ -54,19 +54,47 @@ const calculateLeadScore = (lead) => {
   let score = 0;
 
   // 1. Stage progression — 0 a 35 pts
-  // Pipeline oficial Duke (12 etapas). Apartó y Cierre son los milestones más altos.
-  const stages = ["Contáctame Ya","Segundo Intento","Tercer Intento","Rotación",
-    "Remarketing IA","Zoom Agendado","Reactivar Zoom","Seguimiento","Largo Plazo","Apartó",
-    "Visita Agendada","Cierre","Postventa"];
-  const stageIdx = stages.indexOf(lead.st ?? "Contáctame Ya");
-  // Excluir "Postventa" del score positivo
-  if (stageIdx >= 0 && lead.st !== "Postventa") {
-    score += Math.round((stageIdx / 10) * 35);
+  if (IS_CUSTOM_PIPELINE) {
+    // Cliente con tablero propio: se avanza sobre SUS etapas. Antes esto daba
+    // CERO siempre (ninguna etapa suya está en la lista de Duke de abajo), así
+    // que el score de un pedido o un paciente no podía pasar de ~25/100.
+    // Las etapas que no son avance (perdidas y no-shows) no puntúan: si no, las
+    // últimas columnas serían las más altas. Medido antes de corregirlo: en la
+    // clínica, el paciente que FALTÓ puntuaba más que el que terminó de tratarse.
+    if (!NO_PROGRESS_STAGES.has(lead.st)) {
+      const activas = STAGES.filter(s => !NO_PROGRESS_STAGES.has(s));
+      const idx = activas.indexOf(lead.st);
+      const ultima = Math.max(1, activas.length - 1);
+      if (idx >= 0) score += Math.round((idx / ultima) * 35);
+    }
+  } else {
+    // Pipeline oficial Duke (12 etapas). Apartó y Cierre son los milestones más altos.
+    const stages = ["Contáctame Ya","Segundo Intento","Tercer Intento","Rotación",
+      "Remarketing IA","Zoom Agendado","Reactivar Zoom","Seguimiento","Largo Plazo","Apartó",
+      "Visita Agendada","Cierre","Postventa"];
+    const stageIdx = stages.indexOf(lead.st ?? "Contáctame Ya");
+    // Excluir "Postventa" del score positivo
+    if (stageIdx >= 0 && lead.st !== "Postventa") {
+      score += Math.round((stageIdx / 10) * 35);
+    }
   }
 
   // 2. Presupuesto — 0 a 25 pts
   const budget = lead.presupuesto || parseBudget(lead.budget) || 0;
-  if      (budget >= 2_000_000) score += 25;
+  if (TICKET_REFERENCIA) {
+    // Escalado al ticket típico del negocio. Los umbrales fijos de abajo son de
+    // venta inmobiliaria: un tratamiento de $30.000 o un mueble de $80.000
+    // caían siempre en el escalón más bajo, sin importar si eran un trabajo
+    // grande PARA ESE NEGOCIO. Mismos 6 escalones, misma forma, otra escala.
+    const r = budget / TICKET_REFERENCIA;
+    if      (r >= 4)   score += 25;
+    else if (r >= 2)   score += 20;
+    else if (r >= 1)   score += 15;
+    else if (r >= 0.5) score += 10;
+    else if (r >= 0.2) score += 5;
+    else if (budget > 0) score += 2;
+  }
+  else if (budget >= 2_000_000) score += 25;
   else if (budget >= 1_000_000) score += 20;
   else if (budget >= 500_000)   score += 15;
   else if (budget >= 200_000)   score += 10;

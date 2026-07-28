@@ -134,6 +134,15 @@ const legacyDesignConfig = {
     // en false, cada proyecto conserva su etapa al reasignarlo de arquitecto.
     bulkReassignToContactameByDefault: false,
 
+    // ── Ajustes que antes se calculaban con las etapas de Duke ───────────────
+    // La casa que está EN CURSO es la que se mira todos los días.
+    priorityStages: ["En curso"],
+    // Su hoja no tiene una columna de "perdida": una casa no se cancela, se
+    // demora. Por eso queda vacío a propósito.
+    noProgressStages: [],
+    // ⚠️ SUPUESTO A CONFIRMAR: una casa ~$2.000.000 MXN de honorarios/obra.
+    ticketReferencia: 2000000,
+
     // ── Pipeline = el ESTADO de su hoja real — solo Legacy Design ─────────────
     // ⚠️ ESTA ES LA DECISIÓN IMPORTANTE DE ESTE TENANT, y va contra el instinto:
     // NO se inventa un kanban de etapas de obra (consulta → anteproyecto →

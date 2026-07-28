@@ -150,6 +150,18 @@ const muebleriaConfig = {
     // En false, cada pedido conserva su etapa al reasignarlo de carpintero.
     bulkReassignToContactameByDefault: false,
 
+    // ── Ajustes que antes se calculaban con las etapas de Duke ───────────────
+    // Lo que entra solo a la lista de prioridad: la medición (tiene fecha con el
+    // cliente), el pedido recién aprobado (hay que arrancarlo) y el que ya está
+    // en la puerta para entregar.
+    priorityStages: ["Medición", "Aprobado", "Entrega"],
+    // No cuenta como avance: el pedido que se cayó.
+    noProgressStages: ["Cancelado"],
+    // ⚠️ SUPUESTO A CONFIRMAR CON EL TALLER: un mueble típico ~$50.000 MXN
+    // (una cocina integral es varias veces esto; una reparación, una fracción).
+    // Solo escala el score; cambiarlo es una línea.
+    ticketReferencia: 50000,
+
     // ── Pipeline de PEDIDOS del taller — solo Mueblería ───────────────────────
     // El camino real de un mueble a medida: alguien pregunta → se va a tomar
     // medidas → se cotiza → aprueban y dan anticipo → se fabrica → acabados →
