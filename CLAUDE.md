@@ -394,10 +394,19 @@ código. **NO ES un fork — es un solo bundle con config por cliente.**
 | `/muebleria` | `muebleria` | Fábrica de muebles / carpintería | **pedido** |
 | `/legacy-design` | `legacy-design` | Arquitectura + desarrollo inmobiliario | **proyecto** |
 | `/brasa-y-piedra` | `brasa-y-piedra` | Restaurante (Playa del Carmen) | **reserva / evento** |
+| `/clinica-dental` | `clinica-dental` | Clínica dental (salud) | **paciente** |
 
-Los tres últimos (jul-2026) son verticales NO inmobiliarias: mismo motor, con su
+Los cuatro últimos (jul-2026) son verticales NO inmobiliarias: mismo motor, con su
 propio `crm.pipeline`, `crm.labels` y `crm.kpis`. Duke no se ve afectado porque
 esos campos siguen en `null` en su config.
+
+🔒 **La clínica dental es la primera vertical de SALUD.** El CRM sirve para el
+camino comercial del paciente (contacto → cita → presupuesto → tratamiento →
+control) y para eso está bien, pero **no es un expediente clínico**: no tiene
+bitácora de accesos, ni consentimiento, ni los resguardos que pide un dato de
+salud. Historia clínica y radiografías se quedan en el software dental del
+cliente. Si algún día se quiere guardar dato clínico acá, es un proyecto aparte
+con su propia revisión — no una config más.
 
 El cliente queda disponible en toda la app vía `useClient()`:
 
@@ -455,6 +464,7 @@ de clientes), el flujo es:
 - `Mueblería` = `"e583eb98-ff00-4920-a69c-db39f3841b31"` (migración 179).
 - `Legacy Design` = `"281caa01-7414-4eef-b3b6-afa1e7623ab3"` (migración 179).
 - `Brasa y Piedra` = `"ea74b69a-6904-4c65-a0ca-e0af58f1473a"` (migración 179).
+- `Clínica Dental` = `"6c5cf32a-3db4-477d-bbed-26d90231bc9a"` (migración 180).
 - `canAccessModule(moduleId, user)` en `src/app/constants/navigation.js`:
   clientes externos solo ven CRM, Perfil, Papelera (independiente del rol).
 - RLS de Supabase filtra registros por `organization_id` automáticamente.
@@ -489,7 +499,19 @@ Helpers expuestos en `src/clients/index.js`:
      de cita de ese negocio** (medición, reunión, reserva confirmada). Es lo que hace
      que el recordatorio de N horas antes signifique algo.
    - `terminal_stages` = las etapas ya cerradas, para que el escáner de inactividad
-     no moleste por trabajo terminado.
+     no moleste por trabajo terminado. **Pensalo por negocio, no por copiar:** en el
+     restaurante "No asistió" ES terminal (la cena ya pasó), en la clínica NO lo es
+     a propósito (el paciente que faltó es dinero recuperable y se persigue).
+   - **`zoom_reminder_hours` tiene un tope real de 24.** `fn_proactive_scan_zooms`
+     solo mira citas con `next_action_at <= now() + 24 hours`, así que poner 48 o 72
+     no adelanta nada: esas citas ni entran al escaneo. `24` = "avisá apenas la cita
+     entre en el día siguiente" (la confirmación del día antes, que es lo que baja
+     las faltas). El motor además manda solo el aviso de 1 h y el de 15 min.
+   - ⚠️ **Los textos de esos recordatorios dicen "Zoom" y están hardcodeados** dentro
+     de `fn_proactive_scan_zooms` ("En 1 hora tu Zoom con…"). En una clínica o un
+     taller eso se lee mal. Antes de PRENDER el motor en un tenant no inmobiliario,
+     hay que parametrizar el texto por org — la función es compartida y la usa Duke
+     en producción, así que no se toca a la ligera.
 2. **Config**: `src/clients/<id>/config.js` copiando el más parecido. Apagar SIEMPRE
    `dash/erp/team/iacrm/landingPages/finanzas/rrhh` (usan datos mock de Stratos).
 3. **Registro**: importarlo y agregarlo a `CLIENT_CONFIGS` en `src/clients/index.js`.

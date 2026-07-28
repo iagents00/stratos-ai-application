@@ -22,6 +22,7 @@ import nsgConfig     from "./nsg/config";
 import muebleriaConfig     from "./muebleria/config";
 import legacyDesignConfig  from "./legacy-design/config";
 import brasaYPiedraConfig  from "./brasa-y-piedra/config";
+import clinicaDentalConfig from "./clinica-dental/config";
 
 // Registry de todos los clientes conocidos
 const CLIENT_CONFIGS = {
@@ -36,6 +37,7 @@ const CLIENT_CONFIGS = {
   muebleria:       muebleriaConfig,      // fábrica de muebles / carpintería
   "legacy-design": legacyDesignConfig,   // arquitectura + desarrollo inmobiliario
   "brasa-y-piedra": brasaYPiedraConfig,  // restaurante (reservas y eventos)
+  "clinica-dental": clinicaDentalConfig, // clínica dental (pacientes y tratamientos)
 };
 
 /**
