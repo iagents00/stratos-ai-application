@@ -67,6 +67,19 @@ const ETAPAS = [
   { id: "publicada",     l: "Publicada" },
 ];
 
+/* Colores de la columna «Estatus» del registro que trae Alex, para que la tabla
+   se lea IGUAL que su hoja: verde lo aprobado/publicado, ámbar lo que espera,
+   rojo lo que pide cambios. No es decoración — es cómo él escanea el estado. */
+const ETAPA_HEX = {
+  seleccionada:  { d: "#64748B", l: "#64748B" },
+  agendada:      { d: "#7EB8F0", l: "#2563EB" },
+  grabada:       { d: "#A78BFA", l: "#7C3AED" },
+  en_edicion:    { d: "#FBBF24", l: "#D97706" },
+  esperando_voz: { d: "#F87171", l: "#DC2626" },
+  lista:         { d: "#6EE7C2", l: "#0D9A76" },
+  publicada:     { d: "#34D399", l: "#059669" },
+};
+
 const TASK_STATES = [
   { id: "por_hacer",   l: "Por hacer" },
   { id: "en_curso",    l: "En curso" },
@@ -177,6 +190,9 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
   // tareas a propósito — una tarea es algo que ALGUIEN pidió; la bitácora es el
   // relato del día, incluido todo lo que no estaba en ninguna lista.
   const [bitacora, setBitacora] = useState([]);
+  // Columnas que el equipo agregó al registro (viven en mkt_pipeline_columns;
+  // sus valores, en mkt_pipeline_items.datos).
+  const [colsExtra, setColsExtra] = useState([]);
   const [bitaAbierta, setBitaAbierta] = useState(() => new Set()); // ids con el texto completo desplegado
   const [loading, setLoading]   = useState(true);
   const [error, setError]       = useState("");
@@ -186,7 +202,7 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
     setLoading(true);
     setError("");
     try {
-      const [b, pj, tk, pl, rq, pr, bi] = await Promise.all([
+      const [b, pj, tk, pl, rq, pr, bi, cols] = await Promise.all([
         supabase.from("mkt_brands").select("id, nombre, slug, activo, orden")
           .eq("organization_id", orgId).eq("activo", true).order("orden"),
         supabase.from("mkt_projects").select("id, brand_id, nombre, descripcion, drive_url, due_date, estado, orden, created_at")
@@ -194,16 +210,18 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
         supabase.from("mkt_tasks").select("id, brand_id, project_id, titulo, descripcion, assignee_id, created_by, prioridad, estado, avance_pct, due_at, depends_on, drive_url, evidencia_url, evidencia_tipo, updated_at, created_at")
           .eq("organization_id", orgId).is("deleted_at", null)
           .order("due_at", { ascending: true, nullsFirst: false }).limit(600),
-        supabase.from("mkt_pipeline_items").select("id, brand_id, nombre, locacion, etapa, fecha_rodaje, fecha_publicacion, precio, tipo, drive_url, ig_url, crudos_url, video_url, story_url, cine_url, ficha_url, info_url, notas, orden, updated_at")
+        supabase.from("mkt_pipeline_items").select("id, brand_id, nombre, locacion, etapa, fecha_rodaje, fecha_publicacion, precio, tipo, drive_url, ig_url, crudos_url, video_url, story_url, cine_url, ficha_url, info_url, notas, datos, orden, updated_at")
           .eq("organization_id", orgId).is("deleted_at", null).order("orden").order("updated_at"),
         supabase.from("mkt_requests").select("id, brand_id, titulo, detalle, objetivo, complejidad, ref_image_url, fecha_entrega, solicitante, assignee_id, estado, created_at")
           .eq("organization_id", orgId).is("deleted_at", null).order("created_at", { ascending: false }).limit(200),
         supabase.from("profiles").select("id, name, role").eq("organization_id", orgId),
-        supabase.from("mkt_daily_reports").select("id, profile_id, fecha, texto, evidencia_url, origen, created_at")
+        supabase.from("mkt_daily_reports").select("id, profile_id, fecha, texto, evidencia_url, origen, created_at, brand_id, tiempo_texto")
           .eq("organization_id", orgId)
           .order("fecha", { ascending: false }).order("created_at", { ascending: false }).limit(400),
+        supabase.from("mkt_pipeline_columns").select("id, clave, nombre, tipo, opciones, orden")
+          .eq("organization_id", orgId).is("deleted_at", null).order("orden"),
       ]);
-      for (const r of [b, pj, tk, pl, rq, pr, bi]) if (r.error) throw r.error;
+      for (const r of [b, pj, tk, pl, rq, pr, bi, cols]) if (r.error) throw r.error;
       setBrands(b.data || []);
       setProjects(pj.data || []);
       setTasks(tk.data || []);
@@ -211,6 +229,7 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
       setRequests(rq.data || []);
       setPeople(pr.data || []);
       setBitacora(bi.data || []);
+      setColsExtra(cols.data || []);
     } catch (e) {
       setError(`No pude cargar el módulo de ${MODULE_LABEL}. Probá actualizar.`);
     } finally {
@@ -520,15 +539,14 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
         <div style={{ ...card, borderRadius: 13, padding: "11px 15px", display: "flex", alignItems: "center", gap: 11, flexWrap: "wrap" }}>
           <CircleCheck size={16} color={txt3} style={{ flexShrink: 0 }} />
           <div style={{ flex: 1, minWidth: 170, fontSize: 12.5, color: txt2, lineHeight: 1.45 }}>
-            Todavía no cuentas tu bitácora de hoy.
-            <span style={{ color: txt3 }}> Dile al Copilot qué hiciste, con tus palabras.</span>
+            Todavía no cuentas tu reporte de hoy.
+            <span style={{ color: txt3 }}> Son dos minutos y tu líder ya no tiene que preguntarte.</span>
           </div>
-          {onOpenCopilot && (
-            <button onClick={onOpenCopilot} style={{
-              background: "transparent", border: `1px solid ${accent}44`, borderRadius: 9, padding: "5px 11px",
-              cursor: "pointer", color: accent, fontSize: 12, fontFamily: font, whiteSpace: "nowrap",
-            }}>Contarlo ahora</button>
-          )}
+          {/* Lleva a la CAJA, no al chat: es donde Alex pidió que se reporte. */}
+          <button onClick={() => setTab("reporte")} style={{
+            background: "transparent", border: `1px solid ${accent}44`, borderRadius: 9, padding: "5px 11px",
+            cursor: "pointer", color: accent, fontSize: 12, fontFamily: font, whiteSpace: "nowrap",
+          }}>Contarlo ahora</button>
         </div>
       )}
 
@@ -780,9 +798,400 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
     load();
   };
 
+  /* ════════════ LAS DOS HOJAS, COMO HOJAS ════════════
+     Alex y su equipo vienen de dos Google Sheets y así es como leen su trabajo:
+     de corrido, con filtros y con el color del estatus. El tablero kanban y la
+     caja de reporte sirven para OPERAR; estas tablas sirven para MIRAR — que es
+     lo que él hace cuando pregunta «¿cuáles casas grabamos en Cancún?».
+     Ambas viven al lado de su vista operativa, no la reemplazan. */
+
+  const hoja = {
+    wrap:  { ...card, borderRadius: 14, overflowX: "auto", WebkitOverflowScrolling: "touch" },
+    table: { borderCollapse: "separate", borderSpacing: 0, width: "100%", minWidth: 1180, fontFamily: font },
+    th: {
+      position: "sticky", top: 0, zIndex: 1, textAlign: "left", whiteSpace: "nowrap",
+      padding: "9px 11px", fontSize: 10.5, fontWeight: 600, letterSpacing: 0.3,
+      color: txt2, background: isLight ? "#EEF2F7" : "rgba(255,255,255,0.055)",
+      borderBottom: `1px solid ${bd}`,
+    },
+    td: { padding: "9px 11px", fontSize: 12, color: txt2, borderBottom: `1px solid ${bd}`, verticalAlign: "top" },
+  };
+  const chip = (texto, color) => (
+    <span style={{
+      display: "inline-block", padding: "2px 9px", borderRadius: 999, whiteSpace: "nowrap",
+      fontSize: 10.5, fontWeight: 600, color, background: `${color}1E`, border: `1px solid ${color}44`,
+    }}>{texto}</span>
+  );
+  const linkCel = (url, label) => url
+    ? <a href={url} target="_blank" rel="noreferrer" style={{ color: accent, fontSize: 11.5, textDecoration: "none", whiteSpace: "nowrap" }}>{label}</a>
+    : <span style={{ color: txt3, fontSize: 11.5 }}>—</span>;
+
+  /* ── HOJA 1: el registro de propiedades y grabaciones ── */
+  const [pipeVista, setPipeVista]   = useState("tablero");   // tablero | tabla
+  const [pipeFiltro, setPipeFiltro] = useState({ q: "", locacion: "", tipo: "", etapa: "" });
+
+  const pipeFiltrado = useMemo(() => {
+    const q = pipeFiltro.q.trim().toLowerCase();
+    return pipeline.filter(p =>
+      (!q || `${p.nombre} ${p.locacion || ""} ${p.notas || ""}`.toLowerCase().includes(q)) &&
+      (!pipeFiltro.locacion || p.locacion === pipeFiltro.locacion) &&
+      (!pipeFiltro.tipo     || p.tipo === pipeFiltro.tipo) &&
+      (!pipeFiltro.etapa    || p.etapa === pipeFiltro.etapa)
+    );
+  }, [pipeline, pipeFiltro]);
+
+  const locaciones = useMemo(() => [...new Set(pipeline.map(p => p.locacion).filter(Boolean))].sort(), [pipeline]);
+  const tipos      = useMemo(() => [...new Set(pipeline.map(p => p.tipo).filter(Boolean))].sort(), [pipeline]);
+
+  /* Guardar una celda. Optimista NO: se guarda y se recarga, porque el dato de
+     una propiedad lo pueden estar tocando dos personas a la vez y prefiero que
+     la tabla muestre lo que hay en la base, no lo que yo creo que hay. */
+  const [celda, setCelda] = useState(null);      // { id, campo, valor, extra? }
+  const [celdaSaving, setCeldaSaving] = useState(false);
+
+  const guardarCelda = useCallback(async () => {
+    if (!celda?.id) return;
+    const { id, campo, valor, extra } = celda;
+    setCeldaSaving(true);
+    const limpio = String(valor ?? "").trim() || null;
+    let payload;
+    if (extra) {
+      // Columna propia → se mezcla dentro del jsonb sin pisar las demás llaves.
+      const fila = pipeline.find(p => p.id === id);
+      payload = { datos: { ...(fila?.datos || {}), [campo]: limpio }, updated_at: new Date().toISOString() };
+    } else {
+      payload = { [campo]: limpio, updated_at: new Date().toISOString() };
+    }
+    const { error: e } = await supabase.from("mkt_pipeline_items").update(payload).eq("id", id);
+    setCeldaSaving(false);
+    setCelda(null);
+    if (e) { setError("No pude guardar ese dato. Probá de nuevo."); return; }
+    load();
+  }, [celda, pipeline, load]);
+
+  /* El estatus NO se edita por clic: es un desplegable siempre visible, porque
+     cambiarlo es la acción más frecuente de la tabla (lo pidió Alex así). */
+  const cambiarEtapa = useCallback(async (id, etapa) => {
+    const { error: e } = await supabase.from("mkt_pipeline_items")
+      .update({ etapa, updated_at: new Date().toISOString() }).eq("id", id);
+    if (e) { setError("No pude cambiar el estatus."); return; }
+    load();
+  }, [load]);
+
+  /* ── Columnas propias: agregarlas sin que nosotros toquemos el esquema ── */
+  const [colForm, setColForm] = useState(null);   // { nombre, tipo } | null
+
+  const crearColumna = useCallback(async () => {
+    const nombre = String(colForm?.nombre || "").trim();
+    if (!nombre || !orgId) return;
+    // La clave se deriva del nombre: estable aunque después lo renombren.
+    const clave = nombre.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "")
+      .replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "").slice(0, 40) || `col_${Date.now()}`;
+    const { error: e } = await supabase.from("mkt_pipeline_columns").insert({
+      organization_id: orgId, clave, nombre, tipo: colForm.tipo || "texto",
+      orden: colsExtra.length + 1, created_by: user?.id || null,
+    });
+    if (e) { setError(e.code === "23505" ? "Ya existe una columna con ese nombre." : "No pude crear la columna."); return; }
+    setColForm(null);
+    load();
+  }, [colForm, orgId, colsExtra.length, user?.id, load]);
+
+  const archivarColumna = useCallback(async (col) => {
+    // No se borra: se archiva. Los valores siguen en `datos` por si vuelven.
+    const { error: e } = await supabase.from("mkt_pipeline_columns")
+      .update({ deleted_at: new Date().toISOString() }).eq("id", col.id);
+    if (e) { setError("No pude quitar la columna."); return; }
+    load();
+  }, [load]);
+
+  /* Celda editable. Se renderiza como JSX suelto (NO como componente anidado):
+     un componente definido acá adentro cambiaría de identidad en cada render y
+     el input perdería el foco al tipear — está avisado arriba en este archivo. */
+  const celdaEditable = (fila, campo, { tipo = "text", extra = false, ancho = 110, placeholder = "—" } = {}) => {
+    const editando = celda && celda.id === fila.id && celda.campo === campo && celda.extra === extra;
+    const valor = extra ? (fila.datos?.[campo] ?? "") : (fila[campo] ?? "");
+    if (editando) {
+      return (
+        <input
+          autoFocus
+          type={tipo}
+          value={celda.valor}
+          disabled={celdaSaving}
+          onChange={e => setCelda(c => ({ ...c, valor: e.target.value }))}
+          onBlur={guardarCelda}
+          onKeyDown={e => {
+            if (e.key === "Enter") { e.preventDefault(); guardarCelda(); }
+            if (e.key === "Escape") { e.preventDefault(); setCelda(null); }
+          }}
+          style={{ ...inputStyle, padding: "4px 7px", fontSize: 12, width: ancho, minWidth: ancho }} />
+      );
+    }
+    const mostrar = tipo === "date" && valor ? fmtDia(valor) : valor;
+    return (
+      <button
+        onClick={() => setCelda({ id: fila.id, campo, valor: valor || "", extra })}
+        title="Clic para editar"
+        style={{
+          background: "transparent", border: "none", padding: "2px 0", cursor: "text", textAlign: "left",
+          color: mostrar ? txt2 : txt3, fontSize: 12, fontFamily: font, minWidth: 34, width: "100%",
+        }}>{mostrar || placeholder}</button>
+    );
+  };
+
+  /* Celda de enlace: si hay URL muestra «Abrir» y un lápiz para cambiarla. */
+  const celdaEnlace = (fila, campo) => {
+    const editando = celda && celda.id === fila.id && celda.campo === campo && !celda.extra;
+    if (editando) return celdaEditable(fila, campo, { ancho: 190, placeholder: "Pegá el enlace" });
+    const url = fila[campo];
+    return (
+      <span style={{ display: "inline-flex", alignItems: "center", gap: 6, whiteSpace: "nowrap" }}>
+        {url
+          ? <a href={url} target="_blank" rel="noreferrer" style={{ color: accent, fontSize: 11.5, textDecoration: "none" }}>Abrir</a>
+          : <span style={{ color: txt3, fontSize: 11.5 }}>—</span>}
+        <button onClick={() => setCelda({ id: fila.id, campo, valor: url || "", extra: false })}
+          title={url ? "Cambiar el enlace" : "Poner un enlace"} style={{
+            background: "transparent", border: "none", padding: 0, cursor: "pointer", color: txt3, fontSize: 10.5, fontFamily: font,
+          }}>{url ? "editar" : "+"}</button>
+      </span>
+    );
+  };
+
+  const pipelineTabla = () => (
+    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+        <div style={{ position: "relative", flex: isMobile ? "1 1 100%" : "0 0 230px" }}>
+          <Search size={13} color={txt3} style={{ position: "absolute", left: 10, top: 12 }} />
+          <input value={pipeFiltro.q} onChange={e => setPipeFiltro(f => ({ ...f, q: e.target.value }))}
+            placeholder="Buscar propiedad…" style={{ ...inputStyle, paddingLeft: 30 }} />
+        </div>
+        <select value={pipeFiltro.locacion} onChange={e => setPipeFiltro(f => ({ ...f, locacion: e.target.value }))} style={{ ...inputStyle, width: "auto", minWidth: 130 }}>
+          <option value="">Toda ubicación</option>
+          {locaciones.map(l => <option key={l} value={l}>{l}</option>)}
+        </select>
+        <select value={pipeFiltro.tipo} onChange={e => setPipeFiltro(f => ({ ...f, tipo: e.target.value }))} style={{ ...inputStyle, width: "auto", minWidth: 120 }}>
+          <option value="">Todo tipo</option>
+          {tipos.map(t => <option key={t} value={t}>{t}</option>)}
+        </select>
+        <select value={pipeFiltro.etapa} onChange={e => setPipeFiltro(f => ({ ...f, etapa: e.target.value }))} style={{ ...inputStyle, width: "auto", minWidth: 140 }}>
+          <option value="">Todo estatus</option>
+          {ETAPAS.map(s => <option key={s.id} value={s.id}>{s.l}</option>)}
+        </select>
+        <button onClick={() => setColForm(c => c ? null : { nombre: "", tipo: "texto" })} style={{
+          background: "transparent", border: `1px solid ${accent}44`, borderRadius: 9, padding: "7px 12px",
+          cursor: "pointer", color: accent, fontSize: 12, fontFamily: font, display: "inline-flex", alignItems: "center", gap: 5,
+        }}><Plus size={12} /> Columna</button>
+        <span style={{ fontSize: 11.5, color: txt3, marginLeft: "auto", whiteSpace: "nowrap" }}>
+          {pipeFiltrado.length} de {pipeline.length}
+        </span>
+      </div>
+
+      {colForm && (
+        <div style={{ ...card, borderRadius: 12, padding: 12, display: "flex", gap: 8, flexWrap: "wrap", alignItems: "flex-end" }}>
+          <label style={{ display: "flex", flexDirection: "column", gap: 4, flex: "1 1 200px" }}>
+            <span style={{ fontSize: 10.5, color: txt3 }}>Nombre de la columna</span>
+            <input autoFocus value={colForm.nombre} onChange={e => setColForm(c => ({ ...c, nombre: e.target.value }))}
+              onKeyDown={e => { if (e.key === "Enter") crearColumna(); }}
+              placeholder="Voz en off · Responsable · Campaña…" style={inputStyle} />
+          </label>
+          <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+            <span style={{ fontSize: 10.5, color: txt3 }}>Qué guarda</span>
+            <select value={colForm.tipo} onChange={e => setColForm(c => ({ ...c, tipo: e.target.value }))} style={{ ...inputStyle, width: "auto" }}>
+              <option value="texto">Texto</option>
+              <option value="numero">Número</option>
+              <option value="fecha">Fecha</option>
+              <option value="enlace">Enlace</option>
+            </select>
+          </label>
+          <button onClick={crearColumna} disabled={!String(colForm.nombre || "").trim()} style={{
+            padding: "9px 16px", borderRadius: 9, fontFamily: font, fontSize: 12.5, fontWeight: 600,
+            cursor: "pointer", background: `${accent}18`, border: `1px solid ${accent}55`, color: accent,
+            opacity: String(colForm.nombre || "").trim() ? 1 : 0.55,
+          }}>Agregar</button>
+          <button onClick={() => setColForm(null)} style={{
+            background: "transparent", border: "none", cursor: "pointer", color: txt3, fontSize: 12, fontFamily: font, padding: "9px 4px",
+          }}>Cancelar</button>
+        </div>
+      )}
+
+      <div style={hoja.wrap}>
+        <table style={hoja.table}>
+          <thead>
+            <tr>
+              {["Propiedad", "Rodaje", "Publicación", "Estatus", "Ubicación", "Precio", "Tipo",
+                "Crudos", "Video", "Reel", "Story", "Cine", "Ficha téc.", "Info", "Drive"]
+                .map(h => <th key={h} style={hoja.th}>{h}</th>)}
+              {colsExtra.map(c => (
+                <th key={c.id} style={hoja.th}>
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+                    {c.nombre}
+                    <button onClick={() => archivarColumna(c)} title="Quitar esta columna (los datos se conservan)" style={{
+                      background: "transparent", border: "none", padding: 0, cursor: "pointer", color: txt3, display: "inline-flex",
+                    }}><X size={11} /></button>
+                  </span>
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {pipeFiltrado.map(p => {
+              const col = (ETAPA_HEX[p.etapa] || ETAPA_HEX.seleccionada)[isLight ? "l" : "d"];
+              return (
+                <tr key={p.id}>
+                  <td style={{ ...hoja.td, minWidth: 170 }}>
+                    <button onClick={() => openFicha(p)} title="Abrir la ficha completa" style={{
+                      background: "transparent", border: "none", padding: 0, cursor: "pointer", textAlign: "left",
+                      color: txt, fontSize: 12.5, fontWeight: 500, fontFamily: font,
+                    }}>{p.nombre}</button>
+                  </td>
+                  <td style={{ ...hoja.td, whiteSpace: "nowrap" }}>{celdaEditable(p, "fecha_rodaje", { tipo: "date", ancho: 130 })}</td>
+                  <td style={{ ...hoja.td, whiteSpace: "nowrap" }}>{celdaEditable(p, "fecha_publicacion", { tipo: "date", ancho: 130 })}</td>
+                  <td style={hoja.td}>
+                    {/* Cambiar el estatus es lo que más se hace: va siempre listo. */}
+                    <select value={p.etapa} onChange={e => cambiarEtapa(p.id, e.target.value)} title="Cambiar el estatus" style={{
+                      appearance: "none", WebkitAppearance: "none", cursor: "pointer",
+                      padding: "2px 9px", borderRadius: 999, whiteSpace: "nowrap", fontFamily: font,
+                      fontSize: 10.5, fontWeight: 600, color: col, background: `${col}1E`, border: `1px solid ${col}44`,
+                      colorScheme: isLight ? "light" : "dark",
+                    }}>
+                      {ETAPAS.map(s => <option key={s.id} value={s.id}>{s.l}</option>)}
+                    </select>
+                  </td>
+                  <td style={{ ...hoja.td, whiteSpace: "nowrap" }}>{celdaEditable(p, "locacion", { ancho: 130 })}</td>
+                  <td style={{ ...hoja.td, whiteSpace: "nowrap" }}>{celdaEditable(p, "precio", { ancho: 120 })}</td>
+                  <td style={{ ...hoja.td, whiteSpace: "nowrap" }}>{celdaEditable(p, "tipo", { ancho: 120 })}</td>
+                  <td style={hoja.td}>{celdaEnlace(p, "crudos_url")}</td>
+                  <td style={hoja.td}>{celdaEnlace(p, "video_url")}</td>
+                  <td style={hoja.td}>{celdaEnlace(p, "ig_url")}</td>
+                  <td style={hoja.td}>{celdaEnlace(p, "story_url")}</td>
+                  <td style={hoja.td}>{celdaEnlace(p, "cine_url")}</td>
+                  <td style={hoja.td}>{celdaEnlace(p, "ficha_url")}</td>
+                  <td style={hoja.td}>{celdaEnlace(p, "info_url")}</td>
+                  <td style={hoja.td}>{celdaEnlace(p, "drive_url")}</td>
+                  {colsExtra.map(c => (
+                    <td key={c.id} style={{ ...hoja.td, whiteSpace: "nowrap" }}>
+                      {celdaEditable(p, c.clave, {
+                        extra: true,
+                        tipo: c.tipo === "fecha" ? "date" : c.tipo === "numero" ? "number" : "text",
+                        ancho: c.tipo === "enlace" ? 180 : 120,
+                      })}
+                    </td>
+                  ))}
+                </tr>
+              );
+            })}
+            {pipeFiltrado.length === 0 && (
+              <tr><td colSpan={15 + colsExtra.length} style={{ ...hoja.td, textAlign: "center", color: txt3, padding: "18px 0" }}>
+                Ninguna propiedad coincide con ese filtro.
+              </td></tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+      <div style={{ fontSize: 10.5, color: txt3, lineHeight: 1.5 }}>
+        Toca cualquier celda para editarla — Enter guarda, Escape cancela. El estatus se cambia con su
+        desplegable. «+ Columna» agrega las tuyas y se quitan sin perder lo que ya escribiste.
+        El nombre de la propiedad abre su ficha completa.
+      </div>
+    </div>
+  );
+
+
+  /* ── HOJA 2: el registro de actividades (el morado) ── */
+  const [repFiltro, setRepFiltro] = useState({ q: "", persona: "", fecha: "" });
+
+  const bitacoraFiltrada = useMemo(() => {
+    const q = repFiltro.q.trim().toLowerCase();
+    return bitacora.filter(r =>
+      (!q || String(r.texto || "").toLowerCase().includes(q)) &&
+      (!repFiltro.persona || r.profile_id === repFiltro.persona) &&
+      (!repFiltro.fecha   || r.fecha === repFiltro.fecha)
+    );
+  }, [bitacora, repFiltro]);
+
+  const puestoDe = useCallback((id) => {
+    const r = people.find(p => p.id === id)?.role;
+    return r === "marketing" ? "Marketing"
+      : r === "asesor" ? "Ventas"
+      : r === "director" ? "Dirección"
+      : r ? "Administración" : "—";
+  }, [people]);
+
+  const reporteTabla = () => (
+    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+        <div style={{ position: "relative", flex: isMobile ? "1 1 100%" : "0 0 240px" }}>
+          <Search size={13} color={txt3} style={{ position: "absolute", left: 10, top: 12 }} />
+          <input value={repFiltro.q} onChange={e => setRepFiltro(f => ({ ...f, q: e.target.value }))}
+            placeholder="Buscar en las actividades…" style={{ ...inputStyle, paddingLeft: 30 }} />
+        </div>
+        <select value={repFiltro.persona} onChange={e => setRepFiltro(f => ({ ...f, persona: e.target.value }))} style={{ ...inputStyle, width: "auto", minWidth: 150 }}>
+          <option value="">Todo el equipo</option>
+          {assignees.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
+        </select>
+        <input type="date" value={repFiltro.fecha} onChange={e => setRepFiltro(f => ({ ...f, fecha: e.target.value }))}
+          title="Filtrar por día" style={{ ...inputStyle, width: "auto" }} />
+        {(repFiltro.q || repFiltro.persona || repFiltro.fecha) && (
+          <button onClick={() => setRepFiltro({ q: "", persona: "", fecha: "" })} style={{
+            background: "transparent", border: "none", cursor: "pointer", color: txt3, fontSize: 11.5, fontFamily: font,
+          }}>Limpiar</button>
+        )}
+        <span style={{ fontSize: 11.5, color: txt3, marginLeft: "auto", whiteSpace: "nowrap" }}>
+          {bitacoraFiltrada.length} de {bitacora.length}
+        </span>
+      </div>
+
+      <div style={hoja.wrap}>
+        <table style={{ ...hoja.table, minWidth: 900 }}>
+          <thead>
+            <tr>
+              {["Fecha", "Nombre", "Puesto / Área", "Empresa", "Actividades realizadas", "Tiempo", "Evidencia"]
+                .map(h => <th key={h} style={hoja.th}>{h}</th>)}
+            </tr>
+          </thead>
+          <tbody>
+            {bitacoraFiltrada.map(r => (
+              <tr key={r.id}>
+                <td style={{ ...hoja.td, whiteSpace: "nowrap" }}>
+                  {fmtDia(r.fecha)}
+                  <div style={{ fontSize: 10, color: txt3 }}>{fmtHora(r.created_at)}</div>
+                </td>
+                <td style={{ ...hoja.td, whiteSpace: "nowrap", color: txt }}>{nameOf(r.profile_id)}</td>
+                <td style={{ ...hoja.td, whiteSpace: "nowrap" }}>{puestoDe(r.profile_id)}</td>
+                <td style={{ ...hoja.td, whiteSpace: "nowrap" }}>{r.brand_id ? (brandById[r.brand_id]?.nombre || "—") : "—"}</td>
+                <td style={{ ...hoja.td, minWidth: 330, maxWidth: 520 }}>{reporteTexto(r)}</td>
+                <td style={{ ...hoja.td, whiteSpace: "nowrap" }}>{r.tiempo_texto || "—"}</td>
+                <td style={hoja.td}>{linkCel(r.evidencia_url, "Abrir")}</td>
+              </tr>
+            ))}
+            {bitacoraFiltrada.length === 0 && (
+              <tr><td colSpan={7} style={{ ...hoja.td, textAlign: "center", color: txt3, padding: "18px 0" }}>
+                {bitacora.length === 0
+                  ? "Todavía no hay reportes. En cuanto alguien cuente su día, aparece acá."
+                  : "Ningún reporte coincide con ese filtro."}
+              </td></tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+
   const pipelineTab = () => (
     <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-      <div style={{ display: "flex", justifyContent: "flex-end" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+        {/* Tablero para OPERAR (mover etapas) · Tabla para MIRAR (la hoja de Alex,
+            con sus filtros). Conviven: cada una sirve para algo distinto. */}
+        <div style={{ display: "flex", gap: 3, padding: 4, borderRadius: 12, border: `1px solid ${bd}`,
+          background: isLight ? "rgba(15,23,42,0.04)" : "rgba(255,255,255,0.03)" }}>
+          {[["tablero", "Tablero"], ["tabla", "Tabla"]].map(([id, l]) => (
+            <button key={id} onClick={() => setPipeVista(id)} style={{
+              padding: "5px 13px", borderRadius: 9, cursor: "pointer", fontFamily: font, fontSize: 12,
+              fontWeight: pipeVista === id ? 600 : 500, border: "none",
+              background: pipeVista === id ? (isLight ? "#FFFFFF" : "rgba(255,255,255,0.09)") : "transparent",
+              color: pipeVista === id ? txt : txt3,
+            }}>{l}</button>
+          ))}
+        </div>
         <button onClick={() => setShowPipeForm(s => !s)} style={{
           background: showPipeForm ? "transparent" : `${accent}1A`, border: `1px solid ${accent}55`,
           borderRadius: 10, padding: "9px 15px", cursor: "pointer", color: accent,
@@ -810,6 +1219,8 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
           }}>Agregar</button>
         </div>
       )}
+      {pipeVista === "tabla" && pipelineTabla()}
+      {pipeVista === "tablero" && (
       <div style={{ display: "flex", gap: isMobile ? 10 : 12, overflowX: "auto", paddingBottom: 8, alignItems: "flex-start", WebkitOverflowScrolling: "touch", scrollSnapType: isMobile ? "x mandatory" : undefined }}>
         {ETAPAS.map((col, colIdx) => {
           const items = pipeline.filter(p => p.etapa === col.id);
@@ -912,6 +1323,7 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
           );
         })}
       </div>
+      )}
     </div>
   );
 
@@ -1039,97 +1451,260 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
 
   /* ════════════════════ TAB: EQUIPO (solo admin) ════════════════════ */
 
+  /* ── Bloque de texto de un reporte: plegado a 2 líneas, con "ver todo" y su
+     evidencia. Se usa igual en el panel de hoy y en el historial de la
+     persona, para que el líder no tenga que aprender dos formatos. ── */
+  /* ════════════ REPORTE DE ACTIVIDADES ════════════
+     La caja que pidió Alex en la llamada del 27-jul: «que se metan a una pestaña
+     como reporte de actividades y automáticamente ya te aparezca el día de hoy:
+     ¿qué hiciste hoy, Luis Ángel Landeros?».
+     Reemplaza al Google Form. Cuatro campos y un botón — él insistió cuatro veces
+     en lo mismo: «entre menos rutas y menos botones tenga, mejor». */
+  const [repForm, setRepForm]   = useState({ empresa: "", texto: "", tiempo: "", evidencia: "" });
+  const [repSaving, setRepSaving] = useState(false);
+  const [repOtro, setRepOtro]   = useState(false); // ya reportó pero quiere sumar otro
+  const [repVista, setRepVista] = useState("hoy");  // hoy | registro (la hoja completa, solo líder)
+
+  const misReportesHoy = useMemo(
+    () => bitacora.filter(r => r.profile_id === user?.id && r.fecha === hoy),
+    [bitacora, user?.id, hoy]);
+
+  const saveReporte = useCallback(async () => {
+    const texto = String(repForm.texto || "").trim();
+    if (!texto || !orgId) return;
+    setRepSaving(true);
+    const { error: e } = await supabase.from("mkt_daily_reports").insert({
+      organization_id: orgId,
+      profile_id: user?.id,
+      fecha: hoy,
+      texto,
+      brand_id: repForm.empresa || null,
+      tiempo_texto: String(repForm.tiempo || "").trim() || null,
+      evidencia_url: String(repForm.evidencia || "").trim() || null,
+      origen: "web",
+    });
+    setRepSaving(false);
+    if (e) { setError("No pude guardar tu reporte. Probá de nuevo."); return; }
+    // Se conserva la empresa elegida: casi siempre es la misma en el mismo día.
+    setRepForm(f => ({ empresa: f.empresa, texto: "", tiempo: "", evidencia: "" }));
+    setRepOtro(false);
+    load();
+  }, [repForm, orgId, user?.id, hoy, load]);
+
+  const reporteTexto = (r) => {
+    const abierta = bitaAbierta.has(r.id);
+    const texto = String(r.texto || "").trim();
+    const largo = texto.length > 110 || texto.includes("\n");
+    return (
+      <div style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{
+            fontSize: 12, color: txt2, lineHeight: 1.5, whiteSpace: "pre-wrap", wordBreak: "break-word",
+            ...(abierta ? {} : { display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }),
+          }}>{texto || "Sin detalle"}</div>
+          {largo && (
+            <button onClick={() => toggleBita(r.id)} style={{
+              background: "transparent", border: "none", padding: "2px 0 0", cursor: "pointer",
+              color: accent, fontSize: 10.5, fontFamily: font,
+            }}>{abierta ? "ver menos" : "ver todo"}</button>
+          )}
+        </div>
+        {r.evidencia_url && (
+          <a href={r.evidencia_url} target="_blank" rel="noreferrer" title="Abrir evidencia" style={{
+            border: `1px solid ${accent}44`, borderRadius: 7, padding: "2px 7px", flexShrink: 0,
+            color: accent, display: "inline-flex", alignItems: "center", gap: 4, fontSize: 10.5, textDecoration: "none",
+          }}><Folder size={11} /> Evidencia</a>
+        )}
+      </div>
+    );
+  };
+
+  /* ════════════ TAB: ACTIVIDADES (la pantalla de entrada de marketing) ════════════ */
+
+  const reporteTab = () => {
+    const primerNombre = String(user?.name || "").split(" ")[0] || "";
+    const yaReporte    = misReportesHoy.length > 0;
+    const mostrarCaja  = !yaReporte || repOtro;
+    const puedeGuardar = String(repForm.texto || "").trim().length > 0 && !repSaving;
+
+    // Para el líder: qué reportó su gente hoy, arriba de su propia caja.
+    const reportesHoy = bitacora.filter(r => r.fecha === hoy);
+    const equipoHoy   = assignees
+      .filter(m => m.id !== user?.id)
+      .map(m => ({ m, rs: reportesHoy.filter(r => r.profile_id === m.id) }))
+      .sort((a, b) => (b.rs.length > 0) - (a.rs.length > 0));
+    const reportaron  = equipoHoy.filter(p => p.rs.length > 0).length;
+
+    return (
+      <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+
+        {/* Hoy = capturar y ver el día · Registro = la hoja completa con filtros.
+            El Registro es SOLO del líder: nadie del equipo necesita leer la
+            bitácora de sus compañeros (misma regla que la sección Equipo). */}
+        {isAdmin && (
+          <div style={{ display: "flex", gap: 3, padding: 4, borderRadius: 12, border: `1px solid ${bd}`, alignSelf: "flex-start",
+            background: isLight ? "rgba(15,23,42,0.04)" : "rgba(255,255,255,0.03)" }}>
+            {[["hoy", "Hoy"], ["registro", "Registro completo"]].map(([id, l]) => (
+              <button key={id} onClick={() => setRepVista(id)} style={{
+                padding: "5px 13px", borderRadius: 9, cursor: "pointer", fontFamily: font, fontSize: 12,
+                fontWeight: repVista === id ? 600 : 500, border: "none",
+                background: repVista === id ? (isLight ? "#FFFFFF" : "rgba(255,255,255,0.09)") : "transparent",
+                color: repVista === id ? txt : txt3,
+              }}>{l}</button>
+            ))}
+          </div>
+        )}
+
+        {isAdmin && repVista === "registro" && reporteTabla()}
+        {(!isAdmin || repVista === "hoy") && (<>
+
+        {/* ── LA CAJA ── */}
+        {mostrarCaja ? (
+          <div style={{ ...card, borderRadius: 15, padding: isMobile ? "15px 15px" : "18px 20px", display: "flex", flexDirection: "column", gap: 12 }}>
+            <div>
+              <div style={{ fontSize: isMobile ? 17 : 19, fontWeight: 600, color: txt, fontFamily: fontDisp, lineHeight: 1.25 }}>
+                ¿Qué hiciste hoy{primerNombre ? `, ${primerNombre}` : ""}?
+              </div>
+              <div style={{ fontSize: 11.5, color: txt3, marginTop: 3 }}>
+                Cuéntalo con tus palabras, como se lo dirías a un compañero · {fmtDia(hoy)}
+              </div>
+            </div>
+
+            <textarea
+              autoFocus={!isMobile}
+              rows={isMobile ? 6 : 5}
+              value={repForm.texto}
+              onChange={e => setRepForm(f => ({ ...f, texto: e.target.value }))}
+              placeholder={"De 9 a 9:30 generé dos fichas técnicas.\nDe 9:30 a 12 edición del video de Casa Sol y Luna.\nDe 1 a 3 ensamble del proyecto…"}
+              style={{ ...inputStyle, resize: "vertical", lineHeight: 1.55, fontSize: 13.5, padding: "11px 12px" }} />
+
+            <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 9 }}>
+              <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                <span style={{ fontSize: 10.5, color: txt3 }}>¿En qué empresa?</span>
+                <select value={repForm.empresa} onChange={e => setRepForm(f => ({ ...f, empresa: e.target.value }))} style={inputStyle}>
+                  <option value="">— elegir —</option>
+                  {brands.map(b => <option key={b.id} value={b.id}>{b.nombre}</option>)}
+                </select>
+              </label>
+              <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                <span style={{ fontSize: 10.5, color: txt3 }}>¿Cuánto te llevó? (opcional)</span>
+                <input value={repForm.tiempo} onChange={e => setRepForm(f => ({ ...f, tiempo: e.target.value }))}
+                  placeholder="de 9 a 12 · 3 hrs · toda la tarde" style={inputStyle} />
+              </label>
+            </div>
+
+            <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+              <span style={{ fontSize: 10.5, color: txt3 }}>Evidencia (opcional) — el enlace de la carpeta o el archivo</span>
+              <input value={repForm.evidencia} onChange={e => setRepForm(f => ({ ...f, evidencia: e.target.value }))}
+                placeholder="Pegá el enlace de Drive" style={inputStyle} />
+            </label>
+
+            <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+              <button onClick={saveReporte} disabled={!puedeGuardar} style={{
+                padding: "10px 22px", borderRadius: 10, fontFamily: font, fontSize: 13.5, fontWeight: 600,
+                cursor: puedeGuardar ? "pointer" : "default", background: `${accent}1C`,
+                border: `1px solid ${accent}66`, color: accent, opacity: puedeGuardar ? 1 : 0.55,
+              }}>{repSaving ? "Guardando…" : "Guardar"}</button>
+              {yaReporte && (
+                <button onClick={() => setRepOtro(false)} style={{
+                  background: "transparent", border: "none", cursor: "pointer", color: txt3, fontSize: 12, fontFamily: font,
+                }}>Cancelar</button>
+              )}
+              {onOpenCopilot && (
+                <span style={{ fontSize: 11, color: txt3, marginLeft: "auto" }}>
+                  ¿Vas manejando?{" "}
+                  <button onClick={onOpenCopilot} style={{
+                    background: "transparent", border: "none", padding: 0, cursor: "pointer", color: accent, fontSize: 11, fontFamily: font,
+                  }}>cuéntaselo al Copilot por voz</button>
+                </span>
+              )}
+            </div>
+          </div>
+        ) : (
+          <div style={{ ...card, borderRadius: 15, padding: "15px 18px", display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+            <Check size={17} color={accent} strokeWidth={3} />
+            <div style={{ flex: 1, minWidth: 180 }}>
+              <div style={{ fontSize: 14, color: txt, fontWeight: 500, fontFamily: fontDisp }}>Ya reportaste hoy</div>
+              <div style={{ fontSize: 11.5, color: txt3 }}>Gracias. Si hiciste algo más, súmalo.</div>
+            </div>
+            <button onClick={() => setRepOtro(true)} style={{
+              padding: "7px 14px", borderRadius: 9, cursor: "pointer", fontFamily: font, fontSize: 12.5,
+              background: "transparent", border: `1px solid ${accent}44`, color: accent,
+            }}>Agregar otro</button>
+          </div>
+        )}
+
+        {/* ── Lo que ya cargó hoy ── */}
+        {misReportesHoy.length > 0 && (
+          <div style={{ ...card, borderRadius: 14, padding: "13px 16px", display: "flex", flexDirection: "column", gap: 9 }}>
+            <div style={{ fontSize: 10.5, color: txt3, letterSpacing: 0.5, textTransform: "uppercase" }}>Tu reporte de hoy</div>
+            {misReportesHoy.map(r => (
+              <div key={r.id} style={{ display: "flex", gap: 9, alignItems: "flex-start", borderTop: `1px solid ${bd}`, paddingTop: 9 }}>
+                <span style={{ fontSize: 10.5, color: txt3, whiteSpace: "nowrap", flexShrink: 0, minWidth: 38, paddingTop: 1 }}>{fmtHora(r.created_at)}</span>
+                <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 4 }}>
+                  {(r.brand_id || r.tiempo_texto) && (
+                    <div style={{ display: "flex", gap: 7, flexWrap: "wrap", fontSize: 10.5, color: txt2 }}>
+                      {r.brand_id && <span>{brandById[r.brand_id]?.nombre || ""}</span>}
+                      {r.tiempo_texto && <span style={{ color: txt3 }}>· {r.tiempo_texto}</span>}
+                    </div>
+                  )}
+                  {reporteTexto(r)}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* ── Para el líder: qué reportó su gente hoy ── */}
+        {isAdmin && equipoHoy.length > 0 && (
+          <div style={{ ...card, borderRadius: 14, padding: "13px 16px", display: "flex", flexDirection: "column", gap: 10 }}>
+            <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 10, flexWrap: "wrap" }}>
+              <div style={{ fontSize: 14, fontWeight: 600, color: txt, fontFamily: fontDisp }}>Tu equipo hoy</div>
+              <div style={{
+                fontSize: 11.5, whiteSpace: "nowrap", padding: "2px 9px", borderRadius: 999,
+                color: reportaron === equipoHoy.length ? accent : reportaron === 0 ? txt3 : AMBER,
+                border: `1px solid ${reportaron === equipoHoy.length ? `${accent}44` : reportaron === 0 ? bd : `${AMBER}44`}`,
+              }}>{reportaron} de {equipoHoy.length} reportaron</div>
+            </div>
+            {equipoHoy.map(({ m, rs }) => (
+              <div key={m.id} style={{ display: "flex", gap: 9, alignItems: "flex-start", borderTop: `1px solid ${bd}`, paddingTop: 9 }}>
+                <span style={{
+                  width: 8, height: 8, borderRadius: 999, flexShrink: 0, marginTop: 5,
+                  background: rs.length > 0 ? accent : "transparent",
+                  border: rs.length > 0 ? "none" : `1.5px solid ${txt3}66`,
+                }} />
+                <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 5 }}>
+                  <div style={{ display: "flex", alignItems: "baseline", gap: 8, flexWrap: "wrap" }}>
+                    <span style={{ fontSize: 12.5, color: rs.length > 0 ? txt : txt2, fontWeight: 500 }}>{m.name}</span>
+                    {rs.length > 0
+                      ? <span style={{ fontSize: 10.5, color: txt3 }}>
+                          {fmtHora(rs[0].created_at)}
+                          {rs[0].brand_id ? ` · ${brandById[rs[0].brand_id]?.nombre || ""}` : ""}
+                          {rs.length > 1 ? ` · ${rs.length} reportes` : ""}
+                        </span>
+                      : <span style={{ fontSize: 11, color: txt3 }}>todavía no reportó</span>}
+                  </div>
+                  {rs.map(r => <div key={r.id}>{reporteTexto(r)}</div>)}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+        </>)}
+      </div>
+    );
+  };
+
   const equipo = () => {
     const week = Date.now() - 7 * 86400000;
 
-    /* ── Bloque de texto de un reporte: plegado a 2 líneas, con "ver todo" y su
-       evidencia. Se usa igual en el panel de hoy y en el historial de la
-       persona, para que el líder no tenga que aprender dos formatos. ── */
-    const reporteTexto = (r) => {
-      const abierta = bitaAbierta.has(r.id);
-      const texto = String(r.texto || "").trim();
-      const largo = texto.length > 110 || texto.includes("\n");
-      return (
-        <div style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{
-              fontSize: 12, color: txt2, lineHeight: 1.5, whiteSpace: "pre-wrap", wordBreak: "break-word",
-              ...(abierta ? {} : { display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }),
-            }}>{texto || "Sin detalle"}</div>
-            {largo && (
-              <button onClick={() => toggleBita(r.id)} style={{
-                background: "transparent", border: "none", padding: "2px 0 0", cursor: "pointer",
-                color: accent, fontSize: 10.5, fontFamily: font,
-              }}>{abierta ? "ver menos" : "ver todo"}</button>
-            )}
-          </div>
-          {r.evidencia_url && (
-            <a href={r.evidencia_url} target="_blank" rel="noreferrer" title="Abrir evidencia" style={{
-              border: `1px solid ${accent}44`, borderRadius: 7, padding: "2px 7px", flexShrink: 0,
-              color: accent, display: "inline-flex", alignItems: "center", gap: 4, fontSize: 10.5, textDecoration: "none",
-            }}><Folder size={11} /> Evidencia</a>
-          )}
-        </div>
-      );
-    };
-
-    /* ── LO PRIMERO QUE VE EL LÍDER AL ENTRAR ──
-       Su trabajo diario es saber qué hizo su gente hoy. Antes tenía que abrir
-       una hoja de cálculo aparte; ahora es la primera pantalla de su cuenta.
-       Los que reportaron van arriba (con lo que dijeron) y los que faltan
-       quedan abajo, para que se vea de un vistazo a quién hay que buscar. ── */
-    const reportesHoy  = bitacora.filter(r => r.fecha === hoy);
-    const porPersonaHoy = assignees
-      .map(m => ({ m, rs: reportesHoy.filter(r => r.profile_id === m.id) }))
-      .sort((a, b) => (b.rs.length > 0) - (a.rs.length > 0));
-    const cuantosReportaron = porPersonaHoy.filter(p => p.rs.length > 0).length;
-
-    const panelHoy = assignees.length > 0 && (
-      <div style={{ ...card, borderRadius: 14, padding: "14px 16px", display: "flex", flexDirection: "column", gap: 11 }}>
-        <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 10, flexWrap: "wrap" }}>
-          <div>
-            <div style={{ fontSize: 15, fontWeight: 600, color: txt, fontFamily: fontDisp }}>Bitácora de hoy</div>
-            <div style={{ fontSize: 11.5, color: txt3 }}>Lo que reportó cada quien · {fmtDia(hoy)}</div>
-          </div>
-          <div style={{
-            fontSize: 12, whiteSpace: "nowrap", padding: "3px 10px", borderRadius: 999,
-            color: cuantosReportaron === assignees.length ? accent : cuantosReportaron === 0 ? txt3 : AMBER,
-            border: `1px solid ${cuantosReportaron === assignees.length ? `${accent}44` : cuantosReportaron === 0 ? bd : `${AMBER}44`}`,
-          }}>{cuantosReportaron} de {assignees.length} reportaron</div>
-        </div>
-
-        {porPersonaHoy.map(({ m, rs }) => (
-          <div key={m.id} style={{ display: "flex", gap: 10, alignItems: "flex-start", borderTop: `1px solid ${bd}`, paddingTop: 10 }}>
-            <span style={{
-              width: 8, height: 8, borderRadius: 999, flexShrink: 0, marginTop: 5,
-              background: rs.length > 0 ? accent : "transparent",
-              border: rs.length > 0 ? "none" : `1.5px solid ${txt3}66`,
-            }} />
-            <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 6 }}>
-              <div style={{ display: "flex", alignItems: "baseline", gap: 8, flexWrap: "wrap" }}>
-                <span style={{ fontSize: 12.5, color: rs.length > 0 ? txt : txt2, fontWeight: 500 }}>{m.name}</span>
-                {rs.length > 0
-                  ? <span style={{ fontSize: 10.5, color: txt3 }}>
-                      {fmtHora(rs[0].created_at)}{rs.length > 1 ? ` · ${rs.length} reportes` : ""}
-                    </span>
-                  : <span style={{ fontSize: 11, color: txt3 }}>todavía no reportó</span>}
-              </div>
-              {rs.map(r => <div key={r.id}>{reporteTexto(r)}</div>)}
-            </div>
-          </div>
-        ))}
-
-        <div style={{ fontSize: 10.5, color: txt3, borderTop: `1px solid ${bd}`, paddingTop: 9, lineHeight: 1.5 }}>
-          El equipo reporta contándoselo al Copilot, con sus palabras: «hoy edité el video de Casa Lago 3 horas
-          y grabé en Brasa y Piedra». Si te falta el detalle de alguien, pregúntale al Copilot por su bitácora.
-        </div>
-      </div>
-    );
+    /* El panel del día ya no vive acá: se mudó a la pestaña Actividades, que es
+       la pantalla de entrada. Equipo queda para la vista PROFUNDA de la semana
+       (avance por persona, evidencia y bitácora de días anteriores). */
 
     return (
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
         {assignees.length === 0 && emptyRow("Sin usuarios con rol marketing en la organización.")}
-        {panelHoy}
         {assignees.map(m => {
           const tt = tasks.filter(t => t.assignee_id === m.id);
           const enCurso  = tt.filter(t => t.estado !== "hecha" && !isBlocked(t)).length;
@@ -1253,6 +1828,7 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
     // El subtítulo va CORTO a propósito: el largo ("…lo bloqueado no depende de ti")
     // se partía en dos renglones y dejaba la palabra «ti» sola abajo — se veía roto
     // en el iPhone (reporte de Ángel con captura, 27-jul).
+    reporte:     { title: "Reporte de actividades", sub: "Lo que hiciste hoy · queda registrado al instante" },
     dia:         { title: `Hoy — ${firstName}`, sub: "Lo vencido primero, después lo de hoy" },
     // El rótulo lo pone cada empresa (NSG: "Proyectos"). Antes el encabezado decía
     // "Marcas" aunque el botón ya dijera "Proyectos" — el vocabulario de marketing
@@ -1294,6 +1870,7 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
           background: isLight ? "rgba(15,23,42,0.045)" : "rgba(255,255,255,0.035)", border: `1px solid ${bd}`,
           maxWidth: "100%", width: isMobile ? "100%" : undefined, flexShrink: 0,
         }}>
+          {tabBtn("reporte", tabLabel("reporte", "Actividades"))}
           {tabBtn("dia", tabLabel("dia", "Mi Día"))}
           {!HIDDEN_TABS.has("marcas") && tabBtn("marcas", tabLabel("marcas", "Marcas"))}
           {!HIDDEN_TABS.has("pipeline") && tabBtn("pipeline", tabLabel("pipeline", "Pipeline"), esperandoVoz >= 3 ? esperandoVoz : 0)}
@@ -1360,6 +1937,7 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
         <div style={{ color: txt2, fontSize: 13, padding: 30, textAlign: "center" }}>Cargando…</div>
       ) : (
         <>
+          {tab === "reporte" && reporteTab()}
           {tab === "dia" && miDia()}
           {tab === "marcas" && marcas()}
           {tab === "pipeline" && pipelineTab()}
