@@ -173,6 +173,11 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
   const [pipeline, setPipeline] = useState([]);
   const [requests, setRequests] = useState([]);
   const [people, setPeople]     = useState([]); // profiles de la org (nombres + asignar)
+  // Bitácora: lo que cada quien reporta que hizo en el día. Vive aparte de las
+  // tareas a propósito — una tarea es algo que ALGUIEN pidió; la bitácora es el
+  // relato del día, incluido todo lo que no estaba en ninguna lista.
+  const [bitacora, setBitacora] = useState([]);
+  const [bitaAbierta, setBitaAbierta] = useState(() => new Set()); // ids con el texto completo desplegado
   const [loading, setLoading]   = useState(true);
   const [error, setError]       = useState("");
 
@@ -181,7 +186,7 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
     setLoading(true);
     setError("");
     try {
-      const [b, pj, tk, pl, rq, pr] = await Promise.all([
+      const [b, pj, tk, pl, rq, pr, bi] = await Promise.all([
         supabase.from("mkt_brands").select("id, nombre, slug, activo, orden")
           .eq("organization_id", orgId).eq("activo", true).order("orden"),
         supabase.from("mkt_projects").select("id, brand_id, nombre, descripcion, drive_url, due_date, estado, orden, created_at")
@@ -194,14 +199,18 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
         supabase.from("mkt_requests").select("id, brand_id, titulo, detalle, objetivo, complejidad, ref_image_url, fecha_entrega, solicitante, assignee_id, estado, created_at")
           .eq("organization_id", orgId).is("deleted_at", null).order("created_at", { ascending: false }).limit(200),
         supabase.from("profiles").select("id, name, role").eq("organization_id", orgId),
+        supabase.from("mkt_daily_reports").select("id, profile_id, fecha, texto, evidencia_url, origen, created_at")
+          .eq("organization_id", orgId)
+          .order("fecha", { ascending: false }).order("created_at", { ascending: false }).limit(400),
       ]);
-      for (const r of [b, pj, tk, pl, rq, pr]) if (r.error) throw r.error;
+      for (const r of [b, pj, tk, pl, rq, pr, bi]) if (r.error) throw r.error;
       setBrands(b.data || []);
       setProjects(pj.data || []);
       setTasks(tk.data || []);
       setPipeline(pl.data || []);
       setRequests(rq.data || []);
       setPeople(pr.data || []);
+      setBitacora(bi.data || []);
     } catch (e) {
       setError(`No pude cargar el módulo de ${MODULE_LABEL}. Probá actualizar.`);
     } finally {
@@ -225,6 +234,21 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
     }
     return mk;
   }, [people, user?.id]);
+
+  // Bitácora agrupada por persona, ya ordenada de lo más reciente a lo más viejo
+  // (la consulta viene ordenada; acá solo se reparte por dueño).
+  const bitacoraPor = useMemo(() => {
+    const idx = {};
+    for (const r of bitacora) (idx[r.profile_id] ||= []).push(r);
+    return idx;
+  }, [bitacora]);
+  const toggleBita = useCallback((id) => {
+    setBitaAbierta(prev => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  }, []);
 
   // Bloqueada = su dependencia existe y NO está hecha (estado derivado, no guardado).
   const isBlocked  = useCallback((t) => !!(t.depends_on && taskById[t.depends_on] && taskById[t.depends_on].estado !== "hecha"), [taskById]);
@@ -951,6 +975,10 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
           // con su EVIDENCIA clicable — así "le llega" la foto/video que subió cada quien.
           const hechasSemana = tt.filter(t => t.estado === "hecha" && t.updated_at && new Date(t.updated_at).getTime() > week);
           const hechas7  = hechasSemana.length;
+          // Bitácora: los últimos días que reportó. Se muestran 3 y el resto se
+          // cuenta — la tarjeta es un pulso, no el archivo histórico.
+          const bita = bitacoraPor[m.id] || [];
+          const bitaVisible = bita.slice(0, 3);
           const stat = (label, n, color) => (
             <div key={label} style={{ textAlign: "center", minWidth: isMobile ? 0 : 74, flex: isMobile ? "1 1 0" : "0 0 auto" }}>
               <div style={{ fontSize: 17, fontWeight: 600, color: color || txt, fontFamily: fontDisp }}>{n}</div>
@@ -1014,11 +1042,54 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
                   ))}
                 </div>
               )}
+              {/* BITÁCORA — lo que la persona reportó que hizo cada día, con su
+                  evidencia. Es el complemento de las tareas: acá aparece el
+                  trabajo que nadie había pedido en una lista. */}
+              {bitaVisible.length > 0 && (
+                <div style={{ borderTop: `1px solid ${bd}`, paddingTop: 9, display: "flex", flexDirection: "column", gap: 8 }}>
+                  <div style={{ fontSize: 10, color: txt3, letterSpacing: 0.5, textTransform: "uppercase" }}>Bitácora</div>
+                  {bitaVisible.map(r => {
+                    const abierta = bitaAbierta.has(r.id);
+                    const texto = String(r.texto || "").trim();
+                    const largo = texto.length > 110 || texto.includes("\n");
+                    return (
+                      <div key={r.id} style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
+                        <span style={{ fontSize: 10.5, color: txt3, whiteSpace: "nowrap", flexShrink: 0, minWidth: 40, paddingTop: 1 }}>
+                          {fmtDia(r.fecha)}
+                        </span>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{
+                            fontSize: 12, color: txt2, lineHeight: 1.5, whiteSpace: "pre-wrap", wordBreak: "break-word",
+                            ...(abierta ? {} : { display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }),
+                          }}>{texto || "Sin detalle"}</div>
+                          {largo && (
+                            <button onClick={() => toggleBita(r.id)} style={{
+                              background: "transparent", border: "none", padding: "2px 0 0", cursor: "pointer",
+                              color: accent, fontSize: 10.5, fontFamily: font,
+                            }}>{abierta ? "ver menos" : "ver todo"}</button>
+                          )}
+                        </div>
+                        {r.evidencia_url && (
+                          <a href={r.evidencia_url} target="_blank" rel="noreferrer" title="Abrir evidencia del día" style={{
+                            border: `1px solid ${accent}44`, borderRadius: 7, padding: "2px 7px", flexShrink: 0,
+                            color: accent, display: "inline-flex", alignItems: "center", gap: 4, fontSize: 10.5, textDecoration: "none",
+                          }}><Folder size={11} /> Evidencia</a>
+                        )}
+                      </div>
+                    );
+                  })}
+                  {bita.length > bitaVisible.length && (
+                    <div style={{ fontSize: 10.5, color: txt3 }}>
+                      +{bita.length - bitaVisible.length} {bita.length - bitaVisible.length === 1 ? "reporte anterior" : "reportes anteriores"}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           );
         })}
         <div style={{ fontSize: 11, color: txt3, textAlign: "center" }}>
-          Los conteos salen de las tareas del módulo. Vista solo para administración.
+          Los conteos salen de las tareas del módulo; la bitácora, de lo que reporta cada quien. Vista solo para administración.
         </div>
       </div>
     );
@@ -1045,7 +1116,7 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
                      : "Los proyectos de cada marca, con su avance" },
     pipeline:    { title: "Pipeline",     sub: "Cada video avanza hasta Publicada" },
     solicitudes: { title: "Solicitudes",  sub: "Pedidos de diseño · A es simple, AAA es complejo" },
-    equipo:      { title: "Equipo",       sub: "Cómo va cada persona esta semana" },
+    equipo:      { title: "Equipo",       sub: "Cómo va cada persona y qué reportó" },
   };
   const meta = TAB_META[tab] || TAB_META.dia;
 
