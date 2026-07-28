@@ -380,6 +380,25 @@ código. **NO ES un fork — es un solo bundle con config por cliente.**
 | `grupo28.stratoscapitalgroup.com` (fase 2) | `grupo28` | Mismo cliente, subdomain |
 | `localhost:5173/?app&client=grupo28` | `grupo28` | Override de QA en dev |
 
+**Tenants registrados hoy** (`src/clients/index.js`) — cada uno con su
+`organization_id` y sus datos aislados por RLS:
+
+| Ruta | Cliente | Vertical | Qué es un "registro" del CRM |
+|---|---|---|---|
+| `/` | `duke` | Inmobiliaria (Duke del Caribe) | cliente / lead |
+| `/grupo28` | `grupo28` | Inmobiliaria | cliente / lead |
+| `/tgenius` | `tgenius` | — | cliente / lead |
+| `/stratos-sales` | `stratos-sales` | Venta del producto | cliente / lead |
+| `/vega` | `vega` | Constructora (obra y licitaciones) | proyecto |
+| `/nsg` | `nsg` | Operación interna de NSG | inmobiliaria prospecto |
+| `/muebleria` | `muebleria` | Fábrica de muebles / carpintería | **pedido** |
+| `/legacy-design` | `legacy-design` | Arquitectura + desarrollo inmobiliario | **proyecto** |
+| `/brasa-y-piedra` | `brasa-y-piedra` | Restaurante (Playa del Carmen) | **reserva / evento** |
+
+Los tres últimos (jul-2026) son verticales NO inmobiliarias: mismo motor, con su
+propio `crm.pipeline`, `crm.labels` y `crm.kpis`. Duke no se ve afectado porque
+esos campos siguen en `null` en su config.
+
 El cliente queda disponible en toda la app vía `useClient()`:
 
 ```js
@@ -433,6 +452,9 @@ de clientes), el flujo es:
 - Cada `profiles` tiene `organization_id`. `organizations` es la tabla de orgs.
 - `STRATOS_ORG_ID = "00000000-0000-0000-0000-000000000001"` (Stratos / Duke).
 - `Grupo 28` organizationId = `"9afe40d2-7163-4407-a4cd-5346799ecd3c"`.
+- `Mueblería` = `"e583eb98-ff00-4920-a69c-db39f3841b31"` (migración 179).
+- `Legacy Design` = `"281caa01-7414-4eef-b3b6-afa1e7623ab3"` (migración 179).
+- `Brasa y Piedra` = `"ea74b69a-6904-4c65-a0ca-e0af58f1473a"` (migración 179).
 - `canAccessModule(moduleId, user)` en `src/app/constants/navigation.js`:
   clientes externos solo ven CRM, Perfil, Papelera (independiente del rol).
 - RLS de Supabase filtra registros por `organization_id` automáticamente.
@@ -455,6 +477,35 @@ Helpers expuestos en `src/clients/index.js`:
 - `getOrgIdByClientId(clientId)` → UUID de Supabase o null.
 - `resolveRedirectForUser(user, currentClientId, location)` → URL absoluta a la
   que redirigir, o null.
+
+### Dar de alta un tenant nuevo (checklist probado — Mueblería / Legacy / Brasa)
+
+1. **Org en Supabase**: migración en `supabase/migrations/` que inserte la fila en
+   `organizations` (con UUID fijo, idempotente con `WHERE NOT EXISTS`) + su fila en
+   `proactive_config`. Dejar el motor proactivo **apagado** (`enabled=false,
+   shadow_mode=true`) hasta que su gente tenga Telegram vinculado: encenderlo antes
+   solo genera cola de recordatorios que no llegan a nadie.
+   - `zoom_stage_label` NO es "Zoom Agendado" fuera de lo inmobiliario: es **la etapa
+     de cita de ese negocio** (medición, reunión, reserva confirmada). Es lo que hace
+     que el recordatorio de N horas antes signifique algo.
+   - `terminal_stages` = las etapas ya cerradas, para que el escáner de inactividad
+     no moleste por trabajo terminado.
+2. **Config**: `src/clients/<id>/config.js` copiando el más parecido. Apagar SIEMPRE
+   `dash/erp/team/iacrm/landingPages/finanzas/rrhh` (usan datos mock de Stratos).
+3. **Registro**: importarlo y agregarlo a `CLIENT_CONFIGS` en `src/clients/index.js`.
+4. **Si el pipeline es custom**, poner `crm.bulkReassignToContactameByDefault: false`
+   — el default global mueve los registros reasignados a la etapa "Contactame Ya",
+   que en un pipeline propio no existe (quedarían fuera del tablero).
+5. **Coherencia de KPIs**: cada `stage` referida en `crm.kpis` debe existir en
+   `crm.pipeline`, y el `icon` estar en `KPI_ICON_MAP` (`CRM/index.jsx`) — si no,
+   la tarjeta muestra 0 para siempre o cae al ícono genérico.
+6. **Bump de `CACHE_VERSION`** en `public/sw.js`.
+7. **Verificar**: `npm run build` + comprobar el ruteo (`matchClientFromLocation`),
+   el mapeo org→cliente y que Duke siga con `crm.pipeline`/`crm.labels` en `null`.
+
+⚠️ `brand.accent` **todavía no retematiza la app** (el tema global sigue en el menta
+del design system); hoy solo lo consume Comando Ops. Declararlo está bien, pero no
+prometas al cliente que la app cambia de color.
 
 ### Documentos relacionados
 

@@ -19,6 +19,9 @@ import tgeniusConfig from "./tgenius/config";
 import stratosSalesConfig from "./stratos-sales/config";
 import vegaConfig    from "./vega/config";
 import nsgConfig     from "./nsg/config";
+import muebleriaConfig     from "./muebleria/config";
+import legacyDesignConfig  from "./legacy-design/config";
+import brasaYPiedraConfig  from "./brasa-y-piedra/config";
 
 // Registry de todos los clientes conocidos
 const CLIENT_CONFIGS = {
@@ -28,6 +31,11 @@ const CLIENT_CONFIGS = {
   "stratos-sales": stratosSalesConfig,
   vega:            vegaConfig,
   nsg:             nsgConfig,
+  // Tenants de verticales NO inmobiliarias (jul-2026). Mismo motor, pipeline y
+  // vocabulario propios; datos aislados por organization_id + RLS (migración 179).
+  muebleria:       muebleriaConfig,      // fábrica de muebles / carpintería
+  "legacy-design": legacyDesignConfig,   // arquitectura + desarrollo inmobiliario
+  "brasa-y-piedra": brasaYPiedraConfig,  // restaurante (reservas y eventos)
 };
 
 /**
