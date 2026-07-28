@@ -5,9 +5,9 @@
  *   · Los gastos que el equipo registra por Telegram (texto/audio/ticket)
  *     aparecen acá automáticamente (son filas de la misma tabla).
  *   · Desde la web, CUALQUIER rol (admin o asesor/empleado) puede registrar
- *     ingresos y egresos con cuenta, categoría, obra y fecha.
+ *     ingresos y egresos con cuenta, categoría, registro del CRM y fecha.
  *
- * Módulo gated por `features.caja` en la config del cliente (hoy solo Vega).
+ * Módulo gated por `features.caja` en la config del cliente.
  * RLS filtra por organization_id; acá además se filtra explícito (defensa en
  * profundidad, mismo patrón que el resto del CRM).
  *
@@ -17,6 +17,9 @@
  * real #030810 → texto casi invisible y tarjetas planas).
  */
 import { useState, useEffect, useCallback, useMemo } from "react";
+// Vocabulario del cliente: el movimiento se puede atar a un registro del CRM,
+// que según el negocio es un cliente, un pedido, una obra o un paciente.
+import { L } from "../constants/labels";
 import {
   Wallet, ArrowUpRight, ArrowDownRight, Scale, Plus, Search,
   RefreshCw, Send, X, MessageCircle, Monitor, Paperclip, ExternalLink, Download, FileText,
@@ -378,7 +381,7 @@ export default function Caja({ T }) {
           </div>
           <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 2fr auto", gap: 10 }}>
             <select value={form.projectId} onChange={e => setForm(f => ({ ...f, projectId: e.target.value }))} style={inputStyle}>
-              <option value="">Sin obra / general</option>
+              <option value="">Sin {L.entity} / general</option>
               {obras.map(o => <option key={o.id} value={o.id}>{o.name}</option>)}
             </select>
             <input placeholder="Descripción / detalle (opcional)" value={form.description}
@@ -435,7 +438,7 @@ export default function Caja({ T }) {
         </div>
         <div style={{ flex: 1, minWidth: 180, position: "relative" }}>
           <Search size={15} color={txt3} style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)" }} />
-          <input placeholder="Buscar por categoría, obra, persona…" value={searchQ}
+          <input placeholder={`Buscar por categoría, ${L.entity}, persona…`} value={searchQ}
             onChange={e => setSearchQ(e.target.value)} style={{ ...inputStyle, paddingLeft: 36 }} />
         </div>
       </div>

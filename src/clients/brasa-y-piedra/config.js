@@ -69,7 +69,7 @@ const brasaYPiedraConfig = {
 
   tenant: {
     clientId:       "brasa-y-piedra",
-    // UUID de la org "Brasa y Piedra" en `organizations` (migración 179).
+    // UUID de la org "Brasa y Piedra" en `organizations` (migración 184).
     organizationId: "ea74b69a-6904-4c65-a0ca-e0af58f1473a",
     supabaseRef:    "glulgyhkrqpykxmujodb",
     // Sin bot propio todavía. Para un restaurante el bot es probablemente lo más

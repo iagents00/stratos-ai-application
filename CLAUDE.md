@@ -461,10 +461,10 @@ de clientes), el flujo es:
 - Cada `profiles` tiene `organization_id`. `organizations` es la tabla de orgs.
 - `STRATOS_ORG_ID = "00000000-0000-0000-0000-000000000001"` (Stratos / Duke).
 - `Grupo 28` organizationId = `"9afe40d2-7163-4407-a4cd-5346799ecd3c"`.
-- `Mueblería` = `"e583eb98-ff00-4920-a69c-db39f3841b31"` (migración 179).
-- `Legacy Design` = `"281caa01-7414-4eef-b3b6-afa1e7623ab3"` (migración 179).
-- `Brasa y Piedra` = `"ea74b69a-6904-4c65-a0ca-e0af58f1473a"` (migración 179).
-- `Clínica Dental` = `"6c5cf32a-3db4-477d-bbed-26d90231bc9a"` (migración 180).
+- `Mueblería` = `"e583eb98-ff00-4920-a69c-db39f3841b31"` (migración 184).
+- `Legacy Design` = `"281caa01-7414-4eef-b3b6-afa1e7623ab3"` (migración 184).
+- `Brasa y Piedra` = `"ea74b69a-6904-4c65-a0ca-e0af58f1473a"` (migración 184).
+- `Clínica Dental` = `"6c5cf32a-3db4-477d-bbed-26d90231bc9a"` (migración 185).
 - `canAccessModule(moduleId, user)` en `src/app/constants/navigation.js`:
   clientes externos solo ven CRM, Perfil, Papelera (independiente del rol).
 - RLS de Supabase filtra registros por `organization_id` automáticamente.

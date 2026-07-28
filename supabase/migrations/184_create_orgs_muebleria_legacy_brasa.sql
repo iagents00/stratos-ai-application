@@ -1,4 +1,4 @@
--- 179_create_orgs_muebleria_legacy_brasa.sql
+-- 184_create_orgs_muebleria_legacy_brasa.sql
 -- Da de alta TRES tenants nuevos del white-label de Stratos, cada uno con su
 -- propia organization_id (aislamiento por RLS, igual que Grupo 28 / Vega / NSG):
 --

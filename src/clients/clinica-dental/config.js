@@ -85,7 +85,7 @@ const clinicaDentalConfig = {
 
   tenant: {
     clientId:       "clinica-dental",
-    // UUID de la org "Clínica Dental" en `organizations` (migración 180).
+    // UUID de la org "Clínica Dental" en `organizations` (migración 185).
     organizationId: "6c5cf32a-3db4-477d-bbed-26d90231bc9a",
     supabaseRef:    "glulgyhkrqpykxmujodb",
     // Sin bot propio todavía. En una clínica el bot le sirve sobre todo a la
@@ -175,7 +175,7 @@ const clinicaDentalConfig = {
     //
     // "Cita agendada" es la etapa de CITA del tenant: proactive_config
     // .zoom_stage_label = 'Cita agendada' → el asistente avisa el día antes
-    // (24 h es el tope real del escáner; ver la migración 180).
+    // (24 h es el tope real del escáner; ver la migración 185).
     pipeline: [
       { name: "Nuevo contacto", color: "#94A3B8" }, // pidió informes
       { name: "Cita agendada",  color: "#38BDF8" }, // tiene fecha y hora

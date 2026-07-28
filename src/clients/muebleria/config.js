@@ -74,7 +74,7 @@ const muebleriaConfig = {
 
   tenant: {
     clientId:       "muebleria",
-    // UUID de la org "Mueblería" en `organizations` (migración 179). Con esto,
+    // UUID de la org "Mueblería" en `organizations` (migración 184). Con esto,
     // ClientOrgGuard auto-redirige a su gente a /muebleria tras el login y RLS
     // aísla sus datos.
     organizationId: "e583eb98-ff00-4920-a69c-db39f3841b31",

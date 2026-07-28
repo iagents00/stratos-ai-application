@@ -31,7 +31,7 @@ import { zoomEventsOf } from "./zoom-metrics";
 import { StratosAtom, StratosAtomHex } from "../../components/Logo";
 import { AI_AGENTS, AI_AGENT_LIST } from "../../constants/agents";
 // Pipeline + vocabulario activos por cliente (Duke: idéntico; Vega: su pipeline / "proyecto").
-import { STAGES, stgC } from "../../constants/pipeline";
+import { STAGES, stgC, IS_CUSTOM_PIPELINE } from "../../constants/pipeline";
 import { L } from "../../constants/labels";
 import LeadNotesTimeline from "./LeadNotesTimeline";
 import { getEntityHistory, fieldLabel, actionLabel } from "../../../lib/audit";
@@ -577,7 +577,7 @@ const FollowUpBadge = ({ lead, onUpdate, T = P, compact = false, fullWidth = fal
           e.currentTarget.style.color = accentSafe;
           e.currentTarget.style.transform = "translateY(0)";
         }}
-        title="Registrar el primer seguimiento al cliente"
+        title={`Registrar el primer seguimiento al ${L.entity}`}
         aria-label="Registrar primer seguimiento"
         style={{
           display: "inline-flex", alignItems: "center", gap: compact ? 5 : 6,
@@ -999,7 +999,11 @@ const NextActionHero = ({ lead, T = P, onUpdate = null, projectMode = false }) =
             onChange={e => setDraftA(e.target.value)}
             onBlur={autoSaveOnBlur}
             autoFocus
-            placeholder="¿Qué tienes que hacer con este cliente? Ej: Llamar mañana 10am para confirmar visita, enviar propuesta, agendar Zoom…"
+            // El ejemplo se adapta al negocio: pedirle a una clínica que "agende
+            // un Zoom" es de otro rubro. Duke conserva su texto exacto.
+            placeholder={IS_CUSTOM_PIPELINE
+              ? `¿Qué tienes que hacer con este ${L.entity}? Ej: Llamar mañana 10am para confirmar, enviar la cotización, agendar la próxima cita…`
+              : "¿Qué tienes que hacer con este cliente? Ej: Llamar mañana 10am para confirmar visita, enviar propuesta, agendar Zoom…"}
             rows={3}
             style={{
               width: "100%", boxSizing: "border-box",
@@ -1875,7 +1879,7 @@ const UpdateChatPanel = ({ isOpen, onClose, expedienteItems = [], onAddItem, onR
                   handleSend();
                 }
               }}
-              placeholder="Cuéntame qué pasó con el cliente — escribe libre…"
+              placeholder={`Cuéntame qué pasó con el ${L.entity} — escribe libre…`}
               rows={Math.min(Math.max(inputText.split("\n").length, 1), 4)}
               style={{
                 flex: 1, padding: "8px 12px", borderRadius: 10,
@@ -2162,7 +2166,7 @@ const TaskChecklist = ({ lead, onUpdate, T = P }) => {
       {/* Estado vacío */}
       {!hasContent && !addingTask && (
         <div style={{ padding: "20px 14px", textAlign: "center" }}>
-          <p style={{ fontSize: 11.5, color: T.txt3, fontFamily: font, marginBottom: 10 }}>Añade tareas concretas para este cliente</p>
+          <p style={{ fontSize: 11.5, color: T.txt3, fontFamily: font, marginBottom: 10 }}>{`Añade tareas concretas para este ${L.entity}`}</p>
           <button onClick={() => setAdding(true)} style={{ padding: "6px 16px", borderRadius: 7, background: `${T.accent}10`, border: `1px solid ${T.accentB}`, color: accentC, fontSize: 11, fontWeight: 500, cursor: "pointer", fontFamily: fontDisp }}>+ Primera tarea</button>
         </div>
       )}
@@ -2546,7 +2550,7 @@ const PlaybookSection = ({ lead, T = P, onUpdate = null, onShowSuggest = null })
                 if (e.key === 'Escape')              { e.preventDefault(); setAdding(false); setNewDraft(""); }
               }}
               rows={2}
-              placeholder="Ej. Llamar al cliente para confirmar visita del jueves"
+              placeholder={`Ej. Llamar al ${L.entity} para confirmar la próxima cita`}
               style={{
                 width: "100%", padding: "9px 11px", borderRadius: 8,
                 background: isLight ? "rgba(15,23,42,0.04)" : "rgba(255,255,255,0.04)",
@@ -3442,7 +3446,7 @@ const DiscoveryGeneralData = ({ lead, onUpdate, T = P, isLight = false }) => {
           label="Perfil del cliente"
           value={lead.bio}
           onSave={v => onUpdate?.({ ...lead, bio: v })}
-          placeholder="Describe al cliente: necesidad, contexto, objeciones..."
+          placeholder={`Describe al ${L.entity}: necesidad, contexto, objeciones...`}
           emptyText="+ Agregar perfil del cliente"
           multiline rows={4}
         />
@@ -4544,7 +4548,7 @@ const LeadPanel = ({ lead, onClose, oc, onUpdate, onSwitchTab, onShowHistory, on
                       onSave={v => onUpdate?.({...lead, bio: v})}
                       T={T} isLight={isLight}
                       multiline rows={4}
-                      placeholder="Describe al cliente: necesidad, contexto, objeciones..."
+                      placeholder={`Describe al ${L.entity}: necesidad, contexto, objeciones...`}
                       emptyText="+ Agregar perfil del cliente"
                       readStyle={{ fontSize: 12.5, lineHeight: 1.7, display: "block" }}
                       editStyle={{ fontSize: 12.5 }}

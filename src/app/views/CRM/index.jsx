@@ -38,7 +38,7 @@ import SuggestActionsModal from "../../components/SuggestActionsModal";
 import { AI_AGENTS, AI_AGENT_LIST } from "../../constants/agents";
 // Pipeline + vocabulario activos resueltos por cliente. Para Duke devuelven
 // exactamente STAGES/stgC/labels históricos; Vega usa su pipeline y "proyecto".
-import { STAGES, stgC, DEFAULT_STAGE } from "../../constants/pipeline";
+import { STAGES, stgC, DEFAULT_STAGE, IS_CUSTOM_PIPELINE } from "../../constants/pipeline";
 import { L } from "../../constants/labels";
 import {
   calculateLeadScore,
@@ -2180,7 +2180,15 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
   const kpiValue = (spec) => {
     if (!spec) return "";
     if (spec.type === "total") return visibleLeads.length;
-    if (spec.type === "money") return `$${(totalPipeline / 1000000).toFixed(1)}M`;
+    // Dinero con la escala del negocio. Estaba fijo en millones, que sirve para
+    // una inmobiliaria pero deja a un taller o una clínica mostrando "$0.0M"
+    // siempre. Arriba de un millón el resultado es idéntico al de antes.
+    if (spec.type === "money") {
+      const v = Number(totalPipeline) || 0;
+      if (v >= 1000000) return `$${(v / 1000000).toFixed(1)}M`;
+      if (v >= 1000)    return `$${Math.round(v / 1000)}K`;
+      return `$${v.toLocaleString("es-MX")}`;
+    }
     if (spec.type === "count") return visibleLeads.filter(l => l.st === spec.stage).length;
     return "";
   };
@@ -2496,7 +2504,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                     }}
                   >
                     <option value="manual"     style={{ background: isLight ? "#FFFFFF" : "#111318", color: T.txt }}>Manual (arrastra)</option>
-                    <option value="proxZoom"   style={{ background: isLight ? "#FFFFFF" : "#111318", color: T.txt }}>Próximo Zoom</option>
+                    <option value="proxZoom"   style={{ background: isLight ? "#FFFFFF" : "#111318", color: T.txt }}>{IS_CUSTOM_PIPELINE ? "Próxima acción" : "Próximo Zoom"}</option>
                     <option value="newest"     style={{ background: isLight ? "#FFFFFF" : "#111318", color: T.txt }}>Nuevos primero</option>
                     <option value="oldest"     style={{ background: isLight ? "#FFFFFF" : "#111318", color: T.txt }}>Nuevos al fondo</option>
                     <option value="concretado" style={{ background: isLight ? "#FFFFFF" : "#111318", color: T.txt }}>En Seguimiento</option>
@@ -3934,7 +3942,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
           {!isMobile && (() => {
             const SORT_OPTS = [
               { v: 'fechaIngreso', label: 'Más recientes' },
-              { v: 'proxZoom',     label: 'Próximo Zoom' },
+              { v: 'proxZoom',     label: IS_CUSTOM_PIPELINE ? 'Próxima acción' : 'Próximo Zoom' },
               { v: 'presupuesto',  label: 'Mayor presupuesto' },
               { v: 'sc',           label: 'Mayor score' },
             ];

@@ -33,7 +33,7 @@
  *      El CRM aún no tiene ese rol de "lectura por módulo" — hay que resolverlo
  *      antes de darles acceso, o se lo damos a editar a quien pidió no tenerlo.
  *   4. **Alex NO quiere avisos para Legacy** (los quiere para su equipo de
- *      marketing). Por eso el motor proactivo queda apagado (ver migración 179).
+ *      marketing). Por eso el motor proactivo queda apagado (ver migración 184).
  *   Detalle completo: nota [[legacy-design-control-proyectos]] del AIOS.
  *
  * Aislamiento: comparte código y proyecto Supabase (glulgyhkrqpykxmujodb) pero sus
@@ -74,7 +74,7 @@ const legacyDesignConfig = {
 
   tenant: {
     clientId:       "legacy-design",
-    // UUID de la org "Legacy Design" en `organizations` (migración 179).
+    // UUID de la org "Legacy Design" en `organizations` (migración 184).
     organizationId: "281caa01-7414-4eef-b3b6-afa1e7623ab3",
     supabaseRef:    "glulgyhkrqpykxmujodb",
     // Sin bot propio todavía (ver receta en la skill stratos-whitelabel-onboarding).

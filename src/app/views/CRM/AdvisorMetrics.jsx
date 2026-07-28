@@ -332,7 +332,17 @@ export default function AdvisorMetrics({ leadsData = [], theme = "dark", onOpenL
       </div>
 
       <p style={{ margin: "10px 4px 0", fontSize: 10.5, color: T.txt3, fontFamily: font, lineHeight: 1.5 }}>
-        Asignados / Contactados / Calificados / Activos se filtran por fecha de creación del lead y reflejan su etapa actual. Las columnas <strong>Zooms Ag./Real.</strong> son históricas: cuentan cada lead que alguna vez pasó por esa fase (aunque hoy esté en otra etapa o haya sido reasignado), acreditadas a <strong>quién dio el Zoom</strong> y filtradas por la fecha real del evento. La fila <strong>{INACTIVE_ADVISOR_GROUP}</strong> agrupa ex-asesores y cuentas de prueba/sistema: sus leads y Zooms cuentan en el total para que cuadre con el pipeline del CRM.
+        {IS_CUSTOM_PIPELINE ? (
+          <>
+            Cada columna es una <strong>etapa de tu tablero</strong> y muestra cuántos {L.entityPlural} tiene ahí cada {L.advisor} —
+            es la foto de HOY, filtrada por fecha de alta del registro. La fila <strong>{INACTIVE_ADVISOR_GROUP}</strong> agrupa
+            cuentas dadas de baja y de prueba: sus {L.entityPlural} igual cuentan en el total para que cuadre con el tablero.
+          </>
+        ) : (
+          <>
+            Asignados / Contactados / Calificados / Activos se filtran por fecha de creación del lead y reflejan su etapa actual. Las columnas <strong>Zooms Ag./Real.</strong> son históricas: cuentan cada lead que alguna vez pasó por esa fase (aunque hoy esté en otra etapa o haya sido reasignado), acreditadas a <strong>quién dio el Zoom</strong> y filtradas por la fecha real del evento. La fila <strong>{INACTIVE_ADVISOR_GROUP}</strong> agrupa ex-asesores y cuentas de prueba/sistema: sus leads y Zooms cuentan en el total para que cuadre con el pipeline del CRM.
+          </>
+        )}
       </p>
 
     </div>

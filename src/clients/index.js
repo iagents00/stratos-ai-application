@@ -33,7 +33,7 @@ const CLIENT_CONFIGS = {
   vega:            vegaConfig,
   nsg:             nsgConfig,
   // Tenants de verticales NO inmobiliarias (jul-2026). Mismo motor, pipeline y
-  // vocabulario propios; datos aislados por organization_id + RLS (migración 179).
+  // vocabulario propios; datos aislados por organization_id + RLS (migración 184).
   muebleria:       muebleriaConfig,      // fábrica de muebles / carpintería
   "legacy-design": legacyDesignConfig,   // arquitectura + desarrollo inmobiliario
   "brasa-y-piedra": brasaYPiedraConfig,  // restaurante (reservas y eventos)
