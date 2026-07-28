@@ -190,6 +190,9 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
   // tareas a propósito — una tarea es algo que ALGUIEN pidió; la bitácora es el
   // relato del día, incluido todo lo que no estaba en ninguna lista.
   const [bitacora, setBitacora] = useState([]);
+  // Columnas que el equipo agregó al registro (viven en mkt_pipeline_columns;
+  // sus valores, en mkt_pipeline_items.datos).
+  const [colsExtra, setColsExtra] = useState([]);
   const [bitaAbierta, setBitaAbierta] = useState(() => new Set()); // ids con el texto completo desplegado
   const [loading, setLoading]   = useState(true);
   const [error, setError]       = useState("");
@@ -199,7 +202,7 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
     setLoading(true);
     setError("");
     try {
-      const [b, pj, tk, pl, rq, pr, bi] = await Promise.all([
+      const [b, pj, tk, pl, rq, pr, bi, cols] = await Promise.all([
         supabase.from("mkt_brands").select("id, nombre, slug, activo, orden")
           .eq("organization_id", orgId).eq("activo", true).order("orden"),
         supabase.from("mkt_projects").select("id, brand_id, nombre, descripcion, drive_url, due_date, estado, orden, created_at")
@@ -207,7 +210,7 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
         supabase.from("mkt_tasks").select("id, brand_id, project_id, titulo, descripcion, assignee_id, created_by, prioridad, estado, avance_pct, due_at, depends_on, drive_url, evidencia_url, evidencia_tipo, updated_at, created_at")
           .eq("organization_id", orgId).is("deleted_at", null)
           .order("due_at", { ascending: true, nullsFirst: false }).limit(600),
-        supabase.from("mkt_pipeline_items").select("id, brand_id, nombre, locacion, etapa, fecha_rodaje, fecha_publicacion, precio, tipo, drive_url, ig_url, crudos_url, video_url, story_url, cine_url, ficha_url, info_url, notas, orden, updated_at")
+        supabase.from("mkt_pipeline_items").select("id, brand_id, nombre, locacion, etapa, fecha_rodaje, fecha_publicacion, precio, tipo, drive_url, ig_url, crudos_url, video_url, story_url, cine_url, ficha_url, info_url, notas, datos, orden, updated_at")
           .eq("organization_id", orgId).is("deleted_at", null).order("orden").order("updated_at"),
         supabase.from("mkt_requests").select("id, brand_id, titulo, detalle, objetivo, complejidad, ref_image_url, fecha_entrega, solicitante, assignee_id, estado, created_at")
           .eq("organization_id", orgId).is("deleted_at", null).order("created_at", { ascending: false }).limit(200),
@@ -215,8 +218,10 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
         supabase.from("mkt_daily_reports").select("id, profile_id, fecha, texto, evidencia_url, origen, created_at, brand_id, tiempo_texto")
           .eq("organization_id", orgId)
           .order("fecha", { ascending: false }).order("created_at", { ascending: false }).limit(400),
+        supabase.from("mkt_pipeline_columns").select("id, clave, nombre, tipo, opciones, orden")
+          .eq("organization_id", orgId).is("deleted_at", null).order("orden"),
       ]);
-      for (const r of [b, pj, tk, pl, rq, pr, bi]) if (r.error) throw r.error;
+      for (const r of [b, pj, tk, pl, rq, pr, bi, cols]) if (r.error) throw r.error;
       setBrands(b.data || []);
       setProjects(pj.data || []);
       setTasks(tk.data || []);
@@ -224,6 +229,7 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
       setRequests(rq.data || []);
       setPeople(pr.data || []);
       setBitacora(bi.data || []);
+      setColsExtra(cols.data || []);
     } catch (e) {
       setError(`No pude cargar el módulo de ${MODULE_LABEL}. Probá actualizar.`);
     } finally {
@@ -837,6 +843,119 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
   const locaciones = useMemo(() => [...new Set(pipeline.map(p => p.locacion).filter(Boolean))].sort(), [pipeline]);
   const tipos      = useMemo(() => [...new Set(pipeline.map(p => p.tipo).filter(Boolean))].sort(), [pipeline]);
 
+  /* Guardar una celda. Optimista NO: se guarda y se recarga, porque el dato de
+     una propiedad lo pueden estar tocando dos personas a la vez y prefiero que
+     la tabla muestre lo que hay en la base, no lo que yo creo que hay. */
+  const [celda, setCelda] = useState(null);      // { id, campo, valor, extra? }
+  const [celdaSaving, setCeldaSaving] = useState(false);
+
+  const guardarCelda = useCallback(async () => {
+    if (!celda?.id) return;
+    const { id, campo, valor, extra } = celda;
+    setCeldaSaving(true);
+    const limpio = String(valor ?? "").trim() || null;
+    let payload;
+    if (extra) {
+      // Columna propia → se mezcla dentro del jsonb sin pisar las demás llaves.
+      const fila = pipeline.find(p => p.id === id);
+      payload = { datos: { ...(fila?.datos || {}), [campo]: limpio }, updated_at: new Date().toISOString() };
+    } else {
+      payload = { [campo]: limpio, updated_at: new Date().toISOString() };
+    }
+    const { error: e } = await supabase.from("mkt_pipeline_items").update(payload).eq("id", id);
+    setCeldaSaving(false);
+    setCelda(null);
+    if (e) { setError("No pude guardar ese dato. Probá de nuevo."); return; }
+    load();
+  }, [celda, pipeline, load]);
+
+  /* El estatus NO se edita por clic: es un desplegable siempre visible, porque
+     cambiarlo es la acción más frecuente de la tabla (lo pidió Alex así). */
+  const cambiarEtapa = useCallback(async (id, etapa) => {
+    const { error: e } = await supabase.from("mkt_pipeline_items")
+      .update({ etapa, updated_at: new Date().toISOString() }).eq("id", id);
+    if (e) { setError("No pude cambiar el estatus."); return; }
+    load();
+  }, [load]);
+
+  /* ── Columnas propias: agregarlas sin que nosotros toquemos el esquema ── */
+  const [colForm, setColForm] = useState(null);   // { nombre, tipo } | null
+
+  const crearColumna = useCallback(async () => {
+    const nombre = String(colForm?.nombre || "").trim();
+    if (!nombre || !orgId) return;
+    // La clave se deriva del nombre: estable aunque después lo renombren.
+    const clave = nombre.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "")
+      .replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "").slice(0, 40) || `col_${Date.now()}`;
+    const { error: e } = await supabase.from("mkt_pipeline_columns").insert({
+      organization_id: orgId, clave, nombre, tipo: colForm.tipo || "texto",
+      orden: colsExtra.length + 1, created_by: user?.id || null,
+    });
+    if (e) { setError(e.code === "23505" ? "Ya existe una columna con ese nombre." : "No pude crear la columna."); return; }
+    setColForm(null);
+    load();
+  }, [colForm, orgId, colsExtra.length, user?.id, load]);
+
+  const archivarColumna = useCallback(async (col) => {
+    // No se borra: se archiva. Los valores siguen en `datos` por si vuelven.
+    const { error: e } = await supabase.from("mkt_pipeline_columns")
+      .update({ deleted_at: new Date().toISOString() }).eq("id", col.id);
+    if (e) { setError("No pude quitar la columna."); return; }
+    load();
+  }, [load]);
+
+  /* Celda editable. Se renderiza como JSX suelto (NO como componente anidado):
+     un componente definido acá adentro cambiaría de identidad en cada render y
+     el input perdería el foco al tipear — está avisado arriba en este archivo. */
+  const celdaEditable = (fila, campo, { tipo = "text", extra = false, ancho = 110, placeholder = "—" } = {}) => {
+    const editando = celda && celda.id === fila.id && celda.campo === campo && celda.extra === extra;
+    const valor = extra ? (fila.datos?.[campo] ?? "") : (fila[campo] ?? "");
+    if (editando) {
+      return (
+        <input
+          autoFocus
+          type={tipo}
+          value={celda.valor}
+          disabled={celdaSaving}
+          onChange={e => setCelda(c => ({ ...c, valor: e.target.value }))}
+          onBlur={guardarCelda}
+          onKeyDown={e => {
+            if (e.key === "Enter") { e.preventDefault(); guardarCelda(); }
+            if (e.key === "Escape") { e.preventDefault(); setCelda(null); }
+          }}
+          style={{ ...inputStyle, padding: "4px 7px", fontSize: 12, width: ancho, minWidth: ancho }} />
+      );
+    }
+    const mostrar = tipo === "date" && valor ? fmtDia(valor) : valor;
+    return (
+      <button
+        onClick={() => setCelda({ id: fila.id, campo, valor: valor || "", extra })}
+        title="Clic para editar"
+        style={{
+          background: "transparent", border: "none", padding: "2px 0", cursor: "text", textAlign: "left",
+          color: mostrar ? txt2 : txt3, fontSize: 12, fontFamily: font, minWidth: 34, width: "100%",
+        }}>{mostrar || placeholder}</button>
+    );
+  };
+
+  /* Celda de enlace: si hay URL muestra «Abrir» y un lápiz para cambiarla. */
+  const celdaEnlace = (fila, campo) => {
+    const editando = celda && celda.id === fila.id && celda.campo === campo && !celda.extra;
+    if (editando) return celdaEditable(fila, campo, { ancho: 190, placeholder: "Pegá el enlace" });
+    const url = fila[campo];
+    return (
+      <span style={{ display: "inline-flex", alignItems: "center", gap: 6, whiteSpace: "nowrap" }}>
+        {url
+          ? <a href={url} target="_blank" rel="noreferrer" style={{ color: accent, fontSize: 11.5, textDecoration: "none" }}>Abrir</a>
+          : <span style={{ color: txt3, fontSize: 11.5 }}>—</span>}
+        <button onClick={() => setCelda({ id: fila.id, campo, valor: url || "", extra: false })}
+          title={url ? "Cambiar el enlace" : "Poner un enlace"} style={{
+            background: "transparent", border: "none", padding: 0, cursor: "pointer", color: txt3, fontSize: 10.5, fontFamily: font,
+          }}>{url ? "editar" : "+"}</button>
+      </span>
+    );
+  };
+
   const pipelineTabla = () => (
     <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
@@ -857,10 +976,42 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
           <option value="">Todo estatus</option>
           {ETAPAS.map(s => <option key={s.id} value={s.id}>{s.l}</option>)}
         </select>
+        <button onClick={() => setColForm(c => c ? null : { nombre: "", tipo: "texto" })} style={{
+          background: "transparent", border: `1px solid ${accent}44`, borderRadius: 9, padding: "7px 12px",
+          cursor: "pointer", color: accent, fontSize: 12, fontFamily: font, display: "inline-flex", alignItems: "center", gap: 5,
+        }}><Plus size={12} /> Columna</button>
         <span style={{ fontSize: 11.5, color: txt3, marginLeft: "auto", whiteSpace: "nowrap" }}>
           {pipeFiltrado.length} de {pipeline.length}
         </span>
       </div>
+
+      {colForm && (
+        <div style={{ ...card, borderRadius: 12, padding: 12, display: "flex", gap: 8, flexWrap: "wrap", alignItems: "flex-end" }}>
+          <label style={{ display: "flex", flexDirection: "column", gap: 4, flex: "1 1 200px" }}>
+            <span style={{ fontSize: 10.5, color: txt3 }}>Nombre de la columna</span>
+            <input autoFocus value={colForm.nombre} onChange={e => setColForm(c => ({ ...c, nombre: e.target.value }))}
+              onKeyDown={e => { if (e.key === "Enter") crearColumna(); }}
+              placeholder="Voz en off · Responsable · Campaña…" style={inputStyle} />
+          </label>
+          <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+            <span style={{ fontSize: 10.5, color: txt3 }}>Qué guarda</span>
+            <select value={colForm.tipo} onChange={e => setColForm(c => ({ ...c, tipo: e.target.value }))} style={{ ...inputStyle, width: "auto" }}>
+              <option value="texto">Texto</option>
+              <option value="numero">Número</option>
+              <option value="fecha">Fecha</option>
+              <option value="enlace">Enlace</option>
+            </select>
+          </label>
+          <button onClick={crearColumna} disabled={!String(colForm.nombre || "").trim()} style={{
+            padding: "9px 16px", borderRadius: 9, fontFamily: font, fontSize: 12.5, fontWeight: 600,
+            cursor: "pointer", background: `${accent}18`, border: `1px solid ${accent}55`, color: accent,
+            opacity: String(colForm.nombre || "").trim() ? 1 : 0.55,
+          }}>Agregar</button>
+          <button onClick={() => setColForm(null)} style={{
+            background: "transparent", border: "none", cursor: "pointer", color: txt3, fontSize: 12, fontFamily: font, padding: "9px 4px",
+          }}>Cancelar</button>
+        </div>
+      )}
 
       <div style={hoja.wrap}>
         <table style={hoja.table}>
@@ -869,6 +1020,16 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
               {["Propiedad", "Rodaje", "Publicación", "Estatus", "Ubicación", "Precio", "Tipo",
                 "Crudos", "Video", "Reel", "Story", "Cine", "Ficha téc.", "Info", "Drive"]
                 .map(h => <th key={h} style={hoja.th}>{h}</th>)}
+              {colsExtra.map(c => (
+                <th key={c.id} style={hoja.th}>
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+                    {c.nombre}
+                    <button onClick={() => archivarColumna(c)} title="Quitar esta columna (los datos se conservan)" style={{
+                      background: "transparent", border: "none", padding: 0, cursor: "pointer", color: txt3, display: "inline-flex",
+                    }}><X size={11} /></button>
+                  </span>
+                </th>
+              ))}
             </tr>
           </thead>
           <tbody>
@@ -877,41 +1038,63 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
               return (
                 <tr key={p.id}>
                   <td style={{ ...hoja.td, minWidth: 170 }}>
-                    <button onClick={() => openFicha(p)} title="Abrir la ficha" style={{
+                    <button onClick={() => openFicha(p)} title="Abrir la ficha completa" style={{
                       background: "transparent", border: "none", padding: 0, cursor: "pointer", textAlign: "left",
                       color: txt, fontSize: 12.5, fontWeight: 500, fontFamily: font,
                     }}>{p.nombre}</button>
                   </td>
-                  <td style={{ ...hoja.td, whiteSpace: "nowrap" }}>{p.fecha_rodaje ? fmtDia(p.fecha_rodaje) : "—"}</td>
-                  <td style={{ ...hoja.td, whiteSpace: "nowrap" }}>{p.fecha_publicacion ? fmtDia(p.fecha_publicacion) : "—"}</td>
-                  <td style={hoja.td}>{chip(ETAPAS.find(e => e.id === p.etapa)?.l || p.etapa, col)}</td>
-                  <td style={{ ...hoja.td, whiteSpace: "nowrap" }}>{p.locacion || "—"}</td>
-                  <td style={{ ...hoja.td, whiteSpace: "nowrap", color: txt }}>{p.precio || "—"}</td>
-                  <td style={{ ...hoja.td, whiteSpace: "nowrap" }}>{p.tipo || "—"}</td>
-                  <td style={hoja.td}>{linkCel(p.crudos_url, "Abrir")}</td>
-                  <td style={hoja.td}>{linkCel(p.video_url,  "Abrir")}</td>
-                  <td style={hoja.td}>{linkCel(p.ig_url,     "Abrir")}</td>
-                  <td style={hoja.td}>{linkCel(p.story_url,  "Abrir")}</td>
-                  <td style={hoja.td}>{linkCel(p.cine_url,   "Abrir")}</td>
-                  <td style={hoja.td}>{linkCel(p.ficha_url,  "Abrir")}</td>
-                  <td style={hoja.td}>{linkCel(p.info_url,   "Abrir")}</td>
-                  <td style={hoja.td}>{linkCel(p.drive_url,  "Abrir")}</td>
+                  <td style={{ ...hoja.td, whiteSpace: "nowrap" }}>{celdaEditable(p, "fecha_rodaje", { tipo: "date", ancho: 130 })}</td>
+                  <td style={{ ...hoja.td, whiteSpace: "nowrap" }}>{celdaEditable(p, "fecha_publicacion", { tipo: "date", ancho: 130 })}</td>
+                  <td style={hoja.td}>
+                    {/* Cambiar el estatus es lo que más se hace: va siempre listo. */}
+                    <select value={p.etapa} onChange={e => cambiarEtapa(p.id, e.target.value)} title="Cambiar el estatus" style={{
+                      appearance: "none", WebkitAppearance: "none", cursor: "pointer",
+                      padding: "2px 9px", borderRadius: 999, whiteSpace: "nowrap", fontFamily: font,
+                      fontSize: 10.5, fontWeight: 600, color: col, background: `${col}1E`, border: `1px solid ${col}44`,
+                      colorScheme: isLight ? "light" : "dark",
+                    }}>
+                      {ETAPAS.map(s => <option key={s.id} value={s.id}>{s.l}</option>)}
+                    </select>
+                  </td>
+                  <td style={{ ...hoja.td, whiteSpace: "nowrap" }}>{celdaEditable(p, "locacion", { ancho: 130 })}</td>
+                  <td style={{ ...hoja.td, whiteSpace: "nowrap" }}>{celdaEditable(p, "precio", { ancho: 120 })}</td>
+                  <td style={{ ...hoja.td, whiteSpace: "nowrap" }}>{celdaEditable(p, "tipo", { ancho: 120 })}</td>
+                  <td style={hoja.td}>{celdaEnlace(p, "crudos_url")}</td>
+                  <td style={hoja.td}>{celdaEnlace(p, "video_url")}</td>
+                  <td style={hoja.td}>{celdaEnlace(p, "ig_url")}</td>
+                  <td style={hoja.td}>{celdaEnlace(p, "story_url")}</td>
+                  <td style={hoja.td}>{celdaEnlace(p, "cine_url")}</td>
+                  <td style={hoja.td}>{celdaEnlace(p, "ficha_url")}</td>
+                  <td style={hoja.td}>{celdaEnlace(p, "info_url")}</td>
+                  <td style={hoja.td}>{celdaEnlace(p, "drive_url")}</td>
+                  {colsExtra.map(c => (
+                    <td key={c.id} style={{ ...hoja.td, whiteSpace: "nowrap" }}>
+                      {celdaEditable(p, c.clave, {
+                        extra: true,
+                        tipo: c.tipo === "fecha" ? "date" : c.tipo === "numero" ? "number" : "text",
+                        ancho: c.tipo === "enlace" ? 180 : 120,
+                      })}
+                    </td>
+                  ))}
                 </tr>
               );
             })}
             {pipeFiltrado.length === 0 && (
-              <tr><td colSpan={15} style={{ ...hoja.td, textAlign: "center", color: txt3, padding: "18px 0" }}>
+              <tr><td colSpan={15 + colsExtra.length} style={{ ...hoja.td, textAlign: "center", color: txt3, padding: "18px 0" }}>
                 Ninguna propiedad coincide con ese filtro.
               </td></tr>
             )}
           </tbody>
         </table>
       </div>
-      <div style={{ fontSize: 10.5, color: txt3 }}>
-        Toca el nombre de una propiedad para abrir su ficha y editar cualquier dato o enlace.
+      <div style={{ fontSize: 10.5, color: txt3, lineHeight: 1.5 }}>
+        Toca cualquier celda para editarla — Enter guarda, Escape cancela. El estatus se cambia con su
+        desplegable. «+ Columna» agrega las tuyas y se quitan sin perder lo que ya escribiste.
+        El nombre de la propiedad abre su ficha completa.
       </div>
     </div>
   );
+
 
   /* ── HOJA 2: el registro de actividades (el morado) ── */
   const [repFiltro, setRepFiltro] = useState({ q: "", persona: "", fecha: "" });

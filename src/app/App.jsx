@@ -64,6 +64,17 @@ import { nav, MODULE_ROLES, MOBILE_PRIMARY_NAV, canAccessModule } from "./consta
 // a la vista de trabajo principal (CRM o Comando), no a estas pantallas.
 const NON_PERSISTABLE_VIEWS = new Set(["planes", "admin"]);
 
+// Llave de ESTRENO de una sección nueva.
+// El problema que resuelve: la vista guardada en localStorage GANA sobre el
+// fallback (así quien ya usó la app vuelve donde estaba, que es lo correcto en
+// el día a día). Pero eso hace que una sección NUEVA no se le muestre NUNCA a
+// quien ya tenía una vista guardada — le pasó a Alex con Actividades el 28-jul:
+// la sección existía y su navegador lo seguía mandando a la vista vieja, así que
+// para él "no estaba".
+// Con esta llave, la PRIMERA vez que entra después del cambio se le abre la
+// sección nueva; de ahí en adelante manda su elección, como siempre.
+const MKT_ESTRENO_KEY = "stratos.mkt.estreno.actividades";
+
 // Tope del caché de leads en localStorage (paint instantáneo en F5).
 // CRÍTICO: este caché comparte la cuota de localStorage (~5 MB en Safari) con
 // el token de sesión de Supabase (sb-<ref>-auth-token). Los admins ven TODOS
@@ -99,6 +110,15 @@ function resolveInitialView(user, clientConfig) {
     ? "mkt_reporte"
     : ((isAsesorRole || isExternalOrg) ? "c" : "d");
   if (!user?.id) return fallback;
+  // Estreno de Actividades: una sola vez por usuario de marketing, antes de
+  // mirar la vista guardada (si no, nunca la vería).
+  const esMarketing = user?.isMarketingAdmin === true || user?.role === "marketing";
+  try {
+    if (esMarketing && !localStorage.getItem(`${MKT_ESTRENO_KEY}.${user.id}`)) {
+      localStorage.setItem(`${MKT_ESTRENO_KEY}.${user.id}`, "1");
+      return "mkt_reporte";
+    }
+  } catch (_) { /* sin localStorage, sigue el camino normal */ }
   try {
     const saved = localStorage.getItem(`stratos.crm.view.${user.id}`);
     if (!saved) return fallback;
