@@ -275,16 +275,32 @@ export async function removeSubscriptionFromBackend(userId) {
  * Devuelve { success, permission, subscription }
  */
 export async function enablePushNotifications(userId) {
+  // Paso 0: ¿este navegador puede, siquiera?
+  // Iván probó en Mac con Brave y con Safari y «no dejó activar». El botón
+  // fallaba EN SILENCIO: devolvía success:false sin decir por qué, así que la
+  // pantalla no mostraba nada y parecía que el botón estaba muerto. Ahora cada
+  // salida trae su `motivo` y la pantalla lo cuenta.
+  if (!isPushSupported()) {
+    return { success: false, permission: 'unsupported', subscription: null, motivo: 'navegador' };
+  }
+
   // Paso 1: pedir permiso
   const permission = await requestNotificationPermission();
   if (permission !== 'granted') {
-    return { success: false, permission, subscription: null };
+    return { success: false, permission, subscription: null, motivo: 'permiso' };
   }
 
   // Paso 2: suscribirse al push service
   const subscription = await subscribeToPush();
   if (!subscription) {
-    return { success: false, permission, subscription: null };
+    // Brave trae APAGADO el servicio de push por defecto: el permiso se
+    // concede pero `pushManager.subscribe()` revienta. No se arregla desde acá
+    // — es un interruptor del navegador — así que hay que decir cuál es.
+    const esBrave = await detectarBrave();
+    return {
+      success: false, permission, subscription: null,
+      motivo: esBrave ? 'brave' : 'suscripcion',
+    };
   }
 
   // Paso 3: guardar en el backend
@@ -325,6 +341,20 @@ export async function getPushStatus() {
     // navegador sin instalar → NO pedimos instalar, se activa directo.
     needsInstall: !installed && isIOSDevice(),
   };
+}
+
+/**
+ * ¿Es Brave? Brave expone `navigator.brave.isBrave()` (una promesa). Trae el
+ * servicio de push APAGADO de fábrica, así que el permiso se concede pero la
+ * suscripción falla. Se prende en brave://settings/privacy → «Usar los servicios
+ * de Google para la mensajería push», y hay que reiniciar el navegador.
+ */
+export async function detectarBrave() {
+  try {
+    return typeof navigator !== 'undefined' && navigator.brave
+      ? await navigator.brave.isBrave()
+      : false;
+  } catch { return false; }
 }
 
 /** True si es un iPhone/iPad (donde el push exige instalar la PWA). */
