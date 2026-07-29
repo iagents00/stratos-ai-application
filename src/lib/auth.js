@@ -304,7 +304,10 @@ export async function signOut() {
     if (session?.user?.id) {
       await logAuthEvent('LOGOUT', session.user.id, { email: session.user.email })
     }
-    await withTimeout(supabase.auth.signOut(), TIMEOUT_MS, 'signOut')
+    // scope 'local': cerrar sesión en ESTE dispositivo no mata las sesiones de
+    // los demás. El default de Supabase es 'global' — con él, salir en la PC
+    // botaba también al teléfono (y sus notificaciones). 29-jul-2026.
+    await withTimeout(supabase.auth.signOut({ scope: 'local' }), TIMEOUT_MS, 'signOut')
   } catch (e) {
     console.warn('[Stratos] signOut error (ignorado):', e.message)
   }

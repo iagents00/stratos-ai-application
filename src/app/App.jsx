@@ -543,6 +543,12 @@ export default function App() {
         setTimeout(() => setCallPushPrompt(p => (p === "done" ? null : p)), 6000);
       } else if (r?.permission === "denied") {
         setCallPushPrompt("denied");
+      } else {
+        // Antes esto no hacía NADA: el botón se apagaba y la persona se quedaba
+        // mirando. Iván lo vivió en Mac con Brave y con Safari. Cada motivo
+        // tiene ahora su pantalla, con el paso concreto que destraba.
+        setCallPushPrompt(r?.motivo === "brave" ? "brave"
+          : r?.motivo === "navegador" ? "navegador" : "reintentar");
       }
     } catch { /* noop */ }
     setCallPushBusy(false);
@@ -2550,6 +2556,9 @@ export default function App() {
                   {callPushPrompt === "done" ? "¡Listo! Avisos de llamada activados" :
                    callPushPrompt === "install" ? "Falta un paso en tu iPhone" :
                    callPushPrompt === "denied" ? "Los avisos están bloqueados" :
+                   callPushPrompt === "brave" ? "Brave trae los avisos apagados" :
+                   callPushPrompt === "navegador" ? "Este navegador no admite avisos" :
+                   callPushPrompt === "reintentar" ? "No se pudo activar" :
                    "Activa los avisos de llamada"}
                 </div>
                 <div style={{ fontSize: 12.5, lineHeight: 1.5, marginTop: 4, color: isLight ? "rgba(11,18,32,0.62)" : "rgba(255,255,255,0.62)" }}>
@@ -2557,6 +2566,13 @@ export default function App() {
                   {callPushPrompt === "activate" && "Para que te suene cuando un compañero te llame (como WhatsApp), permite las notificaciones. En Android el aviso trae botones Contestar / Rechazar; en iPhone tocas el aviso y entras directo."}
                   {callPushPrompt === "install" && "iPhone solo permite avisos con la app en la pantalla de inicio: abre esta página en Safari → botón Compartir → “Agregar a inicio”. Después entra desde ese ícono y vuelve a este aviso para activar."}
                   {callPushPrompt === "denied" && "Este navegador tiene las notificaciones de Stratos bloqueadas. Actívalas en Ajustes → Notificaciones de tu teléfono (o en el candado de la barra del navegador) y vuelve a entrar."}
+                  {/* Brave apaga el servicio de push de fábrica: el permiso se
+                      concede pero la suscripción falla. Es un interruptor del
+                      navegador, no algo que podamos arreglar desde acá — así que
+                      se dice exactamente dónde está. */}
+                  {callPushPrompt === "brave" && "Brave viene con la mensajería push apagada de fábrica, por eso el permiso se concede pero el aviso nunca llega. Abre brave://settings/privacy, prende «Usar los servicios de Google para la mensajería push», cierra Brave por completo y vuelve a entrar. Si prefieres no tocar eso, en Chrome o en Safari funciona sin configurar nada."}
+                  {callPushPrompt === "navegador" && "Este navegador no admite avisos del sistema. En Mac funcionan con Safari 16.1 o superior (macOS 13 en adelante) y con Chrome; en Windows, con Chrome o Edge. Si estás en Safari y no te deja, revisa Safari → Ajustes → Sitios web → Notificaciones y que stratoscapitalgroup.com esté en «Permitir»."}
+                  {callPushPrompt === "reintentar" && "El permiso quedó dado, pero el navegador no completó la suscripción. Suele destrabarse cerrando la pestaña y volviendo a entrar. Si sigue igual, avísanos y lo miramos con el detalle de tu navegador."}
                 </div>
                 {callPushPrompt !== "done" && (
                   <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
