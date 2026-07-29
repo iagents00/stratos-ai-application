@@ -34,8 +34,11 @@
  * Estilo: español neutro (sin voseo) — Duke es México.
  */
 
+import { INTEL_FEATURES } from '../app/constants/intelFeatures';
+
 export const CATEGORIES = [
   { id: 'empezar',     label: 'Empezar',            icon: 'Sparkles' },
+  { id: 'funciones',   label: 'Todas las funciones', icon: 'Zap' },
   { id: 'clientes',    label: 'Tus clientes',       icon: 'Users' },
   { id: 'pipeline',    label: 'Pipeline',           icon: 'Layers' },
   { id: 'seguimiento', label: 'Notas y tareas',     icon: 'FileText' },
@@ -51,6 +54,58 @@ export const CATEGORIES = [
   { id: 'reportes',    label: 'Reportes',           icon: 'LineChart' },
   { id: 'soporte',     label: 'Soporte y ayuda',    icon: 'LifeBuoy' },
 ];
+
+
+/* ── Las funciones del sistema, una por una ───────────────────────────────────
+ * NO están escritas a mano: se generan de INTEL_FEATURES, la MISMA lista que
+ * alimenta el Centro de Inteligencia dentro del sistema. Si mañana se agrega
+ * una función allá, aparece acá sola. Copiarlas a mano garantizaba que en dos
+ * semanas el manual dijera una cosa y la app otra.
+ * ───────────────────────────────────────────────────────────────────────── */
+const PEDIS  = INTEL_FEATURES.filter((f) => f.kind === 'pedis');
+const AGENTE = INTEL_FEATURES.filter((f) => f.kind !== 'pedis');
+
+const FICHAS_FUNCIONES = INTEL_FEATURES.map((f) => ({
+  id: `fn-${f.id}`,
+  category: 'funciones',
+  icon: f.icon,
+  title: f.label,
+  summary: f.tagline,
+  tags: [
+    f.label.toLowerCase(),
+    ...f.label.toLowerCase().split(/[\s/]+/).filter((w) => w.length > 3),
+    f.kind === 'pedis' ? 'se lo pides' : 'lo hace solo',
+    'funcion', 'copilot',
+  ],
+  content: [
+    { type: 'p', text: f.tagline },
+    { type: 'p', text: f.kind === 'pedis'
+        ? `Esto se lo pides tú. ${f.where}.`
+        : `Esto lo hace el sistema solo, sin que nadie lo pida. ${f.where}.` },
+    { type: 'steps', items: f.how },
+    ...(f.kind === 'pedis'
+      ? []
+      : [{ type: 'tip', text: 'No hay que activarla ni acordarse de ella: corre sola en segundo plano.' }]),
+  ],
+}));
+
+const INDICE_FUNCIONES = {
+  id: 'fn-indice',
+  category: 'funciones',
+  icon: 'Zap',
+  title: `Las ${INTEL_FEATURES.length} funciones del sistema, en una lista`,
+  summary: `Todo lo que Stratos AI puede hacer hoy: ${PEDIS.length} cosas que le pides y ${AGENTE.length} que hace solo.`,
+  tags: ['funciones', 'todo lo que puede hacer', 'capacidades', 'lista', 'indice', 'que puede hacer', 'para que sirve'],
+  content: [
+    { type: 'p', text: `Stratos AI tiene ${INTEL_FEATURES.length} funciones. ${PEDIS.length} se las pides tú —por escrito o por voz, desde el Copilot— y ${AGENTE.length} las hace el sistema solo, sin que nadie se acuerde de ellas.` },
+    { type: 'p', text: 'Esta misma lista está dentro del sistema: toca el Centro de Inteligencia en la barra de arriba y ahí ves cada función con su mini-tutorial. Abajo está el detalle de cada una.' },
+    { type: 'p', text: `LO QUE TÚ LE PIDES (${PEDIS.length})` },
+    { type: 'list', items: PEDIS.map((f) => `${f.label} — ${f.tagline}`) },
+    { type: 'p', text: `LO QUE HACE SOLO (${AGENTE.length})` },
+    { type: 'list', items: AGENTE.map((f) => `${f.label} — ${f.tagline}`) },
+    { type: 'tip', text: 'Casi todo se hace hablándole al Copilot con tus palabras. No hay comandos que memorizar: si lo dices como se lo dirías a un compañero, lo entiende.' },
+  ],
+};
 
 export const MANUAL_SECTIONS = [
   /* ═══════════════════ EMPEZAR ═══════════════════ */
@@ -898,6 +953,8 @@ export const MANUAL_SECTIONS = [
       { type: 'tip', text: 'Cuando publicamos una versión nueva puede pedirte entrar una vez. Eso es normal.' },
     ],
   },
+  INDICE_FUNCIONES,
+  ...FICHAS_FUNCIONES,
 ];
 
 /**

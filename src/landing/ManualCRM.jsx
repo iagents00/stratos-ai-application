@@ -13,7 +13,8 @@
  * Datos en src/landing/manual-content.js — se exponen en window.__STRATOS_MANUAL__
  * para que un agente IA embebido los consuma.
  */
-import { useState, useEffect, useMemo } from "react";
+import {
+  BarChart3, Bell, BellRing, ClipboardList, Flame, ListChecks, MapPin, TrendingUp, Video, Zap, useState, useEffect, useMemo } from "react";
 import {
   ArrowLeft, ArrowRight, Search, Bot, X,
   ChevronRight, Lightbulb, AlertTriangle, Mail, MessageCircle,
@@ -73,6 +74,7 @@ const APP_URL = "https://app.stratoscapitalgroup.com";
    Permite usar icon: 'LogIn' como string en manual-content.js
    ═══════════════════════════════════════════════════════════════════════════ */
 const ICON_MAP = {
+  BarChart3, Bell, BellRing, ClipboardList, Flame, ListChecks, MapPin, TrendingUp, Video, Zap,
   // 'Sparkles' del manual-content.js queda mapeado al átomo potente
   Sparkles: PowerAtom,
   Atom: PowerAtom,
