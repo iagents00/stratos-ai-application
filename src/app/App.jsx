@@ -1901,7 +1901,24 @@ export default function App() {
                     cosa gris… nada más deja los números»). Centrados, sin cortes. */}
                 <span style={{ fontSize:9, fontFamily:fontDisp, fontWeight:400, letterSpacing:"-0.01em", fontVariantNumeric:"tabular-nums", whiteSpace:"nowrap", color: isLight ? "rgba(15,23,42,0.66)" : "rgba(255,255,255,0.62)" }}>{actDone}/{actTotal}</span>
               </div>
-              <span style={{ fontSize: pc >= 100 ? 30 : 33, fontWeight: pc >= 100 ? 400 : 200, fontFamily:fontDisp, letterSpacing:"-0.04em", lineHeight:1, color: isLight ? (pc >= 100 ? "#0D9A76" : "#082818") : (pc >= 100 ? "#34D399" : "#FFFFFF"), display:"block", position:"relative", zIndex:1, whiteSpace:"nowrap", fontVariantNumeric:"tabular-nums" }}>{pc >= 100 ? "✓" : pc}</span>
+              {/* El número del avance. Iba en `display:block` SIN textAlign, así que
+                  se apoyaba a la izquierda: con un dígito («1») se veía corrido y con
+                  dos («10») disimulaba porque llenaba más el ancho. Ahora va centrado
+                  de verdad y el tamaño se ajusta a cuántos dígitos tenga, para que no
+                  se apriete ni quede chico. (Iván, 29-jul.) */}
+              {(() => {
+                const pcTxt = pc >= 100 ? "✓" : String(pc);
+                const tam = pcTxt === "✓" ? 30 : pcTxt.length >= 3 ? 26 : pcTxt.length === 2 ? 31 : 34;
+                return (
+                  <span style={{
+                    fontSize: tam, fontWeight: pc >= 100 ? 400 : 200, fontFamily:fontDisp,
+                    letterSpacing:"-0.04em", lineHeight:1,
+                    color: isLight ? (pc >= 100 ? "#0D9A76" : "#082818") : (pc >= 100 ? "#34D399" : "#FFFFFF"),
+                    display:"block", textAlign:"center", width:"100%",
+                    position:"relative", zIndex:1, whiteSpace:"nowrap", fontVariantNumeric:"tabular-nums",
+                  }}>{pcTxt}</span>
+                );
+              })()}
               <div style={{ width:"100%", height:2.5, borderRadius:99, background: isLight ? "rgba(13,154,118,0.09)" : "rgba(255,255,255,0.08)", marginTop:9, overflow:"hidden", position:"relative", zIndex:1 }}>
                 <div style={{ width:`${pc}%`, height:"100%", borderRadius:99, background: isLight ? "linear-gradient(90deg, #0D9A76, #34D399)" : "linear-gradient(90deg, #34D399, #6EE7C2)", boxShadow: isLight ? "none" : "0 0 8px rgba(52,211,153,0.55)", transition:"width 1.1s cubic-bezier(0.4,0,0.2,1)" }} />
               </div>
