@@ -1,11 +1,13 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import { P, font, fontDisp } from "../../design-system/tokens";
 import { G, KPI, Pill } from "../SharedComponents";
 import {
   Building2, MapPin, FolderOpen, Search, Phone, HardDrive,
-  Map as MapIcon, Layers, Briefcase, X, Wallet, SlidersHorizontal, LayoutGrid, Table as TableIcon, Send,
+  Map as MapIcon, Layers, Briefcase, X, Wallet, SlidersHorizontal, LayoutGrid, Table as TableIcon, Send, Plus,
 } from "lucide-react";
 import { CATALOGO_SECCIONES } from "../data/catalogoProyectos";
+import { supabase } from "../../lib/supabase";
+import { useAuth } from "../../hooks/useAuth";
 
 // Solo se MUESTRAN estas secciones del catálogo (control = pestaña "DRIVES DC" del Sheet).
 // Las demás propiedades quedan guardadas en la data pero ocultas en la UI (y en el bot de Telegram).
@@ -87,9 +89,66 @@ const summary = (it) => [
   it.drive && `Drive: ${it.drive}`,
 ].filter(Boolean).join(" · ");
 
+/* Campos del formulario «Añadir propiedad» — mismos nombres que la tabla
+   `catalogo_proyectos` (fuente del bot de Telegram). */
+const ADD_EMPTY = {
+  desarrollo: "", ubicacion: "", ticket: "", clasificacion: "", tipologia: "",
+  entrega: "", masterbroker: "", contacto: "", drive: "", maps: "",
+};
+
 const ERP = ({ oc, T: _T }) => {
   const isLight = !!_T && _T?.bg !== P.bg;
   const T = _T || P;
+  const { user } = useAuth();
+
+  /* ── Propiedades AGREGADAS EN LA APP (pedido de Ángel 29-jul): cualquier
+     usuario —ventas o marketing— puede añadir; NADIE puede borrar (la política
+     de DELETE no existe en la base, ni para admins). Viven en la tabla
+     `catalogo_proyectos` con origen='app' y se mezclan con las del Sheet. ── */
+  const [extras, setExtras] = useState([]);
+  const [showAdd, setShowAdd] = useState(false);
+  const [addForm, setAddForm] = useState(ADD_EMPTY);
+  const [addSaving, setAddSaving] = useState(false);
+  const [addError, setAddError] = useState("");
+
+  const orgId = user?.organizationId;
+  useEffect(() => {
+    if (!orgId) return;
+    let vivo = true;
+    supabase.from("catalogo_proyectos")
+      .select("id, desarrollo, ubicacion, zona, masterbroker, ticket, clasificacion, tipologia, entrega, financiamiento, entrega_como, highlights, mantenimiento, contacto, drive, maps")
+      .eq("organization_id", orgId).eq("origen", "app").eq("visible", true)
+      .order("created_at", { ascending: false })
+      .then(({ data, error }) => {
+        if (vivo && !error && data) setExtras(data.map(r => ({ ...r, entregaComo: r.entrega_como, _app: true })));
+      });
+    return () => { vivo = false; };
+  }, [orgId]);
+
+  const guardarPropiedad = useCallback(async () => {
+    const desarrollo = addForm.desarrollo.trim();
+    if (!desarrollo || !orgId || addSaving) return;
+    setAddSaving(true); setAddError("");
+    const fila = {
+      organization_id: orgId, seccion: "top-desarrollos", seccion_nombre: "Top Desarrollos",
+      visible: true, origen: "app",
+      desarrollo,
+      ubicacion: addForm.ubicacion.trim() || null,
+      ticket: addForm.ticket.trim() || null,
+      clasificacion: addForm.clasificacion.trim() || null,
+      tipologia: addForm.tipologia.trim() || null,
+      entrega: addForm.entrega.trim() || null,
+      masterbroker: addForm.masterbroker.trim() || null,
+      contacto: addForm.contacto.trim() || null,
+      drive: addForm.drive.trim() || null,
+      maps: addForm.maps.trim() || null,
+    };
+    const { data, error } = await supabase.from("catalogo_proyectos").insert(fila).select("id").single();
+    setAddSaving(false);
+    if (error) { setAddError("No se pudo guardar. Revisa tu conexión y prueba de nuevo."); return; }
+    setExtras(prev => [{ ...fila, id: data?.id, _app: true }, ...prev]);
+    setAddForm(ADD_EMPTY); setShowAdd(false);
+  }, [addForm, orgId, addSaving]);
 
   const [secId, setSecId] = useState(SECCIONES[0].id);
   const [q, setQ] = useState("");
@@ -105,42 +164,47 @@ const ERP = ({ oc, T: _T }) => {
     () => SECCIONES.find((s) => s.id === secId) || SECCIONES[0],
     [secId]
   );
+  // Las agregadas en la app van PRIMERO (recientes arriba) en la sección visible.
+  const secItems = useMemo(
+    () => (sec.id === "top-desarrollos" ? [...extras, ...sec.items] : sec.items),
+    [sec, extras]
+  );
 
   const kpis = useMemo(() => {
-    const all = SECCIONES.flatMap((s) => s.items);
+    const all = [...SECCIONES.flatMap((s) => s.items), ...extras];
     const conDrive = all.filter((i) => i.drive).length;
     const ubic = new Set(all.map((i) => canonZona(i.ubicacion)).filter(Boolean));
     const secciones = SECCIONES.filter((s) => s.items.length).length;
     return { total: all.length, conDrive, ubic: ubic.size, secciones };
-  }, []);
+  }, [extras]);
 
   // Zonas presentes (canónicas, ordenadas por cantidad) — para los botones de filtro.
   const zonas = useMemo(() => {
     const count = new Map();
-    sec.items.forEach((i) => {
-      if (!i.drive) return;
+    secItems.forEach((i) => {
+      if (!i.drive && !i._app) return;
       const z = canonZona(i.ubicacion);
       if (z) count.set(z, (count.get(z) || 0) + 1);
     });
     return [...count.entries()].sort((a, b) => b[1] - a[1]).map(([z]) => z);
-  }, [sec]);
+  }, [secItems]);
 
   // Rangos de presupuesto que realmente tienen proyectos (+ si hay terrenos).
   const buckets = useMemo(() => {
-    const ps = sec.items.filter((i) => i.drive).map((i) => parseTicketUSD(i.ticket)).filter(Boolean);
+    const ps = secItems.filter((i) => i.drive || i._app).map((i) => parseTicketUSD(i.ticket)).filter(Boolean);
     return {
       ranges: BUCKETS.filter((b) => ps.some((p) => bucketMatch(p, b))),
       hasLand: ps.some((p) => p.land),
     };
-  }, [sec]);
+  }, [secItems]);
 
   const filtered = useMemo(() => {
     const needle = q.trim().toLowerCase();
     const zLibre = zonaLibre.trim().toLowerCase();
     const bucket = presu && presu !== "terrenos" && presu !== "custom" ? BUCKETS.find((b) => b.id === presu) : null;
     const hiCustom = rMax >= RANGE_MAX ? Infinity : rMax;
-    return sec.items.filter((i) => {
-      if (!i.drive) return false; // Solo desarrollos con carpeta Drive disponible
+    return secItems.filter((i) => {
+      if (!i.drive && !i._app) return false; // Del Sheet solo con carpeta Drive; las de la app entran siempre
       // Zona: la escrita a mano tiene prioridad; si no, la seleccionada.
       if (zLibre) {
         if (!`${i.ubicacion || ""} ${i.zona || ""}`.toLowerCase().includes(zLibre)) return false;
@@ -159,7 +223,7 @@ const ERP = ({ oc, T: _T }) => {
         i.clasificacion, i.tipologia, i.highlights, i.asesor,
       ].filter(Boolean).join(" ").toLowerCase().includes(needle);
     });
-  }, [sec, q, zona, zonaLibre, presu, rMin, rMax]);
+  }, [secItems, q, zona, zonaLibre, presu, rMin, rMax]);
 
   const shown = filtered.slice(0, limit);
 
@@ -244,7 +308,15 @@ const ERP = ({ oc, T: _T }) => {
                 Duke del Caribe · fuente: Google Sheet «DRIVES DUKE DEL CARIBE»
               </p>
             </div>
-            <Pill color={T.blue} s isLight={isLight}>{filtered.length} de {sec.items.filter((i) => i.drive).length}</Pill>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+              <Pill color={T.blue} s isLight={isLight}>{filtered.length} de {secItems.filter((i) => i.drive || i._app).length}</Pill>
+              {/* Añadir puede CUALQUIER usuario (ventas o marketing) — borrar, nadie. */}
+              <button onClick={() => { setShowAdd(s => !s); setAddError(""); }} style={{
+                display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 14px", borderRadius: 10,
+                cursor: "pointer", border: `1px solid ${T.accent}55`, background: showAdd ? "transparent" : `${T.accent}18`,
+                color: T.accent, fontSize: 12.5, fontWeight: 600, fontFamily: fontDisp,
+              }}>{showAdd ? <X size={13} /> : <Plus size={13} />} {showAdd ? "Cerrar" : "Añadir propiedad"}</button>
+            </div>
           </div>
 
           {/* Section tabs (solo si hay más de una sección visible) */}
@@ -277,8 +349,54 @@ const ERP = ({ oc, T: _T }) => {
           </div>
         </div>
 
+        {/* Añadir propiedad — abierto a TODO el equipo. Se guarda en la base
+            (catalogo_proyectos) y también la ve el bot de Telegram. */}
+        {showAdd && (() => {
+          const inp = {
+            padding: "9px 12px", borderRadius: 10, fontSize: 13, fontFamily: font, outline: "none",
+            border: `1px solid ${T.border}`, background: isLight ? "#FFFFFF" : "rgba(255,255,255,0.04)",
+            color: T.txt, width: "100%", boxSizing: "border-box",
+          };
+          const campo = (key, ph, req) => (
+            <input key={key} value={addForm[key]} placeholder={ph + (req ? " *" : "")} autoFocus={key === "desarrollo"}
+              onChange={(e) => setAddForm(f => ({ ...f, [key]: e.target.value }))} style={inp} />
+          );
+          return (
+            <div style={{ padding: "16px 22px", borderBottom: `1px solid ${T.border}`, display: "flex", flexDirection: "column", gap: 9 }}>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(220px, 100%), 1fr))", gap: 8 }}>
+                {campo("desarrollo", "Nombre del desarrollo", true)}
+                {campo("ubicacion", "Ubicación (Cancún, Tulum…)")}
+                {campo("ticket", "Ticket (ej. 150k a 250k)")}
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(220px, 100%), 1fr))", gap: 8 }}>
+                {campo("clasificacion", "Clasificación (CONDO, STUDIO…)")}
+                {campo("tipologia", "Tipología (2 HABS 2 BAÑOS…)")}
+                {campo("entrega", "Entrega (INMEDIATA, dic 2027…)")}
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(220px, 100%), 1fr))", gap: 8 }}>
+                {campo("masterbroker", "Masterbroker")}
+                {campo("contacto", "Contacto (tel y nombre)")}
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(260px, 100%), 1fr))", gap: 8 }}>
+                {campo("drive", "Link carpeta Drive (opcional)")}
+                {campo("maps", "Link Google Maps (opcional)")}
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+                <button onClick={guardarPropiedad} disabled={addSaving || !addForm.desarrollo.trim()} style={{
+                  padding: "10px 20px", borderRadius: 10, cursor: "pointer", border: `1px solid ${T.accent}`,
+                  background: T.accent, color: isLight ? "#FFFFFF" : "#04140F", fontSize: 13, fontWeight: 600,
+                  fontFamily: fontDisp, opacity: addSaving || !addForm.desarrollo.trim() ? 0.6 : 1,
+                }}>{addSaving ? "Guardando…" : "Guardar propiedad"}</button>
+                <span style={{ fontSize: 12, color: addError ? "#F87171" : T.txt3, fontFamily: font }}>
+                  {addError || "La ve todo el equipo al instante — también el bot de Telegram. Las propiedades no se pueden eliminar."}
+                </span>
+              </div>
+            </div>
+          );
+        })()}
+
         {/* Toolbar: buscador + filtros simples (Zona · Presupuesto) + vista */}
-        {sec.items.length > 0 && (
+        {secItems.length > 0 && (
           <div style={{ padding: "14px 22px", borderBottom: `1px solid ${T.border}`, display: "flex", flexDirection: "column", gap: 11 }}>
             {/* Fila 1: buscador + toggle de vista */}
             <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>

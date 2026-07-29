@@ -1903,7 +1903,8 @@ export default function App() {
                   padding:"1.5px 5px", borderRadius:99,
                   background: isLight ? "rgba(13,154,118,0.08)" : "rgba(52,211,153,0.13)",
                 }}>
-                  <span style={{ fontSize:7, fontFamily:fontDisp, fontWeight:500, letterSpacing:"0.06em", color: isLight ? "rgba(13,154,118,0.60)" : "rgba(52,211,153,0.52)" }}>ACT</span>
+                  {/* Solo los números: con «ACT» delante se cortaba contra el borde
+                      del carril (pedido de Ángel 29-jul: que nada se salga). */}
                   <span style={{ fontSize:9, fontFamily:fontDisp, fontWeight:400, letterSpacing:"-0.01em", fontVariantNumeric:"tabular-nums", color: isLight ? "rgba(15,23,42,0.66)" : "rgba(255,255,255,0.62)" }}>{actDone}/{actTotal}</span>
                 </span>
               </div>
@@ -1911,7 +1912,7 @@ export default function App() {
               <div style={{ width:"100%", height:2.5, borderRadius:99, background: isLight ? "rgba(13,154,118,0.09)" : "rgba(255,255,255,0.08)", marginTop:9, overflow:"hidden", position:"relative", zIndex:1 }}>
                 <div style={{ width:`${pc}%`, height:"100%", borderRadius:99, background: isLight ? "linear-gradient(90deg, #0D9A76, #34D399)" : "linear-gradient(90deg, #34D399, #6EE7C2)", boxShadow: isLight ? "none" : "0 0 8px rgba(52,211,153,0.55)", transition:"width 1.1s cubic-bezier(0.4,0,0.2,1)" }} />
               </div>
-              <span style={{ fontSize:7, fontWeight:500, fontFamily:fontDisp, letterSpacing:"0.17em", textTransform:"uppercase", color: isLight ? "rgba(13,154,118,0.48)" : "rgba(52,211,153,0.36)", display:"block", marginTop:8, position:"relative", zIndex:1 }}>AVANCE</span>
+              <span style={{ fontSize:7, fontWeight:500, fontFamily:fontDisp, letterSpacing:"0.08em", textTransform:"uppercase", textAlign:"center", lineHeight:1.5, color: isLight ? "rgba(13,154,118,0.48)" : "rgba(52,211,153,0.36)", display:"block", marginTop:8, position:"relative", zIndex:1 }}>Mi Espacio</span>
             </div>
             <div style={{ width:32, height:1, marginTop:10, background: isLight ? "linear-gradient(90deg, transparent, rgba(15,23,42,0.07), transparent)" : "linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent)" }} />
           </div>
