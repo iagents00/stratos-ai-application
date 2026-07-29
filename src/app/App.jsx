@@ -1901,21 +1901,25 @@ export default function App() {
                     cosa gris… nada más deja los números»). Centrados, sin cortes. */}
                 <span style={{ fontSize:9, fontFamily:fontDisp, fontWeight:400, letterSpacing:"-0.01em", fontVariantNumeric:"tabular-nums", whiteSpace:"nowrap", color: isLight ? "rgba(15,23,42,0.66)" : "rgba(255,255,255,0.62)" }}>{actDone}/{actTotal}</span>
               </div>
-              {/* El número del avance. Iba en `display:block` SIN textAlign, así que
-                  se apoyaba a la izquierda: con un dígito («1») se veía corrido y con
-                  dos («10») disimulaba porque llenaba más el ancho. Ahora va centrado
-                  de verdad y el tamaño se ajusta a cuántos dígitos tenga, para que no
-                  se apriete ni quede chico. (Iván, 29-jul.) */}
+              {/* El número del avance, centrado de verdad. Con un solo dígito («1»)
+                  se veía corrido a la izquierda: `letterSpacing` negativo agrega
+                  el espacio DESPUÉS del último caracter, y con dos o tres dígitos
+                  eso se compensa entre ellos pero con uno queda todo al final.
+                  Por eso el apretado tipográfico solo se aplica cuando hay más de
+                  un dígito, y el bloque se centra explícitamente.
+                  Además el TAMAÑO se ajusta a cuántos dígitos hay (Iván, 29-jul:
+                  «que se ajuste dinámicamente para que se vea bien»): con uno solo
+                  hay lugar de sobra y respira mejor un poco más grande. */}
               {(() => {
                 const pcTxt = pc >= 100 ? "✓" : String(pc);
-                const tam = pcTxt === "✓" ? 30 : pcTxt.length >= 3 ? 26 : pcTxt.length === 2 ? 31 : 34;
+                const tam = pcTxt === "✓" ? 30 : pcTxt.length >= 3 ? 27 : pcTxt.length === 2 ? 33 : 35;
                 return (
                   <span style={{
-                    fontSize: tam, fontWeight: pc >= 100 ? 400 : 200, fontFamily:fontDisp,
-                    letterSpacing:"-0.04em", lineHeight:1,
+                    fontSize: tam, fontWeight: pc >= 100 ? 400 : 200, fontFamily: fontDisp,
+                    letterSpacing: pcTxt.length >= 2 ? "-0.04em" : "0", lineHeight: 1,
                     color: isLight ? (pc >= 100 ? "#0D9A76" : "#082818") : (pc >= 100 ? "#34D399" : "#FFFFFF"),
-                    display:"block", textAlign:"center", width:"100%",
-                    position:"relative", zIndex:1, whiteSpace:"nowrap", fontVariantNumeric:"tabular-nums",
+                    display: "block", textAlign: "center", width: "100%",
+                    position: "relative", zIndex: 1, whiteSpace: "nowrap", fontVariantNumeric: "tabular-nums",
                   }}>{pcTxt}</span>
                 );
               })()}
