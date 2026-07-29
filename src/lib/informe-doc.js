@@ -76,8 +76,8 @@ export function bloquesDelReporte(texto, meta = {}) {
     // 1) Título del documento — la primera línea con contenido.
     if (!tituloPuesto) {
       tituloPuesto = true;
-      bloques.push({ text: l, bold: true, size: 19, align: "center",
-                     after: 14, color: VERDE });
+      bloques.push({ text: l, bold: true, size: 23, align: "center",
+                     after: 16, color: VERDE });
       return;
     }
 
@@ -85,7 +85,7 @@ export function bloquesDelReporte(texto, meta = {}) {
     const ficha = l.match(/^(Periodo|Responsables|Proyecto|Cliente|Empresa)\s*:\s*(.*)$/i);
     if (ficha) {
       bloques.push({ text: [{ t: `${ficha[1]}: `, bold: true }, { t: ficha[2] }],
-                     size: 10.5, after: 3, color: TINTA });
+                     size: 11, after: 4, color: TINTA });
       return;
     }
 
@@ -93,7 +93,7 @@ export function bloquesDelReporte(texto, meta = {}) {
     //    sub-viñeta indentada también podría colarse como viñeta suelta.
     if (indentado && /^[·•-]\s+/.test(l)) {
       bloques.push({ text: partirTitular(l.replace(/^[·•-]\s+/, "")),
-                     size: 10, indent: 34, before: 1, after: 4, color: TINTA });
+                     size: 10.5, indent: 34, before: 2, after: 5, color: TINTA });
       return;
     }
 
@@ -101,32 +101,32 @@ export function bloquesDelReporte(texto, meta = {}) {
     if (/^[•·]\s+/.test(l)) {
       const cuerpo = partirTitular(l.replace(/^[•·]\s+/, ""));
       bloques.push({ text: [{ t: "•   " }, ...cuerpo],
-                     size: 10.5, indent: 14, before: 2, after: 6, color: TINTA });
+                     size: 11, indent: 14, before: 3, after: 7, color: TINTA });
       return;
     }
 
     // 5) Sección (PARTE 1 — TRABAJO REALIZADO, RESUMEN GENERAL…).
     if (esMayusculas(l)) {
-      bloques.push({ text: l, bold: true, size: 13, before: 16, after: 8,
+      bloques.push({ text: l, bold: true, size: 15, before: 20, after: 9,
                      color: VERDE, linea: true });
       return;
     }
 
     // 6) Subtítulo de semana.
     if (/^Semana\s+\d+/i.test(l)) {
-      bloques.push({ text: l, bold: true, size: 11.5, before: 12, after: 6,
+      bloques.push({ text: l, bold: true, size: 12.5, before: 16, after: 7,
                      color: VERDE_HONDO });
       return;
     }
 
     // 7) Cierre de la Parte 1.
     if (/^Resultado\s*:/i.test(l)) {
-      bloques.push({ text: partirTitular(l), size: 10.5, before: 8, after: 8, color: TINTA });
+      bloques.push({ text: partirTitular(l), size: 11, before: 10, after: 9, color: TINTA });
       return;
     }
 
     // 8) Párrafo normal.
-    bloques.push({ text: l, size: 10.5, after: 7, color: TINTA });
+    bloques.push({ text: l, size: 11, after: 8, color: TINTA });
   });
 
   return bloques;
