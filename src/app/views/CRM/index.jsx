@@ -4190,7 +4190,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
 
                         {l.isNew && (
                           <span style={{
-                            fontSize: 8.5, fontWeight: 500, letterSpacing: "0.09em",
+                            fontSize: 9.5, fontWeight: 500, letterSpacing: "0.09em",
                             color: isLight ? "rgba(15,23,42,0.40)" : "rgba(255,255,255,0.35)",
                             background: isLight ? "rgba(15,23,42,0.05)" : "rgba(255,255,255,0.05)",
                             border: `1px solid ${isLight ? "rgba(15,23,42,0.10)" : "rgba(255,255,255,0.09)"}`,
