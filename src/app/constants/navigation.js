@@ -8,7 +8,7 @@
 import {
   Users, Hexagon, Activity, Building2, Atom,
   Trophy, Landmark, UserCheck, CreditCard, Shield, User, Trash2, Wallet, MessageCircle, Bot, Sparkles, Megaphone,
-  CalendarDays, Layers, Clapperboard, Inbox, MessagesSquare
+  CalendarDays, Layers, Clapperboard, Inbox, MessagesSquare, ClipboardList, NotebookPen
 } from "lucide-react";
 
 export const nav = [
@@ -19,13 +19,20 @@ export const nav = [
   // crear/proyectos/papelera, poneles mi día, marcas, pipeline, solicitudes —
   // en ambas, sidebar y tabs"). Mismo componente, tab inicial distinta.
   { id: "mkt",        l: "Marketing",   i: Megaphone     },
-  // "Equipo" va PRIMERO y solo para el líder de marketing (Alex): es su pantalla
-  // de entrada porque su trabajo diario es saber qué hizo su gente. El equipo no
-  // la ve — nadie necesita leer la bitácora de sus compañeros.
+  // "Actividades" es la PRIMERA de todas y la pantalla de entrada de TODO el área
+  // de marketing — del equipo y del líder. Es el reporte del día que Alex pidió
+  // en la llamada del 27-jul: la caja de «¿qué hiciste hoy?» para quien reporta,
+  // y arriba, para el líder, lo que reportó su gente. Va primera a propósito: si
+  // hay que buscarla, no se usa.
+  { id: "mkt_reporte", l: "Actividades", i: NotebookPen },
+  // "Equipo" es la vista PROFUNDA del líder (cómo viene la semana de cada quien).
+  // Solo la ve él — nadie del equipo necesita leer la bitácora de sus compañeros.
   { id: "mkt_equipo", l: "Equipo",      i: UserCheck     },
   { id: "mkt_dia",    l: "Mi Día",      i: CalendarDays  },
   { id: "mkt_marcas", l: "Marcas",      i: Layers        },
-  { id: "mkt_pipe",   l: "Pipeline",    i: Clapperboard  },
+  // «Pipeline» era jerga nuestra. El equipo de Alex lo llama «Registro de
+  // Propiedades» — el nombre de su hoja de siempre. Se llama como ellos lo llaman.
+  { id: "mkt_pipe",   l: "Propiedades", i: Clapperboard  },
   { id: "mkt_sol",    l: "Solicitudes", i: Inbox         },
   { id: "wa",    l: "WhatsApp",  i: MessageCircle },
   { id: "lp",    l: "Create",    i: Hexagon    },
@@ -99,8 +106,8 @@ export const MODULE_NAMES = {
   a: "Asesores", lp: "Campañas", fa: "Finanzas",
   rrhh: "Stratos RH", trash: "Papelera", caja: "Caja",
   wa: "WhatsApp", copilot: "Copilot", mkt: "Marketing", chat: "Chat del equipo",
-  mkt_dia: "Mi Día", mkt_marcas: "Marcas", mkt_pipe: "Pipeline", mkt_sol: "Solicitudes",
-  mkt_equipo: "Equipo",
+  mkt_dia: "Mi Día", mkt_marcas: "Marcas", mkt_pipe: "Registro de Propiedades", mkt_sol: "Solicitudes",
+  mkt_equipo: "Equipo", mkt_reporte: "Actividades",
   planes: "Planes", perfil: "Perfil", admin: "Usuarios",
 };
 
@@ -123,10 +130,10 @@ export const CRM_ONLY_MODULES = new Set(["c", "perfil"]);
 // Ve las MISMAS secciones que su equipo en el sidebar (Mi Día · Marcas · Pipeline ·
 // Solicitudes) + Copilot + Proyectos (catálogo/drives para contenido) + Perfil.
 // La pestaña "Equipo" (admin) la abre desde los tabs de arriba dentro del módulo.
-export const MARKETING_ADMIN_MODULES = new Set(["mkt_equipo", "mkt_dia", "mkt_marcas", "mkt_pipe", "mkt_sol", "copilot", "e", "perfil"]);
+export const MARKETING_ADMIN_MODULES = new Set(["mkt_reporte", "mkt_equipo", "mkt_dia", "mkt_marcas", "mkt_pipe", "mkt_sol", "copilot", "e", "perfil"]);
 // Secciones del módulo Marketing que se muestran como items del sidebar. Las ve el
 // rol `marketing` (su equipo) Y el admin de marketing (Alex) — no los admins de ventas.
-export const MKT_SECTION_MODULES = new Set(["mkt_equipo", "mkt_dia", "mkt_marcas", "mkt_pipe", "mkt_sol"]);
+export const MKT_SECTION_MODULES = new Set(["mkt_reporte", "mkt_equipo", "mkt_dia", "mkt_marcas", "mkt_pipe", "mkt_sol"]);
 
 export function isStratosOrg(orgId) {
   return orgId === STRATOS_ORG_ID;

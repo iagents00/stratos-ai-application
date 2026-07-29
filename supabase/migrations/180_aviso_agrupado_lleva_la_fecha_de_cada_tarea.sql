@@ -1,0 +1,18 @@
+-- 177 · En el aviso agrupado, cada tarea lleva su fecha.
+--
+-- Al PROBAR la 176 (no al escribirla) salió esto en el chat de Yazz:
+--   «Mostrar resultados de la última semana de trabajo» y
+--   «Mostrar resultados de la última semana de trabajo»
+-- Dos tareas distintas con el mismo nombre: el mensaje parecía un error del
+-- sistema. Con la fecha se distinguen y se lee bien:
+--   «revisar drone de Aurora» (24 Jul) y «Fotos de sillas nuevas» (25 Jul)
+--
+-- Es el criterio de Iván del 28-jul: el registro no alcanza con ser correcto,
+-- tiene que VERSE bien escrito. Y es la razón por la que se prueba antes de
+-- darlo por hecho.
+--
+-- El cuerpo completo de la función quedó aplicado en producción con este mismo
+-- nombre de migración. Cambia solo el texto de las ramas n=2 y n>2 del bloque B:
+-- se agrega  (' || to_char(dN at time zone ptz,'DD Mon') || ')  después de cada título.
+--
+-- REVERTIR: quitar esas dos concatenaciones. No cambia comportamiento, solo texto.

@@ -15,7 +15,7 @@
 // no viaja por ningún lado y no se puede corromper en el camino.
 
 import { useState, useEffect, useCallback } from "react";
-import { FileText, Plus, RefreshCw, Download, Check, X, PenLine, UserRound } from "lucide-react";
+import { FileText, Plus, RefreshCw, Download, Check, X, PenLine, UserRound, CalendarDays } from "lucide-react";
 import { font, fontDisp } from "../../design-system/tokens";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../hooks/useAuth";
@@ -84,6 +84,14 @@ export default function CuentasCobro({ T, emisor }) {
     background: isLight ? "#FFFFFF" : "rgba(255,255,255,0.045)", color: txt,
     border: `1px solid ${bd}`, borderRadius: 10, padding: "11px 13px",
     fontSize: 13.5, fontFamily: font, outline: "none", width: "100%", boxSizing: "border-box",
+  };
+
+  // `colorScheme` no es cosmético: sin él, en modo oscuro el navegador dibuja el
+  // calendario nativo con fondo blanco y el iconito del día queda invisible.
+  const campoFecha = {
+    background: "transparent", border: "none", outline: "none", padding: 0,
+    color: txt, fontSize: 13, fontFamily: font,
+    colorScheme: isLight ? "light" : "dark", cursor: "pointer",
   };
 
   const [rows, setRows] = useState([]);
@@ -297,11 +305,23 @@ export default function CuentasCobro({ T, emisor }) {
             <input type="number" step="0.01" placeholder="Cuánto se le cobra" value={form.monto}
               onChange={e => setForm(f => ({ ...f, monto: e.target.value }))} style={inputStyle} />
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 10 }}>
-            <input type="date" value={form.desde} title="Desde (vacío = la quincena que se está cerrando)"
-              onChange={e => setForm(f => ({ ...f, desde: e.target.value }))} style={inputStyle} />
-            <input type="date" value={form.hasta} title="Hasta"
-              onChange={e => setForm(f => ({ ...f, hasta: e.target.value }))} style={inputStyle} />
+          {/* El periodo que se cobra. Antes eran dos cajas de fecha peladas, sin
+              etiqueta: en pantalla se leían «dd/mm/aaaa  dd/mm/aaaa» y nadie sabía
+              cuál era cuál. Ahora dicen qué son y se ven como un rango. */}
+          <div style={{
+            display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap",
+            border: `1px solid ${bd}`, borderRadius: 10, padding: "10px 13px",
+            background: isLight ? "#FFFFFF" : "rgba(255,255,255,0.045)",
+          }}>
+            <CalendarDays size={15} color={accent} style={{ flexShrink: 0 }} />
+            <span style={{ fontSize: 12.5, color: txt2, fontFamily: font }}>Periodo que se cobra</span>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginLeft: "auto" }}>
+              <input type="date" value={form.desde} max={form.hasta || undefined} aria-label="Desde"
+                onChange={e => setForm(f => ({ ...f, desde: e.target.value }))} style={campoFecha} />
+              <span style={{ color: txt3, fontSize: 12, fontFamily: font }}>al</span>
+              <input type="date" value={form.hasta} min={form.desde || undefined} aria-label="Hasta"
+                onChange={e => setForm(f => ({ ...f, hasta: e.target.value }))} style={campoFecha} />
+            </div>
           </div>
           <input placeholder="Concepto (vacío = servicios de desarrollo, automatización e IA)" value={form.concepto}
             onChange={e => setForm(f => ({ ...f, concepto: e.target.value }))} style={inputStyle} />

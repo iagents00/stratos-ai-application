@@ -5,8 +5,11 @@
  * 15-jul-2026): tabs Mi Día · Marcas · Pipeline · Solicitudes (+ Equipo solo admin).
  *   · Mi Día: rodaje de hoy → vencidas → para hoy → bloqueadas → mañana.
  *   · Marcas: tableros por marca con proyectos y barra de progreso (tareas hechas/total).
- *   · Pipeline: kanban de propiedades con 7 etapas reales (drag & drop nativo en
- *     desktop, botones ‹ › en móvil). La columna "Esperando voz" marca el cuello.
+ *   · Registro de Propiedades: la hoja de Alex adentro del CRM. Arranca en TABLA
+ *     (se edita celda por celda, Enter baja / Tab va a la derecha, columnas a
+ *     elegir y columnas propias); el kanban queda como vista alterna. Las 9
+ *     etapas son las de SU hoja, con "Cambios" (retrabajo) y "Sin voz en off"
+ *     marcadas en rojo cuando se acumulan.
  *   · Solicitudes: bandeja de pedidos de diseño con complejidad A/AA/AAA.
  *
  * Datos: tablas `mkt_*` (stratos-prod) — RLS org-scoped + is_marketing_or_above(),
@@ -30,7 +33,7 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import {
   Megaphone, Plus, X, RefreshCw, Folder, ExternalLink, Lock, Check,
   ChevronLeft, ChevronRight, ChevronDown, Clapperboard, Mic, CalendarDays,
-  Search, Camera, CircleCheck,
+  Search, Camera, CircleCheck, Layers, SlidersHorizontal, Trash2, Maximize2,
 } from "lucide-react";
 import { font, fontDisp } from "../../design-system/tokens";
 import { supabase } from "../../lib/supabase";
@@ -57,14 +60,62 @@ const TENANT_MKT = (() => {
 const HIDDEN_TABS = new Set(Array.isArray(TENANT_MKT.hideTabs) ? TENANT_MKT.hideTabs : []);
 const tabLabel = (id, fallback) => (TENANT_MKT.tabLabels && TENANT_MKT.tabLabels[id]) || fallback;
 
+/* Las etapas son LAS DE ALEX, en el orden de su hoja y con sus palabras:
+   Sin edición → esperando aprobación → CAMBIOS → Aprovado → sin Voz en Off →
+   Publicado. Al cargar sus 21 propiedades habíamos aplastado «CAMBIOS» y
+   «esperando aprobación» dentro de «en edición» — y ahí se perdía lo único que
+   él mira: qué está en RETRABAJO. Un video que volvió con cambios no es lo
+   mismo que uno que se edita por primera vez. (Migración 182.) */
 const ETAPAS = [
-  { id: "seleccionada",  l: "Seleccionada" },
-  { id: "agendada",      l: "Agendada" },
-  { id: "grabada",       l: "Grabada" },
-  { id: "en_edicion",    l: "En edición" },
-  { id: "esperando_voz", l: "Esperando voz" },
-  { id: "lista",         l: "Lista" },
-  { id: "publicada",     l: "Publicada" },
+  { id: "seleccionada",         l: "Seleccionada" },
+  { id: "agendada",             l: "Agendada" },
+  { id: "grabada",              l: "Sin edición" },
+  { id: "en_edicion",           l: "En edición" },
+  { id: "esperando_aprobacion", l: "Esperando aprobación" },
+  { id: "cambios",              l: "Cambios" },
+  { id: "lista",                l: "Aprobado" },
+  { id: "esperando_voz",        l: "Sin voz en off" },
+  { id: "publicada",            l: "Publicada" },
+];
+
+/* Colores de la columna «Estatus», para que la tabla se lea IGUAL que su hoja:
+   verde lo aprobado/publicado, ámbar lo que está en curso, ROJO el retrabajo.
+   No es decoración — es cómo él escanea el estado sin leer. */
+const ETAPA_HEX = {
+  seleccionada:         { d: "#64748B", l: "#64748B" },
+  agendada:             { d: "#7EB8F0", l: "#2563EB" },
+  grabada:              { d: "#A78BFA", l: "#7C3AED" },
+  en_edicion:           { d: "#FBBF24", l: "#D97706" },
+  esperando_aprobacion: { d: "#38BDF8", l: "#0284C7" },
+  cambios:              { d: "#F87171", l: "#DC2626" },
+  lista:                { d: "#6EE7C2", l: "#0D9A76" },
+  esperando_voz:        { d: "#FB923C", l: "#EA580C" },
+  publicada:            { d: "#34D399", l: "#059669" },
+};
+
+/* Las columnas del registro, en el orden en que se leen. «Propiedad» y
+   «Estatus» van juntas al principio y no se pueden apagar: son las dos cosas
+   que Alex mira primero (qué es y en qué va). El resto se puede esconder desde
+   el botón «Columnas» — 17 columnas a la vez no las usa nadie todos los días.
+   `nombre`, `etapa` y `marca` se pintan distinto; el resto son celdas normales. */
+const COLS_REGISTRO = [
+  { key: "nombre",            l: "Propiedad",   tipo: "nombre", ancho: 190, fija: true },
+  { key: "etapa",             l: "Estatus",     tipo: "etapa",  ancho: 160, fija: true },
+  { key: "brand_id",          l: "Empresa",     tipo: "marca",  ancho: 140 },
+  { key: "fecha_rodaje",      l: "Rodaje",      tipo: "date",   ancho: 130 },
+  { key: "fecha_publicacion", l: "Publicación", tipo: "date",   ancho: 130 },
+  { key: "locacion",          l: "Ubicación",   tipo: "text",   ancho: 130 },
+  { key: "precio",            l: "Precio",      tipo: "text",   ancho: 120 },
+  { key: "tipo",              l: "Tipo",        tipo: "text",   ancho: 120 },
+  { key: "crudos_url",        l: "Crudos",      tipo: "enlace" },
+  { key: "video_url",         l: "Video",       tipo: "enlace" },
+  { key: "ig_url",            l: "Reel",        tipo: "enlace" },
+  { key: "story_url",         l: "Story",       tipo: "enlace" },
+  { key: "cine_url",          l: "Cine",        tipo: "enlace" },
+  { key: "ficha_url",         l: "Ficha téc.",  tipo: "enlace" },
+  { key: "info_url",          l: "Info",        tipo: "enlace" },
+  { key: "drive_url",         l: "Drive",       tipo: "enlace" },
+  { key: "notas",             l: "Notas",       tipo: "text",   ancho: 220 },
 ];
 
 const TASK_STATES = [
@@ -117,6 +168,27 @@ const fmtDia = (isoOrDate) => {
     return `${d.getDate()} ${mos[d.getMonth()]}`;
   } catch { return "—"; }
 };
+/* El tiempo que tardó, sacado del propio relato. En la hoja real de Duke la
+   columna «tiempo» del formulario está VACÍA en el 100% de las filas, pero el
+   tiempo SÍ está escrito adentro del texto: «edición 7 hrs», «de 9 a 9:50».
+   Yolanda pidió medir tiempos; Alex pidió menos campos. Esto resuelve las dos:
+   se lee del texto y no se le pide nada más a nadie.
+   Un rango solo cuenta si viene con «de …» o con hora con minutos — si no,
+   «hice 2 a 3 fichas» se leería como un horario. */
+const tiempoDelTexto = (texto) => {
+  const t = String(texto || "");
+  const conDe = t.match(/\bde\s*(\d{1,2}(?::\d{2})?)\s*(?:a|hasta|-|–|—)\s*(\d{1,2}(?::\d{2})?)\b/i);
+  if (conDe) return `${conDe[1]} a ${conDe[2]}`;
+  const conReloj = t.match(/\b(\d{1,2}:\d{2})\s*(?:a|hasta|-|–|—)\s*(\d{1,2}(?::\d{2})?)\b/i)
+                || t.match(/\b(\d{1,2})\s*(?:a|hasta|-|–|—)\s*(\d{1,2}:\d{2})\b/i);
+  if (conReloj) return `${conReloj[1]} a ${conReloj[2]}`;
+  const horas = t.match(/\b(\d+(?:[.,]\d+)?)\s*(?:h|hs|hr|hrs|hora|horas)\b/i);
+  if (horas) return `${horas[1]} h`;
+  const mins = t.match(/\b(\d{1,3})\s*(?:min|mins|minutos)\b/i);
+  if (mins) return `${mins[1]} min`;
+  return "";
+};
+
 const diasDesde = (iso) => {
   if (!iso) return 0;
   return Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 86400000));
@@ -177,6 +249,9 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
   // tareas a propósito — una tarea es algo que ALGUIEN pidió; la bitácora es el
   // relato del día, incluido todo lo que no estaba en ninguna lista.
   const [bitacora, setBitacora] = useState([]);
+  // Columnas que el equipo agregó al registro (viven en mkt_pipeline_columns;
+  // sus valores, en mkt_pipeline_items.datos).
+  const [colsExtra, setColsExtra] = useState([]);
   const [bitaAbierta, setBitaAbierta] = useState(() => new Set()); // ids con el texto completo desplegado
   const [loading, setLoading]   = useState(true);
   const [error, setError]       = useState("");
@@ -186,7 +261,7 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
     setLoading(true);
     setError("");
     try {
-      const [b, pj, tk, pl, rq, pr, bi] = await Promise.all([
+      const [b, pj, tk, pl, rq, pr, bi, cols] = await Promise.all([
         supabase.from("mkt_brands").select("id, nombre, slug, activo, orden")
           .eq("organization_id", orgId).eq("activo", true).order("orden"),
         supabase.from("mkt_projects").select("id, brand_id, nombre, descripcion, drive_url, due_date, estado, orden, created_at")
@@ -194,16 +269,18 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
         supabase.from("mkt_tasks").select("id, brand_id, project_id, titulo, descripcion, assignee_id, created_by, prioridad, estado, avance_pct, due_at, depends_on, drive_url, evidencia_url, evidencia_tipo, updated_at, created_at")
           .eq("organization_id", orgId).is("deleted_at", null)
           .order("due_at", { ascending: true, nullsFirst: false }).limit(600),
-        supabase.from("mkt_pipeline_items").select("id, brand_id, nombre, locacion, etapa, fecha_rodaje, drive_url, ig_url, notas, orden, updated_at")
+        supabase.from("mkt_pipeline_items").select("id, brand_id, nombre, locacion, etapa, fecha_rodaje, fecha_publicacion, precio, tipo, drive_url, ig_url, crudos_url, video_url, story_url, cine_url, ficha_url, info_url, notas, datos, orden, updated_at")
           .eq("organization_id", orgId).is("deleted_at", null).order("orden").order("updated_at"),
         supabase.from("mkt_requests").select("id, brand_id, titulo, detalle, objetivo, complejidad, ref_image_url, fecha_entrega, solicitante, assignee_id, estado, created_at")
           .eq("organization_id", orgId).is("deleted_at", null).order("created_at", { ascending: false }).limit(200),
         supabase.from("profiles").select("id, name, role").eq("organization_id", orgId),
-        supabase.from("mkt_daily_reports").select("id, profile_id, fecha, texto, evidencia_url, origen, created_at")
+        supabase.from("mkt_daily_reports").select("id, profile_id, fecha, texto, evidencia_url, origen, created_at, brand_id, tiempo_texto")
           .eq("organization_id", orgId)
           .order("fecha", { ascending: false }).order("created_at", { ascending: false }).limit(400),
+        supabase.from("mkt_pipeline_columns").select("id, clave, nombre, tipo, opciones, orden")
+          .eq("organization_id", orgId).is("deleted_at", null).order("orden"),
       ]);
-      for (const r of [b, pj, tk, pl, rq, pr, bi]) if (r.error) throw r.error;
+      for (const r of [b, pj, tk, pl, rq, pr, bi, cols]) if (r.error) throw r.error;
       setBrands(b.data || []);
       setProjects(pj.data || []);
       setTasks(tk.data || []);
@@ -211,6 +288,7 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
       setRequests(rq.data || []);
       setPeople(pr.data || []);
       setBitacora(bi.data || []);
+      setColsExtra(cols.data || []);
     } catch (e) {
       setError(`No pude cargar el módulo de ${MODULE_LABEL}. Probá actualizar.`);
     } finally {
@@ -311,6 +389,46 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
   // ningún lado). El bucket `evidencia` es privado → URL firmada al vuelo (mismo
   // patrón que Caja.jsx). Los links (evidencia_tipo='link') se abren directo.
   const [evViewer, setEvViewer] = useState(null); // { url, tipo, titulo } | { loading }
+  /* ── FICHA DE LA PROPIEDAD ──
+     Es el reemplazo del renglón de la hoja de cálculo: todo lo que había en el
+     Sheet (precio, tipo, fechas y los seis enlaces) editable desde la tarjeta.
+     Se abre tocando el nombre en el tablero. ── */
+  const [ficha, setFicha] = useState(null);   // { id, ...campos como texto }
+  const [fichaSaving, setFichaSaving] = useState(false);
+
+  const openFicha = useCallback((it) => {
+    setFicha({
+      id: it.id, nombre: it.nombre || "", locacion: it.locacion || "",
+      precio: it.precio || "", tipo: it.tipo || "",
+      fecha_rodaje: it.fecha_rodaje || "", fecha_publicacion: it.fecha_publicacion || "",
+      crudos_url: it.crudos_url || "", video_url: it.video_url || "", ig_url: it.ig_url || "",
+      story_url: it.story_url || "", cine_url: it.cine_url || "", ficha_url: it.ficha_url || "",
+      info_url: it.info_url || "", drive_url: it.drive_url || "", notas: it.notas || "",
+    });
+  }, []);
+
+  const saveFicha = useCallback(async () => {
+    if (!ficha?.id) return;
+    setFichaSaving(true);
+    // Los vacíos se guardan como null, no como "": así un campo sin llenar no
+    // se distingue de uno borrado y las condiciones `if (it.video_url)` siguen
+    // funcionando en la tarjeta.
+    const limpio = (s) => (String(s || "").trim() || null);
+    const { error: e } = await supabase.from("mkt_pipeline_items").update({
+      nombre: limpio(ficha.nombre) || ficha.nombre, locacion: limpio(ficha.locacion),
+      precio: limpio(ficha.precio), tipo: limpio(ficha.tipo),
+      fecha_rodaje: ficha.fecha_rodaje || null, fecha_publicacion: ficha.fecha_publicacion || null,
+      crudos_url: limpio(ficha.crudos_url), video_url: limpio(ficha.video_url), ig_url: limpio(ficha.ig_url),
+      story_url: limpio(ficha.story_url), cine_url: limpio(ficha.cine_url), ficha_url: limpio(ficha.ficha_url),
+      info_url: limpio(ficha.info_url), drive_url: limpio(ficha.drive_url), notas: limpio(ficha.notas),
+      updated_at: new Date().toISOString(),
+    }).eq("id", ficha.id);
+    setFichaSaving(false);
+    if (e) { setError("No pude guardar la ficha. Probá de nuevo."); return; }
+    setFicha(null);
+    load();
+  }, [ficha, load]);
+
   const openEvidence = useCallback(async (t) => {
     const path = t?.evidencia_url;
     if (!path) return;
@@ -480,15 +598,14 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
         <div style={{ ...card, borderRadius: 13, padding: "11px 15px", display: "flex", alignItems: "center", gap: 11, flexWrap: "wrap" }}>
           <CircleCheck size={16} color={txt3} style={{ flexShrink: 0 }} />
           <div style={{ flex: 1, minWidth: 170, fontSize: 12.5, color: txt2, lineHeight: 1.45 }}>
-            Todavía no cuentas tu bitácora de hoy.
-            <span style={{ color: txt3 }}> Dile al Copilot qué hiciste, con tus palabras.</span>
+            Todavía no cuentas tu reporte de hoy.
+            <span style={{ color: txt3 }}> Son dos minutos y tu líder ya no tiene que preguntarte.</span>
           </div>
-          {onOpenCopilot && (
-            <button onClick={onOpenCopilot} style={{
-              background: "transparent", border: `1px solid ${accent}44`, borderRadius: 9, padding: "5px 11px",
-              cursor: "pointer", color: accent, fontSize: 12, fontFamily: font, whiteSpace: "nowrap",
-            }}>Contarlo ahora</button>
-          )}
+          {/* Lleva a la CAJA, no al chat: es donde Alex pidió que se reporte. */}
+          <button onClick={() => setTab("reporte")} style={{
+            background: "transparent", border: `1px solid ${accent}44`, borderRadius: 9, padding: "5px 11px",
+            cursor: "pointer", color: accent, fontSize: 12, fontFamily: font, whiteSpace: "nowrap",
+          }}>Contarlo ahora</button>
         </div>
       )}
 
@@ -731,6 +848,9 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
       nombre: pipeForm.nombre.trim(), locacion: pipeForm.locacion.trim() || null,
       etapa: pipeForm.etapa, fecha_rodaje: pipeForm.rodaje || null,
       drive_url: pipeForm.drive.trim() || null, ig_url: pipeForm.ig.trim() || null,
+      // Igual que el alta desde la tabla: posición explícita para que la fila
+      // no se reacomode sola cuando la editen.
+      orden: pipeline.reduce((m, p) => Math.max(m, p.orden || 0), 0) + 1,
       created_by: user?.id || null,
     });
     setSaving(false);
@@ -740,9 +860,637 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
     load();
   };
 
+  /* ════════════ LAS DOS HOJAS, COMO HOJAS ════════════
+     Alex y su equipo vienen de dos Google Sheets y así es como leen su trabajo:
+     de corrido, con filtros y con el color del estatus. El tablero kanban y la
+     caja de reporte sirven para OPERAR; estas tablas sirven para MIRAR — que es
+     lo que él hace cuando pregunta «¿cuáles casas grabamos en Cancún?».
+     Ambas viven al lado de su vista operativa, no la reemplazan. */
+
+  const hoja = {
+    wrap:  { ...card, borderRadius: 14, overflowX: "auto", WebkitOverflowScrolling: "touch" },
+    table: { borderCollapse: "separate", borderSpacing: 0, width: "100%", minWidth: 1180, fontFamily: font },
+    th: {
+      position: "sticky", top: 0, zIndex: 1, textAlign: "left", whiteSpace: "nowrap",
+      padding: "9px 11px", fontSize: 10.5, fontWeight: 600, letterSpacing: 0.3,
+      color: txt2, background: isLight ? "#EEF2F7" : "rgba(255,255,255,0.055)",
+      borderBottom: `1px solid ${bd}`,
+    },
+    td: { padding: "9px 11px", fontSize: 12, color: txt2, borderBottom: `1px solid ${bd}`, verticalAlign: "top" },
+    /* La primera columna queda fija al desplazarse a lo ancho: con 17 columnas,
+       sin esto se pierde de vista de qué propiedad es la fila que estás llenando.
+       El fondo tiene que ser OPACO (el de la tarjeta es translúcido y dejaría
+       ver el contenido pasando por debajo). */
+    congelada: {
+      position: "sticky", left: 0, zIndex: 2,
+      background: isLight ? "#FBFCFE" : "#0C1119",
+      borderRight: `1px solid ${bd}`,
+    },
+  };
+  const chip = (texto, color) => (
+    <span style={{
+      display: "inline-block", padding: "2px 9px", borderRadius: 999, whiteSpace: "nowrap",
+      fontSize: 10.5, fontWeight: 600, color, background: `${color}1E`, border: `1px solid ${color}44`,
+    }}>{texto}</span>
+  );
+  const linkCel = (url, label) => url
+    ? <a href={url} target="_blank" rel="noreferrer" style={{ color: accent, fontSize: 11.5, textDecoration: "none", whiteSpace: "nowrap" }}>{label}</a>
+    : <span style={{ color: txt3, fontSize: 11.5 }}>—</span>;
+
+  /* ── HOJA 1: el registro de propiedades y grabaciones ── */
+
+  /* La TABLA es la vista de arranque, no el tablero: Alex trabaja en una hoja,
+     no en un kanban. Y se recuerda lo último que eligió cada persona — el que
+     prefiera el tablero lo tiene ahí y no se lo volvemos a cambiar. */
+  const vistaKey = user?.id ? `stratos.mkt.registro.vista.${user.id}` : null;
+  const [pipeVista, setPipeVista] = useState(() => {
+    try { return (vistaKey && localStorage.getItem(vistaKey)) || "tabla"; } catch (_) { return "tabla"; }
+  });
+  const elegirVista = useCallback((v) => {
+    setPipeVista(v);
+    try { if (vistaKey) localStorage.setItem(vistaKey, v); } catch (_) {}
+  }, [vistaKey]);
+
+  const [pipeFiltro, setPipeFiltro] = useState({ q: "", locacion: "", tipo: "", etapa: "", empresa: "" });
+
+  const pipeFiltrado = useMemo(() => {
+    const q = pipeFiltro.q.trim().toLowerCase();
+    return pipeline.filter(p =>
+      (!q || `${p.nombre} ${p.locacion || ""} ${p.notas || ""}`.toLowerCase().includes(q)) &&
+      (!pipeFiltro.locacion || p.locacion === pipeFiltro.locacion) &&
+      (!pipeFiltro.tipo     || p.tipo === pipeFiltro.tipo) &&
+      (!pipeFiltro.etapa    || p.etapa === pipeFiltro.etapa) &&
+      (!pipeFiltro.empresa  || p.brand_id === pipeFiltro.empresa)
+    );
+  }, [pipeline, pipeFiltro]);
+
+  const hayFiltro = !!(pipeFiltro.q || pipeFiltro.locacion || pipeFiltro.tipo || pipeFiltro.etapa || pipeFiltro.empresa);
+  const locaciones = useMemo(() => [...new Set(pipeline.map(p => p.locacion).filter(Boolean))].sort(), [pipeline]);
+  const tipos      = useMemo(() => [...new Set(pipeline.map(p => p.tipo).filter(Boolean))].sort(), [pipeline]);
+
+  /* ── Qué columnas se ven ──────────────────────────────────────────────────
+     Son 17 columnas y nadie usa las 17 todos los días. Cada quien apaga las que
+     no mira y la tabla se le queda a su medida (se guarda en su navegador, no
+     en la base: es una preferencia personal, no un dato del equipo).
+     Propiedad y Estatus no se pueden apagar — sin ellas la tabla no se lee. */
+  const colsKey = user?.id ? `stratos.mkt.registro.cols.${user.id}` : null;
+  const [colsOcultas, setColsOcultas] = useState(() => {
+    try { return new Set(JSON.parse((colsKey && localStorage.getItem(colsKey)) || "[]")); }
+    catch (_) { return new Set(); }
+  });
+  const [showCols, setShowCols] = useState(false);
+  const toggleCol = useCallback((key) => {
+    setColsOcultas(prev => {
+      const next = new Set(prev);
+      next.has(key) ? next.delete(key) : next.add(key);
+      try { if (colsKey) localStorage.setItem(colsKey, JSON.stringify([...next])); } catch (_) {}
+      return next;
+    });
+  }, [colsKey]);
+
+  // Las columnas visibles, ya mezcladas: las de siempre + las que inventó el equipo.
+  const colsVista = useMemo(() => ([
+    ...COLS_REGISTRO.filter(c => c.fija || !colsOcultas.has(c.key)),
+    ...colsExtra.map(c => ({
+      key: c.clave, l: c.nombre, extra: true, propia: c,
+      tipo: c.tipo === "enlace" ? "enlace" : c.tipo === "fecha" ? "date" : c.tipo === "numero" ? "number" : "text",
+      ancho: c.tipo === "enlace" ? 180 : 120,
+    })),
+  ]), [colsOcultas, colsExtra]);
+
+  // Sobre cuáles salta el cursor con Enter / Tab (las que se escriben).
+  const colsNav = useMemo(() => colsVista.filter(c => c.tipo !== "etapa" && c.tipo !== "marca"), [colsVista]);
+
+  /* Guardar una celda. Optimista NO: se guarda y se recarga, porque el dato de
+     una propiedad lo pueden estar tocando dos personas a la vez y prefiero que
+     la tabla muestre lo que hay en la base, no lo que yo creo que hay. */
+  const [celda, setCelda] = useState(null);      // { id, campo, valor, extra? }
+  const [celdaSaving, setCeldaSaving] = useState(false);
+
+  const guardarCelda = useCallback(async (siguiente = null) => {
+    if (!celda?.id) return;
+    const { id, campo, valor, extra } = celda;
+    const fila = pipeline.find(p => p.id === id);
+    const antes = extra ? (fila?.datos?.[campo] ?? "") : (fila?.[campo] ?? "");
+    const limpio = String(valor ?? "").trim() || null;
+
+    // Si no cambió nada (entró a la celda y se fue), no se escribe ni se recarga.
+    // Además de ahorrar viajes, esto evita el doble guardado cuando el salto con
+    // Enter/Tab desmonta el input y dispara su onBlur.
+    if (String(antes ?? "") === String(limpio ?? "")) { setCelda(siguiente); return; }
+
+    setCeldaSaving(true);
+    // Columna propia → se mezcla dentro del jsonb sin pisar las demás llaves.
+    const payload = extra
+      ? { datos: { ...(fila?.datos || {}), [campo]: limpio }, updated_at: new Date().toISOString() }
+      : { [campo]: limpio, updated_at: new Date().toISOString() };
+    const { error: e } = await supabase.from("mkt_pipeline_items").update(payload).eq("id", id);
+    setCeldaSaving(false);
+    setCelda(siguiente);
+    if (e) { setError("No pude guardar ese dato. Probá de nuevo."); return; }
+    load();
+  }, [celda, pipeline, load]);
+
+  /* Moverse como en Excel: Enter baja, Tab va a la derecha (y al final de la
+     fila salta a la siguiente). Devuelve la celda destino o null si ya no hay. */
+  const celdaVecina = useCallback((desde, dir) => {
+    if (!desde) return null;
+    const fi = pipeFiltrado.findIndex(p => p.id === desde.id);
+    const ci = colsNav.findIndex(c => c.key === desde.campo && !!c.extra === !!desde.extra);
+    if (fi < 0 || ci < 0) return null;
+    let nf = fi, nc = ci;
+    if (dir === "abajo") nf = fi + 1;
+    else { nc = ci + 1; if (nc >= colsNav.length) { nc = 0; nf = fi + 1; } }
+    if (nf >= pipeFiltrado.length || nf < 0) return null;
+    const col = colsNav[nc];
+    const destino = pipeFiltrado[nf];
+    const valor = col.extra ? (destino.datos?.[col.key] ?? "") : (destino[col.key] ?? "");
+    return { id: destino.id, campo: col.key, valor: valor || "", extra: !!col.extra };
+  }, [pipeFiltrado, colsNav]);
+
+  /* El estatus NO se edita por clic: es un desplegable siempre visible, porque
+     cambiarlo es la acción más frecuente de la tabla (lo pidió Alex así). */
+  const cambiarEtapa = useCallback(async (id, etapa) => {
+    const { error: e } = await supabase.from("mkt_pipeline_items")
+      .update({ etapa, updated_at: new Date().toISOString() }).eq("id", id);
+    if (e) { setError("No pude cambiar el estatus."); return; }
+    load();
+  }, [load]);
+
+  // Empresa (marca): Alex lo pidió expreso en la reunión — el equipo graba para
+  // varias empresas del corporativo y sin esta columna no sabe de cuál es cada video.
+  const cambiarEmpresa = useCallback(async (id, brandId) => {
+    const { error: e } = await supabase.from("mkt_pipeline_items")
+      .update({ brand_id: brandId || null, updated_at: new Date().toISOString() }).eq("id", id);
+    if (e) { setError("No pude cambiar la empresa."); return; }
+    load();
+  }, [load]);
+
+  /* Sacar una fila de la tabla. NO se borra (la tabla no tiene permiso de
+     DELETE, a propósito): se marca con fecha de archivado y deja de mostrarse.
+     Se puede devolver desde la base si alguien se equivoca. */
+  const [archivarId, setArchivarId] = useState(null);
+  const archivarPropiedad = useCallback(async (id) => {
+    const { error: e } = await supabase.from("mkt_pipeline_items")
+      .update({ deleted_at: new Date().toISOString() }).eq("id", id);
+    setArchivarId(null);
+    if (e) { setError("No pude quitar esa propiedad."); return; }
+    load();
+  }, [load]);
+
+  /* Alta desde la última fila de la tabla, como en una hoja: se escribe el
+     nombre, Enter, y ya está. El formulario de arriba sigue existiendo para
+     quien quiera cargarla completa de una vez. */
+  const [filaNueva, setFilaNueva] = useState("");
+  const [filaNuevaSaving, setFilaNuevaSaving] = useState(false);
+  const crearDesdeTabla = useCallback(async () => {
+    const nombre = filaNueva.trim();
+    if (!nombre || !orgId) return;
+    setFilaNuevaSaving(true);
+    const dukeBrand = brands.find(b => b.slug === "duke-del-caribe");
+    const { error: e } = await supabase.from("mkt_pipeline_items").insert({
+      organization_id: orgId,
+      brand_id: pipeFiltro.empresa || dukeBrand?.id || brands[0]?.id || null,
+      nombre, etapa: pipeFiltro.etapa || "seleccionada",
+      // Posición explícita: la tabla ordena por `orden` y recién después por
+      // fecha de cambio. Sin esto, la fila nueva se movería de lugar cada vez
+      // que alguien le escribe algo — y no se puede trabajar en una tabla que
+      // se reacomoda sola.
+      orden: pipeline.reduce((m, p) => Math.max(m, p.orden || 0), 0) + 1,
+      created_by: user?.id || null,
+    });
+    setFilaNuevaSaving(false);
+    if (e) { setError("No pude agregar esa propiedad."); return; }
+    setFilaNueva("");
+    load();
+  }, [filaNueva, orgId, brands, pipeline, pipeFiltro.empresa, pipeFiltro.etapa, user?.id, load]);
+
+  /* ── Columnas propias: agregarlas sin que nosotros toquemos el esquema ── */
+  const [colForm, setColForm] = useState(null);   // { nombre, tipo } | null
+
+  const crearColumna = useCallback(async () => {
+    const nombre = String(colForm?.nombre || "").trim();
+    if (!nombre || !orgId) return;
+    // La clave se deriva del nombre: estable aunque después lo renombren.
+    const clave = nombre.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "")
+      .replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "").slice(0, 40) || `col_${Date.now()}`;
+    const { error: e } = await supabase.from("mkt_pipeline_columns").insert({
+      organization_id: orgId, clave, nombre, tipo: colForm.tipo || "texto",
+      orden: colsExtra.length + 1, created_by: user?.id || null,
+    });
+    if (e) { setError(e.code === "23505" ? "Ya existe una columna con ese nombre." : "No pude crear la columna."); return; }
+    setColForm(null);
+    load();
+  }, [colForm, orgId, colsExtra.length, user?.id, load]);
+
+  const archivarColumna = useCallback(async (col) => {
+    // No se borra: se archiva. Los valores siguen en `datos` por si vuelven.
+    const { error: e } = await supabase.from("mkt_pipeline_columns")
+      .update({ deleted_at: new Date().toISOString() }).eq("id", col.id);
+    if (e) { setError("No pude quitar la columna."); return; }
+    load();
+  }, [load]);
+
+  /* Celda editable. Se renderiza como JSX suelto (NO como componente anidado):
+     un componente definido acá adentro cambiaría de identidad en cada render y
+     el input perdería el foco al tipear — está avisado arriba en este archivo. */
+  const celdaEditable = (fila, campo, { tipo = "text", extra = false, ancho = 110, placeholder = "—", fuerte = false } = {}) => {
+    const editando = celda && celda.id === fila.id && celda.campo === campo && !!celda.extra === !!extra;
+    const valor = extra ? (fila.datos?.[campo] ?? "") : (fila[campo] ?? "");
+    if (editando) {
+      return (
+        <input
+          autoFocus
+          type={tipo}
+          value={celda.valor}
+          disabled={celdaSaving}
+          onChange={e => setCelda(c => ({ ...c, valor: e.target.value }))}
+          onBlur={() => guardarCelda()}
+          onKeyDown={e => {
+            if (e.key === "Enter")       { e.preventDefault(); guardarCelda(celdaVecina(celda, "abajo")); }
+            else if (e.key === "Tab")    { e.preventDefault(); guardarCelda(celdaVecina(celda, "derecha")); }
+            else if (e.key === "Escape") { e.preventDefault(); setCelda(null); }
+          }}
+          style={{ ...inputStyle, padding: "4px 7px", fontSize: 12, width: ancho, minWidth: ancho }} />
+      );
+    }
+    const mostrar = tipo === "date" && valor ? fmtDia(valor) : valor;
+    return (
+      <button
+        onClick={() => setCelda({ id: fila.id, campo, valor: valor || "", extra })}
+        title="Clic para editar · Enter baja · Tab va a la derecha"
+        style={{
+          background: "transparent", border: "none", padding: "2px 0", cursor: "text", textAlign: "left",
+          color: mostrar ? (fuerte ? txt : txt2) : txt3,
+          fontSize: fuerte ? 12.5 : 12, fontWeight: fuerte ? 500 : 400,
+          fontFamily: font, minWidth: 34, width: "100%",
+        }}>{mostrar || placeholder}</button>
+    );
+  };
+
+  /* Celda de enlace: si hay URL muestra «Abrir» y un lápiz para cambiarla. */
+  const celdaEnlace = (fila, campo) => {
+    const editando = celda && celda.id === fila.id && celda.campo === campo && !celda.extra;
+    if (editando) return celdaEditable(fila, campo, { ancho: 190, placeholder: "Pegá el enlace" });
+    const url = fila[campo];
+    return (
+      <span style={{ display: "inline-flex", alignItems: "center", gap: 6, whiteSpace: "nowrap" }}>
+        {url
+          ? <a href={url} target="_blank" rel="noreferrer" style={{ color: accent, fontSize: 11.5, textDecoration: "none" }}>Abrir</a>
+          : <span style={{ color: txt3, fontSize: 11.5 }}>—</span>}
+        <button onClick={() => setCelda({ id: fila.id, campo, valor: url || "", extra: false })}
+          title={url ? "Cambiar el enlace" : "Poner un enlace"} style={{
+            background: "transparent", border: "none", padding: 0, cursor: "pointer", color: txt3, fontSize: 10.5, fontFamily: font,
+          }}>{url ? "editar" : "+"}</button>
+      </span>
+    );
+  };
+
+  const pipelineTabla = () => (
+    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+        <div style={{ position: "relative", flex: isMobile ? "1 1 100%" : "0 0 230px" }}>
+          <Search size={13} color={txt3} style={{ position: "absolute", left: 10, top: 12 }} />
+          <input value={pipeFiltro.q} onChange={e => setPipeFiltro(f => ({ ...f, q: e.target.value }))}
+            placeholder="Buscar propiedad…" style={{ ...inputStyle, paddingLeft: 30 }} />
+        </div>
+        <select value={pipeFiltro.etapa} onChange={e => setPipeFiltro(f => ({ ...f, etapa: e.target.value }))} style={{ ...inputStyle, width: "auto", minWidth: 150 }}>
+          <option value="">Todo estatus</option>
+          {ETAPAS.map(s => <option key={s.id} value={s.id}>{s.l}</option>)}
+        </select>
+        {brands.length > 1 && (
+          <select value={pipeFiltro.empresa} onChange={e => setPipeFiltro(f => ({ ...f, empresa: e.target.value }))} style={{ ...inputStyle, width: "auto", minWidth: 130 }}>
+            <option value="">Toda empresa</option>
+            {brands.map(b => <option key={b.id} value={b.id}>{b.nombre}</option>)}
+          </select>
+        )}
+        <select value={pipeFiltro.locacion} onChange={e => setPipeFiltro(f => ({ ...f, locacion: e.target.value }))} style={{ ...inputStyle, width: "auto", minWidth: 130 }}>
+          <option value="">Toda ubicación</option>
+          {locaciones.map(l => <option key={l} value={l}>{l}</option>)}
+        </select>
+        <select value={pipeFiltro.tipo} onChange={e => setPipeFiltro(f => ({ ...f, tipo: e.target.value }))} style={{ ...inputStyle, width: "auto", minWidth: 120 }}>
+          <option value="">Todo tipo</option>
+          {tipos.map(t => <option key={t} value={t}>{t}</option>)}
+        </select>
+        {hayFiltro && (
+          <button onClick={() => setPipeFiltro({ q: "", locacion: "", tipo: "", etapa: "", empresa: "" })} style={{
+            background: "transparent", border: "none", cursor: "pointer", color: txt3, fontSize: 11.5, fontFamily: font,
+          }}>Limpiar</button>
+        )}
+        <button onClick={() => { setShowCols(s => !s); setColForm(null); }} title="Elegir qué columnas ver" style={{
+          background: showCols ? `${accent}14` : "transparent", border: `1px solid ${bd}`, borderRadius: 9, padding: "7px 12px",
+          cursor: "pointer", color: txt2, fontSize: 12, fontFamily: font, display: "inline-flex", alignItems: "center", gap: 5,
+        }}><SlidersHorizontal size={12} /> Columnas{colsOcultas.size > 0 ? ` (${colsOcultas.size} ocultas)` : ""}</button>
+        <button onClick={() => { setColForm(c => c ? null : { nombre: "", tipo: "texto" }); setShowCols(false); }} style={{
+          background: "transparent", border: `1px solid ${accent}44`, borderRadius: 9, padding: "7px 12px",
+          cursor: "pointer", color: accent, fontSize: 12, fontFamily: font, display: "inline-flex", alignItems: "center", gap: 5,
+        }}><Plus size={12} /> Columna nueva</button>
+        <span style={{ fontSize: 11.5, color: celdaSaving ? accent : txt3, marginLeft: "auto", whiteSpace: "nowrap" }}>
+          {celdaSaving ? "Guardando…" : `${pipeFiltrado.length} de ${pipeline.length}`}
+        </span>
+      </div>
+
+      {/* Elegir qué columnas ver. Es preferencia de cada quien: se guarda en su
+          navegador y no le cambia la tabla a nadie más del equipo. */}
+      {showCols && (
+        <div style={{ ...card, borderRadius: 12, padding: 12, display: "flex", flexWrap: "wrap", gap: 7, alignItems: "center" }}>
+          <span style={{ fontSize: 11, color: txt3, marginRight: 4 }}>Se ven:</span>
+          {COLS_REGISTRO.map(c => {
+            const visible = c.fija || !colsOcultas.has(c.key);
+            return (
+              <button key={c.key} onClick={() => { if (!c.fija) toggleCol(c.key); }}
+                title={c.fija ? "Esta siempre se ve" : visible ? "Ocultarla" : "Mostrarla"}
+                style={{
+                  padding: "5px 11px", borderRadius: 999, fontFamily: font, fontSize: 11.5,
+                  cursor: c.fija ? "default" : "pointer",
+                  border: `1px solid ${visible ? `${accent}55` : bd}`,
+                  background: visible ? `${accent}16` : "transparent",
+                  color: visible ? accent : txt3, opacity: c.fija ? 0.7 : 1,
+                }}>{c.l}</button>
+            );
+          })}
+          <button onClick={() => { setColsOcultas(new Set()); try { if (colsKey) localStorage.setItem(colsKey, "[]"); } catch (_) {} }}
+            style={{ background: "transparent", border: "none", cursor: "pointer", color: txt3, fontSize: 11.5, fontFamily: font, marginLeft: "auto" }}>
+            Ver todas
+          </button>
+        </div>
+      )}
+
+      {colForm && (
+        <div style={{ ...card, borderRadius: 12, padding: 12, display: "flex", gap: 8, flexWrap: "wrap", alignItems: "flex-end" }}>
+          <label style={{ display: "flex", flexDirection: "column", gap: 4, flex: "1 1 200px" }}>
+            <span style={{ fontSize: 10.5, color: txt3 }}>Nombre de la columna</span>
+            <input autoFocus value={colForm.nombre} onChange={e => setColForm(c => ({ ...c, nombre: e.target.value }))}
+              onKeyDown={e => { if (e.key === "Enter") crearColumna(); }}
+              placeholder="Voz en off · Responsable · Campaña…" style={inputStyle} />
+          </label>
+          <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+            <span style={{ fontSize: 10.5, color: txt3 }}>Qué guarda</span>
+            <select value={colForm.tipo} onChange={e => setColForm(c => ({ ...c, tipo: e.target.value }))} style={{ ...inputStyle, width: "auto" }}>
+              <option value="texto">Texto</option>
+              <option value="numero">Número</option>
+              <option value="fecha">Fecha</option>
+              <option value="enlace">Enlace</option>
+            </select>
+          </label>
+          <button onClick={crearColumna} disabled={!String(colForm.nombre || "").trim()} style={{
+            padding: "9px 16px", borderRadius: 9, fontFamily: font, fontSize: 12.5, fontWeight: 600,
+            cursor: "pointer", background: `${accent}18`, border: `1px solid ${accent}55`, color: accent,
+            opacity: String(colForm.nombre || "").trim() ? 1 : 0.55,
+          }}>Agregar</button>
+          <button onClick={() => setColForm(null)} style={{
+            background: "transparent", border: "none", cursor: "pointer", color: txt3, fontSize: 12, fontFamily: font, padding: "9px 4px",
+          }}>Cancelar</button>
+        </div>
+      )}
+
+      <div style={hoja.wrap}>
+        <table style={hoja.table}>
+          <thead>
+            <tr>
+              {colsVista.map((c, i) => (
+                <th key={c.extra ? `x-${c.key}` : c.key}
+                  style={i === 0
+                    ? { ...hoja.th, ...hoja.congelada, top: 0, zIndex: 4, background: isLight ? "#EEF2F7" : "#141A24" }
+                    : hoja.th}>
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+                    {c.l}
+                    {c.extra && (
+                      <button onClick={() => archivarColumna(c.propia)} title="Quitar esta columna (lo escrito se conserva)" style={{
+                        background: "transparent", border: "none", padding: 0, cursor: "pointer", color: txt3, display: "inline-flex",
+                      }}><X size={11} /></button>
+                    )}
+                  </span>
+                </th>
+              ))}
+              <th style={{ ...hoja.th, width: 34 }} aria-label="Quitar" />
+            </tr>
+          </thead>
+          <tbody>
+            {pipeFiltrado.map(p => {
+              const col = (ETAPA_HEX[p.etapa] || ETAPA_HEX.seleccionada)[isLight ? "l" : "d"];
+              return (
+                <tr key={p.id}>
+                  {colsVista.map((c, i) => {
+                    const base = i === 0 ? { ...hoja.td, ...hoja.congelada, zIndex: 2 } : hoja.td;
+                    if (c.tipo === "nombre") return (
+                      // El nombre se edita como cualquier celda; la ficha completa
+                      // se abre con el icono de al lado (antes el clic hacía las dos
+                      // cosas a la vez y no se podía corregir un nombre mal escrito).
+                      <td key={c.key} style={{ ...base, minWidth: c.ancho }}>
+                        <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                          <span style={{ flex: 1, minWidth: 0 }}>
+                            {celdaEditable(p, "nombre", { ancho: c.ancho - 30, fuerte: true, placeholder: "Sin nombre" })}
+                          </span>
+                          <button onClick={() => openFicha(p)} title="Abrir la ficha completa" style={{
+                            background: "transparent", border: "none", padding: 0, cursor: "pointer",
+                            color: txt3, display: "inline-flex", flexShrink: 0,
+                          }}><Maximize2 size={11} /></button>
+                        </span>
+                      </td>
+                    );
+                    if (c.tipo === "etapa") return (
+                      // Cambiar el estatus es lo que más se hace: va siempre listo,
+                      // con su color, sin tener que entrar a ningún lado.
+                      <td key={c.key} style={base}>
+                        <select value={p.etapa} onChange={e => cambiarEtapa(p.id, e.target.value)} title="Cambiar el estatus" style={{
+                          appearance: "none", WebkitAppearance: "none", cursor: "pointer", maxWidth: "100%",
+                          padding: "3px 10px", borderRadius: 999, whiteSpace: "nowrap", fontFamily: font,
+                          fontSize: 10.5, fontWeight: 600, color: col, background: `${col}1E`, border: `1px solid ${col}44`,
+                          colorScheme: isLight ? "light" : "dark",
+                        }}>
+                          {ETAPAS.map(s => <option key={s.id} value={s.id}>{s.l}</option>)}
+                        </select>
+                      </td>
+                    );
+                    if (c.tipo === "marca") {
+                      const b = brandById[p.brand_id];
+                      const bc = brandColor(b);
+                      return (
+                        <td key={c.key} style={base}>
+                          <select value={p.brand_id || ""} onChange={e => cambiarEmpresa(p.id, e.target.value)} title="¿De qué empresa es?" style={{
+                            appearance: "none", WebkitAppearance: "none", cursor: "pointer", maxWidth: "100%",
+                            padding: "3px 10px", borderRadius: 999, whiteSpace: "nowrap", fontFamily: font,
+                            fontSize: 10.5, fontWeight: 600,
+                            color: b ? bc : txt3, background: b ? `${bc}1E` : "transparent",
+                            border: `1px solid ${b ? `${bc}44` : bd}`, colorScheme: isLight ? "light" : "dark",
+                          }}>
+                            <option value="">— empresa —</option>
+                            {brands.map(x => <option key={x.id} value={x.id}>{x.nombre}</option>)}
+                          </select>
+                        </td>
+                      );
+                    }
+                    if (c.tipo === "enlace" && !c.extra) return <td key={c.key} style={base}>{celdaEnlace(p, c.key)}</td>;
+                    return (
+                      <td key={c.extra ? `x-${c.key}` : c.key} style={{ ...base, whiteSpace: c.key === "notas" ? "normal" : "nowrap" }}>
+                        {celdaEditable(p, c.key, { extra: !!c.extra, tipo: c.tipo === "enlace" ? "text" : c.tipo, ancho: c.ancho || 130 })}
+                      </td>
+                    );
+                  })}
+                  <td style={{ ...hoja.td, textAlign: "right" }}>
+                    {archivarId === p.id ? (
+                      <span style={{ display: "inline-flex", gap: 6, alignItems: "center", whiteSpace: "nowrap" }}>
+                        <button onClick={() => archivarPropiedad(p.id)} style={{
+                          background: "transparent", border: "none", cursor: "pointer", color: RED, fontSize: 11, fontFamily: font, padding: 0,
+                        }}>Quitar</button>
+                        <button onClick={() => setArchivarId(null)} style={{
+                          background: "transparent", border: "none", cursor: "pointer", color: txt3, fontSize: 11, fontFamily: font, padding: 0,
+                        }}>No</button>
+                      </span>
+                    ) : (
+                      <button onClick={() => setArchivarId(p.id)} title="Sacar esta propiedad de la tabla (no se borra)" style={{
+                        background: "transparent", border: "none", padding: 0, cursor: "pointer", color: txt3, display: "inline-flex",
+                      }}><Trash2 size={12} /></button>
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
+
+            {/* Última fila: se escribe el nombre, Enter, y la propiedad ya existe.
+                Como en la hoja — sin abrir ningún formulario. */}
+            <tr>
+              <td style={{ ...hoja.td, ...hoja.congelada, zIndex: 2 }}>
+                <input
+                  value={filaNueva}
+                  disabled={filaNuevaSaving}
+                  onChange={e => setFilaNueva(e.target.value)}
+                  onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); crearDesdeTabla(); } }}
+                  onBlur={() => { if (filaNueva.trim()) crearDesdeTabla(); }}
+                  placeholder="+ Agregar propiedad…"
+                  style={{ ...inputStyle, padding: "5px 8px", fontSize: 12, border: `1px dashed ${bd}`, background: "transparent" }} />
+              </td>
+              <td colSpan={colsVista.length} style={{ ...hoja.td, color: txt3, fontSize: 11 }}>
+                {filaNuevaSaving ? "Agregando…" : "Escribí el nombre y presioná Enter — el resto se llena después, en la misma tabla."}
+              </td>
+            </tr>
+
+            {pipeFiltrado.length === 0 && (
+              <tr><td colSpan={colsVista.length + 1} style={{ ...hoja.td, textAlign: "center", color: txt3, padding: "18px 0" }}>
+                {pipeline.length === 0
+                  ? "Todavía no hay propiedades cargadas."
+                  : "Ninguna propiedad coincide con ese filtro."}
+              </td></tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+      <div style={{ fontSize: 10.5, color: txt3, lineHeight: 1.6 }}>
+        Toca cualquier celda para escribir · <b style={{ color: txt2 }}>Enter</b> baja a la de abajo ·{" "}
+        <b style={{ color: txt2 }}>Tab</b> pasa a la de al lado · <b style={{ color: txt2 }}>Escape</b> cancela.
+        El estatus y la empresa se cambian con su desplegable. «Columnas» esconde las que no uses y
+        «Columna nueva» agrega las tuyas. El icono ⤢ abre la ficha completa de la propiedad.
+      </div>
+    </div>
+  );
+
+
+  /* ── HOJA 2: el registro de actividades (el morado) ── */
+  const [repFiltro, setRepFiltro] = useState({ q: "", persona: "", fecha: "" });
+
+  const bitacoraFiltrada = useMemo(() => {
+    const q = repFiltro.q.trim().toLowerCase();
+    return bitacora.filter(r =>
+      (!q || String(r.texto || "").toLowerCase().includes(q)) &&
+      (!repFiltro.persona || r.profile_id === repFiltro.persona) &&
+      (!repFiltro.fecha   || r.fecha === repFiltro.fecha)
+    );
+  }, [bitacora, repFiltro]);
+
+  const puestoDe = useCallback((id) => {
+    const r = people.find(p => p.id === id)?.role;
+    return r === "marketing" ? "Marketing"
+      : r === "asesor" ? "Ventas"
+      : r === "director" ? "Dirección"
+      : r ? "Administración" : "—";
+  }, [people]);
+
+  const reporteTabla = () => (
+    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+        <div style={{ position: "relative", flex: isMobile ? "1 1 100%" : "0 0 240px" }}>
+          <Search size={13} color={txt3} style={{ position: "absolute", left: 10, top: 12 }} />
+          <input value={repFiltro.q} onChange={e => setRepFiltro(f => ({ ...f, q: e.target.value }))}
+            placeholder="Buscar en las actividades…" style={{ ...inputStyle, paddingLeft: 30 }} />
+        </div>
+        <select value={repFiltro.persona} onChange={e => setRepFiltro(f => ({ ...f, persona: e.target.value }))} style={{ ...inputStyle, width: "auto", minWidth: 150 }}>
+          <option value="">Todo el equipo</option>
+          {assignees.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
+        </select>
+        <input type="date" value={repFiltro.fecha} onChange={e => setRepFiltro(f => ({ ...f, fecha: e.target.value }))}
+          title="Filtrar por día" style={{ ...inputStyle, width: "auto" }} />
+        {(repFiltro.q || repFiltro.persona || repFiltro.fecha) && (
+          <button onClick={() => setRepFiltro({ q: "", persona: "", fecha: "" })} style={{
+            background: "transparent", border: "none", cursor: "pointer", color: txt3, fontSize: 11.5, fontFamily: font,
+          }}>Limpiar</button>
+        )}
+        <span style={{ fontSize: 11.5, color: txt3, marginLeft: "auto", whiteSpace: "nowrap" }}>
+          {bitacoraFiltrada.length} de {bitacora.length}
+        </span>
+      </div>
+
+      <div style={hoja.wrap}>
+        <table style={{ ...hoja.table, minWidth: 900 }}>
+          <thead>
+            <tr>
+              {["Fecha", "Nombre", "Puesto / Área", "Empresa", "Actividades realizadas", "Tiempo", "Evidencia"]
+                .map(h => <th key={h} style={hoja.th}>{h}</th>)}
+            </tr>
+          </thead>
+          <tbody>
+            {bitacoraFiltrada.map(r => (
+              <tr key={r.id}>
+                <td style={{ ...hoja.td, whiteSpace: "nowrap" }}>
+                  {fmtDia(r.fecha)}
+                  <div style={{ fontSize: 10, color: txt3 }}>{fmtHora(r.created_at)}</div>
+                </td>
+                <td style={{ ...hoja.td, whiteSpace: "nowrap", color: txt }}>{nameOf(r.profile_id)}</td>
+                <td style={{ ...hoja.td, whiteSpace: "nowrap" }}>{puestoDe(r.profile_id)}</td>
+                <td style={{ ...hoja.td, whiteSpace: "nowrap" }}>{r.brand_id ? (brandById[r.brand_id]?.nombre || "—") : "—"}</td>
+                <td style={{ ...hoja.td, minWidth: 330, maxWidth: 520 }}>{reporteTexto(r)}</td>
+                <td style={{ ...hoja.td, whiteSpace: "nowrap" }}>
+                  {r.tiempo_texto
+                    ? r.tiempo_texto
+                    : (() => {
+                        const t = tiempoDelTexto(r.texto);
+                        return t
+                          ? <span title="Tomado de lo que escribió — no se lo pedimos aparte" style={{ color: txt3, fontStyle: "italic" }}>{t}</span>
+                          : "—";
+                      })()}
+                </td>
+                <td style={hoja.td}>{linkCel(r.evidencia_url, "Abrir")}</td>
+              </tr>
+            ))}
+            {bitacoraFiltrada.length === 0 && (
+              <tr><td colSpan={7} style={{ ...hoja.td, textAlign: "center", color: txt3, padding: "18px 0" }}>
+                {bitacora.length === 0
+                  ? "Todavía no hay reportes. En cuanto alguien cuente su día, aparece acá."
+                  : "Ningún reporte coincide con ese filtro."}
+              </td></tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+
   const pipelineTab = () => (
     <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-      <div style={{ display: "flex", justifyContent: "flex-end" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+        {/* Tablero para OPERAR (mover etapas) · Tabla para MIRAR (la hoja de Alex,
+            con sus filtros). Conviven: cada una sirve para algo distinto. */}
+        <div style={{ display: "flex", gap: 3, padding: 4, borderRadius: 12, border: `1px solid ${bd}`,
+          background: isLight ? "rgba(15,23,42,0.04)" : "rgba(255,255,255,0.03)" }}>
+          {[["tabla", "Tabla"], ["tablero", "Tablero"]].map(([id, l]) => (
+            <button key={id} onClick={() => elegirVista(id)} style={{
+              padding: "5px 13px", borderRadius: 9, cursor: "pointer", fontFamily: font, fontSize: 12,
+              fontWeight: pipeVista === id ? 600 : 500, border: "none",
+              background: pipeVista === id ? (isLight ? "#FFFFFF" : "rgba(255,255,255,0.09)") : "transparent",
+              color: pipeVista === id ? txt : txt3,
+            }}>{l}</button>
+          ))}
+        </div>
         <button onClick={() => setShowPipeForm(s => !s)} style={{
           background: showPipeForm ? "transparent" : `${accent}1A`, border: `1px solid ${accent}55`,
           borderRadius: 10, padding: "9px 15px", cursor: "pointer", color: accent,
@@ -770,10 +1518,15 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
           }}>Agregar</button>
         </div>
       )}
+      {pipeVista === "tabla" && pipelineTabla()}
+      {pipeVista === "tablero" && (
       <div style={{ display: "flex", gap: isMobile ? 10 : 12, overflowX: "auto", paddingBottom: 8, alignItems: "flex-start", WebkitOverflowScrolling: "touch", scrollSnapType: isMobile ? "x mandatory" : undefined }}>
         {ETAPAS.map((col, colIdx) => {
           const items = pipeline.filter(p => p.etapa === col.id);
-          const isCuello = col.id === "esperando_voz" && items.length >= 3;
+          // Se marcan en rojo los dos atascos que le duelen al equipo: lo que
+          // espera voz en off (el cuello viejo) y lo que volvió con CAMBIOS
+          // (retrabajo — es trabajo que ya se había hecho y hay que rehacer).
+          const isCuello = (col.id === "esperando_voz" || col.id === "cambios") && items.length >= 3;
           return (
             <div key={col.id}
               onDragOver={e => { if (dragId) e.preventDefault(); }}
@@ -819,18 +1572,37 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
                     }}>
                     <div style={{ display: "flex", alignItems: "flex-start", gap: 7 }}>
                       <span style={{ width: 8, height: 8, borderRadius: 999, background: c, marginTop: 5, flexShrink: 0 }} />
-                      <div style={{ flex: 1, fontSize: 12.5, color: txt, fontWeight: 500, lineHeight: 1.3 }}>{it.nombre}</div>
+                      {/* El nombre abre la ficha: es el renglón de la hoja de cálculo,
+                          con precio, tipo, fechas y todos los enlaces. */}
+                      <button onClick={() => openFicha(it)} title="Abrir la ficha de la propiedad" style={{
+                        flex: 1, textAlign: "left", background: "transparent", border: "none", padding: 0,
+                        cursor: "pointer", fontSize: 12.5, color: txt, fontWeight: 500, lineHeight: 1.3, fontFamily: font,
+                      }}>{it.nombre}</button>
                     </div>
                     <div style={{ display: "flex", alignItems: "center", gap: 7, flexWrap: "wrap" }}>
                       {it.locacion && <span style={{ fontSize: 10.5, color: txt2, padding: "2px 8px", borderRadius: 999, background: isLight ? "rgba(15,23,42,0.05)" : "rgba(255,255,255,0.06)", border: `1px solid ${bd}` }}>{it.locacion}</span>}
+                      {it.precio && <span style={{ fontSize: 10.5, color: txt2 }}>{it.precio}</span>}
+                      {it.tipo && <span style={{ fontSize: 10.5, color: txt3 }}>{it.tipo}</span>}
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 7, flexWrap: "wrap" }}>
                       {it.fecha_rodaje && (
-                        <span style={{ fontSize: 10.5, color: it.fecha_rodaje === hoy ? accent : txt3, display: "inline-flex", alignItems: "center", gap: 3 }}>
+                        <span style={{ fontSize: 10.5, color: it.fecha_rodaje === hoy ? accent : txt3, display: "inline-flex", alignItems: "center", gap: 3 }} title="Fecha de rodaje">
                           <CalendarDays size={10} /> {fmtDia(it.fecha_rodaje)}
                         </span>
                       )}
+                      {it.fecha_publicacion && (
+                        <span style={{ fontSize: 10.5, color: txt3, display: "inline-flex", alignItems: "center", gap: 3 }} title="Fecha de publicación">
+                          <ExternalLink size={10} /> {fmtDia(it.fecha_publicacion)}
+                        </span>
+                      )}
                       <span style={{ flex: 1 }} />
-                      {it.drive_url && <a href={it.drive_url} target="_blank" rel="noreferrer" title="Drive" style={{ color: txt3, display: "flex" }}><Folder size={13} /></a>}
-                      {it.ig_url && <a href={it.ig_url} target="_blank" rel="noreferrer" title="Ver publicación" style={{ color: txt3, display: "flex" }}><ExternalLink size={13} /></a>}
+                      {/* Los enlaces del registro, cada uno con su ícono. Se muestran
+                          solo los que existen: una tarjeta a medio llenar no se ve rota. */}
+                      {it.crudos_url && <a href={it.crudos_url} target="_blank" rel="noreferrer" title="Carpeta de crudos" style={{ color: txt3, display: "flex" }}><Folder size={13} /></a>}
+                      {it.video_url  && <a href={it.video_url}  target="_blank" rel="noreferrer" title="Video editado" style={{ color: txt3, display: "flex" }}><Clapperboard size={13} /></a>}
+                      {it.ficha_url  && <a href={it.ficha_url}  target="_blank" rel="noreferrer" title="Ficha técnica" style={{ color: txt3, display: "flex" }}><Search size={13} /></a>}
+                      {it.drive_url  && <a href={it.drive_url}  target="_blank" rel="noreferrer" title="Drive" style={{ color: txt3, display: "flex" }}><Layers size={13} /></a>}
+                      {it.ig_url     && <a href={it.ig_url}     target="_blank" rel="noreferrer" title="Ver publicación" style={{ color: txt3, display: "flex" }}><ExternalLink size={13} /></a>}
                     </div>
                     <div style={{ display: "flex", gap: 5 }}>
                       <button disabled={colIdx === 0} onClick={() => moveStage(it, -1)} title="Etapa anterior" style={{
@@ -853,6 +1625,7 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
           );
         })}
       </div>
+      )}
     </div>
   );
 
@@ -980,97 +1753,260 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
 
   /* ════════════════════ TAB: EQUIPO (solo admin) ════════════════════ */
 
+  /* ── Bloque de texto de un reporte: plegado a 2 líneas, con "ver todo" y su
+     evidencia. Se usa igual en el panel de hoy y en el historial de la
+     persona, para que el líder no tenga que aprender dos formatos. ── */
+  /* ════════════ REPORTE DE ACTIVIDADES ════════════
+     La caja que pidió Alex en la llamada del 27-jul: «que se metan a una pestaña
+     como reporte de actividades y automáticamente ya te aparezca el día de hoy:
+     ¿qué hiciste hoy, Luis Ángel Landeros?».
+     Reemplaza al Google Form. Cuatro campos y un botón — él insistió cuatro veces
+     en lo mismo: «entre menos rutas y menos botones tenga, mejor». */
+  const [repForm, setRepForm]   = useState({ empresa: "", texto: "", tiempo: "", evidencia: "" });
+  const [repSaving, setRepSaving] = useState(false);
+  const [repOtro, setRepOtro]   = useState(false); // ya reportó pero quiere sumar otro
+  const [repVista, setRepVista] = useState("hoy");  // hoy | registro (la hoja completa, solo líder)
+
+  const misReportesHoy = useMemo(
+    () => bitacora.filter(r => r.profile_id === user?.id && r.fecha === hoy),
+    [bitacora, user?.id, hoy]);
+
+  const saveReporte = useCallback(async () => {
+    const texto = String(repForm.texto || "").trim();
+    if (!texto || !orgId) return;
+    setRepSaving(true);
+    const { error: e } = await supabase.from("mkt_daily_reports").insert({
+      organization_id: orgId,
+      profile_id: user?.id,
+      fecha: hoy,
+      texto,
+      brand_id: repForm.empresa || null,
+      tiempo_texto: String(repForm.tiempo || "").trim() || null,
+      evidencia_url: String(repForm.evidencia || "").trim() || null,
+      origen: "web",
+    });
+    setRepSaving(false);
+    if (e) { setError("No pude guardar tu reporte. Probá de nuevo."); return; }
+    // Se conserva la empresa elegida: casi siempre es la misma en el mismo día.
+    setRepForm(f => ({ empresa: f.empresa, texto: "", tiempo: "", evidencia: "" }));
+    setRepOtro(false);
+    load();
+  }, [repForm, orgId, user?.id, hoy, load]);
+
+  const reporteTexto = (r) => {
+    const abierta = bitaAbierta.has(r.id);
+    const texto = String(r.texto || "").trim();
+    const largo = texto.length > 110 || texto.includes("\n");
+    return (
+      <div style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{
+            fontSize: 12, color: txt2, lineHeight: 1.5, whiteSpace: "pre-wrap", wordBreak: "break-word",
+            ...(abierta ? {} : { display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }),
+          }}>{texto || "Sin detalle"}</div>
+          {largo && (
+            <button onClick={() => toggleBita(r.id)} style={{
+              background: "transparent", border: "none", padding: "2px 0 0", cursor: "pointer",
+              color: accent, fontSize: 10.5, fontFamily: font,
+            }}>{abierta ? "ver menos" : "ver todo"}</button>
+          )}
+        </div>
+        {r.evidencia_url && (
+          <a href={r.evidencia_url} target="_blank" rel="noreferrer" title="Abrir evidencia" style={{
+            border: `1px solid ${accent}44`, borderRadius: 7, padding: "2px 7px", flexShrink: 0,
+            color: accent, display: "inline-flex", alignItems: "center", gap: 4, fontSize: 10.5, textDecoration: "none",
+          }}><Folder size={11} /> Evidencia</a>
+        )}
+      </div>
+    );
+  };
+
+  /* ════════════ TAB: ACTIVIDADES (la pantalla de entrada de marketing) ════════════ */
+
+  const reporteTab = () => {
+    const primerNombre = String(user?.name || "").split(" ")[0] || "";
+    const yaReporte    = misReportesHoy.length > 0;
+    const mostrarCaja  = !yaReporte || repOtro;
+    const puedeGuardar = String(repForm.texto || "").trim().length > 0 && !repSaving;
+
+    // Para el líder: qué reportó su gente hoy, arriba de su propia caja.
+    const reportesHoy = bitacora.filter(r => r.fecha === hoy);
+    const equipoHoy   = assignees
+      .filter(m => m.id !== user?.id)
+      .map(m => ({ m, rs: reportesHoy.filter(r => r.profile_id === m.id) }))
+      .sort((a, b) => (b.rs.length > 0) - (a.rs.length > 0));
+    const reportaron  = equipoHoy.filter(p => p.rs.length > 0).length;
+
+    return (
+      <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+
+        {/* Hoy = capturar y ver el día · Registro = la hoja completa con filtros.
+            El Registro es SOLO del líder: nadie del equipo necesita leer la
+            bitácora de sus compañeros (misma regla que la sección Equipo). */}
+        {isAdmin && (
+          <div style={{ display: "flex", gap: 3, padding: 4, borderRadius: 12, border: `1px solid ${bd}`, alignSelf: "flex-start",
+            background: isLight ? "rgba(15,23,42,0.04)" : "rgba(255,255,255,0.03)" }}>
+            {[["hoy", "Hoy"], ["registro", "Registro completo"]].map(([id, l]) => (
+              <button key={id} onClick={() => setRepVista(id)} style={{
+                padding: "5px 13px", borderRadius: 9, cursor: "pointer", fontFamily: font, fontSize: 12,
+                fontWeight: repVista === id ? 600 : 500, border: "none",
+                background: repVista === id ? (isLight ? "#FFFFFF" : "rgba(255,255,255,0.09)") : "transparent",
+                color: repVista === id ? txt : txt3,
+              }}>{l}</button>
+            ))}
+          </div>
+        )}
+
+        {isAdmin && repVista === "registro" && reporteTabla()}
+        {(!isAdmin || repVista === "hoy") && (<>
+
+        {/* ── LA CAJA ── */}
+        {mostrarCaja ? (
+          <div style={{ ...card, borderRadius: 15, padding: isMobile ? "15px 15px" : "18px 20px", display: "flex", flexDirection: "column", gap: 12 }}>
+            <div>
+              <div style={{ fontSize: isMobile ? 17 : 19, fontWeight: 600, color: txt, fontFamily: fontDisp, lineHeight: 1.25 }}>
+                ¿Qué hiciste hoy{primerNombre ? `, ${primerNombre}` : ""}?
+              </div>
+              <div style={{ fontSize: 11.5, color: txt3, marginTop: 3 }}>
+                Cuéntalo con tus palabras, como se lo dirías a un compañero · {fmtDia(hoy)}
+              </div>
+            </div>
+
+            <textarea
+              autoFocus={!isMobile}
+              rows={isMobile ? 6 : 5}
+              value={repForm.texto}
+              onChange={e => setRepForm(f => ({ ...f, texto: e.target.value }))}
+              placeholder={"De 9 a 9:30 generé dos fichas técnicas.\nDe 9:30 a 12 edición del video de Casa Sol y Luna.\nDe 1 a 3 ensamble del proyecto…"}
+              style={{ ...inputStyle, resize: "vertical", lineHeight: 1.55, fontSize: 13.5, padding: "11px 12px" }} />
+
+            <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 9 }}>
+              <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                <span style={{ fontSize: 10.5, color: txt3 }}>¿En qué empresa?</span>
+                <select value={repForm.empresa} onChange={e => setRepForm(f => ({ ...f, empresa: e.target.value }))} style={inputStyle}>
+                  <option value="">— elegir —</option>
+                  {brands.map(b => <option key={b.id} value={b.id}>{b.nombre}</option>)}
+                </select>
+              </label>
+              <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                <span style={{ fontSize: 10.5, color: txt3 }}>¿Cuánto te llevó? (opcional)</span>
+                <input value={repForm.tiempo} onChange={e => setRepForm(f => ({ ...f, tiempo: e.target.value }))}
+                  placeholder="de 9 a 12 · 3 hrs · toda la tarde" style={inputStyle} />
+              </label>
+            </div>
+
+            <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+              <span style={{ fontSize: 10.5, color: txt3 }}>Evidencia (opcional) — el enlace de la carpeta o el archivo</span>
+              <input value={repForm.evidencia} onChange={e => setRepForm(f => ({ ...f, evidencia: e.target.value }))}
+                placeholder="Pegá el enlace de Drive" style={inputStyle} />
+            </label>
+
+            <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+              <button onClick={saveReporte} disabled={!puedeGuardar} style={{
+                padding: "10px 22px", borderRadius: 10, fontFamily: font, fontSize: 13.5, fontWeight: 600,
+                cursor: puedeGuardar ? "pointer" : "default", background: `${accent}1C`,
+                border: `1px solid ${accent}66`, color: accent, opacity: puedeGuardar ? 1 : 0.55,
+              }}>{repSaving ? "Guardando…" : "Guardar"}</button>
+              {yaReporte && (
+                <button onClick={() => setRepOtro(false)} style={{
+                  background: "transparent", border: "none", cursor: "pointer", color: txt3, fontSize: 12, fontFamily: font,
+                }}>Cancelar</button>
+              )}
+              {onOpenCopilot && (
+                <span style={{ fontSize: 11, color: txt3, marginLeft: "auto" }}>
+                  ¿Vas manejando?{" "}
+                  <button onClick={onOpenCopilot} style={{
+                    background: "transparent", border: "none", padding: 0, cursor: "pointer", color: accent, fontSize: 11, fontFamily: font,
+                  }}>cuéntaselo al Copilot por voz</button>
+                </span>
+              )}
+            </div>
+          </div>
+        ) : (
+          <div style={{ ...card, borderRadius: 15, padding: "15px 18px", display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+            <Check size={17} color={accent} strokeWidth={3} />
+            <div style={{ flex: 1, minWidth: 180 }}>
+              <div style={{ fontSize: 14, color: txt, fontWeight: 500, fontFamily: fontDisp }}>Ya reportaste hoy</div>
+              <div style={{ fontSize: 11.5, color: txt3 }}>Gracias. Si hiciste algo más, súmalo.</div>
+            </div>
+            <button onClick={() => setRepOtro(true)} style={{
+              padding: "7px 14px", borderRadius: 9, cursor: "pointer", fontFamily: font, fontSize: 12.5,
+              background: "transparent", border: `1px solid ${accent}44`, color: accent,
+            }}>Agregar otro</button>
+          </div>
+        )}
+
+        {/* ── Lo que ya cargó hoy ── */}
+        {misReportesHoy.length > 0 && (
+          <div style={{ ...card, borderRadius: 14, padding: "13px 16px", display: "flex", flexDirection: "column", gap: 9 }}>
+            <div style={{ fontSize: 10.5, color: txt3, letterSpacing: 0.5, textTransform: "uppercase" }}>Tu reporte de hoy</div>
+            {misReportesHoy.map(r => (
+              <div key={r.id} style={{ display: "flex", gap: 9, alignItems: "flex-start", borderTop: `1px solid ${bd}`, paddingTop: 9 }}>
+                <span style={{ fontSize: 10.5, color: txt3, whiteSpace: "nowrap", flexShrink: 0, minWidth: 38, paddingTop: 1 }}>{fmtHora(r.created_at)}</span>
+                <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 4 }}>
+                  {(r.brand_id || r.tiempo_texto) && (
+                    <div style={{ display: "flex", gap: 7, flexWrap: "wrap", fontSize: 10.5, color: txt2 }}>
+                      {r.brand_id && <span>{brandById[r.brand_id]?.nombre || ""}</span>}
+                      {r.tiempo_texto && <span style={{ color: txt3 }}>· {r.tiempo_texto}</span>}
+                    </div>
+                  )}
+                  {reporteTexto(r)}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* ── Para el líder: qué reportó su gente hoy ── */}
+        {isAdmin && equipoHoy.length > 0 && (
+          <div style={{ ...card, borderRadius: 14, padding: "13px 16px", display: "flex", flexDirection: "column", gap: 10 }}>
+            <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 10, flexWrap: "wrap" }}>
+              <div style={{ fontSize: 14, fontWeight: 600, color: txt, fontFamily: fontDisp }}>Tu equipo hoy</div>
+              <div style={{
+                fontSize: 11.5, whiteSpace: "nowrap", padding: "2px 9px", borderRadius: 999,
+                color: reportaron === equipoHoy.length ? accent : reportaron === 0 ? txt3 : AMBER,
+                border: `1px solid ${reportaron === equipoHoy.length ? `${accent}44` : reportaron === 0 ? bd : `${AMBER}44`}`,
+              }}>{reportaron} de {equipoHoy.length} reportaron</div>
+            </div>
+            {equipoHoy.map(({ m, rs }) => (
+              <div key={m.id} style={{ display: "flex", gap: 9, alignItems: "flex-start", borderTop: `1px solid ${bd}`, paddingTop: 9 }}>
+                <span style={{
+                  width: 8, height: 8, borderRadius: 999, flexShrink: 0, marginTop: 5,
+                  background: rs.length > 0 ? accent : "transparent",
+                  border: rs.length > 0 ? "none" : `1.5px solid ${txt3}66`,
+                }} />
+                <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 5 }}>
+                  <div style={{ display: "flex", alignItems: "baseline", gap: 8, flexWrap: "wrap" }}>
+                    <span style={{ fontSize: 12.5, color: rs.length > 0 ? txt : txt2, fontWeight: 500 }}>{m.name}</span>
+                    {rs.length > 0
+                      ? <span style={{ fontSize: 10.5, color: txt3 }}>
+                          {fmtHora(rs[0].created_at)}
+                          {rs[0].brand_id ? ` · ${brandById[rs[0].brand_id]?.nombre || ""}` : ""}
+                          {rs.length > 1 ? ` · ${rs.length} reportes` : ""}
+                        </span>
+                      : <span style={{ fontSize: 11, color: txt3 }}>todavía no reportó</span>}
+                  </div>
+                  {rs.map(r => <div key={r.id}>{reporteTexto(r)}</div>)}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+        </>)}
+      </div>
+    );
+  };
+
   const equipo = () => {
     const week = Date.now() - 7 * 86400000;
 
-    /* ── Bloque de texto de un reporte: plegado a 2 líneas, con "ver todo" y su
-       evidencia. Se usa igual en el panel de hoy y en el historial de la
-       persona, para que el líder no tenga que aprender dos formatos. ── */
-    const reporteTexto = (r) => {
-      const abierta = bitaAbierta.has(r.id);
-      const texto = String(r.texto || "").trim();
-      const largo = texto.length > 110 || texto.includes("\n");
-      return (
-        <div style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{
-              fontSize: 12, color: txt2, lineHeight: 1.5, whiteSpace: "pre-wrap", wordBreak: "break-word",
-              ...(abierta ? {} : { display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }),
-            }}>{texto || "Sin detalle"}</div>
-            {largo && (
-              <button onClick={() => toggleBita(r.id)} style={{
-                background: "transparent", border: "none", padding: "2px 0 0", cursor: "pointer",
-                color: accent, fontSize: 10.5, fontFamily: font,
-              }}>{abierta ? "ver menos" : "ver todo"}</button>
-            )}
-          </div>
-          {r.evidencia_url && (
-            <a href={r.evidencia_url} target="_blank" rel="noreferrer" title="Abrir evidencia" style={{
-              border: `1px solid ${accent}44`, borderRadius: 7, padding: "2px 7px", flexShrink: 0,
-              color: accent, display: "inline-flex", alignItems: "center", gap: 4, fontSize: 10.5, textDecoration: "none",
-            }}><Folder size={11} /> Evidencia</a>
-          )}
-        </div>
-      );
-    };
-
-    /* ── LO PRIMERO QUE VE EL LÍDER AL ENTRAR ──
-       Su trabajo diario es saber qué hizo su gente hoy. Antes tenía que abrir
-       una hoja de cálculo aparte; ahora es la primera pantalla de su cuenta.
-       Los que reportaron van arriba (con lo que dijeron) y los que faltan
-       quedan abajo, para que se vea de un vistazo a quién hay que buscar. ── */
-    const reportesHoy  = bitacora.filter(r => r.fecha === hoy);
-    const porPersonaHoy = assignees
-      .map(m => ({ m, rs: reportesHoy.filter(r => r.profile_id === m.id) }))
-      .sort((a, b) => (b.rs.length > 0) - (a.rs.length > 0));
-    const cuantosReportaron = porPersonaHoy.filter(p => p.rs.length > 0).length;
-
-    const panelHoy = assignees.length > 0 && (
-      <div style={{ ...card, borderRadius: 14, padding: "14px 16px", display: "flex", flexDirection: "column", gap: 11 }}>
-        <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 10, flexWrap: "wrap" }}>
-          <div>
-            <div style={{ fontSize: 15, fontWeight: 600, color: txt, fontFamily: fontDisp }}>Bitácora de hoy</div>
-            <div style={{ fontSize: 11.5, color: txt3 }}>Lo que reportó cada quien · {fmtDia(hoy)}</div>
-          </div>
-          <div style={{
-            fontSize: 12, whiteSpace: "nowrap", padding: "3px 10px", borderRadius: 999,
-            color: cuantosReportaron === assignees.length ? accent : cuantosReportaron === 0 ? txt3 : AMBER,
-            border: `1px solid ${cuantosReportaron === assignees.length ? `${accent}44` : cuantosReportaron === 0 ? bd : `${AMBER}44`}`,
-          }}>{cuantosReportaron} de {assignees.length} reportaron</div>
-        </div>
-
-        {porPersonaHoy.map(({ m, rs }) => (
-          <div key={m.id} style={{ display: "flex", gap: 10, alignItems: "flex-start", borderTop: `1px solid ${bd}`, paddingTop: 10 }}>
-            <span style={{
-              width: 8, height: 8, borderRadius: 999, flexShrink: 0, marginTop: 5,
-              background: rs.length > 0 ? accent : "transparent",
-              border: rs.length > 0 ? "none" : `1.5px solid ${txt3}66`,
-            }} />
-            <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 6 }}>
-              <div style={{ display: "flex", alignItems: "baseline", gap: 8, flexWrap: "wrap" }}>
-                <span style={{ fontSize: 12.5, color: rs.length > 0 ? txt : txt2, fontWeight: 500 }}>{m.name}</span>
-                {rs.length > 0
-                  ? <span style={{ fontSize: 10.5, color: txt3 }}>
-                      {fmtHora(rs[0].created_at)}{rs.length > 1 ? ` · ${rs.length} reportes` : ""}
-                    </span>
-                  : <span style={{ fontSize: 11, color: txt3 }}>todavía no reportó</span>}
-              </div>
-              {rs.map(r => <div key={r.id}>{reporteTexto(r)}</div>)}
-            </div>
-          </div>
-        ))}
-
-        <div style={{ fontSize: 10.5, color: txt3, borderTop: `1px solid ${bd}`, paddingTop: 9, lineHeight: 1.5 }}>
-          El equipo reporta contándoselo al Copilot, con sus palabras: «hoy edité el video de Casa Lago 3 horas
-          y grabé en Brasa y Piedra». Si te falta el detalle de alguien, pregúntale al Copilot por su bitácora.
-        </div>
-      </div>
-    );
+    /* El panel del día ya no vive acá: se mudó a la pestaña Actividades, que es
+       la pantalla de entrada. Equipo queda para la vista PROFUNDA de la semana
+       (avance por persona, evidencia y bitácora de días anteriores). */
 
     return (
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
         {assignees.length === 0 && emptyRow("Sin usuarios con rol marketing en la organización.")}
-        {panelHoy}
         {assignees.map(m => {
           const tt = tasks.filter(t => t.assignee_id === m.id);
           const enCurso  = tt.filter(t => t.estado !== "hecha" && !isBlocked(t)).length;
@@ -1185,7 +2121,11 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
 
   /* ════════════════════ Render ════════════════════ */
 
+  // El número rojo de la pestaña: lo atascado. Cuenta el retrabajo (CAMBIOS) y
+  // lo que espera voz en off — las dos cosas que frenan una publicación.
   const esperandoVoz = pipeline.filter(p => p.etapa === "esperando_voz").length;
+  const enCambios    = pipeline.filter(p => p.etapa === "cambios").length;
+  const atascadas    = esperandoVoz + enCambios;
 
   const firstName = String(user?.name || "").split(" ")[0] || "Marketing";
   // Título + explicación EN SIMPLE por sección (la gente no es técnica: cada tab
@@ -1194,6 +2134,7 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
     // El subtítulo va CORTO a propósito: el largo ("…lo bloqueado no depende de ti")
     // se partía en dos renglones y dejaba la palabra «ti» sola abajo — se veía roto
     // en el iPhone (reporte de Ángel con captura, 27-jul).
+    reporte:     { title: "Reporte de actividades", sub: "Lo que hiciste hoy · queda registrado al instante" },
     dia:         { title: `Hoy — ${firstName}`, sub: "Lo vencido primero, después lo de hoy" },
     // El rótulo lo pone cada empresa (NSG: "Proyectos"). Antes el encabezado decía
     // "Marcas" aunque el botón ya dijera "Proyectos" — el vocabulario de marketing
@@ -1202,7 +2143,10 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
                    sub: TENANT_MKT.tabLabels?.marcas
                      ? "Cada proyecto con su avance"
                      : "Los proyectos de cada marca, con su avance" },
-    pipeline:    { title: "Pipeline",     sub: "Cada video avanza hasta Publicada" },
+    // «Pipeline» era jerga nuestra. El equipo de Alex lo llama por lo que es:
+    // el registro de las propiedades y sus grabaciones.
+    pipeline:    { title: tabLabel("pipeline", "Registro de Propiedades"),
+                   sub: "Cada propiedad y en qué va su video · se edita acá mismo" },
     solicitudes: { title: "Solicitudes",  sub: "Pedidos de diseño · A es simple, AAA es complejo" },
     equipo:      { title: "Equipo",       sub: "Qué hizo hoy cada quien, y cómo viene la semana" },
   };
@@ -1235,9 +2179,10 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
           background: isLight ? "rgba(15,23,42,0.045)" : "rgba(255,255,255,0.035)", border: `1px solid ${bd}`,
           maxWidth: "100%", width: isMobile ? "100%" : undefined, flexShrink: 0,
         }}>
+          {tabBtn("reporte", tabLabel("reporte", "Actividades"))}
           {tabBtn("dia", tabLabel("dia", "Mi Día"))}
           {!HIDDEN_TABS.has("marcas") && tabBtn("marcas", tabLabel("marcas", "Marcas"))}
-          {!HIDDEN_TABS.has("pipeline") && tabBtn("pipeline", tabLabel("pipeline", "Pipeline"), esperandoVoz >= 3 ? esperandoVoz : 0)}
+          {!HIDDEN_TABS.has("pipeline") && tabBtn("pipeline", tabLabel("pipeline", "Propiedades"), atascadas >= 3 ? atascadas : 0)}
           {!HIDDEN_TABS.has("solicitudes") && tabBtn("solicitudes", tabLabel("solicitudes", "Solicitudes"), requests.filter(r => r.estado === "nueva").length)}
           {isAdmin && tabBtn("equipo", tabLabel("equipo", "Equipo"))}
         </div>
@@ -1301,6 +2246,7 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
         <div style={{ color: txt2, fontSize: 13, padding: 30, textAlign: "center" }}>Cargando…</div>
       ) : (
         <>
+          {tab === "reporte" && reporteTab()}
           {tab === "dia" && miDia()}
           {tab === "marcas" && marcas()}
           {tab === "pipeline" && pipelineTab()}
@@ -1331,6 +2277,87 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
                 ? <video src={evViewer.url} controls autoPlay style={{ maxWidth: "100%", maxHeight: "72vh", borderRadius: 10, background: "#000" }} />
                 : <img src={evViewer.url} alt="Evidencia" style={{ maxWidth: "100%", maxHeight: "72vh", borderRadius: 10, objectFit: "contain" }} />
             )}
+          </div>
+        </div>
+      )}
+
+      {/* FICHA DE LA PROPIEDAD — el renglón de la hoja de cálculo, adentro del CRM.
+          Todo lo que el registro guardaba en Sheets se llena y se lee acá. */}
+      {ficha && (
+        <div onClick={() => setFicha(null)} style={{
+          position: "fixed", inset: 0, zIndex: 900, background: "rgba(0,0,0,0.78)",
+          display: "flex", alignItems: "center", justifyContent: "center", padding: 18,
+        }}>
+          <div onClick={e => e.stopPropagation()} style={{
+            background: isLight ? "#FFFFFF" : "#0B1220", border: `1px solid ${bd}`, borderRadius: 16,
+            padding: 16, width: "min(94vw, 620px)", maxHeight: "88vh", overflowY: "auto",
+            display: "flex", flexDirection: "column", gap: 12,
+          }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <Clapperboard size={15} color={accent} />
+              <div style={{ flex: 1, fontSize: 13.5, color: txt, fontWeight: 600, fontFamily: fontDisp }}>Ficha de la propiedad</div>
+              <button onClick={() => setFicha(null)} style={{ background: "transparent", border: "none", cursor: "pointer", color: txt2, padding: 4 }}><X size={16} /></button>
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 9 }}>
+              {[
+                ["nombre",            "Propiedad",            "text",  "Casa Lago"],
+                ["locacion",          "Ubicación",            "text",  "Tulum, Cancún, PDC…"],
+                ["precio",            "Precio",               "text",  "$22.88 MDP · $2.1M USD · Reservado"],
+                ["tipo",              "Tipo",                 "text",  "Casa - Villa · Depto · Terreno"],
+                ["fecha_rodaje",      "Fecha de rodaje",      "date",  ""],
+                ["fecha_publicacion", "Fecha de publicación", "date",  ""],
+              ].map(([k, label, type, ph]) => (
+                <label key={k} style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                  <span style={{ fontSize: 10.5, color: txt3 }}>{label}</span>
+                  <input type={type} placeholder={ph} value={ficha[k]}
+                    onChange={e => setFicha(f => ({ ...f, [k]: e.target.value }))} style={inputStyle} />
+                </label>
+              ))}
+            </div>
+
+            <div style={{ fontSize: 10.5, color: txt3, letterSpacing: 0.4, textTransform: "uppercase", paddingTop: 2 }}>Enlaces</div>
+            <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 9 }}>
+              {[
+                ["crudos_url", "Carpeta de crudos"],
+                ["video_url",  "Video editado"],
+                ["ig_url",     "Reel de Instagram"],
+                ["story_url",  "Versión story"],
+                ["cine_url",   "Versión cine"],
+                ["ficha_url",  "Ficha técnica"],
+                ["info_url",   "Carpeta de información"],
+                ["drive_url",  "Drive de la propiedad"],
+              ].map(([k, label]) => (
+                <label key={k} style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                  <span style={{ fontSize: 10.5, color: txt3, display: "flex", alignItems: "center", gap: 6 }}>
+                    {label}
+                    {ficha[k] && <a href={ficha[k]} target="_blank" rel="noreferrer" style={{ color: accent, display: "inline-flex" }} title="Abrir"><ExternalLink size={11} /></a>}
+                  </span>
+                  <input placeholder="Pegá el enlace" value={ficha[k]}
+                    onChange={e => setFicha(f => ({ ...f, [k]: e.target.value }))} style={inputStyle} />
+                </label>
+              ))}
+            </div>
+
+            <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+              <span style={{ fontSize: 10.5, color: txt3 }}>Notas</span>
+              <textarea rows={2} placeholder="Lo que haga falta recordar de esta propiedad" value={ficha.notas}
+                onChange={e => setFicha(f => ({ ...f, notas: e.target.value }))}
+                style={{ ...inputStyle, resize: "vertical", lineHeight: 1.5 }} />
+            </label>
+
+            <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", paddingTop: 2 }}>
+              <button onClick={() => setFicha(null)} style={{
+                padding: "8px 14px", borderRadius: 9, cursor: "pointer", fontFamily: font, fontSize: 12.5,
+                background: "transparent", border: `1px solid ${bd}`, color: txt2,
+              }}>Cancelar</button>
+              <button onClick={saveFicha} disabled={fichaSaving || !String(ficha.nombre || "").trim()} style={{
+                padding: "8px 16px", borderRadius: 9, fontFamily: font, fontSize: 12.5, fontWeight: 600,
+                cursor: fichaSaving ? "default" : "pointer", background: `${accent}18`,
+                border: `1px solid ${accent}55`, color: accent,
+                opacity: fichaSaving || !String(ficha.nombre || "").trim() ? 0.6 : 1,
+              }}>{fichaSaving ? "Guardando…" : "Guardar"}</button>
+            </div>
           </div>
         </div>
       )}

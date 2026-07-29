@@ -11,7 +11,10 @@
  */
 import { fontDisp } from "../../design-system/tokens";
 
-export default function IAOSIsland({ leadsData, isLight, idx, brandLabel = "Duke", onOpen }) {
+/* `phrases`: si viene, manda. Lo usa MARKETING, que no tiene leads y muestra
+   sus propios números (tareas vencidas, videos parados, quién no reportó).
+   Sin esa prop se comporta exactamente como siempre — ventas no cambia. */
+export default function IAOSIsland({ leadsData = [], isLight, idx, brandLabel = "Duke", onOpen, phrases: phrasesProp }) {
   const hot       = leadsData.filter(l => l.hot).length;
   // "Sin actividad": el campo daysInactive viene en 0 (stale) → daba siempre 0.
   // Proxy real y puro: leads sin próxima acción agendada (nadie definió el siguiente paso).
@@ -22,7 +25,7 @@ export default function IAOSIsland({ leadsData, isLight, idx, brandLabel = "Duke
   // Ej: "Duke del Caribe" → "Duke" · "Grupo 28" → "Grupo 28".
   const shortBrand = brandLabel.split(" ")[0] || "Duke";
 
-  const phrases = [
+  const phrases = phrasesProp && phrasesProp.length ? phrasesProp : [
     `${shortBrand} · ${hot} alertas activas`,
     `$${totalPipe}M en pipeline`,
     `${inact} leads sin actividad`,

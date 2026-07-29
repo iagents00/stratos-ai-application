@@ -10,7 +10,8 @@
  * onChange(nextValue)
  * ─────────────────────────────────────────────────────────────────────────────
  */
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { CalendarDays, SlidersHorizontal, Check } from "lucide-react";
 import { font, fontDisp } from "../../../design-system/tokens";
 import { DATE_PRESETS, dateRangeLabel, resolveDateRange } from "./date-range";
@@ -24,6 +25,14 @@ export default function DateRangeControl({ T, isLight, value, onChange, label = 
 
   const isCustom = value.preset === "custom";
   const presets = DATE_PRESETS.filter((p) => p.id !== "custom");
+
+  // Escape cierra el calendario (igual que un clic afuera).
+  useEffect(() => {
+    if (!calOpen) return;
+    const onKeyDown = (e) => { if (e.key === "Escape") setCalOpen(false); };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [calOpen]);
 
   const border = isLight ? "rgba(15,23,42,0.10)" : "rgba(255,255,255,0.08)";
   const surface = isLight
@@ -132,15 +141,24 @@ export default function DateRangeControl({ T, isLight, value, onChange, label = 
         </button>
       </div>
 
-      {/* Calendario de selección por clicks — FLOTA sobre el contenido (no empuja
-          el layout). Backdrop invisible para cerrar al hacer clic afuera. */}
-      {calOpen && (
-        <>
-          <div
-            onClick={() => setCalOpen(false)}
-            style={{ position: "fixed", inset: 0, zIndex: 69 }}
-          />
-          <div style={{ position: "absolute", top: "100%", left: isMobile ? 8 : 14, right: isMobile ? 8 : "auto", marginTop: 8, zIndex: 70, display: "flex", justifyContent: "center" }}>
+      {/* Calendario de selección por clicks — modal por PORTAL con scrim
+          difuminado, como el resto de los modales de la app. El portal es
+          obligatorio: el backdropFilter de esta tarjeta convierte a sus hijos
+          `position:fixed` en `absolute` (el backdrop viejo solo cubría la
+          tarjeta, y clicar el resto de la página NO cerraba el calendario). */}
+      {calOpen && createPortal(
+        <div
+          onClick={() => setCalOpen(false)}
+          style={{
+            position: "fixed", inset: 0, zIndex: 100000,
+            background: isLight ? "rgba(15,23,42,0.30)" : "rgba(2,5,12,0.62)",
+            backdropFilter: "blur(7px)", WebkitBackdropFilter: "blur(7px)",
+            display: "flex", alignItems: "flex-start", justifyContent: "center",
+            padding: "max(7vh, 24px) 16px 24px", overflowY: "auto",
+            animation: "fadeIn 0.18s ease both",
+          }}
+        >
+          <div onClick={(e) => e.stopPropagation()} style={{ width: "100%", maxWidth: 330 }}>
             <RangeCalendar
               isLight={isLight}
               fromStr={value.customFrom}
@@ -149,7 +167,8 @@ export default function DateRangeControl({ T, isLight, value, onChange, label = 
               onApply={() => setCalOpen(false)}
             />
           </div>
-        </>
+        </div>,
+        document.body
       )}
     </div>
   );

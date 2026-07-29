@@ -423,7 +423,7 @@ async function _sendCopilotMessageInner(rawText, options = {}) {
     }
     if (isMarketing && !options.callback_data && (wantsManual || wantsCapabilities)) {
       return {
-        reply: "Esto es lo que puedo hacer por ti:\n\n• Decirte qué tienes hoy — \"¿qué tengo hoy?\"\n• Crear tareas para el equipo — \"créale una tarea a Luis: editar Casa Banana para el viernes\"\n• Marcar tus tareas como hechas — \"ya terminé los copys\" (y ahí mismo te invito a subir la evidencia)\n• Mover propiedades del pipeline — \"mueve Bay View Grand 2 a lista\"\n• Registrar solicitudes de diseño — \"necesito un flyer AA para Mueblería el sábado\"\n• Asignar una solicitud — \"asígnale el flyer a Emmanuel\"\n• Cómo va el pipeline de videos — \"¿cómo van los videos?\"\n• Pendientes de una persona — \"¿qué tiene pendiente Emmanuel?\"\n• Pasarte el Drive de una propiedad — \"pásame el drive de Bay View Grand\"\n• Anotar tu bitácora del día — cuéntame qué hiciste (\"hoy edité Casa Lago 3 hrs y grabé en Brasa y Piedra\") y queda registrado tal cual; si me pasas el enlace de la carpeta, se lo agrego\n• Ver qué reportó el equipo — \"¿qué reportó el equipo hoy?\" o \"¿qué reportó Yazz ayer?\"\n• Adjuntar evidencia — con el botón de cámara del chat subes una foto o video de una tarea terminada\n\nSolo manejo lo de marketing (no clientes ni ventas). Todo por voz o texto, y lo que creo aparece al instante en tu módulo Marketing. El manual completo: [Manual de Marketing](https://app.stratoscapitalgroup.com/manual-marketing)",
+        reply: "Esto es lo que puedo hacer por ti:\n\n• Decirte qué tienes hoy — \"¿qué tengo hoy?\"\n• Crear tareas para el equipo — \"créale una tarea a Luis: editar Casa Banana para el viernes\"\n• Marcar tus tareas como hechas — \"ya terminé los copys\" (y ahí mismo te invito a subir la evidencia)\n• Mover propiedades del pipeline — \"mueve Bay View Grand 2 a lista\"\n• Registrar solicitudes de diseño — \"necesito un flyer AA para Mueblería el sábado\"\n• Asignar una solicitud — \"asígnale el flyer a Emmanuel\"\n• Cómo va el pipeline de videos — \"¿cómo van los videos?\"\n• Pendientes de una persona — \"¿qué tiene pendiente Emmanuel?\"\n• Pasarte el Drive de una propiedad — \"pásame el drive de Bay View Grand\"\n• La ficha de una propiedad — \"¿cómo va Casa Lago?\" te da su etapa, precio, tipo, fechas y todos sus enlaces\n• Guardar datos de una propiedad — \"los crudos de Casa Lago están en <enlace>\", \"el precio de X es 22 millones\", \"X se publicó el 25 de julio\" (esto reemplazó al Excel de grabaciones)\n• Anotar tu reporte de actividades — también lo puedes llenar en la sección **Actividades**, que es la primera al entrar — cuéntame qué hiciste (\"hoy edité Casa Lago 3 hrs y grabé en Brasa y Piedra\") y queda registrado tal cual; si me pasas el enlace de la carpeta, se lo agrego\n• Ver qué reportó el equipo — \"¿qué reportó el equipo hoy?\" o \"¿qué reportó Yazz ayer?\"\n• Adjuntar evidencia — con el botón de cámara del chat subes una foto o video de una tarea terminada\n\nSolo manejo lo de marketing (no clientes ni ventas). Todo por voz o texto, y lo que creo aparece al instante en tu módulo Marketing. El manual completo: [Manual de Marketing](https://app.stratoscapitalgroup.com/manual-marketing)",
         buttons: [
           { label: "Abrir Manual de Marketing", action: "https://app.stratoscapitalgroup.com/manual-marketing", isUrl: true, primary: true }
         ],
@@ -527,9 +527,21 @@ async function _sendCopilotMessageInner(rawText, options = {}) {
     // Webhook n8n con AI Agent GPT-4o o Router
     try {
       const ctrl = new AbortController();
-      // Marketing usa gpt-4o + tool a Supabase; algunas corridas (crear solicitud)
-      // pasan de 15s. Le damos más aire para que no corte con "intenta de nuevo".
-      const timeout = setTimeout(() => ctrl.abort(), isMarketing ? 40000 : 15000);
+      // 40s para TODOS los cerebros (antes: 40s marketing / 15s ventas).
+      //
+      // El 29-jul Ángel escribió desde su cuenta de admin "asignale una tarea a
+      // asesor prueba para que revise el asistente mañana a las 12" y vio
+      // "El asistente IA está procesando tu solicitud, intenta de nuevo".
+      // Pero en la base quedó: "Listo. Acción de equipo creada: revise el
+      // asistente · responsable: Asesor Prueba · vence Mié 29 jul, 12:00 p.m."
+      // O sea: FUNCIONÓ, y le dijimos que no. Volvió a mandarlo → casi crea la
+      // tarea dos veces.
+      //
+      // El cerebro de ventas es más grande que el de marketing (más tools, más
+      // ruteo): darle 15s cuando a marketing le dábamos 40 no tenía ninguna
+      // razón, solo quedó así. Un aborto del cliente NO cancela el flujo: n8n
+      // sigue corriendo del lado del servidor y guarda igual.
+      const timeout = setTimeout(() => ctrl.abort(), 40000);
       // Webhook por tenant (NSG → su flujo Claude propio); si no hay override,
       // la ruta de siempre: marketing → cerebro mkt · resto → cerebro de ventas.
       const webhookUrl = (tenant.tasksBrain && tenant.webhook)
@@ -576,14 +588,18 @@ async function _sendCopilotMessageInner(rawText, options = {}) {
       console.warn('[Copilot] webhook error:', err?.name || err?.message);
     }
 
-    // Fallback cuando el webhook no respondió a tiempo o dio error. Para MARKETING el
-    // mensaje es honesto: si era una acción, es probable que el flujo la haya guardado
-    // igual (corre server-side aunque el cliente corte) → NO invitamos a reintentar a
-    // ciegas para no duplicar tareas/solicitudes.
+    // Fallback cuando el webhook no respondió a tiempo o dio error.
+    //
+    // Es el MISMO mensaje para todos los cerebros, y dice la verdad: el flujo
+    // corre del lado del servidor aunque el cliente corte, así que lo más
+    // probable es que la acción YA esté guardada. El mensaje viejo de ventas
+    // ("intenta de nuevo en unos segundos") invitaba a repetir a ciegas — y el
+    // 29-jul casi duplica una tarea que se había creado bien.
+    //
+    // Regla: cuando no sabemos si algo se guardó, se dice que NO sabemos y se
+    // manda a mirar. Nunca se pide reintentar una acción que escribe.
     return {
-      reply: isMarketing
-        ? "No recibí la respuesta a tiempo. Si pediste una acción (crear una tarea o solicitud, mover el pipeline), es muy probable que YA se haya guardado — revisá la sección antes de repetirla."
-        : "El asistente IA está procesando tu solicitud. Por favor intenta de nuevo en unos segundos.",
+      reply: "No recibí la respuesta a tiempo, pero eso no quiere decir que no se haya hecho. Si pediste una acción (crear una tarea, asignarla, mover algo), es muy probable que YA esté guardada — revísalo antes de repetirla para no duplicarla.",
       buttons: [], error: null
     };
   } catch (e) {
