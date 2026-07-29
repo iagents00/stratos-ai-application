@@ -53,7 +53,7 @@ function renderNoteText(text, T) {
            display: "inline-flex", alignItems: "center", gap: 5, verticalAlign: "middle",
            margin: "1px 2px", padding: "2px 9px 2px 7px", borderRadius: 7,
            background: `${T.accent}14`, border: `1px solid ${T.accent}38`,
-           color: T.accent, fontSize: 11.5, fontWeight: 500, fontFamily: font,
+           color: T.accent, fontSize: 12, fontWeight: 500, fontFamily: font,
            textDecoration: "none", lineHeight: 1.4, cursor: "pointer",
            maxWidth: 220, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
          }}>
@@ -213,7 +213,7 @@ export default function LeadNotesTimeline({ lead, T = P, isLight = false, autoSt
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
         <span style={{
           display: "inline-flex", alignItems: "center", gap: 6,
-          fontSize: 10.5, fontWeight: 500, letterSpacing: "0.12em",
+          fontSize: 11.5, fontWeight: 500, letterSpacing: "0.12em",
           textTransform: "uppercase", color: headerC,
           fontFamily: fontDisp,
         }}>
@@ -233,7 +233,7 @@ export default function LeadNotesTimeline({ lead, T = P, isLight = false, autoSt
               display: "inline-flex", alignItems: "center", gap: 5,
               padding: "6px 11px", borderRadius: 9,
               background: `${T.accent}14`, border: `1px solid ${T.accent}38`,
-              color: T.accent, fontSize: 11.5, fontWeight: 400, fontFamily: font,
+              color: T.accent, fontSize: 12, fontWeight: 400, fontFamily: font,
               cursor: "pointer", transition: "all 0.15s",
             }}
             onMouseEnter={(e) => (e.currentTarget.style.background = `${T.accent}22`)}
@@ -271,7 +271,7 @@ export default function LeadNotesTimeline({ lead, T = P, isLight = false, autoSt
             onBlur={(e) => { e.currentTarget.style.borderColor = T.border; }}
           />
           {errorMsg && (
-            <div style={{ marginTop: 6, fontSize: 11.5, color: "#F87171" }}>
+            <div style={{ marginTop: 6, fontSize: 12, color: "#F87171" }}>
               {errorMsg}
             </div>
           )}
@@ -283,7 +283,7 @@ export default function LeadNotesTimeline({ lead, T = P, isLight = false, autoSt
               style={{
                 padding: "7px 13px", borderRadius: 9,
                 background: "transparent", border: `1px solid ${T.border}`,
-                color: T.txt2, fontSize: 12, fontWeight: 400, fontFamily: font,
+                color: T.txt2, fontSize: 12.5, fontWeight: 400, fontFamily: font,
                 cursor: saving ? "default" : "pointer",
               }}
             >
@@ -298,7 +298,7 @@ export default function LeadNotesTimeline({ lead, T = P, isLight = false, autoSt
                 padding: "7px 14px", borderRadius: 9,
                 background: saving || !draft.trim() ? `${T.accent}55` : T.accent,
                 border: "none", color: "#041016",
-                fontSize: 12, fontWeight: 500, fontFamily: fontDisp,
+                fontSize: 12.5, fontWeight: 500, fontFamily: fontDisp,
                 cursor: saving || !draft.trim() ? "default" : "pointer",
                 transition: "all 0.15s",
               }}
@@ -312,7 +312,7 @@ export default function LeadNotesTimeline({ lead, T = P, isLight = false, autoSt
 
       {/* Lista de notas */}
       {loading ? (
-        <div style={{ padding: "10px 4px", fontSize: 12, color: T.txt3 }}>
+        <div style={{ padding: "10px 4px", fontSize: 12.5, color: T.txt3 }}>
           Cargando notas…
         </div>
       ) : notes.length === 0 ? (
@@ -339,7 +339,7 @@ export default function LeadNotesTimeline({ lead, T = P, isLight = false, autoSt
               }}>
                 <div style={{
                   display: "flex", alignItems: "center", gap: 6,
-                  marginBottom: v.isAi ? 6 : 4, fontSize: 10.5, color: T.txt3,
+                  marginBottom: v.isAi ? 6 : 4, fontSize: 11.5, color: T.txt3,
                   fontFamily: fontDisp, letterSpacing: "0.04em",
                   flexWrap: "wrap",
                 }}>
@@ -354,7 +354,7 @@ export default function LeadNotesTimeline({ lead, T = P, isLight = false, autoSt
                       marginLeft: 4, padding: "1px 7px", borderRadius: 5,
                       background: isLight ? `${v.accent}1A` : `${v.accent}1F`,
                       color: v.accent,
-                      fontSize: 9.5, fontWeight: 500, textTransform: "uppercase",
+                      fontSize: 10.5, fontWeight: 500, textTransform: "uppercase",
                       letterSpacing: "0.08em",
                     }}>
                       <Sparkles size={9} strokeWidth={2.5} />
@@ -365,7 +365,7 @@ export default function LeadNotesTimeline({ lead, T = P, isLight = false, autoSt
                     <span style={{
                       marginLeft: 4, padding: "1px 6px", borderRadius: 4,
                       background: `${T.accent}14`, color: T.accent,
-                      fontSize: 9, fontWeight: 500, textTransform: "uppercase",
+                      fontSize: 10.5, fontWeight: 500, textTransform: "uppercase",
                       letterSpacing: "0.06em",
                     }}>
                       {n.metadata.source}
@@ -378,7 +378,7 @@ export default function LeadNotesTimeline({ lead, T = P, isLight = false, autoSt
                   )}
                   {!v.isAi && editingId !== n.id && (
                     <button type="button" onClick={() => startEdit(n)} title="Editar nota"
-                      style={{ marginLeft: "auto", display: "inline-flex", alignItems: "center", gap: 4, background: "transparent", border: "none", color: T.txt3, cursor: "pointer", padding: "2px 4px", fontFamily: font, fontSize: 10.5, opacity: 0.75, transition: "opacity 0.15s, color 0.15s" }}
+                      style={{ marginLeft: "auto", display: "inline-flex", alignItems: "center", gap: 4, background: "transparent", border: "none", color: T.txt3, cursor: "pointer", padding: "2px 4px", fontFamily: font, fontSize: 11.5, opacity: 0.75, transition: "opacity 0.15s, color 0.15s" }}
                       onMouseEnter={e => { e.currentTarget.style.opacity = "1"; e.currentTarget.style.color = T.accent; }}
                       onMouseLeave={e => { e.currentTarget.style.opacity = "0.75"; e.currentTarget.style.color = T.txt3; }}>
                       <Pencil size={11} strokeWidth={2.2} /> Editar
@@ -409,11 +409,11 @@ export default function LeadNotesTimeline({ lead, T = P, isLight = false, autoSt
                     />
                     <div style={{ display: "flex", gap: 8, marginTop: 8, justifyContent: "flex-end" }}>
                       <button type="button" onClick={cancelEdit} disabled={savingEdit}
-                        style={{ padding: "5px 12px", borderRadius: 8, background: "transparent", border: `1px solid ${T.border}`, color: T.txt3, cursor: "pointer", fontSize: 12, fontWeight: 400, fontFamily: font }}>
+                        style={{ padding: "5px 12px", borderRadius: 8, background: "transparent", border: `1px solid ${T.border}`, color: T.txt3, cursor: "pointer", fontSize: 12.5, fontWeight: 400, fontFamily: font }}>
                         Cancelar
                       </button>
                       <button type="button" onClick={() => saveEdit(n)} disabled={savingEdit || !editDraft.trim()}
-                        style={{ padding: "5px 14px", borderRadius: 8, background: editDraft.trim() ? T.accent : T.border, border: "none", color: editDraft.trim() ? "#041016" : T.txt3, cursor: editDraft.trim() ? "pointer" : "default", fontSize: 12, fontWeight: 500, fontFamily: font }}>
+                        style={{ padding: "5px 14px", borderRadius: 8, background: editDraft.trim() ? T.accent : T.border, border: "none", color: editDraft.trim() ? "#041016" : T.txt3, cursor: editDraft.trim() ? "pointer" : "default", fontSize: 12.5, fontWeight: 500, fontFamily: font }}>
                         {savingEdit ? "Guardando…" : "Guardar"}
                       </button>
                     </div>

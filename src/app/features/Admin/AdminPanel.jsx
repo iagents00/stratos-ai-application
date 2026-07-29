@@ -186,9 +186,9 @@ export default function AdminPanel({ T = P, isLight: isLightProp }) {
         <div>
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4, flexWrap: "wrap" }}>
             <h2 style={{ fontSize: isMobile ? 18 : 20, fontWeight: 500, color: wTxt, fontFamily: fontDisp, letterSpacing: "-0.025em", margin: 0 }}>Gestión de Usuarios</h2>
-            <span style={{ fontSize: 10, fontWeight: 500, color: T.txt3, background: T.glass, border: `1px solid ${T.border}`, padding: "3px 9px", borderRadius: 99, letterSpacing: "0.06em" }}>{users.length} usuarios</span>
+            <span style={{ fontSize: 11, fontWeight: 500, color: T.txt3, background: T.glass, border: `1px solid ${T.border}`, padding: "3px 9px", borderRadius: 99, letterSpacing: "0.06em" }}>{users.length} usuarios</span>
           </div>
-          <p style={{ fontSize: 11.5, color: T.txt3, margin: 0 }}>
+          <p style={{ fontSize: 12, color: T.txt3, margin: 0 }}>
             {users.filter(u => u.isActive !== false).length} activos · {users.filter(u => u.isActive === false).length} inactivos
           </p>
         </div>
@@ -256,7 +256,7 @@ export default function AdminPanel({ T = P, isLight: isLightProp }) {
             onMouseLeave={e => { if (roleFilter !== s.key) e.currentTarget.style.borderColor = T.border; }}
           >
             <div style={{ width: 8, height: 8, borderRadius: "50%", background: s.color, flexShrink: 0 }} />
-            <span style={{ fontSize: 11, fontWeight: 400, color: roleFilter === s.key ? s.color : T.txt2 }}>{s.label}</span>
+            <span style={{ fontSize: 12, fontWeight: 400, color: roleFilter === s.key ? s.color : T.txt2 }}>{s.label}</span>
             <span style={{ fontSize: 15, fontWeight: 500, color: roleFilter === s.key ? s.color : wTxt, fontFamily: fontDisp }}>{s.count}</span>
           </div>
         ))}
@@ -268,28 +268,28 @@ export default function AdminPanel({ T = P, isLight: isLightProp }) {
           <div style={{ position: "relative", flex: 1, minWidth: 160, maxWidth: 300 }}>
             <Search size={12} style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", color: T.txt3, pointerEvents: "none" }} />
             <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Buscar nombre o email…"
-              style={{ ...inputStyle, paddingLeft: 30, height: 34, fontSize: 12 }}
+              style={{ ...inputStyle, paddingLeft: 30, height: 34, fontSize: 12.5 }}
               onFocus={e => e.target.style.borderColor = T.accentB}
               onBlur={e => e.target.style.borderColor = T.border}
             />
           </div>
-          <select value={roleFilter} onChange={e => setRoleFilter(e.target.value)} style={{ height: 34, padding: "0 12px", borderRadius: 9, background: T.glass, border: `1px solid ${T.border}`, fontSize: 11, color: T.txt3, cursor: "pointer", outline: "none", fontFamily: font }}>
+          <select value={roleFilter} onChange={e => setRoleFilter(e.target.value)} style={{ height: 34, padding: "0 12px", borderRadius: 9, background: T.glass, border: `1px solid ${T.border}`, fontSize: 12, color: T.txt3, cursor: "pointer", outline: "none", fontFamily: font }}>
             <option value="ALL">Todos los roles</option>
             {Object.entries(ROLE_META).map(([k, m]) => <option key={k} value={k} style={{ background: cardBg }}>{m.label}</option>)}
           </select>
           {(search || roleFilter !== "ALL") && (
-            <button onClick={() => { setSearch(""); setRoleFilter("ALL"); }} style={{ height: 34, padding: "0 12px", borderRadius: 9, background: `${T.rose}0C`, border: `1px solid ${T.rose}28`, color: T.rose, fontSize: 11, fontWeight: 400, cursor: "pointer", fontFamily: font, display: "flex", alignItems: "center", gap: 5 }}>
+            <button onClick={() => { setSearch(""); setRoleFilter("ALL"); }} style={{ height: 34, padding: "0 12px", borderRadius: 9, background: `${T.rose}0C`, border: `1px solid ${T.rose}28`, color: T.rose, fontSize: 12, fontWeight: 400, cursor: "pointer", fontFamily: font, display: "flex", alignItems: "center", gap: 5 }}>
               <X size={11} /> Limpiar
             </button>
           )}
-          <span style={{ marginLeft: "auto", fontSize: 11, color: T.txt3 }}>{filtered.length} resultado{filtered.length !== 1 ? "s" : ""}</span>
+          <span style={{ marginLeft: "auto", fontSize: 12, color: T.txt3 }}>{filtered.length} resultado{filtered.length !== 1 ? "s" : ""}</span>
         </div>
 
         {/* ── Table header — solo desktop (en móvil las filas son tarjetas) ── */}
         {!isMobile && (
           <div style={{ display: "grid", gridTemplateColumns: "2.2fr 2fr 1fr 1fr 100px", gap: 0, padding: "9px 20px", borderBottom: `1px solid ${T.border}` }}>
             {["Usuario", "Email", "Rol", "Estado", "Acciones"].map((h, i) => (
-              <span key={h} style={{ fontSize: 9, fontWeight: 500, color: T.txt3, letterSpacing: "0.08em", textTransform: "uppercase", textAlign: i === 4 ? "center" : "left" }}>{h}</span>
+              <span key={h} style={{ fontSize: 10.5, fontWeight: 500, color: T.txt3, letterSpacing: "0.08em", textTransform: "uppercase", textAlign: i === 4 ? "center" : "left" }}>{h}</span>
             ))}
           </div>
         )}
@@ -329,7 +329,7 @@ export default function AdminPanel({ T = P, isLight: isLightProp }) {
                 )}
               </>
             ) : (
-              <span style={{ fontSize: 10, color: T.txt3, fontStyle: "italic" }}>—</span>
+              <span style={{ fontSize: 11, color: T.txt3, fontStyle: "italic" }}>—</span>
             );
 
             /* ── Tarjeta MÓVIL: la grilla de 5 columnas no entra en 360px —
@@ -337,13 +337,13 @@ export default function AdminPanel({ T = P, isLight: isLightProp }) {
             if (isMobile) return (
               <div key={u.id} style={{ padding: "13px 14px", borderBottom: idx < filtered.length - 1 ? `1px solid ${T.border}` : "none", display: "flex", flexDirection: "column", gap: 9 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 11 }}>
-                  <div style={{ width: 34, height: 34, borderRadius: 10, background: `${ac}18`, border: `1.5px solid ${ac}30`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 500, color: ac, fontFamily: fontDisp, flexShrink: 0 }}>{initials}</div>
+                  <div style={{ width: 34, height: 34, borderRadius: 10, background: `${ac}18`, border: `1.5px solid ${ac}30`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12.5, fontWeight: 500, color: ac, fontFamily: fontDisp, flexShrink: 0 }}>{initials}</div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <p style={{ fontSize: 13, fontWeight: 400, color: active ? wTxt : T.txt3, fontFamily: fontDisp, letterSpacing: "-0.01em", margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                       {u.name}
-                      {isMe && <span style={{ fontSize: 9, color: T.accent, fontWeight: 500, marginLeft: 7, background: `${T.accent}12`, border: `1px solid ${T.accentB}`, padding: "1px 7px", borderRadius: 99 }}>Tú</span>}
+                      {isMe && <span style={{ fontSize: 10.5, color: T.accent, fontWeight: 500, marginLeft: 7, background: `${T.accent}12`, border: `1px solid ${T.accentB}`, padding: "1px 7px", borderRadius: 99 }}>Tú</span>}
                     </p>
-                    <p style={{ fontSize: 11, color: active ? T.txt2 : T.txt3, fontFamily: font, margin: "2px 0 0", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{u.email}</p>
+                    <p style={{ fontSize: 12, color: active ? T.txt2 : T.txt3, fontFamily: font, margin: "2px 0 0", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{u.email}</p>
                   </div>
                   <div style={{ display: "flex", gap: 5, flexShrink: 0 }}>{actionBtns}</div>
                 </div>
@@ -351,9 +351,9 @@ export default function AdminPanel({ T = P, isLight: isLightProp }) {
                   <RoleBadge role={u.role} />
                   <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                     <div style={{ width: 7, height: 7, borderRadius: "50%", background: active ? T.emerald : T.txt3, boxShadow: active ? `0 0 6px ${T.emerald}80` : "none" }} />
-                    <span style={{ fontSize: 11, color: active ? T.txt2 : T.txt3, fontWeight: active ? 600 : 400 }}>{active ? "Activo" : "Inactivo"}</span>
+                    <span style={{ fontSize: 12, color: active ? T.txt2 : T.txt3, fontWeight: active ? 600 : 400 }}>{active ? "Activo" : "Inactivo"}</span>
                   </div>
-                  <span style={{ fontSize: 10.5, color: T.txt3, marginLeft: "auto" }}>ID #{u.id}</span>
+                  <span style={{ fontSize: 11.5, color: T.txt3, marginLeft: "auto" }}>ID #{u.id}</span>
                 </div>
               </div>
             );
@@ -369,18 +369,18 @@ export default function AdminPanel({ T = P, isLight: isLightProp }) {
               >
                 {/* Name + avatar */}
                 <div style={{ display: "flex", alignItems: "center", gap: 11 }}>
-                  <div style={{ width: 34, height: 34, borderRadius: 10, background: `${ac}18`, border: `1.5px solid ${ac}30`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 500, color: ac, fontFamily: fontDisp, flexShrink: 0 }}>{initials}</div>
+                  <div style={{ width: 34, height: 34, borderRadius: 10, background: `${ac}18`, border: `1.5px solid ${ac}30`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12.5, fontWeight: 500, color: ac, fontFamily: fontDisp, flexShrink: 0 }}>{initials}</div>
                   <div>
                     <p style={{ fontSize: 13, fontWeight: 400, color: active ? wTxt : T.txt3, fontFamily: fontDisp, letterSpacing: "-0.01em" }}>
                       {u.name}
-                      {isMe && <span style={{ fontSize: 9, color: T.accent, fontWeight: 500, marginLeft: 7, background: `${T.accent}12`, border: `1px solid ${T.accentB}`, padding: "1px 7px", borderRadius: 99 }}>Tú</span>}
+                      {isMe && <span style={{ fontSize: 10.5, color: T.accent, fontWeight: 500, marginLeft: 7, background: `${T.accent}12`, border: `1px solid ${T.accentB}`, padding: "1px 7px", borderRadius: 99 }}>Tú</span>}
                     </p>
-                    <p style={{ fontSize: 10.5, color: T.txt3, marginTop: 1 }}>ID #{u.id}</p>
+                    <p style={{ fontSize: 11.5, color: T.txt3, marginTop: 1 }}>ID #{u.id}</p>
                   </div>
                 </div>
 
                 {/* Email */}
-                <span style={{ fontSize: 12, color: active ? T.txt2 : T.txt3, fontFamily: font, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", paddingRight: 12 }}>{u.email}</span>
+                <span style={{ fontSize: 12.5, color: active ? T.txt2 : T.txt3, fontFamily: font, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", paddingRight: 12 }}>{u.email}</span>
 
                 {/* Role */}
                 <RoleBadge role={u.role} />
@@ -388,7 +388,7 @@ export default function AdminPanel({ T = P, isLight: isLightProp }) {
                 {/* Status */}
                 <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
                   <div style={{ width: 7, height: 7, borderRadius: "50%", background: active ? T.emerald : T.txt3, boxShadow: active ? `0 0 6px ${T.emerald}80` : "none" }} />
-                  <span style={{ fontSize: 11, color: active ? T.txt2 : T.txt3, fontWeight: active ? 600 : 400 }}>{active ? "Activo" : "Inactivo"}</span>
+                  <span style={{ fontSize: 12, color: active ? T.txt2 : T.txt3, fontWeight: active ? 600 : 400 }}>{active ? "Activo" : "Inactivo"}</span>
                 </div>
 
                 {/* Actions */}
@@ -431,7 +431,7 @@ export default function AdminPanel({ T = P, isLight: isLightProp }) {
                 <p style={{ fontSize: 16, fontWeight: 500, color: wTxt, fontFamily: fontDisp, letterSpacing: "-0.02em", marginBottom: 3 }}>
                   {modal.mode === "create" ? "Crear Nuevo Usuario" : modal.mode === "reset" ? "Restablecer Contraseña" : `Editar: ${modal.user?.name}`}
                 </p>
-                <p style={{ fontSize: 11, color: T.txt3 }}>
+                <p style={{ fontSize: 12, color: T.txt3 }}>
                   {modal.mode === "create" ? "El usuario podrá iniciar sesión inmediatamente." : modal.mode === "reset" ? "Define una nueva contraseña temporal." : "Modifica los datos y el rol del usuario."}
                 </p>
               </div>
@@ -445,21 +445,21 @@ export default function AdminPanel({ T = P, isLight: isLightProp }) {
               {modal.mode !== "reset" && (
                 <>
                   <div>
-                    <p style={{ fontSize: 10, fontWeight: 500, color: T.txt3, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 7 }}>Nombre completo <span style={{ color: T.accent }}>*</span></p>
+                    <p style={{ fontSize: 11, fontWeight: 500, color: T.txt3, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 7 }}>Nombre completo <span style={{ color: T.accent }}>*</span></p>
                     <input value={form.name || ""} onChange={e => sf("name")(e.target.value)} placeholder="Ej. María González" style={inputStyle}
                       onFocus={e => e.target.style.borderColor = T.accentB}
                       onBlur={e => e.target.style.borderColor = T.border}
                     />
                   </div>
                   <div>
-                    <p style={{ fontSize: 10, fontWeight: 500, color: T.txt3, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 7 }}>Email <span style={{ color: T.accent }}>*</span></p>
+                    <p style={{ fontSize: 11, fontWeight: 500, color: T.txt3, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 7 }}>Email <span style={{ color: T.accent }}>*</span></p>
                     <input value={form.email || ""} onChange={e => sf("email")(e.target.value)} placeholder="maria@stratos.ai" type="email" style={inputStyle}
                       onFocus={e => e.target.style.borderColor = T.accentB}
                       onBlur={e => e.target.style.borderColor = T.border}
                     />
                   </div>
                   <div>
-                    <p style={{ fontSize: 10, fontWeight: 500, color: T.txt3, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 7 }}>Rol</p>
+                    <p style={{ fontSize: 11, fontWeight: 500, color: T.txt3, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 7 }}>Rol</p>
                     <select value={form.role || "asesor"} onChange={e => sf("role")(e.target.value)} style={{ ...inputStyle, cursor: "pointer" }}
                       onFocus={e => e.target.style.borderColor = T.accentB}
                       onBlur={e => e.target.style.borderColor = T.border}
@@ -468,7 +468,7 @@ export default function AdminPanel({ T = P, isLight: isLightProp }) {
                         <option key={r.key} value={r.key} style={{ background: cardBg }}>{r.label} — Nivel {r.level}</option>
                       ))}
                     </select>
-                    <p style={{ fontSize: 10, color: T.txt3, marginTop: 5 }}>
+                    <p style={{ fontSize: 11, color: T.txt3, marginTop: 5 }}>
                       {ROLE_META[form.role]?.level === 1 && "Acceso total al sistema. Puede crear y eliminar cualquier usuario."}
                       {ROLE_META[form.role]?.level === 2 && "Acceso administrativo. Gestiona directores y asesores."}
                       {ROLE_META[form.role]?.level === 3 && "Acceso ejecutivo. Ve KPIs globales y métricas del equipo."}
@@ -484,7 +484,7 @@ export default function AdminPanel({ T = P, isLight: isLightProp }) {
                   Así nadie tiene que inventar una clave ni mandarla por chat. */}
               {modal.mode === "create" && (
                 <div style={{ padding: "12px 14px", borderRadius: 10, background: `${T.accent}12`, border: `1px solid ${T.accent}33` }}>
-                  <p style={{ fontSize: 12, color: T.txt2, margin: 0, lineHeight: 1.55 }}>
+                  <p style={{ fontSize: 12.5, color: T.txt2, margin: 0, lineHeight: 1.55 }}>
                     Al crearla te doy una <strong style={{ color: T.txt }}>clave temporal</strong> para pasarle a la persona.
                     Entra con ella y se pone la suya.
                   </p>
@@ -493,7 +493,7 @@ export default function AdminPanel({ T = P, isLight: isLightProp }) {
 
               {modal.mode === "reset" && (
                 <div style={{ padding: "12px 14px", borderRadius: 10, background: `${T.accent}12`, border: `1px solid ${T.accent}33` }}>
-                  <p style={{ fontSize: 12, color: T.txt2, margin: 0, lineHeight: 1.55 }}>
+                  <p style={{ fontSize: 12.5, color: T.txt2, margin: 0, lineHeight: 1.55 }}>
                     Le voy a mandar un correo a <strong style={{ color: T.txt }}>{modal.user?.email || modal.user?.name}</strong> para
                     que ponga una contraseña nueva. Vos no tenés que elegirla.
                   </p>
@@ -502,24 +502,24 @@ export default function AdminPanel({ T = P, isLight: isLightProp }) {
 
               {modal.mode === "edit" && (
                 <div>
-                  <p style={{ fontSize: 10, fontWeight: 500, color: T.txt3, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 9 }}>Estado de la cuenta</p>
+                  <p style={{ fontSize: 11, fontWeight: 500, color: T.txt3, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 9 }}>Estado de la cuenta</p>
                   <div style={{ display: "flex", gap: 8 }}>
                     {[{ v: true, label: "Activo", c: T.emerald }, { v: false, label: "Inactivo", c: T.rose }].map(o => (
-                      <button key={String(o.v)} onClick={() => sf("isActive")(o.v)} style={{ flex: 1, padding: "9px 0", borderRadius: 10, cursor: "pointer", fontSize: 12, fontWeight: 400, fontFamily: font, transition: "all 0.18s", background: form.isActive === o.v ? `${o.c}14` : "transparent", border: `1px solid ${form.isActive === o.v ? `${o.c}40` : T.border}`, color: form.isActive === o.v ? o.c : T.txt3 }}>{o.label}</button>
+                      <button key={String(o.v)} onClick={() => sf("isActive")(o.v)} style={{ flex: 1, padding: "9px 0", borderRadius: 10, cursor: "pointer", fontSize: 12.5, fontWeight: 400, fontFamily: font, transition: "all 0.18s", background: form.isActive === o.v ? `${o.c}14` : "transparent", border: `1px solid ${form.isActive === o.v ? `${o.c}40` : T.border}`, color: form.isActive === o.v ? o.c : T.txt3 }}>{o.label}</button>
                     ))}
                   </div>
                 </div>
               )}
 
               {modal.mode === "edit" && (
-                <button onClick={() => openReset(modal.user)} style={{ padding: "9px 0", borderRadius: 10, background: "transparent", border: `1px solid ${T.amber}28`, color: T.amber, fontSize: 11.5, fontWeight: 400, fontFamily: font, cursor: "pointer", transition: "all 0.18s" }}
+                <button onClick={() => openReset(modal.user)} style={{ padding: "9px 0", borderRadius: 10, background: "transparent", border: `1px solid ${T.amber}28`, color: T.amber, fontSize: 12, fontWeight: 400, fontFamily: font, cursor: "pointer", transition: "all 0.18s" }}
                   onMouseEnter={e => e.currentTarget.style.background = `${T.amber}0C`}
                   onMouseLeave={e => e.currentTarget.style.background = "transparent"}
                 >Restablecer contraseña</button>
               )}
 
-              {formErr && <p style={{ fontSize: 11.5, color: T.rose, background: `${T.rose}0C`, border: `1px solid ${T.rose}22`, padding: "10px 14px", borderRadius: 10 }}>{formErr}</p>}
-              {formOk  && <p style={{ fontSize: 11.5, color: T.emerald, background: `${T.emerald}0C`, border: `1px solid ${T.emerald}22`, padding: "10px 14px", borderRadius: 10 }}>{formOk}</p>}
+              {formErr && <p style={{ fontSize: 12, color: T.rose, background: `${T.rose}0C`, border: `1px solid ${T.rose}22`, padding: "10px 14px", borderRadius: 10 }}>{formErr}</p>}
+              {formOk  && <p style={{ fontSize: 12, color: T.emerald, background: `${T.emerald}0C`, border: `1px solid ${T.emerald}22`, padding: "10px 14px", borderRadius: 10 }}>{formOk}</p>}
             </div>
 
             <div style={{ padding: "16px 26px", borderTop: `1px solid ${T.border}`, display: "flex", gap: 10 }}>

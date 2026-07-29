@@ -95,7 +95,7 @@ export default function ProFeatureGate({
             marginBottom: 10,
           }}>
             <Lock size={10} color={P.accent} strokeWidth={2.4} />
-            <span style={{ fontSize: 9.5, fontWeight: 500, color: P.accent, letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: fontDisp }}>
+            <span style={{ fontSize: 10.5, fontWeight: 500, color: P.accent, letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: fontDisp }}>
               Función Premium Stratos
             </span>
           </div>
@@ -117,7 +117,7 @@ export default function ProFeatureGate({
         {benefits.length > 0 && (
           <div style={{ padding: "20px 26px 8px" }}>
             <p style={{
-              margin: "0 0 12px", fontSize: 10, fontWeight: 500,
+              margin: "0 0 12px", fontSize: 11, fontWeight: 500,
               color: P.txt3, letterSpacing: "0.12em", textTransform: "uppercase", fontFamily: fontDisp,
             }}>
               ¿Qué obtienes al activarla?
@@ -134,7 +134,7 @@ export default function ProFeatureGate({
                   display: "flex", alignItems: "center", justifyContent: "center",
                   flexShrink: 0, marginTop: 1,
                 }}>
-                  <span style={{ fontSize: 10, color: P.accent, fontWeight: 500, fontFamily: fontDisp }}>{i + 1}</span>
+                  <span style={{ fontSize: 11, color: P.accent, fontWeight: 500, fontFamily: fontDisp }}>{i + 1}</span>
                 </div>
                 <p style={{
                   margin: 0, fontSize: 12.5, color: P.txt,
@@ -193,7 +193,7 @@ export default function ProFeatureGate({
           </a>
 
           <p style={{
-            margin: "8px 0 0", fontSize: 10.5, color: P.txt3,
+            margin: "8px 0 0", fontSize: 11.5, color: P.txt3,
             fontFamily: font, textAlign: "center",
           }}>
             Tu ejecutivo Stratos te responderá hoy mismo con detalles y precio.

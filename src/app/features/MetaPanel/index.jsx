@@ -355,11 +355,11 @@ export default function MetaPanel({
   const sectionHd = (label, color) => (
     <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:13 }}>
       <div style={{ width:3, height:16, borderRadius:2, background:color }} />
-      <span style={{ fontSize:11, fontWeight:500, fontFamily:fontDisp, letterSpacing:"0.1em", textTransform:"uppercase", color }}>{label}</span>
+      <span style={{ fontSize:12, fontWeight:500, fontFamily:fontDisp, letterSpacing:"0.1em", textTransform:"uppercase", color }}>{label}</span>
     </div>
   );
   const colHd = txt => (
-    <p style={{ margin:"0 0 9px", fontSize:11.5, fontWeight:500, fontFamily:fontDisp, color:T.txt2, letterSpacing:"0.04em", textTransform:"uppercase" }}>{txt}</p>
+    <p style={{ margin:"0 0 9px", fontSize:12, fontWeight:500, fontFamily:fontDisp, color:T.txt2, letterSpacing:"0.04em", textTransform:"uppercase" }}>{txt}</p>
   );
   // Componente in-line: editable solo si canEditFinal (super_admin/admin); en
   // modo solo-lectura se renderiza como <span> normal sin borde dashed ni cursor text,
@@ -586,10 +586,10 @@ export default function MetaPanel({
                 <p style={{ margin:0, fontSize:17, fontWeight:500, fontFamily:fontDisp, letterSpacing:"-0.025em", color:T.txt, display:"flex", alignItems:"center", gap:8, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>
                   Mi Espacio
                   {savingConfig && (
-                    <span style={{ fontSize:10, fontWeight:400, color:T.accent, background:`${T.accent}18`, borderRadius:99, padding:"2px 9px", letterSpacing:0, flexShrink:0 }}>guardando…</span>
+                    <span style={{ fontSize:11, fontWeight:400, color:T.accent, background:`${T.accent}18`, borderRadius:99, padding:"2px 9px", letterSpacing:0, flexShrink:0 }}>guardando…</span>
                   )}
                 </p>
-                <p style={{ margin:"2px 0 0", fontSize:11.5, color:T.txt3, fontFamily:font, letterSpacing:"0.02em", whiteSpace:"nowrap" }}>{user?.name || "Plan Estratégico · Scaling Up · 2026"}</p>
+                <p style={{ margin:"2px 0 0", fontSize:12, color:T.txt3, fontFamily:font, letterSpacing:"0.02em", whiteSpace:"nowrap" }}>{user?.name || "Plan Estratégico · Scaling Up · 2026"}</p>
               </div>
             </div>
             {/* Control segmentado */}
@@ -696,7 +696,7 @@ export default function MetaPanel({
                         </span>
                         <span style={{ minWidth:0, flex:1 }}>
                           <span style={{ display:"block", color:T.txt, fontSize:14.5, fontWeight:500, fontFamily:fontDisp, letterSpacing:"-0.025em" }}>{title}</span>
-                          <span style={{ display:"block", color:T.txt3, fontSize:11.5, fontWeight:400, fontFamily:font, marginTop:2 }}>{sub}</span>
+                          <span style={{ display:"block", color:T.txt3, fontSize:12, fontWeight:400, fontFamily:font, marginTop:2 }}>{sub}</span>
                         </span>
                         <span style={{
                           minWidth:34, height:28, padding:"0 10px", borderRadius:999,
@@ -821,7 +821,7 @@ export default function MetaPanel({
                         Para mí · {_selfName}
                       </span>
                     )}
-                    <span style={{ marginLeft:"auto", fontSize:11.5, fontFamily:font, color:T.txt3, whiteSpace:"nowrap" }}>
+                    <span style={{ marginLeft:"auto", fontSize:12, fontFamily:font, color:T.txt3, whiteSpace:"nowrap" }}>
                       Enter crea si está completo
                     </span>
                   </div>
@@ -959,7 +959,7 @@ export default function MetaPanel({
                             </button>
                             <div style={{ textAlign:"center", minWidth:0 }}>
                               <p style={{ margin:0, fontSize:14.5, fontWeight:500, fontFamily:fontDisp, color:T.txt, letterSpacing:"-0.02em" }}>{monthLabel}</p>
-                              <p style={{ margin:"2px 0 0", fontSize:10.5, fontFamily:font, color:T.txt3 }}>Selecciona el día del pendiente</p>
+                              <p style={{ margin:"2px 0 0", fontSize:11.5, fontFamily:font, color:T.txt3 }}>Selecciona el día del pendiente</p>
                             </div>
                             <button
                               type="button"
@@ -973,7 +973,7 @@ export default function MetaPanel({
                           </div>
                           <div style={{ display:"grid", gridTemplateColumns:"repeat(7,1fr)", gap:5, marginBottom:6 }}>
                             {dayNames.map((d, i) => (
-                              <div key={`${d}-${i}`} style={{ height:22, display:"flex", alignItems:"center", justifyContent:"center", fontSize:10.5, fontWeight:500, fontFamily:fontDisp, color:T.txt3 }}>
+                              <div key={`${d}-${i}`} style={{ height:22, display:"flex", alignItems:"center", justifyContent:"center", fontSize:11.5, fontWeight:500, fontFamily:fontDisp, color:T.txt3 }}>
                                 {d}
                               </div>
                             ))}
@@ -1012,7 +1012,7 @@ export default function MetaPanel({
                               minHeight:36, borderRadius:13, padding:"0 11px",
                               border:`1px solid ${isLight ? "rgba(15,23,42,0.10)" : "rgba(255,255,255,0.10)"}`,
                               background:isLight ? "rgba(248,250,252,0.88)" : "rgba(255,255,255,0.045)",
-                              color:T.txt2, fontSize:11.5, fontWeight:500, fontFamily:fontDisp,
+                              color:T.txt2, fontSize:12, fontWeight:500, fontFamily:fontDisp,
                             }}>
                               Fecha exacta
                               <input
@@ -1032,8 +1032,8 @@ export default function MetaPanel({
                                 }}
                               />
                             </label>
-                            <button type="button" onClick={() => { const today = localYmd(new Date()); setCalendarMonth(new Date(`${today}T12:00:00`)); setActionDueDate(today); setDuePickerOpen("time"); }} className="mp-quickchip" style={{ border:`1px solid ${T.border}`, background:isLight?"rgba(15,23,42,0.035)":"rgba(255,255,255,0.045)", color:T.txt2, borderRadius:99, padding:"7px 11px", fontSize:11.5, fontWeight:500, fontFamily:fontDisp, cursor:"pointer" }}>Hoy</button>
-                            <button type="button" onClick={clearActionDue} className="mp-quickchip" style={{ border:"1px solid transparent", background:"transparent", color:T.txt3, borderRadius:99, padding:"7px 11px", fontSize:11.5, fontWeight:500, fontFamily:fontDisp, cursor:"pointer" }}>Limpiar</button>
+                            <button type="button" onClick={() => { const today = localYmd(new Date()); setCalendarMonth(new Date(`${today}T12:00:00`)); setActionDueDate(today); setDuePickerOpen("time"); }} className="mp-quickchip" style={{ border:`1px solid ${T.border}`, background:isLight?"rgba(15,23,42,0.035)":"rgba(255,255,255,0.045)", color:T.txt2, borderRadius:99, padding:"7px 11px", fontSize:12, fontWeight:500, fontFamily:fontDisp, cursor:"pointer" }}>Hoy</button>
+                            <button type="button" onClick={clearActionDue} className="mp-quickchip" style={{ border:"1px solid transparent", background:"transparent", color:T.txt3, borderRadius:99, padding:"7px 11px", fontSize:12, fontWeight:500, fontFamily:fontDisp, cursor:"pointer" }}>Limpiar</button>
                           </div>
                         </>
                       ) : (
@@ -1041,9 +1041,9 @@ export default function MetaPanel({
                           <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", gap:12, marginBottom:12 }}>
                             <div>
                               <p style={{ margin:0, fontSize:14.5, fontWeight:500, fontFamily:fontDisp, color:T.txt, letterSpacing:"-0.02em" }}>Horario</p>
-                              <p style={{ margin:"2px 0 0", fontSize:10.5, fontFamily:font, color:T.txt3 }}>{dateChipLabel(selectedDueDate)} · recordatorio automático</p>
+                              <p style={{ margin:"2px 0 0", fontSize:11.5, fontFamily:font, color:T.txt3 }}>{dateChipLabel(selectedDueDate)} · recordatorio automático</p>
                             </div>
-                            <button type="button" onClick={() => setDuePickerOpen("date")} className="mp-quickchip" style={{ border:`1px solid ${T.border}`, background:isLight?"rgba(15,23,42,0.035)":"rgba(255,255,255,0.045)", color:T.txt2, borderRadius:99, padding:"7px 11px", fontSize:11.5, fontWeight:500, fontFamily:fontDisp, cursor:"pointer" }}>Cambiar fecha</button>
+                            <button type="button" onClick={() => setDuePickerOpen("date")} className="mp-quickchip" style={{ border:`1px solid ${T.border}`, background:isLight?"rgba(15,23,42,0.035)":"rgba(255,255,255,0.045)", color:T.txt2, borderRadius:99, padding:"7px 11px", fontSize:12, fontWeight:500, fontFamily:fontDisp, cursor:"pointer" }}>Cambiar fecha</button>
                           </div>
                           <div style={{ marginBottom:10 }}>
                             {/* Reloj custom con steppers — reemplaza al picker nativo
@@ -1080,7 +1080,7 @@ export default function MetaPanel({
                                     </span>
                                     <span style={{ display:"flex", flexDirection:"column", gap:3, minWidth:0 }}>
                                       <span style={{ color:T.txt, fontSize:14, fontWeight:500, fontFamily:fontDisp, letterSpacing:"-0.02em" }}>Hora exacta</span>
-                                      <span style={{ color:T.txt3, fontSize:11, fontWeight:400, fontFamily:font, lineHeight:1.35 }}>Ajústala con los botones o los accesos de abajo</span>
+                                      <span style={{ color:T.txt3, fontSize:12, fontWeight:400, fontFamily:font, lineHeight:1.35 }}>Ajústala con los botones o los accesos de abajo</span>
                                     </span>
                                   </span>
                                   <div style={{ display:"flex", alignItems:"center", gap:8, justifySelf:isMobile ? "center" : "end" }}>
@@ -1093,16 +1093,16 @@ export default function MetaPanel({
                             })()}
                             <div style={{ display:"flex", alignItems:"center", gap:8, marginTop:10, flexWrap:"wrap" }}>
                               <button type="button" className="mp-quickchip" onClick={() => setActionDueTime(currentTimeValue())}
-                                style={{ display:"inline-flex", alignItems:"center", gap:5, border:`1px solid ${_hex(T.accent,"44")}`, background:`${T.accent}12`, color:T.accent, borderRadius:99, padding:"7px 13px", fontSize:11.5, fontWeight:600, fontFamily:fontDisp, cursor:"pointer" }}>
+                                style={{ display:"inline-flex", alignItems:"center", gap:5, border:`1px solid ${_hex(T.accent,"44")}`, background:`${T.accent}12`, color:T.accent, borderRadius:99, padding:"7px 13px", fontSize:12, fontWeight:600, fontFamily:fontDisp, cursor:"pointer" }}>
                                 <Clock size={12} strokeWidth={2.4} /> Ahora
                               </button>
                               <span style={{ width:1, height:18, background:T.border, margin:"0 2px" }} />
-                              <span style={{ color:T.txt3, fontSize:10.5, fontWeight:500, fontFamily:fontDisp, letterSpacing:"0.02em" }}>Minutos</span>
+                              <span style={{ color:T.txt3, fontSize:11.5, fontWeight:500, fontFamily:fontDisp, letterSpacing:"0.02em" }}>Minutos</span>
                               {[0, 15, 30, 45].map(mm => {
                                 const on = baseDueTime().slice(3, 5) === pad2(mm);
                                 return (
                                   <button key={mm} type="button" className="mp-quickchip" onClick={() => setDueMinute(mm)}
-                                    style={{ border:`1px solid ${on ? _hex(T.accent,"58") : T.border}`, background:on ? `${T.accent}16` : (isLight ? "rgba(15,23,42,0.035)" : "rgba(255,255,255,0.045)"), color:on ? T.accent : T.txt2, borderRadius:99, padding:"7px 11px", fontSize:11.5, fontWeight:500, fontFamily:fontDisp, fontVariantNumeric:"tabular-nums", cursor:"pointer" }}>
+                                    style={{ border:`1px solid ${on ? _hex(T.accent,"58") : T.border}`, background:on ? `${T.accent}16` : (isLight ? "rgba(15,23,42,0.035)" : "rgba(255,255,255,0.045)"), color:on ? T.accent : T.txt2, borderRadius:99, padding:"7px 11px", fontSize:12, fontWeight:500, fontFamily:fontDisp, fontVariantNumeric:"tabular-nums", cursor:"pointer" }}>
                                     :{pad2(mm)}
                                   </button>
                                 );
@@ -1136,8 +1136,8 @@ export default function MetaPanel({
                             })}
                           </div>
                           <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", gap:8, marginTop:12, paddingTop:10, borderTop:`1px solid ${T.border}` }}>
-                            <button type="button" onClick={clearActionDue} className="mp-quickchip" style={{ border:"1px solid transparent", background:"transparent", color:T.txt3, borderRadius:99, padding:"7px 11px", fontSize:11.5, fontWeight:500, fontFamily:fontDisp, cursor:"pointer" }}>Limpiar fecha y hora</button>
-                            <button type="button" onClick={() => selectedDueTime && setDuePickerOpen(null)} className="mp-quickchip" style={{ border:`1px solid ${selectedDueTime ? _hex(T.accent,"60") : "transparent"}`, background:selectedDueTime ? `${T.accent}12` : "transparent", color:selectedDueTime ? T.accent : T.txt3, borderRadius:99, padding:"7px 12px", fontSize:11.5, fontWeight:500, fontFamily:fontDisp, cursor:selectedDueTime ? "pointer" : "default" }}>Listo</button>
+                            <button type="button" onClick={clearActionDue} className="mp-quickchip" style={{ border:"1px solid transparent", background:"transparent", color:T.txt3, borderRadius:99, padding:"7px 11px", fontSize:12, fontWeight:500, fontFamily:fontDisp, cursor:"pointer" }}>Limpiar fecha y hora</button>
+                            <button type="button" onClick={() => selectedDueTime && setDuePickerOpen(null)} className="mp-quickchip" style={{ border:`1px solid ${selectedDueTime ? _hex(T.accent,"60") : "transparent"}`, background:selectedDueTime ? `${T.accent}12` : "transparent", color:selectedDueTime ? T.accent : T.txt3, borderRadius:99, padding:"7px 12px", fontSize:12, fontWeight:500, fontFamily:fontDisp, cursor:selectedDueTime ? "pointer" : "default" }}>Listo</button>
                           </div>
                         </>
                       )}
@@ -1204,7 +1204,7 @@ export default function MetaPanel({
                     background:`${categoryMeta.accent}12`,
                     border:`1px solid ${categoryMeta.accent}28`,
                     color:categoryMeta.accent,
-                    fontSize:11,
+                    fontSize:12,
                     fontWeight:500,
                     fontFamily:fontDisp,
                     letterSpacing:"-0.01em",
@@ -1230,7 +1230,7 @@ export default function MetaPanel({
                   <div style={{ display:"flex", alignItems:"center", gap:7, flexWrap:"wrap" }}>
                     {categoryChip}
                     <E val={a.lead}   onSave={v => setMetaActions(p => p.map(x => x.id===a.id?{...x,lead:v}:x))}   style={{ fontSize:12.5, color:T.txt3, fontFamily:font }} />
-                    <span style={{ fontSize:10, color:T.txt3, opacity:0.4 }}>·</span>
+                    <span style={{ fontSize:11, color:T.txt3, opacity:0.4 }}>·</span>
                     <E val={a.asesor} onSave={v => setMetaActions(p => p.map(x => x.id===a.id?{...x,asesor:v}:x))} style={{ fontSize:12.5, color:T.txt3, fontFamily:font }} />
                   </div>
                 );
@@ -1240,7 +1240,7 @@ export default function MetaPanel({
                     title="Cambiar prioridad"
                     style={{
                       display:"inline-flex", alignItems:"center", gap:6,
-                      fontSize:12, fontWeight:400, fontFamily:font,
+                      fontSize:12.5, fontWeight:400, fontFamily:font,
                       color:prioColor, background:`${prioDot}12`,
                       border:`1px solid ${prioDot}2E`, borderRadius:99,
                       padding:"6px 12px 6px 10px", cursor:"pointer",
@@ -1292,7 +1292,7 @@ export default function MetaPanel({
                       padding:"7px 12px", borderRadius:10,
                       border:`1px solid ${T.blue}28`,
                       background:`${T.blue}07`,
-                      color:T.blue, fontSize:11.5, fontFamily:font, fontWeight:400,
+                      color:T.blue, fontSize:12, fontFamily:font, fontWeight:400,
                       cursor:"not-allowed", opacity:0.4,
                     }}
                   >
@@ -1333,7 +1333,7 @@ export default function MetaPanel({
                         <h4 style={{ margin:0, fontSize:15, fontWeight:400, fontFamily:fontDisp, color:T.txt, letterSpacing:"-0.005em" }}>
                           Agenda {categoryMeta.label}
                         </h4>
-                        <span style={{ fontSize:11.5, fontFamily:font, color:T.txt3 }}>
+                        <span style={{ fontSize:12, fontFamily:font, color:T.txt3 }}>
                           {countInCategory} pendiente{countInCategory !== 1 ? "s" : ""}
                         </span>
                         <div style={{ flex:1, height:1, background:T.border }} />
@@ -1431,10 +1431,10 @@ export default function MetaPanel({
                     onClick={() => setDoneCollapsed(x => !x)}
                     style={{ display:"flex", alignItems:"center", gap:8, background:"none", border:"none", cursor:"pointer", padding:"8px 0", width:"100%" }}>
                     <div style={{ flex:1, height:1, background:T.border }} />
-                    <span style={{ fontSize:12, fontWeight:400, color:T.txt3, fontFamily:font, whiteSpace:"nowrap", display:"flex", alignItems:"center", gap:6 }}>
+                    <span style={{ fontSize:12.5, fontWeight:400, color:T.txt3, fontFamily:font, whiteSpace:"nowrap", display:"flex", alignItems:"center", gap:6 }}>
                       <Check size={12} color={T.accent} />
                       {completedAgendaActions.length} completadas
-                      <span style={{ fontSize:10.5, opacity:0.6 }}>{doneCollapsed ? "▸ ver" : "▾ ocultar"}</span>
+                      <span style={{ fontSize:11.5, opacity:0.6 }}>{doneCollapsed ? "▸ ver" : "▾ ocultar"}</span>
                     </span>
                     <div style={{ flex:1, height:1, background:T.border }} />
                   </button>
@@ -1454,7 +1454,7 @@ export default function MetaPanel({
                       </button>
                       <div style={{ flex:1, minWidth:0 }}>
                         <span style={{ fontSize:13.5, color:T.txt3, fontFamily:font, textDecoration:"line-through", lineHeight:1.45 }}>{a.text}</span>
-                        <p style={{ margin:"3px 0 0", fontSize:11.5, color:T.txt3, fontFamily:font, opacity:0.7 }}>{a.lead} · {a.asesor}</p>
+                        <p style={{ margin:"3px 0 0", fontSize:12, color:T.txt3, fontFamily:font, opacity:0.7 }}>{a.lead} · {a.asesor}</p>
                       </div>
                       <button onClick={() => { persistDelete(a); setMetaActions(p => p.filter(x => x.id!==a.id)); }} title="Eliminar acción" style={{ background:"none", border:"none", cursor:"pointer", padding:3, opacity:0.30 }}>
                         <Minus size={13} color={T.txt3} />
@@ -1579,7 +1579,7 @@ export default function MetaPanel({
                     </div>
                     <div style={{ flex:1, minWidth:0 }}>
                       <p style={{ margin:0, fontSize:14.5, fontWeight:400, fontFamily:fontDisp, letterSpacing:"-0.015em", color:T.txt, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>{d.title}</p>
-                      <p style={{ margin:"3px 0 0", fontSize:12, color:T.txt3, fontFamily:font, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>{meta}</p>
+                      <p style={{ margin:"3px 0 0", fontSize:12.5, color:T.txt3, fontFamily:font, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>{meta}</p>
                     </div>
                     <ExternalLink size={15} color={T.txt3} style={{ flexShrink:0, opacity:0.45 }} />
                     {canEditFinal && (
@@ -1599,7 +1599,7 @@ export default function MetaPanel({
 
               {/* Nota para asesores (solo lectura) */}
               {!canEditFinal && (metaDocs || []).length > 0 && (
-                <p style={{ margin:"14px 0 0", fontSize:11.5, color:T.txt3, fontFamily:font, textAlign:"center", opacity:0.7 }}>
+                <p style={{ margin:"14px 0 0", fontSize:12, color:T.txt3, fontFamily:font, textAlign:"center", opacity:0.7 }}>
                   Solo los administradores pueden agregar o quitar documentos.
                 </p>
               )}
@@ -1611,7 +1611,7 @@ export default function MetaPanel({
             <div>
               <div style={{ textAlign:"center", marginBottom:18 }}>
                 <p style={{ margin:0, fontSize:25, fontWeight:500, fontFamily:fontDisp, letterSpacing:"-0.045em", color:T.txt }}>{brandLabel.toUpperCase()}</p>
-                <p style={{ margin:"4px 0 0", fontSize:11.5, color:T.txt3, fontFamily:font, letterSpacing:"0.07em", textTransform:"uppercase" }}>Plan Estratégico · Una Página · Scaling Up® · Q2 2026</p>
+                <p style={{ margin:"4px 0 0", fontSize:12, color:T.txt3, fontFamily:font, letterSpacing:"0.07em", textTransform:"uppercase" }}>Plan Estratégico · Una Página · Scaling Up® · Q2 2026</p>
               </div>
 
               {/* CORE */}
@@ -1623,15 +1623,15 @@ export default function MetaPanel({
                     {metaPlan.coreValues.map((v, i) => (
                       <div key={i} style={{ display:"flex", gap:6, marginBottom:5, alignItems:"flex-start" }}>
                         <div style={{ width:4, height:4, borderRadius:"50%", background:T.accent, marginTop:6, flexShrink:0 }} />
-                        <E val={v} onSave={nv => setMetaPlan(p => { const c=[...p.coreValues]; c[i]=nv; return {...p,coreValues:c}; })} style={{ fontSize:11, color:T.txt, fontFamily:font, lineHeight:1.45, flex:1 }} />
+                        <E val={v} onSave={nv => setMetaPlan(p => { const c=[...p.coreValues]; c[i]=nv; return {...p,coreValues:c}; })} style={{ fontSize:12, color:T.txt, fontFamily:font, lineHeight:1.45, flex:1 }} />
                       </div>
                     ))}
                   </div>
                   <div>
                     {colHd("Propósito")}
-                    <E val={metaPlan.purpose} onSave={v => setMetaPlan(p=>({...p,purpose:v}))} multi style={{ fontSize:11.5, color:T.txt, fontFamily:font, lineHeight:1.65, fontStyle:"italic", marginBottom:10 }} />
+                    <E val={metaPlan.purpose} onSave={v => setMetaPlan(p=>({...p,purpose:v}))} multi style={{ fontSize:12, color:T.txt, fontFamily:font, lineHeight:1.65, fontStyle:"italic", marginBottom:10 }} />
                     {colHd("X-Factor")}
-                    <E val={metaPlan.xfactor} onSave={v => setMetaPlan(p=>({...p,xfactor:v}))} multi style={{ fontSize:11, color:T.txt, fontFamily:font, lineHeight:1.5 }} />
+                    <E val={metaPlan.xfactor} onSave={v => setMetaPlan(p=>({...p,xfactor:v}))} multi style={{ fontSize:12, color:T.txt, fontFamily:font, lineHeight:1.5 }} />
                   </div>
                   <div>
                     {colHd("SWT")}
@@ -1639,8 +1639,8 @@ export default function MetaPanel({
                       const col = s.type==="F"?"#34D399":s.type==="D"?"#F87171":T.blue;
                       return (
                         <div key={i} style={{ display:"flex", gap:6, marginBottom:5, alignItems:"flex-start" }}>
-                          <span style={{ fontSize:7.5, fontWeight:500, color:col, background:`${col}18`, borderRadius:3, padding:"1px 4px", flexShrink:0, marginTop:2 }}>{s.type}</span>
-                          <E val={s.text} onSave={v => setMetaPlan(p => { const sw=[...p.swt]; sw[i]={...sw[i],text:v}; return {...p,swt:sw}; })} style={{ fontSize:10.5, color:T.txt, fontFamily:font, lineHeight:1.4, flex:1 }} />
+                          <span style={{ fontSize:9, fontWeight:500, color:col, background:`${col}18`, borderRadius:3, padding:"1px 4px", flexShrink:0, marginTop:2 }}>{s.type}</span>
+                          <E val={s.text} onSave={v => setMetaPlan(p => { const sw=[...p.swt]; sw[i]={...sw[i],text:v}; return {...p,swt:sw}; })} style={{ fontSize:11.5, color:T.txt, fontFamily:font, lineHeight:1.4, flex:1 }} />
                         </div>
                       );
                     })}
@@ -1659,7 +1659,7 @@ export default function MetaPanel({
                     {metaPlan.targets3yr.map((t, i) => (
                       <div key={i} style={{ display:"flex", gap:6, marginBottom:4, alignItems:"center" }}>
                         <TrendingUp size={9} color={T.accent} strokeWidth={2.5} style={{ flexShrink:0 }} />
-                        <E val={t} onSave={v => setMetaPlan(p => { const ts=[...p.targets3yr]; ts[i]=v; return {...p,targets3yr:ts}; })} style={{ fontSize:11, color:T.txt, fontFamily:font, flex:1 }} />
+                        <E val={t} onSave={v => setMetaPlan(p => { const ts=[...p.targets3yr]; ts[i]=v; return {...p,targets3yr:ts}; })} style={{ fontSize:12, color:T.txt, fontFamily:font, flex:1 }} />
                       </div>
                     ))}
                   </div>
@@ -1667,8 +1667,8 @@ export default function MetaPanel({
                     {colHd("Sandbox")}
                     {Object.entries(metaPlan.sandbox).map(([k, v]) => (
                       <div key={k} style={{ marginBottom:6 }}>
-                        <span style={{ fontSize:8.5, fontWeight:500, color:T.txt3, fontFamily:fontDisp, letterSpacing:"0.04em", textTransform:"uppercase" }}>{k} </span>
-                        <E val={v} onSave={nv => setMetaPlan(p=>({...p,sandbox:{...p.sandbox,[k]:nv}}))} style={{ fontSize:11, color:T.txt, fontFamily:font }} />
+                        <span style={{ fontSize:10, fontWeight:500, color:T.txt3, fontFamily:fontDisp, letterSpacing:"0.04em", textTransform:"uppercase" }}>{k} </span>
+                        <E val={v} onSave={nv => setMetaPlan(p=>({...p,sandbox:{...p.sandbox,[k]:nv}}))} style={{ fontSize:12, color:T.txt, fontFamily:font }} />
                       </div>
                     ))}
                   </div>
@@ -1676,8 +1676,8 @@ export default function MetaPanel({
                     {colHd("Brand Promise")}
                     {metaPlan.brandPromises.map((bp, i) => (
                       <div key={i} style={{ marginBottom:7, padding:"8px 10px", borderRadius:9, background:`${T.accent}07`, border:`1px solid ${T.accent}14` }}>
-                        <E val={bp.title} onSave={v => setMetaPlan(p => { const b=[...p.brandPromises]; b[i]={...b[i],title:v}; return {...p,brandPromises:b}; })} style={{ fontSize:11, fontWeight:500, color:isLight?"#082818":T.accent, fontFamily:fontDisp, marginBottom:2 }} />
-                        <E val={bp.sub}   onSave={v => setMetaPlan(p => { const b=[...p.brandPromises]; b[i]={...b[i],sub:v};   return {...p,brandPromises:b}; })} style={{ fontSize:10, color:T.txt2, fontFamily:font, lineHeight:1.4 }} />
+                        <E val={bp.title} onSave={v => setMetaPlan(p => { const b=[...p.brandPromises]; b[i]={...b[i],title:v}; return {...p,brandPromises:b}; })} style={{ fontSize:12, fontWeight:500, color:isLight?"#082818":T.accent, fontFamily:fontDisp, marginBottom:2 }} />
+                        <E val={bp.sub}   onSave={v => setMetaPlan(p => { const b=[...p.brandPromises]; b[i]={...b[i],sub:v};   return {...p,brandPromises:b}; })} style={{ fontSize:11, color:T.txt2, fontFamily:font, lineHeight:1.4 }} />
                       </div>
                     ))}
                   </div>
@@ -1693,13 +1693,13 @@ export default function MetaPanel({
                     {metaPlan.rocks.map((r, i) => (
                       <div key={i} style={{ marginBottom:12 }}>
                         <div style={{ display:"flex", justifyContent:"space-between", marginBottom:3 }}>
-                          <E val={r.n} onSave={v => setMetaPlan(p => { const rs=[...p.rocks]; rs[i]={...rs[i],n:v}; return {...p,rocks:rs}; })} style={{ fontSize:11, fontWeight:400, color:T.txt, fontFamily:font, lineHeight:1.35, flex:1 }} />
-                          <span style={{ fontSize:10, fontWeight:500, fontFamily:fontDisp, marginLeft:6, flexShrink:0, color:r.pct>=60?"#34D399":r.pct>=40?"#F59E0B":"#F87171" }}>{r.pct}%</span>
+                          <E val={r.n} onSave={v => setMetaPlan(p => { const rs=[...p.rocks]; rs[i]={...rs[i],n:v}; return {...p,rocks:rs}; })} style={{ fontSize:12, fontWeight:400, color:T.txt, fontFamily:font, lineHeight:1.35, flex:1 }} />
+                          <span style={{ fontSize:11, fontWeight:500, fontFamily:fontDisp, marginLeft:6, flexShrink:0, color:r.pct>=60?"#34D399":r.pct>=40?"#F59E0B":"#F87171" }}>{r.pct}%</span>
                         </div>
                         <input type="range" min="0" max="100" value={r.pct}
                           onChange={e => setMetaPlan(p => { const rs=[...p.rocks]; rs[i]={...rs[i],pct:+e.target.value}; return {...p,rocks:rs}; })}
                           style={{ width:"100%", accentColor:r.pct>=60?"#34D399":r.pct>=40?"#F59E0B":"#F87171", height:3, marginBottom:3, cursor:"pointer" }} />
-                        <E val={r.owner} onSave={v => setMetaPlan(p => { const rs=[...p.rocks]; rs[i]={...rs[i],owner:v}; return {...p,rocks:rs}; })} style={{ fontSize:9, color:T.txt3, fontFamily:font }} />
+                        <E val={r.owner} onSave={v => setMetaPlan(p => { const rs=[...p.rocks]; rs[i]={...rs[i],owner:v}; return {...p,rocks:rs}; })} style={{ fontSize:10.5, color:T.txt3, fontFamily:font }} />
                       </div>
                     ))}
                   </div>
@@ -1715,16 +1715,16 @@ export default function MetaPanel({
                       return (
                         <div key={i} style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"8px 10px", borderRadius:9, marginBottom:6, background:isLight?"rgba(255,255,255,0.80)":"rgba(255,255,255,0.04)", border:`1px solid ${T.border}` }}>
                           <div style={{ flex:1 }}>
-                            <p style={{ margin:"0 0 1px", fontSize:9, color:T.txt3, fontFamily:font }}>{k.label}</p>
+                            <p style={{ margin:"0 0 1px", fontSize:10.5, color:T.txt3, fontFamily:font }}>{k.label}</p>
                             <p style={{ margin:"0 0 5px", fontSize:15, fontWeight:500, color:T.txt, fontFamily:fontDisp, letterSpacing:"-0.025em" }}>{k.value}</p>
                             <div style={{ height:2.5, borderRadius:99, background:isLight?"rgba(0,0,0,0.07)":"rgba(255,255,255,0.07)", overflow:"hidden", width:"88%" }}>
                               <div style={{ width:`${Math.min(k.pct,100)}%`, height:"100%", background:k.pct>=80?"#34D399":k.pct>=50?"#F59E0B":"#F87171", borderRadius:99 }} />
                             </div>
                           </div>
                           <div style={{ textAlign:"right", paddingLeft:8 }}>
-                            <p style={{ margin:"0 0 2px", fontSize:8, color:T.txt3 }}>Meta</p>
-                            <p style={{ margin:"0 0 4px", fontSize:12, fontWeight:500, color:T.accent, fontFamily:fontDisp }}>{k.target}</p>
-                            <span style={{ fontSize:7.5, fontWeight:500, padding:"2px 6px", borderRadius:99, background:`${kCol}14`, color:kCol }}>{k.type}</span>
+                            <p style={{ margin:"0 0 2px", fontSize:9.5, color:T.txt3 }}>Meta</p>
+                            <p style={{ margin:"0 0 4px", fontSize:12.5, fontWeight:500, color:T.accent, fontFamily:fontDisp }}>{k.target}</p>
+                            <span style={{ fontSize:9, fontWeight:500, padding:"2px 6px", borderRadius:99, background:`${kCol}14`, color:kCol }}>{k.type}</span>
                           </div>
                         </div>
                       );
@@ -1734,16 +1734,16 @@ export default function MetaPanel({
                     {colHd("Meta Anual 2026")}
                     <div style={{ padding:"12px", borderRadius:11, background:`${T.accent}07`, border:`1px solid ${T.accent}16`, marginBottom:12 }}>
                       <p style={{ margin:"0 0 1px", fontSize:24, fontWeight:500, fontFamily:fontDisp, letterSpacing:"-0.045em", color:T.txt }}>{fmtM(metaPlan.goal)}</p>
-                      <p style={{ margin:"0 0 9px", fontSize:10, color:T.txt2, fontFamily:font }}>Pipeline · 12 cierres/trimestre</p>
+                      <p style={{ margin:"0 0 9px", fontSize:11, color:T.txt2, fontFamily:font }}>Pipeline · 12 cierres/trimestre</p>
                       <div style={{ height:5, borderRadius:99, background:isLight?"rgba(13,154,118,0.09)":"rgba(255,255,255,0.08)", overflow:"hidden", marginBottom:5 }}>
                         <div style={{ width:`${pct2}%`, height:"100%", background:"linear-gradient(90deg,#0D9A76,#34D399,#6EE7C2)", borderRadius:99 }} />
                       </div>
-                      <p style={{ margin:0, fontSize:11, fontWeight:500, color:T.accent, fontFamily:fontDisp }}>{pct2}% · {fmtM(pipe2)}</p>
+                      <p style={{ margin:0, fontSize:12, fontWeight:500, color:T.accent, fontFamily:fontDisp }}>{pct2}% · {fmtM(pipe2)}</p>
                     </div>
                     {colHd("Tema 2026")}
                     <div style={{ padding:"10px 11px", borderRadius:10, background:isLight?"#FFFCF0":"rgba(251,191,36,0.05)", border:"1px solid rgba(251,191,36,0.22)" }}>
                       <E val={metaPlan.anualTheme} onSave={v => setMetaPlan(p=>({...p,anualTheme:v}))} style={{ fontSize:12.5, fontWeight:500, color:"#D97706", fontFamily:fontDisp, marginBottom:4 }} />
-                      <E val={metaPlan.anualThemeDesc} onSave={v => setMetaPlan(p=>({...p,anualThemeDesc:v}))} multi style={{ fontSize:10.5, color:T.txt2, fontFamily:font, lineHeight:1.55 }} />
+                      <E val={metaPlan.anualThemeDesc} onSave={v => setMetaPlan(p=>({...p,anualThemeDesc:v}))} multi style={{ fontSize:11.5, color:T.txt2, fontFamily:font, lineHeight:1.55 }} />
                     </div>
                   </div>
                 </div>
@@ -1760,7 +1760,7 @@ export default function MetaPanel({
                 <div>
                   <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:5 }}>
                     <div style={{ width:3, height:18, borderRadius:2, background:`linear-gradient(180deg,${T.accent},${T.blue})` }} />
-                    <span style={{ fontSize:8, fontWeight:500, letterSpacing:"0.16em", textTransform:"uppercase", color:T.txt3, fontFamily:fontDisp }}>Protocolo Operativo · Stratos Capital Group</span>
+                    <span style={{ fontSize:9.5, fontWeight:500, letterSpacing:"0.16em", textTransform:"uppercase", color:T.txt3, fontFamily:fontDisp }}>Protocolo Operativo · Stratos Capital Group</span>
                   </div>
                   <p style={{ margin:"0 0 4px", fontSize:25, fontWeight:500, color:T.txt, fontFamily:fontDisp, letterSpacing:"-0.045em" }}>Protocolo {brandLabel}</p>
                   {/* El subtítulo sale del protocolo de CADA empresa. Estaba fijo en
@@ -1779,7 +1779,7 @@ export default function MetaPanel({
                   ].map((s,i) => (
                     <div key={i} style={{ textAlign:"center", padding:"9px 14px", borderRadius:11, background:isLight?"rgba(255,255,255,0.75)":"rgba(255,255,255,0.04)", border:`1px solid ${s.color}22` }}>
                       <p style={{ margin:"0 0 1px", fontSize:18, fontWeight:500, color:s.color, fontFamily:fontDisp, letterSpacing:"-0.03em" }}>{s.value}</p>
-                      <p style={{ margin:0, fontSize:8, color:T.txt3, fontFamily:font, fontWeight:400, letterSpacing:"0.04em", textTransform:"uppercase" }}>{s.label}</p>
+                      <p style={{ margin:0, fontSize:9.5, color:T.txt3, fontFamily:font, fontWeight:400, letterSpacing:"0.04em", textTransform:"uppercase" }}>{s.label}</p>
                     </div>
                   ))}
                 </div>
@@ -1791,26 +1791,26 @@ export default function MetaPanel({
                 {/* Objetivo */}
                 <div style={{ padding:"14px 15px", borderRadius:13, background:isLight?"rgba(110,231,194,0.06)":"rgba(110,231,194,0.04)", border:`1px solid ${T.accent}22` }}>
                   {sectionHd("1. Objetivo", T.accent)}
-                  <E val={metaProtocol.objetivo} onSave={v=>setMetaProtocol(p=>({...p,objetivo:v}))} multi style={{ fontSize:12, fontWeight:400, color:T.txt, fontFamily:font, lineHeight:1.6, marginBottom:10 }} />
+                  <E val={metaProtocol.objetivo} onSave={v=>setMetaProtocol(p=>({...p,objetivo:v}))} multi style={{ fontSize:12.5, fontWeight:400, color:T.txt, fontFamily:font, lineHeight:1.6, marginBottom:10 }} />
                   <div style={{ padding:"8px 10px", borderRadius:8, background:`${T.accent}08`, border:`1px solid ${T.accent}18` }}>
-                    <p style={{ margin:"0 0 3px", fontSize:8.5, fontWeight:500, color:T.accent, fontFamily:fontDisp, letterSpacing:"0.08em", textTransform:"uppercase" }}>Regla Base</p>
-                    <E val={metaProtocol.reglaBase} onSave={v=>setMetaProtocol(p=>({...p,reglaBase:v}))} multi style={{ fontSize:11, color:T.txt2, fontFamily:font, lineHeight:1.5 }} />
+                    <p style={{ margin:"0 0 3px", fontSize:10, fontWeight:500, color:T.accent, fontFamily:fontDisp, letterSpacing:"0.08em", textTransform:"uppercase" }}>Regla Base</p>
+                    <E val={metaProtocol.reglaBase} onSave={v=>setMetaProtocol(p=>({...p,reglaBase:v}))} multi style={{ fontSize:12, color:T.txt2, fontFamily:font, lineHeight:1.5 }} />
                   </div>
                 </div>
 
                 {/* Principios */}
                 <div style={{ padding:"14px 15px", borderRadius:13, background:isLight?"rgba(126,184,240,0.06)":"rgba(126,184,240,0.03)", border:`1px solid ${T.blue}22` }}>
                   {sectionHd("2. Principios del Asesor", T.blue)}
-                  <p style={{ margin:"0 0 8px", fontSize:11, color:T.txt3, fontFamily:font }}>Tu responsabilidad es:</p>
+                  <p style={{ margin:"0 0 8px", fontSize:12, color:T.txt3, fontFamily:font }}>Tu responsabilidad es:</p>
                   {metaProtocol.principios.map((pr, i) => (
                     <div key={i} style={{ display:"flex", gap:8, marginBottom:7, alignItems:"flex-start" }}>
-                      <span style={{ fontSize:9.5, fontWeight:500, color:T.blue, background:`${T.blue}14`, borderRadius:99, minWidth:19, height:19, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, fontFamily:fontDisp }}>{i+1}</span>
-                      <E val={pr} onSave={v=>setMetaProtocol(p=>{const arr=[...p.principios];arr[i]=v;return{...p,principios:arr};})} style={{ fontSize:12, color:T.txt, fontFamily:font, lineHeight:1.5, flex:1 }} />
+                      <span style={{ fontSize:10.5, fontWeight:500, color:T.blue, background:`${T.blue}14`, borderRadius:99, minWidth:19, height:19, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, fontFamily:fontDisp }}>{i+1}</span>
+                      <E val={pr} onSave={v=>setMetaProtocol(p=>{const arr=[...p.principios];arr[i]=v;return{...p,principios:arr};})} style={{ fontSize:12.5, color:T.txt, fontFamily:font, lineHeight:1.5, flex:1 }} />
                     </div>
                   ))}
                   <div style={{ marginTop:10, padding:"7px 10px", borderRadius:8, background:`${T.blue}09`, border:`1px solid ${T.blue}1A` }}>
-                    <p style={{ margin:"0 0 2px", fontSize:8.5, fontWeight:500, color:T.blue, fontFamily:fontDisp, letterSpacing:"0.08em", textTransform:"uppercase" }}>Regla Crítica</p>
-                    <E val={metaProtocol.reglaRegistro} onSave={v=>setMetaProtocol(p=>({...p,reglaRegistro:v}))} multi style={{ fontSize:11, color:T.txt2, fontFamily:font, lineHeight:1.5 }} />
+                    <p style={{ margin:"0 0 2px", fontSize:10, fontWeight:500, color:T.blue, fontFamily:fontDisp, letterSpacing:"0.08em", textTransform:"uppercase" }}>Regla Crítica</p>
+                    <E val={metaProtocol.reglaRegistro} onSave={v=>setMetaProtocol(p=>({...p,reglaRegistro:v}))} multi style={{ fontSize:12, color:T.txt2, fontFamily:font, lineHeight:1.5 }} />
                   </div>
                 </div>
 
@@ -1819,21 +1819,21 @@ export default function MetaPanel({
                   {sectionHd("3. Velocidad de Respuesta", T.violet)}
                   <div style={{ display:"flex", gap:8, marginBottom:12 }}>
                     <div style={{ flex:1, padding:"10px", borderRadius:10, background:"rgba(52,211,153,0.10)", border:"1px solid rgba(52,211,153,0.22)", textAlign:"center" }}>
-                      <p style={{ margin:"0 0 2px", fontSize:8.5, color:"#34D399", fontFamily:fontDisp, fontWeight:500, letterSpacing:"0.06em", textTransform:"uppercase" }}>Ideal</p>
+                      <p style={{ margin:"0 0 2px", fontSize:10, color:"#34D399", fontFamily:fontDisp, fontWeight:500, letterSpacing:"0.06em", textTransform:"uppercase" }}>Ideal</p>
                       <E val={metaProtocol.velocidadIdeal} onSave={v=>setMetaProtocol(p=>({...p,velocidadIdeal:v}))} style={{ fontSize:16, fontWeight:500, color:"#34D399", fontFamily:fontDisp, letterSpacing:"-0.02em", textAlign:"center" }} />
                     </div>
                     <div style={{ flex:1, padding:"10px", borderRadius:10, background:"rgba(239,68,68,0.10)", border:"1px solid rgba(239,68,68,0.22)", textAlign:"center" }}>
-                      <p style={{ margin:"0 0 2px", fontSize:8.5, color:"#EF4444", fontFamily:fontDisp, fontWeight:500, letterSpacing:"0.06em", textTransform:"uppercase" }}>Máximo</p>
+                      <p style={{ margin:"0 0 2px", fontSize:10, color:"#EF4444", fontFamily:fontDisp, fontWeight:500, letterSpacing:"0.06em", textTransform:"uppercase" }}>Máximo</p>
                       <E val={metaProtocol.velocidadMax} onSave={v=>setMetaProtocol(p=>({...p,velocidadMax:v}))} style={{ fontSize:16, fontWeight:500, color:"#EF4444", fontFamily:fontDisp, letterSpacing:"-0.02em", textAlign:"center" }} />
                     </div>
                   </div>
-                  <p style={{ margin:"0 0 6px", fontSize:9, fontWeight:500, color:T.violet, fontFamily:fontDisp, letterSpacing:"0.07em", textTransform:"uppercase" }}>Protocolo Inmediato</p>
+                  <p style={{ margin:"0 0 6px", fontSize:10.5, fontWeight:500, color:T.violet, fontFamily:fontDisp, letterSpacing:"0.07em", textTransform:"uppercase" }}>Protocolo Inmediato</p>
                   {["Mensaje por WhatsApp", "Llamada directa", "Sin respuesta → mensaje breve + siguiente intento"].map((s, i) => (
                     <div key={i} style={{ display:"flex", gap:7, marginBottom:5, alignItems:"flex-start" }}>
                       <div style={{ width:16, height:16, borderRadius:"50%", background:`${T.violet}14`, border:`1px solid ${T.violet}30`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, marginTop:1 }}>
-                        <span style={{ fontSize:7.5, fontWeight:500, color:T.violet, fontFamily:fontDisp }}>{i+1}</span>
+                        <span style={{ fontSize:9, fontWeight:500, color:T.violet, fontFamily:fontDisp }}>{i+1}</span>
                       </div>
-                      <span style={{ fontSize:11.5, color:T.txt2, fontFamily:font, lineHeight:1.45 }}>{s}</span>
+                      <span style={{ fontSize:12, color:T.txt2, fontFamily:font, lineHeight:1.45 }}>{s}</span>
                     </div>
                   ))}
                 </div>
@@ -1850,12 +1850,12 @@ export default function MetaPanel({
                       <div key={si} style={{ padding:"13px 14px", borderRadius:12, background:isLight?"rgba(255,255,255,0.85)":"rgba(255,255,255,0.03)", border:`1px solid ${c}25` }}>
                         <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:8 }}>
                           <div style={{ width:24, height:24, borderRadius:"50%", background:`${c}18`, border:`1.5px solid ${c}35`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
-                            <span style={{ fontSize:10, fontWeight:500, color:c, fontFamily:fontDisp }}>{si+1}</span>
+                            <span style={{ fontSize:11, fontWeight:500, color:c, fontFamily:fontDisp }}>{si+1}</span>
                           </div>
-                          <E val={step.n} onSave={v=>setMetaProtocol(p=>{const f=[...p.flujoSteps];f[si]={...f[si],n:v};return{...p,flujoSteps:f};})} style={{ fontSize:12, fontWeight:500, color:T.txt, fontFamily:fontDisp }} />
+                          <E val={step.n} onSave={v=>setMetaProtocol(p=>{const f=[...p.flujoSteps];f[si]={...f[si],n:v};return{...p,flujoSteps:f};})} style={{ fontSize:12.5, fontWeight:500, color:T.txt, fontFamily:fontDisp }} />
                         </div>
-                        <p style={{ margin:"0 0 7px", fontSize:10, color:c, fontFamily:font, fontStyle:"italic", paddingLeft:32 }}>{step.desc}</p>
-                        <E val={step.action} onSave={v=>setMetaProtocol(p=>{const f=[...p.flujoSteps];f[si]={...f[si],action:v};return{...p,flujoSteps:f};})} multi style={{ fontSize:11, color:T.txt2, fontFamily:font, lineHeight:1.55, paddingLeft:32 }} />
+                        <p style={{ margin:"0 0 7px", fontSize:11, color:c, fontFamily:font, fontStyle:"italic", paddingLeft:32 }}>{step.desc}</p>
+                        <E val={step.action} onSave={v=>setMetaProtocol(p=>{const f=[...p.flujoSteps];f[si]={...f[si],action:v};return{...p,flujoSteps:f};})} multi style={{ fontSize:12, color:T.txt2, fontFamily:font, lineHeight:1.55, paddingLeft:32 }} />
                       </div>
                     );
                   })}
@@ -1875,8 +1875,8 @@ export default function MetaPanel({
                     return (
                       <div key={i} style={{ display:"flex", alignItems:"center", gap:5 }}>
                         <div style={{ display:"flex", alignItems:"center", gap:5, padding:"5px 11px 5px 7px", borderRadius:99, background:`${c}14`, border:`1px solid ${c}30` }}>
-                          <span style={{ fontSize:8, fontWeight:500, color:c, fontFamily:fontDisp, minWidth:13, textAlign:"center" }}>{i+1}</span>
-                          <span style={{ fontSize:10.5, fontWeight:400, color:T.txt, fontFamily:fontDisp }}>{st}</span>
+                          <span style={{ fontSize:9.5, fontWeight:500, color:c, fontFamily:fontDisp, minWidth:13, textAlign:"center" }}>{i+1}</span>
+                          <span style={{ fontSize:11.5, fontWeight:400, color:T.txt, fontFamily:fontDisp }}>{st}</span>
                         </div>
                         {i < 9 && <ChevronRight size={10} color={T.txt3} style={{ opacity:0.35 }} />}
                       </div>
@@ -1894,7 +1894,7 @@ export default function MetaPanel({
                   {metaProtocol.reglasOp.map((r, i) => (
                     <div key={i} style={{ display:"flex", gap:7, marginBottom:7, alignItems:"flex-start" }}>
                       <AlertCircle size={11} color="#EF4444" style={{ marginTop:2, flexShrink:0 }} />
-                      <E val={r} onSave={v=>setMetaProtocol(p=>{const arr=[...p.reglasOp];arr[i]=v;return{...p,reglasOp:arr};})} style={{ fontSize:11.5, color:T.txt, fontFamily:font, lineHeight:1.5, flex:1 }} />
+                      <E val={r} onSave={v=>setMetaProtocol(p=>{const arr=[...p.reglasOp];arr[i]=v;return{...p,reglasOp:arr};})} style={{ fontSize:12, color:T.txt, fontFamily:font, lineHeight:1.5, flex:1 }} />
                     </div>
                   ))}
                 </div>
@@ -1902,13 +1902,13 @@ export default function MetaPanel({
                 {/* Seguimiento Fases */}
                 <div style={{ padding:"13px 14px", borderRadius:13, background:isLight?"rgba(126,184,240,0.05)":"rgba(126,184,240,0.03)", border:`1px solid ${T.blue}20` }}>
                   {sectionHd("7. Fases de Seguimiento", T.blue)}
-                  <p style={{ margin:"0 0 8px", fontSize:11, color:T.txt2, fontFamily:font, lineHeight:1.5 }}>Las ventas ocurren hasta después de 30–45 intentos. <strong style={{ color:T.txt }}>No abandonar sin razón clara.</strong></p>
+                  <p style={{ margin:"0 0 8px", fontSize:12, color:T.txt2, fontFamily:font, lineHeight:1.5 }}>Las ventas ocurren hasta después de 30–45 intentos. <strong style={{ color:T.txt }}>No abandonar sin razón clara.</strong></p>
                   {metaProtocol.seguimientoFases.map((f, i) => {
                     const fc = i===0?"#60A5FA":i===1?"#34D399":i===2?"#A78BFA":"#F59E0B";
                     return (
                       <div key={i} style={{ display:"flex", alignItems:"center", gap:8, marginBottom:6, padding:"7px 9px", borderRadius:8, background:`${fc}09`, border:`1px solid ${fc}18` }}>
-                        <span style={{ fontSize:9, fontWeight:500, color:fc, background:`${fc}18`, padding:"2px 7px", borderRadius:99, flexShrink:0, fontFamily:fontDisp, whiteSpace:"nowrap" }}>{f.range}</span>
-                        <E val={f.desc} onSave={v=>setMetaProtocol(p=>{const arr=[...p.seguimientoFases];arr[i]={...arr[i],desc:v};return{...p,seguimientoFases:arr};})} style={{ fontSize:11.5, color:T.txt2, fontFamily:font, flex:1 }} />
+                        <span style={{ fontSize:10.5, fontWeight:500, color:fc, background:`${fc}18`, padding:"2px 7px", borderRadius:99, flexShrink:0, fontFamily:fontDisp, whiteSpace:"nowrap" }}>{f.range}</span>
+                        <E val={f.desc} onSave={v=>setMetaProtocol(p=>{const arr=[...p.seguimientoFases];arr[i]={...arr[i],desc:v};return{...p,seguimientoFases:arr};})} style={{ fontSize:12, color:T.txt2, fontFamily:font, flex:1 }} />
                       </div>
                     );
                   })}
@@ -1920,14 +1920,14 @@ export default function MetaPanel({
                   {metaProtocol.seguimientoFreq.map((f, i) => (
                     <div key={i} style={{ padding:"9px 11px", borderRadius:10, marginBottom:6, background:isLight?"rgba(255,255,255,0.85)":"rgba(255,255,255,0.04)", border:`1px solid ${f.color}22` }}>
                       <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:3 }}>
-                        <span style={{ fontSize:11, fontWeight:500, color:f.color, fontFamily:fontDisp }}>{f.tipo}</span>
-                        <E val={f.freq} onSave={v=>setMetaProtocol(p=>{const arr=[...p.seguimientoFreq];arr[i]={...arr[i],freq:v};return{...p,seguimientoFreq:arr};})} style={{ fontSize:10.5, fontWeight:400, color:T.txt2, fontFamily:fontDisp }} />
+                        <span style={{ fontSize:12, fontWeight:500, color:f.color, fontFamily:fontDisp }}>{f.tipo}</span>
+                        <E val={f.freq} onSave={v=>setMetaProtocol(p=>{const arr=[...p.seguimientoFreq];arr[i]={...arr[i],freq:v};return{...p,seguimientoFreq:arr};})} style={{ fontSize:11.5, fontWeight:400, color:T.txt2, fontFamily:fontDisp }} />
                       </div>
                     </div>
                   ))}
                   <div style={{ marginTop:4, padding:"8px 10px", borderRadius:8, background:`${T.accent}08`, border:`1px solid ${T.accent}16` }}>
-                    <p style={{ margin:"0 0 2px", fontSize:8, fontWeight:500, color:T.accent, fontFamily:fontDisp, letterSpacing:"0.07em", textTransform:"uppercase" }}>Reglas</p>
-                    <p style={{ margin:0, fontSize:10, color:T.txt3, fontFamily:font, lineHeight:1.55 }}>No repetir mensajes · Cada contacto aporta valor · Siempre cerrar con siguiente paso</p>
+                    <p style={{ margin:"0 0 2px", fontSize:9.5, fontWeight:500, color:T.accent, fontFamily:fontDisp, letterSpacing:"0.07em", textTransform:"uppercase" }}>Reglas</p>
+                    <p style={{ margin:0, fontSize:11, color:T.txt3, fontFamily:font, lineHeight:1.55 }}>No repetir mensajes · Cada contacto aporta valor · Siempre cerrar con siguiente paso</p>
                   </div>
                 </div>
               </div>
@@ -1938,11 +1938,11 @@ export default function MetaPanel({
                 <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:8 }}>
                   {metaProtocol.kpis.map((k, i) => (
                     <div key={i} style={{ padding:"11px 12px", borderRadius:12, background:isLight?"rgba(255,255,255,0.85)":"rgba(255,255,255,0.04)", border:`1px solid ${k.color}25` }}>
-                      <p style={{ margin:"0 0 8px", fontSize:9.5, fontWeight:500, color:k.color, fontFamily:fontDisp, letterSpacing:"0.08em", textTransform:"uppercase" }}>{k.cat}</p>
+                      <p style={{ margin:"0 0 8px", fontSize:10.5, fontWeight:500, color:k.color, fontFamily:fontDisp, letterSpacing:"0.08em", textTransform:"uppercase" }}>{k.cat}</p>
                       {k.items.map((item, ii) => (
                         <div key={ii} style={{ display:"flex", gap:6, marginBottom:5, alignItems:"flex-start" }}>
                           <div style={{ width:4, height:4, borderRadius:"50%", background:k.color, marginTop:6, flexShrink:0 }} />
-                          <span style={{ fontSize:11, color:T.txt2, fontFamily:font, lineHeight:1.45 }}>{item}</span>
+                          <span style={{ fontSize:12, color:T.txt2, fontFamily:font, lineHeight:1.45 }}>{item}</span>
                         </div>
                       ))}
                     </div>
@@ -1959,7 +1959,7 @@ export default function MetaPanel({
                   {metaProtocol.alertas.map((al, i) => (
                     <div key={i} style={{ display:"flex", gap:7, marginBottom:6, alignItems:"flex-start" }}>
                       <Bell size={11} color="#F59E0B" style={{ marginTop:2, flexShrink:0 }} />
-                      <E val={al} onSave={v=>setMetaProtocol(p=>{const arr=[...p.alertas];arr[i]=v;return{...p,alertas:arr};})} style={{ fontSize:11.5, color:T.txt, fontFamily:font, lineHeight:1.5, flex:1 }} />
+                      <E val={al} onSave={v=>setMetaProtocol(p=>{const arr=[...p.alertas];arr[i]=v;return{...p,alertas:arr};})} style={{ fontSize:12, color:T.txt, fontFamily:font, lineHeight:1.5, flex:1 }} />
                     </div>
                   ))}
                 </div>
@@ -1970,12 +1970,12 @@ export default function MetaPanel({
                   {metaProtocol.errores.map((er, i) => (
                     <div key={i} style={{ display:"flex", gap:7, marginBottom:6, alignItems:"flex-start" }}>
                       <X size={11} color="#F87171" style={{ marginTop:2, flexShrink:0 }} />
-                      <E val={er} onSave={v=>setMetaProtocol(p=>{const arr=[...p.errores];arr[i]=v;return{...p,errores:arr};})} style={{ fontSize:11.5, color:T.txt, fontFamily:font, lineHeight:1.5, flex:1 }} />
+                      <E val={er} onSave={v=>setMetaProtocol(p=>{const arr=[...p.errores];arr[i]=v;return{...p,errores:arr};})} style={{ fontSize:12, color:T.txt, fontFamily:font, lineHeight:1.5, flex:1 }} />
                     </div>
                   ))}
                   <div style={{ marginTop:8, padding:"8px 10px", borderRadius:8, background:"rgba(248,113,113,0.08)", border:"1px solid rgba(248,113,113,0.16)" }}>
-                    <p style={{ margin:"0 0 2px", fontSize:8.5, fontWeight:500, color:"#F87171", fontFamily:fontDisp, letterSpacing:"0.07em", textTransform:"uppercase" }}>12. Cierre de Proceso</p>
-                    <E val={metaProtocol.cierre} onSave={v=>setMetaProtocol(p=>({...p,cierre:v}))} multi style={{ fontSize:10, color:T.txt2, fontFamily:font, lineHeight:1.55 }} />
+                    <p style={{ margin:"0 0 2px", fontSize:10, fontWeight:500, color:"#F87171", fontFamily:fontDisp, letterSpacing:"0.07em", textTransform:"uppercase" }}>12. Cierre de Proceso</p>
+                    <E val={metaProtocol.cierre} onSave={v=>setMetaProtocol(p=>({...p,cierre:v}))} multi style={{ fontSize:11, color:T.txt2, fontFamily:font, lineHeight:1.55 }} />
                   </div>
                 </div>
 
@@ -1983,7 +1983,7 @@ export default function MetaPanel({
                 <div style={{ padding:"13px 14px", borderRadius:13, background:isLight?"rgba(110,231,194,0.08)":"rgba(110,231,194,0.04)", border:`1px solid ${T.accent}25`, display:"flex", flexDirection:"column", justifyContent:"center" }}>
                   {sectionHd("13. Principio Final", T.accent)}
                   <div style={{ textAlign:"center", padding:"10px 0" }}>
-                    <p style={{ margin:"0 0 8px", fontSize:11, color:T.txt3, fontFamily:font, lineHeight:1.6 }}>No gana el que más leads tiene.</p>
+                    <p style={{ margin:"0 0 8px", fontSize:12, color:T.txt3, fontFamily:font, lineHeight:1.6 }}>No gana el que más leads tiene.</p>
                     <p style={{ margin:"0 0 12px", fontSize:13, fontWeight:500, color:T.txt, fontFamily:fontDisp, letterSpacing:"-0.02em" }}>Gana el que mejor los trabaja.</p>
                     <div style={{ padding:"12px 14px", borderRadius:10, background:`${T.accent}10`, border:`1px solid ${T.accent}25` }}>
                       <E val={metaProtocol.principioFinal} onSave={v=>setMetaProtocol(p=>({...p,principioFinal:v}))} style={{ fontSize:15, fontWeight:500, color:T.accent, fontFamily:fontDisp, letterSpacing:"-0.02em", textAlign:"center", lineHeight:1.4 }} />
@@ -1997,26 +1997,26 @@ export default function MetaPanel({
                 <div>
                   <div style={{ display:"flex", alignItems:"center", gap:7, marginBottom:10 }}>
                     <div style={{ width:3, height:13, borderRadius:2, background:T.blue }} />
-                    <span style={{ fontSize:8.5, fontWeight:500, fontFamily:fontDisp, letterSpacing:"0.13em", textTransform:"uppercase", color:T.blue }}>8. Calificación BANT · Stratos AI</span>
+                    <span style={{ fontSize:10, fontWeight:500, fontFamily:fontDisp, letterSpacing:"0.13em", textTransform:"uppercase", color:T.blue }}>8. Calificación BANT · Stratos AI</span>
                   </div>
                   {metaProtocol.qualification.map((q, qi) => (
                     <div key={qi} style={{ padding:"9px 12px", borderRadius:10, marginBottom:6, background:isLight?"rgba(255,255,255,0.90)":"rgba(255,255,255,0.04)", border:`1px solid ${T.border}` }}>
                       <div style={{ display:"flex", alignItems:"center", gap:7, marginBottom:4 }}>
-                        <span style={{ fontSize:8.5, fontWeight:500, color:T.blue, background:`${T.blue}14`, borderRadius:5, padding:"2px 7px", flexShrink:0 }}>{q.label}</span>
+                        <span style={{ fontSize:10, fontWeight:500, color:T.blue, background:`${T.blue}14`, borderRadius:5, padding:"2px 7px", flexShrink:0 }}>{q.label}</span>
                       </div>
-                      <E val={q.q} onSave={v => setMetaProtocol(p => { const qq=[...p.qualification]; qq[qi]={...qq[qi],q:v}; return {...p,qualification:qq}; })} multi style={{ fontSize:11.5, color:T.txt, fontFamily:font, lineHeight:1.5 }} />
+                      <E val={q.q} onSave={v => setMetaProtocol(p => { const qq=[...p.qualification]; qq[qi]={...qq[qi],q:v}; return {...p,qualification:qq}; })} multi style={{ fontSize:12, color:T.txt, fontFamily:font, lineHeight:1.5 }} />
                     </div>
                   ))}
                 </div>
                 <div>
                   <div style={{ display:"flex", alignItems:"center", gap:7, marginBottom:10 }}>
                     <div style={{ width:3, height:13, borderRadius:2, background:"#F87171" }} />
-                    <span style={{ fontSize:8.5, fontWeight:500, fontFamily:fontDisp, letterSpacing:"0.13em", textTransform:"uppercase", color:"#F87171" }}>Manejo de Objeciones</span>
+                    <span style={{ fontSize:10, fontWeight:500, fontFamily:fontDisp, letterSpacing:"0.13em", textTransform:"uppercase", color:"#F87171" }}>Manejo de Objeciones</span>
                   </div>
                   {metaProtocol.objections.map((o, oi) => (
                     <div key={oi} style={{ padding:"9px 12px", borderRadius:10, marginBottom:6, background:isLight?"rgba(255,255,255,0.90)":"rgba(255,255,255,0.04)", border:`1px solid ${T.border}` }}>
-                      <E val={o.obj} onSave={v => setMetaProtocol(p => { const ob=[...p.objections]; ob[oi]={...ob[oi],obj:v}; return {...p,objections:ob}; })} style={{ fontSize:11, fontWeight:500, color:"#F87171", fontFamily:fontDisp, marginBottom:4 }} />
-                      <E val={o.resp} onSave={v => setMetaProtocol(p => { const ob=[...p.objections]; ob[oi]={...ob[oi],resp:v}; return {...p,objections:ob}; })} multi style={{ fontSize:11.5, color:T.txt, fontFamily:font, lineHeight:1.5 }} />
+                      <E val={o.obj} onSave={v => setMetaProtocol(p => { const ob=[...p.objections]; ob[oi]={...ob[oi],obj:v}; return {...p,objections:ob}; })} style={{ fontSize:12, fontWeight:500, color:"#F87171", fontFamily:fontDisp, marginBottom:4 }} />
+                      <E val={o.resp} onSave={v => setMetaProtocol(p => { const ob=[...p.objections]; ob[oi]={...ob[oi],resp:v}; return {...p,objections:ob}; })} multi style={{ fontSize:12, color:T.txt, fontFamily:font, lineHeight:1.5 }} />
                     </div>
                   ))}
                 </div>
@@ -2026,20 +2026,20 @@ export default function MetaPanel({
               <div>
                 <div style={{ display:"flex", alignItems:"center", gap:7, marginBottom:10 }}>
                   <div style={{ width:3, height:13, borderRadius:2, background:T.violet }} />
-                  <span style={{ fontSize:8.5, fontWeight:500, fontFamily:fontDisp, letterSpacing:"0.13em", textTransform:"uppercase", color:T.violet }}>SLA de Respuesta · Tiempos Críticos</span>
+                  <span style={{ fontSize:10, fontWeight:500, fontFamily:fontDisp, letterSpacing:"0.13em", textTransform:"uppercase", color:T.violet }}>SLA de Respuesta · Tiempos Críticos</span>
                 </div>
                 <div style={{ borderRadius:11, overflow:"hidden", border:`1px solid ${T.border}` }}>
                   <div style={{ display:"grid", gridTemplateColumns:"2fr 1.2fr 0.7fr 1.2fr", padding:"7px 12px", background:isLight?"rgba(0,0,0,0.03)":"rgba(255,255,255,0.04)", borderBottom:`1px solid ${T.border}` }}>
                     {["Evento","Respuesta","Tiempo","Responsable"].map(h => (
-                      <span key={h} style={{ fontSize:8.5, fontWeight:500, color:T.txt2, fontFamily:fontDisp, letterSpacing:"0.05em", textTransform:"uppercase" }}>{h}</span>
+                      <span key={h} style={{ fontSize:10, fontWeight:500, color:T.txt2, fontFamily:fontDisp, letterSpacing:"0.05em", textTransform:"uppercase" }}>{h}</span>
                     ))}
                   </div>
                   {metaProtocol.slas.map((sl, si) => (
                     <div key={si} style={{ display:"grid", gridTemplateColumns:"2fr 1.2fr 0.7fr 1.2fr", padding:"8px 12px", borderBottom: si < metaProtocol.slas.length-1 ? `1px solid ${T.border}` : "none", background: si%2===0 ? "transparent" : (isLight?"rgba(0,0,0,0.015)":"rgba(255,255,255,0.015)") }}>
-                      <E val={sl.trigger} onSave={v => setMetaProtocol(p => { const ss=[...p.slas]; ss[si]={...ss[si],trigger:v}; return {...p,slas:ss}; })} style={{ fontSize:11, color:T.txt, fontFamily:font }} />
-                      <E val={sl.resp}    onSave={v => setMetaProtocol(p => { const ss=[...p.slas]; ss[si]={...ss[si],resp:v};    return {...p,slas:ss}; })} style={{ fontSize:11, color:T.txt, fontFamily:font }} />
-                      <E val={sl.time}    onSave={v => setMetaProtocol(p => { const ss=[...p.slas]; ss[si]={...ss[si],time:v};    return {...p,slas:ss}; })} style={{ fontSize:11, fontWeight:500, color:T.accent, fontFamily:fontDisp }} />
-                      <E val={sl.owner}   onSave={v => setMetaProtocol(p => { const ss=[...p.slas]; ss[si]={...ss[si],owner:v};   return {...p,slas:ss}; })} style={{ fontSize:11, color:T.txt2, fontFamily:font }} />
+                      <E val={sl.trigger} onSave={v => setMetaProtocol(p => { const ss=[...p.slas]; ss[si]={...ss[si],trigger:v}; return {...p,slas:ss}; })} style={{ fontSize:12, color:T.txt, fontFamily:font }} />
+                      <E val={sl.resp}    onSave={v => setMetaProtocol(p => { const ss=[...p.slas]; ss[si]={...ss[si],resp:v};    return {...p,slas:ss}; })} style={{ fontSize:12, color:T.txt, fontFamily:font }} />
+                      <E val={sl.time}    onSave={v => setMetaProtocol(p => { const ss=[...p.slas]; ss[si]={...ss[si],time:v};    return {...p,slas:ss}; })} style={{ fontSize:12, fontWeight:500, color:T.accent, fontFamily:fontDisp }} />
+                      <E val={sl.owner}   onSave={v => setMetaProtocol(p => { const ss=[...p.slas]; ss[si]={...ss[si],owner:v};   return {...p,slas:ss}; })} style={{ fontSize:12, color:T.txt2, fontFamily:font }} />
                     </div>
                   ))}
                 </div>

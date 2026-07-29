@@ -162,7 +162,7 @@ export default function DocsStratos({ T, isLight, userId, empresa = "NSG" }) {
           <div style={{ fontSize: 14, color: txt, fontFamily: fontDisp, textWrap: "pretty" }}>
             Manual de {MANUAL.titulo} — módulo por módulo
           </div>
-          <div style={{ fontSize: 11.5, color: txt3, marginTop: 3 }}>
+          <div style={{ fontSize: 12, color: txt3, marginTop: 3 }}>
             {MANUAL.secciones.length} secciones · {MANUAL.secciones.reduce((a, s) => a + s.items.length, 0)} funciones · qué hace cada una y qué cambia
           </div>
         </div>
@@ -203,7 +203,7 @@ export default function DocsStratos({ T, isLight, userId, empresa = "NSG" }) {
           </span>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ fontSize: 13.5, color: txt, fontFamily: fontDisp, textWrap: "pretty" }}>{d.titulo}</div>
-            <div style={{ fontSize: 11.5, color: txt3, marginTop: 3 }}>
+            <div style={{ fontSize: 12, color: txt3, marginTop: 3 }}>
               {d.tipo} · {fechaLarga(d.fecha)}{d.autor ? ` · ${d.autor.split(" ")[0]}` : ""}
             </div>
           </div>

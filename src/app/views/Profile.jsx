@@ -63,7 +63,7 @@ export default function Profile({ theme = "dark", T: Tprop }) {
       <div style={{ marginBottom: 28 }}>
         <p style={{
           margin: "0 0 8px",
-          fontSize: 11, fontWeight: 500, letterSpacing: "0.14em",
+          fontSize: 12, fontWeight: 500, letterSpacing: "0.14em",
           textTransform: "uppercase",
           color: isLight ? T.txt3 : "rgba(255,255,255,0.36)",
           fontFamily: fontDisp,
@@ -197,7 +197,7 @@ function PasswordPanel({ T = P, isLight = false, user }) {
         </div>
         <div>
           <h2 style={{ margin: "0 0 2px", fontSize: 17, fontWeight: 400, color: T.txt, fontFamily: fontDisp }}>System</h2>
-          <p style={{ margin: 0, fontSize: 12, color: T.txt2 }}>Cambia tu contraseña de acceso sin pedir soporte.</p>
+          <p style={{ margin: 0, fontSize: 12.5, color: T.txt2 }}>Cambia tu contraseña de acceso sin pedir soporte.</p>
         </div>
       </div>
       <form onSubmit={handleSubmit} style={{ display: "grid", gap: 10 }}>
@@ -208,7 +208,7 @@ function PasswordPanel({ T = P, isLight = false, user }) {
         </button>
       </form>
       {(message || errorMsg) && (
-        <div style={{ marginTop: 12, padding: "10px 12px", borderRadius: 10, fontSize: 12, color: errorMsg ? (isLight ? "#B91C1C" : "#FCA5A5") : (isLight ? "#047857" : "#6EE7C2"), background: errorMsg ? (isLight ? "rgba(225,29,72,0.08)" : "rgba(248,113,113,0.08)") : `${T.accent}12`, border: `1px solid ${errorMsg ? (isLight ? "rgba(225,29,72,0.22)" : "rgba(248,113,113,0.22)") : `${T.accent}2A`}` }}>
+        <div style={{ marginTop: 12, padding: "10px 12px", borderRadius: 10, fontSize: 12.5, color: errorMsg ? (isLight ? "#B91C1C" : "#FCA5A5") : (isLight ? "#047857" : "#6EE7C2"), background: errorMsg ? (isLight ? "rgba(225,29,72,0.08)" : "rgba(248,113,113,0.08)") : `${T.accent}12`, border: `1px solid ${errorMsg ? (isLight ? "rgba(225,29,72,0.22)" : "rgba(248,113,113,0.22)") : `${T.accent}2A`}` }}>
           {errorMsg || message}
         </div>
       )}
@@ -267,14 +267,14 @@ function RecoveryEmailPanel({ T = P, isLight = false, user }) {
         </div>
         <div style={{ minWidth: 0 }}>
           <h2 style={{ margin: "0 0 2px", fontSize: 17, fontWeight: 400, color: T.txt, fontFamily: fontDisp }}>Correo de recuperación</h2>
-          <p style={{ margin: 0, fontSize: 12, color: T.txt2 }}>
+          <p style={{ margin: 0, fontSize: 12.5, color: T.txt2 }}>
             Si olvidas tu contraseña, te enviamos un código a este correo. Usa uno al que sí tengas acceso.
           </p>
         </div>
       </div>
 
       {loading ? (
-        <div style={{ fontSize: 12, color: T.txt3 }}>Cargando…</div>
+        <div style={{ fontSize: 12.5, color: T.txt3 }}>Cargando…</div>
       ) : (
         <>
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
@@ -296,7 +296,7 @@ function RecoveryEmailPanel({ T = P, isLight = false, user }) {
               {busy ? "Guardando..." : "Guardar"}
             </button>
           </div>
-          <div style={{ marginTop: 10, fontSize: 12, color: T.txt3 }}>
+          <div style={{ marginTop: 10, fontSize: 12.5, color: T.txt3 }}>
             {current
               ? <>Actual: <strong style={{ color: T.txt }}>{current}</strong></>
               : <>Aún no configuras un correo de recuperación.</>}
@@ -305,7 +305,7 @@ function RecoveryEmailPanel({ T = P, isLight = false, user }) {
       )}
 
       {(message || errorMsg) && (
-        <div style={{ marginTop: 12, padding: "10px 12px", borderRadius: 10, fontSize: 12, color: errorMsg ? (isLight ? "#B91C1C" : "#FCA5A5") : (isLight ? "#047857" : "#6EE7C2"), background: errorMsg ? (isLight ? "rgba(225,29,72,0.08)" : "rgba(248,113,113,0.08)") : `${T.accent}12`, border: `1px solid ${errorMsg ? (isLight ? "rgba(225,29,72,0.22)" : "rgba(248,113,113,0.22)") : `${T.accent}2A`}` }}>
+        <div style={{ marginTop: 12, padding: "10px 12px", borderRadius: 10, fontSize: 12.5, color: errorMsg ? (isLight ? "#B91C1C" : "#FCA5A5") : (isLight ? "#047857" : "#6EE7C2"), background: errorMsg ? (isLight ? "rgba(225,29,72,0.08)" : "rgba(248,113,113,0.08)") : `${T.accent}12`, border: `1px solid ${errorMsg ? (isLight ? "rgba(225,29,72,0.22)" : "rgba(248,113,113,0.22)") : `${T.accent}2A`}` }}>
           {errorMsg || message}
         </div>
       )}
@@ -327,7 +327,7 @@ function SupportPanel({ T = P, isLight = false, clientConfig }) {
         </div>
         <div style={{ minWidth: 0 }}>
           <h2 style={{ margin: "0 0 2px", fontSize: 17, fontWeight: 400, color: T.txt, fontFamily: fontDisp }}>Soporte directo</h2>
-          <p style={{ margin: 0, fontSize: 12, color: T.txt2 }}>Mientras activamos más funciones, llama o escribe a soporte.</p>
+          <p style={{ margin: 0, fontSize: 12.5, color: T.txt2 }}>Mientras activamos más funciones, llama o escribe a soporte.</p>
         </div>
       </div>
       <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
@@ -433,16 +433,16 @@ function TimezonePanel({ T = P, isLight = false, user }) {
         </div>
         <div style={{ minWidth: 0 }}>
           <h2 style={{ margin: "0 0 2px", fontSize: 17, fontWeight: 400, color: T.txt, fontFamily: fontDisp }}>Zona horaria</h2>
-          <p style={{ margin: 0, fontSize: 12, color: T.txt2 }}>
+          <p style={{ margin: 0, fontSize: 12.5, color: T.txt2 }}>
             El bot de Telegram y los recordatorios usan esta zona para interpretar y mostrar fechas. Default: Cancun.
           </p>
         </div>
       </div>
 
       {detected && detected !== currentTz && (
-        <div style={{ marginBottom: 10, padding: "8px 12px", borderRadius: 8, background: isLight ? "rgba(15,23,42,0.04)" : "rgba(255,255,255,0.04)", border: `1px solid ${T.border}`, fontSize: 12, color: T.txt2, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, flexWrap: "wrap" }}>
+        <div style={{ marginBottom: 10, padding: "8px 12px", borderRadius: 8, background: isLight ? "rgba(15,23,42,0.04)" : "rgba(255,255,255,0.04)", border: `1px solid ${T.border}`, fontSize: 12.5, color: T.txt2, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, flexWrap: "wrap" }}>
           <span>Detectada por tu navegador: <strong style={{ color: T.txt }}>{detected}</strong></span>
-          <button type="button" onClick={() => save(detected)} disabled={disabled || busy} style={{ padding: "5px 10px", borderRadius: 8, border: `1px solid ${T.accent}40`, background: `${T.accent}14`, color: T.txt, fontSize: 11, fontWeight: 500, fontFamily: fontDisp, cursor: disabled || busy ? "not-allowed" : "pointer" }}>
+          <button type="button" onClick={() => save(detected)} disabled={disabled || busy} style={{ padding: "5px 10px", borderRadius: 8, border: `1px solid ${T.accent}40`, background: `${T.accent}14`, color: T.txt, fontSize: 12, fontWeight: 500, fontFamily: fontDisp, cursor: disabled || busy ? "not-allowed" : "pointer" }}>
             Usar la detectada
           </button>
         </div>
@@ -468,21 +468,21 @@ function TimezonePanel({ T = P, isLight = false, user }) {
       </select>
 
       <div style={{ marginTop: 12, display: "flex", gap: 8, alignItems: "center", justifyContent: "space-between", flexWrap: "wrap" }}>
-        <span style={{ fontSize: 12, color: T.txt3 }}>
+        <span style={{ fontSize: 12.5, color: T.txt3 }}>
           Actual: <strong style={{ color: T.txt }}>{currentTz}</strong>
         </span>
         <button
           type="button"
           onClick={() => save(draftTz)}
           disabled={disabled || busy || draftTz === currentTz}
-          style={{ height: 36, padding: "0 16px", borderRadius: 10, border: "none", background: (disabled || busy || draftTz === currentTz) ? (isLight ? "rgba(15,23,42,0.08)" : "rgba(255,255,255,0.08)") : T.accent, color: (disabled || busy || draftTz === currentTz) ? T.txt3 : "#06120E", fontWeight: 500, fontFamily: fontDisp, fontSize: 12, cursor: (disabled || busy || draftTz === currentTz) ? "not-allowed" : "pointer" }}
+          style={{ height: 36, padding: "0 16px", borderRadius: 10, border: "none", background: (disabled || busy || draftTz === currentTz) ? (isLight ? "rgba(15,23,42,0.08)" : "rgba(255,255,255,0.08)") : T.accent, color: (disabled || busy || draftTz === currentTz) ? T.txt3 : "#06120E", fontWeight: 500, fontFamily: fontDisp, fontSize: 12.5, cursor: (disabled || busy || draftTz === currentTz) ? "not-allowed" : "pointer" }}
         >
           {busy ? "Guardando..." : "Guardar zona horaria"}
         </button>
       </div>
 
       {(message || errorMsg) && (
-        <div style={{ marginTop: 10, padding: "8px 12px", borderRadius: 10, fontSize: 12, color: errorMsg ? (isLight ? "#B91C1C" : "#FCA5A5") : (isLight ? "#047857" : "#6EE7C2"), background: errorMsg ? (isLight ? "rgba(225,29,72,0.08)" : "rgba(248,113,113,0.08)") : `${T.accent}12`, border: `1px solid ${errorMsg ? (isLight ? "rgba(225,29,72,0.22)" : "rgba(248,113,113,0.22)") : `${T.accent}2A`}` }}>
+        <div style={{ marginTop: 10, padding: "8px 12px", borderRadius: 10, fontSize: 12.5, color: errorMsg ? (isLight ? "#B91C1C" : "#FCA5A5") : (isLight ? "#047857" : "#6EE7C2"), background: errorMsg ? (isLight ? "rgba(225,29,72,0.08)" : "rgba(248,113,113,0.08)") : `${T.accent}12`, border: `1px solid ${errorMsg ? (isLight ? "rgba(225,29,72,0.22)" : "rgba(248,113,113,0.22)") : `${T.accent}2A`}` }}>
           {errorMsg || message}
         </div>
       )}
@@ -616,7 +616,7 @@ function ConnectTelegramPanel({ T = P, isLight = false, botUsername = "", manual
           }}>
             Conectar Telegram
           </h2>
-          <p style={{ margin: 0, fontSize: 12, color: T.txt2 }}>
+          <p style={{ margin: 0, fontSize: 12.5, color: T.txt2 }}>
             Gestiona tus leads desde el chat del bot en Telegram.
           </p>
         </div>
@@ -638,7 +638,7 @@ function ConnectTelegramPanel({ T = P, isLight = false, botUsername = "", manual
             background: isLight ? "rgba(225,29,72,0.08)" : "rgba(248,113,113,0.08)",
             border: `1px solid ${isLight ? "rgba(225,29,72,0.28)" : "rgba(248,113,113,0.22)"}`,
             borderRadius: 10,
-            fontSize: 12, color: isLight ? "#B91C3A" : "#FCA5A5",
+            fontSize: 12.5, color: isLight ? "#B91C3A" : "#FCA5A5",
           }}>
             {errorMsg}
           </div>
@@ -695,7 +695,7 @@ function ManualCodeView({ code, T = P, isLight = false, botUsername = "" }) {
     <div>
       <p style={{
         margin: "0 0 12px",
-        fontSize: 11, fontWeight: 500, letterSpacing: "0.12em",
+        fontSize: 12, fontWeight: 500, letterSpacing: "0.12em",
         textTransform: "uppercase",
         color: T.txt3, fontFamily: fontDisp,
       }}>
@@ -750,7 +750,7 @@ function ManualCodeView({ code, T = P, isLight = false, botUsername = "" }) {
         </button>
       )}
 
-      <p style={{ margin: "10px 0 0", fontSize: 11, color: T.txt3 }}>
+      <p style={{ margin: "10px 0 0", fontSize: 12, color: T.txt3 }}>
         Esta pantalla se actualiza sola cuando el bot reciba el código.
       </p>
     </div>
@@ -784,7 +784,7 @@ function PairedView({ pairedAt, onUnpair, unpairing, T = P, isLight = false, bot
         </span>
       </div>
       {fechaTxt && (
-        <p style={{ margin: "0 0 16px 24px", fontSize: 12, color: T.txt3 }}>
+        <p style={{ margin: "0 0 16px 24px", fontSize: 12.5, color: T.txt3 }}>
           Conectado desde el {fechaTxt}
         </p>
       )}
@@ -867,7 +867,7 @@ function RecentBotActivity({ T = P, isLight = false }) {
   if (paired === null || loading) {
     return (
       <G T={T} style={{ padding: 20, marginTop: 20 }}>
-        <div style={{ fontSize: 12, color: T.txt3 }}>Cargando actividad…</div>
+        <div style={{ fontSize: 12.5, color: T.txt3 }}>Cargando actividad…</div>
       </G>
     );
   }
@@ -896,7 +896,7 @@ function RecentBotActivity({ T = P, isLight = false }) {
           }}>
             Últimas acciones desde Telegram
           </h2>
-          <p style={{ margin: 0, fontSize: 12, color: T.txt2 }}>
+          <p style={{ margin: 0, fontSize: 12.5, color: T.txt2 }}>
             Tu historial reciente con el bot (mostrando últimos 20).
           </p>
         </div>
@@ -996,14 +996,14 @@ function BotMessageRow({ msg, T = P, isLight = false }) {
       <div style={{ minWidth: 0, flex: 1 }}>
         <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 4 }}>
           <span style={{
-            fontSize: 11, fontWeight: 500, letterSpacing: "0.04em",
+            fontSize: 12, fontWeight: 500, letterSpacing: "0.04em",
             textTransform: "uppercase", fontFamily: fontDisp,
             color: roleColor,
           }}>
             {isAi ? "Bot" : "Tú"}
           </span>
           {time && (
-            <span style={{ fontSize: 11, color: T.txt3 }}>{time}</span>
+            <span style={{ fontSize: 12, color: T.txt3 }}>{time}</span>
           )}
         </div>
         <pre style={{

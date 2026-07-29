@@ -108,7 +108,7 @@ export default function Nomina({ T }) {
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
         <div>
           <div style={{ fontSize: 14.5, fontFamily: fontDisp, fontWeight: 500, color: txt }}>Nómina del equipo</div>
-          <div style={{ fontSize: 12, color: txt2, marginTop: 3 }}>
+          <div style={{ fontSize: 12.5, color: txt2, marginTop: 3 }}>
             Cuánto le toca a cada uno, cuánto lleva ganado y cuánto le falta cobrar · se paga el 15 y el 30
           </div>
         </div>
@@ -125,7 +125,7 @@ export default function Nomina({ T }) {
         <div style={{ ...card, padding: "30px 20px", textAlign: "center" }}>
           <Users size={24} color={txt3} strokeWidth={1.6} />
           <div style={{ fontSize: 13.5, color: txt2, marginTop: 10 }}>Todavía no hay nóminas definidas.</div>
-          <div style={{ fontSize: 12, color: txt3, marginTop: 4 }}>
+          <div style={{ fontSize: 12.5, color: txt3, marginTop: 4 }}>
             Decile al Copilot «la nómina de Ángel es de $500 quincenales» y aparece acá.
           </div>
         </div>
@@ -149,7 +149,7 @@ export default function Nomina({ T }) {
                   {debe > 0 ? money(debe, n.moneda) : "al día"}
                 </span>
               </div>
-              <div style={{ fontSize: 11.5, color: txt3, marginTop: 2 }}>
+              <div style={{ fontSize: 12, color: txt3, marginTop: 2 }}>
                 {debe > 0 ? "se le debe" : "no se le debe nada"}
               </div>
 
@@ -194,7 +194,7 @@ export default function Nomina({ T }) {
                 <div style={{ height: 7, borderRadius: 999, background: isLight ? "rgba(15,23,42,0.07)" : "rgba(255,255,255,0.06)", overflow: "hidden" }}>
                   <div style={{ width: `${pct}%`, height: "100%", borderRadius: 999, background: debe > 0 ? PEND : OK, transition: "width .5s ease" }} />
                 </div>
-                <div style={{ display: "flex", justifyContent: "space-between", marginTop: 6, fontSize: 11, color: txt3 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", marginTop: 6, fontSize: 12, color: txt3 }}>
                   <span>lleva ganado {money(devengado, n.moneda)}</span>
                   <span>ya cobró {money(pagado, n.moneda)}</span>
                 </div>
@@ -215,9 +215,9 @@ export default function Nomina({ T }) {
             {pagos.map(p => (
               <div key={p.id} style={{ display: "flex", justifyContent: "space-between", gap: 10, alignItems: "baseline" }}>
                 <span style={{ fontSize: 12.5, color: txt2, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                  <span style={{ color: txt3, fontSize: 11 }}>{fechaCorta(p.spent_at)}</span>{" "}
+                  <span style={{ color: txt3, fontSize: 12 }}>{fechaCorta(p.spent_at)}</span>{" "}
                   {p.contraparte || p.description}
-                  {!p.evidence_path && <span style={{ color: txt3, fontSize: 10.5 }}> · sin comprobante</span>}
+                  {!p.evidence_path && <span style={{ color: txt3, fontSize: 11.5 }}> · sin comprobante</span>}
                 </span>
                 <span style={{ fontSize: 13, color: txt, fontFamily: fontDisp, whiteSpace: "nowrap", flexShrink: 0 }}>
                   {money(p.amount, p.currency || "USD")}
@@ -228,7 +228,7 @@ export default function Nomina({ T }) {
         </div>
       )}
 
-      <p style={{ margin: 0, fontSize: 11.5, color: txt3, fontFamily: font }}>
+      <p style={{ margin: 0, fontSize: 12, color: txt3, fontFamily: font }}>
         El saldo se calcula solo con lo que hay cargado: si se corrige un pago, se corrige el saldo.
         Cambiar el monto aplica de hoy en adelante — no reescribe lo ya pagado.
       </p>

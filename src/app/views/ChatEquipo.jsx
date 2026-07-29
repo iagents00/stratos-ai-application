@@ -300,7 +300,7 @@ export default function ChatEquipo({ T, onInmersivo }) {
         {verLista && (
           <div style={{ ...card, width: isMobile ? "100%" : 264, flexShrink: 0, padding: 10, display: "flex", flexDirection: "column", gap: 4 }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "4px 6px 8px" }}>
-              <span style={{ fontSize: 11.5, color: txt3, letterSpacing: "0.04em", textTransform: "uppercase" }}>Canales</span>
+              <span style={{ fontSize: 12, color: txt3, letterSpacing: "0.04em", textTransform: "uppercase" }}>Canales</span>
               <button onClick={() => setNuevoCanal({ nombre: "", descripcion: "" })} title="Nuevo canal"
                 style={{ background: "transparent", border: "none", cursor: "pointer", color: txt3, display: "flex", padding: 2 }}>
                 <Plus size={15} />
@@ -322,13 +322,13 @@ export default function ChatEquipo({ T, onInmersivo }) {
                       {c.nombre}
                     </span>
                     {c.ultimo && (
-                      <span style={{ display: "block", fontSize: 11.5, color: txt3, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", marginTop: 2 }}>
+                      <span style={{ display: "block", fontSize: 12, color: txt3, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", marginTop: 2 }}>
                         {c.ultimo.autor?.split(" ")[0]}: {c.ultimo.body}
                       </span>
                     )}
                   </span>
                   {sinLeer > 0 && (
-                    <span style={{ flexShrink: 0, minWidth: 19, height: 19, borderRadius: 999, background: accent, color: isLight ? "#fff" : "#04140F", fontSize: 11, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", padding: "0 5px" }}>
+                    <span style={{ flexShrink: 0, minWidth: 19, height: 19, borderRadius: 999, background: accent, color: isLight ? "#fff" : "#04140F", fontSize: 12, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", padding: "0 5px" }}>
                       {sinLeer}
                     </span>
                   )}
@@ -360,7 +360,7 @@ export default function ChatEquipo({ T, onInmersivo }) {
                   <Hash size={16} color={accent} strokeWidth={2} />
                   <div style={{ minWidth: 0 }}>
                     <div style={{ fontSize: 14, fontWeight: 500, color: txt, fontFamily: fontDisp }}>{activo.nombre}</div>
-                    {activo.descripcion && <div style={{ fontSize: 11.5, color: txt3, marginTop: 1 }}>{activo.descripcion}</div>}
+                    {activo.descripcion && <div style={{ fontSize: 12, color: txt3, marginTop: 1 }}>{activo.descripcion}</div>}
                   </div>
                 </div>
 
@@ -376,7 +376,7 @@ export default function ChatEquipo({ T, onInmersivo }) {
                   {!conAgrupado.length && (
                     <div style={{ margin: "auto", textAlign: "center", color: txt3, fontSize: 13, padding: 20 }}>
                       Todavía no hay mensajes acá.<br />
-                      <span style={{ fontSize: 12 }}>Escribí el primero — esto reemplaza el WhatsApp del equipo.</span>
+                      <span style={{ fontSize: 12.5 }}>Escribí el primero — esto reemplaza el WhatsApp del equipo.</span>
                     </div>
                   )}
 
@@ -388,7 +388,7 @@ export default function ChatEquipo({ T, onInmersivo }) {
                         {m.nuevoDia && (
                           <div style={{ display: "flex", alignItems: "center", gap: 10, margin: "16px 0 12px" }}>
                             <div style={{ flex: 1, height: 1, background: bd }} />
-                            <span style={{ fontSize: 11, color: txt3 }}>{etiquetaDia(m.created_at)}</span>
+                            <span style={{ fontSize: 12, color: txt3 }}>{etiquetaDia(m.created_at)}</span>
                             <div style={{ flex: 1, height: 1, background: bd }} />
                           </div>
                         )}
@@ -403,7 +403,7 @@ export default function ChatEquipo({ T, onInmersivo }) {
                         >
                           <div style={{ width: 32, flexShrink: 0 }}>
                             {!m.seguido && (
-                              <div style={{ width: 32, height: 32, borderRadius: 10, background: `${col}22`, border: `1px solid ${col}44`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11.5, fontWeight: 600, color: col }}>
+                              <div style={{ width: 32, height: 32, borderRadius: 10, background: `${col}22`, border: `1px solid ${col}44`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 600, color: col }}>
                                 {iniciales(m.autor)}
                               </div>
                             )}
@@ -418,7 +418,7 @@ export default function ChatEquipo({ T, onInmersivo }) {
                               </div>
                             )}
                             {m.reply_to && (
-                              <div style={{ fontSize: 11.5, color: txt3, borderLeft: `2px solid ${bd}`, paddingLeft: 8, marginBottom: 4 }}>
+                              <div style={{ fontSize: 12, color: txt3, borderLeft: `2px solid ${bd}`, paddingLeft: 8, marginBottom: 4 }}>
                                 <span style={{ color: txt2 }}>{m.reply_autor || "alguien"}</span>: {m.reply_body}
                               </div>
                             )}
@@ -428,7 +428,7 @@ export default function ChatEquipo({ T, onInmersivo }) {
                             {m.attachment_path && (
                               <button onClick={() => abrirAdjunto(m.attachment_path)} style={{
                                 marginTop: 6, background: "transparent", border: `1px solid ${bd}`, borderRadius: 9,
-                                padding: "6px 11px", cursor: "pointer", color: txt2, fontSize: 12, fontFamily: font,
+                                padding: "6px 11px", cursor: "pointer", color: txt2, fontSize: 12.5, fontFamily: font,
                                 display: "inline-flex", alignItems: "center", gap: 6,
                               }}>
                                 <Paperclip size={13} /> {m.attachment_type === "image" ? "Ver la imagen" : "Abrir el archivo"}
@@ -449,7 +449,7 @@ export default function ChatEquipo({ T, onInmersivo }) {
                 {/* Escribir */}
                 <div style={{ borderTop: `1px solid ${bd}`, padding: 12, position: "relative" }}>
                   {respondiendo && (
-                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8, fontSize: 11.5, color: txt3 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8, fontSize: 12, color: txt3 }}>
                       <CornerUpLeft size={12} />
                       <span style={{ flex: 1, minWidth: 0, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                         Respondiendo a {respondiendo.autor}: {respondiendo.body?.slice(0, 60)}
@@ -468,7 +468,7 @@ export default function ChatEquipo({ T, onInmersivo }) {
                           padding: "8px 10px", borderRadius: 9, cursor: "pointer", border: "none",
                           background: "transparent", color: txt, fontSize: chatType.input, fontFamily: font,
                         }}>
-                          <span style={{ width: 22, height: 22, borderRadius: 7, background: `${colorDe(p.id)}22`, color: colorDe(p.id), display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 700 }}>
+                          <span style={{ width: 22, height: 22, borderRadius: 7, background: `${colorDe(p.id)}22`, color: colorDe(p.id), display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700 }}>
                             {iniciales(p.name)}
                           </span>
                           {p.name}

@@ -120,7 +120,7 @@ export default function LeadRelatedContacts({ lead, T = P, isLight = false }) {
   };
   const labelStyle = {
     display: "block", margin: "0 0 4px 2px",
-    fontSize: 10, fontWeight: 500, letterSpacing: "0.06em",
+    fontSize: 11, fontWeight: 500, letterSpacing: "0.06em",
     textTransform: "uppercase", color: labelC, fontFamily: fontDisp,
   };
 
@@ -156,7 +156,7 @@ export default function LeadRelatedContacts({ lead, T = P, isLight = false }) {
         <label style={labelStyle}>Nota (opcional)</label>
         <input value={form.notas} onChange={(e) => setForm(f => ({ ...f, notas: e.target.value }))} placeholder="Ej. decide junto con el titular" style={inputStyle} />
       </div>
-      {err && <p style={{ margin: 0, color: "#F87171", fontSize: 12, fontFamily: font }}>{err}</p>}
+      {err && <p style={{ margin: 0, color: "#F87171", fontSize: 12.5, fontFamily: font }}>{err}</p>}
       <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
         <button type="button" onClick={reset} style={{
           display: "inline-flex", alignItems: "center", gap: 5, padding: "8px 14px", borderRadius: 9,
@@ -180,7 +180,7 @@ export default function LeadRelatedContacts({ lead, T = P, isLight = false }) {
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
         <span style={{
           display: "inline-flex", alignItems: "center", gap: 6,
-          fontSize: 10.5, fontWeight: 500, letterSpacing: "0.12em",
+          fontSize: 11.5, fontWeight: 500, letterSpacing: "0.12em",
           textTransform: "uppercase", color: headerC, fontFamily: fontDisp,
         }}>
           <Users size={11} /> Familiares o Socios
@@ -190,7 +190,7 @@ export default function LeadRelatedContacts({ lead, T = P, isLight = false }) {
             display: "inline-flex", alignItems: "center", gap: 5,
             padding: "5px 11px", borderRadius: 8,
             background: `${T.accent}14`, border: `1px solid ${T.accent}3A`,
-            color: accentStrong, fontSize: 11.5, fontWeight: 500, fontFamily: fontDisp, cursor: "pointer",
+            color: accentStrong, fontSize: 12, fontWeight: 500, fontFamily: fontDisp, cursor: "pointer",
           }}><Plus size={12} /> Agregar</button>
         )}
       </div>
@@ -198,7 +198,7 @@ export default function LeadRelatedContacts({ lead, T = P, isLight = false }) {
       {/* Lista */}
       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
         {isAdmin && contacts.length === 0 && editing !== "new" && (
-          <p style={{ margin: 0, fontSize: 12, color: T.txt3, fontFamily: font, lineHeight: 1.5 }}>
+          <p style={{ margin: 0, fontSize: 12.5, color: T.txt3, fontFamily: font, lineHeight: 1.5 }}>
             Sin familiares o socios aún. Agregá el contacto de la esposa/o, un socio o un familiar del cliente.
           </p>
         )}
@@ -212,7 +212,7 @@ export default function LeadRelatedContacts({ lead, T = P, isLight = false }) {
                 <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
                   <span style={{ fontSize: 13.5, fontWeight: 600, color: T.txt, fontFamily: fontDisp }}>{c.name}</span>
                   {c.relationship && (
-                    <span style={{ padding: "1px 7px", borderRadius: 5, background: `${T.accent}18`, color: accentStrong, fontSize: 10, fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.05em" }}>{c.relationship}</span>
+                    <span style={{ padding: "1px 7px", borderRadius: 5, background: `${T.accent}18`, color: accentStrong, fontSize: 11, fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.05em" }}>{c.relationship}</span>
                   )}
                 </div>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: "4px 16px", marginTop: 5 }}>
@@ -227,7 +227,7 @@ export default function LeadRelatedContacts({ lead, T = P, isLight = false }) {
                     </a>
                   )}
                 </div>
-                {c.notas && <p style={{ margin: "5px 0 0", fontSize: 12, color: T.txt3, fontFamily: font, lineHeight: 1.45 }}>{c.notas}</p>}
+                {c.notas && <p style={{ margin: "5px 0 0", fontSize: 12.5, color: T.txt3, fontFamily: font, lineHeight: 1.45 }}>{c.notas}</p>}
               </div>
               {isAdmin && (
                 <div style={{ display: "flex", gap: 4, flexShrink: 0 }}>

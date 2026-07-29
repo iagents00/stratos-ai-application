@@ -157,7 +157,7 @@ export default function RangeCalendar({ isLight = false, fromStr, toStr, onPick,
       {/* Encabezado de días de la semana */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 3, marginBottom: 7 }}>
         {WEEKDAYS.map((w, i) => (
-          <span key={i} style={{ textAlign: "center", fontSize: 10, fontWeight: 500, color: C.txtMute, fontFamily: fontDisp, textTransform: "uppercase", letterSpacing: "0.04em" }}>
+          <span key={i} style={{ textAlign: "center", fontSize: 11, fontWeight: 500, color: C.txtMute, fontFamily: fontDisp, textTransform: "uppercase", letterSpacing: "0.04em" }}>
             {w}
           </span>
         ))}
@@ -219,7 +219,7 @@ export default function RangeCalendar({ isLight = false, fromStr, toStr, onPick,
         })}
       </div>
 
-      <p style={{ margin: "14px 2px 9px", fontSize: 10.5, color: C.txtMute, fontFamily: fontDisp, lineHeight: 1.5, textAlign: "center" }}>
+      <p style={{ margin: "14px 2px 9px", fontSize: 11.5, color: C.txtMute, fontFamily: fontDisp, lineHeight: 1.5, textAlign: "center" }}>
         {anchor
           ? "Elige la fecha final…"
           : "Haz clic en la fecha inicial y luego en la final."}

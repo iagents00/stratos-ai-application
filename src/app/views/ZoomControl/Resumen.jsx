@@ -218,7 +218,7 @@ export default function ResumenZooms({ rows = [], T, isLight, onOpenZoom = null 
             background: isLight ? accent : `${accent}18`,
             color: isLight ? "#06080F" : accent,
             border: `1px solid ${isLight ? "transparent" : `${accent}55`}`,
-            fontSize: 12, fontWeight: 500, fontFamily: fontDisp,
+            fontSize: 12.5, fontWeight: 500, fontFamily: fontDisp,
             cursor: pdfBusy ? "default" : "pointer", opacity: pdfBusy ? 0.6 : 1,
             boxShadow: isLight ? `0 2px 8px ${accent}40` : "none",
           }}
@@ -243,7 +243,7 @@ export default function ResumenZooms({ rows = [], T, isLight, onOpenZoom = null 
             background: isLight ? "rgba(255,255,255,0.6)" : "rgba(255,255,255,0.02)",
             border: `1px solid ${rowBorder}`, borderTop: `3px solid ${k.color}`,
           }}>
-            <div style={{ fontSize: 11, fontWeight: 500, color: T.txt2, fontFamily: fontDisp, textTransform: "uppercase", letterSpacing: "0.05em", whiteSpace: "nowrap" }}>{k.label}</div>
+            <div style={{ fontSize: 12, fontWeight: 500, color: T.txt2, fontFamily: fontDisp, textTransform: "uppercase", letterSpacing: "0.05em", whiteSpace: "nowrap" }}>{k.label}</div>
             <div style={{ fontSize: 28, fontWeight: 500, color: T.txt, fontFamily: fontDisp, marginTop: 3, fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em" }}>{k.value}</div>
           </div>
         ))}
@@ -273,11 +273,11 @@ export default function ResumenZooms({ rows = [], T, isLight, onOpenZoom = null 
               onMouseEnter={(e) => { e.currentTarget.style.borderColor = accent; }}
               onMouseLeave={(e) => { e.currentTarget.style.borderColor = selectedDay === d.key ? accent : d.isToday ? `${accent}77` : ""; }}
             >
-              <div style={{ fontSize: 11, fontWeight: 500, color: d.isToday ? accent : T.txt2, fontFamily: fontDisp, textTransform: "uppercase", letterSpacing: "0.04em", whiteSpace: "nowrap" }}>
+              <div style={{ fontSize: 12, fontWeight: 500, color: d.isToday ? accent : T.txt2, fontFamily: fontDisp, textTransform: "uppercase", letterSpacing: "0.04em", whiteSpace: "nowrap" }}>
                 {d.label}{d.isToday ? " · hoy" : ""}
               </div>
               <div style={{ fontSize: 24, fontWeight: 500, color: T.txt, fontFamily: fontDisp, marginTop: 2, fontVariantNumeric: "tabular-nums" }}>{d.total}</div>
-              <div style={{ fontSize: 10.5, fontWeight: 500, color: T.txt2, fontFamily: font, whiteSpace: "nowrap" }}>{d.confirmados} conf. · {d.asistieron} asist.</div>
+              <div style={{ fontSize: 11.5, fontWeight: 500, color: T.txt2, fontFamily: font, whiteSpace: "nowrap" }}>{d.confirmados} conf. · {d.asistieron} asist.</div>
             </button>
           ))}
         </div>
@@ -328,11 +328,11 @@ export default function ResumenZooms({ rows = [], T, isLight, onOpenZoom = null 
                       {r.calentito && <Flame size={13} color="#DC2626" strokeWidth={2.6} />}
                       {r.cliente || "—"}
                     </span>
-                    <span style={{ flex: "1 1 20%", minWidth: 0, fontSize: 12, color: T.txt2, fontFamily: font, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.liner || "—"}</span>
-                    <span style={{ flex: "1 1 20%", minWidth: 0, fontSize: 12, color: T.txt2, fontFamily: font, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.presentador_principal || "—"}</span>
+                    <span style={{ flex: "1 1 20%", minWidth: 0, fontSize: 12.5, color: T.txt2, fontFamily: font, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.liner || "—"}</span>
+                    <span style={{ flex: "1 1 20%", minWidth: 0, fontSize: 12.5, color: T.txt2, fontFamily: font, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.presentador_principal || "—"}</span>
                     <span style={{
                       flexShrink: 0, padding: "3px 10px", borderRadius: 99,
-                      fontSize: 11, fontWeight: 500, fontFamily: fontDisp,
+                      fontSize: 12, fontWeight: 500, fontFamily: fontDisp,
                       color: isLight ? `color-mix(in srgb, ${c} 62%, #0B1220 38%)` : c,
                       background: isLight ? `${c}1F` : `${c}22`, border: `1px solid ${c}55`,
                     }}>{r.estatus}</span>
@@ -356,7 +356,7 @@ export default function ResumenZooms({ rows = [], T, isLight, onOpenZoom = null 
                 return (
                   <button key={s.id} onClick={() => setLinerScope(s.id)} style={{
                     padding: "5px 12px", borderRadius: 6, border: "none", cursor: "pointer",
-                    fontSize: 11.5, fontWeight: active ? 700 : 600, fontFamily: fontDisp,
+                    fontSize: 12, fontWeight: active ? 700 : 600, fontFamily: fontDisp,
                     background: active ? (isLight ? accent : `${accent}22`) : "transparent",
                     color: active ? (isLight ? "#06080F" : accent) : T.txt3,
                   }}>{s.l}</button>
@@ -382,7 +382,7 @@ export default function ResumenZooms({ rows = [], T, isLight, onOpenZoom = null 
               </tbody>
               <tfoot>
                 <tr style={{ borderTop: `1px solid ${rowBorder}`, background: headerBg }}>
-                  <td style={{ ...miniTd(T, "left"), fontWeight: 500, color: T.txt2, textTransform: "uppercase", fontSize: 10 }}>Total</td>
+                  <td style={{ ...miniTd(T, "left"), fontWeight: 500, color: T.txt2, textTransform: "uppercase", fontSize: 11 }}>Total</td>
                   {ESTATUS_COLS.map(c => (
                     <td key={c.key} style={{ ...miniTd(T), fontWeight: 500, color: accent }}>
                       {porLiner.reduce((s, r) => s + r[c.key], 0)}
@@ -398,7 +398,7 @@ export default function ResumenZooms({ rows = [], T, isLight, onOpenZoom = null 
         <div style={{ borderRadius: 12, border: `1px solid ${rowBorder}`, overflow: "hidden" }}>
           <div style={{ padding: "10px 12px", background: headerBg }}>
             <span style={{ fontSize: 13.5, fontWeight: 500, color: T.txt, fontFamily: fontDisp }}>Por Presentador</span>
-            <span style={{ fontSize: 11.5, color: T.txt2, fontFamily: font, marginLeft: 6 }}>quién corre el Zoom</span>
+            <span style={{ fontSize: 12, color: T.txt2, fontFamily: font, marginLeft: 6 }}>quién corre el Zoom</span>
           </div>
           <div style={{ overflowX: "auto" }}>
             <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 280 }}>
@@ -430,7 +430,7 @@ export default function ResumenZooms({ rows = [], T, isLight, onOpenZoom = null 
         <div style={{ borderRadius: 12, border: `1px solid ${rowBorder}`, overflow: "hidden" }}>
           <div style={{ padding: "10px 12px", background: headerBg }}>
             <span style={{ fontSize: 13.5, fontWeight: 500, color: T.txt, fontFamily: fontDisp }}>Próximos 7 días</span>
-            <span style={{ fontSize: 11.5, color: T.txt2, fontFamily: font, marginLeft: 6 }}>lo que viene en agenda</span>
+            <span style={{ fontSize: 12, color: T.txt2, fontFamily: font, marginLeft: 6 }}>lo que viene en agenda</span>
           </div>
           <table style={{ width: "100%", borderCollapse: "collapse" }}>
             <thead>
@@ -466,7 +466,7 @@ export default function ResumenZooms({ rows = [], T, isLight, onOpenZoom = null 
 function miniTh(T, align = "center") {
   return {
     padding: "9px 11px", textAlign: align,
-    fontSize: 10.5, fontWeight: 500, color: T.txt2, fontFamily: fontDisp,
+    fontSize: 11.5, fontWeight: 500, color: T.txt2, fontFamily: fontDisp,
     textTransform: "uppercase", letterSpacing: "0.05em", whiteSpace: "nowrap",
   };
 }

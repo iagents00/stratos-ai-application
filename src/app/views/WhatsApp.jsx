@@ -233,7 +233,7 @@ export default function WhatsAppInbox({ T = P, isLight = false, inbox, openLead,
             background: isLight ? "rgba(255,255,255,0.85)" : T.glass,
             border: `1px solid ${stageFilter ? (STAGE_COLORS?.[stageFilter] || T.border) : T.border}`,
             color: stageFilter ? (STAGE_COLORS?.[stageFilter] || T.txt) : T.txt2,
-            fontSize: 11, fontWeight: 400, fontFamily: font,
+            fontSize: 12, fontWeight: 400, fontFamily: font,
           }}
         >
           <option value="" style={{ color: "#0B1220" }}>Todas las etapas</option>
@@ -246,7 +246,7 @@ export default function WhatsAppInbox({ T = P, isLight = false, inbox, openLead,
           title="Mostrar solo conversaciones con mensajes sin leer"
           style={{
             height: 40, padding: "0 12px", borderRadius: 10, cursor: "pointer",
-            flexShrink: 0, fontSize: 11, fontWeight: 500, fontFamily: font,
+            flexShrink: 0, fontSize: 12, fontWeight: 500, fontFamily: font,
             background: unreadOnly
               ? (isLight ? "rgba(13,154,118,0.10)" : "rgba(110,231,194,0.10)")
               : (isLight ? "rgba(255,255,255,0.85)" : T.glass),
@@ -260,7 +260,7 @@ export default function WhatsAppInbox({ T = P, isLight = false, inbox, openLead,
 
       <div style={{ flex: 1, overflowY: "auto", display: "flex", flexDirection: "column", gap: 6, minHeight: 0 }}>
         {loading ? (
-          <div style={{ padding: 14, fontSize: 12, color: T.txt3, fontFamily: font }}>Cargando conversaciones…</div>
+          <div style={{ padding: 14, fontSize: 12.5, color: T.txt3, fontFamily: font }}>Cargando conversaciones…</div>
         ) : filtered.length === 0 ? (
           <div
             style={{
@@ -310,7 +310,7 @@ export default function WhatsAppInbox({ T = P, isLight = false, inbox, openLead,
                     width: 34, height: 34, borderRadius: 10, flexShrink: 0,
                     display: "flex", alignItems: "center", justifyContent: "center",
                     background: isLight ? "rgba(13,154,118,0.10)" : "rgba(110,231,194,0.09)",
-                    color: accentStrong, fontSize: 12, fontWeight: 500, fontFamily: fontDisp,
+                    color: accentStrong, fontSize: 12.5, fontWeight: 500, fontFamily: fontDisp,
                   }}
                 >
                   {initials(c.lead_name)}
@@ -340,14 +340,14 @@ export default function WhatsAppInbox({ T = P, isLight = false, inbox, openLead,
                     >
                       <Pin size={12} fill={pinned ? "currentColor" : "none"} style={{ transform: pinned ? "none" : "rotate(45deg)" }} />
                     </button>
-                    <span style={{ fontSize: 9.5, color: unread > 0 ? accentStrong : subC, fontFamily: font, flexShrink: 0, fontWeight: unread > 0 ? 700 : 400 }}>
+                    <span style={{ fontSize: 10.5, color: unread > 0 ? accentStrong : subC, fontFamily: font, flexShrink: 0, fontWeight: unread > 0 ? 700 : 400 }}>
                       {fmtWhen(c.last_at)}
                     </span>
                   </div>
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 6, marginTop: 2 }}>
                     <span
                       style={{
-                        fontSize: 11.5, color: unread > 0 ? T.txt : subC, fontFamily: font,
+                        fontSize: 12, color: unread > 0 ? T.txt : subC, fontFamily: font,
                         fontWeight: unread > 0 ? 600 : 400,
                         whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
                       }}
@@ -359,7 +359,7 @@ export default function WhatsAppInbox({ T = P, isLight = false, inbox, openLead,
                         style={{
                           minWidth: 17, height: 17, padding: "0 5px", borderRadius: 99, flexShrink: 0,
                           background: T.accent, color: "#041016",
-                          fontSize: 9.5, fontWeight: 500, fontFamily: fontDisp,
+                          fontSize: 10.5, fontWeight: 500, fontFamily: fontDisp,
                           display: "flex", alignItems: "center", justifyContent: "center",
                         }}
                       >
@@ -373,7 +373,7 @@ export default function WhatsAppInbox({ T = P, isLight = false, inbox, openLead,
                       {c.stage && (
                         <span
                           style={{
-                            fontSize: 8.5, fontWeight: 500, fontFamily: fontDisp,
+                            fontSize: 10, fontWeight: 500, fontFamily: fontDisp,
                             padding: "1.5px 7px", borderRadius: 99, flexShrink: 0,
                             color: stageC || subC,
                             background: stageC ? `${stageC}14` : "transparent",
@@ -385,7 +385,7 @@ export default function WhatsAppInbox({ T = P, isLight = false, inbox, openLead,
                         </span>
                       )}
                       {isMando && c.asesor_name && (
-                        <span style={{ fontSize: 9, color: subC, fontFamily: font, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                        <span style={{ fontSize: 10.5, color: subC, fontFamily: font, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                           {c.asesor_name}
                         </span>
                       )}
@@ -444,7 +444,7 @@ export default function WhatsAppInbox({ T = P, isLight = false, inbox, openLead,
                   width: 34, height: 34, borderRadius: 10, flexShrink: 0,
                   display: "flex", alignItems: "center", justifyContent: "center",
                   background: isLight ? "rgba(13,154,118,0.10)" : "rgba(110,231,194,0.09)",
-                  color: accentStrong, fontSize: 12, fontWeight: 500, fontFamily: fontDisp,
+                  color: accentStrong, fontSize: 12.5, fontWeight: 500, fontFamily: fontDisp,
                 }}
               >
                 {initials(selected.lead_name)}
@@ -465,7 +465,7 @@ export default function WhatsAppInbox({ T = P, isLight = false, inbox, openLead,
                 >
                   {selected.lead_name || "Cliente"}
                 </button>
-                <p style={{ fontSize: 10.5, color: subC, fontFamily: font, display: "flex", alignItems: "center", gap: 4 }}>
+                <p style={{ fontSize: 11.5, color: subC, fontFamily: font, display: "flex", alignItems: "center", gap: 4 }}>
                   <Phone size={9} />
                   {selected.lead_phone || "—"}
                 </p>
@@ -478,19 +478,19 @@ export default function WhatsAppInbox({ T = P, isLight = false, inbox, openLead,
                   padding: "5px 10px", borderRadius: 8, cursor: "pointer",
                   background: isLight ? "rgba(13,154,118,0.07)" : "rgba(110,231,194,0.07)",
                   border: `1px solid ${isLight ? "rgba(13,154,118,0.25)" : "rgba(110,231,194,0.2)"}`,
-                  color: accentStrong, fontSize: 10.5, fontWeight: 500, fontFamily: font,
+                  color: accentStrong, fontSize: 11.5, fontWeight: 500, fontFamily: font,
                 }}
               >
                 <FolderOpen size={11} />
                 {isMobile ? "" : "Expediente"}
               </button>
               {actionMsg && (
-                <span style={{ fontSize: 10.5, color: actionMsg.startsWith("⚠") ? "#EF4444" : accentStrong, fontFamily: font, fontWeight: 400, flexShrink: 0 }}>
+                <span style={{ fontSize: 11.5, color: actionMsg.startsWith("⚠") ? "#EF4444" : accentStrong, fontFamily: font, fontWeight: 400, flexShrink: 0 }}>
                   {actionMsg}
                 </span>
               )}
               {savingLead && !actionMsg && (
-                <span style={{ fontSize: 10.5, color: T.txt3, fontFamily: font, flexShrink: 0 }}>Guardando…</span>
+                <span style={{ fontSize: 11.5, color: T.txt3, fontFamily: font, flexShrink: 0 }}>Guardando…</span>
               )}
             </div>
 
@@ -506,7 +506,7 @@ export default function WhatsAppInbox({ T = P, isLight = false, inbox, openLead,
                   background: isLight ? "rgba(255,255,255,0.9)" : "rgba(255,255,255,0.04)",
                   border: `1px solid ${STAGE_COLORS?.[selected.stage] || T.border}`,
                   color: STAGE_COLORS?.[selected.stage] || T.txt,
-                  fontSize: 11, fontWeight: 500, fontFamily: font, outline: "none",
+                  fontSize: 12, fontWeight: 500, fontFamily: font, outline: "none",
                   maxWidth: isMobile ? 150 : 190,
                 }}
               >
@@ -540,7 +540,7 @@ export default function WhatsAppInbox({ T = P, isLight = false, inbox, openLead,
                       height: 30, padding: "0 8px", borderRadius: 8, cursor: "pointer",
                       background: isLight ? "rgba(255,255,255,0.9)" : "rgba(255,255,255,0.04)",
                       border: `1px solid ${T.border}`, color: T.txt,
-                      fontSize: 11, fontWeight: 400, fontFamily: font, outline: "none",
+                      fontSize: 12, fontWeight: 400, fontFamily: font, outline: "none",
                       maxWidth: isMobile ? 140 : 180,
                     }}
                   >
@@ -553,7 +553,7 @@ export default function WhatsAppInbox({ T = P, isLight = false, inbox, openLead,
                 </label>
               ) : (
                 selected.asesor_name && (
-                  <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 10.5, color: subC, fontFamily: font }}>
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11.5, color: subC, fontFamily: font }}>
                     <UserRound size={11} /> {selected.asesor_name}
                   </span>
                 )
@@ -648,7 +648,7 @@ export default function WhatsAppInbox({ T = P, isLight = false, inbox, openLead,
             <h1 style={{ fontSize: 17, fontWeight: 500, color: T.txt, fontFamily: fontDisp, letterSpacing: "-0.01em" }}>
               WhatsApp
             </h1>
-            <p style={{ fontSize: 11, color: subC, fontFamily: font }}>
+            <p style={{ fontSize: 12, color: subC, fontFamily: font }}>
               Conversaciones de tus clientes
               {inbox?.totalUnread > 0 ? ` · ${inbox.totalUnread} sin leer` : ""}
             </p>

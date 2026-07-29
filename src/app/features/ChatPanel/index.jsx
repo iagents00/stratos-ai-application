@@ -363,7 +363,7 @@ const Chat = ({ open, onClose, msgs, setMsgs, inp, setInp }) => {
           </div>
           <div>
             <p style={{ fontSize: 13, fontWeight: 500, color: "#FFFFFF", fontFamily: fontDisp, letterSpacing: "-0.01em" }}>Agente Stratos</p>
-            <p style={{ fontSize: 10, color: P.txt3, fontWeight: 400, fontFamily: font }}>Inteligencia Activa</p>
+            <p style={{ fontSize: 11, color: P.txt3, fontWeight: 400, fontFamily: font }}>Inteligencia Activa</p>
           </div>
         </div>
         <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", padding: 4 }}><X size={16} color={P.txt3} /></button>
@@ -377,7 +377,7 @@ const Chat = ({ open, onClose, msgs, setMsgs, inp, setInp }) => {
                 <StratosAtom size={32} color={P.accent} />
               </div>
               <p style={{ fontSize: 18, fontWeight: 400, color: "#FFFFFF", fontFamily: fontDisp, letterSpacing: "-0.02em" }}>Agente Ejecutivo</p>
-              <p style={{ fontSize: 12, color: P.txt3, marginTop: 6, fontFamily: font, lineHeight: 1.5 }}>Inteligencia estratégica lista. ¿Qué decisión tomamos?</p>
+              <p style={{ fontSize: 12.5, color: P.txt3, marginTop: 6, fontFamily: font, lineHeight: 1.5 }}>Inteligencia estratégica lista. ¿Qué decisión tomamos?</p>
             </div>
 
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
@@ -397,8 +397,8 @@ const Chat = ({ open, onClose, msgs, setMsgs, inp, setInp }) => {
                     <e.i size={16} color={e.c} />
                   </div>
                   <div>
-                    <p style={{ fontSize: 9, color: P.txt3, fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 2 }}>{e.cat}</p>
-                    <p style={{ fontSize: 11, color: P.txt, fontWeight: 400, lineHeight: 1.3 }}>{e.t}</p>
+                    <p style={{ fontSize: 10.5, color: P.txt3, fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 2 }}>{e.cat}</p>
+                    <p style={{ fontSize: 12, color: P.txt, fontWeight: 400, lineHeight: 1.3 }}>{e.t}</p>
                   </div>
                 </button>
               ))}
@@ -413,7 +413,7 @@ const Chat = ({ open, onClose, msgs, setMsgs, inp, setInp }) => {
               <div style={{ maxWidth: "95%" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
                   <div style={{ width: 22, height: 22, borderRadius: 6, background: "rgba(110,231,194,0.08)", display: "flex", alignItems: "center", justifyContent: "center" }}><StratosAtom size={14} color={P.accent} /></div>
-                  <span style={{ fontSize: 10, color: P.txt2, fontWeight: 400, letterSpacing: "0.04em" }}>Agente Stratos</span>
+                  <span style={{ fontSize: 11, color: P.txt2, fontWeight: 400, letterSpacing: "0.04em" }}>Agente Stratos</span>
                 </div>
                 <div style={{ padding: "12px 14px", borderRadius: "4px 14px 14px 14px", background: P.glass, border: `1px solid ${P.border}`, boxShadow: "0 2px 8px rgba(0,0,0,0.15)" }}>
                   <p style={{ fontSize: 13, color: P.txt, lineHeight: 1.6, marginBottom: m.metrics ? 12 : 0 }} dangerouslySetInnerHTML={{ __html: mdBold(m.content, "#FFFFFF") }} />
@@ -423,18 +423,18 @@ const Chat = ({ open, onClose, msgs, setMsgs, inp, setInp }) => {
                         <div key={j} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", borderRadius: P.rx, background: `${x.c}0D`, border: `1px solid ${x.c}22` }}>
                           <Ico icon={x.i} sz={32} is={16} c={x.c} />
                           <div style={{ flex: 1, minWidth: 0 }}>
-                            <p style={{ fontSize: 12, color: "#FFFFFF", fontWeight: 400, fontFamily: fontDisp }}>{x.label}</p>
-                            <p style={{ fontSize: 11, color: P.txt2, lineHeight: 1.4 }}>{x.val}</p>
+                            <p style={{ fontSize: 12.5, color: "#FFFFFF", fontWeight: 400, fontFamily: fontDisp }}>{x.label}</p>
+                            <p style={{ fontSize: 12, color: P.txt2, lineHeight: 1.4 }}>{x.val}</p>
                           </div>
                         </div>
                       ))}
                     </div>
                   )}
-                  {m.follow && <p style={{ fontSize: 11.5, color: P.txt3, marginTop: 14, lineHeight: 1.5, fontStyle: "italic", borderTop: `1px solid ${P.border}`, paddingTop: 10 }} dangerouslySetInnerHTML={{ __html: mdBold(m.follow, "#E2E8F0") }} />}
+                  {m.follow && <p style={{ fontSize: 12, color: P.txt3, marginTop: 14, lineHeight: 1.5, fontStyle: "italic", borderTop: `1px solid ${P.border}`, paddingTop: 10 }} dangerouslySetInnerHTML={{ __html: mdBold(m.follow, "#E2E8F0") }} />}
                   {m.btn && (
                     <button onClick={() => m.action && send(m.action)} style={{
                       marginTop: 14, width: "100%", padding: "11px 16px", borderRadius: 10,
-                      background: "rgba(255,255,255,0.93)", color: "#0A0F18", fontWeight: 500, fontSize: 12,
+                      background: "rgba(255,255,255,0.93)", color: "#0A0F18", fontWeight: 500, fontSize: 12.5,
                       border: "none", cursor: "pointer", transition: "all 0.25s",
                       display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
                       boxShadow: "0 2px 12px rgba(255,255,255,0.1)", letterSpacing: "0.01em"
@@ -462,7 +462,7 @@ const Chat = ({ open, onClose, msgs, setMsgs, inp, setInp }) => {
         {rec && (
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8, padding: "7px 12px", borderRadius: P.rx, background: `${P.rose}0C`, border: `1px solid ${P.rose}1A` }}>
             <div style={{ width: 7, height: 7, borderRadius: "50%", background: P.rose, animation: "blink 0.8s infinite" }} />
-            <span style={{ fontSize: 11, color: P.rose, fontWeight: 400 }}>Grabando...</span>
+            <span style={{ fontSize: 12, color: P.rose, fontWeight: 400 }}>Grabando...</span>
             <div style={{ flex: 1, display: "flex", gap: 2, justifyContent: "center" }}>
               {[...Array(14)].map((_, i) => <div key={i} style={{ width: 2, borderRadius: 1, background: P.rose, height: 3 + Math.random() * 12, opacity: 0.4, animation: `wave 0.35s ease ${i * 0.04}s infinite alternate` }} />)}
             </div>

@@ -61,19 +61,19 @@ const ChangeRow = ({ field, change }) => {
       display: "grid",
       gridTemplateColumns: "120px 1fr",
       gap: 8,
-      fontSize: 12, fontFamily: font,
+      fontSize: 12.5, fontFamily: font,
       padding: "4px 0",
     }}>
       <div style={{ color: P.txt3, fontWeight: 400 }}>{fieldLabel(field)}</div>
       <div style={{ color: P.txt2, display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
         <span style={{
           color: P.txt3, textDecoration: "line-through",
-          fontFamily: mono, fontSize: 11,
+          fontFamily: mono, fontSize: 12,
         }}>{fmtValue(old)}</span>
         <span style={{ color: P.txt3 }}>→</span>
         <span style={{
           color: P.txt, fontWeight: 400,
-          fontFamily: mono, fontSize: 11,
+          fontFamily: mono, fontSize: 12,
         }}>{fmtValue(neu)}</span>
       </div>
     </div>
@@ -110,7 +110,7 @@ const HistoryEntry = ({ row }) => {
           }}>
             {actionLabel(row.action)}
           </div>
-          <div style={{ fontSize: 11, color: P.txt3, display: "flex", gap: 6, marginTop: 2 }}>
+          <div style={{ fontSize: 12, color: P.txt3, display: "flex", gap: 6, marginTop: 2 }}>
             <Clock size={11} />
             <span>{fmtDate(row.created_at)}</span>
             {row.actor_name && (
@@ -141,7 +141,7 @@ const HistoryEntry = ({ row }) => {
         <div style={{
           marginTop: 8, paddingTop: 8,
           borderTop: `1px solid ${P.border}`,
-          fontSize: 11, color: P.txt3, fontFamily: mono,
+          fontSize: 12, color: P.txt3, fontFamily: mono,
         }}>
           {row.metadata.email && <div>email: {row.metadata.email}</div>}
           {row.metadata.reason && <div>razón: {row.metadata.reason}</div>}
@@ -211,7 +211,7 @@ export default function HistoryDrawer({
         }}>
           <div>
             <div style={{
-              fontSize: 11, color: P.txt3, fontWeight: 400,
+              fontSize: 12, color: P.txt3, fontWeight: 400,
               letterSpacing: "0.08em", textTransform: "uppercase",
             }}>
               Historial de cambios
@@ -258,10 +258,10 @@ export default function HistoryDrawer({
               background: `${P.rose}14`,
               border: `1px solid ${P.rose}33`,
               borderRadius: P.r,
-              color: P.rose, fontSize: 12,
+              color: P.rose, fontSize: 12.5,
             }}>
               No se pudo cargar el historial: {error}
-              <div style={{ color: P.txt3, fontSize: 11, marginTop: 6 }}>
+              <div style={{ color: P.txt3, fontSize: 12, marginTop: 6 }}>
                 Asegúrate de haber corrido la migración 003 en Supabase.
               </div>
             </div>
@@ -270,7 +270,7 @@ export default function HistoryDrawer({
             <div style={{ padding: 40, textAlign: "center", color: P.txt3, fontSize: 13 }}>
               <Clock size={32} style={{ opacity: 0.4, marginBottom: 12 }} />
               <div>Sin cambios registrados todavía.</div>
-              <div style={{ fontSize: 11, marginTop: 6 }}>
+              <div style={{ fontSize: 12, marginTop: 6 }}>
                 Cualquier edición desde ahora quedará en el historial.
               </div>
             </div>

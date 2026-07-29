@@ -196,7 +196,7 @@ export default function AdvisorMetrics({ leadsData = [], theme = "dark", onOpenL
         <h3 style={{ margin: 0, fontSize: 18, fontWeight: 400, fontFamily: fontDisp, color: T.txt, letterSpacing: "-0.02em" }}>
           Indicadores de Asesores
         </h3>
-        <p style={{ margin: "4px 0 0", fontSize: 12, color: T.txt3, fontFamily: font }}>
+        <p style={{ margin: "4px 0 0", fontSize: 12.5, color: T.txt3, fontFamily: font }}>
           Métricas por asesor calculadas desde los leads del período seleccionado.
         </p>
       </div>
@@ -249,7 +249,7 @@ export default function AdvisorMetrics({ leadsData = [], theme = "dark", onOpenL
               <tr key={asesor} style={{ borderTop: i === 0 ? "none" : `1px solid ${rowBorder}` }}>
                 <td style={{ padding: cellPad, paddingLeft: 16, fontFamily: fontDisp, fontWeight: 400, color: T.txt, fontSize: 13 }}>
                   {asesor}
-                  <span style={{ marginLeft: 8, fontSize: 11, fontWeight: 500, color: T.txt3 }}>
+                  <span style={{ marginLeft: 8, fontSize: 12, fontWeight: 500, color: T.txt3 }}>
                     {count} {count === 1 ? "lead" : "leads"}
                   </span>
                 </td>
@@ -264,7 +264,7 @@ export default function AdvisorMetrics({ leadsData = [], theme = "dark", onOpenL
           {rows.length > 0 && (
             <tfoot>
               <tr style={{ borderTop: `1px solid ${rowBorder}`, background: headerBg }}>
-                <td style={{ padding: cellPad, paddingLeft: 16, fontFamily: fontDisp, fontWeight: 500, color: T.txt2, fontSize: 12, textTransform: "uppercase", letterSpacing: "0.04em" }}>
+                <td style={{ padding: cellPad, paddingLeft: 16, fontFamily: fontDisp, fontWeight: 500, color: T.txt2, fontSize: 12.5, textTransform: "uppercase", letterSpacing: "0.04em" }}>
                   Total
                 </td>
                 {INDICATORS.map(ind => (
@@ -278,7 +278,7 @@ export default function AdvisorMetrics({ leadsData = [], theme = "dark", onOpenL
         </table>
       </div>
 
-      <p style={{ margin: "10px 4px 0", fontSize: 10.5, color: T.txt3, fontFamily: font, lineHeight: 1.5 }}>
+      <p style={{ margin: "10px 4px 0", fontSize: 11.5, color: T.txt3, fontFamily: font, lineHeight: 1.5 }}>
         Asignados / Contactados / Calificados / Activos se filtran por fecha de creación del lead y reflejan su etapa actual. Las columnas <strong>Zooms Ag./Real.</strong> son históricas: cuentan cada lead que alguna vez pasó por esa fase (aunque hoy esté en otra etapa o haya sido reasignado), acreditadas a <strong>quién dio el Zoom</strong> y filtradas por la fecha real del evento. La fila <strong>{INACTIVE_ADVISOR_GROUP}</strong> agrupa ex-asesores y cuentas de prueba/sistema: sus leads y Zooms cuentan en el total para que cuadre con el pipeline del CRM.
       </p>
 
@@ -290,7 +290,7 @@ function thStyle(T) {
   return {
     padding: "11px 12px",
     textAlign: "center",
-    fontSize: 10.5,
+    fontSize: 11.5,
     fontWeight: 400,
     color: T.txt2,
     fontFamily: fontDisp,
