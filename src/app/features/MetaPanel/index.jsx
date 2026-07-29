@@ -1639,7 +1639,7 @@ export default function MetaPanel({
                       const col = s.type==="F"?"#34D399":s.type==="D"?"#F87171":T.blue;
                       return (
                         <div key={i} style={{ display:"flex", gap:6, marginBottom:5, alignItems:"flex-start" }}>
-                          <span style={{ fontSize:9, fontWeight:500, color:col, background:`${col}18`, borderRadius:3, padding:"1px 4px", flexShrink:0, marginTop:2 }}>{s.type}</span>
+                          <span style={{ fontSize:10, fontWeight:500, color:col, background:`${col}18`, borderRadius:3, padding:"1px 4px", flexShrink:0, marginTop:2 }}>{s.type}</span>
                           <E val={s.text} onSave={v => setMetaPlan(p => { const sw=[...p.swt]; sw[i]={...sw[i],text:v}; return {...p,swt:sw}; })} style={{ fontSize:11.5, color:T.txt, fontFamily:font, lineHeight:1.4, flex:1 }} />
                         </div>
                       );
@@ -1724,7 +1724,7 @@ export default function MetaPanel({
                           <div style={{ textAlign:"right", paddingLeft:8 }}>
                             <p style={{ margin:"0 0 2px", fontSize:9.5, color:T.txt3 }}>Meta</p>
                             <p style={{ margin:"0 0 4px", fontSize:12.5, fontWeight:500, color:T.accent, fontFamily:fontDisp }}>{k.target}</p>
-                            <span style={{ fontSize:9, fontWeight:500, padding:"2px 6px", borderRadius:99, background:`${kCol}14`, color:kCol }}>{k.type}</span>
+                            <span style={{ fontSize:10, fontWeight:500, padding:"2px 6px", borderRadius:99, background:`${kCol}14`, color:kCol }}>{k.type}</span>
                           </div>
                         </div>
                       );
@@ -1831,7 +1831,7 @@ export default function MetaPanel({
                   {["Mensaje por WhatsApp", "Llamada directa", "Sin respuesta → mensaje breve + siguiente intento"].map((s, i) => (
                     <div key={i} style={{ display:"flex", gap:7, marginBottom:5, alignItems:"flex-start" }}>
                       <div style={{ width:16, height:16, borderRadius:"50%", background:`${T.violet}14`, border:`1px solid ${T.violet}30`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, marginTop:1 }}>
-                        <span style={{ fontSize:9, fontWeight:500, color:T.violet, fontFamily:fontDisp }}>{i+1}</span>
+                        <span style={{ fontSize:10, fontWeight:500, color:T.violet, fontFamily:fontDisp }}>{i+1}</span>
                       </div>
                       <span style={{ fontSize:12, color:T.txt2, fontFamily:font, lineHeight:1.45 }}>{s}</span>
                     </div>

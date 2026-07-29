@@ -59,6 +59,11 @@ const TENANT_MKT = (() => {
   try { return resolveClientFromLocation()?.mkt || {}; } catch { return {}; }
 })();
 const HIDDEN_TABS = new Set(Array.isArray(TENANT_MKT.hideTabs) ? TENANT_MKT.hideTabs : []);
+/* Pedido de Ángel 29-jul: «Mi Día» no se usa más y en Propiedades la hoja ya
+   vive en Actividades → Espacio 1. Quedan OCULTOS (no borrados): volver a
+   true si algún día se necesitan. */
+const SHOW_TAB_DIA = false;
+const SHOW_VISTA_TABLA = false;
 const tabLabel = (id, fallback) => (TENANT_MKT.tabLabels && TENANT_MKT.tabLabels[id]) || fallback;
 
 /* Las etapas son LAS DE ALEX, en el orden de su hoja y con sus palabras:
@@ -284,8 +289,8 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
   // El rol marketing entra por las 4 secciones del SIDEBAR (mkt_dia/mkt_marcas/…)
   // y los tabs siguen funcionando adentro ("en ambas" — Iván 21-jul).
   const [tab, setTab] = useState(() => {
-    const t = initialTab || "dia"; // dia | marcas | pipeline | solicitudes | equipo
-    return HIDDEN_TABS.has(t) ? "dia" : t; // pestaña oculta para este tenant → Mi Día
+    const t = initialTab || "reporte"; // reporte | dia | marcas | pipeline | solicitudes | equipo
+    return HIDDEN_TABS.has(t) ? "reporte" : t; // pestaña oculta para este tenant → Actividades
   });
   useEffect(() => { if (initialTab) setTab(initialTab); }, [initialTab]);
   const [brands, setBrands]     = useState([]);
@@ -953,6 +958,7 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
      prefiera el tablero lo tiene ahí y no se lo volvemos a cambiar. */
   const vistaKey = user?.id ? `stratos.mkt.registro.vista.${user.id}` : null;
   const [pipeVista, setPipeVista] = useState(() => {
+    if (!SHOW_VISTA_TABLA) return "tablero"; // la hoja vive en Actividades → Espacio 1
     try { return (vistaKey && localStorage.getItem(vistaKey)) || "tabla"; } catch (_) { return "tabla"; }
   });
   const elegirVista = useCallback((v) => {
@@ -1707,6 +1713,7 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
         {/* Tablero para OPERAR (mover etapas) · Tabla para MIRAR (la hoja de Alex,
             con sus filtros). Conviven: cada una sirve para algo distinto. */}
+        {SHOW_VISTA_TABLA ? (
         <div style={{ display: "flex", gap: 3, padding: 4, borderRadius: 12, border: `1px solid ${bd}`,
           background: isLight ? "rgba(15,23,42,0.04)" : "rgba(255,255,255,0.03)" }}>
           {[["tabla", "Tabla"], ["tablero", "Tablero"]].map(([id, l]) => (
@@ -1718,6 +1725,7 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
             }}>{l}</button>
           ))}
         </div>
+        ) : <span />}{/* sin toggle: solo Tablero (la hoja vive en Espacio 1) */}
         <button onClick={() => setShowPipeForm(s => !s)} style={{
           background: showPipeForm ? "transparent" : `${accent}1A`, border: `1px solid ${accent}55`,
           borderRadius: 10, padding: "9px 15px", cursor: "pointer", color: accent,
@@ -2116,20 +2124,20 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
       <div style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{
-            fontSize: 12.5, color: txt2, lineHeight: 1.5, whiteSpace: "pre-wrap", wordBreak: "break-word",
+            fontSize: 14.5, color: txt2, lineHeight: 1.5, whiteSpace: "pre-wrap", wordBreak: "break-word",
             ...(abierta ? {} : { display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }),
           }}>{texto || "Sin detalle"}</div>
           {largo && (
             <button onClick={() => toggleBita(r.id)} style={{
               background: "transparent", border: "none", padding: "2px 0 0", cursor: "pointer",
-              color: accent, fontSize: 11.5, fontFamily: font,
+              color: accent, fontSize: 13.5, fontFamily: font,
             }}>{abierta ? "ver menos" : "ver todo"}</button>
           )}
         </div>
         {r.evidencia_url && (
           <a href={r.evidencia_url} target="_blank" rel="noreferrer" title="Abrir evidencia" style={{
             border: `1px solid ${accent}44`, borderRadius: 7, padding: "2px 7px", flexShrink: 0,
-            color: accent, display: "inline-flex", alignItems: "center", gap: 4, fontSize: 11.5, textDecoration: "none",
+            color: accent, display: "inline-flex", alignItems: "center", gap: 4, fontSize: 13.5, textDecoration: "none",
           }}><Folder size={11} /> Evidencia</a>
         )}
       </div>
@@ -2357,7 +2365,7 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
           const stat = (label, n, color) => (
             <div key={label} style={{ textAlign: "center", minWidth: isMobile ? 0 : 74, flex: isMobile ? "1 1 0" : "0 0 auto" }}>
               <div style={{ fontSize: 17, fontWeight: 600, color: color || txt, fontFamily: fontDisp }}>{n}</div>
-              <div style={{ fontSize: 11.5, color: txt3 }}>{label}</div>
+              <div style={{ fontSize: 13.5, color: txt3 }}>{label}</div>
             </div>
           );
           return (
@@ -2369,7 +2377,7 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
                 }}>{String(m.name || "?").charAt(0).toUpperCase()}</div>
                 <div style={{ flex: 1, minWidth: 120 }}>
                   <div style={{ fontSize: 13.5, color: txt, fontWeight: 500 }}>{m.name}</div>
-                  <div style={{ fontSize: 12, color: txt3 }}>{m.id === user?.id ? "tú" : "marketing"}</div>
+                  <div style={{ fontSize: 14, color: txt3 }}>{m.id === user?.id ? "tú" : "marketing"}</div>
                 </div>
                 {/* Stats: en móvil ocupan su propia fila a lo ancho, repartidas parejas */}
                 <div style={{ display: "flex", gap: isMobile ? 4 : 10, flex: isMobile ? "1 1 100%" : "0 0 auto", justifyContent: isMobile ? "space-between" : "flex-end" }}>
@@ -2386,14 +2394,14 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
                     return (
                       <div key={t.id} style={{ display: "flex", alignItems: "center", gap: 8 }}>
                         <span style={{ width: 7, height: 7, borderRadius: 999, flexShrink: 0, background: vencida ? RED : isBlocked(t) ? AMBER : `${accent}88` }} />
-                        <span style={{ flex: 1, fontSize: 12.5, color: txt2, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{t.titulo}</span>
-                        {isBlocked(t) && <span style={{ fontSize: 11, color: AMBER, flexShrink: 0 }}>bloqueada</span>}
-                        <span style={{ fontSize: 11.5, color: vencida ? RED : txt3, whiteSpace: "nowrap", flexShrink: 0 }}>{t.due_at ? fmtDia(t.due_at) : "sin fecha"}</span>
+                        <span style={{ flex: 1, fontSize: 14.5, color: txt2, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{t.titulo}</span>
+                        {isBlocked(t) && <span style={{ fontSize: 13, color: AMBER, flexShrink: 0 }}>bloqueada</span>}
+                        <span style={{ fontSize: 13.5, color: vencida ? RED : txt3, whiteSpace: "nowrap", flexShrink: 0 }}>{t.due_at ? fmtDia(t.due_at) : "sin fecha"}</span>
                       </div>
                     );
                   })}
                   {pendientes.length > 8 && (
-                    <div style={{ fontSize: 11.5, color: txt3 }}>+{pendientes.length - 8} más</div>
+                    <div style={{ fontSize: 13.5, color: txt3 }}>+{pendientes.length - 8} más</div>
                   )}
                 </div>
               )}
@@ -2403,15 +2411,15 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
                   {hechasSemana.slice(0, 6).map(t => (
                     <div key={t.id} style={{ display: "flex", alignItems: "center", gap: 8 }}>
                       <Check size={12} color={accent} strokeWidth={3} style={{ flexShrink: 0 }} />
-                      <span style={{ flex: 1, fontSize: 12.5, color: txt2, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{t.titulo}</span>
-                      <span style={{ fontSize: 11.5, color: txt3, whiteSpace: "nowrap" }}>{fmtDia(t.updated_at)}</span>
+                      <span style={{ flex: 1, fontSize: 14.5, color: txt2, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{t.titulo}</span>
+                      <span style={{ fontSize: 13.5, color: txt3, whiteSpace: "nowrap" }}>{fmtDia(t.updated_at)}</span>
                       {t.evidencia_url ? (
                         <button onClick={() => openEvidence(t)} title="Ver evidencia" style={{
                           background: "transparent", border: `1px solid ${accent}44`, borderRadius: 7,
-                          padding: "2px 7px", cursor: "pointer", color: accent, display: "inline-flex", alignItems: "center", gap: 4, fontSize: 11.5, fontFamily: font, flexShrink: 0,
+                          padding: "2px 7px", cursor: "pointer", color: accent, display: "inline-flex", alignItems: "center", gap: 4, fontSize: 13.5, fontFamily: font, flexShrink: 0,
                         }}><Camera size={11} /> Evidencia</button>
                       ) : (
-                        <span style={{ fontSize: 11.5, color: txt3, flexShrink: 0 }}>sin evidencia</span>
+                        <span style={{ fontSize: 13.5, color: txt3, flexShrink: 0 }}>sin evidencia</span>
                       )}
                     </div>
                   ))}
@@ -2422,17 +2430,17 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
                   trabajo que nadie había pedido en una lista. */}
               {bitaVisible.length > 0 && (
                 <div style={{ borderTop: `1px solid ${bd}`, paddingTop: 9, display: "flex", flexDirection: "column", gap: 8 }}>
-                  <div style={{ fontSize: 11, color: txt3, letterSpacing: 0.5, textTransform: "uppercase" }}>Días anteriores</div>
+                  <div style={{ fontSize: 13, color: txt3, letterSpacing: 0.5, textTransform: "uppercase" }}>Días anteriores</div>
                   {bitaVisible.map(r => (
                     <div key={r.id} style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
-                      <span style={{ fontSize: 11.5, color: txt3, whiteSpace: "nowrap", flexShrink: 0, minWidth: 40, paddingTop: 1 }}>
+                      <span style={{ fontSize: 13.5, color: txt3, whiteSpace: "nowrap", flexShrink: 0, minWidth: 40, paddingTop: 1 }}>
                         {fmtDia(r.fecha)}
                       </span>
                       <div style={{ flex: 1, minWidth: 0 }}>{reporteTexto(r)}</div>
                     </div>
                   ))}
                   {bita.length > bitaVisible.length && (
-                    <div style={{ fontSize: 11.5, color: txt3 }}>
+                    <div style={{ fontSize: 13.5, color: txt3 }}>
                       +{bita.length - bitaVisible.length} {bita.length - bitaVisible.length === 1 ? "reporte anterior" : "reportes anteriores"}
                     </div>
                   )}
@@ -2441,7 +2449,7 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
             </div>
           );
         })}
-        <div style={{ fontSize: 12, color: txt3, textAlign: "center" }}>
+        <div style={{ fontSize: 14, color: txt3, textAlign: "center" }}>
           Los conteos salen de las tareas del módulo; la bitácora, de lo que reporta cada quien. Vista solo para administración.
         </div>
       </div>
@@ -2509,7 +2517,7 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
           maxWidth: "100%", width: isMobile ? "100%" : undefined, flexShrink: 0,
         }}>
           {tabBtn("reporte", tabLabel("reporte", "Actividades"))}
-          {tabBtn("dia", tabLabel("dia", "Mi Día"))}
+          {SHOW_TAB_DIA && tabBtn("dia", tabLabel("dia", "Mi Día"))}
           {!HIDDEN_TABS.has("marcas") && tabBtn("marcas", tabLabel("marcas", "Marcas"))}
           {!HIDDEN_TABS.has("pipeline") && tabBtn("pipeline", tabLabel("pipeline", "Propiedades"), atascadas >= 3 ? atascadas : 0)}
           {!HIDDEN_TABS.has("solicitudes") && tabBtn("solicitudes", tabLabel("solicitudes", "Solicitudes"), requests.filter(r => r.estado === "nueva").length)}
