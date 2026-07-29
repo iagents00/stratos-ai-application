@@ -124,6 +124,39 @@ export function AuthProvider({ children }) {
       setLoading(false);
     }, HYDRATION_TIMEOUT_MS);
 
+    // ── Reintento SILENCIOSO de hidratación (Iván 29-jul: «al entrar aparece
+    //    un error como fallando la conexión y funciona hasta que hice Cmd+R
+    //    tres veces»). Si la hidratación devuelve null PERO hay un token real
+    //    de Supabase guardado, casi seguro fue un timeout transitorio (red
+    //    lenta México→us-west-2): en vez de dejarlo en el login recargando a
+    //    mano, reintentamos getStoredSession() hasta 2 veces (4s y 8s).
+    //    100% aditivo: NO toca storage, NO hace signOut, NO cambia timeouts.
+    const hasSupabaseToken = () => {
+      try {
+        for (let i = 0; i < localStorage.length; i++) {
+          if (/^sb-.+-auth-token$/.test(localStorage.key(i) || '')) return true;
+        }
+      } catch (_) { /* storage bloqueado */ }
+      return false;
+    };
+    let rehydrateTries = 0;
+    const scheduleRehydrate = () => {
+      if (rehydrateTries >= 2 || !hasSupabaseToken()) return;
+      rehydrateTries += 1;
+      setTimeout(() => {
+        if (!isMounted || loginSettledRef.current) return;
+        getStoredSession()
+          .then(s => {
+            if (!isMounted || loginSettledRef.current) return;
+            // prev ?? s: si el usuario ya entró por otro camino (login manual,
+            // listener SIGNED_IN), no lo pisamos.
+            if (s) setUser(prev => prev ?? s);
+            else scheduleRehydrate();
+          })
+          .catch(() => { if (isMounted) scheduleRehydrate(); });
+      }, 4000 * rehydrateTries);
+    };
+
     getStoredSession()
       .then(session => {
         if (!isMounted || loginSettledRef.current) return;
@@ -132,8 +165,10 @@ export function AuthProvider({ children }) {
         //     cacheada por la fresca (puede traer cambios en role/prefs).
         //   · Si Supabase devuelve null → la caché que usamos en el render
         //     inicial estaba obsoleta (signOut desde otra pestaña, cuenta
-        //     desactivada, JWT expirado). Limpiamos para mostrar LoginScreen.
+        //     desactivada, JWT expirado). Limpiamos para mostrar LoginScreen
+        //     — salvo que haya token real guardado: ahí reintentamos solos.
         setUser(session ?? null);
+        if (!session) scheduleRehydrate();
       })
       .catch(e => {
         console.warn('[Stratos] Hidratación falló (no destructivo):', e?.message || e);

@@ -232,6 +232,7 @@ export default function MetaPanel({
     if (!open || !_online) return;
     let cancelled = false;
     supabase.from('team_actions').select('*')   // RLS ya filtra por el org del usuario logueado
+      .order('order_idx', { ascending: true, nullsFirst: false })
       .order('created_at', { ascending: false })
       .then(({ data, error }) => {
         if (cancelled || error || !data) { if (error) console.warn('[Stratos] team_actions load:', error.message); return; }
@@ -243,6 +244,7 @@ export default function MetaPanel({
           date: r.due_at ? new Date(r.due_at).toLocaleString('es-MX',{ day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' }) : '',
           done: r.done, priority: r.priority || 'normal', assignee: r.asesor_name || '',
           assigneeType: r.assignee_type || 'human', due_at: r.due_at, status: r.status || 'pending', _persisted: true,
+          order_idx: r.order_idx,
         }));
         setMetaActions(p => { const ids = new Set(mapped.map(m => m.id)); return [...mapped, ...p.filter(a => !a._persisted && !ids.has(a.id))]; });
       });
@@ -1185,7 +1187,10 @@ export default function MetaPanel({
                 const order = { personal: 0, profesional: 1 };
                 const ca = normalizeAgendaCategory(a.agendaCategory || a.category || a.lead);
                 const cb = normalizeAgendaCategory(b.agendaCategory || b.category || b.lead);
-                return (order[ca] ?? 9) - (order[cb] ?? 9);
+                // Dentro de cada categoría manda el orden ARRASTRADO (order_idx);
+                // sin orden explícito, el orden de llegada.
+                return (order[ca] ?? 9) - (order[cb] ?? 9)
+                  || ((a.order_idx ?? 1e9) - (b.order_idx ?? 1e9));
               }).map((a, index, arr) => {
                 const isUrgent = a.priority==="urgente" || a.date?.toLowerCase().includes("hoy");
                 const isHigh   = !isUrgent && (a.priority==="alto" || a.date?.toLowerCase().includes("mañana") || a.date?.toLowerCase().includes("semana"));
@@ -1358,7 +1363,15 @@ export default function MetaPanel({
                         if (fi < 0 || ti < 0) return p;
                         const [item]=arr.splice(fi,1);
                         arr.splice(ti,0,item);
-                        return arr;
+                        // PERSISTIR el orden (pedido de Iván 29-jul): sin esto el
+                        // arrastre se perdía al recargar. order_idx = posición.
+                        return arr.map((x, i) => {
+                          if (x._persisted && x.order_idx !== i && _online) {
+                            supabase.from('team_actions').update({ order_idx: i }).eq('id', x.id)
+                              .then(({ error }) => { if (error) console.warn('[Stratos] team_action orden:', error.message); });
+                          }
+                          return { ...x, order_idx: i };
+                        });
                       });
                     }}
                     style={{
