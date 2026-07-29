@@ -1183,7 +1183,7 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
      el input perdería el foco al tipear — está avisado arriba en este archivo. */
   const celdaEditable = (fila, campo, {
     tipo = "text", extra = false, ancho = 110, placeholder = "—", fuerte = false,
-    tabla = PIPE, multilinea = false,
+    tabla = PIPE, multilinea = false, clamp = false,
   } = {}) => {
     const editando = celda && celda.id === fila.id && celda.campo === campo
       && !!celda.extra === !!extra && (celda.tabla || PIPE) === tabla;
@@ -1239,6 +1239,7 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
           fontSize: fuerte ? 12.5 : 12.5, fontWeight: fuerte ? 500 : 400,
           fontFamily: font, minWidth: 34, width: "100%",
           whiteSpace: multilinea ? "pre-wrap" : undefined, lineHeight: multilinea ? 1.55 : undefined,
+          ...(clamp ? { display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden", whiteSpace: "normal", lineHeight: 1.45 } : {}),
         }}>{mostrar || placeholder}</button>
     );
   };
@@ -1298,6 +1299,73 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
     );
   };
 
+  /* ── ESPACIO 1 EN EL TELÉFONO: TARJETAS, no tabla (auditoría móvil 29-jul).
+     La tabla de 17 columnas en 390px era inusable (2 columnas visibles y
+     scroll infinito). En móvil: una tarjeta por propiedad con lo esencial
+     (estatus y empresa editables, fechas, enlaces) y el botón Ficha para
+     editar TODO (el modal ya es 1 columna en móvil). ── */
+  const pipeCards = () => {
+    const pillSel = (c, empty) => ({
+      appearance: "none", WebkitAppearance: "none", cursor: "pointer", maxWidth: "100%",
+      padding: "5px 12px", borderRadius: 999, whiteSpace: "nowrap", fontFamily: font,
+      fontSize: 12, fontWeight: 600, colorScheme: isLight ? "light" : "dark",
+      color: empty ? txt3 : c, background: empty ? "transparent" : `${c}1E`,
+      border: `1px solid ${empty ? bd : `${c}44`}`, ...caret(empty ? txt3 : c, 8),
+    });
+    return (
+      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+        {pipeFiltrado.map(p => {
+          const col = (ETAPA_HEX[p.etapa] || ETAPA_HEX.seleccionada)[isLight ? "l" : "d"];
+          const b = brandById[p.brand_id];
+          const bc = brandColor(b);
+          const enlaces = [["Crudos", p.crudos_url], ["Video", p.video_url], ["Reel", p.ig_url], ["Story", p.story_url], ["Cine", p.cine_url], ["Ficha", p.ficha_url], ["Info", p.info_url], ["Drive", p.drive_url]].filter(([, u]) => u);
+          const meta = [p.fecha_rodaje && `Rodaje ${fmtDia(p.fecha_rodaje)}`, p.fecha_publicacion && `Publica ${fmtDia(p.fecha_publicacion)}`, p.locacion, p.tipo, p.precio].filter(Boolean).join(" · ");
+          return (
+            <div key={p.id} style={{ ...card, borderRadius: 14, padding: "12px 14px", display: "flex", flexDirection: "column", gap: 8 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <span style={{ flex: 1, minWidth: 0, fontSize: 13.5, fontWeight: 600, color: txt, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.nombre || "Sin nombre"}</span>
+                <button onClick={() => openFicha(p)} title="Abrir la ficha completa — acá se edita todo" style={{
+                  background: "transparent", border: `1px solid ${accent}44`, borderRadius: 9, padding: "6px 11px",
+                  cursor: "pointer", color: accent, fontSize: 12, fontFamily: font,
+                  display: "inline-flex", alignItems: "center", gap: 5, flexShrink: 0,
+                }}><Maximize2 size={12} /> Ficha</button>
+              </div>
+              <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                <select value={p.etapa} onChange={e => cambiarEtapa(p.id, e.target.value)} style={pillSel(col)}>
+                  {ETAPAS.map(x => <option key={x.id} value={x.id}>{x.l}</option>)}
+                </select>
+                <select value={p.brand_id || ""} onChange={e => cambiarEmpresa(p.id, e.target.value)} style={pillSel(b ? bc : txt3, !b)}>
+                  <option value="">— empresa —</option>
+                  {brands.map(x => <option key={x.id} value={x.id}>{x.nombre}</option>)}
+                </select>
+              </div>
+              {meta && <div style={{ fontSize: 12, color: txt3, lineHeight: 1.5 }}>{meta}</div>}
+              {p.notas && <div style={{ fontSize: 12, color: txt2, lineHeight: 1.45, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{p.notas}</div>}
+              {enlaces.length > 0 && (
+                <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                  {enlaces.map(([l, u]) => (
+                    <a key={l} href={u} target="_blank" rel="noreferrer" style={{
+                      fontSize: 12, color: accent, textDecoration: "none", borderRadius: 99,
+                      border: `1px solid ${accent}33`, background: `${accent}0E`, padding: "4px 11px",
+                    }}>{l}</a>
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        })}
+        {pipeFiltrado.length === 0 && emptyRow(pipeline.length === 0 ? "Todavía no hay propiedades cargadas." : "Ninguna propiedad coincide con ese filtro.")}
+        <div style={{ ...card, borderRadius: 14, padding: "10px 12px" }}>
+          <input value={filaNueva} disabled={filaNuevaSaving} onChange={e => setFilaNueva(e.target.value)}
+            onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); crearDesdeTabla(); } }}
+            onBlur={() => { if (filaNueva.trim()) crearDesdeTabla(); }}
+            placeholder={filaNuevaSaving ? "Agregando…" : "+ Agregar propiedad… (Enter)"}
+            style={{ ...inputStyle, border: `1px dashed ${bd}`, background: "transparent" }} />
+        </div>
+      </div>
+    );
+  };
+
   const pipelineTabla = () => (
     <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
@@ -1337,14 +1405,14 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
             background: "transparent", border: "none", cursor: "pointer", color: txt3, fontSize: 12, fontFamily: font,
           }}>Limpiar</button>
         )}
-        <button onClick={() => { setShowCols(s => !s); setColForm(null); }} title="Elegir qué columnas ver" style={{
+        {!isMobile && <button onClick={() => { setShowCols(s => !s); setColForm(null); }} title="Elegir qué columnas ver" style={{
           background: showCols ? `${accent}14` : "transparent", border: `1px solid ${bd}`, borderRadius: 9, padding: "7px 12px",
           cursor: "pointer", color: txt2, fontSize: 12.5, fontFamily: font, display: "inline-flex", alignItems: "center", gap: 5,
-        }}><SlidersHorizontal size={12} /> Columnas{colsOcultas.size > 0 ? ` (${colsOcultas.size} ocultas)` : ""}</button>
-        <button onClick={() => { setColForm(c => c ? null : { nombre: "", tipo: "texto" }); setShowCols(false); }} style={{
+        }}><SlidersHorizontal size={12} /> Columnas{colsOcultas.size > 0 ? ` (${colsOcultas.size} ocultas)` : ""}</button>}
+        {!isMobile && <button onClick={() => { setColForm(c => c ? null : { nombre: "", tipo: "texto" }); setShowCols(false); }} style={{
           background: "transparent", border: `1px solid ${accent}44`, borderRadius: 9, padding: "7px 12px",
           cursor: "pointer", color: accent, fontSize: 12.5, fontFamily: font, display: "inline-flex", alignItems: "center", gap: 5,
-        }}><Plus size={12} /> Columna nueva</button>
+        }}><Plus size={12} /> Columna nueva</button>}
         <span style={{ fontSize: 12, color: celdaSaving ? accent : txt3, marginLeft: "auto", whiteSpace: "nowrap" }}>
           {celdaSaving ? "Guardando…" : `${pipeFiltrado.length} de ${pipeline.length}`}
         </span>
@@ -1404,7 +1472,8 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
         </div>
       )}
 
-      <div style={hoja.wrap}>
+      {isMobile && pipeCards()}
+      {!isMobile && <div style={hoja.wrap}>
         <table style={hoja.table}>
           <thead>
             <tr>
@@ -1490,10 +1559,17 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
                     );
                     if (c.tipo === "enlace" && !c.extra) return <td key={c.key} style={base}>{celdaEnlace(p, c.key)}</td>;
                     return (
-                      <td key={c.extra ? `x-${c.key}` : c.key} style={{ ...base, whiteSpace: c.key === "notas" ? "normal" : "nowrap" }}>
+                      <td key={c.extra ? `x-${c.key}` : c.key} style={{
+                        ...base, whiteSpace: c.key === "notas" ? "normal" : "nowrap",
+                        /* Notas: SIN mínimo, la tabla apretada la dejaba de ~60px y 95
+                           caracteres se partían en ~10 renglones → la fila entera se
+                           estiraba (el «hueco» bajo Casa 392 que vio Iván, 29-jul). */
+                        ...(c.key === "notas" ? { minWidth: 220, maxWidth: 340 } : {}),
+                      }}>
                         {celdaEditable(p, c.key, {
                           extra: !!c.extra, tipo: c.tipo === "enlace" ? "text" : c.tipo,
                           ancho: c.ancho || 130, placeholder: c.ph || "—",
+                          clamp: c.key === "notas",
                         })}
                       </td>
                     );
@@ -1545,13 +1621,13 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
             )}
           </tbody>
         </table>
-      </div>
-      <div style={{ fontSize: 11.5, color: txt3, lineHeight: 1.6 }}>
+      </div>}
+      {!isMobile && <div style={{ fontSize: 11.5, color: txt3, lineHeight: 1.6 }}>
         Toca cualquier celda para escribir · <b style={{ color: txt2 }}>Enter</b> baja a la de abajo ·{" "}
         <b style={{ color: txt2 }}>Tab</b> pasa a la de al lado · <b style={{ color: txt2 }}>Escape</b> cancela.
         El estatus y la empresa se cambian con su desplegable. «Columnas» esconde las que no uses y
         «Columna nueva» agrega las tuyas. El icono ⤢ abre la ficha completa de la propiedad.
-      </div>
+      </div>}
     </div>
   );
 
@@ -1582,6 +1658,66 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
       : rol ? "Administración" : "—";
   }, [people]);
 
+  /* ── ESPACIO 2 EN EL TELÉFONO: tarjetas (la tabla dejaba las actividades
+     —lo único que importa— fuera de la pantalla). Mismo poder que la tabla:
+     empresa editable, texto con «ver todo» y editar, tiempo y evidencia. ── */
+  const bitaCards = () => (
+    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+      {bitacoraFiltrada.map(r => {
+        const mio = r.profile_id === user?.id;
+        const edit = mio || isAdmin;
+        const editandoTexto = celda && celda.id === r.id && celda.campo === "texto" && (celda.tabla || PIPE) === BITA;
+        const bcol = r.brand_id ? brandColor(brandById[r.brand_id]) : null;
+        const tiempo = r.tiempo_texto || tiempoDelTexto(r.texto);
+        return (
+          <div key={r.id} style={{ ...card, borderRadius: 14, padding: "12px 14px", display: "flex", flexDirection: "column", gap: 7 }}>
+            <div style={{ display: "flex", alignItems: "baseline", gap: 8, flexWrap: "wrap" }}>
+              <span style={{ fontSize: 13, fontWeight: 600, color: txt }}>{nameOf(r.profile_id)}</span>
+              <span style={{ fontSize: 11.5, color: txt3 }}>{puestoDe(r)}</span>
+              <span style={{ marginLeft: "auto", fontSize: 11.5, color: txt3, whiteSpace: "nowrap" }}>{fmtDia(r.fecha)} · {fmtHora(r.created_at)}</span>
+            </div>
+            {edit ? (
+              <select value={r.brand_id || ""} title="¿De qué empresa?"
+                onChange={e => guardarCampo(BITA, r.id, "brand_id", e.target.value)}
+                style={{
+                  alignSelf: "flex-start", appearance: "none", WebkitAppearance: "none", cursor: "pointer",
+                  padding: "3px 10px", borderRadius: 999, fontFamily: font, fontSize: 11.5, fontWeight: 600,
+                  colorScheme: isLight ? "light" : "dark", color: bcol || txt3,
+                  background: bcol ? `${bcol}1E` : "transparent",
+                  border: `1px solid ${bcol ? `${bcol}44` : bd}`, ...caret(bcol || txt3, 8),
+                }}>
+                <option value="">— empresa —</option>
+                {brands.map(b => <option key={b.id} value={b.id}>{b.nombre}</option>)}
+              </select>
+            ) : (bcol && (
+              <span style={{ alignSelf: "flex-start", padding: "3px 10px", borderRadius: 999, fontSize: 11.5, fontWeight: 600, color: bcol, background: `${bcol}1E`, border: `1px solid ${bcol}44` }}>
+                {brandById[r.brand_id]?.nombre}
+              </span>
+            ))}
+            {editandoTexto
+              ? celdaEditable(r, "texto", { tabla: BITA, multilinea: true })
+              : (
+                <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
+                  {reporteTexto(r)}
+                  {edit && (
+                    <button onClick={() => setCelda({ id: r.id, campo: "texto", valor: r.texto || "", extra: false, tabla: BITA })}
+                      style={{ alignSelf: "flex-start", background: "transparent", border: "none", padding: 0, cursor: "pointer", color: txt3, fontSize: 11.5, fontFamily: font }}>editar</button>
+                  )}
+                </div>
+              )}
+            <div style={{ display: "flex", gap: 12, alignItems: "center", fontSize: 11.5, color: txt3, flexWrap: "wrap" }}>
+              <span>Tiempo · {tiempo || "—"}</span>
+              {r.evidencia_url && <a href={r.evidencia_url} target="_blank" rel="noreferrer" style={{ color: accent, textDecoration: "none" }}>Evidencia →</a>}
+            </div>
+          </div>
+        );
+      })}
+      {bitacoraFiltrada.length === 0 && emptyRow(bitacora.length === 0
+        ? "Todavía no hay reportes. En cuanto alguien cuente su día, aparece acá."
+        : "Ningún reporte coincide con ese filtro.")}
+    </div>
+  );
+
   const reporteTabla = () => (
     <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
@@ -1606,7 +1742,8 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
         </span>
       </div>
 
-      <div style={hoja.wrap}>
+      {isMobile && bitaCards()}
+      {!isMobile && <div style={hoja.wrap}>
         <table style={{ ...hoja.table, minWidth: 900 }}>
           <thead>
             <tr>
@@ -1697,14 +1834,14 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
             )}
           </tbody>
         </table>
-      </div>
-      <div style={{ fontSize: 11.5, color: txt3, lineHeight: 1.6 }}>
+      </div>}
+      {!isMobile && <div style={{ fontSize: 11.5, color: txt3, lineHeight: 1.6 }}>
         Cada quien puede corregir sus propios reportes{isAdmin ? " (y vos, los de todo el equipo)" : ""} —
         toca la fecha, la empresa, el tiempo o «editar» debajo del texto.
         En el texto largo, <b style={{ color: txt2 }}>Enter</b> hace salto de línea y{" "}
         <b style={{ color: txt2 }}>⌘/Ctrl+Enter</b> guarda. El <b style={{ color: txt2 }}>nombre</b> y el{" "}
         <b style={{ color: txt2 }}>área</b> salen del perfil de cada persona, no se escriben acá.
-      </div>
+      </div>}
     </div>
   );
 
