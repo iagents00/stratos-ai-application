@@ -940,7 +940,7 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
           <span style={{
             padding: "7px 11px", borderRadius: 9,
             background: headerBg, border: `1px solid ${rowBorder}`,
-            color: T.txt3, fontSize: 11, fontFamily: font,
+            color: T.txt3, fontSize: 12, fontFamily: font,
           }}>
             Vista automática: <strong style={{ color: T.txt2 }}>{granularity.label}</strong>
           </span>
@@ -984,7 +984,7 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
           <p style={{ fontSize: 14.5, fontWeight: 500, color: T.txt, fontFamily: fontDisp, margin: 0, letterSpacing: "-0.014em" }}>
             Embudo de conversión
           </p>
-          <p style={{ fontSize: 11, color: T.txt3, fontFamily: font, margin: "3px 0 0", lineHeight: 1.5 }}>
+          <p style={{ fontSize: 12, color: T.txt3, fontFamily: font, margin: "3px 0 0", lineHeight: 1.5 }}>
             Del lead al cierre · cuántos avanzan en cada etapa y dónde se caen. Cada barra es proporcional al total de leads.
           </p>
         </div>
@@ -1000,7 +1000,7 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
                   <span style={{ display: "inline-flex", padding: 6, borderRadius: 8, background: `${s.color}1A`, flexShrink: 0 }}>
                     <Icon size={14} color={s.color} strokeWidth={2.2} />
                   </span>
-                  <span style={{ fontSize: 12, fontWeight: 400, color: T.txt2, fontFamily: font, lineHeight: 1.2 }}>{s.label}</span>
+                  <span style={{ fontSize: 12.5, fontWeight: 400, color: T.txt2, fontFamily: font, lineHeight: 1.2 }}>{s.label}</span>
                 </div>
                 <div style={{ flex: 1, minWidth: 0, display: "flex", alignItems: "center", gap: 10 }}>
                   <div style={{ flex: 1, minWidth: 0, height: 34, borderRadius: 8, background: isLight ? "rgba(15,23,42,0.04)" : "rgba(255,255,255,0.04)", overflow: "hidden" }}>
@@ -1012,7 +1012,7 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
                       <span style={{ fontSize: 14, fontWeight: 500, color: "#FFFFFF", fontFamily: fontDisp, letterSpacing: "-0.01em", textShadow: "0 1px 3px rgba(0,0,0,0.45)" }}>{s.value.toLocaleString("es-MX")}</span>
                     </div>
                   </div>
-                  <span style={{ minWidth: 64, flexShrink: 0, fontSize: 11, color: T.txt3, fontFamily: font, textAlign: "right", whiteSpace: "nowrap" }}>
+                  <span style={{ minWidth: 64, flexShrink: 0, fontSize: 12, color: T.txt3, fontFamily: font, textAlign: "right", whiteSpace: "nowrap" }}>
                     {conv !== null ? <><strong style={{ color: T.txt2 }}>{conv}%</strong> del previo</> : "100%"}
                   </span>
                 </div>
@@ -1029,7 +1029,7 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
             <p style={{ fontSize: 14.5, fontWeight: 500, color: T.txt, fontFamily: fontDisp, margin: 0, letterSpacing: "-0.014em" }}>
               Evolución de indicadores
             </p>
-            <p style={{ fontSize: 11, color: T.txt3, fontFamily: font, margin: "3px 0 0", lineHeight: 1.5 }}>
+            <p style={{ fontSize: 12, color: T.txt3, fontFamily: font, margin: "3px 0 0", lineHeight: 1.5 }}>
               Agrupación <strong style={{ color: T.txt2 }}>{granularity.label.toLowerCase()}</strong> dentro del rango global seleccionado.
               {" "}Por defecto muestra <strong style={{ color: T.txt2 }}>Zooms agendados y realizados</strong>; prende más series con los chips de la leyenda.
             </p>
@@ -1059,7 +1059,7 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
                     ? (isLight ? "rgba(15,23,42,0.10)" : "rgba(255,255,255,0.08)")
                     : `${c}55`}`,
                   color: hidden ? T.txt3 : (isLight ? `color-mix(in srgb, ${c} 60%, #0B1220)` : c),
-                  fontSize: 11, fontWeight: 400, fontFamily: fontDisp,
+                  fontSize: 12, fontWeight: 400, fontFamily: fontDisp,
                   letterSpacing: "0.005em", cursor: "pointer",
                   transition: "all 0.14s", WebkitTapHighlightColor: "transparent",
                   opacity: hidden ? 0.55 : 1,
@@ -1098,7 +1098,7 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
               <XAxis
                 dataKey="label"
                 stroke={T.txt3}
-                tick={{ fill: T.txt3, fontSize: 10.5, fontFamily: fontDisp, fontWeight: 500 }}
+                tick={{ fill: T.txt3, fontSize: 11.5, fontFamily: fontDisp, fontWeight: 500 }}
                 tickLine={false}
                 axisLine={{ stroke: isLight ? "rgba(15,23,42,0.08)" : "rgba(255,255,255,0.06)" }}
                 interval={series.length > 20 ? "preserveStartEnd" : 0}
@@ -1110,7 +1110,7 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
               <YAxis
                 allowDecimals={false}
                 stroke={T.txt3}
-                tick={{ fill: T.txt3, fontSize: 10.5, fontFamily: fontDisp, fontWeight: 500 }}
+                tick={{ fill: T.txt3, fontSize: 11.5, fontFamily: fontDisp, fontWeight: 500 }}
                 tickLine={false}
                 axisLine={false}
                 width={36}
@@ -1124,7 +1124,7 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
                   strokeWidth={1}
                   label={{
                     value: "Hoy", position: "top",
-                    fill: T.txt2, fontSize: 10, fontWeight: 500,
+                    fill: T.txt2, fontSize: 11, fontWeight: 500,
                     fontFamily: fontDisp,
                     dy: -2,
                   }}
@@ -1205,12 +1205,12 @@ function ChartTooltip({ active, payload, label, isLight, T, hiddenSeries }) {
       border: `1px solid ${isLight ? "rgba(15,23,42,0.10)" : "rgba(255,255,255,0.10)"}`,
       borderRadius: 12,
       padding: "10px 14px",
-      fontFamily: font, fontSize: 12,
+      fontFamily: font, fontSize: 12.5,
       boxShadow: "0 12px 32px rgba(0,0,0,0.20)",
       minWidth: 200,
     }}>
       <div style={{
-        fontSize: 11, fontWeight: 500, color: T.txt, fontFamily: fontDisp,
+        fontSize: 12, fontWeight: 500, color: T.txt, fontFamily: fontDisp,
         letterSpacing: "-0.005em",
         marginBottom: 8, paddingBottom: 7,
         borderBottom: `1px solid ${isLight ? "rgba(15,23,42,0.06)" : "rgba(255,255,255,0.07)"}`,
@@ -1218,11 +1218,11 @@ function ChartTooltip({ active, payload, label, isLight, T, hiddenSeries }) {
       <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
         {items.map(p => (
           <div key={p.dataKey} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
-            <span style={{ display: "inline-flex", alignItems: "center", gap: 7, color: T.txt2, fontFamily: fontDisp, fontSize: 11.5, fontWeight: 500 }}>
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 7, color: T.txt2, fontFamily: fontDisp, fontSize: 12, fontWeight: 500 }}>
               <span style={{ width: 8, height: 8, borderRadius: 2, background: p.color, flexShrink: 0 }} />
               {FULL_LABELS[p.dataKey] || p.dataKey}
             </span>
-            <span style={{ fontSize: 12, fontWeight: 500, color: T.txt, fontVariantNumeric: "tabular-nums", fontFamily: fontDisp }}>
+            <span style={{ fontSize: 12.5, fontWeight: 500, color: T.txt, fontVariantNumeric: "tabular-nums", fontFamily: fontDisp }}>
               {p.value || 0}
             </span>
           </div>
@@ -1234,7 +1234,7 @@ function ChartTooltip({ active, payload, label, isLight, T, hiddenSeries }) {
           borderTop: `1px solid ${isLight ? "rgba(15,23,42,0.06)" : "rgba(255,255,255,0.07)"}`,
           display: "flex", justifyContent: "space-between", alignItems: "center",
         }}>
-          <span style={{ fontSize: 10, fontWeight: 500, color: T.txt3, fontFamily: fontDisp, textTransform: "uppercase", letterSpacing: "0.06em" }}>
+          <span style={{ fontSize: 11, fontWeight: 500, color: T.txt3, fontFamily: fontDisp, textTransform: "uppercase", letterSpacing: "0.06em" }}>
             Total
           </span>
           <span style={{ fontSize: 13, fontWeight: 500, color: T.txt, fontVariantNumeric: "tabular-nums", fontFamily: fontDisp }}>
@@ -1251,7 +1251,7 @@ function tableHeadStyle(T, align = "right") {
   return {
     padding: "11px 14px",
     textAlign: align,
-    fontSize: 10.5, fontWeight: 500,
+    fontSize: 11.5, fontWeight: 500,
     color: T.txt2, fontFamily: fontDisp,
     textTransform: "uppercase",
     letterSpacing: "0.06em",

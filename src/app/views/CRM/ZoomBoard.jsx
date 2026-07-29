@@ -155,17 +155,17 @@ export default function ZoomBoard({ leadsData = [], theme = "dark", onOpenLead =
                 <span style={{ display: "inline-flex", padding: 7, borderRadius: 9, background: `${k.color}1A` }}>
                   <Icon size={15} color={k.color} strokeWidth={2.2} />
                 </span>
-                <span style={{ fontSize: 12, fontWeight: 400, color: T.txt2, fontFamily: font }}>{k.label}</span>
+                <span style={{ fontSize: 12.5, fontWeight: 400, color: T.txt2, fontFamily: font }}>{k.label}</span>
               </div>
               <div style={{ fontSize: 28, fontWeight: 500, fontFamily: fontDisp, color: T.txt, letterSpacing: "-0.02em" }}>{k.value}</div>
-              <div style={{ fontSize: 11, color: T.txt3, fontFamily: font, marginTop: 2 }}>{k.sub}</div>
+              <div style={{ fontSize: 12, color: T.txt3, fontFamily: font, marginTop: 2 }}>{k.sub}</div>
             </div>
           );
         })}
       </div>
 
       {/* Leyenda: activos + nota de inferidos (recuperación, no alarma) */}
-      <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "8px 18px", margin: "-6px 2px 0", fontSize: 11.5, color: T.txt3, fontFamily: font }}>
+      <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "8px 18px", margin: "-6px 2px 0", fontSize: 12, color: T.txt3, fontFamily: font }}>
         <span><strong style={{ color: T.txt2 }}>Activos post-Zoom:</strong> {activosPostZoom} clientes en cierre ahora</span>
         {totals.doneInferred > 0 && (
           <span style={{
@@ -184,7 +184,7 @@ export default function ZoomBoard({ leadsData = [], theme = "dark", onOpenLead =
         <h3 style={{ margin: "0 0 2px", fontSize: 16, fontWeight: 400, fontFamily: fontDisp, color: T.txt }}>
           Zooms realizados por asesor
         </h3>
-        <p style={{ margin: "0 0 10px", fontSize: 11.5, color: T.txt3, fontFamily: font }}>
+        <p style={{ margin: "0 0 10px", fontSize: 12, color: T.txt3, fontFamily: font }}>
           Quién corrió el Zoom (presentador) — acreditado a quien lo dio, no al dueño actual del lead.
         </p>
         <div style={{ borderRadius: 14, background: isLight ? "rgba(255,255,255,0.6)" : "rgba(255,255,255,0.02)", border: `1px solid ${rowBorder}`, overflow: "hidden", overflowX: "auto" }}>
@@ -209,7 +209,7 @@ export default function ZoomBoard({ leadsData = [], theme = "dark", onOpenLead =
             {byPresenter.length > 0 && (
               <tfoot>
                 <tr style={{ borderTop: `1px solid ${rowBorder}`, background: headerBg }}>
-                  <td style={{ padding: cellPad, paddingLeft: 16, fontFamily: fontDisp, fontWeight: 500, color: T.txt2, fontSize: 12, textTransform: "uppercase", letterSpacing: "0.04em" }}>Total</td>
+                  <td style={{ padding: cellPad, paddingLeft: 16, fontFamily: fontDisp, fontWeight: 500, color: T.txt2, fontSize: 12.5, textTransform: "uppercase", letterSpacing: "0.04em" }}>Total</td>
                   <td style={{ padding: cellPad, textAlign: "center", fontFamily: fontDisp, fontWeight: 500, color: accent, fontSize: 14 }}>{totals.done}</td>
                 </tr>
               </tfoot>
@@ -231,7 +231,7 @@ export default function ZoomBoard({ leadsData = [], theme = "dark", onOpenLead =
         >
           <History size={15} color={accent} strokeWidth={2.2} />
           <span>Historial de movimientos de Zoom</span>
-          <span style={{ fontSize: 12, fontWeight: 500, color: T.txt3 }}>· {historial.length} movimientos</span>
+          <span style={{ fontSize: 12.5, fontWeight: 500, color: T.txt3 }}>· {historial.length} movimientos</span>
           <ChevronDown size={16} color={T.txt3} style={{ marginLeft: "auto", transform: histOpen ? "rotate(180deg)" : "none", transition: "transform 0.15s" }} />
         </button>
 
@@ -246,7 +246,7 @@ export default function ZoomBoard({ leadsData = [], theme = "dark", onOpenLead =
                     background: active ? "linear-gradient(135deg, #18B795 0%, #0A7C5D 100%)" : "transparent",
                     color: active ? "#FFFFFF" : T.txt2,
                     textShadow: active ? "0 1px 2px rgba(0,0,0,0.30)" : "none",
-                    fontSize: 12, fontWeight: active ? 700 : 500, fontFamily: fontDisp,
+                    fontSize: 12.5, fontWeight: active ? 700 : 500, fontFamily: fontDisp,
                   }}>{t.l}</button>
                 );
               })}
@@ -270,13 +270,13 @@ export default function ZoomBoard({ leadsData = [], theme = "dark", onOpenLead =
                       style={{ padding: "12px 14px", borderTop: i === 0 ? "none" : `1px solid ${rowBorder}`, cursor: onOpenLead ? "pointer" : "default", WebkitTapHighlightColor: "transparent" }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                         <span style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontFamily: fontDisp, fontWeight: 500, color: T.txt, fontSize: 13.5 }}>{m.lead.name || m.lead.n || "(sin nombre)"}</span>
-                        <span style={{ marginLeft: "auto", flexShrink: 0, padding: "3px 10px", borderRadius: 999, fontFamily: fontDisp, fontSize: 11, color: movColor, background: `${movColor}1A` }}>{movLabel}</span>
+                        <span style={{ marginLeft: "auto", flexShrink: 0, padding: "3px 10px", borderRadius: 999, fontFamily: fontDisp, fontSize: 12, color: movColor, background: `${movColor}1A` }}>{movLabel}</span>
                       </div>
-                      <div style={{ marginTop: 3, display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap", fontSize: 12, color: T.txt2, fontFamily: font }}>
+                      <div style={{ marginTop: 3, display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap", fontSize: 12.5, color: T.txt2, fontFamily: font }}>
                         <span>{m.by || m.lead.asesor || "—"}</span>
                         <span style={{ color: T.txt3 }}>· {fmtFecha(m.at)}</span>
-                        <span style={{ padding: "2px 8px", borderRadius: 999, fontFamily: fontDisp, fontSize: 10.5, color: stColor, background: `${stColor}1A` }}>{m.lead.st || "—"}</span>
-                        {m.inferred && <span style={{ color: "#F59E0B", fontFamily: fontDisp, fontSize: 10.5 }}>Inferido</span>}
+                        <span style={{ padding: "2px 8px", borderRadius: 999, fontFamily: fontDisp, fontSize: 11.5, color: stColor, background: `${stColor}1A` }}>{m.lead.st || "—"}</span>
+                        {m.inferred && <span style={{ color: "#F59E0B", fontFamily: fontDisp, fontSize: 11.5 }}>Inferido</span>}
                       </div>
                     </div>
                   );
@@ -311,15 +311,15 @@ export default function ZoomBoard({ leadsData = [], theme = "dark", onOpenLead =
                         onMouseLeave={onOpenLead ? (e) => { e.currentTarget.style.background = "transparent"; } : undefined}
                       >
                         <td style={{ padding: cellPad, paddingLeft: 16, fontFamily: fontDisp, fontWeight: 400, color: T.txt, fontSize: 13 }}>{m.lead.name || m.lead.n || "(sin nombre)"}</td>
-                        <td style={{ padding: cellPad, textAlign: "center", fontSize: 12 }}>
-                          <span style={{ display: "inline-block", whiteSpace: "nowrap", padding: "3px 10px", borderRadius: 999, fontFamily: fontDisp, fontWeight: 400, fontSize: 11, color: movColor, background: `${movColor}1A` }}>{movLabel}</span>
+                        <td style={{ padding: cellPad, textAlign: "center", fontSize: 12.5 }}>
+                          <span style={{ display: "inline-block", whiteSpace: "nowrap", padding: "3px 10px", borderRadius: 999, fontFamily: fontDisp, fontWeight: 400, fontSize: 12, color: movColor, background: `${movColor}1A` }}>{movLabel}</span>
                         </td>
                         <td style={{ padding: cellPad, textAlign: "center", fontFamily: font, color: T.txt2, fontSize: 12.5 }}>{m.by || m.lead.asesor || "—"}</td>
                         <td style={{ padding: cellPad, textAlign: "center", fontFamily: font, color: T.txt2, fontSize: 12.5, whiteSpace: "nowrap" }}>{fmtFecha(m.at)}</td>
-                        <td style={{ padding: cellPad, textAlign: "center", fontSize: 12, whiteSpace: "nowrap" }}>
-                          <span style={{ display: "inline-block", whiteSpace: "nowrap", padding: "3px 10px", borderRadius: 999, fontFamily: fontDisp, fontWeight: 400, fontSize: 11, color: STAGE_COLORS[m.lead.st] || T.txt3, background: `${STAGE_COLORS[m.lead.st] || T.txt3}1A` }}>{m.lead.st || "—"}</span>
+                        <td style={{ padding: cellPad, textAlign: "center", fontSize: 12.5, whiteSpace: "nowrap" }}>
+                          <span style={{ display: "inline-block", whiteSpace: "nowrap", padding: "3px 10px", borderRadius: 999, fontFamily: fontDisp, fontWeight: 400, fontSize: 12, color: STAGE_COLORS[m.lead.st] || T.txt3, background: `${STAGE_COLORS[m.lead.st] || T.txt3}1A` }}>{m.lead.st || "—"}</span>
                         </td>
-                        <td style={{ padding: cellPad, textAlign: "center", fontSize: 11.5 }}>
+                        <td style={{ padding: cellPad, textAlign: "center", fontSize: 12 }}>
                           {m.inferred
                             ? <span title="La etapa actual implica Zoom, pero el movimiento no se registró. Lo inferimos." style={{ color: "#F59E0B", fontFamily: fontDisp, fontWeight: 400 }}>Inferido</span>
                             : <span style={{ color: T.txt3, fontFamily: font }}>Registrado</span>}
@@ -331,7 +331,7 @@ export default function ZoomBoard({ leadsData = [], theme = "dark", onOpenLead =
               </table>
             </div>
             )}
-            <p style={{ margin: "8px 4px 0", fontSize: 10.5, color: T.txt3, fontFamily: font, lineHeight: 1.5 }}>
+            <p style={{ margin: "8px 4px 0", fontSize: 11.5, color: T.txt3, fontFamily: font, lineHeight: 1.5 }}>
               <strong style={{ color: "#F59E0B" }}>Inferido</strong> = la etapa actual del lead implica que hubo Zoom, pero el asesor no marcó el movimiento. Lo recuperamos de la etapa para no perder la métrica; conviene que se registre correctamente.
             </p>
           </div>
@@ -343,7 +343,7 @@ export default function ZoomBoard({ leadsData = [], theme = "dark", onOpenLead =
 
 function thStyle(T) {
   return {
-    padding: "11px 12px", textAlign: "center", fontSize: 10.5, fontWeight: 400,
+    padding: "11px 12px", textAlign: "center", fontSize: 11.5, fontWeight: 400,
     color: T.txt2, fontFamily: fontDisp, textTransform: "uppercase",
     letterSpacing: "0.05em", whiteSpace: "nowrap",
   };

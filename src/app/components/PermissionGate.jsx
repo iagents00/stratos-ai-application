@@ -29,7 +29,7 @@ export default function PermissionGate({ moduleId, onGoBack, homeLabel = "Ir a m
         <p style={{ fontSize: 13, color: P.txt3, lineHeight: 1.7, marginBottom: 6 }}>
           No tienes permiso para acceder al módulo <span style={{ color: P.txt2, fontWeight: 400 }}>{MODULE_NAMES[moduleId] || moduleId}</span>.
         </p>
-        <p style={{ fontSize: 12, color: P.txt3, lineHeight: 1.6 }}>
+        <p style={{ fontSize: 12.5, color: P.txt3, lineHeight: 1.6 }}>
           Contacta a tu director o administrador para solicitar acceso.
         </p>
       </div>

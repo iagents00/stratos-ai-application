@@ -717,7 +717,7 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
       <div ref={scrollRef} style={{ flex: 1, minHeight: 0, overflowY: "auto", padding: "12px 14px" }}>
         <div style={{ width: "100%", maxWidth: "none", minHeight: "100%", display: "flex", flexDirection: "column", gap: 8 }}>
           {loading ? (
-            <div style={{ margin: "auto", color: T.txt3, fontSize: 12, fontFamily: font }}>Cargando conversación…</div>
+            <div style={{ margin: "auto", color: T.txt3, fontSize: 12.5, fontFamily: font }}>Cargando conversación…</div>
           ) : messages.length === 0 ? (
             <EmptyState T={T} isLight={isLight} onPick={send} />
           ) : (
@@ -729,7 +729,7 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
 
       {/* ── Banner de error ── */}
       {errBanner && (
-        <div style={{ margin: "0 14px 4px", padding: "8px 12px", borderRadius: 8, fontSize: 12, background: isLight ? "rgba(225,29,72,0.08)" : "rgba(248,113,113,0.10)", border: `1px solid ${isLight ? "rgba(225,29,72,0.22)" : "rgba(248,113,113,0.22)"}`, color: isLight ? "#B91C3A" : "#FCA5A5", fontFamily: font, flexShrink: 0 }}>
+        <div style={{ margin: "0 14px 4px", padding: "8px 12px", borderRadius: 8, fontSize: 12.5, background: isLight ? "rgba(225,29,72,0.08)" : "rgba(248,113,113,0.10)", border: `1px solid ${isLight ? "rgba(225,29,72,0.22)" : "rgba(248,113,113,0.22)"}`, color: isLight ? "#B91C3A" : "#FCA5A5", fontFamily: font, flexShrink: 0 }}>
           {errBanner}
         </div>
       )}
@@ -750,22 +750,22 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
       {recording && (
         <div style={{ margin: "0 14px 4px", padding: "8px 12px", borderRadius: 10, background: "rgba(239,68,68,0.10)", border: "1px solid rgba(239,68,68,0.30)", display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
           <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#EF4444", flexShrink: 0, animation: "pulse 1.2s ease-in-out infinite" }} />
-          <span style={{ flex: 1, fontSize: 12, fontWeight: 500, color: isLight ? "#B91C1C" : "#FCA5A5", fontFamily: fontDisp }}>
+          <span style={{ flex: 1, fontSize: 12.5, fontWeight: 500, color: isLight ? "#B91C1C" : "#FCA5A5", fontFamily: fontDisp }}>
             Grabando {fmtRecSecs(recordSecs)}
-            {voiceTranscript ? <span style={{ fontWeight: 400, opacity: 0.9, marginLeft: 6, fontSize: 11 }}>({voiceTranscript})</span> : null}
+            {voiceTranscript ? <span style={{ fontWeight: 400, opacity: 0.9, marginLeft: 6, fontSize: 12 }}>({voiceTranscript})</span> : null}
           </span>
-          <button onClick={cancelRecording} style={{ padding: "3px 8px", borderRadius: 6, background: "transparent", border: `1px solid ${T.border}`, color: T.txt2, fontSize: 11, fontFamily: font, cursor: "pointer" }}><X size={10} /> Cancelar</button>
-          <button onClick={finishRecording} style={{ padding: "3px 10px", borderRadius: 6, border: "none", background: "#EF4444", color: "#FFF", fontSize: 11, fontWeight: 600, fontFamily: fontDisp, cursor: "pointer" }}><Square size={9} /> Listo</button>
+          <button onClick={cancelRecording} style={{ padding: "3px 8px", borderRadius: 6, background: "transparent", border: `1px solid ${T.border}`, color: T.txt2, fontSize: 12, fontFamily: font, cursor: "pointer" }}><X size={10} /> Cancelar</button>
+          <button onClick={finishRecording} style={{ padding: "3px 10px", borderRadius: 6, border: "none", background: "#EF4444", color: "#FFF", fontSize: 12, fontWeight: 600, fontFamily: fontDisp, cursor: "pointer" }}><Square size={9} /> Listo</button>
         </div>
       )}
 
       {/* ── Aviso: comentando una evidencia (el próximo mensaje va como comentario) ── */}
       {commenting && (
         <div style={{ margin: "0 14px 4px", padding: "7px 12px", borderRadius: 10, background: `${T.accent}14`, border: `1px solid ${T.accent}40`, display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
-          <span style={{ flex: 1, fontSize: 12, fontWeight: 500, color: T.accent, fontFamily: font }}>
+          <span style={{ flex: 1, fontSize: 12.5, fontWeight: 500, color: T.accent, fontFamily: font }}>
             Comentando la evidencia{commenting.fromName ? ` de ${commenting.fromName}` : ""} — escribe y se lo hago llegar
           </span>
-          <button onClick={() => setCommenting(null)} title="Cancelar comentario" style={{ padding: "3px 8px", borderRadius: 6, background: "transparent", border: `1px solid ${T.border}`, color: T.txt2, fontSize: 11, fontFamily: font, cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }}><X size={11} /> Cancelar</button>
+          <button onClick={() => setCommenting(null)} title="Cancelar comentario" style={{ padding: "3px 8px", borderRadius: 6, background: "transparent", border: `1px solid ${T.border}`, color: T.txt2, fontSize: 12, fontFamily: font, cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }}><X size={11} /> Cancelar</button>
         </div>
       )}
 
@@ -1228,7 +1228,7 @@ function VoiceNote({ url, transcript, T, isLight, onDiscard, onSend }) {
           })}
         </div>
 
-        <span style={{ flexShrink: 0, fontSize: 11.5, fontWeight: 500, fontFamily: fontDisp, fontVariantNumeric: "tabular-nums", color: T.txt2, minWidth: 66, textAlign: "right" }}>
+        <span style={{ flexShrink: 0, fontSize: 12, fontWeight: 500, fontFamily: fontDisp, fontVariantNumeric: "tabular-nums", color: T.txt2, minWidth: 66, textAlign: "right" }}>
           {fmtClock(cur)} / {fmtClock(dur)}
         </span>
 
@@ -1246,10 +1246,10 @@ function VoiceNote({ url, transcript, T, isLight, onDiscard, onSend }) {
               "{transcript}"
             </span>
           ) : (
-            <span style={{ flex: 1, minWidth: 0, fontSize: 11.5, color: T.txt3, fontFamily: font }}>Nota de voz lista para enviar</span>
+            <span style={{ flex: 1, minWidth: 0, fontSize: 12, color: T.txt3, fontFamily: font }}>Nota de voz lista para enviar</span>
           )}
           <button type="button" onClick={onSend}
-            style={{ flexShrink: 0, display: "inline-flex", alignItems: "center", gap: 6, padding: "6px 14px", borderRadius: 9, border: "none", background: accent, color: isLight ? "#FFF" : "#041016", fontSize: 12, fontWeight: 600, fontFamily: fontDisp, cursor: "pointer" }}>
+            style={{ flexShrink: 0, display: "inline-flex", alignItems: "center", gap: 6, padding: "6px 14px", borderRadius: 9, border: "none", background: accent, color: isLight ? "#FFF" : "#041016", fontSize: 12.5, fontWeight: 600, fontFamily: fontDisp, cursor: "pointer" }}>
             <Send size={13} strokeWidth={2.4} /> Enviar
           </button>
         </div>
@@ -1351,7 +1351,7 @@ function NotifBanner({ T, isLight }) {
       borderBottom: `1px solid ${T.accent}22`,
     }}>
       <Bell size={16} color={T.accent} strokeWidth={2} style={{ flexShrink: 0 }} />
-      <div style={{ flex: 1, minWidth: 0, fontSize: 12, color: T.txt2, fontFamily: font, lineHeight: 1.35 }}>
+      <div style={{ flex: 1, minWidth: 0, fontSize: 12.5, color: T.txt2, fontFamily: font, lineHeight: 1.35 }}>
         {needsInstall
           ? <>Para recibir avisos con la app cerrada, instalala: <strong style={{ color: T.txt }}>botón Compartir → Agregar a inicio</strong>.</>
           : (err
@@ -1360,7 +1360,7 @@ function NotifBanner({ T, isLight }) {
       </div>
       {!needsInstall && (
         <button type="button" onClick={enable} disabled={busy}
-          style={{ flexShrink: 0, padding: "6px 12px", borderRadius: 8, border: "none", background: busy ? `${T.accent}66` : T.accent, color: isLight ? "#FFF" : "#041016", fontSize: 12, fontWeight: 600, fontFamily: fontDisp, cursor: busy ? "default" : "pointer" }}>
+          style={{ flexShrink: 0, padding: "6px 12px", borderRadius: 8, border: "none", background: busy ? `${T.accent}66` : T.accent, color: isLight ? "#FFF" : "#041016", fontSize: 12.5, fontWeight: 600, fontFamily: fontDisp, cursor: busy ? "default" : "pointer" }}>
           {busy ? "Activando…" : "Activar"}
         </button>
       )}
@@ -1440,7 +1440,7 @@ function ConnectPrompt({ T, isLight, botUsername, manualPairing, onPaired, onBac
           </>
         ) : (
           <div>
-            <p style={{ margin: "0 0 8px", fontSize: 11, fontWeight: 600, letterSpacing: "0.10em", textTransform: "uppercase", color: T.txt3, fontFamily: fontDisp }}>Tu código</p>
+            <p style={{ margin: "0 0 8px", fontSize: 12, fontWeight: 600, letterSpacing: "0.10em", textTransform: "uppercase", color: T.txt3, fontFamily: fontDisp }}>Tu código</p>
             <div style={{ padding: "16px 20px", background: `${T.accent}0C`, border: `1px solid ${T.accent}2A`, borderRadius: 14, fontSize: "clamp(26px,7vw,36px)", fontWeight: 400, letterSpacing: "0.10em", fontFamily: fontDisp, color: T.txt, fontVariantNumeric: "tabular-nums", marginBottom: 14 }}>{code}</div>
             <p style={{ margin: "0 0 10px", fontSize: 12.5, color: T.txt2, fontFamily: font }}>Envía a <strong>@{botName}</strong>:</p>
             <code style={{ display: "block", padding: "10px 12px", background: isLight ? "#F1F5F9" : "rgba(255,255,255,0.04)", border: `1px solid ${T.border}`, borderRadius: 8, fontSize: 14, fontFamily: "ui-monospace, SF Mono, monospace", color: T.txt }}>/conectar {code}</code>
@@ -1450,12 +1450,12 @@ function ConnectPrompt({ T, isLight, botUsername, manualPairing, onPaired, onBac
                 <Send size={13} strokeWidth={2} /> Abrir en Telegram
               </button>
             )}
-            <p style={{ margin: "12px 0 0", fontSize: 11, color: T.txt3, fontFamily: font }}>Esta pantalla se activa sola al conectar.</p>
+            <p style={{ margin: "12px 0 0", fontSize: 12, color: T.txt3, fontFamily: font }}>Esta pantalla se activa sola al conectar.</p>
           </div>
         )}
 
         {err && (
-          <div style={{ marginTop: 16, padding: "10px 12px", background: isLight ? "rgba(225,29,72,0.06)" : "rgba(248,113,113,0.08)", border: `1px solid ${isLight ? "rgba(225,29,72,0.22)" : "rgba(248,113,113,0.22)"}`, borderRadius: 10, fontSize: 12, color: isLight ? "#B91C3A" : "#FCA5A5", fontFamily: font }}>{err}</div>
+          <div style={{ marginTop: 16, padding: "10px 12px", background: isLight ? "rgba(225,29,72,0.06)" : "rgba(248,113,113,0.08)", border: `1px solid ${isLight ? "rgba(225,29,72,0.22)" : "rgba(248,113,113,0.22)"}`, borderRadius: 10, fontSize: 12.5, color: isLight ? "#B91C3A" : "#FCA5A5", fontFamily: font }}>{err}</div>
         )}
       </G>
     </div>

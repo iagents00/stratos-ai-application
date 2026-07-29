@@ -57,12 +57,12 @@ const Tarjeta = ({ icon: Icon, label, valor, sub, color, T }) => (
       <span style={{ display: "inline-flex", padding: 6, borderRadius: 8, background: `${color}1A` }}>
         <Icon size={14} color={color} />
       </span>
-      <span style={{ fontSize: 11, color: T.txt3, fontFamily: font }}>{label}</span>
+      <span style={{ fontSize: 12, color: T.txt3, fontFamily: font }}>{label}</span>
     </div>
     <p style={{ margin: 0, fontSize: 24, fontWeight: 600, color: T.txt, fontFamily: fontDisp, letterSpacing: "-0.02em" }}>
       {valor}
     </p>
-    {sub ? <p style={{ margin: "3px 0 0", fontSize: 11, color: T.txt3, fontFamily: font }}>{sub}</p> : null}
+    {sub ? <p style={{ margin: "3px 0 0", fontSize: 12, color: T.txt3, fontFamily: font }}>{sub}</p> : null}
   </div>
 );
 
@@ -112,7 +112,7 @@ const ComandoOps = ({ T, accent = "#F472B6" }) => {
         {t}
       </p>
       {s ? (
-        <p style={{ fontSize: 11, color: T.txt3, fontFamily: font, margin: "3px 0 0", lineHeight: 1.5 }}>{s}</p>
+        <p style={{ fontSize: 12, color: T.txt3, fontFamily: font, margin: "3px 0 0", lineHeight: 1.5 }}>{s}</p>
       ) : null}
     </div>
   );
@@ -134,7 +134,7 @@ const ComandoOps = ({ T, accent = "#F472B6" }) => {
           <button
             onClick={cargar}
             style={{ marginLeft: "auto", background: "transparent", border: `1px solid ${T.border}`, color: T.txt2,
-                     borderRadius: 8, padding: "6px 10px", fontSize: 12, fontFamily: font, cursor: "pointer" }}
+                     borderRadius: 8, padding: "6px 10px", fontSize: 12.5, fontFamily: font, cursor: "pointer" }}
           >
             Reintentar
           </button>
@@ -164,7 +164,7 @@ const ComandoOps = ({ T, accent = "#F472B6" }) => {
                    style={{ flex: "1 1 200px", padding: "10px 12px", borderRadius: 12,
                             background: T.bg2 || "rgba(255,255,255,0.03)", border: `1px solid ${T.border}` }}>
                 <p style={{ margin: 0, fontSize: 12.5, color: T.txt, fontFamily: font, fontWeight: 500 }}>{p.nombre}</p>
-                <p style={{ margin: "2px 0 0", fontSize: 11, color: T.txt3, fontFamily: font }}>
+                <p style={{ margin: "2px 0 0", fontSize: 12, color: T.txt3, fontFamily: font }}>
                   {p.abiertas} abierta{p.abiertas === 1 ? "" : "s"}
                   {p.vencidas > 0 ? ` · ${p.vencidas} vencida${p.vencidas === 1 ? "" : "s"}` : ""}
                 </p>
@@ -188,13 +188,13 @@ const ComandoOps = ({ T, accent = "#F472B6" }) => {
                 <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8, flexWrap: "wrap" }}>
                   <Target size={14} color={accent} />
                   <span style={{ fontSize: 13.5, color: T.txt, fontFamily: font, fontWeight: 500 }}>{c.nombre}</span>
-                  <span style={{ fontSize: 10.5, color: T.txt3, fontFamily: font, padding: "2px 8px",
+                  <span style={{ fontSize: 11.5, color: T.txt3, fontFamily: font, padding: "2px 8px",
                                  borderRadius: 999, border: `1px solid ${T.border}` }}>
                     {c.etapa}
                   </span>
                 </div>
                 {(c.objetivos || []).length === 0 ? (
-                  <p style={{ margin: "0 0 0 22px", fontSize: 11.5, color: T.txt3, fontFamily: font }}>
+                  <p style={{ margin: "0 0 0 22px", fontSize: 12, color: T.txt3, fontFamily: font }}>
                     Sin objetivos fijados — dile al Copilot «fija un objetivo con {c.nombre}: …»
                   </p>
                 ) : (
@@ -202,8 +202,8 @@ const ComandoOps = ({ T, accent = "#F472B6" }) => {
                     {c.objetivos.map((o) => (
                       <div key={o.titulo}>
                         <div style={{ display: "flex", justifyContent: "space-between", gap: 10, marginBottom: 5, flexWrap: "wrap" }}>
-                          <span style={{ fontSize: 12, color: T.txt2, fontFamily: font }}>{o.titulo}</span>
-                          <span style={{ fontSize: 12, color: T.txt, fontFamily: font, fontWeight: 500, whiteSpace: "nowrap" }}>
+                          <span style={{ fontSize: 12.5, color: T.txt2, fontFamily: font }}>{o.titulo}</span>
+                          <span style={{ fontSize: 12.5, color: T.txt, fontFamily: font, fontWeight: 500, whiteSpace: "nowrap" }}>
                             {o.actual} de {o.meta} {o.unidad} · {o.pct ?? 0}%
                           </span>
                         </div>
@@ -213,7 +213,7 @@ const ComandoOps = ({ T, accent = "#F472B6" }) => {
                   </div>
                 )}
                 {c.ultimo_avance ? (
-                  <p style={{ margin: "8px 0 0 22px", fontSize: 11, color: T.txt3, fontFamily: font, fontStyle: "italic" }}>
+                  <p style={{ margin: "8px 0 0 22px", fontSize: 12, color: T.txt3, fontFamily: font, fontStyle: "italic" }}>
                     Último avance: {c.ultimo_avance}
                   </p>
                 ) : null}
@@ -236,7 +236,7 @@ const ComandoOps = ({ T, accent = "#F472B6" }) => {
                     <span style={{ display: "inline-flex", alignItems: "center", gap: 7, fontSize: 12.5, color: T.txt2, fontFamily: font }}>
                       <FolderKanban size={13} color={T.txt3} /> {p.nombre}
                     </span>
-                    <span style={{ fontSize: 12, color: T.txt3, fontFamily: font }}>{p.hechas}/{p.total}</span>
+                    <span style={{ fontSize: 12.5, color: T.txt3, fontFamily: font }}>{p.hechas}/{p.total}</span>
                   </div>
                   <Barra pct={pct} color={accent} T={T} />
                 </div>
@@ -259,7 +259,7 @@ const ComandoOps = ({ T, accent = "#F472B6" }) => {
 
         {nomina.length > 0 && (
           <div style={{ marginTop: 18 }}>
-            <p style={{ fontSize: 12, color: T.txt2, fontFamily: font, margin: "0 0 10px", fontWeight: 500 }}>
+            <p style={{ fontSize: 12.5, color: T.txt2, fontFamily: font, margin: "0 0 10px", fontWeight: 500 }}>
               Saldos de nómina
             </p>
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
@@ -282,22 +282,22 @@ const ComandoOps = ({ T, accent = "#F472B6" }) => {
                       </span>
                     </div>
                     <div style={{ display: "flex", justifyContent: "space-between", gap: 8, marginBottom: 6 }}>
-                      <span style={{ fontSize: 11, color: T.txt3, fontFamily: font }}>
+                      <span style={{ fontSize: 12, color: T.txt3, fontFamily: font }}>
                         {money(n.monto)} {n.moneda} {n.periodicidad}
                       </span>
                       {debe > 0 && (
-                        <span style={{ fontSize: 11, color: T.txt3, fontFamily: font, whiteSpace: "nowrap" }}>pendiente</span>
+                        <span style={{ fontSize: 12, color: T.txt3, fontFamily: font, whiteSpace: "nowrap" }}>pendiente</span>
                       )}
                     </div>
                     <Barra pct={pct} color={debe > 0 ? "#F59E0B" : "#22C55E"} T={T} />
-                    <p style={{ margin: "5px 0 0", fontSize: 10.5, color: T.txt3, fontFamily: font }}>
+                    <p style={{ margin: "5px 0 0", fontSize: 11.5, color: T.txt3, fontFamily: font }}>
                       lleva ganado {money(n.devengado)} · ya cobró {money(n.pagado)}
                     </p>
                   </div>
                 );
               })}
             </div>
-            <p style={{ margin: "12px 0 0", fontSize: 10.5, color: T.txt3, fontFamily: font }}>
+            <p style={{ margin: "12px 0 0", fontSize: 11.5, color: T.txt3, fontFamily: font }}>
               Los pagos se hacen el 15 y el 30 de cada mes. El acumulado sube día a día.
             </p>
           </div>
@@ -309,7 +309,7 @@ const ComandoOps = ({ T, accent = "#F472B6" }) => {
           onClick={cargar}
           style={{ display: "inline-flex", alignItems: "center", gap: 7, background: "transparent",
                    border: `1px solid ${T.border}`, color: T.txt2, borderRadius: 10, padding: "8px 14px",
-                   fontSize: 12, fontFamily: font, cursor: "pointer", width: isMobile ? "100%" : "auto",
+                   fontSize: 12.5, fontFamily: font, cursor: "pointer", width: isMobile ? "100%" : "auto",
                    justifyContent: "center" }}
         >
           <RefreshCw size={13} /> Actualizar

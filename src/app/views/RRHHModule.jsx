@@ -224,7 +224,7 @@ const RRHHModule = ({ T: _T }) => {
               <p style={{ margin: 0, fontSize: 24, fontWeight: 400, color: T.txt, fontFamily: fontDisp, letterSpacing: "-0.045em" }}>
                 Stratos <span style={{ fontWeight: 500, color: T.violet }}>People</span>
               </p>
-              <span style={{ fontSize: 10, fontWeight: 500, color: T.violet, background: `${T.violet}12`, border: `1px solid ${T.violet}22`, padding: "4px 9px", borderRadius: 8, letterSpacing: "0.04em" }}>2026</span>
+              <span style={{ fontSize: 11, fontWeight: 500, color: T.violet, background: `${T.violet}12`, border: `1px solid ${T.violet}22`, padding: "4px 9px", borderRadius: 8, letterSpacing: "0.04em" }}>2026</span>
             </div>
             <p style={{ margin: "5px 0 0", fontSize: 12.5, color: T.txt2, fontWeight: 500 }}>
               Recursos Humanos · <span style={{ color: T.violet }}>Selección con IA</span> · Gestión de Talento
@@ -240,7 +240,7 @@ const RRHHModule = ({ T: _T }) => {
           ].map(s => (
             <div key={s.l} style={{ padding: "9px 16px", borderRadius: 14, background: isLight ? "#FFFFFFAA" : `${s.c}08`, border: `1px solid ${isLight ? "rgba(15,23,42,0.07)" : `${s.c}20`}`, textAlign: "center", minWidth: 96, boxShadow: isLight ? "0 1px 2px rgba(15,23,42,0.04)" : "none" }}>
               <p style={{ margin: 0, fontSize: 18, fontWeight: 500, color: s.c, fontFamily: fontDisp, lineHeight: 1 }}>{s.v}</p>
-              <p style={{ margin: "5px 0 0", fontSize: 10, color: T.txt2, fontWeight: 500 }}>{s.l}</p>
+              <p style={{ margin: "5px 0 0", fontSize: 11, color: T.txt2, fontWeight: 500 }}>{s.l}</p>
             </div>
           ))}
           {!isMobile && <div style={{ width: 1, height: 32, background: T.border, margin: "0 4px" }} />}
@@ -277,7 +277,7 @@ const RRHHModule = ({ T: _T }) => {
               display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 4,
               padding: "13px 16px", borderRadius: 16, border: "none", cursor: "pointer",
               background: active ? (isLight ? "#FFFFFF" : (isAI ? `${T.violet}14` : "rgba(255,255,255,0.07)")) : "transparent",
-              color: active ? T.txt : T.txt3, fontSize: 11, fontWeight: active ? 700 : 400,
+              color: active ? T.txt : T.txt3, fontSize: 12, fontWeight: active ? 700 : 400,
               fontFamily: fontDisp, transition: "all 0.2s",
               outline: "none",
               boxShadow: active && isLight ? "0 1px 2px rgba(15,23,42,0.05), 0 8px 18px rgba(15,23,42,0.06)" : "none",
@@ -289,7 +289,7 @@ const RRHHModule = ({ T: _T }) => {
                 }
                 <span style={{ color: active ? (isAI ? T.violet : T.txt) : T.txt3 }}>{t.label}</span>
               </div>
-              <span style={{ fontSize: 9, color: active ? (isAI ? `${T.violet}90` : T.txt3) : T.txt3, fontWeight: 400 }}>{t.hint}</span>
+              <span style={{ fontSize: 10.5, color: active ? (isAI ? `${T.violet}90` : T.txt3) : T.txt3, fontWeight: 400 }}>{t.hint}</span>
             </button>
           );
         })}
@@ -308,11 +308,11 @@ const RRHHModule = ({ T: _T }) => {
             ].map(k => (
               <G key={k.l} hover style={{ padding: 18, ...peopleCard }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
-                  <p style={{ margin: 0, fontSize: 11, color: T.txt2, fontWeight: 500, lineHeight: 1.4, letterSpacing: "-0.01em" }}>{k.l}</p>
+                  <p style={{ margin: 0, fontSize: 12, color: T.txt2, fontWeight: 500, lineHeight: 1.4, letterSpacing: "-0.01em" }}>{k.l}</p>
                   <Ico icon={k.i} sz={28} is={13} c={k.c} />
                 </div>
                 <p style={{ margin: "18px 0 0", fontSize: 30, fontWeight: 400, color: T.txt, fontFamily: fontDisp, letterSpacing: "-0.055em", lineHeight: 1 }}>{k.v}</p>
-                <p style={{ fontSize: 10.5, color: k.c, fontWeight: 500, marginTop: 8 }}>{k.sub}</p>
+                <p style={{ fontSize: 11.5, color: k.c, fontWeight: 500, marginTop: 8 }}>{k.sub}</p>
               </G>
             ))}
           </div>
@@ -337,7 +337,7 @@ const RRHHModule = ({ T: _T }) => {
                         <div style={{ position: "absolute", top: -24, left: "50%", transform: "translateX(-50%)", fontSize: 14, fontWeight: 500, color: etapaColor[e], fontFamily: fontDisp }}>{count}</div>
                       </div>
                     </div>
-                    <p style={{ margin: 0, fontSize: 10, color: etapaColor[e], fontWeight: 500, letterSpacing: "0.035em" }}>{e.toUpperCase()}</p>
+                    <p style={{ margin: 0, fontSize: 11, color: etapaColor[e], fontWeight: 500, letterSpacing: "0.035em" }}>{e.toUpperCase()}</p>
                   </div>
                 );
               })}
@@ -358,15 +358,15 @@ const RRHHModule = ({ T: _T }) => {
                   onMouseLeave={e => e.currentTarget.style.background = "transparent"}
                 >
                   <div style={{ width: 34, height: 34, borderRadius: "50%", background: `${c.color}20`, border: `2px solid ${c.color}40`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                    <span style={{ fontSize: 11, fontWeight: 500, color: c.color }}>{c.avatar}</span>
+                    <span style={{ fontSize: 12, fontWeight: 500, color: c.color }}>{c.avatar}</span>
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <p style={{ fontSize: 12.5, color: T.txt, fontWeight: 500, fontFamily: fontDisp, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{c.nombre}</p>
-                    <p style={{ fontSize: 10.5, color: T.txt3, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{c.cargo}</p>
+                    <p style={{ fontSize: 11.5, color: T.txt3, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{c.cargo}</p>
                   </div>
                   <div style={{ textAlign: "right", flexShrink: 0 }}>
                     <p style={{ fontSize: 16, fontWeight: 500, color: scoreColor(c.score), fontFamily: fontDisp }}>{c.score}</p>
-                    <p style={{ fontSize: 9, color: scoreColor(c.score) }}>{scoreLabel(c.score)}</p>
+                    <p style={{ fontSize: 10.5, color: scoreColor(c.score) }}>{scoreLabel(c.score)}</p>
                   </div>
                 </div>
               ))}
@@ -374,7 +374,7 @@ const RRHHModule = ({ T: _T }) => {
             <G np>
               <div style={{ padding: "14px 18px", borderBottom: `1px solid ${T.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <p style={{ fontSize: 13, fontWeight: 500, color: T.txt, fontFamily: fontDisp }}>Vacantes Prioritarias</p>
-                <button onClick={() => setTab("vacantes")} style={{ fontSize: 11, color: T.accent, background: "none", border: "none", cursor: "pointer" }}>Ver todas →</button>
+                <button onClick={() => setTab("vacantes")} style={{ fontSize: 12, color: T.accent, background: "none", border: "none", cursor: "pointer" }}>Ver todas →</button>
               </div>
               {vacantes.map(v => (
                 <div key={v.id} style={{ padding: "12px 18px", borderBottom: `1px solid ${T.border}`, transition: "background 0.15s" }}
@@ -383,13 +383,13 @@ const RRHHModule = ({ T: _T }) => {
                 >
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 6, gap: 8 }}>
                     <p style={{ fontSize: 12.5, color: T.txt, fontWeight: 500, fontFamily: fontDisp, flex: 1, minWidth: 0, wordBreak: "break-word" }}>{v.titulo}</p>
-                    <span style={{ fontSize: 9, fontWeight: 500, color: prioColor[v.prioridad], background: `${prioColor[v.prioridad]}15`, padding: "3px 8px", borderRadius: 5, flexShrink: 0 }}>{v.prioridad}</span>
+                    <span style={{ fontSize: 10.5, fontWeight: 500, color: prioColor[v.prioridad], background: `${prioColor[v.prioridad]}15`, padding: "3px 8px", borderRadius: 5, flexShrink: 0 }}>{v.prioridad}</span>
                   </div>
                   <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
-                    <span style={{ fontSize: 10, color: T.txt3 }}>{v.postulados} postulados</span>
-                    <span style={{ fontSize: 10, color: T.txt3 }}>·</span>
-                    <span style={{ fontSize: 10, color: T.txt3 }}>{v.entrevistas} en entrevista</span>
-                    <span style={{ fontSize: 10, color: v.status === "Activa" ? T.emerald : T.amber }}>{v.status}</span>
+                    <span style={{ fontSize: 11, color: T.txt3 }}>{v.postulados} postulados</span>
+                    <span style={{ fontSize: 11, color: T.txt3 }}>·</span>
+                    <span style={{ fontSize: 11, color: T.txt3 }}>{v.entrevistas} en entrevista</span>
+                    <span style={{ fontSize: 11, color: v.status === "Activa" ? T.emerald : T.amber }}>{v.status}</span>
                   </div>
                 </div>
               ))}
@@ -406,7 +406,7 @@ const RRHHModule = ({ T: _T }) => {
             <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 14px", borderRadius: 10, background: T.glass, border: `1px solid ${T.border}`, flex: "1 1 200px" }}>
               <Search size={13} color={T.txt3} />
               <input value={pipelineSearch} onChange={e => setPipelineSearch(e.target.value)}
-                placeholder="Buscar candidato..." style={{ background: "none", border: "none", outline: "none", color: T.txt, fontSize: 12, fontFamily: font, width: "100%" }} />
+                placeholder="Buscar candidato..." style={{ background: "none", border: "none", outline: "none", color: T.txt, fontSize: 12.5, fontFamily: font, width: "100%" }} />
               {pipelineSearch && <button onClick={() => setPipelineSearch("")} style={{ background: "none", border: "none", cursor: "pointer", color: T.txt3, padding: 0, display: "flex" }}><X size={11} /></button>}
             </div>
             <div className="rrhh-pipeline-scroll" style={{ flex: "1 1 100%", paddingTop: 4 }}>
@@ -416,7 +416,7 @@ const RRHHModule = ({ T: _T }) => {
                 const col = etapaColor[e] || T.accent;
                 return (
                   <button key={e} onClick={() => setPipelineFilter(e)} style={{
-                    padding: "6px 14px", borderRadius: 8, fontSize: 11, fontWeight: 500,
+                    padding: "6px 14px", borderRadius: 8, fontSize: 12, fontWeight: 500,
                     border: `1px solid ${isActive ? col + "55" : T.border}`,
                     background: isActive ? `${col}14` : T.glass,
                     color: isActive ? col : T.txt3,
@@ -424,12 +424,12 @@ const RRHHModule = ({ T: _T }) => {
                     display: "flex", alignItems: "center", gap: 6, flexShrink: 0
                   }}>
                     {e === "todos" ? "Todos" : e}
-                    <span style={{ fontSize: 9.5, background: isActive ? `${col}25` : "rgba(255,255,255,0.06)", padding: "1px 6px", borderRadius: 4 }}>{count}</span>
+                    <span style={{ fontSize: 10.5, background: isActive ? `${col}25` : "rgba(255,255,255,0.06)", padding: "1px 6px", borderRadius: 4 }}>{count}</span>
                   </button>
                 );
               })}
             </div>
-            <span style={{ fontSize: 10.5, color: T.txt3, marginLeft: "auto" }}>
+            <span style={{ fontSize: 11.5, color: T.txt3, marginLeft: "auto" }}>
               {filteredCandidates.filter(c => !pipelineSearch || c.nombre.toLowerCase().includes(pipelineSearch.toLowerCase())).length} resultado(s)
             </span>
           </div>
@@ -447,13 +447,13 @@ const RRHHModule = ({ T: _T }) => {
                         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4, flexWrap: "wrap" }}>
                           <p style={{ fontSize: 14, color: T.txt, fontWeight: 600, fontFamily: fontDisp, margin: 0 }}>{c.nombre}</p>
                           {c.tags.map(t => (
-                            <span key={t} style={{ fontSize: 9.5, color: t === "Top Pick" ? T.accent : T.txt3, background: t === "Top Pick" ? `${T.accent}15` : "rgba(255,255,255,0.06)", padding: "2px 8px", borderRadius: 4, fontWeight: 500 }}>{t}</span>
+                            <span key={t} style={{ fontSize: 10.5, color: t === "Top Pick" ? T.accent : T.txt3, background: t === "Top Pick" ? `${T.accent}15` : "rgba(255,255,255,0.06)", padding: "2px 8px", borderRadius: 4, fontWeight: 500 }}>{t}</span>
                           ))}
                         </div>
-                        <p style={{ fontSize: 11.5, color: T.txt2, margin: "2px 0 0" }}>{c.cargo} · {c.exp} · {c.educacion}</p>
+                        <p style={{ fontSize: 12, color: T.txt2, margin: "2px 0 0" }}>{c.cargo} · {c.exp} · {c.educacion}</p>
                         <div style={{ display: "flex", gap: 6, marginTop: 8, flexWrap: "wrap" }}>
                           {c.habilidades.slice(0, 4).map(h => (
-                            <span key={h} style={{ fontSize: 9.5, color: T.txt3, background: "rgba(255,255,255,0.04)", border: `1px solid ${T.border}`, padding: "2px 8px", borderRadius: 4 }}>{h}</span>
+                            <span key={h} style={{ fontSize: 10.5, color: T.txt3, background: "rgba(255,255,255,0.04)", border: `1px solid ${T.border}`, padding: "2px 8px", borderRadius: 4 }}>{h}</span>
                           ))}
                         </div>
                       </div>
@@ -463,14 +463,14 @@ const RRHHModule = ({ T: _T }) => {
                         <div style={{ width: 48, height: 48, borderRadius: "50%", border: `3px solid ${scoreColor(c.score)}40`, background: `${scoreColor(c.score)}08`, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto" }}>
                           <p style={{ fontSize: 15, fontWeight: 600, color: scoreColor(c.score), fontFamily: fontDisp, margin: 0 }}>{c.score}</p>
                         </div>
-                        <p style={{ fontSize: 9, color: scoreColor(c.score), marginTop: 4, fontWeight: 500, margin: "4px 0 0" }}>Score IA</p>
+                        <p style={{ fontSize: 10.5, color: scoreColor(c.score), marginTop: 4, fontWeight: 500, margin: "4px 0 0" }}>Score IA</p>
                       </div>
                       <div style={{ textAlign: "right" }}>
                         <p style={{ fontSize: 14, fontWeight: 600, color: T.emerald, fontFamily: fontDisp, margin: 0 }}>${c.salario.toLocaleString("es-MX")}</p>
-                        <p style={{ fontSize: 9.5, color: T.txt3, margin: "2px 0 0" }}>Expectativa / mes</p>
+                        <p style={{ fontSize: 10.5, color: T.txt3, margin: "2px 0 0" }}>Expectativa / mes</p>
                       </div>
-                      <span style={{ fontSize: 10.5, fontWeight: 500, color: etapaColor[c.etapa], background: `${etapaColor[c.etapa]}15`, padding: "6px 14px", borderRadius: 8, textAlign: "center", minWidth: 88, border: `1px solid ${etapaColor[c.etapa]}25` }}>{c.etapa}</span>
-                      <span style={{ fontSize: 9.5, color: T.txt3, background: "rgba(255,255,255,0.04)", padding: "4px 8px", borderRadius: 5 }}>{c.fuente}</span>
+                      <span style={{ fontSize: 11.5, fontWeight: 500, color: etapaColor[c.etapa], background: `${etapaColor[c.etapa]}15`, padding: "6px 14px", borderRadius: 8, textAlign: "center", minWidth: 88, border: `1px solid ${etapaColor[c.etapa]}25` }}>{c.etapa}</span>
+                      <span style={{ fontSize: 10.5, color: T.txt3, background: "rgba(255,255,255,0.04)", padding: "4px 8px", borderRadius: 5 }}>{c.fuente}</span>
                       <div style={{ width: 24, height: 24, borderRadius: "50%", border: `1px solid ${T.border}`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                         {selectedCandidate?.id === c.id
                           ? <ChevronDown size={12} color={T.txt3} style={{ transform: "rotate(180deg)" }} />
@@ -488,22 +488,22 @@ const RRHHModule = ({ T: _T }) => {
                           { l: "Actitud", v: c.actitud, c: T.emerald },
                         ].map(s => (
                           <div key={s.l} style={{ padding: "12px 14px", borderRadius: 10, background: `${s.c}08`, border: `1px solid ${s.c}18` }}>
-                            <p style={{ fontSize: 10, color: T.txt2, marginBottom: 8, fontWeight: 400 }}>{s.l}</p>
-                            <p style={{ fontSize: 22, fontWeight: 400, color: s.c, fontFamily: fontDisp }}>{s.v}<span style={{ fontSize: 12 }}>/100</span></p>
+                            <p style={{ fontSize: 11, color: T.txt2, marginBottom: 8, fontWeight: 400 }}>{s.l}</p>
+                            <p style={{ fontSize: 22, fontWeight: 400, color: s.c, fontFamily: fontDisp }}>{s.v}<span style={{ fontSize: 12.5 }}>/100</span></p>
                             <div style={{ height: 3, borderRadius: 2, background: T.border, marginTop: 8, overflow: "hidden" }}>
                               <div style={{ width: `${s.v}%`, height: "100%", background: s.c, borderRadius: 2 }} />
                             </div>
                           </div>
                         ))}
                         <div style={{ padding: "12px 14px", borderRadius: 10, background: T.glass, border: `1px solid ${T.border}` }}>
-                          <p style={{ fontSize: 10, color: T.txt2, marginBottom: 8, fontWeight: 400 }}>Nota del Reclutador</p>
-                          <p style={{ fontSize: 11.5, color: T.txt, lineHeight: 1.6 }}>{c.nota}</p>
+                          <p style={{ fontSize: 11, color: T.txt2, marginBottom: 8, fontWeight: 400 }}>Nota del Reclutador</p>
+                          <p style={{ fontSize: 12, color: T.txt, lineHeight: 1.6 }}>{c.nota}</p>
                         </div>
                       </div>
                       <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                         {["Agendar Entrevista", "Avanzar Etapa", "Enviar Oferta", "Descartar"].map((a, i) => (
                           <button key={a} style={{
-                            padding: "9px 16px", borderRadius: 8, fontSize: 11.5, fontWeight: 500, cursor: "pointer",
+                            padding: "9px 16px", borderRadius: 8, fontSize: 12, fontWeight: 500, cursor: "pointer",
                             border: i === 2 ? "none" : `1px solid ${T.border}`,
                             background: i === 2 ? T.emerald : i === 3 ? `${T.rose}10` : T.glass,
                             color: i === 2 ? "#000" : i === 3 ? T.rose : T.txt2, fontFamily: fontDisp,
@@ -531,7 +531,7 @@ const RRHHModule = ({ T: _T }) => {
               <G key={k.l} hover style={{ padding: 16, display: "flex", alignItems: "center", gap: 14 }}>
                 <Ico icon={k.i} sz={38} is={16} c={k.c} />
                 <div>
-                  <p style={{ fontSize: 11, color: T.txt2, fontWeight: 400, marginBottom: 4 }}>{k.l}</p>
+                  <p style={{ fontSize: 12, color: T.txt2, fontWeight: 400, marginBottom: 4 }}>{k.l}</p>
                   <p style={{ fontSize: 22, fontWeight: 500, color: T.txt, fontFamily: fontDisp }}>{k.v}</p>
                 </div>
               </G>
@@ -544,30 +544,30 @@ const RRHHModule = ({ T: _T }) => {
                   <div>
                     <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6, flexWrap: "wrap" }}>
                       <p style={{ fontSize: 15.5, fontWeight: 600, color: T.txt, fontFamily: fontDisp, margin: 0 }}>{v.titulo}</p>
-                      <span style={{ fontSize: 9.5, fontWeight: 500, color: prioColor[v.prioridad], background: `${prioColor[v.prioridad]}15`, padding: "3px 8px", borderRadius: 5 }}>{v.prioridad}</span>
-                      <span style={{ fontSize: 9.5, fontWeight: 500, color: v.status === "Activa" ? T.emerald : T.amber, background: v.status === "Activa" ? `${T.emerald}15` : `${T.amber}15`, padding: "3px 8px", borderRadius: 5 }}>{v.status}</span>
+                      <span style={{ fontSize: 10.5, fontWeight: 500, color: prioColor[v.prioridad], background: `${prioColor[v.prioridad]}15`, padding: "3px 8px", borderRadius: 5 }}>{v.prioridad}</span>
+                      <span style={{ fontSize: 10.5, fontWeight: 500, color: v.status === "Activa" ? T.emerald : T.amber, background: v.status === "Activa" ? `${T.emerald}15` : `${T.amber}15`, padding: "3px 8px", borderRadius: 5 }}>{v.status}</span>
                     </div>
                     <div style={{ display: "flex", gap: 14, flexWrap: "wrap" }}>
-                      <span style={{ fontSize: 11, color: T.txt3 }}>{v.dept}</span>
-                      <span style={{ fontSize: 11, color: T.txt3 }}>· {v.ubicacion}</span>
-                      <span style={{ fontSize: 11, color: T.txt3 }}>· {v.tipo}</span>
-                      <span style={{ fontSize: 11, color: T.txt3 }}>· Cierra: {v.cierre}</span>
+                      <span style={{ fontSize: 12, color: T.txt3 }}>{v.dept}</span>
+                      <span style={{ fontSize: 12, color: T.txt3 }}>· {v.ubicacion}</span>
+                      <span style={{ fontSize: 12, color: T.txt3 }}>· {v.tipo}</span>
+                      <span style={{ fontSize: 12, color: T.txt3 }}>· Cierra: {v.cierre}</span>
                     </div>
                   </div>
                   <div style={{ textAlign: "right" }}>
                     <p style={{ fontSize: 14.5, fontWeight: 600, color: T.emerald, fontFamily: fontDisp, margin: 0 }}>${v.salarioMin.toLocaleString("es-MX")} – ${v.salarioMax.toLocaleString("es-MX")}</p>
-                    <p style={{ fontSize: 10, color: T.txt3, margin: "2px 0 0" }}>MXN / mes</p>
+                    <p style={{ fontSize: 11, color: T.txt3, margin: "2px 0 0" }}>MXN / mes</p>
                   </div>
                 </div>
                 <p style={{ fontSize: 12.5, color: T.txt2, lineHeight: 1.6, marginBottom: 14 }}>{v.desc}</p>
                 <div style={{ display: "flex", gap: 20, alignItems: "center", flexWrap: "wrap", justifyContent: "space-between" }}>
                   <div style={{ display: "flex", gap: 20 }}>
-                    <div style={{ textAlign: "center" }}><p style={{ fontSize: 18, fontWeight: 500, color: T.violet, fontFamily: fontDisp, margin: 0 }}>{v.postulados}</p><p style={{ fontSize: 9.5, color: T.txt3, textTransform: "uppercase", margin: "2px 0 0" }}>Postulados</p></div>
-                    <div style={{ textAlign: "center" }}><p style={{ fontSize: 18, fontWeight: 500, color: T.blue, fontFamily: fontDisp, margin: 0 }}>{v.entrevistas}</p><p style={{ fontSize: 9.5, color: T.txt3, textTransform: "uppercase", margin: "2px 0 0" }}>Entrevistas</p></div>
+                    <div style={{ textAlign: "center" }}><p style={{ fontSize: 18, fontWeight: 500, color: T.violet, fontFamily: fontDisp, margin: 0 }}>{v.postulados}</p><p style={{ fontSize: 10.5, color: T.txt3, textTransform: "uppercase", margin: "2px 0 0" }}>Postulados</p></div>
+                    <div style={{ textAlign: "center" }}><p style={{ fontSize: 18, fontWeight: 500, color: T.blue, fontFamily: fontDisp, margin: 0 }}>{v.entrevistas}</p><p style={{ fontSize: 10.5, color: T.txt3, textTransform: "uppercase", margin: "2px 0 0" }}>Entrevistas</p></div>
                   </div>
                   <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                     {["Ver candidatos", "Editar", "Pausar"].map((a, i) => (
-                      <button key={a} style={{ padding: "8px 14px", borderRadius: 8, border: i === 0 ? `1px solid ${T.violet}40` : `1px solid ${T.border}`, background: i === 0 ? `${T.violet}10` : T.glass, color: i === 0 ? T.violet : T.txt2, fontSize: 11.5, fontWeight: 500, cursor: "pointer", fontFamily: fontDisp }}>{a}</button>
+                      <button key={a} style={{ padding: "8px 14px", borderRadius: 8, border: i === 0 ? `1px solid ${T.violet}40` : `1px solid ${T.border}`, background: i === 0 ? `${T.violet}10` : T.glass, color: i === 0 ? T.violet : T.txt2, fontSize: 12, fontWeight: 500, cursor: "pointer", fontFamily: fontDisp }}>{a}</button>
                     ))}
                   </div>
                 </div>
@@ -590,7 +590,7 @@ const RRHHModule = ({ T: _T }) => {
               <G key={k.l} hover style={{ padding: 16, display: "flex", alignItems: "center", gap: 14 }}>
                 <Ico icon={k.i} sz={38} is={16} c={k.c} />
                 <div>
-                  <p style={{ fontSize: 11, color: T.txt2, fontWeight: 400, marginBottom: 4 }}>{k.l}</p>
+                  <p style={{ fontSize: 12, color: T.txt2, fontWeight: 400, marginBottom: 4 }}>{k.l}</p>
                   <p style={{ fontSize: 20, fontWeight: 500, color: T.txt, fontFamily: fontDisp }}>{k.v}</p>
                 </div>
               </G>
@@ -598,7 +598,7 @@ const RRHHModule = ({ T: _T }) => {
           </div>
           <G np>
             <div className="rrhh-pipeline-scroll">
-            <div style={{ display: "grid", gridTemplateColumns: "2fr 1.2fr 1fr 0.8fr 0.8fr 0.8fr", minWidth: 650, gap: 8, padding: "12px 20px", borderBottom: `1px solid ${T.border}`, fontSize: 9.5, color: T.txt3, textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 500 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "2fr 1.2fr 1fr 0.8fr 0.8fr 0.8fr", minWidth: 650, gap: 8, padding: "12px 20px", borderBottom: `1px solid ${T.border}`, fontSize: 10.5, color: T.txt3, textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 500 }}>
               <span>Empleado</span><span>Cargo / Departamento</span><span>Desde</span><span>Salario</span><span>Score</span><span>Estado</span>
             </div>
             <div style={{ display: "flex", flexDirection: "column", minWidth: 650 }}>
@@ -609,23 +609,23 @@ const RRHHModule = ({ T: _T }) => {
                 >
                   <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                     <div style={{ width: 36, height: 36, borderRadius: "50%", background: `${e.color}18`, border: `2px solid ${e.color}35`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                      <span style={{ fontSize: 10, fontWeight: 500, color: e.color }}>{e.avatar}</span>
+                      <span style={{ fontSize: 11, fontWeight: 500, color: e.color }}>{e.avatar}</span>
                     </div>
                     <p style={{ fontSize: 12.5, color: T.txt, fontWeight: 500, fontFamily: fontDisp, margin: 0 }}>{e.nombre}</p>
                   </div>
                   <div>
-                    <p style={{ fontSize: 11.5, color: T.txt, fontWeight: 400, margin: 0 }}>{e.cargo}</p>
-                    <p style={{ fontSize: 10, color: T.txt3, margin: "2px 0 0" }}>{e.dept}</p>
+                    <p style={{ fontSize: 12, color: T.txt, fontWeight: 400, margin: 0 }}>{e.cargo}</p>
+                    <p style={{ fontSize: 11, color: T.txt3, margin: "2px 0 0" }}>{e.dept}</p>
                   </div>
-                  <span style={{ fontSize: 11, color: T.txt2 }}>{e.desde}</span>
-                  <span style={{ fontSize: 12, fontWeight: 500, color: T.emerald, fontFamily: fontDisp }}>${e.salario.toLocaleString("es-MX")}</span>
+                  <span style={{ fontSize: 12, color: T.txt2 }}>{e.desde}</span>
+                  <span style={{ fontSize: 12.5, fontWeight: 500, color: T.emerald, fontFamily: fontDisp }}>${e.salario.toLocaleString("es-MX")}</span>
                   <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                     <div style={{ flex: 1, height: 4, borderRadius: 2, background: T.border, overflow: "hidden" }}>
                       <div style={{ width: `${e.score}%`, height: "100%", background: scoreColor(e.score), borderRadius: 2 }} />
                     </div>
-                    <span style={{ fontSize: 10.5, color: scoreColor(e.score), fontWeight: 500, width: 24 }}>{e.score}</span>
+                    <span style={{ fontSize: 11.5, color: scoreColor(e.score), fontWeight: 500, width: 24 }}>{e.score}</span>
                   </div>
-                  <span style={{ fontSize: 9.5, fontWeight: 500, color: e.estado === "Activo" ? T.emerald : T.amber, background: e.estado === "Activo" ? `${T.emerald}15` : `${T.amber}15`, padding: "4px 10px", borderRadius: 6, textAlign: "center" }}>{e.estado}</span>
+                  <span style={{ fontSize: 10.5, fontWeight: 500, color: e.estado === "Activo" ? T.emerald : T.amber, background: e.estado === "Activo" ? `${T.emerald}15` : `${T.amber}15`, padding: "4px 10px", borderRadius: 6, textAlign: "center" }}>{e.estado}</span>
                 </div>
               ))}
             </div>
@@ -646,11 +646,11 @@ const RRHHModule = ({ T: _T }) => {
                 </div>
                 <div>
                   <p style={{ fontSize: 16, fontWeight: 600, color: T.txt, fontFamily: fontDisp, margin: 0 }}>Escáner IA de Candidatos</p>
-                  <p style={{ fontSize: 11.5, color: T.txt2, margin: "3px 0 0" }}>Sube un CV (PDF o imagen) — la IA extrae datos, evalúa y genera un score en segundos</p>
+                  <p style={{ fontSize: 12, color: T.txt2, margin: "3px 0 0" }}>Sube un CV (PDF o imagen) — la IA extrae datos, evalúa y genera un score en segundos</p>
                 </div>
               </div>
               {aiResult && (
-                <button onClick={() => { setAiResult(null); setAiScanning(false); }} style={{ padding: "8px 14px", borderRadius: 8, border: `1px solid ${T.border}`, background: T.glass, color: T.txt2, fontSize: 11.5, cursor: "pointer", fontFamily: font, display: "flex", alignItems: "center", gap: 6 }}>
+                <button onClick={() => { setAiResult(null); setAiScanning(false); }} style={{ padding: "8px 14px", borderRadius: 8, border: `1px solid ${T.border}`, background: T.glass, color: T.txt2, fontSize: 12, cursor: "pointer", fontFamily: font, display: "flex", alignItems: "center", gap: 6 }}>
                   <RefreshCw size={12} /> Nuevo escáner
                 </button>
               )}
@@ -691,9 +691,9 @@ const RRHHModule = ({ T: _T }) => {
                             return (
                               <div key={s.step} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", borderRadius: 9, background: done ? `${T.emerald}08` : active ? `${T.violet}10` : "rgba(255,255,255,0.02)", border: `1px solid ${done ? T.emerald + "25" : active ? T.violet + "35" : T.border}`, transition: "all 0.4s" }}>
                                 <div style={{ width: 20, height: 20, borderRadius: "50%", background: done ? `${T.emerald}20` : active ? `${T.violet}20` : T.border, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                                  {done ? <CheckCircle2 size={12} color={T.emerald} /> : <span style={{ fontSize: 9.5, fontWeight: 500, color: active ? T.violet : T.txt3 }}>{s.step}</span>}
+                                  {done ? <CheckCircle2 size={12} color={T.emerald} /> : <span style={{ fontSize: 10.5, fontWeight: 500, color: active ? T.violet : T.txt3 }}>{s.step}</span>}
                                 </div>
-                                <span style={{ fontSize: 11.5, color: done ? T.txt : active ? T.violet : T.txt3, fontWeight: active ? 600 : 400, textAlign: "left" }}>{s.label}</span>
+                                <span style={{ fontSize: 12, color: done ? T.txt : active ? T.violet : T.txt3, fontWeight: active ? 600 : 400, textAlign: "left" }}>{s.label}</span>
                                 {active && <div style={{ marginLeft: "auto", display: "flex", gap: 3 }}>{[0,1,2].map(i => <div key={i} style={{ width: 4, height: 4, borderRadius: "50%", background: T.violet, animation: `blink 1.4s ${i * 0.2}s infinite` }} />)}</div>}
                               </div>
                             );
@@ -718,10 +718,10 @@ const RRHHModule = ({ T: _T }) => {
                           { l: "Texto libre", c: T.accent },
                           { l: "LinkedIn URL", c: T.violet },
                         ].map(f => (
-                          <span key={f.l} style={{ fontSize: 10.5, color: f.c, background: `${f.c}10`, border: `1px solid ${f.c}25`, padding: "6px 14px", borderRadius: 7, fontWeight: 500 }}>{f.l}</span>
+                          <span key={f.l} style={{ fontSize: 11.5, color: f.c, background: `${f.c}10`, border: `1px solid ${f.c}25`, padding: "6px 14px", borderRadius: 7, fontWeight: 500 }}>{f.l}</span>
                         ))}
                       </div>
-                      <p style={{ fontSize: 10.5, color: T.txt3 }}>Haz clic para simular un análisis de CV con IA</p>
+                      <p style={{ fontSize: 11.5, color: T.txt3 }}>Haz clic para simular un análisis de CV con IA</p>
                     </>
                   )}
                 </div>
@@ -737,19 +737,19 @@ const RRHHModule = ({ T: _T }) => {
                   <div className="rrhh-grid-2" style={{ marginBottom: 16 }}>
                     <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                       <div style={{ padding: "18px 20px", borderRadius: 12, background: T.glass, border: `1px solid ${T.border}` }}>
-                        <p style={{ fontSize: 11, color: T.txt3, marginBottom: 6, fontWeight: 500 }}>CANDIDATO IDENTIFICADO</p>
+                        <p style={{ fontSize: 12, color: T.txt3, marginBottom: 6, fontWeight: 500 }}>CANDIDATO IDENTIFICADO</p>
                         <p style={{ fontSize: 17, fontWeight: 600, color: T.txt, fontFamily: fontDisp, margin: 0 }}>{aiResult.nombre}</p>
-                        <p style={{ fontSize: 12, color: T.txt2, margin: "4px 0 0" }}>{aiResult.cargo}</p>
-                        <p style={{ fontSize: 11.5, color: T.txt3, margin: "2px 0 0" }}>{aiResult.exp}</p>
-                        <p style={{ fontSize: 11.5, color: T.txt3, margin: "2px 0 0" }}>{aiResult.educacion}</p>
+                        <p style={{ fontSize: 12.5, color: T.txt2, margin: "4px 0 0" }}>{aiResult.cargo}</p>
+                        <p style={{ fontSize: 12, color: T.txt3, margin: "2px 0 0" }}>{aiResult.exp}</p>
+                        <p style={{ fontSize: 12, color: T.txt3, margin: "2px 0 0" }}>{aiResult.educacion}</p>
                         <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 12 }}>
                           {aiResult.habilidades.map(h => (
-                            <span key={h} style={{ fontSize: 10, color: T.accent, background: `${T.accent}10`, border: `1px solid ${T.accent}20`, padding: "3px 9px", borderRadius: 5, fontWeight: 500 }}>{h}</span>
+                            <span key={h} style={{ fontSize: 11, color: T.accent, background: `${T.accent}10`, border: `1px solid ${T.accent}20`, padding: "3px 9px", borderRadius: 5, fontWeight: 500 }}>{h}</span>
                           ))}
                         </div>
                       </div>
                       <div style={{ padding: "16px 20px", borderRadius: 12, background: T.glass, border: `1px solid ${T.border}` }}>
-                        <p style={{ fontSize: 11, color: T.txt3, marginBottom: 8, fontWeight: 500 }}>SALARIO SUGERIDO POR IA</p>
+                        <p style={{ fontSize: 12, color: T.txt3, marginBottom: 8, fontWeight: 500 }}>SALARIO SUGERIDO POR IA</p>
                         <p style={{ fontSize: 15, fontWeight: 600, color: T.emerald, fontFamily: fontDisp, margin: 0 }}>{aiResult.salarioSug}</p>
                       </div>
                     </div>
@@ -761,7 +761,7 @@ const RRHHModule = ({ T: _T }) => {
                         { l: "Actitud / Soft Skills", v: aiResult.actitud, c: T.emerald },
                       ].map(s => (
                         <div key={s.l} style={{ padding: "12px 16px", borderRadius: 10, background: `${s.c}08`, border: `1px solid ${s.c}18`, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                          <p style={{ fontSize: 11.5, color: T.txt, fontWeight: 500, margin: 0 }}>{s.l}</p>
+                          <p style={{ fontSize: 12, color: T.txt, fontWeight: 500, margin: 0 }}>{s.l}</p>
                           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                             <div style={{ width: 80, height: 5, borderRadius: 3, background: T.border, overflow: "hidden" }}>
                               <div style={{ width: `${s.v}%`, height: "100%", background: s.c, borderRadius: 3 }} />
@@ -774,26 +774,26 @@ const RRHHModule = ({ T: _T }) => {
                   </div>
                   <div className="rrhh-grid-2" style={{ marginBottom: 16 }}>
                     <div style={{ padding: "16px 18px", borderRadius: 12, background: `${T.emerald}06`, border: `1px solid ${T.emerald}20` }}>
-                      <p style={{ fontSize: 11, color: T.emerald, fontWeight: 600, textTransform: "uppercase", marginBottom: 12, letterSpacing: "0.05em", margin: "0 0 12px" }}>Fortalezas detectadas</p>
+                      <p style={{ fontSize: 12, color: T.emerald, fontWeight: 600, textTransform: "uppercase", marginBottom: 12, letterSpacing: "0.05em", margin: "0 0 12px" }}>Fortalezas detectadas</p>
                       {aiResult.fortalezas.map((f, i) => (
                         <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 8, marginBottom: 8 }}>
                           <CheckCircle2 size={14} color={T.emerald} style={{ marginTop: 2, flexShrink: 0 }} />
-                          <span style={{ fontSize: 11.5, color: T.txt, lineHeight: 1.5 }}>{f}</span>
+                          <span style={{ fontSize: 12, color: T.txt, lineHeight: 1.5 }}>{f}</span>
                         </div>
                       ))}
                     </div>
                     <div style={{ padding: "16px 18px", borderRadius: 12, background: `${T.amber}06`, border: `1px solid ${T.amber}20` }}>
-                      <p style={{ fontSize: 11, color: T.amber, fontWeight: 600, textTransform: "uppercase", marginBottom: 12, letterSpacing: "0.05em", margin: "0 0 12px" }}>Áreas de atención</p>
+                      <p style={{ fontSize: 12, color: T.amber, fontWeight: 600, textTransform: "uppercase", marginBottom: 12, letterSpacing: "0.05em", margin: "0 0 12px" }}>Áreas de atención</p>
                       {aiResult.debilidades.map((d, i) => (
                         <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 8, marginBottom: 8 }}>
                           <AlertCircle size={14} color={T.amber} style={{ marginTop: 2, flexShrink: 0 }} />
-                          <span style={{ fontSize: 11.5, color: T.txt, lineHeight: 1.5 }}>{d}</span>
+                          <span style={{ fontSize: 12, color: T.txt, lineHeight: 1.5 }}>{d}</span>
                         </div>
                       ))}
                     </div>
                   </div>
                   <div style={{ padding: "16px 20px", borderRadius: 12, background: `${T.violet}06`, border: `1px solid ${T.violet}25`, marginBottom: 16 }}>
-                    <p style={{ fontSize: 11, color: T.violet, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em", margin: "0 0 8px" }}>Recomendación IA</p>
+                    <p style={{ fontSize: 12, color: T.violet, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em", margin: "0 0 8px" }}>Recomendación IA</p>
                     <p style={{ fontSize: 13, color: T.txt, fontWeight: 400, lineHeight: 1.6, margin: 0 }}>{aiResult.recomendacion}</p>
                   </div>
                   <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
@@ -821,7 +821,7 @@ const RRHHModule = ({ T: _T }) => {
                   <div key={s.n} style={{ padding: 18, borderRadius: 12, background: `${s.c}06`, border: `1px solid ${s.c}18` }}>
                     <p style={{ fontSize: 22, fontWeight: 500, color: s.c, fontFamily: fontDisp, margin: "0 0 8px" }}>{s.n}</p>
                     <p style={{ fontSize: 12.5, fontWeight: 600, color: T.txt, margin: "0 0 4px" }}>{s.t}</p>
-                    <p style={{ fontSize: 11, color: T.txt2, lineHeight: 1.5, margin: 0 }}>{s.d}</p>
+                    <p style={{ fontSize: 12, color: T.txt2, lineHeight: 1.5, margin: 0 }}>{s.d}</p>
                   </div>
                 ))}
               </div>

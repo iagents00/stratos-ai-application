@@ -159,6 +159,14 @@ Con Supabase, el envío de emails (verificación y recuperación) funciona autom
 
 ## Design System — Reglas Críticas
 
+### Piso tipográfico (Jul 2026 — pedido de Ángel: que la letra no desgaste la vista)
+
+Toda la plataforma usa UNA escala de tamaños. **NO escribas `fontSize` menor a 9.5**
+(única excepción: micro-etiquetas decorativas del carril lateral, 7–9).
+Escala: 9.5–10 micro-etiquetas · 10.5–11.5 metadatos/chips · **12–12.5 texto corriente**
+· 13–14 cuerpo destacado · 15+ títulos. Se aplicó con un barrido global (1318 tamaños
+subidos en 56 archivos). Si copias código viejo con `fontSize: 9/10/11`, súbelo a la escala.
+
 Lee `DESIGN_SYSTEM.md` completo. Resumen ejecutivo:
 
 ```js

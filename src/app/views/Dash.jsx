@@ -82,12 +82,12 @@ const Dash = ({ oc, co, leadsData = [], T: _T }) => {
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 14, flexWrap: "wrap", gap: 8 }}>
           <div>
             <p style={{ fontSize: 13, fontWeight: 500, color: T.txt, fontFamily: fontDisp, margin: 0 }}>Rendimiento del Equipo</p>
-            <p style={{ fontSize: 10, color: T.txt3, fontFamily: font, margin: "2px 0 0" }}>Acciones acumuladas · Asesores vs. iAgents</p>
+            <p style={{ fontSize: 11, color: T.txt3, fontFamily: font, margin: "2px 0 0" }}>Acciones acumuladas · Asesores vs. iAgents</p>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
             {["semana","mes"].map(p => (
               <button key={p} onClick={() => setDashPeriod(p)} style={{
-                padding: "3px 10px", borderRadius: 99, fontSize: 9.5, fontWeight: 400,
+                padding: "3px 10px", borderRadius: 99, fontSize: 10.5, fontWeight: 400,
                 fontFamily: font, cursor: "pointer", transition: "all 0.15s",
                 background: dashPeriod === p ? `${T.accent}18` : "transparent",
                 border: `1px solid ${dashPeriod === p ? T.accentB : T.border}`,
@@ -105,8 +105,8 @@ const Dash = ({ oc, co, leadsData = [], T: _T }) => {
             <div key={lg.label} style={{ display: "flex", alignItems: "center", gap: 6 }}>
               <div style={{ width: 24, height: 3, borderRadius: 2, background: lg.color, opacity: 0.85 }} />
               <div>
-                <span style={{ fontSize: 10.5, fontWeight: 500, color: lg.color, fontFamily: fontDisp }}>{lg.label}</span>
-                <span style={{ fontSize: 9, color: T.txt3, fontFamily: font, marginLeft: 5 }}>{lg.desc}</span>
+                <span style={{ fontSize: 11.5, fontWeight: 500, color: lg.color, fontFamily: fontDisp }}>{lg.label}</span>
+                <span style={{ fontSize: 10.5, color: T.txt3, fontFamily: font, marginLeft: 5 }}>{lg.desc}</span>
               </div>
             </div>
           ))}
@@ -141,12 +141,12 @@ const Dash = ({ oc, co, leadsData = [], T: _T }) => {
               <div style={{ display: "flex", gap: 18, marginBottom: 10 }}>
                 <div>
                   <span style={{ fontSize: 18, fontWeight: 500, color: T.emerald, fontFamily: fontDisp, letterSpacing: "-0.04em" }}>{totAsesores}</span>
-                  <span style={{ fontSize: 10, color: T.txt3, fontFamily: font, marginLeft: 4 }}>acciones asesores</span>
+                  <span style={{ fontSize: 11, color: T.txt3, fontFamily: font, marginLeft: 4 }}>acciones asesores</span>
                 </div>
                 <div style={{ width: 1, background: T.border }} />
                 <div>
                   <span style={{ fontSize: 18, fontWeight: 500, color: T.blue, fontFamily: fontDisp, letterSpacing: "-0.04em" }}>{totIAgents}</span>
-                  <span style={{ fontSize: 10, color: T.txt3, fontFamily: font, marginLeft: 4 }}>acciones iAgents</span>
+                  <span style={{ fontSize: 11, color: T.txt3, fontFamily: font, marginLeft: 4 }}>acciones iAgents</span>
                 </div>
                 <div style={{ marginLeft: "auto" }}>
                   <Pill color={totIAgents > totAsesores ? T.blue : T.emerald} s isLight={isLight}>
@@ -166,10 +166,10 @@ const Dash = ({ oc, co, leadsData = [], T: _T }) => {
                       <stop offset="95%" stopColor={T.blue} stopOpacity={0} />
                     </linearGradient>
                   </defs>
-                  <XAxis dataKey="d" tick={{ fill: T.txt3, fontSize: 9, fontFamily: font }} axisLine={false} tickLine={false} />
-                  <YAxis allowDecimals={false} tick={{ fill: T.txt3, fontSize: 9 }} axisLine={false} tickLine={false} width={22} />
+                  <XAxis dataKey="d" tick={{ fill: T.txt3, fontSize: 10.5, fontFamily: font }} axisLine={false} tickLine={false} />
+                  <YAxis allowDecimals={false} tick={{ fill: T.txt3, fontSize: 10.5 }} axisLine={false} tickLine={false} width={22} />
                   <Tooltip
-                    contentStyle={{ background: isLight ? "#FFFFFF" : "#111318", border: `1px solid ${T.border}`, borderRadius: 10, color: T.txt, fontSize: 11, boxShadow: isLight ? "0 8px 28px rgba(15,23,42,0.14)" : "0 8px 32px rgba(0,0,0,0.4)" }}
+                    contentStyle={{ background: isLight ? "#FFFFFF" : "#111318", border: `1px solid ${T.border}`, borderRadius: 10, color: T.txt, fontSize: 12, boxShadow: isLight ? "0 8px 28px rgba(15,23,42,0.14)" : "0 8px 32px rgba(0,0,0,0.4)" }}
                     cursor={{ stroke: isLight ? "rgba(15,23,42,0.08)" : "rgba(255,255,255,0.07)", strokeWidth: 1 }}
                     formatter={(val, name) => [
                       `${val} acciones`,
@@ -194,16 +194,16 @@ const Dash = ({ oc, co, leadsData = [], T: _T }) => {
           return (
             <div key={st} style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 9 }}>
               <div style={{ width: 6, height: 6, borderRadius: "50%", background: c, flexShrink: 0 }} />
-              <span style={{ fontSize: 10, color: T.txt2, flex: 1, fontFamily: font, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{st}</span>
+              <span style={{ fontSize: 11, color: T.txt2, flex: 1, fontFamily: font, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{st}</span>
               <div style={{ width: 48, height: 4, borderRadius: 2, background: isLight ? "rgba(15,23,42,0.08)" : "rgba(255,255,255,0.05)" }}>
                 <div style={{ width: `${pct}%`, height: "100%", borderRadius: 2, background: c, opacity: 0.75 }} />
               </div>
-              <span style={{ fontSize: 11, fontWeight: 500, color: c, fontFamily: fontDisp, minWidth: 16, textAlign: "right" }}>{cnt}</span>
+              <span style={{ fontSize: 12, fontWeight: 500, color: c, fontFamily: fontDisp, minWidth: 16, textAlign: "right" }}>{cnt}</span>
             </div>
           );
         })}
         <div style={{ marginTop: 6, padding: "7px 10px", borderRadius: T.rx, background: T.accentS, border: `1px solid ${T.accentB}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <span style={{ fontSize: 10.5, color: T.txt2, fontFamily: font }}>Total activos</span>
+          <span style={{ fontSize: 11.5, color: T.txt2, fontFamily: font }}>Total activos</span>
           <span style={{ fontSize: 15, fontWeight: 500, color: T.accent, fontFamily: fontDisp }}>{activos}</span>
         </div>
       </G>
@@ -222,7 +222,7 @@ const Dash = ({ oc, co, leadsData = [], T: _T }) => {
           borderRadius: T.rs, border: `1px solid ${a.c}${isLight ? "44" : "18"}`,
           background: isLight ? `${a.c}10` : `${a.c}08`,
           cursor: "pointer", color: T.txt2,
-          fontSize: 12, fontWeight: 400, fontFamily: font, transition: "all 0.25s",
+          fontSize: 12.5, fontWeight: 400, fontFamily: font, transition: "all 0.25s",
         }}><Ico icon={a.i} sz={30} is={14} c={a.c} />{a.l}</button>
       ))}
     </div>
@@ -235,13 +235,13 @@ const Dash = ({ oc, co, leadsData = [], T: _T }) => {
           <p style={{ fontSize: 13, fontWeight: 500, color: T.txt, fontFamily: fontDisp }}>Atención Inmediata</p>
           <Pill color={T.accent} s isLight={isLight}>Nuevos · Zoom agendado</Pill>
         </div>
-        <button onClick={() => oc("Dame un resumen de los clientes que necesitan atención inmediata")} style={{ fontSize: 11, color: T.txt3, background: "none", border: "none", cursor: "pointer", fontFamily: font }}
+        <button onClick={() => oc("Dame un resumen de los clientes que necesitan atención inmediata")} style={{ fontSize: 12, color: T.txt3, background: "none", border: "none", cursor: "pointer", fontFamily: font }}
           onMouseEnter={e => e.currentTarget.style.color = T.txt2}
           onMouseLeave={e => e.currentTarget.style.color = T.txt3}
         >Analizar con IA →</button>
       </div>
       {leadsData.filter(l => l.isNew || l.st === "Zoom Agendado").sort((a,b) => b.sc - a.sc).slice(0, 4).length === 0
-        ? <div style={{ padding: "22px 18px", textAlign: "center" }}><p style={{ fontSize: 12, color: T.txt3, fontFamily: font }}>Sin clientes urgentes ✓</p></div>
+        ? <div style={{ padding: "22px 18px", textAlign: "center" }}><p style={{ fontSize: 12.5, color: T.txt3, fontFamily: font }}>Sin clientes urgentes ✓</p></div>
         : leadsData.filter(l => l.isNew || l.st === "Zoom Agendado").sort((a,b) => b.sc - a.sc).slice(0, 4).map(l => (
           <div key={l.id} onClick={() => oc(`__crm__ ${l.n.toLowerCase()}`)} style={{
             display: "grid", gridTemplateColumns: co ? "2fr 0.7fr 1fr" : "2fr 0.55fr 0.9fr 0.7fr 1.4fr",
@@ -252,26 +252,26 @@ const Dash = ({ oc, co, leadsData = [], T: _T }) => {
             onMouseLeave={e => e.currentTarget.style.background = "transparent"}
           >
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <div style={{ width: 28, height: 28, borderRadius: 8, background: `${l.hot ? T.accent : T.blue}12`, border: `1px solid ${l.hot ? T.accent : T.blue}20`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 500, color: l.hot ? T.accent : T.blue, flexShrink: 0, fontFamily: fontDisp }}>{l.n.charAt(0)}</div>
+              <div style={{ width: 28, height: 28, borderRadius: 8, background: `${l.hot ? T.accent : T.blue}12`, border: `1px solid ${l.hot ? T.accent : T.blue}20`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 500, color: l.hot ? T.accent : T.blue, flexShrink: 0, fontFamily: fontDisp }}>{l.n.charAt(0)}</div>
               <div>
                 <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
                   <span style={{ fontSize: 12.5, fontWeight: 400, color: T.txt, fontFamily: fontDisp, letterSpacing: "-0.01em" }}>{l.n}</span>
-                  {l.isNew && <span style={{ fontSize: 8, fontWeight: 500, color: T.accent, background: `${T.accent}14`, padding: "1px 5px", borderRadius: 99, letterSpacing: "0.06em" }}>NEW</span>}
+                  {l.isNew && <span style={{ fontSize: 9.5, fontWeight: 500, color: T.accent, background: `${T.accent}14`, padding: "1px 5px", borderRadius: 99, letterSpacing: "0.06em" }}>NEW</span>}
                 </div>
-                <p style={{ fontSize: 9, color: T.txt3, marginTop: 1, fontFamily: font }}>{l.asesor}</p>
+                <p style={{ fontSize: 10.5, color: T.txt3, marginTop: 1, fontFamily: font }}>{l.asesor}</p>
               </div>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
               <div style={{ width: 24, height: 3, borderRadius: 2, background: T.border }}>
                 <div style={{ width: `${l.sc}%`, height: 3, borderRadius: 2, background: l.sc >= 80 ? T.emerald : l.sc >= 60 ? T.blue : T.cyan }} />
               </div>
-              <span style={{ fontSize: 10, fontWeight: 500, color: l.sc >= 80 ? T.emerald : l.sc >= 60 ? T.blue : T.cyan, fontFamily: fontDisp }}>{l.sc}</span>
+              <span style={{ fontSize: 11, fontWeight: 500, color: l.sc >= 80 ? T.emerald : l.sc >= 60 ? T.blue : T.cyan, fontFamily: fontDisp }}>{l.sc}</span>
             </div>
             <Pill color={stgC[l.st]} s isLight={isLight}>{l.st}</Pill>
             {!co && <span style={{ fontSize: 13, fontWeight: 400, color: T.txt, fontFamily: fontDisp, letterSpacing: "-0.02em" }}>{l.budget}</span>}
             {!co && <div style={{ padding: "5px 8px", borderRadius: 7, background: `${T.accent}07`, border: `1px solid ${T.accentB}` }}>
-              <p style={{ fontSize: 9, fontWeight: 500, color: T.accent, letterSpacing: "0.04em", marginBottom: 2, fontFamily: font }}>{l.nextActionDate?.toUpperCase()}</p>
-              <p style={{ fontSize: 10, color: T.txt2, lineHeight: 1.35, fontFamily: font }}>{l.nextAction?.substring(0, 45)}{l.nextAction?.length > 45 ? "…" : ""}</p>
+              <p style={{ fontSize: 10.5, fontWeight: 500, color: T.accent, letterSpacing: "0.04em", marginBottom: 2, fontFamily: font }}>{l.nextActionDate?.toUpperCase()}</p>
+              <p style={{ fontSize: 11, color: T.txt2, lineHeight: 1.35, fontFamily: font }}>{l.nextAction?.substring(0, 45)}{l.nextAction?.length > 45 ? "…" : ""}</p>
             </div>}
           </div>
         ))
@@ -284,7 +284,7 @@ const Dash = ({ oc, co, leadsData = [], T: _T }) => {
         <p style={{ fontSize: 13, fontWeight: 500, color: T.txt, fontFamily: fontDisp, marginBottom: 12 }}>Rendimiento del Equipo</p>
         <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr", gap: 0 }}>
           {["Asesor","Leads","Zooms","Cierres","Score"].map(h => (
-            <span key={h} style={{ fontSize: 9, fontWeight: 500, color: T.txt3, fontFamily: fontDisp, letterSpacing: "0.06em", textTransform: "uppercase", paddingBottom: 8 }}>{h}</span>
+            <span key={h} style={{ fontSize: 10.5, fontWeight: 500, color: T.txt3, fontFamily: fontDisp, letterSpacing: "0.06em", textTransform: "uppercase", paddingBottom: 8 }}>{h}</span>
           ))}
         </div>
         {asesorStats.map((a, i) => {
@@ -293,13 +293,13 @@ const Dash = ({ oc, co, leadsData = [], T: _T }) => {
           return (
             <div key={a.name} style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr", gap: 0, alignItems: "center", padding: "8px 0", borderTop: `1px solid ${T.border}` }}>
               <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
-                <div style={{ width: 24, height: 24, borderRadius: 7, background: `${c}14`, border: `1px solid ${c}28`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 9, fontWeight: 500, color: c, fontFamily: fontDisp }}>{a.name.charAt(0)}</div>
-                <span style={{ fontSize: 11.5, color: T.txt, fontFamily: font }}>{a.name.split(" ")[0]}</span>
+                <div style={{ width: 24, height: 24, borderRadius: 7, background: `${c}14`, border: `1px solid ${c}28`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10.5, fontWeight: 500, color: c, fontFamily: fontDisp }}>{a.name.charAt(0)}</div>
+                <span style={{ fontSize: 12, color: T.txt, fontFamily: font }}>{a.name.split(" ")[0]}</span>
               </div>
-              <span style={{ fontSize: 12, fontWeight: 500, color: T.txt,     fontFamily: fontDisp }}>{a.total}</span>
-              <span style={{ fontSize: 12, fontWeight: 500, color: T.blue,    fontFamily: fontDisp }}>{a.zooms}</span>
-              <span style={{ fontSize: 12, fontWeight: 500, color: T.emerald, fontFamily: fontDisp }}>{a.cierres}</span>
-              <span style={{ fontSize: 12, fontWeight: 500, color: c,         fontFamily: fontDisp }}>{a.avgSc}</span>
+              <span style={{ fontSize: 12.5, fontWeight: 500, color: T.txt,     fontFamily: fontDisp }}>{a.total}</span>
+              <span style={{ fontSize: 12.5, fontWeight: 500, color: T.blue,    fontFamily: fontDisp }}>{a.zooms}</span>
+              <span style={{ fontSize: 12.5, fontWeight: 500, color: T.emerald, fontFamily: fontDisp }}>{a.cierres}</span>
+              <span style={{ fontSize: 12.5, fontWeight: 500, color: c,         fontFamily: fontDisp }}>{a.avgSc}</span>
             </div>
           );
         })}
@@ -317,15 +317,15 @@ const Dash = ({ oc, co, leadsData = [], T: _T }) => {
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
             <Ico icon={a.i} sz={32} is={15} c={a.c} />
             <div>
-              <p style={{ fontSize: 12, fontWeight: 500, color: T.txt, fontFamily: fontDisp }}>{a.n}</p>
-              <p style={{ fontSize: 10, color: T.txt3, fontFamily: font }}>{a.r}</p>
+              <p style={{ fontSize: 12.5, fontWeight: 500, color: T.txt, fontFamily: fontDisp }}>{a.n}</p>
+              <p style={{ fontSize: 11, color: T.txt3, fontFamily: font }}>{a.r}</p>
             </div>
           </div>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <span style={{ fontSize: 10, color: T.txt3, fontFamily: font }}>{a.s}</span>
+            <span style={{ fontSize: 11, color: T.txt3, fontFamily: font }}>{a.s}</span>
             <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
               <div style={{ width: 6, height: 6, borderRadius: "50%", background: T.emerald, boxShadow: `0 0 6px ${T.emerald}50` }} />
-              <span style={{ fontSize: 10, color: T.emerald, fontWeight: 400, fontFamily: font }}>Activo</span>
+              <span style={{ fontSize: 11, color: T.emerald, fontWeight: 400, fontFamily: font }}>Activo</span>
             </div>
           </div>
         </G>

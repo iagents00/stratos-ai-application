@@ -50,15 +50,15 @@ function ChartTip({ active, payload, label, isLight, T, totalLabel = "Total" }) 
     <div style={{
       background: isLight ? "#FFFFFF" : "#0E1320",
       border: `1px solid ${isLight ? "rgba(15,23,42,0.10)" : "rgba(255,255,255,0.10)"}`,
-      borderRadius: 12, padding: "9px 12px", fontFamily: font, fontSize: 12,
+      borderRadius: 12, padding: "9px 12px", fontFamily: font, fontSize: 12.5,
       boxShadow: "0 12px 32px rgba(0,0,0,0.20)", minWidth: 160,
     }}>
       {label != null && (
-        <div style={{ fontSize: 11, fontWeight: 500, color: T.txt, fontFamily: fontDisp, marginBottom: 6 }}>{label}</div>
+        <div style={{ fontSize: 12, fontWeight: 500, color: T.txt, fontFamily: fontDisp, marginBottom: 6 }}>{label}</div>
       )}
       {items.map(p => (
         <div key={p.dataKey || p.name} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "1.5px 0" }}>
-          <span style={{ display: "inline-flex", alignItems: "center", gap: 6, color: T.txt2, fontSize: 11.5, fontFamily: fontDisp, fontWeight: 500 }}>
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 6, color: T.txt2, fontSize: 12, fontFamily: fontDisp, fontWeight: 500 }}>
             <span style={{ width: 8, height: 8, borderRadius: 2, background: p.color || p.payload?.fill, flexShrink: 0 }} />
             {p.name}
           </span>
@@ -67,7 +67,7 @@ function ChartTip({ active, payload, label, isLight, T, totalLabel = "Total" }) 
       ))}
       {items.length > 1 && (
         <div style={{ display: "flex", justifyContent: "space-between", gap: 12, marginTop: 6, paddingTop: 6, borderTop: `1px solid ${isLight ? "rgba(15,23,42,0.06)" : "rgba(255,255,255,0.07)"}` }}>
-          <span style={{ fontSize: 10, fontWeight: 500, color: T.txt3, fontFamily: fontDisp, textTransform: "uppercase", letterSpacing: "0.05em" }}>{totalLabel}</span>
+          <span style={{ fontSize: 11, fontWeight: 500, color: T.txt3, fontFamily: fontDisp, textTransform: "uppercase", letterSpacing: "0.05em" }}>{totalLabel}</span>
           <span style={{ fontWeight: 500, color: T.txt, fontVariantNumeric: "tabular-nums", fontFamily: fontDisp }}>{total}</span>
         </div>
       )}
@@ -86,7 +86,7 @@ function ChartCard({ T, isLight, title, subtitle, children }) {
     }}>
       <div style={{ marginBottom: 8 }}>
         <div style={{ fontSize: 13.5, fontWeight: 500, color: T.txt, fontFamily: fontDisp, letterSpacing: "-0.01em" }}>{title}</div>
-        {subtitle && <div style={{ fontSize: 11.5, color: T.txt2, fontFamily: font, marginTop: 1 }}>{subtitle}</div>}
+        {subtitle && <div style={{ fontSize: 12, color: T.txt2, fontFamily: font, marginTop: 1 }}>{subtitle}</div>}
       </div>
       {children}
     </div>
@@ -98,7 +98,7 @@ function LegendChips({ T, items }) {
   return (
     <div style={{ display: "flex", flexWrap: "wrap", gap: "4px 14px", padding: "6px 2px 4px" }}>
       {items.map(it => (
-        <span key={it.label} style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 11.5, fontWeight: 400, color: T.txt2, fontFamily: fontDisp }}>
+        <span key={it.label} style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 12, fontWeight: 400, color: T.txt2, fontFamily: fontDisp }}>
           <span style={{ width: 9, height: 9, borderRadius: 3, background: it.color, flexShrink: 0 }} />
           {it.label}{it.count != null && <span style={{ color: T.txt, fontWeight: 500 }}>{it.count}</span>}
         </span>
@@ -110,7 +110,7 @@ function LegendChips({ T, items }) {
 export default function GraficasZooms({ rows = [], T, isLight }) {
   const accent = T.accent;
   const gridStroke = isLight ? "rgba(15,23,42,0.06)" : "rgba(255,255,255,0.05)";
-  const axisTick = { fill: T.txt2, fontSize: 11, fontFamily: fontDisp, fontWeight: 500 };
+  const axisTick = { fill: T.txt2, fontSize: 12, fontFamily: fontDisp, fontWeight: 500 };
   // Gap de 2px entre segmentos apilados = trazo del color de la superficie.
   const surface = isLight ? "#FFFFFF" : "#0B1220";
 
@@ -223,7 +223,7 @@ export default function GraficasZooms({ rows = [], T, isLight }) {
               {/* Número héroe al centro — texto en tokens de texto. */}
               <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", pointerEvents: "none" }}>
                 <span style={{ fontSize: 30, fontWeight: 500, color: T.txt, fontFamily: fontDisp, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}>{totalMes}</span>
-                <span style={{ fontSize: 10.5, fontWeight: 500, color: T.txt3, fontFamily: fontDisp, textTransform: "uppercase", letterSpacing: "0.06em" }}>Zooms</span>
+                <span style={{ fontSize: 11.5, fontWeight: 500, color: T.txt3, fontFamily: fontDisp, textTransform: "uppercase", letterSpacing: "0.06em" }}>Zooms</span>
               </div>
             </div>
             {/* Leyenda con nombre + conteo + % — identidad nunca por color solo. */}
@@ -231,9 +231,9 @@ export default function GraficasZooms({ rows = [], T, isLight }) {
               {porEstatus.map(d => (
                 <div key={d.name} style={{ display: "flex", alignItems: "center", gap: 7 }}>
                   <span style={{ width: 9, height: 9, borderRadius: 3, background: d.color, flexShrink: 0 }} />
-                  <span style={{ fontSize: 12, fontWeight: 400, color: T.txt2, fontFamily: fontDisp, flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{d.name}</span>
+                  <span style={{ fontSize: 12.5, fontWeight: 400, color: T.txt2, fontFamily: fontDisp, flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{d.name}</span>
                   <span style={{ fontSize: 12.5, fontWeight: 500, color: T.txt, fontFamily: fontDisp, fontVariantNumeric: "tabular-nums" }}>{d.value}</span>
-                  <span style={{ fontSize: 11, color: T.txt3, fontFamily: font, width: 34, textAlign: "right", fontVariantNumeric: "tabular-nums" }}>{Math.round((d.value / totalMes) * 100)}%</span>
+                  <span style={{ fontSize: 12, color: T.txt3, fontFamily: font, width: 34, textAlign: "right", fontVariantNumeric: "tabular-nums" }}>{Math.round((d.value / totalMes) * 100)}%</span>
                 </div>
               ))}
             </div>
@@ -273,14 +273,14 @@ function PersonBars({ data, color, T, isLight, gridStroke, axisTick }) {
           <XAxis type="number" allowDecimals={false} hide />
           <YAxis
             type="category" dataKey="name" width={128}
-            tick={{ ...axisTick, fontSize: 12 }} tickLine={false} axisLine={false}
+            tick={{ ...axisTick, fontSize: 12.5 }} tickLine={false} axisLine={false}
           />
           <Tooltip
             cursor={{ fill: isLight ? "rgba(15,23,42,0.04)" : "rgba(255,255,255,0.04)" }}
             content={(p) => <ChartTip {...p} isLight={isLight} T={T} />}
           />
           <Bar dataKey="value" name="Zooms" fill={color} radius={[0, 4, 4, 0]} maxBarSize={18} isAnimationActive={false}>
-            <LabelList dataKey="value" position="right" style={{ fill: T.txt, fontSize: 12, fontWeight: 500, fontFamily: fontDisp }} />
+            <LabelList dataKey="value" position="right" style={{ fill: T.txt, fontSize: 12.5, fontWeight: 500, fontFamily: fontDisp }} />
           </Bar>
         </BarChart>
       </ResponsiveContainer>

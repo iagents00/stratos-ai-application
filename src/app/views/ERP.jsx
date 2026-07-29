@@ -168,13 +168,13 @@ const ERP = ({ oc, T: _T }) => {
   const btnStyle = (color) => ({
     display: "inline-flex", alignItems: "center", gap: 5,
     padding: "6px 11px", borderRadius: 9, textDecoration: "none",
-    fontSize: 11, fontWeight: 500, fontFamily: fontDisp, letterSpacing: "-0.01em",
+    fontSize: 12, fontWeight: 500, fontFamily: fontDisp, letterSpacing: "-0.01em",
     color, background: `${color}14`, border: `1px solid ${color}2E`,
     whiteSpace: "nowrap", transition: "background 0.15s, border-color 0.15s",
   });
 
   const tdBase = {
-    padding: "11px 13px", fontSize: 12, color: T.txt2, fontFamily: font,
+    padding: "11px 13px", fontSize: 12.5, color: T.txt2, fontFamily: font,
     borderBottom: `1px solid ${T.border}`, verticalAlign: "middle", whiteSpace: "nowrap",
   };
   const iconLink = (color) => ({
@@ -185,14 +185,14 @@ const ERP = ({ oc, T: _T }) => {
   // Botón de filtro (Zona / Presupuesto): claro, grande y con estado activo evidente.
   const fBtn = (active, color) => ({
     display: "inline-flex", alignItems: "center", gap: 5, padding: "7px 13px", borderRadius: 99,
-    cursor: "pointer", fontSize: 11.5, fontWeight: 500, fontFamily: fontDisp, whiteSpace: "nowrap",
+    cursor: "pointer", fontSize: 12, fontWeight: 500, fontFamily: fontDisp, whiteSpace: "nowrap",
     border: `1px solid ${active ? color : T.border}`,
     background: active ? `${color}1E` : (isLight ? "#FFFFFF" : "rgba(255,255,255,0.03)"),
     color: active ? color : T.txt2, transition: "all 0.15s",
   });
   const fLabel = {
     display: "inline-flex", alignItems: "center", gap: 5, minWidth: 96, flexShrink: 0,
-    fontSize: 10, fontWeight: 500, letterSpacing: "0.06em", textTransform: "uppercase",
+    fontSize: 11, fontWeight: 500, letterSpacing: "0.06em", textTransform: "uppercase",
     color: T.txt3, fontFamily: fontDisp,
   };
 
@@ -220,13 +220,13 @@ const ERP = ({ oc, T: _T }) => {
           <p style={{ margin: 0, fontSize: 13.5, fontWeight: 500, color: T.txt, fontFamily: fontDisp }}>
             Pregúntale al catálogo por Telegram
           </p>
-          <p style={{ margin: "3px 0 0", fontSize: 11.5, color: T.txt3, fontFamily: font }}>
+          <p style={{ margin: "3px 0 0", fontSize: 12, color: T.txt3, fontFamily: font }}>
             Por voz o texto en <span style={{ color: T.blue, fontWeight: 400 }}>@Strato_sasistente_crm_bot</span> — filtra por zona, precio o característica.
           </p>
         </div>
         <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
           {["Top 5 destacados", "Propiedades en Cancún", "Villa cerca del mar"].map((ex) => (
-            <span key={ex} style={{ fontSize: 10.5, color: T.txt2, fontFamily: font, padding: "5px 10px", borderRadius: 99, background: isLight ? "rgba(15,23,42,0.03)" : "rgba(255,255,255,0.03)", border: `1px solid ${T.border}`, whiteSpace: "nowrap" }}>
+            <span key={ex} style={{ fontSize: 11.5, color: T.txt2, fontFamily: font, padding: "5px 10px", borderRadius: 99, background: isLight ? "rgba(15,23,42,0.03)" : "rgba(255,255,255,0.03)", border: `1px solid ${T.border}`, whiteSpace: "nowrap" }}>
               “{ex}”
             </span>
           ))}
@@ -240,7 +240,7 @@ const ERP = ({ oc, T: _T }) => {
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap", marginBottom: 14 }}>
             <div>
               <p style={{ fontSize: 14, fontWeight: 500, color: T.txt, fontFamily: fontDisp, margin: 0 }}>Catálogo de Proyectos</p>
-              <p style={{ fontSize: 10.5, color: T.txt3, fontFamily: font, margin: "3px 0 0" }}>
+              <p style={{ fontSize: 11.5, color: T.txt3, fontFamily: font, margin: "3px 0 0" }}>
                 Duke del Caribe · fuente: Google Sheet «DRIVES DUKE DEL CARIBE»
               </p>
             </div>
@@ -261,13 +261,13 @@ const ERP = ({ oc, T: _T }) => {
                     border: `1px solid ${active ? `${T.accent}55` : T.border}`,
                     background: active ? `${T.accent}18` : (isLight ? "rgba(15,23,42,0.02)" : "rgba(255,255,255,0.02)"),
                     color: active ? T.accent : T.txt2,
-                    fontSize: 12, fontWeight: active ? 700 : 500, fontFamily: fontDisp, letterSpacing: "-0.01em",
+                    fontSize: 12.5, fontWeight: active ? 700 : 500, fontFamily: fontDisp, letterSpacing: "-0.01em",
                     transition: "all 0.15s",
                   }}
                 >
                   {s.nombre}
                   <span style={{
-                    fontSize: 10, fontWeight: 500, padding: "1px 6px", borderRadius: 99,
+                    fontSize: 11, fontWeight: 500, padding: "1px 6px", borderRadius: 99,
                     background: active ? `${T.accent}26` : (isLight ? "rgba(15,23,42,0.06)" : "rgba(255,255,255,0.06)"),
                     color: active ? T.accent : T.txt3,
                   }}>{s.items.length}</span>
@@ -303,7 +303,7 @@ const ERP = ({ oc, T: _T }) => {
                       style={{
                         display: "inline-flex", alignItems: "center", gap: 6, padding: "7px 12px", borderRadius: 9, cursor: "pointer",
                         border: "none", background: active ? `${T.accent}1E` : "transparent",
-                        color: active ? T.accent : T.txt3, fontSize: 12, fontWeight: active ? 700 : 500, fontFamily: fontDisp, transition: "all 0.15s",
+                        color: active ? T.accent : T.txt3, fontSize: 12.5, fontWeight: active ? 700 : 500, fontFamily: fontDisp, transition: "all 0.15s",
                       }}>
                       <v.Icon size={13} /> {v.label}
                     </button>
@@ -325,7 +325,7 @@ const ERP = ({ oc, T: _T }) => {
                     value={zonaLibre}
                     onChange={(e) => { setZonaLibre(e.target.value); if (e.target.value) setZona(""); setLimit(60); }}
                     placeholder="Otra zona…"
-                    style={{ width: 118, padding: "6px 12px", borderRadius: 99, outline: "none", fontSize: 11, fontFamily: font, color: T.txt,
+                    style={{ width: 118, padding: "6px 12px", borderRadius: 99, outline: "none", fontSize: 12, fontFamily: font, color: T.txt,
                       border: `1px solid ${zonaLibre ? T.blue : T.border}`, background: isLight ? "#FFFFFF" : "rgba(255,255,255,0.03)" }}
                   />
                 </div>
@@ -350,7 +350,7 @@ const ERP = ({ oc, T: _T }) => {
                 </div>
                 {(zona || zonaLibre || presu || q) && (
                   <button onClick={() => { setZona(""); setZonaLibre(""); setPresu(""); setRMin(0); setRMax(RANGE_MAX); setQ(""); setLimit(60); }}
-                    style={{ marginLeft: "auto", display: "inline-flex", alignItems: "center", gap: 4, padding: "6px 10px", borderRadius: 8, cursor: "pointer", border: "none", background: "transparent", color: T.txt3, fontSize: 11, fontWeight: 400, fontFamily: font }}>
+                    style={{ marginLeft: "auto", display: "inline-flex", alignItems: "center", gap: 4, padding: "6px 10px", borderRadius: 8, cursor: "pointer", border: "none", background: "transparent", color: T.txt3, fontSize: 12, fontWeight: 400, fontFamily: font }}>
                     <X size={12} /> Limpiar
                   </button>
                 )}
@@ -372,7 +372,7 @@ const ERP = ({ oc, T: _T }) => {
                       return (
                         <div key={s.key}>
                           <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 5 }}>
-                            <span style={{ fontSize: 10, color: T.txt3, fontFamily: fontDisp, fontWeight: 500, letterSpacing: "0.06em", textTransform: "uppercase" }}>{s.label}</span>
+                            <span style={{ fontSize: 11, color: T.txt3, fontFamily: fontDisp, fontWeight: 500, letterSpacing: "0.06em", textTransform: "uppercase" }}>{s.label}</span>
                             <span style={{ fontSize: 13, color: T.emerald, fontFamily: fontDisp, fontWeight: 500 }}>{s.show}</span>
                           </div>
                           <input className="erp-range" type="range" min={0} max={RANGE_MAX} step={RANGE_STEP} value={s.val}
@@ -381,7 +381,7 @@ const ERP = ({ oc, T: _T }) => {
                         </div>
                       );
                     })}
-                    <span style={{ fontSize: 11, color: T.txt3, fontFamily: font }}>
+                    <span style={{ fontSize: 12, color: T.txt3, fontFamily: font }}>
                       Mostrando propiedades entre <b style={{ color: T.txt2 }}>{fmtMoney(rMin)}</b> y <b style={{ color: T.txt2 }}>{rMax >= RANGE_MAX ? "sin límite" : fmtMoney(rMax)}</b>.
                     </span>
                   </div>
@@ -399,7 +399,7 @@ const ERP = ({ oc, T: _T }) => {
                 <FolderOpen size={25} color={T.accent} strokeWidth={1.6} style={{ opacity: 0.75 }} />
               </div>
               <p style={{ margin: "0 0 4px", fontSize: 14, fontWeight: 400, fontFamily: fontDisp, color: T.txt }}>Sección sin registros todavía</p>
-              <p style={{ margin: 0, fontSize: 12, color: T.txt3, fontFamily: font }}>Esta pestaña existe en el Sheet pero aún no tiene desarrollos cargados.</p>
+              <p style={{ margin: 0, fontSize: 12.5, color: T.txt3, fontFamily: font }}>Esta pestaña existe en el Sheet pero aún no tiene desarrollos cargados.</p>
             </div>
           ) : filtered.length === 0 ? (
             <div style={{ textAlign: "center", padding: "40px 20px", fontSize: 13, color: T.txt3, fontFamily: font }}>
@@ -435,12 +435,12 @@ const ERP = ({ oc, T: _T }) => {
                       {(it.ubicacion || it.clasificacion) && (
                         <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
                           {it.ubicacion && (
-                            <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 11, color: T.txt2, fontFamily: font }}>
+                            <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 12, color: T.txt2, fontFamily: font }}>
                               <MapPin size={11} color={T.txt3} /> {canonZona(it.ubicacion)}
                             </span>
                           )}
                           {it.clasificacion && (
-                            <span style={{ fontSize: 10, color: T.txt3, fontFamily: font, textTransform: "uppercase", letterSpacing: "0.04em" }}>· {it.clasificacion}</span>
+                            <span style={{ fontSize: 11, color: T.txt3, fontFamily: font, textTransform: "uppercase", letterSpacing: "0.04em" }}>· {it.clasificacion}</span>
                           )}
                         </div>
                       )}
@@ -448,9 +448,9 @@ const ERP = ({ oc, T: _T }) => {
                       {/* Detail lines */}
                       {(it.tipologia || it.highlights || it.entrega) && (
                         <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
-                          {it.tipologia && <span style={{ fontSize: 11, color: T.txt2, fontFamily: font }}>{it.tipologia}</span>}
-                          {it.highlights && <span style={{ fontSize: 11, color: T.txt3, fontFamily: font, fontStyle: "italic" }}>“{it.highlights}”</span>}
-                          {it.entrega && <span style={{ fontSize: 10.5, color: T.txt3, fontFamily: font }}>Entrega: {it.entrega}</span>}
+                          {it.tipologia && <span style={{ fontSize: 12, color: T.txt2, fontFamily: font }}>{it.tipologia}</span>}
+                          {it.highlights && <span style={{ fontSize: 12, color: T.txt3, fontFamily: font, fontStyle: "italic" }}>“{it.highlights}”</span>}
+                          {it.entrega && <span style={{ fontSize: 11.5, color: T.txt3, fontFamily: font }}>Entrega: {it.entrega}</span>}
                         </div>
                       )}
 
@@ -458,17 +458,17 @@ const ERP = ({ oc, T: _T }) => {
                       {(it.masterbroker || it.asesor || it.contacto) && (
                         <div style={{ display: "flex", flexDirection: "column", gap: 3, paddingTop: 2 }}>
                           {it.masterbroker && (
-                            <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 10.5, color: T.txt3, fontFamily: font }}>
+                            <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11.5, color: T.txt3, fontFamily: font }}>
                               <Briefcase size={10} /> {it.masterbroker}
                             </span>
                           )}
                           {it.asesor && (
-                            <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 10.5, color: T.txt3, fontFamily: font }}>
+                            <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11.5, color: T.txt3, fontFamily: font }}>
                               <Building2 size={10} /> Asesor: {it.asesor}
                             </span>
                           )}
                           {it.contacto && (
-                            <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 10.5, color: T.txt3, fontFamily: font }}>
+                            <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11.5, color: T.txt3, fontFamily: font }}>
                               <Phone size={10} /> {it.contacto}
                             </span>
                           )}
@@ -501,7 +501,7 @@ const ERP = ({ oc, T: _T }) => {
                     <tr>
                       {["Desarrollo", "Ubicación", "Ticket", "Clase", "Tipología", "Broker / Asesor", "Entrega", "Contacto", "Enlaces"].map((h) => (
                         <th key={h} style={{
-                          textAlign: "left", padding: "11px 13px", fontSize: 9.5, fontWeight: 400, color: T.txt3,
+                          textAlign: "left", padding: "11px 13px", fontSize: 10.5, fontWeight: 400, color: T.txt3,
                           textTransform: "uppercase", letterSpacing: "0.07em", fontFamily: fontDisp,
                           borderBottom: `1px solid ${T.border}`, whiteSpace: "nowrap",
                           background: isLight ? "rgba(15,23,42,0.03)" : "rgba(255,255,255,0.03)",
@@ -527,7 +527,7 @@ const ERP = ({ oc, T: _T }) => {
                               : <span style={{ color: T.txt3 }}>—</span>}
                           </td>
                           <td style={tdBase}>{it.ticket ? <Pill color={c} s isLight={isLight}>{it.ticket}</Pill> : <span style={{ color: T.txt3 }}>—</span>}</td>
-                          <td style={{ ...tdBase, textTransform: "uppercase", fontSize: 10.5, letterSpacing: "0.03em" }}>{it.clasificacion || "—"}</td>
+                          <td style={{ ...tdBase, textTransform: "uppercase", fontSize: 11.5, letterSpacing: "0.03em" }}>{it.clasificacion || "—"}</td>
                           <td style={tdBase}>{it.tipologia || "—"}</td>
                           <td style={tdBase}>{it.masterbroker || it.asesor || "—"}</td>
                           <td style={tdBase}>{it.entrega || "—"}</td>

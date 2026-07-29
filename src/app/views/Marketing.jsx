@@ -499,7 +499,7 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
     return (
       <span style={{
         display: "inline-flex", alignItems: "center", gap: 5, padding: small ? "2px 8px" : "3px 10px",
-        borderRadius: 999, fontSize: small ? 10.5 : 11.5, fontWeight: 600, fontFamily: font,
+        borderRadius: 999, fontSize: small ? 11.5 : 12, fontWeight: 600, fontFamily: font,
         color: c, background: `${c}1A`, border: `1px solid ${c}40`, whiteSpace: "nowrap",
       }}>{b.nombre}</span>
     );
@@ -510,7 +510,7 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
     const done = estado === "hecha" || estado === "entregada";
     return (
       <span style={{
-        padding: "3px 10px", borderRadius: 999, fontSize: 11, fontFamily: font, whiteSpace: "nowrap",
+        padding: "3px 10px", borderRadius: 999, fontSize: 12, fontFamily: font, whiteSpace: "nowrap",
         color: done ? accent : txt2, background: done ? `${accent}14` : (isLight ? "rgba(15,23,42,0.05)" : "rgba(255,255,255,0.06)"),
         border: `1px solid ${done ? `${accent}40` : bd}`,
       }}>{l}</span>
@@ -544,7 +544,7 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
       {badge > 0 && (
         <span style={{
           minWidth: 17, height: 17, borderRadius: 999, background: RED, color: "#fff",
-          fontSize: 10, fontWeight: 700, display: "inline-flex", alignItems: "center", justifyContent: "center", padding: "0 4px",
+          fontSize: 11, fontWeight: 700, display: "inline-flex", alignItems: "center", justifyContent: "center", padding: "0 4px",
         }}>{badge}</span>
       )}
     </button>
@@ -592,12 +592,12 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
             {unlocked && (
               <span style={{
                 display: "inline-flex", alignItems: "center", gap: 4, padding: "2px 9px", borderRadius: 999,
-                fontSize: 10.5, fontWeight: 700, color: isLight ? "#FFFFFF" : "#04140F",
+                fontSize: 11.5, fontWeight: 700, color: isLight ? "#FFFFFF" : "#04140F",
                 background: accent, whiteSpace: "nowrap",
               }}><Check size={11} strokeWidth={3} /> Desbloqueada</span>
             )}
           </div>
-          <div style={{ fontSize: 11.5, color: txt3, marginTop: 3, display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center" }}>
+          <div style={{ fontSize: 12, color: txt3, marginTop: 3, display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center" }}>
             {p && <span>Proyecto: {p.nombre}</span>}
             {unlocked && dep && <span style={{ color: txt2 }}>· se completó “{dep.titulo}”</span>}
             {blocked && dep && (
@@ -607,7 +607,7 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
         </div>
         {brandChip(t.brand_id)}
         {!blocked && statePill(t.estado)}
-        <div style={{ fontSize: 12, color: overdue ? RED : txt2, fontFamily: font, whiteSpace: "nowrap", fontWeight: overdue ? 700 : 400 }}>
+        <div style={{ fontSize: 12.5, color: overdue ? RED : txt2, fontFamily: font, whiteSpace: "nowrap", fontWeight: overdue ? 700 : 400 }}>
           {overdue ? `Venció ${fmtDia(t.due_at)}` : (t.due_at ? fmtHora(t.due_at) || fmtDia(t.due_at) : "")}
         </div>
         {t.drive_url && (
@@ -635,7 +635,7 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
           {/* Lleva a la CAJA, no al chat: es donde Alex pidió que se reporte. */}
           <button onClick={() => setTab("reporte")} style={{
             background: "transparent", border: `1px solid ${accent}44`, borderRadius: 9, padding: "5px 11px",
-            cursor: "pointer", color: accent, fontSize: 12, fontFamily: font, whiteSpace: "nowrap",
+            cursor: "pointer", color: accent, fontSize: 12.5, fontFamily: font, whiteSpace: "nowrap",
           }}>Contarlo ahora</button>
         </div>
       )}
@@ -647,7 +647,7 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
             <b style={{ fontWeight: 600 }}>Rodaje de hoy</b> — {r.nombre}{r.locacion ? ` · ${r.locacion}` : ""}
           </div>
           {r.drive_url && (
-            <a href={r.drive_url} target="_blank" rel="noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: 6, color: txt2, fontSize: 12, textDecoration: "none" }}>
+            <a href={r.drive_url} target="_blank" rel="noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: 6, color: txt2, fontSize: 12.5, textDecoration: "none" }}>
               <Folder size={14} /> {isMobile ? "" : "Carpeta en Drive"}
             </a>
           )}
@@ -746,9 +746,9 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
         }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <div style={{ flex: 1, fontSize: 13, color: txt, fontWeight: 500, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.nombre}</div>
-            {p.due_date && <span style={{ fontSize: 11, color: txt3, whiteSpace: "nowrap" }}>{fmtDia(p.due_date)}</span>}
+            {p.due_date && <span style={{ fontSize: 12, color: txt3, whiteSpace: "nowrap" }}>{fmtDia(p.due_date)}</span>}
             {p.drive_url && <Folder size={13} color={txt3} />}
-            <span style={{ fontSize: 11, color: txt2, whiteSpace: "nowrap" }}>{prog.done}/{prog.total}</span>
+            <span style={{ fontSize: 12, color: txt2, whiteSpace: "nowrap" }}>{prog.done}/{prog.total}</span>
           </div>
           <div style={{ height: 4, borderRadius: 999, background: isLight ? "rgba(15,23,42,0.07)" : "rgba(255,255,255,0.07)", marginTop: 8, overflow: "hidden" }}>
             <div style={{ width: `${prog.pct}%`, height: "100%", borderRadius: 999, background: c, transition: "width .3s ease" }} />
@@ -756,7 +756,7 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
         </button>
         {open && (
           <div style={{ padding: "2px 13px 13px", display: "flex", flexDirection: "column", gap: 7 }}>
-            {projTasks.length === 0 && <div style={{ fontSize: 12, color: txt3 }}>Sin tareas todavía.</div>}
+            {projTasks.length === 0 && <div style={{ fontSize: 12.5, color: txt3 }}>Sin tareas todavía.</div>}
             {projTasks.map(t => {
               const blocked = isBlocked(t);
               return (
@@ -773,15 +773,15 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
                     {t.titulo}
                     {blocked && <span style={{ color: txt3 }}> · esperando “{taskById[t.depends_on]?.titulo}”</span>}
                   </span>
-                  {t.assignee_id && <span style={{ fontSize: 11, color: txt2, whiteSpace: "nowrap" }}>{nameOf(t.assignee_id)}</span>}
-                  {t.due_at && <span style={{ fontSize: 11, color: txt3, whiteSpace: "nowrap" }}>{fmtDia(t.due_at)}</span>}
+                  {t.assignee_id && <span style={{ fontSize: 12, color: txt2, whiteSpace: "nowrap" }}>{nameOf(t.assignee_id)}</span>}
+                  {t.due_at && <span style={{ fontSize: 12, color: txt3, whiteSpace: "nowrap" }}>{fmtDia(t.due_at)}</span>}
                   {t.evidencia_url && (
                     <button onClick={() => openEvidence(t)} title="Ver evidencia" style={{
                       background: "transparent", border: `1px solid ${accent}44`, borderRadius: 7,
-                      padding: "3px 7px", cursor: "pointer", color: accent, display: "inline-flex", alignItems: "center", gap: 4, fontSize: 10.5, fontFamily: font,
+                      padding: "3px 7px", cursor: "pointer", color: accent, display: "inline-flex", alignItems: "center", gap: 4, fontSize: 11.5, fontFamily: font,
                     }}><Camera size={12} /> Evidencia</button>
                   )}
-                  <select value={t.estado} onChange={e => setTaskState(t, e.target.value)} style={{ ...inputStyle, width: "auto", padding: "3px 6px", fontSize: 11 }}>
+                  <select value={t.estado} onChange={e => setTaskState(t, e.target.value)} style={{ ...inputStyle, width: "auto", padding: "3px 6px", fontSize: 12 }}>
                     {TASK_STATES.map(s => <option key={s.id} value={s.id}>{s.l}</option>)}
                   </select>
                 </div>
@@ -827,7 +827,7 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
             <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
               <span style={{ width: 9, height: 9, borderRadius: 999, background: c, flexShrink: 0 }} />
               <div style={{ flex: 1, fontSize: 14.5, fontWeight: 600, color: txt, fontFamily: fontDisp }}>{b.nombre}</div>
-              <span style={{ fontSize: 11.5, color: txt3 }}>{bProjects.length} proyecto{bProjects.length === 1 ? "" : "s"}</span>
+              <span style={{ fontSize: 12, color: txt3 }}>{bProjects.length} proyecto{bProjects.length === 1 ? "" : "s"}</span>
               <button onClick={() => { setNewProjBrand(newProjBrand === b.id ? null : b.id); setProjForm({ nombre: "", due: "", drive: "" }); }} title="Nuevo proyecto" style={{
                 background: "transparent", border: `1px solid ${bd}`, borderRadius: 9, padding: "5px 8px",
                 cursor: "pointer", color: txt2, display: "flex", alignItems: "center",
@@ -848,12 +848,12 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
               </div>
             )}
             {bProjects.length === 0 && newProjBrand !== b.id && (
-              <div style={{ fontSize: 12, color: txt3 }}>Sin proyectos activos. Agregá el primero con “+”.</div>
+              <div style={{ fontSize: 12.5, color: txt3 }}>Sin proyectos activos. Agregá el primero con “+”.</div>
             )}
             {bProjects.map(p => projectCard(p))}
             {bLoose.length > 0 && (
               <div style={{ display: "flex", flexDirection: "column", gap: 4, borderTop: bProjects.length ? `1px solid ${bd}` : "none", paddingTop: bProjects.length ? 8 : 0 }}>
-                <div style={{ fontSize: 11.5, color: txt3, fontWeight: 600 }}>Sin proyecto · {bLoose.length}</div>
+                <div style={{ fontSize: 12, color: txt3, fontWeight: 600 }}>Sin proyecto · {bLoose.length}</div>
                 {bLoose.map(t => taskRow(t, { overdue: !!(t.due_at && dayStr(t.due_at) < hoy), blocked: isBlocked(t) }))}
               </div>
             )}
@@ -903,11 +903,11 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
     table: { borderCollapse: "separate", borderSpacing: 0, width: "100%", minWidth: 1180, fontFamily: font },
     th: {
       position: "sticky", top: 0, zIndex: 1, textAlign: "left", whiteSpace: "nowrap",
-      padding: "9px 11px", fontSize: 10.5, fontWeight: 600, letterSpacing: 0.3,
+      padding: "9px 11px", fontSize: 11.5, fontWeight: 600, letterSpacing: 0.3,
       color: txt2, background: isLight ? "#EEF2F7" : "rgba(255,255,255,0.055)",
       borderBottom: `1px solid ${bd}`,
     },
-    td: { padding: "9px 11px", fontSize: 12, color: txt2, borderBottom: `1px solid ${bd}`, verticalAlign: "top" },
+    td: { padding: "9px 11px", fontSize: 12.5, color: txt2, borderBottom: `1px solid ${bd}`, verticalAlign: "top" },
     /* La primera columna queda fija al desplazarse a lo ancho: con 17 columnas,
        sin esto se pierde de vista de qué propiedad es la fila que estás llenando.
        El fondo tiene que ser OPACO (el de la tarjeta es translúcido y dejaría
@@ -921,12 +921,12 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
   const chip = (texto, color) => (
     <span style={{
       display: "inline-block", padding: "2px 9px", borderRadius: 999, whiteSpace: "nowrap",
-      fontSize: 10.5, fontWeight: 600, color, background: `${color}1E`, border: `1px solid ${color}44`,
+      fontSize: 11.5, fontWeight: 600, color, background: `${color}1E`, border: `1px solid ${color}44`,
     }}>{texto}</span>
   );
   const linkCel = (url, label) => url
-    ? <a href={url} target="_blank" rel="noreferrer" style={{ color: accent, fontSize: 11.5, textDecoration: "none", whiteSpace: "nowrap" }}>{label}</a>
-    : <span style={{ color: txt3, fontSize: 11.5 }}>—</span>;
+    ? <a href={url} target="_blank" rel="noreferrer" style={{ color: accent, fontSize: 12, textDecoration: "none", whiteSpace: "nowrap" }}>{label}</a>
+    : <span style={{ color: txt3, fontSize: 12 }}>—</span>;
 
   /* ── HOJA 1: el registro de propiedades y grabaciones ── */
 
@@ -1182,7 +1182,7 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
               if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) { e.preventDefault(); guardarCelda(); }
               else if (e.key === "Escape") { e.preventDefault(); setCelda(null); }
             }}
-            style={{ ...inputStyle, padding: "7px 9px", fontSize: 12, lineHeight: 1.5, resize: "vertical", width: "100%" }} />
+            style={{ ...inputStyle, padding: "7px 9px", fontSize: 12.5, lineHeight: 1.5, resize: "vertical", width: "100%" }} />
         );
       }
       return (
@@ -1201,7 +1201,7 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
             else if (e.key === "Tab")    { e.preventDefault(); guardarCelda(nav ? celdaVecina(celda, "derecha") : null); }
             else if (e.key === "Escape") { e.preventDefault(); setCelda(null); }
           }}
-          style={{ ...inputStyle, padding: "4px 7px", fontSize: 12, width: ancho, minWidth: ancho }} />
+          style={{ ...inputStyle, padding: "4px 7px", fontSize: 12.5, width: ancho, minWidth: ancho }} />
       );
     }
     const mostrar = tipo === "date" && valor ? fmtDia(valor) : valor;
@@ -1212,7 +1212,7 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
         style={{
           background: "transparent", border: "none", padding: "2px 0", cursor: "text", textAlign: "left",
           color: mostrar ? (fuerte ? txt : txt2) : txt3,
-          fontSize: fuerte ? 12.5 : 12, fontWeight: fuerte ? 500 : 400,
+          fontSize: fuerte ? 12.5 : 12.5, fontWeight: fuerte ? 500 : 400,
           fontFamily: font, minWidth: 34, width: "100%",
           whiteSpace: multilinea ? "pre-wrap" : undefined, lineHeight: multilinea ? 1.55 : undefined,
         }}>{mostrar || placeholder}</button>
@@ -1242,7 +1242,7 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
         style={{
           appearance: "none", WebkitAppearance: "none", cursor: "pointer", maxWidth: "100%",
           padding: "3px 10px", borderRadius: 999, whiteSpace: "nowrap", fontFamily: font,
-          fontSize: 10.5, fontWeight: 600, colorScheme: isLight ? "light" : "dark",
+          fontSize: 11.5, fontWeight: 600, colorScheme: isLight ? "light" : "dark",
           color: hex || (valor ? txt2 : txt3),
           background: hex ? `${hex}1E` : "transparent",
           border: `1px solid ${hex ? `${hex}44` : bd}`,
@@ -1263,11 +1263,11 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
     return (
       <span style={{ display: "inline-flex", alignItems: "center", gap: 6, whiteSpace: "nowrap" }}>
         {url
-          ? <a href={url} target="_blank" rel="noreferrer" style={{ color: accent, fontSize: 11.5, textDecoration: "none" }}>Abrir</a>
-          : <span style={{ color: txt3, fontSize: 11.5 }}>—</span>}
+          ? <a href={url} target="_blank" rel="noreferrer" style={{ color: accent, fontSize: 12, textDecoration: "none" }}>Abrir</a>
+          : <span style={{ color: txt3, fontSize: 12 }}>—</span>}
         <button onClick={() => setCelda({ id: fila.id, campo, valor: url || "", extra: false, tabla })}
           title={url ? "Cambiar el enlace" : "Poner un enlace"} style={{
-            background: "transparent", border: "none", padding: 0, cursor: "pointer", color: txt3, fontSize: 10.5, fontFamily: font,
+            background: "transparent", border: "none", padding: 0, cursor: "pointer", color: txt3, fontSize: 11.5, fontFamily: font,
           }}>{url ? "editar" : "+"}</button>
       </span>
     );
@@ -1309,18 +1309,18 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
         </select>
         {hayFiltro && (
           <button onClick={() => setPipeFiltro({ q: "", locacion: "", tipo: "", etapa: "", empresa: "" })} style={{
-            background: "transparent", border: "none", cursor: "pointer", color: txt3, fontSize: 11.5, fontFamily: font,
+            background: "transparent", border: "none", cursor: "pointer", color: txt3, fontSize: 12, fontFamily: font,
           }}>Limpiar</button>
         )}
         <button onClick={() => { setShowCols(s => !s); setColForm(null); }} title="Elegir qué columnas ver" style={{
           background: showCols ? `${accent}14` : "transparent", border: `1px solid ${bd}`, borderRadius: 9, padding: "7px 12px",
-          cursor: "pointer", color: txt2, fontSize: 12, fontFamily: font, display: "inline-flex", alignItems: "center", gap: 5,
+          cursor: "pointer", color: txt2, fontSize: 12.5, fontFamily: font, display: "inline-flex", alignItems: "center", gap: 5,
         }}><SlidersHorizontal size={12} /> Columnas{colsOcultas.size > 0 ? ` (${colsOcultas.size} ocultas)` : ""}</button>
         <button onClick={() => { setColForm(c => c ? null : { nombre: "", tipo: "texto" }); setShowCols(false); }} style={{
           background: "transparent", border: `1px solid ${accent}44`, borderRadius: 9, padding: "7px 12px",
-          cursor: "pointer", color: accent, fontSize: 12, fontFamily: font, display: "inline-flex", alignItems: "center", gap: 5,
+          cursor: "pointer", color: accent, fontSize: 12.5, fontFamily: font, display: "inline-flex", alignItems: "center", gap: 5,
         }}><Plus size={12} /> Columna nueva</button>
-        <span style={{ fontSize: 11.5, color: celdaSaving ? accent : txt3, marginLeft: "auto", whiteSpace: "nowrap" }}>
+        <span style={{ fontSize: 12, color: celdaSaving ? accent : txt3, marginLeft: "auto", whiteSpace: "nowrap" }}>
           {celdaSaving ? "Guardando…" : `${pipeFiltrado.length} de ${pipeline.length}`}
         </span>
       </div>
@@ -1329,14 +1329,14 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
           navegador y no le cambia la tabla a nadie más del equipo. */}
       {showCols && (
         <div style={{ ...card, borderRadius: 12, padding: 12, display: "flex", flexWrap: "wrap", gap: 7, alignItems: "center" }}>
-          <span style={{ fontSize: 11, color: txt3, marginRight: 4 }}>Se ven:</span>
+          <span style={{ fontSize: 12, color: txt3, marginRight: 4 }}>Se ven:</span>
           {COLS_REGISTRO.map(c => {
             const visible = c.fija || !colsOcultas.has(c.key);
             return (
               <button key={c.key} onClick={() => { if (!c.fija) toggleCol(c.key); }}
                 title={c.fija ? "Esta siempre se ve" : visible ? "Ocultarla" : "Mostrarla"}
                 style={{
-                  padding: "5px 11px", borderRadius: 999, fontFamily: font, fontSize: 11.5,
+                  padding: "5px 11px", borderRadius: 999, fontFamily: font, fontSize: 12,
                   cursor: c.fija ? "default" : "pointer",
                   border: `1px solid ${visible ? `${accent}55` : bd}`,
                   background: visible ? `${accent}16` : "transparent",
@@ -1345,7 +1345,7 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
             );
           })}
           <button onClick={() => { setColsOcultas(new Set()); try { if (colsKey) localStorage.setItem(colsKey, "[]"); } catch (_) {} }}
-            style={{ background: "transparent", border: "none", cursor: "pointer", color: txt3, fontSize: 11.5, fontFamily: font, marginLeft: "auto" }}>
+            style={{ background: "transparent", border: "none", cursor: "pointer", color: txt3, fontSize: 12, fontFamily: font, marginLeft: "auto" }}>
             Ver todas
           </button>
         </div>
@@ -1354,13 +1354,13 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
       {colForm && (
         <div style={{ ...card, borderRadius: 12, padding: 12, display: "flex", gap: 8, flexWrap: "wrap", alignItems: "flex-end" }}>
           <label style={{ display: "flex", flexDirection: "column", gap: 4, flex: "1 1 200px" }}>
-            <span style={{ fontSize: 10.5, color: txt3 }}>Nombre de la columna</span>
+            <span style={{ fontSize: 11.5, color: txt3 }}>Nombre de la columna</span>
             <input autoFocus value={colForm.nombre} onChange={e => setColForm(c => ({ ...c, nombre: e.target.value }))}
               onKeyDown={e => { if (e.key === "Enter") crearColumna(); }}
               placeholder="Voz en off · Responsable · Campaña…" style={inputStyle} />
           </label>
           <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-            <span style={{ fontSize: 10.5, color: txt3 }}>Qué guarda</span>
+            <span style={{ fontSize: 11.5, color: txt3 }}>Qué guarda</span>
             <select value={colForm.tipo} onChange={e => setColForm(c => ({ ...c, tipo: e.target.value }))} style={{ ...inputStyle, width: "auto" }}>
               <option value="texto">Texto</option>
               <option value="numero">Número</option>
@@ -1374,7 +1374,7 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
             opacity: String(colForm.nombre || "").trim() ? 1 : 0.55,
           }}>Agregar</button>
           <button onClick={() => setColForm(null)} style={{
-            background: "transparent", border: "none", cursor: "pointer", color: txt3, fontSize: 12, fontFamily: font, padding: "9px 4px",
+            background: "transparent", border: "none", cursor: "pointer", color: txt3, fontSize: 12.5, fontFamily: font, padding: "9px 4px",
           }}>Cancelar</button>
         </div>
       )}
@@ -1431,7 +1431,7 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
                         <select value={p.etapa} onChange={e => cambiarEtapa(p.id, e.target.value)} title="Cambiar el estatus" style={{
                           appearance: "none", WebkitAppearance: "none", cursor: "pointer", maxWidth: "100%",
                           padding: "3px 10px", borderRadius: 999, whiteSpace: "nowrap", fontFamily: font,
-                          fontSize: 10.5, fontWeight: 600, color: col, background: `${col}1E`, border: `1px solid ${col}44`,
+                          fontSize: 11.5, fontWeight: 600, color: col, background: `${col}1E`, border: `1px solid ${col}44`,
                           colorScheme: isLight ? "light" : "dark",
                         }}>
                           {ETAPAS.map(s => <option key={s.id} value={s.id}>{s.l}</option>)}
@@ -1446,7 +1446,7 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
                           <select value={p.brand_id || ""} onChange={e => cambiarEmpresa(p.id, e.target.value)} title="¿De qué empresa es?" style={{
                             appearance: "none", WebkitAppearance: "none", cursor: "pointer", maxWidth: "100%",
                             padding: "3px 10px", borderRadius: 999, whiteSpace: "nowrap", fontFamily: font,
-                            fontSize: 10.5, fontWeight: 600,
+                            fontSize: 11.5, fontWeight: 600,
                             color: b ? bc : txt3, background: b ? `${bc}1E` : "transparent",
                             border: `1px solid ${b ? `${bc}44` : bd}`, colorScheme: isLight ? "light" : "dark",
                           }}>
@@ -1475,10 +1475,10 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
                     {archivarId === p.id ? (
                       <span style={{ display: "inline-flex", gap: 6, alignItems: "center", whiteSpace: "nowrap" }}>
                         <button onClick={() => archivarPropiedad(p.id)} style={{
-                          background: "transparent", border: "none", cursor: "pointer", color: RED, fontSize: 11, fontFamily: font, padding: 0,
+                          background: "transparent", border: "none", cursor: "pointer", color: RED, fontSize: 12, fontFamily: font, padding: 0,
                         }}>Quitar</button>
                         <button onClick={() => setArchivarId(null)} style={{
-                          background: "transparent", border: "none", cursor: "pointer", color: txt3, fontSize: 11, fontFamily: font, padding: 0,
+                          background: "transparent", border: "none", cursor: "pointer", color: txt3, fontSize: 12, fontFamily: font, padding: 0,
                         }}>No</button>
                       </span>
                     ) : (
@@ -1502,9 +1502,9 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
                   onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); crearDesdeTabla(); } }}
                   onBlur={() => { if (filaNueva.trim()) crearDesdeTabla(); }}
                   placeholder="+ Agregar propiedad…"
-                  style={{ ...inputStyle, padding: "5px 8px", fontSize: 12, border: `1px dashed ${bd}`, background: "transparent" }} />
+                  style={{ ...inputStyle, padding: "5px 8px", fontSize: 12.5, border: `1px dashed ${bd}`, background: "transparent" }} />
               </td>
-              <td colSpan={colsVista.length} style={{ ...hoja.td, color: txt3, fontSize: 11 }}>
+              <td colSpan={colsVista.length} style={{ ...hoja.td, color: txt3, fontSize: 12 }}>
                 {filaNuevaSaving ? "Agregando…" : "Escribí el nombre y presioná Enter — el resto se llena después, en la misma tabla."}
               </td>
             </tr>
@@ -1519,7 +1519,7 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
           </tbody>
         </table>
       </div>
-      <div style={{ fontSize: 10.5, color: txt3, lineHeight: 1.6 }}>
+      <div style={{ fontSize: 11.5, color: txt3, lineHeight: 1.6 }}>
         Toca cualquier celda para escribir · <b style={{ color: txt2 }}>Enter</b> baja a la de abajo ·{" "}
         <b style={{ color: txt2 }}>Tab</b> pasa a la de al lado · <b style={{ color: txt2 }}>Escape</b> cancela.
         El estatus y la empresa se cambian con su desplegable. «Columnas» esconde las que no uses y
@@ -1571,10 +1571,10 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
           title="Filtrar por día" style={{ ...inputStyle, width: "auto" }} />
         {(repFiltro.q || repFiltro.persona || repFiltro.fecha) && (
           <button onClick={() => setRepFiltro({ q: "", persona: "", fecha: "" })} style={{
-            background: "transparent", border: "none", cursor: "pointer", color: txt3, fontSize: 11.5, fontFamily: font,
+            background: "transparent", border: "none", cursor: "pointer", color: txt3, fontSize: 12, fontFamily: font,
           }}>Limpiar</button>
         )}
-        <span style={{ fontSize: 11.5, color: txt3, marginLeft: "auto", whiteSpace: "nowrap" }}>
+        <span style={{ fontSize: 12, color: txt3, marginLeft: "auto", whiteSpace: "nowrap" }}>
           {bitacoraFiltrada.length} de {bitacora.length}
         </span>
       </div>
@@ -1601,7 +1601,7 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
                     {edit
                       ? celdaEditable(r, "fecha", { tipo: "date", ancho: 130, tabla: BITA })
                       : fmtDia(r.fecha)}
-                    <div style={{ fontSize: 10, color: txt3 }} title="Cuándo se registró">{fmtHora(r.created_at)}</div>
+                    <div style={{ fontSize: 11, color: txt3 }} title="Cuándo se registró">{fmtHora(r.created_at)}</div>
                   </td>
                   <td style={{ ...hoja.td, whiteSpace: "nowrap", color: txt }}>{nameOf(r.profile_id)}</td>
                   <td style={{ ...hoja.td, whiteSpace: "nowrap" }}>{puestoDe(r)}</td>
@@ -1611,7 +1611,7 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
                         onChange={e => guardarCampo(BITA, r.id, "brand_id", e.target.value)}
                         style={{
                           appearance: "none", WebkitAppearance: "none", cursor: "pointer", maxWidth: "100%",
-                          padding: "3px 10px", borderRadius: 999, fontFamily: font, fontSize: 10.5, fontWeight: 600,
+                          padding: "3px 10px", borderRadius: 999, fontFamily: font, fontSize: 11.5, fontWeight: 600,
                           colorScheme: isLight ? "light" : "dark",
                           color: r.brand_id ? brandColor(brandById[r.brand_id]) : txt3,
                           background: r.brand_id ? `${brandColor(brandById[r.brand_id])}1E` : "transparent",
@@ -1632,7 +1632,7 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
                             <button onClick={() => setCelda({ id: r.id, campo: "texto", valor: r.texto || "", extra: false, tabla: BITA })}
                               title="Corregir lo que escribiste" style={{
                                 alignSelf: "flex-start", background: "transparent", border: "none", padding: 0,
-                                cursor: "pointer", color: txt3, fontSize: 10.5, fontFamily: font,
+                                cursor: "pointer", color: txt3, fontSize: 11.5, fontFamily: font,
                               }}>editar</button>
                           )}
                         </div>
@@ -1649,7 +1649,7 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
                         })
                       : (r.tiempo_texto || tiempoDelTexto(r.texto) || "—")}
                     {edit && !r.tiempo_texto && tiempoDelTexto(r.texto) && (
-                      <div style={{ fontSize: 9.5, color: txt3, fontStyle: "italic" }} title="Tomado de lo que escribió — no se lo pedimos aparte">
+                      <div style={{ fontSize: 10.5, color: txt3, fontStyle: "italic" }} title="Tomado de lo que escribió — no se lo pedimos aparte">
                         del texto
                       </div>
                     )}
@@ -1670,7 +1670,7 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
           </tbody>
         </table>
       </div>
-      <div style={{ fontSize: 10.5, color: txt3, lineHeight: 1.6 }}>
+      <div style={{ fontSize: 11.5, color: txt3, lineHeight: 1.6 }}>
         Cada quien puede corregir sus propios reportes{isAdmin ? " (y vos, los de todo el equipo)" : ""} —
         toca la fecha, la empresa, el tiempo o «editar» debajo del texto.
         En el texto largo, <b style={{ color: txt2 }}>Enter</b> hace salto de línea y{" "}
@@ -1689,7 +1689,7 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
           background: isLight ? "rgba(15,23,42,0.04)" : "rgba(255,255,255,0.03)" }}>
           {[["tabla", "Tabla"], ["tablero", "Tablero"]].map(([id, l]) => (
             <button key={id} onClick={() => elegirVista(id)} style={{
-              padding: "5px 13px", borderRadius: 9, cursor: "pointer", fontFamily: font, fontSize: 12,
+              padding: "5px 13px", borderRadius: 9, cursor: "pointer", fontFamily: font, fontSize: 12.5,
               fontWeight: pipeVista === id ? 600 : 500, border: "none",
               background: pipeVista === id ? (isLight ? "#FFFFFF" : "rgba(255,255,255,0.09)") : "transparent",
               color: pipeVista === id ? txt : txt3,
@@ -1752,11 +1752,11 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
               }}>
               <div style={{ display: "flex", alignItems: "center", gap: 7, padding: "2px 4px" }}>
                 {col.id === "esperando_voz" && <Mic size={13} color={isCuello ? RED : txt2} />}
-                <span style={{ flex: 1, fontSize: 12, fontWeight: 700, color: isCuello ? RED : txt2, fontFamily: font, textTransform: "uppercase", letterSpacing: "0.04em", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{col.l}</span>
+                <span style={{ flex: 1, fontSize: 12.5, fontWeight: 700, color: isCuello ? RED : txt2, fontFamily: font, textTransform: "uppercase", letterSpacing: "0.04em", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{col.l}</span>
                 <span style={{
                   minWidth: 20, height: 20, borderRadius: 999, padding: "0 5px",
                   background: isCuello ? RED : (isLight ? "rgba(15,23,42,0.07)" : "rgba(255,255,255,0.08)"),
-                  color: isCuello ? "#fff" : txt2, fontSize: 11, fontWeight: 700,
+                  color: isCuello ? "#fff" : txt2, fontSize: 12, fontWeight: 700,
                   display: "inline-flex", alignItems: "center", justifyContent: "center",
                 }}>{items.length}</span>
               </div>
@@ -1785,18 +1785,18 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
                       }}>{it.nombre}</button>
                     </div>
                     <div style={{ display: "flex", alignItems: "center", gap: 7, flexWrap: "wrap" }}>
-                      {it.locacion && <span style={{ fontSize: 10.5, color: txt2, padding: "2px 8px", borderRadius: 999, background: isLight ? "rgba(15,23,42,0.05)" : "rgba(255,255,255,0.06)", border: `1px solid ${bd}` }}>{it.locacion}</span>}
-                      {it.precio && <span style={{ fontSize: 10.5, color: txt2 }}>{it.precio}</span>}
-                      {it.tipo && <span style={{ fontSize: 10.5, color: txt3 }}>{it.tipo}</span>}
+                      {it.locacion && <span style={{ fontSize: 11.5, color: txt2, padding: "2px 8px", borderRadius: 999, background: isLight ? "rgba(15,23,42,0.05)" : "rgba(255,255,255,0.06)", border: `1px solid ${bd}` }}>{it.locacion}</span>}
+                      {it.precio && <span style={{ fontSize: 11.5, color: txt2 }}>{it.precio}</span>}
+                      {it.tipo && <span style={{ fontSize: 11.5, color: txt3 }}>{it.tipo}</span>}
                     </div>
                     <div style={{ display: "flex", alignItems: "center", gap: 7, flexWrap: "wrap" }}>
                       {it.fecha_rodaje && (
-                        <span style={{ fontSize: 10.5, color: it.fecha_rodaje === hoy ? accent : txt3, display: "inline-flex", alignItems: "center", gap: 3 }} title="Fecha de rodaje">
+                        <span style={{ fontSize: 11.5, color: it.fecha_rodaje === hoy ? accent : txt3, display: "inline-flex", alignItems: "center", gap: 3 }} title="Fecha de rodaje">
                           <CalendarDays size={10} /> {fmtDia(it.fecha_rodaje)}
                         </span>
                       )}
                       {it.fecha_publicacion && (
-                        <span style={{ fontSize: 10.5, color: txt3, display: "inline-flex", alignItems: "center", gap: 3 }} title="Fecha de publicación">
+                        <span style={{ fontSize: 11.5, color: txt3, display: "inline-flex", alignItems: "center", gap: 3 }} title="Fecha de publicación">
                           <ExternalLink size={10} /> {fmtDia(it.fecha_publicacion)}
                         </span>
                       )}
@@ -1824,7 +1824,7 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
                   </div>
                 );
               })}
-              {items.length === 0 && <div style={{ fontSize: 11, color: txt3, textAlign: "center", padding: "14px 0" }}>—</div>}
+              {items.length === 0 && <div style={{ fontSize: 12, color: txt3, textAlign: "center", padding: "14px 0" }}>—</div>}
               </div>
             </div>
           );
@@ -1860,7 +1860,7 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
   const cplxBadge = (c) => {
     const color = c === "AAA" ? AMBER : c === "AA" ? (isLight ? "#B45309" : "#FCD34D") : txt2;
     return (
-      <span style={{ padding: "2px 9px", borderRadius: 7, fontSize: 10.5, fontWeight: 800, fontFamily: font, color, border: `1px solid ${color}55`, background: `${c === "A" ? "transparent" : color + "14"}` }}>{c}</span>
+      <span style={{ padding: "2px 9px", borderRadius: 7, fontSize: 11.5, fontWeight: 800, fontFamily: font, color, border: `1px solid ${color}55`, background: `${c === "A" ? "transparent" : color + "14"}` }}>{c}</span>
     );
   };
 
@@ -1961,16 +1961,16 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
             </select>
           </div>
           <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-            <span style={{ fontSize: 12, color: txt2 }}>Complejidad:</span>
+            <span style={{ fontSize: 12.5, color: txt2 }}>Complejidad:</span>
             {["A", "AA", "AAA"].map(c => (
               <button key={c} onClick={() => setReqForm(f => ({ ...f, complejidad: c }))} style={{
-                padding: "6px 14px", borderRadius: 9, cursor: "pointer", fontSize: 12, fontWeight: 800, fontFamily: font,
+                padding: "6px 14px", borderRadius: 9, cursor: "pointer", fontSize: 12.5, fontWeight: 800, fontFamily: font,
                 border: `1px solid ${reqForm.complejidad === c ? accent : bd}`,
                 background: reqForm.complejidad === c ? `${accent}18` : "transparent",
                 color: reqForm.complejidad === c ? accent : txt2,
               }}>{c}</button>
             ))}
-            <span style={{ fontSize: 10.5, color: txt3 }}>A = simple · AAA = producción compleja (fija expectativas)</span>
+            <span style={{ fontSize: 11.5, color: txt3 }}>A = simple · AAA = producción compleja (fija expectativas)</span>
           </div>
           <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr 1fr" : "1fr 1fr 2fr", gap: 8 }}>
             <input type="date" title="Fecha de entrega" value={reqForm.entrega} onChange={e => setReqForm(f => ({ ...f, entrega: e.target.value }))} style={inputStyle} />
@@ -2020,14 +2020,14 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
             <div style={{ fontSize: 13.5, color: txt, display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
               {r.titulo} {cplxBadge(r.complejidad)}
             </div>
-            <div style={{ fontSize: 11.5, color: txt3, marginTop: 3, display: "flex", gap: 6, flexWrap: "wrap" }}>
+            <div style={{ fontSize: 12, color: txt3, marginTop: 3, display: "flex", gap: 6, flexWrap: "wrap" }}>
               <span>{nameOf(r.solicitante)} → {r.assignee_id ? nameOf(r.assignee_id) : "sin asignar"}</span>
               {r.fecha_entrega && <span>· entrega {fmtDia(r.fecha_entrega)}</span>}
               {r.objetivo && <span>· {r.objetivo}</span>}
             </div>
-            {r.detalle && <div style={{ fontSize: 11.5, color: txt2, marginTop: 3 }}>{r.detalle}</div>}
+            {r.detalle && <div style={{ fontSize: 12, color: txt2, marginTop: 3 }}>{r.detalle}</div>}
             {r.ref_image_url && (
-              <a href={r.ref_image_url} target="_blank" rel="noreferrer" style={{ fontSize: 11, color: accent, textDecoration: "none" }}>Ver referencia →</a>
+              <a href={r.ref_image_url} target="_blank" rel="noreferrer" style={{ fontSize: 12, color: accent, textDecoration: "none" }}>Ver referencia →</a>
             )}
           </div>
           {brandChip(r.brand_id)}
@@ -2035,7 +2035,7 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
             const estado = e.target.value;
             const ok = await patch("mkt_requests", r.id, { estado });
             if (ok) setRequests(prev => prev.map(x => x.id === r.id ? { ...x, estado } : x));
-          }} style={{ ...inputStyle, width: "auto", padding: "5px 8px", fontSize: 11.5 }}>
+          }} style={{ ...inputStyle, width: "auto", padding: "5px 8px", fontSize: 12 }}>
             {REQ_STATES.map(s => <option key={s.id} value={s.id}>{s.l}</option>)}
           </select>
         </div>
@@ -2094,20 +2094,20 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
       <div style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{
-            fontSize: 12, color: txt2, lineHeight: 1.5, whiteSpace: "pre-wrap", wordBreak: "break-word",
+            fontSize: 12.5, color: txt2, lineHeight: 1.5, whiteSpace: "pre-wrap", wordBreak: "break-word",
             ...(abierta ? {} : { display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }),
           }}>{texto || "Sin detalle"}</div>
           {largo && (
             <button onClick={() => toggleBita(r.id)} style={{
               background: "transparent", border: "none", padding: "2px 0 0", cursor: "pointer",
-              color: accent, fontSize: 10.5, fontFamily: font,
+              color: accent, fontSize: 11.5, fontFamily: font,
             }}>{abierta ? "ver menos" : "ver todo"}</button>
           )}
         </div>
         {r.evidencia_url && (
           <a href={r.evidencia_url} target="_blank" rel="noreferrer" title="Abrir evidencia" style={{
             border: `1px solid ${accent}44`, borderRadius: 7, padding: "2px 7px", flexShrink: 0,
-            color: accent, display: "inline-flex", alignItems: "center", gap: 4, fontSize: 10.5, textDecoration: "none",
+            color: accent, display: "inline-flex", alignItems: "center", gap: 4, fontSize: 11.5, textDecoration: "none",
           }}><Folder size={11} /> Evidencia</a>
         )}
       </div>
@@ -2145,7 +2145,7 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
             ...(isAdmin ? [["espacio2", "Espacio 2", "Bitácora del equipo"]] : [])
            ].map(([id, l, ayuda]) => (
             <button key={id} onClick={() => setRepVista(id)} title={ayuda} style={{
-              padding: "5px 13px", borderRadius: 9, cursor: "pointer", fontFamily: font, fontSize: 12,
+              padding: "5px 13px", borderRadius: 9, cursor: "pointer", fontFamily: font, fontSize: 12.5,
               fontWeight: repVista === id ? 600 : 500, border: "none",
               background: repVista === id ? (isLight ? "#FFFFFF" : "rgba(255,255,255,0.09)") : "transparent",
               color: repVista === id ? txt : txt3,
@@ -2156,7 +2156,7 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
         {/* Un renglón que dice QUÉ es cada espacio: «Espacio 1» y «Espacio 2»
             son los nombres que pidió Iván, pero solos no dicen nada. */}
         {repVista !== "hoy" && (
-          <div style={{ fontSize: 12, color: txt2, marginTop: -4 }}>
+          <div style={{ fontSize: 12.5, color: txt2, marginTop: -4 }}>
             {repVista === "espacio1"
               ? "Registro de propiedades y grabaciones — cada propiedad, en qué va su video y todos sus enlaces."
               : "Bitácora del equipo — lo que reportó cada quien, día por día."}
@@ -2174,7 +2174,7 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
               <div style={{ fontSize: isMobile ? 17 : 19, fontWeight: 600, color: txt, fontFamily: fontDisp, lineHeight: 1.25 }}>
                 ¿Qué hiciste hoy{primerNombre ? `, ${primerNombre}` : ""}?
               </div>
-              <div style={{ fontSize: 11.5, color: txt3, marginTop: 3 }}>
+              <div style={{ fontSize: 12, color: txt3, marginTop: 3 }}>
                 Cuéntalo con tus palabras, como se lo dirías a un compañero · {fmtDia(hoy)}
               </div>
             </div>
@@ -2189,21 +2189,21 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
 
             <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 9 }}>
               <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                <span style={{ fontSize: 10.5, color: txt3 }}>¿En qué empresa?</span>
+                <span style={{ fontSize: 11.5, color: txt3 }}>¿En qué empresa?</span>
                 <select value={repForm.empresa} onChange={e => setRepForm(f => ({ ...f, empresa: e.target.value }))} style={inputStyle}>
                   <option value="">— elegir —</option>
                   {brands.map(b => <option key={b.id} value={b.id}>{b.nombre}</option>)}
                 </select>
               </label>
               <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                <span style={{ fontSize: 10.5, color: txt3 }}>¿Cuánto te llevó? (opcional)</span>
+                <span style={{ fontSize: 11.5, color: txt3 }}>¿Cuánto te llevó? (opcional)</span>
                 <input value={repForm.tiempo} onChange={e => setRepForm(f => ({ ...f, tiempo: e.target.value }))}
                   placeholder="de 9 a 12 · 3 hrs · toda la tarde" style={inputStyle} />
               </label>
             </div>
 
             <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-              <span style={{ fontSize: 10.5, color: txt3 }}>Evidencia (opcional) — el enlace de la carpeta o el archivo</span>
+              <span style={{ fontSize: 11.5, color: txt3 }}>Evidencia (opcional) — el enlace de la carpeta o el archivo</span>
               <input value={repForm.evidencia} onChange={e => setRepForm(f => ({ ...f, evidencia: e.target.value }))}
                 placeholder="Pegá el enlace de Drive" style={inputStyle} />
             </label>
@@ -2216,14 +2216,14 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
               }}>{repSaving ? "Guardando…" : "Guardar"}</button>
               {yaReporte && (
                 <button onClick={() => setRepOtro(false)} style={{
-                  background: "transparent", border: "none", cursor: "pointer", color: txt3, fontSize: 12, fontFamily: font,
+                  background: "transparent", border: "none", cursor: "pointer", color: txt3, fontSize: 12.5, fontFamily: font,
                 }}>Cancelar</button>
               )}
               {onOpenCopilot && (
-                <span style={{ fontSize: 11, color: txt3, marginLeft: "auto" }}>
+                <span style={{ fontSize: 12, color: txt3, marginLeft: "auto" }}>
                   ¿Vas manejando?{" "}
                   <button onClick={onOpenCopilot} style={{
-                    background: "transparent", border: "none", padding: 0, cursor: "pointer", color: accent, fontSize: 11, fontFamily: font,
+                    background: "transparent", border: "none", padding: 0, cursor: "pointer", color: accent, fontSize: 12, fontFamily: font,
                   }}>cuéntaselo al Copilot por voz</button>
                 </span>
               )}
@@ -2234,7 +2234,7 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
             <Check size={17} color={accent} strokeWidth={3} />
             <div style={{ flex: 1, minWidth: 180 }}>
               <div style={{ fontSize: 14, color: txt, fontWeight: 500, fontFamily: fontDisp }}>Ya reportaste hoy</div>
-              <div style={{ fontSize: 11.5, color: txt3 }}>Gracias. Si hiciste algo más, súmalo.</div>
+              <div style={{ fontSize: 12, color: txt3 }}>Gracias. Si hiciste algo más, súmalo.</div>
             </div>
             <button onClick={() => setRepOtro(true)} style={{
               padding: "7px 14px", borderRadius: 9, cursor: "pointer", fontFamily: font, fontSize: 12.5,
@@ -2246,13 +2246,13 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
         {/* ── Lo que ya cargó hoy ── */}
         {misReportesHoy.length > 0 && (
           <div style={{ ...card, borderRadius: 14, padding: "13px 16px", display: "flex", flexDirection: "column", gap: 9 }}>
-            <div style={{ fontSize: 10.5, color: txt3, letterSpacing: 0.5, textTransform: "uppercase" }}>Tu reporte de hoy</div>
+            <div style={{ fontSize: 11.5, color: txt3, letterSpacing: 0.5, textTransform: "uppercase" }}>Tu reporte de hoy</div>
             {misReportesHoy.map(r => (
               <div key={r.id} style={{ display: "flex", gap: 9, alignItems: "flex-start", borderTop: `1px solid ${bd}`, paddingTop: 9 }}>
-                <span style={{ fontSize: 10.5, color: txt3, whiteSpace: "nowrap", flexShrink: 0, minWidth: 38, paddingTop: 1 }}>{fmtHora(r.created_at)}</span>
+                <span style={{ fontSize: 11.5, color: txt3, whiteSpace: "nowrap", flexShrink: 0, minWidth: 38, paddingTop: 1 }}>{fmtHora(r.created_at)}</span>
                 <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 4 }}>
                   {(r.brand_id || r.tiempo_texto) && (
-                    <div style={{ display: "flex", gap: 7, flexWrap: "wrap", fontSize: 10.5, color: txt2 }}>
+                    <div style={{ display: "flex", gap: 7, flexWrap: "wrap", fontSize: 11.5, color: txt2 }}>
                       {r.brand_id && <span>{brandById[r.brand_id]?.nombre || ""}</span>}
                       {r.tiempo_texto && <span style={{ color: txt3 }}>· {r.tiempo_texto}</span>}
                     </div>
@@ -2270,7 +2270,7 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
             <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 10, flexWrap: "wrap" }}>
               <div style={{ fontSize: 14, fontWeight: 600, color: txt, fontFamily: fontDisp }}>Tu equipo hoy</div>
               <div style={{
-                fontSize: 11.5, whiteSpace: "nowrap", padding: "2px 9px", borderRadius: 999,
+                fontSize: 12, whiteSpace: "nowrap", padding: "2px 9px", borderRadius: 999,
                 color: reportaron === equipoHoy.length ? accent : reportaron === 0 ? txt3 : AMBER,
                 border: `1px solid ${reportaron === equipoHoy.length ? `${accent}44` : reportaron === 0 ? bd : `${AMBER}44`}`,
               }}>{reportaron} de {equipoHoy.length} reportaron</div>
@@ -2286,12 +2286,12 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
                   <div style={{ display: "flex", alignItems: "baseline", gap: 8, flexWrap: "wrap" }}>
                     <span style={{ fontSize: 12.5, color: rs.length > 0 ? txt : txt2, fontWeight: 500 }}>{m.name}</span>
                     {rs.length > 0
-                      ? <span style={{ fontSize: 10.5, color: txt3 }}>
+                      ? <span style={{ fontSize: 11.5, color: txt3 }}>
                           {fmtHora(rs[0].created_at)}
                           {rs[0].brand_id ? ` · ${brandById[rs[0].brand_id]?.nombre || ""}` : ""}
                           {rs.length > 1 ? ` · ${rs.length} reportes` : ""}
                         </span>
-                      : <span style={{ fontSize: 11, color: txt3 }}>todavía no reportó</span>}
+                      : <span style={{ fontSize: 12, color: txt3 }}>todavía no reportó</span>}
                   </div>
                   {rs.map(r => <div key={r.id}>{reporteTexto(r)}</div>)}
                 </div>
@@ -2335,7 +2335,7 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
           const stat = (label, n, color) => (
             <div key={label} style={{ textAlign: "center", minWidth: isMobile ? 0 : 74, flex: isMobile ? "1 1 0" : "0 0 auto" }}>
               <div style={{ fontSize: 17, fontWeight: 600, color: color || txt, fontFamily: fontDisp }}>{n}</div>
-              <div style={{ fontSize: 10.5, color: txt3 }}>{label}</div>
+              <div style={{ fontSize: 11.5, color: txt3 }}>{label}</div>
             </div>
           );
           return (
@@ -2347,7 +2347,7 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
                 }}>{String(m.name || "?").charAt(0).toUpperCase()}</div>
                 <div style={{ flex: 1, minWidth: 120 }}>
                   <div style={{ fontSize: 13.5, color: txt, fontWeight: 500 }}>{m.name}</div>
-                  <div style={{ fontSize: 11, color: txt3 }}>{m.id === user?.id ? "tú" : "marketing"}</div>
+                  <div style={{ fontSize: 12, color: txt3 }}>{m.id === user?.id ? "tú" : "marketing"}</div>
                 </div>
                 {/* Stats: en móvil ocupan su propia fila a lo ancho, repartidas parejas */}
                 <div style={{ display: "flex", gap: isMobile ? 4 : 10, flex: isMobile ? "1 1 100%" : "0 0 auto", justifyContent: isMobile ? "space-between" : "flex-end" }}>
@@ -2364,14 +2364,14 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
                     return (
                       <div key={t.id} style={{ display: "flex", alignItems: "center", gap: 8 }}>
                         <span style={{ width: 7, height: 7, borderRadius: 999, flexShrink: 0, background: vencida ? RED : isBlocked(t) ? AMBER : `${accent}88` }} />
-                        <span style={{ flex: 1, fontSize: 12, color: txt2, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{t.titulo}</span>
-                        {isBlocked(t) && <span style={{ fontSize: 10, color: AMBER, flexShrink: 0 }}>bloqueada</span>}
-                        <span style={{ fontSize: 10.5, color: vencida ? RED : txt3, whiteSpace: "nowrap", flexShrink: 0 }}>{t.due_at ? fmtDia(t.due_at) : "sin fecha"}</span>
+                        <span style={{ flex: 1, fontSize: 12.5, color: txt2, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{t.titulo}</span>
+                        {isBlocked(t) && <span style={{ fontSize: 11, color: AMBER, flexShrink: 0 }}>bloqueada</span>}
+                        <span style={{ fontSize: 11.5, color: vencida ? RED : txt3, whiteSpace: "nowrap", flexShrink: 0 }}>{t.due_at ? fmtDia(t.due_at) : "sin fecha"}</span>
                       </div>
                     );
                   })}
                   {pendientes.length > 8 && (
-                    <div style={{ fontSize: 10.5, color: txt3 }}>+{pendientes.length - 8} más</div>
+                    <div style={{ fontSize: 11.5, color: txt3 }}>+{pendientes.length - 8} más</div>
                   )}
                 </div>
               )}
@@ -2381,15 +2381,15 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
                   {hechasSemana.slice(0, 6).map(t => (
                     <div key={t.id} style={{ display: "flex", alignItems: "center", gap: 8 }}>
                       <Check size={12} color={accent} strokeWidth={3} style={{ flexShrink: 0 }} />
-                      <span style={{ flex: 1, fontSize: 12, color: txt2, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{t.titulo}</span>
-                      <span style={{ fontSize: 10.5, color: txt3, whiteSpace: "nowrap" }}>{fmtDia(t.updated_at)}</span>
+                      <span style={{ flex: 1, fontSize: 12.5, color: txt2, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{t.titulo}</span>
+                      <span style={{ fontSize: 11.5, color: txt3, whiteSpace: "nowrap" }}>{fmtDia(t.updated_at)}</span>
                       {t.evidencia_url ? (
                         <button onClick={() => openEvidence(t)} title="Ver evidencia" style={{
                           background: "transparent", border: `1px solid ${accent}44`, borderRadius: 7,
-                          padding: "2px 7px", cursor: "pointer", color: accent, display: "inline-flex", alignItems: "center", gap: 4, fontSize: 10.5, fontFamily: font, flexShrink: 0,
+                          padding: "2px 7px", cursor: "pointer", color: accent, display: "inline-flex", alignItems: "center", gap: 4, fontSize: 11.5, fontFamily: font, flexShrink: 0,
                         }}><Camera size={11} /> Evidencia</button>
                       ) : (
-                        <span style={{ fontSize: 10.5, color: txt3, flexShrink: 0 }}>sin evidencia</span>
+                        <span style={{ fontSize: 11.5, color: txt3, flexShrink: 0 }}>sin evidencia</span>
                       )}
                     </div>
                   ))}
@@ -2400,17 +2400,17 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
                   trabajo que nadie había pedido en una lista. */}
               {bitaVisible.length > 0 && (
                 <div style={{ borderTop: `1px solid ${bd}`, paddingTop: 9, display: "flex", flexDirection: "column", gap: 8 }}>
-                  <div style={{ fontSize: 10, color: txt3, letterSpacing: 0.5, textTransform: "uppercase" }}>Días anteriores</div>
+                  <div style={{ fontSize: 11, color: txt3, letterSpacing: 0.5, textTransform: "uppercase" }}>Días anteriores</div>
                   {bitaVisible.map(r => (
                     <div key={r.id} style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
-                      <span style={{ fontSize: 10.5, color: txt3, whiteSpace: "nowrap", flexShrink: 0, minWidth: 40, paddingTop: 1 }}>
+                      <span style={{ fontSize: 11.5, color: txt3, whiteSpace: "nowrap", flexShrink: 0, minWidth: 40, paddingTop: 1 }}>
                         {fmtDia(r.fecha)}
                       </span>
                       <div style={{ flex: 1, minWidth: 0 }}>{reporteTexto(r)}</div>
                     </div>
                   ))}
                   {bita.length > bitaVisible.length && (
-                    <div style={{ fontSize: 10.5, color: txt3 }}>
+                    <div style={{ fontSize: 11.5, color: txt3 }}>
                       +{bita.length - bitaVisible.length} {bita.length - bitaVisible.length === 1 ? "reporte anterior" : "reportes anteriores"}
                     </div>
                   )}
@@ -2419,7 +2419,7 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
             </div>
           );
         })}
-        <div style={{ fontSize: 11, color: txt3, textAlign: "center" }}>
+        <div style={{ fontSize: 12, color: txt3, textAlign: "center" }}>
           Los conteos salen de las tareas del módulo; la bitácora, de lo que reporta cada quien. Vista solo para administración.
         </div>
       </div>
@@ -2478,7 +2478,7 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
           </div>
           <div style={{ minWidth: 0 }}>
             <div style={{ fontSize: 14.5, fontWeight: 650, color: txt, fontFamily: fontDisp, letterSpacing: "-0.01em" }}>Mi Espacio</div>
-            <div style={{ fontSize: 11.5, color: txt2 }}>{firstName} · {MODULE_LABEL}</div>
+            <div style={{ fontSize: 12, color: txt2 }}>{firstName} · {MODULE_LABEL}</div>
           </div>
         </div>
         <div style={{
@@ -2528,7 +2528,7 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
           <Check size={16} color={accent} strokeWidth={2.5} />
           <div style={{ flex: 1, minWidth: 180 }}>
             <div style={{ fontSize: 13, color: txt, fontWeight: 600 }}>«{evidence.task.titulo}» completada</div>
-            <div style={{ fontSize: 11.5, color: txt2, marginTop: 2 }}>Si tienes alguna evidencia (foto, video o link), envíala — suma a tu reporte. Es opcional.</div>
+            <div style={{ fontSize: 12, color: txt2, marginTop: 2 }}>Si tienes alguna evidencia (foto, video o link), envíala — suma a tu reporte. Es opcional.</div>
           </div>
           <label style={{
             background: `${accent}12`, border: `1px dashed ${accent}55`, borderRadius: 10, padding: "9px 13px",
@@ -2616,14 +2616,14 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
                 ["fecha_publicacion", "Fecha de publicación", "date",  ""],
               ].map(([k, label, type, ph]) => (
                 <label key={k} style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                  <span style={{ fontSize: 10.5, color: txt3 }}>{label}</span>
+                  <span style={{ fontSize: 11.5, color: txt3 }}>{label}</span>
                   <input type={type} placeholder={ph} value={ficha[k]}
                     onChange={e => setFicha(f => ({ ...f, [k]: e.target.value }))} style={inputStyle} />
                 </label>
               ))}
             </div>
 
-            <div style={{ fontSize: 10.5, color: txt3, letterSpacing: 0.4, textTransform: "uppercase", paddingTop: 2 }}>Enlaces</div>
+            <div style={{ fontSize: 11.5, color: txt3, letterSpacing: 0.4, textTransform: "uppercase", paddingTop: 2 }}>Enlaces</div>
             <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 9 }}>
               {[
                 ["crudos_url", "Carpeta de crudos"],
@@ -2636,7 +2636,7 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
                 ["drive_url",  "Drive de la propiedad"],
               ].map(([k, label]) => (
                 <label key={k} style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                  <span style={{ fontSize: 10.5, color: txt3, display: "flex", alignItems: "center", gap: 6 }}>
+                  <span style={{ fontSize: 11.5, color: txt3, display: "flex", alignItems: "center", gap: 6 }}>
                     {label}
                     {ficha[k] && <a href={ficha[k]} target="_blank" rel="noreferrer" style={{ color: accent, display: "inline-flex" }} title="Abrir"><ExternalLink size={11} /></a>}
                   </span>
@@ -2647,7 +2647,7 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
             </div>
 
             <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-              <span style={{ fontSize: 10.5, color: txt3 }}>Notas</span>
+              <span style={{ fontSize: 11.5, color: txt3 }}>Notas</span>
               <textarea rows={2} placeholder="Lo que haga falta recordar de esta propiedad" value={ficha.notas}
                 onChange={e => setFicha(f => ({ ...f, notas: e.target.value }))}
                 style={{ ...inputStyle, resize: "vertical", lineHeight: 1.5 }} />

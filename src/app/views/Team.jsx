@@ -38,20 +38,20 @@ const Team = ({ T: _T }) => {
       <div style={{
         display: "grid", gridTemplateColumns: "220px 60px 80px 100px 90px 50px",
         gap: 12, alignItems: "center", padding: "8px 20px", borderBottom: `1px solid ${T.border}`,
-        fontSize: 10, color: T.txt3, textTransform: "uppercase", letterSpacing: "0.07em", fontWeight: 400,
+        fontSize: 11, color: T.txt3, textTransform: "uppercase", letterSpacing: "0.07em", fontWeight: 400,
       }}>
         <span>Asesor</span><span>Deals</span><span>Revenue</span><span>Eficiencia</span><span>Tendencia</span><span style={{ textAlign: "right" }}>Racha</span>
       </div>
       {team.map((m, i) => (
         <div key={i} style={{
           display: "grid", gridTemplateColumns: "220px 60px 80px 100px 90px 50px",
-          gap: 12, alignItems: "center", padding: "14px 20px", borderBottom: `1px solid ${T.border}`, fontSize: 12,
+          gap: 12, alignItems: "center", padding: "14px 20px", borderBottom: `1px solid ${T.border}`, fontSize: 12.5,
         }}>
           <div style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 0 }}>
             <Ico icon={User} sz={36} is={15} c={T.accent} />
             <div style={{ minWidth: 0 }}>
               <p style={{ fontSize: 13, fontWeight: 400, color: T.txt, fontFamily: font, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{m.n}</p>
-              <p style={{ fontSize: 10, color: T.txt3, fontFamily: font, marginTop: 2 }}>{m.r}</p>
+              <p style={{ fontSize: 11, color: T.txt3, fontFamily: font, marginTop: 2 }}>{m.r}</p>
             </div>
           </div>
           <span style={{ color: T.txt, fontWeight: 500, fontSize: 14, fontFamily: fontDisp }}>{m.d}</span>
@@ -60,7 +60,7 @@ const Team = ({ T: _T }) => {
             <div style={{ width: 44, height: 4, borderRadius: 2, background: T.border }}>
               <div style={{ width: `${m.e}%`, height: 4, borderRadius: 2, background: m.e > 85 ? T.emerald : m.e > 70 ? T.blue : T.rose, boxShadow: `0 0 8px ${m.e > 85 ? T.emerald : m.e > 70 ? T.blue : T.rose}40` }} />
             </div>
-            <span style={{ fontSize: 11, color: m.e > 85 ? T.emerald : m.e > 70 ? T.blue : T.rose, fontWeight: 400, fontFamily: fontDisp }}>{m.e}%</span>
+            <span style={{ fontSize: 12, color: m.e > 85 ? T.emerald : m.e > 70 ? T.blue : T.rose, fontWeight: 400, fontFamily: fontDisp }}>{m.e}%</span>
           </div>
           <div style={{ height: 28 }}>
             <ResponsiveContainer width="100%" height={28} minWidth={100} minHeight={10}>
@@ -92,8 +92,8 @@ const Team = ({ T: _T }) => {
             <div key={m.t} style={{ display: "flex", gap: 10, padding: 12, borderRadius: T.rs, background: `${m.c}06`, border: `1px solid ${m.c}10` }}>
               <Ico icon={m.i} sz={32} is={15} c={m.c} />
               <div>
-                <p style={{ fontSize: 12, fontWeight: 500, color: T.txt, fontFamily: font }}>{m.t}</p>
-                <p style={{ fontSize: 10.5, color: T.txt3, marginTop: 1, fontFamily: font }}>{m.d}</p>
+                <p style={{ fontSize: 12.5, fontWeight: 500, color: T.txt, fontFamily: font }}>{m.t}</p>
+                <p style={{ fontSize: 11.5, color: T.txt3, marginTop: 1, fontFamily: font }}>{m.d}</p>
               </div>
             </div>
           ))}
@@ -103,8 +103,8 @@ const Team = ({ T: _T }) => {
         <p style={{ fontSize: 13, fontWeight: 500, color: T.txt, marginBottom: 12 }}>Revenue por asesor</p>
         <ResponsiveContainer width="100%" height={190} minWidth={100} minHeight={100}>
           <BarChart data={team} layout="vertical">
-            <XAxis type="number" tick={{ fill: T.txt3, fontSize: 10, fontFamily: fontDisp }} axisLine={false} tickLine={false} />
-            <YAxis type="category" dataKey="n" tick={{ fill: T.txt2, fontSize: 10, fontFamily: font }} axisLine={false} tickLine={false} width={95} />
+            <XAxis type="number" tick={{ fill: T.txt3, fontSize: 11, fontFamily: fontDisp }} axisLine={false} tickLine={false} />
+            <YAxis type="category" dataKey="n" tick={{ fill: T.txt2, fontSize: 11, fontFamily: font }} axisLine={false} tickLine={false} width={95} />
             <Bar dataKey="d" fill={T.accent} radius={[0, 4, 4, 0]} barSize={14} opacity={0.9} />
           </BarChart>
         </ResponsiveContainer>

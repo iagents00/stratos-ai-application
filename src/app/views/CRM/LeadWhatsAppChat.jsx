@@ -129,7 +129,7 @@ function MediaAttachment({ m, T, isLight }) {
       }}
     >
       <FileText size={16} color={T.txt2} />
-      <span style={{ fontSize: 12, fontFamily: font, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+      <span style={{ fontSize: 12.5, fontFamily: font, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
         {fname}
       </span>
       <Download size={13} color={T.txt3} />
@@ -583,7 +583,7 @@ export default function LeadWhatsAppChat({ lead, T = P, isLight = false, threadM
         <span
           style={{
             display: "inline-flex", alignItems: "center", gap: 6,
-            fontSize: 10.5, fontWeight: 500, letterSpacing: "0.12em",
+            fontSize: 11.5, fontWeight: 500, letterSpacing: "0.12em",
             textTransform: "uppercase", color: headerC, fontFamily: fontDisp,
           }}
         >
@@ -597,7 +597,7 @@ export default function LeadWhatsAppChat({ lead, T = P, isLight = false, threadM
           <span
             style={{
               display: "inline-flex", alignItems: "center", gap: 4,
-              fontSize: 9.5, fontWeight: 500, fontFamily: fontDisp,
+              fontSize: 10.5, fontWeight: 500, fontFamily: fontDisp,
               padding: "3px 8px", borderRadius: 999,
               color: windowOpen ? (isLight ? "#067A5E" : T.accent) : T.amber,
               background: windowOpen
@@ -629,7 +629,7 @@ export default function LeadWhatsAppChat({ lead, T = P, isLight = false, threadM
           Disponible con datos reales del CRM.
         </div>
       ) : loading ? (
-        <div style={{ padding: "10px 4px", fontSize: 12, color: T.txt3, fontFamily: font }}>
+        <div style={{ padding: "10px 4px", fontSize: 12.5, color: T.txt3, fontFamily: font }}>
           Cargando conversación…
         </div>
       ) : !hasThread ? (
@@ -682,7 +682,7 @@ export default function LeadWhatsAppChat({ lead, T = P, isLight = false, threadM
                     }}
                   >
                     {mine && m.senderName && (
-                      <p style={{ fontSize: 9.5, fontWeight: 500, color: accentStrong, fontFamily: fontDisp, marginBottom: 3 }}>
+                      <p style={{ fontSize: 10.5, fontWeight: 500, color: accentStrong, fontFamily: fontDisp, marginBottom: 3 }}>
                         {m.senderName}
                       </p>
                     )}
@@ -703,7 +703,7 @@ export default function LeadWhatsAppChat({ lead, T = P, isLight = false, threadM
                         }}
                       >
                         <Paperclip size={12} color={T.txt2} />
-                        <span style={{ fontSize: 11.5, color: T.txt2, fontFamily: font, maxWidth: 180, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        <span style={{ fontSize: 12, color: T.txt2, fontFamily: font, maxWidth: 180, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                           {m.mediaType === "image" ? "Foto" : m.mediaType === "audio" ? "Audio" : m.mediaType === "video" ? "Video" : cleanFileName(m.mediaFilename)}
                         </span>
                       </div>
@@ -721,7 +721,7 @@ export default function LeadWhatsAppChat({ lead, T = P, isLight = false, threadM
                     <div style={{ display: "flex", alignItems: "center", gap: 5, marginTop: 4, justifyContent: "flex-end" }}>
                       {inFlight && <Clock size={9} color={T.txt3} />}
                       {failed && <AlertTriangle size={9} color="#EF4444" />}
-                      <span style={{ fontSize: 9.5, color: subC, fontFamily: font }}>
+                      <span style={{ fontSize: 10.5, color: subC, fontFamily: font }}>
                         {failed ? "no se envió" : inFlight ? "enviando…" : fmtTime(m.at)}
                       </span>
                       {retryable && (
@@ -734,7 +734,7 @@ export default function LeadWhatsAppChat({ lead, T = P, isLight = false, threadM
                             padding: "1px 7px", borderRadius: 6,
                             cursor: retrying === m.outboxId ? "default" : "pointer",
                             background: "transparent", border: "1px solid rgba(239,68,68,0.4)",
-                            color: "#EF4444", fontSize: 9.5, fontWeight: 500, fontFamily: font,
+                            color: "#EF4444", fontSize: 10.5, fontWeight: 500, fontFamily: font,
                             opacity: retrying === m.outboxId ? 0.5 : 1,
                           }}
                         >
@@ -772,12 +772,12 @@ export default function LeadWhatsAppChat({ lead, T = P, isLight = false, threadM
                   ) : (
                     <>
                       <Paperclip size={13} color={accentStrong} style={{ flexShrink: 0 }} />
-                      <span style={{ flex: 1, minWidth: 0, fontSize: 12, color: T.txt, fontFamily: font, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      <span style={{ flex: 1, minWidth: 0, fontSize: 12.5, color: T.txt, fontFamily: font, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                         {pendingFile.name}
                       </span>
                     </>
                   )}
-                  <span style={{ fontSize: 10, color: subC, fontFamily: font, flexShrink: 0 }}>
+                  <span style={{ fontSize: 11, color: subC, fontFamily: font, flexShrink: 0 }}>
                     {(pendingFile.size / 1024).toFixed(0)} KB
                   </span>
                   <button
@@ -800,7 +800,7 @@ export default function LeadWhatsAppChat({ lead, T = P, isLight = false, threadM
                   }}
                 >
                   <span style={{ width: 9, height: 9, borderRadius: "50%", background: "#EF4444", flexShrink: 0, animation: "pulse 1.2s ease-in-out infinite" }} />
-                  <span style={{ flex: 1, fontSize: 12, fontWeight: 500, color: isLight ? "#B91C1C" : "#FCA5A5", fontFamily: fontDisp }}>
+                  <span style={{ flex: 1, fontSize: 12.5, fontWeight: 500, color: isLight ? "#B91C1C" : "#FCA5A5", fontFamily: fontDisp }}>
                     Grabando nota de voz · {fmtRecSecs(recordSecs)}
                   </span>
                   <button
@@ -810,7 +810,7 @@ export default function LeadWhatsAppChat({ lead, T = P, isLight = false, threadM
                       display: "inline-flex", alignItems: "center", gap: 4, padding: "4px 10px",
                       borderRadius: 7, cursor: "pointer", background: "transparent",
                       border: `1px solid ${isLight ? "rgba(15,23,42,0.14)" : "rgba(255,255,255,0.14)"}`,
-                      color: T.txt2, fontSize: 11, fontWeight: 400, fontFamily: font,
+                      color: T.txt2, fontSize: 12, fontWeight: 400, fontFamily: font,
                     }}
                   >
                     <X size={11} /> Cancelar
@@ -822,7 +822,7 @@ export default function LeadWhatsAppChat({ lead, T = P, isLight = false, threadM
                       display: "inline-flex", alignItems: "center", gap: 4, padding: "4px 10px",
                       borderRadius: 7, cursor: "pointer", border: "none",
                       background: "#EF4444", color: "#FFF",
-                      fontSize: 11, fontWeight: 500, fontFamily: font,
+                      fontSize: 12, fontWeight: 500, fontFamily: font,
                     }}
                   >
                     <Square size={10} /> Listo
@@ -907,11 +907,11 @@ export default function LeadWhatsAppChat({ lead, T = P, isLight = false, threadM
                 })()}
               </div>
               <div style={{ display: "flex", justifyContent: "space-between", marginTop: 4 }}>
-                <span style={{ fontSize: 9.5, color: sendError ? "#EF4444" : subC, fontFamily: font }}>
+                <span style={{ fontSize: 10.5, color: sendError ? "#EF4444" : subC, fontFamily: font }}>
                   {sendError ? `⚠ ${sendError}` : "Enter envía · Shift+Enter salto de línea"}
                 </span>
                 {sending && (
-                  <span style={{ fontSize: 9.5, color: T.txt3, fontFamily: font }}>Enviando…</span>
+                  <span style={{ fontSize: 10.5, color: T.txt3, fontFamily: font }}>Enviando…</span>
                 )}
               </div>
             </div>
@@ -920,7 +920,7 @@ export default function LeadWhatsAppChat({ lead, T = P, isLight = false, threadM
               style={{
                 marginTop: 10, flexShrink: 0, padding: "10px 12px", borderRadius: 10,
                 background: "rgba(251,191,36,0.07)", border: "1px solid rgba(251,191,36,0.22)",
-                fontSize: 11.5, color: isLight ? "#92600A" : T.amber,
+                fontSize: 12, color: isLight ? "#92600A" : T.amber,
                 fontFamily: font, lineHeight: 1.5,
                 display: "flex", alignItems: "flex-start", gap: 8,
               }}

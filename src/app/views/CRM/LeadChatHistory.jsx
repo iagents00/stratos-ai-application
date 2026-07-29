@@ -78,7 +78,7 @@ export default function LeadChatHistory({ lead, T = P, isLight = false }) {
       <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 12 }}>
         <span style={{
           display: "inline-flex", alignItems: "center", gap: 6,
-          fontSize: 10.5, fontWeight: 500, letterSpacing: "0.12em",
+          fontSize: 11.5, fontWeight: 500, letterSpacing: "0.12em",
           textTransform: "uppercase", color: headerC, fontFamily: fontDisp,
         }}>
           <MessageCircle size={11} />
@@ -90,7 +90,7 @@ export default function LeadChatHistory({ lead, T = P, isLight = false }) {
       </div>
 
       {loading ? (
-        <div style={{ padding: "10px 4px", fontSize: 12, color: T.txt3, fontFamily: font }}>
+        <div style={{ padding: "10px 4px", fontSize: 12.5, color: T.txt3, fontFamily: font }}>
           Cargando historial…
         </div>
       ) : items.length === 0 ? (
@@ -115,12 +115,12 @@ export default function LeadChatHistory({ lead, T = P, isLight = false }) {
                 gap: 8, marginBottom: 6,
               }}>
                 <span style={{
-                  fontSize: 11.5, fontWeight: 500, color: T.txt2,
+                  fontSize: 12, fontWeight: 500, color: T.txt2,
                   fontFamily: fontDisp, letterSpacing: "-0.005em",
                 }}>
                   {it.titulo || "Conversación"}
                 </span>
-                <span style={{ fontSize: 10.5, color: subC, fontFamily: font, flexShrink: 0 }}>
+                <span style={{ fontSize: 11.5, color: subC, fontFamily: font, flexShrink: 0 }}>
                   {fmtDateTime(it.created_at)}
                 </span>
               </div>
@@ -133,7 +133,7 @@ export default function LeadChatHistory({ lead, T = P, isLight = false }) {
                 <div style={{
                   marginTop: 8, paddingTop: 6,
                   borderTop: `1px dashed ${isLight ? "rgba(15,23,42,0.06)" : "rgba(255,255,255,0.06)"}`,
-                  fontSize: 10, color: subC, fontFamily: fontDisp, letterSpacing: "0.02em",
+                  fontSize: 11, color: subC, fontFamily: fontDisp, letterSpacing: "0.02em",
                   display: "flex", flexWrap: "wrap", gap: 8,
                 }}>
                   {it.metadata.source && <span>fuente: <strong>{it.metadata.source}</strong></span>}

@@ -231,7 +231,7 @@ const FinanzasAdmin = ({ T: _T }) => {
             <p style={{ fontSize: 22, fontWeight: 300, color: isLight ? T.txt : "#FFF", fontFamily: fontDisp, letterSpacing: "-0.03em" }}>
               Finanzas <span style={{ fontWeight: 400, color: ACC }}>&amp;</span> Administración
             </p>
-            <p style={{ fontSize: 11, color: T.txt3, marginTop: 2, letterSpacing: "0.01em" }}>
+            <p style={{ fontSize: 12, color: T.txt3, marginTop: 2, letterSpacing: "0.01em" }}>
               Ingresos, egresos y flujo de caja · datos en vivo{curSuffix ? ` · ${currency}` : ""}
             </p>
           </div>
@@ -240,14 +240,14 @@ const FinanzasAdmin = ({ T: _T }) => {
             ancho y envuelven: los 3 juntos no caben en una fila y "Nuevo
             movimiento" se cortaba a "Nue movin". Ahora cada botón crece parejo. */}
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap", width: isMobile ? "100%" : "auto", justifyContent: isMobile ? "stretch" : "flex-end" }}>
-          <button onClick={load} title="Actualizar" style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "10px 16px", flex: isMobile ? "1 1 46%" : "0 0 auto", borderRadius: 9, border: `1px solid ${T.border}`, background: T.glass, cursor: "pointer", color: T.txt2, fontSize: 12, fontWeight: 400, fontFamily: fontDisp }}>
+          <button onClick={load} title="Actualizar" style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "10px 16px", flex: isMobile ? "1 1 46%" : "0 0 auto", borderRadius: 9, border: `1px solid ${T.border}`, background: T.glass, cursor: "pointer", color: T.txt2, fontSize: 12.5, fontWeight: 400, fontFamily: fontDisp }}>
             <RefreshCw size={13} style={loading ? { animation: "spin 1s linear infinite" } : undefined} /> Actualizar
           </button>
           <button onClick={exportCSV} disabled={!rows.length} title={rows.length ? "Descargar movimientos en CSV" : "Sin movimientos para exportar"}
-            style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "10px 16px", flex: isMobile ? "1 1 46%" : "0 0 auto", borderRadius: 9, border: `1px solid ${T.border}`, background: T.glass, cursor: rows.length ? "pointer" : "not-allowed", opacity: rows.length ? 1 : 0.5, color: T.txt2, fontSize: 12, fontWeight: 400, fontFamily: fontDisp }}>
+            style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "10px 16px", flex: isMobile ? "1 1 46%" : "0 0 auto", borderRadius: 9, border: `1px solid ${T.border}`, background: T.glass, cursor: rows.length ? "pointer" : "not-allowed", opacity: rows.length ? 1 : 0.5, color: T.txt2, fontSize: 12.5, fontWeight: 400, fontFamily: fontDisp }}>
             <Download size={13} /> Exportar CSV
           </button>
-          <button onClick={() => setTab("caja")} style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "10px 20px", flex: isMobile ? "1 1 100%" : "0 0 auto", borderRadius: 9, border: "none", background: isLight ? ACC : "rgba(255,255,255,0.95)", cursor: "pointer", color: isLight ? "#FFF" : "#0A0F18", fontSize: 12, fontWeight: 500, fontFamily: fontDisp, boxShadow: isLight ? `0 4px 18px ${ACC}44` : "0 4px 18px rgba(255,255,255,0.12)" }}>
+          <button onClick={() => setTab("caja")} style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "10px 20px", flex: isMobile ? "1 1 100%" : "0 0 auto", borderRadius: 9, border: "none", background: isLight ? ACC : "rgba(255,255,255,0.95)", cursor: "pointer", color: isLight ? "#FFF" : "#0A0F18", fontSize: 12.5, fontWeight: 500, fontFamily: fontDisp, boxShadow: isLight ? `0 4px 18px ${ACC}44` : "0 4px 18px rgba(255,255,255,0.12)" }}>
             <Plus size={14} /> Nuevo movimiento
           </button>
         </div>
@@ -266,7 +266,7 @@ const FinanzasAdmin = ({ T: _T }) => {
               flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 7,
               padding: "10px 12px", borderRadius: 9, border: "none", cursor: "pointer",
               background: active ? (isLight ? "rgba(255,255,255,0.9)" : "rgba(255,255,255,0.08)") : "transparent",
-              color: active ? T.txt : T.txt3, fontSize: 12, fontWeight: active ? 700 : 400,
+              color: active ? T.txt : T.txt3, fontSize: 12.5, fontWeight: active ? 700 : 400,
               fontFamily: fontDisp, transition: "all 0.2s",
               boxShadow: active ? (isLight ? "0 1px 6px rgba(15,23,42,0.08)" : "0 1px 8px rgba(0,0,0,0.3)") : "none",
             }}>
@@ -294,7 +294,7 @@ const FinanzasAdmin = ({ T: _T }) => {
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
                 <div>
                   <p style={{ fontSize: 14, fontWeight: 500, color: T.txt, fontFamily: fontDisp }}>Ingresos vs Egresos</p>
-                  <p style={{ fontSize: 11, color: T.txt3, marginTop: 2 }}>Últimos 12 meses</p>
+                  <p style={{ fontSize: 12, color: T.txt3, marginTop: 2 }}>Últimos 12 meses</p>
                 </div>
                 <Pill color={POS} s isLight={isLight}>en vivo</Pill>
               </div>
@@ -304,9 +304,9 @@ const FinanzasAdmin = ({ T: _T }) => {
                     <linearGradient id="faIng" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor={POS} stopOpacity={0.25} /><stop offset="95%" stopColor={POS} stopOpacity={0} /></linearGradient>
                     <linearGradient id="faEgr" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor={NEG} stopOpacity={0.2} /><stop offset="95%" stopColor={NEG} stopOpacity={0} /></linearGradient>
                   </defs>
-                  <XAxis dataKey="mes" tick={{ fontSize: 10, fill: T.txt3 }} axisLine={false} tickLine={false} />
-                  <YAxis tick={{ fontSize: 9, fill: T.txt3 }} axisLine={false} tickLine={false} tickFormatter={v => money(v)} width={52} />
-                  <Tooltip contentStyle={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 8, fontSize: 11 }} formatter={v => [`${money(v)}${curSuffix}`, ""]} labelStyle={{ color: T.txt2 }} />
+                  <XAxis dataKey="mes" tick={{ fontSize: 11, fill: T.txt3 }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fontSize: 10.5, fill: T.txt3 }} axisLine={false} tickLine={false} tickFormatter={v => money(v)} width={52} />
+                  <Tooltip contentStyle={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 8, fontSize: 12 }} formatter={v => [`${money(v)}${curSuffix}`, ""]} labelStyle={{ color: T.txt2 }} />
                   <Area type="monotone" dataKey="ingresos" stroke={POS} strokeWidth={2} fill="url(#faIng)" name="Ingresos" />
                   <Area type="monotone" dataKey="egresos" stroke={NEG} strokeWidth={2} fill="url(#faEgr)" name="Egresos" />
                 </AreaChart>
@@ -315,11 +315,11 @@ const FinanzasAdmin = ({ T: _T }) => {
             <G T={T} np>
               <div style={{ padding: "16px 18px", borderBottom: `1px solid ${T.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <p style={{ fontSize: 13, fontWeight: 500, color: T.txt, fontFamily: fontDisp }}>Últimos movimientos</p>
-                <button onClick={() => setTab("caja")} style={{ fontSize: 11, color: ACC, background: "none", border: "none", cursor: "pointer" }}>Ver todo →</button>
+                <button onClick={() => setTab("caja")} style={{ fontSize: 12, color: ACC, background: "none", border: "none", cursor: "pointer" }}>Ver todo →</button>
               </div>
-              {loading && <div style={{ padding: "24px 18px", color: T.txt3, fontSize: 12, textAlign: "center" }}>Cargando…</div>}
+              {loading && <div style={{ padding: "24px 18px", color: T.txt3, fontSize: 12.5, textAlign: "center" }}>Cargando…</div>}
               {emptyRows && (
-                <div style={{ padding: "28px 18px", color: T.txt3, fontSize: 12, textAlign: "center", lineHeight: 1.6 }}>
+                <div style={{ padding: "28px 18px", color: T.txt3, fontSize: 12.5, textAlign: "center", lineHeight: 1.6 }}>
                   <Inbox size={22} color={T.txt3} style={{ marginBottom: 8, opacity: 0.7 }} />
                   <div>Sin movimientos todavía.</div>
                   <div style={{ marginTop: 2 }}>Registrá el primero en la pestaña <strong style={{ color: T.txt2 }}>Caja</strong>.</div>
@@ -332,10 +332,10 @@ const FinanzasAdmin = ({ T: _T }) => {
                   <div key={r.id} style={{ padding: "12px 18px", borderBottom: `1px solid ${T.border}`, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10 }}>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 3 }}>
-                        <span style={{ fontSize: 9, fontWeight: 500, color: c, background: `${c}15`, padding: "2px 7px", borderRadius: 4 }}>{r.tipo === "ingreso" ? "Ingreso" : "Egreso"}</span>
-                        <span style={{ fontSize: 10, color: T.txt3 }}>{fmtDate(r.spent_at)}</span>
+                        <span style={{ fontSize: 10.5, fontWeight: 500, color: c, background: `${c}15`, padding: "2px 7px", borderRadius: 4 }}>{r.tipo === "ingreso" ? "Ingreso" : "Egreso"}</span>
+                        <span style={{ fontSize: 11, color: T.txt3 }}>{fmtDate(r.spent_at)}</span>
                       </div>
-                      <p style={{ fontSize: 12, color: T.txt, fontWeight: 400, fontFamily: fontDisp, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: 190 }}>
+                      <p style={{ fontSize: 12.5, color: T.txt, fontWeight: 400, fontFamily: fontDisp, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: 190 }}>
                         {r.category || (r.tipo === "ingreso" ? "Ingreso" : "Gasto")}{obra ? ` · ${obra}` : ""}
                       </p>
                     </div>
@@ -353,24 +353,24 @@ const FinanzasAdmin = ({ T: _T }) => {
                 <Ico icon={TrendingDown} sz={32} is={14} c={NEG} />
                 <div>
                   <p style={{ fontSize: 14, fontWeight: 500, color: T.txt, fontFamily: fontDisp }}>Egresos por categoría</p>
-                  <p style={{ fontSize: 11, color: T.txt3 }}>Mes en curso{curSuffix ? ` · ${currency}` : ""}</p>
+                  <p style={{ fontSize: 12, color: T.txt3 }}>Mes en curso{curSuffix ? ` · ${currency}` : ""}</p>
                 </div>
               </div>
             </div>
             {catBreakdown.list.length === 0 ? (
-              <div style={{ padding: "18px 4px", color: T.txt3, fontSize: 12 }}>Sin egresos este mes.</div>
+              <div style={{ padding: "18px 4px", color: T.txt3, fontSize: 12.5 }}>Sin egresos este mes.</div>
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                 {catBreakdown.list.map(([cat, val]) => {
                   const pct = catBreakdown.total > 0 ? (val / catBreakdown.total * 100) : 0;
                   return (
                     <div key={cat} style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                      <span style={{ fontSize: 12, color: T.txt2, fontFamily: fontDisp, width: 150, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", flexShrink: 0 }}>{cat}</span>
+                      <span style={{ fontSize: 12.5, color: T.txt2, fontFamily: fontDisp, width: 150, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", flexShrink: 0 }}>{cat}</span>
                       <div style={{ flex: 1, height: 6, borderRadius: 3, background: T.border, overflow: "hidden" }}>
                         <div style={{ width: `${pct}%`, height: "100%", borderRadius: 3, background: NEG, opacity: 0.85 }} />
                       </div>
-                      <span style={{ fontSize: 12, fontWeight: 500, color: T.txt, fontFamily: fontDisp, width: 90, textAlign: "right", flexShrink: 0 }}>{money(val)}</span>
-                      <span style={{ fontSize: 10, color: T.txt3, width: 38, textAlign: "right", flexShrink: 0 }}>{pct.toFixed(0)}%</span>
+                      <span style={{ fontSize: 12.5, fontWeight: 500, color: T.txt, fontFamily: fontDisp, width: 90, textAlign: "right", flexShrink: 0 }}>{money(val)}</span>
+                      <span style={{ fontSize: 11, color: T.txt3, width: 38, textAlign: "right", flexShrink: 0 }}>{pct.toFixed(0)}%</span>
                     </div>
                   );
                 })}
@@ -397,22 +397,22 @@ const FinanzasAdmin = ({ T: _T }) => {
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 18, flexWrap: "wrap", gap: 8 }}>
               <div>
                 <p style={{ fontSize: 14, fontWeight: 500, color: T.txt, fontFamily: fontDisp }}>Flujo de caja mensual</p>
-                <p style={{ fontSize: 11, color: T.txt3, marginTop: 2 }}>Últimos 12 meses{curSuffix ? ` · ${currency}` : ""}</p>
+                <p style={{ fontSize: 12, color: T.txt3, marginTop: 2 }}>Últimos 12 meses{curSuffix ? ` · ${currency}` : ""}</p>
               </div>
               <div style={{ display: "flex", gap: 16 }}>
                 {[{ c: POS, l: "Ingresos" }, { c: NEG, l: "Egresos" }, { c: ACC, l: "Saldo" }].map(l => (
                   <div key={l.l} style={{ display: "flex", alignItems: "center", gap: 6 }}>
                     <div style={{ width: 10, height: 3, borderRadius: 2, background: l.c }} />
-                    <span style={{ fontSize: 11, color: T.txt3 }}>{l.l}</span>
+                    <span style={{ fontSize: 12, color: T.txt3 }}>{l.l}</span>
                   </div>
                 ))}
               </div>
             </div>
             <ResponsiveContainer width="100%" height={300} minWidth={100} minHeight={100}>
               <BarChart data={series} margin={{ top: 5, right: 10, bottom: 0, left: 0 }} barGap={3}>
-                <XAxis dataKey="mes" tick={{ fontSize: 10, fill: T.txt3 }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fontSize: 9, fill: T.txt3 }} axisLine={false} tickLine={false} tickFormatter={v => money(v)} width={52} />
-                <Tooltip contentStyle={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 8, fontSize: 11 }} formatter={v => [`${money(v)}${curSuffix}`, ""]} labelStyle={{ color: T.txt2 }} cursor={{ fill: isLight ? "rgba(15,23,42,0.04)" : "rgba(255,255,255,0.04)" }} />
+                <XAxis dataKey="mes" tick={{ fontSize: 11, fill: T.txt3 }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fontSize: 10.5, fill: T.txt3 }} axisLine={false} tickLine={false} tickFormatter={v => money(v)} width={52} />
+                <Tooltip contentStyle={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 8, fontSize: 12 }} formatter={v => [`${money(v)}${curSuffix}`, ""]} labelStyle={{ color: T.txt2 }} cursor={{ fill: isLight ? "rgba(15,23,42,0.04)" : "rgba(255,255,255,0.04)" }} />
                 <Bar dataKey="ingresos" fill={POS} radius={[4, 4, 0, 0]} name="Ingresos" opacity={0.85} />
                 <Bar dataKey="egresos" fill={NEG} radius={[4, 4, 0, 0]} name="Egresos" opacity={0.85} />
                 <Bar dataKey="saldo" fill={ACC} radius={[4, 4, 0, 0]} name="Saldo" opacity={0.85} />
@@ -425,7 +425,7 @@ const FinanzasAdmin = ({ T: _T }) => {
             <div style={{ padding: "12px 20px", borderBottom: `1px solid ${T.border}` }}>
               <p style={{ fontSize: 13, fontWeight: 500, color: T.txt, fontFamily: fontDisp }}>Detalle mensual</p>
             </div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr 1fr", gap: 8, minWidth: 560, padding: "9px 20px", borderBottom: `1px solid ${T.border}`, fontSize: 9, color: T.txt3, textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 500 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr 1fr", gap: 8, minWidth: 560, padding: "9px 20px", borderBottom: `1px solid ${T.border}`, fontSize: 10.5, color: T.txt3, textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 500 }}>
               <span>Mes</span><span>Ingresos</span><span>Egresos</span><span>Saldo</span><span>Margen</span>
             </div>
             {series.map(d => {
@@ -433,15 +433,15 @@ const FinanzasAdmin = ({ T: _T }) => {
               const mpct = Math.max(0, Math.min(100, margen));
               return (
                 <div key={d.key} style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr 1fr", gap: 8, minWidth: 560, alignItems: "center", padding: "11px 20px", borderBottom: `1px solid ${T.border}` }}>
-                  <span style={{ fontSize: 12, color: T.txt, fontWeight: 400, fontFamily: fontDisp }}>{d.mes}</span>
-                  <span style={{ fontSize: 12, fontWeight: 400, color: POS, fontFamily: fontDisp }}>{money(d.ingresos)}</span>
-                  <span style={{ fontSize: 12, fontWeight: 400, color: NEG, fontFamily: fontDisp }}>{money(d.egresos)}</span>
+                  <span style={{ fontSize: 12.5, color: T.txt, fontWeight: 400, fontFamily: fontDisp }}>{d.mes}</span>
+                  <span style={{ fontSize: 12.5, fontWeight: 400, color: POS, fontFamily: fontDisp }}>{money(d.ingresos)}</span>
+                  <span style={{ fontSize: 12.5, fontWeight: 400, color: NEG, fontFamily: fontDisp }}>{money(d.egresos)}</span>
                   <span style={{ fontSize: 13, fontWeight: 500, color: d.saldo >= 0 ? ACC : NEG, fontFamily: fontDisp }}>{money(d.saldo)}</span>
                   <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                     <div style={{ flex: 1, height: 4, borderRadius: 2, background: T.border, overflow: "hidden" }}>
                       <div style={{ width: `${mpct}%`, height: "100%", background: ACC, borderRadius: 2 }} />
                     </div>
-                    <span style={{ fontSize: 10, color: T.txt3, fontWeight: 400, fontFamily: fontDisp, width: 40, textAlign: "right" }}>{margen.toFixed(0)}%</span>
+                    <span style={{ fontSize: 11, color: T.txt3, fontWeight: 400, fontFamily: fontDisp, width: 40, textAlign: "right" }}>{margen.toFixed(0)}%</span>
                   </div>
                 </div>
               );

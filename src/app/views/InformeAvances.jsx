@@ -279,7 +279,7 @@ export default function InformeAvances({ T }) {
           <div style={{ fontSize: 14.5, fontFamily: fontDisp, fontWeight: 500, color: txt }}>
             Informe de avances
           </div>
-          <div style={{ fontSize: 12, color: txt2, marginTop: 3, textWrap: "pretty" }}>
+          <div style={{ fontSize: 12.5, color: txt2, marginTop: 3, textWrap: "pretty" }}>
             Junta lo que de verdad se hizo y lo cuenta sin tecnicismos · listo para enviar al cliente
           </div>
         </div>
@@ -313,7 +313,7 @@ export default function InformeAvances({ T }) {
             <input type="date" value={desde} max={hasta} disabled={cargando}
               onChange={(e) => e.target.value && setDesde(e.target.value)}
               aria-label="Desde" style={campoFecha} />
-            <span style={{ color: txt3, fontSize: 12, fontFamily: font }}>al</span>
+            <span style={{ color: txt3, fontSize: 12.5, fontFamily: font }}>al</span>
             <input type="date" value={hasta} min={desde} max={hoyISO()} disabled={cargando}
               onChange={(e) => e.target.value && setHasta(e.target.value)}
               aria-label="Hasta" style={campoFecha} />
@@ -369,7 +369,7 @@ export default function InformeAvances({ T }) {
                 <div style={{ fontSize: 13.5, fontFamily: fontDisp, color: txt }}>
                   {meta?.periodo ? `${fechaLarga(meta.periodo.desde)} al ${fechaLarga(meta.periodo.hasta)}` : "Informe"}
                 </div>
-                <div style={{ fontSize: 11.5, color: txt3, marginTop: 2 }}>
+                <div style={{ fontSize: 12, color: txt3, marginTop: 2 }}>
                   {meta?.jornadas || 0} jornadas · {meta?.reuniones || 0} reuniones
                   {meta?.entregas ? ` · ${meta.entregas} entregas` : ""}
                   {meta && !meta.redactado ? " · versión resumida" : ""}
@@ -416,7 +416,7 @@ export default function InformeAvances({ T }) {
           <div style={{ fontSize: 13.5, color: txt2, marginTop: 12, fontFamily: font, textWrap: "pretty" }}>
             Elegí el periodo y dale a «Generar informe».
           </div>
-          <div style={{ fontSize: 12, color: txt3, marginTop: 6, maxWidth: 470, marginLeft: "auto", marginRight: "auto", textWrap: "pretty" }}>
+          <div style={{ fontSize: 12.5, color: txt3, marginTop: 6, maxWidth: 470, marginLeft: "auto", marginRight: "auto", textWrap: "pretty" }}>
             Sale día a día, agrupado por semana, de lo que quedó registrado: el trabajo
             del periodo, las reuniones, las tareas cerradas y el avance de los proyectos.
             Lo del domingo se reporta en el sábado.

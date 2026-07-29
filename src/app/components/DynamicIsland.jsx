@@ -99,7 +99,7 @@ const DynIsland = ({ onExpand, notifications = [] }) => {
             {isOpen && !selectedNotif && (
               <div style={{ padding: "16px 0" }}>
                 <div style={{ padding: "0 24px", marginBottom: 14, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <span style={{ fontSize: 11, color: P.txt3, fontWeight: 500, letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: fontDisp }}>Centro de Inteligencia — Activo</span>
+                  <span style={{ fontSize: 12, color: P.txt3, fontWeight: 500, letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: fontDisp }}>Centro de Inteligencia — Activo</span>
                   <button onClick={() => { setIsOpen(false); }} style={{ background: "none", border: "none", cursor: "pointer", padding: 4, color: P.txt2, display: "flex", alignItems: "center" }}><X size={14} /></button>
                 </div>
                 {msgs.map((m, i) => (
@@ -113,7 +113,7 @@ const DynIsland = ({ onExpand, notifications = [] }) => {
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <p style={{ fontSize: 13, color: "#FFFFFF", fontWeight: 400, fontFamily: fontDisp, marginBottom: 2 }}>{m.agent}</p>
-                      <p style={{ fontSize: 12, color: P.txt2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", fontFamily: font }}>{m.text}</p>
+                      <p style={{ fontSize: 12.5, color: P.txt2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", fontFamily: font }}>{m.text}</p>
                     </div>
                     <ChevronRight size={14} color={P.txt3} />
                   </div>
@@ -129,7 +129,7 @@ const DynIsland = ({ onExpand, notifications = [] }) => {
                   </div>
                   <div style={{ flex: 1 }}>
                     <p style={{ fontSize: 14, color: "#FFFFFF", fontWeight: 400, fontFamily: fontDisp }}>{selectedNotif.agent}</p>
-                    <p style={{ fontSize: 11, color: P.txt2 }}>Actualización Importante</p>
+                    <p style={{ fontSize: 12, color: P.txt2 }}>Actualización Importante</p>
                   </div>
                   <button onClick={() => setSelectedNotif(null)} style={{ background: "rgba(255,255,255,0.05)", border: "none", color: "#FFF", borderRadius: "50%", width: 24, height: 24, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}><X size={14} /></button>
                 </div>

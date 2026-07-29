@@ -77,7 +77,7 @@ export const Pill = ({ children, color = P.accent, small }) => (
     gap:           4,
     padding:       small ? "2px 8px" : "4px 11px",
     borderRadius:  99,
-    fontSize:      small ? 10 : 11,
+    fontSize:      small ? 11 : 12,
     fontWeight:    600,
     color,
     background:    `${color}12`,
@@ -143,7 +143,7 @@ export const KPICard = ({ label, value, sub, icon, color = P.accent }) => (
       </p>
       {sub && (
         <p style={{
-          fontSize: 12, color: P.emerald, marginTop: 10,
+          fontSize: 12.5, color: P.emerald, marginTop: 10,
           display: "flex", alignItems: "center", gap: 3, fontWeight: 500,
         }}>
           <ArrowUpRight size={12} />{sub}

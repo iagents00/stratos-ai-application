@@ -426,7 +426,7 @@ const ZoomControl = ({ theme = "dark" }) => {
             return (
               <button key={r.id} onClick={() => setRange(r.id)} style={{
                 padding: isMobile ? "11px 15px" : "7px 13px", borderRadius: 9, border: "none", cursor: "pointer",
-                fontSize: 12, fontWeight: active ? 700 : 600, fontFamily: fontDisp,
+                fontSize: 12.5, fontWeight: active ? 700 : 600, fontFamily: fontDisp,
                 background: active ? (isLight ? accent : `${accent}22`) : "transparent",
                 color: active ? (isLight ? "#06080F" : accent) : T.txt2,
               }}>{r.label}</button>
@@ -452,7 +452,7 @@ const ZoomControl = ({ theme = "dark" }) => {
             style={{
               display: "inline-flex", alignItems: "center", gap: 6,
               padding: isMobile ? "11px 15px" : "8px 13px", borderRadius: 10, cursor: "pointer",
-              fontSize: 12, fontWeight: hotOnly ? 700 : 600, fontFamily: fontDisp,
+              fontSize: 12.5, fontWeight: hotOnly ? 700 : 600, fontFamily: fontDisp,
               background: hotOnly ? "rgba(220,38,38,0.14)" : subtleBg,
               color: hotOnly ? "#DC2626" : T.txt2,
               border: `1px solid ${hotOnly ? "rgba(220,38,38,0.45)" : cardBorder}`,
@@ -500,7 +500,7 @@ const ZoomControl = ({ theme = "dark" }) => {
               const esHoy = item.fecha === today;
               return (
                 <div key={`msep-${item.fecha || idx}`} style={{
-                  padding: "10px 4px 0", fontSize: 11.5, fontWeight: 600, fontFamily: fontDisp,
+                  padding: "10px 4px 0", fontSize: 12, fontWeight: 600, fontFamily: fontDisp,
                   textTransform: "uppercase", letterSpacing: "0.05em",
                   color: esHoy ? accent : T.txt2,
                 }}>
@@ -529,11 +529,11 @@ const ZoomControl = ({ theme = "dark" }) => {
                     {r.calentito && <Flame size={14} color="#DC2626" strokeWidth={2.6} style={{ flexShrink: 0 }} />}
                     <span style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.cliente || "—"}</span>
                   </div>
-                  <div style={{ marginTop: 3, fontSize: 12, color: T.txt2, fontFamily: font, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  <div style={{ marginTop: 3, fontSize: 12.5, color: T.txt2, fontFamily: font, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                     {(r.proyecto || "—")} · {(r.liner || "—")} → {(r.presentador_principal || "—")}
                   </div>
                   {r.comentarios && (
-                    <div style={{ marginTop: 4, fontSize: 11.5, color: T.txt3, fontFamily: font, lineHeight: 1.45, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
+                    <div style={{ marginTop: 4, fontSize: 12, color: T.txt3, fontFamily: font, lineHeight: 1.45, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
                       {r.comentarios}
                     </div>
                   )}
@@ -543,7 +543,7 @@ const ZoomControl = ({ theme = "dark" }) => {
                     <button onClick={() => toggleDiscovery(r)} style={{
                       display: "inline-flex", alignItems: "center", gap: 6, minHeight: 40,
                       padding: "0 14px", borderRadius: 12, cursor: "pointer",
-                      fontSize: 12, fontWeight: 500, fontFamily: fontDisp,
+                      fontSize: 12.5, fontWeight: 500, fontFamily: fontDisp,
                       color: r.discovery ? "#10B981" : T.txt2,
                       background: r.discovery ? "rgba(16,185,129,0.12)" : (isLight ? "rgba(15,23,42,0.04)" : "rgba(255,255,255,0.05)"),
                       border: `1px solid ${r.discovery ? "rgba(16,185,129,0.35)" : (isLight ? "rgba(15,23,42,0.10)" : "rgba(255,255,255,0.10)")}`,
@@ -638,7 +638,7 @@ const ZoomControl = ({ theme = "dark" }) => {
                         position: "sticky", top: zoomTableHeaderHeight, zIndex: 3,
                         backgroundClip: "padding-box",
                         boxShadow: `0 -1px 0 ${sepBg}, inset 0 1px 0 ${rowBorder}, inset 0 -1px 0 ${rowBorder}`,
-                        fontSize: 11.5, fontWeight: 500, fontFamily: fontDisp,
+                        fontSize: 12, fontWeight: 500, fontFamily: fontDisp,
                         textTransform: "uppercase", letterSpacing: "0.05em",
                         color: esHoy ? accent : T.txt2,
                       }}>
@@ -692,7 +692,7 @@ const ZoomControl = ({ theme = "dark" }) => {
                         style={{
                           display: "inline-flex", alignItems: "center", gap: 5,
                           padding: "4px 11px", borderRadius: 99, cursor: "pointer",
-                          fontSize: 11.5, fontWeight: 500, fontFamily: fontDisp, lineHeight: 1.4,
+                          fontSize: 12, fontWeight: 500, fontFamily: fontDisp, lineHeight: 1.4,
                           color: r.discovery ? "#10B981" : T.txt2,
                           background: discoveryOpenId === r.id
                             ? (r.discovery ? "rgba(16,185,129,0.20)" : (isLight ? "rgba(15,23,42,0.09)" : "rgba(255,255,255,0.10)"))
@@ -764,7 +764,7 @@ const ZoomControl = ({ theme = "dark" }) => {
                               <div style={{ fontSize: 13.5, fontWeight: 500, color: T.txt, fontFamily: fontDisp, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                                 Discovery — {r.cliente || "—"}
                               </div>
-                              <div style={{ fontSize: 11, color: T.txt3, fontFamily: font }}>
+                              <div style={{ fontSize: 12, color: T.txt3, fontFamily: font }}>
                                 Presupuesto, ubicación, intereses — lo que el presentador necesita antes del Zoom.
                               </div>
                             </div>
@@ -790,7 +790,7 @@ const ZoomControl = ({ theme = "dark" }) => {
                           />
                           {/* Barra de acciones a la mano, pegada al texto. */}
                           <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 10, flexWrap: "wrap" }}>
-                            <span style={{ fontSize: 10.5, color: T.txt3, fontFamily: font }}>
+                            <span style={{ fontSize: 11.5, color: T.txt3, fontFamily: font }}>
                               {discoveryDraft ? `${discoveryDraft.length.toLocaleString("es-MX")} caracteres` : "Sin texto aún"}
                               <span style={{ opacity: 0.7 }}>  ·  ⌘↵ Guardar  ·  Esc Cerrar</span>
                             </span>
@@ -799,7 +799,7 @@ const ZoomControl = ({ theme = "dark" }) => {
                                 <button onClick={copyDiscovery} disabled={busy} title="Copiar el discovery al portapapeles" style={{
                                   display: "inline-flex", alignItems: "center", gap: 6,
                                   padding: "8px 12px", borderRadius: 9, cursor: busy ? "default" : "pointer",
-                                  fontSize: 12, fontWeight: 400, fontFamily: fontDisp,
+                                  fontSize: 12.5, fontWeight: 400, fontFamily: fontDisp,
                                   background: "transparent", color: discCopied ? "#10B981" : T.txt2,
                                   border: `1px solid ${discCopied ? "rgba(16,185,129,0.40)" : (isLight ? "rgba(15,23,42,0.12)" : "rgba(255,255,255,0.12)")}`,
                                   transition: "color 0.15s, border-color 0.15s",
@@ -810,7 +810,7 @@ const ZoomControl = ({ theme = "dark" }) => {
                               )}
                               <button onClick={() => setDiscoveryOpenId(null)} disabled={busy} style={{
                                 padding: "8px 14px", borderRadius: 9, cursor: busy ? "default" : "pointer",
-                                fontSize: 12, fontWeight: 400, fontFamily: fontDisp,
+                                fontSize: 12.5, fontWeight: 400, fontFamily: fontDisp,
                                 background: "transparent", color: T.txt2,
                                 border: `1px solid ${isLight ? "rgba(15,23,42,0.12)" : "rgba(255,255,255,0.12)"}`,
                               }}>Cancelar</button>
@@ -818,7 +818,7 @@ const ZoomControl = ({ theme = "dark" }) => {
                                 display: "inline-flex", alignItems: "center", gap: 6,
                                 padding: "8px 16px", borderRadius: 9,
                                 cursor: busy || !discDirtyFor(r) ? "default" : "pointer",
-                                fontSize: 12, fontWeight: 500, fontFamily: fontDisp,
+                                fontSize: 12.5, fontWeight: 500, fontFamily: fontDisp,
                                 background: "#10B981", color: "#FFFFFF", border: "none",
                                 boxShadow: busy || !discDirtyFor(r) ? "none" : "0 2px 8px rgba(16,185,129,0.35)",
                                 opacity: busy ? 0.7 : (!discDirtyFor(r) ? 0.45 : 1),
@@ -879,7 +879,7 @@ const ZoomControl = ({ theme = "dark" }) => {
                   <span style={{
                     minWidth: 18, height: 18, padding: "0 5px", borderRadius: 99,
                     display: "inline-flex", alignItems: "center", justifyContent: "center",
-                    fontSize: 10, fontWeight: 500, fontFamily: fontDisp,
+                    fontSize: 11, fontWeight: 500, fontFamily: fontDisp,
                     color: "#FFFFFF", background: badgeColor,
                   }}>{badge}</span>
                 )}
@@ -1064,11 +1064,11 @@ function ZoomModal({ T, isLight, accent, editing, form, setField, formErr, busy,
                 <div style={{ fontSize: 12.5, fontWeight: 500, color: form.calentito ? "#DC2626" : T.txt, fontFamily: fontDisp }}>
                   Alta intención de cierre
                 </div>
-                <div style={{ fontSize: 11, color: T.txt3, fontFamily: font }}>
+                <div style={{ fontSize: 12, color: T.txt3, fontFamily: font }}>
                   Señal de cierre en el Zoom: carta oferta, identificación enviada o cuentas solicitadas para apartar.
                 </div>
               </div>
-              <span style={{ fontSize: 11.5, fontWeight: 500, fontFamily: fontDisp, color: form.calentito ? "#DC2626" : T.txt3 }}>
+              <span style={{ fontSize: 12, fontWeight: 500, fontFamily: fontDisp, color: form.calentito ? "#DC2626" : T.txt3 }}>
                 {form.calentito ? "Sí" : "No"}
               </span>
             </div>
@@ -1076,7 +1076,7 @@ function ZoomModal({ T, isLight, accent, editing, form, setField, formErr, busy,
         </div>
 
         {formErr && (
-          <div style={{ marginTop: 12, fontSize: 12, color: T.rose, fontFamily: font }}>{formErr}</div>
+          <div style={{ marginTop: 12, fontSize: 12.5, color: T.rose, fontFamily: font }}>{formErr}</div>
         )}
 
         <div style={{ display: "flex", justifyContent: "flex-end", gap: 9, marginTop: 18 }}>
@@ -1126,7 +1126,7 @@ function EditableSelect({ T, isLight, value, options, onChange, placeholder }) {
 function Field({ T, label, children, full }) {
   return (
     <div style={{ gridColumn: full ? "1 / -1" : "auto", display: "flex", flexDirection: "column", gap: 5 }}>
-      <label style={{ fontSize: 11.5, fontWeight: 500, color: T.txt2, fontFamily: fontDisp, textTransform: "uppercase", letterSpacing: "0.04em" }}>{label}</label>
+      <label style={{ fontSize: 12, fontWeight: 500, color: T.txt2, fontFamily: fontDisp, textTransform: "uppercase", letterSpacing: "0.04em" }}>{label}</label>
       {children}
     </div>
   );
@@ -1162,7 +1162,7 @@ function iconBtn(T, isLight) {
 function thStyle(T, align) {
   return {
     padding: "12px 14px", textAlign: align,
-    fontSize: 11.5, fontWeight: 500, color: T.txt2, fontFamily: fontDisp,
+    fontSize: 12, fontWeight: 500, color: T.txt2, fontFamily: fontDisp,
     textTransform: "uppercase", letterSpacing: "0.06em", whiteSpace: "nowrap",
   };
 }

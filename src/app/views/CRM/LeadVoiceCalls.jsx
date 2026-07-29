@@ -73,7 +73,7 @@ function CallRow({ log, T, isLight }) {
                 </span>
               )}
             </p>
-            <p style={{ margin: "1px 0 0", fontSize: 10.5, color: subC, fontFamily: font }}>
+            <p style={{ margin: "1px 0 0", fontSize: 11.5, color: subC, fontFamily: font }}>
               {fmtDateTime(log.created_at)}
               {log.disconnection_reason && (
                 <span style={{ marginLeft: 8, opacity: 0.85 }}>· {log.disconnection_reason}</span>
@@ -103,7 +103,7 @@ function CallRow({ log, T, isLight }) {
           fontSize: 12.5, color: T.txt, fontFamily: font, lineHeight: 1.55,
         }}>
           <p style={{
-            margin: "0 0 4px", fontSize: 9.5, fontWeight: 500,
+            margin: "0 0 4px", fontSize: 10.5, fontWeight: 500,
             letterSpacing: "0.08em", textTransform: "uppercase",
             color: subC, fontFamily: fontDisp,
           }}>Resumen IA</p>
@@ -121,7 +121,7 @@ function CallRow({ log, T, isLight }) {
               marginTop: 8, display: "inline-flex", alignItems: "center", gap: 4,
               padding: "4px 9px", borderRadius: 6,
               background: "transparent", border: `1px solid ${T.border}`,
-              color: subC, fontSize: 10.5, fontWeight: 400, fontFamily: fontDisp,
+              color: subC, fontSize: 11.5, fontWeight: 400, fontFamily: fontDisp,
               cursor: "pointer", letterSpacing: "0.02em",
             }}
           >
@@ -133,7 +133,7 @@ function CallRow({ log, T, isLight }) {
               marginTop: 8, padding: 10, borderRadius: 8,
               background: isLight ? "#FFFFFF" : "rgba(0,0,0,0.18)",
               border: `1px solid ${T.border}`,
-              color: T.txt2, fontSize: 11.5, lineHeight: 1.55,
+              color: T.txt2, fontSize: 12, lineHeight: 1.55,
               fontFamily: "ui-monospace, 'SF Mono', Menlo, monospace",
               whiteSpace: "pre-wrap", wordBreak: "break-word",
               maxHeight: 260, overflowY: "auto",
@@ -183,7 +183,7 @@ export default function LeadVoiceCalls({ lead, T = P, isLight = false }) {
       <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
         <span style={{
           display: "inline-flex", alignItems: "center", gap: 6,
-          fontSize: 10.5, fontWeight: 500, letterSpacing: "0.12em",
+          fontSize: 11.5, fontWeight: 500, letterSpacing: "0.12em",
           textTransform: "uppercase", color: headerC, fontFamily: fontDisp,
         }}>
           <Phone size={11} />

@@ -1623,7 +1623,7 @@ export default function App() {
             animation: "stratosSpin 0.9s linear infinite",
           }} />
           <div style={{
-            fontSize: 12, letterSpacing: "0.08em", textTransform: "uppercase",
+            fontSize: 12.5, letterSpacing: "0.08em", textTransform: "uppercase",
             color: T.txt2, fontWeight: 500,
           }}>
             {clientConfig?.brand?.appWordmark || "Stratos AI"}
@@ -1695,7 +1695,7 @@ export default function App() {
             ? <CopilotMark size={iconSize + 3} isLight={isLight} style={{ opacity: a ? 1 : (hasAccess ? 0.82 : 1) }} />
             : <IosIcon name={n.id} filled={a} size={iconSize} color={a ? activeIcon : (isLight ? "rgba(15,23,42,0.45)" : "rgba(255,255,255,0.40)")} />}
         </button>
-        <span style={{ width:"100%", fontSize:7.2, fontFamily:fontDisp, fontWeight: a ? 650 : 430, letterSpacing: a ? "0.01em" : "0.005em", textAlign:"center",
+        <span style={{ width:"100%", fontSize:9, fontFamily:fontDisp, fontWeight: a ? 650 : 430, letterSpacing: a ? "0.01em" : "0.005em", textAlign:"center",
           color: a ? activeIcon : (isLight ? "rgba(15,23,42,0.38)" : "rgba(255,255,255,0.28)"),
           lineHeight:1, userSelect:"none", transition:"color 0.18s ease",
         }}>{clientConfig?.navLabels?.[n.id] ?? n.l}</span>
@@ -1873,7 +1873,7 @@ export default function App() {
           </div>
           <div style={{ display:"flex", alignItems:"center", gap:4 }}>
             <div style={{ width:4, height:4, borderRadius:"50%", background:"#34D399", boxShadow:"0 0 5px rgba(52,211,153,0.80), 0 0 10px rgba(52,211,153,0.30)", animation:"pulse 2.2s ease-in-out infinite", willChange:"transform, opacity" }} />
-            <span style={{ fontSize:7, fontFamily:fontDisp, fontWeight:500, letterSpacing:"0.18em", textTransform:"uppercase", color: isLight ? "rgba(15,23,42,0.32)" : "rgba(255,255,255,0.28)", lineHeight:1 }}>Live</span>
+            <span style={{ fontSize:8.5, fontFamily:fontDisp, fontWeight:500, letterSpacing:"0.18em", textTransform:"uppercase", color: isLight ? "rgba(15,23,42,0.32)" : "rgba(255,255,255,0.28)", lineHeight:1 }}>Live</span>
           </div>
           <div style={{ width:28, height:1, background: isLight ? "linear-gradient(90deg, transparent, rgba(13,154,118,0.18), transparent)" : "linear-gradient(90deg, transparent, rgba(110,231,194,0.12), transparent)" }} />
         </div>
@@ -1903,15 +1903,15 @@ export default function App() {
                   padding:"1.5px 5px", borderRadius:99,
                   background: isLight ? "rgba(13,154,118,0.08)" : "rgba(52,211,153,0.13)",
                 }}>
-                  <span style={{ fontSize:5.5, fontFamily:fontDisp, fontWeight:500, letterSpacing:"0.06em", color: isLight ? "rgba(13,154,118,0.60)" : "rgba(52,211,153,0.52)" }}>ACT</span>
-                  <span style={{ fontSize:7.5, fontFamily:fontDisp, fontWeight:400, letterSpacing:"-0.01em", fontVariantNumeric:"tabular-nums", color: isLight ? "rgba(15,23,42,0.66)" : "rgba(255,255,255,0.62)" }}>{actDone}/{actTotal}</span>
+                  <span style={{ fontSize:7, fontFamily:fontDisp, fontWeight:500, letterSpacing:"0.06em", color: isLight ? "rgba(13,154,118,0.60)" : "rgba(52,211,153,0.52)" }}>ACT</span>
+                  <span style={{ fontSize:9, fontFamily:fontDisp, fontWeight:400, letterSpacing:"-0.01em", fontVariantNumeric:"tabular-nums", color: isLight ? "rgba(15,23,42,0.66)" : "rgba(255,255,255,0.62)" }}>{actDone}/{actTotal}</span>
                 </span>
               </div>
               <span style={{ fontSize: pc >= 100 ? 30 : 33, fontWeight: pc >= 100 ? 400 : 200, fontFamily:fontDisp, letterSpacing:"-0.04em", lineHeight:1, color: isLight ? (pc >= 100 ? "#0D9A76" : "#082818") : (pc >= 100 ? "#34D399" : "#FFFFFF"), display:"block", position:"relative", zIndex:1, whiteSpace:"nowrap", fontVariantNumeric:"tabular-nums" }}>{pc >= 100 ? "✓" : pc}</span>
               <div style={{ width:"100%", height:2.5, borderRadius:99, background: isLight ? "rgba(13,154,118,0.09)" : "rgba(255,255,255,0.08)", marginTop:9, overflow:"hidden", position:"relative", zIndex:1 }}>
                 <div style={{ width:`${pc}%`, height:"100%", borderRadius:99, background: isLight ? "linear-gradient(90deg, #0D9A76, #34D399)" : "linear-gradient(90deg, #34D399, #6EE7C2)", boxShadow: isLight ? "none" : "0 0 8px rgba(52,211,153,0.55)", transition:"width 1.1s cubic-bezier(0.4,0,0.2,1)" }} />
               </div>
-              <span style={{ fontSize:5.5, fontWeight:500, fontFamily:fontDisp, letterSpacing:"0.17em", textTransform:"uppercase", color: isLight ? "rgba(13,154,118,0.48)" : "rgba(52,211,153,0.36)", display:"block", marginTop:8, position:"relative", zIndex:1 }}>AVANCE</span>
+              <span style={{ fontSize:7, fontWeight:500, fontFamily:fontDisp, letterSpacing:"0.17em", textTransform:"uppercase", color: isLight ? "rgba(13,154,118,0.48)" : "rgba(52,211,153,0.36)", display:"block", marginTop:8, position:"relative", zIndex:1 }}>AVANCE</span>
             </div>
             <div style={{ width:32, height:1, marginTop:10, background: isLight ? "linear-gradient(90deg, transparent, rgba(15,23,42,0.07), transparent)" : "linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent)" }} />
           </div>
@@ -1929,7 +1929,7 @@ export default function App() {
             >
               <IosIcon name="menu" filled={appsActive} size={19} color={appsActive ? (isLight ? T.accent : "#E9FCF4") : (isLight ? "rgba(15,23,42,0.45)" : "rgba(255,255,255,0.40)")} />
             </button>
-            <span style={{ fontSize:7.2, fontFamily:fontDisp, fontWeight: appsActive ? 650 : 430, letterSpacing:"0.01em", userSelect:"none", color: appsActive ? (isLight ? T.accent : "#E9FCF4") : (isLight ? "rgba(15,23,42,0.38)" : "rgba(255,255,255,0.28)"), transition:"color 0.18s ease" }}>Apps</span>
+            <span style={{ fontSize:9, fontFamily:fontDisp, fontWeight: appsActive ? 650 : 430, letterSpacing:"0.01em", userSelect:"none", color: appsActive ? (isLight ? T.accent : "#E9FCF4") : (isLight ? "rgba(15,23,42,0.38)" : "rgba(255,255,255,0.28)"), transition:"color 0.18s ease" }}>Apps</span>
           </div>
           )}
           </div>
@@ -1970,7 +1970,7 @@ export default function App() {
             >
               <Settings size={17} color={v==="admin" ? "#A78BFA" : v==="perfil" ? T.accent : (isLight ? T.txt2 : "rgba(255,255,255,0.34)")} strokeWidth={1.9} />
             </button>
-            <span style={{ fontSize:7.5, fontFamily:font, fontWeight:500, color: isLight ? T.txt3 : "rgba(255,255,255,0.22)", userSelect:"none" }}>System</span>
+            <span style={{ fontSize:9, fontFamily:font, fontWeight:500, color: isLight ? T.txt3 : "rgba(255,255,255,0.22)", userSelect:"none" }}>System</span>
           </div>
         </div>
       </div>
@@ -2034,7 +2034,7 @@ export default function App() {
                       <>
                         <div onClick={() => setCallOpen(false)} style={{ position: "fixed", inset: 0, zIndex: 99980 }} />
                         <div style={{ position: "fixed", top: 56, right: 14, zIndex: 99981, minWidth: 236, borderRadius: 14, padding: 6, background: "rgba(8,13,22,0.98)", border: "1px solid rgba(255,255,255,0.10)", boxShadow: "0 18px 44px rgba(0,0,0,0.5)" }}>
-                          <div style={{ fontSize: 10.5, fontWeight: 700, letterSpacing: "0.08em", color: "rgba(255,255,255,0.45)", padding: "8px 10px 6px" }}>LLAMAR A…</div>
+                          <div style={{ fontSize: 11.5, fontWeight: 700, letterSpacing: "0.08em", color: "rgba(255,255,255,0.45)", padding: "8px 10px 6px" }}>LLAMAR A…</div>
                           {callTargets === null && (
                             <div style={{ padding: "8px 10px", fontSize: 12.5, color: "rgba(255,255,255,0.6)" }}>Cargando equipo…</div>
                           )}
@@ -2085,7 +2085,7 @@ export default function App() {
                         minWidth:14, height:14, padding:"0 3.5px", borderRadius:99,
                         background:T.accent, color:"#041016",
                         border:`1.5px solid ${isLight ? "#F5FAF8" : "#050507"}`,
-                        fontSize:8.5, fontWeight:500, fontFamily:fontDisp,
+                        fontSize:10, fontWeight:500, fontFamily:fontDisp,
                         display:"flex", alignItems:"center", justifyContent:"center",
                         lineHeight:1,
                       }}>{totalNotifUnread > 99 ? "99+" : totalNotifUnread}</div>
@@ -2095,7 +2095,7 @@ export default function App() {
                         minWidth:14, height:14, padding:"0 3.5px", borderRadius:99,
                         background:"#F59E0B", color:"#0B1220",
                         border:`1.5px solid ${isLight ? "#F5FAF8" : "#050507"}`,
-                        fontSize:8.5, fontWeight:500, fontFamily:fontDisp,
+                        fontSize:10, fontWeight:500, fontFamily:fontDisp,
                         display:"flex", alignItems:"center", justifyContent:"center",
                         lineHeight:1,
                       }}>{pendingSync > 99 ? "99+" : pendingSync}</div>
@@ -2128,7 +2128,7 @@ export default function App() {
                         display:"flex", flexDirection:"column", gap:10,
                       }}>
                         <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between" }}>
-                          <span style={{ fontSize:11, fontWeight:500, letterSpacing:"0.06em", textTransform:"uppercase", color:isLight ? T.txt2 : "rgba(255,255,255,0.55)", fontFamily:fontDisp }}>Notificaciones</span>
+                          <span style={{ fontSize:12, fontWeight:500, letterSpacing:"0.06em", textTransform:"uppercase", color:isLight ? T.txt2 : "rgba(255,255,255,0.55)", fontFamily:fontDisp }}>Notificaciones</span>
                         </div>
 
                         {/* ── WhatsApp: clientes que escribieron y siguen sin leer ── */}
@@ -2136,7 +2136,7 @@ export default function App() {
                           <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
                             <div style={{ display:"flex", alignItems:"center", gap:6 }}>
                               <MessageCircle size={12} color={T.accent} strokeWidth={2.4} />
-                              <span style={{ fontSize:10.5, fontWeight:500, letterSpacing:"0.04em", textTransform:"uppercase", color:T.accent, fontFamily:fontDisp }}>
+                              <span style={{ fontSize:11.5, fontWeight:500, letterSpacing:"0.04em", textTransform:"uppercase", color:T.accent, fontFamily:fontDisp }}>
                                 WhatsApp · {waUnread} sin leer
                               </span>
                             </div>
@@ -2157,17 +2157,17 @@ export default function App() {
                                   onMouseLeave={e => { e.currentTarget.style.background = isLight ? "rgba(13,154,118,0.06)" : "rgba(110,231,194,0.06)"; }}
                                 >
                                   <div style={{ flex:1, minWidth:0 }}>
-                                    <div style={{ fontSize:12, fontWeight:500, color:T.txt, fontFamily:fontDisp, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>
+                                    <div style={{ fontSize:12.5, fontWeight:500, color:T.txt, fontFamily:fontDisp, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>
                                       {c.lead_name || c.lead_phone || "Cliente"}
                                     </div>
-                                    <div style={{ fontSize:10.5, color:isLight ? T.txt2 : "rgba(255,255,255,0.55)", fontFamily:font, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>
+                                    <div style={{ fontSize:11.5, color:isLight ? T.txt2 : "rgba(255,255,255,0.55)", fontFamily:font, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>
                                       {c.last_content || "Nuevo mensaje"}
                                     </div>
                                   </div>
                                   <span style={{
                                     minWidth:16, height:16, padding:"0 5px", borderRadius:99, flexShrink:0,
                                     background:T.accent, color:"#041016",
-                                    fontSize:9, fontWeight:500, fontFamily:fontDisp,
+                                    fontSize:10.5, fontWeight:500, fontFamily:fontDisp,
                                     display:"flex", alignItems:"center", justifyContent:"center",
                                   }}>{u > 99 ? "99+" : u}</span>
                                 </button>
@@ -2178,7 +2178,7 @@ export default function App() {
                               style={{
                                 marginTop:2, padding:"6px 0", borderRadius:7, cursor:"pointer",
                                 background:"transparent", border:"none",
-                                color:T.accent, fontSize:11, fontWeight:500, fontFamily:font,
+                                color:T.accent, fontSize:12, fontWeight:500, fontFamily:font,
                               }}
                             >Ver todas las conversaciones →</button>
                           </div>
@@ -2189,7 +2189,7 @@ export default function App() {
                           <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
                             <div style={{ display:"flex", alignItems:"center", gap:6 }}>
                               <CopilotMark size={15} isLight={isLight} />
-                              <span style={{ fontSize:10.5, fontWeight:500, letterSpacing:"0.04em", textTransform:"uppercase", color:T.accent, fontFamily:fontDisp }}>
+                              <span style={{ fontSize:11.5, fontWeight:500, letterSpacing:"0.04em", textTransform:"uppercase", color:T.accent, fontFamily:fontDisp }}>
                                 Copilot · {copilotUnread} nueva{copilotUnread !== 1 ? "s" : ""}
                               </span>
                             </div>
@@ -2206,17 +2206,17 @@ export default function App() {
                               onMouseLeave={e => { e.currentTarget.style.background = isLight ? "rgba(13,154,118,0.06)" : "rgba(110,231,194,0.06)"; }}
                             >
                               <div style={{ flex:1, minWidth:0 }}>
-                                <div style={{ fontSize:12, fontWeight:500, color:T.txt, fontFamily:fontDisp, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>
+                                <div style={{ fontSize:12.5, fontWeight:500, color:T.txt, fontFamily:fontDisp, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>
                                   Asistente IA
                                 </div>
-                                <div style={{ fontSize:10.5, color:isLight ? T.txt2 : "rgba(255,255,255,0.55)", fontFamily:font, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>
+                                <div style={{ fontSize:11.5, color:isLight ? T.txt2 : "rgba(255,255,255,0.55)", fontFamily:font, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>
                                   {copilotInbox.lastAiMessage?.content || "Nueva respuesta disponible"}
                                 </div>
                               </div>
                               <span style={{
                                 minWidth:16, height:16, padding:"0 5px", borderRadius:99, flexShrink:0,
                                 background:T.accent, color:"#041016",
-                                fontSize:9, fontWeight:500, fontFamily:fontDisp,
+                                fontSize:10.5, fontWeight:500, fontFamily:fontDisp,
                                 display:"flex", alignItems:"center", justifyContent:"center",
                               }}>{copilotUnread > 99 ? "99+" : copilotUnread}</span>
                             </button>
@@ -2225,7 +2225,7 @@ export default function App() {
 
                         {/* Estado: sin pendientes ni offline ni notificaciones sin leer */}
                         {!user?._offline && pendingSync === 0 && totalNotifUnread === 0 && (
-                          <div style={{ fontSize:12, color: isLight ? T.txt3 : "rgba(255,255,255,0.45)", fontFamily:font, padding:"8px 0" }}>
+                          <div style={{ fontSize:12.5, color: isLight ? T.txt3 : "rgba(255,255,255,0.45)", fontFamily:font, padding:"8px 0" }}>
                             Sin notificaciones nuevas.
                           </div>
                         )}
@@ -2238,8 +2238,8 @@ export default function App() {
                             border:`1px solid ${isLight ? "rgba(245,158,11,0.32)" : "rgba(245,158,11,0.30)"}`,
                             display:"flex", flexDirection:"column", gap:4,
                           }}>
-                            <span style={{ fontSize:11.5, fontWeight:500, color:"#F59E0B", fontFamily:fontDisp }}>Modo offline</span>
-                            <span style={{ fontSize:11, color:isLight ? T.txt2 : "rgba(255,255,255,0.65)", fontFamily:font, lineHeight:1.4 }}>
+                            <span style={{ fontSize:12, fontWeight:500, color:"#F59E0B", fontFamily:fontDisp }}>Modo offline</span>
+                            <span style={{ fontSize:12, color:isLight ? T.txt2 : "rgba(255,255,255,0.65)", fontFamily:font, lineHeight:1.4 }}>
                               Servicio respondiendo lento. Los cambios se sincronizan automáticamente al recuperar conexión.
                             </span>
                           </div>
@@ -2254,11 +2254,11 @@ export default function App() {
                             display:"flex", flexDirection:"column", gap:8,
                           }}>
                             <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between" }}>
-                              <span style={{ fontSize:11.5, fontWeight:500, color:"#F59E0B", fontFamily:fontDisp }}>
+                              <span style={{ fontSize:12, fontWeight:500, color:"#F59E0B", fontFamily:fontDisp }}>
                                 {pendingSync} cambio{pendingSync !== 1 ? "s" : ""} pendiente{pendingSync !== 1 ? "s" : ""}
                               </span>
                             </div>
-                            <span style={{ fontSize:11, color:isLight ? T.txt2 : "rgba(255,255,255,0.62)", fontFamily:font, lineHeight:1.4 }}>
+                            <span style={{ fontSize:12, color:isLight ? T.txt2 : "rgba(255,255,255,0.62)", fontFamily:font, lineHeight:1.4 }}>
                               Se intentan enviar automáticamente cada 60 s. Si llevan tiempo sin avanzar es probable que sean obsoletos.
                             </span>
                             <div style={{ display:"flex", gap:6, marginTop:2 }}>
@@ -2269,7 +2269,7 @@ export default function App() {
                                   flex:1, padding:"7px 10px", borderRadius:7,
                                   background: syncing ? (isLight ? "rgba(15,23,42,0.06)" : "rgba(255,255,255,0.05)") : "#F59E0B",
                                   color: syncing ? (isLight ? T.txt3 : "rgba(255,255,255,0.40)") : "#0B1220",
-                                  border:"none", fontSize:11, fontWeight:500, fontFamily:font,
+                                  border:"none", fontSize:12, fontWeight:500, fontFamily:font,
                                   cursor: syncing ? "not-allowed" : "pointer", transition:"opacity 0.16s",
                                 }}
                               >{syncing ? "Sincronizando..." : "Sincronizar ahora"}</button>
@@ -2286,7 +2286,7 @@ export default function App() {
                                   background:"transparent",
                                   color: isLight ? T.txt2 : "rgba(255,255,255,0.55)",
                                   border:`1px solid ${isLight ? "rgba(15,23,42,0.14)" : "rgba(255,255,255,0.14)"}`,
-                                  fontSize:11, fontWeight:400, fontFamily:font,
+                                  fontSize:12, fontWeight:400, fontFamily:font,
                                   cursor:"pointer", transition:"all 0.14s",
                                 }}
                                 onMouseEnter={e => { e.currentTarget.style.background = isLight ? "rgba(225,29,72,0.08)" : "rgba(239,68,68,0.10)"; e.currentTarget.style.color = isLight ? "#B91C1C" : "#FCA5A5"; e.currentTarget.style.borderColor = isLight ? "rgba(225,29,72,0.32)" : "rgba(239,68,68,0.32)"; }}
@@ -2297,7 +2297,7 @@ export default function App() {
                         )}
 
                         {syncMsg && (
-                          <div style={{ fontSize:11, color: isLight ? T.txt2 : "rgba(255,255,255,0.65)", fontFamily:font, padding:"4px 2px" }}>
+                          <div style={{ fontSize:12, color: isLight ? T.txt2 : "rgba(255,255,255,0.65)", fontFamily:font, padding:"4px 2px" }}>
                             {syncMsg}
                           </div>
                         )}
@@ -2354,14 +2354,14 @@ export default function App() {
                     ? (isLight ? `${T.accent}1A` : "rgba(110,231,194,0.10)")
                     : "transparent"; }}
                 >
-                  <div style={{ width:26, height:26, borderRadius:"50%", flexShrink:0, background: isLight ? `linear-gradient(135deg, ${T.accent} 0%, #10B48A 100%)` : `linear-gradient(145deg, rgba(110,231,194,0.28) 0%, rgba(52,211,153,0.12) 100%)`, border: isLight ? "1.5px solid rgba(255,255,255,0.30)" : `1.5px solid rgba(110,231,194,0.24)`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:10.5, fontWeight:500, fontFamily:fontDisp, color: isLight ? "#FFFFFF" : T.accent, boxShadow: isLight ? `0 2px 8px ${T.accent}45` : `inset 0 1px 0 rgba(110,231,194,0.22)` }}>
+                  <div style={{ width:26, height:26, borderRadius:"50%", flexShrink:0, background: isLight ? `linear-gradient(135deg, ${T.accent} 0%, #10B48A 100%)` : `linear-gradient(145deg, rgba(110,231,194,0.28) 0%, rgba(52,211,153,0.12) 100%)`, border: isLight ? "1.5px solid rgba(255,255,255,0.30)" : `1.5px solid rgba(110,231,194,0.24)`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:11.5, fontWeight:500, fontFamily:fontDisp, color: isLight ? "#FFFFFF" : T.accent, boxShadow: isLight ? `0 2px 8px ${T.accent}45` : `inset 0 1px 0 rgba(110,231,194,0.22)` }}>
                     {user?.name?.charAt(0).toUpperCase() || "U"}
                   </div>
                   <div className="stratos-userpill-text" style={{ display:"flex", flexDirection:"column", alignItems:"flex-start" }}>
-                    <span style={{ fontSize:11.5, fontWeight:500, fontFamily:fontDisp, letterSpacing:"-0.01em", lineHeight:1.2, color: isLight ? T.txt : "rgba(255,255,255,0.82)", whiteSpace:"nowrap" }}>
+                    <span style={{ fontSize:12, fontWeight:500, fontFamily:fontDisp, letterSpacing:"-0.01em", lineHeight:1.2, color: isLight ? T.txt : "rgba(255,255,255,0.82)", whiteSpace:"nowrap" }}>
                       {user?.name?.split(" ")[0] || "Usuario"}
                     </span>
-                    <span style={{ fontSize:9, fontWeight:400, fontFamily:font, letterSpacing:"0.02em", lineHeight:1.1, color: user?.isDemo ? T.amber : (isLight ? T.txt3 : "rgba(255,255,255,0.30)"), whiteSpace:"nowrap" }}>
+                    <span style={{ fontSize:10.5, fontWeight:400, fontFamily:font, letterSpacing:"0.02em", lineHeight:1.1, color: user?.isDemo ? T.amber : (isLight ? T.txt3 : "rgba(255,255,255,0.30)"), whiteSpace:"nowrap" }}>
                       {user?.isDemo ? "Demo" : (user?.role || "Miembro")}
                     </span>
                   </div>
@@ -2481,7 +2481,7 @@ export default function App() {
                 {n.id === "copilot"
                   ? <CopilotMark size={23} isLight={isLight} style={{ opacity: a ? 1 : 0.85 }} />
                   : <IosIcon name={n.id} filled={a} size={n.id === "d" ? 23 : n.id === "ia" ? 22 : n.id === "lp" ? 22 : n.id === "e" ? 21 : n.id === "c" ? 22 : 20} color={a ? activeColor : (isLight ? "rgba(15,23,42,0.45)" : "rgba(255,255,255,0.40)")} />}
-                <span style={{ fontSize:9.5, fontFamily:fontDisp, fontWeight: a ? 700 : 500, letterSpacing:"-0.01em", color: a ? activeColor : (isLight ? "rgba(15,23,42,0.42)" : "rgba(255,255,255,0.34)"), lineHeight:1, whiteSpace:"nowrap", overflow:"hidden", maxWidth:"100%" }}>{clientConfig?.navLabels?.[n.id] ?? n.l}</span>
+                <span style={{ fontSize:10.5, fontFamily:fontDisp, fontWeight: a ? 700 : 500, letterSpacing:"-0.01em", color: a ? activeColor : (isLight ? "rgba(15,23,42,0.42)" : "rgba(255,255,255,0.34)"), lineHeight:1, whiteSpace:"nowrap", overflow:"hidden", maxWidth:"100%" }}>{clientConfig?.navLabels?.[n.id] ?? n.l}</span>
               </button>
             );
           })}
@@ -2502,7 +2502,7 @@ export default function App() {
                 transition:"background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease",
               }}>
                 <IosIcon name="menu" filled={a} size={20} color={a ? activeColor : (isLight ? "rgba(15,23,42,0.45)" : "rgba(255,255,255,0.40)")} />
-                <span style={{ fontSize:9.5, fontFamily:fontDisp, fontWeight: a ? 700 : 500, color: a ? activeColor : (isLight ? "rgba(15,23,42,0.42)" : "rgba(255,255,255,0.34)"), lineHeight:1 }}>Menú</span>
+                <span style={{ fontSize:10.5, fontFamily:fontDisp, fontWeight: a ? 700 : 500, color: a ? activeColor : (isLight ? "rgba(15,23,42,0.42)" : "rgba(255,255,255,0.34)"), lineHeight:1 }}>Menú</span>
               </button>
             );
           })()}
@@ -2676,7 +2676,7 @@ export default function App() {
               </div>
               <div style={{ minWidth:0 }}>
                 <p style={{ margin:0, fontSize:13, fontWeight:500, fontFamily:fontDisp, letterSpacing:"-0.015em", color: isLight ? T.txt : "#FFFFFF", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>Mi Espacio{user?.name ? ` · ${user.name.split(" ")[0]}` : ""}</p>
-                <p style={{ margin:"2px 0 0", fontSize:10.5, fontFamily:font, color: isLight ? T.txt3 : "rgba(255,255,255,0.42)" }}>Agenda, lista de acción, documentos y plan</p>
+                <p style={{ margin:"2px 0 0", fontSize:11.5, fontFamily:font, color: isLight ? T.txt3 : "rgba(255,255,255,0.42)" }}>Agenda, lista de acción, documentos y plan</p>
               </div>
             </button>
 
@@ -2695,7 +2695,7 @@ export default function App() {
                     {n.id === "copilot"
                       ? <CopilotMark size={22} isLight={isLight} animated={false} style={{ opacity: a ? 1 : 0.85 }} />
                       : <IosIcon name={n.id} filled={a} size={22} color={a ? activeColor : (isLight ? "rgba(15,23,42,0.55)" : "rgba(255,255,255,0.55)")} />}
-                    <span style={{ fontSize:10, fontFamily:fontDisp, fontWeight: a ? 700 : 500, color: a ? activeColor : (isLight ? "rgba(15,23,42,0.55)" : "rgba(255,255,255,0.50)"), lineHeight:1, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis", maxWidth:"100%" }}>{clientConfig?.navLabels?.[n.id] ?? n.l}</span>
+                    <span style={{ fontSize:11, fontFamily:fontDisp, fontWeight: a ? 700 : 500, color: a ? activeColor : (isLight ? "rgba(15,23,42,0.55)" : "rgba(255,255,255,0.50)"), lineHeight:1, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis", maxWidth:"100%" }}>{clientConfig?.navLabels?.[n.id] ?? n.l}</span>
                   </button>
                 );
               })}
@@ -2715,11 +2715,11 @@ export default function App() {
             <div style={{ display:"flex", gap:8, marginTop:8 }}>
               <button onClick={() => setTheme(isLight ? "dark" : "light")} style={{ flex:1, display:"flex", alignItems:"center", justifyContent:"center", gap:7, padding:"11px 8px", borderRadius:13, border:`1px solid ${isLight ? "rgba(15,23,42,0.08)" : "rgba(255,255,255,0.07)"}`, background: isLight ? "rgba(15,23,42,0.03)" : "rgba(255,255,255,0.04)", cursor:"pointer" }}>
                 {isLight ? <IosIcon name="moon" filled size={15} color={T.txt2} /> : <IosIcon name="sun" filled size={15} color="rgba(255,255,255,0.60)" />}
-                <span style={{ fontSize:11.5, fontWeight:400, fontFamily:fontDisp, color: isLight ? T.txt2 : "rgba(255,255,255,0.60)" }}>{isLight ? "Modo oscuro" : "Modo claro"}</span>
+                <span style={{ fontSize:12, fontWeight:400, fontFamily:fontDisp, color: isLight ? T.txt2 : "rgba(255,255,255,0.60)" }}>{isLight ? "Modo oscuro" : "Modo claro"}</span>
               </button>
               <button onClick={() => { setPlusOpen(false); onLogout(); }} style={{ flex:1, display:"flex", alignItems:"center", justifyContent:"center", gap:7, padding:"11px 8px", borderRadius:13, border:`1px solid ${isLight ? "rgba(225,29,72,0.16)" : "rgba(232,129,140,0.18)"}`, background: isLight ? "rgba(225,29,72,0.05)" : "rgba(232,129,140,0.07)", cursor:"pointer" }}>
                 <IosIcon name="exit" filled size={15} color={isLight ? "#BE123C" : "#E8818C"} />
-                <span style={{ fontSize:11.5, fontWeight:400, fontFamily:fontDisp, color: isLight ? "#BE123C" : "#E8818C" }}>Salir</span>
+                <span style={{ fontSize:12, fontWeight:400, fontFamily:fontDisp, color: isLight ? "#BE123C" : "#E8818C" }}>Salir</span>
               </button>
             </div>
 
@@ -2727,7 +2727,7 @@ export default function App() {
                 nativo carga la web remota: un APK nuevo NO garantiza web nueva
                 (SW/deploy). Con esto cualquiera puede reportar "web vNNN" y se
                 acaba el adivinar. Mantener en sync con CACHE_VERSION (sw.js). */}
-            <p style={{ margin:"12px 0 0", textAlign:"center", fontSize:9.5, fontFamily:font, letterSpacing:"0.02em", color: isLight ? "rgba(15,23,42,0.35)" : "rgba(255,255,255,0.28)" }}>Stratos CRM AI · web v256</p>
+            <p style={{ margin:"12px 0 0", textAlign:"center", fontSize:10.5, fontFamily:font, letterSpacing:"0.02em", color: isLight ? "rgba(15,23,42,0.35)" : "rgba(255,255,255,0.28)" }}>Stratos CRM AI · web v256</p>
           </div>
         </>,
         document.body
@@ -2760,7 +2760,7 @@ export default function App() {
                   onMouseLeave={e => { e.currentTarget.style.transform="none"; if(!act) { e.currentTarget.style.background = isLight ? "#F8FAFC" : "rgba(255,255,255,0.03)"; e.currentTarget.style.boxShadow = "none"; } }}
                   >
                     <IosIcon name={n.id} filled={act} size={26} color={act ? acol : (isLight ? "rgba(15,23,42,0.50)" : "rgba(255,255,255,0.55)")} />
-                    <span style={{ fontSize:11, fontFamily:fontDisp, fontWeight: act ? 700 : 500, letterSpacing:"-0.01em", color: act ? acol : (isLight ? "rgba(15,23,42,0.60)" : "rgba(255,255,255,0.62)"), lineHeight:1, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis", maxWidth:"100%" }}>{clientConfig?.navLabels?.[n.id] ?? n.l}</span>
+                    <span style={{ fontSize:12, fontFamily:fontDisp, fontWeight: act ? 700 : 500, letterSpacing:"-0.01em", color: act ? acol : (isLight ? "rgba(15,23,42,0.60)" : "rgba(255,255,255,0.62)"), lineHeight:1, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis", maxWidth:"100%" }}>{clientConfig?.navLabels?.[n.id] ?? n.l}</span>
                   </button>
                 );
               })}
@@ -2770,7 +2770,7 @@ export default function App() {
               <>
                 <div style={{ height:1, margin:"18px 2px 14px", background: isLight ? "rgba(15,23,42,0.06)" : "rgba(255,255,255,0.05)" }} />
                 <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", gap:12 }}>
-                  <span style={{ fontSize:10.5, fontWeight:500, fontFamily:fontDisp, letterSpacing:"0.08em", textTransform:"uppercase", color: isLight ? "rgba(15,23,42,0.42)" : "rgba(255,255,255,0.36)" }}>Configuración</span>
+                  <span style={{ fontSize:11.5, fontWeight:500, fontFamily:fontDisp, letterSpacing:"0.08em", textTransform:"uppercase", color: isLight ? "rgba(15,23,42,0.42)" : "rgba(255,255,255,0.36)" }}>Configuración</span>
                   <button onClick={() => { setV("admin"); setSidebarMore(false); }} style={{
                     display:"flex", alignItems:"center", gap:9, padding:"10px 16px", borderRadius:14, cursor:"pointer",
                     border: `1px solid ${v === "admin" ? "rgba(167,139,250,0.45)" : (isLight ? "rgba(15,23,42,0.08)" : "rgba(255,255,255,0.07)")}`,

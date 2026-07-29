@@ -80,7 +80,7 @@ export default function Trash({ trashedLeads = [], onRestore, onHardDelete, onRe
             display: "inline-flex", alignItems: "center", gap: 6,
             padding: "8px 12px", borderRadius: 9,
             border: `1px solid ${T.border}`, background: "transparent",
-            color: T.txt3, fontSize: 11.5, cursor: "pointer", fontFamily: fontDisp,
+            color: T.txt3, fontSize: 12, cursor: "pointer", fontFamily: fontDisp,
             transition: "all 0.16s",
           }}
           onMouseEnter={e => { e.currentTarget.style.background = T.glassH; e.currentTarget.style.color = T.txt; }}
@@ -102,7 +102,7 @@ export default function Trash({ trashedLeads = [], onRestore, onHardDelete, onRe
             paddingLeft: isMobile ? 38 : 32, paddingRight: 14,
             borderRadius: 12, border: `1px solid ${T.border}`,
             background: isLight ? "rgba(255,255,255,0.7)" : "rgba(255,255,255,0.04)",
-            color: T.txt, fontSize: isMobile ? 14 : 12,
+            color: T.txt, fontSize: isMobile ? 14 : 12.5,
             outline: "none", fontFamily: fontDisp, boxSizing: "border-box",
           }}
         />
@@ -126,7 +126,7 @@ export default function Trash({ trashedLeads = [], onRestore, onHardDelete, onRe
           <p style={{ margin: 0, fontSize: 14, fontWeight: 400, color: T.txt2, fontFamily: fontDisp }}>
             La papelera está vacía
           </p>
-          <p style={{ margin: "6px 0 0", fontSize: 11.5, color: T.txt3 }}>
+          <p style={{ margin: "6px 0 0", fontSize: 12, color: T.txt3 }}>
             Los clientes eliminados aparecerán aquí y podrás restaurarlos en cualquier momento.
           </p>
         </div>
@@ -165,7 +165,7 @@ export default function Trash({ trashedLeads = [], onRestore, onHardDelete, onRe
                   <p style={{ margin: 0, fontSize: 14, fontWeight: 400, color: T.txt, fontFamily: fontDisp, letterSpacing: "-0.015em", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                     {l.n || l.name}
                   </p>
-                  <p style={{ margin: "2px 0 0", fontSize: 11, color: T.txt2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  <p style={{ margin: "2px 0 0", fontSize: 12, color: T.txt2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                     {[l.asesor, l.p, fmtDate(l.deleted_at)].filter(Boolean).join(" · ")}
                   </p>
                 </div>
@@ -182,7 +182,7 @@ export default function Trash({ trashedLeads = [], onRestore, onHardDelete, onRe
                       border: `1px solid ${isLight ? T.accent : `${T.accent}55`}`,
                       background: isLight ? T.accent : `${T.accent}14`,
                       color: isLight ? "#FFFFFF" : T.accent,
-                      fontSize: isMobile ? 12 : 11, fontWeight: 500,
+                      fontSize: isMobile ? 12.5 : 12, fontWeight: 500,
                       fontFamily: fontDisp, cursor: isBusy ? "not-allowed" : "pointer",
                       transition: "all 0.16s",
                       boxShadow: isLight ? `0 2px 8px ${T.accent}3A` : "none",

@@ -222,7 +222,7 @@ export default function SuggestActionsModal({ open, onClose, lead, onAddTasks })
               <Wand2 size={17} color={P.accent} strokeWidth={2.4} />
             </div>
             <div>
-              <div style={{ fontSize: 9, color: P.txt3, fontWeight: 500, letterSpacing: "0.12em", textTransform: "uppercase", fontFamily: fontDisp, display: "flex", alignItems: "center", gap: 6 }}>
+              <div style={{ fontSize: 10.5, color: P.txt3, fontWeight: 500, letterSpacing: "0.12em", textTransform: "uppercase", fontFamily: fontDisp, display: "flex", alignItems: "center", gap: 6 }}>
                 <span>Tu asistente de venta</span>
                 <span style={{
                   display: "inline-flex", alignItems: "center", gap: 4,
@@ -230,9 +230,9 @@ export default function SuggestActionsModal({ open, onClose, lead, onAddTasks })
                   background: source === "ai" ? `${P.accent}1A` : `${P.violet}1A`,
                   border: `1px solid ${source === "ai" ? P.accentB : `${P.violet}33`}`,
                   color: source === "ai" ? P.accent : P.violet,
-                  fontSize: 8.5, letterSpacing: "0.1em",
+                  fontSize: 10, letterSpacing: "0.1em",
                 }}>
-                  <span style={{ fontSize: 8 }}>{source === "ai" ? "✨" : "🎯"}</span>
+                  <span style={{ fontSize: 9.5 }}>{source === "ai" ? "✨" : "🎯"}</span>
                   {source === "ai" ? "IA + Protocolo Duke" : "Protocolo Duke"}
                 </span>
               </div>
@@ -267,7 +267,7 @@ export default function SuggestActionsModal({ open, onClose, lead, onAddTasks })
               display: "flex", alignItems: "flex-start", gap: 10,
             }}>
               <Lightbulb size={14} color={P.accent} strokeWidth={2.2} style={{ marginTop: 2, flexShrink: 0 }} />
-              <p style={{ margin: 0, fontSize: 12, color: P.txt2, fontFamily: font, lineHeight: 1.55 }}>
+              <p style={{ margin: 0, fontSize: 12.5, color: P.txt2, fontFamily: font, lineHeight: 1.55 }}>
                 {summary}
               </p>
             </div>
@@ -278,7 +278,7 @@ export default function SuggestActionsModal({ open, onClose, lead, onAddTasks })
             <div style={{ padding: 40, textAlign: "center", color: P.txt3, fontFamily: font }}>
               <RefreshCw size={28} color={P.accent} strokeWidth={2} style={{ animation: "spinAi 1s linear infinite", marginBottom: 12 }} />
               <p style={{ margin: 0, fontSize: 13, fontWeight: 400, color: P.txt2 }}>Estoy leyendo el expediente…</p>
-              <p style={{ margin: "4px 0 0", fontSize: 11, color: P.txt3 }}>Pensando qué te conviene hacer para avanzar la venta</p>
+              <p style={{ margin: "4px 0 0", fontSize: 12, color: P.txt3 }}>Pensando qué te conviene hacer para avanzar la venta</p>
               <style>{`@keyframes spinAi { to { transform: rotate(360deg); } }`}</style>
             </div>
           )}
@@ -288,7 +288,7 @@ export default function SuggestActionsModal({ open, onClose, lead, onAddTasks })
             <div style={{
               padding: 14, borderRadius: 10,
               background: `${P.rose}14`, border: `1px solid ${P.rose}33`,
-              color: P.rose, fontSize: 12,
+              color: P.rose, fontSize: 12.5,
             }}>
               {error}. ¿La Edge Function está deployada y tiene ANTHROPIC_API_KEY configurada?
             </div>
@@ -317,12 +317,12 @@ export default function SuggestActionsModal({ open, onClose, lead, onAddTasks })
                     {/* Top row: priority + technique + checkbox */}
                     <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
                       <span style={{
-                        fontSize: 9, fontWeight: 500, color: pm.color,
+                        fontSize: 10.5, fontWeight: 500, color: pm.color,
                         background: `${pm.color}1A`, border: `1px solid ${pm.color}33`,
                         padding: "2px 8px", borderRadius: 99, letterSpacing: "0.08em", fontFamily: fontDisp,
                       }}>{pm.label}</span>
                       <span style={{
-                        fontSize: 9.5, color: P.violet,
+                        fontSize: 10.5, color: P.violet,
                         background: `${P.violet}15`, border: `1px solid ${P.violet}33`,
                         padding: "2px 8px", borderRadius: 99, fontFamily: fontDisp, fontWeight: 500,
                       }}>{naturalTechnique(s.technique) || "Sugerencia"}</span>
@@ -345,7 +345,7 @@ export default function SuggestActionsModal({ open, onClose, lead, onAddTasks })
 
                     {/* Date */}
                     {s.date && (
-                      <p style={{ margin: "0 0 8px", fontSize: 11, color: P.accent, fontFamily: mono }}>
+                      <p style={{ margin: "0 0 8px", fontSize: 12, color: P.accent, fontFamily: mono }}>
                         📅 {s.date}
                       </p>
                     )}
@@ -353,7 +353,7 @@ export default function SuggestActionsModal({ open, onClose, lead, onAddTasks })
                     {/* Reason */}
                     {s.reason && (
                       <p style={{
-                        margin: 0, fontSize: 11.5, color: P.txt2, fontFamily: font, lineHeight: 1.55,
+                        margin: 0, fontSize: 12, color: P.txt2, fontFamily: font, lineHeight: 1.55,
                         paddingTop: 8, borderTop: `1px solid ${P.border}`,
                       }}>
                         <span style={{ color: P.txt3, fontWeight: 400 }}>POR QUÉ TE LO SUGIERO · </span>
@@ -369,11 +369,11 @@ export default function SuggestActionsModal({ open, onClose, lead, onAddTasks })
           {/* Empty state */}
           {!loading && !error && suggestions.length === 0 && (
             <div style={{ padding: 40, textAlign: "center", color: P.txt3 }}>
-              <p style={{ margin: 0, fontSize: 12 }}>Sin sugerencias por ahora.</p>
+              <p style={{ margin: 0, fontSize: 12.5 }}>Sin sugerencias por ahora.</p>
               <button onClick={fetchSuggestions} style={{
                 marginTop: 10, padding: "6px 14px", borderRadius: 8,
                 background: P.glass, border: `1px solid ${P.border}`, color: P.accent,
-                cursor: "pointer", fontSize: 11, fontFamily: font,
+                cursor: "pointer", fontSize: 12, fontFamily: font,
               }}>Reintentar</button>
             </div>
           )}
@@ -389,7 +389,7 @@ export default function SuggestActionsModal({ open, onClose, lead, onAddTasks })
             <button onClick={fetchSuggestions} style={{
               padding: "8px 14px", borderRadius: 9,
               background: "transparent", border: `1px solid ${P.border}`,
-              color: P.txt2, cursor: "pointer", fontSize: 12, fontFamily: font,
+              color: P.txt2, cursor: "pointer", fontSize: 12.5, fontFamily: font,
               display: "flex", alignItems: "center", gap: 6,
             }}>
               <RefreshCw size={12} /> Pensar de nuevo

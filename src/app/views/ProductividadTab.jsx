@@ -143,14 +143,14 @@ export default function ProductividadTab({ T, isLight }) {
                   />
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: 14, fontWeight: 500, fontFamily: fontDisp, color: T.txt, letterSpacing: "-0.02em", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{r.asesor}</div>
-                    <div style={{ fontSize: 11.5, color: T.txt3, fontFamily: font, marginTop: 2 }}>{summary(r)}</div>
+                    <div style={{ fontSize: 12, color: T.txt3, fontFamily: font, marginTop: 2 }}>{summary(r)}</div>
                     <div style={{ height: 6, borderRadius: 6, background: rowBorder, marginTop: 8, overflow: "hidden" }}>
                       <div style={{ height: "100%", width: `${pct}%`, background: T.accent, transition: "width 0.3s" }} />
                     </div>
                   </div>
                   <div style={{ textAlign: "right", flexShrink: 0 }}>
                     <div style={{ fontSize: 22, fontWeight: 500, fontFamily: fontDisp, color: pct >= 70 ? T.accent : T.txt, letterSpacing: "-0.03em" }}>{pct}%</div>
-                    <div style={{ fontSize: 10.5, color: T.txt3, fontFamily: font }}>avance</div>
+                    <div style={{ fontSize: 11.5, color: T.txt3, fontFamily: font }}>avance</div>
                   </div>
                 </div>
 
@@ -164,7 +164,7 @@ export default function ProductividadTab({ T, isLight }) {
                       <ActionGroup title={`Completadas (${doneItems.length})`} items={doneItems} STATE_META={STATE_META} T={T} rowBorder={rowBorder} />
                     )}
                     {r.items.length === 0 && (
-                      <p style={{ fontSize: 12, color: T.txt3, fontFamily: font, margin: "10px 0 0" }}>Sin acciones.</p>
+                      <p style={{ fontSize: 12.5, color: T.txt3, fontFamily: font, margin: "10px 0 0" }}>Sin acciones.</p>
                     )}
                   </div>
                 )}
@@ -181,7 +181,7 @@ export default function ProductividadTab({ T, isLight }) {
 function ActionGroup({ title, items, STATE_META, T, rowBorder }) {
   return (
     <div style={{ marginTop: 12 }}>
-      <div style={{ fontSize: 10.5, fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.06em", color: T.txt3, fontFamily: font, marginBottom: 6 }}>
+      <div style={{ fontSize: 11.5, fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.06em", color: T.txt3, fontFamily: font, marginBottom: 6 }}>
         {title}
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: 1 }}>
@@ -196,16 +196,16 @@ function ActionGroup({ title, items, STATE_META, T, rowBorder }) {
                 <div style={{ fontSize: 13, color: T.txt, fontFamily: font, lineHeight: 1.35, textDecoration: it.state === "done" ? "line-through" : "none", opacity: it.state === "done" ? 0.7 : 1 }}>
                   {it.text}
                 </div>
-                <div style={{ fontSize: 11, color: T.txt3, fontFamily: font, marginTop: 2 }}>
+                <div style={{ fontSize: 12, color: T.txt3, fontFamily: font, marginTop: 2 }}>
                   {fmtDate(when) ? `${whenLabel} ${fmtDate(when)}` : ""}
                 </div>
                 {it.nota && (
-                  <div style={{ fontSize: 11.5, color: T.txt2, fontFamily: font, marginTop: 3, fontStyle: "italic" }}>
+                  <div style={{ fontSize: 12, color: T.txt2, fontFamily: font, marginTop: 3, fontStyle: "italic" }}>
                     📝 {it.nota}
                   </div>
                 )}
               </div>
-              <span style={{ fontSize: 10.5, fontWeight: 500, color: meta.color, fontFamily: font, flexShrink: 0, marginTop: 2 }}>
+              <span style={{ fontSize: 11.5, fontWeight: 500, color: meta.color, fontFamily: font, flexShrink: 0, marginTop: 2 }}>
                 {meta.label}
               </span>
             </div>

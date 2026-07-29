@@ -265,7 +265,7 @@ export default function CuentasCobro({ T, emisor }) {
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
         <div>
           <div style={{ fontSize: 14.5, fontFamily: fontDisp, fontWeight: 500, color: txt }}>Cuentas de cobro</div>
-          <div style={{ fontSize: 12, color: txt2, marginTop: 3 }}>
+          <div style={{ fontSize: 12.5, color: txt2, marginTop: 3 }}>
             El borrador se arma solo con lo que se entregó en el periodo · se descarga en Word para firmarla
           </div>
         </div>
@@ -336,14 +336,14 @@ export default function CuentasCobro({ T, emisor }) {
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginLeft: "auto" }}>
               <input type="date" value={form.desde} max={form.hasta || undefined} aria-label="Desde"
                 onChange={e => setForm(f => ({ ...f, desde: e.target.value }))} style={campoFecha} />
-              <span style={{ color: txt3, fontSize: 12, fontFamily: font }}>al</span>
+              <span style={{ color: txt3, fontSize: 12.5, fontFamily: font }}>al</span>
               <input type="date" value={form.hasta} min={form.desde || undefined} aria-label="Hasta"
                 onChange={e => setForm(f => ({ ...f, hasta: e.target.value }))} style={campoFecha} />
             </div>
           </div>
           <input placeholder="Concepto (vacío = servicios de desarrollo, automatización e IA)" value={form.concepto}
             onChange={e => setForm(f => ({ ...f, concepto: e.target.value }))} style={inputStyle} />
-          <div style={{ fontSize: 11.5, color: txt3 }}>
+          <div style={{ fontSize: 12, color: txt3 }}>
             Si dejás las fechas vacías toma la quincena que se está cerrando. El detalle de lo entregado
             lo saca solo de las tareas cerradas y los objetivos que se movieron en ese periodo.
           </div>
@@ -359,7 +359,7 @@ export default function CuentasCobro({ T, emisor }) {
         <div style={{ ...card, padding: "34px 20px", textAlign: "center" }}>
           <FileText size={26} color={txt3} strokeWidth={1.6} />
           <div style={{ fontSize: 13.5, color: txt2, marginTop: 10 }}>Todavía no hay ninguna cuenta de cobro.</div>
-          <div style={{ fontSize: 12, color: txt3, marginTop: 4 }}>
+          <div style={{ fontSize: 12.5, color: txt3, marginTop: 4 }}>
             Armá la primera cuando cierre la quincena — el detalle sale solo del trabajo del periodo.
           </div>
         </div>
@@ -379,14 +379,14 @@ export default function CuentasCobro({ T, emisor }) {
                         ? `${inv.beneficiario} → ${inv?.detalle?.cobra_a || "NSG"}`
                         : `NSG → ${inv.beneficiario}`}
                     </span>
-                    <span style={{ fontSize: 11, color: txt3 }}>{inv.numero}</span>
+                    <span style={{ fontSize: 12, color: txt3 }}>{inv.numero}</span>
                     <span style={{
-                      fontSize: 10.5, padding: "2px 8px", borderRadius: 999,
+                      fontSize: 11.5, padding: "2px 8px", borderRadius: 999,
                       color: estadoColor(inv.estado), border: `1px solid ${estadoColor(inv.estado)}44`,
                       background: `${estadoColor(inv.estado)}14`, textTransform: "capitalize",
                     }}>{inv.estado}</span>
                   </div>
-                  <div style={{ fontSize: 12, color: txt2, marginTop: 5 }}>
+                  <div style={{ fontSize: 12.5, color: txt2, marginTop: 5 }}>
                     {fechaCorta(inv.periodo_desde)} — {fechaCorta(inv.periodo_hasta)}
                     {items.length ? ` · ${items.length} ${items.length === 1 ? "entrega" : "entregas"}` : ""}
                   </div>
@@ -409,7 +409,7 @@ export default function CuentasCobro({ T, emisor }) {
                       style={{
                         background: "transparent", border: `1px solid ${sinMonto ? `${accent}55` : "transparent"}`,
                         borderRadius: 8, padding: "5px 9px", cursor: "pointer",
-                        color: sinMonto ? accent : txt, fontSize: sinMonto ? 12 : 16,
+                        color: sinMonto ? accent : txt, fontSize: sinMonto ? 12.5 : 16,
                         fontFamily: fontDisp, display: "flex", alignItems: "center", gap: 6,
                       }}>
                       {sinMonto ? <><PenLine size={13} /> Poner el monto</> : money(inv.monto, inv.moneda)}
@@ -443,13 +443,13 @@ export default function CuentasCobro({ T, emisor }) {
               {!!items.length && (
                 <div style={{ marginTop: 12, paddingTop: 11, borderTop: `1px solid ${bd}`, display: "flex", flexDirection: "column", gap: 5 }}>
                   {items.slice(0, 6).map((it, i) => (
-                    <div key={i} style={{ fontSize: 12, color: txt2, display: "flex", gap: 9 }}>
-                      <span style={{ color: txt3, flexShrink: 0, fontSize: 11 }}>{fechaCorta(it.fecha)}</span>
+                    <div key={i} style={{ fontSize: 12.5, color: txt2, display: "flex", gap: 9 }}>
+                      <span style={{ color: txt3, flexShrink: 0, fontSize: 12 }}>{fechaCorta(it.fecha)}</span>
                       <span style={{ minWidth: 0 }}>{it.que}</span>
                     </div>
                   ))}
                   {items.length > 6 && (
-                    <div style={{ fontSize: 11.5, color: txt3 }}>y {items.length - 6} más — todas salen en el Word</div>
+                    <div style={{ fontSize: 12, color: txt3 }}>y {items.length - 6} más — todas salen en el Word</div>
                   )}
                 </div>
               )}

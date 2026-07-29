@@ -47,7 +47,7 @@ export default function IAOSIsland({ leadsData = [], isLight, idx, brandLabel = 
     }}>
       {/* IAOS label */}
       <span style={{
-        fontSize: 9, fontFamily: fontDisp, fontWeight: 500,
+        fontSize: 10.5, fontFamily: fontDisp, fontWeight: 500,
         letterSpacing: "0.16em", textTransform: "uppercase", lineHeight: 1,
         color: isLight ? "rgba(13,154,118,0.70)" : "rgba(110,231,194,0.60)",
         flexShrink: 0, marginRight: 8,
@@ -60,7 +60,7 @@ export default function IAOSIsland({ leadsData = [], isLight, idx, brandLabel = 
       <div className="stratos-iaos-ticker" style={{ overflow: "hidden", height: 14, width: 118, flexShrink: 0 }}>
         <span key={idx} style={{
           display: "block",
-          fontSize: 10.5, fontFamily: fontDisp, fontWeight: 500,
+          fontSize: 11.5, fontFamily: fontDisp, fontWeight: 500,
           letterSpacing: "-0.012em", whiteSpace: "nowrap",
           overflow: "hidden", textOverflow: "ellipsis",
           color: isLight ? "rgba(10,20,15,0.62)" : "rgba(255,255,255,0.62)",

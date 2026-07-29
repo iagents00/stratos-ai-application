@@ -406,7 +406,7 @@ export default function Caja({ T }) {
           {[{ id: "mio", label: "Lo mío" }, { id: "empresa", label: "NSG" }, { id: "todo", label: "Todo" }].map(o => (
             <button key={o.id} type="button" onClick={() => setPersonaFilter(o.id)}
               style={{
-                padding: "5px 11px", borderRadius: 8, cursor: "pointer", fontSize: 12, fontFamily: font,
+                padding: "5px 11px", borderRadius: 8, cursor: "pointer", fontSize: 12.5, fontFamily: font,
                 border: "1px solid transparent",
                 background: personaFilter === o.id ? `${accent}1A` : "transparent",
                 color: personaFilter === o.id ? accent : txt3,
@@ -423,7 +423,7 @@ export default function Caja({ T }) {
             { id: "Servicios", label: "Servicios" }, { id: "Cliente", label: "Clientes" }].map(o => (
             <button key={o.id} type="button" onClick={() => setCatFilter(o.id)}
               style={{
-                padding: "5px 11px", borderRadius: 8, cursor: "pointer", fontSize: 12, fontFamily: font,
+                padding: "5px 11px", borderRadius: 8, cursor: "pointer", fontSize: 12.5, fontFamily: font,
                 border: "1px solid transparent",
                 background: catFilter === o.id ? `${accent}1A` : "transparent",
                 color: catFilter === o.id ? accent : txt3,
@@ -464,7 +464,7 @@ export default function Caja({ T }) {
                   {r.category || (tipo === "ingreso" ? "Ingreso" : "Gasto")}
                   {obra && <span style={{ color: txt2, fontWeight: 400 }}> · {obra}</span>}
                 </div>
-                <div style={{ fontSize: 11.5, color: txt3, display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap", marginTop: 3 }}>
+                <div style={{ fontSize: 12, color: txt3, display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap", marginTop: 3 }}>
                   {fmtDate(r.spent_at)}
                   {quien && <span>· {quien}</span>}
                   {r.account && <span>· {r.account}</span>}
@@ -472,13 +472,13 @@ export default function Caja({ T }) {
                     · {porTelegram ? <MessageCircle size={11} /> : <Monitor size={11} />} {porTelegram ? "Telegram" : "Web"}
                   </span>
                 </div>
-                {r.description && <div style={{ fontSize: 11.5, color: txt2, marginTop: 3 }}>{r.description}</div>}
+                {r.description && <div style={{ fontSize: 12, color: txt2, marginTop: 3 }}>{r.description}</div>}
                 {r.evidence_path ? (
                   <button type="button" onClick={() => openEvidence(r.evidence_path)} style={{
                     marginTop: 6, display: "inline-flex", alignItems: "center", gap: 5,
                     padding: "4px 10px", borderRadius: 8, cursor: "pointer",
                     background: `${accent}14`, border: `1px solid ${accent}40`, color: accent,
-                    fontSize: 11, fontWeight: 500, fontFamily: font,
+                    fontSize: 12, fontWeight: 500, fontFamily: font,
                   }}>
                     <Paperclip size={11} /> Ver comprobante
                   </button>
@@ -489,7 +489,7 @@ export default function Caja({ T }) {
                     marginTop: 6, display: "inline-flex", alignItems: "center", gap: 5,
                     padding: "4px 10px", borderRadius: 8, cursor: subiendo === r.id ? "wait" : "pointer",
                     background: "transparent", border: `1px dashed ${txt3}55`, color: txt3,
-                    fontSize: 11, fontWeight: 500, fontFamily: font,
+                    fontSize: 12, fontWeight: 500, fontFamily: font,
                   }}>
                     <Paperclip size={11} />
                     {subiendo === r.id ? "Guardando…" : "Agregar soporte"}
