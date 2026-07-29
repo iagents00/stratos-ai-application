@@ -149,8 +149,15 @@ const nsgConfig = {
   // Ajustes del módulo Proyectos (motor mkt reusado): NSG no produce videos →
   // fuera la pestaña "Pipeline" (kanban de videos de marketing); la pestaña
   // "Marcas" acá se llama "Proyectos" (marca NSG → proyectos → tareas).
+  //
+  // "Solicitudes" también se va (29-jul). Es la bandeja de PEDIDOS DE DISEÑO del
+  // equipo de marketing de Duke, con complejidad A/AA/AAA — «A es simple, AAA es
+  // complejo». NSG no recibe pedidos de diseño: acá el trabajo entra como
+  // proyecto y tarea. Ángel al verla: «no va relacionado a lo que hacemos».
+  // Se oculta por config, no se borra: el motor sigue igual para Duke y volver a
+  // prenderla es sacar una palabra de esta lista.
   mkt: {
-    hideTabs: ["pipeline"],
+    hideTabs: ["pipeline", "solicitudes"],
     tabLabels: { marcas: "Proyectos" },
   },
 
