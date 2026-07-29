@@ -131,6 +131,24 @@ export default function CuentasCobro({ T, emisor }) {
     setSaving(false);
     if (e) { setError(e.message); return; }
     if (typeof data === "string" && !data.startsWith("✓")) { setError(data); return; }
+    // La cuenta de cobro también queda en Mi Espacio → Documentos. Pedido de
+    // Ángel (29-jul): «todo lo que sea archivo pongámoslo allí en documentos».
+    // Antes solo vivía en esta pantalla y en el Word que uno bajaba a su
+    // computadora — o sea, en ningún lado consultable por el otro socio.
+    // Si falla, NO se le grita al usuario: la cuenta de cobro ya está creada,
+    // que es lo que pidió, y se puede archivar a mano después.
+    try {
+      const periodo = form.desde && form.hasta ? ` · ${form.desde} al ${form.hasta}` : "";
+      await supabase.rpc("fn_doc_guardar", {
+        p_profile_id: user.id,
+        p_titulo: `Cuenta de cobro · ${form.cliente.trim()}${periodo}`,
+        p_contenido: String(data),
+        p_tipo: "cuenta_cobro",
+        p_desde: form.desde || null,
+        p_hasta: form.hasta || null,
+      });
+    } catch { /* la cuenta ya existe; el archivado es el extra, no el trabajo */ }
+
     setForm({ cliente: "", monto: "", desde: "", hasta: "", concepto: "" });
     setShowForm(false);
     load();
