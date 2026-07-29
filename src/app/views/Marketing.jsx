@@ -257,6 +257,24 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
     colorScheme: isLight ? "light" : "dark",
   };
 
+  /* Flechita ▾ para todo lo seleccionable (pedido de Ángel 29-jul): en los
+     filtros la nativa quedaba PEGADA al borde derecho; en las pastillas de la
+     hoja (estatus, empresa, ubicación…) no había ninguna y no se notaba que
+     eran desplegables. Dibujamos la nuestra, del color del texto de cada uno,
+     unos milímetros adentro. */
+  const caret = useCallback((c, right = 9) => ({
+    backgroundImage: `url("data:image/svg+xml;charset=utf-8,${encodeURIComponent(
+      `<svg xmlns='http://www.w3.org/2000/svg' width='8' height='5' viewBox='0 0 8 5'><path d='M1 1l3 3 3-3' fill='none' stroke='${c}' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'/></svg>`
+    )}")`,
+    backgroundRepeat: "no-repeat",
+    backgroundPosition: `right ${right}px center`,
+    paddingRight: right + 15,
+  }), []);
+
+  /* Estilo para los <select> de filtros: como selStyle pero con nuestra
+     flechita, corrida unos milímetros del borde. */
+  const selStyle = { ...inputStyle, appearance: "none", WebkitAppearance: "none", cursor: "pointer", ...caret(txt2, 12) };
+
   const brandColor = useCallback(
     (brand) => ((brand && BRAND_HEX[brand.slug]) || BRAND_FALLBACK)[isLight ? "l" : "d"],
     [isLight]
@@ -781,7 +799,7 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
                       padding: "3px 7px", cursor: "pointer", color: accent, display: "inline-flex", alignItems: "center", gap: 4, fontSize: 11.5, fontFamily: font,
                     }}><Camera size={12} /> Evidencia</button>
                   )}
-                  <select value={t.estado} onChange={e => setTaskState(t, e.target.value)} style={{ ...inputStyle, width: "auto", padding: "3px 6px", fontSize: 12 }}>
+                  <select value={t.estado} onChange={e => setTaskState(t, e.target.value)} style={{ ...selStyle, width: "auto", padding: "3px 6px", fontSize: 12, ...caret(txt2, 7) }}>
                     {TASK_STATES.map(s => <option key={s.id} value={s.id}>{s.l}</option>)}
                   </select>
                 </div>
@@ -790,14 +808,14 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
             {/* Alta de tarea dentro del proyecto */}
             <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "2fr 1fr 1fr", gap: 7, marginTop: 6 }}>
               <input placeholder="Nueva tarea…" value={taskForm.titulo} onChange={e => setTaskForm(f => ({ ...f, titulo: e.target.value }))} style={inputStyle} />
-              <select value={taskForm.assignee} onChange={e => setTaskForm(f => ({ ...f, assignee: e.target.value }))} style={inputStyle}>
+              <select value={taskForm.assignee} onChange={e => setTaskForm(f => ({ ...f, assignee: e.target.value }))} style={selStyle}>
                 <option value="">Asignar a…</option>
                 {assignees.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
               </select>
               <input type="datetime-local" value={taskForm.due} onChange={e => setTaskForm(f => ({ ...f, due: e.target.value }))} style={inputStyle} />
             </div>
             <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr auto", gap: 7 }}>
-              <select value={taskForm.dependsOn} onChange={e => setTaskForm(f => ({ ...f, dependsOn: e.target.value }))} style={inputStyle} title="La tarea queda bloqueada hasta que ésta se complete">
+              <select value={taskForm.dependsOn} onChange={e => setTaskForm(f => ({ ...f, dependsOn: e.target.value }))} style={selStyle} title="La tarea queda bloqueada hasta que ésta se complete">
                 <option value="">Sin dependencia</option>
                 {projTasks.filter(t => t.estado !== "hecha").map(t => <option key={t.id} value={t.id}>Bloqueada por: {t.titulo}</option>)}
               </select>
@@ -1246,6 +1264,7 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
           color: hex || (valor ? txt2 : txt3),
           background: hex ? `${hex}1E` : "transparent",
           border: `1px solid ${hex ? `${hex}44` : bd}`,
+          ...caret(hex || (valor ? txt2 : txt3), 8),
         }}>
         <option value="">—</option>
         {opciones.map(o => <option key={o} value={o}>{o}</option>)}
@@ -1284,26 +1303,26 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
         {/* El año hace lo que hacían sus pestañas 2026 · 2025 · … */}
         {anios.length > 1 && (
           <select value={pipeFiltro.anio} onChange={e => setPipeFiltro(f => ({ ...f, anio: e.target.value }))}
-            title="El año, como las pestañas de la hoja" style={{ ...inputStyle, width: "auto", minWidth: 100 }}>
+            title="El año, como las pestañas de la hoja" style={{ ...selStyle, width: "auto", minWidth: 100 }}>
             <option value="">Todos los años</option>
             {anios.map(a => <option key={a} value={a}>{a}</option>)}
           </select>
         )}
-        <select value={pipeFiltro.etapa} onChange={e => setPipeFiltro(f => ({ ...f, etapa: e.target.value }))} style={{ ...inputStyle, width: "auto", minWidth: 150 }}>
+        <select value={pipeFiltro.etapa} onChange={e => setPipeFiltro(f => ({ ...f, etapa: e.target.value }))} style={{ ...selStyle, width: "auto", minWidth: 150 }}>
           <option value="">Todo estatus</option>
           {ETAPAS.map(s => <option key={s.id} value={s.id}>{s.l}</option>)}
         </select>
         {brands.length > 1 && (
-          <select value={pipeFiltro.empresa} onChange={e => setPipeFiltro(f => ({ ...f, empresa: e.target.value }))} style={{ ...inputStyle, width: "auto", minWidth: 130 }}>
+          <select value={pipeFiltro.empresa} onChange={e => setPipeFiltro(f => ({ ...f, empresa: e.target.value }))} style={{ ...selStyle, width: "auto", minWidth: 130 }}>
             <option value="">Toda empresa</option>
             {brands.map(b => <option key={b.id} value={b.id}>{b.nombre}</option>)}
           </select>
         )}
-        <select value={pipeFiltro.locacion} onChange={e => setPipeFiltro(f => ({ ...f, locacion: e.target.value }))} style={{ ...inputStyle, width: "auto", minWidth: 130 }}>
+        <select value={pipeFiltro.locacion} onChange={e => setPipeFiltro(f => ({ ...f, locacion: e.target.value }))} style={{ ...selStyle, width: "auto", minWidth: 130 }}>
           <option value="">Toda ubicación</option>
           {locaciones.map(l => <option key={l} value={l}>{l}</option>)}
         </select>
-        <select value={pipeFiltro.tipo} onChange={e => setPipeFiltro(f => ({ ...f, tipo: e.target.value }))} style={{ ...inputStyle, width: "auto", minWidth: 120 }}>
+        <select value={pipeFiltro.tipo} onChange={e => setPipeFiltro(f => ({ ...f, tipo: e.target.value }))} style={{ ...selStyle, width: "auto", minWidth: 120 }}>
           <option value="">Todo tipo</option>
           {tipos.map(t => <option key={t} value={t}>{t}</option>)}
         </select>
@@ -1361,7 +1380,7 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
           </label>
           <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
             <span style={{ fontSize: 11.5, color: txt3 }}>Qué guarda</span>
-            <select value={colForm.tipo} onChange={e => setColForm(c => ({ ...c, tipo: e.target.value }))} style={{ ...inputStyle, width: "auto" }}>
+            <select value={colForm.tipo} onChange={e => setColForm(c => ({ ...c, tipo: e.target.value }))} style={{ ...selStyle, width: "auto" }}>
               <option value="texto">Texto</option>
               <option value="numero">Número</option>
               <option value="fecha">Fecha</option>
@@ -1433,6 +1452,7 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
                           padding: "3px 10px", borderRadius: 999, whiteSpace: "nowrap", fontFamily: font,
                           fontSize: 11.5, fontWeight: 600, color: col, background: `${col}1E`, border: `1px solid ${col}44`,
                           colorScheme: isLight ? "light" : "dark",
+                          ...caret(col, 8),
                         }}>
                           {ETAPAS.map(s => <option key={s.id} value={s.id}>{s.l}</option>)}
                         </select>
@@ -1449,6 +1469,7 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
                             fontSize: 11.5, fontWeight: 600,
                             color: b ? bc : txt3, background: b ? `${bc}1E` : "transparent",
                             border: `1px solid ${b ? `${bc}44` : bd}`, colorScheme: isLight ? "light" : "dark",
+                            ...caret(b ? bc : txt3, 8),
                           }}>
                             <option value="">— empresa —</option>
                             {brands.map(x => <option key={x.id} value={x.id}>{x.nombre}</option>)}
@@ -1563,7 +1584,7 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
           <input value={repFiltro.q} onChange={e => setRepFiltro(f => ({ ...f, q: e.target.value }))}
             placeholder="Buscar en las actividades…" style={{ ...inputStyle, paddingLeft: 30 }} />
         </div>
-        <select value={repFiltro.persona} onChange={e => setRepFiltro(f => ({ ...f, persona: e.target.value }))} style={{ ...inputStyle, width: "auto", minWidth: 150 }}>
+        <select value={repFiltro.persona} onChange={e => setRepFiltro(f => ({ ...f, persona: e.target.value }))} style={{ ...selStyle, width: "auto", minWidth: 150 }}>
           <option value="">Todo el equipo</option>
           {assignees.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
         </select>
@@ -1616,6 +1637,7 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
                           color: r.brand_id ? brandColor(brandById[r.brand_id]) : txt3,
                           background: r.brand_id ? `${brandColor(brandById[r.brand_id])}1E` : "transparent",
                           border: `1px solid ${r.brand_id ? `${brandColor(brandById[r.brand_id])}44` : bd}`,
+                          ...caret(r.brand_id ? brandColor(brandById[r.brand_id]) : txt3, 8),
                         }}>
                         <option value="">— empresa —</option>
                         {brands.map(b => <option key={b.id} value={b.id}>{b.nombre}</option>)}
@@ -1706,11 +1728,11 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
         <div style={{ ...card, padding: 14, display: "grid", gridTemplateColumns: isMobile ? "1fr 1fr" : "repeat(4, 1fr)", gap: 8 }}>
           <input autoFocus placeholder="Propiedad *" value={pipeForm.nombre} onChange={e => setPipeForm(f => ({ ...f, nombre: e.target.value }))} style={inputStyle} />
           <input placeholder="Locación (Tulum, Playa…)" value={pipeForm.locacion} onChange={e => setPipeForm(f => ({ ...f, locacion: e.target.value }))} style={inputStyle} />
-          <select value={pipeForm.brand} onChange={e => setPipeForm(f => ({ ...f, brand: e.target.value }))} style={inputStyle}>
+          <select value={pipeForm.brand} onChange={e => setPipeForm(f => ({ ...f, brand: e.target.value }))} style={selStyle}>
             <option value="">Marca (Duke)</option>
             {brands.map(b => <option key={b.id} value={b.id}>{b.nombre}</option>)}
           </select>
-          <select value={pipeForm.etapa} onChange={e => setPipeForm(f => ({ ...f, etapa: e.target.value }))} style={inputStyle}>
+          <select value={pipeForm.etapa} onChange={e => setPipeForm(f => ({ ...f, etapa: e.target.value }))} style={selStyle}>
             {ETAPAS.map(s => <option key={s.id} value={s.id}>{s.l}</option>)}
           </select>
           <input type="date" title="Fecha de rodaje" value={pipeForm.rodaje} onChange={e => setPipeForm(f => ({ ...f, rodaje: e.target.value }))} style={inputStyle} />
@@ -1955,7 +1977,7 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
         <div style={{ ...card, padding: 15, display: "flex", flexDirection: "column", gap: 9 }}>
           <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "2fr 1fr", gap: 8 }}>
             <input autoFocus placeholder="¿Qué necesitas? (ej. Flyer promo…) *" value={reqForm.titulo} onChange={e => setReqForm(f => ({ ...f, titulo: e.target.value }))} style={inputStyle} />
-            <select value={reqForm.brand} onChange={e => setReqForm(f => ({ ...f, brand: e.target.value }))} style={inputStyle}>
+            <select value={reqForm.brand} onChange={e => setReqForm(f => ({ ...f, brand: e.target.value }))} style={selStyle}>
               <option value="">Marca…</option>
               {brands.map(b => <option key={b.id} value={b.id}>{b.nombre}</option>)}
             </select>
@@ -1974,7 +1996,7 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
           </div>
           <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr 1fr" : "1fr 1fr 2fr", gap: 8 }}>
             <input type="date" title="Fecha de entrega" value={reqForm.entrega} onChange={e => setReqForm(f => ({ ...f, entrega: e.target.value }))} style={inputStyle} />
-            <select value={reqForm.assignee} onChange={e => setReqForm(f => ({ ...f, assignee: e.target.value }))} style={inputStyle}>
+            <select value={reqForm.assignee} onChange={e => setReqForm(f => ({ ...f, assignee: e.target.value }))} style={selStyle}>
               <option value="">Asignar a…</option>
               {assignees.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
             </select>
@@ -2035,7 +2057,7 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
             const estado = e.target.value;
             const ok = await patch("mkt_requests", r.id, { estado });
             if (ok) setRequests(prev => prev.map(x => x.id === r.id ? { ...x, estado } : x));
-          }} style={{ ...inputStyle, width: "auto", padding: "5px 8px", fontSize: 12 }}>
+          }} style={{ ...selStyle, width: "auto", padding: "5px 8px", fontSize: 12, ...caret(txt2, 8) }}>
             {REQ_STATES.map(s => <option key={s.id} value={s.id}>{s.l}</option>)}
           </select>
         </div>
@@ -2190,7 +2212,7 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
             <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 9 }}>
               <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
                 <span style={{ fontSize: 11.5, color: txt3 }}>¿En qué empresa?</span>
-                <select value={repForm.empresa} onChange={e => setRepForm(f => ({ ...f, empresa: e.target.value }))} style={inputStyle}>
+                <select value={repForm.empresa} onChange={e => setRepForm(f => ({ ...f, empresa: e.target.value }))} style={selStyle}>
                   <option value="">— elegir —</option>
                   {brands.map(b => <option key={b.id} value={b.id}>{b.nombre}</option>)}
                 </select>
