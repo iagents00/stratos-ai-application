@@ -29,7 +29,38 @@ import { useIsMobile } from "../../hooks/useViewport";
 import { descargarDocx } from "../../lib/docx";
 
 const REDACTOR_URL = "https://personal-n8n.suwsiw.easypanel.host/webhook/nsg-informe-avances";
-const REDACTOR_TIMEOUT_MS = 90000;   // el redactor tarda ~10s; 90 es margen de sobra
+// El redactor tarda entre 30 y 60 segundos con una quincena entera. Estaba en 90
+// y aun así se cortó: el 29-jul salió el BORRADOR crudo —con emojis, números de
+// PR y nombres de flujos— porque el redactor no llegó a tiempo. 150 da aire.
+const REDACTOR_TIMEOUT_MS = 150000;
+
+// Lo que se le manda al redactor va PODADO. Con la quincena completa eran ~120
+// entradas de 420 caracteres: el modelo tardaba más que el tope y se caía al
+// borrador. Con esto el prompt baja a la mitad y el informe sale redactado.
+const HECHOS_POR_DIA = 5;
+const LARGO_HECHO    = 300;
+
+// Emojis y símbolos fuera. El prompt ya los prohíbe, pero si el modelo copia uno
+// del changelog termina en el Word que lee la persona de recursos humanos — y
+// ahí ya es tarde. Se limpia en los dos sentidos: lo que entra y lo que sale.
+const sinEmojis = (t) =>
+  String(t || "").replace(/[^\n\r -~áéíóúüñÁÉÍÓÚÜÑ¿¡«»°ºª—–…·]/g, "").replace(/[ \t]{2,}/g, " ");
+
+// Poda la evidencia sin tocar su forma: el redactor sigue viendo `dias`,
+// `semanas` y `encabezado` igual, solo que más corto y ya limpio.
+const podarEvidencia = (data) => ({
+  ...data,
+  cambios: undefined,          // el día a día ya los trae; mandarlos dos veces es pagar doble
+  bitacora: undefined,
+  dias: (data.dias || []).map((d) => ({
+    ...d,
+    hechos: (d.hechos || []).slice(0, HECHOS_POR_DIA).map((h) => ({
+      ...h,
+      titulo:  h.titulo  ? sinEmojis(h.titulo).slice(0, LARGO_HECHO)  : h.titulo,
+      detalle: h.detalle ? sinEmojis(h.detalle).slice(0, LARGO_HECHO) : h.detalle,
+    })),
+  })),
+});
 
 const RANGOS = [
   { dias: 7,  label: "7 días" },
@@ -137,21 +168,30 @@ export default function InformeAvances({ T }) {
         redactado: false,
       };
 
-      // 2) El redactor. Si no contesta, se usa el borrador y el informe sale igual.
-      let salida = data.borrador || "";
+      // 2) El borrador presentable. Es el que sale si el redactor no contesta, así
+      //    que TIENE que poder mandarse tal cual: abre con el encabezado del
+      //    documento y va día por día, ya sin emojis ni jerga técnica.
+      let salida = "";
+      try {
+        const { data: b } = await supabase.rpc("fn_informe_borrador", { p_j: data });
+        if (b && String(b).trim().length > 40) salida = String(b).trim();
+      } catch { /* si falla, queda el de la propia función */ }
+      if (!salida) salida = sinEmojis(data.borrador || "");
+
+      // 3) El redactor. Si no contesta, se usa el borrador y el informe sale igual.
       try {
         const ctrl = new AbortController();
         const t = setTimeout(() => ctrl.abort(), REDACTOR_TIMEOUT_MS);
         const r = await fetch(REDACTOR_URL, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ evidencia: data }),
+          body: JSON.stringify({ evidencia: podarEvidencia(data) }),
           signal: ctrl.signal,
         });
         clearTimeout(t);
         const j = await r.json();
         if (j?.texto && String(j.texto).trim().length > 80) {
-          salida = String(j.texto).trim();
+          salida = sinEmojis(String(j.texto).trim());
           info.redactado = true;
         }
       } catch {
