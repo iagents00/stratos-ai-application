@@ -22,6 +22,9 @@ import {
   NotebookPen, CheckSquare, History, UserCheck, ShieldCheck,
   LayoutDashboard, Send, HelpCircle, AlertCircle, Users, Layers,
   FileText, UsersRound, LineChart, LifeBuoy, AlarmClock, Home, Smartphone,
+  // Módulos agregados 29-jul: Copilot, WhatsApp, Mi Espacio, Proyectos,
+  // Create, Caja, Comando, Papelera, llamadas y audios.
+  FolderOpen, Building2, Hexagon, Wallet, Activity, Trash2, Phone, Mic,
 } from "lucide-react";
 import { CATEGORIES, MANUAL_SECTIONS, searchManual, exposeManualToWindow } from "./manual-content";
 
@@ -78,6 +81,7 @@ const ICON_MAP = {
   LogIn, KeyRound, Layout, UserPlus, FileSearch, MoveRight, Workflow,
   NotebookPen, CheckSquare, History, UserCheck, ShieldUser: ShieldCheck,
   LayoutDashboard, Send, HelpCircle, AlertCircle, AlarmClock, Home, Smartphone,
+  Bot, Search, FolderOpen, Building2, Hexagon, Wallet, Activity, Trash2, Phone, Mic,
 };
 const iconFor = (name) => ICON_MAP[name] || ChevronRight;
 
@@ -452,7 +456,10 @@ function ContentBlock({ block }) {
   if (block.type === 'ex') {
     return (
       <div className="mn-block mn-ex">
-        <div className="mn-ex-label">Escribile (o mandale audio) así:</div>
+        {/* Label impersonal a propósito: este componente renderiza TANTO el manual
+            del CRM (español neutro) como el de Telegram (voseo). Sin conjugar en
+            segunda persona, encaja en los dos sin sonar mal en ninguno. */}
+        <div className="mn-ex-label">Ejemplos para pedírselo (por texto o por audio):</div>
         {block.items.map((it, i) => (
           <div key={i} className="mn-ex-item">{it}</div>
         ))}
