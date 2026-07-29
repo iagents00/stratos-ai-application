@@ -1401,7 +1401,7 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
           {tipos.map(t => <option key={t} value={t}>{t}</option>)}
         </select>
         {hayFiltro && (
-          <button onClick={() => setPipeFiltro({ q: "", locacion: "", tipo: "", etapa: "", empresa: "" })} style={{
+          <button onClick={() => setPipeFiltro(f => ({ ...f, q: "", locacion: "", tipo: "", etapa: "", empresa: "" }))} style={{
             background: "transparent", border: "none", cursor: "pointer", color: txt3, fontSize: 12, fontFamily: font,
           }}>Limpiar</button>
         )}
