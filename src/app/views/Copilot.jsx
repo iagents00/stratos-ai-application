@@ -887,8 +887,9 @@ function renderInline(text, linkColor, key) {
     if (m[1] !== undefined) {
       partes.push(<strong key={`b${key}-${i++}`} style={{ fontWeight: 600 }}>{m[1]}</strong>);
     } else {
+      // Sin las comillas «»: Iván pidió quitarlas — queda solo el resaltado.
       partes.push(
-        <span key={`q${key}-${i++}`} style={{ color: linkColor, fontWeight: 600 }}>«{m[2]}»</span>
+        <span key={`q${key}-${i++}`} style={{ color: linkColor, fontWeight: 600 }}>{m[2]}</span>
       );
     }
     resto = resto.slice(m.index + m[0].length);
@@ -1054,9 +1055,11 @@ function Bubble({ m, T, isLight, userBg, userTxt, aiBg, aiBd, onPick, sending, i
         maxWidth: "min(82%, 62ch)", padding: "10px 14px", borderRadius: 14,
         borderBottomRightRadius: isUser ? 3 : 14, borderBottomLeftRadius: isUser ? 14 : 3,
         background: isUser ? userBg : aiBg, border: isUser ? "none" : `1px solid ${aiBd}`,
-        /* fontDisp: la tipografía «redondita» del header Stratos AI — Iván la
-           pidió para el chat en la llamada del 28-jul. */
+        /* La tipografía del wordmark «Stratos AI» que pidió Iván: es la misma
+           Inter, pero con el tracking apretado del logo — eso es lo que la hace
+           verse «más redondita». */
         color: isUser ? userTxt : T.txt, fontSize: chatType.body, lineHeight: chatType.bodyLh, fontFamily: fontDisp,
+        letterSpacing: "-0.02em",
         wordBreak: "break-word", opacity: m.pending ? 0.7 : 1,
         boxShadow: isLight ? (isUser ? `0 3px 10px ${T.accent}28` : "0 1px 4px rgba(15,23,42,0.03)") : "none"
       }}>
