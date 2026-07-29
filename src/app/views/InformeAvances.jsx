@@ -20,7 +20,8 @@
 // vivo no es un informe, es una promesa.
 
 import { useState, useCallback, useRef, useEffect } from "react";
-import { FileBarChart, Download, RefreshCw, Sparkles, AlertTriangle, Save, Check } from "lucide-react";
+import { FileBarChart, Download, RefreshCw, Sparkles, AlertTriangle, Save, Check, CalendarDays } from "lucide-react";
+import { bloquesDelReporte } from "../../lib/informe-doc";
 import { font, fontDisp } from "../../design-system/tokens";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../hooks/useAuth";
@@ -52,6 +53,31 @@ const fechaLarga = (iso) => {
   return `${d} de ${MESES[m - 1]} de ${y}`;
 };
 
+// Fecha de HOY en la zona de quien está mirando. `toISOString()` a secas devuelve
+// UTC: en Bogotá (-5) eso da el día de AYER hasta las 7 de la tarde, y el informe
+// arrancaría corrido un día sin que nadie lo note.
+const isoLocal = (d) =>
+  new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+const hoyISO = () => isoLocal(new Date());
+const menosDias = (iso, n) => {
+  const [y, m, d] = String(iso).split("-").map(Number);
+  return isoLocal(new Date(y, m - 1, d - n));
+};
+
+// Deja el informe en Mi Espacio → Documentos (y le avisa al equipo por el
+// Copilot). Vive fuera del componente y recibe TODO por parámetro: así la
+// pueden llamar tanto el guardado automático —que corre cuando el estado de
+// React todavía no se actualizó— como el botón, sin riesgo de archivar el
+// informe anterior.
+async function guardarEnDocumentos(profileId, texto, periodo) {
+  const nombre = `Informe de avances · ${periodo?.desde || ""} al ${periodo?.hasta || ""}`.trim();
+  const { data, error } = await supabase.rpc("fn_doc_guardar", {
+    p_profile_id: profileId, p_titulo: nombre, p_contenido: texto,
+    p_tipo: "informe", p_desde: periodo?.desde || null, p_hasta: periodo?.hasta || null,
+  });
+  return !error && data?.ok !== false;
+}
+
 export default function InformeAvances({ T }) {
   const { user } = useAuth();
   const isMobile = useIsMobile();
@@ -69,7 +95,11 @@ export default function InformeAvances({ T }) {
     backdropFilter: "blur(22px)", WebkitBackdropFilter: "blur(22px)",
   };
 
-  const [dias, setDias] = useState(15);
+  // El periodo se guarda SIEMPRE como dos fechas. Los botones de 7/15/30 no son
+  // otro modo: solo rellenan estas dos cajas. Con una sola fuente de verdad no
+  // puede pasar que la pantalla diga un rango y el informe salga con otro.
+  const [hasta, setHasta] = useState(hoyISO);
+  const [desde, setDesde] = useState(() => menosDias(hoyISO(), 15));
   const [cargando, setCargando] = useState(false);
   const [paso, setPaso] = useState(0);
   const [texto, setTexto] = useState("");
@@ -93,15 +123,17 @@ export default function InformeAvances({ T }) {
     try {
       // 1) La evidencia. Esto es lo único que no puede fallar.
       const { data, error: e } = await supabase.rpc("fn_informe_avances", {
-        p_profile_id: user.id, p_dias: dias,
+        p_profile_id: user.id, p_dias: 15, p_desde: desde, p_hasta: hasta,
       });
       if (e) throw new Error(e.message);
       if (!data || data.ok === false) throw new Error(data?.error || "No pude reunir la información.");
 
       const info = {
         empresa: data.empresa, cliente: data.cliente, periodo: data.periodo,
+        encabezado: data.encabezado || null,
         entregas: (data.entregas || []).length,
         reuniones: (data.reuniones || []).length,
+        jornadas: (data.dias || []).length,
         redactado: false,
       };
 
@@ -129,29 +161,36 @@ export default function InformeAvances({ T }) {
 
       setTexto(salida);
       setMeta(info);
-      setGuardado(false);   // informe nuevo = todavía sin guardar
+
+      // Queda archivado SOLO, sin que nadie apriete nada. Si falla, el informe
+      // sigue en pantalla y descargable — solo se avisa que no se archivó.
+      const ok = await guardarEnDocumentos(user.id, salida, info.periodo);
+      setGuardado(ok);
+      if (!ok) setError("El informe está listo, pero no pude dejarlo en Documentos. Probá con «Guardar en Stratos».");
     } catch (err) {
       setError(err?.message || "No pude generar el informe.");
     } finally {
       clearInterval(pasoTimer.current);
       setCargando(false);
     }
-  }, [user?.id, dias, cargando]);
+  }, [user?.id, desde, hasta, cargando]);
 
-  // Guardar en Stratos — pedido de Ángel: «ponle un botón de guardar… y que se
-  // guarde en el AIOS y también en mis documentos». Queda en Mi Espacio →
-  // Documentos, se puede bajar en Word desde ahí, y al equipo le llega el aviso
-  // por el Copilot.
+  // Guardar en Documentos. Ya NO depende de que alguien apriete el botón:
+  // pedido de Ángel (29-jul) — «todo reporte que hagamos debe quedar en
+  // documentos de NSG… el reporte del día del lunes no se puso en ningún lado».
+  // Un documento que solo existe si alguien se acuerda de guardarlo, tarde o
+  // temprano no existe. Se guarda solo apenas está listo; el botón queda como
+  // testigo (y como reintento si el guardado falló).
+  //
+  // Recibe el texto y la ficha por parámetro a propósito: cuando se llama desde
+  // `generar`, el estado de React todavía no se actualizó y leerlo de ahí
+  // guardaría el informe ANTERIOR.
   const guardar = async () => {
     if (!texto || !user?.id || guardando) return;
     setGuardando(true); setError("");
-    const nombre = `Informe de avances · ${meta?.periodo?.desde || ""} al ${meta?.periodo?.hasta || ""}`.trim();
-    const { data, error: e } = await supabase.rpc("fn_doc_guardar", {
-      p_profile_id: user.id, p_titulo: nombre, p_contenido: texto,
-      p_tipo: "informe", p_desde: meta?.periodo?.desde || null, p_hasta: meta?.periodo?.hasta || null,
-    });
+    const ok = await guardarEnDocumentos(user.id, texto, meta?.periodo);
     setGuardando(false);
-    if (e || data?.ok === false) { setError(e?.message || data?.error || "No pude guardarlo."); return; }
+    if (!ok) { setError("No pude dejarlo en Documentos. Intentá de nuevo en un momento."); return; }
     setGuardado(true);
   };
 
@@ -160,33 +199,22 @@ export default function InformeAvances({ T }) {
   // cuenta de cobro, que llegaba dañada).
   const bajarWord = () => {
     if (!texto) return;
-    const bloques = [
-      { text: (meta?.empresa || "Informe").toUpperCase(), bold: true, size: 12, align: "right", after: 0, color: "667085" },
-      { text: fechaLarga(new Date().toISOString().slice(0, 10)), size: 10, align: "right", after: 18, color: "667085" },
-    ];
-
-    // El texto viene en párrafos separados por línea en blanco. Los títulos de
-    // sección vienen EN MAYÚSCULAS y las viñetas empiezan con •.
-    String(texto).split("\n").forEach((linea) => {
-      const l = linea.trim();
-      if (!l) { bloques.push({ text: "", after: 6 }); return; }
-
-      const esTitulo = l === l.toUpperCase() && l.length < 60 && /[A-ZÁÉÍÓÚÑ]/.test(l);
-      const esVineta = l.startsWith("•") || l.startsWith("·") || l.startsWith("-");
-
-      if (esTitulo && bloques.length <= 2) {
-        bloques.push({ text: l, bold: true, size: 18, align: "center", after: 4 });
-      } else if (esTitulo) {
-        bloques.push({ text: l, bold: true, size: 11.5, before: 12, after: 6, linea: true });
-      } else if (esVineta) {
-        bloques.push({ text: l.replace(/^[•·-]\s*/, "• "), size: 10.5, indent: 12, after: 5 });
-      } else {
-        bloques.push({ text: l, size: 11, after: 6 });
-      }
+    const bloques = bloquesDelReporte(texto, {
+      empresa: meta?.empresa,
+      generado: fechaLarga(hoyISO()),
     });
+    const d = meta?.periodo?.desde || "";
+    const h = meta?.periodo?.hasta || "";
+    descargarDocx(`Reporte de avances ${d && h ? `${d} al ${h}` : ""}`.trim(), bloques);
+  };
 
-    const desde = meta?.periodo?.desde || "";
-    descargarDocx(`Informe de avances ${desde ? `— ${desde}` : ""}`.trim(), bloques);
+  // `colorScheme` no es cosmético: sin él, en modo oscuro el navegador dibuja el
+  // calendario nativo con fondo blanco y el iconito del día queda invisible.
+  const campoFecha = {
+    background: "transparent", border: "none", outline: "none",
+    color: txt, fontSize: 12.5, fontFamily: font, padding: 0,
+    colorScheme: isLight ? "light" : "dark",
+    cursor: cargando ? "default" : "pointer",
   };
 
   const botonPrimario = {
@@ -216,19 +244,41 @@ export default function InformeAvances({ T }) {
           </div>
         </div>
 
-        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "center" }}>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "center", alignItems: "center" }}>
+          {/* Atajos. No son «otro modo»: solo mueven la fecha de inicio. */}
           <div style={{ display: "flex", gap: 3, padding: 3, borderRadius: 11, border: `1px solid ${bd}` }}>
-            {RANGOS.map((r) => (
-              <button key={r.dias} type="button" onClick={() => setDias(r.dias)} disabled={cargando}
-                style={{
-                  padding: "9px 12px", borderRadius: 8, cursor: cargando ? "default" : "pointer",
-                  fontSize: 12.5, fontFamily: font, border: "1px solid transparent", textAlign: "center",
-                  background: dias === r.dias ? `${accent}1A` : "transparent",
-                  color: dias === r.dias ? accent : txt2,
-                  fontWeight: dias === r.dias ? 600 : 400,
-                }}>{r.label}</button>
-            ))}
+            {RANGOS.map((r) => {
+              const activo = desde === menosDias(hasta, r.dias);
+              return (
+                <button key={r.dias} type="button" disabled={cargando}
+                  onClick={() => setDesde(menosDias(hasta, r.dias))}
+                  style={{
+                    padding: "9px 12px", borderRadius: 8, cursor: cargando ? "default" : "pointer",
+                    fontSize: 12.5, fontFamily: font, border: "1px solid transparent", textAlign: "center",
+                    background: activo ? `${accent}1A` : "transparent",
+                    color: activo ? accent : txt2,
+                    fontWeight: activo ? 600 : 400,
+                  }}>{r.label}</button>
+              );
+            })}
           </div>
+
+          {/* El periodo exacto. Los reportes se facturan por quincena («del 30 de
+              junio al 14 de julio»), no por «los últimos N días». */}
+          <div style={{
+            display: "flex", alignItems: "center", gap: 6, padding: "6px 10px",
+            borderRadius: 11, border: `1px solid ${bd}`,
+          }}>
+            <CalendarDays size={14} color={txt3} style={{ flexShrink: 0 }} />
+            <input type="date" value={desde} max={hasta} disabled={cargando}
+              onChange={(e) => e.target.value && setDesde(e.target.value)}
+              aria-label="Desde" style={campoFecha} />
+            <span style={{ color: txt3, fontSize: 12, fontFamily: font }}>al</span>
+            <input type="date" value={hasta} min={desde} max={hoyISO()} disabled={cargando}
+              onChange={(e) => e.target.value && setHasta(e.target.value)}
+              aria-label="Hasta" style={campoFecha} />
+          </div>
+
           <button onClick={generar} disabled={cargando} style={botonPrimario}>
             {cargando
               ? <RefreshCw size={15} style={{ animation: "spin 1s linear infinite" }} />
@@ -280,14 +330,17 @@ export default function InformeAvances({ T }) {
                   {meta?.periodo ? `${fechaLarga(meta.periodo.desde)} al ${fechaLarga(meta.periodo.hasta)}` : "Informe"}
                 </div>
                 <div style={{ fontSize: 11.5, color: txt3, marginTop: 2 }}>
-                  {meta?.entregas || 0} entregas · {meta?.reuniones || 0} reuniones
+                  {meta?.jornadas || 0} jornadas · {meta?.reuniones || 0} reuniones
+                  {meta?.entregas ? ` · ${meta.entregas} entregas` : ""}
                   {meta && !meta.redactado ? " · versión resumida" : ""}
                 </div>
               </div>
             </div>
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
               <button onClick={guardar} disabled={guardando || guardado}
-                title={guardado ? "Ya quedó en Mi Espacio → Documentos" : "Guardarlo en Stratos y avisarle al equipo"}
+                title={guardado
+                  ? "Quedó solo en Mi Espacio → Documentos, y al equipo le llegó el aviso"
+                  : "Guardarlo en Stratos y avisarle al equipo"}
                 style={{
                   background: guardado ? `${accent}14` : "transparent",
                   border: `1px solid ${guardado ? `${accent}55` : bd}`, borderRadius: 10,
@@ -297,7 +350,7 @@ export default function InformeAvances({ T }) {
                 }}>
                 {guardando ? <RefreshCw size={14} style={{ animation: "spin 1s linear infinite" }} />
                   : guardado ? <Check size={14} /> : <Save size={14} />}
-                {guardando ? "Guardando…" : guardado ? "Guardado" : "Guardar en Stratos"}
+                {guardando ? "Guardando…" : guardado ? "En Documentos" : "Guardar en Stratos"}
               </button>
               <button onClick={bajarWord} title="Descargar en Word" style={{
                 background: "transparent", border: `1px solid ${bd}`, borderRadius: 10,
@@ -323,9 +376,10 @@ export default function InformeAvances({ T }) {
           <div style={{ fontSize: 13.5, color: txt2, marginTop: 12, fontFamily: font, textWrap: "pretty" }}>
             Elegí el periodo y dale a «Generar informe».
           </div>
-          <div style={{ fontSize: 12, color: txt3, marginTop: 6, maxWidth: 460, marginLeft: "auto", marginRight: "auto", textWrap: "pretty" }}>
-            Sale de lo que quedó registrado: tareas cerradas, avance de los proyectos,
-            objetivos del cliente y las reuniones del periodo.
+          <div style={{ fontSize: 12, color: txt3, marginTop: 6, maxWidth: 470, marginLeft: "auto", marginRight: "auto", textWrap: "pretty" }}>
+            Sale día a día, agrupado por semana, de lo que quedó registrado: el trabajo
+            del periodo, las reuniones, las tareas cerradas y el avance de los proyectos.
+            Lo del domingo se reporta en el sábado.
           </div>
         </div>
       )}
