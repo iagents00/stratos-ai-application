@@ -29,11 +29,12 @@
  * Aesthetic: paleta `T` del theme de App.jsx (glass/border/txt/accent) igual que
  * el resto del CRM; isLight por luminancia del bg (patrón Caja.jsx).
  */
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import {
   Megaphone, Plus, X, RefreshCw, Folder, ExternalLink, Lock, Check,
   ChevronLeft, ChevronRight, ChevronDown, Clapperboard, Mic, CalendarDays,
   Search, Camera, CircleCheck, Layers, SlidersHorizontal, Trash2, Maximize2,
+  GripVertical,
 } from "lucide-react";
 import { font, fontDisp } from "../../design-system/tokens";
 import { supabase } from "../../lib/supabase";
@@ -271,7 +272,7 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
           .order("due_at", { ascending: true, nullsFirst: false }).limit(600),
         supabase.from("mkt_pipeline_items").select("id, brand_id, nombre, locacion, etapa, fecha_rodaje, fecha_publicacion, precio, tipo, drive_url, ig_url, crudos_url, video_url, story_url, cine_url, ficha_url, info_url, notas, datos, orden, updated_at")
           .eq("organization_id", orgId).is("deleted_at", null).order("orden").order("updated_at"),
-        supabase.from("mkt_requests").select("id, brand_id, titulo, detalle, objetivo, complejidad, ref_image_url, fecha_entrega, solicitante, assignee_id, estado, created_at")
+        supabase.from("mkt_requests").select("id, brand_id, titulo, detalle, objetivo, complejidad, ref_image_url, fecha_entrega, solicitante, assignee_id, estado, orden, created_at")
           .eq("organization_id", orgId).is("deleted_at", null).order("created_at", { ascending: false }).limit(200),
         supabase.from("profiles").select("id, name, role").eq("organization_id", orgId),
         supabase.from("mkt_daily_reports").select("id, profile_id, fecha, texto, evidencia_url, origen, created_at, brand_id, tiempo_texto")
@@ -1659,12 +1660,78 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
     );
   };
 
+  /* Orden de PRIORIDAD (arrastrable): las priorizadas van por su `orden` (1 =
+     más urgente); las recién llegadas (orden null) arriba de todo, la más
+     nueva primero, para que ningún pedido nuevo pase desapercibido. */
+  const reqPrio = useCallback((a, b) => {
+    const ao = a.orden ?? null, bo = b.orden ?? null;
+    if (ao == null && bo == null) return new Date(b.created_at) - new Date(a.created_at);
+    if (ao == null) return -1;
+    if (bo == null) return 1;
+    return ao - bo;
+  }, []);
+
   const filteredReqs = useMemo(() => requests.filter(r => {
     if (!reqSearch) return true;
     const q = reqSearch.toLowerCase();
     return [r.titulo, r.detalle, r.objetivo, brandById[r.brand_id]?.nombre, nameOf(r.solicitante), nameOf(r.assignee_id)]
       .some(s => String(s || "").toLowerCase().includes(q));
-  }), [requests, reqSearch, brandById, nameOf]);
+  }).sort(reqPrio), [requests, reqSearch, brandById, nameOf, reqPrio]);
+
+  /* ── Arrastrar para priorizar (mouse Y dedo, sin librerías) ──────────────
+     Se agarra del mango ⋮⋮; mientras se mueve, la lista se reacomoda en vivo;
+     al soltar, el nuevo orden (1..n) se guarda para TODA la org. Con búsqueda
+     activa el mango se esconde: reordenar media lista sería ambiguo. */
+  const [dragReq, setDragReq] = useState(null);
+  const dragReqSnapshot = useRef(null); // orden previo por id, para persistir solo lo cambiado
+
+  const onReqGripDown = useCallback((e, id) => {
+    e.preventDefault();
+    try { e.currentTarget.setPointerCapture?.(e.pointerId); } catch (_) { /* noop */ }
+    dragReqSnapshot.current = Object.fromEntries(requests.map(x => [x.id, x.orden ?? null]));
+    setDragReq(id);
+  }, [requests]);
+
+  useEffect(() => {
+    if (!dragReq) return;
+    const onMove = (e) => {
+      const el = document.elementsFromPoint(e.clientX, e.clientY)
+        .find(n => n.dataset && n.dataset.reqid);
+      if (!el) return;
+      const overId = el.dataset.reqid;
+      if (!overId || overId === dragReq) return;
+      setRequests(prev => {
+        const vis = [...prev].sort(reqPrio);
+        const from = vis.findIndex(x => x.id === dragReq);
+        const to   = vis.findIndex(x => x.id === overId);
+        if (from < 0 || to < 0 || from === to) return prev;
+        vis.splice(to, 0, vis.splice(from, 1)[0]);
+        return vis.map((x, i) => ({ ...x, orden: i + 1 }));
+      });
+    };
+    const onUp = () => {
+      const snap = dragReqSnapshot.current || {};
+      dragReqSnapshot.current = null;
+      setDragReq(null);
+      // Persistir en background solo las filas cuyo orden cambió.
+      setRequests(prev => {
+        const vis = [...prev].sort(reqPrio);
+        vis.forEach((x, i) => {
+          const nuevo = i + 1;
+          if (snap[x.id] !== nuevo) patch("mkt_requests", x.id, { orden: nuevo });
+        });
+        return vis.map((x, i) => ({ ...x, orden: i + 1 }));
+      });
+    };
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", onUp);
+    window.addEventListener("pointercancel", onUp);
+    return () => {
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", onUp);
+      window.removeEventListener("pointercancel", onUp);
+    };
+  }, [dragReq, reqPrio, patch]);
 
   const solicitudes = () => (
     <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
@@ -1723,8 +1790,29 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
 
       {filteredReqs.length === 0 && emptyRow("Sin solicitudes. El pedido por nota de voz llega en la siguiente fase — por ahora se cargan acá.")}
       {filteredReqs.map(r => (
-        <div key={r.id} style={{ ...card, borderRadius: 14, padding: "12px 15px", display: "flex", alignItems: "center", gap: 11, flexWrap: isMobile ? "wrap" : "nowrap" }}>
-          <div style={{ flex: 1, minWidth: isMobile ? "100%" : 0 }}>
+        <div key={r.id} data-reqid={r.id} style={{
+          ...card, borderRadius: 14, padding: "12px 15px", display: "flex", alignItems: "center", gap: 11,
+          flexWrap: isMobile ? "wrap" : "nowrap",
+          border: dragReq === r.id ? `1px solid ${accent}` : card.border,
+          boxShadow: dragReq === r.id ? `0 8px 24px ${accent}33` : card.boxShadow,
+          opacity: dragReq && dragReq !== r.id ? 0.75 : 1,
+          userSelect: dragReq ? "none" : undefined,
+          transition: "border-color 0.12s, box-shadow 0.12s, opacity 0.12s",
+        }}>
+          {/* Mango de arrastre: prioridad a mano (se esconde durante una búsqueda) */}
+          {!reqSearch && (
+            <span
+              onPointerDown={(e) => onReqGripDown(e, r.id)}
+              title="Arrastra para cambiar la prioridad"
+              style={{
+                display: "inline-flex", alignItems: "center", flexShrink: 0,
+                cursor: dragReq === r.id ? "grabbing" : "grab",
+                touchAction: "none", color: dragReq === r.id ? accent : txt3,
+                padding: "6px 2px", margin: "-6px 0",
+              }}
+            ><GripVertical size={15} /></span>
+          )}
+          <div style={{ flex: 1, minWidth: isMobile ? "60%" : 0 }}>
             <div style={{ fontSize: 13.5, color: txt, display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
               {r.titulo} {cplxBadge(r.complejidad)}
             </div>
