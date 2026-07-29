@@ -301,6 +301,23 @@ Esta config se logró después de **MUCHAS** iteraciones para resolver:
 | `src/lib/lead-save.js` | espejo local con `appendEntrySync` (`lead-storage.js`) | Síncrono, NO deferred | El defer con `requestIdleCallback` perdía entries al cerrar el tab. NO volver al patrón viejo (`LOCAL_MIRROR_LIMIT`/idle ya no existen). _(Fila actualizada 2026-06-10 al código real.)_ |
 | `src/lib/lead-save.js` | `INSERT_TIMEOUT_MS = 12000` | 12s | Supabase paid plan no tiene cold-start; 25s era exagerado |
 | `public/sw.js` | `CACHE_VERSION` | bump cada vez que cambies auth/schema | Sin bump, navegadores con SW viejo siguen sirviendo bundle pre-fix |
+| `src/lib/auth.js` | `signOut({ scope: 'local' })` | **NO volver al default `global`** | El default de Supabase revoca las sesiones de TODOS los dispositivos del usuario: salir en la PC botaba también al teléfono (y sus notificaciones). 2026-07-29 |
+
+### Duración de sesiones (2026-07-29) — la llave está en el DASHBOARD, no en el código
+
+El síntoma «se cierra la sesión a cada rato» NO es del frontend (la caché local dura 30 días y el
+contexto ya reintenta 2 veces antes de botar): es la **rotación del refresh token + la detección de
+reutilización** de Supabase. Una PWA/teléfono que se suspende a mitad de una renovación reintenta con
+el token viejo → Supabase lo trata como robo → revoca la familia entera → login forzado. Para que las
+sesiones duren MESES (hasta cambio de contraseña o logout explícito), en el **Dashboard de Supabase**
+(`glulgyhkrqpykxmujodb` → Authentication → Sessions):
+1. **Refresh token reuse interval**: subirlo a `86400` (o desactivar «Detect compromised refresh
+   tokens» si la opción existe en el plan) — es lo que mata sesiones legítimas de PWA/multi-pestaña.
+2. **Access token (JWT) expiry**: subir de 3600 a `43200` (12 h) — menos renovaciones = menos
+   oportunidades de choque.
+3. NO activar «Time-box user sessions» ni «Inactivity timeout» (hoy están apagados — verificado:
+   `auth.sessions.not_after` es null en todas).
+Cambiar la contraseña sigue revocando todas las sesiones (comportamiento pedido por Ángel).
 
 ### Cómo se logró cada parte (debugging history)
 
