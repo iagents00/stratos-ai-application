@@ -846,7 +846,7 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
             flex: 1, minWidth: 0, height: 40, padding: "0 14px", borderRadius: 20,
             background: isLight ? "#F1F5F9" : "rgba(255,255,255,0.06)",
             border: `1px solid ${isLight ? "rgba(15,23,42,0.08)" : "rgba(255,255,255,0.10)"}`,
-            color: T.txt, fontSize: chatType.input, fontFamily: font, outline: "none", transition: "border-color 0.15s"
+            color: T.txt, fontSize: chatType.input, fontFamily: fontDisp, outline: "none", transition: "border-color 0.15s"
           }}
           onFocus={(e) => { e.currentTarget.style.borderColor = T.accent; }}
           onBlur={(e) => { e.currentTarget.style.borderColor = isLight ? "rgba(15,23,42,0.08)" : "rgba(255,255,255,0.10)"; }}
@@ -878,11 +878,19 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
 function renderInline(text, linkColor, key) {
   const partes = [];
   let resto = String(text), i = 0;
-  const rxB = /\*\*([^*\n]+)\*\*/;
+  // **negrita** → negrita real · «lo importante» (tarea, nombre) → verde menta.
+  // Estándar de Iván (28-jul): jamás asteriscos visibles; lo importante resalta.
+  const rx = /\*\*([^*\n]+)\*\*|«([^»\n]+)»/;
   let m;
-  while ((m = rxB.exec(resto)) !== null) {
+  while ((m = rx.exec(resto)) !== null) {
     if (m.index > 0) partes.push(renderRichText(resto.slice(0, m.index), linkColor));
-    partes.push(<strong key={`b${key}-${i++}`} style={{ fontWeight: 600 }}>{m[1]}</strong>);
+    if (m[1] !== undefined) {
+      partes.push(<strong key={`b${key}-${i++}`} style={{ fontWeight: 600 }}>{m[1]}</strong>);
+    } else {
+      partes.push(
+        <span key={`q${key}-${i++}`} style={{ color: linkColor, fontWeight: 600 }}>«{m[2]}»</span>
+      );
+    }
     resto = resto.slice(m.index + m[0].length);
   }
   if (resto) partes.push(renderRichText(resto, linkColor));
@@ -902,7 +910,9 @@ function renderBloques(text, linkColor, accent) {
     const l = ln.trimEnd();
     if (l.trim() === "") return <div key={`e${i}`} style={{ height: 8 }} />;
 
-    const persona = l.match(/^\s*▸\s*(.+)$/);
+    // Encabezado de persona: «▸ Nombre» del cerebro, o «**Nombre**» solito en
+    // su línea cuando el modelo reescribe el plan — mismo look, sin asteriscos.
+    const persona = l.match(/^\s*▸\s*(.+)$/) || l.match(/^\s*\*\*([^*]+)\*\*\s*$/);
     if (persona) return (
       <div key={`p${i}`} style={{ marginTop: i === 0 ? 0 : 10, marginBottom: 3, fontWeight: 600, color: accent }}>
         {persona[1]}
@@ -1044,7 +1054,9 @@ function Bubble({ m, T, isLight, userBg, userTxt, aiBg, aiBd, onPick, sending, i
         maxWidth: "min(82%, 62ch)", padding: "10px 14px", borderRadius: 14,
         borderBottomRightRadius: isUser ? 3 : 14, borderBottomLeftRadius: isUser ? 14 : 3,
         background: isUser ? userBg : aiBg, border: isUser ? "none" : `1px solid ${aiBd}`,
-        color: isUser ? userTxt : T.txt, fontSize: chatType.body, lineHeight: chatType.bodyLh, fontFamily: font,
+        /* fontDisp: la tipografía «redondita» del header Stratos AI — Iván la
+           pidió para el chat en la llamada del 28-jul. */
+        color: isUser ? userTxt : T.txt, fontSize: chatType.body, lineHeight: chatType.bodyLh, fontFamily: fontDisp,
         wordBreak: "break-word", opacity: m.pending ? 0.7 : 1,
         boxShadow: isLight ? (isUser ? `0 3px 10px ${T.accent}28` : "0 1px 4px rgba(15,23,42,0.03)") : "none"
       }}>
