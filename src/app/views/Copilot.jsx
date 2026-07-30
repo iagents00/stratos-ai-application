@@ -928,10 +928,13 @@ function renderBloques(text, linkColor, accent) {
       </div>
     );
 
-    const vin = l.match(/^\s*[·•\-]\s+(.*)$/);
+    /* Iván, 30-jul: «puntos de color menta, fuerte brillante, que vayan a la
+       izquierda como para indicar algunas cosas». El punto pasa de gris tenue
+       al acento de la marca — es lo que hace que la lista se lea de un vistazo. */
+    const vin = l.match(/^\s*[·•▪\-]\s+(.*)$/);
     if (vin) return (
-      <div key={`v${i}`} style={{ display: "flex", gap: 8, marginBottom: 2 }}>
-        <span style={{ flexShrink: 0, opacity: 0.65 }}>·</span>
+      <div key={`v${i}`} style={{ display: "flex", gap: 8, marginBottom: 3 }}>
+        <span style={{ flexShrink: 0, color: accent, fontWeight: 700 }}>•</span>
         <span style={{ minWidth: 0 }}>{renderInline(vin[1], linkColor, i)}</span>
       </div>
     );
