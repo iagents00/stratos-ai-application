@@ -1,0 +1,96 @@
+-- 194 · Lo que encontraron dos agentes adversarios al auditar la migración 193.
+--
+-- Aplicado en la base como: 194 · 194b · 194c · 194d (29-jul-2026).
+-- Cuerpos vivos en Supabase (+ volcado diario de .github/workflows/backup.yml).
+--
+-- ═══════════════════════════════════════════════════════════════════════════
+-- LOS CUATRO HALLAZGOS
+--
+-- 1. EL CANDADO ESTABA DEFINIDO PERO NUNCA ENCHUFADO.
+--    La 193 creó _ventas_es_dictado_equipo y documentó que se llamaría desde
+--    …_required_fields_orig ANTES de los guardias de agenda. Ese CREATE OR
+--    REPLACE se quedó fuera del SQL que se aplicó: la función existía y no la
+--    llamaba nadie. Verificado con: prosrc like '%_ventas_es_dictado_equipo%'
+--    sobre …_required_fields_orig → 0.
+--    Lección: probar la función suelta NO prueba que esté en el camino. La
+--    prueba de la 193 pasaba porque le pasaba el tool_name a mano.
+--    Ya enchufado. Ahora, aun cuando el modelo manda la tool EQUIVOCADA
+--    («complete_task»), el dictado entra bien — que era el punto: la llave, no
+--    el prompt.
+--
+-- 2. _bot_agenda_is_done: la 193 lo ancló al arranque y ROMPIÓ cierres reales.
+--    «ya está lista la propuesta», «ya está hecho», «sí, ya quedó», «perfecto,
+--    listo» dejaron de reconocerse (el prefijo permitido era muy corto y «ya \s»
+--    exigía la palabra de cierre pegada). Y no cerró el agujero viejo: «lista de
+--    clientes de hoy» y «lista mis pendientes» seguían marcando hecho.
+--    Reescrito: admite saludo previo, reconoce «ya está …» con palabras en
+--    medio, y descarta «lista» como SUSTANTIVO («lista de precios») y como
+--    VERBO («lista mis pendientes»). Batería: 18/18.
+--
+-- 3. UN NOMBRE QUE NO EXISTE LE MANDABA TRABAJO A TODO DUKE.
+--    «que Fernanda llame mañana a las once…» → el separador no resolvía
+--    «Fernanda», dejaba responsable null y el nombre quedaba como TEXTO: salían
+--    dos acciones, una titulada «Fernanda», ambas para «Todos». Si el jefe
+--    apretaba «sí», les llegaba a los 5 asesores.
+--    Ahora, si va en mayúscula y no está en el equipo, se devuelve como
+--    responsable para que el motor conteste «No encontré a «Fernanda» en el
+--    equipo» — igual que marketing.
+--
+-- 4. bot_create_team_action PONÍA «Todos» SIN PREGUNTAR.
+--    Si no sabía para quién era, la rama ELSE ponía v_resp_name := 'Todos'. Se
+--    llegaba desde una pregunta cualquiera («¿cómo organizamos el día?»), que el
+--    portón de _inner fuerza a acción de equipo. Ahora, si el mensaje no dice
+--    explícitamente «todos»/«el equipo», PREGUNTA para quién.
+--    Preguntar cuesta un mensaje; equivocarse le cuesta a los 5 asesores.
+--
+-- MÁS, del mismo barrido:
+--  · «organízame el día» CON TILDE no se reconocía: el patrón pedía «organi»
+--    con i sin acento y la palabra trae «í». El reparto salía mal y las tareas
+--    terminaban en «Todos». (Y «organízame» es justo la forma que sale dictando
+--    por voz.)
+--  · El LÍMITE que dicta el jefe («…y que todo esto esté listo antes de las
+--    cuatro») entraba como una actividad basura Y se llevaba la hora: las
+--    actividades reales quedaban al cierre de jornada. Ahora se reconoce como
+--    límite y se le aplica a todas.
+--  · Consultas que entraban como encargo: «quiero que me digas cómo va el
+--    equipo», «necesito que me armes un reporte de los vendedores». Pedirle algo
+--    AL ASISTENTE ya no cuenta como dictado.
+--  · «que todos los vendedores hagan sus llamadas mañana» no entraba (el verbo
+--    de encargo se buscaba como «que <UNA palabra> <verbo>» y acá van tres).
+--
+-- ⚠️ PARA EL FUTURO — en Postgres `\b` es BACKSPACE (ascii 8), NO límite de
+--    palabra: eso es `\y`. Dos de los tres regex del portón de la mig 211
+--    (dentro de _inner) nunca matchearon por esto: '\bpidele\s+a\b' y
+--    '\brepart\w+…\b'. La lección ya estaba escrita en bot_nlu_dispatch_gvintell_orig
+--    y se repitió igual. NO corregido acá: vive en _inner, que ya no es el
+--    camino principal desde que el candado entra arriba.
+--
+-- VERIFICACIÓN: caso real de Iván → «Entendí 2 acciones ▸ Carlos Ayala ·
+-- mañana 4:00 p.m. ¿Confirmas?» (antes: «No encontré un recordatorio personal
+-- pendiente que coincida»). Falsos positivos 13/13. QA dorado ventas 26/26 ·
+-- marketing 15/17, idéntico antes y después.
+--
+-- REVERTIR: CREATE OR REPLACE al cuerpo anterior de cada función. Sin DDL
+-- destructivo, sin datos migrados. Nada se escribe sin que el admin confirme.
+-- ═══════════════════════════════════════════════════════════════════════════
+--
+-- Funciones tocadas (cuerpos en Supabase):
+--   194   _bot_agenda_is_done · bot_create_team_action
+--   194b  fn_ventas_split_dictado  (tilde · nombre desconocido · límite)
+--   194c  _ventas_es_dictado_equipo · bot_nlu_dispatch_gvintell_required_fields_orig
+--   194d  _ventas_es_dictado_equipo  (dictar a todo el equipo sin nombrar a nadie)
+--
+-- El bloque que se agregó a …_required_fields_orig, que es el corazón de todo:
+--
+--   if v_tool not in ('add_expediente_note','add_expediente_voice','add_note_bulk',
+--                     'upsert_lead','create_lead','add_client','create_client',
+--                     'nuevo_cliente','registrar_cliente','bulk_register')
+--      and public._ventas_es_dictado_equipo(p_telegram_chat_id, v_text) then
+--     return public.bot_nlu_dispatch_gvintell_inner(
+--       p_telegram_chat_id, 'create_team_action',
+--       v_args || jsonb_build_object('input_text', v_text));
+--   end if;
+--
+-- Va inmediatamente después del chequeo de mensaje vacío y ANTES de todo lo
+-- demás. Se excluyen altas y notas de cliente porque su texto puede traer un
+-- «pídele a…» legítimo adentro.

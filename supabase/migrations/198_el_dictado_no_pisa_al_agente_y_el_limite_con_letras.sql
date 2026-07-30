@@ -1,0 +1,78 @@
+-- 198 · 198b · Dos cosas que salieron de probar el dictado a fondo, ya con todo
+-- lo demás andando. Los cuerpos están aplicados en Supabase; esto es el registro
+-- revisable.
+--
+-- REVERTIR: CREATE OR REPLACE al cuerpo anterior de cada función. Sin DDL.
+-- ═══════════════════════════════════════════════════════════════════════════
+
+
+-- 198 · SI EL AGENTE YA SEPARÓ LAS TAREAS, NO SE LAS PISAMOS
+-- bot_nlu_dispatch_gvintell_required_fields_orig
+--
+-- El candado del dictado (194c) reescribe cualquier mensaje que huela a dictado
+-- de equipo como `create_team_action` + el texto crudo, para que la base lo
+-- separe con regex. Eso es lo correcto HOY: el agente de ventas manda el texto
+-- entero y no sabe desglosarlo.
+--
+-- Pero dejaba una trampa para el día que se actualice el prompt de n8n — que es
+-- justamente lo que queda pendiente. Si el agente mandara `create_team_actions`
+-- con el arreglo `tareas[]` YA separado (lo que hace el de marketing, y lo que
+-- `…_inner` sabe recibir), el candado se lo pisaba: tiraba el trabajo del modelo
+-- y volvía a partir el texto con regex. La mejora del prompt no se habría
+-- notado, y habría sido muy difícil de explicar por qué.
+--
+-- Ahora el candado se corre a un lado cuando el pedido ya viene desglosado. Con
+-- el prompt de hoy no cambia nada (nunca llega `tareas[]`); es la puerta abierta
+-- para cuando se actualice.
+--
+-- La condición agregada, delante del candado:
+--
+--     and not (v_tool = 'create_team_actions'
+--              and jsonb_typeof(v_args->'tareas') = 'array'
+--              and jsonb_array_length(v_args->'tareas') > 0)
+--
+-- Verificado simulando el prompt futuro: dos tareas pre-separadas entran con SU
+-- hora («mañana 10:00 a.m.» y «mañana 5:00 p.m.») en vez de heredar una sola.
+
+
+-- 198b · EL LÍMITE DICHO CON LETRAS YA NO SE TIRA
+-- fn_ventas_split_dictado
+--
+-- El separador saca el límite global del dictado («…y que todo esto esté listo
+-- ANTES DE LAS CUATRO DE LA TARDE») y, antes de aplicarlo a todas las
+-- actividades, comprueba que de verdad hable de tiempo — si no, entraría como
+-- una tarea basura. Esa comprobación sólo reconocía «a las …», «hoy/mañana»,
+-- dígitos y «al mediodía».
+--
+-- «antes de las cuatro de la tarde» no tiene ni un dígito ni un «a las»: daba
+-- negativo. El límite se cortaba del texto y después se descartaba, así que las
+-- actividades quedaban con la hora de CIERRE DE LA JORNADA (10 p.m.) en vez de
+-- las 4.
+--
+-- Con la frase COMPLETA de Iván no se notaba, porque termina en «tiene hasta las
+-- 5:30» y ese «5:30» sí matcheaba — el límite se salvaba de casualidad. Un jefe
+-- que dijera sólo la primera mitad perdía la hora.
+--
+-- Se agregaron las formas que faltaban a `v_re_tiempo`:
+--
+--     \m(a|de|hasta|antes|despu[eé]s)\s+(de\s+)?las?\s+
+--     \mde\s+la\s+(tarde|noche|ma[nñ]ana|madrugada)\M
+--
+-- Los números en letras ya los resolvía `fn_hora_en_palabras` más abajo; lo que
+-- fallaba era este portero de arriba.
+--
+-- Verificado: la frase de Iván SIN su cola («…esté listo antes de las cuatro de
+-- la tarde») ahora da «mañana 4:00 p.m.» en las dos actividades. Con la cola
+-- completa sigue dando lo mismo que antes.
+
+-- ═══════════════════════════════════════════════════════════════════════════
+-- VERIFICACIÓN
+--   QA dorado ventas 28/28 · marketing 15/17 (idéntico antes y después).
+--   Falsos positivos: «mis clientes», «cuántos leads tengo en seguimiento»,
+--   «a todos mis clientes en zoom concretado agrégales una nota», «recordame
+--   llamar a Pedro mañana a las 4», «ya está lista la propuesta de Martínez»
+--   → ninguno rutea como acción de equipo.
+--
+-- Funciones tocadas (cuerpos en Supabase):
+--   198   bot_nlu_dispatch_gvintell_required_fields_orig
+--   198b  fn_ventas_split_dictado
