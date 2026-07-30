@@ -20,13 +20,14 @@
 // vivo no es un informe, es una promesa.
 
 import { useState, useCallback, useRef, useEffect } from "react";
-import { FileBarChart, Download, RefreshCw, Sparkles, AlertTriangle, Save, Check, CalendarDays } from "lucide-react";
+import { FileBarChart, Download, RefreshCw, Sparkles, AlertTriangle, Save, Check, CalendarDays,
+         Cloud, Link2, MessageSquarePlus, X } from "lucide-react";
 import { bloquesDelReporte } from "../../lib/informe-doc";
 import { font, fontDisp } from "../../design-system/tokens";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../hooks/useAuth";
 import { useIsMobile } from "../../hooks/useViewport";
-import { descargarDocx } from "../../lib/docx";
+import { descargarDocx, buildDocx } from "../../lib/docx";
 
 const REDACTOR_URL = "https://personal-n8n.suwsiw.easypanel.host/webhook/nsg-informe-avances";
 // El redactor tarda entre 30 y 60 segundos con una quincena entera. Estaba en 90
@@ -126,6 +127,43 @@ async function guardarEnDocumentos(profileId, texto, periodo) {
   return !error && data?.ok !== false;
 }
 
+// Sube el Word a Google Drive y devuelve un link que abre de verdad.
+//
+// El flujo del otro lado (`nsg-subir-doc`) sube con la cuenta OPERATIVA del
+// negocio y después abre el permiso a «cualquiera con el enlace, como editor».
+// Las dos cosas importan: un archivo subido con otra cuenta le pide permiso a
+// quien lo abra, y un link que pide permiso no sirve para mandarle nada a nadie.
+const DRIVE_URL = "https://personal-n8n.suwsiw.easypanel.host/webhook/nsg-subir-doc";
+
+// El Word viaja en base64. `btoa` no acepta bytes sueltos de más de 255 ni
+// strings largos de un saque, así que se arma por trozos.
+function bytesABase64(bytes) {
+  let bin = "";
+  const PASO = 0x8000;
+  for (let i = 0; i < bytes.length; i += PASO) {
+    bin += String.fromCharCode.apply(null, bytes.subarray(i, i + PASO));
+  }
+  return btoa(bin);
+}
+
+async function subirADrive(nombreArchivo, blob) {
+  const bytes = new Uint8Array(await blob.arrayBuffer());
+  const r = await fetch(DRIVE_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      nombre: nombreArchivo,
+      base64: bytesABase64(bytes),
+      mime: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    }),
+  });
+  const j = await r.json();
+  if (!j?.link) throw new Error("Drive no devolvió el enlace del archivo.");
+  // Se compara el peso de ida y vuelta: ya pasó que el archivo llegara a medias
+  // y el link existiera igual, apuntando a un Word que no abre.
+  return { link: j.link, id: j.id, bytes: bytes.length };
+}
+
 export default function InformeAvances({ T }) {
   const { user } = useAuth();
   const isMobile = useIsMobile();
@@ -155,15 +193,34 @@ export default function InformeAvances({ T }) {
   const [error, setError] = useState("");
   const [guardando, setGuardando] = useState(false);
   const [guardado, setGuardado] = useState(false);
+  // Drive y notas del equipo.
+  const [subiendo, setSubiendo] = useState(false);
+  const [linkDrive, setLinkDrive] = useState("");
+  const [notas, setNotas] = useState([]);
+  const [notaNueva, setNotaNueva] = useState("");
+  const [anotando, setAnotando] = useState(false);
   const pasoTimer = useRef(null);
 
   // El intervalo de los pasos se limpia siempre — si no, sigue corriendo después
   // de desmontar la vista y React avisa (y se acumulan timers).
   useEffect(() => () => clearInterval(pasoTimer.current), []);
 
+  // Las notas del periodo que se esté mirando. Se refrescan al cambiar las
+  // fechas para que lo que se ve en pantalla sea lo que va a entrar al informe.
+  const cargarNotas = useCallback(async () => {
+    if (!user?.id) return;
+    const { data } = await supabase.rpc("fn_informe_notas_listar", {
+      p_profile_id: user.id, p_desde: desde, p_hasta: hasta,
+    });
+    setNotas(Array.isArray(data) ? data : []);
+  }, [user?.id, desde, hasta]);
+
+  useEffect(() => { cargarNotas(); }, [cargarNotas]);
+
   const generar = useCallback(async () => {
     if (!user?.id || cargando) return;
     setCargando(true); setError(""); setTexto(""); setMeta(null); setPaso(0);
+    setLinkDrive("");   // el link de Drive es de ESE Word; con otro informe ya no aplica
 
     clearInterval(pasoTimer.current);
     pasoTimer.current = setInterval(() => setPaso((p) => Math.min(p + 1, PASOS.length - 1)), 3500);
@@ -196,13 +253,30 @@ export default function InformeAvances({ T }) {
       if (!salida) salida = sinEmojis(data.borrador || "");
 
       // 3) El redactor. Si no contesta, se usa el borrador y el informe sale igual.
+      //    Las notas del equipo se leen ACÁ y no del estado de React: si alguien
+      //    acaba de escribir una y aprieta «regenerar», el estado todavía no se
+      //    actualizó y la nota se perdería justo en la corrida que la pidió.
+      let notasAhora = [];
+      try {
+        const { data: n } = await supabase.rpc("fn_informe_notas_listar", {
+          p_profile_id: user.id, p_desde: desde, p_hasta: hasta,
+        });
+        notasAhora = Array.isArray(n) ? n : [];
+        setNotas(notasAhora);
+      } catch { /* sin notas se genera igual */ }
+
       try {
         const ctrl = new AbortController();
         const t = setTimeout(() => ctrl.abort(), REDACTOR_TIMEOUT_MS);
         const r = await fetch(REDACTOR_URL, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ evidencia: podarEvidencia(data) }),
+          body: JSON.stringify({
+            evidencia: {
+              ...podarEvidencia(data),
+              notas_del_equipo: notasAhora.map((n) => n.texto),
+            },
+          }),
           signal: ctrl.signal,
         });
         clearTimeout(t);
@@ -263,6 +337,74 @@ export default function InformeAvances({ T }) {
     const d = meta?.periodo?.desde || "";
     const h = meta?.periodo?.hasta || "";
     descargarDocx(`Reporte de avances ${d && h ? `${d} al ${h}` : ""}`.trim(), bloques);
+  };
+
+  // El mismo Word, pero a Drive: queda un enlace que se puede mandar por
+  // WhatsApp o pegar en un correo y lo abre cualquiera, sin cuenta y sin pedir
+  // permiso. Pedido de Ángel (30-jul): «ponle una función en generar reporte
+  // para ponerlo en Google Drive, para que de un link se mande al Drive».
+  const mandarADrive = async () => {
+    if (!texto || subiendo) return;
+    setSubiendo(true); setError("");
+    try {
+      const bloques = bloquesDelReporte(texto, {
+        empresa: meta?.empresa,
+        generado: fechaLarga(hoyISO()),
+      });
+      const d = meta?.periodo?.desde || "";
+      const h = meta?.periodo?.hasta || "";
+      const nombre = `Reporte de avances ${d && h ? `${d} al ${h}` : hoyISO()}.docx`;
+      const blob = buildDocx(bloques);
+      const { link } = await subirADrive(nombre, blob);
+      setLinkDrive(link);
+      // El enlace también se guarda en Documentos del equipo: si solo vive en
+      // esta pantalla, mañana nadie lo encuentra.
+      try {
+        await supabase.rpc("fn_doc_link_agregar", {
+          p_profile_id: user.id,
+          p_titulo: `Informe de avances ${d} al ${h} (Word)`,
+          p_url: link,
+        });
+      } catch { /* el link ya está en pantalla; que falle el índice no lo pierde */ }
+    } catch (err) {
+      setError(err?.message || "No pude subirlo a Drive. Probá de nuevo en un momento.");
+    } finally {
+      setSubiendo(false);
+    }
+  };
+
+  // Guardar una nota del equipo y volver a redactar con ella puesta.
+  //
+  // Pedido de Ángel (30-jul): «algo que no está en el AIOS y que se quiera que
+  // se agregue… "también agrega que se le dedicaron 10 horas a trabajar en la
+  // meta de Cecilia"… o mandarle retroalimentación después del reporte, para que
+  // no nos quedemos solo con la primera versión que da».
+  //
+  // La nota se GUARDA antes de regenerar, no se manda de paso: así el dato queda
+  // para la próxima quincena aunque esta corrida falle.
+  const agregarNota = async (regenerar) => {
+    const t = notaNueva.trim();
+    if (!t || !user?.id || anotando) return;
+    setAnotando(true); setError("");
+    try {
+      const { data, error: e } = await supabase.rpc("fn_informe_nota_agregar", {
+        p_profile_id: user.id, p_texto: t, p_desde: desde, p_hasta: hasta,
+      });
+      if (e || data?.ok === false) throw new Error(data?.error || e?.message || "No pude guardar la nota.");
+      setNotaNueva("");
+      await cargarNotas();
+      if (regenerar) await generar();
+    } catch (err) {
+      setError(err?.message || "No pude guardar la nota.");
+    } finally {
+      setAnotando(false);
+    }
+  };
+
+  const quitarNota = async (id) => {
+    if (!user?.id) return;
+    await supabase.rpc("fn_informe_nota_borrar", { p_profile_id: user.id, p_nota_id: id });
+    cargarNotas();
   };
 
   // `colorScheme` no es cosmético: sin él, en modo oscuro el navegador dibuja el
@@ -416,13 +558,131 @@ export default function InformeAvances({ T }) {
               }}>
                 <Download size={14} /> Word
               </button>
+              <button onClick={mandarADrive} disabled={subiendo}
+                title="Subirlo a Google Drive y quedarse con el enlace para compartir"
+                style={{
+                  background: linkDrive ? `${accent}14` : "transparent",
+                  border: `1px solid ${linkDrive ? `${accent}55` : bd}`, borderRadius: 10,
+                  padding: "10px 14px", cursor: subiendo ? "default" : "pointer",
+                  color: linkDrive ? accent : txt2, fontSize: 12.5, fontFamily: font,
+                  display: "flex", alignItems: "center", justifyContent: "center", gap: 7,
+                }}>
+                {subiendo ? <RefreshCw size={14} style={{ animation: "spin 1s linear infinite" }} />
+                  : linkDrive ? <Check size={14} /> : <Cloud size={14} />}
+                {subiendo ? "Subiendo…" : linkDrive ? "En Drive" : "Subir a Drive"}
+              </button>
             </div>
           </div>
+
+          {/* El enlace de Drive. Se muestra entero y se puede copiar de un toque:
+              el caso real es mandarlo por WhatsApp, no abrirlo acá. */}
+          {linkDrive && (
+            <div style={{
+              display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap",
+              padding: "10px 12px", marginBottom: 14, borderRadius: 10,
+              background: `${accent}0D`, border: `1px solid ${accent}33`,
+            }}>
+              <Link2 size={14} color={accent} style={{ flexShrink: 0 }} />
+              <a href={linkDrive} target="_blank" rel="noreferrer" style={{
+                color: accent, fontSize: 12.5, fontFamily: font, wordBreak: "break-all", flex: 1,
+              }}>{linkDrive}</a>
+              <button onClick={() => navigator.clipboard?.writeText(linkDrive)} style={{
+                background: "transparent", border: `1px solid ${accent}44`, borderRadius: 8,
+                padding: "6px 12px", cursor: "pointer", color: accent, fontSize: 12, fontFamily: font,
+              }}>Copiar</button>
+            </div>
+          )}
 
           <pre style={{
             margin: 0, fontFamily: font, fontSize: isMobile ? 13 : 13.5,
             lineHeight: 1.75, color: txt, whiteSpace: "pre-wrap", wordBreak: "break-word",
           }}>{texto}</pre>
+        </div>
+      )}
+
+      {/* Notas del equipo — lo que el informe no puede saber solo.
+          Va DESPUÉS del informe a propósito: se escribe leyendo lo que salió. */}
+      {!cargando && (
+        <div style={{ ...card, padding: isMobile ? 18 : 22 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 9, marginBottom: 8 }}>
+            <MessageSquarePlus size={16} color={accent} />
+            <div style={{ fontSize: 13.5, fontFamily: fontDisp, color: txt }}>
+              {texto ? "¿Le falta algo o lo cambiarías?" : "Contexto para el próximo informe"}
+            </div>
+          </div>
+          <div style={{ fontSize: 12.5, color: txt3, marginBottom: 12, textWrap: "pretty" }}>
+            Escribí acá lo que el sistema no puede saber solo — «dedicamos diez horas a la meta
+            de Cecilia» — o cómo querés que cambie el texto — «el resumen no debería abrir con
+            la app». Queda guardado para este periodo: si mañana lo volvés a generar, sigue puesto.
+          </div>
+
+          <textarea
+            value={notaNueva}
+            onChange={(e) => setNotaNueva(e.target.value)}
+            placeholder="Ej.: También dedicamos diez horas a la meta de Cecilia."
+            rows={3}
+            style={{
+              width: "100%", boxSizing: "border-box", resize: "vertical",
+              background: isLight ? "rgba(255,255,255,0.6)" : "rgba(255,255,255,0.03)",
+              border: `1px solid ${bd}`, borderRadius: 10, padding: "11px 13px",
+              color: txt, fontSize: 12.5, fontFamily: font, lineHeight: 1.6, outline: "none",
+            }}
+          />
+
+          <div style={{ display: "flex", gap: 8, marginTop: 10, flexWrap: "wrap" }}>
+            <button onClick={() => agregarNota(true)} disabled={!notaNueva.trim() || anotando}
+              title="Guarda la nota y vuelve a redactar el informe con ella puesta"
+              style={{
+                background: notaNueva.trim() ? `${accent}1A` : "transparent",
+                border: `1px solid ${notaNueva.trim() ? `${accent}55` : bd}`, borderRadius: 10,
+                padding: "10px 15px", cursor: notaNueva.trim() && !anotando ? "pointer" : "default",
+                color: notaNueva.trim() ? accent : txt3, fontSize: 12.5, fontWeight: 600,
+                fontFamily: font, display: "flex", alignItems: "center", gap: 7,
+                opacity: anotando ? 0.7 : 1,
+              }}>
+              {anotando ? <RefreshCw size={14} style={{ animation: "spin 1s linear infinite" }} />
+                        : <Sparkles size={14} />}
+              {anotando ? "Aplicando…" : texto ? "Guardar y rehacer el informe" : "Guardar"}
+            </button>
+            {texto && (
+              <button onClick={() => agregarNota(false)} disabled={!notaNueva.trim() || anotando}
+                title="Solo la guarda; se usará la próxima vez que generes"
+                style={{
+                  background: "transparent", border: `1px solid ${bd}`, borderRadius: 10,
+                  padding: "10px 15px", cursor: notaNueva.trim() && !anotando ? "pointer" : "default",
+                  color: txt2, fontSize: 12.5, fontFamily: font,
+                }}>
+                Solo guardar
+              </button>
+            )}
+          </div>
+
+          {notas.length > 0 && (
+            <div style={{ marginTop: 16, display: "flex", flexDirection: "column", gap: 7 }}>
+              <div style={{ fontSize: 11.5, color: txt3, fontFamily: font, letterSpacing: "0.03em" }}>
+                {notas.length === 1 ? "1 nota en este periodo" : `${notas.length} notas en este periodo`}
+              </div>
+              {notas.map((n) => (
+                <div key={n.id} style={{
+                  display: "flex", alignItems: "flex-start", gap: 10, padding: "9px 12px",
+                  borderRadius: 9, background: isLight ? "rgba(15,23,42,0.03)" : "rgba(255,255,255,0.025)",
+                  border: `1px solid ${bd}`,
+                }}>
+                  <div style={{ flex: 1, fontSize: 12.5, color: txt2, fontFamily: font, lineHeight: 1.55 }}>
+                    {n.texto}
+                    {n.quien && <span style={{ color: txt3 }}>{`  — ${n.quien}`}</span>}
+                  </div>
+                  <button onClick={() => quitarNota(n.id)} title="Quitar del informe"
+                    style={{
+                      background: "transparent", border: "none", cursor: "pointer",
+                      color: txt3, padding: 2, display: "flex", flexShrink: 0,
+                    }}>
+                    <X size={14} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
