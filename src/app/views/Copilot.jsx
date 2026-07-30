@@ -359,6 +359,14 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
         const updated = prev.map(m => m.id === tmpId ? { ...m, pending: false } : m);
         return [...updated, aiMsg];
       });
+    } else if (r.slow) {
+      // El motor sigue trabajando y va a DEJAR la respuesta en el historial
+      // (la registra el propio flujo). Recargamos con merge hasta traerla —
+      // nada de disculpas ni de timeouts visibles.
+      setMessages((prev) => prev.map(m => m.id === tmpId ? { ...m, pending: false } : m));
+      [4000, 10000, 20000, 35000].forEach(ms => {
+        setTimeout(() => { if (mountedRef.current) reload({ merge: true }); }, ms);
+      });
     }
     inputRef.current?.focus();
   };
