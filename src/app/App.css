@@ -299,3 +299,22 @@ select optgroup {
 @media (prefers-reduced-motion: reduce) {
   .mkt-seg-btn { transition: none; }
 }
+
+/* Campos del formulario de captura del día (Actividades).
+   `inputStyle` en Marketing.jsx lleva `outline: none` para que el borde propio
+   no compita con el del navegador — pero sin reemplazo, quien llena el
+   formulario con Tab no ve DÓNDE está parado. Se usa :focus-visible para que el
+   anillo aparezca al navegar con teclado y no al hacer clic con el mouse. */
+.mkt-campo:focus-visible {
+  outline: 2px solid rgba(110, 231, 194, 0.6);
+  outline-offset: 2px;
+}
+.mkt-campo {
+  transition: border-color 140ms ease, box-shadow 140ms ease;
+}
+.mkt-campo:hover:not(:focus) {
+  border-color: rgba(110, 231, 194, 0.42);
+}
+@media (prefers-reduced-motion: reduce) {
+  .mkt-campo { transition: none; }
+}

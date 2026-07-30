@@ -254,7 +254,14 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
     backdropFilter: "blur(22px)", WebkitBackdropFilter: "blur(22px)",
   };
   const inputStyle = {
-    background: isLight ? "#FFFFFF" : "rgba(255,255,255,0.045)", color: txt,
+    // ⚠️ `backgroundColor`, NUNCA el atajo `background`. Los <select> le suman la
+    // flechita con backgroundImage/Repeat/Position (ver `caret`), y React aplica
+    // los estilos por separado: al cambiar de tema reaplica SOLO el atajo, que
+    // resetea background-repeat a «repeat» y background-position al origen. Los
+    // valores largos no cambiaron, así que React no los vuelve a poner y la
+    // flechita queda EN MOSAICO. Eso era el «¿En qué empresa?» rayado en gris y
+    // blanco: cientos de flechitas repetidas, no un color de fondo feo.
+    backgroundColor: isLight ? "#FFFFFF" : "rgba(255,255,255,0.045)", color: txt,
     border: `1px solid ${bd}`, borderRadius: 10, padding: "10px 12px",
     fontSize: 13, fontFamily: font, outline: "none", width: "100%", boxSizing: "border-box",
     // colorScheme hace que el desplegable NATIVO del <select> use el tema correcto:
@@ -1290,7 +1297,7 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
           padding: "3px 10px", borderRadius: 999, whiteSpace: "nowrap", fontFamily: font,
           fontSize: 11.5, fontWeight: 600, colorScheme: isLight ? "light" : "dark",
           color: hex || (valor ? txt2 : txt3),
-          background: hex ? `${hex}1E` : "transparent",
+          backgroundColor: hex ? `${hex}1E` : "transparent",
           border: `1px solid ${hex ? `${hex}44` : bd}`,
           ...caret(hex || (valor ? txt2 : txt3), 8),
         }}>
@@ -1330,7 +1337,7 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
       appearance: "none", WebkitAppearance: "none", cursor: "pointer", maxWidth: "100%",
       padding: "5px 12px", borderRadius: 999, whiteSpace: "nowrap", fontFamily: font,
       fontSize: 12, fontWeight: 600, colorScheme: isLight ? "light" : "dark",
-      color: empty ? txt3 : c, background: empty ? "transparent" : `${c}1E`,
+      color: empty ? txt3 : c, backgroundColor: empty ? "transparent" : `${c}1E`,
       border: `1px solid ${empty ? bd : `${c}44`}`, ...caret(empty ? txt3 : c, 8),
     });
     return (
@@ -1550,7 +1557,7 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
                         <select value={p.etapa} onChange={e => cambiarEtapa(p.id, e.target.value)} title="Cambiar el estatus" style={{
                           appearance: "none", WebkitAppearance: "none", cursor: "pointer", maxWidth: "100%",
                           padding: "3px 10px", borderRadius: 999, whiteSpace: "nowrap", fontFamily: font,
-                          fontSize: 11.5, fontWeight: 600, color: col, background: `${col}1E`, border: `1px solid ${col}44`,
+                          fontSize: 11.5, fontWeight: 600, color: col, backgroundColor: `${col}1E`, border: `1px solid ${col}44`,
                           colorScheme: isLight ? "light" : "dark",
                           ...caret(col, 8),
                         }}>
@@ -1567,7 +1574,7 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
                             appearance: "none", WebkitAppearance: "none", cursor: "pointer", maxWidth: "100%",
                             padding: "3px 10px", borderRadius: 999, whiteSpace: "nowrap", fontFamily: font,
                             fontSize: 11.5, fontWeight: 600,
-                            color: b ? bc : txt3, background: b ? `${bc}1E` : "transparent",
+                            color: b ? bc : txt3, backgroundColor: b ? `${bc}1E` : "transparent",
                             border: `1px solid ${b ? `${bc}44` : bd}`, colorScheme: isLight ? "light" : "dark",
                             ...caret(b ? bc : txt3, 8),
                           }}>
@@ -1708,7 +1715,7 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
                   alignSelf: "flex-start", appearance: "none", WebkitAppearance: "none", cursor: "pointer",
                   padding: "3px 10px", borderRadius: 999, fontFamily: font, fontSize: 11.5, fontWeight: 600,
                   colorScheme: isLight ? "light" : "dark", color: bcol || txt3,
-                  background: bcol ? `${bcol}1E` : "transparent",
+                  backgroundColor: bcol ? `${bcol}1E` : "transparent",
                   border: `1px solid ${bcol ? `${bcol}44` : bd}`, ...caret(bcol || txt3, 8),
                 }}>
                 <option value="">— empresa —</option>
@@ -1803,7 +1810,7 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
                           padding: "3px 10px", borderRadius: 999, fontFamily: font, fontSize: 11.5, fontWeight: 600,
                           colorScheme: isLight ? "light" : "dark",
                           color: r.brand_id ? brandColor(brandById[r.brand_id]) : txt3,
-                          background: r.brand_id ? `${brandColor(brandById[r.brand_id])}1E` : "transparent",
+                          backgroundColor: r.brand_id ? `${brandColor(brandById[r.brand_id])}1E` : "transparent",
                           border: `1px solid ${r.brand_id ? `${brandColor(brandById[r.brand_id])}44` : bd}`,
                           ...caret(r.brand_id ? brandColor(brandById[r.brand_id]) : txt3, 8),
                         }}>
@@ -2273,7 +2280,8 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
       origen: "web",
     });
     setRepSaving(false);
-    if (e) { setError("No pude guardar tu reporte. Probá de nuevo."); return; }
+    if (e) { setError("No pude guardar tu reporte. Intenta de nuevo."); return; }
+    setError("");   // si venía de un intento fallido, el aviso rojo se va al guardar bien
     // Se conserva la empresa elegida: casi siempre es la misma en el mismo día.
     setRepForm(f => ({ empresa: f.empresa, texto: "", tiempo: "", evidencia: "" }));
     setRepOtro(false);
@@ -2315,7 +2323,10 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
     const primerNombre = String(user?.name || "").split(" ")[0] || "";
     const yaReporte    = misReportesHoy.length > 0;
     const mostrarCaja  = !yaReporte || repOtro;
-    const puedeGuardar = String(repForm.texto || "").trim().length > 0 && !repSaving;
+    // `orgId` entra en la condición porque `saveReporte` se planta si no lo tiene:
+    // sin esto el botón se veía habilitado, la persona lo apretaba y NO PASABA NADA
+    // (sin error ni aviso). Mejor que se vea apagado hasta que la empresa cargue.
+    const puedeGuardar = String(repForm.texto || "").trim().length > 0 && !repSaving && !!orgId;
 
     // Para el líder: qué reportó su gente hoy, arriba de su propia caja.
     const reportesHoy = bitacora.filter(r => r.fecha === hoy);
@@ -2373,61 +2384,89 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
 
         {/* ── LA CAJA ── */}
         {mostrarCaja ? (
-          <div style={{ ...card, borderRadius: 15, padding: isMobile ? "15px 15px" : "18px 20px", display: "flex", flexDirection: "column", gap: 12 }}>
+          /* Tipografía +10% en toda la caja (pedido de Iván: «deja las letras un
+             10% más grandes de este apartado»). Es el formulario que el equipo
+             llena TODOS los días — es donde menos se puede forzar la vista.
+             UX aplicada, no decoración: (1) `.mkt-campo` da anillo de FOCO
+             visible — `inputStyle` trae `outline:none` y sin esto quien llena la
+             hoja con Tab no sabe dónde está parado; (2) ⌘/Ctrl+Enter guarda desde
+             el propio texto, que es donde están las manos; (3) el único campo
+             obligatorio se marca con * y se dice qué falta, en vez de dejar el
+             botón apagado sin explicación; (4) los opcionales lo dicen en la
+             etiqueta para que nadie se frene buscando el dato. */
+          <div style={{ ...card, borderRadius: 15, padding: isMobile ? "16px 16px" : "20px 22px", display: "flex", flexDirection: "column", gap: 13 }}>
             <div>
-              <div style={{ fontSize: isMobile ? 17 : 19, fontWeight: 600, color: txt, fontFamily: fontDisp, lineHeight: 1.25 }}>
+              <div style={{ fontSize: isMobile ? 18.5 : 21, fontWeight: 600, color: txt, fontFamily: fontDisp, lineHeight: 1.25 }}>
                 ¿Qué hiciste hoy{primerNombre ? `, ${primerNombre}` : ""}?
               </div>
-              <div style={{ fontSize: 12, color: txt3, marginTop: 3 }}>
+              <div style={{ fontSize: 13, color: txt3, marginTop: 3 }}>
                 Cuéntalo con tus palabras, como se lo dirías a un compañero · {fmtDia(hoy)}
               </div>
             </div>
 
-            <textarea
-              autoFocus={!isMobile}
-              rows={isMobile ? 6 : 5}
-              value={repForm.texto}
-              onChange={e => setRepForm(f => ({ ...f, texto: e.target.value }))}
-              placeholder={"De 9 a 9:30 generé dos fichas técnicas.\nDe 9:30 a 12 edición del video de Casa Sol y Luna.\nDe 1 a 3 ensamble del proyecto…"}
-              style={{ ...inputStyle, resize: "vertical", lineHeight: 1.55, fontSize: 13.5, padding: "11px 12px" }} />
+            <label style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+              <span style={{ fontSize: 12.5, color: txt3 }}>
+                Lo que hiciste <span style={{ color: accent }}>*</span>
+              </span>
+              <textarea
+                className="mkt-campo"
+                autoFocus={!isMobile}
+                rows={isMobile ? 6 : 5}
+                value={repForm.texto}
+                onChange={e => setRepForm(f => ({ ...f, texto: e.target.value }))}
+                onKeyDown={e => { if ((e.metaKey || e.ctrlKey) && e.key === "Enter" && puedeGuardar) saveReporte(); }}
+                placeholder={"De 9 a 9:30 generé dos fichas técnicas.\nDe 9:30 a 12 edición del video de Casa Sol y Luna.\nDe 1 a 3 ensamble del proyecto…"}
+                style={{ ...inputStyle, resize: "vertical", lineHeight: 1.55, fontSize: 15, padding: "12px 13px" }} />
+            </label>
 
-            <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 9 }}>
-              <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                <span style={{ fontSize: 11.5, color: txt3 }}>¿En qué empresa?</span>
-                <select value={repForm.empresa} onChange={e => setRepForm(f => ({ ...f, empresa: e.target.value }))} style={selStyle}>
+            <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 10 }}>
+              <label style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+                <span style={{ fontSize: 12.5, color: txt3 }}>¿En qué empresa? (opcional)</span>
+                <select className="mkt-campo" value={repForm.empresa}
+                  onChange={e => setRepForm(f => ({ ...f, empresa: e.target.value }))}
+                  style={{ ...selStyle, fontSize: 14.5, padding: "11px 13px", paddingRight: 27 }}>
                   <option value="">— elegir —</option>
                   {brands.map(b => <option key={b.id} value={b.id}>{b.nombre}</option>)}
                 </select>
               </label>
-              <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                <span style={{ fontSize: 11.5, color: txt3 }}>¿Cuánto te llevó? (opcional)</span>
-                <input value={repForm.tiempo} onChange={e => setRepForm(f => ({ ...f, tiempo: e.target.value }))}
-                  placeholder="de 9 a 12 · 3 hrs · toda la tarde" style={inputStyle} />
+              <label style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+                <span style={{ fontSize: 12.5, color: txt3 }}>¿Cuánto te llevó? (opcional)</span>
+                <input className="mkt-campo" value={repForm.tiempo} onChange={e => setRepForm(f => ({ ...f, tiempo: e.target.value }))}
+                  placeholder="de 9 a 12 · 3 hrs · toda la tarde"
+                  style={{ ...inputStyle, fontSize: 14.5, padding: "11px 13px" }} />
               </label>
             </div>
 
-            <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-              <span style={{ fontSize: 11.5, color: txt3 }}>Evidencia (opcional) — el enlace de la carpeta o el archivo</span>
-              <input value={repForm.evidencia} onChange={e => setRepForm(f => ({ ...f, evidencia: e.target.value }))}
-                placeholder="Pegá el enlace de Drive" style={inputStyle} />
+            <label style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+              <span style={{ fontSize: 12.5, color: txt3 }}>Evidencia (opcional) — el enlace de la carpeta o el archivo</span>
+              <input className="mkt-campo" value={repForm.evidencia} onChange={e => setRepForm(f => ({ ...f, evidencia: e.target.value }))}
+                placeholder="Pega el enlace de Drive"
+                style={{ ...inputStyle, fontSize: 14.5, padding: "11px 13px" }} />
             </label>
 
-            <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-              <button onClick={saveReporte} disabled={!puedeGuardar} style={{
-                padding: "10px 22px", borderRadius: 10, fontFamily: font, fontSize: 13.5, fontWeight: 600,
-                cursor: puedeGuardar ? "pointer" : "default", background: `${accent}1C`,
+            <div style={{ display: "flex", alignItems: "center", gap: 11, flexWrap: "wrap" }}>
+              <button onClick={saveReporte} disabled={!puedeGuardar} title="⌘/Ctrl + Enter" style={{
+                padding: "11px 24px", borderRadius: 10, fontFamily: font, fontSize: 15, fontWeight: 600,
+                cursor: puedeGuardar ? "pointer" : "default", backgroundColor: `${accent}1C`,
                 border: `1px solid ${accent}66`, color: accent, opacity: puedeGuardar ? 1 : 0.55,
               }}>{repSaving ? "Guardando…" : "Guardar"}</button>
+              {/* Que el botón apagado DIGA por qué lo está: un control gris sin
+                  explicación es el clásico «no me deja guardar y no sé por qué». */}
+              {!puedeGuardar && !repSaving && (
+                <span style={{ fontSize: 13, color: txt3 }}>
+                  {String(repForm.texto || "").trim() ? "Un momento, cargando tu empresa…" : "Escribe lo que hiciste para poder guardar."}
+                </span>
+              )}
               {yaReporte && (
                 <button onClick={() => setRepOtro(false)} style={{
-                  background: "transparent", border: "none", cursor: "pointer", color: txt3, fontSize: 12.5, fontFamily: font,
+                  background: "transparent", border: "none", cursor: "pointer", color: txt3, fontSize: 13.5, fontFamily: font,
                 }}>Cancelar</button>
               )}
               {onOpenCopilot && (
-                <span style={{ fontSize: 12, color: txt3, marginLeft: "auto" }}>
+                <span style={{ fontSize: 13, color: txt3, marginLeft: "auto" }}>
                   ¿Vas manejando?{" "}
                   <button onClick={onOpenCopilot} style={{
-                    background: "transparent", border: "none", padding: 0, cursor: "pointer", color: accent, fontSize: 12, fontFamily: font,
+                    background: "transparent", border: "none", padding: 0, cursor: "pointer", color: accent, fontSize: 13, fontFamily: font,
                   }}>cuéntaselo al Copilot por voz</button>
                 </span>
               )}

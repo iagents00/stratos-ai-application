@@ -5,7 +5,7 @@
  * Todos los componentes y lógica de negocio viven en sus propios módulos.
  * ─────────────────────────────────────────────────────────────────────────────
  */
-import { useState, useEffect, useRef, useCallback, useMemo, lazy, Suspense } from "react";
+import { useState, useEffect, useLayoutEffect, useRef, useCallback, useMemo, lazy, Suspense } from "react";
 import { createPortal, flushSync } from "react-dom";
 import { supabase, SUPABASE_REST_URL, SUPABASE_ANON_KEY } from "../lib/supabase";
 import { formatFechaLarga, STAGES_CON_CITA } from "../lib/utils";
@@ -268,6 +268,33 @@ export default function App() {
   // del rol actual por si cambió desde la última sesión.
   const [v, setV]        = useState(() => resolveInitialView(user, clientConfig));
 
+  // ⚠️ EL useState DE ARRIBA CORRE ANTES DE SABER QUIÉN ENTRÓ. `<App/>` se monta
+  // en el primer render de main.jsx, mientras AuthContext todavía está hidratando
+  // la sesión: `user` es null, así que `resolveInitialView` cae siempre al mismo
+  // lado (asesor ⇒ "c", el CRM) y ese valor queda congelado — el inicializador de
+  // useState no se vuelve a ejecutar nunca.
+  // Lo que causaba: Alex (admin de MARKETING) iniciaba sesión y lo primero que
+  // veía era «Acceso restringido — no tienes permiso para el módulo CRM», con el
+  // menú de marketing al lado. Su casa es Actividades (Espacio 1 y 2). A los
+  // administradores de ventas les pasaba lo mismo en silencio: caían en el CRM
+  // en vez de Comando y nadie lo reportó porque el CRM sí les abre.
+  // Por eso la vista se RESUELVE DE NUEVO cuando ya se sabe el rol. Va en
+  // useLayoutEffect (no useEffect) para que se corrija ANTES de pintar: si no,
+  // se ve un parpadeo del módulo equivocado.
+  const vistaResueltaParaRef = useRef(null);
+  useLayoutEffect(() => {
+    if (!user?.id) return;
+    if (vistaResueltaParaRef.current !== user.id) {
+      vistaResueltaParaRef.current = user.id;   // también cubre cambiar de cuenta
+      setV(resolveInitialView(user, clientConfig));
+      return;
+    }
+    // Red de seguridad: si la vista actual deja de ser suya (le cambian el rol o
+    // los permisos a mitad de sesión), se va a su casa en vez de quedarse
+    // mirando la pantalla de «Acceso restringido».
+    if (!canAccessModule(v, user, clientConfig)) setV(resolveInitialView(user, clientConfig));
+  }, [user, clientConfig, v]);
+
   // Vista PREVIA a las vistas INMERSIVAS (Copilot / WhatsApp) — su flecha
   // "‹ volver" regresa acá. Se guarda la última vista que NO sea inmersiva.
   const prevViewRef = useRef(isAsesorRole ? "c" : "d");
@@ -280,8 +307,13 @@ export default function App() {
   useEffect(() => {
     if (!user?.id) return;
     if (NON_PERSISTABLE_VIEWS.has(v)) return;
+    // Nunca recordar una vista que la persona NO puede abrir: si se guarda, en el
+    // próximo inicio de sesión la restauramos y la deja mirando «Acceso
+    // restringido». Le pasaba a Alex: el "c" del arranque sin usuario le quedaba
+    // grabado como su última vista.
+    if (!canAccessModule(v, user, clientConfig)) return;
     try { localStorage.setItem(`stratos.crm.view.${user.id}`, v); } catch (_) { /* quota o bloqueado */ }
-  }, [v, user?.id]);
+  }, [v, user, clientConfig]);
 
   // ── Buscador del header → enfoca el input de busqueda del CRM ──
   // Implementacion minima: navega al CRM (si no estamos ahi) y enfoca el
