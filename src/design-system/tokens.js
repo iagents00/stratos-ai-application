@@ -138,13 +138,15 @@ export const mono     = `"SF Mono", "Cascadia Code", "Consolas", "Fira Code", mo
 // que agrandar o achicar el chat, se toca ACÁ y en ningún otro lado: un parche
 // por pantalla deja a los demás clientes con la letra vieja.
 export const chatType = {
-  body:   15.5,  // el mensaje — lo que se lee todo el día (antes 13.2)
+  // +5% en todo el chat (pedido de Ángel 30-jul; antes body 15.5 / input 15.5 /
+  // title 16 / chip 13 / meta 12 / time 11).
+  body:   16.3,  // el mensaje — lo que se lee todo el día
   bodyLh: 1.55,  // aire entre renglones; 1.48 apretaba los mensajes largos
-  input:  15.5,  // lo que se escribe, del mismo tamaño que lo que se lee
-  title:  16,    // "Copilot AI"
-  chip:   13,    // botones y sugerencias dentro del chat
-  meta:   12,    // estados y etiquetas
-  time:   11,    // la hora del mensaje
+  input:  16.3,  // lo que se escribe, del mismo tamaño que lo que se lee
+  title:  16.8,  // "Copilot AI"
+  chip:   13.7,  // botones y sugerencias dentro del chat
+  meta:   12.6,  // estados y etiquetas
+  time:   11.6,  // la hora del mensaje
 };
 
 // ─── ESPACIADO ────────────────────────────────────────────────────────────────
