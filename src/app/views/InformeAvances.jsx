@@ -46,19 +46,36 @@ const LARGO_HECHO    = 300;
 const sinEmojis = (t) =>
   String(t || "").replace(/[^\n\r -~áéíóúüñÁÉÍÓÚÜÑ¿¡«»°ºª—–…·]/g, "").replace(/[ \t]{2,}/g, " ");
 
-// Poda la evidencia sin tocar su forma: el redactor sigue viendo `dias`,
-// `semanas` y `encabezado` igual, solo que más corto y ya limpio.
+// Al redactor se le manda SOLO lo que va a usar, y en la forma más simple que
+// existe: el encabezado, el periodo y el día a día con sus hechos como frases
+// sueltas. Nada más.
+//
+// Antes viajaba la evidencia entera —con `entregas`, `reuniones`, `proyectos` y
+// `objetivos` además de los `dias`—, y eso era pagar dos veces por lo mismo: las
+// entregas y las reuniones YA vienen dentro de cada día como hechos. Los
+// porcentajes de proyectos y los objetivos ya no se usan (Ángel los sacó del
+// molde del documento), así que solo hacían el prompt más largo y más lento.
+//
+// Esta es exactamente la forma con la que se probó el redactor de punta a punta
+// el 30-jul. Si cambia acá, hay que volver a probarlo: el prompt está escrito
+// contra esta forma.
 const podarEvidencia = (data) => ({
-  ...data,
-  cambios: undefined,          // el día a día ya los trae; mandarlos dos veces es pagar doble
-  bitacora: undefined,
+  empresa:    data.empresa,
+  cliente:    data.cliente,
+  periodo:    data.periodo,
+  encabezado: data.encabezado,
   dias: (data.dias || []).map((d) => ({
-    ...d,
-    hechos: (d.hechos || []).slice(0, HECHOS_POR_DIA).map((h) => ({
-      ...h,
-      titulo:  h.titulo  ? sinEmojis(h.titulo).slice(0, LARGO_HECHO)  : h.titulo,
-      detalle: h.detalle ? sinEmojis(h.detalle).slice(0, LARGO_HECHO) : h.detalle,
-    })),
+    dia:    d.dia,
+    numero: d.numero,
+    semana: d.semana,
+    hechos: (d.hechos || [])
+      .slice(0, HECHOS_POR_DIA)
+      // Un hecho es una frase, no un objeto: el título si lo tiene (las tareas y
+      // las reuniones lo traen limpio) y si no, el detalle del changelog.
+      // El `trim` no es cosmético: al sacar un emoji del arranque queda un
+      // espacio suelto, y esa frase entra al prompt empezando en blanco.
+      .map((h) => sinEmojis(h.titulo || h.detalle || "").trim().slice(0, LARGO_HECHO))
+      .filter((t) => t.length > 0),
   })),
 });
 
