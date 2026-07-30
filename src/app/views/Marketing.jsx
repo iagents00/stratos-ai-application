@@ -34,7 +34,7 @@ import {
   Megaphone, Plus, X, RefreshCw, Folder, ExternalLink, Lock, Check,
   ChevronLeft, ChevronRight, ChevronDown, Clapperboard, Mic, CalendarDays,
   Search, Camera, CircleCheck, Layers, SlidersHorizontal, Trash2, Maximize2,
-  GripVertical,
+  GripVertical, ClipboardList,
 } from "lucide-react";
 import { font, fontDisp } from "../../design-system/tokens";
 import { supabase } from "../../lib/supabase";
@@ -1401,7 +1401,7 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
           {tipos.map(t => <option key={t} value={t}>{t}</option>)}
         </select>
         {hayFiltro && (
-          <button onClick={() => setPipeFiltro({ q: "", locacion: "", tipo: "", etapa: "", empresa: "" })} style={{
+          <button onClick={() => setPipeFiltro(f => ({ ...f, q: "", locacion: "", tipo: "", etapa: "", empresa: "" }))} style={{
             background: "transparent", border: "none", cursor: "pointer", color: txt3, fontSize: 12, fontFamily: font,
           }}>Limpiar</button>
         )}
@@ -1474,7 +1474,7 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
 
       {isMobile && pipeCards()}
       {!isMobile && <div style={hoja.wrap}>
-        <table style={hoja.table}>
+        <table className="mkt-hoja" style={hoja.table}>
           <thead>
             <tr>
               {colsVista.map((c, i) => (
@@ -1744,7 +1744,7 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
 
       {isMobile && bitaCards()}
       {!isMobile && <div style={hoja.wrap}>
-        <table style={{ ...hoja.table, minWidth: 900 }}>
+        <table className="mkt-hoja" style={{ ...hoja.table, minWidth: 900 }}>
           <thead>
             <tr>
               {["Fecha", "Nombre", "Puesto / Área", "Empresa", "Actividades realizadas", "Tiempo", "Evidencia"]
@@ -2225,7 +2225,9 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
   const [repSaving, setRepSaving] = useState(false);
   const [repOtro, setRepOtro]   = useState(false); // ya reportó pero quiere sumar otro
   // hoy | espacio1 (registro de propiedades) | espacio2 (bitácora, solo líder)
-  const [repVista, setRepVista] = useState("hoy");
+  const [repVista, setRepVista] = useState("espacio1");
+  // La captura del día vive plegada arriba: la pantalla abre en la hoja, no en un formulario.
+  const [repAbierto, setRepAbierto] = useState(false);
 
   const misReportesHoy = useMemo(
     () => bitacora.filter(r => r.profile_id === user?.id && r.fecha === hoy),
@@ -2250,6 +2252,7 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
     // Se conserva la empresa elegida: casi siempre es la misma en el mismo día.
     setRepForm(f => ({ empresa: f.empresa, texto: "", tiempo: "", evidencia: "" }));
     setRepOtro(false);
+    setRepAbierto(false);   // se pliega sola: reportar y volver a la hoja
     load();
   }, [repForm, orgId, user?.id, hoy, load]);
 
@@ -2300,39 +2303,48 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
     return (
       <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
 
-        {/* LAS DOS HOJAS DE ALEX, EN EL MISMO LUGAR DONDE ENTRA.
-            «Hoy» captura el día · «Espacio 1» es el registro de propiedades y
-            grabaciones · «Espacio 2» es la bitácora del equipo (el formulario).
-            Espacio 2 es SOLO del líder: nadie del equipo necesita leer la
-            bitácora de sus compañeros (misma regla que la sección Equipo). */}
-        <div style={{ display: "flex", gap: 3, padding: 4, borderRadius: 12, border: `1px solid ${bd}`, alignSelf: "flex-start",
-          background: isLight ? "rgba(15,23,42,0.04)" : "rgba(255,255,255,0.03)", flexWrap: "wrap" }}>
-          {[["hoy", "Hoy", "Lo que hiciste hoy"],
-            ["espacio1", "Espacio 1", "Registro de propiedades y grabaciones"],
-            ...(isAdmin ? [["espacio2", "Espacio 2", "Bitácora del equipo"]] : [])
-           ].map(([id, l, ayuda]) => (
-            <button key={id} onClick={() => setRepVista(id)} title={ayuda} style={{
-              padding: "5px 13px", borderRadius: 9, cursor: "pointer", fontFamily: font, fontSize: 12.5,
-              fontWeight: repVista === id ? 600 : 500, border: "none",
-              background: repVista === id ? (isLight ? "#FFFFFF" : "rgba(255,255,255,0.09)") : "transparent",
-              color: repVista === id ? txt : txt3,
-            }}>{l}</button>
-          ))}
+        {/* LA CAPTURA DEL DÍA, PLEGADA. Iván pidió sacar «Hoy» del selector; la
+            caja no se elimina porque es la que reemplazó al Google Form y es la
+            única vía que tiene el equipo para reportar. Queda como un renglón:
+            se ve de un vistazo si ya reportaste, y se abre con un toque. */}
+        <div style={{
+          ...card, borderRadius: 14, padding: "10px 14px",
+          display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap",
+          borderColor: yaReporte ? `${accent}33` : bd,
+        }}>
+          <span style={{
+            width: 26, height: 26, borderRadius: 999, flexShrink: 0,
+            display: "inline-flex", alignItems: "center", justifyContent: "center",
+            background: yaReporte ? `${accent}1A` : (isLight ? "rgba(15,23,42,0.05)" : "rgba(255,255,255,0.06)"),
+          }}>
+            {yaReporte ? <Check size={14} color={accent} strokeWidth={3} /> : <ClipboardList size={14} color={txt3} />}
+          </span>
+          <div style={{ flex: 1, minWidth: 150 }}>
+            <div style={{ fontSize: 13, fontWeight: 500, color: txt, fontFamily: fontDisp }}>
+              {yaReporte ? "Ya reportaste hoy" : `¿Qué hiciste hoy${primerNombre ? `, ${primerNombre}` : ""}?`}
+            </div>
+            <div style={{ fontSize: 11.5, color: txt3, marginTop: 1 }}>
+              {yaReporte ? "Si hiciste algo más, súmalo." : `Queda registrado al instante · ${fmtDia(hoy)}`}
+            </div>
+          </div>
+          {/* Para el líder: cómo viene su equipo hoy, sin entrar a ningún lado. */}
+          {isAdmin && equipoHoy.length > 0 && (
+            <button onClick={() => setRepVista("espacio2")} title="Ver la bitácora del equipo" style={{
+              fontSize: 11.5, whiteSpace: "nowrap", padding: "4px 11px", borderRadius: 999, cursor: "pointer",
+              fontFamily: font, background: "transparent",
+              color: reportaron === equipoHoy.length ? accent : reportaron === 0 ? txt3 : AMBER,
+              border: `1px solid ${reportaron === equipoHoy.length ? `${accent}44` : reportaron === 0 ? bd : `${AMBER}44`}`,
+            }}>{reportaron} de {equipoHoy.length} reportaron</button>
+          )}
+          <button onClick={() => { setRepAbierto(o => !o); if (yaReporte) setRepOtro(true); }} style={{
+            minHeight: 34, padding: "0 15px", borderRadius: 10, cursor: "pointer", fontFamily: font,
+            fontSize: 12.5, fontWeight: 600, whiteSpace: "nowrap",
+            background: repAbierto ? "transparent" : `${accent}18`,
+            border: `1px solid ${accent}55`, color: accent,
+          }}>{repAbierto ? "Cerrar" : yaReporte ? "Agregar otro" : "Contar mi día"}</button>
         </div>
 
-        {/* Un renglón que dice QUÉ es cada espacio: «Espacio 1» y «Espacio 2»
-            son los nombres que pidió Iván, pero solos no dicen nada. */}
-        {repVista !== "hoy" && (
-          <div style={{ fontSize: 12.5, color: txt2, marginTop: -4 }}>
-            {repVista === "espacio1"
-              ? "Registro de propiedades y grabaciones — cada propiedad, en qué va su video y todos sus enlaces."
-              : "Bitácora del equipo — lo que reportó cada quien, día por día."}
-          </div>
-        )}
-
-        {repVista === "espacio1" && pipelineTabla()}
-        {isAdmin && repVista === "espacio2" && reporteTabla()}
-        {repVista === "hoy" && (<>
+        {repAbierto && (<>
 
         {/* ── LA CAJA ── */}
         {mostrarCaja ? (
@@ -2467,6 +2479,71 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
           </div>
         )}
         </>)}
+
+
+        {/* LOS DOS ESPACIOS. Iván: «quita el módulo de hoy y solo se quede el
+            espacio 1 y 2». La CAPTURA del día no se pierde —es la que reemplazó
+            al Google Form y sin ella el equipo no tiene dónde reportar—: se
+            movió a la barra plegada de acá abajo, a un toque.
+            Espacio 2 es SOLO del líder: nadie del equipo necesita leer la
+            bitácora de sus compañeros (misma regla que la sección Equipo). */}
+        {(() => {
+          const espacios = [
+            ["espacio1", "Espacio 1", "Registro de propiedades y grabaciones",
+             "Cada propiedad, en qué va su video y todos sus enlaces.", pipeline.length],
+            ...(isAdmin ? [["espacio2", "Espacio 2", "Bitácora del equipo",
+             "Lo que reportó cada quien, día por día.", bitacora.length]] : []),
+          ];
+          const actual = espacios.find(e => e[0] === repVista) || espacios[0];
+          return (
+            <>
+              <div role="tablist" aria-label="Espacios" style={{
+                display: "inline-flex", gap: 4, padding: 4, borderRadius: 14, alignSelf: "flex-start",
+                border: `1px solid ${bd}`, background: isLight ? "rgba(15,23,42,0.045)" : "rgba(255,255,255,0.035)",
+              }}>
+                {espacios.map(([id, l, titulo, , n]) => {
+                  const on = repVista === id;
+                  return (
+                    <button key={id} className="mkt-seg-btn" role="tab" aria-selected={on} title={titulo}
+                      onClick={() => setRepVista(id)}
+                      style={{
+                        // 36px de alto: el mínimo cómodo para tocar en móvil.
+                        display: "inline-flex", alignItems: "center", gap: 8, minHeight: 36,
+                        padding: "0 16px", borderRadius: 11, cursor: "pointer", border: "none",
+                        fontFamily: fontDisp, fontSize: 13, fontWeight: on ? 600 : 500,
+                        letterSpacing: "-0.01em",
+                        background: on ? (isLight ? "#FFFFFF" : "rgba(255,255,255,0.10)") : "transparent",
+                        color: on ? txt : txt3,
+                        boxShadow: on ? (isLight ? "0 1px 3px rgba(15,23,42,0.10)" : "0 2px 10px rgba(0,0,0,0.35)") : "none",
+                      }}>
+                      {l}
+                      {/* El conteo evita tener que entrar para saber cuánto hay. */}
+                      <span style={{
+                        fontSize: 11, fontWeight: 600, fontVariantNumeric: "tabular-nums",
+                        padding: "1px 7px", borderRadius: 999,
+                        color: on ? accent : txt3,
+                        background: on ? `${accent}1A` : (isLight ? "rgba(15,23,42,0.06)" : "rgba(255,255,255,0.06)"),
+                      }}>{n}</span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Título del espacio + qué es. «Espacio 1» y «Espacio 2» son los
+                  nombres que pidió Iván, pero solos no dicen nada: el nombre
+                  real va grande y la explicación en segundo plano. */}
+              <div style={{ marginTop: 2 }}>
+                <div style={{ fontSize: isMobile ? 19 : 22, fontWeight: 600, color: txt, fontFamily: fontDisp, letterSpacing: "-0.02em", lineHeight: 1.2 }}>
+                  {actual[2]}
+                </div>
+                <div style={{ fontSize: 12.5, color: txt3, marginTop: 3 }}>{actual[3]}</div>
+              </div>
+            </>
+          );
+        })()}
+
+        {repVista === "espacio1" && pipelineTabla()}
+        {isAdmin && repVista === "espacio2" && reporteTabla()}
       </div>
     );
   };
@@ -2608,7 +2685,9 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
     // El subtítulo va CORTO a propósito: el largo ("…lo bloqueado no depende de ti")
     // se partía en dos renglones y dejaba la palabra «ti» sola abajo — se veía roto
     // en el iPhone (reporte de Ángel con captura, 27-jul).
-    reporte:     { title: "Reporte de actividades", sub: "Lo que hiciste hoy · queda registrado al instante" },
+    // Ya no es un formulario: la pantalla son las DOS HOJAS del equipo, y el
+    // reporte del día quedó como una barra plegada arriba (Iván, 30-jul).
+    reporte:     { title: "Actividades", sub: "Las dos hojas del equipo, en un solo lugar" },
     dia:         { title: `Hoy — ${firstName}`, sub: "Lo vencido primero, después lo de hoy" },
     // El rótulo lo pone cada empresa (NSG: "Proyectos"). Antes el encabezado decía
     // "Marcas" aunque el botón ya dijera "Proyectos" — el vocabulario de marketing

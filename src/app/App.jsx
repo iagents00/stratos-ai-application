@@ -1906,9 +1906,23 @@ export default function App() {
                   el espacio DESPUÉS del último caracter, y con dos o tres dígitos
                   eso se compensa entre ellos pero con uno queda todo al final.
                   Por eso el apretado tipográfico solo se aplica cuando hay más de
-                  un dígito, y el bloque se centra explícitamente — así se ve bien
-                  con 1, con 10 y con el ✓ del 100%. */}
-              <span style={{ fontSize: pc >= 100 ? 30 : 33, fontWeight: pc >= 100 ? 400 : 200, fontFamily:fontDisp, letterSpacing: pc >= 10 ? "-0.04em" : "0", lineHeight:1, color: isLight ? (pc >= 100 ? "#0D9A76" : "#082818") : (pc >= 100 ? "#34D399" : "#FFFFFF"), display:"block", textAlign:"center", width:"100%", position:"relative", zIndex:1, whiteSpace:"nowrap", fontVariantNumeric:"tabular-nums" }}>{pc >= 100 ? "✓" : pc}</span>
+                  un dígito, y el bloque se centra explícitamente.
+                  Además el TAMAÑO se ajusta a cuántos dígitos hay (Iván, 29-jul:
+                  «que se ajuste dinámicamente para que se vea bien»): con uno solo
+                  hay lugar de sobra y respira mejor un poco más grande. */}
+              {(() => {
+                const pcTxt = pc >= 100 ? "✓" : String(pc);
+                const tam = pcTxt === "✓" ? 30 : pcTxt.length >= 3 ? 27 : pcTxt.length === 2 ? 33 : 35;
+                return (
+                  <span style={{
+                    fontSize: tam, fontWeight: pc >= 100 ? 400 : 200, fontFamily: fontDisp,
+                    letterSpacing: pcTxt.length >= 2 ? "-0.04em" : "0", lineHeight: 1,
+                    color: isLight ? (pc >= 100 ? "#0D9A76" : "#082818") : (pc >= 100 ? "#34D399" : "#FFFFFF"),
+                    display: "block", textAlign: "center", width: "100%",
+                    position: "relative", zIndex: 1, whiteSpace: "nowrap", fontVariantNumeric: "tabular-nums",
+                  }}>{pcTxt}</span>
+                );
+              })()}
               <div style={{ width:"100%", height:2.5, borderRadius:99, background: isLight ? "rgba(13,154,118,0.09)" : "rgba(255,255,255,0.08)", marginTop:9, overflow:"hidden", position:"relative", zIndex:1 }}>
                 <div style={{ width:`${pc}%`, height:"100%", borderRadius:99, background: isLight ? "linear-gradient(90deg, #0D9A76, #34D399)" : "linear-gradient(90deg, #34D399, #6EE7C2)", boxShadow: isLight ? "none" : "0 0 8px rgba(52,211,153,0.55)", transition:"width 1.1s cubic-bezier(0.4,0,0.2,1)" }} />
               </div>

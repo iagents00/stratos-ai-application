@@ -1,0 +1,37 @@
+-- ═══════════════════════════════════════════════════════════════════════════
+-- 192 — Autocierre de tareas con lo que quedó escrito  ⛔ CONSTRUIDO Y APAGADO
+--
+-- Iván pidió que el estatus de las tareas se actualice solo con lo que hacemos
+-- (changelog, hot-cache, transcripciones) y eligió: que CIERRE lo que detecte,
+-- al cierre de la jornada de cada quien.
+--
+-- 🔴 NO SE ENCENDIÓ, Y ESTE ES EL MOTIVO — con evidencia, no con opinión:
+-- el ensayo en seco sobre NSG detectó 6 tareas para cerrar y LAS 6 ESTABAN
+-- PENDIENTES. El caso peor:
+--
+--   tarea    : «Cargar los montos reales de los servicios»
+--   evidencia: «Lo único que FALTA son DATOS que solo tiene Ángel: (1) montos
+--               reales de los servicios…»
+--   puntaje  : 1.00  ← coincidencia perfecta de palabras… diciendo lo CONTRARIO
+--
+-- La causa no es el umbral (dos falsos positivos puntuaron 1.00): es que la
+-- coincidencia de palabras detecta que se HABLA del tema, no que el trabajo se
+-- HAYA HECHO. Y un changelog habla todo el tiempo de lo que falta, de lo que se
+-- planea y de lo que se validó — con las mismas palabras que la tarea.
+--
+-- El camino correcto es que el JUEZ sea el Copilot (Claude ya está conectado al
+-- cerebro en el flujo de NSG): recibe las tareas abiertas + lo escrito hoy y
+-- responde cuáles quedaron terminadas y con qué frase se prueba. Eso sí
+-- distingue «faltan los montos» de «cargamos los montos».
+--
+-- Mientras tanto queda todo listo y SIN cron:
+--   · fn_mkt_autocierre(org, profile, dias, p_dry_run => true)  ← ensayo, no escribe
+--   · fn_mkt_autocierre_deshacer(log_id, profile)               ← siempre reversible
+--   · mkt_autocierre_log                                        ← qué cerró y por qué
+-- Encenderlo = crear el cron. NO lo crees sin volver a correr el ensayo y ver
+-- que lo que propone está realmente hecho.
+-- ═══════════════════════════════════════════════════════════════════════════
+
+-- El cuerpo aplicado está en Supabase como `192_autocierre_de_tareas_con_lo_que_quedo_escrito`
+-- + `192b_autocierre_orden_de_funciones` (la primera pasada falló porque
+-- _mkt_palabras usaba unaccent_simple antes de definirla).
