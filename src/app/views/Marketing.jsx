@@ -450,38 +450,59 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
   const [ficha, setFicha] = useState(null);   // { id, ...campos como texto }
   const [fichaSaving, setFichaSaving] = useState(false);
 
+  // `it` en null = ALTA. Es la MISMA ficha para crear y para editar: una sola
+  // pantalla que aprender y una sola que mantener. Trae todos los campos de la
+  // hoja, así se puede cargar una propiedad completa de una sentada — o solo el
+  // nombre y llenar el resto después en la tabla.
   const openFicha = useCallback((it) => {
+    const x = it || {};
     setFicha({
-      id: it.id, nombre: it.nombre || "", locacion: it.locacion || "",
-      precio: it.precio || "", tipo: it.tipo || "",
-      fecha_rodaje: it.fecha_rodaje || "", fecha_publicacion: it.fecha_publicacion || "",
-      crudos_url: it.crudos_url || "", video_url: it.video_url || "", ig_url: it.ig_url || "",
-      story_url: it.story_url || "", cine_url: it.cine_url || "", ficha_url: it.ficha_url || "",
-      info_url: it.info_url || "", drive_url: it.drive_url || "", notas: it.notas || "",
+      id: x.id || null,
+      nombre: x.nombre || "", etapa: x.etapa || "seleccionada",
+      brand_id: x.brand_id || "", locacion: x.locacion || "",
+      precio: x.precio || "", tipo: x.tipo || "",
+      fecha_rodaje: x.fecha_rodaje || "", fecha_publicacion: x.fecha_publicacion || "",
+      crudos_url: x.crudos_url || "", video_url: x.video_url || "", ig_url: x.ig_url || "",
+      story_url: x.story_url || "", cine_url: x.cine_url || "", ficha_url: x.ficha_url || "",
+      info_url: x.info_url || "", drive_url: x.drive_url || "", notas: x.notas || "",
+      datos: x.datos || {},
     });
   }, []);
 
   const saveFicha = useCallback(async () => {
-    if (!ficha?.id) return;
+    if (!ficha) return;
+    if (!String(ficha.nombre || "").trim()) { setError("Ponle un nombre a la propiedad."); return; }
     setFichaSaving(true);
     // Los vacíos se guardan como null, no como "": así un campo sin llenar no
     // se distingue de uno borrado y las condiciones `if (it.video_url)` siguen
     // funcionando en la tarjeta.
     const limpio = (s) => (String(s || "").trim() || null);
-    const { error: e } = await supabase.from("mkt_pipeline_items").update({
-      nombre: limpio(ficha.nombre) || ficha.nombre, locacion: limpio(ficha.locacion),
-      precio: limpio(ficha.precio), tipo: limpio(ficha.tipo),
+    const dukeBrand = brands.find(b => b.slug === "duke-del-caribe");
+    const campos = {
+      nombre: limpio(ficha.nombre) || ficha.nombre,
+      etapa: ficha.etapa || "seleccionada",
+      brand_id: ficha.brand_id || dukeBrand?.id || brands[0]?.id || null,
+      locacion: limpio(ficha.locacion), precio: limpio(ficha.precio), tipo: limpio(ficha.tipo),
       fecha_rodaje: ficha.fecha_rodaje || null, fecha_publicacion: ficha.fecha_publicacion || null,
       crudos_url: limpio(ficha.crudos_url), video_url: limpio(ficha.video_url), ig_url: limpio(ficha.ig_url),
       story_url: limpio(ficha.story_url), cine_url: limpio(ficha.cine_url), ficha_url: limpio(ficha.ficha_url),
       info_url: limpio(ficha.info_url), drive_url: limpio(ficha.drive_url), notas: limpio(ficha.notas),
+      datos: ficha.datos || {},
       updated_at: new Date().toISOString(),
-    }).eq("id", ficha.id);
+    };
+    // Sin id es una propiedad NUEVA. Nace al final de la lista con posición
+    // propia, para que la tabla no se reacomode cuando la empiecen a llenar.
+    const e = ficha.id
+      ? (await supabase.from("mkt_pipeline_items").update(campos).eq("id", ficha.id)).error
+      : (await supabase.from("mkt_pipeline_items").insert({
+          ...campos, organization_id: orgId, created_by: user?.id || null,
+          orden: pipeline.reduce((m, p) => Math.max(m, p.orden || 0), 0) + 1,
+        })).error;
     setFichaSaving(false);
     if (e) { setError("No pude guardar la ficha. Probá de nuevo."); return; }
     setFicha(null);
     load();
-  }, [ficha, load]);
+  }, [ficha, brands, orgId, user?.id, pipeline, load]);
 
   const openEvidence = useCallback(async (t) => {
     const path = t?.evidencia_url;
@@ -970,34 +991,34 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
      año en curso, como cuando ellos abren el archivo, y desde el mismo lugar se
      ve el histórico sin cambiar de pantalla. */
   const anioDe = (p) => String(p.fecha_publicacion || p.fecha_rodaje || "").slice(0, 4);
-  const anios = useMemo(
-    () => [...new Set(pipeline.map(anioDe).filter(Boolean))].sort().reverse(),
-    [pipeline]
-  );
-  const [pipeFiltro, setPipeFiltro] = useState({
-    q: "", locacion: "", tipo: "", etapa: "", empresa: "",
-    anio: String(new Date().getFullYear()),
-  });
-  // Si el año en curso todavía no tiene nada cargado, se muestra el más reciente
-  // que sí tenga — para que la tabla nunca abra vacía.
-  useEffect(() => {
-    if (!anios.length) return;
-    setPipeFiltro(f => (f.anio && !anios.includes(f.anio) ? { ...f, anio: anios[0] } : f));
-  }, [anios]);
+  // El filtro es UNO SOLO: texto. Los cinco desplegables (año, estatus, empresa,
+  // ubicación y tipo) se fueron —Iván, 30-jul: «son muchos botones»— y su
+  // trabajo lo hace el buscador, que mira todos esos campos.
+  const [pipeFiltro, setPipeFiltro] = useState({ q: "" });
+
+  /* UN SOLO BUSCADOR en vez de seis desplegables. Mira todo lo que antes
+     filtraba cada uno —nombre, ubicación, estatus (con SU nombre: «Sin voz en
+     off», no «esperando_voz»), empresa, tipo, precio, año y notas— así que
+     escribir «Tulum», «2025», «Publicada» o «Depto» hace el mismo trabajo, y
+     nadie tiene que aprenderse qué desplegable usa cada cosa.
+     Se pueden encadenar palabras: «tulum publicada» filtra por las dos. */
+  const textoDe = useCallback((p) => [
+    p.nombre, p.locacion, p.tipo, p.precio, p.notas,
+    ETAPAS.find(e => e.id === p.etapa)?.l,
+    brandById[p.brand_id]?.nombre,
+    anioDe(p),
+    ...Object.values(p.datos || {}),
+  ].filter(Boolean).join(" ").toLowerCase(), [brandById]);
 
   const pipeFiltrado = useMemo(() => {
-    const q = pipeFiltro.q.trim().toLowerCase();
-    return pipeline.filter(p =>
-      (!q || `${p.nombre} ${p.locacion || ""} ${p.notas || ""}`.toLowerCase().includes(q)) &&
-      (!pipeFiltro.locacion || p.locacion === pipeFiltro.locacion) &&
-      (!pipeFiltro.tipo     || p.tipo === pipeFiltro.tipo) &&
-      (!pipeFiltro.etapa    || p.etapa === pipeFiltro.etapa) &&
-      (!pipeFiltro.empresa  || p.brand_id === pipeFiltro.empresa) &&
-      (!pipeFiltro.anio     || anioDe(p) === pipeFiltro.anio)
-    );
-  }, [pipeline, pipeFiltro]);
+    const palabras = pipeFiltro.q.trim().toLowerCase().split(/\s+/).filter(Boolean);
+    if (!palabras.length) return pipeline;
+    return pipeline.filter(p => {
+      const t = textoDe(p);
+      return palabras.every(w => t.includes(w));
+    });
+  }, [pipeline, pipeFiltro.q, textoDe]);
 
-  const hayFiltro = !!(pipeFiltro.q || pipeFiltro.locacion || pipeFiltro.tipo || pipeFiltro.etapa || pipeFiltro.empresa);
   const locaciones = useMemo(() => [...new Set(pipeline.map(p => p.locacion).filter(Boolean))].sort(), [pipeline]);
   const tipos      = useMemo(() => [...new Set(pipeline.map(p => p.tipo).filter(Boolean))].sort(), [pipeline]);
 
@@ -1137,8 +1158,8 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
     const dukeBrand = brands.find(b => b.slug === "duke-del-caribe");
     const { error: e } = await supabase.from("mkt_pipeline_items").insert({
       organization_id: orgId,
-      brand_id: pipeFiltro.empresa || dukeBrand?.id || brands[0]?.id || null,
-      nombre, etapa: pipeFiltro.etapa || "seleccionada",
+      brand_id: dukeBrand?.id || brands[0]?.id || null,
+      nombre, etapa: "seleccionada",
       // Posición explícita: la tabla ordena por `orden` y recién después por
       // fecha de cambio. Sin esto, la fila nueva se movería de lugar cada vez
       // que alguien le escribe algo — y no se puede trabajar en una tabla que
@@ -1150,7 +1171,7 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
     if (e) { setError("No pude agregar esa propiedad."); return; }
     setFilaNueva("");
     load();
-  }, [filaNueva, orgId, brands, pipeline, pipeFiltro.empresa, pipeFiltro.etapa, user?.id, load]);
+  }, [filaNueva, orgId, brands, pipeline, user?.id, load]);
 
   /* ── Columnas propias: agregarlas sin que nosotros toquemos el esquema ── */
   const [colForm, setColForm] = useState(null);   // { nombre, tipo } | null
@@ -1368,51 +1389,55 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
 
   const pipelineTabla = () => (
     <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
-        <div style={{ position: "relative", flex: isMobile ? "1 1 100%" : "0 0 230px" }}>
-          <Search size={13} color={txt3} style={{ position: "absolute", left: 10, top: 12 }} />
+      {/* UNA SOLA BARRA. Iván: «son muchos botones, ellos quieren que todo sea
+          más simple; ahí no se necesita nada de lo que está: solamente buscar
+          propiedad, y una parte de agregar». Los cinco desplegables (año,
+          estatus, empresa, ubicación, tipo) se fueron: el buscador ahora mira
+          TODOS esos campos, así que escribir «Tulum», «2025», «Publicada» o
+          «Depto» filtra igual — un control en vez de seis, y no hay que
+          aprenderse cuál usa cada cosa.
+          «Columnas» y «Columna nueva» quedan SOLO para administración: son
+          para armar la hoja, no para el día a día de quien la llena. */}
+      <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
+        <div style={{ position: "relative", flex: isMobile ? "1 1 100%" : "1 1 320px", maxWidth: isMobile ? "none" : 420 }}>
+          <Search size={14} color={txt3} style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)" }} />
           <input value={pipeFiltro.q} onChange={e => setPipeFiltro(f => ({ ...f, q: e.target.value }))}
-            placeholder="Buscar propiedad…" style={{ ...inputStyle, paddingLeft: 30 }} />
+            placeholder="Buscar propiedad, ubicación, estatus, año…"
+            style={{ ...inputStyle, paddingLeft: 34, paddingRight: pipeFiltro.q ? 32 : 12, minHeight: 38 }} />
+          {pipeFiltro.q && (
+            <button onClick={() => setPipeFiltro(f => ({ ...f, q: "" }))} title="Limpiar" style={{
+              position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)",
+              background: "transparent", border: "none", cursor: "pointer", color: txt3, display: "inline-flex", padding: 2,
+            }}><X size={13} /></button>
+          )}
         </div>
-        {/* El año hace lo que hacían sus pestañas 2026 · 2025 · … */}
-        {anios.length > 1 && (
-          <select value={pipeFiltro.anio} onChange={e => setPipeFiltro(f => ({ ...f, anio: e.target.value }))}
-            title="El año, como las pestañas de la hoja" style={{ ...selStyle, width: "auto", minWidth: 100 }}>
-            <option value="">Todos los años</option>
-            {anios.map(a => <option key={a} value={a}>{a}</option>)}
-          </select>
+
+        {/* Agregar una propiedad abre LA MISMA ficha con la que se edita: todos
+            los campos de la hoja, agrupados. Con poner el nombre alcanza; el
+            resto se completa acá o después, en la tabla. */}
+        <button onClick={() => openFicha(null)} style={{
+          minHeight: 38, padding: "0 16px", borderRadius: 10, cursor: "pointer", fontFamily: font,
+          fontSize: 13, fontWeight: 600, whiteSpace: "nowrap",
+          background: `${accent}18`, border: `1px solid ${accent}55`, color: accent,
+          display: "inline-flex", alignItems: "center", gap: 6,
+        }}><Plus size={14} /> Agregar propiedad</button>
+
+        {/* Solo administración: armar la hoja (qué columnas se ven, columnas propias). */}
+        {isAdmin && !isMobile && (
+          <>
+            <button onClick={() => { setShowCols(s => !s); setColForm(null); }} title="Elegir qué columnas ver" style={{
+              minHeight: 38, padding: "0 13px", borderRadius: 10, cursor: "pointer", fontFamily: font, fontSize: 12.5,
+              background: showCols ? `${accent}14` : "transparent", border: `1px solid ${bd}`, color: txt2,
+              display: "inline-flex", alignItems: "center", gap: 6,
+            }}><SlidersHorizontal size={13} /> Columnas{colsOcultas.size > 0 ? ` (${colsOcultas.size})` : ""}</button>
+            <button onClick={() => { setColForm(c => c ? null : { nombre: "", tipo: "texto" }); setShowCols(false); }}
+              title="Agregar una columna propia a la hoja" style={{
+              minHeight: 38, padding: "0 13px", borderRadius: 10, cursor: "pointer", fontFamily: font, fontSize: 12.5,
+              background: "transparent", border: `1px solid ${bd}`, color: txt2,
+              display: "inline-flex", alignItems: "center", gap: 6,
+            }}><Plus size={13} /> Columna nueva</button>
+          </>
         )}
-        <select value={pipeFiltro.etapa} onChange={e => setPipeFiltro(f => ({ ...f, etapa: e.target.value }))} style={{ ...selStyle, width: "auto", minWidth: 150 }}>
-          <option value="">Todo estatus</option>
-          {ETAPAS.map(s => <option key={s.id} value={s.id}>{s.l}</option>)}
-        </select>
-        {brands.length > 1 && (
-          <select value={pipeFiltro.empresa} onChange={e => setPipeFiltro(f => ({ ...f, empresa: e.target.value }))} style={{ ...selStyle, width: "auto", minWidth: 130 }}>
-            <option value="">Toda empresa</option>
-            {brands.map(b => <option key={b.id} value={b.id}>{b.nombre}</option>)}
-          </select>
-        )}
-        <select value={pipeFiltro.locacion} onChange={e => setPipeFiltro(f => ({ ...f, locacion: e.target.value }))} style={{ ...selStyle, width: "auto", minWidth: 130 }}>
-          <option value="">Toda ubicación</option>
-          {locaciones.map(l => <option key={l} value={l}>{l}</option>)}
-        </select>
-        <select value={pipeFiltro.tipo} onChange={e => setPipeFiltro(f => ({ ...f, tipo: e.target.value }))} style={{ ...selStyle, width: "auto", minWidth: 120 }}>
-          <option value="">Todo tipo</option>
-          {tipos.map(t => <option key={t} value={t}>{t}</option>)}
-        </select>
-        {hayFiltro && (
-          <button onClick={() => setPipeFiltro(f => ({ ...f, q: "", locacion: "", tipo: "", etapa: "", empresa: "" }))} style={{
-            background: "transparent", border: "none", cursor: "pointer", color: txt3, fontSize: 12, fontFamily: font,
-          }}>Limpiar</button>
-        )}
-        {!isMobile && <button onClick={() => { setShowCols(s => !s); setColForm(null); }} title="Elegir qué columnas ver" style={{
-          background: showCols ? `${accent}14` : "transparent", border: `1px solid ${bd}`, borderRadius: 9, padding: "7px 12px",
-          cursor: "pointer", color: txt2, fontSize: 12.5, fontFamily: font, display: "inline-flex", alignItems: "center", gap: 5,
-        }}><SlidersHorizontal size={12} /> Columnas{colsOcultas.size > 0 ? ` (${colsOcultas.size} ocultas)` : ""}</button>}
-        {!isMobile && <button onClick={() => { setColForm(c => c ? null : { nombre: "", tipo: "texto" }); setShowCols(false); }} style={{
-          background: "transparent", border: `1px solid ${accent}44`, borderRadius: 9, padding: "7px 12px",
-          cursor: "pointer", color: accent, fontSize: 12.5, fontFamily: font, display: "inline-flex", alignItems: "center", gap: 5,
-        }}><Plus size={12} /> Columna nueva</button>}
         <span style={{ fontSize: 12, color: celdaSaving ? accent : txt3, marginLeft: "auto", whiteSpace: "nowrap" }}>
           {celdaSaving ? "Guardando…" : `${pipeFiltrado.length} de ${pipeline.length}`}
         </span>
@@ -2848,11 +2873,31 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
           }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
               <Clapperboard size={15} color={accent} />
-              <div style={{ flex: 1, fontSize: 13.5, color: txt, fontWeight: 600, fontFamily: fontDisp }}>Ficha de la propiedad</div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 14.5, color: txt, fontWeight: 600, fontFamily: fontDisp }}>
+                  {ficha.id ? "Ficha de la propiedad" : "Nueva propiedad"}
+                </div>
+                <div style={{ fontSize: 11.5, color: txt3, marginTop: 1 }}>
+                  {ficha.id ? "Todo lo de la hoja, en un solo lugar." : "Con el nombre alcanza — el resto se llena cuando lo tengas."}
+                </div>
+              </div>
               <button onClick={() => setFicha(null)} style={{ background: "transparent", border: "none", cursor: "pointer", color: txt2, padding: 4 }}><X size={16} /></button>
             </div>
 
             <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 9 }}>
+              <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                <span style={{ fontSize: 11.5, color: txt3 }}>Estatus</span>
+                <select value={ficha.etapa} onChange={e => setFicha(f => ({ ...f, etapa: e.target.value }))} style={selStyle}>
+                  {ETAPAS.map(x => <option key={x.id} value={x.id}>{x.l}</option>)}
+                </select>
+              </label>
+              <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                <span style={{ fontSize: 11.5, color: txt3 }}>Empresa</span>
+                <select value={ficha.brand_id} onChange={e => setFicha(f => ({ ...f, brand_id: e.target.value }))} style={selStyle}>
+                  <option value="">— elegir —</option>
+                  {brands.map(x => <option key={x.id} value={x.id}>{x.nombre}</option>)}
+                </select>
+              </label>
               {[
                 ["nombre",            "Propiedad",            "text",  "Casa Lago"],
                 ["locacion",          "Ubicación",            "text",  "Tulum, Cancún, PDC…"],
@@ -2861,12 +2906,25 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
                 ["fecha_rodaje",      "Fecha de rodaje",      "date",  ""],
                 ["fecha_publicacion", "Fecha de publicación", "date",  ""],
               ].map(([k, label, type, ph]) => (
-                <label key={k} style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                  <span style={{ fontSize: 11.5, color: txt3 }}>{label}</span>
-                  <input type={type} placeholder={ph} value={ficha[k]}
+                <label key={k} style={{
+                  display: "flex", flexDirection: "column", gap: 4,
+                  gridColumn: k === "nombre" && !isMobile ? "1 / -1" : undefined,
+                  order: k === "nombre" ? -1 : undefined,
+                }}>
+                  <span style={{ fontSize: 11.5, color: txt3 }}>
+                    {label}{k === "nombre" && <span style={{ color: accent }}> *</span>}
+                  </span>
+                  <input type={type} placeholder={ph} value={ficha[k]} autoFocus={k === "nombre" && !ficha.id}
+                    list={k === "locacion" ? "mkt-cat-ubicacion" : k === "tipo" ? "mkt-cat-tipo" : undefined}
                     onChange={e => setFicha(f => ({ ...f, [k]: e.target.value }))} style={inputStyle} />
                 </label>
               ))}
+              {/* Ubicación y Tipo SUGIEREN el catálogo de la hoja (mismas plazas y
+                  mismos tipos que ya usa el equipo) pero dejan escribir algo nuevo:
+                  así no se inventan cinco formas de decir «Cancún» y tampoco hay que
+                  pedir permiso para dar de alta una plaza que todavía no está. */}
+              <datalist id="mkt-cat-ubicacion">{CAT_UBICACION.map(o => <option key={o.v} value={o.v} />)}</datalist>
+              <datalist id="mkt-cat-tipo">{CAT_TIPO.map(o => <option key={o.v} value={o.v} />)}</datalist>
             </div>
 
             <div style={{ fontSize: 11.5, color: txt3, letterSpacing: 0.4, textTransform: "uppercase", paddingTop: 2 }}>Enlaces</div>
@@ -2891,6 +2949,22 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
                 </label>
               ))}
             </div>
+
+            {colsExtra.length > 0 && (<>
+              <div style={{ fontSize: 11.5, color: txt3, letterSpacing: 0.4, textTransform: "uppercase", paddingTop: 2 }}>Columnas del equipo</div>
+              <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 9 }}>
+                {colsExtra.map(c => (
+                  <label key={c.id} style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                    <span style={{ fontSize: 11.5, color: txt3 }}>{c.nombre}</span>
+                    <input
+                      type={c.tipo === "fecha" ? "date" : c.tipo === "numero" ? "number" : "text"}
+                      value={ficha.datos?.[c.clave] || ""}
+                      onChange={e => setFicha(f => ({ ...f, datos: { ...(f.datos || {}), [c.clave]: e.target.value } }))}
+                      style={inputStyle} />
+                  </label>
+                ))}
+              </div>
+            </>)}
 
             <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
               <span style={{ fontSize: 11.5, color: txt3 }}>Notas</span>
