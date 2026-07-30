@@ -152,10 +152,21 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
       if (!opts.merge) return delServidor;
       // Se conserva lo LOCAL que el servidor todavía no refleja (comparando por
       // rol + texto). Sin esto, un refresco a destiempo te borra el mensaje.
-      const enServidor = new Set(delServidor.map((m) => `${m.role}|${(m.content || "").trim()}`));
+      // Un local cuenta como «ya está en el servidor» solo si el texto coincide
+      // Y las horas quedan a menos de 90s. Comparar por texto pelado hacía que
+      // un tap repetido («En proceso», «Sí», «Hecho») se borrara de pantalla al
+      // refrescar porque matcheaba con su gemelo VIEJO de arriba — «mi mensaje
+      // se fue para arriba de la nada» (Ángel, 30-jul).
+      const hora = (m) => new Date(m.occurred_at || 0).getTime() || 0;
+      const enServidor = delServidor.map((m) => ({ k: `${m.role}|${(m.content || "").trim()}`, t: hora(m) }));
+      const yaEsta = (m) => {
+        const k = `${m.role}|${(m.content || "").trim()}`;
+        const t = hora(m);
+        return enServidor.some((s) => s.k === k && Math.abs(s.t - t) < 90000);
+      };
       const huerfanos = prev.filter(
         (m) => String(m.id || "").startsWith("tmp-") || String(m.id || "").startsWith("ai-")
-      ).filter((m) => !enServidor.has(`${m.role}|${(m.content || "").trim()}`));
+      ).filter((m) => !yaEsta(m));
       if (!huerfanos.length) return delServidor;
       // Los huérfanos se INTERCALAN por hora, no se cuelgan al final: colgarlos
       // hacía que un mensaje viejo que el servidor aún no tenía saltara al fondo
