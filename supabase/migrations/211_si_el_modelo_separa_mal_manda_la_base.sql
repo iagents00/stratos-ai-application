@@ -1,0 +1,41 @@
+-- 211 · Si el modelo separa mal, manda la base
+-- bot_nlu_dispatch_gvintell_inner
+--
+-- La mig 198 dejó una puerta abierta: si el agente de n8n mandara las tareas ya
+-- separadas (`tareas[]`), la base las respeta y no vuelve a partir el texto.
+-- Tenía sentido cuando el separador de la base era pobre.
+--
+-- Ya no. Después de las migs 200-210 el separador va **12 de 12** contra frases
+-- reales de un gerente de ventas de Duke y **35/35** en el QA dorado; es
+-- determinista y se puede probar: corro una frase, veo qué sale, escribo un caso
+-- dorado y queda fijo.
+--
+-- El agente corre con **gpt-4o-mini**, del que ya está registrado que «falló de
+-- 4 formas distintas en un día». Confiarle el desglose sería cambiar algo
+-- probado por algo que no se puede probar, y encima en el flujo que usan los
+-- asesores de Duke todos los días.
+--
+-- ⇒ **DECISIÓN: no se toca el prompt de n8n.** No es un pendiente: es una
+-- decisión con motivo. El dictado ya funciona sin eso porque el ruteo se atiende
+-- en la base, arriba de todos los guardias, aunque el modelo mande el tool
+-- equivocado. Detalle y qué hacer si algún día se decide lo contrario:
+-- `infra/n8n-flows/PARCHE-prompt-ventas-create_team_actions.md` (repo del AIOS).
+--
+-- Y como la puerta de la 198 pasó de ventaja a riesgo, se le puso una guarda: el
+-- desglose del modelo se respeta **sólo si viene COMPLETO** (cada entrada con su
+-- texto). Si viene algo vacío o mal armado, la base lo ignora y separa ella.
+--
+-- La condición agregada:
+--
+--     and not exists (select 1 from jsonb_array_elements(v_args->'tareas') e
+--                      where coalesce(btrim(e->>'texto'),'') = '')
+--
+-- VERIFICADO en los dos sentidos:
+--   · desglose bueno del modelo  → se respeta (cada tarea con SU hora)
+--   · desglose con una entrada vacía → la base lo ignora y recupera las dos tareas
+--
+-- ⚠️ Aparte, dato que salió al abrir el flujo: en n8n el flujo de VENTAS DE DUKE
+-- EN PRODUCCIÓN se llama **«Copilot Audio Transcribe Test»**. Cualquiera podría
+-- apagarlo creyendo que es una prueba. Renombrarlo lo decide Ángel.
+--
+-- REVERTIR: CREATE OR REPLACE quitando la condición del `where`. Sin DDL.
