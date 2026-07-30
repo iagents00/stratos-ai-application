@@ -1,8 +1,127 @@
 {
+  "_comentario": [
+    "Config de PROYECTO de stratos-ai-application. SE COMMITEA -> la heredan las sesiones",
+    "en la NUBE, la Mac de Ivan y la PC de Angel. Aqui NO van secretos.",
+    "",
+    "2026-07-30 — Antes este archivo solo tenia 'mcpServers': cero permisos, cero autoMode.",
+    "Por eso CUALQUIER sesion abierta sobre este repo preguntaba por todo (apply_migration,",
+    "n8n, etc.) aunque la PC tuviera permisos configurados: la config de iagents-aios NO",
+    "aplica aca, cada repo lleva la suya.",
+    "",
+    "autoMode describe QUE ES RUTINA en este proyecto y que es critico. Ojo con la diferencia",
+    "respecto del AIOS: esto es un repo de PRODUCTO -> el codigo va por RAMA + PR, nunca push",
+    "directo a main. Eso queda en hard_deny.",
+    "",
+    "NO se pone defaultMode aqui: el modo (auto / bypass / plan) es decision de cada persona",
+    "en SU maquina, no se impone desde el repo."
+  ],
   "mcpServers": {
     "supabase": {
       "type": "http",
       "url": "https://mcp.supabase.com/mcp?project_ref=glulgyhkrqpykxmujodb&features=docs%2Caccount%2Cdatabase%2Cdevelopment%2Cdebugging%2Cfunctions%2Cbranching%2Cstorage"
     }
+  },
+  "autoMode": {
+    "environment": [
+      "$defaults",
+      "Este repo es el CRM de Stratos Capital Group (app.stratoscapitalgroup.com), producto vivo de iagents00 — los duenios del codigo son quienes operan la sesion (Angel e Ivan). Sirve a varios tenants: Duke del Caribe, Grupo28, Stratos Sales, NSG.",
+      "Toda la red de seguridad es la REVERSIBILIDAD, no los prompts: el codigo va por rama + PR (git revert), la base tiene backup diario administrado y las migraciones quedan versionadas en supabase_migrations, los flujos n8n se exportan antes de tocarlos y Vercel permite rollback del deploy.",
+      "Los duenios pidieron expresamente no ser interrumpidos en las operaciones rutinarias, para poder dejar una sesion trabajando sola. Lo critico e irreversible SI debe seguir preguntando, y explicado en lenguaje natural, sin tecnicismos: que se toca, que se pierde si sale mal, por que hace falta y como se recupera.",
+      "La base de este proyecto es Supabase stratos-prod (glulgyhkrqpykxmujodb). La otra base (gvintell-prod) es de OTRO producto y no se toca desde aca."
+    ],
+    "allow": [
+      "$defaults",
+      "Supabase apply_migration y execute_sql en stratos-prod que CREAN o ACTUALIZAN: funciones plpgsql del cerebro del asistente, tablas, columnas, indices, filas de configuracion y RPCs. Es el trabajo diario de este repo; las migraciones quedan versionadas y la base tiene backup diario.",
+      "Operaciones de n8n sobre https://personal-n8n.suwsiw.easypanel.host: leer flujos, editarlos, activar/desactivar, publicar, ejecutar de prueba y cambiar el System Message de un nodo AI Agent. Se hace backup del flujo en vivo antes de tocarlo.",
+      "Git no destructivo: add, commit, pull, fetch, checkout, stash, merge, revert, y push de RAMAS (no de main).",
+      "npm install / run build / run dev y levantar el servidor de desarrollo para verificar un cambio en el navegador.",
+      "Crear y actualizar Pull Requests, y leer PRs, issues y CI."
+    ],
+    "soft_deny": [
+      "$defaults"
+    ],
+    "hard_deny": [
+      "$defaults",
+      "DROP, DELETE o TRUNCATE sobre datos reales de stratos-prod sin un OK humano explicito y un backup fresco. La regla del proyecto es CREAR si, BORRAR no. Al pedir ese OK hay que explicar en palabras que se borra, cuantas filas, que se pierde, por que hace falta y como se recupera.",
+      "Push directo a main. Este es un repo de PRODUCTO: todo cambio va por rama + PR. Tampoco mergear saltandose la proteccion de rama sin que lo pida un humano.",
+      "Tocar la base del otro producto (gvintell-prod) desde este repo.",
+      "Borrar un flujo de n8n, o desactivar uno productivo sin avisar antes en palabras.",
+      "Escribir un secreto (token, API key, service_role, contrasena) dentro del repo o de un archivo de configuracion."
+    ]
+  },
+  "permissions": {
+    "allow": [
+      "Read",
+      "Grep",
+      "Glob",
+      "Edit",
+      "Write",
+      "Skill",
+      "TodoWrite",
+      "Task",
+      "WebFetch",
+      "WebSearch",
+      "Bash(git:*)",
+      "Bash(gh:*)",
+      "Bash(ls:*)",
+      "Bash(cat:*)",
+      "Bash(find:*)",
+      "Bash(grep:*)",
+      "Bash(rg:*)",
+      "Bash(echo:*)",
+      "Bash(head:*)",
+      "Bash(tail:*)",
+      "Bash(sed:*)",
+      "Bash(awk:*)",
+      "Bash(sort:*)",
+      "Bash(uniq:*)",
+      "Bash(cut:*)",
+      "Bash(tr:*)",
+      "Bash(wc:*)",
+      "Bash(diff:*)",
+      "Bash(basename:*)",
+      "Bash(dirname:*)",
+      "Bash(date:*)",
+      "Bash(du:*)",
+      "Bash(df:*)",
+      "Bash(printenv:*)",
+      "Bash(which:*)",
+      "Bash(command:*)",
+      "Bash(mkdir:*)",
+      "Bash(cp:*)",
+      "Bash(mv:*)",
+      "Bash(touch:*)",
+      "Bash(tar:*)",
+      "Bash(unzip:*)",
+      "Bash(python:*)",
+      "Bash(python3:*)",
+      "Bash(pip:*)",
+      "Bash(node:*)",
+      "Bash(npm:*)",
+      "Bash(npx:*)",
+      "Bash(ssh:*)",
+      "Bash(scp:*)",
+      "Bash(timeout:*)",
+      "Bash(curl:*)",
+      "Bash(sleep:*)",
+      "mcp__github",
+      "mcp__stratos-prod",
+      "mcp__filesystem",
+      "mcp__Claude_Browser",
+      "mcp__ccd_session",
+      "mcp__ccd_session_mgmt",
+      "mcp__visualize"
+    ],
+    "deny": [
+      "Bash(rm -rf /:*)",
+      "Bash(rm -rf ~:*)",
+      "Bash(rm -rf /home:*)",
+      "Bash(sudo:*)",
+      "Bash(git push --force:*)",
+      "Bash(git push -f:*)",
+      "Bash(git reset --hard:*)",
+      "Bash(mkfs:*)",
+      "Bash(dd if=:*)"
+    ]
   }
 }

@@ -256,3 +256,46 @@ select optgroup {
   background-color: #FFFFFF;
   color: #0B1220;
 }
+
+/* ── LAS HOJAS DE MARKETING (Espacio 1 y Espacio 2) ─────────────────────────
+   Estas tres reglas resuelven cosas concretas que con estilos en línea
+   costarían un listener por fila (y con 34 filas × 17 columnas eso se siente):
+
+   1. RESALTAR LA FILA AL PASAR. En una tabla de 17 columnas, al desplazarte a
+      lo ancho perdés de vista en qué renglón estás. El realce se hace con un
+      gris neutro que funciona igual en tema claro y oscuro.
+   2. QUE SE NOTE QUE LA CELDA SE PUEDE ESCRIBIR. Hoy hay que adivinarlo: el
+      texto se ve igual que uno de solo lectura. Al pasar por encima aparece un
+      borde tenue — la señal clásica de «esto es editable», sin ensuciar la
+      tabla cuando no la estás tocando.
+   3. FOCO VISIBLE AL TECLADO. Moverse con Tab entre celdas es la forma rápida
+      de llenar la hoja; sin un anillo de foco no se sabe dónde estás parado.  */
+
+.mkt-hoja tbody tr:hover > td {
+  background-color: rgba(127, 127, 127, 0.06);
+}
+.mkt-hoja tbody tr:hover > td:first-child {
+  /* La primera columna va congelada con fondo opaco: se realza aparte para que
+     no quede más clara que el resto de la fila. */
+  filter: brightness(1.06);
+}
+.mkt-hoja td button:hover {
+  box-shadow: inset 0 0 0 1px rgba(127, 127, 127, 0.28);
+  border-radius: 5px;
+}
+.mkt-hoja input:focus,
+.mkt-hoja select:focus,
+.mkt-hoja textarea:focus {
+  outline: 2px solid rgba(110, 231, 194, 0.55);
+  outline-offset: 1px;
+}
+
+/* El selector de espacios: la pastilla activa se desliza en vez de aparecer de
+   golpe. Es la señal de continuidad que hace que se sienta una sola superficie
+   y no dos pantallas distintas. */
+.mkt-seg-btn {
+  transition: color 160ms ease, background-color 160ms ease;
+}
+@media (prefers-reduced-motion: reduce) {
+  .mkt-seg-btn { transition: none; }
+}
