@@ -1,0 +1,208 @@
+-- 200 → 210 · Que el Copilot de VENTAS entienda como habla de verdad un gerente
+-- de ventas de Duke del Caribe.
+--
+-- ═══════════════════════════════════════════════════════════════════════════
+-- CÓMO SE LLEGÓ ACÁ
+--
+-- Hasta la 199 el dictado funcionaba… con las frases con las que se había
+-- construido. Se armó una batería de 12 frases reales —las que diría Emmanuel
+-- Ortiz, Gerente de Ventas de Duke, dictando por voz, sin puntuación y con el
+-- vocabulario del CRM— y se corrió contra la organización real.
+--
+--   FALLARON 11 DE 12.
+--
+-- Este tramo es lo que salió de ahí. Al final: 12 de 12 completas, 0 de 16
+-- falsos positivos, y QA dorado de ventas 28/28 → 35/35 (7 casos nuevos que
+-- fijan cada arreglo).
+--
+-- Todos los cuerpos están aplicados en Supabase; esto es el registro revisable.
+-- REVERTIR: CREATE OR REPLACE al cuerpo anterior de cada función. El único DDL
+-- es la creación de dos funciones auxiliares nuevas.
+-- ═══════════════════════════════════════════════════════════════════════════
+
+
+-- 200 · SI EL DICTADO TENÍA UNA SOLA ACCIÓN, SE TIRABA EL TRABAJO HECHO
+-- bot_nlu_dispatch_gvintell_inner · bot_create_team_actions
+--
+--     if ... jsonb_array_length(v_multi) < 2 then v_multi := null; end if;
+--
+-- El separador resolvía perfecto «que Gael haga el seguimiento de postventa»
+-- —responsable «Gael»— y esa línea lo descartaba por traer UNA sola tarea.
+-- Caía en la versión singular, que recibe el texto crudo, no sabe sacar el
+-- nombre, y contesta «¿para quién registro…?».
+--
+-- O sea: el dictado sólo funcionaba con DOS o más acciones. Un jefe que encarga
+-- UNA cosa —el caso más común del día— chocaba contra una pregunta.
+--
+-- Ahora se acepta desde UNA. Y como todas las asignaciones pasan por el mismo
+-- lugar, TODAS piden confirmación igual (antes una sola se escribía de una y
+-- dos preguntaban: incoherente). La promesa «mientras no digas que sí, dictar
+-- es gratis» ahora vale siempre.
+--
+-- También se amplió el candado: le faltaban verbos («marquen», «coticen»,
+-- «reporten», «confirmen»…), las formas «X tiene que» y «X debe», y el verbo de
+-- encargo «ponle», que sí conocía la otra función. Y el chequeo de «se lo dicta
+-- a todo el equipo» estaba DESPUÉS del de verbo, así que «que todo el equipo
+-- revise su pipeline» nunca llegaba a mirarse y terminaba respondiendo el
+-- tablero de etapas.
+
+
+-- 201 · 🔴 «QUE ME PASE EL REPORTE» SE LO ASIGNABA A CECILIA MENDOZA
+-- _ventas_find_profile · _ventas_menciona_companero · _ventas_verbos_encargo (nueva)
+--
+-- El resolvedor de nombres buscaba el texto EN CUALQUIER PARTE del nombre
+-- (`like '%me%'`), y el pronombre «me» cae dentro de «MEndoza». El jefe pedía
+-- que le pasaran a ÉL el reporte y el sistema le encajaba la tarea a una asesora
+-- que no tenía nada que ver.
+--
+-- Es la familia de errores más cara que hay acá: **no falla, acierta mal**.
+-- Nadie revisa una tarea que "se creó bien".
+--
+-- Dos candados: (a) una lista de palabras que NUNCA son una persona —pronombres,
+-- artículos, preposiciones y el vocabulario diario del CRM: cliente, lead,
+-- reporte, zoom, etapa—; (b) la búsqueda pasa a ser por PRINCIPIO DE PALABRA:
+-- «ayala» encuentra a Carlos Ayala, «yala» ya no. Los nombres de dos letras
+-- (mig 195) siguen entrando.
+--
+-- Además: cada función tenía SU PROPIA lista de verbos y se desincronizaban
+-- —tercera vez que muerde el mismo desfase, ya había pasado en la 195b—. Se
+-- corta de raíz con una fuente única, `_ventas_verbos_encargo()`.
+--
+-- Y «oye Gael tiene que subir al CRM» no encontraba a Gael: el patrón tomaba las
+-- dos palabras antes de «tiene que» —«oye gael»— y probaba «oye gael» y «oye»,
+-- nunca «gael» solo. Ahora prueba cada una.
+
+
+-- 202 · EL SEPARADOR ENTIENDE COMO HABLA DUKE
+-- fn_ventas_split_dictado · _ventas_verbos_split (nueva)
+--
+-- Cinco cosas que generaban tareas basura o se las daban a quien no era:
+--
+--  · «que me pase el REPORTE» se partía en «Pasar el» + «Reporte». La 200 había
+--    metido `reporte` y `pase` entre los verbos, y en ventas «el reporte» es un
+--    sustantivo el 90% de las veces. ⇒ DOS listas: una ANCHA para DETECTAR que
+--    el jefe encarga algo (puede permitirse dudar) y una ANGOSTA e inequívoca
+--    para CORTAR el texto (ahí una duda genera basura).
+--  · «MAÑANA quiero que Victor…» creaba una tarea llamada «Mañana» para Todos.
+--  · «que CADA UNO DE LOS ASESORES reporte» creaba una tarea con ese título.
+--  · «que Carlos Y CECILIA marquen…» le daba todo a Carlos y encima creaba una
+--    tarea llamada «Cecilia». Ahora se registra para LOS DOS.
+--  · «oye Gael TIENE QUE subir…» se iba a «Todos» con el texto crudo.
+
+
+-- 203 · 🔴 UNA REGLA DE ESPAÑOL CORRECTA DESTROZÓ UNA FRASE DE DUKE
+-- fn_ventas_split_dictado · fn_due_ventas · fn_quitar_tiempo
+--
+-- Para que «que Carlos LE DÉ SEGUIMIENTO» no quedara titulado «Le de
+-- seguimiento…», la 202 convertía «dé seguimiento» → «dar seguimiento». Pero en
+-- Duke **Seguimiento es una ETAPA del pipeline** y «los DE SEGUIMIENTO» son los
+-- leads que están en ella:
+--     «marquen a todos los de seguimiento» → «Marquen a todos los dar seguimiento»
+--
+-- Ahora sólo se convierte con el clítico («le/les dé seguimiento»), que es la
+-- única forma en que es verbo.
+--
+-- ⚠️ Lección para cualquier white-label: **el vocabulario del cliente manda.**
+-- Una regla gramaticalmente correcta puede destrozar una frase que en su negocio
+-- significa otra cosa.
+--
+-- Y «temprano» / «a primera hora» caían a las 10 de la noche (un día sin hora
+-- vence al cierre de la jornada, mig 193f). Ahora significan la APERTURA de la
+-- jornada de esa persona. «Al mediodía» = 12:00.
+
+
+-- 204 · 205 · AFINAR LA HORA
+-- fn_due_ventas · fn_quitar_tiempo
+--
+--  · «antes DEL mediodía» no se entendía (sólo «AL mediodía») → «sin fecha».
+--  · «el lunes TEMPRANO» seguía cayendo al cierre: «temprano» sólo se aplicaba
+--    cuando el parser NO lograba resolver la fecha, y con «el lunes» sí resuelve.
+--    Ahora, si el jefe dijo «temprano» y no dio hora exacta, eso manda.
+--  · Una hora pegada sin «a las» —«confirme asistencia mañana 9am»— quedaba
+--    dentro del título.
+--  · 🔎 La causa fina del mediodía: `fn_hora_en_palabras` convierte «mediodía» →
+--    «las 12» ANTES de que se preguntara si el jefe había dicho «mediodía». Se
+--    detecta sobre el texto ORIGINAL, que es donde había que preguntarlo.
+
+
+-- 206 · LOS VERBOS QUE FALTABAN EN EL TÍTULO
+-- fn_titulo_limpio
+--
+-- Los títulos van en infinitivo (mig 196) pero el diccionario no tenía los
+-- verbos de ventas: «Marquen a todos…» debía leerse «Marcar…», «Reporte sus
+-- cierres» → «Reportar…». De paso se corrigió «cotizen», mal escrito, que por eso
+-- nunca matcheaba (es «coticen»).
+
+
+-- 207 · 208 · NOMBRES DE TRES PALABRAS, Y NOMBRES LARGOS UNIDOS POR «Y»
+-- _ventas_menciona_companero · fn_ventas_split_dictado · _ventas_es_dictado_equipo
+--
+-- Probar en la cancha de QA destapó una clase de bug que Duke no había tocado
+-- por casualidad: «QA Asesor Uno» resolvía «QA Asesor» y dejaba «Uno» dando
+-- vueltas como tarea. No es cosa del laboratorio: en marketing está **Luis Ángel
+-- Landeros**. Ahora se prueba de MÁS LARGO A MÁS CORTO: tres palabras, dos, una.
+--
+-- Y con dos nombres largos unidos por «y» quedaban seis palabras entre el «que»
+-- y el verbo; la ventana del candado era de tres. Se ensanchó (3→6 y 2→4). No
+-- afloja la seguridad: sigue exigiendo jefe + verbo de encargo + persona REAL, y
+-- la batería de falsos positivos se volvió a correr entera después.
+
+
+-- 209 · 209b · 🔴 EN VENTAS, «EMMA» ERA EL DE MARKETING
+-- _ventas_find_profile
+--
+-- En Duke hay DOS Emmanuel: **Emmanuel Ortiz** (Gerente de Ventas) y **Emmanuel
+-- Sánchez** (marketing). Sánchez tiene cargados los apodos `emmanuel · emanuel ·
+-- emma · manu · sanchez` — puestos a propósito para el cerebro de MARKETING
+-- (mig 186), y ahí están bien. Pero viven en el perfil, así que se filtran al
+-- cerebro de VENTAS, y el apodo pesa más que cualquier otra cosa al buscar.
+--
+-- Resultado: en ventas, «Emmanuel» y **«Emma»** —el apodo con el que el equipo
+-- llama al Gerente de Ventas— le caían al de marketing. La tarea que el jefe de
+-- ventas dicta terminaba en la agenda de otra área. Eso cruza los dos mundos que
+-- CLAUDE.md manda mantener separados.
+--
+-- Arreglo: en el resolvedor de VENTAS, ser de marketing pesa MÁS que el apodo —
+-- un perfil de marketing sólo gana si lo nombran completo («Emmanuel Sánchez»).
+-- No se tocan los apodos: son datos que marketing necesita tal cual. Sólo cambia
+-- a quién le da la duda ESTE resolvedor, que lo usan únicamente las cuatro
+-- funciones del dictado de ventas.
+
+
+-- 210 · LAS ETAPAS DE DUKE SON SUSTANTIVOS, NO VERBOS
+-- fn_ventas_split_dictado
+--
+-- «que Emma revise el pipeline DE CIERRE» se partía en «Cerrar» + «Revisar el
+-- pipeline de», porque `cierre` está —con razón— entre los verbos con los que se
+-- corta («que Carlos CIERRE los dos que tiene pendientes»). Pero Cierre es una
+-- ETAPA, igual que Seguimiento, Rotación, Postventa, Contáctame Ya, Zoom
+-- Agendado y Zoom Concretado.
+--
+-- Segunda vez que muerde lo mismo (la primera, «de seguimiento», en la 203). En
+-- vez de tapar palabra por palabra, se resuelve por la FORMA: **un verbo
+-- precedido de artículo o preposición no es un verbo, es un sustantivo.** Vale
+-- para cualquier white-label — no depende de conocer las etapas de Duke.
+
+
+-- ═══════════════════════════════════════════════════════════════════════════
+-- VERIFICACIÓN
+--
+--   Batería Duke (12 frases reales, dictadas como habla un gerente):
+--     antes  1 de 12   ·   después  12 de 12 completas
+--     (rutean, a la persona correcta, con fecha, y sin tareas basura)
+--
+--   Falsos positivos: 0 de 16 — consultas, notas a clientes, altas,
+--   recordatorios personales y pedidos al propio asistente no se rutean como
+--   dictado de equipo.
+--
+--   QA dorado: ventas 28/28 → **35/35** (7 casos nuevos, uno por arreglo, que
+--   fijan esto para que no vuelva) · marketing 15/17, idéntico antes y después.
+--
+--   Todo probado contra la organización REAL de Duke dentro de transacciones que
+--   se revierten solas: no quedó ni una fila.
+--
+-- Objetos nuevos: _ventas_verbos_encargo() · _ventas_verbos_split()
+-- Funciones tocadas: bot_nlu_dispatch_gvintell_inner · bot_create_team_actions ·
+--   _ventas_es_dictado_equipo · _ventas_menciona_companero · _ventas_find_profile ·
+--   fn_ventas_split_dictado · fn_due_ventas · fn_quitar_tiempo · fn_titulo_limpio
+-- ═══════════════════════════════════════════════════════════════════════════
