@@ -33,7 +33,17 @@ const GRIS        = "667085";
 // Hasta acá se busca el «:» que separa el titular del texto. Más allá ya no es
 // un titular sino una frase con dos puntos en el medio, y ponerla media en
 // negrita se ve como un error de formato.
-const LARGO_MAX_TITULAR = 95;
+//
+// Estaba en 95 y se quedaba corto: el redactor escribe titulares de día como
+// «Martes 28 — Las etapas de Alex vuelven a ser las suyas y el registro de
+// propiedades se puede editar:» (99 caracteres) y ese día salía SIN negrita
+// mientras sus vecinos la tenían — el mismo defecto que ya se había reportado.
+const LARGO_MAX_TITULAR = 130;
+
+// Sin tope. Para los titulares de día no hace falta adivinar: la línea ya viene
+// identificada por «<Día> <número> —», así que el PRIMER «:» es el final del
+// titular por definición, mida lo que mida.
+const SIN_TOPE = Infinity;
 
 
 // «Martes 14 — Nacimiento del asistente:» es el titular de un día, y va en
@@ -47,9 +57,9 @@ const esMayusculas = (l) =>
 
 // Parte «Titular: resto» en dos trozos, uno en negrita. Si no hay un «:» a
 // tiempo, devuelve la línea entera sin negrita.
-const partirTitular = (texto) => {
+const partirTitular = (texto, tope = LARGO_MAX_TITULAR) => {
   const i = texto.indexOf(":");
-  if (i < 0 || i > LARGO_MAX_TITULAR) return [{ t: texto }];
+  if (i < 0 || i > tope) return [{ t: texto }];
   return [
     { t: texto.slice(0, i + 1), bold: true },
     { t: texto.slice(i + 1) },
@@ -76,6 +86,12 @@ export function bloquesDelReporte(texto, meta = {}) {
 
   const lineas = String(texto || "").split("\n");
   let tituloPuesto = false;
+  // En «PARTE 2 — LO QUE SIGUE» todas las líneas son viñetas, aunque el redactor
+  // se olvide del «•». Le pasó el 30-jul: escribió los días perfectos pero listó
+  // lo que sigue como párrafos sueltos, y en el Word salieron sin viñeta y sin
+  // negrita, justo debajo de una Parte 1 que sí las tenía. Se lee como un error
+  // de formato. El estado se apaga solo al llegar a la sección siguiente.
+  let enLoQueSigue = false;
 
   lineas.forEach((cruda) => {
     // El indentado importa (marca las sub-viñetas), así que se mira antes de
@@ -111,7 +127,9 @@ export function bloquesDelReporte(texto, meta = {}) {
 
     // 4) Viñeta.
     if (/^[•·]\s+/.test(l)) {
-      const cuerpo = partirTitular(l.replace(/^[•·]\s+/, ""));
+      const sinBolita = l.replace(/^[•·]\s+/, "");
+      const cuerpo = partirTitular(sinBolita,
+                                   DIA_TITULAR.test(sinBolita) ? SIN_TOPE : LARGO_MAX_TITULAR);
       bloques.push({ text: [{ t: "•   " }, ...cuerpo],
                      size: 13, indent: 14, before: 3, after: 7, color: TINTA });
       return;
@@ -119,6 +137,7 @@ export function bloquesDelReporte(texto, meta = {}) {
 
     // 5) Sección (PARTE 1 — TRABAJO REALIZADO, RESUMEN GENERAL…).
     if (esMayusculas(l)) {
+      enLoQueSigue = /^PARTE\s*2\b/i.test(l);
       bloques.push({ text: l, bold: true, size: 17.5, before: 20, after: 9,
                      color: AZUL, linea: true });
       return;
@@ -138,8 +157,11 @@ export function bloquesDelReporte(texto, meta = {}) {
     }
 
     // 8) Titular de día sin viñeta — se rescata acá para que no pierda la negrita.
-    if (DIA_TITULAR.test(l)) {
-      bloques.push({ text: [{ t: "•   " }, ...partirTitular(l)],
+    //    Y dentro de «LO QUE SIGUE», cualquier línea con titular es una viñeta:
+    //    esa sección es una lista, no prosa.
+    if (DIA_TITULAR.test(l) || (enLoQueSigue && l.includes(":"))) {
+      bloques.push({ text: [{ t: "•   " }, ...partirTitular(l, DIA_TITULAR.test(l) ? SIN_TOPE
+                                                                                  : LARGO_MAX_TITULAR)],
                      size: 13, indent: 14, before: 3, after: 7, color: TINTA });
       return;
     }
