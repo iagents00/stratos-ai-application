@@ -598,10 +598,11 @@ async function _sendCopilotMessageInner(rawText, options = {}) {
     //
     // Regla: cuando no sabemos si algo se guardó, se dice que NO sabemos y se
     // manda a mirar. Nunca se pide reintentar una acción que escribe.
-    return {
-      reply: "No recibí la respuesta a tiempo, pero eso no quiere decir que no se haya hecho. Si pediste una acción (crear una tarea, asignarla, mover algo), es muy probable que YA esté guardada — revísalo antes de repetirla para no duplicarla.",
-      buttons: [], error: null
-    };
+    // Desde el 30-jul el motor GUARDA cada respuesta en el historial del chat
+    // (fn_log_proactive_copilot) — aunque el cliente corte, la respuesta llega
+    // sola al hilo. Por eso acá ya no se muestra ninguna disculpa: se avisa
+    // `slow` y el chat recarga hasta que la respuesta aparezca.
+    return { reply: null, buttons: [], error: null, slow: true };
   } catch (e) {
     return { reply: null, buttons: [], error: e?.message || 'Error de conexión' };
   }
