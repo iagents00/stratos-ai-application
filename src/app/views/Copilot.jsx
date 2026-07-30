@@ -1013,6 +1013,17 @@ function Bubble({ m, T, isLight, userBg, userTxt, aiBg, aiBd, onPick, sending, i
         { label: "💬 Comentar", action: `mktcomment:${m.meta.task_id}:${m.meta.from_name || ""}`, primary: true },
         { label: "✅ Aprobar", action: `mktapprove:${m.meta.task_id}`, primary: false },
       ];
+    } else if (m.meta?.kind === "team_action") {
+      // La base declara qué aviso es (mig 224). Los botones de estado van en los
+      // RECORDATORIOS (1 hora antes, 10 minutos antes y a la hora) — el aviso de
+      // «nueva actividad asignada» se queda limpio, a pedido de Ángel (30-jul).
+      if (["60", "10", "0"].includes(String(m.meta.fase))) {
+        inlineButtons = [
+          { label: "✅ Hecho", action: "Ya la hice", primary: true },
+          { label: "⏳ En proceso", action: "En proceso", primary: false },
+          { label: "❌ No la hice", action: "No la hice", primary: false }
+        ];
+      }
     } else if (Array.isArray(m.buttons) && m.buttons.length > 0) {
       inlineButtons = m.buttons;
     } else if (m.content && typeof m.content === "string") {

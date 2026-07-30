@@ -1,5 +1,11 @@
 -- El informe elige QUÉ contar, no solo cómo contarlo.
 --
+-- ⚠️ Se APLICÓ en la base con el nombre `224_el_informe_elige_lo_que_le_sirve_al_cliente`.
+-- El archivo quedó como 225 porque otra sesión mergeó primero su propia 224
+-- (`224_avisos_del_equipo_con_fase_declarada`) y dos archivos con el mismo número
+-- se leen como si uno pisara al otro. La base ya la tiene; esto es la copia
+-- versionada.
+--
 -- Ángel (30-jul), sobre el reporte del 15 al 30 de julio: «no pongas eso de que
 -- a pedido de Ángel, ni a pedido de Iván… y cosas como la segunda imagen no dan
 -- valor de nada. ¿De qué le sirve a Yolanda de RRHH que un documento Word sin
