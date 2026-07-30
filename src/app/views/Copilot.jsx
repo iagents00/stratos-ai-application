@@ -213,34 +213,6 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
 
   useEffect(() => { voiceTranscriptRef.current = voiceTranscript; }, [voiceTranscript]);
 
-  /* ── Enter envía la grabación / Escape la cancela (global) ─────────────────
-     El input está deshabilitado mientras se graba, así que Enter caía en el
-     botón del mic (que quedaba con el foco) y lo RE-disparaba: cortaba la
-     grabación y arrancaba OTRA — el «falla» que reportó Ángel. Listener global
-     con función nombrada + removeEventListener (regla de performance). */
-  useEffect(() => {
-    if (!recording) return;
-    const onRecKeyDown = (e) => {
-      const el = e.target;
-      const tag = (el?.tagName || "").toLowerCase();
-      // Si está escribiendo en OTRO campo habilitado (ej. el formulario de la
-      // Caja), ese Enter es de ese campo — no se roba.
-      const enOtroCampo = (tag === "input" || tag === "textarea" || tag === "select" || el?.isContentEditable) && !el?.disabled;
-      if (e.key === "Enter" && !e.shiftKey && !enOtroCampo) {
-        e.preventDefault();
-        if (!recorderRef.current) return; // Enter sostenido: la grabación ya se cerró
-        document.activeElement?.blur?.(); // que el botón del mic no re-dispare con el próximo Enter
-        autoSendVoiceRef.current = true;
-        finishRecording();
-      } else if (e.key === "Escape" && !enOtroCampo) {
-        e.preventDefault();
-        cancelRecording();
-      }
-    };
-    document.addEventListener("keydown", onRecKeyDown);
-    return () => document.removeEventListener("keydown", onRecKeyDown);
-  }, [recording, finishRecording, cancelRecording]);
-
   const send = async (rawText, options = {}) => {
     const text = (rawText ?? "").trim();
     if (!text && !options.callback_data) return;
@@ -706,6 +678,38 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
     const t = setTimeout(() => { autoSendVoiceRef.current = false; sendVoiceNote(); }, 350);
     return () => clearTimeout(t);
   }, [pendingVoiceBlob, recording]);
+
+  /* ── Enter envía la grabación / Escape la cancela (global) ─────────────────
+     El input está deshabilitado mientras se graba, así que Enter caía en el
+     botón del mic (que quedaba con el foco) y lo RE-disparaba: cortaba la
+     grabación y arrancaba OTRA — el «falla» que reportó Ángel. Listener global
+     con función nombrada + removeEventListener (regla de performance).
+     ⚠️ Este efecto DEBE vivir DESPUÉS de finishRecording/cancelRecording: su
+     array de deps los evalúa en el render y un const todavía no inicializado
+     revienta con «Cannot access before initialization» (pasó en producción,
+     30-jul: la pantalla «Algo salió mal» al abrir el Copilot). */
+  useEffect(() => {
+    if (!recording) return;
+    const onRecKeyDown = (e) => {
+      const el = e.target;
+      const tag = (el?.tagName || "").toLowerCase();
+      // Si está escribiendo en OTRO campo habilitado (ej. el formulario de la
+      // Caja), ese Enter es de ese campo — no se roba.
+      const enOtroCampo = (tag === "input" || tag === "textarea" || tag === "select" || el?.isContentEditable) && !el?.disabled;
+      if (e.key === "Enter" && !e.shiftKey && !enOtroCampo) {
+        e.preventDefault();
+        if (!recorderRef.current) return; // Enter sostenido: la grabación ya se cerró
+        document.activeElement?.blur?.(); // que el botón del mic no re-dispare con el próximo Enter
+        autoSendVoiceRef.current = true;
+        finishRecording();
+      } else if (e.key === "Escape" && !enOtroCampo) {
+        e.preventDefault();
+        cancelRecording();
+      }
+    };
+    document.addEventListener("keydown", onRecKeyDown);
+    return () => document.removeEventListener("keydown", onRecKeyDown);
+  }, [recording, finishRecording, cancelRecording]);
 
   const onKeyDown = (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
