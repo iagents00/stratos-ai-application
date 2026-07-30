@@ -1,0 +1,46 @@
+-- 199 · Los títulos ya no terminan en «y»
+-- fn_ventas_split_dictado
+--
+-- Salió probando el CICLO COMPLETO por primera vez (dictar → ver el plan → decir
+-- «sí» → que se escriba en la agenda). Hasta ahora se había probado sólo hasta
+-- el «¿Confirmas?».
+--
+--   «necesito que X haga 30 llamadas a los clientes nuevos Y prepare el reporte»
+--   →  1. Hacer 30 llamadas a los clientes nuevos y     ← la «y» colgando
+--      2. Preparar el reporte de la semana
+--
+-- El separador corta justo antes del verbo de la segunda tarea, así que la
+-- conjunción que las unía se queda pegada al final de la primera. La tarea es
+-- correcta; se ve mal — y lo va a leer un gerente de ventas en su agenda todos
+-- los días.
+--
+-- Se recortan las conjunciones y conectores que queden colgando al final (y al
+-- principio, por las dudas) de cada título: y · e · o · u · además · también ·
+-- luego · después.
+--
+-- Verificado con el ciclo entero dentro de una transacción que se revierte:
+--   AL DICTAR   → «Hacer treinta llamadas a los clientes nuevos» · mañana 11:00 a.m.
+--                 «Preparar el reporte de la semana»            · mañana 7:00 p.m.
+--   AL DECIR SÍ → 2 tareas escritas en la agenda del asesor, con esas fechas.
+-- QA dorado ventas 28/28 · marketing 15/17.
+--
+-- REVERTIR: CREATE OR REPLACE quitando las líneas de recorte.
+
+-- ═══════════════════════════════════════════════════════════════════════════
+-- NOTA DEL MISMO ENSAYO — el ciclo de confirmación quedó verificado de punta a
+-- punta, y conviene dejar escrito cómo funciona porque no es obvio:
+--
+--   1. El dictado entra por …_required_fields_orig (mig 194c) y se atiende
+--      antes de los guardias de agenda.
+--   2. bot_create_team_actions arma el plan y responde «¿Confirmas?» SIN
+--      escribir nada.
+--   3. bot_nlu_dispatch_gvintell_inner guarda el plan en `bot_pending_confirm`
+--      con action='team_plan' y el arreglo `tareas` en el payload.
+--   4. El «sí» del jefe lo lee de ahí y llama a bot_create_team_actions con
+--      p_confirmar=true → recién ahí se escribe en team_actions.
+--   5. El «no» borra la fila pendiente y no deja rastro.
+--
+-- O sea: mientras el jefe no diga «sí», dictar es gratis. Eso es lo que hace
+-- que se pueda dictar sin miedo, y es lo primero que hay que mostrarle a quien
+-- lo va a usar.
+-- ═══════════════════════════════════════════════════════════════════════════
