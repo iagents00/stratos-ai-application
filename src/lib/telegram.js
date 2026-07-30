@@ -362,13 +362,18 @@ const N8N_COPILOT_WEBHOOK_MKT = "https://personal-n8n.suwsiw.easypanel.host/webh
  * @returns {Promise<{ reply: string|null, buttons?: Array, error: string|null }>}
  */
 export async function sendCopilotMessage(rawText, options = {}) {
+  // PERSISTENCIA: el turno del USUARIO se guarda AL ENVIAR, no al final. Antes se
+  // guardaba después de la respuesta y, con la base lenta, el motor registraba su
+  // respuesta PRIMERO → el historial quedaba persistido al revés y al refrescar el
+  // chat «se reordenaba» (Ángel, 30-jul). Fire-and-forget: no bloquea ni rompe el envío.
+  const userText = (rawText || "").trim();
+  if (userText) {
+    supabase.rpc('copilot_log_msg', { p_role: 'user', p_content: userText }).then(() => {}, () => {});
+  }
   const r = await _sendCopilotMessageInner(rawText, options);
-  // PERSISTENCIA: guardar SIEMPRE el mensaje del usuario y la respuesta en tg_bot_activity,
-  // pase lo que pase (comando, webhook, needs_input, manual). Antes el Copilot no guardaba
-  // sus propios mensajes → se borraban al cerrar/reabrir la app. Best-effort (no bloquea la UI).
+  // La respuesta directa (cuando no la registra el propio flujo) se guarda igual que
+  // siempre. Best-effort (no bloquea la UI).
   try {
-    const userText = (rawText || "").trim();
-    if (userText) await supabase.rpc('copilot_log_msg', { p_role: 'user', p_content: userText });
     if (r && typeof r.reply === 'string' && r.reply.trim()) {
       await supabase.rpc('copilot_log_msg', { p_role: 'ai', p_content: r.reply });
     }
@@ -583,9 +588,22 @@ async function _sendCopilotMessageInner(rawText, options = {}) {
             }
           }
         }
+      } else if (res.status !== 504) {
+        // 502/503 del proxy: el motor NO tomó el mensaje. Callar sería mentir
+        // (el camino "slow" espera una respuesta que jamás va a llegar) y
+        // reenviar es SEGURO porque nada corrió. Un 504 sí puede estar
+        // procesando → ese sigue al camino slow.
+        return { reply: null, buttons: [], error: 'no_llego' };
       }
     } catch (err) {
       console.warn('[Copilot] webhook error:', err?.name || err?.message);
+      // Abort (40s) = n8n SÍ recibió y sigue trabajando → camino "slow" (la
+      // respuesta la deja el propio flujo en el historial). Un fallo de RED =
+      // el POST murió en tránsito y el motor NUNCA lo recibió — era el hueco
+      // del «confirmado» sin respuesta (Ángel, 30-jul): se avisa con la verdad.
+      if (err?.name !== 'AbortError') {
+        return { reply: null, buttons: [], error: 'no_llego' };
+      }
     }
 
     // Fallback cuando el webhook no respondió a tiempo o dio error.
