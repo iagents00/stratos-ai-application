@@ -1,0 +1,154 @@
+-- 195 → 197b · El tramo final para que el Copilot de VENTAS se comporte igual
+-- que el de MARKETING cuando un jefe dicta el día.
+--
+-- Contexto: la 193 y la 194 arreglaron que el dictado LLEGARA (antes lo
+-- secuestraba la palabra «listo» y moría antes de ser atendido). Con eso ya
+-- registraba. Este tramo cierra las diferencias que quedaban al lado del de
+-- marketing: cómo se LEE lo que registró, qué FECHA le pone, y si la persona
+-- se ENTERA de que le asignaron algo.
+--
+-- Los cuerpos ya están aplicados en Supabase. Este archivo es el registro
+-- revisable: qué cambió, por qué, y cómo se revierte.
+--
+-- REVERTIR: CREATE OR REPLACE al cuerpo anterior de cada función. Lo único que
+-- es DDL es una columna nueva con default false (197), que no cambia el
+-- comportamiento de nadie mientras nadie la prenda.
+-- ═══════════════════════════════════════════════════════════════════════════
+
+
+-- 195 · EL CANDADO RECONOCE NOMBRES DE DOS LETRAS
+-- _ventas_menciona_companero
+--
+-- El candado que decide «esto es un dictado de equipo» exigía nombres de 3
+-- letras o más. En el equipo hay gente que se llama con dos («Jo», y cualquier
+-- apodo corto que use un jefe al dictar). Ese dictado no entraba y la persona
+-- se quedaba sin su tarea. Ahora entran de 2 en adelante.
+
+
+-- 195b · MANDA EL PERFIL REAL, NO MI LISTA DE PALABRAS
+-- _ventas_menciona_companero
+--
+-- El candado tenía su propia lista de palabras a ignorar («todos», «equipo»,
+-- artículos, etc.). Esa lista se desincronizaba de la que usa el buscador de
+-- perfiles, así que a veces el candado decía «sí hay una persona» y después el
+-- buscador no la encontraba — o al revés. Ahora la única autoridad sobre si una
+-- palabra es una persona es `_ventas_find_profile`, o sea, la tabla de perfiles.
+-- Una sola fuente de verdad en vez de dos que se contradicen.
+
+
+-- 195c · EL QA DE VENTAS PUEDE PROBAR COMO ADMIN
+-- fn_qa_run_golden
+--
+-- El runner de casos dorados de ventas ignoraba `chat_override`, así que TODOS
+-- los casos corrían como si los escribiera un asesor común. Un dictado sólo lo
+-- puede hacer un admin ⇒ era literalmente imposible escribir un caso dorado que
+-- cubriera el dictado. Por eso el QA daba verde mientras producción fallaba: no
+-- es que el caso pasara, es que el caso no podía existir.
+--
+-- Con esto arreglado se agregaron los casos que faltaban. QA ventas: 28/28.
+
+
+-- 196 · LOS TÍTULOS DE VENTAS SE LEEN COMO LOS DE MARKETING
+-- fn_titulo_limpio (rama de ventas)
+--
+-- Ventas guardaba el título tal como salía del dictado, en subjuntivo, porque
+-- así lo dice el jefe: «Haga 50 llamadas», «Actualice el tablero». En la agenda
+-- del asesor eso se lee como una orden suelta y desalineada con marketing, que
+-- guarda infinitivo: «Hacer 50 llamadas», «Actualizar el tablero».
+--
+-- Ahora ventas normaliza igual que marketing. Es cosmético para la base y
+-- notorio para quien lee su agenda todos los días.
+
+
+-- 196b · UNA HORA SIN DÍA YA NO QUEDA «SIN FECHA»
+-- fn_ventas_split_dictado · fn_due_ventas
+--
+-- Salió probando un dictado a dos personas:
+--
+--   «vamos a organizar el día: que Carlos llame a los clientes nuevos mañana a
+--    las diez, y pídele a Cecilia que actualice el tablero a las tres y media»
+--
+-- La de Carlos salía bien. La de Cecilia quedaba «sin fecha». Dos causas
+-- encadenadas:
+--
+--   1) El día se dice UNA vez al principio y vale para todo el dictado — eso ya
+--      estaba (193e). Pero la herencia sólo se aplicaba a los segmentos que no
+--      tuvieran NINGUNA marca de tiempo, y el de Cecilia sí traía hora. Ahora se
+--      mira si le falta el DÍA, no si le falta la hora.
+--
+--   2) Aun heredando, «a las 3:30» a secas devolvía null: el parser compartido
+--      exige día + hora. Ahora una hora suelta se resuelve a HOY a esa hora, y
+--      si ya pasó, a mañana — con el mismo empujón a la tarde que usa el resto
+--      (nadie le pone una tarea a un vendedor a las 3 de la mañana).
+--
+-- Verificado: las dos tareas salen con «mañana 10:00 a.m.» y «mañana 3:30 p.m.».
+
+
+-- 197 · EL AVISO AL ASIGNAR — CONSTRUIDO Y APAGADO
+-- proactive_config.team_notify_on_assign (columna nueva) · bot_create_team_actions
+--
+-- Última diferencia real con marketing: allá, cuando Alex asigna una tarea, a la
+-- persona LE LLEGA el aviso. En ventas no existía — la acción caía en la agenda
+-- y el asesor se enteraba recién al vencer.
+--
+-- La mitad del camino ya estaba hecha: bot_create_team_action(s) sabía encolar
+-- el aviso, pero lo ataba a `team_requires_evidence`, un flag que significa otra
+-- cosa (que la tarea pida foto). Para Duke está en false ⇒ nadie recibía nada, y
+-- prenderlo habría empezado a exigir evidencia sin que nadie lo pidiera. Dos
+-- cosas distintas en un solo interruptor.
+--
+-- Se separan. La condición nueva es `team_notify_on_assign OR
+-- team_requires_evidence`, así que ninguna organización cambia de comportamiento
+-- hoy: la que tenía evidencia prendida sigue avisando igual que antes.
+--
+-- ⚠️ NACE APAGADO A PROPÓSITO. Prenderlo manda mensajes REALES por Telegram a
+-- los asesores de Duke, y esa es una decisión de Iván/Ángel, no de una
+-- migración. Para prenderlo, cuando lo decidan:
+--
+--     update proactive_config set team_notify_on_assign = true
+--      where organization_id = '00000000-0000-0000-0000-000000000001';
+--
+-- Para apagarlo, lo mismo con false. La entrega la hace el flujo n8n
+-- STRATOS_TeamActions_Coach (Sv4SOmMzfGF1Nh1A), que ya está vivo. El aviso sólo
+-- se encola para quien tiene Telegram vinculado; en el Copilot se ve igual
+-- porque ese flujo loguea en tg_bot_activity.
+
+
+-- 197b · EL MISMO INTERRUPTOR EN LA VERSIÓN DE UNA SOLA TAREA
+-- bot_create_team_action
+--
+-- La versión singular quedó con el gating viejo (leía sólo
+-- team_requires_evidence). Se le puso el mismo par de flags para que el aviso se
+-- prenda y se apague en un solo lugar, y no dependa de si el jefe dictó una
+-- tarea o cinco.
+
+-- ═══════════════════════════════════════════════════════════════════════════
+-- VERIFICACIÓN de todo el tramo
+--
+--   QA dorado ventas    28/28   (antes de la 193: los casos de dictado no
+--                                podían ni escribirse)
+--   QA dorado marketing 15/17   idéntico antes y después — no se tocó
+--
+--   Caso textual de Iván:
+--     «…necesito que Carlos Ayala haga mañana 50 llamadas con clientes de las
+--      primeras etapas del CRM haga rol Play de las llamadas de zoom y que todo
+--      esto esté listo antes de las cuatro de la tarde…»
+--   →  ▸ Carlos Ayala
+--        1. Hacer 50 llamadas con clientes de las primeras etapas del CRM · mañana 4:00 p.m.
+--        2. Hacer rol Play de las llamadas de zoom · mañana 4:00 p.m.
+--
+--   Dictado a dos personas:
+--   →  ▸ Carlos Ayala   1. Llamar a los clientes nuevos      · mañana 10:00 a.m.
+--      ▸ Cecilia Mendoza 1. Actualizar el tablero            · mañana 3:30 p.m.
+--
+-- Nada se escribe sin que el admin confirme: se muestra el plan y espera el «sí».
+-- ═══════════════════════════════════════════════════════════════════════════
+--
+-- Funciones y objetos tocados (cuerpos en Supabase):
+--   195   _ventas_menciona_companero
+--   195b  _ventas_menciona_companero
+--   195c  fn_qa_run_golden
+--   196   fn_titulo_limpio
+--   196b  fn_ventas_split_dictado · fn_due_ventas
+--   197   proactive_config.team_notify_on_assign (columna) · bot_create_team_actions
+--   197b  bot_create_team_action
