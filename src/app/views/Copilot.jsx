@@ -107,6 +107,10 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
   const [recordSecs, setRecordSecs] = useState(0);
   const [voiceTranscript, setVoiceTranscript] = useState("");
   const [pendingVoiceBlob, setPendingVoiceBlob] = useState(null);
+  // El dictado (SpeechRecognition) falló o no existe en este navegador — Brave lo
+  // bloquea por privacidad y el WebView del APK no lo trae. Sin esto, la voz se
+  // grababa pero JAMÁS había texto que enviar.
+  const [speechDown, setSpeechDown] = useState(false);
   const [pendingVoiceUrl, setPendingVoiceUrl] = useState(null);
   const recorderRef = useRef(null);
   const recognitionRef = useRef(null);
@@ -565,23 +569,32 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
     if (recording || sending) return;
     setErrBanner(null);
     setVoiceTranscript("");
+    setSpeechDown(false);
 
     const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (SpeechRec) {
-      try {
-        const recSpeech = new SpeechRec();
-        recSpeech.lang = "es-MX";
-        recSpeech.continuous = true;
-        recSpeech.interimResults = true;
-        recSpeech.onresult = (e) => {
-          let t = "";
-          for (let i = 0; i < e.results.length; i++) t += e.results[i][0].transcript;
-          if (mountedRef.current) setVoiceTranscript(t);
-        };
-        recSpeech.start();
-        recognitionRef.current = recSpeech;
-      } catch { /* noop */ }
+    // Sin motor de dictado no hay NADA que enviar después (el audio no viaja al
+    // servidor): se avisa de una en vez de dejar grabar un mensaje muerto.
+    if (!SpeechRec) {
+      setErrBanner("Este navegador no convierte la voz en texto (pasa en la app Android y en navegadores con el dictado bloqueado). Escribe el mensaje, o abre el CRM en Chrome o Safari para dictar.");
+      return;
     }
+    try {
+      const recSpeech = new SpeechRec();
+      recSpeech.lang = "es-MX";
+      recSpeech.continuous = true;
+      recSpeech.interimResults = true;
+      recSpeech.onresult = (e) => {
+        let t = "";
+        for (let i = 0; i < e.results.length; i++) t += e.results[i][0].transcript;
+        if (mountedRef.current) setVoiceTranscript(t);
+      };
+      // Brave SÍ define webkitSpeechRecognition pero corta el servicio al arrancar
+      // (error network/service-not-allowed) → el transcript queda vacío para siempre.
+      // Se marca para avisarlo EN VIVO en la barra de grabación.
+      recSpeech.onerror = () => { if (mountedRef.current) setSpeechDown(true); };
+      recSpeech.start();
+      recognitionRef.current = recSpeech;
+    } catch { setSpeechDown(true); }
 
     let stream;
     try { stream = await navigator.mediaDevices.getUserMedia({ audio: true }); }
@@ -742,7 +755,16 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
           T={T}
           isLight={isLight}
           onDiscard={() => { setPendingVoiceBlob(null); setVoiceTranscript(""); }}
-          onSend={() => send(voiceTranscript || "mis clientes")}
+          onSend={() => {
+            const t = (voiceTranscript || "").trim();
+            if (t) { send(t); return; }
+            // Sin transcript NO se inventa texto. El placeholder viejo ("mis clientes")
+            // convertía la voz del asesor en esa frase cuando el navegador no dictaba
+            // (le pasó a Iván en Brave el 29-jul): mejor decir la verdad y dejar escribir.
+            setPendingVoiceBlob(null); setVoiceTranscript("");
+            setErrBanner("No pude convertir tu voz en texto en este navegador (pasa en Brave y en la app Android). Escribe el mensaje — o dicta desde Chrome o Safari.");
+            inputRef.current?.focus();
+          }}
         />
       )}
 
@@ -753,6 +775,7 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
           <span style={{ flex: 1, fontSize: 12.5, fontWeight: 500, color: isLight ? "#B91C1C" : "#FCA5A5", fontFamily: fontDisp }}>
             Grabando {fmtRecSecs(recordSecs)}
             {voiceTranscript ? <span style={{ fontWeight: 400, opacity: 0.9, marginLeft: 6, fontSize: 12 }}>({voiceTranscript})</span> : null}
+            {speechDown && !voiceTranscript ? <span style={{ fontWeight: 400, opacity: 0.9, marginLeft: 6, fontSize: 12 }}>(este navegador no está transcribiendo — lo que digas no se convertirá en texto)</span> : null}
           </span>
           <button onClick={cancelRecording} style={{ padding: "3px 8px", borderRadius: 6, background: "transparent", border: `1px solid ${T.border}`, color: T.txt2, fontSize: 12, fontFamily: font, cursor: "pointer" }}><X size={10} /> Cancelar</button>
           <button onClick={finishRecording} style={{ padding: "3px 10px", borderRadius: 6, border: "none", background: "#EF4444", color: "#FFF", fontSize: 12, fontWeight: 600, fontFamily: fontDisp, cursor: "pointer" }}><Square size={9} /> Listo</button>
