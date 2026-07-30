@@ -115,6 +115,12 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
   const recorderRef = useRef(null);
   const recognitionRef = useRef(null);
   const recordTimerRef = useRef(null);
+  // Enter mientras grabás = cortar y ENVIAR en un solo gesto (pedido de Ángel
+  // 30-jul). El flag marca que el cierre vino de Enter, para auto-enviar cuando
+  // el audio quede listo; el espejo del transcript deja leer lo último dictado
+  // desde un timeout sin closures viejas.
+  const autoSendVoiceRef = useRef(false);
+  const voiceTranscriptRef = useRef("");
 
   /* ── El refresco NO puede pisar lo que acabás de escribir ──────────────────
      BUG que reportó Ángel (29-jul): «a veces se desaparecen los mensajes que
@@ -150,7 +156,18 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
       const huerfanos = prev.filter(
         (m) => String(m.id || "").startsWith("tmp-") || String(m.id || "").startsWith("ai-")
       ).filter((m) => !enServidor.has(`${m.role}|${(m.content || "").trim()}`));
-      return huerfanos.length ? [...delServidor, ...huerfanos] : delServidor;
+      if (!huerfanos.length) return delServidor;
+      // Los huérfanos se INTERCALAN por hora, no se cuelgan al final: colgarlos
+      // hacía que un mensaje viejo que el servidor aún no tenía saltara al fondo
+      // en cada refresco — el «se cambia el orden» que reportó Ángel (30-jul).
+      // Orden estable: a igual hora se respeta el orden que ya tenían.
+      const merged = [...delServidor, ...huerfanos].map((m, i) => [m, i]);
+      merged.sort((a, b) => {
+        const ta = new Date(a[0].occurred_at || 0).getTime() || 0;
+        const tb = new Date(b[0].occurred_at || 0).getTime() || 0;
+        return (ta - tb) || (a[1] - b[1]);
+      });
+      return merged.map(([m]) => m);
     });
     setLoading(false);
   }, []);
@@ -193,6 +210,8 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
     setPendingVoiceUrl(url);
     return () => URL.revokeObjectURL(url);
   }, [pendingVoiceBlob]);
+
+  useEffect(() => { voiceTranscriptRef.current = voiceTranscript; }, [voiceTranscript]);
 
   const send = async (rawText, options = {}) => {
     const text = (rawText ?? "").trim();
@@ -340,7 +359,11 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
 
     if (r.error === "not_paired") { onUnpaired(); return; }
     if (r.error) {
-      setErrBanner("No se pudo enviar. Probá de nuevo.");
+      // «no_llego» = el POST murió en la red y el motor nunca recibió el mensaje:
+      // reenviar es seguro (nada se guardó). Decirlo es mejor que el silencio.
+      setErrBanner(r.error === "no_llego"
+        ? "Tu mensaje no llegó al motor (falló la conexión). Mándalo de nuevo — no se guardó nada."
+        : "No se pudo enviar. Intenta de nuevo.");
       return;
     }
 
@@ -637,8 +660,65 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
     }, 1000);
   }, [recording, sending, finishRecording]);
 
+  /* Enviar la nota de voz pendiente: si hay transcript va al cerebro; si no,
+     la verdad de siempre (sin inventar texto). Lo usan el botón del preview,
+     el auto-envío por Enter durante la grabación y el Enter del compositor. */
+  const sendVoiceNote = () => {
+    const t = (voiceTranscriptRef.current || "").trim();
+    if (t) { send(t); inputRef.current?.focus(); return; }
+    setPendingVoiceBlob(null); setVoiceTranscript("");
+    setErrBanner("No pude convertir tu voz en texto en este navegador (pasa en Brave y en la app Android). Escribe el mensaje — o dicta desde Chrome o Safari.");
+    inputRef.current?.focus();
+  };
+
+  /* El cierre vino de Enter: cuando el audio queda listo se envía SOLO. La
+     pausa breve deja que el dictado suelte las últimas palabras dichas. */
+  useEffect(() => {
+    if (!pendingVoiceBlob || recording || !autoSendVoiceRef.current) return;
+    const t = setTimeout(() => { autoSendVoiceRef.current = false; sendVoiceNote(); }, 350);
+    return () => clearTimeout(t);
+  }, [pendingVoiceBlob, recording]);
+
+  /* ── Enter envía la grabación / Escape la cancela (global) ─────────────────
+     El input está deshabilitado mientras se graba, así que Enter caía en el
+     botón del mic (que quedaba con el foco) y lo RE-disparaba: cortaba la
+     grabación y arrancaba OTRA — el «falla» que reportó Ángel. Listener global
+     con función nombrada + removeEventListener (regla de performance).
+     ⚠️ Este efecto DEBE vivir DESPUÉS de finishRecording/cancelRecording: su
+     array de deps los evalúa en el render y un const todavía no inicializado
+     revienta con «Cannot access before initialization» (pasó en producción,
+     30-jul: la pantalla «Algo salió mal» al abrir el Copilot). */
+  useEffect(() => {
+    if (!recording) return;
+    const onRecKeyDown = (e) => {
+      const el = e.target;
+      const tag = (el?.tagName || "").toLowerCase();
+      // Si está escribiendo en OTRO campo habilitado (ej. el formulario de la
+      // Caja), ese Enter es de ese campo — no se roba.
+      const enOtroCampo = (tag === "input" || tag === "textarea" || tag === "select" || el?.isContentEditable) && !el?.disabled;
+      if (e.key === "Enter" && !e.shiftKey && !enOtroCampo) {
+        e.preventDefault();
+        if (!recorderRef.current) return; // Enter sostenido: la grabación ya se cerró
+        document.activeElement?.blur?.(); // que el botón del mic no re-dispare con el próximo Enter
+        autoSendVoiceRef.current = true;
+        finishRecording();
+      } else if (e.key === "Escape" && !enOtroCampo) {
+        e.preventDefault();
+        cancelRecording();
+      }
+    };
+    document.addEventListener("keydown", onRecKeyDown);
+    return () => document.removeEventListener("keydown", onRecKeyDown);
+  }, [recording, finishRecording, cancelRecording]);
+
   const onKeyDown = (e) => {
-    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(input); }
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      // Con una nota de voz esperando y nada escrito, Enter la envía — el mismo
+      // gesto que durante la grabación, por si tocaron «Listo» con el mouse.
+      if (!input.trim() && pendingVoiceBlob) { sendVoiceNote(); return; }
+      send(input);
+    }
   };
 
   /* ── Colores burbujas ── */
@@ -763,16 +843,10 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
           T={T}
           isLight={isLight}
           onDiscard={() => { setPendingVoiceBlob(null); setVoiceTranscript(""); }}
-          onSend={() => {
-            const t = (voiceTranscript || "").trim();
-            if (t) { send(t); return; }
-            // Sin transcript NO se inventa texto. El placeholder viejo ("mis clientes")
-            // convertía la voz del asesor en esa frase cuando el navegador no dictaba
-            // (le pasó a Iván en Brave el 29-jul): mejor decir la verdad y dejar escribir.
-            setPendingVoiceBlob(null); setVoiceTranscript("");
-            setErrBanner("No pude convertir tu voz en texto en este navegador (pasa en Brave y en la app Android). Escribe el mensaje — o dicta desde Chrome o Safari.");
-            inputRef.current?.focus();
-          }}
+          // Sin transcript NO se inventa texto (el placeholder viejo "mis clientes"
+          // convertía la voz en esa frase cuando el navegador no dictaba — Iván,
+          // Brave, 29-jul): sendVoiceNote dice la verdad y deja escribir.
+          onSend={sendVoiceNote}
         />
       )}
 
@@ -785,8 +859,8 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
             {voiceTranscript ? <span style={{ fontWeight: 400, opacity: 0.9, marginLeft: 6, fontSize: 12 }}>({voiceTranscript})</span> : null}
             {speechDown && !voiceTranscript ? <span style={{ fontWeight: 400, opacity: 0.9, marginLeft: 6, fontSize: 12 }}>(este navegador no está transcribiendo — lo que digas no se convertirá en texto)</span> : null}
           </span>
-          <button onClick={cancelRecording} style={{ padding: "3px 8px", borderRadius: 6, background: "transparent", border: `1px solid ${T.border}`, color: T.txt2, fontSize: 12, fontFamily: font, cursor: "pointer" }}><X size={10} /> Cancelar</button>
-          <button onClick={finishRecording} style={{ padding: "3px 10px", borderRadius: 6, border: "none", background: "#EF4444", color: "#FFF", fontSize: 12, fontWeight: 600, fontFamily: fontDisp, cursor: "pointer" }}><Square size={9} /> Listo</button>
+          <button onClick={cancelRecording} title="Esc" style={{ padding: "3px 8px", borderRadius: 6, background: "transparent", border: `1px solid ${T.border}`, color: T.txt2, fontSize: 12, fontFamily: font, cursor: "pointer" }}><X size={10} /> Cancelar</button>
+          <button onClick={finishRecording} title="Listo (con Enter se envía directo)" style={{ padding: "3px 10px", borderRadius: 6, border: "none", background: "#EF4444", color: "#FFF", fontSize: 12, fontWeight: 600, fontFamily: fontDisp, cursor: "pointer" }}><Square size={9} /> Listo</button>
         </div>
       )}
 
