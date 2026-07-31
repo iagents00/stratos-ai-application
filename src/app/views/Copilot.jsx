@@ -1036,6 +1036,28 @@ function renderBloques(text, linkColor, accent) {
       </div>
     );
 
+    /* «**Nombre** · Etapa» — el encabezado de cada cliente en las listas. Antes
+       solo se pintaba en menta el nombre que estaba SOLO en su línea, así que en
+       la lista de clientes el nombre salía igual de apagado que el resto y no se
+       podía leer de un vistazo (Ángel, 31-jul, grabando). El nombre va en menta y
+       en negrita; lo que sigue (etapa, «caliente») queda en tinta normal. */
+    const encabezado = l.match(/^\s*\*\*([^*]+)\*\*(.*)$/);
+    if (encabezado) return (
+      <div key={`h${i}`} style={{ marginTop: i === 0 ? 0 : 10, marginBottom: 1 }}>
+        <span style={{ fontWeight: 700, color: accent }}>{encabezado[1]}</span>
+        {encabezado[2] ? renderInline(encabezado[2], linkColor, i) : null}
+      </div>
+    );
+
+    /* La línea de detalle de cada cliente (teléfono · score · próxima) viene
+       indentada a propósito: se pinta un punto más tenue para que el nombre
+       mande y la lista tenga jerarquía en vez de un bloque plano. */
+    if (/^\s{2,}\S/.test(ln)) return (
+      <div key={`d${i}`} style={{ marginBottom: 2, opacity: 0.72, paddingLeft: 2 }}>
+        {renderInline(l.trim(), linkColor, i)}
+      </div>
+    );
+
     const num = l.match(/^\s*(\d{1,2})[.)]\s+(.*)$/);
     if (num) return (
       <div key={`n${i}`} style={{ display: "flex", gap: 8, marginBottom: 2 }}>
