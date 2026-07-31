@@ -113,6 +113,26 @@ const menosDias = (iso, n) => {
   return isoLocal(new Date(y, m - 1, d - n));
 };
 
+// Por qué no se pudo redactar. No es para dar detalle técnico: es para que la
+// persona sepa si tiene sentido volver a intentar o si hay que avisarle a
+// alguien. Son cosas muy distintas y hasta hoy se contaban igual.
+const motivoDelRedactor = (respuesta, cuerpo) => {
+  const crudo = JSON.stringify(cuerpo || {}) + " " + (respuesta?.statusText || "");
+  // El caso que nos mordió: la cuenta de la IA sin saldo. Reintentar no arregla
+  // nada, hay que recargarla — y eso lo hace Iván, que tiene los accesos.
+  if (/credit balance|too low|insufficient|quota|billing/i.test(crudo)) return "sin-saldo";
+  if (/rate.?limit|429/i.test(crudo)) return "saturado";
+  return "otro";
+};
+
+const AVISOS_REDACTOR = {
+  "sin-saldo": "El asistente que redacta se quedó sin saldo, así que el informe salió en su versión resumida. Volver a intentar no lo va a resolver: hay que recargar la cuenta (eso lo ve Iván). Abajo queda todo lo que hay registrado.",
+  "saturado":  "El asistente que redacta está saturado en este momento. Esperá un par de minutos y volvé a darle a «Generar informe».",
+  "tardo":     "El asistente que redacta tardó más de lo normal. Volvé a darle a «Generar informe» y suele salir completo.",
+  "sin-conexion": "No pude comunicarme con el asistente que redacta. Revisá la conexión y volvé a intentar.",
+  "otro":      "El asistente que redacta no pudo responder, así que el informe salió en su versión resumida. Volvé a intentar en un momento.",
+};
+
 // Deja el informe en Mi Espacio → Documentos (y le avisa al equipo por el
 // Copilot). Vive fuera del componente y recibe TODO por parámetro: así la
 // pueden llamar tanto el guardado automático —que corre cuando el estado de
@@ -280,14 +300,24 @@ export default function InformeAvances({ T }) {
           signal: ctrl.signal,
         });
         clearTimeout(t);
-        const j = await r.json();
+        const j = await r.json().catch(() => null);
         if (j?.texto && String(j.texto).trim().length > 80) {
           salida = sinEmojis(String(j.texto).trim());
           info.redactado = true;
+        } else {
+          info.porQueNo = motivoDelRedactor(r, j);
         }
-      } catch {
-        // Silencio a propósito: el borrador ya cubre el caso y decirle a la
-        // persona «falló el redactor» no le sirve de nada — el informe está.
+      } catch (e) {
+        // Antes esto era silencio a propósito, con el argumento de que el
+        // borrador ya cubría el caso. Estaba mal: el 31-jul el redactor se cayó
+        // porque la cuenta de la IA se quedó SIN SALDO, y la pantalla dijo «no
+        // alcanzó a responder, volvé a intentar en un momento». Reintentar no
+        // servía de nada — iba a fallar igual — y nadie tenía cómo saberlo.
+        // Un aviso que manda a repetir algo que no puede funcionar es peor que
+        // no decir nada.
+        info.porQueNo = e?.name === "AbortError"
+          ? "tardo"
+          : "sin-conexion";
       }
 
       setTexto(salida);
@@ -533,6 +563,17 @@ export default function InformeAvances({ T }) {
                   {meta?.entregas ? ` · ${meta.entregas} entregas` : ""}
                   {meta && !meta.redactado ? " · versión resumida" : ""}
                 </div>
+                {/* Por qué quedó resumido. Va acá arriba, pegado al informe, y
+                    no como un error rojo: el informe SÍ salió, solo que sin
+                    redactar. Lo que cambia es qué hacer al respecto. */}
+                {meta && !meta.redactado && (
+                  <div style={{
+                    fontSize: 12, color: txt2, marginTop: 7, maxWidth: 620,
+                    lineHeight: 1.55, textWrap: "pretty",
+                  }}>
+                    {AVISOS_REDACTOR[meta.porQueNo] || AVISOS_REDACTOR.otro}
+                  </div>
+                )}
               </div>
             </div>
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
