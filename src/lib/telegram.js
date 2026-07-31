@@ -437,7 +437,7 @@ async function _sendCopilotMessageInner(rawText, options = {}) {
     }
     if (!options.callback_data && (wantsManual || wantsCapabilities)) {
       const reply = wantsCapabilities
-        ? "🤖 **Esto es lo que puedo hacer por ti:**\n\n• Registrar clientes y mover su etapa\n• Buscar una ficha por nombre o teléfono\n• Recomendarte propiedades según el presupuesto y la zona de un lead\n• Enviarte el catálogo y los drives por presupuesto o ubicación\n• Consultar la cartera de un asesor (si eres admin)\n• Programar recordatorios y avisarte de tus Zooms y tareas\n\nTodo esto por voz o texto. Aquí está el manual completo con ejemplos:"
+        ? "🤖 **Esto es lo que puedo hacer por ti:**\n\n• Registrar clientes y mover su etapa (por nombre o por número: \"tercera etapa\")\n• Buscar una ficha por nombre o teléfono\n• Programar actividades para el equipo dictando varias de una vez — te muestro el plan y tú confirmas o corriges\n• Recordarte cada actividad con botones: 1 hora antes, 10 minutos antes y a la hora\n• Recomendarte propiedades según el presupuesto y la zona de un lead\n• Enviarte el catálogo y los drives por presupuesto o ubicación\n• Consultar la cartera de un asesor (si eres admin)\n• Recordatorios personales (\"recuérdame en 2 horas…\") y avisos de tus Zooms y visitas\n\nTodo por voz o texto — con el micrófono, Enter envía el audio. Aquí está el manual completo con ejemplos:"
         : "📖 **Manual Oficial del Asistente Stratos IA & Telegram**\n\nConsulta aquí todas las funcionalidades, comandos de voz y texto para sacarle el máximo partido al sistema:";
       return {
         reply,
