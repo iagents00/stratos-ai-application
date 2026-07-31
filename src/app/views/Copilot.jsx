@@ -1147,11 +1147,20 @@ function Bubble({ m, T, isLight, userBg, userTxt, aiBg, aiBd, onPick, sending, i
         const isMassiveReport = bulletCount > 3 || text.length > 550;
         if (!isMassiveReport) {
           if (lower.includes("días sin movimiento") || lower.includes("lead abandonado") || lower.includes("sin movimiento")) {
-            inlineButtons = [
-              { label: "📞 Ya lo contacté", action: "Ya lo contacté", primary: true },
-              { label: "📅 Definir acción", action: "Definir próxima acción", primary: false },
-              { label: "👤 Ver ficha", action: "Ver ficha del cliente", primary: false }
-            ];
+            // Un aviso de UN cliente y el resumen de TODA la cartera no llevan los mismos
+            // botones. Con 43 clientes sin movimiento, «Ya lo contacté» no significa nada:
+            // ¿a los 43? (Ángel, 31-jul: «cuando son muchos clientes, les voy a poner "ya
+            // los contacté a todos", no tiene sentido»). En el resumen se ofrece abrir la
+            // lista; los tres botones de acción quedan para el aviso de un cliente puntual.
+            const cuantos = parseInt((text.match(/(\d+)\s+clientes?\s+sin\s+movimiento/i) || [])[1] || "1", 10);
+            const esResumen = cuantos > 1 || /\sy\s\d+\s+más/i.test(text);
+            inlineButtons = esResumen
+              ? [{ label: "👥 Ver mis clientes", action: "mis clientes", primary: true }]
+              : [
+                  { label: "📞 Ya lo contacté", action: "Ya lo contacté", primary: true },
+                  { label: "📅 Definir acción", action: "Definir próxima acción", primary: false },
+                  { label: "👤 Ver ficha", action: "Ver ficha del cliente", primary: false }
+                ];
           } else if (lower.includes("antes de tu zoom") || lower.includes("plan sugerido") || lower.includes("zooms en 3 horas")) {
             inlineButtons = [
               { label: "🧠 Ya lo estudié", action: "Ya estudié, este es mi plan", primary: true },
