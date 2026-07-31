@@ -8,7 +8,7 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "prebuild": "node tools/check_mobile_perf.mjs"
+    "prebuild": "node tools/check_mobile_perf.mjs && node tools/check_plan_semanal.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.104.1",
