@@ -77,7 +77,7 @@ function buildReminderButtons(reminder) {
 
   if (tipo === 'inactividad' || tipo === 'inactividad_insist') {
     return [
-      { label: 'Ya lo contacte', action: `proact_inact:contacte:${leadId}`, primary: true },
+      { label: 'Ya lo contacté', action: `proact_inact:contacte:${leadId}`, primary: true },
       { label: 'Reagendar seguimiento', action: `proact_inact:reagendar:${leadId}`, primary: false },
       { label: 'Ver ficha del cliente', action: `proact_inact:ficha:${leadId}`, primary: false },
     ]
@@ -85,7 +85,7 @@ function buildReminderButtons(reminder) {
 
   if (tipo === 'next_action_10min') {
     return [
-      { label: 'Si, listo', action: `proact_next:listo:${leadId}`, primary: true },
+      { label: 'Sí, listo', action: `proact_next:listo:${leadId}`, primary: true },
       { label: 'Posponer 30 min', action: `proact_next:posponer30:${leadId}`, primary: false },
       { label: 'Cancelar', action: `proact_next:cancelar:${leadId}`, primary: false },
     ]
@@ -93,7 +93,7 @@ function buildReminderButtons(reminder) {
 
   if (tipo === 'zoom_brief' || tipo === 'next_action_3h' || tipo.startsWith('next_action')) {
     return [
-      { label: 'Ya estudie, este es mi plan', action: `proact_plan:${leadId}`, primary: true },
+      { label: 'Ya estudié, este es mi plan', action: `proact_plan:${leadId}`, primary: true },
       { label: 'Reagendar', action: `proact_reagendar:${leadId}`, primary: false },
       { label: 'Ver expediente', action: `proact_next:ficha:${leadId}`, primary: false },
     ]
@@ -107,28 +107,39 @@ function buildReminderContent(reminder) {
   const tipo = String(reminder?.tipo || '')
   const text = payload.text || payload.message_hint || payload.next_action || ''
 
+  /* El texto de la base ya viene con el formato de la casa (encabezado «▸» en
+     menta, un punto menta por dato y el dato que importa entre «»). Cuando
+     existe se devuelve TAL CUAL: envolverlo en un encabezado propio lo rompía y
+     además impedía que este aviso se emparejara con el mensaje del chat.
+     Lo de abajo solo corre cuando el aviso no trae texto. */
   if (tipo === 'team_action') {
     const due = payload.due_at ? new Date(payload.due_at) : null
     const dueTxt = due && !Number.isNaN(due.getTime())
       ? due.toLocaleString('es-MX', { weekday: 'long', day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })
       : 'hora programada'
     return [
-      `Hola ${reminder?.asesor_name || 'Admin Stratos'} - Recordatorio de tu agenda:`,
-      '',
-      `Tarea: ${text || 'Tarea pendiente'}`,
-      `Vence: ${dueTxt}`,
-      '',
-      'Como vas?',
+      '▸ Recordatorio de tu agenda',
+      `· «${text || 'Tarea pendiente'}»`,
+      `· Vence: «${dueTxt}»`,
+      '· ¿Cómo vas?',
     ].join('\n')
   }
 
   if (tipo === 'next_action_10min') {
-    return `Estas listo y preparado para la accion con ${payload.lead_name || 'tu cliente'}?\nAccion: ${text || 'sin descripcion'}`
+    return [
+      `▸ ${payload.lead_name || 'Tu cliente'}`,
+      `· ${text || 'Acción programada'}`,
+      '· Es en 10 minutos. ¿Estás listo?',
+    ].join('\n')
   }
 
-  if (text) return `STRATOS ASISTENTE Recordatorio:\n${text}`
-  if (tipo === 'inactividad' || tipo === 'inactividad_insist') return 'IMPORTANTE\n\nTienes un cliente sin movimiento; revisalo en el CRM.'
-  if (tipo === 'zoom_brief' || tipo.startsWith('next_action')) return 'Tienes una alerta proactiva del asistente.'
+  if (text) return text
+  if (tipo === 'inactividad' || tipo === 'inactividad_insist') {
+    return '▸ Tienes clientes sin movimiento\n· Retómalos desde el CRM, o dime «ya lo contacté».'
+  }
+  if (tipo === 'zoom_brief' || tipo.startsWith('next_action')) {
+    return '▸ Tienes algo agendado con un cliente\n· Repasa su ficha antes de entrar.'
+  }
   return ''
 }
 
