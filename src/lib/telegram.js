@@ -77,7 +77,7 @@ function buildReminderButtons(reminder) {
 
   if (tipo === 'inactividad' || tipo === 'inactividad_insist') {
     return [
-      { label: 'Ya lo contacte', action: `proact_inact:contacte:${leadId}`, primary: true },
+      { label: 'Ya lo contacté', action: `proact_inact:contacte:${leadId}`, primary: true },
       { label: 'Reagendar seguimiento', action: `proact_inact:reagendar:${leadId}`, primary: false },
       { label: 'Ver ficha del cliente', action: `proact_inact:ficha:${leadId}`, primary: false },
     ]
@@ -85,7 +85,7 @@ function buildReminderButtons(reminder) {
 
   if (tipo === 'next_action_10min') {
     return [
-      { label: 'Si, listo', action: `proact_next:listo:${leadId}`, primary: true },
+      { label: 'Sí, listo', action: `proact_next:listo:${leadId}`, primary: true },
       { label: 'Posponer 30 min', action: `proact_next:posponer30:${leadId}`, primary: false },
       { label: 'Cancelar', action: `proact_next:cancelar:${leadId}`, primary: false },
     ]
@@ -93,7 +93,7 @@ function buildReminderButtons(reminder) {
 
   if (tipo === 'zoom_brief' || tipo === 'next_action_3h' || tipo.startsWith('next_action')) {
     return [
-      { label: 'Ya estudie, este es mi plan', action: `proact_plan:${leadId}`, primary: true },
+      { label: 'Ya estudié, este es mi plan', action: `proact_plan:${leadId}`, primary: true },
       { label: 'Reagendar', action: `proact_reagendar:${leadId}`, primary: false },
       { label: 'Ver expediente', action: `proact_next:ficha:${leadId}`, primary: false },
     ]
@@ -107,28 +107,39 @@ function buildReminderContent(reminder) {
   const tipo = String(reminder?.tipo || '')
   const text = payload.text || payload.message_hint || payload.next_action || ''
 
+  /* El texto de la base ya viene con el formato de la casa (encabezado «▸» en
+     menta, un punto menta por dato y el dato que importa entre «»). Cuando
+     existe se devuelve TAL CUAL: envolverlo en un encabezado propio lo rompía y
+     además impedía que este aviso se emparejara con el mensaje del chat.
+     Lo de abajo solo corre cuando el aviso no trae texto. */
   if (tipo === 'team_action') {
     const due = payload.due_at ? new Date(payload.due_at) : null
     const dueTxt = due && !Number.isNaN(due.getTime())
       ? due.toLocaleString('es-MX', { weekday: 'long', day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })
       : 'hora programada'
     return [
-      `Hola ${reminder?.asesor_name || 'Admin Stratos'} - Recordatorio de tu agenda:`,
-      '',
-      `Tarea: ${text || 'Tarea pendiente'}`,
-      `Vence: ${dueTxt}`,
-      '',
-      'Como vas?',
+      '▸ Recordatorio de tu agenda',
+      `· «${text || 'Tarea pendiente'}»`,
+      `· Vence: «${dueTxt}»`,
+      '· ¿Cómo vas?',
     ].join('\n')
   }
 
   if (tipo === 'next_action_10min') {
-    return `Estas listo y preparado para la accion con ${payload.lead_name || 'tu cliente'}?\nAccion: ${text || 'sin descripcion'}`
+    return [
+      `▸ ${payload.lead_name || 'Tu cliente'}`,
+      `· ${text || 'Acción programada'}`,
+      '· Es en 10 minutos. ¿Estás listo?',
+    ].join('\n')
   }
 
-  if (text) return `STRATOS ASISTENTE Recordatorio:\n${text}`
-  if (tipo === 'inactividad' || tipo === 'inactividad_insist') return 'IMPORTANTE\n\nTienes un cliente sin movimiento; revisalo en el CRM.'
-  if (tipo === 'zoom_brief' || tipo.startsWith('next_action')) return 'Tienes una alerta proactiva del asistente.'
+  if (text) return text
+  if (tipo === 'inactividad' || tipo === 'inactividad_insist') {
+    return '▸ Tienes clientes sin movimiento\n· Retómalos desde el CRM, o dime «ya lo contacté».'
+  }
+  if (tipo === 'zoom_brief' || tipo.startsWith('next_action')) {
+    return '▸ Tienes algo agendado con un cliente\n· Repasa su ficha antes de entrar.'
+  }
   return ''
 }
 
@@ -412,7 +423,13 @@ async function _sendCopilotMessageInner(rawText, options = {}) {
       const orgCfg = getClientConfigByOrgId(profile?.organization_id);
       if (orgCfg) tenant = tenantCopilotShape(orgCfg);
     } catch { /* noop — se queda la resolución por URL */ }
-    const isMarketing = profile?.role === 'marketing' || profile?.is_marketing_admin === true || tenant.tasksBrain;
+    // COLABORADOR de área (Comercial, Operativo, Administrativo, Finanzas, RRHH):
+    // habla con el MISMO cerebro de tareas que marketing, porque es el que sabe de
+    // pendientes, bitácora del día y «ya terminé X». El cerebro de ventas no le
+    // sirve: no tiene leads ni cartera. Ventas queda intacto — nadie de ventas
+    // entra por esta rama (su rol es `asesor`, no `colaborador`).
+    const esColaborador = profile?.role === 'colaborador';
+    const isMarketing = profile?.role === 'marketing' || profile?.is_marketing_admin === true || esColaborador || tenant.tasksBrain;
 
     // 1. Detección directa de solicitud de manual / guía / instrucciones — o "¿qué puedes hacer?"
     const wantsManual = /^(?:dame |mandame |enviame |enviar |ver |mostrar |necesito |pasame )?(?:el |la )?(?:manual|guía|guia|instrucciones|ayuda)(?:\s|$)/i.test(cleanText);
@@ -422,6 +439,16 @@ async function _sendCopilotMessageInner(rawText, options = {}) {
     if (tenant.tasksBrain && !options.callback_data && (wantsManual || wantsCapabilities)) {
       return {
         reply: `Esto es lo que puedo hacer por ti:\n\n• Decirte qué tienes hoy — "¿qué tengo hoy?"\n• Crear tareas sin fricción — "ponme una tarea: enviar el reporte mañana a las 10" o "créale una tarea a Iván: llamar al prospecto"\n• Avance por texto — "ya empecé …", "ya terminé …", "pospón … para mañana a las 3"\n• Pendientes de una persona — "¿qué tiene pendiente Ángel?"\n• Consultar el segundo cerebro — "¿en qué estamos?", "¿qué se hizo hoy?", el plan de NSG, promesas, informes y reuniones\n• Registrar solicitudes y asignarlas — "necesito … para el viernes"\n\nTodo por voz o texto. Lo que creo aparece al instante en el módulo ${tenant.mktLabel}, y el sistema persigue cada tarea hasta que se cierra (avisos 1h y 10min antes de vencer, y "¿ya pudiste comenzar?").`,
+        buttons: [],
+        error: null
+      };
+    }
+    // Colaborador de área: mismo cerebro que marketing, pero su ayuda NO habla de
+    // marcas ni de videos —eso es del mundo de Alex y solo lo confundiría—, sino
+    // de su plan, sus pendientes y su bitácora. Va ANTES del bloque isMarketing.
+    if (esColaborador && !options.callback_data && (wantsManual || wantsCapabilities)) {
+      return {
+        reply: "Esto es lo que puedo hacer por ti:\n\n• Decirte qué tienes hoy — \"¿qué tengo hoy?\"\n• Anotar tu reporte del día y tu Plan de Trabajo Semanal — \"hoy revisé las facturas de junio, 2 horas\" (también lo puedes escribir en **Actividades**, la primera sección al entrar)\n• Crear tus tareas — \"ponme una tarea: entregar el corte de caja el viernes a las 10\"\n• Avanzarlas — \"ya empecé el reporte\", \"ya terminé el corte\", \"pospón eso para mañana a las 3\"\n• Perseguir lo que vence — te aviso 1 hora antes, 10 minutos antes y a la hora exacta\n• Ver tus pendientes — \"¿qué tengo pendiente?\"\n• Adjuntar evidencia — con el botón de cámara subes la foto de lo que entregaste\n\nTodo por voz o texto, y lo que registro aparece al instante en tu espacio.",
         buttons: [],
         error: null
       };
@@ -437,7 +464,7 @@ async function _sendCopilotMessageInner(rawText, options = {}) {
     }
     if (!options.callback_data && (wantsManual || wantsCapabilities)) {
       const reply = wantsCapabilities
-        ? "🤖 **Esto es lo que puedo hacer por ti:**\n\n• Registrar clientes y mover su etapa\n• Buscar una ficha por nombre o teléfono\n• Recomendarte propiedades según el presupuesto y la zona de un lead\n• Enviarte el catálogo y los drives por presupuesto o ubicación\n• Consultar la cartera de un asesor (si eres admin)\n• Programar recordatorios y avisarte de tus Zooms y tareas\n\nTodo esto por voz o texto. Aquí está el manual completo con ejemplos:"
+        ? "🤖 **Esto es lo que puedo hacer por ti:**\n\n• Registrar clientes y mover su etapa (por nombre o por número: \"tercera etapa\")\n• Buscar una ficha por nombre o teléfono\n• Programar actividades para el equipo dictando varias de una vez — te muestro el plan y tú confirmas o corriges\n• Recordarte cada actividad con botones: 1 hora antes, 10 minutos antes y a la hora\n• Recomendarte propiedades según el presupuesto y la zona de un lead\n• Enviarte el catálogo y los drives por presupuesto o ubicación\n• Consultar la cartera de un asesor (si eres admin)\n• Recordatorios personales (\"recuérdame en 2 horas…\") y avisos de tus Zooms y visitas\n\nTodo por voz o texto — con el micrófono, Enter envía el audio. Aquí está el manual completo con ejemplos:"
         : "📖 **Manual Oficial del Asistente Stratos IA & Telegram**\n\nConsulta aquí todas las funcionalidades, comandos de voz y texto para sacarle el máximo partido al sistema:";
       return {
         reply,

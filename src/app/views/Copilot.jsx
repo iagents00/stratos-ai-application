@@ -152,10 +152,21 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
       if (!opts.merge) return delServidor;
       // Se conserva lo LOCAL que el servidor todavía no refleja (comparando por
       // rol + texto). Sin esto, un refresco a destiempo te borra el mensaje.
-      const enServidor = new Set(delServidor.map((m) => `${m.role}|${(m.content || "").trim()}`));
+      // Un local cuenta como «ya está en el servidor» solo si el texto coincide
+      // Y las horas quedan a menos de 90s. Comparar por texto pelado hacía que
+      // un tap repetido («En proceso», «Sí», «Hecho») se borrara de pantalla al
+      // refrescar porque matcheaba con su gemelo VIEJO de arriba — «mi mensaje
+      // se fue para arriba de la nada» (Ángel, 30-jul).
+      const hora = (m) => new Date(m.occurred_at || 0).getTime() || 0;
+      const enServidor = delServidor.map((m) => ({ k: `${m.role}|${(m.content || "").trim()}`, t: hora(m) }));
+      const yaEsta = (m) => {
+        const k = `${m.role}|${(m.content || "").trim()}`;
+        const t = hora(m);
+        return enServidor.some((s) => s.k === k && Math.abs(s.t - t) < 90000);
+      };
       const huerfanos = prev.filter(
         (m) => String(m.id || "").startsWith("tmp-") || String(m.id || "").startsWith("ai-")
-      ).filter((m) => !enServidor.has(`${m.role}|${(m.content || "").trim()}`));
+      ).filter((m) => !yaEsta(m));
       if (!huerfanos.length) return delServidor;
       // Los huérfanos se INTERCALAN por hora, no se cuelgan al final: colgarlos
       // hacía que un mensaje viejo que el servidor aún no tenía saltara al fondo
@@ -1025,6 +1036,28 @@ function renderBloques(text, linkColor, accent) {
       </div>
     );
 
+    /* «**Nombre** · Etapa» — el encabezado de cada cliente en las listas. Antes
+       solo se pintaba en menta el nombre que estaba SOLO en su línea, así que en
+       la lista de clientes el nombre salía igual de apagado que el resto y no se
+       podía leer de un vistazo (Ángel, 31-jul, grabando). El nombre va en menta y
+       en negrita; lo que sigue (etapa, «caliente») queda en tinta normal. */
+    const encabezado = l.match(/^\s*\*\*([^*]+)\*\*(.*)$/);
+    if (encabezado) return (
+      <div key={`h${i}`} style={{ marginTop: i === 0 ? 0 : 10, marginBottom: 1 }}>
+        <span style={{ fontWeight: 700, color: accent }}>{encabezado[1]}</span>
+        {encabezado[2] ? renderInline(encabezado[2], linkColor, i) : null}
+      </div>
+    );
+
+    /* La línea de detalle de cada cliente (teléfono · score · próxima) viene
+       indentada a propósito: se pinta un punto más tenue para que el nombre
+       mande y la lista tenga jerarquía en vez de un bloque plano. */
+    if (/^\s{2,}\S/.test(ln)) return (
+      <div key={`d${i}`} style={{ marginBottom: 2, opacity: 0.72, paddingLeft: 2 }}>
+        {renderInline(l.trim(), linkColor, i)}
+      </div>
+    );
+
     const num = l.match(/^\s*(\d{1,2})[.)]\s+(.*)$/);
     if (num) return (
       <div key={`n${i}`} style={{ display: "flex", gap: 8, marginBottom: 2 }}>
@@ -1136,11 +1169,20 @@ function Bubble({ m, T, isLight, userBg, userTxt, aiBg, aiBd, onPick, sending, i
         const isMassiveReport = bulletCount > 3 || text.length > 550;
         if (!isMassiveReport) {
           if (lower.includes("días sin movimiento") || lower.includes("lead abandonado") || lower.includes("sin movimiento")) {
-            inlineButtons = [
-              { label: "📞 Ya lo contacté", action: "Ya lo contacté", primary: true },
-              { label: "📅 Definir acción", action: "Definir próxima acción", primary: false },
-              { label: "👤 Ver ficha", action: "Ver ficha del cliente", primary: false }
-            ];
+            // Un aviso de UN cliente y el resumen de TODA la cartera no llevan los mismos
+            // botones. Con 43 clientes sin movimiento, «Ya lo contacté» no significa nada:
+            // ¿a los 43? (Ángel, 31-jul: «cuando son muchos clientes, les voy a poner "ya
+            // los contacté a todos", no tiene sentido»). En el resumen se ofrece abrir la
+            // lista; los tres botones de acción quedan para el aviso de un cliente puntual.
+            const cuantos = parseInt((text.match(/(\d+)\s+clientes?\s+sin\s+movimiento/i) || [])[1] || "1", 10);
+            const esResumen = cuantos > 1 || /\sy\s\d+\s+más/i.test(text);
+            inlineButtons = esResumen
+              ? [{ label: "👥 Ver mis clientes", action: "mis clientes", primary: true }]
+              : [
+                  { label: "📞 Ya lo contacté", action: "Ya lo contacté", primary: true },
+                  { label: "📅 Definir acción", action: "Definir próxima acción", primary: false },
+                  { label: "👤 Ver ficha", action: "Ver ficha del cliente", primary: false }
+                ];
           } else if (lower.includes("antes de tu zoom") || lower.includes("plan sugerido") || lower.includes("zooms en 3 horas")) {
             inlineButtons = [
               { label: "🧠 Ya lo estudié", action: "Ya estudié, este es mi plan", primary: true },

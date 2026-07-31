@@ -237,6 +237,11 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
   const isMobile = useIsMobile();
   const orgId = user?.organizationId;
   const isAdmin = ["super_admin", "admin"].includes(user?.role);
+  // COLABORADOR de área (Comercial, Operativo, Administrativo, Finanzas, RRHH):
+  // usa el mismo motor, pero su espacio es SOLO Actividades + Mi Día. Marcas,
+  // Propiedades y Solicitudes son del pipeline de video de marketing — a alguien
+  // de Finanzas no le dicen nada y le ensucian la pantalla.
+  const esColaborador = user?.role === "colaborador";
 
   // Paleta theme-aware (patrón Caja.jsx: isLight por luminancia del bg).
   const isLight = parseInt(String(T?.bg || "#000000").replace("#", "").slice(0, 2), 16) > 128;
@@ -297,9 +302,15 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
   // y los tabs siguen funcionando adentro ("en ambas" — Iván 21-jul).
   const [tab, setTab] = useState(() => {
     const t = initialTab || "reporte"; // reporte | dia | marcas | pipeline | solicitudes | equipo
+    // Colaborador: solo Actividades y Mi Día existen para él. Cualquier otra cae
+    // en Actividades (no en una pestaña vacía que no debería poder abrir).
+    if (esColaborador && t !== "reporte" && t !== "dia") return "reporte";
     return HIDDEN_TABS.has(t) ? "reporte" : t; // pestaña oculta para este tenant → Actividades
   });
-  useEffect(() => { if (initialTab) setTab(initialTab); }, [initialTab]);
+  useEffect(() => {
+    if (!initialTab) return;
+    setTab(esColaborador && initialTab !== "reporte" && initialTab !== "dia" ? "reporte" : initialTab);
+  }, [initialTab, esColaborador]);
   const [brands, setBrands]     = useState([]);
   const [projects, setProjects] = useState([]);
   const [tasks, setTasks]       = useState([]);
@@ -334,20 +345,27 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
           .eq("organization_id", orgId).is("deleted_at", null).order("orden").order("updated_at"),
         supabase.from("mkt_requests").select("id, brand_id, titulo, detalle, objetivo, complejidad, ref_image_url, fecha_entrega, solicitante, assignee_id, estado, orden, created_at")
           .eq("organization_id", orgId).is("deleted_at", null).order("created_at", { ascending: false }).limit(200),
-        supabase.from("profiles").select("id, name, role").eq("organization_id", orgId),
+        supabase.from("profiles").select("id, name, role, area").eq("organization_id", orgId),
         supabase.from("mkt_daily_reports").select("id, profile_id, fecha, texto, evidencia_url, origen, created_at, brand_id, tiempo_texto, area")
           .eq("organization_id", orgId)
           .order("fecha", { ascending: false }).order("created_at", { ascending: false }).limit(400),
         supabase.from("mkt_pipeline_columns").select("id, clave, nombre, tipo, opciones, orden")
           .eq("organization_id", orgId).is("deleted_at", null).order("orden"),
       ]);
-      for (const r of [b, pj, tk, pl, rq, pr, bi, cols]) if (r.error) throw r.error;
+      // `profiles.area` llega con la mig 227. Si el bundle sale antes que el SQL,
+      // pedirla revienta la carga ENTERA del módulo — así que se reintenta sin
+      // ella en vez de dejar al equipo sin pantalla por una columna cosmética.
+      let personas = pr;
+      if (pr.error && /column .*area.* does not exist/i.test(pr.error.message || "")) {
+        personas = await supabase.from("profiles").select("id, name, role").eq("organization_id", orgId);
+      }
+      for (const r of [b, pj, tk, pl, rq, personas, bi, cols]) if (r.error) throw r.error;
       setBrands(b.data || []);
       setProjects(pj.data || []);
       setTasks(tk.data || []);
       setPipeline(pl.data || []);
       setRequests(rq.data || []);
-      setPeople(pr.data || []);
+      setPeople(personas.data || []);
       setBitacora(bi.data || []);
       setColsExtra(cols.data || []);
     } catch (e) {
@@ -1683,7 +1701,12 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
      trae su área, manda esa; si no, se deduce como antes. */
   const puestoDe = useCallback((r) => {
     if (r?.area) return r.area;
-    const rol = people.find(p => p.id === (r?.profile_id ?? r))?.role;
+    const quien = people.find(p => p.id === (r?.profile_id ?? r));
+    // Desde la mig 227 el área vive en el perfil: si la persona la tiene, esa
+    // manda sobre cualquier deducción por rol (un `colaborador` de Finanzas caía
+    // en «Administración», que no es su área).
+    if (quien?.area) return quien.area;
+    const rol = quien?.role;
     return rol === "marketing" ? "Marketing"
       : rol === "asesor" ? "Ventas"
       : rol === "director" ? "Dirección"
@@ -2788,7 +2811,9 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
           </div>
           <div style={{ minWidth: 0 }}>
             <div style={{ fontSize: 14.5, fontWeight: 650, color: txt, fontFamily: fontDisp, letterSpacing: "-0.01em" }}>Mi Espacio</div>
-            <div style={{ fontSize: 12, color: txt2 }}>{firstName} · {MODULE_LABEL}</div>
+            {/* El colaborador ve SU área, no «Marketing»: su espacio es el de
+                Finanzas, Comercial, etc., aunque el motor sea el mismo. */}
+            <div style={{ fontSize: 12, color: txt2 }}>{firstName} · {esColaborador ? (user?.area || "Mi área") : MODULE_LABEL}</div>
           </div>
         </div>
         <div style={{
@@ -2798,9 +2823,9 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
         }}>
           {tabBtn("reporte", tabLabel("reporte", "Actividades"))}
           {SHOW_TAB_DIA && tabBtn("dia", tabLabel("dia", "Mi Día"))}
-          {!HIDDEN_TABS.has("marcas") && tabBtn("marcas", tabLabel("marcas", "Marcas"))}
-          {!HIDDEN_TABS.has("pipeline") && tabBtn("pipeline", tabLabel("pipeline", "Propiedades"), atascadas >= 3 ? atascadas : 0)}
-          {!HIDDEN_TABS.has("solicitudes") && tabBtn("solicitudes", tabLabel("solicitudes", "Solicitudes"), requests.filter(r => r.estado === "nueva").length)}
+          {!esColaborador && !HIDDEN_TABS.has("marcas") && tabBtn("marcas", tabLabel("marcas", "Marcas"))}
+          {!esColaborador && !HIDDEN_TABS.has("pipeline") && tabBtn("pipeline", tabLabel("pipeline", "Propiedades"), atascadas >= 3 ? atascadas : 0)}
+          {!esColaborador && !HIDDEN_TABS.has("solicitudes") && tabBtn("solicitudes", tabLabel("solicitudes", "Solicitudes"), requests.filter(r => r.estado === "nueva").length)}
           {isAdmin && tabBtn("equipo", tabLabel("equipo", "Equipo"))}
         </div>
         {!isMobile && <div style={{ flex: 1 }} />}

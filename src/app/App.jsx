@@ -107,9 +107,17 @@ function resolveInitialView(user, clientConfig) {
   // cuenta lo que hizo; para Alex, lo primero que necesita ver es qué hizo su
   // gente hoy. Pedido de Alex (llamada 27-jul): que aparezca al iniciar sesión,
   // sin buscarlo. Si tiene que buscarlo, no se usa.
-  const fallback = (user?.isMarketingAdmin || user?.role === "marketing")
-    ? "mkt_reporte"
-    : ((isAsesorRole || isExternalOrg) ? "c" : "d");
+  // `colaborador` (gente de área: Comercial, Operativo, Administrativo, Finanzas,
+  // RRHH) entra por lo mismo y por la misma razón: su Plan de Trabajo Semanal es
+  // lo primero que tiene que ver, no algo que haya que ir a buscar.
+  // El `colaborador` abre en su PLAN SEMANAL — es la lista con la que arranca la
+  // semana y la que el líder le revisa el viernes. Marketing sigue abriendo en
+  // Actividades (pedido de Alex, 27-jul): su reporte del día es lo primero.
+  const fallback = user?.role === "colaborador"
+    ? "plan"
+    : ((user?.isMarketingAdmin || user?.role === "marketing")
+        ? "mkt_reporte"
+        : ((isAsesorRole || isExternalOrg) ? "c" : "d"));
   if (!user?.id) return fallback;
   // Estreno de Actividades: una sola vez por usuario de marketing, antes de
   // mirar la vista guardada (si no, nunca la vería).
@@ -153,6 +161,8 @@ const Copilot       = lazy(() => import("./views/Copilot"));
 const Profile       = lazy(() => import("./views/Profile"));
 const Trash         = lazy(() => import("./views/Trash"));
 const Marketing     = lazy(() => import("./views/Marketing"));
+const MiDrive       = lazy(() => import("./views/MiDrive"));
+const PlanSemanal   = lazy(() => import("./views/PlanSemanal"));
 
 /* ── PREFETCH de vistas ──────────────────────────────────────────────────────
  * Mismos specifiers que los lazy() de arriba. import() dedupe por specifier, así
@@ -2432,8 +2442,8 @@ export default function App() {
           <div key={v} className="stratos-content-area" style={{ flex:1, padding: (v === "wa" || v === "copilot") ? 0 : "18px 22px", overflowY: (v === "wa" || v === "copilot") ? "hidden" : "auto", animation:"fadeIn 0.28s ease", display:"flex", flexDirection:"column" }}>
             {user?.role && !canAccessModule(v, user, clientConfig)
               ? <PermissionGate moduleId={v}
-                  onGoBack={() => setV((user?.isMarketingAdmin || user?.role === "marketing") ? "mkt_reporte" : "c")}
-                  homeLabel={(user?.role === "marketing" || user?.isMarketingAdmin) ? "Ir a mi espacio" : "Ir a mi CRM"} />
+                  onGoBack={() => setV(user?.role === "colaborador" ? "plan" : ((user?.isMarketingAdmin || user?.role === "marketing") ? "mkt_reporte" : "c"))}
+                  homeLabel={(user?.role === "marketing" || user?.role === "colaborador" || user?.isMarketingAdmin) ? "Ir a mi espacio" : "Ir a mi CRM"} />
               : <ErrorBoundary>
                 <Suspense fallback={
                   <div style={{ display:"flex", alignItems:"center", justifyContent:"center", padding:"60px 20px", color:T.txt3, fontFamily:font, fontSize:13 }}>
@@ -2456,6 +2466,10 @@ export default function App() {
                       initialTab={{ mkt_reporte: "reporte", mkt_equipo: "equipo", mkt_dia: "dia", mkt_marcas: "marcas", mkt_pipe: "pipeline", mkt_sol: "solicitudes" }[v]}
                       onOpenCopilot={canAccessModule("copilot", user, clientConfig) ? () => setV("copilot") : undefined} />
                   )}
+                  {v === "plan"   && canAccessModule("plan", user, clientConfig) && (
+                    <PlanSemanal T={T} onOpenCopilot={canAccessModule("copilot", user, clientConfig) ? () => setV("copilot") : undefined} />
+                  )}
+                  {v === "midrive" && canAccessModule("midrive", user, clientConfig) && <MiDrive T={T} />}
                   {v === "trash"  && <Trash trashedLeads={trashedLeads} onRestore={restoreLead} onHardDelete={hardDeleteLead} onRefresh={refreshTrash} T={T} />}
                   {v === "ia"     && <IACRM oc={oc} T={T} theme={theme} />}
                   {v === "e"      && <ERP oc={oc} T={T} />}
