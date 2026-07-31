@@ -444,24 +444,86 @@ export default function MetaPanel({
   // Los controles dentro de una FILA no llevan fondo propio: en la captura el
   // ojo veía caja-dentro-de-caja-dentro-de-caja. Se sostienen con texto y una
   // línea, y ganan fondo sólo al pasar el mouse.
+  // ── MATERIAL (Iván, 31-jul: «como de Apple, glass, en blanco y en negro») ──
+  // Los tres roles siguen siendo tres. Lo que cambia es que dejan de ser un
+  // relleno plano y pasan a ser un MATERIAL, que es como Apple construye sus
+  // superficies. Un material son cuatro cosas juntas, y falta una y se cae:
+  //
+  //   1. tinte translúcido    → deja ver que hay algo debajo
+  //   2. backdrop blur+satura → lo de abajo se difumina y el color revive
+  //                             (el `saturate` es lo que evita el gris muerto)
+  //   3. brillo especular     → una línea de luz de 1px ARRIBA, como el canto
+  //                             de un vidrio real. Es el detalle que más
+  //                             "caro" hace ver una tarjeta y el que casi
+  //                             siempre falta.
+  //   4. sombra ambiental     → dos sombras: uno de contacto (1px, cerrada) y
+  //                             una de ambiente (grande, muy suave). Nunca un
+  //                             resplandor de color.
+  //
+  // El blur sólo es HONESTO donde hay algo detrás que difuminar, y en esta
+  // pantalla eso son DOS sitios: la barra superior (el contenido le pasa por
+  // debajo) y el calendario flotante (se abre encima de las tarjetas). Nada más.
+  // Las tarjetas y las filas se apoyan en un lienzo plano: ahí un
+  // `backdrop-filter` difumina un color liso — devuelve el mismo color liso —
+  // y encima cuesta caro, porque cada capa la compone el navegador por
+  // separado y la lista puede traer decenas de filas. Pagar el costo sin el
+  // efecto es peor que no tener el efecto. Ahí el material se sostiene con
+  // tinte + canto especular + sombra, que es lo que de verdad se ve.
   const S = isLight ? {
-    row:   "#FFFFFF",
-    card:  "#FFFFFF",
-    inset: "rgba(15,23,42,0.055)",
-    line:  "rgba(15,23,42,0.09)",
-    lineS: "rgba(15,23,42,0.16)",
+    row:   "rgba(255,255,255,0.74)",
+    card:  "rgba(255,255,255,0.80)",
+    inset: "rgba(15,23,42,0.045)",
+    line:  "rgba(15,23,42,0.075)",
+    lineS: "rgba(15,23,42,0.14)",
+    // Hairline de verdad: media línea. Un separador de 1px lleno en claro se
+    // ve como un trazo dibujado; a 0.5px se ve como un corte.
+    hair:  "rgba(15,23,42,0.07)",
+    spec:  "inset 0 1px 0 rgba(255,255,255,0.95)",
+    blur:  "saturate(180%) blur(30px)",
+    shadow:    "0 1px 1.5px rgba(15,23,42,0.05), 0 8px 24px rgba(15,23,42,0.055)",
+    shadowRow: "0 1px 1.5px rgba(15,23,42,0.04), 0 3px 10px rgba(15,23,42,0.035)",
+    shadowPop: "0 2px 6px rgba(15,23,42,0.10), 0 24px 60px rgba(15,23,42,0.18)",
   } : {
-    row:   "rgba(255,255,255,0.030)",
-    card:  "rgba(255,255,255,0.060)",
-    inset: "rgba(255,255,255,0.100)",
-    line:  "rgba(255,255,255,0.07)",
-    lineS: "rgba(255,255,255,0.14)",
+    row:   "rgba(255,255,255,0.034)",
+    card:  "rgba(255,255,255,0.062)",
+    inset: "rgba(255,255,255,0.095)",
+    line:  "rgba(255,255,255,0.075)",
+    lineS: "rgba(255,255,255,0.145)",
+    hair:  "rgba(255,255,255,0.06)",
+    spec:  "inset 0 1px 0 rgba(255,255,255,0.075)",
+    blur:  "saturate(180%) blur(30px)",
+    shadow:    "0 1px 1.5px rgba(0,0,0,0.34), 0 10px 30px rgba(0,0,0,0.26)",
+    shadowRow: "0 1px 1.5px rgba(0,0,0,0.28), 0 3px 10px rgba(0,0,0,0.18)",
+    shadowPop: "0 2px 8px rgba(0,0,0,0.44), 0 28px 70px rgba(0,0,0,0.56)",
   };
   // Alerta: el ÚNICO matiz además del acento de marca. Antes convivían ámbar
   // (Alto) + rojo (Urgente) + azul (Profesional) + verde (Personal) peleando
   // por la misma mirada. Ahora el rojo es el único que interrumpe, y por eso
   // vuelve a significar algo.
   const ALERT = isLight ? "#DC2626" : "#F87171";
+
+  // ── GEOMETRÍA — radios CONCÉNTRICOS ───────────────────────────────────────
+  // La regla que Apple respeta y casi nadie copia: el radio de adentro es el de
+  // afuera MENOS el padding que los separa. Si no se cumple, las esquinas no
+  // quedan paralelas — el control de adentro se ve o demasiado redondo o
+  // demasiado cuadrado — y esa desalineación es la que hace que un tablero se
+  // sienta "armado a mano" aunque nadie sepa señalar por qué.
+  //   card 26 con padding 14 → control 12
+  //   row  18 con padding 16 → control 10
+  const R = { card:26, tile:22, row:18, ctrl:12, ctrlSm:10, icon:14, pill:999 };
+
+  // ── TIPOGRAFÍA — el tracking se APRIETA cuando el texto crece ─────────────
+  // En SF el interletrado óptico es negativo en títulos y vuelve a cero en el
+  // cuerpo. Aplicado aquí: 28px pide -0.028em, 15px casi nada, y las etiquetas
+  // pequeñas en versalitas ABREN a +0.06em porque en mayúsculas apretadas se
+  // pierden. Los números van tabulares para que las columnas no bailen.
+  const TY = {
+    title:   { fontSize:28, fontWeight:600, letterSpacing:"-0.028em", fontFamily:fontDisp },
+    section: { fontSize:15, fontWeight:500, letterSpacing:"-0.012em", fontFamily:fontDisp },
+    body:    { fontSize:16.5, fontWeight:400, letterSpacing:"-0.015em", fontFamily:font },
+    num:     { fontVariantNumeric:"tabular-nums" },
+  };
+
   const selectedDueDate = metaNewDate ? metaNewDate.slice(0, 10) : "";
   const selectedDueTime = metaNewDate ? metaNewDate.slice(11, 16) : "";
   const dueTimeSlots = ["08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00"];
@@ -542,16 +604,22 @@ export default function MetaPanel({
   const mpVars = {
     "--mp-txt": T.txt, "--mp-txt2": T.txt2, "--mp-txt3": T.txt3,
     "--mp-accent": T.accent, "--mp-border": T.border, "--mp-borderH": T.borderH,
-    "--mp-hairline": S.line,
+    "--mp-hairline": S.hair,
     "--mp-bg": panelBg,
-    "--mp-topbar": isLight ? "rgba(244,246,249,0.82)" : "rgba(10,14,22,0.72)",
+    // La barra superior es el único sitio donde el vidrio es LITERAL: queda
+    // fija y el contenido pasa por debajo, así que hay algo real que difuminar.
+    // Por eso baja la opacidad (0.82 → 0.66): a 0.82 el blur casi no se veía,
+    // era una barra sólida con un filtro puesto de adorno.
+    "--mp-topbar": isLight ? "rgba(246,248,251,0.66)" : "rgba(10,14,22,0.58)",
+    "--mp-blur": S.blur,
+    "--mp-spec": S.spec,
     "--mp-seg-bg": isLight ? S.inset : S.row,
-    "--mp-seg-on": isLight ? S.card : S.inset,
+    "--mp-seg-on": isLight ? "rgba(255,255,255,0.92)" : S.inset,
     "--mp-edit": S.inset,
     "--mp-row": S.row, "--mp-card": S.card, "--mp-inset": S.inset, "--mp-lineS": S.lineS,
     "--mp-ring": ring, "--mp-ringSoft": ringSoft,
     "--mp-scroll": isLight ? "rgba(15,23,42,0.16)" : "rgba(255,255,255,0.12)",
-    "--mp-rowShadow": isLight ? "0 1px 2px rgba(15,23,42,0.05), 0 10px 28px rgba(15,23,42,0.08)" : "0 1px 2px rgba(0,0,0,0.40), 0 12px 32px rgba(0,0,0,0.32)",
+    "--mp-rowShadow": S.shadow,
     "--mp-chevron": chevron,
   };
   const MP_CSS = `
@@ -561,16 +629,18 @@ export default function MetaPanel({
     .mp-body::-webkit-scrollbar{width:12px;height:12px}
     .mp-body::-webkit-scrollbar-thumb{background:var(--mp-scroll);border-radius:99px;border:4px solid transparent;background-clip:padding-box}
     .mp-body::-webkit-scrollbar-thumb:hover{background:var(--mp-txt3)}
-    .mp-topbar{position:sticky;top:0;z-index:20;flex-shrink:0;padding-top:var(--safe-area-inset-top, env(safe-area-inset-top, 0px));background:var(--mp-topbar);backdrop-filter:saturate(180%) blur(24px);-webkit-backdrop-filter:saturate(180%) blur(24px);border-bottom:1px solid var(--mp-hairline)}
-    .mp-seg{display:inline-flex;gap:2px;padding:4px;border-radius:15px;background:var(--mp-seg-bg);border:1px solid var(--mp-hairline)}
+    .mp-topbar{position:sticky;top:0;z-index:20;flex-shrink:0;padding-top:var(--safe-area-inset-top, env(safe-area-inset-top, 0px));background:var(--mp-topbar);backdrop-filter:var(--mp-blur);-webkit-backdrop-filter:var(--mp-blur);box-shadow:inset 0 -0.5px 0 var(--mp-hairline),var(--mp-spec)}
+    .mp-seg{display:inline-flex;gap:2px;padding:3px;border-radius:14px;background:var(--mp-seg-bg);box-shadow:inset 0 0 0 0.5px var(--mp-hairline)}
     .mp-seg>button{appearance:none;-webkit-appearance:none;border:none;background:transparent;cursor:pointer;font-family:inherit;font-size:13.5px;font-weight:500;letter-spacing:-.015em;color:var(--mp-txt2);padding:9px 20px;border-radius:11px;white-space:nowrap;transition:color .2s ease,background .2s ease,box-shadow .2s ease}
     .mp-seg>button:hover{color:var(--mp-txt)}
-    .mp-seg>button[data-on="1"]{color:var(--mp-txt);background:var(--mp-seg-on);box-shadow:0 1px 3px rgba(0,0,0,.16),0 0 0 .5px rgba(255,255,255,.05)}
+    .mp-seg>button[data-on="1"]{color:var(--mp-txt);background:var(--mp-seg-on);box-shadow:0 0 0 0.5px var(--mp-hairline),0 1px 2px rgba(0,0,0,.12),0 3px 8px rgba(0,0,0,.10),var(--mp-spec)}
     .mp-edit{border-radius:6px;margin:0 -4px;padding:0 4px;transition:background .15s ease,box-shadow .15s ease;cursor:text}
     .mp-edit:hover{background:var(--mp-edit)}
-    .mp-edit:focus{background:var(--mp-edit);box-shadow:0 0 0 2px var(--mp-ring)}
-    .mp-row{transition:background .18s ease,border-color .18s ease,box-shadow .2s ease}
-    .mp-row:hover{border-color:var(--mp-borderH)!important;box-shadow:var(--mp-rowShadow)}
+    .mp-edit:focus{background:var(--mp-edit);box-shadow:0 0 0 3.5px var(--mp-ringSoft),0 0 0 1px var(--mp-accent)}
+    .mp-select:focus-visible,.mp-input:focus-visible,.mp-datechip:focus-visible,.mp-quickchip:focus-visible,.mp-calday:focus-visible,.mp-timebtn:focus-visible,.mp-seg>button:focus-visible{outline:none;box-shadow:0 0 0 3.5px var(--mp-ringSoft),0 0 0 1px var(--mp-accent)}
+    .mp-row{transition:background .22s cubic-bezier(.16,1,.3,1),border-color .22s ease,box-shadow .22s ease,transform .22s cubic-bezier(.16,1,.3,1)}
+    .mp-row:hover{border-color:var(--mp-lineS)!important;box-shadow:var(--mp-rowShadow);transform:translateY(-1px)}
+    .mp-row:active{transform:translateY(0)}
     .mp-grip{opacity:0;transition:opacity .16s ease}
     .mp-row:hover .mp-grip{opacity:.4}
     .mp-del{opacity:0;transition:opacity .16s ease}
@@ -588,18 +658,19 @@ export default function MetaPanel({
     .mp-input{transition:border-color .16s ease,box-shadow .16s ease,background-color .16s ease}
     .mp-input::placeholder{color:var(--mp-txt3);opacity:1}
     .mp-datechip{transition:transform .14s ease,background .16s ease,border-color .16s ease,box-shadow .16s ease,color .16s ease}
-    .mp-datechip:hover{transform:translateY(-1px);border-color:var(--mp-borderH)!important;box-shadow:0 10px 24px rgba(15,23,42,.08)}
+    .mp-datechip:hover{transform:translateY(-1px);border-color:var(--mp-lineS)!important;box-shadow:var(--mp-rowShadow)}
     .mp-datechip:active{transform:translateY(0) scale(.98)}
     .mp-due-popover{animation:mpPop .16s cubic-bezier(.16,1,.3,1) both}
     @keyframes mpPop{from{opacity:0}to{opacity:1}}
     .mp-calday,.mp-timebtn,.mp-iconbtn{transition:background .14s ease,border-color .14s ease,color .14s ease,transform .12s ease,box-shadow .14s ease}
-    .mp-calday:hover,.mp-timebtn:hover,.mp-iconbtn:hover{transform:translateY(-1px);border-color:var(--mp-accent)!important;box-shadow:0 10px 22px rgba(15,23,42,.10)}
+    .mp-calday:hover,.mp-timebtn:hover,.mp-iconbtn:hover{transform:translateY(-1px);border-color:var(--mp-accent)!important}
     .mp-calday:active,.mp-timebtn:active,.mp-iconbtn:active{transform:translateY(0) scale(.97)}
     .mp-quickchip{transition:background .14s ease,border-color .14s ease,color .14s ease,transform .14s ease}
     .mp-quickchip:hover{transform:translateY(-1px);border-color:var(--mp-accent)!important;color:var(--mp-accent)!important}
     .mp-ghost{transition:background .16s ease,border-color .16s ease,color .16s ease}
     .mp-fade{animation:mpFade .3s cubic-bezier(.16,1,.3,1) both}
     @keyframes mpFade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+    @media(prefers-reduced-motion:reduce){.mp,.mp-fade,.mp-due-popover{animation:none!important}.mp-row,.mp-datechip,.mp-calday,.mp-timebtn,.mp-quickchip,.mp-iconbtn{transition-duration:.01ms!important}.mp-row:hover,.mp-datechip:hover,.mp-calday:hover,.mp-timebtn:hover,.mp-quickchip:hover,.mp-iconbtn:hover{transform:none!important}}
     @media(max-width:768px){.mp-seg{display:grid;grid-template-columns:1fr 1fr;width:100%}.mp-mobilebody [style*="grid-template-columns"]{grid-template-columns:1fr!important}.mp-mobilebody [style*="min-width"]{min-width:0!important}}
   `;
 
@@ -679,7 +750,7 @@ export default function MetaPanel({
                 return (
                   <div style={{ display:"flex", alignItems:"flex-end", justifyContent:"space-between", gap:24, flexWrap:"wrap", marginBottom:26 }}>
                     <div>
-                      <h3 style={{ margin:0, fontSize:28, fontWeight:500, fontFamily:fontDisp, letterSpacing:"-0.01em", color:T.txt }}>
+                      <h3 style={{ margin:0, ...TY.title, color:T.txt }}>
                         Agenda personal y profesional
                       </h3>
                       <p style={{ margin:"8px 0 0", fontSize:14, color:T.txt3, fontFamily:font, letterSpacing:"0.01em" }}>
@@ -697,7 +768,7 @@ export default function MetaPanel({
                               se percibe como que el color no está decidido. */}
                           <div style={{ width:`${pct}%`, height:"100%", borderRadius:99, background:T.accent, transition:"width .5s cubic-bezier(.16,1,.3,1)" }} />
                         </div>
-                        <span style={{ fontSize:13.5, fontWeight:500, fontFamily:fontDisp, color:T.txt2, whiteSpace:"nowrap", minWidth:38, textAlign:"right" }}>{pct}%</span>
+                        <span style={{ fontSize:13.5, fontWeight:500, fontFamily:fontDisp, ...TY.num, color:T.txt2, whiteSpace:"nowrap", minWidth:38, textAlign:"right" }}>{pct}%</span>
                       </div>
                     )}
                   </div>
@@ -723,7 +794,7 @@ export default function MetaPanel({
                         onClick={() => setAgendaView(id)}
                         style={{
                           minHeight:74,
-                          borderRadius:24,
+                          borderRadius:R.tile,
                           padding:"14px 16px",
                           display:"flex",
                           alignItems:"center",
@@ -735,11 +806,14 @@ export default function MetaPanel({
                           // familia neutra que el resto y la pantalla no se mancha.
                           border:`1px solid ${active ? _hex(T.accent,"55") : S.line}`,
                           background: active ? S.card : S.row,
-                          boxShadow:"none",
+                          // Canto de luz arriba + sombra de contacto y de ambiente.
+                          // Son los dos detalles que separan «un rectángulo con color
+                          // de fondo» de «un objeto apoyado sobre algo».
+                          boxShadow: active ? `${S.spec}, ${S.shadow}` : `${S.spec}, ${S.shadowRow}`,
                         }}
                       >
                         <span style={{
-                          width:42, height:42, borderRadius:17,
+                          width:42, height:42, borderRadius:R.icon,
                           display:"flex", alignItems:"center", justifyContent:"center",
                           color:active ? T.accent : T.txt3,
                           background:active ? `${T.accent}1A` : S.card,
@@ -757,7 +831,7 @@ export default function MetaPanel({
                           color:active ? T.accent : T.txt2,
                           background:active ? `${T.accent}14` : S.card,
                           border:`1px solid ${active ? _hex(T.accent,"26") : "transparent"}`,
-                          fontSize:12.5, fontWeight:500, fontFamily:fontDisp,
+                          fontSize:12.5, fontWeight:500, fontFamily:fontDisp, ...TY.num,
                         }}>
                           {count}
                         </span>
@@ -779,7 +853,7 @@ export default function MetaPanel({
               }}>
                 <div style={{
                   minHeight:118,
-                  borderRadius:30,
+                  borderRadius:R.card,
                   padding:14,
                   // Fondo PLANO. El degradado vertical (0.055 → 0.028) ponía dos
                   // grises distintos en la misma tarjeta: arriba una cosa, abajo
@@ -787,13 +861,13 @@ export default function MetaPanel({
                   // efecto — y de paso desaparecen dos tonos del inventario.
                   background:S.card,
                   border:`1px solid ${metaNewText ? _hex(T.accent,"70") : S.line}`,
-                  boxShadow: metaNewText ? `0 0 0 1px ${_hex(T.accent,"22")}` : "none",
-                  backdropFilter:"saturate(180%) blur(22px)",
-                  WebkitBackdropFilter:"saturate(180%) blur(22px)",
+                  boxShadow: metaNewText
+                    ? `0 0 0 3.5px ${ringSoft}, ${S.spec}, ${S.shadow}`
+                    : `${S.spec}, ${S.shadow}`,
                 }}>
                   <label style={{ display:"flex", alignItems:"center", gap:13, minHeight:48 }}>
                     <span style={{
-                      width:34, height:34, borderRadius:14, flexShrink:0,
+                      width:34, height:34, borderRadius:R.icon, flexShrink:0,
                       display:"flex", alignItems:"center", justifyContent:"center",
                       background: metaNewText ? `${T.accent}1A` : S.inset,
                       color: metaNewText ? T.accent : T.txt3,
@@ -885,12 +959,12 @@ export default function MetaPanel({
                   overflow:"visible", display:"flex", flexDirection:"column", justifyContent:"space-between",
                   minHeight:118,
                   padding:12,
-                  borderRadius:30,
+                  borderRadius:R.card,
                   background:S.card,
                   border:`1px solid ${metaNewDate ? _hex(T.accent,"58") : S.line}`,
-                  boxShadow: metaNewDate ? `0 0 0 1px ${_hex(T.accent,"18")}` : "none",
-                  backdropFilter:"saturate(180%) blur(22px)",
-                  WebkitBackdropFilter:"saturate(180%) blur(22px)",
+                  boxShadow: metaNewDate
+                    ? `0 0 0 3.5px ${ringSoft}, ${S.spec}, ${S.shadow}`
+                    : `${S.spec}, ${S.shadow}`,
                 }}>
                   <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
                     <button
@@ -898,7 +972,7 @@ export default function MetaPanel({
                       className="mp-datechip"
                       onClick={() => openDuePicker("date")}
                       style={{
-                        height:54, borderRadius:18, border:`1px solid ${duePickerOpen === "date" || selectedDueDate ? _hex(T.accent,"58") : S.line}`,
+                        height:54, borderRadius:14, border:`1px solid ${duePickerOpen === "date" || selectedDueDate ? _hex(T.accent,"58") : S.line}`,
                         background: duePickerOpen === "date" || selectedDueDate ? `${T.accent}14` : S.inset,
                         color: selectedDueDate ? T.txt : T.txt2, cursor:"pointer", fontFamily:fontDisp,
                         display:"flex", alignItems:"center", justifyContent:"center", gap:9,
@@ -913,7 +987,7 @@ export default function MetaPanel({
                       className="mp-datechip"
                       onClick={() => openDuePicker("time")}
                       style={{
-                        height:54, borderRadius:18, border:`1px solid ${duePickerOpen === "time" || selectedDueTime ? _hex(T.accent,"58") : S.line}`,
+                        height:54, borderRadius:14, border:`1px solid ${duePickerOpen === "time" || selectedDueTime ? _hex(T.accent,"58") : S.line}`,
                         background: duePickerOpen === "time" || selectedDueTime ? `${T.accent}14` : S.inset,
                         color: selectedDueTime ? T.txt : T.txt2, cursor:"pointer", fontFamily:fontDisp,
                         display:"flex", alignItems:"center", justifyContent:"center", gap:9,
@@ -943,7 +1017,7 @@ export default function MetaPanel({
                             border:`1px solid ${selectedDueDate === value ? _hex(T.accent,"58") : S.line}`,
                             background:selectedDueDate === value ? `${T.accent}14` : S.inset,
                             color:selectedDueDate === value ? T.accent : T.txt2,
-                            borderRadius:13, padding:"9px 14px", fontSize:12.5, fontWeight:400,
+                            borderRadius:R.ctrl, padding:"9px 14px", fontSize:12.5, fontWeight:400,
                             fontFamily:fontDisp, cursor:"pointer", letterSpacing:"-0.01em",
                           }}
                         >
@@ -962,7 +1036,7 @@ export default function MetaPanel({
                             border:`1px solid ${selectedDueTime === timeValue ? _hex(T.accent,"58") : S.line}`,
                             background:selectedDueTime === timeValue ? `${T.accent}14` : S.inset,
                             color:selectedDueTime === timeValue ? T.accent : T.txt2,
-                            borderRadius:13, padding:"9px 14px", fontSize:12.5, fontWeight:400,
+                            borderRadius:R.ctrl, padding:"9px 14px", fontSize:12.5, fontWeight:400,
                             fontFamily:fontDisp, cursor:"pointer", letterSpacing:"-0.01em",
                           }}
                         >
@@ -986,12 +1060,16 @@ export default function MetaPanel({
                         zIndex:120,
                         marginTop:0,
                         padding:14,
-                        borderRadius:24,
-                        background:isLight ? "#FFFFFF" : "#0D121D",
-                        border:`1px solid ${S.lineS}`,
-                        boxShadow:isLight ? "0 30px 80px rgba(15,23,42,0.24), 0 2px 8px rgba(15,23,42,0.10)" : "0 34px 90px rgba(0,0,0,0.62), inset 0 1px 0 rgba(255,255,255,0.05)",
-                        backdropFilter:"none",
-                        WebkitBackdropFilter:"none",
+                        borderRadius:R.card,
+                        // El calendario flota SOBRE las tarjetas: acá el vidrio sí
+                        // tiene qué difuminar, así que es translúcido de verdad y no
+                        // un panel opaco (#0D121D) con `backdropFilter:"none"`, que
+                        // era pedir un material y después apagarlo.
+                        background:isLight ? "rgba(255,255,255,0.86)" : "rgba(16,22,34,0.82)",
+                        border:`1px solid ${S.line}`,
+                        boxShadow:`${S.spec}, ${S.shadowPop}`,
+                        backdropFilter:"saturate(180%) blur(40px)",
+                        WebkitBackdropFilter:"saturate(180%) blur(40px)",
                       }}
                     >
                       {duePickerOpen === "date" ? (
@@ -1283,7 +1361,7 @@ export default function MetaPanel({
                 );
                 const titleEl = (
                   <E val={a.text} onSave={v => setMetaActions(p => p.map(x => x.id===a.id ? {...x,text:v} : x))}
-                    style={{ fontSize:16.5, fontWeight:400, color:T.txt, fontFamily:font, lineHeight:1.35, letterSpacing:"-0.014em" }} />
+                    style={{ ...TY.body, color:T.txt, lineHeight:1.35 }} />
                 );
                 const metaEl = (
                   <div style={{ display:"flex", alignItems:"center", gap:7, flexWrap:"wrap" }}>
@@ -1332,7 +1410,7 @@ export default function MetaPanel({
                       // filas deja de querer decir "esto está activo" y se vuelve
                       // decoración. El acento se guarda para el estado real.
                       border:`1px solid ${a.assignee ? S.lineS : S.line}`,
-                      borderRadius:10, padding:"7px 12px",
+                      borderRadius:R.ctrlSm, padding:"7px 12px",
                       cursor:"pointer", outline:"none", maxWidth: isMobile ? 200 : 190,
                     }}
                   >
@@ -1352,7 +1430,7 @@ export default function MetaPanel({
                     title="Próximamente — Asignación directa a iAgents IA"
                     style={{
                       display:"flex", alignItems:"center", gap:5,
-                      padding:"7px 12px", borderRadius:10,
+                      padding:"7px 12px", borderRadius:R.ctrlSm,
                       border:`1px solid ${S.line}`,
                       background:"transparent",
                       color:T.txt3, fontSize:12, fontFamily:font, fontWeight:400,
@@ -1369,6 +1447,7 @@ export default function MetaPanel({
                       fontSize:12.5,
                       fontWeight:400,
                       fontFamily:fontDisp,
+                      ...TY.num,
                       color:prioColor,
                       background: isUrgent ? `${ALERT}14` : "transparent",
                       border:`1px solid ${isUrgent ? `${ALERT}38` : S.line}`,
@@ -1393,7 +1472,7 @@ export default function MetaPanel({
                         margin:index === 0 ? "2px 0 12px" : "26px 0 12px",
                       }}>
                         <div style={{ width:9, height:9, borderRadius:"50%", background:catColor }} />
-                        <h4 style={{ margin:0, fontSize:15, fontWeight:400, fontFamily:fontDisp, color:T.txt, letterSpacing:"-0.005em" }}>
+                        <h4 style={{ margin:0, ...TY.section, color:T.txt }}>
                           Agenda {categoryMeta.label}
                         </h4>
                         <span style={{ fontSize:12, fontFamily:font, color:T.txt3 }}>
@@ -1435,10 +1514,18 @@ export default function MetaPanel({
                     style={{
                       position:"relative",
                       padding: isMobile ? "14px 16px" : "16px 18px",
-                      borderRadius:18, marginBottom:10,
-                      background: isUrgent ? `${ALERT}0F` : S.row,
-                      border:`1px solid ${isUrgent ? `${ALERT}30` : S.line}`,
-                      boxShadow: isLight ? "0 1px 2px rgba(15,23,42,0.05)" : "none",
+                      borderRadius:R.row, marginBottom:8,
+                      // El MISMO 6% de rojo no pesa igual en los dos temas: sobre
+                      // negro se hunde y sobre blanco grita. En claro va a la mitad.
+                      background: isUrgent ? `${ALERT}${isLight ? "0A" : "0F"}` : S.row,
+                      border:`1px solid ${isUrgent ? `${ALERT}${isLight ? "26" : "30"}` : S.line}`,
+                      // SIN backdrop-filter a propósito: la lista puede traer
+                      // decenas de filas y cada blur es una capa que el navegador
+                      // compone aparte — es de las propiedades más caras que hay.
+                      // Además la fila se apoya en el lienzo plano, así que no
+                      // tendría nada que difuminar: sería el costo sin el efecto.
+                      // El material acá lo dan el tinte, el canto de luz y la sombra.
+                      boxShadow:`${S.spec}, ${S.shadowRow}`,
                     }}
                   >
                     {isMobile ? (
