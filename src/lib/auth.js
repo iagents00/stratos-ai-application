@@ -210,7 +210,10 @@ export async function signIn(email, password) {
     const { data: profile, error: profileError } = await withTimeout(
       supabase
         .from('profiles')
-        .select('id, name, role, phone, active, organization_id, is_marketing_admin, view_all_leads, crm_only, crm_prefs')
+        .select('*')   // forward-compatible: trae `area` (mig 227) SI ya existe la
+        // columna, y sigue funcionando si el bundle sale antes que el SQL.
+        // Mismo patrón que ProductividadTab con `status`/`nota`. Sin esto, un
+        // deploy adelantado a la migración rompía el login de TODOS.
         .eq('id', data.user.id)
         .single(),
       TIMEOUT_MS,
@@ -237,6 +240,9 @@ export async function signIn(email, password) {
       // Admin de MARKETING (ej. Alex): aunque sea super_admin, su casa es marketing.
       // Restringe su navegación a los módulos de marketing (ver navigation.js).
       isMarketingAdmin: profile.is_marketing_admin === true,
+      // Área a la que pertenece (mig 227). Decide qué carpeta ve en "Mi Drive" y
+      // con qué «Puesto/Área» se prellena su reporte diario. null = sin asignar.
+      area:           profile.area || null,
       viewAllLeads:   profile.view_all_leads === true,
       // Si crm_only=true, el usuario solo accede al módulo CRM + Perfil.
       // Usado para cuentas tipo bot/IA (iagents@stratos.ai) que no necesitan
@@ -396,7 +402,10 @@ export async function getStoredSession() {
       const result = await withTimeout(
         supabase
           .from('profiles')
-          .select('id, name, role, phone, active, organization_id, is_marketing_admin, view_all_leads, crm_only, crm_prefs')
+          .select('*')   // forward-compatible: trae `area` (mig 227) SI ya existe la
+        // columna, y sigue funcionando si el bundle sale antes que el SQL.
+        // Mismo patrón que ProductividadTab con `status`/`nota`. Sin esto, un
+        // deploy adelantado a la migración rompía el login de TODOS.
           .eq('id', session.user.id)
           .single(),
         PROFILE_TIMEOUT,
@@ -443,6 +452,9 @@ export async function getStoredSession() {
       // Admin de MARKETING (ej. Alex): aunque sea super_admin, su casa es marketing.
       // Restringe su navegación a los módulos de marketing (ver navigation.js).
       isMarketingAdmin: profile.is_marketing_admin === true,
+      // Área a la que pertenece (mig 227). Decide qué carpeta ve en "Mi Drive" y
+      // con qué «Puesto/Área» se prellena su reporte diario. null = sin asignar.
+      area:           profile.area || null,
       viewAllLeads:   profile.view_all_leads === true,
       crmOnly:        profile.crm_only === true,
       crmPrefs:       profile.crm_prefs && typeof profile.crm_prefs === 'object' ? profile.crm_prefs : {},

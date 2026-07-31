@@ -8,7 +8,7 @@
 import {
   Users, Hexagon, Activity, Building2, Atom,
   Trophy, Landmark, UserCheck, CreditCard, Shield, User, Trash2, Wallet, MessageCircle, Bot, Sparkles, Megaphone,
-  CalendarDays, Layers, Clapperboard, Inbox, MessagesSquare, ClipboardList, NotebookPen
+  CalendarDays, Layers, Clapperboard, Inbox, MessagesSquare, ClipboardList, NotebookPen, FolderOpen
 } from "lucide-react";
 
 export const nav = [
@@ -34,6 +34,11 @@ export const nav = [
   // Propiedades» — el nombre de su hoja de siempre. Se llama como ellos lo llaman.
   { id: "mkt_pipe",   l: "Propiedades", i: Clapperboard  },
   { id: "mkt_sol",    l: "Solicitudes", i: Inbox         },
+  // "Mi Drive": la carpeta del ÁREA de la persona, embebida. Nació con el Plan de
+  // Trabajo Semanal (30-jul-2026): cada área ya tenía su Drive y la gente vivía
+  // saltando de pestaña. Va junto a las secciones de trabajo, no en el cajón de
+  // "Más", porque es material de consulta diaria.
+  { id: "midrive", l: "Mi Drive", i: FolderOpen  },
   { id: "wa",    l: "WhatsApp",  i: MessageCircle },
   { id: "lp",    l: "Create",    i: Hexagon    },
   { id: "d",     l: "Comando",   i: Activity   },
@@ -65,7 +70,13 @@ export const MODULE_ROLES = {
   // roles lo ven. Gateado por features.copilotModule.
   // `marketing` (equipo de marketing de Duke) también: es su ÚNICA casa —
   // no ve CRM ni leads, opera su trabajo desde el chat (delegar por voz, etc.).
-  copilot: ["super_admin","admin","director","ceo","asesor","marketing"],
+  // `colaborador` (gente de área: Comercial, Operativo, Administrativo, Finanzas,
+  // RRHH) también: el Copilot es donde dicta su plan y cierra sus pendientes.
+  copilot: ["super_admin","admin","director","ceo","asesor","marketing","colaborador"],
+  // Mi Drive: la carpeta del área. La gente ve la suya; el mando salta entre las
+  // seis (es lo que revisan los viernes). El asesor de ventas no entra acá — su
+  // material vive en Proyectos (catálogo/drives de desarrollos).
+  midrive: ["super_admin","admin","director","ceo","marketing","colaborador"],
   // Marketing (ERP de actividades del equipo de marketing de Duke).
   // `mkt` (módulo único con tabs) = solo admins. El rol `marketing` navega por las
   // 4 secciones directas del sidebar (mkt_dia/mkt_marcas/mkt_pipe/mkt_sol) — pedido
@@ -96,8 +107,9 @@ export const MODULE_ROLES = {
   rrhh:   ["super_admin","admin","director","ceo"],
   trash:  ["super_admin","admin","director","ceo","asesor"],
   planes: ["super_admin","admin","director","ceo","asesor"],
-  // `marketing` necesita Perfil para conectar su Telegram y cambiar su contraseña.
-  perfil: ["super_admin","admin","director","ceo","asesor","marketing"],
+  // `marketing` y `colaborador` necesitan Perfil para conectar su Telegram y
+  // cambiar su contraseña (entran con una temporal que les da RRHH).
+  perfil: ["super_admin","admin","director","ceo","asesor","marketing","colaborador"],
   admin:  ["super_admin","admin"],
 };
 
@@ -107,7 +119,7 @@ export const MODULE_NAMES = {
   rrhh: "Stratos RH", trash: "Papelera", caja: "Caja",
   wa: "WhatsApp", copilot: "Copilot", mkt: "Marketing", chat: "Chat del equipo",
   mkt_dia: "Mi Día", mkt_marcas: "Marcas", mkt_pipe: "Registro de Propiedades", mkt_sol: "Solicitudes",
-  mkt_equipo: "Equipo", mkt_reporte: "Actividades",
+  mkt_equipo: "Equipo", mkt_reporte: "Actividades", midrive: "Mi Drive",
   planes: "Planes", perfil: "Perfil", admin: "Usuarios",
 };
 
@@ -130,7 +142,17 @@ export const CRM_ONLY_MODULES = new Set(["c", "perfil"]);
 // Ve las MISMAS secciones que su equipo en el sidebar (Mi Día · Marcas · Pipeline ·
 // Solicitudes) + Copilot + Proyectos (catálogo/drives para contenido) + Perfil.
 // La pestaña "Equipo" (admin) la abre desde los tabs de arriba dentro del módulo.
-export const MARKETING_ADMIN_MODULES = new Set(["mkt_reporte", "mkt_equipo", "mkt_dia", "mkt_marcas", "mkt_pipe", "mkt_sol", "copilot", "e", "perfil"]);
+export const MARKETING_ADMIN_MODULES = new Set(["mkt_reporte", "mkt_equipo", "mkt_dia", "mkt_marcas", "mkt_pipe", "mkt_sol", "copilot", "e", "midrive", "perfil"]);
+// ESPACIO DE ÁREA (30-jul-2026). La gente de Comercial, Operativo, Administrativo,
+// Finanzas y RRHH entra con rol `colaborador` y su casa es esto y nada más:
+//   · Actividades — su Plan de Trabajo Semanal / «¿qué hiciste hoy?»
+//   · Mi Día      — sus tareas y pendientes con fecha
+//   · Mi Drive    — la carpeta de su área
+//   · Copilot     — dicta el plan, cierra pendientes, pide su día
+//   · Perfil      — su contraseña y su Telegram
+// NO ven el CRM de ventas, ni Comando, ni Finanzas, ni el pipeline de video de
+// marketing (Marcas/Propiedades/Solicitudes son del mundo de Alex).
+export const AREA_MEMBER_MODULES = new Set(["mkt_reporte", "mkt_dia", "midrive", "copilot", "perfil"]);
 // Secciones del módulo Marketing que se muestran como items del sidebar. Las ve el
 // rol `marketing` (su equipo) Y el admin de marketing (Alex) — no los admins de ventas.
 export const MKT_SECTION_MODULES = new Set(["mkt_reporte", "mkt_equipo", "mkt_dia", "mkt_marcas", "mkt_pipe", "mkt_sol"]);
@@ -141,8 +163,10 @@ export function isStratosOrg(orgId) {
 
 /**
  * Decide si un usuario puede acceder a un módulo.
- * Combina tres capas:
+ * Combina cuatro capas:
  *   1) Restricción per-usuario `crm_only`: cuentas bot/IA solo ven CRM + Perfil.
+ *   1b) Casas cerradas por identidad: admin de marketing (Alex) y `colaborador`
+ *      de área — su set de módulos manda sobre el permiso por rol.
  *   2) Aislamiento por organización: clientes externos solo CRM + perfil + papelera.
  *   3) Permiso por rol dentro de la org (MODULE_ROLES).
  *
@@ -155,6 +179,17 @@ export function canAccessModule(moduleId, user, clientConfig = null) {
   // (1b) Admin de MARKETING (Alex): aunque su rol sea super_admin, su casa es
   // marketing → solo ve los módulos de marketing (gana sobre el permiso por rol).
   if (user.isMarketingAdmin === true && !MARKETING_ADMIN_MODULES.has(moduleId)) return false;
+  // (1c) COLABORADOR de área: su espacio es cerrado y se resuelve acá completo,
+  // sin caer al permiso por rol de más abajo (MODULE_ROLES no lo lista en casi
+  // nada a propósito: lo que no está en AREA_MEMBER_MODULES, no lo ve).
+  if (user.role === "colaborador") {
+    if (!AREA_MEMBER_MODULES.has(moduleId)) return false;
+    // El Copilot sigue siendo del cliente: sin el flag, nadie lo ve.
+    if (moduleId === "copilot") return clientConfig?.features?.copilotModule === true;
+    // Las carpetas de "Mi Drive" son las de Duke; fuera de esa org no aplican.
+    if (moduleId === "midrive") return isStratosOrg(user.organizationId);
+    return true;
+  }
 
   // Caja (cuentas / ingresos / egresos) es 100% por feature flag del cliente,
   // y se evalúa ANTES del aislamiento por org para que también aplique a los
