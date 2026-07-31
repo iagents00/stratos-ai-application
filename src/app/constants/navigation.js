@@ -8,11 +8,16 @@
 import {
   Users, Hexagon, Activity, Building2, Atom,
   Trophy, Landmark, UserCheck, CreditCard, Shield, User, Trash2, Wallet, MessageCircle, Bot, Sparkles, Megaphone,
-  CalendarDays, Layers, Clapperboard, Inbox, MessagesSquare, ClipboardList, NotebookPen, FolderOpen
+  CalendarDays, Layers, Clapperboard, Inbox, MessagesSquare, ClipboardList, NotebookPen, FolderOpen,
+  CalendarRange
 } from "lucide-react";
 
 export const nav = [
   { id: "c",     l: "CRM",       i: Users      },
+  // "Plan Semanal" es la hoja que dirección repartió el 30-jul-2026 y que cada
+  // quien mantiene toda la semana (los líderes la revisan el viernes). Va PRIMERA
+  // de las secciones de trabajo a propósito: es la lista con la que abren el día.
+  { id: "plan",  l: "Plan Semanal", i: CalendarRange },
   { id: "copilot", l: "Copilot", i: Bot        },
   // Marketing: los ADMIN ven UN módulo ("Marketing"); el rol `marketing` ve las
   // 4 secciones directas en el sidebar (pedido de Iván 21-jul: "en vez de CRM/
@@ -77,6 +82,10 @@ export const MODULE_ROLES = {
   // seis (es lo que revisan los viernes). El asesor de ventas no entra acá — su
   // material vive en Proyectos (catálogo/drives de desarrollos).
   midrive: ["super_admin","admin","director","ceo","marketing","colaborador"],
+  // Plan Semanal: lo llena TODO el que trabaja adentro y lo revisa el mando.
+  // El asesor de ventas queda fuera: su semana la maneja el pipeline del CRM,
+  // no una hoja de franjas horarias.
+  plan:    ["super_admin","admin","director","ceo","marketing","colaborador"],
   // Marketing (ERP de actividades del equipo de marketing de Duke).
   // `mkt` (módulo único con tabs) = solo admins. El rol `marketing` navega por las
   // 4 secciones directas del sidebar (mkt_dia/mkt_marcas/mkt_pipe/mkt_sol) — pedido
@@ -119,7 +128,7 @@ export const MODULE_NAMES = {
   rrhh: "Stratos RH", trash: "Papelera", caja: "Caja",
   wa: "WhatsApp", copilot: "Copilot", mkt: "Marketing", chat: "Chat del equipo",
   mkt_dia: "Mi Día", mkt_marcas: "Marcas", mkt_pipe: "Registro de Propiedades", mkt_sol: "Solicitudes",
-  mkt_equipo: "Equipo", mkt_reporte: "Actividades", midrive: "Mi Drive",
+  mkt_equipo: "Equipo", mkt_reporte: "Actividades", midrive: "Mi Drive", plan: "Plan Semanal",
   planes: "Planes", perfil: "Perfil", admin: "Usuarios",
 };
 
@@ -142,17 +151,18 @@ export const CRM_ONLY_MODULES = new Set(["c", "perfil"]);
 // Ve las MISMAS secciones que su equipo en el sidebar (Mi Día · Marcas · Pipeline ·
 // Solicitudes) + Copilot + Proyectos (catálogo/drives para contenido) + Perfil.
 // La pestaña "Equipo" (admin) la abre desde los tabs de arriba dentro del módulo.
-export const MARKETING_ADMIN_MODULES = new Set(["mkt_reporte", "mkt_equipo", "mkt_dia", "mkt_marcas", "mkt_pipe", "mkt_sol", "copilot", "e", "midrive", "perfil"]);
+export const MARKETING_ADMIN_MODULES = new Set(["plan", "mkt_reporte", "mkt_equipo", "mkt_dia", "mkt_marcas", "mkt_pipe", "mkt_sol", "copilot", "e", "midrive", "perfil"]);
 // ESPACIO DE ÁREA (30-jul-2026). La gente de Comercial, Operativo, Administrativo,
 // Finanzas y RRHH entra con rol `colaborador` y su casa es esto y nada más:
-//   · Actividades — su Plan de Trabajo Semanal / «¿qué hiciste hoy?»
+//   · Plan Semanal — la hoja de la semana (franjas + notas + prioridades)
+//   · Actividades — lo que efectivamente hizo cada día
 //   · Mi Día      — sus tareas y pendientes con fecha
 //   · Mi Drive    — la carpeta de su área
 //   · Copilot     — dicta el plan, cierra pendientes, pide su día
 //   · Perfil      — su contraseña y su Telegram
 // NO ven el CRM de ventas, ni Comando, ni Finanzas, ni el pipeline de video de
 // marketing (Marcas/Propiedades/Solicitudes son del mundo de Alex).
-export const AREA_MEMBER_MODULES = new Set(["mkt_reporte", "mkt_dia", "midrive", "copilot", "perfil"]);
+export const AREA_MEMBER_MODULES = new Set(["plan", "mkt_reporte", "mkt_dia", "midrive", "copilot", "perfil"]);
 // Secciones del módulo Marketing que se muestran como items del sidebar. Las ve el
 // rol `marketing` (su equipo) Y el admin de marketing (Alex) — no los admins de ventas.
 export const MKT_SECTION_MODULES = new Set(["mkt_reporte", "mkt_equipo", "mkt_dia", "mkt_marcas", "mkt_pipe", "mkt_sol"]);
