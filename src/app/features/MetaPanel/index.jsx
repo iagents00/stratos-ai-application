@@ -419,6 +419,111 @@ export default function MetaPanel({
   const _hex = (c, a) => (typeof c === "string" && c[0] === "#" && c.length === 7) ? c + a : c;
   const ring     = _hex(T.accent, "66");
   const ringSoft = _hex(T.accent, "26");
+
+  // ── ESCALA DE SUPERFICIE — una sola familia, tres escalones ────────────────
+  // Iván (31-jul): «que quede más elegante y no con tantos tonos grises y
+  // diferentes». En oscuro esta pantalla venía con ONCE grises casi iguales
+  // (0.028 / 0.035 / 0.045 / 0.05 / 0.052 / 0.055 / 0.06 / 0.065 / 0.08 /
+  // 0.085 / 0.10): cada elemento inventaba el suyo. Diferencias de 0,005 no se
+  // leen como jerarquía — se leen como suciedad, y es lo que hace que una
+  // pantalla se sienta inestable.
+  //
+  // Regla: TRES ROLES, no once tonos sueltos, y DOS líneas.
+  //   row   → la superficie de contenido (las filas de actividad)
+  //   card  → lo que flota sobre ella (compositor, tarjetas de selección)
+  //   inset → un control HUNDIDO dentro de una tarjeta (selects, chips, pista
+  //           del segmentado) y el hover de lo editable
+  //
+  // Van por ROL y no por número porque la elevación NO apunta al mismo lado en
+  // los dos temas: en oscuro se sube hacia el blanco, pero en claro el lienzo
+  // ya es casi blanco y una tarjeta elevada no puede ser "más clara" — se
+  // queda en blanco puro y lo que se hunde se tiñe de tinta. Con una sola
+  // rampa numérica el tema claro salía al revés: la tarjeta del compositor
+  // quedaba MÁS OSCURA que el fondo de la página.
+  //
+  // Los controles dentro de una FILA no llevan fondo propio: en la captura el
+  // ojo veía caja-dentro-de-caja-dentro-de-caja. Se sostienen con texto y una
+  // línea, y ganan fondo sólo al pasar el mouse.
+  // ── MATERIAL (Iván, 31-jul: «como de Apple, glass, en blanco y en negro») ──
+  // Los tres roles siguen siendo tres. Lo que cambia es que dejan de ser un
+  // relleno plano y pasan a ser un MATERIAL, que es como Apple construye sus
+  // superficies. Un material son cuatro cosas juntas, y falta una y se cae:
+  //
+  //   1. tinte translúcido    → deja ver que hay algo debajo
+  //   2. backdrop blur+satura → lo de abajo se difumina y el color revive
+  //                             (el `saturate` es lo que evita el gris muerto)
+  //   3. brillo especular     → una línea de luz de 1px ARRIBA, como el canto
+  //                             de un vidrio real. Es el detalle que más
+  //                             "caro" hace ver una tarjeta y el que casi
+  //                             siempre falta.
+  //   4. sombra ambiental     → dos sombras: uno de contacto (1px, cerrada) y
+  //                             una de ambiente (grande, muy suave). Nunca un
+  //                             resplandor de color.
+  //
+  // El blur sólo es HONESTO donde hay algo detrás que difuminar, y en esta
+  // pantalla eso son DOS sitios: la barra superior (el contenido le pasa por
+  // debajo) y el calendario flotante (se abre encima de las tarjetas). Nada más.
+  // Las tarjetas y las filas se apoyan en un lienzo plano: ahí un
+  // `backdrop-filter` difumina un color liso — devuelve el mismo color liso —
+  // y encima cuesta caro, porque cada capa la compone el navegador por
+  // separado y la lista puede traer decenas de filas. Pagar el costo sin el
+  // efecto es peor que no tener el efecto. Ahí el material se sostiene con
+  // tinte + canto especular + sombra, que es lo que de verdad se ve.
+  const S = isLight ? {
+    row:   "rgba(255,255,255,0.74)",
+    card:  "rgba(255,255,255,0.80)",
+    inset: "rgba(15,23,42,0.045)",
+    line:  "rgba(15,23,42,0.075)",
+    lineS: "rgba(15,23,42,0.14)",
+    // Hairline de verdad: media línea. Un separador de 1px lleno en claro se
+    // ve como un trazo dibujado; a 0.5px se ve como un corte.
+    hair:  "rgba(15,23,42,0.07)",
+    spec:  "inset 0 1px 0 rgba(255,255,255,0.95)",
+    blur:  "saturate(180%) blur(30px)",
+    shadow:    "0 1px 1.5px rgba(15,23,42,0.05), 0 8px 24px rgba(15,23,42,0.055)",
+    shadowRow: "0 1px 1.5px rgba(15,23,42,0.04), 0 3px 10px rgba(15,23,42,0.035)",
+    shadowPop: "0 2px 6px rgba(15,23,42,0.10), 0 24px 60px rgba(15,23,42,0.18)",
+  } : {
+    row:   "rgba(255,255,255,0.034)",
+    card:  "rgba(255,255,255,0.062)",
+    inset: "rgba(255,255,255,0.095)",
+    line:  "rgba(255,255,255,0.075)",
+    lineS: "rgba(255,255,255,0.145)",
+    hair:  "rgba(255,255,255,0.06)",
+    spec:  "inset 0 1px 0 rgba(255,255,255,0.075)",
+    blur:  "saturate(180%) blur(30px)",
+    shadow:    "0 1px 1.5px rgba(0,0,0,0.34), 0 10px 30px rgba(0,0,0,0.26)",
+    shadowRow: "0 1px 1.5px rgba(0,0,0,0.28), 0 3px 10px rgba(0,0,0,0.18)",
+    shadowPop: "0 2px 8px rgba(0,0,0,0.44), 0 28px 70px rgba(0,0,0,0.56)",
+  };
+  // Alerta: el ÚNICO matiz además del acento de marca. Antes convivían ámbar
+  // (Alto) + rojo (Urgente) + azul (Profesional) + verde (Personal) peleando
+  // por la misma mirada. Ahora el rojo es el único que interrumpe, y por eso
+  // vuelve a significar algo.
+  const ALERT = isLight ? "#DC2626" : "#F87171";
+
+  // ── GEOMETRÍA — radios CONCÉNTRICOS ───────────────────────────────────────
+  // La regla que Apple respeta y casi nadie copia: el radio de adentro es el de
+  // afuera MENOS el padding que los separa. Si no se cumple, las esquinas no
+  // quedan paralelas — el control de adentro se ve o demasiado redondo o
+  // demasiado cuadrado — y esa desalineación es la que hace que un tablero se
+  // sienta "armado a mano" aunque nadie sepa señalar por qué.
+  //   card 26 con padding 14 → control 12
+  //   row  18 con padding 16 → control 10
+  const R = { card:26, tile:22, row:18, ctrl:12, ctrlSm:10, icon:14, pill:999 };
+
+  // ── TIPOGRAFÍA — el tracking se APRIETA cuando el texto crece ─────────────
+  // En SF el interletrado óptico es negativo en títulos y vuelve a cero en el
+  // cuerpo. Aplicado aquí: 28px pide -0.028em, 15px casi nada, y las etiquetas
+  // pequeñas en versalitas ABREN a +0.06em porque en mayúsculas apretadas se
+  // pierden. Los números van tabulares para que las columnas no bailen.
+  const TY = {
+    title:   { fontSize:28, fontWeight:600, letterSpacing:"-0.028em", fontFamily:fontDisp },
+    section: { fontSize:15, fontWeight:500, letterSpacing:"-0.012em", fontFamily:fontDisp },
+    body:    { fontSize:16.5, fontWeight:400, letterSpacing:"-0.015em", fontFamily:font },
+    num:     { fontVariantNumeric:"tabular-nums" },
+  };
+
   const selectedDueDate = metaNewDate ? metaNewDate.slice(0, 10) : "";
   const selectedDueTime = metaNewDate ? metaNewDate.slice(11, 16) : "";
   const dueTimeSlots = ["08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00"];
@@ -492,19 +597,29 @@ export default function MetaPanel({
   const chevron  = `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='${isLight ? "%235C6B82" : "%238B99AE"}' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'><path d='M6 9l6 6 6-6'/></svg>")`;
   const panelBg  = isLight
     ? "#F1F3F6"
-    : "radial-gradient(130% 90% at 50% -25%, rgba(110,231,194,0.06), rgba(126,184,240,0.028) 34%, transparent 62%), #080C15";
+    // El lavado del fondo era VERDE mezclado con AZUL (rgba(126,184,240,0.028)):
+    // dos matices en el lienzo hacen que todo lo que se apoya encima parezca de
+    // un color distinto según dónde caiga. Un solo matiz, y muy tenue.
+    : "radial-gradient(130% 90% at 50% -25%, rgba(110,231,194,0.05), transparent 58%), #080C15";
   const mpVars = {
     "--mp-txt": T.txt, "--mp-txt2": T.txt2, "--mp-txt3": T.txt3,
     "--mp-accent": T.accent, "--mp-border": T.border, "--mp-borderH": T.borderH,
-    "--mp-hairline": isLight ? "rgba(15,23,42,0.08)" : "rgba(255,255,255,0.06)",
+    "--mp-hairline": S.hair,
     "--mp-bg": panelBg,
-    "--mp-topbar": isLight ? "rgba(244,246,249,0.82)" : "rgba(10,14,22,0.72)",
-    "--mp-seg-bg": isLight ? "rgba(15,23,42,0.05)" : "rgba(255,255,255,0.045)",
-    "--mp-seg-on": isLight ? "#FFFFFF" : "rgba(255,255,255,0.10)",
-    "--mp-edit": isLight ? "rgba(15,23,42,0.05)" : "rgba(255,255,255,0.06)",
+    // La barra superior es el único sitio donde el vidrio es LITERAL: queda
+    // fija y el contenido pasa por debajo, así que hay algo real que difuminar.
+    // Por eso baja la opacidad (0.82 → 0.66): a 0.82 el blur casi no se veía,
+    // era una barra sólida con un filtro puesto de adorno.
+    "--mp-topbar": isLight ? "rgba(246,248,251,0.66)" : "rgba(10,14,22,0.58)",
+    "--mp-blur": S.blur,
+    "--mp-spec": S.spec,
+    "--mp-seg-bg": isLight ? S.inset : S.row,
+    "--mp-seg-on": isLight ? "rgba(255,255,255,0.92)" : S.inset,
+    "--mp-edit": S.inset,
+    "--mp-row": S.row, "--mp-card": S.card, "--mp-inset": S.inset, "--mp-lineS": S.lineS,
     "--mp-ring": ring, "--mp-ringSoft": ringSoft,
     "--mp-scroll": isLight ? "rgba(15,23,42,0.16)" : "rgba(255,255,255,0.12)",
-    "--mp-rowShadow": isLight ? "0 1px 2px rgba(15,23,42,0.05), 0 10px 28px rgba(15,23,42,0.08)" : "0 1px 2px rgba(0,0,0,0.40), 0 12px 32px rgba(0,0,0,0.32)",
+    "--mp-rowShadow": S.shadow,
     "--mp-chevron": chevron,
   };
   const MP_CSS = `
@@ -514,16 +629,18 @@ export default function MetaPanel({
     .mp-body::-webkit-scrollbar{width:12px;height:12px}
     .mp-body::-webkit-scrollbar-thumb{background:var(--mp-scroll);border-radius:99px;border:4px solid transparent;background-clip:padding-box}
     .mp-body::-webkit-scrollbar-thumb:hover{background:var(--mp-txt3)}
-    .mp-topbar{position:sticky;top:0;z-index:20;flex-shrink:0;padding-top:var(--safe-area-inset-top, env(safe-area-inset-top, 0px));background:var(--mp-topbar);backdrop-filter:saturate(180%) blur(24px);-webkit-backdrop-filter:saturate(180%) blur(24px);border-bottom:1px solid var(--mp-hairline)}
-    .mp-seg{display:inline-flex;gap:2px;padding:4px;border-radius:15px;background:var(--mp-seg-bg);border:1px solid var(--mp-hairline)}
+    .mp-topbar{position:sticky;top:0;z-index:20;flex-shrink:0;padding-top:var(--safe-area-inset-top, env(safe-area-inset-top, 0px));background:var(--mp-topbar);backdrop-filter:var(--mp-blur);-webkit-backdrop-filter:var(--mp-blur);box-shadow:inset 0 -0.5px 0 var(--mp-hairline),var(--mp-spec)}
+    .mp-seg{display:inline-flex;gap:2px;padding:3px;border-radius:14px;background:var(--mp-seg-bg);box-shadow:inset 0 0 0 0.5px var(--mp-hairline)}
     .mp-seg>button{appearance:none;-webkit-appearance:none;border:none;background:transparent;cursor:pointer;font-family:inherit;font-size:13.5px;font-weight:500;letter-spacing:-.015em;color:var(--mp-txt2);padding:9px 20px;border-radius:11px;white-space:nowrap;transition:color .2s ease,background .2s ease,box-shadow .2s ease}
     .mp-seg>button:hover{color:var(--mp-txt)}
-    .mp-seg>button[data-on="1"]{color:var(--mp-txt);background:var(--mp-seg-on);box-shadow:0 1px 3px rgba(0,0,0,.16),0 0 0 .5px rgba(255,255,255,.05)}
+    .mp-seg>button[data-on="1"]{color:var(--mp-txt);background:var(--mp-seg-on);box-shadow:0 0 0 0.5px var(--mp-hairline),0 1px 2px rgba(0,0,0,.12),0 3px 8px rgba(0,0,0,.10),var(--mp-spec)}
     .mp-edit{border-radius:6px;margin:0 -4px;padding:0 4px;transition:background .15s ease,box-shadow .15s ease;cursor:text}
     .mp-edit:hover{background:var(--mp-edit)}
-    .mp-edit:focus{background:var(--mp-edit);box-shadow:0 0 0 2px var(--mp-ring)}
-    .mp-row{transition:background .18s ease,border-color .18s ease,box-shadow .2s ease}
-    .mp-row:hover{border-color:var(--mp-borderH)!important;box-shadow:var(--mp-rowShadow)}
+    .mp-edit:focus{background:var(--mp-edit);box-shadow:0 0 0 3.5px var(--mp-ringSoft),0 0 0 1px var(--mp-accent)}
+    .mp-select:focus-visible,.mp-input:focus-visible,.mp-datechip:focus-visible,.mp-quickchip:focus-visible,.mp-calday:focus-visible,.mp-timebtn:focus-visible,.mp-seg>button:focus-visible{outline:none;box-shadow:0 0 0 3.5px var(--mp-ringSoft),0 0 0 1px var(--mp-accent)}
+    .mp-row{transition:background .22s cubic-bezier(.16,1,.3,1),border-color .22s ease,box-shadow .22s ease,transform .22s cubic-bezier(.16,1,.3,1)}
+    .mp-row:hover{border-color:var(--mp-lineS)!important;box-shadow:var(--mp-rowShadow);transform:translateY(-1px)}
+    .mp-row:active{transform:translateY(0)}
     .mp-grip{opacity:0;transition:opacity .16s ease}
     .mp-row:hover .mp-grip{opacity:.4}
     .mp-del{opacity:0;transition:opacity .16s ease}
@@ -541,18 +658,19 @@ export default function MetaPanel({
     .mp-input{transition:border-color .16s ease,box-shadow .16s ease,background-color .16s ease}
     .mp-input::placeholder{color:var(--mp-txt3);opacity:1}
     .mp-datechip{transition:transform .14s ease,background .16s ease,border-color .16s ease,box-shadow .16s ease,color .16s ease}
-    .mp-datechip:hover{transform:translateY(-1px);border-color:var(--mp-borderH)!important;box-shadow:0 10px 24px rgba(15,23,42,.08)}
+    .mp-datechip:hover{transform:translateY(-1px);border-color:var(--mp-lineS)!important;box-shadow:var(--mp-rowShadow)}
     .mp-datechip:active{transform:translateY(0) scale(.98)}
     .mp-due-popover{animation:mpPop .16s cubic-bezier(.16,1,.3,1) both}
     @keyframes mpPop{from{opacity:0}to{opacity:1}}
     .mp-calday,.mp-timebtn,.mp-iconbtn{transition:background .14s ease,border-color .14s ease,color .14s ease,transform .12s ease,box-shadow .14s ease}
-    .mp-calday:hover,.mp-timebtn:hover,.mp-iconbtn:hover{transform:translateY(-1px);border-color:var(--mp-accent)!important;box-shadow:0 10px 22px rgba(15,23,42,.10)}
+    .mp-calday:hover,.mp-timebtn:hover,.mp-iconbtn:hover{transform:translateY(-1px);border-color:var(--mp-accent)!important}
     .mp-calday:active,.mp-timebtn:active,.mp-iconbtn:active{transform:translateY(0) scale(.97)}
     .mp-quickchip{transition:background .14s ease,border-color .14s ease,color .14s ease,transform .14s ease}
     .mp-quickchip:hover{transform:translateY(-1px);border-color:var(--mp-accent)!important;color:var(--mp-accent)!important}
     .mp-ghost{transition:background .16s ease,border-color .16s ease,color .16s ease}
     .mp-fade{animation:mpFade .3s cubic-bezier(.16,1,.3,1) both}
     @keyframes mpFade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+    @media(prefers-reduced-motion:reduce){.mp,.mp-fade,.mp-due-popover{animation:none!important}.mp-row,.mp-datechip,.mp-calday,.mp-timebtn,.mp-quickchip,.mp-iconbtn{transition-duration:.01ms!important}.mp-row:hover,.mp-datechip:hover,.mp-calday:hover,.mp-timebtn:hover,.mp-quickchip:hover,.mp-iconbtn:hover{transform:none!important}}
     @media(max-width:768px){.mp-seg{display:grid;grid-template-columns:1fr 1fr;width:100%}.mp-mobilebody [style*="grid-template-columns"]{grid-template-columns:1fr!important}.mp-mobilebody [style*="min-width"]{min-width:0!important}}
   `;
 
@@ -632,7 +750,7 @@ export default function MetaPanel({
                 return (
                   <div style={{ display:"flex", alignItems:"flex-end", justifyContent:"space-between", gap:24, flexWrap:"wrap", marginBottom:26 }}>
                     <div>
-                      <h3 style={{ margin:0, fontSize:28, fontWeight:500, fontFamily:fontDisp, letterSpacing:"-0.01em", color:T.txt }}>
+                      <h3 style={{ margin:0, ...TY.title, color:T.txt }}>
                         Agenda personal y profesional
                       </h3>
                       <p style={{ margin:"8px 0 0", fontSize:14, color:T.txt3, fontFamily:font, letterSpacing:"0.01em" }}>
@@ -644,10 +762,13 @@ export default function MetaPanel({
                     </div>
                     {total > 0 && (
                       <div style={{ display:"flex", alignItems:"center", gap:12, minWidth:210, flex: isMobile ? "1 1 100%" : "0 1 300px" }}>
-                        <div style={{ flex:1, height:7, borderRadius:99, background: isLight?"rgba(15,23,42,0.07)":"rgba(255,255,255,0.07)", overflow:"hidden" }}>
-                          <div style={{ width:`${pct}%`, height:"100%", borderRadius:99, background:`linear-gradient(90deg, #0D9A76, ${T.accent})`, transition:"width .5s cubic-bezier(.16,1,.3,1)" }} />
+                        <div style={{ flex:1, height:7, borderRadius:99, background:S.line, overflow:"hidden" }}>
+                          {/* Un solo verde, plano. El degradado #0D9A76 → accent metía
+                              dos verdes en una barra de 7px: no se percibe como riqueza,
+                              se percibe como que el color no está decidido. */}
+                          <div style={{ width:`${pct}%`, height:"100%", borderRadius:99, background:T.accent, transition:"width .5s cubic-bezier(.16,1,.3,1)" }} />
                         </div>
-                        <span style={{ fontSize:13.5, fontWeight:500, fontFamily:fontDisp, color:T.txt2, whiteSpace:"nowrap", minWidth:38, textAlign:"right" }}>{pct}%</span>
+                        <span style={{ fontSize:13.5, fontWeight:500, fontFamily:fontDisp, ...TY.num, color:T.txt2, whiteSpace:"nowrap", minWidth:38, textAlign:"right" }}>{pct}%</span>
                       </div>
                     )}
                   </div>
@@ -673,25 +794,29 @@ export default function MetaPanel({
                         onClick={() => setAgendaView(id)}
                         style={{
                           minHeight:74,
-                          borderRadius:24,
+                          borderRadius:R.tile,
                           padding:"14px 16px",
                           display:"flex",
                           alignItems:"center",
                           gap:13,
                           textAlign:"left",
                           cursor:"pointer",
-                          border:`1px solid ${active ? _hex(T.accent,"58") : (isLight ? "rgba(15,23,42,0.075)" : "rgba(255,255,255,0.085)")}`,
-                          background:active
-                            ? `linear-gradient(135deg, ${_hex(T.accent,"16")}, ${isLight ? "rgba(255,255,255,0.82)" : "rgba(255,255,255,0.05)"})`
-                            : (isLight ? "rgba(255,255,255,0.68)" : "rgba(255,255,255,0.035)"),
-                          boxShadow:active ? `0 14px 34px ${_hex(T.accent,"14")}, inset 0 1px 0 rgba(255,255,255,0.48)` : "none",
+                          // Lo seleccionado se marca con LÍNEA y TEXTO en acento, no
+                          // con un degradado teñido: el fondo se queda en la misma
+                          // familia neutra que el resto y la pantalla no se mancha.
+                          border:`1px solid ${active ? _hex(T.accent,"55") : S.line}`,
+                          background: active ? S.card : S.row,
+                          // Canto de luz arriba + sombra de contacto y de ambiente.
+                          // Son los dos detalles que separan «un rectángulo con color
+                          // de fondo» de «un objeto apoyado sobre algo».
+                          boxShadow: active ? `${S.spec}, ${S.shadow}` : `${S.spec}, ${S.shadowRow}`,
                         }}
                       >
                         <span style={{
-                          width:42, height:42, borderRadius:17,
+                          width:42, height:42, borderRadius:R.icon,
                           display:"flex", alignItems:"center", justifyContent:"center",
                           color:active ? T.accent : T.txt3,
-                          background:active ? `${T.accent}14` : (isLight ? "rgba(15,23,42,0.045)" : "rgba(255,255,255,0.055)"),
+                          background:active ? `${T.accent}1A` : S.card,
                           flexShrink:0,
                         }}>
                           <Icon size={19} strokeWidth={2.05} />
@@ -704,9 +829,9 @@ export default function MetaPanel({
                           minWidth:34, height:28, padding:"0 10px", borderRadius:999,
                           display:"flex", alignItems:"center", justifyContent:"center",
                           color:active ? T.accent : T.txt2,
-                          background:active ? `${T.accent}12` : (isLight ? "rgba(15,23,42,0.045)" : "rgba(255,255,255,0.05)"),
+                          background:active ? `${T.accent}14` : S.card,
                           border:`1px solid ${active ? _hex(T.accent,"26") : "transparent"}`,
-                          fontSize:12.5, fontWeight:500, fontFamily:fontDisp,
+                          fontSize:12.5, fontWeight:500, fontFamily:fontDisp, ...TY.num,
                         }}>
                           {count}
                         </span>
@@ -728,23 +853,23 @@ export default function MetaPanel({
               }}>
                 <div style={{
                   minHeight:118,
-                  borderRadius:30,
+                  borderRadius:R.card,
                   padding:14,
-                  background:isLight
-                    ? "linear-gradient(180deg, rgba(255,255,255,0.92), rgba(255,255,255,0.72))"
-                    : "linear-gradient(180deg, rgba(255,255,255,0.055), rgba(255,255,255,0.028))",
-                  border:`1px solid ${metaNewText ? _hex(T.accent,"70") : (isLight ? "rgba(15,23,42,0.08)" : "rgba(255,255,255,0.085)")}`,
+                  // Fondo PLANO. El degradado vertical (0.055 → 0.028) ponía dos
+                  // grises distintos en la misma tarjeta: arriba una cosa, abajo
+                  // otra. Una superficie sólida se lee como un objeto, no como un
+                  // efecto — y de paso desaparecen dos tonos del inventario.
+                  background:S.card,
+                  border:`1px solid ${metaNewText ? _hex(T.accent,"70") : S.line}`,
                   boxShadow: metaNewText
-                    ? `0 0 0 1px ${_hex(T.accent,"22")}, 0 18px 48px ${_hex(T.accent,"12")}`
-                    : (isLight ? "0 20px 55px rgba(15,23,42,0.075), inset 0 1px 0 rgba(255,255,255,0.75)" : "inset 0 1px 0 rgba(255,255,255,0.055)"),
-                  backdropFilter:"saturate(180%) blur(22px)",
-                  WebkitBackdropFilter:"saturate(180%) blur(22px)",
+                    ? `0 0 0 3.5px ${ringSoft}, ${S.spec}, ${S.shadow}`
+                    : `${S.spec}, ${S.shadow}`,
                 }}>
                   <label style={{ display:"flex", alignItems:"center", gap:13, minHeight:48 }}>
                     <span style={{
-                      width:34, height:34, borderRadius:14, flexShrink:0,
+                      width:34, height:34, borderRadius:R.icon, flexShrink:0,
                       display:"flex", alignItems:"center", justifyContent:"center",
-                      background: metaNewText ? `${T.accent}18` : (isLight ? "rgba(15,23,42,0.045)" : "rgba(255,255,255,0.055)"),
+                      background: metaNewText ? `${T.accent}1A` : S.inset,
                       color: metaNewText ? T.accent : T.txt3,
                     }}>
                       <Plus size={18} strokeWidth={2.35} />
@@ -766,7 +891,7 @@ export default function MetaPanel({
                   <div style={{
                     display:"flex", alignItems:"center", gap:8, flexWrap:"wrap",
                     marginTop:12, paddingTop:12,
-                    borderTop:`1px solid ${isLight ? "rgba(15,23,42,0.06)" : "rgba(255,255,255,0.065)"}`,
+                    borderTop:`1px solid ${S.line}`,
                   }}>
                     <select
                       className="mp-select"
@@ -779,8 +904,8 @@ export default function MetaPanel({
                       title="Tipo de agenda"
                       style={{
                         height:36, borderRadius:999, padding:"0 30px 0 13px",
-                        background:isLight ? "rgba(248,250,252,0.92)" : "rgba(255,255,255,0.052)",
-                        border:`1px solid ${isLight ? "rgba(15,23,42,0.075)" : "rgba(255,255,255,0.085)"}`,
+                        background:S.inset,
+                        border:`1px solid ${S.line}`,
                         color:T.txt2, fontSize:12.5, fontWeight:500, fontFamily:fontDisp,
                         outline:"none", cursor:"pointer",
                       }}
@@ -796,8 +921,8 @@ export default function MetaPanel({
                         style={{
                           height:36, maxWidth:isMobile ? "100%" : 280,
                           borderRadius:999, padding:"0 30px 0 13px",
-                          background:isLight ? "rgba(248,250,252,0.92)" : "rgba(255,255,255,0.052)",
-                          border:`1px solid ${metaNewAssignee ? _hex(T.accent,"45") : (isLight ? "rgba(15,23,42,0.075)" : "rgba(255,255,255,0.085)")}`,
+                          background:S.inset,
+                          border:`1px solid ${metaNewAssignee ? _hex(T.accent,"45") : S.line}`,
                           color:metaNewAssignee ? T.txt2 : T.txt3,
                           fontSize:12.5, fontWeight:500, fontFamily:font,
                           outline:"none", cursor:"pointer",
@@ -814,7 +939,7 @@ export default function MetaPanel({
                         height:36, maxWidth:isMobile ? "100%" : 280,
                         borderRadius:999, padding:"0 13px",
                         display:"inline-flex", alignItems:"center", gap:8,
-                        background:isLight ? "rgba(248,250,252,0.92)" : "rgba(255,255,255,0.052)",
+                        background:S.inset,
                         border:`1px solid ${_hex(T.accent,"35")}`,
                         color:T.txt2,
                         fontSize:12.5, fontWeight:500, fontFamily:font,
@@ -834,16 +959,12 @@ export default function MetaPanel({
                   overflow:"visible", display:"flex", flexDirection:"column", justifyContent:"space-between",
                   minHeight:118,
                   padding:12,
-                  borderRadius:30,
-                  background:isLight
-                    ? "linear-gradient(180deg, rgba(255,255,255,0.90), rgba(255,255,255,0.68))"
-                    : "linear-gradient(180deg, rgba(255,255,255,0.055), rgba(255,255,255,0.026))",
-                  border:`1px solid ${metaNewDate ? _hex(T.accent,"58") : (isLight ? "rgba(15,23,42,0.08)" : "rgba(255,255,255,0.085)")}`,
+                  borderRadius:R.card,
+                  background:S.card,
+                  border:`1px solid ${metaNewDate ? _hex(T.accent,"58") : S.line}`,
                   boxShadow: metaNewDate
-                    ? `0 0 0 1px ${_hex(T.accent,"18")}, 0 18px 48px ${_hex(T.accent,"10")}`
-                    : (isLight ? "0 20px 55px rgba(15,23,42,0.075), inset 0 1px 0 rgba(255,255,255,0.75)" : "inset 0 1px 0 rgba(255,255,255,0.055)"),
-                  backdropFilter:"saturate(180%) blur(22px)",
-                  WebkitBackdropFilter:"saturate(180%) blur(22px)",
+                    ? `0 0 0 3.5px ${ringSoft}, ${S.spec}, ${S.shadow}`
+                    : `${S.spec}, ${S.shadow}`,
                 }}>
                   <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
                     <button
@@ -851,8 +972,8 @@ export default function MetaPanel({
                       className="mp-datechip"
                       onClick={() => openDuePicker("date")}
                       style={{
-                        height:54, borderRadius:18, border:`1px solid ${duePickerOpen === "date" || selectedDueDate ? _hex(T.accent,"58") : (isLight ? "rgba(15,23,42,0.075)" : "rgba(255,255,255,0.085)")}`,
-                        background: duePickerOpen === "date" || selectedDueDate ? `${T.accent}11` : (isLight?"rgba(248,250,252,0.82)":"rgba(255,255,255,0.045)"),
+                        height:54, borderRadius:14, border:`1px solid ${duePickerOpen === "date" || selectedDueDate ? _hex(T.accent,"58") : S.line}`,
+                        background: duePickerOpen === "date" || selectedDueDate ? `${T.accent}14` : S.inset,
                         color: selectedDueDate ? T.txt : T.txt2, cursor:"pointer", fontFamily:fontDisp,
                         display:"flex", alignItems:"center", justifyContent:"center", gap:9,
                         fontSize:15, fontWeight:500, letterSpacing:"0.02em",
@@ -866,8 +987,8 @@ export default function MetaPanel({
                       className="mp-datechip"
                       onClick={() => openDuePicker("time")}
                       style={{
-                        height:54, borderRadius:18, border:`1px solid ${duePickerOpen === "time" || selectedDueTime ? _hex(T.accent,"58") : (isLight ? "rgba(15,23,42,0.075)" : "rgba(255,255,255,0.085)")}`,
-                        background: duePickerOpen === "time" || selectedDueTime ? `${T.accent}11` : (isLight?"rgba(248,250,252,0.82)":"rgba(255,255,255,0.045)"),
+                        height:54, borderRadius:14, border:`1px solid ${duePickerOpen === "time" || selectedDueTime ? _hex(T.accent,"58") : S.line}`,
+                        background: duePickerOpen === "time" || selectedDueTime ? `${T.accent}14` : S.inset,
                         color: selectedDueTime ? T.txt : T.txt2, cursor:"pointer", fontFamily:fontDisp,
                         display:"flex", alignItems:"center", justifyContent:"center", gap:9,
                         fontSize:15, fontWeight:500, letterSpacing:"0.02em",
@@ -893,10 +1014,10 @@ export default function MetaPanel({
                           className="mp-quickchip"
                           onClick={() => { setActionDueDate(value); setCalendarMonth(new Date(`${value}T12:00:00`)); }}
                           style={{
-                            border:`1px solid ${selectedDueDate === value ? _hex(T.accent,"58") : (isLight ? "rgba(15,23,42,0.07)" : "rgba(255,255,255,0.08)")}`,
-                            background:selectedDueDate === value ? `${T.accent}16` : (isLight ? "rgba(15,23,42,0.045)" : "rgba(255,255,255,0.05)"),
+                            border:`1px solid ${selectedDueDate === value ? _hex(T.accent,"58") : S.line}`,
+                            background:selectedDueDate === value ? `${T.accent}14` : S.inset,
                             color:selectedDueDate === value ? T.accent : T.txt2,
-                            borderRadius:13, padding:"9px 14px", fontSize:12.5, fontWeight:400,
+                            borderRadius:R.ctrl, padding:"9px 14px", fontSize:12.5, fontWeight:400,
                             fontFamily:fontDisp, cursor:"pointer", letterSpacing:"-0.01em",
                           }}
                         >
@@ -912,10 +1033,10 @@ export default function MetaPanel({
                           className="mp-quickchip"
                           onClick={() => setActionDueTime(timeValue)}
                           style={{
-                            border:`1px solid ${selectedDueTime === timeValue ? _hex(T.accent,"58") : (isLight ? "rgba(15,23,42,0.07)" : "rgba(255,255,255,0.08)")}`,
-                            background:selectedDueTime === timeValue ? `${T.accent}16` : (isLight ? "rgba(15,23,42,0.045)" : "rgba(255,255,255,0.05)"),
+                            border:`1px solid ${selectedDueTime === timeValue ? _hex(T.accent,"58") : S.line}`,
+                            background:selectedDueTime === timeValue ? `${T.accent}14` : S.inset,
                             color:selectedDueTime === timeValue ? T.accent : T.txt2,
-                            borderRadius:13, padding:"9px 14px", fontSize:12.5, fontWeight:400,
+                            borderRadius:R.ctrl, padding:"9px 14px", fontSize:12.5, fontWeight:400,
                             fontFamily:fontDisp, cursor:"pointer", letterSpacing:"-0.01em",
                           }}
                         >
@@ -939,12 +1060,16 @@ export default function MetaPanel({
                         zIndex:120,
                         marginTop:0,
                         padding:14,
-                        borderRadius:24,
-                        background:isLight ? "#FFFFFF" : "#0D121D",
-                        border:`1px solid ${isLight ? "rgba(15,23,42,0.10)" : "rgba(255,255,255,0.12)"}`,
-                        boxShadow:isLight ? "0 30px 80px rgba(15,23,42,0.24), 0 2px 8px rgba(15,23,42,0.10)" : "0 34px 90px rgba(0,0,0,0.62), inset 0 1px 0 rgba(255,255,255,0.05)",
-                        backdropFilter:"none",
-                        WebkitBackdropFilter:"none",
+                        borderRadius:R.card,
+                        // El calendario flota SOBRE las tarjetas: acá el vidrio sí
+                        // tiene qué difuminar, así que es translúcido de verdad y no
+                        // un panel opaco (#0D121D) con `backdropFilter:"none"`, que
+                        // era pedir un material y después apagarlo.
+                        background:isLight ? "rgba(255,255,255,0.86)" : "rgba(16,22,34,0.82)",
+                        border:`1px solid ${S.line}`,
+                        boxShadow:`${S.spec}, ${S.shadowPop}`,
+                        backdropFilter:"saturate(180%) blur(40px)",
+                        WebkitBackdropFilter:"saturate(180%) blur(40px)",
                       }}
                     >
                       {duePickerOpen === "date" ? (
@@ -955,7 +1080,7 @@ export default function MetaPanel({
                               className="mp-iconbtn"
                               onClick={() => moveCalendarMonth(-1)}
                               title="Mes anterior"
-                              style={{ width:34, height:34, borderRadius:12, border:`1px solid ${T.border}`, background:isLight?"rgba(15,23,42,0.035)":"rgba(255,255,255,0.055)", color:T.txt2, display:"flex", alignItems:"center", justifyContent:"center", cursor:"pointer" }}
+                              style={{ width:34, height:34, borderRadius:12, border:`1px solid ${T.border}`, background:S.inset, color:T.txt2, display:"flex", alignItems:"center", justifyContent:"center", cursor:"pointer" }}
                             >
                               <ChevronLeft size={16} />
                             </button>
@@ -968,7 +1093,7 @@ export default function MetaPanel({
                               className="mp-iconbtn"
                               onClick={() => moveCalendarMonth(1)}
                               title="Mes siguiente"
-                              style={{ width:34, height:34, borderRadius:12, border:`1px solid ${T.border}`, background:isLight?"rgba(15,23,42,0.035)":"rgba(255,255,255,0.055)", color:T.txt2, display:"flex", alignItems:"center", justifyContent:"center", cursor:"pointer" }}
+                              style={{ width:34, height:34, borderRadius:12, border:`1px solid ${T.border}`, background:S.inset, color:T.txt2, display:"flex", alignItems:"center", justifyContent:"center", cursor:"pointer" }}
                             >
                               <ChevronRight size={16} />
                             </button>
@@ -994,7 +1119,7 @@ export default function MetaPanel({
                                     height:34,
                                     borderRadius:11,
                                     border:`1px solid ${isSelected ? `${T.accent}88` : isToday ? `${T.accent}35` : "transparent"}`,
-                                    background:isSelected ? `linear-gradient(135deg, ${T.accent}, #0D9A76)` : isToday ? `${T.accent}10` : "transparent",
+                                    background:isSelected ? T.accent : isToday ? `${T.accent}14` : "transparent",
                                     color:isSelected ? "#041016" : inMonth ? T.txt : T.txt3,
                                     opacity:inMonth ? 1 : 0.38,
                                     fontSize:13,
@@ -1012,8 +1137,8 @@ export default function MetaPanel({
                             <label style={{
                               display:"flex", alignItems:"center", gap:8,
                               minHeight:36, borderRadius:13, padding:"0 11px",
-                              border:`1px solid ${isLight ? "rgba(15,23,42,0.10)" : "rgba(255,255,255,0.10)"}`,
-                              background:isLight ? "rgba(248,250,252,0.88)" : "rgba(255,255,255,0.045)",
+                              border:`1px solid ${S.line}`,
+                              background:S.inset,
                               color:T.txt2, fontSize:12, fontWeight:500, fontFamily:fontDisp,
                             }}>
                               Fecha exacta
@@ -1034,7 +1159,7 @@ export default function MetaPanel({
                                 }}
                               />
                             </label>
-                            <button type="button" onClick={() => { const today = localYmd(new Date()); setCalendarMonth(new Date(`${today}T12:00:00`)); setActionDueDate(today); setDuePickerOpen("time"); }} className="mp-quickchip" style={{ border:`1px solid ${T.border}`, background:isLight?"rgba(15,23,42,0.035)":"rgba(255,255,255,0.045)", color:T.txt2, borderRadius:99, padding:"7px 11px", fontSize:12, fontWeight:500, fontFamily:fontDisp, cursor:"pointer" }}>Hoy</button>
+                            <button type="button" onClick={() => { const today = localYmd(new Date()); setCalendarMonth(new Date(`${today}T12:00:00`)); setActionDueDate(today); setDuePickerOpen("time"); }} className="mp-quickchip" style={{ border:`1px solid ${T.border}`, background:S.inset, color:T.txt2, borderRadius:99, padding:"7px 11px", fontSize:12, fontWeight:500, fontFamily:fontDisp, cursor:"pointer" }}>Hoy</button>
                             <button type="button" onClick={clearActionDue} className="mp-quickchip" style={{ border:"1px solid transparent", background:"transparent", color:T.txt3, borderRadius:99, padding:"7px 11px", fontSize:12, fontWeight:500, fontFamily:fontDisp, cursor:"pointer" }}>Limpiar</button>
                           </div>
                         </>
@@ -1045,7 +1170,7 @@ export default function MetaPanel({
                               <p style={{ margin:0, fontSize:14.5, fontWeight:500, fontFamily:fontDisp, color:T.txt, letterSpacing:"-0.02em" }}>Horario</p>
                               <p style={{ margin:"2px 0 0", fontSize:11.5, fontFamily:font, color:T.txt3 }}>{dateChipLabel(selectedDueDate)} · recordatorio automático</p>
                             </div>
-                            <button type="button" onClick={() => setDuePickerOpen("date")} className="mp-quickchip" style={{ border:`1px solid ${T.border}`, background:isLight?"rgba(15,23,42,0.035)":"rgba(255,255,255,0.045)", color:T.txt2, borderRadius:99, padding:"7px 11px", fontSize:12, fontWeight:500, fontFamily:fontDisp, cursor:"pointer" }}>Cambiar fecha</button>
+                            <button type="button" onClick={() => setDuePickerOpen("date")} className="mp-quickchip" style={{ border:`1px solid ${T.border}`, background:S.inset, color:T.txt2, borderRadius:99, padding:"7px 11px", fontSize:12, fontWeight:500, fontFamily:fontDisp, cursor:"pointer" }}>Cambiar fecha</button>
                           </div>
                           <div style={{ marginBottom:10 }}>
                             {/* Reloj custom con steppers — reemplaza al picker nativo
@@ -1056,8 +1181,8 @@ export default function MetaPanel({
                               const committed = !!selectedDueTime;
                               const stepBtn = {
                                 width:44, height:28, borderRadius:10,
-                                border:`1px solid ${isLight ? "rgba(15,23,42,0.10)" : "rgba(255,255,255,0.10)"}`,
-                                background:isLight ? "rgba(15,23,42,0.035)" : "rgba(255,255,255,0.05)",
+                                border:`1px solid ${S.line}`,
+                                background:S.inset,
                                 color:T.accent, display:"flex", alignItems:"center", justifyContent:"center",
                                 cursor:"pointer", padding:0,
                               };
@@ -1072,12 +1197,12 @@ export default function MetaPanel({
                                 <div style={{
                                   display:"grid", gridTemplateColumns:isMobile ? "1fr" : "1fr auto",
                                   alignItems:"center", gap:14, minHeight:74, borderRadius:20, padding:"14px 16px",
-                                  border:`1px solid ${committed ? _hex(T.accent,"62") : (isLight ? "rgba(15,23,42,0.10)" : "rgba(255,255,255,0.10)")}`,
-                                  background:committed ? `${T.accent}10` : (isLight ? "rgba(248,250,252,0.94)" : "rgba(255,255,255,0.048)"),
+                                  border:`1px solid ${committed ? _hex(T.accent,"62") : S.line}`,
+                                  background:committed ? `${T.accent}14` : S.inset,
                                   boxShadow:committed ? `inset 0 0 0 1px ${_hex(T.accent,"18")}` : "none",
                                 }}>
                                   <span style={{ display:"flex", alignItems:"center", gap:10, minWidth:0 }}>
-                                    <span style={{ width:38, height:38, borderRadius:12, flexShrink:0, display:"flex", alignItems:"center", justifyContent:"center", background:committed ? `${T.accent}1E` : (isLight ? "rgba(15,23,42,0.05)" : "rgba(255,255,255,0.06)"), border:`1px solid ${committed ? _hex(T.accent,"3A") : "transparent"}` }}>
+                                    <span style={{ width:38, height:38, borderRadius:12, flexShrink:0, display:"flex", alignItems:"center", justifyContent:"center", background:committed ? `${T.accent}1E` : S.inset, border:`1px solid ${committed ? _hex(T.accent,"3A") : "transparent"}` }}>
                                       <Clock size={19} color={committed ? T.accent : T.txt3} strokeWidth={2.25} />
                                     </span>
                                     <span style={{ display:"flex", flexDirection:"column", gap:3, minWidth:0 }}>
@@ -1104,7 +1229,7 @@ export default function MetaPanel({
                                 const on = baseDueTime().slice(3, 5) === pad2(mm);
                                 return (
                                   <button key={mm} type="button" className="mp-quickchip" onClick={() => setDueMinute(mm)}
-                                    style={{ border:`1px solid ${on ? _hex(T.accent,"58") : T.border}`, background:on ? `${T.accent}16` : (isLight ? "rgba(15,23,42,0.035)" : "rgba(255,255,255,0.045)"), color:on ? T.accent : T.txt2, borderRadius:99, padding:"7px 11px", fontSize:12, fontWeight:500, fontFamily:fontDisp, fontVariantNumeric:"tabular-nums", cursor:"pointer" }}>
+                                    style={{ border:`1px solid ${on ? _hex(T.accent,"58") : S.line}`, background:on ? `${T.accent}14` : S.inset, color:on ? T.accent : T.txt2, borderRadius:99, padding:"7px 11px", fontSize:12, fontWeight:500, fontFamily:fontDisp, fontVariantNumeric:"tabular-nums", cursor:"pointer" }}>
                                     :{pad2(mm)}
                                   </button>
                                 );
@@ -1124,7 +1249,7 @@ export default function MetaPanel({
                                     minHeight:40,
                                     borderRadius:13,
                                     border:`1px solid ${isSelected ? `${T.accent}88` : T.border}`,
-                                    background:isSelected ? `linear-gradient(135deg, ${T.accent}, #0D9A76)` : isLight ? "rgba(15,23,42,0.035)" : "rgba(255,255,255,0.045)",
+                                    background:isSelected ? T.accent : S.inset,
                                     color:isSelected ? "#041016" : T.txt,
                                     fontSize:13,
                                     fontWeight:500,
@@ -1157,12 +1282,12 @@ export default function MetaPanel({
                         {missingAssignee ? "Elegí a quién se asigna arriba" : (metaNewDate ? "Listo para agregar" : "Poné fecha y hora — o registralo sin fecha")}
                       </span>
                       <button type="button" onClick={() => createAction({ noDate: true })} disabled={missingAssignee}
-                        style={{ display:"inline-flex", alignItems:"center", gap:7, padding:"12px 18px", borderRadius:16, cursor: missingAssignee ? "default" : "pointer", border:`1px solid ${isLight ? "rgba(15,23,42,0.12)" : "rgba(255,255,255,0.14)"}`, background:"transparent", color: missingAssignee ? T.txt3 : T.txt2, fontSize:14, fontWeight:500, fontFamily:fontDisp, letterSpacing:"-0.01em", opacity: missingAssignee ? 0.5 : 1, transition:"background 0.16s, border-color 0.16s" }}
-                        onMouseEnter={e => { if(!missingAssignee){ e.currentTarget.style.background = isLight ? "rgba(15,23,42,0.04)" : "rgba(255,255,255,0.05)"; } }}
+                        style={{ display:"inline-flex", alignItems:"center", gap:7, padding:"12px 18px", borderRadius:16, cursor: missingAssignee ? "default" : "pointer", border:`1px solid ${S.lineS}`, background:"transparent", color: missingAssignee ? T.txt3 : T.txt2, fontSize:14, fontWeight:500, fontFamily:fontDisp, letterSpacing:"-0.01em", opacity: missingAssignee ? 0.5 : 1, transition:"background 0.16s, border-color 0.16s" }}
+                        onMouseEnter={e => { if(!missingAssignee){ e.currentTarget.style.background = S.inset; } }}
                         onMouseLeave={e => { e.currentTarget.style.background = "transparent"; }}
                       >Registrar sin fecha</button>
                       <button type="button" onClick={() => createAction()} disabled={!canAdd}
-                        style={{ display:"inline-flex", alignItems:"center", gap:8, padding:"12px 22px", borderRadius:16, border: canAdd ? (isLight ? "1px solid transparent" : `1px solid ${T.accentB}`) : "1px solid transparent", cursor: canAdd ? "pointer" : "default", background: !canAdd ? (isLight?"rgba(15,23,42,0.055)":"rgba(255,255,255,0.06)") : (isLight ? `linear-gradient(135deg, ${T.accent}, ${T.emerald})` : "linear-gradient(135deg, rgba(110,231,194,0.16), rgba(110,231,194,0.07))"), color: !canAdd ? T.txt3 : (isLight ? "#FFFFFF" : T.accent), fontSize:14.5, fontWeight:500, fontFamily:fontDisp, letterSpacing:"-0.02em", boxShadow: canAdd && isLight ? `0 4px 14px ${_hex(T.accent,"40")}` : "none", transition:"background 0.16s, box-shadow 0.16s, transform 0.12s" }}
+                        style={{ display:"inline-flex", alignItems:"center", gap:8, padding:"12px 22px", borderRadius:16, border: canAdd ? (isLight ? "1px solid transparent" : `1px solid ${T.accentB}`) : "1px solid transparent", cursor: canAdd ? "pointer" : "default", background: !canAdd ? S.inset : (isLight ? T.accent : `${T.accent}20`), color: !canAdd ? T.txt3 : (isLight ? "#FFFFFF" : T.accent), fontSize:14.5, fontWeight:500, fontFamily:fontDisp, letterSpacing:"-0.02em", boxShadow: canAdd && isLight ? `0 4px 14px ${_hex(T.accent,"40")}` : "none", transition:"background 0.16s, box-shadow 0.16s, transform 0.12s" }}
                         onMouseDown={e => { if(canAdd) e.currentTarget.style.transform="scale(0.97)"; }}
                         onMouseUp={e => { e.currentTarget.style.transform="scale(1)"; }}
                         onMouseLeave={e => { e.currentTarget.style.transform="scale(1)"; }}
@@ -1194,11 +1319,18 @@ export default function MetaPanel({
               }).map((a, index, arr) => {
                 const isUrgent = a.priority==="urgente" || a.date?.toLowerCase().includes("hoy");
                 const isHigh   = !isUrgent && (a.priority==="alto" || a.date?.toLowerCase().includes("mañana") || a.date?.toLowerCase().includes("semana"));
-                const prioColor = isUrgent ? "#EF4444" : isHigh ? "#F59E0B" : T.txt2;
+                // Antes: rojo (Urgente) + ámbar (Alto) + gris (Normal) = tres matices
+                // compitiendo en cada fila. Ahora sólo interrumpe lo urgente; "Alto" se
+                // distingue por PESO de texto, que es jerarquía sin gastar un color.
+                const prioColor = isUrgent ? ALERT : T.txt2;
                 const prioNext = a.priority==="normal" ? "alto" : a.priority==="alto" ? "urgente" : "normal";
-                const prioDot  = isUrgent ? "#EF4444" : isHigh ? "#F59E0B" : (isLight?"#94A3B8":"#64748B");
+                const prioDot  = isUrgent ? ALERT : (isHigh ? T.txt2 : T.txt3);
                 const prioLabel = a.priority==="urgente" ? "Urgente" : a.priority==="alto" ? "Alto" : "Normal";
                 const categoryMeta = agendaCategoryMeta(a.agendaCategory || a.category || a.lead);
+                // Personal llevaba verde #10B981 y Profesional azul #3B82F6: dos colores
+                // para una diferencia que la etiqueta ya dice con todas sus letras. Queda
+                // el punto — acento de marca para Personal, neutro para Profesional.
+                const catColor = categoryMeta.id === "personal" ? T.accent : T.txt3;
                 const previousCategory = index > 0 ? normalizeAgendaCategory(arr[index - 1].agendaCategory || arr[index - 1].category || arr[index - 1].lead) : null;
                 const showCategoryHeader = index === 0 || previousCategory !== categoryMeta.id;
                 const countInCategory = arr.filter(x => normalizeAgendaCategory(x.agendaCategory || x.category || x.lead) === categoryMeta.id).length;
@@ -1206,15 +1338,15 @@ export default function MetaPanel({
                   <span style={{
                     display:"inline-flex", alignItems:"center", gap:6,
                     padding:"4px 9px", borderRadius:99,
-                    background:`${categoryMeta.accent}12`,
-                    border:`1px solid ${categoryMeta.accent}28`,
-                    color:categoryMeta.accent,
+                    background:"transparent",
+                    border:`1px solid ${S.line}`,
+                    color:T.txt2,
                     fontSize:12,
                     fontWeight:500,
                     fontFamily:fontDisp,
                     letterSpacing:"-0.01em",
                   }}>
-                    <span style={{ width:6, height:6, borderRadius:"50%", background:categoryMeta.accent }} />
+                    <span style={{ width:6, height:6, borderRadius:"50%", background:catColor }} />
                     {categoryMeta.label}
                   </span>
                 );
@@ -1229,7 +1361,7 @@ export default function MetaPanel({
                 );
                 const titleEl = (
                   <E val={a.text} onSave={v => setMetaActions(p => p.map(x => x.id===a.id ? {...x,text:v} : x))}
-                    style={{ fontSize:16.5, fontWeight:400, color:T.txt, fontFamily:font, lineHeight:1.35, letterSpacing:"-0.014em" }} />
+                    style={{ ...TY.body, color:T.txt, lineHeight:1.35 }} />
                 );
                 const metaEl = (
                   <div style={{ display:"flex", alignItems:"center", gap:7, flexWrap:"wrap" }}>
@@ -1245,9 +1377,9 @@ export default function MetaPanel({
                     title="Cambiar prioridad"
                     style={{
                       display:"inline-flex", alignItems:"center", gap:6,
-                      fontSize:12.5, fontWeight:400, fontFamily:font,
-                      color:prioColor, background:`${prioDot}12`,
-                      border:`1px solid ${prioDot}2E`, borderRadius:99,
+                      fontSize:12.5, fontWeight:isHigh ? 500 : 400, fontFamily:font,
+                      color:prioColor, background: isUrgent ? `${ALERT}14` : "transparent",
+                      border:`1px solid ${isUrgent ? `${ALERT}38` : S.line}`, borderRadius:99,
                       padding:"6px 12px 6px 10px", cursor:"pointer",
                       letterSpacing:"0.01em", transition:"background 0.15s, border 0.15s",
                     }}>
@@ -1272,9 +1404,13 @@ export default function MetaPanel({
                     style={{
                       fontSize:12.5, fontFamily:font, fontWeight:500,
                       color: a.assignee ? T.txt2 : T.txt3,
-                      background: isLight ? "rgba(15,23,42,0.035)" : "rgba(255,255,255,0.045)",
-                      border:`1px solid ${a.assignee ? T.accentB : T.border}`,
-                      borderRadius:10, padding:"7px 12px",
+                      background:"transparent",
+                      // Con responsable puesto se marca con una línea NEUTRA más
+                      // firme, no con el acento: si el verde aparece en las diez
+                      // filas deja de querer decir "esto está activo" y se vuelve
+                      // decoración. El acento se guarda para el estado real.
+                      border:`1px solid ${a.assignee ? S.lineS : S.line}`,
+                      borderRadius:R.ctrlSm, padding:"7px 12px",
                       cursor:"pointer", outline:"none", maxWidth: isMobile ? 200 : 190,
                     }}
                   >
@@ -1294,10 +1430,10 @@ export default function MetaPanel({
                     title="Próximamente — Asignación directa a iAgents IA"
                     style={{
                       display:"flex", alignItems:"center", gap:5,
-                      padding:"7px 12px", borderRadius:10,
-                      border:`1px solid ${T.blue}28`,
-                      background:`${T.blue}07`,
-                      color:T.blue, fontSize:12, fontFamily:font, fontWeight:400,
+                      padding:"7px 12px", borderRadius:R.ctrlSm,
+                      border:`1px solid ${S.line}`,
+                      background:"transparent",
+                      color:T.txt3, fontSize:12, fontFamily:font, fontWeight:400,
                       cursor:"not-allowed", opacity:0.4,
                     }}
                   >
@@ -1311,9 +1447,10 @@ export default function MetaPanel({
                       fontSize:12.5,
                       fontWeight:400,
                       fontFamily:fontDisp,
+                      ...TY.num,
                       color:prioColor,
-                      background:`${prioColor}14`,
-                      border:`1px solid ${prioColor}28`,
+                      background: isUrgent ? `${ALERT}14` : "transparent",
+                      border:`1px solid ${isUrgent ? `${ALERT}38` : S.line}`,
                       padding:"6px 14px",
                       borderRadius:99,
                       whiteSpace:"nowrap",
@@ -1334,14 +1471,14 @@ export default function MetaPanel({
                         display:"flex", alignItems:"center", gap:10,
                         margin:index === 0 ? "2px 0 12px" : "26px 0 12px",
                       }}>
-                        <div style={{ width:9, height:9, borderRadius:"50%", background:categoryMeta.accent, boxShadow:`0 0 0 5px ${categoryMeta.accent}12` }} />
-                        <h4 style={{ margin:0, fontSize:15, fontWeight:400, fontFamily:fontDisp, color:T.txt, letterSpacing:"-0.005em" }}>
+                        <div style={{ width:9, height:9, borderRadius:"50%", background:catColor }} />
+                        <h4 style={{ margin:0, ...TY.section, color:T.txt }}>
                           Agenda {categoryMeta.label}
                         </h4>
                         <span style={{ fontSize:12, fontFamily:font, color:T.txt3 }}>
                           {countInCategory} pendiente{countInCategory !== 1 ? "s" : ""}
                         </span>
-                        <div style={{ flex:1, height:1, background:T.border }} />
+                        <div style={{ flex:1, height:1, background:S.line }} />
                       </div>
                     )}
                   <div
@@ -1377,12 +1514,18 @@ export default function MetaPanel({
                     style={{
                       position:"relative",
                       padding: isMobile ? "14px 16px" : "16px 18px",
-                      borderRadius:18, marginBottom:10,
-                      background: isUrgent
-                        ? (isLight?"rgba(239,68,68,0.045)":"rgba(239,68,68,0.05)")
-                        : (isLight?"#FFFFFF":"rgba(255,255,255,0.028)"),
-                      border:`1px solid ${isUrgent ? "rgba(239,68,68,0.20)" : T.border}`,
-                      boxShadow: isLight ? "0 1px 2px rgba(15,23,42,0.05)" : "none",
+                      borderRadius:R.row, marginBottom:8,
+                      // El MISMO 6% de rojo no pesa igual en los dos temas: sobre
+                      // negro se hunde y sobre blanco grita. En claro va a la mitad.
+                      background: isUrgent ? `${ALERT}${isLight ? "0A" : "0F"}` : S.row,
+                      border:`1px solid ${isUrgent ? `${ALERT}${isLight ? "26" : "30"}` : S.line}`,
+                      // SIN backdrop-filter a propósito: la lista puede traer
+                      // decenas de filas y cada blur es una capa que el navegador
+                      // compone aparte — es de las propiedades más caras que hay.
+                      // Además la fila se apoya en el lienzo plano, así que no
+                      // tendría nada que difuminar: sería el costo sin el efecto.
+                      // El material acá lo dan el tinte, el canto de luz y la sombra.
+                      boxShadow:`${S.spec}, ${S.shadowRow}`,
                     }}
                   >
                     {isMobile ? (
@@ -1443,20 +1586,23 @@ export default function MetaPanel({
                   <button
                     onClick={() => setDoneCollapsed(x => !x)}
                     style={{ display:"flex", alignItems:"center", gap:8, background:"none", border:"none", cursor:"pointer", padding:"8px 0", width:"100%" }}>
-                    <div style={{ flex:1, height:1, background:T.border }} />
+                    <div style={{ flex:1, height:1, background:S.line }} />
                     <span style={{ fontSize:12.5, fontWeight:400, color:T.txt3, fontFamily:font, whiteSpace:"nowrap", display:"flex", alignItems:"center", gap:6 }}>
                       <Check size={12} color={T.accent} />
                       {completedAgendaActions.length} completadas
                       <span style={{ fontSize:11.5, opacity:0.6 }}>{doneCollapsed ? "▸ ver" : "▾ ocultar"}</span>
                     </span>
-                    <div style={{ flex:1, height:1, background:T.border }} />
+                    <div style={{ flex:1, height:1, background:S.line }} />
                   </button>
                   {!doneCollapsed && completedAgendaActions.map(a => (
                     <div key={a.id} style={{
                       display:"flex", alignItems:"flex-start", gap:11,
                       padding:"11px 16px", borderRadius:12, marginBottom:6,
-                      background: isLight?"rgba(52,211,153,0.03)":"rgba(52,211,153,0.025)",
-                      border:`1px solid ${T.accent}14`,
+                      // Completada = apagada, no verde. El tinte de marca en cada fila
+                      // hecha sumaba una superficie teñida más; el acento se queda donde
+                      // significa algo: la palomita.
+                      background:S.row,
+                      border:`1px solid ${S.line}`,
                       opacity:0.65,
                     }}>
                       <button
