@@ -1117,8 +1117,8 @@ function Bubble({ m, T, isLight, userBg, userTxt, aiBg, aiBd, onPick, sending, i
     if (m.meta?.can_comment && m.meta?.task_id) {
       // Evidencia recibida por el líder: puede comentarla (feedback al que la hizo) o aprobarla.
       inlineButtons = [
-        { label: "💬 Comentar", action: `mktcomment:${m.meta.task_id}:${m.meta.from_name || ""}`, primary: true },
-        { label: "✅ Aprobar", action: `mktapprove:${m.meta.task_id}`, primary: false },
+        { label: "Comentar", action: `mktcomment:${m.meta.task_id}:${m.meta.from_name || ""}`, primary: true },
+        { label: "Aprobar", action: `mktapprove:${m.meta.task_id}`, primary: false },
       ];
     } else if (m.meta?.kind === "team_action") {
       // La base declara qué aviso es (mig 224). Los botones de estado van en los
@@ -1126,9 +1126,9 @@ function Bubble({ m, T, isLight, userBg, userTxt, aiBg, aiBd, onPick, sending, i
       // «nueva actividad asignada» se queda limpio, a pedido de Ángel (30-jul).
       if (["60", "10", "0"].includes(String(m.meta.fase))) {
         inlineButtons = [
-          { label: "✅ Hecho", action: "Ya la hice", primary: true },
-          { label: "⏳ En proceso", action: "En proceso", primary: false },
-          { label: "❌ No la hice", action: "No la hice", primary: false }
+          { label: "Hecho", action: "Ya la hice", primary: true },
+          { label: "En proceso", action: "En proceso", primary: false },
+          { label: "No la hice", action: "No la hice", primary: false }
         ];
       }
     } else if (Array.isArray(m.buttons) && m.buttons.length > 0) {
@@ -1146,8 +1146,8 @@ function Bubble({ m, T, isLight, userBg, userTxt, aiBg, aiBd, onPick, sending, i
         (lower.includes("he preparado el cambio") && lower.includes("confirmas"))
       ) {
         inlineButtons = [
-          { label: "✅ Sí, confirmar", action: "si", primary: true },
-          { label: "❌ Cancelar", action: "cancelar", primary: false }
+          { label: "Sí, confirmar", action: "si", primary: true },
+          { label: "Cancelar", action: "cancelar", primary: false }
         ];
       }
       // 2) Guía o manual del asistente
@@ -1158,9 +1158,9 @@ function Bubble({ m, T, isLight, userBg, userTxt, aiBg, aiBd, onPick, sending, i
         lower.includes("puedes consultar el manual completo")
       ) {
         inlineButtons = [
-          { label: "📖 Abrir Manual web", action: "https://app.stratoscapitalgroup.com/manual-asistente-telegram", isUrl: true, primary: true },
-          { label: "💡 ¿Cómo agendar Zooms?", action: "¿Cómo agendar un zoom con el asistente?", primary: false },
-          { label: "🚀 Ver comandos de voz", action: "¿Cómo registrar un cliente por voz?", primary: false }
+          { label: "Abrir Manual web", action: "https://app.stratoscapitalgroup.com/manual-asistente-telegram", isUrl: true, primary: true },
+          { label: "¿Cómo agendar Zooms?", action: "¿Cómo agendar un zoom con el asistente?", primary: false },
+          { label: "Ver comandos de voz", action: "¿Cómo registrar un cliente por voz?", primary: false }
         ];
       }
       // 3) Otros botones contextuales de notificaciones y seguimiento (si no es un reporte masivo)
@@ -1177,23 +1177,23 @@ function Bubble({ m, T, isLight, userBg, userTxt, aiBg, aiBd, onPick, sending, i
             const cuantos = parseInt((text.match(/(\d+)\s+clientes?\s+sin\s+movimiento/i) || [])[1] || "1", 10);
             const esResumen = cuantos > 1 || /\sy\s\d+\s+más/i.test(text);
             inlineButtons = esResumen
-              ? [{ label: "👥 Ver mis clientes", action: "mis clientes", primary: true }]
+              ? [{ label: "Ver mis clientes", action: "mis clientes", primary: true }]
               : [
-                  { label: "📞 Ya lo contacté", action: "Ya lo contacté", primary: true },
-                  { label: "📅 Definir acción", action: "Definir próxima acción", primary: false },
-                  { label: "👤 Ver ficha", action: "Ver ficha del cliente", primary: false }
+                  { label: "Ya lo contacté", action: "Ya lo contacté", primary: true },
+                  { label: "Definir acción", action: "Definir próxima acción", primary: false },
+                  { label: "Ver ficha", action: "Ver ficha del cliente", primary: false }
                 ];
           } else if (lower.includes("antes de tu zoom") || lower.includes("plan sugerido") || lower.includes("zooms en 3 horas")) {
             inlineButtons = [
-              { label: "🧠 Ya lo estudié", action: "Ya estudié, este es mi plan", primary: true },
-              { label: "🗓️ Reagendar", action: "Reagendar", primary: false },
-              { label: "📁 Expediente", action: "Ver expediente", primary: false }
+              { label: "Ya lo estudié", action: "Ya estudié, este es mi plan", primary: true },
+              { label: "Reagendar", action: "Reagendar", primary: false },
+              { label: "Expediente", action: "Ver expediente", primary: false }
             ];
           } else if (lower.includes("ya hiciste esta acción") || lower.includes("lista de acción") || lower.includes("tarea pendiente")) {
             inlineButtons = [
-              { label: "✅ Hecho", action: "Ya la hice", primary: true },
-              { label: "⏳ En proceso", action: "En proceso", primary: false },
-              { label: "❌ No la hice", action: "No la hice", primary: false }
+              { label: "Hecho", action: "Ya la hice", primary: true },
+              { label: "En proceso", action: "En proceso", primary: false },
+              { label: "No la hice", action: "No la hice", primary: false }
             ];
           }
         }
