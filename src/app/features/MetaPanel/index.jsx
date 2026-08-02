@@ -216,10 +216,15 @@ export default function MetaPanel({
   const _selfName = user?.name || user?.fullName || user?.email || "Admin";
   const _nameKey = (value) => String(value || "").trim().toLowerCase();
   const _actionOwner = (action) => action?.assignee || action?.asesor || "";
+  /* ¿Esta acción es MÍA? Se compara primero por id (lo confiable) y sólo si no
+     hay id, por nombre. ⚠️ Antes un NO-manager recibía `true` para TODO: en su
+     agenda veía las tareas de sus compañeros (Yazmin veía las de Luis y
+     Emmanuel — capturas de Ángel 29-jul). Ahora cada quien ve lo suyo. */
   const _isOwnAction = (action) => {
+    if (action?.asesor_id && user?.id) return action.asesor_id === user.id;
     const owner = _nameKey(_actionOwner(action));
-    if (!_isManager) return true;
-    return owner && owner !== "todos" && owner !== "equipo" && owner === _nameKey(_selfName);
+    if (!owner || owner === "todos" || owner === "equipo") return !_isManager ? false : false;
+    return owner === _nameKey(_selfName);
   };
   const fallbackTeamMembers = ["Oscar Gálvez","Alexia Santillán","Araceli Oneto","Ken Duke","Emmanuel Ortiz","Cecilia Mendoza"];
   const teamMemberOptions = teamMembers.length ? teamMembers : fallbackTeamMembers;
@@ -244,7 +249,7 @@ export default function MetaPanel({
           date: r.due_at ? new Date(r.due_at).toLocaleString('es-MX',{ day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' }) : '',
           done: r.done, priority: r.priority || 'normal', assignee: r.asesor_name || '',
           assigneeType: r.assignee_type || 'human', due_at: r.due_at, status: r.status || 'pending', _persisted: true,
-          order_idx: r.order_idx,
+          order_idx: r.order_idx, asesor_id: r.asesor_id,
         }));
         setMetaActions(p => { const ids = new Set(mapped.map(m => m.id)); return [...mapped, ...p.filter(a => !a._persisted && !ids.has(a.id))]; });
       });
@@ -287,6 +292,7 @@ export default function MetaPanel({
       text: txt,
       lead: agendaCategoryMeta(category).label,
       agendaCategory: category,
+      asesor_id: _selfId,
       asesor: assigneeName || 'Equipo',
       date: localDate,
       done: false,
@@ -1368,7 +1374,9 @@ export default function MetaPanel({
                     {categoryChip}
                     <E val={a.lead}   onSave={v => setMetaActions(p => p.map(x => x.id===a.id?{...x,lead:v}:x))}   style={{ fontSize:12.5, color:T.txt3, fontFamily:font }} />
                     <span style={{ fontSize:11, color:T.txt3, opacity:0.4 }}>·</span>
-                    <E val={a.asesor} onSave={v => setMetaActions(p => p.map(x => x.id===a.id?{...x,asesor:v}:x))} style={{ fontSize:12.5, color:T.txt3, fontFamily:font }} />
+                    {/* El NOMBRE del encargado va en negrita — pedido de Iván 29-jul:
+                        es el dato que se busca de un vistazo en la agenda. */}
+                    <E val={a.asesor} onSave={v => setMetaActions(p => p.map(x => x.id===a.id?{...x,asesor:v}:x))} style={{ fontSize:12.5, color:T.txt2, fontWeight:600, fontFamily:font }} />
                   </div>
                 );
                 const prioBtn = (
@@ -1613,7 +1621,7 @@ export default function MetaPanel({
                       </button>
                       <div style={{ flex:1, minWidth:0 }}>
                         <span style={{ fontSize:13.5, color:T.txt3, fontFamily:font, textDecoration:"line-through", lineHeight:1.45 }}>{a.text}</span>
-                        <p style={{ margin:"3px 0 0", fontSize:12, color:T.txt3, fontFamily:font, opacity:0.7 }}>{a.lead} · {a.asesor}</p>
+                        <p style={{ margin:"3px 0 0", fontSize:12, color:T.txt3, fontFamily:font, opacity:0.7 }}>{a.lead} · <span style={{ fontWeight:600 }}>{a.asesor}</span></p>
                       </div>
                       <button onClick={() => { persistDelete(a); setMetaActions(p => p.filter(x => x.id!==a.id)); }} title="Eliminar acción" style={{ background:"none", border:"none", cursor:"pointer", padding:3, opacity:0.30 }}>
                         <Minus size={13} color={T.txt3} />
