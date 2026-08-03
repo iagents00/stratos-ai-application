@@ -265,6 +265,30 @@ en toda la base Stratos (si ya está en otro perfil, hay que desconectarlo prime
 
 ## 10. Smoke test (SQL, reemplaza `<TG>` por el telegram_chat_id de un asesor; Araceli Duke = 7464451486)
 
+19. **Si normalizas el pedido, DELEGA lo normalizado.** (3-ago-2026.) `bot_nlu_dispatch_gvintell` desanida
+    `query`, unifica el texto de la nota y corrige la herramienta cuando el clasificador se equivoca — y todo eso lo
+    guarda en `v_tool`/`v_args`. Pero al delegar en `..._required_fields_orig` reenviaba **`p_tool_name`/`p_args`, los
+    originales**: el trabajo se tiraba en la última línea. Tres arreglos seguidos «no funcionaron» por esto. Antes de
+    dar por muerto un fix que no toma, **seguí el dato hasta la llamada final** y mirá qué se pasa de verdad (mig 273).
+
+20. **«¿Existe la ruta?» antes que «¿mejoro el prompt?».** Tercera vez en dos días: `bot_agendar_visita` y
+    `bot_create_team_action` existían y funcionaban, pero el cerebro no las conocía. Un modelo sin la casilla correcta
+    no dice «no puedo» — usa la más parecida, y el pedido termina como tarea o como recordatorio personal. Casos
+    reales: «Agenda una visita con X el sábado» → tarea de equipo; «Asígnale a X preparar Y» → tarea PERSONAL del
+    gerente con el nombre del asesor dentro del título (migs 271-276).
+
+21. **Agendar un Zoom o una visita mueve TRES cosas, no una.** Escribir solo la fecha dejaba al cliente en
+    «Contáctame Ya» con la próxima acción vieja («llamarla») apuntando a la hora del Zoom — la ficha mentía y el asesor
+    entraba en frío. Van juntas: **fecha + etapa + próxima acción**. Y no se retrocede a quien ya está más adelante
+    («Zoom Concretado», «Cierre»). La visita además guarda el LUGAR («en Portofino»), que es el dato que el asesor
+    busca el sábado (migs 267, 268).
+
+22. **La frase del guion de demostración se corre ANTES de grabar.** El bug de «asígnale a X» apareció al redactar el
+    guion: había que escribir la frase exacta que se iba a decir en cámara, se probó, y no asignaba. Escribir la demo
+    es una prueba — obliga a usar la frase real y a mirar el resultado real, que es lo que no hace un test escrito por
+    quien construyó la función.
+
+
 **⭐ Antes de mostrarle el asistente a alguien, corré TAMBIÉN esta prueba** — es la que faltó el 3-ago y
 dejó pasar el bug del botón. Elegí un homónimo desde la lista y comprobá que la acción **quedó escrita**:
 
