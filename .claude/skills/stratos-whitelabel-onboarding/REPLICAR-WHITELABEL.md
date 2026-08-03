@@ -114,6 +114,26 @@ Desde 16-jul el Copilot **no obliga a conectar Telegram** y **avisa al teléfono
 
 ---
 
+
+## 9. Replicar para un equipo que NO vende inmuebles (clínicas, agencias, constructoras…)
+
+El asistente tiene **dos mitades**, y solo una es inmobiliaria:
+
+| Mitad | ¿Sirve fuera de inmobiliarias? |
+|---|---|
+| **Motor de ACTIVIDADES** — asignar tareas, cerrarlas con evidencia, perseguir lo vencido, agenda personal, resumen del día | **Sí, tal cual.** No sabe nada de propiedades: sabe de personas, tareas y fechas. Es lo que corre hoy en NSG, que no vende inmuebles. |
+| **Motor de VENTAS** — pipeline, etapas, catálogo, recomendar propiedades, Zoom/visita, score | **Depende.** La estructura (cliente → etapas → próxima acción) sirve para cualquier venta consultiva; lo inmobiliario son los NOMBRES y el catálogo. |
+
+**Receta corta para un rubro nuevo:**
+
+1. **Arrancá por el motor de actividades.** Es el que da valor desde el primer día sin configurar nada: el equipo asigna tareas hablando, se cierran con foto y llega el resumen. Es exactamente lo que se montó para NSG.
+2. **Las etapas son configuración, no código.** Viven por organización; no hay un `if rubro = 'inmobiliaria'` en ninguna parte. Una clínica usa «Primera consulta · En tratamiento · Alta»; una agencia, «Propuesta enviada · En producción · Entregado».
+3. **El catálogo es opcional.** Si el rubro no tiene un catálogo que compartir, esa función simplemente no se enciende. Nada más se rompe.
+4. **Lo que SÍ hay que revisar palabra por palabra:** los textos que ve la persona. Hoy dicen «cliente», «propiedad», «Zoom», «visita». Para una clínica serían «paciente», «tratamiento», «consulta». Están en las funciones del cerebro, no en el CRM.
+5. ⚠️ **El score está afinado para bienes raíces.** Fuera de ese rubro, la búsqueda y el pipeline funcionan, pero la calificación automática sale con sesgo inmobiliario hasta que se escriba la rúbrica del rubro nuevo. **Decilo antes de venderlo**, no después.
+
+**El orden que funciona** (probado con NSG): actividades → agenda y recordatorios → segundo cerebro → y recién ahí, si el rubro lo pide, el pipeline. Al revés se pasan semanas configurando etapas para un equipo que todavía no usa el asistente todos los días.
+
 ## ⭐ Reglas de oro (si respetás estas, no se rompe nada)
 
 1. **Paridad Telegram ↔ Copilot:** todo cambio al asistente debe quedar andando en **las dos superficies** (mismo cerebro).
@@ -124,3 +144,10 @@ Desde 16-jul el Copilot **no obliga a conectar Telegram** y **avisa al teléfono
    con Gvintell (`vfakuhpumgwsnmczzkhk`).
 6. **El texto lo genera la DB, no el LLM:** el LLM solo elige tool+args (y redacta briefings). La lógica vive en SQL, reusable por todas las marcas.
 7. **Registrá en el AIOS:** DB/n8n no quedan en git de los repos de producto → toda edición va al `changelog` del AIOS + este catálogo.
+8. **Si normalizás el pedido, delegá lo normalizado.** El cerebro corrige la herramienta cuando el clasificador se equivoca; si después delega pasando los parámetros ORIGINALES, todo ese trabajo se tira. Pasó el 3-ago y costó tres arreglos que «no funcionaban» (mig 273).
+9. **Antes de mejorar un prompt, preguntá «¿existe la ruta?».** Una capacidad sin ruta desde el cerebro hace que el modelo meta el pedido en la casilla más parecida — no dice «no puedo». Tres casos en dos días: agendar visita, asignar tarea, ver la cartera de un compañero.
+10. **Un identificador que puede venir vacío no es un identificador.** Los botones señalan por **id**, nunca por teléfono: hay clientes sin teléfono y en SQL concatenar con NULL borra la cadena entera — token incluido.
+11. **Un canal que falla no puede llevarse a los demás.** El envío a Telegram va con `onError: continueRegularOutput`; si no, un chat sin parear deja al Copilot sin el aviso.
+12. **Ante «no llegó», mirá primero el sello de envío en la base.** Si `proactive_reminders.sent_at` está y está a tiempo, el problema es la pantalla o el canal — no el motor. Tocar el motor ahí es arriesgar lo que funciona.
+13. **El formato se arregla en el render, no en cada función.** Los `**` visibles se limpian en un solo lugar por donde pasa todo; editar decenas de funciones deja decenas de oportunidades de que la próxima nazca mal.
+14. **Probá el registro pobre, no el bonito.** El cliente sin teléfono, sin etapa, sin apellido. El camino feliz ya funciona; los bugs viven en los registros incompletos, que en un equipo real son mayoría.
