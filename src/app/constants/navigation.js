@@ -188,7 +188,22 @@ export function canAccessModule(moduleId, user, clientConfig = null) {
   if (user.crmOnly === true && !CRM_ONLY_MODULES.has(moduleId)) return false;
   // (1b) Admin de MARKETING (Alex): aunque su rol sea super_admin, su casa es
   // marketing → solo ve los módulos de marketing (gana sobre el permiso por rol).
-  if (user.isMarketingAdmin === true && !MARKETING_ADMIN_MODULES.has(moduleId)) return false;
+  //
+  // ⚠️ SOLO en la org de Duke/Stratos, y la aclaración no es un detalle: la
+  // bandera `is_marketing_admin` hace DOS trabajos distintos. En Duke significa
+  // «su casa es el área de marketing» y por eso le achica el menú a Alex. En
+  // cualquier otra org significa solo «manda en el motor de tareas» — es la que
+  // usan las 9 funciones del cerebro para saber a quién avisarle de un
+  // vencimiento y quién puede aprobar evidencia.
+  //
+  // Sin este `isStratosOrg`, Iván y Ángel entraban a NSG —siendo super_admin y
+  // dueños de la empresa— y se quedaban con Copilot y Perfil, porque el resto de
+  // los módulos de marketing se los comía después el aislamiento por org. Ni
+  // siquiera podían abrir Actividades (reporte de Ángel, 3-ago). Apagarles la
+  // bandera en la base «arreglaba» el menú pero les cortaba los avisos de tareas:
+  // el problema nunca fue el dato, era esta regla aplicándose donde no va.
+  if (user.isMarketingAdmin === true && isStratosOrg(user.organizationId)
+      && !MARKETING_ADMIN_MODULES.has(moduleId)) return false;
   // (1c) COLABORADOR de área: su espacio es cerrado y se resuelve acá completo,
   // sin caer al permiso por rol de más abajo (MODULE_ROLES no lo lista en casi
   // nada a propósito: lo que no está en AREA_MEMBER_MODULES, no lo ve).
@@ -283,7 +298,30 @@ export function canAccessModule(moduleId, user, clientConfig = null) {
     const isMktOpenIn = (
       moduleId === "mkt" && clientConfig?.features?.mktModule === true
     );
-    if (!isComandoDirectivoOpenIn && !isMktOpenIn) return false;
+    // Excepción: las SECCIONES del motor de tareas, para el tenant que ya prendió
+    // `mktModule`. Son las mismas tablas `mkt_*`/`team_actions`, org-scoped con
+    // RLS: NSG ve lo suyo y jamás lo de Duke. Hasta hoy el MÓDULO pasaba pero sus
+    // secciones no, así que «Actividades» daba «Acceso restringido» adentro de su
+    // propia empresa.
+    //
+    // Se abren SOLO las tres que aportan algo fuera de Duke:
+    //   · plan        → Plan Semanal, la hoja con la que se abre la semana
+    //   · mkt_reporte → Actividades, el «¿qué hiciste hoy?» (la que daba el error)
+    //   · mkt_equipo  → la vista del líder sobre el avance de su gente
+    // Las otras quedan fuera a propósito, cada una por su razón:
+    //   · mkt_pipe y mkt_sol → el tenant ya las escondió (`mkt.hideTabs`): son la
+    //     hoja de propiedades de Alex y los pedidos de diseño de Duke.
+    //   · mkt_marcas → en el carril se lee «Marcas», justo la palabra que se sacó
+    //     de NSG por no ser su idioma; y ahí el módulo `mkt` ya se llama
+    //     «Proyectos», así que serían dos entradas para lo mismo.
+    //   · mkt_dia    → «Mi Día» está apagado desde el 29-jul (`SHOW_TAB_DIA`), no
+    //     tiene sentido devolverlo por el costado.
+    const SECCIONES_FUERA_DE_DUKE = new Set(["plan", "mkt_reporte", "mkt_equipo"]);
+    const isMktSeccionOpenIn = (
+      clientConfig?.features?.mktModule === true &&
+      SECCIONES_FUERA_DE_DUKE.has(moduleId)
+    );
+    if (!isComandoDirectivoOpenIn && !isMktOpenIn && !isMktSeccionOpenIn) return false;
   }
   // Secciones de marketing en el sidebar (Mi Día/Marcas/Pipeline/Solicitudes): las ve
   // el rol `marketing` Y el admin de marketing (Alex). NO los admins de ventas (que ven
