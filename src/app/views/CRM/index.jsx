@@ -29,6 +29,7 @@ import {
 } from "lucide-react";
 import { useIsMobile } from "../../../hooks/useViewport";
 import { useClient } from "../../../hooks/useClient";
+import { useTeam } from "../../../hooks/useTeam";
 import { P, LP, font, fontDisp } from "../../../design-system/tokens";
 import { G, KPI, Pill, Ico, ChipSelect } from "../../SharedComponents";
 import { parseBudget, formatBudget, buildTelegramSummary, fmtNow, genId, formatFechaLarga, compareZoomProximity, fmtFechaCortaISO } from "../../../lib/utils";
@@ -126,6 +127,9 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
   const { user } = useAuth();
   const { config: clientConfig, clientId } = useClient();
   const { get: getScheduledCall } = useScheduledCalls();
+  // Equipo real de la organización — se suma a asesoresMaster para que un
+  // asesor recién dado de alta (sin leads todavía) exista en los selectores.
+  const { asesores: orgAsesores } = useTeam();
   const isMobile = useIsMobile();
   const isLight = theme === "light";
   const T = isLight ? LP : P;
@@ -1301,12 +1305,20 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
 
   const asesores = useMemo(() => [...new Set(visibleLeads.map(l => l.asesor))], [visibleLeads]);
   // Listas maestras: únicas, sin vacíos, ordenadas alfabéticamente.
-  // Se alimentan de leadsData (todos, no solo visibles — para que un director
-  // también vea asesores completos) + customs añadidos desde el modal.
+  // Tres fuentes que se SUMAN (nunca se sustituyen):
+  //   1. orgAsesores — el equipo real de `profiles`. Es lo que hace visible a un
+  //      asesor recién dado de alta que todavía no tiene ni un lead. Sin esto no
+  //      se le podía reasignar nada porque no salía en ninguna lista.
+  //   2. leadsData — quien ya tiene leads. Se conserva porque en Duke hay leads
+  //      a nombre de super_admins y de gente ya inactiva; filtrar solo por rol
+  //      `asesor` los borraría del modal de reasignación.
+  //   3. customAsesores — nombres tecleados a mano desde el modal.
+  // Si la query de perfiles falla (offline/demo) orgAsesores llega vacío y el
+  // comportamiento es exactamente el histórico.
   const asesoresMaster = useMemo(() => {
-    const set = new Set([...leadsData.map(l => l.asesor), ...customAsesores].filter(Boolean));
+    const set = new Set([...leadsData.map(l => l.asesor), ...orgAsesores, ...customAsesores].filter(Boolean));
     return [...set].sort((a, b) => a.localeCompare(b, "es"));
-  }, [leadsData, customAsesores]);
+  }, [leadsData, orgAsesores, customAsesores]);
   const proyectosMaster = useMemo(() => {
     // Si el cliente declaró una lista curada en su config (ej. Grupo 28), esa
     // lista toma prioridad sobre los proyectos derivados de leads existentes.
