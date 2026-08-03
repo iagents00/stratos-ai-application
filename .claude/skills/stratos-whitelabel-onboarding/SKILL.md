@@ -238,7 +238,55 @@ en toda la base Stratos (si ya está en otro perfil, hay que desconectarlo prime
     meter un `if cliente='Duke'` o quemar un nombre en el prompt, preguntarse "¿esto debería viajar al clonar a otro tenant?".
     Si no, va en `meta_config`/tabla `*_config` con `organization_id`. Igual que `proactive_config`, `terminal_stages`, etc.
 
+16. **Un botón NUNCA identifica a un cliente por su TELÉFONO — se identifica por su ID.** (3-ago-2026, con Ángel
+    grabando.) La lista de homónimos armaba el botón con `v_token||':'||r.phone`. Hay clientes SIN teléfono cargado, y en
+    SQL **cualquier concatenación con NULL da NULL**: el `callback_data` entero se derrumbaba a `pickdis:_:<firma>` —
+    **con el token adentro**. Al tocarlo, el asistente buscaba el token `_`, no lo encontraba y respondía *«Esta
+    confirmación venció o ya se procesó»*. La nota que el asesor acababa de dictar **se perdía en silencio**: la fila de
+    `bot_pending_actions` quedaba con `consumed_at = null` para siempre. Un `coalesce` habría tapado el síntoma dejando el
+    botón igual de inservible (sin teléfono no hay a quién señalar). Migs 261-266: `fn_bot_name_candidates` acepta un
+    **id** como referencia, los botones lo usan, y las funciones que resolvían solo por teléfono aceptan además
+    `id = fn_uuid_o_nulo(p_phone)` — se AGREGA un camino, no se quita el de siempre.
+    - **Regla dura:** antes de meter un dato en un `callback_data`, preguntate *«¿este campo puede venir vacío para algún
+      cliente real?»*. Si la respuesta es sí, no sirve como identificador. El id existe siempre y es único.
+    - **Y probá el caso pobre**, no el bonito: el cliente sin teléfono, sin etapa, sin apellido. El camino feliz ya
+      funciona; los bugs viven en los registros incompletos.
+
+17. **Una lista para elegir tiene que traer con qué elegir.** (Mismo día.) Salían cinco «Felipe» con la etapa y los
+    últimos cuatro dígitos (`...3320`), y uno sin nada. Nadie reconoce a un cliente por cuatro dígitos. Ahora va
+    **nombre completo · etapa · teléfono ENTERO** (`fn_telefono_legible`, mig 263) y, si no tiene, lo dice: `sin teléfono`.
+    Mismo criterio en la lista de «¿es alguno de estos?» (`bot_sugerir_clientes`, mig 265), que además **excluía** a los
+    clientes sin teléfono — o sea que a los más incompletos, los que más ayuda necesitan, ni los ofrecía.
+
+18. **Si una acción NO se completó, el asistente tiene que decirlo.** El peor detalle del bug 16 no fue el botón roto:
+    fue que la respuesta *«Esta confirmación venció o ya se procesó»* **suena a que algo pasó**, y el asesor se va
+    tranquilo. Cuando una acción muere a mitad de camino, el mensaje debe decir que **no se guardó** y qué hacer.
+    Vale para todo el asistente: **silencio o ambigüedad ante una escritura fallida = bug de severidad alta.**
+
 ## 10. Smoke test (SQL, reemplaza `<TG>` por el telegram_chat_id de un asesor; Araceli Duke = 7464451486)
+
+**⭐ Antes de mostrarle el asistente a alguien, corré TAMBIÉN esta prueba** — es la que faltó el 3-ago y
+dejó pasar el bug del botón. Elegí un homónimo desde la lista y comprobá que la acción **quedó escrita**:
+
+```sql
+-- 1) La lista trae con qué elegir: nombre completo · etapa · teléfono ENTERO.
+select jsonb_pretty(public._bot_disambiguate(<TG>,'add_expediente_note',
+  jsonb_build_object('contenido','PRUEBA - borrar','client_name','<NOMBRE REPETIDO>'),
+  '<NOMBRE REPETIDO>')->'reply');
+
+-- 2) Tocar el boton guarda de verdad. Probá el primero y, SOBRE TODO, uno SIN TELEFONO.
+--    Debe responder «Listo», nunca «Esta confirmacion vencio o ya se proceso».
+with d as (select public._bot_disambiguate(<TG>,'add_expediente_note',
+   jsonb_build_object('contenido','PRUEBA - borrar','client_name','<NOMBRE>'),'<NOMBRE>') as j)
+select public.bot_handle_callback(<TG>, j->'reply'->'inline_keyboard'->0->0->>'callback_data')
+       #>>'{reply,text}' from d;
+
+-- 3) LA COMPROBACION QUE IMPORTA: ¿la nota existe? Un «Listo» no alcanza.
+select l.name, ei.descripcion from public.expediente_items ei
+  join public.leads l on l.id = ei.lead_id
+ where ei.descripcion = 'PRUEBA - borrar' and ei.deleted_at is null;
+-- Limpieza: update public.expediente_items set deleted_at = now() where descripcion = 'PRUEBA - borrar';
+```
 
 ```sql
 select t, public.bot_nlu_dispatch_gvintell(<TG>,'',jsonb_build_object('input_text',t))#>>'{reply,text}'
