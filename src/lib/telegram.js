@@ -143,6 +143,25 @@ function buildReminderContent(reminder) {
   return ''
 }
 
+/* Para comparar dos versiones del MISMO aviso hay que ignorar la ropa.
+   El aviso viaja por dos caminos: el que guarda el historial (que vuelve de
+   Telegram ya sin los `**`) y el que llega de proactive_reminders (que los
+   conserva). Comparando el texto crudo no se reconocían, y el chat mostraba el
+   mismo aviso DOS VECES — una sin botones y otra con ellos (Ángel, 3-ago).
+   Se comparan sin marcas de formato, sin acentos y sin espacios de más. */
+function mismaEsencia(a, b) {
+  const limpio = (t) => String(t || '')
+    .replace(/\*\*/g, '')
+    .replace(/[«»"']/g, '')
+    .normalize('NFD').replace(/[̀-ͯ]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toLowerCase()
+  const x = limpio(a), y = limpio(b)
+  if (!x || !y) return false
+  return x === y || x.includes(y) || y.includes(x)
+}
+
 function attachReminderToMessages(messages, reminderMessage) {
   const buttons = reminderMessage.buttons || []
   const content = reminderMessage.content || ''
@@ -152,7 +171,7 @@ function attachReminderToMessages(messages, reminderMessage) {
   let idx = messages.findIndex((m) =>
     m.role === 'ai' &&
     m.content &&
-    (m.content === content || (textProbe && m.content.includes(textProbe)))
+    (mismaEsencia(m.content, content) || (textProbe && mismaEsencia(m.content, textProbe)))
   )
 
   if (idx < 0 && buttons.length && reminderTime) {

@@ -1036,6 +1036,17 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
 /* Trozo de línea con **negrita** y enlaces. La negrita se renderiza porque el
    modelo la produce sola al armar listas y planes — antes se veía el `**` crudo
    en pantalla, que es exactamente lo contrario de lo que pidió Iván. */
+/* Red de seguridad contra asteriscos visibles.
+   Un texto como «**Asesor Prueba**» —comillas de menta CON negrita adentro— se
+   pintaba en menta y dejaba los `**` a la vista: el resaltado de comillas nunca
+   miraba dentro de sí mismo (Ángel, 3-ago: «tiene asterisco, doble asterisco, y
+   eso se ve feo»). En vez de perseguir cada función del cerebro que combine las
+   dos marcas, se limpia acá, que es por donde pasa TODO lo que se muestra.
+   También barre un `**` suelto que quedó sin cerrar. */
+function sinAsteriscos(t) {
+  return String(t).replace(/\*\*/g, "");
+}
+
 function renderInline(text, linkColor, key) {
   const partes = [];
   let resto = String(text), i = 0;
@@ -1044,18 +1055,19 @@ function renderInline(text, linkColor, key) {
   const rx = /\*\*([^*\n]+)\*\*|«([^»\n]+)»/;
   let m;
   while ((m = rx.exec(resto)) !== null) {
-    if (m.index > 0) partes.push(renderRichText(resto.slice(0, m.index), linkColor));
+    if (m.index > 0) partes.push(renderRichText(sinAsteriscos(resto.slice(0, m.index)), linkColor));
     if (m[1] !== undefined) {
       partes.push(<strong key={`b${key}-${i++}`} style={{ fontWeight: 600 }}>{m[1]}</strong>);
     } else {
       // Sin las comillas «»: Iván pidió quitarlas — queda solo el resaltado.
+      // Si adentro venía **negrita**, se limpia: ya está resaltado por el color.
       partes.push(
-        <span key={`q${key}-${i++}`} style={{ color: linkColor, fontWeight: 600 }}>{m[2]}</span>
+        <span key={`q${key}-${i++}`} style={{ color: linkColor, fontWeight: 600 }}>{sinAsteriscos(m[2])}</span>
       );
     }
     resto = resto.slice(m.index + m[0].length);
   }
-  if (resto) partes.push(renderRichText(resto, linkColor));
+  if (resto) partes.push(renderRichText(sinAsteriscos(resto), linkColor));
   return partes;
 }
 
@@ -1074,10 +1086,11 @@ function renderBloques(text, linkColor, accent) {
 
     // Encabezado de persona: «▸ Nombre» del cerebro, o «**Nombre**» solito en
     // su línea cuando el modelo reescribe el plan — mismo look, sin asteriscos.
-    const persona = l.match(/^\s*▸\s*(.+)$/) || l.match(/^\s*\*\*([^*]+)\*\*\s*$/);
+    const persona = l.match(/^\s*▸\s*(.+)$/) || l.match(/^\s*\*\*([^*]+)\*\*\s*$/)
+      || l.match(/^\s*«\s*\*\*([^*»]+)\*\*\s*»\s*$/);
     if (persona) return (
       <div key={`p${i}`} style={{ marginTop: i === 0 ? 0 : 10, marginBottom: 3, fontWeight: 600, color: accent }}>
-        {persona[1]}
+        {sinAsteriscos(persona[1])}
       </div>
     );
 
@@ -1089,7 +1102,7 @@ function renderBloques(text, linkColor, accent) {
     const encabezado = l.match(/^\s*\*\*([^*]+)\*\*(.*)$/);
     if (encabezado) return (
       <div key={`h${i}`} style={{ marginTop: i === 0 ? 0 : 10, marginBottom: 1 }}>
-        <span style={{ fontWeight: 700, color: accent }}>{encabezado[1]}</span>
+        <span style={{ fontWeight: 700, color: accent }}>{sinAsteriscos(encabezado[1])}</span>
         {encabezado[2] ? renderInline(encabezado[2], linkColor, i) : null}
       </div>
     );
