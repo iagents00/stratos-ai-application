@@ -1330,7 +1330,7 @@ export default function App() {
                   {v === "trash"  && <Trash trashedLeads={trashedLeads} onRestore={restoreLead} onHardDelete={hardDeleteLead} onRefresh={refreshTrash} T={T} />}
                   {v === "ia"     && <IACRM oc={oc} T={T} theme={theme} />}
                   {v === "e"      && <ERP oc={oc} T={T} />}
-                  {v === "a"      && <Team oc={oc} T={T} />}
+                  {v === "a"      && <Team oc={oc} T={T} leadsData={leadsData} />}
                   {v === "lp"     && <LandingPages T={T} />}
                   {v === "fa"     && <FinanzasAdmin T={T} />}
                   {v === "rrhh"   && <RRHHModule T={T} />}

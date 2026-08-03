@@ -28,14 +28,19 @@ import {
 } from "lucide-react";
 import { useIsMobile } from "../../../hooks/useViewport";
 import { useClient } from "../../../hooks/useClient";
-import { P, LP, font, fontDisp, STAGES } from "../../../design-system/tokens";
+import { useTeam } from "../../../hooks/useTeam";
+import { P, LP, font, fontDisp } from "../../../design-system/tokens";
 import { G, KPI, Pill, Ico, ChipSelect } from "../../SharedComponents";
 import { parseBudget, formatBudget, buildTelegramSummary, fmtNow, genId } from "../../../lib/utils";
 import { StratosAtom, StratosAtomHex } from "../../components/Logo";
 import HistoryDrawer from "../../components/HistoryDrawer";
 import SuggestActionsModal from "../../components/SuggestActionsModal";
 import { AI_AGENTS, AI_AGENT_LIST } from "../../constants/agents";
-import { stgC } from "../../constants/crm";
+// Pipeline activo (etapas + colores + etapa default) resuelto por cliente.
+// Para Duke devuelve exactamente STAGES/stgC históricos; Vega usa su pipeline.
+import { STAGES, stgC, DEFAULT_STAGE } from "../../constants/pipeline";
+// Vocabulario del CRM por cliente (Duke: "cliente"; Vega: "proyecto").
+import { L } from "../../constants/labels";
 import {
   calculateLeadScore,
   SRC_META, SourceBadge,
@@ -121,6 +126,9 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
   const { user } = useAuth();
   const { config: clientConfig } = useClient();
   const { get: getScheduledCall } = useScheduledCalls();
+  // Equipo real de la organización — alimenta asesoresMaster junto con los
+  // asesores derivados de leads (ver el useMemo de asesoresMaster).
+  const { asesores: orgAsesores } = useTeam();
   const isMobile = useIsMobile();
   const isLight = theme === "light";
   const T = isLight ? LP : P;
@@ -282,7 +290,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
   }, []);
   const [budgetMenuOpen, setBudgetMenuOpen] = useState(false);
   const [stageMenuOpen, setStageMenuOpen]   = useState(false);
-  const [newLead, setNewLead]           = useState({ n: "", asesor: canSeeAll ? "" : (user?.name || ""), phone: "", email: "", budget: "", p: "", campana: "", source: "manual", st: "Contáctame Ya", nextAction: "", notas: "" });
+  const [newLead, setNewLead]           = useState({ n: "", asesor: canSeeAll ? "" : (user?.name || ""), phone: "", email: "", budget: "", p: "", campana: "", source: "manual", st: DEFAULT_STAGE, nextAction: "", notas: "" });
   // ── Detección de duplicados en alta ────────────────────────────────────
   // Cuando el asesor escribe phone o email, llamamos a la RPC find_lead_duplicate
   // (migración 013) con debounce. Si encuentra un lead existente en la misma
@@ -991,12 +999,20 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
 
   const asesores = useMemo(() => [...new Set(visibleLeads.map(l => l.asesor))], [visibleLeads]);
   // Listas maestras: únicas, sin vacíos, ordenadas alfabéticamente.
-  // Se alimentan de leadsData (todos, no solo visibles — para que un director
-  // también vea asesores completos) + customs añadidos desde el modal.
+  // Se alimentan de tres fuentes que se SUMAN (nunca se sustituyen):
+  //   1. orgAsesores — el equipo real de `profiles`. Es lo que hace visible a un
+  //      asesor recién dado de alta que todavía no tiene ni un lead. Sin esto no
+  //      se le puede reasignar nada: no aparecía en ninguna lista.
+  //   2. leadsData — quien ya tiene leads asignados. Se mantiene porque en Duke
+  //      hay leads a nombre de super_admins y de gente ya inactiva; si filtráramos
+  //      solo por rol `asesor` esas personas desaparecerían de la reasignación.
+  //   3. customAsesores — nombres tecleados a mano desde el modal.
+  // Si la query de perfiles falla (offline/demo) orgAsesores llega vacío y el
+  // comportamiento es exactamente el histórico.
   const asesoresMaster = useMemo(() => {
-    const set = new Set([...leadsData.map(l => l.asesor), ...customAsesores].filter(Boolean));
+    const set = new Set([...leadsData.map(l => l.asesor), ...orgAsesores, ...customAsesores].filter(Boolean));
     return [...set].sort((a, b) => a.localeCompare(b, "es"));
-  }, [leadsData, customAsesores]);
+  }, [leadsData, orgAsesores, customAsesores]);
   const proyectosMaster = useMemo(() => {
     // Si el cliente declaró una lista curada en su config (ej. Grupo 28), esa
     // lista toma prioridad sobre los proyectos derivados de leads existentes.
@@ -1196,7 +1212,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
     // Solo los que REALMENTE cambian (evita escrituras y echoes de realtime
     // inútiles). Snapshot desde la ref síncrona, no desde el render.
     const willChange = (l) => ids.has(l.id)
-      && (l.asesor !== target || (toContactame && l.st !== "Contáctame Ya"));
+      && (l.asesor !== target || (toContactame && l.st !== DEFAULT_STAGE));
     const originals = leadsDataRef.current.filter(willChange);
     const affectedIds = originals.map(l => l.id);
     const moved = affectedIds.length;
@@ -1216,12 +1232,12 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
     // ── 1 sola actualización optimista (no N) — clave para la fluidez ──
     const affectedSet = new Set(affectedIds);
     const applyLocal = (l) => affectedSet.has(l.id)
-      ? { ...l, asesor: target, st: toContactame ? "Contáctame Ya" : l.st }
+      ? { ...l, asesor: target, st: toContactame ? DEFAULT_STAGE : l.st }
       : l;
     leadsDataRef.current = leadsDataRef.current.map(applyLocal);
     setLeadsData(prev => prev.map(applyLocal));
     showToast(
-      `${moved} lead${moved !== 1 ? "s" : ""} reasignado${moved !== 1 ? "s" : ""} a ${target}${toContactame ? " · Contáctame Ya" : ""}`,
+      `${moved} lead${moved !== 1 ? "s" : ""} reasignado${moved !== 1 ? "s" : ""} a ${target}${toContactame ? ` · ${DEFAULT_STAGE}` : ""}`,
       "success"
     );
 
@@ -1232,7 +1248,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
     // leads_sync_asesor_id resuelve asesor_id desde asesor_name en cada UPDATE,
     // así que con asesor_name (+ stage) alcanza — el mismo efecto que la RPC.
     const dbChanges = toContactame
-      ? { asesor_name: target, stage: "Contáctame Ya" }
+      ? { asesor_name: target, stage: DEFAULT_STAGE }
       : { asesor_name: target };
 
     // ── Ya en modo offline ───────────────────────────────────────────────
@@ -1329,7 +1345,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
       name:             draft.n.trim(),
       phone:            draft.phone || null,
       email:            draft.email || null,
-      stage:            draft.st || "Contáctame Ya",
+      stage:            draft.st || DEFAULT_STAGE,
       score:            5,
       hot:              false,
       is_new:           true,
@@ -1354,10 +1370,10 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
 
     // ── Entry local (lo que se pinta en la UI) ─────────────────────────
     const newEntry = {
-      id: localId, ...draft, st: draft.st || "Contáctame Ya",
+      id: localId, ...draft, st: draft.st || DEFAULT_STAGE,
       sc: 5,
       source: draft.source || "manual",
-      tag: draft.tag || draft.st || "Contáctame Ya", hot: false, isNew: true, fechaIngreso: dateStr,
+      tag: draft.tag || draft.st || DEFAULT_STAGE, hot: false, isNew: true, fechaIngreso: dateStr,
       bio: "Cliente recién registrado. Pendiente primer contacto.", risk: "Sin información suficiente aún.",
       friction: "Medio",
       nextAction: draft.nextAction?.trim() || "Primer contacto en las próximas 24 horas",
@@ -1382,7 +1398,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
     // 1. Cerrar modal y limpiar el draft → el botón "Registrar" desaparece
     //    de la pantalla. Imposible hacer doble clic a partir de aquí.
     setAddingLead(false);
-    setNewLead({ n: "", asesor: canSeeAll ? "" : (user?.name || ""), phone: "", email: "", budget: "", p: "", campana: "", source: "manual", st: "Contáctame Ya", nextAction: "", notas: "" });
+    setNewLead({ n: "", asesor: canSeeAll ? "" : (user?.name || ""), phone: "", email: "", budget: "", p: "", campana: "", source: "manual", st: DEFAULT_STAGE, nextAction: "", notas: "" });
     // El lead ya entró al espejo local (saveLead garantiza eso síncrono),
     // así que el draft de recovery ya no tiene utilidad — lo limpiamos.
     clearLeadDraft();
@@ -1754,7 +1770,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                 CRM{" "}
                 <span style={{ fontWeight: 300, color: isLight ? T.txt3 : "rgba(255,255,255,0.38)" }}>Asesores</span>
               </h2>
-              <span style={{ fontSize: 10, fontWeight: 700, color: T.txt3, background: T.glass, border: `1px solid ${T.border}`, padding: "3px 9px", borderRadius: 99, letterSpacing: "0.06em" }}>{visibleLeads.length} clientes</span>
+              <span style={{ fontSize: 10, fontWeight: 700, color: T.txt3, background: T.glass, border: `1px solid ${T.border}`, padding: "3px 9px", borderRadius: 99, letterSpacing: "0.06em" }}>{visibleLeads.length} {L.entityPlural}</span>
               {!canSeeAll && <span style={{ fontSize: 10, fontWeight: 700, color: T.amber, background: `${T.amber}10`, border: `1px solid ${T.amber}28`, padding: "3px 9px", borderRadius: 99, letterSpacing: "0.04em" }}>Vista personal</span>}
             </div>
             <p style={{ fontSize: 11.5, color: T.txt3, fontFamily: font, margin: 0 }}>
@@ -1809,7 +1825,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                   e.currentTarget.style.boxShadow = "none";
                 }
               }}
-            ><Plus size={14} /> Nuevo cliente</button>
+            ><Plus size={14} /> {L.newEntity}</button>
           </div>
         </div>
       )}
@@ -1924,7 +1940,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                         fontSize: 12.5, fontWeight: 800,
                         color: isLight ? T.accentDark : "#FFFFFF",
                         letterSpacing: "-0.005em", fontFamily: fontDisp,
-                      }}>Clientes en prioridad</span>
+                      }}>{L.priorityList}</span>
                     </div>
                     <span style={{
                       fontSize: 11, color: T.txt2, fontFamily: font, fontWeight: 500,
@@ -2544,7 +2560,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                   fontSize: 15.5, fontWeight: 700,
                   color: isLight ? T.txt : "#FFFFFF",
                   fontFamily: fontDisp, letterSpacing: "-0.025em", margin: 0,
-                }}>Nuevo cliente</h3>
+                }}>{L.newEntity}</h3>
                 {/* Subtítulo: oculto en mobile (no cabe y rompe el header) */}
                 {!isMobile && (
                   <span style={{
@@ -2955,7 +2971,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                 </label>
                 {/* Trigger button */}
                 {(() => {
-                  const stageVal = newLead.st || "Contáctame Ya";
+                  const stageVal = newLead.st || DEFAULT_STAGE;
                   const stageCol = stgC[stageVal] || T.accent;
                   const stageTitleC = isLight ? `color-mix(in srgb, ${stageCol} 55%, #0B1220 45%)` : stageCol;
                   return (
@@ -3544,7 +3560,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                   <div style={{ display: "flex", alignItems: "center", gap: 11, minWidth: 0 }}>
                     {/* Avatar — rounded square, initial, accent tint.
                         Click → abre el Discovery (vía el onClick de la fila). */}
-                    <div title="Ver Discovery del cliente" style={{
+                    <div title={L.viewDetail} style={{
                       width: 34, height: 34, borderRadius: 10,
                       background: isLight
                         ? `linear-gradient(145deg, ${T.violet}1A 0%, ${T.violet}0D 100%)`
@@ -3572,7 +3588,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                             value={l.n}
                             onSave={v => updateLead({ ...l, n: v })}
                             T={T} isLight={isLight}
-                            placeholder="Nombre del cliente"
+                            placeholder={L.entityNamePlaceholder}
                             readStyle={{
                               fontSize: 13.5, fontWeight: 700, letterSpacing: "-0.018em",
                               color: isLight ? T.txt : "#FFFFFF", fontFamily: fontDisp,
@@ -4072,7 +4088,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                         {/* 👤 Perfil — siempre visible con borde sutil. Hover
                             ilumina con accent azul para señal de acción. */}
                         <button onClick={() => openLeadDrawer(l)}
-                          title="Abrir perfil del cliente"
+                          title={L.openProfile}
                           aria-label="Abrir perfil del cliente"
                           style={{
                             width: 30, height: 30, borderRadius: 8,
@@ -4389,7 +4405,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                     )}
                     {stLeads.length === 0 && (
                       <div style={{ padding: "28px 16px", borderRadius: 11, border: `1px dashed ${isDragTarget ? `${c}50` : T.border}`, textAlign: "center", background: isDragTarget ? `${c}06` : "transparent", transition: "all 0.15s" }}>
-                        <p style={{ fontSize: 10.5, color: isDragTarget ? c : T.txt3 }}>{isDragTarget ? "Soltar aquí" : "Sin clientes"}</p>
+                        <p style={{ fontSize: 10.5, color: isDragTarget ? c : T.txt3 }}>{isDragTarget ? "Soltar aquí" : L.emptyList}</p>
                       </div>
                     )}
                   </div>
@@ -5244,7 +5260,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
               <p style={{ margin: "0 0 12px", fontSize: 12.5, lineHeight: 1.5, color: T.txt3, fontFamily: font }}>
                 Elegí el asesor que recibirá {selectedIds.size === 1 ? "el lead" : "los leads"}.{" "}
                 {reassignToContactame
-                  ? <>Aparecerán al inicio de su pipeline en <strong style={{ color: isLight ? T.txt : "#fff", fontWeight: 700 }}>Contáctame Ya</strong>.</>
+                  ? <>Aparecerán al inicio de su pipeline en <strong style={{ color: isLight ? T.txt : "#fff", fontWeight: 700 }}>{DEFAULT_STAGE}</strong>.</>
                   : "Conservarán su etapa actual."}
               </p>
 
@@ -5310,9 +5326,9 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                   background: isLight ? "rgba(15,23,42,0.03)" : "rgba(255,255,255,0.03)",
                   border: `1px solid ${isLight ? "rgba(15,23,42,0.08)" : "rgba(255,255,255,0.08)"}`,
                 }}>
-                <SelectCheck checked={reassignToContactame} onToggle={() => setReassignToContactame(v => !v)} size={18} title="Mover a Contáctame Ya" T={T} isLight={isLight} />
+                <SelectCheck checked={reassignToContactame} onToggle={() => setReassignToContactame(v => !v)} size={18} title={`Mover a ${DEFAULT_STAGE}`} T={T} isLight={isLight} />
                 <span style={{ flex: 1, minWidth: 0 }}>
-                  <span style={{ display: "block", fontSize: 12.5, fontWeight: 700, color: isLight ? T.txt : "#fff", fontFamily: font }}>Mover a Contáctame Ya</span>
+                  <span style={{ display: "block", fontSize: 12.5, fontWeight: 700, color: isLight ? T.txt : "#fff", fontFamily: font }}>Mover a {DEFAULT_STAGE}</span>
                   <span style={{ display: "block", fontSize: 11, color: T.txt3, fontFamily: font, lineHeight: 1.4, marginTop: 1 }}>Reinicia el lead al inicio del pipeline del nuevo asesor.</span>
                 </span>
               </div>

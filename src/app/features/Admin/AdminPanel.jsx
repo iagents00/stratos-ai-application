@@ -5,7 +5,7 @@
  * Extraído de App.jsx.
  * ─────────────────────────────────────────────────────────────────────────────
  */
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
 import {
   Search, Plus, X, User, CheckCircle2, Trash2, Download
@@ -19,7 +19,12 @@ import { ROLE_META, RoleBadge } from "./RoleBadge";
 
 export default function AdminPanel() {
   const { user: me } = useAuth();
-  const [users, setUsers]           = useState(() => adminGetAllUsers());
+  // adminGetAllUsers es async: guardar la Promise en el state (como se hacía
+  // antes) dejaba `users` siendo una Promise y reventaba el panel entero en el
+  // primer render con "users.filter is not a function". Por eso se carga en un
+  // efecto y el state arranca como array vacío.
+  const [users, setUsers]           = useState([]);
+  const [loadingUsers, setLoadingUsers] = useState(true);
   const [search, setSearch]         = useState("");
   const [roleFilter, setRoleFilter] = useState("ALL");
   const [modal, setModal]           = useState(null);
@@ -47,7 +52,24 @@ export default function AdminPanel() {
     setTimeout(() => setBackupState(s => ({ ...s, msg: "" })), 6000);
   };
 
-  const refresh = () => setUsers(adminGetAllUsers());
+  const refresh = useCallback(async () => {
+    const list = await adminGetAllUsers(me?.id);
+    setUsers(Array.isArray(list) ? list : []);
+    setLoadingUsers(false);
+  }, [me?.id]);
+
+  // Carga inicial. El flag de cancelación evita el setState tardío si el panel
+  // se desmonta mientras la query va en vuelo (el usuario cambia de módulo).
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const list = await adminGetAllUsers(me?.id);
+      if (cancelled) return;
+      setUsers(Array.isArray(list) ? list : []);
+      setLoadingUsers(false);
+    })();
+    return () => { cancelled = true; };
+  }, [me?.id]);
 
   const sf = (k) => (v) => setForm(p => ({ ...p, [k]: typeof v === "string" ? v : v.target.value }));
 
@@ -79,11 +101,11 @@ export default function AdminPanel() {
     setTimeout(() => setModal(null), 1400);
   };
 
-  const handleEdit = () => {
+  const handleEdit = async () => {
     if (!form.name?.trim()) { setFormErr("El nombre es requerido."); return; }
-    const { data, error } = adminUpdateUser(modal.user.id, { name: form.name.trim(), email: form.email.trim().toLowerCase(), role: form.role, isActive: form.isActive });
+    const { error } = await adminUpdateUser(modal.user.id, { name: form.name.trim(), role: form.role, isActive: form.isActive });
     if (error) { setFormErr(error); return; }
-    refresh(); setFormOk("Cambios guardados."); setTimeout(() => setModal(null), 1000);
+    await refresh(); setFormOk("Cambios guardados."); setTimeout(() => setModal(null), 1000);
   };
 
   const handleReset = () => {
@@ -93,14 +115,18 @@ export default function AdminPanel() {
     setFormOk("Contraseña actualizada."); setTimeout(() => setModal(null), 1000);
   };
 
-  const handleDelete = (id) => {
-    const { error } = adminDeleteUser(id, me?.id);
-    if (error) return;
-    setDeleteConfirm(null); refresh();
+  const [rowErr, setRowErr] = useState("");
+
+  const handleDelete = async (id) => {
+    const { error } = await adminDeleteUser(id, me?.id);
+    if (error) { setRowErr(error); setDeleteConfirm(null); return; }
+    setDeleteConfirm(null); await refresh();
   };
 
-  const handleToggleActive = (u) => {
-    adminUpdateUser(u.id, { isActive: !u.isActive }); refresh();
+  const handleToggleActive = async (u) => {
+    const { error } = await adminUpdateUser(u.id, { isActive: !u.isActive });
+    if (error) { setRowErr(error); return; }
+    setRowErr(""); await refresh();
   };
 
   const filtered = users.filter(u => {
@@ -182,6 +208,20 @@ export default function AdminPanel() {
         </div>
       )}
 
+      {/* Error de escritura sobre una fila (permisos de la base) */}
+      {rowErr && (
+        <div style={{
+          padding: "10px 16px", borderRadius: 10, fontSize: 12.5, fontFamily: font,
+          background: `${P.rose}0E`, border: `1px solid ${P.rose}30`, color: P.rose,
+          display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12,
+        }}>
+          <span>{rowErr}</span>
+          <button onClick={() => setRowErr("")} style={{ background: "transparent", border: "none", color: P.rose, cursor: "pointer", display: "flex", padding: 0 }}>
+            <X size={14} />
+          </button>
+        </div>
+      )}
+
       {/* ── Role stats strip ── */}
       <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
         {stats.map(s => (
@@ -236,17 +276,21 @@ export default function AdminPanel() {
         <div style={{ overflowY: "auto", maxHeight: "calc(100vh - 380px)" }}>
           {filtered.length === 0 && (
             <div style={{ padding: "48px 0", textAlign: "center" }}>
-              <p style={{ fontSize: 13, color: P.txt3 }}>No se encontraron usuarios.</p>
+              <p style={{ fontSize: 13, color: P.txt3 }}>
+                {loadingUsers ? "Cargando usuarios…" : "No se encontraron usuarios."}
+              </p>
             </div>
           )}
           {filtered.map((u, idx) => {
-            const m = ROLE_META[u.role] || { label: u.role, color: P.txt3 };
             const active = u.isActive !== false;
             const isMe = u.id === me?.id;
             const canEdit = canManage && (isSuper || (ROLE_META[u.role]?.level ?? 99) > (ROLE_META[me?.role]?.level ?? 0));
             const initials = (u.name || "?").split(" ").map(w => w[0]).join("").toUpperCase().slice(0, 2);
             const avatarColors = ["#A78BFA", "#7EB8F0", "#6EE7C2", "#F59E0B", "#5DC8D9", "#E8818C"];
-            const ac = avatarColors[u.id % avatarColors.length];
+            // Los ids son UUID (texto): `u.id % n` daba NaN y el color salía
+            // "undefined18". Se hashea el string para tener color estable.
+            const hash = [...String(u.id)].reduce((h, ch) => (h * 31 + ch.charCodeAt(0)) >>> 0, 7);
+            const ac = avatarColors[hash % avatarColors.length];
             return (
               <div key={u.id} style={{
                 display: "grid", gridTemplateColumns: "2.2fr 2fr 1fr 1fr 100px",
@@ -264,7 +308,7 @@ export default function AdminPanel() {
                       {u.name}
                       {isMe && <span style={{ fontSize: 9, color: P.accent, fontWeight: 700, marginLeft: 7, background: `${P.accent}12`, border: `1px solid ${P.accentB}`, padding: "1px 7px", borderRadius: 99 }}>Tú</span>}
                     </p>
-                    <p style={{ fontSize: 10.5, color: P.txt3, marginTop: 1 }}>ID #{u.id}</p>
+                    <p style={{ fontSize: 10.5, color: P.txt3, marginTop: 1 }}>ID {String(u.id).slice(0, 8)}</p>
                   </div>
                 </div>
 

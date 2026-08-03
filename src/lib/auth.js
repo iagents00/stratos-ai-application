@@ -428,28 +428,77 @@ export async function getStoredSession() {
 }
 
 /* ── Funciones admin ─────────────────────────────────────── */
-export async function adminGetAllUsers() {
+
+const NO_WRITE_PERMISSION =
+  'La base de datos solo permite editar tu propio perfil. Para cambiar el rol o desactivar a otra persona, hazlo desde Supabase → Authentication.'
+
+/** Normaliza una fila de perfil a la forma que consume AdminPanel. */
+function toAdminUser(u) {
+  return {
+    id: u.id,
+    name: u.name,
+    email: u.email || '',
+    role: u.role,
+    phone: u.phone || '',
+    isActive: u.active !== false,
+    createdAt: u.created_at,
+  }
+}
+
+/**
+ * Lista de usuarios de la organización para el panel de admin.
+ *
+ * Va por la RPC `fn_team_users` porque es la única forma de traer el EMAIL: vive
+ * en `auth.users`, tabla que el frontend no puede leer nunca. La RPC es
+ * SECURITY DEFINER y solo responde a super_admin/admin/director/ceo.
+ *
+ * Si la RPC no está disponible cae a un SELECT sobre `profiles` (RLS lo limita a
+ * la org del usuario): se pierde la columna de email, pero el panel muestra a
+ * todo el equipo en vez de quedarse vacío.
+ */
+export async function adminGetAllUsers(profileId) {
   try {
+    if (profileId) {
+      const { data, error } = await supabase.rpc('fn_team_users', { p_profile_id: profileId })
+      if (!error && Array.isArray(data) && data.length) return data.map(toAdminUser)
+    }
     const { data, error } = await supabase
       .from('profiles')
       .select('id, name, role, phone, active, created_at')
       .order('created_at')
-    return error ? [] : data
+    return error ? [] : (data || []).map(toAdminUser)
   } catch (e) {
     console.warn('[Stratos] adminGetAllUsers error:', e.message)
     return []
   }
 }
 
-export async function adminUpdateUser(id, updates) {
+/**
+ * Actualiza un perfil. Traduce las claves de UI a las columnas reales:
+ * `isActive` → `active`, y descarta `email` (vive en auth.users, no en profiles).
+ *
+ * OJO: la policy `profiles_update_own` solo deja escribir el perfil propio, así
+ * que editar a otra persona no afecta filas. Antes eso se reportaba como éxito;
+ * ahora se devuelve un error explícito en vez de mentirle al admin.
+ */
+export async function adminUpdateUser(id, updates = {}) {
+  const patch = {}
+  if (updates.name     !== undefined) patch.name   = updates.name
+  if (updates.role     !== undefined) patch.role   = updates.role
+  if (updates.phone    !== undefined) patch.phone  = updates.phone
+  if (updates.active   !== undefined) patch.active = updates.active
+  if (updates.isActive !== undefined) patch.active = updates.isActive
+  if (!Object.keys(patch).length) return { data: null, error: 'No hay cambios que guardar.' }
+
   try {
     const { data, error } = await supabase
       .from('profiles')
-      .update(updates)
+      .update(patch)
       .eq('id', id)
       .select()
-      .single()
-    return { data, error: error?.message ?? null }
+    if (error) return { data: null, error: error.message }
+    if (!data?.length) return { data: null, error: NO_WRITE_PERMISSION }
+    return { data: toAdminUser(data[0]), error: null }
   } catch (e) {
     return { data: null, error: 'Error de conexión al actualizar usuario.' }
   }
@@ -458,11 +507,14 @@ export async function adminUpdateUser(id, updates) {
 export async function adminDeleteUser(id, currentUserId) {
   if (id === currentUserId) return { error: 'No puedes desactivar tu propia cuenta.' }
   try {
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('profiles')
       .update({ active: false })
       .eq('id', id)
-    return { error: error?.message ?? null }
+      .select()
+    if (error) return { error: error.message }
+    if (!data?.length) return { error: NO_WRITE_PERMISSION }
+    return { error: null }
   } catch (e) {
     return { error: 'Error de conexión al desactivar usuario.' }
   }
