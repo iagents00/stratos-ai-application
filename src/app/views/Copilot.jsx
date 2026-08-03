@@ -43,6 +43,22 @@ const OCR_COMPROBANTE_URL = "https://personal-n8n.suwsiw.easypanel.host/webhook/
 const REC_MAX_SECS = 300;
 const fmtRecSecs = (s) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
 
+/* Cuándo se dijo un mensaje. Hoy → solo la hora (lo de siempre). Ayer o antes →
+   también el día, porque si no, dos avisos de días distintos a la misma hora se
+   leen como el mismo mensaje repetido. */
+const fmtCuando = (iso) => {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  const hora = d.toLocaleString("es-MX", { hour: "2-digit", minute: "2-digit" });
+  const dia = (x) => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime();
+  const diasAtras = Math.round((dia(new Date()) - dia(d)) / 86400000);
+  if (diasAtras <= 0) return hora;
+  if (diasAtras === 1) return `ayer ${hora}`;
+  if (diasAtras < 7) return `${d.toLocaleDateString("es-MX", { weekday: "long" })} ${hora}`;
+  return `${d.toLocaleDateString("es-MX", { day: "numeric", month: "long" })}, ${hora}`;
+};
+
 export default function Copilot({ theme = "dark", T: Tprop, isLight: isLightProp, onBack, score }) {
   const isLight = isLightProp != null ? isLightProp : theme === "light";
   const T = Tprop || (isLight ? LP : P);
@@ -1105,11 +1121,12 @@ function renderRichText(text, linkColor) {
 function Bubble({ m, T, isLight, userBg, userTxt, aiBg, aiBd, onPick, sending, isLast }) {
   const isUser = m.role === "user";
   const [zoom, setZoom] = useState(false); // visor a pantalla completa de la evidencia (estilo WhatsApp)
-  const time = m.occurred_at
-    ? new Date(m.occurred_at).toLocaleString("es-MX", { hour: "2-digit", minute: "2-digit" })
-    : m.created_at
-    ? new Date(m.created_at).toLocaleString("es-MX", { hour: "2-digit", minute: "2-digit" })
-    : "";
+  /* La burbuja mostraba SOLO la hora. Los avisos que se repiten todos los días
+     a la misma hora (el radar de tareas vencidas sale 10:00 a.m. cada mañana)
+     quedaban idénticos uno debajo del otro y parecían el MISMO mensaje enviado
+     tres veces — Ángel lo leyó como spam el 3-ago. No era spam: eran tres días.
+     Cuando el mensaje no es de hoy, se dice de cuándo es. */
+  const time = fmtCuando(m.occurred_at || m.created_at);
 
   /* ── Detección de botones inline (misma lógica que Telegram y botones explícitos) ── */
   let inlineButtons = [];
