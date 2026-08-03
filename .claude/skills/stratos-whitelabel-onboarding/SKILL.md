@@ -289,6 +289,26 @@ en toda la base Stratos (si ya está en otro perfil, hay que desconectarlo prime
     quien construyó la función.
 
 
+23. **La PUNTUALIDAD de un recordatorio depende de dos cosas, y la segunda es la pantalla.** (3-ago-2026.)
+    Ángel pidió «recuérdame en 2 minutos», el sistema lo agendó bien y él no lo vio llegar. Dos causas distintas:
+    - **El cron de entrega.** Corría cada 2 minutos, así que el retraso máximo era ese. Los crons de **consumo**
+      (`Get Pending…`) pasaron a **15 segundos** en los seis motores: PersonalReminders, SALES_Proactive,
+      NextAction (×2), ZoomVisitas y TeamActions. Los de **scan** se dejaron como estaban: encolan con horas o días
+      de anticipación y bajarlos solo multiplica carga sin ganar puntualidad.
+    - **El Copilot no se refrescaba solo.** El hilo únicamente recargaba al cambiar de pestaña y volver. El
+      recordatorio de las 16:08:34 se entregó a las **16:08:40** —6 segundos— y quedó en `tg_bot_activity`, pero la
+      pantalla nunca fue a buscarlo. Ahora el chat escucha `tg_bot_activity` por realtime (mismo patrón que
+      `useCopilotInbox`) con un respaldo cada 20 s, pausado mientras escribes.
+    - ⚠️ **Al diagnosticar «no llegó», mirá primero `proactive_reminders.sent_at`.** Si está puesto y a tiempo, el
+      problema **no** es la entrega: es la pantalla, o el chat de destino. No toques el motor.
+
+24. **Un envío a Telegram que falla no puede tragarse el aviso del Copilot.** Los perfiles de prueba tienen
+    `telegram_chat_id` **sintéticos** (negativos, tipo `-9000000000065`): Telegram rechaza el envío. Como el nodo
+    `Log Proactive Copilot` va DESPUÉS del de Telegram, un fallo ahí dejaba al Copilot sin el mensaje. Todos los nodos
+    de Telegram de los motores llevan ahora `onError: continueRegularOutput` — el Copilot recibe el aviso aunque
+    Telegram falle. Vale igual para un asesor real que todavía no pareó su Telegram.
+
+
 **⭐ Antes de mostrarle el asistente a alguien, corré TAMBIÉN esta prueba** — es la que faltó el 3-ago y
 dejó pasar el bug del botón. Elegí un homónimo desde la lista y comprobá que la acción **quedó escrita**:
 

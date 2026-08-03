@@ -214,8 +214,37 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
     };
     document.addEventListener('visibilitychange', onFocusReload);
     window.addEventListener('focus', onFocusReload);
+
+    /* El hilo SOLO se refrescaba al cambiar de pestaña y volver. Un recordatorio
+       que entraba mientras mirabas el chat no aparecía: el 3-ago Ángel pidió uno
+       «en 2 minutos», el sistema lo entregó puntual (6 segundos de retraso, está
+       en la base) y él no lo vio nunca, porque la pantalla no fue a buscarlo.
+       Ahora el chat escucha los mensajes nuevos como ya lo hace la campanita
+       (mismo patrón que useCopilotInbox), con un respaldo por si el realtime se
+       cae. Se pausa cuando la pestaña está oculta y cuando acabas de escribir,
+       para no pisar lo que estás mandando. */
+    let debounceRealtime = null;
+    const onMensajeNuevo = () => {
+      if (document.hidden || sendingRef.current) return;
+      if (Date.now() - lastSendRef.current < 4000) return;
+      if (debounceRealtime) clearTimeout(debounceRealtime);
+      debounceRealtime = setTimeout(() => reload({ merge: true }), 700);
+    };
+    const canal = supabase
+      .channel(`copilot-hilo-${Date.now()}`)
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'tg_bot_activity' }, onMensajeNuevo)
+      .subscribe();
+    const respaldo = setInterval(() => {
+      if (document.hidden || sendingRef.current) return;
+      if (Date.now() - lastSendRef.current < 15000) return;
+      reload({ merge: true });
+    }, 20000);
+
     return () => {
       mountedRef.current = false;
+      if (debounceRealtime) clearTimeout(debounceRealtime);
+      supabase.removeChannel(canal);
+      clearInterval(respaldo);
       document.removeEventListener('visibilitychange', onFocusReload);
       window.removeEventListener('focus', onFocusReload);
       if (recordTimerRef.current) clearInterval(recordTimerRef.current);
