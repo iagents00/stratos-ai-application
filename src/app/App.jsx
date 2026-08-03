@@ -401,6 +401,18 @@ export default function App() {
   const [callOpen, setCallOpen] = useState(false);
   const [callTargets, setCallTargets] = useState(null); // [{id,name}] compañeros de la org
   const [incomingCall, setIncomingCall] = useState(null); // {caller, meet}
+  /* ── Rechazar de verdad + «siguen en llamada» ──────────────────────────────
+   * [guard:CALL-REJECT] Rechazar NO terminaba la llamada: el chequeo de
+   * `fn_llamada_en_curso` (más abajo) corre al volver a la app, veía la llamada
+   * TODAVÍA viva en la base y volvía a abrir la pantalla con el timbre. Ángel:
+   * «lo presiono y me sigue sonando».
+   * Fix: se recuerda QUÉ meet se rechazó. Mientras esa llamada siga en curso no
+   * vuelve a sonar — pero tampoco desaparece del todo: queda una barra discreta
+   * «siguen en llamada · Unirse», por si el rechazo fue sin querer o se quiere
+   * entrar más tarde. Cuando la llamada termina de verdad, las dos se limpian.
+   * ────────────────────────────────────────────────────────────────────────── */
+  const [callRejected, setCallRejected] = useState(null); // meet que YO rechacé
+  const [callOngoing, setCallOngoing]   = useState(null); // {caller, meet} para la barra
   const openCallMenu = () => {
     setCallOpen(o => !o);
     if (callTargets === null) {
@@ -445,12 +457,15 @@ export default function App() {
   // Muestra la pantalla de llamada. Ignora avisos repetidos mientras ya hay una
   // en curso: si no, cada evento reiniciaría el timbre desde cero.
   const showIncomingCall = useCallback((caller, meet) => {
-    setIncomingCall(prev => prev || {
-      caller: caller || "Alguien",
-      meet: meet || "https://meet.google.com/mus-xsur-jdc",
-    });
+    const m = meet || "https://meet.google.com/mus-xsur-jdc";
+    // Si YO rechacé esta llamada, no vuelve a sonar: pasa a la barra discreta.
+    if (callRejected && m === callRejected) {
+      setCallOngoing({ caller: caller || "El equipo", meet: m });
+      return;
+    }
+    setIncomingCall(prev => prev || { caller: caller || "Alguien", meet: m });
     try { if (navigator.vibrate) navigator.vibrate([300, 120, 300, 120, 300]); } catch { /* noop */ }
-  }, []);
+  }, [callRejected]);
   // Cierra la notificación del SO al contestar/rechazar/expirar: viaja con
   // requireInteraction, así que sin esto se queda pegada en pantalla.
   const closeCallNotifications = useCallback(() => {
@@ -461,6 +476,19 @@ export default function App() {
         .catch(() => { /* noop */ });
     } catch { /* noop */ }
   }, []);
+  /** Rechazar: calla el timbre y deja la barra discreta de «siguen en llamada». */
+  const rejectCall = useCallback((meet) => {
+    closeCallNotifications();
+    setCallRejected(meet || null);
+    setCallOngoing(meet ? { caller: "El equipo", meet } : null);
+    setIncomingCall(null);
+  }, [closeCallNotifications]);
+  /** Unirse (desde el overlay o desde la barra): abre el Meet y limpia todo. */
+  const joinCall = useCallback((meet) => {
+    closeCallNotifications();
+    setIncomingCall(null); setCallOngoing(null); setCallRejected(null);
+    if (meet) window.open(meet, "_blank", "noopener");
+  }, [closeCallNotifications]);
   // Suscripción a llamadas entrantes (solo tenants con el botón; cleanup SIEMPRE).
   // ⚠️ HOY ESTE CAMINO NO DISPARA: `proactive_reminders` no está en la publicación
   // `supabase_realtime`, así que el INSERT nunca llega al navegador. Se deja
@@ -509,7 +537,13 @@ export default function App() {
     const revisarLlamada = () => {
       if (document.hidden) return;
       supabase.rpc("fn_llamada_en_curso", { p_profile_id: user.id })
-        .then(({ data }) => { if (vivo && data?.meet) showIncomingCall(data.caller, data.meet); })
+        .then(({ data }) => {
+          if (!vivo) return;
+          if (data?.meet) { showIncomingCall(data.caller, data.meet); return; }
+          // Ya NO hay llamada en curso → se limpia todo (incluido el rechazo,
+          // para que la PRÓXIMA llamada al mismo Meet sí vuelva a sonar).
+          setCallOngoing(null); setCallRejected(null);
+        })
         .catch(() => { /* si falla, quedan los otros dos caminos */ });
     };
     revisarLlamada();
@@ -517,6 +551,20 @@ export default function App() {
     document.addEventListener("visibilitychange", onVisible);
     return () => { vivo = false; document.removeEventListener("visibilitychange", onVisible); };
   }, [user?.id, clientConfig?.features?.reunionButton, showIncomingCall]);
+  /* Mientras la barra de «siguen en llamada» esté visible, se revisa cada 30 s
+   * para que desaparezca sola cuando la reunión termine. Solo corre si la barra
+   * está puesta y la pestaña visible — y se limpia siempre (regla de performance
+   * del CRM: ningún setInterval sin su clearInterval). */
+  useEffect(() => {
+    if (!callOngoing || !user?.id) return;
+    const tic = setInterval(() => {
+      if (document.hidden) return;
+      supabase.rpc("fn_llamada_en_curso", { p_profile_id: user.id })
+        .then(({ data }) => { if (!data?.meet) { setCallOngoing(null); setCallRejected(null); } })
+        .catch(() => { /* noop */ });
+    }, 30000);
+    return () => clearInterval(tic);
+  }, [callOngoing, user?.id]);
   // La pantalla de llamada se auto-cierra a los 45s (como un teléfono que deja de sonar).
   useEffect(() => {
     if (!incomingCall) return;
@@ -2689,15 +2737,48 @@ export default function App() {
             <div style={{ fontSize: 14, color: "rgba(255,255,255,0.68)", marginTop: 6 }}>te está llamando · Reunión de equipo</div>
           </div>
           <div style={{ display: "flex", gap: 12, marginTop: 8, width: "100%", maxWidth: 360 }}>
-            <button onClick={() => { closeCallNotifications(); setIncomingCall(null); }}
+            <button onClick={() => rejectCall(incomingCall.meet)}
               style={{ flex: 1, minHeight: 54, padding: "15px 12px", borderRadius: 999, border: "1px solid #7F3B3B", background: "#2A1214", color: "#FCA5A5", fontSize: 15.5, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 7 }}>
               <PhoneOff size={17} /> Rechazar
             </button>
-            <button onClick={() => { const m = incomingCall.meet; closeCallNotifications(); setIncomingCall(null); window.open(m, "_blank", "noopener"); }}
+            <button onClick={() => joinCall(incomingCall.meet)}
               style={{ flex: 1, minHeight: 54, padding: "15px 12px", borderRadius: 999, border: "none", background: P.accent, color: "#04211A", fontSize: 15.5, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 7, boxShadow: `0 8px 26px ${P.accent}38` }}>
               <PhoneCall size={17} /> Contestar
             </button>
           </div>
+        </div>, document.body)}
+      {/* ── «Siguen en llamada · Unirse» ────────────────────────────────────────
+          Aparece cuando rechacé pero la reunión SIGUE viva: si el rechazo fue sin
+          querer —o si quiero entrar más tarde— hay cómo volver, sin que el timbre
+          moleste. Barra discreta, no un velo: la llamada ya no reclama atención.
+          Se va sola cuando la reunión termina (chequeo de 30 s). ── */}
+      {!incomingCall && callOngoing && createPortal(
+        <div style={{
+          position: "fixed", left: "50%", transform: "translateX(-50%)",
+          bottom: `calc(env(safe-area-inset-bottom, 0px) + 84px)`,   // por encima del menú del celular
+          zIndex: 99994, display: "flex", alignItems: "center", gap: 12,
+          padding: "10px 12px 10px 16px", borderRadius: 999,
+          background: "#0B1524", border: `1px solid ${P.accent}3d`,
+          boxShadow: "0 1px 2px rgba(0,0,0,0.30), 0 10px 30px rgba(0,0,0,0.42)", // dos capas
+          maxWidth: "calc(100vw - 32px)",
+        }}>
+          <span style={{ width: 8, height: 8, borderRadius: "50%", background: P.accent, flexShrink: 0,
+                         animation: "stratosNewLeadPulse 1.8s ease-in-out infinite" }} />
+          <span style={{ fontSize: 13.5, fontWeight: 600, color: "#E8EEF6", fontFamily: font,
+                         whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+            {clientConfig?.brand?.logoText || "El equipo"} sigue en llamada
+          </span>
+          <button onClick={() => joinCall(callOngoing.meet)}
+            style={{ minHeight: 36, padding: "8px 16px", borderRadius: 999, border: "none",
+                     background: P.accent, color: "#04211A", fontSize: 13.5, fontWeight: 700,
+                     cursor: "pointer", flexShrink: 0, display: "flex", alignItems: "center", gap: 6 }}>
+            <PhoneCall size={14} /> Unirse
+          </button>
+          <button onClick={() => { setCallOngoing(null); }} aria-label="Ocultar aviso de llamada"
+            style={{ background: "none", border: "none", color: "rgba(232,238,246,0.45)",
+                     cursor: "pointer", padding: 6, display: "flex", flexShrink: 0 }}>
+            <X size={15} />
+          </button>
         </div>, document.body)}
       {plusOpen && createPortal(
         <>
