@@ -23,10 +23,23 @@ import { resolveClientFromLocation, getClientConfigByOrgId } from '../clients'
 // `features.copilotBrain: "tareas"` y, si tiene flujo propio,
 // `tenant.copilotWebhook` (caso NSG → flujo Claude `copilot-nsg`). Va por
 // CONFIG, nunca hardcodeado por org (regla white-label #15 de la skill).
+//
+// `copilotBrain` distinto de 'crm' = el tenant tiene CEREBRO PROPIO y no es una
+// inmobiliaria: no debe pasar por las capas de VENTAS (quick commands de
+// `copilot_send`, callbacks proactivos de zoom/inactividad, awaiting-plan) ni
+// recibir el manual inmobiliario. Antes eso se lograba solo con `tasksBrain`,
+// así que un rubro nuevo (ej. `dental`) caía en el Copilot de ventas y le
+// hablaba de leads y Zooms. `customBrain` generaliza esa puerta a cualquier
+// rubro; `copilotHelp` deja que cada tenant escriba su propio "¿qué puedes
+// hacer?" en vez de heredar el de Duke.
 function tenantCopilotShape(cfg) {
+  const brain = cfg?.features?.copilotBrain || 'crm'
   return {
-    tasksBrain: cfg?.features?.copilotBrain === 'tareas',
+    brain,
+    tasksBrain: brain === 'tareas',
+    customBrain: brain !== 'crm',
     webhook: cfg?.tenant?.copilotWebhook || null,
+    helpText: cfg?.tenant?.copilotHelp || null,
     mktLabel: cfg?.navLabels?.mkt || 'Marketing',
   }
 }
@@ -34,7 +47,7 @@ function tenantCopilotShape(cfg) {
 // labels.js/pipeline.js). La AUTORIDAD final es la ORG del usuario (ver inner).
 function getTenantCopilotConfig() {
   try { return tenantCopilotShape(resolveClientFromLocation()) }
-  catch { return { tasksBrain: false, webhook: null, mktLabel: 'Marketing' } }
+  catch { return { brain: 'crm', tasksBrain: false, customBrain: false, webhook: null, helpText: null, mktLabel: 'Marketing' } }
 }
 
 // getSession() puede colgarse si el SDK auto-refresca un token caducado.
@@ -434,6 +447,12 @@ async function _sendCopilotMessageInner(rawText, options = {}) {
     // 1. Detección directa de solicitud de manual / guía / instrucciones — o "¿qué puedes hacer?"
     const wantsManual = /^(?:dame |mandame |enviame |enviar |ver |mostrar |necesito |pasame )?(?:el |la )?(?:manual|guía|guia|instrucciones|ayuda)(?:\s|$)/i.test(cleanText);
     const wantsCapabilities = /(qu[eé]\s+(tanto\s+)?(cosas\s+)?(me\s+)?(puedes?|pod[eé]s|sabes?|sab[eé]s)\s+hacer|qu[eé]\s+haces|qu[eé]\s+(otras\s+)?funcion(es|alidades)|para\s+qu[eé]\s+sirves?|en\s+qu[eé]\s+(me\s+)?(puedes?|pod[eé]s)\s+ayudar|c[oó]mo\s+(me\s+)?(puedes?\s+)?ayud)/i.test(cleanText);
+    // Tenant que escribió su propio "¿qué puedes hacer?" en la config
+    // (`tenant.copilotHelp`, ej. una clínica dental). Va PRIMERO: sin esto caía
+    // al manual inmobiliario de más abajo y le hablaba de leads y Zooms.
+    if (tenant.helpText && !options.callback_data && (wantsManual || wantsCapabilities)) {
+      return { reply: tenant.helpText, buttons: [], error: null };
+    }
     // Tenant con cerebro de TAREAS (ej. NSG): ayuda propia, sin el branding de
     // marketing de Duke (marcas/videos). Va ANTES del bloque isMarketing.
     if (tenant.tasksBrain && !options.callback_data && (wantsManual || wantsCapabilities)) {
@@ -462,7 +481,10 @@ async function _sendCopilotMessageInner(rawText, options = {}) {
         error: null
       };
     }
-    if (!options.callback_data && (wantsManual || wantsCapabilities)) {
+    // Manual INMOBILIARIO (Duke y demás tenants de venta). Un tenant con cerebro
+    // propio nunca debe llegar acá: si no declaró `copilotHelp`, que le conteste
+    // su propio cerebro, no el manual de leads y Zooms.
+    if (!options.callback_data && !tenant.customBrain && (wantsManual || wantsCapabilities)) {
       const reply = wantsCapabilities
         ? "🤖 **Esto es lo que puedo hacer por ti:**\n\n• Registrar clientes y mover su etapa (por nombre o por número: \"tercera etapa\")\n• Buscar una ficha por nombre o teléfono\n• Programar actividades para el equipo dictando varias de una vez — te muestro el plan y tú confirmas o corriges\n• Recordarte cada actividad con botones: 1 hora antes, 10 minutos antes y a la hora\n• Recomendarte propiedades según el presupuesto y la zona de un lead\n• Enviarte el catálogo y los drives por presupuesto o ubicación\n• Consultar la cartera de un asesor (si eres admin)\n• Recordatorios personales (\"recuérdame en 2 horas…\") y avisos de tus Zooms y visitas\n\nTodo por voz o texto — con el micrófono, Enter envía el audio. Aquí está el manual completo con ejemplos:"
         : "📖 **Manual Oficial del Asistente Stratos IA & Telegram**\n\nConsulta aquí todas las funcionalidades, comandos de voz y texto para sacarle el máximo partido al sistema:";
@@ -484,7 +506,7 @@ async function _sendCopilotMessageInner(rawText, options = {}) {
     // tareas de equipo (done/en proceso/no la hice). Devuelve {text, buttons} para reofrecer
     // los botones de seguimiento (ej. tras la ficha). El texto que el asesor escribe DESPUÉS
     // (la fecha para reagendar, o el plan) lo captura `copilot_handle_pending`, más abajo.
-    if (!isMarketing && options.callback_data && /^(proact_inact|proact_next|proact_plan|proact_reagendar|team_action):/.test(options.callback_data)) {
+    if (!isMarketing && !tenant.customBrain && options.callback_data && /^(proact_inact|proact_next|proact_plan|proact_reagendar|team_action):/.test(options.callback_data)) {
       try {
         const { data: cb } = await supabase.rpc('copilot_handle_callback', { p_callback_data: options.callback_data });
         if (cb && typeof cb === 'object') {
@@ -496,7 +518,7 @@ async function _sendCopilotMessageInner(rawText, options = {}) {
     }
 
     // Si es un click en botón inline (callback_data), va directo al webhook (o RPC callback) sin evaluar QUICK_COMMANDS
-    if (!options.callback_data && !isMarketing) {
+    if (!options.callback_data && !isMarketing && !tenant.customBrain) {
       const lower = cleanText.toLowerCase();
       const QUICK_COMMANDS = [
         'mis clientes', 'qué tengo hoy', 'que tengo hoy', 'cómo voy', 'como voy',
@@ -524,7 +546,7 @@ async function _sendCopilotMessageInner(rawText, options = {}) {
     // mi plan", el próximo texto ES el plan → lo capturamos acá ANTES del webhook
     // (que lo trataría como una nota). Si no está en ese estado, devuelve null y
     // el mensaje sigue su curso normal. Cubre el plan de Zoom y el de próxima acción.
-    if (!isMarketing && !options.callback_data && cleanText) {
+    if (!isMarketing && !tenant.customBrain && !options.callback_data && cleanText) {
       try {
         const { data: pendingReply } = await supabase.rpc('copilot_handle_pending', { p_text: cleanText });
         if (pendingReply && typeof pendingReply === 'string' && pendingReply.trim()) {
@@ -574,9 +596,13 @@ async function _sendCopilotMessageInner(rawText, options = {}) {
       // razón, solo quedó así. Un aborto del cliente NO cancela el flujo: n8n
       // sigue corriendo del lado del servidor y guarda igual.
       const timeout = setTimeout(() => ctrl.abort(), 40000);
-      // Webhook por tenant (NSG → su flujo Claude propio); si no hay override,
-      // la ruta de siempre: marketing → cerebro mkt · resto → cerebro de ventas.
-      const webhookUrl = (tenant.tasksBrain && tenant.webhook)
+      // Webhook por tenant: si el tenant declaró el suyo en la config, manda ese
+      // — vale para NSG (cerebro de tareas) y para cualquier rubro nuevo (ej. la
+      // clínica dental). Antes la condición exigía además `tasksBrain`, así que
+      // un cerebro distinto de 'tareas' terminaba en el flujo de ventas aunque
+      // tuviera webhook propio. Sin override, la ruta de siempre:
+      // marketing → cerebro mkt · resto → cerebro de ventas.
+      const webhookUrl = tenant.webhook
         ? tenant.webhook
         : (isMarketing ? N8N_COPILOT_WEBHOOK_MKT : N8N_COPILOT_WEBHOOK);
       const res = await fetch(webhookUrl, {

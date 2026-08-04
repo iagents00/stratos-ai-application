@@ -19,6 +19,7 @@ import tgeniusConfig from "./tgenius/config";
 import stratosSalesConfig from "./stratos-sales/config";
 import vegaConfig    from "./vega/config";
 import nsgConfig     from "./nsg/config";
+import clinicaDentalConfig from "./clinica-dental/config";
 
 // Registry de todos los clientes conocidos
 const CLIENT_CONFIGS = {
@@ -28,6 +29,7 @@ const CLIENT_CONFIGS = {
   "stratos-sales": stratosSalesConfig,
   vega:            vegaConfig,
   nsg:             nsgConfig,
+  "clinica-dental": clinicaDentalConfig,
 };
 
 /**
