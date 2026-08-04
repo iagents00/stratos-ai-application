@@ -41,7 +41,7 @@ export function useTeam() {
     try {
       const { data, error: qErr } = await supabase
         .from('profiles')
-        .select('id, name, role, active')
+        .select('id, name, role, active, crm_only')
         .eq('active', true)
         .order('name');
       if (!alive.current) return;

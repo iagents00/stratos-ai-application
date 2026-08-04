@@ -20,22 +20,32 @@
  * ─────────────────────────────────────────────────────────────────────────────
  */
 
+/* ── Semilla de nombres ───────────────────────────────────────────────────────
+ * Desde ago-2026 los dropdowns del form se arman del EQUIPO REAL (`profiles`,
+ * vía useTeam) y estas listas quedan solo como respaldo para cuando esa consulta
+ * no responde (offline/demo).
+ *
+ * Los nombres se corrigieron para que coincidan EXACTO con `profiles.name`: la
+ * métrica de Zooms le da el crédito a quien lo dio comparando por nombre, así
+ * que "Gael Velasco" (no existe en la base) contra "Gael G" (el perfil real)
+ * partía el conteo en dos. Igual pasaba con "Ken Lugo" → "Ken Duke".
+ * Daniel Pavón salió de la semilla: su perfil está inactivo.
+ * ──────────────────────────────────────────────────────────────────────────── */
+
 // Setters que agendan el Zoom.
 export const LINERS = [
-  "Gael Velasco",
+  "Gael G",
   "Carlos Ayala",
   "Cecilia Mendoza",
-  "Daniel Pavon",
   "Victor Benitez",
 ];
 
 // Closers que corren el Zoom (principal o apoyo).
 export const PRESENTADORES = [
   "Oscar Gálvez",
-  "Ken Lugo",
+  "Ken Duke",
   "Cecilia Mendoza",
-  "Daniel Pavon",
-  "Gael Velasco",
+  "Gael G",
 ];
 
 // Ciclo de vida del Zoom, en orden operativo. El índice define el "avance".
@@ -75,17 +85,19 @@ export const ESTATUS_ACTIVOS = new Set(["Agendado", "Confirmado", "Reagendado"])
 
 // Dupla sugerida Liner → Presentador principal (de la hoja Catálogos del Excel).
 // Solo pre-llena el form; el usuario puede sobreescribir siempre.
+// Las claves y los valores usan `profiles.name` para que el pre-llenado siga
+// funcionando ahora que el dropdown ofrece los nombres reales del equipo.
 export const PAIRINGS = {
-  "Gael Velasco":   "Oscar Gálvez",
-  "Carlos Ayala":   "Ken Lugo",
+  "Gael G":          "Oscar Gálvez",
+  "Carlos Ayala":    "Ken Duke",
   "Cecilia Mendoza": "Cecilia Mendoza",
-  "Victor Benitez": "Oscar Gálvez",
+  "Victor Benitez":  "Oscar Gálvez",
 };
 
 // Apoyo sugerido por Liner (cuando la dupla del Excel traía un segundo closer).
-export const PAIRINGS_APOYO = {
-  "Cecilia Mendoza": "Daniel Pavon",
-};
+// Vacío: la única dupla que había (Cecilia → Daniel Pavón) apuntaba a un perfil
+// que ya está inactivo.
+export const PAIRINGS_APOYO = {};
 
 /** Devuelve el presentador principal sugerido para un liner (o ""). */
 export function suggestPresentador(liner) {
