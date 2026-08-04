@@ -143,25 +143,62 @@ const clinicaDentalConfig = {
     expedienteCentered:  false,
     projectMode:         false,  // El paciente ES una persona: teléfono y datos visibles
 
-    // ── Pipeline de PACIENTES ────────────────────────────────────────────────
-    // El recorrido real de una clínica: alguien pregunta → se le contacta →
-    // viene a valoración → se le pasa el presupuesto → acepta y se trata →
-    // queda en controles. "Perdido" es el carril de los que no siguieron.
+    // ── DOS RECORRIDOS, NO UNO ───────────────────────────────────────────────
+    // Una clínica tiene dos trabajos distintos y no conviene mezclarlos:
+    //
+    //   CAPTACIÓN   — del primer mensaje hasta que la persona VIENE. Lo trabaja
+    //                 recepción: responder, entender qué necesita, ofrecer
+    //                 horarios, confirmar y recordar. Se mide en citas.
+    //   TRATAMIENTO — empieza DESPUÉS de la primera consulta. Lo trabaja el
+    //                 odontólogo con recepción: estudios, plan, presupuesto,
+    //                 decisión, sesiones y control. Se mide en tratamientos.
+    //
+    // Las 19 etapas viven en el MISMO campo del paciente (`leads.stage`): nadie
+    // está en los dos a la vez, y el paso de uno a otro es "Cita realizada" →
+    // "Consulta realizada". El tablero muestra un recorrido por vez, con
+    // pestañas, porque 19 columnas juntas no se leen.
     //
     // ⚠️ CONTRATO CON EL CEREBRO: estos `name` son EXACTOS los strings que van a
-    // leads.stage, y `dental_nlu_dispatch` los escribe tal cual al mover un
-    // paciente (al agendar cita, al marcar atendida, al aceptar presupuesto…).
-    // Si se renombra una etapa acá, hay que renombrarla también en esa función
-    // o el paciente deja de aparecer en su columna.
-    pipeline: [
-      { name: "Nuevo contacto",      color: "#94A3B8" }, // preguntó, aún sin contactar
-      { name: "Contactado",          color: "#38BDF8" }, // se le escribió, coordinando cita
-      { name: "Cita agendada",       color: "#A78BFA" }, // con día y hora confirmados
-      { name: "Consulta realizada",  color: "#FBBF24" }, // ya vino, falta presupuesto
-      { name: "Presupuesto enviado", color: "#FB923C" }, // esperando su respuesta
-      { name: "Tratamiento en curso",color: "#22D3EE" }, // aceptó, está en sesiones
-      { name: "Paciente recurrente", color: "#34D399" }, // terminó, sigue en controles
-      { name: "Perdido",             color: "#F87171" }, // no siguió — se anota el motivo
+    // `leads.stage`, y `dental_nlu_dispatch` los escribe tal cual al agendar,
+    // marcar atendida, aceptar presupuesto o cerrar la última sesión. Si acá se
+    // renombra una etapa, hay que renombrarla también en esa función o el
+    // paciente desaparece de su columna.
+    // Doce etapas, seis por tablero. La versión larga tenía diecinueve y la
+    // mitad no eran etapas: "Servicio identificado" es un DATO (el servicio ya
+    // se guarda en su campo), "Cita ofrecida" y "Tratamiento agendado" son
+    // momentos de minutos donde nadie se queda, "Decisión pendiente" es lo
+    // mismo que "Presupuesto enviado" visto desde el otro lado, y "Estudios
+    // pendientes" o "Tratamiento definido" son una próxima acción, no una
+    // columna. Una etapa se gana su lugar solo si alguien puede QUEDARSE ahí y
+    // hay que ir a buscarlo. Con seis por tablero, además, entran todas en
+    // pantalla sin scroll horizontal.
+    pipelines: [
+      {
+        id: "captacion",
+        label: "Captación",
+        hint: "Del primer mensaje hasta que el paciente viene",
+        stages: [
+          { name: "Nuevo contacto",   color: "#94A3B8" }, // escribió, llamó o llenó un formulario
+          { name: "Contactado",       color: "#38BDF8" }, // ya se habló; sabemos qué necesita
+          { name: "Cita agendada",    color: "#818CF8" }, // tiene día y hora
+          { name: "Cita confirmada",  color: "#22D3EE" }, // dijo que viene — es lo que predice el ausentismo
+          { name: "Reagendar",        color: "#FBBF24" }, // canceló o no vino — hay que recuperarlo
+          { name: "Cerrado",          color: "#F87171" }, // no sigue — SIEMPRE con motivo
+        ],
+      },
+      {
+        id: "tratamiento",
+        label: "Tratamiento",
+        hint: "Desde la primera consulta hasta el control",
+        stages: [
+          { name: "Consulta realizada",   color: "#38BDF8" }, // vino y ya fue revisado
+          { name: "Presupuesto enviado",  color: "#FB923C" }, // tiene precio y condiciones; está decidiendo
+          { name: "Tratamiento aceptado", color: "#22D3EE" }, // dijo que sí; falta arrancar
+          { name: "En tratamiento",       color: "#34D399" }, // en sesiones
+          { name: "Terminado",            color: "#4ADE80" }, // completó el servicio
+          { name: "Seguimiento",          color: "#10B981" }, // vuelve a control o mantenimiento
+        ],
+      },
     ],
 
     // ── Vocabulario de la clínica ────────────────────────────────────────────
@@ -193,13 +230,13 @@ const clinicaDentalConfig = {
         sub: { type: "count", stage: "Nuevo contacto", suffix: "sin contactar" },
         icon: "Users",        color: "blue" },
       { label: "Citas por atender",    value: { type: "count", stage: "Cita agendada" },
-        sub: { type: "count", stage: "Consulta realizada", suffix: "ya valorados" },
+        sub: { type: "count", stage: "Cita confirmada", suffix: "ya confirmadas" },
         icon: "CalendarDays", color: "cyan" },
       { label: "Presupuestos abiertos",value: { type: "count", stage: "Presupuesto enviado" },
-        sub: { type: "count", stage: "Tratamiento en curso", suffix: "en tratamiento" },
+        sub: { type: "count", stage: "Decisión pendiente", suffix: "decidiendo" },
         icon: "FileText",     color: "accent" },
       { label: "Valor en el embudo",   value: { type: "money" },
-        sub: { type: "count", stage: "Paciente recurrente", suffix: "en control" },
+        sub: { type: "count", stage: "En tratamiento", suffix: "en tratamiento" },
         icon: "DollarSign",   color: "emerald" },
     ],
   },
