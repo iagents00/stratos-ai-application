@@ -172,31 +172,45 @@ const clinicaDentalConfig = {
     // columna. Una etapa se gana su lugar solo si alguien puede QUEDARSE ahí y
     // hay que ir a buscarlo. Con seis por tablero, además, entran todas en
     // pantalla sin scroll horizontal.
+    // ── CÓMO SE ELIGIERON LOS NOMBRES ────────────────────────────────────────
+    // Cada etapa se llama por la SITUACIÓN del paciente, en palabras que usaría
+    // cualquiera en la recepción. Nada de vocabulario de CRM de ventas
+    // ("Cerrado", "Perdido", "Captación", "Lead"): quien entra por primera vez
+    // tiene que entender de un vistazo qué paciente va en cada columna y qué
+    // hay que hacer con él, sin que nadie se lo explique.
+    //
+    // El nombre dice la situación Y sugiere la acción:
+    //   "Sin contactar"          → hay que escribirle
+    //   "Buscando cita"          → hay que ponerle día y hora
+    //   "Cita sin confirmar"     → hay que llamar a confirmar
+    //   "Pensando el presupuesto"→ hay que hacer seguimiento, sin presionar
+    //   "Listo para empezar"     → hay que agendarle la primera sesión
+    //   "Vuelve a control"       → hay que recordarle cuándo volver
     pipelines: [
       {
         id: "captacion",
-        label: "Captación",
-        hint: "Del primer mensaje hasta que el paciente viene",
+        label: "Citas",
+        hint: "Desde que preguntan hasta que vienen",
         stages: [
-          { name: "Nuevo contacto",   color: "#94A3B8" }, // escribió, llamó o llenó un formulario
-          { name: "Contactado",       color: "#38BDF8" }, // ya se habló; sabemos qué necesita
-          { name: "Cita agendada",    color: "#818CF8" }, // tiene día y hora
-          { name: "Cita confirmada",  color: "#22D3EE" }, // dijo que viene — es lo que predice el ausentismo
-          { name: "Reagendar",        color: "#FBBF24" }, // canceló o no vino — hay que recuperarlo
-          { name: "Cerrado",          color: "#F87171" }, // no sigue — SIEMPRE con motivo
+          { name: "Sin contactar",     color: "#94A3B8" }, // escribió, llamó o llenó un formulario; nadie le respondió aún
+          { name: "Buscando cita",     color: "#38BDF8" }, // ya se habló; se está coordinando día y hora
+          { name: "Cita sin confirmar",color: "#818CF8" }, // tiene día y hora, falta que diga que viene
+          { name: "Cita confirmada",   color: "#22D3EE" }, // confirmó — es lo que anticipa los ausentismos
+          { name: "Faltó a la cita",   color: "#FBBF24" }, // canceló o no vino; hay que recuperarlo
+          { name: "No continuó",       color: "#F87171" }, // no sigue — SIEMPRE con el motivo anotado
         ],
       },
       {
         id: "tratamiento",
-        label: "Tratamiento",
+        label: "Tratamientos",
         hint: "Desde la primera consulta hasta el control",
         stages: [
-          { name: "Consulta realizada",   color: "#38BDF8" }, // vino y ya fue revisado
-          { name: "Presupuesto enviado",  color: "#FB923C" }, // tiene precio y condiciones; está decidiendo
-          { name: "Tratamiento aceptado", color: "#22D3EE" }, // dijo que sí; falta arrancar
-          { name: "En tratamiento",       color: "#34D399" }, // en sesiones
-          { name: "Terminado",            color: "#4ADE80" }, // completó el servicio
-          { name: "Seguimiento",          color: "#10B981" }, // vuelve a control o mantenimiento
+          { name: "Ya vino a consulta",     color: "#38BDF8" }, // lo revisaron; falta pasarle el precio
+          { name: "Pensando el presupuesto",color: "#FB923C" }, // tiene precio y condiciones; está decidiendo
+          { name: "Listo para empezar",     color: "#22D3EE" }, // aceptó; falta agendar la primera sesión
+          { name: "En tratamiento",         color: "#34D399" }, // en sesiones
+          { name: "Tratamiento terminado",  color: "#4ADE80" }, // completó el servicio
+          { name: "Vuelve a control",       color: "#10B981" }, // revisión o mantenimiento
         ],
       },
     ],
@@ -227,13 +241,13 @@ const clinicaDentalConfig = {
     // presupuestos están sin respuesta y cuánto vale lo que está en juego.
     kpis: [
       { label: "Pacientes activos",    value: { type: "total" },
-        sub: { type: "count", stage: "Nuevo contacto", suffix: "sin contactar" },
+        sub: { type: "count", stage: "Sin contactar", suffix: "sin contactar" },
         icon: "Users",        color: "blue" },
-      { label: "Citas por atender",    value: { type: "count", stage: "Cita agendada" },
+      { label: "Citas por atender",    value: { type: "count", stage: "Cita sin confirmar" },
         sub: { type: "count", stage: "Cita confirmada", suffix: "ya confirmadas" },
         icon: "CalendarDays", color: "cyan" },
-      { label: "Presupuestos abiertos",value: { type: "count", stage: "Presupuesto enviado" },
-        sub: { type: "count", stage: "Decisión pendiente", suffix: "decidiendo" },
+      { label: "Presupuestos abiertos",value: { type: "count", stage: "Pensando el presupuesto" },
+        sub: { type: "count", stage: "Listo para empezar", suffix: "listos para empezar" },
         icon: "FileText",     color: "accent" },
       { label: "Valor en el embudo",   value: { type: "money" },
         sub: { type: "count", stage: "En tratamiento", suffix: "en tratamiento" },
