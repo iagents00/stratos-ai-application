@@ -402,6 +402,36 @@ const N8N_COPILOT_WEBHOOK = "https://personal-n8n.suwsiw.easypanel.host/webhook/
 // a propósito para NO tocar el Copilot de asesores. Ver migraciones 107/108.
 const N8N_COPILOT_WEBHOOK_MKT = "https://personal-n8n.suwsiw.easypanel.host/webhook/copilot-marketing";
 
+function normalizeAgendaText(text) {
+  return String(text || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function looksLikeCopilotAgendaCreateIntent(text) {
+  const norm = normalizeAgendaText(text);
+  if (!norm) return false;
+  if (/^(agenda|pendientes|mis pendientes|que tengo hoy|que tengo en agenda)$/.test(norm)) return false;
+
+  const hasCreateVerb = /\b(recuerdame|recordame|recuestame|agendame|agenda me|anotame|ponme|programame|creame|agrega|agregame)\b/.test(norm);
+  if (!hasCreateVerb) return false;
+
+  return (
+    /\b(hoy|manana|pasado manana|lunes|martes|miercoles|jueves|viernes|sabado|domingo)\b/.test(norm) ||
+    /\b(a\s*las|alas|para\s*las|hora)\s*\d{1,2}(?:(?::|\s+)\d{2})?\b/.test(norm) ||
+    /\ben\s+\d+\s*(minuto|minutos|min|mins|hora|horas|hr|hrs|dia|dias)\b/.test(norm)
+  );
+}
+
+function extractRpcReplyText(data) {
+  if (!data) return '';
+  if (typeof data === 'string') return data;
+  return data?.reply?.text || data?.text || '';
+}
+
 /**
  * COPILOT — envía un mensaje al asistente IA del CRM.
  *
@@ -474,6 +504,26 @@ async function _sendCopilotMessageInner(rawText, options = {}) {
     // entra por esta rama (su rol es `asesor`, no `colaborador`).
     const esColaborador = profile?.role === 'colaborador';
     const isMarketing = profile?.role === 'marketing' || profile?.is_marketing_admin === true || esColaborador || tenant.tasksBrain;
+
+    // Recordatorios claros del Copilot web: se crean directo en team_actions para
+    // que aparezcan en Mi Espacio -> Agenda y no pasen por n8n dos veces.
+    if (!options.callback_data && !isMarketing && !tenant.customBrain && looksLikeCopilotAgendaCreateIntent(cleanText)) {
+      try {
+        const { data: agendaData, error: agendaError } = await supabase.rpc('copilot_agenda_create_from_text', {
+          p_text: cleanText,
+          p_category: null,
+        });
+        const agendaReply = extractRpcReplyText(agendaData);
+        if (!agendaError && agendaReply) {
+          return { reply: agendaReply, error: null };
+        }
+        if (agendaError && !/function .* does not exist|could not find/i.test(agendaError.message || '')) {
+          console.warn('[Copilot agenda] direct create failed:', agendaError.message);
+        }
+      } catch (e) {
+        console.warn('[Copilot agenda] direct create exception:', e?.message || e);
+      }
+    }
 
     // 1. Detección directa de solicitud de manual / guía / instrucciones — o "¿qué puedes hacer?"
     const wantsManual = /^(?:dame |mandame |enviame |enviar |ver |mostrar |necesito |pasame )?(?:el |la )?(?:manual|guía|guia|instrucciones|ayuda)(?:\s|$)/i.test(cleanText);
