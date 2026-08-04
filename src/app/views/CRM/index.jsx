@@ -1303,7 +1303,12 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
     setPinnedIds(prev => { const next = new Set(prev); next.delete(id); return next; });
   };
 
-  const asesores = useMemo(() => [...new Set(visibleLeads.map(l => l.asesor))], [visibleLeads]);
+  // El <select> "Todos los asesores" (solo visible para mando) usa
+  // `asesoresMaster`, no una lista derivada de los leads visibles: si se deriva
+  // de los leads, un asesor recién dado de alta no sale en el filtro hasta que
+  // alguien le asigna su primer cliente — justo el caso de Aldo, Carlos Reyes y
+  // Paz. De paso, `asesoresMaster` viene ordenado y sin vacíos: la lista vieja
+  // metía una opción en blanco cuando algún lead no tenía asesor.
   // Listas maestras: únicas, sin vacíos, ordenadas alfabéticamente.
   // Tres fuentes que se SUMAN (nunca se sustituyen):
   //   1. orgAsesores — el equipo real de `profiles`. Es lo que hace visible a un
@@ -3995,7 +4000,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                   fontFamily: fontDisp, fontWeight: active ? 600 : 400, transition: "all 0.18s",
                 }}>
                   <option value="TODO">Todos los asesores</option>
-                  {asesores.map(a => <option key={a} value={a} style={{ background: isLight ? "#FFFFFF" : "#111318", color: isLight ? "#0B1220" : "#E2E8F0" }}>{a.split(" ")[0]} {a.split(" ")[1] || ""}</option>)}
+                  {asesoresMaster.map(a => <option key={a} value={a} style={{ background: isLight ? "#FFFFFF" : "#111318", color: isLight ? "#0B1220" : "#E2E8F0" }}>{a.split(" ")[0]} {a.split(" ")[1] || ""}</option>)}
                 </select>
                 <ChevronDown size={10} color={selClr} strokeWidth={2.2} style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", pointerEvents: "none", flexShrink: 0 }} />
               </div>
