@@ -40,6 +40,14 @@ const REGISTRO = [
   // Alta del 3-ago-2026. OJO: existe aparte `paz.adm@stratos.ai` (perfil "Paz",
   // colaborador de Administrativo). Son cuentas distintas a propósito.
   { name: 'Paz Cambray',  email: 'paz.cambray@stratos.ai' },
+  // Alta del 3-ago-2026. El `name` sale del propio correo porque no se dieron
+  // apellidos, y NO puede quedar solo "Alexander": ya hay un "Alexander"
+  // (colaborador de Administrativo, alexander.adm@stratos.ai) y la RLS de leads
+  // empareja al asesor POR NOMBRE — dos perfiles con el mismo nombre en la misma
+  // org se verían los clientes entre sí. Renombrar en cuanto lleguen apellidos,
+  // ANTES de asignarles cartera (después habría que tocar leads.asesor_name).
+  { name: 'Diego PV',     email: 'diego.pv@stratos.ai' },
+  { name: 'Alexander PV', email: 'alexander.pv@stratos.ai' },
 ]
 
 function loadEnv() {
