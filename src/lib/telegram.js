@@ -122,6 +122,36 @@ export async function getCopilotActivity(limit = 40) {
 
 const N8N_TELEGRAM_BOT_WEBHOOK = "https://personal-n8n.suwsiw.easypanel.host/webhook/copilot-transcribe";
 
+function normalizeAgendaText(text) {
+  return String(text || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function looksLikeCopilotAgendaCreateIntent(text) {
+  const norm = normalizeAgendaText(text);
+  if (!norm) return false;
+  if (/^(agenda|pendientes|mis pendientes|que tengo hoy|que tengo en agenda)$/.test(norm)) return false;
+
+  const hasCreateVerb = /\b(recuerdame|recordame|recuestame|agendame|agenda me|anotame|ponme|programame|creame|agrega|agregame)\b/.test(norm);
+  if (!hasCreateVerb) return false;
+
+  return (
+    /\b(hoy|manana|pasado manana|lunes|martes|miercoles|jueves|viernes|sabado|domingo)\b/.test(norm) ||
+    /\b(a\s*las|alas|para\s*las|hora)\s*\d{1,2}(?:(?::|\s+)\d{2})?\b/.test(norm) ||
+    /\ben\s+\d+\s*(minuto|minutos|min|mins|hora|horas|hr|hrs|dia|dias)\b/.test(norm)
+  );
+}
+
+function extractRpcReplyText(data) {
+  if (!data) return '';
+  if (typeof data === 'string') return data;
+  return data?.reply?.text || data?.text || '';
+}
+
 /**
  * COPILOT — envía un mensaje al asistente (mismo cerebro que el bot de Telegram).
  *
@@ -154,6 +184,26 @@ export async function sendCopilotMessage(text) {
 
     if (!profile?.telegram_chat_id) return { reply: null, error: 'not_paired' };
     const chatId = Number(profile.telegram_chat_id);
+
+    // Recordatorios claros del Copilot web: crear directo en team_actions para
+    // que aparezcan en Mi Espacio -> Agenda sin esperar al LLM/n8n.
+    if (looksLikeCopilotAgendaCreateIntent(cleanText)) {
+      try {
+        const { data: agendaData, error: agendaError } = await supabase.rpc('copilot_agenda_create_from_text', {
+          p_text: cleanText,
+          p_category: null,
+        });
+        const agendaReply = extractRpcReplyText(agendaData);
+        if (!agendaError && agendaReply) {
+          return { reply: agendaReply, error: null };
+        }
+        if (agendaError && !/function .* does not exist|could not find/i.test(agendaError.message || '')) {
+          console.warn('[Copilot agenda] direct create failed:', agendaError.message);
+        }
+      } catch (e) {
+        console.warn('[Copilot agenda] direct create exception:', e?.message || e);
+      }
+    }
 
     // ── Fase 1: RPC rápido (determinista, sin LLM, ~100ms) ──
     const { data: rpcData, error: rpcError } = await supabase.rpc('copilot_send', { p_text: cleanText });
