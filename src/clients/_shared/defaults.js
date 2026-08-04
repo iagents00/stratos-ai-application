@@ -74,6 +74,15 @@ export const DEFAULT_CLIENT_CONFIG = {
     //     conectar desde la app de Telegram del celular sin depender de que el
     //     navegador tenga sesión iniciada.
     telegramManualPairing: false,
+    // Flujo n8n propio del Copilot de este tenant. Si se declara, TODO el chat
+    // del tenant va a ese webhook en vez del cerebro de ventas o el de
+    // marketing. Lo usan NSG (cerebro de tareas) y Clínica Dental (cerebro
+    // dental). Default null → ruta de siempre.
+    copilotWebhook: null,
+    // Texto de "¿qué puedes hacer?" propio del tenant. Sin esto, cualquiera que
+    // se lo pregunte recibe el manual INMOBILIARIO de Duke (leads, Zooms,
+    // catálogo de propiedades), que a un rubro distinto solo lo confunde.
+    copilotHelp: null,
   },
 
   // Features habilitadas — cada módulo del CRM puede prenderse/apagarse
@@ -136,7 +145,13 @@ export const DEFAULT_CLIENT_CONFIG = {
     callRingtone: false,
     // Cerebro de la puerta del chat (Copilot): "crm" = asistente de ventas/leads
     // (default, asesores Duke) · "tareas" = motor de tareas sin fricción
-    // (mkt_nlu_dispatch: crear/empezar/terminar/posponer + persecución; caso NSG).
+    // (mkt_nlu_dispatch: crear/empezar/terminar/posponer + persecución; caso NSG)
+    // · "dental" = clínica odontológica (dental_nlu_dispatch: pacientes, citas,
+    // presupuestos, tratamientos por sesiones y controles).
+    // ⚠️ Cualquier valor distinto de "crm" marca CEREBRO PROPIO: el tenant deja
+    // de pasar por las capas de ventas (quick commands, callbacks proactivos de
+    // zoom/inactividad, awaiting-plan) y por el manual inmobiliario. Ver
+    // `tenantCopilotShape` en src/lib/telegram.js.
     copilotBrain: "crm",
   },
 
