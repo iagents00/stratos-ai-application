@@ -156,6 +156,25 @@ function buildReminderContent(reminder) {
   return ''
 }
 
+/* Para comparar dos versiones del MISMO aviso hay que ignorar la ropa.
+   El aviso viaja por dos caminos: el que guarda el historial (que vuelve de
+   Telegram ya sin los `**`) y el que llega de proactive_reminders (que los
+   conserva). Comparando el texto crudo no se reconocían, y el chat mostraba el
+   mismo aviso DOS VECES — una sin botones y otra con ellos (Ángel, 3-ago).
+   Se comparan sin marcas de formato, sin acentos y sin espacios de más. */
+function mismaEsencia(a, b) {
+  const limpio = (t) => String(t || '')
+    .replace(/\*\*/g, '')
+    .replace(/[«»"']/g, '')
+    .normalize('NFD').replace(/[̀-ͯ]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toLowerCase()
+  const x = limpio(a), y = limpio(b)
+  if (!x || !y) return false
+  return x === y || x.includes(y) || y.includes(x)
+}
+
 function attachReminderToMessages(messages, reminderMessage) {
   const buttons = reminderMessage.buttons || []
   const content = reminderMessage.content || ''
@@ -165,7 +184,7 @@ function attachReminderToMessages(messages, reminderMessage) {
   let idx = messages.findIndex((m) =>
     m.role === 'ai' &&
     m.content &&
-    (m.content === content || (textProbe && m.content.includes(textProbe)))
+    (mismaEsencia(m.content, content) || (textProbe && mismaEsencia(m.content, textProbe)))
   )
 
   if (idx < 0 && buttons.length && reminderTime) {
@@ -579,85 +598,104 @@ async function _sendCopilotMessageInner(rawText, options = {}) {
     };
 
     // Webhook n8n con AI Agent GPT-4o o Router
-    try {
-      const ctrl = new AbortController();
-      // 40s para TODOS los cerebros (antes: 40s marketing / 15s ventas).
-      //
-      // El 29-jul Ángel escribió desde su cuenta de admin "asignale una tarea a
-      // asesor prueba para que revise el asistente mañana a las 12" y vio
-      // "El asistente IA está procesando tu solicitud, intenta de nuevo".
-      // Pero en la base quedó: "Listo. Acción de equipo creada: revise el
-      // asistente · responsable: Asesor Prueba · vence Mié 29 jul, 12:00 p.m."
-      // O sea: FUNCIONÓ, y le dijimos que no. Volvió a mandarlo → casi crea la
-      // tarea dos veces.
-      //
-      // El cerebro de ventas es más grande que el de marketing (más tools, más
-      // ruteo): darle 15s cuando a marketing le dábamos 40 no tenía ninguna
-      // razón, solo quedó así. Un aborto del cliente NO cancela el flujo: n8n
-      // sigue corriendo del lado del servidor y guarda igual.
-      const timeout = setTimeout(() => ctrl.abort(), 40000);
-      // Webhook por tenant: si el tenant declaró el suyo en la config, manda ese
-      // — vale para NSG (cerebro de tareas) y para cualquier rubro nuevo (ej. la
-      // clínica dental). Antes la condición exigía además `tasksBrain`, así que
-      // un cerebro distinto de 'tareas' terminaba en el flujo de ventas aunque
-      // tuviera webhook propio. Sin override, la ruta de siempre:
-      // marketing → cerebro mkt · resto → cerebro de ventas.
-      const webhookUrl = tenant.webhook
-        ? tenant.webhook
-        : (isMarketing ? N8N_COPILOT_WEBHOOK_MKT : N8N_COPILOT_WEBHOOK);
-      const res = await fetch(webhookUrl, {
-        method: 'POST',
-        signal: ctrl.signal,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          chat_id: chatId,
-          text: cleanText,
-          callback_data: options.callback_data || undefined,
-          original_type: options.callback_data ? "callback" : "text"
-        })
-      });
-      clearTimeout(timeout);
+    //
+    // REINTENTO AUTOMÁTICO (3-ago, pedido de Ángel: «que eso no ocurra de nuevo»).
+    // El cartel rojo «Tu mensaje no llegó al motor» salía ante cualquier hipo de
+    // red o un 502/503 del proxy, y el asesor tenía que reescribir su pregunta.
+    // Pero ese error significa, POR DEFINICIÓN, que el motor nunca recibió nada
+    // — es la misma razón por la que el cartel dice «no se guardó nada». Si
+    // reenviar es seguro para la persona, también lo es para nosotros: ahora se
+    // reintenta solo (3 intentos, esperando 400 ms y 1,2 s) y el cartel queda
+    // para cuando de verdad no se pudo.
+    //
+    // Lo que NUNCA se reintenta: un corte por tiempo (AbortError) y un 504. En
+    // esos dos casos el motor SÍ tomó el mensaje y sigue trabajando; reenviar
+    // ahí duplicaría la acción — justo el accidente del 29-jul con la tarea que
+    // casi se crea dos veces.
+    // Webhook por tenant: si el tenant declaró el suyo en la config, manda ese
+    // — vale para NSG (cerebro de tareas) y para cualquier rubro nuevo (ej. la
+    // clínica dental). Antes la condición exigía además `tasksBrain`, así que
+    // un cerebro distinto de 'tareas' terminaba en el flujo de ventas aunque
+    // tuviera webhook propio.
+    const webhookUrl = tenant.webhook
+      ? tenant.webhook
+      : (isMarketing ? N8N_COPILOT_WEBHOOK_MKT : N8N_COPILOT_WEBHOOK);
+    const esperaEntreIntentos = [400, 1200];
+    for (let intento = 0; intento < 3; intento++) {
+      try {
+        const ctrl = new AbortController();
+        // 40s para TODOS los cerebros (antes: 40s marketing / 15s ventas).
+        //
+        // El 29-jul Ángel escribió desde su cuenta de admin "asignale una tarea a
+        // asesor prueba para que revise el asistente mañana a las 12" y vio
+        // "El asistente IA está procesando tu solicitud, intenta de nuevo".
+        // Pero en la base quedó: "Listo. Acción de equipo creada: revise el
+        // asistente · responsable: Asesor Prueba · vence Mié 29 jul, 12:00 p.m."
+        // O sea: FUNCIONÓ, y le dijimos que no. Volvió a mandarlo → casi crea la
+        // tarea dos veces.
+        //
+        // El cerebro de ventas es más grande que el de marketing (más tools, más
+        // ruteo): darle 15s cuando a marketing le dábamos 40 no tenía ninguna
+        // razón, solo quedó así. Un aborto del cliente NO cancela el flujo: n8n
+        // sigue corriendo del lado del servidor y guarda igual.
+        const timeout = setTimeout(() => ctrl.abort(), 40000);
+        // Webhook por tenant (NSG → su flujo Claude propio); si no hay override,
+        // la ruta de siempre: marketing → cerebro mkt · resto → cerebro de ventas.
+        const res = await fetch(webhookUrl, {
+          method: 'POST',
+          signal: ctrl.signal,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            chat_id: chatId,
+            text: cleanText,
+            callback_data: options.callback_data || undefined,
+            original_type: options.callback_data ? "callback" : "text"
+          })
+        });
+        clearTimeout(timeout);
 
-      if (res.ok) {
-        const raw = await res.text();
-        if (raw && raw.length > 2) {
-          try {
-            const json = JSON.parse(raw);
-            const reply = json?.reply || json?.output || (typeof json === 'string' ? json : null);
-            if (reply && typeof reply === 'object') {
-              const text = reply.text || reply.content || 'Listo.';
-              const buttons = flatKeyboard(reply.inline_keyboard);
-              const filtered = filterIntrusiveReply(text, buttons);
-              return { reply: filtered.reply, buttons: filtered.buttons, error: null };
-            }
-            if (reply && typeof reply === 'string' && reply.length > 2) {
-              const filtered = filterIntrusiveReply(reply, []);
-              return { reply: filtered.reply, buttons: filtered.buttons, error: null };
-            }
-          } catch {
-            if (raw.length > 5 && !raw.includes('<html')) {
-              const filtered = filterIntrusiveReply(raw, []);
-              return { reply: filtered.reply, buttons: filtered.buttons, error: null };
+        if (res.ok) {
+          const raw = await res.text();
+          if (raw && raw.length > 2) {
+            try {
+              const json = JSON.parse(raw);
+              const reply = json?.reply || json?.output || (typeof json === 'string' ? json : null);
+              if (reply && typeof reply === 'object') {
+                const text = reply.text || reply.content || 'Listo.';
+                const buttons = flatKeyboard(reply.inline_keyboard);
+                const filtered = filterIntrusiveReply(text, buttons);
+                return { reply: filtered.reply, buttons: filtered.buttons, error: null };
+              }
+              if (reply && typeof reply === 'string' && reply.length > 2) {
+                const filtered = filterIntrusiveReply(reply, []);
+                return { reply: filtered.reply, buttons: filtered.buttons, error: null };
+              }
+            } catch {
+              if (raw.length > 5 && !raw.includes('<html')) {
+                const filtered = filterIntrusiveReply(raw, []);
+                return { reply: filtered.reply, buttons: filtered.buttons, error: null };
+              }
             }
           }
+          // Respondió bien pero sin nada aprovechable en el cuerpo: el motor lo
+          // tomó igual, así que se sigue por el camino "slow" (no se reintenta).
+          break;
         }
-      } else if (res.status !== 504) {
-        // 502/503 del proxy: el motor NO tomó el mensaje. Callar sería mentir
-        // (el camino "slow" espera una respuesta que jamás va a llegar) y
-        // reenviar es SEGURO porque nada corrió. Un 504 sí puede estar
-        // procesando → ese sigue al camino slow.
-        return { reply: null, buttons: [], error: 'no_llego' };
+        if (res.status === 504) break;   // el motor lo tomó y sigue → camino "slow"
+        // 502/503 del proxy: el motor NO tomó el mensaje. Se reintenta.
+        console.warn('[Copilot] el motor no tomó el mensaje (HTTP ' + res.status + '), intento ' + (intento + 1) + ' de 3');
+      } catch (err) {
+        console.warn('[Copilot] webhook error:', err?.name || err?.message, '· intento', intento + 1, 'de 3');
+        // Abort (40s) = n8n SÍ recibió y sigue trabajando → camino "slow" (la
+        // respuesta la deja el propio flujo en el historial). NO se reintenta.
+        if (err?.name === 'AbortError') break;
+        // Un fallo de RED: el POST murió en tránsito y el motor NUNCA lo recibió.
+        // Se reintenta abajo; si se acaban los intentos, recién ahí se avisa.
       }
-    } catch (err) {
-      console.warn('[Copilot] webhook error:', err?.name || err?.message);
-      // Abort (40s) = n8n SÍ recibió y sigue trabajando → camino "slow" (la
-      // respuesta la deja el propio flujo en el historial). Un fallo de RED =
-      // el POST murió en tránsito y el motor NUNCA lo recibió — era el hueco
-      // del «confirmado» sin respuesta (Ángel, 30-jul): se avisa con la verdad.
-      if (err?.name !== 'AbortError') {
-        return { reply: null, buttons: [], error: 'no_llego' };
+      // Llegar acá = este intento no entró al motor.
+      if (intento === 2) return { reply: null, buttons: [], error: 'no_llego' };
+      await new Promise((r) => setTimeout(r, esperaEntreIntentos[intento]));
       }
-    }
 
     // Fallback cuando el webhook no respondió a tiempo o dio error.
     //

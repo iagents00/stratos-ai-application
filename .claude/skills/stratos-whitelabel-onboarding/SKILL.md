@@ -238,7 +238,127 @@ en toda la base Stratos (si ya está en otro perfil, hay que desconectarlo prime
     meter un `if cliente='Duke'` o quemar un nombre en el prompt, preguntarse "¿esto debería viajar al clonar a otro tenant?".
     Si no, va en `meta_config`/tabla `*_config` con `organization_id`. Igual que `proactive_config`, `terminal_stages`, etc.
 
+16. **Un botón NUNCA identifica a un cliente por su TELÉFONO — se identifica por su ID.** (3-ago-2026, con Ángel
+    grabando.) La lista de homónimos armaba el botón con `v_token||':'||r.phone`. Hay clientes SIN teléfono cargado, y en
+    SQL **cualquier concatenación con NULL da NULL**: el `callback_data` entero se derrumbaba a `pickdis:_:<firma>` —
+    **con el token adentro**. Al tocarlo, el asistente buscaba el token `_`, no lo encontraba y respondía *«Esta
+    confirmación venció o ya se procesó»*. La nota que el asesor acababa de dictar **se perdía en silencio**: la fila de
+    `bot_pending_actions` quedaba con `consumed_at = null` para siempre. Un `coalesce` habría tapado el síntoma dejando el
+    botón igual de inservible (sin teléfono no hay a quién señalar). Migs 261-266: `fn_bot_name_candidates` acepta un
+    **id** como referencia, los botones lo usan, y las funciones que resolvían solo por teléfono aceptan además
+    `id = fn_uuid_o_nulo(p_phone)` — se AGREGA un camino, no se quita el de siempre.
+    - **Regla dura:** antes de meter un dato en un `callback_data`, preguntate *«¿este campo puede venir vacío para algún
+      cliente real?»*. Si la respuesta es sí, no sirve como identificador. El id existe siempre y es único.
+    - **Y probá el caso pobre**, no el bonito: el cliente sin teléfono, sin etapa, sin apellido. El camino feliz ya
+      funciona; los bugs viven en los registros incompletos.
+
+17. **Una lista para elegir tiene que traer con qué elegir.** (Mismo día.) Salían cinco «Felipe» con la etapa y los
+    últimos cuatro dígitos (`...3320`), y uno sin nada. Nadie reconoce a un cliente por cuatro dígitos. Ahora va
+    **nombre completo · etapa · teléfono ENTERO** (`fn_telefono_legible`, mig 263) y, si no tiene, lo dice: `sin teléfono`.
+    Mismo criterio en la lista de «¿es alguno de estos?» (`bot_sugerir_clientes`, mig 265), que además **excluía** a los
+    clientes sin teléfono — o sea que a los más incompletos, los que más ayuda necesitan, ni los ofrecía.
+
+18. **Si una acción NO se completó, el asistente tiene que decirlo.** El peor detalle del bug 16 no fue el botón roto:
+    fue que la respuesta *«Esta confirmación venció o ya se procesó»* **suena a que algo pasó**, y el asesor se va
+    tranquilo. Cuando una acción muere a mitad de camino, el mensaje debe decir que **no se guardó** y qué hacer.
+    Vale para todo el asistente: **silencio o ambigüedad ante una escritura fallida = bug de severidad alta.**
+
 ## 10. Smoke test (SQL, reemplaza `<TG>` por el telegram_chat_id de un asesor; Araceli Duke = 7464451486)
+
+19. **Si normalizas el pedido, DELEGA lo normalizado.** (3-ago-2026.) `bot_nlu_dispatch_gvintell` desanida
+    `query`, unifica el texto de la nota y corrige la herramienta cuando el clasificador se equivoca — y todo eso lo
+    guarda en `v_tool`/`v_args`. Pero al delegar en `..._required_fields_orig` reenviaba **`p_tool_name`/`p_args`, los
+    originales**: el trabajo se tiraba en la última línea. Tres arreglos seguidos «no funcionaron» por esto. Antes de
+    dar por muerto un fix que no toma, **seguí el dato hasta la llamada final** y mirá qué se pasa de verdad (mig 273).
+
+20. **«¿Existe la ruta?» antes que «¿mejoro el prompt?».** Tercera vez en dos días: `bot_agendar_visita` y
+    `bot_create_team_action` existían y funcionaban, pero el cerebro no las conocía. Un modelo sin la casilla correcta
+    no dice «no puedo» — usa la más parecida, y el pedido termina como tarea o como recordatorio personal. Casos
+    reales: «Agenda una visita con X el sábado» → tarea de equipo; «Asígnale a X preparar Y» → tarea PERSONAL del
+    gerente con el nombre del asesor dentro del título (migs 271-276).
+
+21. **Agendar un Zoom o una visita mueve TRES cosas, no una.** Escribir solo la fecha dejaba al cliente en
+    «Contáctame Ya» con la próxima acción vieja («llamarla») apuntando a la hora del Zoom — la ficha mentía y el asesor
+    entraba en frío. Van juntas: **fecha + etapa + próxima acción**. Y no se retrocede a quien ya está más adelante
+    («Zoom Concretado», «Cierre»). La visita además guarda el LUGAR («en Portofino»), que es el dato que el asesor
+    busca el sábado (migs 267, 268).
+
+22. **La frase del guion de demostración se corre ANTES de grabar.** El bug de «asígnale a X» apareció al redactar el
+    guion: había que escribir la frase exacta que se iba a decir en cámara, se probó, y no asignaba. Escribir la demo
+    es una prueba — obliga a usar la frase real y a mirar el resultado real, que es lo que no hace un test escrito por
+    quien construyó la función.
+
+
+23. **La PUNTUALIDAD de un recordatorio depende de dos cosas, y la segunda es la pantalla.** (3-ago-2026.)
+    Ángel pidió «recuérdame en 2 minutos», el sistema lo agendó bien y él no lo vio llegar. Dos causas distintas:
+    - **El cron de entrega.** Corría cada 2 minutos, así que el retraso máximo era ese. Los crons de **consumo**
+      (`Get Pending…`) pasaron a **15 segundos** en los seis motores: PersonalReminders, SALES_Proactive,
+      NextAction (×2), ZoomVisitas y TeamActions. Los de **scan** se dejaron como estaban: encolan con horas o días
+      de anticipación y bajarlos solo multiplica carga sin ganar puntualidad.
+    - **El Copilot no se refrescaba solo.** El hilo únicamente recargaba al cambiar de pestaña y volver. El
+      recordatorio de las 16:08:34 se entregó a las **16:08:40** —6 segundos— y quedó en `tg_bot_activity`, pero la
+      pantalla nunca fue a buscarlo. Ahora el chat escucha `tg_bot_activity` por realtime (mismo patrón que
+      `useCopilotInbox`) con un respaldo cada 20 s, pausado mientras escribes.
+    - ⚠️ **Al diagnosticar «no llegó», mirá primero `proactive_reminders.sent_at`.** Si está puesto y a tiempo, el
+      problema **no** es la entrega: es la pantalla, o el chat de destino. No toques el motor.
+
+24. **Un envío a Telegram que falla no puede tragarse el aviso del Copilot.** Los perfiles de prueba tienen
+    `telegram_chat_id` **sintéticos** (negativos, tipo `-9000000000065`): Telegram rechaza el envío. Como el nodo
+    `Log Proactive Copilot` va DESPUÉS del de Telegram, un fallo ahí dejaba al Copilot sin el mensaje. Todos los nodos
+    de Telegram de los motores llevan ahora `onError: continueRegularOutput` — el Copilot recibe el aviso aunque
+    Telegram falle. Vale igual para un asesor real que todavía no pareó su Telegram.
+
+
+25. **La cola de avisos se ordena por HORA, no por tipo.** (4-ago-2026, mig 280.) `fn_proactive_get_pending`
+    entrega **un aviso por persona por ciclo** y ordenaba primero por un `CASE` de tipo, después por `scheduled_at`.
+    Con esa combinación el tipo mandaba y la hora casi nunca se miraba. Dos consecuencias:
+    - **`admin_overdue` caía en el `ELSE 5`** — el grupo de menor prioridad — así que siempre perdía contra un
+      `personal` o un `next_action`. Resultado: **dirección no recibió NUNCA un aviso de tarea vencida** desde que
+      existe la función. El síntoma no era «llega tarde», era «no llega».
+    - Un recordatorio para dentro de 5 minutos podía salir **después** de uno para dentro de una hora.
+    Ahora ordena por `date_trunc('minute', scheduled_at)` primero y el tipo solo desempata dentro del mismo minuto.
+    ⚠️ **La regla:** en una cola, lo que decide es **cuándo toca**, no de qué tipo es ni en qué orden se creó. Un
+    `CASE` de prioridad antes del tiempo convierte a las categorías de abajo en inalcanzables — no las retrasa, las
+    **mata**. Si querés priorizar, hacelo *dentro* del mismo instante.
+
+26. **Un tipo de aviso nuevo hay que darlo de alta en el consumidor.** `admin_overdue` se generaba bien y ningún
+    flujo lo pedía: el nodo `Get Pending team_action` mandaba `tipo_in: ["team_action"]` a secas. Se acumulaba en la
+    cola para siempre. **Al agregar un tipo, revisá los dos lados**: quién lo encola y quién lo consume.
+
+27. **El cron de un motor no puede ser más corto que lo que tarda una corrida.** Bajé los consume a 15 s y el
+    `NextAction_Engine` —que tarda 4-8 s porque llama a un LLM— empezó a pisarse: tres ejecuciones colgadas en
+    «running» y un aviso marcado como enviado que nunca salió. **15 s solo para motores livianos** (PersonalReminders
+    tarda 0,4 s); los que llaman a un modelo van a **1 minuto**. Un aviso programado con horas de anticipación no
+    gana nada con 15 s y sí se rompe.
+
+28. **Una línea fija no se le pide a un modelo: se escribe.** El aviso de 3 h decía «…CON EL CLIENTE» y el nombre
+    nunca aparecía: el prompt le exigía al LLM «comenzá OBLIGATORIAMENTE con esta línea exacta», y el modelo la
+    copiaba tal cual, con el hueco sin llenar. Se leía «acción programada con el cliente Estudia su información».
+    **El encabezado lo arma el sistema con los datos reales; el modelo solo redacta el briefing.**
+
+
+**⭐ Antes de mostrarle el asistente a alguien, corré TAMBIÉN esta prueba** — es la que faltó el 3-ago y
+dejó pasar el bug del botón. Elegí un homónimo desde la lista y comprobá que la acción **quedó escrita**:
+
+```sql
+-- 1) La lista trae con qué elegir: nombre completo · etapa · teléfono ENTERO.
+select jsonb_pretty(public._bot_disambiguate(<TG>,'add_expediente_note',
+  jsonb_build_object('contenido','PRUEBA - borrar','client_name','<NOMBRE REPETIDO>'),
+  '<NOMBRE REPETIDO>')->'reply');
+
+-- 2) Tocar el boton guarda de verdad. Probá el primero y, SOBRE TODO, uno SIN TELEFONO.
+--    Debe responder «Listo», nunca «Esta confirmacion vencio o ya se proceso».
+with d as (select public._bot_disambiguate(<TG>,'add_expediente_note',
+   jsonb_build_object('contenido','PRUEBA - borrar','client_name','<NOMBRE>'),'<NOMBRE>') as j)
+select public.bot_handle_callback(<TG>, j->'reply'->'inline_keyboard'->0->0->>'callback_data')
+       #>>'{reply,text}' from d;
+
+-- 3) LA COMPROBACION QUE IMPORTA: ¿la nota existe? Un «Listo» no alcanza.
+select l.name, ei.descripcion from public.expediente_items ei
+  join public.leads l on l.id = ei.lead_id
+ where ei.descripcion = 'PRUEBA - borrar' and ei.deleted_at is null;
+-- Limpieza: update public.expediente_items set deleted_at = now() where descripcion = 'PRUEBA - borrar';
+```
 
 ```sql
 select t, public.bot_nlu_dispatch_gvintell(<TG>,'',jsonb_build_object('input_text',t))#>>'{reply,text}'
