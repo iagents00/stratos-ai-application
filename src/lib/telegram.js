@@ -196,8 +196,14 @@ function attachReminderToMessages(messages, reminderMessage) {
   }
 
   if (idx >= 0) {
-    if (buttons.length && (!Array.isArray(messages[idx].buttons) || messages[idx].buttons.length === 0)) {
-      messages[idx] = { ...messages[idx], buttons }
+    if ((buttons.length && (!Array.isArray(messages[idx].buttons) || messages[idx].buttons.length === 0))
+        || (reminderMessage.media_path && !messages[idx].media_path)) {
+      /* Al emparejar el aviso con el mensaje ya guardado se conservaban solo los
+         botones; la FOTO se perdía ahí (Ángel, 4-ago). */
+      messages[idx] = { ...messages[idx],
+        buttons: buttons.length ? buttons : messages[idx].buttons,
+        media_path: messages[idx].media_path || reminderMessage.media_path || null,
+        media_type: messages[idx].media_type || reminderMessage.media_type || 'foto' }
     }
     return false
   }
@@ -331,7 +337,13 @@ export async function getCopilotActivity(limit = 50) {
                 role: 'ai',
                 content,
                 buttons,
-                probe: txt
+                probe: txt,
+                /* La FOTO del aviso. Un asesor cierra una tarea con evidencia y al
+                   admin le llegaba solo el texto: el aviso traía la ruta, pero al
+                   convertirlo en mensaje no se copiaba, y más abajo solo se firman
+                   los que tienen `media_path` (Ángel, 4-ago). */
+                media_path: p?.payload?.media_path || null,
+                media_type: p?.payload?.media_type || 'foto'
               })
               if (added) hasNewSync = true
             }
