@@ -598,7 +598,12 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
     }]);
     try {
       const safe = String(file.name || "archivo").replace(/[^a-zA-Z0-9._-]/g, "_").slice(-60);
-      const path = `mkt/${orgId}/copilot/${Date.now()}-${safe}`;
+      /* La carpeta decide el permiso: `mkt/` exige rol de marketing y el asesor
+         de ventas era rechazado con «No se pudo subir la evidencia» (Ángel,
+         4-ago). `tarea/` acepta a cualquier rol, aislada por organización
+         (mig 289). Marketing sigue por su carpeta de siempre. */
+      const carpeta = isMarketing ? 'mkt' : 'tarea';
+      const path = `${carpeta}/${orgId}/copilot/${Date.now()}-${safe}`;
       const { error: upErr } = await supabase.storage.from("evidencia").upload(path, file);
       if (upErr) throw upErr;
       // NO adjuntar a ciegas: la foto se pegaba a "la última tarea hecha sin evidencia" y caía en la
