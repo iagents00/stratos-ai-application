@@ -2359,6 +2359,91 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
         </div>
       )}
 
+      {/* ── SELECTOR DE TABLERO ──
+          Va ARRIBA de las dos vistas, no dentro del kanban: manda sobre la
+          lista igual que sobre el tablero. La lista es la vista por defecto
+          y la ÚNICA que existe en el celular — con el selector metido en el
+          kanban, elegir "Tratamiento" no cambiaba nada para casi nadie. */}
+      {HAS_PIPELINE_GROUPS && (() => {
+        // ── Pill de tableros, estilo Dynamic Island ──────────────
+        // Cápsula flotante y centrada, con una pastilla clara que se
+        // DESLIZA de un lado al otro en vez de encenderse y apagarse:
+        // el movimiento es lo que hace entender que son dos caras de lo
+        // mismo y no dos botones sueltos. Los segmentos miden igual
+        // (flex:1) para que el indicador sea 50% y se mueva por
+        // porcentaje — sin medir nada en JS, sin saltos al redimensionar.
+        const idx = Math.max(0, PIPELINE_GROUPS.findIndex(g => g.id === grupoActivo.id));
+        const n   = PIPELINE_GROUPS.length;
+        return (
+          <div style={{ display: "flex", justifyContent: "center", padding: isMobile ? "12px 12px 2px" : "16px 16px 4px" }}>
+            <div style={{
+              position: "relative",
+              display: "flex", alignItems: "center",
+              padding: 4, borderRadius: 999,
+              width: isMobile ? "100%" : 340, maxWidth: "100%",
+              background: isLight ? "rgba(15,23,42,0.055)" : "rgba(8,11,18,0.72)",
+              border: `1px solid ${isLight ? "rgba(15,23,42,0.07)" : "rgba(255,255,255,0.07)"}`,
+              backdropFilter: "blur(20px) saturate(170%)",
+              WebkitBackdropFilter: "blur(20px) saturate(170%)",
+              boxShadow: isLight
+                ? "0 1px 2px rgba(15,23,42,0.05), 0 8px 24px rgba(15,23,42,0.07)"
+                : "0 1px 2px rgba(0,0,0,0.4), 0 10px 30px rgba(0,0,0,0.5)",
+            }}>
+              {/* Pastilla que se desliza. La curva es la de iOS: sale
+                  rápido y frena suave, que es lo que da la sensación de
+                  peso en vez de la de una transición lineal. */}
+              <div aria-hidden style={{
+                position: "absolute", top: 4, bottom: 4, left: 4,
+                width: `calc((100% - 8px) / ${n})`,
+                transform: `translateX(${idx * 100}%)`,
+                borderRadius: 999,
+                background: isLight ? "#FFFFFF" : "rgba(255,255,255,0.10)",
+                border: `1px solid ${isLight ? "rgba(15,23,42,0.06)" : "rgba(255,255,255,0.09)"}`,
+                boxShadow: isLight
+                  ? "0 1px 3px rgba(15,23,42,0.10), 0 4px 12px rgba(15,23,42,0.06)"
+                  : "0 1px 3px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.08)",
+                transition: "transform 0.42s cubic-bezier(0.32,0.72,0,1)",
+              }} />
+              {PIPELINE_GROUPS.map(g => {
+                const act = g.id === grupoActivo.id;
+                const enGrupo = visibleLeads.filter(l => g.stages.includes(l.st)).length;
+                return (
+                  <button key={g.id} onClick={() => setPipelineGroup(g.id)} title={g.hint || undefined}
+                    style={{
+                      position: "relative", zIndex: 1,
+                      flex: 1, minWidth: 0, minHeight: 34,
+                      display: "flex", alignItems: "center", justifyContent: "center", gap: 7,
+                      padding: "0 12px", border: "none", background: "transparent",
+                      cursor: "pointer", borderRadius: 999,
+                      fontFamily: fontDisp, fontSize: 12.5,
+                      fontWeight: act ? 650 : 480,
+                      letterSpacing: "-0.01em",
+                      whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
+                      color: act
+                        ? (isLight ? "rgba(15,23,42,0.90)" : "rgba(255,255,255,0.95)")
+                        : (isLight ? "rgba(15,23,42,0.42)" : "rgba(255,255,255,0.38)"),
+                      transition: "color 0.28s ease, font-weight 0.28s ease",
+                    }}>
+                    {g.label}
+                    <span style={{
+                      fontSize: 11, fontWeight: 650, lineHeight: 1,
+                      padding: "3px 7px", borderRadius: 999,
+                      background: act
+                        ? `${T.accent}22`
+                        : (isLight ? "rgba(15,23,42,0.05)" : "rgba(255,255,255,0.05)"),
+                      color: act
+                        ? (isLight ? `color-mix(in srgb, ${T.accent} 62%, #0B1220 38%)` : T.accent)
+                        : "inherit",
+                      transition: "all 0.28s ease",
+                    }}>{enGrupo}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        );
+      })()}
+
       {/* ── Vista "Indicadores de Asesores" — toggle activo, ocupa el lugar
           de los KPIs/priority/listas. Solo disponible si el cliente tiene
           el flag prendido + rol admin (ambos chequeados en metricsTabEnabled). */}
@@ -4076,91 +4161,6 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
             </span>
           )}
         </div>
-
-        {/* ── SELECTOR DE TABLERO ──
-            Va ARRIBA de las dos vistas, no dentro del kanban: manda sobre la
-            lista igual que sobre el tablero. La lista es la vista por defecto
-            y la ÚNICA que existe en el celular — con el selector metido en el
-            kanban, elegir "Tratamiento" no cambiaba nada para casi nadie. */}
-        {HAS_PIPELINE_GROUPS && (() => {
-          // ── Pill de tableros, estilo Dynamic Island ──────────────
-          // Cápsula flotante y centrada, con una pastilla clara que se
-          // DESLIZA de un lado al otro en vez de encenderse y apagarse:
-          // el movimiento es lo que hace entender que son dos caras de lo
-          // mismo y no dos botones sueltos. Los segmentos miden igual
-          // (flex:1) para que el indicador sea 50% y se mueva por
-          // porcentaje — sin medir nada en JS, sin saltos al redimensionar.
-          const idx = Math.max(0, PIPELINE_GROUPS.findIndex(g => g.id === grupoActivo.id));
-          const n   = PIPELINE_GROUPS.length;
-          return (
-            <div style={{ display: "flex", justifyContent: "center", padding: isMobile ? "12px 12px 2px" : "16px 16px 4px" }}>
-              <div style={{
-                position: "relative",
-                display: "flex", alignItems: "center",
-                padding: 4, borderRadius: 999,
-                width: isMobile ? "100%" : 340, maxWidth: "100%",
-                background: isLight ? "rgba(15,23,42,0.055)" : "rgba(8,11,18,0.72)",
-                border: `1px solid ${isLight ? "rgba(15,23,42,0.07)" : "rgba(255,255,255,0.07)"}`,
-                backdropFilter: "blur(20px) saturate(170%)",
-                WebkitBackdropFilter: "blur(20px) saturate(170%)",
-                boxShadow: isLight
-                  ? "0 1px 2px rgba(15,23,42,0.05), 0 8px 24px rgba(15,23,42,0.07)"
-                  : "0 1px 2px rgba(0,0,0,0.4), 0 10px 30px rgba(0,0,0,0.5)",
-              }}>
-                {/* Pastilla que se desliza. La curva es la de iOS: sale
-                    rápido y frena suave, que es lo que da la sensación de
-                    peso en vez de la de una transición lineal. */}
-                <div aria-hidden style={{
-                  position: "absolute", top: 4, bottom: 4, left: 4,
-                  width: `calc((100% - 8px) / ${n})`,
-                  transform: `translateX(${idx * 100}%)`,
-                  borderRadius: 999,
-                  background: isLight ? "#FFFFFF" : "rgba(255,255,255,0.10)",
-                  border: `1px solid ${isLight ? "rgba(15,23,42,0.06)" : "rgba(255,255,255,0.09)"}`,
-                  boxShadow: isLight
-                    ? "0 1px 3px rgba(15,23,42,0.10), 0 4px 12px rgba(15,23,42,0.06)"
-                    : "0 1px 3px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.08)",
-                  transition: "transform 0.42s cubic-bezier(0.32,0.72,0,1)",
-                }} />
-                {PIPELINE_GROUPS.map(g => {
-                  const act = g.id === grupoActivo.id;
-                  const enGrupo = visibleLeads.filter(l => g.stages.includes(l.st)).length;
-                  return (
-                    <button key={g.id} onClick={() => setPipelineGroup(g.id)} title={g.hint || undefined}
-                      style={{
-                        position: "relative", zIndex: 1,
-                        flex: 1, minWidth: 0, minHeight: 34,
-                        display: "flex", alignItems: "center", justifyContent: "center", gap: 7,
-                        padding: "0 12px", border: "none", background: "transparent",
-                        cursor: "pointer", borderRadius: 999,
-                        fontFamily: fontDisp, fontSize: 12.5,
-                        fontWeight: act ? 650 : 480,
-                        letterSpacing: "-0.01em",
-                        whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
-                        color: act
-                          ? (isLight ? "rgba(15,23,42,0.90)" : "rgba(255,255,255,0.95)")
-                          : (isLight ? "rgba(15,23,42,0.42)" : "rgba(255,255,255,0.38)"),
-                        transition: "color 0.28s ease, font-weight 0.28s ease",
-                      }}>
-                      {g.label}
-                      <span style={{
-                        fontSize: 11, fontWeight: 650, lineHeight: 1,
-                        padding: "3px 7px", borderRadius: 999,
-                        background: act
-                          ? `${T.accent}22`
-                          : (isLight ? "rgba(15,23,42,0.05)" : "rgba(255,255,255,0.05)"),
-                        color: act
-                          ? (isLight ? `color-mix(in srgb, ${T.accent} 62%, #0B1220 38%)` : T.accent)
-                          : "inherit",
-                        transition: "all 0.28s ease",
-                      }}>{enGrupo}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          );
-        })()}
 
         {/* ── LIST VIEW — Redesigned ── */}
         {effectiveViewMode === "list" && (
