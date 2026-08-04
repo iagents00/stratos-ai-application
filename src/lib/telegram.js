@@ -162,17 +162,28 @@ function buildReminderContent(reminder) {
    conserva). Comparando el texto crudo no se reconocían, y el chat mostraba el
    mismo aviso DOS VECES — una sin botones y otra con ellos (Ángel, 3-ago).
    Se comparan sin marcas de formato, sin acentos y sin espacios de más. */
-function mismaEsencia(a, b) {
-  const limpio = (t) => String(t || '')
+function normalizar(t) {
+  return String(t || '')
     .replace(/\*\*/g, '')
     .replace(/[«»"']/g, '')
     .normalize('NFD').replace(/[̀-ͯ]/g, '')
     .replace(/\s+/g, ' ')
     .trim()
     .toLowerCase()
-  const x = limpio(a), y = limpio(b)
+}
+
+function mismaEsencia(a, b) {
+  const x = normalizar(a), y = normalizar(b)
   if (!x || !y) return false
   return x === y || x.includes(y) || y.includes(x)
+}
+
+/* El título de la tarea dentro de un aviso: es lo que va entre «». Sirve para
+   comprobar que un mensaje del chat habla de ESA tarea antes de colgarle los
+   botones de cerrarla. Se piden 6 caracteres para no emparejar por un «sí». */
+function tituloDeLaTarea(texto) {
+  const m = String(texto || '').match(/«([^»]{6,})»/)
+  return m ? normalizar(m[1]) : ''
 }
 
 function attachReminderToMessages(messages, reminderMessage) {
@@ -187,12 +198,26 @@ function attachReminderToMessages(messages, reminderMessage) {
     (mismaEsencia(m.content, content) || (textProbe && mismaEsencia(m.content, textProbe)))
   )
 
+  /* Segundo intento, cuando el aviso llegó con OTRA redacción y no se reconoció
+     arriba. Antes bastaba con que un mensaje del asistente cayera dentro de una
+     ventana de 10 minutos y no tuviera botones — y con eso los botones «Ya la
+     hice / En proceso / No la hice» se pegaban a CUALQUIER cosa: a la lista de
+     la agenda, a un resumen del día, a una respuesta que no era una tarea
+     (Ángel, 4-ago, con la captura). Un botón de cerrar tarea sobre un mensaje
+     que no es una tarea no confunde un poco: hace que el asesor lo toque.
+     Ahora, además de la cercanía en el tiempo, el mensaje tiene que hablar de
+     LA MISMA tarea: el título del aviso (lo que va entre «») debe aparecer en
+     él. Sin esa prueba, el aviso se agrega como su propio mensaje. */
   if (idx < 0 && buttons.length && reminderTime) {
-    idx = messages.findIndex((m) => {
-      if (m.role !== 'ai' || !m.occurred_at || Array.isArray(m.buttons)) return false
-      const delta = Math.abs(new Date(m.occurred_at).getTime() - reminderTime)
-      return delta <= 10 * 60 * 1000
-    })
+    const titulo = tituloDeLaTarea(content) || tituloDeLaTarea(textProbe)
+    if (titulo) {
+      idx = messages.findIndex((m) => {
+        if (m.role !== 'ai' || !m.occurred_at || Array.isArray(m.buttons)) return false
+        const delta = Math.abs(new Date(m.occurred_at).getTime() - reminderTime)
+        if (delta > 10 * 60 * 1000) return false
+        return normalizar(m.content).includes(titulo)
+      })
+    }
   }
 
   if (idx >= 0) {
