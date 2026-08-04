@@ -22,6 +22,7 @@ import { P, LP, font, fontDisp } from "../../../design-system/tokens";
 import { G, KPI } from "../../SharedComponents";
 import { useIsMobile } from "../../../hooks/useViewport";
 import { useZoomAgendados } from "../../../hooks/useZoomAgendados";
+import { useTeam } from "../../../hooks/useTeam";
 import {
   LINERS, PRESENTADORES, ESTATUS, ESTATUS_DEFAULT,
   ESTATUS_ASISTIO, ESTATUS_NO_SHOW, ESTATUS_ACTIVOS,
@@ -60,6 +61,31 @@ const ZoomControl = ({ theme = "dark" }) => {
   const isMobile = useIsMobile();
 
   const { rows, loading, error, hasExtCols, refetch, createRow, updateRow, removeRow } = useZoomAgendados();
+
+  // Quién puede aparecer en los dropdowns de Liner y Presentador: el equipo REAL
+  // de la organización, no una lista escrita a mano. Antes eran constantes fijas,
+  // así que un asesor nuevo no se podía seleccionar (había que teclear su nombre
+  // a mano, y cualquier variación partía en dos el crédito de la métrica de Zooms).
+  //
+  // Se toma el equipo completo salvo marketing y colaboradores de área: los
+  // Zooms los dan asesores y mando (en Duke los closers son super_admins, así que
+  // filtrar solo por rol `asesor` dejaría fuera a Oscar y a Ken).
+  // Se excluyen las cuentas `crm_only` (el bot iAgents entra con una): son
+  // identidades de sistema, no personas que den Zooms.
+  const { team: orgTeam } = useTeam();
+  const rosterZoom = useMemo(() => {
+    const ROLES = ["super_admin", "admin", "ceo", "director", "asesor"];
+    return orgTeam.filter(p => ROLES.includes(p.role) && !p.crm_only).map(p => p.name);
+  }, [orgTeam]);
+  // Si la consulta no respondió (offline/demo) se cae a la semilla histórica.
+  const linerOptions = useMemo(
+    () => (rosterZoom.length ? rosterZoom : LINERS).slice().sort((a, b) => a.localeCompare(b, "es")),
+    [rosterZoom]
+  );
+  const presentadorOptions = useMemo(
+    () => (rosterZoom.length ? rosterZoom : PRESENTADORES).slice().sort((a, b) => a.localeCompare(b, "es")),
+    [rosterZoom]
+  );
 
   const [range, setRange] = useState("todos"); // vista completa por default, como el sheet
   const [statusFilter, setStatusFilter] = useState("Todos");
@@ -942,6 +968,7 @@ const ZoomControl = ({ theme = "dark" }) => {
           T={T} isLight={isLight} accent={accent}
           editing={!!editingId} form={form} setField={setField}
           formErr={formErr} busy={busy} hasExtCols={hasExtCols}
+          linerOptions={linerOptions} presentadorOptions={presentadorOptions}
           onCancel={closeModal} onSave={save}
         />
       )}
@@ -973,7 +1000,7 @@ function StatusSelect({ T, isLight, value, onChange }) {
 }
 
 // ── Sub-componente: modal de alta/edición ────────────────────────────────────
-function ZoomModal({ T, isLight, accent, editing, form, setField, formErr, busy, hasExtCols, onCancel, onSave }) {
+function ZoomModal({ T, isLight, accent, editing, form, setField, formErr, busy, hasExtCols, linerOptions = LINERS, presentadorOptions = PRESENTADORES, onCancel, onSave }) {
   return (
     <div
       onClick={onCancel}
@@ -1014,17 +1041,17 @@ function ZoomModal({ T, isLight, accent, editing, form, setField, formErr, busy,
           </Field>
 
           <Field T={T} label="Liner">
-            <EditableSelect T={T} isLight={isLight} value={form.liner} options={LINERS} onChange={(v) => setField("liner", v)} placeholder="Quién agenda" />
+            <EditableSelect T={T} isLight={isLight} value={form.liner} options={linerOptions} onChange={(v) => setField("liner", v)} placeholder="Quién agenda" />
           </Field>
           <Field T={T} label="Desarrollo / Proyecto">
             <input value={form.proyecto} onChange={(e) => setField("proyecto", e.target.value)} placeholder="Ej. Grupo 28" style={{ ...inputStyle(T, isLight), width: "100%" }} />
           </Field>
 
           <Field T={T} label="Presentador principal">
-            <EditableSelect T={T} isLight={isLight} value={form.presentador_principal} options={PRESENTADORES} onChange={(v) => setField("presentador_principal", v)} placeholder="Quién corre el Zoom" />
+            <EditableSelect T={T} isLight={isLight} value={form.presentador_principal} options={presentadorOptions} onChange={(v) => setField("presentador_principal", v)} placeholder="Quién corre el Zoom" />
           </Field>
           <Field T={T} label="Presentador apoyo">
-            <EditableSelect T={T} isLight={isLight} value={form.presentador_apoyo} options={PRESENTADORES} onChange={(v) => setField("presentador_apoyo", v)} placeholder="Opcional" />
+            <EditableSelect T={T} isLight={isLight} value={form.presentador_apoyo} options={presentadorOptions} onChange={(v) => setField("presentador_apoyo", v)} placeholder="Opcional" />
           </Field>
 
           <Field T={T} label="Estatus">
