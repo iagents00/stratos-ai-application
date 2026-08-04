@@ -98,6 +98,24 @@ const clinicaDentalConfig = {
     copilotBrain:  "dental",
   },
 
+  // Portada de la pantalla de acceso. Sin esto se hereda la de Stratos, que
+  // habla de "IA comercial", de "cerrar más" y de "$40M+ en transacciones
+  // gestionadas": el negocio de una inmobiliaria, no el de un consultorio — y
+  // es lo primero que ve cualquiera que entre.
+  login: {
+    heroTop: "El consultorio",
+    heroBot: "ordenado de principio a fin",
+    sub: [
+      "Pacientes · Agenda · Presupuestos · Tratamientos",
+      "Todo en un solo lugar, y un asistente que lo escribe por ti.",
+    ],
+    stats: [
+      ["100%", "De la historia en un lugar"],
+      ["0",    "Citas que se te pasan"],
+      ["24/7", "Asistente que responde"],
+    ],
+  },
+
   support: {
     email:    null,   // Pendiente: correo de soporte de la clínica
     whatsapp: null,   // Pendiente: WhatsApp de la clínica

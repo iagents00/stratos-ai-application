@@ -68,6 +68,19 @@ export default function LoginScreen({ onLogin }) {
     ? brandName.slice(brandWord.length).trim()
     : "";
   const isDuke   = clientId === "duke";
+  // ── Portada del acceso, por cliente ──────────────────────────────
+  // Era texto fijo de Stratos: "IA comercial", "diseñado para cerrar más" y
+  // "$40M+ en transacciones gestionadas". A una inmobiliaria le habla; a una
+  // clínica dental le habla del negocio de otro — y es la PRIMERA pantalla que
+  // ve cualquiera. Ahora sale del config, con el texto de siempre como default
+  // para que Duke, NSG y Vega queden idénticos al pixel.
+  const heroTop   = config?.login?.heroTop   || "El sistema operativo";
+  const heroBot   = config?.login?.heroBot   || "que escala tu empresa";
+  const heroSub   = config?.login?.sub       || ["CRM inteligente · Pipeline automático · IA comercial", "Todo en un solo lugar, diseñado para cerrar más."];
+  const heroStats = config?.login?.stats     || [["$40M+","En transacciones gestionadas"],["8–13%","ROI anual documentado"],["47","Agentes IA activos"]];
+  // El acento de la marca en los dos puntos donde más se nota. El resto de la
+  // pantalla sigue en el menta de Stratos: cambiarlo entero es otra tarea.
+  const brandAccent = config?.brand?.accent || P.accent;
   // El WhatsApp de "solicitar acceso" cae al de Stratos (operador del white-label)
   // salvo que el cliente declare el suyo; el texto siempre nombra a la marca activa.
   const waNumber = config?.support?.whatsapp || "17479779711";
@@ -232,29 +245,30 @@ export default function LoginScreen({ onLogin }) {
       }} className="brand-panel">
         <div style={{ maxWidth: 420 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 56 }}>
-            <StratosAtom size={28} color={P.accent} />
+            <StratosAtom size={28} color={brandAccent} />
             <span style={{ fontSize: 18, fontWeight: 700, color: "#FFFFFF", fontFamily: fontD, letterSpacing: "-0.02em" }}>
               {brandWord}{brandSuffix ? <>{" "}<span style={{ fontWeight: 300, color: "rgba(255,255,255,0.5)" }}>{brandSuffix}</span></> : null}
             </span>
           </div>
 
           <h1 style={{ fontSize: 38, fontWeight: 300, color: "#FFFFFF", fontFamily: fontD, letterSpacing: "-0.03em", lineHeight: 1.15, marginBottom: 20 }}>
-            El sistema operativo<br />
+            {heroTop}<br />
             <span style={{
-              background: "linear-gradient(135deg, #FFFFFF 0%, rgba(110,231,194,0.7) 100%)",
+              background: `linear-gradient(135deg, #FFFFFF 0%, ${brandAccent}B3 100%)`,
               WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text",
             }}>
-              que escala tu empresa
+              {heroBot}
             </span>
           </h1>
           <p style={{ fontSize: 14, color: P.txt2, lineHeight: 1.75, marginBottom: 48 }}>
-            CRM inteligente · Pipeline automático · IA comercial<br />
-            Todo en un solo lugar, diseñado para cerrar más.
+            {heroSub.map((linea, i) => (
+              <span key={i}>{linea}{i < heroSub.length - 1 ? <br /> : null}</span>
+            ))}
           </p>
 
           {/* Métricas */}
           <div style={{ display: "flex", gap: 32 }}>
-            {[["$40M+","En transacciones gestionadas"],["8–13%","ROI anual documentado"],["47","Agentes IA activos"]].map(([v, l]) => (
+            {heroStats.map(([v, l]) => (
               <div key={v}>
                 <p style={{ fontSize: 22, fontWeight: 300, color: "#FFFFFF", fontFamily: fontD, letterSpacing: "-0.03em", lineHeight: 1 }}>{v}</p>
                 <p style={{ fontSize: 10, color: P.txt3, marginTop: 4, lineHeight: 1.4 }}>{l}</p>
