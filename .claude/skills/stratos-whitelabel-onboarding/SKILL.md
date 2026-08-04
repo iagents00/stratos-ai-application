@@ -309,6 +309,34 @@ en toda la base Stratos (si ya está en otro perfil, hay que desconectarlo prime
     Telegram falle. Vale igual para un asesor real que todavía no pareó su Telegram.
 
 
+25. **La cola de avisos se ordena por HORA, no por tipo.** (4-ago-2026, mig 280.) `fn_proactive_get_pending`
+    entrega **un aviso por persona por ciclo** y ordenaba primero por un `CASE` de tipo, después por `scheduled_at`.
+    Con esa combinación el tipo mandaba y la hora casi nunca se miraba. Dos consecuencias:
+    - **`admin_overdue` caía en el `ELSE 5`** — el grupo de menor prioridad — así que siempre perdía contra un
+      `personal` o un `next_action`. Resultado: **dirección no recibió NUNCA un aviso de tarea vencida** desde que
+      existe la función. El síntoma no era «llega tarde», era «no llega».
+    - Un recordatorio para dentro de 5 minutos podía salir **después** de uno para dentro de una hora.
+    Ahora ordena por `date_trunc('minute', scheduled_at)` primero y el tipo solo desempata dentro del mismo minuto.
+    ⚠️ **La regla:** en una cola, lo que decide es **cuándo toca**, no de qué tipo es ni en qué orden se creó. Un
+    `CASE` de prioridad antes del tiempo convierte a las categorías de abajo en inalcanzables — no las retrasa, las
+    **mata**. Si querés priorizar, hacelo *dentro* del mismo instante.
+
+26. **Un tipo de aviso nuevo hay que darlo de alta en el consumidor.** `admin_overdue` se generaba bien y ningún
+    flujo lo pedía: el nodo `Get Pending team_action` mandaba `tipo_in: ["team_action"]` a secas. Se acumulaba en la
+    cola para siempre. **Al agregar un tipo, revisá los dos lados**: quién lo encola y quién lo consume.
+
+27. **El cron de un motor no puede ser más corto que lo que tarda una corrida.** Bajé los consume a 15 s y el
+    `NextAction_Engine` —que tarda 4-8 s porque llama a un LLM— empezó a pisarse: tres ejecuciones colgadas en
+    «running» y un aviso marcado como enviado que nunca salió. **15 s solo para motores livianos** (PersonalReminders
+    tarda 0,4 s); los que llaman a un modelo van a **1 minuto**. Un aviso programado con horas de anticipación no
+    gana nada con 15 s y sí se rompe.
+
+28. **Una línea fija no se le pide a un modelo: se escribe.** El aviso de 3 h decía «…CON EL CLIENTE» y el nombre
+    nunca aparecía: el prompt le exigía al LLM «comenzá OBLIGATORIAMENTE con esta línea exacta», y el modelo la
+    copiaba tal cual, con el hueco sin llenar. Se leía «acción programada con el cliente Estudia su información».
+    **El encabezado lo arma el sistema con los datos reales; el modelo solo redacta el briefing.**
+
+
 **⭐ Antes de mostrarle el asistente a alguien, corré TAMBIÉN esta prueba** — es la que faltó el 3-ago y
 dejó pasar el bug del botón. Elegí un homónimo desde la lista y comprobá que la acción **quedó escrita**:
 
