@@ -28,12 +28,49 @@ const _cfg = (() => {
   catch { return null; }
 })();
 
-const _custom = Array.isArray(_cfg?.crm?.pipeline) && _cfg.crm.pipeline.length
-  ? _cfg.crm.pipeline
+// ── VARIOS TABLEROS PARA UN MISMO CLIENTE ──────────────────────────────────
+// Una clínica no tiene un solo recorrido: tiene el de CONSEGUIR Y ATENDER al
+// paciente (del primer mensaje hasta que viene a la consulta) y el de TRATARLO
+// (del diagnóstico hasta el control). Son 19 etapas en total — ponerlas en un
+// solo tablero lo vuelve ilegible, y separarlas en dos hace que cualquiera del
+// equipo vea de un golpe dónde está cada persona.
+//
+// Por eso un cliente puede declarar `crm.pipelines`:
+//   [{ id, label, stages: [{name, color}] }, ...]
+// Las etapas de TODOS los grupos siguen viviendo en el mismo campo del
+// paciente, así que los desplegables, los filtros y los colores no cambian:
+// `STAGES` sigue siendo la lista completa y en orden. Lo único nuevo es que el
+// tablero sabe qué trozo mostrar.
+//
+// Quien no declare `crm.pipelines` (Duke, NSG, Vega, Grupo 28, TGenius) queda
+// exactamente como está: un único grupo con todo, y el selector ni aparece.
+const _groups = Array.isArray(_cfg?.crm?.pipelines) && _cfg.crm.pipelines.length
+  ? _cfg.crm.pipelines.filter(g => Array.isArray(g?.stages) && g.stages.length)
   : null;
+
+const _custom = _groups
+  ? _groups.flatMap(g => g.stages)
+  : (Array.isArray(_cfg?.crm?.pipeline) && _cfg.crm.pipeline.length ? _cfg.crm.pipeline : null);
 
 /** Etapas del pipeline activo, en orden (izq → der en el kanban). */
 export const STAGES = _custom ? _custom.map(s => s.name) : DUKE_STAGES;
+
+/**
+ * Tableros del cliente: `[{ id, label, stages:[nombre] }]`.
+ * Siempre tiene al menos uno — quien no declare `crm.pipelines` recibe un único
+ * grupo con todas sus etapas, que es como se comportaba el CRM hasta ahora.
+ */
+export const PIPELINE_GROUPS = _groups
+  ? _groups.map(g => ({
+      id:     g.id,
+      label:  g.label || g.id,
+      hint:   g.hint || null,
+      stages: g.stages.map(s => s.name),
+    }))
+  : [{ id: "todo", label: "Pipeline", hint: null, stages: STAGES }];
+
+/** true si el cliente reparte sus etapas en más de un tablero. */
+export const HAS_PIPELINE_GROUPS = !!_groups && _groups.length > 1;
 
 /** Mapa etapa → color. Para clientes custom se arma desde su config; Duke usa el histórico. */
 export const stgC = _custom
