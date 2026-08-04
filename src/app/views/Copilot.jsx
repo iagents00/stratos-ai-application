@@ -73,13 +73,12 @@ export default function Copilot({ theme = "dark", T: Tprop, isLight: isLightProp
   // adjuntar… que funcione como en Vega: mandás la imagen y te pregunta si es un
   // gasto o un ingreso»). Gateado por tenant: hoy solo NSG.
   const puedeCajaFoto = clientConfig?.features?.copilotGastoFoto === true;
-  /* El botón de adjuntar evidencia solo existía para marketing, así que un asesor
-     de VENTAS no tenía cómo mandar la foto de una tarea — aunque su organización
-     exija evidencia y la función 19 del guion la prometa (Ángel, 4-ago).
-     Ahora también lo ve quien no es marketing: la lista de tareas a las que puede
-     pegarla ya incluye las de ventas (mig 288). Si no tiene ninguna, el propio
-     flujo se lo dice; el botón no rompe nada por estar. */
-  const puedeEvidenciaTarea = !isMarketing && !puedeCajaFoto;
+  /* El botón de evidencia solo existía para marketing: un asesor de VENTAS no
+     tenía cómo mandar la foto de una tarea, aunque su organización la exija
+     (Ángel, 4-ago). Ahora lo ve todo el mundo — la lista de tareas a las que
+     pegarla ya incluye las de ventas (mig 288). La condición va EN LÍNEA en el
+     JSX a propósito: una variable declarada acá arriba queda fuera del alcance
+     de ese bloque y rompe el Copilot entero con «Can't find variable». */
   const orgId = user?.organizationId;
   const botUsername = clientConfig?.tenant?.botUsername || "Strato_sasistente_crm_bot";
   // (manualPairing y getPairingStatus ya no se usan acá: el Copilot no espera
@@ -984,19 +983,19 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
         {/* Adjuntar: evidencia de tarea (marketing) o captura de un pago (tenants
             con copilotGastoFoto, hoy NSG). Es el mismo botón; cambia a dónde va
             la imagen. Si el tenant no tiene ninguno de los dos, ni se renderiza. */}
-        {(isMarketing || puedeCajaFoto || puedeEvidenciaTarea) && (
+        {(isMarketing || puedeCajaFoto || (!isMarketing && !puedeCajaFoto)) && (
           <>
             <button type="button"
-              title={(isMarketing || puedeEvidenciaTarea) ? "Adjuntar foto o video de evidencia" : "Mandar la captura de un pago"}
+              title={(isMarketing || !puedeCajaFoto) ? "Adjuntar foto o video de evidencia" : "Mandar la captura de un pago"}
               onClick={() => evInputRef.current?.click()} disabled={attaching || sending}
               style={{ width: 36, height: 36, borderRadius: 10, flexShrink: 0, border: "none", background: "transparent", color: attaching ? T.accent : T.txt3, cursor: (attaching || sending) ? "default" : "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
               {attaching
                 ? <RefreshCw size={17} strokeWidth={2} style={{ animation: "spin 1s linear infinite" }} />
-                : (isMarketing || puedeEvidenciaTarea) ? <Camera size={18} strokeWidth={2} /> : <Paperclip size={18} strokeWidth={2} />}
+                : (isMarketing || !puedeCajaFoto) ? <Camera size={18} strokeWidth={2} /> : <Paperclip size={18} strokeWidth={2} />}
             </button>
             <input ref={evInputRef} type="file"
-              accept={(isMarketing || puedeEvidenciaTarea) ? "image/*,video/*" : "image/*"}
-              onChange={(isMarketing || puedeEvidenciaTarea) ? handlePickEvidence : handlePickCaja}
+              accept={(isMarketing || !puedeCajaFoto) ? "image/*,video/*" : "image/*"}
+              onChange={(isMarketing || !puedeCajaFoto) ? handlePickEvidence : handlePickCaja}
               style={{ display: "none" }} />
           </>
         )}
