@@ -114,7 +114,12 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [attaching, setAttaching] = useState(false);  // subiendo evidencia (solo marketing)
   const [commenting, setCommenting] = useState(null);  // {taskId, fromName} — líder comentando una evidencia
-  const [pendingEvidence, setPendingEvidence] = useState(null);  // {path, tipo} — foto subida esperando que el usuario elija a cuál tarea es
+  const [pendingEvidence, setPendingEvidence] = useState(null);
+  /* La foto subida + los botones para elegir a cuál tarea va son mensajes LOCALES:
+     el servidor todavía no los conoce. El refresco automático traía la conversación
+     del servidor y se los llevaba en 1-2 segundos, sin darte tiempo a elegir
+     (Ángel, 4-ago). Este ref congela el refresco mientras hay una elección abierta. */
+  const eligiendoTareaRef = useRef(false);
   // Captura de un pago mandada al Copilot, esperando que digan qué es y de cuánto.
   const [cajaForm, setCajaForm] = useState(null);   // {path, tipo:'ingreso'|'egreso', amount, category, description}
   const cajaPathRef = useRef(null);                 // la última captura subida (sobrevive al re-render)
@@ -212,7 +217,7 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
     // y ahora mirás la PC (o volvés a la pestaña), refrescamos para traer lo último.
     // Función NOMBRADA + removeEventListener en cleanup (regla de performance).
     const onFocusReload = () => {
-      if (document.hidden || sendingRef.current) return;
+      if (document.hidden || sendingRef.current || eligiendoTareaRef.current) return;
       const ahora = Date.now();
       if (ahora - lastSendRef.current < 15000) return;    // recién enviaste: no pises nada
       if (ahora - lastReloadRef.current < 20000) return;  // freno: no en cada foco
@@ -231,7 +236,7 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
        para no pisar lo que estás mandando. */
     let debounceRealtime = null;
     const onMensajeNuevo = () => {
-      if (document.hidden || sendingRef.current) return;
+      if (document.hidden || sendingRef.current || eligiendoTareaRef.current) return;
       if (Date.now() - lastSendRef.current < 4000) return;
       if (debounceRealtime) clearTimeout(debounceRealtime);
       debounceRealtime = setTimeout(() => reload({ merge: true }), 700);
@@ -241,7 +246,7 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'tg_bot_activity' }, onMensajeNuevo)
       .subscribe();
     const respaldo = setInterval(() => {
-      if (document.hidden || sendingRef.current) return;
+      if (document.hidden || sendingRef.current || eligiendoTareaRef.current) return;
       if (Date.now() - lastSendRef.current < 15000) return;
       reload({ merge: true });
     }, 20000);
@@ -260,6 +265,7 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
   }, [reload]);
 
   useEffect(() => { sendingRef.current = sending; }, [sending]);
+  useEffect(() => { eligiendoTareaRef.current = !!pendingEvidence; }, [pendingEvidence]);
 
   useEffect(() => {
     const el = scrollRef.current;
