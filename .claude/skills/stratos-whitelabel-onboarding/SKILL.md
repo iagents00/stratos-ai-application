@@ -336,6 +336,30 @@ en toda la base Stratos (si ya está en otro perfil, hay que desconectarlo prime
     copiaba tal cual, con el hueco sin llenar. Se leía «acción programada con el cliente Estudia su información».
     **El encabezado lo arma el sistema con los datos reales; el modelo solo redacta el briefing.**
 
+29. **Un atajo en la PUERTA se paga con todo lo que pasa por la puerta.** (4-ago-2026, migs 296 → 299-300.)
+    Ángel reportó que el Copilot «perdió la inteligencia» al asignar tareas a varias personas y apuntó al
+    LLM (se había agotado OpenAI ese día). **Era falso, y la evidencia estaba en la ejecución de n8n:** el
+    `Agente Actividades` había devuelto el desglose perfecto — `create_team_actions` con 3 tareas, 3
+    responsables y 3 horas. Lo que fallaba era la mig 296, que interceptaba el mensaje **en la primera
+    línea** de `bot_nlu_dispatch_gvintell`, descartaba ese desglose y corría una regex sobre el texto
+    crudo (`«asignale una actividad asesor prueba de…»` → responsable `«una actividad a Asesor Prueba»`).
+    **Las tres reglas:**
+    (a) Si interceptás al inicio de una función compartida, la PRIMERA condición debe ser *«¿esto ya
+    viene resuelto?»* — acá, `jsonb_typeof(p_args->'tareas') = 'array'` e `interpreted:true` mandan.
+    (b) **Cuando alguien dice «el modelo se volvió tonto», leé la ejecución ANTES de tocar el modelo.**
+    Cuesta un minuto y decide entre dos causas opuestas; sin eso se revierten migraciones buenas y se
+    cambia un LLM que estaba bien.
+    (c) **Un parche que tapa un hueco lo vuelve invisible, no lo cierra.** Al quitar la 296 salió que con
+    UNA sola tarea se perdía el responsable desde antes (terminaba preguntando «¿para quién?»): la 296 lo
+    venía tapando. **Al sacar un atajo, probá también el caso que ese atajo estaba atendiendo.**
+
+30. **Lo que se ve en pantalla no se arregla solo en el front cuando alguien está grabando.** (4-ago-2026,
+    migs 301-302.) El encabezado salía `▸ **Cecilia Mendoza**`. `Copilot.jsx` ya limpiaba los `**`
+    (`sinAsteriscos`) y estaba desplegado — pero el navegador de Ángel tenía el bundle viejo por el
+    Service Worker, y grabando no se le puede pedir que refresque. **Se quitaron en el ORIGEN (la
+    función del cerebro).** El `▸` se conserva a propósito: es el signo exacto con el que `Copilot.jsx`
+    detecta al responsable para pintarlo en verde menta — quitarlo apaga el color.
+
 
 **⭐ Antes de mostrarle el asistente a alguien, corré TAMBIÉN esta prueba** — es la que faltó el 3-ago y
 dejó pasar el bug del botón. Elegí un homónimo desde la lista y comprobá que la acción **quedó escrita**:
