@@ -143,25 +143,76 @@ const clinicaDentalConfig = {
     expedienteCentered:  false,
     projectMode:         false,  // El paciente ES una persona: teléfono y datos visibles
 
-    // ── Pipeline de PACIENTES ────────────────────────────────────────────────
-    // El recorrido real de una clínica: alguien pregunta → se le contacta →
-    // viene a valoración → se le pasa el presupuesto → acepta y se trata →
-    // queda en controles. "Perdido" es el carril de los que no siguieron.
+    // ── DOS RECORRIDOS, NO UNO ───────────────────────────────────────────────
+    // Una clínica tiene dos trabajos distintos y no conviene mezclarlos:
+    //
+    //   CAPTACIÓN   — del primer mensaje hasta que la persona VIENE. Lo trabaja
+    //                 recepción: responder, entender qué necesita, ofrecer
+    //                 horarios, confirmar y recordar. Se mide en citas.
+    //   TRATAMIENTO — empieza DESPUÉS de la primera consulta. Lo trabaja el
+    //                 odontólogo con recepción: estudios, plan, presupuesto,
+    //                 decisión, sesiones y control. Se mide en tratamientos.
+    //
+    // Las 19 etapas viven en el MISMO campo del paciente (`leads.stage`): nadie
+    // está en los dos a la vez, y el paso de uno a otro es "Cita realizada" →
+    // "Consulta realizada". El tablero muestra un recorrido por vez, con
+    // pestañas, porque 19 columnas juntas no se leen.
     //
     // ⚠️ CONTRATO CON EL CEREBRO: estos `name` son EXACTOS los strings que van a
-    // leads.stage, y `dental_nlu_dispatch` los escribe tal cual al mover un
-    // paciente (al agendar cita, al marcar atendida, al aceptar presupuesto…).
-    // Si se renombra una etapa acá, hay que renombrarla también en esa función
-    // o el paciente deja de aparecer en su columna.
-    pipeline: [
-      { name: "Nuevo contacto",      color: "#94A3B8" }, // preguntó, aún sin contactar
-      { name: "Contactado",          color: "#38BDF8" }, // se le escribió, coordinando cita
-      { name: "Cita agendada",       color: "#A78BFA" }, // con día y hora confirmados
-      { name: "Consulta realizada",  color: "#FBBF24" }, // ya vino, falta presupuesto
-      { name: "Presupuesto enviado", color: "#FB923C" }, // esperando su respuesta
-      { name: "Tratamiento en curso",color: "#22D3EE" }, // aceptó, está en sesiones
-      { name: "Paciente recurrente", color: "#34D399" }, // terminó, sigue en controles
-      { name: "Perdido",             color: "#F87171" }, // no siguió — se anota el motivo
+    // `leads.stage`, y `dental_nlu_dispatch` los escribe tal cual al agendar,
+    // marcar atendida, aceptar presupuesto o cerrar la última sesión. Si acá se
+    // renombra una etapa, hay que renombrarla también en esa función o el
+    // paciente desaparece de su columna.
+    // Doce etapas, seis por tablero. La versión larga tenía diecinueve y la
+    // mitad no eran etapas: "Servicio identificado" es un DATO (el servicio ya
+    // se guarda en su campo), "Cita ofrecida" y "Tratamiento agendado" son
+    // momentos de minutos donde nadie se queda, "Decisión pendiente" es lo
+    // mismo que "Presupuesto enviado" visto desde el otro lado, y "Estudios
+    // pendientes" o "Tratamiento definido" son una próxima acción, no una
+    // columna. Una etapa se gana su lugar solo si alguien puede QUEDARSE ahí y
+    // hay que ir a buscarlo. Con seis por tablero, además, entran todas en
+    // pantalla sin scroll horizontal.
+    // ── CÓMO SE ELIGIERON LOS NOMBRES ────────────────────────────────────────
+    // Cada etapa se llama por la SITUACIÓN del paciente, en palabras que usaría
+    // cualquiera en la recepción. Nada de vocabulario de CRM de ventas
+    // ("Cerrado", "Perdido", "Captación", "Lead"): quien entra por primera vez
+    // tiene que entender de un vistazo qué paciente va en cada columna y qué
+    // hay que hacer con él, sin que nadie se lo explique.
+    //
+    // El nombre dice la situación Y sugiere la acción:
+    //   "Sin contactar"          → hay que escribirle
+    //   "Buscando cita"          → hay que ponerle día y hora
+    //   "Cita sin confirmar"     → hay que llamar a confirmar
+    //   "Pensando el presupuesto"→ hay que hacer seguimiento, sin presionar
+    //   "Listo para empezar"     → hay que agendarle la primera sesión
+    //   "Vuelve a control"       → hay que recordarle cuándo volver
+    pipelines: [
+      {
+        id: "captacion",
+        label: "Citas",
+        hint: "Desde que preguntan hasta que vienen",
+        stages: [
+          { name: "Sin contactar",     color: "#94A3B8" }, // escribió, llamó o llenó un formulario; nadie le respondió aún
+          { name: "Buscando cita",     color: "#38BDF8" }, // ya se habló; se está coordinando día y hora
+          { name: "Cita sin confirmar",color: "#818CF8" }, // tiene día y hora, falta que diga que viene
+          { name: "Cita confirmada",   color: "#22D3EE" }, // confirmó — es lo que anticipa los ausentismos
+          { name: "Faltó a la cita",   color: "#FBBF24" }, // canceló o no vino; hay que recuperarlo
+          { name: "No continuó",       color: "#F87171" }, // no sigue — SIEMPRE con el motivo anotado
+        ],
+      },
+      {
+        id: "tratamiento",
+        label: "Tratamientos",
+        hint: "Desde la primera consulta hasta el control",
+        stages: [
+          { name: "Ya vino a consulta",     color: "#38BDF8" }, // lo revisaron; falta pasarle el precio
+          { name: "Pensando el presupuesto",color: "#FB923C" }, // tiene precio y condiciones; está decidiendo
+          { name: "Listo para empezar",     color: "#22D3EE" }, // aceptó; falta agendar la primera sesión
+          { name: "En tratamiento",         color: "#34D399" }, // en sesiones
+          { name: "Tratamiento terminado",  color: "#4ADE80" }, // completó el servicio
+          { name: "Vuelve a control",       color: "#10B981" }, // revisión o mantenimiento
+        ],
+      },
     ],
 
     // ── Vocabulario de la clínica ────────────────────────────────────────────
@@ -190,16 +241,16 @@ const clinicaDentalConfig = {
     // presupuestos están sin respuesta y cuánto vale lo que está en juego.
     kpis: [
       { label: "Pacientes activos",    value: { type: "total" },
-        sub: { type: "count", stage: "Nuevo contacto", suffix: "sin contactar" },
+        sub: { type: "count", stage: "Sin contactar", suffix: "sin contactar" },
         icon: "Users",        color: "blue" },
-      { label: "Citas por atender",    value: { type: "count", stage: "Cita agendada" },
-        sub: { type: "count", stage: "Consulta realizada", suffix: "ya valorados" },
+      { label: "Citas por atender",    value: { type: "count", stage: "Cita sin confirmar" },
+        sub: { type: "count", stage: "Cita confirmada", suffix: "ya confirmadas" },
         icon: "CalendarDays", color: "cyan" },
-      { label: "Presupuestos abiertos",value: { type: "count", stage: "Presupuesto enviado" },
-        sub: { type: "count", stage: "Tratamiento en curso", suffix: "en tratamiento" },
+      { label: "Presupuestos abiertos",value: { type: "count", stage: "Pensando el presupuesto" },
+        sub: { type: "count", stage: "Listo para empezar", suffix: "listos para empezar" },
         icon: "FileText",     color: "accent" },
       { label: "Valor en el embudo",   value: { type: "money" },
-        sub: { type: "count", stage: "Paciente recurrente", suffix: "en control" },
+        sub: { type: "count", stage: "En tratamiento", suffix: "en tratamiento" },
         icon: "DollarSign",   color: "emerald" },
     ],
   },
