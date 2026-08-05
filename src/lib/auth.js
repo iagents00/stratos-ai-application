@@ -276,7 +276,14 @@ export async function signUp(name, email, password, recoveryEmail = '') {
   try {
     // El correo de recuperación se guarda en la metadata; el trigger handle_new_user
     // lo copia a profiles.recovery_email al crear el perfil (migración 055).
-    const meta = { name, role: 'asesor' }
+    //
+    // ⚠️ NO mandar acá `role` ni `organization_id`: esto lo escribe el NAVEGADOR y
+    // el servidor ya no les cree (migración `seguridad_registro_no_confia_en_el_
+    // navegador`, 05-ago-2026). Antes se mandaba `role:'asesor'` y el trigger lo
+    // obedecía — el mismo camino por el que alguien podía pedir 'super_admin' y la
+    // organización de otro cliente. Quien da de alta a alguien de verdad es un
+    // admin desde Gestión de Usuarios, que hereda SU organización.
+    const meta = { name }
     const cleanRecovery = String(recoveryEmail || '').trim().toLowerCase()
     if (cleanRecovery) meta.recovery_email = cleanRecovery
     const { data, error } = await supabase.auth.signUp({
@@ -284,7 +291,23 @@ export async function signUp(name, email, password, recoveryEmail = '') {
       password,
       options: { data: meta },
     })
-    if (error) return { data: null, error: error.message }
+    if (error) {
+      // Los mensajes de Supabase vienen en inglés y con jerga ("User already
+      // registered", "Password should be at least..."). El asesor no tiene por
+      // qué leer eso.
+      const msg = error.message?.toLowerCase() || ''
+      if (msg.includes('already registered') || msg.includes('already been registered'))
+        return { data: null, error: 'Ese correo ya tiene una cuenta. Inicia sesión o usa «¿Olvidaste tu contraseña?».' }
+      if (msg.includes('password') && msg.includes('at least'))
+        return { data: null, error: 'La contraseña debe tener al menos 8 caracteres.' }
+      if (msg.includes('invalid') && msg.includes('email'))
+        return { data: null, error: 'Ese correo no parece válido. Revísalo e inténtalo de nuevo.' }
+      if (msg.includes('signups not allowed') || msg.includes('signup is disabled'))
+        return { data: null, error: 'Las cuentas se crean desde adentro del sistema. Pídele acceso a tu administrador.' }
+      if (msg.includes('too many requests') || msg.includes('rate limit'))
+        return { data: null, error: 'Demasiados intentos. Espera unos minutos e inténtalo de nuevo.' }
+      return { data: null, error: 'No se pudo crear la cuenta. Inténtalo de nuevo en unos segundos.' }
+    }
 
     logAuthEvent('SIGNUP', data.user?.id || null, { email, name, role: 'asesor' })
     return {

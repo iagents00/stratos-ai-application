@@ -176,7 +176,9 @@ export default function LoginScreen({ onLogin }) {
     setError("");
     if (!name.trim() || !email.trim() || !password || !confirm) { setError("Completa todos los campos."); return; }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { setError("Correo electrónico inválido."); return; }
-    if (password.length < 6) { setError("Mínimo 6 caracteres en la contraseña."); return; }
+    // 8, igual que al recuperar la clave (doVerifyCode). Antes acá pedía 6 y allá
+    // 8: se podía crear una contraseña que después el propio sistema rechazaba.
+    if (password.length < 8) { setError("La contraseña debe tener al menos 8 caracteres."); return; }
     if (password !== confirm) { setError("Las contraseñas no coinciden."); return; }
     setLoad(true);
     const result = await onLogin(email.trim().toLowerCase(), password, { name: name.trim(), isRegister: true, recoveryEmail: recoveryEmail.trim().toLowerCase() });
