@@ -13,7 +13,7 @@
  *   localhost:5173               →  Landing (modo desarrollo)
  * ─────────────────────────────────────────────────────────────────────────────
  */
-import { StrictMode, lazy, Suspense } from "react";
+import { StrictMode, lazy, Suspense, useEffect } from "react";
 import { createRoot } from "react-dom/client";
 
 import { AuthProvider }   from "./contexts/AuthContext";
@@ -171,9 +171,29 @@ try {
   };
 } catch (_) {}
 
+// ─── SEÑAL DE ARRANQUE ───────────────────────────────────────────────────────
+// [guard:BOOT-HEALTH] Le avisa a los vigilantes de index.html que React MONTÓ.
+// Antes esos vigilantes miraban si <div id="root"> tenía hijos — y root queda
+// VACÍO a propósito mientras carga el chunk de la app (`<Suspense fallback={null}>`).
+// O sea: confundían "está arrancando" con "se colgó" y recargaban una app que
+// venía perfecta. Va FUERA del <Suspense> para avisar apenas React commitea,
+// sin esperar al chunk grande. (Si el chunk grande falla, de eso se encarga
+// `vite:preloadError` + ErrorBoundary, que es su trabajo.)
+function BootSignal() {
+  useEffect(() => {
+    try {
+      window.__STRATOS_BOOT__ = 1;
+      document.documentElement.setAttribute("data-app-mounted", "1");
+      window.dispatchEvent(new Event("stratos:mounted"));
+    } catch (_) { /* noop */ }
+  }, []);
+  return null;
+}
+
 // ─── RENDER ───────────────────────────────────────────────────────────────────
 createRoot(document.getElementById("root")).render(
   <StrictMode>
+    <BootSignal />
     <ErrorBoundary>
       <ClientProvider config={clientConfig}>
         <AuthProvider>
@@ -229,6 +249,21 @@ createRoot(document.getElementById("root")).render(
 //   · App carga sin internet (cache-first del shell)
 //   · Instalable como app nativa en celular (Add to Home Screen)
 //   · Datos seed offline siempre disponibles
+//
+// ⚠️ ACÁ NO SE RECARGA LA PÁGINA. NUNCA. (fix 05-ago-2026)
+// Hasta ago-2026, cuando el SW se actualizaba (o sea: en CADA deploy, y
+// desplegamos ~3 veces por día) esta sección hacía `window.location.reload()`.
+// Eso era el primer eslabón del "se recarga varias veces solo al abrir":
+//   1. Abrís la app → llega el index.html nuevo → el SW nuevo se instala,
+//      activa y reclama la página → reload #1, tirando a la basura el bundle
+//      que ACABABA de bajar.
+//   2. La recarga arranca con el caché recién vaciado → tarda más → los
+//      vigilantes de arranque (index.html) la daban por colgada → reload #2 y #3.
+// Y era una recarga INÚTIL: la navegación es network-first, así que el HTML que
+// el usuario ya tenía en pantalla ERA el nuevo, con los chunks nuevos. La
+// versión nueva entra sola en la próxima navegación, como en cualquier app.
+// El caso "pestaña vieja pide un chunk que ya no existe" lo cubre
+// `vite:preloadError` acá arriba. Revertir = volver a poner el forceReload.
 if ("serviceWorker" in navigator && import.meta.env.PROD) {
   window.addEventListener("load", () => {
     navigator.serviceWorker.register("/sw.js", { scope: "/" })
@@ -247,42 +282,10 @@ if ("serviceWorker" in navigator && import.meta.env.PROD) {
       })
       .catch(err => console.warn("[Stratos] SW registro falló:", err));
 
-    // Cuando el SW nuevo toma control, recargar para usar la última versión
-    let refreshing = false;
-    // ¿La página YA estaba controlada por un SW al cargar? En la PRIMERA carga
-    // (o en incógnito) NO lo está: el SW recién se instala y "reclama" la página,
-    // lo que dispara controllerchange/SW_UPDATED. Pero en esa primera carga el
-    // bundle que ya bajó ES el más nuevo (vino de la red) → recargar es
-    // INNECESARIO. Ese reload de la primera visita era el "recorte" a los ~3s
-    // (se reiniciaba toda la página, ícono incluido). Solo recargamos cuando SÍ
-    // estábamos controlados = update real (se reemplaza un SW viejo por uno nuevo
-    // y hay que bajar el bundle nuevo). El guard anti-loop de iOS se conserva.
-    const wasControlledAtLoad = !!navigator.serviceWorker.controller;
-    const forceReload = () => {
-      if (!wasControlledAtLoad) return; // primera carga: ya tenemos el bundle nuevo
-      if (refreshing) return;
-      // Guard CROSS-RELOAD (fix loop iOS "Ocurrió un problema varias veces"):
-      // el flag `refreshing` vive solo en memoria y se reinicia al recargar. En
-      // iOS Safari, controllerchange/SW_UPDATED puede dispararse en CADA carga →
-      // reload → loop infinito. Sumamos un guard por sessionStorage: si ya
-      // recargamos por el SW hace <30s, NO recargamos otra vez (corta el loop),
-      // pero permite updates legítimos más tarde en la misma sesión.
-      try {
-        const last = +(sessionStorage.getItem("stratos_sw_reload_at") || 0);
-        if (last && Date.now() - last < 30000) return;
-        sessionStorage.setItem("stratos_sw_reload_at", String(Date.now()));
-      } catch (_) { /* sessionStorage bloqueado → queda el guard en memoria */ }
-      refreshing = true;
-      window.location.reload();
-    };
-    navigator.serviceWorker.addEventListener("controllerchange", forceReload);
-    // Backup: el SW también nos manda un postMessage en activate. Si por
-    // alguna razón controllerchange no se dispara (ej. la página ya estaba
-    // controlada por una versión vieja del SW), este listener lo cubre.
     navigator.serviceWorker.addEventListener("message", (evt) => {
-      // Refuerzo: si el SW v10+ avisa, limpiamos tokens huérfanos antes del
-      // reload. Cubre el caso en que el cleanup síncrono del boot guard no
-      // haya alcanzado a correr porque el bundle viejo ya estaba en memoria.
+      // Limpieza de tokens huérfanos de versiones viejas. Cubre el caso en que
+      // el cleanup síncrono del boot guard no haya alcanzado a correr porque el
+      // bundle viejo ya estaba en memoria. No recarga nada.
       if (evt.data?.type === "PURGE_LEGACY_AUTH") {
         try {
           for (const k of Object.keys(localStorage)) {
@@ -290,7 +293,6 @@ if ("serviceWorker" in navigator && import.meta.env.PROD) {
           }
         } catch (_) { /* noop */ }
       }
-      if (evt.data?.type === "SW_UPDATED") forceReload();
     });
   });
 }

@@ -17,6 +17,13 @@
  *                     SW y recarga → fuerza bajar TODO fresco de Vercel.
  *   3º+       → se muestra el error real (evita bucle si de verdad no hay red).
  *
+ * ⚠️ 05-ago-2026: el presupuesto de recargas ya NO es propio de este archivo.
+ * Se pide al ÁRBITRO ÚNICO que vive en index.html (`window.__stratosReload`),
+ * compartido con los otros vigilantes de arranque. Antes cada uno llevaba su
+ * cuenta por separado, así que "una recarga" para cada uno eran tres seguidas
+ * para el usuario. Ver [guard:RELOAD-ARBITER] en index.html. Los contadores
+ * locales quedan solo como respaldo por si el árbitro no cargó.
+ *
  * IMPORTANTE: NUNCA toca localStorage/IndexedDB → la sesión de Supabase
  * (`sb-<ref>-auth-token`) se conserva. Solo limpia cachés de assets del SW.
  */
@@ -48,14 +55,31 @@ async function nukeCachesAndSW() {
 
 // Recuperación DURA e inmediata (para los botones "Reintentar"/"Recargar"):
 // limpia cachés + SW y recarga fresco. Siempre saca al usuario del atasco.
+// La pidió el USUARIO con un botón → no consume presupuesto de recargas.
 export async function hardRecover() {
   try { sessionStorage.removeItem(GUARD_KEY); sessionStorage.removeItem(COUNT_KEY); } catch (_) { /* noop */ }
-  await nukeCachesAndSW();
+  if (typeof window !== "undefined" && typeof window.__stratosReload === "function") {
+    window.__stratosReload("boton-usuario-chunk", true, true);
+    return;
+  }
+  await nukeCachesAndSW();   // respaldo: el árbitro de index.html no cargó
   window.location.reload();
 }
 
 // Auto-recuperación escalonada. Devuelve true si tomó acción (recargó/limpió).
 export function recoverFromStaleChunk() {
+  // Camino normal: el árbitro único de index.html lleva el presupuesto que se
+  // comparte con los vigilantes de arranque. Si dice que no queda, devolvemos
+  // false y el ErrorBoundary muestra el error de verdad (con sus botones).
+  if (typeof window !== "undefined" && typeof window.__stratosReload === "function") {
+    const quedan = window.__stratosReloadQuedan();
+    if (quedan <= 0) return false;
+    // Con presupuesto de sobra, primero el reload suave; en el último tiro se
+    // hace la limpieza dura, que es la que de verdad saca de un caché podrido.
+    return window.__stratosReload("chunk-viejo", quedan === 1, false);
+  }
+
+  // ── Respaldo (el árbitro no cargó): contadores propios, como antes ──
   let last = 0, count = 0;
   try {
     last = Number(sessionStorage.getItem(GUARD_KEY) || 0);

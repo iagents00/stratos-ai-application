@@ -389,6 +389,34 @@ Si en algún momento la app vuelve a sentirse lenta tras agregar features:
 
 ---
 
+## ⚠️ ZONA CRÍTICA — ARRANQUE DE LA APP (SW v356, Agosto 2026)
+
+Síntoma que se cerró: *«la abro en la Mac o en el iPhone y se recarga varias veces sola, como lageada, y después ya entra»*. Eran **cinco causas encadenadas**, no una. El detalle completo está en `SW-VERSIONES.md` → v356. Las reglas que quedan:
+
+### Las 5 reglas del arranque (romper una y vuelve el bug)
+
+| # | Regla | Por qué |
+|---|---|---|
+| 1 | **NADIE recarga la página sin pasar por `window.__stratosReload(motivo, duro, forzada)`** (`[guard:RELOAD-ARBITER]` en `index.html`) | Había 3 sistemas de auto-recarga con contadores separados: "una recarga" para cada uno eran 3 seguidas para el usuario. El presupuesto (2 en 90s) es **compartido** y vive en `localStorage`, no en `sessionStorage`: la PWA de iPhone abre sesión nueva en cada apertura y el freno se perdía justo donde hacía falta |
+| 2 | **El SW NO le pide a la app que recargue.** No revivir `SW_UPDATED` / `controllerchange → location.reload()` en `main.jsx` | La navegación es network-first ⇒ el HTML en pantalla YA es el nuevo. Esa recarga no aportaba nada y era el primer eslabón de la cascada (se disparaba en CADA deploy, y desplegamos ~3/día) |
+| 3 | **`RUNTIME_CACHE` tiene nombre ESTABLE** (`'stratos-runtime'`, sin `CACHE_VERSION`) y `activate` NO lo borra | Los `/assets/` llevan el hash del contenido en el nombre ⇒ lo cacheado nunca está viejo. Cuando se versionaba, cada deploy obligaba a rebajar ~1.3 MB de librerías sin cambios. Se poda por cantidad (`RUNTIME_MAX`) |
+| 4 | **`/assets/*` va con `Cache-Control: immutable`** en `vercel.json` | Vercel por defecto los servía `max-age=0, must-revalidate` ⇒ ~25 idas al servidor antes de pintar. En un iPhone son varios segundos de pantalla muerta. Es seguro **porque el nombre lleva el hash** |
+| 5 | **Para saber si la app arrancó se mira `window.__STRATOS_BOOT__`, NUNCA si `#root` tiene hijos** | `#root` está vacío **a propósito** mientras baja el chunk de la app (`<Suspense fallback={null}>`): "cargando" y "muerta" se veían idénticas, y el vigilante recargaba apps sanas. La señal la emite `<BootSignal/>` en `main.jsx` |
+
+### Otras dos cosas que NO hay que deshacer
+
+- **`public/sw.js` se queda CHICO.** El navegador se lo baja entero en cada navegación. El historial de versiones va en `SW-VERSIONES.md`, **no** comentado dentro del archivo (llegó a pesar 271 KB, 97% comentarios). En `sw.js` queda la línea `CACHE_VERSION` con UNA línea de descripción.
+- **El detector de crash usa claves `_v3`** y no cuenta las recargas propias (`window.__stratosRecargaPropia`). Contaba nuestras propias recargas como crash-loop de Safari y clavaba el modo seguro (sin blur ni animaciones) por 48h.
+
+### Si tocás el arranque: TEST OBLIGATORIO
+
+1. Abrir la app con caché vacío → **una sola carga**, splash visible, sin parpadeos.
+2. Desplegar con la pestaña abierta → recargar a mano → entra sin cascada.
+3. DevTools → Network: los `/assets/*` deben salir de `disk cache`, no con `200`/`304`.
+4. `localStorage.stratos_reload_budget_v1` no debe quedar con `n>0` tras un arranque sano.
+
+---
+
 ## ⚠️ ZONA CRÍTICA — ARQUITECTURA MULTI-CLIENTE (Mayo 2026)
 
 A partir de Mayo 2026 el proyecto sirve a múltiples clientes desde el mismo
