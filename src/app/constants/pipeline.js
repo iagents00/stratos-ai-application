@@ -69,6 +69,10 @@ export const PIPELINE_GROUPS = _groups
       // etapas del otro y marcan cero. Opcional: quien no las declare hereda
       // las de `crm.kpis`.
       kpis:   Array.isArray(g.kpis) && g.kpis.length ? g.kpis : null,
+      // Vocabulario propio del recorrido (`entity`, `entityPlural`,
+      // `priorityList`). Se mezcla sobre los `labels` del cliente, así que
+      // basta con declarar las palabras que cambian.
+      labels: g.labels && typeof g.labels === "object" ? g.labels : null,
       stages: g.stages.map(s => s.name),
     }))
   : [{ id: "todo", label: "Pipeline", hint: null, stages: STAGES }];

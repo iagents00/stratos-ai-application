@@ -189,8 +189,17 @@ const clinicaDentalConfig = {
     pipelines: [
       {
         id: "captacion",
-        label: "Citas",
-        hint: "Desde que preguntan hasta que vienen",
+        // PROSPECTO = todavía no pisó la clínica. Es la división que de verdad
+        // usa la recepción: a un prospecto se lo persigue para que venga; a un
+        // paciente se lo atiende. Llamarlos a todos "pacientes" mezclaba dos
+        // trabajos distintos en la misma pantalla.
+        label: "Prospectos",
+        hint: "Preguntaron, pero todavía no vinieron",
+        labels: {
+          entity:       "prospecto",
+          entityPlural: "prospectos",
+          priorityList: "Prospectos en prioridad",
+        },
         stages: [
           { name: "Sin contactar",     color: "#94A3B8" }, // escribió, llamó o llenó un formulario; nadie le respondió aún
           { name: "Buscando cita",     color: "#38BDF8" }, // ya se habló; se está coordinando día y hora
@@ -203,7 +212,7 @@ const clinicaDentalConfig = {
         // preguntas de la recepción: a cuánta gente le debo respuesta, cuántos
         // vienen, cuántos se me están cayendo.
         kpis: [
-          { label: "Pacientes por atender", value: { type: "total" },
+          { label: "Prospectos por atender", value: { type: "total" },
             sub: { type: "count", stage: "Sin contactar", suffix: "sin contactar" },
             icon: "Users",        color: "blue" },
           { label: "Sin día y hora",        value: { type: "count", stage: "Buscando cita" },
@@ -219,8 +228,15 @@ const clinicaDentalConfig = {
       },
       {
         id: "tratamiento",
-        label: "Tratamientos",
-        hint: "Desde la primera consulta hasta el control",
+        // PACIENTE = ya vino a la consulta. De acá en adelante hay historia
+        // clínica, presupuesto y sesiones.
+        label: "Pacientes",
+        hint: "Ya vinieron: en tratamiento o en control",
+        labels: {
+          entity:       "paciente",
+          entityPlural: "pacientes",
+          priorityList: "Pacientes en prioridad",
+        },
         stages: [
           { name: "Ya vino a consulta",     color: "#38BDF8" }, // lo revisaron; falta pasarle el precio
           { name: "Pensando el presupuesto",color: "#FB923C" }, // tiene precio y condiciones; está decidiendo
