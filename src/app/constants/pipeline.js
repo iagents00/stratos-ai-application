@@ -65,6 +65,10 @@ export const PIPELINE_GROUPS = _groups
       id:     g.id,
       label:  g.label || g.id,
       hint:   g.hint || null,
+      // Tarjetas propias del recorrido. Sin esto, las de un tablero cuentan
+      // etapas del otro y marcan cero. Opcional: quien no las declare hereda
+      // las de `crm.kpis`.
+      kpis:   Array.isArray(g.kpis) && g.kpis.length ? g.kpis : null,
       stages: g.stages.map(s => s.name),
     }))
   : [{ id: "todo", label: "Pipeline", hint: null, stages: STAGES }];

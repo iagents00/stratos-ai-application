@@ -199,6 +199,23 @@ const clinicaDentalConfig = {
           { name: "Faltó a la cita",   color: "#FBBF24" }, // canceló o no vino; hay que recuperarlo
           { name: "No continuó",       color: "#F87171" }, // no sigue — SIEMPRE con el motivo anotado
         ],
+        // Las cuatro tarjetas de arriba, contadas SOBRE ESTE recorrido. Son las
+        // preguntas de la recepción: a cuánta gente le debo respuesta, cuántos
+        // vienen, cuántos se me están cayendo.
+        kpis: [
+          { label: "Pacientes por atender", value: { type: "total" },
+            sub: { type: "count", stage: "Sin contactar", suffix: "sin contactar" },
+            icon: "Users",        color: "blue" },
+          { label: "Sin día y hora",        value: { type: "count", stage: "Buscando cita" },
+            sub: { type: "count", stage: "Sin contactar", suffix: "sin contactar" },
+            icon: "Search",       color: "violet" },
+          { label: "Citas por confirmar",   value: { type: "count", stage: "Cita sin confirmar" },
+            sub: { type: "count", stage: "Cita confirmada", suffix: "ya confirmadas" },
+            icon: "CalendarDays", color: "cyan" },
+          { label: "Hay que recuperar",     value: { type: "count", stage: "Faltó a la cita" },
+            sub: { type: "count", stage: "No continuó", suffix: "no continuaron" },
+            icon: "Target",       color: "accent" },
+        ],
       },
       {
         id: "tratamiento",
@@ -211,6 +228,22 @@ const clinicaDentalConfig = {
           { name: "En tratamiento",         color: "#34D399" }, // en sesiones
           { name: "Tratamiento terminado",  color: "#4ADE80" }, // completó el servicio
           { name: "Vuelve a control",       color: "#10B981" }, // revisión o mantenimiento
+        ],
+        // Acá la pregunta es otra: cuánto dinero está esperando respuesta y
+        // cuánta gente está en sesiones.
+        kpis: [
+          { label: "Pacientes en tratamiento", value: { type: "total" },
+            sub: { type: "count", stage: "En tratamiento", suffix: "en sesiones" },
+            icon: "Users",        color: "blue" },
+          { label: "Presupuestos abiertos",    value: { type: "count", stage: "Pensando el presupuesto" },
+            sub: { type: "count", stage: "Listo para empezar", suffix: "listos para empezar" },
+            icon: "FileText",     color: "cyan" },
+          { label: "Valor en el embudo",       value: { type: "money" },
+            sub: { type: "count", stage: "En tratamiento", suffix: "en tratamiento" },
+            icon: "DollarSign",   color: "emerald" },
+          { label: "Vuelven a control",        value: { type: "count", stage: "Vuelve a control" },
+            sub: { type: "count", stage: "Tratamiento terminado", suffix: "terminaron" },
+            icon: "Trophy",       color: "accent" },
         ],
       },
     ],

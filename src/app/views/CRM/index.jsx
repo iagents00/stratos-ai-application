@@ -647,6 +647,24 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
         )
   ), [canSeeAll, leadsData, user?.id, user?.name]);
 
+  // ── EL TABLERO ACTIVO MANDA SOBRE TODA LA PANTALLA ────────────────────────
+  // El selector no es un control del kanban: es "qué parte de la clínica estoy
+  // mirando". Así que TODO lo que se ve —las tarjetas de prioridad, los
+  // indicadores de arriba, la fila de etapas, la lista y el kanban— habla del
+  // tablero elegido. `boardLeads` es esa única fuente; `visibleLeads` queda
+  // para lo que sí es del total (los contadores del propio selector).
+  // Sin esto el selector se movía pero la pantalla no cambiaba: con "Citas"
+  // elegido seguían saliendo pacientes en tratamiento.
+  const boardLeads = useMemo(() => (
+    HAS_PIPELINE_GROUPS
+      ? visibleLeads.filter(l => grupoActivo.stages.includes(l.st))
+      : visibleLeads
+  ), [visibleLeads, grupoActivo]);
+
+  // Al cambiar de tablero, una etapa filtrada del tablero anterior dejaría la
+  // pantalla vacía (ninguna etapa de "Citas" existe en "Tratamientos").
+  useEffect(() => { setFilterStage("TODO"); }, [pipelineGroup]);
+
   // leadsDataRef — fuente de verdad síncrona del array de leads.
   // Antes, updateLead() usaba `leadsData.find()` capturado en closure, lo que
   // producía datos stale si dos updates al mismo lead llegaban en el mismo
@@ -1364,7 +1382,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
   const urgColor = (d) => d >= 10 ? T.violet : d >= 5 ? T.cyan : T.emerald;
 
   const sortedLeads = useMemo(() => {
-    let data = visibleLeads.filter(l => {
+    let data = boardLeads.filter(l => {
       // Folding insensible a acentos: "hector zarate" debe encontrar a
       // "Héctor Zárate". Sin esto, .includes() compara é≠e y el asesor no
       // halla a sus propios leads con tildes (José, Hernández, Martínez…).
@@ -1390,13 +1408,6 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
       const matchAsesor = !!q || filterAsesor === "TODO" || l.asesor === filterAsesor;
       return matchQ && matchStage && matchAsesor;
     });
-    // Tablero activo. El selector no es un control del kanban: es "qué parte de
-    // la clínica estoy mirando", así que manda también sobre la LISTA — que es
-    // la vista por defecto y la única que hay en el celular. Sin esto, elegir
-    // "Tratamiento" no cambiaba nada salvo dentro del kanban en escritorio.
-    if (HAS_PIPELINE_GROUPS) {
-      data = data.filter(l => grupoActivo.stages.includes(l.st));
-    }
     // Mapa de índice original → posición. Lo usamos como tiebreaker dentro
     // del grupo isNew: addNewLead prepende, así que el más reciente tiene
     // menor índice y queda #1 entre los recién registrados.
@@ -1467,7 +1478,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
       if (av > bv) return sortDir === "asc" ? 1 : -1;
       return 0;
     });
-  }, [visibleLeads, sortField, sortDir, filterStage, filterAsesor, debouncedSearch, pinnedIds, pinnedOrder, pipelineGroup]);
+  }, [boardLeads, sortField, sortDir, filterStage, filterAsesor, debouncedSearch, pinnedIds, pinnedOrder]);
 
   // Windowing: reiniciar el límite de render cuando cambia el set de resultados
   // (búsqueda/filtro/orden), para no quedar pintando miles de filas tras filtrar.
@@ -1961,7 +1972,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
   // Pipeline Mayo 2026: Zoom Agendado | Reactivar Zoom (antes "No Show") |
   // Apartó (milestone reciente) | Seguimiento activo (antes "Zoom Concretado").
   const isAutoPriority = (l) => (l.isNew || l.st === "Zoom Agendado" || l.st === "Reactivar Zoom" || l.st === "Apartó" || l.st === "Seguimiento" || l.hot || l.daysInactive <= 3) && !dismissedIds.has(l.id);
-  const rawPriorityLeads = visibleLeads.filter(l => pinnedIds.has(l.id) || isAutoPriority(l));
+  const rawPriorityLeads = boardLeads.filter(l => pinnedIds.has(l.id) || isAutoPriority(l));
   // Orden final: modo manual respeta drag & dropdown de posición; los demás aplican criterio
   const priorityLeadsFull = (() => {
     const arr = [...rawPriorityLeads];
@@ -2194,24 +2205,31 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
   const carouselRef = useRef(null);
   const [prioScrollX, setPrioScrollX] = useState(0);
   const scrollCarousel = (dir) => carouselRef.current?.scrollBy({ left: dir * 310, behavior: "smooth" });
-  const totalPipeline = visibleLeads.reduce((s, l) => s + (l.presupuesto || 0), 0);
-  const avgScore = visibleLeads.length ? Math.round(visibleLeads.reduce((s, l) => s + l.sc, 0) / visibleLeads.length) : 0;
-  const hotLeads = visibleLeads.filter(l => l.hot || l.daysInactive <= 2).length;
-  const newLeadsCount = visibleLeads.filter(l => l.isNew).length;
+  // Todo lo de acá abajo es "lo que estoy mirando" → tablero activo. Para
+  // quien tiene un solo tablero, boardLeads ES visibleLeads y nada cambia.
+  const totalPipeline = boardLeads.reduce((s, l) => s + (l.presupuesto || 0), 0);
+  const avgScore = boardLeads.length ? Math.round(boardLeads.reduce((s, l) => s + l.sc, 0) / boardLeads.length) : 0;
+  const hotLeads = boardLeads.filter(l => l.hot || l.daysInactive <= 2).length;
+  const newLeadsCount = boardLeads.filter(l => l.isNew).length;
   // Cerca del cierre = Apartó + Visita Agendada + Cierre (milestones finales).
-  const nearCloseLeads = visibleLeads.filter(l => l.st === "Apartó" || l.st === "Visita Agendada" || l.st === "Cierre").length;
-  const zoomsAgendados   = visibleLeads.filter(l => l.st === "Zoom Agendado").length;
+  const nearCloseLeads = boardLeads.filter(l => l.st === "Apartó" || l.st === "Visita Agendada" || l.st === "Cierre").length;
+  const zoomsAgendados   = boardLeads.filter(l => l.st === "Zoom Agendado").length;
   // Post-Mayo 2026 "Zoom Concretado" se consolidó en "Seguimiento".
-  const zoomsConcretados = visibleLeads.filter(l => l.st === "Seguimiento").length;
+  const zoomsConcretados = boardLeads.filter(l => l.st === "Seguimiento").length;
 
   // KPIs config-driven (clientes con `crm.kpis`, ej. Vega). Resuelve el valor
   // de un spec sobre los leads visibles. Duke no usa esto (su bloque es el else).
-  const kpiCustom = Array.isArray(clientConfig?.crm?.kpis) ? clientConfig.crm.kpis : null;
+  // Un tablero puede traer los SUYOS: si no, las tarjetas de un recorrido
+  // cuentan etapas del otro y marcan cero. Quien no declare nada por tablero
+  // sigue con las de siempre.
+  const kpiCustom = Array.isArray(grupoActivo?.kpis) && grupoActivo.kpis.length
+    ? grupoActivo.kpis
+    : (Array.isArray(clientConfig?.crm?.kpis) ? clientConfig.crm.kpis : null);
   const kpiValue = (spec) => {
     if (!spec) return "";
-    if (spec.type === "total") return visibleLeads.length;
+    if (spec.type === "total") return boardLeads.length;
     if (spec.type === "money") return `$${(totalPipeline / 1000000).toFixed(1)}M`;
-    if (spec.type === "count") return visibleLeads.filter(l => l.st === spec.stage).length;
+    if (spec.type === "count") return boardLeads.filter(l => l.st === spec.stage).length;
     return "";
   };
   const KPI_ICON_MAP = { Building2, Search, Trophy, DollarSign, Users, Target, CalendarDays, FileText };
@@ -2219,6 +2237,11 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
   // Columnas del tablero activo. Con un solo tablero es la lista completa,
   // igual que siempre.
   const kanbanStages = grupoActivo.stages.filter(s => s !== "Postventa");
+  // Fila de etapas de abajo. Con varios tableros muestra las del activo y TODAS
+  // (antes cortaba la última con `slice(0,-1)` por la "Postventa" de Duke, que
+  // en la clínica se comía "Vuelve a control"). Con un tablero solo, se
+  // comporta exactamente como siempre.
+  const stripStages = HAS_PIPELINE_GROUPS ? grupoActivo.stages : STAGES.slice(0, -1);
 
   /* Responsive grid columns — 6 columnas en modo full, 5 en compact.
      · Cliente: avatar + nombre + tags + sub-línea (asesor · proyecto · fecha).
@@ -2261,7 +2284,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
             fontSize: 13, fontWeight: 500, color: T.txt3, fontFamily: fontDisp,
             letterSpacing: "-0.01em",
           }}>
-            {visibleLeads.length} {visibleLeads.length === 1 ? L.entity : L.entityPlural}
+            {boardLeads.length} {boardLeads.length === 1 ? L.entity : L.entityPlural}
           </span>
           <span style={{ marginLeft: "auto", fontSize: 12, color: T.txt3, fontFamily: font, fontWeight: 500 }}>
             ${(totalPipeline/1000000).toFixed(1)}M
@@ -2276,7 +2299,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                 {L.pageTitle}{" "}
                 <span style={{ fontWeight: 300, color: isLight ? T.txt3 : "rgba(255,255,255,0.38)" }}>{L.pageTitleAccent}</span>
               </h2>
-              <span style={{ fontSize: 11, fontWeight: 500, color: T.txt3, background: T.glass, border: `1px solid ${T.border}`, padding: "3px 9px", borderRadius: 99, letterSpacing: "0.06em" }}>{visibleLeads.length} {L.entityPlural}</span>
+              <span style={{ fontSize: 11, fontWeight: 500, color: T.txt3, background: T.glass, border: `1px solid ${T.border}`, padding: "3px 9px", borderRadius: 99, letterSpacing: "0.06em" }}>{boardLeads.length} {L.entityPlural}</span>
               {!canSeeAll && <span style={{ fontSize: 11, fontWeight: 500, color: T.amber, background: `${T.amber}10`, border: `1px solid ${T.amber}28`, padding: "3px 9px", borderRadius: 99, letterSpacing: "0.04em" }}>Vista personal</span>}
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
@@ -2469,7 +2492,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
           ) : (
             // KPIs históricas de Stratos/Duke (sin cambios).
             <>
-              <KPI T={T} label="Clientes en Pipeline" value={visibleLeads.length} sub={`${hotLeads} activos hoy`} icon={Users} color={T.blue} />
+              <KPI T={T} label="Clientes en Pipeline" value={boardLeads.length} sub={`${hotLeads} activos hoy`} icon={Users} color={T.blue} />
               <KPI T={T} label="Score Promedio" value={avgScore} sub={`promedio del pipeline`} icon={Target} color={T.cyan} />
               <KPI T={T} label="Zooms Agendados" value={zoomsAgendados} sub={`${zoomsConcretados} concretados`} icon={CalendarDays} color={T.accent} />
               <KPI T={T} label="Valor Total Pipeline" value={`$${(totalPipeline/1000000).toFixed(1)}M`} sub={`${nearCloseLeads} en cierre`} icon={DollarSign} color={T.emerald} />
@@ -3883,12 +3906,12 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
         WebkitMaskImage: isMobile ? "linear-gradient(90deg, #000 88%, transparent 100%)" : "none",
         maskImage: isMobile ? "linear-gradient(90deg, #000 88%, transparent 100%)" : "none",
       }}>
-        {STAGES.slice(0,-1).map((stage, idx) => {
-          const cnt = visibleLeads.filter(l => l.st === stage).length;
+        {stripStages.map((stage, idx) => {
+          const cnt = boardLeads.filter(l => l.st === stage).length;
           const c = stgC[stage] || T.txt3;
           const isActive = filterStage === stage;
           const hasCount = cnt > 0;
-          const divider = idx < STAGES.length - 2;
+          const divider = idx < stripStages.length - 1;
           // Identidad visual consistente: cada etapa siempre tiene su acento de color,
           // solo varía la intensidad. Las etapas vacías (cnt=0) siguen siendo legibles
           // en lugar de quedar fantasmales — UX consistente sin huecos en el carrusel.
@@ -4037,7 +4060,10 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                   fontFamily: fontDisp, fontWeight: active ? 600 : 400, transition: "all 0.18s",
                 }}>
                   <option value="TODO">Todas las etapas</option>
-                  {STAGES.map(s => <option key={s} value={s} style={{ background: isLight ? "#FFFFFF" : "#111318", color: isLight ? "#0B1220" : "#E2E8F0" }}>{s}</option>)}
+                  {/* Solo las del tablero abierto: elegir una del otro recorrido
+                      dejaba la lista vacía sin explicar por qué. Para MOVER a un
+                      paciente el desplegable de la fila sí ofrece todas. */}
+                  {grupoActivo.stages.map(s => <option key={s} value={s} style={{ background: isLight ? "#FFFFFF" : "#111318", color: isLight ? "#0B1220" : "#E2E8F0" }}>{s}</option>)}
                 </select>
                 <ChevronDown size={10} color={selClr} strokeWidth={2.2} style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", pointerEvents: "none", flexShrink: 0 }} />
               </div>
@@ -4936,10 +4962,6 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
 
           return (
             <div style={{ position: "relative" }}>
-              {/* ── Selector de tablero ────────────────────────────────────
-                  Solo aparece si el cliente reparte sus etapas en más de un
-                  recorrido (una clínica: captación y tratamiento). Con un solo
-                  tablero no se pinta nada y el CRM queda igual que siempre. */}
 
               {/* ← botón izquierda — oculto en mobile (touch swipe es natural) */}
               {canLeft && !isMobile && (
