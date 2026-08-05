@@ -117,39 +117,56 @@
   <body>
     <div id="root"></div>
 
-    <!-- ─── [guard:BOOT-BLANK] LA PANTALLA NEGRA DEL IPHONE ───────────────────
-         Reporte de Ángel (27-jul, con captura): «a veces me meto a la app en el
-         iPhone y se pone negro y no inicia».
+    <!-- ─── [guard:RELOAD-ARBITER] EL ÚNICO QUE PUEDE RECARGAR LA APP ─────────
+         Reporte de Ángel/Iván (05-ago): «la abro en la Mac o en el iPhone y se
+         recarga varias veces sola, como lageada, y después ya entra».
 
-         Por qué pasa: la app se instala en la pantalla de inicio (PWA) y iOS la
-         SUSPENDE. Cuando volvés, o cuando desplegamos mientras la tenías abierta,
-         puede quedar un index.html que apunta a un archivo .js que ya cambió de
-         nombre. Ese archivo no carga → React NUNCA monta → no hay ErrorBoundary,
-         no hay chunk-recovery, no corre NADA de la app: solo queda el fondo, que
-         es casi negro. Por eso la recuperación tiene que vivir ACÁ, en un script
-         suelto del HTML: es lo único que se ejecuta en ese escenario.
+         La causa NO era una sola: eran TRES sistemas de auto-recarga que no se
+         conocían entre sí y se encadenaban.
+           1. El Service Worker: en cada deploy avisaba y la app se recargaba.
+           2. Este vigilante de pantalla en blanco.
+           3. La recuperación de chunk viejo (src/lib/chunk-recovery.js).
+         Cada uno llevaba su propio contador, así que "una sola recarga" para
+         cada uno eran TRES seguidas para el usuario — y encima la #1 vaciaba el
+         caché, con lo que la #2 tardaba más y disparaba a la #3.
 
-         Cómo recupera (escalando, y nunca en bucle):
-           1er intento  → recarga simple (el index.html es network-first → baja el nuevo).
-           2do intento  → borra TODAS las cachés + desregistra el Service Worker y recarga.
-           3ro          → deja de recargar y muestra un mensaje con botón, para que
-                          el usuario no se quede mirando una pantalla negra muda.
-         Nunca toca localStorage → la sesión de Supabase se conserva. -->
+         Ahora hay UN SOLO PRESUPUESTO de recargas automáticas, compartido por
+         todos y guardado en localStorage (sessionStorage NO servía: la PWA del
+         iPhone empieza sesión nueva en cada apertura, así que el freno se
+         perdía justo donde más falta hacía). Máximo 2 recargas automáticas en
+         90 segundos; de ahí en más se le muestra un mensaje al usuario en vez
+         de seguir girando.
+
+         Además marca cada recarga como PROPIA, para que el detector de crash de
+         más abajo no las confunda con caídas de Safari y no clave la app en
+         "modo seguro" 48h por un problema que causamos nosotros.
+
+         Nunca toca localStorage de la sesión → la sesión de Supabase se conserva. -->
     <script>
       (function () {
-        var TRIES = "stratos_blank_recover_v1";
-        var ESPERA_MS = 12000;   // margen amplio: un iPhone viejo en 3G tarda
+        var PRESUP = "stratos_reload_budget_v1";  // { t: primer intento, n: cuántos }
+        var PROPIA = "stratos_reload_self_at";    // marca "esta recarga la pedimos nosotros"
+        var VENTANA_MS = 90000;
+        var MAX_AUTO = 2;
 
-        function montada() {
-          var r = document.getElementById("root");
-          return !!(r && r.childElementCount > 0);
+        function leer() {
+          try { return JSON.parse(localStorage.getItem(PRESUP) || "null") || null; } catch (e) { return null; }
         }
-        function intentos() { try { return +sessionStorage.getItem(TRIES) || 0; } catch (e) { return 0; } }
-        function setIntentos(n) { try { sessionStorage.setItem(TRIES, String(n)); } catch (e) {} }
+        function guardar(v) { try { localStorage.setItem(PRESUP, JSON.stringify(v)); } catch (e) {} }
 
-        function recargar(duro) {
-          var destino = location.pathname + location.search + location.hash;
-          if (!duro) { location.replace(destino); return; }
+        // ¿Cuántas recargas automáticas quedan en la ventana actual?
+        function quedan() {
+          var b = leer(), now = Date.now();
+          if (!b || (now - b.t) > VENTANA_MS) return MAX_AUTO;
+          return Math.max(0, MAX_AUTO - (b.n || 0));
+        }
+
+        // Se llama cuando la app arranca BIEN: se devuelve el presupuesto entero.
+        function reiniciar() {
+          try { localStorage.removeItem(PRESUP); } catch (e) {}
+        }
+
+        function limpiarCachesYSW() {
           var p = Promise.resolve();
           try {
             if (typeof caches !== "undefined") {
@@ -162,7 +179,84 @@
                    .then(function (rs) { return Promise.all(rs.map(function (r) { return r.unregister(); })); });
             }
           } catch (e) {}
-          p.catch(function () {}).then(function () { location.replace(destino); });
+          return p.catch(function () {});
+        }
+
+        // Pide una recarga. Devuelve false si el presupuesto se agotó (el que
+        // llama debe mostrarle algo al usuario en vez de insistir).
+        //   motivo → solo para diagnóstico (queda en window.__stratosReloadMotivo)
+        //   duro   → además borra cachés y desregistra el SW antes de recargar
+        //   forzada→ pedida por el usuario (botón): no consume presupuesto
+        function pedirRecarga(motivo, duro, forzada) {
+          if (!forzada && quedan() <= 0) return false;
+          if (!forzada) {
+            var b = leer(), now = Date.now();
+            if (!b || (now - b.t) > VENTANA_MS) b = { t: now, n: 0 };
+            b.n = (b.n || 0) + 1;
+            guardar(b);
+          }
+          try {
+            localStorage.setItem(PROPIA, String(Date.now()));
+            window.__stratosReloadMotivo = motivo || "";
+          } catch (e) {}
+          var destino = location.pathname + location.search + location.hash;
+          if (duro) limpiarCachesYSW().then(function () { location.replace(destino); });
+          else location.replace(destino);
+          return true;
+        }
+
+        // ¿La carga que se está ejecutando viene de una recarga PEDIDA POR NOSOTROS?
+        // (se consume: solo vale para el arranque inmediatamente siguiente)
+        function veniaDeRecargaPropia() {
+          try {
+            var t = +localStorage.getItem(PROPIA) || 0;
+            if (!t) return false;
+            localStorage.removeItem(PROPIA);
+            return (Date.now() - t) < 60000;
+          } catch (e) { return false; }
+        }
+
+        window.__stratosReload        = pedirRecarga;
+        window.__stratosReloadQuedan  = quedan;
+        window.__stratosReloadOk      = reiniciar;
+        window.__stratosLimpiarCaches = limpiarCachesYSW;
+        window.__stratosRecargaPropia = veniaDeRecargaPropia();
+      })();
+    </script>
+
+    <!-- ─── [guard:BOOT-BLANK] LA PANTALLA NEGRA DEL IPHONE ───────────────────
+         Reporte de Ángel (27-jul, con captura): «a veces me meto a la app en el
+         iPhone y se pone negro y no inicia».
+
+         Por qué pasa: la app se instala en la pantalla de inicio (PWA) y iOS la
+         SUSPENDE. Cuando volvés, o cuando desplegamos mientras la tenías abierta,
+         puede quedar un index.html que apunta a un archivo .js que ya cambió de
+         nombre. Ese archivo no carga → React NUNCA monta → no hay ErrorBoundary,
+         no hay chunk-recovery, no corre NADA de la app: solo queda el fondo, que
+         es casi negro. Por eso la recuperación tiene que vivir ACÁ, en un script
+         suelto del HTML: es lo único que se ejecuta en ese escenario.
+
+         ⚠️ CORREGIDO 05-ago-2026 — este vigilante estaba recargando apps SANAS.
+         Miraba si <div id="root"> tenía hijos para decidir "arrancó / se colgó".
+         Pero root queda VACÍO A PROPÓSITO mientras baja el chunk grande de la
+         app (main.jsx lo envuelve en `<Suspense fallback={null}>`): o sea que
+         "todavía está cargando" y "se murió" se veían EXACTAMENTE IGUAL. Con la
+         señal de 3 segundos del visibilitychange eso era una recarga casi
+         garantizada en cualquier conexión lenta. Ahora mira una señal REAL de
+         que React montó (window.__STRATOS_BOOT__, lo pone main.jsx) y espera
+         tiempos de celular en 3G, no de fibra. -->
+    <script>
+      (function () {
+        var ESPERA_MS = 20000;   // margen amplio: un iPhone viejo en 3G tarda
+        var ESPERA_VUELTA_MS = 9000; // al volver a la app suspendida
+
+        // Señal REAL de arranque: React montó (main.jsx → <BootSignal/>).
+        // El chequeo de hijos de #root queda como red de seguridad por si algún
+        // día se sirve un HTML viejo cacheado sin esa señal.
+        function montada() {
+          if (window.__STRATOS_BOOT__) return true;
+          var r = document.getElementById("root");
+          return !!(r && r.childElementCount > 0);
         }
 
         function avisar() {
@@ -181,36 +275,112 @@
             'background:#6EE7C2;color:#04211A;font-size:15px;font-weight:700">Volver a intentar</button>';
           document.body.appendChild(d);
           var b = document.getElementById("stratos-blank-btn");
-          if (b) b.addEventListener("click", function () { setIntentos(0); recargar(true); });
+          if (b) b.addEventListener("click", function () {
+            // Pedida por el usuario: limpieza dura y sin gastar presupuesto.
+            window.__stratosReload("boton-usuario", true, true);
+          });
         }
 
-        function revisar() {
-          if (montada()) { setIntentos(0); return; }
-          var n = intentos() + 1;
-          setIntentos(n);
-          if (n === 1) return recargar(false);
-          if (n === 2) return recargar(true);
-          avisar();
+        function revisar(duro) {
+          if (montada()) { window.__stratosReloadOk(); return; }
+          // 1ª y 2ª van por el árbitro (presupuesto compartido con el resto).
+          // La 2ª es dura: limpia cachés y SW.
+          var quedan = window.__stratosReloadQuedan();
+          if (quedan <= 0) { avisar(); return; }
+          if (!window.__stratosReload("boot-blank", duro || quedan === 1)) avisar();
         }
 
         // (a) el bundle no llegó a montar en un tiempo razonable
-        window.addEventListener("load", function () { setTimeout(revisar, ESPERA_MS); });
+        window.addEventListener("load", function () { setTimeout(function () { revisar(false); }, ESPERA_MS); });
 
-        // (b) el .js principal devolvió 404 → no hay por qué esperar los 12s
+        // Arranque sano confirmado → se devuelve el presupuesto de recargas.
+        window.addEventListener("stratos:mounted", function () { window.__stratosReloadOk(); });
+
+        // (b) el .js principal devolvió 404 → no hay por qué esperar
         window.addEventListener("error", function (ev) {
           var t = ev && ev.target;
           if (t && t.tagName === "SCRIPT" && String(t.src || "").indexOf("/assets/") >= 0 && !montada()) {
-            setTimeout(revisar, 400);
+            // Un 404 de un chunk SÍ es un caché viejo: limpieza dura de una.
+            setTimeout(function () { revisar(true); }, 600);
           }
         }, true);
 
-        // (c) iOS devuelve la PWA suspendida con la vista en blanco
+        // (c) iOS devuelve la PWA suspendida con la vista en blanco.
+        // 9s y no 3s: en 3 segundos una app que está bajando su bundle todavía
+        // NO montó, y se la recargaba sin motivo (era el disparador principal).
         document.addEventListener("visibilitychange", function () {
-          if (!document.hidden && !montada()) setTimeout(revisar, 3000);
+          if (!document.hidden && !montada()) setTimeout(function () { revisar(false); }, ESPERA_VUELTA_MS);
         });
         window.addEventListener("pageshow", function (ev) {
-          if (ev && ev.persisted && !montada()) setTimeout(revisar, 3000);
+          if (ev && ev.persisted && !montada()) setTimeout(function () { revisar(false); }, ESPERA_VUELTA_MS);
         });
+      })();
+    </script>
+
+    <!-- ─── [guard:BOOT-SPLASH] QUE NO SE VEA UN AGUJERO NEGRO MIENTRAS CARGA ──
+         Mientras baja el chunk de la app, <div id="root"> está vacío y la
+         pantalla es un rectángulo casi negro: eso es lo que se siente como
+         "lageado / no responde" y lo que empuja a la gente a recargar a mano.
+         Este splash es HTML puro (no espera a ningún .js) y se va solo apenas
+         la app pinta su primer contenido. Reversible: borrar este bloque. -->
+    <script>
+      (function () {
+        var tema = "dark";
+        try { tema = localStorage.getItem("stratos_crm_theme") || "dark"; } catch (e) {}
+        try { document.documentElement.setAttribute("data-theme", tema); } catch (e) {}
+        var claro = tema === "light";
+        var fondo = claro ? "#F1F3F6" : "#060A11";
+        var tinta = claro ? "#1F2937" : "#E2E8F0";
+        var menta = "#6EE7C2";
+
+        var s = document.createElement("div");
+        s.id = "stratos-splash";
+        s.setAttribute("style",
+          "position:fixed;inset:0;z-index:2147483000;display:flex;flex-direction:column;" +
+          "align-items:center;justify-content:center;gap:18px;background:" + fondo + ";" +
+          "color:" + tinta + ";font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text',sans-serif;" +
+          "transition:opacity .28s ease");
+        s.innerHTML =
+          '<div style="font-size:19px;font-weight:600;letter-spacing:.3px">Stratos<span style="color:' + menta + '"> AI</span></div>' +
+          '<div style="width:132px;height:2px;border-radius:2px;overflow:hidden;background:rgba(110,231,194,.16)">' +
+          '<div id="stratos-splash-bar" style="width:38%;height:100%;border-radius:2px;background:' + menta + ';' +
+          'animation:stratosSplash 1.15s ease-in-out infinite"></div></div>';
+
+        var st = document.createElement("style");
+        st.textContent = "@keyframes stratosSplash{0%{transform:translateX(-115%)}100%{transform:translateX(285%)}}";
+        document.head.appendChild(st);
+
+        function poner() {
+          if (document.body && !document.getElementById("stratos-splash")) document.body.appendChild(s);
+        }
+        function sacar() {
+          var el = document.getElementById("stratos-splash");
+          if (!el) return;
+          el.style.opacity = "0";
+          setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); }, 300);
+        }
+        poner();
+        if (!document.body) document.addEventListener("DOMContentLoaded", poner);
+
+        // Se va cuando la app pinta contenido de verdad dentro de #root.
+        var root = document.getElementById("root");
+        if (root && window.MutationObserver) {
+          var obs = new MutationObserver(function () {
+            if (root.childElementCount > 0) { obs.disconnect(); sacar(); }
+          });
+          obs.observe(root, { childList: true });
+          if (root.childElementCount > 0) { obs.disconnect(); sacar(); }
+        } else {
+          // Sin MutationObserver: sondeo simple.
+          var iv = setInterval(function () {
+            var r = document.getElementById("root");
+            if (r && r.childElementCount > 0) { clearInterval(iv); sacar(); }
+          }, 250);
+          setTimeout(function () { clearInterval(iv); sacar(); }, 30000);
+        }
+        // Cinturón: si algo sale muy mal, el splash no se queda para siempre
+        // tapando el aviso de "La app no terminó de abrir".
+        setTimeout(sacar, 32000);
       })();
     </script>
 
@@ -265,14 +435,30 @@
         //  siga recargando. Pasadas 48h sin crashes, vuelve solo al look full.
         try {
           var now = Date.now();
-          // Claves _v2 (10-jul): la v1 tenía un FALSO POSITIVO en la APP
-          // nativa — cerrar la app antes de los 15s contaba como "crash";
-          // abrir/cerrar 3 veces probando una APK clavaba el modo seguro 48h
-          // (pasó en BlueStacks). Renombrar las claves libera al instante a
-          // los dispositivos atascados por ese bug; los contadores nuevos ya
-          // no cuentan cierres normales (ver markHealthy abajo).
-          var LOWFX_UNTIL = "stratos_lowfx_until_v2";
-          var BOOT_FAILS = "stratos_boot_fails_v2";
+          // Claves _v3 (05-ago): el segundo FALSO POSITIVO, y este era grave.
+          // La app se recargaba sola 2-3 veces al abrir (SW + vigilante de
+          // pantalla en blanco, ver [guard:RELOAD-ARBITER] arriba) → este
+          // detector veía "3 recargas en menos de 12s", que es exactamente la
+          // firma de un crash-loop de Safari, y clavaba el MODO SEGURO por 48h.
+          // O sea: la app se auto-degradaba (sin blur ni animaciones) por un
+          // problema que causábamos nosotros, y el usuario se quedaba dos días
+          // con la versión fea sin saber por qué. Ahora (a) las recargas
+          // propias NO cuentan, y (b) renombrar las claves a _v3 libera AL
+          // INSTANTE a las Macs/iPhones que ya quedaron atascados en modo
+          // seguro por este bug.
+          var LOWFX_UNTIL = "stratos_lowfx_until_v3";
+          var BOOT_FAILS = "stratos_boot_fails_v3";
+          // Limpieza de las claves viejas: sin esto, un dispositivo atascado
+          // arrastra basura de v1/v2 para siempre.
+          try {
+            localStorage.removeItem("stratos_lowfx_until_v2");
+            localStorage.removeItem("stratos_boot_fails_v2");
+            localStorage.removeItem("stratos_lowfx_until");
+            localStorage.removeItem("stratos_boot_fails");
+          } catch (e) {}
+          // ¿Esta carga viene de una recarga que pedimos NOSOTROS? Entonces no
+          // es un crash: no cuenta ni para el loop rápido ni para los fallos.
+          var recargaPropia = !!window.__stratosRecargaPropia;
           var LOWFX_SCOPE = false;
           try {
             LOWFX_SCOPE =
@@ -288,20 +474,23 @@
           try { stick = +localStorage.getItem(LOWFX_UNTIL) || 0; } catch (e) {}
           var lowfx = stick > now;
 
-          // (a) loop rápido en la misma pestaña
+          // (a) loop rápido en la misma pestaña (las recargas propias no cuentan)
           var KEY = "stratos_reload_ticks";
           var ticks = [];
           try { ticks = JSON.parse(sessionStorage.getItem(KEY) || "[]"); } catch (e) {}
           if (!Array.isArray(ticks)) ticks = [];
-          ticks.push(now);
+          if (!recargaPropia) ticks.push(now);
           ticks = ticks.filter(function (t) { return now - t < 12000; });
           try { sessionStorage.setItem(KEY, JSON.stringify(ticks)); } catch (e) {}
           if (ticks.length >= 3) lowfx = true;
 
           // (b) arranques fallidos consecutivos (sobrevive a recargas manuales)
           var fails = 0;
-          try { fails = (+localStorage.getItem(BOOT_FAILS) || 0) + 1; } catch (e) {}
-          try { localStorage.setItem(BOOT_FAILS, String(fails)); } catch (e) {}
+          try { fails = +localStorage.getItem(BOOT_FAILS) || 0; } catch (e) {}
+          if (!recargaPropia) {
+            fails += 1;
+            try { localStorage.setItem(BOOT_FAILS, String(fails)); } catch (e) {}
+          }
           if (fails >= 3) lowfx = true;
           // si la página vive 15s, el arranque fue sano → resetear el contador
           function markHealthy() {
