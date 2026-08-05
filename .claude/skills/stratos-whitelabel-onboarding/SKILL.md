@@ -361,6 +361,34 @@ en toda la base Stratos (si ya está en otro perfil, hay que desconectarlo prime
     detecta al responsable para pintarlo en verde menta — quitarlo apaga el color.
 
 
+31. **Cuando un prompt no cede, no lo empujes: sacale la INTENCIÓN.** (5-ago-2026.) Dos intentos de que el
+    Intérprete ruteara una intención nueva («distribuye los clientes de X a Y, ponles 10 y 10») fallaron
+    idéntico, incluso pegándole la frase literal como contraejemplo. **No era la temperatura:** a
+    `temperature 0` el modelo es determinísticamente consistente — si está equivocado, subirla lo vuelve
+    aleatorio, no correcto. La causa: la frase tenía la forma exacta de una intención (dictado de tareas)
+    que ese prompt lleva meses reforzando. **La salida fue darle su propia puerta** — un nodo detector
+    ANTES del ruteo (`¿Reparto de cartera?` + `¿Es reparto?` en el flujo de ventas). Dos condiciones para
+    que sea seguro: **si no matchea devuelve el item TAL CUAL** al camino de siempre, y **aun matcheando de
+    más no puede escribir nada** sin confirmación humana. ⚠️ Si hay que tocar cómo se detecta el reparto, se
+    toca ESE nodo — no el prompt del Intérprete.
+
+32. **Probar por MCP no es probar.** (5-ago-2026.) `bot_redistribuir_leads` pasó todas las pruebas por MCP y
+    murió en el primer intento real con `DELETE requires a WHERE clause` (21000): Supabase corre el rol de
+    la API (PostgREST) con `sql_safe_updates`, que prohíbe un DELETE sin WHERE **aunque sea sobre una tabla
+    temporal**. Distinto rol, distinto resultado. **Entrá siempre por la puerta de enfrente** (`execute_workflow`
+    con el webhook real) antes de dar algo por bueno.
+
+33. **Una tabla de «actividad» no es un historial de conversación.** (5-ago-2026, mig 314.) La ventana de
+    memoria tomaba las últimas 8 filas de `tg_bot_activity` sin distinguir, y ahí conviven los turnos reales
+    con los avisos que el sistema manda solo. En un día con avisos el modelo recibía casi puro «Fulano tiene
+    Zoom en 1h» y **cero diálogo** — parecía leer solo el mensaje actual. Se separan con `meta->>'kind'`
+    (null = conversación) y los avisos van aparte, resumidos. Dos detalles que también mordieron: la pregunta
+    y la respuesta se guardan con el **mismo `created_at`**, así que sin un desempate explícito el diálogo
+    llega con la respuesta ANTES de la pregunta; y los mensajes del asistente se duplicaban (uno con `**`,
+    otro sin), gastando dos slots en decir lo mismo. ⚠️ Al abrir la memoria, **conservá el matiz**: el
+    historial se usa para ENTENDER referencias, **no para RELLENAR** datos que la persona no volvió a decir
+    (si no, vuelve el bug de reciclar un nombre y asignarle la tarea a quien no era).
+
 **⭐ Antes de mostrarle el asistente a alguien, corré TAMBIÉN esta prueba** — es la que faltó el 3-ago y
 dejó pasar el bug del botón. Elegí un homónimo desde la lista y comprobá que la acción **quedó escrita**:
 
