@@ -267,9 +267,36 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
   useEffect(() => { sendingRef.current = sending; }, [sending]);
   useEffect(() => { eligiendoTareaRef.current = !!pendingEvidence; }, [pendingEvidence]);
 
+  /* Bajar solo (a) si ya estabas abajo, o (b) si acabas de escribir tú.
+     Antes bajaba SIEMPRE que cambiaba `messages`. Con el refresco automático
+     (realtime + repaso cada 20 s) eso significaba que si subías a leer un
+     mensaje viejo, a los pocos segundos el chat te devolvía al final solo
+     (Ángel, 5-ago). Leer el historial se volvía imposible.
+     `pegadoAbajo` guarda si estabas al final ANTES de que React repinte; con
+     80px de tolerancia para no depender del píxel exacto. */
+  const pegadoAbajoRef = useRef(true);
+
   useEffect(() => {
     const el = scrollRef.current;
-    if (el) el.scrollTop = el.scrollHeight;
+    if (!el) return;
+    const alFinal = () => {
+      pegadoAbajoRef.current =
+        el.scrollHeight - el.scrollTop - el.clientHeight < 80;
+    };
+    alFinal();
+    el.addEventListener("scroll", alFinal, { passive: true });
+    return () => el.removeEventListener("scroll", alFinal);
+  }, []);
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    // Lo que escribe el usuario SIEMPRE lo lleva al final; lo que llega solo, no.
+    const recienEnvie = Date.now() - lastSendRef.current < 4000;
+    if (pegadoAbajoRef.current || recienEnvie || sending || recording) {
+      el.scrollTop = el.scrollHeight;
+      pegadoAbajoRef.current = true;
+    }
   }, [messages, sending, recording, pendingVoiceBlob]);
 
   useEffect(() => {
