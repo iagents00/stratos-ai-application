@@ -324,3 +324,91 @@ from (values
 > ⚠️ GOTCHA 16 (15-jul): los routers de nombre (`_bot_reco_client`, `_bot_asesor_clients_ref`) deben LIMPIAR las
 > muletillas/cuantificadores ("alguna", "una", "para", "han sido", números) antes de extraer el nombre; si no, el
 > nombre sale sucio (ej. "Alguna Pepito") y el matcher pide desambiguar de más o falla. Mantener el array de stopwords.
+
+---
+
+## 13. ⭐ CUANDO EL ASISTENTE «NO ENTIENDE» — EL ORDEN EN QUE SE DIAGNOSTICA
+
+*(Escrito el 6-ago-2026 después de perder medio día arreglando el síntoma equivocado. Léelo ANTES
+de tocar un prompt o de agregar una palabra a una lista.)*
+
+**La trampa:** cuando un mensaje se contesta mal, lo natural es pensar «el modelo no entendió» y
+ponerse a mejorar el prompt — o peor, a agregarle la palabra que faltaba a una lista. Las dos veces
+que pasó acá, **el modelo entendía bien y el problema estaba en el camino**. Un parche sobre un
+diagnóstico equivocado deja el bug vivo y encima suma deuda.
+
+**El orden correcto, de afuera hacia adentro. No saltes pasos.**
+
+1. **¿La decisión del agente llega ENTERA a destino?** Antes que nada, mirá qué contestó el
+   Intérprete y qué hizo el código con esa respuesta. Buscá listas blancas, `includes`, `switch`
+   con `default`, castings, filtros por tipo. **Bug real 6-ago:** `Parse Intérprete` tenía
+   `['actividades','completar','correccion','recordatorio','equipo','crm']` **sin `redistribuir`**
+   → el Intérprete acertaba y el código lo degradaba a `crm` en silencio. Dos sesiones antes habían
+   concluido «el modelo se equivoca siempre» y construyeron un detector por verbos encima.
+2. **¿Hay carriles muertos?** Si una condición del flujo (`ruta === 'X'`) no puede ser verdadera
+   nunca, eso es un síntoma, no un detalle. `Ruta Redistribuir?` llevaba tiempo sin poder dispararse.
+3. **¿La capacidad se reconoce POR LA PUERTA POR LA QUE ENTRA EL USUARIO?** Probar la función
+   llamándola directo no prueba nada: el usuario escribe en un chat. **Bug real:** el reparto de
+   cartera funcionaba perfecto por SQL y el Copilot lo leía como dictado de tarea.
+4. **¿Alguna capa intermedia PIERDE datos en silencio?** **Bug real:** el nodo que armaba la llamada
+   mandaba solo `origen` y `destinos`; «los más antiguos» y «de segunda etapa» se caían por el camino
+   → el reparto se habría hecho con los clientes equivocados **y con cara de éxito**. Un dato que se
+   pierde callado es peor que un error.
+5. **¿La conversación sobrevive al segundo turno?** Recién acá mirá el prompt. Ver §14.
+
+**Y la regla de fondo:** las intenciones se describen por su **EFECTO**, nunca por sus verbos.
+«¿un grupo de clientes cambia de dueño?» sobrevive al white-label; `mueve|pasa|reparte` no — cada
+empresa habla distinto y la lista siempre queda corta. Si te encontrás agregando un sinónimo a un
+regex para que el asistente entienda, **parate: estás arreglando el síntoma.**
+
+---
+
+## 14. CONVERSACIONES — lo que se rompe en el SEGUNDO turno
+
+La mitad de los fallos que reporta el equipo no están en la frase: están en lo que pasa **después**
+de que el asistente pregunta algo.
+
+**Regla dura: TODA pregunta que hace el asistente tiene que quedar ANOTADA.** Si preguntás
+«¿cuál de los dos Carlos?» o «¿le paso esos 14?» y no guardás nada, la respuesta del usuario llega
+sin contexto y el sistema contesta cualquier cosa. **Bug real 6-ago:** el usuario contestó
+«Si esos 14» y le salió **«No tienes nada pendiente»** — el «sí» llegó al manejador de
+confirmaciones, que mira su propia tabla, no encontró nada y cortó la charla justo cuando la persona
+ya había dicho que sí.
+
+**Cómo se hace acá:**
+- La pregunta se guarda en `bot_pending_confirm` con `action='reasignar_pendiente'` y un payload que
+  incluye `pregunta` (qué se preguntó) y lo que ya se sabía.
+- Caduca (15 min) y **solo se consume si la respuesta REALMENTE contesta**; si no, se descarta y el
+  asistente sigue normal. Una pregunta vieja no puede secuestrar un mensaje nuevo.
+- Las respuestas se aceptan como habla la gente: «sí», «sí esos 14», «mejor 10».
+- ⚠️ **`bot_pending_confirm` tiene UNA FILA POR CHAT** (clave primaria sobre `telegram_chat_id`).
+  Los borrados **NO** se filtran por `action`: se borra por chat. Filtrar por tipo hace que el
+  segundo pedido reviente con clave duplicada (pasó el 6-ago).
+- ⚠️ **La respuesta lleva al PLAN, nunca a la ejecución.** Un «sí» ambiguo no puede mover 14 clientes
+  reales: primero se muestra el plan completo y recién el segundo sí ejecuta.
+
+---
+
+## 15. CÓMO SE PRUEBA ESTO (y por qué las frases sueltas no alcanzan)
+
+`qa_golden_cases` tiene una columna **`pasos`**: si viene llena, el caso es una **CONVERSACIÓN**.
+
+```json
+[{"dice":"mueve los 30 clientes mas antiguos de Gael para Carlos",
+  "espera":"cuál de los dos", "no_espera":"para quién registro"},
+ {"dice":"Carlos Reyes", "espera":"¿Confirmas?", "no_espera":"No tienes nada pendiente"}]
+```
+
+- Motor: **`fn_qa_run_conversaciones()`**, enganchado a `fn_qa_run_ciclo()` (clave `conversaciones`).
+- Corre con **«Admin Stratos»**, una identidad sintética con `telegram_chat_id` negativo: tiene rol
+  de dirección, no le llega nada a ninguna persona y **no hay que elevarle el rol a nadie real**.
+  ⚠️ No uses el perfil de una persona para probar permisos: el Copilot de la app resuelve la
+  identidad por el `telegram_chat_id` del perfil logueado, así que cambiarle el rol a un perfil de
+  prueba **le cambia lo que puede hacer a quien lo esté usando en ese momento** (pasó el 6-ago).
+- Las conversaciones **terminan en el plan**, nunca en el «sí» final: una prueba no mueve clientes.
+- **`no_espera` es lo que más vale.** Poné ahí la frase EXACTA que salió mal («No tienes nada
+  pendiente», «para quién registro»). Un caso que solo verifica lo bueno no prueba que el bug
+  esté muerto; uno que prohíbe la respuesta vieja, sí.
+
+**Cuándo agregar una conversación:** cada vez que el asistente PREGUNTE algo nuevo. Si hay una
+pregunta, hay un segundo turno, y ese turno hay que probarlo.
