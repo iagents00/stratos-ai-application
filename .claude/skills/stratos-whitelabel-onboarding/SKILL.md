@@ -412,3 +412,28 @@ ya había dicho que sí.
 
 **Cuándo agregar una conversación:** cada vez que el asistente PREGUNTE algo nuevo. Si hay una
 pregunta, hay un segundo turno, y ese turno hay que probarlo.
+
+### ⛔ El candado: una prueba NO puede tocar a un asesor real
+
+*(Requisito de Ángel, 6-ago: «no quiero que ninguna de estas pruebas afecte lo que los asesores
+reales hacen».)*
+
+No alcanza con elegir bien a quién usar de prueba. **«Asesor Prueba» tiene 160 clientes y solo 37
+son ficticios**: si una prueba llegara a ejecutarse, movería clientes de verdad. Y las pruebas
+nombran asesores reales a propósito, porque lo que se quiere probar son los conteos y las etapas
+reales.
+
+Por eso el candado no es una promesa, es una llave: **`bot_redistribuir_leads` no ejecuta si quien
+pide es la identidad de pruebas** (`_bot_chat_qa()`). Llega hasta el plan —que es solo lectura— y
+ahí se detiene, diga lo que diga el caso. Verificado forzando `confirmar:true`: Gael quedó con sus
+748 clientes intactos y cero lotes creados.
+
+- La identidad vive en **UN** solo lugar (`_bot_chat_qa()`), que leen tanto el motor de pruebas como
+  el candado: no se pueden desincronizar.
+- ⚠️ **NO se bloquea a las identidades sintéticas en general.** Varios directores y admins REALES
+  (Yolanda, Carolina, Carlos Ayala…) tienen `telegram_chat_id` negativo porque no conectaron
+  Telegram y entran por el Copilot de la app. Bloquearlos por eso les rompería el reparto de verdad.
+- Al agregar cualquier prueba que ESCRIBA (tareas, recordatorios, etapas), preguntate lo mismo:
+  *¿a nombre de quién queda esto?* Hoy las pruebas escriben solo bajo «QA Asesor Uno» y «QA Admin»
+  — auditado. Si una prueba nueva necesita escribir sobre una persona real, no la escribas: o usás
+  una identidad sintética, o le ponés su propio candado.
