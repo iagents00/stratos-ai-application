@@ -175,6 +175,7 @@ const legacyDesignConfig = {
     followUpRegisterShort: "Registrar",
     followUpColShort:      "Avances",
     noAdvisor:             "Sin responsable",
+    advisorAll:            "Todos los responsables",
     relatedContacts:       "Contactos de la casa",
   },
 };

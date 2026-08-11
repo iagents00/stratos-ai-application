@@ -4146,7 +4146,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                   fontSize: isMobile ? 14 : 12, color: selClr, cursor: "pointer", outline: "none",
                   fontFamily: fontDisp, fontWeight: active ? 600 : 400, transition: "all 0.18s",
                 }}>
-                  <option value="TODO">Todos los asesores</option>
+                  <option value="TODO">{L.advisorAll}</option>
                   {asesoresMaster.map(a => <option key={a} value={a} style={{ background: isLight ? "#FFFFFF" : "#111318", color: isLight ? "#0B1220" : "#E2E8F0" }}>{a.split(" ")[0]} {a.split(" ")[1] || ""}</option>)}
                 </select>
                 <ChevronDown size={10} color={selClr} strokeWidth={2.2} style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", pointerEvents: "none", flexShrink: 0 }} />
@@ -5082,7 +5082,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                       <div style={{ width: 10, height: 10, borderRadius: "50%", background: c, flexShrink: 0, boxShadow: `0 0 0 2px ${c}2E${isLight ? ", 0 1px 3px " + c + "55" : ""}` }} />
                       <div style={{ minWidth: 0 }}>
                         <p style={{ fontSize: 11.5, fontWeight: 500, color: cText, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", letterSpacing: "0.01em" }}>{stage}</p>
-                        {stLeads.length > 0 && <p style={{ fontSize: 10.5, color: T.txt3, fontWeight: 400 }}>${(stVal/1000000).toFixed(1)}M</p>}
+                        {stLeads.length > 0 && !IS_CUSTOM_PIPELINE && <p style={{ fontSize: 10.5, color: T.txt3, fontWeight: 400 }}>${(stVal/1000000).toFixed(1)}M</p>}
                       </div>
                     </div>
                     <span style={{ fontSize: 12.5, fontWeight: 500, color: cText, background: countBg, border: `1px solid ${countBorder}`, padding: "2px 9px", borderRadius: 99, flexShrink: 0, fontFamily: fontDisp, boxShadow: isLight ? `inset 0 1px 0 rgba(255,255,255,0.5)` : "none" }}>{stLeads.length}</span>
@@ -5123,10 +5123,16 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                                       <span title={`Llamada programada · ${new Date(sc.scheduled_at).toLocaleString("es-MX",{day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit",hour12:false})}`} style={{ flexShrink: 0, fontSize: 12, lineHeight: 1 }}>📅</span>
                                     ) : null;
                                   })()}
-                                  <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{l.n}</span>
+                                  {/* El nombre abre el expediente — antes no era clickeable y
+                                      la gente esperaba que lo fuera (feedback Legacy 11-ago). */}
+                                  <span
+                                    onClick={e => { e.stopPropagation(); setNotesLead(l); }}
+                                    title={L.viewDetail}
+                                    style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", cursor: "pointer" }}
+                                  >{l.n}</span>
                                 </p>
                                 <p style={{ fontSize: 10.5, color: T.txt3 }}>{l.asesor?.split(" ")[0]} · {l.campana}</p>
-                                {didZoom && (
+                                {didZoom && !IS_CUSTOM_PIPELINE && (
                                   <span title="Este cliente ya pasó por Zoom (concretado o etapa posterior)" style={{
                                     display: "inline-flex", alignItems: "center", gap: 3, marginTop: 4,
                                     fontSize: 10, fontWeight: 500, letterSpacing: "0.04em",
@@ -5138,14 +5144,17 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                               </div>
                               <p style={{ fontSize: 12.5, fontWeight: 500, color: isLight ? T.txt : "#FFF", fontFamily: fontDisp, letterSpacing: "-0.02em", flexShrink: 0 }}>{l.budget}</p>
                             </div>
-                            <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
-                              <div style={{ flex: 1, height: 2.5, borderRadius: 2, background: "rgba(255,255,255,0.06)" }}>
-                                <div style={{ width: `${sc}%`, height: "100%", borderRadius: 2, background: T.accent,
-                                  opacity: sc >= 80 ? 1 : sc >= 60 ? 0.85 : 0.65,
-                                  boxShadow: sc >= 80 ? `0 0 6px ${T.accent}50` : "none" }} />
+                            {/* Barra de score: calificación de LEADS de ventas — fuera en pipelines custom. */}
+                            {!IS_CUSTOM_PIPELINE && (
+                              <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+                                <div style={{ flex: 1, height: 2.5, borderRadius: 2, background: "rgba(255,255,255,0.06)" }}>
+                                  <div style={{ width: `${sc}%`, height: "100%", borderRadius: 2, background: T.accent,
+                                    opacity: sc >= 80 ? 1 : sc >= 60 ? 0.85 : 0.65,
+                                    boxShadow: sc >= 80 ? `0 0 6px ${T.accent}50` : "none" }} />
+                                </div>
+                                <span style={{ fontSize: 11, fontWeight: 500, fontFamily: fontDisp, minWidth: 18, color: T.accent }}>{sc}</span>
                               </div>
-                              <span style={{ fontSize: 11, fontWeight: 500, fontFamily: fontDisp, minWidth: 18, color: T.accent }}>{sc}</span>
-                            </div>
+                            )}
                             {l.daysInactive >= 7 && (
                               <div style={{ fontSize: 10.5, fontWeight: 500, color: isLight ? "#B91C1C" : "#FF6B6B", background: isLight ? "linear-gradient(135deg, rgba(239,68,68,0.16) 0%, rgba(239,68,68,0.08) 100%)" : "rgba(255,107,107,0.10)", border: isLight ? "1px solid rgba(239,68,68,0.45)" : "1px solid rgba(255,107,107,0.22)", borderRadius: 6, padding: "2px 7px", display: "inline-flex", alignItems: "center", gap: 3, marginBottom: 7, boxShadow: isLight ? "inset 0 1px 0 rgba(255,255,255,0.55)" : "none" }}>
                                 ⚠ {l.daysInactive}d sin actividad
@@ -5169,7 +5178,10 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                               <FollowUpBadge lead={l} onUpdate={updateLead} T={T} compact />
                             </div>
                             <div style={{ display: "flex", gap: 5 }}>
-                              <button onClick={() => oc(`__crm__ ${l.n.toLowerCase()}`, l)} style={{ flex: 1, padding: "6px 0", borderRadius: 7, background: `${T.accent}10`, border: `1px solid ${T.accentB}`, color: T.accent, fontSize: 10.5, fontWeight: 400, cursor: "pointer", fontFamily: font, transition: "background 0.15s" }} onMouseEnter={e => e.currentTarget.style.background = `${T.accent}1E`} onMouseLeave={e => e.currentTarget.style.background = `${T.accent}10`}>Analizar</button>
+                              {/* «Analizar» abría el chat viejo del agente, que ya no tiene forma
+                                  de abrirse (co nunca pasa a true) — botón muerto para TODOS.
+                                  Ahora abre el expediente, que es donde de verdad se analiza. */}
+                              <button onClick={() => setNotesLead(l)} style={{ flex: 1, padding: "6px 0", borderRadius: 7, background: `${T.accent}10`, border: `1px solid ${T.accentB}`, color: T.accent, fontSize: 10.5, fontWeight: 400, cursor: "pointer", fontFamily: font, transition: "background 0.15s" }} onMouseEnter={e => e.currentTarget.style.background = `${T.accent}1E`} onMouseLeave={e => e.currentTarget.style.background = `${T.accent}10`}>Analizar</button>
                               <button onClick={() => togglePin(l.id)} title={pinnedIds.has(l.id) ? "Quitar de prioridad" : "Añadir a prioridad"} style={{ width: 28, padding: "5px 0", borderRadius: 7, background: pinnedIds.has(l.id) ? `${T.accent}12` : "transparent", border: `1px solid ${pinnedIds.has(l.id) ? `${T.accent}36` : T.border}`, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.15s" }} onMouseEnter={e => { e.currentTarget.style.background = `${T.accent}1A`; }} onMouseLeave={e => { e.currentTarget.style.background = pinnedIds.has(l.id) ? `${T.accent}12` : "transparent"; }}><Star size={10} color={pinnedIds.has(l.id) ? T.accent : T.txt3} fill={pinnedIds.has(l.id) ? T.accent : "none"} strokeWidth={2} /></button>
                               {!isDiscoverySimplified && (
                                 <button onClick={() => openLeadDrawer(l)} title="Abrir perfil" style={{ width: 28, padding: "5px 0", borderRadius: 7, background: "transparent", border: `1px solid ${T.border}`, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.15s" }} onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.06)"; e.currentTarget.style.borderColor = T.borderH; }} onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = T.border; }}><User size={10} color={T.txt3} /></button>
