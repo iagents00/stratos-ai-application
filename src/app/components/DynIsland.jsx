@@ -44,6 +44,12 @@ const DynIsland = ({ onExpand, onOpenLead, notifications = [], theme = "dark", b
   }
   const { config: clientConfig } = useClient();
   const centerLabel = clientConfig?.brand?.intelligenceCenterLabel || "Centro de Inteligencia";
+  // Catálogo de funciones POR CLIENTE (11-ago): un tenant puede declarar
+  // `intelFeatures` en su config y el carrusel muestra LO SUYO, no las 17 de
+  // Duke (a Legacy le aparecía «Recomendar propiedades» siendo arquitectura).
+  const FEATURES = Array.isArray(clientConfig?.intelFeatures) && clientConfig.intelFeatures.length
+    ? clientConfig.intelFeatures
+    : INTEL_FEATURES;
   // Rótulo distinto en móvil (opcional por cliente). Duke: "Intelligence" en móvil,
   // "Centro de Inteligencia" en escritorio. Si el cliente no define el móvil, usa el mismo.
   const centerLabelMobile = clientConfig?.brand?.intelligenceCenterLabelMobile || centerLabel;
@@ -289,13 +295,13 @@ const DynIsland = ({ onExpand, onOpenLead, notifications = [], theme = "dark", b
                     style={{ flexShrink: 0, display: "flex", alignItems: "center", gap: 4, background: "rgba(110,231,194,0.10)", border: "1px solid rgba(110,231,194,0.22)", color: D.acc, borderRadius: 8, padding: "6px 10px", fontSize: 11.5, fontWeight: 500, fontFamily: fontDisp, cursor: "pointer", whiteSpace: "nowrap", transition: "background 0.16s" }}
                     onMouseEnter={e => { e.currentTarget.style.background = "rgba(110,231,194,0.18)"; }}
                     onMouseLeave={e => { e.currentTarget.style.background = "rgba(110,231,194,0.10)"; }}
-                  >Ver todas <span style={{ opacity: 0.7 }}>({INTEL_FEATURES.length})</span><ChevronRight size={12} strokeWidth={2.4} /></button>
+                  >Ver todas <span style={{ opacity: 0.7 }}>({FEATURES.length})</span><ChevronRight size={12} strokeWidth={2.4} /></button>
                 </div>
                 <div className="intel-scroll" style={{ overflowX: "auto", overflowY: "hidden", padding: "10px 20px 16px", WebkitOverflowScrolling: "touch", scrollSnapType: "x proximity", overscrollBehaviorX: "contain" }}>
                   <div
                     style={{ display: "flex", gap: 12, width: "max-content", paddingRight: 2 }}
                   >
-                    {INTEL_FEATURES.map((f) => {
+                    {FEATURES.map((f) => {
                       const Ic = FEATURE_ICONS[f.icon] || Sparkles;
                       const isAgent = f.kind === "agente";
                       const chan = f.chan || (f.where.includes("Copilot")
@@ -348,7 +354,7 @@ const DynIsland = ({ onExpand, onOpenLead, notifications = [], theme = "dark", b
                   ><ChevronLeft size={15} /></button>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <p style={{ margin: 0, fontSize: 13.5, color: D.w, fontWeight: 500, fontFamily: fontDisp, letterSpacing: "-0.01em" }}>Todas las funciones</p>
-                    <p style={{ margin: 0, fontSize: 11, color: D.t40, fontFamily: font, marginTop: 2 }}>{INTEL_FEATURES.length} funciones · tocá una para ver cómo se usa</p>
+                    <p style={{ margin: 0, fontSize: 11, color: D.t40, fontFamily: font, marginTop: 2 }}>{FEATURES.length} funciones · tocá una para ver cómo se usa</p>
                   </div>
                   <button onClick={() => setShowAll(false)} style={{ background: D.btn, border: "none", cursor: "pointer", width: 26, height: 26, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", color: D.t50, flexShrink: 0, transition: "all 0.16s" }}
                     onMouseEnter={e => { e.currentTarget.style.background = D.btnH; e.currentTarget.style.color = D.w; }}
@@ -357,7 +363,7 @@ const DynIsland = ({ onExpand, onOpenLead, notifications = [], theme = "dark", b
                 </div>
                 {/* Grid 2 columnas con TODAS las funciones */}
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, padding: "14px 20px 18px" }}>
-                  {INTEL_FEATURES.map((f) => {
+                  {FEATURES.map((f) => {
                     const Ic = FEATURE_ICONS[f.icon] || Sparkles;
                     const isAgent = f.kind === "agente";
                     const chan = f.chan || (f.where.includes("Copilot")

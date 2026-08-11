@@ -1703,7 +1703,7 @@ export default function App() {
   const appsActive  = !metaOpen && (sidebarMore || !sidebarTop.some(n => n.id === v));
 
   const NavBtn = ({ n }) => {
-    const a = v === n.id && !metaOpen;
+    const a = n.id === "miespacio" ? metaOpen : (v === n.id && !metaOpen);
     const isAdmin = n.adminOnly;
     const hasAccess = canAccessModule(n.id, user, clientConfig);
     const mintC = isAdmin ? "#A78BFA" : "#6EE7C2";
@@ -1713,7 +1713,7 @@ export default function App() {
     return (
       <div style={{ display:"flex", flexDirection:"column", alignItems:"center", gap:3, width:56, padding:0 }}>
         <button
-          onClick={() => { setV(n.id); setSidebarMore(false); setMetaOpen(false); }}
+          onClick={() => { if (n.id === "miespacio") { setMetaOpen(true); setSidebarMore(false); return; } setV(n.id); setSidebarMore(false); setMetaOpen(false); }}
           title={(clientConfig?.navLabels?.[n.id] ?? n.l) + (!hasAccess ? " · Sin acceso" : "")}
           style={{
             width:48, height:40, borderRadius:14,
@@ -1735,6 +1735,8 @@ export default function App() {
         >
           {n.id === "copilot"
             ? <CopilotMark size={iconSize + 3} isLight={isLight} style={{ opacity: a ? 1 : (hasAccess ? 0.82 : 1) }} />
+            : n.id === "miespacio" && n.i
+            ? <n.i size={iconSize} strokeWidth={2} color={a ? activeIcon : (isLight ? "rgba(15,23,42,0.45)" : "rgba(255,255,255,0.40)")} />
             : <IosIcon name={n.id} filled={a} size={iconSize} color={a ? activeIcon : (isLight ? "rgba(15,23,42,0.45)" : "rgba(255,255,255,0.40)")} />}
         </button>
         <span style={{ width:"100%", fontSize:9, fontFamily:fontDisp, fontWeight: a ? 650 : 430, letterSpacing: a ? "0.01em" : "0.005em", textAlign:"center",
@@ -2812,7 +2814,7 @@ export default function App() {
                 const act = v === n.id;
                 const acol = n.adminOnly ? "#A78BFA" : (isLight ? T.accent : "#E9FCF4");
                 return (
-                  <button key={n.id} onClick={() => { setV(n.id); setSidebarMore(false); setMetaOpen(false); }} style={{
+                  <button key={n.id} onClick={() => { if (n.id === "miespacio") { setMetaOpen(true); setSidebarMore(false); return; } setV(n.id); setSidebarMore(false); setMetaOpen(false); }} style={{
                     display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:9, padding:"18px 6px", borderRadius:18, cursor:"pointer",
                     border: act ? (isLight ? `1.5px solid ${acol}` : "1px solid rgba(190,245,225,0.20)") : (isLight ? "1px solid rgba(15,23,42,0.08)" : "1px solid rgba(255,255,255,0.06)"),
                     background: act ? (isLight ? `linear-gradient(180deg, #FFFFFF, ${acol}14)` : "linear-gradient(180deg, rgba(255,255,255,0.08), rgba(110,231,194,0.04))") : (isLight ? "#F8FAFC" : "rgba(255,255,255,0.03)"),
