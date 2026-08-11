@@ -18,121 +18,49 @@ import { font, fontDisp } from "../../../design-system/tokens";
 import DocsStratos from "./DocsStratos";
 
 /* ── INITIAL STATE DEFAULTS (used by App.jsx to seed useState) ─────────────── */
+// DEFAULT NEUTRO (11-ago-2026): antes acá vivía el plan estratégico COMPLETO de
+// Duke, y toda organización sin meta_config lo veía como propio — fuga entre
+// tenants. El plan de Duke ahora es DATO de Duke (organizations.meta_config).
+// Este default es una plantilla vacía: cada empresa llena la suya.
 export const DEFAULT_META_PLAN = {
-  coreValues: ["Integridad en cada transacción", "Excelencia en experiencia de lujo", "Confianza y transparencia total", "Resultados medibles y reales"],
-  purpose: "Conectar inversionistas globales con las mejores propiedades de lujo en la Riviera Maya, creando riqueza y legado generacional.",
-  xfactor: "Única firma con expertise legal completo USA-México + acceso exclusivo a propiedades pre-mercado.",
-  swt: [
-    { type: "F", text: "Acceso exclusivo a propiedades pre-mercado premium" },
-    { type: "F", text: "Red activa de +200 clientes referidos HNW" },
-    { type: "D", text: "Proceso de cierre 52 días (meta: 45)" },
-    { type: "D", text: "Equipo pequeño vs. competencia (7 vs. 25+ agentes)" },
-    { type: "T", text: "8% apreciación anual PDC · Nómadas digitales en auge" },
-    { type: "T", text: "Crypto payments en real estate +15% deals 2026" },
-  ],
-  bhag: "#1 bróker de lujo en la Riviera Maya · $500M en transacciones anuales para 2030",
-  targets3yr: ["$200M pipeline activo", "15 asesores élite en equipo", "40% cierres por referido", "Reconocimiento internacional de marca"],
-  sandbox: { zona: "Playa del Carmen · Riviera Maya", precio: "$1.5M – $6.5M USD", cliente: "HNW 45–65 años", origen: "EEUU · Canadá · Latam · EU", producto: "Beachfront · Penthouses · Resort" },
-  brandPromises: [
-    { title: "Experiencia sin fricciones", sub: "Legal MX-USA resuelto para ti" },
-    { title: "ROI con inteligencia real", sub: "Proyecciones reales de plusvalía" },
-    { title: "Servicio clase mundial", sub: "Concierge personal 360°" },
-  ],
-  rocks: [
-    { n: "Cerrar 12 propiedades $2M+", owner: "Todo el equipo", pct: 42 },
-    { n: "Lanzar Red Inversionistas PDC", owner: "Dir. Desarrollo", pct: 65 },
-    { n: "Contratar 3 asesores élite", owner: "RRHH", pct: 30 },
-    { n: "Reducir cierre a 45 días", owner: "Operaciones", pct: 55 },
-  ],
-  anualTheme: "El Año del Inversionista",
-  anualThemeDesc: "Cultivar capital institucional y compradores recurrentes. Bono de equipo al alcanzar $50M.",
-  goal: 48_000_000,
+  "coreValues": [],
+  "purpose": "Toca aquí para escribir para qué existe tu empresa.",
+  "xfactor": "",
+  "swt": [],
+  "bhag": "",
+  "targets3yr": [],
+  "sandbox": {},
+  "brandPromises": [],
+  "rocks": [],
+  "anualTheme": "",
+  "anualThemeDesc": "",
+  "goal": 0
 };
 
+// DEFAULT NEUTRO (11-ago-2026): ídem — el Protocolo de Ventas de Duke pasó a su
+// meta_config en la base. Mismas claves y tipos que el default histórico para
+// que ningún .map reviente ([guard:META-MERGE-DEFAULTS] hace el merge por clave).
 export const DEFAULT_META_PROTOCOL = {
-  // Protocolo oficial Duke del Caribe (Mayo 2026). 12 etapas con SLA y
-  // acciones obligatorias por etapa. Orden alineado con CRM kanban.
-  stages: [
-    { id: 1, name: "Contáctame Ya", color: "#34D399", sla: "< 1h",
-      actions: ["Contacto inmediato por llamada y WhatsApp", "Calificar BANT en el primer contacto", "Si no contesta, registrar intento y mover a Segundo Intento", "No acumular en esta bandeja — máxima urgencia"] },
-    { id: 2, name: "Segundo Intento", color: "#60A5FA", sla: "< 24h",
-      actions: ["Segundo intento de llamada y mensaje", "Registrar intento y resultado en CRM", "Si no contesta, mover a Tercer Intento"] },
-    { id: 3, name: "Tercer Intento", color: "#7EB8F0", sla: "< 24h",
-      actions: ["Tercer intento de llamada", "Registrar evidencia (hora, canal, resultado)", "Si no contesta, mover a Rotación"] },
-    { id: 4, name: "Rotación", color: "#A8A29E", sla: "< 12h",
-      actions: ["Emanuel (gerente) reasigna a otro asesor", "Nuevo asesor inicia ciclo de contacto", "Es segunda oportunidad, no abandono"] },
-    { id: 5, name: "Remarketing IA", color: "#FB923C", sla: "Continuo",
-      actions: ["Leads no calificados o no listos para invertir", "La IA programa publicidad, info y nutrición", "Mantener comunicación automatizada hasta reactivación"] },
-    { id: 6, name: "Zoom Agendado", color: "#3B82F6", sla: "Confirmado",
-      actions: ["Discovery completo previo al Zoom", "Confirmar 24h y 1h antes por WhatsApp", "Tener comparativos y dossier listos", "Llegar al Zoom con perfil + intención"] },
-    { id: 7, name: "Reactivar Zoom", color: "#EA580C", sla: "< 2h",
-      actions: ["Mensaje empático sin presión — confirmar interés real", "Proponer 2 ventanas alternativas para reagendar", "Recuperar confianza y fijar nuevo horario", "Si en 24h no responde, mover a Remarketing IA"] },
-    { id: 8, name: "Seguimiento", color: "#FBBF24", sla: "< 24h",
-      actions: ["Incluye Zoom concretado, envío de proyectos, corridas y negociación", "Cada touchpoint debe aportar valor (avance de obra, caso similar, disponibilidad)", "Mantener próxima acción + fecha siempre definidas"] },
-    { id: 9, name: "Apartó", color: "#4ADE80", sla: "< 24h",
-      actions: ["Validar comprobante, unidad, monto y desarrollador", "Coordinar siguiente paso (visita o Down Payment)", "El cliente envió dinero al desarrollador"] },
-    { id: 10, name: "Visita Agendada", color: "#06B6D4", sla: "Confirmado",
-      actions: ["Confirmar fechas, vuelos y horarios", "Coordinar recorrido, propiedades y responsables", "Diseñar experiencia VIP del cliente"] },
-    { id: 11, name: "Cierre", color: "#34D399", sla: "Inmediato",
-      actions: ["Solo entra aquí con Down Payment pagado", "Validar comprobante y documentación de cierre", "Coordinar firma con notaría aliada"] },
-    { id: 12, name: "Postventa", color: "#64748B", sla: "Continuo",
-      actions: ["Lili da seguimiento formal de avances de obra", "Compartir comprobantes y estados de cuenta", "Mantener comunicación formal, ordenada y documentada"] },
-  ],
-  qualification: [
-    { label: "Budget",    q: "¿Cuál es tu presupuesto disponible para esta inversión?" },
-    { label: "Authority", q: "¿Eres tú quien toma la decisión final?" },
-    { label: "Need",      q: "¿Buscas inversión, disfrute personal o ambos?" },
-    { label: "Timeline",  q: "¿En qué plazo planeas concretar la compra?" },
-    { label: "Financing", q: "¿Tienes capital disponible o necesitas financiamiento?" },
-  ],
-  objections: [
-    { obj: "Está muy caro",         resp: "El precio refleja la ubicación premium y el ROI proyectado de 8% anual. ¿Cuál es tu referencia de precio?" },
-    { obj: "Necesito pensarlo",     resp: "Entendido. ¿Qué información adicional necesitas para decidir? Tengo disponibilidad esta semana." },
-    { obj: "No conozco la zona",    resp: "Perfecto, hagamos un tour virtual o te agendo una visita VIP con traslado incluido. ¿Cuándo tienes disponibilidad?" },
-    { obj: "¿Y si no se vende?",    resp: "Tiene 8% apreciación anual + programa de renta vacacional con 10-12% ROI. ¿Te muestro los números?" },
-    { obj: "Quiero esperar precios bajos", resp: "En PDC los precios suben 8% anual. Cada mes de espera equivale a pagar más. ¿Te muestro la proyección?" },
-  ],
-  slas: [
-    { trigger: "Nuevo lead registrado",  resp: "Primer contacto",     time: "< 1 hora",  owner: "Asesor asignado" },
-    { trigger: "Zoom realizado",         resp: "Envío de propuesta",  time: "24 horas",  owner: "Asesor asignado" },
-    { trigger: "Sin actividad 5+ días",  resp: "Reactivación activa", time: "Inmediato", owner: "Director de Ventas" },
-    { trigger: "Negociación activa",     resp: "Seguimiento diario",  time: "24 horas",  owner: "Asesor + Director" },
-  ],
-  objetivo: "Convertir leads en ventas mediante un proceso claro, rápido y consistente.",
-  reglaBase: "Todo lead debe avanzar, seguir en proceso o cerrarse. Si no, está perdido.",
-  principios: ["Califica rápido", "Calificar correctamente", "Mover al siguiente paso", "Dar seguimiento constante", "Registrar todo"],
-  reglaRegistro: "Lo que no está registrado en el CRM, no existe.",
-  velocidadIdeal: "< 5 minutos",
-  velocidadMax: "30 minutos",
-  flujoSteps: [
-    { n: "Contacto Inicial", desc: "Objetivo: obtener respuesta", action: "Mensaje + llamada. Sin respuesta → mensaje breve + siguiente intento." },
-    { n: "Calificación",     desc: "Objetivo: entender al cliente", action: "Nombre · presupuesto · zona · objetivo · tiempo · ubicación · objeciones" },
-    { n: "Avance",           desc: "Toda conversación termina en un siguiente paso", action: "Zoom agendado · Recorrido agendado · Seguimiento con fecha definida" },
-    { n: "Registro",         desc: "Después de cada interacción", action: "Registrar en Stratos AI: resumen · etapa · próxima acción · fecha · nivel del lead" },
-  ],
-  pipelineStages: ["Lead nuevo", "Contactado", "Conversación", "Zoom agendado", "Recorrido", "Seguimiento", "Apartado", "Venta cerrada", "Post-venta", "Referidos"],
-  reglasOp: ["Todo lead tiene próxima acción y fecha", "3 intentos sin respuesta → riesgo", "24h sin avance → alerta", "5 días sin actividad → frío"],
-  seguimientoFases: [
-    { range: "1–5 intentos",   desc: "Contacto y respuesta" },
-    { range: "6–15 intentos",  desc: "Interés y valor" },
-    { range: "16–30 intentos", desc: "Confianza y decisión" },
-    { range: "31–45 intentos", desc: "Cierre o reactivación" },
-  ],
-  seguimientoFreq: [
-    { tipo: "Caliente", freq: "cada 24h",     color: "#EF4444" },
-    { tipo: "Medio",    freq: "cada 48h",     color: "#F59E0B" },
-    { tipo: "Frío",     freq: "cada 3–5 días", color: "#60A5FA" },
-  ],
-  kpis: [
-    { cat: "Actividad",  color: "#60A5FA", items: ["Tiempo de respuesta", "Contactos diarios", "Seguimientos activos"] },
-    { cat: "Conversión", color: "#34D399", items: ["Zooms realizados", "Recorridos agendados", "Cierres del mes"] },
-    { cat: "Calidad",    color: "#A78BFA", items: ["Leads sin seguimiento", "Registros incompletos"] },
-    { cat: "Resultado",  color: "#FB923C", items: ["Ventas cerradas", "Ingresos generados"] },
-  ],
-  alertas: ["Lead sin contacto", "Seguimiento vencido", "Lead caliente sin avance", "Cliente sin próxima acción"],
-  errores: ["No registrar en CRM", "No dar seguimiento", "No definir siguiente paso", "Responder tarde", "No calificar al lead"],
-  principioFinal: "El dinero está en el seguimiento.",
-  cierre: "Un lead solo se cierra si: compra, se descarta con motivo claro, o deja de ser viable.",
+  "stages": [],
+  "qualification": [],
+  "objections": [],
+  "slas": [],
+  "objetivo": "Toca aquí para escribir el objetivo de tu equipo.",
+  "reglaBase": "Completa el protocolo de tu empresa — este espacio es solo tuyo.",
+  "principios": [],
+  "reglaRegistro": "",
+  "velocidadIdeal": "",
+  "velocidadMax": "",
+  "flujoSteps": [],
+  "pipelineStages": [],
+  "reglasOp": [],
+  "seguimientoFases": [],
+  "seguimientoFreq": [],
+  "kpis": [],
+  "alertas": [],
+  "errores": [],
+  "principioFinal": "",
+  "cierre": ""
 };
 
 /* ── Detección de proveedor para el apartado Documentos ────────────────────── */
