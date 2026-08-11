@@ -527,7 +527,7 @@ async function _sendCopilotMessageInner(rawText, options = {}) {
 
     // 1. Detección directa de solicitud de manual / guía / instrucciones — o "¿qué puedes hacer?"
     const wantsManual = /^(?:dame |mandame |enviame |enviar |ver |mostrar |necesito |pasame )?(?:el |la )?(?:manual|guía|guia|instrucciones|ayuda)(?:\s|$)/i.test(cleanText);
-    const wantsCapabilities = /(qu[eé]\s+(tanto\s+)?(cosas\s+)?(me\s+)?(puedes?|pod[eé]s|sabes?|sab[eé]s)\s+hacer|qu[eé]\s+haces|qu[eé]\s+(otras\s+)?funcion(es|alidades)|para\s+qu[eé]\s+sirves?|en\s+qu[eé]\s+(me\s+)?(puedes?|pod[eé]s)\s+ayudar|c[oó]mo\s+(me\s+)?(puedes?\s+)?ayud)/i.test(cleanText);
+    const wantsCapabilities = /(qu[eé]\s+(tanto\s+)?(cosas\s+)?(me\s+)?(puedes?|peudes?|pudes?|pod[eé]s|sabes?|sab[eé]s)\s+hacer|qu[eé]\s+haces|qu[eé]\s+(otras\s+)?funcion(es|alidades)|para\s+qu[eé]\s+sirves?|en\s+qu[eé]\s+(me\s+)?(puedes?|pod[eé]s)\s+ayudar|c[oó]mo\s+(me\s+)?(puedes?\s+)?ayud)/i.test(cleanText);
     // Tenant que escribió su propio "¿qué puedes hacer?" en la config
     // (`tenant.copilotHelp`, ej. una clínica dental). Va PRIMERO: sin esto caía
     // al manual inmobiliario de más abajo y le hablaba de leads y Zooms.
@@ -679,6 +679,24 @@ async function _sendCopilotMessageInner(rawText, options = {}) {
     // clínica dental). Antes la condición exigía además `tasksBrain`, así que
     // un cerebro distinto de 'tareas' terminaba en el flujo de ventas aunque
     // tuviera webhook propio.
+    // Tenant con cerebro PROPIO y SIN flujo n8n (ej. Legacy Design): las
+    // PREGUNTAS se responden desde el cerebro de SU empresa (org_brain_docs)
+    // y JAMÁS quedan en silencio («que tanto peudes hacer?» → puntitos
+    // infinitos, captura de Ángel 11-ago). Las ACCIONES («ponme una tarea…»)
+    // devuelven null en la RPC y siguen su camino normal al motor de tareas.
+    // NSG y la clínica no pasan por acá: tienen webhook propio.
+    if (tenant.customBrain && !tenant.webhook && !options.callback_data && cleanText && profile?.organization_id) {
+      try {
+        const { data: orgReply } = await withTimeout(
+          supabase.rpc('fn_org_copilot_responder', { p_org: profile.organization_id, p_texto: cleanText }),
+          6000, 'fn_org_copilot_responder',
+        );
+        if (typeof orgReply === 'string' && orgReply.trim()) {
+          return { reply: orgReply, buttons: [], error: null };
+        }
+      } catch { /* si la RPC falla, sigue al webhook compartido como antes */ }
+    }
+
     const webhookUrl = tenant.webhook
       ? tenant.webhook
       : (isMarketing ? N8N_COPILOT_WEBHOOK_MKT : N8N_COPILOT_WEBHOOK);
