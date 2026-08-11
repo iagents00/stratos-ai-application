@@ -12,6 +12,13 @@
 import { fontDisp } from "../../design-system/tokens";
 import { L } from "../constants/labels";
 import { IS_CUSTOM_PIPELINE } from "../constants/pipeline";
+import { resolveClientFromLocation } from "../../clients";
+
+// ¿El tenant tiene el CRM apagado? (Brasa y Piedra). Sin CRM no hay leads ni
+// protocolo de ventas que anunciar en la pill.
+const CRM_APAGADO = (() => {
+  try { return resolveClientFromLocation()?.features?.crm === false; } catch { return false; }
+})();
 
 /* `phrases`: si viene, manda. Lo usa MARKETING, que no tiene leads y muestra
    sus propios números (tareas vencidas, videos parados, quién no reportó).
@@ -29,7 +36,10 @@ export default function IAOSIsland({ leadsData = [], isLight, idx, brandLabel = 
 
   // Pipelines custom (Legacy, Vega, NSG…): sin dinero-en-pipeline ni la palabra
   // «leads» — el registro se llama como esa empresa lo llama (casa, pedido…).
-  const phrases = phrasesProp && phrasesProp.length ? phrasesProp : (IS_CUSTOM_PIPELINE ? [
+  const phrases = phrasesProp && phrasesProp.length ? phrasesProp : (CRM_APAGADO ? [
+    `${shortBrand} al día`,
+    `Avisos solo en tu jornada`,
+  ] : IS_CUSTOM_PIPELINE ? [
     `${shortBrand} · ${hot} alertas activas`,
     `${inact} ${L.entityPlural} sin siguiente paso`,
     `${shortBrand} al día`,
