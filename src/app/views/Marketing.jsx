@@ -2280,7 +2280,9 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
   const [repSaving, setRepSaving] = useState(false);
   const [repOtro, setRepOtro]   = useState(false); // ya reportó pero quiere sumar otro
   // hoy | espacio1 (registro de propiedades) | espacio2 (bitácora, solo líder)
-  const [repVista, setRepVista] = useState("espacio1");
+  // Si el tenant escondió la hoja de propiedades (pipeline), el único espacio
+  // con sentido es la bitácora del equipo.
+  const [repVista, setRepVista] = useState(HIDDEN_TABS.has("pipeline") ? "espacio2" : "espacio1");
   // La captura del día vive plegada arriba: la pantalla abre en la hoja, no en un formulario.
   const [repAbierto, setRepAbierto] = useState(false);
 
@@ -2575,12 +2577,17 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
             Espacio 2 es SOLO del líder: nadie del equipo necesita leer la
             bitácora de sus compañeros (misma regla que la sección Equipo). */}
         {(() => {
+          // El Espacio 1 es la HOJA DE PROPIEDADES de Duke (videos, rodajes,
+          // drives). Un tenant que escondió la pestaña "pipeline" (Legacy,
+          // Mueblería, Brasa…) tampoco debe ver esta hoja acá adentro — un
+          // restaurante no graba propiedades (captura de Ángel, 11-ago).
           const espacios = [
-            ["espacio1", "Espacio 1", "Registro de propiedades y grabaciones",
-             "Cada propiedad, en qué va su video y todos sus enlaces.", pipeline.length],
+            ...(!HIDDEN_TABS.has("pipeline") ? [["espacio1", "Espacio 1", "Registro de propiedades y grabaciones",
+             "Cada propiedad, en qué va su video y todos sus enlaces.", pipeline.length]] : []),
             ...(isAdmin ? [["espacio2", "Espacio 2", "Bitácora del equipo",
              "Lo que reportó cada quien, día por día.", bitacora.length]] : []),
           ];
+          if (!espacios.length) return null;
           const actual = espacios.find(e => e[0] === repVista) || espacios[0];
           return (
             <>
@@ -2629,7 +2636,7 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
           );
         })()}
 
-        {repVista === "espacio1" && pipelineTabla()}
+        {!HIDDEN_TABS.has("pipeline") && repVista === "espacio1" && pipelineTabla()}
         {isAdmin && repVista === "espacio2" && reporteTabla()}
       </div>
     );
@@ -2644,7 +2651,7 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
 
     return (
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-        {assignees.length === 0 && emptyRow("Sin usuarios con rol marketing en la organización.")}
+        {assignees.length === 0 && emptyRow("Sin gente del equipo todavía — se dan de alta en el módulo Usuarios.")}
         {assignees.map(m => {
           const tt = tasks.filter(t => t.assignee_id === m.id);
           const enCurso  = tt.filter(t => t.estado !== "hecha" && !isBlocked(t)).length;

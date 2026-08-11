@@ -227,6 +227,14 @@ export function canAccessModule(moduleId, user, clientConfig = null) {
   // SOLO la ven si el cliente además prende `features.cajaAsesores: true`
   // (ej. Vega, donde el equipo de campo registra gastos por Telegram/web).
   // Se separa así porque la RLS de team_expenses es org-scoped, no por rol.
+  // CRM apagado por config (`features.crm: false` — ej. Brasa y Piedra, un
+  // restaurante sin pipeline de clientes): NADIE lo ve, ningún rol. Antes no
+  // había gate y el admin de Brasa abría «Nuevo cliente» con las etapas de
+  // VENTAS de Duke adentro (captura de Ángel, 11-ago).
+  if (moduleId === "c" && clientConfig?.features?.crm === false) return false;
+  // La papelera guarda CLIENTES borrados del CRM — sin CRM no tiene contenido.
+  if (moduleId === "trash" && clientConfig?.features?.crm === false) return false;
+
   if (moduleId === "caja") {
     // Caja ahora vive como PESTAÑA dentro de Finanzas. Si el usuario tiene
     // acceso a Finanzas, no la mostramos como opción suelta (evita duplicar).

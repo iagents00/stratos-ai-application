@@ -113,9 +113,12 @@ function resolveInitialView(user, clientConfig) {
   // El `colaborador` abre en su PLAN SEMANAL — es la lista con la que arranca la
   // semana y la que el líder le revisa el viernes. Marketing sigue abriendo en
   // Actividades (pedido de Alex, 27-jul): su reporte del día es lo primero.
+  // Tenant con el CRM APAGADO (features.crm: false — ej. Brasa y Piedra): su
+  // casa es Actividades, jamás "c" (caería en «Acceso restringido» en bucle).
+  const crmApagado = clientConfig?.features?.crm === false;
   const fallback = user?.role === "colaborador"
     ? "plan"
-    : ((user?.isMarketingAdmin || user?.role === "marketing")
+    : ((user?.isMarketingAdmin || user?.role === "marketing" || crmApagado)
         ? "mkt_reporte"
         : ((isAsesorRole || isExternalOrg) ? "c" : "d"));
   if (!user?.id) return fallback;
@@ -332,6 +335,9 @@ export default function App() {
   // que ya estaba prometido en el tooltip "Buscar (⌘K)" pero antes no hacia
   // nada al click.
   const openHeaderSearch = useCallback(() => {
+    // Sin CRM (features.crm: false, ej. Brasa) el buscador no tiene a dónde ir:
+    // saltar a "c" dejaría a la persona en «Acceso restringido».
+    if (clientConfig?.features?.crm === false) return;
     setV("c"); // "c" es el id del modulo CRM en navigation.js
     setTimeout(() => {
       const input = document.querySelector('input[data-stratos-search-input]');
@@ -339,7 +345,7 @@ export default function App() {
         try { input.focus(); input.select(); } catch (_) { /* noop */ }
       }
     }, 80);
-  }, []);
+  }, [clientConfig?.features?.crm]);
 
   useEffect(() => {
     const onHeaderSearchKey = (e) => {
@@ -2070,9 +2076,11 @@ export default function App() {
               </div>
               {/* RIGHT */}
               <div className="stratos-header-right" style={{ display:"flex", alignItems:"center", gap:4 }}>
+                {clientConfig?.features?.crm !== false && (
                 <button className="stratos-header-search" title="Buscar (⌘K)" onClick={openHeaderSearch} style={iBtnBase} onMouseEnter={onIco} onMouseLeave={offIco} onMouseDown={dnIco} onMouseUp={upIco}>
                   <IosIcon name="search" size={16} color={icoRest} />
                 </button>
+                )}
                 {/* ── Botón "Llamar" (tenants con features.reunionButton, hoy NSG) ──
                    Un toque: la RPC fn_start_team_call avisa a los compañeros de la
                    org ("📞 X te está llamando" → campanita + push al teléfono) y
