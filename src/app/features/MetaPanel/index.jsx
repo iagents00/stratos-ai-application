@@ -16,6 +16,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "../../../lib/supabase";
 import { font, fontDisp } from "../../../design-system/tokens";
 import DocsStratos from "./DocsStratos";
+import { useClient } from "../../../hooks/useClient";
 
 /* ── INITIAL STATE DEFAULTS (used by App.jsx to seed useState) ─────────────── */
 // DEFAULT NEUTRO (11-ago-2026): antes acá vivía el plan estratégico COMPLETO de
