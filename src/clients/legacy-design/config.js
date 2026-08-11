@@ -163,7 +163,19 @@ const legacyDesignConfig = {
     viewDetail:            "Ver expediente de la casa",
     openProfile:           "Abrir expediente de la casa",
     pageTitle:             "Proyectos",
+    pageTitleAccent:       "",              // sin el «Asesores» de Duke al lado
     pageTitleMobile:       "Proyectos",
+    // El expediente acá no es un «Discovery» de ventas.
+    discoveryTab:          "Expediente",
+    discoveryTabShort:     "Exped.",
+    // En la obra el recontacto es un AVANCE, y el dueño de la casa un responsable.
+    followUpOne:           "avance",
+    followUpMany:          "avances",
+    followUpRegister:      "Registrar avance",
+    followUpRegisterShort: "Registrar",
+    followUpColShort:      "Avances",
+    noAdvisor:             "Sin responsable",
+    relatedContacts:       "Contactos de la casa",
   },
 };
 

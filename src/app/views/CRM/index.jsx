@@ -2259,7 +2259,9 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
   const colsCompact = "1.7fr 110px 130px 130px 110px";
   // En mobile: una sola columna que toma ancho completo — la fila se
   // re-organiza en stack vertical con info principal arriba y acciones abajo.
-  const cols = isMobile ? "1fr" : (co ? colsCompact : colsFull);
+  // Pipelines custom (Legacy, Vega, NSG…): sin columna Score — es métrica de
+  // calificación de leads de ventas, no aplica a una casa/obra/pedido.
+  const cols = isMobile ? "1fr" : ((co || IS_CUSTOM_PIPELINE) ? colsCompact : colsFull);
 
   return (
     <div style={{
@@ -2291,9 +2293,11 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
           }}>
             {boardLeads.length} {boardLeads.length === 1 ? LB.entity : LB.entityPlural}
           </span>
-          <span style={{ marginLeft: "auto", fontSize: 12, color: T.txt3, fontFamily: font, fontWeight: 500 }}>
-            ${(totalPipeline/1000000).toFixed(1)}M
-          </span>
+          {!IS_CUSTOM_PIPELINE && (
+            <span style={{ marginLeft: "auto", fontSize: 12, color: T.txt3, fontFamily: font, fontWeight: 500 }}>
+              ${(totalPipeline/1000000).toFixed(1)}M
+            </span>
+          )}
         </div>
       ) : (
         // ── DESKTOP: layout amplio sin cambios respecto al original. ──
@@ -2309,7 +2313,10 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
               <p style={{ fontSize: 12, color: T.txt3, fontFamily: font, margin: 0 }}>
-                <span style={{ color: T.txt2 }}>${(totalPipeline/1000000).toFixed(1)}M</span> en pipeline · <span style={{ color: T.emerald }}>{hotLeads} activos</span> · Score promedio <span style={{ color: T.blue }}>{avgScore}</span>
+                {/* Dinero en pipeline y Score: métricas de VENTAS — fuera en pipelines custom. */}
+                {!IS_CUSTOM_PIPELINE && <><span style={{ color: T.txt2 }}>${(totalPipeline/1000000).toFixed(1)}M</span> en pipeline · </>}
+                <span style={{ color: T.emerald }}>{hotLeads} activos</span>
+                {!IS_CUSTOM_PIPELINE && <> · Score promedio <span style={{ color: T.blue }}>{avgScore}</span></>}
               </p>
               {isRefreshing && (
                 <span
@@ -3279,7 +3286,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                       <div style={{ fontSize: 12, color: T.txt2, lineHeight: 1.45 }}>
                         <strong style={{ color: T.txt, fontWeight: 500 }}>{duplicateMatch.lead_name || "Sin nombre"}</strong>
                         {!isMine && (
-                          <> · asignado a <strong style={{ color: T.txt, fontWeight: 500 }}>{duplicateMatch.asesor_name || "Sin asesor"}</strong></>
+                          <> · asignado a <strong style={{ color: T.txt, fontWeight: 500 }}>{duplicateMatch.asesor_name || L.noAdvisor}</strong></>
                         )}
                         {duplicateMatch.lead_stage && (
                           <> · etapa <strong style={{ color: T.txt }}>{duplicateMatch.lead_stage}</strong></>
@@ -3508,7 +3515,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                     if (v && !proyectosMaster.includes(v)) setCustomProyectos(prev => [...prev, v]);
                   }}
                   options={proyectosMaster}
-                  placeholder="Gobernador 28, Portofino, Torre Esmeralda, Monarca 28…"
+                  placeholder={IS_CUSTOM_PIPELINE ? "Escribe el nombre y regístralo aquí…" : "Gobernador 28, Portofino, Torre Esmeralda, Monarca 28…"}
                   label="proyecto"
                   icon={Building2}
                   createLabel="Registrar nuevo proyecto"
@@ -4209,11 +4216,11 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                 es una "card" vertical sin necesidad de encabezados. */}
             {!isMobile && (
               <div style={{ display: "grid", gridTemplateColumns: cols, gap: 14, padding: "10px 20px", borderBottom: `1px solid ${T.border}`, alignItems: "center", background: isLight ? "rgba(15,23,42,0.015)" : "rgba(255,255,255,0.012)" }}>
-                <SH label="Cliente" field="n" />
+                <SH label={LB.entityCap} field="n" />
                 <SH label="Presupuesto" field="presupuesto" align="right" />
                 <SH label="Etapa" field="st" align="center" />
-                <SH label="Seguim." field="seguimientos" align="center" />
-                {!co && <SH label="Score" field="sc" align="center" />}
+                <SH label={L.followUpColShort} field="seguimientos" align="center" />
+                {!co && !IS_CUSTOM_PIPELINE && <SH label="Score" field="sc" align="center" />}
                 <span style={{ fontSize: 10.5, fontWeight: 500, color: T.txt3, fontFamily: fontDisp, letterSpacing: "0.07em", textTransform: "uppercase", textAlign: "center" }}>Acciones</span>
               </div>
             )}
@@ -4769,7 +4776,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
 
                   {/* ═══ SCORE ═══ Solo desktop full mode — bar + número + ± manual.
                        Contenido centrado para alinear con el header. */}
-                  {!co && !isMobile && (
+                  {!co && !isMobile && !IS_CUSTOM_PIPELINE && (
                     <div onClick={e => e.stopPropagation()} style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 5 }}>
                       <div style={{ flex: 1, height: 3, borderRadius: 2, background: isLight ? "rgba(15,23,42,0.08)" : "rgba(255,255,255,0.06)", maxWidth: 36 }}>
                         <div style={{ width: `${sc}%`, height: 3, borderRadius: 2, background: T.accent, transition: "width 0.4s", boxShadow: sc >= 80 ? `0 0 6px ${T.accent}60` : "none" }} />

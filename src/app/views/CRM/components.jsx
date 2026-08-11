@@ -406,8 +406,8 @@ const FollowUpBadge = ({ lead, onUpdate, T = P, compact = false, fullWidth = fal
         <button
           onClick={dec}
           disabled={isEmpty}
-          title="Restar un seguimiento"
-          aria-label="Restar un seguimiento"
+          title={`Restar un ${L.followUpOne}`}
+          aria-label={`Restar un ${L.followUpOne}`}
           style={{
             width: 46, height: "100%", padding: 0, border: "none",
             background: "transparent",
@@ -462,7 +462,7 @@ const FollowUpBadge = ({ lead, onUpdate, T = P, compact = false, fullWidth = fal
         ) : (
           <button
             onClick={openEdit}
-            title={isEmpty ? "Click para registrar el primer seguimiento" : "Click para editar el número"}
+            title={isEmpty ? `Click para registrar el primer ${L.followUpOne}` : "Click para editar el número"}
             style={{
               flex: 1, minWidth: 0, height: "100%",
               padding: "0 14px", margin: 0,
@@ -508,8 +508,8 @@ const FollowUpBadge = ({ lead, onUpdate, T = P, compact = false, fullWidth = fal
             Con registros: ghost tintado → acción secundaria. */}
         <button
           onClick={inc}
-          title="Registrar un nuevo seguimiento"
-          aria-label="Registrar un nuevo seguimiento"
+          title={`Registrar un nuevo ${L.followUpOne}`}
+          aria-label={`Registrar un nuevo ${L.followUpOne}`}
           style={{
             width: 46, height: "100%", padding: 0, border: "none",
             borderLeft: isEmpty
@@ -577,8 +577,8 @@ const FollowUpBadge = ({ lead, onUpdate, T = P, compact = false, fullWidth = fal
           e.currentTarget.style.color = accentSafe;
           e.currentTarget.style.transform = "translateY(0)";
         }}
-        title="Registrar el primer seguimiento al cliente"
-        aria-label="Registrar primer seguimiento"
+        title={`Registrar el primer ${L.followUpOne} al ${L.entity}`}
+        aria-label={`Registrar primer ${L.followUpOne}`}
         style={{
           display: "inline-flex", alignItems: "center", gap: compact ? 5 : 6,
           height: H, padding: compact ? "0 10px 0 9px" : "0 12px 0 11px",
@@ -595,7 +595,7 @@ const FollowUpBadge = ({ lead, onUpdate, T = P, compact = false, fullWidth = fal
         }}
       >
         <Plus size={iconSz + 2} strokeWidth={2.8} style={{ marginLeft: -2 }} />
-        {compact ? "Registrar" : "Registrar seguimiento"}
+        {compact ? L.followUpRegisterShort : L.followUpRegister}
       </button>
     );
   }
@@ -605,7 +605,7 @@ const FollowUpBadge = ({ lead, onUpdate, T = P, compact = false, fullWidth = fal
     <div style={{ display: "inline-flex", alignItems: "center", flexShrink: 0 }}>
       <div
         onClick={e => e.stopPropagation()}
-        title={`${count} seguimiento${count === 1 ? "" : "s"} registrado${count === 1 ? "" : "s"} — click + para sumar otro`}
+        title={`${count} ${count === 1 ? L.followUpOne : L.followUpMany} registrado${count === 1 ? "" : "s"} — click + para sumar otro`}
         style={{
           display: "inline-flex", alignItems: "stretch",
           height: H, borderRadius: 99,
@@ -633,8 +633,8 @@ const FollowUpBadge = ({ lead, onUpdate, T = P, compact = false, fullWidth = fal
         {/* − restar (secundario) */}
         <button
           onClick={dec}
-          title="Corregir: restar un seguimiento"
-          aria-label="Restar un seguimiento"
+          title={`Corregir: restar un ${L.followUpOne}`}
+          aria-label={`Restar un ${L.followUpOne}`}
           style={{
             width: btnW, height: "100%", padding: 0, border: "none",
             background: "transparent",
@@ -709,7 +709,7 @@ const FollowUpBadge = ({ lead, onUpdate, T = P, compact = false, fullWidth = fal
                 letterSpacing: "0.03em", fontFamily: font, textTransform: "lowercase",
                 opacity: 0.85,
                 lineHeight: 1, whiteSpace: "nowrap",
-              }}>{count === 1 ? "seguimiento" : "seguimientos"}</span>
+              }}>{count === 1 ? L.followUpOne : L.followUpMany}</span>
             )}
           </button>
         )}
@@ -717,8 +717,8 @@ const FollowUpBadge = ({ lead, onUpdate, T = P, compact = false, fullWidth = fal
         {/* + sumar (PRIMARIO) — bg relleno sutil, hover con micro-scale */}
         <button
           onClick={inc}
-          title="Registrar un nuevo seguimiento"
-          aria-label="Registrar un nuevo seguimiento"
+          title={`Registrar un nuevo ${L.followUpOne}`}
+          aria-label={`Registrar un nuevo ${L.followUpOne}`}
           style={{
             width: btnW, height: "100%", padding: 0, border: "none",
             background: isLight
@@ -3069,7 +3069,7 @@ const AsesorPicker = ({
   allowCreate = true,
   fullWidth = false,
   size = "md",
-  placeholder = "Sin asesor",
+  placeholder = L.noAdvisor,
   T = P,
   isLight = false,
 }) => {

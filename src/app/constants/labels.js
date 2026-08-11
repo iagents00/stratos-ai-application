@@ -37,6 +37,15 @@ const DEFAULT_LABELS = {
   // Sub-vista que en Stratos se llama "Discovery" (expediente + perfil del lead).
   discoveryTab:          "Discovery",
   discoveryTabShort:     "Dyscov.",
+  // Vocabulario de seguimiento/recontacto (FollowUpBadge) y responsables.
+  // Un tenant de obra puede llamarlo "avance" y al responsable "responsable".
+  followUpOne:           "seguimiento",
+  followUpMany:          "seguimientos",
+  followUpRegister:      "Registrar seguimiento",
+  followUpRegisterShort: "Registrar",
+  followUpColShort:      "Seguim.",                          // header de columna en vista lista
+  noAdvisor:             "Sin asesor",
+  relatedContacts:       "Familiares o Socios",
 };
 
 const _cfg = (() => {
@@ -44,5 +53,8 @@ const _cfg = (() => {
   catch { return null; }
 })();
 
-/** Etiquetas activas: defaults de Duke + overrides del cliente (si los declara). */
-export const L = { ...DEFAULT_LABELS, ...(_cfg?.crm?.labels || {}) };
+/** Etiquetas activas: defaults de Duke + overrides del cliente (si los declara).
+ *  Se leen DOS ubicaciones: `labels` en la raíz del config (Legacy/Mueblería las
+ *  declaran ahí) y `crm.labels` (Vega/NSG). La anidada gana si hay conflicto.
+ *  Duke no declara ninguna → sigue byte-idéntico a DEFAULT_LABELS. */
+export const L = { ...DEFAULT_LABELS, ...(_cfg?.labels || {}), ...(_cfg?.crm?.labels || {}) };
