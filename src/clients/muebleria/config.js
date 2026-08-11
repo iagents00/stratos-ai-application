@@ -85,7 +85,12 @@ const muebleriaConfig = {
     viewDetail:            "Ver detalle del pedido",
     openProfile:           "Abrir detalle del pedido",
     pageTitle:             "Pedidos",
+    pageTitleAccent:       "",              // sin el «Asesores» de Duke al lado
     pageTitleMobile:       "Pedidos",
+    discoveryTab:          "Detalle",
+    discoveryTabShort:     "Detalle",
+    noAdvisor:             "Sin responsable",
+    relatedContacts:       "Contactos del pedido",
   },
 };
 

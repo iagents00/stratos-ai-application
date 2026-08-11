@@ -15,6 +15,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { Users, Plus, Phone, Mail, Trash2, Pencil, X, Check } from "lucide-react";
 import { P, font, fontDisp } from "../../../design-system/tokens";
+import { L } from "../../constants/labels";
 import { supabase } from "../../../lib/supabase";
 import { useAuth } from "../../../hooks/useAuth";
 
@@ -183,7 +184,7 @@ export default function LeadRelatedContacts({ lead, T = P, isLight = false }) {
           fontSize: 11.5, fontWeight: 500, letterSpacing: "0.12em",
           textTransform: "uppercase", color: headerC, fontFamily: fontDisp,
         }}>
-          <Users size={11} /> Familiares o Socios
+          <Users size={11} /> {L.relatedContacts}
         </span>
         {isAdmin && editing === null && (
           <button type="button" onClick={startNew} style={{
@@ -199,7 +200,9 @@ export default function LeadRelatedContacts({ lead, T = P, isLight = false }) {
       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
         {isAdmin && contacts.length === 0 && editing !== "new" && (
           <p style={{ margin: 0, fontSize: 12.5, color: T.txt3, fontFamily: font, lineHeight: 1.5 }}>
-            Sin familiares o socios aún. Agregá el contacto de la esposa/o, un socio o un familiar del cliente.
+            {L.relatedContacts === "Familiares o Socios"
+              ? "Sin familiares o socios aún. Agregá el contacto de la esposa/o, un socio o un familiar del cliente."
+              : `Sin contactos aún. Agrega aquí a las personas relacionadas con esta ${L.entity}.`}
           </p>
         )}
 
