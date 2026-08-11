@@ -35,6 +35,7 @@ const ManualCRM        = lazy(() => import("./landing/ManualCRM.jsx"));
 const ManualMarketing  = lazy(() => import("./landing/ManualMarketing.jsx"));
 const ManualNSG        = lazy(() => import("./landing/ManualNSG.jsx"));
 const ManualLegacy     = lazy(() => import("./landing/ManualLegacy.jsx"));
+const ManualBrasa      = lazy(() => import("./landing/ManualBrasa.jsx"));
 const Diagnostico      = lazy(() => import("./landing/Diagnostico.jsx"));
 import { CATEGORIES_TG, MANUAL_SECTIONS_TG, searchManualTG } from "./landing/manual-telegram-content";
 
@@ -105,6 +106,8 @@ const MANUAL_NSG_PATHS = ["/manual-nsg", "/manual-stratos-nsg"];
 // Manual de uso de Stratos para LEGACY DESIGN (Shadai, Mario y su equipo) — público,
 // en el lenguaje de la obra, linkeable desde sus Documentos y desde el Copilot.
 const MANUAL_LEGACY_PATHS = ["/manual-legacy", "/manual-legacy-design"];
+// Manual de uso de Stratos para BRASA Y PIEDRA (restaurante) — público, tono cercano.
+const MANUAL_BRASA_PATHS = ["/manual-brasa", "/manual-brasa-y-piedra"];
 const DIAGNOSTICO_PATHS = ["/diagnostico"];
 const matchPath = (paths) => paths.some(p => pathname === p || pathname === p + "/");
 const isPrivacy = matchPath(PRIVACY_PATHS);
@@ -115,6 +118,7 @@ const isManualTG = matchPath(MANUAL_TG_PATHS);
 const isManualMkt = matchPath(MANUAL_MKT_PATHS);
 const isManualNSG = matchPath(MANUAL_NSG_PATHS);
 const isManualLegacy = matchPath(MANUAL_LEGACY_PATHS);
+const isManualBrasa = matchPath(MANUAL_BRASA_PATHS);
 // /diagnostico (formulario público) y /diagnostico/view/<lead_id> (vista compartida
 // del Blueprint que vio el cliente — el link llega al equipo por Telegram al
 // crearse cada lead). Ambas se renderean con el mismo componente Diagnostico.jsx,
@@ -143,7 +147,7 @@ const isLanding = !isExplicitClient && (
   || (hostname === "127.0.0.1" && !params.has("app"))
 );
 
-const isApp = !isPrivacy && !isDeletion && !isDelivery && !isManual && !isManualTG && !isManualNSG && !isManualLegacy && !isDiagnostico && !isPublicLanding && !isLanding;
+const isApp = !isPrivacy && !isDeletion && !isDelivery && !isManual && !isManualTG && !isManualNSG && !isManualLegacy && !isManualBrasa && !isDiagnostico && !isPublicLanding && !isLanding;
 
 // URL de la plataforma — usada por la landing para el CTA principal
 const APP_URL = import.meta.env.VITE_APP_URL || (window.location.origin + "/?app");
@@ -219,6 +223,8 @@ createRoot(document.getElementById("root")).render(
                     ? <ManualNSG />
                   : isManualLegacy
                     ? <ManualLegacy />
+                  : isManualBrasa
+                    ? <ManualBrasa />
                   : isManualMkt
                     ? <ManualMarketing />
                   : isManual
