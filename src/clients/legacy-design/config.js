@@ -55,6 +55,10 @@ const legacyDesignConfig = {
     // Retiro · Renta vacacional), el arquitecto y el link a Drive van como
     // campos del expediente, no como etapas.
     pipeline: [
+      // «Terreno y contrato» nació de cargar las 11 casas REALES de la hoja de
+      // Shadai: 5 estaban ANTES del diseño (selección de terreno, cierre de
+      // compra, contrato con el arquitecto). La hoja manda, no el catálogo.
+      { name: "Terreno y contrato",          color: "#A8A29E" },
       { name: "Diseño y proyecto ejecutivo", color: "#94A3B8" },
       { name: "Licencias y permisos",        color: "#38BDF8" },
       { name: "Cimientos",                   color: "#FBBF24" },
