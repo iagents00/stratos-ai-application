@@ -101,6 +101,10 @@ const nsgConfig = {
     // Caja: libro de ingresos/egresos de NSG (los gastos que se carguen por
     // Telegram aparecen solos). Lo ve el mando (Ángel/Iván).
     caja:             true,
+    // Cuentas de cobro + Informe de avances: la maquinaria de facturación de
+    // NSG a Duke. Es EXCLUSIVA de NSG — en los demás tenants la Caja muestra
+    // solo Movimientos y Nómina (fuga cazada por Ángel en Brasa, 11-ago).
+    cajaCobro:        true,
     cajaAsesores:     false,
     // Copilot ON: la puerta del chat. Con copilotBrain:"tareas" habla con el
     // motor de tareas sin fricción (mkt_nlu_dispatch): "ponme una tarea…",

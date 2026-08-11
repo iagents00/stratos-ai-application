@@ -60,6 +60,13 @@ export default function Caja({ T }) {
   const { user } = useAuth();
   const { config: clientConfig } = useClient();
   const isMobile = useIsMobile();
+  // El nombre de LA EMPRESA del tenant — la Caja nació en NSG y tenía «NSG»
+  // escrito a mano: en Brasa y Piedra decía «Entró a NSG este mes» (captura de
+  // Ángel, 11-ago). Cada empresa ve SU nombre.
+  const empresa = clientConfig?.name || "la empresa";
+  // Cuentas de cobro + Informe de avances son la maquinaria de facturación de
+  // NSG hacia SU cliente — un tenant común no las necesita y solo lo confunden.
+  const conCobros = clientConfig?.features?.cajaCobro === true;
 
   // ── Paleta theme-aware (tomada del `T` de App.jsx, igual que el resto del CRM).
   // isLight por LUMINANCIA del bg (robusto): antes se comparaban hexes fijos y
@@ -287,7 +294,7 @@ export default function Caja({ T }) {
           <div>
             <h1 style={{ margin: 0, fontSize: isMobile ? 20 : 22, fontFamily: fontDisp, fontWeight: 500, letterSpacing: "-0.01em", color: txt }}>Caja</h1>
             <p style={{ margin: "3px 0 0", fontSize: 12.5, color: txt2 }}>
-              Cuentas, ingresos y egresos · los gastos por Telegram entran solos
+              {conCobros ? "Cuentas, ingresos y egresos · los gastos por Telegram entran solos" : "El dinero del día: lo que entra y lo que sale, anotado en el momento"}
             </p>
           </div>
         </div>
@@ -320,8 +327,10 @@ export default function Caja({ T }) {
                     flexWrap: isMobile ? "wrap" : "nowrap" }}>
         {[{ id: "movimientos", label: isMobile ? "Movim." : "Movimientos" },
           { id: "nomina", label: "Nómina" },
-          { id: "cobros", label: isMobile ? "Cobros" : "Cuentas de cobro" },
-          { id: "informe", label: "Informe" }].map(s => (
+          ...(conCobros ? [
+            { id: "cobros", label: isMobile ? "Cobros" : "Cuentas de cobro" },
+            { id: "informe", label: "Informe" },
+          ] : [])].map(s => (
           <button key={s.id} type="button" onClick={() => setSeccion(s.id)} style={{
             padding: "10px 14px", borderRadius: 9, cursor: "pointer", fontSize: 13, fontFamily: font,
             border: "1px solid transparent", flex: isMobile ? 1 : "none", textAlign: "center",
@@ -343,9 +352,9 @@ export default function Caja({ T }) {
       {seccion === "movimientos" && <>
       {/* KPIs del mes */}
       <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-        <KpiCard label={personaFilter === "mio" ? "Lo que recibí este mes" : personaFilter === "empresa" ? "Entró a NSG este mes" : "Ingresos del mes"}
+        <KpiCard label={personaFilter === "mio" ? "Lo que recibí este mes" : personaFilter === "empresa" ? `Entró a ${empresa} este mes` : "Ingresos del mes"}
                  value={fmtMoney(kpis.ing)} icon={ArrowUpRight} color={POS} />
-        <KpiCard label={personaFilter === "mio" ? "Lo que pagué este mes" : personaFilter === "empresa" ? "Salió de NSG este mes" : "Egresos del mes"}
+        <KpiCard label={personaFilter === "mio" ? "Lo que pagué este mes" : personaFilter === "empresa" ? `Salió de ${empresa} este mes` : "Egresos del mes"}
                  value={fmtMoney(kpis.egr)} icon={ArrowDownRight} color={NEG} />
         <KpiCard label="Balance del mes" value={fmtMoney(kpis.bal)} icon={Scale} color={kpis.bal >= 0 ? POS : NEG} />
       </div>
@@ -403,7 +412,7 @@ export default function Caja({ T }) {
             movimiento de la empresa (lo que cobra a clientes y lo que paga), y "Todo"
             las dos caras juntas — que sumadas se cancelan, por eso no es el default. */}
         <div style={{ display: "flex", gap: 4, padding: 3, borderRadius: 10, border: `1px solid ${txt3}22` }}>
-          {[{ id: "mio", label: "Lo mío" }, { id: "empresa", label: "NSG" }, { id: "todo", label: "Todo" }].map(o => (
+          {[{ id: "mio", label: "Lo mío" }, { id: "empresa", label: empresa }, { id: "todo", label: "Todo" }].map(o => (
             <button key={o.id} type="button" onClick={() => setPersonaFilter(o.id)}
               style={{
                 padding: "5px 11px", borderRadius: 8, cursor: "pointer", fontSize: 12.5, fontFamily: font,
@@ -445,7 +454,9 @@ export default function Caja({ T }) {
         {loading && <div style={{ color: txt2, fontSize: 13, padding: 24, textAlign: "center" }}>Cargando movimientos…</div>}
         {!loading && filtered.length === 0 && (
           <div style={{ ...card, color: txt2, fontSize: 13, padding: 32, textAlign: "center" }}>
-            Sin movimientos todavía. Registrá el primero acá arriba, o mandá un gasto por Telegram.
+            {conCobros
+              ? "Sin movimientos todavía. Registrá el primero acá arriba, o mandá un gasto por Telegram."
+              : "Sin movimientos todavía. Registra el primero aquí arriba."}
           </div>
         )}
         {filtered.map(r => {
