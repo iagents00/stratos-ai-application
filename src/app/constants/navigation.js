@@ -234,6 +234,15 @@ export function canAccessModule(moduleId, user, clientConfig = null) {
   if (moduleId === "c" && clientConfig?.features?.crm === false) return false;
   // La papelera guarda CLIENTES borrados del CRM — sin CRM no tiene contenido.
   if (moduleId === "trash" && clientConfig?.features?.crm === false) return false;
+  // Dos entradas con el MISMO nombre confunden (captura de Ángel en Brasa: el
+  // módulo `mkt` renombrado «Actividades» + la sección suelta «Actividades»).
+  // Si el tenant llamó «Actividades» al módulo completo y este usuario PUEDE
+  // abrirlo, la sección suelta sobra — el módulo ya abre en esa pestaña.
+  // NSG no cambia (su módulo se llama «Proyectos») y Duke tampoco (sin navLabels).
+  if (moduleId === "mkt_reporte"
+      && clientConfig?.features?.mktModule === true
+      && (clientConfig?.navLabels?.mkt || "").trim().toLowerCase() === "actividades"
+      && MODULE_ROLES.mkt.includes(user.role)) return false;
 
   if (moduleId === "caja") {
     // Caja ahora vive como PESTAÑA dentro de Finanzas. Si el usuario tiene

@@ -68,6 +68,21 @@ const PREMIUM_ICON_OVERRIDES = {
     s: "<path d=\"M104 88 h304 a40 40 0 0 1 40 40 v180 a40 40 0 0 1 -40 40 H252 l-92 80 v-80 h-56 a40 40 0 0 1 -40 -40 V128 a40 40 0 0 1 40 -40 Z\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"40\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><path d=\"M256 158 v120 M196 218 h120\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"38\" stroke-linecap=\"round\"/>",
     o: "<path d=\"M104 88 h304 a40 40 0 0 1 40 40 v180 a40 40 0 0 1 -40 40 H252 l-92 80 v-80 h-56 a40 40 0 0 1 -40 -40 V128 a40 40 0 0 1 40 -40 Z\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"30\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><path d=\"M256 158 v120 M196 218 h120\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"28\" stroke-linecap=\"round\"/>",
   },
+  // ── MÓDULOS DEL MOLDE EQUIPO (ago-2026): sin glifo propio caían al fallback
+  //    "menu" (los 4 cuadrados) y en Aplicaciones se veían tres módulos con el
+  //    mismo ícono (captura de Ángel en Brasa, 11-ago).
+  miespacio: { // diana: tu espacio, tu foco
+    s: "<circle cx=\"256\" cy=\"256\" r=\"180\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"36\"/><circle cx=\"256\" cy=\"256\" r=\"104\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"32\" opacity=\"0.75\"/><circle cx=\"256\" cy=\"256\" r=\"36\" fill=\"currentColor\"/>",
+    o: "<circle cx=\"256\" cy=\"256\" r=\"180\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"30\"/><circle cx=\"256\" cy=\"256\" r=\"104\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"26\" opacity=\"0.75\"/><circle cx=\"256\" cy=\"256\" r=\"30\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"24\"/>",
+  },
+  mkt_reporte: { // libreta con pluma: el reporte del día
+    s: "<rect x=\"96\" y=\"72\" width=\"268\" height=\"368\" rx=\"40\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"36\" stroke-linejoin=\"round\"/><path d=\"M160 168 h140 M160 240 h140 M160 312 h84\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"32\" stroke-linecap=\"round\"/><path d=\"M430 190 L318 302 l-14 58 58 -14 L474 234 Z\" fill=\"currentColor\" stroke=\"currentColor\" stroke-width=\"16\" stroke-linejoin=\"round\"/>",
+    o: "<rect x=\"96\" y=\"72\" width=\"268\" height=\"368\" rx=\"40\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"30\" stroke-linejoin=\"round\"/><path d=\"M160 168 h140 M160 240 h140 M160 312 h84\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"26\" stroke-linecap=\"round\"/><path d=\"M430 190 L318 302 l-14 58 58 -14 L474 234 Z\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"26\" stroke-linejoin=\"round\"/>",
+  },
+  mkt_equipo: { // persona con check: cómo viene cada quien
+    s: "<circle cx=\"216\" cy=\"166\" r=\"74\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"36\"/><path d=\"M84 420 q0 -110 132 -110 q60 0 94 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"36\" stroke-linecap=\"round\"/><path d=\"M312 388 l44 44 84 -96\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"40\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>",
+    o: "<circle cx=\"216\" cy=\"166\" r=\"74\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"30\"/><path d=\"M84 420 q0 -110 132 -110 q60 0 94 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"30\" stroke-linecap=\"round\"/><path d=\"M312 388 l44 44 84 -96\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"32\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>",
+  },
   menu: {
     s: "<rect x=\"78\" y=\"78\" width=\"132\" height=\"132\" rx=\"24\"/><rect x=\"302\" y=\"78\" width=\"132\" height=\"132\" rx=\"24\"/><rect x=\"78\" y=\"302\" width=\"132\" height=\"132\" rx=\"24\"/><rect x=\"302\" y=\"302\" width=\"132\" height=\"132\" rx=\"24\"/>",
     o: "<rect x=\"78\" y=\"78\" width=\"132\" height=\"132\" rx=\"24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"30\" stroke-linejoin=\"round\"/><rect x=\"302\" y=\"78\" width=\"132\" height=\"132\" rx=\"24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"30\" stroke-linejoin=\"round\"/><rect x=\"78\" y=\"302\" width=\"132\" height=\"132\" rx=\"24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"30\" stroke-linejoin=\"round\"/><rect x=\"302\" y=\"302\" width=\"132\" height=\"132\" rx=\"24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"30\" stroke-linejoin=\"round\"/>",

@@ -39,7 +39,7 @@ const brasaYPiedraConfig = {
     supabaseRef:    "glulgyhkrqpykxmujodb",
     // El «¿qué puedes hacer?» PROPIO de Brasa (telegram.js lo responde al
     // instante). Tono cercano de cocina, cero tecnicismos.
-    copilotHelp: "Esto es lo que puedo hacer por ti en Brasa y Piedra:\n\n• Tareas al vuelo — «ponme una tarea: pedir la proteína al proveedor mañana antes de las 10»\n• Repartir el trabajo — «que Carlos consiga cotización del cocinero nuevo el viernes» (le llega el aviso y el sistema lo persigue)\n• Tu día — «¿qué tengo hoy?» o «¿qué pendientes tiene el equipo?»\n• Recordatorios que suenan — «recuérdame a las 5 sacar el pan del congelador»\n• Lo que sabe tu restaurante — pregúntame por los pedidos de proteína, el manual o quién tiene cuenta\n\nTodo por texto o por voz. Los avisos llegan 1 hora y 10 minutos antes, solo en tu jornada (10:00–21:00).",
+    copilotHelp: "Esto es lo que puedo hacer por ti en Brasa y Piedra:\n\n• Tareas al vuelo: «ponme una tarea: pedir la proteína al proveedor mañana antes de las 10»\n• Repartir el trabajo: «que Carlos consiga cotización del cocinero nuevo el viernes» (le llega el aviso y el sistema lo persigue)\n• Tu día: «¿qué tengo hoy?» o «¿qué pendientes tiene el equipo?»\n• Recordatorios que suenan: «recuérdame a las 5 sacar el pan del congelador»\n• Lo que sabe tu restaurante: pregúntame por los pedidos de proteína, el manual o quién tiene cuenta\n\nTodo por texto o por voz. Los avisos llegan 1 hora y 10 minutos antes, solo en tu jornada (10:00 a 21:00).",
   },
 
   // Módulos del molde EQUIPO (patrón NSG/Legacy, sin CRM):
