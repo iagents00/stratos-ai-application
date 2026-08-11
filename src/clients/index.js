@@ -20,6 +20,9 @@ import stratosSalesConfig from "./stratos-sales/config";
 import vegaConfig    from "./vega/config";
 import nsgConfig     from "./nsg/config";
 import clinicaDentalConfig from "./clinica-dental/config";
+import muebleriaConfig     from "./muebleria/config";
+import legacyDesignConfig  from "./legacy-design/config";
+import brasaYPiedraConfig  from "./brasa-y-piedra/config";
 
 // Registry de todos los clientes conocidos
 const CLIENT_CONFIGS = {
@@ -30,6 +33,12 @@ const CLIENT_CONFIGS = {
   vega:            vegaConfig,
   nsg:             nsgConfig,
   "clinica-dental": clinicaDentalConfig,
+  // Corporativo Duke, molde EQUIPO (doctrina 11-ago-2026): registrados para que
+  // /muebleria, /legacy-design y /brasa-y-piedra dejen de caer en la config de
+  // Duke (slug desconocido = marca y pipeline de Duke — la fuga de la auditoría).
+  muebleria:        muebleriaConfig,
+  "legacy-design":  legacyDesignConfig,
+  "brasa-y-piedra": brasaYPiedraConfig,
 };
 
 /**
