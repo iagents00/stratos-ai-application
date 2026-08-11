@@ -5,7 +5,7 @@
  * Extraído de App.jsx.
  * ─────────────────────────────────────────────────────────────────────────────
  */
-import {
+import { Target,
   Users, Hexagon, Activity, Building2, Atom,
   Trophy, Landmark, UserCheck, CreditCard, Shield, User, Trash2, Wallet, MessageCircle, Bot, Sparkles, Megaphone,
   CalendarDays, Layers, Clapperboard, Inbox, MessagesSquare, ClipboardList, NotebookPen, FolderOpen,
@@ -14,6 +14,9 @@ import {
 
 export const nav = [
   { id: "c",     l: "CRM",       i: Users      },
+  // Mi Espacio como módulo VISIBLE bajo el CRM (reunión 11-ago): es una segunda
+  // puerta al MISMO panel (metaOpen), no una vista nueva — no hay dos estados.
+  { id: "miespacio", l: "Mi Espacio", i: Target },
   // "Plan Semanal" es la hoja que dirección repartió el 30-jul-2026 y que cada
   // quien mantiene toda la semana (los líderes la revisan el viernes). Va PRIMERA
   // de las secciones de trabajo a propósito: es la lista con la que abren el día.
@@ -141,17 +144,18 @@ export const MODULE_NAMES = {
 // super_admin de Grupo 28 administra Grupo 28, no los módulos internos de
 // Stratos (Finanzas, Personas, Comando, ERP, iAgents, Campañas, Asesores).
 export const STRATOS_ORG_ID = "00000000-0000-0000-0000-000000000001";
-export const EXTERNAL_ORG_MODULES = new Set(["c", "perfil", "trash"]);
+export const EXTERNAL_ORG_MODULES = new Set(["c", "miespacio", "perfil", "trash"]);
 // Módulos visibles para usuarios con flag crm_only=true (cuentas tipo bot/IA
 // como iagents@stratos.ai). Conservan su rol pero solo navegan CRM + Perfil.
-export const CRM_ONLY_MODULES = new Set(["c", "perfil"]);
+export const _MIESP_MARK = true;
+export const CRM_ONLY_MODULES = new Set(["miespacio", "c", "perfil"]);
 // Admin de MARKETING (ej. Alex Velázquez): es super_admin pero LÍDER DE MARKETING.
 // Su navegación se limita a lo que necesita para operar el área — NO ve el CRM de
 // ventas, Comando, Create, Finanzas, RRHH, iAgents, Usuarios, etc.
 // Ve las MISMAS secciones que su equipo en el sidebar (Mi Día · Marcas · Pipeline ·
 // Solicitudes) + Copilot + Proyectos (catálogo/drives para contenido) + Perfil.
 // La pestaña "Equipo" (admin) la abre desde los tabs de arriba dentro del módulo.
-export const MARKETING_ADMIN_MODULES = new Set(["plan", "mkt_reporte", "mkt_equipo", "mkt_dia", "mkt_marcas", "mkt_pipe", "mkt_sol", "copilot", "e", "midrive", "perfil"]);
+export const MARKETING_ADMIN_MODULES = new Set(["miespacio", "plan", "mkt_reporte", "mkt_equipo", "mkt_dia", "mkt_marcas", "mkt_pipe", "mkt_sol", "copilot", "e", "midrive", "perfil"]);
 // ESPACIO DE ÁREA (30-jul-2026). La gente de Comercial, Operativo, Administrativo,
 // Finanzas y RRHH entra con rol `colaborador` y su casa es esto y nada más:
 //   · Plan Semanal — la hoja de la semana (franjas + notas + prioridades)
@@ -162,7 +166,7 @@ export const MARKETING_ADMIN_MODULES = new Set(["plan", "mkt_reporte", "mkt_equi
 //   · Perfil      — su contraseña y su Telegram
 // NO ven el CRM de ventas, ni Comando, ni Finanzas, ni el pipeline de video de
 // marketing (Marcas/Propiedades/Solicitudes son del mundo de Alex).
-export const AREA_MEMBER_MODULES = new Set(["plan", "mkt_reporte", "mkt_dia", "midrive", "copilot", "perfil"]);
+export const AREA_MEMBER_MODULES = new Set(["miespacio", "plan", "mkt_reporte", "mkt_dia", "midrive", "copilot", "perfil"]);
 // Secciones del módulo Marketing que se muestran como items del sidebar. Las ve el
 // rol `marketing` (su equipo) Y el admin de marketing (Alex) — no los admins de ventas.
 export const MKT_SECTION_MODULES = new Set(["mkt_reporte", "mkt_equipo", "mkt_dia", "mkt_marcas", "mkt_pipe", "mkt_sol"]);
