@@ -39,7 +39,7 @@ import SuggestActionsModal from "../../components/SuggestActionsModal";
 import { AI_AGENTS, AI_AGENT_LIST } from "../../constants/agents";
 // Pipeline + vocabulario activos resueltos por cliente. Para Duke devuelven
 // exactamente STAGES/stgC/labels históricos; Vega usa su pipeline y "proyecto".
-import { STAGES, stgC, DEFAULT_STAGE, PIPELINE_GROUPS, HAS_PIPELINE_GROUPS } from "../../constants/pipeline";
+import { STAGES, stgC, DEFAULT_STAGE, PIPELINE_GROUPS, HAS_PIPELINE_GROUPS, IS_CUSTOM_PIPELINE } from "../../constants/pipeline";
 import { L } from "../../constants/labels";
 import {
   calculateLeadScore,
@@ -2557,10 +2557,13 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                     }}
                   >
                     <option value="manual"     style={{ background: isLight ? "#FFFFFF" : "#111318", color: T.txt }}>Manual (arrastra)</option>
-                    <option value="proxZoom"   style={{ background: isLight ? "#FFFFFF" : "#111318", color: T.txt }}>Próximo Zoom</option>
+                    {/* «Próximo Zoom» y «En Seguimiento» son etapas de Duke: en un
+                        pipeline custom (Legacy = casas) no significan nada. Regla
+                        11-ago: la jerga sigue a las etapas de CADA empresa. */}
+                    {!IS_CUSTOM_PIPELINE && <option value="proxZoom"   style={{ background: isLight ? "#FFFFFF" : "#111318", color: T.txt }}>Próximo Zoom</option>}
                     <option value="newest"     style={{ background: isLight ? "#FFFFFF" : "#111318", color: T.txt }}>Nuevos primero</option>
                     <option value="oldest"     style={{ background: isLight ? "#FFFFFF" : "#111318", color: T.txt }}>Nuevos al fondo</option>
-                    <option value="concretado" style={{ background: isLight ? "#FFFFFF" : "#111318", color: T.txt }}>En Seguimiento</option>
+                    {!IS_CUSTOM_PIPELINE && <option value="concretado" style={{ background: isLight ? "#FFFFFF" : "#111318", color: T.txt }}>En Seguimiento</option>}
                   </select>
                   <ChevronDown size={12} color={prioritySort === "manual" ? T.txt3 : T.accent} strokeWidth={2.5} style={{ position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }} />
                 </div>
@@ -4034,7 +4037,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
           {/* Search — full width en mobile, max 240 en desktop */}
           <div style={{ position: "relative", flex: 1, minWidth: 140, maxWidth: isMobile ? "100%" : 240, width: isMobile ? "100%" : "auto" }}>
             <Search size={isMobile ? 14 : 11} color={isLight ? "rgba(15,23,42,0.30)" : "rgba(255,255,255,0.28)"} style={{ position: "absolute", left: isMobile ? 14 : 10, top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }} />
-            <input value={searchQ} onChange={e => setSearchQ(e.target.value)} placeholder={isMobile ? "Buscar cliente…" : "Buscar cliente, asesor, proyecto…"}
+            <input value={searchQ} onChange={e => setSearchQ(e.target.value)} placeholder={(clientConfig?.labels?.entity && clientConfig.labels.entity !== "cliente") ? `Buscar ${clientConfig.labels.entity}…` : (isMobile ? "Buscar cliente…" : "Buscar cliente, asesor, proyecto…")}
               data-stratos-search-input="1"
               style={{
                 width: "100%", paddingLeft: isMobile ? 36 : 29, paddingRight: searchQ ? 32 : 11,
@@ -4084,9 +4087,13 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
           {!isMobile && (() => {
             const SORT_OPTS = [
               { v: 'fechaIngreso', label: 'Más recientes' },
-              { v: 'proxZoom',     label: 'Próximo Zoom' },
-              { v: 'presupuesto',  label: 'Mayor presupuesto' },
-              { v: 'sc',           label: 'Mayor score' },
+              // Jerga de VENTAS de Duke (zoom/presupuesto/score): solo donde el
+              // pipeline es el de Duke. Regla 11-ago: la jerga sigue a la empresa.
+              ...(IS_CUSTOM_PIPELINE ? [] : [
+                { v: 'proxZoom',     label: 'Próximo Zoom' },
+                { v: 'presupuesto',  label: 'Mayor presupuesto' },
+                { v: 'sc',           label: 'Mayor score' },
+              ]),
             ];
             const known  = SORT_OPTS.some(o => o.v === sortField);
             const active = sortField !== 'fechaIngreso';
