@@ -35,7 +35,7 @@ const legacyDesignConfig = {
     // El «¿qué puedes hacer?» PROPIO de Legacy (telegram.js lo responde al
     // instante, antes de cualquier webhook). Sin esto caía al texto de NSG
     // (que habla del segundo cerebro de NSG) o al manual inmobiliario.
-    copilotHelp: "Esto es lo que puedo hacer por ti en Legacy:\n\n• Tareas sin fricción — «ponme una tarea: llamar al notario de Casa Ágata mañana a las 10»\n• Repartir el trabajo — «que Mario revise los planos de Sol y Luna el jueves» (le llega el aviso y el sistema lo persigue)\n• Tu día — «¿qué tengo hoy?» o «¿qué pendientes tiene el equipo?»\n• Recordatorios que suenan — «recuérdame en 2 horas pedir la licencia de tala»\n• El conocimiento de tu empresa — pregúntame por el manual, quién edita, o el tablero de casas\n\nTodo por texto o por voz. Los avisos llegan 1 hora y 10 minutos antes, solo en tu jornada (10:00–21:00).",
+    copilotHelp: "Esto es lo que puedo hacer por ti en Legacy:\n\n• Tareas sin fricción: «ponme una tarea: llamar al notario de Casa Ágata mañana a las 10»\n• Repartir el trabajo: «que Mario revise los planos de Sol y Luna el jueves» (le llega el aviso y el sistema lo persigue)\n• Tu día: «¿qué tengo hoy?» o «¿qué pendientes tiene el equipo?»\n• Recordatorios que suenan: «recuérdame en 2 horas pedir la licencia de tala»\n• El conocimiento de tu empresa: pregúntame por el manual, quién edita, o el tablero de casas\n\nTodo por texto o por voz. Los avisos llegan 1 hora y 10 minutos antes, solo en tu jornada (10:00 a 21:00).",
   },
 
   // Módulos según la reunión del 11-ago (CRM · plan semanal · copiloto ·
