@@ -23,6 +23,7 @@ import { font, fontDisp } from "../../design-system/tokens";
 import { G } from "../SharedComponents";
 import { supabase } from "../../lib/supabase";
 import { useIsMobile } from "../../hooks/useViewport";
+import { useClient } from "../../hooks/useClient";
 
 const money = (n) =>
   "$" + Number(n || 0).toLocaleString("es-MX", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -67,6 +68,9 @@ const Tarjeta = ({ icon: Icon, label, valor, sub, color, T }) => (
 );
 
 const ComandoOps = ({ T, accent = "#F472B6" }) => {
+  // Nació en NSG y decía «NSG» a mano — cada tenant ve el nombre de SU empresa.
+  const { config: clientConfig } = useClient();
+  const empresa = clientConfig?.name || "la empresa";
   const [data, setData] = useState(null);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState(null);
@@ -248,7 +252,7 @@ const ComandoOps = ({ T, accent = "#F472B6" }) => {
 
       {/* ── Caja y nómina ── */}
       <G T={T}>
-        {titulo("Caja del mes", "Lo de NSG como empresa: lo que cobró, lo que pagó y cuánto le debe a cada quien")}
+        {titulo("Caja del mes", `Lo de ${empresa} como empresa: lo que cobró, lo que pagó y cuánto le debe a cada quien`)}
         <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
           <Tarjeta icon={Wallet} label="Cobró a clientes" valor={money(caja.entro)} color="#22C55E" T={T} />
           <Tarjeta icon={Wallet} label="Pagó de nómina" valor={money(caja.nomina)} color="#3B82F6" T={T} />

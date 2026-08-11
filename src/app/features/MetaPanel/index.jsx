@@ -139,6 +139,7 @@ export default function MetaPanel({
   const [duePickerOpen, setDuePickerOpen] = useState(null);
   const [calendarMonth, setCalendarMonth] = useState(() => new Date());
   const [teamMembers, setTeamMembers] = useState([]);   // responsables dinámicos (todos los activos del org, incl. nuevos)
+  const { config: _clientCfg } = useClient();
   const _orgId = user?.organizationId;
   const _isManager = ['super_admin','admin','ceo','director'].includes(user?.role);
   const _selfName = user?.name || user?.fullName || user?.email || "Admin";
@@ -154,8 +155,11 @@ export default function MetaPanel({
     if (!owner || owner === "todos" || owner === "equipo") return !_isManager ? false : false;
     return owner === _nameKey(_selfName);
   };
-  const fallbackTeamMembers = ["Oscar Gálvez","Alexia Santillán","Araceli Oneto","Ken Duke","Emmanuel Ortiz","Cecilia Mendoza"];
-  const teamMemberOptions = teamMembers.length ? teamMembers : fallbackTeamMembers;
+  // ⛔ Antes acá había una lista de GENTE DE DUKE como fallback: un tenant con el
+  // equipo aún sin cargar veía a Oscar/Alexia/Ken como opciones para asignar
+  // («un default que apunta a una empresa real convierte cada hueco en una fuga»).
+  // Sin equipo cargado, la única opción segura es uno mismo.
+  const teamMemberOptions = teamMembers.length ? teamMembers : (_selfName ? [_selfName] : []);
   const creatingForTeam = _isManager && agendaView === "team";
   // Persistimos si hay un usuario REAL logueado. NO exigimos conocer el org en el front:
   // team_actions tiene DEFAULT organization_id = current_organization_id() (la DB lo pone desde el
@@ -272,8 +276,9 @@ export default function MetaPanel({
   const removeDoc = (id) => setMetaDocs((metaDocs || []).filter(d => d.id !== id));
 
   if (!open) return null;
-  // Brand label fallback (compat con instancias legacy que no pasen el prop)
-  const brandLabel = orgBrand || 'Duke del Caribe';
+  // Brand label fallback: el nombre del TENANT activo — antes decía «Duke del
+  // Caribe» a mano y cualquier empresa sin el prop veía la marca de otra.
+  const brandLabel = orgBrand || _clientCfg?.name || 'la empresa';
   // canEdit puede venir indefinido en versiones legacy → permitir edición por defecto
   const canEditFinal = canEdit === undefined ? true : canEdit;
 
