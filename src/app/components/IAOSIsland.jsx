@@ -10,6 +10,8 @@
  * ─────────────────────────────────────────────────────────────────────────────
  */
 import { fontDisp } from "../../design-system/tokens";
+import { L } from "../constants/labels";
+import { IS_CUSTOM_PIPELINE } from "../constants/pipeline";
 
 /* `phrases`: si viene, manda. Lo usa MARKETING, que no tiene leads y muestra
    sus propios números (tareas vencidas, videos parados, quién no reportó).
@@ -25,12 +27,18 @@ export default function IAOSIsland({ leadsData = [], isLight, idx, brandLabel = 
   // Ej: "Duke del Caribe" → "Duke" · "Grupo 28" → "Grupo 28".
   const shortBrand = brandLabel.split(" ")[0] || "Duke";
 
-  const phrases = phrasesProp && phrasesProp.length ? phrasesProp : [
+  // Pipelines custom (Legacy, Vega, NSG…): sin dinero-en-pipeline ni la palabra
+  // «leads» — el registro se llama como esa empresa lo llama (casa, pedido…).
+  const phrases = phrasesProp && phrasesProp.length ? phrasesProp : (IS_CUSTOM_PIPELINE ? [
+    `${shortBrand} · ${hot} alertas activas`,
+    `${inact} ${L.entityPlural} sin siguiente paso`,
+    `${shortBrand} al día`,
+  ] : [
     `${shortBrand} · ${hot} alertas activas`,
     `$${totalPipe}M en pipeline`,
     `${inact} leads sin actividad`,
     `Protocolo ${shortBrand} activo`,
-  ];
+  ]);
 
   return (
     /* className: en móvil el bloque CSS global (App.jsx) lo hace COMPRESIBLE

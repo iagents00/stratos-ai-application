@@ -45,6 +45,7 @@ const DEFAULT_LABELS = {
   followUpRegisterShort: "Registrar",
   followUpColShort:      "Seguim.",                          // header de columna en vista lista
   noAdvisor:             "Sin asesor",
+  advisorAll:            "Todos los asesores",
   relatedContacts:       "Familiares o Socios",
 };
 

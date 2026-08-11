@@ -90,6 +90,7 @@ const muebleriaConfig = {
     discoveryTab:          "Detalle",
     discoveryTabShort:     "Detalle",
     noAdvisor:             "Sin responsable",
+    advisorAll:            "Todos los responsables",
     relatedContacts:       "Contactos del pedido",
   },
 };
