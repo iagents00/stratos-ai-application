@@ -37,6 +37,7 @@ const ManualNSG        = lazy(() => import("./landing/ManualNSG.jsx"));
 const ManualLegacy     = lazy(() => import("./landing/ManualLegacy.jsx"));
 const ManualBrasa      = lazy(() => import("./landing/ManualBrasa.jsx"));
 const ManualGasil      = lazy(() => import("./landing/ManualGasil.jsx"));
+const ManualMuebleria  = lazy(() => import("./landing/ManualMuebleria.jsx"));
 const Diagnostico      = lazy(() => import("./landing/Diagnostico.jsx"));
 import { CATEGORIES_TG, MANUAL_SECTIONS_TG, searchManualTG } from "./landing/manual-telegram-content";
 
@@ -112,6 +113,9 @@ const MANUAL_BRASA_PATHS = ["/manual-brasa", "/manual-brasa-y-piedra"];
 // Manual de uso de Stratos para GASIL RADIODIAGNÓSTICO DEL VALLE (centro de
 // imagen) — público, para recepción y técnicos.
 const MANUAL_GASIL_PATHS = ["/manual-gasil", "/manual-gasil-radiodiagnostico"];
+// Manual de uso de Stratos para MUEBLARIA (mobiliario a medida) — público, en el
+// lenguaje del taller: los carpinteros no viven frente a una computadora.
+const MANUAL_MUEBLERIA_PATHS = ["/manual-muebleria", "/manual-mueblaria"];
 const DIAGNOSTICO_PATHS = ["/diagnostico"];
 const matchPath = (paths) => paths.some(p => pathname === p || pathname === p + "/");
 const isPrivacy = matchPath(PRIVACY_PATHS);
@@ -124,6 +128,7 @@ const isManualNSG = matchPath(MANUAL_NSG_PATHS);
 const isManualLegacy = matchPath(MANUAL_LEGACY_PATHS);
 const isManualBrasa = matchPath(MANUAL_BRASA_PATHS);
 const isManualGasil = matchPath(MANUAL_GASIL_PATHS);
+const isManualMuebleria = matchPath(MANUAL_MUEBLERIA_PATHS);
 // /diagnostico (formulario público) y /diagnostico/view/<lead_id> (vista compartida
 // del Blueprint que vio el cliente — el link llega al equipo por Telegram al
 // crearse cada lead). Ambas se renderean con el mismo componente Diagnostico.jsx,
@@ -152,7 +157,7 @@ const isLanding = !isExplicitClient && (
   || (hostname === "127.0.0.1" && !params.has("app"))
 );
 
-const isApp = !isPrivacy && !isDeletion && !isDelivery && !isManual && !isManualTG && !isManualNSG && !isManualLegacy && !isManualBrasa && !isManualGasil && !isDiagnostico && !isPublicLanding && !isLanding;
+const isApp = !isPrivacy && !isDeletion && !isDelivery && !isManual && !isManualTG && !isManualMkt && !isManualNSG && !isManualLegacy && !isManualBrasa && !isManualGasil && !isManualMuebleria && !isDiagnostico && !isPublicLanding && !isLanding;
 
 // URL de la plataforma — usada por la landing para el CTA principal
 const APP_URL = import.meta.env.VITE_APP_URL || (window.location.origin + "/?app");
@@ -232,6 +237,8 @@ createRoot(document.getElementById("root")).render(
                     ? <ManualBrasa />
                   : isManualGasil
                     ? <ManualGasil />
+                  : isManualMuebleria
+                    ? <ManualMuebleria />
                   : isManualMkt
                     ? <ManualMarketing />
                   : isManual
