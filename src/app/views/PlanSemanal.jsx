@@ -326,7 +326,7 @@ export default function PlanSemanal({ T, onOpenCopilot }) {
           </select>
           {!esMio && (
             <span style={{ fontSize: 11.5, color: AMBER, display: "flex", alignItems: "center", gap: 5 }}>
-              <AlertCircle size={12} /> Solo lectura — este plan lo edita su dueño
+              <AlertCircle size={12} /> Solo lectura: este plan lo edita su dueño
             </span>
           )}
         </div>

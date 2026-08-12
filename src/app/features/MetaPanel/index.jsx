@@ -47,7 +47,7 @@ export const DEFAULT_META_PROTOCOL = {
   "objections": [],
   "slas": [],
   "objetivo": "Toca aquí para escribir el objetivo de tu equipo.",
-  "reglaBase": "Completa el protocolo de tu empresa — este espacio es solo tuyo.",
+  "reglaBase": "Completa el protocolo de tu empresa: este espacio es solo tuyo.",
   "principios": [],
   "reglaRegistro": "",
   "velocidadIdeal": "",
@@ -1219,7 +1219,7 @@ export default function MetaPanel({
                   return (
                     <div style={{ display:"flex", alignItems:"center", gap:12, flexWrap:"wrap", marginBottom:28 }}>
                       <span style={{ marginRight:"auto", fontSize:12.5, fontFamily:font, color:T.txt3, letterSpacing:"-0.01em" }}>
-                        {missingAssignee ? "Elegí a quién se asigna arriba" : (metaNewDate ? "Listo para agregar" : "Poné fecha y hora — o registralo sin fecha")}
+                        {missingAssignee ? "Elige a quién se asigna arriba" : (metaNewDate ? "Listo para agregar" : "Pon fecha y hora, o regístralo sin fecha")}
                       </span>
                       <button type="button" onClick={() => createAction({ noDate: true })} disabled={missingAssignee}
                         style={{ display:"inline-flex", alignItems:"center", gap:7, padding:"12px 18px", borderRadius:16, cursor: missingAssignee ? "default" : "pointer", border:`1px solid ${S.lineS}`, background:"transparent", color: missingAssignee ? T.txt3 : T.txt2, fontSize:14, fontWeight:500, fontFamily:fontDisp, letterSpacing:"-0.01em", opacity: missingAssignee ? 0.5 : 1, transition:"background 0.16s, border-color 0.16s" }}
@@ -1244,7 +1244,7 @@ export default function MetaPanel({
                   </div>
                   <p style={{ margin:"0 0 5px", fontSize:15, fontWeight:400, fontFamily:fontDisp, letterSpacing:"-0.02em", color:T.txt }}>Todo al día</p>
                   <p style={{ margin:0, fontSize:12.5, color:T.txt3, fontFamily:font }}>
-                    {creatingForTeam ? "Sin pendientes del equipo — asigna la primera arriba." : "Sin pendientes en tu agenda — agrega la primera arriba."}
+                    {creatingForTeam ? "Sin pendientes del equipo: asigna la primera arriba." : "Sin pendientes en tu agenda — agrega la primera arriba."}
                   </p>
                 </div>
               )}

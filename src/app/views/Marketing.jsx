@@ -369,7 +369,7 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
       setBitacora(bi.data || []);
       setColsExtra(cols.data || []);
     } catch (e) {
-      setError(`No pude cargar el módulo de ${MODULE_LABEL}. Probá actualizar.`);
+      setError(`No pude cargar el módulo de ${MODULE_LABEL}. Intenta actualizar.`);
     } finally {
       setLoading(false);
     }
@@ -418,7 +418,7 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
     const { error: e } = await supabase.from(table)
       .update({ ...fields, updated_at: new Date().toISOString() })
       .eq("id", id).eq("organization_id", orgId);
-    if (e) { setError("No se pudo guardar el cambio. Probá de nuevo."); return false; }
+    if (e) { setError("No se pudo guardar el cambio. Intenta de nuevo."); return false; }
     return true;
   }, [orgId]);
 
@@ -524,7 +524,7 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
           orden: pipeline.reduce((m, p) => Math.max(m, p.orden || 0), 0) + 1,
         })).error;
     setFichaSaving(false);
-    if (e) { setError("No pude guardar la ficha. Probá de nuevo."); return; }
+    if (e) { setError("No pude guardar la ficha. Intenta de nuevo."); return; }
     setFicha(null);
     load();
   }, [ficha, brands, orgId, user?.id, pipeline, load]);
@@ -540,7 +540,7 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
       setEvViewer({ url: data.signedUrl, tipo: t.evidencia_tipo || "foto", titulo: t.titulo });
     } catch {
       setEvViewer(null);
-      setError("No pude abrir la evidencia. Probá de nuevo.");
+      setError("No pude abrir la evidencia. Intenta de nuevo.");
     }
   }, []);
 
@@ -1121,7 +1121,7 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
     const { error: e } = await supabase.from(tabla).update(payload).eq("id", id);
     setCeldaSaving(false);
     setCelda(siguiente);
-    if (e) { setError("No pude guardar ese dato. Probá de nuevo."); return; }
+    if (e) { setError("No pude guardar ese dato. Intenta de nuevo."); return; }
     load();
   }, [celda, filaDe, load]);
 
@@ -1131,7 +1131,7 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
     const payload = { [campo]: valor || null };
     if (tabla === PIPE) payload.updated_at = new Date().toISOString();
     const { error: e } = await supabase.from(tabla).update(payload).eq("id", id);
-    if (e) { setError("No pude guardar ese cambio. Probá de nuevo."); return; }
+    if (e) { setError("No pude guardar ese cambio. Intenta de nuevo."); return; }
     load();
   }, [load]);
 
@@ -1296,7 +1296,7 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
      (para no perder nada) + «Otra…», que abre el campo para escribir una nueva. */
   const celdaCatalogo = (fila, campo, catalogo, usados, ancho = 150) => {
     const editando = celda && celda.id === fila.id && celda.campo === campo && !celda.extra;
-    if (editando) return celdaEditable(fila, campo, { ancho, placeholder: "Escribí el valor" });
+    if (editando) return celdaEditable(fila, campo, { ancho, placeholder: "Escribe el valor" });
     const valor = fila[campo] || "";
     const base = catalogo.map(o => o.v);
     const opciones = [...new Set([...base, ...usados])].filter(Boolean);
@@ -1305,7 +1305,7 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
     return (
       <select
         value={valor}
-        title="Elegí de la lista, o «Otra…» para escribir una nueva"
+        title="Elige de la lista, o «Otra…» para escribir una nueva"
         onChange={e => {
           if (e.target.value === "__otra__") { setCelda({ id: fila.id, campo, valor: "", extra: false, tabla: PIPE }); return; }
           guardarCampo(PIPE, fila.id, campo, e.target.value);
@@ -1658,7 +1658,7 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
                   style={{ ...inputStyle, padding: "5px 8px", fontSize: 12.5, border: `1px dashed ${bd}`, background: "transparent" }} />
               </td>
               <td colSpan={colsVista.length} style={{ ...hoja.td, color: txt3, fontSize: 12 }}>
-                {filaNuevaSaving ? "Agregando…" : "Escribí el nombre y presioná Enter — el resto se llena después, en la misma tabla."}
+                {filaNuevaSaving ? "Agregando…" : "Escribe el nombre y presiona Enter · el resto se llena después, en la misma tabla."}
               </td>
             </tr>
 
@@ -1891,7 +1891,7 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
         </table>
       </div>}
       {!isMobile && <div style={{ fontSize: 11.5, color: txt3, lineHeight: 1.6 }}>
-        Cada quien puede corregir sus propios reportes{isAdmin ? " (y vos, los de todo el equipo)" : ""} —
+        Cada quien puede corregir sus propios reportes{isAdmin ? " (y los tuyos, los de todo el equipo)" : ""} —
         toca la fecha, la empresa, el tiempo o «editar» debajo del texto.
         En el texto largo, <b style={{ color: txt2 }}>Enter</b> hace salto de línea y{" "}
         <b style={{ color: txt2 }}>⌘/Ctrl+Enter</b> guarda. El <b style={{ color: txt2 }}>nombre</b> y el{" "}
@@ -2685,7 +2685,7 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
                 }}>{String(m.name || "?").charAt(0).toUpperCase()}</div>
                 <div style={{ flex: 1, minWidth: 120 }}>
                   <div style={{ fontSize: 13.5, color: txt, fontWeight: 500 }}>{m.name}</div>
-                  <div style={{ fontSize: 14, color: txt3 }}>{m.id === user?.id ? "tú" : "marketing"}</div>
+                  <div style={{ fontSize: 14, color: txt3 }}>{m.id === user?.id ? "tú" : "equipo"}</div>
                 </div>
                 {/* Stats: en móvil ocupan su propia fila a lo ancho, repartidas parejas */}
                 <div style={{ display: "flex", gap: isMobile ? 4 : 10, flex: isMobile ? "1 1 100%" : "0 0 auto", justifyContent: isMobile ? "space-between" : "flex-end" }}>

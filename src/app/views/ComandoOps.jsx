@@ -183,7 +183,7 @@ const ComandoOps = ({ T, accent = "#F472B6" }) => {
         {titulo("Clientes y objetivos", "Qué nos comprometimos con cada uno y cuánto llevamos")}
         {clientes.length === 0 ? (
           <p style={{ color: T.txt3, fontFamily: font, fontSize: 12.5, margin: 0 }}>
-            Todavía no hay clientes cargados. Dile al Copilot «agrega el cliente X» y aparece acá.
+            Todavía no hay clientes cargados. Dile al Copilot «agrega el cliente X» y aparece aquí.
           </p>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
@@ -199,7 +199,7 @@ const ComandoOps = ({ T, accent = "#F472B6" }) => {
                 </div>
                 {(c.objetivos || []).length === 0 ? (
                   <p style={{ margin: "0 0 0 22px", fontSize: 12, color: T.txt3, fontFamily: font }}>
-                    Sin objetivos fijados — dile al Copilot «fija un objetivo con {c.nombre}: …»
+                    Sin objetivos fijados: dile al Copilot «fija un objetivo con {c.nombre}: …»
                   </p>
                 ) : (
                   <div style={{ display: "flex", flexDirection: "column", gap: 10, marginLeft: 22 }}>

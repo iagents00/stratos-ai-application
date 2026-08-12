@@ -495,7 +495,7 @@ export default function AdminPanel({ T = P, isLight: isLightProp }) {
                 <div style={{ padding: "12px 14px", borderRadius: 10, background: `${T.accent}12`, border: `1px solid ${T.accent}33` }}>
                   <p style={{ fontSize: 12.5, color: T.txt2, margin: 0, lineHeight: 1.55 }}>
                     Le voy a mandar un correo a <strong style={{ color: T.txt }}>{modal.user?.email || modal.user?.name}</strong> para
-                    que ponga una contraseña nueva. Vos no tenés que elegirla.
+                    que ponga una contraseña nueva. Tú no tienes que elegirla.
                   </p>
                 </div>
               )}
