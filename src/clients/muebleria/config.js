@@ -41,6 +41,14 @@ const muebleriaConfig = {
     supabaseRef:    "glulgyhkrqpykxmujodb",
     // El «¿qué puedes hacer?» PROPIO (sin esto caía al texto de NSG o al
     // manual inmobiliario). Español neutro, sin guiones largos.
+    // ⭐ ARQUITECTURA «un flujo, un cerebro por empresa» (12-ago-2026).
+    // Este webhook es COMPARTIDO y genérico: no sabe a quién atiende. Lo primero
+    // que hace es preguntarle a la base `fn_copilot_brief(chat_id)` quién es esta
+    // empresa y qué sabe hacer, y con ESE prompt trabaja el modelo.
+    // Antes, al no declarar webhook, este tenant caía en `copilot-marketing`, que
+    // es el asistente del equipo de marketing de Duke: por eso no respondía bien.
+    // Detalle: context/copilot-arquitectura-un-flujo.md del AIOS.
+    copilotWebhook: "https://personal-n8n.suwsiw.easypanel.host/webhook/copilot-tenant",
     copilotHelp: "Esto es lo que puedo hacer por ti en la mueblería:\n\n• Tareas sin fricción: «ponme una tarea: pedir la laca mañana a las 10»\n• Repartir el trabajo: «que Juan arme el comedor de los López el jueves» (le llega el aviso y el sistema lo persigue)\n• Tu día: «¿qué tengo hoy?» o «¿qué pendientes tiene el equipo?»\n• Recordatorios que suenan: «recuérdame en 2 horas llamar al cliente del ropero»\n• El conocimiento de tu empresa: pregúntame por el manual, quién es quién, o el tablero de pedidos\n\nTodo por texto o por voz. Los avisos llegan 1 hora y 10 minutos antes, solo en tu jornada.",
   },
 

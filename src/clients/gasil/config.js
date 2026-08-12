@@ -63,6 +63,14 @@ const gasilConfig = {
     // El «¿qué puedes hacer?» PROPIO de Gasil (telegram.js lo responde al
     // instante, antes de cualquier webhook). Sin esto caería al texto de NSG o
     // al manual inmobiliario. Lenguaje de recepción de un centro de imagen.
+    // ⭐ ARQUITECTURA «un flujo, un cerebro por empresa» (12-ago-2026).
+    // Este webhook es COMPARTIDO y genérico: no sabe a quién atiende. Lo primero
+    // que hace es preguntarle a la base `fn_copilot_brief(chat_id)` quién es esta
+    // empresa y qué sabe hacer, y con ESE prompt trabaja el modelo.
+    // Antes, al no declarar webhook, este tenant caía en `copilot-marketing`, que
+    // es el asistente del equipo de marketing de Duke: por eso no respondía bien.
+    // Detalle: context/copilot-arquitectura-un-flujo.md del AIOS.
+    copilotWebhook: "https://personal-n8n.suwsiw.easypanel.host/webhook/copilot-tenant",
     copilotHelp:
       "Esto es lo que puedo hacer por ti en Gasil:\n\n" +
       "• Anotar al vuelo: «ponme una tarea: llamar mañana a las 10 a los pacientes que no se presentaron»\n" +
