@@ -23,6 +23,7 @@ import clinicaDentalConfig from "./clinica-dental/config";
 import muebleriaConfig     from "./muebleria/config";
 import legacyDesignConfig  from "./legacy-design/config";
 import brasaYPiedraConfig  from "./brasa-y-piedra/config";
+import gasilConfig         from "./gasil/config";
 
 // Registry de todos los clientes conocidos
 const CLIENT_CONFIGS = {
@@ -39,6 +40,10 @@ const CLIENT_CONFIGS = {
   muebleria:        muebleriaConfig,
   "legacy-design":  legacyDesignConfig,
   "brasa-y-piedra": brasaYPiedraConfig,
+  // Centro de radiodiagnóstico en el Valle de Mexicali (molde EQUIPO con CRM de
+  // pacientes + tablero de médicos que refieren). Mismo motivo que los de
+  // arriba: sin esta línea /gasil caería en la config de Duke.
+  gasil:            gasilConfig,
 };
 
 /**
