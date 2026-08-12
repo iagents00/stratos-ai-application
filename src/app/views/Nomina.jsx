@@ -90,7 +90,7 @@ export default function Nomina({ T }) {
   const guardar = async () => {
     if (!editando) return;
     const monto = Number(String(editando.monto).replace(",", "."));
-    if (!monto || monto <= 0) { setError("Poné un monto válido."); return; }
+    if (!monto || monto <= 0) { setError("Pon un monto válido."); return; }
     const { error: e } = await supabase.rpc("fn_fin_set_nomina", {
       p_profile_id: user.id,
       p_persona: editando.persona,
@@ -126,7 +126,7 @@ export default function Nomina({ T }) {
           <Users size={24} color={txt3} strokeWidth={1.6} />
           <div style={{ fontSize: 13.5, color: txt2, marginTop: 10 }}>Todavía no hay nóminas definidas.</div>
           <div style={{ fontSize: 12.5, color: txt3, marginTop: 4 }}>
-            Decile al Copilot «la nómina de Ángel es de $500 quincenales» y aparece acá.
+            Dile al Copilot «la nómina de María es de $500 quincenales» y aparece aquí.
           </div>
         </div>
       )}

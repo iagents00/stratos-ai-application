@@ -289,7 +289,7 @@ const DynIsland = ({ onExpand, onOpenLead, notifications = [], theme = "dark", b
                 <div style={{ padding: "10px 20px 4px", borderTop: `1px solid ${D.line}`, display: "flex", justifyContent: "space-between", alignItems: "flex-end", gap: 10 }}>
                   <div style={{ minWidth: 0 }}>
                     <p style={{ margin: "0 0 2px", fontSize: 11, color: D.t55, fontWeight: 500, fontFamily: fontDisp, letterSpacing: "0.10em", textTransform: "uppercase" }}>Qué puede hacer el sistema</p>
-                    <p style={{ margin: 0, fontSize: 10.5, color: D.t34, fontFamily: font }}>Tocá una función para ver cómo se usa</p>
+                    <p style={{ margin: 0, fontSize: 10.5, color: D.t34, fontFamily: font }}>Toca una función para ver cómo se usa</p>
                   </div>
                   <button onClick={() => setShowAll(true)}
                     style={{ flexShrink: 0, display: "flex", alignItems: "center", gap: 4, background: "rgba(110,231,194,0.10)", border: "1px solid rgba(110,231,194,0.22)", color: D.acc, borderRadius: 8, padding: "6px 10px", fontSize: 11.5, fontWeight: 500, fontFamily: fontDisp, cursor: "pointer", whiteSpace: "nowrap", transition: "background 0.16s" }}
@@ -354,7 +354,7 @@ const DynIsland = ({ onExpand, onOpenLead, notifications = [], theme = "dark", b
                   ><ChevronLeft size={15} /></button>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <p style={{ margin: 0, fontSize: 13.5, color: D.w, fontWeight: 500, fontFamily: fontDisp, letterSpacing: "-0.01em" }}>Todas las funciones</p>
-                    <p style={{ margin: 0, fontSize: 11, color: D.t40, fontFamily: font, marginTop: 2 }}>{FEATURES.length} funciones · tocá una para ver cómo se usa</p>
+                    <p style={{ margin: 0, fontSize: 11, color: D.t40, fontFamily: font, marginTop: 2 }}>{FEATURES.length} funciones · toca una para ver cómo se usa</p>
                   </div>
                   <button onClick={() => setShowAll(false)} style={{ background: D.btn, border: "none", cursor: "pointer", width: 26, height: 26, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", color: D.t50, flexShrink: 0, transition: "all 0.16s" }}
                     onMouseEnter={e => { e.currentTarget.style.background = D.btnH; e.currentTarget.style.color = D.w; }}

@@ -130,7 +130,7 @@ export default function Caja({ T }) {
       setViewer({ url: ver.data.signedUrl, urlDescarga: bajar.data?.signedUrl || ver.data.signedUrl, esPdf });
     } catch {
       setViewer(null);
-      setError("No pude abrir el comprobante. Probá de nuevo.");
+      setError("No pude abrir el comprobante. Intenta de nuevo.");
     }
   }, []);
 
@@ -178,7 +178,7 @@ export default function Caja({ T }) {
       setPeople(Object.fromEntries((profs.data || []).map(p => [p.id, p.name])));
       setObras((leads.data || []).sort((a, b) => String(a.name).localeCompare(b.name)));
     } catch (e) {
-      setError("No pude cargar los movimientos. Probá de nuevo.");
+      setError("No pude cargar los movimientos. Intenta de nuevo.");
     } finally {
       setLoading(false);
     }
@@ -231,7 +231,7 @@ export default function Caja({ T }) {
   const submit = async (e) => {
     e?.preventDefault?.();
     const amount = parseFloat(String(form.amount).replace(",", "."));
-    if (!amount || amount <= 0) { setError("Poné un monto válido."); return; }
+    if (!amount || amount <= 0) { setError("Pon un monto válido."); return; }
     setSaving(true);
     setError("");
     try {
@@ -253,7 +253,7 @@ export default function Caja({ T }) {
       if (isMobile) setShowForm(false);
       await load();
     } catch (e2) {
-      setError("No se pudo guardar el movimiento. Probá de nuevo.");
+      setError("No se pudo guardar el movimiento. Intenta de nuevo.");
     } finally {
       setSaving(false);
     }

@@ -385,7 +385,7 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
       setSending(false);
       const reply = (!error && typeof data === "string" && data.trim())
         ? data
-        : (error ? "No se pudo vincular la evidencia. Probá de nuevo." : "Evidencia vinculada.");
+        : (error ? "No se pudo vincular la evidencia. Intenta de nuevo." : "Evidencia vinculada.");
       setMessages((prev) => [...prev, { id: `ai-${Date.now()}`, role: "ai", content: reply, occurred_at: new Date().toISOString() }]);
       // Persistir la foto del que la envía (con su tarea) para que se siga viendo al recargar.
       try {
@@ -413,7 +413,7 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
       setSending(false);
       const reply = (!error && typeof data === "string" && data.trim())
         ? data
-        : (error ? "No se pudo enviar el comentario. Probá de nuevo." : "Comentario enviado.");
+        : (error ? "No se pudo enviar el comentario. Intenta de nuevo." : "Comentario enviado.");
       setMessages((prev) => {
         const updated = prev.map(m => m.id === tmpId ? { ...m, pending: false } : m);
         return [...updated, { id: `ai-${Date.now()}`, role: "ai", content: reply, occurred_at: new Date().toISOString() }];
@@ -638,7 +638,7 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
         occurred_at: new Date().toISOString(),
       }]);
     } catch (err) {
-      setErrBanner("No se pudo subir la evidencia. Probá de nuevo.");
+      setErrBanner("No se pudo subir la evidencia. Intenta de nuevo.");
     } finally {
       setAttaching(false);
       inputRef.current?.focus();
@@ -1576,8 +1576,8 @@ function NotifBanner({ T, isLight }) {
       const r = await enablePushNotifications(user?.id);
       if (r.success) { setShow(false); }
       else if (r.permission === "denied") { setErr("Bloqueaste las notificaciones. Actívalas desde los Ajustes del teléfono."); }
-      else { setErr("No se pudo activar. Probá de nuevo."); }
-    } catch { setErr("No se pudo activar. Probá de nuevo."); }
+      else { setErr("No se pudo activar. Intenta de nuevo."); }
+    } catch { setErr("No se pudo activar. Intenta de nuevo."); }
     setBusy(false);
   };
 

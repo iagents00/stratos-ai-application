@@ -116,11 +116,25 @@ function resolveInitialView(user, clientConfig) {
   // Tenant con el CRM APAGADO (features.crm: false — ej. Brasa y Piedra): su
   // casa es Actividades, jamás "c" (caería en «Acceso restringido» en bucle).
   const crmApagado = clientConfig?.features?.crm === false;
-  const fallback = user?.role === "colaborador"
+  const fallbackDeseado = user?.role === "colaborador"
     ? "plan"
     : ((user?.isMarketingAdmin || user?.role === "marketing" || crmApagado)
         ? "mkt_reporte"
         : ((isAsesorRole || isExternalOrg) ? "c" : "d"));
+  // ⚠️ La vista inicial DEBE ser una que este usuario pueda abrir. En Brasa y
+  // Gasil el admin caía en «Acceso restringido» EN BUCLE: el fallback decía
+  // mkt_reporte, pero la regla anti-duplicado (módulo mkt renombrado
+  // «Actividades») se lo esconde justamente a quien puede abrir el módulo
+  // completo. La cadena prueba candidatos en orden y devuelve el primero
+  // accesible — jamás una pantalla bloqueada (auditoría 12-ago).
+  const resolverAccesible = (deseado) => {
+    const candidatos = [deseado, "mkt", "c", "d", "copilot", "miespacio", "perfil"];
+    for (const m of candidatos) {
+      try { if (canAccessModule(m, user, clientConfig)) return m; } catch (_) { /* sigue */ }
+    }
+    return "perfil";
+  };
+  const fallback = resolverAccesible(fallbackDeseado);
   if (!user?.id) return fallback;
   // Estreno de Actividades: una sola vez por usuario de marketing, antes de
   // mirar la vista guardada (si no, nunca la vería).
@@ -128,7 +142,7 @@ function resolveInitialView(user, clientConfig) {
   try {
     if (esMarketing && !localStorage.getItem(`${MKT_ESTRENO_KEY}.${user.id}`)) {
       localStorage.setItem(`${MKT_ESTRENO_KEY}.${user.id}`, "1");
-      return "mkt_reporte";
+      return resolverAccesible("mkt_reporte");
     }
   } catch (_) { /* sin localStorage, sigue el camino normal */ }
   try {

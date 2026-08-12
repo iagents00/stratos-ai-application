@@ -5950,7 +5950,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
               fontSize: 12.5, fontWeight: 500, fontFamily: fontDisp,
             }}>{selectedIds.size}</span>
             <span style={{ fontSize: 12.5, fontWeight: 400, color: isLight ? T.txt : "#fff", fontFamily: font, whiteSpace: "nowrap" }}>
-              {selectedIds.size === 0 ? "Elegí leads" : `seleccionado${selectedIds.size !== 1 ? "s" : ""}`}
+              {selectedIds.size === 0 ? "Elige registros" : `seleccionado${selectedIds.size !== 1 ? "s" : ""}`}
             </span>
           </span>
           <button onClick={toggleSelectAll} title="Seleccionar/quitar todos los resultados" style={{
@@ -6044,7 +6044,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
             {/* Body */}
             <div style={{ padding: "14px 16px 4px", overflowY: "auto", flex: 1 }}>
               <p style={{ margin: "0 0 12px", fontSize: 12.5, lineHeight: 1.5, color: T.txt3, fontFamily: font }}>
-                Elegí el asesor que recibirá {selectedIds.size === 1 ? "el lead" : "los leads"}.{" "}
+                Elige quién recibirá {selectedIds.size === 1 ? "el lead" : "los leads"}.{" "}
                 {reassignToContactame
                   ? <>Aparecerán al inicio de su pipeline en <strong style={{ color: isLight ? T.txt : "#fff", fontWeight: 500 }}>Contáctame Ya</strong>.</>
                   : "Conservarán su etapa actual."}

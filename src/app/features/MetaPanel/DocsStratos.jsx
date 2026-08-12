@@ -115,7 +115,7 @@ export default function DocsStratos({ T, isLight, userId, empresa = "NSG" }) {
       // link no le sirve a nadie más del equipo — es peor que no haberlo subido,
       // porque parece que está y al abrirlo pide acceso. (Le pasó a Ángel el 24-jul.)
       if (!j?.ok || !j?.link || j?.permiso?.type !== "anyone") {
-        throw new Error("Se subió pero quedó restringido. Avisá para revisarlo.");
+        throw new Error("Se subió pero quedó restringido. Avisa para revisarlo.");
       }
       const link = j.link;
       setSubido((s) => ({ ...s, [clave]: link }));
@@ -123,7 +123,7 @@ export default function DocsStratos({ T, isLight, userId, empresa = "NSG" }) {
         await supabase.rpc("fn_doc_link_agregar", { p_profile_id: userId, p_titulo: titulo, p_url: link });
       }
     } catch (e) {
-      setAviso(e?.message || "No pude subirlo a Drive. Probá de nuevo en un minuto.");
+      setAviso(e?.message || "No pude subirlo a Drive. Intenta de nuevo en un minuto.");
     } finally {
       setSubiendo(null);
     }
@@ -207,7 +207,7 @@ export default function DocsStratos({ T, isLight, userId, empresa = "NSG" }) {
               {d.tipo} · {fechaLarga(d.fecha)}{d.autor ? ` · ${d.autor.split(" ")[0]}` : ""}
             </div>
           </div>
-          <button onClick={() => setAbierto(d)} title="Leerlo acá" style={btn}>
+          <button onClick={() => setAbierto(d)} title="Leerlo aquí" style={btn}>
             <Eye size={14} />
           </button>
           <button onClick={() => bajarDoc(d)} title="Descargar en Word" style={btn}>
@@ -231,7 +231,7 @@ export default function DocsStratos({ T, isLight, userId, empresa = "NSG" }) {
 
       {!cargando && !docs.length && (
         <div style={{ ...fila, color: txt3, fontSize: 12.5, textWrap: "pretty" }}>
-          Todavía no guardaste ninguno. Los informes que generes en Caja → Informe se guardan acá con un botón.
+          Todavía no guardaste ninguno. Los informes que generes en Caja → Informe se guardan aquí con un botón.
         </div>
       )}
 
