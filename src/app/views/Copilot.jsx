@@ -425,7 +425,14 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
     const r = await sendCopilotMessage(text, options);
     setSending(false);
 
-    if (r.error === "not_paired") { onUnpaired(); return; }
+    // Sin identidad de chat no hay a dónde mandar el mensaje. Antes esto llamaba
+    // a un no-op: el usuario escribía y NO PASABA NADA, ni una palabra en pantalla.
+    if (r.error === "not_paired") {
+      onUnpaired();
+      setMessages((prev) => prev.map(m => m.id === tmpId ? { ...m, pending: false } : m));
+      setErrBanner("Tu cuenta todavía no tiene el asistente activado. Pídele al administrador que lo habilite.");
+      return;
+    }
     if (r.error) {
       // «no_llego» = el POST murió en la red y el motor nunca recibió el mensaje:
       // reenviar es seguro (nada se guardó). Decirlo es mejor que el silencio.
@@ -451,13 +458,39 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
         return [...updated, aiMsg];
       });
     } else if (r.slow) {
-      // El motor sigue trabajando y va a DEJAR la respuesta en el historial
-      // (la registra el propio flujo). Recargamos con merge hasta traerla —
-      // nada de disculpas ni de timeouts visibles.
+      // El motor no devolvió texto: puede que siga trabajando y DEJE la respuesta
+      // en el historial, o que se haya quedado sin contestar. Recargamos con
+      // merge hasta traerla.
+      //
+      // ⚠️ Y si a los 35 segundos no llegó nada, HAY QUE DECIRLO. Antes acá no se
+      // mostraba absolutamente nada: el usuario escribía, veía los puntitos
+      // desaparecer y se quedaba mirando la pantalla sin saber si su mensaje
+      // había servido de algo (captura de Ángel en Mueblaria, 12-ago: escribió
+      // dos veces y hasta un «?» sin recibir una palabra). El silencio es la peor
+      // respuesta posible: parece que el sistema está roto aunque haya hecho el
+      // trabajo. Preferimos decir la verdad antes que callar.
       setMessages((prev) => prev.map(m => m.id === tmpId ? { ...m, pending: false } : m));
+      const envioAt = lastSendRef.current;
+      const avisoId = `ai-sin-respuesta-${envioAt}`;
       [4000, 10000, 20000, 35000].forEach(ms => {
         setTimeout(() => { if (mountedRef.current) reload({ merge: true }); }, ms);
       });
+      setTimeout(() => {
+        if (!mountedRef.current) return;
+        setMessages((prev) => {
+          // ¿Llegó alguna respuesta del asistente después de este envío?
+          const yaContesto = prev.some(m =>
+            m.role === "ai" && new Date(m.occurred_at || 0).getTime() >= envioAt);
+          // (el id fijo evita que se duplique si esto corre dos veces)
+          if (yaContesto || prev.some(m => m.id === avisoId)) return prev;
+          return [...prev, {
+            id: avisoId,
+            role: "ai",
+            content: "Recibí tu mensaje pero no alcancé a contestarte a tiempo. Si era una tarea o un recordatorio, revísalo en tu agenda por las dudas; y si no aparece, vuelve a escribírmelo.",
+            occurred_at: new Date().toISOString(),
+          }];
+        });
+      }, 38000);
     }
     inputRef.current?.focus();
   };
