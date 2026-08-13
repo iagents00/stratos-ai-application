@@ -87,7 +87,7 @@ const gasilConfig = {
   // módulos internos de Stratos con datos de ejemplo horneados en el bundle:
   // prendidos filtrarían información de otra empresa.
   features: {
-    crm:              true,   // Los dos tableros: pacientes y médicos
+    crm:              true,   // Los tres tableros: prospectos, pacientes y médicos
     dash:             false,
     erp:              false,
     team:             false,
@@ -165,10 +165,15 @@ const gasilConfig = {
       tagline: "Pregunta qué prepara un estudio y responde solo lo confirmado, nunca a la adivinanza.",
       how: ['"¿Qué preparación lleva el ultrasonido de hígado?" y te da el ayuno de 8 horas.',
             "Si de ese estudio no hay indicación cargada, lo dice y lo pasa al personal en vez de inventar."] },
+    { id: "tablero-prospectos", label: "Los que aún no vienen", icon: "Bell", color: "#818CF8", kind: "pedis",
+      chan: "En el CRM", where: "Módulo Pacientes, pestaña «Prospectos»",
+      tagline: "El que preguntó y todavía no pisa el centro: se ve quién sigue sin respuesta y quién ya tiene día.",
+      how: ["Va de «Mensaje nuevo» a «Preparación enviada», más los que no se presentaron o no agendaron.",
+            "Cuando la persona viene y se le hace el estudio, pasa sola al tablero de Pacientes."] },
     { id: "tablero-pacientes", label: "El tablero de pacientes", icon: "ClipboardList", color: "#22D3EE", kind: "pedis",
-      chan: "En el CRM", where: "Módulo Pacientes",
-      tagline: "De «Mensaje nuevo» a «Resultados entregados»: en qué va cada persona, sin preguntar.",
-      how: ["Se abre y se mira: quién viene mañana, a quién le falta el estudio, a quién falta entregarle.",
+      chan: "En el CRM", where: "Módulo Pacientes, pestaña «Pacientes»",
+      tagline: "Los que ya vinieron: qué estudio falta entregar y a quién hay que llamar al control.",
+      how: ["Se abre y se mira: a quién le falta la interpretación, a quién falta entregarle.",
             'También hablando: "¿cómo va la señora Martínez?"'] },
     { id: "medicos-refieren", label: "Los médicos que nos mandan", icon: "Users", color: "#34D399", kind: "pedis",
       chan: "En el CRM", where: "Módulo Pacientes, pestaña «Médicos»",
@@ -217,15 +222,25 @@ const gasilConfig = {
     expedienteCentered:  false,
     projectMode:         false,  // El paciente ES una persona: teléfono y datos visibles
 
-    // ── DOS TABLEROS, NO UNO ─────────────────────────────────────────────────
-    // Un centro de imagen tiene dos trabajos distintos y mezclarlos esconde el
-    // segundo:
+    // ── TRES TABLEROS ────────────────────────────────────────────────────────
+    // Un centro de imagen tiene tres trabajos distintos y mezclarlos esconde los
+    // dos últimos. El corte entre los dos primeros es el mismo que en la Clínica
+    // Dental y es el que de verdad usa la recepción: **prospecto = todavía no
+    // pisó el centro; paciente = ya se le hizo el estudio.** A un prospecto se lo
+    // persigue para que venga; a un paciente se le entrega y se le llama al
+    // control. Juntos, la pregunta más importante del negocio («¿a cuánta gente
+    // le debo respuesta ahora mismo?») quedaba enterrada entre diez columnas.
     //
-    //   PACIENTES — del primer mensaje hasta que se le entregan los resultados.
-    //               Lo trabaja recepción y el técnico. Se mide en estudios.
-    //   MÉDICOS   — los doctores de la zona que mandan pacientes. Se consiguen
-    //               visitando consultorios y se pierden en silencio. Se mide en
-    //               pacientes referidos.
+    //   PROSPECTOS — del primer mensaje hasta que llega. Lo trabaja recepción.
+    //                Se mide en citas.
+    //   PACIENTES  — desde que se le hace el estudio hasta el control. Lo trabaja
+    //                el técnico y el radiólogo. Se mide en estudios entregados.
+    //   MÉDICOS    — los doctores de la zona que mandan pacientes. Se consiguen
+    //                visitando consultorios y se pierden en silencio. Se mide en
+    //                pacientes referidos.
+    //
+    // Las 15 etapas son LAS MISMAS de siempre, solo reagrupadas: este cambio no
+    // toca `org_stages` ni mueve ningún registro de columna.
     //
     // ⚠️ ESPEJO EXACTO de `org_stages` (15 filas, orden 1-15) en stratos-prod.
     // Los `name` son los strings que van a `leads.stage`: si acá se renombra una
@@ -242,41 +257,76 @@ const gasilConfig = {
     //   "Dejó de mandar"           → hay que ir a visitarlo
     pipelines: [
       {
+        id: "prospectos",
+        // PROSPECTO = todavía NO pisó el centro. Es la división que de verdad usa
+        // la recepción, la misma que en la Clínica Dental: a un prospecto se lo
+        // persigue para que venga; a un paciente se lo atiende y se le entrega.
+        // Tenerlos juntos escondía la pregunta más importante del negocio, que es
+        // «¿a cuánta gente le debo respuesta ahora mismo?».
+        label: "Prospectos",
+        hint: "Preguntaron, pero todavía no vienen",
+        labels: {
+          entity:       "prospecto",
+          entityPlural: "prospectos",
+          priorityList: "Prospectos en prioridad",
+        },
+        stages: [
+          { name: "Mensaje nuevo",       color: "#94A3B8" }, // escribió por Facebook o WhatsApp; nadie le respondió aún
+          { name: "Ya se le informó",    color: "#38BDF8" }, // sabe precio y qué incluye; falta ponerle día
+          { name: "Cita agendada",       color: "#818CF8" }, // tiene día y hora
+          { name: "Preparación enviada", color: "#A78BFA" }, // sabe el ayuno, la orden médica y qué traer
+          { name: "No se presentó",      color: "#FBBF24" }, // tenía cita y no vino; hay que recuperarlo
+          { name: "No agendó",           color: "#F87171" }, // preguntó y no siguió — SIEMPRE con el motivo anotado
+        ],
+        // Las preguntas de la recepción: a cuánta gente le debo respuesta, cuántos
+        // vienen y cuántos se están cayendo antes de llegar.
+        kpis: [
+          { label: "Sin responder",      value: { type: "count", stage: "Mensaje nuevo" },
+            sub: { type: "count", stage: "Ya se le informó", suffix: "ya informados" },
+            icon: "Bell",         color: "accent" },
+          { label: "Vienen a estudio",   value: { type: "count", stage: "Cita agendada" },
+            sub: { type: "count", stage: "Preparación enviada", suffix: "con preparación enviada" },
+            icon: "CalendarDays", color: "cyan" },
+          { label: "Falta prepararlos",  value: { type: "count", stage: "Cita agendada" },
+            sub: { type: "count", stage: "Preparación enviada", suffix: "ya la recibieron" },
+            icon: "Search",       color: "violet" },
+          { label: "Hay que recuperar",  value: { type: "count", stage: "No se presentó" },
+            sub: { type: "count", stage: "No agendó", suffix: "no agendaron" },
+            icon: "Target",       color: "blue" },
+        ],
+      },
+      {
         id: "pacientes",
+        // PACIENTE = ya vino y se le hizo el estudio. De acá en adelante lo que
+        // importa es entregarle su resultado y traerlo de vuelta al control.
         label: "Pacientes",
-        hint: "Del primer mensaje hasta los resultados en la mano",
+        hint: "Ya vinieron: estudio hecho, resultado en camino",
         labels: {
           entity:       "paciente",
           entityPlural: "pacientes",
           priorityList: "Pacientes en prioridad",
         },
         stages: [
-          { name: "Mensaje nuevo",            color: "#94A3B8" }, // escribió por Facebook o WhatsApp; nadie le respondió aún
-          { name: "Ya se le informó",         color: "#38BDF8" }, // sabe precio y qué incluye; falta ponerle día
-          { name: "Cita agendada",            color: "#818CF8" }, // tiene día y hora
-          { name: "Preparación enviada",      color: "#A78BFA" }, // sabe el ayuno, la orden médica y qué traer
           { name: "Estudio realizado",        color: "#22D3EE" }, // vino y se le hizo
           { name: "Esperando interpretación", color: "#FB923C" }, // el radiólogo lo está leyendo y firmando
           { name: "Resultados entregados",    color: "#4ADE80" }, // impresos o por la Aplicación Gasil
           { name: "Toca control",             color: "#10B981" }, // mamografía anual, seguimiento de embarazo
-          { name: "No se presentó",           color: "#FBBF24" }, // no vino a su cita; hay que recuperarlo
-          { name: "No agendó",                color: "#F87171" }, // preguntó y no siguió — SIEMPRE con el motivo anotado
         ],
-        // Las preguntas de la recepción: a cuánta gente le debo respuesta,
-        // cuántos vienen, y cuántos estudios están sin entregar.
+        // Acá la pregunta es otra: qué estudio está sin entregar y a quién hay que
+        // volver a llamar.
         kpis: [
-          { label: "Sin responder",       value: { type: "count", stage: "Mensaje nuevo" },
-            sub: { type: "count", stage: "Ya se le informó", suffix: "ya informados" },
-            icon: "Bell",         color: "accent" },
-          { label: "Vienen a estudio",    value: { type: "count", stage: "Cita agendada" },
-            sub: { type: "count", stage: "Preparación enviada", suffix: "con preparación enviada" },
-            icon: "CalendarDays", color: "cyan" },
-          { label: "Falta entregar",      value: { type: "count", stage: "Esperando interpretación" },
+          { label: "Falta entregar",     value: { type: "count", stage: "Esperando interpretación" },
             sub: { type: "count", stage: "Estudio realizado", suffix: "estudios hechos" },
-            icon: "FileText",     color: "violet" },
-          { label: "Hay que recuperar",   value: { type: "count", stage: "No se presentó" },
-            sub: { type: "count", stage: "Toca control", suffix: "tocan control" },
-            icon: "Target",       color: "blue" },
+            icon: "FileText",     color: "accent" },
+          { label: "Con el radiólogo",   value: { type: "count", stage: "Esperando interpretación" },
+            sub: { type: "count", stage: "Resultados entregados", suffix: "ya entregados" },
+            icon: "Search",       color: "violet" },
+          { label: "Entregados",         value: { type: "count", stage: "Resultados entregados" },
+            sub: { type: "total", suffix: "pacientes en total" },
+            icon: "Trophy",       color: "emerald" },
+          { label: "Tocan control",      value: { type: "count", stage: "Toca control" },
+            sub: { type: "count", stage: "Resultados entregados", suffix: "ya tienen resultados" },
+            icon: "CalendarDays", color: "cyan" },
         ],
       },
       {

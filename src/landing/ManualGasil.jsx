@@ -49,25 +49,35 @@ const SECCIONES = [
     ],
   },
   {
-    id: "pacientes", icono: ClipboardList, titulo: "Pacientes — el tablero",
+    id: "prospectos", icono: Bell, titulo: "Prospectos — los que todavía no vienen",
     bloques: [
-      { t: "p", v: "Cada persona que pregunta o que viene por un estudio es una tarjeta, y va avanzando de columna. Las columnas dicen en qué va, y lo que hay que hacer:" },
+      { t: "p", v: "Acá está todo el que preguntó pero aún no pisa el centro. Cada persona es una tarjeta y va avanzando de columna. El nombre de la columna dice qué hay que hacer:" },
       { t: "ejemplos", v: [
         ["Mensaje nuevo", "escribió y nadie le ha respondido"],
         ["Ya se le informó", "sabe el precio y qué incluye; falta ponerle día"],
         ["Cita agendada", "tiene día y hora"],
         ["Preparación enviada", "ya sabe si viene en ayunas y qué traer"],
+        ["No se presentó", "tenía cita y no vino: hay que recuperarlo"],
+        ["No agendó", "preguntó y no siguió; anota siempre el motivo"],
+      ] },
+      { t: "tip", v: "La columna «Mensaje nuevo» es la más importante del sistema: cada tarjeta ahí es una persona esperando respuesta. Si está vacía al final del día, el día salió bien." },
+    ],
+  },
+  {
+    id: "pacientes", icono: ClipboardList, titulo: "Pacientes — los que ya vinieron",
+    bloques: [
+      { t: "p", v: "En cuanto la persona viene y se le hace el estudio, pasa a este tablero. Acá lo que importa es entregarle su resultado y traerla de vuelta:" },
+      { t: "ejemplos", v: [
         ["Estudio realizado", "vino y se le hizo"],
         ["Esperando interpretación", "el radiólogo lo está leyendo y firmando"],
         ["Resultados entregados", "impresos o por la Aplicación Gasil"],
         ["Toca control", "hay que llamarle más adelante: la mamografía del año, el seguimiento del embarazo"],
       ] },
-      { t: "p", v: "Y dos columnas para lo que se cae: «No se presentó» (no vino a su cita, hay que recuperarlo) y «No agendó» (preguntó y no siguió — anota siempre el motivo)." },
       { t: "tip", v: "La tarjeta se mueve arrastrándola, o diciéndoselo al asistente: «ya se le entregaron los resultados a la señora Martínez»." },
     ],
   },
   {
-    id: "medicos", icono: Stethoscope, titulo: "Médicos — el segundo tablero",
+    id: "medicos", icono: Stethoscope, titulo: "Médicos — el tercer tablero",
     bloques: [
       { t: "p", v: "Buena parte de los pacientes no llega sola: la mandan médicos de la zona. Médicos generales que mandan placas, ginecólogos que mandan ultrasonidos, dentistas sin equipo que mandan panorámicas." },
       { t: "p", v: "Ese tablero va así: Médico por visitar, Visita hecha, Ya nos mandó pacientes, Nos manda seguido, y Dejó de mandar." },
