@@ -174,6 +174,64 @@ try {
   document.documentElement.setAttribute("data-client", clientId);
 } catch (_) { /* SSR / DOM no disponible */ }
 
+// ─── LA APP INSTALADA ABRE EN SU EMPRESA (13-ago-2026) ───────────────────────
+// Qué arregla, reportado desde un iPhone:
+//   «Agregar a inicio» guardaba SIEMPRE el nombre «Stratos AI» y, peor, el
+//   ícono abría SIEMPRE la raíz — que cae en la config de Duke. Quien instalaba
+//   desde /nsg terminaba viendo la marca y las etapas de Duke. Parecía que la
+//   app «había vuelto a una versión vieja»; era la puerta equivocada.
+//
+// Causa: el manifest es UNO solo y estático, con `start_url: "/"` y el nombre
+// fijo. Un archivo para once empresas.
+//
+// Arreglo: al arrancar se arma el manifest de ESTA empresa —su nombre y su
+// dirección de inicio— y se reemplaza el estático. Si algo falla queda el de
+// siempre, así que nunca se pierde la posibilidad de instalar.
+try {
+  if (isApp && clientConfig?.name) {
+    const nombre = clientConfig.name;
+
+    // 1) El nombre que iOS escribe debajo del ícono.
+    let metaTitulo = document.querySelector('meta[name="apple-mobile-web-app-title"]');
+    if (!metaTitulo) {
+      metaTitulo = document.createElement("meta");
+      metaTitulo.setAttribute("name", "apple-mobile-web-app-title");
+      document.head.appendChild(metaTitulo);
+    }
+    metaTitulo.setAttribute("content", nombre);
+
+    // 2) El manifest de esta empresa. `start_url` apunta a SU dirección, así
+    //    que el ícono instalado abre donde se instaló y no en la raíz.
+    const inicio = clientId === "duke" ? "/" : `/${clientId}`;
+    const linkManifest = document.querySelector('link[rel="manifest"]');
+    if (linkManifest) {
+      const manifest = {
+        name: `${nombre} — Plataforma`,
+        short_name: nombre,
+        description: `Sistema de ${nombre}.`,
+        lang: "es-MX",
+        dir: "ltr",
+        start_url: inicio,
+        scope: "/",
+        display: "standalone",
+        orientation: "any",
+        background_color: "#030810",
+        theme_color: "#030810",
+        categories: ["business", "productivity"],
+        icons: [
+          { src: "/icon-192.png",     sizes: "192x192", type: "image/png", purpose: "any" },
+          { src: "/icon-512.png",     sizes: "512x512", type: "image/png", purpose: "any" },
+          { src: "/maskable-512.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
+        ],
+      };
+      const url = URL.createObjectURL(
+        new Blob([JSON.stringify(manifest)], { type: "application/manifest+json" })
+      );
+      linkManifest.setAttribute("href", url);
+    }
+  }
+} catch (_) { /* si falla, queda el manifest estático de siempre */ }
+
 // ─── SILENCIADOR DE WARNINGS NO FATALES EN CONSOLA (Recharts & Tailwind CDN) ───
 try {
   const origError = console.error;
