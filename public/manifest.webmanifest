@@ -4,13 +4,16 @@
   "description": "Sistema operativo de ventas para Stratos Capital Group. CRM con IA aplicada a la operación comercial.",
   "lang": "es-MX",
   "dir": "ltr",
-  "start_url": "/",
+  "start_url": ".",
   "scope": "/",
   "display": "standalone",
   "orientation": "any",
   "background_color": "#030810",
   "theme_color": "#030810",
-  "categories": ["business", "productivity"],
+  "categories": [
+    "business",
+    "productivity"
+  ],
   "icons": [
     {
       "src": "/icon-192.png",

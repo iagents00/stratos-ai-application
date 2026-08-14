@@ -33,7 +33,7 @@
  *   sola en la próxima navegación. Ver `main.jsx` → SERVICE WORKER.
  */
 
-const CACHE_VERSION = 'stratos-v356'; // v356: arranque estable — se acaban las recargas solas al abrir la app (ver SW-VERSIONES.md)
+const CACHE_VERSION = 'stratos-v357'; // v357: la app instalada abre en SU empresa (manifest por tenant) — fuerza refresco del cache viejo
 
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 // Nombre ESTABLE a propósito: no lleva CACHE_VERSION (ver cabecera).
