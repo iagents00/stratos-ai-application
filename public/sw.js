@@ -33,7 +33,7 @@
  *   sola en la próxima navegación. Ver `main.jsx` → SERVICE WORKER.
  */
 
-const CACHE_VERSION = 'stratos-v359'; // v359: landing Duke — oferta USD 97K visible, srcset móvil, canonical/og corregidos, asesores Ken y Carlos
+const CACHE_VERSION = 'stratos-v360'; // v360: /duke/registro — formulario de captura que escribe en el CRM y manda al WhatsApp del asesor asignado
 
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 // Nombre ESTABLE a propósito: no lleva CACHE_VERSION (ver cabecera).
