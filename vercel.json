@@ -4,6 +4,10 @@
   "outputDirectory": "dist",
   "rewrites": [
     {
+      "source": "/mondrian",
+      "destination": "/duke/mondrian/index.html"
+    },
+    {
       "source": "/p",
       "destination": "/api/og-landing"
     },

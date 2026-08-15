@@ -33,7 +33,7 @@
  *   sola en la próxima navegación. Ver `main.jsx` → SERVICE WORKER.
  */
 
-const CACHE_VERSION = 'stratos-v362'; // v362: revertir el monto en la landing de Duke — vuelve a la version minimalista aprobada
+const CACHE_VERSION = 'stratos-v363'; // v363: landing Mondrian (/mondrian) — captura que etiqueta el lead como Mondrian y lo manda a Marco
 
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 // Nombre ESTABLE a propósito: no lleva CACHE_VERSION (ver cabecera).
