@@ -33,7 +33,7 @@
  *   sola en la próxima navegación. Ver `main.jsx` → SERVICE WORKER.
  */
 
-const CACHE_VERSION = 'stratos-v361'; // v361: /duke/registro asigna directo a Marco (sin carrusel) — lead a su WhatsApp y a su cuenta en Stratos
+const CACHE_VERSION = 'stratos-v362'; // v362: revertir el monto en la landing de Duke — vuelve a la version minimalista aprobada
 
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 // Nombre ESTABLE a propósito: no lleva CACHE_VERSION (ver cabecera).
