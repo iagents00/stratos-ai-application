@@ -33,7 +33,7 @@
  *   sola en la próxima navegación. Ver `main.jsx` → SERVICE WORKER.
  */
 
-const CACHE_VERSION = 'stratos-v365'; // v365: landing Mondrian sin formulario — un solo boton a WhatsApp, clic registrado en Stratos
+const CACHE_VERSION = 'stratos-v366'; // v366: fix sendBeacon del registro de clic — content-type text/plain para no disparar preflight CORS
 
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 // Nombre ESTABLE a propósito: no lleva CACHE_VERSION (ver cabecera).
