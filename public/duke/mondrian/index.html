@@ -463,7 +463,11 @@
             // sendBeacon no retrasa la salida a WhatsApp.
             var url = "https://glulgyhkrqpykxmujodb.supabase.co/functions/v1/duke-lead-router";
             if (navigator.sendBeacon) {
-              navigator.sendBeacon(url, new Blob([payload], { type: "application/json" }));
+              // text/plain a proposito: application/json no esta en la lista
+              // segura de CORS y obliga a un preflight que sendBeacon no puede
+              // hacer, asi que el navegador descarta el envio en silencio.
+              // La Edge Function parsea el body sin mirar el content-type.
+              navigator.sendBeacon(url, new Blob([payload], { type: "text/plain;charset=UTF-8" }));
             } else {
               fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: payload, keepalive: true });
             }
