@@ -8,31 +8,41 @@
     <title>Mondrian Riviera Maya | Duke del Caribe</title>
     <meta
       name="description"
-      content="Conoce Mondrian en Riviera Maya. Déjanos tus datos y recibe la información por WhatsApp."
+      content="Mondrian, en la Riviera Maya. Invertir con inteligencia, con acompañamiento de Duke del Caribe."
     />
-    <link rel="canonical" href="https://stratoscapitalgroup.com/duke/mondrian" />
+    <link rel="canonical" href="https://stratoscapitalgroup.com/mondrian" />
     <meta property="og:type" content="website" />
     <meta property="og:locale" content="es_MX" />
     <meta property="og:site_name" content="Duke del Caribe" />
-    <meta property="og:title" content="Mondrian Riviera Maya" />
+    <meta property="og:title" content="Invertir con inteligencia" />
     <meta
       property="og:description"
-      content="Conoce Mondrian en Riviera Maya. Recibe la información por WhatsApp."
+      content="Mondrian, en la Riviera Maya. Invertir con inteligencia, con acompañamiento de Duke del Caribe."
     />
-    <meta property="og:url" content="https://stratoscapitalgroup.com/duke/mondrian" />
-    <meta property="og:image" content="https://stratoscapitalgroup.com/duke/mondrian/hero.jpg" />
+    <meta property="og:url" content="https://stratoscapitalgroup.com/mondrian" />
+    <meta
+      property="og:image"
+      content="https://stratoscapitalgroup.com/duke/mondrian/hero-1000.jpg"
+    />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Duke del Caribe | Inversión inteligente en Riviera Maya" />
+    <meta
+      name="twitter:description"
+      content="Mondrian, en la Riviera Maya. Invertir con inteligencia."
+    />
+    <meta
+      name="twitter:image"
+      content="https://stratoscapitalgroup.com/duke/mondrian/hero-1000.jpg"
+    />
     <link rel="icon" href="/favicon.ico" sizes="any" />
-    <!-- Meta Pixel — DUKE DEL CARIBE MKT (1768687304377919).
-         Sin esto Meta solo puede optimizar por visitas a la página; con el
-         evento Lead puede optimizar por leads reales y se habilita retargeting. -->
+    <!-- Meta Pixel — DUKE DEL CARIBE MKT -->
     <script>
       !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
       n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
       n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;
       t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,
       document,'script','https://connect.facebook.net/en_US/fbevents.js');
-      fbq('init', '1768687304377919');
-      fbq('track', 'PageView');
+      fbq('init', '1768687304377919'); fbq('track', 'PageView');
     </script>
     <noscript><img height="1" width="1" style="display:none"
       src="https://www.facebook.com/tr?id=1768687304377919&ev=PageView&noscript=1" /></noscript>
@@ -45,12 +55,14 @@
         --muted: #7c8288;
         --gold: #b8945c;
         --line: rgba(17, 17, 17, 0.12);
-        --error: #b42318;
       }
 
-      * { box-sizing: border-box; }
+      * {
+        box-sizing: border-box;
+      }
 
-      html, body {
+      html,
+      body {
         min-height: 100%;
         margin: 0;
         background: var(--paper);
@@ -58,7 +70,26 @@
         font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       }
 
-      body { overflow-x: hidden; }
+      body {
+        overflow-x: hidden;
+      }
+
+      @keyframes cta-breathe {
+        0%, 78%, 100% {
+          transform: translateY(0) scale(1);
+          box-shadow: 0 14px 34px rgba(17, 17, 17, 0.14);
+        }
+
+        88% {
+          transform: translateY(-1px) scale(1.006);
+          box-shadow: 0 18px 42px rgba(17, 17, 17, 0.18);
+        }
+      }
+
+      @keyframes arrow-drift {
+        0%, 72%, 100% { transform: translateX(0); }
+        84% { transform: translateX(3px); }
+      }
 
       .page {
         width: 100%;
@@ -72,27 +103,27 @@
 
       .brand-panel {
         width: min(100%, 980px);
-        padding: clamp(22px, 3vw, 40px) 24px clamp(14px, 1.8vw, 22px);
+        padding: clamp(28px, 3.8vw, 50px) 24px clamp(20px, 2.5vw, 30px);
         text-align: center;
       }
 
       .brand {
         margin: 0;
         font-family: Didot, "Bodoni 72", "Bodoni 72 Smallcaps", Georgia, serif;
-        font-size: clamp(24px, 5vw, 44px);
+        font-size: clamp(31px, 6.3vw, 58px);
         font-weight: 400;
         letter-spacing: clamp(0.14em, 0.8vw, 0.28em);
         line-height: 1.08;
       }
 
       .hero-wrap {
-        width: min(calc(100% - 40px), 560px);
-        aspect-ratio: 2.6;
+        width: min(calc(100% - 40px), 800px);
+        aspect-ratio: 1.58;
         margin: 0 auto;
         overflow: hidden;
         border: 1px solid rgba(17, 17, 17, 0.08);
-        border-radius: clamp(14px, 2.4vw, 22px);
-        box-shadow: 0 14px 36px rgba(70, 58, 36, 0.12);
+        border-radius: clamp(18px, 3vw, 28px);
+        box-shadow: 0 18px 48px rgba(70, 58, 36, 0.12);
       }
 
       .hero-image {
@@ -100,138 +131,248 @@
         height: 100%;
         display: block;
         object-fit: cover;
-        object-position: center 62%;
+        object-position: center;
       }
 
       .content {
-        width: min(calc(100% - 40px), 560px);
-        padding: clamp(20px, 3.2vw, 30px) 0 36px;
+        width: min(100%, 920px);
+        padding: clamp(28px, 3.6vw, 42px) clamp(22px, 5vw, 68px) clamp(42px, 5vw, 68px);
         text-align: center;
       }
 
       h1 {
-        margin: 0;
+        max-width: 640px;
+        margin: 0 auto;
         font-family: Didot, "Bodoni 72", Georgia, serif;
+        font-size: clamp(38px, 5vw, 68px);
         font-weight: 400;
-        font-size: clamp(28px, 6.4vw, 42px);
-        line-height: 1.06;
-        letter-spacing: -0.005em;
+        line-height: 1.02;
+        letter-spacing: 0;
+      }
+
+      h1 span {
+        display: block;
+        white-space: nowrap;
       }
 
       .gold-rule {
-        width: 96px;
+        width: 64px;
         height: 1px;
-        margin: clamp(14px, 2.2vw, 20px) auto;
-        background: var(--gold);
-        opacity: 0.85;
+        margin: clamp(20px, 3vw, 28px) auto clamp(18px, 2.6vw, 26px);
+        background: rgba(184, 148, 92, 0.8);
       }
 
       .copy {
-        margin: 0 0 clamp(18px, 2.8vw, 26px);
+        max-width: 680px;
+        margin: 0 auto;
         color: var(--muted);
-        font-size: clamp(15px, 3.6vw, 18px);
-        line-height: 1.45;
-      }
-
-      form { display: grid; gap: 12px; text-align: left; }
-
-      label {
-        display: grid;
-        gap: 6px;
-        font-size: 13px;
-        font-weight: 600;
-        letter-spacing: 0.01em;
-        color: #25323d;
-      }
-
-      input, select {
-        width: 100%;
-        min-height: 50px;
-        padding: 12px 14px;
-        border: 1px solid var(--line);
-        border-radius: 10px;
-        background: var(--paper-strong);
-        color: var(--ink);
-        font: inherit;
-        font-size: 16px; /* 16px evita el zoom automático de iOS al enfocar */
-      }
-
-      input:focus-visible, select:focus-visible {
-        outline: 2px solid var(--gold);
-        outline-offset: 1px;
-        border-color: transparent;
-      }
-
-      .hp {
-        position: absolute;
-        left: -9999px;
-        width: 1px;
-        height: 1px;
-        opacity: 0;
+        font-size: clamp(20px, 3.3vw, 30px);
+        line-height: 1.32;
+        letter-spacing: 0;
       }
 
       .cta {
-        width: 100%;
-        min-height: 56px;
-        margin-top: 6px;
+        width: min(100%, 580px);
+        min-height: clamp(58px, 7vw, 70px);
         display: inline-flex;
         align-items: center;
-        justify-content: space-between;
-        gap: 12px;
-        padding: 0 20px;
-        border: 0;
-        border-radius: 12px;
-        background: #111111;
-        color: #ffffff;
-        font: inherit;
-        font-size: clamp(15px, 3.4vw, 17px);
-        font-weight: 700;
-        cursor: pointer;
+        justify-content: center;
+        gap: clamp(18px, 4vw, 32px);
+        margin: clamp(24px, 3.4vw, 34px) auto 0;
+        padding: 0 clamp(20px, 5vw, 42px);
+        border: 1px solid #111111;
+        border-radius: 8px;
+        background: linear-gradient(145deg, #101010 0%, #1b1b1b 100%);
         box-shadow: 0 14px 34px rgba(17, 17, 17, 0.14);
-        transition: transform 0.18s ease, box-shadow 0.18s ease, opacity 0.18s ease;
+        color: #ffffff;
+        font-size: clamp(19px, 3vw, 28px);
+        font-weight: 650;
+        line-height: 1.1;
+        text-decoration: none;
+        transform-origin: center;
+        transition: transform 180ms ease, box-shadow 180ms ease, background 180ms ease;
+        animation: cta-breathe 5.6s ease-in-out infinite;
       }
 
-      .cta:hover { transform: translateY(-1px); box-shadow: 0 18px 42px rgba(17, 17, 17, 0.18); }
-      .cta[disabled] { opacity: 0.62; cursor: progress; transform: none; }
-      .cta svg { width: 22px; height: 22px; flex: none; }
-
-      .status {
-        margin: 12px 0 0;
-        min-height: 20px;
-        font-size: 14px;
-        line-height: 1.45;
-        color: var(--error);
+      .cta:hover {
+        background: #242424;
+        transform: translateY(-1px);
+        box-shadow: 0 18px 42px rgba(17, 17, 17, 0.18);
       }
 
-      .status[data-tone="info"] { color: var(--muted); }
+      .cta:active {
+        transform: translateY(0) scale(0.99);
+      }
+
+      .cta svg {
+        width: clamp(27px, 4vw, 36px);
+        height: clamp(27px, 4vw, 36px);
+        flex: 0 0 auto;
+        animation: arrow-drift 5.6s ease-in-out infinite;
+      }
+
+      .cta span {
+        min-width: 0;
+      }
 
       .assurance {
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        gap: 8px;
-        margin-top: 18px;
-        color: var(--muted);
-        font-size: 13px;
+        gap: 14px;
+        margin-top: 28px;
+        color: #8a9094;
+        font-size: clamp(17px, 3.4vw, 26px);
+        line-height: 1;
       }
 
-      .assurance svg { width: 15px; height: 15px; }
+      .assurance svg {
+        width: 24px;
+        height: 24px;
+      }
 
       footer {
-        margin-top: 26px;
-        padding-top: 18px;
+        width: min(100%, 860px);
+        margin-top: clamp(54px, 7vw, 78px);
+        padding-top: 35px;
         border-top: 1px solid var(--line);
-        color: var(--muted);
-        font-size: 12px;
-        line-height: 1.7;
+        color: #858b90;
+        font-size: clamp(15px, 2.6vw, 22px);
+        line-height: 1.8;
         text-align: center;
       }
 
-      footer a { color: inherit; }
+      footer a {
+        color: inherit;
+        text-decoration: none;
+      }
+
+      footer a:hover {
+        color: #111111;
+      }
+
+      @media (max-width: 560px) {
+        .brand-panel {
+          padding-top: 28px;
+          padding-bottom: 18px;
+        }
+
+        .brand {
+          white-space: nowrap;
+          font-size: clamp(24px, 6.6vw, 30px);
+          letter-spacing: 0.14em;
+        }
+
+        .hero-image {
+          object-position: 43% center;
+        }
+
+        .content {
+          padding-top: 36px;
+          padding-right: 16px;
+          padding-left: 16px;
+        }
+
+        h1 {
+          font-size: clamp(34px, 9.4vw, 42px);
+        }
+
+        .cta {
+          width: 100%;
+          min-height: 60px;
+          margin-top: 22px;
+          justify-content: space-between;
+          text-align: left;
+          gap: 14px;
+          padding: 0 18px;
+          box-shadow: 0 16px 36px rgba(17, 17, 17, 0.22);
+          font-size: 17px;
+        }
+
+        .cta span {
+          white-space: nowrap;
+        }
+
+      }
+
+      @media (min-width: 561px) and (max-width: 920px) {
+        .brand-panel {
+          padding-top: 56px;
+          padding-bottom: 36px;
+        }
+
+        .hero-wrap {
+          width: min(calc(100% - 40px), 780px);
+        }
+
+        .content {
+          padding-top: 42px;
+        }
+
+        h1 {
+          font-size: clamp(46px, 7vw, 64px);
+        }
+
+        .copy {
+          font-size: clamp(23px, 4vw, 32px);
+        }
+
+        .cta {
+          width: min(100%, 760px);
+          max-width: 760px;
+          min-height: 68px;
+          margin-top: 30px;
+          justify-content: space-between;
+          box-shadow: 0 18px 42px rgba(17, 17, 17, 0.22);
+          font-size: clamp(20px, 3vw, 26px);
+        }
+
+        .cta svg {
+          width: 34px;
+          height: 34px;
+        }
+      }
+
+      @media (max-width: 360px) {
+        .brand {
+          font-size: 22px;
+          letter-spacing: 0.12em;
+        }
+
+        h1 {
+          font-size: 30px;
+        }
+
+        .cta {
+          width: 100%;
+          min-height: 58px;
+          gap: 10px;
+          padding: 0 16px;
+          font-size: 15px;
+        }
+
+        .cta svg {
+          width: 24px;
+          height: 24px;
+        }
+      }
+
+      @media (min-width: 1200px) {
+        .brand-panel {
+          padding-top: 52px;
+        }
+
+        .hero-wrap {
+          width: min(calc(100% - 64px), 800px);
+        }
+      }
 
       @media (prefers-reduced-motion: reduce) {
-        .cta { transition: none; }
-        .cta:hover { transform: none; }
+        .cta,
+        .cta svg {
+          animation: none;
+          transition: none;
+        }
       }
     </style>
   </head>
@@ -244,7 +385,7 @@
       <div class="hero-wrap">
         <img
           class="hero-image"
-          src="/duke/mondrian/hero.jpg"
+          src="/duke/mondrian/hero-1000.jpg"
           alt="Terraza residencial frente al mar en Riviera Maya"
           width="1000"
           height="649"
@@ -253,51 +394,21 @@
       </div>
 
       <section class="content">
-        <h1>Mondrian<br />Riviera Maya</h1>
+        <h1>
+          <span>Invertir con</span>
+          <span>inteligencia</span>
+        </h1>
         <div class="gold-rule" aria-hidden="true"></div>
-        <p class="copy">Déjanos tus datos y te enviamos la información por WhatsApp.</p>
+        <p class="copy">Mondrian, en el corazón de la Riviera Maya.</p>
 
-        <form id="leadForm" novalidate>
-          <label>
-            Nombre completo
-            <input id="name" name="name" type="text" autocomplete="name" required placeholder="Tu nombre" />
-          </label>
+        <a class="cta" id="moreInfo" href="https://wa.me/529848763357" rel="nofollow noopener">
+          <span>Quiero conocer Mondrian</span>
+          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none">
+            <path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+        </a>
 
-          <label>
-            WhatsApp
-            <input id="phone" name="phone" type="tel" inputmode="tel" autocomplete="tel" required placeholder="+52 984 000 0000" />
-          </label>
-
-          <label>
-            Email <span style="font-weight:400;color:var(--muted)">(opcional)</span>
-            <input id="email" name="email" type="email" autocomplete="email" placeholder="tu@email.com" />
-          </label>
-
-          <label>
-            Ciudad de interés
-            <select id="city" name="city" required>
-              <option value="">Elige una</option>
-              <option>Cancún</option>
-              <option>Playa del Carmen</option>
-              <option>Tulum</option>
-              <option>Cualquiera de las 3</option>
-            </select>
-          </label>
-
-          <!-- Honeypot: los bots la llenan, las personas no la ven. -->
-          <input class="hp" type="text" id="company_website" name="company_website" tabindex="-1" autocomplete="off" aria-hidden="true" />
-
-          <button class="cta" id="submitBtn" type="submit">
-            <span id="submitLabel">Recibir opciones por WhatsApp</span>
-            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none">
-              <path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" />
-            </svg>
-          </button>
-        </form>
-
-        <p class="status" id="status" role="status" aria-live="polite"></p>
-
-        <div class="assurance">
+        <div class="assurance" aria-label="Sin compromiso">
           <svg aria-hidden="true" viewBox="0 0 24 24" fill="none">
             <rect x="5" y="10" width="14" height="10" rx="2" stroke="currentColor" stroke-width="1.6" />
             <path d="M8 10V7.8C8 5.45 9.6 4 12 4s4 1.45 4 3.8V10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
@@ -314,95 +425,49 @@
 
     <script>
       (function () {
-        var ENDPOINT = "https://glulgyhkrqpykxmujodb.supabase.co/functions/v1/duke-lead-router";
-
-        var form = document.getElementById("leadForm");
-        var btn = document.getElementById("submitBtn");
-        var label = document.getElementById("submitLabel");
-        var status = document.getElementById("status");
         var params = new URLSearchParams(window.location.search);
+        // Espejo del pool en Supabase. Si cambia un teléfono allá, cambiarlo aquí.
+        var phoneByAdvisor = { marco: "529848763357", ken: "529842181660", carlos: "529841794415" };
+        var advisor = (params.get("advisor") || params.get("asesor") || "marco").toLowerCase();
+        var phone = phoneByAdvisor[advisor] || phoneByAdvisor.marco;
+        var message = [
+          "Hola, quiero invertir inteligentemente en Riviera Maya.",
+          "Vi el anuncio de Mondrian y me gustaría conocerlo."
+        ].join("\n");
+        var waUrl = "https://wa.me/" + phone + "?text=" + encodeURIComponent(message);
 
-        // Mensajes del router traducidos. Cualquier otro código cae en el genérico.
-        var ERRORES = {
-          name_required: "Escribe tu nombre para continuar.",
-          phone_required: "Revisa tu WhatsApp: necesitamos 10 dígitos.",
-          city_required: "Elige la ciudad que te interesa.",
-          bad_json: "No pudimos leer tus datos. Intenta de nuevo.",
-          advisor_phone_missing: "Recibimos tus datos. Un asesor te contacta en breve."
-        };
+        var cta = document.getElementById("moreInfo");
+        cta.href = waUrl;
 
-        function decir(mensaje, tono) {
-          status.textContent = mensaje || "";
-          status.setAttribute("data-tone", tono || "error");
-        }
-
-        function ocupado(si) {
-          btn.disabled = si;
-          label.textContent = si ? "Enviando…" : "Recibir opciones por WhatsApp";
-        }
-
-        form.addEventListener("submit", function (event) {
-          event.preventDefault();
-          decir("");
-
-          var payload = {
-            name: document.getElementById("name").value.trim(),
-            phone: document.getElementById("phone").value.trim(),
-            email: document.getElementById("email").value.trim(),
-            city: document.getElementById("city").value,
-            company_website: document.getElementById("company_website").value,
-            source: "stratos_landing_duke_mondrian",
-            campaign: "Duke Mondrian - Marco - Lead Ads",
-            project: "Mondrian",
-            tag: "Mondrian",
-            page_url: window.location.href,
-            landing_path: window.location.pathname,
-            // Asignación DIRECTA a Marco, no carrusel: el lead debe llegar a su
-            // WhatsApp y quedar en su cuenta de Stratos. ?advisor= lo puede
-            // sobrescribir si algún día se reparte entre varios asesores.
-            advisor: params.get("advisor") || params.get("asesor") || "marco",
-            utm_source: params.get("utm_source") || "",
-            utm_medium: params.get("utm_medium") || "",
-            utm_campaign: params.get("utm_campaign") || "",
-            utm_content: params.get("utm_content") || "",
-            utm_term: params.get("utm_term") || "",
-            fbclid: params.get("fbclid") || ""
-          };
-
-          if (!payload.name || payload.name.length < 2) return decir(ERRORES.name_required);
-          if (payload.phone.replace(/\D/g, "").length < 10) return decir(ERRORES.phone_required);
-          if (!payload.city) return decir(ERRORES.city_required);
-
-          ocupado(true);
-
-          fetch(ENDPOINT, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload)
-          })
-            .then(function (r) { return r.json(); })
-            .then(function (data) {
-              if (data && data.ok && data.wa_url) {
-                // El lead ya quedó en el CRM con asesor asignado; mandamos al WhatsApp.
-                // Lead confirmado por el router: se lo avisamos a Meta para que
-                // pueda optimizar por leads reales, no por visitas.
-                try { if (window.fbq) fbq('track', 'Lead', { content_name: 'Mondrian Riviera Maya', content_category: 'Duke del Caribe' }); } catch (e) {}
-                decir("Listo. Te llevamos a WhatsApp…", "info");
-                window.location.href = data.wa_url;
-                return;
-              }
-              if (data && data.ok && data.ignored) {
-                decir("Listo. Te contactamos en breve.", "info");
-                return;
-              }
-              ocupado(false);
-              var code = data && (typeof data.error === "string" ? data.error : null);
-              decir(ERRORES[code] || "No pudimos enviarlo. Revisa tus datos e intenta de nuevo.");
-            })
-            .catch(function () {
-              ocupado(false);
-              decir("Sin conexión. Revisa tu internet e intenta de nuevo.");
+        // Esta landing no pide datos, así que el clic ES la conversión: se
+        // registra en Stratos para no perder la atribución, y se le avisa a
+        // Meta para que pueda optimizar por ella.
+        cta.addEventListener("click", function () {
+          try { if (window.fbq) fbq("track", "Lead", { content_name: "Mondrian Riviera Maya", content_category: "Duke del Caribe" }); } catch (e) {}
+          try {
+            var payload = JSON.stringify({
+              event: "whatsapp_click",
+              advisor: advisor,
+              project: "Mondrian",
+              campaign: "Duke Mondrian - Marco - Lead Ads",
+              landing_path: window.location.pathname,
+              page_url: window.location.href,
+              referrer: document.referrer || "",
+              utm_source: params.get("utm_source") || "",
+              utm_medium: params.get("utm_medium") || "",
+              utm_campaign: params.get("utm_campaign") || "",
+              utm_content: params.get("utm_content") || "",
+              utm_term: params.get("utm_term") || "",
+              fbclid: params.get("fbclid") || ""
             });
+            // sendBeacon no retrasa la salida a WhatsApp.
+            var url = "https://glulgyhkrqpykxmujodb.supabase.co/functions/v1/duke-lead-router";
+            if (navigator.sendBeacon) {
+              navigator.sendBeacon(url, new Blob([payload], { type: "application/json" }));
+            } else {
+              fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: payload, keepalive: true });
+            }
+          } catch (e) {}
         });
       })();
     </script>
