@@ -33,7 +33,7 @@
  *   sola en la próxima navegación. Ver `main.jsx` → SERVICE WORKER.
  */
 
-const CACHE_VERSION = 'stratos-v368'; // v368: subtitulo de Mondrian que paga el titular — decision, no apuesta
+const CACHE_VERSION = 'stratos-v369'; // v369: subtitulo de Mondrian — opciones selectas + respaldo de experiencia, sin nombrar el desarrollo
 
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 // Nombre ESTABLE a propósito: no lleva CACHE_VERSION (ver cabecera).
