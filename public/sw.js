@@ -33,7 +33,7 @@
  *   sola en la próxima navegación. Ver `main.jsx` → SERVICE WORKER.
  */
 
-const CACHE_VERSION = 'stratos-v360'; // v360: /duke/registro — formulario de captura que escribe en el CRM y manda al WhatsApp del asesor asignado
+const CACHE_VERSION = 'stratos-v361'; // v361: /duke/registro asigna directo a Marco (sin carrusel) — lead a su WhatsApp y a su cuenta en Stratos
 
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 // Nombre ESTABLE a propósito: no lleva CACHE_VERSION (ver cabecera).
