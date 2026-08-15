@@ -1,0 +1,151 @@
+{
+  "name": "DUKE - Meta Lead Ads (trigger nativo) to Stratos",
+  "nodes": [
+    {
+      "parameters": {
+        "event": "newLead",
+        "page": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        },
+        "form": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        }
+      },
+      "type": "n8n-nodes-base.facebookLeadAdsTrigger",
+      "typeVersion": 1,
+      "position": [
+        260,
+        300
+      ],
+      "id": "a1f0c5d2-3b64-4e77-9f01-duke0meta0trg",
+      "name": "Meta Lead Ads Trigger",
+      "credentials": {
+        "facebookLeadAdsOAuth2Api": {
+          "id": "",
+          "name": "Facebook Lead Ads — Duke del Caribe"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "supabase-url",
+              "name": "SUPABASE_URL",
+              "value": "={{ $env.SUPABASE_URL || 'https://glulgyhkrqpykxmujodb.supabase.co' }}",
+              "type": "string"
+            },
+            {
+              "id": "supabase-service-role-key",
+              "name": "SUPABASE_SERVICE_ROLE_KEY",
+              "value": "={{ $env.SUPABASE_SERVICE_ROLE_KEY }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        480,
+        300
+      ],
+      "id": "5671cd2a-d94e-412f-80d1-fbc78449ef7a",
+      "name": "Global Config"
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = $json.body ?? $json;\nconst firstEntry = Array.isArray(raw.entry) ? raw.entry[0] : undefined;\nconst firstChange = Array.isArray(firstEntry?.changes) ? firstEntry.changes[0]?.value : undefined;\nconst data = raw.data ?? raw.lead ?? raw;\nconst change = firstChange ?? {};\nconst fieldData = raw.field_data ?? data.field_data ?? change.field_data ?? [];\n\nconst leadgenId = raw.leadgen_id ?? data.leadgen_id ?? change.leadgen_id ?? raw.id ?? data.id;\nconst formId = raw.form_id ?? data.form_id ?? change.form_id;\nconst pageId = raw.page_id ?? data.page_id ?? change.page_id;\nconst campaignId = raw.campaign_id ?? data.campaign_id ?? change.campaign_id;\nconst adsetId = raw.adset_id ?? data.adset_id ?? data.adgroup_id ?? change.adset_id ?? change.adgroup_id;\nconst adId = raw.ad_id ?? data.ad_id ?? change.ad_id;\n\nconst haystack = JSON.stringify({ raw, data, change, fieldData, campaignId, adsetId, adId, formId }).toLowerCase();\nconst isMondrianMarco = haystack.includes('mondrian')\n  || campaignId === '120246723565640137'\n  || adsetId === '120246723565650137'\n  || adId === '120246723565630137';\n\nconst payload = {\n  ...raw,\n  ...data,\n  leadgen_id: leadgenId,\n  form_id: formId,\n  page_id: pageId,\n  campaign_id: campaignId,\n  adset_id: adsetId,\n  ad_id: adId,\n  campaign_name: isMondrianMarco\n    ? 'Duke Mondrian - Marco - Lead Ads'\n    : (raw.campaign_name ?? data.campaign_name ?? change.campaign_name ?? 'Duke desarrollos desde USD 97,000'),\n  project: isMondrianMarco ? 'Mondrian' : (raw.project ?? data.project ?? change.project),\n  desarrollo: isMondrianMarco ? 'Mondrian' : (raw.desarrollo ?? data.desarrollo ?? change.desarrollo),\n  tag: isMondrianMarco ? 'Mondrian' : (raw.tag ?? data.tag ?? change.tag ?? 'meta_ads'),\n  source: raw.source ?? 'meta_ads',\n  field_data: fieldData\n};\n\nreturn [{\n  json: {\n    payload,\n    p_pool_key: isMondrianMarco ? 'duke_ads_marco' : 'duke_ads_round_robin'\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        720,
+        300
+      ],
+      "id": "3f6cf0d9-7fb1-4a94-b079-50f037ca24e6",
+      "name": "Normalize Meta Payload"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Global Config').item.json.SUPABASE_URL }}/rest/v1/rpc/fn_upsert_lead_from_meta_ads",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $('Global Config').item.json.SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('Global Config').item.json.SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ payload: $json.payload, p_pool_key: $json.p_pool_key }) }}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        980,
+        300
+      ],
+      "id": "d537ab97-e09f-4fd0-b833-7eab177bbf5e",
+      "name": "Supabase - Upsert Lead Round Robin"
+    }
+  ],
+  "connections": {
+    "Global Config": {
+      "main": [
+        [
+          {
+            "node": "Normalize Meta Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Meta Payload": {
+      "main": [
+        [
+          {
+            "node": "Supabase - Upsert Lead Round Robin",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Meta Lead Ads Trigger": {
+      "main": [
+        [
+          {
+            "node": "Global Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}
