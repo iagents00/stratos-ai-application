@@ -33,7 +33,7 @@
  *   sola en la próxima navegación. Ver `main.jsx` → SERVICE WORKER.
  */
 
-const CACHE_VERSION = 'stratos-v366'; // v366: fix sendBeacon del registro de clic — content-type text/plain para no disparar preflight CORS
+const CACHE_VERSION = 'stratos-v367'; // v367: titular de Mondrian mas refinado (cursiva + interlineado cerrado) y CTA sin nombre de desarrollo
 
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 // Nombre ESTABLE a propósito: no lleva CACHE_VERSION (ver cabecera).
