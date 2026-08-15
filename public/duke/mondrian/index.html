@@ -22,6 +22,20 @@
     <meta property="og:url" content="https://stratoscapitalgroup.com/duke/mondrian" />
     <meta property="og:image" content="https://stratoscapitalgroup.com/duke/mondrian/hero.jpg" />
     <link rel="icon" href="/favicon.ico" sizes="any" />
+    <!-- Meta Pixel — DUKE DEL CARIBE MKT (1768687304377919).
+         Sin esto Meta solo puede optimizar por visitas a la página; con el
+         evento Lead puede optimizar por leads reales y se habilita retargeting. -->
+    <script>
+      !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+      n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
+      n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;
+      t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,
+      document,'script','https://connect.facebook.net/en_US/fbevents.js');
+      fbq('init', '1768687304377919');
+      fbq('track', 'PageView');
+    </script>
+    <noscript><img height="1" width="1" style="display:none"
+      src="https://www.facebook.com/tr?id=1768687304377919&ev=PageView&noscript=1" /></noscript>
     <style>
       :root {
         color-scheme: light;
@@ -370,6 +384,9 @@
             .then(function (data) {
               if (data && data.ok && data.wa_url) {
                 // El lead ya quedó en el CRM con asesor asignado; mandamos al WhatsApp.
+                // Lead confirmado por el router: se lo avisamos a Meta para que
+                // pueda optimizar por leads reales, no por visitas.
+                try { if (window.fbq) fbq('track', 'Lead', { content_name: 'Mondrian Riviera Maya', content_category: 'Duke del Caribe' }); } catch (e) {}
                 decir("Listo. Te llevamos a WhatsApp…", "info");
                 window.location.href = data.wa_url;
                 return;

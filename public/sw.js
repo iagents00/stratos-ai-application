@@ -33,7 +33,7 @@
  *   sola en la próxima navegación. Ver `main.jsx` → SERVICE WORKER.
  */
 
-const CACHE_VERSION = 'stratos-v363'; // v363: landing Mondrian (/mondrian) — captura que etiqueta el lead como Mondrian y lo manda a Marco
+const CACHE_VERSION = 'stratos-v364'; // v364: Meta Pixel + evento Lead en las landings de Duke — habilita optimizar por leads reales y retargeting
 
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 // Nombre ESTABLE a propósito: no lleva CACHE_VERSION (ver cabecera).
