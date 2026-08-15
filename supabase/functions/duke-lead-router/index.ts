@@ -558,6 +558,45 @@ Deno.serve(async (req) => {
     return json({ ok: true, ignored: true }, 200, origin);
   }
 
+  // Landings de marca (sin formulario): sólo registramos el clic al WhatsApp.
+  // Es la única atribución posible hasta que el prospecto escribe, y no
+  // ensucia el pipeline de leads con registros sin teléfono.
+  if (cleanText(body.event, 40) === "whatsapp_click") {
+    const clickAdvisorKey = requestedAdvisorKey(body, cleanText(body.campaign || body.campaign_name, 180) || "");
+    const clickAdvisor = clickAdvisorKey ? DIRECT_ADVISORS[clickAdvisorKey] : null;
+
+    const { error: clickError } = await admin.from("duke_ad_clicks").insert({
+      organization_id: ORG_ID,
+      advisor_key: clickAdvisorKey || null,
+      advisor_name: clickAdvisor?.name || null,
+      advisor_phone_e164: clickAdvisor?.phone_e164 || null,
+      project: cleanText(body.project || body.proyecto || body.desarrollo, 80) || null,
+      campaign: cleanText(body.campaign || body.campaign_name, 180) || null,
+      landing_path: cleanText(body.landing_path, 180) || null,
+      page_url: cleanText(body.page_url, 600) || null,
+      utm_source: cleanText(body.utm_source, 120) || null,
+      utm_medium: cleanText(body.utm_medium, 120) || null,
+      utm_campaign: cleanText(body.utm_campaign, 180) || null,
+      utm_content: cleanText(body.utm_content, 180) || null,
+      utm_term: cleanText(body.utm_term, 180) || null,
+      fbclid: cleanText(body.fbclid, 240) || null,
+      referrer: cleanText(body.referrer, 600) || null,
+      user_agent: cleanText(req.headers.get("user-agent"), 400) || null,
+    });
+
+    if (clickError) {
+      console.error("[duke-lead-router] click log failed", clickError.message);
+    }
+
+    const clickPhone = phoneDigits(clickAdvisor?.phone_e164 || DIRECT_ADVISORS.marco.phone_e164);
+    return json({
+      ok: true,
+      logged: !clickError,
+      advisor: clickAdvisor?.name || DIRECT_ADVISORS.marco.name,
+      wa_url: `https://wa.me/${clickPhone}`,
+    }, 200, origin);
+  }
+
   const name = cleanText(body.name || body.full_name || body.nombre, 120);
   const rawPhone = cleanText(body.phone || body.whatsapp || body.telefono, 40);
   const phone = normalizeMxPhone(rawPhone);
