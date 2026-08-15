@@ -21,7 +21,25 @@ Si Meta no permite cambiar el objetivo/destino de una campana de WhatsApp/conver
 
 ## Ruta Viva Recomendada
 
-Para cumplir el objetivo urgente de que el cliente llegue al WhatsApp del asesor y tambien quede reflejado en Stratos AI, usar como destino de anuncio este formulario-router:
+> CORRECCION 2026-08-15. La URL de la Edge Function NO sirve como destino de
+> anuncio. Supabase reescribe las respuestas de las Edge Functions a
+> `content-type: text/plain` y les impone
+> `content-security-policy: default-src 'none'; sandbox`, asi que el HTML que
+> devuelve el router se muestra como codigo fuente en el navegador. Es politica
+> anti-phishing de la plataforma para `*.supabase.co` y no se puede desactivar
+> desde el codigo; se redesplego la funcion para descartar version vieja y el
+> comportamiento no cambia.
+>
+> No se habia detectado porque `HEAD` si devuelve `text/html` y solo `GET`
+> devuelve `text/plain`, y porque las pruebas previas fueron por POST, nunca
+> abriendo la URL en un navegador.
+>
+> Destino correcto del anuncio:
+> `https://stratoscapitalgroup.com/duke/registro`
+>
+> Esa pagina sirve el formulario desde el dominio de Stratos y hace POST a la
+> Edge Function, que se queda unicamente como API JSON. El flujo de abajo sigue
+> siendo valido; lo unico que cambia es quien sirve el HTML.
 
 `https://glulgyhkrqpykxmujodb.supabase.co/functions/v1/duke-lead-router`
 
@@ -471,3 +489,34 @@ que es exactamente lo que manda el nodo HTTP del workflow.
   confirmar en pantalla que opciones ofrece.
 - No presionar `Publicar` sin confirmar presupuesto: ese boton activa entrega
   y gasto.
+
+## Embudo Listo Para Produccion 2026-08-15
+
+Destino del anuncio: `https://stratoscapitalgroup.com/duke/registro`
+
+Este camino no depende de `META_APP_SECRET`, `META_PAGE_ACCESS_TOKEN` ni de
+n8n. Sirve para un anuncio con destino `Sitio web`.
+
+Flujo verificado end-to-end desde un navegador real contra produccion:
+
+1. El prospecto llena nombre, WhatsApp, email opcional y ciudad.
+2. La pagina hace POST a la Edge Function `duke-lead-router`.
+3. El RPC crea el lead en `Contactame Ya` y asigna por round-robin.
+4. La pagina redirige al WhatsApp del asesor con el mensaje prellenado.
+
+Resultado de la prueba: lead asignado a `Ken Duke`, rotando correctamente
+desde Marco; ciudad capturada en el perfilamiento; expediente y notificacion
+creados; redireccion a `wa.me/529842181660` con nombre y ciudad en el texto.
+El lead de prueba se borro y el contador del pool se restauro a 1/1/1 con sus
+timestamps originales, para que el lanzamiento arranque limpio.
+
+La landing `/duke/desarrollos-97k` sigue siendo la pagina de marca sin
+formulario. Sirve como pantalla final del formulario instantaneo de Meta, no
+como captura.
+
+Resumen de cual usar:
+
+- Anuncio con destino `Sitio web` -> `/duke/registro`. Completo hoy.
+- Anuncio con formulario instantaneo -> pantalla final a
+  `/duke/desarrollos-97k`, pero el lead NO entra a Stratos hasta conectar
+  n8n o el webhook `leadgen`.
