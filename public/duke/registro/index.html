@@ -340,7 +340,10 @@
             source: "stratos_landing_duke_registro",
             page_url: window.location.href,
             landing_path: window.location.pathname,
-            advisor: params.get("advisor") || params.get("asesor") || "",
+            // Asignación DIRECTA a Marco, no carrusel: el lead debe llegar a su
+            // WhatsApp y quedar en su cuenta de Stratos. ?advisor= lo puede
+            // sobrescribir si algún día se reparte entre varios asesores.
+            advisor: params.get("advisor") || params.get("asesor") || "marco",
             utm_source: params.get("utm_source") || "",
             utm_medium: params.get("utm_medium") || "",
             utm_campaign: params.get("utm_campaign") || "",
