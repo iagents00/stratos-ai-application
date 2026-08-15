@@ -280,17 +280,20 @@ const gasilConfig = {
         ],
         // Las preguntas de la recepción: a cuánta gente le debo respuesta, cuántos
         // vienen y cuántos se están cayendo antes de llegar.
+        // Las cuatro tarjetas responden CUATRO preguntas distintas, y cada una
+        // cuenta una etapa distinta: dos tarjetas con el mismo número ocupan
+        // lugar y no dicen nada nuevo.
         kpis: [
-          { label: "Sin responder",      value: { type: "count", stage: "Mensaje nuevo" },
+          { label: "Sin responder",       value: { type: "count", stage: "Mensaje nuevo" },
             sub: { type: "count", stage: "Ya se le informó", suffix: "ya informados" },
             icon: "Bell",         color: "accent" },
-          { label: "Vienen a estudio",   value: { type: "count", stage: "Cita agendada" },
+          { label: "Falta agendarles",    value: { type: "count", stage: "Ya se le informó" },
+            sub: { type: "count", stage: "Mensaje nuevo", suffix: "sin responder" },
+            icon: "Search",       color: "violet" },
+          { label: "Vienen a estudio",    value: { type: "count", stage: "Cita agendada" },
             sub: { type: "count", stage: "Preparación enviada", suffix: "con preparación enviada" },
             icon: "CalendarDays", color: "cyan" },
-          { label: "Falta prepararlos",  value: { type: "count", stage: "Cita agendada" },
-            sub: { type: "count", stage: "Preparación enviada", suffix: "ya la recibieron" },
-            icon: "Search",       color: "violet" },
-          { label: "Hay que recuperar",  value: { type: "count", stage: "No se presentó" },
+          { label: "Hay que recuperar",   value: { type: "count", stage: "No se presentó" },
             sub: { type: "count", stage: "No agendó", suffix: "no agendaron" },
             icon: "Target",       color: "blue" },
         ],
@@ -314,19 +317,20 @@ const gasilConfig = {
         ],
         // Acá la pregunta es otra: qué estudio está sin entregar y a quién hay que
         // volver a llamar.
+        // Ídem: cuatro preguntas, cuatro etapas distintas.
         kpis: [
-          { label: "Falta entregar",     value: { type: "count", stage: "Esperando interpretación" },
+          { label: "Estudios de hoy",     value: { type: "count", stage: "Estudio realizado" },
+            sub: { type: "count", stage: "Esperando interpretación", suffix: "con el radiólogo" },
+            icon: "FileText",     color: "cyan" },
+          { label: "Con el radiólogo",    value: { type: "count", stage: "Esperando interpretación" },
             sub: { type: "count", stage: "Estudio realizado", suffix: "estudios hechos" },
-            icon: "FileText",     color: "accent" },
-          { label: "Con el radiólogo",   value: { type: "count", stage: "Esperando interpretación" },
-            sub: { type: "count", stage: "Resultados entregados", suffix: "ya entregados" },
-            icon: "Search",       color: "violet" },
-          { label: "Entregados",         value: { type: "count", stage: "Resultados entregados" },
+            icon: "Search",       color: "accent" },
+          { label: "Entregados",          value: { type: "count", stage: "Resultados entregados" },
             sub: { type: "total", suffix: "pacientes en total" },
             icon: "Trophy",       color: "emerald" },
-          { label: "Tocan control",      value: { type: "count", stage: "Toca control" },
+          { label: "Tocan control",       value: { type: "count", stage: "Toca control" },
             sub: { type: "count", stage: "Resultados entregados", suffix: "ya tienen resultados" },
-            icon: "CalendarDays", color: "cyan" },
+            icon: "CalendarDays", color: "violet" },
         ],
       },
       {
