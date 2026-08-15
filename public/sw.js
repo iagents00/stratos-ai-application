@@ -33,7 +33,7 @@
  *   sola en la próxima navegación. Ver `main.jsx` → SERVICE WORKER.
  */
 
-const CACHE_VERSION = 'stratos-v369'; // v369: subtitulo de Mondrian — opciones selectas + respaldo de experiencia, sin nombrar el desarrollo
+const CACHE_VERSION = 'stratos-v370'; // v370: escala tipografica de Mondrian — titular +20%, wordmark -25%, ritmo vertical recalibrado
 
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 // Nombre ESTABLE a propósito: no lleva CACHE_VERSION (ver cabecera).
