@@ -317,7 +317,7 @@ function DukeLeadRouter() {
           <span>inteligencia</span>
         </h1>
         <div className="duke-editorial-rule" aria-hidden="true" />
-        <p className="duke-editorial-copy">Oportunidades desde USD $97,000 en Cancún, Playa del Carmen y Tulum.</p>
+        <p className="duke-editorial-copy">Oportunidades seleccionadas en Cancún, Playa del Carmen y Tulum.</p>
 
         <a className="duke-editorial-cta" href={whatsAppUrl} rel="nofollow noopener">
           <span>Quiero conocer las opciones</span>
