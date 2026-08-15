@@ -20,13 +20,12 @@ const SERVICE_ROLE =
 const ORG_ID = "00000000-0000-0000-0000-000000000001";
 const POOL_KEY = Deno.env.get("DUKE_LEAD_ROUTER_POOL_KEY") ?? "duke_ads_round_robin";
 const DEFAULT_CAMPAIGN = "DUKE - Desarrollos USD 97K - Stratos Router";
-const DIRECT_ADVISORS: Record<string, { name: string; phone_e164: string; profile_names: string[] }> = {
-  marco: {
-    name: "Marco Lopez",
-    phone_e164: "+529848763357",
-    profile_names: ["Marco Lopez", "Marco"],
-  },
-};
+// Los asesores directos NO se hardcodean: el pool `duke_ads_<clave>` en
+// Supabase es la configuración. Antes esto era un mapa con Marco adentro, y
+// con cualquier otro asesor el prospecto le escribía a uno mientras el lead
+// se asignaba a otro por round-robin. Para dar de alta un asesor basta crear
+// su pool; no hay que tocar ni redesplegar esta función.
+const DIRECT_POOL_PREFIX = "duke_ads_";
 
 const admin = createClient(SUPABASE_URL, SERVICE_ROLE, {
   auth: { autoRefreshToken: false, persistSession: false },
@@ -120,29 +119,37 @@ function requestedAdvisorKey(body: Record<string, unknown>, campaign: string) {
 }
 
 async function getDirectAdvisor(advisorKey: string) {
-  const direct = DIRECT_ADVISORS[advisorKey];
-  if (!direct) return null;
+  if (!advisorKey) return null;
 
-  let profile: { id?: string; name?: string; phone?: string } | null = null;
-  for (const profileName of direct.profile_names) {
-    const { data } = await admin
-      .from("profiles")
-      .select("id, name, phone")
-      .eq("organization_id", ORG_ID)
-      .eq("name", profileName)
-      .maybeSingle();
+  // En dos pasos a propósito: `lead_assignment_pools` y
+  // `lead_assignment_pool_members` tienen ambas una columna `active`, y un
+  // filtro anidado sobre ella se vuelve ambiguo y devuelve vacío en silencio.
+  const { data: pool } = await admin
+    .from("lead_assignment_pools")
+    .select("id")
+    .eq("organization_id", ORG_ID)
+    .eq("pool_key", `${DIRECT_POOL_PREFIX}${advisorKey}`)
+    .maybeSingle();
 
-    if (data) {
-      profile = data;
-      break;
-    }
-  }
+  if (!pool?.id) return null;
+
+  const { data: member } = await admin
+    .from("lead_assignment_pool_members")
+    .select("asesor_id, asesor_name, advisor_phone_e164")
+    .eq("pool_id", pool.id)
+    .eq("active", true)
+    .order("sort_order", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+
+  const phone = cleanText(member?.advisor_phone_e164, 40);
+  if (!phone) return null;
 
   return {
     advisor_key: advisorKey,
-    advisor_id: cleanText(profile?.id, 80) || null,
-    advisor_name: cleanText(profile?.name, 120) || direct.name,
-    advisor_phone_e164: direct.phone_e164,
+    advisor_id: cleanText(member?.asesor_id, 80) || null,
+    advisor_name: cleanText(member?.asesor_name, 120) || null,
+    advisor_phone_e164: phone,
   };
 }
 
@@ -563,13 +570,13 @@ Deno.serve(async (req) => {
   // ensucia el pipeline de leads con registros sin teléfono.
   if (cleanText(body.event, 40) === "whatsapp_click") {
     const clickAdvisorKey = requestedAdvisorKey(body, cleanText(body.campaign || body.campaign_name, 180) || "");
-    const clickAdvisor = clickAdvisorKey ? DIRECT_ADVISORS[clickAdvisorKey] : null;
+    const clickAdvisor = await getDirectAdvisor(clickAdvisorKey);
 
     const { error: clickError } = await admin.from("duke_ad_clicks").insert({
       organization_id: ORG_ID,
       advisor_key: clickAdvisorKey || null,
-      advisor_name: clickAdvisor?.name || null,
-      advisor_phone_e164: clickAdvisor?.phone_e164 || null,
+      advisor_name: clickAdvisor?.advisor_name || null,
+      advisor_phone_e164: clickAdvisor?.advisor_phone_e164 || null,
       project: cleanText(body.project || body.proyecto || body.desarrollo, 80) || null,
       campaign: cleanText(body.campaign || body.campaign_name, 180) || null,
       landing_path: cleanText(body.landing_path, 180) || null,
@@ -588,12 +595,15 @@ Deno.serve(async (req) => {
       console.error("[duke-lead-router] click log failed", clickError.message);
     }
 
-    const clickPhone = phoneDigits(clickAdvisor?.phone_e164 || DIRECT_ADVISORS.marco.phone_e164);
+    // Sin asesor resoluble no inventamos un destino: la landing ya trae su
+    // propio enlace y prefiere ese antes que mandar al prospecto con alguien
+    // que no le corresponde.
+    const clickPhone = phoneDigits(clickAdvisor?.advisor_phone_e164 || "");
     return json({
       ok: true,
       logged: !clickError,
-      advisor: clickAdvisor?.name || DIRECT_ADVISORS.marco.name,
-      wa_url: `https://wa.me/${clickPhone}`,
+      advisor: clickAdvisor?.advisor_name || null,
+      wa_url: clickPhone ? `https://wa.me/${clickPhone}` : null,
     }, 200, origin);
   }
 
@@ -609,7 +619,11 @@ Deno.serve(async (req) => {
   const interest = cleanText(body.project || body.proyecto || body.desarrollo, 80);
   const source = cleanText(body.source, 80) || "stratos_router_meta_ads";
   const advisorKey = requestedAdvisorKey(body, campaign);
-  const rpcPoolKey = advisorKey && DIRECT_ADVISORS[advisorKey] ? `duke_ads_${advisorKey}` : POOL_KEY;
+  // Se resuelve aquí y no más abajo porque de esto depende a qué pool va el
+  // RPC: si el asesor pedido no existe, el lead debe caer en el round-robin
+  // en vez de quedarse sin dueño.
+  const directAdvisor = await getDirectAdvisor(advisorKey);
+  const rpcPoolKey = directAdvisor ? `${DIRECT_POOL_PREFIX}${advisorKey}` : POOL_KEY;
 
   if (!name || name.length < 2) {
     return json({ ok: false, error: "name_required" }, 200, origin);
@@ -668,7 +682,6 @@ Deno.serve(async (req) => {
 
   const asesorId = cleanText(data.asesor_id, 80) || null;
   const asesorName = cleanText(data.asesor_name, 120) || null;
-  const directAdvisor = advisorKey ? await getDirectAdvisor(advisorKey) : null;
 
   if (directAdvisor) {
     const updatePayload: Record<string, string | null> = {
