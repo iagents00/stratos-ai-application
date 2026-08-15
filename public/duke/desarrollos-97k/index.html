@@ -8,17 +8,18 @@
     <title>Duke del Caribe | Inversión inteligente en Riviera Maya</title>
     <meta
       name="description"
-      content="Oportunidades seleccionadas en Cancún, Playa del Carmen y Tulum."
+      content="Oportunidades desde USD $97,000 en Cancún, Playa del Carmen y Tulum."
     />
+    <link rel="canonical" href="https://stratoscapitalgroup.com/duke/desarrollos-97k" />
     <meta property="og:type" content="website" />
     <meta property="og:locale" content="es_MX" />
     <meta property="og:site_name" content="Duke del Caribe" />
     <meta property="og:title" content="Invertir con inteligencia" />
     <meta
       property="og:description"
-      content="Oportunidades seleccionadas en Cancún, Playa del Carmen y Tulum."
+      content="Oportunidades desde USD $97,000 en Cancún, Playa del Carmen y Tulum."
     />
-    <meta property="og:url" content="https://stratoscapitalgroup.com/duke-100k" />
+    <meta property="og:url" content="https://stratoscapitalgroup.com/duke/desarrollos-97k" />
     <meta
       property="og:image"
       content="https://stratoscapitalgroup.com/duke/desarrollos-97k/duke-riviera-hero.jpg"
@@ -27,7 +28,7 @@
     <meta name="twitter:title" content="Duke del Caribe | Inversión inteligente en Riviera Maya" />
     <meta
       name="twitter:description"
-      content="Oportunidades seleccionadas en Riviera Maya para invertir con inteligencia."
+      content="Oportunidades desde USD $97,000 en Riviera Maya para invertir con inteligencia."
     />
     <meta
       name="twitter:image"
@@ -374,6 +375,11 @@
         <img
           class="hero-image"
           src="/duke/desarrollos-97k/duke-riviera-hero.jpg"
+          srcset="
+            /duke/desarrollos-97k/duke-riviera-hero-1000.jpg 1000w,
+            /duke/desarrollos-97k/duke-riviera-hero.jpg      1728w
+          "
+          sizes="(max-width: 767px) calc(100vw - 42px), 800px"
           alt="Terraza residencial frente al mar en Riviera Maya"
           width="1728"
           height="1122"
@@ -387,7 +393,7 @@
           <span>inteligencia</span>
         </h1>
         <div class="gold-rule" aria-hidden="true"></div>
-        <p class="copy">Oportunidades seleccionadas en Cancún, Playa del Carmen y Tulum.</p>
+        <p class="copy">Oportunidades desde USD $97,000 en Cancún, Playa del Carmen y Tulum.</p>
 
         <a class="cta" id="moreInfo" href="https://wa.me/529848763357" rel="nofollow noopener">
           <span>Quiero conocer las opciones</span>
@@ -414,8 +420,12 @@
     <script>
       (function () {
         var params = new URLSearchParams(window.location.search);
+        // Espejo del pool `duke_ads_round_robin` en Supabase. Si cambia un
+        // teléfono allá, cambiarlo aquí: esta página no consulta la BD.
         var phoneByAdvisor = {
-          marco: "529848763357"
+          marco: "529848763357",
+          ken: "529842181660",
+          carlos: "529841794415"
         };
         var advisor = (params.get("advisor") || params.get("asesor") || "marco").toLowerCase();
         var phone = phoneByAdvisor[advisor] || phoneByAdvisor.marco;

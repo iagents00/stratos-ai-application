@@ -33,7 +33,7 @@
  *   sola en la próxima navegación. Ver `main.jsx` → SERVICE WORKER.
  */
 
-const CACHE_VERSION = 'stratos-v358'; // v358: landing pública de Duke del Caribe (/duke-100k y alias) para la campaña Meta de formulario instantáneo
+const CACHE_VERSION = 'stratos-v359'; // v359: landing Duke — oferta USD 97K visible, srcset móvil, canonical/og corregidos, asesores Ken y Carlos
 
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 // Nombre ESTABLE a propósito: no lleva CACHE_VERSION (ver cabecera).
