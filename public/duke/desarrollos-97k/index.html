@@ -34,6 +34,7 @@
       name="twitter:image"
       content="https://stratoscapitalgroup.com/duke/desarrollos-97k/duke-riviera-hero.jpg"
     />
+    <link rel="preload" as="image" href="/duke/desarrollos-97k/duke-riviera-hero-1000.jpg" fetchpriority="high" />
     <link rel="icon" href="/favicon.ico" sizes="any" />
     <style>
       :root {
@@ -107,12 +108,17 @@
 
       .hero-wrap {
         width: min(calc(100% - 40px), 800px);
-        aspect-ratio: 1.58;
+        aspect-ratio: 1.54;
         margin: 0 auto;
         overflow: hidden;
         border: 1px solid rgba(17, 17, 17, 0.08);
         border-radius: clamp(18px, 3vw, 28px);
         box-shadow: 0 18px 48px rgba(70, 58, 36, 0.12);
+        /* Miniatura de 1 KB de la misma foto: se pinta en el primer
+           frame para que nunca se vea el hueco mientras baja la buena. */
+        background-image: url("data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAASABIAAD/4QBMRXhpZgAATU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAA6ABAAMAAAABAAEAAKACAAQAAAABAAAAGKADAAQAAAABAAAADwAAAAD/wgARCAAPABgDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAwIEAQUABgcICQoL/8QAwxAAAQMDAgQDBAYEBwYECAZzAQIAAxEEEiEFMRMiEAZBUTIUYXEjB4EgkUIVoVIzsSRiMBbBctFDkjSCCOFTQCVjFzXwk3OiUESyg/EmVDZklHTCYNKEoxhw4idFN2WzVXWklcOF8tNGdoDjR1ZmtAkKGRooKSo4OTpISUpXWFlaZ2hpand4eXqGh4iJipCWl5iZmqClpqeoqaqwtba3uLm6wMTFxsfIycrQ1NXW19jZ2uDk5ebn6Onq8/T19vf4+fr/xAAfAQADAQEBAQEBAQEBAAAAAAABAgADBAUGBwgJCgv/xADDEQACAgEDAwMCAwUCBQIEBIcBAAIRAxASIQQgMUETBTAiMlEUQAYzI2FCFXFSNIFQJJGhQ7EWB2I1U/DRJWDBROFy8ReCYzZwJkVUkiei0ggJChgZGigpKjc4OTpGR0hJSlVWV1hZWmRlZmdoaWpzdHV2d3h5eoCDhIWGh4iJipCTlJWWl5iZmqCjpKWmp6ipqrCys7S1tre4ubrAwsPExcbHyMnK0NPU1dbX2Nna4OLj5OXm5+jp6vLz9PX29/j5+v/bAEMABwcHBwcHDAcHDBEMDAwRFxEREREXHhcXFxcXHiQeHh4eHh4kJCQkJCQkJCsrKysrKzIyMjIyODg4ODg4ODg4OP/bAEMBCQkJDg0OGQ0NGTsoISg7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7O//aAAwDAQACEQMRAAABo+7422x17M3momT/2gAIAQEAAQUCh425iWhKEOCJS0/RxIXdy27/AP/aAAgBAxEBPwGXh4f/2gAIAQIRAT8Bj5SS/wD/2gAIAQEABj8C6ePo6V1HYqUX1auqTkn4v//EADMQAQADAAICAgICAwEBAAACCwERACExQVFhcYGRobHB8NEQ4fEgMEBQYHCAkKCwwNDg/9oACAEBAAE/IYgcJhXDRTPHE3giXCKYB7vAGnnsrRMsEaX/2gAMAwEAAhEDEQAAEIu//8QAMxEBAQEAAwABAgUFAQEAAQEJAQARITEQQVFhIHHwkYGhsdHB4fEwQFBgcICQoLDA0OD/2gAIAQMRAT8Q58ziBnd//9oACAECEQE/ENnB5huJf//aAAgBAQABPxDmD+Q4S/EndOdRfJlSzT80K0gADylmpNfxrHYm0YKyBPHDETf/2Q==");
+        background-size: cover;
+        background-position: center 62%;
       }
 
       .hero-image {
@@ -121,6 +127,12 @@
         display: block;
         object-fit: cover;
         object-position: center;
+        opacity: 0;
+        transition: opacity 0.45s ease;
+      }
+
+      .hero-image.cargada {
+        opacity: 1;
       }
 
       .content {
@@ -384,6 +396,7 @@
           width="1728"
           height="1122"
           fetchpriority="high"
+          onload="this.classList.add('cargada')"
         />
       </div>
 

@@ -33,7 +33,7 @@
  *   sola en la próxima navegación. Ver `main.jsx` → SERVICE WORKER.
  */
 
-const CACHE_VERSION = 'stratos-v372'; // v372: hero con placeholder inmediato + cache real; el SW deja de secuestrar las landings de campaña
+const CACHE_VERSION = 'stratos-v373'; // v373: placeholder inmediato y preload tambien en las landings de 97k y registro
 
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 // Nombre ESTABLE a propósito: no lleva CACHE_VERSION (ver cabecera).
