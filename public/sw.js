@@ -33,7 +33,7 @@
  *   sola en la próxima navegación. Ver `main.jsx` → SERVICE WORKER.
  */
 
-const CACHE_VERSION = 'stratos-v371'; // v371: subtitulo — cada una pasa a cada inversion
+const CACHE_VERSION = 'stratos-v372'; // v372: hero con placeholder inmediato + cache real; el SW deja de secuestrar las landings de campaña
 
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 // Nombre ESTABLE a propósito: no lleva CACHE_VERSION (ver cabecera).
@@ -122,6 +122,15 @@ function isNavigationRequest(req) {
   return req.mode === 'navigate' || (req.method === 'GET' && req.headers.get('accept')?.includes('text/html'));
 }
 
+// Landings estáticas de campaña: son archivos HTML propios servidos desde
+// public/, NO rutas del SPA. Sin esto el SW guardaba la landing de Duke como
+// '/index.html' y se la servía como shell de la app a quien abriera sin red.
+const LANDINGS_ESTATICAS = ['/mondrian', '/bayview', '/duke-100k', '/desarrollos-97k', '/duke-97k'];
+
+function isStandaloneLanding(url) {
+  return url.pathname.startsWith('/duke/') || LANDINGS_ESTATICAS.includes(url.pathname.replace(/\/$/, ''));
+}
+
 // ── FETCH: estrategias por tipo de request ──
 self.addEventListener('fetch', (event) => {
   const { request } = event;
@@ -131,6 +140,13 @@ self.addEventListener('fetch', (event) => {
 
   // ── Supabase: network-only (no cachear; deja que la app maneje fallos) ──
   if (isSupabaseRequest(url)) {
+    return;
+  }
+
+  // ── Landings de campaña: no las tocamos. Son HTML propio, no el SPA, y
+  //    cachearlas como '/index.html' rompía el shell de la app. Además nos
+  //    interesa que lleguen frescas: son el destino de anuncios pagados. ──
+  if (isStandaloneLanding(url)) {
     return;
   }
 
