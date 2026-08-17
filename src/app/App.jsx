@@ -1390,24 +1390,75 @@ export default function App() {
   }, [runAutoRecovery]);
 
   // ── PREFETCH de las vistas lazy (evita "chunk viejo" al navegar tras deploy) ──
-  // Apenas la app queda ociosa, precargamos en segundo plano los chunks de todas
-  // las vistas contra el bundle ACTUAL. Los errores se tragan en silencio para no
-  // gatillar el recovery global (vite:preloadError). Corre una sola vez.
+  // Precargamos en segundo plano los chunks de todas las vistas contra el bundle
+  // ACTUAL. Los errores se tragan en silencio para no gatillar el recovery global
+  // (vite:preloadError). Corre una sola vez.
+  //
+  // ⚠️ REESCRITO 17-ago-2026 — esto era parte del "se queda cargando" del celular.
+  // La versión anterior disparaba las 13 vistas de golpe a los 1,5 s (Safari, que
+  // no siempre tiene requestIdleCallback) o a los 4 s forzados por el `timeout`
+  // —que NO significa "cuando esté ocioso", significa "a los 4 s aunque esté
+  // ocupado"—. Medido en producción: 114 archivos de JavaScript en el arranque,
+  // los últimos (WhatsApp, Profile, Marketing, AdminPanel) entrando a los 5,1 s.
+  // O sea: mientras el asesor mira el splash, el teléfono está bajando pantallas
+  // que no pidió, robándole red y CPU justo a lo que sí necesita para abrir.
+  //
+  // Ahora, tres frenos, en orden:
+  //   1. Espera al `load` de la ventana: recién cuando lo que SÍ hace falta
+  //      terminó de bajar, empezamos con lo opcional. Nunca compite con el arranque.
+  //   2. Se saltea entero si el teléfono está en ahorro de datos o en una red
+  //      lenta (2G/3G): ahí precargar 13 pantallas hace más daño que bien.
+  //      El chunk se baja igual cuando el usuario entra a esa pantalla.
+  //   3. Va de a UNA vista por vez, con respiro entre cada una, en vez de las 13
+  //      juntas. Una conexión de celular con 100 peticiones en paralelo se
+  //      atraganta; escalonado, ninguna le quita el lugar a lo importante.
+  // Reversible: este bloque se borra y todo sigue andando — el prefetch es una
+  // comodidad, no un requisito; sin él la vista se baja al entrar.
   useEffect(() => {
     let cancelled = false;
-    const warm = () => {
-      if (cancelled) return;
-      for (const load of PREFETCH_VIEWS) {
-        try { const p = load(); if (p && p.catch) p.catch(() => {}); } catch (_) { /* noop */ }
-      }
+
+    // Red pobre o ahorro de datos → no precargamos nada.
+    const redFloja = () => {
+      try {
+        const c = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+        if (!c) return false;                              // sin dato: seguimos normal
+        if (c.saveData) return true;                       // el usuario pidió ahorrar datos
+        return /(^|-)2g$/.test(c.effectiveType || "") || c.effectiveType === "3g";
+      } catch (_) { return false; }
     };
-    const ric = typeof window !== "undefined" && window.requestIdleCallback;
-    const id = ric ? window.requestIdleCallback(warm, { timeout: 4000 }) : setTimeout(warm, 1500);
+
+    let timerVista = null;
+    const warm = () => {
+      if (cancelled || redFloja()) return;
+      let i = 0;
+      const siguiente = () => {
+        if (cancelled || i >= PREFETCH_VIEWS.length) return;
+        const load = PREFETCH_VIEWS[i++];
+        try { const p = load(); if (p && p.catch) p.catch(() => {}); } catch (_) { /* noop */ }
+        timerVista = setTimeout(siguiente, 300);           // respiro entre vista y vista
+      };
+      siguiente();
+    };
+
+    // Arranca DESPUÉS del load, y todavía espera a un hueco ocioso.
+    let idOcio = null;
+    let timerArranque = null;
+    const programar = () => {
+      if (cancelled) return;
+      const ric = typeof window !== "undefined" && window.requestIdleCallback;
+      if (ric) idOcio = window.requestIdleCallback(warm, { timeout: 10000 });
+      else timerArranque = setTimeout(warm, 3000);
+    };
+    if (document.readyState === "complete") programar();
+    else window.addEventListener("load", programar, { once: true });
+
     return () => {
       cancelled = true;
       try {
-        if (ric && typeof id === "number") window.cancelIdleCallback(id);
-        else clearTimeout(id);
+        window.removeEventListener("load", programar);
+        if (idOcio != null && window.cancelIdleCallback) window.cancelIdleCallback(idOcio);
+        if (timerArranque) clearTimeout(timerArranque);
+        if (timerVista) clearTimeout(timerVista);
       } catch (_) { /* noop */ }
     };
   }, []);
@@ -1782,7 +1833,17 @@ export default function App() {
     }}>
       {/* ── Static CSS ── */}
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+        /* ⚠️ NO PONER @import ACÁ. (Quitado 17-ago-2026.)
+           Vivía acá un @import de Google Fonts (Outfit + Plus Jakarta Sans) que
+           NADIE usaba: cero referencias a esas familias en todo src/ — se bajaban
+           9 variantes de fuente en cada arranque para nada.
+           Y un @import dentro de CSS es la peor forma de pedir algo: el navegador
+           tiene que bajar y parsear ESTE <style> para recién ahí descubrir la URL
+           y salir a Google — un viaje en cascada, no en paralelo — y mientras
+           tanto frena el pintado. Medido en producción: se pedía a los 1.112 ms,
+           en pleno arranque, cuando la pantalla todavía era el splash.
+           Si algún día hace falta una fuente, va como <link> en index.html
+           (no bloqueante), nunca como @import acá adentro. */
         .topbar-shimmer{background-size:300% 100%;animation:shimmer 2.4s linear infinite}
         .topbar-static{background-size:100%}
         .widget-shimmer{animation:pillShimmer 5s ease-in-out infinite}
