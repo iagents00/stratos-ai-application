@@ -457,6 +457,12 @@
         var phoneByAdvisor = { marco: "529848763357", ken: "529842181660", carlos: "529841794415" };
         var advisor = (params.get("advisor") || params.get("asesor") || "marco").toLowerCase();
         var phone = phoneByAdvisor[advisor] || phoneByAdvisor.marco;
+        // Cada asesor tiene su propia campana en Meta. El nombre se arma con el
+        // asesor en vez de venir fijo, porque antes todos los clics — los de
+        // Marco y los de Ken — se registraban bajo la misma etiqueta y la
+        // atribucion por campana no servia para nada.
+        var campaign = params.get("utm_campaign") ||
+          ("Mondrian Stratos AI - " + advisor.charAt(0).toUpperCase() + advisor.slice(1));
         var message = [
           "Hola, quiero invertir inteligentemente en Riviera Maya.",
           "Vi el anuncio de Mondrian y me gustaría conocerlo."
@@ -476,7 +482,7 @@
               event: "whatsapp_click",
               advisor: advisor,
               project: "Mondrian",
-              campaign: "Duke Mondrian - Marco - Lead Ads",
+              campaign: campaign,
               landing_path: window.location.pathname,
               page_url: window.location.href,
               referrer: document.referrer || "",
