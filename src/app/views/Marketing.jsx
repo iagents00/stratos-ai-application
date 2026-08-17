@@ -1972,9 +1972,13 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
                 border: `1px solid ${isCuello ? `${RED}55` : bd}`,
                 display: "flex", flexDirection: "column", gap: 8,
               }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 7, padding: "2px 4px" }}>
+              {/* Alto fijo del encabezado: el título puede ocupar dos renglones
+                  («ESPERANDO APROBACIÓN» no entra en uno) y aun así todas las
+                  columnas arrancan sus tarjetas a la misma altura. Antes se
+                  cortaba en «ESPERANDO APRO…», que se lee como algo sin terminar. */}
+              <div style={{ display: "flex", alignItems: "center", gap: 7, padding: "2px 4px", minHeight: 34 }}>
                 {col.id === "esperando_voz" && <Mic size={13} color={isCuello ? RED : txt2} />}
-                <span style={{ flex: 1, fontSize: 12.5, fontWeight: 700, color: isCuello ? RED : txt2, fontFamily: font, textTransform: "uppercase", letterSpacing: "0.04em", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{col.l}</span>
+                <span title={col.l} style={{ flex: 1, fontSize: 12.5, fontWeight: 700, color: isCuello ? RED : txt2, fontFamily: font, textTransform: "uppercase", letterSpacing: "0.02em", lineHeight: 1.15, whiteSpace: "normal", overflowWrap: "anywhere", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{col.l}</span>
                 <span style={{
                   minWidth: 20, height: 20, borderRadius: 999, padding: "0 5px",
                   background: isCuello ? RED : (isLight ? "rgba(15,23,42,0.07)" : "rgba(255,255,255,0.08)"),
@@ -2817,10 +2821,16 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
             <Megaphone size={20} color={accent} strokeWidth={1.9} />
           </div>
           <div style={{ minWidth: 0 }}>
-            <div style={{ fontSize: 14.5, fontWeight: 650, color: txt, fontFamily: fontDisp, letterSpacing: "-0.01em" }}>Mi Espacio</div>
-            {/* El colaborador ve SU área, no «Marketing»: su espacio es el de
-                Finanzas, Comercial, etc., aunque el motor sea el mismo. */}
-            <div style={{ fontSize: 12, color: txt2 }}>{firstName} · {esColaborador ? (user?.area || "Mi área") : MODULE_LABEL}</div>
+            {/* El título es el nombre que ESTA empresa le puso al módulo (Duke:
+                «Actividades», NSG: «Proyectos»). Antes decía siempre «Mi Espacio»,
+                que es el nombre de OTRA cosa del menú —el panel personal—, así que
+                había dos pantallas distintas llamadas igual. */}
+            <div style={{ fontSize: 14.5, fontWeight: 650, color: txt, fontFamily: fontDisp, letterSpacing: "-0.01em" }}>
+              {esColaborador ? (user?.area || "Mi área") : MODULE_LABEL}
+            </div>
+            {/* El área/módulo ya está en el título de arriba, así que acá va la
+                persona sola: antes se leía «Marketing» dos veces seguidas. */}
+            <div style={{ fontSize: 12, color: txt2 }}>{firstName}</div>
           </div>
         </div>
         <div style={{

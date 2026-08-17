@@ -264,10 +264,14 @@ const ERP = ({ oc, T: _T }) => {
     <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
       {/* KPIs */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(150px, 100%), 1fr))", gap: 14 }}>
-        <KPI label="Desarrollos" value={kpis.total} sub="Catálogo total" icon={Building2} color={T.blue} T={T} />
-        <KPI label="Con carpeta Drive" value={kpis.conDrive} sub="Material listo" icon={HardDrive} color={T.emerald} T={T} />
+        {/* Los subtítulos explican por qué el número de arriba no coincide con el
+            de la lista de abajo: arriba están TODOS los desarrollos y abajo solo
+            los que ya tienen material. Sin esto se lee como una contradicción
+            («93» arriba y «70 de 70» abajo). */}
+        <KPI label="Desarrollos" value={kpis.total} sub="Todos los registrados" icon={Building2} color={T.blue} T={T} />
+        <KPI label="Con carpeta Drive" value={kpis.conDrive} sub="Los que ya tienen material" icon={HardDrive} color={T.emerald} T={T} />
         <KPI label="Ubicaciones" value={kpis.ubic} sub="Zonas cubiertas" icon={MapPin} color={T.amber} T={T} />
-        <KPI label="Secciones" value={kpis.secciones} sub="Del Google Sheet" icon={Layers} color={T.violet} T={T} />
+        <KPI label="Secciones" value={kpis.secciones} sub="Grupos del catálogo" icon={Layers} color={T.violet} T={T} />
       </div>
 
       {/* Consulta del catálogo por Telegram */}
@@ -305,7 +309,10 @@ const ERP = ({ oc, T: _T }) => {
             <div>
               <p style={{ fontSize: 14, fontWeight: 500, color: T.txt, fontFamily: fontDisp, margin: 0 }}>Catálogo de Proyectos</p>
               <p style={{ fontSize: 11.5, color: T.txt3, fontFamily: font, margin: "3px 0 0" }}>
-                Duke del Caribe · fuente: Google Sheet «DRIVES DUKE DEL CARIBE»
+                {/* Antes decía «fuente: Google Sheet «DRIVES DUKE DEL CARIBE»»: el
+                    nombre del archivo interno no le dice nada a quien lo lee, y
+                    tampoco explicaba por qué acá aparecen menos que arriba. */}
+                Duke del Caribe · aquí están los que ya tienen material cargado · se actualiza solo desde su hoja
               </p>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
