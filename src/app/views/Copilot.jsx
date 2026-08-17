@@ -108,6 +108,12 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
   const showBackBtn = onBack && (isNativeApp() || isMobile);
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
+  // "No se pudo traer la conversación" — ver el TIEMPO LÍMITE en `reload`.
+  // Se declara ACÁ arriba, junto a los demás estados, y NO más abajo cerca de su
+  // uso: en este mismo archivo ya nos costó una caída en producción declarar algo
+  // después de quien lo necesitaba (lección «un useEffect declarado ANTES de sus
+  // deps tumbó el Copilot en producción»).
+  const [errorCarga, setErrorCarga] = useState(false);
   const [sending, setSending] = useState(false);
   const [input, setInput] = useState("");
   const [errBanner, setErrBanner] = useState(null);
@@ -170,9 +176,41 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
   const lastSendRef = useRef(0);
   const lastReloadRef = useRef(0);
 
+  // ── TIEMPO LÍMITE (17-ago-2026) — por qué existe ──────────────────────────
+  // Ángel reportó el chat clavado en "Cargando conversación…" desde el celular.
+  // La causa no era lentitud: era que acá NO HABÍA NINGÚN LÍMITE. Se pedía el
+  // historial y recién al volver la respuesta se apagaba el cartel. Si el pedido
+  // salía y no volvía nunca —lo normal en el celular cuando la red se corta al
+  // volver de segundo plano, o si `auth.getSession()` se traba refrescando el
+  // token— la promesa quedaba esperando para siempre y el cartel también: sin
+  // aviso, sin reintento, sin salida más que cerrar la app.
+  // Ahora, pasados 12 segundos damos por perdido el intento y la pantalla dice
+  // qué ocurrió, con un botón para reintentar. 12 s es el mismo margen que ya usa
+  // la hidratación de sesión (`HYDRATION_TIMEOUT_MS` en AuthContext): sobra para
+  // una red de celular lenta, y es mucho menos que "para siempre".
+  // Reversible: se borra el Promise.race y vuelve el comportamiento anterior.
+  const ESPERA_MAX_MS = 12000;
+
   const reload = useCallback(async (opts = {}) => {
-    const r = await getCopilotActivity(50);
+    let venció = false;
+    const reloj = new Promise((resolve) => {
+      setTimeout(() => { venció = true; resolve(null); }, ESPERA_MAX_MS);
+    });
+    // getCopilotActivity ya atrapa sus errores y devuelve {messages, error}; el
+    // try/catch es el cinturón por si alguna vez deja de hacerlo.
+    let r = null;
+    try {
+      r = await Promise.race([getCopilotActivity(50), reloj]);
+    } catch (_) { r = null; }
     if (!mountedRef.current) return;
+    if (venció || !r) {
+      // El aviso se muestra SOLO si no hay nada en pantalla: un refresco que
+      // falla no debe tapar la conversación que el usuario ya está leyendo.
+      setErrorCarga(true);
+      setLoading(false);
+      return;
+    }
+    setErrorCarga(false);
     lastReloadRef.current = Date.now();
     const delServidor = [...(r.messages || [])].reverse();
     setMessages((prev) => {
@@ -925,6 +963,23 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
         <div style={{ width: "100%", maxWidth: "none", minHeight: "100%", display: "flex", flexDirection: "column", gap: 8 }}>
           {loading ? (
             <div style={{ margin: "auto", color: T.txt3, fontSize: 12.5, fontFamily: font }}>Cargando conversación…</div>
+          ) : errorCarga && messages.length === 0 ? (
+            /* Solo cuando el intento se venció Y no hay nada que mostrar. Antes,
+               este caso era el cartel de "Cargando conversación…" para siempre. */
+            <div style={{ margin: "auto", display: "flex", flexDirection: "column", alignItems: "center", gap: 10, textAlign: "center", padding: "0 24px" }}>
+              <div style={{ color: T.txt2, fontSize: 13, fontFamily: font, lineHeight: 1.5 }}>
+                No se pudo traer la conversación.<br />Puede ser la conexión.
+              </div>
+              <button type="button"
+                onClick={() => { setErrorCarga(false); setLoading(true); reload(); }}
+                style={{
+                  padding: "9px 20px", borderRadius: 999, border: "none", cursor: "pointer",
+                  background: T.accent, color: isLight ? "#FFFFFF" : "#041016",
+                  fontSize: 13, fontWeight: 600, fontFamily: font,
+                }}>
+                Reintentar
+              </button>
+            </div>
           ) : messages.length === 0 ? (
             <EmptyState T={T} isLight={isLight} onPick={send} />
           ) : (
