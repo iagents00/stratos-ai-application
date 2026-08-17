@@ -33,7 +33,7 @@
  *   sola en la próxima navegación. Ver `main.jsx` → SERVICE WORKER.
  */
 
-const CACHE_VERSION = 'stratos-v375'; // v375: pixel de Meta tambien en la landing de 97k, que se habia quedado sin medicion
+const CACHE_VERSION = 'stratos-v376'; // v376: skill de campanas Duke con el desbloqueo de Meta
 
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 // Nombre ESTABLE a propósito: no lleva CACHE_VERSION (ver cabecera).
