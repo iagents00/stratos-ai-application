@@ -359,7 +359,30 @@ export async function resetPassword(email) {
   }
 }
 
+// ── Una sola lectura de sesión a la vez ────────────────────────────────────
+// Al cargar la app, `getStoredSession()` se llamaba DOS VECES en paralelo (la
+// hidratación del AuthContext y el listener de auth). Cada una espera hasta
+// 3.5s a `supabase.auth.getSession()`, así que en la consola aparecían dos
+// «getSession atascado >3.5s — uso caché local» en el mismo segundo, y el
+// arranque pagaba esa espera por duplicado (medido el 17-ago en producción).
+//
+// Esto NO cambia comportamiento: si ya hay una lectura EN VUELO, la segunda se
+// cuelga de la misma promesa en vez de abrir otra. Devuelven lo mismo, porque
+// leen el mismo estado en el mismo instante. Los reintentos de hidratación (a
+// los 4s y 8s) no se ven afectados: arrancan cuando la anterior ya terminó.
+let _sesionEnVuelo = null
+
 export async function getStoredSession() {
+  if (_sesionEnVuelo) return _sesionEnVuelo
+  _sesionEnVuelo = _leerSesionGuardada()
+  try {
+    return await _sesionEnVuelo
+  } finally {
+    _sesionEnVuelo = null
+  }
+}
+
+async function _leerSesionGuardada() {
   // Recuperar sesión demo local tras un refresh
   if (sessionStorage.getItem('stratos_demo') === '1') {
     return DEMO_USER

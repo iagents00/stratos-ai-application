@@ -63,7 +63,16 @@ import { nav, MODULE_ROLES, MOBILE_PRIMARY_NAV, canAccessModule } from "./consta
 // Vistas que NO se persisten entre F5: son flujos efímeros (entrar a Planes
 // desde una promo, abrir admin desde un settings click). El F5 te regresa
 // a la vista de trabajo principal (CRM o Comando), no a estas pantallas.
-const NON_PERSISTABLE_VIEWS = new Set(["planes", "admin"]);
+// ⚠️ "miespacio" NO es una vista: es el PANEL superpuesto que abre `metaOpen`
+// (ver el onClick del rail). No existe ninguna rama `v === "miespacio"` que lo
+// dibuje. Si `v` llegaba a valer eso, el área de contenido quedaba VACÍA —
+// pantalla negra, sin error de consola y sin mensaje— y como se persistía, el
+// siguiente F5 volvía a dejarla en blanco: quedaba pegada para siempre.
+// Reproducido el 17-ago en la cuenta de marketing de Duke: 28 segundos de
+// espera y cero elementos dibujados. Entrando desde Apps con la sesión ya viva
+// abría bien, porque ese camino usa el panel y no la vista.
+// Al estar acá, además, se CURA sola la gente que ya la tenga guardada.
+const NON_PERSISTABLE_VIEWS = new Set(["planes", "admin", "miespacio"]);
 
 // Llave de ESTRENO de una sección nueva.
 // El problema que resuelve: la vista guardada en localStorage GANA sobre el
@@ -128,7 +137,10 @@ function resolveInitialView(user, clientConfig) {
   // completo. La cadena prueba candidatos en orden y devuelve el primero
   // accesible — jamás una pantalla bloqueada (auditoría 12-ago).
   const resolverAccesible = (deseado) => {
-    const candidatos = [deseado, "mkt", "c", "d", "copilot", "miespacio", "perfil"];
+    // ⛔ "miespacio" NO va acá: es un panel superpuesto, no una vista, y no hay
+    // nada que lo dibuje. Si la cadena caía en él, el usuario arrancaba con la
+    // pantalla vacía. El último recurso sigue siendo "perfil", que sí se dibuja.
+    const candidatos = [deseado, "mkt", "c", "d", "copilot", "perfil"];
     for (const m of candidatos) {
       try { if (canAccessModule(m, user, clientConfig)) return m; } catch (_) { /* sigue */ }
     }
@@ -316,7 +328,13 @@ export default function App() {
       setV(resolveInitialView(user, clientConfig));
       return;
     }
-    // Red de seguridad: si la vista actual deja de ser suya (le cambian el rol o
+    // Red de seguridad 1: "miespacio" es un PANEL, no una vista — nadie la
+    // dibuja. Si por lo que sea `v` termina ahí (una versión vieja guardada, un
+    // camino nuevo), se va a una vista que sí se dibuja en vez de dejar la
+    // pantalla vacía. ⛔ Acá NO se puede tocar `setMetaOpen`: se declara mucho
+    // más abajo y referenciarlo sería el mismo TDZ que tumbó el Copilot.
+    if (v === "miespacio") { setV(resolveInitialView(user, clientConfig)); return; }
+    // Red de seguridad 2: si la vista actual deja de ser suya (le cambian el rol o
     // los permisos a mitad de sesión), se va a su casa en vez de quedarse
     // mirando la pantalla de «Acceso restringido».
     if (!canAccessModule(v, user, clientConfig)) setV(resolveInitialView(user, clientConfig));
@@ -2081,7 +2099,7 @@ export default function App() {
         <div style={{ width:"100%", display:"flex", flexDirection:"column", alignItems:"center", paddingBottom:12 }}>
           <div style={{ height:1, width:34, background: isLight ? "rgba(13,154,118,0.10)" : "rgba(255,255,255,0.06)", margin:"4px auto 8px" }} />
           <div style={{ display:"flex", flexDirection:"column", alignItems:"center", gap:3 }}>
-            <button title={canAccessModule("admin", user, clientConfig) ? "Gestión de Usuarios" : "System - contrasena y soporte"}
+            <button title={canAccessModule("admin", user, clientConfig) ? "Gestión de Usuarios" : "System — contraseña y soporte"}
               onClick={() => { setMetaOpen(false); canAccessModule("admin", user, clientConfig) ? setV("admin") : setV("perfil"); }}
               style={{
                 width:44, height:44, borderRadius:13, cursor:"pointer",
@@ -2112,7 +2130,13 @@ export default function App() {
             >
               <Settings size={17} color={v==="admin" ? "#A78BFA" : v==="perfil" ? T.accent : (isLight ? T.txt2 : "rgba(255,255,255,0.34)")} strokeWidth={1.9} />
             </button>
-            <span style={{ fontSize:9, fontFamily:font, fontWeight:500, color: isLight ? T.txt3 : "rgba(255,255,255,0.22)", userSelect:"none" }}>System</span>
+            {/* El botón lleva a DOS lugares distintos según el rol, así que el
+                nombre tiene que decir a cuál. Antes decía siempre «System» y a
+                quien no es administrador lo mandaba a su Perfil: dos nombres
+                para la misma pantalla, y encima el nombre interno nuestro. */}
+            <span style={{ fontSize:9, fontFamily:font, fontWeight:500, color: isLight ? T.txt3 : "rgba(255,255,255,0.22)", userSelect:"none" }}>
+              {canAccessModule("admin", user, clientConfig) ? "Usuarios" : "Perfil"}
+            </span>
           </div>
         </div>
       </div>
@@ -2209,7 +2233,9 @@ export default function App() {
                   <button
                     title={
                       totalNotifUnread > 0
-                        ? `${totalNotifUnread} notificación${totalNotifUnread !== 1 ? "es" : ""} sin leer`
+                        /* El plural NO se arma pegando "es": «notificación» pierde
+                           la tilde al pasar a plural, y salía «notificaciónes». */
+                        ? `${totalNotifUnread} ${totalNotifUnread !== 1 ? "notificaciones" : "notificación"} sin leer`
                         : pendingSync > 0
                           ? `${pendingSync} cambios pendientes de sincronizar`
                           : "Notificaciones"
@@ -2907,7 +2933,12 @@ export default function App() {
                   onMouseEnter={e => { e.currentTarget.style.transform="translateY(-2px)"; if(!act) { e.currentTarget.style.background = isLight ? "#FFFFFF" : "rgba(255,255,255,0.06)"; e.currentTarget.style.boxShadow = isLight ? "0 4px 12px rgba(15,23,42,0.06)" : "0 4px 12px rgba(0,0,0,0.2)"; } }}
                   onMouseLeave={e => { e.currentTarget.style.transform="none"; if(!act) { e.currentTarget.style.background = isLight ? "#F8FAFC" : "rgba(255,255,255,0.03)"; e.currentTarget.style.boxShadow = "none"; } }}
                   >
-                    <IosIcon name={n.id} filled={act} size={26} color={act ? acol : (isLight ? "rgba(15,23,42,0.50)" : "rgba(255,255,255,0.55)")} />
+                    {/* El Copilot lleva SU marca, igual que en el rail. Acá salía
+                        con el ícono genérico, así que la misma app se veía con dos
+                        dibujos distintos según por dónde entraras. */}
+                    {n.id === "copilot"
+                      ? <CopilotMark size={28} isLight={isLight} />
+                      : <IosIcon name={n.id} filled={act} size={26} color={act ? acol : (isLight ? "rgba(15,23,42,0.50)" : "rgba(255,255,255,0.55)")} />}
                     <span style={{ fontSize:12, fontFamily:fontDisp, fontWeight: act ? 700 : 500, letterSpacing:"-0.01em", color: act ? acol : (isLight ? "rgba(15,23,42,0.60)" : "rgba(255,255,255,0.62)"), lineHeight:1, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis", maxWidth:"100%" }}>{clientConfig?.navLabels?.[n.id] ?? n.l}</span>
                   </button>
                 );
