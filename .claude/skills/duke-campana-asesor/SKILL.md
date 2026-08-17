@@ -140,6 +140,55 @@ deja segmentar a EE.UU. Al ponerlo en Estados Unidos, Meta hace tres cosas solo:
 - elimina los intereses que la categoría Vivienda no permite,
 - el público estimado sube (en Mondrian pasó de 26.8M a 51.2M).
 
+### 4.3.1 Si la campaña YA existía: el bloqueo circular
+
+Sobre una campaña **ya publicada**, cambiar el país no basta — aparece un
+`Error de entrega` (`#2909034`) que **bloquea justo la publicación que lo
+arreglaría**. Pasa por esto:
+
+> `special_ad_category_country` — *"will default to tax country if not set"*.
+
+La campaña se creó sin declarar país, así que Meta le puso el **país fiscal de la
+cuenta**: México. El borrador apunta a EE.UU. → conflicto → error → no publica.
+
+**La salida es el orden.** Publica en dos pasos, nunca de golpe:
+
+1. **Primero la campaña sola** (solo el país). Al aplicarse, el conflicto
+   desaparece del conjunto.
+2. **Después el conjunto** (público + ubicación).
+3. Recién entonces enciende: conjunto → campaña.
+
+Antes de nada, revisa que no haya una **prueba A/B activa** sobre la campaña: con
+una prueba viva, Meta congela las ediciones y el botón Publicar queda muerto.
+Cancélala y el editor de Lugares reaparece.
+
+### 4.3.2 Nunca uses "Revisar y publicar" tal cual
+
+Ese botón trae **todos** los borradores pendientes de la cuenta — en Duke suelen
+ser 20+, de campañas de otros con presupuestos propios. Publicarlos por error
+lanza campañas que nadie aprobó y empiezan a gastar.
+
+El diálogo tiene **casillas por fila** y tres pestañas (Campañas / Conjuntos /
+Anuncios). El procedimiento seguro:
+
+1. Desmarca todo con la casilla del encabezado, **en cada una de las tres pestañas**.
+2. Marca solo tu objeto. Confirma que el contador diga `1 de N` donde toca y
+   `0 de N` en las otras dos.
+3. Publica. El contador de arriba debe bajar exactamente en 1.
+
+Si tu objeto es una **edición** sobre algo ya publicado, no tendrá "Publicar" en
+la fila de la tabla (eso solo sale en borradores nuevos): va por este diálogo.
+
+### 4.3.3 Cómo saber que quedó
+
+La columna Entrega del conjunto cuenta la historia:
+
+| Dice | Significa |
+|---|---|
+| `Error de entrega` | Sigue el conflicto de país. Ver 4.3.1 |
+| `Campaña desactiva` | El conjunto ya está bien; falta encender la campaña |
+| `Aprendizaje` | Entregando. Listo |
+
 ### 4.4 Por qué EE.UU. y sin intereses
 
 Datos de la propia cuenta, 30 días a agosto 2026:
@@ -189,9 +238,13 @@ delete from duke_ad_clicks where utm_source = 'qa';
 
 | Asesor | Clave | WhatsApp | Pool | Landing |
 |---|---|---|---|---|
-| Marco Lopez | `marco` | `+529848763357` | `duke_ads_marco` | `/mondrian` |
-| Ken Duke | — | `+529842181660` | solo en round-robin | — |
+| Marco Lopez | `marco` | `+529848763357` | `duke_ads_marco` | `/mondrian?advisor=marco` |
+| Ken Duke | `ken` | `+529842181660` | `duke_ads_ken` | `/mondrian?advisor=ken` |
 | Carlos Reyes | — | `+529841794415` | solo en round-robin | — |
 
-Ken y Carlos están en `duke_ads_round_robin` pero **no tienen pool directo**: hoy
-`?advisor=ken` cae en round-robin. Correr el script del punto 3 para darlos de alta.
+Marco y Ken tienen pool directo y están verificados end-to-end. Carlos sigue solo
+en `duke_ads_round_robin`: correr el script del punto 3 para darlo de alta.
+
+Campaña viva: **`Mondrian Stratos AI - Marco`** (`120246724024850137`), $170 MXN/día,
+EE.UU., objetivo visita a la página de destino. Para Ken se duplica y se cambian dos
+cosas: la URL a `?advisor=ken` y el nombre a `Mondrian Stratos AI - Ken`.
