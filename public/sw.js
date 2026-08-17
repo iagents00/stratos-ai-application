@@ -33,7 +33,7 @@
  *   sola en la próxima navegación. Ver `main.jsx` → SERVICE WORKER.
  */
 
-const CACHE_VERSION = 'stratos-v374'; // v374: arranque - fuera 2 fuentes que nadie usaba, prefetch despues del load, y el chat del Copilot ya no se cuelga
+const CACHE_VERSION = 'stratos-v375'; // v375: pixel de Meta tambien en la landing de 97k, que se habia quedado sin medicion
 
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 // Nombre ESTABLE a propósito: no lleva CACHE_VERSION (ver cabecera).

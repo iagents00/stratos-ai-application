@@ -35,6 +35,19 @@
       content="https://stratoscapitalgroup.com/duke/desarrollos-97k/duke-riviera-hero.jpg"
     />
     <link rel="preload" as="image" href="/duke/desarrollos-97k/duke-riviera-hero-1000.jpg" fetchpriority="high" />
+    <!-- Meta Pixel — DUKE DEL CARIBE MKT. Faltaba solo en esta landing: se
+         instaló en /mondrian y /duke/registro pero esta se quedó fuera, así
+         que cualquier anuncio que apuntara aquí no medía nada. -->
+    <script>
+      !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+      n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
+      n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;
+      t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,
+      document,'script','https://connect.facebook.net/en_US/fbevents.js');
+      fbq('init', '1768687304377919'); fbq('track', 'PageView');
+    </script>
+    <noscript><img height="1" width="1" style="display:none"
+      src="https://www.facebook.com/tr?id=1768687304377919&ev=PageView&noscript=1" /></noscript>
     <link rel="icon" href="/favicon.ico" sizes="any" />
     <style>
       :root {
@@ -446,7 +459,11 @@
           "Hola, quiero invertir inteligentemente en Riviera Maya.",
           "Me gustaría conocer las opciones de Duke del Caribe."
         ].join("\n");
-        document.getElementById("moreInfo").href = "https://wa.me/" + phone + "?text=" + encodeURIComponent(message);
+        var cta = document.getElementById("moreInfo");
+        cta.href = "https://wa.me/" + phone + "?text=" + encodeURIComponent(message);
+        cta.addEventListener("click", function () {
+          try { if (window.fbq) fbq("track", "Lead", { content_category: "Duke del Caribe" }); } catch (e) {}
+        });
       })();
     </script>
   </body>
