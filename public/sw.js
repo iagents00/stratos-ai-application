@@ -33,7 +33,7 @@
  *   sola en la próxima navegación. Ver `main.jsx` → SERVICE WORKER.
  */
 
-const CACHE_VERSION = 'stratos-v380'; // v380: se registra a todo el que llega a la landing, no solo al que da clic
+const CACHE_VERSION = 'stratos-v381'; // v381: los ids de Meta viajan al CRM, la atribucion por campana ya distingue asesor
 
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 // Nombre ESTABLE a propósito: no lleva CACHE_VERSION (ver cabecera).

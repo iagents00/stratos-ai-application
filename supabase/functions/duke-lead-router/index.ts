@@ -694,6 +694,15 @@ Deno.serve(async (req) => {
     phone_number: phone,
     email,
     campaign_name: campaign,
+    // Los ids de Meta son lo que permite saber de QUÉ anuncio vino el lead.
+    // Sin ellos la RPC solo puede aplicar la regla comodín por nombre, y todos
+    // los leads de Mondrian terminaban con la etiqueta de una campaña que ya
+    // ni existe — daba igual si eran de Marco, de Ken o de Oscar.
+    campaign_id: cleanText(body.campaign_id, 60) || null,
+    adset_id: cleanText(body.adset_id, 60) || null,
+    ad_id: cleanText(body.ad_id, 60) || null,
+    form_id: cleanText(body.form_id, 60) || null,
+    page_id: cleanText(body.page_id, 60) || null,
     source,
     project: interest || "Duke desarrollos desde USD 97,000",
     city,
