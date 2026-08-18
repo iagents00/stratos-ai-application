@@ -32,20 +32,72 @@ description: >-
 
 ```
 Anuncio de Meta
-   └─ Sitio web ──► stratoscapitalgroup.com/<slug>      landing de marca, SIN formulario
-        └─ clic en el botón, y en ese orden:
-             1. fbq('track','Lead')                     Meta puede optimizar por la conversión
-             2. sendBeacon → duke-lead-router           el clic queda en duke_ad_clicks
-             3. window.location → wa.me/<asesor>        con el mensaje ya escrito
+   └─ Sitio web ──► stratoscapitalgroup.com/<slug>
+        │
+        ├─ al CARGAR:  sendBeacon event=landing_view    ► duke_ad_clicks
+        │              (todo el que llega, aunque no haga nada más)
+        │
+        └─ al dar CLIC, en este orden:
+             1. fbq('track','Lead')                     Meta optimiza por la conversión
+             2. sendBeacon event=whatsapp_click         ► duke_ad_clicks + LEAD en el CRM
+             3. window.location → wa.me/<asesor>        mensaje ya escrito, con (ref MD-XXXX)
 ```
 
-**La landing no pide datos.** El clic *es* la conversión. El nombre y el teléfono
-reales llegan cuando la persona escribe por WhatsApp; hasta entonces la única
-atribución es la fila en `duke_ad_clicks`.
+**Se registran los dos momentos, no solo el clic.** Esto salió de una auditoría
+de Mondrian: había 33 visitas y 9 clics. De las otras 24 personas no quedaba ni
+rastro — ni siquiera que habían llegado. Medir solo el clic esconde dos tercios
+del embudo.
 
-Si en el futuro se quiere capturar nombre/teléfono en la landing, existe la
-variante con formulario en `public/duke/registro/` — esa sí crea el lead en
-`leads` con asesor asignado y etapa `Contáctame Ya`.
+### 1.1 El clic crea el lead. No lo quites.
+
+Durante un tiempo el router registraba el clic en `duke_ad_clicks` y **no**
+creaba lead, con este razonamiento en el código: *"no ensucia el pipeline de
+leads con registros sin teléfono"*.
+
+El resultado fue peor. En dos días 16 personas pasaron a WhatsApp entre Marco y
+Ken, y **cero** aparecieron en el CRM. Los asesores nunca se enteraron. El
+motivo de fondo:
+
+| asesor | leads automáticos por WhatsApp (`whatsapp_inbound`) |
+|---|---|
+| Gael G | 339 |
+| Carlos Reyes | 45 |
+| Marco Lopez | **0** |
+| Ken Duke | **0** |
+| Oscar Gálvez | **0** |
+
+La captura automática de WhatsApp solo está conectada al número de Gael. Para
+los demás, si el clic no crea el lead, el prospecto es invisible.
+
+**Vale más un lead sin teléfono que un prospecto que nadie ve.**
+
+### 1.2 El código de pareo
+
+El mensaje de WhatsApp lleva `(ref MD-XXXX)` al final. Ese código se genera en
+el navegador — no en el servidor, para que el mensaje esté listo sin esperar
+un viaje de red — y se guarda junto al clic en `duke_ad_clicks.pair_code`.
+
+Sirve para lo único que la conversación de WhatsApp no trae consigo: **de qué
+anuncio vino**. Sin él, un mensaje entrante es indistinguible de cualquier otro.
+
+El alfabeto excluye caracteres que se confunden al leerlos (`0`/`O`, `1`/`I`).
+
+### 1.3 La variante con formulario instantáneo
+
+La landing sin formulario tiene un techo: el dato real solo llega si la persona
+escribe. El formulario instantáneo de Meta lo resuelve — precarga nombre,
+teléfono y correo del perfil, y en la pantalla de gracias pone un botón a
+WhatsApp. **El dato llega aunque nunca escriba.**
+
+La tubería ya existe:
+
+```
+Formulario Meta → n8n (duke-meta-lead-ads-trigger) → fn_upsert_lead_from_meta_ads → CRM
+```
+
+Requiere que el workflow esté **activo** en n8n y conectado a la página
+*El duke del caribe*. Si no lo está, los leads de formulario no llegan por
+ningún lado: históricamente solo entraron por CSV a mano.
 
 ## 2. El pool ES la configuración
 
@@ -233,18 +285,37 @@ delete from duke_ad_clicks where utm_source = 'qa';
 | El editor de Lugares no abre en Meta | Categoría especial declarada para México. Ver 4.3 |
 | El anuncio muestra código fuente | La URL apunta a la Edge Function. Ver 4.1 |
 | El cambio no se ve en producción | Falta bumpear `CACHE_VERSION` en `public/sw.js` |
+| Hay clics pero ningún lead en el CRM | El clic no está creando el lead, o el asesor no tiene `asesor_id`. Ver 1.1 |
+| Todos los leads salen con la misma campaña | El router no está mandando `campaign_id`/`adset_id`/`ad_id` a la RPC: sin ids solo aplica la regla comodín por nombre |
+| Se ven clics pero no visitas | La landing no está mandando `landing_view` al cargar. Ver 1 |
+| Un lead de formulario cae en round-robin | Falta la regla de `meta_ads_lead_routing_overrides` con el `campaign_id` de esa campaña |
 
 ## 7. Estado actual
 
-| Asesor | Clave | WhatsApp | Pool | Landing |
+| Asesor | Clave | WhatsApp | Pool | Campaña Meta |
 |---|---|---|---|---|
-| Marco Lopez | `marco` | `+529848763357` | `duke_ads_marco` | `/mondrian?advisor=marco` |
-| Ken Duke | `ken` | `+529842181660` | `duke_ads_ken` | `/mondrian?advisor=ken` |
-| Carlos Reyes | — | `+529841794415` | solo en round-robin | — |
+| Marco Lopez | `marco` | `+529848763357` | `duke_ads_marco` | `Mondrian Stratos AI - Marco` · Activa |
+| Ken Duke | `ken` | `+529842181660` | `duke_ads_ken` | `Mondrian Stratos AI - Ken` · Activa |
+| Oscar Gálvez | `duke` y `oscar` | `+529841376686` | `duke_ads_duke` y `duke_ads_oscar` | `Mondrian Stratos AI - Oscar` · conjunto sin publicar |
+| Carlos Reyes | — | `+529841794415` | solo round-robin | — |
 
-Marco y Ken tienen pool directo y están verificados end-to-end. Carlos sigue solo
-en `duke_ads_round_robin`: correr el script del punto 3 para darlo de alta.
+Todos entran por `stratoscapitalgroup.com/mondrian?advisor=<clave>`. Sin
+parámetro cae en Marco.
 
-Campaña viva: **`Mondrian Stratos AI - Marco`** (`120246724024850137`), $170 MXN/día,
-EE.UU., objetivo visita a la página de destino. Para Ken se duplica y se cambian dos
-cosas: la URL a `?advisor=ken` y el nombre a `Mondrian Stratos AI - Ken`.
+**Duke del Caribe es Oscar Gálvez.** Las claves `duke` y `oscar` apuntan al
+mismo teléfono y a la misma cuenta; ambas existen para que ninguna forma de
+escribirlo falle.
+
+### Rendimiento a 18-ago-2026
+
+| campaña | resultados | costo | gastado |
+|---|---|---|---|
+| Ken | 33 visitas a la landing | **$2,60** | $85,82 |
+| Marco | 33 visitas a la landing | **$3,60** | $118,80 |
+
+Para comparar: `WEBINAR MONDRIAN USA` va en $6,05 y `MARCO- MONDRIAN 1 USA-3357`
+en cero resultados. **No toques las de Marco y Ken sin razón** — cambiarles el
+destino reinicia el aprendizaje de Meta.
+
+Si se quiere probar el formulario instantáneo, hacerlo primero en la de Oscar,
+que aún no gasta.
