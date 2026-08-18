@@ -565,20 +565,67 @@ Deno.serve(async (req) => {
     return json({ ok: true, ignored: true }, 200, origin);
   }
 
-  // Landings de marca (sin formulario): sólo registramos el clic al WhatsApp.
-  // Es la única atribución posible hasta que el prospecto escribe, y no
-  // ensucia el pipeline de leads con registros sin teléfono.
-  if (cleanText(body.event, 40) === "whatsapp_click") {
-    const clickAdvisorKey = requestedAdvisorKey(body, cleanText(body.campaign || body.campaign_name, 180) || "");
+  // Landings de marca (sin formulario). Se registran DOS momentos:
+  //
+  //   landing_view    llegó a la landing
+  //   whatsapp_click  se fue a WhatsApp
+  //
+  // La visita importa tanto como el clic: en Mondrian hubo 33 visitas contra
+  // 9 clics, y de esas 24 personas no quedaba ni rastro. Ahora sí.
+  //
+  // El clic además crea el lead en el CRM. Antes no lo hacía "para no ensuciar
+  // el pipeline con registros sin teléfono", pero el resultado fue peor: 16
+  // personas se fueron a WhatsApp y el asesor nunca se enteró. Vale más un
+  // lead sin teléfono que un prospecto invisible.
+  const landingEvent = cleanText(body.event, 40);
+  if (landingEvent === "landing_view" || landingEvent === "whatsapp_click") {
+    const clickCampaign = cleanText(body.campaign || body.campaign_name, 180);
+    const clickAdvisorKey = requestedAdvisorKey(body, clickCampaign || "");
     const clickAdvisor = await getDirectAdvisor(clickAdvisorKey);
+    const clickProject = cleanText(body.project || body.proyecto || body.desarrollo, 80);
+    const esClic = landingEvent === "whatsapp_click";
+
+    // El código lo genera la landing, no el servidor: así el mensaje de
+    // WhatsApp se arma al instante y el prospecto no espera un viaje de red.
+    const pairCode = esClic ? cleanText(body.pair_code, 20).toUpperCase() || null : null;
+
+    // El lead sólo se crea con asesor resuelto. Sin dueño no sirve de nada y
+    // ensucia el pipeline de verdad.
+    let leadId: string | null = null;
+    if (esClic && clickAdvisor?.advisor_id) {
+      const etiqueta = pairCode ? `${clickProject || "Anuncio"} · ${pairCode}` : (clickProject || "Anuncio");
+      const { data: nuevoLead, error: leadError } = await admin
+        .from("leads")
+        .insert({
+          organization_id: ORG_ID,
+          name: `WhatsApp ${etiqueta}`,
+          stage: "Contáctame Ya",
+          source: "landing_click",
+          project: clickProject || null,
+          campaign: clickCampaign || null,
+          tag: clickProject || null,
+          asesor_id: clickAdvisor.advisor_id,
+          asesor_name: clickAdvisor.advisor_name,
+        })
+        .select("id")
+        .single();
+      if (leadError) {
+        console.error("[duke-lead-router] lead desde clic falló", leadError.message);
+      } else {
+        leadId = nuevoLead?.id ?? null;
+      }
+    }
 
     const { error: clickError } = await admin.from("duke_ad_clicks").insert({
       organization_id: ORG_ID,
+      event: landingEvent,
+      pair_code: pairCode,
+      lead_id: leadId,
       advisor_key: clickAdvisorKey || null,
       advisor_name: clickAdvisor?.advisor_name || null,
       advisor_phone_e164: clickAdvisor?.advisor_phone_e164 || null,
-      project: cleanText(body.project || body.proyecto || body.desarrollo, 80) || null,
-      campaign: cleanText(body.campaign || body.campaign_name, 180) || null,
+      project: clickProject || null,
+      campaign: clickCampaign || null,
       landing_path: cleanText(body.landing_path, 180) || null,
       page_url: cleanText(body.page_url, 600) || null,
       utm_source: cleanText(body.utm_source, 120) || null,
@@ -592,7 +639,7 @@ Deno.serve(async (req) => {
     });
 
     if (clickError) {
-      console.error("[duke-lead-router] click log failed", clickError.message);
+      console.error("[duke-lead-router] registro de landing falló", clickError.message);
     }
 
     // Sin asesor resoluble no inventamos un destino: la landing ya trae su
@@ -601,7 +648,10 @@ Deno.serve(async (req) => {
     const clickPhone = phoneDigits(clickAdvisor?.advisor_phone_e164 || "");
     return json({
       ok: true,
+      event: landingEvent,
       logged: !clickError,
+      lead_id: leadId,
+      pair_code: pairCode,
       advisor: clickAdvisor?.advisor_name || null,
       wa_url: clickPhone ? `https://wa.me/${clickPhone}` : null,
     }, 200, origin);

@@ -469,48 +469,76 @@
         // atribucion por campana no servia para nada.
         var campaign = params.get("utm_campaign") ||
           ("Mondrian Stratos AI - " + advisor.charAt(0).toUpperCase() + advisor.slice(1));
+        var URL_ROUTER = "https://glulgyhkrqpykxmujodb.supabase.co/functions/v1/duke-lead-router";
+
+        // Un envio que no retrasa la salida del navegador. application/json no
+        // esta en la lista segura de CORS y obligaria a un preflight que
+        // sendBeacon no puede hacer: el navegador lo descartaria en silencio.
+        // La Edge Function parsea el body sin mirar el content-type.
+        function avisar(datos) {
+          try {
+            var cuerpo = JSON.stringify(datos);
+            if (navigator.sendBeacon) {
+              navigator.sendBeacon(URL_ROUTER, new Blob([cuerpo], { type: "text/plain;charset=UTF-8" }));
+            } else {
+              fetch(URL_ROUTER, { method: "POST", headers: { "Content-Type": "application/json" }, body: cuerpo, keepalive: true });
+            }
+          } catch (e) {}
+        }
+
+        function contexto(evento) {
+          return {
+            event: evento,
+            advisor: advisor,
+            project: "Mondrian",
+            campaign: campaign,
+            landing_path: window.location.pathname,
+            page_url: window.location.href,
+            referrer: document.referrer || "",
+            utm_source: params.get("utm_source") || "",
+            utm_medium: params.get("utm_medium") || "",
+            utm_campaign: params.get("utm_campaign") || "",
+            utm_content: params.get("utm_content") || "",
+            utm_term: params.get("utm_term") || "",
+            fbclid: params.get("fbclid") || ""
+          };
+        }
+
+        // 1) TODOS los que llegan. Antes solo se registraba a quien daba clic y
+        //    se perdian 2 de cada 3 visitas.
+        avisar(contexto("landing_view"));
+
+        // El codigo se arma aqui y no en el servidor para que el mensaje de
+        // WhatsApp este listo al instante. Sin letras ni numeros que se
+        // confundan al leerlos en voz alta (0/O, 1/I).
+        var ALFABETO = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+        function codigoPareo() {
+          var azar = new Uint8Array(4);
+          (window.crypto || window.msCrypto).getRandomValues(azar);
+          var out = "";
+          for (var i = 0; i < 4; i++) out += ALFABETO[azar[i] % ALFABETO.length];
+          return "MD-" + out;
+        }
+        var codigo = codigoPareo();
+
         var message = [
           "Hola, quiero invertir inteligentemente en Riviera Maya.",
-          "Vi el anuncio de Mondrian y me gustaría conocerlo."
+          "Vi el anuncio de Mondrian y me gustaría conocerlo.",
+          "(ref " + codigo + ")"
         ].join("\n");
         var waUrl = "https://wa.me/" + phone + "?text=" + encodeURIComponent(message);
 
         var cta = document.getElementById("moreInfo");
         cta.href = waUrl;
 
-        // Esta landing no pide datos, así que el clic ES la conversión: se
-        // registra en Stratos para no perder la atribución, y se le avisa a
-        // Meta para que pueda optimizar por ella.
+        // 2) Los que pasan a WhatsApp. El clic ES la conversion de esta
+        //    landing: se registra en Stratos, crea el lead en el CRM y se le
+        //    avisa a Meta para que pueda optimizar por el.
         cta.addEventListener("click", function () {
           try { if (window.fbq) fbq("track", "Lead", { content_name: "Mondrian Riviera Maya", content_category: "Duke del Caribe" }); } catch (e) {}
-          try {
-            var payload = JSON.stringify({
-              event: "whatsapp_click",
-              advisor: advisor,
-              project: "Mondrian",
-              campaign: campaign,
-              landing_path: window.location.pathname,
-              page_url: window.location.href,
-              referrer: document.referrer || "",
-              utm_source: params.get("utm_source") || "",
-              utm_medium: params.get("utm_medium") || "",
-              utm_campaign: params.get("utm_campaign") || "",
-              utm_content: params.get("utm_content") || "",
-              utm_term: params.get("utm_term") || "",
-              fbclid: params.get("fbclid") || ""
-            });
-            // sendBeacon no retrasa la salida a WhatsApp.
-            var url = "https://glulgyhkrqpykxmujodb.supabase.co/functions/v1/duke-lead-router";
-            if (navigator.sendBeacon) {
-              // text/plain a proposito: application/json no esta en la lista
-              // segura de CORS y obliga a un preflight que sendBeacon no puede
-              // hacer, asi que el navegador descarta el envio en silencio.
-              // La Edge Function parsea el body sin mirar el content-type.
-              navigator.sendBeacon(url, new Blob([payload], { type: "text/plain;charset=UTF-8" }));
-            } else {
-              fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: payload, keepalive: true });
-            }
-          } catch (e) {}
+          var datos = contexto("whatsapp_click");
+          datos.pair_code = codigo;
+          avisar(datos);
         });
       })();
     </script>

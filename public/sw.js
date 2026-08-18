@@ -33,7 +33,7 @@
  *   sola en la próxima navegación. Ver `main.jsx` → SERVICE WORKER.
  */
 
-const CACHE_VERSION = 'stratos-v379'; // v379: alias oscar = duke, misma persona y mismo whatsapp
+const CACHE_VERSION = 'stratos-v380'; // v380: se registra a todo el que llega a la landing, no solo al que da clic
 
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 // Nombre ESTABLE a propósito: no lleva CACHE_VERSION (ver cabecera).
