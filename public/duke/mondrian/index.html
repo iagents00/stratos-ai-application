@@ -454,7 +454,12 @@
       (function () {
         var params = new URLSearchParams(window.location.search);
         // Espejo del pool en Supabase. Si cambia un teléfono allá, cambiarlo aquí.
-        var phoneByAdvisor = { marco: "529848763357", ken: "529842181660", carlos: "529841794415" };
+        var phoneByAdvisor = {
+          marco: "529848763357",
+          ken: "529842181660",
+          carlos: "529841794415",
+          duke: "529841376686" // numero de la casa (Oscar Galvez)
+        };
         var advisor = (params.get("advisor") || params.get("asesor") || "marco").toLowerCase();
         var phone = phoneByAdvisor[advisor] || phoneByAdvisor.marco;
         // Cada asesor tiene su propia campana en Meta. El nombre se arma con el
