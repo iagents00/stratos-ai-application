@@ -33,7 +33,7 @@
  *   sola en la próxima navegación. Ver `main.jsx` → SERVICE WORKER.
  */
 
-const CACHE_VERSION = 'stratos-v386'; // v386: cada numero de whatsapp cae con su asesor
+const CACHE_VERSION = 'stratos-v386'; // v386: ruteo de whatsapp por asesor + leccion del saldo de Meta
 
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 // Nombre ESTABLE a propósito: no lleva CACHE_VERSION (ver cabecera).
