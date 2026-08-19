@@ -104,12 +104,18 @@ const calculateLeadScore = (lead) => {
   return Math.max(0, Math.min(100, Math.round(score)));
 };
 
+// ⚠️ Esta lista y la de chips del formulario (index.jsx → SOURCES) son las dos
+// caras del mismo dato: una deja ELEGIR el canal, la otra lo PINTA después. Si
+// agregas un canal en una sola, el cliente se guarda bien pero en su ficha no
+// se ve nada (SourceBadge devuelve null cuando la clave no está acá).
 const SRC_META = {
-  telegram: { label: "Telegram", color: "#29B6F6" },
-  whatsapp:  { label: "WhatsApp", color: "#25D366" },
-  facebook:  { label: "Facebook", color: "#7EB8F0" },
-  web:       { label: "Web",      color: "#A78BFA" },
-  manual:    { label: null,       color: null      },
+  telegram:  { label: "Telegram",  color: "#29B6F6" },
+  whatsapp:  { label: "WhatsApp",  color: "#25D366" },
+  facebook:  { label: "Facebook",  color: "#7EB8F0" },
+  instagram: { label: "Instagram", color: "#C13584" },
+  tiktok:    { label: "TikTok",    color: "#FE2C55" },
+  web:       { label: "Web",       color: "#A78BFA" },
+  manual:    { label: null,        color: null      },
 };
 const SourceBadge = ({ source, isLight }) => {
   const meta = SRC_META[source] || null;

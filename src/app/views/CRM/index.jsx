@@ -3691,6 +3691,8 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                   { key: "telegram",  label: "Telegram",  color: "#29B6F6" },
                   { key: "whatsapp",  label: "WhatsApp",  color: "#25D366" },
                   { key: "facebook",  label: "Facebook",  color: "#7EB8F0" },
+                  { key: "instagram", label: "Instagram", color: "#C13584" },
+                  { key: "tiktok",    label: "TikTok",    color: "#FE2C55" },
                   { key: "web",       label: "Web",       color: T.violet  },
                 ];
                 return (
