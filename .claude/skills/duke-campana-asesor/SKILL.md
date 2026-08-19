@@ -147,6 +147,41 @@ Después, a mano:
 
 ## 4. La campaña en Meta
 
+### 4.0 ANTES DE NADA: revisa el saldo de la cuenta
+
+Si el botón **Publicar** no hace nada —no da error, no cambia el contador de
+pendientes, simplemente no pasa nada— **no sigas intentando**. Ve a
+Facturación y pagos.
+
+Esto costó dos días. Se probaron seis rutas distintas de publicación (botón
+del editor, vista previa, diálogo de revisión con selección fila por fila,
+acción de la fila, sesión limpia, atajo de teclado), se investigó el código de
+error #2909034, se sospechó de la automatización. Nada de eso era.
+
+El diálogo real solo aparece al insistir:
+
+```
+⚠️ Tus anuncios dejarán de publicarse en breve.
+   Se rechazó el pago. Para seguir publicando anuncios,
+   paga el saldo pendiente.
+```
+
+**Meta bloquea las publicaciones cuando hay saldo vencido, y no lo dice.** El
+botón simplemente no responde.
+
+Peor: las campañas que YA estaban corriendo también se apagan. El 19-ago las
+de Marco y Ken dejaron de entregar sin aviso — se detectó porque el registro
+de visitas se quedó en cero:
+
+```sql
+-- ¿siguen vivas? si esto da 0, la campaña está muerta
+select advisor_name,
+       count(*) filter (where created_at > now() - interval '3 hours') as ultimas_3h
+from duke_ad_clicks where event='landing_view' group by 1;
+```
+
+
+
 ### 4.1 Lo que NO se debe hacer
 
 - **No usar formulario instantáneo.** El lead se queda dentro de Meta: no existe
@@ -289,6 +324,40 @@ delete from duke_ad_clicks where utm_source = 'qa';
 | Todos los leads salen con la misma campaña | El router no está mandando `campaign_id`/`adset_id`/`ad_id` a la RPC: sin ids solo aplica la regla comodín por nombre |
 | Se ven clics pero no visitas | La landing no está mandando `landing_view` al cargar. Ver 1 |
 | Un lead de formulario cae en round-robin | Falta la regla de `meta_ads_lead_routing_overrides` con el `campaign_id` de esa campaña |
+
+## 6.5 Que los mensajes de WhatsApp lleguen al CRM
+
+El objetivo es que **todo** cliente que le escriba a un asesor aparezca en
+Stratos, venga de campaña o sea mensaje directo.
+
+### La restricción que manda
+
+Si un número entra a la **API oficial de Meta**, deja de funcionar en la app de
+WhatsApp del teléfono. Es regla de WhatsApp, no nuestra. Así que:
+
+| el asesor quiere… | la conexión tiene que ser |
+|---|---|
+| seguir usando su celular normal | un puente tipo WhatsApp Web (se escanea un QR) |
+| trabajar desde Stratos/Chatwoot | API oficial de Meta |
+
+No hay opción que dé las dos cosas. Decidir esto ANTES de mover un número.
+
+### Lo que ya está resuelto del lado de Stratos
+
+La función que crea el lead tenía el asesor escrito a fuego (`'iAgents'`), así
+que aunque conectaras el número de alguien, el lead **no llegaba a su cuenta**.
+
+Ahora se enruta con `whatsapp_numero_asesor` y `fn_asesor_del_numero()`. Dar de
+alta un número es agregar una fila:
+
+```sql
+insert into whatsapp_numero_asesor (numero_whatsapp, asesor_id, asesor_name)
+values ('+52...', '<uuid del perfil>', 'Nombre Apellido');
+```
+
+La comparación usa los **últimos 10 dígitos**: `+52` contra `+521`, con o sin
+lada, con espacios. Ese detalle es la causa más común de que estos mapeos
+fallen en México.
 
 ## 7. Estado actual
 
