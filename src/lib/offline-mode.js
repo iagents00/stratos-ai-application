@@ -8,8 +8,8 @@
  *      automáticamente (también puede forzarse manualmente).
  *   2. Auth se valida contra una tabla local de email→password
  *      (las contraseñas conocidas del equipo).
- *   3. Los leads se cargan desde un JSON estático (`offline-seed/leads.json`)
- *      exportado del Supabase real antes del incidente.
+ *   3. (Removido ago-2026 por seguridad) El seed en JSON exponía PII real en el
+ *      bundle público; el modo offline ya no siembra datos, solo caché/espejo local.
  *   4. Cualquier cambio (notas, status, tareas) se acumula en
  *      `localStorage["stratos_pending_sync"]` como una cola.
  *   5. Cuando Supabase vuelve, el botón "🔄 Sincronizar" replay la cola.
@@ -23,27 +23,15 @@
  *   sin exponer ningún secreto en el cliente.
  */
 
-// ── Datos seed (se cargan dinámicamente para no inflar el bundle inicial) ──
-let _profilesCache = null
-let _leadsCache    = null
-
+// ── Seed offline ──
+// SEGURIDAD (ago-2026): los archivos data/offline-seed/{leads,profiles}.json
+// contenían PII real (nombres, teléfonos, notas) y Vite los emitía como chunk
+// público descargable SIN auth. Se eliminaron del repo/bundle. El modo offline
+// ya no siembra datos: la resiliencia se apoya en la sesión cacheada 24h
+// (auth.js → saveSessionCache) y el espejo local (stratos_leads_mirror),
+// no en un export global de la base.
 async function loadSeed() {
-  if (_profilesCache && _leadsCache) {
-    return { profiles: _profilesCache, leads: _leadsCache }
-  }
-  try {
-    const [profilesMod, leadsMod] = await Promise.all([
-      import('../data/offline-seed/profiles.json'),
-      import('../data/offline-seed/leads.json'),
-    ])
-    // Vite importa JSON como `default`. Soportar ambos formatos.
-    _profilesCache = profilesMod.default ?? profilesMod
-    _leadsCache    = leadsMod.default    ?? leadsMod
-    return { profiles: _profilesCache, leads: _leadsCache }
-  } catch (e) {
-    console.error('[Offline] No pude cargar el seed:', e)
-    return { profiles: [], leads: [] }
-  }
+  return { profiles: [], leads: [] }
 }
 
 // ── Tabla de contraseñas del equipo (modo emergencia) ──

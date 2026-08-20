@@ -33,7 +33,7 @@
  *   sola en la próxima navegación. Ver `main.jsx` → SERVICE WORKER.
  */
 
-const CACHE_VERSION = 'stratos-v387'; // v387: atribucion de anuncios que van directo a whatsapp
+const CACHE_VERSION = 'stratos-v388'; // v388: seguridad — remover seeds de PII del bundle offline
 
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 // Nombre ESTABLE a propósito: no lleva CACHE_VERSION (ver cabecera).
