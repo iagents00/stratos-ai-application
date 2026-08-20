@@ -33,7 +33,7 @@
  *   sola en la próxima navegación. Ver `main.jsx` → SERVICE WORKER.
  */
 
-const CACHE_VERSION = 'stratos-v387'; // v387: el expediente guarda la identificacion del cliente (ID/pasaporte) y el avatar la delata en verde
+const CACHE_VERSION = 'stratos-v388'; // v388: la foto del ID/pasaporte se sube al expediente (bucket evidencia, carpeta id-doc)
 
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 // Nombre ESTABLE a propósito: no lleva CACHE_VERSION (ver cabecera).

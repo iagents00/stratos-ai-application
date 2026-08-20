@@ -967,6 +967,9 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
     if ((withScore.id_document ?? '') !== (prev?.id_document ?? '')) {
       payload.id_document = withScore.id_document ?? null;
     }
+    if ((withScore.id_document_path ?? '') !== (prev?.id_document_path ?? '')) {
+      payload.id_document_path = withScore.id_document_path ?? null;
+    }
 
     // ── Modo offline: encolar el cambio en localStorage ─────────────────
     if (user?._offline) {
@@ -4322,7 +4325,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                         Con identificación registrada (id_document, se captura
                         en el Discovery): persona en verde en vez de inicial. */}
                     {(() => {
-                      const hasIdDoc = !!String(l.id_document || "").trim();
+                      const hasIdDoc = !!String(l.id_document || "").trim() || !!l.id_document_path;
                       return (
                         <div title={hasIdDoc ? `${L.viewDetail} · Identificación registrada` : L.viewDetail} style={{
                           width: 34, height: 34, borderRadius: 10,
