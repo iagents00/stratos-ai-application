@@ -3608,16 +3608,29 @@ const NotesModal = ({ lead, onClose, onSave, onUpdate, onSwitchTab, onShowHistor
       if (idDocFileRef.current) idDocFileRef.current.value = "";
     }
   };
+  // Visor propio (lightbox) en vez de window.open: abrir una pestaña DESPUÉS
+  // de un await pierde el gesto del usuario y el navegador lo bloquea como
+  // ventana emergente (reporte de Ivan: "me aparece como si hubiera ventana
+  // emergente pero no sale") — sobre todo en Safari/iPhone. El mismo patrón
+  // que el visor de comprobantes de la Caja: imagen a pantalla completa +
+  // botón Descargar con URL firmada `download` (funciona también en iPhone).
+  const [idDocViewer, setIdDocViewer] = useState(null); // null | {loading} | {url, urlDescarga, esPdf}
   const viewIdDocFile = async () => {
     const path = lead?.id_document_path;
     if (!path) return;
     setIdDocError("");
+    setIdDocViewer({ loading: true });
     try {
-      const { data, error } = await supabase.storage.from("evidencia").createSignedUrl(path, 3600);
-      if (error) throw error;
-      window.open(data.signedUrl, "_blank", "noopener");
-    } catch {
-      setIdDocError("No se pudo abrir el documento. Intenta de nuevo.");
+      const esPdf = /\.pdf($|\?)/i.test(path);
+      const [ver, bajar] = await Promise.all([
+        supabase.storage.from("evidencia").createSignedUrl(path, 3600),
+        supabase.storage.from("evidencia").createSignedUrl(path, 3600, { download: true }),
+      ]);
+      if (ver.error) throw ver.error;
+      setIdDocViewer({ url: ver.data.signedUrl, urlDescarga: bajar.data?.signedUrl || ver.data.signedUrl, esPdf });
+    } catch (e) {
+      setIdDocViewer(null);
+      setIdDocError(`No se pudo abrir el documento: ${e?.message || "intenta de nuevo"}`);
     }
   };
   const removeIdDocFile = () => {
@@ -3629,6 +3642,7 @@ const NotesModal = ({ lead, onClose, onSave, onUpdate, onSwitchTab, onShowHistor
   useEffect(() => {
     if (currentLeadIdRef.current !== lead?.id) {
       currentLeadIdRef.current = lead?.id;
+      setIdDocViewer(null);
       setNotesDraft(lead?.notas || "");
       setSaveStatus("idle");
       setLastSavedAt(null);
@@ -4297,6 +4311,56 @@ const NotesModal = ({ lead, onClose, onSave, onUpdate, onSwitchTab, onShowHistor
         {/* Dynamic Island — pill principal "Discovery" + "Análisis IA". */}
         <DrawerTabIsland current="discovery" onSwitch={onSwitchTab} T={T} />
       </div>
+
+      {/* Visor del documento de identidad — lightbox propio (mismo patrón que
+          el visor de comprobantes de la Caja). Muestra la imagen COMPLETA
+          dentro de la app y ofrece Descargar / Abrir aparte; el click en el
+          <a> sí es gesto directo del usuario, así que el navegador no lo
+          bloquea como popup. zIndex sobre el drawer (401). */}
+      {idDocViewer && (
+        <div onClick={() => setIdDocViewer(null)} style={{
+          position: "fixed", inset: 0, zIndex: 100000, background: "rgba(3,8,16,0.82)",
+          backdropFilter: "blur(6px)", WebkitBackdropFilter: "blur(6px)",
+          display: "flex", alignItems: "center", justifyContent: "center", padding: 20,
+        }}>
+          <button onClick={() => setIdDocViewer(null)} title="Cerrar" style={{
+            position: "absolute", top: 18, right: 18, background: "rgba(255,255,255,0.12)",
+            border: "none", borderRadius: 10, padding: 8, cursor: "pointer", color: "#fff", display: "flex",
+          }}><X size={18} /></button>
+          {idDocViewer.loading ? (
+            <div style={{ color: "#fff", fontSize: 14, fontFamily: font }}>Abriendo documento…</div>
+          ) : (
+            <div onClick={e => e.stopPropagation()} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 14, maxWidth: "94vw" }}>
+              {idDocViewer.esPdf ? (
+                // Un <img> con un PDF adentro da un ícono roto — tarjeta + descarga.
+                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 10, padding: "34px 40px", borderRadius: 16, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)" }}>
+                  <FileText size={38} color="#fff" strokeWidth={1.5} />
+                  <span style={{ color: "#fff", fontSize: 14, fontFamily: font }}>El documento es un PDF</span>
+                </div>
+              ) : (
+                <img src={idDocViewer.url} alt="Documento de identidad"
+                  style={{ maxWidth: "94vw", maxHeight: "76vh", borderRadius: 12, objectFit: "contain", boxShadow: "0 12px 48px rgba(0,0,0,0.5)" }} />
+              )}
+              <div style={{ display: "flex", gap: 10, flexWrap: "wrap", justifyContent: "center" }}>
+                <a href={idDocViewer.urlDescarga || idDocViewer.url} download style={{
+                  display: "inline-flex", alignItems: "center", gap: 7, padding: "11px 20px", borderRadius: 999,
+                  background: "#FFFFFF", color: "#0B1220", fontSize: 13.5, fontWeight: 600,
+                  fontFamily: font, textDecoration: "none",
+                }}>
+                  <Download size={15} /> Descargar
+                </a>
+                <a href={idDocViewer.url} target="_blank" rel="noreferrer" style={{
+                  display: "inline-flex", alignItems: "center", gap: 7, padding: "11px 20px", borderRadius: 999,
+                  border: "1px solid rgba(255,255,255,0.25)", color: "#fff", fontSize: 13.5,
+                  fontFamily: font, textDecoration: "none",
+                }}>
+                  <ExternalLink size={15} /> Abrir aparte
+                </a>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
     </>,
     document.body
   );

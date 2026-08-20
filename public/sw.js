@@ -33,7 +33,7 @@
  *   sola en la próxima navegación. Ver `main.jsx` → SERVICE WORKER.
  */
 
-const CACHE_VERSION = 'stratos-v388'; // v388: la foto del ID/pasaporte se sube al expediente (bucket evidencia, carpeta id-doc)
+const CACHE_VERSION = 'stratos-v389'; // v389: la foto del ID se VE en un visor propio (el window.open tras await salia bloqueado como popup)
 
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 // Nombre ESTABLE a propósito: no lleva CACHE_VERSION (ver cabecera).
