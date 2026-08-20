@@ -961,6 +961,13 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
       payload.notas = withScore.notas;
     }
 
+    // id_document (INE/pasaporte, capturado en el Discovery): mismo patrón que
+    // notas — solo se persiste si cambió, para que una edición con copia vieja
+    // del lead no pise la identificación registrada desde otro dispositivo.
+    if ((withScore.id_document ?? '') !== (prev?.id_document ?? '')) {
+      payload.id_document = withScore.id_document ?? null;
+    }
+
     // ── Modo offline: encolar el cambio en localStorage ─────────────────
     if (user?._offline) {
       updateOfflineLead(withScore.id, payload, user);
@@ -4311,21 +4318,38 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                        Segunda línea: asesor · proyecto · fecha · campaña. */}
                   <div style={{ display: "flex", alignItems: "center", gap: 11, minWidth: 0 }}>
                     {/* Avatar — rounded square, initial, accent tint.
-                        Click → abre el Discovery (vía el onClick de la fila). */}
-                    <div title={L.viewDetail} style={{
-                      width: 34, height: 34, borderRadius: 10,
-                      background: isLight
-                        ? `linear-gradient(145deg, ${T.violet}1A 0%, ${T.violet}0D 100%)`
-                        : `linear-gradient(145deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.04) 100%)`,
-                      border: `1px solid ${isLight ? `${T.violet}38` : "rgba(255,255,255,0.10)"}`,
-                      boxShadow: isLight
-                        ? `inset 0 1px 0 rgba(255,255,255,0.9), 0 1px 2px ${T.violet}14`
-                        : `inset 0 1px 0 rgba(255,255,255,0.07)`,
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                      fontSize: 13, fontWeight: 500,
-                      color: isLight ? `color-mix(in srgb, ${T.violet} 62%, #0B1220 38%)` : "rgba(255,255,255,0.72)",
-                      flexShrink: 0, fontFamily: fontDisp, letterSpacing: "-0.01em",
-                    }}>{l.n.charAt(0)}</div>
+                        Click → abre el Discovery (vía el onClick de la fila).
+                        Con identificación registrada (id_document, se captura
+                        en el Discovery): persona en verde en vez de inicial. */}
+                    {(() => {
+                      const hasIdDoc = !!String(l.id_document || "").trim();
+                      return (
+                        <div title={hasIdDoc ? `${L.viewDetail} · Identificación registrada` : L.viewDetail} style={{
+                          width: 34, height: 34, borderRadius: 10,
+                          background: hasIdDoc
+                            ? (isLight
+                                ? `linear-gradient(145deg, ${T.emerald}1F 0%, ${T.emerald}0D 100%)`
+                                : `linear-gradient(145deg, ${T.emerald}26 0%, ${T.emerald}10 100%)`)
+                            : (isLight
+                                ? `linear-gradient(145deg, ${T.violet}1A 0%, ${T.violet}0D 100%)`
+                                : `linear-gradient(145deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.04) 100%)`),
+                          border: `1px solid ${hasIdDoc
+                            ? (isLight ? `${T.emerald}4D` : `${T.emerald}4D`)
+                            : (isLight ? `${T.violet}38` : "rgba(255,255,255,0.10)")}`,
+                          boxShadow: isLight
+                            ? `inset 0 1px 0 rgba(255,255,255,0.9), 0 1px 2px ${hasIdDoc ? T.emerald : T.violet}14`
+                            : `inset 0 1px 0 rgba(255,255,255,0.07)`,
+                          display: "flex", alignItems: "center", justifyContent: "center",
+                          fontSize: 13, fontWeight: 500,
+                          color: hasIdDoc
+                            ? (isLight ? `color-mix(in srgb, ${T.emerald} 68%, #0B1220 32%)` : T.emerald)
+                            : (isLight ? `color-mix(in srgb, ${T.violet} 62%, #0B1220 38%)` : "rgba(255,255,255,0.72)"),
+                          flexShrink: 0, fontFamily: fontDisp, letterSpacing: "-0.01em",
+                        }}>
+                          {hasIdDoc ? <User size={16} strokeWidth={2.2} /> : l.n.charAt(0)}
+                        </div>
+                      );
+                    })()}
 
                     {/* Identity block — fills remaining width */}
                     <div style={{ minWidth: 0, flex: 1 }}>

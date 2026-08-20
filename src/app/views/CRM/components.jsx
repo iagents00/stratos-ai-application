@@ -3560,6 +3560,27 @@ const NotesModal = ({ lead, onClose, onSave, onUpdate, onSwitchTab, onShowHistor
   const saveTimerRef = useRef(null);
   const dirtyRef = useRef(false);
   const currentLeadIdRef = useRef(lead?.id);
+  // ── IDENTIFICACIÓN DEL CLIENTE (INE / pasaporte) ──────────────────────
+  // Campo compacto de una línea dentro de la sección de notas. Se guarda
+  // on blur (o Enter) vía onUpdate → columna leads.id_document. Cuando hay
+  // valor, el avatar del expediente y el de la tabla pasan a persona verde.
+  const [idDocDraft, setIdDocDraft] = useState(lead?.id_document || "");
+  const idDocDirtyRef = useRef(false);
+  useEffect(() => {
+    idDocDirtyRef.current = false;
+    setIdDocDraft(lead?.id_document || "");
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lead?.id]);
+  useEffect(() => {
+    if (!idDocDirtyRef.current) setIdDocDraft(lead?.id_document || "");
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lead?.id_document]);
+  const saveIdDoc = () => {
+    idDocDirtyRef.current = false;
+    const v = idDocDraft.trim();
+    if (v === String(lead?.id_document || "").trim()) return;
+    onUpdate?.({ ...lead, id_document: v || null });
+  };
 
   // Si cambia el lead activo (drawer abierto a otro lead), reset draft
   useEffect(() => {
@@ -3697,21 +3718,34 @@ const NotesModal = ({ lead, onClose, onSave, onUpdate, onSwitchTab, onShowHistor
             etapa, presupuesto) vive en una sub-línea ligera. ════════════ */}
         <div style={{ padding: isMobile ? "10px 16px 14px" : "18px 24px 16px", borderBottom: `1px solid ${T.border}`, flexShrink: 0 }}>
           <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
-            {/* Izquierda: avatar + nombre + sub-línea */}
+            {/* Izquierda: avatar + nombre + sub-línea.
+                Con identificación registrada (lead.id_document) el avatar
+                cambia: inicial azul → icono de persona en verde, señal
+                visual de "este cliente ya dejó su INE/pasaporte". */}
             <div style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 0, flex: 1 }}>
-              <div style={{
-                width: isMobile ? 40 : 44, height: isMobile ? 40 : 44, borderRadius: 12,
-                background: isLight
-                  ? `linear-gradient(145deg, ${T.blue}1A 0%, ${T.blue}0D 100%)`
-                  : `linear-gradient(145deg, ${T.blue}24 0%, ${T.blue}10 100%)`,
-                border: `1px solid ${isLight ? `${T.blue}38` : `${T.blue}44`}`,
-                display: "flex", alignItems: "center", justifyContent: "center",
-                fontSize: isMobile ? 16 : 18, fontWeight: 500,
-                color: isLight ? `color-mix(in srgb, ${T.blue} 60%, #0B1220 40%)` : T.blue,
-                fontFamily: fontDisp, flexShrink: 0,
-                boxShadow: isLight ? `0 1px 2px ${T.blue}18, inset 0 1px 0 rgba(255,255,255,0.6)` : "none",
-                letterSpacing: "-0.02em",
-              }}>{(lead.n || "?").charAt(0).toUpperCase()}</div>
+              {(() => {
+                const hasIdDoc = !!String(lead.id_document || "").trim();
+                const avC = hasIdDoc ? T.emerald : T.blue;
+                return (
+                  <div title={hasIdDoc ? "Identificación registrada" : undefined} style={{
+                    width: isMobile ? 40 : 44, height: isMobile ? 40 : 44, borderRadius: 12,
+                    background: isLight
+                      ? `linear-gradient(145deg, ${avC}1A 0%, ${avC}0D 100%)`
+                      : `linear-gradient(145deg, ${avC}24 0%, ${avC}10 100%)`,
+                    border: `1px solid ${isLight ? `${avC}38` : `${avC}44`}`,
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    fontSize: isMobile ? 16 : 18, fontWeight: 500,
+                    color: isLight ? `color-mix(in srgb, ${avC} 60%, #0B1220 40%)` : avC,
+                    fontFamily: fontDisp, flexShrink: 0,
+                    boxShadow: isLight ? `0 1px 2px ${avC}18, inset 0 1px 0 rgba(255,255,255,0.6)` : "none",
+                    letterSpacing: "-0.02em",
+                  }}>
+                    {hasIdDoc
+                      ? <User size={isMobile ? 19 : 21} strokeWidth={2.2} />
+                      : (lead.n || "?").charAt(0).toUpperCase()}
+                  </div>
+                );
+              })()}
               <div style={{ minWidth: 0, flex: 1 }}>
                 <h2 style={{
                   margin: 0,
@@ -3921,6 +3955,49 @@ const NotesModal = ({ lead, onClose, onSave, onUpdate, onSwitchTab, onShowHistor
               fechadas tipo registro de interacción". */}
           <div>
             <SectionLabel T={T} icon={FileText}>Notas del expediente</SectionLabel>
+
+            {/* ID / PASAPORTE — una sola línea, discreta, arriba del textarea.
+                Vacía: gris neutro. Con valor: tinte verde + persona, el mismo
+                código visual del avatar. Guarda on blur o Enter. */}
+            {(() => {
+              const filled = !!idDocDraft.trim();
+              const g = T.emerald;
+              const gTxt = isLight ? `color-mix(in srgb, ${g} 72%, #0B1220 28%)` : g;
+              return (
+                <div style={{
+                  display: "flex", alignItems: "center", gap: 8,
+                  margin: "0 0 10px", padding: "7px 12px", borderRadius: 10,
+                  background: filled
+                    ? (isLight ? `${g}0F` : `${g}0D`)
+                    : (isLight ? "rgba(15,23,42,0.025)" : "rgba(255,255,255,0.03)"),
+                  border: `1px solid ${filled ? (isLight ? `${g}42` : `${g}38`) : T.border}`,
+                  transition: "border-color 0.18s, background 0.18s",
+                }}>
+                  {filled
+                    ? <BadgeCheck size={13} color={gTxt} strokeWidth={2.4} style={{ flexShrink: 0 }} />
+                    : <User size={13} color={T.txt3} strokeWidth={2.2} style={{ flexShrink: 0 }} />}
+                  <span style={{
+                    fontSize: 10.5, fontWeight: 500, letterSpacing: "0.08em",
+                    textTransform: "uppercase", fontFamily: fontDisp, flexShrink: 0,
+                    color: filled ? gTxt : T.txt3,
+                  }}>ID / Pasaporte</span>
+                  <input
+                    value={idDocDraft}
+                    onChange={e => { idDocDirtyRef.current = true; setIdDocDraft(e.target.value); }}
+                    onBlur={saveIdDoc}
+                    onKeyDown={e => { if (e.key === "Enter") e.currentTarget.blur(); }}
+                    placeholder="INE, pasaporte o identificación…"
+                    spellCheck={false}
+                    style={{
+                      flex: 1, minWidth: 0,
+                      background: "transparent", border: "none", outline: "none",
+                      color: T.txt, fontSize: 12.5, fontFamily: font, padding: 0,
+                    }}
+                  />
+                </div>
+              );
+            })()}
+
             <textarea
               value={notesDraft}
               onChange={e => handleChange(e.target.value)}

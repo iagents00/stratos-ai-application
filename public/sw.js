@@ -33,7 +33,7 @@
  *   sola en la próxima navegación. Ver `main.jsx` → SERVICE WORKER.
  */
 
-const CACHE_VERSION = 'stratos-v386'; // v386: ruteo de whatsapp por asesor + leccion del saldo de Meta
+const CACHE_VERSION = 'stratos-v387'; // v387: el expediente guarda la identificacion del cliente (ID/pasaporte) y el avatar la delata en verde
 
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 // Nombre ESTABLE a propósito: no lleva CACHE_VERSION (ver cabecera).
