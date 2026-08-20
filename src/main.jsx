@@ -20,6 +20,8 @@ import { AuthProvider }   from "./contexts/AuthContext";
 import { ClientProvider } from "./contexts/ClientContext";
 import { ClientOrgGuard } from "./contexts/ClientOrgGuard";
 import { resolveClientFromLocation, matchClientFromLocation } from "./clients";
+import { isNative } from "./lib/native";
+import { initNative } from "./lib/native-bootstrap";
 import ErrorBoundary   from "./components/ErrorBoundary.jsx";
 
 // Code-splitting: solo se carga el bundle de la experiencia que el usuario
@@ -88,13 +90,17 @@ const clientId        = matchClientFromLocation(window.location);
 const clientConfig    = resolveClientFromLocation(window.location);
 const isExplicitClient = clientId !== "duke";
 
-const isLanding = !isExplicitClient && (
+// NATIVO (iOS/Android): el WKWebView sirve la app desde capacitor://localhost,
+// así que hostname === "localhost" y la heurística de dev de abajo daría true
+// → la app del App Store abriría la LANDING DE MARKETING en vez del CRM.
+// El binario nativo ES la plataforma: nunca landing, nunca páginas públicas.
+const isLanding = !isNative && !isExplicitClient && (
   LANDING_DOMAINS.includes(hostname)
   || (hostname === "localhost" && !params.has("app"))
   || (hostname === "127.0.0.1" && !params.has("app"))
 );
 
-const isApp = !isPrivacy && !isDeletion && !isDelivery && !isManual && !isLanding;
+const isApp = isNative || (!isPrivacy && !isDeletion && !isDelivery && !isManual && !isLanding);
 
 // URL de la plataforma — usada por la landing para el CTA principal
 const APP_URL = import.meta.env.VITE_APP_URL || (window.location.origin + "/?app");
@@ -141,6 +147,11 @@ createRoot(document.getElementById("root")).render(
   </StrictMode>
 );
 
+// ─── CONTENEDOR NATIVO (iOS/Android) ────────────────────────────────────────
+// Después del render: status bar, teclado, splash. No-op en web.
+// No lo await-eamos ni bloqueamos el render — es shell, no datos.
+initNative();
+
 // ─── SERVICE WORKER ─────────────────────────────────────────────────────────
 // Registramos el SW en producción y en preview. NO en dev (puerto 5173) porque
 // el HMR de Vite se vuelve impredecible cuando el SW intercepta requests.
@@ -149,7 +160,11 @@ createRoot(document.getElementById("root")).render(
 //   · App carga sin internet (cache-first del shell)
 //   · Instalable como app nativa en celular (Add to Home Screen)
 //   · Datos seed offline siempre disponibles
-if ("serviceWorker" in navigator && import.meta.env.PROD) {
+// NATIVO: no registrar. Capacitor ya sirve el bundle desde disco local (offline
+// por definición) y un SW bajo el esquema capacitor:// pelea con el WebView:
+// intercepta requests que nunca pasan por red y el controllerchange dispara
+// reloads en loop. El caché nativo lo maneja Capacitor, no el SW.
+if ("serviceWorker" in navigator && import.meta.env.PROD && !isNative) {
   window.addEventListener("load", () => {
     navigator.serviceWorker.register("/sw.js", { scope: "/" })
       .then(reg => {

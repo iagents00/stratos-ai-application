@@ -24,11 +24,12 @@
 import { useEffect, useRef } from "react";
 import { useAuth } from "../hooks/useAuth";
 import { useClient } from "../hooks/useClient";
-import { resolveRedirectForUser } from "../clients";
+import { resolveRedirectForUser, getClientIdByOrgId } from "../clients";
+import { isNative } from "../lib/native";
 
 export function ClientOrgGuard() {
   const { user } = useAuth();
-  const { clientId } = useClient();
+  const { clientId, setClientById } = useClient();
   // Evita redirects múltiples si el componente re-renderea durante la
   // navegación (replace() es asíncrono en la práctica).
   const redirectedRef = useRef(false);
@@ -39,6 +40,28 @@ export function ClientOrgGuard() {
 
     // Las cuentas demo no tienen una org "real" — saltearlas.
     if (user?._offline || user?.id === "demo-user-local") return;
+
+    // ── NATIVO (iOS/Android) ────────────────────────────────────────────────
+    // Es UNA sola app para todos los clientes, servida desde
+    // capacitor://localhost/ — no hay path ni subdominio que cambiar, y un
+    // location.replace() a capacitor://localhost/grupo28 daría 404 porque no
+    // hay servidor que rutee: el usuario quedaría con pantalla en blanco.
+    // Aquí el tenant se aplica en memoria y el árbol re-renderea con la config
+    // correcta. No marcamos redirectedRef: si el usuario cierra sesión y entra
+    // con una cuenta de otra organización, tiene que volver a aplicarse.
+    if (isNative) {
+      const targetClientId = getClientIdByOrgId(user.organizationId);
+      if (targetClientId && targetClientId !== clientId) {
+        if (import.meta.env.DEV) {
+          console.info(
+            `[Stratos] Nativo: org ${user.organizationId} → tenant "${targetClientId}" ` +
+            `(sin redirect, se aplica en runtime)`
+          );
+        }
+        setClientById(targetClientId);
+      }
+      return;
+    }
 
     const redirectUrl = resolveRedirectForUser(user, clientId, window.location);
     if (redirectUrl) {
@@ -52,7 +75,7 @@ export function ClientOrgGuard() {
       }
       window.location.replace(redirectUrl);
     }
-  }, [user, clientId]);
+  }, [user, clientId, setClientById]);
 
   return null;
 }
