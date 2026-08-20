@@ -33,7 +33,7 @@
  *   sola en la próxima navegación. Ver `main.jsx` → SERVICE WORKER.
  */
 
-const CACHE_VERSION = 'stratos-v389'; // v389: la foto del ID se VE en un visor propio (el window.open tras await salia bloqueado como popup)
+const CACHE_VERSION = 'stratos-v387'; // v387: atribucion de anuncios que van directo a whatsapp
 
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 // Nombre ESTABLE a propósito: no lleva CACHE_VERSION (ver cabecera).
