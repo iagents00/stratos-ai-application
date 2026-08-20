@@ -3581,6 +3581,49 @@ const NotesModal = ({ lead, onClose, onSave, onUpdate, onSwitchTab, onShowHistor
     if (v === String(lead?.id_document || "").trim()) return;
     onUpdate?.({ ...lead, id_document: v || null });
   };
+  // Foto del documento — sube al bucket privado `evidencia`, carpeta
+  // id-doc/<orgId>/<leadId>/ (RLS: org + visibilidad del lead, migración 231).
+  // El path queda en leads.id_document_path y se abre con URL firmada.
+  const idDocFileRef = useRef(null);
+  const [idDocUploading, setIdDocUploading] = useState(false);
+  const [idDocError, setIdDocError] = useState("");
+  const uploadIdDocFile = async (file) => {
+    if (!file || !lead?.id) return;
+    if (notesUser?.isDemo) { setIdDocError("No disponible en modo demo."); return; }
+    const orgId = notesUser?.organizationId;
+    if (!orgId) { setIdDocError("Sin organización activa — recarga la app."); return; }
+    setIdDocUploading(true); setIdDocError("");
+    try {
+      const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
+      const path = `id-doc/${orgId}/${lead.id}/${Date.now()}.${ext}`;
+      const up = await supabase.storage.from("evidencia").upload(path, file, { upsert: true });
+      if (up.error) throw up.error;
+      onUpdate?.({ ...lead, id_document_path: path });
+    } catch (e) {
+      // Se muestra la causa real (lección de la Caja: "probá con otra imagen"
+      // tapaba errores de permisos del bucket).
+      setIdDocError(`No se pudo subir: ${e?.message || "error desconocido"}`);
+    } finally {
+      setIdDocUploading(false);
+      if (idDocFileRef.current) idDocFileRef.current.value = "";
+    }
+  };
+  const viewIdDocFile = async () => {
+    const path = lead?.id_document_path;
+    if (!path) return;
+    setIdDocError("");
+    try {
+      const { data, error } = await supabase.storage.from("evidencia").createSignedUrl(path, 3600);
+      if (error) throw error;
+      window.open(data.signedUrl, "_blank", "noopener");
+    } catch {
+      setIdDocError("No se pudo abrir el documento. Intenta de nuevo.");
+    }
+  };
+  const removeIdDocFile = () => {
+    setIdDocError("");
+    onUpdate?.({ ...lead, id_document_path: null });
+  };
 
   // Si cambia el lead activo (drawer abierto a otro lead), reset draft
   useEffect(() => {
@@ -3724,7 +3767,7 @@ const NotesModal = ({ lead, onClose, onSave, onUpdate, onSwitchTab, onShowHistor
                 visual de "este cliente ya dejó su INE/pasaporte". */}
             <div style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 0, flex: 1 }}>
               {(() => {
-                const hasIdDoc = !!String(lead.id_document || "").trim();
+                const hasIdDoc = !!String(lead.id_document || "").trim() || !!lead.id_document_path;
                 const avC = hasIdDoc ? T.emerald : T.blue;
                 return (
                   <div title={hasIdDoc ? "Identificación registrada" : undefined} style={{
@@ -3957,43 +4000,87 @@ const NotesModal = ({ lead, onClose, onSave, onUpdate, onSwitchTab, onShowHistor
             <SectionLabel T={T} icon={FileText}>Notas del expediente</SectionLabel>
 
             {/* ID / PASAPORTE — una sola línea, discreta, arriba del textarea.
-                Vacía: gris neutro. Con valor: tinte verde + persona, el mismo
-                código visual del avatar. Guarda on blur o Enter. */}
+                Vacía: gris neutro. Con valor (texto o foto): tinte verde +
+                persona, el mismo código visual del avatar. El texto guarda on
+                blur o Enter; la foto sube al bucket privado `evidencia`. */}
             {(() => {
-              const filled = !!idDocDraft.trim();
+              const hasFile = !!lead.id_document_path;
+              const filled = !!idDocDraft.trim() || hasFile;
               const g = T.emerald;
               const gTxt = isLight ? `color-mix(in srgb, ${g} 72%, #0B1220 28%)` : g;
+              const miniBtn = (active) => ({
+                display: "inline-flex", alignItems: "center", gap: 4,
+                padding: "3px 8px", borderRadius: 7, cursor: "pointer",
+                background: active ? (isLight ? `${g}14` : `${g}1A`) : "transparent",
+                border: `1px solid ${active ? (isLight ? `${g}4D` : `${g}44`) : T.border}`,
+                color: active ? gTxt : T.txt3,
+                fontSize: 10.5, fontWeight: 500, fontFamily: fontDisp,
+                letterSpacing: "0.04em", flexShrink: 0, transition: "all 0.15s",
+              });
               return (
-                <div style={{
-                  display: "flex", alignItems: "center", gap: 8,
-                  margin: "0 0 10px", padding: "7px 12px", borderRadius: 10,
-                  background: filled
-                    ? (isLight ? `${g}0F` : `${g}0D`)
-                    : (isLight ? "rgba(15,23,42,0.025)" : "rgba(255,255,255,0.03)"),
-                  border: `1px solid ${filled ? (isLight ? `${g}42` : `${g}38`) : T.border}`,
-                  transition: "border-color 0.18s, background 0.18s",
-                }}>
-                  {filled
-                    ? <BadgeCheck size={13} color={gTxt} strokeWidth={2.4} style={{ flexShrink: 0 }} />
-                    : <User size={13} color={T.txt3} strokeWidth={2.2} style={{ flexShrink: 0 }} />}
-                  <span style={{
-                    fontSize: 10.5, fontWeight: 500, letterSpacing: "0.08em",
-                    textTransform: "uppercase", fontFamily: fontDisp, flexShrink: 0,
-                    color: filled ? gTxt : T.txt3,
-                  }}>ID / Pasaporte</span>
-                  <input
-                    value={idDocDraft}
-                    onChange={e => { idDocDirtyRef.current = true; setIdDocDraft(e.target.value); }}
-                    onBlur={saveIdDoc}
-                    onKeyDown={e => { if (e.key === "Enter") e.currentTarget.blur(); }}
-                    placeholder="INE, pasaporte o identificación…"
-                    spellCheck={false}
-                    style={{
-                      flex: 1, minWidth: 0,
-                      background: "transparent", border: "none", outline: "none",
-                      color: T.txt, fontSize: 12.5, fontFamily: font, padding: 0,
-                    }}
-                  />
+                <div style={{ margin: "0 0 10px" }}>
+                  <div style={{
+                    display: "flex", alignItems: "center", gap: 8,
+                    padding: "7px 12px", borderRadius: 10,
+                    background: filled
+                      ? (isLight ? `${g}0F` : `${g}0D`)
+                      : (isLight ? "rgba(15,23,42,0.025)" : "rgba(255,255,255,0.03)"),
+                    border: `1px solid ${filled ? (isLight ? `${g}42` : `${g}38`) : T.border}`,
+                    transition: "border-color 0.18s, background 0.18s",
+                  }}>
+                    {filled
+                      ? <BadgeCheck size={13} color={gTxt} strokeWidth={2.4} style={{ flexShrink: 0 }} />
+                      : <User size={13} color={T.txt3} strokeWidth={2.2} style={{ flexShrink: 0 }} />}
+                    <span style={{
+                      fontSize: 10.5, fontWeight: 500, letterSpacing: "0.08em",
+                      textTransform: "uppercase", fontFamily: fontDisp, flexShrink: 0,
+                      color: filled ? gTxt : T.txt3,
+                    }}>ID / Pasaporte</span>
+                    <input
+                      value={idDocDraft}
+                      onChange={e => { idDocDirtyRef.current = true; setIdDocDraft(e.target.value); }}
+                      onBlur={saveIdDoc}
+                      onKeyDown={e => { if (e.key === "Enter") e.currentTarget.blur(); }}
+                      placeholder="INE, pasaporte o identificación…"
+                      spellCheck={false}
+                      style={{
+                        flex: 1, minWidth: 0,
+                        background: "transparent", border: "none", outline: "none",
+                        color: T.txt, fontSize: 12.5, fontFamily: font, padding: 0,
+                      }}
+                    />
+                    {/* Foto del documento: subir / ver / quitar */}
+                    <input
+                      ref={idDocFileRef}
+                      type="file"
+                      accept="image/*,application/pdf"
+                      style={{ display: "none" }}
+                      onChange={e => uploadIdDocFile(e.target.files?.[0])}
+                    />
+                    {idDocUploading ? (
+                      <span style={{ ...miniBtn(false), cursor: "default" }}>Subiendo…</span>
+                    ) : hasFile ? (
+                      <>
+                        <button type="button" onClick={viewIdDocFile} title="Ver el documento subido" style={miniBtn(true)}>
+                          <Eye size={11} strokeWidth={2.4} />
+                          Ver
+                        </button>
+                        <button type="button" onClick={removeIdDocFile} title="Quitar el documento" style={{ ...miniBtn(false), padding: "3px 6px" }}>
+                          <Trash2 size={11} strokeWidth={2.2} />
+                        </button>
+                      </>
+                    ) : (
+                      <button type="button" onClick={() => idDocFileRef.current?.click()} title="Subir foto del documento (imagen o PDF)" style={miniBtn(false)}>
+                        <Image size={11} strokeWidth={2.2} />
+                        Foto
+                      </button>
+                    )}
+                  </div>
+                  {idDocError && (
+                    <p style={{ margin: "5px 2px 0", fontSize: 11, color: "#F87171", fontFamily: font }}>
+                      {idDocError}
+                    </p>
+                  )}
                 </div>
               );
             })()}
