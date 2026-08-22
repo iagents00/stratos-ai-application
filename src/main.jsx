@@ -21,6 +21,7 @@ import { ClientProvider } from "./contexts/ClientContext";
 import { ClientOrgGuard } from "./contexts/ClientOrgGuard";
 import { resolveClientFromLocation, matchClientFromLocation } from "./clients";
 import ErrorBoundary   from "./components/ErrorBoundary.jsx";
+import UpdatePill      from "./components/UpdatePill.jsx";
 import { recoverFromStaleChunk } from "./lib/chunk-recovery.js";
 import { isNativeApp } from "./lib/native";
 
@@ -302,6 +303,10 @@ createRoot(document.getElementById("root")).render(
               path correcto. Solo activo cuando isApp=true porque las páginas
               públicas (privacy, deletion, etc.) no necesitan este guardrail. */}
           {isApp && <ClientOrgGuard />}
+          {/* Aviso de versión nueva. Se pinta SOLO dentro de la app nativa y
+              solo cuando el servidor sirve un bundle distinto al que corre.
+              Nunca recarga solo: la recarga la toca el usuario (ver #594). */}
+          {isApp && <UpdatePill />}
           <Suspense fallback={null}>
             {isPublicLanding
               ? <PublicLanding />
