@@ -33,7 +33,7 @@
  *   sola en la próxima navegación. Ver `main.jsx` → SERVICE WORKER.
  */
 
-const CACHE_VERSION = 'stratos-v389'; // v389: iOS — plugins nativos enlazados + pulido del WebView
+const CACHE_VERSION = 'stratos-v390'; // v390: aviso de versión nueva dentro de la app nativa
 
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 // Nombre ESTABLE a propósito: no lleva CACHE_VERSION (ver cabecera).
