@@ -33,6 +33,56 @@ TGenius y Vega comparten binario; el tenant se resuelve tras el login).
 
 ---
 
+## Dónde está la app móvil (auditado 21-ago-2026)
+
+**El código de la app iOS ES el mismo código de la web.** No hay carpeta
+`mobile/` ni proyecto aparte: Capacitor toma el bundle que produce
+`npm run build` (la carpeta `dist/`) y lo mete dentro del proyecto Xcode.
+
+| Qué | Dónde |
+|---|---|
+| Interfaz de la app | `src/` — el mismo React de la web |
+| Layout móvil | `src/app/App.jsx` → `@media(max-width:768px)` (~línea 968) |
+| Barra inferior | `src/app/App.jsx` → `.stratos-bottomnav` (~línea 1352) |
+| Estilos solo-nativo | `src/index.css` → bloque `html.stratos-native` |
+| Detección de plataforma | `src/lib/native.js` |
+| Arranque nativo | `src/lib/native-bootstrap.js` |
+| Proyecto Xcode | `ios/App/App.xcodeproj` |
+| Bundle copiado al binario | `ios/App/App/public/` (se regenera, no se commitea) |
+| Config del contenedor | `capacitor.config.json` |
+
+Para ver cambios de web dentro de la app: `npm run ios:sync`.
+
+### Resultado de la auditoría a 393×852 (iPhone 15/16)
+
+Sano:
+- Sin overflow horizontal de página en CRM ni en Comando.
+- Las tres tablas de Comando viven en contenedores `overflow-x:auto` — scrollean
+  solas, no se cortan columnas.
+- Ya existe un diseño móvil real: barra inferior de pestañas, FAB, tarjetas de
+  prioridad, header colapsado. No es la vista de escritorio encogida.
+- Inputs a 16px (evita el zoom automático de iOS), `touch-action: manipulation`,
+  tap highlight de marca.
+
+Corregido en esta pasada:
+- La barra inferior no respetaba el indicador de inicio del iPhone: los 34pt
+  se comían las etiquetas CRM/Comando/Más. Igual el padding del contenido y el
+  desplegable "Más".
+- Faltaba apagar la selección de texto en el chrome de la UI: en iOS, dejar el
+  dedo sobre un botón sacaba la lupa y el menú "Copiar · Buscar".
+- El rebote elástico descubría el fondo del WebView al arrastrar de más.
+
+Pendiente, decisión de diseño:
+- **58 de 117 controles quedan por debajo de los 44×44 pt** que recomienda
+  Apple; hay varios de 24×24 y 32×32. No es causa de rechazo en App Review,
+  pero se sienten incómodos en un teléfono real. Agrandarlos cambia la
+  densidad visual del CRM, que es referencia del cliente (`DESIGN_SYSTEM.md`),
+  así que se deja como tarea aparte y consensuada. La alternativa sin tocar
+  el diseño es ampliar solo el área táctil con un pseudo-elemento, botón por
+  botón.
+
+---
+
 ## Paso 0 — Actualizar macOS  ⬅️ BLOQUEANTE
 
 **El Xcode actual del App Store exige macOS 26.2 o posterior.** Esta Mac estaba
