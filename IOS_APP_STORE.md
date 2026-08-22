@@ -33,10 +33,28 @@ TGenius y Vega comparten binario; el tenant se resuelve tras el login).
 
 ---
 
+## Paso 0 — Actualizar macOS  ⬅️ BLOQUEANTE
+
+**El Xcode actual del App Store exige macOS 26.2 o posterior.** Esta Mac estaba
+en **26.1** (build 25B78), así que el botón "Obtener" habría fallado.
+
+Configuración del Sistema → General → Actualización de software →
+**macOS Tahoe 26.6.2** (17.38 GB, ~20 min de instalación + reinicio).
+
+Requiere contraseña de administrador, así que lo lanza Ivan a mano.
+
+> **Espacio en disco.** El disco estaba al 88% (25 GB libres) — insuficiente
+> para encadenar los 17.38 GB de macOS con los 9.45 GB de Xcode. Se liberaron
+> 9 GB de cachés de navegador (Chrome, Brave, Atlas, Claude, Edge) y Homebrew,
+> quedando en **34 GB**. Si vuelve a faltar espacio, los cachés se regeneran y
+> se pueden volver a borrar; NO borrar
+> `~/Library/Application Support/Claude/vm_bundles` (10 GB) porque es la VM de
+> Claude Desktop.
+
 ## Paso 1 — Instalar Xcode  ⬅️ BLOQUEANTE
 
-App Store → buscar "Xcode" → Instalar (~15 GB, 30-60 min). Al terminar, ábrelo
-una vez y acepta la licencia. Después:
+App Store → buscar "Xcode" → **Obtener** (9.45 GB de descarga, ~20 GB ya
+instalado). Al terminar, ábrelo una vez y acepta la licencia. Después:
 
 ```bash
 sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
