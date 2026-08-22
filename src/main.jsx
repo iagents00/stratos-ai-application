@@ -22,6 +22,7 @@ import { ClientOrgGuard } from "./contexts/ClientOrgGuard";
 import { resolveClientFromLocation, matchClientFromLocation } from "./clients";
 import ErrorBoundary   from "./components/ErrorBoundary.jsx";
 import { recoverFromStaleChunk } from "./lib/chunk-recovery.js";
+import { isNativeApp } from "./lib/native";
 
 // Code-splitting: solo se carga el bundle de la experiencia que el usuario
 // realmente abrió. Antes este import era estático y arrastraba todo a 922KB.
@@ -77,6 +78,24 @@ window.addEventListener("vite:preloadError", (event) => {
   event.preventDefault(); // que el import fallido no reviente el árbol: nos encargamos nosotros
   recoverFromStaleChunk(); // escala: reload suave y, si no alcanza, limpieza dura de cachés/SW
 });
+
+// ─── SHELL NATIVO ────────────────────────────────────────────────────────────
+// Marca el <html> cuando la web corre dentro de la app de Capacitor (mobile/),
+// para que index.css pueda aplicar reglas que SOLO tienen sentido en WebView.
+// Se hace acá y no en index.css porque no hay media query que detecte "app".
+//
+// Por qué importa: el shell carga esta MISMA web remota, así que este ajuste
+// llega a la app por Vercel, sin recompilar ni resubir el binario.
+//
+// El bridge se inyecta antes de los scripts de la página, pero si por timing
+// no estuviera, reintentamos en load — barato y sin efectos secundarios.
+function marcarShellNativo() {
+  try {
+    if (isNativeApp()) document.documentElement.classList.add("stratos-native");
+  } catch { /* noop */ }
+}
+marcarShellNativo();
+window.addEventListener("load", marcarShellNativo, { once: true });
 
 // ─── DECISIÓN DE EXPERIENCIA ─────────────────────────────────────────────────
 // LÓGICA: mostrar Landing SOLO en los dominios públicos conocidos.
