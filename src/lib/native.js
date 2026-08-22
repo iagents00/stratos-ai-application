@@ -35,3 +35,12 @@ export const isAndroid = nativePlatform === "android";
  * user.organizationId — ver ClientOrgGuard.
  */
 export const resolvesTenantByUrl = !isNative;
+
+// Marca el <html> para que index.css pueda scopear reglas SOLO al contenedor
+// nativo (html.stratos-native ...). Se hace en tiempo de módulo, antes del
+// primer render, para que no haya un flash con los estilos de web.
+// La web de producción nunca recibe esta clase, así que sus estilos no cambian.
+if (isNative && typeof document !== "undefined") {
+  document.documentElement.classList.add("stratos-native");
+  document.documentElement.setAttribute("data-platform", nativePlatform);
+}

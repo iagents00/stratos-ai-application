@@ -967,10 +967,16 @@ export default function App() {
         .stratos-bottomnav{display:none}
         @media(max-width:768px){
           .stratos-sidebar{display:none!important}
-          .stratos-content-area{padding:14px 14px 72px 14px!important}
+          .stratos-content-area{padding:14px 14px calc(72px + env(safe-area-inset-bottom, 0px)) 14px!important}
+          /* height + padding-bottom con env(): en iPhone con Face ID los 34pt
+             del indicador de inicio quedan libres y los botones no caen
+             debajo de él. En web y Android sin gesture bar env() vale 0px,
+             así que el nav mide exactamente los mismos 58px de siempre. */
           .stratos-bottomnav{
             display:flex!important;position:fixed;bottom:0;left:0;right:0;
-            height:58px;z-index:200;align-items:center;justify-content:space-around;
+            height:calc(58px + env(safe-area-inset-bottom, 0px));
+            padding-bottom:env(safe-area-inset-bottom, 0px);
+            z-index:200;align-items:center;justify-content:space-around;
             border-top:1px solid rgba(255,255,255,0.07);
           }
           .stratos-header{padding:0 10px!important;gap:6px!important}
@@ -1361,7 +1367,7 @@ export default function App() {
           <span style={{ fontSize:9, fontFamily:fontDisp, fontWeight:400, color: nav.filter(n=>n.more).some(n=>n.id===v) ? (isLight ? T.accent : "#6EE7C2") : (isLight ? "rgba(15,23,42,0.38)" : "rgba(255,255,255,0.28)"), lineHeight:1 }}>Más</span>
         </button>
         {sidebarMore && (
-          <div style={{ position:"fixed", bottom:58, left:0, right:0, zIndex:199, display:"flex", flexWrap:"wrap", justifyContent:"center", gap:8, padding:"14px 16px", background: isLight ? "rgba(246,248,247,0.97)" : "rgba(4,8,18,0.97)", backdropFilter:"blur(24px)", WebkitBackdropFilter:"blur(24px)", borderTop:`1px solid ${isLight ? "rgba(0,0,0,0.07)" : "rgba(255,255,255,0.07)"}` }}>
+          <div style={{ position:"fixed", bottom:"calc(58px + env(safe-area-inset-bottom, 0px))", left:0, right:0, zIndex:199, display:"flex", flexWrap:"wrap", justifyContent:"center", gap:8, padding:"14px 16px", background: isLight ? "rgba(246,248,247,0.97)" : "rgba(4,8,18,0.97)", backdropFilter:"blur(24px)", WebkitBackdropFilter:"blur(24px)", borderTop:`1px solid ${isLight ? "rgba(0,0,0,0.07)" : "rgba(255,255,255,0.07)"}` }}>
             {nav.filter(n => n.more && (!n.adminOnly || ["super_admin","admin"].includes(user?.role)) && canAccessModule(n.id, user, clientConfig)).map(n => {
               const a = v === n.id;
               const activeColor = n.adminOnly ? "#A78BFA" : (isLight ? T.accent : "#6EE7C2");
