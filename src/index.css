@@ -204,3 +204,46 @@ input:-webkit-autofill:active {
 h1, h2, h3, h4, p {
   text-wrap: pretty;
 }
+
+/* ── SOLO DENTRO DE LA APP NATIVA (shell de mobile/) ────────────────────
+   La clase .stratos-native la pone main.jsx cuando isNativeApp() es true.
+   En el navegador nunca aparece, así que nada de esto afecta a la web.
+
+   Qué resuelve: en el WebView de iOS, mantener el dedo sobre un botón saca
+   la lupa de selección de texto y el menú "Copiar · Buscar". Es el tell más
+   obvio de que estás viendo una web y no una app. Se apaga solo en el chrome
+   de la interfaz — el contenido del CRM sigue seleccionable, porque los
+   asesores copian teléfonos y notas de los leads.
+
+   El resto del pulido táctil (tap-highlight, touch-action, overscroll) ya
+   está más arriba en el bloque de @media(max-width:768px). */
+html.stratos-native button,
+html.stratos-native a,
+html.stratos-native [role="button"],
+html.stratos-native .stratos-bottomnav,
+html.stratos-native .stratos-sidebar,
+html.stratos-native .stratos-header {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  touch-action: manipulation;
+}
+
+/* Long-press sobre avatares y logos ofrecía "Guardar imagen". */
+html.stratos-native img,
+html.stratos-native svg {
+  -webkit-touch-callout: none;
+}
+
+/* Los campos de texto SIEMPRE deben permitir selección y el menú de pegar,
+   aunque hereden de un contenedor con user-select:none. */
+html.stratos-native input,
+html.stratos-native textarea,
+html.stratos-native [contenteditable="true"] {
+  -webkit-user-select: text;
+  user-select: text;
+  -webkit-touch-callout: default;
+}
+
+/* En táctil no hay mouse: las scrollbars de 10px solo roban ancho útil. */
+html.stratos-native *::-webkit-scrollbar { width: 0; height: 0; }
