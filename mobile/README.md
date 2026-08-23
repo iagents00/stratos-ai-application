@@ -14,6 +14,17 @@
 >
 > Los **datos** (leads, métricas, pipeline) siguen viniendo en vivo de Supabase.
 > Lo único que se congela hasta el próximo release es el código de la interfaz.
+>
+> **El sitio web NO va dentro del binario.** `npm run build:app` excluye la
+> landing de marketing, la política de privacidad, los siete manuales de cliente
+> y 1.5 MB de estáticos del sitio: **6.7 MB → 4.5 MB**. La app solo lleva el
+> login y el CRM. Además de peso, importa porque Apple revisa el contenido del
+> paquete: un sitio de marketing ahí adentro refuerza justo la lectura de "web
+> enlatada" que hay que evitar.
+>
+> El módulo **Planes** también se oculta en la app: muestra precios de
+> suscripción y un botón de pago que hoy ni cobra. Apple exige In-App Purchase
+> para bienes digitales, así que dejarlo visible es rechazo seguro.
 
 ## Cuándo hay que recompilar
 
