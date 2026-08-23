@@ -30,6 +30,10 @@ import {
    En navegador cada helper cae al comportamiento web de siempre. */
 import { isNativeApp, ensureNotifPermission, notifyUser, addNotificationTapListener } from "../lib/native";
 
+/* Push REAL de la app nativa (APNs): es el único que llega con la app CERRADA.
+   notifyUser de arriba solo dispara con la app abierta, porque lo maneja React. */
+import { iniciarPushNativo, detenerPushNativo } from "../lib/push-native";
+
 /* Sistema de notificaciones Web Push (PWA "Agregar a inicio" en iPhone/Android) */
 import { initPushContext, enablePushNotifications, onNotificationClick, getPushStatus, subscribeToPush, saveSubscriptionToBackend } from "../lib/push";
 
@@ -721,6 +725,28 @@ export default function App() {
     if (!user || !isNativeApp()) return;
     ensureNotifPermission();
     return addNotificationTapListener(() => setV("wa"));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
+
+  // PUSH NATIVO (APNs). Es el que llega con la app CERRADA: un lead que entra a
+  // las 11 de la noche despierta el teléfono del asesor. Las notificaciones de
+  // arriba son locales y solo aparecen si la app ya está abierta.
+  //
+  // Se arranca DESPUÉS del login porque el token hay que ligarlo a un usuario;
+  // sin eso el servidor no sabría a qué teléfono mandar el aviso. Al cerrar
+  // sesión se borra el token, o el teléfono seguiría recibiendo los leads del
+  // usuario anterior.
+  useEffect(() => {
+    if (!user?.id || !isNativeApp()) return;
+    const uid = user.id;
+
+    iniciarPushNativo(uid, (data) => {
+      // El payload manda a dónde ir. Por defecto, al CRM.
+      const destino = typeof data?.view === "string" ? data.view : "c";
+      setV(destino);
+    });
+
+    return () => { detenerPushNativo(uid); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id]);
 
