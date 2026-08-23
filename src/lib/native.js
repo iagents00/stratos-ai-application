@@ -2,9 +2,14 @@
  * lib/native.js — Puente con la app nativa (Capacitor)
  * ─────────────────────────────────────────────────────────────────────────────
  * El CRM corre igual en el navegador y dentro del shell nativo Android/iOS
- * (carpeta mobile/). El shell carga esta web REMOTA e inyecta window.Capacitor
- * en la página, así que acá NO se importa ningún paquete @capacitor/* (no está
- * en el package.json del web — y no hace falta): se usa el bridge global.
+ * (carpeta mobile/). El shell EMPAQUETA este mismo bundle dentro del binario
+ * (capacitor.config.json → webDir: "../dist") y lo sirve desde
+ * capacitor://localhost, así que la app abre sin red y los datos siguen
+ * viniendo en vivo de Supabase.
+ *
+ * Capacitor inyecta window.Capacitor en la página, así que acá NO se importa
+ * ningún paquete @capacitor/* (no está en el package.json del web — y no hace
+ * falta): se usa el bridge global.
  * En navegador cada helper cae al comportamiento web de siempre.
  *
  * Plugins nativos disponibles (instalados en mobile/package.json):

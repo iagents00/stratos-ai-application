@@ -44,7 +44,7 @@ tocar alguno, leé primero la sección de ZONAS CRÍTICAS de `CLAUDE.md`.
 - `src/app/constants/navigation.js`
   Qué módulo ve cada rol y cada cliente. Un error acá le abre módulos a quien no debe.
 - `mobile/capacitor.config.json`
-  Shell de la app móvil. `server.url` define qué carga la app en el teléfono.
+  Shell de la app móvil. `webDir` apunta a `../dist`: el CRM va EMPAQUETADO en el binario. Volver a poner `server.url` haría que cargue remoto y se pierde el offline.
 
 ---
 
@@ -162,7 +162,7 @@ casa; por eso mismo son los que más cuidado piden.
 | `hooks/useViewport.js` | **27** |
 | `app/SharedComponents.jsx` | **18** |
 | `hooks/useClient.js` | **14** |
-| `lib/native.js` | **6** |
+| `lib/native.js` | **8** |
 | `app/views/CRM/zoom-metrics.js` | **6** |
 | `app/components/Logo.jsx` | **5** |
 | `app/views/CRM/date-range.js` | **5** |
@@ -257,8 +257,8 @@ Los tres caminos que hay que entender. Todo lo demás se deduce de estos.
    Vercel despliega solo.
 4. **Verificar**
    `curl app.stratoscapitalgroup.com/sw.js` y confirmar la versión nueva.
-5. **La app móvil se entera sola** → `mobile/capacitor.config.json`
-   Carga la web remota; no hay que recompilar el binario.
+5. **La app móvil NO se entera sola** → `mobile/capacitor.config.json`
+   Desde ago-2026 empaqueta el CRM dentro del binario, así que abre sin red. Los datos siguen en vivo, pero un cambio de interfaz necesita un release nuevo por TestFlight o Play.
 
 ---
 
@@ -270,7 +270,7 @@ Los tres caminos que hay que entender. Todo lo demás se deduce de estos.
 | Entra pero se sale al recargar | `src/contexts/AuthContext.jsx`. Casi siempre es un timeout mal calibrado. |
 | Dejaron de llegar leads | n8n primero, no el CRM. El webhook de Meta es el sospechoso. |
 | Un usuario ve una versión vieja | `CACHE_VERSION` en `public/sw.js` no se subió en el último merge. |
-| La app móvil no abre | Carga la web remota: si Vercel está caído, la app también. |
+| La app móvil no abre | El bundle va dentro del binario, así que abrir siempre abre. Si carga pero sin datos, el problema es Supabase, no Vercel. |
 | Un módulo se le abrió a quien no debe | `src/app/constants/navigation.js` y las políticas RLS de Supabase. |
 | El Copilot responde raro o no responde | ¿Falló una acción concreta (aprobar, comentar)? Es RPC de Supabase. ¿Falló lo conversacional? El prompt vive en n8n, no en este repo. |
 | Un cliente dice que pagó y no le llegó | Revisar la sección 9: el botón de pago no cobra. El cobro real es manual. |

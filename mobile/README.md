@@ -1,14 +1,24 @@
 # Stratos AI — App móvil (Android + iOS)
 
-> **Qué es:** el shell NATIVO (Capacitor) de la app "Stratos AI". No duplica el
-> CRM: el WebView carga **https://app.stratoscapitalgroup.com** directamente
-> (`capacitor.config.json → server.url`). Por eso **toda actualización del CRM
-> web llega SOLA a la app** — mergeás un PR del CRM, Vercel despliega, y la app
-> ya lo muestra. **No hay que recompilar el APK para features del CRM.**
+> **Qué es:** el shell NATIVO (Capacitor) de la app "Stratos AI". El WebView
+> **empaqueta el CRM dentro del binario** (`capacitor.config.json → webDir:
+> "../dist"`) y lo sirve desde `capacitor://localhost`.
+>
+> **Por qué empaquetado y no remoto.** Hasta agosto 2026 esto usaba
+> `server.url` apuntando al sitio en vivo. Se cambió por dos razones:
+> 1. **Sin señal la app no abría.** Desde iOS 14, WKWebView solo permite Service
+>    Workers si la app declara `WKAppBoundDomains`, y no lo hacía: no había nada
+>    de offline. Un asesor sin señal en una propiedad veía "no se pudo cargar".
+> 2. **Guideline 4.2.** Para Apple, un `server.url` apuntando a un sitio web es
+>    "una web dentro de un WebView", el motivo de rechazo nº1 de este tipo de app.
+>
+> Los **datos** (leads, métricas, pipeline) siguen viniendo en vivo de Supabase.
+> Lo único que se congela hasta el próximo release es el código de la interfaz.
 
-## Cuándo SÍ hay que tocar esta carpeta (y recompilar)
+## Cuándo hay que recompilar
 
-Solo para cambios NATIVOS:
+Ahora que el CRM va empaquetado, **cualquier cambio de la interfaz necesita un
+release nuevo**. También los cambios NATIVOS:
 - Ícono / splash / nombre de la app.
 - Permisos nuevos (micrófono, cámara ya están; ubicación, etc. se agregan acá).
 - Plugins nativos (push notifications = V2, Firebase).

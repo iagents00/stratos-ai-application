@@ -5,9 +5,9 @@
 # compila el APK Android firmado con el keystore de pruebas y lo publica en el
 # release "android-latest" del repo → descargar e instalar en cualquier Android.
 #
-# La app es un shell nativo (Capacitor) que carga app.stratoscapitalgroup.com:
-# las actualizaciones del CRM llegan SOLAS a la app (no hay que recompilar).
-# Este workflow solo corre cuando cambia el SHELL (ícono, permisos, config).
+# La app EMPAQUETA el CRM dentro del binario (webDir: ../dist), así que abre sin
+# red. Los datos siguen viniendo en vivo de Supabase, pero cualquier cambio de la
+# interfaz necesita recompilar: por eso este workflow también corre con src/**.
 #
 # Instalar: GitHub → Releases → "App Android (última)" → stratos-ai.apk
 # (Android pide permitir "instalar apps de origen desconocido" la primera vez.)
@@ -17,7 +17,7 @@ name: Android APK (Stratos AI móvil)
 on:
   push:
     branches: [main]
-    paths: ['mobile/**', '.github/workflows/android-apk.yml']
+    paths: ['mobile/**', 'src/**', '.github/workflows/android-apk.yml']
   workflow_dispatch:
 
 permissions:
@@ -38,6 +38,13 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+
+      # webDir apunta a ../dist: la app ahora EMPAQUETA el CRM en el binario en
+      # vez de cargarlo remoto, así que hay que compilar la web antes de sincronizar.
+      - name: Compilar el CRM web
+        run: |
+          npm ci
+          npm run build
 
       - name: Instalar dependencias de Capacitor
         working-directory: mobile
