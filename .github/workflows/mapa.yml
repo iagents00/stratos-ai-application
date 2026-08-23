@@ -1,16 +1,16 @@
 # ─────────────────────────────────────────────────────────────────────────────
-# mapa.yml — Mantiene MAPA.md sincronizado con el código
+# mapa.yml — Mantiene MAPA.md y PLANO.md sincronizados con el código
 #
 # POR QUÉ: un mapa escrito a mano envejece y termina mandándote al archivo
-# equivocado. Este workflow lo regenera en cada push a main y commitea el
-# resultado si cambió, así nadie tiene que acordarse de correrlo.
+# equivocado. Este workflow los regenera en cada push a main y commitea el
+# resultado si cambió, así nadie tiene que acordarse de correrlos.
 # ─────────────────────────────────────────────────────────────────────────────
-name: Mapa del código
+name: Planos del código
 
 on:
   push:
     branches: [main]
-    paths: ['src/**', 'scripts/generar-mapa.mjs']
+    paths: ['src/**', 'n8n/**', 'mobile/**', 'scripts/generar-*.mjs']
   workflow_dispatch:
 
 permissions:
@@ -26,17 +26,19 @@ jobs:
         with:
           node-version: '22'
 
-      - name: Regenerar MAPA.md
-        run: node scripts/generar-mapa.mjs
-
-      - name: Commitear si cambió
+      - name: Regenerar los planos
         run: |
-          if git diff --quiet MAPA.md; then
-            echo "MAPA.md ya estaba al día."
+          node scripts/generar-mapa.mjs
+          node scripts/generar-plano.mjs
+
+      - name: Commitear si cambiaron
+        run: |
+          if git diff --quiet MAPA.md PLANO.md; then
+            echo "Los planos ya estaban al día."
             exit 0
           fi
           git config user.name  "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add MAPA.md
-          git commit -m "docs(mapa): regenerar MAPA.md [skip ci]"
+          git add MAPA.md PLANO.md
+          git commit -m "docs(planos): regenerar MAPA.md y PLANO.md [skip ci]"
           git push

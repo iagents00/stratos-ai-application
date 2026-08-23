@@ -208,15 +208,22 @@ y la tabla siguió ahí, mandando a todo el mundo al lugar equivocado.
 
 En su lugar:
 
-- **`MAPA.md`** — qué pantalla vive en qué archivo, qué hace cada archivo, y un
-  índice de los textos visibles de la app. Lo genera `scripts/generar-mapa.mjs`
-  leyendo el código, y el CI lo regenera en cada push a `main`: no puede mentir.
+- **`MAPA.md`** — el plano arquitectónico: qué pantalla vive en qué archivo, qué
+  hace cada archivo, y un índice de los textos visibles de la app.
+
+- **`PLANO.md`** — el plano de instalaciones: por dónde corren los datos (qué
+  archivo toca qué tabla), qué servicios externos hay conectados, el radio de
+  impacto de cada archivo, los tres flujos críticos trazados paso a paso, y
+  dónde mirar cuando algo se rompe en producción.
+
+Los dos se generan leyendo el código y el CI los regenera en cada push a `main`,
+así que **no pueden mentir**. No los edites a mano.
 
 - **`npm run buscar "texto"`** — para cuando alguien dice "cambiá el botón que
   dice Generar PDF". Devuelve archivo y línea al instante.
 
 ```bash
-npm run mapa                    # regenerar el mapa
+npm run planos                  # regenerar MAPA.md y PLANO.md
 npm run buscar "generar pdf"    # ¿dónde está este texto?
 ```
 
