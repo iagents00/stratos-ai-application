@@ -186,8 +186,19 @@ export function isStratosOrg(orgId) {
  *
  * Si el módulo no está en MODULE_ROLES, se asume público (default true).
  */
+/** true solo dentro del contenedor nativo. Se lee del bridge global para no
+    atar este archivo de constantes a ningún paquete. */
+function esAppNativa() {
+  try { return !!window.Capacitor?.isNativePlatform?.(); } catch { return false; }
+}
+
 export function canAccessModule(moduleId, user, clientConfig = null) {
   if (!user) return false;
+  // (0) APP NATIVA: "Planes" muestra precios de suscripción y un botón de pago
+  // que hoy ni siquiera cobra (simula con setTimeout). Apple exige In-App
+  // Purchase para bienes digitales: dejarlo visible es rechazo seguro. Los
+  // planes se contratan por la web, que es donde tiene sentido.
+  if (moduleId === "planes" && esAppNativa()) return false;
   // (1) Restricción per-usuario — gana sobre todo lo demás.
   if (user.crmOnly === true && !CRM_ONLY_MODULES.has(moduleId)) return false;
   // (1b) Admin de MARKETING (Alex): aunque su rol sea super_admin, su casa es

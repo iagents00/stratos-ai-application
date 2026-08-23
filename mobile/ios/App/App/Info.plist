@@ -7,7 +7,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>es_MX</string>
 	<key>CFBundleDisplayName</key>
-	<string>Stratos CRM AI</string>
+	<string>Stratos AI</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>

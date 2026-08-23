@@ -6,7 +6,7 @@
 >
 > ¿Buscás un botón o un texto y no está acá? `npm run buscar "texto"`
 
-**162 archivos · 72.670 líneas**
+**163 archivos · 72.736 líneas**
 
 ---
 
@@ -73,6 +73,7 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | `main.jsx` | 421 | Entry point de Stratos AI |
 | `index.css` | 250 | _sin describir_ |
 | `mobile-perf.css` | 121 | _sin describir_ |
+| `pagina-solo-web.jsx` | 47 | _sin describir_ |
 
 ### `src/app/`
 
@@ -101,7 +102,7 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 
 | Archivo | Líneas | Qué hace |
 |---|---|---|
-| `navigation.js` | 362 | Configuración de navegación y permisos por módulo. |
+| `navigation.js` | 373 | Configuración de navegación y permisos por módulo. |
 | `intelFeatures.js` | 211 | _sin describir_ |
 | `areas.js` | 97 | _sin describir_ |
 | `pipeline.js` | 93 | _sin describir_ |
@@ -327,7 +328,7 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | `DeliveryHubCRM.jsx` | 880 | Hub de Entrega del CRM Stratos AI v1.0 |
 | `ManualCRM.jsx` | 789 | Manual del CRM Stratos AI para asesores |
 | `manual-telegram-content.js` | 714 | Manual del COPILOT / Asistente IA (Duke del Caribe) |
-| `LoginScreen.jsx` | 684 | Pantalla de autenticación completa para la app |
+| `LoginScreen.jsx` | 692 | Pantalla de autenticación completa para la app |
 | `PricingScreen.jsx` | 611 | Planes y pagos para Stratos AI |
 | `DataDeletion.jsx` | 553 | _sin describir_ |
 | `DukeLeadRouter.jsx` | 343 | _sin describir_ |

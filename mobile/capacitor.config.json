@@ -1,7 +1,7 @@
 {
   "appId": "com.stratoscapitalgroup.crm",
-  "appName": "Stratos CRM AI",
-  "webDir": "../dist",
+  "appName": "Stratos AI",
+  "webDir": "../dist-app",
   "backgroundColor": "#030810",
   "android": {
     "allowMixedContent": false,

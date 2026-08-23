@@ -664,8 +664,16 @@ export default function LoginScreen({ onLogin }) {
 
               {/* ─ Legal ─ */}
               <p style={{ fontSize: 10, color: P.txt3, textAlign: "center", marginTop: 14, lineHeight: 1.65 }}>
-                Al continuar aceptas los <span style={{ color: "rgba(110,231,194,0.6)", cursor: "pointer" }}>Términos de Servicio</span>{" "}
-                y la <span style={{ color: "rgba(110,231,194,0.6)", cursor: "pointer" }}>Política de Privacidad</span>.
+                {/* Eran <span> decorativos: no abrían nada, y App Review comprueba que
+                      los enlaces legales funcionen. target="_blank" los manda al
+                      navegador del sistema, que es lo correcto dentro de la app:
+                      esas páginas viven en el sitio y no se empaquetan en el binario. */}
+                  Al continuar aceptas los{" "}
+                  <a href="https://stratoscapitalgroup.com/terminos" target="_blank" rel="noopener noreferrer"
+                     style={{ color: "rgba(110,231,194,0.6)", textDecoration: "none" }}>Términos de Servicio</a>{" "}
+                  y la{" "}
+                  <a href="https://stratoscapitalgroup.com/politica-de-privacidad" target="_blank" rel="noopener noreferrer"
+                     style={{ color: "rgba(110,231,194,0.6)", textDecoration: "none" }}>Política de Privacidad</a>.
               </p>
             </>
           )}

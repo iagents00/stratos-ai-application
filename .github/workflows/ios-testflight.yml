@@ -75,10 +75,14 @@ jobs:
 
       # webDir apunta a ../dist: la app ahora EMPAQUETA el CRM en el binario en
       # vez de cargarlo remoto, así que hay que compilar la web antes de sincronizar.
-      - name: Compilar el CRM web
+      # build:app excluye del binario la landing, la política de privacidad, los
+      # siete manuales y 1.5 MB de estáticos del sitio: 6.7 MB -> 4.5 MB. Apple
+      # revisa el contenido del paquete, y un sitio de marketing ahí adentro
+      # refuerza justo la lectura de "web enlatada" (Guideline 4.2).
+      - name: Compilar el CRM (modo app, sin el sitio web)
         run: |
           npm ci
-          npm run build
+          npm run build:app
 
       # CapApp-SPM referencia ../../../node_modules/@capacitor/* — sin esto el
       # paquete de Swift no resuelve y la compilación falla al enlazar plugins.

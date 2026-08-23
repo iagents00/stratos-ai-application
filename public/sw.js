@@ -33,7 +33,7 @@
  *   sola en la próxima navegación. Ver `main.jsx` → SERVICE WORKER.
  */
 
-const CACHE_VERSION = 'stratos-v393'; // v393: borrado de cuenta dentro de la app (Apple 5.1.1(v))
+const CACHE_VERSION = 'stratos-v394'; // v394: la app no empaqueta el sitio web; se llama Stratos AI
 
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 // Nombre ESTABLE a propósito: no lleva CACHE_VERSION (ver cabecera).
