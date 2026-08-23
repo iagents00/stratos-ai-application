@@ -68,7 +68,7 @@ Click en el enlace → Se abre Stratos AI en una pestaña.
 ### **Paso 4: Editar código**
 
 En Antigravity:
-- **Archivo principal:** `src/App.jsx` (donde está TODO)
+- **Archivo principal:** `src/app/App.jsx` (donde está TODO)
 - **Estilos:** Inline en los componentes (no hay CSS separado)
 - **Datos:** Arrays de objetos en el mismo archivo
 
@@ -129,7 +129,7 @@ Verás el servidor corriendo en `http://localhost:5173/`
 
 ### **Paso 4: Editar código**
 
-- **Archivo principal:** `src/App.jsx`
+- **Archivo principal:** `src/app/App.jsx`
 - **Icons:** De `lucide-react`
 - **Gráficos:** De `recharts`
 - **Estilos:** Todos inline en `style={{ ... }}`
@@ -189,7 +189,7 @@ Estás leyéndolo ahora 📖
 
 ## 🎨 Lo Primero: Entender la Paleta de Colores
 
-En `src/App.jsx`, hay un objeto llamado `P`:
+En `src/app/App.jsx`, hay un objeto llamado `P`:
 
 ```javascript
 const P = {

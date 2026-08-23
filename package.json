@@ -12,7 +12,8 @@
     "mapa": "node scripts/generar-mapa.mjs",
     "buscar": "node scripts/buscar.mjs",
     "plano": "node scripts/generar-plano.mjs",
-    "planos": "npm run mapa && npm run plano"
+    "planos": "npm run mapa && npm run plano",
+    "verificar-docs": "node scripts/verificar-docs.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.104.1",

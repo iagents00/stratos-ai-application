@@ -150,7 +150,7 @@ Tres niveles de personalización, en orden de simplicidad:
 - Editar `src/clients/grupo28/config.js`: cambiar `legalName`, `brand.logoText`,
   `brand.accent` (color), `tagline`, `features.<modulo> = false` para apagar
   módulos del cliente.
-- Crear `src/clients/grupo28/theme.js` o `src/clients/grupo28/overrides/` si
+- Crear un `theme.js` dentro de `src/clients/grupo28/` (aún no existe) si
   necesitás overrides visuales complejos.
 
 **Nivel B — Texto dinámico configurable por el cliente desde la UI (no toca código):**

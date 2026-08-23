@@ -530,4 +530,4 @@ VITE_API_URL=https://api.stratoscapitalgroup.com
 ---
 
 *Documento generado por Claude Code analizando el frontend de Stratos AI — Abril 2026*
-*Para preguntas técnicas, el frontend está en: `src/app/App.jsx` y `src/data/leads.js`*
+*Para preguntas técnicas, el frontend está en: `src/app/App.jsx` y `src/app/data/leads.js`*
