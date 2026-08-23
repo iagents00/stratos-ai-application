@@ -33,7 +33,7 @@
  *   sola en la próxima navegación. Ver `main.jsx` → SERVICE WORKER.
  */
 
-const CACHE_VERSION = 'stratos-v391'; // v391: la app móvil empaqueta el CRM en el binario
+const CACHE_VERSION = 'stratos-v392'; // v392: push nativo de lead nuevo + ícono real de la app
 
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 // Nombre ESTABLE a propósito: no lleva CACHE_VERSION (ver cabecera).

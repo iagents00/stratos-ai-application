@@ -39,6 +39,70 @@ anteriores sin desinstalar (firma consistente).
 También se puede correr a mano: Actions → "Android APK (Stratos AI móvil)" →
 Run workflow.
 
+## Push de lead nuevo
+
+Es la razón de peso para que la app exista: entra un lead de Meta Ads y el
+teléfono del asesor suena en segundos. En bienes raíces la velocidad de primer
+contacto decide la conversión.
+
+### Por qué no alcanzaba con lo que ya había
+
+- `src/lib/push.js` implementa **Web Push** (VAPID + `push_subscriptions`).
+  Funciona en navegador y en la PWA instalada, pero necesita un Service Worker,
+  y WKWebView solo los permite si la app declara `WKAppBoundDomains`. Dentro de
+  la app nativa, Web Push **no funciona ni va a funcionar**.
+- `notifyUser()` en `src/lib/native.js` son notificaciones **locales**: las
+  dispara React al cambiar el estado, así que solo aparecen con la app ABIERTA.
+  Un lead que entra a las 11pm no despierta a nadie.
+
+`src/lib/push-native.js` cubre el hueco con APNs, que sí llega con la app cerrada.
+
+### Lo que ya está hecho
+
+- Plugin `@capacitor/push-notifications` instalado y enlazado en el proyecto iOS.
+- `App.entitlements` con `aps-environment`, referenciado en Debug y Release.
+- Registro cableado a la sesión: arranca tras el login y borra el token al
+  cerrar sesión (si no, el teléfono seguiría recibiendo los leads del anterior).
+- Tabla `device_tokens` con RLS — migración `232_push_nativo_device_tokens.sql`.
+  Se aplica **corriendo el SQL en el editor del dashboard**, no con `db push`.
+
+### Lo que falta, y necesita la cuenta de Apple
+
+1. **Key de APNs (.p8).** developer.apple.com → Keys → **+** → marcar *Apple Push
+   Notifications service*. Se descarga **una sola vez**: guardarla.
+2. **Quién envía.** Cuando n8n registra un lead, tiene que llamar a APNs con esa
+   key (JWT ES256) y el token del asesor sacado de `device_tokens`. Lo más
+   simple es una Edge Function de Supabase que reciba `{ user_id, title, body }`
+   y n8n la invoque, reusando el patrón de `send-push`.
+
+Payload de ejemplo — `view` decide a qué pantalla salta la app al tocarla:
+
+```json
+{
+  "aps": { "alert": { "title": "Lead nuevo · Duke", "body": "Marco Aurelio — $1.5M USD" }, "sound": "default" },
+  "view": "c",
+  "leadId": "12345"
+}
+```
+
+> **El entorno importa.** Un token sacado con la app compilada desde Xcode vive
+> en el **sandbox** de APNs y el servidor de producción lo rechaza con
+> `BadDeviceToken`. Por eso `device_tokens` guarda de qué entorno vino cada uno.
+
+### Qué se verificó y qué no
+
+| | |
+|---|---|
+| Plugin enlazado en el proyecto iOS | ✅ 4 plugins encontrados |
+| `App.entitlements` válido y referenciado | ✅ en Debug y Release |
+| Compilación con push | ✅ `BUILD SUCCEEDED` |
+| `simctl push` entrega al bundle | ✅ sin error |
+| Ícono de la app | ✅ el rayo de Stratos, ya no el de Capacitor |
+| **Diálogo de permiso y banner** | ⚠️ **sin verificar** — requiere tocar la pantalla del simulador |
+| **Entrega real por APNs** | ⚠️ **sin verificar** — requiere la key .p8 |
+
+---
+
 ## iOS — subir a TestFlight (desde GitHub Actions, sin Xcode local)
 
 La cuenta **Apple Developer ya está pagada y aprobada** (ago-2026). El release

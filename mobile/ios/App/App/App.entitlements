@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!--
+	  aps-environment habilita las notificaciones push.
+
+	  El valor "development" apunta al SANDBOX de APNs, que es lo correcto para
+	  builds de Xcode y para TestFlight. Al distribuir por App Store, Xcode lo
+	  reemplaza por "production" automáticamente al firmar, así que no hay que
+	  tocarlo a mano.
+
+	  Un token del sandbox enviado al servidor de producción se rechaza con
+	  BadDeviceToken. Por eso device_tokens guarda de qué entorno vino cada uno.
+	-->
+	<key>aps-environment</key>
+	<string>development</string>
+</dict>
+</plist>

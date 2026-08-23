@@ -63,6 +63,7 @@ columna, estos son los archivos que hay que revisar.
 | `mkt_tasks` | 2 | `app/views/Marketing.jsx` · `app/views/PlanSemanal.jsx` |
 | `team_actions` | 2 | `app/App.jsx` · `app/views/ProductividadTab.jsx` |
 | `catalogo_proyectos` | 1 | `app/views/ERP.jsx` |
+| `device_tokens` | 1 | `lib/push-native.js` |
 | `discovery_data` | 1 | `app/views/CRM/LeadDiscoveryPanel.jsx` |
 | `fin_invoices` | 1 | `app/views/CuentasCobro.jsx` |
 | `lead_related_contacts` | 1 | `app/views/CRM/LeadRelatedContacts.jsx` |
@@ -157,12 +158,12 @@ casa; por eso mismo son los que más cuidado piden.
 | Archivo | Archivos que lo importan |
 |---|---|
 | `design-system/tokens.js` | **67** |
-| `lib/supabase.js` | **37** |
+| `lib/supabase.js` | **38** |
 | `hooks/useAuth.js` | **33** |
 | `hooks/useViewport.js` | **27** |
 | `app/SharedComponents.jsx` | **18** |
 | `hooks/useClient.js` | **14** |
-| `lib/native.js` | **8** |
+| `lib/native.js` | **9** |
 | `app/views/CRM/zoom-metrics.js` | **6** |
 | `app/components/Logo.jsx` | **5** |
 | `app/views/CRM/date-range.js` | **5** |

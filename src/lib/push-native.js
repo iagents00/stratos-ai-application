@@ -1,0 +1,171 @@
+/**
+ * lib/push-native.js — Push REAL dentro de la app nativa (APNs / FCM)
+ * ─────────────────────────────────────────────────────────────────────────────
+ * POR QUÉ EXISTE, HABIENDO YA UN push.js
+ *
+ * `push.js` implementa Web Push: VAPID, pushManager.subscribe() y la tabla
+ * push_subscriptions. Funciona en el navegador y en la PWA instalada, y ahí se
+ * queda como está. Pero Web Push necesita un Service Worker, y WKWebView solo
+ * los permite si la app declara WKAppBoundDomains — la nuestra no lo hace, y
+ * hacerlo traería otras restricciones. Conclusión: dentro de la app nativa,
+ * Web Push NO funciona ni va a funcionar.
+ *
+ * Y las notificaciones locales que ya existen (notifyUser en native.js) solo se
+ * disparan con la app ABIERTA, porque las dispara React al cambiar el estado.
+ * Un lead que entra a las 11 de la noche, con la app cerrada, no avisa a nadie.
+ * Eso es justo lo que este archivo resuelve.
+ *
+ * QUÉ HACE
+ *   1. Pide permiso de notificaciones (diálogo nativo del sistema).
+ *   2. Registra el dispositivo contra APNs y recibe un token.
+ *   3. Guarda ese token en `device_tokens`, ligado al usuario.
+ *   4. Escucha los pushes que llegan y el tap del usuario sobre ellos.
+ *
+ * QUÉ FALTA DEL OTRO LADO (no es código de este repo)
+ *   · Una key de APNs (.p8) en la cuenta de Apple del cliente.
+ *   · Quien envíe: n8n cuando entra un lead, o una Edge Function.
+ *   Ver mobile/README.md.
+ *
+ * En web todo esto es no-op: los helpers devuelven false sin tocar nada.
+ * ─────────────────────────────────────────────────────────────────────────────
+ */
+import { supabase } from "./supabase";
+import { isNativeApp } from "./native";
+
+/** El plugin solo existe dentro del contenedor nativo. */
+function plugin() {
+  try {
+    const c = typeof window !== "undefined" ? window.Capacitor : undefined;
+    if (!c?.isNativePlatform?.()) return null;
+    return c.Plugins?.PushNotifications || null;
+  } catch { return null; }
+}
+
+/** "ios" | "android" | null */
+function plataforma() {
+  try { return window.Capacitor?.getPlatform?.() || null; } catch { return null; }
+}
+
+/**
+ * Un token sacado con la app compilada desde Xcode vive en el SANDBOX de APNs,
+ * y el servidor de producción lo rechaza con BadDeviceToken. Guardar cuál es
+ * evita horas de depurar un envío que "no llega sin razón".
+ */
+function entorno() {
+  try {
+    // Vite reemplaza esto en tiempo de build: en un release es production.
+    return import.meta.env.PROD ? "production" : "sandbox";
+  } catch { return "production"; }
+}
+
+let yaRegistrado = false;
+
+/**
+ * Guarda el token del dispositivo contra el usuario. Idempotente: la tabla
+ * tiene UNIQUE(user_id, token), así que reabrir la app no duplica filas.
+ */
+async function guardarToken(userId, token) {
+  if (!userId || !token) return false;
+  try {
+    const { error } = await supabase
+      .from("device_tokens")
+      .upsert(
+        {
+          user_id: userId,
+          token,
+          platform: plataforma() === "android" ? "android" : "ios",
+          entorno: entorno(),
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: "user_id,token" }
+      );
+    if (error) {
+      console.warn("[push-native] no se pudo guardar el token:", error.message);
+      return false;
+    }
+    return true;
+  } catch (e) {
+    console.warn("[push-native] error guardando el token:", e?.message || e);
+    return false;
+  }
+}
+
+/**
+ * Arranca el push nativo para un usuario. Llamar DESPUÉS del login: sin userId
+ * el token no se puede ligar a nadie y el envío no sabría a qué teléfono ir.
+ *
+ * @param {string} userId
+ * @param {(data:object)=>void} [alTocar] - qué hacer cuando el usuario toca la
+ *        notificación. Recibe el payload (ej. { view: "c", leadId: 123 }).
+ * @returns {Promise<boolean>} true si quedó registrado
+ */
+export async function iniciarPushNativo(userId, alTocar) {
+  const PN = plugin();
+  if (!PN || !userId) return false;      // web, o todavía sin sesión
+  if (yaRegistrado) return true;
+
+  try {
+    // El permiso se pide una sola vez: si el usuario ya dijo que no, iOS no
+    // vuelve a mostrar el diálogo y hay que mandarlo a Ajustes.
+    let permiso = await PN.checkPermissions();
+    if (permiso?.receive === "prompt" || permiso?.receive === "prompt-with-rationale") {
+      permiso = await PN.requestPermissions();
+    }
+    if (permiso?.receive !== "granted") return false;
+
+    // Los listeners se registran ANTES de register(): el evento 'registration'
+    // puede llegar de inmediato y perderlo significa quedarse sin token.
+    await PN.addListener("registration", (t) => {
+      guardarToken(userId, t?.value);
+    });
+
+    await PN.addListener("registrationError", (err) => {
+      // El caso típico es que falte la capability de Push en el proyecto Xcode.
+      console.warn("[push-native] APNs rechazó el registro:", err?.error || err);
+    });
+
+    // Llega con la app ABIERTA. iOS no muestra banner en ese caso, así que si
+    // se quiere avisar visualmente hay que hacerlo desde la app.
+    await PN.addListener("pushNotificationReceived", (n) => {
+      if (import.meta.env.DEV) console.info("[push-native] recibido:", n?.title);
+    });
+
+    // El usuario tocó la notificación: acá se navega a donde corresponda.
+    await PN.addListener("pushNotificationActionPerformed", (accion) => {
+      try { alTocar?.(accion?.notification?.data || {}); } catch { /* noop */ }
+    });
+
+    await PN.register();
+    yaRegistrado = true;
+    return true;
+  } catch (e) {
+    console.warn("[push-native] no se pudo iniciar:", e?.message || e);
+    return false;
+  }
+}
+
+/**
+ * Borra el token de este dispositivo. Llamar al cerrar sesión: si no, el
+ * teléfono sigue recibiendo los leads del usuario anterior.
+ */
+export async function detenerPushNativo(userId) {
+  const PN = plugin();
+  yaRegistrado = false;
+  if (!PN || !userId) return;
+  try {
+    await PN.removeAllListeners();
+    const { data } = await supabase
+      .from("device_tokens")
+      .delete()
+      .eq("user_id", userId)
+      .eq("platform", plataforma() === "android" ? "android" : "ios");
+    return data;
+  } catch (e) {
+    console.warn("[push-native] no se pudo limpiar el token:", e?.message || e);
+  }
+}
+
+/** ¿Este dispositivo puede recibir push nativo? En web siempre false. */
+export function soportaPushNativo() {
+  return isNativeApp() && !!plugin();
+}
