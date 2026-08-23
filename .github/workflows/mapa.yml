@@ -1,0 +1,42 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# mapa.yml — Mantiene MAPA.md sincronizado con el código
+#
+# POR QUÉ: un mapa escrito a mano envejece y termina mandándote al archivo
+# equivocado. Este workflow lo regenera en cada push a main y commitea el
+# resultado si cambió, así nadie tiene que acordarse de correrlo.
+# ─────────────────────────────────────────────────────────────────────────────
+name: Mapa del código
+
+on:
+  push:
+    branches: [main]
+    paths: ['src/**', 'scripts/generar-mapa.mjs']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  regenerar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Regenerar MAPA.md
+        run: node scripts/generar-mapa.mjs
+
+      - name: Commitear si cambió
+        run: |
+          if git diff --quiet MAPA.md; then
+            echo "MAPA.md ya estaba al día."
+            exit 0
+          fi
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add MAPA.md
+          git commit -m "docs(mapa): regenerar MAPA.md [skip ci]"
+          git push
