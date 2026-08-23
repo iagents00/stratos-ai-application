@@ -1,0 +1,200 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# ios-testflight.yml — Compila la app iOS "Stratos AI" y la sube a TestFlight
+#
+# POR QUÉ EXISTE: compilar para iOS necesita Xcode, que son 9.45 GB de descarga
+# y ~20 GB en disco, y ata cada release a una Mac concreta. Los runners macOS de
+# GitHub ya traen Xcode, así que el release sale de aquí: sin instalar nada
+# local y sin depender de quién tenga la Mac a mano.
+#
+# La app es un shell nativo (Capacitor) que carga app.stratoscapitalgroup.com,
+# igual que el APK de Android. Las actualizaciones del CRM llegan SOLAS a la
+# app por Vercel — este workflow solo hace falta cuando cambia el SHELL (ícono,
+# permisos, plugins, versión) o para el primer envío a TestFlight.
+#
+# ── SECRETS QUE HAY QUE CARGAR (Settings → Secrets and variables → Actions) ──
+#
+#   APPLE_TEAM_ID          Team ID de 10 caracteres.
+#                          developer.apple.com → Membership details.
+#
+#   APPSTORE_ISSUER_ID     UUID del emisor de la API key.
+#                          App Store Connect → Users and Access → Integrations
+#                          → App Store Connect API. Está arriba de la tabla.
+#
+#   APPSTORE_KEY_ID        Key ID de 10 caracteres de esa misma tabla.
+#
+#   APPSTORE_PRIVATE_KEY   Contenido COMPLETO del archivo AuthKey_XXXX.p8
+#                          (incluyendo las líneas BEGIN/END PRIVATE KEY).
+#                          Apple solo deja descargarlo UNA vez: guardarlo.
+#                          El rol de la key debe ser "App Manager" o superior,
+#                          o el upload a TestFlight se rechaza por permisos.
+#
+# ── ANTES DE LA PRIMERA CORRIDA ──
+#   1. Registrar el Bundle ID com.stratoscapitalgroup.crm en
+#      developer.apple.com → Identifiers.
+#   2. Crear la app en App Store Connect con ese mismo Bundle ID.
+#   Sin esos dos pasos el upload falla aunque compile bien.
+#
+# El número de build sale de github.run_number: siempre sube, así que App Store
+# Connect nunca lo rechaza por repetido.
+# ─────────────────────────────────────────────────────────────────────────────
+name: iOS TestFlight (Stratos AI móvil)
+
+on:
+  workflow_dispatch:
+    inputs:
+      marketing_version:
+        description: 'Versión visible (ej. 1.0.1). Vacío = deja la del proyecto.'
+        required: false
+        default: ''
+
+concurrency:
+  group: ios-testflight
+  cancel-in-progress: false   # nunca cancelar un upload a medias
+
+jobs:
+  testflight:
+    runs-on: macos-15
+    timeout-minutes: 60
+
+    env:
+      SCHEME: App
+      PROJECT: mobile/ios/App/App.xcodeproj
+      BUNDLE_ID: com.stratoscapitalgroup.crm
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Elegir Xcode estable del runner
+        run: |
+          sudo xcode-select -s /Applications/Xcode.app
+          xcodebuild -version
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      # CapApp-SPM referencia ../../../node_modules/@capacitor/* — sin esto el
+      # paquete de Swift no resuelve y la compilación falla al enlazar plugins.
+      - name: Instalar dependencias de Capacitor
+        working-directory: mobile
+        run: npm ci
+
+      - name: Sincronizar proyecto iOS
+        working-directory: mobile
+        run: npx cap sync ios
+
+      - name: Preparar la API key de App Store Connect
+        env:
+          APPSTORE_PRIVATE_KEY: ${{ secrets.APPSTORE_PRIVATE_KEY }}
+          APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
+        run: |
+          # altool y xcodebuild buscan la key en esta ruta exacta.
+          mkdir -p "$HOME/private_keys"
+          printf '%s' "$APPSTORE_PRIVATE_KEY" > "$HOME/private_keys/AuthKey_${APPSTORE_KEY_ID}.p8"
+          chmod 600 "$HOME/private_keys/AuthKey_${APPSTORE_KEY_ID}.p8"
+
+      - name: Archivar (firma automática con la API key)
+        env:
+          KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
+          ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
+          TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          MARKETING: ${{ inputs.marketing_version }}
+        run: |
+          # Sin 'set -u': el bash 3.2 que trae macOS falla al expandir un
+          # array vacío con -u activo. GitHub ya corre los steps con -e y
+          # pipefail, así que no hace falta repetirlos.
+          set -eo pipefail
+          ARGS=""
+          if [ -n "$MARKETING" ]; then ARGS="MARKETING_VERSION=$MARKETING"; fi
+          # shellcheck disable=SC2086  # $ARGS debe separarse en palabras
+
+          # -allowProvisioningUpdates deja que Xcode cree el certificado y el
+          # perfil solo, usando la API key. Sin eso habría que exportar el
+          # certificado a mano desde una Mac y guardarlo como secret.
+          xcodebuild archive \
+            -project "$PROJECT" \
+            -scheme "$SCHEME" \
+            -configuration Release \
+            -destination 'generic/platform=iOS' \
+            -archivePath "$RUNNER_TEMP/App.xcarchive" \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath "$HOME/private_keys/AuthKey_${KEY_ID}.p8" \
+            -authenticationKeyID "$KEY_ID" \
+            -authenticationKeyIssuerID "$ISSUER_ID" \
+            DEVELOPMENT_TEAM="$TEAM_ID" \
+            CODE_SIGN_STYLE=Automatic \
+            CURRENT_PROJECT_VERSION=${{ github.run_number }} \
+            $ARGS
+
+      - name: Exportar el .ipa
+        env:
+          TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
+          ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
+        run: |
+          set -eo pipefail
+          cat > "$RUNNER_TEMP/ExportOptions.plist" <<PLIST
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>method</key><string>app-store-connect</string>
+            <key>teamID</key><string>${TEAM_ID}</string>
+            <key>signingStyle</key><string>automatic</string>
+            <key>uploadSymbols</key><true/>
+            <key>destination</key><string>export</string>
+          </dict>
+          </plist>
+          PLIST
+
+          xcodebuild -exportArchive \
+            -archivePath "$RUNNER_TEMP/App.xcarchive" \
+            -exportPath "$RUNNER_TEMP/export" \
+            -exportOptionsPlist "$RUNNER_TEMP/ExportOptions.plist" \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath "$HOME/private_keys/AuthKey_${KEY_ID}.p8" \
+            -authenticationKeyID "$KEY_ID" \
+            -authenticationKeyIssuerID "$ISSUER_ID"
+
+          ls -lh "$RUNNER_TEMP/export"
+
+      - name: Validar antes de subir
+        env:
+          KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
+          ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
+        run: |
+          set -eo pipefail
+          IPA=$(find "$RUNNER_TEMP/export" -name "*.ipa" -maxdepth 1 | head -1)
+          # Falla acá con un mensaje claro en vez de a mitad del upload.
+          xcrun altool --validate-app -f "$IPA" -t ios \
+            --apiKey "$KEY_ID" --apiIssuer "$ISSUER_ID"
+
+      - name: Subir a TestFlight
+        env:
+          KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
+          ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
+        run: |
+          set -eo pipefail
+          IPA=$(find "$RUNNER_TEMP/export" -name "*.ipa" -maxdepth 1 | head -1)
+          xcrun altool --upload-app -f "$IPA" -t ios \
+            --apiKey "$KEY_ID" --apiIssuer "$ISSUER_ID"
+          echo "Subido. App Store Connect tarda ~10-15 min en procesarlo."
+
+      - name: Guardar el .ipa como artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: stratos-ios-ipa
+          path: ${{ runner.temp }}/export/*.ipa
+          retention-days: 30
+          if-no-files-found: ignore
+
+      - name: Guardar logs si algo falló
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: xcodebuild-logs
+          path: |
+            ${{ runner.temp }}/App.xcarchive
+          retention-days: 7
+          if-no-files-found: ignore
