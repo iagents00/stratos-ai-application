@@ -38,6 +38,15 @@ const SOLO_WEB = new Set([
   './landing/Diagnostico.jsx',
   './landing/DukeLeadRouter.jsx',
   './app/views/LandingPages/PublicLanding.jsx',
+  // PricingScreen muestra precios de suscripción y un botón de Apple Pay que
+  // NO cobra (simula con setTimeout). El módulo "Planes" ya está oculto en la
+  // app, pero su CÓDIGO seguía viajando dentro del binario: un revisor que
+  // inspeccione el paquete encuentra "Apple Pay" ahí adentro. Apple exige
+  // In-App Purchase para bienes digitales; una pasarela falsa es peor que no
+  // tener ninguna. Los planes se contratan por la web.
+  // Con '../' porque quien la importa es App.jsx, que vive en src/app/. El hook
+  // compara la cadena tal como está escrita en el import, no la ruta resuelta.
+  '../landing/PricingScreen.jsx',
 ])
 
 /**
@@ -73,7 +82,11 @@ function sacarElSitioWeb(stub) {
     },
     buildEnd() {
       // Si mañana alguien renombra una página, este número baja y se nota.
+      // Si este número deja de ser n/n, alguien renombró o movió una página y
+      // su código volvió a colarse en el binario sin que nadie se entere.
+      const faltan = [...SOLO_WEB].filter(x => !fuera.includes(x))
       this.info(`[solo-app] ${fuera.length}/${SOLO_WEB.size} páginas públicas excluidas del binario`)
+      if (faltan.length) this.warn(`[solo-app] NO se excluyeron (¿se renombraron?): ${faltan.join(', ')}`)
     },
     closeBundle() {
       let liberado = 0

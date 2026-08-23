@@ -11,7 +11,7 @@ import { supabase, SUPABASE_REST_URL, SUPABASE_ANON_KEY } from "../lib/supabase"
 import { formatFechaLarga, STAGES_CON_CITA } from "../lib/utils";
 import { startRing, stopRing, primeRinger } from "../lib/ringer";
 import LoginScreen from "../landing/LoginScreen.jsx";
-import PricingScreen from "../landing/PricingScreen.jsx";
+
 import { useAuth } from "../hooks/useAuth";
 import { useClient } from "../hooks/useClient";
 import { useWhatsAppInbox } from "../hooks/useWhatsAppInbox";
@@ -178,6 +178,9 @@ function resolveInitialView(user, clientConfig) {
 import Dash          from "./views/Dash";
 import ComandoDirectivo from "./views/ComandoDirectivo";
 const ComandoOps    = lazy(() => import("./views/ComandoOps"));
+// Lazy a propósito: en web quita ~60 KB del arranque, y en la app este módulo
+// ni siquiera se compila (ver vite.config.js).
+const PricingScreen  = lazy(() => import("../landing/PricingScreen.jsx"));
 // Chat del equipo: lazy porque solo lo usan los tenants con features.teamChat.
 const ChatEquipo    = lazy(() => import("./views/ChatEquipo"));
 import CRM           from "./views/CRM";
