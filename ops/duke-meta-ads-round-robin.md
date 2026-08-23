@@ -253,7 +253,7 @@ Pruebas en transaccion con rollback:
 
 Workflow importable para upsert directo desde payload normalizado:
 
-`n8n/workflows/duke-meta-ads-round-robin.json`
+el workflow `duke-meta-ads-round-robin` (vive en n8n, no está exportado a este repo)
 
 Endpoint de destino Supabase:
 
@@ -292,7 +292,7 @@ Notas de implementacion:
 
 Workflow importable para avisar al asesor por WhatsApp Cloud API:
 
-`n8n/workflows/duke-advisor-whatsapp-queue-pump.json`
+el workflow `duke-advisor-whatsapp-queue-pump` (vive en n8n, no está exportado a este repo)
 
 Webhook de produccion esperado:
 

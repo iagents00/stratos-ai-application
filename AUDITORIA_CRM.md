@@ -228,7 +228,7 @@ El CRM está operativo en su totalidad. 8 módulos funcionales, 3 vistas de dato
 | Consola del browser sin errores | ✅ 0 errores en runtime |
 | Tema claro / oscuro en todo el CRM | ✅ Tokens `P` (dark) / `LP` (light) en todos los componentes |
 | Responsive básico (col compact en pantallas pequeñas) | ✅ Modo `co` reduce columnas |
-| Datos de prueba (8 leads pre-cargados) | ✅ `src/data/leads.js` |
+| Datos de prueba (8 leads pre-cargados) | ✅ `src/app/data/leads.js` |
 | Auth demo funcional (`demo@stratos.ai` / `Demo2024`) | ✅ |
 | Todos los cambios en git (rama `main`) | ✅ Commit `14a7b00` |
 

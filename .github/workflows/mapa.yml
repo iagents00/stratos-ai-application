@@ -1,23 +1,48 @@
 # ─────────────────────────────────────────────────────────────────────────────
-# mapa.yml — Mantiene MAPA.md y PLANO.md sincronizados con el código
+# mapa.yml — Que la documentación nunca mienta
 #
-# POR QUÉ: un mapa escrito a mano envejece y termina mandándote al archivo
-# equivocado. Este workflow los regenera en cada push a main y commitea el
-# resultado si cambió, así nadie tiene que acordarse de correrlos.
+# POR QUÉ: CLAUDE.md decía que Dash estaba en App.jsx:260. Se había movido meses
+# antes. Una doc que apunta a un archivo inexistente es peor que no tener doc:
+# no la dudás, vas, y no está.
+#
+# Dos trabajos:
+#   verificar  — en cada PR y push. Falla si algún .md apunta a un archivo que
+#                no existe, o si los planos quedaron desactualizados.
+#   regenerar  — solo en main. Reescribe MAPA.md y PLANO.md y los commitea si
+#                cambiaron, así nadie tiene que acordarse de correrlos.
 # ─────────────────────────────────────────────────────────────────────────────
 name: Planos del código
 
 on:
   push:
     branches: [main]
-    paths: ['src/**', 'n8n/**', 'mobile/**', 'scripts/generar-*.mjs']
+  pull_request:
   workflow_dispatch:
 
 permissions:
   contents: write
 
 jobs:
+  verificar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Ninguna doc puede apuntar a un archivo inexistente
+        run: node scripts/verificar-docs.mjs
+
+      - name: Los planos tienen que estar al día
+        run: |
+          node scripts/generar-mapa.mjs  --check
+          node scripts/generar-plano.mjs --check
+
   regenerar:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: verificar
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:

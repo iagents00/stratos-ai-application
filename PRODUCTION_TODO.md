@@ -43,7 +43,7 @@ Ver esquema completo en `docs/backend-architecture.md`.
 
 ### Tablas principales
 - [ ] `profiles` — usuarios y roles
-- [ ] `leads` — CRM (reemplaza `src/data/leads.js`)
+- [ ] `leads` — CRM (reemplaza `src/app/data/leads.js`)
 - [ ] `lead_activities` — historial de seguimiento por lead
 - [ ] `meta_actions` — Lista de Acción del MetaPanel (hoy en React state)
 - [ ] `meta_plan` — Plan Estratégico (hoy en React state)
@@ -57,7 +57,7 @@ Ver esquema completo en `docs/backend-architecture.md`.
 - [ ] Escribir migrations SQL (usar `supabase/migrations/`)
 - [ ] Crear indexes en: `leads.asesor_id`, `leads.stage`, `leads.created_at`
 - [ ] Crear triggers para `updated_at` automático
-- [ ] Seedear con los datos mock actuales de `src/data/leads.js`
+- [ ] Seedear con los datos mock actuales de `src/app/data/leads.js`
 
 ---
 

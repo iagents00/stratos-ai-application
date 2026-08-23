@@ -723,4 +723,4 @@ Es un **keyword matcher local**, no una API de IA real.
 
 > **Última actualización**: Abril 2026  
 > **Generado por**: Análisis automatizado del código fuente  
-> **Archivo principal**: `src/App.jsx` (5,330 líneas / 373 KB)
+> **Archivo principal**: `src/app/App.jsx` (5,330 líneas / 373 KB)
