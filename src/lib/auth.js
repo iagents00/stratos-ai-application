@@ -636,3 +636,41 @@ export async function adminResetPassword(email) {
     return { data: null, error: 'Error de conexión al mandar el correo.' }
   }
 }
+
+/**
+ * Borra la cuenta de quien está en sesión. Requisito de Apple 5.1.1(v): una app
+ * que permite crear cuentas tiene que permitir borrarlas desde adentro.
+ *
+ * A quién se borra lo decide el servidor leyendo el JWT, nunca este cliente:
+ * acá solo viaja la confirmación escrita por la persona.
+ *
+ * Qué se borra: la cuenta, el perfil, los tokens de push y las suscripciones.
+ * Qué NO: los leads y las acciones del CRM, que son registros de la empresa.
+ *
+ * @param {string} confirmacion - el correo de la cuenta, escrito por el usuario
+ * @returns {Promise<{data: object|null, error: string|null}>}
+ */
+export async function deleteMyAccount(confirmacion) {
+  try {
+    const { data, error } = await supabase.functions.invoke('delete-my-account', {
+      body: { confirmacion },
+    })
+
+    if (error) {
+      // El cuerpo del error trae el mensaje útil (ej. "eres el único admin").
+      let msg = 'No se pudo eliminar la cuenta. Inténtalo de nuevo.'
+      try {
+        const cuerpo = await error.context?.json?.()
+        if (cuerpo?.error) msg = cuerpo.error
+      } catch { /* nos quedamos con el mensaje genérico */ }
+      return { data: null, error: msg }
+    }
+
+    if (data?.error) return { data: null, error: data.error }
+
+    logAuthEvent('ACCOUNT_DELETED', null, {})
+    return { data, error: null }
+  } catch (e) {
+    return { data: null, error: e?.message || 'No se pudo eliminar la cuenta.' }
+  }
+}

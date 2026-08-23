@@ -17,13 +17,14 @@
  * Workflow:  n8n/workflows/stratos-telegram-bot-v3-asesor.json
  */
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Send, Check, X, ExternalLink, MessageCircle, RefreshCw, User, Bot, Lock, PhoneCall, Globe, Mail } from "lucide-react";
+import { Send, Check, X, ExternalLink, MessageCircle, RefreshCw, User, Bot, Lock, PhoneCall, Globe, Mail, Trash2, AlertTriangle } from "lucide-react";
 import { P, LP, font, fontDisp } from "../../design-system/tokens";
 import { G, Pill } from "../SharedComponents";
 import { useAuth } from "../../hooks/useAuth";
 import { useClient } from "../../hooks/useClient";
 import { supabase } from "../../lib/supabase";
 import { logAuthEvent } from "../../lib/audit";
+import { deleteMyAccount } from "../../lib/auth";
 import {
   getPairingStatus,
   requestPairingCode,
@@ -89,6 +90,7 @@ export default function Profile({ theme = "dark", T: Tprop }) {
       <SupportPanel T={T} isLight={isLight} clientConfig={clientConfig} />
       <TimezonePanel T={T} isLight={isLight} user={user} />
       <ConnectTelegramPanel T={T} isLight={isLight} botUsername={botUsername} manualPairing={manualPairing} />
+      <DeleteAccountPanel T={T} isLight={isLight} user={user} />
       <RecentBotActivity T={T} isLight={isLight} />
     </div>
   );
@@ -97,6 +99,112 @@ export default function Profile({ theme = "dark", T: Tprop }) {
 /* ─────────────────────────────────────────────────────────────────────── */
 /*  System (cambio de contraseña) + Soporte directo                         */
 /* ─────────────────────────────────────────────────────────────────────── */
+
+/* ──────────────────────────────────────────────────────────────────────────
+   DeleteAccountPanel — borrar la propia cuenta
+
+   Lo exige Apple (Guideline 5.1.1(v)): una app que permite crear cuentas tiene
+   que permitir borrarlas DESDE ADENTRO. La página /eliminar-mis-datos no
+   cuenta: es informativa y trata de leads de formularios de Meta, no de
+   usuarios del CRM.
+
+   Se pide escribir el correo completo a propósito. Un botón de "confirmar" a
+   secas se toca sin leer; escribir el correo obliga a detenerse. Quién se borra
+   lo decide el SERVIDOR leyendo el JWT — acá solo viaja la confirmación.
+   ────────────────────────────────────────────────────────────────────────── */
+function DeleteAccountPanel({ T = P, isLight = false, user }) {
+  const [abierto, setAbierto]   = useState(false);
+  const [escrito, setEscrito]   = useState("");
+  const [busy, setBusy]         = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
+
+  const correo    = (user?.email || "").trim();
+  const bloqueado = user?.isDemo || user?._offline;
+  const coincide  = !!correo && escrito.trim().toLowerCase() === correo.toLowerCase();
+
+  const PELIGRO = "#F87171";
+
+  const borrar = async () => {
+    if (!coincide || busy) return;
+    setBusy(true);
+    setErrorMsg("");
+    const { error } = await deleteMyAccount(escrito.trim());
+    if (error) { setBusy(false); setErrorMsg(error); return; }
+    // La cuenta ya no existe: al recargar, la app queda en el login sin sesión.
+    window.location.replace("/");
+  };
+
+  return (
+    <G T={T} style={{ padding: 24, marginBottom: 18, borderColor: `${PELIGRO}33` }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 14 }}>
+        <div style={{ width: 40, height: 40, borderRadius: 12, background: `${PELIGRO}14`, border: `1px solid ${PELIGRO}2A`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+          <Trash2 size={18} color={PELIGRO} strokeWidth={1.9} />
+        </div>
+        <div style={{ minWidth: 0 }}>
+          <h2 style={{ margin: "0 0 2px", fontSize: 17, fontWeight: 400, color: T.txt, fontFamily: fontDisp }}>Eliminar mi cuenta</h2>
+          <p style={{ margin: 0, fontSize: 12.5, color: T.txt2 }}>
+            Se borran tu acceso, tu perfil y tus notificaciones. Es permanente.
+          </p>
+        </div>
+      </div>
+
+      <div style={{ fontSize: 12.5, color: T.txt2, lineHeight: 1.65, marginBottom: 16 }}>
+        Los clientes, seguimientos y registros que capturaste <strong style={{ color: T.txt }}>no se borran</strong>:
+        son información de la empresa y siguen con tu equipo. Lo que desaparece es tu cuenta personal.
+      </div>
+
+      {bloqueado ? (
+        <div style={{ fontSize: 12.5, color: T.txt3 }}>
+          {user?.isDemo ? "La cuenta demo no se puede eliminar." : "Necesitas conexión para eliminar tu cuenta."}
+        </div>
+      ) : !abierto ? (
+        <button
+          onClick={() => setAbierto(true)}
+          style={{ padding: "10px 18px", minHeight: 40, borderRadius: 10, border: `1px solid ${PELIGRO}44`, background: "transparent", color: PELIGRO, fontSize: 13, fontWeight: 600, fontFamily: font, cursor: "pointer" }}
+        >
+          Eliminar mi cuenta
+        </button>
+      ) : (
+        <div style={{ display: "grid", gap: 12 }}>
+          <div style={{ display: "flex", gap: 10, alignItems: "flex-start", padding: "12px 14px", borderRadius: 10, background: `${PELIGRO}0F`, border: `1px solid ${PELIGRO}2A` }}>
+            <AlertTriangle size={16} color={PELIGRO} strokeWidth={2} style={{ flexShrink: 0, marginTop: 1 }} />
+            <div style={{ fontSize: 12.5, color: T.txt, lineHeight: 1.6 }}>
+              Esto no se puede deshacer. Para confirmar, escribe <strong>{correo}</strong>.
+            </div>
+          </div>
+
+          <input
+            type="email"
+            value={escrito}
+            onChange={(e) => { setEscrito(e.target.value); setErrorMsg(""); }}
+            placeholder={correo}
+            autoComplete="off"
+            style={{ width: "100%", padding: "11px 13px", minHeight: 44, borderRadius: 10, border: `1px solid ${coincide ? PELIGRO : T.borderH}`, background: isLight ? "rgba(15,23,42,0.03)" : "rgba(255,255,255,0.04)", color: T.txt, fontSize: 14, fontFamily: font, outline: "none" }}
+          />
+
+          {errorMsg && <div style={{ fontSize: 12.5, color: PELIGRO, lineHeight: 1.55 }}>{errorMsg}</div>}
+
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            <button
+              onClick={borrar}
+              disabled={!coincide || busy}
+              style={{ padding: "10px 18px", minHeight: 40, borderRadius: 10, border: "none", background: coincide && !busy ? PELIGRO : `${PELIGRO}33`, color: coincide && !busy ? "#1A0505" : T.txt3, fontSize: 13, fontWeight: 700, fontFamily: font, cursor: coincide && !busy ? "pointer" : "not-allowed" }}
+            >
+              {busy ? "Eliminando…" : "Eliminar definitivamente"}
+            </button>
+            <button
+              onClick={() => { setAbierto(false); setEscrito(""); setErrorMsg(""); }}
+              disabled={busy}
+              style={{ padding: "10px 18px", minHeight: 40, borderRadius: 10, border: `1px solid ${T.borderH}`, background: "transparent", color: T.txt2, fontSize: 13, fontWeight: 600, fontFamily: font, cursor: "pointer" }}
+            >
+              Cancelar
+            </button>
+          </div>
+        </div>
+      )}
+    </G>
+  );
+}
 
 function normalizePhoneHref(value) {
   const cleaned = String(value || "").replace(/[^\d+]/g, "");

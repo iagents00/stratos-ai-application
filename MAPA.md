@@ -6,7 +6,7 @@
 >
 > ¿Buscás un botón o un texto y no está acá? `npm run buscar "texto"`
 
-**162 archivos · 72.524 líneas**
+**162 archivos · 72.670 líneas**
 
 ---
 
@@ -39,7 +39,7 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | **Stratos RH** | `src/app/views/RRHHModule.jsx` | 839 |
 | **Papelera** | `src/app/views/Trash.jsx` | 285 |
 | **Planes** | _sin vista propia (redirige a otra)_ | — |
-| **Perfil** | `src/app/views/Profile.jsx` | 1021 |
+| **Perfil** | `src/app/views/Profile.jsx` | 1129 |
 | **Usuarios** | `src/app/features/Admin/AdminPanel.jsx` | 543 |
 
 ---
@@ -151,7 +151,7 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | `Copilot.jsx` | 1789 | v2 (15-jul) |
 | `ComandoDirectivo.jsx` | 1277 | _sin describir_ |
 | `index.jsx` | 1205 | Panel "Control de Zooms" — pestaña dentro de Comando Directivo (Duke). |
-| `Profile.jsx` | 1021 | vista de perfil del asesor. |
+| `Profile.jsx` | 1129 | vista de perfil del asesor. |
 | `LeadWhatsAppChat.jsx` | 942 | _sin describir_ |
 | `RRHHModule.jsx` | 839 | _sin describir_ |
 | `InformeAvances.jsx` | 747 | _sin describir_ |
@@ -342,7 +342,7 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | Archivo | Líneas | Qué hace |
 |---|---|---|
 | `telegram.js` | 827 | Pareo del bot de Telegram con el perfil del asesor. |
-| `auth.js` | 639 | _sin describir_ |
+| `auth.js` | 677 | _sin describir_ |
 | `push.js` | 416 | Sistema de suscripción a notificaciones Web Push |
 | `offline-mode.js` | 351 | _sin describir_ |
 | `lead-storage.js` | 343 | _sin describir_ |
@@ -415,7 +415,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | ACTIVO | `src/app/views/CRM/components.jsx:5514` |
 | Activos post-Zoom | `src/app/views/ComandoDirectivo.jsx:694` |
 | Activos post-Zoom: | `src/app/views/CRM/ZoomBoard.jsx:169` |
-| Actual: | `src/app/views/Profile.jsx:301` |
+| Actual: | `src/app/views/Profile.jsx:409` |
 | Actualización del sistema | `src/app/components/DynIsland.jsx:408` |
 | Actualización Importante | `src/app/components/DynamicIsland.jsx:132` |
 | Actualizar | `src/app/views/Caja.jsx:303` |
@@ -460,7 +460,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Asignar responsable | `src/app/features/MetaPanel/index.jsx:860` |
 | Asistió (sem.) | `src/app/views/ZoomControl/Resumen.jsx:411` |
 | Atención Inmediata | `src/app/views/Dash.jsx:235` |
-| Aún no configuras un correo de recuperación. | `src/app/views/Profile.jsx:302` |
+| Aún no configuras un correo de recuperación. | `src/app/views/Profile.jsx:410` |
 | Aún no hay documentos | `src/app/features/MetaPanel/index.jsx:1646` |
 | Badge | `src/app/views/LandingPages/index.jsx:662` |
 | Bajo · Medio · Alto | `src/app/views/CRM/components.jsx:3440` |
@@ -496,7 +496,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Cancelar comentario | `src/app/views/Copilot.jsx:1034` |
 | CANDIDATO IDENTIFICADO | `src/app/views/RRHHModule.jsx:740` |
 | Características | `src/app/views/LandingPages/index.jsx:704` |
-| Cargando actividad… | `src/app/views/Profile.jsx:870` |
+| Cargando actividad… | `src/app/views/Profile.jsx:978` |
 | Cargando conversación… | `src/app/views/Copilot.jsx:965` |
 | Cargando conversaciones… | `src/app/views/WhatsApp.jsx:263` |
 | Cargando el plan… | `src/app/views/PlanSemanal.jsx:353` |
@@ -536,10 +536,10 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Cómo trabaja el equipo IA | `src/app/views/IACRM.jsx:568` |
 | Cómo verá el cliente | `src/app/views/LandingPages/index.jsx:131` |
 | Complejidad: | `src/app/views/Marketing.jsx:2190` |
-| Conectado | `src/app/views/Profile.jsx:623` |
+| Conectado | `src/app/views/Profile.jsx:731` |
 | Configuración | `src/app/App.jsx:2978` |
 | Confirmados | `src/app/views/ZoomControl/Resumen.jsx:440` |
-| Confirmar contraseña | `src/app/views/Profile.jsx:205` |
+| Confirmar contraseña | `src/app/views/Profile.jsx:313` |
 | Contáctame Ya | `src/app/views/CRM/index.jsx:6078` |
 | Contarlo ahora | `src/app/views/Marketing.jsx:708` |
 | Continuar sin CV | `src/app/features/Portal/index.jsx:425` |
@@ -551,7 +551,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Copiar resumen para Telegram | `src/app/views/CRM/components.jsx:4569` |
 | Copilot AI | `src/app/views/Copilot.jsx:923` |
 | Corregir lo que escribiste | `src/app/views/Marketing.jsx:1853` |
-| Correo de recuperación | `src/app/views/Profile.jsx:269` |
+| Correo de recuperación | `src/app/views/Profile.jsx:377` |
 | Crear | `src/app/views/Marketing.jsx:915` |
 | Crear con voz | `src/app/views/Marketing.jsx:2873` |
 | Crear con voz — díctale al Copilot | `src/app/views/Marketing.jsx:2868` |
@@ -581,7 +581,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Desglose por asesor | `src/app/views/ComandoDirectivo.jsx:765` |
 | Detalle mensual | `src/app/views/FinanzasAdmin.jsx:426` |
 | Detalle: estilo, textos, medidas… | `src/app/views/Marketing.jsx:2210` |
-| Detectada por tu navegador: | `src/app/views/Profile.jsx:444` |
+| Detectada por tu navegador: | `src/app/views/Profile.jsx:552` |
 | Días anteriores | `src/app/views/Marketing.jsx:2745` |
 | Distribución actual de candidatos por etapa | `src/app/views/RRHHModule.jsx:325` |
 | Documentos del Equipo | `src/app/features/MetaPanel/index.jsx:1575` |
@@ -614,6 +614,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Eliminar cliente | `src/app/views/CRM/components.jsx:3868` |
 | Eliminar definitivamente | `src/app/views/Trash.jsx:197` |
 | Eliminar documento | `src/app/features/MetaPanel/index.jsx:1689` |
+| Eliminar mi cuenta | `src/app/views/Profile.jsx:144` |
 | Eliminar usuario | `src/app/features/Admin/AdminPanel.jsx:325` |
 | Email | `src/app/features/Admin/AdminPanel.jsx:455` |
 | Empleado | `src/app/views/RRHHModule.jsx:602` |
@@ -626,10 +627,9 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Entrevistas | `src/app/views/RRHHModule.jsx:566` |
 | Envía a | `src/app/views/Copilot.jsx:1770` |
 | Enviando… | `src/app/views/CRM/LeadWhatsAppChat.jsx:914` |
-| Enviar (Enter) | `src/app/views/CRM/LeadWhatsAppChat.jsx:894` |
 
 
-_(431 textos más — usá `npm run buscar "texto"`)_
+_(432 textos más — usá `npm run buscar "texto"`)_
 
 ---
 
@@ -648,8 +648,8 @@ hacen. Agregarles un bloque `/** ... */` arriba los hace aparecer solos acá.
 - `src/app/views/RRHHModule.jsx` (839 líneas)
 - `src/app/views/InformeAvances.jsx` (747 líneas)
 - `src/app/views/ERP.jsx` (698 líneas)
+- `src/lib/auth.js` (677 líneas)
 - `src/app/views/WhatsApp.jsx` (667 líneas)
-- `src/lib/auth.js` (639 líneas)
 - `src/app/data/catalogoProyectos.js` (611 líneas)
 - `src/app/views/Caja.jsx` (580 líneas)
 - `src/app/views/ChatEquipo.jsx` (569 líneas)
