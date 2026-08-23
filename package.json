@@ -10,7 +10,9 @@
     "preview": "vite preview",
     "prebuild": "node tools/check_mobile_perf.mjs && node tools/check_plan_semanal.mjs",
     "mapa": "node scripts/generar-mapa.mjs",
-    "buscar": "node scripts/buscar.mjs"
+    "buscar": "node scripts/buscar.mjs",
+    "plano": "node scripts/generar-plano.mjs",
+    "planos": "npm run mapa && npm run plano"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.104.1",
