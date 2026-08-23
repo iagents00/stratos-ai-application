@@ -199,18 +199,26 @@ font     = "SF Pro Text, Segoe UI, sans-serif"     // Cuerpo
 
 ---
 
-## Componentes Principales en App.jsx
+## ¿Dónde está cada cosa?
 
-| Componente | Vista | Línea aprox. |
-|-----------|-------|-------------|
-| `Dash` | Comando / Dashboard | ~260 |
-| `CRM` | Pipeline de ventas | ~549 |
-| `IACRM` | Agentes IA | ~750 |
-| `ERP` | Proyectos inmobiliarios | ~736 |
-| `AsesorCRM` | Base de datos asesores | ~1040 |
-| `LandingPages` | Generador de landing | ~2450 |
-| `FinanzasAdmin` | Módulo finanzas | ~4300 |
-| `RRHHModule` | Recursos humanos | ~5000 |
+**No lo busques a mano ni confíes en tablas escritas a mano — envejecen.**
+Este archivo tenía una tabla que decía que `Dash` estaba en `App.jsx:260` y
+`CRM` en `App.jsx:549`. Ambas vistas se movieron a `src/app/views/` hace meses
+y la tabla siguió ahí, mandando a todo el mundo al lugar equivocado.
+
+En su lugar:
+
+- **`MAPA.md`** — qué pantalla vive en qué archivo, qué hace cada archivo, y un
+  índice de los textos visibles de la app. Lo genera `scripts/generar-mapa.mjs`
+  leyendo el código, y el CI lo regenera en cada push a `main`: no puede mentir.
+
+- **`npm run buscar "texto"`** — para cuando alguien dice "cambiá el botón que
+  dice Generar PDF". Devuelve archivo y línea al instante.
+
+```bash
+npm run mapa                    # regenerar el mapa
+npm run buscar "generar pdf"    # ¿dónde está este texto?
+```
 
 ---
 
