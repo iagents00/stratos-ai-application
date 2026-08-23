@@ -1,17 +1,8 @@
 {
   "appId": "com.stratoscapitalgroup.crm",
   "appName": "Stratos CRM AI",
-  "webDir": "www",
+  "webDir": "../dist",
   "backgroundColor": "#030810",
-  "server": {
-    "url": "https://app.stratoscapitalgroup.com",
-    "allowNavigation": [
-      "app.stratoscapitalgroup.com",
-      "stratoscapitalgroup.com",
-      "*.stratoscapitalgroup.com"
-    ],
-    "cleartext": false
-  },
   "android": {
     "allowMixedContent": false,
     "backgroundColor": "#030810",
@@ -19,6 +10,7 @@
   },
   "ios": {
     "backgroundColor": "#030810",
-    "contentInset": "always"
+    "contentInset": "always",
+    "limitsNavigationsToAppBoundDomains": false
   }
 }

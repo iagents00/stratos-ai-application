@@ -6,10 +6,10 @@
 # GitHub ya traen Xcode, así que el release sale de aquí: sin instalar nada
 # local y sin depender de quién tenga la Mac a mano.
 #
-# La app es un shell nativo (Capacitor) que carga app.stratoscapitalgroup.com,
-# igual que el APK de Android. Las actualizaciones del CRM llegan SOLAS a la
-# app por Vercel — este workflow solo hace falta cuando cambia el SHELL (ícono,
-# permisos, plugins, versión) o para el primer envío a TestFlight.
+# La app EMPAQUETA el CRM dentro del binario (webDir: ../dist), así que abre sin
+# red. Los datos siguen viniendo en vivo de Supabase, pero cualquier cambio de la
+# interfaz necesita un release nuevo: por eso este workflow se corre también
+# cuando cambia el CRM, no solo el shell.
 #
 # ── SECRETS QUE HAY QUE CARGAR (Settings → Secrets and variables → Actions) ──
 #
@@ -72,6 +72,13 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+
+      # webDir apunta a ../dist: la app ahora EMPAQUETA el CRM en el binario en
+      # vez de cargarlo remoto, así que hay que compilar la web antes de sincronizar.
+      - name: Compilar el CRM web
+        run: |
+          npm ci
+          npm run build
 
       # CapApp-SPM referencia ../../../node_modules/@capacitor/* — sin esto el
       # paquete de Swift no resuelve y la compilación falla al enlazar plugins.

@@ -88,7 +88,7 @@ const LLAVES = [
   { f: "src/lib/lead-save.js",           que: "Guardado de leads con triple respaldo. Es el camino por el que entra el dinero: si falla, se pierden leads." },
   { f: "public/sw.js",                   que: "Service Worker. `CACHE_VERSION` se sube en cada merge a main; es el marcador para verificar que el deploy salió." },
   { f: "src/app/constants/navigation.js",que: "Qué módulo ve cada rol y cada cliente. Un error acá le abre módulos a quien no debe." },
-  { f: "mobile/capacitor.config.json",   que: "Shell de la app móvil. `server.url` define qué carga la app en el teléfono." },
+  { f: "mobile/capacitor.config.json",   que: "Shell de la app móvil. `webDir` apunta a `../dist`: el CRM va EMPAQUETADO en el binario. Volver a poner `server.url` haría que cargue remoto y se pierde el offline." },
 ];
 
 const FLUJOS = [
@@ -139,7 +139,7 @@ const FLUJOS = [
       { t: "Subir CACHE_VERSION", d: "Es el marcador para verificar el deploy después.", f: "public/sw.js" },
       { t: "Merge a main", d: "Vercel despliega solo.", f: null },
       { t: "Verificar", d: "`curl app.stratoscapitalgroup.com/sw.js` y confirmar la versión nueva.", f: null },
-      { t: "La app móvil se entera sola", d: "Carga la web remota; no hay que recompilar el binario.", f: "mobile/capacitor.config.json" },
+      { t: "La app móvil NO se entera sola", d: "Desde ago-2026 empaqueta el CRM dentro del binario, así que abre sin red. Los datos siguen en vivo, pero un cambio de interfaz necesita un release nuevo por TestFlight o Play.", f: "mobile/capacitor.config.json" },
     ],
   },
 ];
@@ -279,7 +279,7 @@ ${f.pasos.map((p, j) => {
 | Entra pero se sale al recargar | \`src/contexts/AuthContext.jsx\`. Casi siempre es un timeout mal calibrado. |
 | Dejaron de llegar leads | n8n primero, no el CRM. El webhook de Meta es el sospechoso. |
 | Un usuario ve una versión vieja | \`CACHE_VERSION\` en \`public/sw.js\` no se subió en el último merge. |
-| La app móvil no abre | Carga la web remota: si Vercel está caído, la app también. |
+| La app móvil no abre | El bundle va dentro del binario, así que abrir siempre abre. Si carga pero sin datos, el problema es Supabase, no Vercel. |
 | Un módulo se le abrió a quien no debe | \`src/app/constants/navigation.js\` y las políticas RLS de Supabase. |
 | El Copilot responde raro o no responde | ¿Falló una acción concreta (aprobar, comentar)? Es RPC de Supabase. ¿Falló lo conversacional? El prompt vive en n8n, no en este repo. |
 | Un cliente dice que pagó y no le llegó | Revisar la sección 9: el botón de pago no cobra. El cobro real es manual. |

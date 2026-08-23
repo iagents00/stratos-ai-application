@@ -6,7 +6,7 @@
 >
 > ¿Buscás un botón o un texto y no está acá? `npm run buscar "texto"`
 
-**161 archivos · 72.282 líneas**
+**161 archivos · 72.326 líneas**
 
 ---
 
@@ -70,7 +70,7 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 
 | Archivo | Líneas | Qué hace |
 |---|---|---|
-| `main.jsx` | 415 | Entry point de Stratos AI |
+| `main.jsx` | 421 | Entry point de Stratos AI |
 | `index.css` | 250 | _sin describir_ |
 | `mobile-perf.css` | 121 | _sin describir_ |
 
@@ -285,8 +285,8 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | Archivo | Líneas | Qué hace |
 |---|---|---|
 | `AuthContext.jsx` | 376 | Estado global de autenticación — conectado a Supabase Auth. |
-| `ClientOrgGuard.jsx` | 59 | _sin describir_ |
-| `ClientContext.jsx` | 46 | Provee la configuración del cliente activo (Duke, Grupo 28, etc.) a toda la app. |
+| `ClientOrgGuard.jsx` | 71 | _sin describir_ |
+| `ClientContext.jsx` | 61 | Provee la configuración del cliente activo (Duke, Grupo 28, etc.) a toda la app. |
 
 ### `src/data/`
 
@@ -342,7 +342,7 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | Archivo | Líneas | Qué hace |
 |---|---|---|
 | `telegram.js` | 827 | Pareo del bot de Telegram con el perfil del asesor. |
-| `auth.js` | 633 | _sin describir_ |
+| `auth.js` | 639 | _sin describir_ |
 | `push.js` | 416 | Sistema de suscripción a notificaciones Web Push |
 | `offline-mode.js` | 351 | _sin describir_ |
 | `lead-storage.js` | 343 | _sin describir_ |
@@ -355,7 +355,7 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | `lead-backup.js` | 197 | _sin describir_ |
 | `informe-doc.js` | 175 | _sin describir_ |
 | `audit.js` | 151 | Cliente del sistema de auditoría |
-| `native.js` | 144 | Puente con la app nativa (Capacitor) |
+| `native.js` | 149 | _sin describir_ |
 | `markdown.jsx` | 129 | Mini renderer Markdown → React. Pensado para las notas privadas que la IA |
 | `iagents-actions.js` | 126 | _sin describir_ |
 | `backup.js` | 116 | Respaldo manual de la base de datos |
@@ -648,7 +648,7 @@ hacen. Agregarles un bloque `/** ... */` arriba los hace aparecer solos acá.
 - `src/app/views/InformeAvances.jsx` (747 líneas)
 - `src/app/views/ERP.jsx` (698 líneas)
 - `src/app/views/WhatsApp.jsx` (667 líneas)
-- `src/lib/auth.js` (633 líneas)
+- `src/lib/auth.js` (639 líneas)
 - `src/app/data/catalogoProyectos.js` (611 líneas)
 - `src/app/views/Caja.jsx` (580 líneas)
 - `src/app/views/ChatEquipo.jsx` (569 líneas)
@@ -694,6 +694,7 @@ hacen. Agregarles un bloque `/** ... */` arriba los hace aparecer solos acá.
 - `src/components/UpdatePill.jsx` (157 líneas)
 - `src/app/components/DynamicIsland.jsx` (153 líneas)
 - `src/app/views/CRM/LeadChatHistory.jsx` (152 líneas)
+- `src/lib/native.js` (149 líneas)
 - `src/app/views/CRM/ScheduledCallBadge.jsx` (144 líneas)
 - `src/clients/brasa-y-piedra/config.js` (140 líneas)
 - `src/lib/iagents-actions.js` (126 líneas)
@@ -709,4 +710,5 @@ hacen. Agregarles un bloque `/** ... */` arriba los hace aparecer solos acá.
 - `src/app/views/CRM/date-range.js` (86 líneas)
 - `src/hooks/useTeam.js` (74 líneas)
 - `src/lib/ringer.js` (72 líneas)
+- `src/contexts/ClientOrgGuard.jsx` (71 líneas)
 - `src/lib/supabase.js` (67 líneas)

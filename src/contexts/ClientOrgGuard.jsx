@@ -24,11 +24,12 @@
 import { useEffect, useRef } from "react";
 import { useAuth } from "../hooks/useAuth";
 import { useClient } from "../hooks/useClient";
-import { resolveRedirectForUser } from "../clients";
+import { resolveRedirectForUser, getClientIdByOrgId } from "../clients";
+import { isNativeApp } from "../lib/native";
 
 export function ClientOrgGuard() {
   const { user } = useAuth();
-  const { clientId } = useClient();
+  const { clientId, setClientById } = useClient();
   // Evita redirects múltiples si el componente re-renderea durante la
   // navegación (replace() es asíncrono en la práctica).
   const redirectedRef = useRef(false);
@@ -39,6 +40,17 @@ export function ClientOrgGuard() {
 
     // Las cuentas demo no tienen una org "real" — saltearlas.
     if (user?._offline || user?.id === "demo-user-local") return;
+
+    // APP NATIVA: es UN binario para todos los clientes, servido desde
+    // capacitor://localhost. No hay path que cambiar, y un location.replace()
+    // a capacitor://localhost/grupo28 daría 404 (no hay servidor que rutee):
+    // el usuario quedaría con pantalla en blanco. Acá el tenant se aplica en
+    // memoria y el árbol re-renderea con la config correcta.
+    if (isNativeApp()) {
+      const destino = getClientIdByOrgId(user.organizationId);
+      if (destino && destino !== clientId) setClientById(destino);
+      return;
+    }
 
     const redirectUrl = resolveRedirectForUser(user, clientId, window.location);
     if (redirectUrl) {
@@ -52,7 +64,7 @@ export function ClientOrgGuard() {
       }
       window.location.replace(redirectUrl);
     }
-  }, [user, clientId]);
+  }, [user, clientId, setClientById]);
 
   return null;
 }

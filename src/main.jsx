@@ -176,13 +176,19 @@ const clientId        = matchClientFromLocation(window.location);
 const clientConfig    = resolveClientFromLocation(window.location);
 const isExplicitClient = clientId !== "duke";
 
-const isLanding = !isExplicitClient && (
+// APP NATIVA: el bundle va empaquetado dentro del binario y se sirve desde
+// capacitor://localhost, o sea hostname === "localhost". Sin este guard, la
+// heurística de desarrollo de abajo daría true y la app del App Store abriría
+// la LANDING DE MARKETING en lugar del CRM. El binario ES la plataforma.
+const esAppNativa = isNativeApp();
+
+const isLanding = !esAppNativa && !isExplicitClient && (
   LANDING_DOMAINS.includes(hostname)
   || (hostname === "localhost" && !params.has("app"))
   || (hostname === "127.0.0.1" && !params.has("app"))
 );
 
-const isApp = !isPrivacy && !isDeletion && !isDelivery && !isManual && !isManualTG && !isManualMkt && !isManualNSG && !isManualLegacy && !isManualBrasa && !isManualGasil && !isManualMuebleria && !isDiagnostico && !isDukeLeadRouter && !isPublicLanding && !isLanding;
+const isApp = esAppNativa || (!isPrivacy && !isDeletion && !isDelivery && !isManual && !isManualTG && !isManualMkt && !isManualNSG && !isManualLegacy && !isManualBrasa && !isManualGasil && !isManualMuebleria && !isDiagnostico && !isDukeLeadRouter && !isPublicLanding && !isLanding);
 
 // URL de la plataforma — usada por la landing para el CTA principal
 const APP_URL = import.meta.env.VITE_APP_URL || (window.location.origin + "/?app");
