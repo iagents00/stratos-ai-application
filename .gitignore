@@ -45,3 +45,6 @@ team_credentials.txt
 # Backups temporales generados por scripts (.bak de leads.json, etc)
 *.bak
 dist-app
+
+# Derived data de compilaciones locales de Xcode
+dd/
