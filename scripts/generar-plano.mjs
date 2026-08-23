@@ -113,6 +113,16 @@ const FLUJOS = [
     ],
   },
   {
+    titulo: "Cómo alguien borra su propia cuenta",
+    pasos: [
+      { t: "Lo exige Apple", d: "Guideline 5.1.1(v): una app que permite crear cuentas tiene que permitir borrarlas desde adentro.", f: null },
+      { t: "El panel en el Perfil", d: "Pide escribir el correo completo. Un botón de 'confirmar' a secas se toca sin leer.", f: "src/app/views/Profile.jsx" },
+      { t: "La Edge Function decide, no el navegador", d: "A quién se borra sale del JWT de quien llama. Desplegada y activa en producción.", f: "supabase/functions/delete-my-account/index.ts" },
+      { t: "Guarda contra dejar la org huérfana", d: "Si es el único admin de su organización, se rechaza: nadie podría volver a dar de alta a nadie.", f: null },
+      { t: "Los leads NO se borran", d: "Son registros de la empresa, no de la persona. La interfaz lo dice explícitamente.", f: null },
+    ],
+  },
+  {
     titulo: "Cómo cobra Stratos, y dónde NO cobra",
     pasos: [
       { t: "La pantalla de Planes muestra precios", d: "Es presentación: muestra los planes y un botón de Apple Pay.", f: "src/landing/PricingScreen.jsx" },

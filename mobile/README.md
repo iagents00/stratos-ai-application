@@ -74,8 +74,10 @@ contacto decide la conversión.
 - `App.entitlements` con `aps-environment`, referenciado en Debug y Release.
 - Registro cableado a la sesión: arranca tras el login y borra el token al
   cerrar sesión (si no, el teléfono seguiría recibiendo los leads del anterior).
-- Tabla `device_tokens` con RLS — migración `232_push_nativo_device_tokens.sql`.
-  Se aplica **corriendo el SQL en el editor del dashboard**, no con `db push`.
+- Tabla `device_tokens` con RLS — migración `232_push_nativo_device_tokens.sql`,
+  **ya aplicada en producción** (23-ago-2026). Verificado: RLS activo, una
+  política por usuario, y `anon` sin acceso — un token filtrado permitiría
+  mandarle notificaciones al teléfono de un asesor.
 
 ### Lo que falta, y necesita la cuenta de Apple
 
