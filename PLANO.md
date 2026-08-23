@@ -222,7 +222,20 @@ Los tres caminos que hay que entender. Todo lo demás se deduce de estos.
 5. **Se resuelve a qué cliente pertenece** → `src/contexts/ClientOrgGuard.jsx`
    Por `organization_id`, y redirige si entró por el path equivocado.
 
-### 7.3 Cómo cobra Stratos, y dónde NO cobra
+### 7.3 Cómo alguien borra su propia cuenta
+
+1. **Lo exige Apple**
+   Guideline 5.1.1(v): una app que permite crear cuentas tiene que permitir borrarlas desde adentro.
+2. **El panel en el Perfil** → `src/app/views/Profile.jsx`
+   Pide escribir el correo completo. Un botón de 'confirmar' a secas se toca sin leer.
+3. **La Edge Function decide, no el navegador** → `supabase/functions/delete-my-account/index.ts`
+   A quién se borra sale del JWT de quien llama. Desplegada y activa en producción.
+4. **Guarda contra dejar la org huérfana**
+   Si es el único admin de su organización, se rechaza: nadie podría volver a dar de alta a nadie.
+5. **Los leads NO se borran**
+   Son registros de la empresa, no de la persona. La interfaz lo dice explícitamente.
+
+### 7.4 Cómo cobra Stratos, y dónde NO cobra
 
 1. **La pantalla de Planes muestra precios** → `src/landing/PricingScreen.jsx`
    Es presentación: muestra los planes y un botón de Apple Pay.
@@ -237,7 +250,7 @@ Los tres caminos que hay que entender. Todo lo demás se deduce de estos.
 6. **Caja: ingresos y egresos** → `src/app/views/Caja.jsx`
    Libro de movimientos sobre `team_expenses`. Los gastos entran por Telegram.
 
-### 7.4 Cómo funciona el Copilot (tiene DOS caminos)
+### 7.5 Cómo funciona el Copilot (tiene DOS caminos)
 
 1. **Camino determinista: va directo a Supabase** → `src/app/views/Copilot.jsx`
    Aprobar evidencia, adjuntarla, comentar. Son RPCs (`mkt_approve_evidence`, `mkt_attach_evidence_to`, `mkt_comment_evidence`). NO pasan por la IA, así que si esto falla el problema está en Postgres o en RLS.
@@ -248,7 +261,7 @@ Los tres caminos que hay que entender. Todo lo demás se deduce de estos.
 4. **Todo queda registrado**
    `copilot_log_msg` y `copilot_log_msg_media` guardan la conversación en Supabase.
 
-### 7.5 Cómo llega un cambio a producción
+### 7.6 Cómo llega un cambio a producción
 
 1. **Rama, commit y PR**
    `main` está protegida por CODEOWNERS.
