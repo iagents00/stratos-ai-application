@@ -33,7 +33,7 @@
  *   sola en la próxima navegación. Ver `main.jsx` → SERVICE WORKER.
  */
 
-const CACHE_VERSION = 'stratos-v394'; // v394: la app no empaqueta el sitio web; se llama Stratos AI
+const CACHE_VERSION = 'stratos-v395'; // v395: el logo real de Stratos en la app
 
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 // Nombre ESTABLE a propósito: no lleva CACHE_VERSION (ver cabecera).
