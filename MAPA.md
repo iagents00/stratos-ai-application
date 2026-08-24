@@ -6,7 +6,7 @@
 >
 > ¿Buscás un botón o un texto y no está acá? `npm run buscar "texto"`
 
-**171 archivos · 74.343 líneas**
+**173 archivos · 74.714 líneas**
 
 ---
 
@@ -190,6 +190,7 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | `DateRangeControl.jsx` | 176 | Control ÚNICO de período del Comando / CRM. Presets rápidos (Hoy, Semana, Mes, |
 | `MiDrive.jsx` | 171 | _sin describir_ |
 | `LeadDiscoveryPanel.jsx` | 158 | Render del perfilamiento extraído por la IA de voz (Retell) en la tabla |
+| `ConectarWhatsApp.jsx` | 156 | Conectar WhatsApp Business en tres clics |
 | `LeadChatHistory.jsx` | 152 | _sin describir_ |
 | `ScheduledCallBadge.jsx` | 144 | _sin describir_ |
 | `constants.js` | 116 | _sin describir_ |
@@ -209,7 +210,7 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 
 | Archivo | Líneas | Qué hace |
 |---|---|---|
-| `defaults.js` | 273 | Config base que TODOS los clientes heredan. |
+| `defaults.js` | 292 | Config base que TODOS los clientes heredan. |
 | `client-value.js` | 37 | _sin describir_ |
 
 ### `src/clients/brasa-y-piedra/`
@@ -360,6 +361,7 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | `organize-notes.js` | 220 | _sin describir_ |
 | `docx.js` | 203 | _sin describir_ |
 | `lead-backup.js` | 197 | _sin describir_ |
+| `whatsapp-signup.js` | 196 | _sin describir_ |
 | `informe-doc.js` | 175 | _sin describir_ |
 | `push-native.js` | 172 | _sin describir_ |
 | `audit.js` | 151 | Cliente del sistema de auditoría |
@@ -547,9 +549,12 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Cómo verá el cliente | `src/app/views/LandingPages/index.jsx:131` |
 | Complejidad: | `src/app/views/Marketing.jsx:2190` |
 | Conectado | `src/app/views/Profile.jsx:731` |
+| Conectando… | `src/app/views/ConectarWhatsApp.jsx:122` |
+| Conectar mi WhatsApp | `src/app/views/ConectarWhatsApp.jsx:123` |
 | Configuración | `src/app/App.jsx:2983` |
 | Confirmados | `src/app/views/ZoomControl/Resumen.jsx:440` |
 | Confirmar contraseña | `src/app/views/Profile.jsx:313` |
+| Confirmas y listo | `src/app/views/ConectarWhatsApp.jsx:107` |
 | Contáctame Ya | `src/app/views/CRM/index.jsx:6170` |
 | Contarlo ahora | `src/app/views/Marketing.jsx:708` |
 | Continuar sin CV | `src/app/features/Portal/index.jsx:425` |
@@ -619,6 +624,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | El documento es un PDF | `src/app/views/CRM/components.jsx:4329` |
 | El mercado | `src/app/views/LandingPages/LandingPagePreview.jsx:400` |
 | Elegir qué columnas ver | `src/app/views/Marketing.jsx:1453` |
+| Eliges el número que quieres conectar | `src/app/views/ConectarWhatsApp.jsx:106` |
 | Eliminar | `src/app/features/Admin/AdminPanel.jsx:416` |
 | Eliminar acción | `src/app/features/MetaPanel/index.jsx:1404` |
 | Eliminar cliente | `src/app/views/CRM/components.jsx:3859` |
@@ -633,13 +639,9 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Enlace | `src/app/views/Marketing.jsx:1511` |
 | Enlace de la landing page | `src/app/views/LandingPages/LandingPagePreview.jsx:109` |
 | Enlaces | `src/app/views/CRM/components.jsx:4129` |
-| Enter | `src/app/views/Marketing.jsx:1676` |
-| Entrevistas | `src/app/views/RRHHModule.jsx:566` |
-| Envía a | `src/app/views/Copilot.jsx:1785` |
-| Enviando… | `src/app/views/CRM/LeadWhatsAppChat.jsx:914` |
 
 
-_(434 textos más — usá `npm run buscar "texto"`)_
+_(444 textos más — usá `npm run buscar "texto"`)_
 
 ---
 
@@ -698,6 +700,7 @@ hacen. Agregarles un bloque `/** ... */` arriba los hace aparecer solos acá.
 - `src/lib/docx.js` (203 líneas)
 - `src/lib/lead-backup.js` (197 líneas)
 - `src/clients/vega/config.js` (196 líneas)
+- `src/lib/whatsapp-signup.js` (196 líneas)
 - `src/app/views/CRM/CallActionButton.jsx` (183 líneas)
 - `src/app/components/Chat.jsx` (182 líneas)
 - `src/clients/muebleria/config.js` (182 líneas)

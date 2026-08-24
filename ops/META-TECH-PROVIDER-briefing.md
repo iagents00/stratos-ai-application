@@ -282,7 +282,7 @@ verificación del paso 2.
 
 El paso 9 de la ruta ya está **aplicado y verificado en producción**.
 
-- Migración `supabase/migrations/032_whatsapp_tech_provider_routing.sql`
+- Migración `supabase/migrations/233_whatsapp_tech_provider_routing.sql`
 - Contrato de integración para n8n: `ops/RUTEO-WHATSAPP-multicliente.md`
 
 Se corrigió el defecto de fondo: `fn_asesor_del_numero` hardcodeaba
