@@ -132,6 +132,43 @@ error aparente y luego **nunca** entrega webhooks. Ahora se rechaza de entrada.
 
 ---
 
+## El ingest también ruteaba mal (migración 235)
+
+Tener `fn_resolver_canal_whatsapp` no bastaba: **el flujo de Meta en n8n no
+escribe el lead directo, llama al RPC `ingest_inbound_lead`** — y ese abría con:
+
+```sql
+v_org := COALESCE((payload->>'organization_id')::uuid,
+                  '00000000-0000-0000-0000-000000000001');
+```
+
+Es decir, si n8n no manda `organization_id`, **todo lead entrante cae en la
+organización de Stratos**. El día que Grupo 28 o Vega conecten su WhatsApp por
+Embedded Signup, sus leads habrían aterrizado en el CRM de Duke.
+
+La migración 235 lo corrige: antes de fijar la organización, resuelve el canal.
+
+| Precedencia | Fuente |
+|---|---|
+| 1 | `organization_id` del payload — lo explícito manda |
+| 2 | La organización del canal que resuelve el WABA / phone_number_id |
+| 3 | Stratos — último recurso, el comportamiento histórico |
+
+Segundo defecto corregido: el asesor se resolvía casando `profiles.phone` como
+texto **exacto**. Un `+52 984…` contra un `52984…` no casa y el lead queda sin
+dueño. Ahora el asesor sale del canal primero, y el match por texto queda de
+respaldo.
+
+**No hace falta cambiar n8n para que esto funcione**: el flujo ya manda
+`asesor_phone`, y el resolver lo usa como `display_phone_number`. Mandar además
+`phone_number_id` y `waba_id` (que vienen en el webhook de Meta) lo hace más
+robusto, pero no es requisito.
+
+En `audit_log.metadata` quedan `canal_match_by` y `canal_platform_type` para
+poder ver por qué vía se ruteó cada lead.
+
+---
+
 ## Seguridad
 
 Ambas funciones son `SECURITY DEFINER` y están concedidas **solo a
