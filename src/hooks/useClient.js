@@ -10,16 +10,17 @@
  */
 import { useContext } from "react";
 import { ClientContext } from "../contexts/ClientContext";
+import { crearValorCliente } from "../clients/_shared/client-value";
+import { DEFAULT_CLIENT_CONFIG } from "../clients/_shared/defaults";
+
+// Se construye una sola vez: es constante y evita re-renders si alguien lo usa
+// fuera del Provider.
+const SIN_PROVIDER = crearValorCliente(DEFAULT_CLIENT_CONFIG);
 
 export function useClient() {
   const ctx = useContext(ClientContext);
-  // Defensa: si alguien usa el hook sin Provider, devolvemos un objeto válido
-  if (!ctx) {
-    return {
-      config: null,
-      clientId: "default",
-      isFeatureEnabled: () => true,
-    };
-  }
-  return ctx;
+  // Defensa: si alguien usa el hook sin Provider, devolvemos la misma forma que
+  // devuelve el Provider — nunca un objeto a medias. Ver el comentario largo en
+  // clients/_shared/client-value.js sobre por qué esto importa.
+  return ctx || SIN_PROVIDER;
 }

@@ -40,6 +40,15 @@ jobs:
           node scripts/generar-mapa.mjs  --check
           node scripts/generar-plano.mjs --check
 
+      # El contexto de cliente se desincronizó una vez (#666: el Provider
+      # renombró `config` a `activa`) y apagó en silencio toda la
+      # personalización por tenant. Nadie lo vio porque no crasheaba.
+      - name: Instalar dependencias
+        run: npm ci --no-audit --no-fund
+
+      - name: El contexto de cliente no puede desincronizarse
+        run: node scripts/verificar-contexto-cliente.mjs
+
   regenerar:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     needs: verificar
