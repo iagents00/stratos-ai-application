@@ -28,6 +28,10 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Historia completa: verificar-migraciones compara contra origin/main,
+          # y con el checkout superficial ese ref no existe.
+          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
@@ -58,6 +62,11 @@ jobs:
       # colado 33 textos en voseo, incluido el botón de registrar un cliente.
       - name: La interfaz habla mexicano neutro
         run: node scripts/verificar-lenguaje.mjs
+
+      # Hoy entró una migración numerada 032 cuando la carpeta iba en 234, y su
+      # documentación apuntó a un archivo que nunca existió con ese nombre.
+      - name: Las migraciones se leen en orden
+        run: node scripts/verificar-migraciones.mjs
 
   regenerar:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'

@@ -33,7 +33,7 @@
  *   sola en la próxima navegación. Ver `main.jsx` → SERVICE WORKER.
  */
 
-const CACHE_VERSION = 'stratos-v408'; // v408: el Copilot dice la verdad cuando algo falla
+const CACHE_VERSION = 'stratos-v409'; // v409: migraciones en orden y docs que no mienten
 
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 // Nombre ESTABLE a propósito: no lleva CACHE_VERSION (ver cabecera).

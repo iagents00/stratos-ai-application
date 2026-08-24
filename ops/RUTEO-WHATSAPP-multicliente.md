@@ -1,6 +1,6 @@
 # Ruteo multi-cliente de WhatsApp — contrato para n8n
 
-_Aplicado a producción el 23-ago-2026 · migración `supabase/migrations/032_whatsapp_tech_provider_routing.sql`_
+_Aplicado a producción el 23-ago-2026 · migración `supabase/migrations/233_whatsapp_tech_provider_routing.sql`_
 
 ---
 
