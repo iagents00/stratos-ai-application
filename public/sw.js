@@ -33,7 +33,7 @@
  *   sola en la próxima navegación. Ver `main.jsx` → SERVICE WORKER.
  */
 
-const CACHE_VERSION = 'stratos-v398'; // v398: Mi Día por encima de todo, el CRM intacto debajo
+const CACHE_VERSION = 'stratos-v399'; // v399: Rails persiste — agenda_items y sus RPC
 
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 // Nombre ESTABLE a propósito: no lleva CACHE_VERSION (ver cabecera).
