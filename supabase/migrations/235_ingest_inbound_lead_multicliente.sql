@@ -38,6 +38,13 @@
 --   Verificado antes de aplicar: el canal de Gael (WABA 263671803501919)
 --   resuelve a org `stratos` + asesor `Gael G` — exactamente lo que hace hoy.
 --
+-- ⚠️ ESTO SOLO NO ALCANZA:
+--   Auditados los payloads reales, n8n HARDCODEA organization_id = Stratos y no
+--   manda phone_number_id ni waba_id ni asesor_phone. Con ese payload esta
+--   función cae —correctamente— al organization_id explícito: es un no-op.
+--   Para que el ruteo entre en efecto, n8n debe dejar de fijar organization_id
+--   y empezar a mandar los ids del canal. Ver ops/RUTEO-WHATSAPP-multicliente.md
+--
 -- OBSERVABILIDAD:
 --   `canal_match_by` y `canal_platform_type` quedan en audit_log.metadata y en
 --   el JSON de respuesta, para poder ver por qué vía se ruteó cada lead y

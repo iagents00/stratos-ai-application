@@ -159,10 +159,41 @@ texto **exacto**. Un `+52 984…` contra un `52984…` no casa y el lead queda s
 dueño. Ahora el asesor sale del canal primero, y el match por texto queda de
 respaldo.
 
-**No hace falta cambiar n8n para que esto funcione**: el flujo ya manda
-`asesor_phone`, y el resolver lo usa como `display_phone_number`. Mandar además
-`phone_number_id` y `waba_id` (que vienen en el webhook de Meta) lo hace más
-robusto, pero no es requisito.
+### ⚠️ La 235 sola NO alcanza: hay que cambiar n8n
+
+Auditados los payloads reales que n8n manda hoy a `ingest_inbound_lead`
+(tabla `whatsapp_inbox.raw_payload`, últimos 5 mensajes de `meta_cloud_api`):
+
+```
+claves presentes: asesor_id, extracted, message_text, organization_id,
+                  sender_name, sender_phone, source
+organization_id : "00000000-0000-0000-0000-000000000001"   ← HARDCODEADO
+phone_number_id : ausente
+waba_id         : ausente
+asesor_phone    : ausente
+```
+
+O sea: **n8n fija la organización de Stratos a mano en cada lead**, y no manda
+ningún identificador del canal. Con ese payload, la migración 235 no tiene con
+qué resolver y cae —correctamente— al `organization_id` explícito. Es decir, hoy
+es un no-op: correcta y segura, pero inerte.
+
+La 235 es el **lado receptor**. Para que el ruteo multi-cliente entre en efecto,
+el nodo de n8n que arma el payload del ingest tiene que:
+
+1. **Dejar de hardcodear `organization_id`.** Quitarlo del payload. Si ningún
+   canal casa, la función cae igual al default de Stratos — mismo comportamiento
+   que hoy, cero riesgo.
+2. **Mandar los identificadores del canal**, que ya vienen en el webhook de Meta:
+
+```js
+waba_id:              $json.entry[0].id,
+phone_number_id:      $json.entry[0].changes[0].value.metadata.phone_number_id,
+display_phone_number: $json.entry[0].changes[0].value.metadata.display_phone_number,
+```
+
+3. Opcional: dejar de resolver `asesor_id` con el MAP hardcodeado y dejar que lo
+   resuelva el canal. Mandar `asesor_id` sigue funcionando — tiene precedencia.
 
 En `audit_log.metadata` quedan `canal_match_by` y `canal_platform_type` para
 poder ver por qué vía se ruteó cada lead.
