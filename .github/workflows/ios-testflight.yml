@@ -6,7 +6,7 @@
 # GitHub ya traen Xcode, así que el release sale de aquí: sin instalar nada
 # local y sin depender de quién tenga la Mac a mano.
 #
-# La app EMPAQUETA el CRM dentro del binario (webDir: ../dist), así que abre sin
+# La app EMPAQUETA el CRM dentro del binario (webDir: ../dist-app), así que abre sin
 # red. Los datos siguen viniendo en vivo de Supabase, pero cualquier cambio de la
 # interfaz necesita un release nuevo: por eso este workflow se corre también
 # cuando cambia el CRM, no solo el shell.
@@ -73,7 +73,7 @@ jobs:
         with:
           node-version: '22'
 
-      # webDir apunta a ../dist: la app ahora EMPAQUETA el CRM en el binario en
+      # webDir apunta a ../dist-app: la app ahora EMPAQUETA el CRM en el binario en
       # vez de cargarlo remoto, así que hay que compilar la web antes de sincronizar.
       # build:app excluye del binario la landing, la política de privacidad, los
       # siete manuales y 1.5 MB de estáticos del sitio: 6.7 MB -> 4.5 MB. Apple
