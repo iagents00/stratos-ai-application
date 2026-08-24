@@ -33,7 +33,7 @@
  *   sola en la próxima navegación. Ver `main.jsx` → SERVICE WORKER.
  */
 
-const CACHE_VERSION = 'stratos-v403'; // v403: Rails se prende, se apaga y se personaliza desde la app
+const CACHE_VERSION = 'stratos-v404'; // v404: el botón de la tarjeta abre el canal que dice
 
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 // Nombre ESTABLE a propósito: no lleva CACHE_VERSION (ver cabecera).

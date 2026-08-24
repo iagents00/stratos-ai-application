@@ -7,6 +7,7 @@ import { createPortal } from "react-dom";
 import { useAuth } from "../../../hooks/useAuth";
 import { useIsMobile } from "../../../hooks/useViewport";
 import { supabase } from "../../../lib/supabase";
+import { digitosWhatsApp } from "../../../lib/telefono";
 import {
   TrendingUp, Target, CheckCircle2, Mic, Search,
   Users, Building2, Send, Plus, Timer, Flame,
@@ -882,22 +883,12 @@ const NextActionHero = ({ lead, T = P, onUpdate = null, projectMode = false }) =
 
   const accentStrong = isLight ? (T.accentDark || T.accent) : T.accent;
   const textMain     = isLight ? T.txt : "#F1F5F9";
-  // Normalización de teléfono — separamos formato visual del que va al dialer.
-  // tel:  → mantiene "+" si lo trae, si no, dígitos puros (el SO sabe parsear).
-  // wa.me → DEBE incluir código de país. Si no detecta uno (longitud típica
-  //         de número de 10 dígitos sin lada), prepend "1" (USA) por default.
-  //         La mayoría de los clientes son de Estados Unidos.
+  // Normalización de teléfono: por qué tel: y wa.me NO son intercambiables, y
+  // por qué 10 dígitos se asumen de Estados Unidos, está en lib/telefono.js.
+  // Vivía duplicada acá y en el bloque del Perfil, y Mi Día necesitaba una
+  // tercera copia — que es cuando dejan de coincidir sin que nadie lo note.
   const phoneClean = (lead.phone || "").replace(/[^0-9+]/g, "");
-  const waDigits   = (lead.phone || "").replace(/[^0-9]/g, "");
-  const waPhone    = (() => {
-    if (!waDigits) return "";
-    // Si ya empieza con "+" en el original, asumimos código de país explícito.
-    if ((lead.phone || "").trim().startsWith("+")) return waDigits;
-    // 10 dígitos sin código → asumimos USA (+1) por default
-    if (waDigits.length === 10) return `1${waDigits}`;
-    // Otros casos (más o menos dígitos): pasar como vienen, wa.me decide
-    return waDigits;
-  })();
+  const waPhone    = digitosWhatsApp(lead.phone);
   // Texto bonito para mostrar en el botón de copiar
   const phoneDisplay = lead.phone || "";
 
@@ -4647,11 +4638,7 @@ const LeadPanel = ({ lead, onClose, oc, onUpdate, onSwitchTab, onShowHistory, on
           {(() => {
             const rawPhone   = (editing ? f("phone") : lead.phone) || "";
             const phoneClean = rawPhone.replace(/[^0-9+]/g, "");
-            const waDigits   = rawPhone.replace(/[^0-9]/g, "");
-            // 10 dígitos sin "+" → USA por default (mayoría de los clientes).
-            const waPhone    = !waDigits ? "" :
-              rawPhone.trim().startsWith("+") ? waDigits :
-              waDigits.length === 10 ? `1${waDigits}` : waDigits;
+            const waPhone    = digitosWhatsApp(rawPhone);
             if (!phoneClean) {
               return <AddPhoneInline lead={lead} onUpdate={onUpdate} T={T} isLight={isLight} />;
             }

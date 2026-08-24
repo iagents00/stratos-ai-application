@@ -23,6 +23,7 @@ import { useState, useMemo, useCallback, useEffect } from "react";
 import { Phone, MessageCircle, Check, X, CalendarClock, Plus, LayoutGrid } from "lucide-react";
 import { P, LP, font, fontDisp } from "../../design-system/tokens";
 import { listaDelDia, MAX_DEL_DIA } from "../../lib/next-action-engine";
+import { hrefDelCanal } from "../../lib/telefono";
 import { agendaDeHoy, marcarAccion } from "../../lib/agenda";
 
 /* Un solo punto de color por tarjeta, de 6px. Sin iconos decorativos. */
@@ -34,6 +35,10 @@ function Tarjeta({ accion, indice, total, T, isLight, onCerrar }) {
   const [saliendo, setSaliendo] = useState(false);
   const color = T[COLOR_CUBETA[accion.cubeta]] || T.accent;
   const IconoCanal = ICONO_CANAL[accion.canal] || Phone;
+  const esWhatsApp = accion.canal === "whatsapp";
+  // El mensaje ya lleva la instrucción del día: el asesor abre WhatsApp con el
+  // contexto puesto, en vez de mirar un chat en blanco.
+  const enlace = hrefDelCanal(accion.canal, accion.telefono, esWhatsApp ? accion.pedir : null);
 
   const cerrar = (resultado) => {
     setSaliendo(true);
@@ -98,9 +103,18 @@ function Tarjeta({ accion, indice, total, T, isLight, onCerrar }) {
       )}
 
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-        {accion.telefono && (
-          <a href={`tel:${accion.telefono}`} style={{ ...btn({ background: color, color: "#041016", border: "none", textDecoration: "none" }) }}>
-            <IconoCanal size={15} strokeWidth={2.2} /> {accion.canal === "whatsapp" ? "Escribir" : "Llamar"}
+        {/* El botón decía "Escribir" y el enlace era `tel:` SIEMPRE: en las
+            tarjetas de WhatsApp abría el marcador telefónico. Y varias reglas
+            sugieren WhatsApp a propósito — la regla 3 de Rails dice que pasadas
+            20 h el teléfono deja de ser el canal primario. Ahora el enlace lo
+            decide el canal, con el código de país que wa.me exige. */}
+        {enlace && (
+          <a
+            href={enlace.href}
+            {...(enlace.externo ? { target: "_blank", rel: "noreferrer" } : {})}
+            style={{ ...btn({ background: color, color: "#041016", border: "none", textDecoration: "none" }) }}
+          >
+            <IconoCanal size={15} strokeWidth={2.2} /> {esWhatsApp ? "Escribir" : "Llamar"}
           </a>
         )}
         <button onClick={() => cerrar("hecho")} style={btn({ color: T.txt })}>

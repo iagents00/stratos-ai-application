@@ -79,6 +79,30 @@ try {
     ? ok("ordenar solo por peso conserva el orden de las cubetas")
     : mal(`los pesos ya no respetan el orden de cubetas: ${cat.map((r) => `${r.tipo}(${r.peso}/${r.cubeta})`).join(" ")}`);
 
+  // 5c. El botón grande de la tarjeta tiene que abrir el canal que dice.
+  //     Decía "Escribir" y el href era `tel:` siempre: en las tarjetas de
+  //     WhatsApp abría el marcador. Y wa.me EXIGE código de país — sin él el
+  //     chat sale vacío y el asesor cree que el cliente no le contesta.
+  const { hrefDelCanal, digitosWhatsApp } = await vite.ssrLoadModule("/src/lib/telefono.js");
+  const wa = hrefDelCanal("whatsapp", "998 123 4567", "Confirma asistencia");
+  const tel = hrefDelCanal("llamada", "+52 998 123 4567");
+  if (!wa?.href.startsWith("https://wa.me/")) mal(`la tarjeta de WhatsApp no abre WhatsApp: ${wa?.href}`);
+  else if (!wa.externo) mal("el enlace de WhatsApp debería abrirse en otra pestaña");
+  else if (!/text=/.test(wa.href)) mal("el enlace de WhatsApp no lleva la instrucción del día");
+  else ok(`la tarjeta de WhatsApp abre WhatsApp: ${wa.href.split("?")[0]}`);
+  tel?.href === "tel:+529981234567" && tel.externo === false
+    ? ok("la tarjeta de llamada abre el marcador")
+    : mal(`el enlace de llamada quedó mal: ${JSON.stringify(tel)}`);
+  digitosWhatsApp("9981234567") === "19981234567"
+    ? ok("10 dígitos sin lada se asumen de Estados Unidos")
+    : mal(`10 dígitos sin lada: ${digitosWhatsApp("9981234567")}`);
+  digitosWhatsApp("+52 998 123 4567") === "529981234567"
+    ? ok("una lada explícita se respeta")
+    : mal(`lada explícita: ${digitosWhatsApp("+52 998 123 4567")}`);
+  digitosWhatsApp("") === "" && hrefDelCanal("llamada", null) === null
+    ? ok("sin teléfono no se pinta el botón")
+    : mal("sin teléfono debería devolver vacío/null");
+
   // 6. La red de seguridad no se puede apagar desde el panel.
   const fija = catalogoDeReglas().find((r) => r.tipo === "definir_paso");
   fija?.fija === true ? ok("definir_paso está marcada como no apagable") : mal("definir_paso se podría apagar");
