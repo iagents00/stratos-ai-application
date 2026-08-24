@@ -60,6 +60,7 @@ import MetaPanel,
 // AdminPanel y vistas pesadas se cargan bajo demanda con React.lazy
 // para reducir el bundle inicial de ~1.3 MB a ~400 KB.
 const AdminPanel = lazy(() => import("./features/Admin/AdminPanel"));
+const RailsSettings = lazy(() => import("./features/Admin/RailsSettings"));
 
 /* ── Navigation & roles ── */
 import { nav, MODULE_ROLES, MOBILE_PRIMARY_NAV, canAccessModule } from "./constants/navigation";
@@ -2636,6 +2637,7 @@ export default function App() {
                   )}
                   {v === "perfil" && <Profile theme={theme} T={T} />}
                   {v === "admin"  && canAccessModule("admin", user, clientConfig) && <AdminPanel T={T} isLight={isLight} />}
+                  {v === "rails"  && canAccessModule("rails", user, clientConfig) && <RailsSettings T={T} isLight={isLight} />}
                 </Suspense>
               </ErrorBoundary>
             }

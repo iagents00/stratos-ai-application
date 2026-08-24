@@ -29,6 +29,7 @@ import {
 } from "lucide-react";
 import { useIsMobile } from "../../../hooks/useViewport";
 import { useClient } from "../../../hooks/useClient";
+import { useRailsConfig } from "../../../hooks/useRailsConfig";
 // Stratos Rails — la lista del día. Detrás de features.procesoGuiado.
 import MiDia from "../MiDia";
 import { useTeam } from "../../../hooks/useTeam";
@@ -128,6 +129,7 @@ function useDebounced(value, ms = 200) {
 function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () => {}, isRefreshing = false, autoOpenPriority1 = 0, onAutoOpenHandled, softDeleteLead, autoOpenLead = null, onAutoOpenLeadHandled = () => {}, autoOpenNewLead = 0, onNewLeadHandled = () => {}, onOpenComando = null }) {
   const { user } = useAuth();
   const { config: clientConfig, clientId, isFeatureEnabled } = useClient();
+  const { cfg: railsCfg } = useRailsConfig();
   const { get: getScheduledCall } = useScheduledCalls();
   // Equipo real de la organización — se suma a asesoresMaster para que un
   // asesor recién dado de alta (sin leads todavía) exista en los selectores.
@@ -2299,7 +2301,14 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
     const v = new URLSearchParams(window.location.search).get("rails");
     return v === null ? null : v !== "0" && v !== "false";
   });
-  const railsActivo = (railsPreview ?? isFeatureEnabled("procesoGuiado")) && !verCRMCompleto;
+  // Dos llaves distintas, a propósito:
+  //   isFeatureEnabled("procesoGuiado") → ¿esta empresa PUEDE tener Rails?
+  //                                       (capacidad, vive en el bundle)
+  //   railsCfg.activo                   → ¿está prendido HOY?
+  //                                       (estado, vive en la base — sin deploy)
+  // Y ?rails=1 pasa por encima de las dos, solo para quien tenga ese link.
+  const puedeRails  = isFeatureEnabled("procesoGuiado");
+  const railsActivo = (railsPreview ?? (puedeRails && railsCfg.activo)) && !verCRMCompleto;
 
   return (
     <div style={{
@@ -2311,6 +2320,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
 
       {railsActivo && (
         <MiDia
+          config={railsCfg}
           leads={leadsData}
           T={T}
           theme={theme}

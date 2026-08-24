@@ -9,7 +9,7 @@ import { Target,
   Users, Hexagon, Activity, Building2, Atom,
   Trophy, Landmark, UserCheck, CreditCard, Shield, User, Trash2, Wallet, MessageCircle, Bot, Sparkles, Megaphone,
   CalendarDays, Layers, Clapperboard, Inbox, MessagesSquare, ClipboardList, NotebookPen, FolderOpen,
-  CalendarRange
+  CalendarRange, ListChecks
 } from "lucide-react";
 
 export const nav = [
@@ -62,6 +62,9 @@ export const nav = [
   { id: "planes",l: "Planes",    i: CreditCard, more: true },
   { id: "perfil",l: "Perfil",    i: User,      more: true },
   { id: "admin", l: "Usuarios",  i: Shield,    more: true, adminOnly: true },
+  // Ajustes de Stratos Rails. Se llama "Proceso" y no "Rails" porque así lo
+  // nombra el equipo en voz alta; el nombre de producto vive adentro.
+  { id: "rails", l: "Proceso",   i: ListChecks, more: true, adminOnly: true },
 ];
 
 /* Módulos PRIMARIOS del bottom-nav móvil (máximo 4 + "Más"): con los 8 de
@@ -94,6 +97,9 @@ export const MODULE_ROLES = {
   // 4 secciones directas del sidebar (mkt_dia/mkt_marcas/mkt_pipe/mkt_sol) — pedido
   // de Iván 21-jul. Sin feature flag: el aislamiento por org bloquea tenants externos.
   mkt:        ["super_admin","admin"],
+  // Los ajustes del proceso guiado cambian la pantalla de entrada de TODO el
+  // equipo, y la RLS de organizations solo deja escribir a estos dos roles.
+  rails:      ["super_admin","admin"],
   mkt_dia:    ["marketing"],
   mkt_marcas: ["marketing"],
   mkt_pipe:   ["marketing"],
@@ -144,7 +150,12 @@ export const MODULE_NAMES = {
 // super_admin de Grupo 28 administra Grupo 28, no los módulos internos de
 // Stratos (Finanzas, Personas, Comando, ERP, iAgents, Campañas, Asesores).
 export const STRATOS_ORG_ID = "00000000-0000-0000-0000-000000000001";
-export const EXTERNAL_ORG_MODULES = new Set(["c", "miespacio", "perfil", "trash"]);
+// "rails" va acá a propósito: los clientes externos son justamente los que más
+// necesitan personalizar el proceso — una constructora no tiene Zooms y una
+// inmobiliaria sí. Su admin lo prende y reescribe los textos desde la pantalla
+// "Proceso"; MODULE_ROLES lo limita a super_admin/admin, y la RLS de
+// organizations vuelve a limitarlo del lado de la base.
+export const EXTERNAL_ORG_MODULES = new Set(["c", "miespacio", "perfil", "trash", "rails"]);
 // Módulos visibles para usuarios con flag crm_only=true (cuentas tipo bot/IA
 // como iagents@stratos.ai). Conservan su rol pero solo navegan CRM + Perfil.
 export const _MIESP_MARK = true;

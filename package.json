@@ -15,6 +15,7 @@
     "planos": "npm run mapa && npm run plano",
     "verificar-docs": "node scripts/verificar-docs.mjs",
     "verificar-contexto": "node scripts/verificar-contexto-cliente.mjs",
+    "verificar-rails": "node scripts/verificar-rails.mjs",
     "build:app": "vite build --mode app"
   },
   "dependencies": {
