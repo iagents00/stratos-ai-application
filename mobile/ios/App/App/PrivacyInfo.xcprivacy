@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  PrivacyInfo.xcprivacy — Manifiesto de privacidad de la app.
+
+  POR QUÉ EXISTE: desde mayo de 2024 Apple exige declarar las llamadas al
+  sistema que históricamente se usaron para rastrear usuarios ("required reason
+  APIs"). Si falta la declaración, App Store Connect responde el aviso
+  ITMS-91053 por correo y bloquea el envío a revisión del App Store.
+
+  QUÉ DECLARA: solo las tres categorías que este binario realmente usa. Cada
+  plugin de Capacitor trae su propio manifiesto para lo suyo; esto cubre lo del
+  target de la app.
+
+  SI APPLE SE QUEJA: el correo de ITMS-91053 nombra la API exacta que falta y su
+  código de motivo. Se agrega acá y se vuelve a subir — no hay que adivinar.
+-->
+<plist version="1.0">
+<dict>
+	<!-- La app no rastrea usuarios ni comparte datos con terceros con ese fin. -->
+	<key>NSPrivacyTracking</key>
+	<false/>
+
+	<key>NSPrivacyTrackingDomains</key>
+	<array/>
+
+	<key>NSPrivacyAccessedAPITypes</key>
+	<array>
+		<!--
+		  UserDefaults — Capacitor guarda ahí las preferencias del shell.
+		  CA92.1 = solo se lee y escribe información de esta misma app.
+		-->
+		<dict>
+			<key>NSPrivacyAccessedAPIType</key>
+			<string>NSPrivacyAccessedAPICategoryUserDefaults</string>
+			<key>NSPrivacyAccessedAPITypeReasons</key>
+			<array>
+				<string>CA92.1</string>
+			</array>
+		</dict>
+
+		<!--
+		  Marcas de tiempo de archivos — el plugin Filesystem escribe los PDF
+		  generados en la caché de la app antes de abrir la hoja de compartir.
+		  DDA9.1 = archivos dentro del contenedor de la propia app.
+		-->
+		<dict>
+			<key>NSPrivacyAccessedAPIType</key>
+			<string>NSPrivacyAccessedAPICategoryFileTimestamp</string>
+			<key>NSPrivacyAccessedAPITypeReasons</key>
+			<array>
+				<string>DDA9.1</string>
+			</array>
+		</dict>
+
+		<!--
+		  Espacio en disco — se consulta al escribir esos mismos archivos.
+		  E174.1 = escribir o borrar un archivo porque el usuario lo pidió.
+		-->
+		<dict>
+			<key>NSPrivacyAccessedAPIType</key>
+			<string>NSPrivacyAccessedAPICategoryDiskSpace</string>
+			<key>NSPrivacyAccessedAPITypeReasons</key>
+			<array>
+				<string>E174.1</string>
+			</array>
+		</dict>
+	</array>
+</dict>
+</plist>
