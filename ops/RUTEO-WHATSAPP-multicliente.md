@@ -132,7 +132,7 @@ error aparente y luego **nunca** entrega webhooks. Ahora se rechaza de entrada.
 
 ---
 
-## El ingest también ruteaba mal (migración 235)
+## El ingest también ruteaba mal (migración 238)
 
 Tener `fn_resolver_canal_whatsapp` no bastaba: **el flujo de Meta en n8n no
 escribe el lead directo, llama al RPC `ingest_inbound_lead`** — y ese abría con:
@@ -146,7 +146,7 @@ Es decir, si n8n no manda `organization_id`, **todo lead entrante cae en la
 organización de Stratos**. El día que Grupo 28 o Vega conecten su WhatsApp por
 Embedded Signup, sus leads habrían aterrizado en el CRM de Duke.
 
-La migración 235 lo corrige: antes de fijar la organización, resuelve el canal.
+La migración 238 lo corrige: antes de fijar la organización, resuelve el canal.
 
 | Precedencia | Fuente |
 |---|---|
@@ -159,7 +159,7 @@ texto **exacto**. Un `+52 984…` contra un `52984…` no casa y el lead queda s
 dueño. Ahora el asesor sale del canal primero, y el match por texto queda de
 respaldo.
 
-### ⚠️ La 235 sola NO alcanza: hay que cambiar n8n
+### ⚠️ La 238 sola NO alcanza: hay que cambiar n8n
 
 Auditados los payloads reales que n8n manda hoy a `ingest_inbound_lead`
 (tabla `whatsapp_inbox.raw_payload`, últimos 5 mensajes de `meta_cloud_api`):
@@ -174,11 +174,11 @@ asesor_phone    : ausente
 ```
 
 O sea: **n8n fija la organización de Stratos a mano en cada lead**, y no manda
-ningún identificador del canal. Con ese payload, la migración 235 no tiene con
+ningún identificador del canal. Con ese payload, la migración 238 no tiene con
 qué resolver y cae —correctamente— al `organization_id` explícito. Es decir, hoy
 es un no-op: correcta y segura, pero inerte.
 
-La 235 es el **lado receptor**. Para que el ruteo multi-cliente entre en efecto,
+La 238 es el **lado receptor**. Para que el ruteo multi-cliente entre en efecto,
 el nodo de n8n que arma el payload del ingest tiene que:
 
 1. **Dejar de hardcodear `organization_id`.** Quitarlo del payload. Si ningún
