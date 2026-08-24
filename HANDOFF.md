@@ -146,6 +146,28 @@ primero. Nada se mueve solo bajo el asesor. Ver
 La casilla de Push hay que marcarla **al registrar el identificador**: si falta, la
 compilación falla al firmar y el error no dice que es por eso.
 
+El **Acuerdo para apps gratuitas** quedó **activo** el 24-ago-2026 al aceptar el
+contrato del programa. Eso es lo que habilita distribuir una app gratis, así que
+por el lado contractual TestFlight ya no tiene freno. El *Acuerdo para apps de
+pago* sigue sin firmar y **no hace falta**: solo se necesita para cobrar dentro
+de la app.
+
+### La declaración de comerciante para la Unión Europea
+
+Está en App Store Connect → Negocio, y **no frena TestFlight**. Pero es una
+decisión personal que nadie más debería tomar, porque las dos opciones tienen
+consecuencias distintas:
+
+- **"Soy un comerciante sujeto al DSA"** → Apple **publica tu dirección, tu
+  teléfono y tu correo en la ficha de la app**. La cuenta está inscrita como
+  *Individual* con una dirección particular, así que lo que se publicaría es un
+  domicilio de casa.
+- **"No soy comerciante o no tengo intención de distribuir en la UE"** → no se
+  publica ningún dato de contacto, y la app no se distribuye en la Unión Europea.
+
+Si algún día la app va a la UE, conviene inscribir la cuenta como *Organización*
+con un domicilio fiscal antes de declararse comerciante.
+
 **Falta un solo secreto: `APPSTORE_PRIVATE_KEY`.** Es el archivo `.p8` de la
 llave, y lo carga Iván a mano — una llave privada no se le pasa a nadie más, ni
 siquiera para pegarla. Se descarga desde App Store Connect → Users and Access →
