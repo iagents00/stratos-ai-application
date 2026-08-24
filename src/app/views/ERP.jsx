@@ -528,7 +528,7 @@ const ERP = ({ oc, T: _T }) => {
             </div>
           ) : filtered.length === 0 ? (
             <div style={{ textAlign: "center", padding: "40px 20px", fontSize: 13, color: T.txt3, fontFamily: font }}>
-              No hay desarrollos con esos filtros{q && ` para «${q}»`}. Probá quitar alguno.
+              No hay desarrollos con esos filtros{q && ` para «${q}»`}. Prueba quitar alguno.
             </div>
           ) : (
             <>

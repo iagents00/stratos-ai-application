@@ -105,7 +105,7 @@ export default function ProductividadTab({ T, isLight }) {
           Indicadores · Productividad
         </h2>
         <p style={{ margin: "4px 0 0", fontSize: 12.5, color: T.txt3, fontFamily: font }}>
-          Lista de Acción por asesor · tocá una fila para ver el detalle. El coach de Telegram da seguimiento a estas acciones.
+          Lista de Acción por asesor · toca una fila para ver el detalle. El coach de Telegram da seguimiento a estas acciones.
         </p>
       </div>
 

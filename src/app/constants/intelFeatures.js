@@ -33,7 +33,7 @@ export const INTEL_FEATURES = [
     where: "En el Copilot del CRM (o en Telegram, si lo conectás)",
     tagline: "Crea un cliente con un audio o un texto, sin llenar formularios.",
     how: [
-      "Abrí el módulo Copilot en el CRM y escribile —o dictale por voz con el micrófono.",
+      "Abre el módulo Copilot en el CRM y escríbele —o díctale por voz con el micrófono.",
       'Ejemplo: "Crea un cliente, Mariana López, teléfono 55 1234 5678, llamarla en 4 horas".',
       "Lo registra al instante y te confirma. Si conectaste Telegram, también puedes hacerlo desde ahí.",
     ],
@@ -157,7 +157,7 @@ export const INTEL_FEATURES = [
     where: "Automático → notificación al teléfono (con la app cerrada)",
     tagline: "Los avisos del asistente te llegan al celular aunque tengas la app cerrada.",
     how: [
-      "Instalá la app en tu teléfono (en iPhone: Compartir → Agregar a inicio) y activá las notificaciones.",
+      "Instala la app en tu teléfono (en iPhone: Compartir → Agregar a inicio) y activa las notificaciones.",
       "Desde ahí, los Zooms, tareas y recordatorios te llegan como notificación del teléfono — igual que un chat.",
     ],
   },
@@ -178,7 +178,7 @@ export const INTEL_FEATURES = [
     tagline: "Detecta clientes fríos y te arma el mensaje para reactivarlos.",
     how: [
       "El sistema encuentra los leads sin movimiento y te avisa con un texto ya redactado.",
-      'Tocás "Abrir WhatsApp" y puedes enviárselo (o editarlo antes de enviar).',
+      'Tocas "Abrir WhatsApp" y puedes enviárselo (o editarlo antes de enviar).',
     ],
   },
   {

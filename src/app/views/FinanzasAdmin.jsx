@@ -98,7 +98,7 @@ const FinanzasAdmin = ({ T: _T }) => {
       setPeople(Object.fromEntries((profs.data || []).map(p => [p.id, p.name])));
       setObras(Object.fromEntries((leads.data || []).map(l => [l.id, l.name])));
     } catch {
-      setError("No pude cargar los movimientos. Probá de nuevo.");
+      setError("No pude cargar los movimientos. Prueba de nuevo.");
     } finally {
       setLoading(false);
     }

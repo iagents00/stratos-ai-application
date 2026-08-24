@@ -472,7 +472,12 @@ async function _sendCopilotMessageInner(rawText, options = {}) {
 
   try {
     const { data: { session } } = await withTimeout(supabase.auth.getSession(), GETSESSION_TIMEOUT, 'getSession');
-    if (!session?.user?.id) return { reply: "Sesión expirada.", error: null };
+    // Sin sesión NO es una respuesta del asistente. Volvía como `reply` con
+    // error:null, así que la pantalla pintaba una burbuja del Copilot diciendo
+    // "Sesión expirada." y nada más: sin explicación, sin salida, y con el
+    // encabezado diciendo "En línea" dos centímetros más arriba. Como error sí
+    // entra al sistema de avisos, que ya sabe explicar y ofrecer qué hacer.
+    if (!session?.user?.id) return { reply: null, error: 'sesion_expirada' };
 
     const { data: profile } = await supabase
       .from('profiles')

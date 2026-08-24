@@ -474,9 +474,16 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
     if (r.error) {
       // «no_llego» = el POST murió en la red y el motor nunca recibió el mensaje:
       // reenviar es seguro (nada se guardó). Decirlo es mejor que el silencio.
-      setErrBanner(r.error === "no_llego"
-        ? "Tu mensaje no llegó al motor (falló la conexión). Mándalo de nuevo — no se guardó nada."
-        : "No se pudo enviar. Intenta de nuevo.");
+      // «sesion_expirada» = no hay a quién atribuirle el mensaje. Reenviar no
+      // sirve hasta volver a entrar, así que se dice eso y no "intenta de nuevo",
+      // que solo lo haría chocar contra la misma pared.
+      setMessages((prev) => prev.map(m => m.id === tmpId ? { ...m, pending: false } : m));
+      setErrBanner(
+        r.error === "no_llego"
+          ? "Tu mensaje no llegó al motor (falló la conexión). Mándalo de nuevo — no se guardó nada."
+        : r.error === "sesion_expirada"
+          ? "Tu sesión se cerró. Vuelve a entrar para seguir hablando con el asistente — lo que escribiste no se envió."
+          : "No se pudo enviar. Intenta de nuevo.");
       return;
     }
 
@@ -546,7 +553,7 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
     const file = e.target.files && e.target.files[0];
     if (e.target) e.target.value = "";
     if (!file) return;
-    if (!orgId) { setErrBanner("No pude identificar tu organización. Actualizá la página."); return; }
+    if (!orgId) { setErrBanner("No pude identificar tu organización. Actualiza la página."); return; }
     if (attaching || sending) return;
     setErrBanner(null);
     setAttaching(true);
@@ -609,7 +616,7 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
         occurred_at: new Date().toISOString(),
       }]);
     } catch (err) {
-      setErrBanner("No pude subir la captura. Probá con otra imagen.");
+      setErrBanner("No pude subir la captura. Prueba con otra imagen.");
     } finally {
       setAttaching(false);
     }
@@ -643,7 +650,7 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
       setCajaForm(null);
       cajaPathRef.current = null;
     } catch (err) {
-      setErrBanner("No pude registrarlo en la Caja. Probá de nuevo.");
+      setErrBanner("No pude registrarlo en la Caja. Prueba de nuevo.");
     } finally {
       setSending(false);
     }
@@ -657,7 +664,7 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
     const file = e.target.files && e.target.files[0];
     if (e.target) e.target.value = "";
     if (!file) return;
-    if (!orgId) { setErrBanner("No pude identificar tu organización. Actualizá la página."); return; }
+    if (!orgId) { setErrBanner("No pude identificar tu organización. Actualiza la página."); return; }
     if (attaching || sending) return;
     setErrBanner(null);
     setAttaching(true);
@@ -921,8 +928,16 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
         </div>
         <div style={{ minWidth: 0, flex: 1 }}>
           <div style={{ fontSize: chatType.title, fontWeight: 600, color: T.txt, fontFamily: fontDisp, lineHeight: 1.2 }}>Copilot AI</div>
-          <div style={{ fontSize: chatType.meta, color: T.accent, fontFamily: font, marginTop: 1, display: "flex", alignItems: "center", gap: 4 }}>
-            <span style={{ width: 6, height: 6, borderRadius: "50%", background: T.accent, boxShadow: `0 0 6px ${T.accent}` }} />En línea
+            {/* "En línea" estaba escrito a mano: seguía verde aunque la sesión
+                estuviera muerta o la cuenta sin activar. Un indicador que no
+                puede ponerse en gris no informa nada; solo contradice al aviso
+                de error que hay dos centímetros más abajo. */}
+            <div style={{ fontSize: chatType.meta, color: errBanner ? T.txt3 : T.accent, fontFamily: font, marginTop: 1, display: "flex", alignItems: "center", gap: 4 }}>
+              <span style={{
+                width: 6, height: 6, borderRadius: "50%",
+                background: errBanner ? T.txt3 : T.accent,
+                boxShadow: errBanner ? "none" : `0 0 6px ${T.accent}`,
+              }} />{errBanner ? "Sin conexión con el asistente" : "En línea"}
           </div>
         </div>
         <button type="button" onClick={reload} title="Refrescar"
@@ -1681,7 +1696,7 @@ function NotifBanner({ T, isLight }) {
           ? <>Para recibir avisos con la app cerrada, instalala: <strong style={{ color: T.txt }}>botón Compartir → Agregar a inicio</strong>.</>
           : (err
               ? <span style={{ color: isLight ? "#B91C3A" : "#FCA5A5" }}>{err}</span>
-              : <>Activá las notificaciones para enterarte de tus Zooms, tareas y recordatorios aunque tengas la app cerrada.</>)}
+              : <>Activa las notificaciones para enterarte de tus Zooms, tareas y recordatorios aunque tengas la app cerrada.</>)}
       </div>
       {!needsInstall && (
         <button type="button" onClick={enable} disabled={busy}

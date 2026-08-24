@@ -80,11 +80,11 @@ export default function LeadRelatedContacts({ lead, T = P, isLight = false }) {
         .insert({ lead_id: lead.id, ...payload })
         .select("id, name, relationship, phone, email, notas")
         .single();
-      if (error) { setErr("No se pudo guardar. Intentá de nuevo."); setSaving(false); return; }
+      if (error) { setErr("No se pudo guardar. Intenta de nuevo."); setSaving(false); return; }
       setContacts(prev => [...prev, data]);
     } else {
       const { error } = await supabase.from("lead_related_contacts").update(payload).eq("id", editing);
-      if (error) { setErr("No se pudo guardar. Intentá de nuevo."); setSaving(false); return; }
+      if (error) { setErr("No se pudo guardar. Intenta de nuevo."); setSaving(false); return; }
       setContacts(prev => prev.map(c => (c.id === editing ? { ...c, ...payload } : c)));
     }
     reset();

@@ -35,9 +35,9 @@ const SECCIONES = [
     id: "empezar", icono: Smartphone, titulo: "Cómo entrar",
     bloques: [
       { t: "p", v: `En la computadora: ${APP}` },
-      { t: "p", v: "En el celular: la misma dirección. En Android está el APK; en iPhone se abre en Safari, tocás Compartir y después «Agregar a inicio» — queda como una app en la pantalla." },
-      { t: "tip", v: "La primera vez el celular te va a preguntar si permitís notificaciones. Decí que sí: de eso dependen los avisos de llamada, las menciones del chat y el resumen de la mañana." },
-      { t: "warn", v: "Si alguna vez la app queda en negro y no abre, esperá unos segundos: se recupera sola. Si insiste, te va a aparecer un botón «Volver a intentar»." },
+      { t: "p", v: "En el celular: la misma dirección. En Android está el APK; en iPhone se abre en Safari, tocas Compartir y después «Agregar a inicio» — queda como una app en la pantalla." },
+      { t: "tip", v: "La primera vez el celular te va a preguntar si permites notificaciones. Di que sí: de eso dependen los avisos de llamada, las menciones del chat y el resumen de la mañana." },
+      { t: "warn", v: "Si alguna vez la app queda en negro y no abre, espera unos segundos: se recupera sola. Si insiste, te va a aparecer un botón «Volver a intentar»." },
     ],
   },
   {
@@ -92,7 +92,7 @@ const SECCIONES = [
     bloques: [
       { t: "p", v: "Está organizado en canales (General, Desarrollo, Clientes, y los que quieras crear con el «+»)." },
       { t: "lista", v: [
-        "Escribís y le llega al otro al instante, sin recargar nada.",
+        "Escribes y le llega al otro al instante, sin recargar nada.",
         "Menciona con @ (por ejemplo @Iván) y a esa persona le suena el teléfono. Es la única forma de que algo no se pierda en el scroll.",
         "Puedes adjuntar archivos y capturas; quedan ahí, no en una conversación de WhatsApp que después nadie encuentra.",
         "Doble clic sobre un mensaje para responderlo.",
@@ -148,7 +148,7 @@ const SECCIONES = [
         "Todo adentro. Nada de plan del día por WhatsApp, nada de documentos sueltos.",
         "Hablale al Copilot en vez de llenar formularios. Es más rápido y queda igual de bien.",
         "Menciona con @ cuando algo es para el otro. Es lo único que le suena el teléfono.",
-        "Contá lo que pasó, aunque sea en una frase. El sistema conecta el resto.",
+        "Cuenta lo que pasó, aunque sea en una frase. El sistema conecta el resto.",
         "Si algo se ve mal, dilo. No lo arregles por afuera: si se arregla afuera, vuelve a pasar.",
       ] },
     ],

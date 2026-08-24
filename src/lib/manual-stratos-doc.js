@@ -29,7 +29,7 @@ export const MANUAL = {
           cambia: "Queda como una app más del teléfono, con su ícono." },
         { que: "En iPhone", como: "Se abre en Safari, botón Compartir → «Agregar a inicio».",
           cambia: "Mismo resultado que una app, sin pasar por la App Store." },
-        { que: "Los avisos", como: "La primera vez el teléfono pregunta si permitís notificaciones. Hay que decir que sí.",
+        { que: "Los avisos", como: "La primera vez el teléfono pregunta si permites notificaciones. Hay que decir que sí.",
           cambia: "De eso dependen las llamadas, las menciones del chat y el resumen de la mañana." },
       ],
     },

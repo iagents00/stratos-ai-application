@@ -861,7 +861,7 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
       if (isNativeApp()) {
         // En la app el fallback de <a download> no hace nada: avisar en vez
         // de dejar el botón "muerto" en silencio.
-        window.alert("No se pudo generar el PDF en la app. Probá de nuevo; si sigue, generalo desde el navegador.");
+        window.alert("No se pudo generar el PDF en la app. Prueba de nuevo; si sigue, genéralo desde el navegador.");
       } else {
         // Navegador donde jsPDF no cargó: descargamos el HTML imprimible.
         downloadFile(`${filenameBase}.html`, html);

@@ -597,7 +597,7 @@ export async function adminCreateUser({ name, email, role = 'asesor', phone = nu
   try {
     const { data: sesion } = await supabase.auth.getSession()
     const token = sesion?.session?.access_token
-    if (!token) return { data: null, error: 'Tu sesión venció. Volvé a entrar y probá de nuevo.' }
+    if (!token) return { data: null, error: 'Tu sesión venció. Vuelve a entrar e intenta de nuevo.' }
 
     const url = `${SUPABASE_REST_URL}/functions/v1/admin-create-user`
     const res = await fetch(url, {

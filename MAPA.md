@@ -6,7 +6,7 @@
 >
 > ¿Buscás un botón o un texto y no está acá? `npm run buscar "texto"`
 
-**171 archivos · 74.323 líneas**
+**171 archivos · 74.343 líneas**
 
 ---
 
@@ -19,7 +19,7 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | **CRM** | `src/app/views/CRM/index.jsx` | 6656 |
 | **Mi Espacio** | _sin vista propia (redirige a otra)_ | — |
 | **Plan Semanal** | `src/app/views/PlanSemanal.jsx` | 500 |
-| **Copilot** | `src/app/views/Copilot.jsx` | 1789 |
+| **Copilot** | `src/app/views/Copilot.jsx` | 1804 |
 | **Marketing** | `src/app/views/Marketing.jsx` | 3075 |
 | **Actividades** | `src/app/views/Marketing.jsx` | 3075 |
 | **Equipo** | `src/app/views/Marketing.jsx` | 3075 |
@@ -151,7 +151,7 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | `components.jsx` | 5872 | Todos los sub-componentes del módulo CRM |
 | `Marketing.jsx` | 3075 | _sin describir_ |
 | `index.jsx` | 2022 | Generador de landing pages inmobiliarias |
-| `Copilot.jsx` | 1789 | v2 (15-jul) |
+| `Copilot.jsx` | 1804 | v2 (15-jul) |
 | `ComandoDirectivo.jsx` | 1277 | _sin describir_ |
 | `index.jsx` | 1205 | Panel "Control de Zooms" — pestaña dentro de Comando Directivo (Duke). |
 | `Profile.jsx` | 1129 | vista de perfil del asesor. |
@@ -347,7 +347,7 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 
 | Archivo | Líneas | Qué hace |
 |---|---|---|
-| `telegram.js` | 827 | Pareo del bot de Telegram con el perfil del asesor. |
+| `telegram.js` | 832 | Pareo del bot de Telegram con el perfil del asesor. |
 | `auth.js` | 677 | _sin describir_ |
 | `push.js` | 416 | Sistema de suscripción a notificaciones Web Push |
 | `offline-mode.js` | 351 | _sin describir_ |
@@ -390,10 +390,10 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | ¿A qué cliente se le cobra? (ej: Duke) | `src/app/views/CuentasCobro.jsx:321` |
 | ¿Cómo funciona el Escáner IA? | `src/app/views/RRHHModule.jsx:813` |
 | ¿Cuánto te llevó? (opcional) | `src/app/views/Marketing.jsx:2462` |
-| ¿Cuánto? | `src/app/views/Copilot.jsx:1053` |
+| ¿Cuánto? | `src/app/views/Copilot.jsx:1068` |
 | ¿De qué empresa es? | `src/app/views/Marketing.jsx:1591` |
 | ¿De qué empresa? | `src/app/views/Marketing.jsx:1735` |
-| ¿De qué es? (opcional) | `src/app/views/Copilot.jsx:1066` |
+| ¿De qué es? (opcional) | `src/app/views/Copilot.jsx:1081` |
 | ¿De qué se habla acá? (opcional) | `src/app/views/ChatEquipo.jsx:529` |
 | ¿Eliminar usuario? | `src/app/features/Admin/AdminPanel.jsx:410` |
 | ¿En qué empresa? (opcional) | `src/app/views/Marketing.jsx:2453` |
@@ -419,7 +419,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Acciones | `src/app/views/CRM/index.jsx:4328` |
 | Acciones acumuladas · Asesores vs. iAgents | `src/app/views/Dash.jsx:85` |
 | Acciones de cierre IA | `src/app/views/CRM/components.jsx:5614` |
-| Activa tu Copilot AI | `src/app/views/Copilot.jsx:1747` |
+| Activa tu Copilot AI | `src/app/views/Copilot.jsx:1762` |
 | Actividad del equipo IA — hoy | `src/app/views/IACRM.jsx:291` |
 | Actividad reciente | `src/app/views/CRM/index.jsx:5893` |
 | ACTIVO | `src/app/views/CRM/components.jsx:5501` |
@@ -446,7 +446,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Agregar propiedad | `src/app/views/Marketing.jsx:1448` |
 | Agregar tarea de prioridad… | `src/app/views/PlanSemanal.jsx:470` |
 | Agregar una columna propia a la hoja | `src/app/views/Marketing.jsx:1459` |
-| Ahora no | `src/app/views/Copilot.jsx:1692` |
+| Ahora no | `src/app/views/Copilot.jsx:1707` |
 | Ajusta el rango en el paso anterior | `src/app/views/LandingPages/index.jsx:1951` |
 | ALDEA ZAMA · TULUM | `src/app/views/LandingPages/index.jsx:305` |
 | Alta intención | `src/app/views/ZoomControl/index.jsx:583` |
@@ -503,11 +503,11 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Campo requerido | `src/app/views/LandingPages/index.jsx:641` |
 | Canales | `src/app/views/ChatEquipo.jsx:303` |
 | Cancelar | `src/app/features/Admin/AdminPanel.jsx:415` |
-| Cancelar comentario | `src/app/views/Copilot.jsx:1034` |
+| Cancelar comentario | `src/app/views/Copilot.jsx:1049` |
 | CANDIDATO IDENTIFICADO | `src/app/views/RRHHModule.jsx:740` |
 | Características | `src/app/views/LandingPages/index.jsx:704` |
 | Cargando actividad… | `src/app/views/Profile.jsx:978` |
-| Cargando conversación… | `src/app/views/Copilot.jsx:965` |
+| Cargando conversación… | `src/app/views/Copilot.jsx:980` |
 | Cargando conversaciones… | `src/app/views/WhatsApp.jsx:263` |
 | Cargando el plan… | `src/app/views/PlanSemanal.jsx:353` |
 | Cargando el tablero… | `src/app/views/ComandoOps.jsx:127` |
@@ -559,7 +559,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Copiar | `src/app/views/InformeAvances.jsx:633` |
 | Copiar el discovery al portapapeles | `src/app/views/ZoomControl/index.jsx:825` |
 | Copiar resumen para Telegram | `src/app/views/CRM/components.jsx:4560` |
-| Copilot AI | `src/app/views/Copilot.jsx:923` |
+| Copilot AI | `src/app/views/Copilot.jsx:930` |
 | Corregir lo que escribiste | `src/app/views/Marketing.jsx:1853` |
 | Correo de recuperación | `src/app/views/Profile.jsx:377` |
 | Crear | `src/app/views/Marketing.jsx:915` |
@@ -580,7 +580,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Descargar en Word | `src/app/features/MetaPanel/DocsStratos.jsx:213` |
 | Descargar en Word para firmarla | `src/app/views/CuentasCobro.jsx:419` |
 | Descartar | `src/app/App.jsx:2494` |
-| Descartar audio | `src/app/views/Copilot.jsx:1560` |
+| Descartar audio | `src/app/views/Copilot.jsx:1575` |
 | Descartar grabación | `src/app/views/CRM/LeadWhatsAppChat.jsx:808` |
 | Describe la tarea... | `src/app/views/CRM/components.jsx:2109` |
 | Descripción | `src/app/views/IACRM.jsx:433` |
@@ -635,7 +635,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Enlaces | `src/app/views/CRM/components.jsx:4129` |
 | Enter | `src/app/views/Marketing.jsx:1676` |
 | Entrevistas | `src/app/views/RRHHModule.jsx:566` |
-| Envía a | `src/app/views/Copilot.jsx:1770` |
+| Envía a | `src/app/views/Copilot.jsx:1785` |
 | Enviando… | `src/app/views/CRM/LeadWhatsAppChat.jsx:914` |
 
 
