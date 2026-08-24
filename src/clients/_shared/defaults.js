@@ -91,7 +91,11 @@ export const DEFAULT_CLIENT_CONFIG = {
     // Stratos Rails: el proceso diario guiado (Mi Día, briefing de Zoom,
     // cierre por chips). Apagado por defecto — Duke lo prende cuando el
     // piloto de 3 campeones esté listo. Ver PLAN_STRATOS_RAILS.md.
-    procesoGuiado: false,
+    // CAPACIDAD, no estado. true = esta empresa PUEDE usar Stratos Rails; si
+    // está prendido o no lo decide un admin desde Configuración, y se guarda en
+    // organizations.meta_config.rails.activo (que arranca en false). Poner esto
+    // en false esconde Rails por completo, incluida su pantalla de ajustes.
+    procesoGuiado: true,
     crm:           true,
     dash:          true,
     erp:           true,

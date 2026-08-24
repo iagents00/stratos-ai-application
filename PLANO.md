@@ -73,6 +73,7 @@ columna, estos son los archivos que hay que revisar.
 | `mkt_pipeline_items` | 1 | `app/views/Marketing.jsx` |
 | `mkt_projects` | 1 | `app/views/Marketing.jsx` |
 | `mkt_requests` | 1 | `app/views/Marketing.jsx` |
+| `organizations` | 1 | `hooks/useRailsConfig.js` |
 | `scheduled_calls` | 1 | `hooks/useScheduledCalls.js` |
 | `voice_call_logs` | 1 | `app/views/CRM/LeadVoiceCalls.jsx` |
 | `whatsapp_messages` | 1 | `lib/whatsapp-chat.js` |
@@ -159,11 +160,11 @@ casa; por eso mismo son los que más cuidado piden.
 
 | Archivo | Archivos que lo importan |
 |---|---|
-| `design-system/tokens.js` | **68** |
-| `lib/supabase.js` | **39** |
-| `hooks/useAuth.js` | **33** |
-| `hooks/useViewport.js` | **27** |
-| `app/SharedComponents.jsx` | **18** |
+| `design-system/tokens.js` | **69** |
+| `lib/supabase.js` | **40** |
+| `hooks/useAuth.js` | **34** |
+| `hooks/useViewport.js` | **28** |
+| `app/SharedComponents.jsx` | **19** |
 | `hooks/useClient.js` | **14** |
 | `lib/native.js` | **9** |
 | `app/views/CRM/zoom-metrics.js` | **6** |

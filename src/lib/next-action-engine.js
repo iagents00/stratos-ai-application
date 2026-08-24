@@ -38,6 +38,8 @@ export const MAX_DEL_DIA = 7;
 const REGLAS = [
   {
     tipo: "primer_contacto",
+    label: "Primer contacto",
+    cuando: "El cliente acaba de entrar o nadie lo ha llamado todavía.",
     cubeta: "prioritario",
     peso: 100,
     aplica: (l) => l.st === "Contáctame Ya" || (l.isNew && ETAPAS_SIN_CONTACTO.has(l.st)),
@@ -50,6 +52,8 @@ const REGLAS = [
   },
   {
     tipo: "zoom_hoy",
+    label: "Zoom hoy",
+    cuando: "Tiene un Zoom agendado para hoy.",
     cubeta: "prioritario",
     peso: 95,
     aplica: (l) => l.st === "Zoom Agendado",
@@ -60,6 +64,8 @@ const REGLAS = [
   },
   {
     tipo: "validar_apartado",
+    label: "Validar apartado",
+    cuando: "Ya mandó dinero y falta confirmar el comprobante.",
     cubeta: "prioritario",
     peso: 92,
     aplica: (l) => l.st === "Apartó",
@@ -70,6 +76,8 @@ const REGLAS = [
   },
   {
     tipo: "lead_caliente",
+    label: "Cliente caliente",
+    cuando: "Mostró señales de compra activa.",
     cubeta: "prioritario",
     peso: 90,
     aplica: (l) => l.hot === true,
@@ -80,6 +88,8 @@ const REGLAS = [
   },
   {
     tipo: "reactivar_zoom",
+    label: "Reactivar Zoom",
+    cuando: "Agendó un Zoom y no se conectó.",
     cubeta: "prioritario",
     peso: 88,
     aplica: (l) => l.st === "Reactivar Zoom",
@@ -90,6 +100,8 @@ const REGLAS = [
   },
   {
     tipo: "promesa_vencida",
+    label: "Promesa vencida",
+    cuando: "Quedaste en algo con él y ya pasó la fecha.",
     cubeta: "prioritario",
     peso: 85,
     aplica: (l) => l.proximaAccionVencida === true,
@@ -100,6 +112,8 @@ const REGLAS = [
   },
   {
     tipo: "post_zoom",
+    label: "Seguimiento post-Zoom",
+    cuando: "Ya pasó por Zoom y sigue en negociación.",
     cubeta: "intermedio",
     peso: 70,
     aplica: (l) => l.st === "Seguimiento" || l.st === "Zoom Concretado",
@@ -112,6 +126,8 @@ const REGLAS = [
   },
   {
     tipo: "calificar",
+    label: "Calificar",
+    cuando: "Le faltan datos (presupuesto, para qué lo quiere, fecha).",
     cubeta: "intermedio",
     peso: 60,
     // Solo se califica una conversación VIVA. A alguien que lleva dos semanas
@@ -127,6 +143,8 @@ const REGLAS = [
   },
   {
     tipo: "reactivar",
+    label: "Reactivar dormido",
+    cuando: "Lleva días sin movimiento.",
     cubeta: "reactivar",
     peso: 40,
     aplica: (l) => l.diasSinTocar >= 14,
@@ -144,6 +162,8 @@ const REGLAS = [
  */
 const DEFINIR_PASO = {
   tipo: "definir_paso",
+  label: "Definir el siguiente paso",
+  cuando: "Red de seguridad: no tiene un próximo paso puesto.",
   cubeta: "intermedio",
   peso: 50,
   razon: () => "No tiene un próximo paso definido.",
@@ -164,6 +184,58 @@ const ETAPAS_CERRADAS = new Set(["Cierre", "Postventa", "Descartado"]);
 const ETAPAS_SIN_CONTACTO = new Set([
   "Contáctame Ya", "Segundo Intento", "Tercer Intento", "Rotación",
 ]);
+
+/**
+ * El catálogo de reglas para el panel de configuración: qué existe, cómo se
+ * llama en español y cuándo se dispara. El motor es la ÚNICA fuente — si mañana
+ * se agrega una regla acá, aparece sola en el panel de admin sin tocar la UI.
+ */
+export function catalogoDeReglas() {
+  return [...REGLAS, DEFINIR_PASO].map((r) => ({
+    tipo: r.tipo,
+    label: r.label || r.tipo,
+    cuando: r.cuando || "",
+    cubeta: r.cubeta,
+    peso: r.peso,
+    canal: r.canal,
+    // Texto de fábrica, para mostrarlo de marca de agua en el panel. Se calcula
+    // con un cliente de ejemplo porque varias razones son dinámicas.
+    razonDefault: seguro(() => r.razon(LEAD_EJEMPLO)),
+    pedirDefault: seguro(() => r.pedir(LEAD_EJEMPLO)),
+    // definir_paso es la red de seguridad; apagarla dejaría leads sin dueño de
+    // su futuro, que es justo el problema que Rails viene a resolver.
+    fija: r.tipo === "definir_paso",
+  }));
+}
+
+const LEAD_EJEMPLO = {
+  n: "tu cliente", st: "Seguimiento", diasSinTocar: 3, diasVencida: 2,
+  bantFaltantes: ["presupuesto"], presupuesto: 0,
+};
+function seguro(fn) { try { return fn() || ""; } catch { return ""; } }
+
+/** Reemplaza las fichas {nombre} {dias} … por los datos reales del cliente. */
+export function interpolar(texto, lead) {
+  if (!texto) return texto;
+  const d = lead?.diasSinTocar ?? 0;
+  const v = lead?.diasVencida ?? 0;
+  // {dias} es el número pelado, para quien quiera escribir "3 d" o "hace 3".
+  // {dias_txt} viene conjugado: nadie quiere leerle a su equipo "llevas 1 días".
+  const plural = (n) => `${n} ${n === 1 ? "día" : "días"}`;
+  const fichas = {
+    nombre: lead?.n || lead?.nombre || "tu cliente",
+    dias: d,
+    dias_txt: plural(d),
+    diasVencida: v,
+    diasVencida_txt: plural(v),
+    etapa: lead?.st || "sin etapa",
+    faltantes: Array.isArray(lead?.bantFaltantes) ? lead.bantFaltantes.join(", ") : "",
+  };
+  return String(texto).replace(/\{(\w+)\}/g, (crudo, k) =>
+    (k in fichas ? String(fichas[k]) : crudo));
+}
+
+export const FICHAS_DISPONIBLES = ["nombre", "dias_txt", "dias", "diasVencida", "etapa", "faltantes"];
 
 /** Normaliza un lead del CRM a lo que el motor necesita. Tolera campos ausentes. */
 export function normalizarLead(lead, ahora = new Date()) {
@@ -201,17 +273,32 @@ export function normalizarLead(lead, ahora = new Date()) {
  * Devuelve LA acción del día para un lead, o null si el lead está cerrado.
  * Una sola: la lista de siete tarjetas no admite empates.
  */
-export function proximaAccion(leadCrudo, ahora = new Date()) {
+export function proximaAccion(leadCrudo, ahora = new Date(), config = null) {
   if (!leadCrudo || ETAPAS_CERRADAS.has(leadCrudo.st)) return null;
   const lead = normalizarLead(leadCrudo, ahora);
 
+  // La organización puede apagar reglas enteras y cambiarles el peso. `definir_paso`
+  // no se puede apagar: es la red de seguridad.
+  const ajuste = (tipo) => config?.reglas?.[tipo] || null;
+  const pesoDe = (r) => {
+    const p = ajuste(r.tipo)?.peso;
+    return Number.isFinite(p) ? p : r.peso;
+  };
+
   const candidatas = REGLAS.filter((r) => {
+    if (ajuste(r.tipo)?.activa === false) return false;
     try { return r.aplica(lead); } catch { return false; }
   });
-  const regla = candidatas.sort((a, b) => b.peso - a.peso)[0]
+  const regla = candidatas.sort((a, b) => pesoDe(b) - pesoDe(a))[0]
     || (lead.bantFaltantes.includes("fecha del siguiente paso") ? DEFINIR_PASO : null);
 
   if (!regla) return null;
+
+  // Si la empresa escribió su propio texto, el suyo manda tal cual (con las
+  // fichas resueltas). Si no, el del motor.
+  const propio = ajuste(regla.tipo);
+  const razon = propio?.razon ? interpolar(propio.razon, lead) : regla.razon(lead);
+  const pedir = propio?.pedir ? interpolar(propio.pedir, lead) : regla.pedir(lead);
 
   return {
     leadId: lead.id,
@@ -220,11 +307,11 @@ export function proximaAccion(leadCrudo, ahora = new Date()) {
     etapa: lead.st,
     tipo: regla.tipo,
     cubeta: regla.cubeta,
-    peso: regla.peso,
+    peso: pesoDe(regla),
     canal: regla.canal,
     eta: regla.eta,
-    razon: regla.razon(lead),
-    pedir: regla.pedir(lead),
+    razon,
+    pedir,
     // Contexto de apoyo: la tarjeta lo muestra pequeño, debajo de la razón.
     contexto: [
       lead.presupuesto || lead.budget ? `Presupuesto ${lead.budget || lead.presupuesto}` : null,
@@ -238,9 +325,16 @@ export function proximaAccion(leadCrudo, ahora = new Date()) {
  * La lista del día. Máximo 7 por diseño: una lista larga es una lista que no
  * se termina, y la que no se termina se abandona.
  */
-export function listaDelDia(leads, { max = MAX_DEL_DIA, ahora = new Date() } = {}) {
-  const acciones = (leads || []).map((l) => proximaAccion(l, ahora)).filter(Boolean);
-  const orden = { prioritario: 0, intermedio: 1, reactivar: 2 };
-  acciones.sort((a, b) => (orden[a.cubeta] - orden[b.cubeta]) || (b.peso - a.peso));
-  return { visibles: acciones.slice(0, max), total: acciones.length };
+export function listaDelDia(leads, { max, ahora = new Date(), config = null } = {}) {
+  const tope = Number.isFinite(max) ? max
+             : (Number.isFinite(config?.maxTarjetas) ? config.maxTarjetas : MAX_DEL_DIA);
+  const acciones = (leads || []).map((l) => proximaAccion(l, ahora, config)).filter(Boolean);
+  // Ordena SOLO por peso. Antes la cubeta mandaba primero y el peso solo
+  // desempataba dentro de ella — con el efecto de que subirle la prioridad a una
+  // regla de "reactivar" no la movía nunca, aunque el panel dijera 100. Con los
+  // pesos de fábrica (100…40) el orden resultante es idéntico al de las cubetas,
+  // porque las cubetas siempre fueron rangos de peso con otro nombre. La cubeta
+  // sigue viva: es la que le da color a la tarjeta.
+  acciones.sort((a, b) => b.peso - a.peso);
+  return { visibles: acciones.slice(0, tope), total: acciones.length };
 }

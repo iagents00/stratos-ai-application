@@ -125,7 +125,7 @@ function mismaLista(a, b) {
     x.leadId === b[i].leadId && x.razon === b[i].razon && x.pedir === b[i].pedir);
 }
 
-export default function MiDia({ leads = [], T: Tprop, theme = "dark", onNuevoCliente, onVerCRM }) {
+export default function MiDia({ leads = [], T: Tprop, theme = "dark", config = null, onNuevoCliente, onVerCRM }) {
   const isLight = theme === "light";
   const T = Tprop || (isLight ? LP : P);
 
@@ -143,7 +143,9 @@ export default function MiDia({ leads = [], T: Tprop, theme = "dark", onNuevoCli
   // Entonces: el orden y la membresía se deciden UNA vez y se sostienen. Después
   // solo pueden AGREGARSE clientes nuevos, al final. Nada que ya está en pantalla
   // se va ni se mueve, salvo que el asesor lo cierre.
-  const fresca = useMemo(() => listaDelDia(leads), [leads]);
+  // La configuración de la organización decide qué reglas corren, con qué peso,
+  // con qué texto y cuántas tarjetas caben. Ver lib/rails-config.js.
+  const fresca = useMemo(() => listaDelDia(leads, { config }), [leads, config]);
   const [congelada, setCongelada] = useState(null);
   const [ultimaFresca, setUltimaFresca] = useState(null);
 
@@ -151,10 +153,19 @@ export default function MiDia({ leads = [], T: Tprop, theme = "dark", onNuevoCli
   // reintenta el render antes de pintar, así que no hay parpadeo ni cascada.
   // Va acá y no en un useEffect para que la lista quede resuelta en el MISMO
   // render — con un efecto, el asesor vería un frame con el orden viejo.
-  if (fresca !== ultimaFresca) {
+  // Un cambio de CONFIGURACIÓN sí rompe el congelado, y debe: si un admin apagó
+  // una regla o reescribió un texto, fue un acto deliberado y la lista tiene que
+  // reflejarlo ya. Lo que no puede moverla sola es el paso del tiempo o un
+  // sondeo del CRM. La tienda de config solo publica cuando algo cambió de
+  // verdad, así que comparar por identidad alcanza.
+  const [ultimaConfig, setUltimaConfig] = useState(config);
+  const configCambio = config !== ultimaConfig;
+  if (configCambio) setUltimaConfig(config);
+
+  if (fresca !== ultimaFresca || configCambio) {
     setUltimaFresca(fresca);
     setCongelada((prev) => {
-      if (!prev) return fresca.visibles;
+      if (!prev || configCambio) return fresca.visibles;
 
       const porId   = new Map(fresca.visibles.map((a) => [a.leadId, a]));
       const yaEstan = new Set(prev.map((a) => a.leadId));
@@ -166,7 +177,8 @@ export default function MiDia({ leads = [], T: Tprop, theme = "dark", onNuevoCli
       // Los que entraron después van al final, nunca intercalados. Un lead recién
       // registrado SÍ tiene que aparecer: es la tarjeta más valiosa del sistema.
       const nuevas = fresca.visibles.filter((a) => !yaEstan.has(a.leadId));
-      const sig = sostenidas.concat(nuevas).slice(0, MAX_DEL_DIA);
+      const tope    = config?.maxTarjetas || MAX_DEL_DIA;
+      const sig = sostenidas.concat(nuevas).slice(0, tope);
 
       // Devolver `prev` hace que React se salte el render. Sin esto, cada sondeo
       // de 5s repintaría la lista aunque nada haya cambiado.

@@ -49,6 +49,11 @@ jobs:
       - name: El contexto de cliente no puede desincronizarse
         run: node scripts/verificar-contexto-cliente.mjs
 
+      # Si el motor ignorara la config, el panel "Proceso" mentiría en silencio:
+      # los switches se moverían y la lista del día seguiría igual.
+      - name: La configuración de Rails tiene que llegar al motor
+        run: node scripts/verificar-rails.mjs
+
   regenerar:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     needs: verificar
