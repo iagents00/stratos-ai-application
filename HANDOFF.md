@@ -207,6 +207,28 @@ desarrollo, no puede distribuir.
 `.p8` se descarga UNA sola vez — va a GitHub Secrets y a un gestor de
 contraseñas. Si el dev se va, se revoca esa key y listo; la cuenta no se toca.
 
+### Cuando prendas Rails: el chequeo de 3 minutos
+
+El panel está verificado en producción — se abre, los interruptores responden, el
+tope de tarjetas se mueve, y cada cambio guarda solo (no hay botón que olvidar).
+El gate de la interfaz y la RLS de `organizations` coinciden: solo `super_admin`
+y `admin`, así que un asesor ni lo ve.
+
+Lo único que no se puede probar sin una cuenta real es el viaje completo: que lo
+que guarda el admin llegue a la pantalla del asesor. Cuando lo prendas:
+
+1. **Menú → Proceso**, prende el interruptor grande. Debe decir *Guardado*.
+2. **Recarga la página** y vuelve a Proceso — si el interruptor sigue prendido,
+   la base lo guardó de verdad.
+3. Entra al **CRM**: debe aparecer Mi Día arriba de todo.
+4. Apaga una regla (por ejemplo *Validar apartado*), recarga, y comprueba que
+   ninguna tarjeta de esa clase aparezca.
+5. Si algo no cuadra, `?rails=0` en la URL te devuelve el CRM de siempre al
+   instante, sin esperar deploy.
+
+El equipo lo ve en su **siguiente carga**, no al instante: la configuración se
+lee al montar la pantalla.
+
 ### La app móvil
 
 Vive en **`mobile/`**. Es un shell de Capacitor que empaqueta el CRM dentro del
