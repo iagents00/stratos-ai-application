@@ -22,7 +22,7 @@
 import { useState, useMemo, useCallback, useEffect } from "react";
 import { Phone, MessageCircle, Check, X, CalendarClock, Plus, LayoutGrid } from "lucide-react";
 import { P, LP, font, fontDisp } from "../../design-system/tokens";
-import { listaDelDia } from "../../lib/next-action-engine";
+import { listaDelDia, MAX_DEL_DIA } from "../../lib/next-action-engine";
 import { agendaDeHoy, marcarAccion } from "../../lib/agenda";
 
 /* Un solo punto de color por tarjeta, de 6px. Sin iconos decorativos. */
@@ -117,13 +117,67 @@ function Tarjeta({ accion, indice, total, T, isLight, onCerrar }) {
   );
 }
 
+/** Dos listas son "la misma" si traen los mismos clientes, en el mismo orden y
+ *  pidiendo lo mismo. Compara lo que el asesor ve, no identidad de objetos. */
+function mismaLista(a, b) {
+  if (a.length !== b.length) return false;
+  return a.every((x, i) =>
+    x.leadId === b[i].leadId && x.razon === b[i].razon && x.pedir === b[i].pedir);
+}
+
 export default function MiDia({ leads = [], T: Tprop, theme = "dark", onNuevoCliente, onVerCRM }) {
   const isLight = theme === "light";
   const T = Tprop || (isLight ? LP : P);
 
   const [cerradas, setCerradas] = useState({});   // leadId -> estado
 
-  const { visibles, total } = useMemo(() => listaDelDia(leads), [leads]);
+  // ── LA LISTA DEL DÍA NO SE MUEVE SOLA ──────────────────────────────────
+  // `leads` cambia de referencia seguido (el CRM sondea cada 5s y hay realtime),
+  // y cada recálculo usa un `ahora` nuevo. Sin congelar, una tarjeta que sigue
+  // siendo válida se reordena o se CAE de la lista mientras el asesor la está
+  // trabajando: verificado en producción — a los 10 segundos, sin tocar nada, el
+  // primero de la lista desapareció solo. Si estás marcando el teléfono de
+  // alguien y su tarjeta se esfuma, el proceso deja de ser confiable, y un
+  // proceso en el que no confías no se usa.
+  //
+  // Entonces: el orden y la membresía se deciden UNA vez y se sostienen. Después
+  // solo pueden AGREGARSE clientes nuevos, al final. Nada que ya está en pantalla
+  // se va ni se mueve, salvo que el asesor lo cierre.
+  const fresca = useMemo(() => listaDelDia(leads), [leads]);
+  const [congelada, setCongelada] = useState(null);
+  const [ultimaFresca, setUltimaFresca] = useState(null);
+
+  // Ajuste de estado durante el render (patrón documentado de React): React
+  // reintenta el render antes de pintar, así que no hay parpadeo ni cascada.
+  // Va acá y no en un useEffect para que la lista quede resuelta en el MISMO
+  // render — con un efecto, el asesor vería un frame con el orden viejo.
+  if (fresca !== ultimaFresca) {
+    setUltimaFresca(fresca);
+    setCongelada((prev) => {
+      if (!prev) return fresca.visibles;
+
+      const porId   = new Map(fresca.visibles.map((a) => [a.leadId, a]));
+      const yaEstan = new Set(prev.map((a) => a.leadId));
+
+      // Lo ya mostrado se queda, en su lugar. Si el motor dejó de proponer acción
+      // para ese cliente (cambió de etapa, lo tocaron desde el móvil), se conserva
+      // la última que sí tuvo: la tarjeta no puede evaporarse bajo el asesor.
+      const sostenidas = prev.map((a) => porId.get(a.leadId) || a);
+      // Los que entraron después van al final, nunca intercalados. Un lead recién
+      // registrado SÍ tiene que aparecer: es la tarjeta más valiosa del sistema.
+      const nuevas = fresca.visibles.filter((a) => !yaEstan.has(a.leadId));
+      const sig = sostenidas.concat(nuevas).slice(0, MAX_DEL_DIA);
+
+      // Devolver `prev` hace que React se salte el render. Sin esto, cada sondeo
+      // de 5s repintaría la lista aunque nada haya cambiado.
+      return mismaLista(prev, sig) ? prev : sig;
+    });
+  }
+
+  // Antes de que corra el efecto (primer pintado) se usa la fresca: sin parpadeo.
+  const visibles = congelada ?? fresca.visibles;
+  const total = fresca.total;
+
   const pendientes = visibles.filter((a) => !cerradas[a.leadId]);
   const hechas = visibles.length - pendientes.length;
 
