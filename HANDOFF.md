@@ -90,7 +90,9 @@ Al terminar:
 |---|---|---|
 | **Pagar las facturas de Supabase** | Dashboard → Billing | La tarjeta está bloqueada. Si suspenden el proyecto se cae todo. Es lo más urgente. |
 | **Aplicar `237_post_zoom_protocol.sql`** | SQL editor del dashboard | Escritura a la base de producción |
-| **Los 4 secretos de Apple** | GitHub → Settings → Secrets | Requiere su cuenta de Apple Developer |
+| **Enviar la solicitud de acceso a la API** | App Store Connect → Users and Access → Integrations | Hay que aceptar los términos de uso de la API. Apple la revisa, y avisa que *"las organizaciones reciben acceso primero y después los individuos"* — esta cuenta está inscrita como Individual. **Es lo que marca el reloj de TestFlight.** |
+| **Aceptar el contrato actualizado** | developer.apple.com → Review agreement | Contrato legal. Plazo: **1 de octubre de 2026**. Si vence, se apagan App Store Connect y la API. |
+| **Cargar los 2 secretos que faltan** | GitHub → Settings → Secrets | `APPSTORE_ISSUER_ID` y `APPSTORE_KEY_ID` salen de crear la API key, que no se puede crear hasta que Apple apruebe el acceso. El `.p8` se descarga una sola vez. |
 | **Prender Stratos Rails** | Dentro de la app: Menú → Proceso | Le reordena la pantalla a los 20 asesores |
 
 ### Lo que sí puede avanzar un dev
@@ -131,6 +133,18 @@ https://app.stratoscapitalgroup.com/?rails=1
 montar. Solo pueden agregarse clientes al final, y el que acabas de registrar va
 primero. Nada se mueve solo bajo el asesor. Ver
 `src/app/views/MiDia.jsx` y `src/lib/next-action-engine.js`.
+
+### Lo de Apple que ya está hecho (24-ago-2026)
+
+| | |
+|---|---|
+| Identificador de la app | `com.stratoscapitalgroup.crm`, con **Push Notifications** habilitado |
+| App en App Store Connect | **Stratos AI** · ID `6804826565` · versión 1.0 en preparación |
+| Team ID | `5683F2CFT6` — ya cargado en GitHub como `APPLE_TEAM_ID` |
+| Acceso del dev | Invitado como **Gestor de apps** (App Manager) |
+
+La casilla de Push hay que marcarla **al registrar el identificador**: si falta, la
+compilación falla al firmar y el error no dice que es por eso.
 
 ### Dar acceso a Apple sin exponer la cuenta personal
 
