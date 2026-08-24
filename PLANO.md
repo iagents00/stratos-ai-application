@@ -165,7 +165,7 @@ casa; por eso mismo son los que más cuidado piden.
 | `hooks/useAuth.js` | **35** |
 | `hooks/useViewport.js` | **28** |
 | `app/SharedComponents.jsx` | **19** |
-| `hooks/useClient.js` | **15** |
+| `hooks/useClient.js` | **16** |
 | `lib/native.js` | **9** |
 | `app/views/CRM/zoom-metrics.js` | **6** |
 | `app/components/Logo.jsx` | **5** |

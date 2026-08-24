@@ -205,10 +205,10 @@ function esAppNativa() {
 
 export function canAccessModule(moduleId, user, clientConfig = null) {
   if (!user) return false;
-  // (0) APP NATIVA: "Planes" muestra precios de suscripción y un botón de pago
-  // que hoy ni siquiera cobra (simula con setTimeout). Apple exige In-App
-  // Purchase para bienes digitales: dejarlo visible es rechazo seguro. Los
-  // planes se contratan por la web, que es donde tiene sentido.
+    // (0) APP NATIVA: "Planes" muestra precios de suscripción. Apple exige
+    // In-App Purchase para vender bienes digitales dentro de la app: dejarlo
+    // visible es rechazo seguro. Los planes se contratan hablando con un
+    // ejecutivo, que es lo que hace la pantalla en web.
   if (moduleId === "planes" && esAppNativa()) return false;
   // (1) Restricción per-usuario — gana sobre todo lo demás.
   if (user.crmOnly === true && !CRM_ONLY_MODULES.has(moduleId)) return false;

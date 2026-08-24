@@ -33,7 +33,7 @@
  *   sola en la próxima navegación. Ver `main.jsx` → SERVICE WORKER.
  */
 
-const CACHE_VERSION = 'stratos-v409'; // v409: migraciones en orden y docs que no mienten
+const CACHE_VERSION = 'stratos-v410'; // v410: fuera el cobro falso de la pantalla de planes
 
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 // Nombre ESTABLE a propósito: no lleva CACHE_VERSION (ver cabecera).
