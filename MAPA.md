@@ -6,7 +6,7 @@
 >
 > ¿Buscás un botón o un texto y no está acá? `npm run buscar "texto"`
 
-**167 archivos · 73.351 líneas**
+**167 archivos · 73.410 líneas**
 
 ---
 
@@ -174,10 +174,10 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | `AdvisorMetrics.jsx` | 302 | Tabla de indicadores por asesor (Comando Directivo dentro del CRM). |
 | `Graficas.jsx` | 290 | _sin describir_ |
 | `Trash.jsx` | 285 | Papelera del CRM |
+| `MiDia.jsx` | 274 | _sin describir_ |
 | `RangeCalendar.jsx` | 258 | Calendario de selección de RANGO por clicks. Se usa dentro de DateRangeControl |
 | `LeadRelatedContacts.jsx` | 250 | "Familiares o Socios" del expediente — personas ALLEGADAS al contacto |
 | `Nomina.jsx` | 238 | _sin describir_ |
-| `MiDia.jsx` | 220 | _sin describir_ |
 | `ProductividadTab.jsx` | 218 | _sin describir_ |
 | `zoom-metrics.js` | 207 | _sin describir_ |
 | `LeadVoiceCalls.jsx` | 201 | Sección con las llamadas de voz hechas por Retell AI a este lead. |
@@ -352,7 +352,7 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | `whatsapp-chat.js` | 326 | _sin describir_ |
 | `utils.js` | 308 | Utilidades compartidas entre todas las vistas. |
 | `lead-save.js` | 288 | _sin describir_ |
-| `next-action-engine.js` | 242 | _sin describir_ |
+| `next-action-engine.js` | 247 | _sin describir_ |
 | `manual-stratos-doc.js` | 230 | _sin describir_ |
 | `organize-notes.js` | 220 | _sin describir_ |
 | `docx.js` | 203 | _sin describir_ |
@@ -676,14 +676,14 @@ hacen. Agregarles un bloque `/** ... */` arriba los hace aparecer solos acá.
 - `src/clients/clinica-dental/config.js` (309 líneas)
 - `src/app/views/ZoomControl/Graficas.jsx` (290 líneas)
 - `src/lib/lead-save.js` (288 líneas)
+- `src/app/views/MiDia.jsx` (274 líneas)
 - `src/clients/nsg/config.js` (270 líneas)
 - `src/app/features/MetaPanel/DocsStratos.jsx` (262 líneas)
 - `src/index.css` (250 líneas)
 - `src/app/data/chat.js` (249 líneas)
-- `src/lib/next-action-engine.js` (242 líneas)
+- `src/lib/next-action-engine.js` (247 líneas)
 - `src/app/views/Nomina.jsx` (238 líneas)
 - `src/lib/manual-stratos-doc.js` (230 líneas)
-- `src/app/views/MiDia.jsx` (220 líneas)
 - `src/lib/organize-notes.js` (220 líneas)
 - `src/app/views/ProductividadTab.jsx` (218 líneas)
 - `src/app/constants/intelFeatures.js` (211 líneas)

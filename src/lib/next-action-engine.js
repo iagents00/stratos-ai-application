@@ -26,6 +26,11 @@
 /** Cubetas de clasificación. El orden es el de atención. */
 export const CUBETAS = ["prioritario", "intermedio", "reactivar"];
 
+// Siete. Ni una más. Una lista que no se puede terminar deja de ser una lista y
+// vuelve a ser el pipeline con otro nombre — que es justo de lo que Rails saca
+// al asesor.
+export const MAX_DEL_DIA = 7;
+
 /**
  * Tipos de acción. `canal` es una sugerencia, no una imposición: la regla 3 de
  * Rails dice que pasadas 20 h el teléfono deja de ser canal primario.
@@ -233,7 +238,7 @@ export function proximaAccion(leadCrudo, ahora = new Date()) {
  * La lista del día. Máximo 7 por diseño: una lista larga es una lista que no
  * se termina, y la que no se termina se abandona.
  */
-export function listaDelDia(leads, { max = 7, ahora = new Date() } = {}) {
+export function listaDelDia(leads, { max = MAX_DEL_DIA, ahora = new Date() } = {}) {
   const acciones = (leads || []).map((l) => proximaAccion(l, ahora)).filter(Boolean);
   const orden = { prioritario: 0, intermedio: 1, reactivar: 2 };
   acciones.sort((a, b) => (orden[a.cubeta] - orden[b.cubeta]) || (b.peso - a.peso));
