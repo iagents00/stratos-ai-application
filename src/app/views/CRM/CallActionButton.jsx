@@ -61,7 +61,7 @@ export default function CallActionButton({
     if (!warnZoom) return true;
     return window.confirm(
       "Este lead tiene un Zoom agendado. " +
-      "¿Seguro que querés llamarlo ahora? La IA podría estar a punto de contactarlo."
+      "¿Seguro que quieres llamarlo ahora? La IA podría estar a punto de contactarlo."
     );
   };
 

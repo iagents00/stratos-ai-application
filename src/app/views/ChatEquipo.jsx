@@ -279,7 +279,7 @@ export default function ChatEquipo({ T, onInmersivo }) {
             <p style={{ margin: "3px 0 0", fontSize: 12.5, color: txt2 }}>
               {totalSinLeer > 0
                 ? `${totalSinLeer} mensaje${totalSinLeer === 1 ? "" : "s"} sin leer`
-                : "Todo lo del equipo acá adentro · mencioná con @ y le llega el aviso"}
+                : "Todo lo del equipo aquí adentro · menciona con @ y le llega el aviso"}
             </p>
           </div>
         </div>
@@ -347,7 +347,7 @@ export default function ChatEquipo({ T, onInmersivo }) {
           }}>
             {!activo ? (
               <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", color: txt3, fontSize: 13, padding: 40 }}>
-                Elegí un canal para empezar
+                Elige un canal para empezar
               </div>
             ) : (
               <>
@@ -376,7 +376,7 @@ export default function ChatEquipo({ T, onInmersivo }) {
                   {!conAgrupado.length && (
                     <div style={{ margin: "auto", textAlign: "center", color: txt3, fontSize: 13, padding: 20 }}>
                       Todavía no hay mensajes acá.<br />
-                      <span style={{ fontSize: 12.5 }}>Escribí el primero — esto reemplaza el WhatsApp del equipo.</span>
+                      <span style={{ fontSize: 12.5 }}>Escribe el primero — esto reemplaza el WhatsApp del equipo.</span>
                     </div>
                   )}
 

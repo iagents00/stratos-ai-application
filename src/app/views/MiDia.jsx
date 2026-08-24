@@ -22,7 +22,7 @@
 import { useState, useMemo, useCallback, useEffect } from "react";
 import { Phone, MessageCircle, Check, X, CalendarClock, Plus, LayoutGrid } from "lucide-react";
 import { P, LP, font, fontDisp } from "../../design-system/tokens";
-import { listaDelDia, MAX_DEL_DIA } from "../../lib/next-action-engine";
+import { listaDelDia, proximaAccion, MAX_DEL_DIA } from "../../lib/next-action-engine";
 import { hrefDelCanal } from "../../lib/telefono";
 import { agendaDeHoy, marcarAccion } from "../../lib/agenda";
 
@@ -176,7 +176,7 @@ function mismaLista(a, b) {
     x.leadId === b[i].leadId && x.razon === b[i].razon && x.pedir === b[i].pedir);
 }
 
-export default function MiDia({ leads = [], T: Tprop, theme = "dark", config = null, onNuevoCliente, onVerCRM, onMover }) {
+export default function MiDia({ leads = [], T: Tprop, theme = "dark", config = null, recienRegistrado = null, onNuevoCliente, onVerCRM, onMover }) {
   const isLight = theme === "light";
   const T = Tprop || (isLight ? LP : P);
 
@@ -213,10 +213,20 @@ export default function MiDia({ leads = [], T: Tprop, theme = "dark", config = n
   const configCambio = config !== ultimaConfig;
   if (configCambio) setUltimaConfig(config);
 
-  if (fresca !== ultimaFresca || configCambio) {
+  // Un cliente que el asesor ACABA de registrar va hasta arriba, aunque la lista
+  // ya esté llena. Es la única excepción a "nada se cuela": no es el sistema
+  // moviéndole el piso, es él viendo lo que él mismo creó hace tres segundos. Y
+  // es la tarjeta más urgente que existe — la contactabilidad cae 100× entre el
+  // minuto 5 y el 30, así que mandarla al lugar 8 de una lista de 7 es tirarla.
+  const [ultimoNuevo, setUltimoNuevo] = useState(recienRegistrado);
+  const hayNuevo = !!recienRegistrado && recienRegistrado !== ultimoNuevo;
+  if (hayNuevo) setUltimoNuevo(recienRegistrado);
+
+  if (fresca !== ultimaFresca || configCambio || hayNuevo) {
     setUltimaFresca(fresca);
     setCongelada((prev) => {
       if (!prev || configCambio) return fresca.visibles;
+
 
       const porId   = new Map(fresca.visibles.map((a) => [a.leadId, a]));
       const yaEstan = new Set(prev.map((a) => a.leadId));
@@ -229,7 +239,17 @@ export default function MiDia({ leads = [], T: Tprop, theme = "dark", config = n
       // registrado SÍ tiene que aparecer: es la tarjeta más valiosa del sistema.
       const nuevas = fresca.visibles.filter((a) => !yaEstan.has(a.leadId));
       const tope    = config?.maxTarjetas || MAX_DEL_DIA;
-      const sig = sostenidas.concat(nuevas).slice(0, tope);
+      let sig = sostenidas.concat(nuevas);
+
+      // El recién registrado, al frente. Se calcula su acción aparte porque
+      // listaDelDia ya cortó en el tope y podría haber quedado fuera.
+      if (hayNuevo) {
+        const lead = leads.find((l) => l.id === recienRegistrado);
+        const suya = lead ? proximaAccion(lead, new Date(), config) : null;
+        if (suya) sig = [suya, ...sig.filter((a) => a.leadId !== recienRegistrado)];
+      }
+
+      sig = sig.slice(0, tope);
 
       // Devolver `prev` hace que React se salte el render. Sin esto, cada sondeo
       // de 5s repintaría la lista aunque nada haya cambiado.
@@ -271,9 +291,11 @@ export default function MiDia({ leads = [], T: Tprop, theme = "dark", config = n
           margin: 0, fontFamily: fontDisp, fontSize: 30, fontWeight: 800,
           letterSpacing: "-0.03em", color: T.txt,
         }}>
-          {pendientes.length === 0
-            ? "Terminaste tu día"
-            : `${pendientes.length} ${pendientes.length === 1 ? "acción" : "acciones"}`}
+          {pendientes.length > 0
+            ? `${pendientes.length} ${pendientes.length === 1 ? "acción" : "acciones"}`
+            : hechas > 0
+              ? "Terminaste tu día"
+              : "Nada que trabajar todavía"}
         </h2>
         <p style={{ margin: "6px 0 0", fontFamily: font, fontSize: 13.5, color: T.txt2 }}>
           {hechas > 0 && <strong style={{ color: T.accent }}>{hechas} hecha{hechas !== 1 ? "s" : ""} · </strong>}
@@ -316,7 +338,11 @@ export default function MiDia({ leads = [], T: Tprop, theme = "dark", config = n
           border: `1px solid ${T.border}`, borderRadius: P.r, padding: "36px 24px",
           textAlign: "center", fontFamily: font, fontSize: 14.5, color: T.txt2,
         }}>
-          Nada más por hoy. Lo que cerraste no vuelve a aparecer.
+          {/* Felicitar por "terminar" a quien no hizo nada es burlarse: no
+              terminó, no tuvo con qué empezar. */}
+          {hechas > 0
+            ? "Nada más por hoy. Lo que cerraste no vuelve a aparecer."
+            : "Ningún cliente pide atención hoy. Registra uno y aparece aquí arriba."}
         </div>
       ) : (
         pendientes.map((accion, i) => (

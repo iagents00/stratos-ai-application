@@ -334,7 +334,7 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
         setCajaForm(null);
         setMessages((prev) => [...prev, {
           id: `ai-${Date.now()}`, role: "ai",
-          content: "Listo, la dejo guardada nomás. Si después querés registrarla, mandámela de nuevo.",
+          content: "Listo, la dejo guardada. Si después quieres registrarla, mándamela de nuevo.",
           occurred_at: new Date().toISOString(),
         }]);
         return;
@@ -350,7 +350,7 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
         if (!list.length) {
           setMessages((prev) => [...prev, {
             id: `ai-${Date.now()}`, role: "ai",
-            content: "La imagen quedó guardada, pero no encontré tareas tuyas recientes para vincularla. Decime primero «ya terminé [la tarea]» y mandámela de nuevo.",
+            content: "La imagen quedó guardada, pero no encontré tareas tuyas recientes para vincularla. Dime primero «ya terminé [la tarea]» y mándamela de nuevo.",
             occurred_at: new Date().toISOString(),
           }]);
           return;
@@ -619,7 +619,7 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
   const guardarCaja = async () => {
     if (!cajaForm || !orgId) return;
     const monto = Number(String(cajaForm.amount).replace(",", "."));
-    if (!monto || monto <= 0) { setErrBanner("Poné el monto para poder registrarlo."); return; }
+    if (!monto || monto <= 0) { setErrBanner("Pon el monto para poder registrarlo."); return; }
     setSending(true);
     try {
       const { error } = await supabase.from("team_expenses").insert({

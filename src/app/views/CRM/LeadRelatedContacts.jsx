@@ -201,7 +201,7 @@ export default function LeadRelatedContacts({ lead, T = P, isLight = false }) {
         {isAdmin && contacts.length === 0 && editing !== "new" && (
           <p style={{ margin: 0, fontSize: 12.5, color: T.txt3, fontFamily: font, lineHeight: 1.5 }}>
             {L.relatedContacts === "Familiares o Socios"
-              ? "Sin familiares o socios aún. Agregá el contacto de la esposa/o, un socio o un familiar del cliente."
+              ? "Sin familiares o socios aún. Agrega el contacto de la esposa/o, un socio o un familiar del cliente."
               : `Sin contactos aún. Agrega aquí a las personas relacionadas con esta ${L.entity}.`}
           </p>
         )}

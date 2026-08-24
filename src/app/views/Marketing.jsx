@@ -917,7 +917,7 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
               </div>
             )}
             {bProjects.length === 0 && newProjBrand !== b.id && (
-              <div style={{ fontSize: 12.5, color: txt3 }}>Sin proyectos activos. Agregá el primero con “+”.</div>
+              <div style={{ fontSize: 12.5, color: txt3 }}>Sin proyectos activos. Agrega el primero con “+”.</div>
             )}
             {bProjects.map(p => projectCard(p))}
             {bLoose.length > 0 && (

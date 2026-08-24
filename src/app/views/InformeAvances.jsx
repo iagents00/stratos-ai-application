@@ -652,8 +652,8 @@ export default function InformeAvances({ T }) {
             </div>
           </div>
           <div style={{ fontSize: 12.5, color: txt3, marginBottom: 12, textWrap: "pretty" }}>
-            Escribí acá lo que el sistema no puede saber solo — «dedicamos diez horas a la meta
-            de Cecilia» — o cómo querés que cambie el texto — «el resumen no debería abrir con
+            Escribe aquí lo que el sistema no puede saber solo — «dedicamos diez horas a la meta
+            de Cecilia» — o cómo quieres que cambie el texto — «el resumen no debería abrir con
             la app». Queda guardado para este periodo: si mañana lo volvés a generar, sigue puesto.
           </div>
 
@@ -732,7 +732,7 @@ export default function InformeAvances({ T }) {
         <div style={{ ...card, padding: 28, textAlign: "center" }}>
           <FileBarChart size={26} color={txt3} strokeWidth={1.6} />
           <div style={{ fontSize: 13.5, color: txt2, marginTop: 12, fontFamily: font, textWrap: "pretty" }}>
-            Elegí el periodo y dale a «Generar informe».
+            Elige el periodo y dale a «Generar informe».
           </div>
           <div style={{ fontSize: 12.5, color: txt3, marginTop: 6, maxWidth: 470, marginLeft: "auto", marginRight: "auto", textWrap: "pretty" }}>
             Sale día a día, agrupado por semana, de lo que quedó registrado: el trabajo

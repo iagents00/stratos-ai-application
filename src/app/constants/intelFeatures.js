@@ -35,7 +35,7 @@ export const INTEL_FEATURES = [
     how: [
       "Abrí el módulo Copilot en el CRM y escribile —o dictale por voz con el micrófono.",
       'Ejemplo: "Crea un cliente, Mariana López, teléfono 55 1234 5678, llamarla en 4 horas".',
-      "Lo registra al instante y te confirma. Si conectaste Telegram, también podés hacerlo desde ahí.",
+      "Lo registra al instante y te confirma. Si conectaste Telegram, también puedes hacerlo desde ahí.",
     ],
   },
   {
@@ -44,7 +44,7 @@ export const INTEL_FEATURES = [
     where: "En el Copilot del CRM (o en Telegram, si lo conectás)",
     tagline: "Cuéntale qué pasó con el cliente y lo guarda en su expediente al instante.",
     how: [
-      "En el Copilot, escribí o mandá un audio con la novedad.",
+      "En el Copilot, escribe o manda un audio con la novedad.",
       'Ejemplo: "Anota en Felipe que pidió ver dos propiedades más en la zona norte".',
       "Queda en el expediente del cliente, con fecha y hora.",
     ],
@@ -105,7 +105,7 @@ export const INTEL_FEATURES = [
     where: "En el Copilot (o reasignando desde el CRM)",
     tagline: "Pasa un cliente a otro asesor — o tómalo tú con una frase.",
     how: [
-      'En el Copilot: "pasá a Juan y asignámelo a mí" · "ponlo en mi cartera".',
+      'En el Copilot: "pasa a Juan y asígnamelo a mí" · "ponlo en mi cartera".',
       "Lo reasigna y, si tenía recordatorios pendientes, los mueve al nuevo asesor para que el aviso llegue a quien lo tiene.",
     ],
   },
@@ -116,7 +116,7 @@ export const INTEL_FEATURES = [
     tagline: "Pide la ficha, las notas y el expediente completo de cualquier cliente.",
     how: [
       'En el Copilot: "Busca a Diana" · "muéstrame el expediente de Carlos Ruiz".',
-      "Si hay dos con nombre parecido, te muestra botones para elegir. También podés usar la lupa del CRM web.",
+      "Si hay dos con nombre parecido, te muestra botones para elegir. También puedes usar la lupa del CRM web.",
     ],
   },
   {
@@ -146,7 +146,7 @@ export const INTEL_FEATURES = [
     tagline: "Pídele que te recuerde cualquier cosa, a la hora que tú pidas.",
     how: [
       'En el Copilot: "Recuérdame enviarle la propuesta a Felipe mañana a las 10".',
-      "Te llega el aviso puntual (al Copilot y al teléfono). También podés pedirlo por audio.",
+      "Te llega el aviso puntual (al Copilot y al teléfono). También puedes pedirlo por audio.",
     ],
   },
 
