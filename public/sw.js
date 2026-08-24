@@ -33,7 +33,7 @@
  *   sola en la próxima navegación. Ver `main.jsx` → SERVICE WORKER.
  */
 
-const CACHE_VERSION = 'stratos-v415'; // v415: acuerdos y la declaración de comerciante de la UE
+const CACHE_VERSION = 'stratos-v416'; // v416: el chequeo para encender Rails
 
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 // Nombre ESTABLE a propósito: no lleva CACHE_VERSION (ver cabecera).
