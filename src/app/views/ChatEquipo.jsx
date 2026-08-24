@@ -179,7 +179,7 @@ export default function ChatEquipo({ T, onInmersivo }) {
       setTexto(""); setRespondiendo(null);
       cargarMensajes(activo.id);
     } catch {
-      setError("No pude subir el archivo. Probá con otro.");
+      setError("No pude subir el archivo. Prueba con otro.");
     } finally {
       setAdjuntando(false);
     }
@@ -412,7 +412,7 @@ export default function ChatEquipo({ T, onInmersivo }) {
                             {!m.seguido && (
                               <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 3 }}>
                                 <span style={{ fontSize: chatType.chip + 0.5, fontWeight: 600, color: mio ? accent : txt }}>
-                                  {mio ? "Vos" : m.autor}
+                                  {mio ? "Tú" : m.autor}
                                 </span>
                                 <span style={{ fontSize: chatType.time, color: txt3 }}>{cuando(m.created_at)}</span>
                               </div>

@@ -1330,7 +1330,7 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
   const celdaEnlace = (fila, campo, { tabla = PIPE } = {}) => {
     const editando = celda && celda.id === fila.id && celda.campo === campo
       && !celda.extra && (celda.tabla || PIPE) === tabla;
-    if (editando) return celdaEditable(fila, campo, { ancho: 190, placeholder: "Pegá el enlace", tabla });
+    if (editando) return celdaEditable(fila, campo, { ancho: 190, placeholder: "Pega el enlace", tabla });
     const url = fila[campo];
     return (
       <span style={{ display: "inline-flex", alignItems: "center", gap: 6, whiteSpace: "nowrap" }}>
@@ -3025,7 +3025,7 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
                     {label}
                     {ficha[k] && <a href={ficha[k]} target="_blank" rel="noreferrer" style={{ color: accent, display: "inline-flex" }} title="Abrir"><ExternalLink size={11} /></a>}
                   </span>
-                  <input placeholder="Pegá el enlace" value={ficha[k]}
+                  <input placeholder="Pega el enlace" value={ficha[k]}
                     onChange={e => setFicha(f => ({ ...f, [k]: e.target.value }))} style={inputStyle} />
                 </label>
               ))}

@@ -26,11 +26,45 @@ const SRC = join(RAIZ, "src");
 // Formas voseantes que no existen en el español mexicano. Se listan explícitas
 // en vez de una regla morfológica: "está" y "acá" también acaban en tilde y son
 // perfectamente normales en México — el voseo está en la CONJUGACIÓN.
+// Las formas se GENERAN de la raíz del verbo, no se listan a mano: la lista a
+// mano se quedó corta la primera vez (se le escaparon "Actualizá" y "Probá" en
+// el Copilot). Voseo = raíz + á/ás (-ar), é/és (-er), í/ís (-ir).
+//
+// OJO con las exclusiones: "estar" daría "está", que es tercera persona normal;
+// "dar" daría "dá". Por eso las raíces se listan explícitas y esos verbos NO
+// están. Es la diferencia entre un chequeo que se usa y uno que se apaga porque
+// grita de más.
+const RAIZ_AR = [
+  "actualiz", "prob", "intent", "revis", "busc", "seleccion", "esper", "toc",
+  "apret", "llam", "avis", "confirm", "complet", "agreg", "guard", "cerr",
+  "mand", "asign", "empez", "registr", "marc", "dej", "llev", "mir", "fij",
+  "carg", "borr", "cambi", "filtr", "orden", "descarg", "activ", "apag",
+  "program", "verific", "valid", "coment", "edit", "copi", "peg", "ajust",
+  "cancel", "acept", "rechaz", "arregl", "anot", "cont", "record", "olvid",
+];
+const RAIZ_ER = [
+  "volv", "ten", "pod", "quer", "sab", "hac", "corr", "aprend", "entend",
+  "resolv", "respond", "escog", "prend", "encend", "vend", "romp", "le",
+];
+// De los -ir SOLO se genera el presente (-ís). El imperativo (-í) se escribe
+// igual que la primera persona del pasado: "Subí tu foto" es «yo subí», no
+// «subí vos». Un chequeo que grita ahí se apaga a la semana, y entonces no
+// sirve para nada. Los pocos imperativos -ir que aparezcan se ven a ojo.
+const RAIZ_IR = [
+  "sub", "abr", "escrib", "decid", "ped", "permit", "imprim", "compart", "eleg",
+];
+// Pronominales y sueltas que no salen de la fórmula.
+const SUELTAS = [
+  "decime", "decilo", "contame", "avisame", "mandámela", "mandámelo",
+  "asignámelo", "asignámela", "fijate", "acordate", "quedate", "andá", "vení",
+  "poné", "ponés", "vos", "tuyo tuyo",
+];
+
 const VOSEO = [
-  "querés", "podés", "tenés", "sabés", "hacés", "vení", "andá", "mirá", "dale que",
-  "poné", "asigná", "empezá", "registrá", "escribí", "elegí", "mencioná", "mandá",
-  "decime", "decilo", "contame", "fijate", "mandámela", "asignámelo", "avisame",
-  "marcás", "bajás", "ponés", "mandás", "llevás", "dejás", "guardá", "agregá", "cerrá",
+  ...RAIZ_AR.flatMap((r) => [`${r}á`, `${r}ás`]),
+  ...RAIZ_ER.flatMap((r) => [`${r}é`, `${r}és`]),
+  ...RAIZ_IR.map((r) => `${r}ís`),
+  ...SUELTAS,
 ];
 
 // OJO con \b: en JavaScript es ASCII, así que trata la "á" como frontera de

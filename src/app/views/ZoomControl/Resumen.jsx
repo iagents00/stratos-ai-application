@@ -187,7 +187,7 @@ export default function ResumenZooms({ rows = [], T, isLight, onOpenZoom = null 
     } catch (err) {
       console.warn("[Control de Zooms] PDF del resumen falló:", err);
       // En la app el botón quedaría "muerto" en silencio: avisar.
-      if (isNativeApp()) window.alert("No se pudo generar el PDF en la app. Probá de nuevo.");
+      if (isNativeApp()) window.alert("No se pudo generar el PDF en la app. Prueba de nuevo.");
     }
     setPdfBusy(false);
   };

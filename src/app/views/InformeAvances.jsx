@@ -127,10 +127,10 @@ const motivoDelRedactor = (respuesta, cuerpo) => {
 
 const AVISOS_REDACTOR = {
   "sin-saldo": "El asistente que redacta se quedó sin saldo, así que el informe salió en su versión resumida. Volver a intentar no lo va a resolver: hay que recargar la cuenta (eso lo ve Iván). Abajo queda todo lo que hay registrado.",
-  "saturado":  "El asistente que redacta está saturado en este momento. Esperá un par de minutos y volvé a darle a «Generar informe».",
-  "tardo":     "El asistente que redacta tardó más de lo normal. Volvé a darle a «Generar informe» y suele salir completo.",
-  "sin-conexion": "No pude comunicarme con el asistente que redacta. Revisá la conexión y volvé a intentar.",
-  "otro":      "El asistente que redacta no pudo responder, así que el informe salió en su versión resumida. Volvé a intentar en un momento.",
+  "saturado":  "El asistente que redacta está saturado en este momento. Espera un par de minutos y vuelve a darle a «Generar informe».",
+  "tardo":     "El asistente que redacta tardó más de lo normal. Vuelve a darle a «Generar informe» y suele salir completo.",
+  "sin-conexion": "No pude comunicarme con el asistente que redacta. Revisa la conexión y vuelve a intentar.",
+  "otro":      "El asistente que redacta no pudo responder, así que el informe salió en su versión resumida. Vuelve a intentar en un momento.",
 };
 
 // Deja el informe en Mi Espacio → Documentos (y le avisa al equipo por el
@@ -327,7 +327,7 @@ export default function InformeAvances({ T }) {
       // sigue en pantalla y descargable — solo se avisa que no se archivó.
       const ok = await guardarEnDocumentos(user.id, salida, info.periodo);
       setGuardado(ok);
-      if (!ok) setError("El informe está listo, pero no pude dejarlo en Documentos. Probá con «Guardar en Stratos».");
+      if (!ok) setError("El informe está listo, pero no pude dejarlo en Documentos. Prueba con «Guardar en Stratos».");
     } catch (err) {
       setError(err?.message || "No pude generar el informe.");
     } finally {
@@ -351,7 +351,7 @@ export default function InformeAvances({ T }) {
     setGuardando(true); setError("");
     const ok = await guardarEnDocumentos(user.id, texto, meta?.periodo);
     setGuardando(false);
-    if (!ok) { setError("No pude dejarlo en Documentos. Intentá de nuevo en un momento."); return; }
+    if (!ok) { setError("No pude dejarlo en Documentos. Intenta de nuevo en un momento."); return; }
     setGuardado(true);
   };
 
@@ -397,7 +397,7 @@ export default function InformeAvances({ T }) {
         });
       } catch { /* el link ya está en pantalla; que falle el índice no lo pierde */ }
     } catch (err) {
-      setError(err?.message || "No pude subirlo a Drive. Probá de nuevo en un momento.");
+      setError(err?.message || "No pude subirlo a Drive. Prueba de nuevo en un momento.");
     } finally {
       setSubiendo(false);
     }
@@ -654,7 +654,7 @@ export default function InformeAvances({ T }) {
           <div style={{ fontSize: 12.5, color: txt3, marginBottom: 12, textWrap: "pretty" }}>
             Escribe aquí lo que el sistema no puede saber solo — «dedicamos diez horas a la meta
             de Cecilia» — o cómo quieres que cambie el texto — «el resumen no debería abrir con
-            la app». Queda guardado para este periodo: si mañana lo volvés a generar, sigue puesto.
+            la app». Queda guardado para este periodo: si mañana lo vuelves a generar, sigue puesto.
           </div>
 
           <textarea
