@@ -322,7 +322,7 @@ const FinanzasAdmin = ({ T: _T }) => {
                 <div style={{ padding: "28px 18px", color: T.txt3, fontSize: 12.5, textAlign: "center", lineHeight: 1.6 }}>
                   <Inbox size={22} color={T.txt3} style={{ marginBottom: 8, opacity: 0.7 }} />
                   <div>Sin movimientos todavía.</div>
-                  <div style={{ marginTop: 2 }}>Registrá el primero en la pestaña <strong style={{ color: T.txt2 }}>Caja</strong>.</div>
+                  <div style={{ marginTop: 2 }}>Registra el primero en la pestaña <strong style={{ color: T.txt2 }}>Caja</strong>.</div>
                 </div>
               )}
               {latest.map(r => {

@@ -358,6 +358,8 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
   // asesor puede salir al CRM completo a propósito, pero no es lo primero que
   // se le ofrece — la lista corta es lo único que compite por su atención.
   const [verCRMCompleto, setVerCRMCompleto] = useState(false);
+  // Id del cliente dado de alta en esta sesión, para que Mi Día lo ponga primero.
+  const [leadRecienRegistrado, setLeadRecienRegistrado] = useState(null);
   const [newLead, setNewLead]           = useState({ n: "", asesor: canSeeAll ? "" : (user?.name || ""), phone: "", email: "", budget: "", p: "", campana: "", source: "manual", st: DEFAULT_STAGE, nextAction: "", notas: "" });
   // ── Detección de duplicados en alta ────────────────────────────────────
   // Cuando el asesor escribe phone o email, llamamos a la RPC find_lead_duplicate
@@ -1712,7 +1714,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
     // Un admin DEBE asignar asesor: si no, el lead queda huérfano (sin dueño,
     // sin recordatorios proactivos). Bloqueamos el registro y avisamos.
     if (isAdminRole && !String(newLead.asesor || "").trim()) {
-      showToast("Asigná un asesor para registrar el cliente.", "error");
+      showToast("Asigna un asesor para registrar el cliente.", "error");
       return;
     }
     // Guardia idempotente síncrona: si ya hay un submit en vuelo, ignoramos.
@@ -1763,7 +1765,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
       }
       const targetAsesor = (newLead.asesor || user?.name || "").trim();
       if (!targetAsesor) {
-        showToast("Asigná un asesor antes de transferir el cliente.", "error");
+        showToast("Asigna un asesor antes de transferir el cliente.", "error");
         return;
       }
       if (submittingRef.current) return;
@@ -1923,6 +1925,12 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
     // 1. Cerrar modal y limpiar el draft → el botón "Registrar" desaparece
     //    de la pantalla. Imposible hacer doble clic a partir de aquí.
     setAddingLead(false);
+    // Mi Día necesita saber CUÁL se acaba de registrar para ponerlo hasta arriba.
+    // Es la única excepción a "nada se cuela en la lista": no es el sistema
+    // moviéndole el piso al asesor, es el asesor viendo lo que él mismo acaba de
+    // crear. Y un lead recién entrado es la tarjeta más urgente que existe — la
+    // contactabilidad cae 100× entre el minuto 5 y el 30.
+    setLeadRecienRegistrado(localId);
     setNewLead({ n: "", asesor: canSeeAll ? "" : (user?.name || ""), phone: "", email: "", budget: "", p: "", campana: "", source: "manual", st: DEFAULT_STAGE, nextAction: "", notas: "" });
     // El lead ya entró al espejo local (saveLead garantiza eso síncrono),
     // así que el draft de recovery ya no tiene utilidad — lo limpiamos.
@@ -2351,6 +2359,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
           leads={leadsData}
           T={T}
           theme={theme}
+          recienRegistrado={leadRecienRegistrado}
           onMover={moverLead}
           onNuevoCliente={() => setAddingLead(true)}
           onVerCRM={() => setVerCRMCompleto(true)}
@@ -3656,7 +3665,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                 />
                 {isAdminRole && !String(newLead.asesor || "").trim() && (
                   <div style={{ marginTop: 6, fontSize: 12, color: "#F87171", fontFamily: font, lineHeight: 1.35 }}>
-                    Obligatorio: asigná un asesor. Si no, el cliente queda sin dueño y sin recordatorios.
+                    Obligatorio: asigna un asesor. Si no, el cliente queda sin dueño y sin recordatorios.
                   </div>
                 )}
               </div>
@@ -3867,7 +3876,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
               <button
                 onClick={addNewLead}
                 disabled={!canSubmit || submittingLead}
-                title={dupBlocks ? "Confirma el aviso de duplicado antes de registrar" : (asesorMissing ? "Asigná un asesor para registrar el cliente" : undefined)}
+                title={dupBlocks ? "Confirma el aviso de duplicado antes de registrar" : (asesorMissing ? "Asigna un asesor para registrar el cliente" : undefined)}
                 style={{
                 flex: 2.4, height: isMobile ? 48 : 40, borderRadius: 10,
                 background: primaryBg,
@@ -3899,7 +3908,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                 }}
               >
                 <UserCheck size={13} strokeWidth={2.4} />
-                {dupBlocks ? "Ya existe en el CRM" : (asesorMissing ? "Asigná un asesor" : "Registrar cliente")}
+                {dupBlocks ? "Ya existe en el CRM" : (asesorMissing ? "Asigna un asesor" : "Registrar cliente")}
               </button>
             </div>
               );

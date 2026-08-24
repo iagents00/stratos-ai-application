@@ -44,7 +44,7 @@ const SECCIONES = [
     id: "mañana", icono: Sun, titulo: "El resumen de la mañana",
     bloques: [
       { t: "p", v: "A primera hora te llega solo: qué venció, qué hay para hoy, en qué va cada cliente y cómo está la caja." },
-      { t: "p", v: "Llega al teléfono y también queda en la campanita del CRM. No tenés que preguntarle nada a nadie para saber a dónde vas." },
+      { t: "p", v: "Llega al teléfono y también queda en la campanita del CRM. No tienes que preguntarle nada a nadie para saber a dónde vas." },
     ],
   },
   {
@@ -93,8 +93,8 @@ const SECCIONES = [
       { t: "p", v: "Está organizado en canales (General, Desarrollo, Clientes, y los que quieras crear con el «+»)." },
       { t: "lista", v: [
         "Escribís y le llega al otro al instante, sin recargar nada.",
-        "Mencioná con @ (por ejemplo @Iván) y a esa persona le suena el teléfono. Es la única forma de que algo no se pierda en el scroll.",
-        "Podés adjuntar archivos y capturas; quedan ahí, no en una conversación de WhatsApp que después nadie encuentra.",
+        "Menciona con @ (por ejemplo @Iván) y a esa persona le suena el teléfono. Es la única forma de que algo no se pierda en el scroll.",
+        "Puedes adjuntar archivos y capturas; quedan ahí, no en una conversación de WhatsApp que después nadie encuentra.",
         "Doble clic sobre un mensaje para responderlo.",
       ] },
       { t: "warn", v: "Por qué importa: cuando el plan del día llega por WhatsApp, el sistema no lo ve y no puede hacer nada con él. Cuando llega acá, sí." },
@@ -107,12 +107,12 @@ const SECCIONES = [
       { t: "sub", v: "Movimientos" },
       { t: "p", v: "Todo lo que entra y sale. La contabilidad se mira desde NSG: Duke le paga a NSG (ingreso de la empresa) y NSG paga la nómina (egreso de NSG + ingreso de la persona). Ni Iván ni Ángel tienen egresos: ellos solo reciben." },
       { t: "p", v: "Los servicios (Claude, Retell, Sidance…) son egresos de NSG, aunque los pague la tarjeta de Duke: igual tienen que estar en la contabilidad." },
-      { t: "p", v: "Filtros: «Lo mío», «NSG» y «Todo», y las secciones Nómina, Servicios y Clientes. Cada pago sin comprobante tiene un botón «Agregar soporte» para pegarle la captura después; y si ya lo tiene, «Ver comprobante» lo abre y lo podés descargar." },
+      { t: "p", v: "Filtros: «Lo mío», «NSG» y «Todo», y las secciones Nómina, Servicios y Clientes. Cada pago sin comprobante tiene un botón «Agregar soporte» para pegarle la captura después; y si ya lo tiene, «Ver comprobante» lo abre y lo puedes descargar." },
       { t: "sub", v: "Nómina" },
       { t: "p", v: "Cuánto le toca a cada uno y cada cuánto — y se puede cambiar si mañana sube. Muestra lo que lleva ganado, lo que ya cobró y lo que falta. Se cuenta por quincenas completas desde que arrancó cada uno." },
       { t: "tip", v: "Cambiar el monto aplica de hoy en adelante: no reescribe lo que ya se pagó." },
       { t: "sub", v: "Cuentas de cobro" },
-      { t: "p", v: "El borrador se arma solo con lo que de verdad se cerró en la quincena (las tareas terminadas y los objetivos que se movieron). Vos ponés el monto — el sistema no adivina cuánto se cobra — y bajás el Word para firmarlo a mano. Después lo marcás «ya la firmé» y «ya la pagaron»." },
+      { t: "p", v: "El borrador se arma solo con lo que de verdad se cerró en la quincena (las tareas terminadas y los objetivos que se movieron). Tú pones el monto — el sistema no adivina cuánto se cobra — y bajas el Word para firmarlo a mano. Después lo marcas «ya la firmé» y «ya la pagaron»." },
     ],
   },
   {
@@ -125,7 +125,7 @@ const SECCIONES = [
   {
     id: "documentos", icono: FileText, titulo: "Documentos",
     bloques: [
-      { t: "p", v: "En «Mi Espacio → Documentos» están los enlaces del equipo. Y las ~200 notas del cerebro (contexto del negocio, decisiones, reuniones, cómo hacemos las cosas, entregables) se las podés pedir directo al Copilot en vez de buscarlas a mano." },
+      { t: "p", v: "En «Mi Espacio → Documentos» están los enlaces del equipo. Y las ~200 notas del cerebro (contexto del negocio, decisiones, reuniones, cómo hacemos las cosas, entregables) se las puedes pedir directo al Copilot en vez de buscarlas a mano." },
     ],
   },
   {
@@ -136,7 +136,7 @@ const SECCIONES = [
         "Persigue las tareas que se están venciendo, en el horario de cada quien.",
         "Manda el resumen de la mañana.",
         "Avisa el día de pago (15 y 30).",
-        "Registra los gastos que mandás por Telegram (texto, audio o foto del ticket).",
+        "Registra los gastos que mandas por Telegram (texto, audio o foto del ticket).",
       ] },
       { t: "warn", v: "Lo que toca plata nunca se aplica solo. Si el sistema entiende que se pagó algo, te lo pregunta antes de tocarlo. Es a propósito." },
     ],
@@ -147,9 +147,9 @@ const SECCIONES = [
       { t: "numerada", v: [
         "Todo adentro. Nada de plan del día por WhatsApp, nada de documentos sueltos.",
         "Hablale al Copilot en vez de llenar formularios. Es más rápido y queda igual de bien.",
-        "Mencioná con @ cuando algo es para el otro. Es lo único que le suena el teléfono.",
+        "Menciona con @ cuando algo es para el otro. Es lo único que le suena el teléfono.",
         "Contá lo que pasó, aunque sea en una frase. El sistema conecta el resto.",
-        "Si algo se ve mal, decilo. No lo arregles por afuera: si se arregla afuera, vuelve a pasar.",
+        "Si algo se ve mal, dilo. No lo arregles por afuera: si se arregla afuera, vuelve a pasar.",
       ] },
     ],
   },
@@ -276,7 +276,7 @@ export default function ManualNSG() {
 
       <footer style={{ padding: "26px 20px 46px", textAlign: "center", borderTop: `1px solid ${P.border}`, color: P.txt3, fontSize: 13, lineHeight: 1.7 }}>
         Este manual es un documento vivo: se actualiza cuando cambia algo.<br />
-        Si algo no funciona como dice acá, decilo — el que está mal es el sistema, no vos.
+        Si algo no funciona como dice aquí, dilo — el que está mal es el sistema, no tú.
       </footer>
     </div>
   );

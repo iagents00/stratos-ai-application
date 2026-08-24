@@ -16,6 +16,7 @@
     "verificar-docs": "node scripts/verificar-docs.mjs",
     "verificar-contexto": "node scripts/verificar-contexto-cliente.mjs",
     "verificar-rails": "node scripts/verificar-rails.mjs",
+    "verificar-lenguaje": "node scripts/verificar-lenguaje.mjs",
     "build:app": "vite build --mode app"
   },
   "dependencies": {

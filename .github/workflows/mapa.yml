@@ -54,6 +54,11 @@ jobs:
       - name: La configuración de Rails tiene que llegar al motor
         run: node scripts/verificar-rails.mjs
 
+      # El repo ya decía "español neutro mexicano" y nadie lo revisaba: se habían
+      # colado 33 textos en voseo, incluido el botón de registrar un cliente.
+      - name: La interfaz habla mexicano neutro
+        run: node scripts/verificar-lenguaje.mjs
+
   regenerar:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     needs: verificar

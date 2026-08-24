@@ -115,10 +115,10 @@ export default function CuentasCobro({ T, emisor }) {
 
   const crear = async (ev) => {
     ev.preventDefault();
-    if (!form.cliente.trim()) { setError("Decime a qué cliente se le cobra."); return; }
+    if (!form.cliente.trim()) { setError("Dime a qué cliente se le cobra."); return; }
     // El monto se pide ACÁ: dejarlo para después es como terminaba una cuenta de
     // cobro en $0 sin que nadie lo notara hasta abrir el Word.
-    if (!Number(String(form.monto).replace(",", "."))) { setError("Poné cuánto se le cobra."); return; }
+    if (!Number(String(form.monto).replace(",", "."))) { setError("Pon cuánto se le cobra."); return; }
     setSaving(true); setError("");
     const { data, error: e } = await supabase.rpc("fn_fin_cuenta_cobro_cliente", {
       p_profile_id: user.id,
@@ -160,7 +160,7 @@ export default function CuentasCobro({ T, emisor }) {
   // algo falla, lo dice. Con plata no se falla callado.
   const guardarMonto = async (id, valor) => {
     const monto = Number(String(valor).replace(",", "."));
-    if (!monto || monto <= 0) { setError("Poné un monto mayor que cero."); return; }
+    if (!monto || monto <= 0) { setError("Pon un monto mayor que cero."); return; }
     setError("");
     const { data, error: e } = await supabase.rpc("fn_fin_invoice_set_monto", {
       p_profile_id: user.id, p_invoice_id: id, p_monto: monto,
@@ -344,7 +344,7 @@ export default function CuentasCobro({ T, emisor }) {
           <input placeholder="Concepto (vacío = servicios de desarrollo, automatización e IA)" value={form.concepto}
             onChange={e => setForm(f => ({ ...f, concepto: e.target.value }))} style={inputStyle} />
           <div style={{ fontSize: 12, color: txt3 }}>
-            Si dejás las fechas vacías toma la quincena que se está cerrando. El detalle de lo entregado
+            Si dejas las fechas vacías toma la quincena que se está cerrando. El detalle de lo entregado
             lo saca solo de las tareas cerradas y los objetivos que se movieron en ese periodo.
           </div>
           <button type="submit" disabled={saving} style={{

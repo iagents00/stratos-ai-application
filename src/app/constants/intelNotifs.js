@@ -69,7 +69,7 @@ export function buildIntelNotifs(leadsData, now = Date.now()) {
   out.push({
     agent: "Tu día",
     text: `${zooms} Zoom(s) · ${nuevos} nuevos sin contactar`,
-    detail: `Tenés ${zooms} Zoom(s) en agenda y ${nuevos} lead(s) nuevo(s) sin contactar todavía. Empezá por los HOT.`,
+    detail: `Tienes ${zooms} Zoom(s) en agenda y ${nuevos} lead(s) nuevo(s) sin contactar todavía. Empieza por los HOT.`,
     c: "#A78BFA", icon: CalendarClock, btn: "Ver en el CRM", action: null,
   });
 

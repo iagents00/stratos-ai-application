@@ -114,7 +114,7 @@ export default function ProductividadTab({ T, isLight }) {
       )}
       {rows !== null && rows.length === 0 && (
         <p style={{ fontSize: 13, color: T.txt3, fontFamily: font }}>
-          Aún no hay acciones de equipo. Agregá acciones desde la Lista de Acción (botón de la meta).
+          Aún no hay acciones de equipo. Agrega acciones desde la Lista de Acción (botón de la meta).
         </p>
       )}
 

@@ -455,7 +455,7 @@ export default function Caja({ T }) {
         {!loading && filtered.length === 0 && (
           <div style={{ ...card, color: txt2, fontSize: 13, padding: 32, textAlign: "center" }}>
             {conCobros
-              ? "Sin movimientos todavía. Registrá el primero acá arriba, o mandá un gasto por Telegram."
+              ? "Sin movimientos todavía. Registra el primero aquí arriba, o manda un gasto por Telegram."
               : "Sin movimientos todavía. Registra el primero aquí arriba."}
           </div>
         )}
