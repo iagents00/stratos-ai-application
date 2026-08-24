@@ -31,8 +31,19 @@ const COLOR_CUBETA = { prioritario: "accent", intermedio: "amber", reactivar: "b
 
 const ICONO_CANAL = { llamada: Phone, whatsapp: MessageCircle, zoom: CalendarClock };
 
-function Tarjeta({ accion, indice, total, T, isLight, onCerrar }) {
+// Tres opciones, no un calendario. Elegir día y hora en un date-picker toma
+// diez segundos y rompe el ritmo de una lista que se trabaja en cinco minutos;
+// además, "mañana" y "la próxima semana" es como el asesor ya piensa el
+// seguimiento. Si necesita una fecha exacta, la pone en la ficha del cliente.
+const OPCIONES_MOVER = [
+  { dias: 1, label: "Mañana" },
+  { dias: 3, label: "En 3 días" },
+  { dias: 7, label: "La próxima semana" },
+];
+
+function Tarjeta({ accion, indice, total, T, isLight, onCerrar, onMover }) {
   const [saliendo, setSaliendo] = useState(false);
+  const [eligiendo, setEligiendo] = useState(false);
   const color = T[COLOR_CUBETA[accion.cubeta]] || T.accent;
   const IconoCanal = ICONO_CANAL[accion.canal] || Phone;
   const esWhatsApp = accion.canal === "whatsapp";
@@ -40,11 +51,11 @@ function Tarjeta({ accion, indice, total, T, isLight, onCerrar }) {
   // contexto puesto, en vez de mirar un chat en blanco.
   const enlace = hrefDelCanal(accion.canal, accion.telefono, esWhatsApp ? accion.pedir : null);
 
-  const cerrar = (resultado) => {
+  const cerrar = (estado, detalle = null) => {
     setSaliendo(true);
     // 240 ms: lo que dura el fade. Se avisa al final para que el contador suba
     // en el mismo frame en que la tarjeta termina de irse.
-    setTimeout(() => onCerrar(accion.leadId, resultado), 240);
+    setTimeout(() => onCerrar(accion.leadId, estado, detalle), 240);
   };
 
   const btn = (extra = {}) => ({
@@ -102,6 +113,31 @@ function Tarjeta({ accion, indice, total, T, isLight, onCerrar }) {
         </div>
       )}
 
+        {/* "Mover" antes solo hacía desaparecer la tarjeta: no agendaba nada, no
+            tocaba la próxima acción del cliente, no dejaba compromiso. En un
+            sistema cuya premisa es que ningún cliente se cae, ese era el agujero
+            más grande. Ahora mover obliga a decir CUÁNDO, y eso se escribe en la
+            ficha del cliente igual que si lo hubieras puesto desde el pipeline. */}
+        {eligiendo ? (
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+            <span style={{ fontSize: 12.5, color: T.txt2, fontFamily: font, marginRight: 2 }}>
+              ¿Cuándo lo retomas?
+            </span>
+            {OPCIONES_MOVER.map((o) => (
+              <button
+                key={o.dias}
+                onClick={() => {
+                  const fecha = onMover?.(accion, o.dias);
+                  // La agenda guarda A QUÉ DÍA se movió, no solo que se movió:
+                  // "lo pospuse" sin fecha no es información, es ruido.
+                  cerrar("movido", fecha ? `Retoma ${fecha}` : `Retoma en ${o.dias} d`);
+                }}
+                style={btn({ color: T.txt })}
+              >{o.label}</button>
+            ))}
+            <button onClick={() => setEligiendo(false)} style={btn()}>Cancelar</button>
+          </div>
+        ) : (
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
         {/* El botón decía "Escribir" y el enlace era `tel:` SIEMPRE: en las
             tarjetas de WhatsApp abría el marcador telefónico. Y varias reglas
@@ -123,10 +159,11 @@ function Tarjeta({ accion, indice, total, T, isLight, onCerrar }) {
         <button onClick={() => cerrar("no_contesto")} style={btn()}>
           <X size={15} strokeWidth={2.2} /> No contestó
         </button>
-        <button onClick={() => cerrar("movido")} style={btn()}>
+        <button onClick={() => setEligiendo(true)} style={btn()}>
           <CalendarClock size={15} strokeWidth={2.2} /> Mover
         </button>
       </div>
+      )}
     </article>
   );
 }
@@ -139,7 +176,7 @@ function mismaLista(a, b) {
     x.leadId === b[i].leadId && x.razon === b[i].razon && x.pedir === b[i].pedir);
 }
 
-export default function MiDia({ leads = [], T: Tprop, theme = "dark", config = null, onNuevoCliente, onVerCRM }) {
+export default function MiDia({ leads = [], T: Tprop, theme = "dark", config = null, onNuevoCliente, onVerCRM, onMover }) {
   const isLight = theme === "light";
   const T = Tprop || (isLight ? LP : P);
 
@@ -214,13 +251,13 @@ export default function MiDia({ leads = [], T: Tprop, theme = "dark", config = n
     return () => { vivo = false; };
   }, []);
 
-  const cerrar = useCallback((leadId, estado) => {
+  const cerrar = useCallback((leadId, estado, detalle = null) => {
     // Optimista a propósito: la tarjeta se va en el acto y el guardado ocurre
     // detrás. Si falla, se avisa en consola pero no se le devuelve la tarjeta
     // al asesor — nada peor que trabajar algo y que reaparezca.
     setCerradas((prev) => ({ ...prev, [leadId]: estado }));
     const accion = visibles.find((a) => a.leadId === leadId);
-    if (accion) marcarAccion(accion, estado === "no_contesto" ? "saltado" : estado);
+    if (accion) marcarAccion(accion, estado === "no_contesto" ? "saltado" : estado, detalle);
   }, [visibles]);
 
   return (
@@ -290,7 +327,7 @@ export default function MiDia({ leads = [], T: Tprop, theme = "dark", config = n
             total={pendientes.length}
             T={T}
             isLight={isLight}
-            onCerrar={cerrar}
+            onCerrar={cerrar} onMover={onMover}
           />
         ))
       )}

@@ -30,6 +30,7 @@ import {
 import { useIsMobile } from "../../../hooks/useViewport";
 import { useClient } from "../../../hooks/useClient";
 import { useRailsConfig } from "../../../hooks/useRailsConfig";
+import { fechaParaMover } from "../../../lib/agenda";
 // Stratos Rails — la lista del día. Detrás de features.procesoGuiado.
 import MiDia from "../MiDia";
 import { useTeam } from "../../../hooks/useTeam";
@@ -392,6 +393,32 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
     setActionDraft({ a: lead.nextAction || "", d: lead.nextActionDate || "" });
     setEditingActionId(lead.id);
   };
+  // Mover un cliente desde Mi Día = agendarlo de verdad. Escribe la próxima
+  // acción en su ficha con la misma forma que el pipeline (texto + fecha larga +
+  // el instante real en next_action_at), así el motor de Rails lo vuelve a
+  // ofrecer ese día y el expediente registra el compromiso. Sin esto, "Mover"
+  // solo hacía desaparecer la tarjeta y el cliente quedaba sin dueño de su
+  // futuro — justo el problema que Rails viene a resolver.
+  const moverLead = (accion, dias) => {
+    const lead = leadsDataRef.current.find((l) => l.id === accion?.leadId);
+    if (!lead) return;
+
+    const { iso, local } = fechaParaMover(dias);
+
+    updateLead({
+      ...lead,
+      // Se conserva lo que ya tuviera escrito; solo si no hay nada se pone el
+      // "qué conseguir" de la tarjeta, que es más útil que un texto genérico.
+      nextAction: (lead.nextAction || "").trim() || accion.pedir || "Retomar contacto",
+      nextActionDate: formatFechaLarga(local.replace(" ", "T")) || local,
+      next_action_date: local,
+      next_action_at: iso,
+    });
+    const legible = formatFechaLarga(local.replace(" ", "T")) || local;
+    showToast(`Movido — lo retomas el ${legible}`, "success");
+    return legible;   // la tarjeta lo guarda en la agenda del día
+  };
+
   const saveInlineAction = (lead) => {
     // updateLead detecta automáticamente el cambio de nextAction y registra
     // la acción anterior en el historial del expediente.
@@ -2324,6 +2351,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
           leads={leadsData}
           T={T}
           theme={theme}
+          onMover={moverLead}
           onNuevoCliente={() => setAddingLead(true)}
           onVerCRM={() => setVerCRMCompleto(true)}
         />

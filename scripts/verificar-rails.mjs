@@ -103,6 +103,27 @@ try {
     ? ok("sin teléfono no se pinta el botón")
     : mal("sin teléfono debería devolver vacío/null");
 
+  // 5d. "Mover" tiene que agendar de verdad. Antes solo hacía desaparecer la
+  //     tarjeta: ni fecha, ni compromiso, ni rastro — el agujero más grande en un
+  //     sistema cuya premisa es que ningún cliente se cae.
+  const { fechaParaMover } = await vite.ssrLoadModule("/src/lib/agenda.js");
+  const lunes = new Date(2026, 7, 23, 16, 47, 12);   // domingo 23-ago-2026, 4:47 pm
+  const m3 = fechaParaMover(3, lunes);
+  m3.local === "2026-08-26 09:00"
+    ? ok(`mover 3 días cae en ${m3.local}`)
+    : mal(`mover 3 días dio ${m3.local}, esperaba 2026-08-26 09:00`);
+  new Date(m3.iso).getHours() === 9
+    ? ok("siempre a las 9, no a la hora en que se tocó el botón")
+    : mal(`la hora quedó en ${new Date(m3.iso).getHours()}`);
+  fechaParaMover(1, lunes).local === "2026-08-24 09:00" &&
+  fechaParaMover(7, lunes).local === "2026-08-30 09:00"
+    ? ok("mañana y la próxima semana caen donde deben")
+    : mal(`mañana=${fechaParaMover(1, lunes).local} semana=${fechaParaMover(7, lunes).local}`);
+  // Cruce de mes: el 30 de noviembre + 3 días es diciembre, no el 33 de noviembre.
+  fechaParaMover(3, new Date(2026, 10, 30, 10)).local === "2026-12-03 09:00"
+    ? ok("cruzar de mes no rompe la fecha")
+    : mal(`cruce de mes: ${fechaParaMover(3, new Date(2026, 10, 30, 10)).local}`);
+
   // 6. La red de seguridad no se puede apagar desde el panel.
   const fija = catalogoDeReglas().find((r) => r.tipo === "definir_paso");
   fija?.fija === true ? ok("definir_paso está marcada como no apagable") : mal("definir_paso se podría apagar");
