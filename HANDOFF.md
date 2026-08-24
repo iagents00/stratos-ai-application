@@ -90,9 +90,7 @@ Al terminar:
 |---|---|---|
 | **Pagar las facturas de Supabase** | Dashboard → Billing | La tarjeta está bloqueada. Si suspenden el proyecto se cae todo. Es lo más urgente. |
 | **Aplicar `237_post_zoom_protocol.sql`** | SQL editor del dashboard | Escritura a la base de producción |
-| **Enviar la solicitud de acceso a la API** | App Store Connect → Users and Access → Integrations | Hay que aceptar los términos de uso de la API. Apple la revisa, y avisa que *"las organizaciones reciben acceso primero y después los individuos"* — esta cuenta está inscrita como Individual. **Es lo que marca el reloj de TestFlight.** |
-| **Aceptar el contrato actualizado** | developer.apple.com → Review agreement | Contrato legal. Plazo: **1 de octubre de 2026**. Si vence, se apagan App Store Connect y la API. |
-| **Cargar los 2 secretos que faltan** | GitHub → Settings → Secrets | `APPSTORE_ISSUER_ID` y `APPSTORE_KEY_ID` salen de crear la API key, que no se puede crear hasta que Apple apruebe el acceso. El `.p8` se descarga una sola vez. |
+| **Cargar `APPSTORE_PRIVATE_KEY`** | GitHub → Settings → Secrets | Es el `.p8` de la llave de API. Una llave privada la maneja solo su dueño. Se descarga una única vez. |
 | **Prender Stratos Rails** | Dentro de la app: Menú → Proceso | Le reordena la pantalla a los 20 asesores |
 
 ### Lo que sí puede avanzar un dev
@@ -138,13 +136,24 @@ primero. Nada se mueve solo bajo el asesor. Ver
 
 | | |
 |---|---|
+| Contrato del Developer Program | **Aceptado** (la versión nueva, con plazo al 1-oct) |
+| Acceso a la API de App Store Connect | **Aprobado** — la solicitud se aprobó al instante |
 | Identificador de la app | `com.stratoscapitalgroup.crm`, con **Push Notifications** habilitado |
 | App en App Store Connect | **Stratos AI** · ID `6804826565` · versión 1.0 en preparación |
-| Team ID | `5683F2CFT6` — ya cargado en GitHub como `APPLE_TEAM_ID` |
-| Acceso del dev | Invitado como **Gestor de apps** (App Manager) |
+| Llave de API | **Stratos CI** · rol Gestor de apps · ID `F8Q7R9J7V7` |
+| Secretos en GitHub | `APPLE_TEAM_ID`, `APPSTORE_ISSUER_ID` y `APPSTORE_KEY_ID` cargados |
 
 La casilla de Push hay que marcarla **al registrar el identificador**: si falta, la
 compilación falla al firmar y el error no dice que es por eso.
+
+**Falta un solo secreto: `APPSTORE_PRIVATE_KEY`.** Es el archivo `.p8` de la
+llave, y lo carga Iván a mano — una llave privada no se le pasa a nadie más, ni
+siquiera para pegarla. Se descarga desde App Store Connect → Users and Access →
+Integrations (botón *Descargar*, **solo funciona una vez**) y se pega completo,
+incluidas las líneas `BEGIN` y `END`.
+
+Con ese secreto cargado, el flujo `ios-testflight.yml` corre solo desde la
+pestaña Actions.
 
 ### Dar acceso a Apple sin exponer la cuenta personal
 
