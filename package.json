@@ -18,6 +18,7 @@
     "verificar-rails": "node scripts/verificar-rails.mjs",
     "verificar-lenguaje": "node scripts/verificar-lenguaje.mjs",
     "verificar-migraciones": "node scripts/verificar-migraciones.mjs",
+    "verificar-rpc": "node scripts/verificar-rpc-permisos.mjs",
     "build:app": "vite build --mode app"
   },
   "dependencies": {
