@@ -20,7 +20,7 @@
  * ─────────────────────────────────────────────────────────────────────────────
  */
 import { useState, useMemo, useCallback } from "react";
-import { Phone, MessageCircle, Check, X, CalendarClock } from "lucide-react";
+import { Phone, MessageCircle, Check, X, CalendarClock, Plus, LayoutGrid } from "lucide-react";
 import { P, LP, font, fontDisp } from "../../design-system/tokens";
 import { listaDelDia } from "../../lib/next-action-engine";
 
@@ -116,7 +116,7 @@ function Tarjeta({ accion, indice, total, T, isLight, onCerrar }) {
   );
 }
 
-export default function MiDia({ leads = [], T: Tprop, theme = "dark" }) {
+export default function MiDia({ leads = [], T: Tprop, theme = "dark", onNuevoCliente, onVerCRM }) {
   const isLight = theme === "light";
   const T = Tprop || (isLight ? LP : P);
 
@@ -151,6 +151,34 @@ export default function MiDia({ leads = [], T: Tprop, theme = "dark" }) {
             ? `${total} en total en tu cartera. Estas son las que mueven la aguja hoy.`
             : "Estas son las que mueven la aguja hoy."}
         </p>
+
+        {/* Las DOS únicas cosas que puede hacer desde acá: trabajar la lista o
+            dar de alta un cliente. Ver el CRM completo existe, pero se ofrece
+            en tono secundario a propósito: no debe competir con la lista. */}
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 16 }}>
+          <button
+            onClick={() => onNuevoCliente?.()}
+            style={{
+              minHeight: 44, padding: "0 18px", borderRadius: 11, border: "none",
+              background: T.accent, color: "#041016", fontFamily: font,
+              fontSize: 13.5, fontWeight: 700, cursor: "pointer",
+              display: "inline-flex", alignItems: "center", gap: 7,
+            }}
+          >
+            <Plus size={16} strokeWidth={2.4} /> Nuevo cliente
+          </button>
+          <button
+            onClick={() => onVerCRM?.()}
+            style={{
+              minHeight: 44, padding: "0 16px", borderRadius: 11,
+              border: `1px solid ${T.border}`, background: "transparent",
+              color: T.txt3, fontFamily: font, fontSize: 13, fontWeight: 500,
+              cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 7,
+            }}
+          >
+            <LayoutGrid size={15} strokeWidth={2} /> Ver el CRM completo
+          </button>
+        </div>
       </header>
 
       {pendientes.length === 0 ? (

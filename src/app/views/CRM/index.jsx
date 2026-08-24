@@ -351,6 +351,10 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
   }, []);
   const [budgetMenuOpen, setBudgetMenuOpen] = useState(false);
   const [stageMenuOpen, setStageMenuOpen]   = useState(false);
+  // Stratos Rails: mientras haya acciones del día, ESA es la pantalla. El
+  // asesor puede salir al CRM completo a propósito, pero no es lo primero que
+  // se le ofrece — la lista corta es lo único que compite por su atención.
+  const [verCRMCompleto, setVerCRMCompleto] = useState(false);
   const [newLead, setNewLead]           = useState({ n: "", asesor: canSeeAll ? "" : (user?.name || ""), phone: "", email: "", budget: "", p: "", campana: "", source: "manual", st: DEFAULT_STAGE, nextAction: "", notas: "" });
   // ── Detección de duplicados en alta ────────────────────────────────────
   // Cuando el asesor escribe phone o email, llamamos a la RPC find_lead_duplicate
@@ -2275,6 +2279,17 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
   // calificación de leads de ventas, no aplica a una casa/obra/pedido.
   const cols = isMobile ? "1fr" : ((co || IS_CUSTOM_PIPELINE) ? colsCompact : colsFull);
 
+  // ── STRATOS RAILS ────────────────────────────────────────────────────────
+  // Va POR ENCIMA DE TODO: ni entre las métricas y el pipeline, ni como una
+  // sección más. Mientras haya acciones del día, el asesor tiene exactamente
+  // dos opciones — trabajarlas o registrar un cliente.
+  //
+  // El CRM se OCULTA, no se desmonta: el modal de alta vive en un portal más
+  // abajo de este mismo componente, y desmontar el árbol se lo llevaría por
+  // delante. Además así el estado del pipeline (filtros, orden, scroll) sigue
+  // intacto cuando el asesor entra y sale.
+  const railsActivo = isFeatureEnabled("procesoGuiado") && !verCRMCompleto;
+
   return (
     <div style={{
       display: "flex", flexDirection: "column", gap: 18,
@@ -2282,6 +2297,21 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
       paddingBottom: isMobile ? 24 : 0,
       transition: "color 0.3s ease",
     }}>
+
+      {railsActivo && (
+        <MiDia
+          leads={leadsData}
+          T={T}
+          theme={theme}
+          onNuevoCliente={() => setAddingLead(true)}
+          onVerCRM={() => setVerCRMCompleto(true)}
+        />
+      )}
+
+      <div style={{
+        display: railsActivo ? "none" : "flex",
+        flexDirection: "column", gap: 18,
+      }}>
 
       {/* ══════════════════════════════════════════════════════════════════
           HEADER — diseño dual: mobile minimalista (1 fila clean), desktop
@@ -2479,18 +2509,6 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
 
         return (
           <div>
-            {/* ── STRATOS RAILS ──────────────────────────────────────────────
-                La lista del día va ARRIBA del carrusel: es lo primero que ve
-                el asesor al abrir el CRM. Apagado por defecto; Duke lo prende
-                con features.procesoGuiado cuando arranque el piloto.
-                Lee de leadsData (la cartera completa), no de priorityLeads:
-                el motor decide qué entra, no el pineo manual. */}
-            {isFeatureEnabled("procesoGuiado") && (
-              <div style={{ marginBottom: 28 }}>
-                <MiDia leads={leadsData} T={T} theme={theme} />
-              </div>
-            )}
-
             {/* Header — 3 zonas. En mobile: título arriba, sort abajo, leyenda oculta. */}
             <div style={{
               position: "relative", display: "flex",
@@ -3096,6 +3114,8 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
           </div>
         );
       })()}
+
+      </div>{/* cierra el envoltorio del CRM que Rails oculta */}
 
       {/* ── MODAL NUEVO LEAD ── */}
       {addingLead && createPortal(
