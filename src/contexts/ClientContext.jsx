@@ -1,7 +1,8 @@
 /**
  * contexts/ClientContext.jsx
  * ─────────────────────────────────────────────────────────────────────────────
- * Provee la configuración del cliente activo (Duke, Grupo 28, etc.) a toda la app.
+ * Provee la configuración del cliente activo (Duke, Grupo 28, NSG, Vega…) a
+ * toda la app.
  *
  * El clientId se resuelve en main.jsx con resolveClientFromLocation() y se pasa
  * a este provider como prop. NO se cambia en runtime — para cambiar de cliente
@@ -13,18 +14,19 @@
  *
  * Para apagar un módulo según cliente:
  *   {isFeatureEnabled("rrhh") && <RRHHModule />}
+ *
+ * La FORMA del value (qué llaves expone) vive en
+ * clients/_shared/client-value.js, compartida con useClient(). Ahí está el
+ * porqué — se desincronizó una vez y apagó toda la personalización por cliente.
  * ─────────────────────────────────────────────────────────────────────────────
  */
 import { createContext, useMemo, useState, useCallback } from "react";
 import { getClientConfig } from "../clients";
 import { isNativeApp } from "../lib/native";
 import { DEFAULT_CLIENT_CONFIG } from "../clients/_shared/defaults";
+import { crearValorCliente } from "../clients/_shared/client-value";
 
-export const ClientContext = createContext({
-  config: DEFAULT_CLIENT_CONFIG,
-  clientId: "default",
-  isFeatureEnabled: () => true,
-});
+export const ClientContext = createContext(crearValorCliente(DEFAULT_CLIENT_CONFIG));
 
 export function ClientProvider({ config, children }) {
   // En WEB el cliente lo fija la URL y no cambia en runtime: ClientOrgGuard
@@ -39,18 +41,10 @@ export function ClientProvider({ config, children }) {
     setConfigNativa(getClientConfig(clientId));
   }, []);
 
-  const value = useMemo(() => {
-    const cfg = activa || DEFAULT_CLIENT_CONFIG;
-    return {
-      activa: cfg,
-      clientId: cfg.id,
-      // Si el módulo no aparece en features, asumimos habilitado (compat con
-      // código existente que no consulta features). Solo cuando el dev marca
-      // explícitamente `false` apagamos el módulo.
-      setClientById,
-      isFeatureEnabled: (moduleKey) => cfg.features?.[moduleKey] !== false,
-    };
-  }, [activa]);
+  const value = useMemo(
+    () => crearValorCliente(activa, setClientById),
+    [activa, setClientById],
+  );
 
   return (
     <ClientContext.Provider value={value}>

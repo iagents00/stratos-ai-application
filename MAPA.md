@@ -6,7 +6,7 @@
 >
 > ¿Buscás un botón o un texto y no está acá? `npm run buscar "texto"`
 
-**166 archivos · 73.308 líneas**
+**167 archivos · 73.340 líneas**
 
 ---
 
@@ -208,6 +208,7 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | Archivo | Líneas | Qué hace |
 |---|---|---|
 | `defaults.js` | 269 | Config base que TODOS los clientes heredan. |
+| `client-value.js` | 37 | _sin describir_ |
 
 ### `src/clients/brasa-y-piedra/`
 
@@ -288,7 +289,7 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 |---|---|---|
 | `AuthContext.jsx` | 376 | Estado global de autenticación — conectado a Supabase Auth. |
 | `ClientOrgGuard.jsx` | 71 | _sin describir_ |
-| `ClientContext.jsx` | 61 | Provee la configuración del cliente activo (Duke, Grupo 28, etc.) a toda la app. |
+| `ClientContext.jsx` | 55 | _sin describir_ |
 
 ### `src/data/`
 
@@ -315,7 +316,7 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | `useScheduledCalls.js` | 73 | Devuelve un Map<phoneDigits, { id, phone_e164, scheduled_at }> con las |
 | `useProperties.js` | 45 | _sin describir_ |
 | `useAuth.js` | 30 | Hook para consumir AuthContext desde cualquier componente. |
-| `useClient.js` | 26 | Hook para consumir el contexto del cliente activo. |
+| `useClient.js` | 27 | Hook para consumir el contexto del cliente activo. |
 
 ### `src/landing/`
 
