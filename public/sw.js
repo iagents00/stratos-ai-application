@@ -33,7 +33,7 @@
  *   sola en la próxima navegación. Ver `main.jsx` → SERVICE WORKER.
  */
 
-const CACHE_VERSION = 'stratos-v411'; // v411: HANDOFF.md y README al día
+const CACHE_VERSION = 'stratos-v412'; // v412: cómo dar acceso a Apple sin exponer la cuenta
 
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 // Nombre ESTABLE a propósito: no lleva CACHE_VERSION (ver cabecera).

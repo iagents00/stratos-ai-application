@@ -132,6 +132,36 @@ montar. Solo pueden agregarse clientes al final, y el que acabas de registrar va
 primero. Nada se mueve solo bajo el asesor. Ver
 `src/app/views/MiDia.jsx` y `src/lib/next-action-engine.js`.
 
+### Dar acceso a Apple sin exponer la cuenta personal
+
+Regla de arranque: **nunca se comparte el Apple ID ni la contraseña de Iván.**
+Apple tiene roles justo para esto, y hay tres niveles según lo que se necesite.
+
+**Nivel 1 — subir builds a TestFlight: cero acceso a Apple.**
+El flujo `ios-testflight.yml` es `workflow_dispatch`: se dispara a mano desde la
+pestaña Actions de GitHub. Iván carga los cuatro secretos UNA vez; GitHub los
+cifra y a partir de ahí nadie puede leerlos, solo usarlos. Un dev con permiso de
+escritura en el repo entra a Actions → Run workflow y ya. No ve nada de Apple.
+
+**Nivel 2 — gestionar TestFlight (invitar probadores, ver crashes, metadata).**
+Invitación a App Store Connect **con el Apple ID propio del dev**, rol
+**App Manager**:
+
+- puede administrar la app, subir builds y manejar TestFlight;
+- **no ve** Acuerdos, Impuestos ni Banca — ahí está la información fiscal y
+  financiera personal. Solo el Account Holder y el rol Finance la ven;
+- se le puede limitar a **apps específicas**, así no ve otras apps de la cuenta;
+- se le puede quitar el acceso a Certificates, Identifiers & Profiles si no
+  necesita tocar la firma.
+
+**Nivel 3 — compilar y firmar en su propia Mac.**
+Rol **Developer** en el Apple Developer Program: crea certificados de
+desarrollo, no puede distribuir.
+
+**Sobre la API key:** la crea Iván con rol **App Manager**, no Admin. El archivo
+`.p8` se descarga UNA sola vez — va a GitHub Secrets y a un gestor de
+contraseñas. Si el dev se va, se revoca esa key y listo; la cuenta no se toca.
+
 ### La app móvil
 
 Vive en **`mobile/`**. Es un shell de Capacitor que empaqueta el CRM dentro del
