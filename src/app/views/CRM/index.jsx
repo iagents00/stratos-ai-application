@@ -2288,7 +2288,18 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
   // abajo de este mismo componente, y desmontar el árbol se lo llevaría por
   // delante. Además así el estado del pipeline (filtros, orden, scroll) sigue
   // intacto cuando el asesor entra y sale.
-  const railsActivo = isFeatureEnabled("procesoGuiado") && !verCRMCompleto;
+  // Interruptor de vista previa: ?rails=1 lo prende SOLO para quien tenga esa
+  // URL, ?rails=0 lo apaga. Existe porque prender la bandera del cliente le
+  // reordena la pantalla a todo el equipo de golpe, y nadie debería tomar esa
+  // decisión sin haberlo visto antes con sus propios clientes en pantalla.
+  // Se lee una vez al montar: cambiar la URL a mitad de sesión no debe moverle
+  // el piso al asesor.
+  const [railsPreview] = useState(() => {
+    if (typeof window === "undefined") return null;
+    const v = new URLSearchParams(window.location.search).get("rails");
+    return v === null ? null : v !== "0" && v !== "false";
+  });
+  const railsActivo = (railsPreview ?? isFeatureEnabled("procesoGuiado")) && !verCRMCompleto;
 
   return (
     <div style={{

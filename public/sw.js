@@ -33,7 +33,7 @@
  *   sola en la próxima navegación. Ver `main.jsx` → SERVICE WORKER.
  */
 
-const CACHE_VERSION = 'stratos-v400'; // v400: revive la personalización por cliente (regresión de #666)
+const CACHE_VERSION = 'stratos-v401'; // v401: vista previa de Rails con ?rails=1
 
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 // Nombre ESTABLE a propósito: no lleva CACHE_VERSION (ver cabecera).
