@@ -33,7 +33,7 @@
  *   sola en la próxima navegación. Ver `main.jsx` → SERVICE WORKER.
  */
 
-const CACHE_VERSION = 'stratos-v396'; // v396: el código del pago falso ya no viaja en la app
+const CACHE_VERSION = 'stratos-v397'; // v397: Stratos Rails v0 — Mi Día detrás de la bandera
 
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 // Nombre ESTABLE a propósito: no lleva CACHE_VERSION (ver cabecera).

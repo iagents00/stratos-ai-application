@@ -29,6 +29,8 @@ import {
 } from "lucide-react";
 import { useIsMobile } from "../../../hooks/useViewport";
 import { useClient } from "../../../hooks/useClient";
+// Stratos Rails — la lista del día. Detrás de features.procesoGuiado.
+import MiDia from "../MiDia";
 import { useTeam } from "../../../hooks/useTeam";
 import { P, LP, font, fontDisp } from "../../../design-system/tokens";
 import { G, KPI, Pill, Ico, ChipSelect } from "../../SharedComponents";
@@ -125,7 +127,7 @@ function useDebounced(value, ms = 200) {
 
 function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () => {}, isRefreshing = false, autoOpenPriority1 = 0, onAutoOpenHandled, softDeleteLead, autoOpenLead = null, onAutoOpenLeadHandled = () => {}, autoOpenNewLead = 0, onNewLeadHandled = () => {}, onOpenComando = null }) {
   const { user } = useAuth();
-  const { config: clientConfig, clientId } = useClient();
+  const { config: clientConfig, clientId, isFeatureEnabled } = useClient();
   const { get: getScheduledCall } = useScheduledCalls();
   // Equipo real de la organización — se suma a asesoresMaster para que un
   // asesor recién dado de alta (sin leads todavía) exista en los selectores.
@@ -2477,6 +2479,18 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
 
         return (
           <div>
+            {/* ── STRATOS RAILS ──────────────────────────────────────────────
+                La lista del día va ARRIBA del carrusel: es lo primero que ve
+                el asesor al abrir el CRM. Apagado por defecto; Duke lo prende
+                con features.procesoGuiado cuando arranque el piloto.
+                Lee de leadsData (la cartera completa), no de priorityLeads:
+                el motor decide qué entra, no el pineo manual. */}
+            {isFeatureEnabled("procesoGuiado") && (
+              <div style={{ marginBottom: 28 }}>
+                <MiDia leads={leadsData} T={T} theme={theme} />
+              </div>
+            )}
+
             {/* Header — 3 zonas. En mobile: título arriba, sort abajo, leyenda oculta. */}
             <div style={{
               position: "relative", display: "flex",
