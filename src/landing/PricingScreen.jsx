@@ -3,7 +3,8 @@
  * Reutilizable: puede montarse en App o LandingMarketing.
  */
 import { useState } from "react";
-import { Check, X, ChevronRight, Shield, Zap, Building2, Users, BarChart3, Brain, Phone, MessageCircle, ArrowLeft } from "lucide-react";
+import { useClient } from "../hooks/useClient";
+import { Check, X, ChevronRight, Shield, Zap, Building2, Users, BarChart3, Brain, Phone, MessageCircle, Mail, ArrowLeft } from "lucide-react";
 
 const font  = `-apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif`;
 const fontD = `-apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif`;
@@ -110,41 +111,15 @@ const plans = [
 
 const faqs = [
   { q: "¿Puedo cambiar de plan en cualquier momento?", a: "Sí. Puedes hacer upgrade o downgrade desde tu panel de cuenta. Los cambios se aplican de forma prorrateada en tu próximo ciclo de facturación." },
-  { q: "¿Qué métodos de pago aceptan?", a: "Apple Pay, tarjeta de crédito/débito (Visa, Mastercard, Amex), transferencia bancaria y OXXO Pay para México. Todos los pagos son procesados de forma segura con cifrado TLS." },
+  { q: "¿Cómo se contrata y cómo se paga?", a: "Se contrata hablando con tu ejecutivo: confirma el plan, da de alta a tu equipo y emite la factura. El pago se hace por transferencia bancaria contra factura." },
   { q: "¿Hay contratos de permanencia?", a: "No. Todos los planes son mes a mes o anuales sin penalización. Puedes cancelar en cualquier momento desde tu cuenta." },
   { q: "¿Incluye capacitación o onboarding?", a: "El plan Pro incluye una sesión de onboarding de 60 min con nuestro equipo. Enterprise incluye onboarding dedicado + capacitación al equipo completo." },
   { q: "¿Mis datos están seguros?", a: "Sí. Usamos Supabase con cifrado en reposo y en tránsito, servidores en región Latinoamérica, y cumplimos con GDPR y Ley Federal de Protección de Datos (México)." },
 ];
 
-/* ─── Apple Pay Button ─── */
-function ApplePayButton({ onClick, plan }) {
-  return (
-    <button
-      onClick={onClick}
-      style={{
-        width: "100%", padding: "14px 0", borderRadius: 12, border: "none",
-        background: "#000000", color: "#FFFFFF",
-        fontSize: 15, fontWeight: 500, fontFamily: fontD,
-        cursor: "pointer", display: "flex", alignItems: "center",
-        justifyContent: "center", gap: 8,
-        transition: "all 0.2s",
-        boxShadow: "0 4px 16px rgba(0,0,0,0.5)",
-        letterSpacing: "-0.01em",
-      }}
-      onMouseEnter={e => { e.currentTarget.style.background = "#1a1a1a"; e.currentTarget.style.transform = "translateY(-1px)"; }}
-      onMouseLeave={e => { e.currentTarget.style.background = "#000000"; e.currentTarget.style.transform = "translateY(0)"; }}
-    >
-      {/* Apple logo */}
-      <svg width="14" height="17" viewBox="0 0 814 1000" fill="white">
-        <path d="M788.1 340.9c-5.8 4.5-108.2 62.2-108.2 190.5 0 148.4 130.3 200.9 134.2 202.2-.6 3.2-20.7 71.9-68.7 141.9-42.8 61.6-87.5 123.1-155.5 123.1s-85.5-39.5-164-39.5c-76 0-103.7 40.8-165.9 40.8s-105-57.8-155.5-127.4C46 790.7 0 663 0 541.8c0-207.8 135.4-317.7 269-317.7 70.6 0 129.5 42.4 174 42.4 42.5 0 109.2-44.8 188.5-44.8 30.4 0 111.4 2.6 170.3 82.6zm-75.5-165.7c-28.6 35.3-75.7 62.3-128.1 62.3-5.6 0-11.2-.4-16.8-1.1-.8-5.8-1.2-11.6-1.2-17.8 0-40.1 20.9-80.9 50-108.8 28.6-27.7 76.6-47.2 118.2-47.2 5.6 0 11.2.4 16.8 1.1 1.1 7 1.5 13.6 1.5 19.8 0 41.9-18.2 83.8-40.4 91.7z"/>
-      </svg>
-      Pay
-    </button>
-  );
-}
 
 /* ─── Plan Card ─── */
-function PlanCard({ plan, billing, onSelect, onApplePay }) {
+function PlanCard({ plan, billing, onSelect }) {
   const [hovered, setHovered] = useState(false);
   const price = billing === "yearly" ? plan.yearlyPrice : plan.monthlyPrice;
   const savings = plan.monthlyPrice && plan.yearlyPrice
@@ -249,10 +224,9 @@ function PlanCard({ plan, billing, onSelect, onApplePay }) {
           {plan.ctaText}
         </button>
 
-        {/* Apple Pay button — only for paid plans */}
-        {price && (
-          <ApplePayButton onClick={() => onApplePay(plan)} plan={plan} />
-        )}
+        {/* Acá había un botón de Apple Pay. Prometía un método de pago que no
+            está conectado; el plan se contrata hablando con un ejecutivo, y el
+            botón de arriba ya lleva ahí. */}
       </div>
 
       {/* Divider */}
@@ -281,59 +255,47 @@ function PlanCard({ plan, billing, onSelect, onApplePay }) {
   );
 }
 
-/* ─── Apple Pay Checkout Modal ─── */
-function ApplePayModal({ plan, billing, onClose }) {
+/* ─── Contratar un plan ───────────────────────────────────────────────────
+   Acá vivía un checkout falso: un botón de Apple Pay, campos de NÚMERO DE
+   TARJETA, MM/AA y CVC, y un `setTimeout` de 2.2 segundos que mostraba "Pago
+   exitoso · Tu plan ha sido activado · Recibirás un correo con el recibo".
+
+   No había procesador de pagos. No se cobraba nada, no se activaba ningún
+   plan, no salía ningún correo. Y los campos de tarjeta recogían el número y
+   el CVC de quien los llenara para tirarlos a la basura.
+
+   La pantalla "Planes" la ve CUALQUIER rol, asesores incluidos. Un asesor de
+   Duke podía teclear su tarjeta y quedarse esperando un recibo que no existe.
+
+   Stratos se contrata hablando con un ejecutivo — así se cerró Duke, así se
+   cerró NSG. Esto ahora hace exactamente eso, que además es lo único honesto
+   que se puede hacer sin un procesador conectado. Cuando se conecte uno de
+   verdad, este es el lugar. */
+function ContratarModal({ plan, billing, onClose, whatsapp, email }) {
   const price = billing === "yearly" ? plan.yearlyPrice : plan.monthlyPrice;
-  const [step, setStep] = useState("confirm"); // confirm | processing | success
+  const total = billing === "yearly" ? price * 12 : price;
+  const periodo = billing === "yearly" ? "anual" : "mensual";
 
-  const handlePay = () => {
-    setStep("processing");
-    setTimeout(() => setStep("success"), 2200);
-  };
+  const mensaje = `Hola, me interesa el plan ${plan.name} (${periodo}, $${total} USD). ¿Me ayudas con los siguientes pasos?`;
+  const waLink = `https://wa.me/${String(whatsapp).replace(/\D/g, "")}?text=${encodeURIComponent(mensaje)}`;
+  const mailLink = `mailto:${email}?subject=${encodeURIComponent(`Plan ${plan.name}`)}&body=${encodeURIComponent(mensaje)}`;
 
-  if (step === "success") {
-    return (
-      <div style={{ position: "fixed", inset: 0, zIndex: 1000, background: "rgba(2,5,12,0.85)", backdropFilter: "blur(10px)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <div style={{ background: "#0D1525", border: `1px solid ${P.border}`, borderRadius: 20, padding: "40px 36px", width: "min(440px, 92vw)", textAlign: "center" }}>
-          <div style={{ width: 64, height: 64, borderRadius: "50%", background: `${P.accent}15`, border: `1px solid ${P.accentB}`, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 20px" }}>
-            <Check size={30} color={P.accent} strokeWidth={2} />
-          </div>
-          <h3 style={{ fontSize: 22, fontWeight: 700, color: "#FFFFFF", fontFamily: fontD, marginBottom: 8, letterSpacing: "-0.02em" }}>Pago exitoso</h3>
-          <p style={{ fontSize: 13, color: P.txt2, lineHeight: 1.7, marginBottom: 24 }}>
-            Tu plan <strong style={{ color: "#FFFFFF" }}>{plan.name}</strong> ha sido activado.<br />
-            Recibirás un correo con el recibo y las instrucciones de acceso.
-          </p>
-          <button onClick={onClose} style={{ width: "100%", padding: "13px 0", borderRadius: 11, border: "none", background: `linear-gradient(135deg, ${P.accent}, #3BC9A8)`, color: "#04080F", fontSize: 14, fontWeight: 700, fontFamily: fontD, cursor: "pointer" }}>
-            Ir al dashboard
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  if (step === "processing") {
-    return (
-      <div style={{ position: "fixed", inset: 0, zIndex: 1000, background: "rgba(2,5,12,0.85)", backdropFilter: "blur(10px)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <div style={{ background: "#0D1525", border: `1px solid ${P.border}`, borderRadius: 20, padding: "40px 36px", width: "min(440px, 92vw)", textAlign: "center" }}>
-          <div style={{ width: 64, height: 64, borderRadius: "50%", background: "rgba(0,0,0,0.5)", border: "1px solid rgba(255,255,255,0.08)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 20px" }}>
-            <svg width="20" height="24" viewBox="0 0 814 1000" fill="white" style={{ animation: "spin 1.5s linear infinite" }}>
-              <path d="M788.1 340.9c-5.8 4.5-108.2 62.2-108.2 190.5 0 148.4 130.3 200.9 134.2 202.2-.6 3.2-20.7 71.9-68.7 141.9-42.8 61.6-87.5 123.1-155.5 123.1s-85.5-39.5-164-39.5c-76 0-103.7 40.8-165.9 40.8s-105-57.8-155.5-127.4C46 790.7 0 663 0 541.8c0-207.8 135.4-317.7 269-317.7 70.6 0 129.5 42.4 174 42.4 42.5 0 109.2-44.8 188.5-44.8 30.4 0 111.4 2.6 170.3 82.6z"/>
-            </svg>
-          </div>
-          <h3 style={{ fontSize: 18, fontWeight: 600, color: "#FFFFFF", fontFamily: fontD, marginBottom: 8 }}>Procesando pago con Apple Pay...</h3>
-          <p style={{ fontSize: 12, color: P.txt3 }}>Verifica en tu dispositivo Apple</p>
-        </div>
-      </div>
-    );
-  }
+  const boton = (principal) => ({
+    width: "100%", padding: "13px 0", borderRadius: 11,
+    border: principal ? "none" : `1px solid ${P.border}`,
+    background: principal ? `linear-gradient(135deg, ${P.accent}, #3BC9A8)` : "transparent",
+    color: principal ? "#04080F" : P.txt,
+    fontSize: 13, fontWeight: 700, fontFamily: fontD, cursor: "pointer",
+    textDecoration: "none", display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+    boxShadow: principal ? `0 4px 20px ${P.accent}25` : "none",
+  });
 
   return (
     <div style={{ position: "fixed", inset: 0, zIndex: 1000, background: "rgba(2,5,12,0.85)", backdropFilter: "blur(10px)", display: "flex", alignItems: "center", justifyContent: "center" }} onClick={onClose}>
       <div style={{ background: "#0D1525", border: `1px solid ${P.border}`, borderRadius: 20, padding: "32px 32px", width: "min(420px, 92vw)" }} onClick={e => e.stopPropagation()}>
-        {/* Header */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 24 }}>
           <div>
-            <p style={{ fontSize: 11, color: P.accent, fontWeight: 700, letterSpacing: "0.07em", textTransform: "uppercase", marginBottom: 4 }}>Confirmación de pago</p>
+            <p style={{ fontSize: 11, color: P.accent, fontWeight: 700, letterSpacing: "0.07em", textTransform: "uppercase", marginBottom: 4 }}>Contratar</p>
             <h3 style={{ fontSize: 20, fontWeight: 700, color: "#FFFFFF", fontFamily: fontD, letterSpacing: "-0.02em" }}>Plan {plan.name}</h3>
           </div>
           <button onClick={onClose} style={{ width: 30, height: 30, borderRadius: 8, border: `1px solid ${P.border}`, background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -341,7 +303,6 @@ function ApplePayModal({ plan, billing, onClose }) {
           </button>
         </div>
 
-        {/* Order summary */}
         <div style={{ background: P.glass, border: `1px solid ${P.border}`, borderRadius: 12, padding: "16px 18px", marginBottom: 20 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
             <span style={{ fontSize: 13, color: P.txt2 }}>Plan {plan.name} · {billing === "yearly" ? "Anual" : "Mensual"}</span>
@@ -355,56 +316,35 @@ function ApplePayModal({ plan, billing, onClose }) {
           )}
           <div style={{ height: 1, background: P.border, margin: "10px 0" }} />
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <span style={{ fontSize: 13, fontWeight: 700, color: P.txt }}>Total hoy</span>
-            <span style={{ fontSize: 16, fontWeight: 700, color: "#FFFFFF", fontFamily: fontD }}>${billing === "yearly" ? price * 12 : price} USD</span>
+            <span style={{ fontSize: 13, fontWeight: 700, color: P.txt }}>Total</span>
+            <span style={{ fontSize: 16, fontWeight: 700, color: "#FFFFFF", fontFamily: fontD }}>${total} USD</span>
           </div>
         </div>
 
-        {/* Security note */}
-        <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 14px", borderRadius: 9, background: "rgba(52,211,153,0.05)", border: `1px solid rgba(52,211,153,0.12)`, marginBottom: 18 }}>
-          <Shield size={13} color={P.emerald} />
-          <span style={{ fontSize: 11, color: "rgba(52,211,153,0.8)", lineHeight: 1.5 }}>Pago cifrado · Cancela en cualquier momento · Sin contratos</span>
-        </div>
+        <p style={{ fontSize: 12, color: P.txt2, lineHeight: 1.7, marginBottom: 18 }}>
+          Los planes se activan con tu ejecutivo: confirma la disponibilidad, da de alta a
+          tu equipo y te manda la factura. Toma unos minutos.
+        </p>
 
-        {/* Apple Pay CTA */}
-        <ApplePayButton onClick={handlePay} plan={plan} />
-
-        <div style={{ display: "flex", alignItems: "center", gap: 10, margin: "14px 0" }}>
-          <div style={{ flex: 1, height: 1, background: P.border }} />
-          <span style={{ fontSize: 10, color: P.txt3 }}>o paga con tarjeta</span>
-          <div style={{ flex: 1, height: 1, background: P.border }} />
-        </div>
-
-        {/* Card form (placeholder) */}
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-          <input placeholder="Número de tarjeta" style={{ width: "100%", padding: "11px 14px", borderRadius: 9, border: `1px solid ${P.border}`, background: "rgba(255,255,255,0.04)", color: P.txt, fontSize: 13, fontFamily: font, outline: "none", boxSizing: "border-box" }} />
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-            <input placeholder="MM / AA" style={{ padding: "11px 14px", borderRadius: 9, border: `1px solid ${P.border}`, background: "rgba(255,255,255,0.04)", color: P.txt, fontSize: 13, fontFamily: font, outline: "none" }} />
-            <input placeholder="CVC" style={{ padding: "11px 14px", borderRadius: 9, border: `1px solid ${P.border}`, background: "rgba(255,255,255,0.04)", color: P.txt, fontSize: 13, fontFamily: font, outline: "none" }} />
-          </div>
-          <button onClick={handlePay} style={{
-            width: "100%", padding: "13px 0", borderRadius: 11, border: "none",
-            background: `linear-gradient(135deg, ${P.accent}, #3BC9A8)`, color: "#04080F",
-            fontSize: 13, fontWeight: 700, fontFamily: fontD, cursor: "pointer",
-            boxShadow: `0 4px 20px ${P.accent}25`,
-          }}>
-            Pagar ${billing === "yearly" ? price * 12 : price} USD
-          </button>
+          <a href={waLink} target="_blank" rel="noreferrer" style={boton(true)}>
+            <MessageCircle size={15} strokeWidth={2.2} /> Hablar con mi ejecutivo
+          </a>
+          <a href={mailLink} style={boton(false)}>
+            <Mail size={15} strokeWidth={2.2} /> Escribir por correo
+          </a>
         </div>
       </div>
     </div>
   );
 }
 
-/* ─── Main Pricing Screen ─── */
 export default function PricingScreen({ onBack, embedded = false }) {
+  const { config } = useClient();
   const [billing, setBilling] = useState("yearly");
   const [checkoutPlan, setCheckoutPlan] = useState(null);
   const [openFaq, setOpenFaq] = useState(null);
 
-  const handleApplePay = (plan) => {
-    setCheckoutPlan(plan);
-  };
 
   const handleSelect = (plan) => {
     if (plan.monthlyPrice === null) {
@@ -484,7 +424,6 @@ export default function PricingScreen({ onBack, embedded = false }) {
               plan={plan}
               billing={billing}
               onSelect={handleSelect}
-              onApplePay={handleApplePay}
             />
           ))}
         </div>
@@ -492,7 +431,9 @@ export default function PricingScreen({ onBack, embedded = false }) {
         {/* Trust badges */}
         <div style={{ display: "flex", justifyContent: "center", flexWrap: "wrap", gap: 28, marginBottom: 64 }}>
           {[
-            { icon: Shield, text: "Pago cifrado SSL" },
+            // "Pago cifrado SSL" prometía un procesador de pagos que no existe. Se
+            // cobra por transferencia contra factura; eso sí es verdad.
+            { icon: Shield, text: "Facturación fiscal en México" },
             { icon: Check, text: "14 días gratis sin tarjeta" },
             { icon: X, text: "Sin contratos de permanencia" },
             { icon: BarChart3, text: "Datos 100% en México / LATAM" },
@@ -597,11 +538,13 @@ export default function PricingScreen({ onBack, embedded = false }) {
         </div>
       </div>
 
-      {/* Apple Pay / checkout modal */}
+      {/* Contratar un plan */}
       {checkoutPlan && (
-        <ApplePayModal
+        <ContratarModal
           plan={checkoutPlan}
           billing={billing}
+          whatsapp={config?.support?.whatsapp || "17479779711"}
+          email={config?.support?.email || "ventas@stratoscapitalgroup.com"}
           onClose={() => setCheckoutPlan(null)}
         />
       )}

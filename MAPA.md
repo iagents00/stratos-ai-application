@@ -6,7 +6,7 @@
 >
 > ¿Buscás un botón o un texto y no está acá? `npm run buscar "texto"`
 
-**173 archivos · 74.714 líneas**
+**173 archivos · 74.657 líneas**
 
 ---
 
@@ -335,7 +335,7 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | `ManualCRM.jsx` | 789 | Manual del CRM Stratos AI para asesores |
 | `manual-telegram-content.js` | 714 | Manual del COPILOT / Asistente IA (Duke del Caribe) |
 | `LoginScreen.jsx` | 692 | Pantalla de autenticación completa para la app |
-| `PricingScreen.jsx` | 611 | Planes y pagos para Stratos AI |
+| `PricingScreen.jsx` | 554 | Planes y pagos para Stratos AI |
 | `DataDeletion.jsx` | 553 | _sin describir_ |
 | `DukeLeadRouter.jsx` | 343 | _sin describir_ |
 | `ManualGasil.jsx` | 284 | Manual de uso de Stratos IA para GASIL RADIODIAGNÓSTICO DEL VALLE |
