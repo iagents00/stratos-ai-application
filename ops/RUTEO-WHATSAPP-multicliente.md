@@ -132,6 +132,74 @@ error aparente y luego **nunca** entrega webhooks. Ahora se rechaza de entrada.
 
 ---
 
+## El ingest también ruteaba mal (migración 235)
+
+Tener `fn_resolver_canal_whatsapp` no bastaba: **el flujo de Meta en n8n no
+escribe el lead directo, llama al RPC `ingest_inbound_lead`** — y ese abría con:
+
+```sql
+v_org := COALESCE((payload->>'organization_id')::uuid,
+                  '00000000-0000-0000-0000-000000000001');
+```
+
+Es decir, si n8n no manda `organization_id`, **todo lead entrante cae en la
+organización de Stratos**. El día que Grupo 28 o Vega conecten su WhatsApp por
+Embedded Signup, sus leads habrían aterrizado en el CRM de Duke.
+
+La migración 235 lo corrige: antes de fijar la organización, resuelve el canal.
+
+| Precedencia | Fuente |
+|---|---|
+| 1 | `organization_id` del payload — lo explícito manda |
+| 2 | La organización del canal que resuelve el WABA / phone_number_id |
+| 3 | Stratos — último recurso, el comportamiento histórico |
+
+Segundo defecto corregido: el asesor se resolvía casando `profiles.phone` como
+texto **exacto**. Un `+52 984…` contra un `52984…` no casa y el lead queda sin
+dueño. Ahora el asesor sale del canal primero, y el match por texto queda de
+respaldo.
+
+### ⚠️ La 235 sola NO alcanza: hay que cambiar n8n
+
+Auditados los payloads reales que n8n manda hoy a `ingest_inbound_lead`
+(tabla `whatsapp_inbox.raw_payload`, últimos 5 mensajes de `meta_cloud_api`):
+
+```
+claves presentes: asesor_id, extracted, message_text, organization_id,
+                  sender_name, sender_phone, source
+organization_id : "00000000-0000-0000-0000-000000000001"   ← HARDCODEADO
+phone_number_id : ausente
+waba_id         : ausente
+asesor_phone    : ausente
+```
+
+O sea: **n8n fija la organización de Stratos a mano en cada lead**, y no manda
+ningún identificador del canal. Con ese payload, la migración 235 no tiene con
+qué resolver y cae —correctamente— al `organization_id` explícito. Es decir, hoy
+es un no-op: correcta y segura, pero inerte.
+
+La 235 es el **lado receptor**. Para que el ruteo multi-cliente entre en efecto,
+el nodo de n8n que arma el payload del ingest tiene que:
+
+1. **Dejar de hardcodear `organization_id`.** Quitarlo del payload. Si ningún
+   canal casa, la función cae igual al default de Stratos — mismo comportamiento
+   que hoy, cero riesgo.
+2. **Mandar los identificadores del canal**, que ya vienen en el webhook de Meta:
+
+```js
+waba_id:              $json.entry[0].id,
+phone_number_id:      $json.entry[0].changes[0].value.metadata.phone_number_id,
+display_phone_number: $json.entry[0].changes[0].value.metadata.display_phone_number,
+```
+
+3. Opcional: dejar de resolver `asesor_id` con el MAP hardcodeado y dejar que lo
+   resuelva el canal. Mandar `asesor_id` sigue funcionando — tiene precedencia.
+
+En `audit_log.metadata` quedan `canal_match_by` y `canal_platform_type` para
+poder ver por qué vía se ruteó cada lead.
+
+---
+
 ## Seguridad
 
 Ambas funciones son `SECURITY DEFINER` y están concedidas **solo a
