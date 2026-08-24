@@ -1,5 +1,8 @@
 # Stratos AI — Plataforma CRM + ERP Inmobiliaria
 
+> **¿Retomando el proyecto?** Empieza por **[HANDOFF.md](HANDOFF.md)**: qué está
+> vivo, qué falta, y qué se puede tocar sin romper nada.
+
 Plataforma de gestión comercial para equipos de ventas inmobiliarias.
 Incluye CRM con pipeline visual, agentes IA, ERP de proyectos, finanzas y RRHH.
 
@@ -13,9 +16,9 @@ Incluye CRM con pipeline visual, agentes IA, ERP de proyectos, finanzas y RRHH.
 | Estilos | CSS-in-JS (inline styles) — NO Tailwind |
 | Iconos | Lucide React |
 | Gráficas | Recharts |
-| Auth actual | localStorage (demo) |
-| Auth producción | Supabase (pendiente — ver plan) |
-| Base de datos | Supabase PostgreSQL (pendiente) |
+| Auth | Supabase Auth (EN PRODUCCIÓN) |
+| Base de datos | Supabase PostgreSQL (EN PRODUCCIÓN) |
+| Aislamiento multi-cliente | `organization_id` + RLS |
 
 ---
 
