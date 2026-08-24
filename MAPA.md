@@ -6,7 +6,7 @@
 >
 > ¿Buscás un botón o un texto y no está acá? `npm run buscar "texto"`
 
-**165 archivos · 73.226 líneas**
+**166 archivos · 73.308 líneas**
 
 ---
 
@@ -177,9 +177,9 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | `RangeCalendar.jsx` | 258 | Calendario de selección de RANGO por clicks. Se usa dentro de DateRangeControl |
 | `LeadRelatedContacts.jsx` | 250 | "Familiares o Socios" del expediente — personas ALLEGADAS al contacto |
 | `Nomina.jsx` | 238 | _sin describir_ |
+| `MiDia.jsx` | 220 | _sin describir_ |
 | `ProductividadTab.jsx` | 218 | _sin describir_ |
 | `zoom-metrics.js` | 207 | _sin describir_ |
-| `MiDia.jsx` | 207 | _sin describir_ |
 | `LeadVoiceCalls.jsx` | 201 | Sección con las llamadas de voz hechas por Retell AI a este lead. |
 | `catalogAdapter.js` | 197 | Puente entre el catálogo maestro y el generador de landings |
 | `Team.jsx` | 194 | vista "Asesores" |
@@ -367,6 +367,7 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | `chunk-recovery.js` | 103 | _sin describir_ |
 | `lead-draft.js` | 85 | Autosave del borrador del modal "Registrar cliente" |
 | `ringer.js` | 72 | _sin describir_ |
+| `agenda.js` | 69 | _sin describir_ |
 | `supabase.js` | 67 | _sin describir_ |
 | `recovery.js` | 58 | Recuperación de contraseña por CÓDIGO al correo de recuperación. |
 | `suggest-actions.js` | 58 | Cliente del agente IA "co-pilot" que sugiere próximas acciones |
@@ -681,11 +682,11 @@ hacen. Agregarles un bloque `/** ... */` arriba los hace aparecer solos acá.
 - `src/lib/next-action-engine.js` (242 líneas)
 - `src/app/views/Nomina.jsx` (238 líneas)
 - `src/lib/manual-stratos-doc.js` (230 líneas)
+- `src/app/views/MiDia.jsx` (220 líneas)
 - `src/lib/organize-notes.js` (220 líneas)
 - `src/app/views/ProductividadTab.jsx` (218 líneas)
 - `src/app/constants/intelFeatures.js` (211 líneas)
 - `src/app/views/CRM/zoom-metrics.js` (207 líneas)
-- `src/app/views/MiDia.jsx` (207 líneas)
 - `src/hooks/useZoomAgendados.js` (204 líneas)
 - `src/lib/docx.js` (203 líneas)
 - `src/lib/lead-backup.js` (197 líneas)
@@ -718,4 +719,5 @@ hacen. Agregarles un bloque `/** ... */` arriba los hace aparecer solos acá.
 - `src/hooks/useTeam.js` (74 líneas)
 - `src/lib/ringer.js` (72 líneas)
 - `src/contexts/ClientOrgGuard.jsx` (71 líneas)
+- `src/lib/agenda.js` (69 líneas)
 - `src/lib/supabase.js` (67 líneas)

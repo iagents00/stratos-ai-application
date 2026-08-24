@@ -125,6 +125,8 @@ error no está en el frontend.
 | `mkt_attach_evidence_to` | `app/views/Copilot.jsx` |
 | `mkt_comment_evidence` | `app/views/Copilot.jsx` |
 | `mkt_evidence_candidates` | `app/views/Copilot.jsx` |
+| `rails_agenda_hoy` | `lib/agenda.js` |
+| `rails_marcar_accion` | `lib/agenda.js` |
 | `resolve_portfolio_link` | `app/views/LandingPages/PublicLanding.jsx` |
 
 ---
@@ -158,7 +160,7 @@ casa; por eso mismo son los que más cuidado piden.
 | Archivo | Archivos que lo importan |
 |---|---|
 | `design-system/tokens.js` | **68** |
-| `lib/supabase.js` | **38** |
+| `lib/supabase.js` | **39** |
 | `hooks/useAuth.js` | **33** |
 | `hooks/useViewport.js` | **27** |
 | `app/SharedComponents.jsx` | **18** |

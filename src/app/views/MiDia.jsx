@@ -19,10 +19,11 @@
  * (esa tabla llega en la migración 032): "Hecho" es optimista y local.
  * ─────────────────────────────────────────────────────────────────────────────
  */
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { Phone, MessageCircle, Check, X, CalendarClock, Plus, LayoutGrid } from "lucide-react";
 import { P, LP, font, fontDisp } from "../../design-system/tokens";
 import { listaDelDia } from "../../lib/next-action-engine";
+import { agendaDeHoy, marcarAccion } from "../../lib/agenda";
 
 /* Un solo punto de color por tarjeta, de 6px. Sin iconos decorativos. */
 const COLOR_CUBETA = { prioritario: "accent", intermedio: "amber", reactivar: "blue" };
@@ -120,15 +121,27 @@ export default function MiDia({ leads = [], T: Tprop, theme = "dark", onNuevoCli
   const isLight = theme === "light";
   const T = Tprop || (isLight ? LP : P);
 
-  const [cerradas, setCerradas] = useState({});   // leadId -> resultado
+  const [cerradas, setCerradas] = useState({});   // leadId -> estado
 
   const { visibles, total } = useMemo(() => listaDelDia(leads), [leads]);
   const pendientes = visibles.filter((a) => !cerradas[a.leadId]);
   const hechas = visibles.length - pendientes.length;
 
-  const cerrar = useCallback((leadId, resultado) => {
-    setCerradas((prev) => ({ ...prev, [leadId]: resultado }));
+  // Lo que ya se cerró hoy no vuelve a aparecer, ni siquiera tras un F5.
+  useEffect(() => {
+    let vivo = true;
+    agendaDeHoy().then((mapa) => { if (vivo) setCerradas((prev) => ({ ...mapa, ...prev })); });
+    return () => { vivo = false; };
   }, []);
+
+  const cerrar = useCallback((leadId, estado) => {
+    // Optimista a propósito: la tarjeta se va en el acto y el guardado ocurre
+    // detrás. Si falla, se avisa en consola pero no se le devuelve la tarjeta
+    // al asesor — nada peor que trabajar algo y que reaparezca.
+    setCerradas((prev) => ({ ...prev, [leadId]: estado }));
+    const accion = visibles.find((a) => a.leadId === leadId);
+    if (accion) marcarAccion(accion, estado === "no_contesto" ? "saltado" : estado);
+  }, [visibles]);
 
   return (
     <div style={{ maxWidth: 720, margin: "0 auto", padding: "4px 0 24px" }}>
