@@ -157,7 +157,7 @@ casa; por eso mismo son los que más cuidado piden.
 
 | Archivo | Archivos que lo importan |
 |---|---|
-| `design-system/tokens.js` | **67** |
+| `design-system/tokens.js` | **68** |
 | `lib/supabase.js` | **38** |
 | `hooks/useAuth.js` | **33** |
 | `hooks/useViewport.js` | **27** |

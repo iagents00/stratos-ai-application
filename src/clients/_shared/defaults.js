@@ -88,6 +88,10 @@ export const DEFAULT_CLIENT_CONFIG = {
   // Features habilitadas — cada módulo del CRM puede prenderse/apagarse
   // por cliente. Si no aparece aquí, asumimos true (compat retroactiva).
   features: {
+    // Stratos Rails: el proceso diario guiado (Mi Día, briefing de Zoom,
+    // cierre por chips). Apagado por defecto — Duke lo prende cuando el
+    // piloto de 3 campeones esté listo. Ver PLAN_STRATOS_RAILS.md.
+    procesoGuiado: false,
     crm:           true,
     dash:          true,
     erp:           true,
