@@ -307,7 +307,14 @@ export async function getCopilotActivity(limit = 50) {
   try {
     const { data, error } = await supabase.rpc('get_my_copilot_activity', { p_limit: limit })
     let messages = Array.isArray(data) ? [...data] : []
-    if (error && messages.length === 0) return { messages: [], error: error.message }
+    // Si el historial falla (por ejemplo un permiso revocado en la base), NO se corta
+    // acá: seguimos y mezclamos igual los avisos programados, así el chat DEGRADA en
+    // vez de quedarse en blanco. El error se devuelve al final, y solo si no quedó nada
+    // que mostrar.
+    // 24-ago-2026: por cortar en esta línea, un `permission denied` en
+    // get_my_copilot_activity dejaba la pantalla vacía Y sin los avisos que sí habían
+    // llegado al teléfono — un solo fallo apagaba las dos cosas a la vez.
+    const errorHistorial = error ? error.message : null
 
     // Sincronización en tiempo real con recordatorios proactivos programados (proactive_reminders)
     try {
@@ -390,7 +397,7 @@ export async function getCopilotActivity(limit = 50) {
       seenAt.set(key, t)
       deduped.push(m)
     }
-    return { messages: deduped.slice(0, limit), error: null }
+    return { messages: deduped.slice(0, limit), error: deduped.length === 0 ? errorHistorial : null }
   } catch (e) {
     return { messages: [], error: e?.message || 'Error de conexión' }
   }
