@@ -139,6 +139,13 @@ export const DEFAULT_CLIENT_CONFIG = {
     // OFF — hoy solo Duke lo prende (que la asesora vea al instante quién le
     // escribió). Requiere también whatsappChat para el composer.
     whatsappModule: false,
+    // Embedded Signup de Meta: el cliente conecta SU número de WhatsApp
+    // Business en tres clics desde el CRM, sin apps por asesor ni consola de
+    // desarrolladores (lo que hacen GoHighLevel y HubSpot). Default OFF —
+    // requiere que Stratos AI esté aprobado como proveedor de tecnología y que
+    // `meta.appId` / `meta.configId` estén poblados.
+    // Ver ops/META-TECH-PROVIDER-briefing.md
+    whatsappSignup: false,
     // Módulo "Copilot" en el sidebar: chat con el asistente IA (el mismo cerebro
     // que el bot de Telegram @Strato_sasistente_crm_bot) embebido en el CRM.
     // El asesor conecta su Telegram una vez y opera sus leads desde el chat del
@@ -161,6 +168,18 @@ export const DEFAULT_CLIENT_CONFIG = {
     // zoom/inactividad, awaiting-plan) y por el manual inmobiliario. Ver
     // `tenantCopilotShape` en src/lib/telegram.js.
     copilotBrain: "crm",
+  },
+
+  // Integración con Meta (WhatsApp Business Platform).
+  // Se llena cuando Stratos AI quede registrado como proveedor de tecnología.
+  // El APP SECRET no va aquí: vive solo en el backend (n8n), porque este objeto
+  // termina en el bundle JS público.
+  meta: {
+    appId:             null,  // Identificador de la app de Meta
+    configId:          null,  // Configuración de Embedded Signup
+    // Endpoint del backend que intercambia el `code` por token y registra el
+    // canal vía fn_registrar_canal_whatsapp. Ver ops/RUTEO-WHATSAPP-multicliente.md
+    signupCallbackUrl: null,
   },
 
   // Contacto y soporte
