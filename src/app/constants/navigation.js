@@ -7,7 +7,7 @@
  */
 import {
   Users, Hexagon, Activity, Building2, Atom,
-  Trophy, Landmark, UserCheck, CreditCard, Shield, User, Trash2
+  Trophy, Landmark, UserCheck, CreditCard, Shield, User, Trash2, MessageCircle
 } from "lucide-react";
 
 export const nav = [
@@ -20,6 +20,7 @@ export const nav = [
   { id: "fa",    l: "Finanzas",  i: Landmark,  more: true },
   { id: "rrhh",  l: "Personas",  i: UserCheck, more: true },
   { id: "trash", l: "Papelera",  i: Trash2,    more: true },
+  { id: "wa",    l: "WhatsApp",  i: MessageCircle, more: true },
   { id: "planes",l: "Planes",    i: CreditCard, more: true },
   { id: "perfil",l: "Perfil",    i: User,      more: true },
   { id: "admin", l: "Usuarios",  i: Shield,    more: true, adminOnly: true },
@@ -35,6 +36,8 @@ export const MODULE_ROLES = {
   fa:     ["super_admin","admin","director","ceo"],
   rrhh:   ["super_admin","admin","director","ceo"],
   trash:  ["super_admin","admin","director","ceo","asesor"],
+  // El asesor conecta SU propio número, así que también entra aquí.
+  wa:     ["super_admin","admin","director","ceo","asesor"],
   planes: ["super_admin","admin","director","ceo","asesor"],
   perfil: ["super_admin","admin","director","ceo","asesor"],
   admin:  ["super_admin","admin"],
@@ -43,7 +46,7 @@ export const MODULE_ROLES = {
 export const MODULE_NAMES = {
   d: "Comando", c: "CRM", ia: "iAgents", e: "ERP",
   a: "Asesores", lp: "Campañas", fa: "Finanzas",
-  rrhh: "Personas", trash: "Papelera",
+  rrhh: "Personas", trash: "Papelera", wa: "WhatsApp",
   planes: "Planes", perfil: "Perfil", admin: "Usuarios",
 };
 
@@ -56,7 +59,9 @@ export const MODULE_NAMES = {
 // super_admin de Grupo 28 administra Grupo 28, no los módulos internos de
 // Stratos (Finanzas, Personas, Comando, ERP, iAgents, Campañas, Asesores).
 export const STRATOS_ORG_ID = "00000000-0000-0000-0000-000000000001";
-export const EXTERNAL_ORG_MODULES = new Set(["c", "perfil", "trash"]);
+// "wa" entra aquí a propósito: conectar su propio WhatsApp es justo lo que un
+// cliente externo necesita poder hacer solo. Va gated por features.whatsappSignup.
+export const EXTERNAL_ORG_MODULES = new Set(["c", "perfil", "trash", "wa"]);
 // Módulos visibles para usuarios con flag crm_only=true (cuentas tipo bot/IA
 // como iagents@stratos.ai). Conservan su rol pero solo navegan CRM + Perfil.
 export const CRM_ONLY_MODULES = new Set(["c", "perfil"]);
@@ -78,6 +83,10 @@ export function canAccessModule(moduleId, user, clientConfig = null) {
   if (!user) return false;
   // (1) Restricción per-usuario — gana sobre todo lo demás.
   if (user.crmOnly === true && !CRM_ONLY_MODULES.has(moduleId)) return false;
+
+  // (1.5) Conectar WhatsApp solo existe si el cliente lo tiene prendido.
+  //       Default OFF hasta que Stratos sea proveedor de tecnología aprobado.
+  if (moduleId === "wa" && clientConfig?.features?.whatsappSignup !== true) return false;
 
   if (!isStratosOrg(user.organizationId) && !EXTERNAL_ORG_MODULES.has(moduleId)) {
     // Excepción: si el cliente externo prendió Comando Directivo (`d`)

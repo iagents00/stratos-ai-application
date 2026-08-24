@@ -75,6 +75,23 @@ export const DEFAULT_CLIENT_CONFIG = {
     // Default OFF — workflow específico de Duke por ahora; otros clientes no
     // ven la pestaña hasta que lo prendan.
     zoomControl: false,
+    // Conectar WhatsApp: Embedded Signup de Meta — el cliente conecta su número
+    // de WhatsApp Business en tres clics, sin consola de desarrolladores.
+    // Default OFF: requiere que Stratos ya esté aprobado como proveedor de
+    // tecnología y que `meta.appId` / `meta.configId` estén poblados.
+    // Ver ops/META-TECH-PROVIDER-briefing.md
+    whatsappSignup: false,
+  },
+
+  // Integración con Meta (WhatsApp Business Platform).
+  // Se llena cuando Stratos AI quede registrado como proveedor de tecnología.
+  // El APP SECRET no va aquí: vive solo en el backend (n8n).
+  meta: {
+    appId:             null,  // Identificador de la app de Meta
+    configId:          null,  // Configuración de Embedded Signup
+    // Endpoint del backend que intercambia el `code` por token y registra el
+    // canal vía fn_registrar_canal_whatsapp. Ver ops/RUTEO-WHATSAPP-multicliente.md
+    signupCallbackUrl: null,
   },
 
   // Contacto y soporte
