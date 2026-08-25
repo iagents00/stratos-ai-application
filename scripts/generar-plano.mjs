@@ -21,11 +21,20 @@ import { fileURLToPath } from "node:url";
 
 const RAIZ = join(dirname(fileURLToPath(import.meta.url)), "..");
 const SRC  = join(RAIZ, "src");
-const leer = (p) => readFileSync(p, "utf8");
-const rel  = (p) => relative(RAIZ, p);
+// Misma razón que en generar-mapa.mjs: sin normalizar CRLF, generar desde
+// Windows da un resultado distinto al de Linux y el plano deja de coincidir
+// con lo que verifica el CI.
+const leer = (p) => readFileSync(p, "utf8").replace(/\r\n/g, "\n");
+// Misma razón que en generar-mapa.mjs: sin normalizar, una generación desde
+// Windows escribe las rutas con barras invertidas y el plano deja de servir
+// fuera de esa máquina.
+const rel  = (p) => relative(RAIZ, p).split("\\").join("/");
 
+// Mismo motivo que en generar-mapa.mjs: readdirSync no garantiza el mismo orden
+// entre sistemas, y el plano depende del orden para resolver a qué archivo se
+// atribuye cada cosa. Ordenar lo vuelve reproducible.
 function archivos(dir, acc = []) {
-  for (const n of readdirSync(dir)) {
+  for (const n of readdirSync(dir).sort()) {
     const p = join(dir, n);
     if (statSync(p).isDirectory()) archivos(p, acc);
     else if (/\.jsx?$/.test(n)) acc.push(p);

@@ -24,8 +24,13 @@ const SRC  = join(RAIZ, "src");
 
 /* ── utilidades ─────────────────────────────────────────────────────────── */
 
+// .sort() no es cosmético: readdirSync devuelve el orden del sistema de archivos,
+// que NO es el mismo en Windows que en Linux. Como el índice de textos guarda la
+// PRIMERA aparición de cada frase, sin ordenar la misma frase quedaba atribuida a
+// un archivo distinto según quién generara el mapa, y el chequeo del CI fallaba
+// sin que nada estuviera mal. Ordenado, el resultado es idéntico en todas partes.
 function archivos(dir, acc = []) {
-  for (const n of readdirSync(dir)) {
+  for (const n of readdirSync(dir).sort()) {
     const p = join(dir, n);
     if (statSync(p).isDirectory()) archivos(p, acc);
     else if (/\.(jsx?|css)$/.test(n)) acc.push(p);
@@ -33,8 +38,19 @@ function archivos(dir, acc = []) {
   return acc;
 }
 
-const leer  = (p) => readFileSync(p, "utf8");
-const rel   = (p) => relative(RAIZ, p);
+// Se normalizan los finales de línea al leer. En Windows git deja los archivos
+// con CRLF (core.autocrlf), o sea un byte más por línea, y este generador busca
+// el componente de cada pantalla dentro de una VENTANA FIJA de 600 caracteres:
+// con CRLF esa ventana alcanza menos líneas y algunas vistas quedaban sin
+// resolver. El síntoma era que al regenerar desde Windows, pantallas que sí
+// tienen archivo (Copilot, entre otras) aparecían como "sin vista propia".
+const leer  = (p) => readFileSync(p, "utf8").replace(/\r\n/g, "\n");
+// relative() de Node devuelve el separador del sistema: en Windows salen barras
+// invertidas (src\app\views\...). Si el MAPA se genera desde una máquina Windows
+// queda con rutas que no existen para el CI ni para nadie en Mac o Linux, y el
+// diff se vuelve ilegible porque cambian las 900 rutas a la vez. Se normaliza acá
+// para que el archivo salga igual sin importar quién lo genere.
+const rel   = (p) => relative(RAIZ, p).split("\\").join("/");
 const lineas = (t) => t.split("\n").length;
 
 /**

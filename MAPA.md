@@ -6,7 +6,7 @@
 >
 > ¿Buscás un botón o un texto y no está acá? `npm run buscar "texto"`
 
-**173 archivos · 74.664 líneas**
+**174 archivos · 74.732 líneas**
 
 ---
 
@@ -34,7 +34,7 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | **Caja** | `src/app/views/Caja.jsx` | 580 |
 | **Chat** | `src/app/views/ChatEquipo.jsx` | 569 |
 | **Proyectos** | `src/app/views/ERP.jsx` | 698 |
-| **iAgents** | `src/app/views/IACRM.jsx` | 690 |
+| **iAgents** | `src/app/views/IACRM.jsx` | 622 |
 | **Finanzas** | `src/app/views/FinanzasAdmin.jsx` | 458 |
 | **Stratos RH** | `src/app/views/RRHHModule.jsx` | 839 |
 | **Papelera** | `src/app/views/Trash.jsx` | 285 |
@@ -159,8 +159,8 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | `RRHHModule.jsx` | 839 | _sin describir_ |
 | `InformeAvances.jsx` | 747 | _sin describir_ |
 | `ERP.jsx` | 698 | _sin describir_ |
-| `IACRM.jsx` | 690 | iAgents · Equipo de Agentes IA |
 | `WhatsApp.jsx` | 667 | _sin describir_ |
+| `IACRM.jsx` | 622 | iAgents · Equipo de Agentes IA |
 | `Caja.jsx` | 580 | _sin describir_ |
 | `ChatEquipo.jsx` | 569 | _sin describir_ |
 | `ComandoDirectivo.pdf.js` | 514 | _sin describir_ |
@@ -193,6 +193,7 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | `ConectarWhatsApp.jsx` | 156 | Conectar WhatsApp Business en tres clics |
 | `LeadChatHistory.jsx` | 152 | _sin describir_ |
 | `ScheduledCallBadge.jsx` | 144 | _sin describir_ |
+| `IACRMPlanes.jsx` | 119 | _sin describir_ |
 | `constants.js` | 116 | _sin describir_ |
 | `ZoomLista.jsx` | 107 | Lista compacta y clickeable de Zooms — la usan los apartados "Calentitos" y |
 | `PublicLanding.jsx` | 95 | La landing personalizada que abre el CLIENTE FINAL |
@@ -334,7 +335,7 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | `DeliveryHubCRM.jsx` | 880 | Hub de Entrega del CRM Stratos AI v1.0 |
 | `ManualCRM.jsx` | 789 | Manual del CRM Stratos AI para asesores |
 | `manual-telegram-content.js` | 714 | Manual del COPILOT / Asistente IA (Duke del Caribe) |
-| `LoginScreen.jsx` | 692 | Pantalla de autenticación completa para la app |
+| `LoginScreen.jsx` | 709 | Pantalla de autenticación completa para la app |
 | `PricingScreen.jsx` | 554 | Planes y pagos para Stratos AI |
 | `DataDeletion.jsx` | 553 | _sin describir_ |
 | `DukeLeadRouter.jsx` | 343 | _sin describir_ |
@@ -422,7 +423,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Acciones acumuladas · Asesores vs. iAgents | `src/app/views/Dash.jsx:85` |
 | Acciones de cierre IA | `src/app/views/CRM/components.jsx:5614` |
 | Activa tu Copilot AI | `src/app/views/Copilot.jsx:1762` |
-| Actividad del equipo IA — hoy | `src/app/views/IACRM.jsx:291` |
+| Actividad del equipo IA — hoy | `src/app/views/IACRM.jsx:299` |
 | Actividad reciente | `src/app/views/CRM/index.jsx:5893` |
 | ACTIVO | `src/app/views/CRM/components.jsx:5501` |
 | Activos post-Zoom | `src/app/views/ComandoDirectivo.jsx:694` |
@@ -545,7 +546,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Comando Directivo | `src/app/views/ComandoDirectivo.jsx:662` |
 | Cómo se usa | `src/app/components/DynIsland.jsx:467` |
 | Cómo terminaron los Zooms del mes | `src/app/views/ZoomControl/Graficas.jsx:202` |
-| Cómo trabaja el equipo IA | `src/app/views/IACRM.jsx:568` |
+| Cómo trabaja el equipo IA | `src/app/views/IACRM.jsx:576` |
 | Cómo verá el cliente | `src/app/views/LandingPages/index.jsx:131` |
 | Complejidad: | `src/app/views/Marketing.jsx:2190` |
 | Conectado | `src/app/views/Profile.jsx:731` |
@@ -588,7 +589,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Descartar audio | `src/app/views/Copilot.jsx:1575` |
 | Descartar grabación | `src/app/views/CRM/LeadWhatsAppChat.jsx:808` |
 | Describe la tarea... | `src/app/views/CRM/components.jsx:2109` |
-| Descripción | `src/app/views/IACRM.jsx:433` |
+| Descripción | `src/app/views/IACRM.jsx:441` |
 | Descripción / detalle (opcional) | `src/app/views/Caja.jsx:393` |
 | Descripción del desarrollo | `src/app/views/LandingPages/index.jsx:739` |
 | Descripción y detalles | `src/app/views/LandingPages/index.jsx:737` |
@@ -718,6 +719,7 @@ hacen. Agregarles un bloque `/** ... */` arriba los hace aparecer solos acá.
 - `src/lib/iagents-actions.js` (126 líneas)
 - `src/mobile-perf.css` (121 líneas)
 - `src/app/data/rivieraProperties.js` (119 líneas)
+- `src/app/views/IACRMPlanes.jsx` (119 líneas)
 - `src/app/views/ZoomControl/constants.js` (116 líneas)
 - `src/app/components/CopilotMark.jsx` (113 líneas)
 - `src/hooks/useRailsConfig.js` (112 líneas)

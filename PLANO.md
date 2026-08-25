@@ -160,13 +160,13 @@ casa; por eso mismo son los que más cuidado piden.
 
 | Archivo | Archivos que lo importan |
 |---|---|
-| `design-system/tokens.js` | **70** |
+| `design-system/tokens.js` | **71** |
 | `lib/supabase.js` | **40** |
 | `hooks/useAuth.js` | **35** |
 | `hooks/useViewport.js` | **28** |
-| `app/SharedComponents.jsx` | **19** |
+| `app/SharedComponents.jsx` | **20** |
 | `hooks/useClient.js` | **16** |
-| `lib/native.js` | **9** |
+| `lib/native.js` | **11** |
 | `app/views/CRM/zoom-metrics.js` | **6** |
 | `app/components/Logo.jsx` | **5** |
 | `app/views/CRM/date-range.js` | **5** |
