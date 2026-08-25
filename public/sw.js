@@ -33,7 +33,7 @@
  *   sola en la próxima navegación. Ver `main.jsx` → SERVICE WORKER.
  */
 
-const CACHE_VERSION = 'stratos-v421'; // v421: fuera del binario el tarifario de iAgents y el alta de cuenta
+const CACHE_VERSION = 'stratos-v422'; // v422: salud distingue caché de DNS local
 
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 // Nombre ESTABLE a propósito: no lleva CACHE_VERSION (ver cabecera).
