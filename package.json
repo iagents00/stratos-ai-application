@@ -19,7 +19,8 @@
     "verificar-lenguaje": "node scripts/verificar-lenguaje.mjs",
     "verificar-migraciones": "node scripts/verificar-migraciones.mjs",
     "verificar-rpc": "node scripts/verificar-rpc-permisos.mjs",
-    "build:app": "vite build --mode app"
+    "build:app": "vite build --mode app",
+    "salud": "node scripts/salud.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.104.1",
