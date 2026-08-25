@@ -130,8 +130,10 @@ Al terminar:
 2. `npm run build` y los cinco `verificar-*`.
 3. PR → merge → verifica el deploy real:
    ```bash
-   curl -s https://app.stratoscapitalgroup.com/sw.js | grep CACHE_VERSION
+   npm run salud
    ```
+   Te dice qué versión está sirviendo de verdad. Si no es la tuya, todavía no
+   llegó: espera y vuelve a correrlo.
 
 ---
 
@@ -141,22 +143,71 @@ Al terminar:
 
 | Qué | Dónde | Por qué no lo puede hacer un dev |
 |---|---|---|
-| **Pagar las facturas de Supabase** | Dashboard → Billing | La tarjeta está bloqueada. Si suspenden el proyecto se cae todo. Es lo más urgente. |
-| **Aplicar `237_post_zoom_protocol.sql`** | SQL editor del dashboard | Escritura a la base de producción |
+| **Pagar la factura de Supabase** | Dashboard → Billing | Queda pagada el **martes 25 de agosto por la tarde**. Mientras tanto producción sigue en pie: lo verifiqué contra la base — lectura y escritura, 2 515 clientes, gente registrando leads esta madrugada. No está restringida. |
+| **Aplicar `237_post_zoom_protocol.sql`** | SQL editor del dashboard | Escritura a producción. **No corre prisa**: comprobé que ninguna de sus seis funciones existe todavía en la base, y que la app desplegada no llama a ninguna. No hay nada roto esperándola; aplica limpio cuando se quiera. |
 | **Cargar `APPSTORE_PRIVATE_KEY`** | GitHub → Settings → Secrets | Es el `.p8` de la llave de API. Una llave privada la maneja solo su dueño. Se descarga una única vez. |
 | **Prender Stratos Rails** | Dentro de la app: Menú → Proceso | Le reordena la pantalla a los 20 asesores |
 
-### Lo que sí puede avanzar un dev
+---
+
+## Plan de arranque para un dev que entra hoy
+
+Nada de esto depende de la factura de Supabase ni de Apple. Está ordenado por
+valor, no por dificultad.
+
+### Primera hora — montar y mirar
+
+1. Clona, `npm install`, `npm run dev`. Entra con el botón de Demo.
+2. **`npm run salud`** — te dice en dos segundos si producción está viva y con
+   qué versión. Córrelo antes de sospechar de tu código: la mitad de los "no
+   funciona" son que estás viendo un despliegue viejo.
+3. `npm run buscar <lo que sea>` y una pasada a `MAPA.md`. No leas el código
+   completo; aprende a encontrarlo.
+
+### Lo primero que vale la pena
+
+**1 · Triar los PRs abiertos.** Hay once, el más viejo de abril. Siete ya tienen
+conflicto, o sea que nadie los va a mergear tal cual — pero siguen ahí
+sugiriendo que hay trabajo pendiente que en realidad no existe.
+
+Un veredicto ya está hecho, como muestra del método: el
+[#221](https://github.com/iagents00/stratos-ai-application/pull/221) dice
+*"HOTFIX: corrige crash en producción"* y lleva dos meses abierto. Da miedo. No
+lo es: arreglaba que `accent` se usara antes de declararse en
+`ComandoDirectivo.jsx`, y ese archivo se reescribió desde entonces —hoy `T` se
+resuelve en la línea 251 y `accent` en la 252, antes de cualquier uso. **El bug
+ya no existe; el PR se cierra.**
+
+Lo mismo para los otros diez: abrir, ver si lo que arreglaban sigue roto,
+cerrar o rescatar. Es la forma más rápida de aprender el código y deja el
+tablero diciendo la verdad.
+
+**2 · Terminar el chequeo de permisos de RPC.** `npm run verificar-rpc` revisa
+la mitad que se puede ver desde el repo y te lo dice: *falta la otra mitad,
+contra la base*. Esa mitad es una consulta:
+
+```sql
+select * from fn_qa_rpc_del_front() where estado <> 'OK';
+```
+
+Existe porque una función nueva nace ejecutable por la llave `anon` pública, y
+eso ya rompió el historial del Copiloto una vez. Correrla y dejar dicho qué
+salió cierra el hueco.
+
+**3 · Auditar un módulo con el método que ha funcionado.** Abrir la pantalla,
+hacer el flujo completo, y comprobar **el resultado** —la ficha del cliente, la
+fila en la base—, no que el botón "hizo algo". Así salieron todos los bugs de
+esta semana, incluido uno donde la tarjeta desaparecía de la pantalla y no
+guardaba nada.
+
+### Si sobra tiempo
 
 - **Conectar un procesador de pagos.** Hoy la pantalla de Planes lleva a hablar
   con un ejecutivo. Si se decide cobrar en línea, el lugar exacto es
   `ContratarModal` en `src/landing/PricingScreen.jsx`.
-- **Auditar módulos con el método que ha funcionado**: abrir la pantalla, hacer
-  el flujo completo, y comprobar el RESULTADO (la ficha del cliente, la fila en
-  la base), no que el botón "hizo algo". Así salieron todos los bugs de esta
-  semana.
 - Las mejoras de performance listadas en `CLAUDE.md`, si algo se siente lento.
-  **No antes** — la app va fluida hoy.
+  **No antes** — la app va fluida hoy, y ya hubo una falsa alarma de lentitud
+  que costó tiempo.
 
 ---
 
