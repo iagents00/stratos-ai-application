@@ -34,6 +34,8 @@
 	<string>Stratos AI guarda en tus fotos los comprobantes y reportes que descargas del CRM.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Stratos AI accede a tus fotos para adjuntar identificaciones y documentos al expediente de un cliente.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>Stratos AI usa el reconocimiento de voz para que puedas dictarle al asistente en vez de escribir.</string>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>
