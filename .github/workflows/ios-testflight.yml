@@ -182,6 +182,18 @@ jobs:
           ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
         run: |
           set -eo pipefail
+          # signingCertificate NO es opcional acá, aunque la firma sea automatica.
+          # La corrida del 25-ago-2026 exporto con el PERFIL correcto (se leyo el
+          # embedded.mobileprovision del .ipa: "iOS Team Store Provisioning
+          # Profile", aps-environment=production, sin dispositivos) pero firmo con
+          # el CERTIFICADO DE DESARROLLO que quedo en el llavero al archivar, y
+          # altool lo rechazo:
+          #   "Invalid Signature... The file at path App.app/App is not properly
+          #    signed. Make sure you have signed your application with a
+          #    distribution certificate, not an ad hoc certificate or a
+          #    development certificate."
+          # Con esta linea se le dice explicitamente cual usar, y
+          # -allowProvisioningUpdates lo baja con la API key.
           cat > "$RUNNER_TEMP/ExportOptions.plist" <<PLIST
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -190,6 +202,7 @@ jobs:
             <key>method</key><string>app-store-connect</string>
             <key>teamID</key><string>${TEAM_ID}</string>
             <key>signingStyle</key><string>automatic</string>
+            <key>signingCertificate</key><string>Apple Distribution</string>
             <key>uploadSymbols</key><true/>
             <key>destination</key><string>export</string>
           </dict>
