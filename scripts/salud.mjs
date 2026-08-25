@@ -38,6 +38,32 @@ if (!URL_BASE || !LLAVE) {
 const APP = "https://app.stratoscapitalgroup.com";
 const ESPERA = 15000;
 
+/**
+ * ¿El nombre existe de verdad, o solo tu computadora cree que no?
+ *
+ * Cuando un proyecto de Supabase está pausado su subdominio deja de resolver, y
+ * tu resolvedor guarda ese "no existe" un rato. Al reactivarse, el mundo lo ve
+ * volver y tú sigues viendo el error viejo — durante minutos.
+ *
+ * Nos pasó el 25-ago-2026: producción llevaba media hora arriba y desde aquí
+ * seguía dando "Could not resolve host". Media hora de diagnóstico contra un
+ * problema que ya no existía.
+ *
+ * Le preguntamos a un resolvedor público por HTTPS, que no pasa por la caché
+ * local, y así distinguimos las dos cosas.
+ */
+async function existeElNombre(host) {
+  try {
+    const r = await fetch(`https://dns.google/resolve?name=${host}&type=A`, {
+      signal: AbortSignal.timeout(8000),
+    });
+    const j = await r.json();
+    return Array.isArray(j.Answer) && j.Answer.some((a) => a.type === 1);
+  } catch {
+    return null; // sin internet para preguntar: no sabemos, y no vamos a inventar
+  }
+}
+
 async function pedir(url, opciones = {}) {
   const corte = AbortSignal.timeout(ESPERA);
   const t0 = Date.now();
@@ -50,6 +76,7 @@ async function pedir(url, opciones = {}) {
 }
 
 const hallazgos = [];
+let baseCaida = false;
 function decir(titulo, bien, detalle, comoArreglar) {
   console.log(`  ${bien ? "✓" : "✗"} ${titulo.padEnd(22)} ${detalle}`);
   if (!bien) hallazgos.push({ titulo, detalle, comoArreglar });
@@ -67,15 +94,31 @@ console.log("\nSalud de producción\n");
   if (r.estado === 200) {
     decir("Base de datos", true, `responde en ${r.ms} ms`);
   } else if (r.estado === 402) {
+    baseCaida = true;
     decir("Base de datos", false, "RESTRINGIDA POR FALTA DE PAGO (402)",
       "Paga la factura en supabase.com/dashboard/org/_/billing. Se reactiva sola en minutos.");
   } else if (r.estado === 0) {
-    decir("Base de datos", false, `sin respuesta — ${r.error}`,
-      "El proyecto puede estar pausado (los planes gratuitos se pausan tras una semana sin uso) o eliminado. Míralo en el dashboard de Supabase.");
+    const host = new URL(URL_BASE).hostname;
+    const existe = await existeElNombre(host);
+    if (existe === true) {
+      baseCaida = true;
+      decir("Base de datos", false, "tu computadora no la encuentra, pero SÍ existe",
+        `El proyecto está arriba: un resolvedor público resuelve ${host}. Lo que falla es la caché de DNS de tu máquina, que guardó un "no existe" de cuando estaba pausado. Límpiala:\n      sudo dscacheutil -flushcache; sudo killall -HUP mDNSResponder\n      Los usuarios en otras redes ya lo ven bien.`);
+    } else if (existe === false) {
+      baseCaida = true;
+      decir("Base de datos", false, "el proyecto no existe para nadie",
+        `Ningún resolvedor conoce ${host}. Está pausado o eliminado. Pausado no pierde datos: se restaura desde el dashboard. Los planes gratuitos se pausan tras una semana sin uso, y una factura sin pagar también lo baja.`);
+    } else {
+      baseCaida = true;
+      decir("Base de datos", false, `sin respuesta — ${r.error}`,
+        "Tampoco pude preguntarle a un resolvedor público, así que puede ser tu conexión. Revisa que tengas internet antes de culpar a Supabase.");
+    }
   } else if (r.estado >= 500) {
+    baseCaida = true;
     decir("Base de datos", false, `caída o degradada (${r.estado})`,
       "Revisa status.supabase.com antes de tocar nada: puede no ser tuyo.");
   } else {
+    baseCaida = true;
     decir("Base de datos", false, `respuesta inesperada (${r.estado})`,
       "Si es 401, la llave anon cambió: actualiza FALLBACK_KEY en src/lib/supabase.js.");
   }
@@ -84,8 +127,17 @@ console.log("\nSalud de producción\n");
 // ── 2. Login ────────────────────────────────────────────────────────────────
 {
   const r = await pedir(`${URL_BASE}/auth/v1/health`, { headers: { apikey: LLAVE } });
-  decir("Login", r.estado === 200, r.estado === 200 ? `responde en ${r.ms} ms` : `no responde (${r.estado || r.error})`,
-    "Sin esto nadie entra, aunque la base esté viva. Revisa Authentication en el dashboard.");
+  if (r.estado === 200) {
+    decir("Login", true, `responde en ${r.ms} ms`);
+  } else if (baseCaida) {
+    // Vive en el mismo dominio que la base. Si la base no se alcanza, esto
+    // tampoco — y es la MISMA causa. Contarlo aparte inventa un segundo
+    // problema y manda a revisar Authentication, que no tiene nada que ver.
+    console.log("  · Login                  no se puede saber hasta que vuelva la base");
+  } else {
+    decir("Login", false, `no responde (${r.estado || r.error})`,
+      "La base sí responde, así que es Authentication en particular. Míralo en el dashboard.");
+  }
 }
 
 // ── 3. La app ───────────────────────────────────────────────────────────────
