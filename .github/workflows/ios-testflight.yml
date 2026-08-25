@@ -53,7 +53,7 @@ concurrency:
 
 jobs:
   testflight:
-    runs-on: macos-15
+    runs-on: macos-26
     timeout-minutes: 60
 
     env:
@@ -64,10 +64,25 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Elegir Xcode estable del runner
+      - name: Elegir el Xcode mas nuevo del runner
         run: |
-          sudo xcode-select -s /Applications/Xcode.app
+          # Apple RECHAZA el paquete si se compilo con un SDK viejo. La corrida
+          # del 25-ago-2026 murio en la validacion con:
+          #   "This app was built with the iOS 18.5 SDK. All iOS and iPadOS apps
+          #    must be built with the iOS 26 SDK or later, included in Xcode 26
+          #    or later, in order to be uploaded to App Store Connect."
+          # Pasaba porque /Applications/Xcode.app apunta al que el runner deja
+          # enlazado por defecto, que no es el mas nuevo. Se elige explicitamente
+          # el mayor por version, para que esto no vuelva a envejecer solo.
+          set -eo pipefail
+          echo "Xcodes disponibles en el runner:"
+          ls -d /Applications/Xcode*.app
+          ELEGIDO=$(ls -d /Applications/Xcode*.app | sort -V | tail -1)
+          echo "Elegido: $ELEGIDO"
+          sudo xcode-select -s "$ELEGIDO"
           xcodebuild -version
+          echo "SDKs de iOS disponibles:"
+          xcodebuild -showsdks | grep -i ios || true
 
       - uses: actions/setup-node@v4
         with:
@@ -157,8 +172,6 @@ jobs:
             -authenticationKeyIssuerID "$ISSUER_ID" \
             DEVELOPMENT_TEAM="$TEAM_ID" \
             CODE_SIGN_STYLE=Automatic \
-            CODE_SIGNING_ALLOWED=NO \
-            CODE_SIGNING_REQUIRED=NO \
             CURRENT_PROJECT_VERSION=${{ github.run_number }} \
             $ARGS
 
