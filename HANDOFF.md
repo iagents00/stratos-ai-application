@@ -59,6 +59,59 @@ npm run buscar "lo que sea"     # busca en el mapa del código
 
 ---
 
+## Montar el proyecto en otra computadora
+
+Lo que necesitas instalar:
+
+| | Para qué |
+|---|---|
+| **Node 22** | correr el proyecto |
+| **git** y **gh** (`gh auth login`) | clonar, abrir PRs, disparar el flujo de TestFlight |
+| **Xcode 26+** | solo si vas a tocar la app móvil |
+| **Supabase CLI** | opcional, solo para consultas de lectura |
+
+```bash
+gh repo clone iagents00/stratos-ai-application
+cd stratos-ai-application
+npm install
+npm run dev
+```
+
+**No hace falta configurar credenciales para empezar.** El cliente de Supabase
+trae valores de respaldo y el login tiene botón de Demo, así que la app levanta
+sin pedirte llaves. Para trabajar contra datos reales hace falta una cuenta del
+CRM, que la crea un admin.
+
+### Lo que NO viaja con la cuenta
+
+Si retomas el proyecto en otra máquina, esto se queda atrás:
+
+- **La memoria de las sesiones anteriores.** Vive en `~/.claude/` de cada
+  computadora, no en la nube. Por eso el conocimiento que importa está en este
+  repo —`CLAUDE.md`, este archivo, `MAPA.md`— y no en la cabeza de una sesión:
+  ahí sí viaja, y además queda versionado y revisable.
+- **La sesión de `gh`, la del CLI de Supabase y la de Xcode.** Cada una se
+  autentica en cada máquina.
+
+Lo que sí viaja con el repo: `.claude/settings.json`, `.claude/launch.json` y
+las skills de `.claude/skills/`.
+
+### Este repositorio es PÚBLICO
+
+Cualquiera en internet puede leer el código. Eso no es un accidente que haya que
+corregir a las carreras —la seguridad del sistema está en la RLS de Supabase y en
+los secretos de GitHub, no en que el código sea secreto— pero **cambia lo que se
+puede escribir aquí**:
+
+- Nunca una llave, un token, un `.p8`, ni el ID de una credencial.
+- Nunca datos de clientes reales: ni nombres, ni teléfonos, ni correos.
+- La llave `anon` de Supabase sí está en el código, y está bien: va en el bundle
+  del navegador de todos modos, y sin RLS correcta no serviría de nada tenerla
+  escondida.
+
+Si algún día se decide hacerlo privado, ojo con lo que depende de él (despliegues
+e integraciones) antes de cambiar la visibilidad.
+
 ## Cómo se trabaja aquí
 
 ```bash
@@ -140,7 +193,7 @@ primero. Nada se mueve solo bajo el asesor. Ver
 | Acceso a la API de App Store Connect | **Aprobado** — la solicitud se aprobó al instante |
 | Identificador de la app | `com.stratoscapitalgroup.crm`, con **Push Notifications** habilitado |
 | App en App Store Connect | **Stratos AI** · ID `6804826565` · versión 1.0 en preparación |
-| Llave de API | **Stratos CI** · rol Gestor de apps · ID `F8Q7R9J7V7` |
+| Llave de API | **Stratos CI** · rol Gestor de apps (el ID vive en App Store Connect, no acá: **este repo es público**) |
 | Secretos en GitHub | `APPLE_TEAM_ID`, `APPSTORE_ISSUER_ID` y `APPSTORE_KEY_ID` cargados |
 
 La casilla de Push hay que marcarla **al registrar el identificador**: si falta, la
