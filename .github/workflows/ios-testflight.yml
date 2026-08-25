@@ -119,6 +119,53 @@ jobs:
           printf '%s' "$APPSTORE_PRIVATE_KEY" > "$HOME/private_keys/AuthKey_${APPSTORE_KEY_ID}.p8"
           chmod 600 "$HOME/private_keys/AuthKey_${APPSTORE_KEY_ID}.p8"
 
+      # ⭐ FIRMA CON CERTIFICADO PROPIO. Por que no alcanzaba la firma automatica:
+      # el runner solo termina con UNA identidad, y es de desarrollo. Medido el
+      # 25-ago-2026 con `security find-identity`:
+      #   1) "Apple Development: Created via API"   -> 1 valid identities found
+      # El certificado de distribucion que gestiona Apple NUNCA se instala en el
+      # runner, asi que ninguna combinacion de opciones podia firmar con el.
+      #
+      # Se creo uno propio desde un CSR (openssl) via la API de App Store Connect,
+      # junto con su perfil de App Store. Los dos viven en secretos del repo.
+      #
+      # Tres trampas conocidas, todas cubiertas aca:
+      #  1. set-key-partition-list: sin esto codesign pide autorizacion por
+      #     ventana y el job se cuelga sin mensaje.
+      #  2. list-keychains: el llavero nuevo tiene que quedar en la lista de
+      #     busqueda O xcodebuild no lo mira.
+      #  3. El perfil se copia en las DOS rutas: Xcode 15+ usa UserData, lo
+      #     anterior usa MobileDevice.
+      - name: Instalar el certificado y el perfil de publicacion
+        env:
+          CERT_P12:  ${{ secrets.IOS_DIST_CERT_P12 }}
+          CERT_PASS: ${{ secrets.IOS_DIST_CERT_PASSWORD }}
+          PROFILE:   ${{ secrets.IOS_PROVISION_PROFILE }}
+        run: |
+          set -eo pipefail
+          KEYCHAIN="$RUNNER_TEMP/build.keychain-db"
+          KPASS=$(openssl rand -base64 24)
+
+          security create-keychain -p "$KPASS" "$KEYCHAIN"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN"
+          security unlock-keychain -p "$KPASS" "$KEYCHAIN"
+          security list-keychains -d user -s "$KEYCHAIN" $(security list-keychains -d user | tr -d '"')
+
+          printf '%s' "$CERT_P12" | base64 --decode > "$RUNNER_TEMP/dist.p12"
+          security import "$RUNNER_TEMP/dist.p12" -k "$KEYCHAIN" -P "$CERT_PASS" \
+            -T /usr/bin/codesign -T /usr/bin/security -f pkcs12
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KPASS" "$KEYCHAIN" > /dev/null
+          rm -f "$RUNNER_TEMP/dist.p12"
+
+          for D in "$HOME/Library/MobileDevice/Provisioning Profiles" \
+                   "$HOME/Library/Developer/Xcode/UserData/Provisioning Profiles"; do
+            mkdir -p "$D"
+            printf '%s' "$PROFILE" | base64 --decode > "$D/d96ea157-0456-4a26-90a3-23a14f8e9ff4.mobileprovision"
+          done
+
+          echo "=== identidades tras instalar (tiene que aparecer una de Distribution) ==="
+          security find-identity -v -p codesigning
+
       - name: Archivar (firma automática con la API key)
         env:
           KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
@@ -171,7 +218,9 @@ jobs:
             -authenticationKeyID "$KEY_ID" \
             -authenticationKeyIssuerID "$ISSUER_ID" \
             DEVELOPMENT_TEAM="$TEAM_ID" \
-            CODE_SIGN_STYLE=Automatic \
+            CODE_SIGN_STYLE=Manual \
+            CODE_SIGN_IDENTITY=7096D7584C8ED19C1B47DD621DE3FC547C9D01D9 \
+            PROVISIONING_PROFILE_SPECIFIER="Stratos AI App Store" \
             CURRENT_PROJECT_VERSION=${{ github.run_number }} \
             $ARGS
 
@@ -208,11 +257,11 @@ jobs:
             <key>method</key><string>app-store-connect</string>
             <key>teamID</key><string>${TEAM_ID}</string>
             <key>signingStyle</key><string>manual</string>
-            <key>signingCertificate</key><string>Apple Distribution</string>
+            <key>signingCertificate</key><string>7096D7584C8ED19C1B47DD621DE3FC547C9D01D9</string>
             <key>provisioningProfiles</key>
             <dict>
               <key>com.stratoscapitalgroup.crm</key>
-              <string>iOS Team Store Provisioning Profile: com.stratoscapitalgroup.crm</string>
+              <string>Stratos AI App Store</string>
             </dict>
             <key>uploadSymbols</key><true/>
             <key>destination</key><string>export</string>
