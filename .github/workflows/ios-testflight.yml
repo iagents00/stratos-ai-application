@@ -123,22 +123,28 @@ jobs:
           # perfil solo, usando la API key. Sin eso habría que exportar el
           # certificado a mano desde una Mac y guardarlo como secret.
           #
-          # CODE_SIGN_IDENTITY se pisa aca A PROPOSITO. El proyecto que genera
-          # Capacitor trae escrito 'iPhone Developer' en las configuraciones
-          # Debug Y Release del proyecto (project.pbxproj), y ese valor le gana
-          # a la firma automatica: aunque archivemos en Release, Xcode sale a
-          # buscar un perfil de DESARROLLO, que exige tener iPhones registrados
-          # en la cuenta. La primera corrida (25-ago-2026) murio justo ahi:
-          #   "Your team has no devices from which to generate a provisioning
-          #    profile" + "No profiles for 'com.stratoscapitalgroup.crm' were
-          #    found: Xcode couldn't find any iOS App Development provisioning
-          #    profiles matching..."
-          # Para TestFlight el perfil correcto es de DISTRIBUCION, y ese no
-          # necesita ningun dispositivo registrado.
           #
-          # Se pisa desde aca y NO en project.pbxproj a proposito: asi el
-          # proyecto sigue firmando con identidad de desarrollo cuando alguien
-          # lo abre en una Mac para depurar en su propio iPhone.
+          # NO SE FIRMA AL ARCHIVAR, se firma al EXPORTAR. Por que:
+          # con CODE_SIGN_STYLE=Automatic, Xcode firma el archivo "para
+          # desarrollo" — lo dice el mismo con todas las letras — y un perfil
+          # de desarrollo EXIGE al menos un dispositivo registrado en la
+          # cuenta. Este equipo no tiene ninguno, y para TestFlight no hace
+          # falta que lo tenga. Las dos corridas del 25-ago-2026 murieron aca:
+          #   1) "Your team has no devices from which to generate a
+          #      provisioning profile" (pedia perfil de desarrollo)
+          #   2) al forzar CODE_SIGN_IDENTITY="Apple Distribution":
+          #      "App has conflicting provisioning settings. App is
+          #       automatically signed for development, but a conflicting
+          #       code signing identity Apple Distribution has been manually
+          #       specified."
+          # La salida: archivar SIN firmar y dejar que -exportArchive firme,
+          # que es donde se usa el perfil de DISTRIBUCION — y ese no necesita
+          # ningun dispositivo. -allowProvisioningUpdates lo obtiene con la
+          # API key en el paso siguiente.
+          #
+          # Alternativa si esto no alcanza: registrar el UDID de un iPhone en
+          # Certificates, Identifiers & Profiles (solo lo puede hacer Ivan) y
+          # volver a la firma automatica normal.
           xcodebuild archive \
             -project "$PROJECT" \
             -scheme "$SCHEME" \
@@ -151,7 +157,8 @@ jobs:
             -authenticationKeyIssuerID "$ISSUER_ID" \
             DEVELOPMENT_TEAM="$TEAM_ID" \
             CODE_SIGN_STYLE=Automatic \
-            CODE_SIGN_IDENTITY="Apple Distribution" \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
             CURRENT_PROJECT_VERSION=${{ github.run_number }} \
             $ARGS
 
