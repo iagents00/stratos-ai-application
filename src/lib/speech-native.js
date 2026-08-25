@@ -32,13 +32,11 @@
  * ───────────────────────────────────────────────────────────
  */
 
+import { nativePlugin } from "./native";
+
 /** El plugin solo existe dentro del contenedor nativo. */
 function plugin() {
-  try {
-    const c = typeof window !== "undefined" ? window.Capacitor : undefined;
-    if (!c?.isNativePlatform?.()) return null;
-    return c.Plugins?.SpeechRecognition || null;
-  } catch { return null; }
+  return nativePlugin("SpeechRecognition");
 }
 
 /** ¿Este dispositivo puede dictar? Falso en web, siempre. */

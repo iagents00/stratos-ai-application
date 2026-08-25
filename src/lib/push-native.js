@@ -30,15 +30,19 @@
  * ─────────────────────────────────────────────────────────────────────────────
  */
 import { supabase } from "./supabase";
-import { isNativeApp } from "./native";
+import { isNativeApp, nativePlugin } from "./native";
 
-/** El plugin solo existe dentro del contenedor nativo. */
+/**
+ * El plugin solo existe dentro del contenedor nativo.
+ *
+ * Usa el ayudante central de native.js A PROPÓSITO: antes leía
+ * Capacitor.Plugins.PushNotifications directo, y eso devolvía null SIEMPRE —
+ * Plugins solo se llena al llamar registerPlugin, cosa que nadie hacía. O sea
+ * que el registro de push nunca llegó a ejecutarse dentro de la app, y sin un
+ * solo error. El porqué completo está en el comentario de nativePlugin.
+ */
 function plugin() {
-  try {
-    const c = typeof window !== "undefined" ? window.Capacitor : undefined;
-    if (!c?.isNativePlatform?.()) return null;
-    return c.Plugins?.PushNotifications || null;
-  } catch { return null; }
+  return nativePlugin("PushNotifications");
 }
 
 /** "ios" | "android" | null */

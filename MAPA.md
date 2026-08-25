@@ -6,7 +6,7 @@
 >
 > ¿Buscás un botón o un texto y no está acá? `npm run buscar "texto"`
 
-**175 archivos · 74.894 líneas**
+**175 archivos · 74.922 líneas**
 
 ---
 
@@ -363,11 +363,11 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | `docx.js` | 203 | _sin describir_ |
 | `lead-backup.js` | 197 | _sin describir_ |
 | `whatsapp-signup.js` | 196 | _sin describir_ |
+| `push-native.js` | 176 | _sin describir_ |
 | `informe-doc.js` | 175 | _sin describir_ |
-| `push-native.js` | 172 | _sin describir_ |
+| `native.js` | 175 | _sin describir_ |
 | `audit.js` | 151 | Cliente del sistema de auditoría |
-| `native.js` | 149 | _sin describir_ |
-| `speech-native.js` | 134 | _sin describir_ |
+| `speech-native.js` | 132 | _sin describir_ |
 | `markdown.jsx` | 129 | Mini renderer Markdown → React. Pensado para las notas privadas que la IA |
 | `iagents-actions.js` | 126 | _sin describir_ |
 | `backup.js` | 116 | Respaldo manual de la base de datos |
@@ -708,16 +708,16 @@ hacen. Agregarles un bloque `/** ... */` arriba los hace aparecer solos acá.
 - `src/clients/muebleria/config.js` (182 líneas)
 - `src/hooks/useWhatsAppInbox.js` (178 líneas)
 - `src/app/views/CRM/RequiresHumanButton.jsx` (177 líneas)
+- `src/lib/push-native.js` (176 líneas)
 - `src/lib/informe-doc.js` (175 líneas)
-- `src/lib/push-native.js` (172 líneas)
+- `src/lib/native.js` (175 líneas)
 - `src/app/views/MiDrive.jsx` (171 líneas)
 - `src/components/UpdatePill.jsx` (157 líneas)
 - `src/app/components/DynamicIsland.jsx` (153 líneas)
 - `src/app/views/CRM/LeadChatHistory.jsx` (152 líneas)
-- `src/lib/native.js` (149 líneas)
 - `src/app/views/CRM/ScheduledCallBadge.jsx` (144 líneas)
 - `src/clients/brasa-y-piedra/config.js` (140 líneas)
-- `src/lib/speech-native.js` (134 líneas)
+- `src/lib/speech-native.js` (132 líneas)
 - `src/lib/iagents-actions.js` (126 líneas)
 - `src/mobile-perf.css` (121 líneas)
 - `src/app/data/rivieraProperties.js` (119 líneas)
