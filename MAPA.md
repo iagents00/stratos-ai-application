@@ -467,7 +467,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Áreas de atención | `src/app/views/RRHHModule.jsx:786` |
 | Arrastra el CV aquí o haz clic para subir | `src/app/views/RRHHModule.jsx:709` |
 | Arrastra para cambiar la prioridad | `src/app/views/Marketing.jsx:2236` |
-| Asesor | `src/app/views/ComandoDirectivo.jsx:771` |
+| Asesor | `src/app/views/CRM/AdvisorMetrics.jsx:226` |
 | Asignar a un asesor | `src/app/features/MetaPanel/index.jsx:871` |
 | Asignar a… | `src/app/views/Marketing.jsx:863` |
 | Asignar responsable | `src/app/features/MetaPanel/index.jsx:860` |
@@ -537,7 +537,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Click para agendar fecha/hora de la cita | `src/app/views/CRM/index.jsx:4625` |
 | Click para editar | `src/app/features/MetaPanel/index.jsx:333` |
 | Click para escribir el número directamente | `src/app/views/CRM/components.jsx:695` |
-| Cliente | `src/app/views/Copilot.jsx:1078` |
+| Cliente | `src/app/views/CRM/ZoomBoard.jsx:290` |
 | Coaching IA · Análisis | `src/app/views/CRM/components.jsx:4998` |
 | Color de acento para la tarjeta | `src/app/views/LandingPages/index.jsx:802` |
 | Color personalizado | `src/app/views/LandingPages/index.jsx:815` |
@@ -603,7 +603,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Documentos del Equipo | `src/app/features/MetaPanel/index.jsx:1575` |
 | Dónde | `src/app/components/DynIsland.jsx:462` |
 | Drive | `src/app/views/Marketing.jsx:2035` |
-| Editar | `src/app/views/CRM/components.jsx:2503` |
+| Editar | `src/app/views/CRM/LeadRelatedContacts.jsx:237` |
 | Editar acción | `src/app/views/CRM/components.jsx:2492` |
 | Editar nota | `src/app/views/CRM/LeadNotesTimeline.jsx:380` |
 | Editar usuario | `src/app/features/Admin/AdminPanel.jsx:316` |

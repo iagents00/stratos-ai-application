@@ -24,8 +24,13 @@ const SRC  = join(RAIZ, "src");
 
 /* ── utilidades ─────────────────────────────────────────────────────────── */
 
+// .sort() no es cosmético: readdirSync devuelve el orden del sistema de archivos,
+// que NO es el mismo en Windows que en Linux. Como el índice de textos guarda la
+// PRIMERA aparición de cada frase, sin ordenar la misma frase quedaba atribuida a
+// un archivo distinto según quién generara el mapa, y el chequeo del CI fallaba
+// sin que nada estuviera mal. Ordenado, el resultado es idéntico en todas partes.
 function archivos(dir, acc = []) {
-  for (const n of readdirSync(dir)) {
+  for (const n of readdirSync(dir).sort()) {
     const p = join(dir, n);
     if (statSync(p).isDirectory()) archivos(p, acc);
     else if (/\.(jsx?|css)$/.test(n)) acc.push(p);
