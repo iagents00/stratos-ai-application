@@ -233,9 +233,26 @@ lee al montar la pantalla.
 
 Vive en **`mobile/`**. Es un shell de Capacitor que empaqueta el CRM dentro del
 binario (no carga la web remota). **No crear otro proyecto Capacitor** — ya pasó
-y se tiró el trabajo.
+y se tiró el trabajo. Ver `mobile/README.md`.
 
-Compila y corre hoy. Ver `mobile/README.md`.
+Verificado contra el `main` del 24-ago-2026:
+
+- `npm run build:app` deja 4.5 MB, con las 15 páginas públicas excluidas.
+- El proyecto de Xcode compila en Debug y en Release.
+- El manifiesto de privacidad que Apple exige (`PrivacyInfo.xcprivacy`) **sí
+  queda dentro del `.app`** — comprobado en el binario compilado, no solo en el
+  repo. Xcode lo incluye por los grupos sincronizados, sin entrada explícita en
+  Copy Bundle Resources.
+- Arranca a la pantalla de login, sin website, con el nombre "Stratos AI".
+
+**Un dato para medir en el primer build de TestFlight:** en el simulador tarda
+entre 4.6 y 9 segundos en pintar la primera pantalla, y Release no mejora sobre
+Debug. La misma app en web pinta en 574 ms, así que no es el bundle de React:
+es el arranque del WebView. El simulador es lento levantando su primer proceso
+de WebKit, así que lo más probable es que en un teléfono real sea mucho menos —
+pero **hay que medirlo ahí antes de darlo por bueno**. Si en dispositivo también
+son segundos, vale la pena investigarlo: es pantalla oscura cada vez que un
+asesor abre la app.
 
 ### Migraciones
 
