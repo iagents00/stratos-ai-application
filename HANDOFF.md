@@ -254,6 +254,34 @@ pero **hay que medirlo ahí antes de darlo por bueno**. Si en dispositivo tambi�
 son segundos, vale la pena investigarlo: es pantalla oscura cada vez que un
 asesor abre la app.
 
+### Antes de crear un proyecto en Supabase: mira en qué organización
+
+**Cada proyecto activo en la organización Pro cuesta ~$10/mes.** El plan Pro son
+$25 e incluye crédito de compute para UN solo proyecto. Tres proyectos costaban
+$45 — que es exactamente el ejemplo que trae la documentación de Supabase.
+
+Por eso desde el 24-ago-2026 están separados:
+
+| Organización | Plan | Proyecto |
+|---|---|---|
+| `synergyfornature@gmail.com's Org` | **Pro $25** | `stratos-prod` |
+| `Gvintell` | Free $0 | `gvintell-prod` |
+| `Finanzas Plenas` | Free $0 | `finanzas-plenas` |
+
+Si creas un proyecto nuevo en la organización Pro sin pensarlo, la factura sube
+$10 al mes y nadie se entera hasta que llega. El diagnóstico se hace en
+`/dashboard/org/<org>/usage`: la línea **Micro Compute Hours** delata cuántos
+proyectos están corriendo.
+
+Dos cosas que aprendimos por las malas: **los proyectos Pro no se pueden
+pausar** —hay que transferirlos primero a una organización Free—, y pausar o
+transferir **no borra el consumo que ya ocurrió** en el ciclo en curso.
+
+Los dos proyectos en Free tienen tope de 500 MB de base, sin respaldos
+automáticos, y se pausan solos tras una semana sin actividad. Miden 24 y 25 MB,
+así que sobra espacio — pero si alguno empieza a tener uso real de clientes,
+devuélvelo a Pro por los respaldos.
+
 ### Migraciones
 
 La carpeta va por el **238**. Toda migración nueva usa el siguiente número
