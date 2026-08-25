@@ -25,6 +25,7 @@ import {
   getCopilotActivity, sendCopilotMessage,
 } from "../../lib/telegram";
 import { getPushStatus, enablePushNotifications } from "../../lib/push";
+import { startNativeDictation } from "../../lib/speech-native";
 import { supabase } from "../../lib/supabase";
 import { isNativeApp } from "../../lib/native";
 import { useIsMobile } from "../../hooks/useViewport";
@@ -753,30 +754,57 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
     setVoiceTranscript("");
     setSpeechDown(false);
 
-    const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
-    // Sin motor de dictado no hay NADA que enviar después (el audio no viaja al
-    // servidor): se avisa de una en vez de dejar grabar un mensaje muerto.
-    if (!SpeechRec) {
-      setErrBanner("Este navegador no convierte la voz en texto (pasa en la app Android y en navegadores con el dictado bloqueado). Escribe el mensaje, o abre el CRM en Chrome o Safari para dictar.");
-      return;
-    }
+    // ── DICTADO ────────────────────────────────────────────────────────────
+    // Dos motores, en este orden:
+    //
+    //   1. EL DEL SISTEMA OPERATIVO (app nativa). El navegador que corre dentro
+    //      de una app NO trae SpeechRecognition — ni WKWebView en iPhone ni el
+    //      WebView de Android. Hasta el 25-ago-2026 eso dejaba el micrófono del
+    //      Copilot inservible en la app: grababa y descartaba el audio, con el
+    //      cartel "No pude convertir tu voz en texto". Ahora lo transcribe el
+    //      teléfono, el mismo motor del micrófono del teclado: gratis, en vivo,
+    //      y el audio no sale del dispositivo.
+    //
+    //   2. EL DEL NAVEGADOR (web). Sigue igual que siempre. En Brave se define
+    //      pero el servicio se corta al arrancar, y eso se avisa en vivo.
+    //
+    // El objeto nativo expone .stop() a propósito: misma forma que el del
+    // navegador, así el resto del componente no distingue cuál le tocó.
+    let usandoNativo = false;
     try {
-      const recSpeech = new SpeechRec();
-      recSpeech.lang = "es-MX";
-      recSpeech.continuous = true;
-      recSpeech.interimResults = true;
-      recSpeech.onresult = (e) => {
-        let t = "";
-        for (let i = 0; i < e.results.length; i++) t += e.results[i][0].transcript;
-        if (mountedRef.current) setVoiceTranscript(t);
-      };
-      // Brave SÍ define webkitSpeechRecognition pero corta el servicio al arrancar
-      // (error network/service-not-allowed) → el transcript queda vacío para siempre.
-      // Se marca para avisarlo EN VIVO en la barra de grabación.
-      recSpeech.onerror = () => { if (mountedRef.current) setSpeechDown(true); };
-      recSpeech.start();
-      recognitionRef.current = recSpeech;
-    } catch { setSpeechDown(true); }
+      const sesionNativa = await startNativeDictation({
+        onText: (t) => { if (mountedRef.current) setVoiceTranscript(t); },
+        onError: () => { if (mountedRef.current) setSpeechDown(true); },
+      });
+      if (sesionNativa) { recognitionRef.current = sesionNativa; usandoNativo = true; }
+    } catch { /* sigue por el camino del navegador */ }
+
+    if (!usandoNativo) {
+      const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+      // Sin motor de dictado no hay NADA que enviar después (el audio no viaja al
+      // servidor): se avisa de una en vez de dejar grabar un mensaje muerto.
+      if (!SpeechRec) {
+        setErrBanner("Este navegador no convierte la voz en texto. Escribe el mensaje, o abre el CRM en Chrome o Safari para dictar.");
+        return;
+      }
+      try {
+        const recSpeech = new SpeechRec();
+        recSpeech.lang = "es-MX";
+        recSpeech.continuous = true;
+        recSpeech.interimResults = true;
+        recSpeech.onresult = (e) => {
+          let t = "";
+          for (let i = 0; i < e.results.length; i++) t += e.results[i][0].transcript;
+          if (mountedRef.current) setVoiceTranscript(t);
+        };
+        // Brave SÍ define webkitSpeechRecognition pero corta el servicio al arrancar
+        // (error network/service-not-allowed) → el transcript queda vacío para siempre.
+        // Se marca para avisarlo EN VIVO en la barra de grabación.
+        recSpeech.onerror = () => { if (mountedRef.current) setSpeechDown(true); };
+        recSpeech.start();
+        recognitionRef.current = recSpeech;
+      } catch { setSpeechDown(true); }
+    }
 
     let stream;
     try { stream = await navigator.mediaDevices.getUserMedia({ audio: true }); }
@@ -818,7 +846,7 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
     const t = (voiceTranscriptRef.current || "").trim();
     if (t) { send(t); inputRef.current?.focus(); return; }
     setPendingVoiceBlob(null); setVoiceTranscript("");
-    setErrBanner("No pude convertir tu voz en texto en este navegador (pasa en Brave y en la app Android). Escribe el mensaje — o dicta desde Chrome o Safari.");
+    setErrBanner("No pude convertir tu voz en texto en este navegador (le pasa a Brave). Escribe el mensaje, o dicta desde la app, Chrome o Safari.");
     inputRef.current?.focus();
   };
 
