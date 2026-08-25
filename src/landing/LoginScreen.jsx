@@ -10,6 +10,7 @@ import { supabase } from "../lib/supabase";
 import { pingSupabase } from "../lib/offline-mode";
 import { useClient } from "../hooks/useClient";
 import { requestRecoveryCode, verifyRecoveryCode } from "../lib/recovery";
+import { isNativeApp } from "../lib/native";
 
 const font  = `-apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif`;
 const fontD = `-apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif`;
@@ -52,8 +53,24 @@ function seedDemo() {
 }
 
 export default function LoginScreen({ onLogin }) {
-  // Si viene de landing con ?register=true → abrir tab de registro directamente
-  const initialMode = new URLSearchParams(window.location.search).get("register") === "true"
+  // ⚠️ APP NATIVA: no hay alta de cuenta. Dos motivos distintos, y los dos pesan.
+  //
+  // 1) Apple. Bajo la Guideline 3.1.3(c) (Enterprise Services) la app se sostiene
+  //    porque se le vende a EMPRESAS y el empleado solo entra a usar lo que su
+  //    empresa contrató. Una pantalla de alta dentro de la app sugiere que desde
+  //    ahí se puede crear una suscripción, y hay rechazos documentados por eso.
+  // 2) Seguridad. El alta pública crea una organización nueva y deja al que se
+  //    registra como 'admin' de ella. Cerrar esta puerta en la app achica esa
+  //    superficie (la web sigue igual: acá NO se toca ese flujo).
+  //
+  // El alta real de un asesor la hace el admin de su empresa desde el CRM, que
+  // es como funciona el producto de todos modos.
+  const nativo = isNativeApp();
+
+  // Si viene de landing con ?register=true → abrir tab de registro directamente.
+  // En nativo se ignora: si no, el parámetro sería la puerta lateral a la pantalla
+  // que acabamos de esconder.
+  const initialMode = !nativo && new URLSearchParams(window.location.search).get("register") === "true"
     ? "register" : "login";
 
   // ── Marca por cliente (white-label) ───────────────────────────────
@@ -409,8 +426,8 @@ export default function LoginScreen({ onLogin }) {
                 </h2>
               </div>
 
-              {/* ─ Tabs ─ */}
-              {(mode === "login" || mode === "register") && (
+              {/* ─ Tabs ─ (en la app nativa no hay alta: queda solo iniciar sesión) */}
+              {!nativo && (mode === "login" || mode === "register") && (
                 <div style={{ display: "flex", gap: 3, background: "rgba(255,255,255,0.04)", borderRadius: 10, padding: 3, marginBottom: 24 }}>
                   {[["login","Iniciar sesión"],["register","Solicitar acceso"]].map(([m, lbl]) => (
                     <button key={m} type="button" onClick={() => go(m)} style={{

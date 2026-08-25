@@ -47,6 +47,14 @@ const SOLO_WEB = new Set([
   // Con '../' porque quien la importa es App.jsx, que vive en src/app/. El hook
   // compara la cadena tal como está escrita en el import, no la ruta resuelta.
   '../landing/PricingScreen.jsx',
+  // El SEGUNDO tarifario, que nadie había visto: la pestaña "Planes" del módulo
+  // iAgents. Precios en dólares, botón "Contratar", y un plan descrito como
+  // "Para asesores individuales" — la frase que rompe el argumento de la
+  // Guideline 3.1.3(c), que es lo que sostiene a esta app: se le vende a
+  // EMPRESAS, no a personas sueltas. Esconder la pestaña no bastaba porque el
+  // texto seguía dentro del paquete que abre el revisor.
+  // Con './' porque quien la importa es IACRM.jsx, que vive en la misma carpeta.
+  './IACRMPlanes.jsx',
 ])
 
 /**
