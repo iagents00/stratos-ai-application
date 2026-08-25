@@ -175,6 +175,25 @@ jobs:
             CURRENT_PROJECT_VERSION=${{ github.run_number }} \
             $ARGS
 
+      # Paso de MEDICION, no de arreglo. Tras 8 corridas el diagnostico chocaba
+      # con una pregunta que nadie habia contestado: que certificados y perfiles
+      # quedan REALMENTE instalados en el runner despues de archivar. En manual,
+      # xcodebuild solo usa lo que esta instalado, y fallaba con:
+      #   "No signing certificate \"iOS Distribution\" found"
+      #   "No \"iOS App Store\" profiles ... are installed"
+      # Si aparece un certificado de distribucion con otro nombre, se usa ese.
+      # Si no aparece ninguno, hace falta uno propio (creado desde un CSR).
+      - name: Que quedo instalado en el llavero (diagnostico)
+        if: always()
+        run: |
+          echo "=== identidades de firma disponibles ==="
+          security find-identity -v -p codesigning || true
+          echo "=== todas las identidades del llavero por defecto ==="
+          security find-identity -v || true
+          echo "=== perfiles instalados ==="
+          ls -la ~/Library/MobileDevice/Provisioning\ Profiles/ 2>/dev/null || echo "  (no hay carpeta de perfiles)"
+          ls -la ~/Library/Developer/Xcode/UserData/Provisioning\ Profiles/ 2>/dev/null || echo "  (tampoco en UserData)"
+
       - name: Exportar el .ipa
         env:
           TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
