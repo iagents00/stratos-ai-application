@@ -55,29 +55,29 @@ columna, estos son los archivos que hay que revisar.
 
 | Tabla | Archivos | Dónde se usa |
 |---|---|---|
-| `profiles` | 6 | `app/views/Caja.jsx` · `app/views/ChatEquipo.jsx` · `app/views/FinanzasAdmin.jsx` _+3_ |
-| `evidencia` | 5 | `app/views/CRM/components.jsx` · `app/views/Caja.jsx` · `app/views/ChatEquipo.jsx` _+2_ |
-| `team_expenses` | 4 | `app/views/Caja.jsx` · `app/views/Copilot.jsx` · `app/views/FinanzasAdmin.jsx` _+1_ |
-| `leads` | 3 | `app/views/Caja.jsx` · `app/views/FinanzasAdmin.jsx` · `app/views/WhatsApp.jsx` |
-| `expediente_items` | 2 | `app/views/CRM/LeadChatHistory.jsx` · `app/views/CRM/LeadNotesTimeline.jsx` |
-| `mkt_tasks` | 2 | `app/views/Marketing.jsx` · `app/views/PlanSemanal.jsx` |
-| `team_actions` | 2 | `app/App.jsx` · `app/views/ProductividadTab.jsx` |
-| `catalogo_proyectos` | 1 | `app/views/ERP.jsx` |
-| `device_tokens` | 1 | `lib/push-native.js` |
-| `discovery_data` | 1 | `app/views/CRM/LeadDiscoveryPanel.jsx` |
-| `fin_invoices` | 1 | `app/views/CuentasCobro.jsx` |
-| `lead_related_contacts` | 1 | `app/views/CRM/LeadRelatedContacts.jsx` |
-| `mkt_brands` | 1 | `app/views/Marketing.jsx` |
-| `mkt_daily_reports` | 1 | `app/views/Marketing.jsx` |
-| `mkt_pipeline_columns` | 1 | `app/views/Marketing.jsx` |
-| `mkt_pipeline_items` | 1 | `app/views/Marketing.jsx` |
-| `mkt_projects` | 1 | `app/views/Marketing.jsx` |
-| `mkt_requests` | 1 | `app/views/Marketing.jsx` |
-| `organizations` | 1 | `hooks/useRailsConfig.js` |
-| `scheduled_calls` | 1 | `hooks/useScheduledCalls.js` |
-| `voice_call_logs` | 1 | `app/views/CRM/LeadVoiceCalls.jsx` |
-| `whatsapp_messages` | 1 | `lib/whatsapp-chat.js` |
-| `whatsapp_outbox` | 1 | `lib/whatsapp-chat.js` |
+| `profiles` | 6 | `src\app\views\Caja.jsx` · `src\app\views\ChatEquipo.jsx` · `src\app\views\FinanzasAdmin.jsx` _+3_ |
+| `evidencia` | 5 | `src\app\views\CRM\components.jsx` · `src\app\views\Caja.jsx` · `src\app\views\ChatEquipo.jsx` _+2_ |
+| `team_expenses` | 4 | `src\app\views\Caja.jsx` · `src\app\views\Copilot.jsx` · `src\app\views\FinanzasAdmin.jsx` _+1_ |
+| `leads` | 3 | `src\app\views\Caja.jsx` · `src\app\views\FinanzasAdmin.jsx` · `src\app\views\WhatsApp.jsx` |
+| `expediente_items` | 2 | `src\app\views\CRM\LeadChatHistory.jsx` · `src\app\views\CRM\LeadNotesTimeline.jsx` |
+| `mkt_tasks` | 2 | `src\app\views\Marketing.jsx` · `src\app\views\PlanSemanal.jsx` |
+| `team_actions` | 2 | `src\app\App.jsx` · `src\app\views\ProductividadTab.jsx` |
+| `catalogo_proyectos` | 1 | `src\app\views\ERP.jsx` |
+| `device_tokens` | 1 | `src\lib\push-native.js` |
+| `discovery_data` | 1 | `src\app\views\CRM\LeadDiscoveryPanel.jsx` |
+| `fin_invoices` | 1 | `src\app\views\CuentasCobro.jsx` |
+| `lead_related_contacts` | 1 | `src\app\views\CRM\LeadRelatedContacts.jsx` |
+| `mkt_brands` | 1 | `src\app\views\Marketing.jsx` |
+| `mkt_daily_reports` | 1 | `src\app\views\Marketing.jsx` |
+| `mkt_pipeline_columns` | 1 | `src\app\views\Marketing.jsx` |
+| `mkt_pipeline_items` | 1 | `src\app\views\Marketing.jsx` |
+| `mkt_projects` | 1 | `src\app\views\Marketing.jsx` |
+| `mkt_requests` | 1 | `src\app\views\Marketing.jsx` |
+| `organizations` | 1 | `src\hooks\useRailsConfig.js` |
+| `scheduled_calls` | 1 | `src\hooks\useScheduledCalls.js` |
+| `voice_call_logs` | 1 | `src\app\views\CRM\LeadVoiceCalls.jsx` |
+| `whatsapp_messages` | 1 | `src\lib\whatsapp-chat.js` |
+| `whatsapp_outbox` | 1 | `src\lib\whatsapp-chat.js` |
 
 ### Funciones del servidor (RPC)
 
@@ -86,49 +86,49 @@ error no está en el frontend.
 
 | Función | Llamada desde |
 |---|---|
-| `fn_comando_nsg` | `app/views/ComandoOps.jsx` · `app/views/Nomina.jsx` |
-| `fn_doc_guardar` | `app/views/CuentasCobro.jsx` · `app/views/InformeAvances.jsx` |
-| `fn_doc_link_agregar` | `app/features/MetaPanel/DocsStratos.jsx` · `app/views/InformeAvances.jsx` |
-| `add_expediente_item` | `app/views/CRM/LeadNotesTimeline.jsx` |
-| `copilot_log_msg` | `app/views/Copilot.jsx` |
-| `copilot_log_msg_media` | `app/views/Copilot.jsx` |
-| `create_portfolio_link` | `app/views/LandingPages/index.jsx` |
-| `fn_bulk_reassign_leads` | `app/views/WhatsApp.jsx` |
-| `fn_call_targets` | `app/App.jsx` |
-| `fn_chat_channels` | `app/views/ChatEquipo.jsx` |
-| `fn_chat_create_channel` | `app/views/ChatEquipo.jsx` |
-| `fn_chat_messages` | `app/views/ChatEquipo.jsx` |
-| `fn_chat_read` | `app/views/ChatEquipo.jsx` |
-| `fn_chat_send` | `app/views/ChatEquipo.jsx` |
-| `fn_docs_listar` | `app/features/MetaPanel/DocsStratos.jsx` |
-| `fn_fin_cuenta_cobro_cliente` | `app/views/CuentasCobro.jsx` |
-| `fn_fin_cuenta_cobro_persona` | `app/views/CuentasCobro.jsx` |
-| `fn_fin_invoice_set_monto` | `app/views/CuentasCobro.jsx` |
-| `fn_fin_invoices_list` | `app/views/CuentasCobro.jsx` |
-| `fn_fin_set_nomina` | `app/views/Nomina.jsx` |
-| `fn_get_my_recovery_email` | `app/views/Profile.jsx` |
-| `fn_get_my_timezone` | `app/views/Profile.jsx` |
-| `fn_informe_avances` | `app/views/InformeAvances.jsx` |
-| `fn_informe_borrador` | `app/views/InformeAvances.jsx` |
-| `fn_informe_nota_agregar` | `app/views/InformeAvances.jsx` |
-| `fn_informe_nota_borrar` | `app/views/InformeAvances.jsx` |
-| `fn_informe_notas_listar` | `app/views/InformeAvances.jsx` |
-| `fn_llamada_en_curso` | `app/App.jsx` |
-| `fn_mkt_intel` | `app/App.jsx` |
-| `fn_set_my_recovery_email` | `app/views/Profile.jsx` |
-| `fn_set_my_timezone` | `app/views/Profile.jsx` |
-| `fn_start_team_call` | `app/App.jsx` |
-| `fn_wa_conversations` | `hooks/useWhatsAppInbox.js` |
-| `fn_wa_mark_read` | `hooks/useWhatsAppInbox.js` |
-| `fn_wa_outbox_retry` | `lib/whatsapp-chat.js` |
-| `fn_wa_toggle_pin` | `hooks/useWhatsAppInbox.js` |
-| `mkt_approve_evidence` | `app/views/Copilot.jsx` |
-| `mkt_attach_evidence_to` | `app/views/Copilot.jsx` |
-| `mkt_comment_evidence` | `app/views/Copilot.jsx` |
-| `mkt_evidence_candidates` | `app/views/Copilot.jsx` |
-| `rails_agenda_hoy` | `lib/agenda.js` |
-| `rails_marcar_accion` | `lib/agenda.js` |
-| `resolve_portfolio_link` | `app/views/LandingPages/PublicLanding.jsx` |
+| `fn_comando_nsg` | `src\app\views\ComandoOps.jsx` · `src\app\views\Nomina.jsx` |
+| `fn_doc_guardar` | `src\app\views\CuentasCobro.jsx` · `src\app\views\InformeAvances.jsx` |
+| `fn_doc_link_agregar` | `src\app\features\MetaPanel\DocsStratos.jsx` · `src\app\views\InformeAvances.jsx` |
+| `add_expediente_item` | `src\app\views\CRM\LeadNotesTimeline.jsx` |
+| `copilot_log_msg` | `src\app\views\Copilot.jsx` |
+| `copilot_log_msg_media` | `src\app\views\Copilot.jsx` |
+| `create_portfolio_link` | `src\app\views\LandingPages\index.jsx` |
+| `fn_bulk_reassign_leads` | `src\app\views\WhatsApp.jsx` |
+| `fn_call_targets` | `src\app\App.jsx` |
+| `fn_chat_channels` | `src\app\views\ChatEquipo.jsx` |
+| `fn_chat_create_channel` | `src\app\views\ChatEquipo.jsx` |
+| `fn_chat_messages` | `src\app\views\ChatEquipo.jsx` |
+| `fn_chat_read` | `src\app\views\ChatEquipo.jsx` |
+| `fn_chat_send` | `src\app\views\ChatEquipo.jsx` |
+| `fn_docs_listar` | `src\app\features\MetaPanel\DocsStratos.jsx` |
+| `fn_fin_cuenta_cobro_cliente` | `src\app\views\CuentasCobro.jsx` |
+| `fn_fin_cuenta_cobro_persona` | `src\app\views\CuentasCobro.jsx` |
+| `fn_fin_invoice_set_monto` | `src\app\views\CuentasCobro.jsx` |
+| `fn_fin_invoices_list` | `src\app\views\CuentasCobro.jsx` |
+| `fn_fin_set_nomina` | `src\app\views\Nomina.jsx` |
+| `fn_get_my_recovery_email` | `src\app\views\Profile.jsx` |
+| `fn_get_my_timezone` | `src\app\views\Profile.jsx` |
+| `fn_informe_avances` | `src\app\views\InformeAvances.jsx` |
+| `fn_informe_borrador` | `src\app\views\InformeAvances.jsx` |
+| `fn_informe_nota_agregar` | `src\app\views\InformeAvances.jsx` |
+| `fn_informe_nota_borrar` | `src\app\views\InformeAvances.jsx` |
+| `fn_informe_notas_listar` | `src\app\views\InformeAvances.jsx` |
+| `fn_llamada_en_curso` | `src\app\App.jsx` |
+| `fn_mkt_intel` | `src\app\App.jsx` |
+| `fn_set_my_recovery_email` | `src\app\views\Profile.jsx` |
+| `fn_set_my_timezone` | `src\app\views\Profile.jsx` |
+| `fn_start_team_call` | `src\app\App.jsx` |
+| `fn_wa_conversations` | `src\hooks\useWhatsAppInbox.js` |
+| `fn_wa_mark_read` | `src\hooks\useWhatsAppInbox.js` |
+| `fn_wa_outbox_retry` | `src\lib\whatsapp-chat.js` |
+| `fn_wa_toggle_pin` | `src\hooks\useWhatsAppInbox.js` |
+| `mkt_approve_evidence` | `src\app\views\Copilot.jsx` |
+| `mkt_attach_evidence_to` | `src\app\views\Copilot.jsx` |
+| `mkt_comment_evidence` | `src\app\views\Copilot.jsx` |
+| `mkt_evidence_candidates` | `src\app\views\Copilot.jsx` |
+| `rails_agenda_hoy` | `src\lib\agenda.js` |
+| `rails_marcar_accion` | `src\lib\agenda.js` |
+| `resolve_portfolio_link` | `src\app\views\LandingPages\PublicLanding.jsx` |
 
 ---
 
@@ -160,21 +160,21 @@ casa; por eso mismo son los que más cuidado piden.
 
 | Archivo | Archivos que lo importan |
 |---|---|
-| `design-system/tokens.js` | **70** |
-| `lib/supabase.js` | **40** |
-| `hooks/useAuth.js` | **35** |
-| `hooks/useViewport.js` | **28** |
-| `app/SharedComponents.jsx` | **19** |
-| `hooks/useClient.js` | **16** |
-| `lib/native.js` | **9** |
-| `app/views/CRM/zoom-metrics.js` | **6** |
-| `app/components/Logo.jsx` | **5** |
-| `app/views/CRM/date-range.js` | **5** |
-| `lib/utils.js` | **4** |
-| `lib/offline-mode.js` | **4** |
-| `design-system/primitives.jsx` | **4** |
-| `lib/audit.js` | **4** |
-| `app/constants/labels.js` | **4** |
+| `src\design-system\tokens.js` | **71** |
+| `src\lib\supabase.js` | **40** |
+| `src\hooks\useAuth.js` | **35** |
+| `src\hooks\useViewport.js` | **28** |
+| `src\app\SharedComponents.jsx` | **20** |
+| `src\hooks\useClient.js` | **16** |
+| `src\lib\native.js` | **11** |
+| `src\app\views\CRM\zoom-metrics.js` | **6** |
+| `src\app\components\Logo.jsx` | **5** |
+| `src\app\views\CRM\date-range.js` | **5** |
+| `src\lib\utils.js` | **4** |
+| `src\lib\offline-mode.js` | **4** |
+| `src\design-system\primitives.jsx` | **4** |
+| `src\lib\audit.js` | **4** |
+| `src\app\constants\labels.js` | **4** |
 
 ---
 
@@ -182,12 +182,12 @@ casa; por eso mismo son los que más cuidado piden.
 
 | Variable | Consumida en |
 |---|---|
-| `VITE_SUPABASE_ANON_KEY` | `app/App.jsx` · `lib/supabase.js` |
-| `VITE_SUPABASE_URL` | `app/App.jsx` · `lib/supabase.js` |
-| `VITE_APP_URL` | `main.jsx` |
-| `VITE_DIAGNOSTICO_CALCOM_URL` | `landing/Diagnostico.jsx` |
-| `VITE_DIAGNOSTICO_STRATOS_WEBHOOK_URL` | `lib/webhook-diagnostico-stratos.js` |
-| `VITE_TELEGRAM_BOT_USERNAME` | `app/views/Profile.jsx` |
+| `VITE_SUPABASE_ANON_KEY` | `src\app\App.jsx` · `src\lib\supabase.js` |
+| `VITE_SUPABASE_URL` | `src\app\App.jsx` · `src\lib\supabase.js` |
+| `VITE_APP_URL` | `src\main.jsx` |
+| `VITE_DIAGNOSTICO_CALCOM_URL` | `src\landing\Diagnostico.jsx` |
+| `VITE_DIAGNOSTICO_STRATOS_WEBHOOK_URL` | `src\lib\webhook-diagnostico-stratos.js` |
+| `VITE_TELEGRAM_BOT_USERNAME` | `src\app\views\Profile.jsx` |
 
 > `VITE_SUPABASE_URL` y `VITE_SUPABASE_ANON_KEY` tienen valores de respaldo
 > escritos en `src/lib/supabase.js`. Es a propósito: sin ellos, un deploy sin
