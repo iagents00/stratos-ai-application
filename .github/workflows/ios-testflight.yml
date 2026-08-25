@@ -182,18 +182,24 @@ jobs:
           ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
         run: |
           set -eo pipefail
-          # signingCertificate NO es opcional acá, aunque la firma sea automatica.
-          # La corrida del 25-ago-2026 exporto con el PERFIL correcto (se leyo el
-          # embedded.mobileprovision del .ipa: "iOS Team Store Provisioning
-          # Profile", aps-environment=production, sin dispositivos) pero firmo con
-          # el CERTIFICADO DE DESARROLLO que quedo en el llavero al archivar, y
-          # altool lo rechazo:
+          # ⚠️ FIRMA MANUAL AL EXPORTAR, A PROPOSITO. Con signingStyle automatic,
+          # xcodebuild NO vuelve a firmar: reempaqueta lo que salio del archivado,
+          # que esta firmado con el certificado de DESARROLLO que la propia firma
+          # automatica instala en el llavero del runner. altool lo rechaza:
           #   "Invalid Signature... The file at path App.app/App is not properly
           #    signed. Make sure you have signed your application with a
           #    distribution certificate, not an ad hoc certificate or a
           #    development certificate."
-          # Con esta linea se le dice explicitamente cual usar, y
-          # -allowProvisioningUpdates lo baja con la API key.
+          # Y signingCertificate NO alcanza para arreglarlo en modo automatico:
+          # la documentacion de xcodebuild dice "For manual signing only", asi que
+          # ahi se ignora en silencio (comprobado: corrida 7 del 25-ago-2026 dio
+          # exactamente el mismo error que la 6).
+          #
+          # En manual hay que nombrar el perfil. El nombre sale de abrir el .ipa
+          # de la corrida 6 y leer su embedded.mobileprovision: es el perfil de
+          # App Store que Xcode genera solo, y era el CORRECTO (production, sin
+          # dispositivos). O sea: el perfil ya estaba bien, faltaba el certificado.
+          # -allowProvisioningUpdates baja los dos con la API key (rol Admin).
           cat > "$RUNNER_TEMP/ExportOptions.plist" <<PLIST
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -201,8 +207,13 @@ jobs:
           <dict>
             <key>method</key><string>app-store-connect</string>
             <key>teamID</key><string>${TEAM_ID}</string>
-            <key>signingStyle</key><string>automatic</string>
+            <key>signingStyle</key><string>manual</string>
             <key>signingCertificate</key><string>Apple Distribution</string>
+            <key>provisioningProfiles</key>
+            <dict>
+              <key>com.stratoscapitalgroup.crm</key>
+              <string>iOS Team Store Provisioning Profile: com.stratoscapitalgroup.crm</string>
+            </dict>
             <key>uploadSymbols</key><true/>
             <key>destination</key><string>export</string>
           </dict>
