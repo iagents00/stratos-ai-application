@@ -194,7 +194,19 @@ export async function enviarAPNs(
           "apns-push-type": "alert",
           "apns-priority": "10",
           "apns-collapse-id": aviso.tag.slice(0, 64),
-          ...(esLlamada ? {} : { "apns-expiration": "0" }),
+          // CUÁNTO VALE LA PENA GUARDAR ESTE AVISO SI EL TELÉFONO NO ESTÁ.
+          //
+          // Estaba justo al revés y era grave: los recordatorios llevaban
+          // expiration 0 —«entregar ahora o descartar para siempre»— así que un
+          // asesor con el teléfono apagado o sin señal los perdía sin enterarse,
+          // y la llamada, que es lo único que de verdad caduca, no llevaba nada
+          // y Apple podía entregarla horas después.
+          //
+          // Una llamada de hace diez minutos no sirve; un recordatorio o un lead
+          // sirven igual cuando el teléfono vuelve a tener señal.
+          ...(esLlamada
+            ? { "apns-expiration": String(Math.floor(Date.now() / 1000) + 60) }
+            : {}),
           "content-type": "application/json",
         },
         body: cuerpo,
@@ -330,6 +342,9 @@ export async function enviarFCM(
         },
         android: {
           priority: "HIGH",
+          // Mismo criterio que en iPhone: la llamada caduca en un minuto, todo
+          // lo demás se guarda y se entrega cuando el teléfono vuelva.
+          ttl: esLlamada ? "60s" : "86400s",
           notification: {
             // El canal decide el sonido y si el aviso aparece encima de todo.
             // Los crea la app al arrancar (ver avisos-nativos.js).
