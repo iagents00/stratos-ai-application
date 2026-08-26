@@ -764,15 +764,34 @@ export default function App() {
       })
       .catch(() => { /* nunca romper el arranque por un aviso */ });
 
-    // Al volver del segundo plano se reprograma: el usuario pudo haber
-    // agendado (o cerrado) recordatorios desde la computadora mientras tanto.
-    const alVolver = () => {
-      if (!document.hidden) sincronizarRecordatorios(uid).catch(() => {});
+    // Se reprograma en los DOS momentos que importan, y el segundo es el que
+    // de verdad hace que esto sirva:
+    //
+    //   · al VOLVER: el usuario pudo haber agendado o cerrado recordatorios
+    //     desde la computadora mientras la app estaba guardada.
+    //   · al IRSE al fondo: es el instante exacto en que el telefono pasa a
+    //     hacerse cargo. Sin esto, alguien que le pide al Copilot "recordame en
+    //     tres minutos" y enseguida bloquea el telefono se queda SIN el aviso:
+    //     el recordatorio se creo despues de la ultima sincronizacion y nadie
+    //     lo dejo agendado. Es el caso mas comun de todos.
+    const alCambiarVisibilidad = () => {
+      sincronizarRecordatorios(uid).catch(() => {});
     };
-    document.addEventListener("visibilitychange", alVolver);
+    document.addEventListener("visibilitychange", alCambiarVisibilidad);
+
+    // Red de seguridad, porque lo de arriba es una CARRERA que se puede perder:
+    // cuando la app se va al fondo, iOS congela el navegador de adentro casi de
+    // inmediato, y la consulta puede quedar a medio camino. Este repaso cada
+    // minuto —solo con la app a la vista, no gasta bateria de fondo— hace que un
+    // recordatorio recien creado quede agendado antes de que el usuario cierre.
+    // Es barato: una consulta filtrada por asesor y con tope de 48 filas.
+    const repaso = setInterval(() => {
+      if (!document.hidden) sincronizarRecordatorios(uid).catch(() => {});
+    }, 60000);
 
     return () => {
-      document.removeEventListener("visibilitychange", alVolver);
+      clearInterval(repaso);
+      document.removeEventListener("visibilitychange", alCambiarVisibilidad);
       detenerPushNativo(uid);
       limpiarRecordatorios();
     };
