@@ -1,15 +1,17 @@
-{{nombre}}, es hoy en la noche.
+🚨 INVERSIONISTAS | ES HOY
 
-Te reenvío esto por si se te perdió entre el correo. Presentamos {{titulo}} en
-vivo: el único proyecto en preventa en la Zona Hotelera de Cancún, con vista al
-mar Caribe, la laguna y el campo de golf.
+{{nombre}}, te reenvío esto por si se te perdió entre el correo. Hoy
+presentamos la oportunidad inmobiliaria que está por entrar en una nueva
+etapa, antes de su lanzamiento oficial.
 
-Hoy {{fecha_larga}}
+🌴 Webinar exclusivo MONDRIAN Cancún
+📅 Hoy, 27 de agosto
+
 {{horarios_txt}}
 
-APARTAR MI LUGAR: {{registro_url}}
+Cupo limitado. Cerramos el registro unas horas antes de empezar.
 
-Cerramos el registro unas horas antes de empezar.
+REGÍSTRATE: {{registro_url}}
 
 {{presentador}}
 Duke del Caribe
