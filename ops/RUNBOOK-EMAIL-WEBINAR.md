@@ -37,10 +37,22 @@ quedaron idénticos. Resend usa CNAMEs, no MX, así que *Mail Settings* nunca se
 
 Los planes gratis topan por día. Con los dos, la base entera sale el mismo día:
 
-| Proveedor | Gratis al día | Cómo se usa |
-|---|---|---|
-| Resend | 100 | `enviar <slug>` (por defecto) |
-| Brevo | 300 | `enviar <slug> --proveedor brevo` |
+| Proveedor | Gratis al día | Estado | Cómo se usa |
+|---|---|---|---|
+| Resend | 100 | **verificado** 26-ago 3:34 PM | `enviar <slug>` (por defecto) |
+| Brevo | 300 | **autenticado** 26-ago | `enviar <slug> --proveedor brevo` |
+
+Los dos firman con `stratoscapitalgroup.com` y conviven sin pisarse: Resend usa
+el selector `resend._domainkey` y los CNAME `rsend`/`send`; Brevo usa
+`brevo1`/`brevo2._domainkey` y un TXT de verificación en la raíz.
+
+**Un solo registro `_dmarc`**, compartido: `v=DMARC1; p=none; rua=mailto:rua@dmarc.brevo.com`.
+Brevo mostraba su propio DMARC para copiar — ponerlo habría creado un segundo
+registro y **dos `_dmarc` rompen DMARC por completo**. En vez de eso se le
+agregó la etiqueta `rua` al que ya existía.
+
+Verificado después de todo el montaje: la app en Vercel responde 200, los MX de
+PrivateEmail y el SPF quedaron idénticos.
 
 Ambos firman con el mismo dominio verificado. La audiencia, la lista de
 exclusión, la idempotencia y el registro en el CRM son los mismos.
