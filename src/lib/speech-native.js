@@ -32,13 +32,15 @@
  * ───────────────────────────────────────────────────────────
  */
 
+import { nativePlugin } from "./native";
+
+/** Por qué no arrancó el dictado nativo la última vez. Lo lee el Copilot. */
+let ultimoMotivo = null;
+export function motivoDictadoNativo() { return ultimoMotivo; }
+
 /** El plugin solo existe dentro del contenedor nativo. */
 function plugin() {
-  try {
-    const c = typeof window !== "undefined" ? window.Capacitor : undefined;
-    if (!c?.isNativePlatform?.()) return null;
-    return c.Plugins?.SpeechRecognition || null;
-  } catch { return null; }
+  return nativePlugin("SpeechRecognition");
 }
 
 /** ¿Este dispositivo puede dictar? Falso en web, siempre. */
@@ -58,15 +60,17 @@ export async function nativeDictationAvailable() {
  * @param {Function} opts.onText   recibe el texto acumulado, en vivo
  * @param {Function} [opts.onError] se llama si el motor falla a mitad
  * @returns {Promise<{stop: Function}|null>} null si no hay dictado nativo
+ *
+ * Cuando devuelve null, deja el MOTIVO en `ultimoMotivo`. Sin eso, un fallo
+ * acá era indistinguible de "no estamos en la app": cuatro versiones seguidas
+ * (25-ago-2026) con el mismo cartel de error y sin saber cuál de los cinco
+ * pasos era el que fallaba. El motivo se muestra en el aviso del Copilot para
+ * que la próxima prueba de una persona ya SEA el diagnóstico.
  */
 export async function startNativeDictation({ onText, onError } = {}) {
+  ultimoMotivo = null;
   const p = plugin();
-  if (!p) return null;
-
-  try {
-    const disp = await p.available();
-    if (!disp?.available) return null;
-  } catch { return null; }
+  if (!p) { ultimoMotivo = "no-hay-plugin"; return null; }
 
   // El permiso se pide ACÁ y no al abrir la app: iOS muestra el diálogo en el
   // momento en que la persona toca el micrófono, que es cuando entiende para
@@ -76,13 +80,31 @@ export async function startNativeDictation({ onText, onError } = {}) {
     let perm = await p.checkPermissions();
     if (perm?.speechRecognition !== "granted") perm = await p.requestPermissions();
     if (perm?.speechRecognition !== "granted") {
+      ultimoMotivo = "permiso-no-concedido: " + String(perm?.speechRecognition);
       onError?.("sin-permiso");
       return null;
     }
-  } catch {
+  } catch (e) {
+    ultimoMotivo = "fallo-al-pedir-permiso: " + (e?.message || e);
     onError?.("sin-permiso");
     return null;
   }
+
+  // La disponibilidad se consulta DESPUÉS del permiso, y solo para informar.
+  //
+  // En iOS `available()` devuelve SFSpeechRecognizer.isAvailable, que es FALSO
+  // mientras el reconocimiento de voz no esté autorizado. Preguntarlo antes del
+  // permiso es preguntarle a una puerta cerrada si se puede pasar: siempre dice
+  // que no. Eso hacía este archivo, y por eso el dictado nunca arrancaba en el
+  // iPhone aunque el plugin estuviera perfecto (Ángel, 25-ago-2026).
+  //
+  // Y no se corta si dice que no: se intenta arrancar igual. Si de verdad no se
+  // puede, `start()` falla con un motivo REAL, que sirve mucho más que un "no
+  // disponible" a secas.
+  try {
+    const disp = await p.available();
+    if (!disp?.available) ultimoMotivo = "el-telefono-dice-que-no-esta-disponible (se intenta igual)";
+  } catch { /* informativo: no frena nada */ }
 
   const oyentes = [];
   let vivo = true;
@@ -112,7 +134,8 @@ export async function startNativeDictation({ onText, onError } = {}) {
       popup: false,           // sin la ventana de Google en Android: el chat es la interfaz
       addPunctuation: true,   // "punto", "coma" salen como signos
     });
-  } catch {
+  } catch (e) {
+    ultimoMotivo = "fallo-al-arrancar: " + (e?.message || e);
     vivo = false;
     await soltar();
     return null;

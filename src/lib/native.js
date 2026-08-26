@@ -26,11 +26,37 @@ export function isNativeApp() {
   try { return !!cap()?.isNativePlatform?.(); } catch { return false; }
 }
 
-function nativePlugin(name) {
+/**
+ * Devuelve el plugin nativo, o null si no estamos dentro de la app.
+ *
+ * ⚠️ EL registerPlugin NO ES OPCIONAL, aunque lo parezca.
+ *
+ * window.Capacitor.Plugins arranca VACÍO y solo se llena cuando alguien llama
+ * registerPlugin. Se ve en el motor (@capacitor/core, createCapacitor):
+ *
+ *     const Plugins = (cap.Plugins = cap.Plugins || {});   // arranca vacío
+ *     ...
+ *     Plugins[pluginName] = proxy;                         // dentro de registerPlugin
+ *
+ * El lado nativo publica QUÉ plugins existen en Capacitor.PluginHeaders, pero
+ * NO crea las entradas de Plugins. Por eso leer Plugins?.[name] a secas
+ * devolvía null SIEMPRE dentro de la app — en silencio, sin un error en
+ * consola. Eso dejaba mudos a Filesystem, Share, LocalNotifications, las
+ * notificaciones push y el dictado: todos caían al camino "no hay plugin" y
+ * usaban el respaldo web, que dentro de una app no existe.
+ *
+ * Lo encontró Ángel el 25-ago-2026: en la app de TestFlight el micrófono del
+ * Copilot decía "no pude convertir tu voz en texto" aunque el dictado nativo
+ * ya estaba instalado. La causa no era el dictado: era este renglón.
+ *
+ * registerPlugin(name) arma el proxy desde PluginHeaders y lo deja cacheado en
+ * Plugins, así que llamarlo de más es gratis: la segunda vez devuelve el mismo.
+ */
+export function nativePlugin(name) {
   try {
     const c = cap();
     if (!c?.isNativePlatform?.()) return null;
-    return c.Plugins?.[name] || null;
+    return c.Plugins?.[name] || c.registerPlugin?.(name) || null;
   } catch { return null; }
 }
 
@@ -129,8 +155,11 @@ export function addNotificationTapListener(callback) {
 export async function savePdfDoc(doc, filename) {
   const c = cap();
   if (c?.isNativePlatform?.()) {
-    const fs = c.Plugins?.Filesystem;
-    const share = c.Plugins?.Share;
+    // Por el ayudante central: leer c.Plugins?.X directo devolvia null SIEMPRE
+    // (ver el comentario de nativePlugin). Guardar un PDF dentro de la app
+    // nunca funciono por esto.
+    const fs = nativePlugin("Filesystem");
+    const share = nativePlugin("Share");
     if (fs) {
       const base64 = doc.output("datauristring").split(",")[1];
       const res = await fs.writeFile({ path: filename, data: base64, directory: "CACHE" });
@@ -145,4 +174,64 @@ export async function savePdfDoc(doc, filename) {
   }
   doc.save(filename);
   return true;
+}
+
+/* ── Descargar un archivo ─────────────────────────────────────────────────────
+   POR QUÉ EXISTE
+
+   En el navegador, descargar es crear un <a download> y tocarlo. Dentro de la
+   app eso NO HACE NADA: WKWebView ignora el atributo `download` y las URLs
+   blob:, sin error ni aviso. Para el usuario el botón simplemente no responde.
+
+   Lo reportó Ángel el 25-ago-2026 con el botón CSV de Control de Zooms, pero el
+   mismo patrón estaba en SIETE lugares del CRM: los tres CSV, el respaldo, los
+   documentos Word y la entrega del Hub.
+
+   Acá el archivo se escribe en el almacenamiento de la app y se abre la hoja de
+   compartir del sistema — que es como se guarda un archivo en un teléfono: el
+   usuario elige Archivos, Drive, WhatsApp o lo que quiera.
+   ────────────────────────────────────────────────────────────────────────── */
+
+/** Convierte texto a base64 respetando acentos y ñ (btoa solo entiende latin1). */
+function textoABase64(texto) {
+  const bytes = new TextEncoder().encode(String(texto));
+  let bin = "";
+  for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+  return btoa(bin);
+}
+
+/**
+ * Guarda un archivo de texto (CSV, JSON, lo que sea) de la forma que corresponda
+ * a cada plataforma. Devuelve true si se pudo.
+ *
+ * @param {string} nombre    nombre del archivo, con extensión
+ * @param {string} contenido el texto
+ * @param {string} [mime]    tipo, por defecto text/csv
+ */
+export async function descargarArchivo(nombre, contenido, mime = "text/csv;charset=utf-8") {
+  if (isNativeApp()) {
+    const fs = nativePlugin("Filesystem");
+    const share = nativePlugin("Share");
+    if (fs && share) {
+      try {
+        const res = await fs.writeFile({ path: nombre, data: textoABase64(contenido), directory: "CACHE" });
+        try {
+          await share.share({ title: nombre, url: res.uri, dialogTitle: "Guardar o compartir" });
+        } catch { /* el usuario cerró la hoja de compartir: no es un error */ }
+        return true;
+      } catch { /* cae al camino del navegador, que al menos no rompe nada */ }
+    }
+  }
+  try {
+    const blob = new Blob([contenido], { type: mime });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = nombre;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    return true;
+  } catch { return false; }
 }

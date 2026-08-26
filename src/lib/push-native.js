@@ -30,15 +30,19 @@
  * ─────────────────────────────────────────────────────────────────────────────
  */
 import { supabase } from "./supabase";
-import { isNativeApp } from "./native";
+import { isNativeApp, nativePlugin } from "./native";
 
-/** El plugin solo existe dentro del contenedor nativo. */
+/**
+ * El plugin solo existe dentro del contenedor nativo.
+ *
+ * Usa el ayudante central de native.js A PROPÓSITO: antes leía
+ * Capacitor.Plugins.PushNotifications directo, y eso devolvía null SIEMPRE —
+ * Plugins solo se llena al llamar registerPlugin, cosa que nadie hacía. O sea
+ * que el registro de push nunca llegó a ejecutarse dentro de la app, y sin un
+ * solo error. El porqué completo está en el comentario de nativePlugin.
+ */
 function plugin() {
-  try {
-    const c = typeof window !== "undefined" ? window.Capacitor : undefined;
-    if (!c?.isNativePlatform?.()) return null;
-    return c.Plugins?.PushNotifications || null;
-  } catch { return null; }
+  return nativePlugin("PushNotifications");
 }
 
 /** "ios" | "android" | null */
@@ -103,6 +107,29 @@ export async function iniciarPushNativo(userId, alTocar) {
   const PN = plugin();
   if (!PN || !userId) return false;      // web, o todavía sin sesión
   if (yaRegistrado) return true;
+
+  // ⛔ ANDROID SIN FIREBASE: register() CIERRA LA APP.
+  //
+  // En Android el push va por Firebase, y este proyecto NO tiene
+  // google-services.json — lo dice el propio build.gradle al compilar:
+  // "google-services.json not found, Push Notifications won't work".
+  //
+  // Llamar a register() sin esa configuración lanza, del lado nativo,
+  // IllegalStateException: Default FirebaseApp is not initialized. Eso NO lo
+  // atrapa el try/catch de acá: revienta en el hilo principal de Android y la
+  // app se cierra sola. Y como corre en el useEffect del login, se cierra
+  // JUSTO al entrar — que es exactamente lo que reportó Ángel el 25-ago-2026
+  // probando el APK en un Android real ("Stratos AI continúa fallando").
+  //
+  // En iPhone no pasa: APNs no usa Firebase.
+  //
+  // Se sale antes en vez de intentar: aunque no reventara, sin Firebase el push
+  // de Android no puede funcionar. Cuando se agregue google-services.json,
+  // borrar este bloque y probar en un Android real ANTES de repartir el APK.
+  if (plataforma() === "android") {
+    console.info("[push-native] Android sin Firebase: no se registra push (ver comentario).");
+    return false;
+  }
 
   try {
     // El permiso se pide una sola vez: si el usuario ya dijo que no, iOS no

@@ -13,6 +13,7 @@
  * ─────────────────────────────────────────────────────────────────────────────
  */
 import { Fragment, useMemo, useState, useCallback } from "react";
+import { descargarArchivo } from "../../../lib/native";
 import {
   Video, Plus, RefreshCw, Search, X, Pencil, Trash2, Flame, Download,
   CalendarDays, CheckCircle2, UserCheck, Clock3, AlertTriangle,
@@ -247,14 +248,9 @@ const ZoomControl = ({ theme = "dark" }) => {
       ].map(esc).join(",");
     });
     const csv = "\ufeff" + headers.join(",") + "\n" + lines.join("\n");
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `control-zooms_${today}.csv`;
-    document.body.appendChild(a);
-    a.click();
-    setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 200);
+    // descargarArchivo y no <a download>: dentro de la app ese atributo lo
+    // ignora el WebView y el botón no hace NADA, sin error. Ver native.js.
+    descargarArchivo(`control-zooms_${today}.csv`, csv);
   }, [filtered, today]);
 
   // ── Form helpers ─────────────────────────────────────────────────────────
