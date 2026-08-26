@@ -78,11 +78,31 @@ nuevo**, así que hay que guardarlo bien apenas se baje.
 2. Botón **+** (Crear una llave).
 3. Nombre: `Stratos Push`. Marcar la casilla **Apple Push Notifications service
    (APNs)**. → **Continue** → **Register**.
-4. **Download**. El archivo se llama algo como `AuthKey_AB12CD34EF.p8`.
+4. Al marcar la casilla aparece un botón **Configure** al costado. **Hay que
+   entrar ahí**, y lo que se elige adentro **no se puede cambiar nunca más**
+   (lo dice la propia pantalla). Los dos valores correctos:
+
+   | Campo | Qué elegir | Por qué |
+   |---|---|---|
+   | **Environment** | **Sandbox & Production** | Viene en «Sandbox» por defecto, y **con eso la llave NO sirve para TestFlight ni para la App Store**. Está medido: el binario que sube a TestFlight sale firmado como *production*. Eligiendo las dos, la misma llave sirve para la app publicada y para las pruebas desde Xcode. |
+   | **Key Restriction** | **Team Scoped (All Topics)** | Sirve para todas las apps del equipo. Con «Topic Specific» habría que crear otra llave por cada app nueva. |
+
+   Apple sugiere usar llaves distintas por entorno. Para un equipo de dos
+   personas y una app, eso son dos secretos que mantener en vez de uno, sin
+   ganar nada: el servidor ya elige el destino correcto según de dónde vino cada
+   teléfono (`device_tokens.entorno`).
+
+   → **Save** → **Continue** → **Register**.
+
+5. **Download**. El archivo se llama algo como `AuthKey_AB12CD34EF.p8`.
    Esos 10 caracteres del nombre son el **Key ID**: anotarlos.
 
 ⚠️ Apple deja bajarlo **una sola vez**. Si se pierde, hay que revocar esa llave
 y crear otra.
+
+> 💡 **Si estás haciendo esto a mano, el paso 4 es el que importa.** El resto se
+> corrige; ese no. Una llave creada en «Sandbox» hay que revocarla y empezar de
+> nuevo.
 
 ## Trámite 2 — Android: el proyecto de Google (10 minutos)
 
