@@ -74,6 +74,7 @@ columna, estos son los archivos que hay que revisar.
 | `mkt_projects` | 1 | `app/views/Marketing.jsx` |
 | `mkt_requests` | 1 | `app/views/Marketing.jsx` |
 | `organizations` | 1 | `hooks/useRailsConfig.js` |
+| `proactive_reminders` | 1 | `lib/recordatorios-locales.js` |
 | `scheduled_calls` | 1 | `hooks/useScheduledCalls.js` |
 | `voice_call_logs` | 1 | `app/views/CRM/LeadVoiceCalls.jsx` |
 | `whatsapp_messages` | 1 | `lib/whatsapp-chat.js` |
@@ -160,13 +161,13 @@ casa; por eso mismo son los que más cuidado piden.
 
 | Archivo | Archivos que lo importan |
 |---|---|
-| `design-system/tokens.js` | **71** |
-| `lib/supabase.js` | **40** |
+| `design-system/tokens.js` | **72** |
+| `lib/supabase.js` | **41** |
 | `hooks/useAuth.js` | **35** |
 | `hooks/useViewport.js` | **28** |
-| `app/SharedComponents.jsx` | **20** |
+| `app/SharedComponents.jsx` | **21** |
+| `lib/native.js` | **18** |
 | `hooks/useClient.js` | **16** |
-| `lib/native.js` | **14** |
 | `app/views/CRM/zoom-metrics.js` | **6** |
 | `app/components/Logo.jsx` | **5** |
 | `app/views/CRM/date-range.js` | **5** |
@@ -184,6 +185,7 @@ casa; por eso mismo son los que más cuidado piden.
 |---|---|
 | `VITE_SUPABASE_ANON_KEY` | `app/App.jsx` · `lib/supabase.js` |
 | `VITE_SUPABASE_URL` | `app/App.jsx` · `lib/supabase.js` |
+| `VITE_ANDROID_PUSH` | `lib/push-native.js` |
 | `VITE_APP_URL` | `main.jsx` |
 | `VITE_DIAGNOSTICO_CALCOM_URL` | `landing/Diagnostico.jsx` |
 | `VITE_DIAGNOSTICO_STRATOS_WEBHOOK_URL` | `lib/webhook-diagnostico-stratos.js` |
