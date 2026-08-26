@@ -1,3 +1,4 @@
+import { descargarArchivo } from './native'
 /**
  * lib/backup.js — Respaldo manual de la base de datos
  *
@@ -86,21 +87,12 @@ export async function downloadBackup() {
       },
     }
 
-    // Generar archivo descargable
-    const blob = new Blob([JSON.stringify(backup, null, 2)], {
-      type: 'application/json',
-    })
-    const url = URL.createObjectURL(blob)
     const ts = new Date().toISOString().split('T')[0]   // 2026-04-27
     const filename = `stratos-backup-${ts}.json`
 
-    const a = document.createElement('a')
-    a.href = url
-    a.download = filename
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
-    URL.revokeObjectURL(url)
+    // Dentro de la app el <a download> se ignora en silencio. descargarArchivo
+    // guarda y abre el menu de compartir; en el navegador hace lo de siempre.
+    await descargarArchivo(filename, JSON.stringify(backup, null, 2), 'application/json')
 
     return { ok: true, error: null, filename, stats: backup.stats }
   } catch (e) {

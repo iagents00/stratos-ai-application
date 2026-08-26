@@ -1,3 +1,4 @@
+import { descargarArchivo } from './native'
 /**
  * lib/lead-backup.js — Backup exportable y verificación de integridad
  * ─────────────────────────────────────────────────────────────────────────────
@@ -23,15 +24,9 @@ import { getQueueDeadLetter } from './offline-mode'
 function downloadJson(filename, data) {
   try {
     const json = JSON.stringify(data, null, 2)
-    const blob = new Blob([json], { type: 'application/json' })
-    const url  = URL.createObjectURL(blob)
-    const a    = document.createElement('a')
-    a.href     = url
-    a.download = filename
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
-    setTimeout(() => URL.revokeObjectURL(url), 5000)
+    // Dentro de la app el <a download> se ignora en silencio: el boton parece
+    // no hacer nada. descargarArchivo resuelve las dos plataformas.
+    descargarArchivo(filename, json, 'application/json')
     return true
   } catch (e) {
     console.error('[backup] download failed', e)

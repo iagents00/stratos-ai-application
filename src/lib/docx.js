@@ -1,3 +1,4 @@
+import { descargarBlob } from "./native";
 // docx.js — arma un archivo de Word (.docx) en el navegador, sin librerías.
 //
 // Por qué existe: Ángel necesita firmar las cuentas de cobro a mano, y un PDF
@@ -190,13 +191,10 @@ export function buildDocx(bloques = []) {
 /** Genera el .docx y lo baja al equipo. */
 export function descargarDocx(nombreArchivo, bloques) {
   const blob = buildDocx(bloques);
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = nombreArchivo.endsWith(".docx") ? nombreArchivo : `${nombreArchivo}.docx`;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  setTimeout(() => URL.revokeObjectURL(url), 2000);
+  // descargarBlob y no el <a download> de siempre: dentro de la app ese enlace
+  // se ignora sin decir nada — el usuario toca el boton y no pasa NADA. Ahi el
+  // archivo se guarda y se abre el menu de compartir del telefono.
+  const nombre = nombreArchivo.endsWith(".docx") ? nombreArchivo : `${nombreArchivo}.docx`;
+  return descargarBlob(nombre, blob);
   return blob;
 }

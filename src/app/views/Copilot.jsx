@@ -118,6 +118,16 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
   const [sending, setSending] = useState(false);
   const [input, setInput] = useState("");
   const [errBanner, setErrBanner] = useState(null);
+  // El cartelito verde de arriba miraba errBanner, que es el cajon de TODOS los
+  // errores: sin permiso de microfono, falto el monto, no subio la captura. Con
+  // cualquiera de esos el Copilot se declaraba "Sin conexion con el asistente"
+  // estando perfectamente conectado — que es lo que reporto Angel el 25-ago-2026
+  // junto con el fallo del dictado: el mismo aviso del microfono apagaba el
+  // indicador. Un indicador que miente sobre algo que el usuario PUEDE
+  // comprobar hace dudar de todo lo demas que dice la pantalla.
+  //
+  // Este estado se enciende SOLO cuando el asistente esta realmente inalcanzable.
+  const [asistenteCaido, setAsistenteCaido] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [attaching, setAttaching] = useState(false);  // subiendo evidencia (solo marketing)
   const [commenting, setCommenting] = useState(null);  // {taskId, fromName} — líder comentando una evidencia
@@ -470,6 +480,7 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
       onUnpaired();
       setMessages((prev) => prev.map(m => m.id === tmpId ? { ...m, pending: false } : m));
       setErrBanner("Tu cuenta todavía no tiene el asistente activado. Pídele al administrador que lo habilite.");
+      setAsistenteCaido(true);
       return;
     }
     if (r.error) {
@@ -485,12 +496,16 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
         : r.error === "sesion_expirada"
           ? "Tu sesión se cerró. Vuelve a entrar para seguir hablando con el asistente — lo que escribiste no se envió."
           : "No se pudo enviar. Intenta de nuevo.");
+      // Solo "no_llego" es de verdad un problema de conexión. Una sesión vencida
+      // o un rechazo del motor no significan que el asistente esté caído.
+      setAsistenteCaido(r.error === "no_llego");
       return;
     }
 
     // Si el backend devolvió una respuesta directa, inyectarla al chat sin leer la DB
     // (la DB de stratos-prod puede tener viejos "No conozco esa acción" que taparían la respuesta real)
     if (r.reply) {
+      setAsistenteCaido(false);   // contestó: está en línea, se diga lo que se diga abajo
       const aiMsg = {
         id: `ai-${Date.now()}`,
         role: "ai",
@@ -967,16 +982,16 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
         </div>
         <div style={{ minWidth: 0, flex: 1 }}>
           <div style={{ fontSize: chatType.title, fontWeight: 600, color: T.txt, fontFamily: fontDisp, lineHeight: 1.2 }}>Copilot AI</div>
-            {/* "En línea" estaba escrito a mano: seguía verde aunque la sesión
-                estuviera muerta o la cuenta sin activar. Un indicador que no
-                puede ponerse en gris no informa nada; solo contradice al aviso
-                de error que hay dos centímetros más abajo. */}
-            <div style={{ fontSize: chatType.meta, color: errBanner ? T.txt3 : T.accent, fontFamily: font, marginTop: 1, display: "flex", alignItems: "center", gap: 4 }}>
+            {/* Mira asistenteCaido y NO errBanner: errBanner es el cajón de todos
+                los errores, así que un fallo del micrófono apagaba el indicador
+                del asistente. Se pone en gris solo cuando el asistente está de
+                verdad inalcanzable — sin activar, o el mensaje no llegó. */}
+            <div style={{ fontSize: chatType.meta, color: asistenteCaido ? T.txt3 : T.accent, fontFamily: font, marginTop: 1, display: "flex", alignItems: "center", gap: 4 }}>
               <span style={{
                 width: 6, height: 6, borderRadius: "50%",
-                background: errBanner ? T.txt3 : T.accent,
-                boxShadow: errBanner ? "none" : `0 0 6px ${T.accent}`,
-              }} />{errBanner ? "Sin conexión con el asistente" : "En línea"}
+                background: asistenteCaido ? T.txt3 : T.accent,
+                boxShadow: asistenteCaido ? "none" : `0 0 6px ${T.accent}`,
+              }} />{asistenteCaido ? "Sin conexión con el asistente" : "En línea"}
           </div>
         </div>
         <button type="button" onClick={reload} title="Refrescar"
