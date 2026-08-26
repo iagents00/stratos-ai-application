@@ -1,7 +1,8 @@
 # Plan de desarrollo — Email marketing para el webinar de Duke del Caribe
 
-**Webinar:** miércoles 2 de septiembre de 2026
-**Hoy:** martes 25 de agosto de 2026 · quedan **8 días**
+**Webinar:** Mondrian Cancún · **jueves 27 de agosto de 2026**
+9:00 PM Cancún y Riviera Maya · 8:00 PM Ciudad de México · 7:00 PM California
+**Hoy:** martes 25 de agosto de 2026 · quedan **2 días**
 **Remitente acordado:** `admin@dukedelcaribe.com`
 **Base:** organización `Stratos Capital Group` (`00000000-0000-0000-0000-000000000001`) en `glulgyhkrqpykxmujodb`
 
@@ -234,112 +235,94 @@ pero es al revés: **si no encuentran el botón, marcan spam**, y eso pesa cien 
 
 ---
 
-## 6. Registro al webinar — no lo construyas
+## 6. Registro: formulario de Google
 
-Recomiendo **usar el registro nativo de Zoom** en lugar de armar una landing propia. Razones:
+El cliente ya tiene el registro montado en un formulario de Google, y el flyer
+que está circulando apunta ahí. No se toca: cambiarlo a dos días del webinar
+rompería las piezas que ya salieron.
 
-- Zoom genera un link de acceso único por persona, manda sus propios recordatorios y te da el
-  reporte de asistencia real (quién entró, cuánto duró). Replicar eso son días de trabajo.
-- El link de registro va como botón en el correo; el UTM se conserva.
-- Los registrados regresan al CRM por webhook de Zoom → n8n → `leads` + `lead_events`, marcando
-  `campaign = 'Webinar 2-sep'`. Si el registrado no existe como lead, se crea.
+Lo que hay que saber de esa decisión:
 
-**Decisión pendiente tuya:** Zoom Meetings con registro (viene en los planes de pago) alcanza para
-esto. Zoom Webinars es un complemento aparte que cuesta más y solo se justifica si esperas más de
-100 asistentes o quieres que el público no se vea entre sí. Con 279 invitados, Meetings basta.
+| | |
+|---|---|
+| **A favor** | Ya existe, ya está en el flyer, y `docs.google.com` es un dominio con buena reputación en los filtros |
+| **En contra** | No manda recordatorios, no da enlace de acceso único por persona, y las respuestas no llegan al CRM |
 
-Si prefieres landing propia (para capturar campos extra), es medio día más de trabajo y te la hago
-en el repo bajo `/webinar`. Dime.
+**Consecuencias operativas, las tres importan:**
 
----
+1. El correo de *"es hoy"* lo tenemos que mandar nosotros, con el enlace de Zoom.
+   El formulario no lo va a hacer.
+2. Para saber a quién mandárselo hay que **exportar las respuestas del formulario**
+   el jueves temprano y sembrar la campaña con esos correos.
+3. Quien se registre y no exista como lead en el CRM queda fuera de nuestro
+   circuito. Vale la pena darlos de alta el viernes: son los más calientes de todos.
 
-## 7. Calendario día por día
+Se limpió el enlace: venía con `?usp=sharing&ouid=1061318…`, que identifica la
+cuenta de Google que lo compartió. No aporta nada y viajaba en cada correo.
 
-### Martes 26 (hoy) — desbloquear
-- [ ] **Tú:** crear cuenta en Resend, agregar `dukedelcaribe.com`, pasarme los 4 registros DNS
-- [ ] **Tú:** capturar los registros en HostGator (o darme acceso)
-- [ ] **Tú:** definir título, hora y presentador del webinar
-- [ ] **Yo:** migración 034 + las tres edge functions
+## 7. Calendario, comprimido a dos días
 
-### Miércoles 27 — infraestructura de pie
-- [ ] Verificar propagación DNS (`dig`) y validación del dominio en Resend
-- [ ] Desplegar edge functions, probar webhook de punta a punta
-- [ ] Correr `email_validate.mjs`: regex, chequeo de MX real, corrección de dedazos tipo
-      `prontonmail.com`. Esperado: se caen entre 5 y 15 de los 279
-- [ ] **Tú:** confirmar si entra la lista de compradores históricos
-- [ ] Crear el evento en Zoom con registro activado
+### Hoy martes 25 — toda la infraestructura
+- [ ] **Tú:** cuenta en Resend, dominio agregado, los 3 registros que genera
+- [ ] **Tú:** capturar esos 3 + el DMARC en HostGator (cPanel → Editor de Zona DNS)
+- [ ] **Tú:** correr la migración 034 en el editor SQL
+- [ ] **Tú:** presentador, enlace de Zoom, dirección postal, aviso de privacidad
+- [ ] **Yo:** secrets, webhook, validar la lista, prueba semilla
 
-### Jueves 28 — contenido y primera prueba
-- [ ] Plantillas HTML de los 4 correos (peso máximo 100 KB, tabla + estilos en línea, sin JS,
-      probadas en modo oscuro)
-- [ ] Envío semilla a 10–15 buzones internos + mail-tester
-- [ ] Copy revisado y aprobado por ti
-- [ ] **Tú:** dirección física + URL del aviso de privacidad
+### Miércoles 26 — invitación en tres tandas
+- [ ] 10:00 CDMX — 100 · revisar reporte
+- [ ] 14:00 CDMX — 100 · revisar reporte
+- [ ] 18:00 CDMX — el resto
+- [ ] Ese día también: los 1,814 de WhatsApp
 
-### Viernes 29 — CORREO 1 (invitación), en tandas de calentamiento
-- [ ] 10:00 — Segmento A (35) + primeros 65 de B = **100 envíos**
-- [ ] 16:00 — resto de B = **90 envíos**
-- [ ] Revisar tasa de rebote antes de cada tanda
+### Jueves 27
+- [ ] Mañana: reenvío a quien no abrió, con otro asunto
+- [ ] Exportar las respuestas del formulario
+- [ ] 16:00 California (T-3h): *"es hoy"* a registrados, con el enlace de Zoom
 
-### Sábado 30
-- [ ] 11:00 — Segmento C = **89 envíos**. Correo 1 completo
-- [ ] WhatsApp: enviar la plantilla de invitación a los 1,814 teléfonos, en tandas
+### Viernes 28 — donde está el dinero
+- [ ] Asistió: agendar media hora y ver números
+- [ ] No asistió: la grabación. Suele rendir más que toda la invitación
 
-### Domingo 31 — CORREO 2 (contenido de valor + agenda)
-- [ ] A los 279, ya con el dominio caliente
-- [ ] Ana empieza a llamar al segmento A para confirmar asistencia
+### El riesgo, dicho claro
 
-### Lunes 1 de septiembre — CORREO 3 (último llamado)
-- [ ] Asunto distinto para quien no abrió el correo 1
-- [ ] Reporte de registrados vs. invitados
+No hay calentamiento posible en dos días. Se compensa con tres cosas: la lista se
+valida por MX antes de mandar, el envío se parte en tandas con freno automático
+entre cada una, y el dominio tiene dos años de antigüedad, que ayuda aunque la
+firma DKIM sea nueva.
 
-### Martes 2 de septiembre — día del webinar
-- [ ] **T-3h:** CORREO 4 "es hoy" solo a registrados, con el link de acceso
-- [ ] **T-1h:** recordatorio por WhatsApp a registrados
-- [ ] **T-15min:** prueba de audio, video y pantalla compartida
+Si el DNS no propaga hoy, el correo se pospone y WhatsApp carga el webinar. No
+vale la pena quemar el dominio de Duke por alcanzar una fecha.
 
-### Miércoles 3 en adelante — el seguimiento, que es donde está el dinero
-- [ ] CORREO 5, dos versiones: **asistió** (gracias + siguiente paso) y **no asistió**
-      (grabación + segunda oportunidad)
-- [ ] Los que asistieron entran al CRM con etapa e interés actualizados, repartidos a asesores
-- [ ] Reporte de resultados
+## 8. Los 5 correos
 
----
-
-## 8. Los 7 correos
-
-| # | Cuándo | Asunto | Pide | Armazón |
+| # | Cuándo | Asunto | Botón | Armazón |
 |---|---|---|---|---|
-| 1 | Vie 29 | *{{nombre}}, te invito al miércoles* / *¿Te aparto un lugar para el miércoles?* | **respuesta** | plano |
-| 1-bis | Dom 31 a.m. | *¿Lo viste, {{nombre}}?* — solo a quien no abrió el 1 | respuesta | plano |
-| 2 | Dom 31 p.m. | *Lo que vamos a ver el miércoles (y lo que no)* | clic | diseñado |
-| 3 | Lun 1 | *{{nombre}}, ¿te apunto?* / *Hoy cierro el registro* | **respuesta** | plano |
-| 4 | Mié 2, T-3h | *Es hoy — aquí está tu acceso* | clic | diseñado |
-| 5a | Jue 3 | *Gracias por quedarte, {{nombre}}* | **respuesta** | plano |
-| 5b | Jue 3 | *Te dejo la grabación* / *{{nombre}}, ayer no te vi* | **respuesta** | plano |
+| 1 | Mié 26, tres tandas | *{{nombre}}, el único en preventa en la Zona Hotelera* / *Mondrian Cancún: preventa para inversionistas* | Registrarme al webinar | diseñado |
+| 2 | Jue 27 a.m. | *Es hoy: Mondrian Cancún en vivo* / *{{nombre}}, ¿alcanzas hoy en la noche?* — solo a quien no abrió el 1 | Apartar mi lugar | diseñado |
+| 3 | Jue 27, 16:00 CA | *Es hoy — aquí está tu acceso* — solo registrados | Entrar al webinar | diseñado |
+| 4a | Vie 28 | *Gracias por quedarte, {{nombre}}* / *Lo que queda de Mondrian* | Agenda tu media hora | plano |
+| 4b | Vie 28 | *Te dejo la grabación* / *{{nombre}}, anoche no te vi* | Ver la grabación | plano |
 
-Cada uno con dos asuntos: el motor reparte mitad y mitad y `reporte` te dice cuál
-ganó, para el siguiente correo ya decidir con datos.
+Cada uno con dos asuntos: el motor reparte mitad y mitad y `reporte` dice cuál
+ganó, para decidir el siguiente con datos y no con corazonada.
 
-**Cuatro de los siete piden respuesta, no clic.** Es la decisión de fondo de toda
-la secuencia: contestar convierte más que registrarse, y cada respuesta le enseña
-a Gmail que este remitente se quiere — lo cual mejora la entrega de todos los
-demás correos, incluidos los de quien no contestó.
+**Una sola acción por correo, con botón.** El objetivo es registro medible, así
+que no hay llamadas ambiguas ni caminos alternos. El detalle de cada táctica y
+por qué está así: **`ops/TECNICAS-EMAIL-DUKE.md`**.
 
-El detalle de cada táctica y por qué está así: **`ops/TECNICAS-EMAIL-QUE-CONTESTAN.md`**.
+**Reglas de redacción:**
 
-**Reglas de redacción**, alineadas al tono del bot y de la marca:
-
-- **Remitente:** `Óscar Gálvez · Duke del Caribe <admin@dukedelcaribe.com>`. Nombre
-  de persona real. Con `admin@` sola, el correo se lee institucional y frío.
-- **Reply-To** al buzón que alguien lea de verdad — sin eso, la mitad de la
-  estrategia no sirve.
+- **Remitente:** `<presentador> · Duke del Caribe <admin@dukedelcaribe.com>`.
+  Nombre de persona real: con `admin@` sola se lee institucional y frío.
+- **Reply-To** al mismo buzón. Aunque la acción sea el botón, la gente va a
+  responder, y esas respuestas son leads calientes.
 - Español mexicano neutro, tú/puedes. Nunca voseo.
-- Sin emojis. Iconos tipográficos si hace falta.
-- Pocas palabras. Una sola acción por correo.
-- Nada de "¡ÚLTIMA OPORTUNIDAD!", mayúsculas sostenidas ni signos repetidos.
-- **Se prueba en modo oscuro y en celular antes de enviar.** Más de la mitad de la
-  lista es iPhone y Gmail móvil.
+- Sin emojis. El texto original traía `👉`; en redes funciona, en un correo
+  masivo pesa en contra de la entrega.
+- Los tres horarios en el cuerpo, como en el flyer: la lista abarca tres husos.
+- **Probado en modo oscuro y en celular.** Más de la mitad de la lista es iPhone
+  y Gmail móvil.
 
 ## 9. Cumplimiento legal
 
@@ -362,10 +345,13 @@ El detalle de cada táctica y por qué está así: **`ops/TECNICAS-EMAIL-QUE-CON
 | Quejas de spam | < 0.1% | **> 0.3% → detener todo** |
 | Apertura (correo 1) | 35–45% (base propia y tibia) | < 20% → problema de entregabilidad, no de asunto |
 | Clic al registro | 8–15% | |
-| **Registrados** | **60–85** de 279 | |
-| **Asistentes** | **25–40** (40–50% de los registrados es lo normal) | |
+| **Registrados por correo** | **45–70** de 279 | |
+| **Asistentes** | **20–35** (40–50% de los registrados es lo normal) | |
 
-Los dos umbrales en negritas se vigilan **entre tanda y tanda** el viernes. Si se cruzan, se para.
+Menos que con una semana de anticipación: dos días recortan el registro. El
+número grande del webinar va a venir de WhatsApp, no del correo.
+
+Los dos umbrales en negritas se vigilan **entre tanda y tanda** el miércoles. Si se cruzan, se para.
 Quemar el dominio de Duke por apurar un envío no vale ningún webinar.
 
 ---

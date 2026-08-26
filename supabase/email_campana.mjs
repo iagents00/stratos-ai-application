@@ -274,7 +274,8 @@ async function cmdRender(slug) {
 
   // Los datos del webinar se inyectan aquí. {{nombre}} y {{unsub_url}} NO:
   // esos cambian por destinatario y los resuelve la edge function.
-  const porRecipiente = new Set(['nombre', 'unsub_url', 'gancho'])
+  // Las resuelve el motor al enviar, no el JSON: no son error si siguen aquí.
+  const porRecipiente = new Set(['nombre', 'unsub_url', 'gancho', 'preheader'])
   const sustituir = (t) =>
     t.replace(/\{\{(\w+)\}\}/g, (m, k) =>
       porRecipiente.has(k) ? m : (datos[k] ?? c[k] ?? m)
@@ -341,7 +342,8 @@ function componerLocal(plantilla, datos, campana) {
     const base = existsSync(dir(`${armazón}.${ext}`)) ? readFileSync(dir(`${armazón}.${ext}`), 'utf8') : '{{contenido}}'
     return base.replace('{{contenido}}', frag)
   }
-  const porRecipiente = new Set(['nombre', 'unsub_url', 'gancho'])
+  // Las resuelve el motor al enviar, no el JSON: no son error si siguen aquí.
+  const porRecipiente = new Set(['nombre', 'unsub_url', 'gancho', 'preheader'])
   const sustituir = (t) =>
     t.replace(/\{\{(\w+)\}\}/g, (m, k) =>
       porRecipiente.has(k) ? m : (datos[k] ?? campana[k] ?? m))
@@ -359,7 +361,7 @@ async function cmdPrevisualizar(slug) {
   mkdirSync(resolve(process.cwd(), salida), { recursive: true })
 
   // Datos de muestra para que se vea como el correo real, no como una plantilla.
-  const muestra = { nombre: 'Carmen', unsub_url: '#baja', gancho: def.datos?._gancho_muestra ?? 'La última vez que platicamos preguntabas por Bay View Grand.' }
+  const muestra = { nombre: 'Carmen', unsub_url: '#baja', preheader: '', gancho: def.datos?._gancho_muestra ?? 'La última vez que platicamos preguntabas por Bay View Grand.' }
   const enlaces = []
 
   for (const c of objetivo) {

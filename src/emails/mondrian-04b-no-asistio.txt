@@ -1,0 +1,16 @@
+{{nombre}}, anoche no te vi conectado.
+
+Te dejo la grabación de {{titulo}}, el único proyecto en preventa en la Zona
+Hotelera de Cancún, con vista al mar Caribe, la laguna y el campo de golf.
+La dejamos disponible unos días.
+
+Ver la grabación: {{grabacion_url}}
+
+Si ya la viste y quieres los números de alguna unidad, agenda media hora y los
+revisamos juntos: {{agenda_url}}
+
+{{presentador}}
+Duke del Caribe
+
+P.D. Las condiciones de preventa siguen vigentes unos días más. Después se van
+con el precio de lista.

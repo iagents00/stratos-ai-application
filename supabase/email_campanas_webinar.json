@@ -1,159 +1,123 @@
 {
-  "_nota": "Secuencia de correos del webinar. Los valores en PENDIENTE los llena el cliente; hasta entonces `render` se niega a marcar la campaña como lista. `base` elige el armazón: _base-plano parece nota personal (contesta más), _base es el diseñado. `asunto_b` activa la prueba A/B.",
-  "from_name": "Óscar Gálvez · Duke del Caribe",
+  "_nota": "Secuencia del webinar Mondrian Cancún del jueves 27 de agosto de 2026. Los valores en PENDIENTE los llena el cliente; hasta entonces `render` se niega a marcar la campaña como lista. `base` elige el armazón: _base-plano parece nota personal (contesta más), _base es el diseñado. `asunto_b` activa la prueba A/B.",
+  "from_name": "PENDIENTE_PRESENTADOR · Duke del Caribe",
   "from_email": "admin@dukedelcaribe.com",
   "reply_to": "admin@dukedelcaribe.com",
   "datos": {
     "marca": "Duke del Caribe",
     "presentador": "PENDIENTE_PRESENTADOR",
-    "titulo": "PENDIENTE_TITULO",
-    "fecha_larga": "miércoles 2 de septiembre",
-    "hora": "PENDIENTE_HORA",
-    "zona": "hora del centro de México",
-    "duracion": "PENDIENTE_DURACION",
-    "registro_url": "PENDIENTE_URL_REGISTRO",
-    "acceso_url": "PENDIENTE_URL_ACCESO",
+    "titulo": "Mondrian Cancún",
+    "fecha_larga": "jueves 27 de agosto",
+    "horarios_html": "Cancún y Riviera Maya &nbsp;9:00 PM<br>Ciudad de México &nbsp;8:00 PM<br>California &nbsp;7:00 PM",
+    "horarios_txt": "  Cancún y Riviera Maya   9:00 PM\n  Ciudad de México        8:00 PM\n  California              7:00 PM",
+    "registro_url": "https://docs.google.com/forms/d/e/1FAIpQLScmf-1bwez9VpxdAtPbLGZl4U-NfjpVG1-9P87H8zEGRha8wA/viewform",
+    "acceso_url": "PENDIENTE_URL_ACCESO_ZOOM",
     "agenda_url": "PENDIENTE_URL_AGENDA",
     "grabacion_url": "PENDIENTE_URL_GRABACION",
     "direccion_postal": "PENDIENTE_DIRECCION_POSTAL",
     "aviso_privacidad_url": "PENDIENTE_URL_AVISO_PRIVACIDAD",
-    "_gancho_muestra": "Hace un tiempo pediste información y no alcanzamos a terminar la plática."
+    "_gancho_muestra": "No alcanzamos a terminar aquella plática, y ahora sí hay algo concreto que mostrarte."
   },
   "campanas": [
     {
-      "slug": "webinar-01-invitacion",
-      "nombre": "Webinar 2-sep · 1 Invitación",
-      "asunto": "{{nombre}}, te invito al miércoles",
-      "preheader": "Contéstame con un \"va\" y yo te aparto el lugar.",
-      "plantilla": "webinar-01-invitacion",
+      "slug": "mondrian-01-invitacion",
+      "nombre": "Mondrian · 1 Invitación",
+      "base": "_base",
+      "asunto": "{{nombre}}, el único en preventa en la Zona Hotelera",
+      "asunto_b": "Mondrian Cancún: preventa para inversionistas",
+      "preheader": "Jueves 27 en vivo. Vista al mar, laguna y campo de golf.",
+      "plantilla": "mondrian-01-invitacion",
       "segmentos": [
         "A",
         "B",
         "C"
       ],
       "metadata": {
-        "envio": "viernes 29 en tandas de calentamiento",
+        "envio": "miércoles 26, en tres tandas",
         "ganchos": {
-          "A": "Ya habíamos platicado hace poco, así que varias cosas te van a sonar.",
-          "B": "Hace un tiempo pediste información y no alcanzamos a terminar la plática.",
-          "C": "Sé que ya pasó un buen rato desde la última vez que hablamos.",
-          "default": "Nos escribiste hace un tiempo preguntando por nuestros desarrollos."
-        }
-      },
-      "base": "_base-plano",
-      "asunto_b": "¿Te aparto un lugar para el miércoles?"
-    },
-    {
-      "slug": "webinar-01-reenvio",
-      "nombre": "Webinar 2-sep · 1-bis Reenvío a quien no abrió",
-      "base": "_base-plano",
-      "asunto": "¿Lo viste, {{nombre}}?",
-      "asunto_b": "Se me pasó preguntarte",
-      "preheader": "Te reenvío por si se te perdió entre el correo.",
-      "plantilla": "webinar-01-invitacion",
-      "segmentos": [
-        "A",
-        "B",
-        "C"
-      ],
-      "metadata": {
-        "envio": "domingo 31 en la mañana, antes del correo 2",
-        "audiencia": "node supabase/email_campana.mjs audiencia webinar-01-reenvio --no-abrieron webinar-01-invitacion",
-        "ganchos": {
-          "A": "Ya habíamos platicado hace poco, así que varias cosas te van a sonar.",
-          "B": "Hace un tiempo pediste información y no alcanzamos a terminar la plática.",
-          "C": "Sé que ya pasó un buen rato desde la última vez que hablamos.",
-          "default": "Nos escribiste hace un tiempo preguntando por nuestros desarrollos."
+          "A": "Ya habíamos platicado hace poco, así que esto te va a interesar.",
+          "B": "No alcanzamos a terminar aquella plática, y ahora sí hay algo concreto que mostrarte.",
+          "C": "Sé que ya pasó un buen rato, pero esto vale la pena que lo veas.",
+          "default": "Esto es lo que estábamos esperando para volver a escribirte."
         }
       }
     },
     {
-      "slug": "webinar-02-contenido",
-      "nombre": "Webinar 2-sep · 2 Contenido",
-      "asunto": "Lo que vamos a ver el miércoles (y lo que no)",
-      "preheader": "El temario completo, para que decidas si te sirve.",
-      "plantilla": "webinar-02-contenido",
-      "segmentos": [
-        "A",
-        "B",
-        "C"
-      ],
-      "metadata": {
-        "envio": "domingo 31"
-      },
+      "slug": "mondrian-02-reenvio",
+      "nombre": "Mondrian · 2 Reenvío a quien no abrió",
       "base": "_base",
-      "asunto_b": "El temario del miércoles, en cuatro puntos"
-    },
-    {
-      "slug": "webinar-03-ultimo-llamado",
-      "nombre": "Webinar 2-sep · 3 Último llamado",
-      "asunto": "{{nombre}}, ¿te apunto?",
-      "preheader": "Un sí de vuelta y quedas dentro.",
-      "plantilla": "webinar-03-ultimo-llamado",
+      "asunto": "Es hoy: Mondrian Cancún en vivo",
+      "asunto_b": "{{nombre}}, ¿alcanzas hoy en la noche?",
+      "preheader": "Cerramos el registro unas horas antes.",
+      "plantilla": "mondrian-02-reenvio",
       "segmentos": [
         "A",
         "B",
         "C"
       ],
       "metadata": {
-        "envio": "lunes 1",
-        "solo_no_registrados": true
-      },
-      "base": "_base-plano",
-      "asunto_b": "Hoy cierro el registro"
+        "envio": "jueves 27 en la mañana",
+        "audiencia": "node supabase/email_campana.mjs audiencia mondrian-02-reenvio --no-abrieron mondrian-01-invitacion",
+        "ganchos": {
+          "A": "Ya habíamos platicado hace poco, así que esto te va a interesar.",
+          "B": "No alcanzamos a terminar aquella plática, y ahora sí hay algo concreto que mostrarte.",
+          "C": "Sé que ya pasó un buen rato, pero esto vale la pena que lo veas.",
+          "default": "Esto es lo que estábamos esperando para volver a escribirte."
+        }
+      }
     },
     {
-      "slug": "webinar-04-es-hoy",
-      "nombre": "Webinar 2-sep · 4 Es hoy",
+      "slug": "mondrian-03-es-hoy",
+      "nombre": "Mondrian · 3 Es hoy",
+      "base": "_base",
       "asunto": "Es hoy — aquí está tu acceso",
-      "preheader": "Empezamos en unas horas. Te dejo el enlace a la mano.",
-      "plantilla": "webinar-04-es-hoy",
+      "plantilla": "mondrian-03-es-hoy",
       "segmentos": [
         "A",
         "B",
         "C"
       ],
       "metadata": {
-        "envio": "miércoles 2, tres horas antes",
+        "envio": "jueves 27, 4:00 PM California (T-3h)",
         "solo_registrados": true
       },
-      "base": "_base"
+      "preheader": "Empezamos en unas horas. Aquí está tu acceso."
     },
     {
-      "slug": "webinar-05a-asistio",
-      "nombre": "Webinar 2-sep · 5a Asistió",
+      "slug": "mondrian-04a-asistio",
+      "nombre": "Mondrian · 4a Asistió",
+      "base": "_base-plano",
       "asunto": "Gracias por quedarte, {{nombre}}",
-      "preheader": "Quedaron preguntas en el chat. Vamos a la tuya.",
-      "plantilla": "webinar-05a-asistio",
+      "asunto_b": "Lo que queda de Mondrian",
+      "plantilla": "mondrian-04a-asistio",
       "segmentos": [
         "A",
         "B",
         "C"
       ],
       "metadata": {
-        "envio": "jueves 3",
+        "envio": "viernes 28",
         "solo_asistentes": true
       },
-      "base": "_base-plano",
-      "asunto_b": "Quedaron preguntas en el chat"
+      "preheader": "El siguiente paso son treinta minutos y los números."
     },
     {
-      "slug": "webinar-05b-no-asistio",
-      "nombre": "Webinar 2-sep · 5b No asistió",
+      "slug": "mondrian-04b-no-asistio",
+      "nombre": "Mondrian · 4b No asistió",
+      "base": "_base-plano",
       "asunto": "Te dejo la grabación",
-      "preheader": "Estará disponible unos días.",
-      "plantilla": "webinar-05b-no-asistio",
+      "asunto_b": "{{nombre}}, anoche no te vi",
+      "plantilla": "mondrian-04b-no-asistio",
       "segmentos": [
         "A",
         "B",
         "C"
       ],
       "metadata": {
-        "envio": "jueves 3",
+        "envio": "viernes 28",
         "solo_no_asistentes": true
       },
-      "base": "_base-plano",
-      "asunto_b": "{{nombre}}, ayer no te vi"
+      "preheader": "La grabación está disponible unos días."
     }
   ]
 }

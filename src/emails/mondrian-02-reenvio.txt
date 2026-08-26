@@ -1,0 +1,15 @@
+{{nombre}}, es hoy en la noche.
+
+Te reenvío esto por si se te perdió entre el correo. Presentamos {{titulo}} en
+vivo: el único proyecto en preventa en la Zona Hotelera de Cancún, con vista al
+mar Caribe, la laguna y el campo de golf.
+
+Hoy {{fecha_larga}}
+{{horarios_txt}}
+
+APARTAR MI LUGAR: {{registro_url}}
+
+Cerramos el registro unas horas antes de empezar.
+
+{{presentador}}
+Duke del Caribe

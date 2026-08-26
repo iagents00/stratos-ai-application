@@ -1,0 +1,12 @@
+{{nombre}}, es hoy.
+
+Empezamos en unas horas. Te dejo el acceso aquí para que no lo andes buscando.
+
+{{horarios_txt}}
+
+Entrar al webinar: {{acceso_url}}
+
+Conéctate cinco minutos antes. Si el enlace no abre, escríbeme y te lo paso.
+
+Ahí nos vemos,
+{{presentador}}

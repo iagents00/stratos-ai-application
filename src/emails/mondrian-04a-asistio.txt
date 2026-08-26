@@ -1,0 +1,14 @@
+{{nombre}}, gracias por quedarte anoche.
+
+Como viste, lo que queda en preventa es poco y las condiciones que presentamos
+son para este grupo. El siguiente paso es sentarnos media hora, ver los números
+de la unidad que te interesó y, si te cuadra, apartarla.
+
+Agenda tu media hora aquí: {{agenda_url}}
+Elige el horario que te acomode.
+
+{{presentador}}
+Duke del Caribe
+
+P.D. Las unidades se apartan por orden de llegada. Si ya sabes cuál quieres,
+agenda hoy.

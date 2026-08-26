@@ -1,11 +1,28 @@
-# Runbook — Correo del webinar del 2 de septiembre
+# Runbook — Correo del webinar Mondrian Cancún
+
+**Jueves 27 de agosto de 2026** · 9:00 PM Cancún · 8:00 PM CDMX · 7:00 PM California
 
 Guía operativa paso a paso.
 
 - El plan y el porqué: [`PLAN_EMAIL_MARKETING_DUKE.md`](../PLAN_EMAIL_MARKETING_DUKE.md)
-- Las tácticas de redacción y por qué están así: [`TECNICAS-EMAIL-QUE-CONTESTAN.md`](TECNICAS-EMAIL-QUE-CONTESTAN.md)
+- Las tácticas de redacción y por qué están así: [`TECNICAS-EMAIL-DUKE.md`](TECNICAS-EMAIL-DUKE.md)
 
 ---
+
+## Quedan dos días
+
+El webinar es **pasado mañana**. No hay margen para calentar el dominio por
+escalones a lo largo de una semana: todo el trabajo de infraestructura cae hoy y
+el primer envío sale mañana en tres tandas.
+
+Lo que eso significa en la práctica:
+
+- **La lista se valida antes de mandar, sin excepción.** Con una firma DKIM nueva,
+  un rebote de 5% en el primer envío deja el dominio marcado. `validar --aplicar`
+  no es opcional.
+- **Tres tandas el miércoles**, no un solo disparo de 279.
+- **WhatsApp carga el peso.** 1,814 teléfonos contra 279 correos, y sin DNS de por
+  medio. Si algo se atora con el dominio, el webinar se llena por ahí.
 
 ## Estado al 25 de agosto de 2026
 
@@ -18,7 +35,7 @@ Guía operativa paso a paso.
 | Receptor de eventos | `supabase/functions/email-webhook/` | **desplegado**, sin JWT |
 | Baja en un clic | `supabase/functions/email-unsubscribe/` | **desplegado**, sin JWT |
 | Herramienta de operación | `supabase/email_campana.mjs` | listo |
-| Secuencia de 7 correos | `src/emails/` + `supabase/email_campanas_webinar.json` | listos, **faltan los datos del webinar** |
+| Secuencia de 5 correos | `src/emails/` + `supabase/email_campanas_webinar.json` | listos, **faltan los datos del webinar** |
 
 Probado en vivo contra producción:
 
@@ -149,18 +166,20 @@ Mientras el secret no esté puesto, contesta 401 a todo — que es lo correcto.
 
 Llena `supabase/email_campanas_webinar.json`. Todo lo que dice `PENDIENTE_*`:
 
+Ya están puestos el título (Mondrian Cancún), la fecha, los tres horarios y la
+URL del formulario de registro. Falta:
+
 ```
-presentador            Óscar Gálvez
-titulo                 el tema del webinar
-hora                   6:00 p.m. (o la que sea)
-duracion               45 minutos
-registro_url           el enlace de registro de Zoom
-acceso_url             el enlace de acceso
-agenda_url             a dónde mandas a quien quiere platicar
-grabacion_url          la grabación (se llena el miércoles en la noche)
-direccion_postal       dirección física de Duke  ← obligatoria por ley
-aviso_privacidad_url   el aviso de privacidad    ← obligatorio por ley
+presentador            nombre de quien presenta, para firmar y para el remitente
+acceso_url             el enlace de Zoom del jueves
+agenda_url             a dónde mandas a quien quiere ver números
+grabacion_url          la grabación (se llena el jueves en la noche)
+direccion_postal       dirección física de Duke  ← obligatoria por CAN-SPAM
+aviso_privacidad_url   el aviso de privacidad    ← obligatorio por LFPDPPP
 ```
+
+La dirección postal **no es negociable**: hay destinatarios en California,
+Houston y Miami, así que CAN-SPAM aplica.
 
 Revísalos antes de mandar nada:
 
@@ -180,14 +199,14 @@ Abre `preview-emails/index.html`. Si algo sigue en PENDIENTE, ahí lo dice, y
 node supabase/email_campana.mjs validar
 node supabase/email_campana.mjs validar --aplicar     # cuando estés de acuerdo
 
-# 2. Dar de alta las 7 campañas
+# 2. Dar de alta las 5 campañas
 node supabase/email_campana.mjs crear
 
 # 3. Cargar el HTML
-node supabase/email_campana.mjs render webinar-01-invitacion
+node supabase/email_campana.mjs render mondrian-01-invitacion
 
 # 4. Llenar los destinatarios
-node supabase/email_campana.mjs audiencia webinar-01-invitacion
+node supabase/email_campana.mjs audiencia mondrian-01-invitacion
 ```
 
 ---
@@ -223,81 +242,89 @@ select action, count(*) from lead_events where type='email' group by 1;
 
 ---
 
-## Paso 8 — Calendario de envío
+## Paso 8 — Calendario, comprimido a dos días
 
-El dominio es viejo pero la firma DKIM es nueva. Se sube el volumen por escalones,
-no de golpe.
+### Hoy martes 25 — toda la infraestructura
 
-### Viernes 29 — invitación en tandas
+Pasos 1 al 7 de este documento, en orden. Meta: terminar el día con el dominio
+verificado, la lista limpia y la prueba semilla en la bandeja del equipo.
 
-```bash
-# 10:00 · calientes + primeros tibios
-node supabase/email_campana.mjs enviar webinar-01-invitacion --lote 100 --max 100
-node supabase/email_campana.mjs reporte webinar-01-invitacion
+Si el DNS no propagó al final del día, avísame: se replantea a WhatsApp como canal
+principal y el correo sale cuando esté listo, sin forzarlo.
 
-# 16:00 · resto de tibios — solo si el reporte de la mañana viene limpio
-node supabase/email_campana.mjs enviar webinar-01-invitacion --lote 90 --max 90
-```
+### Miércoles 26 — invitación en tres tandas
 
-### Sábado 30
+La lista abarca tres husos horarios. Las tandas se reparten para caer en horario
+decente en los tres.
 
 ```bash
-node supabase/email_campana.mjs enviar webinar-01-invitacion --lote 100 --max 100
+node supabase/email_campana.mjs render    mondrian-01-invitacion
+node supabase/email_campana.mjs audiencia mondrian-01-invitacion
+
+# 10:00 CDMX
+node supabase/email_campana.mjs enviar mondrian-01-invitacion --lote 100 --max 100
+node supabase/email_campana.mjs reporte mondrian-01-invitacion
+
+# 14:00 CDMX — solo si el reporte viene limpio
+node supabase/email_campana.mjs enviar mondrian-01-invitacion --lote 100 --max 100
+
+# 18:00 CDMX — el resto
+node supabase/email_campana.mjs enviar mondrian-01-invitacion --lote 100
 ```
 
-Aquí también salen los 1,814 de WhatsApp. Ese es el canal que llena el webinar.
+**Entre tanda y tanda se revisa el reporte.** Si el rebote pasa de 5%, el script
+se detiene solo; no lo fuerces.
 
-### Domingo 31 — reenvío a quien no abrió, y luego el contenido
+Ese mismo día salen los 1,814 de WhatsApp.
 
-El reenvío va **primero, en la mañana**. Mismo correo, otro asunto, solo a quien
-no abrió la invitación. Recupera entre 30% y 50% de aperturas extra.
+### Jueves 27 por la mañana — reenvío a quien no abrió
+
+Mismo contenido, otro asunto, solo a quien no abrió la invitación. Recupera entre
+30% y 50% de aperturas adicionales.
 
 ```bash
-node supabase/email_campana.mjs render    webinar-01-reenvio
-node supabase/email_campana.mjs audiencia webinar-01-reenvio --no-abrieron webinar-01-invitacion
-node supabase/email_campana.mjs enviar    webinar-01-reenvio --lote 100
+node supabase/email_campana.mjs render    mondrian-02-reenvio
+node supabase/email_campana.mjs audiencia mondrian-02-reenvio --no-abrieron mondrian-01-invitacion
+node supabase/email_campana.mjs enviar    mondrian-02-reenvio --lote 100
 ```
 
-Por la tarde, el correo de contenido a todos:
+### Jueves 27 a las 16:00 California — es hoy
+
+**Solo a registrados**, y con el enlace de Zoom, no el del formulario.
+
+El registro vive en un formulario de Google, así que el sistema no sabe quién se
+apuntó. Hay que exportar las respuestas y sembrar la campaña con esos correos:
 
 ```bash
-node supabase/email_campana.mjs render    webinar-02-contenido
-node supabase/email_campana.mjs audiencia webinar-02-contenido
-node supabase/email_campana.mjs enviar    webinar-02-contenido --lote 100
+# Exporta el formulario a CSV y saca la columna de correos, separados por coma
+node supabase/email_campana.mjs render    mondrian-03-es-hoy
+node supabase/email_campana.mjs audiencia mondrian-03-es-hoy --solo "correo1@x.com,correo2@y.com,..."
+node supabase/email_campana.mjs enviar    mondrian-03-es-hoy --lote 100
 ```
 
-### Lunes 1 — último llamado
+`--solo` toma únicamente los correos indicados, y solo si además pasan las reglas
+de elegibilidad (sin baja, sin rebote previo).
 
-Solo a quien no se ha registrado:
+Quien se registró y **no** está en la base de leads no recibe este correo por aquí:
+a esos les llega el que mande el formulario o Zoom. Vale la pena darlos de alta
+como leads el viernes.
+
+### Viernes 28 — seguimiento
+
+Según el reporte de asistencia de Zoom, se parte en dos:
 
 ```bash
-node supabase/email_campana.mjs render    webinar-03-ultimo-llamado
-node supabase/email_campana.mjs audiencia webinar-03-ultimo-llamado --excluir webinar-04-es-hoy
-node supabase/email_campana.mjs enviar    webinar-03-ultimo-llamado --lote 100
+node supabase/email_campana.mjs render    mondrian-04a-asistio
+node supabase/email_campana.mjs audiencia mondrian-04a-asistio --solo "<los que sí entraron>"
+node supabase/email_campana.mjs enviar    mondrian-04a-asistio --lote 100
+
+node supabase/email_campana.mjs render    mondrian-04b-no-asistio
+node supabase/email_campana.mjs audiencia mondrian-04b-no-asistio --excluir mondrian-04a-asistio
+node supabase/email_campana.mjs enviar    mondrian-04b-no-asistio --lote 100
 ```
 
-(Ve metiendo a los registrados en `webinar-04-es-hoy` conforme lleguen; así
-`--excluir` los quita solo.)
-
-### Miércoles 2 — tres horas antes
-
-`webinar-04-es-hoy`, **solo a registrados**.
-
-### Jueves 3 — el seguimiento, que es donde está el dinero
-
-`webinar-05a-asistio` y `webinar-05b-no-asistio`, según el reporte de asistencia
-de Zoom. Los dos piden respuesta directa, no clic.
-
-### Y toda la semana: contestar
-
-Los correos 1, 3, 5a y 5b piden que la gente **responda**, no que haga clic. Eso
-es a propósito — convierte más y le enseña a Gmail que este remitente se quiere.
-
-Solo funciona si alguien está leyendo `admin@dukedelcaribe.com` y contesta el
-mismo día. Si nadie lo va a leer, avísame y cambiamos la llamada a la acción
-antes del viernes.
-
----
+**Aquí está el dinero.** El correo del viernes a quien no asistió suele rendir más
+que toda la invitación: ya sabe de qué se trata y no tuvo que apartar la noche.
 
 ## Frenos automáticos
 
