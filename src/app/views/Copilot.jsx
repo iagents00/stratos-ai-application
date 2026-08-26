@@ -845,7 +845,7 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
     // el diagnóstico.
     if (!usandoNativo && isNativeApp()) {
       const motivo = motivoDictadoNativo();
-      setErrBanner("El dictado del teléfono no arrancó" + (motivo ? " — " + motivo : "") + ". Tocá el micrófono del teclado para dictar mientras lo revisamos.");
+      setErrBanner("El dictado del teléfono no arrancó" + (motivo ? " — " + motivo : "") + ". Usa el micrófono del teclado para dictar mientras lo revisamos.");
       return;
     }
 
