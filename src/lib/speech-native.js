@@ -108,6 +108,10 @@ export async function startNativeDictation({ onText, onError } = {}) {
 
   const oyentes = [];
   let vivo = true;
+  // Se guarda lo ultimo transcrito para poder devolverlo al parar. Sin esto, el
+  // texto solo existia dentro del callback y quien apagaba el microfono no
+  // tenia forma de saber que se habia dicho.
+  let textoFinal = "";
 
   const soltar = async () => {
     for (const h of oyentes) { try { await h?.remove?.(); } catch { /* noop */ } }
@@ -120,20 +124,29 @@ export async function startNativeDictation({ onText, onError } = {}) {
     // que un dictado largo no pierda el principio.
     oyentes.push(await p.addListener("partialResults", (ev) => {
       if (!vivo) return;
-      const t = ev?.accumulated ?? ev?.accumulatedText ?? ev?.matches?.[0] ?? "";
-      if (t) onText?.(String(t));
+      // Verificado contra la interfaz real del plugin (8.1.11): el evento trae
+      // accumulatedText (todo lo dicho, incluido el tramo actual), accumulated
+      // (los tramos anteriores) y matches (solo el ultimo). Se prefiere el mas
+      // completo, o un dictado largo pierde el principio.
+      const t = ev?.accumulatedText ?? ev?.accumulated ?? ev?.matches?.[0] ?? "";
+      if (t) { textoFinal = String(t); onText?.(textoFinal); }
     }));
 
     oyentes.push(await p.addListener("error", () => {
       if (vivo) onError?.("motor");
     }));
 
-    await p.start({
+    const arranque = await p.start({
       language: "es-MX",
       partialResults: true,   // texto en vivo mientras habla, como el del teclado
       popup: false,           // sin la ventana de Google en Android: el chat es la interfaz
       addPunctuation: true,   // "punto", "coma" salen como signos
     });
+    // start() devuelve las coincidencias finales cuando la sesion termina sola
+    // (el usuario dejo de hablar). Es otro camino por el que puede llegar el
+    // texto, y perderlo era quedarse sin nada teniendolo a mano.
+    const deArranque = arranque?.matches?.[0];
+    if (deArranque && !textoFinal) textoFinal = String(deArranque);
   } catch (e) {
     ultimoMotivo = "fallo-al-arrancar: " + (e?.message || e);
     vivo = false;
@@ -142,15 +155,34 @@ export async function startNativeDictation({ onText, onError } = {}) {
   }
 
   return {
-    /** Misma forma que un SpeechRecognition del navegador. */
-    stop: () => {
-      if (!vivo) return;
+    /**
+     * Misma forma que un SpeechRecognition del navegador, pero DEVUELVE el
+     * texto: quien apaga el microfono necesita saber que se dijo, y esperar a
+     * que llegue un evento despues del stop es una carrera que se pierde.
+     *
+     * @returns {Promise<string>} lo transcrito, o "" si no hubo nada
+     */
+    stop: async () => {
+      if (!vivo) return textoFinal;
       vivo = false;
-      // forceStop cierra aunque el motor esté esperando más voz; sin él, en
-      // Android la sesión puede quedar abierta unos segundos después del toque.
-      try { p.forceStop?.({ timeout: 300 }); } catch { /* noop */ }
-      try { p.stop?.(); } catch { /* noop */ }
-      soltar();
+      // forceStop cierra aunque el motor este esperando mas voz; sin el, en
+      // Android la sesion puede quedar abierta unos segundos despues del toque.
+      try { await p.forceStop?.({ timeout: 300 }); } catch { /* noop */ }
+      try { await p.stop?.(); } catch { /* noop */ }
+
+      // RED DE SEGURIDAD: en vez de confiar en que llego un evento, se le
+      // PREGUNTA al motor cual fue el ultimo texto que reconocio. El plugin lo
+      // guarda justo para esto (getLastPartialResult). Es la diferencia entre
+      // "no se transcribio nada" y "se transcribio pero nadie lo recogio".
+      try {
+        const ultimo = await p.getLastPartialResult?.();
+        if (ultimo?.text && String(ultimo.text).length > textoFinal.length) {
+          textoFinal = String(ultimo.text);
+        }
+      } catch { /* si no esta, queda lo que junto onText */ }
+
+      await soltar();
+      return textoFinal;
     },
   };
 }

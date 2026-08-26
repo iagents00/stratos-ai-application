@@ -165,6 +165,12 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
   // desde un timeout sin closures viejas.
   const autoSendVoiceRef = useRef(false);
   const voiceTranscriptRef = useRef("");
+  // Un puntero SIEMPRE fresco a send(). finishRecording es un useCallback con
+  // dependencias vacias, asi que congela lo que captura; send() en cambio se
+  // vuelve a crear en cada render y lee el estado actual (la organizacion, la
+  // conversacion, el modo). Llamar a la version congelada enviaria el mensaje
+  // con el estado del PRIMER render — un fallo silencioso y dificil de ver.
+  const sendRef = useRef(null);
 
   /* ── El refresco NO puede pisar lo que acabás de escribir ──────────────────
      BUG que reportó Ángel (29-jul): «a veces se desaparecen los mensajes que
@@ -556,6 +562,8 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
     inputRef.current?.focus();
   };
 
+  sendRef.current = send;   // se actualiza en cada render (ver sendRef arriba)
+
   /* ── Captura de un PAGO desde el Copilot → queda registrada en la Caja ──
      Pedido de Ángel (27-jul): «con una captura de pantalla que enviamos de lo que
      Iván me manda, que se la mande al Copilot y se registre el pago y quede el
@@ -744,12 +752,48 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
 
   const finishRecording = useCallback(() => {
     const session = recorderRef.current;
+    const rec = recognitionRef.current;
     recorderRef.current = null;
     if (recordTimerRef.current) { clearInterval(recordTimerRef.current); recordTimerRef.current = null; }
     setRecording(false);
     setRecordSecs(0);
-    try { recognitionRef.current?.stop(); } catch { /* noop */ }
+
+    // El dictado del telefono DEVUELVE el texto al pararlo. Antes se llamaba a
+    // stop() y se leia el transcript enseguida: una carrera que se perdia casi
+    // siempre, porque el ultimo tramo de voz llega despues del stop. Ahora se
+    // espera esa respuesta y recien ahi se decide que hacer con ella.
+    let resultado;
+    try { resultado = rec?.stop(); } catch { /* noop */ }
     try { session?.finish(); } catch { /* noop */ }
+
+    if (resultado && typeof resultado.then === "function") {
+      resultado.then((texto) => {
+        if (!mountedRef.current) return;
+        // Se limpia SIEMPRE, incluso si no se entendio nada: dejarlo en true
+        // haria que la proxima grabacion se enviara sola sin que nadie lo pida.
+        const eraAutomatico = autoSendVoiceRef.current;
+        autoSendVoiceRef.current = false;
+        setVoiceTranscript("");
+        voiceTranscriptRef.current = "";
+
+        if (!texto) {
+          // Sin texto no hay nada que mandar. Se dice, en vez de dejar al
+          // usuario mirando un campo vacio sin saber si lo escucho.
+          setErrBanner("No te escuche. Vuelve a intentarlo hablando un poco mas cerca del telefono.");
+          return;
+        }
+        // Si el cierre vino de Enter, se manda solo. Si vino del boton, el
+        // texto queda en el campo de escritura para leerlo y corregirlo antes
+        // de enviarlo — igual que el microfono del teclado.
+        if (eraAutomatico) {
+          sendRef.current?.(texto);
+        } else {
+          setInput((prev) => (prev ? prev + " " + texto : texto));
+          inputRef.current?.focus();
+        }
+      }).catch(() => { /* el aviso del dictado ya se mostro al arrancar */ });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const cancelRecording = useCallback(() => {
@@ -830,6 +874,28 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
         recSpeech.start();
         recognitionRef.current = recSpeech;
       } catch { setSpeechDown(true); }
+    }
+
+    // ⛔ EN LA APP NO SE GRABA AUDIO. Es el arreglo de fondo del dictado.
+    //
+    // En un telefono el microfono es EXCLUSIVO: el segundo que lo pide se lo
+    // quita al primero, sin error y sin aviso. Aca se arrancaba el dictado del
+    // sistema y un instante despues getUserMedia pedia el mismo microfono para
+    // MediaRecorder — asi que el motor de voz se quedaba escuchando silencio.
+    // Por eso arrancaba bien, no daba ningun error, y el texto llegaba vacio:
+    // el sintoma que sobrevivio a seis versiones (Angel, 25/26-ago-2026).
+    //
+    // Y el audio no hacia falta para nada: el blob NUNCA se sube al servidor,
+    // solo servia para una vista previa. Lo que viaja al asistente es el TEXTO.
+    // En web se sigue grabando igual que siempre.
+    if (usandoNativo) {
+      recorderRef.current = { finish: () => {}, cancel: () => {} };
+      setRecording(true);
+      setRecordSecs(0);
+      recordTimerRef.current = setInterval(() => {
+        setRecordSecs((s) => { const next = s + 1; if (next >= REC_MAX_SECS) queueMicrotask(finishRecording); return next; });
+      }, 1000);
+      return;
     }
 
     let stream;
