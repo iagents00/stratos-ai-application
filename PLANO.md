@@ -140,7 +140,7 @@ Servicios de terceros con los que habla el código.
 | Servicio | Usado en |
 |---|---|
 | `personal-n8n.suwsiw.easypanel.host` | 13 archivos |
-| `glulgyhkrqpykxmujodb.supabase.co` | 4 archivos |
+| `glulgyhkrqpykxmujodb.supabase.co` | 5 archivos |
 | `drive.google.com` | 3 archivos |
 | `brokers.mycocay.com` | 1 archivo |
 | `brokers.simca.mx` | 1 archivo |
@@ -162,7 +162,7 @@ casa; por eso mismo son los que más cuidado piden.
 | Archivo | Archivos que lo importan |
 |---|---|
 | `design-system/tokens.js` | **72** |
-| `lib/supabase.js` | **41** |
+| `lib/supabase.js` | **42** |
 | `hooks/useAuth.js` | **35** |
 | `hooks/useViewport.js` | **28** |
 | `app/SharedComponents.jsx` | **21** |
@@ -183,8 +183,8 @@ casa; por eso mismo son los que más cuidado piden.
 
 | Variable | Consumida en |
 |---|---|
+| `VITE_SUPABASE_URL` | `app/App.jsx` · `lib/supabase.js` · `lib/transcribir.js` |
 | `VITE_SUPABASE_ANON_KEY` | `app/App.jsx` · `lib/supabase.js` |
-| `VITE_SUPABASE_URL` | `app/App.jsx` · `lib/supabase.js` |
 | `VITE_ANDROID_PUSH` | `lib/push-native.js` |
 | `VITE_APP_URL` | `main.jsx` |
 | `VITE_DIAGNOSTICO_CALCOM_URL` | `landing/Diagnostico.jsx` |

@@ -26,6 +26,7 @@ import {
 } from "../../lib/telegram";
 import { getPushStatus, enablePushNotifications } from "../../lib/push";
 import { startNativeDictation, motivoDictadoNativo } from "../../lib/speech-native";
+import { transcribirEnServidor } from "../../lib/transcribir";
 import { supabase } from "../../lib/supabase";
 import { isNativeApp } from "../../lib/native";
 import { useIsMobile } from "../../hooks/useViewport";
@@ -171,6 +172,16 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
   // conversacion, el modo). Llamar a la version congelada enviaria el mensaje
   // con el estado del PRIMER render — un fallo silencioso y dificil de ver.
   const sendRef = useRef(null);
+  // true cuando ESTE aparato no sabe convertir voz en texto por su cuenta y hay
+  // que mandarle el audio al servidor. Se decide al arrancar la grabacion y lo
+  // lee sendVoiceNote al soltar.
+  const transcribirAfueraRef = useRef(false);
+  // El blob tambien en un ref: sendVoiceNote se llama desde un temporizador y
+  // desde el teclado, donde el estado que capturo el render puede estar viejo.
+  const pendingVoiceBlobRef = useRef(null);
+  // Mandar el audio y esperar la respuesta tarda unos segundos. Sin avisar,
+  // parece que el boton no hizo nada y la persona lo toca otra vez.
+  const [transcribiendo, setTranscribiendo] = useState(false);
 
   /* ── El refresco NO puede pisar lo que acabás de escribir ──────────────────
      BUG que reportó Ángel (29-jul): «a veces se desaparecen los mensajes que
@@ -335,6 +346,7 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
   }, [pendingVoiceBlob]);
 
   useEffect(() => { voiceTranscriptRef.current = voiceTranscript; }, [voiceTranscript]);
+  useEffect(() => { pendingVoiceBlobRef.current = pendingVoiceBlob; }, [pendingVoiceBlob]);
 
   const send = async (rawText, options = {}) => {
     const text = (rawText ?? "").trim();
@@ -838,25 +850,32 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
       if (sesionNativa) { recognitionRef.current = sesionNativa; usandoNativo = true; }
     } catch { /* sigue por el camino del navegador */ }
 
-    // Dentro de la app, si el dictado del sistema NO arrancó, se dice POR QUÉ.
-    // El camino del navegador no va a funcionar acá (el WebView no transcribe),
-    // así que seguir en silencio solo produce el mismo cartel genérico de
-    // siempre. Con el motivo a la vista, la próxima prueba de una persona ya es
-    // el diagnóstico.
+    transcribirAfueraRef.current = false;
+
+    // ── PLAN B: que lo transcriba el servidor ──────────────────────────────
+    //
+    // Si el aparato no sabe convertir voz en texto, ya NO se abandona. Antes se
+    // mostraba un cartel y listo: la persona tocaba el micrófono, hablaba, y no
+    // pasaba nada. Ahora se graba igual y al soltar se manda a transcribir.
+    //
+    // Pasa de verdad, y en dos lugares distintos:
+    //   · Android sin los servicios de voz de Google. El teléfono contesta
+    //     "Speech recognition service is not available" — reportado el
+    //     26-ago-2026 por Ángel, con el diagnóstico de la versión anterior.
+    //   · Brave, que define la API del navegador pero le corta el servicio.
+    //
+    // Sigue siendo el plan B: el motor del aparato es gratis, instantáneo y no
+    // saca la voz de ahí. Este cuesta y tarda unos segundos. El orden es una
+    // decisión, no un descuido.
     if (!usandoNativo && isNativeApp()) {
-      const motivo = motivoDictadoNativo();
-      setErrBanner("El dictado del teléfono no arrancó" + (motivo ? " — " + motivo : "") + ". Usa el micrófono del teclado para dictar mientras lo revisamos.");
-      return;
+      transcribirAfueraRef.current = true;
     }
 
-    if (!usandoNativo) {
+    if (!usandoNativo && !isNativeApp()) {
       const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
-      // Sin motor de dictado no hay NADA que enviar después (el audio no viaja al
-      // servidor): se avisa de una en vez de dejar grabar un mensaje muerto.
       if (!SpeechRec) {
-        setErrBanner("Este navegador no convierte la voz en texto. Escribe el mensaje, o abre el CRM en Chrome o Safari para dictar.");
-        return;
-      }
+        transcribirAfueraRef.current = true;
+      } else {
       try {
         const recSpeech = new SpeechRec();
         recSpeech.lang = "es-MX";
@@ -874,6 +893,7 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
         recSpeech.start();
         recognitionRef.current = recSpeech;
       } catch { setSpeechDown(true); }
+      }
     }
 
     // ⛔ EN LA APP NO SE GRABA AUDIO. Es el arreglo de fondo del dictado.
@@ -934,9 +954,31 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
   /* Enviar la nota de voz pendiente: si hay transcript va al cerebro; si no,
      la verdad de siempre (sin inventar texto). Lo usan el botón del preview,
      el auto-envío por Enter durante la grabación y el Enter del compositor. */
-  const sendVoiceNote = () => {
+  const sendVoiceNote = async () => {
     const t = (voiceTranscriptRef.current || "").trim();
-    if (t) { send(t); inputRef.current?.focus(); return; }
+    if (t) { sendRef.current?.(t); inputRef.current?.focus(); return; }
+
+    // Sin texto pero CON audio: este aparato no supo transcribir, así que lo
+    // hace el servidor. Antes acá se tiraba la grabación y se mostraba un
+    // cartel — la persona hablaba y no pasaba nada.
+    const blob = pendingVoiceBlobRef.current;
+    if (transcribirAfueraRef.current && blob) {
+      setPendingVoiceBlob(null);
+      setTranscribiendo(true);
+      const r = await transcribirEnServidor(blob);
+      setTranscribiendo(false);
+      if (r.texto) {
+        setVoiceTranscript("");
+        voiceTranscriptRef.current = "";
+        sendRef.current?.(r.texto);
+        inputRef.current?.focus();
+        return;
+      }
+      setErrBanner(r.error || "No se pudo convertir tu voz en texto.");
+      inputRef.current?.focus();
+      return;
+    }
+
     setPendingVoiceBlob(null); setVoiceTranscript("");
     setErrBanner("No pude convertir tu voz en texto en este navegador (le pasa a Brave). Escribe el mensaje, o dicta desde la app, Chrome o Safari.");
     inputRef.current?.focus();
@@ -945,9 +987,21 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
   /* El cierre vino de Enter: cuando el audio queda listo se envía SOLO. La
      pausa breve deja que el dictado suelte las últimas palabras dichas. */
   useEffect(() => {
-    if (!pendingVoiceBlob || recording || !autoSendVoiceRef.current) return;
+    if (!pendingVoiceBlob || recording) return;
+
+    // Si este aparato no supo transcribir, se manda SOLO, sin esperar a que la
+    // persona toque nada. No tendria sentido mostrarle una vista previa para
+    // que "revise" un texto que todavia no existe: lo unico que hay es el audio.
+    if (transcribirAfueraRef.current) {
+      autoSendVoiceRef.current = false;
+      const t = setTimeout(() => { sendVoiceNote(); }, 150);
+      return () => clearTimeout(t);
+    }
+
+    if (!autoSendVoiceRef.current) return;
     const t = setTimeout(() => { autoSendVoiceRef.current = false; sendVoiceNote(); }, 350);
     return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pendingVoiceBlob, recording]);
 
   /* ── Enter envía la grabación / Escape la cancela (global) ─────────────────
@@ -1144,6 +1198,18 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
           // Brave, 29-jul): sendVoiceNote dice la verdad y deja escribir.
           onSend={sendVoiceNote}
         />
+      )}
+
+      {/* ── Convirtiendo la voz en texto (solo cuando lo hace el servidor) ──
+          Tarda unos segundos. Sin este aviso parece que el botón no hizo nada y
+          la persona lo vuelve a tocar. */}
+      {transcribiendo && (
+        <div style={{ margin: "0 14px 4px", padding: "8px 12px", borderRadius: 10, background: `${T.accent}14`, border: `1px solid ${T.accent}40`, display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
+          <span style={{ width: 8, height: 8, borderRadius: "50%", background: T.accent, flexShrink: 0, animation: "pulse 1.2s ease-in-out infinite" }} />
+          <span style={{ flex: 1, fontSize: 12.5, fontWeight: 500, color: T.accent, fontFamily: fontDisp }}>
+            Convirtiendo tu voz en texto…
+          </span>
+        </div>
       )}
 
       {/* ── Barra de grabación ── */}
