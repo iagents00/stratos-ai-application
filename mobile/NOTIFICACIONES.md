@@ -46,18 +46,43 @@ trámites de abajo.
 
 ---
 
-## Trámite 1 — iPhone: la llave de Apple (5 minutos)
+## Trámite 1 — iPhone: la llave de Apple
 
 Es un archivo `.p8`. **Se descarga una sola vez y Apple no lo deja descargar de
 nuevo**, así que hay que guardarlo bien apenas se baje.
 
-1. Entrar a <https://appstoreconnect.apple.com> → arriba a la derecha,
-   **Usuarios y acceso**.
-2. Pestaña **Integraciones** → en la lista de la izquierda,
-   **Apple Push Notifications service (APNs)**.
-3. Botón **+** → nombre: `Stratos Push` → **Continuar** → **Generar**.
-4. **Descargar** el archivo. Se llama algo como `AuthKey_AB12CD34EF.p8`.
+> ⚠️ **LO TIENE QUE HACER IVÁN.** No es capricho ni falta de permisos que se
+> puedan arreglar: está verificado el 26-ago-2026 y no hay vuelta.
+>
+> La llave **no vive en App Store Connect** —ahí la sección ni siquiera existe;
+> el menú de Integraciones solo tiene llaves de API, compras y webhooks— sino en
+> el **portal de desarrolladores**, que es otra cosa con otros permisos.
+>
+> Ese portal exige estar **inscrito en el Apple Developer Program**. Ángel es
+> Administrador en App Store Connect (se le subió el rol ese mismo día) y aun
+> así el portal contesta *«Access Unavailable: this resource is only for
+> developers enrolled in a developer program»*. Y al intentar darle el permiso
+> por API, Apple lo rechaza con todas las letras:
+> **`The user can't have provisioning privilege.`**
+>
+> También se agotó la vía automática: **7 rutas de API probadas** para llaves de
+> APNs (todas 404) y la propia API confirmó que su lista de tipos de certificado
+> **no incluye ninguno de push**.
+>
+> Conclusión: solo el titular de la cuenta puede crearla.
+
+**Los pasos, para Iván:**
+
+1. Entrar a <https://developer.apple.com/account/resources/authkeys/list>
+   (con su Apple ID, `ivanrroficial@gmail.com`).
+2. Botón **+** (Crear una llave).
+3. Nombre: `Stratos Push`. Marcar la casilla **Apple Push Notifications service
+   (APNs)**. → **Continue** → **Register**.
+4. **Download**. El archivo se llama algo como `AuthKey_AB12CD34EF.p8`.
    Esos 10 caracteres del nombre son el **Key ID**: anotarlos.
+
+⚠️ Apple deja bajarlo **una sola vez**. Si se pierde, hay que revocar esa llave
+y crear otra.
 
 ## Trámite 2 — Android: el proyecto de Google (10 minutos)
 
