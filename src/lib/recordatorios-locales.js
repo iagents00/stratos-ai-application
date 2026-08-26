@@ -52,13 +52,32 @@ function idNumerico(uuid) {
   return Math.abs(h) % 2000000000;
 }
 
-/** El mismo texto que arma el servidor, para que el aviso se lea igual venga
- *  de donde venga. Si el payload no trae nada, se usa el tipo. */
+/**
+ * El MISMO texto que arma el servidor (trg_push_on_proactive_sent), para que el
+ * aviso se lea igual venga de donde venga.
+ *
+ * La parte de abajo no es un adorno: mirando los recordatorios reales, varios
+ * —los de Zoom, por ejemplo— vienen SIN texto en el payload, y el servidor los
+ * completa segun el tipo. Sin esto, esos avisos dirian "Tienes un recordatorio
+ * pendiente" y el asesor no sabria de que, que es casi lo mismo que nada.
+ *
+ * ⚠️ Si cambian los textos del servidor, cambian aca. Son dos copias de la
+ * misma frase a proposito: el aviso local existe para funcionar cuando el
+ * servidor NO puede hablar, asi que no puede depender de el.
+ */
 function textoDe(r) {
   const p = r.payload || {};
   const titulo = p.title || "Recordatorio · Stratos";
-  const cuerpo = p.text || p.message || p.message_hint || p.next_action ||
-    "Tienes un recordatorio pendiente.";
+  const delTipo = (t) => {
+    if (!t) return "Recordatorio del asistente.";
+    if (t.startsWith("zoom")) return "Tienes un Zoom próximamente — repasá la ficha del cliente.";
+    if (t.startsWith("next_action")) return "Tienes una acción programada con un cliente próximamente.";
+    if (t.startsWith("visita")) return "Tienes una visita/recorrido agendado próximamente.";
+    if (t.startsWith("inactividad")) return "Tienes un cliente sin movimiento; revisalo en el CRM.";
+    if (t === "team_action" || t === "personal") return "Tienes un recordatorio pendiente.";
+    return "Recordatorio del asistente.";
+  };
+  const cuerpo = p.text || p.message || p.message_hint || p.next_action || delTipo(r.tipo);
   return { titulo, cuerpo };
 }
 
