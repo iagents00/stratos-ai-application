@@ -22,9 +22,15 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 const SUPABASE_URL   = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY    = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") ?? "";
+const BREVO_API_KEY  = Deno.env.get("BREVO_API_KEY") ?? "";
 const PUBLIC_BASE    = Deno.env.get("EMAIL_PUBLIC_BASE") ?? `${SUPABASE_URL}/functions/v1`;
 
 const RESEND_BATCH_MAX = 100;
+
+// Dos proveedores porque los planes gratis topan por día: Resend da 100 y
+// Brevo 300. Juntos alcanzan para mandarle a toda la base el mismo día sin
+// pagar. Ambos firman con el mismo dominio verificado.
+type Proveedor = "resend" | "brevo";
 
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), {
@@ -87,10 +93,14 @@ Deno.serve(async (req) => {
   const slug    = String(payload.campaign_slug ?? "");
   const limite  = Math.min(Number(payload.limit ?? RESEND_BATCH_MAX), RESEND_BATCH_MAX);
   const dryRun  = payload.dry_run === true;
+  const proveedor: Proveedor = payload.proveedor === "brevo" ? "brevo" : "resend";
 
   if (!orgId || !slug) return json({ error: "Faltan organization_id y campaign_slug" }, 400);
-  if (!dryRun && !RESEND_API_KEY) {
-    return json({ error: "Falta el secret RESEND_API_KEY" }, 500);
+  if (!dryRun) {
+    const llave = proveedor === "brevo" ? BREVO_API_KEY : RESEND_API_KEY;
+    if (!llave) {
+      return json({ error: `Falta el secret ${proveedor === "brevo" ? "BREVO_API_KEY" : "RESEND_API_KEY"}` }, 500);
+    }
   }
 
   // ── Campaña ──────────────────────────────────────────────────────────────
@@ -215,20 +225,67 @@ Deno.serve(async (req) => {
     body: JSON.stringify({ estado: "enviando" }),
   });
 
-  const res = await fetch("https://api.resend.com/emails/batch", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${RESEND_API_KEY}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(lote),
-  });
+  // ── Resend: un lote de hasta 100 en una llamada ──────────────────────────
+  // ── Brevo:   una llamada por destinatario, con concurrencia acotada ──────
+  let res: Response;
+  let cuerpo: string;
 
-  const cuerpo = await res.text();
+  if (proveedor === "brevo") {
+    const ids: (string | null)[] = new Array(lote.length).fill(null);
+    const errores: string[] = [];
+    const CONCURRENCIA = 5;
+
+    for (let i = 0; i < lote.length; i += CONCURRENCIA) {
+      const trozo = lote.slice(i, i + CONCURRENCIA);
+      await Promise.all(trozo.map(async (m: any, j: number) => {
+        const r = await fetch("https://api.brevo.com/v3/smtp/email", {
+          method: "POST",
+          headers: {
+            "api-key": BREVO_API_KEY,
+            "content-type": "application/json",
+            accept: "application/json",
+          },
+          body: JSON.stringify({
+            sender: { name: c.from_name, email: c.from_email },
+            to: [{ email: m.to[0] }],
+            subject: m.subject,
+            htmlContent: m.html,
+            ...(m.text ? { textContent: m.text } : {}),
+            ...(c.reply_to ? { replyTo: { email: c.reply_to } } : {}),
+            headers: m.headers,
+          }),
+        });
+        const t = await r.text();
+        if (r.ok) {
+          try { ids[i + j] = JSON.parse(t)?.messageId ?? null; } catch { /* sin id */ }
+        } else {
+          errores.push(`${r.status}: ${t.slice(0, 160)}`);
+        }
+      }));
+    }
+
+    // Se simula la forma de respuesta de Resend para no duplicar el código
+    // que actualiza destinatarios y escribe en el CRM.
+    const todosFallaron = ids.every((x) => x === null) && errores.length > 0;
+    res = new Response(null, { status: todosFallaron ? 502 : 200 });
+    cuerpo = todosFallaron
+      ? `Brevo — ${errores[0]}`
+      : JSON.stringify({ data: ids.map((id) => ({ id })) });
+  } else {
+    res = await fetch("https://api.resend.com/emails/batch", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${RESEND_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(lote),
+    });
+    cuerpo = await res.text();
+  }
 
   if (!res.ok) {
     // Falló el lote entero: se marcan con error y quedan reintentables a mano.
-    const detalle = `Resend ${res.status}: ${cuerpo.slice(0, 500)}`;
+    const detalle = `${proveedor} ${res.status}: ${cuerpo.slice(0, 500)}`;
     for (const r of envíanse) {
       await rest(`email_recipients?id=eq.${r.id}`, {
         method: "PATCH",
@@ -247,7 +304,7 @@ Deno.serve(async (req) => {
   const data = JSON.parse(cuerpo)?.data ?? [];
   const ahora = new Date().toISOString();
 
-  // Resend regresa los ids en el mismo orden del lote.
+  // Los ids vienen en el mismo orden del lote, con cualquiera de los dos.
   for (let i = 0; i < envíanse.length; i++) {
     const r = envíanse[i];
     const id = data[i]?.id ?? null;
@@ -259,7 +316,7 @@ Deno.serve(async (req) => {
         estado: "enviado",
         provider_message_id: id,
         sent_at: ahora,
-        error: id ? null : "Resend no devolvió id para este destinatario",
+        error: id ? null : `${proveedor} no devolvió id para este destinatario`,
       }),
     });
 
@@ -305,5 +362,6 @@ Deno.serve(async (req) => {
     omitidos: omitidos.length,
     restantes: Array.isArray(restantes) ? restantes.length : 0,
     campaña: c.slug,
+    proveedor,
   });
 });

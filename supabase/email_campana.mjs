@@ -504,14 +504,18 @@ async function cmdEnviar(slug) {
   const max    = Number(flag('max', 100))
   const espera = Number(flag('espera', 3000))
   const dry    = tiene('dry-run')
+  // Resend gratis topa en 100 al día; Brevo en 300. Se elige por corrida.
+  const prov   = String(flag('proveedor', 'resend'))
 
   const c = await campañaPorSlug(slug)
   console.log(`\n${c.nombre}`)
   console.log(`Asunto: "${c.asunto}"`)
   console.log(`De: ${c.from_name} <${c.from_email}>`)
+  console.log(`Proveedor: ${prov}`)
   console.log(dry ? 'MODO ENSAYO — no se manda nada\n' : `Lotes de ${lote}, tope de ${max} en esta corrida\n`)
-  if (!dry && max > 100) {
-    console.log('AVISO: el plan gratis de Resend corta en 100 al día. Arriba de eso, rechaza.\n')
+  const topeDiario = prov === 'brevo' ? 300 : 100
+  if (!dry && max > topeDiario) {
+    console.log(`AVISO: el plan gratis de ${prov} corta en ${topeDiario} al día. Arriba de eso, rechaza.\n`)
   }
 
   let enviados = 0
@@ -522,6 +526,7 @@ async function cmdEnviar(slug) {
       campaign_slug: slug,
       limit: Math.min(lote, max - enviados),
       dry_run: dry,
+      proveedor: prov,
     })
 
     if (dry) {
@@ -642,7 +647,8 @@ Uso: node supabase/email_campana.mjs <comando> [slug] [opciones]
                              --solo a@b.com,c@d.com  para la prueba semilla
   enviar    <slug>           manda en lotes, con freno automático
                              --lote 100  --espera 3000  --dry-run
-                             --max 100   tope de la corrida; 100 = el diario del plan gratis
+                             --max 100   tope de la corrida
+                             --proveedor resend|brevo  (gratis: 100/día y 300/día)
   reporte   <slug>           resultados de la campaña
 `
 
