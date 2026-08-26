@@ -26,11 +26,37 @@ export function isNativeApp() {
   try { return !!cap()?.isNativePlatform?.(); } catch { return false; }
 }
 
-function nativePlugin(name) {
+/**
+ * Devuelve el plugin nativo, o null si no estamos dentro de la app.
+ *
+ * ⚠️ EL registerPlugin NO ES OPCIONAL, aunque lo parezca.
+ *
+ * window.Capacitor.Plugins arranca VACÍO y solo se llena cuando alguien llama
+ * registerPlugin. Se ve en el motor (@capacitor/core, createCapacitor):
+ *
+ *     const Plugins = (cap.Plugins = cap.Plugins || {});   // arranca vacío
+ *     ...
+ *     Plugins[pluginName] = proxy;                         // dentro de registerPlugin
+ *
+ * El lado nativo publica QUÉ plugins existen en Capacitor.PluginHeaders, pero
+ * NO crea las entradas de Plugins. Por eso leer Plugins?.[name] a secas
+ * devolvía null SIEMPRE dentro de la app — en silencio, sin un error en
+ * consola. Eso dejaba mudos a Filesystem, Share, LocalNotifications, las
+ * notificaciones push y el dictado: todos caían al camino "no hay plugin" y
+ * usaban el respaldo web, que dentro de una app no existe.
+ *
+ * Lo encontró Ángel el 25-ago-2026: en la app de TestFlight el micrófono del
+ * Copilot decía "no pude convertir tu voz en texto" aunque el dictado nativo
+ * ya estaba instalado. La causa no era el dictado: era este renglón.
+ *
+ * registerPlugin(name) arma el proxy desde PluginHeaders y lo deja cacheado en
+ * Plugins, así que llamarlo de más es gratis: la segunda vez devuelve el mismo.
+ */
+export function nativePlugin(name) {
   try {
     const c = cap();
     if (!c?.isNativePlatform?.()) return null;
-    return c.Plugins?.[name] || null;
+    return c.Plugins?.[name] || c.registerPlugin?.(name) || null;
   } catch { return null; }
 }
 

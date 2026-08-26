@@ -25,7 +25,7 @@ import {
   getCopilotActivity, sendCopilotMessage,
 } from "../../lib/telegram";
 import { getPushStatus, enablePushNotifications } from "../../lib/push";
-import { startNativeDictation } from "../../lib/speech-native";
+import { startNativeDictation, motivoDictadoNativo } from "../../lib/speech-native";
 import { supabase } from "../../lib/supabase";
 import { isNativeApp } from "../../lib/native";
 import { useIsMobile } from "../../hooks/useViewport";
@@ -778,6 +778,17 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
       });
       if (sesionNativa) { recognitionRef.current = sesionNativa; usandoNativo = true; }
     } catch { /* sigue por el camino del navegador */ }
+
+    // Dentro de la app, si el dictado del sistema NO arrancó, se dice POR QUÉ.
+    // El camino del navegador no va a funcionar acá (el WebView no transcribe),
+    // así que seguir en silencio solo produce el mismo cartel genérico de
+    // siempre. Con el motivo a la vista, la próxima prueba de una persona ya es
+    // el diagnóstico.
+    if (!usandoNativo && isNativeApp()) {
+      const motivo = motivoDictadoNativo();
+      setErrBanner("El dictado del teléfono no arrancó" + (motivo ? " — " + motivo : "") + ". Tocá el micrófono del teclado para dictar mientras lo revisamos.");
+      return;
+    }
 
     if (!usandoNativo) {
       const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
