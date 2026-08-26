@@ -66,6 +66,21 @@ function entorno() {
 let yaRegistrado = false;
 
 /**
+ * Por que NO quedo registrado este telefono. Se muestra en Perfil.
+ *
+ * Existe por lo mismo que su equivalente en speech-native.js: TODO este archivo
+ * falla en silencio. Se comprobo el 26-ago-2026 que device_tokens estaba vacio
+ * despues de dias de uso real en un iPhone, y no habia forma de saber en cual
+ * de los cuatro pasos se caia. Un fallo mudo no se arregla: se adivina.
+ */
+let motivo = "todavia-no-se-intento";
+export function motivoPushNativo() { return motivo; }
+
+/** true cuando el token quedo guardado contra el usuario. */
+let registrado = false;
+export function pushNativoRegistrado() { return registrado; }
+
+/**
  * Guarda el token del dispositivo contra el usuario. Idempotente: la tabla
  * tiene UNIQUE(user_id, token), así que reabrir la app no duplica filas.
  */
@@ -106,7 +121,8 @@ async function guardarToken(userId, token) {
  */
 export async function iniciarPushNativo(userId, alTocar) {
   const PN = plugin();
-  if (!PN || !userId) return false;      // web, o todavía sin sesión
+  if (!PN) { motivo = "no-hay-plugin"; return false; }
+  if (!userId) { motivo = "sin-sesion"; return false; }
   if (yaRegistrado) return true;
 
   // ⛔ ANDROID: registrar push SIN Firebase CIERRA LA APP.
@@ -124,6 +140,7 @@ export async function iniciarPushNativo(userId, alTocar) {
   //
   // En iPhone no aplica: APNs no usa Firebase.
   if (plataforma() === "android" && import.meta.env.VITE_ANDROID_PUSH !== "1") {
+    motivo = "este-APK-se-compilo-sin-Firebase";
     console.info("[push-native] este APK se compiló sin Firebase: no se registra push.");
     return false;
   }
@@ -135,16 +152,22 @@ export async function iniciarPushNativo(userId, alTocar) {
     if (permiso?.receive === "prompt" || permiso?.receive === "prompt-with-rationale") {
       permiso = await PN.requestPermissions();
     }
-    if (permiso?.receive !== "granted") return false;
+    if (permiso?.receive !== "granted") {
+      motivo = "permiso-de-avisos-no-concedido: " + String(permiso?.receive);
+      return false;
+    }
 
     // Los listeners se registran ANTES de register(): el evento 'registration'
     // puede llegar de inmediato y perderlo significa quedarse sin token.
-    await PN.addListener("registration", (t) => {
-      guardarToken(userId, t?.value);
+    await PN.addListener("registration", async (t) => {
+      const ok = await guardarToken(userId, t?.value);
+      registrado = !!ok;
+      motivo = ok ? "registrado" : "el-telefono-dio-su-numero-pero-no-se-pudo-guardar";
     });
 
     await PN.addListener("registrationError", (err) => {
       // El caso típico es que falte la capability de Push en el proyecto Xcode.
+      motivo = "el-sistema-rechazo-el-registro: " + String(err?.error || err);
       console.warn("[push-native] APNs rechazó el registro:", err?.error || err);
     });
 
@@ -161,8 +184,13 @@ export async function iniciarPushNativo(userId, alTocar) {
 
     await PN.register();
     yaRegistrado = true;
+    // register() vuelve enseguida; el numero del telefono llega despues por el
+    // listener de arriba. Si en 10 segundos no llego nada, algo se trago el
+    // evento y hay que poder verlo.
+    if (motivo !== "registrado") motivo = "esperando-que-el-sistema-de-el-numero";
     return true;
   } catch (e) {
+    motivo = "fallo-al-registrar: " + (e?.message || e);
     console.warn("[push-native] no se pudo iniciar:", e?.message || e);
     return false;
   }
