@@ -27,7 +27,34 @@ en Namecheap. Ya quedó todo:
 Nada del dominio se rompió: la app en Vercel, los MX de PrivateEmail y el SPF
 quedaron idénticos. Resend usa CNAMEs, no MX, así que *Mail Settings* nunca se tocó.
 
-**Falta solo la migración 034** y los datos del webinar. Nada más.
+| Migración 034 | **aplicada** |
+| Las 5 campañas y los 284 destinatarios | cargados |
+| Lista validada por MX | 283 de 285 limpios |
+| Aviso de privacidad | ya existía: `stratoscapitalgroup.com/politica-de-privacidad` |
+| Conector de Brevo + su receptor de eventos | desplegados y probados |
+
+### Los dos proveedores
+
+Los planes gratis topan por día. Con los dos, la base entera sale el mismo día:
+
+| Proveedor | Gratis al día | Cómo se usa |
+|---|---|---|
+| Resend | 100 | `enviar <slug>` (por defecto) |
+| Brevo | 300 | `enviar <slug> --proveedor brevo` |
+
+Ambos firman con el mismo dominio verificado. La audiencia, la lista de
+exclusión, la idempotencia y el registro en el CRM son los mismos.
+
+### Falta, y solo lo puede dar el cliente
+
+1. **El domicilio físico.** 278 de 283 destinatarios tienen teléfono de Estados
+   Unidos, así que CAN-SPAM aplica y la dirección en el pie es obligatoria. No
+   está publicada en ningún lado: ni en el sitio de Duke, ni en el de Stratos,
+   ni en el WHOIS.
+2. **La cuenta de Brevo.** Creada por el cliente en brevo.com. Después:
+   autenticar `stratoscapitalgroup.com` (registros DKIM en Namecheap),
+   guardar `BREVO_API_KEY` en secrets, y dar de alta el webhook — la URL con
+   su token ya está generada.
 
 ## Quedan dos días
 
