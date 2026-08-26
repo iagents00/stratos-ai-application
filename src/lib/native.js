@@ -208,6 +208,50 @@ function textoABase64(texto) {
  * @param {string} contenido el texto
  * @param {string} [mime]    tipo, por defecto text/csv
  */
+/**
+ * Igual que descargarArchivo pero para archivos BINARIOS (un .docx, un .pdf, una
+ * imagen). No se puede reusar la otra: aquella recibe texto, y pasar bytes por
+ * un string los corrompe en silencio — el archivo se guarda, pesa lo esperado y
+ * al abrirlo esta dañado, que es la peor forma de fallar.
+ *
+ * @param {string} nombre nombre del archivo, con extension
+ * @param {Blob}   blob   el contenido
+ */
+export async function descargarBlob(nombre, blob) {
+  if (isNativeApp()) {
+    const fs = nativePlugin("Filesystem");
+    const share = nativePlugin("Share");
+    if (fs && share) {
+      try {
+        // FileReader devuelve "data:<mime>;base64,<datos>"; el plugin quiere
+        // solo la parte de despues de la coma.
+        const b64 = await new Promise((ok, mal) => {
+          const fr = new FileReader();
+          fr.onload = () => ok(String(fr.result).split(",")[1] || "");
+          fr.onerror = mal;
+          fr.readAsDataURL(blob);
+        });
+        const res = await fs.writeFile({ path: nombre, data: b64, directory: "CACHE" });
+        try {
+          await share.share({ title: nombre, url: res.uri, dialogTitle: "Guardar o compartir" });
+        } catch { /* el usuario cerro la hoja de compartir: no es un error */ }
+        return true;
+      } catch { /* cae al camino del navegador */ }
+    }
+  }
+  try {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = nombre;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 2000);
+    return true;
+  } catch { return false; }
+}
+
 export async function descargarArchivo(nombre, contenido, mime = "text/csv;charset=utf-8") {
   if (isNativeApp()) {
     const fs = nativePlugin("Filesystem");
