@@ -23,6 +23,7 @@
  * PAC + timbrado); cuando se haga, vuelve como pestaña real.
  */
 import { useState, useEffect, useCallback, useMemo } from "react";
+import { descargarArchivo } from "../../lib/native";
 import {
   Landmark, Download, RefreshCw, BarChart3, Banknote, TrendingUp, TrendingDown,
   Scale, Wallet, PiggyBank, Percent, Plus, Inbox,
@@ -197,15 +198,12 @@ const FinanzasAdmin = ({ T: _T }) => {
       csvCell(r.account), csvCell(r.category), csvCell(obras[r.project_id]),
       csvCell(r.description), r.source || "",
     ].join(","));
-    const blob = new Blob(["﻿" + [header.join(","), ...lines].join("\n")], { type: "text/csv;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `finanzas-movimientos-${new Date().toISOString().slice(0, 10)}.csv`;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 2000);
+    // descargarArchivo y no <a download>: dentro de la app ese atributo lo
+    // ignora el WebView y el boton no hace NADA, sin error. Ver native.js.
+    descargarArchivo(
+      `finanzas-movimientos-${new Date().toISOString().slice(0, 10)}.csv`,
+      "﻿" + [header.join(","), ...lines].join("\n"),
+    );
   }, [rows, obras]);
 
   const curSuffix = currency ? ` ${currency}` : "";

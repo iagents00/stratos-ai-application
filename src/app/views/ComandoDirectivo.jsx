@@ -19,6 +19,7 @@
  * ─────────────────────────────────────────────────────────────────────────────
  */
 import { useMemo, useState } from "react";
+import { descargarArchivo } from "../../lib/native";
 import {
   Users, Phone, BadgeCheck, CalendarDays, CheckCircle2, Activity,
   RefreshCw, Download, MapPin, Handshake,
@@ -231,18 +232,10 @@ function htmlEscape(v) {
     .replace(/'/g, "&#39;");
 }
 
+// Delega en descargarArchivo: dentro de la app el <a download> de siempre lo
+// ignora el WebView y el boton no hace NADA, sin error. Ver native.js.
 function downloadFile(filename, content, mimeType = "text/html;charset=utf-8") {
-  const blob = new Blob([content], { type: mimeType });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  setTimeout(() => {
-    URL.revokeObjectURL(url);
-    a.remove();
-  }, 200);
+  descargarArchivo(filename, content, mimeType);
 }
 
 // ── Componente principal ────────────────────────────────────────────────────

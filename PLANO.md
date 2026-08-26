@@ -166,7 +166,7 @@ casa; por eso mismo son los que más cuidado piden.
 | `hooks/useViewport.js` | **28** |
 | `app/SharedComponents.jsx` | **20** |
 | `hooks/useClient.js` | **16** |
-| `lib/native.js` | **12** |
+| `lib/native.js` | **14** |
 | `app/views/CRM/zoom-metrics.js` | **6** |
 | `app/components/Logo.jsx` | **5** |
 | `app/views/CRM/date-range.js` | **5** |
