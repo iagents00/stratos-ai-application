@@ -779,7 +779,7 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
         if (!texto) {
           // Sin texto no hay nada que mandar. Se dice, en vez de dejar al
           // usuario mirando un campo vacio sin saber si lo escucho.
-          setErrBanner("No te escuche. Vuelve a intentarlo hablando un poco mas cerca del telefono.");
+          setErrBanner("No te escuché. Vuelve a intentarlo hablando un poco más cerca del teléfono.");
           return;
         }
         // Si el cierre vino de Enter, se manda solo. Si vino del boton, el

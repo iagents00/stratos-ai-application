@@ -20,6 +20,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { Send, Check, X, ExternalLink, MessageCircle, RefreshCw, User, Bot, Lock, PhoneCall, Globe, Mail, Trash2, AlertTriangle } from "lucide-react";
 import { P, LP, font, fontDisp } from "../../design-system/tokens";
 import { G, Pill } from "../SharedComponents";
+import EstadoAvisos from "../components/EstadoAvisos";
 import { useAuth } from "../../hooks/useAuth";
 import { useClient } from "../../hooks/useClient";
 import { supabase } from "../../lib/supabase";
@@ -85,6 +86,9 @@ export default function Profile({ theme = "dark", T: Tprop }) {
         </div>
       </div>
 
+      {/* Va PRIMERO a proposito: si los avisos no llegan, es lo que la persona
+          vino a buscar. Dentro del navegador no se muestra. */}
+      <EstadoAvisos T={T} isLight={isLight} userId={user?.id} />
       <PasswordPanel T={T} isLight={isLight} user={user} />
       <RecoveryEmailPanel T={T} isLight={isLight} user={user} />
       <SupportPanel T={T} isLight={isLight} clientConfig={clientConfig} />
