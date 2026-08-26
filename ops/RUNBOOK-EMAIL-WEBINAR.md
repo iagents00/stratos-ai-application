@@ -9,6 +9,26 @@ Guía operativa paso a paso.
 
 ---
 
+## HECHO el 26 de agosto (3:34 PM)
+
+El dominio de envío **no** es `dukedelcaribe.com`. Su DNS está en HostGator y no
+hubo acceso, así que se montó sobre **`stratoscapitalgroup.com`**, cuyo DNS vive
+en Namecheap. Ya quedó todo:
+
+| Pieza | Estado |
+|---|---|
+| Dominio `stratoscapitalgroup.com` en Resend | **Verificado** |
+| CNAME `rsend`, CNAME `send`, TXT `resend._domainkey`, TXT `_dmarc` | capturados en Namecheap y propagados |
+| `RESEND_API_KEY` (permiso solo de envío) | en secrets de Supabase |
+| `RESEND_WEBHOOK_SECRET` | en secrets de Supabase |
+| Webhook con los 5 eventos | activo |
+| Remitente | `Óscar Gálvez · Duke del Caribe <oscar.galvez@stratoscapitalgroup.com>` |
+
+Nada del dominio se rompió: la app en Vercel, los MX de PrivateEmail y el SPF
+quedaron idénticos. Resend usa CNAMEs, no MX, así que *Mail Settings* nunca se tocó.
+
+**Falta solo la migración 034** y los datos del webinar. Nada más.
+
 ## Quedan dos días
 
 El webinar es **pasado mañana**. No hay margen para calentar el dominio por

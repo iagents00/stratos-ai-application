@@ -498,7 +498,10 @@ async function cmdAudiencia(slug) {
 
 async function cmdEnviar(slug) {
   const lote   = Number(flag('lote', 100))
-  const max    = Number(flag('max', 100000))
+  // El plan gratis de Resend corta en 100 correos al día. Pasarse no es un
+  // error suave: los de más los rechaza y quedan marcados como fallidos.
+  // Por eso el tope por defecto es 100 y hay que subirlo a propósito.
+  const max    = Number(flag('max', 100))
   const espera = Number(flag('espera', 3000))
   const dry    = tiene('dry-run')
 
@@ -506,7 +509,10 @@ async function cmdEnviar(slug) {
   console.log(`\n${c.nombre}`)
   console.log(`Asunto: "${c.asunto}"`)
   console.log(`De: ${c.from_name} <${c.from_email}>`)
-  console.log(dry ? 'MODO ENSAYO — no se manda nada\n' : `Lotes de ${lote}, tope de ${max}\n`)
+  console.log(dry ? 'MODO ENSAYO — no se manda nada\n' : `Lotes de ${lote}, tope de ${max} en esta corrida\n`)
+  if (!dry && max > 100) {
+    console.log('AVISO: el plan gratis de Resend corta en 100 al día. Arriba de eso, rechaza.\n')
+  }
 
   let enviados = 0
 
@@ -635,7 +641,8 @@ Uso: node supabase/email_campana.mjs <comando> [slug] [opciones]
                              --excluir <slug>        quita a los de otra campaña
                              --solo a@b.com,c@d.com  para la prueba semilla
   enviar    <slug>           manda en lotes, con freno automático
-                             --lote 100  --max 100  --espera 3000  --dry-run
+                             --lote 100  --espera 3000  --dry-run
+                             --max 100   tope de la corrida; 100 = el diario del plan gratis
   reporte   <slug>           resultados de la campaña
 `
 

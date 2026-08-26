@@ -3,6 +3,7 @@
 —
 {{marca}}
 {{direccion_postal}}
+{{nota_remitente}}
 
 Recibes este correo porque pediste información sobre nuestros desarrollos.
 Aviso de privacidad: {{aviso_privacidad_url}}

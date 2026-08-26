@@ -1,11 +1,11 @@
 {
-  "_nota": "Secuencia del webinar Mondrian Cancún del jueves 27 de agosto de 2026. Los valores en PENDIENTE los llena el cliente; hasta entonces `render` se niega a marcar la campaña como lista. `base` elige el armazón: _base-plano parece nota personal (contesta más), _base es el diseñado. `asunto_b` activa la prueba A/B.",
-  "from_name": "PENDIENTE_PRESENTADOR · Duke del Caribe",
-  "from_email": "admin@dukedelcaribe.com",
-  "reply_to": "admin@dukedelcaribe.com",
+  "_nota": "Secuencia del webinar Mondrian Cancún del jueves 27 de agosto de 2026. REMITENTE: se envía desde stratoscapitalgroup.com porque es el dominio verificado en Resend (dukedelcaribe.com está en HostGator y no se tocó). El nombre visible lleva la marca Duke. Los valores en PENDIENTE los llena el cliente; hasta entonces `render` se niega a marcar la campaña como lista.",
+  "from_name": "Óscar Gálvez · Duke del Caribe",
+  "from_email": "oscar.galvez@stratoscapitalgroup.com",
+  "reply_to": "oscar.galvez@stratoscapitalgroup.com",
   "datos": {
     "marca": "Duke del Caribe",
-    "presentador": "PENDIENTE_PRESENTADOR",
+    "presentador": "Óscar Gálvez",
     "titulo": "Mondrian Cancún",
     "fecha_larga": "jueves 27 de agosto",
     "horarios_html": "Cancún y Riviera Maya &nbsp;9:00 PM<br>Ciudad de México &nbsp;8:00 PM<br>California &nbsp;7:00 PM",
@@ -16,7 +16,8 @@
     "grabacion_url": "PENDIENTE_URL_GRABACION",
     "direccion_postal": "PENDIENTE_DIRECCION_POSTAL",
     "aviso_privacidad_url": "PENDIENTE_URL_AVISO_PRIVACIDAD",
-    "_gancho_muestra": "No alcanzamos a terminar aquella plática, y ahora sí hay algo concreto que mostrarte."
+    "_gancho_muestra": "No alcanzamos a terminar aquella plática, y ahora sí hay algo concreto que mostrarte.",
+    "nota_remitente": "Este correo lo envía Stratos Capital Group a nombre de Duke del Caribe."
   },
   "campanas": [
     {
