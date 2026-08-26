@@ -21,10 +21,11 @@
  *   3. Guarda ese token en `device_tokens`, ligado al usuario.
  *   4. Escucha los pushes que llegan y el tap del usuario sobre ellos.
  *
- * QUÉ FALTA DEL OTRO LADO (no es código de este repo)
- *   · Una key de APNs (.p8) en la cuenta de Apple del cliente.
- *   · Quien envíe: n8n cuando entra un lead, o una Edge Function.
- *   Ver mobile/README.md.
+ * QUÉ HACE FALTA DEL OTRO LADO (no es código: son dos credenciales)
+ *   · iPhone  → una key de APNs (.p8) de la cuenta de Apple.
+ *   · Android → un google-services.json y una cuenta de servicio de Firebase.
+ *   Quien envía ya existe: la Edge Function send-push (canales-nativos.ts).
+ *   Los pasos exactos para sacarlas están en mobile/NOTIFICACIONES.md.
  *
  * En web todo esto es no-op: los helpers devuelven false sin tocar nada.
  * ─────────────────────────────────────────────────────────────────────────────
@@ -108,26 +109,22 @@ export async function iniciarPushNativo(userId, alTocar) {
   if (!PN || !userId) return false;      // web, o todavía sin sesión
   if (yaRegistrado) return true;
 
-  // ⛔ ANDROID SIN FIREBASE: register() CIERRA LA APP.
+  // ⛔ ANDROID: registrar push SIN Firebase CIERRA LA APP.
   //
-  // En Android el push va por Firebase, y este proyecto NO tiene
-  // google-services.json — lo dice el propio build.gradle al compilar:
-  // "google-services.json not found, Push Notifications won't work".
+  // En Android el push va por Firebase. Si el APK no lleva google-services.json,
+  // register() lanza del lado nativo "Default FirebaseApp is not initialized",
+  // y eso NO lo atrapa el try/catch de acá: revienta en el hilo principal y la
+  // app se cierra sola. Como esto corre en el efecto del login, se cerraba
+  // JUSTO al entrar — lo que reportó Ángel el 25-ago-2026 probando el APK.
   //
-  // Llamar a register() sin esa configuración lanza, del lado nativo,
-  // IllegalStateException: Default FirebaseApp is not initialized. Eso NO lo
-  // atrapa el try/catch de acá: revienta en el hilo principal de Android y la
-  // app se cierra sola. Y como corre en el useEffect del login, se cierra
-  // JUSTO al entrar — que es exactamente lo que reportó Ángel el 25-ago-2026
-  // probando el APK en un Android real ("Stratos AI continúa fallando").
+  // La protección no puede ser "intentar y ver": para cuando falla, la app ya
+  // se cerró. Por eso el interruptor lo pone quien COMPILA: el workflow de
+  // Android escribe VITE_ANDROID_PUSH=1 solo si el secreto con el
+  // google-services.json existe. Sin ese archivo, este código ni lo intenta.
   //
-  // En iPhone no pasa: APNs no usa Firebase.
-  //
-  // Se sale antes en vez de intentar: aunque no reventara, sin Firebase el push
-  // de Android no puede funcionar. Cuando se agregue google-services.json,
-  // borrar este bloque y probar en un Android real ANTES de repartir el APK.
-  if (plataforma() === "android") {
-    console.info("[push-native] Android sin Firebase: no se registra push (ver comentario).");
+  // En iPhone no aplica: APNs no usa Firebase.
+  if (plataforma() === "android" && import.meta.env.VITE_ANDROID_PUSH !== "1") {
+    console.info("[push-native] este APK se compiló sin Firebase: no se registra push.");
     return false;
   }
 

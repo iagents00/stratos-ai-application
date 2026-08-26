@@ -1,4 +1,4 @@
-// send-push — envía notificaciones push a dispositivos suscritos via Web Push API
+// send-push — avisa a un usuario en TODAS sus pantallas: navegador, PWA y app
 // ─────────────────────────────────────────────────────────────────────────────
 // Endpoint PRIVADO (verify_jwt=false, protegido por secreto compartido).
 // Lo llaman flujos de n8n Y el trigger de DB `trg_push_on_proactive_sent`
@@ -18,6 +18,7 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
 import webpush from "npm:web-push@3.6.7";
+import { enviarANativos, type Dispositivo } from "./canales-nativos.ts";
 
 const SUPABASE_URL =
   Deno.env.get("SB_URL") ?? Deno.env.get("SUPABASE_URL") ??
@@ -208,6 +209,57 @@ Deno.serve(async (req) => {
     }
   }
 
+  // ── El TELÉFONO ────────────────────────────────────────────────────────────
+  // Todo lo de arriba es Web Push: llega al navegador y a la PWA. Dentro de la
+  // app instalada no llega nada, porque ni el WebView de Android ni WKWebView
+  // permiten Service Workers para push. El teléfono tiene su propio cartero
+  // (APNs en iPhone, FCM en Android) y es lo que se usa acá.
+  //
+  // Va DESPUÉS y por separado a propósito: si el canal del teléfono falla o le
+  // faltan credenciales, el aviso al navegador ya salió igual.
+  let nativos = 0;
+  let nativosFallidos = 0;
+  const notasNativas: string[] = [];
+
+  try {
+    const { data: devs, error: errDev } = await admin
+      .from("device_tokens")
+      .select("token, platform, entorno")
+      .in("user_id", userIds);
+
+    if (errDev) {
+      notasNativas.push(`device_tokens: ${errDev.message}`);
+    } else if (devs && devs.length > 0) {
+      const r = await enviarANativos(devs as Dispositivo[], {
+        title,
+        body,
+        tag,
+        url,
+        view,
+        leadId,
+        kind: typeof payload.kind === "string" ? payload.kind : null,
+      });
+      nativos = r.enviados;
+      nativosFallidos = r.fallidos;
+      notasNativas.push(...r.notas);
+
+      // Un token muerto es un teléfono al que ya no le llega nada: si no se
+      // borra, cada aviso futuro gasta un intento fallido para siempre.
+      if (r.muertos.length > 0) {
+        try {
+          await admin.from("device_tokens").delete().in("token", r.muertos);
+          console.log(`[send-push] ${r.muertos.length} token(s) muerto(s) eliminados`);
+        } catch { /* best-effort */ }
+      }
+    }
+  } catch (e) {
+    notasNativas.push(`nativo: ${(e as Error).message}`);
+  }
+
+  if (notasNativas.length > 0) {
+    console.warn("[send-push] canal del teléfono:", notasNativas.join(" | "));
+  }
+
   return json(
     {
       ok: true,
@@ -215,6 +267,13 @@ Deno.serve(async (req) => {
       failed,
       errors: errors.length > 0 ? errors : undefined,
       users: userIds.length,
+      // Desglose por canal: sin esto, "sent: 0" no distingue entre "nadie
+      // tiene la app" y "la credencial de Apple está mal cargada".
+      telefono: {
+        enviados: nativos,
+        fallidos: nativosFallidos,
+        notas: notasNativas.length > 0 ? notasNativas : undefined,
+      },
     },
     200,
     origin,
