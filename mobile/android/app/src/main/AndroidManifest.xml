@@ -36,6 +36,21 @@
          Capacitor concede el permiso al WebView SOLO si la app lo declara y el
          usuario lo acepta en el diálogo nativo. -->
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
+
+    <!-- ⭐ SIN ESTO EL DICTADO NO EXISTE PARA ANDROID.
+         Desde Android 11 (API 30) una app solo "ve" los paquetes que declara.
+         SpeechRecognizer.isRecognitionAvailable() consulta por dentro los
+         servicios que responden a android.speech.RecognitionService, y si no
+         están declarados acá la consulta vuelve VACÍA: el sistema responde
+         "no hay dictado" aunque el teléfono lo tenga.
+         Sintoma exacto en la app (Angel, 25-ago-2026, Android real):
+           "El dictado del telefono no arranco - el-telefono-dice-que-no-esta-disponible"
+         El plugin no lo declara en su propio manifest, asi que va aca. -->
+    <queries>
+        <intent>
+            <action android:name="android.speech.RecognitionService" />
+        </intent>
+    </queries>
     <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
     <!-- Adjuntar fotos desde la cámara en el chat / futuros módulos. -->
     <uses-permission android:name="android.permission.CAMERA" />

@@ -6,7 +6,7 @@
 >
 > ¿Buscás un botón o un texto y no está acá? `npm run buscar "texto"`
 
-**175 archivos · 75.020 líneas**
+**175 archivos · 75.031 líneas**
 
 ---
 
@@ -366,8 +366,8 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | `lead-backup.js` | 197 | _sin describir_ |
 | `whatsapp-signup.js` | 196 | _sin describir_ |
 | `informe-doc.js` | 175 | _sin describir_ |
+| `speech-native.js` | 157 | _sin describir_ |
 | `audit.js` | 151 | Cliente del sistema de auditoría |
-| `speech-native.js` | 146 | _sin describir_ |
 | `markdown.jsx` | 129 | Mini renderer Markdown → React. Pensado para las notas privadas que la IA |
 | `iagents-actions.js` | 126 | _sin describir_ |
 | `backup.js` | 116 | Respaldo manual de la base de datos |
@@ -713,9 +713,9 @@ hacen. Agregarles un bloque `/** ... */` arriba los hace aparecer solos acá.
 - `src/lib/informe-doc.js` (175 líneas)
 - `src/app/views/MiDrive.jsx` (171 líneas)
 - `src/components/UpdatePill.jsx` (157 líneas)
+- `src/lib/speech-native.js` (157 líneas)
 - `src/app/components/DynamicIsland.jsx` (153 líneas)
 - `src/app/views/CRM/LeadChatHistory.jsx` (152 líneas)
-- `src/lib/speech-native.js` (146 líneas)
 - `src/app/views/CRM/ScheduledCallBadge.jsx` (144 líneas)
 - `src/clients/brasa-y-piedra/config.js` (140 líneas)
 - `src/lib/iagents-actions.js` (126 líneas)

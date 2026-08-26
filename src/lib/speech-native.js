@@ -72,11 +72,6 @@ export async function startNativeDictation({ onText, onError } = {}) {
   const p = plugin();
   if (!p) { ultimoMotivo = "no-hay-plugin"; return null; }
 
-  try {
-    const disp = await p.available();
-    if (!disp?.available) { ultimoMotivo = "el-telefono-dice-que-no-esta-disponible"; return null; }
-  } catch (e) { ultimoMotivo = "fallo-al-preguntar-si-esta-disponible: " + (e?.message || e); return null; }
-
   // El permiso se pide ACÁ y no al abrir la app: iOS muestra el diálogo en el
   // momento en que la persona toca el micrófono, que es cuando entiende para
   // qué se lo piden. Pedirlo al arrancar es la forma más rápida de que digan
@@ -94,6 +89,22 @@ export async function startNativeDictation({ onText, onError } = {}) {
     onError?.("sin-permiso");
     return null;
   }
+
+  // La disponibilidad se consulta DESPUÉS del permiso, y solo para informar.
+  //
+  // En iOS `available()` devuelve SFSpeechRecognizer.isAvailable, que es FALSO
+  // mientras el reconocimiento de voz no esté autorizado. Preguntarlo antes del
+  // permiso es preguntarle a una puerta cerrada si se puede pasar: siempre dice
+  // que no. Eso hacía este archivo, y por eso el dictado nunca arrancaba en el
+  // iPhone aunque el plugin estuviera perfecto (Ángel, 25-ago-2026).
+  //
+  // Y no se corta si dice que no: se intenta arrancar igual. Si de verdad no se
+  // puede, `start()` falla con un motivo REAL, que sirve mucho más que un "no
+  // disponible" a secas.
+  try {
+    const disp = await p.available();
+    if (!disp?.available) ultimoMotivo = "el-telefono-dice-que-no-esta-disponible (se intenta igual)";
+  } catch { /* informativo: no frena nada */ }
 
   const oyentes = [];
   let vivo = true;
