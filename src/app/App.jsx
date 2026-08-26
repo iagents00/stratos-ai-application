@@ -33,6 +33,8 @@ import { isNativeApp, ensureNotifPermission, notifyUser, addNotificationTapListe
 /* Push REAL de la app nativa (APNs): es el único que llega con la app CERRADA.
    notifyUser de arriba solo dispara con la app abierta, porque lo maneja React. */
 import { iniciarPushNativo, detenerPushNativo } from "../lib/push-native";
+import { prepararAvisos } from "../lib/avisos-nativos";
+import { sincronizarRecordatorios, limpiarRecordatorios } from "../lib/recordatorios-locales";
 
 /* Sistema de notificaciones Web Push (PWA "Agregar a inicio" en iPhone/Android) */
 import { initPushContext, enablePushNotifications, onNotificationClick, getPushStatus, subscribeToPush, saveSubscriptionToBackend } from "../lib/push";
@@ -744,13 +746,36 @@ export default function App() {
     if (!user?.id || !isNativeApp()) return;
     const uid = user.id;
 
-    iniciarPushNativo(uid, (data) => {
-      // El payload manda a dónde ir. Por defecto, al CRM.
-      const destino = typeof data?.view === "string" ? data.view : "c";
-      setV(destino);
-    });
+    // Los canales de Android y la categoria de llamada de iOS van PRIMERO: son
+    // los que deciden si el aviso suena y si trae los botones Contestar y
+    // Rechazar. Si un aviso llega antes de que existan, entra mudo por el canal
+    // de por defecto y ya no hay forma de arreglarlo para ese aviso.
+    prepararAvisos()
+      .then(() => {
+        iniciarPushNativo(uid, (data) => {
+          // El payload manda a donde ir. Por defecto, al CRM.
+          const destino = typeof data?.view === "string" ? data.view : "c";
+          setV(destino);
+        });
+        // Los recordatorios con hora conocida se dejan agendados en el propio
+        // telefono: suenan con la app cerrada y sin internet, sin depender de
+        // que un servidor acierte a despertarla.
+        return sincronizarRecordatorios(uid);
+      })
+      .catch(() => { /* nunca romper el arranque por un aviso */ });
 
-    return () => { detenerPushNativo(uid); };
+    // Al volver del segundo plano se reprograma: el usuario pudo haber
+    // agendado (o cerrado) recordatorios desde la computadora mientras tanto.
+    const alVolver = () => {
+      if (!document.hidden) sincronizarRecordatorios(uid).catch(() => {});
+    };
+    document.addEventListener("visibilitychange", alVolver);
+
+    return () => {
+      document.removeEventListener("visibilitychange", alVolver);
+      detenerPushNativo(uid);
+      limpiarRecordatorios();
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id]);
 

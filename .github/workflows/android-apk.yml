@@ -45,7 +45,36 @@ jobs:
       # siete manuales y 1.5 MB de estáticos del sitio: 6.7 MB -> 4.5 MB. Apple
       # revisa el contenido del paquete, y un sitio de marketing ahí adentro
       # refuerza justo la lectura de "web enlatada" (Guideline 4.2).
+      # Firebase es lo que permite que a un Android le llegue un aviso con la
+      # app CERRADA. Si el secreto existe, se escribe el archivo que espera el
+      # plugin de Google y se enciende el registro de push en la app.
+      #
+      # El interruptor es de COMPILACION y no de tiempo de ejecucion a
+      # proposito: sin ese archivo, registrar push lanza una excepcion NATIVA
+      # ("Default FirebaseApp is not initialized") que el try/catch de
+      # JavaScript no atrapa — la app se cierra sola al iniciar sesion, que es
+      # justo el fallo que se reporto el 25-ago-2026. No se puede "intentar y
+      # ver": para cuando falla, ya se cerro.
+      - name: Firebase (solo si la credencial esta cargada)
+        id: firebase
+        env:
+          GS_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
+        run: |
+          if [ -n "$GS_JSON" ]; then
+            printf '%s' "$GS_JSON" > mobile/android/app/google-services.json
+            # Un secreto mal pegado da un archivo que no es JSON: mejor frenar
+            # aca que repartir un APK que se cierra al entrar.
+            node -e "JSON.parse(require('fs').readFileSync('mobile/android/app/google-services.json','utf8'))"               || { echo "::error::GOOGLE_SERVICES_JSON no es un JSON valido"; exit 1; }
+            echo "hay=1" >> "$GITHUB_OUTPUT"
+            echo "Firebase configurado: el APK va a recibir avisos con la app cerrada."
+          else
+            echo "hay=0" >> "$GITHUB_OUTPUT"
+            echo "::warning::Sin GOOGLE_SERVICES_JSON: este APK NO recibe avisos con la app cerrada."
+          fi
+
       - name: Compilar el CRM (modo app, sin el sitio web)
+        env:
+          VITE_ANDROID_PUSH: ${{ steps.firebase.outputs.hay }}
         run: |
           npm ci
           npm run build:app

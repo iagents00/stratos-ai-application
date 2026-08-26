@@ -58,4 +58,23 @@
          WhatsApp del CRM vía el plugin LocalNotifications. El CRM pide el
          permiso al entrar (src/lib/native.js → ensureNotifPermission). -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+    <!--
+      Que el aviso suene A LA HORA, con la app cerrada.
+
+      Un recordatorio de "en dos minutos" que llega veinte minutos tarde no es
+      un recordatorio. Android agrupa las alarmas para ahorrar bateria salvo
+      que se pida lo contrario, y desde Android 12 eso hay que declararlo.
+
+      Se usa SCHEDULE_EXACT_ALARM y NO el mas comodo USE_EXACT_ALARM: el
+      segundo se concede solo, pero Google Play lo reserva para apps de alarma
+      y calendario, y pedirlo aca seria un motivo de rechazo el dia que la app
+      entre a la tienda.
+    -->
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+    <uses-permission android:name="android.permission.VIBRATE" />
+
+    <!-- Sin esto, apagar y prender el telefono borra todos los recordatorios
+         que el usuario ya tenia agendados. -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 </manifest>
