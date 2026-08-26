@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="es" xmlns:v="urn:schemas-microsoft-com:vml">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="x-apple-disable-message-reformatting">
+<meta name="color-scheme" content="light dark">
+<meta name="supported-color-schemes" content="light dark">
+<title>{{asunto}}</title>
+<style>
+  /* Apple Mail y clientes que sí respetan el modo oscuro. Gmail lo invierte
+     por su cuenta, por eso el diseño no depende de esto para leerse. */
+  @media (prefers-color-scheme: dark) {
+    .lienzo  { background:#0b0f14 !important; }
+    .tarjeta { background:#141a21 !important; }
+    .texto   { color:#e6eaf0 !important; }
+    .suave   { color:#9aa5b1 !important; }
+    .linea   { border-color:#26303a !important; }
+    .pie     { color:#7c8794 !important; }
+    .pie a   { color:#9aa5b1 !important; }
+  }
+  @media (max-width:620px) {
+    .caja    { width:100% !important; }
+    .relleno { padding:28px 22px !important; }
+    .boton a { display:block !important; }
+  }
+  a { color:#1f6f6b; }
+</style>
+</head>
+<body class="lienzo" style="margin:0;padding:0;background:#f4f5f7;">
+
+<!-- Preencabezado: el renglón gris que se ve en la bandeja junto al asunto.
+     Si no se pone, el cliente de correo jala la primera línea del HTML. -->
+<div style="display:none;max-height:0;overflow:hidden;opacity:0;">{{preheader}}</div>
+<div style="display:none;max-height:0;overflow:hidden;">&#8202;&zwnj;&nbsp;&#8199;&#65279;&#847;&#8202;&zwnj;&nbsp;&#8199;&#65279;&#847;&#8202;&zwnj;&nbsp;&#8199;&#65279;&#847;&#8202;&zwnj;&nbsp;&#8199;&#65279;&#847;</div>
+
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" class="lienzo" style="background:#f4f5f7;">
+<tr><td align="center" style="padding:32px 12px;">
+
+  <table role="presentation" class="caja" width="600" cellpadding="0" cellspacing="0" border="0" style="width:600px;max-width:600px;">
+
+    <!-- Marca. Texto, no imagen: la mitad de los clientes bloquea imágenes
+         por defecto y un correo que abre en blanco se borra. -->
+    <tr><td align="center" style="padding:0 0 22px;">
+      <span class="suave" style="font:600 13px/1 -apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;letter-spacing:.13em;text-transform:uppercase;color:#6b7684;">{{marca}}</span>
+    </td></tr>
+
+    <tr><td class="tarjeta" style="background:#ffffff;border-radius:14px;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr><td class="relleno texto" style="padding:40px 44px;font:16px/1.6 -apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;color:#141a21;">
+
+{{contenido}}
+
+        </td></tr>
+      </table>
+    </td></tr>
+
+    <!-- Pie legal. La dirección postal es obligatoria por CAN-SPAM para los
+         destinatarios en Estados Unidos, y el enlace de baja tiene que verse.
+         Si no lo encuentran, marcan spam — y eso pesa mucho más que una baja. -->
+    <tr><td class="pie" style="padding:26px 24px 8px;font:12px/1.65 -apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;color:#8b95a1;text-align:center;">
+      Recibes este correo porque pediste información sobre nuestros desarrollos.<br>
+      {{marca}} · {{direccion_postal}}<br>
+      <a href="{{aviso_privacidad_url}}" style="color:#8b95a1;">Aviso de privacidad</a>
+      &nbsp;·&nbsp;
+      <a href="{{unsub_url}}" style="color:#8b95a1;">Cancelar suscripción</a>
+    </td></tr>
+
+  </table>
+
+</td></tr>
+</table>
+</body>
+</html>

@@ -1,0 +1,9 @@
+{{contenido}}
+
+—
+{{marca}}
+{{direccion_postal}}
+
+Recibes este correo porque pediste información sobre nuestros desarrollos.
+Aviso de privacidad: {{aviso_privacidad_url}}
+Cancelar suscripción: {{unsub_url}}

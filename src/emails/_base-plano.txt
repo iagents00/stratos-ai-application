@@ -1,0 +1,7 @@
+{{contenido}}
+
+--
+{{marca}} · {{direccion_postal}}
+Te escribo a este correo porque pediste información sobre nuestros desarrollos.
+Aviso de privacidad: {{aviso_privacidad_url}}
+Ya no quiero recibir correos: {{unsub_url}}

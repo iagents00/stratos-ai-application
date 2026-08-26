@@ -1,0 +1,12 @@
+{{nombre}}, ayer no te vi conectado.
+
+Pasa, no hay problema. Aquí está la grabación: {{grabacion_url}}
+La dejamos unos días y luego la bajamos.
+
+Si prefieres saltarte los {{duracion}} de video, contéstame este correo con la
+duda que traes y te la resuelvo en dos líneas.
+
+{{presentador}}
+
+P.D. La pregunta que más salió ayer fue sobre el enganche. Si es la tuya,
+dímelo y te mando los números.

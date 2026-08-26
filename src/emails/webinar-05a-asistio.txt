@@ -1,0 +1,11 @@
+{{nombre}}, gracias por quedarte ayer.
+
+Quedaron preguntas en el chat que no alcancé a contestar. Si la tuya fue una
+de esas, contéstame este correo y te la respondo yo directo, sin intermediarios.
+
+Y si quieres ver los números de algún desarrollo en concreto, aparta media
+hora aquí: {{agenda_url}}
+
+{{presentador}}
+
+P.D. Dime en una línea qué parte te sirvió más. Me ayuda a preparar el siguiente.

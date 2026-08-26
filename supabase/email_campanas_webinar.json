@@ -1,0 +1,159 @@
+{
+  "_nota": "Secuencia de correos del webinar. Los valores en PENDIENTE los llena el cliente; hasta entonces `render` se niega a marcar la campaña como lista. `base` elige el armazón: _base-plano parece nota personal (contesta más), _base es el diseñado. `asunto_b` activa la prueba A/B.",
+  "from_name": "Óscar Gálvez · Duke del Caribe",
+  "from_email": "admin@dukedelcaribe.com",
+  "reply_to": "admin@dukedelcaribe.com",
+  "datos": {
+    "marca": "Duke del Caribe",
+    "presentador": "PENDIENTE_PRESENTADOR",
+    "titulo": "PENDIENTE_TITULO",
+    "fecha_larga": "miércoles 2 de septiembre",
+    "hora": "PENDIENTE_HORA",
+    "zona": "hora del centro de México",
+    "duracion": "PENDIENTE_DURACION",
+    "registro_url": "PENDIENTE_URL_REGISTRO",
+    "acceso_url": "PENDIENTE_URL_ACCESO",
+    "agenda_url": "PENDIENTE_URL_AGENDA",
+    "grabacion_url": "PENDIENTE_URL_GRABACION",
+    "direccion_postal": "PENDIENTE_DIRECCION_POSTAL",
+    "aviso_privacidad_url": "PENDIENTE_URL_AVISO_PRIVACIDAD",
+    "_gancho_muestra": "Hace un tiempo pediste información y no alcanzamos a terminar la plática."
+  },
+  "campanas": [
+    {
+      "slug": "webinar-01-invitacion",
+      "nombre": "Webinar 2-sep · 1 Invitación",
+      "asunto": "{{nombre}}, te invito al miércoles",
+      "preheader": "Contéstame con un \"va\" y yo te aparto el lugar.",
+      "plantilla": "webinar-01-invitacion",
+      "segmentos": [
+        "A",
+        "B",
+        "C"
+      ],
+      "metadata": {
+        "envio": "viernes 29 en tandas de calentamiento",
+        "ganchos": {
+          "A": "Ya habíamos platicado hace poco, así que varias cosas te van a sonar.",
+          "B": "Hace un tiempo pediste información y no alcanzamos a terminar la plática.",
+          "C": "Sé que ya pasó un buen rato desde la última vez que hablamos.",
+          "default": "Nos escribiste hace un tiempo preguntando por nuestros desarrollos."
+        }
+      },
+      "base": "_base-plano",
+      "asunto_b": "¿Te aparto un lugar para el miércoles?"
+    },
+    {
+      "slug": "webinar-01-reenvio",
+      "nombre": "Webinar 2-sep · 1-bis Reenvío a quien no abrió",
+      "base": "_base-plano",
+      "asunto": "¿Lo viste, {{nombre}}?",
+      "asunto_b": "Se me pasó preguntarte",
+      "preheader": "Te reenvío por si se te perdió entre el correo.",
+      "plantilla": "webinar-01-invitacion",
+      "segmentos": [
+        "A",
+        "B",
+        "C"
+      ],
+      "metadata": {
+        "envio": "domingo 31 en la mañana, antes del correo 2",
+        "audiencia": "node supabase/email_campana.mjs audiencia webinar-01-reenvio --no-abrieron webinar-01-invitacion",
+        "ganchos": {
+          "A": "Ya habíamos platicado hace poco, así que varias cosas te van a sonar.",
+          "B": "Hace un tiempo pediste información y no alcanzamos a terminar la plática.",
+          "C": "Sé que ya pasó un buen rato desde la última vez que hablamos.",
+          "default": "Nos escribiste hace un tiempo preguntando por nuestros desarrollos."
+        }
+      }
+    },
+    {
+      "slug": "webinar-02-contenido",
+      "nombre": "Webinar 2-sep · 2 Contenido",
+      "asunto": "Lo que vamos a ver el miércoles (y lo que no)",
+      "preheader": "El temario completo, para que decidas si te sirve.",
+      "plantilla": "webinar-02-contenido",
+      "segmentos": [
+        "A",
+        "B",
+        "C"
+      ],
+      "metadata": {
+        "envio": "domingo 31"
+      },
+      "base": "_base",
+      "asunto_b": "El temario del miércoles, en cuatro puntos"
+    },
+    {
+      "slug": "webinar-03-ultimo-llamado",
+      "nombre": "Webinar 2-sep · 3 Último llamado",
+      "asunto": "{{nombre}}, ¿te apunto?",
+      "preheader": "Un sí de vuelta y quedas dentro.",
+      "plantilla": "webinar-03-ultimo-llamado",
+      "segmentos": [
+        "A",
+        "B",
+        "C"
+      ],
+      "metadata": {
+        "envio": "lunes 1",
+        "solo_no_registrados": true
+      },
+      "base": "_base-plano",
+      "asunto_b": "Hoy cierro el registro"
+    },
+    {
+      "slug": "webinar-04-es-hoy",
+      "nombre": "Webinar 2-sep · 4 Es hoy",
+      "asunto": "Es hoy — aquí está tu acceso",
+      "preheader": "Empezamos en unas horas. Te dejo el enlace a la mano.",
+      "plantilla": "webinar-04-es-hoy",
+      "segmentos": [
+        "A",
+        "B",
+        "C"
+      ],
+      "metadata": {
+        "envio": "miércoles 2, tres horas antes",
+        "solo_registrados": true
+      },
+      "base": "_base"
+    },
+    {
+      "slug": "webinar-05a-asistio",
+      "nombre": "Webinar 2-sep · 5a Asistió",
+      "asunto": "Gracias por quedarte, {{nombre}}",
+      "preheader": "Quedaron preguntas en el chat. Vamos a la tuya.",
+      "plantilla": "webinar-05a-asistio",
+      "segmentos": [
+        "A",
+        "B",
+        "C"
+      ],
+      "metadata": {
+        "envio": "jueves 3",
+        "solo_asistentes": true
+      },
+      "base": "_base-plano",
+      "asunto_b": "Quedaron preguntas en el chat"
+    },
+    {
+      "slug": "webinar-05b-no-asistio",
+      "nombre": "Webinar 2-sep · 5b No asistió",
+      "asunto": "Te dejo la grabación",
+      "preheader": "Estará disponible unos días.",
+      "plantilla": "webinar-05b-no-asistio",
+      "segmentos": [
+        "A",
+        "B",
+        "C"
+      ],
+      "metadata": {
+        "envio": "jueves 3",
+        "solo_no_asistentes": true
+      },
+      "base": "_base-plano",
+      "asunto_b": "{{nombre}}, ayer no te vi"
+    }
+  ]
+}

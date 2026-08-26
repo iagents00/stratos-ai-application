@@ -44,3 +44,10 @@ team_credentials.txt
 
 # Backups temporales generados por scripts (.bak de leads.json, etc)
 *.bak
+
+# PII de clientes: lotes de alta masiva y volcados de respaldo (el repo es público)
+supabase/batch_*.json
+supabase/respaldo_*/
+
+# Vistas previas de correo generadas por supabase/email_campana.mjs
+preview-emails/

@@ -1,0 +1,11 @@
+{{nombre}}, es hoy.
+
+Empezamos a las {{hora}} ({{zona}}). Te dejo el acceso aquí para que no lo busques.
+
+Entrar al webinar: {{acceso_url}}
+
+Conéctate cinco minutos antes. Si el enlace no abre, revisa el correo que te
+mandó Zoom al registrarte: ahí va tu enlace personal.
+
+Ahí nos vemos,
+{{presentador}}
