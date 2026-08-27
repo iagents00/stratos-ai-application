@@ -113,3 +113,41 @@ export async function soltarLlamadas(userId) {
       .delete().eq("user_id", userId).eq("platform", "ios-voip");
   } catch { /* best-effort */ }
 }
+
+/**
+ * ¿Alguien me está llamando AHORA MISMO?
+ *
+ * Se consulta al abrir la app y al volver del segundo plano, porque en Android
+ * la llamada abre la app pero no le cuenta al CRM por qué se abrió. En vez de
+ * pasarle el dato por un camino frágil, el CRM lo va a buscar: si hay una
+ * llamada de hace menos de un minuto, la muestra.
+ *
+ * Un minuto es a propósito. Más que eso ya no es una llamada, es un aviso
+ * viejo — y aparecer con la pantalla de "te están llamando" por algo de hace
+ * cinco minutos es peor que no aparecer.
+ *
+ * @param {string} userId
+ * @returns {Promise<{caller:string, meet:string}|null>}
+ */
+export async function llamadaEnCurso(userId) {
+  if (!userId) return null;
+  try {
+    const desde = new Date(Date.now() - 60000).toISOString();
+    const { data, error } = await supabase
+      .from("proactive_reminders")
+      .select("payload, created_at")
+      .eq("asesor_id", userId)
+      .eq("tipo", "llamada_entrante")
+      .gte("created_at", desde)
+      .order("created_at", { ascending: false })
+      .limit(1);
+    if (error || !data || data.length === 0) return null;
+    const p = data[0].payload || {};
+    return {
+      caller: p.caller || String(p.title || "Alguien").replace(/\s+te est[aá] llamando.*$/i, "").trim(),
+      meet: p.meet || p.url || "",
+    };
+  } catch {
+    return null;
+  }
+}

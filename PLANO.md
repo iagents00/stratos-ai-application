@@ -62,6 +62,7 @@ columna, estos son los archivos que hay que revisar.
 | `device_tokens` | 2 | `lib/llamadas-nativas.js` · `lib/push-native.js` |
 | `expediente_items` | 2 | `app/views/CRM/LeadChatHistory.jsx` · `app/views/CRM/LeadNotesTimeline.jsx` |
 | `mkt_tasks` | 2 | `app/views/Marketing.jsx` · `app/views/PlanSemanal.jsx` |
+| `proactive_reminders` | 2 | `lib/llamadas-nativas.js` · `lib/recordatorios-locales.js` |
 | `team_actions` | 2 | `app/App.jsx` · `app/views/ProductividadTab.jsx` |
 | `catalogo_proyectos` | 1 | `app/views/ERP.jsx` |
 | `discovery_data` | 1 | `app/views/CRM/LeadDiscoveryPanel.jsx` |
@@ -74,7 +75,6 @@ columna, estos son los archivos que hay que revisar.
 | `mkt_projects` | 1 | `app/views/Marketing.jsx` |
 | `mkt_requests` | 1 | `app/views/Marketing.jsx` |
 | `organizations` | 1 | `hooks/useRailsConfig.js` |
-| `proactive_reminders` | 1 | `lib/recordatorios-locales.js` |
 | `scheduled_calls` | 1 | `hooks/useScheduledCalls.js` |
 | `voice_call_logs` | 1 | `app/views/CRM/LeadVoiceCalls.jsx` |
 | `whatsapp_messages` | 1 | `lib/whatsapp-chat.js` |

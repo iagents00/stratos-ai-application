@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
@@ -27,6 +28,29 @@
             android:grantUriPermissions="true">
             <meta-data android:name="android.support.FILE_PROVIDER_PATHS" android:resource="@xml/file_paths" />
         </provider>
+
+        <!--
+          QUE UNA LLAMADA ABRA LA APP ENCIMA DE TODO, con la app cerrada.
+
+          Este servicio reemplaza al que traia el complemento de avisos. Todo lo
+          que NO sea una llamada lo delega en el de siempre: un error aca dejaria
+          sin avisos a todo el equipo, no solo sin llamadas.
+
+          El de origen se desactiva a proposito. Si quedaran los dos declarados,
+          Android elige uno solo y no hay forma de saber cual — y la mitad de las
+          veces elegiria el equivocado.
+        -->
+        <service
+            android:name=".ServicioLlamadas"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
+        <service
+            android:name="com.capacitorjs.plugins.pushnotifications.MessagingService"
+            tools:node="remove" />
+
     </application>
 
     <!-- Permissions -->
@@ -71,6 +95,16 @@
       y calendario, y pedirlo aca seria un motivo de rechazo el dia que la app
       entre a la tienda.
     -->
+    <!--
+      Abrir una pantalla completa cuando entra una llamada, sin que la persona
+      tenga que tocar nada. Es lo que hace WhatsApp.
+
+      Desde Android 14 esto solo se concede solo a las apps de llamadas y
+      alarmas; al resto hay que pedirselo a la persona. Si no esta concedido
+      Android NO falla: muestra un cartel grande con sonido. Peor que la
+      pantalla completa, mucho mejor que una tira.
+    -->
+    <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
     <uses-permission android:name="android.permission.VIBRATE" />
 
