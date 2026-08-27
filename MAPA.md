@@ -6,7 +6,7 @@
 >
 > ¿Buscás un botón o un texto y no está acá? `npm run buscar "texto"`
 
-**180 archivos · 76.021 líneas**
+**180 archivos · 76.038 líneas**
 
 ---
 
@@ -372,12 +372,12 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | `audit.js` | 151 | Cliente del sistema de auditoría |
 | `markdown.jsx` | 129 | Mini renderer Markdown → React. Pensado para las notas privadas que la IA |
 | `iagents-actions.js` | 126 | _sin describir_ |
+| `llamadas-nativas.js` | 116 | _sin describir_ |
 | `webhook-diagnostico-stratos.js` | 112 | Envía los resultados del diagnóstico Stratos AI al webhook n8n del funnel. |
 | `avisos-nativos.js` | 111 | _sin describir_ |
 | `backup.js` | 108 | _sin describir_ |
 | `rails-config.js` | 107 | _sin describir_ |
 | `chunk-recovery.js` | 103 | _sin describir_ |
-| `llamadas-nativas.js` | 99 | _sin describir_ |
 | `agenda.js` | 91 | _sin describir_ |
 | `lead-draft.js` | 85 | Autosave del borrador del modal "Registrar cliente" |
 | `transcribir.js` | 77 | _sin describir_ |
@@ -730,6 +730,7 @@ hacen. Agregarles un bloque `/** ... */` arriba los hace aparecer solos acá.
 - `src/app/data/rivieraProperties.js` (119 líneas)
 - `src/app/views/IACRMPlanes.jsx` (119 líneas)
 - `src/app/views/ZoomControl/constants.js` (116 líneas)
+- `src/lib/llamadas-nativas.js` (116 líneas)
 - `src/app/components/CopilotMark.jsx` (113 líneas)
 - `src/hooks/useRailsConfig.js` (112 líneas)
 - `src/lib/avisos-nativos.js` (111 líneas)
@@ -737,7 +738,6 @@ hacen. Agregarles un bloque `/** ... */` arriba los hace aparecer solos acá.
 - `src/lib/rails-config.js` (107 líneas)
 - `src/lib/chunk-recovery.js` (103 líneas)
 - `src/clients/grupo28/config.js` (100 líneas)
-- `src/lib/llamadas-nativas.js` (99 líneas)
 - `src/app/constants/areas.js` (97 líneas)
 - `src/app/constants/pipeline.js` (93 líneas)
 - `src/lib/agenda.js` (91 líneas)

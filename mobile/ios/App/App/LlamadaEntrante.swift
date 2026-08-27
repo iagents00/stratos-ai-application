@@ -54,6 +54,22 @@ final class LlamadaEntrante: NSObject {
     /// A donde entra la persona al contestar. Lo manda el servidor en el aviso.
     private var enlaceReunion: String?
 
+    /// LA IDENTIFICACION DE ESTE TELEFONO PARA LAS LLAMADAS, GUARDADA.
+    ///
+    /// Guardarla no es un lujo: iOS la entrega UNA sola vez, en el instante en
+    /// que arranca la app, y el CRM recien se pone a escuchar despues del login
+    /// —segundos mas tarde—. El mensaje llegaba y no habia nadie del otro lado,
+    /// asi que se perdia para siempre y las llamadas nunca podian salir a
+    /// pantalla completa. Se comprobo el 27-ago-2026: el binario estaba
+    /// perfecto y la tabla no tenia ni una sola identificacion de llamadas.
+    ///
+    /// Se conserva ademas entre aperturas, porque iOS solo la vuelve a entregar
+    /// cuando CAMBIA: si la primera vez se perdio, no hay una segunda.
+    private var tokenVoIP: String? {
+        get { UserDefaults.standard.string(forKey: "stratos.voip.token") }
+        set { UserDefaults.standard.set(newValue, forKey: "stratos.voip.token") }
+    }
+
     // MARK: - Arranque
 
     /// Deja el telefono listo para recibir llamadas. Se llama una vez, al abrir.
@@ -81,6 +97,31 @@ final class LlamadaEntrante: NSObject {
         registro.delegate = self
         registro.desiredPushTypes = [.voIP]
         registroVoIP = registro
+
+        // Si ya se tenia una identificacion de una apertura anterior, se vuelve
+        // a ofrecer. iOS solo entrega una nueva cuando CAMBIA, asi que sin esto
+        // una identificacion que se perdio la primera vez no vuelve jamas.
+        reenviarConGracia()
+    }
+
+    /// Vuelve a ofrecerle al CRM la identificacion guardada.
+    ///
+    /// Se llama en varios momentos a proposito —al llegar, al abrir la app, y
+    /// con unos segundos de gracia— porque no hay forma de saber desde Swift
+    /// cuando termino de cargar el CRM. Reenviarla de mas no cuesta nada: del
+    /// otro lado se guarda siempre la misma y no se duplica.
+    func reenviarToken() {
+        guard let t = tokenVoIP, !t.isEmpty else { return }
+        avisarleAlCRM("token", datos: ["token": t])
+    }
+
+    /// Reintentos escalonados para cubrir el arranque, que es cuando se perdia.
+    private func reenviarConGracia() {
+        for segundos in [0.5, 2.0, 5.0, 10.0] {
+            DispatchQueue.main.asyncAfter(deadline: .now() + segundos) { [weak self] in
+                self?.reenviarToken()
+            }
+        }
     }
 
     // MARK: - Mostrar y cerrar
@@ -140,11 +181,27 @@ final class LlamadaEntrante: NSObject {
         DispatchQueue.main.async {
             guard let vc = UIApplication.shared.connectedScenes
                     .compactMap({ ($0 as? UIWindowScene)?.keyWindow?.rootViewController })
-                    .first as? CAPBridgeViewController,
-                  let bridge = vc.bridge else { return }
-            bridge.triggerWindowJSEvent(eventName: evento == "token"
-                                        ? "StratosTokenVoIP" : "StratosLlamada",
-                                        data: json)
+                    .first as? CAPBridgeViewController else { return }
+
+            // 1. El aviso en vivo, para quien ya este escuchando.
+            vc.bridge?.triggerWindowJSEvent(eventName: evento == "token"
+                                            ? "StratosTokenVoIP" : "StratosLlamada",
+                                            data: json)
+
+            // 2. Y ADEMAS se deja guardado donde el CRM lo pueda buscar cuando
+            //    quiera. Esto es lo que elimina la carrera de raiz: un aviso en
+            //    vivo solo sirve si hay alguien del otro lado en ese instante, y
+            //    al arrancar la app nunca lo hay. Dejarlo escrito convierte
+            //    "tenes que estar ahi justo" en "busca cuando estes listo".
+            //
+            //    Solo para la identificacion: una llamada entrante SI tiene que
+            //    ser en vivo, guardarla no tendria sentido.
+            if evento == "token", let t = todo["token"], !t.isEmpty {
+                let seguro = t.replacingOccurrences(of: "'", with: "")
+                vc.webView?.evaluateJavaScript(
+                    "try{localStorage.setItem('stratos.voip.token','\(seguro)')}catch(e){}",
+                    completionHandler: nil)
+            }
         }
     }
 
@@ -167,12 +224,15 @@ extension LlamadaEntrante: PKPushRegistryDelegate {
                       for type: PKPushType) {
         guard type == .voIP else { return }
         let token = pushCredentials.token.map { String(format: "%02x", $0) }.joined()
-        // Se le pasa al CRM para que lo guarde junto al usuario que entro.
+        tokenVoIP = token
+        // Se ofrece varias veces: cuando llega el CRM casi nunca esta listo.
         avisarleAlCRM("token", datos: ["token": token])
+        reenviarConGracia()
     }
 
     func pushRegistry(_ registry: PKPushRegistry,
                       didInvalidatePushTokenFor type: PKPushType) {
+        tokenVoIP = nil
         avisarleAlCRM("token", datos: ["token": ""])
     }
 
