@@ -65,6 +65,16 @@ function escapeHtml(s: string) {
   );
 }
 
+/** Validación estricta, la que aplica el proveedor.
+ *  La sintaxis laxa de fn_email_audiencia deja pasar cosas que Resend rechaza,
+ *  como un punto pegado a la arroba. Y su API de lotes valida todo o nada:
+ *  UNA dirección mala tumba las otras 99. Se filtran antes de armar el lote. */
+function correoValido(e: string): boolean {
+  return /^[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}$/.test(e)
+    && !/^\.|\.@|@\.|\.\./.test(e)
+    && e.length <= 254;
+}
+
 /** "Juan Pérez López" → "Juan". Un correo que saluda con el nombre completo se lee a máquina. */
 function primerNombre(nombre: string | null) {
   if (!nombre) return "";
@@ -163,14 +173,21 @@ Deno.serve(async (req) => {
   );
   const excluidos = new Set(enLista.map((s: any) => s.email.toLowerCase()));
 
-  const omitidos = pendientes.filter((r: any) => excluidos.has(r.email.toLowerCase()));
-  const envíanse = pendientes.filter((r: any) => !excluidos.has(r.email.toLowerCase()));
+  const omitidos = pendientes.filter(
+    (r: any) => excluidos.has(r.email.toLowerCase()) || !correoValido(r.email.trim())
+  );
+  const envíanse = pendientes.filter(
+    (r: any) => !excluidos.has(r.email.toLowerCase()) && correoValido(r.email.trim())
+  );
 
   for (const r of omitidos) {
+    const motivo = excluidos.has(r.email.toLowerCase())
+      ? "en lista de exclusión"
+      : "sintaxis que el proveedor rechaza";
     await rest(`email_recipients?id=eq.${r.id}`, {
       method: "PATCH",
       headers: { Prefer: "return=minimal" },
-      body: JSON.stringify({ estado: "omitido", error: "en lista de exclusión" }),
+      body: JSON.stringify({ estado: "omitido", error: motivo }),
     });
   }
 
@@ -369,9 +386,11 @@ Deno.serve(async (req) => {
     }).catch(() => {});
   }
 
+  // Sin Range: con `Range: 0-0` esto devolvía una fila y el conteo salía
+  // siempre 1, aunque quedaran cientos. El bug era solo de reporte —el envío
+  // iba bien— pero volvía inútil el número que decide si seguir mandando.
   const restantes = await rest(
-    `email_recipients?campaign_id=eq.${c.id}&estado=eq.pendiente&select=id`,
-    { headers: { Prefer: "count=exact", Range: "0-0" } }
+    `email_recipients?campaign_id=eq.${c.id}&estado=eq.pendiente&select=id`
   );
 
   return json({
