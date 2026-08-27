@@ -197,9 +197,17 @@ export async function iniciarPushNativo(userId, alTocar) {
     await PN.register();
     yaRegistrado = true;
     // register() vuelve enseguida; el numero del telefono llega despues por el
-    // listener de arriba. Si en 10 segundos no llego nada, algo se trago el
-    // evento y hay que poder verlo.
-    if (motivo !== "registrado") motivo = "esperando-que-el-sistema-de-el-numero";
+    // listener de arriba.
+    //
+    // ⚠️ Solo se pisa el motivo si TODAVIA no paso nada. Antes se pisaba
+    // siempre, y eso tapaba el error de verdad: si Apple rechazaba el registro
+    // un instante antes de que register() retornara, el motivo real quedaba
+    // reemplazado por un inocente "esperando..." y nadie se enteraba nunca de
+    // cual habia sido el rechazo. Un diagnostico que borra su propia evidencia
+    // es peor que no tener diagnostico.
+    if (motivo === "todavia-no-se-intento" || motivo === "sin-sesion") {
+      motivo = "esperando-que-el-sistema-de-el-numero";
+    }
     return true;
   } catch (e) {
     motivo = "fallo-al-registrar: " + (e?.message || e);
