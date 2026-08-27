@@ -127,8 +127,12 @@ public class ServicioLlamadas extends MessagingService {
                 // el cartel de arriba, que es justo lo que se quiere evitar.
                 .setFullScreenIntent(destino, true)
                 .setContentIntent(destino)
-                // Que no se pueda descartar de un manotazo mientras suena.
-                .setOngoing(true)
+                // SE PUEDE DESCARTAR. Antes estaba marcada como fija para que
+                // no se fuera de un manotazo mientras sonaba, y el efecto era el
+                // contrario al buscado: quien NO queria atender se quedaba con
+                // el aviso pegado sin forma de sacarlo ("sigue insistiendo",
+                // Angel, 27-ago-2026). Poder colgar es parte de atender bien una
+                // llamada.
                 .setAutoCancel(true)
                 .setTimeoutAfter(45000)
                 .setVibrate(new long[]{0, 700, 400, 700, 400, 700});
