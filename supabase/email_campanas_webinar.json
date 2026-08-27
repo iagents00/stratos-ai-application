@@ -14,12 +14,28 @@
     "acceso_url": "PENDIENTE_URL_ACCESO_ZOOM",
     "agenda_url": "PENDIENTE_URL_AGENDA",
     "grabacion_url": "PENDIENTE_URL_GRABACION",
-    "direccion_postal": "PENDIENTE_DIRECCION_POSTAL",
+    "direccion_postal": "40 Avenida Sur LB, Centro, 77713 Playa del Carmen, Q.R., México",
     "aviso_privacidad_url": "https://stratoscapitalgroup.com/politica-de-privacidad",
     "_gancho_muestra": "No alcanzamos a terminar aquella plática, y ahora sí hay algo concreto que mostrarte.",
     "nota_remitente": "Este correo lo envía Stratos Capital Group a nombre de Duke del Caribe."
   },
   "campanas": [
+    {
+      "slug": "prueba-semilla",
+      "nombre": "Prueba semilla — buzones del equipo",
+      "base": "_base",
+      "asunto": "[PRUEBA] 🚨 INVERSIONISTAS | OPORTUNIDAD EXCLUSIVA",
+      "preheader": "Prueba interna antes del envío real.",
+      "plantilla": "mondrian-01-invitacion",
+      "segmentos": [
+        "A",
+        "B",
+        "C"
+      ],
+      "metadata": {
+        "envio": "antes de tocar a un solo cliente"
+      }
+    },
     {
       "slug": "mondrian-01-invitacion",
       "nombre": "Mondrian · 1 Invitación",

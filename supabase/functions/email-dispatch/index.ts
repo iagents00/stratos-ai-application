@@ -73,12 +73,30 @@ function primerNombre(nombre: string | null) {
   return limpio.charAt(0).toUpperCase() + limpio.slice(1).toLowerCase();
 }
 
+function esServiceRole(auth: string): boolean {
+  const token = auth.replace(/^Bearer\s+/i, "").trim();
+  if (!token) return false;
+  if (token === SERVICE_KEY) return true;
+  try {
+    const carga = token.split(".")[1];
+    if (!carga) return false;
+    const json = atob(carga.replace(/-/g, "+").replace(/_/g, "/"));
+    return JSON.parse(json)?.role === "service_role";
+  } catch {
+    return false;
+  }
+}
+
 Deno.serve(async (req) => {
   if (req.method !== "POST") return json({ error: "Solo POST" }, 405);
 
   // ── Auth: exclusivamente service_role ────────────────────────────────────
-  const auth = req.headers.get("Authorization") ?? "";
-  if (auth !== `Bearer ${SERVICE_KEY}`) {
+  // Comparar el token literal contra el secret parecía lo más estricto, pero
+  // se rompe en cuanto se rota una llave: quedan dos JWT igual de válidos y
+  // distintos entre sí. Como esta función se despliega CON verify_jwt, la
+  // plataforma ya validó la firma antes de llegar aquí; lo único que falta
+  // comprobar es que el rol sea service_role y no el anon del bundle público.
+  if (!esServiceRole(req.headers.get("Authorization") ?? "")) {
     return json({ error: "No autorizado" }, 401);
   }
 
