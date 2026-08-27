@@ -17,6 +17,8 @@ name: Android APK (Stratos AI móvil)
 on:
   push:
     branches: [main]
+    # ⚠️ Misma lista que ios-testflight.yml. Si cambia una, cambia la otra:
+    # dos listas distintas desincronizan las apps sin que nadie lo note.
     paths: ['mobile/**', 'src/**', '.github/workflows/android-apk.yml']
   workflow_dispatch:
 
