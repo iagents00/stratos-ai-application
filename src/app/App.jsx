@@ -35,7 +35,7 @@ import { isNativeApp, ensureNotifPermission, notifyUser, addNotificationTapListe
 import { iniciarPushNativo, detenerPushNativo } from "../lib/push-native";
 import { prepararAvisos } from "../lib/avisos-nativos";
 import { sincronizarRecordatorios, limpiarRecordatorios } from "../lib/recordatorios-locales";
-import { engancharLlamadas, soltarLlamadas } from "../lib/llamadas-nativas";
+import { engancharLlamadas, soltarLlamadas, llamadaEnCurso } from "../lib/llamadas-nativas";
 
 /* Sistema de notificaciones Web Push (PWA "Agregar a inicio" en iPhone/Android) */
 import { initPushContext, enablePushNotifications, onNotificationClick, getPushStatus, subscribeToPush, saveSubscriptionToBackend } from "../lib/push";
@@ -822,6 +822,20 @@ export default function App() {
       if (!document.hidden) sincronizarRecordatorios(uid).catch(() => {});
     }, 60000);
 
+    // ANDROID: la llamada ABRE la app encima de todo, pero no le cuenta al CRM
+    // por qué se abrió. Así que el CRM lo pregunta: si hay una llamada de hace
+    // menos de un minuto, muestra la pantalla. Se consulta al abrir y cada vez
+    // que la app vuelve al frente, que son los dos momentos en que puede haber
+    // entrado una mientras no mirábamos.
+    const mirarSiLlaman = () => {
+      if (document.hidden) return;
+      llamadaEnCurso(uid)
+        .then((l) => { if (l) showIncomingCall(l.caller, l.meet); })
+        .catch(() => {});
+    };
+    mirarSiLlaman();
+    document.addEventListener("visibilitychange", mirarSiLlaman);
+
     // LLAMADAS A PANTALLA COMPLETA (solo iPhone). Es un canal aparte del de los
     // avisos: si esto falla, la llamada sigue llegando como una tira normal.
     const soltar = engancharLlamadas(uid, (url) => {
@@ -834,6 +848,7 @@ export default function App() {
     return () => {
       clearInterval(repaso);
       document.removeEventListener("visibilitychange", alCambiarVisibilidad);
+      document.removeEventListener("visibilitychange", mirarSiLlaman);
       soltar();
       soltarLlamadas(uid);
       detenerPushNativo(uid);

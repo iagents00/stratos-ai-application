@@ -73,6 +73,7 @@ export default function EstadoAvisos({ T, isLight = false, userId }) {
   const [agendados, setAgendados] = useState(null);
   const [pidiendo, setPidiendo] = useState(false);
   const [motivo, setMotivo] = useState(motivoPushNativo());
+  const [llamadas, setLlamadas] = useState(null);
 
   const mirar = useCallback(async () => {
     const ln = nativePlugin("LocalNotifications");
@@ -85,6 +86,9 @@ export default function EstadoAvisos({ T, isLight = false, userId }) {
       setAgendados(r?.notifications?.length ?? 0);
     } catch { setAgendados(null); }
     setMotivo(pushNativoRegistrado() ? "registrado" : motivoPushNativo());
+    // Lo que el teléfono dejó escrito sobre las llamadas a pantalla completa.
+    try { setLlamadas(window.localStorage?.getItem("stratos.voip.diagnostico") || null); }
+    catch { setLlamadas(null); }
   }, []);
 
   useEffect(() => { if (isNativeApp()) mirar(); }, [mirar]);
@@ -135,6 +139,16 @@ export default function EstadoAvisos({ T, isLight = false, userId }) {
           <div style={{ fontSize: 13.5, color: T.txt, lineHeight: 1.5 }}>{texto}</div>
           {queHacer && (
             <div style={{ fontSize: 12.5, color: T.txt2, lineHeight: 1.55, marginTop: 4 }}>{queHacer}</div>
+          )}
+          {/* El estado de las LLAMADAS a pantalla completa. Solo iPhone, y solo
+              si ya hay algo que decir — no se le muestra ruido a quien no está
+              buscando esto. */}
+          {llamadas && (
+            <div style={{ fontSize: 12.5, color: T.txt2, marginTop: 6, lineHeight: 1.5 }}>
+              {llamadas.startsWith("el-telefono-dio")
+                ? "Las llamadas pueden aparecer a pantalla completa en este teléfono."
+                : "Las llamadas todavía no pueden aparecer a pantalla completa — " + llamadas}
+            </div>
           )}
           {agendados !== null && (
             <div style={{ fontSize: 12.5, color: T.txt2, marginTop: 6 }}>

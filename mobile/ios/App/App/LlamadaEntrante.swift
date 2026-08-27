@@ -166,6 +166,48 @@ final class LlamadaEntrante: NSObject {
         llamadaActual = nil
     }
 
+    /// Encuentra la pantalla del CRM, esté donde esté.
+    ///
+    /// Antes se asumia que era directamente la pantalla principal, y con un solo
+    /// `as?` que fallara todo se caia por ahi EN SILENCIO — sin error, sin
+    /// registro, sin nada. Si iOS la envuelve en otro contenedor (cosa que hace
+    /// segun la version y como arranque la app), el dato nunca llegaba.
+    ///
+    /// Ahora se busca hacia adentro: por los hijos y por lo que este presentado
+    /// encima. Es la diferencia entre "funciona si se dio la casualidad" y
+    /// "funciona".
+    private static func buscarPantallaDelCRM() -> CAPBridgeViewController? {
+        let raices = UIApplication.shared.connectedScenes
+            .compactMap { ($0 as? UIWindowScene) }
+            .flatMap { $0.windows }
+            .compactMap { $0.rootViewController }
+
+        for raiz in raices {
+            if let encontrada = buscarEn(raiz) { return encontrada }
+        }
+        return nil
+    }
+
+    private static func buscarEn(_ vc: UIViewController) -> CAPBridgeViewController? {
+        if let bridge = vc as? CAPBridgeViewController { return bridge }
+        for hijo in vc.children {
+            if let encontrada = buscarEn(hijo) { return encontrada }
+        }
+        if let presentado = vc.presentedViewController {
+            return buscarEn(presentado)
+        }
+        return nil
+    }
+
+    /// Lo que el CRM puede leer para saber si esto quedo funcionando.
+    static func diagnostico() -> String {
+        let d = UserDefaults.standard
+        let token = d.string(forKey: "stratos.voip.token") ?? ""
+        let ultimo = d.string(forKey: "stratos.voip.diagnostico") ?? "todavia-no-se-intento"
+        if !token.isEmpty { return "el-telefono-dio-su-numero-de-llamadas (" + ultimo + ")" }
+        return "el-telefono-NO-dio-su-numero-de-llamadas (" + ultimo + ")"
+    }
+
     /// El unico camino para hablarle al CRM.
     ///
     /// Tiene que ser `triggerWindowJSEvent` del puente de Capacitor: los avisos
@@ -179,9 +221,14 @@ final class LlamadaEntrante: NSObject {
             .flatMap { String(data: $0, encoding: .utf8) } ?? "{}"
 
         DispatchQueue.main.async {
-            guard let vc = UIApplication.shared.connectedScenes
-                    .compactMap({ ($0 as? UIWindowScene)?.keyWindow?.rootViewController })
-                    .first as? CAPBridgeViewController else { return }
+            guard let vc = Self.buscarPantallaDelCRM() else {
+                // No se pudo hablar con el CRM AHORA. No es fatal: el dato queda
+                // guardado y se reofrece al abrir la app (reenviarToken).
+                UserDefaults.standard.set("no-encontre-la-pantalla-del-CRM",
+                                          forKey: "stratos.voip.diagnostico")
+                return
+            }
+            UserDefaults.standard.set("ok", forKey: "stratos.voip.diagnostico")
 
             // 1. El aviso en vivo, para quien ya este escuchando.
             vc.bridge?.triggerWindowJSEvent(eventName: evento == "token"
@@ -202,6 +249,13 @@ final class LlamadaEntrante: NSObject {
                     "try{localStorage.setItem('stratos.voip.token','\(seguro)')}catch(e){}",
                     completionHandler: nil)
             }
+
+            // El estado, para que la tarjeta de Perfil pueda decir que pasa sin
+            // necesidad de conectar el telefono a una computadora.
+            let diag = Self.diagnostico().replacingOccurrences(of: "'", with: "")
+            vc.webView?.evaluateJavaScript(
+                "try{localStorage.setItem('stratos.voip.diagnostico','\(diag)')}catch(e){}",
+                completionHandler: nil)
         }
     }
 
