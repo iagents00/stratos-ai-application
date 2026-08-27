@@ -35,6 +35,7 @@ import { isNativeApp, ensureNotifPermission, notifyUser, addNotificationTapListe
 import { iniciarPushNativo, detenerPushNativo } from "../lib/push-native";
 import { prepararAvisos } from "../lib/avisos-nativos";
 import { sincronizarRecordatorios, limpiarRecordatorios } from "../lib/recordatorios-locales";
+import { engancharLlamadas, soltarLlamadas } from "../lib/llamadas-nativas";
 
 /* Sistema de notificaciones Web Push (PWA "Agregar a inicio" en iPhone/Android) */
 import { initPushContext, enablePushNotifications, onNotificationClick, getPushStatus, subscribeToPush, saveSubscriptionToBackend } from "../lib/push";
@@ -821,9 +822,20 @@ export default function App() {
       if (!document.hidden) sincronizarRecordatorios(uid).catch(() => {});
     }, 60000);
 
+    // LLAMADAS A PANTALLA COMPLETA (solo iPhone). Es un canal aparte del de los
+    // avisos: si esto falla, la llamada sigue llegando como una tira normal.
+    const soltar = engancharLlamadas(uid, (url) => {
+      // Contestar entra a la reunión. Si no vino el enlace, al menos se abre el
+      // Copilot, que es donde está la conversación.
+      if (url) { try { window.open(url, "_blank"); } catch { setV("copilot"); } }
+      else setV("copilot");
+    });
+
     return () => {
       clearInterval(repaso);
       document.removeEventListener("visibilitychange", alCambiarVisibilidad);
+      soltar();
+      soltarLlamadas(uid);
       detenerPushNativo(uid);
       limpiarRecordatorios();
     };

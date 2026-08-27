@@ -7,7 +7,14 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     var window: UIWindow?
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-        // Override point for customization after application launch.
+        // Deja el telefono listo para recibir llamadas a pantalla completa.
+        //
+        // Va ACA y no mas tarde por una razon concreta: iOS puede entregar una
+        // llamada apenas arranca la app, incluso antes de que la persona vea
+        // nada. Si el sistema de llamadas todavia no esta preparado en ese
+        // momento, la llamada se pierde — y peor, iOS lo cuenta como que la app
+        // no cumplio, que es lo que la hace perder el permiso.
+        LlamadaEntrante.shared.arrancar()
         return true
     }
 

@@ -60,21 +60,24 @@
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
 	<!--
-	  remote-notification deja que el aviso DESPIERTE la app un instante para
-	  ponerse al día antes de que la persona la abra: el contador de la campanita,
-	  los mensajes nuevos, el estado del expediente.
+	  remote-notification: deja que el aviso DESPIERTE la app un instante para
+	  ponerse al día (el contador de la campanita, los mensajes nuevos) antes de
+	  que la persona la abra.
 
-	  Sin esto los avisos igual LLEGAN y se ven —eso lo hace iOS solo—, pero la
-	  app se entera recién al abrirla: se toca la notificación de un mensaje y por
-	  un momento la pantalla sigue mostrando lo de antes.
+	  voip: lo que permite que una llamada entrante ocupe la PANTALLA COMPLETA
+	  con la app cerrada, como WhatsApp. Sin esto, una llamada solo puede
+	  aparecer como una tira arriba.
 
-	  No estaba declarado. Se detectó el 27-ago-2026 revisando qué pedía Apple
-	  para las llamadas, antes de que llegara la llave: mejor encontrarlo leyendo
-	  que después, con los avisos ya andando a medias.
+	  ⚠️ voip trae una obligación de Apple que no es negociable: cuando llega un
+	  aviso de llamada, la app DEBE avisarle al sistema de llamadas de iOS
+	  inmediatamente. Si no lo hace, iOS cierra la app; si pasa varias veces, le
+	  quita el permiso de recibir llamadas. Por eso el codigo del AppDelegate
+	  reporta la llamada SIEMPRE, aunque los datos vengan incompletos.
 	-->
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>remote-notification</string>
+		<string>voip</string>
 	</array>
 </dict>
 </plist>
