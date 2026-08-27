@@ -23,7 +23,7 @@ import { Bell, BellOff, CheckCircle2, AlertCircle } from "lucide-react";
 import { G } from "../SharedComponents";
 import { font, fontDisp } from "../../design-system/tokens";
 import { isNativeApp, nativePlugin, ensureNotifPermission } from "../../lib/native";
-import { motivoPushNativo, pushNativoRegistrado } from "../../lib/push-native";
+import { motivoPushNativo, pushNativoRegistrado, iniciarPushNativo } from "../../lib/push-native";
 import { sincronizarRecordatorios } from "../../lib/recordatorios-locales";
 
 /** Traduce el motivo técnico a algo que se entienda y se pueda accionar. */
@@ -95,7 +95,14 @@ export default function EstadoAvisos({ T, isLight = false, userId }) {
   const activar = async () => {
     setPidiendo(true);
     try {
+      // 1. El permiso. Si ya está dado, esto no molesta a nadie.
       await ensureNotifPermission();
+      // 2. REGISTRAR EL TELÉFONO. Este paso faltaba, y era el que dejaba el
+      //    botón sin salida: pedía el permiso, la persona lo daba, y el
+      //    teléfono seguía sin registrarse porque nadie lo volvía a intentar.
+      //    Tocar el botón otra vez daba exactamente el mismo resultado.
+      if (userId) await iniciarPushNativo(userId);
+      // 3. Los recordatorios, que ya pueden agendarse con el permiso dado.
       if (userId) await sincronizarRecordatorios(userId);
     } catch { /* el estado de abajo lo va a mostrar igual */ }
     await mirar();
@@ -142,7 +149,7 @@ export default function EstadoAvisos({ T, isLight = false, userId }) {
       <div style={{ display: "flex", gap: 8, marginTop: 10, flexWrap: "wrap" }}>
         <button type="button" onClick={activar} disabled={pidiendo}
           style={{ padding: "8px 14px", borderRadius: 10, border: `1px solid ${T.border}`, background: "transparent", color: T.txt, fontFamily: font, fontSize: 13, cursor: pidiendo ? "default" : "pointer", opacity: pidiendo ? 0.6 : 1, minHeight: 40 }}>
-          {pidiendo ? "Revisando…" : "Activar y revisar"}
+          {pidiendo ? "Conectando…" : "Activar y conectar"}
         </button>
       </div>
     </G>

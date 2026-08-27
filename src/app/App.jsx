@@ -727,9 +727,16 @@ export default function App() {
   // App NATIVA: pedir el permiso de notificaciones al entrar (Android 13+ lo
   // exige en runtime; el diálogo sale una sola vez) y navegar a la bandeja de
   // WhatsApp cuando el usuario toca una notificación.
+  //
+  // ⚠️ Acá NO se pide el permiso. Se pedia, y competia con el registro de push
+  // de abajo: los dos abren el mismo dialogo del sistema, uno gana y el otro
+  // recibe una respuesta que no es "concedido". El que perdia se quedaba
+  // convencido de que faltaba el permiso —para siempre, porque este efecto solo
+  // corre al cambiar de usuario— aunque iOS ya lo hubiera concedido.
+  //
+  // Ahora el permiso lo pide un solo lugar, en orden, en el efecto de abajo.
   useEffect(() => {
     if (!user || !isNativeApp()) return;
-    ensureNotifPermission();
     return addNotificationTapListener(() => setV("wa"));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id]);
@@ -751,6 +758,9 @@ export default function App() {
     // Rechazar. Si un aviso llega antes de que existan, entra mudo por el canal
     // de por defecto y ya no hay forma de arreglarlo para ese aviso.
     prepararAvisos()
+      // El permiso se pide UNA vez y ANTES de registrar: asi el registro ya lo
+      // encuentra concedido en vez de toparse con el dialogo a medio responder.
+      .then(() => ensureNotifPermission())
       .then(() => {
         iniciarPushNativo(uid, (data) => {
           // El payload manda a donde ir. Por defecto, al CRM.
