@@ -54,6 +54,18 @@ final class LlamadaEntrante: NSObject {
     /// A donde entra la persona al contestar. Lo manda el servidor en el aviso.
     private var enlaceReunion: String?
 
+    /// LA REUNION A LA QUE HAY QUE ENTRAR APENAS SE PUEDA ABRIR UN ENLACE.
+    ///
+    /// Contestar desde la pantalla bloqueada NO trae la app al frente: iOS
+    /// muestra su propia pantalla de llamada y el CRM sigue dormido adentro. Por
+    /// eso el enlace no se le puede pedir al CRM que lo abra — puede no estar
+    /// vivo para escuchar. Se guarda aca y lo abre el propio telefono.
+    ///
+    /// Lleva la hora a proposito: si el intento no prospera y la persona abre la
+    /// app veinte minutos despues por otra cosa, NO se le abre Google Meet en la
+    /// cara. Una reunion vieja no se entra sola.
+    private var reunionPendiente: (enlace: String, cuando: Date)?
+
     /// LA IDENTIFICACION DE ESTE TELEFONO PARA LAS LLAMADAS, GUARDADA.
     ///
     /// Guardarla no es un lujo: iOS la entrega UNA sola vez, en el instante en
@@ -177,6 +189,48 @@ final class LlamadaEntrante: NSObject {
             // Se cumple pase lo que pase, incluso si iOS rechazo la llamada
             // (por ejemplo si la persona tiene el telefono en No Molestar).
             completion()
+        }
+    }
+
+    /// ENTRA A LA REUNION.
+    ///
+    /// Lo abre el TELEFONO, no el CRM. Es la unica forma que funciona siempre:
+    /// contestar desde la pantalla bloqueada deja al CRM dormido, y ademas
+    /// Google Meet necesita camara y microfono, cosa que dentro de la ventana
+    /// del CRM no funciona bien. Afuera se abre la app de Meet si esta
+    /// instalada, y si no, el navegador.
+    ///
+    /// Se REINTENTA a proposito: si en el momento de contestar la app todavia
+    /// esta de fondo, iOS puede negarse a abrir el enlace. Entonces queda
+    /// pendiente y se vuelve a intentar apenas la app esta a la vista, que es
+    /// justo cuando iOS si lo permite. Es la diferencia entre "funciona si se
+    /// dio la casualidad" y "funciona".
+    func abrirReunionPendiente() {
+        guard let p = reunionPendiente else { return }
+
+        // Una reunion de hace rato ya no se entra sola.
+        guard Date().timeIntervalSince(p.cuando) < 120 else {
+            reunionPendiente = nil
+            return
+        }
+        guard let url = URL(string: p.enlace) else {
+            reunionPendiente = nil
+            return
+        }
+
+        DispatchQueue.main.async { [weak self] in
+            UIApplication.shared.open(url, options: [:]) { logrado in
+                if logrado {
+                    self?.reunionPendiente = nil
+                    UserDefaults.standard.set("entre-a-la-reunion",
+                                              forKey: "stratos.voip.diagnostico")
+                } else {
+                    // No se pudo AHORA. Queda pendiente: lo reintenta
+                    // `applicationDidBecomeActive`.
+                    UserDefaults.standard.set("la-reunion-quedo-esperando",
+                                              forKey: "stratos.voip.diagnostico")
+                }
+            }
         }
     }
 
@@ -345,13 +399,24 @@ extension LlamadaEntrante: CXProviderDelegate {
         enlaceReunion = nil
     }
 
-    /// Contestar: se abre la app y se entra a la reunion.
+    /// Contestar: se entra a la reunion.
     func provider(_ provider: CXProvider, perform action: CXAnswerCallAction) {
+        // El enlace se aparta ANTES que nada: `cerrar` lo borra, y sin el no hay
+        // reunion a la que entrar.
+        if let enlace = enlaceReunion, !enlace.isEmpty {
+            reunionPendiente = (enlace, Date())
+        }
+
         avisarleALaApp("contestar")
         action.fulfill()
-        // La pantalla de llamada se cierra enseguida: lo que sigue pasa dentro
-        // de la app (o del navegador, si la reunion es un enlace).
-        cerrar(.answeredElsewhere)
+
+        // El ORDEN importa: primero se abre la reunion y despues se cierra la
+        // pantalla de llamada. Al reves, la persona ve un segundo de "llamada
+        // finalizada" antes de que pase nada — que fue exactamente lo que vio
+        // Angel el 27-ago-2026: contesto, la llamada se dio por terminada y no
+        // lo llevo a ningun lado.
+        abrirReunionPendiente()
+        cerrar(.remoteEnded)
     }
 
     /// Rechazar o colgar.
@@ -359,6 +424,9 @@ extension LlamadaEntrante: CXProviderDelegate {
         avisarleALaApp("rechazar")
         llamadaActual = nil
         enlaceReunion = nil
+        // Quien colgo NO quiere entrar. Si quedara pendiente, se le abriria la
+        // reunion la proxima vez que abriera la app.
+        reunionPendiente = nil
         action.fulfill()
     }
 

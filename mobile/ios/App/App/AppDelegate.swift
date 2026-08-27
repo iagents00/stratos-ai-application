@@ -43,6 +43,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // Reofrecerla de mas no cuesta nada: del otro lado se guarda siempre la
         // misma y no se duplica.
         LlamadaEntrante.shared.reenviarToken()
+
+        // Y si quedo una reunion sin abrir, se abre ahora. Al contestar desde la
+        // pantalla bloqueada la app todavia esta de fondo y iOS puede negarse a
+        // abrir un enlace; este es el primer momento en que si lo permite.
+        LlamadaEntrante.shared.abrirReunionPendiente()
     }
 
     func applicationWillTerminate(_ application: UIApplication) {
