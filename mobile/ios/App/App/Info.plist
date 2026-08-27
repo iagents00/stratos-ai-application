@@ -59,5 +59,22 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
+	<!--
+	  remote-notification deja que el aviso DESPIERTE la app un instante para
+	  ponerse al día antes de que la persona la abra: el contador de la campanita,
+	  los mensajes nuevos, el estado del expediente.
+
+	  Sin esto los avisos igual LLEGAN y se ven —eso lo hace iOS solo—, pero la
+	  app se entera recién al abrirla: se toca la notificación de un mensaje y por
+	  un momento la pantalla sigue mostrando lo de antes.
+
+	  No estaba declarado. Se detectó el 27-ago-2026 revisando qué pedía Apple
+	  para las llamadas, antes de que llegara la llave: mejor encontrarlo leyendo
+	  que después, con los avisos ya andando a medias.
+	-->
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>remote-notification</string>
+	</array>
 </dict>
 </plist>
