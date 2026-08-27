@@ -33,7 +33,16 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     }
 
     func applicationDidBecomeActive(_ application: UIApplication) {
-        // Restart any tasks that were paused (or not yet started) while the application was inactive. If the application was previously in the background, optionally refresh the user interface.
+        // Cada vez que la app queda a la vista se le vuelve a ofrecer al CRM la
+        // identificacion para llamadas. Es el momento en que es MAS probable
+        // que el CRM ya este cargado y escuchando — al arrancar casi nunca lo
+        // esta, y esa era la razon por la que las llamadas no salian a pantalla
+        // completa: la identificacion se emitia una sola vez, sin nadie del
+        // otro lado, y se perdia para siempre.
+        //
+        // Reofrecerla de mas no cuesta nada: del otro lado se guarda siempre la
+        // misma y no se duplica.
+        LlamadaEntrante.shared.reenviarToken()
     }
 
     func applicationWillTerminate(_ application: UIApplication) {

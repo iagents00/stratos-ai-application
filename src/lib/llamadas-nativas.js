@@ -51,9 +51,15 @@ export function engancharLlamadas(userId, alContestar) {
   // El lado nativo avisa por estos dos eventos. Se escuchan en la ventana
   // porque es el único puente que hay entre Swift y el CRM sin escribir un
   // plugin entero para dos mensajes.
+  // Se recibe varias veces a proposito (el lado nativo la reofrece al abrir la
+  // app y con unos segundos de gracia). Guardar la misma dos veces no molesta:
+  // la tabla la reemplaza. Lo que SI dolia era recibirla cero veces.
+  let ultimaGuardada = null;
+
   const alLlegarToken = async (ev) => {
     const token = ev?.detail?.token || "";
-    if (!token) return;
+    if (!token || token === ultimaGuardada) return;
+    ultimaGuardada = token;
     try {
       await supabase.from("device_tokens").upsert({
         user_id: userId,
@@ -80,6 +86,17 @@ export function engancharLlamadas(userId, alContestar) {
 
   window.addEventListener("StratosTokenVoIP", alLlegarToken);
   window.addEventListener("StratosLlamada", alTocarBoton);
+
+  // Y se BUSCA la que el teléfono dejó guardada, sin esperar a que nos avisen.
+  //
+  // Es lo que hace que esto funcione siempre: el aviso en vivo solo sirve si
+  // estábamos escuchando en ese instante, y al arrancar la app nunca lo
+  // estamos — el CRM se engancha después del login, segundos más tarde. Como
+  // el teléfono además la deja escrita, acá alcanza con ir a buscarla.
+  try {
+    const guardada = window.localStorage?.getItem("stratos.voip.token");
+    if (guardada) alLlegarToken({ detail: { token: guardada } });
+  } catch { /* si no hay, la traerá el aviso en vivo */ }
 
   return () => {
     yaEscuchando = false;
