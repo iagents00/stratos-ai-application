@@ -1,12 +1,16 @@
-{{nombre}}, es hoy.
+ESTA NOCHE ES EL WEBINAR
 
-Empezamos en unas horas. Te dejo el acceso aquí para que no lo andes buscando.
+{{nombre}}, esta noche presentamos el mejor proyecto de la Zona Hotelera
+de Cancún.
+
+Conéctate, conócelo y obtén beneficios exclusivos antes de su lanzamiento
+oficial.
 
 {{horarios_txt}}
 
-Entrar al webinar: {{acceso_url}}
+ENTRAR AL WEBINAR: {{acceso_url}}
 
-Conéctate cinco minutos antes. Si el enlace no abre, escríbeme y te lo paso.
+¿Todavía no te registras? {{registro_url}}
 
-Ahí nos vemos,
 {{presentador}}
+Duke del Caribe · Inversión inmobiliaria en el Caribe Mexicano

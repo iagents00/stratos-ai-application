@@ -8,10 +8,10 @@
     "presentador": "Óscar Gálvez",
     "titulo": "Mondrian Cancún",
     "fecha_larga": "jueves 27 de agosto",
-    "horarios_html": "Cancún y Riviera Maya &nbsp;9:00 PM<br>Ciudad de México &nbsp;8:00 PM<br>California &nbsp;7:00 PM",
-    "horarios_txt": "  Cancún y Riviera Maya   9:00 PM\n  Ciudad de México        8:00 PM\n  California              7:00 PM",
+    "horarios_html": "Cancún y Playa del Carmen &nbsp;9:00 p.m.<br>Ciudad de México &nbsp;8:00 p.m.<br>California &nbsp;7:00 p.m.",
+    "horarios_txt": "  Cancún y Playa del Carmen   9:00 p.m.\n  Ciudad de México            8:00 p.m.\n  California                  7:00 p.m.",
     "registro_url": "https://docs.google.com/forms/d/e/1FAIpQLScmf-1bwez9VpxdAtPbLGZl4U-NfjpVG1-9P87H8zEGRha8wA/viewform",
-    "acceso_url": "PENDIENTE_URL_ACCESO_ZOOM",
+    "acceso_url": "https://us06web.zoom.us/j/82082245804?pwd=llnbL3fblNKaNInjBTfn9KCLV92gSNM",
     "agenda_url": "PENDIENTE_URL_AGENDA",
     "grabacion_url": "PENDIENTE_URL_GRABACION",
     "direccion_postal": "40 Avenida Sur LB, Centro, 77713 Playa del Carmen, Q.R., México",
@@ -87,7 +87,7 @@
       "slug": "mondrian-03-es-hoy",
       "nombre": "Mondrian · 3 Es hoy",
       "base": "_base",
-      "asunto": "Es hoy — aquí está tu acceso",
+      "asunto": "Esta noche: el mejor proyecto de la Zona Hotelera de Cancún",
       "plantilla": "mondrian-03-es-hoy",
       "segmentos": [
         "A",
@@ -95,10 +95,11 @@
         "C"
       ],
       "metadata": {
-        "envio": "jueves 27, 4:00 PM California (T-3h)",
-        "solo_registrados": true
+        "envio": "jueves 27, día del webinar",
+        "audiencia": "toda la lista"
       },
-      "preheader": "Empezamos en unas horas. Aquí está tu acceso."
+      "preheader": "9 p.m. Cancún · 8 p.m. CDMX · 7 p.m. California. Aquí está tu acceso.",
+      "asunto_b": "{{nombre}}, es esta noche"
     },
     {
       "slug": "mondrian-04a-asistio",
