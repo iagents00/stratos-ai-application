@@ -6,7 +6,7 @@
 >
 > ¿Buscás un botón o un texto y no está acá? `npm run buscar "texto"`
 
-**180 archivos · 76.000 líneas**
+**180 archivos · 76.021 líneas**
 
 ---
 
@@ -360,7 +360,7 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | `utils.js` | 308 | Utilidades compartidas entre todas las vistas. |
 | `lead-save.js` | 288 | _sin describir_ |
 | `native.js` | 282 | _sin describir_ |
-| `push-native.js` | 244 | _sin describir_ |
+| `push-native.js` | 265 | _sin describir_ |
 | `manual-stratos-doc.js` | 230 | _sin describir_ |
 | `organize-notes.js` | 220 | _sin describir_ |
 | `docx.js` | 201 | _sin describir_ |
@@ -695,10 +695,10 @@ hacen. Agregarles un bloque `/** ... */` arriba los hace aparecer solos acá.
 - `src/lib/lead-save.js` (288 líneas)
 - `src/lib/native.js` (282 líneas)
 - `src/clients/nsg/config.js` (270 líneas)
+- `src/lib/push-native.js` (265 líneas)
 - `src/app/features/MetaPanel/DocsStratos.jsx` (262 líneas)
 - `src/index.css` (250 líneas)
 - `src/app/data/chat.js` (249 líneas)
-- `src/lib/push-native.js` (244 líneas)
 - `src/app/views/Nomina.jsx` (238 líneas)
 - `src/lib/manual-stratos-doc.js` (230 líneas)
 - `src/lib/organize-notes.js` (220 líneas)
