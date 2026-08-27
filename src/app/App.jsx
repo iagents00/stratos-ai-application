@@ -741,6 +741,31 @@ export default function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id]);
 
+  // ── EL PERMISO SE PIDE AL ABRIR LA APP, COMO CUALQUIER OTRA ──────────────
+  //
+  // Antes se pedía recién DESPUÉS de iniciar sesión, y eso está mal por dos
+  // razones. La obvia: una app recién instalada pide sus permisos al abrirse,
+  // no escondidos detrás de un login — la persona no entiende por qué le
+  // aparece un diálogo del sistema en medio de otra cosa (Ángel, 27-ago-2026).
+  //
+  // Y la que rompía de verdad: quien abría la app, entraba, y NO llegaba a
+  // responder el diálogo antes de que el registro consultara el permiso, se
+  // quedaba sin avisos para siempre — el registro lo veía «sin responder» y no
+  // volvía a intentarlo.
+  //
+  // Pedirlo acá lo resuelve de raíz: para cuando hay sesión, la respuesta ya
+  // está dada. Corre una sola vez por apertura y no depende de nadie.
+  //
+  // Los otros permisos (micrófono, cámara, fotos) NO van acá a propósito: iOS
+  // obliga a pedirlos en el momento de usarlos, y pedirlos de golpe al abrir es
+  // la forma más rápida de que digan que no a todo.
+  useEffect(() => {
+    if (!isNativeApp()) return;
+    prepararAvisos()
+      .then(() => ensureNotifPermission())
+      .catch(() => { /* nunca romper el arranque por un aviso */ });
+  }, []);
+
   // PUSH NATIVO (APNs). Es el que llega con la app CERRADA: un lead que entra a
   // las 11 de la noche despierta el teléfono del asesor. Las notificaciones de
   // arriba son locales y solo aparecen si la app ya está abierta.
@@ -753,14 +778,11 @@ export default function App() {
     if (!user?.id || !isNativeApp()) return;
     const uid = user.id;
 
-    // Los canales de Android y la categoria de llamada de iOS van PRIMERO: son
-    // los que deciden si el aviso suena y si trae los botones Contestar y
-    // Rechazar. Si un aviso llega antes de que existan, entra mudo por el canal
-    // de por defecto y ya no hay forma de arreglarlo para ese aviso.
+    // El permiso ya se pidió al abrir la app (efecto de arriba), así que acá
+    // solo queda ligar este teléfono al usuario que entró. prepararAvisos se
+    // vuelve a llamar por si esta sesión empezó sin pasar por el arranque; es
+    // idempotente y no cuesta nada.
     prepararAvisos()
-      // El permiso se pide UNA vez y ANTES de registrar: asi el registro ya lo
-      // encuentra concedido en vez de toparse con el dialogo a medio responder.
-      .then(() => ensureNotifPermission())
       .then(() => {
         iniciarPushNativo(uid, (data) => {
           // El payload manda a donde ir. Por defecto, al CRM.
