@@ -397,13 +397,34 @@ export async function enviarFCM(
   const endpoint = `https://fcm.googleapis.com/v1/projects/${sa.project_id}/messages:send`;
 
   await Promise.all(dispositivos.map(async (d) => {
+    // ⚠️ UNA LLAMADA NO LLEVA "notification". ES LA CAUSA DE QUE LA PANTALLA
+    // COMPLETA NUNCA APARECIERA, y está en la documentación de Google:
+    //
+    //   «Notification messages delivered when your app is in the background:
+    //    the notification is delivered to the device's system tray.»
+    //
+    // Traducido: si el mensaje trae el bloque de notificación y la app está
+    // cerrada, Android la dibuja ÉL MISMO en la persiana y NUNCA ejecuta el
+    // código de la app. Nuestro servicio de llamadas —el que arma la pantalla
+    // completa— no llegaba a correr jamás. Por eso se veía un aviso común.
+    //
+    // Solo los mensajes que llevan ÚNICAMENTE datos despiertan a la app.
+    //
+    // Contrapartida asumida: si la persona FORZÓ el cierre de la app desde los
+    // ajustes, un mensaje de solo datos no llega. Con la app simplemente
+    // cerrada —que es el caso real— sí llega. Para una llamada, que aparezca
+    // como pantalla completa el 95% de las veces vale más que una tira el 100%.
     const mensaje = {
       message: {
         token: d.token,
-        notification: { title: aviso.title, body: aviso.body },
+        ...(esLlamada ? {} : { notification: { title: aviso.title, body: aviso.body } }),
         // Los datos viajan aparte del texto: son los que lee la app al abrirse
-        // desde el aviso para saber a qué pantalla ir.
+        // desde el aviso para saber a qué pantalla ir. En una llamada son
+        // ademas lo UNICO que viaja, y de ahi sale lo que se ve en pantalla.
         data: {
+          title: aviso.title,
+          body: aviso.body,
+          caller: aviso.title.replace(/\s+te est[aá] llamando.*$/i, "").trim(),
           url: aviso.url,
           view: aviso.view,
           lead_id: aviso.leadId ?? "",
@@ -415,15 +436,17 @@ export async function enviarFCM(
           // Mismo criterio que en iPhone: la llamada caduca en un minuto, todo
           // lo demás se guarda y se entrega cuando el teléfono vuelva.
           ttl: esLlamada ? "60s" : "86400s",
-          notification: {
+          // La llamada tampoco lleva esta parte: describe cómo dibujar una
+          // notificación, y en una llamada la dibuja nuestro propio código.
+          ...(esLlamada ? {} : { notification: {
             // El canal decide el sonido y si el aviso aparece encima de todo.
             // Los crea la app al arrancar (ver avisos-nativos.js).
-            channel_id: esLlamada ? "llamadas" : "avisos",
+            channel_id: "avisos",
             tag: aviso.tag,
             default_vibrate_timings: true,
-            notification_priority: esLlamada ? "PRIORITY_MAX" : "PRIORITY_HIGH",
+            notification_priority: "PRIORITY_HIGH",
             visibility: "PUBLIC",
-          },
+          } }),
         },
       },
     };

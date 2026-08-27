@@ -83,13 +83,16 @@ public class ServicioLlamadas extends MessagingService {
     }
 
     private void mostrarLlamada(Map<String, String> datos, RemoteMessage mensaje) {
+        // Todo sale de los DATOS, no del bloque de notificacion: una llamada ya
+        // no lleva ese bloque a proposito (es lo que hacia que Android la
+        // dibujara solo y nunca ejecutara este codigo).
         String quien = "Alguien";
         String texto = "Te está llamando";
-        if (mensaje.getNotification() != null) {
-            if (mensaje.getNotification().getTitle() != null) quien = mensaje.getNotification().getTitle();
-            if (mensaje.getNotification().getBody() != null) texto = mensaje.getNotification().getBody();
+        if (datos != null) {
+            if (datos.get("caller") != null && !datos.get("caller").isEmpty()) quien = datos.get("caller");
+            else if (datos.get("title") != null) quien = datos.get("title");
+            if (datos.get("body") != null && !datos.get("body").isEmpty()) texto = datos.get("body");
         }
-        if (datos != null && datos.get("caller") != null) quien = datos.get("caller");
 
         asegurarCanal();
 

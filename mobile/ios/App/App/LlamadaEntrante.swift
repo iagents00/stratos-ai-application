@@ -74,6 +74,30 @@ final class LlamadaEntrante: NSObject {
 
     /// Deja el telefono listo para recibir llamadas. Se llama una vez, al abrir.
     func arrancar() {
+        // ⚠️ EL ORDEN DE ESTAS DOS COSAS IMPORTA, y por eso esta al reves de lo
+        // que parece natural.
+        //
+        // PRIMERO el canal de avisos de llamada. Es lo unico imprescindible: sin
+        // el, iOS nunca entrega la identificacion del telefono y no hay llamada
+        // posible. Antes se creaba DESPUES de la pantalla de llamada, y si algo
+        // fallaba armando esa pantalla —una configuracion que iOS no acepta, un
+        // icono que no esta— la ejecucion moria ahi y nunca se llegaba a
+        // registrar. Resultado: ninguna identificacion, ninguna llamada, y sin
+        // un solo error visible.
+        //
+        // Lo critico va primero. Lo bonito, despues.
+        let registro = PKPushRegistry(queue: .main)
+        registro.delegate = self
+        registro.desiredPushTypes = [.voIP]
+        registroVoIP = registro
+
+        UserDefaults.standard.set("pedi-el-numero-de-llamadas",
+                                  forKey: "stratos.voip.diagnostico")
+
+        // Si ya se tenia una identificacion de una apertura anterior, se vuelve
+        // a ofrecer. iOS solo entrega una nueva cuando CAMBIA.
+        reenviarConGracia()
+
         // El proveedor es lo que dibuja la pantalla de llamada. La
         // configuracion decide como se ve y que puede hacer la persona.
         let config = CXProviderConfiguration()
@@ -91,17 +115,6 @@ final class LlamadaEntrante: NSObject {
         p.setDelegate(self, queue: nil)
         proveedor = p
 
-        // El canal por el que llegan los avisos de llamada. Es distinto del de
-        // los avisos normales y tiene su propia identificacion del telefono.
-        let registro = PKPushRegistry(queue: .main)
-        registro.delegate = self
-        registro.desiredPushTypes = [.voIP]
-        registroVoIP = registro
-
-        // Si ya se tenia una identificacion de una apertura anterior, se vuelve
-        // a ofrecer. iOS solo entrega una nueva cuando CAMBIA, asi que sin esto
-        // una identificacion que se perdio la primera vez no vuelve jamas.
-        reenviarConGracia()
     }
 
     /// Vuelve a ofrecerle al CRM la identificacion guardada.
@@ -203,9 +216,9 @@ final class LlamadaEntrante: NSObject {
     static func diagnostico() -> String {
         let d = UserDefaults.standard
         let token = d.string(forKey: "stratos.voip.token") ?? ""
-        let ultimo = d.string(forKey: "stratos.voip.diagnostico") ?? "todavia-no-se-intento"
-        if !token.isEmpty { return "el-telefono-dio-su-numero-de-llamadas (" + ultimo + ")" }
-        return "el-telefono-NO-dio-su-numero-de-llamadas (" + ultimo + ")"
+        let ultimo = d.string(forKey: "stratos.voip.diagnostico") ?? "ni-siquiera-arranco"
+        if !token.isEmpty { return "listo (" + ultimo + ")" }
+        return "sin-numero-de-llamadas (" + ultimo + ")"
     }
 
     /// El unico camino para hablarle al CRM.
