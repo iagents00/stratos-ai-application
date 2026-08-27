@@ -39,7 +39,7 @@ const APNS_BUNDLE_ID = Deno.env.get("APNS_BUNDLE_ID") ?? "com.stratoscapitalgrou
 /** Un teléfono registrado, tal como sale de la tabla `device_tokens`. */
 export interface Dispositivo {
   token: string;
-  platform: string;          // "ios" | "android"
+  platform: string;          // "ios" | "android" | "ios-voip"
   entorno?: string | null;   // "production" | "sandbox" (solo importa en iOS)
 }
 
@@ -158,6 +158,76 @@ function cuerpoAPNs(aviso: Aviso) {
     kind: aviso.kind ?? null,
     tag: aviso.tag,
   };
+}
+
+/**
+ * El canal de LLAMADAS de Apple, que es distinto del de avisos normales.
+ *
+ * Usa la MISMA llave, pero cambian dos cosas y las dos son obligatorias:
+ *   · el buzon lleva ".voip" al final del identificador de la app;
+ *   · el tipo de aviso es "voip" en vez de "alert".
+ *
+ * Con eso iOS despierta la app aunque este cerrada y le exige mostrar la
+ * pantalla de llamada. El cuerpo NO lleva la parte de "alert": no es un aviso
+ * que se lea, es una orden para que la app dibuje la pantalla.
+ *
+ * ⚠️ Es un canal SEPARADO a proposito. Si esto falla, el aviso normal de la
+ * llamada sigue llegando como una tira — se pierde la pantalla completa, no el
+ * aviso.
+ */
+export async function enviarLlamadaVoIP(
+  dispositivos: Dispositivo[],
+  aviso: Aviso,
+): Promise<Resultado> {
+  const r = vacio();
+  if (dispositivos.length === 0) return r;
+
+  const jwt = await jwtDeApple();
+  if (!jwt) {
+    r.notas.push(`voip: faltan credenciales — ${dispositivos.length} iPhone(s) sin pantalla de llamada`);
+    return r;
+  }
+
+  const cuerpo = JSON.stringify({
+    caller: aviso.title.replace(/\s+te est[aá] llamando.*$/i, "").trim() || "Stratos AI",
+    motivo: aviso.body,
+    url: aviso.url,
+    tag: aviso.tag,
+  });
+
+  await Promise.all(dispositivos.map(async (d) => {
+    const host = d.entorno === "sandbox"
+      ? "https://api.sandbox.push.apple.com"
+      : "https://api.push.apple.com";
+    try {
+      const resp = await fetch(`${host}/3/device/${d.token}`, {
+        method: "POST",
+        headers: {
+          "authorization": `bearer ${jwt}`,
+          // El ".voip" NO es opcional: sin el, Apple rechaza con BadTopic.
+          "apns-topic": `${APNS_BUNDLE_ID}.voip`,
+          "apns-push-type": "voip",
+          "apns-priority": "10",
+          // Una llamada de hace un minuto ya no sirve.
+          "apns-expiration": String(Math.floor(Date.now() / 1000) + 45),
+          "content-type": "application/json",
+        },
+        body: cuerpo,
+      });
+      if (resp.ok) { r.enviados++; return; }
+      const texto = await resp.text();
+      r.fallidos++;
+      if (resp.status === 410 || texto.includes("BadDeviceToken") || texto.includes("Unregistered")) {
+        r.muertos.push(d.token);
+      }
+      if (r.notas.length < 5) r.notas.push(`voip ${resp.status}: ${texto.slice(0, 160)}`);
+    } catch (e) {
+      r.fallidos++;
+      if (r.notas.length < 5) r.notas.push(`voip error: ${(e as Error).message}`);
+    }
+  }));
+
+  return r;
 }
 
 export async function enviarAPNs(
@@ -399,11 +469,22 @@ export async function enviarANativos(
 ): Promise<Resultado> {
   const ios = dispositivos.filter((d) => d.platform === "ios");
   const android = dispositivos.filter((d) => d.platform === "android");
-  const [a, f] = await Promise.all([enviarAPNs(ios, aviso), enviarFCM(android, aviso)]);
+  // El buzon de llamadas es otro: el mismo telefono tiene DOS identificaciones,
+  // una para avisos y otra para llamadas, y no son intercambiables.
+  const voip = dispositivos.filter((d) => d.platform === "ios-voip");
+
+  const esLlamada = aviso.kind === "llamada";
+  const [a, f, v] = await Promise.all([
+    enviarAPNs(ios, aviso),
+    enviarFCM(android, aviso),
+    // La pantalla completa SOLO para llamadas. Mandar un aviso de llamada por
+    // cualquier otra cosa haria que iOS le quite el permiso a la app.
+    esLlamada ? enviarLlamadaVoIP(voip, aviso) : Promise.resolve(vacio()),
+  ]);
   return {
-    enviados: a.enviados + f.enviados,
-    fallidos: a.fallidos + f.fallidos,
-    muertos: [...a.muertos, ...f.muertos],
-    notas: [...a.notas, ...f.notas],
+    enviados: a.enviados + f.enviados + v.enviados,
+    fallidos: a.fallidos + f.fallidos + v.fallidos,
+    muertos: [...a.muertos, ...f.muertos, ...v.muertos],
+    notas: [...a.notas, ...f.notas, ...v.notas],
   };
 }

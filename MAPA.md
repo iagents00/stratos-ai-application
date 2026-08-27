@@ -6,7 +6,7 @@
 >
 > ¿Buscás un botón o un texto y no está acá? `npm run buscar "texto"`
 
-**179 archivos · 75.889 líneas**
+**180 archivos · 76.000 líneas**
 
 ---
 
@@ -80,7 +80,7 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 
 | Archivo | Líneas | Qué hace |
 |---|---|---|
-| `App.jsx` | 3109 | Shell principal de Stratos AI |
+| `App.jsx` | 3121 | Shell principal de Stratos AI |
 | `SharedComponents.jsx` | 343 | Shared primitive components used by all views. |
 | `App.css` | 321 | _sin describir_ |
 
@@ -377,6 +377,7 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | `backup.js` | 108 | _sin describir_ |
 | `rails-config.js` | 107 | _sin describir_ |
 | `chunk-recovery.js` | 103 | _sin describir_ |
+| `llamadas-nativas.js` | 99 | _sin describir_ |
 | `agenda.js` | 91 | _sin describir_ |
 | `lead-draft.js` | 85 | Autosave del borrador del modal "Registrar cliente" |
 | `transcribir.js` | 77 | _sin describir_ |
@@ -442,7 +443,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Adjuntar PDF, documento o audio | `src/app/views/CRM/components.jsx:1830` |
 | Agenda (opcional) | `src/app/views/LandingPages/index.jsx:1606` |
 | Agenda una llamada con | `src/app/views/LandingPages/LandingPagePreview.jsx:458` |
-| Agenda, lista de acción, documentos y plan | `src/app/App.jsx:2960` |
+| Agenda, lista de acción, documentos y plan | `src/app/App.jsx:2972` |
 | Agendar fecha | `src/app/views/CRM/index.jsx:4648` |
 | Agendar llamada | `src/app/views/LandingPages/LandingPagePreview.jsx:164` |
 | Agente Ejecutivo | `src/app/components/Chat.jsx:74` |
@@ -467,8 +468,8 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Añade tareas concretas para este cliente | `src/app/views/CRM/components.jsx:2162` |
 | Añadir | `src/app/views/CRM/components.jsx:5768` |
 | Aparecerán al inicio de su pipeline en | `src/app/views/CRM/index.jsx:6170` |
-| Aplicaciones | `src/app/App.jsx:3023` |
-| Apps | `src/app/App.jsx:2198` |
+| Aplicaciones | `src/app/App.jsx:3035` |
+| Apps | `src/app/App.jsx:2210` |
 | Áreas de atención | `src/app/views/RRHHModule.jsx:786` |
 | Arrastra el CV aquí o haz clic para subir | `src/app/views/RRHHModule.jsx:709` |
 | Arrastra para cambiar la prioridad | `src/app/views/Marketing.jsx:2236` |
@@ -482,7 +483,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Aún no hay documentos | `src/app/features/MetaPanel/index.jsx:1646` |
 | Badge | `src/app/views/LandingPages/index.jsx:662` |
 | Bajo · Medio · Alto | `src/app/views/CRM/components.jsx:3431` |
-| Buscar (⌘K) | `src/app/App.jsx:2285` |
+| Buscar (⌘K) | `src/app/App.jsx:2297` |
 | Buscar asesor… | `src/app/views/CRM/components.jsx:3188` |
 | Buscar candidato... | `src/app/views/RRHHModule.jsx:409` |
 | Buscar cliente o teléfono… | `src/app/views/WhatsApp.jsx:212` |
@@ -519,7 +520,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Cargando conversaciones… | `src/app/views/WhatsApp.jsx:263` |
 | Cargando el plan… | `src/app/views/PlanSemanal.jsx:353` |
 | Cargando el tablero… | `src/app/views/ComandoOps.jsx:127` |
-| Cargando equipo… | `src/app/App.jsx:2313` |
+| Cargando equipo… | `src/app/App.jsx:2325` |
 | Cargando movimientos… | `src/app/views/Caja.jsx:454` |
 | Cargando Zooms… | `src/app/views/ZoomControl/index.jsx:511` |
 | Cargando… | `src/app/views/FinanzasAdmin.jsx:318` |
@@ -531,11 +532,11 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Centro de Agentes IA | `src/app/views/CRM/index.jsx:5474` |
 | Centro de Inteligencia | `src/app/components/DynamicIsland.jsx:81` |
 | Centro de Inteligencia — Activo | `src/app/components/DynamicIsland.jsx:102` |
-| Cerrar | `src/app/App.jsx:2876` |
+| Cerrar | `src/app/App.jsx:2888` |
 | Cerrar (Esc) | `src/app/views/ZoomControl/index.jsx:793` |
 | Cerrar detalle | `src/app/views/ZoomControl/Resumen.jsx:299` |
 | Cerrar Mi Espacio | `src/app/features/MetaPanel/index.jsx:664` |
-| Cerrar sesión | `src/app/App.jsx:2646` |
+| Cerrar sesión | `src/app/App.jsx:2658` |
 | Cerrar vista previa | `src/app/views/LandingPages/LandingPagePreview.jsx:202` |
 | Chats | `src/app/views/WhatsApp.jsx:633` |
 | Cierres | `src/app/views/Team.jsx:116` |
@@ -557,7 +558,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Conectado | `src/app/views/Profile.jsx:735` |
 | Conectando… | `src/app/views/ConectarWhatsApp.jsx:122` |
 | Conectar mi WhatsApp | `src/app/views/ConectarWhatsApp.jsx:123` |
-| Configuración | `src/app/App.jsx:3059` |
+| Configuración | `src/app/App.jsx:3071` |
 | Confirmados | `src/app/views/ZoomControl/Resumen.jsx:440` |
 | Confirmar contraseña | `src/app/views/Profile.jsx:317` |
 | Confirmas y listo | `src/app/views/ConectarWhatsApp.jsx:107` |
@@ -590,7 +591,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Descargar el manual en Word | `src/app/features/MetaPanel/DocsStratos.jsx:169` |
 | Descargar en Word | `src/app/features/MetaPanel/DocsStratos.jsx:213` |
 | Descargar en Word para firmarla | `src/app/views/CuentasCobro.jsx:419` |
-| Descartar | `src/app/App.jsx:2570` |
+| Descartar | `src/app/App.jsx:2582` |
 | Descartar audio | `src/app/views/Copilot.jsx:1761` |
 | Descartar grabación | `src/app/views/CRM/LeadWhatsAppChat.jsx:808` |
 | Describe la tarea... | `src/app/views/CRM/components.jsx:2109` |
@@ -736,6 +737,7 @@ hacen. Agregarles un bloque `/** ... */` arriba los hace aparecer solos acá.
 - `src/lib/rails-config.js` (107 líneas)
 - `src/lib/chunk-recovery.js` (103 líneas)
 - `src/clients/grupo28/config.js` (100 líneas)
+- `src/lib/llamadas-nativas.js` (99 líneas)
 - `src/app/constants/areas.js` (97 líneas)
 - `src/app/constants/pipeline.js` (93 líneas)
 - `src/lib/agenda.js` (91 líneas)
