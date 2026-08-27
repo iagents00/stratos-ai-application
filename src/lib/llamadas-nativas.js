@@ -177,3 +177,48 @@ export async function llamadaEnCurso(userId) {
     return null;
   }
 }
+
+/**
+ * LAS LLAMADAS QUE YA SE ATENDIERON O SE COLGARON.
+ *
+ * Sin esto, colgar no servía de nada: el CRM pregunta si te llaman cada vez que
+ * la app vuelve al frente, encontraba la MISMA llamada —todavía dentro de su
+ * minuto de vida— y la mostraba otra vez. Se colgaba, se volvía a la app, y ahí
+ * estaba de nuevo. Reportado por Ángel el 27-ago-2026: «sigue insistiendo».
+ *
+ * Se guarda en el teléfono y no solo en memoria, porque el caso típico es
+ * justamente cerrar la app y volver: si viviera en memoria, se olvidaría en el
+ * peor momento.
+ *
+ * Se conservan solo las últimas: nadie necesita recordar que colgó una llamada
+ * de anteayer, y una lista que crece para siempre termina siendo un problema.
+ */
+const CLAVE_DESPACHADAS = "stratos.llamadas.despachadas";
+const CUANTAS_RECORDAR = 20;
+
+function leerDespachadas() {
+  try {
+    const crudo = window.localStorage?.getItem(CLAVE_DESPACHADAS);
+    const l = crudo ? JSON.parse(crudo) : [];
+    return Array.isArray(l) ? l : [];
+  } catch { return []; }
+}
+
+function yaDespachada(id) {
+  if (!id) return false;
+  return leerDespachadas().includes(id);
+}
+
+/** Marca una llamada como resuelta: contestada, colgada o vencida. */
+export function marcarLlamadaDespachada(id) {
+  if (!id) return;
+  try {
+    const l = leerDespachadas();
+    if (l.includes(id)) return;
+    l.push(id);
+    window.localStorage?.setItem(
+      CLAVE_DESPACHADAS,
+      JSON.stringify(l.slice(-CUANTAS_RECORDAR)),
+    );
+  } catch { /* si no se puede guardar, lo peor es que insista una vez más */ }
+}
