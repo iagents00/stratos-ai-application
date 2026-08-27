@@ -35,6 +35,17 @@ function entorno() {
 let yaEscuchando = false;
 
 /**
+ * Deja escrito en el teléfono qué pasó con el buzón de llamadas.
+ *
+ * Es lo que lee la tarjeta «Avisos en este teléfono» del Perfil. Existe para que
+ * un fallo de este camino se pueda VER sin conectar el teléfono a una
+ * computadora — que es exactamente lo que faltó el 27-ago-2026.
+ */
+function anotarEstado(texto) {
+  try { window.localStorage?.setItem("stratos.voip.diagnostico", texto); } catch { /* noop */ }
+}
+
+/**
  * Deja el CRM enganchado a la pantalla de llamada del sistema.
  *
  * @param {string} userId a quién pertenece este teléfono
@@ -61,7 +72,7 @@ export function engancharLlamadas(userId, alContestar) {
     if (!token || token === ultimaGuardada) return;
     ultimaGuardada = token;
     try {
-      await supabase.from("device_tokens").upsert({
+      const { error } = await supabase.from("device_tokens").upsert({
         user_id: userId,
         token,
         // Se guarda aparte a propósito: si se mezclara con la identificación de
@@ -71,8 +82,23 @@ export function engancharLlamadas(userId, alContestar) {
         entorno: entorno(),
         updated_at: new Date().toISOString(),
       }, { onConflict: "user_id,token" });
+      if (error) throw error;
+      anotarEstado("guardada");
     } catch (e) {
-      console.warn("[llamadas] no pude guardar la identificación:", e?.message || e);
+      // ⚠️ ESTE ERROR NO PUEDE VOLVER A SER INVISIBLE.
+      //
+      // Acá solo se avisaba por consola, y en un teléfono la consola no la lee
+      // nadie. Durante ocho versiones pareció que el iPhone no entregaba la
+      // identificación de llamadas; la entregaba, y la base la rechazaba porque
+      // solo aceptaba 'ios' y 'android'. Se buscó el problema en el teléfono
+      // durante horas mientras el que fallaba avisaba en un lugar donde no se
+      // podía mirar. (27-ago-2026.)
+      //
+      // Ahora queda escrito donde SÍ se ve: la tarjeta de Perfil.
+      const razon = e?.message || String(e);
+      console.warn("[llamadas] no pude guardar la identificación:", razon);
+      anotarEstado("no-se-pudo-guardar: " + razon.slice(0, 80));
+      ultimaGuardada = null;   // que el próximo intento lo vuelva a probar
     }
   };
 

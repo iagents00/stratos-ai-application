@@ -124,7 +124,15 @@ final class LlamadaEntrante: NSObject {
     /// cuando termino de cargar el CRM. Reenviarla de mas no cuesta nada: del
     /// otro lado se guarda siempre la misma y no se duplica.
     func reenviarToken() {
-        guard let t = tokenVoIP, !t.isEmpty else { return }
+        guard let t = tokenVoIP, !t.isEmpty else {
+            // Sin identificacion no hay nada que ofrecer, pero SI hay algo que
+            // contar: que no la hay. Antes se salia de aca en silencio, y el
+            // estado nunca llegaba al CRM justo en el unico caso en que habia
+            // algo que diagnosticar — la tarjeta de Perfil quedaba vacia
+            // precisamente cuando mas se la necesitaba. (27-ago-2026.)
+            avisarleAlCRM("estado")
+            return
+        }
         avisarleAlCRM("token", datos: ["token": t])
     }
 

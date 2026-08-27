@@ -6,7 +6,7 @@
 >
 > ¿Buscás un botón o un texto y no está acá? `npm run buscar "texto"`
 
-**180 archivos · 76.105 líneas**
+**180 archivos · 76.131 líneas**
 
 ---
 
@@ -367,9 +367,9 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | `whatsapp-signup.js` | 196 | _sin describir_ |
 | `lead-backup.js` | 192 | _sin describir_ |
 | `speech-native.js` | 189 | _sin describir_ |
+| `llamadas-nativas.js` | 180 | _sin describir_ |
 | `recordatorios-locales.js` | 179 | _sin describir_ |
 | `informe-doc.js` | 175 | _sin describir_ |
-| `llamadas-nativas.js` | 154 | _sin describir_ |
 | `audit.js` | 151 | Cliente del sistema de auditoría |
 | `markdown.jsx` | 129 | Mini renderer Markdown → React. Pensado para las notas privadas que la IA |
 | `iagents-actions.js` | 126 | _sin describir_ |
@@ -714,6 +714,7 @@ hacen. Agregarles un bloque `/** ... */` arriba los hace aparecer solos acá.
 - `src/app/views/CRM/CallActionButton.jsx` (183 líneas)
 - `src/app/components/Chat.jsx` (182 líneas)
 - `src/clients/muebleria/config.js` (182 líneas)
+- `src/lib/llamadas-nativas.js` (180 líneas)
 - `src/lib/recordatorios-locales.js` (179 líneas)
 - `src/hooks/useWhatsAppInbox.js` (178 líneas)
 - `src/app/views/CRM/RequiresHumanButton.jsx` (177 líneas)
@@ -721,7 +722,6 @@ hacen. Agregarles un bloque `/** ... */` arriba los hace aparecer solos acá.
 - `src/app/components/EstadoAvisos.jsx` (172 líneas)
 - `src/app/views/MiDrive.jsx` (171 líneas)
 - `src/components/UpdatePill.jsx` (157 líneas)
-- `src/lib/llamadas-nativas.js` (154 líneas)
 - `src/app/components/DynamicIsland.jsx` (153 líneas)
 - `src/app/views/CRM/LeadChatHistory.jsx` (152 líneas)
 - `src/app/views/CRM/ScheduledCallBadge.jsx` (144 líneas)
