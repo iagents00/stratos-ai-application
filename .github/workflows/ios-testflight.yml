@@ -40,6 +40,21 @@
 name: iOS TestFlight (Stratos AI móvil)
 
 on:
+  # ⚠️ ESTE DISPARADOR AUTOMATICO ES LO QUE MANTIENE LAS DOS APPS IGUALES.
+  #
+  # Hasta el 27-ago-2026 este archivo era SOLO manual, y Android era automatico.
+  # El resultado: cada mejora del CRM llegaba sola al Android y el iPhone se
+  # quedaba congelado hasta que alguien se acordaba de apretar el boton. Nadie
+  # se acuerda siempre. Asi nacen los reportes de "en Android funciona y en
+  # iPhone no" que en realidad son "el iPhone tiene una version de la semana
+  # pasada", y se pierden horas buscando un problema que no existe.
+  #
+  # Las rutas son EXACTAMENTE las mismas que las de android-apk.yml. Si se
+  # cambian aca hay que cambiarlas alla: dos listas distintas volverian a
+  # desincronizar las apps, que es justo lo que esto viene a evitar.
+  push:
+    branches: [main]
+    paths: ['mobile/**', 'src/**', '.github/workflows/ios-testflight.yml']
   workflow_dispatch:
     inputs:
       marketing_version:
