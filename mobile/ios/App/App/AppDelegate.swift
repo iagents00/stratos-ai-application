@@ -33,6 +33,42 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // Called when the application is about to terminate. Save data if appropriate. See also applicationDidEnterBackground:.
     }
 
+    // ── EL IDENTIFICADOR QUE APPLE LE DA A ESTE TELEFONO ─────────────────────
+    //
+    // Estos dos metodos FALTABAN, y eran la causa de que las notificaciones no
+    // llegaran nunca con la app cerrada. Lo que pasaba era esto:
+    //
+    //   1. la app pedia registrarse contra Apple  -> OK
+    //   2. Apple generaba el identificador        -> OK
+    //   3. iOS se lo entregaba al AppDelegate     -> y aca no habia nadie
+    //   4. el identificador se perdia             -> en silencio, sin error
+    //
+    // Sin nadie que lo recoja, iOS simplemente lo descarta. El plugin se queda
+    // esperando un evento que no va a llegar, y la app dice "el telefono acepto
+    // pero todavia no dio su identificacion" — que es exactamente lo que veia
+    // Angel el 27-ago-2026 despues de varias versiones.
+    //
+    // Capacitor NO los agrega solo: hay que ponerlos a mano en cada proyecto.
+    // Por eso `cap sync` nunca lo arreglo, y por eso reinstalar tampoco servia:
+    // el problema no estaba en la instalacion ni en los permisos, estaba en que
+    // faltaba el buzon donde iOS deja el sobre.
+    //
+    // ⚠️ Si algun dia se regenera la carpeta de iOS desde cero, HAY QUE VOLVER
+    // A AGREGARLOS. Es el archivo que mas facil se pierde en una regeneracion.
+    func application(_ application: UIApplication,
+                     didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
+        NotificationCenter.default.post(name: .capacitorDidRegisterForRemoteNotifications,
+                                        object: deviceToken)
+    }
+
+    func application(_ application: UIApplication,
+                     didFailToRegisterForRemoteNotificationsWithError error: Error) {
+        // Que el fallo llegue al JavaScript importa tanto como el exito: sin
+        // esto, un rechazo de Apple seria indistinguible de "todavia no llego".
+        NotificationCenter.default.post(name: .capacitorDidFailToRegisterForRemoteNotifications,
+                                        object: error)
+    }
+
     func application(_ app: UIApplication, open url: URL, options: [UIApplication.OpenURLOptionsKey: Any] = [:]) -> Bool {
         // Called when the app was launched with a url. Feel free to add additional processing here,
         // but if you want the App API to support tracking app url opens, make sure to keep this call
