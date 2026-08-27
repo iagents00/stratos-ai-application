@@ -123,7 +123,19 @@ export async function iniciarPushNativo(userId, alTocar) {
   const PN = plugin();
   if (!PN) { motivo = "no-hay-plugin"; return false; }
   if (!userId) { motivo = "sin-sesion"; return false; }
-  if (yaRegistrado) return true;
+  // Solo se sale temprano si el telefono QUEDO REGISTRADO de verdad. Antes
+  // bastaba con haber INTENTADO, y eso dejaba un callejon sin salida: si el
+  // primer intento se topaba con el permiso todavia sin responder, el motivo
+  // quedaba congelado en "falta permiso" y nadie reintentaba nunca — ni cuando
+  // la persona daba el permiso un segundo despues. Es lo que le paso a Angel el
+  // 27-ago-2026: iOS decia que el permiso estaba dado y la app seguia diciendo
+  // que faltaba.
+  if (registrado) return true;
+  yaRegistrado = false;
+
+  // Los oyentes se limpian antes de volver a intentar: si no, cada reintento
+  // deja uno mas y el token se guarda tantas veces como intentos hubo.
+  try { await PN.removeAllListeners(); } catch { /* la primera vez no hay nada */ }
 
   // ⛔ ANDROID: registrar push SIN Firebase CIERRA LA APP.
   //
