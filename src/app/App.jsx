@@ -35,7 +35,7 @@ import { isNativeApp, ensureNotifPermission, notifyUser, addNotificationTapListe
 import { iniciarPushNativo, detenerPushNativo } from "../lib/push-native";
 import { prepararAvisos } from "../lib/avisos-nativos";
 import { sincronizarRecordatorios, limpiarRecordatorios } from "../lib/recordatorios-locales";
-import { engancharLlamadas, soltarLlamadas, llamadaEnCurso } from "../lib/llamadas-nativas";
+import { engancharLlamadas, soltarLlamadas, llamadaEnCurso, marcarLlamadaDespachada } from "../lib/llamadas-nativas";
 
 /* Sistema de notificaciones Web Push (PWA "Agregar a inicio" en iPhone/Android) */
 import { initPushContext, enablePushNotifications, onNotificationClick, getPushStatus, subscribeToPush, saveSubscriptionToBackend } from "../lib/push";
@@ -493,10 +493,13 @@ export default function App() {
   };
   // Muestra la pantalla de llamada. Ignora avisos repetidos mientras ya hay una
   // en curso: si no, cada evento reiniciaría el timbre desde cero.
-  const showIncomingCall = useCallback((caller, meet) => {
+  const showIncomingCall = useCallback((caller, meet, id) => {
     setIncomingCall(prev => prev || {
       caller: caller || "Alguien",
       meet: meet || "https://meet.google.com/mus-xsur-jdc",
+      // Se guarda para poder marcarla como resuelta al colgar o contestar. Sin
+      // esto, colgar no sirve: el CRM la vuelve a encontrar al volver a la app.
+      id: id || null,
     });
     try { if (navigator.vibrate) navigator.vibrate([300, 120, 300, 120, 300]); } catch { /* noop */ }
   }, []);
@@ -569,7 +572,11 @@ export default function App() {
   // La pantalla de llamada se auto-cierra a los 45s (como un teléfono que deja de sonar).
   useEffect(() => {
     if (!incomingCall) return;
-    const t = setTimeout(() => { closeCallNotifications(); setIncomingCall(null); }, 45000);
+    const t = setTimeout(() => {
+      marcarLlamadaDespachada(incomingCall.id);
+      closeCallNotifications();
+      setIncomingCall(null);
+    }, 45000);
     return () => clearTimeout(t);
   }, [incomingCall, closeCallNotifications]);
   // TIMBRE (solo tenants con callRingtone, ej. NSG): suena mientras hay llamada entrante.
@@ -830,7 +837,7 @@ export default function App() {
     const mirarSiLlaman = () => {
       if (document.hidden) return;
       llamadaEnCurso(uid)
-        .then((l) => { if (l) showIncomingCall(l.caller, l.meet); })
+        .then((l) => { if (l) showIncomingCall(l.caller, l.meet, l.id); })
         .catch(() => {});
     };
     mirarSiLlaman();
@@ -2934,11 +2941,11 @@ export default function App() {
             <div style={{ fontSize: 14, color: "rgba(255,255,255,0.68)", marginTop: 6 }}>te está llamando · Reunión de equipo</div>
           </div>
           <div style={{ display: "flex", gap: 12, marginTop: 8, width: "100%", maxWidth: 360 }}>
-            <button onClick={() => { closeCallNotifications(); setIncomingCall(null); }}
+            <button onClick={() => { marcarLlamadaDespachada(incomingCall.id); closeCallNotifications(); setIncomingCall(null); }}
               style={{ flex: 1, minHeight: 54, padding: "15px 12px", borderRadius: 999, border: "1px solid #7F3B3B", background: "#2A1214", color: "#FCA5A5", fontSize: 15.5, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 7 }}>
               <PhoneOff size={17} /> Rechazar
             </button>
-            <button onClick={() => { const m = incomingCall.meet; closeCallNotifications(); setIncomingCall(null); window.open(m, "_blank", "noopener"); }}
+            <button onClick={() => { const m = incomingCall.meet; marcarLlamadaDespachada(incomingCall.id); closeCallNotifications(); setIncomingCall(null); window.open(m, "_blank", "noopener"); }}
               style={{ flex: 1, minHeight: 54, padding: "15px 12px", borderRadius: 999, border: "none", background: P.accent, color: "#04211A", fontSize: 15.5, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 7, boxShadow: `0 8px 26px ${P.accent}38` }}>
               <PhoneCall size={17} /> Contestar
             </button>
