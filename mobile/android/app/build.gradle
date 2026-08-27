@@ -57,6 +57,18 @@ dependencies {
     androidTestImplementation "androidx.test.ext:junit:$androidxJunitVersion"
     androidTestImplementation "androidx.test.espresso:espresso-core:$androidxEspressoCoreVersion"
     implementation project(':capacitor-cordova-android-plugins')
+
+    // Firebase Messaging, para nuestro propio servicio de llamadas.
+    //
+    // El complemento de avisos ya la trae, pero se la queda para si mismo (la
+    // declara como `implementation`, que NO se comparte hacia afuera). Nuestro
+    // codigo vive en el modulo de la app, asi que sin esta linea no ve ni
+    // RemoteMessage ni FirebaseMessagingService — y falla al compilar con un
+    // "cannot find symbol" que no dice nada del porque.
+    //
+    // Se usa la MISMA version que el complemento para que no queden dos copias
+    // distintas de la misma libreria peleandose.
+    implementation "com.google.firebase:firebase-messaging:$firebaseMessagingVersion"
 }
 
 apply from: 'capacitor.build.gradle'
