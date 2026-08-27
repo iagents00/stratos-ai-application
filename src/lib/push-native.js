@@ -103,6 +103,27 @@ async function guardarToken(userId, token) {
       console.warn("[push-native] no se pudo guardar el token:", error.message);
       return false;
     }
+
+    // UN TELEFONO, UNA IDENTIFICACION.
+    //
+    // Cada vez que se reinstala la app, el sistema entrega una identificacion
+    // NUEVA — la vieja no se borra sola. Se comprobo el 27-ago-2026: despues de
+    // tres reinstalaciones habia tres guardadas, y cada aviso salia TRES VECES
+    // al mismo telefono. El usuario ve el mismo recordatorio repetido y no
+    // entiende por que.
+    //
+    // Se borran las anteriores de esta misma plataforma. Para un equipo donde
+    // cada persona usa un telefono es lo correcto; el dia que alguien use dos
+    // aparatos a la vez habra que guardar tambien cual es cual.
+    try {
+      await supabase
+        .from("device_tokens")
+        .delete()
+        .eq("user_id", userId)
+        .eq("platform", plataforma() === "android" ? "android" : "ios")
+        .neq("token", token);
+    } catch { /* si falla, lo peor que pasa es un aviso repetido */ }
+
     return true;
   } catch (e) {
     console.warn("[push-native] error guardando el token:", e?.message || e);
