@@ -1,4 +1,8 @@
 ext {
+    // La usa nuestro servicio de llamadas (app/build.gradle) y tiene que
+    // coincidir con la que trae el complemento de avisos: dos versiones
+    // distintas de la misma libreria hacen que el APK falle al armarse.
+    firebaseMessagingVersion = '25.0.1'
     minSdkVersion = 24
     compileSdkVersion = 36
     // targetSdk 34 A PROPÓSITO (10-jul-2026): con target 35/36 Android fuerza
