@@ -6,7 +6,7 @@
 >
 > ¿Buscás un botón o un texto y no está acá? `npm run buscar "texto"`
 
-**180 archivos · 76.157 líneas**
+**180 archivos · 76.183 líneas**
 
 ---
 
@@ -362,9 +362,9 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | `native.js` | 282 | _sin describir_ |
 | `push-native.js` | 265 | _sin describir_ |
 | `manual-stratos-doc.js` | 230 | _sin describir_ |
+| `llamadas-nativas.js` | 225 | _sin describir_ |
 | `organize-notes.js` | 220 | _sin describir_ |
 | `docx.js` | 201 | _sin describir_ |
-| `llamadas-nativas.js` | 199 | _sin describir_ |
 | `whatsapp-signup.js` | 196 | _sin describir_ |
 | `lead-backup.js` | 192 | _sin describir_ |
 | `speech-native.js` | 189 | _sin describir_ |
@@ -701,13 +701,13 @@ hacen. Agregarles un bloque `/** ... */` arriba los hace aparecer solos acá.
 - `src/app/data/chat.js` (249 líneas)
 - `src/app/views/Nomina.jsx` (238 líneas)
 - `src/lib/manual-stratos-doc.js` (230 líneas)
+- `src/lib/llamadas-nativas.js` (225 líneas)
 - `src/lib/organize-notes.js` (220 líneas)
 - `src/app/views/ProductividadTab.jsx` (218 líneas)
 - `src/app/constants/intelFeatures.js` (211 líneas)
 - `src/app/views/CRM/zoom-metrics.js` (207 líneas)
 - `src/hooks/useZoomAgendados.js` (204 líneas)
 - `src/lib/docx.js` (201 líneas)
-- `src/lib/llamadas-nativas.js` (199 líneas)
 - `src/clients/vega/config.js` (196 líneas)
 - `src/lib/whatsapp-signup.js` (196 líneas)
 - `src/lib/lead-backup.js` (192 líneas)
