@@ -6,7 +6,8 @@
   "android": {
     "allowMixedContent": false,
     "backgroundColor": "#030810",
-    "webContentsDebuggingEnabled": false
+    "webContentsDebuggingEnabled": false,
+    "adjustMarginsForEdgeToEdge": "auto"
   },
   "ios": {
     "backgroundColor": "#030810",

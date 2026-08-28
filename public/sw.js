@@ -33,7 +33,7 @@
  *   sola en la próxima navegación. Ver `main.jsx` → SERVICE WORKER.
  */
 
-const CACHE_VERSION = 'stratos-v422'; // v422: salud distingue caché de DNS local
+const CACHE_VERSION = 'stratos-v423'; // v423: pipeline de Google Play (AAB firmado, target 36)
 
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 // Nombre ESTABLE a propósito: no lleva CACHE_VERSION (ver cabecera).

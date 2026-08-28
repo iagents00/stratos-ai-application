@@ -13,9 +13,13 @@
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
         <item name="android:background">@null</item>
-        <!-- Barras del sistema al tono del CRM (#030810) — sin flash blanco -->
+        <!-- Barras del sistema al tono del CRM (#030810) — sin flash blanco.
+             windowBackground cubre también la franja de las barras cuando el
+             build de Play (target 36) va edge-to-edge y Capacitor margina el
+             WebView: sin esto, esa franja mostraría el fondo claro default. -->
         <item name="android:statusBarColor">#030810</item>
         <item name="android:navigationBarColor">#030810</item>
+        <item name="android:windowBackground">#030810</item>
     </style>
 
 
