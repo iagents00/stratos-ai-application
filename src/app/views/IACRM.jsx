@@ -171,7 +171,7 @@ const IACRM = ({ oc, T: _T, theme = "dark" }) => {
   const col = (key) => T[key] || T.accent;
 
   // ⚠️ La pestaña "Planes" muestra precios de suscripción y un botón "Contratar",
-  // y uno de los planes dice "Para asesores individuales". Dentro de la app eso
+  // y uno de los planes DECIA "Para asesores individuales" (28-ago: ya no). Dentro de la app eso
   // es superficie de compra: Apple exige su sistema de pagos para bienes
   // digitales, y la frase "individuales" rompe justo el argumento de que esto se
   // le vende a EMPRESAS (Guideline 3.1.3(c)).
