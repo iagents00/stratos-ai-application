@@ -22,6 +22,7 @@ import { fileURLToPath } from "node:url";
 
 const RAIZ = join(dirname(fileURLToPath(import.meta.url)), "..");
 const SRC = join(RAIZ, "src");
+const PUBLIC = join(RAIZ, "public");
 
 // Formas voseantes que no existen en el español mexicano. Se listan explícitas
 // en vez de una regla morfológica: "está" y "acá" también acaban en tilde y son
@@ -77,14 +78,31 @@ const ES_COMENTARIO = /^\s*(\/\/|\*|\/\*)/;
 const ES_SINONIMOS = /^\s*tags\s*:/;
 
 const archivos = [];
-(function recorrer(dir) {
+function recorrer(dir, extensiones) {
   for (const entrada of readdirSync(dir)) {
     if (entrada === "node_modules" || entrada.startsWith(".")) continue;
     const ruta = join(dir, entrada);
-    if (statSync(ruta).isDirectory()) recorrer(ruta);
-    else if ([".js", ".jsx"].includes(extname(ruta))) archivos.push(ruta);
+    if (statSync(ruta).isDirectory()) recorrer(ruta, extensiones);
+    else if (extensiones.includes(extname(ruta))) archivos.push(ruta);
   }
-})(SRC);
+}
+recorrer(SRC, [".js", ".jsx"]);
+
+// LAS PÁGINAS PÚBLICAS TAMBIÉN CUENTAN.
+//
+// Se revisaba solo el código y quedaban afuera las páginas sueltas del sitio
+// —privacidad, soporte— que son justo las que leen el cliente y el revisor de
+// Apple. El 28-ago-2026 las dos salieron escritas en voseo argentino y este
+// verificador dijo que todo estaba bien: no las miraba.
+//
+// Son las páginas de MÁS exposición del producto y eran las únicas sin control.
+//
+// Solo las de la raíz de public/: las carpetas de adentro son material de
+// campaña de cada cliente, con su propia voz, y no las escribimos nosotros.
+for (const entrada of readdirSync(PUBLIC)) {
+  const ruta = join(PUBLIC, entrada);
+  if (statSync(ruta).isFile() && extname(ruta) === ".html") archivos.push(ruta);
+}
 
 const hallazgos = [];
 for (const ruta of archivos) {
