@@ -1,0 +1,20 @@
+Hola {{nombre}},
+
+Anoche presentamos Mondrian Cancún: el único proyecto en preventa en la Zona
+Hotelera, con vista al mar Caribe, la laguna y el campo de golf.
+
+Las condiciones que mostramos son para el grupo que estuvo en esa sesión, y lo
+que queda disponible en preventa es poco.
+
+Contéstame este correo y te paso los números de la unidad que te interese
+— precio, enganche, plazos y lo que quede libre en ese piso. Te contesto yo,
+sin intermediarios.
+
+Y si anoche no pudiste entrar, dímelo igual y te comparto la información
+completa.
+
+{{presentador}}
+Duke del Caribe · Inversión inmobiliaria en el Caribe Mexicano
+
+P.D. Lo que más preguntaron anoche fue el enganche y los plazos. Si es tu
+duda, escríbeme esa sola palabra y te mando los números.

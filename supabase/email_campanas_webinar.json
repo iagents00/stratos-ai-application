@@ -136,6 +136,41 @@
         "solo_no_asistentes": true
       },
       "preheader": "La grabación está disponible unos días."
+    },
+    {
+      "slug": "mondrian-05-faltan-horas",
+      "nombre": "Mondrian · 5 Faltan 2 horas",
+      "base": "_base",
+      "asunto": "Estamos a 2 horas de iniciar",
+      "asunto_b": "{{nombre}}, comparte la liga con quien quieras",
+      "preheader": "Comparte la liga con tus amigos y familiares.",
+      "plantilla": "mondrian-05-faltan-horas",
+      "segmentos": [
+        "A",
+        "B",
+        "C"
+      ],
+      "metadata": {
+        "envio": "jueves 27, 19:00 Cancún — al reiniciarse la cuota"
+      }
+    },
+    {
+      "slug": "mondrian-07-seguimiento",
+      "nombre": "Mondrian · 7 Seguimiento post webinar",
+      "base": "_base-plano",
+      "asunto": "Lo que sigue con Mondrian",
+      "asunto_b": "{{nombre}}, ¿te interesó alguna unidad?",
+      "preheader": "Contéstame y te paso los números de la que quieras.",
+      "plantilla": "mondrian-07-seguimiento",
+      "segmentos": [
+        "A",
+        "B",
+        "C"
+      ],
+      "metadata": {
+        "envio": "viernes 28, 19:01 Cancún — al reiniciarse la cuota",
+        "nota": "sirve para quien asistió y para quien no; no necesita grabación ni calendario"
+      }
     }
   ]
 }

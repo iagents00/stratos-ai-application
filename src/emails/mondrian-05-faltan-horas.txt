@@ -1,0 +1,16 @@
+ESTAMOS A 2 HORAS DE INICIAR
+
+{{nombre}}, comparte la liga de la reunión con tus amigos y familiares para
+que sean parte de la experiencia.
+
+Esta noche presentamos el mejor proyecto de la Zona Hotelera de Cancún.
+Conéctate, conócelo y obtén beneficios exclusivos antes de su lanzamiento
+oficial.
+
+{{horarios_txt}}
+
+LIGA DE LA REUNIÓN:
+{{acceso_url}}
+
+{{presentador}}
+Duke del Caribe · Inversión inmobiliaria en el Caribe Mexicano
