@@ -6,7 +6,7 @@
 >
 > ¿Buscás un botón o un texto y no está acá? `npm run buscar "texto"`
 
-**180 archivos · 76.194 líneas**
+**180 archivos · 76.210 líneas**
 
 ---
 
@@ -39,7 +39,7 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | **Stratos RH** | `src/app/views/RRHHModule.jsx` | 839 |
 | **Papelera** | `src/app/views/Trash.jsx` | 285 |
 | **Planes** | _sin vista propia (redirige a otra)_ | — |
-| **Perfil** | `src/app/views/Profile.jsx` | 1133 |
+| **Perfil** | `src/app/views/Profile.jsx` | 1149 |
 | **Usuarios** | `src/app/features/Admin/AdminPanel.jsx` | 543 |
 | **Proceso** | `src/app/features/Admin/RailsSettings.jsx` | 377 |
 
@@ -155,7 +155,7 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | `Copilot.jsx` | 1990 | v2 (15-jul) |
 | `ComandoDirectivo.jsx` | 1270 | _sin describir_ |
 | `index.jsx` | 1201 | Panel "Control de Zooms" — pestaña dentro de Comando Directivo (Duke). |
-| `Profile.jsx` | 1133 | vista de perfil del asesor. |
+| `Profile.jsx` | 1149 | vista de perfil del asesor. |
 | `LeadWhatsAppChat.jsx` | 942 | _sin describir_ |
 | `RRHHModule.jsx` | 839 | _sin describir_ |
 | `InformeAvances.jsx` | 747 | _sin describir_ |
@@ -434,7 +434,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | ACTIVO | `src/app/views/CRM/components.jsx:5501` |
 | Activos post-Zoom | `src/app/views/ComandoDirectivo.jsx:687` |
 | Activos post-Zoom: | `src/app/views/CRM/ZoomBoard.jsx:169` |
-| Actual: | `src/app/views/Profile.jsx:413` |
+| Actual: | `src/app/views/Profile.jsx:429` |
 | Actualización del sistema | `src/app/components/DynIsland.jsx:408` |
 | Actualización Importante | `src/app/components/DynamicIsland.jsx:132` |
 | Actualizar | `src/app/views/Caja.jsx:303` |
@@ -479,7 +479,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Asignar responsable | `src/app/features/MetaPanel/index.jsx:860` |
 | Asistió (sem.) | `src/app/views/ZoomControl/Resumen.jsx:411` |
 | Atención Inmediata | `src/app/views/Dash.jsx:235` |
-| Aún no configuras un correo de recuperación. | `src/app/views/Profile.jsx:414` |
+| Aún no configuras un correo de recuperación. | `src/app/views/Profile.jsx:430` |
 | Aún no hay documentos | `src/app/features/MetaPanel/index.jsx:1646` |
 | Badge | `src/app/views/LandingPages/index.jsx:662` |
 | Bajo · Medio · Alto | `src/app/views/CRM/components.jsx:3431` |
@@ -515,7 +515,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Cancelar comentario | `src/app/views/Copilot.jsx:1235` |
 | CANDIDATO IDENTIFICADO | `src/app/views/RRHHModule.jsx:740` |
 | Características | `src/app/views/LandingPages/index.jsx:704` |
-| Cargando actividad… | `src/app/views/Profile.jsx:982` |
+| Cargando actividad… | `src/app/views/Profile.jsx:998` |
 | Cargando conversación… | `src/app/views/Copilot.jsx:1154` |
 | Cargando conversaciones… | `src/app/views/WhatsApp.jsx:263` |
 | Cargando el plan… | `src/app/views/PlanSemanal.jsx:353` |
@@ -555,12 +555,12 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Cómo trabaja el equipo IA | `src/app/views/IACRM.jsx:576` |
 | Cómo verá el cliente | `src/app/views/LandingPages/index.jsx:131` |
 | Complejidad: | `src/app/views/Marketing.jsx:2190` |
-| Conectado | `src/app/views/Profile.jsx:735` |
+| Conectado | `src/app/views/Profile.jsx:751` |
 | Conectando… | `src/app/views/ConectarWhatsApp.jsx:122` |
 | Conectar mi WhatsApp | `src/app/views/ConectarWhatsApp.jsx:123` |
 | Configuración | `src/app/App.jsx:3104` |
 | Confirmados | `src/app/views/ZoomControl/Resumen.jsx:440` |
-| Confirmar contraseña | `src/app/views/Profile.jsx:317` |
+| Confirmar contraseña | `src/app/views/Profile.jsx:333` |
 | Confirmas y listo | `src/app/views/ConectarWhatsApp.jsx:107` |
 | Contáctame Ya | `src/app/views/CRM/index.jsx:6170` |
 | Contarlo ahora | `src/app/views/Marketing.jsx:708` |
@@ -573,7 +573,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Copiar resumen para Telegram | `src/app/views/CRM/components.jsx:4560` |
 | Copilot AI | `src/app/views/Copilot.jsx:1104` |
 | Corregir lo que escribiste | `src/app/views/Marketing.jsx:1853` |
-| Correo de recuperación | `src/app/views/Profile.jsx:381` |
+| Correo de recuperación | `src/app/views/Profile.jsx:397` |
 | Crear | `src/app/views/Marketing.jsx:915` |
 | Crear con voz | `src/app/views/Marketing.jsx:2873` |
 | Crear con voz — díctale al Copilot | `src/app/views/Marketing.jsx:2868` |
@@ -603,7 +603,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Desglose por asesor | `src/app/views/ComandoDirectivo.jsx:758` |
 | Detalle mensual | `src/app/views/FinanzasAdmin.jsx:424` |
 | Detalle: estilo, textos, medidas… | `src/app/views/Marketing.jsx:2210` |
-| Detectada por tu navegador: | `src/app/views/Profile.jsx:556` |
+| Detectada por tu navegador: | `src/app/views/Profile.jsx:572` |
 | Días anteriores | `src/app/views/Marketing.jsx:2745` |
 | Distribución actual de candidatos por etapa | `src/app/views/RRHHModule.jsx:325` |
 | Documentos del Equipo | `src/app/features/MetaPanel/index.jsx:1575` |
@@ -637,7 +637,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Eliminar cliente | `src/app/views/CRM/components.jsx:3859` |
 | Eliminar definitivamente | `src/app/views/Trash.jsx:197` |
 | Eliminar documento | `src/app/features/MetaPanel/index.jsx:1689` |
-| Eliminar mi cuenta | `src/app/views/Profile.jsx:148` |
+| Eliminar mi cuenta | `src/app/views/Profile.jsx:164` |
 | Eliminar usuario | `src/app/features/Admin/AdminPanel.jsx:325` |
 | Email | `src/app/features/Admin/AdminPanel.jsx:455` |
 | Empleado | `src/app/views/RRHHModule.jsx:602` |
