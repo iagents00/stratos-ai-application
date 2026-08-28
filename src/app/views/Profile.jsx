@@ -96,6 +96,22 @@ export default function Profile({ theme = "dark", T: Tprop }) {
       <ConnectTelegramPanel T={T} isLight={isLight} botUsername={botUsername} manualPairing={manualPairing} />
       <DeleteAccountPanel T={T} isLight={isLight} user={user} />
       <RecentBotActivity T={T} isLight={isLight} />
+
+      {/* La politica de privacidad, al alcance de la mano.
+          Las dos tiendas la exigen en la ficha, y ademas el revisor de Apple la
+          busca DENTRO de la app: encontrarla ahi le ahorra una vuelta de
+          rechazo. Se abre afuera a proposito — es una pagina publica del sitio,
+          no una pantalla del CRM. */}
+      <div style={{ textAlign: "center", padding: "22px 0 4px" }}>
+        <a
+          href="https://app.stratoscapitalgroup.com/privacidad.html"
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{ fontSize: 12.5, color: T.txt3, textDecoration: "none", fontFamily: font }}
+        >
+          Política de privacidad
+        </a>
+      </div>
     </div>
   );
 }
