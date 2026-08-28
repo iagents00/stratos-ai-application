@@ -6,7 +6,7 @@
 >
 > ¿Buscás un botón o un texto y no está acá? `npm run buscar "texto"`
 
-**180 archivos · 76.210 líneas**
+**181 archivos · 76.329 líneas**
 
 ---
 
@@ -206,7 +206,7 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 
 | Archivo | Líneas | Qué hace |
 |---|---|---|
-| `index.js` | 216 | Resolver del cliente activo según la URL. |
+| `index.js` | 222 | Resolver del cliente activo según la URL. |
 
 ### `src/clients/_shared/`
 
@@ -226,6 +226,12 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | Archivo | Líneas | Qué hace |
 |---|---|---|
 | `config.js` | 309 | _sin describir_ |
+
+### `src/clients/demo/`
+
+| Archivo | Líneas | Qué hace |
+|---|---|---|
+| `config.js` | 113 | _sin describir_ |
 
 ### `src/clients/duke/`
 
@@ -732,6 +738,7 @@ hacen. Agregarles un bloque `/** ... */` arriba los hace aparecer solos acá.
 - `src/app/views/IACRMPlanes.jsx` (119 líneas)
 - `src/app/views/ZoomControl/constants.js` (116 líneas)
 - `src/app/components/CopilotMark.jsx` (113 líneas)
+- `src/clients/demo/config.js` (113 líneas)
 - `src/hooks/useRailsConfig.js` (112 líneas)
 - `src/lib/avisos-nativos.js` (111 líneas)
 - `src/lib/backup.js` (108 líneas)

@@ -139,7 +139,7 @@ Servicios de terceros con los que habla el código.
 
 | Servicio | Usado en |
 |---|---|
-| `personal-n8n.suwsiw.easypanel.host` | 13 archivos |
+| `personal-n8n.suwsiw.easypanel.host` | 14 archivos |
 | `glulgyhkrqpykxmujodb.supabase.co` | 5 archivos |
 | `drive.google.com` | 3 archivos |
 | `brokers.mycocay.com` | 1 archivo |

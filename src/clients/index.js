@@ -24,6 +24,7 @@ import muebleriaConfig     from "./muebleria/config";
 import legacyDesignConfig  from "./legacy-design/config";
 import brasaYPiedraConfig  from "./brasa-y-piedra/config";
 import gasilConfig         from "./gasil/config";
+import demoConfig          from "./demo/config";
 
 // Registry de todos los clientes conocidos
 const CLIENT_CONFIGS = {
@@ -44,6 +45,11 @@ const CLIENT_CONFIGS = {
   // pacientes + tablero de médicos que refieren). Mismo motivo que los de
   // arriba: sin esta línea /gasil caería en la config de Duke.
   gasil:            gasilConfig,
+  // Espacio de DEMOSTRACIÓN para la revisión de Apple. Sin esta línea, el
+  // usuario de demostración caería en la configuración de Duke y el revisor
+  // vería la marca y el pipeline de un cliente real — la misma fuga que
+  // encontró la auditoría del 13-ago. Se quita cuando la app esté publicada.
+  demo:             demoConfig,
 };
 
 /**
