@@ -4,7 +4,7 @@
  * ⚠️ POR QUÉ VIVE EN SU PROPIO ARCHIVO Y NO DENTRO DE IACRM.jsx
  *
  * Muestra precios de suscripción, un botón "Contratar" y un plan descrito como
- * "Para asesores individuales". Dentro del binario de la app eso es superficie
+ * "Para asesores individuales" (28-ago: ya no lo dice). Dentro del binario eso es superficie
  * de compra, y trae dos problemas a la vez con Apple:
  *
  *   1. Guideline 3.1.3: para vender bienes digitales dentro de la app, Apple
@@ -28,7 +28,7 @@ import { G } from "../SharedComponents";
 const WA = "#25D366";
 
 const PRICING = [
-  { name: "Starter",  price: 49,  desc: "Para asesores individuales",          colorKey: "accent",  popular: false, agents: 2, messages: 500,  features: ["2 agentes activos","500 mensajes/mes","Notificaciones Telegram","Dashboard de conversaciones"] },
+  { name: "Starter",  price: 49,  desc: "Para equipos que arrancan",          colorKey: "accent",  popular: false, agents: 2, messages: 500,  features: ["2 agentes activos","500 mensajes/mes","Notificaciones Telegram","Dashboard de conversaciones"] },
   { name: "Pro",      price: 129, desc: "Para equipos de hasta 5 asesores",    colorKey: "blue",    popular: true,  agents: 4, messages: 2000, features: ["4 agentes activos (todos)","2,000 mensajes/mes","Briefings Zoom (Opus)","CRM integrado en tiempo real","Reportes semanales automáticos"] },
   { name: "Business", price: 299, desc: "Para equipos grandes y franquicias",  colorKey: "cyan",    popular: false, agents: 4, messages: 8000, features: ["Mensajes ilimitados","Múltiples números WhatsApp","Agentes personalizados","Integración API","Account manager dedicado"] },
 ];

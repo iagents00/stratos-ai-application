@@ -34,7 +34,7 @@ const plans = [
   {
     id: "starter",
     name: "Starter",
-    label: "Para asesores independientes",
+    label: "Para equipos que arrancan",
     icon: Zap,
     colorAccent: P.blue,
     monthlyPrice: 149,
