@@ -5,7 +5,7 @@
 # compila el APK Android firmado con el keystore de pruebas y lo publica en el
 # release "android-latest" del repo → descargar e instalar en cualquier Android.
 #
-# La app EMPAQUETA el CRM dentro del binario (webDir: ../dist), así que abre sin
+# La app EMPAQUETA el CRM dentro del binario (webDir: ../dist-app), así que abre sin
 # red. Los datos siguen viniendo en vivo de Supabase, pero cualquier cambio de la
 # interfaz necesita recompilar: por eso este workflow también corre con src/**.
 #
@@ -41,7 +41,7 @@ jobs:
         with:
           node-version: '22'
 
-      # webDir apunta a ../dist: la app ahora EMPAQUETA el CRM en el binario en
+      # webDir apunta a ../dist-app: la app ahora EMPAQUETA el CRM en el binario en
       # vez de cargarlo remoto, así que hay que compilar la web antes de sincronizar.
       # build:app excluye del binario la landing, la política de privacidad, los
       # siete manuales y 1.5 MB de estáticos del sitio: 6.7 MB -> 4.5 MB. Apple
@@ -111,7 +111,11 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          # El numero de version sale de build.gradle, que es donde vive. Si
+          # por lo que sea no se puede leer, el release igual se publica.
+          VER=$(grep versionName mobile/android/app/build.gradle | head -1 | cut -d'"' -f2)
+          [ -n "$VER" ] || VER="?"
           gh release delete android-latest --yes --cleanup-tag || true
           gh release create android-latest stratos-ai.apk \
-            --title "App Android (última) — Stratos AI" \
-            --notes "APK de la app móvil Stratos AI (shell que carga el CRM — las actualizaciones del CRM llegan solas). Compilado automáticamente del commit ${GITHUB_SHA::7}. Instalar: descargar stratos-ai.apk en el Android y abrirlo (permitir 'orígenes desconocidos' la primera vez). Firma de pruebas: instala encima de versiones anteriores sin desinstalar."
+            --title "App Android (última) — Stratos AI $VER" \
+            --notes "Versión $VER de la app móvil Stratos AI para Android, compilada del commit ${GITHUB_SHA::7}. **Cómo se instala:** descarga stratos-ai.apk en el celular y ábrelo; la primera vez Android pide permitir 'orígenes desconocidos', se acepta y listo. Se instala encima de la versión anterior sin desinstalar nada. **Importante:** el sistema viaja DENTRO de la app, no se descarga cada vez que se abre. Por eso abre sin señal y va más rápido, pero significa que cuando salga una versión nueva hay que volver a bajar este archivo. Este enlace siempre apunta a la última."
