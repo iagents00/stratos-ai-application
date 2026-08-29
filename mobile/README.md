@@ -34,7 +34,22 @@ release nuevo**. También los cambios NATIVOS:
 - Permisos nuevos (micrófono, cámara ya están; ubicación, etc. se agregan acá).
 - Plugins nativos (push notifications = V2, Firebase).
 - Dominios permitidos (`allowNavigation` en `capacitor.config.json`).
-- Subir `versionCode`/`versionName` (android/app/build.gradle) para releases.
+- Subir la version para un release. **Se sube en los DOS lados o no se sube:**
+  - Android: `mobile/android/app/build.gradle` -> `versionCode` (+1) y `versionName`.
+  - iPhone: `mobile/ios/App/App.xcodeproj/project.pbxproj` -> `MARKETING_VERSION`,
+    que aparece **DOS veces** (bloque Debug y bloque Release). Mismo valor que el
+    `versionName` de Android, para que las dos apps se puedan comparar de un vistazo.
+  El **numero de compilacion** del iPhone NO se toca: lo pone solo el contador de
+  corridas de GitHub (`CURRENT_PROJECT_VERSION=${{ github.run_number }}`).
+
+  > ⚠️ **Por que esto esta escrito aca (28-ago-2026).** El numero visible del iPhone
+  > **nunca estuvo guardado en el proyecto**: decia `1.0` desde el origen, y el `1.2.3`
+  > que se veia en TestFlight lo tecleaba una persona a mano en el campo
+  > `marketing_version` del workflow, que solo se aplica si viene lleno. Cuando el
+  > workflow paso a dispararse solo, ya no habia nadie tecleando y la app **retrocedio
+  > a 1.0**. Como App Store Connect ordena por ese numero y no por fecha, las entregas
+  > nuevas aparecieron **al fondo** de la lista y se creyo que los arreglos no se habian
+  > subido. Un dato que solo existe cuando un humano lo teclea, no existe.
 
 ## Cómo se compila el APK (automático)
 
