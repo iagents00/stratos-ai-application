@@ -140,7 +140,7 @@ Servicios de terceros con los que habla el código.
 | Servicio | Usado en |
 |---|---|
 | `personal-n8n.suwsiw.easypanel.host` | 14 archivos |
-| `glulgyhkrqpykxmujodb.supabase.co` | 5 archivos |
+| `glulgyhkrqpykxmujodb.supabase.co` | 6 archivos |
 | `drive.google.com` | 3 archivos |
 | `brokers.mycocay.com` | 1 archivo |
 | `brokers.simca.mx` | 1 archivo |
@@ -183,12 +183,13 @@ casa; por eso mismo son los que más cuidado piden.
 
 | Variable | Consumida en |
 |---|---|
-| `VITE_SUPABASE_URL` | `app/App.jsx` · `lib/supabase.js` · `lib/transcribir.js` |
+| `VITE_SUPABASE_URL` | `app/App.jsx` · `lib/form-submit.js` · `lib/supabase.js` · `lib/transcribir.js` |
 | `VITE_SUPABASE_ANON_KEY` | `app/App.jsx` · `lib/supabase.js` |
 | `VITE_ANDROID_PUSH` | `lib/push-native.js` |
 | `VITE_APP_URL` | `main.jsx` |
 | `VITE_DIAGNOSTICO_CALCOM_URL` | `landing/Diagnostico.jsx` |
 | `VITE_DIAGNOSTICO_STRATOS_WEBHOOK_URL` | `lib/webhook-diagnostico-stratos.js` |
+| `VITE_FORM_SUBMIT_URL` | `lib/form-submit.js` |
 | `VITE_TELEGRAM_BOT_USERNAME` | `app/views/Profile.jsx` |
 
 > `VITE_SUPABASE_URL` y `VITE_SUPABASE_ANON_KEY` tienen valores de respaldo
