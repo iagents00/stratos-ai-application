@@ -6,7 +6,7 @@
 >
 > ¿Buscás un botón o un texto y no está acá? `npm run buscar "texto"`
 
-**181 archivos · 76.329 líneas**
+**183 archivos · 77.094 líneas**
 
 ---
 
@@ -62,6 +62,7 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | `/manual-muebleria` · `/manual-mueblaria` | — |
 | `/diagnostico` | Diagnostico |
 | `/duke/desarrollos-97k` · `/duke-100k` · `/desarrollos-97k` · `/duke-97k` | — |
+| `/onboarding-call-center` · `/call-center` · `/ai-call-center` | — |
 
 ---
 
@@ -71,7 +72,7 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 
 | Archivo | Líneas | Qué hace |
 |---|---|---|
-| `main.jsx` | 421 | Entry point de Stratos AI |
+| `main.jsx` | 429 | Entry point de Stratos AI |
 | `index.css` | 250 | _sin describir_ |
 | `mobile-perf.css` | 121 | _sin describir_ |
 | `pagina-solo-web.jsx` | 47 | _sin describir_ |
@@ -343,6 +344,7 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | `ManualCRM.jsx` | 789 | Manual del CRM Stratos AI para asesores |
 | `manual-telegram-content.js` | 714 | Manual del COPILOT / Asistente IA (Duke del Caribe) |
 | `LoginScreen.jsx` | 709 | Pantalla de autenticación completa para la app |
+| `OnboardingCallCenter.jsx` | 686 | _sin describir_ |
 | `PricingScreen.jsx` | 554 | Planes y pagos para Stratos AI |
 | `DataDeletion.jsx` | 553 | _sin describir_ |
 | `DukeLeadRouter.jsx` | 343 | _sin describir_ |
@@ -388,6 +390,7 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | `lead-draft.js` | 85 | Autosave del borrador del modal "Registrar cliente" |
 | `transcribir.js` | 77 | _sin describir_ |
 | `ringer.js` | 72 | _sin describir_ |
+| `form-submit.js` | 71 | Envía un formulario público (sin sesión) a la edge function `form-submit`. |
 | `supabase.js` | 67 | _sin describir_ |
 | `telefono.js` | 61 | _sin describir_ |
 | `recovery.js` | 58 | Recuperación de contraseña por CÓDIGO al correo de recuperación. |
@@ -673,6 +676,7 @@ hacen. Agregarles un bloque `/** ... */` arriba los hace aparecer solos acá.
 - `src/app/views/RRHHModule.jsx` (839 líneas)
 - `src/app/views/InformeAvances.jsx` (747 líneas)
 - `src/app/views/ERP.jsx` (698 líneas)
+- `src/landing/OnboardingCallCenter.jsx` (686 líneas)
 - `src/lib/auth.js` (677 líneas)
 - `src/app/views/WhatsApp.jsx` (667 líneas)
 - `src/app/data/catalogoProyectos.js` (611 líneas)
