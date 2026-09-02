@@ -42,6 +42,7 @@ const ManualGasil      = lazy(() => import("./landing/ManualGasil.jsx"));
 const ManualMuebleria  = lazy(() => import("./landing/ManualMuebleria.jsx"));
 const Diagnostico      = lazy(() => import("./landing/Diagnostico.jsx"));
 const DukeLeadRouter   = lazy(() => import("./landing/DukeLeadRouter.jsx"));
+const OnboardingCallCenter = lazy(() => import("./landing/OnboardingCallCenter.jsx"));
 import { CATEGORIES_TG, MANUAL_SECTIONS_TG, searchManualTG } from "./landing/manual-telegram-content";
 
 import "./index.css";
@@ -141,6 +142,10 @@ const DIAGNOSTICO_PATHS = ["/diagnostico"];
 // Landing pública de Duke del Caribe — destino de la pantalla final del formulario
 // instantáneo de Meta (campaña "Desarrollos desde USD 97K"). Sin login, sin app.
 const DUKE_LEAD_ROUTER_PATHS = ["/duke/desarrollos-97k", "/duke-100k", "/desarrollos-97k", "/duke-97k"];
+// Cuestionario de configuración del AI Call Center (NSG) — público, sin login.
+// El prospecto lo contesta paso a paso; la respuesta cae en el CRM de Stratos
+// Sales y avisa al equipo por correo (edge function form-submit).
+const ONBOARDING_CC_PATHS = ["/onboarding-call-center", "/call-center", "/ai-call-center"];
 const matchPath = (paths) => paths.some(p => pathname === p || pathname === p + "/");
 const isPrivacy = matchPath(PRIVACY_PATHS);
 const isDeletion = matchPath(DELETION_PATHS);
@@ -160,6 +165,7 @@ const isManualMuebleria = matchPath(MANUAL_MUEBLERIA_PATHS);
 const isDiagnosticoView = /^\/diagnostico\/view\/[A-Za-z0-9-]+\/?$/.test(pathname);
 const isDiagnostico = matchPath(DIAGNOSTICO_PATHS) || isDiagnosticoView;
 const isDukeLeadRouter = matchPath(DUKE_LEAD_ROUTER_PATHS);
+const isOnboardingCC = matchPath(ONBOARDING_CC_PATHS);
 
 // Landing personalizada para el CLIENTE FINAL — pública, sin login. El asesor
 // la genera en el Marketing Studio (Create) y comparte /p#d=<payload>. Todo va
@@ -188,7 +194,7 @@ const isLanding = !esAppNativa && !isExplicitClient && (
   || (hostname === "127.0.0.1" && !params.has("app"))
 );
 
-const isApp = esAppNativa || (!isPrivacy && !isDeletion && !isDelivery && !isManual && !isManualTG && !isManualMkt && !isManualNSG && !isManualLegacy && !isManualBrasa && !isManualGasil && !isManualMuebleria && !isDiagnostico && !isDukeLeadRouter && !isPublicLanding && !isLanding);
+const isApp = esAppNativa || (!isPrivacy && !isDeletion && !isDelivery && !isManual && !isManualTG && !isManualMkt && !isManualNSG && !isManualLegacy && !isManualBrasa && !isManualGasil && !isManualMuebleria && !isDiagnostico && !isDukeLeadRouter && !isOnboardingCC && !isPublicLanding && !isLanding);
 
 // URL de la plataforma — usada por la landing para el CTA principal
 const APP_URL = import.meta.env.VITE_APP_URL || (window.location.origin + "/?app");
@@ -352,6 +358,8 @@ createRoot(document.getElementById("root")).render(
                         ? <Diagnostico />
                       : isDukeLeadRouter
                         ? <DukeLeadRouter />
+                      : isOnboardingCC
+                        ? <OnboardingCallCenter />
                       : isApp
                         ? <App />
                         : <LandingMarketing appUrl={APP_URL} />
