@@ -6,7 +6,7 @@
 >
 > ¿Buscás un botón o un texto y no está acá? `npm run buscar "texto"`
 
-**186 archivos · 77.325 líneas**
+**186 archivos · 77.329 líneas**
 
 ---
 
@@ -300,7 +300,7 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | Archivo | Líneas | Qué hace |
 |---|---|---|
 | `AuthContext.jsx` | 376 | Estado global de autenticación — conectado a Supabase Auth. |
-| `ClientOrgGuard.jsx` | 71 | _sin describir_ |
+| `ClientOrgGuard.jsx` | 75 | _sin describir_ |
 | `ClientContext.jsx` | 55 | _sin describir_ |
 
 ### `src/data/`
@@ -759,8 +759,8 @@ hacen. Agregarles un bloque `/** ... */` arriba los hace aparecer solos acá.
 - `src/clients/tgenius/config.js` (90 líneas)
 - `src/app/views/CRM/date-range.js` (86 líneas)
 - `src/lib/transcribir.js` (77 líneas)
+- `src/contexts/ClientOrgGuard.jsx` (75 líneas)
 - `src/hooks/useTeam.js` (74 líneas)
 - `src/lib/ringer.js` (72 líneas)
-- `src/contexts/ClientOrgGuard.jsx` (71 líneas)
 - `src/lib/supabase.js` (67 líneas)
 - `src/lib/telefono.js` (61 líneas)
