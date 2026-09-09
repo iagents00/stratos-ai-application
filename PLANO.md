@@ -147,10 +147,10 @@ Servicios de terceros con los que habla el código.
 | `cal.com` | 1 archivo |
 | `calendly.com` | 1 archivo |
 | `docs.google.com` | 1 archivo |
+| `getstratosai.com` | 1 archivo |
 | `ionic.io` | 1 archivo |
 | `maps.app` | 1 archivo |
 | `meet.google.com` | 1 archivo |
-| `mexicorealestatesolutions.com` | 1 archivo |
 
 ---
 
