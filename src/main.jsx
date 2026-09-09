@@ -7,8 +7,9 @@
  *   3. Decidir qué experiencia mostrar según el hostname/URL
  *
  * ROUTING POR HOSTNAME (sin React Router — decisión intencional):
- *   app.stratoscapitalgroup.com  →  Plataforma autenticada (App)
- *   stratoscapitalgroup.com      →  Landing pública (LandingMarketing)
+ *   getstratosai.com      →  Plataforma autenticada (App)
+ *   app.getstratosai.com  →  Plataforma autenticada (App, compatibilidad)
+ *   www.getstratosai.com  →  Landing pública (LandingMarketing)
  *   localhost:5173/?app          →  Plataforma (modo desarrollo)
  *   localhost:5173               →  Landing (modo desarrollo)
  * ─────────────────────────────────────────────────────────────────────────────
@@ -107,8 +108,7 @@ const params   = new URLSearchParams(window.location.search);
 const pathname = window.location.pathname;
 
 const LANDING_DOMAINS = [
-  "stratoscapitalgroup.com",
-  "www.stratoscapitalgroup.com",
+  "www.getstratosai.com",
 ];
 
 // Rutas públicas legales — accesibles desde cualquier dominio sin auth
@@ -174,7 +174,7 @@ const isPublicLanding = pathname === "/p" || pathname === "/p/" || /^\/p\/[A-Za-
 
 // ─── RESOLUCIÓN DE CLIENTE (multi-tenant) ────────────────────────────────────
 // Se detecta el cliente activo según hostname/path:
-//   · grupo28.stratoscapitalgroup.com  o  /grupo28   →  cliente "grupo28"
+//   · grupo28.getstratosai.com  o  /grupo28   →  cliente "grupo28"
 //   · cualquier otra cosa                            →  cliente "duke" (default)
 // Si el path matchea un cliente explícito (no-default), forzamos isApp=true:
 // esto permite entrar a `/grupo28` sin necesidad de `?app` en localhost.

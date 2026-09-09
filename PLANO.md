@@ -147,10 +147,10 @@ Servicios de terceros con los que habla el código.
 | `cal.com` | 1 archivo |
 | `calendly.com` | 1 archivo |
 | `docs.google.com` | 1 archivo |
+| `getstratosai.com` | 1 archivo |
 | `ionic.io` | 1 archivo |
 | `maps.app` | 1 archivo |
 | `meet.google.com` | 1 archivo |
-| `mexicorealestatesolutions.com` | 1 archivo |
 
 ---
 
@@ -167,7 +167,7 @@ casa; por eso mismo son los que más cuidado piden.
 | `hooks/useViewport.js` | **28** |
 | `app/SharedComponents.jsx` | **21** |
 | `lib/native.js` | **19** |
-| `hooks/useClient.js` | **16** |
+| `hooks/useClient.js` | **17** |
 | `app/views/CRM/zoom-metrics.js` | **6** |
 | `app/components/Logo.jsx` | **5** |
 | `app/views/CRM/date-range.js` | **5** |

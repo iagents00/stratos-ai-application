@@ -113,6 +113,7 @@ jobs:
         run: |
           npm ci
           npm run build:app
+          npm run verificar:appstore-ios
 
       # CapApp-SPM referencia ../../../node_modules/@capacitor/* — sin esto el
       # paquete de Swift no resuelve y la compilación falla al enlazar plugins.

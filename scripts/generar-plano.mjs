@@ -30,6 +30,12 @@ const leer = (p) => readFileSync(p, "utf8").replace(/\r\n/g, "\n");
 // fuera de esa máquina.
 const rel  = (p) => relative(RAIZ, p).split("\\").join("/");
 
+// localeCompare usa el locale del sistema: Windows en español y Ubuntu en
+// inglés ordenaban distinto los hosts empatados y hacían fallar el mismo
+// documento recién generado. Comparación por puntos de código = mismo orden
+// en cualquier runner.
+const compararTexto = (a, b) => a < b ? -1 : a > b ? 1 : 0;
+
 // Mismo motivo que en generar-mapa.mjs: readdirSync no garantiza el mismo orden
 // entre sistemas, y el plano depende del orden para resolver a qué archivo se
 // atribuye cada cosa. Ordenar lo vuelve reproducible.
@@ -57,7 +63,7 @@ function agrupar(re) {
   }
   return [...mapa.entries()]
     .map(([k, v]) => ({ k, archivos: [...v].sort() }))
-    .sort((a, b) => b.archivos.length - a.archivos.length || a.k.localeCompare(b.k));
+    .sort((a, b) => b.archivos.length - a.archivos.length || compararTexto(a.k, b.k));
 }
 
 const tablas = agrupar(/\.from\("([a-z_]+)"/g);
