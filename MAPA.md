@@ -6,7 +6,7 @@
 >
 > ¿Buscás un botón o un texto y no está acá? `npm run buscar "texto"`
 
-**183 archivos · 77.094 líneas**
+**186 archivos · 77.325 líneas**
 
 ---
 
@@ -353,13 +353,14 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | `ManualLegacy.jsx` | 245 | Manual de uso de Stratos IA para LEGACY DESIGN |
 | `ManualBrasa.jsx` | 234 | Manual de uso de Stratos IA para BRASA Y PIEDRA |
 | `ManualMuebleria.jsx` | 223 | Manual de uso de Stratos IA para la MUEBLERÍA |
+| `LoginScreenNative.jsx` | 175 | _sin describir_ |
 
 ### `src/lib/`
 
 | Archivo | Líneas | Qué hace |
 |---|---|---|
 | `telegram.js` | 839 | Pareo del bot de Telegram con el perfil del asesor. |
-| `auth.js` | 677 | _sin describir_ |
+| `auth.js` | 689 | _sin describir_ |
 | `push.js` | 416 | Sistema de suscripción a notificaciones Web Push |
 | `offline-mode.js` | 351 | _sin describir_ |
 | `lead-storage.js` | 343 | _sin describir_ |
@@ -395,6 +396,8 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | `telefono.js` | 61 | _sin describir_ |
 | `recovery.js` | 58 | Recuperación de contraseña por CÓDIGO al correo de recuperación. |
 | `suggest-actions.js` | 58 | Cliente del agente IA "co-pilot" que sugiere próximas acciones |
+| `app-review-access.native.js` | 32 | _sin describir_ |
+| `app-review-access.js` | 12 | Implementación web: App Review no existe fuera del binario móvil. |
 
 ---
 
@@ -676,8 +679,8 @@ hacen. Agregarles un bloque `/** ... */` arriba los hace aparecer solos acá.
 - `src/app/views/RRHHModule.jsx` (839 líneas)
 - `src/app/views/InformeAvances.jsx` (747 líneas)
 - `src/app/views/ERP.jsx` (698 líneas)
+- `src/lib/auth.js` (689 líneas)
 - `src/landing/OnboardingCallCenter.jsx` (686 líneas)
-- `src/lib/auth.js` (677 líneas)
 - `src/app/views/WhatsApp.jsx` (667 líneas)
 - `src/app/data/catalogoProyectos.js` (611 líneas)
 - `src/app/views/Caja.jsx` (580 líneas)
@@ -728,6 +731,7 @@ hacen. Agregarles un bloque `/** ... */` arriba los hace aparecer solos acá.
 - `src/lib/recordatorios-locales.js` (179 líneas)
 - `src/hooks/useWhatsAppInbox.js` (178 líneas)
 - `src/app/views/CRM/RequiresHumanButton.jsx` (177 líneas)
+- `src/landing/LoginScreenNative.jsx` (175 líneas)
 - `src/lib/informe-doc.js` (175 líneas)
 - `src/app/components/EstadoAvisos.jsx` (172 líneas)
 - `src/app/views/MiDrive.jsx` (171 líneas)
