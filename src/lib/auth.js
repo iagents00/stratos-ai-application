@@ -21,6 +21,7 @@
  */
 import { supabase, SUPABASE_REST_URL, SUPABASE_ANON_KEY } from './supabase'
 import { logAuthEvent } from './audit'
+import { getAppReviewLogin, readAppReviewSession } from './app-review-access'
 import {
   isOfflineForced,
   signInOffline,
@@ -118,6 +119,14 @@ const DEMO_USER = {
   phone:  null,
   isDemo: true,
 }
+function readLocalDemoUser() {
+  const appReviewUser = readAppReviewSession()
+  if (appReviewUser) return appReviewUser
+  try {
+    if (sessionStorage.getItem('stratos_demo') === '1') return DEMO_USER
+  } catch { /* sessionStorage bloqueado */ }
+  return null
+}
 
 export function seedDemoUser() {
   // No-op — usuarios viven en Supabase (o modo demo local)
@@ -136,11 +145,8 @@ export function seedDemoUser() {
  * asíncrona en background.
  */
 export function readSessionFromStorageSync() {
-  try {
-    if (sessionStorage.getItem('stratos_demo') === '1') {
-      return DEMO_USER
-    }
-  } catch (_) { /* sessionStorage bloqueado */ }
+  const localDemoUser = readLocalDemoUser()
+  if (localDemoUser) return localDemoUser
 
   try {
     const offlineRaw = localStorage.getItem('stratos_offline_user')
@@ -180,8 +186,15 @@ export function hasSupabaseAuthToken() {
 }
 
 export async function signIn(email, password) {
+  const normalizedEmail = email.trim().toLowerCase()
+
+  // En la app, el plugin de build reemplaza este módulo por el acceso aislado
+  // de App Review. En la web la función devuelve null y no incluye credenciales.
+  const appReviewUser = getAppReviewLogin(normalizedEmail, password)
+  if (appReviewUser) return { data: appReviewUser, error: null }
+
   // Modo demo local — siempre funciona sin necesitar Supabase
-  if (email.trim().toLowerCase() === DEMO_EMAIL && password === DEMO_PASSWORD) {
+  if (normalizedEmail === DEMO_EMAIL && password === DEMO_PASSWORD) {
     sessionStorage.setItem('stratos_demo', '1')
     return { data: DEMO_USER, error: null }
   }
@@ -390,9 +403,8 @@ export async function getStoredSession() {
 
 async function _leerSesionGuardada() {
   // Recuperar sesión demo local tras un refresh
-  if (sessionStorage.getItem('stratos_demo') === '1') {
-    return DEMO_USER
-  }
+  const localDemoUser = readLocalDemoUser()
+  if (localDemoUser) return localDemoUser
 
   // Recuperar sesión offline (modo emergencia)
   const offlineSession = getOfflineSession()

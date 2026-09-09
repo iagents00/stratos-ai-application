@@ -41,8 +41,16 @@ jobs:
 
       - name: Los planos tienen que estar al día
         run: |
-          node scripts/generar-mapa.mjs  --check
-          node scripts/generar-plano.mjs --check
+          node scripts/generar-mapa.mjs --check || {
+            node scripts/generar-mapa.mjs
+            git diff -- MAPA.md
+            exit 1
+          }
+          node scripts/generar-plano.mjs --check || {
+            node scripts/generar-plano.mjs
+            git diff -- PLANO.md
+            exit 1
+          }
 
       # El contexto de cliente se desincronizó una vez (#666: el Provider
       # renombró `config` a `activa`) y apagó en silencio toda la

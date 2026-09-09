@@ -20,6 +20,7 @@
     "verificar-migraciones": "node scripts/verificar-migraciones.mjs",
     "verificar-rpc": "node scripts/verificar-rpc-permisos.mjs",
     "build:app": "vite build --mode app",
+    "verificar:appstore-ios": "node scripts/verificar-appstore-ios.mjs",
     "salud": "node scripts/salud.mjs"
   },
   "dependencies": {
