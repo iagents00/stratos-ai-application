@@ -6,7 +6,7 @@
 >
 > ¿Buscás un botón o un texto y no está acá? `npm run buscar "texto"`
 
-**186 archivos · 77.329 líneas**
+**186 archivos · 77.129 líneas**
 
 ---
 
@@ -81,7 +81,7 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 
 | Archivo | Líneas | Qué hace |
 |---|---|---|
-| `App.jsx` | 3154 | Shell principal de Stratos AI |
+| `App.jsx` | 3132 | Shell principal de Stratos AI |
 | `SharedComponents.jsx` | 343 | Shared primitive components used by all views. |
 | `App.css` | 321 | _sin describir_ |
 
@@ -94,7 +94,7 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | `HistoryDrawer.jsx` | 291 | Modal de historial de cambios para cualquier entidad. |
 | `ProFeatureGate.jsx` | 208 | pantalla elegante para funciones que requieren |
 | `Chat.jsx` | 182 | _sin describir_ |
-| `EstadoAvisos.jsx` | 172 | _sin describir_ |
+| `EstadoAvisos.jsx` | 158 | _sin describir_ |
 | `DynamicIsland.jsx` | 153 | _sin describir_ |
 | `CopilotMark.jsx` | 113 | _sin describir_ |
 | `IAOSIsland.jsx` | 91 | Indicador IAOS en el header — muestra métricas animadas del pipeline. |
@@ -371,7 +371,6 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | `native.js` | 282 | _sin describir_ |
 | `push-native.js` | 265 | _sin describir_ |
 | `manual-stratos-doc.js` | 230 | _sin describir_ |
-| `llamadas-nativas.js` | 225 | _sin describir_ |
 | `organize-notes.js` | 220 | _sin describir_ |
 | `docx.js` | 201 | _sin describir_ |
 | `whatsapp-signup.js` | 196 | _sin describir_ |
@@ -383,12 +382,13 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | `markdown.jsx` | 129 | Mini renderer Markdown → React. Pensado para las notas privadas que la IA |
 | `iagents-actions.js` | 126 | _sin describir_ |
 | `webhook-diagnostico-stratos.js` | 112 | Envía los resultados del diagnóstico Stratos AI al webhook n8n del funnel. |
-| `avisos-nativos.js` | 111 | _sin describir_ |
 | `backup.js` | 108 | _sin describir_ |
 | `rails-config.js` | 107 | _sin describir_ |
 | `chunk-recovery.js` | 103 | _sin describir_ |
+| `llamadas.js` | 93 | Consultas y estado local de los avisos de llamada del equipo. |
 | `agenda.js` | 91 | _sin describir_ |
 | `lead-draft.js` | 85 | Autosave del borrador del modal "Registrar cliente" |
+| `avisos-nativos.js` | 79 | _sin describir_ |
 | `transcribir.js` | 77 | _sin describir_ |
 | `ringer.js` | 72 | _sin describir_ |
 | `form-submit.js` | 71 | Envía un formulario público (sin sesión) a la edge function `form-submit`. |
@@ -455,7 +455,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Adjuntar PDF, documento o audio | `src/app/views/CRM/components.jsx:1830` |
 | Agenda (opcional) | `src/app/views/LandingPages/index.jsx:1606` |
 | Agenda una llamada con | `src/app/views/LandingPages/LandingPagePreview.jsx:458` |
-| Agenda, lista de acción, documentos y plan | `src/app/App.jsx:3005` |
+| Agenda, lista de acción, documentos y plan | `src/app/App.jsx:2983` |
 | Agendar fecha | `src/app/views/CRM/index.jsx:4648` |
 | Agendar llamada | `src/app/views/LandingPages/LandingPagePreview.jsx:164` |
 | Agente Ejecutivo | `src/app/components/Chat.jsx:74` |
@@ -480,8 +480,8 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Añade tareas concretas para este cliente | `src/app/views/CRM/components.jsx:2162` |
 | Añadir | `src/app/views/CRM/components.jsx:5768` |
 | Aparecerán al inicio de su pipeline en | `src/app/views/CRM/index.jsx:6170` |
-| Aplicaciones | `src/app/App.jsx:3068` |
-| Apps | `src/app/App.jsx:2243` |
+| Aplicaciones | `src/app/App.jsx:3046` |
+| Apps | `src/app/App.jsx:2221` |
 | Áreas de atención | `src/app/views/RRHHModule.jsx:786` |
 | Arrastra el CV aquí o haz clic para subir | `src/app/views/RRHHModule.jsx:709` |
 | Arrastra para cambiar la prioridad | `src/app/views/Marketing.jsx:2236` |
@@ -495,7 +495,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Aún no hay documentos | `src/app/features/MetaPanel/index.jsx:1646` |
 | Badge | `src/app/views/LandingPages/index.jsx:662` |
 | Bajo · Medio · Alto | `src/app/views/CRM/components.jsx:3431` |
-| Buscar (⌘K) | `src/app/App.jsx:2330` |
+| Buscar (⌘K) | `src/app/App.jsx:2308` |
 | Buscar asesor… | `src/app/views/CRM/components.jsx:3188` |
 | Buscar candidato... | `src/app/views/RRHHModule.jsx:409` |
 | Buscar cliente o teléfono… | `src/app/views/WhatsApp.jsx:212` |
@@ -532,7 +532,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Cargando conversaciones… | `src/app/views/WhatsApp.jsx:263` |
 | Cargando el plan… | `src/app/views/PlanSemanal.jsx:353` |
 | Cargando el tablero… | `src/app/views/ComandoOps.jsx:127` |
-| Cargando equipo… | `src/app/App.jsx:2358` |
+| Cargando equipo… | `src/app/App.jsx:2336` |
 | Cargando movimientos… | `src/app/views/Caja.jsx:454` |
 | Cargando Zooms… | `src/app/views/ZoomControl/index.jsx:511` |
 | Cargando… | `src/app/views/FinanzasAdmin.jsx:318` |
@@ -544,11 +544,11 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Centro de Agentes IA | `src/app/views/CRM/index.jsx:5474` |
 | Centro de Inteligencia | `src/app/components/DynamicIsland.jsx:81` |
 | Centro de Inteligencia — Activo | `src/app/components/DynamicIsland.jsx:102` |
-| Cerrar | `src/app/App.jsx:2921` |
+| Cerrar | `src/app/App.jsx:2899` |
 | Cerrar (Esc) | `src/app/views/ZoomControl/index.jsx:793` |
 | Cerrar detalle | `src/app/views/ZoomControl/Resumen.jsx:299` |
 | Cerrar Mi Espacio | `src/app/features/MetaPanel/index.jsx:664` |
-| Cerrar sesión | `src/app/App.jsx:2691` |
+| Cerrar sesión | `src/app/App.jsx:2669` |
 | Cerrar vista previa | `src/app/views/LandingPages/LandingPagePreview.jsx:202` |
 | Chats | `src/app/views/WhatsApp.jsx:633` |
 | Cierres | `src/app/views/Team.jsx:116` |
@@ -570,7 +570,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Conectado | `src/app/views/Profile.jsx:751` |
 | Conectando… | `src/app/views/ConectarWhatsApp.jsx:122` |
 | Conectar mi WhatsApp | `src/app/views/ConectarWhatsApp.jsx:123` |
-| Configuración | `src/app/App.jsx:3104` |
+| Configuración | `src/app/App.jsx:3082` |
 | Confirmados | `src/app/views/ZoomControl/Resumen.jsx:440` |
 | Confirmar contraseña | `src/app/views/Profile.jsx:333` |
 | Confirmas y listo | `src/app/views/ConectarWhatsApp.jsx:107` |
@@ -603,7 +603,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Descargar el manual en Word | `src/app/features/MetaPanel/DocsStratos.jsx:169` |
 | Descargar en Word | `src/app/features/MetaPanel/DocsStratos.jsx:213` |
 | Descargar en Word para firmarla | `src/app/views/CuentasCobro.jsx:419` |
-| Descartar | `src/app/App.jsx:2615` |
+| Descartar | `src/app/App.jsx:2593` |
 | Descartar audio | `src/app/views/Copilot.jsx:1761` |
 | Descartar grabación | `src/app/views/CRM/LeadWhatsAppChat.jsx:808` |
 | Describe la tarea... | `src/app/views/CRM/components.jsx:2109` |
@@ -714,7 +714,6 @@ hacen. Agregarles un bloque `/** ... */` arriba los hace aparecer solos acá.
 - `src/app/data/chat.js` (249 líneas)
 - `src/app/views/Nomina.jsx` (238 líneas)
 - `src/lib/manual-stratos-doc.js` (230 líneas)
-- `src/lib/llamadas-nativas.js` (225 líneas)
 - `src/lib/organize-notes.js` (220 líneas)
 - `src/app/views/ProductividadTab.jsx` (218 líneas)
 - `src/app/constants/intelFeatures.js` (211 líneas)
@@ -733,8 +732,8 @@ hacen. Agregarles un bloque `/** ... */` arriba los hace aparecer solos acá.
 - `src/app/views/CRM/RequiresHumanButton.jsx` (177 líneas)
 - `src/landing/LoginScreenNative.jsx` (175 líneas)
 - `src/lib/informe-doc.js` (175 líneas)
-- `src/app/components/EstadoAvisos.jsx` (172 líneas)
 - `src/app/views/MiDrive.jsx` (171 líneas)
+- `src/app/components/EstadoAvisos.jsx` (158 líneas)
 - `src/components/UpdatePill.jsx` (157 líneas)
 - `src/app/components/DynamicIsland.jsx` (153 líneas)
 - `src/app/views/CRM/LeadChatHistory.jsx` (152 líneas)
@@ -748,7 +747,6 @@ hacen. Agregarles un bloque `/** ... */` arriba los hace aparecer solos acá.
 - `src/app/components/CopilotMark.jsx` (113 líneas)
 - `src/clients/demo/config.js` (113 líneas)
 - `src/hooks/useRailsConfig.js` (112 líneas)
-- `src/lib/avisos-nativos.js` (111 líneas)
 - `src/lib/backup.js` (108 líneas)
 - `src/lib/rails-config.js` (107 líneas)
 - `src/lib/chunk-recovery.js` (103 líneas)
@@ -758,6 +756,7 @@ hacen. Agregarles un bloque `/** ... */` arriba los hace aparecer solos acá.
 - `src/lib/agenda.js` (91 líneas)
 - `src/clients/tgenius/config.js` (90 líneas)
 - `src/app/views/CRM/date-range.js` (86 líneas)
+- `src/lib/avisos-nativos.js` (79 líneas)
 - `src/lib/transcribir.js` (77 líneas)
 - `src/contexts/ClientOrgGuard.jsx` (75 líneas)
 - `src/hooks/useTeam.js` (74 líneas)

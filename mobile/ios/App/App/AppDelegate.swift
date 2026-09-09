@@ -7,14 +7,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     var window: UIWindow?
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-        // Deja el telefono listo para recibir llamadas a pantalla completa.
-        //
-        // Va ACA y no mas tarde por una razon concreta: iOS puede entregar una
-        // llamada apenas arranca la app, incluso antes de que la persona vea
-        // nada. Si el sistema de llamadas todavia no esta preparado en ese
-        // momento, la llamada se pierde — y peor, iOS lo cuenta como que la app
-        // no cumplio, que es lo que la hace perder el permiso.
-        LlamadaEntrante.shared.arrancar()
         return true
     }
 
@@ -33,21 +25,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     }
 
     func applicationDidBecomeActive(_ application: UIApplication) {
-        // Cada vez que la app queda a la vista se le vuelve a ofrecer al CRM la
-        // identificacion para llamadas. Es el momento en que es MAS probable
-        // que el CRM ya este cargado y escuchando — al arrancar casi nunca lo
-        // esta, y esa era la razon por la que las llamadas no salian a pantalla
-        // completa: la identificacion se emitia una sola vez, sin nadie del
-        // otro lado, y se perdia para siempre.
-        //
-        // Reofrecerla de mas no cuesta nada: del otro lado se guarda siempre la
-        // misma y no se duplica.
-        LlamadaEntrante.shared.reenviarToken()
-
-        // Y si quedo una reunion sin abrir, se abre ahora. Al contestar desde la
-        // pantalla bloqueada la app todavia esta de fondo y iOS puede negarse a
-        // abrir un enlace; este es el primer momento en que si lo permite.
-        LlamadaEntrante.shared.abrirReunionPendiente()
     }
 
     func applicationWillTerminate(_ application: UIApplication) {
