@@ -38,8 +38,12 @@ export function ClientOrgGuard() {
     if (redirectedRef.current) return;
     if (!user?.organizationId) return;
 
-    // Las cuentas demo no tienen una org "real" — saltearlas.
-    if (user?._offline || user?.id === "demo-user-local") return;
+    // El modo offline no tiene una organización verificable. La cuenta demo
+    // clásica tampoco trae organizationId y ya salió por el guard de arriba.
+    // La cuenta de App Review SÍ trae la org ficticia de Inmobiliaria Aurora:
+    // debe recorrer el mismo mapeo que una cuenta real para que Apple nunca
+    // caiga en la configuración por defecto de un cliente productivo.
+    if (user?._offline) return;
 
     // APP NATIVA: es UN binario para todos los clientes, servido desde
     // capacitor://localhost. No hay path que cambiar, y un location.replace()
