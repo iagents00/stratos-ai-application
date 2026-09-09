@@ -10,12 +10,8 @@
  * enterrado en la persiana. Es la diferencia entre enterarse de una llamada y
  * verla al día siguiente.
  *
- * En iPhone el equivalente son las CATEGORÍAS: los botones «Contestar» y
- * «Rechazar» que se ven sin abrir la app existen solo si la app declaró antes
- * una categoría con ese nombre. El servidor la menciona (`category: "LLAMADA"`)
- * y iOS busca la que registró la app.
- *
- * Los dos registros son idempotentes y baratos: se hacen una vez al arrancar.
+ * En iPhone los avisos llegan por APNs como notificaciones normales. Al tocar
+ * el aviso se abre Stratos y allí aparece la invitación para entrar a Meet.
  *
  * ⚠️ Los nombres de acá tienen que coincidir EXACTO con los que usa el emisor
  * en supabase/functions/send-push/canales-nativos.ts. Si cambia uno, cambian
@@ -27,7 +23,6 @@ import { isNativeApp, nativePlugin } from "./native";
 /** Los mismos identificadores que manda el servidor. NO tocar de un solo lado. */
 export const CANAL_LLAMADAS = "llamadas";
 export const CANAL_AVISOS = "avisos";
-export const CATEGORIA_LLAMADA = "LLAMADA";
 
 let yaPreparado = false;
 
@@ -73,32 +68,6 @@ async function crearCanalesAndroid() {
 }
 
 /**
- * Registra la categoría «LLAMADA» con sus dos botones.
- *
- * `destructive` pinta «Rechazar» en rojo. `foreground: true` en Contestar hace
- * que tocar el botón abra la app — que es lo que hay que hacer para entrar a la
- * reunión. Rechazar NO la abre: se resuelve sin sacar al usuario de lo suyo.
- */
-async function registrarCategoriasIOS() {
-  const ln = nativePlugin("LocalNotifications");
-  if (!ln?.registerActionTypes) return;
-
-  try {
-    await ln.registerActionTypes({
-      types: [{
-        id: CATEGORIA_LLAMADA,
-        actions: [
-          { id: "contestar", title: "Contestar", foreground: true },
-          { id: "rechazar", title: "Rechazar", destructive: true },
-        ],
-      }],
-    });
-  } catch (e) {
-    console.warn("[avisos] no pude registrar la categoría de llamada:", e?.message || e);
-  }
-}
-
-/**
  * Deja el teléfono listo para recibir avisos como corresponde.
  * Llamar una vez al arrancar la app, antes de registrar el push.
  */
@@ -106,5 +75,4 @@ export async function prepararAvisos() {
   if (!isNativeApp() || yaPreparado) return;
   yaPreparado = true;
   if (plataforma() === "android") await crearCanalesAndroid();
-  else await registrarCategoriasIOS();
 }

@@ -35,7 +35,7 @@ import { isNativeApp, ensureNotifPermission, notifyUser, addNotificationTapListe
 import { iniciarPushNativo, detenerPushNativo } from "../lib/push-native";
 import { prepararAvisos } from "../lib/avisos-nativos";
 import { sincronizarRecordatorios, limpiarRecordatorios } from "../lib/recordatorios-locales";
-import { engancharLlamadas, soltarLlamadas, llamadaEnCurso, marcarLlamadaDespachada } from "../lib/llamadas-nativas";
+import { llamadaEnCurso, marcarLlamadaDespachada } from "../lib/llamadas";
 
 /* Sistema de notificaciones Web Push (PWA "Agregar a inicio" en iPhone/Android) */
 import { initPushContext, enablePushNotifications, onNotificationClick, getPushStatus, subscribeToPush, saveSubscriptionToBackend } from "../lib/push";
@@ -843,32 +843,10 @@ export default function App() {
     mirarSiLlaman();
     document.addEventListener("visibilitychange", mirarSiLlaman);
 
-    // LLAMADAS A PANTALLA COMPLETA (solo iPhone). Es un canal aparte del de los
-    // avisos: si esto falla, la llamada sigue llegando como una tira normal.
-    const soltar = engancharLlamadas(uid, () => {
-      // ⚠️ La reunión la abre el TELÉFONO, no el CRM (LlamadaEntrante.swift).
-      //
-      // Acá se intentaba abrirla con `window.open` y no funcionaba nunca en el
-      // caso que importa: contestar desde la pantalla bloqueada NO trae la app
-      // al frente, así que el CRM sigue dormido y no hay nadie que ejecute ese
-      // `window.open`. Ángel contestó, la llamada se dio por terminada y no lo
-      // llevó a ningún lado (27-ago-2026).
-      //
-      // Además Google Meet necesita cámara y micrófono, y dentro de la ventana
-      // del CRM eso no funciona bien: afuera se abre la app de Meet si está
-      // instalada, y si no, el navegador.
-      //
-      // Un solo dueño para abrir la reunión, y es el que siempre está despierto.
-      // Acá solo se deja el CRM donde tiene sentido volver después.
-      setV("copilot");
-    });
-
     return () => {
       clearInterval(repaso);
       document.removeEventListener("visibilitychange", alCambiarVisibilidad);
       document.removeEventListener("visibilitychange", mirarSiLlaman);
-      soltar();
-      soltarLlamadas(uid);
       detenerPushNativo(uid);
       limpiarRecordatorios();
     };

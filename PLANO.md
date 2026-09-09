@@ -59,12 +59,12 @@ columna, estos son los archivos que hay que revisar.
 | `evidencia` | 5 | `app/views/CRM/components.jsx` · `app/views/Caja.jsx` · `app/views/ChatEquipo.jsx` _+2_ |
 | `team_expenses` | 4 | `app/views/Caja.jsx` · `app/views/Copilot.jsx` · `app/views/FinanzasAdmin.jsx` _+1_ |
 | `leads` | 3 | `app/views/Caja.jsx` · `app/views/FinanzasAdmin.jsx` · `app/views/WhatsApp.jsx` |
-| `device_tokens` | 2 | `lib/llamadas-nativas.js` · `lib/push-native.js` |
 | `expediente_items` | 2 | `app/views/CRM/LeadChatHistory.jsx` · `app/views/CRM/LeadNotesTimeline.jsx` |
 | `mkt_tasks` | 2 | `app/views/Marketing.jsx` · `app/views/PlanSemanal.jsx` |
-| `proactive_reminders` | 2 | `lib/llamadas-nativas.js` · `lib/recordatorios-locales.js` |
+| `proactive_reminders` | 2 | `lib/llamadas.js` · `lib/recordatorios-locales.js` |
 | `team_actions` | 2 | `app/App.jsx` · `app/views/ProductividadTab.jsx` |
 | `catalogo_proyectos` | 1 | `app/views/ERP.jsx` |
+| `device_tokens` | 1 | `lib/push-native.js` |
 | `discovery_data` | 1 | `app/views/CRM/LeadDiscoveryPanel.jsx` |
 | `fin_invoices` | 1 | `app/views/CuentasCobro.jsx` |
 | `lead_related_contacts` | 1 | `app/views/CRM/LeadRelatedContacts.jsx` |
@@ -166,7 +166,7 @@ casa; por eso mismo son los que más cuidado piden.
 | `hooks/useAuth.js` | **35** |
 | `hooks/useViewport.js` | **28** |
 | `app/SharedComponents.jsx` | **21** |
-| `lib/native.js` | **19** |
+| `lib/native.js` | **18** |
 | `hooks/useClient.js` | **17** |
 | `app/views/CRM/zoom-metrics.js` | **6** |
 | `app/components/Logo.jsx` | **5** |
