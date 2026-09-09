@@ -43,7 +43,7 @@ const TIMEOUT_MS         = 8000              // queries normales (read profile, 
 // NO usar window.location.origin: dentro de la app nativa vale
 // "capacitor://localhost" y el link del correo llegaría inservible.
 // La recuperación siempre se completa en la web, y después se entra a la app.
-const WEB_ORIGIN = "https://app.stratoscapitalgroup.com";
+const WEB_ORIGIN = "https://getstratosai.com";
 
 const AUTH_TIMEOUT_MS    = 20000              // signInWithPassword: tolerar redes lentas
 const GETSESSION_TIMEOUT = 3500               // supabase.auth.getSession() — solo lee storage + posible refresh interno
