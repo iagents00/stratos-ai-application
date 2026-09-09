@@ -76,12 +76,28 @@ const ESTATICOS_SOLO_WEB = [
 ]
 
 /** Cambia esos imports por un stub minúsculo antes de que Rollup los lea. */
-function sacarElSitioWeb(stub) {
+function sacarElSitioWeb(stub, nativeLogin, appReviewAccess) {
   const fuera = []
+  let loginNativoIncluido = false
+  let accesoReviewIncluido = false
   return {
     name: 'stratos-solo-app',
     enforce: 'pre',
-    resolveId(source) {
+    resolveId(source, importer) {
+      if (
+        source === '../landing/LoginScreen.jsx' &&
+        importer?.replaceAll('\\', '/').endsWith('/src/app/App.jsx')
+      ) {
+        loginNativoIncluido = true
+        return nativeLogin
+      }
+      if (
+        source === './app-review-access' &&
+        importer?.replaceAll('\\', '/').endsWith('/src/lib/auth.js')
+      ) {
+        accesoReviewIncluido = true
+        return appReviewAccess
+      }
       if (SOLO_WEB.has(source)) {
         fuera.push(source)
         return stub
@@ -95,6 +111,9 @@ function sacarElSitioWeb(stub) {
       const faltan = [...SOLO_WEB].filter(x => !fuera.includes(x))
       this.info(`[solo-app] ${fuera.length}/${SOLO_WEB.size} páginas públicas excluidas del binario`)
       if (faltan.length) this.warn(`[solo-app] NO se excluyeron (¿se renombraron?): ${faltan.join(', ')}`)
+      if (!loginNativoIncluido) this.error('[solo-app] LoginScreenNative no reemplazó al login web')
+      if (!accesoReviewIncluido) this.error('[solo-app] acceso aislado de App Review no se incluyó')
+      this.info('[solo-app] acceso nativo sin alta de cuenta incluido')
     },
     closeBundle() {
       let liberado = 0
@@ -121,9 +140,11 @@ function pesar(ruta) {
 export default defineConfig(({ mode }) => {
   const soloApp = mode === 'app'
   const stub = fileURLToPath(new URL('./src/pagina-solo-web.jsx', import.meta.url))
+  const nativeLogin = fileURLToPath(new URL('./src/landing/LoginScreenNative.jsx', import.meta.url))
+  const appReviewAccess = fileURLToPath(new URL('./src/lib/app-review-access.native.js', import.meta.url))
 
   return {
-    plugins: [react(), ...(soloApp ? [sacarElSitioWeb(stub)] : [])],
+    plugins: [react(), ...(soloApp ? [sacarElSitioWeb(stub, nativeLogin, appReviewAccess)] : [])],
     build: { outDir: soloApp ? 'dist-app' : 'dist' },
   }
 })

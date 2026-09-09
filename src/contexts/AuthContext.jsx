@@ -25,7 +25,7 @@ import { clearOfflineSession } from "../lib/offline-mode";
 export const AuthContext = createContext(null);
 
 const DEMO_SESSION_KEY = 'stratos_demo';
-const isDemo = () => sessionStorage.getItem(DEMO_SESSION_KEY) === '1';
+const isDemo = () => Boolean(sessionStorage.getItem(DEMO_SESSION_KEY));
 
 // Timeout SUAVE de la hidratación inicial. Tras ajustar los timeouts internos
 // de auth.js (getSession=3.5s, profile=5s), getStoredSession resuelve en <9s
