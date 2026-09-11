@@ -1,0 +1,130 @@
+{
+  "name": "INBOUND · NSG · Ivan · Infobip 9109",
+  "nodes": [
+    {
+      "id": "85b01b39-9f0e-4b93-91d3-d5547b553be6",
+      "name": "Recibir Infobip NSG",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "78103337-30db-4674-851f-1a66db67ce92",
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "infobip-nsg-ivan-6914",
+        "authentication": "basicAuth",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "Tfwfwpja8mBLhJSf",
+          "name": "Infobip NSG 6914 inbound"
+        }
+      }
+    },
+    {
+      "id": "bbfb14d2-82bc-4b2b-8477-60a004be3f9e",
+      "name": "Guardar en NSG",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        260,
+        0
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://glulgyhkrqpykxmujodb.supabase.co/rest/v1/rpc/fn_ingest_infobip_nsg",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpCustomAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ payload: $json.body }) }}",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "credentials": {
+        "httpCustomAuth": {
+          "id": "cLb9fN8NOosFmqpW",
+          "name": "Supabase REST stratos-prod (AIOS)"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "506555a0-36c3-400b-820b-5901c8e5fd66",
+      "name": "Confirmar guardado",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        520,
+        0
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {
+          "responseCode": 200
+        }
+      }
+    },
+    {
+      "id": "0787c2c4-68d6-48be-87d4-979688042350",
+      "name": "Pedir reintento a Infobip",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        520,
+        220
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\"ok\":false,\"retry\":true}",
+        "options": {
+          "responseCode": 503
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Recibir Infobip NSG": {
+      "main": [
+        [
+          {
+            "node": "Guardar en NSG",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Guardar en NSG": {
+      "main": [
+        [
+          {
+            "node": "Confirmar guardado",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Pedir reintento a Infobip",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all",
+    "saveManualExecutions": true,
+    "executionTimeout": 90
+  }
+}
