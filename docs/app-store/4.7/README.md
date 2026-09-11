@@ -71,4 +71,6 @@ Actualizamos la presentación de Stratos AI en App Store para mostrar mejor el C
 - Lanzamiento automático después de la aprobación.
 - Disponibilidad inmediata para todos los usuarios.
 - Mantener la valoración media actual.
-
+- Build 48 enviada a revisión el 11 de septiembre de 2026 a las 10:33 COL.
+- Estado verificado: `Pendiente de revisión`.
+- Identificador del envío: `733998cc-c675-42fb-86de-fea38a47374e`.
