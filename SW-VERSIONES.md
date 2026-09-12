@@ -1,5 +1,9 @@
 # Historial de versiones del Service Worker (CACHE_VERSION)
 
+## v426 — Stratos Rails
+
+Gestiones confirmadas, configuración atómica y Proceso a ancho completo en ambos temas. Requiere la migración 243. Renueva el caché estático en la próxima navegación; conserva el caché de assets y no fuerza recargas.
+
 > Este archivo NACIÓ el 2026-08-05 sacando 267 KB de comentarios que vivían dentro de
 > `public/sw.js`. El navegador se baja `sw.js` ENTERO en cada navegación para ver si
 > cambió: ese historial costaba ~99 KB comprimidos en cada apertura de la app, en
