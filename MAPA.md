@@ -6,7 +6,7 @@
 >
 > ¿Buscás un botón o un texto y no está acá? `npm run buscar "texto"`
 
-**189 archivos · 76.964 líneas**
+**190 archivos · 76.796 líneas**
 
 ---
 
@@ -41,7 +41,7 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | **Planes** | _sin vista propia (redirige a otra)_ | — |
 | **Perfil** | `src/app/views/Profile.jsx` | 1149 |
 | **Usuarios** | `src/app/features/Admin/AdminPanel.jsx` | 543 |
-| **Proceso** | `src/app/features/Admin/RailsSettings.jsx` | 394 |
+| **Proceso** | `src/app/features/Admin/RailsSettings.jsx` | 140 |
 
 ---
 
@@ -135,8 +135,9 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | `AdminPanel.jsx` | 543 | Panel de gestión de usuarios (Super Admin y Admin). |
 | `index.jsx` | 487 | Panel de chat con Agente Stratos AI. |
 | `index.jsx` | 453 | Portal de Candidatos — Stratos People |
-| `RailsSettings.jsx` | 394 | _sin describir_ |
 | `DocsStratos.jsx` | 262 | _sin describir_ |
+| `RailsSettings.jsx` | 140 | Configuración de Stratos Rails. Los controles editan un borrador por organización. |
+| `RailsSettings.css` | 86 | _sin describir_ |
 | `RoleBadge.jsx` | 29 | Badge de rol de usuario con colores según nivel. |
 
 ### `src/app/icons/`
@@ -443,7 +444,9 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Acciones | `src/app/views/CRM/index.jsx:4339` |
 | Acciones acumuladas · Asesores vs. iAgents | `src/app/views/Dash.jsx:85` |
 | Acciones de cierre IA | `src/app/views/CRM/components.jsx:5614` |
+| Acciones por bloque | `src/app/features/Admin/RailsSettings.jsx:78` |
 | Activa tu Copilot AI | `src/app/views/Copilot.jsx:1948` |
+| Activar para el equipo | `src/app/features/Admin/RailsSettings.jsx:71` |
 | Actividad del equipo IA — hoy | `src/app/views/IACRM.jsx:299` |
 | Actividad reciente | `src/app/views/CRM/index.jsx:5904` |
 | ACTIVO | `src/app/views/CRM/components.jsx:5501` |
@@ -578,6 +581,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Conectando… | `src/app/views/ConectarWhatsApp.jsx:122` |
 | Conectar mi WhatsApp | `src/app/views/ConectarWhatsApp.jsx:123` |
 | Configuración | `src/app/App.jsx:3082` |
+| Configuración del proceso comercial | `src/app/features/Admin/RailsSettings.jsx:68` |
 | Confirmados | `src/app/views/ZoomControl/Resumen.jsx:440` |
 | Confirmar contraseña | `src/app/views/Profile.jsx:333` |
 | Confirmas y listo | `src/app/views/ConectarWhatsApp.jsx:107` |
@@ -606,6 +610,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Cuentas de cobro | `src/app/views/CuentasCobro.jsx:267` |
 | Datos del Cliente | `src/app/views/LandingPages/index.jsx:1554` |
 | Delegar al equipo IA | `src/app/views/CRM/components.jsx:5465` |
+| Desactivada | `src/app/features/Admin/RailsSettings.jsx:113` |
 | Desbloqueada | `src/app/views/Marketing.jsx:666` |
 | Descarga el reporte ejecutivo como PDF | `src/app/views/ComandoDirectivo.jsx:903` |
 | Descargar el manual en Word | `src/app/features/MetaPanel/DocsStratos.jsx:169` |
@@ -613,8 +618,8 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Descargar en Word para firmarla | `src/app/views/CuentasCobro.jsx:419` |
 | Descartar | `src/app/App.jsx:2593` |
 | Descartar audio | `src/app/views/Copilot.jsx:1761` |
-| Descartar borrador y recargar configuración | `src/app/features/Admin/RailsSettings.jsx:182` |
-| Descartar cambios | `src/app/features/Admin/RailsSettings.jsx:178` |
+| Descartar borrador y recargar configuración | `src/app/features/Admin/RailsSettings.jsx:64` |
+| Descartar cambios | `src/app/features/Admin/RailsSettings.jsx:96` |
 | Descartar grabación | `src/app/views/CRM/LeadWhatsAppChat.jsx:808` |
 | Describe la tarea... | `src/app/views/CRM/components.jsx:2109` |
 | Descripción | `src/app/views/IACRM.jsx:441` |
@@ -657,13 +662,9 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Eliminar | `src/app/features/Admin/AdminPanel.jsx:416` |
 | Eliminar acción | `src/app/features/MetaPanel/index.jsx:1404` |
 | Eliminar cliente | `src/app/views/CRM/components.jsx:3859` |
-| Eliminar definitivamente | `src/app/views/Trash.jsx:197` |
-| Eliminar documento | `src/app/features/MetaPanel/index.jsx:1689` |
-| Eliminar mi cuenta | `src/app/views/Profile.jsx:164` |
-| Eliminar usuario | `src/app/features/Admin/AdminPanel.jsx:325` |
 
 
-_(464 textos más — usá `npm run buscar "texto"`)_
+_(472 textos más — usá `npm run buscar "texto"`)_
 
 ---
 
@@ -695,7 +696,6 @@ hacen. Agregarles un bloque `/** ... */` arriba los hace aparecer solos acá.
 - `src/app/views/CuentasCobro.jsx` (463 líneas)
 - `src/app/views/FinanzasAdmin.jsx` (456 líneas)
 - `src/clients/gasil/config.js` (422 líneas)
-- `src/app/features/Admin/RailsSettings.jsx` (394 líneas)
 - `src/lib/next-action-engine.js` (371 líneas)
 - `src/lib/offline-mode.js` (351 líneas)
 - `src/app/data/leads.js` (348 líneas)
@@ -756,6 +756,7 @@ hacen. Agregarles un bloque `/** ... */` arriba los hace aparecer solos acá.
 - `src/app/constants/areas.js` (97 líneas)
 - `src/app/constants/pipeline.js` (93 líneas)
 - `src/clients/tgenius/config.js` (90 líneas)
+- `src/app/features/Admin/RailsSettings.css` (86 líneas)
 - `src/app/views/CRM/date-range.js` (86 líneas)
 - `src/lib/avisos-nativos.js` (79 líneas)
 - `src/lib/transcribir.js` (77 líneas)

@@ -163,8 +163,8 @@ casa; por eso mismo son los que más cuidado piden.
 | `design-system/tokens.js` | **71** |
 | `lib/supabase.js` | **42** |
 | `hooks/useAuth.js` | **34** |
-| `hooks/useViewport.js` | **28** |
-| `app/SharedComponents.jsx` | **21** |
+| `hooks/useViewport.js` | **27** |
+| `app/SharedComponents.jsx` | **20** |
 | `lib/native.js` | **18** |
 | `hooks/useClient.js` | **17** |
 | `app/views/CRM/zoom-metrics.js` | **6** |

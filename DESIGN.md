@@ -4,7 +4,7 @@ description: Registro acotado de la interfaz construida dentro del Stratos exist
 colors:
   rails-accent-dark: "#6ee7c2"
   rails-accent-light: "#087252"
-  process-accent-light: "#0D9A76"
+  process-accent-light: "#067A5E"
   rails-text-dark: "#E2E8F0"
   rails-text-light: "#0B1220"
   rails-secondary-dark: "#aebaca"
@@ -81,7 +81,7 @@ La evidencia principal es `src/app/views/MiDia.jsx`, `MiDia.css`, `src/app/featu
 - Jerarquía legible entre cliente, razón, instrucción concreta y contexto.
 - Gestión desplegada dentro de la tarjeta y confirmación visible del resultado.
 - Temas claro y oscuro heredados, con ajustes locales de contraste en Mi día.
-- Ajustes compactos con borrador y guardado explícito.
+- Proceso ocupa el ancho del módulo, con ajustes y reglas separados y guardado persistente.
 
 Las capturas `desktop.png`, `mobile.png`, `mobile-form.png`, `settings-desktop.png` y `settings-mobile.png` bajo `.impeccable/review/` son viewports de demo local, algunos desplazados; no documentan páginas completas. Muestran estados concretos, incluyendo un bloque configurado a seis. El predeterminado contractual es siete. La revisión [rails-review.md](output/rails-review.md) limita su disposición `ship` a recuperación, contador personal y persistencia del contrato. Este documento no amplía esa validación a producción, todo el contenido o el tema claro integrado.
 
@@ -93,13 +93,13 @@ La superficie mantiene el verde de Stratos sobre neutros azulados, con texto sec
 
 - **Verde menta:** acento oscuro de Mi día y del proceso predeterminado; distingue el siguiente paso, acciones primarias y confirmaciones.
 - **Verde profundo:** variante local clara de Mi día, con tinta blanca en el botón primario.
-- **Verde de Proceso claro:** viene de `LP.accent`; no es el mismo valor que el ajuste local de Mi día.
+- **Verde de Proceso claro:** usa `T.accentDark` o `LP.accentDark` para texto y botones con contraste sobre blanco. Oscuro conserva `T.accent`.
 
 ### Neutral
 
 - **Superficie azul oscura y campo profundo:** separan la tarjeta de su formulario sin sombra añadida.
 - **Blanco y tinta oscura:** pareja de superficie y texto en Mi día claro.
-- **Texto secundario:** Mi día emplea sus variables locales; Proceso mantiene `T.txt2` y `T.txt3` incumbentes.
+- **Texto secundario:** Mi día emplea sus variables locales; Proceso usa `T.txt2` y evita atenuar filas apagadas completas. Su estado se expresa con texto e interruptor.
 - **Bordes translúcidos:** proceden del tema, delimitan tarjetas, controles y separadores.
 
 **The Theme Scope Rule.** Las variables `--rails-*` pertenecen a Mi día. No extender sus sustituciones de color al resto de Stratos ni confundirlas con toda la paleta `P` o `LP`.
@@ -113,7 +113,7 @@ Inter es la familia existente. Mi día la hereda del contenedor; Proceso usa `fo
 - **Razón e instrucción:** mismo cuerpo legible; la instrucción añade acento y peso (500).
 - **Contexto y acciones:** escala secundaria, con botones de peso normal y primario (600).
 - **Formulario de gestión:** campos de tamaño mayor que sus etiquetas; las etiquetas son visibles y están asociadas a cada control.
-- **Proceso:** título (20 px; 18 px en móvil), nombres de reglas (13 px) y cuerpo introductorio (12–12.5 px). Sus ayudas y pastillas más pequeñas se registran como densidad existente, no como escala recomendada para nuevas superficies.
+- **Proceso:** título 30 px (26 px móvil), secciones 17 px, reglas 15 px, cuerpo 14 px, contexto 13 px y anotaciones 12 px. Campos 16 px. Son escalones locales deliberados; los números del contador son tabulares.
 
 ## Layout
 
@@ -121,25 +121,25 @@ Mi día forma una columna centrada de ancho máximo (720 px), con tarjetas conse
 
 El formulario queda dentro de la tarjeta, separado por un borde superior, margen (18 px) y relleno superior (20 px). No es un diálogo. Las separaciones recurrentes toman pasos de la escala existente, aunque los estilos locales también contienen medidas ópticas intermedias; no se impone una retícula estricta que el código no sigue.
 
-Proceso tiene ancho máximo (880 px). Su envolvente cambia de relleno (28 px 28 px 40 px) a (10 px 0 40 px), y el contenedor interior cambia de (24 px) a (16 px). Usa `useIsMobile`: ancho de viewport de (768 px) o menos, o detección de teléfono táctil con lado corto de pantalla de (500 px) o menos. El título y el interruptor principal comparten fila; la descripción ocupa la siguiente. Las reglas son filas apiladas, con una sección editable abierta a la vez.
+Proceso ocupa el ancho disponible, sin el límite anterior de 880 px ni un panel exterior. Comparte `T.bg` con el lienzo del módulo. En escritorio distribuye ajustes generales y reglas en columnas de proporción 0.85:2, separadas 48 px. Hasta 1100 px reduce el espacio y hasta 800 px coloca las reglas debajo. Los ajustes permanecen lado a lado en tableta y se apilan hasta 540 px. La lista de reglas usa una superficie agrupada con separadores, sin tarjetas anidadas.
+
+La barra de guardado permanece al pie visible del área de contenido, con estado, descarte y guardado. Una extensión del mismo fondo cubre el espacio bajo ella; la navegación global conserva su posición. La envolvente no se encoge dentro del flex del shell: el contenido completo determina la altura desplazable.
 
 ## Elevation & Depth
 
-Las tarjetas de Mi día se separan por tono y borde, sin sombra propia. Proceso reutiliza `G`: vidrio translúcido con desenfoque y saturación, sin sombra en oscuro y con sombra ambiental en capas en claro. Los interruptores conservan una sombra breve en el pomo. Estas decisiones conviven; no se prescribe un sistema global sin sombras.
+Las tarjetas de Mi día se separan por tono y borde, sin sombra propia. Proceso usa superficies sólidas del tema (`T.bg2` oscuro y `T.surface` claro), con borde `T.borderH`. No añade vidrio ni sombras decorativas. La barra de guardado usa el mismo lienzo; no requiere desenfoque.
 
-Los detalles de vidrio, sombras, foco y transiciones se registran en [.impeccable/design.json](.impeccable/design.json). Las transiciones observadas en reglas e interruptores duran (0.2 s); `G` conserva su transición existente (0.3 s). No se añade ni se certifica un sistema nuevo de movimiento reducido.
+Los interruptores y chevrones de Proceso transicionan su transform en 180 ms, sin rebote. El feedback de presión es inmediato y no bloquea entradas. `prefers-reduced-motion` elimina transiciones y desplazamientos; `prefers-contrast: more` eleva el contraste de texto secundario y bordes. Las superficies sólidas no dependen de transparencia.
 
 ## Shapes
 
-Mi día usa esquinas suaves: tarjeta más amplia, controles intermedios y campos más contenidos. Proceso mantiene filas de regla, campos y pastillas con sus radios incumbentes; las pastillas y rieles del interruptor son redondos. No se normalizan a un único radio los componentes compartidos.
-
-Los botones y enlaces de Mi día tienen altura mínima (44 px); sus campos también. En Proceso, interruptores y botones del contador cuentan con cajas de (44 px), aunque el riel visual es menor. El guardado, descarte y recuperación explícitos también tienen altura mínima (44 px). Esto describe esos controles; no certifica que cada enlace o expansor heredado de Proceso alcance ese tamaño.
+Mi día conserva su escala. Proceso usa contenedores agrupados de 14 px, controles y campos de 10 px, foco interior de 6–9 px y riel de interruptor completamente redondeado (26 px). Estas diferencias locales responden a la anatomía de cada control. Todos los botones, expansores y enlaces de Proceso tienen objetivos de al menos 44 px.
 
 ## Components
 
 ### Buttons
 
-Mi día emplea un primario verde y acciones secundarias transparentes con borde. En hover el borde adopta el acento; los controles deshabilitados reducen opacidad. El foco visible usa contorno de (2 px) y separación exterior de (3 px). La regla compartida alcanza Proceso cuando `MiDia.css` está cargado y recurre a un verde fijo si no existe `--rails-accent`.
+Mi día emplea un primario verde y acciones secundarias transparentes con borde. En hover el borde adopta el acento; los controles deshabilitados reducen opacidad. El foco visible usa contorno de (2 px) y separación exterior de (3 px). Proceso importa su propia hoja de estilo y usa su acento del tema para el foco, sin depender de que Mi día haya cargado.
 
 ### Cards / Containers
 
@@ -157,7 +157,7 @@ El error de gestión es un bloque delineado con `role="alert"`; el éxito usa el
 
 ### Proceso
 
-El interruptor principal tiene nombre accesible y estado `aria-checked`; cambiarlo edita un borrador. Las pastillas distinguen cambios sin guardar, estado y personalización. Las filas editables usan `aria-expanded` y `aria-controls`. Guardar y descartar son acciones explícitas; la confirmación de demo se identifica como actualización de sesión. El contador y las prioridades mantienen etiquetas accesibles propias.
+El interruptor principal tiene nombre accesible y estado `aria-checked`; cambiarlo edita un borrador. Textos explícitos distinguen estado, personalización y reglas fijas. Las filas editables usan `aria-expanded` y `aria-controls`. El panel se reinicia al cambiar de organización. Guardar y descartar son acciones explícitas; la confirmación de demo se identifica como actualización de sesión. El contador deshabilita los límites y anuncia el valor. Los campos tienen etiquetas y ayuda enlazadas. Errores y falta de conexión mantienen recuperación visible.
 
 ## Do's and Don'ts
 
@@ -173,3 +173,7 @@ El interruptor principal tiene nombre accesible y estado `aria-checked`; cambiar
 - **Don't** convertir los overrides locales de Rails en una paleta global de Stratos.
 - **Don't** extraer las ayudas pequeñas, el bajo énfasis de las pastillas o los glifos del contador como nuevas reglas visuales generales.
 - **Don't** tratar una captura de demo, un viewport recortado o una revisión de tres fixes como validación de todo el producto.
+
+## Refinamiento de Proceso — septiembre 2026
+
+Capturas actualizadas en `.impeccable/review/proceso/`: escritorio y móvil en ambos temas, más el editor y el tamaño intermedio. Sustituyen solo la evidencia anterior de Proceso. Se aplicaron los principios de claridad, consistencia espacial, feedback y accesibilidad de la skill Apple; se conserva Inter y la identidad Stratos. La revisión es de demo local, no de una activación productiva. Detalle de pruebas en [la entrega visual](output/refinamiento-proceso-2026-09-12.md).

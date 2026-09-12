@@ -12,7 +12,7 @@
 .rails-light .rails-primary { color:white; }
 .stratos-rails button:hover,.stratos-rails a:hover { border-color:var(--rails-accent); }
 .stratos-rails button:disabled { opacity:.55; cursor:wait; }
-.stratos-rails :focus-visible,.rails-settings :focus-visible { outline:2px solid var(--rails-accent,#087252); outline-offset:3px; }
+.stratos-rails :focus-visible { outline:2px solid var(--rails-accent,#087252); outline-offset:3px; }
 .stratos-rails ::selection { color:var(--rails-field); background:var(--rails-accent); }
 .rails-gestion { border-top:1px solid var(--rails-border); margin-top:18px; padding-top:20px; }
 .rails-gestion fieldset { border:0; padding:0; margin:0 0 16px; min-width:0; }
