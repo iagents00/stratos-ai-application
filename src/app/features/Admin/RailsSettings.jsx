@@ -22,7 +22,7 @@
  *   dueño de su futuro, que es el problema que Rails viene a resolver.
  * ─────────────────────────────────────────────────────────────────────────────
  */
-import { useState, useMemo } from "react";
+import { useState, useMemo, useId } from "react";
 import { ChevronDown, RotateCcw, Check, ExternalLink } from "lucide-react";
 import { P, font, fontDisp } from "../../../design-system/tokens";
 import { catalogoDeReglas } from "../../../lib/next-action-engine";
@@ -33,7 +33,10 @@ import { useIsMobile } from "../../../hooks/useViewport";
 
 export default function RailsSettings({ T = P, isLight = false }) {
   const isMobile = useIsMobile();
-  const { cfg, cargando, guardar, puedeGuardar } = useRailsConfig();
+  const { cfg: guardada, cargando, guardar, puedeGuardar, guardando, error, recargar, scope, demo } = useRailsConfig();
+  const [borrador, setBorrador] = useState(null);
+  const cfg = borrador?.scope === scope ? borrador.cfg : guardada;
+  const sucio = cfg !== guardada;
   const catalogo = useMemo(() => catalogoDeReglas(), []);
 
   const [abierta, setAbierta] = useState(null);      // qué regla está desplegada
@@ -41,12 +44,18 @@ export default function RailsSettings({ T = P, isLight = false }) {
 
   const wTxt = isLight ? T.txt : "#FFFFFF";
 
-  async function aplicar(cambio) {
-    const siguiente = typeof cambio === "function" ? cambio(cfg) : { ...cfg, ...cambio };
+  function aplicar(cambio) {
+    setBorrador(prev => {
+      const actual = prev?.scope === scope ? prev.cfg : guardada;
+      return { scope, cfg: typeof cambio === "function" ? cambio(actual) : { ...actual, ...cambio } };
+    });
+    setEstado("");
+  }
+  async function guardarCambios() {
     setEstado("guardando");
-    const r = await guardar(siguiente);
+    const r = await guardar(cfg);
     setEstado(r.ok ? "ok" : (r.error || "No se pudo guardar"));
-    if (r.ok) setTimeout(() => setEstado((e) => (e === "ok" ? "" : e)), 2000);
+    if (r.ok) setBorrador(null);
   }
 
   const cambiarRegla = (tipo, parche) =>
@@ -55,9 +64,9 @@ export default function RailsSettings({ T = P, isLight = false }) {
   const activas = catalogo.filter((r) => cfg.reglas[r.tipo]?.activa !== false).length;
 
   return (
-    <div style={{ padding: isMobile ? "10px 0 40px" : "28px 28px 40px", maxWidth: 880 }}>
+    <div className="rails-settings" style={{ padding: isMobile ? "10px 0 40px" : "28px 28px 40px", maxWidth: 880 }}>
       <G T={T} style={{ padding: isMobile ? 16 : 24 }}>
-      <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+      <fieldset disabled={cargando || guardando || !puedeGuardar || !!error} style={{ border: 0, padding: 0, margin: 0, minWidth: 0, display: "flex", flexDirection: "column", gap: 18 }}>
 
         {/* ── El interruptor grande ──
             El switch va en la MISMA fila que el título, no al final de un bloque
@@ -75,22 +84,22 @@ export default function RailsSettings({ T = P, isLight = false }) {
                 fontFamily: fontDisp, letterSpacing: "-0.025em",
               }}>Stratos Rails</h3>
               <Pastilla T={T} activo={cfg.activo}>
-                {cargando ? "Cargando…" : cfg.activo ? "Prendido" : "Apagado"}
+                {cargando ? "Cargando…" : sucio ? "Cambios sin guardar" : cfg.activo ? "Prendido" : "Apagado"}
               </Pastilla>
             </div>
             <Interruptor
-              T={T} isLight={isLight} activo={cfg.activo} deshabilitado={cargando}
+              T={T} isLight={isLight} activo={cfg.activo} deshabilitado={cargando} nombre="Activar Stratos Rails"
               onChange={(v) => aplicar({ activo: v })}
             />
           </div>
-          <p style={{ margin: 0, fontSize: 12.5, color: T.txt3, fontFamily: font, lineHeight: 1.55, maxWidth: 560 }}>
+          <p style={{ margin: 0, fontSize: 12.5, color: T.txt2, fontFamily: font, lineHeight: 1.55, maxWidth: 560 }}>
             {cfg.activo
-              ? `Tu equipo abre el CRM y ve su lista del día: máximo ${cfg.maxTarjetas} ${cfg.maxTarjetas === 1 ? "acción" : "acciones"}, con el pipeline completo a un clic.`
+              ? `Tu equipo abre el CRM y ve su lista del día: bloques de ${cfg.maxTarjetas} ${cfg.maxTarjetas === 1 ? "acción" : "acciones"}, con el pipeline completo a un clic.`
               : "Apagado, el CRM se ve exactamente como siempre. Prenderlo le cambia la pantalla de entrada a todo el equipo."}
           </p>
         </div>
 
-        {!puedeGuardar && (
+        {demo && (
           <Aviso T={T}>
             Modo demo: muévele todo lo que quieras y míralo en Mi Día — pero al recargar
             vuelve como estaba, porque no hay organización donde guardarlo.
@@ -102,7 +111,7 @@ export default function RailsSettings({ T = P, isLight = false }) {
 
         {/* ── Antes de prenderlo, míralo ── */}
         <a
-          href="/?rails=1" target="_blank" rel="noreferrer"
+          href="/?app&rails=1" target="_blank" rel="noreferrer"
           style={{
             display: "inline-flex", alignItems: "center", gap: 7, alignSelf: "flex-start",
             fontSize: 12.5, fontFamily: font, color: T.accent, textDecoration: "none",
@@ -118,15 +127,14 @@ export default function RailsSettings({ T = P, isLight = false }) {
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
           <div style={{ minWidth: 240, flex: 1 }}>
             <p style={{ margin: "0 0 3px", fontSize: 13.5, fontWeight: 500, color: wTxt, fontFamily: font }}>
-              Acciones por día
+              Acciones por bloque
             </p>
-            <p style={{ margin: 0, fontSize: 12, color: T.txt3, fontFamily: font, lineHeight: 1.5 }}>
-              Siete es el default. Una lista que no se puede terminar deja de ser una lista
-              y vuelve a ser el pipeline con otro nombre.
+            <p style={{ margin: 0, fontSize: 12, color: T.txt2, fontFamily: font, lineHeight: 1.5 }}>
+              Siete por bloque de forma predeterminada. Al guardar una gestión aparece el siguiente cliente; el total pendiente siempre queda visible.
             </p>
           </div>
           <Contador
-            T={T} valor={cfg.maxTarjetas} min={1} max={12}
+            T={T} valor={cfg.maxTarjetas} min={1} max={12} nombre="acciones por bloque"
             onChange={(v) => aplicar({ maxTarjetas: v })}
           />
         </div>
@@ -136,9 +144,9 @@ export default function RailsSettings({ T = P, isLight = false }) {
         {/* ── Las reglas ── */}
         <div>
           <p style={{ margin: "0 0 3px", fontSize: 13.5, fontWeight: 500, color: wTxt, fontFamily: font }}>
-            Reglas <span style={{ color: T.txt3, fontWeight: 400 }}>· {activas} de {catalogo.length} activas</span>
+            Reglas <span style={{ color: T.txt2, fontWeight: 400 }}>· {activas} de {catalogo.length} activas</span>
           </p>
-          <p style={{ margin: "0 0 14px", fontSize: 12, color: T.txt3, fontFamily: font, lineHeight: 1.5 }}>
+          <p style={{ margin: "0 0 14px", fontSize: 12, color: T.txt2, fontFamily: font, lineHeight: 1.5 }}>
             Cada regla decide por qué un cliente aparece hoy y qué hay que conseguir con él.
             Apaga las que no apliquen a tu negocio y escribe los textos con tu voz.
           </p>
@@ -158,14 +166,21 @@ export default function RailsSettings({ T = P, isLight = false }) {
         </div>
 
         {estado === "guardando" && (
-          <p style={{ margin: 0, fontSize: 12, color: T.txt3, fontFamily: font }}>Guardando…</p>
+          <p style={{ margin: 0, fontSize: 12, color: T.txt2, fontFamily: font }}>Guardando…</p>
         )}
         {estado === "ok" && (
-          <p style={{ margin: 0, fontSize: 12, color: T.accent, fontFamily: font, display: "flex", alignItems: "center", gap: 6 }}>
-            <Check size={13} strokeWidth={2.4} /> Guardado. Tu equipo lo ve en su siguiente carga.
+          <p role="status" style={{ margin: 0, fontSize: 12, color: T.accent, fontFamily: font, display: "flex", alignItems: "center", gap: 6 }}>
+            <Check size={13} strokeWidth={2.4} /> {demo ? "Demo actualizada en esta sesión." : "Guardado. Tu equipo lo ve en su siguiente carga."}
           </p>
         )}
-      </div>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 12 }}>
+          <button disabled={!sucio || guardando} onClick={guardarCambios} style={{ minHeight: 44, padding: "10px 16px", borderRadius: 10, background: T.accent, color: "#04120D", border: 0, cursor: "pointer" }}>{guardando ? "Guardando…" : "Guardar cambios del proceso"}</button>
+          {sucio && <button onClick={() => { setBorrador(null); setEstado(""); }} style={{ minHeight: 44, padding: "10px 16px", border: `1px solid ${T.border}`, background: "transparent", color: T.txt, borderRadius: 10 }}>Descartar cambios</button>}
+        </div>
+      </fieldset>
+      {error && <div role="alert"><p>No se pudo leer la configuración: {error}</p><button onClick={recargar} style={{ minHeight: 44 }}>Recargar configuración</button></div>}
+      {estado && !["ok","guardando"].includes(estado) && <button onClick={() => { setBorrador(null); setEstado(""); recargar(); }} style={{ minHeight: 44 }}>Descartar borrador y recargar configuración</button>}
+      {!puedeGuardar && <p role="status">Sin conexión: vuelve a conectarte para editar el proceso.</p>}
       </G>
     </div>
   );
@@ -184,11 +199,12 @@ function FilaRegla({ T, isLight, wTxt, regla, valor, abierta, onAbrir, onCambio 
     }}>
       <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px" }}>
         <Interruptor
-          T={T} isLight={isLight} pequeno activo={activa} deshabilitado={regla.fija}
+          T={T} isLight={isLight} pequeno activo={activa} nombre={`Activar ${regla.label}`} deshabilitado={regla.fija}
           titulo={regla.fija ? "Esta regla es la red de seguridad y no se puede apagar" : undefined}
           onChange={(v) => onCambio({ activa: v })}
         />
         <button
+          aria-expanded={abierta} aria-controls={`rails-regla-${regla.tipo}`}
           onClick={onAbrir}
           style={{
             flex: 1, display: "flex", alignItems: "center", gap: 10, background: "none",
@@ -202,7 +218,7 @@ function FilaRegla({ T, isLight, wTxt, regla, valor, abierta, onAbrir, onCambio 
               {regla.fija && <Pastilla T={T} tenue>siempre</Pastilla>}
             </div>
             <p style={{
-              margin: "2px 0 0", fontSize: 11.5, color: T.txt3, fontFamily: font,
+              margin: "2px 0 0", fontSize: 11.5, color: T.txt2, fontFamily: font,
               lineHeight: 1.45,
             }}>{regla.cuando}</p>
           </div>
@@ -214,7 +230,7 @@ function FilaRegla({ T, isLight, wTxt, regla, valor, abierta, onAbrir, onCambio 
       </div>
 
       {abierta && (
-        <div style={{ padding: "0 14px 14px", display: "flex", flexDirection: "column", gap: 12 }}>
+        <div id={`rails-regla-${regla.tipo}`} style={{ padding: "0 14px 14px", display: "flex", flexDirection: "column", gap: 12 }}>
           <Campo
             T={T} isLight={isLight} wTxt={wTxt}
             etiqueta="Por qué aparece hoy"
@@ -232,16 +248,16 @@ function FilaRegla({ T, isLight, wTxt, regla, valor, abierta, onAbrir, onCambio 
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
             <div>
               <p style={{ margin: "0 0 2px", fontSize: 12, fontWeight: 500, color: wTxt, fontFamily: font }}>Prioridad</p>
-              <p style={{ margin: 0, fontSize: 11, color: T.txt3, fontFamily: font }}>
+              <p style={{ margin: 0, fontSize: 11, color: T.txt2, fontFamily: font }}>
                 Más alto sube en la lista. De fábrica: {regla.peso}.
               </p>
             </div>
             <Contador
-              T={T} valor={valor.peso ?? regla.peso} min={0} max={100} paso={5}
+              T={T} valor={valor.peso ?? regla.peso} nombre={`prioridad de ${regla.label}`} min={0} max={100} paso={5}
               onChange={(v) => onCambio({ peso: v })}
             />
           </div>
-          <p style={{ margin: 0, fontSize: 11, color: T.txt3, fontFamily: font, lineHeight: 1.5 }}>
+          <p style={{ margin: 0, fontSize: 11, color: T.txt2, fontFamily: font, lineHeight: 1.5 }}>
             Puedes usar {FICHAS_DISPONIBLES.map((f) => `{${f}}`).join(" ")} y se reemplazan solas.
             Deja un campo vacío para volver al texto de fábrica.
           </p>
@@ -255,28 +271,27 @@ function FilaRegla({ T, isLight, wTxt, regla, valor, abierta, onAbrir, onCambio 
 
 /** Textarea que guarda al salir del campo, no en cada tecla. */
 function Campo({ T, isLight, wTxt, etiqueta, ayuda, valor, marca, onGuardar }) {
-  const [borrador, setBorrador] = useState(valor);
-  const sucio = borrador !== valor;
+  const id = useId();
 
   return (
     <div>
       <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 8, marginBottom: 5 }}>
-        <label style={{ fontSize: 12, fontWeight: 500, color: wTxt, fontFamily: font }}>{etiqueta}</label>
+        <label htmlFor={id} style={{ fontSize: 12, fontWeight: 500, color: wTxt, fontFamily: font }}>{etiqueta}</label>
         {valor && (
           <button
-            onClick={() => { setBorrador(""); onGuardar(""); }}
+            onClick={() => onGuardar("")}
             style={{
               display: "flex", alignItems: "center", gap: 4, background: "none", border: "none",
-              padding: 0, cursor: "pointer", fontSize: 11, color: T.txt3, fontFamily: font,
+              padding: "8px 0", minHeight: 44, cursor: "pointer", fontSize: 11, color: T.txt2, fontFamily: font,
             }}
           ><RotateCcw size={11} strokeWidth={2.2} /> volver al de fábrica</button>
         )}
       </div>
-      <p style={{ margin: "0 0 6px", fontSize: 11, color: T.txt3, fontFamily: font }}>{ayuda}</p>
+      <p style={{ margin: "0 0 6px", fontSize: 11, color: T.txt2, fontFamily: font }}>{ayuda}</p>
       <textarea
-        value={borrador}
-        onChange={(e) => setBorrador(e.target.value)}
-        onBlur={() => { if (sucio) onGuardar(borrador); }}
+        id={id} maxLength={1000}
+        value={valor}
+        onChange={(e) => onGuardar(e.target.value)}
         rows={2}
         placeholder={marca}
         style={{
@@ -285,14 +300,14 @@ function Campo({ T, isLight, wTxt, etiqueta, ayuda, valor, marca, onGuardar }) {
           border: `1px solid ${T.border}`,
           background: isLight ? "#FFFFFF" : "rgba(0,0,0,0.25)",
           color: wTxt, fontSize: 12.5, fontFamily: font, lineHeight: 1.5,
-          outline: "none",
+
         }}
       />
     </div>
   );
 }
 
-function Interruptor({ T, activo, onChange, deshabilitado, pequeno, titulo, isLight }) {
+function Interruptor({ nombre, T, activo, onChange, deshabilitado, pequeno, titulo, isLight }) {
   const w = pequeno ? 34 : 48, h = pequeno ? 20 : 28, d = h - 6;
   // Un interruptor apagado tiene que verse como interruptor. Con el riel
   // transparente se leía como un borde decorativo —o peor, en claro, como un
@@ -301,19 +316,20 @@ function Interruptor({ T, activo, onChange, deshabilitado, pequeno, titulo, isLi
   const rielApagado = isLight ? "#D8DEE7" : "rgba(255,255,255,0.14)";
   return (
     <button
-      role="switch" aria-checked={activo} title={titulo}
+      role="switch" aria-label={nombre} aria-checked={activo} title={titulo}
       onClick={() => !deshabilitado && onChange(!activo)}
       disabled={deshabilitado}
       style={{
-        width: w, height: h, borderRadius: 99, flexShrink: 0, position: "relative",
-        border: "none", background: activo ? T.accent : rielApagado,
+        width: Math.max(w,44), height: 44, borderRadius: 99, flexShrink: 0, position: "relative",
+        border: "none", background: "transparent",
         cursor: deshabilitado ? "not-allowed" : "pointer",
         opacity: deshabilitado ? 0.45 : 1,
         transition: "background 0.2s", padding: 0,
       }}
     >
-      <span style={{
-        position: "absolute", top: (h - d) / 2, left: activo ? w - d - 3 : 3,
+      <span aria-hidden="true" style={{ position: "absolute", width: w, height: h, left: (Math.max(w,44)-w)/2, top: (44-h)/2, borderRadius: 99, background: activo ? T.accent : rielApagado }} />
+      <span aria-hidden="true" style={{
+        position: "absolute", top: (44 - d) / 2, left: (Math.max(w,44)-w)/2 + (activo ? w - d - 3 : 3),
         width: d, height: d, borderRadius: "50%",
         background: activo ? "#04120D" : "#FFFFFF",
         boxShadow: "0 1px 3px rgba(0,0,0,0.28)",
@@ -323,13 +339,14 @@ function Interruptor({ T, activo, onChange, deshabilitado, pequeno, titulo, isLi
   );
 }
 
-function Contador({ T, valor, min, max, paso = 1, onChange, deshabilitado }) {
+function Contador({ nombre, T, valor, min, max, paso = 1, onChange, deshabilitado }) {
   const btn = (etiqueta, delta) => (
     <button
+      aria-label={`${delta < 0 ? "Reducir" : "Aumentar"} ${nombre}`}
       onClick={() => onChange(Math.min(max, Math.max(min, valor + delta)))}
       disabled={deshabilitado}
       style={{
-        width: 30, height: 30, borderRadius: 8, border: `1px solid ${T.border}`,
+        width: 44, height: 44, borderRadius: 8, border: `1px solid ${T.border}`,
         background: "transparent", color: T.txt2, fontSize: 15, fontFamily: font,
         cursor: deshabilitado ? "not-allowed" : "pointer", opacity: deshabilitado ? 0.45 : 1,
         display: "flex", alignItems: "center", justifyContent: "center", lineHeight: 1,
@@ -362,7 +379,7 @@ function Pastilla({ T, children, activo, tenue }) {
 
 function Aviso({ T, children, error }) {
   return (
-    <p style={{
+    <p role={error ? "alert" : "status"} style={{
       margin: 0, padding: "9px 12px", borderRadius: 9, fontSize: 12, fontFamily: font,
       color: error ? "#FCA5A5" : T.txt2, lineHeight: 1.5,
       background: error ? "rgba(239,68,68,0.08)" : T.glass,

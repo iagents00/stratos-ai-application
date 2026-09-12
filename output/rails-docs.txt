@@ -1,0 +1,7 @@
+
+> stratos-ai@0.0.0 verificar-docs
+> node scripts/verificar-docs.mjs
+
+
+46 documentos · 184 referencias revisadas · 0 rotas
+Ninguna documentación miente.

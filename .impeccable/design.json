@@ -1,0 +1,121 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-12T22:24:05.443613+00:00",
+  "title": "Design System: Stratos Rails — Mi día y Proceso",
+  "extensions": {
+    "shadows": [
+      {
+        "name": "process-switch-thumb",
+        "value": "0 1px 3px rgba(0,0,0,0.28)",
+        "purpose": "Pomo del interruptor de Proceso."
+      },
+      {
+        "name": "process-glass-light-rest",
+        "value": "0 1px 3px rgba(15,23,42,0.05), 0 8px 24px rgba(15,23,42,0.06), 0 16px 40px rgba(15,23,42,0.04), inset 0 1px 0 rgba(255,255,255,0.8)",
+        "purpose": "G reutilizado por Proceso, estado claro de reposo según código; no certificación de render integrado."
+      }
+    ],
+    "motion": [
+      {
+        "name": "process-control",
+        "value": "0.2s",
+        "purpose": "Opacidad de regla, giro de chevron y desplazamiento/color del interruptor."
+      },
+      {
+        "name": "process-glass",
+        "value": "all 0.3s cubic-bezier(.4,0,.2,1)",
+        "purpose": "Transición incumbente de G; Proceso no habilita su prop hover."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "mi-dia-small",
+        "value": "480px"
+      },
+      {
+        "name": "process-mobile-viewport",
+        "value": "768px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primario de gestión",
+      "kind": "button",
+      "refersTo": "button-primary-dark",
+      "description": "Variante de Mi día oscuro; hereda variables Rails si el host las expone. Vista previa visual sin lógica de guardado.",
+      "html": "<button class=\"ds-rails-primary\">Guardar resultado y siguiente paso</button>",
+      "css": ".ds-rails-primary{min-height:44px;padding:10px 14px;display:inline-flex;justify-content:center;align-items:center;gap:7px;border:1px solid var(--rails-border,rgba(255,255,255,0.07));border-radius:10px;cursor:pointer;font-family:\"Inter\", -apple-system, BlinkMacSystemFont, \"Segoe UI Variable\", \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif;font-size:13px;line-height:1.4;text-decoration:none;background:var(--rails-accent,#6ee7c2);color:#08251b;border-color:transparent;font-weight:600;}.ds-rails-primary:hover{border-color:var(--rails-accent,#6ee7c2)}.ds-rails-primary:focus-visible{outline:2px solid var(--rails-accent,#6ee7c2);outline-offset:3px}.ds-rails-primary:disabled{opacity:.55;cursor:wait}"
+    },
+    {
+      "name": "Acción secundaria",
+      "kind": "button",
+      "refersTo": "button-secondary-dark",
+      "description": "Variante de Mi día oscuro; hereda variables Rails si el host las expone. Vista previa visual sin lógica de guardado.",
+      "html": "<button class=\"ds-rails-secondary\">Ver ficha</button>",
+      "css": ".ds-rails-secondary{min-height:44px;padding:10px 14px;display:inline-flex;justify-content:center;align-items:center;gap:7px;border:1px solid var(--rails-border,rgba(255,255,255,0.07));border-radius:10px;cursor:pointer;font-family:\"Inter\", -apple-system, BlinkMacSystemFont, \"Segoe UI Variable\", \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif;font-size:13px;line-height:1.4;text-decoration:none;background:transparent;color:var(--rails-text,#E2E8F0);}.ds-rails-secondary:hover{border-color:var(--rails-accent,#6ee7c2)}.ds-rails-secondary:focus-visible{outline:2px solid var(--rails-accent,#6ee7c2);outline-offset:3px}.ds-rails-secondary:disabled{opacity:.55;cursor:wait}"
+    },
+    {
+      "name": "Campo de siguiente paso",
+      "kind": "input",
+      "refersTo": "field-dark",
+      "description": "Campo etiquetado de Mi día oscuro; el formulario real añade validación y recuperación.",
+      "html": "<label class=\"ds-rails-label\" for=\"ds-paso\">Qué harás después</label><input class=\"ds-rails-field\" id=\"ds-paso\" placeholder=\"Por ejemplo: revisar la propuesta con el cliente\" />",
+      "css": ".ds-rails-label{display:block;margin:14px 0 6px;color:var(--rails-text,#E2E8F0);font-family:\"Inter\", -apple-system, BlinkMacSystemFont, \"Segoe UI Variable\", \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif;font-size:14px;font-weight:500}.ds-rails-field{display:block;width:100%;min-width:0;box-sizing:border-box;min-height:44px;padding:10px;border:1px solid var(--rails-border,rgba(255,255,255,0.07));border-radius:8px;font-family:\"Inter\", -apple-system, BlinkMacSystemFont, \"Segoe UI Variable\", \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif;font-size:16px;color:var(--rails-text,#E2E8F0);background:var(--rails-field,#0d1420);caret-color:var(--rails-accent,#6ee7c2);color-scheme:dark}.ds-rails-field::placeholder{color:var(--rails-secondary,#aebaca)}.ds-rails-field:focus-visible{outline:2px solid var(--rails-accent,#6ee7c2);outline-offset:3px}"
+    },
+    {
+      "name": "Tarjeta de acción",
+      "kind": "card",
+      "refersTo": "action-card-dark",
+      "description": "Jerarquía visual del componente real. El contenido de ejemplo se limita a texto presente en la demo.",
+      "html": "<article class=\"ds-rails-card\"><p class=\"ds-rails-context\">1 de 6 · Llamada · hoy</p><h3>Tony Norberto</h3><p>Mostró señales de compra activa.</p><p class=\"ds-rails-request\">Propón fecha concreta para el siguiente paso, no 'te aviso'.</p></article>",
+      "css": ".ds-rails-card{padding:22px;margin:16px 0;border:1px solid var(--rails-border,rgba(255,255,255,0.07));border-radius:14px;background:var(--rails-surface,#141c28);color:var(--rails-text,#E2E8F0);font-family:\"Inter\", -apple-system, BlinkMacSystemFont, \"Segoe UI Variable\", \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif;overflow-wrap:anywhere}.ds-rails-card h3{font-size:24px;letter-spacing:-.025em;margin:4px 0 12px}.ds-rails-card p{font-size:15px;line-height:1.55;margin:8px 0 14px}.ds-rails-card .ds-rails-context{color:var(--rails-secondary,#aebaca);font-size:13px}.ds-rails-card .ds-rails-request{color:var(--rails-accent,#6ee7c2);font-weight:500}@media(max-width:480px){.ds-rails-card{padding:16px}.ds-rails-card h3{font-size:22px}}"
+    },
+    {
+      "name": "Interruptor principal de Proceso",
+      "kind": "custom",
+      "description": "Estado apagado oscuro con caja de 48 × 44 px y riel de 48 × 28 px. El snippet es una muestra de estado, sin controlador React.",
+      "html": "<button class=\"ds-rails-switch\" role=\"switch\" aria-label=\"Activar Stratos Rails\" aria-checked=\"false\"><span class=\"ds-rails-track\" aria-hidden=\"true\"></span><span class=\"ds-rails-thumb\" aria-hidden=\"true\"></span></button>",
+      "css": ".ds-rails-switch{width:48px;height:44px;border-radius:99px;flex-shrink:0;position:relative;border:none;background:transparent;cursor:pointer;transition:background .2s;padding:0}.ds-rails-track{position:absolute;width:48px;height:28px;left:0;top:8px;border-radius:99px;background:rgba(255,255,255,.14)}.ds-rails-thumb{position:absolute;top:11px;left:3px;width:22px;height:22px;border-radius:50%;background:#FFFFFF;box-shadow:0 1px 3px rgba(0,0,0,.28);transition:left .2s,background .2s}.ds-rails-switch[aria-checked=true] .ds-rails-track{background:#6EE7C2}.ds-rails-switch[aria-checked=true] .ds-rails-thumb{left:23px;background:#04120D}.ds-rails-switch:focus-visible{outline:2px solid var(--rails-accent,#087252);outline-offset:3px}.ds-rails-switch:disabled{cursor:not-allowed;opacity:.45}"
+    },
+    {
+      "name": "Contenedor de Proceso",
+      "kind": "card",
+      "description": "G en reposo oscuro, usado por Proceso. Conserva vidrio incumbente; la sombra de la variante clara se registra en extensions.shadows.",
+      "html": "<div class=\"ds-process-glass\"><p>Stratos Rails</p></div>",
+      "css": ".ds-process-glass{background:rgba(255,255,255,0.035);backdrop-filter:blur(40px) saturate(160%);-webkit-backdrop-filter:blur(40px) saturate(160%);border:1px solid rgba(255,255,255,0.07);border-radius:16px;padding:24px;color:#E2E8F0;font-family:\"Inter\",sans-serif;box-shadow:none;transition:all .3s cubic-bezier(.4,0,.2,1)}@media(max-width:768px){.ds-process-glass{padding:16px}}"
+    }
+  ],
+  "narrative": {
+    "overview": "Este registro describe exclusivamente **Mi día y los ajustes de Proceso**. Conserva la identidad de Stratos: Inter, fondos oscuros azulados o superficies claras, acento verde, bordes discretos y contenedores redondeados. No establece una identidad nueva ni reglas globales para otras áreas de la aplicación.\n\nLa evidencia principal es `src/app/views/MiDia.jsx`, `MiDia.css`, `src/app/features/Admin/RailsSettings.jsx` y `src/design-system/tokens.js`. El contrato operativo permanece en [PRODUCT.md](PRODUCT.md). Los valores de la cabecera documentan las asignaciones construidas; el código y los tokens incumbentes siguen siendo la fuente de implementación. Un tema recibido por propiedades puede sustituir los valores de texto y borde de los temas predeterminados.\n",
+    "keyCharacteristics": [
+      "Jerarquía legible entre cliente, razón, instrucción concreta y contexto.",
+      "Gestión desplegada dentro de la tarjeta y confirmación visible del resultado.",
+      "Temas claro y oscuro heredados, con ajustes locales de contraste en Mi día.",
+      "Ajustes compactos con borrador y guardado explícito."
+    ],
+    "rules": [
+      {
+        "name": "Theme Scope",
+        "body": "Las variables `--rails-*` pertenecen a Mi día. No extender sus sustituciones de color al resto de Stratos ni confundirlas con toda la paleta `P` o `LP`.",
+        "section": "colors"
+      },
+      {
+        "name": "Confirmed State",
+        "body": "Presentar el estado pendiente, el error y la confirmación como estados distintos; conservar la recuperación que corresponde al resultado del envío.",
+        "section": "components"
+      }
+    ],
+    "dos": [
+      "**Do** conservar la identidad y los temas incumbentes dentro de esta superficie.",
+      "**Do** mantener cliente, razón e instrucción en su jerarquía actual.",
+      "**Do** conservar etiquetas, foco visible y recuperación de errores al ampliar estos componentes.",
+      "**Do** distinguir borrador, envío pendiente y confirmación en texto además del color."
+    ],
+    "donts": [
+      "**Don't** convertir los overrides locales de Rails en una paleta global de Stratos.",
+      "**Don't** extraer las ayudas pequeñas, el bajo énfasis de las pastillas o los glifos del contador como nuevas reglas visuales generales.",
+      "**Don't** tratar una captura de demo, un viewport recortado o una revisión de tres fixes como validación de todo el producto."
+    ]
+  }
+}

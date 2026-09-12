@@ -53,15 +53,15 @@ const TOPE_TARJETAS = 12;   // más que esto y deja de ser una lista terminable
  * motor. Nunca lanza y nunca devuelve algo incompleto.
  */
 export function fusionarRails(guardada) {
-  const g = (guardada && typeof guardada === "object") ? guardada : {};
+  const g = (guardada && typeof guardada === "object" && !Array.isArray(guardada)) ? guardada : {};
 
-  const max = Number(g.maxTarjetas);
+  const max = typeof g.maxTarjetas === "number" ? g.maxTarjetas : NaN;
   const reglas = {};
   for (const r of catalogoDeReglas()) {
     const sobre = (g.reglas && typeof g.reglas === "object" && g.reglas[r.tipo]) || {};
-    const peso = Number(sobre.peso);
+    const peso = typeof sobre.peso === "number" ? sobre.peso : NaN;
     reglas[r.tipo] = {
-      activa: sobre.activa !== false,                       // solo un false explícito apaga
+      activa: r.fija || sobre.activa !== false,                       // solo un false explícito apaga
       peso:   Number.isFinite(peso) ? clamp(peso, 0, 100) : r.peso,
       razon:  textoLimpio(sobre.razon),                     // null = usar el del motor
       pedir:  textoLimpio(sobre.pedir),
@@ -102,5 +102,5 @@ export function compactarRails(cfg) {
 function clamp(n, min, max) { return Math.min(max, Math.max(min, n)); }
 function textoLimpio(v) {
   const t = typeof v === "string" ? v.trim() : "";
-  return t.length ? t : null;
+  return t.length ? t.slice(0, 1000) : null;
 }

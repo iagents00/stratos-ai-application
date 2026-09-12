@@ -1,0 +1,303 @@
+{
+  "archivos": 219,
+  "errores": 353,
+  "avisos": 30,
+  "archivosConErrores": [
+    {
+      "archivo": "api/og-landing.js",
+      "errores": 1
+    },
+    {
+      "archivo": "api/push/refresh.js",
+      "errores": 3
+    },
+    {
+      "archivo": "check_braces.js",
+      "errores": 1
+    },
+    {
+      "archivo": "create-admin.js",
+      "errores": 1
+    },
+    {
+      "archivo": "list-tables.js",
+      "errores": 3
+    },
+    {
+      "archivo": "public/sw.js",
+      "errores": 6
+    },
+    {
+      "archivo": "src/app/App.jsx",
+      "errores": 15
+    },
+    {
+      "archivo": "src/app/SharedComponents.jsx",
+      "errores": 3
+    },
+    {
+      "archivo": "src/app/components/Chat.jsx",
+      "errores": 2
+    },
+    {
+      "archivo": "src/app/components/EstadoAvisos.jsx",
+      "errores": 1
+    },
+    {
+      "archivo": "src/app/components/HistoryDrawer.jsx",
+      "errores": 1
+    },
+    {
+      "archivo": "src/app/components/PermissionGate.jsx",
+      "errores": 1
+    },
+    {
+      "archivo": "src/app/components/SuggestActionsModal.jsx",
+      "errores": 1
+    },
+    {
+      "archivo": "src/app/features/Admin/AdminPanel.jsx",
+      "errores": 4
+    },
+    {
+      "archivo": "src/app/features/Admin/RoleBadge.jsx",
+      "errores": 1
+    },
+    {
+      "archivo": "src/app/features/ChatPanel/index.jsx",
+      "errores": 9
+    },
+    {
+      "archivo": "src/app/features/MetaPanel/DocsStratos.jsx",
+      "errores": 1
+    },
+    {
+      "archivo": "src/app/features/MetaPanel/index.jsx",
+      "errores": 16
+    },
+    {
+      "archivo": "src/app/features/Portal/index.jsx",
+      "errores": 7
+    },
+    {
+      "archivo": "src/app/icons/ios-icons.jsx",
+      "errores": 1
+    },
+    {
+      "archivo": "src/app/views/CRM/AdvisorMetrics.jsx",
+      "errores": 2
+    },
+    {
+      "archivo": "src/app/views/CRM/CallActionButton.jsx",
+      "errores": 3
+    },
+    {
+      "archivo": "src/app/views/CRM/LeadRelatedContacts.jsx",
+      "errores": 2
+    },
+    {
+      "archivo": "src/app/views/CRM/RequiresHumanButton.jsx",
+      "errores": 4
+    },
+    {
+      "archivo": "src/app/views/CRM/ScheduledCallBadge.jsx",
+      "errores": 2
+    },
+    {
+      "archivo": "src/app/views/CRM/ZoomBoard.jsx",
+      "errores": 1
+    },
+    {
+      "archivo": "src/app/views/CRM/components.jsx",
+      "errores": 24
+    },
+    {
+      "archivo": "src/app/views/CRM/index.jsx",
+      "errores": 37
+    },
+    {
+      "archivo": "src/app/views/Caja.jsx",
+      "errores": 3
+    },
+    {
+      "archivo": "src/app/views/ComandoDirectivo.jsx",
+      "errores": 3
+    },
+    {
+      "archivo": "src/app/views/ComandoOps.jsx",
+      "errores": 1
+    },
+    {
+      "archivo": "src/app/views/Copilot.jsx",
+      "errores": 10
+    },
+    {
+      "archivo": "src/app/views/CuentasCobro.jsx",
+      "errores": 2
+    },
+    {
+      "archivo": "src/app/views/Dash.jsx",
+      "errores": 1
+    },
+    {
+      "archivo": "src/app/views/FinanzasAdmin.jsx",
+      "errores": 1
+    },
+    {
+      "archivo": "src/app/views/IACRM.jsx",
+      "errores": 2
+    },
+    {
+      "archivo": "src/app/views/LandingPages/LandingPagePreview.jsx",
+      "errores": 3
+    },
+    {
+      "archivo": "src/app/views/LandingPages/index.jsx",
+      "errores": 13
+    },
+    {
+      "archivo": "src/app/views/Marketing.jsx",
+      "errores": 11
+    },
+    {
+      "archivo": "src/app/views/Nomina.jsx",
+      "errores": 2
+    },
+    {
+      "archivo": "src/app/views/Profile.jsx",
+      "errores": 3
+    },
+    {
+      "archivo": "src/app/views/RRHHModule.jsx",
+      "errores": 3
+    },
+    {
+      "archivo": "src/app/views/ZoomControl/Graficas.jsx",
+      "errores": 3
+    },
+    {
+      "archivo": "src/app/views/ZoomControl/Resumen.jsx",
+      "errores": 1
+    },
+    {
+      "archivo": "src/app/views/ZoomControl/index.jsx",
+      "errores": 3
+    },
+    {
+      "archivo": "src/contexts/AuthContext.jsx",
+      "errores": 6
+    },
+    {
+      "archivo": "src/contexts/ClientContext.jsx",
+      "errores": 1
+    },
+    {
+      "archivo": "src/design-system/primitives.jsx",
+      "errores": 1
+    },
+    {
+      "archivo": "src/hooks/useCopilotInbox.js",
+      "errores": 2
+    },
+    {
+      "archivo": "src/hooks/useScheduledCalls.js",
+      "errores": 2
+    },
+    {
+      "archivo": "src/hooks/useWhatsAppInbox.js",
+      "errores": 2
+    },
+    {
+      "archivo": "src/hooks/useZoomAgendados.js",
+      "errores": 2
+    },
+    {
+      "archivo": "src/landing/LandingMarketing.jsx",
+      "errores": 4
+    },
+    {
+      "archivo": "src/landing/LoginScreen.jsx",
+      "errores": 13
+    },
+    {
+      "archivo": "src/landing/ManualCRM.jsx",
+      "errores": 3
+    },
+    {
+      "archivo": "src/landing/ManualMarketing.jsx",
+      "errores": 1
+    },
+    {
+      "archivo": "src/landing/PricingScreen.jsx",
+      "errores": 1
+    },
+    {
+      "archivo": "src/landing/PrivacyPolicy.jsx",
+      "errores": 1
+    },
+    {
+      "archivo": "src/lib/auth.js",
+      "errores": 13
+    },
+    {
+      "archivo": "src/lib/chunk-recovery.js",
+      "errores": 5
+    },
+    {
+      "archivo": "src/lib/docx.js",
+      "errores": 1
+    },
+    {
+      "archivo": "src/lib/lead-backup.js",
+      "errores": 4
+    },
+    {
+      "archivo": "src/lib/lead-draft.js",
+      "errores": 6
+    },
+    {
+      "archivo": "src/lib/lead-save.js",
+      "errores": 2
+    },
+    {
+      "archivo": "src/lib/lead-storage.js",
+      "errores": 21
+    },
+    {
+      "archivo": "src/lib/markdown.jsx",
+      "errores": 2
+    },
+    {
+      "archivo": "src/lib/offline-mode.js",
+      "errores": 11
+    },
+    {
+      "archivo": "src/lib/push-native.js",
+      "errores": 1
+    },
+    {
+      "archivo": "src/lib/push.js",
+      "errores": 1
+    },
+    {
+      "archivo": "src/lib/recovery.js",
+      "errores": 2
+    },
+    {
+      "archivo": "src/lib/webhook-diagnostico-stratos.js",
+      "errores": 1
+    },
+    {
+      "archivo": "src/lib/whatsapp-chat.js",
+      "errores": 1
+    },
+    {
+      "archivo": "src/main.jsx",
+      "errores": 24
+    },
+    {
+      "archivo": "vite.config.js",
+      "errores": 1
+    }
+  ]
+}

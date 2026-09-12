@@ -30,7 +30,6 @@ import {
 import { useIsMobile } from "../../../hooks/useViewport";
 import { useClient } from "../../../hooks/useClient";
 import { useRailsConfig } from "../../../hooks/useRailsConfig";
-import { fechaParaMover } from "../../../lib/agenda";
 // Stratos Rails — la lista del día. Detrás de features.procesoGuiado.
 import MiDia from "../MiDia";
 import { useTeam } from "../../../hooks/useTeam";
@@ -314,6 +313,27 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
     onAutoOpenHandled?.();
   }, [autoOpenPriority1]); // priorityLeadsRef is a ref, always current
   const [addingLead, setAddingLead]     = useState(false);
+  const altaDialog = useRef(null);
+  useEffect(() => {
+    if (!addingLead) return;
+    const anterior = document.activeElement;
+    const root = document.getElementById("root");
+    const eraInerte = root?.inert;
+    if (root) root.inert = true;
+    altaDialog.current?.querySelector('input')?.focus();
+    return () => {
+      if (root) root.inert = eraInerte;
+      if (anterior?.isConnected) anterior.focus();
+    };
+  }, [addingLead]);
+  const tecladoAlta = e => {
+    if (e.key === "Escape") { e.stopPropagation(); setAddingLead(false); return; }
+    if (e.key !== "Tab") return;
+    const items = [...altaDialog.current.querySelectorAll('button:not(:disabled), input:not(:disabled), textarea:not(:disabled), select:not(:disabled), a[href], [tabindex="0"]')].filter(el => el.getClientRects().length);
+    const primero = items[0], ultimo = items.at(-1);
+    if (e.shiftKey && document.activeElement === primero) { e.preventDefault(); ultimo?.focus(); }
+    else if (!e.shiftKey && document.activeElement === ultimo) { e.preventDefault(); primero?.focus(); }
+  };
   // Botón "+" del bottom-nav móvil (App.jsx): manda un contador para abrir
   // este form desde cualquier vista. Ajuste de estado durante el render +
   // reset del tick en el PADRE (en microtask, fuera del render): a diferencia
@@ -395,30 +415,14 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
     setActionDraft({ a: lead.nextAction || "", d: lead.nextActionDate || "" });
     setEditingActionId(lead.id);
   };
-  // Mover un cliente desde Mi Día = agendarlo de verdad. Escribe la próxima
-  // acción en su ficha con la misma forma que el pipeline (texto + fecha larga +
-  // el instante real en next_action_at), así el motor de Rails lo vuelve a
-  // ofrecer ese día y el expediente registra el compromiso. Sin esto, "Mover"
-  // solo hacía desaparecer la tarjeta y el cliente quedaba sin dueño de su
-  // futuro — justo el problema que Rails viene a resolver.
-  const moverLead = (accion, dias) => {
-    const lead = leadsDataRef.current.find((l) => l.id === accion?.leadId);
-    if (!lead) return;
-
-    const { iso, local } = fechaParaMover(dias);
-
-    updateLead({
-      ...lead,
-      // Se conserva lo que ya tuviera escrito; solo si no hay nada se pone el
-      // "qué conseguir" de la tarjeta, que es más útil que un texto genérico.
-      nextAction: (lead.nextAction || "").trim() || accion.pedir || "Retomar contacto",
-      nextActionDate: formatFechaLarga(local.replace(" ", "T")) || local,
-      next_action_date: local,
-      next_action_at: iso,
-    });
-    const legible = formatFechaLarga(local.replace(" ", "T")) || local;
-    showToast(`Movido — lo retomas el ${legible}`, "success");
-    return legible;   // la tarjeta lo guarda en la agenda del día
+  // Rails ya guardó el resultado y el próximo paso en una transacción.
+  const sincronizarGestionRails = (row) => {
+    setLeadsData(prev => prev.map(l => l.id === row.id ? {
+      ...l, ...row, n: row.name ?? l.n, st: row.stage ?? l.st,
+      nextAction: row.next_action, nextActionDate: row.next_action_date,
+      isNew: row.is_new ?? l.isNew,
+      actionHistory: row.action_history ?? l.actionHistory,
+    } : l));
   };
 
   const saveInlineAction = (lead) => {
@@ -2267,7 +2271,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
   // quien tiene un solo tablero, boardLeads ES visibleLeads y nada cambia.
   const totalPipeline = boardLeads.reduce((s, l) => s + (l.presupuesto || 0), 0);
   const avgScore = boardLeads.length ? Math.round(boardLeads.reduce((s, l) => s + l.sc, 0) / boardLeads.length) : 0;
-  const hotLeads = boardLeads.filter(l => l.hot || l.daysInactive <= 2).length;
+  const hotLeads = boardLeads.filter(l => l.hot === true).length;
   const newLeadsCount = boardLeads.filter(l => l.isNew).length;
   // Cerca del cierre = Apartó + Visita Agendada + Cierre (milestones finales).
   const nearCloseLeads = boardLeads.filter(l => l.st === "Apartó" || l.st === "Visita Agendada" || l.st === "Cierre").length;
@@ -2321,10 +2325,8 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
   // sección más. Mientras haya acciones del día, el asesor tiene exactamente
   // dos opciones — trabajarlas o registrar un cliente.
   //
-  // El CRM se OCULTA, no se desmonta: el modal de alta vive en un portal más
-  // abajo de este mismo componente, y desmontar el árbol se lo llevaría por
-  // delante. Además así el estado del pipeline (filtros, orden, scroll) sigue
-  // intacto cuando el asesor entra y sale.
+  // El pipeline se monta al abrir el CRM completo; filtros y selección siguen
+  // en este componente. Los portales de alta y expediente permanecen disponibles.
   // Interruptor de vista previa: ?rails=1 lo prende SOLO para quien tenga esa
   // URL, ?rails=0 lo apaga. Existe porque prender la bandera del cliente le
   // reordena la pantalla a todo el equipo de golpe, y nadie debería tomar esa
@@ -2356,16 +2358,24 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
       {railsActivo && (
         <MiDia
           config={railsCfg}
-          leads={leadsData}
+          leads={isAdminRole || user?.id === "demo-user-local" ? visibleLeads : visibleLeads.filter(l => (l.asesor ?? l.asesor_name) === user?.name)}
           T={T}
           theme={theme}
           recienRegistrado={leadRecienRegistrado}
-          onMover={moverLead}
+          scope={`${user?.id}:${user?.organizationId}`}
+          actorId={user?.id}
+          demo={user?.id === "demo-user-local"}
+          offline={!!user?._offline}
+          onGuardada={sincronizarGestionRails}
+          onVerCliente={id => setNotesLead(leadsDataRef.current.find(l => l.id === id))}
           onNuevoCliente={() => setAddingLead(true)}
           onVerCRM={() => setVerCRMCompleto(true)}
         />
       )}
 
+      {!railsActivo && verCRMCompleto && (railsPreview ?? (puedeRails && railsCfg.activo)) && (
+        <button onClick={() => setVerCRMCompleto(false)} style={{ alignSelf: "flex-start", minHeight: 44, padding: "10px 16px", borderRadius: 10, border: `1px solid ${T.border}`, background: T.surface, color: T.txt, cursor: "pointer" }}>Volver a Mi día</button>
+      )}
       <div style={{
         display: railsActivo ? "none" : "flex",
         flexDirection: "column", gap: 18,
@@ -2415,7 +2425,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
               <p style={{ fontSize: 12, color: T.txt3, fontFamily: font, margin: 0 }}>
                 {/* Dinero en pipeline y Score: métricas de VENTAS — fuera en pipelines custom. */}
                 {!IS_CUSTOM_PIPELINE && <><span style={{ color: T.txt2 }}>${(totalPipeline/1000000).toFixed(1)}M</span> en pipeline · </>}
-                <span style={{ color: T.emerald }}>{hotLeads} activos</span>
+                <span style={{ color: T.emerald }}>{hotLeads} prioritarios</span>
                 {!IS_CUSTOM_PIPELINE && <> · Score promedio <span style={{ color: T.blue }}>{avgScore}</span></>}
               </p>
               {isRefreshing && (
@@ -2520,7 +2530,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
           ) : (
             // KPIs históricas de Stratos/Duke (sin cambios).
             <>
-              <KPI T={T} label="Clientes en Pipeline" value={boardLeads.length} sub={`${hotLeads} activos hoy`} icon={Users} color={T.blue} />
+              <KPI T={T} label="Clientes en Pipeline" value={boardLeads.length} sub={`${hotLeads} marcados como prioritarios`} icon={Users} color={T.blue} />
               <KPI T={T} label="Score Promedio" value={avgScore} sub={`promedio del pipeline`} icon={Target} color={T.cyan} />
               <KPI T={T} label="Zooms Agendados" value={zoomsAgendados} sub={`${zoomsConcretados} concretados`} icon={CalendarDays} color={T.accent} />
               <KPI T={T} label="Valor Total Pipeline" value={`$${(totalPipeline/1000000).toFixed(1)}M`} sub={`${nearCloseLeads} en cierre`} icon={DollarSign} color={T.emerald} />
@@ -3184,7 +3194,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
             backdropFilter: "blur(10px)", WebkitBackdropFilter: "blur(10px)",
             animation: "fadeIn 0.20s ease both",
           }} />
-          <div style={isMobile ? {
+          <div ref={altaDialog} role="dialog" aria-modal="true" aria-label={L.newEntity} onKeyDown={tecladoAlta} style={isMobile ? {
             // En mobile: modal full-screen — más cómodo para llenar el form
             // sin que el teclado virtual lo recorte.
             position: "fixed", inset: 0, zIndex: 501,
@@ -3246,7 +3256,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                   }}>· Completa los campos del formulario</span>
                 )}
               </div>
-              <button onClick={() => setAddingLead(false)} style={{
+              <button aria-label="Cerrar nuevo cliente" onClick={() => setAddingLead(false)} style={{
                 width: 30, height: 30, borderRadius: 9,
                 border: `1px solid ${isLight ? "rgba(15,23,42,0.08)" : T.border}`,
                 background: "transparent", cursor: "pointer",
@@ -3296,7 +3306,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                 <label style={labelStyle}>
                   <User size={9} color={T.txt3} /> Nombre <span style={{ color: accentStrong }}>*</span>
                 </label>
-                <input placeholder="Ej. Rafael García López"
+                <input aria-label="Nombre del cliente" placeholder="Ej. Rafael García López"
                   value={newLead.n || ""} onChange={e => setNewLead(p => ({...p, n: e.target.value}))}
                   style={inputStyle}
                   onFocus={focusOn} onBlur={e => focusOff(e)}
@@ -3308,7 +3318,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                 <label style={labelStyle}>
                   <Phone size={9} color={T.txt3} /> Teléfono
                 </label>
-                <input placeholder="+52 998 123 4567" value={newLead.phone || ""} onChange={e => setNewLead(p => ({...p, phone: e.target.value}))}
+                <input aria-label="Teléfono" placeholder="+52 998 123 4567" value={newLead.phone || ""} onChange={e => setNewLead(p => ({...p, phone: e.target.value}))}
                   style={inputStyle}
                   onFocus={focusOn} onBlur={e => focusOff(e)}
                 />
@@ -3319,7 +3329,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                   <Mail size={9} color={T.txt3} /> Email
                   <span style={{ color: T.txt3, fontSize: 9.5, fontWeight: 500, textTransform: "none", letterSpacing: 0, marginLeft: 4 }}>opcional</span>
                 </label>
-                <input placeholder="correo@ejemplo.com" value={newLead.email || ""} onChange={e => setNewLead(p => ({...p, email: e.target.value}))}
+                <input aria-label="Correo electrónico" type="email" placeholder="correo@ejemplo.com" value={newLead.email || ""} onChange={e => setNewLead(p => ({...p, email: e.target.value}))}
                   style={inputStyle}
                   onFocus={focusOn} onBlur={e => focusOff(e)}
                 />
@@ -3523,7 +3533,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                     {/* Trigger button — muestra valor seleccionado o placeholder */}
                     <button
                       type="button"
-                      onClick={() => setBudgetMenuOpen(v => !v)}
+                      aria-label="Presupuesto" onClick={() => setBudgetMenuOpen(v => !v)}
                       style={{
                         width: "100%", padding: "10px 13px",
                         borderRadius: 10,
@@ -3762,7 +3772,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                 </label>
                 <textarea
                   placeholder="¿Qué hace el asesor mañana? Ej. Llamar 10am, mandar Torre 25…"
-                  value={newLead.nextAction || ""}
+                  aria-label="Próxima acción" value={newLead.nextAction || ""}
                   onChange={e => setNewLead(p => ({...p, nextAction: e.target.value}))}
                   rows={2}
                   style={{ width: "100%", padding: "8px 11px", background: inputBg, border: `1px solid ${inputBorder}`, borderRadius: 9, color: T.txt, fontSize: 12.5, fontWeight: 500, outline: "none", fontFamily: font, boxSizing: "border-box", lineHeight: 1.45, resize: "none", display: "block", minHeight: 52, maxHeight: 72, overflowY: "auto", transition: "all 0.18s" }}
@@ -3777,7 +3787,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                 </label>
                 <textarea
                   placeholder="Preferencias, contexto, insights…"
-                  value={newLead.notas || ""}
+                  aria-label="Notas del cliente" value={newLead.notas || ""}
                   onChange={e => setNewLead(p => ({...p, notas: e.target.value}))}
                   rows={2}
                   style={{ width: "100%", padding: "8px 11px", background: inputBg, border: `1px solid ${inputBorder}`, borderRadius: 9, color: T.txt, fontSize: 12.5, fontWeight: 500, outline: "none", fontFamily: font, boxSizing: "border-box", lineHeight: 1.45, resize: "none", display: "block", minHeight: 52, maxHeight: 72, overflowY: "auto", transition: "all 0.18s" }}
@@ -3918,6 +3928,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
         document.body
       )}
 
+      {!railsActivo && <>
       {/* ── SELECTOR DE RECORRIDO ──
           Va DEBAJO de las tarjetas de prioridad y justo encima del
           pipeline, porque es lo que parte en dos: arriba queda "a quién
@@ -5936,6 +5947,8 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
           </G>
         );
       })()}
+
+      </>}
 
       {/* Drawers — "Discovery" (NotesModal/Expediente) y los drawers
          legacy (Perfil, Análisis IA) comparten un switcher inferior. En
