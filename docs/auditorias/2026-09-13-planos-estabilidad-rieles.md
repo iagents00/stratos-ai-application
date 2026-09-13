@@ -63,10 +63,21 @@ Se sustituyeron las guías obsoletas de prototipo por un punto de entrada operat
 5. El motor conserva reglas inmobiliarias. Cada admin debe revisar instrucciones antes de activar para otros sectores; no implica ERP completo ni validación de todas las reglas de etapas en servidor.
 6. Falta ensayo real de vendedores de Duke y canales externos controlados, monitoreo continuo con recepción de avisos acreditada y cobertura de app cerrada.
 7. En la sesión real se observó un error de registro push del navegador (Registration failed, push service error). El canal necesita diagnóstico con dispositivo/proveedor; la carga de CRM y Rieles funcionó.
-8. El PR requiere una revisión según la protección de main. Una promoción web no integra el código a main.
+8. El CRM conserva un efecto previo que limpia is_new automáticamente a los 20 segundos usando updateLead sobre clientes cargados. Abrir CRM no garantiza una sesión estrictamente de solo lectura. Revisar su alcance y separar estado visual de cambios de negocio; no se certificó ausencia de escrituras automáticas durante la navegación.
+9. El PR requiere una revisión según la protección de main. Una promoción web no integra el código a main.
 
 ## Entrega y reversión
 
 La publicación web compatible utiliza las RPC existentes. La nueva migración está separada; no se afirma que Vercel la publique. Consultar /release.json y Vercel para el SHA efectivo y el [manual de operación](../operacion/README.md) para volver a una entrega conocida. No se cambiaron reglas de ninguna organización durante la QA ni se enviaron mensajes a prospectos.
 
 Referencias de diseño: [Salesforce Path](https://trailhead.salesforce.com/content/learn/modules/sales_admin_optimize_salesforce_for_selling/sales_admin_optimize_for_selling_unit_1) y [HubSpot Pipeline Rules](https://knowledge.hubspot.com/object-settings/set-up-pipeline-rules). Se aplican orientación contextual y configuración administrada; no se presume equivalencia funcional con esas plataformas.
+
+## Evidencia final de publicación
+
+- Web v428 publicada el 13 de septiembre de 2026: commit `84f5f10ac114ca685fe7692903598e0cfe89194b`, despliegue `dpl_8HPNsqGJiB21gQzuyEKZ3fvj6Dqx`, estado READY en producción.
+- Los tres dominios de operación devolvieron HTML, recurso JavaScript, manifiesto limpio y SW coincidentes. Los puntos públicos de salud Auth/PostgREST respondieron. Diagnóstico total: **1.500 ms**, medición puntual de disponibilidad, no de restauración.
+- Sesión real con vista previa administrativa: pipeline oculto en Mi Día, visible al abrir cartera, retorno correcto y formulario Nuevo cliente accesible y cancelable. La configuración organizativa permaneció sin activar por esta prueba. La validación de escritura se realizó con datos sintéticos en el fixture.
+- Checks GitHub de planos y release aprobados para esa revisión; la integración del PR a main sigue requiriendo revisión humana.
+- [Registro verificable de entrega](../operacion/evidencias/2026-09-13-v428.json), sin datos de clientes ni credenciales.
+
+Estos resultados acreditan la entrega web y los controles descritos. No cierran los pendientes remotos ni sustituyen el ensayo de recuperación y aceptación del equipo.

@@ -21,6 +21,7 @@ Este es el punto de entrada para mantener el sistema sin depender de su autor. F
 | Incidentes, respaldo y restauración | [Recuperación](RECUPERACION.md) | Ensayo con evidencia antes del lanzamiento |
 | Configuración admin y trabajo del vendedor | [Rieles](RIELES.md) | Pruebas de comportamiento y permisos |
 | Condiciones para publicar | [Entrega y aceptación](ENTREGA.md) | Verificación en cada PR y despliegue |
+| Evidencia de publicación v428 | [Registro](evidencias/2026-09-13-v428.json) | SHA, despliegue, comprobaciones y límites |
 | Hallazgos de esta revisión | [Auditoría](../auditorias/2026-09-13-planos-estabilidad-rieles.md) | Estado comprobado; pendientes visibles |
 
 ## Plano lógico
