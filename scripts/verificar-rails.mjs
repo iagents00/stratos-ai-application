@@ -22,10 +22,10 @@ try {
 
   const hace = (d) => new Date(Date.now() - d * 864e5);
   const leads = [
-    { id: "1", n: "Fam. Rodríguez", st: "Seguimiento",   hot: true, sc: 92, updatedAt: hace(3) },
-    { id: "2", n: "Tony",           st: "Seguimiento",   hot: true, sc: 88, updatedAt: hace(2) },
-    { id: "3", n: "Ana",            st: "Zoom Agendado",            sc: 70, updatedAt: hace(1) },
-    { id: "4", n: "Beto",           st: "Rotación",                 sc: 40, updatedAt: hace(30) },
+    { id: "1", n: "Fam. Rodríguez", st: "Seguimiento",   hot: true, sc: 92, lastContactAt: hace(3) },
+    { id: "2", n: "Tony",           st: "Seguimiento",   hot: true, sc: 88, lastContactAt: hace(2) },
+    { id: "3", n: "Ana",            st: "Zoom Agendado",            sc: 70, lastContactAt: hace(1) },
+    { id: "4", n: "Beto",           st: "Rotación",                 sc: 40, lastContactAt: hace(30) },
   ];
 
   // 1. Sin configuración se comporta como siempre.
@@ -49,7 +49,7 @@ try {
   else ok(`texto propio con fichas resueltas: "${cal.razon}"`);
 
   // 3b. {dias_txt} viene conjugado: "1 día", no "1 días".
-  const unDia = [{ id: "9", n: "Uno", st: "Seguimiento", hot: true, sc: 90, updatedAt: hace(1) }];
+  const unDia = [{ id: "9", n: "Uno", st: "Seguimiento", hot: true, sc: 90, lastContactAt: hace(1) }];
   const conj = listaDelDia(unDia, {
     config: fusionarRails({ reglas: { lead_caliente: { razon: "llevas {dias_txt} sin moverle" } } }),
   }).visibles[0];

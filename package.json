@@ -21,7 +21,8 @@
     "verificar-rpc": "node scripts/verificar-rpc-permisos.mjs",
     "build:app": "vite build --mode app",
     "verificar:appstore-ios": "node scripts/verificar-appstore-ios.mjs",
-    "salud": "node scripts/salud.mjs"
+    "salud": "node scripts/salud.mjs",
+    "probar-rails": "node scripts/probar-rails.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.104.1",
@@ -34,6 +35,7 @@
     "recharts": "^3.8.1"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "^0.5.8",
     "@eslint/js": "^9.39.4",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",

@@ -1061,7 +1061,9 @@ export default function App() {
       // claro (ej. "Sábado 20 de junio, 2:30 p.m."). Preferimos selected_time
       // (cita real de Cal.com); si no, intentamos next_action_date cuando trae
       // un datetime parseable. Texto libre ("Esta semana") se respeta tal cual.
-      let displayActionDate = l.next_action_date;
+      let displayActionDate = l.action_history?.[0]?.source === "stratos_rails"
+        ? formatFechaLarga(l.next_action_at) || l.next_action_date
+        : l.next_action_date;
       if (STAGES_CON_CITA.has(l.stage)) {
         // Preferimos los timestamps reales de la cita: selected_time (Cal.com) y
         // next_action_at (fn_register_appointment) traen fecha + hora. En leads
@@ -3031,7 +3033,7 @@ export default function App() {
                 nativo carga la web remota: un APK nuevo NO garantiza web nueva
                 (SW/deploy). Con esto cualquiera puede reportar "web vNNN" y se
                 acaba el adivinar. Mantener en sync con CACHE_VERSION (sw.js). */}
-            <p style={{ margin:"12px 0 0", textAlign:"center", fontSize:10.5, fontFamily:font, letterSpacing:"0.02em", color: isLight ? "rgba(15,23,42,0.35)" : "rgba(255,255,255,0.28)" }}>Stratos CRM AI · web v256</p>
+            <p style={{ margin:"12px 0 0", textAlign:"center", fontSize:10.5, fontFamily:font, letterSpacing:"0.02em", color: isLight ? "rgba(15,23,42,0.35)" : "rgba(255,255,255,0.28)" }}>Stratos CRM AI · web v426</p>
           </div>
         </>,
         document.body

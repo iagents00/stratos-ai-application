@@ -74,7 +74,6 @@ columna, estos son los archivos que hay que revisar.
 | `mkt_pipeline_items` | 1 | `app/views/Marketing.jsx` |
 | `mkt_projects` | 1 | `app/views/Marketing.jsx` |
 | `mkt_requests` | 1 | `app/views/Marketing.jsx` |
-| `organizations` | 1 | `hooks/useRailsConfig.js` |
 | `scheduled_calls` | 1 | `hooks/useScheduledCalls.js` |
 | `voice_call_logs` | 1 | `app/views/CRM/LeadVoiceCalls.jsx` |
 | `whatsapp_messages` | 1 | `lib/whatsapp-chat.js` |
@@ -127,8 +126,8 @@ error no está en el frontend.
 | `mkt_attach_evidence_to` | `app/views/Copilot.jsx` |
 | `mkt_comment_evidence` | `app/views/Copilot.jsx` |
 | `mkt_evidence_candidates` | `app/views/Copilot.jsx` |
-| `rails_agenda_hoy` | `lib/agenda.js` |
-| `rails_marcar_accion` | `lib/agenda.js` |
+| `rails_agenda_del_dia` | `lib/agenda.js` |
+| `rails_resolver_accion` | `lib/agenda.js` |
 | `resolve_portfolio_link` | `app/views/LandingPages/PublicLanding.jsx` |
 
 ---
@@ -161,11 +160,11 @@ casa; por eso mismo son los que más cuidado piden.
 
 | Archivo | Archivos que lo importan |
 |---|---|
-| `design-system/tokens.js` | **72** |
-| `lib/supabase.js` | **43** |
-| `hooks/useAuth.js` | **35** |
-| `hooks/useViewport.js` | **28** |
-| `app/SharedComponents.jsx` | **21** |
+| `design-system/tokens.js` | **71** |
+| `lib/supabase.js` | **42** |
+| `hooks/useAuth.js` | **34** |
+| `hooks/useViewport.js` | **27** |
+| `app/SharedComponents.jsx` | **20** |
 | `lib/native.js` | **18** |
 | `hooks/useClient.js` | **17** |
 | `app/views/CRM/zoom-metrics.js` | **6** |

@@ -38,7 +38,8 @@ Antes de abrir cualquier PR:
 ```bash
 npm run verificar-docs          # ninguna doc apunta a un archivo que no existe
 npm run verificar-contexto      # la config por cliente llega a los componentes
-npm run verificar-rails         # prender/apagar/personalizar Rails funciona (19 pruebas)
+npm run verificar-rails         # contrato existente de configuración y canales
+npm run probar-rails            # motor, recuperación, aislamiento y SQL transaccional
 npm run verificar-lenguaje      # la interfaz habla mexicano neutro, nunca voseo
 npm run verificar-migraciones   # las migraciones se leen en orden
 ```
@@ -215,8 +216,7 @@ guardaba nada.
 
 ### Stratos Rails (el proceso diario guiado)
 
-Está terminado y verificado en producción, pero **apagado**. Dos llaves
-distintas, a propósito:
+La versión pública anterior ya tenía Rails. La revisión del 12-sep-2026 endurece el circuito y requiere la migración **245** y frontend coordinados; las pruebas locales no equivalen a validación de producción. Sigue **apagado por defecto**. Dos llaves distintas:
 
 - `features.procesoGuiado` en la config del cliente → *¿esta empresa PUEDE
   tenerlo?* (vive en el bundle)
@@ -231,10 +231,7 @@ https://app.stratoscapitalgroup.com/?rails=1
 
 `?rails=0` lo apaga aunque la bandera esté prendida — sirve de escape.
 
-**La regla que no se rompe:** la lista del día congela orden y membresía al
-montar. Solo pueden agregarse clientes al final, y el que acabas de registrar va
-primero. Nada se mueve solo bajo el asesor. Ver
-`src/app/views/MiDia.jsx` y `src/lib/next-action-engine.js`.
+**Contrato actual:** conservar el orden de las acciones todavía válidas; retirar bajas, cierres y fechas futuras. Excluir gestiones confirmadas antes de limitar el bloque, mantener total pendiente y reponer el siguiente cliente. Resultado y compromiso se guardan juntos; un error no cuenta como éxito. Ver [PRODUCT.md](PRODUCT.md) y [auditoría y despliegue](output/auditoria-stratos-rails-2026-09-12.md).
 
 ### Lo de Apple que ya está hecho (24-ago-2026)
 

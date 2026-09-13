@@ -26,9 +26,7 @@
 /** Cubetas de clasificación. El orden es el de atención. */
 export const CUBETAS = ["prioritario", "intermedio", "reactivar"];
 
-// Siete. Ni una más. Una lista que no se puede terminar deja de ser una lista y
-// vuelve a ser el pipeline con otro nombre — que es justo de lo que Rails saca
-// al asesor.
+// Siete acciones por bloque; el total pendiente siempre permanece visible.
 export const MAX_DEL_DIA = 7;
 
 /**
@@ -42,10 +40,10 @@ const REGLAS = [
     cuando: "El cliente acaba de entrar o nadie lo ha llamado todavía.",
     cubeta: "prioritario",
     peso: 100,
-    aplica: (l) => l.st === "Contáctame Ya" || (l.isNew && ETAPAS_SIN_CONTACTO.has(l.st)),
+    aplica: (l) => ETAPAS_SIN_CONTACTO.has(l.st) && (l.st === "Contáctame Ya" || l.isNew === true),
     razon: (l) => l.diasSinTocar >= 1
-      ? `Entró hace ${l.diasSinTocar} ${l.diasSinTocar === 1 ? "día" : "días"} y todavía nadie lo llamó.`
-      : "Acaba de entrar. La contactabilidad cae 100× entre el minuto 5 y el 30.",
+      ? `Está en primer contacto y lleva ${l.diasSinTocar} ${l.diasSinTocar === 1 ? "día" : "días"} sin actividad registrada.`
+      : "Está en primer contacto. Revisa el historial antes de presentarte.",
     pedir: () => "Preséntate y consigue una cosa: para qué quiere invertir.",
     canal: "llamada",
     eta: "ahora",
@@ -56,20 +54,29 @@ const REGLAS = [
     cuando: "Tiene un Zoom agendado para hoy.",
     cubeta: "prioritario",
     peso: 95,
-    aplica: (l) => l.st === "Zoom Agendado",
+    aplica: (l) => l.st === "Zoom Agendado" && l.zoomHoy && !l.zoomVencido,
     razon: () => "Tiene Zoom agendado. Sin briefing llegas a improvisar.",
     pedir: () => "Confirma asistencia y pregunta quién más participa.",
     canal: "whatsapp",
     eta: "antes del Zoom",
   },
   {
+    tipo: "zoom_vencido", label: "Revisar cita pasada",
+    cuando: "Pasó la hora del Zoom y falta registrar qué ocurrió.",
+    cubeta: "prioritario", peso: 98,
+    aplica: (l) => l.st === "Zoom Agendado" && l.zoomVencido,
+    razon: () => "La hora de la cita ya pasó. Falta registrar el resultado.",
+    pedir: () => "Revisa si se realizó, actualiza la etapa en la ficha y acuerda el siguiente paso.",
+    canal: "llamada", eta: "hoy",
+  },
+  {
     tipo: "validar_apartado",
     label: "Validar apartado",
-    cuando: "Ya mandó dinero y falta confirmar el comprobante.",
+    cuando: "Está en Apartó; hay que comprobar el pago y el siguiente paso.",
     cubeta: "prioritario",
     peso: 92,
     aplica: (l) => l.st === "Apartó",
-    razon: () => "Ya mandó dinero. Falta validar el comprobante.",
+    razon: () => "Está en Apartó. Verifica si el pago y el comprobante están registrados.",
     pedir: () => "Confirma unidad, monto y desarrollo, y agenda la firma.",
     canal: "llamada",
     eta: "hoy",
@@ -103,9 +110,9 @@ const REGLAS = [
     label: "Promesa vencida",
     cuando: "Quedaste en algo con él y ya pasó la fecha.",
     cubeta: "prioritario",
-    peso: 85,
+    peso: 99,
     aplica: (l) => l.proximaAccionVencida === true,
-    razon: (l) => `Quedaste en algo con él${l.diasVencida ? ` hace ${l.diasVencida} días` : ""} y no pasó.`,
+    razon: (l) => `La fecha del siguiente paso venció${l.diasVencida ? ` hace ${l.diasVencida} días` : ""}. Revisa si se cumplió.`,
     pedir: () => "Cumple lo prometido y cierra la siguiente fecha antes de colgar.",
     canal: "llamada",
     eta: "hoy",
@@ -182,7 +189,7 @@ const ETAPAS_CERRADAS = new Set(["Cierre", "Postventa", "Descartado"]);
  * Zoom Agendado, ambos con esa tarjeta absurda.
  */
 const ETAPAS_SIN_CONTACTO = new Set([
-  "Contáctame Ya", "Segundo Intento", "Tercer Intento", "Rotación",
+  "Contáctame Ya", "Nuevo Registro",
 ]);
 
 /**
@@ -237,35 +244,48 @@ export function interpolar(texto, lead) {
 
 export const FICHAS_DISPONIBLES = ["nombre", "dias_txt", "dias", "diasVencida", "etapa", "faltantes"];
 
-/** Normaliza un lead del CRM a lo que el motor necesita. Tolera campos ausentes. */
-export function normalizarLead(lead, ahora = new Date()) {
-  const dias = (fecha) => {
-    if (!fecha) return null;
-    const t = new Date(fecha).getTime();
-    return Number.isNaN(t) ? null : Math.floor((ahora - t) / 86400000);
-  };
+/** Solo fechas con hora: un texto libre no prueba que haya un compromiso. */
+export function instanteRails(value) {
+  if (value instanceof Date) return Number.isFinite(+value) ? +value : null;
+  if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}/.test(value)) return null;
+  const time = Date.parse(value.replace(" ", "T"));
+  return Number.isFinite(time) ? time : null;
+}
 
-  const presupuesto = Number(lead.presupuesto) || Number(lead.budget) || 0;
+export function diaRails(fecha = new Date(), timeZone) {
+  const partes = new Intl.DateTimeFormat("en-CA", {
+    year: "numeric", month: "2-digit", day: "2-digit", ...(timeZone ? { timeZone } : {}),
+  }).formatToParts(fecha);
+  return ["year", "month", "day"].map(k => partes.find(p => p.type === k).value).join("-");
+}
+
+export function normalizarLead(lead, ahora = new Date(), timeZone) {
+  const st = lead.st ?? lead.stage;
+  const siguiente = instanteRails(lead.next_action_at ?? lead.nextActionAt)
+    ?? instanteRails(lead.next_action_date ?? lead.nextActionDate);
+  const zoom = instanteRails(lead.selected_time) ?? siguiente;
+  const contacto = instanteRails(lead.last_contact_at ?? lead.lastContactAt ?? lead.sprint_ultimo_contacto_at);
+  const inactividad = lead.days_inactive ?? lead.daysInactive;
+  const creado = instanteRails(lead.created_at);
+  const diasSinTocar = contacto !== null ? Math.max(0, Math.floor((ahora - contacto) / 864e5))
+    : Number.isFinite(inactividad) ? Math.max(0, inactividad)
+      : creado !== null ? Math.max(0, Math.floor((ahora - creado) / 864e5)) : 0;
   const bant = {
-    presupuesto: presupuesto > 0,
-    asesor: !!String(lead.asesor || "").trim(),
-    necesidad: !!(lead.bio && String(lead.bio).length > 40),
-    fecha: !!(lead.nextActionDate && lead.nextActionDate !== "Por definir"),
+    presupuesto: (Number(lead.presupuesto) || Number(lead.budget)) > 0,
+    asesor: !!String(lead.asesor ?? lead.asesor_name ?? "").trim(),
+    necesidad: !!String(lead.uso || lead.necesidad || "").trim(),
+    fecha: siguiente !== null,
   };
-  const faltantes = Object.entries(bant).filter(([, v]) => !v).map(([k]) => ({
-    presupuesto: "presupuesto", asesor: "asesor asignado",
-    necesidad: "para qué lo quiere", fecha: "fecha del siguiente paso",
-  }[k]));
-
-  const vencida = lead.nextActionAt ? new Date(lead.nextActionAt) < ahora : false;
-
+  const nombres = { presupuesto: "presupuesto", asesor: "asesor asignado", necesidad: "para qué lo quiere", fecha: "fecha del siguiente paso" };
   return {
-    ...lead,
-    diasSinTocar: dias(lead.updatedAt || lead.updated_at) ?? lead.daysInactive ?? 0,
-    proximaAccionVencida: vencida,
-    diasVencida: vencida ? dias(lead.nextActionAt) : null,
+    ...lead, st, n: lead.n ?? lead.name ?? lead.nombre, isNew: lead.isNew ?? lead.is_new,
+    siguiente, diasSinTocar,
+    zoomHoy: zoom !== null && diaRails(new Date(zoom), timeZone) === diaRails(ahora, timeZone),
+    zoomVencido: zoom !== null && zoom < +ahora,
+    proximaAccionVencida: siguiente !== null && siguiente <= +ahora,
+    diasVencida: siguiente !== null && siguiente <= +ahora ? Math.floor((ahora - siguiente) / 864e5) : null,
     bantScore: Object.values(bant).filter(Boolean).length,
-    bantFaltantes: faltantes,
+    bantFaltantes: Object.entries(bant).filter(([, v]) => !v).map(([k]) => nombres[k]),
   };
 }
 
@@ -274,8 +294,14 @@ export function normalizarLead(lead, ahora = new Date()) {
  * Una sola: la lista de siete tarjetas no admite empates.
  */
 export function proximaAccion(leadCrudo, ahora = new Date(), config = null) {
-  if (!leadCrudo || ETAPAS_CERRADAS.has(leadCrudo.st)) return null;
-  const lead = normalizarLead(leadCrudo, ahora);
+  if (!leadCrudo?.id || leadCrudo.opt_out === true || leadCrudo.optOut === true
+    || leadCrudo.deleted_at || leadCrudo.deletedAt || ETAPAS_CERRADAS.has(leadCrudo.st ?? leadCrudo.stage)) return null;
+  const lead = normalizarLead(leadCrudo, ahora, config?.timeZone);
+  const reactivar = instanteRails(lead.reactivar_at);
+  if (reactivar !== null && reactivar > +ahora) return null;
+  // Respeta los compromisos futuros. Una cita de hoy sí permite preparar el Zoom.
+  if (lead.siguiente > +ahora && !(lead.st === "Zoom Agendado" && lead.zoomHoy)) return null;
+  if (lead.st === "Zoom Agendado" && instanteRails(lead.selected_time) > +ahora && !lead.zoomHoy) return null;
 
   // La organización puede apagar reglas enteras y cambiarles el peso. `definir_paso`
   // no se puede apagar: es la red de seguridad.
@@ -286,6 +312,7 @@ export function proximaAccion(leadCrudo, ahora = new Date(), config = null) {
   };
 
   const candidatas = REGLAS.filter((r) => {
+    if (lead.st === "Zoom Agendado" && !lead.zoomHoy && !lead.zoomVencido) return false;
     if (ajuste(r.tipo)?.activa === false) return false;
     try { return r.aplica(lead); } catch { return false; }
   });
@@ -302,6 +329,8 @@ export function proximaAccion(leadCrudo, ahora = new Date(), config = null) {
 
   return {
     leadId: lead.id,
+    version: lead.updated_at ?? lead.updatedAt ?? null,
+    siguiente: lead.siguiente,
     nombre: lead.n || lead.nombre || "Sin nombre",
     telefono: lead.phone || lead.telefono || null,
     etapa: lead.st,
@@ -321,20 +350,21 @@ export function proximaAccion(leadCrudo, ahora = new Date(), config = null) {
   };
 }
 
-/**
- * La lista del día. Máximo 7 por diseño: una lista larga es una lista que no
- * se termina, y la que no se termina se abandona.
- */
-export function listaDelDia(leads, { max, ahora = new Date(), config = null } = {}) {
-  const tope = Number.isFinite(max) ? max
-             : (Number.isFinite(config?.maxTarjetas) ? config.maxTarjetas : MAX_DEL_DIA);
-  const acciones = (leads || []).map((l) => proximaAccion(l, ahora, config)).filter(Boolean);
-  // Ordena SOLO por peso. Antes la cubeta mandaba primero y el peso solo
-  // desempataba dentro de ella — con el efecto de que subirle la prioridad a una
-  // regla de "reactivar" no la movía nunca, aunque el panel dijera 100. Con los
-  // pesos de fábrica (100…40) el orden resultante es idéntico al de las cubetas,
-  // porque las cubetas siempre fueron rangos de peso con otro nombre. La cubeta
-  // sigue viva: es la que le da color a la tarjeta.
-  acciones.sort((a, b) => b.peso - a.peso);
-  return { visibles: acciones.slice(0, tope), total: acciones.length };
+/** Excluye gestiones confirmadas ANTES de limitar el bloque. */
+export function listaDelDia(leads, { max, ahora = new Date(), config = null, cerradas = {}, orden = [] } = {}) {
+  const limite = max ?? config?.maxTarjetas ?? MAX_DEL_DIA;
+  const tope = Number.isFinite(limite) ? Math.max(1, Math.min(12, Math.floor(limite))) : MAX_DEL_DIA;
+  const unicos = new Map();
+  for (const l of Array.isArray(leads) ? leads : []) {
+    const accion = proximaAccion(l, ahora, config);
+    if (!accion) continue;
+    const cierre = cerradas[accion.leadId];
+    const nuevaCitaVencida = accion.siguiente !== null && accion.siguiente <= +ahora
+      && instanteRails(cierre?.completado_at) !== null && accion.siguiente > instanteRails(cierre.completado_at);
+    if (!cierre || nuevaCitaVencida) unicos.set(accion.leadId, accion);
+  }
+  const acciones = [...unicos.values()].sort((a, b) => b.peso - a.peso || (a.siguiente ?? Infinity) - (b.siguiente ?? Infinity) || String(a.leadId).localeCompare(String(b.leadId)));
+  const conservadas = orden.map(id => unicos.get(id)).filter(Boolean);
+  const existentes = new Set(conservadas.map(a => a.leadId));
+  return { visibles: [...conservadas, ...acciones.filter(a => !existentes.has(a.leadId))].slice(0, tope), total: acciones.length };
 }

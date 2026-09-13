@@ -975,18 +975,16 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
       <G T={T}>
         <div style={{ marginBottom: 16 }}>
           <p style={{ fontSize: 14.5, fontWeight: 500, color: T.txt, fontFamily: fontDisp, margin: 0, letterSpacing: "-0.014em" }}>
-            Embudo de conversión
+            Actividad comercial del período
           </p>
           <p style={{ fontSize: 12, color: T.txt3, fontFamily: font, margin: "3px 0 0", lineHeight: 1.5 }}>
-            Del lead al cierre · cuántos avanzan en cada etapa y dónde se caen. Cada barra es proporcional al total de leads.
+            Leads por fecha de creación y citas por fecha del evento. Son volúmenes del período; no una tasa de conversión de la misma cohorte.
           </p>
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-          {funnel.stages.map((s, i) => {
+          {funnel.stages.map((s) => {
             const Icon = s.icon;
-            const widthPct = Math.max(4, Math.round((s.value / funnel.max) * 100));
-            const prev = i > 0 ? funnel.stages[i - 1].value : null;
-            const conv = prev ? Math.round((s.value / prev) * 100) : null;
+            const widthPct = Math.round((s.value / funnel.max) * 100);
             return (
               <div key={s.label} style={{ display: "flex", alignItems: isMobile ? "stretch" : "center", flexDirection: isMobile ? "column" : "row", gap: isMobile ? 6 : 12 }}>
                 <div style={{ width: isMobile ? "auto" : 150, flexShrink: 0, display: "flex", alignItems: "center", gap: 8 }}>
@@ -1002,11 +1000,11 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
                       background: s.color, display: "flex", alignItems: "center", paddingLeft: 12,
                       transition: "width 0.3s ease",
                     }}>
-                      <span style={{ fontSize: 14, fontWeight: 500, color: "#FFFFFF", fontFamily: fontDisp, letterSpacing: "-0.01em", textShadow: "0 1px 3px rgba(0,0,0,0.45)" }}>{s.value.toLocaleString("es-MX")}</span>
+
                     </div>
                   </div>
                   <span style={{ minWidth: 64, flexShrink: 0, fontSize: 12, color: T.txt3, fontFamily: font, textAlign: "right", whiteSpace: "nowrap" }}>
-                    {conv !== null ? <><strong style={{ color: T.txt2 }}>{conv}%</strong> del previo</> : "100%"}
+                    <strong style={{ color: T.txt2 }}>{s.value.toLocaleString("es-MX")}</strong>
                   </span>
                 </div>
               </div>

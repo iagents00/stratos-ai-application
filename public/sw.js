@@ -33,7 +33,7 @@
  *   sola en la próxima navegación. Ver `main.jsx` → SERVICE WORKER.
  */
 
-const CACHE_VERSION = 'stratos-v425'; // v425: FORMULARIO DE ONBOARDING DEL AI CALL CENTER. Página pública paso a paso; la respuesta cae en el CRM de Stratos Sales y avisa por correo.
+const CACHE_VERSION = 'stratos-v426'; // Rails: gestiones confirmadas y Proceso refinado en ambos temas.
 // const CACHE_VERSION = 'stratos-v424'; // v424: ficha de Google Play (textos + graficos de tienda)
 
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
