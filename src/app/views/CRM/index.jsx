@@ -30,6 +30,7 @@ import {
 } from "lucide-react";
 import { useIsMobile } from "../../../hooks/useViewport";
 import { useClient } from "../../../hooks/useClient";
+import { vistaPreviaRails } from "../../../lib/rails-store";
 import { useRailsConfig } from "../../../hooks/useRailsConfig";
 import { fechaParaMover } from "../../../lib/agenda";
 // Stratos Rails — la lista del día. Detrás de features.procesoGuiado.
@@ -131,7 +132,7 @@ function useDebounced(value, ms = 200) {
 function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () => {}, isRefreshing = false, autoOpenPriority1 = 0, onAutoOpenHandled, softDeleteLead, autoOpenLead = null, onAutoOpenLeadHandled = () => {}, autoOpenNewLead = 0, onNewLeadHandled = () => {}, onOpenComando = null }) {
   const { user } = useAuth();
   const { config: clientConfig, clientId, isFeatureEnabled } = useClient();
-  const { cfg: railsCfg } = useRailsConfig();
+  const { cfg: railsCfg, cargando: railsCargando, error: railsError, recargar: recargarRails } = useRailsConfig();
   const { get: getScheduledCall } = useScheduledCalls();
   // Equipo real de la organización — se suma a asesoresMaster para que un
   // asesor recién dado de alta (sin leads todavía) exista en los selectores.
@@ -404,24 +405,28 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
   // ofrecer ese día y el expediente registra el compromiso. Sin esto, "Mover"
   // solo hacía desaparecer la tarjeta y el cliente quedaba sin dueño de su
   // futuro — justo el problema que Rails viene a resolver.
-  const moverLead = (accion, dias) => {
-    const lead = leadsDataRef.current.find((l) => l.id === accion?.leadId);
-    if (!lead) return;
-
+  const moverLead = async (accion, dias) => {
+    const lead = leadsDataRef.current.find(l => l.id === accion?.leadId);
+    if (!lead || lead.opt_out || lead.deleted_at) return { ok: false, error: "El cliente ya no está disponible para contacto." };
     const { iso, local } = fechaParaMover(dias);
-
-    updateLead({
-      ...lead,
-      // Se conserva lo que ya tuviera escrito; solo si no hay nada se pone el
-      // "qué conseguir" de la tarjeta, que es más útil que un texto genérico.
-      nextAction: (lead.nextAction || "").trim() || accion.pedir || "Retomar contacto",
-      nextActionDate: formatFechaLarga(local.replace(" ", "T")) || local,
-      next_action_date: local,
-      next_action_at: iso,
-    });
     const legible = formatFechaLarga(local.replace(" ", "T")) || local;
-    showToast(`Movido — lo retomas el ${legible}`, "success");
-    return legible;   // la tarjeta lo guarda en la agenda del día
+    const nextAction = (lead.nextAction || "").trim() || accion.pedir || "Retomar contacto";
+    if (user?.id !== 'demo-user-local' && !user?.isDemo) {
+      if (!user?.organizationId || user?._offline) return { ok: false, error: "Conéctate para confirmar la nueva fecha." };
+      try {
+        const { data, error } = await supabase.from('leads')
+          .update({ next_action: nextAction, next_action_date: local, next_action_at: iso })
+          .eq('id', lead.id).eq('organization_id', user.organizationId)
+          .select('id').abortSignal(AbortSignal.timeout(10000)).maybeSingle();
+        if (error || !data) return { ok: false, error: "No se confirmó la nueva fecha. Revisa la conexión o tus permisos." };
+      } catch { return { ok: false, error: "No se confirmó la nueva fecha. Revisa la ficha antes de reintentar." }; }
+    }
+    // Publish only confirmed fields; leave other edits intact.
+    const patch = { nextAction, nextActionDate: legible, next_action_date: local, next_action_at: iso, nextActionAt: iso };
+    leadsDataRef.current = leadsDataRef.current.map(l => l.id === lead.id ? { ...l, ...patch } : l);
+    setLeadsData(rows => rows.map(l => l.id === lead.id ? { ...l, ...patch } : l));
+    showToast(`Nueva fecha guardada: ${legible}`, "success");
+    return { ok: true, fecha: legible };
   };
 
   const saveInlineAction = (lead) => {
@@ -2339,19 +2344,10 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
   // decisión sin haberlo visto antes con sus propios clientes en pantalla.
   // Se lee una vez al montar: cambiar la URL a mitad de sesión no debe moverle
   // el piso al asesor.
-  const [railsPreview] = useState(() => {
-    if (typeof window === "undefined") return null;
-    const v = new URLSearchParams(window.location.search).get("rails");
-    return v === null ? null : v !== "0" && v !== "false";
-  });
-  // Dos llaves distintas, a propósito:
-  //   isFeatureEnabled("procesoGuiado") → ¿esta empresa PUEDE tener Rails?
-  //                                       (capacidad, vive en el bundle)
-  //   railsCfg.activo                   → ¿está prendido HOY?
-  //                                       (estado, vive en la base — sin deploy)
-  // Y ?rails=1 pasa por encima de las dos, solo para quien tenga ese link.
-  const puedeRails  = isFeatureEnabled("procesoGuiado");
-  const railsActivo = (railsPreview ?? (puedeRails && railsCfg.activo)) && !verCRMCompleto;
+  const railsPreview = vistaPreviaRails(user, typeof window === 'undefined' ? '' : window.location.search);
+  const puedeRails = isFeatureEnabled("procesoGuiado");
+  const procesoActivo = railsPreview ?? (puedeRails && railsCfg.activo);
+  const railsActivo = procesoActivo && !verCRMCompleto;
 
   return (
     <div style={{
@@ -2361,6 +2357,12 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
       transition: "color 0.3s ease",
     }}>
 
+      {(railsCargando || railsError) && <div role={railsError ? "alert" : "status"} style={{ color: T.txt2 }}>
+        {railsError || "Verificando el proceso de tu equipo…"}
+        {railsError && <button onClick={recargarRails} style={{ minHeight: 44, marginLeft: 12 }}>Reintentar</button>}
+      </div>}
+      {procesoActivo && verCRMCompleto && <button onClick={() => setVerCRMCompleto(false)} style={{ minHeight: 44, alignSelf: "flex-start", color: T.txt, background: T.glass, border: `1px solid ${T.border}`, borderRadius: 9, padding: "10px 16px", cursor: "pointer" }}>Volver a Mi Día</button>}
+      {railsPreview !== null && <p role="status" style={{ color: T.txt2 }}>Vista previa de administrador. La configuración del equipo no cambia.</p>}
       {railsActivo && (
         <MiDia
           config={railsCfg}
@@ -2369,6 +2371,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
           theme={theme}
           recienRegistrado={leadRecienRegistrado}
           onMover={moverLead}
+          onAbrirCliente={(id) => { const lead = leadsDataRef.current.find(l => l.id === id); if (lead) setSelectedLead(lead); }}
           onNuevoCliente={() => setAddingLead(true)}
           onVerCRM={() => setVerCRMCompleto(true)}
         />

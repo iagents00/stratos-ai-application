@@ -1,0 +1,182 @@
+.rails-surface {
+  max-width: 880px;
+  padding: 20px 24px 40px;
+  color: var(--rails-text);
+  font-size: 14px;
+  line-height: 1.55;
+}
+.rails-surface h2 {
+  font-size: 25px;
+  line-height: 1.25;
+  margin: 0 0 8px;
+  letter-spacing: -0.02em;
+}
+.rails-surface h3,
+.rails-surface h4 {
+  margin: 0 0 8px;
+}
+.rails-muted {
+  color: var(--rails-muted);
+  max-width: 70ch;
+}
+.rails-status {
+  padding: 12px 0;
+  border-bottom: 1px solid var(--rails-border);
+}
+.rails-fieldset {
+  border: 0;
+  padding: 20px 0 0;
+  margin: 24px 0;
+  min-width: 0;
+}
+.rails-fieldset legend {
+  font-size: 17px;
+  font-weight: 600;
+  padding: 0;
+}
+.rails-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 16px 0;
+  font-weight: 500;
+}
+.rails-surface :is(textarea, input[type="number"], select) {
+  font: inherit;
+  color: var(--rails-text);
+  background: var(--rails-bg);
+  border: 1px solid var(--rails-border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  min-height: 44px;
+  box-sizing: border-box;
+  width: 100%;
+}
+.rails-surface :is(select, input[type="number"]) {
+  max-width: 210px;
+}
+.rails-surface textarea {
+  resize: vertical;
+}
+.rails-surface textarea::placeholder {
+  color: var(--rails-muted);
+  opacity: 1;
+}
+.rails-surface button,
+.rails-action-button {
+  font: inherit;
+  min-height: 44px;
+  padding: 9px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--rails-border);
+  color: var(--rails-text);
+  background: transparent;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  white-space: normal;
+}
+.rails-surface button:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--rails-accent) 10%, transparent);
+}
+.rails-surface :is(button, input, textarea, select):focus-visible,
+.rails-day :is(button, a):focus-visible {
+  outline: 2px solid var(--rails-accent);
+  outline-offset: 3px;
+}
+.rails-surface button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.rails-surface .rails-primary {
+  background: var(--rails-accent);
+  color: #041016;
+  border-color: transparent;
+  font-weight: 600;
+}
+.rails-check {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  cursor: pointer;
+}
+.rails-surface input[type="checkbox"] {
+  width: 22px;
+  height: 22px;
+  margin: 11px;
+  accent-color: var(--rails-accent);
+  flex-shrink: 0;
+}
+.rails-rule {
+  border-top: 1px solid var(--rails-border);
+}
+.rails-rule-heading {
+  display: flex;
+  align-items: center;
+}
+.rails-rule-heading button {
+  flex: 1;
+  text-align: left;
+  justify-content: space-between;
+  border: 0;
+  min-height: 54px;
+}
+.rails-rule-heading small {
+  font-size: 12px;
+  color: var(--rails-muted);
+}
+.rails-rule-body {
+  padding: 0 8px 20px 44px;
+}
+.rails-preview {
+  padding: 16px;
+  background: var(--rails-bg);
+  border: 1px solid var(--rails-border);
+  border-radius: 8px;
+  margin-top: 20px;
+  overflow-wrap: anywhere;
+}
+.rails-notice {
+  padding: 12px;
+  border: 1px solid var(--rails-border);
+  border-radius: 8px;
+}
+.rails-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.rails-publish {
+  border-top: 1px solid var(--rails-border);
+  padding-top: 24px;
+}
+@media (max-width: 600px) {
+  .rails-surface {
+    padding: 12px 0 32px;
+  }
+  .rails-rule-body {
+    padding-left: 4px;
+  }
+  .rails-actions button {
+    width: 100%;
+  }
+  .rails-surface :is(textarea, input, select) {
+    font-size: 16px;
+  }
+}
+
+.rails-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  min-height: 44px;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+.rails-surface .rails-toggle input {
+  margin: 0;
+}

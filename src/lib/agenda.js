@@ -9,21 +9,18 @@
  * auth.uid(). Si el front pudiera mandar organization_id, un request manipulado
  * escribiría en la agenda de otra empresa.
  *
- * DEGRADACIÓN: si la RPC falla —cuenta demo sin sesión real, sin red, permisos—
- * NO se rompe la pantalla. La tarjeta igual desaparece y el contador sube; se
- * pierde solo la persistencia. Un asesor con mala señal tiene que poder
- * trabajar su lista.
- * ─────────────────────────────────────────────────────────────────────────────
+ * Los errores de lectura se propagan y el caller conserva las acciones cuando
+ * una escritura no es confirmada. No presentar éxito local como persistencia.
  */
 import { supabase } from "./supabase";
 
 /** Qué se cerró hoy. Devuelve un mapa leadId -> estado, o {} si no se pudo. */
 export async function agendaDeHoy() {
   try {
-    const { data, error } = await supabase.rpc("rails_agenda_hoy");
+    const { data, error } = await supabase.rpc("rails_agenda_hoy").abortSignal(AbortSignal.timeout(10000));
     if (error) {
       console.warn("[agenda] no se pudo leer la agenda de hoy:", error.message);
-      return {};
+      throw new Error("No se pudo leer la agenda de hoy.");
     }
     const mapa = {};
     for (const fila of data || []) {
@@ -32,7 +29,7 @@ export async function agendaDeHoy() {
     return mapa;
   } catch (e) {
     console.warn("[agenda] error leyendo la agenda:", e?.message || e);
-    return {};
+    throw new Error("No se pudo leer la agenda de hoy.");
   }
 }
 
@@ -55,7 +52,7 @@ export async function marcarAccion(accion, estado, resultado = null) {
       p_pedir:     accion.pedir ?? null,
       p_canal:     accion.canal ?? null,
       p_resultado: resultado,
-    });
+    }).abortSignal(AbortSignal.timeout(10000));
     if (error) {
       console.warn("[agenda] no se pudo guardar la acción:", error.message);
       return false;

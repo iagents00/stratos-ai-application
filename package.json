@@ -23,7 +23,15 @@
     "verificar:appstore-ios": "node scripts/verificar-appstore-ios.mjs",
     "salud": "node scripts/salud.mjs",
     "test": "node --test tests/*.test.mjs",
-    "check:runtime": "node scripts/check-runtime-lint.mjs"
+    "check:runtime": "node scripts/check-runtime-lint.mjs",
+    "postbuild": "node scripts/ops/release-manifest.mjs",
+    "postbuild:app": "node scripts/ops/release-manifest.mjs dist-app",
+    "ops:doctor": "node scripts/ops/doctor.mjs",
+    "ops:check": "node scripts/ops/check-catalog.mjs && node scripts/ops/generate-system-index.mjs --check",
+    "ops:rollback": "node scripts/ops/rollback.mjs",
+    "ops:backup-check": "node scripts/ops/verify-backup.mjs",
+    "test:rails-db": "node tests/sql/rails-security.mjs",
+    "ops:inventory": "node scripts/ops/generate-system-index.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.104.1",

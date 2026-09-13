@@ -16,7 +16,15 @@ jobs:
           node-version: '24'
           cache: npm
       - run: npm ci --no-audit --no-fund
+      - name: Install isolated PostgreSQL test engine
+        run: npm install --prefix /tmp/stratos-db-audit @electric-sql/pglite@0.5.8 --no-fund --no-audit
+      - run: npm run test:rails-db
+        env:
+          STRATOS_PGLITE_MODULE: /tmp/stratos-db-audit/node_modules/@electric-sql/pglite/dist/index.js
       - run: npm test
+      - run: npm run ops:check
+      - run: npm run verificar-rails
+      - run: npm run verificar-docs
       - run: npm run check:runtime
       - run: node scripts/check-tenant-modules.mjs
       - run: npm run verificar-rpc
