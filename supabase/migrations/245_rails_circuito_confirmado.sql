@@ -22,7 +22,7 @@ USING (organization_id = public.current_organization_id()
 REVOKE ALL ON public.rails_eventos FROM anon, authenticated;
 GRANT SELECT ON public.rails_eventos TO authenticated;
 -- Las escrituras directas evadirían el circuito y su evidencia.
-REVOKE INSERT, UPDATE, DELETE ON public.agenda_items FROM authenticated;
+REVOKE INSERT, UPDATE, DELETE, TRUNCATE, REFERENCES, TRIGGER ON public.agenda_items FROM authenticated;
 
 CREATE OR REPLACE FUNCTION public.rails_resolver_accion(
   p_id uuid, p_lead_id uuid, p_version timestamptz, p_tipo text, p_razon text,
@@ -74,9 +74,10 @@ BEGIN
   v_estado := CASE p_resultado WHEN 'contactado' THEN 'hecho' WHEN 'sin_respuesta' THEN 'saltado' ELSE 'movido' END;
   INSERT INTO public.rails_eventos (id,organization_id,asesor_id,lead_id,resultado,detalle,canal,siguiente_accion,siguiente_at)
   VALUES (p_id,v_actor.organization_id,auth.uid(),p_lead_id,p_resultado,trim(p_detalle),p_canal,trim(p_siguiente),p_siguiente_at);
+  -- Solo el timestamp: el trigger existente deriva el texto legado. Incluir
+  -- next_action_date dispararía una segunda conversión según la zona de la org.
   UPDATE public.leads SET
     next_action = trim(p_siguiente), next_action_at = p_siguiente_at,
-    next_action_date = to_char(p_siguiente_at AT TIME ZONE p_timezone, 'YYYY-MM-DD HH24:MI'),
     sprint_toques = coalesce(sprint_toques,0) + CASE WHEN p_resultado = 'reprogramado' THEN 0 ELSE 1 END,
     sprint_ultimo_canal = CASE WHEN p_resultado = 'reprogramado' THEN sprint_ultimo_canal ELSE p_canal END,
     sprint_ultimo_contacto_at = CASE WHEN p_resultado = 'reprogramado' THEN sprint_ultimo_contacto_at ELSE now() END,

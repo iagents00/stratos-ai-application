@@ -216,7 +216,7 @@ guardaba nada.
 
 ### Stratos Rails (el proceso diario guiado)
 
-La versión pública anterior ya tenía Rails. La revisión del 12-sep-2026 endurece el circuito y requiere la migración **243** y frontend coordinados; las pruebas locales no equivalen a validación de producción. Sigue **apagado por defecto**. Dos llaves distintas:
+La versión pública anterior ya tenía Rails. La revisión del 12-sep-2026 endurece el circuito y requiere la migración **245** y frontend coordinados; las pruebas locales no equivalen a validación de producción. Sigue **apagado por defecto**. Dos llaves distintas:
 
 - `features.procesoGuiado` en la config del cliente → *¿esta empresa PUEDE
   tenerlo?* (vive en el bundle)

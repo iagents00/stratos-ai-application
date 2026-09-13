@@ -2,6 +2,8 @@
 > stratos-ai@0.0.0 probar-rails
 > node scripts/probar-rails.mjs
 
+✓ vista previa conserva la empresa por ruta, subdominio o parámetro
+✓ vista previa no copia fragmentos de autenticación
 ✓ validación ignora espacios y permite corregir sin crear un envío
 ✓ un rechazo SQL se puede editar; un fallo de transporte mantiene identidad
 ✓ los contadores son personales aunque la agenda incluya cierres del equipo
@@ -19,13 +21,14 @@
 ✓ una respuesta tardía de otra empresa no sustituye la configuración actual
 ✓ guardar con fallo conserva la versión confirmada y permite reintentar
 ✓ dos guardados simultáneos no pisan el último estado
-✓ migración 243 ejecutable e idempotente
+✓ migración 245 ejecutable e idempotente
 ✓ sin sesión y otra organización no pueden gestionar el lead
 ✓ asesor no puede gestionar un lead ajeno ni sin dueño
 ✓ una cuenta inactiva no puede escribir
 ✓ una baja de contacto bloquea también el RPC
 ✓ un registro incompleto no deja ni evento ni próximo paso
 ✓ resultado y compromiso se guardan juntos y el reintento no duplica toques
+✓ los triggers de producción conservan el instante entre zonas horarias
 ✓ una tarjeta obsoleta no pisa el siguiente paso
 ✓ reprogramar conserva el contador de contactos y agrega evidencia
 ✓ agenda respeta organización, asignación y zona válida
@@ -34,4 +37,4 @@
 ✓ dos tarjetas con la misma versión solo producen una gestión
 ✓ usuario autenticado no puede escribir evidencia ni saltarse el nuevo contrato
 
-31 pruebas de Rails aprobadas. Sin escrituras en producción.
+34 pruebas de Rails aprobadas. Sin escrituras en producción.

@@ -2,7 +2,7 @@
 
 ## v426 — Stratos Rails
 
-Gestiones confirmadas, configuración atómica y Proceso a ancho completo en ambos temas. Requiere la migración 243. Renueva el caché estático en la próxima navegación; conserva el caché de assets y no fuerza recargas.
+Gestiones confirmadas, configuración atómica y Proceso a ancho completo en ambos temas. Requiere la migración 245. Renueva el caché estático en la próxima navegación; conserva el caché de assets y no fuerza recargas.
 
 > Este archivo NACIÓ el 2026-08-05 sacando 267 KB de comentarios que vivían dentro de
 > `public/sw.js`. El navegador se baja `sw.js` ENTERO en cada navegación para ver si

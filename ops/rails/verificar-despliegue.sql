@@ -1,4 +1,4 @@
--- Solo lectura. Tras aplicar 243, verificar firmas y acceso.
+-- Solo lectura. Tras aplicar 245, verificar firmas y acceso.
 SELECT proname, pg_get_function_identity_arguments(oid) AS firma,
        prosecdef AS security_definer,
        has_function_privilege('authenticated',oid,'EXECUTE') AS app_puede_ejecutar,

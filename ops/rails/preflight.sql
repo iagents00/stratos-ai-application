@@ -1,4 +1,4 @@
--- Solo lectura. Ejecutar en el proyecto glulgyhkrqpykxmujodb antes de 243.
+-- Solo lectura. Ejecutar en el proyecto glulgyhkrqpykxmujodb antes de 245.
 SELECT to_regclass('public.leads') AS leads,
        to_regclass('public.profiles') AS profiles,
        to_regclass('public.organizations') AS organizations,

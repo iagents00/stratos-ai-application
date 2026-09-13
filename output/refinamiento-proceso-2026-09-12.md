@@ -26,3 +26,14 @@ Capturas de la implementación en `.impeccable/review/proceso/`. La revisión no
 La vista previa conserva la empresa identificada por ruta, subdominio o parámetro; no arrastra fragmentos de autenticación. Se explica en Mi día que el enlace no cambia la configuración del equipo y, fuera de demo, que las gestiones sí se guardan en las fichas reales. Ante una respuesta incierta, “Cerrar y revisar la ficha” abre ahora el expediente; el fixture verificó la llamada al destino de revisión. El aviso se comprobó a 390 px sin desbordamiento horizontal.
 
 La batería pasa a 33 pruebas. El despliegue sigue pendiente: la sesión disponible de Supabase solo lista Amistad y GitHub exige revisión del PR 754. No se aplicó la migración ni se publicó el frontend productivo.
+
+
+## Validación en Stratos producción — 12-sep-2026
+
+Acceso confirmado al proyecto `glulgyhkrqpykxmujodb` (stratos-prod). Esquema, restricciones, índices y 20 disparadores revisados. El historial remoto ya usa los nombres 243 y 244 para cambios NSG: la migración Rails se numeró **245**, sin modificar esos registros.
+
+Se corrigió una incompatibilidad real entre los dos disparadores de fechas: Rails escribe el instante y deja al disparador existente derivar el texto legado, evitando una segunda conversión horaria. El frontend presenta el instante confirmado en la zona del navegador. Se incorporaron los dos disparadores a una prueba reproducible: **34 pruebas aprobadas** y build de producción aprobado.
+
+Ensayo transaccional en QA Lab dentro de stratos-prod: migración, gestión con `SET LOCAL ROLE authenticated`, evidencia visible, agenda, reintento idempotente, activación/desactivación y rechazo de configuración obsoleta. Todo terminó con `ROLLBACK`; la tabla nueva seguía ausente. No se conservaron gestiones de prueba ni se contactó a clientes. El centinela previo no encontró RPC rotas.
+
+La publicación definitiva se registra por separado una vez verificada.

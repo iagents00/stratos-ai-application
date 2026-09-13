@@ -99,7 +99,7 @@ try {
     assert.equal((await store.guardar('a',{activo:false})).ok,false); terminar({activo:true}); await primero;
     assert.equal(store.get('a').cfg.activo,true);
   });
-  // PostgreSQL real embebido; fixture mínimo del contrato usado por 243, sin conexión a producción.
+  // PostgreSQL real embebido; fixture mínimo del contrato usado por 245, sin conexión a producción.
   await db.exec(`CREATE ROLE anon; CREATE ROLE authenticated;
     CREATE SCHEMA auth; CREATE FUNCTION auth.uid() RETURNS uuid LANGUAGE sql AS $$ SELECT nullif(current_setting('test.uid',true),'')::uuid $$;
     CREATE TABLE profiles(id uuid PRIMARY KEY,organization_id uuid,name text,role text,active boolean);
@@ -115,8 +115,9 @@ try {
     CREATE FUNCTION is_admin_or_above() RETURNS boolean LANGUAGE sql AS $$ SELECT role IN ('admin','super_admin','ceo','director') FROM profiles WHERE id=auth.uid() $$;
     GRANT USAGE ON SCHEMA auth TO authenticated; GRANT SELECT ON profiles, leads TO authenticated;
   `);
-  const migration=readFileSync(new URL('../supabase/migrations/243_rails_circuito_confirmado.sql',import.meta.url),'utf8');
-  await test('migración 243 ejecutable e idempotente', async () => { await db.exec(migration); await db.exec(migration); });
+  await db.exec(readFileSync(new URL('../ops/rails/fixture-triggers-fecha.sql',import.meta.url),'utf8'));
+  const migration=readFileSync(new URL('../supabase/migrations/245_rails_circuito_confirmado.sql',import.meta.url),'utf8');
+  await test('migración 245 ejecutable e idempotente', async () => { await db.exec(migration); await db.exec(migration); });
   const org=randomUUID(), otroOrg=randomUUID(), asesor=randomUUID(), admin=randomUUID(), otro=randomUUID(), lid=randomUUID();
   await db.query(`INSERT INTO organizations VALUES ($1,'{"brand":"intacta"}'),($2,'{}')`,[org,otroOrg]);
   await db.query(`INSERT INTO profiles VALUES ($1,$2,'Ana','asesor',true),($3,$2,'Admin','admin',true),($4,$5,'Otro','admin',true)`,[asesor,org,admin,otro,otroOrg]);
@@ -147,12 +148,16 @@ try {
     await assert.rejects(enviar({detalle:''}),/resultado/); await assert.rejects(enviar({fecha:'2020-01-01T00:00:00Z'}),/fecha futura/);
     assert.equal((await db.query('select count(*)::int as n from rails_eventos')).rows[0].n,0); assert.equal((await row()).next_action,null);
   });
+  await db.query("INSERT INTO proactive_config VALUES ($1,'America/Tijuana')",[org]);
   let request, savedVersion;
   await test('resultado y compromiso se guardan juntos y el reintento no duplica toques',async()=>{
     request=randomUUID(); savedVersion=await version(); await enviar({id:request,version:savedVersion}); await enviar({id:request,version:savedVersion});
     assert.equal((await row()).sprint_toques,1); assert.equal((await row()).next_action,'Revisar propuesta'); assert.equal((await row()).action_history.length,1);
     assert.equal((await db.query('select count(*)::int as n from rails_eventos')).rows[0].n,1);
     assert.equal((await db.query('select estado from agenda_items')).rows[0].estado,'hecho');
+  });
+  await test('los triggers de producción conservan el instante entre zonas horarias',async()=>{
+    assert.equal(new Date((await row()).next_action_at).toISOString(),futuro);
   });
   await test('una tarjeta obsoleta no pisa el siguiente paso',async()=>await assert.rejects(enviar({version:savedVersion}),/ficha cambió/));
   await test('reprogramar conserva el contador de contactos y agrega evidencia',async()=>{

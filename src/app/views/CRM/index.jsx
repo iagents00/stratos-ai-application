@@ -419,7 +419,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
   const sincronizarGestionRails = (row) => {
     setLeadsData(prev => prev.map(l => l.id === row.id ? {
       ...l, ...row, n: row.name ?? l.n, st: row.stage ?? l.st,
-      nextAction: row.next_action, nextActionDate: row.next_action_date,
+      nextAction: row.next_action, nextActionDate: formatFechaLarga(row.next_action_at) || row.next_action_date,
       isNew: row.is_new ?? l.isNew,
       actionHistory: row.action_history ?? l.actionHistory,
     } : l));
