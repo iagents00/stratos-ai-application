@@ -22,7 +22,7 @@ export default function Prueba() {
     <h1>Prueba local · sin datos reales</h1>
     <label htmlFor="modo">Fallo simulado</label><select id="modo" value={modo} onChange={e=>setModo(e.target.value)} disabled={intentos>0}><option value="definitivo">Rechazo definitivo</option><option value="incierto">Respuesta incierta</option></select>
     <p>Intentos: {intentos}</p><output>{resultado}</output>
-    <Gestion accion={{leadId:'fixture',nombre:'Cliente de ejemplo',canal:'llamada',version:'2026-09-12T00:00:00Z'}} resultado="contactado" onGuardar={guardar} onCancelar={()=>setResultado('Formulario cerrado por el usuario.')} />
+    <Gestion accion={{leadId:'fixture',nombre:'Cliente de ejemplo',canal:'llamada',version:'2026-09-12T00:00:00Z'}} resultado="contactado" onGuardar={guardar} onCancelar={()=>setResultado('Formulario cerrado por el usuario.')} onRevisarFicha={()=>setResultado('Ficha solicitada para revisar el resultado real.')} />
   </main>;
 }
 createRoot(document.getElementById('root')).render(<Prueba />);

@@ -9,6 +9,21 @@ const vite = await createServer({ server: { middlewareMode: true }, logLevel: 's
 const db = new PGlite();
 try {
   const { proximaAccion, listaDelDia, normalizarLead, diaRails } = await vite.ssrLoadModule('/src/lib/next-action-engine.js');
+  const { rutaVistaPreviaRails } = await vite.ssrLoadModule('/src/lib/rails-preview.js');
+  await test('vista previa conserva la empresa por ruta, subdominio o parámetro', () => {
+    for (const href of ['https://app.stratoscapitalgroup.com/grupo28?rails=0','https://grupo28.stratoscapitalgroup.com/','http://localhost:5178/?app&client=vega&rails=false']) {
+      const origen = new URL(href);
+      const destino = new URL(rutaVistaPreviaRails(href), origen);
+      assert.equal(destino.pathname, origen.pathname);
+      assert.equal(destino.host, origen.host);
+      assert.equal(destino.searchParams.get('client'), origen.searchParams.get('client'));
+      assert.equal(destino.searchParams.get('rails'), '1');
+      assert.ok(destino.searchParams.has('app'));
+    }
+  });
+  await test('vista previa no copia fragmentos de autenticación', () => {
+    assert.equal(new URL(rutaVistaPreviaRails('https://app.stratoscapitalgroup.com/#access_token=ejemplo'), 'https://app.stratoscapitalgroup.com').hash, '');
+  });
   const { fusionarRails } = await vite.ssrLoadModule('/src/lib/rails-config.js');
   const { crearRailsStore } = await vite.ssrLoadModule('/src/lib/rails-store.js');
   const { prepararGestion, rechazoDefinitivoRails, resumenAgenda } = await vite.ssrLoadModule('/src/lib/rails-gestion.js');

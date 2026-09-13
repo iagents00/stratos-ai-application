@@ -2358,6 +2358,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
       {railsActivo && (
         <MiDia
           config={railsCfg}
+          vistaPrevia={railsPreview === true}
           leads={isAdminRole || user?.id === "demo-user-local" ? visibleLeads : visibleLeads.filter(l => (l.asesor ?? l.asesor_name) === user?.name)}
           T={T}
           theme={theme}

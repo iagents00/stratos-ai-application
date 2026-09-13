@@ -11,7 +11,7 @@ const agendaDemo = new Map(); // Solo datos de ejemplo; se reinicia al recargar.
 const RESULTADOS = { contactado: 'Contactado', sin_respuesta: 'Sin respuesta', reprogramado: 'Reprogramado' };
 const estadoDe = resultado => ({ contactado: 'hecho', sin_respuesta: 'saltado', reprogramado: 'movido' })[resultado];
 
-export function Gestion({ accion, resultado, onCancelar, onGuardar }) {
+export function Gestion({ accion, resultado, onCancelar, onGuardar, onRevisarFicha }) {
   // Conserva la versión que el asesor estaba revisando, aunque llegue un sondeo.
   const [base] = useState(accion);
   const [detalle, setDetalle] = useState('');
@@ -57,7 +57,7 @@ export function Gestion({ accion, resultado, onCancelar, onGuardar }) {
     <div className="rails-botones">
       <button className="rails-primary" disabled={guardando} type="submit">{guardando ? 'Guardando…' : incierto ? 'Reintentar el mismo guardado' : 'Guardar resultado y siguiente paso'}</button>
       {!incierto && <button disabled={guardando} type="button" onClick={onCancelar}>Cancelar</button>}
-      {incierto && <button disabled={guardando} type="button" onClick={onCancelar}>Cerrar y revisar la ficha</button>}
+      {incierto && <button disabled={guardando} type="button" onClick={onRevisarFicha || onCancelar}>{onRevisarFicha ? "Cerrar y revisar la ficha" : "Cerrar formulario"}</button>}
     </div>
   </form>;
 }
@@ -73,7 +73,7 @@ function Tarjeta({ accion, indice, total, bloqueada, onGuardar, onVerCliente }) 
     <p>{accion.razon}</p>
     <p className="rails-pedir">{accion.pedir}</p>
     <p className="rails-contexto">{accion.contexto?.join(' · ')}</p>
-    {resultado ? <Gestion accion={accion} resultado={resultado} onGuardar={onGuardar} onCancelar={() => { setResultado(null); requestAnimationFrame(() => registrar.current?.focus()); }} />
+    {resultado ? <Gestion accion={accion} resultado={resultado} onGuardar={onGuardar} onRevisarFicha={onVerCliente ? () => { setResultado(null); onVerCliente(accion.leadId); } : undefined} onCancelar={() => { setResultado(null); requestAnimationFrame(() => registrar.current?.focus()); }} />
       : <div className="rails-botones">
         {enlace && <a href={enlace.href} {...(enlace.externo ? { target: '_blank', rel: 'noreferrer' } : {})}><Icono size={16} />{accion.canal === 'whatsapp' ? 'Abrir WhatsApp' : 'Llamar'}</a>}
         {!enlace && <span className="rails-contexto">Sin teléfono registrado</span>}
@@ -85,7 +85,7 @@ function Tarjeta({ accion, indice, total, bloqueada, onGuardar, onVerCliente }) 
   </article>;
 }
 
-function Jornada({ sessionKey, actorId, leads, config, ahora, demo, offline, recienRegistrado, onNuevoCliente, onVerCRM, onVerCliente, onGuardada }) {
+function Jornada({ sessionKey, actorId, leads, config, ahora, demo, offline, vistaPrevia, recienRegistrado, onNuevoCliente, onVerCRM, onVerCliente, onGuardada }) {
   const [agenda, setAgenda] = useState(() => ({ cargada: demo, cerradas: demo ? agendaDemo.get(sessionKey) || {} : {}, error: '' }));
   const [intento, setIntento] = useState(0);
   const [orden, setOrden] = useState([]);
@@ -127,6 +127,7 @@ function Jornada({ sessionKey, actorId, leads, config, ahora, demo, offline, rec
         <button onClick={onVerCRM}><LayoutGrid size={16} />Ver el CRM completo</button>
       </div>
     </header>
+    {vistaPrevia && <p className="rails-aviso"><strong>Vista previa.</strong> Este enlace muestra Rails sin cambiar la configuración de tu equipo.{!demo && " Las gestiones que registres sí se guardan en las fichas reales."}</p>}
     {demo && <p className="rails-aviso">Demo con datos de ejemplo. Las gestiones se simulan en esta sesión; al recargar se reinician.</p>}
     {offline && <p role="alert" className="rails-error">Sin conexión. Puedes revisar la lista; reconecta para confirmar las gestiones.</p>}
     {agenda.error && <div role="alert" className="rails-error"><p>No pudimos comprobar las gestiones de hoy. {agenda.error}</p><button onClick={() => setIntento(i => i+1)}>Reintentar lectura</button></div>}

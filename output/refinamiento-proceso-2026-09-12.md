@@ -20,3 +20,9 @@ Contraste calculado desde los colores leídos del DOM: texto secundario 6.59:1 o
 Compilación y lint del componente aprobados. Las 31 pruebas de Rails siguen pasando. Planos regenerados y lenguaje verificado. El detector señaló solo escalones locales de tipografía y radios que se documentaron: no se interpreta como certificación del producto.
 
 Capturas de la implementación en `.impeccable/review/proceso/`. La revisión no sustituye las pruebas de migración y sesiones reales pendientes antes del despliegue del PR.
+
+## Auditoría adicional del recorrido antes de publicar
+
+La vista previa conserva la empresa identificada por ruta, subdominio o parámetro; no arrastra fragmentos de autenticación. Se explica en Mi día que el enlace no cambia la configuración del equipo y, fuera de demo, que las gestiones sí se guardan en las fichas reales. Ante una respuesta incierta, “Cerrar y revisar la ficha” abre ahora el expediente; el fixture verificó la llamada al destino de revisión. El aviso se comprobó a 390 px sin desbordamiento horizontal.
+
+La batería pasa a 33 pruebas. El despliegue sigue pendiente: la sesión disponible de Supabase solo lista Amistad y GitHub exige revisión del PR 754. No se aplicó la migración ni se publicó el frontend productivo.

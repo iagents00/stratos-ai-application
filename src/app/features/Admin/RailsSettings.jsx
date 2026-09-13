@@ -4,6 +4,7 @@ import { ChevronDown, RotateCcw, Check, ExternalLink, Minus, Plus } from "lucide
 import { P, LP, font } from "../../../design-system/tokens";
 import { catalogoDeReglas } from "../../../lib/next-action-engine";
 import { FICHAS_DISPONIBLES } from "../../../lib/rails-config";
+import { rutaVistaPreviaRails } from "../../../lib/rails-preview";
 import { useRailsConfig } from "../../../hooks/useRailsConfig";
 import "./RailsSettings.css";
 
@@ -54,7 +55,7 @@ function PanelProceso({ T, isLight, config }) {
     }}>
       <header className="process-heading">
         <div><h1 id="proceso-titulo">Stratos Rails</h1><p>Configura las reglas y la lista del día de tu equipo.</p></div>
-        <a className="process-button process-preview" href="/?app&rails=1" target="_blank" rel="noreferrer">
+        <a className="process-button process-preview" href={rutaVistaPreviaRails(window.location.href)} target="_blank" rel="noreferrer">
           <ExternalLink size={16} aria-hidden="true" /> Vista previa <span className="process-sr-only">en una pestaña nueva, sin activar Rails para el equipo</span>
         </a>
       </header>
