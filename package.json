@@ -21,7 +21,9 @@
     "verificar-rpc": "node scripts/verificar-rpc-permisos.mjs",
     "build:app": "vite build --mode app",
     "verificar:appstore-ios": "node scripts/verificar-appstore-ios.mjs",
-    "salud": "node scripts/salud.mjs"
+    "salud": "node scripts/salud.mjs",
+    "test": "node --test tests/*.test.mjs",
+    "check:runtime": "node scripts/check-runtime-lint.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.104.1",

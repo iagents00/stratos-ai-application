@@ -1,3 +1,4 @@
+import { useDialogFocus } from "../../../hooks/useDialogFocus";
 /**
  * CRM/index.jsx — Orquestador principal del módulo CRM
  * Los sub-componentes viven en ./components.jsx
@@ -314,6 +315,8 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
     onAutoOpenHandled?.();
   }, [autoOpenPriority1]); // priorityLeadsRef is a ref, always current
   const [addingLead, setAddingLead]     = useState(false);
+  const closeNewLead = useCallback(() => setAddingLead(false), []);
+  const newLeadDialogRef = useDialogFocus(addingLead, closeNewLead);
   // Botón "+" del bottom-nav móvil (App.jsx): manda un contador para abrir
   // este form desde cualquier vista. Ajuste de estado durante el render +
   // reset del tick en el PADRE (en microtask, fuera del render): a diferencia
@@ -2267,7 +2270,12 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
   // quien tiene un solo tablero, boardLeads ES visibleLeads y nada cambia.
   const totalPipeline = boardLeads.reduce((s, l) => s + (l.presupuesto || 0), 0);
   const avgScore = boardLeads.length ? Math.round(boardLeads.reduce((s, l) => s + l.sc, 0) / boardLeads.length) : 0;
-  const hotLeads = boardLeads.filter(l => l.hot || l.daysInactive <= 2).length;
+  const updatedLeadsToday = boardLeads.filter(l => {
+    const at = l.updated_at;
+    if (!at) return false;
+    const date = new Date(at);
+    return Number.isFinite(date.getTime()) && date.toDateString() === new Date().toDateString();
+  }).length;
   const newLeadsCount = boardLeads.filter(l => l.isNew).length;
   // Cerca del cierre = Apartó + Visita Agendada + Cierre (milestones finales).
   const nearCloseLeads = boardLeads.filter(l => l.st === "Apartó" || l.st === "Visita Agendada" || l.st === "Cierre").length;
@@ -2415,7 +2423,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
               <p style={{ fontSize: 12, color: T.txt3, fontFamily: font, margin: 0 }}>
                 {/* Dinero en pipeline y Score: métricas de VENTAS — fuera en pipelines custom. */}
                 {!IS_CUSTOM_PIPELINE && <><span style={{ color: T.txt2 }}>${(totalPipeline/1000000).toFixed(1)}M</span> en pipeline · </>}
-                <span style={{ color: T.emerald }}>{hotLeads} activos</span>
+                <span style={{ color: T.emerald }}>{updatedLeadsToday} actualizados hoy</span>
                 {!IS_CUSTOM_PIPELINE && <> · Score promedio <span style={{ color: T.blue }}>{avgScore}</span></>}
               </p>
               {isRefreshing && (
@@ -2520,7 +2528,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
           ) : (
             // KPIs históricas de Stratos/Duke (sin cambios).
             <>
-              <KPI T={T} label="Clientes en Pipeline" value={boardLeads.length} sub={`${hotLeads} activos hoy`} icon={Users} color={T.blue} />
+              <KPI T={T} label="Clientes en Pipeline" value={boardLeads.length} sub={`${updatedLeadsToday} actualizados hoy`} icon={Users} color={T.blue} />
               <KPI T={T} label="Score Promedio" value={avgScore} sub={`promedio del pipeline`} icon={Target} color={T.cyan} />
               <KPI T={T} label="Zooms Agendados" value={zoomsAgendados} sub={`${zoomsConcretados} concretados`} icon={CalendarDays} color={T.accent} />
               <KPI T={T} label="Valor Total Pipeline" value={`$${(totalPipeline/1000000).toFixed(1)}M`} sub={`${nearCloseLeads} en cierre`} icon={DollarSign} color={T.emerald} />
@@ -2624,7 +2632,8 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                     <span style={{
                       fontSize: 12, color: T.txt2, fontFamily: font, fontWeight: 500,
                     }}>
-                      <span style={{ color: T.accent, fontWeight: 500 }}>{priorityLeads.length}</span> cliente{priorityLeads.length !== 1 ? "s" : ""} esperando acción
+                      <span style={{ color: T.accent, fontWeight: 500 }}>{priorityLeadsFull.length}</span> cliente{priorityLeadsFull.length !== 1 ? "s" : ""} esperando acción
+                      {priorityLeadsFull.length > priorityLeads.length && ` · mostrando ${priorityLeads.length}; todos en Lista`}
                     </span>
                   </>
                 )}
@@ -3184,7 +3193,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
             backdropFilter: "blur(10px)", WebkitBackdropFilter: "blur(10px)",
             animation: "fadeIn 0.20s ease both",
           }} />
-          <div style={isMobile ? {
+          <div className="stratos-new-lead-dialog" ref={newLeadDialogRef} role="dialog" aria-modal="true" aria-label={L.newEntity} tabIndex={-1} style={isMobile ? {
             // En mobile: modal full-screen — más cómodo para llenar el form
             // sin que el teclado virtual lo recorte.
             position: "fixed", inset: 0, zIndex: 501,
@@ -3209,6 +3218,10 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
             animation: "modalIn 0.26s cubic-bezier(0.16,1,0.3,1) both",
           }}>
             <style>{`
+              .stratos-new-lead-dialog input::placeholder,
+              .stratos-new-lead-dialog textarea::placeholder { color: ${T.txt2}; opacity: 1; }
+              .stratos-new-lead-dialog :focus-visible { outline: 2px solid ${T.accent}; outline-offset: 2px; }
+
               @keyframes modalInMobile{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
             `}</style>
 
@@ -3241,13 +3254,13 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                 {!isMobile && (
                   <span style={{
                     fontSize: 11, fontWeight: 500,
-                    color: T.txt3, fontFamily: font, letterSpacing: "0.02em",
+                    color: T.txt2, fontFamily: font, letterSpacing: "0.02em",
                     whiteSpace: "nowrap",
                   }}>· Completa los campos del formulario</span>
                 )}
               </div>
-              <button onClick={() => setAddingLead(false)} style={{
-                width: 30, height: 30, borderRadius: 9,
+              <button aria-label="Cerrar formulario" onClick={closeNewLead} style={{
+                width: 44, height: 44, borderRadius: 9,
                 border: `1px solid ${isLight ? "rgba(15,23,42,0.08)" : T.border}`,
                 background: "transparent", cursor: "pointer",
                 display: "flex", alignItems: "center", justifyContent: "center",
@@ -3255,7 +3268,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
               }}
                 onMouseEnter={e => { e.currentTarget.style.background = isLight ? "rgba(15,23,42,0.05)" : T.glass; }}
                 onMouseLeave={e => e.currentTarget.style.background = "transparent"}
-              ><X size={14} color={T.txt3} /></button>
+              ><X size={14} color={T.txt2} /></button>
             </div>
 
 
@@ -3266,7 +3279,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
               const chipBg        = isLight ? "rgba(15,23,42,0.04)" : "rgba(255,255,255,0.03)";
               const accentStrong  = isLight ? (T.accentDark || T.accent) : T.accent;
               const labelStyle = {
-                fontSize: 10.5, fontWeight: 500, color: T.txt3,
+                fontSize: 10.5, fontWeight: 500, color: T.txt2,
                 letterSpacing: "0.06em", textTransform: "uppercase",
                 fontFamily: fontDisp, display: "flex", alignItems: "center", gap: 4, marginBottom: 5,
               };
@@ -3294,9 +3307,9 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
               {/* Nombre — full width */}
               <div style={{ gridColumn: "1 / -1" }}>
                 <label style={labelStyle}>
-                  <User size={9} color={T.txt3} /> Nombre <span style={{ color: accentStrong }}>*</span>
+                  <User size={9} color={T.txt2} /> Nombre <span style={{ color: accentStrong }}>*</span>
                 </label>
-                <input placeholder="Ej. Rafael García López"
+                <input aria-label="Nombre" aria-required="true" autoComplete="name" placeholder="Ej. Rafael García López"
                   value={newLead.n || ""} onChange={e => setNewLead(p => ({...p, n: e.target.value}))}
                   style={inputStyle}
                   onFocus={focusOn} onBlur={e => focusOff(e)}
@@ -3306,9 +3319,9 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
               {/* Teléfono + Email — side by side */}
               <div>
                 <label style={labelStyle}>
-                  <Phone size={9} color={T.txt3} /> Teléfono
+                  <Phone size={9} color={T.txt2} /> Teléfono
                 </label>
-                <input placeholder="+52 998 123 4567" value={newLead.phone || ""} onChange={e => setNewLead(p => ({...p, phone: e.target.value}))}
+                <input aria-label="Teléfono" type="tel" autoComplete="tel" placeholder="+52 998 123 4567" value={newLead.phone || ""} onChange={e => setNewLead(p => ({...p, phone: e.target.value}))}
                   style={inputStyle}
                   onFocus={focusOn} onBlur={e => focusOff(e)}
                 />
@@ -3316,10 +3329,10 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
 
               <div>
                 <label style={labelStyle}>
-                  <Mail size={9} color={T.txt3} /> Email
-                  <span style={{ color: T.txt3, fontSize: 9.5, fontWeight: 500, textTransform: "none", letterSpacing: 0, marginLeft: 4 }}>opcional</span>
+                  <Mail size={9} color={T.txt2} /> Email
+                  <span style={{ color: T.txt2, fontSize: 9.5, fontWeight: 500, textTransform: "none", letterSpacing: 0, marginLeft: 4 }}>opcional</span>
                 </label>
-                <input placeholder="correo@ejemplo.com" value={newLead.email || ""} onChange={e => setNewLead(p => ({...p, email: e.target.value}))}
+                <input aria-label="Email" type="email" autoComplete="email" placeholder="correo@ejemplo.com" value={newLead.email || ""} onChange={e => setNewLead(p => ({...p, email: e.target.value}))}
                   style={inputStyle}
                   onFocus={focusOn} onBlur={e => focusOff(e)}
                 />
@@ -3338,7 +3351,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
               {(() => {
                 if (duplicateChecking && !duplicateMatch) {
                   return (
-                    <div style={{ gridColumn: "1 / -1", display: "flex", alignItems: "center", gap: 6, fontSize: 11.5, color: T.txt3, fontFamily: font, padding: "2px 0 0 2px" }}>
+                    <div style={{ gridColumn: "1 / -1", display: "flex", alignItems: "center", gap: 6, fontSize: 11.5, color: T.txt2, fontFamily: font, padding: "2px 0 0 2px" }}>
                       <Search size={10} strokeWidth={2.2} style={{ opacity: 0.7 }} />
                       Verificando si ya existe en el CRM…
                     </div>
@@ -3394,7 +3407,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                           <> · etapa <strong style={{ color: T.txt }}>{duplicateMatch.lead_stage}</strong></>
                         )}
                         {fechaStr && <> · desde {fechaStr}</>}
-                        <span style={{ color: T.txt3 }}> · coincide por {matchKind}</span>
+                        <span style={{ color: T.txt2 }}> · coincide por {matchKind}</span>
                       </div>
                       {!isMine && (
                         <div style={{ display: "flex", gap: 6, marginTop: 8, flexWrap: "wrap" }}>
@@ -3511,7 +3524,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                   <div style={{ gridColumn: "1 / -1", position: "relative" }}>
                     <label style={{ ...labelStyle, justifyContent: "space-between" }}>
                       <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                        <DollarSign size={9} color={T.txt3} /> Presupuesto
+                        <DollarSign size={9} color={T.txt2} /> Presupuesto
                       </span>
                       {hasParsed && (
                         <span style={{ fontSize: 10.5, fontWeight: 500, color: accentStrong, fontFamily: fontDisp, letterSpacing: "-0.005em", textTransform: "none" }}>
@@ -3533,7 +3546,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                         border: `1px solid ${hasValue
                           ? (isLight ? `${T.accent}3A` : T.accentB)
                           : inputBorder}`,
-                        color: hasValue ? accentStrong : T.txt3,
+                        color: hasValue ? accentStrong : T.txt2,
                         fontSize: 13, fontWeight: hasValue ? 700 : 400,
                         fontFamily: fontDisp,
                         cursor: "pointer",
@@ -3545,7 +3558,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                       }}
                     >
                       <span>{hasValue ? displayVal : "Seleccionar presupuesto…"}</span>
-                      <ChevronDown size={14} color={hasValue ? accentStrong : T.txt3} strokeWidth={2} style={{ flexShrink: 0, transition: "transform 0.18s", transform: budgetMenuOpen ? "rotate(180deg)" : "none" }} />
+                      <ChevronDown size={14} color={hasValue ? accentStrong : T.txt2} strokeWidth={2} style={{ flexShrink: 0, transition: "transform 0.18s", transform: budgetMenuOpen ? "rotate(180deg)" : "none" }} />
                     </button>
 
                     {/* Dropdown — grid de presets + custom input */}
@@ -3608,7 +3621,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
               {/* Proyecto de interés — full width para dar espacio */}
               <div style={{ gridColumn: "1 / -1" }}>
                 <label style={labelStyle}>
-                  <Building2 size={9} color={T.txt3} /> Proyecto de interés
+                  <Building2 size={9} color={T.txt2} /> Proyecto de interés
                 </label>
                 <ClickDropdown
                   value={newLead.p || ""}
@@ -3628,7 +3641,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
               {/* Campaña */}
               <div>
                 <label style={labelStyle}>
-                  <Signal size={9} color={T.txt3} /> Campaña / Fuente
+                  <Signal size={9} color={T.txt2} /> Campaña / Fuente
                 </label>
                 <ClickDropdown
                   value={newLead.campana || ""}
@@ -3650,7 +3663,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                   y los admins pueden asignar a cualquiera. */}
               <div style={{ gridColumn: "1 / -1" }}>
                 <label style={labelStyle}>
-                  <Users size={9} color={T.txt3} /> Asesor asignado
+                  <Users size={9} color={T.txt2} /> Asesor asignado
                   {isAdminRole && <span style={{ color: "#F87171", fontWeight: 500 }}> *</span>}
                 </label>
                 <ClickDropdown
@@ -3673,7 +3686,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
               {/* Etapa — selector compacto con menú desplegable */}
               <div style={{ gridColumn: "1 / -1", position: "relative" }}>
                 <label style={labelStyle}>
-                  <Waypoints size={9} color={T.txt3} /> Etapa inicial
+                  <Waypoints size={9} color={T.txt2} /> Etapa inicial
                 </label>
                 {/* Trigger button */}
                 {(() => {
@@ -3719,7 +3732,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                           maxHeight: 280, overflowY: "auto",
                         }}>
                           {STAGES.map(s => {
-                            const c = stgC[s] || T.txt3;
+                            const c = stgC[s] || T.txt2;
                             const active = newLead.st === s;
                             const cTitle = isLight ? `color-mix(in srgb, ${c} 55%, #0B1220 45%)` : c;
                             return (
@@ -3758,11 +3771,11 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
               <div>
                 <label style={labelStyle}>
                   <Zap size={9} color={accentStrong} /> Próxima acción
-                  <span style={{ color: T.txt3, fontSize: 10, fontWeight: 500, textTransform: "none", letterSpacing: 0, marginLeft: 4 }}>opcional</span>
+                  <span style={{ color: T.txt2, fontSize: 10, fontWeight: 500, textTransform: "none", letterSpacing: 0, marginLeft: 4 }}>opcional</span>
                 </label>
                 <textarea
                   placeholder="¿Qué hace el asesor mañana? Ej. Llamar 10am, mandar Torre 25…"
-                  value={newLead.nextAction || ""}
+                  aria-label="Próxima acción" value={newLead.nextAction || ""}
                   onChange={e => setNewLead(p => ({...p, nextAction: e.target.value}))}
                   rows={2}
                   style={{ width: "100%", padding: "8px 11px", background: inputBg, border: `1px solid ${inputBorder}`, borderRadius: 9, color: T.txt, fontSize: 12.5, fontWeight: 500, outline: "none", fontFamily: font, boxSizing: "border-box", lineHeight: 1.45, resize: "none", display: "block", minHeight: 52, maxHeight: 72, overflowY: "auto", transition: "all 0.18s" }}
@@ -3772,12 +3785,12 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
               </div>
               <div>
                 <label style={labelStyle}>
-                  <FileText size={9} color={T.txt3} /> Notas
-                  <span style={{ color: T.txt3, fontSize: 10, fontWeight: 500, textTransform: "none", letterSpacing: 0, marginLeft: 4 }}>opcional</span>
+                  <FileText size={9} color={T.txt2} /> Notas
+                  <span style={{ color: T.txt2, fontSize: 10, fontWeight: 500, textTransform: "none", letterSpacing: 0, marginLeft: 4 }}>opcional</span>
                 </label>
                 <textarea
                   placeholder="Preferencias, contexto, insights…"
-                  value={newLead.notas || ""}
+                  aria-label="Notas" value={newLead.notas || ""}
                   onChange={e => setNewLead(p => ({...p, notas: e.target.value}))}
                   rows={2}
                   style={{ width: "100%", padding: "8px 11px", background: inputBg, border: `1px solid ${inputBorder}`, borderRadius: 9, color: T.txt, fontSize: 12.5, fontWeight: 500, outline: "none", fontFamily: font, boxSizing: "border-box", lineHeight: 1.45, resize: "none", display: "block", minHeight: 52, maxHeight: 72, overflowY: "auto", transition: "all 0.18s" }}
@@ -3789,7 +3802,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
               {/* Canal de origen */}
               {(() => {
                 const SOURCES = [
-                  { key: "manual",    label: "Manual",    color: T.txt3   },
+                  { key: "manual",    label: "Manual",    color: T.txt2   },
                   { key: "telegram",  label: "Telegram",  color: "#29B6F6" },
                   { key: "whatsapp",  label: "WhatsApp",  color: "#25D366" },
                   { key: "facebook",  label: "Facebook",  color: "#7EB8F0" },
@@ -3800,7 +3813,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                 return (
                   <div style={{ gridColumn: "1 / -1" }}>
                     <label style={labelStyle}>
-                      <Send size={9} color={T.txt3} /> Canal de origen
+                      <Send size={9} color={T.txt2} /> Canal de origen
                     </label>
                     <div style={{ display: isMobile ? "grid" : "flex", gridTemplateColumns: isMobile ? "repeat(auto-fill, minmax(96px, 1fr))" : undefined, gap: isMobile ? 8 : 6, flexWrap: "wrap" }}>
                       {SOURCES.map(({ key, label, color }) => {
@@ -3813,13 +3826,13 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                               padding: isMobile ? "11px 8px" : "5px 13px", borderRadius: isMobile ? 12 : 99, textAlign: "center",
                               background: active ? (isLight ? `${color}18` : `${color}14`) : inputBg,
                               border: `1px solid ${active ? (isLight ? `${color}50` : `${color}55`) : inputBorder}`,
-                              color: active ? c : T.txt3,
+                              color: active ? c : T.txt2,
                               fontSize: 12, fontWeight: active ? 700 : 500,
                               cursor: "pointer", fontFamily: font,
                               transition: "all 0.15s",
                             }}
                             onMouseEnter={e => { if (!active) { e.currentTarget.style.background = isLight ? `${color}0A` : `${color}0C`; e.currentTarget.style.borderColor = isLight ? `${color}30` : `${color}30`; e.currentTarget.style.color = c; }}}
-                            onMouseLeave={e => { if (!active) { e.currentTarget.style.background = inputBg; e.currentTarget.style.borderColor = inputBorder; e.currentTarget.style.color = T.txt3; }}}
+                            onMouseLeave={e => { if (!active) { e.currentTarget.style.background = inputBg; e.currentTarget.style.borderColor = inputBorder; e.currentTarget.style.color = T.txt2; }}}
                           >{label}</button>
                         );
                       })}
@@ -3852,7 +3865,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                 : (isLight ? "rgba(15,23,42,0.06)" : T.glass);
               const primaryColor = canSubmit
                 ? (isLight ? "#FFFFFF" : "#040C18")
-                : T.txt3;
+                : T.txt2;
               const primaryBorder = canSubmit
                 ? (isLight ? "transparent" : "rgba(255,255,255,0.90)")
                 : (isLight ? "rgba(15,23,42,0.08)" : T.border);
@@ -3867,11 +3880,11 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                 flex: 1, height: isMobile ? 48 : 38, borderRadius: 10,
                 background: "transparent",
                 border: `1px solid ${isLight ? "rgba(15,23,42,0.08)" : T.border}`,
-                color: T.txt3, fontSize: 12.5, fontWeight: 400,
+                color: T.txt2, fontSize: 12.5, fontWeight: 400,
                 cursor: "pointer", fontFamily: font, transition: "all 0.18s",
               }}
                 onMouseEnter={e => { e.currentTarget.style.background = isLight ? "rgba(15,23,42,0.04)" : T.glass; e.currentTarget.style.color = T.txt2; }}
-                onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = T.txt3; }}
+                onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = T.txt2; }}
               >Cancelar</button>
               <button
                 onClick={addNewLead}

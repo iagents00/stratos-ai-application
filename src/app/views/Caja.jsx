@@ -22,6 +22,7 @@ import {
   RefreshCw, Send, X, MessageCircle, Monitor, Paperclip, ExternalLink, Download, FileText,
 } from "lucide-react";
 import { font, fontDisp } from "../../design-system/tokens";
+import { currencyCode, summarizeMovements, fetchAllRows } from "../../lib/financial-data";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../hooks/useAuth";
 import { useClient } from "../../hooks/useClient";
@@ -102,6 +103,10 @@ export default function Caja({ T }) {
   const [tipoFilter, setTipoFilter] = useState("todos"); // todos | ingreso | egreso
   const [showForm, setShowForm] = useState(!isMobile);
   const [form, setForm] = useState(EMPTY_FORM);
+  const defaultCurrency = clientConfig?.currency || (clientConfig?.id === "vega" ? "ARS" : clientConfig?.id === "nsg" ? "USD" : "MXN");
+  const [selectedCurrency, setSelectedCurrency] = useState(defaultCurrency);
+  const currency = selectedCurrency;
+  const currencies = [...new Set([defaultCurrency, "MXN", "USD", "ARS", "COP", "EUR", "USDT", ...rows.map(r => currencyCode(r.currency))])];
   const [viewer, setViewer] = useState(null);   // comprobante abierto: { loading } | { url }
   const [seccion, setSeccion] = useState("movimientos");      // movimientos | nomina | cobros | informe
   const [personaFilter, setPersonaFilter] = useState("mio");  // mio | empresa | todo
@@ -160,20 +165,20 @@ export default function Caja({ T }) {
   }, [orgId]);
 
   const load = useCallback(async () => {
-    if (!orgId) return;
+    if (!orgId) { setLoading(false); return; }
     setLoading(true);
     setError("");
     try {
       const [mov, profs, leads] = await Promise.all([
-        supabase.from("team_expenses")
+        fetchAllRows(() => supabase.from("team_expenses")
           .select("id, tipo, amount, currency, account, category, description, spent_at, created_by, project_id, source, evidence_path, persona_id, contraparte")
           .eq("organization_id", orgId)
           .order("spent_at", { ascending: false })
-          .limit(400),
-        supabase.from("profiles").select("id, name").eq("organization_id", orgId),
-        supabase.from("leads").select("id, name").eq("organization_id", orgId).is("deleted_at", null).limit(200),
+          .order("id")),
+        fetchAllRows(() => supabase.from("profiles").select("id, name").eq("organization_id", orgId).order("id")),
+        fetchAllRows(() => supabase.from("leads").select("id, name").eq("organization_id", orgId).is("deleted_at", null).order("id")),
       ]);
-      if (mov.error) throw mov.error;
+      if (mov.error || profs.error || leads.error) throw mov.error || profs.error || leads.error;
       setRows(mov.data || []);
       setPeople(Object.fromEntries((profs.data || []).map(p => [p.id, p.name])));
       setObras((leads.data || []).sort((a, b) => String(a.name).localeCompare(b.name)));
@@ -204,20 +209,10 @@ export default function Caja({ T }) {
     if (personaFilter === "mio")     base = rows.filter(r => r.persona_id === user?.id);
     if (personaFilter === "empresa") base = rows.filter(r => !r.persona_id);
     if (catFilter !== "todas")       base = base.filter(r => (r.category || "") === catFilter);
-    return base;
-  }, [rows, personaFilter, catFilter, user?.id]);
+    return base.filter(r => currencyCode(r.currency) === currency);
+  }, [rows, personaFilter, catFilter, user?.id, currency]);
 
-  const kpis = useMemo(() => {
-    const now = new Date();
-    const first = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
-    let ing = 0, egr = 0;
-    misMovimientos.forEach(r => {
-      if (new Date(r.spent_at).getTime() < first) return;
-      if (r.tipo === "ingreso") ing += Number(r.amount || 0);
-      else egr += Number(r.amount || 0);
-    });
-    return { ing, egr, bal: ing - egr };
-  }, [misMovimientos]);
+  const kpis = useMemo(() => summarizeMovements(misMovimientos, currency, new Date()), [misMovimientos, currency]);
 
   const filtered = useMemo(() => misMovimientos.filter(r => {
     if (tipoFilter !== "todos" && (r.tipo || "egreso") !== tipoFilter) return false;
@@ -230,8 +225,10 @@ export default function Caja({ T }) {
 
   const submit = async (e) => {
     e?.preventDefault?.();
-    const amount = parseFloat(String(form.amount).replace(",", "."));
-    if (!amount || amount <= 0) { setError("Pon un monto válido."); return; }
+    if (!orgId || !user?.id || user?.isDemo) { setError("Inicia sesión con una cuenta de organización para registrar movimientos."); return; }
+    const amount = Number(String(form.amount).replace(",", "."));
+    if (!Number.isFinite(amount) || amount <= 0) { setError("Pon un monto válido."); return; }
+    if ((form.currency || currency) === "SIN MONEDA") { setError("Selecciona una moneda para el movimiento."); return; }
     setSaving(true);
     setError("");
     try {
@@ -239,7 +236,7 @@ export default function Caja({ T }) {
         organization_id: orgId,
         tipo: form.tipo,
         amount,
-        currency: "ARS",
+        currency: form.currency || currency,
         account: form.account.trim() || null,
         category: form.category.trim() || (form.tipo === "ingreso" ? "Ingreso" : "Gasto general"),
         description: form.description.trim() || null,
@@ -350,13 +347,20 @@ export default function Caja({ T }) {
       {seccion === "informe" && <InformeAvances T={T} />}
 
       {seccion === "movimientos" && <>
+      <label style={{ color: txt2, display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+        Moneda de movimientos y totales
+        <select aria-label="Moneda de movimientos y totales" value={currency} onChange={e => setSelectedCurrency(e.target.value)} style={{ ...inputStyle, width: "auto" }}>
+          {currencies.map(c => <option key={c} value={c}>{c}</option>)}
+        </select>
+        <span style={{ fontSize: 12 }}>Los importes se muestran por moneda, sin conversión.</span>
+      </label>
       {/* KPIs del mes */}
       <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
         <KpiCard label={personaFilter === "mio" ? "Lo que recibí este mes" : personaFilter === "empresa" ? `Entró a ${empresa} este mes` : "Ingresos del mes"}
-                 value={fmtMoney(kpis.ing)} icon={ArrowUpRight} color={POS} />
+                 value={loading ? "…" : fmtMoney(kpis.ing, currency)} icon={ArrowUpRight} color={POS} />
         <KpiCard label={personaFilter === "mio" ? "Lo que pagué este mes" : personaFilter === "empresa" ? `Salió de ${empresa} este mes` : "Egresos del mes"}
-                 value={fmtMoney(kpis.egr)} icon={ArrowDownRight} color={NEG} />
-        <KpiCard label="Balance del mes" value={fmtMoney(kpis.bal)} icon={Scale} color={kpis.bal >= 0 ? POS : NEG} />
+                 value={loading ? "…" : fmtMoney(kpis.egr, currency)} icon={ArrowDownRight} color={NEG} />
+        <KpiCard label="Balance del mes" value={loading ? "…" : fmtMoney(kpis.bal, currency)} icon={Scale} color={kpis.bal >= 0 ? POS : NEG} />
       </div>
 
       {/* Form de registro */}
@@ -375,7 +379,10 @@ export default function Caja({ T }) {
             ))}
           </div>
           <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr 1fr" : "repeat(4, 1fr)", gap: 10 }}>
-            <input required inputMode="decimal" placeholder="Monto *" value={form.amount}
+            <select aria-label="Moneda del nuevo movimiento" value={form.currency || currency} onChange={e => setForm(f => ({ ...f, currency: e.target.value }))} style={inputStyle}>
+              {currencies.filter(c => c !== "SIN MONEDA").map(c => <option key={c} value={c}>{c}</option>)}
+            </select>
+            <input required aria-label="Monto" inputMode="decimal" placeholder="Monto *" value={form.amount}
               onChange={e => setForm(f => ({ ...f, amount: e.target.value }))} style={inputStyle} />
             <input list="caja-cuentas" placeholder="Cuenta (Caja, Banco…)" value={form.account}
               onChange={e => setForm(f => ({ ...f, account: e.target.value }))} style={inputStyle} />
