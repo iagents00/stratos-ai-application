@@ -6,7 +6,7 @@
 >
 > ¿Buscás un botón o un texto y no está acá? `npm run buscar "texto"`
 
-**190 archivos · 77.450 líneas**
+**190 archivos · 77.455 líneas**
 
 ---
 
@@ -16,7 +16,7 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 
 | En el menú dice | Archivo | Líneas |
 |---|---|---|
-| **CRM** | `src/app/views/CRM/index.jsx` | 6672 |
+| **CRM** | `src/app/views/CRM/index.jsx` | 6677 |
 | **Mi Espacio** | _sin vista propia (redirige a otra)_ | — |
 | **Plan Semanal** | `src/app/views/PlanSemanal.jsx` | 500 |
 | **Copilot** | `src/app/views/Copilot.jsx` | 1990 |
@@ -150,7 +150,7 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 
 | Archivo | Líneas | Qué hace |
 |---|---|---|
-| `index.jsx` | 6672 | _sin describir_ |
+| `index.jsx` | 6677 | _sin describir_ |
 | `components.jsx` | 5873 | Todos los sub-componentes del módulo CRM |
 | `Marketing.jsx` | 3075 | _sin describir_ |
 | `index.jsx` | 2022 | Generador de landing pages inmobiliarias |
@@ -432,21 +432,21 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Abrir | `src/app/views/Marketing.jsx:1338` |
 | Abrir carpeta de Drive | `src/app/views/LandingPages/index.jsx:1422` |
 | Abrir carpeta en Drive | `src/app/views/Marketing.jsx:683` |
-| Abrir Discovery | `src/app/views/CRM/index.jsx:5326` |
+| Abrir Discovery | `src/app/views/CRM/index.jsx:5329` |
 | Abrir el expediente completo | `src/app/views/WhatsApp.jsx:475` |
 | Abrir el expediente completo del cliente | `src/app/views/WhatsApp.jsx:456` |
 | Abrir evidencia | `src/app/views/Marketing.jsx:2340` |
 | Abrir la ficha completa | `src/app/views/Marketing.jsx:1564` |
 | Abrir la ficha completa — acá se edita todo | `src/app/views/Marketing.jsx:1373` |
 | Abrir la ficha de la propiedad | `src/app/views/Marketing.jsx:2008` |
-| Abrir perfil | `src/app/views/CRM/index.jsx:5324` |
+| Abrir perfil | `src/app/views/CRM/index.jsx:5327` |
 | Abrirlo en Drive | `src/app/features/MetaPanel/DocsStratos.jsx:174` |
-| Acciones | `src/app/views/CRM/index.jsx:4344` |
+| Acciones | `src/app/views/CRM/index.jsx:4347` |
 | Acciones acumuladas · Asesores vs. iAgents | `src/app/views/Dash.jsx:85` |
 | Acciones de cierre IA | `src/app/views/CRM/components.jsx:5615` |
 | Activa tu Copilot AI | `src/app/views/Copilot.jsx:1948` |
 | Actividad del equipo IA — hoy | `src/app/views/IACRM.jsx:299` |
-| Actividad reciente | `src/app/views/CRM/index.jsx:5909` |
+| Actividad reciente | `src/app/views/CRM/index.jsx:5912` |
 | ACTIVO | `src/app/views/CRM/components.jsx:5502` |
 | Activos post-Zoom | `src/app/views/ComandoDirectivo.jsx:687` |
 | Activos post-Zoom: | `src/app/views/CRM/ZoomBoard.jsx:169` |
@@ -460,7 +460,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Agenda (opcional) | `src/app/views/LandingPages/index.jsx:1606` |
 | Agenda una llamada con | `src/app/views/LandingPages/LandingPagePreview.jsx:458` |
 | Agenda, lista de acción, documentos y plan | `src/app/App.jsx:2983` |
-| Agendar fecha | `src/app/views/CRM/index.jsx:4664` |
+| Agendar fecha | `src/app/views/CRM/index.jsx:4667` |
 | Agendar llamada | `src/app/views/LandingPages/LandingPagePreview.jsx:164` |
 | Agente Ejecutivo | `src/app/components/Chat.jsx:74` |
 | Agente Stratos | `src/app/components/Chat.jsx:60` |
@@ -478,12 +478,12 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Alta intención — señal de cierre en el Zoom | `src/app/views/ZoomControl/index.jsx:692` |
 | Amenidades (separadas por coma) | `src/app/views/LandingPages/index.jsx:760` |
 | Análisis IA | `src/app/views/CRM/components.jsx:5377` |
-| Analizar | `src/app/views/CRM/index.jsx:5321` |
+| Analizar | `src/app/views/CRM/index.jsx:5324` |
 | Analizar con IA → | `src/app/views/Dash.jsx:241` |
 | Anterior | `src/app/views/CRM/index.jsx:3167` |
 | Añade tareas concretas para este cliente | `src/app/views/CRM/components.jsx:2162` |
 | Añadir | `src/app/views/CRM/components.jsx:5769` |
-| Aparecerán al inicio de su pipeline en | `src/app/views/CRM/index.jsx:6186` |
+| Aparecerán al inicio de su pipeline en | `src/app/views/CRM/index.jsx:6191` |
 | Aplicaciones | `src/app/App.jsx:3046` |
 | Apps | `src/app/App.jsx:2221` |
 | Áreas de atención | `src/app/views/RRHHModule.jsx:786` |
@@ -547,7 +547,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Carpeta de Drive | `src/app/views/ERP.jsx:662` |
 | Catálogo de Propiedades | `src/app/views/LandingPages/index.jsx:1300` |
 | Catálogo de Proyectos | `src/app/views/ERP.jsx:310` |
-| Centro de Agentes IA | `src/app/views/CRM/index.jsx:5490` |
+| Centro de Agentes IA | `src/app/views/CRM/index.jsx:5493` |
 | Centro de Inteligencia | `src/app/components/DynamicIsland.jsx:81` |
 | Centro de Inteligencia — Activo | `src/app/components/DynamicIsland.jsx:102` |
 | Cerrar | `src/app/App.jsx:2899` |
@@ -559,7 +559,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Cerrar vista previa | `src/app/views/LandingPages/LandingPagePreview.jsx:202` |
 | Chats | `src/app/views/WhatsApp.jsx:633` |
 | Cierres | `src/app/views/Team.jsx:116` |
-| Click para agendar fecha/hora de la cita | `src/app/views/CRM/index.jsx:4641` |
+| Click para agendar fecha/hora de la cita | `src/app/views/CRM/index.jsx:4644` |
 | Click para editar | `src/app/features/MetaPanel/index.jsx:333` |
 | Click para escribir el número directamente | `src/app/views/CRM/components.jsx:695` |
 | Cliente | `src/app/views/CRM/ZoomBoard.jsx:290` |
@@ -582,7 +582,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Confirmados | `src/app/views/ZoomControl/Resumen.jsx:440` |
 | Confirmar contraseña | `src/app/views/Profile.jsx:333` |
 | Confirmas y listo | `src/app/views/ConectarWhatsApp.jsx:107` |
-| Contáctame Ya | `src/app/views/CRM/index.jsx:6186` |
+| Contáctame Ya | `src/app/views/CRM/index.jsx:6191` |
 | Contarlo ahora | `src/app/views/Marketing.jsx:708` |
 | Continuar sin CV | `src/app/features/Portal/index.jsx:425` |
 | Conversión | `src/app/views/Team.jsx:116` |
@@ -673,7 +673,7 @@ _(457 textos más — usá `npm run buscar "texto"`)_
 Estos no tienen comentario de cabecera, así que el mapa no puede explicar qué
 hacen. Agregarles un bloque `/** ... */` arriba los hace aparecer solos acá.
 
-- `src/app/views/CRM/index.jsx` (6672 líneas)
+- `src/app/views/CRM/index.jsx` (6677 líneas)
 - `src/app/views/Marketing.jsx` (3075 líneas)
 - `src/landing/LandingMarketing.jsx` (1593 líneas)
 - `src/app/views/ComandoDirectivo.jsx` (1270 líneas)

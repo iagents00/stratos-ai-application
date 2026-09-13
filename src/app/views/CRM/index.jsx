@@ -2366,7 +2366,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
       {railsActivo && (
         <MiDia
           config={railsCfg}
-          leads={leadsData}
+          leads={visibleLeads}
           T={T}
           theme={theme}
           recienRegistrado={leadRecienRegistrado}
@@ -3934,6 +3934,9 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
         document.body
       )}
 
+      {/* Keep pipeline state mounted, but outside the seller workspace and tab order.
+          Portalled dialogs above and drawers below remain available from Mi Día. */}
+      <div data-rails-pipeline hidden={railsActivo} style={{ display: railsActivo ? "none" : "flex", flexDirection: "column", gap: 18 }}>
       {/* ── SELECTOR DE RECORRIDO ──
           Va DEBAJO de las tarjetas de prioridad y justo encima del
           pipeline, porque es lo que parte en dos: arriba queda "a quién
@@ -5952,6 +5955,8 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
           </G>
         );
       })()}
+
+      </div>{/* end pipeline surface */}
 
       {/* Drawers — "Discovery" (NotesModal/Expediente) y los drawers
          legacy (Perfil, Análisis IA) comparten un switcher inferior. En

@@ -26,6 +26,8 @@ Se sustituyeron las guías obsoletas de prototipo por un punto de entrada operat
 | P1 | “Respaldo completo” truncaba datos y excluía sistemas enteros | Exportación paginada y alcance explícito; manual de restauración real | Exportación corregida; restauración real pendiente |
 | P2 | Todos los cierres contaban como hechos y ocultaban cartera restante | Realizados, reprogramados y sin respuesta separados; siguiente lista | Corregido y probado |
 | P2 | WhatsApp prellenaba instrucciones internas para el vendedor | Abre chat sin convertir la instrucción en mensaje al cliente | Corregido |
+| P1 | Integración real conservaba parte del pipeline debajo de Mi Día | Segundo bloque de pipeline oculto sin desmontar; se preservan alta y fichas fuera del bloque | Detectado en sesión real y corregido |
+| P1 | Rieles recibía el conjunto crudo en lugar del filtro del CRM | Usa visibleLeads, compartiendo alcance por persona con la cartera | Corregido |
 | P2 | Sin retorno claro al proceso después de consultar CRM | Volver a Mi Día sin alterar configuración del equipo | Corregido |
 | P2 | Admin modificaba equipo al tocar cada control | Borrador, ejemplo y publicación explícita; controles con nombres accesibles | Corregido; QA escritorio y móvil |
 | P2 | Diagnóstico decía “todo en pie” con solo HTML/Auth health | Comprueba recurso ejecutable, manifiesto y versión; declara exclusiones | Corregido y probado |
@@ -60,7 +62,8 @@ Se sustituyeron las guías obsoletas de prototipo por un punto de entrada operat
 4. Jornada de agenda usa CURRENT_DATE del servidor (UTC); se alineó el reinicio de interfaz. Falta zona comercial por organización para jornadas locales exactas.
 5. El motor conserva reglas inmobiliarias. Cada admin debe revisar instrucciones antes de activar para otros sectores; no implica ERP completo ni validación de todas las reglas de etapas en servidor.
 6. Falta ensayo real de vendedores de Duke y canales externos controlados, monitoreo continuo con recepción de avisos acreditada y cobertura de app cerrada.
-7. El PR requiere una revisión según la protección de main. Una promoción web no integra el código a main.
+7. En la sesión real se observó un error de registro push del navegador (Registration failed, push service error). El canal necesita diagnóstico con dispositivo/proveedor; la carga de CRM y Rieles funcionó.
+8. El PR requiere una revisión según la protección de main. Una promoción web no integra el código a main.
 
 ## Entrega y reversión
 
