@@ -1,10 +1,10 @@
-# Auditoría de Stratos AI y preparación de producción
+# Auditoría de Stratos AI y publicación en producción
 
 Fecha de solicitud: 12 de septiembre de 2026 (Tijuana). Verificaciones técnicas realizadas durante la sesión del 13 de septiembre UTC.
 
 ## Estado y alcance
 
-**La web puede publicarse con las correcciones verificadas. La certificación de todo el sistema permanece pendiente de acceso administrativo a Supabase y n8n.** Un build correcto no acredita permisos de base de datos, entrega de mensajes, funcionamiento de proveedores ni contabilidad completa.
+**La web está publicada con las correcciones verificadas, versión stratos-v426. La certificación de todo el sistema permanece pendiente de acceso administrativo a Supabase y n8n.** Un build correcto no acredita permisos de base de datos, entrega de mensajes, funcionamiento de proveedores ni contabilidad completa.
 
 Se revisaron código del cliente, rutas de Vercel, dependencias, permisos de navegación, flujos de CRM/Copilot/Caja/Finanzas, accesibilidad del alta de clientes, configuración de clientes, scripts de control, paquete web para iOS y respuestas públicas de producción. Se probaron datos sintéticos localmente y se leyeron sesiones existentes en producción; no se hicieron llamadas o envíos a clientes ni se alteraron sus registros para probar.
 
@@ -45,6 +45,8 @@ La versión del service worker pasa de **stratos-v425 a stratos-v426**. Se conse
 - `npm audit` y `npm audit --omit=dev`: cero vulnerabilidades conocidas reportadas tras actualización.
 - Escaneo de JWT en archivos versionados: no se encontraron JWT con rol distinto de anon. Es un control parcial; no certifica ausencia de todos los tipos de secretos ni del historial Git.
 - QA de navegador: CRM demo, modal de alta en escritorio/claro y 390×844/oscuro, campos identificados, Tab desde el último control regresa al primero, Escape cierra, Caja y selector de moneda. La demo y las pruebas unitarias no acreditan CRUD con un usuario real.
+- QA real: Copilot respondió a una consulta de solo lectura de tareas pendientes, sin solicitar creación o modificación de registros. Se verificó la respuesta y su persistencia en el historial; no se contrastó su conteo con una consulta administrativa independiente.
+- Después de publicar, la sesión real de NSG se restauró en **tres recargas** y el CRM mostró el indicador corregido “actualizados hoy”. Se observó un aviso de `getSession` lento y uso del mecanismo existente de caché local; la sesión y los datos terminaron de cargar. Queda pendiente investigar la latencia de Auth. Los demás avisos observados en esa revisión procedían de una extensión del navegador.
 - Se añade **Release checks** en GitHub Actions para mantener build, pruebas, controles de errores de ejecución, navegación y registro RPC.
 
 ## Pruebas públicas de producción
@@ -67,7 +69,7 @@ No se enviaron audios, texto a modelos pagados ni datos de prospectos como parte
 3. **P1 — Funciones de IA ausentes.** organize-lead-notes y suggest-next-actions no aparecen desplegadas en el proyecto al momento de comprobarlas. Se requiere verificar si la producción utiliza otra ruta o si deben publicarse con sus secretos de proveedor y la autenticación corregida.
 4. **Control pendiente — Base de datos completa.** No hubo acceso administrativo al proyecto Stratos: la CLI autenticada solo lista Amistad y el Studio exige login. Falta ejecutar el centinela fn_qa_rpc_del_front con permisos adecuados, comprobar RLS/Storage y SECURITY DEFINER, cron/reminders, salud de consultas, backups recuperables y migraciones realmente aplicadas. No se corrieron migraciones históricas a ciegas.
 5. **Control pendiente — Operación integral.** No se acreditaron con pruebas de ida y vuelta los cobros, Meta, WhatsApp, Retell, Telegram, notificaciones con aplicación cerrada, adjuntos y guardado con distintos roles reales. Requieren sesiones operativas y destinatarios de prueba definidos. No se activa un proveedor pagado ni una campaña por mera compilación.
-6. **P2 — Deuda estática y rendimiento.** El lint completo conserva avisos/errores históricos de componentes anidados, variables sin uso y reglas del compilador React. No se ocultaron para declarar un resultado verde. El bundle principal aún supera 500 kB; el detector visual encontró animaciones de ancho, efectos y contrastes pendientes fuera del formulario intervenido.
+6. **P2 — Deuda estática y rendimiento.** El lint completo conserva **332 errores y 29 advertencias** históricos de componentes anidados, variables sin uso y reglas del compilador React. No se ocultaron para declarar un resultado verde: pasa el control específico de errores de ejecución, no el lint completo. El bundle principal aún supera 500 kB; el detector visual encontró animaciones de ancho, efectos y contrastes pendientes fuera del formulario intervenido. La restauración de sesión funcionó con el mecanismo de caché, pero se observó latencia de Auth pendiente de diagnóstico.
 
 ## Estado de interfaz (evaluación limitada a las superficies inspeccionadas)
 
@@ -86,4 +88,10 @@ El detector es una ayuda estática: una transición de ancho o una curva elásti
 
 Producción anterior: `dpl_CHHaFcNYWeJgT9RzLp1nHWTrKjRD`, `stratos-ai-application-613lsqx5m-iagents-projects.vercel.app`, revisión e08d0c9. Los dominios app.stratoscapitalgroup.com, stratoscapitalgroup.com y getstratosai.com apuntaban al mismo despliegue.
 
-La entrega debe quedar registrada en Git y publicarse con los controles anteriores. La reversión de Vercel recupera el despliegue anterior; no modifica Supabase. No se hicieron cambios de esquema ni borrados en la base de producción durante esta auditoría.
+**Publicación completada:** revisión `afdd64b755911026a562289090aee86c62d88a8f`, despliegue de producción `dpl_Fwx7c8XAsHPTdm11vz62Zodrda5F`, estado **READY**, URL `https://stratos-ai-application-fm4ifybqx-iagents-projects.vercel.app`. Se promocionó la entrega verificada mediante Vercel, que generó el despliegue con la configuración de producción.
+
+Verificación posterior: app.stratoscapitalgroup.com, stratoscapitalgroup.com y getstratosai.com respondieron HTTP 200, con el mismo recurso JavaScript y service worker **stratos-v426**. Las rutas `/nsg`, `/grupo28`, `/vega`, `/mondrian` y `/p` devolvieron HTML con HTTP 200. Se comprobaron las cabeceras `X-Frame-Options: DENY` y `X-Content-Type-Options: nosniff`; una renovación push incompleta fue rechazada con HTTP 400. El script de salud confirmó aplicación, base y Auth disponibles.
+
+Los cambios están en la rama `codex/system-audit-live-20260912` y en [PR #755](https://github.com/iagents00/stratos-ai-application/pull/755). Los controles de release, planos y Vercel pasaron para la revisión publicada. **La integración a main requiere la revisión configurada en GitHub y sigue pendiente**; no se eludió esa protección. Es necesario integrar el PR antes de que otra publicación desde main sustituya estas correcciones. Un eventual commit posterior que solo actualice este informe no cambia la revisión de código publicada.
+
+La reversión de Vercel puede recuperar el despliegue anterior; no modifica Supabase. No se hicieron cambios de esquema ni borrados en la base de producción durante esta auditoría. Las correcciones de funciones Supabase descritas arriba están preparadas en Git, pero **no están desplegadas en el servidor de Supabase**.
