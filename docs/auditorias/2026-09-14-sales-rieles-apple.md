@@ -33,6 +33,14 @@ Reproducción local: npm run dev y /tests/fixtures/rails-qa.html. El fixture sol
 
 ## Límites y publicación
 
-La entrega v429 se publicó y pasó el diagnóstico de tres dominios. La comprobación de integración encontró un conflicto con el reset global de inputs, corregido en v430 con cambio de service worker. El manifiesto /release.json identifica el commit efectivo; el registro final de despliegue se agrega después de comprobar producción.
+La entrega v429 se publicó y pasó el diagnóstico de tres dominios. La comprobación de integración encontró un conflicto con el reset global de inputs, corregido en v430 con cambio de service worker. El manifiesto /release.json identifica el commit efectivo; el registro final aparece abajo.
 
 Esta refinación no despliega la migración SQL 243, no completa la auditoría de permisos remotos y no acredita una restauración de Supabase/n8n. Se conservan los pendientes documentados en la auditoría del 13 de septiembre, incluyendo la reprogramación en dos escrituras y la jornada UTC. La configuración solo está habilitada para admin/super_admin en la aplicación; la garantía adicional del servidor sigue pendiente de acceso y despliegue.
+
+## Entrega comprobada
+
+- **Web v430 publicada**: commit `b25bda5ef4a56efab92f5b987896cc9845c52df6`, despliegue `dpl_GtDnqfKoTest3pWXFnVtHLgdLSvB`, READY en producción.
+- Checks de release y planos aprobados. Los tres dominios devolvieron recursos y versiones coherentes; diagnóstico total 639 ms. Medición puntual de disponibilidad, no tiempo de recuperación.
+- Sesión real: administración y Mi Día renderizados; un cliente expandido y nueve filas compactas con la configuración existente de diez por lista. Casillas de reglas comprobadas con apariencia nativa auto y acento del tema, visibles en captura del CRM real.
+- Se conserva la configuración organizativa existente, incluido su estado inactivo. La QA usa la vista previa administrativa por URL; no activa el proceso para el equipo.
+- [Evidencia de publicación](../operacion/evidencias/2026-09-14-v430.json). El PR 755 conserva revisión obligatoria para integrar a main. El commit posterior de esta evidencia no cambia la interfaz publicada.
