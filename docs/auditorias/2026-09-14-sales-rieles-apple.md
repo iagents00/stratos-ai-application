@@ -13,6 +13,7 @@
 | Vista previa del admin lejos de los campos en móvil | Lateral en escritorio y dentro de la instrucción abierta en móvil |
 | Apariencia dispersa entre estilos inline y CSS | Paleta local compartida en rails-theme.js; componentes y estados en Rails.css |
 | Contraste de acción principal dependía del tema | Variante oscura del acento en modo claro con texto blanco; menta con texto oscuro en modo oscuro |
+| El reset global ocultaba las casillas de reglas en el CRM real | Apariencia nativa restituida solo en esas casillas; fixture carga ahora el CSS global de la app |
 | Poca respuesta táctil y soporte de preferencias | Respuesta al presionar, foco visible, movimiento/transparencia/contraste reducidos y colores forzados |
 
 La estética usa tipografía del sistema, espaciado en rem, superficies sobrias y un único material translúcido funcional en la barra de publicación. No agrega librerías, sonidos, envíos automáticos ni animaciones de entrada decorativas. La interfaz conserva la identidad de Stratos.
@@ -32,6 +33,6 @@ Reproducción local: npm run dev y /tests/fixtures/rails-qa.html. El fixture sol
 
 ## Límites y publicación
 
-Se prepara v429 con cambio de service worker. El manifiesto /release.json identifica el commit efectivo; el registro final de despliegue se agrega después de comprobar producción.
+La entrega v429 se publicó y pasó el diagnóstico de tres dominios. La comprobación de integración encontró un conflicto con el reset global de inputs, corregido en v430 con cambio de service worker. El manifiesto /release.json identifica el commit efectivo; el registro final de despliegue se agrega después de comprobar producción.
 
 Esta refinación no despliega la migración SQL 243, no completa la auditoría de permisos remotos y no acredita una restauración de Supabase/n8n. Se conservan los pendientes documentados en la auditoría del 13 de septiembre, incluyendo la reprogramación en dos escrituras y la jornada UTC. La configuración solo está habilitada para admin/super_admin en la aplicación; la garantía adicional del servidor sigue pendiente de acceso y despliegue.

@@ -1,4 +1,5 @@
 // Development-only fixture. No real users, destinations, database writes or production routes.
+import "../../src/index.css";
 import React, { useMemo, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { AuthContext } from "../../src/contexts/AuthContext";
@@ -85,6 +86,7 @@ function QA() {
           <label style={btn}>
             <input
               type="checkbox"
+              style={{ appearance: "auto" }}
               checked={fail}
               onChange={(e) => setFail(e.target.checked)}
             />{" "}

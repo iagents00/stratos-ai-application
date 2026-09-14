@@ -241,6 +241,8 @@
   border-color: transparent;
 }
 .rails-surface input[type="checkbox"] {
+  -webkit-appearance: auto;
+  appearance: auto;
   width: 20px;
   height: 20px;
   margin: 0;
