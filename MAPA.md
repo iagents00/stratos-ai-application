@@ -6,7 +6,7 @@
 >
 > ¿Buscás un botón o un texto y no está acá? `npm run buscar "texto"`
 
-**191 archivos · 78.278 líneas**
+**191 archivos · 78.280 líneas**
 
 ---
 
@@ -132,7 +132,7 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | Archivo | Líneas | Qué hace |
 |---|---|---|
 | `index.jsx` | 2158 | Modal de cuatro pestañas: Lista de Acción · Documentos · Plan Estratégico · Protocolo de Ventas |
-| `Rails.css` | 825 | _sin describir_ |
+| `Rails.css` | 827 | _sin describir_ |
 | `AdminPanel.jsx` | 543 | Panel de gestión de usuarios (Super Admin y Admin). |
 | `index.jsx` | 487 | Panel de chat con Agente Stratos AI. |
 | `index.jsx` | 453 | Portal de Candidatos — Stratos People |
@@ -683,7 +683,7 @@ hacen. Agregarles un bloque `/** ... */` arriba los hace aparecer solos acá.
 - `src/landing/Diagnostico.jsx` (974 líneas)
 - `src/app/views/CRM/LeadWhatsAppChat.jsx` (942 líneas)
 - `src/app/views/RRHHModule.jsx` (839 líneas)
-- `src/app/features/Admin/Rails.css` (825 líneas)
+- `src/app/features/Admin/Rails.css` (827 líneas)
 - `src/app/views/InformeAvances.jsx` (747 líneas)
 - `src/app/views/ERP.jsx` (698 líneas)
 - `src/lib/auth.js` (689 líneas)
