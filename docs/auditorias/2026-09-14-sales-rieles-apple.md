@@ -1,0 +1,37 @@
+# Sales Rieles · auditoría y refinación de interfaz
+
+14 de septiembre de 2026. Base: web v428, rama codex/system-audit-live-20260912. Skills aplicadas: apple-design e impeccable (refinación de interfaz existente, modo Operate). Alcance: Mi Día del vendedor y configuración de Ventas sobre Rieles del administrador.
+
+## Problemas resueltos
+
+| Hallazgo | Resultado |
+|---|---|
+| Todas las tarjetas abiertas competían por atención | Un cliente expandido; los demás siguen disponibles en filas compactas, sin alterar prioridad |
+| Acciones de contacto y resultado tenían el mismo peso | Contacto principal, consulta secundaria y resultados agrupados después del contacto |
+| Al completar se perdía el foco del teclado | Pasa al siguiente cliente o al estado final de lista, después del guardado confirmado |
+| Resultados diarios mezclados en una línea | Conteos con etiquetas y avance separado de la lista actual |
+| Vista previa del admin lejos de los campos en móvil | Lateral en escritorio y dentro de la instrucción abierta en móvil |
+| Apariencia dispersa entre estilos inline y CSS | Paleta local compartida en rails-theme.js; componentes y estados en Rails.css |
+| Contraste de acción principal dependía del tema | Variante oscura del acento en modo claro con texto blanco; menta con texto oscuro en modo oscuro |
+| Poca respuesta táctil y soporte de preferencias | Respuesta al presionar, foco visible, movimiento/transparencia/contraste reducidos y colores forzados |
+
+La estética usa tipografía del sistema, espaciado en rem, superficies sobrias y un único material translúcido funcional en la barra de publicación. No agrega librerías, sonidos, envíos automáticos ni animaciones de entrada decorativas. La interfaz conserva la identidad de Stratos.
+
+## Verificación
+
+- 15 tests Node aprobados; guardas de Rieles y gate de sintaxis/referencias/hooks aprobados. El lint completo mantiene 361 avisos históricos fuera del alcance.
+- Compilación web aprobada. Detector de interfaz sobre los archivos intervenidos: sin hallazgos emitidos; no equivale a certificación de accesibilidad.
+- Navegador con fixture aislado: error de escritura conserva cliente; éxito cambia foco; realizados, sin respuesta y reprogramados se cuentan por separado; siguiente lista disponible al terminar.
+- Estados de carga, fallo de lectura y sin pendientes verificados. Un fallo de lectura no ofrece botones para registrar resultados.
+- Admin: borrador visible, interpolación de datos en vista previa, publicación deshabilitada en demo. No se cambiaron reglas reales de una organización.
+- Escritorio oscuro, móvil claro de 390×844 y ancho intermedio de 820 px revisados. Sin desbordamiento horizontal, incluso con nombres largos. Botón de contacto medido en 44 px; controles de texto a 16 px en móvil.
+- Botón primario claro medido: fondo rgb(6,122,94), texto blanco. Enlaces de teléfono inspeccionados con número ficticio reservado; no se efectuaron llamadas ni mensajes.
+- Preferencias reducidas implementadas por CSS; no se certificó una prueba asistiva completa ni todos los dispositivos físicos.
+
+Reproducción local: npm run dev y /tests/fixtures/rails-qa.html. El fixture solo usa datos sintéticos y persistencia inyectada; incluye selección de escenarios y fallo de guardado. No forma parte de las rutas productivas.
+
+## Límites y publicación
+
+Se prepara v429 con cambio de service worker. El manifiesto /release.json identifica el commit efectivo; el registro final de despliegue se agrega después de comprobar producción.
+
+Esta refinación no despliega la migración SQL 243, no completa la auditoría de permisos remotos y no acredita una restauración de Supabase/n8n. Se conservan los pendientes documentados en la auditoría del 13 de septiembre, incluyendo la reprogramación en dos escrituras y la jornada UTC. La configuración solo está habilitada para admin/super_admin en la aplicación; la garantía adicional del servidor sigue pendiente de acceso y despliegue.

@@ -1,5 +1,5 @@
 /** Seller workspace. A result is completed only after the server acknowledges it. */
-import { useState, useMemo, useEffect, useRef } from "react";
+import { useState, useMemo, useEffect, useRef, useId } from "react";
 import {
   Phone,
   MessageCircle,
@@ -7,13 +7,18 @@ import {
   CalendarClock,
   Plus,
   LayoutGrid,
+  ChevronDown,
+  ArrowRight,
+  CheckCircle2,
+  LockKeyhole,
 } from "lucide-react";
-import { P, LP, font } from "../../design-system/tokens";
+import { P, LP } from "../../design-system/tokens";
 import { listaDelDia, proximaAccion } from "../../lib/next-action-engine";
 import { hrefDelCanal } from "../../lib/telefono";
 import { agendaDeHoy, marcarAccion } from "../../lib/agenda";
 import { useAuth } from "../../hooks/useAuth";
 import "../features/Admin/Rails.css";
+import { railsTheme } from "../features/Admin/rails-theme";
 // Matches CURRENT_DATE in the existing agenda RPC (UTC); see the day-boundary limitation in the runbook.
 const defaultPersistence = { read: agendaDeHoy, write: marcarAccion };
 const dayKey = () => new Date().toISOString().slice(0, 10);
@@ -47,6 +52,9 @@ function Lista({
 }) {
   const T = palette || (theme === "light" ? LP : P);
   const [closed, setClosed] = useState({});
+  const [activeId, setActiveId] = useState(null);
+  const workspace = useRef(null);
+  const focusAfterResult = useRef(false);
   const [history, setHistory] = useState({ loading: true, error: "" });
   const [notice, setNotice] = useState("");
   const [batch, setBatch] = useState([]);
@@ -123,6 +131,16 @@ function Lista({
   const unanswered = Object.values(closed).filter(
     (v) => v === "saltado",
   ).length;
+  const activeActionId = visible.some((a) => a.leadId === activeId)
+    ? activeId
+    : visible[0]?.leadId;
+  const batchDone = batch.filter((id) => closed[id]).length;
+  const batchTotal = batchDone + visible.length;
+  useEffect(() => {
+    if (!focusAfterResult.current) return;
+    focusAfterResult.current = false;
+    workspace.current?.querySelector("[data-rails-current]")?.focus();
+  }, [closed, batch, activeId]);
   const finish = async (action, state, details = null) => {
     // Recheck latest props before a write; a stale contact must never be worked.
     const lead = leads.find((l) => l.id === action.leadId);
@@ -134,6 +152,7 @@ function Lista({
       throw new Error(
         "No se confirmó el resultado. Tu acción sigue pendiente; revisa la conexión y reintenta.",
       );
+    focusAfterResult.current = true;
     setClosed((prev) => ({ ...prev, [action.leadId]: state }));
     setNotice(
       demo
@@ -147,142 +166,157 @@ function Lista({
   };
   return (
     <section
+      ref={workspace}
       className="rails-day"
-      style={{
-        maxWidth: 720,
-        margin: "0 auto",
-        padding: "8px 0 28px",
-        color: T.txt,
-        fontFamily: font,
-        "--rails-accent": T.accent,
-      }}
+      style={railsTheme(T)}
+      aria-label="Mi Día · Ventas sobre Rieles"
     >
-      <header style={{ marginBottom: 24 }}>
-        <h2
-          style={{ margin: "0 0 8px", fontSize: 28, letterSpacing: "-.02em" }}
-        >
-          Mi Día
-        </h2>
-        <p style={{ color: T.txt2, fontSize: 14, lineHeight: 1.6 }}>
-          Empieza por el primer cliente, sigue la instrucción y registra el
-          resultado. Tu administrador mantiene las reglas del proceso.
-        </p>
-        <p role="status" style={{ color: T.txt2 }}>
-          {history.loading
-            ? "Verificando tus resultados…"
-            : `${remaining.length} pendientes · ${completed} ${completed === 1 ? "realizado" : "realizados"} · ${moved} ${moved === 1 ? "reprogramado" : "reprogramados"} · ${unanswered} sin respuesta`}
-        </p>
-        {demo && (
-          <p style={{ color: T.txt2 }}>
-            Demostración · los resultados no se guardan.
+      <header className="rails-day-header">
+        <div>
+          <h2>Mi Día</h2>
+          <p className="rails-muted">
+            Un cliente a la vez. Un siguiente paso claro.
           </p>
-        )}
-        <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-          <button style={button(T)} onClick={onNuevoCliente}>
-            <Plus size={16} /> Nuevo cliente
+        </div>
+        <div className="rails-actions rails-toolbar">
+          <button className="rails-button" onClick={onNuevoCliente}>
+            <Plus size={17} aria-hidden="true" /> Nuevo cliente
           </button>
-          <button style={button(T)} onClick={onVerCRM}>
-            <LayoutGrid size={16} /> Todos mis clientes
+          <button className="rails-button" onClick={onVerCRM}>
+            <LayoutGrid size={17} aria-hidden="true" /> Todos mis clientes
           </button>
         </div>
       </header>
+      <div className="rails-day-summary">
+        <dl className="rails-counts" aria-label="Resultados de hoy">
+          {[
+            [remaining.length, "Pendientes"],
+            [completed, "Realizados"],
+            [moved, "Reprogramados"],
+            [unanswered, "Sin respuesta"],
+          ].map(([value, label]) => (
+            <div key={label}>
+              <dt>{label}</dt>
+              <dd>{history.loading || history.error ? "—" : value}</dd>
+            </div>
+          ))}
+        </dl>
+        <p className="rails-admin-note">
+          <LockKeyhole size={14} aria-hidden="true" /> Tu administrador mantiene
+          las reglas. Tú decides el resultado de cada contacto.
+        </p>
+      </div>
+      {demo && (
+        <p className="rails-notice">
+          Demostración · los resultados no se guardan.
+        </p>
+      )}
+      {history.loading && (
+        <div className="rails-loading" role="status">
+          <p>Verificando tus resultados…</p>
+          <div aria-hidden="true" className="rails-skeleton" />
+          <div aria-hidden="true" className="rails-skeleton" />
+        </div>
+      )}
       {history.error && (
-        <div role="alert">
+        <div role="alert" className="rails-notice rails-error">
           <p>{history.error}</p>
-          <button style={button(T)} onClick={load}>
+          <button className="rails-button" onClick={load}>
             Reintentar
           </button>
         </div>
       )}
       {notice && (
-        <p role="status" style={{ color: T.txt2 }}>
+        <p role="status" className="rails-notice">
           {notice}
         </p>
       )}
       {!history.loading && !history.error && (
         <>
-          {visible.map((action, index) => (
-            <Tarjeta
-              key={action.leadId}
-              action={action}
-              index={index + 1}
-              count={visible.length}
-              T={T}
-              finish={finish}
-              move={onMover}
-              open={onAbrirCliente}
-              demo={demo}
-              report={setNotice}
-            />
-          ))}
+          {batchTotal > 0 && (
+            <div className="rails-list-heading">
+              <h3>Tu lista de hoy</h3>
+              <span>
+                {batchDone} de {batchTotal} resueltas
+              </span>
+              <progress
+                aria-label="Avance de esta lista"
+                max={batchTotal}
+                value={batchDone}
+              />
+            </div>
+          )}
+          <div className="rails-worklist">
+            {visible.map((action) => (
+              <Tarjeta
+                key={action.leadId}
+                action={action}
+                index={batch.indexOf(action.leadId) + 1}
+                count={batch.length}
+                expanded={activeActionId === action.leadId}
+                select={() => {
+                  focusAfterResult.current = true;
+                  setActiveId(action.leadId);
+                }}
+                finish={finish}
+                move={onMover}
+                open={onAbrirCliente}
+                demo={demo}
+                report={setNotice}
+              />
+            ))}
+          </div>
           {!visible.length && (
-            <div
-              style={{
-                border: `1px solid ${T.border}`,
-                borderRadius: 12,
-                padding: 24,
-              }}
-            >
-              <h3 style={{ marginTop: 0 }}>
+            <div className="rails-empty">
+              <CheckCircle2 size={32} aria-hidden="true" />
+              <h3 tabIndex={-1} data-rails-current>
                 {outside.length
                   ? "Esta lista está resuelta"
                   : "Sin acciones pendientes para hoy"}
               </h3>
-              <p style={{ color: T.txt2 }}>
+              <p className="rails-muted">
                 {outside.length
                   ? `Todavía hay ${outside.length} clientes por atender. Continúa con la siguiente lista cuando estés listo.`
                   : "Las acciones con fecha futura aparecerán cuando corresponda. Puedes consultar tu cartera en Todos mis clientes."}
               </p>
+              {outside.length > 0 && (
+                <button
+                  className="rails-button rails-primary"
+                  onClick={() => {
+                    focusAfterResult.current = true;
+                    setBatch(remaining.slice(0, limit).map((a) => a.leadId));
+                  }}
+                >
+                  Abrir siguiente lista ({Math.min(outside.length, limit)}){" "}
+                  <ArrowRight size={17} aria-hidden="true" />
+                </button>
+              )}
             </div>
           )}
           {visible.length > 0 && outside.length > 0 && (
-            <p style={{ color: T.txt2 }}>
-              {outside.length} acciones adicionales. La siguiente lista estará
-              disponible al resolver esta.
+            <p className="rails-queue-note">
+              {outside.length} acciones adicionales. Al terminar, podrás abrir
+              la siguiente lista.
             </p>
-          )}
-          {!visible.length && outside.length > 0 && (
-            <button
-              style={button(T)}
-              onClick={() =>
-                setBatch(remaining.slice(0, limit).map((a) => a.leadId))
-              }
-            >
-              Abrir siguiente lista ({Math.min(outside.length, limit)})
-            </button>
           )}
         </>
       )}
     </section>
   );
 }
-const button = (T) => ({
-  minHeight: 44,
-  padding: "10px 14px",
-  display: "inline-flex",
-  alignItems: "center",
-  justifyContent: "center",
-  gap: 7,
-  border: `1px solid ${T.border}`,
-  borderRadius: 9,
-  background: "transparent",
-  color: T.txt,
-  font: "inherit",
-  fontSize: 14,
-  cursor: "pointer",
-  textDecoration: "none",
-});
 function Tarjeta({
   action,
   index,
   count,
-  T,
+  expanded,
+  select,
   finish,
   move,
   open,
   demo,
   report,
 }) {
+  const cardId = useId();
   const [busy, setBusy] = useState(false);
   const inFlight = useRef(false);
   const [error, setError] = useState("");
@@ -326,108 +360,157 @@ function Tarjeta({
   };
   return (
     <article
+      className={`rails-client ${expanded ? "is-current" : ""}`}
       aria-busy={busy}
-      style={{
-        border: `1px solid ${T.border}`,
-        borderRadius: 12,
-        padding: "20px",
-        marginBottom: 16,
-        overflowWrap: "anywhere",
-      }}
+      aria-labelledby={`${cardId}-name`}
     >
-      <p style={{ color: T.txt2, margin: "0 0 6px", fontSize: 13 }}>
-        Acción {index} de {count} · {action.etapa} ·{" "}
-        {action.canal === "whatsapp" ? "WhatsApp" : "Llamada"}
-      </p>
-      <h3 style={{ fontSize: 23, margin: "0 0 10px" }}>{action.nombre}</h3>
-      <p style={{ fontSize: 16, lineHeight: 1.55, color: T.txt2 }}>
-        {action.razon}
-      </p>
-      <p style={{ fontSize: 15, lineHeight: 1.55 }}>
-        <strong>Qué conseguir:</strong> {action.pedir}
-      </p>
-      {!contact && (
-        <p style={{ color: T.txt2 }}>
-          Falta un teléfono válido. Abre la ficha para completarlo.
-        </p>
-      )}
-      <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-        {contact && !demo && (
-          <a
-            href={contact.href}
-            {...(contact.externo
-              ? { target: "_blank", rel: "noreferrer" }
-              : {})}
-            style={{
-              ...button(T),
-              background: T.accent,
-              color: "#041016",
-              borderColor: "transparent",
-            }}
+      {expanded ? (
+        <div className="rails-client-heading">
+          <span
+            className="rails-step"
+            aria-label={`Acción ${index} de ${count}`}
           >
-            {action.canal === "whatsapp" ? (
-              <MessageCircle size={16} />
-            ) : (
-              <Phone size={16} />
-            )}
-            {action.canal === "whatsapp" ? "Abrir WhatsApp" : "Llamar"}
-          </a>
-        )}
-        <button style={button(T)} onClick={() => open?.(action.leadId)}>
-          Ver ficha y siguiente paso
+            {index}
+          </span>
+          <div>
+            <h3 id={`${cardId}-name`} tabIndex={-1} data-rails-current>
+              {action.nombre}
+            </h3>
+            <p className="rails-client-meta">
+              {action.etapa} ·{" "}
+              {action.canal === "whatsapp" ? "WhatsApp" : "Llamada"}
+            </p>
+          </div>
+          <span className="rails-current-label">En foco</span>
+        </div>
+      ) : (
+        <button
+          className="rails-client-row"
+          aria-expanded={false}
+          aria-controls={`${cardId}-body`}
+          onClick={select}
+        >
+          <span
+            className="rails-step"
+            aria-label={`Acción ${index} de ${count}`}
+          >
+            {index}
+          </span>
+          <span className="rails-row-copy">
+            <span id={`${cardId}-name`} className="rails-row-name">
+              {action.nombre}
+            </span>
+            <span className="rails-client-meta">
+              {action.etapa} ·{" "}
+              {action.canal === "whatsapp" ? "WhatsApp" : "Llamada"}
+            </span>
+          </span>
+          <span className="rails-row-action">Atender</span>
+          <ChevronDown size={18} aria-hidden="true" />
         </button>
-      </div>
-      <fieldset
-        disabled={busy}
-        style={{ border: 0, padding: 0, margin: "20px 0 0", minWidth: 0 }}
+      )}
+      <div
+        id={`${cardId}-body`}
+        hidden={!expanded}
+        className="rails-client-body"
       >
-        <legend style={{ marginBottom: 10, fontSize: 14, color: T.txt2 }}>
-          Después del contacto
-        </legend>
-        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-          <button style={button(T)} onClick={() => run("hecho")}>
-            <Check size={16} /> Realizado
-          </button>
-          <button style={button(T)} onClick={() => run("saltado")}>
-            No contestó
-          </button>
+        <p className="rails-reason">{action.razon}</p>
+        <div className="rails-objective">
+          <h4>Qué conseguir</h4>
+          <p>{action.pedir}</p>
+        </div>
+        {!contact && (
+          <p className="rails-muted">
+            Falta un teléfono válido. Abre la ficha para completarlo.
+          </p>
+        )}
+        <div className="rails-actions rails-contact-actions">
+          {contact && !demo && (
+            <a
+              className="rails-button rails-primary"
+              href={contact.href}
+              {...(contact.externo
+                ? { target: "_blank", rel: "noreferrer" }
+                : {})}
+            >
+              {action.canal === "whatsapp" ? (
+                <MessageCircle size={17} aria-hidden="true" />
+              ) : (
+                <Phone size={17} aria-hidden="true" />
+              )}
+              {action.canal === "whatsapp" ? "Abrir WhatsApp" : "Llamar"}
+            </a>
+          )}
           <button
-            style={button(T)}
-            aria-expanded={moving}
-            onClick={() => setMoving(!moving)}
+            className={`rails-button ${!contact ? "rails-primary" : "rails-quiet"}`}
+            onClick={() => open?.(action.leadId)}
           >
-            <CalendarClock size={16} /> Reprogramar
+            {!contact ? "Completar teléfono" : "Ver ficha y siguiente paso"}
+            <ArrowRight size={16} aria-hidden="true" />
           </button>
         </div>
-        {moving && (
-          <div style={{ marginTop: 12 }}>
-            <p style={{ color: T.txt2 }}>
-              ¿Cuándo lo retomas? Se guardará a las 9:00, hora de este
-              dispositivo. Para otra hora, abre la ficha.
+        <fieldset disabled={busy} className="rails-results">
+          <legend>Después del contacto</legend>
+          <div className="rails-actions">
+            <button className="rails-button" onClick={() => run("hecho")}>
+              <Check size={17} aria-hidden="true" /> Realizado
+            </button>
+            <button className="rails-button" onClick={() => run("saltado")}>
+              No contestó
+            </button>
+            <button
+              className="rails-button"
+              aria-expanded={moving}
+              aria-controls={`${cardId}-reschedule`}
+              onClick={() => setMoving(!moving)}
+            >
+              <CalendarClock size={17} aria-hidden="true" /> Reprogramar
+            </button>
+          </div>
+          <div
+            id={`${cardId}-reschedule`}
+            hidden={!moving}
+            className="rails-reschedule"
+          >
+            <p>¿Cuándo lo retomas?</p>
+            <p className="rails-muted">
+              Se guardará a las 9:00, hora de este dispositivo. Para otra hora,
+              abre la ficha.
             </p>
-            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            <div className="rails-actions">
               {[
                 [1, "Mañana"],
                 [3, "En 3 días"],
                 [7, "En una semana"],
               ].map(([days, label]) => (
                 <button
-                  style={button(T)}
+                  className="rails-button"
                   key={days}
                   onClick={() => run("movido", days)}
                 >
                   {label}
                 </button>
               ))}
-              <button style={button(T)} onClick={() => setMoving(false)}>
+              <button
+                className="rails-button rails-quiet"
+                onClick={() => setMoving(false)}
+              >
                 Cancelar
               </button>
             </div>
           </div>
+        </fieldset>
+        {busy && (
+          <p role="status" className="rails-saving">
+            Guardando resultado…
+          </p>
         )}
-      </fieldset>
-      {busy && <p role="status">Guardando resultado…</p>}
-      {error && <p role="alert">{error}</p>}
+        {error && (
+          <p role="alert" className="rails-notice rails-error">
+            {error}
+          </p>
+        )}
+      </div>
     </article>
   );
 }

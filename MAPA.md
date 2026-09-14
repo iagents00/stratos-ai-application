@@ -6,7 +6,7 @@
 >
 > ¿Buscás un botón o un texto y no está acá? `npm run buscar "texto"`
 
-**190 archivos · 77.455 líneas**
+**191 archivos · 78.278 líneas**
 
 ---
 
@@ -41,7 +41,7 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | **Planes** | _sin vista propia (redirige a otra)_ | — |
 | **Perfil** | `src/app/views/Profile.jsx` | 1149 |
 | **Usuarios** | `src/app/features/Admin/AdminPanel.jsx` | 543 |
-| **Proceso** | `src/app/features/Admin/RailsSettings.jsx` | 307 |
+| **Proceso** | `src/app/features/Admin/RailsSettings.jsx` | 381 |
 
 ---
 
@@ -132,13 +132,14 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | Archivo | Líneas | Qué hace |
 |---|---|---|
 | `index.jsx` | 2158 | Modal de cuatro pestañas: Lista de Acción · Documentos · Plan Estratégico · Protocolo de Ventas |
+| `Rails.css` | 825 | _sin describir_ |
 | `AdminPanel.jsx` | 543 | Panel de gestión de usuarios (Super Admin y Admin). |
 | `index.jsx` | 487 | Panel de chat con Agente Stratos AI. |
 | `index.jsx` | 453 | Portal de Candidatos — Stratos People |
-| `RailsSettings.jsx` | 307 | Admin publishes the process; sellers only execute it. See docs/operacion/RIELES.md. |
+| `RailsSettings.jsx` | 381 | Admin publishes the process; sellers only execute it. See docs/operacion/RIELES.md. |
 | `DocsStratos.jsx` | 262 | _sin describir_ |
-| `Rails.css` | 183 | _sin describir_ |
 | `RoleBadge.jsx` | 29 | Badge de rol de usuario con colores según nivel. |
+| `rails-theme.js` | 24 | _sin describir_ |
 
 ### `src/app/icons/`
 
@@ -166,6 +167,7 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | `IACRM.jsx` | 622 | iAgents · Equipo de Agentes IA |
 | `Caja.jsx` | 587 | _sin describir_ |
 | `ChatEquipo.jsx` | 569 | _sin describir_ |
+| `MiDia.jsx` | 517 | Seller workspace. A result is completed only after the server acknowledges it. |
 | `ComandoDirectivo.pdf.js` | 514 | _sin describir_ |
 | `PlanSemanal.jsx` | 500 | _sin describir_ |
 | `Resumen.jsx` | 480 | _sin describir_ |
@@ -173,7 +175,6 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | `CuentasCobro.jsx` | 463 | _sin describir_ |
 | `FinanzasAdmin.jsx` | 443 | _sin describir_ |
 | `LeadNotesTimeline.jsx` | 438 | cronograma de notas individuales para un lead. |
-| `MiDia.jsx` | 434 | Seller workspace. A result is completed only after the server acknowledges it. |
 | `ZoomBoard.jsx` | 351 | Espacio "Control de Zooms" del Comando Directivo. Tablero enfocado SOLO en |
 | `Dash.jsx` | 344 | _sin describir_ |
 | `ComandoOps.jsx` | 327 | _sin describir_ |
@@ -414,6 +415,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 |---|---|
 | ¿A qué cliente se le cobra? (ej: Duke) | `src/app/views/CuentasCobro.jsx:321` |
 | ¿Cómo funciona el Escáner IA? | `src/app/views/RRHHModule.jsx:813` |
+| ¿Cuándo lo retomas? | `src/app/views/MiDia.jsx:475` |
 | ¿Cuánto te llevó? (opcional) | `src/app/views/Marketing.jsx:2462` |
 | ¿Cuánto? | `src/app/views/Copilot.jsx:1254` |
 | ¿De qué empresa es? | `src/app/views/Marketing.jsx:1591` |
@@ -444,6 +446,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Acciones | `src/app/views/CRM/index.jsx:4347` |
 | Acciones acumuladas · Asesores vs. iAgents | `src/app/views/Dash.jsx:85` |
 | Acciones de cierre IA | `src/app/views/CRM/components.jsx:5615` |
+| Acciones por lista | `src/app/features/Admin/RailsSettings.jsx:147` |
 | Activa tu Copilot AI | `src/app/views/Copilot.jsx:1948` |
 | Actividad del equipo IA — hoy | `src/app/views/IACRM.jsx:299` |
 | Actividad reciente | `src/app/views/CRM/index.jsx:5912` |
@@ -490,14 +493,15 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Arrastra el CV aquí o haz clic para subir | `src/app/views/RRHHModule.jsx:709` |
 | Arrastra para cambiar la prioridad | `src/app/views/Marketing.jsx:2236` |
 | Asesor | `src/app/views/CRM/AdvisorMetrics.jsx:226` |
-| Así lo verá el vendedor | `src/app/features/Admin/RailsSettings.jsx:249` |
 | Asignar a un asesor | `src/app/features/MetaPanel/index.jsx:871` |
 | Asignar a… | `src/app/views/Marketing.jsx:863` |
 | Asignar responsable | `src/app/features/MetaPanel/index.jsx:860` |
 | Asistió (sem.) | `src/app/views/ZoomControl/Resumen.jsx:411` |
 | Atención Inmediata | `src/app/views/Dash.jsx:235` |
+| Atender | `src/app/views/MiDia.jsx:408` |
 | Aún no configuras un correo de recuperación. | `src/app/views/Profile.jsx:430` |
 | Aún no hay documentos | `src/app/features/MetaPanel/index.jsx:1646` |
+| Avance de esta lista | `src/app/views/MiDia.jsx:243` |
 | Badge | `src/app/views/LandingPages/index.jsx:662` |
 | Bajo · Medio · Alto | `src/app/views/CRM/components.jsx:3431` |
 | Buscar (⌘K) | `src/app/App.jsx:2308` |
@@ -536,7 +540,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Cargando conversación… | `src/app/views/Copilot.jsx:1154` |
 | Cargando conversaciones… | `src/app/views/WhatsApp.jsx:263` |
 | Cargando el plan… | `src/app/views/PlanSemanal.jsx:353` |
-| Cargando el proceso de tu equipo… | `src/app/features/Admin/RailsSettings.jsx:33` |
+| Cargando el proceso de tu equipo… | `src/app/features/Admin/RailsSettings.jsx:41` |
 | Cargando el tablero… | `src/app/views/ComandoOps.jsx:127` |
 | Cargando equipo… | `src/app/App.jsx:2336` |
 | Cargando movimientos… | `src/app/views/Caja.jsx:461` |
@@ -563,7 +567,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Click para editar | `src/app/features/MetaPanel/index.jsx:333` |
 | Click para escribir el número directamente | `src/app/views/CRM/components.jsx:695` |
 | Cliente | `src/app/views/CRM/ZoomBoard.jsx:290` |
-| Cliente de ejemplo | `src/app/features/Admin/RailsSettings.jsx:253` |
+| Cliente de ejemplo | `src/app/features/Admin/RailsSettings.jsx:355` |
 | Coaching IA · Análisis | `src/app/views/CRM/components.jsx:4998` |
 | Color de acento para la tarjeta | `src/app/views/LandingPages/index.jsx:802` |
 | Color personalizado | `src/app/views/LandingPages/index.jsx:815` |
@@ -621,6 +625,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Descripción y detalles | `src/app/views/LandingPages/index.jsx:737` |
 | Desde | `src/app/views/CuentasCobro.jsx:337` |
 | Desglose por asesor | `src/app/views/ComandoDirectivo.jsx:758` |
+| Después del contacto | `src/app/views/MiDia.jsx:453` |
 | Detalle mensual | `src/app/views/FinanzasAdmin.jsx:411` |
 | Detalle: estilo, textos, medidas… | `src/app/views/Marketing.jsx:2210` |
 | Detectada por tu navegador: | `src/app/views/Profile.jsx:572` |
@@ -646,6 +651,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Ej. Rafael García López | `src/app/views/CRM/index.jsx:3315` |
 | Ej. Ramírez Torres | `src/app/features/Portal/index.jsx:333` |
 | Ej. Sofía | `src/app/features/Portal/index.jsx:332` |
+| Ejemplo ilustrativo · no modifica clientes | `src/app/features/Admin/RailsSettings.jsx:352` |
 | El bot pidió que un humano tome control | `src/app/views/CRM/components.jsx:5423` |
 | El comprobante es un PDF | `src/app/views/Caja.jsx:558` |
 | El documento es un PDF | `src/app/views/CRM/components.jsx:4329` |
@@ -657,14 +663,9 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Eliminar cliente | `src/app/views/CRM/components.jsx:3859` |
 | Eliminar definitivamente | `src/app/views/Trash.jsx:197` |
 | Eliminar documento | `src/app/features/MetaPanel/index.jsx:1689` |
-| Eliminar mi cuenta | `src/app/views/Profile.jsx:164` |
-| Eliminar usuario | `src/app/features/Admin/AdminPanel.jsx:325` |
-| Email | `src/app/features/Admin/AdminPanel.jsx:455` |
-| Empleado | `src/app/views/RRHHModule.jsx:602` |
-| Empresa | `src/app/views/Marketing.jsx:2976` |
 
 
-_(457 textos más — usá `npm run buscar "texto"`)_
+_(468 textos más — usá `npm run buscar "texto"`)_
 
 ---
 
@@ -682,6 +683,7 @@ hacen. Agregarles un bloque `/** ... */` arriba los hace aparecer solos acá.
 - `src/landing/Diagnostico.jsx` (974 líneas)
 - `src/app/views/CRM/LeadWhatsAppChat.jsx` (942 líneas)
 - `src/app/views/RRHHModule.jsx` (839 líneas)
+- `src/app/features/Admin/Rails.css` (825 líneas)
 - `src/app/views/InformeAvances.jsx` (747 líneas)
 - `src/app/views/ERP.jsx` (698 líneas)
 - `src/lib/auth.js` (689 líneas)
@@ -728,7 +730,6 @@ hacen. Agregarles un bloque `/** ... */` arriba los hace aparecer solos acá.
 - `src/lib/lead-backup.js` (192 líneas)
 - `src/lib/speech-native.js` (189 líneas)
 - `src/app/views/CRM/CallActionButton.jsx` (184 líneas)
-- `src/app/features/Admin/Rails.css` (183 líneas)
 - `src/app/components/Chat.jsx` (182 líneas)
 - `src/clients/muebleria/config.js` (182 líneas)
 - `src/lib/recordatorios-locales.js` (179 líneas)

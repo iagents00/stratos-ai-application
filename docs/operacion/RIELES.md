@@ -16,7 +16,7 @@ Los roles `ceo`, `director`, etc. no configuran Rieles salvo que el modelo de pe
 
 1. Admin abre **Proceso → Ventas sobre Rieles**. Ve el estado vigente.
 2. Prepara borrador: activación, máximo por lista, reglas e instrucciones. Puede editar sin alterar inmediatamente al equipo.
-3. Ve un ejemplo ilustrativo de la instrucción antes de publicarla. Nunca se envía ese texto interno a un prospecto como mensaje prellenado.
+3. Ve un ejemplo ilustrativo de la instrucción antes de publicarla: lateral en escritorio y junto a la instrucción abierta en móvil. Nunca se envía ese texto interno a un prospecto como mensaje prellenado.
 4. Pulsa **Publicar proceso para el equipo**. Solo se muestra éxito después de confirmar la fila guardada.
 5. Si otra persona cambió la configuración, no se sobrescribe: se conserva el borrador y se solicita cargar la versión vigente. Descártalo para cargarla.
 6. El cliente refresca la configuración al volver a la app y cada minuto mientras está visible. Si falla, conserva la última configuración confirmada y avisa; el primer acceso sin configuración verificada muestra el CRM con aviso.
@@ -25,7 +25,7 @@ La regla **Definir el siguiente paso** permanece activa. Evitar instrucciones am
 
 ## Trabajar sin confusión
 
-El vendedor ve una lista corta, ordenada por prioridad, con cliente, etapa, razón y qué conseguir. Puede abrir la ficha, llamar o abrir WhatsApp y luego registrar **Realizado**, **No contestó** o **Reprogramar**. Abrir WhatsApp no prueba envío ni contacto efectivo.
+El vendedor ve una lista corta, ordenada por prioridad. Un cliente queda expandido con etapa, razón y qué conseguir; los demás son filas compactas que puede abrir sin alterar el orden ni la configuración. Tras confirmar un resultado, el foco pasa al siguiente cliente o al cierre de lista. El progreso se refiere a esa lista, mientras los contadores superiores resumen el día. Puede abrir la ficha, llamar o abrir WhatsApp y luego registrar **Realizado**, **No contestó** o **Reprogramar**. Abrir WhatsApp no prueba envío ni contacto efectivo.
 
 Un resultado fallido conserva la acción y muestra recuperación. **No contestó** no suma a “realizados”; **reprogramado** se cuenta aparte. Al agotar una lista quedan visibles los pendientes adicionales y puede abrir la siguiente. No se anuncia “terminaste el día” mientras queden clientes por atender.
 
@@ -42,6 +42,7 @@ Reprogramar usa las 9:00 del día elegido en la zona del dispositivo y guarda un
 | Permite cambiar reglas a vendedor | RLS organizations + migración 243 | Pruebas con JWT de vendedor, no solo menú oculto |
 | Instrucción errónea / no respeta fecha | `src/lib/next-action-engine.js` | Lead real normalizado, regla y `next_action_at` |
 | Resultado vuelve al recargar | `src/lib/agenda.js`, RPC `rails_marcar_accion` | Permiso, respuesta, fila por lead/día |
+| Aspecto, contraste, controles o adaptación | `src/app/features/Admin/Rails.css`, `rails-theme.js` | Tema claro/oscuro, 390/820 px, movimiento y transparencia reducidos |
 | Sobran o faltan tarjetas | `src/app/views/MiDia.jsx` | Carga de agenda, bajas, fechas futuras, siguiente lista |
 
 ## Seguridad pendiente de servidor
@@ -57,3 +58,7 @@ Limitación temporal: las RPC existentes agrupan por `CURRENT_DATE` del servidor
 ## Prueba de aceptación con Duke
 
 Usar cuentas controladas admin/vendedor en dos organizaciones. Admin publica una regla de prueba; vendedor la recibe sin poder modificarla. Simular red caída, doble clic y dos admins editando. Registrar un resultado, recargar y comprobarlo. Reprogramar y verificar hora; retirar consentimiento y comprobar que no reaparezca. Resolver más clientes que el tamaño de lista. Restaurar configuración anterior. Medir éxito sin ayuda y errores; registrar resultados antes de declarar experiencia validada con vendedores reales.
+
+## Criterios visuales y evidencia
+
+La refinación de septiembre de 2026 aplica la skill apple-design: tipografía del sistema, jerarquía por peso y espacio, respuesta al presionar y material translúcido solo en la barra flotante de publicación. Conserva el acento de marca. [Auditoría de interfaz](../auditorias/2026-09-14-sales-rieles-apple.md).

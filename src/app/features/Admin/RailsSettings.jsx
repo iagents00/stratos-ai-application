@@ -1,7 +1,14 @@
 /** Admin publishes the process; sellers only execute it. See docs/operacion/RIELES.md. */
 import { useState } from "react";
-import { ChevronDown, Check, RotateCcw } from "lucide-react";
-import { P, font } from "../../../design-system/tokens";
+import {
+  ChevronDown,
+  Check,
+  RotateCcw,
+  LockKeyhole,
+  Eye,
+  ArrowRight,
+} from "lucide-react";
+import { P } from "../../../design-system/tokens";
 import {
   catalogoDeReglas,
   interpolar,
@@ -12,6 +19,7 @@ import { puedeConfigurarRails } from "../../../lib/rails-store";
 import { useRailsConfig } from "../../../hooks/useRailsConfig";
 import { useAuth } from "../../../hooks/useAuth";
 import "./Rails.css";
+import { railsTheme } from "./rails-theme";
 const catalogo = catalogoDeReglas();
 const example = normalizarLead({
   n: "Cliente de ejemplo",
@@ -32,22 +40,17 @@ export default function RailsSettings({ T = P }) {
   if (store.cargando)
     return <p role="status">Cargando el proceso de tu equipo…</p>;
   return (
-    <section
-      className="rails-surface"
-      style={{
-        "--rails-text": T.txt,
-        "--rails-muted": T.txt2,
-        "--rails-accent": T.accent,
-        "--rails-border": T.border,
-        "--rails-bg": T.surface || T.bg,
-        fontFamily: font,
-      }}
-    >
-      <h2>Ventas sobre Rieles</h2>
-      <p className="rails-muted">
-        Define qué debe atender tu equipo y cómo hacerlo. Solo los
-        administradores pueden cambiar este proceso.
-      </p>
+    <section className="rails-surface" style={railsTheme(T)}>
+      <header className="rails-settings-header">
+        <h2>Ventas sobre Rieles</h2>
+        <p className="rails-muted">
+          Define qué debe atender tu equipo y cómo hacerlo. Solo los
+          administradores pueden cambiar este proceso.
+        </p>
+        <span className="rails-access-label">
+          <LockKeyhole size={14} aria-hidden="true" /> Solo administradores
+        </span>
+      </header>
       {store.error && (
         <div role="alert" className="rails-notice">
           {store.error}{" "}
@@ -101,12 +104,19 @@ function Editor({ store }) {
     setDraft(store.cfg);
     setStatus("Borrador descartado.");
   };
+  const previewRule = catalogo.find((r) => r.tipo === open) || catalogo[0];
+  const previewValue = draft.reglas[previewRule.tipo];
   return (
     <>
       <div className="rails-status" role="status">
-        Proceso vigente:{" "}
-        <strong>{store.cfg.activo ? "Activo" : "Inactivo"}</strong>
-        {dirty && <span> · Borrador sin publicar</span>}
+        <span
+          className={`rails-status-badge ${store.cfg.activo ? "is-active" : ""}`}
+        >
+          Proceso {store.cfg.activo ? "activo" : "inactivo"}
+        </span>
+        <span className="rails-muted">
+          {dirty ? "Borrador sin publicar" : "Sin cambios pendientes"}
+        </span>
       </div>
       {remoteChanged && (
         <p role="alert" className="rails-notice">
@@ -114,171 +124,198 @@ function Editor({ store }) {
           para cargar la versión actual antes de publicar.
         </p>
       )}
-      <fieldset disabled={store.guardando} className="rails-fieldset">
-        <legend>1. Prepara la lista del equipo</legend>
-        <label className="rails-check">
-          <input
-            type="checkbox"
-            checked={draft.activo}
-            onChange={(e) => change({ activo: e.target.checked })}
-          />{" "}
-          Mostrar Mi Día al abrir el CRM
-        </label>
-        <p className="rails-muted">
-          El vendedor ve sus acciones sugeridas y puede consultar todos sus
-          clientes sin alterar estas reglas.
-        </p>
-        <label className="rails-field">
-          Acciones por lista
-          <select
-            value={draft.maxTarjetas}
-            onChange={(e) => change({ maxTarjetas: Number(e.target.value) })}
-          >
-            {Array.from({ length: 12 }, (_, i) => i + 1).map((n) => (
-              <option key={n} value={n}>
-                {n}
-                {n === 7 ? " · recomendado" : ""}
-              </option>
-            ))}
-          </select>
-        </label>
-        <p className="rails-muted">
-          Empieza con siete. Si hay más pendientes, el vendedor puede abrir la
-          siguiente lista.
-        </p>
-      </fieldset>
-      <fieldset disabled={store.guardando} className="rails-fieldset">
-        <legend>2. Ajusta las instrucciones</legend>
-        <p className="rails-muted">
-          {catalogo.filter((r) => draft.reglas[r.tipo].activa).length} de{" "}
-          {catalogo.length} reglas activas. Cada una explica por qué atender al
-          cliente y qué conseguir.
-        </p>
-        {catalogo.map((rule) => {
-          const val = draft.reglas[rule.tipo];
-          const expanded = open === rule.tipo;
-          return (
-            <div className="rails-rule" key={rule.tipo}>
-              <div className="rails-rule-heading">
-                <label className="rails-toggle">
-                  <input
-                    aria-label={`Activar ${rule.label}`}
-                    type="checkbox"
-                    checked={val.activa}
-                    disabled={rule.fija}
-                    onChange={(e) =>
-                      changeRule(rule.tipo, { activa: e.target.checked })
-                    }
-                  />
-                </label>
-                <button
-                  aria-expanded={expanded}
-                  aria-controls={`rule-${rule.tipo}`}
-                  onClick={() => setOpen(expanded ? null : rule.tipo)}
+      <div className="rails-editor-layout">
+        <div className="rails-editor-fields">
+          <fieldset disabled={store.guardando} className="rails-fieldset">
+            <legend>1. Prepara la lista del equipo</legend>
+            <div className="rails-settings-group">
+              <label className="rails-setting-row">
+                <span>
+                  <strong>Mi Día al abrir el CRM</strong>
+                  <small>El vendedor empieza con sus acciones sugeridas.</small>
+                </span>
+                <input
+                  className="rails-switch"
+                  role="switch"
+                  type="checkbox"
+                  checked={draft.activo}
+                  onChange={(e) => change({ activo: e.target.checked })}
+                />
+              </label>
+              <label className="rails-setting-row">
+                <span>
+                  <strong>Acciones por lista</strong>
+                  <small>
+                    Empieza con siete. Los pendientes restantes forman la
+                    siguiente lista.
+                  </small>
+                </span>
+                <select
+                  value={draft.maxTarjetas}
+                  onChange={(e) =>
+                    change({ maxTarjetas: Number(e.target.value) })
+                  }
                 >
-                  <span>
-                    {rule.label}
-                    {rule.fija && <small> · Siempre activa</small>}
-                  </span>
-                  <ChevronDown size={18} />
-                </button>
-              </div>
-              {expanded && (
-                <div id={`rule-${rule.tipo}`} className="rails-rule-body">
-                  <p className="rails-muted">{rule.cuando}</p>
-                  <label className="rails-field">
-                    Por qué aparece hoy
-                    <textarea
-                      maxLength={600}
-                      rows={3}
-                      placeholder={rule.razonDefault}
-                      value={val.razon || ""}
-                      onChange={(e) =>
-                        changeRule(rule.tipo, { razon: e.target.value || null })
-                      }
-                    />
-                  </label>
-                  <label className="rails-field">
-                    Qué debe conseguir el vendedor
-                    <textarea
-                      maxLength={600}
-                      rows={3}
-                      placeholder={rule.pedirDefault}
-                      value={val.pedir || ""}
-                      onChange={(e) =>
-                        changeRule(rule.tipo, { pedir: e.target.value || null })
-                      }
-                    />
-                  </label>
-                  <label className="rails-field">
-                    Prioridad · 0 a 100
-                    <input
-                      type="number"
-                      min="0"
-                      max="100"
-                      value={val.peso}
-                      onChange={(e) =>
-                        changeRule(rule.tipo, {
-                          peso: Math.min(
-                            100,
-                            Math.max(0, Number(e.target.value)),
-                          ),
-                        })
-                      }
-                    />
-                  </label>
-                  <p className="rails-muted">
-                    Los valores más altos aparecen primero. Puedes usar:{" "}
-                    {FICHAS_DISPONIBLES.map((f) => `{${f}}`).join(", ")}.
-                  </p>
-                  <button
-                    onClick={() =>
-                      changeRule(rule.tipo, {
-                        razon: null,
-                        pedir: null,
-                        peso: rule.peso,
-                      })
-                    }
-                  >
-                    <RotateCcw size={16} /> Restablecer esta instrucción
-                  </button>
-                  <aside
-                    className="rails-preview"
-                    aria-label="Vista previa para el vendedor"
-                  >
-                    <h3>Así lo verá el vendedor</h3>
-                    <p className="rails-muted">
-                      Ejemplo ilustrativo · no modifica clientes
-                    </p>
-                    <strong>Cliente de ejemplo</strong>
-                    <p>
-                      {val.razon
-                        ? interpolar(val.razon, example)
-                        : rule.razonDefault}
-                    </p>
-                    <p>
-                      <strong>Qué conseguir:</strong>{" "}
-                      {val.pedir
-                        ? interpolar(val.pedir, example)
-                        : rule.pedirDefault}
-                    </p>
-                    {!val.activa && (
-                      <p>Esta regla está desactivada en tu borrador.</p>
-                    )}
-                  </aside>
-                </div>
-              )}
+                  {Array.from({ length: 12 }, (_, i) => i + 1).map((n) => (
+                    <option key={n} value={n}>
+                      {n}
+                      {n === 7 ? " · recomendado" : ""}
+                    </option>
+                  ))}
+                </select>
+              </label>
             </div>
-          );
-        })}
-      </fieldset>
+          </fieldset>
+          <fieldset disabled={store.guardando} className="rails-fieldset">
+            <legend>2. Ajusta las instrucciones</legend>
+            <p className="rails-muted">
+              {catalogo.filter((r) => draft.reglas[r.tipo].activa).length} de{" "}
+              {catalogo.length} reglas activas. Abre una para ajustar el mensaje
+              y su prioridad.
+            </p>
+            <div className="rails-settings-group">
+              {catalogo.map((rule) => {
+                const val = draft.reglas[rule.tipo];
+                const expanded = open === rule.tipo;
+                return (
+                  <div className="rails-rule" key={rule.tipo}>
+                    <div className="rails-rule-heading">
+                      <label className="rails-toggle">
+                        <input
+                          aria-label={`Activar ${rule.label}`}
+                          type="checkbox"
+                          checked={val.activa}
+                          disabled={rule.fija}
+                          onChange={(e) =>
+                            changeRule(rule.tipo, { activa: e.target.checked })
+                          }
+                        />
+                      </label>
+                      <button
+                        aria-expanded={expanded}
+                        aria-controls={`rule-${rule.tipo}`}
+                        onClick={() => setOpen(expanded ? null : rule.tipo)}
+                      >
+                        <span>
+                          {rule.label}
+                          <small>
+                            {rule.fija
+                              ? "Siempre activa"
+                              : val.activa
+                                ? `Prioridad ${val.peso}`
+                                : "Desactivada"}
+                          </small>
+                        </span>
+                        <ChevronDown size={18} aria-hidden="true" />
+                      </button>
+                    </div>
+                    <div
+                      id={`rule-${rule.tipo}`}
+                      hidden={!expanded}
+                      className="rails-rule-body"
+                    >
+                      <p className="rails-muted">{rule.cuando}</p>
+                      <label className="rails-field">
+                        Por qué aparece hoy
+                        <textarea
+                          maxLength={600}
+                          rows={3}
+                          placeholder={rule.razonDefault}
+                          value={val.razon || ""}
+                          onChange={(e) =>
+                            changeRule(rule.tipo, {
+                              razon: e.target.value || null,
+                            })
+                          }
+                        />
+                      </label>
+                      <label className="rails-field">
+                        Qué debe conseguir el vendedor
+                        <textarea
+                          maxLength={600}
+                          rows={3}
+                          placeholder={rule.pedirDefault}
+                          value={val.pedir || ""}
+                          onChange={(e) =>
+                            changeRule(rule.tipo, {
+                              pedir: e.target.value || null,
+                            })
+                          }
+                        />
+                      </label>
+                      <label className="rails-field">
+                        Prioridad · 0 a 100
+                        <input
+                          type="number"
+                          min="0"
+                          max="100"
+                          value={val.peso}
+                          onChange={(e) =>
+                            changeRule(rule.tipo, {
+                              peso: Math.min(
+                                100,
+                                Math.max(0, Number(e.target.value)),
+                              ),
+                            })
+                          }
+                        />
+                      </label>
+                      <p className="rails-muted">
+                        Los valores más altos aparecen primero.
+                      </p>
+                      <details className="rails-help">
+                        <summary>Personalizar con datos del cliente</summary>
+                        <p className="rails-muted">
+                          Escribe estas fichas en una instrucción. Se reemplazan
+                          con los datos del cliente:{" "}
+                          {FICHAS_DISPONIBLES.map((f) => `{${f}}`).join(", ")}.
+                        </p>
+                      </details>
+                      <button
+                        className="rails-quiet"
+                        onClick={() =>
+                          changeRule(rule.tipo, {
+                            razon: null,
+                            pedir: null,
+                            peso: rule.peso,
+                          })
+                        }
+                      >
+                        <RotateCcw size={16} aria-hidden="true" /> Restablecer
+                        esta instrucción
+                      </button>
+                      {expanded && (
+                        <div className="rails-inline-preview">
+                          <VistaPrevia rule={rule} value={val} />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </fieldset>
+        </div>
+        <aside
+          className="rails-preview"
+          aria-label="Vista previa para el vendedor"
+        >
+          <VistaPrevia rule={previewRule} value={previewValue} />
+        </aside>
+      </div>
       <div className="rails-publish">
-        <h3>3. Publica cuando esté listo</h3>
-        <p className="rails-muted">
-          Se aplicará a todo tu equipo. Los vendedores podrán registrar
-          resultados y fechas, pero no cambiar la configuración.
-        </p>
+        <div>
+          <h3>3. Publica cuando esté listo</h3>
+          <p className="rails-muted">
+            {dirty
+              ? "Tus cambios aún no se aplican al equipo."
+              : "El proceso vigente se mantiene hasta que publiques cambios."}
+          </p>
+        </div>
         <div className="rails-actions">
+          <button disabled={!dirty || store.guardando} onClick={discard}>
+            Descartar borrador
+          </button>
           <button
             className="rails-primary"
             disabled={
@@ -290,17 +327,54 @@ function Editor({ store }) {
             }
             onClick={publish}
           >
-            <Check size={17} />{" "}
+            <Check size={17} aria-hidden="true" />
             {store.guardando
               ? "Publicando…"
               : "Publicar proceso para el equipo"}
           </button>
-          <button disabled={!dirty || store.guardando} onClick={discard}>
-            Descartar borrador
-          </button>
         </div>
-        {status && <p role="status">{status}</p>}
+        {status && (
+          <p role="status" className="rails-publish-status">
+            {status}
+          </p>
+        )}
       </div>
+    </>
+  );
+}
+
+function VistaPrevia({ rule, value }) {
+  return (
+    <>
+      <h3>
+        <Eye size={18} aria-hidden="true" /> Así lo verá el vendedor
+      </h3>
+      <p className="rails-muted">Ejemplo ilustrativo · no modifica clientes</p>
+      <div className="rails-preview-content">
+        <span className="rails-client-meta">{rule.label}</span>
+        <h4>Cliente de ejemplo</h4>
+        <p className="rails-reason">
+          {value.razon ? interpolar(value.razon, example) : rule.razonDefault}
+        </p>
+        <div className="rails-objective">
+          <h4>Qué conseguir</h4>
+          <p>
+            {value.pedir ? interpolar(value.pedir, example) : rule.pedirDefault}
+          </p>
+        </div>
+        <p className="rails-preview-link" aria-hidden="true">
+          Ver ficha y siguiente paso <ArrowRight size={16} />
+        </p>
+      </div>
+      {!value.activa && (
+        <p className="rails-notice">
+          Esta regla está desactivada en tu borrador.
+        </p>
+      )}
+      <p className="rails-admin-note">
+        <LockKeyhole size={14} aria-hidden="true" /> El vendedor registra
+        resultados. La configuración permanece en manos del administrador.
+      </p>
     </>
   );
 }

@@ -10,7 +10,8 @@ function QA() {
   const [role, setRole] = useState("seller"),
     [light, setLight] = useState(false),
     [fail, setFail] = useState(false),
-    [open, setOpen] = useState("");
+    [open, setOpen] = useState(""),
+    [scenario, setScenario] = useState("normal");
   const [leads, setLeads] = useState(
     Array.from({ length: 11 }, (_, i) => ({
       id: `fixture-${i}`,
@@ -28,14 +29,18 @@ function QA() {
       : { id: "fixture-seller", role: "asesor" };
   const persistence = useMemo(
     () => ({
-      read: async () => saved,
+      read: async () => {
+        if (scenario === "error") throw new Error("Read failure fixture");
+        if (scenario === "loading") return new Promise(() => {});
+        return saved;
+      },
       write: async (a, state) => {
         if (fail) return false;
         setSaved((s) => ({ ...s, [a.leadId]: state }));
         return true;
       },
     }),
-    [fail, saved],
+    [fail, saved, scenario],
   );
   const config = useMemo(
     () => fusionarRails({ activo: true, maxTarjetas: 3 }),
@@ -85,6 +90,20 @@ function QA() {
             />{" "}
             Simular fallo de guardado
           </label>
+          <label style={btn}>
+            Escenario{" "}
+            <select
+              aria-label="Escenario"
+              value={scenario}
+              onChange={(e) => setScenario(e.target.value)}
+            >
+              <option value="normal">Normal</option>
+              <option value="long">Texto largo</option>
+              <option value="empty">Sin pendientes</option>
+              <option value="error">Fallo al leer</option>
+              <option value="loading">Cargando</option>
+            </select>
+          </label>
         </nav>
         <p>
           PRUEBA AISLADA · datos ficticios · sin llamadas ni escrituras reales
@@ -93,7 +112,18 @@ function QA() {
           <RailsSettings T={T} />
         ) : (
           <MiDia
-            leads={leads}
+            key={scenario}
+            leads={
+              scenario === "empty"
+                ? []
+                : scenario === "long"
+                  ? leads.map((l) => ({
+                      ...l,
+                      n: "María Fernanda del Carmen Rodríguez y Asociados · Consultoría Internacional de Inversiones",
+                      phone: "+12025550123",
+                    }))
+                  : leads
+            }
             T={T}
             config={config}
             persistence={persistence}
