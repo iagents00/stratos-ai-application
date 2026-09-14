@@ -149,7 +149,8 @@
       "compactQueue": true,
       "adminSettingsRendered": true,
       "nativeRuleCheckboxVisible": true,
-      "organizationRulesChanged": false
+      "organizationRulesChanged": false,
+      "agendaReadFailureRecoveredWithRetry": true
     },
     "fixtureUI": [
       "failed write retains action",

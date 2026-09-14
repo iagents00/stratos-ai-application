@@ -44,3 +44,5 @@ Esta refinación no despliega la migración SQL 243, no completa la auditoría d
 - Sesión real: administración y Mi Día renderizados; un cliente expandido y nueve filas compactas con la configuración existente de diez por lista. Casillas de reglas comprobadas con apariencia nativa auto y acento del tema, visibles en captura del CRM real.
 - Se conserva la configuración organizativa existente, incluido su estado inactivo. La QA usa la vista previa administrativa por URL; no activa el proceso para el equipo.
 - [Evidencia de publicación](../operacion/evidencias/2026-09-14-v430.json). El PR 755 conserva revisión obligatoria para integrar a main. El commit posterior de esta evidencia no cambia la interfaz publicada.
+
+En la recarga final hubo un fallo transitorio de lectura de agenda: la interfaz mostró error y retiró las acciones de escritura. Reintentar recuperó la lista real. Se verificó la recuperación visible, sin atribuir una causa remota ni certificar disponibilidad continua.
