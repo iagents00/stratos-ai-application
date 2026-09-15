@@ -54,3 +54,5 @@ La captura del usuario mostraba superficies azul gris y una barra de publicació
 La publicación deja de ser sticky: permanece al final del formulario, con borde completo, radio de 12 px y padding lateral de 24 px en escritorio / 20 px en móvil. No se cambian permisos, instrucciones ni persistencia.
 
 Verificación: captura de escritorio y móvil 390×844, superficies computadas rgb(10,10,10), publicación después del editor sin superposición, controles dentro de sus límites y página de 390 px sin desbordamiento. Tema claro conserva superficie blanca. Compilación aprobada y detector sin hallazgos. El manifiesto de la publicación identifica la versión efectiva.
+
+Publicación v431 comprobada: commit `280ca1d753fb5c01c207126333ed02fadc57ee25`, despliegue `dpl_BiZ2ss1kx2wNmS7YRjeSSMxZ5U2A`, READY en producción. Checks de release y planos aprobados. Diagnóstico de los tres dominios aprobado (569 ms, medición puntual). En el CRM real se confirmó fondo rgb(10,10,10), publicación estática después de las reglas y ambos botones contenidos dentro de sus costados.
