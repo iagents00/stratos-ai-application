@@ -984,7 +984,7 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           {funnel.stages.map((s, i) => {
             const Icon = s.icon;
-            const widthPct = Math.max(4, Math.round((s.value / funnel.max) * 100));
+            const widthPct = funnel.max > 0 ? Math.min(100, Math.round((s.value / funnel.max) * 100)) : 0;
             const prev = i > 0 ? funnel.stages[i - 1].value : null;
             const conv = prev ? Math.round((s.value / prev) * 100) : null;
             return (
@@ -999,14 +999,14 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
                   <div style={{ flex: 1, minWidth: 0, height: 34, borderRadius: 8, background: isLight ? "rgba(15,23,42,0.04)" : "rgba(255,255,255,0.04)", overflow: "hidden" }}>
                     <div style={{
                       width: `${widthPct}%`, height: "100%", borderRadius: 8,
-                      background: s.color, display: "flex", alignItems: "center", paddingLeft: 12,
+                      background: s.color, display: "flex", alignItems: "center", paddingLeft: s.value > 0 ? 12 : 0,
                       transition: "width 0.3s ease",
                     }}>
                       <span style={{ fontSize: 14, fontWeight: 500, color: "#FFFFFF", fontFamily: fontDisp, letterSpacing: "-0.01em", textShadow: "0 1px 3px rgba(0,0,0,0.45)" }}>{s.value.toLocaleString("es-MX")}</span>
                     </div>
                   </div>
                   <span style={{ minWidth: 64, flexShrink: 0, fontSize: 12, color: T.txt3, fontFamily: font, textAlign: "right", whiteSpace: "nowrap" }}>
-                    {conv !== null ? <><strong style={{ color: T.txt2 }}>{conv}%</strong> del previo</> : "100%"}
+                    {conv !== null ? <><strong style={{ color: T.txt2 }}>{conv}%</strong> del previo</> : (i === 0 ? "Base" : "Sin base") }
                   </span>
                 </div>
               </div>

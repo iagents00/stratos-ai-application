@@ -23,6 +23,7 @@ const ANON_KEY =
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     res.statusCode = 405;
+    res.setHeader("Allow", "POST");
     return res.end("method_not_allowed");
   }
 
@@ -55,7 +56,10 @@ export default async function handler(req, res) {
   res.setHeader("content-type", "application/json");
   res.setHeader("cache-control", "no-store");
 
-  if (!endpoint || !p256dh || !auth) {
+  const validEndpoint = (value) => typeof value === "string" && value.length <= 4096
+    && /^https:\/\/[^\s]+$/.test(value);
+  const validKey = (value) => typeof value === "string" && value.length > 0 && value.length <= 256;
+  if (!validEndpoint(oldEndpoint) || !validEndpoint(endpoint) || !validKey(p256dh) || !validKey(auth)) {
     res.statusCode = 400;
     return res.end(JSON.stringify({ ok: false, error: "missing_subscription" }));
   }
@@ -63,6 +67,7 @@ export default async function handler(req, res) {
   try {
     const r = await fetch(`${SUPABASE_URL}/rest/v1/rpc/push_refresh`, {
       method: "POST",
+      signal: AbortSignal.timeout(8000),
       headers: {
         "Content-Type": "application/json",
         apikey: ANON_KEY,

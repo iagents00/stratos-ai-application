@@ -1,0 +1,17 @@
+node_modules
+dist
+dist-app
+.git
+.vercel
+.env
+.env.*
+!.env.example
+output
+backups
+mobile
+.claude
+.playwright-cli
+.wa-sessions
+team_users.json
+team_credentials.*
+supabase/.temp
