@@ -46,3 +46,11 @@ Esta refinación no despliega la migración SQL 243, no completa la auditoría d
 - [Evidencia de publicación](../operacion/evidencias/2026-09-14-v430.json). El PR 755 conserva revisión obligatoria para integrar a main. El commit posterior de esta evidencia no cambia la interfaz publicada.
 
 En la recarga final hubo un fallo transitorio de lectura de agenda: la interfaz mostró error y retiró las acciones de escritura. Reintentar recuperó la lista real. Se verificó la recuperación visible, sin atribuir una causa remota ni certificar disponibilidad continua.
+
+## Ajuste solicitado de color y publicación · v431
+
+La captura del usuario mostraba superficies azul gris y una barra de publicación que tapaba las reglas y carecía de margen lateral. Se sustituyen los neutros oscuros de Rieles por fondo #050505, superficie #0A0A0A, texto #EDEDED y secundario #A0A0A0. El acento de acciones y el tema claro se conservan.
+
+La publicación deja de ser sticky: permanece al final del formulario, con borde completo, radio de 12 px y padding lateral de 24 px en escritorio / 20 px en móvil. No se cambian permisos, instrucciones ni persistencia.
+
+Verificación: captura de escritorio y móvil 390×844, superficies computadas rgb(10,10,10), publicación después del editor sin superposición, controles dentro de sus límites y página de 390 px sin desbordamiento. Tema claro conserva superficie blanca. Compilación aprobada y detector sin hallazgos. El manifiesto de la publicación identifica la versión efectiva.

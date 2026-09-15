@@ -394,18 +394,28 @@
   flex-wrap: wrap;
 }
 .rails-publish {
-  position: sticky;
-  bottom: 0;
-  background: color-mix(in srgb, var(--rails-surface) 94%, transparent);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-top: 1px solid var(--rails-border);
-  padding: 1.25rem 0 max(1rem, env(safe-area-inset-bottom));
+  /* Publish stays in the document flow: no overlap or exposed side edges. */
+  position: static;
+  background: var(--rails-surface);
+  border: 1px solid var(--rails-border);
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-top: 0.5rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 1rem;
+}
+.rails-publish > div:first-child {
+  flex: 1 1 16rem;
+  min-width: 0;
+}
+.rails-publish .rails-actions {
+  min-width: 0;
+}
+.rails-publish button {
+  max-width: 100%;
 }
 .rails-publish .rails-muted {
   font-size: 0.8125rem;
@@ -683,12 +693,7 @@
     border-radius: 0;
   }
   .rails-publish {
-    position: static;
-    background: var(--rails-surface);
-    backdrop-filter: none;
     padding: 1.25rem;
-    border: 0;
-    border-radius: 12px;
   }
   .rails-publish .rails-actions {
     width: 100%;

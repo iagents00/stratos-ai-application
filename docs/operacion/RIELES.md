@@ -61,4 +61,4 @@ Usar cuentas controladas admin/vendedor en dos organizaciones. Admin publica una
 
 ## Criterios visuales y evidencia
 
-La refinación de septiembre de 2026 aplica la skill apple-design: tipografía del sistema, jerarquía por peso y espacio, respuesta al presionar y material translúcido solo en la barra flotante de publicación. Conserva el acento de marca. [Auditoría de interfaz](../auditorias/2026-09-14-sales-rieles-apple.md).
+La refinación de septiembre de 2026 aplica la skill apple-design: tipografía del sistema, jerarquía por peso y espacio, respuesta al presionar y superficies oscuras neutras, casi negras. Conserva el acento de marca en acciones. La publicación está al final del formulario, dentro del flujo y con margen interior en todos los lados; no flota sobre las instrucciones. [Auditoría de interfaz](../auditorias/2026-09-14-sales-rieles-apple.md).
