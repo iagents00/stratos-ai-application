@@ -60,6 +60,12 @@ export default function WhatsAppOnboardingAdmin({ T, onBack }) {
   const runs = data?.runs || [];
   const configured = isSignupConfigured(config);
   const providerReady = configured && data?.provider?.infobipConfigured;
+  const missingSetup = [
+    !config?.meta?.appId && "Meta App ID",
+    !config?.meta?.configId && "Meta Configuration ID",
+    !config?.meta?.solutionId && "solutionID de Infobip",
+    !data?.provider?.infobipConfigured && "clave API de Infobip",
+  ].filter(Boolean);
   const selectedProfiles = useMemo(
     () => profiles.filter(p => p.organization_id === channelForm.organization_id && p.active !== false),
     [profiles, channelForm.organization_id],
@@ -132,7 +138,7 @@ export default function WhatsAppOnboardingAdmin({ T, onBack }) {
       {!providerReady && (
         <div style={{ ...card, marginBottom: 16, display: "flex", gap: 12, borderColor: "rgba(245,158,11,.35)", background: "rgba(245,158,11,.06)" }}>
           <CircleAlert size={19} color="#F59E0B" style={{ flexShrink: 0 }} />
-          <div><strong style={{ fontSize: 13 }}>Empresas y usuarios disponibles; conexión automática todavía bloqueada.</strong><div style={{ color: T.txt2, fontSize: 12, lineHeight: 1.55, marginTop: 4 }}>Faltan la aprobación de Tech Provider/Partner Solution y las variables seguras de Meta e Infobip. La consola no fingirá una conexión mientras eso no esté listo.</div></div>
+          <div><strong style={{ fontSize: 13 }}>Empresas y usuarios disponibles; conexión automática todavía bloqueada.</strong><div style={{ color: T.txt2, fontSize: 12, lineHeight: 1.55, marginTop: 4 }}>Pendiente: {missingSetup.join(", ") || "aprobación de Tech Provider/Partner Solution"}. La consola no abrirá Embedded Signup hasta tener la configuración completa.</div></div>
         </div>
       )}
       {error && <div style={{ ...card, marginBottom: 14, color: "#FCA5A5", borderColor: "rgba(248,113,113,.35)" }}>{error}</div>}

@@ -28,7 +28,7 @@ let sdkPromise = null;
 /** ¿Hay config suficiente para siquiera intentar abrir el popup? */
 export function isSignupConfigured(clientConfig) {
   const meta = clientConfig?.meta;
-  return Boolean(meta?.appId && meta?.configId);
+  return Boolean(meta?.appId && meta?.configId && meta?.solutionId);
 }
 
 /**
