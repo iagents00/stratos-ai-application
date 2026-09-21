@@ -6,7 +6,7 @@
 >
 > ¿Buscás un botón o un texto y no está acá? `npm run buscar "texto"`
 
-**189 archivos · 77.439 líneas**
+**189 archivos · 77.465 líneas**
 
 ---
 
@@ -281,7 +281,7 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 
 | Archivo | Líneas | Qué hace |
 |---|---|---|
-| `config.js` | 59 | Entrada neutral para organizaciones creadas desde la consola de plataforma. |
+| `config.js` | 85 | Entrada neutral para organizaciones creadas desde la consola de plataforma. |
 
 ### `src/clients/tgenius/`
 

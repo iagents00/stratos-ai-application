@@ -48,6 +48,32 @@ const tenantConfig = {
     procesoGuiado: false,
   },
 
+  crm: {
+    aiAgentsPanel: false,
+    advisorMetricsTab: false,
+    discoverySimplified: true,
+    pipeline: [
+      { name: "Prospecto",       color: "#94A3B8" },
+      { name: "Contactado",      color: "#38BDF8" },
+      { name: "En conversación", color: "#FBBF24" },
+      { name: "Reunión",         color: "#A78BFA" },
+      { name: "Propuesta",       color: "#FB923C" },
+      { name: "Ganado",          color: "#34D399" },
+      { name: "Perdido",         color: "#F87171" },
+    ],
+    labels: {
+      entity: "cliente",
+      entityCap: "Cliente",
+      entityPlural: "clientes",
+      newEntity: "Nuevo cliente",
+      priorityList: "Clientes en prioridad",
+      emptyList: "Sin clientes",
+      entityNamePlaceholder: "Nombre del cliente",
+      entityProfile: "Detalle del cliente",
+      deleteEntity: "Eliminar cliente (mover a papelera)",
+    },
+  },
+
   support: {
     email: "soporte@stratoscapitalgroup.com",
     whatsapp: null,
