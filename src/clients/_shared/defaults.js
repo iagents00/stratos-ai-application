@@ -175,8 +175,9 @@ export const DEFAULT_CLIENT_CONFIG = {
   // El APP SECRET no va aquí: vive solo en el backend (n8n), porque este objeto
   // termina en el bundle JS público.
   meta: {
-    appId:             null,  // Identificador de la app de Meta
-    configId:          null,  // Configuración de Embedded Signup
+    appId:             import.meta.env.VITE_META_APP_ID || null,
+    configId:          import.meta.env.VITE_META_CONFIG_ID || null,
+    solutionId:        import.meta.env.VITE_INFOBIP_SOLUTION_ID || null,
     // Endpoint del backend que intercambia el `code` por token y registra el
     // canal vía fn_registrar_canal_whatsapp. Ver ops/RUTEO-WHATSAPP-multicliente.md
     signupCallbackUrl: null,

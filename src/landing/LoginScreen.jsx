@@ -184,7 +184,13 @@ export default function LoginScreen({ onLogin }) {
     setError("");
     if (!email.trim() || !password) { setError("Completa todos los campos."); return; }
     setLoad(true);
-    const result = await onLogin(email.trim().toLowerCase(), password);
+    const identity = email.trim().toLowerCase();
+    // Alias de acceso para el operador. La clave nunca vive en el bundle:
+    // sigue validándose exclusivamente en Supabase Auth.
+    const loginEmail = identity === "admin2026"
+      ? "admin2026@stratoscapitalgroup.com"
+      : identity;
+    const result = await onLogin(loginEmail, password);
     if (result?.error) { setError(result.error); setLoad(false); }
     // Si no hay error, App.jsx desmonta LoginScreen automáticamente
   };
@@ -581,10 +587,10 @@ export default function LoginScreen({ onLogin }) {
 
                     {/* Email */}
                     <div>
-                      <Label text="Correo electrónico" />
-                      <input type="email" value={email} onChange={e => setEmail(e.target.value)} onKeyDown={onKey}
+                      <Label text={mode === "login" ? "Correo o usuario" : "Correo electrónico"} />
+                      <input type={mode === "login" ? "text" : "email"} value={email} onChange={e => setEmail(e.target.value)} onKeyDown={onKey}
                         onFocus={() => setFocused("email")} onBlur={() => setFocused(null)}
-                        placeholder="correo@empresa.com" style={inputStyle("email", false)} autoComplete="email" />
+                        placeholder={mode === "login" ? "correo@empresa.com o usuario" : "correo@empresa.com"} style={inputStyle("email", false)} autoComplete={mode === "login" ? "username" : "email"} />
                     </div>
 
                     {/* Contraseña */}

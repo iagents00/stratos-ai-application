@@ -1,0 +1,187 @@
+import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  ArrowLeft, Building2, CheckCircle2, CircleAlert, ExternalLink,
+  Loader2, MessageCircle, Plus, RefreshCw, ShieldCheck, Users,
+} from "lucide-react";
+import { font, fontDisp } from "../../../design-system/tokens";
+import { useClient } from "../../../hooks/useClient";
+import {
+  approveWhatsAppTests, completeWhatsAppSignup, createWhatsAppOnboardingRun,
+  createWhatsAppOrganization, createWhatsAppTenantUser, loadWhatsAppAdmin,
+  retryWhatsAppShare,
+} from "../../../lib/whatsapp-admin";
+import { isSignupConfigured, launchWhatsAppSignup } from "../../../lib/whatsapp-signup";
+
+const STATUS = {
+  draft: ["Borrador", "#94A3B8"],
+  waiting_customer: ["Esperando al cliente", "#F59E0B"],
+  meta_finished: ["Meta terminado", "#38BDF8"],
+  infobip_registering: ["Registrando en Infobip", "#A78BFA"],
+  ready_to_test: ["Listo para probar", "#22D3EE"],
+  active: ["Activo", "#6EE7C2"],
+  failed: ["Requiere atención", "#F87171"],
+  disconnected: ["Desconectado", "#94A3B8"],
+};
+
+const EMPTY_ORG = { name: "", slug: "", seats: 30 };
+const EMPTY_USER = { organization_id: "", name: "", email: "", role: "admin" };
+const EMPTY_CHANNEL = { organization_id: "", advisor_id: "", owner_type: "company", owner_name: "", phone_e164: "" };
+
+function StatusPill({ status }) {
+  const [label, color] = STATUS[status] || [status || "Sin estado", "#94A3B8"];
+  return <span style={{ color, border: `1px solid ${color}45`, background: `${color}12`, borderRadius: 99, padding: "4px 9px", fontSize: 11.5, whiteSpace: "nowrap" }}>{label}</span>;
+}
+
+export default function WhatsAppOnboardingAdmin({ T, onBack }) {
+  const { config } = useClient();
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [busy, setBusy] = useState("");
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+  const [orgForm, setOrgForm] = useState(EMPTY_ORG);
+  const [userForm, setUserForm] = useState(EMPTY_USER);
+  const [channelForm, setChannelForm] = useState(EMPTY_CHANNEL);
+  const [credentials, setCredentials] = useState(null);
+  const [testRun, setTestRun] = useState(null);
+  const [checks, setChecks] = useState({ inbound: false, outbound: false, media: false, isolation: false });
+
+  const refresh = useCallback(async () => {
+    setLoading(true); setError("");
+    try { setData(await loadWhatsAppAdmin()); }
+    catch (err) { setError(err.message || "No se pudo cargar la consola."); }
+    finally { setLoading(false); }
+  }, []);
+
+  useEffect(() => { refresh(); }, [refresh]);
+
+  const organizations = data?.organizations || [];
+  const profiles = useMemo(() => data?.profiles || [], [data?.profiles]);
+  const runs = data?.runs || [];
+  const configured = isSignupConfigured(config);
+  const providerReady = configured && data?.provider?.infobipConfigured;
+  const selectedProfiles = useMemo(
+    () => profiles.filter(p => p.organization_id === channelForm.organization_id && p.active !== false),
+    [profiles, channelForm.organization_id],
+  );
+
+  const input = {
+    width: "100%", minHeight: 42, padding: "0 12px", borderRadius: 10,
+    border: `1px solid ${T.border}`, background: T.glass, color: T.txt,
+    fontSize: 12.5, fontFamily: font, outline: "none", boxSizing: "border-box",
+  };
+  const card = { border: `1px solid ${T.border}`, background: T.glass, borderRadius: 16, padding: 18 };
+  const label = { color: T.txt3, fontSize: 10.5, fontWeight: 700, letterSpacing: ".06em", textTransform: "uppercase", marginBottom: 6, display: "block" };
+  const button = { border: `1px solid ${T.accentB}`, background: T.accentS, color: T.accent, borderRadius: 10, minHeight: 40, padding: "0 15px", fontFamily: font, fontSize: 12.5, fontWeight: 650, cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 7 };
+
+  const runAction = async (key, fn, message) => {
+    setBusy(key); setError(""); setSuccess("");
+    try { const result = await fn(); setSuccess(message); await refresh(); return result; }
+    catch (err) { setError(err.message || "No se pudo completar la acción."); return null; }
+    finally { setBusy(""); }
+  };
+
+  const createOrg = () => runAction("org", async () => {
+    const result = await createWhatsAppOrganization(orgForm);
+    setOrgForm(EMPTY_ORG);
+    setUserForm(p => ({ ...p, organization_id: result.organization.id }));
+    setChannelForm(p => ({ ...p, organization_id: result.organization.id }));
+    return result;
+  }, "Empresa creada. Ahora agrega su administrador y su número.");
+
+  const createUser = () => runAction("user", async () => {
+    const result = await createWhatsAppTenantUser(userForm);
+    setCredentials({ email: result.user.email, password: result.temp_password });
+    setUserForm(p => ({ ...EMPTY_USER, organization_id: p.organization_id }));
+    return result;
+  }, "Usuario creado. La clave temporal se muestra una sola vez.");
+
+  const connect = async () => {
+    if (!providerReady) { setError("Primero hay que completar las aprobaciones de Meta y configurar Infobip en el servidor."); return; }
+    const created = await runAction("channel", () => createWhatsAppOnboardingRun(channelForm), "Proceso creado. Completa ahora la ventana de Meta.");
+    if (!created?.run) return;
+    setBusy("meta"); setError("");
+    try {
+      const meta = await launchWhatsAppSignup({
+        appId: config.meta.appId,
+        configId: config.meta.configId,
+        solutionId: config.meta.solutionId,
+      });
+      await completeWhatsAppSignup({ run_id: created.run.id, waba_id: meta.wabaId, phone_number_id: meta.phoneNumberId });
+      setSuccess("Meta terminó. Infobip está registrando el número; la pantalla se actualizará con su webhook.");
+      setChannelForm(p => ({ ...EMPTY_CHANNEL, organization_id: p.organization_id }));
+      await refresh();
+    } catch (err) {
+      if (err?.reason !== "cancelled") setError(err.message || "No se pudo completar el alta.");
+    } finally { setBusy(""); }
+  };
+
+  const approve = () => runAction("approve", () => approveWhatsAppTests(testRun.id, checks), "Canal activado después de verificar las cuatro pruebas.").then(() => { setTestRun(null); setChecks({ inbound: false, outbound: false, media: false, isolation: false }); });
+
+  return (
+    <div style={{ padding: "22px 24px 60px", color: T.txt, fontFamily: font, overflowY: "auto" }}>
+      <button onClick={onBack} style={{ ...button, marginBottom: 16, background: "transparent", color: T.txt2, borderColor: T.border }}><ArrowLeft size={14} /> Usuarios</button>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12, flexWrap: "wrap", marginBottom: 18 }}>
+        <div>
+          <h2 style={{ margin: 0, fontFamily: fontDisp, fontSize: 22, fontWeight: 650 }}>Alta de empresas y WhatsApp</h2>
+          <p style={{ color: T.txt3, fontSize: 12.5, margin: "6px 0 0", maxWidth: 720 }}>Crea el tenant, incorpora su equipo y conecta números por coexistencia sin mezclar activos con Duke.</p>
+        </div>
+        <button onClick={refresh} disabled={loading} style={button}><RefreshCw size={14} /> Actualizar</button>
+      </div>
+
+      {!providerReady && (
+        <div style={{ ...card, marginBottom: 16, display: "flex", gap: 12, borderColor: "rgba(245,158,11,.35)", background: "rgba(245,158,11,.06)" }}>
+          <CircleAlert size={19} color="#F59E0B" style={{ flexShrink: 0 }} />
+          <div><strong style={{ fontSize: 13 }}>Empresas y usuarios disponibles; conexión automática todavía bloqueada.</strong><div style={{ color: T.txt2, fontSize: 12, lineHeight: 1.55, marginTop: 4 }}>Faltan la aprobación de Tech Provider/Partner Solution y las variables seguras de Meta e Infobip. La consola no fingirá una conexión mientras eso no esté listo.</div></div>
+        </div>
+      )}
+      {error && <div style={{ ...card, marginBottom: 14, color: "#FCA5A5", borderColor: "rgba(248,113,113,.35)" }}>{error}</div>}
+      {success && <div style={{ ...card, marginBottom: 14, color: T.accent, borderColor: T.accentB }}>{success}</div>}
+
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(270px,1fr))", gap: 14, marginBottom: 18 }}>
+        <section style={card}>
+          <div style={{ display: "flex", gap: 9, alignItems: "center", marginBottom: 14 }}><Building2 size={17} color={T.accent} /><strong>1. Crear empresa</strong></div>
+          <label style={label}>Nombre</label><input style={input} value={orgForm.name} onChange={e => setOrgForm(p => ({ ...p, name: e.target.value }))} placeholder="Inmobiliaria Horizonte" />
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 90px", gap: 9, marginTop: 10 }}><div><label style={label}>Ruta</label><input style={input} value={orgForm.slug} onChange={e => setOrgForm(p => ({ ...p, slug: e.target.value }))} placeholder="horizonte" /></div><div><label style={label}>Licencias</label><input style={input} type="number" min="1" max="1000" value={orgForm.seats} onChange={e => setOrgForm(p => ({ ...p, seats: Number(e.target.value) }))} /></div></div>
+          <button onClick={createOrg} disabled={busy === "org"} style={{ ...button, width: "100%", marginTop: 13 }}>{busy === "org" ? <Loader2 size={14} /> : <Plus size={14} />} Crear empresa</button>
+        </section>
+
+        <section style={card}>
+          <div style={{ display: "flex", gap: 9, alignItems: "center", marginBottom: 14 }}><Users size={17} color={T.accent} /><strong>2. Crear usuario</strong></div>
+          <label style={label}>Empresa</label><select style={input} value={userForm.organization_id} onChange={e => setUserForm(p => ({ ...p, organization_id: e.target.value }))}><option value="">Seleccionar…</option>{organizations.map(o => <option key={o.id} value={o.id}>{o.name}</option>)}</select>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 9, marginTop: 10 }}><div><label style={label}>Nombre</label><input style={input} value={userForm.name} onChange={e => setUserForm(p => ({ ...p, name: e.target.value }))} /></div><div><label style={label}>Rol</label><select style={input} value={userForm.role} onChange={e => setUserForm(p => ({ ...p, role: e.target.value }))}><option value="admin">Administrador</option><option value="director">Director</option><option value="asesor">Asesor</option></select></div></div>
+          <label style={{ ...label, marginTop: 10 }}>Correo</label><input style={input} type="email" value={userForm.email} onChange={e => setUserForm(p => ({ ...p, email: e.target.value }))} />
+          <button onClick={createUser} disabled={busy === "user"} style={{ ...button, width: "100%", marginTop: 13 }}>{busy === "user" ? <Loader2 size={14} /> : <Plus size={14} />} Crear usuario</button>
+        </section>
+
+        <section style={card}>
+          <div style={{ display: "flex", gap: 9, alignItems: "center", marginBottom: 14 }}><MessageCircle size={17} color={T.accent} /><strong>3. Conectar número</strong></div>
+          <label style={label}>Empresa</label><select style={input} value={channelForm.organization_id} onChange={e => setChannelForm(p => ({ ...p, organization_id: e.target.value, advisor_id: "" }))}><option value="">Seleccionar…</option>{organizations.map(o => <option key={o.id} value={o.id}>{o.name}</option>)}</select>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 9, marginTop: 10 }}><div><label style={label}>Propietario</label><select style={input} value={channelForm.owner_type} onChange={e => setChannelForm(p => ({ ...p, owner_type: e.target.value }))}><option value="company">Empresa</option><option value="advisor">Asesor</option></select></div><div><label style={label}>Asignar a</label><select style={input} value={channelForm.advisor_id} onChange={e => setChannelForm(p => ({ ...p, advisor_id: e.target.value }))}><option value="">Sin asignar</option>{selectedProfiles.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}</select></div></div>
+          <label style={{ ...label, marginTop: 10 }}>Número internacional</label><input style={input} value={channelForm.phone_e164} onChange={e => setChannelForm(p => ({ ...p, phone_e164: e.target.value }))} placeholder="+57 300 123 4567" />
+          <button onClick={connect} disabled={!providerReady || busy === "meta" || busy === "channel"} style={{ ...button, width: "100%", marginTop: 13, opacity: providerReady ? 1 : .5 }}>{busy === "meta" || busy === "channel" ? <Loader2 size={14} /> : <ExternalLink size={14} />} Conectar con Meta</button>
+        </section>
+      </div>
+
+      {credentials && <div style={{ ...card, marginBottom: 18, borderColor: T.accentB }}><strong>Credenciales temporales — cópialas ahora</strong><div style={{ marginTop: 8, color: T.txt2, fontSize: 13 }}>Correo: <code>{credentials.email}</code><br />Contraseña: <code>{credentials.password}</code></div><button onClick={() => setCredentials(null)} style={{ ...button, marginTop: 10 }}>Ya las guardé</button></div>}
+
+      <section style={card}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, marginBottom: 12 }}><div><strong>Procesos recientes</strong><div style={{ color: T.txt3, fontSize: 11.5, marginTop: 3 }}>{runs.length} altas registradas</div></div><ShieldCheck size={18} color={T.accent} /></div>
+        {loading ? <div style={{ color: T.txt3, padding: 16 }}>Cargando…</div> : runs.length === 0 ? <div style={{ color: T.txt3, padding: 16 }}>Todavía no hay procesos.</div> : (
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            {runs.map(run => {
+              const org = organizations.find(o => o.id === run.organization_id);
+              const advisor = profiles.find(p => p.id === run.advisor_id);
+              return <div key={run.id} style={{ border: `1px solid ${T.border}`, borderRadius: 12, padding: 12, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+                <div><div style={{ fontWeight: 650, fontSize: 13 }}>{org?.name || "Empresa"} · {run.phone_e164 || "Número por confirmar"}</div><div style={{ color: T.txt3, fontSize: 11.5, marginTop: 4 }}>{advisor?.name || "Sin asignar"}{run.last_error ? ` · ${run.last_error}` : ""}</div></div>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}><StatusPill status={run.status} />{run.status === "failed" && run.waba_id && <button onClick={() => runAction(`retry-${run.id}`, () => retryWhatsAppShare(run.id), "Reintento enviado a Infobip.")} style={button}>Reintentar</button>}{run.status === "ready_to_test" && <button onClick={() => setTestRun(run)} style={button}><CheckCircle2 size={14} /> Verificar</button>}</div>
+              </div>;
+            })}
+          </div>
+        )}
+      </section>
+
+      {testRun && <div style={{ position: "fixed", inset: 0, zIndex: 1000, background: "rgba(0,0,0,.72)", display: "grid", placeItems: "center", padding: 18 }}><div style={{ ...card, width: "min(520px,100%)", background: T.bg }}><h3 style={{ margin: "0 0 6px" }}>Prueba final del canal</h3><p style={{ color: T.txt3, fontSize: 12.5, lineHeight: 1.55 }}>Confirma únicamente después de hacer pruebas reales. El canal no se activa con el estado de registro solamente.</p>{[["inbound","Mensaje entrante llegó al CRM"],["outbound","Respuesta del CRM llegó al teléfono"],["media","Imagen o audio funcionó"],["isolation","El mensaje quedó en la empresa correcta"]].map(([key,text]) => <label key={key} style={{ display: "flex", gap: 9, alignItems: "center", padding: "8px 0", fontSize: 13 }}><input type="checkbox" checked={checks[key]} onChange={e => setChecks(p => ({ ...p, [key]: e.target.checked }))} />{text}</label>)}<div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 14 }}><button onClick={() => setTestRun(null)} style={{ ...button, background: "transparent", borderColor: T.border, color: T.txt2 }}>Cancelar</button><button onClick={approve} disabled={busy === "approve"} style={button}>Activar canal</button></div></div></div>}
+    </div>
+  );
+}

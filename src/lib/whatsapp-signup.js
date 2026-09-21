@@ -106,7 +106,7 @@ function listenSignupMessages(onEvent) {
  * @returns {Promise<{code:string, phoneNumberId:string|null, wabaId:string|null}>}
  * @throws  Error con `.reason = "cancelled"` si el cliente cierra el popup.
  */
-export async function launchWhatsAppSignup({ appId, configId }) {
+export async function launchWhatsAppSignup({ appId, configId, solutionId = null }) {
   if (!appId || !configId) {
     throw new Error("Falta appId o configId de Meta — revisa la config del cliente");
   }
@@ -154,8 +154,8 @@ export async function launchWhatsAppSignup({ appId, configId }) {
       response_type: "code",
       override_default_response_type: true,
       extras: {
-        setup: {},
-        featureType: "",
+        setup: solutionId ? { solutionID: solutionId } : {},
+        featureType: "whatsapp_business_app_onboarding",
         sessionInfoVersion: "3",
       },
     });
