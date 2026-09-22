@@ -27,6 +27,7 @@ export const loadWhatsAppAdmin = () => call("bootstrap");
 export const createWhatsAppOrganization = (payload) => call("create_organization", payload);
 export const createWhatsAppTenantUser = (payload) => call("create_user", payload);
 export const createWhatsAppOnboardingRun = (payload) => call("create_run", payload);
+export const verifyInfobipPortalSender = (runId) => call("verify_portal_sender", { run_id: runId });
 export const completeWhatsAppSignup = (payload) => call("complete_signup", payload);
 export const retryWhatsAppShare = (runId) => call("retry_share", { run_id: runId });
 export const approveWhatsAppTests = (runId, checks) => call("approve_tests", { run_id: runId, checks });

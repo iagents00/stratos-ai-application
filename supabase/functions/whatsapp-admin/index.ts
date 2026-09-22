@@ -34,6 +34,25 @@ const normalizePhone = (value: unknown) => {
   return digits.length >= 8 && digits.length <= 15 ? `+${digits}` : null;
 };
 
+const infobipHeaders = () => ({
+  Authorization: INFOBIP_API_KEY.startsWith("App ") ? INFOBIP_API_KEY : `App ${INFOBIP_API_KEY}`,
+  "Content-Type": "application/json",
+});
+
+const rowsFrom = (payload: unknown): Array<Record<string, unknown>> => {
+  if (Array.isArray(payload)) return payload.filter(row => row && typeof row === "object") as Array<Record<string, unknown>>;
+  if (!payload || typeof payload !== "object") return [];
+  const object = payload as Record<string, unknown>;
+  for (const key of ["results", "senders", "data", "items"]) {
+    if (Array.isArray(object[key])) return rowsFrom(object[key]);
+  }
+  return [];
+};
+
+const senderPhone = (row: Record<string, unknown>) => normalizePhone(
+  row.sender ?? row.phoneNumber ?? row.displayPhoneNumber ?? row.number ?? row.phone,
+);
+
 function tempPassword() {
   const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#";
   const bytes = crypto.getRandomValues(new Uint8Array(16));
@@ -81,7 +100,11 @@ Deno.serve(async (req) => {
         ok: true,
         organizations: orgs.data ?? [], profiles: profiles.data ?? [],
         channels: channels.data ?? [], runs: runs.data ?? [],
-        provider: { infobipConfigured: Boolean(INFOBIP_API_KEY), embeddedSignupReady: Boolean(INFOBIP_API_KEY) },
+        provider: {
+          infobipConfigured: Boolean(INFOBIP_API_KEY),
+          portalRegistrationReady: Boolean(INFOBIP_API_KEY),
+          embeddedSignupReady: Boolean(INFOBIP_API_KEY),
+        },
       }, 200, origin);
     }
 
@@ -145,6 +168,9 @@ Deno.serve(async (req) => {
       const ownerType = body.owner_type === "advisor" ? "advisor" : "company";
       if (!organizationId) return respond({ ok: false, error: "Selecciona la empresa." }, 400, origin);
       if (body.phone_e164 && !phone) return respond({ ok: false, error: "El número debe estar en formato internacional." }, 400, origin);
+      if (body.registration_mode === "infobip_portal" && !phone) {
+        return respond({ ok: false, error: "El registro rápido necesita el número en formato internacional." }, 400, origin);
+      }
       if (advisorId) {
         const { data: advisor } = await admin.from("profiles").select("id").eq("id", advisorId).eq("organization_id", organizationId).eq("active", true).maybeSingle();
         if (!advisor) return respond({ ok: false, error: "El asesor no pertenece a esa empresa." }, 400, origin);
@@ -153,9 +179,90 @@ Deno.serve(async (req) => {
         organization_id: organizationId, requested_by: callerId, advisor_id: advisorId,
         owner_type: ownerType, owner_name: String(body.owner_name ?? "").trim() || null,
         phone_e164: phone, status: "waiting_customer",
+        provider_state: body.registration_mode === "infobip_portal" ? { mode: "infobip_portal" } : {},
       }).select("*").single();
       if (error) throw error;
       return respond({ ok: true, run: data }, 200, origin);
+    }
+
+    if (action === "verify_portal_sender") {
+      if (!INFOBIP_API_KEY) return respond({ ok: false, error: "Falta configurar INFOBIP_API_KEY en el servidor." }, 503, origin);
+      const runId = String(body.run_id ?? "");
+      const { data: run } = await admin.from("whatsapp_onboarding_runs").select("*").eq("id", runId).maybeSingle();
+      if (!run) return respond({ ok: false, error: "No encontré ese proceso." }, 404, origin);
+      const phone = normalizePhone(run.phone_e164);
+      if (!phone) return respond({ ok: false, error: "Este proceso no tiene un número internacional válido." }, 400, origin);
+
+      const qualityResponse = await fetch(`${INFOBIP_BASE_URL}/whatsapp/1/senders/quality`, { headers: infobipHeaders() });
+      const qualityPayload = await qualityResponse.json().catch(() => ({}));
+      if (!qualityResponse.ok) {
+        const errorPayload = qualityPayload && typeof qualityPayload === "object"
+          ? qualityPayload as Record<string, unknown> : {};
+        const requestError = errorPayload.requestError && typeof errorPayload.requestError === "object"
+          ? errorPayload.requestError as Record<string, unknown> : {};
+        const serviceException = requestError.serviceException && typeof requestError.serviceException === "object"
+          ? requestError.serviceException as Record<string, unknown> : {};
+        const message = String(serviceException.text ?? errorPayload.message ?? `Infobip HTTP ${qualityResponse.status}`);
+        return respond({ ok: false, error: `Infobip no permitió comprobar los remitentes: ${message}` }, 502, origin);
+      }
+      const sender = rowsFrom(qualityPayload).find(row => senderPhone(row) === phone);
+      if (!sender) {
+        return respond({
+          ok: false,
+          error: "El número todavía no aparece como remitente en Infobip. Termina el registro en Channels and Numbers → WhatsApp → Register sender y vuelve a verificar.",
+        }, 409, origin);
+      }
+      const senderStatus = String(sender.status ?? sender.state ?? "REGISTERED").toUpperCase();
+      if (["FAILED", "REJECTED", "BLOCKED", "DISCONNECTED", "INACTIVE"].includes(senderStatus)) {
+        return respond({ ok: false, error: `Infobip encontró el número, pero su estado es ${senderStatus}. Corrige el registro antes de asignarlo.` }, 409, origin);
+      }
+
+      const { data: activeChannels, error: channelError } = await admin.from("whatsapp_numero_asesor")
+        .select("id,organization_id,numero_whatsapp").eq("active", true).limit(5000);
+      if (channelError) throw channelError;
+      const sameNumber = (activeChannels ?? []).find(channel => normalizePhone(channel.numero_whatsapp) === phone);
+      if (sameNumber && sameNumber.organization_id !== run.organization_id) {
+        return respond({ ok: false, error: "Ese número ya está asignado a otra empresa. No se modificó ninguna conexión." }, 409, origin);
+      }
+
+      const { data: advisor } = run.advisor_id
+        ? await admin.from("profiles").select("id,name").eq("id", run.advisor_id).eq("organization_id", run.organization_id).maybeSingle()
+        : { data: null };
+      const qualityRating = String(sender.qualityRating ?? sender.quality ?? sender.qualityScore ?? "").trim() || null;
+      const channel = {
+        organization_id: run.organization_id,
+        numero_whatsapp: phone,
+        asesor_id: advisor?.id ?? null,
+        asesor_name: advisor?.name ?? run.owner_name ?? "Sin asignar",
+        platform_type: "CLOUD_API",
+        quality_rating: qualityRating,
+        onboarded_via: "manual",
+        onboarded_at: new Date().toISOString(),
+        estado_conexion: "INFOBIP_REGISTERED",
+        active: true,
+        ultimo_error: null,
+      };
+      if (sameNumber?.id) {
+        const { error } = await admin.from("whatsapp_numero_asesor").update(channel).eq("id", sameNumber.id);
+        if (error) throw error;
+      } else {
+        const { error } = await admin.from("whatsapp_numero_asesor").insert(channel);
+        if (error) throw error;
+      }
+
+      const safeProviderState = {
+        mode: "infobip_portal",
+        sender: phone,
+        status: senderStatus,
+        qualityRating,
+        checkedAt: new Date().toISOString(),
+      };
+      const { error: runError } = await admin.from("whatsapp_onboarding_runs").update({
+        status: "ready_to_test", provider_state: safeProviderState,
+        provider_completed_at: new Date().toISOString(), last_error: null,
+      }).eq("id", runId);
+      if (runError) throw runError;
+      return respond({ ok: true, run_id: runId, status: "ready_to_test", sender: safeProviderState }, 200, origin);
     }
 
     if (action === "complete_signup" || action === "retry_share") {
@@ -173,10 +280,7 @@ Deno.serve(async (req) => {
       await admin.from("whatsapp_onboarding_runs").update({ status: "infobip_registering" }).eq("id", runId);
       const infobip = await fetch(`${INFOBIP_BASE_URL}/whatsapp/1/embedded-signup/registrations/share-waba`, {
         method: "POST",
-        headers: {
-          Authorization: INFOBIP_API_KEY.startsWith("App ") ? INFOBIP_API_KEY : `App ${INFOBIP_API_KEY}`,
-          "Content-Type": "application/json",
-        },
+        headers: infobipHeaders(),
         body: JSON.stringify({ businessAccountId: wabaId }),
       });
       const responseBody = await infobip.json().catch(() => ({}));
@@ -196,11 +300,18 @@ Deno.serve(async (req) => {
       if (!checks || required.some(key => checks[key] !== true)) {
         return respond({ ok: false, error: "Deben pasar entrada, salida, multimedia y aislamiento." }, 400, origin);
       }
-      const { data: run } = await admin.from("whatsapp_onboarding_runs").select("id,phone_number_id,status").eq("id", runId).maybeSingle();
+      const { data: run } = await admin.from("whatsapp_onboarding_runs").select("id,organization_id,phone_e164,phone_number_id,status").eq("id", runId).maybeSingle();
       if (!run || run.status !== "ready_to_test") return respond({ ok: false, error: "El canal todavía no está listo para aprobar pruebas." }, 409, origin);
       await admin.from("whatsapp_onboarding_runs").update({ status: "active", verified_at: new Date().toISOString() }).eq("id", runId);
       if (run.phone_number_id) {
         await admin.from("whatsapp_numero_asesor").update({ estado_conexion: "CONNECTED", verificado_at: new Date().toISOString(), ultimo_error: null }).eq("phone_number_id", run.phone_number_id);
+      } else if (run.phone_e164) {
+        const { data: candidates } = await admin.from("whatsapp_numero_asesor")
+          .select("id,numero_whatsapp").eq("organization_id", run.organization_id).eq("active", true).limit(100);
+        const channel = (candidates ?? []).find(candidate => normalizePhone(candidate.numero_whatsapp) === normalizePhone(run.phone_e164));
+        if (channel?.id) {
+          await admin.from("whatsapp_numero_asesor").update({ estado_conexion: "CONNECTED", verificado_at: new Date().toISOString(), ultimo_error: null }).eq("id", channel.id);
+        }
       }
       return respond({ ok: true, status: "active" }, 200, origin);
     }
