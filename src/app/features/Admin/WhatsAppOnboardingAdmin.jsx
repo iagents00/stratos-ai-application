@@ -26,7 +26,7 @@ const STATUS = {
 const EMPTY_ORG = { name: "", slug: "", seats: 30 };
 const EMPTY_USER = { organization_id: "", name: "", email: "", role: "admin" };
 const EMPTY_CHANNEL = { organization_id: "", advisor_id: "", owner_type: "company", owner_name: "", phone_e164: "" };
-const INFOBIP_PORTAL_URL = "https://portal.infobip.com/";
+const INFOBIP_SENDERS_URL = "https://portal.infobip.com/channels-and-numbers/channels/whatsapp/senders";
 
 function StatusPill({ status }) {
   const [label, color] = STATUS[status] || [status || "Sin estado", "#94A3B8"];
@@ -139,8 +139,8 @@ export default function WhatsAppOnboardingAdmin({ T, onBack }) {
       registration_mode: "infobip_portal",
     }), "Proceso guardado. Completa el registro en Infobip y después pulsa Verificar en Infobip.");
     if (!created?.run) { portalWindow?.close(); return; }
-    if (portalWindow) portalWindow.location.href = INFOBIP_PORTAL_URL;
-    else setSuccess("Proceso guardado. Tu navegador bloqueó la pestaña; abre portal.infobip.com y luego vuelve a verificar.");
+    if (portalWindow) portalWindow.location.href = INFOBIP_SENDERS_URL;
+    else setSuccess("Proceso guardado. Tu navegador bloqueó la pestaña; usa “Abrir registro” en Procesos recientes y luego vuelve a verificar.");
     setChannelForm(p => ({ ...EMPTY_CHANNEL, organization_id: p.organization_id }));
   };
 
@@ -188,7 +188,7 @@ export default function WhatsAppOnboardingAdmin({ T, onBack }) {
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 9, marginTop: 10 }}><div><label style={label}>Propietario</label><select style={input} value={channelForm.owner_type} onChange={e => setChannelForm(p => ({ ...p, owner_type: e.target.value }))}><option value="company">Empresa</option><option value="advisor">Asesor</option></select></div><div><label style={label}>Asignar a</label><select style={input} value={channelForm.advisor_id} onChange={e => setChannelForm(p => ({ ...p, advisor_id: e.target.value }))}><option value="">Sin asignar</option>{selectedProfiles.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}</select></div></div>
           <label style={{ ...label, marginTop: 10 }}>Número internacional</label><input style={input} value={channelForm.phone_e164} onChange={e => setChannelForm(p => ({ ...p, phone_e164: e.target.value }))} placeholder="+57 300 123 4567" />
           <button onClick={startQuickRegistration} disabled={!data?.provider?.portalRegistrationReady || busy === "quick-channel"} style={{ ...button, width: "100%", marginTop: 13, opacity: data?.provider?.portalRegistrationReady ? 1 : .5 }}>{busy === "quick-channel" ? <Loader2 size={14} /> : <ExternalLink size={14} />} Registro rápido con Infobip</button>
-          <div style={{ color: T.txt3, fontSize: 11.5, lineHeight: 1.5, marginTop: 8 }}>En Infobip: Channels and Numbers → WhatsApp → Register sender. Si el número sigue en WhatsApp Business, elige coexistencia, escanea el QR y selecciona “Don’t share chats”.</div>
+          <div style={{ color: T.txt3, fontSize: 11.5, lineHeight: 1.5, marginTop: 8 }}>Abre directamente WhatsApp → Remitentes en Infobip. Pulsa “Registrar remitente”, elige coexistencia, escanea el QR y selecciona “Don’t share chats”. Si debes iniciar sesión, Infobip te devolverá automáticamente a Remitentes.</div>
           <button onClick={connect} disabled={!providerReady || busy === "meta" || busy === "channel"} style={{ ...button, width: "100%", marginTop: 10, background: "transparent", borderColor: T.border, color: T.txt2, opacity: providerReady ? 1 : .5 }}>{busy === "meta" || busy === "channel" ? <Loader2 size={14} /> : <ExternalLink size={14} />} Alta automática Stratos</button>
         </section>
       </div>
@@ -204,7 +204,7 @@ export default function WhatsAppOnboardingAdmin({ T, onBack }) {
               const advisor = profiles.find(p => p.id === run.advisor_id);
               return <div key={run.id} style={{ border: `1px solid ${T.border}`, borderRadius: 12, padding: 12, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
                 <div><div style={{ fontWeight: 650, fontSize: 13 }}>{org?.name || "Empresa"} · {run.phone_e164 || "Número por confirmar"}</div><div style={{ color: T.txt3, fontSize: 11.5, marginTop: 4 }}>{advisor?.name || "Sin asignar"}{run.last_error ? ` · ${run.last_error}` : ""}</div></div>
-                <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}><StatusPill status={run.status} />{run.status === "waiting_customer" && run.provider_state?.mode === "infobip_portal" && <button onClick={() => runAction(`verify-${run.id}`, () => verifyInfobipPortalSender(run.id), "Infobip confirmó el remitente. Ahora ejecuta las cuatro pruebas reales.")} style={button}>Verificar en Infobip</button>}{run.status === "failed" && run.waba_id && <button onClick={() => runAction(`retry-${run.id}`, () => retryWhatsAppShare(run.id), "Reintento enviado a Infobip.")} style={button}>Reintentar</button>}{run.status === "ready_to_test" && <button onClick={() => setTestRun(run)} style={button}><CheckCircle2 size={14} /> Verificar pruebas</button>}</div>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}><StatusPill status={run.status} />{run.status === "waiting_customer" && run.provider_state?.mode === "infobip_portal" && <><a href={INFOBIP_SENDERS_URL} target="_blank" rel="noreferrer" style={{ ...button, textDecoration: "none", background: "transparent", borderColor: T.border, color: T.txt2 }}><ExternalLink size={14} /> 1. Abrir registro</a><button onClick={() => runAction(`verify-${run.id}`, () => verifyInfobipPortalSender(run.id), "Infobip confirmó el remitente. Ahora ejecuta las cuatro pruebas reales.")} style={button}>2. Verificar en Infobip</button></>}{run.status === "failed" && run.waba_id && <button onClick={() => runAction(`retry-${run.id}`, () => retryWhatsAppShare(run.id), "Reintento enviado a Infobip.")} style={button}>Reintentar</button>}{run.status === "ready_to_test" && <button onClick={() => setTestRun(run)} style={button}><CheckCircle2 size={14} /> Verificar pruebas</button>}</div>
               </div>;
             })}
           </div>

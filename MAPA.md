@@ -668,7 +668,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Eliminar documento | `src/app/features/MetaPanel/index.jsx:1689` |
 
 
-_(466 textos más — usá `npm run buscar "texto"`)_
+_(465 textos más — usá `npm run buscar "texto"`)_
 
 ---
 
