@@ -6,8 +6,8 @@
  * and make the database parser the only source of bulk-registration operands.
  */
 
-export const interpreterMarker = '// BULK_RAW_INPUT_GUARD_V5_20260923';
-export const pickMarker = '// BULK_REGISTER_CURRENT_TURN_GUARD_V5_20260923';
+export const interpreterMarker = '// BULK_RAW_INPUT_GUARD_V6_20260923';
+export const pickMarker = '// BULK_REGISTER_CURRENT_TURN_GUARD_V6_20260923';
 
 const detector = `function _bulkPhoneMatches(s){
   return (String(s || '').match(/\\+?\\d[\\d ().-]{6,}\\d/g) || [])
@@ -17,7 +17,7 @@ function _cleanBulkName(s){
   return String(s || '')
     .replace(/^\\s*(?:[-*•]|\\d+[.)-])\\s*/, '')
     .replace(/\\[QA-[^\\]]*\\]/ig, ' ')
-    .replace(/\\b(?:nombre|cliente|lead)\\b\\s*[:=-]?/ig, ' ')
+    .replace(/^\\s*(?:nombre|cliente|lead)\\s*[:=-]\\s*/i, ' ')
     .replace(/\\b(?:numero|número)\\s+de\\s+(?:telefono|teléfono|celular)\\b\\s*[:=-]?/ig, ' ')
     .replace(/\\b(?:telefono|teléfono|tel|celular|movil|móvil)\\b\\s*[:=-]?/ig, ' ')
     .replace(/^[\\s|,:=→>-]+|[\\s|,:=→>-]+$/g, '')

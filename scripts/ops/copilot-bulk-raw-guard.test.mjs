@@ -93,6 +93,17 @@ test('single-line tab export parses every tuple and sends the live dispatcher ke
   assert.equal(result[0].json.args.asesor_name, 'QA Admin');
 });
 
+test('legitimate Cliente words inside tab-export names are preserved', () => {
+  const code = patchBulkPick(pickFixture);
+  const run = new Function('$input', '$', 'let tool_name="menu", args={}, inputText=$input; ' + code);
+  const input = '12025551001\tQABULKWRITES Cliente 001 BAY VIEW GRAND\t12025551002\tQABULKWRITES Cliente 002 BAY VIEW GRAND\tESTOS LEADS ASIGNAMELOS A CONTACTAME YA';
+  const result = run(input, () => ({ item: { json: { quien_escribe: 'QA Admin' } } }));
+  assert.deepEqual(result[0].json.args.leads, [
+    { name: 'QABULKWRITES Cliente 001', phone: '12025551001', campaign: 'BAY VIEW GRAND' },
+    { name: 'QABULKWRITES Cliente 002', phone: '12025551002', campaign: 'BAY VIEW GRAND' },
+  ]);
+});
+
 test('explicit list stage move uses the dedicated bulk-stage RPC path', () => {
   const code = patchBulkPick(pickFixture);
   const run = new Function('$input', '$', 'let tool_name="menu", args={}, inputText=$input; ' + code);
